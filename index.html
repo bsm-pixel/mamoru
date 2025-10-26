@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+<link rel="preconnect" href="https://t1.daumcdn.net" />
+
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MAMORU A/S 접수</title>
+
+  <style>
+    :root{--ink:#111213;--panel:#fff;--line:#cbd5e1;--line-strong:#94a3b8;--muted:#6b7280;--btn:#1c1c1e;--err:#dc2626;--ring:0 0 0 2px #1c1c1e inset;--shadow:0 10px 25px rgba(0,0,0,.06)}
+    *{box-sizing:border-box}
+    html,body{height:auto;overflow:visible}
+    body{font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;margin:0;background:#fafafa;color:var(--ink);overflow-x:hidden}
+    .wrap{max-width:980px;margin:0 auto;padding:24px 16px}
+    .hero{display:flex;align-items:center;gap:12px;margin:8px 0 18px}
+    .hero-logo{width:28px;height:28px;border-radius:8px;background:var(--btn)}
+    .hero h1{font-size:24px;margin:0;font-weight:700}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+    .grid{display:grid;gap:16px}
+    .grid-2{grid-template-columns:1fr}
+    @media (min-width:820px){ .grid-2{grid-template-columns:1fr 1fr} }
+    .full{grid-column:1/-1}
+    label{font-size:13px;color:#374151;margin-bottom:6px;display:block}
+    .ctl{width:100%;height:48px;border:1px solid var(--line-strong);border-radius:12px;padding:0 14px;background:#fff;transition:box-shadow .15s ease,border-color .15s ease}
+    .ctl:focus{outline:0;box-shadow:var(--ring);border-color:var(--btn)}
+    textarea.ctl{height:auto;min-height:120px;padding:12px;resize:vertical}
+    .row-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px}
+    .row-head .title{font-size:14px;font-weight:700;color:#111213}
+    .seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:12px;overflow:hidden;background:#fff}
+    .seg button{height:40px;padding:0 16px;border:0;background:#fff;cursor:pointer;font-weight:600}
+    .seg button.active{background:var(--btn);color:#fff}
+    .btn{height:40px;border:0;border-radius:12px;padding:0 14px;background:var(--btn);color:#fff;cursor:pointer;font-weight:700}
+    .btn[disabled]{opacity:.6;cursor:not-allowed}
+    .btn.lg{height:48px;padding:0 18px}
+    .actions{display:flex;gap:10px;justify-content:flex-end}
+    .err{border-color:var(--err)!important}
+    .err-msg{font-size:12px;color:#dc2626;margin-top:6px}
+    .pair{display:grid;gap:12px}
+    @media (min-width:820px){ .pair{grid-template-columns:1fr 1fr} }
+    select.ctl{padding-right:36px}
+    .agree{border:1px solid var(--line-strong);border-radius:12px;padding:12px}
+    .agree .box{height:96px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff;font-size:13px;line-height:1.55;color:#374151}
+    .agree .ck{display:flex;align-items:center;gap:10px;margin-top:10px}
+    .agree .ck input{width:18px;height:18px}
+    .dots{display:inline-block}
+    .dots::after{content:"";display:inline-block;width:0.9em;text-align:left;animation:dots 1.2s steps(4,end) infinite}
+    @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}100%{content:""}}
+    @media (max-width: 819px) { .qty-row { gap: 20px; } }
+    .flatpickr-day.weekend, .flatpickr-day.holiday { color:#dc2626 !important; }
+  </style>
+
+  <!-- Flatpickr CSS preload -->
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" as="style" onload="this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"></noscript>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-logo"></div>
+    <h1>A/S 신청서</h1>
+  </div>
+
+  <div id="view-form" class="card grid grid-2">
+    <div class="full">
+      <div class="row-head">
+        <div class="title">A/S 진행방식</div>
+        <div class="seg" id="seg"><button type="button" data-v="pickup" class="active">방문수거</button><button type="button" data-v="direct">직접발송</button></div>
+      </div>
+      <input type="hidden" id="proceed_type" value="방문수거"/>
+    </div>
+
+    <div class="pair full">
+      <div>
+        <label>성함 *</label>
+        <input id="name" class="ctl" type="text" placeholder="김말숙" autocomplete="name" />
+        <div id="err-name" class="err-msg" style="display:none">성함을 입력하세요</div>
+      </div>
+      <div>
+        <label>연락처 *</label>
+        <input id="phone" class="ctl" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="01012345678" autocomplete="tel" />
+        <div id="err-phone" class="err-msg" style="display:none">연락처 형식을 확인하세요</div>
+      </div>
+    </div>
+
+    <div class="full">
+      <div class="row-head">
+        <div class="title">주소지 입력</div>
+        <button type="button" class="btn" id="btn-post">주소검색</button>
+      </div>
+      <input id="postcode" class="ctl" placeholder="우편번호" readonly style="display:none" />
+      <div style="height:10px"></div>
+      <input id="address1" class="ctl" placeholder="주소" readonly />
+      <div style="height:10px" class="full"></div>
+      <input id="address2" class="ctl" placeholder="상세주소" autocomplete="address-line2" />
+      <div id="err-addr" class="err-msg" style="display:none">주소를 입력하세요</div>
+      <div style="font-size:13px;color:#6b7280;margin-top:6px">※ 방문수거/반송에 사용됩니다.</div>
+    </div>
+
+    <div id="sec-pick" class="pair full">
+      <div>
+        <label>수거 요청일 *</label>
+        <input id="pickup_date" class="ctl" type="text" placeholder="YYYY-MM-DD" />
+      </div>
+      <div>
+        <label>방문기사님께 전달방법 *</label>
+        <select id="delivery_method" class="ctl">
+          <option value="">선택</option>
+          <option>문앞보관 - 9시 이전 보관</option>
+          <option>매장카운터 보관 - 9시 이후 방문</option>
+          <option>매장카운터 보관 - 10시 이후 방문</option>
+          <option>매장카운터 보관 - 11시 이후 방문</option>
+          <option>직접전달 - 9시 이후 방문</option>
+          <option>직접전달 - 10시 이후 방문</option>
+          <option>직접전달 - 11시 이후 방문</option>
+        </select>
+      </div>
+      <div id="err-pick" class="err-msg full" style="display:none">수거일·전달방법을 선택하세요</div>
+    </div>
+
+    <div class="pair full qty-row">
+      <div>
+        <label>마모루가위 A/S 수량 *</label>
+        <select id="qty_mamoru" class="ctl"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select>
+      </div>
+      <div>
+        <label>타사가위 추가진행</label>
+        <select id="qty_other" class="ctl"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select>
+      </div>
+    </div>
+
+    <div class="full">
+      <label class="title">불편사항 또는 요청사항 기재
+        <span style="font-size:12px;color:#6b7280;font-weight:400">(적지 않으셔도 꼼꼼하게 검수하여 진행해드려요)</span>
+      </label>
+      <textarea id="memo" class="ctl" placeholder="예: 모발이 밀려요, 부품이 빠져있어요"></textarea>
+    </div>
+
+    <div class="full">
+      <label class="title">개인정보 수집 및 이용 동의 *</label>
+      <div class="agree">
+        <div class="box" id="agreeText">
+마모루(이하 ‘회사’)는 A/S 접수 처리와 수거·반송, 수리 진단 및 비용 안내, 발송/배송, 고객 고지, 문의 대응 등 A/S 전 과정 수행을 위해 최소한의 개인정보를 수집·이용합니다.
+
+<strong>1. 처리 목적</strong>
+– A/S 접수 식별 및 진행 안내(안내톡/문자), 수거 및 배송 요청, 수리 결과·비용 고지, 결제/정산, 민원 처리.
+
+<strong>2. 수집 항목</strong>
+– 필수: 성명, 연락처(휴대전화), 주소(우편번호·기본·상세), 접수/수거 요청일, 전달방법, 접수내역(수량, 메모).
+– 선택: 타사가위 수량, 기타 요청사항.
+
+<strong>3. 보유 기간</strong>
+– A/S 처리 완료 후 3년 보관(소비자 분쟁해결 기준). 관계 법령상 보존이 필요한 경우 해당 기간까지 보관.
+
+<strong>4. 제3자 제공·위탁</strong>
+– 수거/배송을 위한 택배사, 알림톡/문자 발송 대행사, 결제/정산을 위한 PG사 등에 한해 업무 수행에 필요한 범위에서 위탁 또는 제공될 수 있음. 세부 내역은 사이트 ‘개인정보처리방침’ 참조.
+
+<strong>5. 동의 거부 권리</strong>
+– 동의를 거부하실 수 있으나, 이 경우 A/S 접수 및 진행이 제한될 수 있습니다.
+        </div>
+        <label class="ck"><input type="checkbox" id="agreeCk" /> 개인정보 수집 및 이용에 동의합니다.</label>
+      </div>
+      <div id="err-agree" class="err-msg" style="display:none">동의가 필요합니다.</div>
+    </div>
+
+    <div class="full actions">
+      <button id="btn-submit" class="btn lg">접수하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 주소검색 스크립트 로더 -->
+<script>
+(function ensurePostcode(){
+  if (window.daum && window.daum.Postcode) return;
+  var s=document.createElement('script');
+  s.src='https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+  s.async=true; document.head.appendChild(s);
+})();
+</script>
+
+<script>
+(function(){
+  const GAS_POST_URL = 'https://script.google.com/macros/s/AKfycbzNGgnswYiwqjMH2HK1ihGRD0u5gBmrqu0L7KzD_WEECX72Uo09tuZjJsxOGRSF0UBEkg/exec';
+
+  let HOLIDAYS = new Set();
+  let __fpReady = false;
+
+  function fmt(d){const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;}
+  function isWeekend(date){const w=date.getDay();return w===0||w===6;}
+  function isHolidayDate(date){return HOLIDAYS.has(fmt(date));}
+  function isDisabledDateStr(s){const d=new Date(s);return isNaN(d)?true:(isWeekend(d)||isHolidayDate(d));}
+
+  function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.async=true;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
+  function ensureFlatpickr(){
+    if(__fpReady) return Promise.resolve();
+    return Promise.all([
+      loadScript('https://cdn.jsdelivr.net/npm/flatpickr'),
+      loadScript('https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js')
+    ]).then(()=>{ __fpReady=true; });
+  }
+
+  function loadHolidays(){
+    const k='AS_HOLIDAYS_CACHE'; const now=Date.now();
+    try{
+      const cached=JSON.parse(localStorage.getItem(k)||'null');
+      if(cached && now-cached.t<7*24*60*60*1000){ HOLIDAYS=new Set(cached.list||[]); return Promise.resolve(); }
+    }catch(_){}
+    const years=['2025','2026','2027'];
+    return fetch(`${GAS_POST_URL}?holidays=1&years=${years.join(',')}`)
+      .then(r=>r.json())
+      .then(j=>{
+        const list=(j&&j.holidays)||[];
+        HOLIDAYS=new Set(list);
+        try{ localStorage.setItem(k, JSON.stringify({t:now,list})); }catch(_){}
+      }).catch(()=>{});
+  }
+
+  function initDatepicker(){
+    if(!__fpReady || !window.flatpickr) return;
+    flatpickr('#pickup_date', {
+      dateFormat:'Y-m-d',
+      minDate:'today',
+      disableMobile:true,
+      locale: flatpickr.l10ns.ko,
+      disable:[ d => isWeekend(d) || isHolidayDate(d) ],
+      onDayCreate: (_, __, ___, el) => {
+        const d=el.dateObj;
+        if(isWeekend(d)) el.classList.add('weekend');
+        if(isHolidayDate(d)) el.classList.add('holiday');
+      }
+    });
+  }
+
+  (function lazyBindDatepicker(){
+    const el=document.getElementById('pickup_date');
+    if(!el) return;
+    let loaded=false;
+    function onFirstFocus(){
+      if(loaded) return;
+      loaded=true;
+      Promise.all([ensureFlatpickr(), loadHolidays()]).then(initDatepicker);
+      el.removeEventListener('focus', onFirstFocus, {passive:true});
+      el.removeEventListener('click', onFirstFocus, {passive:true});
+    }
+    el.addEventListener('focus', onFirstFocus, {passive:true});
+    el.addEventListener('click', onFirstFocus, {passive:true});
+  })();
+
+  const $ = id => document.getElementById(id);
+  const seg = $('seg'), secPick = $('sec-pick');
+
+  const FORM_KEY = 'AS_FORM_DRAFT_v1';
+  function getDraft(){
+    try{
+      const v = JSON.parse(localStorage.getItem(FORM_KEY) || '{}');
+      if (!v._ts || Date.now() - v._ts > 3600_000) return {};
+      return v;
+    }catch(_){ return {}; }
+  }
+  function setDraft(v){ try{ localStorage.setItem(FORM_KEY, JSON.stringify(v)); }catch(_){} }
+  function clearDraft(){ try{ localStorage.removeItem(FORM_KEY); }catch(_){} }
+
+  function serializeForm(){
+    return {
+      proceed_type: $('proceed_type').value,
+      name: $('name').value,
+      phone: $('phone').value,
+      postcode: $('postcode').value,
+      address1: $('address1').value,
+      address2: $('address2').value,
+      pickup_date: $('pickup_date').value,
+      delivery_method: $('delivery_method').value,
+      qty_mamoru: $('qty_mamoru').value,
+      qty_other: $('qty_other').value,
+      memo: ($('memo') && $('memo').value) || '',
+      _ts: Date.now()
+    };
+  }
+
+  let __saveTimer;
+  function saveDraftDebounced(){ clearTimeout(__saveTimer); __saveTimer=setTimeout(()=> setDraft(serializeForm()), 300); }
+
+  function applyDraft(){
+    const d = getDraft();
+    if (!d) return;
+    if (d.proceed_type === '직접발송' && seg){
+      [...seg.children].forEach(b=>b.classList.remove('active'));
+      if (seg.children[1]) seg.children[1].classList.add('active');
+      $('proceed_type').value='직접발송';
+      if (secPick) secPick.style.display='none';
+    }
+    if (d.name) $('name').value = d.name;
+    if (d.phone) $('phone').value = d.phone;
+    if (d.postcode) $('postcode').value = d.postcode;
+    if (d.address1) $('address1').value = d.address1;
+    if (d.address2) $('address2').value = d.address2;
+    if (d.pickup_date) $('pickup_date').value = d.pickup_date;
+    if (d.delivery_method) $('delivery_method').value = d.delivery_method;
+    if (d.qty_mamoru) $('qty_mamoru').value = d.qty_mamoru;
+    if (d.qty_other) $('qty_other').value = d.qty_other;
+    if ($('memo') && d.memo) $('memo').value = d.memo;
+    window.__AS_notifyHeight && window.__AS_notifyHeight();
+  }
+
+  function bindDraftAutosave(){
+    ['name','phone','postcode','address1','address2','pickup_date','delivery_method','qty_mamoru','qty_other','memo']
+      .forEach(id=>{
+        const el=$(id); if(!el) return;
+        el.addEventListener('input', saveDraftDebounced);
+        el.addEventListener('change', saveDraftDebounced);
+      });
+    if (seg) seg.addEventListener('click', saveDraftDebounced);
+  }
+
+  applyDraft();
+  bindDraftAutosave();
+
+  function setErr(id,on){ const el=$(id); if(el) el.style.display=on?'block':'none'; }
+  function markCtl(el,on){ if(!el) return; el.classList.toggle('err',!!on); if(on) el.scrollIntoView({block:'center',behavior:'smooth'}); }
+
+  function resetForm(){
+    $('name').value=''; $('phone').value=''; $('postcode').value=''; $('address1').value=''; $('address2').value='';
+    $('pickup_date').value=''; $('delivery_method').value=''; $('qty_mamoru').value='1'; $('qty_other').value='0';
+    $('agreeCk').checked=false;
+    [...seg.children].forEach(b=>b.classList.remove('active')); seg.children[0].classList.add('active');
+    $('proceed_type').value='방문수거'; secPick.style.display='grid';
+    ['err-name','err-phone','err-addr','err-pick','err-agree'].forEach(id=>setErr(id,false));
+    window.__AS_notifyHeight && window.__AS_notifyHeight();
+    clearDraft();
+  }
+  window.__AS_resetForm = resetForm;
+
+  function validate(){
+    let ok=true, focus=false;
+    const nameEl=$('name'); const phoneEl=$('phone'); const addr1El=$('address1'); const postcodeEl=$('postcode');
+    const agree=$('agreeCk').checked; const isPickup=$('proceed_type').value==='방문수거';
+
+    const nameOk=!!nameEl.value.trim(); markCtl(nameEl,!nameOk); setErr('err-name',!nameOk); ok&=nameOk; if(!nameOk&&!focus){nameEl.focus();focus=true;}
+    const phoneOk=/^01[016789]\d{7,8}$/.test(phoneEl.value.replace(/\D/g,'')); markCtl(phoneEl,!phoneOk); setErr('err-phone',!phoneOk); ok&=phoneOk; if(!phoneOk&&!focus){phoneEl.focus();focus=true;}
+    const addrOk=!!(postcodeEl.value && addr1El.value.trim()); markCtl(addr1El,!addrOk); setErr('err-addr',!addrOk); ok&=addrOk; if(!addrOk&&!focus){addr1El.focus();focus=true;}
+    if(isPickup){
+      const pd=$('pickup_date').value; const dm=$('delivery_method').value;
+      const pickOk=!!(pd && dm) && !isDisabledDateStr(pd);
+      setErr('err-pick',!pickOk); ok&=pickOk;
+    } else { setErr('err-pick', false); }
+    setErr('err-agree', !agree); ok&=agree;
+    return !!ok;
+  }
+
+  
+  seg.addEventListener('click',function(e){
+    if(e.target.tagName!=='BUTTON') return;
+    [...this.children].forEach(b=>b.classList.remove('active')); e.target.classList.add('active');
+    const isPickup=e.target.getAttribute('data-v')==='pickup';
+    document.getElementById('proceed_type').value=isPickup?'방문수거':'직접발송';
+    secPick.style.display=isPickup?'grid':'none';
+    window.__AS_notifyHeight && window.__AS_notifyHeight();
+  });
+
+  document.getElementById('btn-post').addEventListener('click',function(){
+    if(!(window.daum && window.daum.Postcode)){ alert('주소검색 스크립트를 불러오는 중입니다. 잠시 후 다시 시도해주세요.'); return; }
+    new daum.Postcode({
+      oncomplete:function(d){
+        document.getElementById('postcode').value=d.zonecode;
+        document.getElementById('address1').value=d.roadAddress||d.jibunAddress;
+        document.getElementById('address2').focus();
+        window.__AS_notifyHeight && window.__AS_notifyHeight();
+      }
+    }).open();
+  });
+
+  document.getElementById('btn-submit').addEventListener('click', function () {
+    if (!validate()) return;
+    const btn = this; btn.disabled = true;
+
+    const payload = {
+      event:'AS_CREATE',
+      proceed_type: document.getElementById('proceed_type').value,
+      name:  document.getElementById('name').value.trim(),
+      phone: document.getElementById('phone').value.replace(/\D/g,''),
+      postcode: document.getElementById('postcode').value.trim(),
+      address1: document.getElementById('address1').value.trim(),
+      address2: document.getElementById('address2').value.trim(),
+      pickup_date: document.getElementById('pickup_date')?.value || '',
+      delivery_method: document.getElementById('delivery_method')?.value || '',
+      qty_mamoru: document.getElementById('qty_mamoru')?.value || '',
+      qty_other:  document.getElementById('qty_other')?.value  || '',
+      memo: document.getElementById('memo')?.value.trim() || ''
+    };
+
+    openModal('접수중입니다', '<span class="dots"></span>', { loading: true });
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+    fetch(GAS_POST_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    })
+    .then(async (r) => {
+      let j = null; try { j = await r.json(); } catch(_){}
+      if (!r.ok) { const msg = (j && j.error) ? String(j.error) : `HTTP ${r.status}`; throw new Error(msg); }
+      return j;
+    })
+    .then((j) => {
+      if (j && j.success) {
+        openModal('A/S 접수가 완료되었습니다', `접수번호: <b>${j.as_id}</b><br>안내톡을 확인해주세요.`, { loading: false });
+      } else {
+        const reason = j && j.error ? j.error : '다시 시도해주세요.'; updateModal('오류', reason);
+      }
+    })
+    .catch((e) => {
+      const msg = (e && e.message && e.message !== 'bad') ? e.message : '다시 시도해주세요.'; updateModal('네트워크/서버 오류', msg);
+    })
+    .finally(() => { clearTimeout(timeoutId); btn.disabled = false; });
+  });
+
+  (function(){
+    let t;
+    function notify(){
+      const h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight);
+      try{ parent.postMessage({type:'AS_IFRAME_HEIGHT',height:h},'*'); }catch(e){}
+    }
+    new MutationObserver(function(){ clearTimeout(t); t=setTimeout(notify,60); })
+      .observe(document.body,{subtree:true,childList:true,attributes:true});
+    new ResizeObserver(function(){ clearTimeout(t); t=setTimeout(notify,60); })
+      .observe(document.documentElement);
+    window.addEventListener('load',notify);
+    window.addEventListener('resize',function(){ clearTimeout(t); t=setTimeout(notify,60); });
+    window.__AS_notifyHeight=notify;
+  })();
+
+})(); /* IIFE */
+</script>
+
+<!-- Modal -->
+<div id="asModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:9999">
+  <div style="width:min(520px,92%);background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.2);overflow:hidden">
+    <div style="padding:22px 22px 8px">
+      <h3 id="asModalTitle" style="margin:0;font-size:18px;font-weight:800;color:#111">알림</h3>
+      <p id="asModalMsg" style="margin:10px 0 0;font-size:14px;color:#374151;line-height:1.55"></p>
+    </div>
+    <div style="padding:16px 22px;display:flex;gap:10px;justify-content:center">
+      <button id="asModalOk" class="btn lg" style="background:#1c1c1e;color:#fff;border:0;border-radius:12px;height:44px;padding:0 18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">확인</button>
+    </div>
+  </div>
+</div>
+<script>
+function openModal(title, msg, opts = {}) {
+  const m  = document.getElementById('asModal');
+  const ok = document.getElementById('asModalOk');
+  document.getElementById('asModalTitle').textContent = title || '알림';
+  document.getElementById('asModalMsg').innerHTML = msg || '';
+  ok.style.display = opts.loading ? 'none' : 'inline-flex';
+  ok.onclick = function() {
+    m.style.display = 'none';
+    if (opts.redirect) location.href = opts.redirect;
+    if (window.__AS_resetForm) window.__AS_resetForm();
+  };
+  m.style.display = 'flex';
+}
+function updateModal(title,msg,opts){
+  document.getElementById('asModalTitle').textContent=title||'알림';
+  document.getElementById('asModalMsg').innerHTML=msg||'';
+  const ok=document.getElementById('asModalOk');
+  ok.disabled=false;
+  ok.onclick=function(){
+    document.getElementById('asModal').style.display='none';
+    if(opts && typeof opts.onok==='function') opts.onok();
+  };
+}
+</script>
+</body>
+</html>

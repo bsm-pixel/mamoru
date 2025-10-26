@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>MAMORU A/S Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+.sec{border-radius:12px;padding:.5rem}
+.sec .group-title{font-size:1.05rem}
+.sec-new{background:#ffffff}
+.sec-partial{background:#ecfdf5}
+.sec-ready{background:#eff6ff}
+    :root{--bg:#fff;--card:#f7f7f9;--line:#e5e7eb;--ink:#1c1c1e;--muted:#6b7280;--brand:#111827;--accent:#111827}
+    html,body{height:100%}
+    body{font-family:'Noto Sans KR',system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Apple Color Emoji','Segoe UI Emoji',sans-serif;background:var(--bg);color:var(--ink)}
+    thead th{position:sticky;top:0;background:var(--bg);z-index:5}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px}
+    .input{background:#fff;border:1px solid var(--line);color:var(--ink)}
+    .input::placeholder{color:#9ca3af}
+    .badge{display:inline-flex;align-items:center;justify-content:center;padding:.125rem .5rem;border-radius:.5rem;font-size:.75rem;line-height:1.1}
+    .y{background:var(--brand);color:#fff}
+    .danger{background:#991b1b;color:#fff}
+    .loader{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:9999px;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .seg{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+    .seg button{padding:.5rem 1rem}
+    .seg button[aria-pressed="true"]{background:#f1f5f9}
+    table{table-layout:fixed;width:100%}
+    colgroup col.col-id{width:15ch}
+    colgroup col.col-name{width:12ch}
+    colgroup col.col-phone{width:16ch}
+    colgroup col.col-method{width:10ch}
+    colgroup col.col-memo{width:28ch}
+    colgroup col.col-qty{width:8ch}
+    colgroup col.col-cost{width:10ch}
+    colgroup col.col-invoice{width:22ch}
+    colgroup col.col-status{width:7ch}
+    td, th{line-height:1.25}
+.cell{padding:.5rem .75rem}
+.truncate-1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table th:nth-child(1), table td:nth-child(1){ width: 18ch; }
+table th:nth-child(3), table td:nth-child(3){ width: 18ch; }
+
+.wrap{white-space:normal; word-break:break-all}
+    .btn-sm{padding:.125rem .5rem;border:1px solid var(--line);border-radius:.375rem;font-size:.75rem;line-height:1.1;background:#fff;color:var(--ink)}
+    .btn-sm:hover{background:#f8fafc}
+    .btn-ghost{padding:.125rem .5rem;border:1px solid var(--line);border-radius:.375rem;font-size:.75rem;background:#fff}
+    .btn-muted{background:#f3f4f6;border:1px solid #e5e7eb;color:#6b7280}
+    .btn-muted:hover{background:#e5e7eb}
+
+.card-grid{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:12px}
+@media(min-width:768px){.card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1024px){.card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+.ascard{position:relative;border:1px solid var(--line);border-radius:14px;background:#fff}
+.ascard .hd{display:flex;justify-content:space-between;align-items:center;background:#1f2937;color:#fff;border-radius:12px 12px 0 0;padding:.5rem .75rem}
+.ascard .name,.ascard .price{font-weight:700}
+.ascard .body{padding:.75rem}
+.ascard .row{display:flex;gap:.5rem;align-items:center;font-size:.85rem;color:#4b5563}
+.ascard .pill{padding:.125rem .5rem;border-radius:.5rem;background:#f3f4f6;font-size:.75rem;white-space:nowrap}
+.ascard .btn{padding:.25rem .6rem;border:1px solid var(--line);border-radius:.5rem;background:#fff;font-size:.8rem}
+.ascard .btn:hover{background:#f8fafc}
+.ascard .btn-ghost{padding:.25rem .6rem;border:1px solid var(--line);border-radius:.5rem;background:#fff;font-size:.8rem}
+.ascard .btn-danger{background:#991b1b;color:#fff;border-color:#991b1b}
+
+.ascard .grid{display:grid;grid-template-columns:1fr 112px;gap:.75rem}
+.ascard .actions{display:flex;flex-direction:column;gap:.5rem;align-items:stretch}
+.ascard .act{display:block;text-align:center;padding:.45rem .5rem;border-radius:.55rem;border:1px solid var(--line);background:#fff;font-weight:600}
+.ascard .act.done{background:#111827;color:#fff;border-color:#111827}
+
+.group-title{margin:.75rem 0 .25rem;font-size:.9rem;color:#6b7280;font-weight:600}
+  </style>
+</head>
+<body class="antialiased overflow-x-hidden">
+
+<header class="sticky top-0 z-40 border-b border-[var(--line)] bg-[var(--bg)]/90 backdrop-blur">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl grid place-items-center bg-[var(--accent)] text-white font-bold">M</div>
+      <h1 class="text-lg font-semibold">MAMORU A/S Center</h1>
+      <span id="lastSynced" class="ml-3 text-xs text-slate-500">—</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="refreshBtn" class="px-3 py-1.5 rounded-lg border border-[var(--line)] hover:bg-[#f8fafc]">새로고침</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+  <section class="grid gap-3 md:grid-cols-[1fr_auto] items-start">
+    <input id="q" class="input w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)]" placeholder="고객명 / 연락처 / 접수번호 / 진행방식 / 고객메모 검색"/>
+    <div class="seg inline-flex">
+      <button id="f-progress" aria-pressed="true">진행중</button>
+      <button id="f-done" aria-pressed="false">처리완료</button>
+    </div>
+  </section>
+
+  <section class="grid grid-cols-3 gap-3">
+    <div class="card p-3"><div class="text-xs text-slate-500">오늘 접수</div><div id="mToday" class="text-xl font-semibold">-</div></div>
+    <div class="card p-3"><div class="text-xs text-slate-500">미출고</div><div id="mPending" class="text-xl font-semibold">-</div></div>
+    <div class="card p-3"><div class="text-xs text-slate-500">완료(출고)</div><div id="mDone" class="text-xl font-semibold">-</div></div>
+  </section>
+
+  <section class="card p-3">
+  <div id="sec-new" class="sec sec-new">
+    <div class="group-title">접수완료</div>
+    <div id="list-new" class="card-grid"></div>
+  </div>
+
+  <div id="sec-partial" class="sec sec-partial" style="margin-top:.5rem">
+    <div class="group-title">입고 또는 입금 완료</div>
+    <div id="list-partial" class="card-grid"></div>
+  </div>
+
+  <div id="sec-ready" class="sec sec-ready" style="margin-top:.5rem">
+    <div class="group-title">입고 & 입금 모두완료</div>
+    <div id="list-ready" class="card-grid"></div>
+  </div>
+
+  <div id="wrap-done" class="hidden" style="margin-top:.5rem">
+    <div class="group-title">처리완료</div>
+    <div id="list-done" class="card-grid"></div>
+  </div>
+
+  <div id="tableEmpty" class="p-8 text-center text-slate-500 hidden">
+    <div class="mx-auto loader mb-3"></div>
+    <div>데이터를 불러오는 중…</div>
+  </div>
+</section>
+</main>
+
+<!-- 송장 모달 -->
+<dialog id="invModal" class="p-0 rounded-xl backdrop:bg-black/30">
+  <form method="dialog" class="card w-[92vw] max-w-md overflow-hidden">
+    <div class="px-4 py-3 border-b border-[var(--line)] font-semibold">송장 등록 / 수정</div>
+    <div class="p-4 space-y-3">
+      <div><label class="block text-sm text-slate-500">접수번호</label><input id="mOrder" class="input w-full px-3 py-2 rounded-lg bg-[#f8fafc]" readonly/></div>
+      <div><label class="block text-sm text-slate-500">송장번호</label><input id="mInv" class="input w-full px-3 py-2 rounded-lg" placeholder="예) 612345678901"/></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-sm text-slate-500">택배사</label><input id="mCourier" class="input w-full px-3 py-2 rounded-lg" placeholder="롯데택배"/></div>
+        <div><label class="block text-sm text-slate-500">출고일</label><input id="mShip" type="date" class="input w-full px-3 py-2 rounded-lg"/></div>
+      </div>
+    </div>
+    <div class="px-3 py-3 flex justify-end gap-2 border-t border-[var(--line)] bg-[var(--bg)]">
+      <button class="px-3 py-2 rounded-lg border border-[var(--line)]" value="cancel">취소</button>
+      <button id="mSave" class="px-3 py-2 rounded-lg bg-[var(--accent)] text-white" value="default">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 메모 모달 -->
+<dialog id="memoModal" class="p-0 rounded-xl backdrop:bg-black/30">
+  <form method="dialog" class="card w-[92vw] max-w-xl overflow-hidden">
+    <div class="px-4 py-3 border-b border-[var(--line)] font-semibold">고객 메모</div>
+    <div class="p-4 space-y-2">
+      <div class="text-sm text-slate-500" id="memoMeta">—</div>
+      <div class="whitespace-pre-wrap leading-relaxed" id="memoText">내용</div>
+    </div>
+    <div class="px-3 py-3 flex justify-end gap-2 border-t border-[var(--line)] bg-[var(--bg)]">
+      <button class="px-3 py-2 rounded-lg border border-[var(--line)]" value="cancel">닫기</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="infoModal" class="p-0 rounded-xl backdrop:bg-black/30">
+  <form method="dialog" class="card w-[92vw] max-w-md overflow-hidden">
+    <div class="px-4 py-3 border-b border-[var(--line)] font-semibold">접수 정보</div>
+    <div class="p-4 space-y-1 text-sm">
+      <div><span class="text-slate-500">이름</span> <span id="iName"></span></div>
+      <div><span class="text-slate-500">연락처</span> <span id="iPhone"></span></div>
+      <div><span class="text-slate-500">주소</span> <div id="iAddr" class="whitespace-pre-wrap"></div></div>
+      <div id="iVisitWrap" class="hidden">
+        <div><span class="text-slate-500">수거요청일</span> <span id="iPickup"></span></div>
+        <div><span class="text-slate-500">전달방법</span> <span id="iDeliver"></span></div>
+      </div>
+    </div>
+    <div class="px-3 py-3 flex justify-end gap-2 border-t border-[var(--line)] bg-[var(--bg)]">
+      <button class="px-3 py-2 rounded-lg border border-[var(--line)]" value="cancel">닫기</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const CONFIG = {
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzNGgnswYiwqjMH2HK1ihGRD0u5gBmrqu0L7KzD_WEECX72Uo09tuZjJsxOGRSF0UBEkg/exec',
+  ADMIN_TOKEN: 'a9f1c3d5e7b9023481ac56fe23b4d7897c6d5e4f3a2b1908fedcba6543210ffe',
+  TIMEOUT_MS: 12000
+};
+const $=(q,el=document)=>el.querySelector(q);
+const maskPhone=v=>v?String(v).replace(/[^0-9]/g,'').replace(/(01[0-9])([0-9]{3,4})([0-9]{4})/,'$1-$2-$3'):'';
+function fmtOrderDateLabel(asId){ const m=/AS-(\d{4})(\d{2})(\d{2})/.exec(asId||''); if(!m) return asId||''; const yy=(Number(m[1])%100).toString().padStart(2,'0'); return `${yy}년 ${m[2]}월 ${m[3]}일`; }
+function withTimeout(p,ms){return new Promise((res,rej)=>{const t=setTimeout(()=>rej(new Error('TIMEOUT')),ms);p.then(v=>{clearTimeout(t);res(v)}).catch(e=>{clearTimeout(t);rej(e)})})}
+
+async function gasGet(params){
+  const url = CONFIG.SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  const r = await withTimeout(fetch(url,{method:'GET'}), CONFIG.TIMEOUT_MS);
+  const j = await r.json(); if(j.success===false) throw new Error(j.error||'API_ERROR'); return j;
+}
+async function gasUpdate(as_id, field, value){
+  const url = CONFIG.SCRIPT_URL + '?action=update&token=' + encodeURIComponent(CONFIG.ADMIN_TOKEN);
+  const body = new URLSearchParams({ as_id, field, value });
+  const r = await withTimeout(fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=utf-8'},body}), CONFIG.TIMEOUT_MS);
+  const j = await r.json(); if(!j.success) throw new Error(j.error||'UPDATE_FAILED'); return j;
+}
+async function gasUnship(as_id){
+  const url = CONFIG.SCRIPT_URL;
+  const body = new URLSearchParams({ action:'unship', token:CONFIG.ADMIN_TOKEN, as_id });
+  const r = await withTimeout(fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=utf-8'},body}), CONFIG.TIMEOUT_MS);
+  const j = await r.json(); return j;
+}
+async function gasDelete(as_id){
+  const url = CONFIG.SCRIPT_URL + '?action=delete&token=' + encodeURIComponent(CONFIG.ADMIN_TOKEN);
+  const body = new URLSearchParams({ as_id });
+  const r = await withTimeout(fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=utf-8'},body}), CONFIG.TIMEOUT_MS);
+  const j = await r.json(); if(!j.success) throw new Error(j.error||'DELETE_FAILED'); return j;
+}
+
+// ── 시작점 ──
+async function gasBook(as_id){
+  const url  = CONFIG.SCRIPT_URL + '?action=book&token=' + encodeURIComponent(CONFIG.ADMIN_TOKEN);
+  const body = new URLSearchParams({ as_id });
+  const r = await withTimeout(fetch(url,{ method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded;charset=utf-8'}, body }), CONFIG.TIMEOUT_MS);
+  const j = await r.json();
+  if(!j.success) throw new Error(j.error||'BOOK_FAILED');
+  return j; // {success:true, invNo:'12자리'}
+}
+// ── 끝점 ──
+
+
+
+let ALL=[]; let VIEW='progress'; let currentId=null; let optimisticInvoiceCell=null;
+function invPretty(inv){ const s=String(inv||'').replace(/\D/g,'').slice(0,12); return s ? s.replace(/(\d{4})(\d{4})(\d{4})/,'$1-$2-$3') : ''; }
+function fmtMethod(m){const s=String(m||''); if(s.includes('방문수거'))return '[방문수거]'; if(s.includes('직접발송'))return '[직접발송]'; return s||'-';}
+const mapRow=r=>({
+  id:String(r['접수번호']||''), name:r['고객명']||'', contact:r['연락처']||'',
+  method:r['진행방식']||'', memo:r['고객메모']||'',
+  mamoru:r['마모루']||'', other:r['타사']||'',
+  cost:r['비용']||'', inv:r['송장번호']||'', courier:r['택배사']||'',
+  ship:r['출고일']||'', inY:r['입고']||'', payY:r['입금']||'', outY:r['출고']||'',
+  created:r['생성일시']||'',
+  zip:r['우편번호']||'', addr1:r['주소']||'', addr2:r['상세주소']||'',
+  pickup:r['수거요청일']||'', deliver:r['전달방법']||''
+});
+const isDone=r=>r.inY==='Y'&&r.payY==='Y'&&r.outY==='Y';
+
+function cardHTML(r){
+  const dateLbl = fmtOrderDateLabel(r.id||'');
+  const memoShort = (String(r.memo||'-').length>24)?(String(r.memo).slice(0,24)+'…'):(r.memo||'-');
+  const inv = invPretty(r.inv);
+  const inDone   = r.inY==='Y';
+  const paidDone = r.payY==='Y';
+  const outDone  = r.outY==='Y';
+
+  return `
+<div class="ascard" data-id="${r.id}">
+    <div class="hd">
+      <div class="name">${r.name}</div>
+      <div class="price">${(r.cost||'').toString()}</div>
+    </div>
+    <div class="body grid">
+      <div>
+        <div class="row">
+          <span class="pill">${dateLbl}</span>
+          <span class="pill">${fmtMethod(r.method)}</span>
+          <span class="pill">M-${r.mamoru||0}</span>
+          <span class="pill">O-${r.other||0}</span>
+        </div>
+        <div class="row">MEMO · <span class="truncate-1">${memoShort}</span></div>
+
+        <!-- [ADMIN_CARD_BTN_START] -->
+        <div class="row" style="gap:.4rem;margin-top:.35rem">
+          <button class="btn" data-act="info">접수 정보</button>
+          ${ r.inv
+              ? '<button class="btn" data-act="copy">운송장 복사</button>'
+              : '<button class="btn" data-act="book">송장생성</button>' }
+          <button class="btn btn-muted" data-act="invoice">수동등록</button>
+        </div>
+        <!-- [ADMIN_CARD_BTN_END] -->
+
+        ${ r.inv ? ('<div class="row" style="margin-top:.35rem">송장 '+inv+'</div>') : '' }
+        <div class="row" style="margin-top:.6rem"><button class="btn btn-muted" data-act="delete">접수취소</button></div>
+      </div>
+      <div class="actions">
+        <button class="act ${inDone?'done':''}"   data-act="in">입고</button>
+        <button class="act ${paidDone?'done':''}" data-act="paid">입금</button>
+        <button class="act ${outDone?'done':''}"  data-act="out">출고</button>
+      </div>
+      </div>
+</div>`;
+}
+
+
+
+function renderTo(id, arr){ document.getElementById(id).innerHTML = arr.map(cardHTML).join(''); }
+
+async function load(){
+  document.getElementById('tableEmpty').classList.remove('hidden');
+  try{
+    const status = (VIEW==='progress')?'progress':'done';
+    const j = await gasGet({ action:'list', status });
+    ALL = (j.rows||[]).map(mapRow);
+    document.getElementById('lastSynced').textContent = new Date().toLocaleString('ko-KR');
+    apply();
+  }catch(e){
+    alert('로드 실패: '+e.message); console.error(e);
+  }finally{
+    document.getElementById('tableEmpty').classList.add('hidden');
+  }
+}
+
+function apply(){
+  const q=(document.getElementById('q').value||'').trim().toLowerCase();
+  const rows = ALL.filter(r=>{
+    const text=[r.id,r.name,r.contact,r.method,r.memo].join(' ').toLowerCase();
+    return (!q || text.includes(q));
+  });
+
+  document.getElementById('wrap-done').classList.toggle('hidden', VIEW!=='done');
+  document.getElementById('sec-new').classList.toggle('hidden', VIEW==='done');
+  document.getElementById('sec-partial').classList.toggle('hidden', VIEW==='done');
+  document.getElementById('sec-ready').classList.toggle('hidden', VIEW==='done');
+
+  if (VIEW==='progress'){
+    const arrNew     = rows.filter(r=> r.outY!=='Y' && !(r.inY==='Y' || r.payY==='Y'));
+    const arrPartial = rows.filter(r=> r.outY!=='Y' && ((r.inY==='Y') ^ (r.payY==='Y')));
+    const arrReady   = rows.filter(r=> r.outY!=='Y' && (r.inY==='Y' && r.payY==='Y'));
+    renderTo('list-new',arrNew); renderTo('list-partial',arrPartial); renderTo('list-ready',arrReady);
+    document.getElementById('list-done').innerHTML='';
+  }else{
+    const arrDone = rows.filter(r=> r.outY==='Y');
+    renderTo('list-done', arrDone);
+    document.getElementById('list-new').innerHTML='';
+    document.getElementById('list-partial').innerHTML='';
+    document.getElementById('list-ready').innerHTML='';
+  }
+
+  const todayISO=new Date().toISOString().slice(0,10);
+  document.getElementById('mToday').textContent=ALL.filter(r=>String(r.created||'').slice(0,10)===todayISO).length;
+  document.getElementById('mPending').textContent=ALL.filter(r=>r.outY!=='Y').length;
+  document.getElementById('mDone').textContent=ALL.filter(r=>r.outY==='Y').length;
+}
+
+async function doUnship(asId){
+  const url = CONFIG.SCRIPT_URL;
+  const body = new URLSearchParams({ action:'unship', token:CONFIG.ADMIN_TOKEN, as_id:asId });
+  const r = await withTimeout(fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=utf-8'},body}), CONFIG.TIMEOUT_MS);
+  const j = await r.json();
+  return j;
+}
+async function doDelete(asId){
+  if (!confirm('접수와 운송장을 삭제합니다. 계속할까요?')) return;
+  const un = await doUnship(asId);
+  if (!un.success){ alert('ALPS 취소 실패: ' + (un.error||'UNKNOWN') + '\n송장을 취소한 뒤 다시 시도하세요.'); return; }
+  await gasDelete(asId); await load();
+}
+
+function openInvoice(r,tr){
+  document.getElementById('mOrder').value=r.id; document.getElementById('mInv').value=r.inv||''; document.getElementById('mCourier').value=r.courier||'롯데택배';
+  document.getElementById('mShip').value=(r.ship?String(r.ship).slice(0,10):new Date().toISOString().slice(0,10));
+  currentId=r.id; optimisticInvoiceCell = tr?.querySelector('[data-col="invoice"]')||null;
+  document.getElementById('invModal').showModal();
+}
+document.getElementById('mSave').addEventListener('click', async e=>{
+  e.preventDefault();
+  const id=currentId; const inv=document.getElementById('mInv').value.trim(); const carr=document.getElementById('mCourier').value.trim()||'롯데택배';
+  document.getElementById('invModal').close();
+  try{ await gasUpdate(id,'송장번호',inv); await gasUpdate(id,'택배사',carr); }
+  catch(err){ alert('송장 저장 실패: '+err.message); }
+  finally{ await load(); }
+});
+
+function openMemo(e){
+  const cell=e.currentTarget; const id=cell.dataset.id; const name=cell.dataset.name; const memo=decodeURIComponent(cell.dataset.memo||'-');
+  document.getElementById('memoMeta').textContent=id+' · '+name; document.getElementById('memoText').textContent=memo; document.getElementById('memoModal').showModal();
+}
+
+document.getElementById('f-progress').addEventListener('click', ()=>{ VIEW='progress'; document.getElementById('f-progress').setAttribute('aria-pressed','true'); document.getElementById('f-done').setAttribute('aria-pressed','false'); document.getElementById('tableEmpty').classList.remove('hidden'); load(); });
+document.querySelector('section.card').addEventListener('click', async (e)=>{
+  const host = e.target.closest('.ascard'); if(!host) return;
+  const id = host.dataset.id; const row = ALL.find(x=>x.id===id);
+  // [ADMIN_CARD_HANDLER_BOOK_START]
+if (e.target.matches('[data-act="book"]')){
+  try{
+    const res = await gasBook(id);                 // id 재선언 금지
+    await gasUpdate(id,'송장번호', res.invNo || '');
+    await gasUpdate(id,'택배사','롯데택배');
+    alert('생성됨: ' + (res.invNo||''));
+    await load();
+  }catch(err){
+    alert('송장 생성 실패: ' + err.message);
+  }
+  return;
+}
+// [ADMIN_CARD_HANDLER_BOOK_END]
+
+  
+
+  if (e.target.matches('[data-act="info"]')){
+    document.getElementById('iName').textContent  = row?.name || '';
+    document.getElementById('iPhone').textContent = row?.contact || '';
+    document.getElementById('iAddr').textContent  = [row?.zip?`(${row.zip})`:'', row?.addr1||'', row?.addr2||''].filter(Boolean).join('\n');
+    const isVisit = String(row?.method||'').includes('방문수거');
+    const wrap = document.getElementById('iVisitWrap');
+    if (isVisit){
+      document.getElementById('iPickup').textContent  = row?.pickup || '-';
+      document.getElementById('iDeliver').textContent = row?.deliver || '-';
+      wrap.classList.remove('hidden');
+    } else { wrap.classList.add('hidden'); }
+    document.getElementById('infoModal').showModal(); return;
+  }
+
+  if (e.target.matches('[data-act="copy"]')){
+    const text = '롯데 ' + invPretty(row?.inv||'');
+    try{ await navigator.clipboard.writeText(text); alert('복사됨: '+text); }catch(_){ alert('복사 실패'); }
+    return;
+  }
+
+  if (e.target.matches('[data-act="invoice"]')){ openInvoice(row, host); return; }
+
+  if (e.target.matches('[data-act="delete"]')){ await doDelete(id); return; }
+
+  if (e.target.matches('[data-act="in"]')){
+    if (row?.inY==='Y') return;
+    e.target.classList.add('done');
+    try{ await gasUpdate(id,'입고완료','Y'); }catch(err){ e.target.classList.remove('done'); alert('입고 처리 실패: '+err.message); }
+    await load(); return;
+  }
+  if (e.target.matches('[data-act="paid"]')){
+    if (row?.payY==='Y') return;
+    e.target.classList.add('done');
+    try{ await gasUpdate(id,'입금완료','Y'); }catch(err){ e.target.classList.remove('done'); alert('입금 처리 실패: '+err.message); }
+    await load(); return;
+  }
+  if (e.target.matches('[data-act="out"]')){
+    if (row?.outY==='Y') return;
+    if (!row?.inv){
+      const inv=prompt('송장번호 입력',''); if(inv===null||inv.trim()==='') return;
+      const carr=prompt('택배사 입력','롯데택배')||'롯데택배';
+      try{ await gasUpdate(id,'송장번호',inv.trim()); await gasUpdate(id,'택배사',carr); row.inv = inv.trim(); }catch(err){ alert('송장 저장 실패: '+err.message); return; }
+    }
+    e.target.classList.add('done');
+    try{ await gasUpdate(id,'출고완료','Y'); }catch(err){ e.target.classList.remove('done'); alert('출고 처리 실패: '+err.message); }
+    await load(); return;
+  }
+});
+document.getElementById('f-done').addEventListener('click', ()=>{ VIEW='done'; document.getElementById('f-progress').setAttribute('aria-pressed','false'); document.getElementById('f-done').setAttribute('aria-pressed','true'); document.getElementById('tableEmpty').classList.remove('hidden'); load(); });
+document.getElementById('q').addEventListener('input', ()=>{ clearTimeout(window.__t); window.__t=setTimeout(apply,200); });
+document.getElementById('refreshBtn').addEventListener('click', load);
+
+load();
+</script>
+</body>
+</html>
