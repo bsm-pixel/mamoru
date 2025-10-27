@@ -185,7 +185,7 @@ table th:nth-child(3), table td:nth-child(3){ width: 18ch; }
 
 <script>
 const CONFIG = {
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzNGgnswYiwqjMH2HK1ihGRD0u5gBmrqu0L7KzD_WEECX72Uo09tuZjJsxOGRSF0UBEkg/exec',
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzLx3Qlu6Bz5pLXnnJiboWPKH7aerxqTGWq_hshq62l3B8FfCnMh_E_EMqgZSLXMNQWLw/exec',
   ADMIN_TOKEN: 'a9f1c3d5e7b9023481ac56fe23b4d7897c6d5e4f3a2b1908fedcba6543210ffe',
   TIMEOUT_MS: 12000
 };
@@ -218,16 +218,24 @@ async function gasDelete(as_id){
   const j = await r.json(); if(!j.success) throw new Error(j.error||'DELETE_FAILED'); return j;
 }
 
-// ── 시작점 ──
+
 async function gasBook(as_id){
-  const url  = CONFIG.SCRIPT_URL + '?action=book&token=' + encodeURIComponent(CONFIG.ADMIN_TOKEN);
-  const body = new URLSearchParams({ as_id });
-  const r = await withTimeout(fetch(url,{ method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded;charset=utf-8'}, body }), CONFIG.TIMEOUT_MS);
+  const url  = CONFIG.SCRIPT_URL;
+  const payload = {
+    event: 'AS_BOOK',
+    as_id: as_id,
+    token: CONFIG.ADMIN_TOKEN
+  };
+  const r = await withTimeout(fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, // <-- 'text/plain'으로 수정!
+    body: JSON.stringify(payload) // JSON 문자열을 텍스트로 보냅니다.
+  }), CONFIG.TIMEOUT_MS);
   const j = await r.json();
   if(!j.success) throw new Error(j.error||'BOOK_FAILED');
   return j; // {success:true, invNo:'12자리'}
 }
-// ── 끝점 ──
+
 
 
 
@@ -351,10 +359,12 @@ async function doUnship(asId){
   return j;
 }
 async function doDelete(asId){
-  if (!confirm('접수와 운송장을 삭제합니다. 계속할까요?')) return;
-  const un = await doUnship(asId);
-  if (!un.success){ alert('ALPS 취소 실패: ' + (un.error||'UNKNOWN') + '\n송장을 취소한 뒤 다시 시도하세요.'); return; }
-  await gasDelete(asId); await load();
+  // '삭제'가 아닌 '취소'를 하도록 수정합니다.
+  if (!confirm('롯데택배에 등록된 운송장을 \'취소\'하고, 시트에서 송장 정보를 지웁니다. 계속할까요?')) return;
+  const un = await doUnship(asId); // 'unship' (취소) 기능만 호출합니다.
+  if (!un.success){ alert('ALPS 취소 실패: ' + (un.error||'UNKNOWN')); return; }
+  // await gasDelete(asId); // <-- 이 줄을 삭제하여 행이 삭제되지 않게 합니다.
+  await load(); // 목록 새로고침
 }
 
 function openInvoice(r,tr){
