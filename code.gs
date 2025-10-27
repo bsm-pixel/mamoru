@@ -199,45 +199,49 @@ function lotteBookSingle_(order){
   return { ok:true, invNo: payload.snd_list[0].invNo, rtnCd: sent.code||'', rtnMsg: sent.msg||'' };
 }
 
-function lotteCancel_(invNo, ordNo){ // ★★★ 1. invNo, ordNo만 받도록 원복 ★★★
+function lotteCancel_(invNo, ordNo){ // ★★★ 1. 다시 invNo, ordNo만 받도록 변경 ★★★
   invNo = String(invNo||'').replace(/\D/g,'');
-  ordNo = String(ordNo || ''); // ordNo도 문자열로 변환
-  if (!invNo || !ordNo) return {success:false, error:'MISSING_INVNO_OR_ORDNO'}; // ordNo 누락 체크 추가
+  ordNo = String(ordNo || '');
+  if (!invNo || !ordNo) return {success:false, error:'MISSING_INVNO_OR_ORDNO'};
   const P = PropertiesService.getScriptProperties();
-  const url = (P.getProperty('LOTTE_CANCEL_API_URL_PROD')||'').trim(); // ★★★ cancelUrl 사용 ★★★
+  const url = (P.getProperty('LOTTE_CANCEL_API_URL_PROD')||'').trim();
   const key = (P.getProperty('LOTTE_CLIENT_KEY_PROD')||'').trim();
   const jobCustCd = (P.getProperty('LOTTE_JOBCUSTCD_PROD')||'').trim();
   if (!url || !key || !jobCustCd) return {success:false, error:'CANCEL_CONFIG_MISSING'};
 
-  // ★★★ 2. payload에 jobCustCd, invNo, ordNo 3개만 포함 (가이드 준수) ★★★
-  const payload = { snd_list:[{jobCustCd, invNo, ordNo}] };
+  // ★★★ 2. payload 구조 변경: snd_list 없이 최상위 레벨에 값 포함 ★★★
+  const payload = { jobCustCd, invNo, ordNo };
 
   const r = httpPostJson_(url, { Authorization:'IgtAK '+key, Accept:'application/json' }, payload, 3);
-  const rawJson = r.json || {}; 
+  const rawJson = r.json || {};
   Logger.log('[CANCEL] Raw Response: ' + JSON.stringify(rawJson));
 
-  // (이하 응답 처리 로직은 이전과 동일)
-  const first = (rawJson.rtn_list || [])[0] || {};
-  const rtnCd = String(first.rtnCd || '').toUpperCase();
-  const rtnMsg = first.rtnMsg || '';
+  // --- 롯데 응답 해석 로직 강화 (이전과 동일) ---
+  let isSuccess = false;
+  let finalCode = '';
+  let finalMsg = '';
+  if (r.ok) {
+    const rtnList = rawJson.rtn_list || []; // 취소 성공 시에도 rtn_list가 올 수 있으므로 유지
+    const first = rtnList[0] || {};
+    finalCode = String(first.rtnCd || rawJson.code || '').toUpperCase();
+    finalMsg = first.rtnMsg || rawJson.message || '';
+    if (finalCode === 'S' || (!finalCode && !finalMsg)) { isSuccess = true; }
+  } else {
+    finalMsg = `HTTP 오류 ${r.code}`;
+    if (rawJson.message) finalMsg += `: ${rawJson.message}`;
+    finalCode = String(rawJson.code || '');
+  }
+  // --- 응답 해석 끝 ---
 
-  if (r.ok && rtnCd === 'S') {
-    Logger.log('[CANCEL] Parsed Result: OK (rtn_list S)');
+  if (isSuccess) {
+    Logger.log('[CANCEL] Parsed Result: OK');
     return {success:true};
+  } else {
+    const errMsg = `롯데 응답: [코드=${finalCode || '없음'}, 메시지=${finalMsg || '없음'}] (HTTP ${r.code})`;
+    Logger.log('[CANCEL] Parsed Result: FAILED (' + errMsg + ')');
+    return {success:false, error: errMsg };
   }
-
-  let errMsg = '';
-  if (rtnMsg) { 
-    errMsg = `롯데 응답: [코드=${rtnCd}, 메시지=${rtnMsg}]`;
-  } else if (rawJson.message) { 
-    errMsg = `롯데 응답: [코드=${rawJson.code || '없음'}, 메시지=${rawJson.message}]`;
-  } else { 
-    errMsg = `롯데 응답: [코드=${rtnCd || '없음'}, 메시지=${rtnMsg || '없음'}] (HTTP ${r.code})`;
-  }
-  
-  Logger.log('[CANCEL] Parsed Result: FAILED (' + errMsg + ')');
-  return {success:false, error: errMsg };
-}
+} // <--- 여기까지 24줄
 
 /* =========================
  * 접수번호 시퀀스
