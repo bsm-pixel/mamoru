@@ -120,14 +120,14 @@ function lotteBuildSnd_(cfg, snd){
       invNo:       String(snd.invNo || ''),
 
       snperNm:     cfg.sender.name,
-      snperTel:    cfg.sender.tel,
+      snperTel:    (cfg.sender.tel || '').replace(/\D/g,''),
       snperCpno:   '',
       snperZipcd:  cfg.sender.zip,
       snperAdr:    cfg.sender.addr,
 
       acperNm:     snd.rcvName,
-      acperTel:    snd.rcvTel || '',
-      acperCpno:   snd.rcvCp  || snd.rcvTel || '',
+      acperTel:    (snd.rcvTel || '').replace(/\D/g,''),
+      acperCpno:   (snd.rcvCp  || snd.rcvTel || '').replace(/\D/g,''),
       acperZipcd:  snd.rcvZip,
       acperAdr:    snd.rcvAdr,
 
@@ -143,6 +143,10 @@ function lotteBuildSnd_(cfg, snd){
 function lotteSend_(payload, cfg){
   const url = String(cfg.url||'').trim();
   const key = String(cfg.clientKey||'').trim();
+
+  // !!!!!! 점검을 위해 이 1줄을 추가했습니다 !!!!!!
+  Logger.log('!!! DEBUG: 롯데 API 호출 URL = ' + url); 
+
   if (!url || !key) throw new Error('LOTTE_CONFIG_MISSING');
   const r = httpPostJson_(url, { Authorization:'IgtAK '+key, Accept:'application/json' }, payload, 3);
   if (!r.ok) throw new Error('LOTTE_HTTP_'+r.code+': '+String(JSON.stringify(r.json)).slice(0,200));
@@ -195,19 +199,42 @@ function lotteBookSingle_(order){
   return { ok:true, invNo: payload.snd_list[0].invNo, rtnCd: sent.code||'', rtnMsg: sent.msg||'' };
 }
 
-function lotteCancel_(invNo){
-  invNo = String(invNo||'').replace(/\D/g,'');
-  if (!invNo) return {success:false, error:'MISSING_INVNO'};
-  const P = PropertiesService.getScriptProperties();
-  const url = (P.getProperty('LOTTE_CANCEL_API_URL_PROD')||'').trim();
-  const key = (P.getProperty('LOTTE_CLIENT_KEY_PROD')||'').trim();
-  const jobCustCd = (P.getProperty('LOTTE_JOBCUSTCD_PROD')||'').trim();
-  if (!url || !key || !jobCustCd) return {success:false, error:'CANCEL_CONFIG_MISSING'};
-  const r = httpPostJson_(url, { Authorization:'IgtAK '+key, Accept:'application/json' }, { snd_list:[{jobCustCd, invNo}] }, 3);
-  const first = (((r||{}).json||{}).rtn_list||[])[0]||{};
-  const ok = !!(r && r.ok && String(first.rtnCd||'').toUpperCase()==='S');
-  Logger.log('[CANCEL] ok=%s msg=%s', ok, first.rtnMsg||'');
-  return ok ? {success:true} : {success:false, error:first.rtnMsg||('HTTP_'+(r&&r.code))};
+function lotteCancel_(orderData){ // ★★★ 1. invNo, ordNo 대신 'orderData' 객체를 받도록 변경 ★★★
+  const cfg = lotteConfig_(); // cfg (보낸사람 정보 등) 로드
+  const url = (cfg.cancelUrl || '').trim(); // 스크립트 속성 대신 cfg에서 취소 URL 가져오기
+  const key = (cfg.clientKey || '').trim();
+  
+  if (!url || !key) return {success:false, error:'CANCEL_CONFIG_MISSING'};
+  if (!orderData.invNo || !orderData.ordNo) return {success:false, error:'MISSING_INVNO_OR_ORDNO'};
+
+  // ★★★ 2. 'lotteBuildSnd_' 헬퍼를 사용해 '생성' 때와 '동일한' 페이로드 생성 ★★★
+  const payload = lotteBuildSnd_(cfg, orderData); 
+  
+  const r = httpPostJson_(url, { Authorization:'IgtAK '+key, Accept:'application/json' }, payload, 3);
+  const rawJson = r.json || {}; 
+  Logger.log('[CANCEL] Raw Response: ' + JSON.stringify(rawJson));
+
+  // (이하 응답 처리 로직은 동일)
+  const first = (rawJson.rtn_list || [])[0] || {};
+  const rtnCd = String(first.rtnCd || '').toUpperCase();
+  const rtnMsg = first.rtnMsg || '';
+
+  if (r.ok && rtnCd === 'S') {
+    Logger.log('[CANCEL] Parsed Result: OK (rtn_list S)');
+    return {success:true};
+  }
+
+  let errMsg = '';
+  if (rtnMsg) {
+    errMsg = `롯데 응답: [코드=${rtnCd}, 메시지=${rtnMsg}]`;
+  } else if (rawJson.message) {
+    errMsg = `롯데 응답: [코드=${rawJson.code || '없음'}, 메시지=${rawJson.message}]`;
+  } else {
+    errMsg = `롯데 응답: [코드=${rtnCd || '없음'}, 메시지=${rtnMsg || '없음'}] (HTTP ${r.code})`;
+  }
+  
+  Logger.log('[CANCEL] Parsed Result: FAILED (' + errMsg + ')');
+  return {success:false, error: errMsg };
 }
 
 /* =========================
@@ -269,15 +296,12 @@ function doPost(e){
     if (q.action === 'delete'){ if (ADMIN_TOKEN && q.token !== ADMIN_TOKEN) return _json({success:false,error:'UNAUTHORIZED'}); return _json(deleteAS_(q.as_id)); }
     if (q.action === 'unship'){ if (ADMIN_TOKEN && q.token !== ADMIN_TOKEN) return _json({success:false,error:'UNAUTHORIZED'}); return _json(unshipAS_(q.as_id)); }
     // [ADD_BOOK_ENDPOINT_POST_START]
-if (q.action === 'book'){
-  if (ADMIN_TOKEN && q.token !== ADMIN_TOKEN) return _json({success:false, error:'UNAUTHORIZED'});
-  return _json(bookAS_(q.as_id));
-}
+
+// [ADD_BOOK_ENDPOINT_POST_START]
 if (body.event === 'AS_BOOK'){
   if (ADMIN_TOKEN && body.token !== ADMIN_TOKEN) return _json({success:false, error:'UNAUTHORIZED'});
   return _json(bookAS_(body.as_id));
 }
-
 // [ADD_BOOK_ENDPOINT_POST_END]
 
 
@@ -578,6 +602,8 @@ function setupHeaders(){
 
 function _json(obj){ return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON); }
 
+
+
 function getHolidayList_(yearsParam){
   const sh = SpreadsheetApp.openById(SHEET_ID).getSheetByName('HOLIDAYS'); if(!sh) return [];
   const last = sh.getLastRow(); if(last<2) return [];
@@ -665,7 +691,19 @@ function unshipAS_(asId){
 
   const inv = String(row[COLS.송장번호-1]||'').replace(/\D/g,'');
   if (inv){
-    const c = lotteCancel_(inv);
+    // ★★★ 1. 취소에 필요한 '모든' 데이터를 row에서 가져와 객체 생성 ★★★
+    const orderDataForCancel = {
+      ordNo:   asId,
+      invNo:   inv,
+      rcvName: String(row[COLS.고객명-1]||''),
+      rcvTel:  String(row[COLS.연락처-1]||''), // .replace()는 lotteBuildSnd_가 해줌
+      rcvZip:  String(row[COLS.우편번호-1]||''),
+      rcvAdr:  String((row[COLS.주소-1]||'')+' '+(row[COLS.상세주소-1]||'')).trim(),
+      gdsNm:   'AS 출고' // 생성 시와 동일한 상품명
+    };
+    
+    // ★★★ 2. 'orderData' 객체를 통째로 전달 ★★★
+    const c = lotteCancel_(orderDataForCancel); 
     if (!c.success) return {success:false, error:'ALPS_CANCEL_FAILED:'+String(c.error||'')};
   }
 
@@ -707,7 +745,7 @@ function bookAS_(asId){
     boxTypCd:'A',
     gdsNm:   'AS 출고',
     dlvMsg:  String(row[COLS.메모-1]||''),
-    pickReqYmd: String(row[COLS.수거요청일-1]||'').replace(/\D/g,'') // 없으면 공란
+    pickReqYmd: '' // ★★★ 송장 생성(출고)시에는 수거요청일을 보내지 않음 ★★★
   };
 
   const out = lotteBookSingle_(order);              // ALPS 채번
@@ -796,3 +834,6 @@ function uiCancelShip(){
 }
 function adminFinishShipById_(asId){ try{ return updateAS_({ as_id:String(asId||'').trim(), field:'출고완료', value:'Y' }); }catch(e){ Logger.log('[adminFinishShipById_] '+e); return {success:false, error:String(e)}; } }
 function adminCancelShipById_(asId){ try{ return unshipAS_(String(asId||'').trim()); }catch(e){ Logger.log('[adminCancelShipById_] '+e); return {success:false, error:String(e)}; } }
+
+
+
