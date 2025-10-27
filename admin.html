@@ -183,13 +183,13 @@ table th:nth-child(3), table td:nth-child(3){ width: 18ch; }
   </form>
 </dialog>
 
-<script>
-const CONFIG = {
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzLx3Qlu6Bz5pLXnnJiboWPKH7aerxqTGWq_hshq62l3B8FfCnMh_E_EMqgZSLXMNQWLw/exec',
-  ADMIN_TOKEN: 'a9f1c3d5e7b9023481ac56fe23b4d7897c6d5e4f3a2b1908fedcba6543210ffe',
-  TIMEOUT_MS: 12000
-};
-const $=(q,el=document)=>el.querySelector(q);
+/* 1 */ <script>
+/* 2 */ const CONFIG = {
+/* 3 */   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzLx3Qlu6Bz5pLXnnJiboWPKH7aerxqTGWq_hshq62l3B8FfCnMh_E_EMqgZSLXMNQWLw/exec',
+/* 4 */   ADMIN_TOKEN: 'a9f1c3d5e7b9023481ac56fe23b4d7897c6d5e4f3a2b1908fedcba6543210ffe',
+/* 5 */   TIMEOUT_MS: 30000 // <-- 30초로 늘림!
+/* 6 */ };
+/* 7 */ const $=(q,el=document)=>el.querySelector(q);
 const maskPhone=v=>v?String(v).replace(/[^0-9]/g,'').replace(/(01[0-9])([0-9]{3,4})([0-9]{4})/,'$1-$2-$3'):'';
 function fmtOrderDateLabel(asId){ const m=/AS-(\d{4})(\d{2})(\d{2})/.exec(asId||''); if(!m) return asId||''; const yy=(Number(m[1])%100).toString().padStart(2,'0'); return `${yy}년 ${m[2]}월 ${m[3]}일`; }
 function withTimeout(p,ms){return new Promise((res,rej)=>{const t=setTimeout(()=>rej(new Error('TIMEOUT')),ms);p.then(v=>{clearTimeout(t);res(v)}).catch(e=>{clearTimeout(t);rej(e)})})}
