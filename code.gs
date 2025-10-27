@@ -199,22 +199,24 @@ function lotteBookSingle_(order){
   return { ok:true, invNo: payload.snd_list[0].invNo, rtnCd: sent.code||'', rtnMsg: sent.msg||'' };
 }
 
-function lotteCancel_(orderData){ // ★★★ 1. invNo, ordNo 대신 'orderData' 객체를 받도록 변경 ★★★
-  const cfg = lotteConfig_(); // cfg (보낸사람 정보 등) 로드
-  const url = (cfg.cancelUrl || '').trim(); // 스크립트 속성 대신 cfg에서 취소 URL 가져오기
-  const key = (cfg.clientKey || '').trim();
-  
-  if (!url || !key) return {success:false, error:'CANCEL_CONFIG_MISSING'};
-  if (!orderData.invNo || !orderData.ordNo) return {success:false, error:'MISSING_INVNO_OR_ORDNO'};
+function lotteCancel_(invNo, ordNo){ // ★★★ 1. invNo, ordNo만 받도록 원복 ★★★
+  invNo = String(invNo||'').replace(/\D/g,'');
+  ordNo = String(ordNo || ''); // ordNo도 문자열로 변환
+  if (!invNo || !ordNo) return {success:false, error:'MISSING_INVNO_OR_ORDNO'}; // ordNo 누락 체크 추가
+  const P = PropertiesService.getScriptProperties();
+  const url = (P.getProperty('LOTTE_CANCEL_API_URL_PROD')||'').trim(); // ★★★ cancelUrl 사용 ★★★
+  const key = (P.getProperty('LOTTE_CLIENT_KEY_PROD')||'').trim();
+  const jobCustCd = (P.getProperty('LOTTE_JOBCUSTCD_PROD')||'').trim();
+  if (!url || !key || !jobCustCd) return {success:false, error:'CANCEL_CONFIG_MISSING'};
 
-  // ★★★ 2. 'lotteBuildSnd_' 헬퍼를 사용해 '생성' 때와 '동일한' 페이로드 생성 ★★★
-  const payload = lotteBuildSnd_(cfg, orderData); 
-  
+  // ★★★ 2. payload에 jobCustCd, invNo, ordNo 3개만 포함 (가이드 준수) ★★★
+  const payload = { snd_list:[{jobCustCd, invNo, ordNo}] };
+
   const r = httpPostJson_(url, { Authorization:'IgtAK '+key, Accept:'application/json' }, payload, 3);
   const rawJson = r.json || {}; 
   Logger.log('[CANCEL] Raw Response: ' + JSON.stringify(rawJson));
 
-  // (이하 응답 처리 로직은 동일)
+  // (이하 응답 처리 로직은 이전과 동일)
   const first = (rawJson.rtn_list || [])[0] || {};
   const rtnCd = String(first.rtnCd || '').toUpperCase();
   const rtnMsg = first.rtnMsg || '';
@@ -225,11 +227,11 @@ function lotteCancel_(orderData){ // ★★★ 1. invNo, ordNo 대신 'orderData
   }
 
   let errMsg = '';
-  if (rtnMsg) {
+  if (rtnMsg) { 
     errMsg = `롯데 응답: [코드=${rtnCd}, 메시지=${rtnMsg}]`;
-  } else if (rawJson.message) {
+  } else if (rawJson.message) { 
     errMsg = `롯데 응답: [코드=${rawJson.code || '없음'}, 메시지=${rawJson.message}]`;
-  } else {
+  } else { 
     errMsg = `롯데 응답: [코드=${rtnCd || '없음'}, 메시지=${rtnMsg || '없음'}] (HTTP ${r.code})`;
   }
   
@@ -689,23 +691,14 @@ function unshipAS_(asId){
   for(let i=0;i<vals.length;i++){ if(String(vals[i][0])===asId){ rowIdx=i+2; row=vals[i]; break; } }
   if(rowIdx<0) return {success:false, error:'NOT_FOUND'};
 
+  /* ... (unshipAS_ 함수 내부) ... */
   const inv = String(row[COLS.송장번호-1]||'').replace(/\D/g,'');
   if (inv){
-    // ★★★ 1. 취소에 필요한 '모든' 데이터를 row에서 가져와 객체 생성 ★★★
-    const orderDataForCancel = {
-      ordNo:   asId,
-      invNo:   inv,
-      rcvName: String(row[COLS.고객명-1]||''),
-      rcvTel:  String(row[COLS.연락처-1]||''), // .replace()는 lotteBuildSnd_가 해줌
-      rcvZip:  String(row[COLS.우편번호-1]||''),
-      rcvAdr:  String((row[COLS.주소-1]||'')+' '+(row[COLS.상세주소-1]||'')).trim(),
-      gdsNm:   'AS 출고' // 생성 시와 동일한 상품명
-    };
-    
-    // ★★★ 2. 'orderData' 객체를 통째로 전달 ★★★
-    const c = lotteCancel_(orderDataForCancel); 
+    const c = lotteCancel_(inv, asId); // ★★★ invNo, asId(ordNo)만 전달하도록 원복 ★★★
     if (!c.success) return {success:false, error:'ALPS_CANCEL_FAILED:'+String(c.error||'')};
   }
+
+  
 
   sh.getRange(rowIdx, COLS.출고완료).setValue('');
   sh.getRange(rowIdx, COLS.출고일).setValue('');
