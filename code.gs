@@ -78,33 +78,34 @@ function lotteConfig_(){
   };
 }
 
-/* =========================
- * HTTP 유틸
- * ========================= */
 function httpPostJson_(url, headers, payload, tries){
   tries = tries || 3;
   let lastErr = null;
-  for (let i=0;i<tries;i++){
+  for (let i = 0; i < tries; i++){
     try{
       const res = UrlFetchApp.fetch(url, {
-        method:'post',
-        contentType:'application/json',
+        method: 'post',
+        contentType: 'application/json; charset=utf-8',
         headers: headers || {},
         payload: JSON.stringify(payload),
-        followRedirects:true,
-        muteHttpExceptions:true
+        followRedirects: true,
+        muteHttpExceptions: true
       });
       const code = res.getResponseCode();
       const text = res.getContentText() || '{}';
-      const json = (function(){ try{ return JSON.parse(text); }catch(_){ return {raw:text}; }})();
-      if (code >= 200 && code < 300) return {ok:true, code, json};
-      if (code === 429 || code >= 500){ Utilities.sleep(600 * (i+1)); continue; }
-      return {ok:false, code, json};
-    }catch(e){ lastErr = e; Utilities.sleep(600 * (i+1)); }
+      const json = (function(){ try{ return JSON.parse(text); }catch(_){ return { raw: text }; }})();
+      if (code >= 200 && code < 300) return { ok: true, code, json };
+      if (code === 429 || code >= 500){ Utilities.sleep(600 * (i + 1)); continue; }
+      return { ok: false, code, json };
+    }catch(e){
+      lastErr = e;
+      Utilities.sleep(600 * (i + 1));
+    }
   }
   if (lastErr) throw lastErr;
   throw new Error('HTTP_POST_FAILED');
 }
+
 
 /* =========================
  * ALPS 페이로드/호출
@@ -199,54 +200,62 @@ function lotteBookSingle_(order){
   return { ok:true, invNo: payload.snd_list[0].invNo, rtnCd: sent.code||'', rtnMsg: sent.msg||'' };
 }
 
-/* 1 */ function lotteCancel_(invNo, ordNo){
-/* 2 */   invNo = String(invNo||'').replace(/\D/g,'');
-/* 3 */   ordNo = String(ordNo || '');
-/* 4 */   if (!invNo || !ordNo) return {success:false, error:'MISSING_INVNO_OR_ORDNO'};
-/* 5 */   const P = PropertiesService.getScriptProperties();
-/* 6 */   const url = (P.getProperty('LOTTE_CANCEL_API_URL_PROD')||'').trim();
-/* 7 */   const key = (P.getProperty('LOTTE_CLIENT_KEY_PROD')||'').trim();
-/* 8 */   const jobCustCd = (P.getProperty('LOTTE_JOBCUSTCD_PROD')||'').trim();
-/* 9 */   if (!url || !key || !jobCustCd) return {success:false, error:'CANCEL_CONFIG_MISSING'};
+function lotteCancel_(invNo, ordNo){
+  invNo = String(invNo||'').replace(/\D/g,'');
+  ordNo = String(ordNo||''); // 선택
+  if (!invNo) return {success:false, error:'MISSING_INVNO'};
 
-/* 10 */  // ★★★ payload 구조 변경: snd_list 없이 최상위 레벨에 값 포함 (최종 가설) ★★★
-/* 11 */  const payload = { jobCustCd, invNo, ordNo };
+  const P = PropertiesService.getScriptProperties();
+  const propUrl   = (P.getProperty('LOTTE_CANCEL_API_URL_PROD')||'').trim(); // 보통 .../apiSndOutCancel
+  const key       = (P.getProperty('LOTTE_CLIENT_KEY_PROD')||'').trim();
+  const jobCustCd = (P.getProperty('LOTTE_JOBCUSTCD_PROD')||'').trim();
+  const fareSctCd = (P.getProperty('LOTTE_DEFAULT_FARE')||'03').trim();
+  if (!key || !jobCustCd) return {success:false, error:'CANCEL_CONFIG_MISSING'};
 
-/* 12 */  const r = httpPostJson_(url, { Authorization:'IgtAK '+key, Accept:'application/json' }, payload, 3);
-/* 13 */  const rawJson = r.json || {}; // 롯데의 실제 응답 JSON
-/* 14 */  Logger.log('[CANCEL] Raw Response: ' + JSON.stringify(rawJson));
+  // ① 스크립트 속성값
+  // ② apiSndOutCancel → apiSndCancel 대체
+  // ③ 안전망: 고정 문자열 후보 2종
+  const candidates = Array.from(new Set([
+    propUrl,
+    propUrl ? propUrl.replace('apiSndOutCancel','apiSndCancel') : '',
+    'https://apigw.llogis.com:10100/api/pid/cus/714a/apiSndOutCancel',
+    'https://apigw.llogis.com:10100/api/pid/cus/714a/apiSndCancel'
+  ])).filter(Boolean);
 
-/* 15 */  // --- 최종 롯데 응답 해석 로직 (이전과 동일) ---
-/* 16 */  let isSuccess = false;
-/* 17 */  let finalCode = '';
-/* 18 */  let finalMsg = '';
+  const payload = {
+    snd_list: [{
+      jobCustCd:   jobCustCd,
+      invNo:       invNo,
+      ordNo:       ordNo,
+      ustRtgSctCd: '01',
+      ordSct:      '3',
+      fareSctCd:   fareSctCd
+    }]
+  };
+  const headers = { Authorization:'IgtAK '+key, Accept:'application/json' };
 
-/* 19 */  if (r.ok) { // HTTP 통신 성공 시 (200 OK)
-/* 20 */    const rtnList = rawJson.rtn_list || [];
-/* 21 */    const first = rtnList[0] || {};
-/* 22 */    finalCode = String(first.rtnCd || rawJson.code || '').toUpperCase(); // rtn_list 우선, 없으면 최상위 code
-/* 23 */    finalMsg = first.rtnMsg || rawJson.message || ''; // rtn_list 우선, 없으면 최상위 message
+  for (let i=0;i<candidates.length;i++){
+    const url = candidates[i];
+    Logger.log(JSON.stringify({debug:'lotte_cancel_try', idx:i+1, url, payload}, null, 2));
+    const r = httpPostJson_(url, headers, payload, 1);
+    Logger.log(JSON.stringify({debug:'lotte_cancel_res', url, code:r.code, body:r.json}, null, 2));
+    if (r.ok){
+      const first = ((r.json||{}).rtn_list||[])[0]||{};
+      if (String(first.rtnCd||'').toUpperCase()==='S') return {success:true};
+      // 200인데 실패 메시지면 다음 후보는 시도하지 않고 종료
+      return {success:false, error:`롯데 응답: [코드=${first.rtnCd||'없음'}, 메시지=${first.rtnMsg||'없음'}] (HTTP ${r.code})`};
+    }
+    // 404(EGTA4022)면 다음 후보로 계속
+    const code = (r.json && String(r.json.code||'').toUpperCase()) || '';
+    if (!(r.code===404 || code==='EGTA4022')) {
+      // 다른 오류(401/403/5xx)는 후보 전환해도 의미 적음 → 바로 종료
+      return {success:false, error:`HTTP ${r.code}: ${JSON.stringify(r.json).slice(0,200)}`};
+    }
+  }
+  return {success:false, error:'ALL_ENDPOINTS_404: apiSndOutCancel/apiSndCancel 모두 미존재'};
+}
 
-/* 24 */    // 성공 조건: rtnCd가 정확히 'S'인 경우만 성공으로 간주
-/* 25 */    if (finalCode === 'S') {
-/* 26 */      isSuccess = true;
-/* 27 */    }
-/* 28 */  } else { // HTTP 통신 실패 시 (4xx, 5xx 등)
-/* 29 */    finalCode = String(rawJson.code || '');
-/* 30 */    finalMsg = rawJson.message || `HTTP 오류 ${r.code}`;
-/* 31 */  }
-/* 32 */  // --- 응답 해석 끝 ---
 
-/* 33 */  if (isSuccess) {
-/* 34 */    Logger.log('[CANCEL] Parsed Result: OK (rtnCd=S)');
-/* 35 */    return {success:true}; // 최종 성공
-/* 36 */  } else {
-/* 37 */    // 최종 실패 메시지 생성 (롯데가 준 코드/메시지 우선)
-/* 38 */    const errMsg = `롯데 응답: [코드=${finalCode || '없음'}, 메시지=${finalMsg || '통신 오류 또는 알 수 없는 응답'}] (HTTP ${r.code})`;
-/* 39 */    Logger.log('[CANCEL] Parsed Result: FAILED (' + errMsg + ')');
-/* 40 */    return {success:false, error: errMsg };
-/* 41 */  }
-/* 42 */ } // <--- 여기까지 42줄 (주석/공백 포함, 이전과 동일)
 
 /* =========================
  * 접수번호 시퀀스
@@ -569,6 +578,7 @@ function addrCheckMake_(zip, addr){
   var url = 'https://hook.eu2.make.com/6a2h9hbp3nzn54ysx5swvtgsa78lmxv8';
   var payload = { address: String(addr||''), zip: String(zip||'') };
   var res = UrlFetchApp.fetch(url, { method:'post', contentType:'application/json', payload: JSON.stringify(payload), followRedirects:true, muteHttpExceptions:true });
+  
   var body = {}; try{ body = JSON.parse(res.getContentText()||'{}'); }catch(_){}
   return { success:true, status: res.getResponseCode(), out: body };
 }
