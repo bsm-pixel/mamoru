@@ -199,49 +199,54 @@ function lotteBookSingle_(order){
   return { ok:true, invNo: payload.snd_list[0].invNo, rtnCd: sent.code||'', rtnMsg: sent.msg||'' };
 }
 
-function lotteCancel_(invNo, ordNo){ // ★★★ 1. 다시 invNo, ordNo만 받도록 변경 ★★★
-  invNo = String(invNo||'').replace(/\D/g,'');
-  ordNo = String(ordNo || '');
-  if (!invNo || !ordNo) return {success:false, error:'MISSING_INVNO_OR_ORDNO'};
-  const P = PropertiesService.getScriptProperties();
-  const url = (P.getProperty('LOTTE_CANCEL_API_URL_PROD')||'').trim();
-  const key = (P.getProperty('LOTTE_CLIENT_KEY_PROD')||'').trim();
-  const jobCustCd = (P.getProperty('LOTTE_JOBCUSTCD_PROD')||'').trim();
-  if (!url || !key || !jobCustCd) return {success:false, error:'CANCEL_CONFIG_MISSING'};
+/* 1 */ function lotteCancel_(invNo, ordNo){
+/* 2 */   invNo = String(invNo||'').replace(/\D/g,'');
+/* 3 */   ordNo = String(ordNo || '');
+/* 4 */   if (!invNo || !ordNo) return {success:false, error:'MISSING_INVNO_OR_ORDNO'};
+/* 5 */   const P = PropertiesService.getScriptProperties();
+/* 6 */   const url = (P.getProperty('LOTTE_CANCEL_API_URL_PROD')||'').trim();
+/* 7 */   const key = (P.getProperty('LOTTE_CLIENT_KEY_PROD')||'').trim();
+/* 8 */   const jobCustCd = (P.getProperty('LOTTE_JOBCUSTCD_PROD')||'').trim();
+/* 9 */   if (!url || !key || !jobCustCd) return {success:false, error:'CANCEL_CONFIG_MISSING'};
 
-  // ★★★ 2. payload 구조 변경: snd_list 없이 최상위 레벨에 값 포함 ★★★
-  const payload = { jobCustCd, invNo, ordNo };
+/* 10 */  // ★★★ payload 구조 변경: snd_list 없이 최상위 레벨에 값 포함 (최종 가설) ★★★
+/* 11 */  const payload = { jobCustCd, invNo, ordNo };
 
-  const r = httpPostJson_(url, { Authorization:'IgtAK '+key, Accept:'application/json' }, payload, 3);
-  const rawJson = r.json || {};
-  Logger.log('[CANCEL] Raw Response: ' + JSON.stringify(rawJson));
+/* 12 */  const r = httpPostJson_(url, { Authorization:'IgtAK '+key, Accept:'application/json' }, payload, 3);
+/* 13 */  const rawJson = r.json || {}; // 롯데의 실제 응답 JSON
+/* 14 */  Logger.log('[CANCEL] Raw Response: ' + JSON.stringify(rawJson));
 
-  // --- 롯데 응답 해석 로직 강화 (이전과 동일) ---
-  let isSuccess = false;
-  let finalCode = '';
-  let finalMsg = '';
-  if (r.ok) {
-    const rtnList = rawJson.rtn_list || []; // 취소 성공 시에도 rtn_list가 올 수 있으므로 유지
-    const first = rtnList[0] || {};
-    finalCode = String(first.rtnCd || rawJson.code || '').toUpperCase();
-    finalMsg = first.rtnMsg || rawJson.message || '';
-    if (finalCode === 'S' || (!finalCode && !finalMsg)) { isSuccess = true; }
-  } else {
-    finalMsg = `HTTP 오류 ${r.code}`;
-    if (rawJson.message) finalMsg += `: ${rawJson.message}`;
-    finalCode = String(rawJson.code || '');
-  }
-  // --- 응답 해석 끝 ---
+/* 15 */  // --- 최종 롯데 응답 해석 로직 (이전과 동일) ---
+/* 16 */  let isSuccess = false;
+/* 17 */  let finalCode = '';
+/* 18 */  let finalMsg = '';
 
-  if (isSuccess) {
-    Logger.log('[CANCEL] Parsed Result: OK');
-    return {success:true};
-  } else {
-    const errMsg = `롯데 응답: [코드=${finalCode || '없음'}, 메시지=${finalMsg || '없음'}] (HTTP ${r.code})`;
-    Logger.log('[CANCEL] Parsed Result: FAILED (' + errMsg + ')');
-    return {success:false, error: errMsg };
-  }
-} // <--- 여기까지 24줄
+/* 19 */  if (r.ok) { // HTTP 통신 성공 시 (200 OK)
+/* 20 */    const rtnList = rawJson.rtn_list || [];
+/* 21 */    const first = rtnList[0] || {};
+/* 22 */    finalCode = String(first.rtnCd || rawJson.code || '').toUpperCase(); // rtn_list 우선, 없으면 최상위 code
+/* 23 */    finalMsg = first.rtnMsg || rawJson.message || ''; // rtn_list 우선, 없으면 최상위 message
+
+/* 24 */    // 성공 조건: rtnCd가 정확히 'S'인 경우만 성공으로 간주
+/* 25 */    if (finalCode === 'S') {
+/* 26 */      isSuccess = true;
+/* 27 */    }
+/* 28 */  } else { // HTTP 통신 실패 시 (4xx, 5xx 등)
+/* 29 */    finalCode = String(rawJson.code || '');
+/* 30 */    finalMsg = rawJson.message || `HTTP 오류 ${r.code}`;
+/* 31 */  }
+/* 32 */  // --- 응답 해석 끝 ---
+
+/* 33 */  if (isSuccess) {
+/* 34 */    Logger.log('[CANCEL] Parsed Result: OK (rtnCd=S)');
+/* 35 */    return {success:true}; // 최종 성공
+/* 36 */  } else {
+/* 37 */    // 최종 실패 메시지 생성 (롯데가 준 코드/메시지 우선)
+/* 38 */    const errMsg = `롯데 응답: [코드=${finalCode || '없음'}, 메시지=${finalMsg || '통신 오류 또는 알 수 없는 응답'}] (HTTP ${r.code})`;
+/* 39 */    Logger.log('[CANCEL] Parsed Result: FAILED (' + errMsg + ')');
+/* 40 */    return {success:false, error: errMsg };
+/* 41 */  }
+/* 42 */ } // <--- 여기까지 42줄 (주석/공백 포함, 이전과 동일)
 
 /* =========================
  * 접수번호 시퀀스
@@ -682,38 +687,54 @@ function markShipped(asId){
 }
 
 /* 출고 취소: ALPS 취소 → 성공 시 롤백 */
-function unshipAS_(asId){
-  asId = String(asId||'').trim();
-  if (!asId) return {success:false, error:'MISSING_AS_ID'};
+/* 1 */ /* 출고 취소: ALPS 취소 → 성공 시 롤백 */
+/* 2 */ function unshipAS_(asId){
+/* 3 */   asId = String(asId||'').trim();
+/* 4 */   if (!asId) return {success:false, error:'MISSING_AS_ID'};
 
-  const sh = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
-  if(!sh) return {success:false, error:'SHEET_NOT_FOUND'};
-  const last = sh.getLastRow(); if(last<2) return {success:false, error:'EMPTY'};
+/* 5 */   const sh = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+/* 6 */   if(!sh) return {success:false, error:'SHEET_NOT_FOUND'};
+/* 7 */   const last = sh.getLastRow(); if(last<2) return {success:false, error:'EMPTY'};
 
-  const vals = sh.getRange(2,1,last-1,sh.getLastColumn()).getValues();
-  let rowIdx=-1, row=null;
-  for(let i=0;i<vals.length;i++){ if(String(vals[i][0])===asId){ rowIdx=i+2; row=vals[i]; break; } }
-  if(rowIdx<0) return {success:false, error:'NOT_FOUND'};
+/* 8 */   const vals = sh.getRange(2,1,last-1,sh.getLastColumn()).getValues();
+/* 9 */   let rowIdx=-1, row=null;
+/* 10 */  for(let i=0;i<vals.length;i++){ if(String(vals[i][0])===asId){ rowIdx=i+2; row=vals[i]; break; } }
+/* 11 */  if(rowIdx<0) return {success:false, error:'NOT_FOUND'};
 
-  /* ... (unshipAS_ 함수 내부) ... */
-  const inv = String(row[COLS.송장번호-1]||'').replace(/\D/g,'');
-  if (inv){
-    const c = lotteCancel_(inv, asId); // ★★★ invNo, asId(ordNo)만 전달하도록 원복 ★★★
-    if (!c.success) return {success:false, error:'ALPS_CANCEL_FAILED:'+String(c.error||'')};
-  }
+/* 12 */  const inv = String(row[COLS.송장번호-1]||'').replace(/\D/g,'');
 
-  
+/* 13 */  // 송장 번호가 있을 경우에만 롯데 API 취소 시도
+/* 14 */  if (inv){
+/* 15 */    const c = lotteCancel_(inv, asId); // 롯데 API 호출
 
-  sh.getRange(rowIdx, COLS.출고완료).setValue('');
-  sh.getRange(rowIdx, COLS.출고일).setValue('');
-  sh.getRange(rowIdx, COLS.송장번호).setValue('');
-  sh.getRange(rowIdx, COLS.택배사).setValue('');
+/* 16 */    // ★★★ 롯데 API 호출 결과가 명시적으로 '성공'이 아닐 경우 실패 처리 ★★★
+/* 17 */    if (!c || !c.success) {
+/* 18 */      return {success:false, error:'ALPS_CANCEL_FAILED:'+String(c.error||'UNKNOWN')};
+/* 19 */    }
+/* 20 */    // 만약 여기까지 왔다면 롯데 API 취소는 성공한 것임
+/* 21 */  } else {
+/* 22 */    // 송장 번호가 애초에 없었으므로 취소할 필요 없음 (성공 간주)
+/* 23 */    Logger.log('[unshipAS_] No invoice to cancel for asId: ' + asId);
+/* 24 */  }
 
-  const cache = CacheService.getScriptCache();
-  cache.remove(CACHE_PREFIX + 'all'); cache.remove(CACHE_PREFIX + 'progress'); cache.remove(CACHE_PREFIX + 'done');
+/* 25 */  // ★★★ 롯데 API 취소가 성공했거나, 취소할 필요가 없었던 경우에만 시트 내용 지우기 ★★★
+/* 26 */  sh.getRange(rowIdx, COLS.출고완료).setValue('');
+/* 27 */  sh.getRange(rowIdx, COLS.출고일).setValue('');
+/* 28 */  sh.getRange(rowIdx, COLS.송장번호).setValue('');
+/* 29 */  sh.getRange(rowIdx, COLS.택배사).setValue('');
 
-  return {success:true};
-}
+/* 30 */  // 캐시 클리어
+/* 31 */  const cache = CacheService.getScriptCache();
+/* 32 */  cache.remove(CACHE_PREFIX + 'all');
+/* 33 */  cache.remove(CACHE_PREFIX + 'progress');
+/* 34 */  cache.remove(CACHE_PREFIX + 'done');
+
+/* 35 */  // 모든 과정이 문제 없었으므로 최종 성공 반환
+/* 36 */  return {success:true};
+
+/* 37 */  // 이전 코드의 불필요한 else 블록 제거
+/* 38 */
+/* 39 */ } // <--- 여기까지 39줄
 // [ADD_BOOK_HELPER_START]
 function bookAS_(asId){
   asId = String(asId||'').trim();
