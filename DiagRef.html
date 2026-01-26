@@ -1,0 +1,1327 @@
+<!-- =========================================================
+   MAMORU 간편진단 페이지 v3
+   
+   ★ 수정사항 반영:
+   1. PC/모바일 반응형 (가로폭 최적화)
+   2. iframe 구조에서 상담접수 연동 (postMessage 방식)
+   3. 선택 시 깜빡임 제거, 전환만 부드럽게
+   
+   ★ 상담접수 연동 방법:
+   - 아임웹 상담접수 페이지의 iframe에 ?allowDiagnosis=true 추가
+   - 또는 별도 URL 파라미터 방식 사용
+   ========================================================= -->
+
+<style>
+/* =========================================================
+   기본 설정 + PC/모바일 반응형
+   ========================================================= */
+.mamoru-diagnosis {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #1C1C1E;
+  color: #ffffff;
+  min-height: 100vh;
+  margin: 0 auto;
+  /* PC: 넓은 화면 */
+  max-width: 800px;
+  padding: 40px;
+  padding-bottom: 140px;
+}
+
+.mamoru-diagnosis * {
+  box-sizing: border-box;
+}
+
+/* 모바일 */
+@media screen and (max-width: 768px) {
+  .mamoru-diagnosis {
+    max-width: 100%;
+    padding: 20px;
+    padding-bottom: 130px;  /* 하단 버튼 가림 방지 */
+  }
+}
+
+/* 소형 모바일 (480px 이하) */
+@media screen and (max-width: 480px) {
+  .mamoru-diagnosis {
+    padding: 16px;
+    padding-bottom: 120px;
+  }
+}
+
+/* =========================================================
+   헤더
+   ========================================================= */
+.diag-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 24px;
+  /* PC */
+  margin-bottom: 8px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-header {
+    padding: 8px 0 20px;
+    margin-bottom: 0;
+  }
+}
+
+.diag-back-btn {
+  width: 48px;   /* 터치 영역 확대 (접근성) */
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.diag-back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.diag-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+@media screen and (max-width: 768px) {
+  .diag-title {
+    font-size: 16px;
+  }
+}
+
+.diag-step-indicator {
+  font-size: 15px;
+  color: #C9A962;
+  font-weight: 600;
+  background: rgba(201, 169, 98, 0.1);
+  padding: 6px 14px;
+  border-radius: 100px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-step-indicator {
+    font-size: 14px;
+    padding: 4px 12px;
+  }
+}
+
+/* =========================================================
+   프로그레스 바
+   ========================================================= */
+.diag-progress-container {
+  margin-bottom: 40px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-progress-container {
+    margin-bottom: 32px;
+  }
+}
+
+.diag-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-progress-bar {
+    height: 6px;  /* 시인성 개선 (4px → 6px) */
+  }
+}
+
+.diag-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #C9A962 0%, #E8D5A3 100%);
+  border-radius: 100px;
+  transition: width 0.4s ease;
+}
+
+/* =========================================================
+   질문 영역
+   ========================================================= */
+.diag-content {
+  min-height: 450px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-content {
+    min-height: 400px;
+  }
+}
+
+/* ★ 수정: 선택 시 깜빡임 제거, 전환 시에만 애니메이션 */
+.diag-question-wrapper {
+  opacity: 1;
+}
+
+.diag-question-wrapper.fade-enter {
+  animation: fadeInSmooth 0.35s ease-out;
+}
+
+@keyframes fadeInSmooth {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.diag-question-label {
+  display: inline-block;
+  padding: 6px 14px;
+  background: rgba(201, 169, 98, 0.15);
+  border-radius: 100px;
+  color: #C9A962;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-question-label {
+    padding: 4px 12px;
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+}
+
+.diag-question-text {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-bottom: 12px;
+  color: #ffffff;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-question-text {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .diag-question-text {
+    font-size: 22px;  /* 소형 모바일 가독성 */
+  }
+}
+
+.diag-question-sub {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+  margin-bottom: 36px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-question-sub {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+}
+
+/* =========================================================
+   선택지 - 기본형
+   ========================================================= */
+.diag-options {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-options {
+    gap: 12px;
+  }
+}
+
+.diag-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option {
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 12px;
+  }
+}
+
+.diag-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.diag-option:active {
+  transform: scale(0.98);
+}
+
+.diag-option.selected {
+  background: rgba(201, 169, 98, 0.12);
+  border-color: #C9A962;
+  transform: scale(1.01);  /* 선택 피드백 강화 */
+}
+
+.diag-option-icon {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+    border-radius: 10px;
+  }
+}
+
+.diag-option.selected .diag-option-icon {
+  background: rgba(201, 169, 98, 0.2);
+}
+
+.diag-option-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.diag-option-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-title {
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+}
+
+.diag-option-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-desc {
+    font-size: 13px;
+  }
+}
+
+.diag-option-check {
+  width: 26px;
+  height: 26px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.2s;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-check {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.diag-option.selected .diag-option-check {
+  background: #C9A962;
+  border-color: #C9A962;
+}
+
+.diag-option.selected .diag-option-check::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #1C1C1E;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option.selected .diag-option-check::after {
+    font-size: 12px;
+  }
+}
+
+/* =========================================================
+   선택지 - GIF 포함형
+   ========================================================= */
+.diag-options--with-gif {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-options--with-gif {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+.diag-option--with-gif {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  overflow: hidden;
+}
+
+.diag-option--with-gif:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.diag-option--with-gif:active {
+  transform: scale(0.98);
+}
+
+.diag-option--with-gif.selected {
+  background: rgba(201, 169, 98, 0.12);
+  border-color: #C9A962;
+  transform: scale(1.01);  /* 선택 피드백 강화 */
+}
+
+.diag-option-gif {
+  width: 100%;
+  height: 160px;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-gif {
+    height: 140px;
+  }
+}
+
+.diag-option-gif img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.diag-option-gif-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+}
+
+.diag-option-gif-placeholder-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+
+.diag-option-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-info {
+    padding: 14px 16px;
+  }
+}
+
+.diag-option-info-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.diag-option-info-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-info-title {
+    font-size: 15px;
+  }
+}
+
+.diag-option-info-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.diag-option-info-check {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.diag-option--with-gif.selected .diag-option-info-check {
+  background: #C9A962;
+  border-color: #C9A962;
+}
+
+.diag-option--with-gif.selected .diag-option-info-check::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #1C1C1E;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* =========================================================
+   복수선택 안내
+   ========================================================= */
+.diag-multiple-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(201, 169, 98, 0.08);
+  border-radius: 10px;
+  font-size: 14px;
+  color: #C9A962;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-multiple-hint {
+    margin-top: 16px;
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+
+/* =========================================================
+   하단 버튼
+   ========================================================= */
+.diag-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 40px;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  background: linear-gradient(to top, #1C1C1E 85%, transparent);
+  z-index: 100;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-footer {
+    padding: 16px 20px;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .diag-footer {
+    padding: 14px 16px;
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+}
+
+.diag-footer-inner {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.diag-next-btn {
+  width: 100%;
+  height: 58px;
+  background: linear-gradient(135deg, #C9A962 0%, #B8963E 100%);
+  border: none;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-next-btn {
+    height: 54px;
+    border-radius: 12px;
+    font-size: 16px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .diag-next-btn {
+    height: 52px;
+    font-size: 15px;
+  }
+}
+
+.diag-next-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.diag-next-btn:not(:disabled):hover {
+  opacity: 0.9;
+}
+
+.diag-next-btn:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+/* =========================================================
+   결과 화면
+   ========================================================= */
+.diag-result {
+  display: none;
+}
+
+.diag-result.show {
+  display: block;
+  animation: fadeInSmooth 0.4s ease-out;
+}
+
+.diag-result-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 32px 28px;
+  margin-bottom: 24px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-card {
+    border-radius: 16px;
+    padding: 24px 20px;
+    margin-bottom: 20px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .diag-result-card {
+    padding: 20px 16px;
+    margin-bottom: 16px;
+  }
+}
+
+.diag-result-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  background: rgba(201, 169, 98, 0.15);
+  border-radius: 100px;
+  color: #C9A962;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-badge {
+    padding: 6px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+}
+
+.diag-result-title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-bottom: 16px;
+  color: #ffffff;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-title {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .diag-result-title {
+    font-size: 20px;
+  }
+}
+
+.diag-result-desc {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-desc {
+    font-size: 15px;
+  }
+}
+
+.diag-result-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-tags {
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+}
+
+.diag-result-tag {
+  display: inline-block;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 100px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-tag {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+
+.diag-result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-actions {
+    gap: 12px;
+    margin-top: 24px;
+  }
+}
+
+.diag-result-btn {
+  width: 100%;
+  height: 58px;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-btn {
+    height: 54px;
+    border-radius: 12px;
+    font-size: 16px;
+  }
+}
+
+.diag-result-btn-primary {
+  background: linear-gradient(135deg, #C9A962 0%, #B8963E 100%);
+  border: none;
+  color: #ffffff;
+}
+
+.diag-result-btn-primary:hover {
+  opacity: 0.9;
+}
+
+.diag-result-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.diag-result-btn-secondary {
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.diag-result-btn-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.diag-result-btn-hint {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  margin-top: 6px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-btn-hint {
+    font-size: 12px;
+    margin-top: 4px;
+  }
+}
+</style>
+
+<div class="mamoru-diagnosis">
+  <!-- 헤더 -->
+  <div class="diag-header">
+    <button class="diag-back-btn" onclick="diagGoBack()">←</button>
+    <span class="diag-title">간편진단</span>
+    <span class="diag-step-indicator" id="stepIndicator">1/5</span>
+  </div>
+  
+  <!-- 프로그레스 바 -->
+  <div class="diag-progress-container">
+    <div class="diag-progress-bar">
+      <div class="diag-progress-fill" id="progressFill" style="width: 20%"></div>
+    </div>
+  </div>
+  
+  <!-- 질문 영역 -->
+  <div class="diag-content" id="questionContent">
+    <!-- 동적 렌더링 -->
+  </div>
+  
+  <!-- 결과 영역 -->
+  <div class="diag-result" id="resultContent">
+    <!-- 동적 렌더링 -->
+  </div>
+  
+  <!-- 하단 버튼 -->
+  <div class="diag-footer" id="diagFooter">
+    <div class="diag-footer-inner">
+      <button class="diag-next-btn" id="nextBtn" onclick="diagNextQuestion()" disabled>다음</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   MAMORU 간편진단 v3
+   
+   ★ 수정 가이드:
+   - 질문 추가/수정: questionsData 배열
+   - 상담접수 URL: CONSULT_PAGE_URL 변수
+   ========================================================= */
+
+// ★★★ 상담접수 페이지 URL 설정 ★★★
+// 아임웹 상담접수 페이지의 전체 URL을 입력하세요
+const CONSULT_PAGE_URL = '/52';  // 예: '/page/consultation' 또는 'https://mamoru.com/consultation'
+
+/* =========================================================
+   질문 데이터
+   ========================================================= */
+const questionsData = [
+  {
+    id: 'Q_STAGE',
+    label: '경력',
+    question: '현재 단계가\n어떻게 되시나요?',
+    sub: '가장 가까운 상황을 선택해주세요',
+    multiple: false,
+    hasGif: false,
+    condition: null,
+    options: [
+      { id: 'CE', label: '자격증 준비', desc: '아직 현장 경험이 없어요', icon: '📚' },
+      { id: 'IN', label: '인턴/스탭', desc: '현장에서 배우는 중이에요', icon: '✂️' },
+      { id: 'DE', label: '디자이너', desc: '손님을 직접 담당해요', icon: '💇' }
+    ]
+  },
+  {
+    id: 'Q_TYPE',
+    label: '가위 종류',
+    question: '어떤 종류의\n가위가 필요하신가요?',
+    sub: '여러 개 선택 가능해요',
+    multiple: true,
+    hasGif: false,
+    condition: null,
+    options: [
+      { id: 'BL', label: '블런트 (커트가위)', desc: '기본 커트용', icon: '✂️' },
+      { id: 'TH', label: '틴닝 (숱가위)', desc: '숱 조절용', icon: '〰️' },
+      { id: 'LO', label: '장가위', desc: '긴 날 커트용', icon: '📏' },
+      { id: 'SL', label: '슬라이싱', desc: '슬라이드 컷 전용', icon: '🌊' }
+    ]
+  },
+  {
+    id: 'Q_FEEL',
+    label: '커트 느낌',
+    question: '선호하는 커트 느낌이\n어떻게 되시나요?',
+    sub: '가위를 쓸 때 원하는 느낌을 선택해주세요',
+    multiple: false,
+    hasGif: true,
+    condition: (answers) => {
+      const stage = answers.Q_STAGE;
+      const types = answers.Q_TYPE || [];
+      return (stage === 'IN' || stage === 'DE') && (types.includes('BL') || types.includes('LO'));
+    },
+    options: [
+      { id: 'FEEL_SOFT', label: '부드러운 커트감', desc: '가볍고 매끄럽게', icon: '☁️', gifUrl: '' },
+      { id: 'FEEL_POWER', label: '힘있고 강한 느낌', desc: '단단하고 확실하게', icon: '💪', gifUrl: '' },
+      { id: 'FEEL_NONE', label: '아직 잘 모르겠어요', desc: '경험이 더 필요해요', icon: '🤔', gifUrl: '' }
+    ]
+  },
+  {
+    id: 'Q_STYLE',
+    label: '커트 스타일',
+    question: '주로 어떤 스타일로\n커트하시나요?',
+    sub: '',
+    multiple: false,
+    hasGif: true,
+    condition: (answers) => answers.Q_STAGE === 'DE' && (answers.Q_TYPE || []).includes('BL'),
+    options: [
+      { id: 'St_GO', label: '직진성 커트', desc: '직선으로 쭉쭉', icon: '➡️', gifUrl: '' },
+      { id: 'St_BACK', label: '스트로크 커트', desc: '뒤로 빼듯 조곤조곤', icon: '↩️', gifUrl: '' },
+      { id: 'St_NONE', label: '딱 기준이 없어요', desc: '상황에 따라 달라요', icon: '🔄', gifUrl: '' }
+    ]
+  },
+  {
+    id: 'Q_HABIT',
+    label: '커트 습관',
+    question: '분무를 하여 커트하는\nWET커트 비중이 어떻게 되세요?',
+    sub: '',
+    multiple: false,
+    hasGif: true,
+    condition: (answers) => answers.Q_STAGE === 'DE' && (answers.Q_TYPE || []).includes('BL'),
+    options: [
+      { id: 'HAB_WET', label: 'WET 커트 위주', desc: '항상 분무하고 커트해요', icon: '💧', gifUrl: '' },
+      { id: 'HAB_DRY', label: 'DRY 커트 위주', desc: '마른 모발 커트가 많아요', icon: '🌵', gifUrl: '' },
+      { id: 'HAB_NONE', label: '반반이에요', desc: '그때그때 달라요', icon: '⚖️', gifUrl: '' }
+    ]
+  },
+  {
+    id: 'Q_TH_RATIO',
+    label: '틴닝 감모량',
+    question: '원하는 감모량이\n어떻게 되시나요?',
+    sub: '숱이 빠지는 정도를 선택해주세요',
+    multiple: false,
+    hasGif: false,
+    condition: (answers) => (answers.Q_TYPE || []).includes('TH'),
+    options: [
+      { id: 'TH_25', label: '25% (메인 틴닝)', desc: '가장 범용적인 감모량', icon: '▓░' },
+      { id: 'TH_15', label: '15% (적은 감모)', desc: '섬세한 마무리용', icon: '░░' },
+      { id: 'TH_35', label: '35% (많은 감모)', desc: '빠른 숱 조절용', icon: '▓▓' }
+    ]
+  },
+  {
+    id: 'Q_TH_WHY',
+    label: '틴닝 구매목적',
+    question: '틴닝가위 구매 목적이\n어떻게 되시나요?',
+    sub: '',
+    multiple: false,
+    hasGif: false,
+    condition: (answers) => (answers.Q_TYPE || []).includes('TH'),
+    options: [
+      { id: 'TH_WHY_NEW', label: '새로운 감모량 추가', desc: '없는 감모량을 채우고 싶어요', icon: '➕' },
+      { id: 'TH_WHY_SAME', label: '기존 틴닝 교체', desc: '쓰던 틴닝이 나쁘진 않았어요', icon: '🔄' },
+      { id: 'TH_WHY_UP', label: '업그레이드', desc: '같은 감모량 더 좋은 제품으로', icon: '⬆️' }
+    ]
+  },
+  {
+    id: 'Q_LO_USE',
+    label: '장가위 용도',
+    question: '장가위 주 사용 용도가\n어떻게 될까요?',
+    sub: '',
+    multiple: false,
+    hasGif: false,
+    condition: (answers) => (answers.Q_TYPE || []).includes('LO'),
+    options: [
+      { id: 'LO_BL', label: '블런트 겸용', desc: '커트가위처럼도 쓸 거예요', icon: '✂️' },
+      { id: 'LO_SING', label: '싱글링 전용', desc: '싱글링 작업 전용이에요', icon: '👆' }
+    ]
+  },
+  {
+    id: 'Q_SL_WHY',
+    label: '슬라이싱 구매동기',
+    question: '슬라이싱 가위 구매 동기가\n어떻게 되실까요?',
+    sub: '',
+    multiple: false,
+    hasGif: false,
+    condition: (answers) => (answers.Q_TYPE || []).includes('SL'),
+    options: [
+      { id: 'SL_NEW', label: '첫 구매', desc: '슬라이싱 가위가 처음이에요', icon: '🆕' },
+      { id: 'SL_SAME', label: '기존 제품 불만족', desc: '쓰던 슬라이싱이 마음에 안 들어요', icon: '😕' }
+    ]
+  },
+  {
+    id: 'Q_SL_SAME_WHY',
+    label: '불만족 이유',
+    question: '기존 슬라이싱 가위가\n어떤 점이 불만족스러우셨나요?',
+    sub: '',
+    multiple: false,
+    hasGif: false,
+    condition: (answers) => answers.Q_SL_WHY === 'SL_SAME',
+    options: [
+      { id: 'SL_SAME_WHY_UNCOM', label: '밀리기만 하고 안 잘려요', desc: '커트 자체가 안 됨', icon: '😤' },
+      { id: 'SL_SAME_WHY_UNCOM1', label: '너무 많이 잘려나가요', desc: '모발이 과하게 잘림', icon: '😱' },
+      { id: 'SL_SAME_WHY_HAND', label: '핸들이 불편해요', desc: '사용감은 괜찮은데...', icon: '🖐️' }
+    ]
+  },
+  {
+    id: 'Q_GENDER',
+    label: '성별',
+    question: '성별은\n어떻게 되시나요?',
+    sub: '손에 맞는 가위 추천을 위해 필요해요',
+    multiple: false,
+    hasGif: false,
+    condition: null,
+    options: [
+      { id: 'FM', label: '여성', desc: '', icon: '👩' },
+      { id: 'M', label: '남성', desc: '', icon: '👨' }
+    ]
+  },
+  {
+    id: 'Q_FING',
+    label: '손가락 굵기',
+    question: '가위를 사용할 손가락 굵기가\n어떤 편일까요?',
+    sub: '핏에 맞는 가위 추천을 위해 필요해요',
+    multiple: false,
+    hasGif: false,
+    condition: null,
+    options: [
+      { id: 'FING_NORMAL', label: '평범한 굵기', desc: '보통이에요', icon: '👌' },
+      { id: 'FING_THICK', label: '두꺼운 편', desc: '주변보다 두꺼워요', icon: '✊' }
+    ]
+  }
+];
+
+/* 결과 문구 */
+const messagesData = {
+  MSG_CE: '새로운 꿈을 위한 멋진 도전!\n응원하겠습니다!\n마모루 대표는 필기만 따고 중도하차 했답니다 ^-^',
+  MSG_IN: '실무속에서 눈치보랴 움직이느라 힘드시죠?\n미용가위만큼은 든든할 수 있도록 돕겠습니다!',
+  MSG_DE: '많은 손님의 스타일과 자신감에 도움을 주시느라 고생많으십니다\n이젠 미용가위의 부담속에서 한결 가벼우시도록 저희가 노력하겠습니다'
+};
+
+/* 라벨 매핑 */
+const labelMap = {
+  CE: '자격증 준비', IN: '인턴/스탭', DE: '디자이너',
+  BL: '블런트', TH: '틴닝', LO: '장가위', SL: '슬라이싱',
+  FEEL_SOFT: '부드러운 커트감', FEEL_POWER: '힘있고 강한 느낌', FEEL_NONE: '아직 모름',
+  St_GO: '직진성 커트', St_BACK: '스트로크 커트', St_NONE: '기준 없음',
+  HAB_WET: 'WET 커트', HAB_DRY: 'DRY 커트', HAB_NONE: '반반',
+  TH_25: '25%', TH_15: '15%', TH_35: '35%',
+  TH_WHY_NEW: '새 감모량', TH_WHY_SAME: '교체', TH_WHY_UP: '업그레이드',
+  LO_BL: '블런트 겸용', LO_SING: '싱글링 전용',
+  SL_NEW: '첫 구매', SL_SAME: '불만족 교체',
+  SL_SAME_WHY_UNCOM: '안 잘림', SL_SAME_WHY_UNCOM1: '과다 절삭', SL_SAME_WHY_HAND: '핸들 불편',
+  FM: '여성', M: '남성',
+  FING_NORMAL: '보통', FING_THICK: '두꺼움'
+};
+
+/* =========================================================
+   로직
+   ========================================================= */
+let diagCurrentStep = 0;
+let diagAnswers = {};
+let diagVisibleQuestions = [];
+let isTransitioning = false;  // ★ 전환 중 플래그
+
+function diagInit() {
+  diagAnswers = {};
+  diagCurrentStep = 0;
+  diagCalculateVisible();
+  diagRenderQuestion(true);
+  document.getElementById('resultContent').classList.remove('show');
+  document.getElementById('questionContent').style.display = 'block';
+  document.getElementById('diagFooter').style.display = 'block';
+}
+
+function diagCalculateVisible() {
+  diagVisibleQuestions = questionsData.filter(q => {
+    if (q.condition === null) return true;
+    return q.condition(diagAnswers);
+  });
+}
+
+// ★ 수정: 전환 시에만 애니메이션 적용
+function diagRenderQuestion(withAnimation = false) {
+  diagCalculateVisible();
+  
+  if (diagCurrentStep >= diagVisibleQuestions.length) {
+    diagShowResult();
+    return;
+  }
+  
+  const q = diagVisibleQuestions[diagCurrentStep];
+  const totalSteps = diagVisibleQuestions.length;
+  const progress = ((diagCurrentStep + 1) / totalSteps) * 100;
+  
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('stepIndicator').textContent = `${diagCurrentStep + 1}/${totalSteps}`;
+  
+  const currentAnswers = diagAnswers[q.id] || (q.multiple ? [] : null);
+  
+  let optionsHtml = '';
+  
+  if (q.hasGif) {
+    optionsHtml = '<div class="diag-options--with-gif">';
+    optionsHtml += q.options.map(opt => {
+      const isSelected = q.multiple 
+        ? (currentAnswers || []).includes(opt.id)
+        : currentAnswers === opt.id;
+      
+      const gifContent = opt.gifUrl 
+        ? `<img src="${opt.gifUrl}" alt="${opt.label}">`
+        : `<div class="diag-option-gif-placeholder">
+             <span class="diag-option-gif-placeholder-icon">${opt.icon}</span>
+             <span>GIF 준비중</span>
+           </div>`;
+      
+      return `
+        <div class="diag-option--with-gif ${isSelected ? 'selected' : ''}" 
+             onclick="diagSelectOption('${q.id}', '${opt.id}', ${q.multiple})">
+          <div class="diag-option-gif">${gifContent}</div>
+          <div class="diag-option-info">
+            <div class="diag-option-info-content">
+              <div class="diag-option-info-title">${opt.label}</div>
+              ${opt.desc ? `<div class="diag-option-info-desc">${opt.desc}</div>` : ''}
+            </div>
+            <div class="diag-option-info-check"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    optionsHtml += '</div>';
+  } else {
+    optionsHtml = '<div class="diag-options">';
+    optionsHtml += q.options.map(opt => {
+      const isSelected = q.multiple 
+        ? (currentAnswers || []).includes(opt.id)
+        : currentAnswers === opt.id;
+      
+      return `
+        <div class="diag-option ${isSelected ? 'selected' : ''}" 
+             onclick="diagSelectOption('${q.id}', '${opt.id}', ${q.multiple})">
+          <div class="diag-option-icon">${opt.icon}</div>
+          <div class="diag-option-content">
+            <div class="diag-option-title">${opt.label}</div>
+            ${opt.desc ? `<div class="diag-option-desc">${opt.desc}</div>` : ''}
+          </div>
+          <div class="diag-option-check"></div>
+        </div>
+      `;
+    }).join('');
+    optionsHtml += '</div>';
+  }
+  
+  // ★ 전환 시에만 애니메이션 클래스 추가
+  const animClass = withAnimation ? 'fade-enter' : '';
+  
+  const html = `
+    <div class="diag-question-wrapper ${animClass}">
+      <span class="diag-question-label">${q.label}</span>
+      <h2 class="diag-question-text">${q.question.replace(/\n/g, '<br>')}</h2>
+      ${q.sub ? `<p class="diag-question-sub">${q.sub}</p>` : ''}
+      ${optionsHtml}
+      ${q.multiple ? '<div class="diag-multiple-hint">💡 여러 개 선택 가능</div>' : ''}
+    </div>
+  `;
+  
+  document.getElementById('questionContent').innerHTML = html;
+  diagUpdateNextButton();
+}
+
+// ★ 수정: 선택 시 깜빡임 없이 상태만 업데이트
+function diagSelectOption(qId, optId, isMultiple) {
+  if (isTransitioning) return;
+  
+  if (isMultiple) {
+    if (!diagAnswers[qId]) diagAnswers[qId] = [];
+    const idx = diagAnswers[qId].indexOf(optId);
+    if (idx > -1) {
+      diagAnswers[qId].splice(idx, 1);
+    } else {
+      diagAnswers[qId].push(optId);
+    }
+  } else {
+    diagAnswers[qId] = optId;
+  }
+  
+  // ★ 선택 상태만 업데이트 (전체 리렌더링 없이)
+  diagUpdateSelectionUI(qId, optId, isMultiple);
+  diagUpdateNextButton();
+}
+
+// ★ 새로 추가: 선택 UI만 업데이트
+function diagUpdateSelectionUI(qId, optId, isMultiple) {
+  const options = document.querySelectorAll('.diag-option, .diag-option--with-gif');
+  
+  options.forEach(opt => {
+    // onclick 속성에서 optId 추출
+    const onclickAttr = opt.getAttribute('onclick') || '';
+    const match = onclickAttr.match(/'([^']+)'/g);
+    if (match && match.length >= 2) {
+      const thisOptId = match[1].replace(/'/g, '');
+      
+      if (isMultiple) {
+        const selected = (diagAnswers[qId] || []).includes(thisOptId);
+        opt.classList.toggle('selected', selected);
+      } else {
+        opt.classList.toggle('selected', thisOptId === optId);
+      }
+    }
+  });
+}
+
+function diagUpdateNextButton() {
+  const q = diagVisibleQuestions[diagCurrentStep];
+  const btn = document.getElementById('nextBtn');
+  
+  if (!q) {
+    btn.disabled = true;
+    return;
+  }
+  
+  const ans = diagAnswers[q.id];
+  
+  if (q.multiple) {
+    btn.disabled = !ans || ans.length === 0;
+  } else {
+    btn.disabled = !ans;
+  }
+}
+
+// ★ 수정: 전환 시 애니메이션
+function diagNextQuestion() {
+  if (isTransitioning) return;
+  isTransitioning = true;
+  
+  diagCurrentStep++;
+  diagCalculateVisible();
+  
+  if (diagCurrentStep >= diagVisibleQuestions.length) {
+    diagShowResult();
+    isTransitioning = false;
+  } else {
+    diagRenderQuestion(true);  // 애니메이션 적용
+    setTimeout(() => { isTransitioning = false; }, 350);
+  }
+}
+
+function diagGoBack() {
+  if (isTransitioning) return;
+  
+  if (diagCurrentStep > 0) {
+    isTransitioning = true;
+    diagCurrentStep--;
+    diagRenderQuestion(true);
+    setTimeout(() => { isTransitioning = false; }, 350);
+  } else {
+    if (window.history.length > 1) {
+      window.history.back();
+    }
+  }
+}
+
+function diagShowResult() {
+  document.getElementById('questionContent').style.display = 'none';
+  document.getElementById('diagFooter').style.display = 'none';
+  
+  const resultEl = document.getElementById('resultContent');
+  resultEl.classList.add('show');
+  
+  const stage = diagAnswers.Q_STAGE;
+  let resultMsg = messagesData['MSG_' + stage] || '진단이 완료되었습니다!';
+  
+  const tags = [];
+  Object.keys(diagAnswers).forEach(key => {
+    const val = diagAnswers[key];
+    if (Array.isArray(val)) {
+      val.forEach(v => {
+        if (labelMap[v]) tags.push(labelMap[v]);
+      });
+    } else {
+      if (labelMap[val]) tags.push(labelMap[val]);
+    }
+  });
+  
+  const tagsHtml = tags.map(t => `<span class="diag-result-tag">${t}</span>`).join('');
+  
+  resultEl.innerHTML = `
+    <div class="diag-result-card">
+      <span class="diag-result-badge">✨ 진단 완료</span>
+      <h2 class="diag-result-title">맞춤 가위 추천 준비 완료!</h2>
+      <p class="diag-result-desc">${resultMsg}</p>
+      <div class="diag-result-tags">${tagsHtml}</div>
+    </div>
+    
+    <div class="diag-result-actions">
+      <button class="diag-result-btn diag-result-btn-primary" onclick="diagGoToConsult()">
+        이 내용으로 상담접수 진행하기
+      </button>
+      <p class="diag-result-btn-hint">진단 내용을 참고하면 더욱 알맞은 가위 안내를 받을 수 있어요</p>
+      
+      <button class="diag-result-btn diag-result-btn-secondary" onclick="diagInit()">
+        다시 진단하기
+      </button>
+    </div>
+  `;
+}
+
+/* =========================================================
+   ★★★ 상담접수 연동 (아임웹 iframe 구조 대응) ★★★
+   ========================================================= */
+
+function diagGoToConsult() {
+  // localStorage에 진단 데이터 저장
+  localStorage.setItem('MAMORU_DIAGNOSIS', JSON.stringify(diagAnswers));
+  
+  // 상담접수 페이지로 이동 (URL 파라미터 없이)
+  window.location.href = CONSULT_PAGE_URL;
+}
+
+// 초기화
+diagInit();
+</script>
