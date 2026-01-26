@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>미용가위 컨설팅 상담접수 | MAMORU</title>
+<title>가위 상담 | MAMORU</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
 <style>
@@ -16,12 +16,11 @@
   --blade-silver: #D1D5DB;
   --crisp-white: #FFFFFF;
   --bg-light: #F9FAFB;
-  --electric-blue: #0055FF;
+  --trust-gold: #C9A962;      /* 브랜드 신뢰 포인트 */
   --muted: #6b7280;
   --line: #E5E7EB;
   --line-strong: #D1D5DB;
   --error: #dc2626;
-  --success: #00D4AA;
 }
 
 * {
@@ -801,8 +800,8 @@ body.pc .modal-footer .btn-primary {
 }
 
 .day.today {
-  border-color: var(--electric-blue);
-  color: var(--electric-blue);
+  border-color: var(--trust-gold);  /* 브랜드 골드 */
+  color: var(--trust-gold);
   font-weight: 600;
 }
 
@@ -1064,8 +1063,8 @@ body.pc .diagnosis-banner {
 }
 
 .diagnosis-banner-badge {
-  background: #00D4AA;
-  color: #1c1c1e;
+  background: var(--trust-gold);  /* 브랜드 골드 - 신뢰의 상징 */
+  color: var(--void-black);
   font-size: 11px;
   font-weight: 700;
   padding: 4px 8px;
@@ -1112,7 +1111,7 @@ body.pc .diagnosis-banner {
     <div class="header-logo">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9  2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
     </div>
-    <h1>미용가위 컨설팅 상담접수</h1>
+    <h1>가위 상담 신청</h1>
   </div>
   <!-- ═══════════════════════════════════════════════════════════
      PART 2: HTML 배너 (header 바로 아래에 삽입)
@@ -1136,7 +1135,7 @@ body.pc .diagnosis-banner {
     <div class="card-body">
       <!-- 상담유형 선택 -->
       <div class="segment-wrap">
-        <div class="segment-label">상담 유형 선택</div>
+        <div class="segment-label">어떤 방식이 편하세요?</div>
         <div class="segment-control" id="seg">
           <button type="button" class="segment-btn active" data-v="visit">매장 방문</button>
           <button type="button" class="segment-btn" data-v="field">출장 요청</button>
@@ -1147,7 +1146,7 @@ body.pc .diagnosis-banner {
 
       <!-- 상담유형 안내 -->
       <div class="type-info" id="type-info">
-        마모루 매장 방문 상담<br>아래에서 <b>날짜와 시간</b>을 선택해주세요.
+        마모루 매장에서 직접 만나뵙겠습니다.<br>편하신 <b>날짜와 시간</b>을 알려주세요.
       </div>
 
       <!-- 기본 정보 -->
@@ -1155,12 +1154,12 @@ body.pc .diagnosis-banner {
         <div class="form-group">
           <label class="required">성함</label>
           <input id="name" type="text" placeholder="홍길동" autocomplete="name">
-          <div id="err-name" class="err-msg">성함을 입력하세요</div>
+          <div id="err-name" class="err-msg">성함을 알려주세요</div>
         </div>
         <div class="form-group">
           <label class="required">연락처</label>
           <input id="phone" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="01012345678" autocomplete="tel">
-          <div id="err-phone" class="err-msg">연락처 형식을 확인하세요</div>
+          <div id="err-phone" class="err-msg">연락처를 확인해주세요</div>
         </div>
       </div>
 
@@ -1173,7 +1172,7 @@ body.pc .diagnosis-banner {
         </button>
         <input type="hidden" id="visit_date">
         <input type="hidden" id="visit_time">
-        <div id="err-visit" class="err-msg">날짜와 시간을 선택하세요</div>
+        <div id="err-visit" class="err-msg">날짜와 시간을 선택해주세요</div>
       </div>
 
       <!-- 출장 요청: 주소/요일/시간대 -->
@@ -1190,7 +1189,7 @@ body.pc .diagnosis-banner {
           <input type="hidden" id="addrPlaceId">
           <input type="hidden" id="addrLat">
           <input type="hidden" id="addrLng">
-          <div id="err-addr" class="err-msg">주소를 입력하세요</div>
+          <div id="err-addr" class="err-msg">방문할 주소를 알려주세요</div>
         </div>
         <div class="form-group">
           <label>선호 요일 (복수선택 가능)</label>
@@ -1243,7 +1242,7 @@ body.pc .diagnosis-banner {
           <input type="checkbox" id="agreeCk">
           <label for="agreeCk">개인정보 수집 및 이용에 동의합니다.</label>
         </div>
-        <div id="err-agree" class="err-msg">동의가 필요합니다.</div>
+        <div id="err-agree" class="err-msg">개인정보 수집에 동의해주세요</div>
       </div>
 
       <button id="btn-submit" class="btn-primary">상담 신청하기</button>
@@ -2058,9 +2057,9 @@ if (isLoadingDates) return;
   const typeInfo = $('type-info');
 
   const typeMessages = {
-    '매장 방문': '마모루 매장 방문 상담<br>아래에서 <b>날짜와 시간</b>을 선택해주세요.',
-    '출장 요청': '출장 상담은 지역에 따라 조율에 시간이 소요될 수 있으며, 보통 <b>1~2주 내외</b>로 방문드립니다.',
-    '톡 상담': '카카오톡으로 간편하게 상담받으세요.<br>신청 후 <b>영업시간 내</b> 순차적으로 연락드립니다.'
+    '매장 방문': '마모루 매장에서 직접 만나뵙겠습니다.<br>편하신 <b>날짜와 시간</b>을 알려주세요.',
+    '출장 요청': '원하시는 장소로 찾아뵙겠습니다.<br>지역에 따라 <b>1~2주 내외</b>로 일정을 조율해드려요.',
+    '톡 상담': '카카오톡으로 편하게 문의해주세요.<br><b>영업시간 내</b> 순차적으로 답변드리겠습니다.'
   };
 
   seg.addEventListener('click', function(e) {

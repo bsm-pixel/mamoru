@@ -516,7 +516,7 @@ function safeClose(){
   if (action === 'c' && uid && datetime) {
     const result = confirmFieldRequest_(uid, datetime);
     if (result.ok) {
-      return createResultPage('예약 확정', '예약이 확정되었습니다. 잠시 후 확정 알림톡이 발송됩니다.');
+      return createResultPage('일정 확정 완료', '일정이 확정되었습니다. 곧 안내톡을 보내드릴게요.');
     } else {
       return createResultPage('오류', result.error);
     }
@@ -930,7 +930,7 @@ function submitConsultation(form){
   } finally {
     lock.releaseLock();
   }
-  return { ok:true, message:'접수되었습니다. 안내 알림톡을 보내드릴게요.' };
+  return { ok:true, message:'신청이 완료되었습니다. 곧 안내톡을 보내드릴게요.' };
 }
 
 /****************************** 확정 처리 ******************************/
