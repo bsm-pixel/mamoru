@@ -9,7 +9,7 @@
 <style>
 /* ══════════════════════════════════════════════════════════════
    MAMORU Brand Kit: Modern Crisp Ver. - 상담접수 통합
-   URL 파라미터: ?v=mobile 또는 ?v=pc
+   반응형: 768px 기준 자동 PC/모바일 전환
    ══════════════════════════════════════════════════════════════ */
 :root {
   /* 다크 테마 - DiagRef 패밀리 룩 */
@@ -1622,13 +1622,23 @@ body.pc .diagnosis-tag {
 </script>
 
 <script>
-// URL 파라미터로 모바일/PC 모드 결정
+// 화면 크기에 따라 자동으로 PC/모바일 모드 전환 (반응형)
 (function() {
-  var params = new URLSearchParams(window.location.search);
-  var mode = params.get('v') || 'mobile';
-  if (mode === 'pc') {
-    document.body.classList.add('pc');
+  var PC_BREAKPOINT = 768;  // 768px 이상이면 PC 레이아웃
+
+  function updateLayout() {
+    if (window.innerWidth > PC_BREAKPOINT) {
+      document.body.classList.add('pc');
+    } else {
+      document.body.classList.remove('pc');
+    }
   }
+
+  // 초기 실행
+  updateLayout();
+
+  // 화면 크기 변경 시 재적용
+  window.addEventListener('resize', updateLayout);
 })();
 </script>
 
