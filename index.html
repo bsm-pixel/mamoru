@@ -12,15 +12,20 @@
    URL 파라미터: ?v=mobile 또는 ?v=pc
    ══════════════════════════════════════════════════════════════ */
 :root {
+  /* 다크 테마 - DiagRef 패밀리 룩 */
   --void-black: #1c1c1e;
-  --blade-silver: #D1D5DB;
+  --bg-dark: #1C1C1E;
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-border: rgba(255, 255, 255, 0.08);
   --crisp-white: #FFFFFF;
-  --bg-light: #F9FAFB;
-  --trust-gold: #C9A962;      /* 브랜드 신뢰 포인트 */
-  --muted: #6b7280;
-  --line: #E5E7EB;
-  --line-strong: #D1D5DB;
-  --error: #dc2626;
+  --trust-gold: #C9A962;
+  --gold-dark: #B8963E;
+  --text-primary: #FFFFFF;
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --muted: rgba(255, 255, 255, 0.5);
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.15);
+  --error: #ef4444;
 }
 
 * {
@@ -31,8 +36,8 @@
 
 html, body {
   font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: var(--bg-light);
-  color: var(--void-black);
+  background: var(--bg-dark);  /* 다크 배경 */
+  color: var(--text-primary);  /* 화이트 텍스트 */
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -56,22 +61,23 @@ html, body {
   align-items: center;
   padding: 20px 0 16px;
   border-bottom: 1px solid var(--line);
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .header-logo {
-  background: var(--void-black);
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 그라디언트 */
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 8px;  /* 둥근 모서리 */
   /* 모바일 기본값 */
-  width: 32px;
-  height: 32px;
-  margin-right: 10px;
+  width: 36px;
+  height: 36px;
+  margin-right: 12px;
 }
 
 .header-logo svg {
-  fill: var(--crisp-white);
+  fill: var(--void-black);  /* 골드 배경에 다크 아이콘 */
   /* 모바일 기본값 */
   width: 20px;
   height: 20px;
@@ -80,28 +86,29 @@ html, body {
 .header h1 {
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: var(--void-black);
+  color: var(--text-primary);  /* 화이트 */
   /* 모바일 기본값 */
   font-size: 18px;
 }
 
-/* PC 레이아웃 */
+/* PC 레이아웃 - 1200px */
 body.pc .wrap {
-  max-width: 720px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 24px 60px;
+  padding: 60px 80px 80px;
 }
 
 body.pc .header {
-  gap: 14px;
-  padding-bottom: 24px;
-  margin-bottom: 32px;
+  gap: 16px;
+  padding-bottom: 28px;
+  margin-bottom: 36px;
 }
 
 body.pc .header-logo {
-  width: 40px;
-  height: 40px;
-  margin-right: 0;
+  width: 44px;
+  height: 44px;
+  margin-right: 14px;
+  border-radius: 10px;
 }
 
 body.pc .header-logo svg {
@@ -110,15 +117,16 @@ body.pc .header-logo svg {
 }
 
 body.pc .header h1 {
-  font-size: 24px;
+  font-size: 28px;  /* PC: 더 큰 제목 */
 }
 
 /* ─────────────────────────────────────────────────────────────
    Card
    ───────────────────────────────────────────────────────────── */
 .card {
-  background: var(--crisp-white);
-  border: 1px solid var(--line);
+  background: var(--card-bg);  /* 다크 카드 배경 */
+  border: 1px solid var(--card-border);
+  border-radius: 16px;  /* 둥근 모서리 */
 }
 
 .card-body {
@@ -127,7 +135,41 @@ body.pc .header h1 {
 }
 
 body.pc .card-body {
-  padding: 36px 40px;
+  padding: 48px 56px;  /* PC: 넉넉한 패딩 */
+  /* PC: 2열 그리드 레이아웃 */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 32px;
+}
+
+/* PC: 전체폭 차지하는 요소들 */
+body.pc .card-body .segment-wrap,
+body.pc .card-body .type-info,
+body.pc .card-body #sec-field,
+body.pc .card-body .privacy-box,
+body.pc .card-body .btn-primary {
+  grid-column: 1 / -1;  /* 2열 전체 차지 */
+}
+
+/* PC: 성함/연락처 2열, 방문날짜/메모 2열 */
+body.pc .card-body .form-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 32px;
+}
+
+body.pc .card-body .form-row .form-group {
+  margin-bottom: 0;
+}
+
+/* PC: 방문날짜(sec-visit)와 메모(memo-group)는 각각 1열씩 */
+body.pc .card-body #sec-visit {
+  grid-column: 1;
+}
+
+body.pc .card-body #memo-group {
+  grid-column: 2;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -153,14 +195,19 @@ body.pc .form-row {
   /* PC: 2열 그리드 */
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 24px;
+}
+
+/* PC: 폼 그룹 간격 조정 */
+body.pc .form-group {
+  margin-bottom: 28px;
 }
 
 label {
   display: block;
   font-size: 13px;
   font-weight: 500;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.6);  /* 밝은 라벨 */
   margin-bottom: 8px;
   letter-spacing: -0.01em;
 }
@@ -177,10 +224,11 @@ select {
   width: 100%;
   height: 48px;
   border: 1px solid var(--line-strong);
-  background: var(--crisp-white);
+  background: rgba(255, 255, 255, 0.05);  /* 반투명 다크 */
+  border-radius: 12px;  /* 둥근 모서리 */
   font-family: inherit;
   font-size: 15px;
-  color: var(--void-black);
+  color: var(--text-primary);  /* 화이트 텍스트 */
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
   -webkit-appearance: none;
@@ -200,17 +248,17 @@ input[type="text"]:focus,
 input[type="tel"]:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--void-black);
-  box-shadow: 0 0 0 1px var(--void-black) inset;
+  border-color: var(--trust-gold);  /* 골드 포커스 */
+  box-shadow: 0 0 0 1px var(--trust-gold) inset;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: var(--blade-silver);
+  color: rgba(255, 255, 255, 0.3);  /* 어두운 placeholder */
 }
 
 input[readonly] {
-  background: var(--bg-light);
+  background: rgba(255, 255, 255, 0.02);  /* 더 어두운 배경 */
   cursor: pointer;
 }
 
@@ -244,7 +292,7 @@ select.err,
 .form-hint {
   margin-top: 8px;
   font-size: 12px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.4);  /* 밝은 힌트 */
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -262,54 +310,100 @@ body.pc .segment-wrap {
 .segment-label {
   font-size: 14px;
   font-weight: 600;
-  color: var(--void-black);
+  color: var(--text-primary);  /* 화이트 */
   letter-spacing: -0.02em;
   margin-bottom: 12px;
 }
 
 .segment-control {
-  display: flex;
-  border: 1px solid var(--line-strong);
-  overflow: hidden;
-  /* 모바일: 전체폭 */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;  /* 카드 간 간격 */
+  /* 외곽 테두리 제거 - 개별 카드형 */
+  border: none;
   width: 100%;
 }
 
 body.pc .segment-control {
-  /* PC: 인라인 */
-  width: auto;
-  display: inline-flex;
-}
-
-.segment-btn {
-  flex: 1;
-  border: none;
-  background: var(--crisp-white);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.2s;
-  border-right: 1px solid var(--line-strong);
-  /* 모바일 기본값 */
-  height: 44px;
-  padding: 0 12px;
+  gap: 20px;  /* PC: 더 넓은 간격 */
 }
 
 body.pc .segment-btn {
-  flex: none;
-  height: 48px;
-  padding: 0 24px;
+  height: 120px;  /* PC: 큰 아이콘 수용 */
+  padding: 20px 16px;
+  gap: 10px;
+  border-radius: 16px;
 }
 
-.segment-btn:last-child {
-  border-right: none;
+body.pc .segment-btn .seg-icon {
+  width: 56px;
+  height: 56px;
+  font-size: 44px;  /* PC: 2배 크기 */
 }
+
+body.pc .segment-btn {
+  font-size: 15px;
+}
+
+.segment-btn {
+  /* 개별 카드 스타일 */
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+  /* 아이콘+텍스트 세로 배치 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100px;  /* 큰 아이콘 수용 */
+  padding: 16px 8px;
+}
+
+.segment-btn:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.segment-btn .seg-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;  /* 2배 크기 */
+}
+
+body.pc .segment-btn {
+  flex: 1;
+  height: 80px;  /* PC: 더 큰 카드형 */
+  padding: 12px 24px;
+  gap: 8px;
+}
+
+body.pc .segment-btn .seg-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 22px;
+}
+
+body.pc .segment-btn {
+  font-size: 15px;
+}
+
+/* 개별 카드형이므로 last-child 특별 처리 불필요 */
 
 .segment-btn.active {
-  background: var(--void-black);
-  color: var(--crisp-white);
+  background: rgba(201, 169, 98, 0.15);  /* 골드 틴트 배경 */
+  border-color: var(--trust-gold);  /* 골드 테두리 */
+  color: var(--trust-gold);  /* 골드 텍스트 */
+  font-weight: 600;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -317,11 +411,12 @@ body.pc .segment-btn {
    ───────────────────────────────────────────────────────────── */
 .type-info {
   padding: 14px 16px;
-  background: var(--bg-light);
-  border-left: 2px solid var(--void-black);
+  background: rgba(201, 169, 98, 0.08);  /* 골드 틴트 */
+  border-left: 2px solid var(--trust-gold);  /* 골드 보더 */
+  border-radius: 0 8px 8px 0;
   font-size: 13px;
-  line-length: 1.7;
-  color: var(--muted);
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.7);
   margin-bottom: 20px;
 }
 
@@ -342,7 +437,8 @@ body.pc .type-info {
   justify-content: space-between;
   padding: 0 14px;
   border: 1px solid var(--line-strong);
-  background: var(--crisp-white);
+  border-radius: 12px;  /* 둥근 모서리 */
+  background: rgba(255, 255, 255, 0.05);  /* 다크 배경 */
   cursor: pointer;
   transition: border-color 0.2s;
 }
@@ -352,22 +448,22 @@ body.pc .date-picker-btn {
 }
 
 .date-picker-btn:hover {
-  border-color: var(--void-black);
+  border-color: var(--trust-gold);  /* 골드 hover */
 }
 
 .date-display {
   font-size: 15px;
-  color: var(--void-black);
+  color: var(--text-primary);  /* 화이트 */
 }
 
 .date-display.placeholder {
-  color: var(--blade-silver);
+  color: rgba(255, 255, 255, 0.3);  /* placeholder */
 }
 
 .date-picker-btn svg {
   width: 18px;
   height: 18px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.5);  /* 밝은 아이콘 */
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -390,11 +486,12 @@ body.pc .address-row {
   flex-shrink: 0;
   height: 48px;
   border: 1px solid var(--line-strong);
-  background: var(--crisp-white);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);  /* 다크 배경 */
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
-  color: var(--void-black);
+  color: var(--text-primary);  /* 화이트 */
   cursor: pointer;
   transition: all 0.2s;
   /* 모바일 기본값 */
@@ -406,9 +503,9 @@ body.pc .btn-search {
 }
 
 .btn-search:hover {
-  background: var(--void-black);
-  color: var(--crisp-white);
-  border-color: var(--void-black);
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 hover */
+  color: var(--void-black);
+  border-color: var(--trust-gold);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -422,11 +519,12 @@ body.pc .btn-search {
 
 .day-chip {
   border: 1px solid var(--line-strong);
-  background: var(--crisp-white);
+  border-radius: 10px;  /* 둥근 모서리 */
+  background: rgba(255, 255, 255, 0.03);  /* 다크 배경 */
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.5);  /* 비활성 */
   cursor: pointer;
   transition: all 0.2s;
   /* 모바일: 7등분 */
@@ -446,9 +544,10 @@ body.pc .day-chip {
 }
 
 .day-chip.active {
-  background: var(--void-black);
-  color: var(--crisp-white);
-  border-color: var(--void-black);
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 */
+  color: var(--void-black);
+  border-color: var(--trust-gold);
+  font-weight: 600;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -468,11 +567,12 @@ body.pc .time-pref-wrap {
 
 .time-pref-btn {
   border: 1px solid var(--line-strong);
-  background: var(--crisp-white);
+  border-radius: 10px;  /* 둥근 모서리 */
+  background: rgba(255, 255, 255, 0.03);  /* 다크 배경 */
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.5);  /* 비활성 */
   cursor: pointer;
   transition: all 0.2s;
   /* 모바일: 전체폭 */
@@ -485,9 +585,10 @@ body.pc .time-pref-btn {
 }
 
 .time-pref-btn.active {
-  background: var(--void-black);
-  color: var(--crisp-white);
-  border-color: var(--void-black);
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 */
+  color: var(--void-black);
+  border-color: var(--trust-gold);
+  font-weight: 600;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -495,6 +596,8 @@ body.pc .time-pref-btn {
    ───────────────────────────────────────────────────────────── */
 .privacy-box {
   border: 1px solid var(--line-strong);
+  border-radius: 12px;  /* 둥근 모서리 */
+  background: rgba(255, 255, 255, 0.02);  /* 살짝 밝은 배경 */
   /* 모바일 기본값 */
   padding: 16px;
   margin-top: 24px;
@@ -508,17 +611,19 @@ body.pc .privacy-box {
 .privacy-box h4 {
   font-size: 14px;
   font-weight: 600;
+  color: var(--text-primary);  /* 화이트 */
   margin-bottom: 12px;
   letter-spacing: -0.02em;
 }
 
 .privacy-content {
   padding: 12px;
-  background: var(--bg-light);
+  background: rgba(0, 0, 0, 0.3);  /* 다크 배경 */
   border: 1px solid var(--line);
+  border-radius: 8px;
   font-size: 11px;
   line-height: 1.7;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.5);  /* 밝은 텍스트 */
   overflow-y: auto;
   white-space: pre-wrap;
   /* 모바일 기본값 */
@@ -541,7 +646,7 @@ body.pc .privacy-content {
 .privacy-check input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: var(--void-black);
+  accent-color: var(--trust-gold);  /* 골드 체크박스 */
   cursor: pointer;
 }
 
@@ -549,7 +654,7 @@ body.pc .privacy-content {
   margin: 0;
   font-size: 14px;
   font-weight: 500;
-  color: var(--void-black);
+  color: var(--text-primary);  /* 화이트 */
   cursor: pointer;
 }
 
@@ -558,21 +663,26 @@ body.pc .privacy-content {
    ───────────────────────────────────────────────────────────── */
 .btn-primary {
   width: 100%;
-  height: 52px;
+  height: 56px;  /* 약간 더 높게 */
   margin-top: 20px;
   border: none;
-  background: var(--void-black);
+  border-radius: 14px;  /* 둥근 모서리 */
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 그라디언트 */
   font-family: inherit;
   font-size: 16px;
   font-weight: 600;
   color: var(--crisp-white);
   letter-spacing: -0.02em;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.15s;
 }
 
 body.pc .btn-primary {
-  margin-top: 24px;
+  margin-top: 32px;
+  max-width: 400px;  /* PC: 버튼 너비 제한 */
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .btn-primary:disabled {
@@ -619,8 +729,9 @@ body.pc .modal-backdrop {
 }
 
 .modal-content {
-  background: var(--crisp-white);
+  background: #2C2C2E;  /* 다크 모달 배경 */
   overflow: hidden;
+  border-radius: 16px;  /* 둥근 모서리 */
   /* 모바일 기본값 */
   width: 100%;
   max-height: 85vh;
@@ -648,7 +759,8 @@ body.pc .modal-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);  /* 다크 라인 */
+  background: rgba(0, 0, 0, 0.2);  /* 살짝 어두운 헤더 */
   /* 모바일 기본값 */
   padding: 16px 20px;
 }
@@ -661,6 +773,7 @@ body.pc .modal-header {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.02em;
+  color: var(--text-primary);  /* 화이트 */
 }
 
 .modal-close {
@@ -672,7 +785,7 @@ body.pc .modal-header {
   border: none;
   background: none;
   font-size: 24px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.5);  /* 밝은 색 */
   cursor: pointer;
 }
 
@@ -702,6 +815,7 @@ body.pc .modal-body {
   font-weight: 700;
   margin-bottom: 8px;
   letter-spacing: -0.03em;
+  color: var(--text-primary);  /* 화이트 */
 }
 
 body.pc .modal-body h2 {
@@ -710,13 +824,14 @@ body.pc .modal-body h2 {
 
 .modal-body p {
   font-size: 14px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.6);  /* 밝은 텍스트 */
   line-height: 1.6;
 }
 
 .modal-footer {
   padding: 16px 20px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);  /* 다크 라인 */
+  background: rgba(0, 0, 0, 0.1);  /* 살짝 어두운 푸터 */
 }
 
 body.pc .modal-footer {
@@ -750,23 +865,26 @@ body.pc .modal-footer .btn-primary {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--line-strong);
-  background: var(--crisp-white);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);  /* 다크 배경 */
   font-size: 18px;
+  color: var(--text-primary);  /* 화이트 */
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .calendar-nav button:hover {
-  background: var(--void-black);
-  color: var(--crisp-white);
-  border-color: var(--void-black);
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 */
+  color: var(--void-black);
+  border-color: var(--trust-gold);
 }
 
 .calendar-nav .month {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.02em;
+  color: var(--text-primary);  /* 화이트 */
 }
 
 .calendar-grid {
@@ -779,7 +897,7 @@ body.pc .modal-footer .btn-primary {
   text-align: center;
   font-size: 12px;
   font-weight: 500;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.5);  /* 밝은 색 */
   padding: 8px 0;
 }
 
@@ -788,15 +906,18 @@ body.pc .modal-footer .btn-primary {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--line);
-  background: var(--crisp-white);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);  /* 다크 배경 */
   font-size: 14px;
+  color: var(--text-primary);  /* 화이트 */
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .day:hover:not(.disabled) {
-  border-color: var(--void-black);
+  border-color: var(--trust-gold);  /* 골드 hover */
+  background: rgba(201, 169, 98, 0.1);
 }
 
 .day.today {
@@ -806,14 +927,15 @@ body.pc .modal-footer .btn-primary {
 }
 
 .day.selected {
-  background: var(--void-black);
-  color: var(--crisp-white);
-  border-color: var(--void-black);
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 */
+  color: var(--void-black);
+  border-color: var(--trust-gold);
+  font-weight: 600;
 }
 
 .day.disabled {
-  background: var(--bg-light);
-  color: var(--blade-silver);
+  background: rgba(0, 0, 0, 0.2);  /* 어두운 배경 */
+  color: rgba(255, 255, 255, 0.2);  /* 흐린 텍스트 */
   text-decoration: line-through;
   cursor: not-allowed;
 }
@@ -827,11 +949,16 @@ body.pc .modal-footer .btn-primary {
   border-top: 1px solid var(--line);
 }
 
+.time-section {
+  border-top-color: rgba(255, 255, 255, 0.1);  /* 다크 라인 */
+}
+
 .time-section h4 {
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 12px;
   letter-spacing: -0.02em;
+  color: var(--text-primary);  /* 화이트 */
 }
 
 .time-slots {
@@ -851,9 +978,11 @@ body.pc .time-slots {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--line-strong);
-  background: var(--crisp-white);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);  /* 다크 배경 */
   font-size: 14px;
+  color: var(--text-primary);  /* 화이트 */
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -863,25 +992,27 @@ body.pc .time-slot {
 }
 
 .time-slot:hover:not(.unavailable) {
-  border-color: var(--void-black);
+  border-color: var(--trust-gold);  /* 골드 hover */
+  background: rgba(201, 169, 98, 0.1);
 }
 
 .time-slot.selected {
-  background: var(--void-black);
-  color: var(--crisp-white);
-  border-color: var(--void-black);
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 */
+  color: var(--void-black);
+  border-color: var(--trust-gold);
+  font-weight: 600;
 }
 
 .time-slot.unavailable {
-  background: var(--bg-light);
-  color: var(--blade-silver);
+  background: rgba(0, 0, 0, 0.2);  /* 어두운 배경 */
+  color: rgba(255, 255, 255, 0.2);  /* 흐린 텍스트 */
   text-decoration: line-through;
   cursor: not-allowed;
 }
 
 .time-slot.loading {
   grid-column: 1 / -1;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.5);  /* 밝은 색 */
   cursor: default;
   border: none;
   background: none;
@@ -914,7 +1045,8 @@ body.pc .time-slot {
 }
 
 .postcode-wrap {
-  background: var(--crisp-white);
+  background: #2C2C2E;  /* 다크 배경 */
+  border-radius: 16px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -934,9 +1066,11 @@ body.pc .postcode-wrap {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);  /* 다크 라인 */
+  background: rgba(0, 0, 0, 0.2);
   font-size: 14px;
   font-weight: 600;
+  color: var(--text-primary);  /* 화이트 */
 }
 
 body.pc .postcode-header {
@@ -950,7 +1084,7 @@ body.pc .postcode-header {
   line-height: 1;
   cursor: pointer;
   padding: 4px 6px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.5);  /* 밝은 색 */
 }
 
 body.pc .postcode-close:hover {
@@ -1017,14 +1151,14 @@ body.noscroll {
   align-items: flex-start;
   justify-content: center;
   padding-top: clamp(72px, 22vh, 200px);
-  background: rgba(255, 255, 255, 0.98);
+  background: rgba(28, 28, 30, 0.98);  /* 다크 배경 */
   z-index: 99999;
 }
 
 #bootFallback {
   border-radius: 50%;
-  border: 3px solid var(--line);
-  border-top-color: var(--void-black);
+  border: 3px solid rgba(255, 255, 255, 0.1);  /* 다크 라인 */
+  border-top-color: var(--trust-gold);  /* 골드 스피너 */
   animation: bootspin 1s linear infinite;
   /* 모바일 기본값 */
   width: 40px;
@@ -1044,15 +1178,30 @@ body.pc #bootFallback {
    ★ 진단 결과 배너
    ───────────────────────────────────────────────────────────── */
 .diagnosis-banner {
-  background: linear-gradient(135deg, #1c1c1e 0%, #2d2d30 100%);
-  border: 1px solid #3a3a3c;
-  padding: 16px;
-  margin-bottom: 20px;
+  background: rgba(201, 169, 98, 0.08);  /* 골드 틴트 배경 */
+  border: 1px solid rgba(201, 169, 98, 0.3);  /* 골드 테두리 */
+  border-radius: 16px;  /* 둥근 모서리 */
+  padding: 20px;
+  margin-bottom: 24px;
 }
 
 body.pc .diagnosis-banner {
-  padding: 20px 24px;
-  margin-bottom: 24px;
+  padding: 24px 32px;
+  margin-bottom: 32px;
+  border-radius: 20px;
+}
+
+body.pc .diagnosis-banner-header {
+  margin-bottom: 16px;
+}
+
+body.pc .diagnosis-banner-tags {
+  gap: 10px;
+}
+
+body.pc .diagnosis-tag {
+  font-size: 13px;
+  padding: 6px 14px;
 }
 
 .diagnosis-banner-header {
@@ -1063,16 +1212,17 @@ body.pc .diagnosis-banner {
 }
 
 .diagnosis-banner-badge {
-  background: var(--trust-gold);  /* 브랜드 골드 - 신뢰의 상징 */
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 그라디언트 */
   color: var(--void-black);
   font-size: 11px;
   font-weight: 700;
-  padding: 4px 8px;
+  padding: 5px 10px;
+  border-radius: 6px;
   letter-spacing: 0.02em;
 }
 
 .diagnosis-banner-title {
-  color: #FFFFFF;
+  color: var(--trust-gold);  /* 골드 타이틀 */
   font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -1085,18 +1235,21 @@ body.pc .diagnosis-banner {
 }
 
 .diagnosis-tag {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.9);
+  background: rgba(201, 169, 98, 0.15);  /* 골드 틴트 */
+  border: 1px solid rgba(201, 169, 98, 0.3);
+  border-radius: 100px;  /* 알약형 */
+  color: var(--trust-gold);  /* 골드 텍스트 */
   font-size: 12px;
   font-weight: 500;
-  padding: 4px 10px;
+  padding: 5px 12px;
 }
 
 .diagnosis-banner-hint {
-  margin-top: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(201, 169, 98, 0.2);
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(201, 169, 98, 0.7);  /* 골드 힌트 */
   line-height: 1.5;
 }
 </style>
@@ -1137,9 +1290,18 @@ body.pc .diagnosis-banner {
       <div class="segment-wrap">
         <div class="segment-label">어떤 방식이 편하세요?</div>
         <div class="segment-control" id="seg">
-          <button type="button" class="segment-btn active" data-v="visit">매장 방문</button>
-          <button type="button" class="segment-btn" data-v="field">출장 요청</button>
-          <button type="button" class="segment-btn" data-v="chat">톡 상담</button>
+          <button type="button" class="segment-btn active" data-v="visit">
+            <span class="seg-icon">🏪</span>
+            <span>매장 방문</span>
+          </button>
+          <button type="button" class="segment-btn" data-v="field">
+            <span class="seg-icon">🚗</span>
+            <span>출장 요청</span>
+          </button>
+          <button type="button" class="segment-btn" data-v="chat">
+            <span class="seg-icon">💬</span>
+            <span>톡 상담</span>
+          </button>
         </div>
         <input type="hidden" id="consult_type" value="매장 방문">
       </div>
@@ -1164,7 +1326,7 @@ body.pc .diagnosis-banner {
       </div>
 
       <!-- 매장 방문: 날짜/시간 선택 -->
-      <div id="sec-visit">
+      <div id="sec-visit" class="form-group">
         <label class="required">방문 날짜 및 시간</label>
         <button type="button" class="date-picker-btn" id="btn-open-picker">
           <span id="selected-date-display" class="date-display placeholder">날짜와 시간을 선택하세요</span>
@@ -1215,7 +1377,7 @@ body.pc .diagnosis-banner {
       </div>
 
       <!-- 메모 -->
-      <div class="form-group">
+      <div class="form-group" id="memo-group">
         <label>메모</label>
         <textarea id="memo" rows="3" placeholder="예) 특정 시간대 선호, 가위 상태, 요청사항 등"></textarea>
         <p class="form-hint">예: 특정 시간대 선호, 가위 상태, 요청사항 등</p>

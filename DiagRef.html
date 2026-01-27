@@ -21,10 +21,10 @@
   color: #ffffff;
   min-height: 100vh;
   margin: 0 auto;
-  /* PC: 넓은 화면 */
-  max-width: 800px;
-  padding: 40px;
-  padding-bottom: 140px;
+  /* PC: 1200px 레이아웃 */
+  max-width: 1200px;
+  padding: 60px 80px;
+  padding-bottom: 160px;
 }
 
 .mamoru-diagnosis * {
@@ -55,8 +55,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0 24px;
-  /* PC */
+  padding: 16px 0 24px;
   margin-bottom: 8px;
 }
 
@@ -203,16 +202,16 @@
 }
 
 .diag-question-text {
-  font-size: 32px;
+  font-size: 40px;  /* PC: 더 큰 제목 */
   font-weight: 700;
   line-height: 1.35;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   color: #ffffff;
 }
 
 @media screen and (max-width: 768px) {
   .diag-question-text {
-    font-size: 24px;
+    font-size: 24px;  /* 모바일: 원래 크기 */
     margin-bottom: 8px;
   }
 }
@@ -241,13 +240,14 @@
    선택지 - 기본형
    ========================================================= */
 .diag-options {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);  /* PC: 2열 그리드 */
+  gap: 16px;
 }
 
 @media screen and (max-width: 768px) {
   .diag-options {
+    grid-template-columns: 1fr;  /* 모바일: 1열 */
     gap: 12px;
   }
 }
@@ -576,12 +576,45 @@
 }
 
 .diag-footer-inner {
-  max-width: 800px;
+  max-width: 480px;
   margin: 0 auto;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* 이전 버튼 - 하단으로 이동 */
+.diag-back-btn-bottom {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.diag-back-btn-bottom:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-back-btn-bottom {
+    width: 48px;
+    height: 48px;
+  }
 }
 
 .diag-next-btn {
-  width: 100%;
+  flex: 1;  /* 남은 공간 채우기 */
   height: 58px;
   background: linear-gradient(135deg, #C9A962 0%, #B8963E 100%);
   border: none;
@@ -746,14 +779,22 @@
 .diag-result-actions {
   display: flex;
   flex-direction: column;
+  align-items: center;  /* PC: 중앙 정렬 */
   gap: 14px;
   margin-top: 28px;
+}
+
+.diag-result-actions .diag-result-btn {
+  max-width: 480px;  /* PC: 버튼 너비 제한 */
 }
 
 @media screen and (max-width: 768px) {
   .diag-result-actions {
     gap: 12px;
     margin-top: 24px;
+  }
+  .diag-result-actions .diag-result-btn {
+    max-width: 100%;  /* 모바일: 전체폭 */
   }
 }
 
@@ -819,7 +860,6 @@
 <div class="mamoru-diagnosis">
   <!-- 헤더 -->
   <div class="diag-header">
-    <button class="diag-back-btn" onclick="diagGoBack()">←</button>
     <span class="diag-title">간편진단</span>
     <span class="diag-step-indicator" id="stepIndicator">1/5</span>
   </div>
@@ -844,6 +884,7 @@
   <!-- 하단 버튼 -->
   <div class="diag-footer" id="diagFooter">
     <div class="diag-footer-inner">
+      <button class="diag-back-btn-bottom" id="backBtn" onclick="diagGoBack()">←</button>
       <button class="diag-next-btn" id="nextBtn" onclick="diagNextQuestion()" disabled>다음</button>
     </div>
   </div>
