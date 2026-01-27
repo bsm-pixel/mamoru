@@ -1,0 +1,78 @@
+<!-- MAMORU 브랜드 소개 - 아임웹 코드위젯용 -->
+<!-- ★ 이 코드를 아임웹 코드위젯에 전체 복사하세요 ★ -->
+
+<style>
+#mamoruIntroWrap {
+  position: relative;
+  width: 100%;
+}
+#mamoruIntroFrame {
+  width: 100%;
+  border: none;
+  display: block;
+  overflow: hidden;
+}
+</style>
+
+<div id="mamoruIntroWrap">
+  <iframe
+    id="mamoruIntroFrame"
+    src="https://script.google.com/macros/s/AKfycbwSxVWwx2oE5YHaajkBAv9nfOZoE1-Yak2uUI4AhDtLGgmHkGvkoiYvsIchBSws0Hr5/exec"
+    scrolling="no"
+    frameborder="0"
+    allowtransparency="true">
+  </iframe>
+</div>
+
+<script>
+(function(){
+  var iframe = document.getElementById('mamoruIntroFrame');
+  var lastHeight = 0;
+
+  // 높이 설정 함수
+  function setHeight(h) {
+    if (h && h > 100 && h !== lastHeight) {
+      lastHeight = h;
+      iframe.style.height = h + 'px';
+    }
+  }
+
+  // 초기 높이 (로딩 중 표시용)
+  setHeight(5000);
+
+  // 높이 메시지 수신
+  window.addEventListener('message', function(e) {
+    try {
+      var data = e.data;
+      if (data && data.type === 'MAMORU_IFRAME_SIZE') {
+        var newHeight = parseInt(data.height, 10);
+        if (newHeight > 100) {
+          setHeight(newHeight + 50); // 약간의 여유
+        }
+      }
+    } catch(err) {}
+  });
+
+  // 높이 요청
+  function requestHeight() {
+    try {
+      if (iframe.contentWindow) {
+        iframe.contentWindow.postMessage({type: 'REQUEST_HEIGHT'}, '*');
+      }
+    } catch(err) {}
+  }
+
+  // 로드 후 높이 요청
+  iframe.addEventListener('load', function() {
+    requestHeight();
+    setTimeout(requestHeight, 100);
+    setTimeout(requestHeight, 300);
+    setTimeout(requestHeight, 500);
+    setTimeout(requestHeight, 1000);
+    setTimeout(requestHeight, 2000);
+  });
+
+  // 1초마다 높이 요청
+  setInterval(requestHeight, 1000);
+})();
+</script>
