@@ -41,6 +41,8 @@ html, body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+  /* iframe 내부 스크롤 완전 비활성화 - 외부(아임웹) 스크롤만 사용 */
+  overflow: hidden;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -2256,7 +2258,16 @@ if (isLoadingDates) return;
     }
     $('consult_type').value = state.type;
     typeInfo.innerHTML = typeMessages[state.type];
-    window.__notifyHeight && window.__notifyHeight();
+    // 레이아웃 재계산 후 높이 알림 - 여러 번 호출하여 확실하게 처리
+    function notifyMultiple() {
+      window.__notifyHeight && window.__notifyHeight(true);
+    }
+    requestAnimationFrame(function() {
+      notifyMultiple();
+      setTimeout(notifyMultiple, 50);
+      setTimeout(notifyMultiple, 150);
+      setTimeout(notifyMultiple, 300);
+    });
   });
 
   // ─────────────────────────────────────────────────────────────
@@ -2483,11 +2494,11 @@ if (isLoadingDates) return;
   (function() {
     let t;
     let lastH = 0;
-    
-    function notify() {
+
+    function notify(force) {
       const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
-      // 높이가 변하지 않으면 메시지 전송 안 함
-      if (h === lastH) return;
+      // 강제 업데이트가 아니고 높이가 변하지 않으면 메시지 전송 안 함
+      if (!force && h === lastH) return;
       lastH = h;
       try { parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: h }, '*'); } catch (e) {}
     }
