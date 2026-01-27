@@ -82,9 +82,20 @@
   padding: 0;
 }
 
-html, body {
-  overflow-x: hidden; /* 가로 스크롤만 차단 */
-  height: auto;
+html {
+  overflow: hidden !important;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+body {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: auto !important;
 }
 
 body {
@@ -987,6 +998,161 @@ body {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   오시는 길 섹션
+   ───────────────────────────────────────────────────────────── */
+.location {
+  background: var(--bg-white);
+  padding: 80px 0 40px; /* 하단 패딩 축소 */
+}
+
+@media screen and (min-width: 769px) {
+  .location {
+    padding: 100px 0 50px; /* PC 하단 패딩 축소 */
+  }
+}
+
+.location-content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-top: 40px;
+}
+
+@media screen and (min-width: 769px) {
+  .location-content {
+    flex-direction: row;
+    gap: 48px;
+    align-items: stretch;
+  }
+}
+
+.location-map {
+  flex: 1;
+  min-height: 240px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e8e8e8 0%, #f5f5f7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+}
+
+.location-map:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+@media screen and (min-width: 769px) {
+  .location-map {
+    min-height: 280px;
+  }
+}
+
+.map-placeholder {
+  text-align: center;
+  padding: 20px;
+}
+
+.map-icon {
+  display: block;
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.map-text {
+  display: block;
+  font-size: 14px;
+  color: var(--text-muted-light);
+  line-height: 1.6;
+}
+
+@media screen and (min-width: 769px) {
+  .map-icon {
+    font-size: 56px;
+  }
+  .map-text {
+    font-size: 15px;
+  }
+}
+
+.location-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.location-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary-light);
+  margin-bottom: 16px;
+}
+
+@media screen and (min-width: 769px) {
+  .location-title {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+}
+
+.location-address {
+  font-size: 15px;
+  color: var(--text-muted-light);
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+
+@media screen and (min-width: 769px) {
+  .location-address {
+    font-size: 17px;
+    margin-bottom: 32px;
+  }
+}
+
+.location-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-location {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  background: var(--bg-dark);
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.btn-location:hover {
+  background: #333;
+  transform: translateY(-2px);
+}
+
+.btn-location.outline {
+  background: transparent;
+  border: 1.5px solid var(--text-muted-light);
+  color: var(--text-primary-light);
+}
+
+.btn-location.outline:hover {
+  border-color: var(--trust-gold);
+  color: var(--trust-gold);
+}
+
+/* ─────────────────────────────────────────────────────────────
    푸터
    ───────────────────────────────────────────────────────────── */
 .footer {
@@ -1325,10 +1491,44 @@ body {
   </div>
 </section>
 
-<!-- 푸터 -->
-<footer class="footer">
-  <p class="footer-text">© 2025 MAMORU. All rights reserved.</p>
-</footer>
+<!-- ══════════════════════════════════════════════════════════════
+     섹션 7: 오시는 길
+     ══════════════════════════════════════════════════════════════ -->
+<section class="section location section-light" id="location">
+  <div class="container">
+    <span class="section-label fade-in">Location</span>
+    <h2 class="section-title fade-in">오시는 길</h2>
+
+    <div class="location-content">
+      <!-- 지도 영역 (정적 이미지 + 클릭 시 지도 열기) -->
+      <a href="https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C%20%EA%B5%AC%EB%A1%9C%EA%B5%AC%20%EB%B6%80%EA%B4%91%EB%A1%9C%2088" target="_blank" class="location-map fade-in">
+        <div class="map-placeholder">
+          <span class="map-icon">🗺️</span>
+          <span class="map-text">지도를 클릭하면<br>네이버지도에서 열립니다</span>
+        </div>
+      </a>
+
+      <!-- 주소 및 버튼 -->
+      <div class="location-info fade-in">
+        <h3 class="location-title">📍 MAMORU</h3>
+        <p class="location-address">
+          서울특별시 구로구 부광로 88<br>
+          SKV1건물 B동 311호
+        </p>
+        <div class="location-buttons">
+          <!-- 네비게이션 (카카오맵 길찾기) -->
+          <a href="https://map.kakao.com/link/to/MAMORU,37.4855,126.8974" target="_blank" class="btn-location">
+            🧭 네비게이션
+          </a>
+          <!-- 지도에서 보기 (네이버지도) -->
+          <a href="https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C%20%EA%B5%AC%EB%A1%9C%EA%B5%AC%20%EB%B6%80%EA%B4%91%EB%A1%9C%2088" target="_blank" class="btn-location outline">
+            🗺️ 지도에서 보기
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <script>
 /* ══════════════════════════════════════════════════════════════
