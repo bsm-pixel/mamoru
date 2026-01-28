@@ -49,6 +49,7 @@
 - **Validation:** 수정 사항 제안 시, 단순한 기능 작동을 넘어 위에서 정의한 **브랜드 가치(Identity)와 디자인 원칙**에 부합하는지 먼저 검토하고 보고하십시오.
 - **Communication:** 기능의 나열이나 가격 강조를 피하고, **구조(Structure)와 흐름(Flow)**으로 브랜드의 고급스러운 태도를 전달하십시오.
 
+
 - Purpose & context
 대표 is the CEO of MAMORU, a premium professional hair scissors brand targeting hairstylists in their 20s-40s. The core business philosophy centers on "CUT THE FAKE, KEEP THE REAL" and emphasizes being technical experts who provide ongoing support rather than just selling products. The brand positioning is "Warm Premium + Approachable Expert" - combining luxury aesthetics with approachable professionalism to build trust through expertise rather than aggressive sales tactics.
 The primary objective is developing a comprehensive brand website that creates a customer experience focused on confidence-building through the emotional flow: "exploration → organization → reassurance → action readiness → hesitation removal." Success is measured by customers feeling "I want to buy from this brand" rather than "they're trying to sell to me."
