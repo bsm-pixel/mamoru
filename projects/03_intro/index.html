@@ -1567,22 +1567,23 @@ body::before {
 
 (function() {
   function getFullHeight() {
-    // 모든 섹션의 끝점을 계산하여 최대 높이 확보
-    var docHeight = Math.max(
-      document.body.scrollHeight,
-      document.body.offsetHeight,
-      document.documentElement.scrollHeight,
-      document.documentElement.offsetHeight
-    );
-    // location 섹션(마지막)의 하단 위치 직접 계산
+    // location 섹션(마지막 콘텐츠)의 하단 위치만 계산 (scrollHeight 사용 안 함 - 피드백 루프 방지)
     var locationEl = document.getElementById('location');
     if (locationEl) {
       var rect = locationEl.getBoundingClientRect();
-      var locationBottom = window.scrollY + rect.top + rect.height;
-      docHeight = Math.max(docHeight, locationBottom);
+      return Math.ceil(rect.top + rect.height + 50); // 여유 마진 포함
     }
-    // 여유 마진 추가 (아임웹 푸터 고려)
-    return docHeight + 50;
+    // fallback: body의 자식 요소들 중 가장 아래 위치
+    var maxBottom = 0;
+    var children = document.body.children;
+    for (var i = 0; i < children.length; i++) {
+      var child = children[i];
+      if (child.tagName !== 'SCRIPT' && child.tagName !== 'STYLE') {
+        var rect = child.getBoundingClientRect();
+        maxBottom = Math.max(maxBottom, rect.top + rect.height);
+      }
+    }
+    return Math.ceil(maxBottom + 50);
   }
 
   function notifyHeight() {
