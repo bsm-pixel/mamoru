@@ -1,5 +1,6 @@
 <!-- MAMORU 브랜드 소개 - 아임웹 코드위젯용 -->
 <!-- ★ 이 코드를 아임웹 코드위젯에 전체 복사하세요 ★ -->
+<!-- GitHub Pages 이전 버전 - postMessage 동적 높이 조절 -->
 
 <style>
 #mamoruIntroWrap {
@@ -10,7 +11,6 @@
   width: 100%;
   border: none;
   display: block;
-  /* overflow: hidden 제거 - 높이 계산 방해 요소 */
 }
 /* 로딩 스피너 애니메이션 */
 @keyframes mamoruSpin {
@@ -58,7 +58,7 @@
 
   <iframe
     id="mamoruIntroFrame"
-    src="https://script.google.com/macros/s/AKfycbwSxVWwx2oE5YHaajkBAv9nfOZoE1-Yak2uUI4AhDtLGgmHkGvkoiYvsIchBSws0Hr5/exec"
+    src="https://bsm-pixel.github.io/mamoru/projects/03_intro/index.html"
     scrolling="no"
     frameborder="0"
     allowtransparency="true">
@@ -68,74 +68,31 @@
 <script>
 (function(){
   var iframe = document.getElementById('mamoruIntroFrame');
-  var stableHeight = 0;
-  var heightHistory = [];
+  var currentHeight = 0;
 
-  // #2 높이 설정 함수 - 안정화된 높이만 적용
-  function setHeight(h) {
-    if (!h || h < 100) return;
+  // postMessage로 동적 높이 수신 (index.html에서 MAMORU_IFRAME_SIZE 타입으로 전송)
+  window.addEventListener('message', function(e) {
+    // GitHub Pages origin 확인
+    if (e.origin !== 'https://bsm-pixel.github.io') return;
 
-    heightHistory.push(h);
-    if (heightHistory.length > 3) heightHistory.shift();
-
-    // 최근 3번 측정값이 비슷하면 안정화된 것으로 판단
-    if (heightHistory.length >= 2) {
-      var avg = heightHistory.reduce(function(a,b){return a+b;}, 0) / heightHistory.length;
-      var stable = heightHistory.every(function(v){ return Math.abs(v - avg) < 50; });
-
-      if (stable && Math.abs(h - stableHeight) > 30) {
-        stableHeight = h;
-        iframe.style.height = h + 'px';
+    if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && typeof e.data.height === 'number') {
+      var newHeight = Math.ceil(e.data.height);
+      if (newHeight !== currentHeight && newHeight > 0) {
+        currentHeight = newHeight;
+        iframe.style.height = newHeight + 'px';
       }
     }
-  }
-
-  // #2 초기 높이 - 적절한 값으로 시작 (너무 크지 않게)
-  iframe.style.height = '3000px';
-
-  // 높이 메시지 수신 - 콘텐츠 높이 그대로 적용
-  window.addEventListener('message', function(e) {
-    try {
-      var data = e.data;
-      if (data && data.type === 'MAMORU_IFRAME_SIZE') {
-        var newHeight = parseInt(data.height, 10);
-        if (newHeight > 100) {
-          setHeight(newHeight); // 마진 없이 정확한 높이 적용
-        }
-      }
-    } catch(err) {}
   });
 
-  // 높이 요청
-  function requestHeight() {
-    try {
-      if (iframe.contentWindow) {
-        iframe.contentWindow.postMessage({type: 'REQUEST_HEIGHT'}, '*');
-      }
-    } catch(err) {}
-  }
+  // 초기 높이 (postMessage 수신 전 fallback)
+  iframe.style.height = (window.innerWidth <= 768 ? 1000 : 6100) + 'px';
 
-  // 로드 후 로더 숨김 및 높이 요청
+  // 로드 후 로딩 스피너 숨김
   iframe.addEventListener('load', function() {
-    // 로딩 스피너 숨김
-    var loader = document.getElementById('mamoruLoader');
-    if (loader) loader.style.display = 'none';
-
-    requestHeight();
-    setTimeout(requestHeight, 100);
-    setTimeout(requestHeight, 300);
-    setTimeout(requestHeight, 500);
-    setTimeout(requestHeight, 1000);
-    setTimeout(requestHeight, 2000);
-    setTimeout(requestHeight, 3000);
-  });
-
-  // #4 1초마다 높이 요청 (500ms에서 개선)
-  setInterval(requestHeight, 1000);
-
-  // 리사이즈 시 높이 재계산 요청
-  window.addEventListener('resize', function() {
-    requestHeight();
+    setTimeout(function() {
+      var loader = document.getElementById('mamoruLoader');
+      if (loader) loader.style.display = 'none';
+    }, 300);
   });
 })();
 </script>

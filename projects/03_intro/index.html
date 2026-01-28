@@ -1551,6 +1551,8 @@ body::before {
 <script>
 (function() {
   var fadeEls = document.querySelectorAll('.fade-in');
+
+  // IntersectionObserver로 스크롤 기반 fade-in 애니메이션
   if ('IntersectionObserver' in window) {
     var observer = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
@@ -1579,25 +1581,30 @@ body::before {
       var locationBottom = window.scrollY + rect.top + rect.height;
       docHeight = Math.max(docHeight, locationBottom);
     }
-    return docHeight;
+    // 여유 마진 추가 (아임웹 푸터 고려)
+    return docHeight + 50;
   }
+
   function notifyHeight() {
     var height = getFullHeight();
-    // #8 console.log 제거
     if (window.parent && window.parent !== window && height > 0) {
       window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: height }, '*');
     }
   }
+
   window.addEventListener('message', function(e) {
     if (e.data && e.data.type === 'REQUEST_HEIGHT') notifyHeight();
   });
+
   window.addEventListener('load', function() {
-    notifyHeight();
-    setTimeout(notifyHeight, 300);
+    // 이미지/폰트 로드 완료 후 높이 계산
+    setTimeout(notifyHeight, 100);
+    setTimeout(notifyHeight, 500);
     setTimeout(notifyHeight, 1000);
+    setTimeout(notifyHeight, 2000);
   });
+
   window.addEventListener('resize', notifyHeight);
-  // #4 setInterval 제거 - introiframe.html에서만 요청하도록 통합
 })();
 </script>
 
