@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>MAMORU | 가위 전문 브랜드</title>
-<link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet"></noscript>
 <style>
 /* ══════════════════════════════════════════════════════════════
    MAMORU Intro - Premium Dark Theme
@@ -45,15 +46,16 @@
 }
 
 html {
-  /* overflow: hidden 제거 - 모바일 높이 계산 방해 원인 */
   scrollbar-width: none;
   -ms-overflow-style: none;
+  overflow-x: hidden; /* #1 가로 스크롤 방지 */
 }
 
 html::-webkit-scrollbar { display: none; }
 
 body {
-  overflow: visible !important;
+  overflow-x: hidden; /* #1 가로 스크롤 방지 */
+  overflow-y: visible;
   height: auto !important;
   min-height: auto !important;
   font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -957,12 +959,11 @@ body::before {
 .location {
   background: var(--bg-elevated);
   border-top: 1px solid var(--line-subtle);
-  padding: 100px 0 80px;
-  padding-bottom: 280px; /* 모바일: 버튼까지 충분히 표시 */
+  padding: 100px 0 120px; /* #5 과도한 패딩 제거 (280px → 120px) */
 }
 
 @media screen and (min-width: 769px) {
-  .location { padding: 120px 0 100px; } /* PC: 기존 패딩 유지 */
+  .location { padding: 120px 0 100px; }
 }
 
 .location-content {
@@ -1074,13 +1075,15 @@ body::before {
    ───────────────────────────────────────────────────────────── */
 .fade-in {
   opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  transform: translateY(30px); /* #7 40px → 30px로 줄여 레이아웃 쉬프트 감소 */
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* #7 0.7s → 0.5s */
+  will-change: opacity, transform; /* #7 GPU 가속 */
 }
 
 .fade-in.visible {
   opacity: 1;
   transform: translateY(0);
+  will-change: auto; /* #7 애니메이션 완료 후 해제 */
 }
 
 .delay-1 { transition-delay: 0.1s; }
@@ -1259,12 +1262,7 @@ body::before {
   <div class="hero-content">
     <!-- ★★★ HERO_LOGO_IMAGE ★★★ -->
     <div class="hero-logo">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 12.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-        <path fill-rule="evenodd" d="M5.5 7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zm0-1a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
-        <path fill-rule="evenodd" d="M5.5 22a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zm0-1a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
-        <path d="M7.5 6L20 18M7.5 18L20 6"/>
-      </svg>
+      <span style="font-size:40px;">✂️</span>
     </div>
 
     <h1 class="hero-title">
@@ -1294,7 +1292,7 @@ body::before {
     <div class="story-content">
       <!-- 메인 이미지: 대표님 작업 사진 -->
       <div class="story-image fade-in">
-        <img src="history_img/3131.jpg" alt="마모루 대표 작업 사진">
+        <img src="https://drive.google.com/uc?export=view&id=1pydvz8HByH7SwTuP54gLSQcR7weKDhwf" alt="마모루 대표 작업 사진">
       </div>
 
       <!-- 텍스트 영역 -->
@@ -1321,7 +1319,7 @@ body::before {
         <!-- 강조 블록 -->
         <div class="story-highlight fade-in">
           <div class="story-highlight-image">
-            <img src="history_img/6.jpg" alt="50년 장인의 손">
+            <img src="https://drive.google.com/uc?export=view&id=1cM4S-FXzkgFlcVVvPKBB8VmjPTf4s3-V" alt="50년 장인의 손">
           </div>
           <p class="story-highlight-text">
             <span class="text-gold">50년 장인의 손에서 시작된 기술,</span>
@@ -1585,7 +1583,7 @@ body::before {
   }
   function notifyHeight() {
     var height = getFullHeight();
-    console.log('[MAMORU index] calculated height:', height); // 디버깅용
+    // #8 console.log 제거
     if (window.parent && window.parent !== window && height > 0) {
       window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: height }, '*');
     }
@@ -1595,13 +1593,11 @@ body::before {
   });
   window.addEventListener('load', function() {
     notifyHeight();
-    setTimeout(notifyHeight, 100);
-    setTimeout(notifyHeight, 500);
+    setTimeout(notifyHeight, 300);
     setTimeout(notifyHeight, 1000);
-    setTimeout(notifyHeight, 2000);
   });
   window.addEventListener('resize', notifyHeight);
-  setInterval(notifyHeight, 500);
+  // #4 setInterval 제거 - introiframe.html에서만 요청하도록 통합
 })();
 </script>
 
