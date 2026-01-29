@@ -1435,14 +1435,15 @@ function diagShowResult() {
    ========================================================= */
 
 function diagGoToConsult() {
-  // localStorage에 진단 데이터 저장
-  localStorage.setItem('MAMORU_DIAGNOSIS', JSON.stringify(diagAnswers));
+  // ★ URL 파라미터로 진단 데이터 전달 (도메인 간 localStorage 공유 불가)
+  const diagData = encodeURIComponent(JSON.stringify(diagAnswers));
+  const url = CONSULT_PAGE_URL + '?diagnosis=' + diagData;
 
   // ★ 아임웹 부모 페이지로 이동 (iframe 탈출)
   if (window.top !== window.self) {
-    window.top.location.href = CONSULT_PAGE_URL;
+    window.top.location.href = url;
   } else {
-    window.location.href = CONSULT_PAGE_URL;
+    window.location.href = url;
   }
 }
 

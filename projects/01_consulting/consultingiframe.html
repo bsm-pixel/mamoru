@@ -14,15 +14,15 @@
   var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwqJr1JVeSspv6kZ-wpKPapKOjk1wvEvQQ9rTN3ZtmtgMpkn8-HLVP7Plw94m-N1EE5/exec';
   var f = document.getElementById('csFramePC');
 
-  // localStorage에서 진단 데이터 확인
-  var diagnosisData = localStorage.getItem('MAMORU_DIAGNOSIS');
+  // ★ URL 파라미터에서 진단 데이터 확인 (DiagRef.html에서 전달)
+  var urlParams = new URLSearchParams(window.location.search);
+  var diagnosisData = urlParams.get('diagnosis');
   var finalURL = WEBAPP_URL;
 
   if (diagnosisData) {
     // iframe URL에 진단 데이터 파라미터 추가
     finalURL = WEBAPP_URL + '?diagnosis=' + encodeURIComponent(diagnosisData);
-    console.log('[MAMORU] 진단 데이터를 iframe URL에 포함');
-    localStorage.removeItem('MAMORU_DIAGNOSIS');
+    console.log('[MAMORU] 진단 데이터를 iframe URL에 포함:', diagnosisData);
   }
 
   f.src = finalURL;
