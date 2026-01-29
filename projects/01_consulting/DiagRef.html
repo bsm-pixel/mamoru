@@ -1,50 +1,77 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>MAMORU 간편진단</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet"></noscript>
 <!-- =========================================================
-   MAMORU 간편진단 페이지 v3
-   
-   ★ 수정사항 반영:
-   1. PC/모바일 반응형 (가로폭 최적화)
-   2. iframe 구조에서 상담접수 연동 (postMessage 방식)
-   3. 선택 시 깜빡임 제거, 전환만 부드럽게
-   
-   ★ 상담접수 연동 방법:
-   - 아임웹 상담접수 페이지의 iframe에 ?allowDiagnosis=true 추가
-   - 또는 별도 URL 파라미터 방식 사용
+   MAMORU 간편진단 페이지 v4
+
+   ★ v4 수정사항:
+   1. iframe 내 스크롤/여백 문제 해결
+   2. 아임웹 페이지 이동 (window.top 사용)
+   3. postMessage로 높이 전송
    ========================================================= -->
 
 <style>
 /* =========================================================
+   HTML/Body Reset (iframe 대응)
+   ========================================================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-x: hidden;
+}
+
+html::-webkit-scrollbar { display: none; }
+
+body {
+  overflow-x: hidden;
+  overflow-y: visible;
+  height: auto !important;
+  min-height: auto !important;
+  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: #1C1C1E;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+}
+/* =========================================================
    기본 설정 + PC/모바일 반응형
    ========================================================= */
 .mamoru-diagnosis {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   background: #1C1C1E;
   color: #ffffff;
   min-height: 100vh;
   margin: 0 auto;
-  /* PC: 1200px 레이아웃 */
-  max-width: 1200px;
-  padding: 60px 80px;
-  padding-bottom: 160px;
+  /* PC: 중앙 정렬 + 최대 너비 */
+  max-width: 800px;
+  padding: 40px 24px;
+  padding-bottom: 140px;  /* 하단 고정 버튼 영역 */
 }
 
-.mamoru-diagnosis * {
-  box-sizing: border-box;
-}
-
-/* 모바일 */
+/* 모바일: 좌우 여백 최소화 */
 @media screen and (max-width: 768px) {
   .mamoru-diagnosis {
     max-width: 100%;
-    padding: 20px;
-    padding-bottom: 130px;  /* 하단 버튼 가림 방지 */
+    padding: 16px 16px;
+    padding-bottom: 120px;
   }
 }
 
 /* 소형 모바일 (480px 이하) */
 @media screen and (max-width: 480px) {
   .mamoru-diagnosis {
-    padding: 16px;
-    padding-bottom: 120px;
+    padding: 12px 12px;
+    padding-bottom: 110px;
   }
 }
 
@@ -548,30 +575,35 @@
 }
 
 /* =========================================================
-   하단 버튼
+   하단 버튼 - sticky 방식 (iframe 대응)
    ========================================================= */
 .diag-footer {
-  position: fixed;
+  position: sticky;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 20px 40px;
-  padding-bottom: max(20px, env(safe-area-inset-bottom));
-  background: linear-gradient(to top, #1C1C1E 85%, transparent);
+  padding: 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  background: linear-gradient(to top, #1C1C1E 80%, rgba(28, 28, 30, 0.95) 90%, transparent);
   z-index: 100;
+  margin: 0 -24px;  /* 부모 패딩 상쇄 */
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
 @media screen and (max-width: 768px) {
   .diag-footer {
-    padding: 16px 20px;
-    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    margin: 0 -16px;
+    padding: 14px 16px;
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
   }
 }
 
 @media screen and (max-width: 480px) {
   .diag-footer {
-    padding: 14px 16px;
-    padding-bottom: max(18px, env(safe-area-inset-bottom));
+    margin: 0 -12px;
+    padding: 12px 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
 }
 
@@ -856,6 +888,8 @@
   }
 }
 </style>
+</head>
+<body>
 
 <div class="mamoru-diagnosis">
   <!-- 헤더 -->
@@ -899,9 +933,9 @@
    - 상담접수 URL: CONSULT_PAGE_URL 변수
    ========================================================= */
 
-// ★★★ 상담접수 페이지 URL 설정 ★★★
-// 아임웹 상담접수 페이지의 전체 URL을 입력하세요
-const CONSULT_PAGE_URL = '/52';  // 예: '/page/consultation' 또는 'https://mamoru.com/consultation'
+// ★★★ URL 설정 ★★★
+const CONSULT_PAGE_URL = '/52';  // 상담접수 페이지
+const RECOMMEND_PAGE_URL = '/48';  // 맞춤 추천 페이지 (★ 아임웹 페이지 번호로 교체)
 
 /* =========================================================
    질문 데이터
@@ -1337,14 +1371,18 @@ function diagShowResult() {
       <p class="diag-result-desc">${resultMsg}</p>
       <div class="diag-result-tags">${tagsHtml}</div>
     </div>
-    
+
     <div class="diag-result-actions">
-      <button class="diag-result-btn diag-result-btn-primary" onclick="diagGoToConsult()">
-        이 내용으로 상담접수 진행하기
+      <button class="diag-result-btn diag-result-btn-primary" onclick="diagGoToRecommend()">
+        진단에 알맞는 제품 보러가기
       </button>
-      <p class="diag-result-btn-hint">진단 내용을 참고하면 더욱 알맞은 가위 안내를 받을 수 있어요</p>
-      
-      <button class="diag-result-btn diag-result-btn-secondary" onclick="diagInit()">
+      <p class="diag-result-btn-hint">진단 결과에 맞는 제품을 점수순으로 추천해드려요</p>
+
+      <button class="diag-result-btn diag-result-btn-secondary" onclick="diagGoToConsult()">
+        이 진단서로 상담접수하기
+      </button>
+
+      <button class="diag-result-btn diag-result-btn-secondary" onclick="diagInit()" style="margin-top: 8px;">
         다시 진단하기
       </button>
     </div>
@@ -1358,11 +1396,73 @@ function diagShowResult() {
 function diagGoToConsult() {
   // localStorage에 진단 데이터 저장
   localStorage.setItem('MAMORU_DIAGNOSIS', JSON.stringify(diagAnswers));
-  
-  // 상담접수 페이지로 이동 (URL 파라미터 없이)
-  window.location.href = CONSULT_PAGE_URL;
+
+  // ★ 아임웹 부모 페이지로 이동 (iframe 탈출)
+  if (window.top !== window.self) {
+    window.top.location.href = CONSULT_PAGE_URL;
+  } else {
+    window.location.href = CONSULT_PAGE_URL;
+  }
 }
+
+// ★ 맞춤 추천 페이지로 이동
+function diagGoToRecommend() {
+  // localStorage에 진단 데이터 저장
+  localStorage.setItem('MAMORU_DIAGNOSIS', JSON.stringify(diagAnswers));
+
+  // ★ 아임웹 부모 페이지로 이동 (iframe 탈출)
+  if (window.top !== window.self) {
+    window.top.location.href = RECOMMEND_PAGE_URL;
+  } else {
+    window.location.href = RECOMMEND_PAGE_URL;
+  }
+}
+
+/* =========================================================
+   iframe 높이 전송 (아임웹 코드위젯 대응)
+   ========================================================= */
+(function() {
+  function getFullHeight() {
+    var diagEl = document.querySelector('.mamoru-diagnosis');
+    if (diagEl) {
+      var rect = diagEl.getBoundingClientRect();
+      return Math.ceil(rect.height + 50);
+    }
+    return Math.ceil(document.body.scrollHeight + 50);
+  }
+
+  function notifyHeight() {
+    var height = getFullHeight();
+    if (window.parent && window.parent !== window && height > 0) {
+      window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: height }, '*');
+    }
+  }
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'REQUEST_HEIGHT') notifyHeight();
+  });
+
+  window.addEventListener('load', function() {
+    setTimeout(notifyHeight, 100);
+    setTimeout(notifyHeight, 500);
+    setTimeout(notifyHeight, 1000);
+  });
+
+  window.addEventListener('resize', notifyHeight);
+
+  // 질문 전환 시에도 높이 재계산
+  var origRender = window.diagRenderQuestion;
+  if (typeof origRender === 'function') {
+    window.diagRenderQuestion = function() {
+      origRender.apply(this, arguments);
+      setTimeout(notifyHeight, 100);
+    };
+  }
+})();
 
 // 초기화
 diagInit();
 </script>
+
+</body>
+</html>
