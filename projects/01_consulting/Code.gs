@@ -6,7 +6,7 @@ const DEALER_SHEET_NAME = '딜러';
 const VERSION = 'v2.2.0-final';
 
 // GitHub Pages URL (index.html 이전용)
-const GITHUB_PAGES_BASE = 'https://mamaboruofficial.github.io/mamoru/projects/01_consulting';
+const GITHUB_PAGES_BASE = 'https://bsm-pixel.github.io/mamoru/projects/01_consulting';
 
 const MAKE_WEBHOOK_URL = 'https://hook.eu2.make.com/x70jrebxr82odam3eu4oosuar9mm2fg5';
 const CAL_NAME = '마모루 방문예약';
