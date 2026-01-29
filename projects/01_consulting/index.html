@@ -145,6 +145,7 @@ body.pc .card-body {
 }
 
 /* PC: 전체폭 차지하는 요소들 */
+body.pc .card-body .diagnosis-banner,  /* 진단배너도 2열 전체 차지 */
 body.pc .card-body .segment-wrap,
 body.pc .card-body .type-info,
 body.pc .card-body #sec-field,
@@ -1268,26 +1269,24 @@ body.pc .diagnosis-tag {
     </div>
     <h1>가위 상담 신청</h1>
   </div>
-  <!-- ═══════════════════════════════════════════════════════════
-     PART 2: HTML 배너 (header 바로 아래에 삽입)
-     ═══════════════════════════════════════════════════════════ -->
-<!-- 진단 결과 배너 (진단 데이터가 있을 때만 표시) -->
-<div id="diagnosis-banner" class="diagnosis-banner hide">
-  <div class="diagnosis-banner-header">
-    <span class="diagnosis-banner-badge">✓ 진단완료</span>
-    <span class="diagnosis-banner-title">간편진단 결과가 반영됩니다</span>
-  </div>
-  <div id="diagnosis-tags" class="diagnosis-banner-tags">
-    <!-- 태그들이 여기에 동적으로 삽입됨 -->
-  </div>
-  <div class="diagnosis-banner-hint">
-    위 내용이 상담 메모에 자동으로 포함됩니다
-  </div>
-</div>
-
-
   <div class="card">
     <div class="card-body">
+      <!-- ═══════════════════════════════════════════════════════════
+         진단 결과 배너 (card-body 최상단 - 모바일에서도 보이도록)
+         ═══════════════════════════════════════════════════════════ -->
+      <div id="diagnosis-banner" class="diagnosis-banner hide">
+        <div class="diagnosis-banner-header">
+          <span class="diagnosis-banner-badge">✓ 진단완료</span>
+          <span class="diagnosis-banner-title">간편진단 결과가 반영됩니다</span>
+        </div>
+        <div id="diagnosis-tags" class="diagnosis-banner-tags">
+          <!-- 태그들이 여기에 동적으로 삽입됨 -->
+        </div>
+        <div class="diagnosis-banner-hint">
+          위 내용이 상담 메모에 자동으로 포함됩니다
+        </div>
+      </div>
+
       <!-- 상담유형 선택 -->
       <div class="segment-wrap">
         <div class="segment-label">어떤 방식이 편하세요?</div>
