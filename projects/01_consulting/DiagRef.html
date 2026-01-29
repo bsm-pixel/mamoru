@@ -326,6 +326,13 @@ body {
   flex-shrink: 0;
 }
 
+/* 커스텀 아이콘 이미지 지원 */
+.diag-custom-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
 @media screen and (max-width: 768px) {
   .diag-option-icon {
     width: 44px;
@@ -575,44 +582,65 @@ body {
 }
 
 /* =========================================================
-   하단 버튼 - sticky 방식 (iframe 대응)
+   하단 버튼 - PC: 우측 하단 고정 / 모바일: 하단 고정
    ========================================================= */
+
+/* 기본(PC): 우측 하단 고정 */
 .diag-footer {
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
-  background: linear-gradient(to top, #1C1C1E 80%, rgba(28, 28, 30, 0.95) 90%, transparent);
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  left: auto;
+  width: auto;
+  padding: 0;
+  margin: 0;
+  background: transparent;
   z-index: 100;
-  margin: 0 -24px;  /* 부모 패딩 상쇄 */
-  padding-left: 24px;
-  padding-right: 24px;
 }
 
+.diag-footer-inner {
+  max-width: none;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* PC: 버튼 스타일 조정 */
+@media screen and (min-width: 769px) {
+  .diag-back-btn-bottom {
+    width: 52px;
+    height: 52px;
+  }
+  .diag-next-btn {
+    width: 180px;
+    flex: none;
+  }
+}
+
+/* 모바일: 하단 전체폭 고정 */
 @media screen and (max-width: 768px) {
   .diag-footer {
-    margin: 0 -16px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
     padding: 14px 16px;
     padding-bottom: max(14px, env(safe-area-inset-bottom));
+    background: linear-gradient(to top, #1C1C1E 85%, transparent);
+    margin: 0;
+  }
+  .diag-footer-inner {
+    max-width: 480px;
+    margin: 0 auto;
   }
 }
 
 @media screen and (max-width: 480px) {
   .diag-footer {
-    margin: 0 -12px;
     padding: 12px 12px;
     padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
-}
-
-.diag-footer-inner {
-  max-width: 480px;
-  margin: 0 auto;
-  display: flex;
-  gap: 12px;
-  align-items: center;
 }
 
 /* 이전 버튼 - 하단으로 이동 */
@@ -934,8 +962,8 @@ body {
    ========================================================= */
 
 // ★★★ URL 설정 ★★★
-const CONSULT_PAGE_URL = '/52';  // 상담접수 페이지
-const RECOMMEND_PAGE_URL = '/57';  // 맞춤 추천 페이지 (★ 아임웹 페이지 번호로 교체)
+const CONSULT_PAGE_URL = '/52';  /* [EDIT:URL] 상담접수 페이지 */
+const RECOMMEND_PAGE_URL = '/57';  /* [EDIT:URL] 맞춤 추천 페이지 */
 
 /* =========================================================
    질문 데이터
@@ -943,38 +971,44 @@ const RECOMMEND_PAGE_URL = '/57';  // 맞춤 추천 페이지 (★ 아임웹 페
 const questionsData = [
   {
     id: 'Q_STAGE',
-    label: '경력',
-    question: '현재 단계가\n어떻게 되시나요?',
-    sub: '가장 가까운 상황을 선택해주세요',
+    label: '경력',  /* [EDIT:TEXT] */
+    question: '현재 단계가\n어떻게 되시나요?',  /* [EDIT:TEXT] */
+    sub: '가장 가까운 상황을 선택해주세요',  /* [EDIT:TEXT] */
     multiple: false,
     hasGif: false,
     condition: null,
     options: [
-      { id: 'CE', label: '자격증 준비', desc: '아직 현장 경험이 없어요', icon: '📚' },
-      { id: 'IN', label: '인턴/스탭', desc: '현장에서 배우는 중이에요', icon: '✂️' },
-      { id: 'DE', label: '디자이너', desc: '손님을 직접 담당해요', icon: '💇' }
+      { id: 'CE', label: '자격증 준비', desc: '아직 현장 경험이 없어요', icon: '📚' /* [EDIT:ICON] */ },
+      { id: 'IN', label: '인턴/스탭', desc: '현장에서 배우는 중이에요', icon: '✂️' /* [EDIT:ICON] */ },
+      { id: 'DE', label: '디자이너', desc: '손님을 직접 담당해요', icon: '💇' /* [EDIT:ICON] */ }
     ]
   },
   {
     id: 'Q_TYPE',
-    label: '가위 종류',
-    question: '어떤 종류의\n가위가 필요하신가요?',
-    sub: '여러 개 선택 가능해요',
+    label: '가위 종류',  /* [EDIT:TEXT] */
+    question: '어떤 종류의\n가위가 필요하신가요?',  /* [EDIT:TEXT] */
+    sub: '여러 개 선택 가능해요',  /* [EDIT:TEXT] */
     multiple: true,
     hasGif: false,
     condition: null,
+    /*
+     * [EDIT:ICON] SVG 아이콘 사용 예시:
+     * icon: './icons/blunt.svg'      ← icons 폴더에 저장된 SVG
+     * icon: './icons/thinning.svg'
+     * icon: '✂️'                     ← 이모지 그대로 사용
+     */
     options: [
-      { id: 'BL', label: '블런트 (커트가위)', desc: '기본 커트용', icon: '✂️' },
-      { id: 'TH', label: '틴닝 (숱가위)', desc: '숱 조절용', icon: '〰️' },
-      { id: 'LO', label: '장가위', desc: '긴 날 커트용', icon: '📏' },
-      { id: 'SL', label: '슬라이싱', desc: '슬라이드 컷 전용', icon: '🌊' }
+      { id: 'BL', label: '블런트 (커트가위)', desc: '기본 커트용', icon: '✂️' /* [EDIT:ICON] 예: './icons/blunt.svg' */ },
+      { id: 'TH', label: '틴닝 (숱가위)', desc: '숱 조절용', icon: '〰️' /* [EDIT:ICON] 예: './icons/thinning.svg' */ },
+      { id: 'LO', label: '장가위', desc: '긴 날 커트용', icon: '📏' /* [EDIT:ICON] 예: './icons/long.svg' */ },
+      { id: 'SL', label: '슬라이싱', desc: '슬라이드 컷 전용', icon: '🌊' /* [EDIT:ICON] 예: './icons/sliding.svg' */ }
     ]
   },
   {
     id: 'Q_FEEL',
-    label: '커트 느낌',
-    question: '선호하는 커트 느낌이\n어떻게 되시나요?',
-    sub: '가위를 쓸 때 원하는 느낌을 선택해주세요',
+    label: '커트 느낌',  /* [EDIT:TEXT] */
+    question: '선호하는 커트 느낌이\n어떻게 되시나요?',  /* [EDIT:TEXT] */
+    sub: '가위를 쓸 때 원하는 느낌을 선택해주세요',  /* [EDIT:TEXT] */
     multiple: false,
     hasGif: true,
     condition: (answers) => {
@@ -983,131 +1017,131 @@ const questionsData = [
       return (stage === 'IN' || stage === 'DE') && (types.includes('BL') || types.includes('LO'));
     },
     options: [
-      { id: 'FEEL_SOFT', label: '부드러운 커트감', desc: '가볍고 매끄럽게', icon: '☁️', gifUrl: '' },
-      { id: 'FEEL_POWER', label: '힘있고 강한 느낌', desc: '단단하고 확실하게', icon: '💪', gifUrl: '' },
-      { id: 'FEEL_NONE', label: '아직 잘 모르겠어요', desc: '경험이 더 필요해요', icon: '🤔', gifUrl: '' }
+      { id: 'FEEL_SOFT', label: '부드러운 커트감', desc: '가볍고 매끄럽게', icon: '☁️' /* [EDIT:ICON] */, gifUrl: '' /* [EDIT:GIF] */ },
+      { id: 'FEEL_POWER', label: '힘있고 강한 느낌', desc: '단단하고 확실하게', icon: '💪' /* [EDIT:ICON] */, gifUrl: '' /* [EDIT:GIF] */ },
+      { id: 'FEEL_NONE', label: '아직 잘 모르겠어요', desc: '경험이 더 필요해요', icon: '🤔' /* [EDIT:ICON] */, gifUrl: '' /* [EDIT:GIF] */ }
     ]
   },
   {
     id: 'Q_STYLE',
-    label: '커트 스타일',
-    question: '주로 어떤 스타일로\n커트하시나요?',
+    label: '커트 스타일',  /* [EDIT:TEXT] */
+    question: '주로 어떤 스타일로\n커트하시나요?',  /* [EDIT:TEXT] */
     sub: '',
     multiple: false,
     hasGif: true,
     condition: (answers) => answers.Q_STAGE === 'DE' && (answers.Q_TYPE || []).includes('BL'),
     options: [
-      { id: 'St_GO', label: '직진성 커트', desc: '직선으로 쭉쭉', icon: '➡️', gifUrl: '' },
-      { id: 'St_BACK', label: '스트로크 커트', desc: '뒤로 빼듯 조곤조곤', icon: '↩️', gifUrl: '' },
-      { id: 'St_NONE', label: '딱 기준이 없어요', desc: '상황에 따라 달라요', icon: '🔄', gifUrl: '' }
+      { id: 'St_GO', label: '직진성 커트', desc: '직선으로 쭉쭉', icon: '➡️' /* [EDIT:ICON] */, gifUrl: '' /* [EDIT:GIF] */ },
+      { id: 'St_BACK', label: '스트로크 커트', desc: '뒤로 빼듯 조곤조곤', icon: '↩️' /* [EDIT:ICON] */, gifUrl: '' /* [EDIT:GIF] */ },
+      { id: 'St_NONE', label: '딱 기준이 없어요', desc: '상황에 따라 달라요', icon: '🔄' /* [EDIT:ICON] */, gifUrl: '' /* [EDIT:GIF] */ }
     ]
   },
   {
     id: 'Q_HABIT',
-    label: '커트 습관',
-    question: '분무를 하여 커트하는\nWET커트 비중이 어떻게 되세요?',
+    label: '커트 습관',  /* [EDIT:TEXT] */
+    question: '분무를 하여 커트하는\nWET커트 비중이 어떻게 되세요?',  /* [EDIT:TEXT] */
     sub: '',
     multiple: false,
     hasGif: true,
     condition: (answers) => answers.Q_STAGE === 'DE' && (answers.Q_TYPE || []).includes('BL'),
     options: [
-      { id: 'HAB_WET', label: 'WET 커트 위주', desc: '항상 분무하고 커트해요', icon: '💧', gifUrl: '' },
-      { id: 'HAB_DRY', label: 'DRY 커트 위주', desc: '마른 모발 커트가 많아요', icon: '🌵', gifUrl: '' },
-      { id: 'HAB_NONE', label: '반반이에요', desc: '그때그때 달라요', icon: '⚖️', gifUrl: '' }
+      { id: 'HAB_WET', label: 'WET 커트 위주', desc: '항상 분무하고 커트해요', icon: '💧' /* [EDIT:ICON] */, gifUrl: '' /* [EDIT:GIF] */ },
+      { id: 'HAB_DRY', label: 'DRY 커트 위주', desc: '마른 모발 커트가 많아요', icon: '🌵' /* [EDIT:ICON] */, gifUrl: '' /* [EDIT:GIF] */ },
+      { id: 'HAB_NONE', label: '반반이에요', desc: '그때그때 달라요', icon: '⚖️' /* [EDIT:ICON] */, gifUrl: '' /* [EDIT:GIF] */ }
     ]
   },
   {
     id: 'Q_TH_RATIO',
-    label: '틴닝 감모량',
-    question: '원하는 감모량이\n어떻게 되시나요?',
-    sub: '숱이 빠지는 정도를 선택해주세요',
+    label: '틴닝 감모량',  /* [EDIT:TEXT] */
+    question: '원하는 감모량이\n어떻게 되시나요?',  /* [EDIT:TEXT] */
+    sub: '숱이 빠지는 정도를 선택해주세요',  /* [EDIT:TEXT] */
     multiple: false,
     hasGif: false,
     condition: (answers) => (answers.Q_TYPE || []).includes('TH'),
     options: [
-      { id: 'TH_25', label: '25% (메인 틴닝)', desc: '가장 범용적인 감모량', icon: '▓░' },
-      { id: 'TH_15', label: '15% (적은 감모)', desc: '섬세한 마무리용', icon: '░░' },
-      { id: 'TH_35', label: '35% (많은 감모)', desc: '빠른 숱 조절용', icon: '▓▓' }
+      { id: 'TH_25', label: '25% (메인 틴닝)', desc: '가장 범용적인 감모량', icon: '▓░' /* [EDIT:ICON] */ },
+      { id: 'TH_15', label: '15% (적은 감모)', desc: '섬세한 마무리용', icon: '░░' /* [EDIT:ICON] */ },
+      { id: 'TH_35', label: '35% (많은 감모)', desc: '빠른 숱 조절용', icon: '▓▓' /* [EDIT:ICON] */ }
     ]
   },
   {
     id: 'Q_TH_WHY',
-    label: '틴닝 구매목적',
-    question: '틴닝가위 구매 목적이\n어떻게 되시나요?',
+    label: '틴닝 구매목적',  /* [EDIT:TEXT] */
+    question: '틴닝가위 구매 목적이\n어떻게 되시나요?',  /* [EDIT:TEXT] */
     sub: '',
     multiple: false,
     hasGif: false,
     condition: (answers) => (answers.Q_TYPE || []).includes('TH'),
     options: [
-      { id: 'TH_WHY_NEW', label: '새로운 감모량 추가', desc: '없는 감모량을 채우고 싶어요', icon: '➕' },
-      { id: 'TH_WHY_SAME', label: '기존 틴닝 교체', desc: '쓰던 틴닝이 나쁘진 않았어요', icon: '🔄' },
-      { id: 'TH_WHY_UP', label: '업그레이드', desc: '같은 감모량 더 좋은 제품으로', icon: '⬆️' }
+      { id: 'TH_WHY_NEW', label: '새로운 감모량 추가', desc: '없는 감모량을 채우고 싶어요', icon: '➕' /* [EDIT:ICON] */ },
+      { id: 'TH_WHY_SAME', label: '기존 틴닝 교체', desc: '쓰던 틴닝이 나쁘진 않았어요', icon: '🔄' /* [EDIT:ICON] */ },
+      { id: 'TH_WHY_UP', label: '업그레이드', desc: '같은 감모량 더 좋은 제품으로', icon: '⬆️' /* [EDIT:ICON] */ }
     ]
   },
   {
     id: 'Q_LO_USE',
-    label: '장가위 용도',
-    question: '장가위 주 사용 용도가\n어떻게 될까요?',
+    label: '장가위 용도',  /* [EDIT:TEXT] */
+    question: '장가위 주 사용 용도가\n어떻게 될까요?',  /* [EDIT:TEXT] */
     sub: '',
     multiple: false,
     hasGif: false,
     condition: (answers) => (answers.Q_TYPE || []).includes('LO'),
     options: [
-      { id: 'LO_BL', label: '블런트 겸용', desc: '커트가위처럼도 쓸 거예요', icon: '✂️' },
-      { id: 'LO_SING', label: '싱글링 전용', desc: '싱글링 작업 전용이에요', icon: '👆' }
+      { id: 'LO_BL', label: '블런트 겸용', desc: '커트가위처럼도 쓸 거예요', icon: '✂️' /* [EDIT:ICON] */ },
+      { id: 'LO_SING', label: '싱글링 전용', desc: '싱글링 작업 전용이에요', icon: '👆' /* [EDIT:ICON] */ }
     ]
   },
   {
     id: 'Q_SL_WHY',
-    label: '슬라이싱 구매동기',
-    question: '슬라이싱 가위 구매 동기가\n어떻게 되실까요?',
+    label: '슬라이싱 구매동기',  /* [EDIT:TEXT] */
+    question: '슬라이싱 가위 구매 동기가\n어떻게 되실까요?',  /* [EDIT:TEXT] */
     sub: '',
     multiple: false,
     hasGif: false,
     condition: (answers) => (answers.Q_TYPE || []).includes('SL'),
     options: [
-      { id: 'SL_NEW', label: '첫 구매', desc: '슬라이싱 가위가 처음이에요', icon: '🆕' },
-      { id: 'SL_SAME', label: '기존 제품 불만족', desc: '쓰던 슬라이싱이 마음에 안 들어요', icon: '😕' }
+      { id: 'SL_NEW', label: '첫 구매', desc: '슬라이싱 가위가 처음이에요', icon: '🆕' /* [EDIT:ICON] */ },
+      { id: 'SL_SAME', label: '기존 제품 불만족', desc: '쓰던 슬라이싱이 마음에 안 들어요', icon: '😕' /* [EDIT:ICON] */ }
     ]
   },
   {
     id: 'Q_SL_SAME_WHY',
-    label: '불만족 이유',
-    question: '기존 슬라이싱 가위가\n어떤 점이 불만족스러우셨나요?',
+    label: '불만족 이유',  /* [EDIT:TEXT] */
+    question: '기존 슬라이싱 가위가\n어떤 점이 불만족스러우셨나요?',  /* [EDIT:TEXT] */
     sub: '',
     multiple: false,
     hasGif: false,
     condition: (answers) => answers.Q_SL_WHY === 'SL_SAME',
     options: [
-      { id: 'SL_SAME_WHY_UNCOM', label: '밀리기만 하고 안 잘려요', desc: '커트 자체가 안 됨', icon: '😤' },
-      { id: 'SL_SAME_WHY_UNCOM1', label: '너무 많이 잘려나가요', desc: '모발이 과하게 잘림', icon: '😱' },
-      { id: 'SL_SAME_WHY_HAND', label: '핸들이 불편해요', desc: '사용감은 괜찮은데...', icon: '🖐️' }
+      { id: 'SL_SAME_WHY_UNCOM', label: '밀리기만 하고 안 잘려요', desc: '커트 자체가 안 됨', icon: '😤' /* [EDIT:ICON] */ },
+      { id: 'SL_SAME_WHY_UNCOM1', label: '너무 많이 잘려나가요', desc: '모발이 과하게 잘림', icon: '😱' /* [EDIT:ICON] */ },
+      { id: 'SL_SAME_WHY_HAND', label: '핸들이 불편해요', desc: '사용감은 괜찮은데...', icon: '🖐️' /* [EDIT:ICON] */ }
     ]
   },
   {
     id: 'Q_GENDER',
-    label: '성별',
-    question: '성별은\n어떻게 되시나요?',
-    sub: '손에 맞는 가위 추천을 위해 필요해요',
+    label: '성별',  /* [EDIT:TEXT] */
+    question: '성별은\n어떻게 되시나요?',  /* [EDIT:TEXT] */
+    sub: '손에 맞는 가위 추천을 위해 필요해요',  /* [EDIT:TEXT] */
     multiple: false,
     hasGif: false,
     condition: null,
     options: [
-      { id: 'FM', label: '여성', desc: '', icon: '👩' },
-      { id: 'M', label: '남성', desc: '', icon: '👨' }
+      { id: 'FM', label: '여성', desc: '', icon: '👩' /* [EDIT:ICON] */ },
+      { id: 'M', label: '남성', desc: '', icon: '👨' /* [EDIT:ICON] */ }
     ]
   },
   {
     id: 'Q_FING',
-    label: '손가락 굵기',
-    question: '가위를 사용할 손가락 굵기가\n어떤 편일까요?',
-    sub: '핏에 맞는 가위 추천을 위해 필요해요',
+    label: '손가락 굵기',  /* [EDIT:TEXT] */
+    question: '가위를 사용할 손가락 굵기가\n어떤 편일까요?',  /* [EDIT:TEXT] */
+    sub: '핏에 맞는 가위 추천을 위해 필요해요',  /* [EDIT:TEXT] */
     multiple: false,
     hasGif: false,
     condition: null,
     options: [
-      { id: 'FING_NORMAL', label: '평범한 굵기', desc: '보통이에요', icon: '👌' },
-      { id: 'FING_THICK', label: '두꺼운 편', desc: '주변보다 두꺼워요', icon: '✊' }
+      { id: 'FING_NORMAL', label: '평범한 굵기', desc: '보통이에요', icon: '👌' /* [EDIT:ICON] */ },
+      { id: 'FING_THICK', label: '두꺼운 편', desc: '주변보다 두꺼워요', icon: '✊' /* [EDIT:ICON] */ }
     ]
   }
 ];
@@ -1142,6 +1176,14 @@ let diagCurrentStep = 0;
 let diagAnswers = {};
 let diagVisibleQuestions = [];
 let isTransitioning = false;  // ★ 전환 중 플래그
+
+/* ★ 아이콘 렌더링 함수: 경로면 img, 아니면 이모지 텍스트 */
+function renderIcon(icon) {
+  if (icon && (icon.includes('/') || icon.includes('.'))) {
+    return `<img src="${icon}" alt="" class="diag-custom-icon">`;
+  }
+  return icon || '';
+}
 
 function diagInit() {
   diagAnswers = {};
@@ -1187,10 +1229,10 @@ function diagRenderQuestion(withAnimation = false) {
         ? (currentAnswers || []).includes(opt.id)
         : currentAnswers === opt.id;
       
-      const gifContent = opt.gifUrl 
+      const gifContent = opt.gifUrl
         ? `<img src="${opt.gifUrl}" alt="${opt.label}">`
         : `<div class="diag-option-gif-placeholder">
-             <span class="diag-option-gif-placeholder-icon">${opt.icon}</span>
+             <span class="diag-option-gif-placeholder-icon">${renderIcon(opt.icon)}</span>
              <span>GIF 준비중</span>
            </div>`;
       
@@ -1217,9 +1259,9 @@ function diagRenderQuestion(withAnimation = false) {
         : currentAnswers === opt.id;
       
       return `
-        <div class="diag-option ${isSelected ? 'selected' : ''}" 
+        <div class="diag-option ${isSelected ? 'selected' : ''}"
              onclick="diagSelectOption('${q.id}', '${opt.id}', ${q.multiple})">
-          <div class="diag-option-icon">${opt.icon}</div>
+          <div class="diag-option-icon">${renderIcon(opt.icon)}</div>
           <div class="diag-option-content">
             <div class="diag-option-title">${opt.label}</div>
             ${opt.desc ? `<div class="diag-option-desc">${opt.desc}</div>` : ''}
