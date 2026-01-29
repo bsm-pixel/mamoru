@@ -54,24 +54,21 @@ body {
   margin: 0 auto;
   /* PC: 중앙 정렬 + 최대 너비 */
   max-width: 800px;
-  padding: 40px 24px;
-  padding-bottom: 140px;  /* 하단 고정 버튼 영역 */
+  padding: 40px 24px 60px;
 }
 
 /* 모바일: 좌우 여백 최소화 */
 @media screen and (max-width: 768px) {
   .mamoru-diagnosis {
     max-width: 100%;
-    padding: 16px 16px;
-    padding-bottom: 120px;
+    padding: 16px 16px 40px;
   }
 }
 
 /* 소형 모바일 (480px 이하) */
 @media screen and (max-width: 480px) {
   .mamoru-diagnosis {
-    padding: 12px 12px;
-    padding-bottom: 110px;
+    padding: 12px 12px 32px;
   }
 }
 
@@ -426,8 +423,8 @@ body {
 
 @media screen and (max-width: 768px) {
   .diag-options--with-gif {
-    grid-template-columns: 1fr;
-    gap: 14px;
+    grid-template-columns: repeat(2, 1fr);  /* 모바일도 2열 유지 */
+    gap: 10px;
   }
 }
 
@@ -470,7 +467,14 @@ body {
 
 @media screen and (max-width: 768px) {
   .diag-option-gif {
-    height: 140px;
+    height: 80px;  /* 모바일 컴팩트 */
+  }
+  .diag-option-gif-placeholder-icon {
+    font-size: 28px;
+    margin-bottom: 4px;
+  }
+  .diag-option-gif-placeholder {
+    font-size: 11px;
   }
 }
 
@@ -504,7 +508,7 @@ body {
 
 @media screen and (max-width: 768px) {
   .diag-option-info {
-    padding: 14px 16px;
+    padding: 10px 12px;
   }
 }
 
@@ -522,7 +526,10 @@ body {
 
 @media screen and (max-width: 768px) {
   .diag-option-info-title {
-    font-size: 15px;
+    font-size: 13px;
+  }
+  .diag-option-info-desc {
+    font-size: 11px;
   }
 }
 
@@ -613,29 +620,24 @@ body {
   }
 }
 
-/* 모바일: 하단 전체폭 고정 */
+/* 모바일: 콘텐츠 내 배치 (브라우저 UI 가림 방지) */
 @media screen and (max-width: 768px) {
   .diag-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    padding: 14px 16px;
-    padding-bottom: max(14px, env(safe-area-inset-bottom));
-    background: linear-gradient(to top, #1C1C1E 85%, transparent);
-    margin: 0;
+    justify-content: center;  /* 모바일은 중앙 정렬 */
+    margin-top: 32px;
+    padding: 0;
+    background: transparent;
   }
   .diag-footer-inner {
-    max-width: 480px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
   }
-}
-
-@media screen and (max-width: 480px) {
-  .diag-footer {
-    padding: 12px 12px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  .diag-back-btn-bottom {
+    width: 48px;
+    height: 48px;
+  }
+  .diag-next-btn {
+    flex: 1;
   }
 }
 
