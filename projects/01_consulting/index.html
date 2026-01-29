@@ -1708,30 +1708,51 @@ body.pc .diagnosis-tag {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Google Apps Script API
+  // Google Apps Script API (GitHub Pages → GAS fetch 방식)
   // ─────────────────────────────────────────────────────────────
-  function gasRun(fn, ...args) {
-    return new Promise((resolve, reject) => {
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run
-          .withSuccessHandler(resolve)
-          .withFailureHandler(reject)
-          [fn](...args);
-      } else {
-        // 테스트용 Mock
-        setTimeout(() => {
-          if (fn === 'getSettings') {
-            resolve({ disabledWeekdays: [0], disabledDates: [], startHour: 10, endHour: 19, stepMin: 30 });
-          } else if (fn === 'getSlots' || fn === 'getSlotsRange') {
-            resolve({});
-          } else if (fn === 'submitConsultation') {
-            resolve({ success: true, id: 'TEST-' + Date.now() });
-          } else {
-            resolve({});
-          }
-        }, 300);
+  const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwqJr1JVeSspv6kZ-wpKPapKOjk1wvEvQQ9rTN3ZtmtgMpkn8-HLVP7Plw94m-N1EE5/exec';
+
+  async function gasRun(fn, ...args) {
+    try {
+      // getSettings: GET 요청
+      if (fn === 'getSettings') {
+        const resp = await fetch(GAS_WEB_APP_URL + '?action=getSettings');
+        const json = await resp.json();
+        if (!json.ok) throw new Error(json.error || 'getSettings failed');
+        return json.data;
       }
-    });
+
+      // getSlotsRange: GET 요청 (dates를 콤마로 연결)
+      if (fn === 'getSlotsRange') {
+        const [dates, consultType] = args;
+        const datesParam = Array.isArray(dates) ? dates.join(',') : dates;
+        const url = `${GAS_WEB_APP_URL}?action=getSlotsRange&dates=${encodeURIComponent(datesParam)}&type=${encodeURIComponent(consultType || '매장 방문')}`;
+        const resp = await fetch(url);
+        const json = await resp.json();
+        if (!json.ok) throw new Error(json.error || 'getSlotsRange failed');
+        return json.data;
+      }
+
+      // submitConsultation: POST 요청
+      if (fn === 'submitConsultation') {
+        const [formData] = args;
+        const resp = await fetch(GAS_WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },  // GAS CORS 우회
+          body: JSON.stringify({ action: 'submitConsultation', data: formData })
+        });
+        const json = await resp.json();
+        if (!json.ok) throw new Error(json.error || 'submitConsultation failed');
+        return json.data;
+      }
+
+      // 기타 함수는 빈 객체 반환
+      console.warn('gasRun: unknown function', fn);
+      return {};
+    } catch (err) {
+      console.error('gasRun error:', fn, err);
+      throw err;
+    }
   }
 
   async function loadSettings() {

@@ -5,6 +5,9 @@ const SHEET_NAME = '상담접수';
 const DEALER_SHEET_NAME = '딜러';
 const VERSION = 'v2.2.0-final';
 
+// GitHub Pages URL (index.html 이전용)
+const GITHUB_PAGES_BASE = 'https://mamaboruofficial.github.io/mamoru/projects/01_consulting';
+
 const MAKE_WEBHOOK_URL = 'https://hook.eu2.make.com/x70jrebxr82odam3eu4oosuar9mm2fg5';
 const CAL_NAME = '마모루 방문예약';
 
@@ -603,6 +606,16 @@ function safeClose(){
 
   if (p.action === 'getSlots' && p.date) return json({ok:true, slots:getAvailableTimeSlots_(String(p.date))});
   if (p.action === 'ver') return json({ok:true, version:VERSION, ts:new Date().toISOString()});
+
+  // ─── GitHub Pages용 API 분기 (CORS 지원) ───
+  if (p.action === 'getSettings') {
+    return json({ ok: true, data: getSettings() });
+  }
+  if (p.action === 'getSlotsRange' && p.dates) {
+    const dateList = String(p.dates).split(',').map(d => d.trim());
+    const consultType = p.type || '매장 방문';
+    return json({ ok: true, data: getSlotsRange(dateList, consultType) });
+  }
   if (p.action === 'confirm' && p.token) {
     var r = confirmByToken_(String(p.token));
     var msg = r.ok ? '예약이 확정되었습니다.' : '확정 토큰이 유효하지 않습니다.';
@@ -661,6 +674,30 @@ function safeClose(){
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 
 
+}
+
+/****************************** doPost - GitHub Pages용 POST API ******************************/
+function doPost(e) {
+  try {
+    const payload = JSON.parse(e.postData.contents || '{}');
+    const action = payload.action;
+
+    if (action === 'submitConsultation') {
+      const result = submitConsultation(payload.data);
+      return json({ ok: true, data: result });
+    }
+
+    if (action === 'getSlotsRange') {
+      const dateList = payload.dates || [];
+      const consultType = payload.type || '매장 방문';
+      return json({ ok: true, data: getSlotsRange(dateList, consultType) });
+    }
+
+    return json({ ok: false, error: 'unknown_action' });
+  } catch (err) {
+    Logger.log('doPost error: ' + err);
+    return json({ ok: false, error: String(err) });
+  }
 }
 
 /****************************** Make Webhook ******************************/
