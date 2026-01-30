@@ -34,7 +34,7 @@ html, body {
   background: #1C1C1E;
   color: #ffffff;
   line-height: 1.6;
-  padding-bottom: 80px; /* 모바일: sticky 버튼 공간 확보 */
+  padding-bottom: 20px;
 }
 
 .mamoru-as-page * {
@@ -777,22 +777,17 @@ html, body {
 }
 
 /* =========================================================
-   [8] 하단 CTA (모바일: sticky, PC: 콘텐츠 내 배치)
+   [8] 하단 CTA (PC/모바일 공통: 콘텐츠 내 배치)
+   - iframe에서 sticky/fixed가 제대로 작동하지 않아 static으로 통일
    ========================================================= */
 .as-cta-fixed {
-  /* 모바일 기본: sticky로 하단 고정 시도 */
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: static; /* iframe 내에서 sticky 미작동 → 콘텐츠 내 배치 */
   display: flex;
   gap: 8px;
-  padding: 12px 20px;
-  background: rgba(28, 28, 30, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 1000;
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  background: transparent;
 }
 
 .as-cta-secondary {
@@ -877,15 +872,10 @@ html, body {
     font-size: 48px;
   }
 
-  /* PC: 고정 제거, 콘텐츠 흐름 내 배치 */
+  /* PC: 버튼 영역 여백 조정 */
   .as-cta-fixed {
-    position: static;
     max-width: 800px;
     margin: 40px auto 0;
-    background: transparent;
-    border-top: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
     padding: 20px;
   }
 }
@@ -1272,7 +1262,7 @@ html, body {
 
   <!-- [8] 하단 고정 CTA -->
   <div class="as-cta-fixed">
-    <button class="as-cta-secondary" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">맨 위로</button>
+    <button class="as-cta-secondary" onclick="scrollToTop();">맨 위로</button>
     <!-- [URL] AS 접수 페이지: /53 -->
     <button class="as-cta-primary" onclick="goToASForm();">A/S 접수하기</button>
   </div>
@@ -1310,6 +1300,15 @@ function goToASForm() {
     window.top.location.href = '/53';
   } catch(e) {
     window.location.href = '/53';
+  }
+}
+
+// 맨 위로 스크롤 (iframe 내부 → 아임웹 페이지 전체 스크롤)
+function scrollToTop() {
+  try {
+    window.top.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch(e) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 
