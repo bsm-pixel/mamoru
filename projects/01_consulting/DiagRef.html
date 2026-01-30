@@ -1449,14 +1449,20 @@ function diagGoToConsult() {
 
 // ★ 맞춤 추천 페이지로 이동
 function diagGoToRecommend() {
-  // localStorage에 진단 데이터 저장
-  localStorage.setItem('MAMORU_DIAGNOSIS', JSON.stringify(diagAnswers));
+  // ★ URL 파라미터로 진단 데이터 전달 (도메인 간 localStorage 공유 불가 대비)
+  const diagData = encodeURIComponent(JSON.stringify(diagAnswers));
+  const url = RECOMMEND_PAGE_URL + '?diagnosis=' + diagData;
+
+  // localStorage도 시도 (같은 도메인일 경우 대비)
+  try {
+    localStorage.setItem('MAMORU_DIAGNOSIS', JSON.stringify(diagAnswers));
+  } catch(e) {}
 
   // ★ 아임웹 부모 페이지로 이동 (iframe 탈출)
   if (window.top !== window.self) {
-    window.top.location.href = RECOMMEND_PAGE_URL;
+    window.top.location.href = url;
   } else {
-    window.location.href = RECOMMEND_PAGE_URL;
+    window.location.href = url;
   }
 }
 

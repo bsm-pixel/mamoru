@@ -51,25 +51,25 @@ body {
 .mamoru-recommend {
   background: #1C1C1E;
   color: #ffffff;
-  min-height: 100vh;
+  min-height: auto;  /* iframe 환경 대응: 100vh 제거 */
   margin: 0 auto;
   max-width: 900px;
   padding: 24px 24px;
-  padding-bottom: 120px;
+  padding-bottom: 160px;  /* footer 높이 + 여유 확보 */
 }
 
 @media screen and (max-width: 768px) {
   .mamoru-recommend {
     max-width: 100%;
     padding: 16px 16px;
-    padding-bottom: 100px;
+    padding-bottom: 140px;  /* footer 가림 방지 */
   }
 }
 
 @media screen and (max-width: 480px) {
   .mamoru-recommend {
     padding: 12px 12px;
-    padding-bottom: 100px;
+    padding-bottom: 130px;  /* footer 가림 방지 */
   }
 }
 
@@ -244,8 +244,21 @@ body {
 
 @media screen and (max-width: 480px) {
   .rec-products-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(2, 1fr);  /* 모바일도 2열 유지 */
+    gap: 10px;
+  }
+}
+
+/* 모바일 카드 크기 최적화 (2열에 맞게) */
+@media screen and (max-width: 480px) {
+  .rec-product-info {
+    padding: 10px;
+  }
+  .rec-product-name {
+    font-size: 13px;
+  }
+  .rec-product-price {
+    font-size: 14px;
   }
 }
 
@@ -551,7 +564,14 @@ const labelMap = {
    초기화
    ========================================================= */
 function initRecommend() {
-  const diagData = localStorage.getItem('MAMORU_DIAGNOSIS');
+  // ★ 1순위: URL 파라미터에서 읽기 (도메인 간 전달용)
+  const urlParams = new URLSearchParams(window.location.search);
+  let diagData = urlParams.get('diagnosis');
+
+  // ★ 2순위: localStorage에서 읽기 (같은 도메인 fallback)
+  if (!diagData) {
+    diagData = localStorage.getItem('MAMORU_DIAGNOSIS');
+  }
 
   if (!diagData) {
     renderError();
@@ -559,11 +579,18 @@ function initRecommend() {
   }
 
   try {
-    const diagnosis = JSON.parse(diagData);
+    // URL 파라미터는 encodeURIComponent로 인코딩됨
+    const diagnosis = JSON.parse(decodeURIComponent(diagData));
     renderRecommendations(diagnosis);
   } catch (e) {
-    console.error('진단 데이터 파싱 오류:', e);
-    renderError();
+    // localStorage 형식 시도 (encodeURIComponent 없이 저장된 경우)
+    try {
+      const diagnosis = JSON.parse(diagData);
+      renderRecommendations(diagnosis);
+    } catch (e2) {
+      console.error('진단 데이터 파싱 오류:', e2);
+      renderError();
+    }
   }
 }
 
