@@ -1,21 +1,21 @@
 /* =========================================================
    MAMORU 제품 데이터 (products.js)
 
-   ★ 수정 가이드:
-   - 제품 추가/삭제: PRODUCTS 배열
-   - 태그 수정: 각 제품의 tags 객체
-   - 팁 메시지: TYPE_INFO의 tip
+   ★ 수정 검색 키워드:
+   - [수정문구] : 제품명, 가격, 팁 메시지 등 텍스트 수정
+   - [수정이미지] : 제품 이미지 URL 수정
+   - [수정아이콘] : 가위 종류별 아이콘 수정
    ========================================================= */
 
 const PRODUCTS = [
   // ================= 블런트 (BL) =================
   {
     id: 'BL-001',
-    name: '마모루 소프트 블런트 5.5',
+    name: '마모루 소프트 블런트 5.5',  /* [수정문구] 제품명 */
     priceNum: 350000,
-    priceText: '350,000원',
-    image: 'https://cdn.imweb.me/upload/sample-bl-001.jpg',  // ★ 실제 이미지 URL로 교체
-    detailUrl: 'https://mamoru.kr/shop/view/BL001',  // ★ 실제 아임웹 상품 URL로 교체
+    priceText: '350,000원',  /* [수정문구] 가격 표시 */
+    image: 'https://cdn.imweb.me/upload/sample-bl-001.jpg',  /* [수정이미지] 제품 이미지 URL */
+    detailUrl: 'https://mamoru.kr/shop/view/BL001',  /* 상품 상세페이지 URL */
     tags: {
       type: ['BL'],
       stage: ['DE', 'IN'],
@@ -27,10 +27,10 @@ const PRODUCTS = [
   },
   {
     id: 'BL-002',
-    name: '마모루 라이트 블런트 5.5',
+    name: '마모루 라이트 블런트 5.5',  /* [수정문구] */
     priceNum: 280000,
-    priceText: '280,000원',
-    image: 'https://cdn.imweb.me/upload/sample-bl-002.jpg',
+    priceText: '280,000원',  /* [수정문구] */
+    image: 'https://cdn.imweb.me/upload/sample-bl-002.jpg',  /* [수정이미지] */
     detailUrl: 'https://mamoru.kr/shop/view/BL002',
     tags: {
       type: ['BL'],
@@ -43,10 +43,10 @@ const PRODUCTS = [
   },
   {
     id: 'BL-003',
-    name: '마모루 파워 블런트 6.0',
+    name: '마모루 파워 블런트 6.0',  /* [수정문구] */
     priceNum: 380000,
-    priceText: '380,000원',
-    image: 'https://cdn.imweb.me/upload/sample-bl-003.jpg',
+    priceText: '380,000원',  /* [수정문구] */
+    image: 'https://cdn.imweb.me/upload/sample-bl-003.jpg',  /* [수정이미지] */
     detailUrl: 'https://mamoru.kr/shop/view/BL003',
     tags: {
       type: ['BL'],
@@ -59,10 +59,10 @@ const PRODUCTS = [
   },
   {
     id: 'BL-004',
-    name: '마모루 클래식 블런트 5.5',
+    name: '마모루 클래식 블런트 5.5',  /* [수정문구] */
     priceNum: 320000,
-    priceText: '320,000원',
-    image: 'https://cdn.imweb.me/upload/sample-bl-004.jpg',
+    priceText: '320,000원',  /* [수정문구] */
+    image: 'https://cdn.imweb.me/upload/sample-bl-004.jpg',  /* [수정이미지] */
     detailUrl: 'https://mamoru.kr/shop/view/BL004',
     tags: {
       type: ['BL'],
@@ -77,10 +77,10 @@ const PRODUCTS = [
   // ================= 틴닝 (TH) =================
   {
     id: 'TH-001',
-    name: '마모루 프리미엄 틴닝 25%',
+    name: '마모루 프리미엄 틴닝 25%',  /* [수정문구] */
     priceNum: 180000,
-    priceText: '180,000원',
-    image: 'https://cdn.imweb.me/upload/sample-th-001.jpg',
+    priceText: '180,000원',  /* [수정문구] */
+    image: 'https://cdn.imweb.me/upload/sample-th-001.jpg',  /* [수정이미지] */
     detailUrl: 'https://mamoru.kr/shop/view/TH001',
     tags: {
       type: ['TH'],
@@ -91,10 +91,10 @@ const PRODUCTS = [
   },
   {
     id: 'TH-002',
-    name: '마모루 스탠다드 틴닝 25%',
+    name: '마모루 스탠다드 틴닝 25%',  /* [수정문구] */
     priceNum: 120000,
-    priceText: '120,000원',
-    image: 'https://cdn.imweb.me/upload/sample-th-002.jpg',
+    priceText: '120,000원',  /* [수정문구] */
+    image: 'https://cdn.imweb.me/upload/sample-th-002.jpg',  /* [수정이미지] */
     detailUrl: 'https://mamoru.kr/shop/view/TH002',
     tags: {
       type: ['TH'],
@@ -105,10 +105,10 @@ const PRODUCTS = [
   },
   {
     id: 'TH-003',
-    name: '마모루 정밀 틴닝 15%',
+    name: '마모루 정밀 틴닝 15%',  /* [수정문구] */
     priceNum: 160000,
-    priceText: '160,000원',
-    image: 'https://cdn.imweb.me/upload/sample-th-003.jpg',
+    priceText: '160,000원',  /* [수정문구] */
+    image: 'https://cdn.imweb.me/upload/sample-th-003.jpg',  /* [수정이미지] */
     detailUrl: 'https://mamoru.kr/shop/view/TH003',
     tags: {
       type: ['TH'],
@@ -119,10 +119,10 @@ const PRODUCTS = [
   },
   {
     id: 'TH-004',
-    name: '마모루 쾌속 틴닝 35%',
+    name: '마모루 쾌속 틴닝 35%',  /* [수정문구] */
     priceNum: 150000,
-    priceText: '150,000원',
-    image: 'https://cdn.imweb.me/upload/sample-th-004.jpg',
+    priceText: '150,000원',  /* [수정문구] */
+    image: 'https://cdn.imweb.me/upload/sample-th-004.jpg',  /* [수정이미지] */
     detailUrl: 'https://mamoru.kr/shop/view/TH004',
     tags: {
       type: ['TH'],
@@ -135,10 +135,10 @@ const PRODUCTS = [
   // ================= 장가위 (LO) =================
   {
     id: 'LO-001',
-    name: '마모루 장가위 7.0 (블런트 겸용)',
+    name: '마모루 장가위 7.0 (블런트 겸용)',  /* [수정문구] */
     priceNum: 420000,
-    priceText: '420,000원',
-    image: 'https://cdn.imweb.me/upload/sample-lo-001.jpg',
+    priceText: '420,000원',  /* [수정문구] */
+    image: 'https://cdn.imweb.me/upload/sample-lo-001.jpg',  /* [수정이미지] */
     detailUrl: 'https://mamoru.kr/shop/view/LO001',
     tags: {
       type: ['LO'],
@@ -150,10 +150,10 @@ const PRODUCTS = [
   },
   {
     id: 'LO-002',
-    name: '마모루 싱글링 전용 장가위 7.0',
+    name: '마모루 싱글링 전용 장가위 7.0',  /* [수정문구] */
     priceNum: 380000,
-    priceText: '380,000원',
-    image: 'https://cdn.imweb.me/upload/sample-lo-002.jpg',
+    priceText: '380,000원',  /* [수정문구] */
+    image: 'https://cdn.imweb.me/upload/sample-lo-002.jpg',  /* [수정이미지] */
     detailUrl: 'https://mamoru.kr/shop/view/LO002',
     tags: {
       type: ['LO'],
@@ -166,10 +166,10 @@ const PRODUCTS = [
   // ================= 슬라이싱 (SL) =================
   {
     id: 'SL-001',
-    name: '마모루 슬라이싱 가위 6.0',
+    name: '마모루 슬라이싱 가위 6.0',  /* [수정문구] */
     priceNum: 280000,
-    priceText: '280,000원',
-    image: 'https://cdn.imweb.me/upload/sample-sl-001.jpg',
+    priceText: '280,000원',  /* [수정문구] */
+    image: 'https://cdn.imweb.me/upload/sample-sl-001.jpg',  /* [수정이미지] */
     detailUrl: 'https://mamoru.kr/shop/view/SL001',
     tags: {
       type: ['SL'],
@@ -180,10 +180,10 @@ const PRODUCTS = [
   },
   {
     id: 'SL-002',
-    name: '마모루 프로 슬라이싱 6.0',
+    name: '마모루 프로 슬라이싱 6.0',  /* [수정문구] */
     priceNum: 350000,
-    priceText: '350,000원',
-    image: 'https://cdn.imweb.me/upload/sample-sl-002.jpg',
+    priceText: '350,000원',  /* [수정문구] */
+    image: 'https://cdn.imweb.me/upload/sample-sl-002.jpg',  /* [수정이미지] */
     detailUrl: 'https://mamoru.kr/shop/view/SL002',
     tags: {
       type: ['SL'],
@@ -200,24 +200,24 @@ const PRODUCTS = [
    ========================================================= */
 const TYPE_INFO = {
   BL: {
-    icon: '✂️',
-    name: '블런트',
-    tip: null
+    icon: '✂️',  /* [수정아이콘] 블런트 아이콘 */
+    name: '블런트',  /* [수정문구] */
+    tip: null  /* [수정문구] 팁 메시지 (null이면 표시 안함) */
   },
   TH: {
-    icon: '〰️',
-    name: '틴닝',
-    tip: '💡 틴닝은 한 번 구매로 평생 사용 가능해요. 욕심을 내셔도 괜찮습니다!'
+    icon: '〰️',  /* [수정아이콘] 틴닝 아이콘 */
+    name: '틴닝',  /* [수정문구] */
+    tip: '💡 틴닝은 한 번 구매로 평생 사용 가능해요. 욕심을 내셔도 괜찮습니다!'  /* [수정문구] */
   },
   LO: {
-    icon: '📏',
-    name: '장가위',
-    tip: null
+    icon: '📏',  /* [수정아이콘] 장가위 아이콘 */
+    name: '장가위',  /* [수정문구] */
+    tip: null  /* [수정문구] */
   },
   SL: {
-    icon: '🌊',
-    name: '슬라이싱',
-    tip: null
+    icon: '🌊',  /* [수정아이콘] 슬라이싱 아이콘 */
+    name: '슬라이싱',  /* [수정문구] */
+    tip: null  /* [수정문구] */
   }
 };
 

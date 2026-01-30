@@ -534,15 +534,15 @@ body {
 const CONSULT_PAGE_URL = '/52';  // 상담접수 페이지
 const DIAG_PAGE_URL = '/51';     // 진단 페이지
 
-/* 라벨 매핑 */
+/* 라벨 매핑 - 진단 결과 태그에 표시되는 텍스트 [수정문구] */
 const labelMap = {
-  CE: '자격증 준비', IN: '인턴/스탭', DE: '디자이너',
-  BL: '블런트', TH: '틴닝', LO: '장가위', SL: '슬라이싱',
-  FEEL_SOFT: '부드러운 커트감', FEEL_POWER: '힘있고 강한 느낌', FEEL_NONE: '아직 모름',
-  St_GO: '직진성 커트', St_BACK: '스트로크 커트', St_NONE: '기준 없음',
-  HAB_WET: 'WET 커트', HAB_DRY: 'DRY 커트', HAB_NONE: '반반',
-  TH_25: '25%', TH_15: '15%', TH_35: '35%',
-  FM: '여성', M: '남성'
+  CE: '자격증 준비', IN: '인턴/스탭', DE: '디자이너',  /* [수정문구] 경력 라벨 */
+  BL: '블런트', TH: '틴닝', LO: '장가위', SL: '슬라이싱',  /* [수정문구] 가위종류 라벨 */
+  FEEL_SOFT: '부드러운 커트감', FEEL_POWER: '힘있고 강한 느낌', FEEL_NONE: '아직 모름',  /* [수정문구] */
+  St_GO: '직진성 커트', St_BACK: '스트로크 커트', St_NONE: '기준 없음',  /* [수정문구] */
+  HAB_WET: 'WET 커트', HAB_DRY: 'DRY 커트', HAB_NONE: '반반',  /* [수정문구] */
+  TH_25: '25%', TH_15: '15%', TH_35: '35%',  /* [수정문구] */
+  FM: '여성', M: '남성'  /* [수정문구] */
 };
 
 /* =========================================================
@@ -586,14 +586,14 @@ function renderError() {
   const container = document.getElementById('recommendContent');
   container.innerHTML = `
     <div class="rec-error">
-      <div class="rec-error-icon">🔍</div>
-      <h2 class="rec-error-title">진단 정보가 없습니다</h2>
+      <div class="rec-error-icon">🔍</div><!-- [수정아이콘] 에러 아이콘 -->
+      <h2 class="rec-error-title">진단 정보가 없습니다</h2><!-- [수정문구] 에러 제목 -->
       <p class="rec-error-desc">
         맞춤 제품 추천을 받으려면<br>
-        먼저 간편진단을 진행해주세요.
+        먼저 간편진단을 진행해주세요.<!-- [수정문구] 에러 설명 -->
       </p>
       <a href="javascript:void(0)" onclick="goToDiag()" class="rec-error-btn">
-        간편진단 시작하기
+        간편진단 시작하기<!-- [수정문구] 에러 버튼 -->
       </a>
     </div>
   `;
@@ -636,13 +636,13 @@ function renderRecommendations(diagnosis) {
     <div class="rec-header">
       <button class="rec-back-btn" onclick="goBack()">←</button>
       <div class="rec-header-content">
-        <h1 class="rec-title">🎯 고객님 맞춤 추천 제품</h1>
+        <h1 class="rec-title">🎯 고객님 맞춤 추천 제품</h1><!-- [수정문구] [수정아이콘] 페이지 제목 -->
       </div>
     </div>
 
     <!-- 진단 요약 -->
     <div class="rec-summary">
-      <div class="rec-summary-label">진단 결과</div>
+      <div class="rec-summary-label">진단 결과</div><!-- [수정문구] -->
       <div class="rec-summary-tags">
         ${summaryTags.map(tag => `<span class="rec-summary-tag">${tag}</span>`).join('')}
       </div>
@@ -677,7 +677,7 @@ function renderRecommendations(diagnosis) {
     <div class="rec-footer">
       <div class="rec-footer-inner">
         <button class="rec-cta-btn" onclick="goToConsult()">
-          이 진단서로 상담접수하기
+          이 진단서로 상담접수하기<!-- [수정문구] CTA 버튼 -->
         </button>
       </div>
     </div>
