@@ -1,0 +1,649 @@
+<style>
+  body { margin: 0; padding: 0; }
+</style>
+<script>
+  // 배너 숨기기 시도
+  if (window.parent !== window) {
+    document.addEventListener('DOMContentLoaded', function() {
+      const banner = document.querySelector('.docs-butterbar-container');
+      if (banner) banner.style.display = 'none';
+    });
+  }
+</script>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="format-detection" content="telephone=no">
+  <meta property="og:title" content="MAMORU 복원수리내역">
+  <meta property="og:description" content="가위 복원수리 결과를 확인하세요">
+  <title>MAMORU 복원수리내역</title>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* 스크롤바 커스텀 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  background: #f5f5f5;
+  color: #1a1a1a;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+.container {
+  max-width: 420px;
+  margin: 0 auto;
+  background: #ffffff;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* 상단 액션바 */
+.action-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(26, 26, 26, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.action-bar button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-back {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}
+
+.btn-back:active {
+  background: rgba(255,255,255,0.25);
+}
+
+.btn-save {
+  background: #fff;
+  color: #1a1a1a;
+}
+
+.btn-save:active {
+  background: #e0e0e0;
+}
+
+.btn-save.saving {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* 캡처 영역 */
+#capture-area {
+  background: #fff;
+}
+
+/* 헤더 */
+.header {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color: #ffffff;
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.header .logo {
+  height: 40px;
+  margin-bottom: 16px;
+}
+
+.header .doc-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  padding: 8px 20px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 20px;
+  display: inline-block;
+}
+
+/* 고객 정보 */
+.customer-info {
+  padding: 20px;
+  background: #fafafa;
+  border-bottom: 1px solid #eee;
+}
+
+.customer-info .name {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.customer-info .name span {
+  font-size: 14px;
+  font-weight: 400;
+  color: #666;
+  margin-left: 4px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.info-grid.three-col {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.info-item .label {
+  font-size: 11px;
+  color: #888;
+  font-weight: 500;
+}
+
+.info-item .value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 섹션 타이틀 */
+.section-title {
+  padding: 16px 20px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+  background: #fff;
+  border-bottom: 2px solid #1a1a1a;
+}
+
+/* 가위 수량 요약 */
+.scissor-summary {
+  padding: 16px 20px;
+  background: #f5f5f5;
+  border-top: 1px solid #eee;
+  text-align: center;
+}
+
+.scissor-summary .total {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.scissor-summary .total-label {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.scissor-summary .types {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scissor-summary .type-item {
+  font-size: 12px;
+  color: #888;
+  background: #fff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.scissor-summary .type-item strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* 가위 카드 */
+.scissor-card {
+  margin: 16px;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border: 1px solid #eee;
+}
+
+.scissor-header {
+  background: linear-gradient(135deg, #2a2a2a 0%, #3d3d3d 100%);
+  color: #fff;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scissor-header .number {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.scissor-header .type {
+  font-size: 13px;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+}
+
+.scissor-body {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 0;
+}
+
+.scissor-photo {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f8f8;
+  border-right: 1px solid #eee;
+}
+
+.scissor-photo img {
+  width: 140px;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #e0e0e0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.scissor-photo .no-photo {
+  width: 140px;
+  height: 250px;
+  background: #e8e8e8;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #999;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.scissor-status {
+  padding: 20px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.status-row:last-child {
+  border-bottom: none;
+}
+
+.status-row .label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-row .value {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.status-row .value.good {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-row .value.warning {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.status-row .value.bad {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* 작업 코멘트 */
+.comment-section {
+  margin: 16px;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  border-left: 4px solid #1a1a1a;
+}
+.comment-section .comment-header {    // ← 여기 추가
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.comment-section .content {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.no-comment {
+  margin: 16px;
+  padding: 16px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
+
+/* 푸터 */
+.footer {
+  margin-top: 24px;
+  padding: 24px 20px;
+  background: #1a1a1a;
+  color: #fff;
+  text-align: center;
+}
+
+.footer .logo {
+  height: 32px;
+  margin-bottom: 16px;
+}
+
+.footer .tagline {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 16px;
+}
+
+.footer .contact {
+  font-size: 12px;
+  color: #aaa;
+  line-height: 1.8;
+}
+
+/* 저장 중 오버레이 */
+.saving-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: #fff;
+}
+
+.saving-overlay.show {
+  display: flex;
+}
+
+.saving-overlay .spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+  </style>
+</head>
+<body>
+  <!-- 상단 액션바 (캡처 영역 밖) -->
+  <div class="action-bar">
+    <button class="btn-back" onclick="goBack()">← 뒤로</button>
+    <button class="btn-save" id="saveBtn" onclick="saveAsImage()">📷 이미지 저장</button>
+  </div>
+  
+  <!-- 저장 중 오버레이 -->
+  <div class="saving-overlay" id="savingOverlay">
+    <div class="spinner"></div>
+    <div>이미지 생성 중...</div>
+  </div>
+
+  <div class="container">
+    <!-- 캡처될 영역 -->
+    <div id="capture-area">
+      <!-- 헤더 -->
+      <div class="header">
+        <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/aeef581a55972.png" alt="MAMORU" class="logo" crossorigin="anonymous">
+        <div class="doc-title">복원수리내역</div>
+      </div>
+      
+      <!-- 고객 정보 -->
+      <div class="customer-info">
+        <div class="name"><?= data.customer_name ?> <span>님</span></div>
+        <div class="info-grid" style="margin-bottom: 8px;">
+          <div class="info-item">
+            <span class="label">접수번호</span>
+            <span class="value"><?= data.as_id ?></span>
+          </div>
+          <div class="info-item">
+            <span class="label">가위 수량</span>
+            <span class="value"><?= data.scissors.length ?>자루</span>
+          </div>
+        </div>
+        <div class="info-grid three-col">
+          <div class="info-item">
+            <span class="label">입고일</span>
+            <span class="value"><?= data.in_date || '-' ?></span>
+          </div>
+          <div class="info-item">
+            <span class="label">출고일</span>
+            <span class="value"><?= data.out_date ?></span>
+          </div>
+          <div class="info-item">
+            <span class="label">작업/책임자</span>
+            <span class="value"><?= data.worker ?></span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 가위 종류별 수량 요약 -->
+      <div class="scissor-summary">
+        <div class="total"><?= data.scissors.length ?>자루</div>
+        <div class="total-label">총 가위</div>
+        <div class="types">
+          <? for (var type in data.type_counts) { ?>
+            <span class="type-item"><?= type ?> <strong><?= data.type_counts[type] ?></strong></span>
+          <? } ?>
+        </div>
+      </div>
+      
+      <!-- 점검 결과 섹션 -->
+      <div class="section-title">📋 진행 전 상태 CHECK</div>
+      
+      <? for (var i = 0; i < data.scissors.length; i++) { 
+           var s = data.scissors[i];
+           var isThinning = (s.type === '틴닝');
+      ?>
+      <div class="scissor-card">
+        <div class="scissor-header">
+          <span class="number"><?= s.number ?>번 가위</span>
+          <span class="type"><?= s.type ?></span>
+        </div>
+        <div class="scissor-body">
+          <div class="scissor-photo">
+            <? if (s.photo) { ?>
+              <img src="<?= s.photo ?>" alt="가위 사진" />
+            <? } else { ?>
+              <div class="no-photo">📷<br>사진 없음</div>
+            <? } ?>
+          </div>
+          <div class="scissor-status">
+            <div class="status-row">
+              <span class="label">날 끝</span>
+              <span class="value <?= s.blade_tip === '양호' ? 'good' : (s.blade_tip === '교체' ? 'bad' : 'warning') ?>"><?= s.blade_tip ?></span>
+            </div>
+            <div class="status-row">
+              <span class="label">날 중간</span>
+              <span class="value <?= s.blade_mid === '양호' ? 'good' : (s.blade_mid === '교체' ? 'bad' : 'warning') ?>"><?= s.blade_mid ?></span>
+            </div>
+            <div class="status-row">
+              <span class="label">날 안쪽</span>
+              <span class="value <?= s.blade_inner === '양호' ? 'good' : (s.blade_inner === '교체' ? 'bad' : 'warning') ?>"><?= s.blade_inner ?></span>
+            </div>
+            <? if (isThinning && s.comb) { ?>
+            <div class="status-row">
+              <span class="label">빗살</span>
+              <span class="value <?= s.comb === '양호' ? 'good' : 'bad' ?>"><?= s.comb ?></span>
+            </div>
+            <? } ?>
+            <div class="status-row">
+              <span class="label">장력</span>
+              <span class="value <?= s.tension === '양호' ? 'good' : 'warning' ?>"><?= s.tension ?></span>
+            </div>
+            <div class="status-row">
+              <span class="label">내부부품</span>
+              <span class="value <?= s.parts === '양호' ? 'good' : 'bad' ?>"><?= s.parts ?></span>
+            </div>
+            <div class="status-row">
+              <span class="label">스토퍼</span>
+              <span class="value <?= s.stopper === '양호' ? 'good' : 'bad' ?>"><?= s.stopper ?></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <? } ?>
+      
+      <!-- 진행내역 -->
+<div class="section-title">📝 진행내역&참고사항</div>
+
+<? if (data.work_summary) { ?>
+<div class="comment-section">
+  <div class="content"><?= data.work_summary ?></div>
+</div>
+<? } ?>
+
+<? if (data.comment) { ?>
+<div class="comment-section">
+  <div class="comment-header">추가 안내</div>
+  <div class="content"><?= data.comment ?></div>
+</div>
+<? } ?>
+
+<? if (!data.work_summary && !data.comment) { ?>
+<div class="no-comment">진행내역이 없습니다.</div>
+<? } ?>
+    </div>
+    
+    <!-- 푸터 (캡처 영역 밖) -->
+    <div class="footer">
+      <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/aeef581a55972.png" alt="MAMORU" class="logo" crossorigin="anonymous">
+      <div class="tagline">가격을 뛰어넘는 가치를 제공합니다</div>
+      <div class="contact">
+        📞 02-6326-0426<br>
+        📧 bsm@mamoru.kr<br>
+        🌐 mamoru.kr
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function goBack() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.close();
+      }
+    }
+    
+    function saveAsImage() {
+      const btn = document.getElementById('saveBtn');
+      const overlay = document.getElementById('savingOverlay');
+      const captureArea = document.getElementById('capture-area');
+      
+      btn.classList.add('saving');
+      btn.textContent = '저장 중...';
+      overlay.classList.add('show');
+      
+      setTimeout(() => {
+        html2canvas(captureArea, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        }).then(canvas => {
+          const link = document.createElement('a');
+          const asId = '<?= data.as_id ?>';
+          link.download = 'MAMORU_수리내역_' + asId + '.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+          
+          btn.classList.remove('saving');
+          btn.textContent = '📷 이미지 저장';
+          overlay.classList.remove('show');
+        }).catch(err => {
+          console.error('캡처 실패:', err);
+          alert('이미지 저장에 실패했습니다. 다시 시도해주세요.');
+          btn.classList.remove('saving');
+          btn.textContent = '📷 이미지 저장';
+          overlay.classList.remove('show');
+        });
+      }, 500);
+    }
+  </script>
+</body>
+</html>
+`

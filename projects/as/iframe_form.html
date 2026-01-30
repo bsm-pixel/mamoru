@@ -1,0 +1,50 @@
+<!-- AS 접수 코드위젯: 아임웹 /53 페이지에 붙여넣기 -->
+<div id="asWrapPC" style="position:relative; max-width: 1200px; margin: 0 auto;">
+  <iframe
+    id="asFramePC"
+    src=""
+    style="width:100%; height:1600px; border:0; display:block; overflow:hidden;"
+    scrolling="no"
+    loading="eager"
+    referrerpolicy="no-referrer-when-downgrade"
+    allowtransparency="true">
+  </iframe>
+</div>
+<script>
+(function(){
+  // GAS Web App URL
+  var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzLx3Qlu6Bz5pLXnnJiboWPKH7aerxqTGWq_hshq62l3B8FfCnMh_E_EMqgZSLXMNQWLw/exec';
+  var f = document.getElementById('asFramePC');
+
+  f.src = WEBAPP_URL;
+
+  // 높이 자동 조절 (debounce 적용 - 무한루프 방지)
+  var MIN = 1600, MAX = 5000;
+  var lastHeight = 0;
+  var debounceTimer = null;
+
+  function setH(h){
+    var hh = Math.max(MIN, Math.min(MAX, Number(h)||0));
+    // 높이 변화가 10px 이상일 때만 업데이트 (무한루프 방지)
+    if (f && hh && Math.abs(hh - lastHeight) > 10) {
+      f.style.height = hh + 'px';
+      lastHeight = hh;
+    }
+  }
+
+  window.addEventListener('message', function(e){
+    var d = e && e.data;
+    // AS_IFRAME_HEIGHT 타입 메시지만 처리
+    if (!d || d.type !== 'AS_IFRAME_HEIGHT') return;
+
+    // debounce: 60ms 이내 연속 메시지 무시
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function(){
+      setH((d.height||0) + 20);
+    }, 60);
+  });
+
+  f.addEventListener('load', function(){ setH(MIN); });
+  setTimeout(function(){ setH(MIN); }, 3000);
+})();
+</script>
