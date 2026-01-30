@@ -1,13 +1,13 @@
-<!-- MAMORU 맞춤 추천 - 아임웹 코드위젯용 -->
+<!-- MAMORU 브랜드 소개 - 아임웹 코드위젯용 -->
 <!-- ★ 이 코드를 아임웹 코드위젯에 전체 복사하세요 ★ -->
 <!-- GitHub Pages 이전 버전 - postMessage 동적 높이 조절 -->
 
 <style>
-#mamoruRecWrap {
+#mamoruIntroWrap {
   position: relative;
   width: 100%;
 }
-#mamoruRecFrame {
+#mamoruIntroFrame {
   width: 100%;
   border: none;
   display: block;
@@ -22,15 +22,15 @@
 }
 </style>
 
-<div id="mamoruRecWrap">
+<div id="mamoruIntroWrap">
   <!-- 로딩 스피너 (iframe 로드 전 표시) -->
-  <div id="mamoruRecLoader" style="
+  <div id="mamoruLoader" style="
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100vh;
-    background: #1C1C1E;
+    background: #0C0C0C;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -53,12 +53,12 @@
       font-weight: 500;
       letter-spacing: 0.1em;
       animation: mamoruPulse 2s ease-in-out infinite;
-    ">맞춤 추천</p>
+    ">MAMORU</p>
   </div>
 
   <iframe
-    id="mamoruRecFrame"
-    src="https://bsm-pixel.github.io/mamoru/projects/01_consulting/RecommendResult.html"
+    id="mamoruIntroFrame"
+    src="https://bsm-pixel.github.io/mamoru/projects/brand/page_intro.html"
     scrolling="no"
     frameborder="0"
     allowtransparency="true">
@@ -67,10 +67,10 @@
 
 <script>
 (function(){
-  var iframe = document.getElementById('mamoruRecFrame');
+  var iframe = document.getElementById('mamoruIntroFrame');
   var currentHeight = 0;
 
-  // postMessage로 동적 높이 수신
+  // postMessage로 동적 높이 수신 (index.html에서 MAMORU_IFRAME_SIZE 타입으로 전송)
   window.addEventListener('message', function(e) {
     // GitHub Pages origin 확인
     if (e.origin !== 'https://bsm-pixel.github.io') return;
@@ -85,12 +85,12 @@
   });
 
   // 초기 높이 (postMessage 수신 전 fallback)
-  iframe.style.height = (window.innerWidth <= 768 ? 1200 : 1500) + 'px';
+  iframe.style.height = (window.innerWidth <= 768 ? 1000 : 6100) + 'px';
 
   // 로드 후 로딩 스피너 숨김
   iframe.addEventListener('load', function() {
     setTimeout(function() {
-      var loader = document.getElementById('mamoruRecLoader');
+      var loader = document.getElementById('mamoruLoader');
       if (loader) loader.style.display = 'none';
     }, 300);
   });

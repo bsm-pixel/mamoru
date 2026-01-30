@@ -592,13 +592,14 @@ body::before {
 
 .consult-steps {
   display: grid;
-  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);  /* 모바일: 2열 그리드 */
+  gap: 16px;
   margin-top: 48px;
 }
 
 @media screen and (min-width: 769px) {
   .consult-steps {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);  /* PC: 4열 */
     gap: 32px;
     margin-top: 64px;
   }
@@ -608,7 +609,7 @@ body::before {
   background: var(--bg-base);
   border: 1px solid var(--line-subtle);
   border-radius: 20px;
-  padding: 36px 28px;
+  padding: 24px 16px;  /* 모바일 2열에 맞게 패딩 축소 */
   text-align: center;
   position: relative;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -621,7 +622,7 @@ body::before {
 }
 
 @media screen and (min-width: 769px) {
-  .consult-step { padding: 44px 32px; }
+  .consult-step { padding: 36px 24px; }  /* PC: 4열에 맞게 조정 */
 }
 
 /* ★★★ CONSULT_STEP_ICON_IMAGE ★★★ */
@@ -1432,6 +1433,13 @@ body::before {
         <h4>합리적인 가격 제안</h4>
         <p>필요한 기능만 갖춘 합리적인 가격의 제품을 제안합니다</p>
       </div>
+
+      <div class="consult-step fade-in delay-4">
+        <!-- ★★★ CONSULT_STEP_ICON_IMAGE_4 ★★★ -->
+        <div class="consult-step-icon">🔧</div>
+        <h4>A/S · 관리 안내</h4>
+        <p>구매 후에도 평생 관리와 AS 서비스를 안내합니다</p>
+      </div>
     </div>
   </div>
 </section>
@@ -1449,21 +1457,21 @@ body::before {
     <div class="goal-list">
       <!-- ★★★ GOAL_ICON_IMAGE_1 ★★★ -->
       <div class="goal-item fade-in delay-1">
-        <div class="goal-icon">✦</div>
+        <div class="goal-icon">💰</div>
         <h4 class="goal-title">모든 미용사가 부담없이 즐기도록</h4>
         <p class="goal-desc">좋은 가위의 기준이 부담없는 가격이 될 수 있다는 것을 안내합니다</p>
       </div>
 
       <!-- ★★★ GOAL_ICON_IMAGE_2 ★★★ -->
       <div class="goal-item fade-in delay-2">
-        <div class="goal-icon">✦</div>
+        <div class="goal-icon">📋</div>
         <h4 class="goal-title">정직한 정보 전달</h4>
         <p class="goal-desc">과장 없이, 있는 그대로 제품의 특성과 장단점을 안내합니다</p>
       </div>
 
       <!-- ★★★ GOAL_ICON_IMAGE_3 ★★★ -->
       <div class="goal-item fade-in delay-3">
-        <div class="goal-icon">✦</div>
+        <div class="goal-icon">🤝</div>
         <h4 class="goal-title">평생 함께하는 파트너</h4>
         <p class="goal-desc">한 번 인연을 맺으면 평생 AS와 관리로 함께합니다</p>
       </div>
