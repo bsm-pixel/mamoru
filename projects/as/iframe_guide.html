@@ -84,11 +84,17 @@
   // 초기 높이
   iframe.style.height = (window.innerWidth <= 768 ? 2000 : 2500) + 'px';
 
+  // 로더 숨기기 함수 분리
+  function hideLoader() {
+    var loader = document.getElementById('mamoruAsGuideLoader');
+    if (loader) loader.style.display = 'none';
+  }
+
   iframe.addEventListener('load', function() {
-    setTimeout(function() {
-      var loader = document.getElementById('mamoruAsGuideLoader');
-      if (loader) loader.style.display = 'none';
-    }, 300);
+    setTimeout(hideLoader, 300);
   });
+
+  // fallback: load 이벤트 실패해도 5초 후 로더 숨김
+  setTimeout(hideLoader, 5000);
 })();
 </script>

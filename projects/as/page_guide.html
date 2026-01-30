@@ -34,7 +34,7 @@ html, body {
   background: #1C1C1E;
   color: #ffffff;
   line-height: 1.6;
-  padding-bottom: 80px;
+  padding-bottom: 80px; /* 모바일: sticky 버튼 공간 확보 */
 }
 
 .mamoru-as-page * {
@@ -777,10 +777,11 @@ html, body {
 }
 
 /* =========================================================
-   [8] 하단 고정 CTA
+   [8] 하단 CTA (모바일: sticky, PC: 콘텐츠 내 배치)
    ========================================================= */
 .as-cta-fixed {
-  position: fixed;
+  /* 모바일 기본: sticky로 하단 고정 시도 */
+  position: sticky;
   bottom: 0;
   left: 0;
   right: 0;
@@ -838,6 +839,7 @@ html, body {
   .mamoru-as-page {
     max-width: 800px;
     margin: 0 auto;
+    padding-bottom: 0; /* PC: static 버튼이므로 추가 패딩 불필요 */
   }
 
   .as-hero-title {
@@ -875,10 +877,16 @@ html, body {
     font-size: 48px;
   }
 
+  /* PC: 고정 제거, 콘텐츠 흐름 내 배치 */
   .as-cta-fixed {
+    position: static;
     max-width: 800px;
-    left: 50%;
-    transform: translateX(-50%);
+    margin: 40px auto 0;
+    background: transparent;
+    border-top: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 20px;
   }
 }
 
