@@ -1,0 +1,94 @@
+<!-- MAMORU A/S 안내 - 아임웹 코드위젯용 -->
+<!-- ★ 이 코드를 아임웹 코드위젯에 전체 복사하세요 ★ -->
+<!-- 아임웹 경로: /60 -->
+
+<style>
+#mamoruAsGuideWrap {
+  position: relative;
+  width: 100%;
+}
+#mamoruAsGuideFrame {
+  width: 100%;
+  border: none;
+  display: block;
+}
+@keyframes mamoruSpin {
+  to { transform: rotate(360deg); }
+}
+@keyframes mamoruPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+</style>
+
+<div id="mamoruAsGuideWrap">
+  <!-- 로딩 스피너 -->
+  <div id="mamoruAsGuideLoader" style="
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: #1C1C1E;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  ">
+    <div style="
+      width: 48px;
+      height: 48px;
+      border: 2px solid rgba(201, 169, 98, 0.2);
+      border-top-color: #C9A962;
+      border-radius: 50%;
+      animation: mamoruSpin 1s linear infinite;
+    "></div>
+    <p style="
+      margin-top: 16px;
+      color: #C9A962;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      animation: mamoruPulse 2s ease-in-out infinite;
+    ">A/S 안내</p>
+  </div>
+
+  <iframe
+    id="mamoruAsGuideFrame"
+    src="https://bsm-pixel.github.io/mamoru/projects/as/page_guide.html"
+    scrolling="no"
+    frameborder="0"
+    allowtransparency="true">
+  </iframe>
+</div>
+
+<script>
+(function(){
+  var iframe = document.getElementById('mamoruAsGuideFrame');
+  var currentHeight = 0;
+
+  window.addEventListener('message', function(e) {
+    if (e.origin !== 'https://bsm-pixel.github.io') return;
+
+    if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && typeof e.data.height === 'number') {
+      var newHeight = Math.ceil(e.data.height);
+      if (newHeight !== currentHeight && newHeight > 0) {
+        currentHeight = newHeight;
+        iframe.style.height = newHeight + 'px';
+      }
+    }
+  });
+
+  // 초기 높이
+  iframe.style.height = (window.innerWidth <= 768 ? 2000 : 2500) + 'px';
+
+  iframe.addEventListener('load', function() {
+    setTimeout(function() {
+      var loader = document.getElementById('mamoruAsGuideLoader');
+      if (loader) loader.style.display = 'none';
+    }, 300);
+  });
+})();
+</script>

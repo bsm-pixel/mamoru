@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAMORU A/S 안내</title>
+  <!-- Pretendard 폰트 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <!--
+  =========================================================
+   MAMORU A/S 안내 페이지 (page_guide.html)
+   - GitHub Pages 호스팅용
+   - 아임웹 경로: /60
+
+   ★★★ 수정 가이드 ★★★
+   - 이미지 수정: [IMG] 검색
+   - 문구 수정: [TEXT] 검색
+   - URL 수정: [URL] 검색
+   - 영상 수정: [VIDEO] 검색
+  ========================================================= -->
+
+<style>
+/* 기본 리셋 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #1C1C1E;
+  min-height: 100%;
+}
+
+/* 기본 설정 */
+.mamoru-as-page {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #1C1C1E;
+  color: #ffffff;
+  line-height: 1.6;
+  padding-bottom: 80px;
+}
+
+.mamoru-as-page * {
+  box-sizing: border-box;
+}
+
+
+/* 섹션 공통 */
+.as-section {
+  padding: 48px 20px;
+}
+
+.as-section-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  text-align: center;
+}
+
+.as-section-subtitle {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+/* =========================================================
+   [1] 히어로 섹션
+   ========================================================= */
+.as-hero {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.as-hero-label {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(201, 169, 98, 0.15);
+  border: 1px solid rgba(201, 169, 98, 0.3);
+  border-radius: 100px;
+  color: #C9A962;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 24px;
+}
+
+.as-hero-title {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.as-hero-title .highlight {
+  color: #C9A962;
+}
+
+.as-hero-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.8;
+  margin-bottom: 32px;
+}
+
+.as-hero-desc .water-blue {
+  color: #5DADE2;
+  font-weight: 600;
+}
+
+.as-hero-images {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.as-hero-image-item {
+  border-radius: 12px;
+  overflow: hidden;
+  filter: grayscale(100%);
+  background: #2C2C2E;
+}
+
+.as-hero-image-item img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+.as-hero-image-placeholder {
+  width: 100%;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+}
+
+/* =========================================================
+   [2] 카테고리 탭
+   ========================================================= */
+.as-tabs-container {
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  background: #1C1C1E;
+  z-index: 100;
+}
+
+.as-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.as-tab {
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 100px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.as-tab,
+.as-method-tab,
+.as-cta-primary,
+.as-cta-secondary {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  user-select: none;
+}
+
+.as-tab:active,
+.as-method-tab:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.as-cta-primary:active,
+.as-cta-secondary:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+.as-tab:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.as-tab.active {
+  background: #C9A962;
+  border-color: #C9A962;
+  color: #1C1C1E;
+  font-weight: 600;
+}
+
+.as-tab-content {
+  display: none;
+}
+
+.as-tab-content.active {
+  display: block;
+}
+
+/* =========================================================
+   [3] 복원수리소개 섹션
+   ========================================================= */
+.as-intro-header {
+  text-align: center;
+  padding: 48px 20px 32px;
+}
+
+.as-intro-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #5DADE2;
+  margin-bottom: 8px;
+}
+
+.as-intro-header p {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.7;
+}
+
+.as-youtube-section {
+  padding: 32px 20px;
+}
+
+.as-youtube-label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 12px;
+}
+
+.as-youtube-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  background: #2C2C2E;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.as-youtube-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.as-youtube-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.as-youtube-placeholder i {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.as-before-after {
+  padding: 32px 0;
+  position: relative;
+}
+
+.as-before-after-title {
+  font-size: 16px;
+  font-weight: 600;
+  padding: 0 20px;
+  margin-bottom: 16px;
+  color: #ffffff;
+}
+
+.as-slider-container {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 0 20px;
+  position: relative;
+}
+
+.as-slider-container::-webkit-scrollbar {
+  display: none;
+}
+
+.as-before-after::after {
+  content: '';
+  position: absolute;
+  top: 48px;
+  right: 0;
+  width: 60px;
+  height: calc(100% - 48px);
+  background: linear-gradient(to right, transparent, #1C1C1E);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.as-slider {
+  display: flex;
+  gap: 12px;
+  padding-right: 40px;
+}
+
+.as-slide-item {
+  flex-shrink: 0;
+  width: 280px;
+  background: #2C2C2E;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.as-slide-images {
+  display: flex;
+}
+
+.as-slide-images .before,
+.as-slide-images .after {
+  flex: 1;
+  position: relative;
+}
+
+.as-slide-images img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+}
+
+.as-slide-images .label {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  font-size: 11px;
+  color: #ffffff;
+}
+
+.as-process-grid {
+  padding: 32px 20px;
+}
+
+.as-process-grid-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.as-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.as-grid-item {
+  background: #2C2C2E;
+  border-radius: 12px;
+  padding: 16px 12px;
+  text-align: center;
+}
+
+.as-grid-item-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  background: rgba(201, 169, 98, 0.15);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.as-grid-item-icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.as-grid-item-icon .placeholder {
+  width: 28px;
+  height: 28px;
+  background: rgba(201, 169, 98, 0.3);
+  border-radius: 6px;
+}
+
+.as-grid-item-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.4;
+}
+
+/* =========================================================
+   [4] 접수방식 섹션
+   ========================================================= */
+.as-method-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px;
+  margin-bottom: 24px;
+}
+
+.as-method-tab {
+  flex: 1;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.as-method-tab.active {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #1C1C1E;
+  font-weight: 600;
+}
+
+.as-method-content {
+  display: none;
+  padding: 0 20px;
+}
+
+.as-method-content.active {
+  display: block;
+}
+
+.as-step {
+  background: #2C2C2E;
+  border-radius: 16px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.as-step-image {
+  width: 100%;
+  height: 120px;
+  background: #3C3C3E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+}
+
+.as-step-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.as-step-body {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  align-items: center;
+}
+
+.as-step-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  background: rgba(201, 169, 98, 0.15);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.as-step-icon .step-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: #C9A962;
+}
+
+.as-step-content {
+  flex: 1;
+}
+
+.as-step-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.as-step-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
+}
+
+/* =========================================================
+   [5] 소요일 섹션
+   ========================================================= */
+.as-duration-card {
+  background: #2C2C2E;
+  border-radius: 16px;
+  padding: 24px 20px;
+  margin: 0 20px 16px;
+}
+
+.as-duration-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 16px;
+}
+
+.as-calendar-placeholder {
+  width: 100%;
+  height: 80px;
+  background: rgba(201, 169, 98, 0.1);
+  border: 1px dashed rgba(201, 169, 98, 0.3);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(201, 169, 98, 0.6);
+  font-size: 13px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.as-calendar-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.as-duration-info {
+  font-size: 15px;
+  font-weight: 600;
+  color: #C9A962;
+  margin-bottom: 12px;
+}
+
+.as-duration-examples {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.8;
+}
+
+.as-duration-note {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.7;
+}
+
+/* =========================================================
+   [6] 비용안내 섹션
+   ========================================================= */
+.as-price-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 20px;
+  margin-bottom: 32px;
+}
+
+.as-price-card {
+  background: linear-gradient(135deg, rgba(201, 169, 98, 0.15) 0%, rgba(201, 169, 98, 0.05) 100%);
+  border: 1px solid rgba(201, 169, 98, 0.3);
+  border-radius: 16px;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.as-price-card-label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+}
+
+.as-price-card-value {
+  font-size: 36px;
+  font-weight: 800;
+  color: #C9A962;
+  line-height: 1;
+}
+
+.as-price-card-value span {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.as-price-card-unit {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 4px;
+}
+
+.as-shipping-section {
+  padding: 0 20px;
+}
+
+.as-shipping-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.as-shipping-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.as-shipping-header p {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.as-shipping-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.as-shipping-card {
+  background: #2C2C2E;
+  border-radius: 16px;
+  padding: 20px 16px;
+}
+
+.as-shipping-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.as-shipping-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.as-shipping-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.as-shipping-row.highlight {
+  background: rgba(201, 169, 98, 0.15);
+  border: 1px solid rgba(201, 169, 98, 0.3);
+}
+
+.as-shipping-row .qty {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.as-shipping-row .price {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.as-shipping-row.highlight .price {
+  color: #C9A962;
+}
+
+.as-shipping-note {
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.7;
+}
+
+/* =========================================================
+   [7] 포장방법 섹션
+   ========================================================= */
+.as-packing-list {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.as-packing-item {
+  background: #2C2C2E;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.as-packing-item.important {
+  border: 1px solid rgba(201, 169, 98, 0.4);
+}
+
+.as-packing-image {
+  width: 100%;
+  height: 180px;
+  background: #3C3C3E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+}
+
+.as-packing-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.as-packing-content {
+  padding: 16px 20px;
+}
+
+.as-packing-step {
+  display: inline-block;
+  padding: 4px 10px;
+  background: rgba(201, 169, 98, 0.15);
+  border-radius: 100px;
+  color: #C9A962;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.as-packing-step.star::before {
+  content: '★ ';
+}
+
+.as-packing-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.as-packing-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
+}
+
+/* =========================================================
+   [8] 하단 고정 CTA
+   ========================================================= */
+.as-cta-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(28, 28, 30, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+}
+
+.as-cta-secondary {
+  flex-shrink: 0;
+  width: 100px;
+  padding: 14px 16px;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.as-cta-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.as-cta-primary {
+  flex: 1;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #C9A962 0%, #B8963E 100%);
+  border: none;
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.as-cta-primary:hover {
+  background: linear-gradient(135deg, #D4B56E 0%, #C9A962 100%);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   반응형 - PC (768px 이상)
+   ========================================================= */
+@media screen and (min-width: 768px) {
+  .mamoru-as-page {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .as-hero-title {
+    font-size: 28px;
+  }
+
+  .as-hero-title br.mobile-only {
+    display: none;
+  }
+
+  .as-hero-images {
+    grid-template-columns: 1fr 1fr;
+    max-width: 600px;
+    gap: 16px;
+  }
+
+  .as-hero-image-item img,
+  .as-hero-image-placeholder {
+    height: 200px;
+  }
+
+  .as-grid {
+    gap: 16px;
+  }
+
+  .as-grid-item {
+    padding: 20px 16px;
+  }
+
+  .as-price-card {
+    padding: 32px 20px;
+  }
+
+  .as-price-card-value {
+    font-size: 48px;
+  }
+
+  .as-cta-fixed {
+    max-width: 800px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* =========================================================
+   반응형 - 모바일 (768px 미만)
+   ========================================================= */
+@media screen and (max-width: 767px) {
+  .as-hero-title {
+    font-size: 18px;
+  }
+
+  .as-shipping-cards {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="mamoru-as-page">
+
+  <!-- [1] 히어로 섹션 -->
+  <section class="as-hero">
+    <span class="as-hero-label">A/S 접수 안내</span>
+
+    <!-- [TEXT] 메인 타이틀 -->
+    <h1 class="as-hero-title">
+      잠깐의 불편해결이 목적이 아닙니다<br>
+      <span class="highlight">새가위, 첫만남을 재현합니다</span>
+    </h1>
+
+    <!-- [TEXT] 보조 문구 -->
+    <p class="as-hero-desc">
+      마모루만의 2대 기술력<br>
+      마모루대표 자체 진행<br>
+      <span class="water-blue">수냉식 복원수리</span>
+    </p>
+
+    <!-- [IMG] 메인 이미지 -->
+    <div class="as-hero-images">
+      <div class="as-hero-image-item">
+        <div class="as-hero-image-placeholder">메인 이미지 1</div>
+      </div>
+      <div class="as-hero-image-item">
+        <div class="as-hero-image-placeholder">메인 이미지 2</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- [2] 카테고리 탭 -->
+  <div class="as-tabs-container">
+    <div class="as-tabs">
+      <button class="as-tab active" data-tab="intro">복원수리소개</button>
+      <button class="as-tab" data-tab="method">접수방식</button>
+      <button class="as-tab" data-tab="duration">소요일</button>
+      <button class="as-tab" data-tab="price">비용안내</button>
+      <button class="as-tab" data-tab="packing">포장방법</button>
+    </div>
+  </div>
+
+  <!-- [3] 복원수리소개 탭 -->
+  <div class="as-tab-content active" id="tab-intro">
+    <div class="as-intro-header">
+      <h2>수냉식 복원수리</h2>
+      <p>미용가위를 위한 최선의 방식<br>
+      가업의 기술을 2대로 이어<br>
+      기술력을 보완 업그레이드하여 제공합니다</p>
+    </div>
+
+    <!-- [VIDEO] 유튜브 영역 -->
+    <div class="as-youtube-section">
+      <p class="as-youtube-label">틴닝가위 불편 시 하단 영상을 우선 시청해주세요</p>
+      <div class="as-youtube-wrapper">
+        <div class="as-youtube-placeholder">
+          <i>▶</i>
+          <span>틴닝가위 불편해도 구매하지마세요</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- [IMG] 전후사진 슬라이드 -->
+    <div class="as-before-after">
+      <h3 class="as-before-after-title">진행 전/후 사진</h3>
+      <div class="as-slider-container">
+        <div class="as-slider">
+          <div class="as-slide-item">
+            <div class="as-slide-images">
+              <div class="before">
+                <img src="" alt="Before" style="background:#3C3C3E;">
+                <span class="label">Before</span>
+              </div>
+              <div class="after">
+                <img src="" alt="After" style="background:#4C4C4E;">
+                <span class="label">After</span>
+              </div>
+            </div>
+          </div>
+          <div class="as-slide-item">
+            <div class="as-slide-images">
+              <div class="before">
+                <img src="" alt="Before" style="background:#3C3C3E;">
+                <span class="label">Before</span>
+              </div>
+              <div class="after">
+                <img src="" alt="After" style="background:#4C4C4E;">
+                <span class="label">After</span>
+              </div>
+            </div>
+          </div>
+          <div class="as-slide-item">
+            <div class="as-slide-images">
+              <div class="before">
+                <img src="" alt="Before" style="background:#3C3C3E;">
+                <span class="label">Before</span>
+              </div>
+              <div class="after">
+                <img src="" alt="After" style="background:#4C4C4E;">
+                <span class="label">After</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- [IMG] 진행작업 그리드 -->
+    <div class="as-process-grid">
+      <h3 class="as-process-grid-title">진행 작업</h3>
+      <div class="as-grid">
+        <div class="as-grid-item">
+          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
+          <p class="as-grid-item-name">사전검수</p>
+        </div>
+        <div class="as-grid-item">
+          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
+          <p class="as-grid-item-name">날바닥<br>복원작업</p>
+        </div>
+        <div class="as-grid-item">
+          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
+          <p class="as-grid-item-name">날등<br>복원작업</p>
+        </div>
+        <div class="as-grid-item">
+          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
+          <p class="as-grid-item-name">초음파세척</p>
+        </div>
+        <div class="as-grid-item">
+          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
+          <p class="as-grid-item-name">녹제거</p>
+        </div>
+        <div class="as-grid-item">
+          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
+          <p class="as-grid-item-name">폴리싱/광택</p>
+        </div>
+        <div class="as-grid-item">
+          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
+          <p class="as-grid-item-name">밸런스교정</p>
+        </div>
+        <div class="as-grid-item">
+          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
+          <p class="as-grid-item-name">노후부품<br>교체</p>
+        </div>
+        <div class="as-grid-item">
+          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
+          <p class="as-grid-item-name">스토퍼<br>교체/장착</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- [4] 접수방식 탭 -->
+  <div class="as-tab-content" id="tab-method">
+    <section class="as-section">
+      <h2 class="as-section-title">접수방식</h2>
+      <p class="as-section-subtitle">편리한 방식을 선택해주세요</p>
+
+      <div class="as-method-tabs">
+        <button class="as-method-tab active" data-method="pickup">방문수거</button>
+        <button class="as-method-tab" data-method="delivery">직접발송</button>
+      </div>
+
+      <!-- 방문수거 -->
+      <div class="as-method-content active" id="method-pickup">
+        <div class="as-step">
+          <div class="as-step-image">이미지 영역</div>
+          <div class="as-step-body">
+            <div class="as-step-icon"><span class="step-number">1</span></div>
+            <div class="as-step-content">
+              <h4 class="as-step-title">접수</h4>
+              <p class="as-step-desc">증상/희망일/연락처/수량을 입력합니다.</p>
+            </div>
+          </div>
+        </div>
+        <div class="as-step">
+          <div class="as-step-image">이미지 영역</div>
+          <div class="as-step-body">
+            <div class="as-step-icon"><span class="step-number">2</span></div>
+            <div class="as-step-content">
+              <h4 class="as-step-title">방문수거</h4>
+              <p class="as-step-desc">일정 확정 후, 수거 및 접수 확인을 진행합니다.</p>
+            </div>
+          </div>
+        </div>
+        <div class="as-step">
+          <div class="as-step-image">이미지 영역</div>
+          <div class="as-step-body">
+            <div class="as-step-icon"><span class="step-number">3</span></div>
+            <div class="as-step-content">
+              <h4 class="as-step-title">작업/반납</h4>
+              <p class="as-step-desc">작업 후 검수 → 안내 → 반납(또는 배송)합니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 직접발송 -->
+      <div class="as-method-content" id="method-delivery">
+        <div class="as-step">
+          <div class="as-step-image">이미지 영역</div>
+          <div class="as-step-body">
+            <div class="as-step-icon"><span class="step-number">1</span></div>
+            <div class="as-step-content">
+              <h4 class="as-step-title">접수</h4>
+              <p class="as-step-desc">증상/연락처/수량을 입력합니다.</p>
+            </div>
+          </div>
+        </div>
+        <div class="as-step">
+          <div class="as-step-image">이미지 영역</div>
+          <div class="as-step-body">
+            <div class="as-step-icon"><span class="step-number">2</span></div>
+            <div class="as-step-content">
+              <h4 class="as-step-title">발송</h4>
+              <p class="as-step-desc">안내된 주소로 가위를 발송해주세요.</p>
+            </div>
+          </div>
+        </div>
+        <div class="as-step">
+          <div class="as-step-image">이미지 영역</div>
+          <div class="as-step-body">
+            <div class="as-step-icon"><span class="step-number">3</span></div>
+            <div class="as-step-content">
+              <h4 class="as-step-title">작업/배송</h4>
+              <p class="as-step-desc">입고 당일 작업 후 출고합니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- [5] 소요일 탭 -->
+  <div class="as-tab-content" id="tab-duration">
+    <section class="as-section">
+      <h2 class="as-section-title">소요일</h2>
+
+      <div class="as-duration-card">
+        <h3 class="as-duration-card-title">방문수거 접수 시</h3>
+        <div class="as-calendar-placeholder">달력 이미지 영역</div>
+        <p class="as-duration-info">수거일 기준 2~3일 후 수령</p>
+        <div class="as-duration-examples">
+          <p>예) 월요일 수거 → 수, 목요일 수령 예상</p>
+          <p>예) 수요일 수거 → 금, 토요일 수령 예상</p>
+          <p>예) 금요일 수거 → 화, 수요일 수령 예상</p>
+        </div>
+        <p class="as-duration-note">* 주말 및 공휴일은 소요일에서 제외됩니다.</p>
+      </div>
+
+      <div class="as-duration-card">
+        <h3 class="as-duration-card-title">직접발송 시</h3>
+        <div class="as-calendar-placeholder">달력 이미지 영역</div>
+        <p class="as-duration-info">입고 당일 출고 원칙</p>
+        <div class="as-duration-examples">
+          <p>예) 월요일 입고 시 월요일 또는 화요일 발송처리</p>
+        </div>
+        <div class="as-duration-note">
+          <p>* 부득이한 사정이나 복원작업 물량이 몰리는 경우 지연될 수 있으며, 이점 양해부탁드립니다.</p>
+          <p style="margin-top:8px;">* 방문수거접수 시 수거일 준비를 못하신 경우 그만큼 수령예상일이 밀립니다.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- [6] 비용안내 탭 -->
+  <div class="as-tab-content" id="tab-price">
+    <section class="as-section">
+      <h2 class="as-section-title">비용안내</h2>
+
+      <p class="as-section-subtitle" style="margin-bottom:16px;">복원수리 비용</p>
+      <div class="as-price-cards">
+        <div class="as-price-card">
+          <p class="as-price-card-label">마모루 가위</p>
+          <p class="as-price-card-value">1<span>만원</span></p>
+          <p class="as-price-card-unit">자루당</p>
+        </div>
+        <div class="as-price-card">
+          <p class="as-price-card-label">타사 가위</p>
+          <p class="as-price-card-value">2<span>만원</span></p>
+          <p class="as-price-card-unit">자루당</p>
+        </div>
+      </div>
+
+      <div class="as-shipping-section">
+        <div class="as-shipping-header">
+          <h3>수거 및 배송 비용</h3>
+          <p>복원수리 비용과 별도</p>
+        </div>
+        <div class="as-shipping-cards">
+          <div class="as-shipping-card">
+            <p class="as-shipping-card-title">방문수거 접수 시</p>
+            <div class="as-shipping-list">
+              <div class="as-shipping-row">
+                <span class="qty">1자루</span>
+                <span class="price">6,000원</span>
+              </div>
+              <div class="as-shipping-row">
+                <span class="qty">2자루</span>
+                <span class="price">3,000원</span>
+              </div>
+              <div class="as-shipping-row highlight">
+                <span class="qty">3자루+</span>
+                <span class="price">무료</span>
+              </div>
+            </div>
+          </div>
+          <div class="as-shipping-card">
+            <p class="as-shipping-card-title">직접발송 접수 시</p>
+            <div class="as-shipping-list">
+              <div class="as-shipping-row">
+                <span class="qty">1자루</span>
+                <span class="price">3,000원</span>
+              </div>
+              <div class="as-shipping-row highlight">
+                <span class="qty">2자루+</span>
+                <span class="price">무료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="as-shipping-note">
+          * 비용은 접수 및 입고 후 수리 필요 여부에 따라 자동계산되어 입금 안내 알림톡을 받으시게 됩니다.<br>
+          (수리 불필요한 경우 자루수에서 제외하여 차감)
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- [7] 포장방법 탭 -->
+  <div class="as-tab-content" id="tab-packing">
+    <section class="as-section">
+      <h2 class="as-section-title">발송 및 수거 전 포장방법</h2>
+      <p class="as-section-subtitle">안전한 발송을 위해 아래 방법을 참고해주세요</p>
+
+      <div class="as-packing-list">
+        <div class="as-packing-item important">
+          <div class="as-packing-image">이미지/GIF 영역</div>
+          <div class="as-packing-content">
+            <span class="as-packing-step star">Step 1</span>
+            <h4 class="as-packing-title">가위 보호</h4>
+            <p class="as-packing-desc">가위날이 맞닿는 부분에 테이프를 감아 보호해주세요.</p>
+          </div>
+        </div>
+
+        <div class="as-packing-item">
+          <div class="as-packing-image">이미지 영역</div>
+          <div class="as-packing-content">
+            <span class="as-packing-step">Step 2</span>
+            <h4 class="as-packing-title">완충재 포장</h4>
+            <p class="as-packing-desc">에어캡(뽁뽁이)으로 가위를 감싸주세요.</p>
+          </div>
+        </div>
+
+        <div class="as-packing-item">
+          <div class="as-packing-image">이미지 영역</div>
+          <div class="as-packing-content">
+            <span class="as-packing-step">Step 3</span>
+            <h4 class="as-packing-title">박스 포장</h4>
+            <p class="as-packing-desc">적당한 크기의 박스에 넣고 빈 공간을 채워주세요.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- [8] 하단 고정 CTA -->
+  <div class="as-cta-fixed">
+    <button class="as-cta-secondary" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">맨 위로</button>
+    <!-- [URL] AS 접수 페이지: /53 -->
+    <button class="as-cta-primary" onclick="goToASForm();">A/S 접수하기</button>
+  </div>
+
+</div>
+
+<script>
+// 탭 전환
+document.querySelectorAll('.as-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.as-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.as-tab-content').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('tab-' + this.getAttribute('data-tab')).classList.add('active');
+    // 탭 변경 시 높이 재계산
+    setTimeout(notifyHeight, 100);
+  });
+});
+
+// 접수방식 내부 탭
+document.querySelectorAll('.as-method-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.as-method-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.as-method-content').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('method-' + this.getAttribute('data-method')).classList.add('active');
+    setTimeout(notifyHeight, 100);
+  });
+});
+
+// [URL] AS 접수 페이지로 이동
+function goToASForm() {
+  // iframe 내부에서 실행 시 부모 페이지 이동
+  try {
+    window.top.location.href = '/53';
+  } catch(e) {
+    window.location.href = '/53';
+  }
+}
+
+/* =========================================================
+   iframe 높이 전송 (아임웹 코드위젯 대응)
+   ========================================================= */
+var lastSentHeight = 0;
+
+function getFullHeight() {
+  var pageEl = document.querySelector('.mamoru-as-page');
+  if (pageEl) {
+    var rect = pageEl.getBoundingClientRect();
+    return Math.ceil(rect.height + 100); // CTA 영역 포함
+  }
+  return Math.ceil(document.body.scrollHeight + 100);
+}
+
+function notifyHeight() {
+  var height = getFullHeight();
+  if (window.parent && window.parent !== window && height > 0 && Math.abs(height - lastSentHeight) > 5) {
+    lastSentHeight = height;
+    window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: height }, '*');
+  }
+}
+
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'REQUEST_HEIGHT') notifyHeight();
+});
+
+window.addEventListener('load', function() {
+  setTimeout(notifyHeight, 100);
+  setTimeout(notifyHeight, 500);
+  setTimeout(notifyHeight, 1000);
+});
+
+var resizeTimer;
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(notifyHeight, 200);
+});
+</script>
+
+</body>
+</html>
