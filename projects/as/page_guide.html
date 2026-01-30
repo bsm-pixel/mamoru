@@ -1303,13 +1303,10 @@ function goToASForm() {
   }
 }
 
-// 맨 위로 스크롤 (iframe 내부 → 아임웹 페이지 전체 스크롤)
+// 맨 위로 스크롤 (iframe 내부 → 부모 페이지에 postMessage로 요청)
 function scrollToTop() {
-  try {
-    window.top.scrollTo({ top: 0, behavior: 'smooth' });
-  } catch(e) {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  // postMessage로 부모 페이지에 스크롤 요청
+  window.parent.postMessage({ type: 'MAMORU_SCROLL_TOP' }, '*');
 }
 
 /* =========================================================
