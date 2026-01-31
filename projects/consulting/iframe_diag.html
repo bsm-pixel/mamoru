@@ -99,5 +99,11 @@
       if (loader) loader.style.display = 'none';
     }, 300);
   });
+
+  // fallback: load 이벤트 실패해도 5초 후 로더 숨김
+  setTimeout(function() {
+    var loader = document.getElementById('mamoruDiagLoader');
+    if (loader) loader.style.display = 'none';
+  }, 5000);
 })();
 </script>
