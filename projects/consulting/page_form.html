@@ -1192,9 +1192,12 @@ body.pc #bootFallback {
   padding: 20px;
   margin-bottom: 24px;
   /* 모바일 렌더링 보장 */
-  display: block;
-  width: 100%;
+  display: block !important;
+  width: 100% !important;
   box-sizing: border-box;
+  min-height: 80px;  /* 최소 높이 강제 */
+  overflow: visible;
+  position: relative;
 }
 
 body.pc .diagnosis-banner {
