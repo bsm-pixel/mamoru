@@ -1293,14 +1293,9 @@ document.querySelectorAll('.as-method-tab').forEach(tab => {
   });
 });
 
-// [URL] AS 접수 페이지로 이동
+// [URL] AS 접수 페이지로 이동 (postMessage 방식 - cross-origin 해결)
 function goToASForm() {
-  // iframe 내부에서 실행 시 부모 페이지 이동
-  try {
-    window.top.location.href = '/53';
-  } catch(e) {
-    window.location.href = '/53';
-  }
+  window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: '/53' }, '*');
 }
 
 // 맨 위로 스크롤 (iframe 내부 → 부모 페이지에 postMessage로 요청)
