@@ -1439,12 +1439,8 @@ function diagGoToConsult() {
   const diagData = encodeURIComponent(JSON.stringify(diagAnswers));
   const url = CONSULT_PAGE_URL + '?diagnosis=' + diagData;
 
-  // ★ 아임웹 부모 페이지로 이동 (iframe 탈출)
-  if (window.top !== window.self) {
-    window.top.location.href = url;
-  } else {
-    window.location.href = url;
-  }
+  // ★ postMessage 방식으로 아임웹 부모 페이지 이동 (cross-origin 해결)
+  window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: url }, '*');
 }
 
 // ★ 맞춤 추천 페이지로 이동
@@ -1458,12 +1454,8 @@ function diagGoToRecommend() {
     localStorage.setItem('MAMORU_DIAGNOSIS', JSON.stringify(diagAnswers));
   } catch(e) {}
 
-  // ★ 아임웹 부모 페이지로 이동 (iframe 탈출)
-  if (window.top !== window.self) {
-    window.top.location.href = url;
-  } else {
-    window.location.href = url;
-  }
+  // ★ postMessage 방식으로 아임웹 부모 페이지 이동 (cross-origin 해결)
+  window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: url }, '*');
 }
 
 /* =========================================================

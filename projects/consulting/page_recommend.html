@@ -722,29 +722,16 @@ function renderProductCard(product, isTop) {
    네비게이션 - 아임웹 부모 페이지로 이동
    ========================================================= */
 function goBack() {
-  if (window.top !== window.self) {
-    window.top.location.href = DIAG_PAGE_URL;
-  } else if (window.history.length > 1) {
-    window.history.back();
-  } else {
-    window.location.href = DIAG_PAGE_URL;
-  }
+  // postMessage 방식으로 아임웹 부모 페이지 이동 (cross-origin 해결)
+  window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: DIAG_PAGE_URL }, '*');
 }
 
 function goToDiag() {
-  if (window.top !== window.self) {
-    window.top.location.href = DIAG_PAGE_URL;
-  } else {
-    window.location.href = DIAG_PAGE_URL;
-  }
+  window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: DIAG_PAGE_URL }, '*');
 }
 
 function goToConsult() {
-  if (window.top !== window.self) {
-    window.top.location.href = CONSULT_PAGE_URL;
-  } else {
-    window.location.href = CONSULT_PAGE_URL;
-  }
+  window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: CONSULT_PAGE_URL }, '*');
 }
 
 /* =========================================================
