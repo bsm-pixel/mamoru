@@ -1192,12 +1192,15 @@ body.pc #bootFallback {
   padding: 20px;
   margin-bottom: 24px;
   /* 모바일 렌더링 보장 */
-  display: block !important;
   width: 100% !important;
   box-sizing: border-box;
   min-height: 80px;  /* 최소 높이 강제 */
   overflow: visible;
   position: relative;
+}
+
+.diagnosis-banner.hide {
+  display: none !important;  /* hide 클래스 우선 적용 */
 }
 
 body.pc .diagnosis-banner {
@@ -1267,6 +1270,50 @@ body.pc .diagnosis-tag {
   color: rgba(201, 169, 98, 0.7);  /* 골드 힌트 */
   line-height: 1.5;
 }
+
+/* ★ 진단 미첨부 배너 (회색 톤) */
+.diagnosis-banner-empty {
+  background: rgba(180, 180, 180, 0.08);
+  border: 1px solid rgba(180, 180, 180, 0.3);
+  text-align: center;
+}
+
+.diagnosis-banner-badge-empty {
+  background: rgba(180, 180, 180, 0.3);
+  color: #888;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+}
+
+.diagnosis-banner-empty .diagnosis-banner-header {
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.diagnosis-banner-desc {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.diagnosis-banner-btn {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);
+  color: var(--void-black);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.diagnosis-banner-btn:hover {
+  opacity: 0.9;
+}
 </style>
 </head>
 <body>
@@ -1297,6 +1344,21 @@ body.pc .diagnosis-tag {
         <div class="diagnosis-banner-hint">
           위 내용이 상담 메모에 자동으로 포함됩니다
         </div>
+      </div>
+
+      <!-- 미첨부 상태 (진단 데이터 없을 때) -->
+      <div id="diagnosis-banner-empty" class="diagnosis-banner diagnosis-banner-empty">
+        <div class="diagnosis-banner-header">
+          <span class="diagnosis-banner-badge-empty">간편진단 미첨부</span>
+        </div>
+        <div class="diagnosis-banner-desc">
+          간편진단을 첨부하시면 더욱 디테일한 상담 준비가 가능합니다.<br>
+          톡 상담 접수 시 꼭 진단 내용을 첨부해 주세요!
+        </div>
+        <a href="https://bsm-pixel.github.io/mamoru/projects/consulting/page_diag.html"
+           class="diagnosis-banner-btn" target="_blank">
+          간편진단 바로가기
+        </a>
       </div>
 
       <!-- 상담유형 선택 -->
@@ -1638,12 +1700,19 @@ body.pc .diagnosis-tag {
   window.__injectDiagnosisToMemo__ = injectDiagnosisToMemo;
 
   // 서버에서 주입된 데이터 처리
+  var emptyBanner = document.getElementById('diagnosis-banner-empty');
+
   if (diagnosisFromServer && diagnosisFromServer.length > 0) {
+    // 진단 데이터 있음 → 진단완료 배너 표시, 미첨부 배너 숨김
+    if (emptyBanner) {
+      emptyBanner.classList.add('hide');
+      emptyBanner.style.display = 'none';
+    }
     try {
       var decoded = decodeURIComponent(diagnosisFromServer);
       window.__MAMORU_DIAGNOSIS__ = JSON.parse(decoded);
       console.log('[MAMORU] 서버에서 진단 데이터 수신:', window.__MAMORU_DIAGNOSIS__);
-      
+
       // DOM 로드 후 배너 표시
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
@@ -1655,6 +1724,9 @@ body.pc .diagnosis-tag {
     } catch (err) {
       console.error('[MAMORU] 진단 데이터 파싱 오류:', err);
     }
+  } else {
+    // 진단 데이터 없음 → 미첨부 배너 표시 (기본 상태)
+    console.log('[MAMORU] 진단 데이터 없음 - 미첨부 배너 표시');
   }
 })();
 </script>
