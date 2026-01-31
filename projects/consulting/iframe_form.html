@@ -65,8 +65,8 @@
 
   f.src = finalURL;
   
-  // 높이 자동 조절
-  var MIN = 1600, MAX = 5000;
+  // 높이 자동 조절 - MAX 3000으로 제한 (5000은 과도함)
+  var MIN = 1600, MAX = 3000;
   function setH(h){
     var hh = Math.max(MIN, Math.min(MAX, Number(h)||0));
     if (f && hh) f.style.height = hh + 'px';

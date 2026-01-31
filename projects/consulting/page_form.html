@@ -2315,15 +2315,9 @@ if (isLoadingDates) return;
     }
     $('consult_type').value = state.type;
     typeInfo.innerHTML = typeMessages[state.type];
-    // 레이아웃 재계산 후 높이 알림 - 여러 번 호출하여 확실하게 처리
-    function notifyMultiple() {
-      window.__notifyHeight && window.__notifyHeight(true);
-    }
+    // 레이아웃 재계산 후 높이 알림 - 1회만 호출 (과다 호출 제거)
     requestAnimationFrame(function() {
-      notifyMultiple();
-      setTimeout(notifyMultiple, 50);
-      setTimeout(notifyMultiple, 150);
-      setTimeout(notifyMultiple, 300);
+      setTimeout(function() { window.__notifyHeight && window.__notifyHeight(true); }, 100);
     });
   });
 
@@ -2546,38 +2540,43 @@ if (isLoadingDates) return;
   });
 
   // ─────────────────────────────────────────────────────────────
-  // Height notify (for iframe) - 성능 최적화 버전
+  // Height notify (for iframe) - 최적화: 디바운스 강화, 호출 최소화
   // ─────────────────────────────────────────────────────────────
   (function() {
-    let t;
+    let debounceTimer = null;
     let lastH = 0;
+    let isThrottled = false;
 
     function notify(force) {
+      // 스로틀링: 100ms 내 중복 호출 방지
+      if (!force && isThrottled) return;
+
       const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
-      // 강제 업데이트가 아니고 높이가 변하지 않으면 메시지 전송 안 함
-      if (!force && h === lastH) return;
+      // 높이 변화가 10px 미만이면 무시 (미세 변동 방지)
+      if (!force && Math.abs(h - lastH) < 10) return;
+
       lastH = h;
       try { parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: h }, '*'); } catch (e) {}
+
+      // 100ms 스로틀
+      isThrottled = true;
+      setTimeout(function() { isThrottled = false; }, 100);
     }
-    
-    // MutationObserver: attributes 제외, 디바운스 500ms로 증가
-    new MutationObserver(function() { 
-      clearTimeout(t); 
-      t = setTimeout(notify, 500); 
-    }).observe(document.body, { subtree: true, childList: true });
-    
-    // ResizeObserver: 디바운스 300ms
-    new ResizeObserver(function() { 
-      clearTimeout(t); 
-      t = setTimeout(notify, 300); 
-    }).observe(document.documentElement);
-    
-    window.addEventListener('load', notify);
-    window.addEventListener('resize', function() { 
-      clearTimeout(t); 
-      t = setTimeout(notify, 300); 
-    });
-    document.fonts && document.fonts.ready.then(notify);
+
+    function debouncedNotify() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(notify, 200);  // 200ms 디바운스
+    }
+
+    // MutationObserver: childList만 감시
+    new MutationObserver(debouncedNotify).observe(document.body, { subtree: true, childList: true });
+
+    // ResizeObserver: 디바운스 적용
+    new ResizeObserver(debouncedNotify).observe(document.documentElement);
+
+    window.addEventListener('load', function() { notify(true); });
+    window.addEventListener('resize', debouncedNotify);
+    document.fonts && document.fonts.ready.then(function() { notify(true); });
     window.__notifyHeight = notify;
   })();
 
