@@ -11,7 +11,8 @@
 </div>
 <script>
 (function(){
-  var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwqJr1JVeSspv6kZ-wpKPapKOjk1wvEvQQ9rTN3ZtmtgMpkn8-HLVP7Plw94m-N1EE5/exec';
+  // ★ GitHub Pages의 page_form.html 로드 (GAS는 백엔드 API로만 사용)
+  var PAGE_URL = 'https://bsm-pixel.github.io/mamoru/projects/consulting/page_form.html';
   var f = document.getElementById('csFramePC');
 
   // ★ URL 파라미터에서 진단 데이터 확인 (여러 방법 시도)
@@ -53,10 +54,10 @@
     } catch(e) { console.log('[MAMORU] localStorage 접근 실패'); }
   }
 
-  var finalURL = WEBAPP_URL;
+  var finalURL = PAGE_URL;
 
   if (diagnosisData) {
-    finalURL = WEBAPP_URL + '?diagnosis=' + encodeURIComponent(diagnosisData);
+    finalURL = PAGE_URL + '?diagnosis=' + encodeURIComponent(diagnosisData);
     console.log('[MAMORU] 진단 데이터 전달 성공:', diagnosisData);
   } else {
     console.log('[MAMORU] 진단 데이터 없음 - 일반 접수 모드');

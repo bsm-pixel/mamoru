@@ -1473,11 +1473,31 @@ body.pc .diagnosis-tag {
 
 <script>
 /* ══════════════════════════════════════════════════════════════
-   ★ 진단 데이터 파서 (서버 주입 방식)
+   ★ 진단 데이터 파서 (클라이언트 사이드 - URL 파라미터 + localStorage)
    ══════════════════════════════════════════════════════════════ */
 (function() {
-  // 서버에서 주입된 진단 데이터
-  var diagnosisFromServer = '<?= diagnosisParam ?>';
+  // URL 파라미터 또는 localStorage에서 진단 데이터 읽기
+  var diagnosisFromServer = null;
+
+  // 방법 1: URL 파라미터에서 읽기
+  try {
+    var urlParams = new URLSearchParams(window.location.search);
+    diagnosisFromServer = urlParams.get('diagnosis');
+    if (diagnosisFromServer) {
+      console.log('[MAMORU] URL 파라미터에서 진단 데이터 읽기 성공');
+    }
+  } catch(e) { console.log('[MAMORU] URL 파라미터 접근 실패'); }
+
+  // 방법 2: localStorage에서 읽기 (모바일 fallback)
+  if (!diagnosisFromServer) {
+    try {
+      diagnosisFromServer = localStorage.getItem('MAMORU_DIAGNOSIS_DATA');
+      if (diagnosisFromServer) {
+        console.log('[MAMORU] localStorage에서 진단 데이터 읽기 성공');
+        localStorage.removeItem('MAMORU_DIAGNOSIS_DATA');  // 사용 후 삭제
+      }
+    } catch(e) { console.log('[MAMORU] localStorage 접근 실패'); }
+  }
   
   const labelMap = {
     'CE': '자격증 준비', 
