@@ -137,6 +137,8 @@ body.pc .header h1 {
 .card-body {
   /* 모바일 기본값 */
   padding: 20px 16px;
+  display: block;  /* 명시적 block - 모바일 렌더링 보장 */
+  width: 100%;
 }
 
 body.pc .card-body {
@@ -1189,6 +1191,10 @@ body.pc #bootFallback {
   border-radius: 16px;  /* 둥근 모서리 */
   padding: 20px;
   margin-bottom: 24px;
+  /* 모바일 렌더링 보장 */
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 body.pc .diagnosis-banner {
