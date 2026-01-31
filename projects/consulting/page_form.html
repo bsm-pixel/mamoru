@@ -1602,6 +1602,11 @@ body.pc .diagnosis-tag {
       return '<span class="diagnosis-tag">' + t + '</span>';
     }).join('');
     banner.classList.remove('hide');
+    // 모바일 렌더링 문제 해결: 인라인 스타일로 강제 표시
+    banner.style.display = 'block';
+    banner.style.width = '100%';
+    banner.style.visibility = 'visible';
+    banner.style.opacity = '1';
     console.log('[MAMORU] 배너 표시 완료');
   }
 
