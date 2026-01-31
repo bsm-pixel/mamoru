@@ -42,6 +42,17 @@
     } catch(e) { console.log('[MAMORU] window.parent 접근 실패 (cross-origin)'); }
   }
 
+  // 방법 4: localStorage (모바일 대응 - iframe_diag.html에서 저장)
+  if (!diagnosisData) {
+    try {
+      diagnosisData = localStorage.getItem('MAMORU_DIAGNOSIS_DATA');
+      if (diagnosisData) {
+        console.log('[MAMORU] localStorage에서 진단 데이터 읽기 성공');
+        localStorage.removeItem('MAMORU_DIAGNOSIS_DATA');  // 사용 후 삭제
+      }
+    } catch(e) { console.log('[MAMORU] localStorage 접근 실패'); }
+  }
+
   var finalURL = WEBAPP_URL;
 
   if (diagnosisData) {

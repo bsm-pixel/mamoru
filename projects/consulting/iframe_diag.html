@@ -44,6 +44,14 @@
 
     // 페이지 이동 요청 처리 (cross-origin 해결)
     if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) {
+      // ★ URL에서 diagnosis 파라미터 추출하여 localStorage에 저장 (모바일 대응)
+      try {
+        var navUrl = new URL(e.data.url, window.location.origin);
+        var diagParam = navUrl.searchParams.get('diagnosis');
+        if (diagParam) {
+          localStorage.setItem('MAMORU_DIAGNOSIS_DATA', diagParam);
+        }
+      } catch(err) {}
       window.location.href = e.data.url;
     }
   });
