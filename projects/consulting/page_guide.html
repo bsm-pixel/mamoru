@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAMORU 상담 안내</title>
+  <!-- Pretendard 폰트 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <!--
+  =========================================================
+   MAMORU 상담 안내 페이지 (page_guide.html)
+   - GitHub Pages 호스팅용
+   - 아임웹 경로: /61
+
+   ★★★ 수정 가이드 ★★★
+   - 이미지 수정: [IMG] 검색
+   - 문구 수정: [TEXT] 검색
+   - URL 수정: [URL] 검색
+  ========================================================= -->
+
+<style>
+/* 기본 리셋 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #1C1C1E;
+  min-height: 100%;
+}
+
+/* =========================================================
+   MAMORU 상담 안내 페이지 v3
+
+   ★★★ 수정 가이드 ★★★
+   [IMG] = 이미지, [TEXT] = 문구, [URL] = 링크
+   ========================================================= */
+
+/* 기본 설정 */
+.mamoru-consult-page {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #1C1C1E;
+  color: #ffffff;
+  line-height: 1.6;
+  padding-bottom: 20px; /* iframe용: static CTA */
+}
+
+.mamoru-consult-page * {
+  box-sizing: border-box;
+}
+
+/* 섹션 공통 */
+.consult-section {
+  padding: 48px 20px;
+}
+
+/* [개선] 섹션 타이틀 - 골드 + 크게 */
+.consult-section-title {
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  margin-top: 0;
+  color: #C9A962;
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+
+/* [개선] 섹션 구분선 */
+.consult-section-divider {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #C9A962, transparent);
+  margin: 0 auto 32px;
+}
+
+/* =========================================================
+   [1] 히어로 섹션
+   ========================================================= */
+.consult-hero {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.consult-hero-label {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(201, 169, 98, 0.15);
+  border: 1px solid rgba(201, 169, 98, 0.3);
+  border-radius: 100px;
+  color: #C9A962;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 24px;
+}
+
+.consult-hero-title {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+}
+
+.consult-hero-title .chosen {
+  background: linear-gradient(135deg, #ffffff 0%, #C9A962 50%, #ffffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.consult-hero-title .not-sold {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+}
+
+.consult-hero-desc {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.8;
+  margin-bottom: 32px;
+}
+
+.consult-hero-image {
+  max-width: 350px;
+  margin: 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.consult-hero-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.consult-hero-image-placeholder {
+  width: 100%;
+  height: 200px;
+  background: #2C2C2E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+}
+
+/* =========================================================
+   [2] 카테고리 탭 - 개선: 모바일 가로 스크롤
+   ========================================================= */
+.consult-tabs-container {
+  padding: 12px 16px;
+  position: sticky;
+  top: 0; /* iframe 내부용 */
+  background: #1C1C1E;
+  z-index: 100;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* [개선] 탭 - 가로 스크롤 */
+.consult-tabs {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+
+.consult-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.consult-tab {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 100px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  user-select: none;
+}
+
+.consult-tab:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.consult-tab.active {
+  background: #C9A962;
+  border-color: #C9A962;
+  color: #1C1C1E;
+  font-weight: 600;
+}
+
+/* 탭 콘텐츠 */
+.consult-tab-content {
+  display: none;
+}
+
+.consult-tab-content.active {
+  display: block;
+}
+
+/* =========================================================
+   [3] 탭별 캐릭터 이미지 영역
+   ========================================================= */
+.tab-character {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0px 4px;
+}
+
+.tab-character-image {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-character-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.tab-character-placeholder {
+  width: 100px;
+  height: 100px;
+  background: rgba(201, 169, 98, 0.1);
+  border: 2px dashed rgba(201, 169, 98, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(201, 169, 98, 0.5);
+  font-size: 12px;
+}
+
+/* =========================================================
+   [4] 상담철칙 섹션 - 개선: 골드 라인 + 호버
+   ========================================================= */
+.principle-list {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* [개선] 철칙 아이템 - 좌측 골드 라인 + 호버 */
+.principle-item {
+  padding: 20px 24px;
+  padding-left: 28px;
+  background: #2C2C2E;
+  border-radius: 16px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+/* 좌측 골드 라인 */
+.principle-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #C9A962 0%, #B8963E 100%);
+  border-radius: 4px 0 0 4px;
+}
+
+/* 호버 효과 */
+.principle-item:hover {
+  background: #343436;
+  border-color: rgba(201, 169, 98, 0.2);
+  transform: translateX(4px);
+}
+
+.principle-text {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.7;
+}
+
+/* =========================================================
+   [5] 상담방식 공통 - 개선: 글씨 위계 명확히
+   ========================================================= */
+.method-intro {
+  text-align: center;
+  padding: 8px 20px 40px;
+}
+
+/* [개선] 서브타이틀 - 더 작고 연하게 */
+.method-intro-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 8px;
+}
+
+.method-intro-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* [개선] 과정안내 소제목 - 구분 명확 */
+.process-section {
+  padding: 0 20px 32px;
+}
+
+.process-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 20px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.process-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.process-step {
+  display: flex;
+  gap: 16px;
+  background: #2C2C2E;
+  border-radius: 16px;
+  overflow: hidden;
+  align-items: center;
+}
+
+.process-step-image {
+  flex-shrink: 0;
+  width: 100px;
+  height: 100px;
+  background: #3C3C3E;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 12px;
+}
+
+.process-step-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+}
+
+.process-step-number {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+  background: #C9A962;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1C1C1E;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.process-step-content {
+  flex: 1;
+  padding: 16px 16px 16px 0;
+}
+
+/* [개선] 스텝 제목 - 흰색 강조 */
+.process-step-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.process-step-desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+}
+
+/* 화살표 */
+.process-arrow {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+  color: rgba(201, 169, 98, 0.4);
+  font-size: 18px;
+}
+
+/* 버튼형 스텝 (시간조율 요청) */
+.process-step-action {
+  background: rgba(201, 169, 98, 0.08);
+  border: 1px solid rgba(201, 169, 98, 0.25);
+}
+
+.process-step-action .process-step-image {
+  background: rgba(201, 169, 98, 0.15);
+}
+
+.process-step-action .process-step-title {
+  color: #C9A962;
+}
+
+.action-hint {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  background: rgba(201, 169, 98, 0.2);
+  border-radius: 6px;
+  font-size: 11px;
+  color: #C9A962;
+}
+
+/* 추가설명 */
+.method-notes {
+  padding: 0 20px 32px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.method-notes-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.method-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.method-note-item {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
+}
+
+.method-note-item::before {
+  content: '•';
+  color: #C9A962;
+  flex-shrink: 0;
+}
+
+/* 팁 영역 */
+.method-tip {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(201, 169, 98, 0.1);
+  border: 1px solid rgba(201, 169, 98, 0.2);
+  border-radius: 12px;
+}
+
+.method-tip-label {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #C9A962;
+  border-radius: 4px;
+  color: #1C1C1E;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.method-tip-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+}
+
+/* 감성메시지 */
+.method-emotion {
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.method-emotion-text {
+  font-size: 16px;
+  font-style: italic;
+  color: rgba(201, 169, 98, 0.7);
+  line-height: 1.6;
+}
+
+/* =========================================================
+   [6] Q&A 토글 섹션
+   ========================================================= */
+.qna-list {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.qna-item {
+  background: #2C2C2E;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.qna-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.qna-question:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.qna-question-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  line-height: 1.4;
+  padding-right: 12px;
+}
+
+.qna-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.qna-item.active .qna-icon {
+  transform: rotate(180deg);
+}
+
+.qna-answer {
+  display: none;
+  padding: 0 20px 20px;
+}
+
+.qna-item.active .qna-answer {
+  display: block;
+}
+
+.qna-answer-text {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.7;
+}
+
+.qna-answer-sub {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+}
+
+/* =========================================================
+   [7] 하단 CTA (iframe용: static)
+   ========================================================= */
+.consult-cta-fixed {
+  position: static; /* iframe 내에서 fixed 미작동 → 콘텐츠 내 배치 */
+  display: flex;
+  gap: 8px;
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  background: transparent;
+}
+
+.consult-cta-btn {
+  flex: 1;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.consult-cta-btn:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+.consult-cta-secondary {
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.consult-cta-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.consult-cta-primary {
+  background: linear-gradient(135deg, #C9A962 0%, #B8963E 100%);
+  border: none;
+  color: #ffffff;
+}
+
+.consult-cta-primary:hover {
+  background: linear-gradient(135deg, #D4B56E 0%, #C9A962 100%);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   반응형 - PC
+   ========================================================= */
+@media screen and (min-width: 768px) {
+  .mamoru-consult-page {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .consult-hero-title {
+    font-size: 40px;
+  }
+
+  .consult-section-title {
+    font-size: 30px;
+  }
+
+  .tab-character-image {
+    width: 150px;
+    height: 150px;
+  }
+
+  /* PC에서 탭 중앙정렬 */
+  .consult-tabs {
+    justify-content: center;
+  }
+
+  .consult-cta-fixed {
+    max-width: 800px;
+    margin: 40px auto 0;
+    padding: 20px;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .consult-hero-title {
+    font-size: 28px;
+  }
+
+  .consult-section-title {
+    font-size: 24px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="mamoru-consult-page">
+
+  <!-- =========================================================
+       [1] 히어로 섹션
+       ========================================================= -->
+  <section class="consult-hero">
+    <span class="consult-hero-label">상담 안내</span>
+
+    <h1 class="consult-hero-title">
+      <span class="chosen">Chosen,</span> <span class="not-sold">Not Sold</span>
+    </h1>
+
+    <p class="consult-hero-desc">
+      권하지 않습니다.<br>
+      올바른 선택을 돕습니다.
+    </p>
+
+    <!-- [IMG] 히어로 이미지 -->
+    <div class="consult-hero-image">
+      <img class="fr-fic fr-dii" src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/39e904d6a61a4.png" alt="123333333.png">
+      <!-- <img src="이미지URL" alt="상담 안내"> -->
+    </div>
+  </section>
+
+  <!-- [2] 카테고리 탭 - 개선: 가로 스크롤 -->
+  <div class="consult-tabs-container">
+    <div class="consult-tabs">
+      <button class="consult-tab active" data-tab="principle">상담철칙</button>
+      <button class="consult-tab" data-tab="visit">직접방문</button>
+      <button class="consult-tab" data-tab="dispatch">출장요청</button>
+      <button class="consult-tab" data-tab="talk">톡상담</button>
+      <button class="consult-tab" data-tab="qna">Q&A</button>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       [3] 상담철칙 탭 - 개선: 골드라인 + 호버
+       ========================================================= -->
+  <div class="consult-tab-content active" id="tab-principle">
+    <!-- [IMG] 캐릭터 이미지 -->
+    <div class="tab-character">
+      <div class="tab-character-image">
+        <img class="fr-fic fr-dii" src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/6e900d3a72c0a.png" alt="상담안내_철칙상단.png">
+        <!-- <img src="상담철칙_캐릭터.png" alt="상담철칙"> -->
+      </div>
+    </div>
+
+    <section class="consult-section" style="padding-top: 0px;">
+      <h2 class="consult-section-title">마모루의 상담철칙</h2>
+      <div class="consult-section-divider"></div>
+
+      <div class="principle-list">
+        <div class="principle-item">
+          <p class="principle-text">의뢰자의 필요에 의한 구매를 돕습니다</p>
+        </div>
+        <div class="principle-item">
+          <p class="principle-text">권하지 않습니다.<br>올바른 선택 가이드를 제공합니다</p>
+        </div>
+        <div class="principle-item">
+          <p class="principle-text">좋은 가위의 기준에 가격이 먼저가 아닙니다.<br>가격을 먼저 말하지 않습니다.</p>
+        </div>
+        <div class="principle-item">
+          <p class="principle-text">인모 100% 통가발을 항상 지참합니다</p>
+        </div>
+        <div class="principle-item">
+          <p class="principle-text">고객이 왜 이 가위를 선택했는지,<br>이유를 고객이 이해한 후 판매합니다</p>
+        </div>
+        <div class="principle-item">
+          <p class="principle-text">어떠한 가위도 완벽할 수 없습니다.<br>올바른 선택지 안에서 충분한 비교를 권합니다</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- =========================================================
+       [4] 직접방문 탭
+       ========================================================= -->
+  <div class="consult-tab-content" id="tab-visit">
+    <div class="tab-character">
+      <div class="tab-character-image">
+        <img class="fr-fic fr-dii" src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/e23be01a7b4cf.png" alt="직접방문_아이콘.png">
+      </div>
+    </div>
+
+    <section class="consult-section" style="padding-top: 16px;">
+      <h2 class="consult-section-title">직접방문</h2>
+      <div class="consult-section-divider"></div>
+
+      <div class="method-intro">
+        <p class="method-intro-desc">고객님이 날짜와 시간을 달력에서 체크하여<br>방문해주시는 방법입니다</p>
+      </div>
+
+      <div class="process-section">
+        <h3 class="process-section-title">PROCESS</h3>
+        <div class="process-grid">
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">1</span>
+              이미지
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">원하는 요일, 시간 예약</h4>
+              <p class="process-step-desc">달력에서 희망 일정을 선택하여 접수합니다</p>
+            </div>
+          </div>
+
+          <div class="process-arrow">↓</div>
+
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">2</span>
+              이미지
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">예약일 방문하여 상담진행</h4>
+              <p class="process-step-desc">가위 테스트는 물론, <br>고객님께 딱 맞는 가위를 안내드립니다</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="method-notes">
+        <div class="method-notes-card">
+          <div class="method-notes-list">
+            <p class="method-note-item">당일예약은 불가합니다</p>
+            <p class="method-note-item">상담시간은 1시간 기준입니다</p>
+            <p class="method-note-item">상담인원이 2명 이상일 경우 접수 시 메모에 작성해주세요</p>
+          </div>
+
+          <div class="method-tip">
+            <span class="method-tip-label">Tip!</span>
+            <p class="method-tip-text">사용중이신 가위를 챙기신다면 <br>무상점검 및 꿀팁을 진행&제공해드립니다</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="method-emotion">
+        <p class="method-emotion-text">"고객님과의 인상깊은 하루, <br>뜻깊은 시간을 기다리고 있겠습니다"</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- =========================================================
+       [5] 출장요청 탭
+       ========================================================= -->
+  <div class="consult-tab-content" id="tab-dispatch">
+    <div class="tab-character">
+      <div class="tab-character-image">
+        <img class="fr-fic fr-dii" src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/1e19cedccfb2a.png" alt="출장상담진행.png">
+      </div>
+    </div>
+
+    <section class="consult-section" style="padding-top: 16px;">
+      <h2 class="consult-section-title">출장상담요청</h2>
+      <div class="consult-section-divider"></div>
+
+      <div class="method-intro">
+        <p class="method-intro-title">마모루가 고객님께 방문합니다</p>
+      </div>
+
+      <div class="process-section">
+        <h3 class="process-section-title">PROCESS</h3>
+        <div class="process-grid">
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">1</span>
+              이미지
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">출장 상담 접수</h4>
+              <p class="process-step-desc">희망 일정과 주소를 입력해주세요</p>
+            </div>
+          </div>
+
+          <div class="process-arrow">↓</div>
+
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">2</span>
+              이미지
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">일정 확정 안내</h4>
+              <p class="process-step-desc">알림톡으로 방문 일정을 안내드립니다</p>
+            </div>
+          </div>
+
+          <div class="process-arrow">↓</div>
+
+          <div class="process-step process-step-action">
+            <div class="process-step-image">
+              <span class="process-step-number">3</span>
+              이미지
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">시간이 안 되시나요?</h4>
+              <p class="process-step-desc">알림톡에서 시간 재조율 요청이 가능합니다</p>
+              <span class="action-hint">버튼 눌러 일정 조율</span>
+            </div>
+          </div>
+
+          <div class="process-arrow">↓</div>
+
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">4</span>
+              이미지
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">확정일자에 방문 상담 진행</h4>
+              <p class="process-step-desc">고객님 매장에서 직접 상담을 진행합니다</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="method-notes">
+        <div class="method-notes-card">
+          <div class="method-notes-list">
+            <p class="method-note-item">상담시간은 1시간 기준입니다</p>
+            <p class="method-note-item">인원이 2명 이상일 경우 접수 메모란에 적어주세요</p>
+            <p class="method-note-item">상담접수가 몰리는 경우 일정제안 알림톡이 지연될 수 있습니다</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- =========================================================
+       [6] 톡상담 탭
+       ========================================================= -->
+  <div class="consult-tab-content" id="tab-talk">
+    <div class="tab-character">
+      <div class="tab-character-image">
+        <div class="tab-character-placeholder">캐릭터</div>
+      </div>
+    </div>
+
+    <section class="consult-section" style="padding-top: 16px;">
+      <h2 class="consult-section-title">톡상담</h2>
+      <div class="consult-section-divider"></div>
+
+      <div class="method-intro">
+        <p class="method-intro-desc">상담톡으로 진행됩니다</p>
+      </div>
+
+      <div class="process-section">
+        <h3 class="process-section-title">PROCESS</h3>
+        <div class="process-grid">
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">1</span>
+              이미지
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">간편진단 진행</h4>
+              <p class="process-step-desc">스타일과 사용습관을 진단해주세요</p>
+            </div>
+          </div>
+
+          <div class="process-arrow">↓</div>
+
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">2</span>
+              이미지
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">톡상담 접수</h4>
+              <p class="process-step-desc">진단 결과와 함께 상담을 접수합니다</p>
+            </div>
+          </div>
+
+          <div class="process-arrow">↓</div>
+
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">3</span>
+              이미지
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">맞춤 상담 진행</h4>
+              <p class="process-step-desc">카카오톡으로 맞춤 안내를 드립니다</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="method-notes">
+        <div class="method-notes-card">
+          <div class="method-notes-list">
+            <p class="method-note-item">톡상담 진행 전 페이지 내 간편진단으로 스타일과 사용습관을 진단해주세요 (상담사에게 전달됩니다)</p>
+            <p class="method-note-item">상담 전 주로 쓰는 메인가위의 사진을 찍어주시면 상담 시 도움이 될 수 있습니다</p>
+            <p class="method-note-item">기존 사용중인 가위의 불편으로 인한 상담일 경우, 해당 가위의 전면 사진 · 날 벌린 사진 각 한 장씩 찍어 준비해주세요</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- =========================================================
+       [7] Q&A 탭
+       ========================================================= -->
+  <div class="consult-tab-content" id="tab-qna">
+    <div class="tab-character">
+      <div class="tab-character-image">
+        <div class="tab-character-placeholder">캐릭터</div>
+      </div>
+    </div>
+
+    <section class="consult-section" style="padding-top: 16px;">
+      <h2 class="consult-section-title">자주 묻는 질문</h2>
+      <div class="consult-section-divider"></div>
+
+      <div class="qna-list">
+        <div class="qna-item">
+          <div class="qna-question">
+            <p class="qna-question-text">상담 예약에 비용은 얼마인가요?</p>
+            <span class="qna-icon">▼</span>
+          </div>
+          <div class="qna-answer">
+            <p class="qna-answer-text">무료입니다. 현재 어느 회사던 무료이니 타사와 비교를 해보시는것도 추천드립니다.</p>
+          </div>
+        </div>
+
+        <div class="qna-item">
+          <div class="qna-question">
+            <p class="qna-question-text">수도권이 아닌데 출장 상담 접수하면 얼마 후에 방문주시나요?</p>
+            <span class="qna-icon">▼</span>
+          </div>
+          <div class="qna-answer">
+            <p class="qna-answer-text">보통 1~2주 이내로 방문드리지만 지역에 따라 출장제안 일정이 늦어질 수 있습니다.</p>
+            <div class="qna-answer-sub">
+              급하신 경우라면 마모루 매장방문으로 예약주시면 보다 빠르게 상담과 제품수령이 가능합니다.
+            </div>
+          </div>
+        </div>
+
+        <div class="qna-item">
+          <div class="qna-question">
+            <p class="qna-question-text">가장 빠른 상담방법은 어떻게 될까요?</p>
+            <span class="qna-icon">▼</span>
+          </div>
+          <div class="qna-answer">
+            <p class="qna-answer-text">톡상담 → 매장방문 → 출장상담 순으로 상담이 수월합니다.</p>
+          </div>
+        </div>
+
+        <div class="qna-item">
+          <div class="qna-question">
+            <p class="qna-question-text">가위상담 시 가위 복원수리도 맡길 수 있나요?</p>
+            <span class="qna-icon">▼</span>
+          </div>
+          <div class="qna-answer">
+            <p class="qna-answer-text">가능합니다.</p>
+            <div class="qna-answer-sub">
+              <strong>매장방문 시</strong> 당일 수리도 가능. 일정이 바쁜경우 맡겨주시면 수리작업 후 배송으로 보내드립니다.<br><br>
+              <strong>출장상담 시</strong> 가위상담 진행하며 맡겨주시면 수리작업 후 발송으로 처리드립니다 (상담일 기준 2~3일 안으로 수령 생각해주시면 됩니다)<br><br>
+              <strong>톡상담 시</strong> 저희 복원수리 접수를 진행해주시면 됩니다.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- =========================================================
+       [8] 하단 CTA
+       ========================================================= -->
+  <div class="consult-cta-fixed">
+    <!-- [URL] 간편진단: /55, 상담접수: /56 -->
+    <button class="consult-cta-btn consult-cta-secondary" onclick="goToDiag();">간편진단 체험하기</button>
+    <button class="consult-cta-btn consult-cta-primary" onclick="goToForm();">상담접수 진행하기</button>
+  </div>
+
+</div>
+
+<script>
+// 탭 전환
+document.querySelectorAll('.consult-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.consult-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.consult-tab-content').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('tab-' + this.getAttribute('data-tab')).classList.add('active');
+
+    // 탭 클릭 시 해당 탭이 보이도록 스크롤
+    this.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+
+    // 탭 변경 시 높이 재계산
+    setTimeout(notifyHeight, 100);
+  });
+});
+
+// Q&A 토글
+document.querySelectorAll('.qna-question').forEach(question => {
+  question.addEventListener('click', function() {
+    const item = this.parentElement;
+    const isActive = item.classList.contains('active');
+
+    document.querySelectorAll('.qna-item').forEach(q => q.classList.remove('active'));
+
+    if (!isActive) {
+      item.classList.add('active');
+    }
+
+    // 높이 재계산
+    setTimeout(notifyHeight, 100);
+  });
+});
+
+// [URL] 간편진단 페이지로 이동
+function goToDiag() {
+  try {
+    window.top.location.href = '/55';
+  } catch(e) {
+    window.location.href = '/55';
+  }
+}
+
+// [URL] 상담접수 페이지로 이동
+function goToForm() {
+  try {
+    window.top.location.href = '/56';
+  } catch(e) {
+    window.location.href = '/56';
+  }
+}
+
+// 맨 위로 스크롤 (iframe 내부 → 부모 페이지에 postMessage로 요청)
+function scrollToTop() {
+  window.parent.postMessage({ type: 'MAMORU_SCROLL_TOP' }, '*');
+}
+
+/* =========================================================
+   iframe 높이 전송 (아임웹 코드위젯 대응)
+   ========================================================= */
+var lastSentHeight = 0;
+
+function getFullHeight() {
+  var pageEl = document.querySelector('.mamoru-consult-page');
+  if (pageEl) {
+    var rect = pageEl.getBoundingClientRect();
+    return Math.ceil(rect.height + 100);
+  }
+  return Math.ceil(document.body.scrollHeight + 100);
+}
+
+function notifyHeight() {
+  var height = getFullHeight();
+  if (window.parent && window.parent !== window && height > 0 && Math.abs(height - lastSentHeight) > 5) {
+    lastSentHeight = height;
+    window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: height }, '*');
+  }
+}
+
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'REQUEST_HEIGHT') notifyHeight();
+});
+
+window.addEventListener('load', function() {
+  setTimeout(notifyHeight, 100);
+  setTimeout(notifyHeight, 500);
+  setTimeout(notifyHeight, 1000);
+});
+
+var resizeTimer;
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(notifyHeight, 200);
+});
+</script>
+
+</body>
+</html>
