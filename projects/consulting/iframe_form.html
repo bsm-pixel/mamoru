@@ -75,7 +75,7 @@
   window.addEventListener('message', function(e){
     var d = e && e.data;
     if (!d || d.type !== 'MAMORU_IFRAME_SIZE') return;
-    setH((d.height||0) + 20);
+    setH(d.height||0);  // +20 제거: 피드백 루프 방지
   });
   
   f.addEventListener('load', function(){ setH(MIN); });
