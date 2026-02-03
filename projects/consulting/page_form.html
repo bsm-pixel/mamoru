@@ -363,7 +363,8 @@ body.pc .segment-btn {
   font-weight: 500;
   color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent; /* 모바일 탭 하이라이트 제거 */
   /* 아이콘+텍스트 세로 배치 */
   display: flex;
   flex-direction: column;
@@ -2366,10 +2367,11 @@ if (isLoadingDates) return;
   };
 
   seg.addEventListener('click', function(e) {
-    if (e.target.tagName !== 'BUTTON') return;
-    [...this.children].forEach(b => b.classList.remove('active'));
-    e.target.classList.add('active');
-    const v = e.target.dataset.v;
+    const btn = e.target.closest('.segment-btn');
+    if (!btn) return;
+    [...this.querySelectorAll('.segment-btn')].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const v = btn.dataset.v;
     if (v === 'visit') {
       state.type = '매장 방문';
       secVisit.classList.remove('hide');
