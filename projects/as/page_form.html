@@ -501,7 +501,7 @@ select.err {
   background: rgba(0, 0, 0, 0.5);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s, visibility 0.3s;
+  transition: opacity 0.2s, visibility 0.2s; /* 달력 시트(0.2s)와 동기화 */
   z-index: 9998;
 }
 
@@ -1492,6 +1492,7 @@ select.err {
 
     renderCalendar();
     calendarSheet.removeAttribute('style'); // 이전 인라인 스타일 초기화
+    void calendarSheet.offsetHeight;        // reflow 강제 → 브라우저가 hidden 상태를 인식한 후 transition 시작
     calendarOverlay.classList.add('show');
     calendarSheet.classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -1504,8 +1505,9 @@ select.err {
   function closeCalendar() {
     calendarOverlay.classList.remove('show');
     calendarSheet.classList.remove('show');
-    calendarSheet.removeAttribute('style');
     document.body.style.overflow = '';
+    // transition(0.2s) 완료 후 인라인 스타일 제거 — 닫히는 도중 위치 점프 방지
+    setTimeout(function() { calendarSheet.removeAttribute('style'); }, 220);
   }
 
   function selectDate(dateStr) {

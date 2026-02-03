@@ -36,14 +36,29 @@
 
   window.addEventListener('message', function(e){
     var d = e && e.data;
-    if (!d || d.type !== 'MAMORU_IFRAME_SIZE') return;
-    heightReceived = true;
+    if (!d) return;
 
-    // debounce: 60ms 이내 연속 메시지 무시
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(function(){
-      setH(d.height||0);
-    }, 60);
+    // iframe 높이 조절
+    if (d.type === 'MAMORU_IFRAME_SIZE') {
+      heightReceived = true;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function(){ setH(d.height||0); }, 60);
+      return;
+    }
+
+    // 모달/달력 중앙 배치용 뷰포트 정보 응답
+    if (d.type === 'MAMORU_REQUEST_VIEWPORT') {
+      var rect = f.getBoundingClientRect();
+      var visibleTop = Math.max(0, -rect.top);
+      var visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+      if (visibleHeight > 0) {
+        f.contentWindow.postMessage({
+          type: 'MAMORU_VIEWPORT_INFO',
+          visibleTop: visibleTop,
+          visibleHeight: visibleHeight
+        }, '*');
+      }
+    }
   });
 
   // postMessage가 3초 내 안 오면 MIN 유지, 왔으면 건드리지 않음
