@@ -80,11 +80,90 @@
 }
 ```
 
-## 4. 구현 가이드라인(요약)
+## 4. 파일 구조 & 배포 방식
+
+### 4.1 프로젝트 디렉토리
+```
+projects/
+├── as/                         # A/S 접수
+│   ├── page_form.html          ← GitHub Pages 배포 (실제 콘텐츠)
+│   ├── page_guide.html         ← GitHub Pages 배포
+│   ├── iframe_form.html        ← 아임웹 코드위젯에 붙여넣기 (/53)
+│   ├── iframe_guide.html       ← 아임웹 코드위젯에 붙여넣기 (/60)
+│   ├── icons/                  # SVG 아이콘
+│   ├── holidays_2026_2027.tsv  # 공휴일 원본 데이터
+│   └── _gas/                   # GAS 백엔드 (Code.gs 등)
+├── consulting/                 # 상담접수
+│   ├── page_form.html          ← GitHub Pages 배포
+│   ├── page_diag.html          ← GitHub Pages 배포
+│   ├── page_guide.html         ← GitHub Pages 배포
+│   ├── page_recommend.html     ← GitHub Pages 배포
+│   ├── iframe_form.html        ← 아임웹 코드위젯
+│   ├── iframe_diag.html        ← 아임웹 코드위젯
+│   ├── iframe_guide.html       ← 아임웹 코드위젯 (/61)
+│   ├── iframe_recommend.html   ← 아임웹 코드위젯
+│   ├── products.js             # 제품 데이터 (추천 로직)
+│   └── Code.gs                 # GAS 백엔드
+└── brand/                      # 브랜드 소개
+    ├── page_intro.html         ← GitHub Pages 배포
+    ├── iframe_intro.html       ← 아임웹 코드위젯
+    └── Code.gs                 # GAS 백엔드
+```
+
+### 4.2 배포 구조 (2단계)
+
+| 계층 | 파일 | 배포 방식 | 변경 시 반영 |
+|------|------|-----------|-------------|
+| **콘텐츠** | `page_*.html` | GitHub Pages 자동 배포 | git push → 1~2분 후 자동 |
+| **코드위젯** | `iframe_*.html` | 아임웹 코드위젯에 수동 붙여넣기 | **아임웹에서 직접 교체 필요** |
+| **백엔드** | `Code.gs` | GAS 에디터에서 배포 | GAS 새 배포 필요 |
+
+> **중요:** `page_*.html` 수정은 push만 하면 되지만, `iframe_*.html` 수정 시에는 **아임웹 해당 페이지의 코드위젯도 동일 내용으로 교체**해야 반영됩니다.
+
+### 4.3 아임웹 페이지 매핑
+
+| 아임웹 경로 | 코드위젯 파일 | 로드하는 콘텐츠 |
+|------------|--------------|---------------|
+| `/53` | `projects/as/iframe_form.html` | AS 접수 폼 |
+| `/60` | `projects/as/iframe_guide.html` | AS 안내 |
+| `/61` | `projects/consulting/iframe_guide.html` | 상담 안내 |
+| (상담접수) | `projects/consulting/iframe_form.html` | 상담접수 폼 |
+| (간편진단) | `projects/consulting/iframe_diag.html` | 간편진단 |
+| (맞춤추천) | `projects/consulting/iframe_recommend.html` | 맞춤 추천 |
+| (브랜드) | `projects/brand/iframe_intro.html` | 브랜드 소개 |
+
+### 4.4 iframe ↔ Parent 공통 메시지 프로토콜 (postMessage)
+
+모든 `page_*.html` ↔ `iframe_*.html` 통신에 사용되는 표준 메시지 타입:
+
+| 메시지 type | 방향 | 용도 |
+|------------|------|------|
+| `MAMORU_IFRAME_SIZE` | page → parent | iframe 높이 자동 조절 (`{ height }`) |
+| `MAMORU_SCROLL_TOP` | page → parent | 부모 페이지 맨 위로 스크롤 |
+| `MAMORU_NAVIGATE` | page → parent | 부모 페이지 이동 (`{ url }`) |
+| `MAMORU_REQUEST_VIEWPORT` | page → parent | 모달 중앙 배치용 뷰포트 정보 요청 |
+| `MAMORU_VIEWPORT_INFO` | parent → page | 뷰포트 정보 응답 (`{ visibleTop, visibleHeight }`) |
+
+> `MAMORU_REQUEST_VIEWPORT` / `MAMORU_VIEWPORT_INFO`는 iframe 내부에서 모달/달력을 **현재 보이는 화면 중앙**에 배치하기 위해 사용합니다. 모달이 있는 page에서 요청하면, iframe_*.html(부모)이 응답합니다.
+
+---
+
+## 5. 구현 가이드라인(요약)
 - **Performance:** 로고는 SVG, 애니메이션은 Lottie 지향. 이미지 배너 남발 대신 코드/스타일 위젯 우선.
 - **Data-Driven:** 콘텐츠(Text/Image)와 로직(Code) 분리. 시트 변경만으로 운영 가능하게 설계.
 - **Responsive:** Mobile-first. PC에서는 max-width + 중앙정렬로 과도한 확장 방지.
 - **Micro-copy:** 기능 나열/가격 강조 대신, 동행/책임/안심이 느껴지는 문장 사용.
+
+---
+
+## 6. 변경 이력 (최근)
+
+### 2026-02-03
+- **style:** AS접수 페이지 가독성 개선 — 섹션 구분선 5개 삽입 + 간격 조정 (`3324f94`)
+- **fix:** PC에서 수거요청일 달력 두번 클릭해야 열리는 문제 수정 — `openCalendar()` 중복 호출 가드 (`06488fa`)
+- **fix:** 달력 모달 열기/닫기 잔상 제거 — overlay/sheet transition 0.2s 동기화, `removeAttribute('style')` 타이밍 개선 (`52b084a`)
+- **fix:** `iframe_form.html`에 `MAMORU_REQUEST_VIEWPORT` 핸들러 추가 — iframe 내 모달 중앙 배치 지원 (`52b084a`)
+  > **아임웹 /53 코드위젯도 동일 내용으로 교체 필요**
 
 ---
 
