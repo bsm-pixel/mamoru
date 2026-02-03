@@ -1,0 +1,23 @@
+<!-- MAMORU: iframe 높이 안전장치 JS -->
+<script>
+(function(){
+  window.addEventListener('message', function(e){
+    if (!e.data || e.data.type !== 'MAMORU_IFRAME_SIZE') return;
+    var h = e.data.height;
+    if (!h || h < 100) return;
+    var ids = ['asFramePC','csFramePC','mamoruAsGuideFrame',
+               'mamoruConsultGuideFrame','mamoruDiagFrame',
+               'mamoruRecFrame','mamoruIntroFrame'];
+    for (var i = 0; i < ids.length; i++) {
+      var f = document.getElementById(ids[i]);
+      if (!f) continue;
+      try {
+        if (f.contentWindow === e.source) {
+          f.style.minHeight = h + 'px';
+          break;
+        }
+      } catch(ex) {}
+    }
+  });
+})();
+</script>
