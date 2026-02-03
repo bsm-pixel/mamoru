@@ -1,0 +1,1892 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<!-- ═══════════════════════════════════════════════════════════════════
+     [CONFIG] 메타 설정 - 필요시 수정
+     ═══════════════════════════════════════════════════════════════════ -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>A/S 신청서 | MAMORU</title>
+
+<!-- [CONFIG] 외부 폰트 -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+
+<style>
+/* ══════════════════════════════════════════════════════════════════════
+   MAMORU Brand Kit: Dark Theme + Gold Accent - A/S 접수
+   - GitHub Pages 정적 호스팅 버전
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────
+   [CONFIG] 디자인 토큰 - 색상/간격 수정 시 이 영역 변경
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --bg-dark: #1C1C1E;
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --trust-gold: #C9A962;
+  --gold-dark: #B8963E;
+  --text-primary: #FFFFFF;
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.15);
+  --error: #ef4444;
+  --void-black: #1c1c1e;
+  --crisp-white: #FFFFFF;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [LAYOUT] 공통 레이아웃
+   ───────────────────────────────────────────────────────────── */
+.wrap {
+  min-height: 100vh;
+  max-width: 100%;
+  padding: 0 16px 32px;
+}
+
+@media (min-width: 768px) {
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [SECTION] 헤더
+   ───────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  padding: 20px 0 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 20px;
+}
+
+.header-logo {
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 10px;
+}
+
+.header-logo svg {
+  fill: var(--void-black);
+  width: 20px;
+  height: 20px;
+}
+
+.header h1 {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+@media (min-width: 768px) {
+  .header {
+    gap: 14px;
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+  }
+  .header-logo {
+    width: 40px;
+    height: 40px;
+    margin-right: 0;
+  }
+  .header-logo svg {
+    width: 24px;
+    height: 24px;
+  }
+  .header h1 {
+    font-size: 24px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [STYLE] 카드
+   ───────────────────────────────────────────────────────────── */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+}
+
+.card-body {
+  padding: 20px 16px;
+}
+
+@media (min-width: 768px) {
+  .card-body {
+    padding: 36px 40px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [STYLE] 폼 요소
+   ───────────────────────────────────────────────────────────── */
+.form-group {
+  margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+  .form-group {
+    margin-bottom: 24px;
+  }
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.required::after {
+  content: " *";
+  color: var(--error);
+}
+
+input[type="text"],
+input[type="tel"],
+textarea,
+select {
+  width: 100%;
+  height: 48px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0 14px;
+}
+
+@media (min-width: 768px) {
+  input[type="text"],
+  input[type="tel"],
+  textarea,
+  select {
+    padding: 0 16px;
+  }
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.5)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+@media (min-width: 768px) {
+  select {
+    background-position: right 16px center;
+    padding-right: 40px;
+  }
+}
+
+input[type="text"]:focus,
+input[type="tel"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--trust-gold);
+  box-shadow: 0 0 0 1px var(--trust-gold) inset;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+input[readonly] {
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+}
+
+textarea {
+  height: auto;
+  padding: 14px;
+  resize: none;
+  line-height: 1.6;
+  min-height: 100px;
+}
+
+@media (min-width: 768px) {
+  textarea {
+    min-height: 120px;
+    padding: 14px 16px;
+  }
+}
+
+.err-msg {
+  font-size: 12px;
+  color: var(--error);
+  margin-top: 6px;
+  display: none;
+}
+
+input.err,
+select.err {
+  border-color: var(--error);
+}
+
+.form-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   [SECTION] 진행방식 선택 - 아이콘 버튼
+   - 아이콘 경로: ./icons/pickup.svg, ./icons/direct.svg
+   ═══════════════════════════════════════════════════════════════════ */
+.segment-wrap {
+  margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+  .segment-wrap {
+    margin-bottom: 28px;
+  }
+}
+
+.segment-control {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (min-width: 768px) {
+  .segment-control {
+    gap: 16px;
+  }
+}
+
+/* [STYLE] 진행방식 선택 버튼 - 아이콘 포함 */
+.segment-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 12px;
+  min-height: 88px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+@media (min-width: 768px) {
+  .segment-btn {
+    min-height: 96px;
+    padding: 20px 16px;
+    gap: 10px;
+  }
+}
+
+.segment-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* [STYLE] 아이콘 크기 - 수정 가능 */
+.segment-icon {
+  width: 32px;
+  height: 32px;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+@media (min-width: 768px) {
+  .segment-icon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+.segment-btn.active {
+  background: rgba(201, 169, 98, 0.15);
+  border-color: var(--trust-gold);
+  color: var(--trust-gold);
+}
+
+.segment-btn.active .segment-icon {
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [STYLE] 주소 입력
+   ───────────────────────────────────────────────────────────── */
+.address-row {
+  display: flex;
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .address-row {
+    gap: 12px;
+  }
+}
+
+.address-row input {
+  flex: 1;
+}
+
+.btn-search {
+  flex-shrink: 0;
+  height: 48px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .btn-search {
+    padding: 0 20px;
+  }
+}
+
+.btn-search:hover {
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);
+  color: var(--void-black);
+  border-color: var(--trust-gold);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [STYLE] 수거 섹션
+   ───────────────────────────────────────────────────────────── */
+#sec-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  #sec-pick {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  #sec-pick .err-msg {
+    grid-column: 1 / -1;
+  }
+}
+
+#sec-pick .form-group {
+  margin-bottom: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [STYLE] 수량 입력
+   ───────────────────────────────────────────────────────────── */
+.qty-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .qty-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .qty-row .form-group {
+    margin-bottom: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   [SECTION] 달력 바텀시트 (커스텀)
+   - 모바일: 화면 하단에서 슬라이드업
+   - PC: 인풋 아래 드롭다운
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 달력 오버레이 (모바일 전용) */
+.calendar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+  z-index: 9998;
+}
+
+.calendar-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 달력 시트 컨테이너 */
+.calendar-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #2C2C2E;
+  border-radius: 20px 20px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
+  z-index: 9999;
+  max-height: 70vh;
+  overflow: hidden;
+}
+
+.calendar-sheet.show {
+  transform: translateY(0);
+}
+
+/* [STYLE] 달력 헤더 */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.calendar-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.calendar-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  font-size: 24px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+/* [STYLE] 달력 네비게이션 */
+.calendar-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+}
+
+.calendar-nav-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.2s;
+}
+
+.calendar-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.calendar-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.calendar-month-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* [STYLE] 요일 헤더 */
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 8px 0;
+}
+
+.calendar-weekday.weekend {
+  color: var(--error);
+}
+
+/* [STYLE] 날짜 그리드 */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  padding: 12px 16px 24px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  background: none;
+}
+
+.calendar-day:hover:not(.disabled):not(.empty) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.calendar-day.empty {
+  cursor: default;
+}
+
+/* [STYLE] 날짜 상태 */
+.calendar-day.today {
+  border: 1px solid var(--trust-gold);
+}
+
+.calendar-day.selected {
+  background: var(--trust-gold) !important;
+  color: #1C1C1E !important;
+  font-weight: 600;
+}
+
+.calendar-day.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.calendar-day.weekend {
+  color: var(--error);
+}
+
+.calendar-day.holiday {
+  color: var(--error);
+}
+
+/* PC: 드롭다운 방식 */
+@media (min-width: 768px) {
+  .calendar-overlay {
+    display: none;
+  }
+
+  .calendar-sheet {
+    position: absolute;
+    bottom: auto;
+    top: 100%;
+    left: 0;
+    right: auto;
+    width: 320px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    transform: translateY(8px);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.2s, opacity 0.2s, visibility 0.2s;
+    max-height: none;
+  }
+
+  .calendar-sheet.show {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .calendar-header {
+    padding: 14px 16px;
+  }
+
+  .calendar-nav {
+    padding: 10px 16px;
+  }
+
+  .calendar-weekdays {
+    padding: 6px 12px;
+  }
+
+  .calendar-grid {
+    padding: 8px 12px 16px;
+  }
+}
+
+/* 날짜 입력 필드 wrapper (PC 드롭다운 위치 기준) */
+.date-input-wrap {
+  position: relative;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [STYLE] 가격 계산
+   ───────────────────────────────────────────────────────────── */
+.mm-price-summary {
+  margin-top: 24px;
+  padding: 20px;
+  background: rgba(201, 169, 98, 0.08);
+  border: 1px solid rgba(201, 169, 98, 0.2);
+  border-radius: 12px;
+}
+
+@media (min-width: 768px) {
+  .mm-price-summary {
+    margin-top: 28px;
+    padding: 24px;
+  }
+}
+
+.mm-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.mm-price-row:last-of-type {
+  margin-bottom: 0;
+}
+
+.mm-price-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.mm-price-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.mm-price-row--shipping .mm-price-value {
+  color: var(--trust-gold);
+}
+
+.mm-price-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 16px 0;
+}
+
+.mm-price-row--total {
+  margin-top: 8px;
+}
+
+.mm-price-row--total .mm-price-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mm-price-gold {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--trust-gold);
+}
+
+.mm-price-hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [STYLE] 개인정보 동의
+   ───────────────────────────────────────────────────────────── */
+.privacy-box {
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 16px;
+  margin-top: 24px;
+}
+
+@media (min-width: 768px) {
+  .privacy-box {
+    padding: 20px;
+    margin-top: 28px;
+  }
+}
+
+.privacy-box h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.privacy-content {
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  overflow-y: auto;
+  white-space: pre-wrap;
+  height: 120px;
+}
+
+@media (min-width: 768px) {
+  .privacy-content {
+    height: 140px;
+    padding: 14px;
+    font-size: 12px;
+  }
+}
+
+.privacy-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.privacy-check input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--trust-gold);
+  cursor: pointer;
+}
+
+.privacy-check label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [STYLE] 버튼
+   ───────────────────────────────────────────────────────────── */
+.btn-primary {
+  width: 100%;
+  height: 56px;
+  margin-top: 20px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--crisp-white);
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .btn-primary {
+    margin-top: 24px;
+  }
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary:not(:disabled):hover {
+  opacity: 0.85;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [STYLE] 모달
+   ───────────────────────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 10000;
+  padding-bottom: 80px;
+}
+
+.modal-backdrop.show {
+  display: flex;
+}
+
+.modal-content {
+  background: #2C2C2E;
+  border-radius: 16px;
+  overflow: hidden;
+  width: calc(100% - 32px);
+  max-width: 400px;
+  animation: modalSlideUp 0.25s ease-out;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+@media (min-width: 768px) {
+  .modal-content {
+    width: calc(100% - 48px);
+    max-width: 480px;
+  }
+}
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-body {
+  padding: 24px 20px;
+}
+
+@media (min-width: 768px) {
+  .modal-body {
+    padding: 28px 24px;
+  }
+}
+
+.modal-body h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.modal-body p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .modal-footer {
+    padding: 18px 24px;
+  }
+}
+
+.modal-footer .btn-primary {
+  margin-top: 0;
+  width: auto;
+  padding: 0 40px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [STYLE] 주소검색 레이어
+   ───────────────────────────────────────────────────────────── */
+#postcode-layer {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+#postcode-layer.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.postcode-wrap {
+  background: #2C2C2E;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 32px);
+  max-width: 480px;
+  max-height: 80vh;
+}
+
+@media (min-width: 768px) {
+  .postcode-wrap {
+    width: calc(100% - 48px);
+    max-width: 520px;
+  }
+}
+
+.postcode-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+  .postcode-header {
+    padding: 14px 20px;
+  }
+}
+
+.postcode-close {
+  border: none;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  color: var(--text-muted);
+}
+
+#postcode-inner {
+  flex: 1;
+  min-height: 320px;
+}
+
+@media (min-width: 768px) {
+  #postcode-inner {
+    min-height: 400px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [UTIL] 유틸리티
+   ───────────────────────────────────────────────────────────── */
+.hide { display: none !important; }
+
+#bootLoader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: clamp(72px, 22vh, 200px);
+  background: rgba(28, 28, 30, 0.98);
+  z-index: 99999;
+}
+
+#bootFallback {
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  border-top-color: var(--trust-gold);
+  animation: bootspin 1s linear infinite;
+  width: 40px;
+  height: 40px;
+}
+
+@keyframes bootspin {
+  to { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+<div id="bootLoader">
+  <div id="bootFallback" aria-hidden="true"></div>
+</div>
+
+<div class="wrap">
+  <!-- ═══════════════════════════════════════════════════════════════
+       [SECTION] 헤더
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="header">
+    <div class="header-logo">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+    </div>
+    <h1>A/S 신청서</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <!-- ═══════════════════════════════════════════════════════════
+           [SECTION] 진행방식 선택 (아이콘 수정 가능)
+           - 아이콘 경로: ./icons/pickup.svg, ./icons/direct.svg
+           ═══════════════════════════════════════════════════════════ -->
+      <div class="segment-wrap">
+        <div class="section-title">A/S 진행방식</div>
+        <div class="segment-control" id="seg">
+          <button type="button" class="segment-btn active" data-v="pickup">
+            <!-- [ICON] 방문수거 아이콘 경로 - 변경 가능 -->
+            <img src="./icons/pickup.svg" alt="" class="segment-icon">
+            <span>방문수거</span>
+          </button>
+          <button type="button" class="segment-btn" data-v="direct">
+            <!-- [ICON] 직접발송 아이콘 경로 - 변경 가능 -->
+            <img src="./icons/direct.svg" alt="" class="segment-icon">
+            <span>직접발송</span>
+          </button>
+        </div>
+        <input type="hidden" id="proceed_type" value="방문수거">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="required">성함</label>
+          <input id="name" type="text" placeholder="홍길동" autocomplete="name">
+          <div id="err-name" class="err-msg">성함을 입력하세요</div>
+        </div>
+        <div class="form-group">
+          <label class="required">연락처</label>
+          <input id="phone" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="01012345678" autocomplete="tel">
+          <div id="err-phone" class="err-msg">연락처 형식을 확인하세요</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="section-title">주소지 입력</div>
+        <input id="postcode" type="hidden">
+        <div class="address-row">
+          <input id="address1" type="text" placeholder="주소" readonly>
+          <button type="button" class="btn-search" id="btn-post">주소검색</button>
+        </div>
+        <input id="address2" type="text" placeholder="상세주소" autocomplete="address-line2" style="margin-top:8px">
+        <div id="err-addr" class="err-msg">주소를 입력하세요</div>
+        <p class="form-hint">※ 방문수거/수령지에 사용됩니다.</p>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           [SECTION] 수거일 선택 (커스텀 달력)
+           ═══════════════════════════════════════════════════════════ -->
+      <div id="sec-pick">
+        <div class="form-group">
+          <label class="required">수거 요청일</label>
+          <div class="date-input-wrap">
+            <input id="pickup_date" type="text" placeholder="날짜를 선택하세요" readonly>
+            <!-- PC용 달력 드롭다운은 여기에 동적 삽입 -->
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="required">방문기사님께 전달방법</label>
+          <select id="delivery_method">
+            <option value="">선택</option>
+            <option>문앞보관 - 9시 이전 보관</option>
+            <option>매장카운터 보관 - 9시 이후 방문</option>
+            <option>매장카운터 보관 - 10시 이후 방문</option>
+            <option>매장카운터 보관 - 11시 이후 방문</option>
+            <option>직접전달 - 9시 이후 방문</option>
+            <option>직접전달 - 10시 이후 방문</option>
+            <option>직접전달 - 11시 이후 방문</option>
+          </select>
+        </div>
+        <div id="err-pick" class="err-msg">수거일·전달방법을 선택하세요</div>
+      </div>
+
+      <div class="qty-row">
+        <div class="form-group">
+          <label class="required">마모루가위 A/S 수량</label>
+          <select id="qty_mamoru">
+            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>타사가위 추가진행</label>
+          <select id="qty_other">
+            <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           [SECTION] 가격 계산
+           ═══════════════════════════════════════════════════════════ -->
+      <div class="mm-price-summary" id="priceSummary">
+        <div class="mm-price-row">
+          <span class="mm-price-label">마모루 가위</span>
+          <span class="mm-price-value" id="priceMaruru">10,000원 × 1 = 10,000원</span>
+        </div>
+        <div class="mm-price-row">
+          <span class="mm-price-label">타사 가위</span>
+          <span class="mm-price-value" id="priceOther">0원</span>
+        </div>
+        <div class="mm-price-row mm-price-row--shipping" id="shippingRow">
+          <span class="mm-price-label">수거비</span>
+          <span class="mm-price-value" id="priceShipping">5,000원</span>
+        </div>
+        <div class="mm-price-divider"></div>
+        <div class="mm-price-row mm-price-row--total">
+          <span class="mm-price-label">예상 금액</span>
+          <span class="mm-price-value mm-price-gold" id="priceTotal">15,000원</span>
+        </div>
+        <p class="mm-price-hint">※ 실제 금액은 검수 후 확정됩니다.</p>
+      </div>
+
+      <div class="form-group">
+        <label>불편사항 또는 요청사항 기재</label>
+        <span style="font-size:12px;color:var(--text-muted);display:block;margin-top:-4px;margin-bottom:8px">(적지 않으셔도 꼼꼼하게 검수하여 진행해드려요)</span>
+        <textarea id="memo" placeholder="예: 모발이 밀려요, 부품이 빠져있어요"></textarea>
+      </div>
+
+      <div class="privacy-box">
+        <h4>개인정보 수집 및 이용 동의 *</h4>
+        <div class="privacy-content">마모루(이하 '회사')는 A/S 접수 처리와 수거·발송, 수리 진단 및 비용 안내, 발송/배송, 고객 고지, 문의 대응 등 A/S 전 과정 수행을 위해 최소한의 개인정보를 수집·이용합니다.
+
+1. 처리 목적
+– A/S 접수 식별 및 진행 안내(안내톡/문자), 수거 및 배송 요청, 수리 결과·비용 고지, 결제/정산, 민원 처리.
+
+2. 수집 항목
+– 필수: 성명, 연락처(휴대전화), 주소(우편번호·기본·상세), 접수/수거 요청일, 전달방법, 접수내역(수량, 메모).
+– 선택: 타사가위 수량, 기타 요청사항.
+
+3. 보유 기간
+– A/S 처리 완료 후 3년 보관(소비자 분쟁해결 기준). 관계 법령상 보존이 필요한 경우 해당 기간까지 보관.
+
+4. 제3자 제공·위탁
+– 수거/배송을 위한 택배사, 알림톡/문자 발송 대행사, 결제/정산을 위한 PG사 등에 한해 업무 수행에 필요한 범위에서 위탁 또는 제공될 수 있음.
+
+5. 동의 거부 권리
+– 동의를 거부하실 수 있으나, 이 경우 A/S 접수 및 진행이 제한될 수 있습니다.</div>
+        <div class="privacy-check">
+          <input type="checkbox" id="agreeCk">
+          <label for="agreeCk">개인정보 수집 및 이용에 동의합니다.</label>
+        </div>
+        <div id="err-agree" class="err-msg">동의가 필요합니다.</div>
+      </div>
+
+      <button id="btn-submit" class="btn-primary">접수하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 주소검색 레이어 -->
+<div id="postcode-layer">
+  <div class="postcode-wrap">
+    <div class="postcode-header">
+      <span>주소 검색</span>
+      <button type="button" class="postcode-close" id="postcode-close">×</button>
+    </div>
+    <div id="postcode-inner"></div>
+  </div>
+</div>
+
+<!-- 달력 오버레이 (모바일) -->
+<div class="calendar-overlay" id="calendarOverlay"></div>
+
+<!-- 달력 바텀시트 -->
+<div class="calendar-sheet" id="calendarSheet">
+  <div class="calendar-header">
+    <span class="calendar-title">수거 요청일 선택</span>
+    <button type="button" class="calendar-close" id="calendarClose">×</button>
+  </div>
+  <div class="calendar-nav">
+    <button type="button" class="calendar-nav-btn" id="calPrev">‹</button>
+    <span class="calendar-month-label" id="calMonthLabel">2026년 2월</span>
+    <button type="button" class="calendar-nav-btn" id="calNext">›</button>
+  </div>
+  <div class="calendar-weekdays">
+    <span class="calendar-weekday weekend">일</span>
+    <span class="calendar-weekday">월</span>
+    <span class="calendar-weekday">화</span>
+    <span class="calendar-weekday">수</span>
+    <span class="calendar-weekday">목</span>
+    <span class="calendar-weekday">금</span>
+    <span class="calendar-weekday weekend">토</span>
+  </div>
+  <div class="calendar-grid" id="calendarGrid"></div>
+</div>
+
+<!-- 결과 모달 -->
+<div id="asModal" class="modal-backdrop">
+  <div class="modal-content">
+    <div class="modal-body">
+      <h2 id="asModalTitle">알림</h2>
+      <p id="asModalMsg"></p>
+    </div>
+    <div class="modal-footer">
+      <button id="asModalOk" class="btn-primary">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- Postcode SDK 로드 -->
+<script>
+(function() {
+  if (!(window.daum && window.daum.Postcode)) {
+    var s = document.createElement('script');
+    s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+    s.async = true;
+    document.head.appendChild(s);
+  }
+})();
+</script>
+
+<script>
+(function() {
+  'use strict';
+
+  // ═══════════════════════════════════════════════════════════════════
+  // [CONFIG] API 설정 - 필요시 수정
+  // ═══════════════════════════════════════════════════════════════════
+  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzLx3Qlu6Bz5pLXnnJiboWPKH7aerxqTGWq_hshq62l3B8FfCnMh_E_EMqgZSLXMNQWLw/exec';
+
+  // ═══════════════════════════════════════════════════════════════════
+  // [CONFIG] 가격 설정 (수정 가능)
+  // ═══════════════════════════════════════════════════════════════════
+  const PRICE_MAMORU = 10000;  // 마모루 가위 단가
+  const PRICE_OTHER = 20000;   // 타사 가위 단가
+  // 수거비 정책: 1자루 5000원, 2자루 3000원, 3자루 이상 무료
+
+  // ═══════════════════════════════════════════════════════════════════
+  // [CONFIG] 공휴일 목록 (캐시 기반)
+  // ═══════════════════════════════════════════════════════════════════
+  let HOLIDAYS = new Set();
+
+  // ─────────────────────────────────────────────────────────────
+  // 유틸리티 함수
+  // ─────────────────────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+
+  function fmt(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function isWeekend(date) {
+    const w = date.getDay();
+    return w === 0 || w === 6;
+  }
+
+  function isHolidayDate(date) {
+    return HOLIDAYS.has(fmt(date));
+  }
+
+  function isDisabledDate(date) {
+    return isWeekend(date) || isHolidayDate(date);
+  }
+
+  function isDisabledDateStr(s) {
+    const d = new Date(s);
+    return isNaN(d) ? true : isDisabledDate(d);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 공휴일 로드
+  // ─────────────────────────────────────────────────────────────
+  function loadHolidays() {
+    const k = 'AS_HOLIDAYS_CACHE';
+    const now = Date.now();
+    try {
+      const cached = JSON.parse(localStorage.getItem(k) || 'null');
+      if (cached && now - cached.t < 7 * 24 * 60 * 60 * 1000) {
+        HOLIDAYS = new Set(cached.list || []);
+        return Promise.resolve();
+      }
+    } catch (_) {}
+    const years = ['2025', '2026', '2027'];
+    return fetch(`${GAS_API_URL}?holidays=1&years=${years.join(',')}`)
+      .then(r => r.json())
+      .then(j => {
+        const list = (j && j.holidays) || [];
+        HOLIDAYS = new Set(list);
+        try { localStorage.setItem(k, JSON.stringify({ t: now, list })); } catch (_) {}
+      }).catch(() => {});
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 커스텀 달력 (바텀시트)
+  // ─────────────────────────────────────────────────────────────
+  let calendarYear = new Date().getFullYear();
+  let calendarMonth = new Date().getMonth();
+  let selectedDate = null;
+
+  const calendarOverlay = $('calendarOverlay');
+  const calendarSheet = $('calendarSheet');
+  const calendarGrid = $('calendarGrid');
+  const calMonthLabel = $('calMonthLabel');
+  const calPrev = $('calPrev');
+  const calNext = $('calNext');
+  const calendarClose = $('calendarClose');
+  const pickupDateInput = $('pickup_date');
+
+  function getMinDate() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    return tomorrow;
+  }
+
+  function renderCalendar() {
+    const minDate = getMinDate();
+    const firstDay = new Date(calendarYear, calendarMonth, 1);
+    const lastDay = new Date(calendarYear, calendarMonth + 1, 0);
+    const startDayOfWeek = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+
+    calMonthLabel.textContent = `${calendarYear}년 ${calendarMonth + 1}월`;
+
+    // 이전 달 버튼 비활성화 체크
+    const prevMonth = new Date(calendarYear, calendarMonth, 0);
+    calPrev.disabled = prevMonth < minDate;
+
+    let html = '';
+
+    // 빈 칸 (이전 달)
+    for (let i = 0; i < startDayOfWeek; i++) {
+      html += '<button type="button" class="calendar-day empty" disabled></button>';
+    }
+
+    // 날짜
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(calendarYear, calendarMonth, day);
+      const dateStr = fmt(date);
+      const isWknd = isWeekend(date);
+      const isHol = isHolidayDate(date);
+      const isPast = date < minDate;
+      const isDisabled = isPast || isWknd || isHol;
+      const isToday = fmt(new Date()) === dateStr;
+      const isSelected = selectedDate === dateStr;
+
+      let classes = ['calendar-day'];
+      if (isDisabled) classes.push('disabled');
+      if (isWknd) classes.push('weekend');
+      if (isHol) classes.push('holiday');
+      if (isToday) classes.push('today');
+      if (isSelected) classes.push('selected');
+
+      html += `<button type="button" class="${classes.join(' ')}" data-date="${dateStr}" ${isDisabled ? 'disabled' : ''}>${day}</button>`;
+    }
+
+    calendarGrid.innerHTML = html;
+  }
+
+  function openCalendar() {
+    // 현재 선택된 날짜가 있으면 그 달로, 없으면 오늘 기준
+    if (selectedDate) {
+      const d = new Date(selectedDate);
+      calendarYear = d.getFullYear();
+      calendarMonth = d.getMonth();
+    } else {
+      const minDate = getMinDate();
+      calendarYear = minDate.getFullYear();
+      calendarMonth = minDate.getMonth();
+    }
+
+    renderCalendar();
+    calendarOverlay.classList.add('show');
+    calendarSheet.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCalendar() {
+    calendarOverlay.classList.remove('show');
+    calendarSheet.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  function selectDate(dateStr) {
+    selectedDate = dateStr;
+    pickupDateInput.value = dateStr;
+    closeCalendar();
+    saveDraftDebounced();
+  }
+
+  // 달력 이벤트 바인딩
+  pickupDateInput.addEventListener('click', openCalendar);
+  pickupDateInput.addEventListener('focus', openCalendar);
+
+  calendarClose.addEventListener('click', closeCalendar);
+  calendarOverlay.addEventListener('click', closeCalendar);
+
+  calPrev.addEventListener('click', function() {
+    calendarMonth--;
+    if (calendarMonth < 0) {
+      calendarMonth = 11;
+      calendarYear--;
+    }
+    renderCalendar();
+  });
+
+  calNext.addEventListener('click', function() {
+    calendarMonth++;
+    if (calendarMonth > 11) {
+      calendarMonth = 0;
+      calendarYear++;
+    }
+    renderCalendar();
+  });
+
+  calendarGrid.addEventListener('click', function(e) {
+    const btn = e.target.closest('.calendar-day');
+    if (!btn || btn.disabled || btn.classList.contains('empty')) return;
+    const dateStr = btn.getAttribute('data-date');
+    if (dateStr) selectDate(dateStr);
+  });
+
+  // PC에서 달력 외부 클릭 시 닫기
+  document.addEventListener('click', function(e) {
+    if (!window.matchMedia('(min-width: 768px)').matches) return;
+    if (!calendarSheet.classList.contains('show')) return;
+    if (calendarSheet.contains(e.target)) return;
+    if (pickupDateInput.contains(e.target)) return;
+    closeCalendar();
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // 세그먼트 컨트롤
+  // ─────────────────────────────────────────────────────────────
+  const seg = $('seg');
+  const secPick = $('sec-pick');
+
+  function getPickDisplay() {
+    return window.matchMedia('(min-width: 768px)').matches ? 'grid' : 'flex';
+  }
+
+  seg.addEventListener('click', function(e) {
+    const btn = e.target.closest('.segment-btn');
+    if (!btn) return;
+    [...this.querySelectorAll('.segment-btn')].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const isPickup = btn.getAttribute('data-v') === 'pickup';
+    $('proceed_type').value = isPickup ? '방문수거' : '직접발송';
+    secPick.style.display = isPickup ? getPickDisplay() : 'none';
+    window.__AS_notifyHeight && window.__AS_notifyHeight();
+    updatePrice();
+    saveDraftDebounced();
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // 가격 계산 로직
+  // ─────────────────────────────────────────────────────────────
+  function getShippingFee(isPickup, totalQty) {
+    if (!isPickup) return 0;
+    if (totalQty >= 3) return 0;
+    if (totalQty === 2) return 3000;
+    return 5000;
+  }
+
+  function formatPrice(n) {
+    return n.toLocaleString('ko-KR') + '원';
+  }
+
+  function updatePrice() {
+    const isPickup = $('proceed_type').value === '방문수거';
+    const mamoruQty = parseInt($('qty_mamoru').value) || 1;
+    const otherQty = parseInt($('qty_other').value) || 0;
+    const totalQty = mamoruQty + otherQty;
+
+    const mamoruTotal = PRICE_MAMORU * mamoruQty;
+    const otherTotal = PRICE_OTHER * otherQty;
+    const shippingFee = getShippingFee(isPickup, totalQty);
+    const grandTotal = mamoruTotal + otherTotal + shippingFee;
+
+    $('priceMaruru').textContent = `${formatPrice(PRICE_MAMORU)} × ${mamoruQty} = ${formatPrice(mamoruTotal)}`;
+    $('priceOther').textContent = otherQty > 0
+      ? `${formatPrice(PRICE_OTHER)} × ${otherQty} = ${formatPrice(otherTotal)}`
+      : '0원';
+
+    const shippingRow = $('shippingRow');
+    if (isPickup) {
+      shippingRow.style.display = 'flex';
+      $('priceShipping').textContent = shippingFee === 0 ? '무료 (3자루 이상)' : formatPrice(shippingFee);
+    } else {
+      shippingRow.style.display = 'none';
+    }
+
+    $('priceTotal').textContent = formatPrice(grandTotal);
+  }
+
+  $('qty_mamoru').addEventListener('change', updatePrice);
+  $('qty_other').addEventListener('change', updatePrice);
+
+  // ─────────────────────────────────────────────────────────────
+  // 폼 임시저장 (Draft)
+  // ─────────────────────────────────────────────────────────────
+  const FORM_KEY = 'AS_FORM_DRAFT_v2';
+
+  function getDraft() {
+    try {
+      const v = JSON.parse(localStorage.getItem(FORM_KEY) || '{}');
+      if (!v._ts || Date.now() - v._ts > 3600000) return {};
+      return v;
+    } catch (_) { return {}; }
+  }
+
+  function setDraft(v) {
+    try { localStorage.setItem(FORM_KEY, JSON.stringify(v)); } catch (_) {}
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(FORM_KEY); } catch (_) {}
+  }
+
+  function serializeForm() {
+    return {
+      proceed_type: $('proceed_type').value,
+      name: $('name').value,
+      phone: $('phone').value,
+      postcode: $('postcode').value,
+      address1: $('address1').value,
+      address2: $('address2').value,
+      pickup_date: $('pickup_date').value,
+      delivery_method: $('delivery_method').value,
+      qty_mamoru: $('qty_mamoru').value,
+      qty_other: $('qty_other').value,
+      memo: $('memo')?.value || '',
+      _ts: Date.now()
+    };
+  }
+
+  let __saveTimer;
+  function saveDraftDebounced() {
+    clearTimeout(__saveTimer);
+    __saveTimer = setTimeout(() => setDraft(serializeForm()), 300);
+  }
+
+  function applyDraft() {
+    const d = getDraft();
+    if (!d || !d._ts) return;
+
+    if (d.proceed_type === '직접발송' && seg) {
+      [...seg.querySelectorAll('.segment-btn')].forEach(b => b.classList.remove('active'));
+      const directBtn = seg.querySelector('[data-v="direct"]');
+      if (directBtn) directBtn.classList.add('active');
+      $('proceed_type').value = '직접발송';
+      secPick.style.display = 'none';
+    }
+
+    if (d.name) $('name').value = d.name;
+    if (d.phone) $('phone').value = d.phone;
+    if (d.postcode) $('postcode').value = d.postcode;
+    if (d.address1) $('address1').value = d.address1;
+    if (d.address2) $('address2').value = d.address2;
+    if (d.pickup_date) {
+      $('pickup_date').value = d.pickup_date;
+      selectedDate = d.pickup_date;
+    }
+    if (d.delivery_method) $('delivery_method').value = d.delivery_method;
+    if (d.qty_mamoru) $('qty_mamoru').value = d.qty_mamoru;
+    if (d.qty_other) $('qty_other').value = d.qty_other;
+    if ($('memo') && d.memo) $('memo').value = d.memo;
+
+    window.__AS_notifyHeight && window.__AS_notifyHeight();
+    updatePrice();
+  }
+
+  function bindDraftAutosave() {
+    ['name', 'phone', 'postcode', 'address1', 'address2', 'pickup_date', 'delivery_method', 'qty_mamoru', 'qty_other', 'memo']
+      .forEach(id => {
+        const el = $(id);
+        if (!el) return;
+        el.addEventListener('input', saveDraftDebounced);
+        el.addEventListener('change', saveDraftDebounced);
+      });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 유효성 검사
+  // ─────────────────────────────────────────────────────────────
+  function setErr(id, on) {
+    const el = $(id);
+    if (el) el.style.display = on ? 'block' : 'none';
+  }
+
+  function markCtl(el, on) {
+    if (!el) return;
+    el.classList.toggle('err', !!on);
+    if (on) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+
+  function validate() {
+    let ok = true, focus = false;
+    const nameEl = $('name');
+    const phoneEl = $('phone');
+    const addr1El = $('address1');
+    const postcodeEl = $('postcode');
+    const agree = $('agreeCk').checked;
+    const isPickup = $('proceed_type').value === '방문수거';
+
+    const nameOk = !!nameEl.value.trim();
+    markCtl(nameEl, !nameOk);
+    setErr('err-name', !nameOk);
+    ok &= nameOk;
+    if (!nameOk && !focus) { nameEl.focus(); focus = true; }
+
+    const phoneOk = /^01[016789]\d{7,8}$/.test(phoneEl.value.replace(/\D/g, ''));
+    markCtl(phoneEl, !phoneOk);
+    setErr('err-phone', !phoneOk);
+    ok &= phoneOk;
+    if (!phoneOk && !focus) { phoneEl.focus(); focus = true; }
+
+    const addrOk = !!(postcodeEl.value && addr1El.value.trim());
+    markCtl(addr1El, !addrOk);
+    setErr('err-addr', !addrOk);
+    ok &= addrOk;
+    if (!addrOk && !focus) { addr1El.focus(); focus = true; }
+
+    if (isPickup) {
+      const pd = $('pickup_date').value;
+      const dm = $('delivery_method').value;
+      const pickOk = !!(pd && dm) && !isDisabledDateStr(pd);
+      setErr('err-pick', !pickOk);
+      ok &= pickOk;
+    } else {
+      setErr('err-pick', false);
+    }
+
+    setErr('err-agree', !agree);
+    ok &= agree;
+    return !!ok;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 폼 리셋
+  // ─────────────────────────────────────────────────────────────
+  function resetForm() {
+    $('name').value = '';
+    $('phone').value = '';
+    $('postcode').value = '';
+    $('address1').value = '';
+    $('address2').value = '';
+    $('pickup_date').value = '';
+    selectedDate = null;
+    $('delivery_method').value = '';
+    $('qty_mamoru').value = '1';
+    $('qty_other').value = '0';
+    $('agreeCk').checked = false;
+
+    [...seg.querySelectorAll('.segment-btn')].forEach(b => b.classList.remove('active'));
+    seg.querySelector('[data-v="pickup"]').classList.add('active');
+    $('proceed_type').value = '방문수거';
+    secPick.style.display = getPickDisplay();
+
+    ['err-name', 'err-phone', 'err-addr', 'err-pick', 'err-agree'].forEach(id => setErr(id, false));
+    if ($('memo')) $('memo').value = '';
+
+    window.__AS_notifyHeight && window.__AS_notifyHeight();
+    clearDraft();
+    updatePrice();
+  }
+  window.__AS_resetForm = resetForm;
+
+  // ─────────────────────────────────────────────────────────────
+  // 주소검색
+  // ─────────────────────────────────────────────────────────────
+  let postcodeWidget = null;
+
+  function closePostcodeLayer() {
+    const layer = $('postcode-layer');
+    if (layer) layer.classList.remove('show');
+    document.body.style.overflow = '';
+    window.__AS_notifyHeight && window.__AS_notifyHeight();
+  }
+
+  function openPostcodeLayer() {
+    if (!(window.daum && window.daum.Postcode)) {
+      alert('주소검색 스크립트를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    const layer = $('postcode-layer');
+    const inner = $('postcode-inner');
+    const closeBtn = $('postcode-close');
+
+    if (!layer || !inner) {
+      alert('주소검색 레이어를 초기화하는 중입니다.');
+      return;
+    }
+
+    layer.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    window.__AS_notifyHeight && window.__AS_notifyHeight();
+
+    postcodeWidget = new daum.Postcode({
+      oncomplete: function(d) {
+        $('postcode').value = d.zonecode || '';
+        $('address1').value = d.roadAddress || d.jibunAddress || '';
+        $('address2').focus();
+        closePostcodeLayer();
+        saveDraftDebounced();
+      },
+      onclose: function() {
+        closePostcodeLayer();
+      }
+    });
+
+    postcodeWidget.embed(inner);
+
+    if (closeBtn && !closeBtn.__bound) {
+      closeBtn.addEventListener('click', closePostcodeLayer);
+      closeBtn.__bound = true;
+    }
+  }
+
+  $('btn-post').addEventListener('click', openPostcodeLayer);
+
+  // ─────────────────────────────────────────────────────────────
+  // 폼 제출 (Fire and Forget)
+  // ─────────────────────────────────────────────────────────────
+  $('btn-submit').addEventListener('click', function() {
+    if (!validate()) return;
+
+    const payload = {
+      event: 'AS_CREATE',
+      proceed_type: $('proceed_type').value,
+      name: $('name').value.trim(),
+      phone: $('phone').value.replace(/\D/g, ''),
+      postcode: $('postcode').value.trim(),
+      address1: $('address1').value.trim(),
+      address2: $('address2').value.trim(),
+      pickup_date: $('pickup_date')?.value || '',
+      delivery_method: $('delivery_method')?.value || '',
+      qty_mamoru: $('qty_mamoru')?.value || '',
+      qty_other: $('qty_other')?.value || '',
+      memo: $('memo')?.value.trim() || ''
+    };
+
+    // 즉시 성공 메시지 표시
+    openModal(
+      'A/S 접수가 완료되었습니다',
+      '고객님의 접수가 정상적으로 처리되었습니다.<br><b>잠시 후 접수번호와 안내사항이<br>카카오톡 알림톡으로 발송됩니다.</b>',
+      { loading: false }
+    );
+
+    resetForm();
+
+    // 백그라운드 전송
+    fetch(GAS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).catch(e => {
+      console.error('Background submission error:', e);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // 모달
+  // ─────────────────────────────────────────────────────────────
+  window.openModal = function(title, msg, opts = {}) {
+    const m = $('asModal');
+    const ok = $('asModalOk');
+    $('asModalTitle').textContent = title || '알림';
+    $('asModalMsg').innerHTML = msg || '';
+    ok.style.display = opts.loading ? 'none' : 'inline-flex';
+    ok.onclick = function() {
+      m.classList.remove('show');
+      if (opts.redirect) location.href = opts.redirect;
+    };
+    m.classList.add('show');
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // iframe 높이 전송
+  // ─────────────────────────────────────────────────────────────
+  (function() {
+    let t;
+    function notify() {
+      const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+      try { parent.postMessage({ type: 'AS_IFRAME_HEIGHT', height: h }, '*'); } catch (e) {}
+    }
+    new MutationObserver(function() { clearTimeout(t); t = setTimeout(notify, 60); })
+      .observe(document.body, { subtree: true, childList: true, attributes: true });
+    new ResizeObserver(function() { clearTimeout(t); t = setTimeout(notify, 60); })
+      .observe(document.documentElement);
+    window.addEventListener('load', notify);
+    window.addEventListener('resize', function() { clearTimeout(t); t = setTimeout(notify, 60); });
+    window.__AS_notifyHeight = notify;
+  })();
+
+  // ─────────────────────────────────────────────────────────────
+  // 초기화
+  // ─────────────────────────────────────────────────────────────
+  loadHolidays().then(() => {
+    renderCalendar();
+  });
+  applyDraft();
+  bindDraftAutosave();
+  updatePrice();
+
+})();
+
+// 부트 로더 숨김
+(function() {
+  function hideLoader() {
+    var b = document.getElementById('bootLoader');
+    if (b) b.style.display = 'none';
+  }
+  if (document.readyState === 'complete') {
+    setTimeout(hideLoader, 150);
+  } else {
+    window.addEventListener('load', function() { setTimeout(hideLoader, 150); });
+  }
+})();
+</script>
+</body>
+</html>

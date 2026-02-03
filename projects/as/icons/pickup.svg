@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 방문수거 아이콘: 트럭 + 집 -->
+  <!-- 트럭 본체 -->
+  <rect x="1" y="11" width="10" height="7" rx="1"/>
+  <!-- 트럭 캡 -->
+  <path d="M11 14h3l2.5 3H17v1H11v-4z"/>
+  <!-- 트럭 바퀴 -->
+  <circle cx="4" cy="18" r="1.5" fill="#C9A962"/>
+  <circle cx="15" cy="18" r="1.5" fill="#C9A962"/>
+  <!-- 집 (픽업 표시) -->
+  <path d="M19 5l-3-3-3 3"/>
+  <path d="M16 2v5"/>
+  <rect x="14" y="7" width="4" height="4" rx="0.5"/>
+</svg>
