@@ -6,6 +6,7 @@
      ═══════════════════════════════════════════════════════════════════ -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="color-scheme" content="dark">
 <title>A/S 신청서 | MAMORU</title>
 
 <!-- [CONFIG] 외부 폰트 -->
@@ -220,6 +221,7 @@ select {
 }
 
 select {
+  color-scheme: dark; /* select option 다크테마 호환 */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.5)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
@@ -239,6 +241,11 @@ textarea:focus,
 select:focus {
   border-color: var(--trust-gold);
   box-shadow: 0 0 0 1px var(--trust-gold) inset;
+}
+
+select option {
+  background: #2C2C2E;
+  color: #FFFFFF;
 }
 
 input::placeholder,
@@ -641,30 +648,30 @@ select.err {
   color: var(--error);
 }
 
-/* PC: 드롭다운 방식 */
+/* PC: 중앙 모달 방식 */
 @media (min-width: 768px) {
   .calendar-overlay {
-    display: none;
+    display: block; /* PC에서도 오버레이 표시 */
   }
 
   .calendar-sheet {
-    position: absolute;
+    position: fixed;
     bottom: auto;
-    top: 100%;
-    left: 0;
+    top: 50%;
+    left: 50%;
     right: auto;
-    width: 320px;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-    transform: translateY(8px);
+    width: 360px;
+    max-height: 480px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    transform: translate(-50%, -50%) scale(0.95);
     opacity: 0;
     visibility: hidden;
     transition: transform 0.2s, opacity 0.2s, visibility 0.2s;
-    max-height: none;
   }
 
   .calendar-sheet.show {
-    transform: translateY(0);
+    transform: translate(-50%, -50%) scale(1);
     opacity: 1;
     visibility: visible;
   }
@@ -1846,20 +1853,35 @@ select.err {
   };
 
   // ─────────────────────────────────────────────────────────────
-  // iframe 높이 전송
+  // iframe 높이 전송 - 스로틀/디바운스/임계값 체크
   // ─────────────────────────────────────────────────────────────
   (function() {
-    let t;
-    function notify() {
+    let debounceTimer = null;
+    let lastH = 0;
+    let isThrottled = false;
+
+    function notify(force) {
+      if (isThrottled && !force) return;
+
       const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
-      try { parent.postMessage({ type: 'AS_IFRAME_HEIGHT', height: h }, '*'); } catch (e) {}
+      if (!force && Math.abs(h - lastH) < 10) return; // 10px 미만 무시
+
+      lastH = h;
+      try { parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: h }, '*'); } catch (e) {}
+
+      isThrottled = true;
+      setTimeout(function() { isThrottled = false; }, 100);
     }
-    new MutationObserver(function() { clearTimeout(t); t = setTimeout(notify, 60); })
-      .observe(document.body, { subtree: true, childList: true, attributes: true });
-    new ResizeObserver(function() { clearTimeout(t); t = setTimeout(notify, 60); })
-      .observe(document.documentElement);
-    window.addEventListener('load', notify);
-    window.addEventListener('resize', function() { clearTimeout(t); t = setTimeout(notify, 60); });
+
+    function debouncedNotify() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(notify, 200);
+    }
+
+    new MutationObserver(debouncedNotify).observe(document.body, { subtree: true, childList: true });
+    new ResizeObserver(debouncedNotify).observe(document.documentElement);
+    window.addEventListener('load', function() { notify(true); });
+    window.addEventListener('resize', debouncedNotify);
     window.__AS_notifyHeight = notify;
   })();
 

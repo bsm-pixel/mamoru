@@ -35,13 +35,13 @@
 
   window.addEventListener('message', function(e){
     var d = e && e.data;
-    // AS_IFRAME_HEIGHT 타입 메시지만 처리
-    if (!d || d.type !== 'AS_IFRAME_HEIGHT') return;
+    // MAMORU_IFRAME_SIZE 타입 메시지만 처리 (consulting과 통일)
+    if (!d || d.type !== 'MAMORU_IFRAME_SIZE') return;
 
     // debounce: 60ms 이내 연속 메시지 무시
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(function(){
-      setH((d.height||0) + 20);
+      setH(d.height||0); // +20 제거: 피드백 루프 방지
     }, 60);
   });
 
