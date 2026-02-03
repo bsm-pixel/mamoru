@@ -62,44 +62,52 @@
 }
 
 .cat-top{
-  max-width:1200px;
+  max-width:1300px;            /* PC: 1300px 고정 */
   margin:0 auto;
   background:#ffffff;
   padding:0;
 }
 
-/* 4) 미니 카테고리 - 언더라인 탭 */
+@media(max-width:1024px){
+  .cat-top{
+    max-width:100%;            /* 태블릿~모바일: 전체 너비 */
+  }
+}
+
+/* 4) 미니 카테고리 - 블랙 칩 */
 .cat-mini{
   display:flex;
-  justify-content:center;       /* PC 중앙 배열 */
-  gap:24px;
-  padding:0 16px 18px 16px;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  padding:14px 16px 18px 16px;
 }
 
 .cat-mini a{
-  padding:8px 2px;
-  border:none;
-  border-radius:0;
-  border-bottom:2px solid transparent;
-  font-size:15px;              /* PC 가독성 확보 */
+  display:inline-block;
+  padding:8px 20px;
+  border:1.5px solid rgba(0,0,0,0.15);
+  border-radius:20px;           /* 칩(pill) 형태 */
+  font-size:14px;
   font-weight:600;
+  letter-spacing:0.02em;
   text-decoration:none;
-  color:rgba(0,0,0,0.45);
-  background:transparent;
+  color:rgba(0,0,0,0.55);
+  background:#ffffff;
   transition:all .2s ease;
 }
 
-/* 호버 - 비활성 탭 */
+/* 호버 */
 .cat-mini a:hover{
-  color:rgba(0,0,0,0.7);
-  border-bottom-color:rgba(0,0,0,0.15);
+  color:#1c1c1e;
+  border-color:rgba(0,0,0,0.4);
 }
 
-/* 선택된 상태 - 골드 언더라인 */
+/* 선택된 상태 - 블랙 칩 */
 .cat-mini a.active{
-  background:transparent;
-  color:#1c1c1e;
-  border-bottom-color:#C9A962;
+  background:#1c1c1e;
+  color:#ffffff;
+  border-color:#1c1c1e;
   font-weight:700;
 }
 
@@ -114,8 +122,8 @@
   <!-- 0) 배너 이미지 + 텍스트 오버레이 -->
   <div class="cat-banner">
     <picture>
-      <source media="(max-width:768px)" srcset="🔧모바일_이미지_URL">
-      <img src="🔧PC_이미지_URL" alt="🔧카테고리명 배너">
+      <source media="(max-width:768px)" srcset="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/8277857802796.png">
+      <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/8959981922fa7.png" alt="🔧카테고리명 배너">
     </picture>
     <!-- 🔧 수정: 카테고리명/설명 -->
     <div class="cat-banner-text">
