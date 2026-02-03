@@ -1476,6 +1476,9 @@ select.err {
   }
 
   function openCalendar() {
+    // 이미 열려있으면 중복 호출 방지 (focus+click 동시 발생 대응)
+    if (calendarSheet.classList.contains('show')) return;
+
     // 현재 선택된 날짜가 있으면 그 달로, 없으면 오늘 기준
     if (selectedDate) {
       const d = new Date(selectedDate);
@@ -1561,7 +1564,7 @@ select.err {
   const typeInfo = $('type-info');
 
   const typeMessages = {
-    'pickup': '지정수거일에 맞추어 수거해갑니다<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요',
+    'pickup': '지정수거일에 맞추어 수거해드립니다<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요',
     'direct': '아래 주소로 직접 발송해주세요<br><b>서울특별시 구로구 부광로 88 SKV1, B동 311호 마모루</b>'
   };
 
