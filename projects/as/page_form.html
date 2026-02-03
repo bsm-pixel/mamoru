@@ -488,23 +488,31 @@ select.err {
   visibility: visible;
 }
 
-/* 달력 시트 컨테이너 */
+/* 달력 시트 컨테이너 - 화면 중앙 모달 */
 .calendar-sheet {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  top: 50%;
+  left: 50%;
+  right: auto;
+  bottom: auto;
+  width: calc(100% - 32px);
+  max-width: 360px;
   background: #2C2C2E;
-  border-radius: 20px 20px 0 0;
-  transform: translateY(100%);
-  transition: transform 0.3s ease-out;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  transform: translate(-50%, -50%) scale(0.95);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.2s, opacity 0.2s, visibility 0.2s;
   z-index: 9999;
-  max-height: 70vh;
+  max-height: 80vh;
   overflow: hidden;
 }
 
 .calendar-sheet.show {
-  transform: translateY(0);
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  visibility: visible;
 }
 
 /* [STYLE] 달력 헤더 */
@@ -648,32 +656,10 @@ select.err {
   color: var(--error);
 }
 
-/* PC: 중앙 모달 방식 */
+/* PC: 달력 모달 미세 조정 */
 @media (min-width: 768px) {
-  .calendar-overlay {
-    display: block; /* PC에서도 오버레이 표시 */
-  }
-
   .calendar-sheet {
-    position: fixed;
-    bottom: auto;
-    top: 50%;
-    left: 50%;
-    right: auto;
-    width: 360px;
     max-height: 480px;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    transform: translate(-50%, -50%) scale(0.95);
-    opacity: 0;
-    visibility: hidden;
-    transition: transform 0.2s, opacity 0.2s, visibility 0.2s;
-  }
-
-  .calendar-sheet.show {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-    visibility: visible;
   }
 
   .calendar-header {
@@ -1445,14 +1431,20 @@ select.err {
     }
 
     renderCalendar();
+    calendarSheet.removeAttribute('style'); // 이전 인라인 스타일 초기화
     calendarOverlay.classList.add('show');
     calendarSheet.classList.add('show');
     document.body.style.overflow = 'hidden';
+    // iframe 환경: 뷰포트 중앙 배치 요청
+    if (window !== window.parent) {
+      try { parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*'); } catch(e) {}
+    }
   }
 
   function closeCalendar() {
     calendarOverlay.classList.remove('show');
     calendarSheet.classList.remove('show');
+    calendarSheet.removeAttribute('style');
     document.body.style.overflow = '';
   }
 
@@ -1858,17 +1850,27 @@ select.err {
     }
   };
 
-  // iframe 뷰포트 정보 수신 → 모달을 현재 화면 중앙에 배치
+  // iframe 뷰포트 정보 수신 → 모달/달력을 현재 화면 중앙에 배치
   window.addEventListener('message', function(e) {
     if (!e.data || e.data.type !== 'MAMORU_VIEWPORT_INFO') return;
     var vt = e.data.visibleTop, vh = e.data.visibleHeight;
     if (!vh) return;
+    var centerY = vt + vh / 2;
+    // 성공 모달
     document.querySelectorAll('.modal-backdrop.show .modal-content').forEach(function(mc) {
       mc.style.position = 'absolute';
-      mc.style.top = (vt + vh / 2) + 'px';
+      mc.style.top = centerY + 'px';
       mc.style.left = '50%';
       mc.style.transform = 'translate(-50%, -50%)';
     });
+    // 달력 모달
+    var cal = document.getElementById('calendarSheet');
+    if (cal && cal.classList.contains('show')) {
+      cal.style.position = 'absolute';
+      cal.style.top = centerY + 'px';
+      cal.style.left = '50%';
+      cal.style.transform = 'translate(-50%, -50%) scale(1)';
+    }
   });
 
   // ─────────────────────────────────────────────────────────────
