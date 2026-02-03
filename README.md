@@ -85,6 +85,13 @@
 ### 4.1 프로젝트 디렉토리
 ```
 projects/
+├── common_code/                # 아임웹 공통 코드 (환경설정)
+│   ├── header_code_top.txt     ← Header Code 상단 (preconnect)
+│   ├── header_code.txt         ← Header Code (iframe CSS)
+│   ├── header_product_style.txt ← Header Code 추가 (상품 진열 공통 스타일)
+│   └── footer_code.txt         ← Footer Code (iframe JS)
+├── product_page/               # 상품 진열 / 카테고리 페이지
+│   └── productpage_categorybar.txt ← 카테고리 TOP 코드위젯 (배너+탭)
 ├── as/                         # A/S 접수
 │   ├── page_form.html          ← GitHub Pages 배포 (실제 콘텐츠)
 │   ├── page_guide.html         ← GitHub Pages 배포
@@ -110,17 +117,28 @@ projects/
     └── Code.gs                 # GAS 백엔드
 ```
 
-### 4.2 배포 구조 (2단계)
+### 4.2 배포 구조 (3단계)
 
 | 계층 | 파일 | 배포 방식 | 변경 시 반영 |
 |------|------|-----------|-------------|
+| **공통 코드** | `common_code/*.txt` | 아임웹 환경설정에 수동 붙여넣기 | **아임웹 환경설정에서 직접 교체** |
 | **콘텐츠** | `page_*.html` | GitHub Pages 자동 배포 | git push → 1~2분 후 자동 |
-| **코드위젯** | `iframe_*.html` | 아임웹 코드위젯에 수동 붙여넣기 | **아임웹에서 직접 교체 필요** |
+| **코드위젯** | `iframe_*.html`, `productpage_*.txt` | 아임웹 코드위젯에 수동 붙여넣기 | **아임웹에서 직접 교체 필요** |
 | **백엔드** | `Code.gs` | GAS 에디터에서 배포 | GAS 새 배포 필요 |
 
 > **중요:** `page_*.html` 수정은 push만 하면 되지만, `iframe_*.html` 수정 시에는 **아임웹 해당 페이지의 코드위젯도 동일 내용으로 교체**해야 반영됩니다.
 
-### 4.3 아임웹 페이지 매핑
+### 4.3 아임웹 공통 코드 매핑
+
+| 아임웹 환경설정 영역 | 로컬 파일 | 역할 |
+|-------------------|----------|------|
+| Header Code 상단 | `common_code/header_code_top.txt` | preconnect/dns-prefetch |
+| Header Code | `common_code/header_code.txt` + `header_product_style.txt` | iframe CSS + 상품 진열 공통 스타일 |
+| Footer Code | `common_code/footer_code.txt` | iframe 높이/모달 뷰포트 JS |
+
+> **상품 진열 스타일**은 Header Code에 한 번만 넣으면 전 카테고리 페이지에 적용됩니다. 새 상품 위젯 추가 시 `header_product_style.txt`의 `IDS` 배열에 위젯 ID만 추가하면 됩니다.
+
+### 4.4 아임웹 페이지 매핑
 
 | 아임웹 경로 | 코드위젯 파일 | 로드하는 콘텐츠 |
 |------------|--------------|---------------|
@@ -132,7 +150,31 @@ projects/
 | (맞춤추천) | `projects/consulting/iframe_recommend.html` | 맞춤 추천 |
 | (브랜드) | `projects/brand/iframe_intro.html` | 브랜드 소개 |
 
-### 4.4 iframe ↔ Parent 공통 메시지 프로토콜 (postMessage)
+### 4.5 카테고리 페이지 구조
+
+각 카테고리 페이지(블런트/틴닝/장가위/슬라이싱)는 **코드위젯 2개**로 구성:
+
+| 순서 | 코드위젯 | 파일 | 역할 |
+|------|---------|------|------|
+| 1 | 카테고리 TOP | `productpage_categorybar.txt` | 배너 이미지(PC/모바일 반응형) + 텍스트 오버레이 + 블랙 칩 탭 |
+| 2 | 상품 진열 | 아임웹 기본 상품 위젯 | 스타일은 공통 코드(`header_product_style.txt`)에서 일괄 적용 |
+
+**카테고리 TOP 수정 포인트** (`productpage_categorybar.txt`):
+- `<source srcset="...">` / `<img src="...">` — 배너 이미지 URL (PC/모바일)
+- `.cat-banner-en` — 영문 카테고리명 (예: BLUNT)
+- `.cat-banner-kr` — 한글 설명 (예: 커트 시작의 출발점)
+- `.cat-mini a.active` — 현재 페이지에 해당하는 탭에 active 클래스
+
+**카테고리 페이지 매핑:**
+
+| 아임웹 경로 | 카테고리 | 상품 위젯 ID |
+|------------|---------|-------------|
+| `/29` | 블런트 | `w2025082780aa858e21dc6` |
+| `/30` | 틴닝 | (위젯 ID 확인 후 IDS 배열에 추가) |
+| `/39` | 장가위 | (위젯 ID 확인 후 IDS 배열에 추가) |
+| `/40` | 슬라이싱 | (위젯 ID 확인 후 IDS 배열에 추가) |
+
+### 4.6 iframe ↔ Parent 공통 메시지 프로토콜 (postMessage)
 
 모든 `page_*.html` ↔ `iframe_*.html` 통신에 사용되는 표준 메시지 타입:
 
@@ -158,7 +200,14 @@ projects/
 
 ## 6. 변경 이력 (최근)
 
-### 2026-02-03
+### 2026-02-03 (상품 진열 / 카테고리 페이지)
+- **style:** 상품 진열 디자인 개선 — 이미지 카드 + 골드 호버 + 라운드 카드 (`7aa062f`)
+- **feat:** 카테고리 배너 이미지 + 텍스트 오버레이 통합 — 블랙 바/타이틀/구분선 제거, `<picture>` PC/모바일 반응형 (`6a8cb1e`)
+- **style:** PC 1300px 고정 + 태블릿~모바일 100% + 카테고리 탭 블랙 칩 형태 (`73fb61d`)
+- **refactor:** 상품 진열 CSS를 공통 코드(Header Code)용 스크립트로 전환 — 위젯 ID 배열(`IDS`)로 일괄 관리, 페이지별 스타일 코드위젯 불필요 (`22eb8c2`)
+- **docs:** 아임웹 공통 코드 백업 파일 생성 — `projects/common_code/` 폴더 신설 (`83c4a2d`)
+
+### 2026-02-03 (A/S 접수)
 - **style:** AS접수 페이지 가독성 개선 — 섹션 구분선 5개 삽입 + 간격 조정 (`3324f94`)
 - **fix:** PC에서 수거요청일 달력 두번 클릭해야 열리는 문제 수정 — `openCalendar()` 중복 호출 가드 (`06488fa`)
 - **fix:** 달력 모달 열기/닫기 잔상 제거 — overlay/sheet transition 0.2s 동기화, `removeAttribute('style')` 타이밍 개선 (`52b084a`)
