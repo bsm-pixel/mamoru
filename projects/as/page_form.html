@@ -296,11 +296,31 @@ select.err {
    - 아이콘 경로: ./icons/pickup.svg, ./icons/direct.svg
    ═══════════════════════════════════════════════════════════════════ */
 .segment-wrap {
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 
 @media (min-width: 768px) {
   .segment-wrap {
+    margin-bottom: 12px;
+  }
+}
+
+/* 진행방식 안내문구 */
+.type-info {
+  padding: 14px 16px;
+  background: rgba(201, 169, 98, 0.08);
+  border-left: 2px solid var(--trust-gold);
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+  .type-info {
+    padding: 16px 20px;
+    font-size: 14px;
     margin-bottom: 28px;
   }
 }
@@ -1087,6 +1107,9 @@ select.err {
         <input type="hidden" id="proceed_type" value="방문수거">
       </div>
 
+      <!-- 진행방식 안내문구 -->
+      <div class="type-info" id="type-info">택배 기사님이 입력하신 주소지로 방문하여 수거해갑니다.<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요.</div>
+
       <div class="form-row">
         <div class="form-group">
           <label class="required">성함</label>
@@ -1501,6 +1524,12 @@ select.err {
   // ─────────────────────────────────────────────────────────────
   const seg = $('seg');
   const secPick = $('sec-pick');
+  const typeInfo = $('type-info');
+
+  const typeMessages = {
+    'pickup': '택배 기사님이 입력하신 주소지로 방문하여 수거해갑니다.<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요.',
+    'direct': '아래 주소로 직접 발송해주세요.<br><b>서울특별시 강남구 논현로 175길 16, 1층 마모루</b>'
+  };
 
   function getPickDisplay() {
     return window.matchMedia('(min-width: 768px)').matches ? 'grid' : 'flex';
@@ -1511,9 +1540,11 @@ select.err {
     if (!btn) return;
     [...this.querySelectorAll('.segment-btn')].forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const isPickup = btn.getAttribute('data-v') === 'pickup';
+    const v = btn.getAttribute('data-v');
+    const isPickup = v === 'pickup';
     $('proceed_type').value = isPickup ? '방문수거' : '직접발송';
     secPick.style.display = isPickup ? getPickDisplay() : 'none';
+    typeInfo.innerHTML = typeMessages[v];
     window.__AS_notifyHeight && window.__AS_notifyHeight();
     updatePrice();
     saveDraftDebounced();
