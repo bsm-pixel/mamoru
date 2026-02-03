@@ -1,0 +1,129 @@
+<!--
+════════════════════════════════════════════
+ MAMORU · CATEGORY TOP TEMPLATE
+ 역할: 카테고리 진입 인지 + 빠른 전환
+ 수정 포인트:
+ 1) CATEGORY LABEL
+ 2) TITLE / SUBTITLE
+ 3) 미니카테고리 링크 / active 클래스
+════════════════════════════════════════════
+-->
+
+<style>
+/* ===== CATEGORY TOP ===== */
+
+.cat-top{
+  background:#ffffff;
+  padding:0;
+}
+
+/* 1) 블랙 가로 바 */
+.cat-bar{
+  background:#1c1c1e;
+  padding:12px 16px;
+}
+
+.cat-bar span{
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.18em;
+  color:rgba(255,255,255,0.75);
+}
+
+/* 2) 타이틀 영역 */
+.cat-title-wrap{
+  padding:18px 16px 10px 16px;
+}
+
+.cat-title-en{
+  font-size:32px;
+  font-weight:900;
+  letter-spacing:-0.01em;
+  color:#000000;
+  line-height:1.05;
+}
+
+.cat-title-kr{
+  margin-top:6px;
+  font-size:14px;
+  font-weight:500;
+  color:rgba(0,0,0,0.55);
+}
+
+/* 3) 가로 구분선 */
+.cat-divider{
+  margin:16px 16px 14px 16px;
+  height:1px;
+  background:rgba(0,0,0,0.08);
+}
+
+/* 4) 미니 카테고리 - 언더라인 탭 */
+.cat-mini{
+  display:flex;
+  justify-content:flex-start;
+  gap:20px;
+  padding:0 16px 18px 16px;
+}
+
+.cat-mini a{
+  padding:8px 2px;
+  border:none;
+  border-radius:0;
+  border-bottom:2px solid transparent;
+  font-size:13px;
+  font-weight:600;
+  text-decoration:none;
+  color:rgba(0,0,0,0.45);
+  background:transparent;
+  transition:all .2s ease;
+}
+
+/* 호버 - 비활성 탭 */
+.cat-mini a:hover{
+  color:rgba(0,0,0,0.7);
+  border-bottom-color:rgba(0,0,0,0.15);
+}
+
+/* 선택된 상태 - 골드 언더라인 */
+.cat-mini a.active{
+  background:transparent;
+  color:#1c1c1e;
+  border-bottom-color:#C9A962;
+  font-weight:700;
+}
+
+/* 눌림 */
+.cat-mini a:active{
+  transform:scale(0.96);
+}
+</style>
+
+<div class="cat-top">
+
+  <!-- 1) 블랙 바 -->
+  <div class="cat-bar">
+    <span>CATEGORY</span>
+  </div>
+
+  <!-- 2) 타이틀 -->
+  <div class="cat-title-wrap">
+    <!-- 🔧 수정: 영문 타이틀 -->
+    <div class="cat-title-en">BLUNT</div>
+
+    <!-- 🔧 수정: 한글 설명 -->
+    <div class="cat-title-kr">커트 시작의 출발점</div>
+  </div>
+
+  <!-- 3) 구분선 -->
+  <div class="cat-divider"></div>
+
+  <!-- 4) 미니 카테고리 -->
+  <div class="cat-mini">
+    <!-- 🔧 active 클래스는 현재 페이지에만 -->
+    <a href="/29" class="active">블런트</a>
+    <a href="/30">틴닝</a>
+    <a href="/39">장가위</a>
+    <a href="/40">슬라이싱</a>
+  </div>
+
+</div>
