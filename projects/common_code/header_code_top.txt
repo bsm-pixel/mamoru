@@ -1,0 +1,11 @@
+<!-- =========================================================
+  MAMORU 공통 코드 — Header Code 상단
+  위치: 아임웹 → 환경설정 → Header Code 상단
+  역할: <head> 최상단 삽입 (preconnect, 메타태그 등)
+  ========================================================= -->
+
+<!-- MAMORU: GitHub Pages iframe 사전 연결 (로딩 속도 개선) -->
+<link rel="preconnect" href="https://bsm-pixel.github.io">
+<link rel="dns-prefetch" href="https://bsm-pixel.github.io">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">

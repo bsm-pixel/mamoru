@@ -1,0 +1,16 @@
+<!-- =========================================================
+  MAMORU 공통 코드 — Header Code
+  위치: 아임웹 → 환경설정 → Header Code
+  역할: <head> 하단 삽입 (공통 CSS, 스타일)
+  ========================================================= -->
+
+<!-- MAMORU: iframe 높이 안전장치 CSS -->
+<style>
+#asFramePC { min-height: 1600px; }
+#csFramePC { min-height: 800px; }
+#mamoruAsGuideFrame { min-height: 2000px; }
+#mamoruConsultGuideFrame { min-height: 1500px; }
+#mamoruDiagFrame { min-height: 800px; }
+#mamoruRecFrame { min-height: 1200px; }
+#mamoruIntroFrame { min-height: 1000px; }
+</style>
