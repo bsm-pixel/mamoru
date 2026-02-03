@@ -67,18 +67,23 @@
   
   // 높이 자동 조절 - MAX 제거, 콘텐츠 높이 그대로 반영
   var MIN = 800;
+  var heightReceived = false; // postMessage 수신 여부
+
   function setH(h){
     var hh = Math.max(MIN, Number(h)||0);
     if (f && hh) f.style.height = hh + 'px';
   }
-  
+
   window.addEventListener('message', function(e){
     var d = e && e.data;
     if (!d || d.type !== 'MAMORU_IFRAME_SIZE') return;
-    setH(d.height||0);  // +20 제거: 피드백 루프 방지
+    heightReceived = true;
+    setH(d.height||0);
   });
-  
-  f.addEventListener('load', function(){ setH(MIN); });
-  setTimeout(function(){ setH(MIN); }, 3000);
+
+  // postMessage가 3초 내 안 오면 MIN 유지, 왔으면 건드리지 않음
+  f.addEventListener('load', function(){
+    setTimeout(function(){ if (!heightReceived) setH(MIN); }, 3000);
+  });
 })();
 </script>

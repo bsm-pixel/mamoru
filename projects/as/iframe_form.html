@@ -23,6 +23,7 @@
   var MIN = 1600, MAX = 5000;
   var lastHeight = 0;
   var debounceTimer = null;
+  var heightReceived = false; // postMessage 수신 여부
 
   function setH(h){
     var hh = Math.max(MIN, Math.min(MAX, Number(h)||0));
@@ -35,17 +36,19 @@
 
   window.addEventListener('message', function(e){
     var d = e && e.data;
-    // MAMORU_IFRAME_SIZE 타입 메시지만 처리 (consulting과 통일)
     if (!d || d.type !== 'MAMORU_IFRAME_SIZE') return;
+    heightReceived = true;
 
     // debounce: 60ms 이내 연속 메시지 무시
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(function(){
-      setH(d.height||0); // +20 제거: 피드백 루프 방지
+      setH(d.height||0);
     }, 60);
   });
 
-  f.addEventListener('load', function(){ setH(MIN); });
-  setTimeout(function(){ setH(MIN); }, 3000);
+  // postMessage가 3초 내 안 오면 MIN 유지, 왔으면 건드리지 않음
+  f.addEventListener('load', function(){
+    setTimeout(function(){ if (!heightReceived) setH(MIN); }, 3000);
+  });
 })();
 </script>
