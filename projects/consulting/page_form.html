@@ -2565,27 +2565,7 @@ if (isLoadingDates) return;
         data.timePrefs = state.prefTimes.slice();
       }
     }
-   // ★ 버튼 위치 기준으로 모달 표시 (스크롤 없음, 렉 없음)
-    const btnRect = btn.getBoundingClientRect();
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
-    const modalContent = successModal.querySelector('.modal-content');
-    
-    if (modalContent) {
-      // 버튼 위쪽에 모달 표시 (버튼과 겹치지 않게)
-      const modalHeight = 200; // 모달 예상 높이
-      let topPos = scrollTop + btnRect.top - modalHeight - 20;
-      
-      // 화면 위로 벗어나면 버튼 아래에 표시
-      if (topPos < scrollTop + 20) {
-        topPos = scrollTop + btnRect.bottom + 20;
-      }
-      
-      modalContent.style.position = 'absolute';
-      modalContent.style.top = topPos + 'px';
-      modalContent.style.left = '50%';
-      modalContent.style.transform = 'translateX(-50%)';
-    }
-    
+    // CSS flexbox 센터링 사용 (align-items:center; justify-content:center)
     successModal.classList.add('show');
     // 서버 전송: 반환값을 기다리지 않고 실패만 로그합니다.
     gasRun('submitConsultation', data)
