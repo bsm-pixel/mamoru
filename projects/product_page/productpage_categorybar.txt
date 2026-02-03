@@ -12,56 +12,67 @@
 <style>
 /* ===== CATEGORY TOP ===== */
 
-.cat-top{
-  background:#ffffff;
-  padding:0;
-}
-
-/* 1) 블랙 가로 바 */
-.cat-bar{
+/* 0) 배너 이미지 + 텍스트 오버레이 */
+.cat-banner{
+  position:relative;
   background:#1c1c1e;
-  padding:12px 16px;
+  line-height:0;
 }
 
-.cat-bar span{
-  font-size:11px;
-  font-weight:600;
-  letter-spacing:0.18em;
-  color:rgba(255,255,255,0.75);
+.cat-banner img{
+  width:100%;
+  height:auto;
+  display:block;
+  object-fit:cover;
 }
 
-/* 2) 타이틀 영역 */
-.cat-title-wrap{
-  padding:18px 16px 10px 16px;
+.cat-banner-text{
+  position:absolute;
+  left:32px;
+  bottom:28px;
+  line-height:1.2;
 }
 
-.cat-title-en{
-  font-size:32px;
+.cat-banner-en{
+  font-size:36px;
   font-weight:900;
-  letter-spacing:-0.01em;
-  color:#000000;
-  line-height:1.05;
+  letter-spacing:0.02em;
+  color:#ffffff;
 }
 
-.cat-title-kr{
+.cat-banner-kr{
   margin-top:6px;
   font-size:14px;
-  font-weight:500;
-  color:rgba(0,0,0,0.55);
+  font-weight:400;
+  color:rgba(255,255,255,0.65);
 }
 
-/* 3) 가로 구분선 */
-.cat-divider{
-  margin:16px 16px 14px 16px;
-  height:1px;
-  background:rgba(0,0,0,0.08);
+/* 모바일 오버레이 조정 */
+@media(max-width:768px){
+  .cat-banner-text{
+    left:20px;
+    bottom:20px;
+  }
+  .cat-banner-en{
+    font-size:26px;
+  }
+  .cat-banner-kr{
+    font-size:13px;
+  }
+}
+
+.cat-top{
+  max-width:1200px;
+  margin:0 auto;
+  background:#ffffff;
+  padding:0;
 }
 
 /* 4) 미니 카테고리 - 언더라인 탭 */
 .cat-mini{
   display:flex;
-  justify-content:flex-start;
-  gap:20px;
+  justify-content:center;       /* PC 중앙 배열 */
+  gap:24px;
   padding:0 16px 18px 16px;
 }
 
@@ -70,7 +81,7 @@
   border:none;
   border-radius:0;
   border-bottom:2px solid transparent;
-  font-size:13px;
+  font-size:15px;              /* PC 가독성 확보 */
   font-weight:600;
   text-decoration:none;
   color:rgba(0,0,0,0.45);
@@ -100,22 +111,18 @@
 
 <div class="cat-top">
 
-  <!-- 1) 블랙 바 -->
-  <div class="cat-bar">
-    <span>CATEGORY</span>
+  <!-- 0) 배너 이미지 + 텍스트 오버레이 -->
+  <div class="cat-banner">
+    <picture>
+      <source media="(max-width:768px)" srcset="🔧모바일_이미지_URL">
+      <img src="🔧PC_이미지_URL" alt="🔧카테고리명 배너">
+    </picture>
+    <!-- 🔧 수정: 카테고리명/설명 -->
+    <div class="cat-banner-text">
+      <div class="cat-banner-en">BLUNT</div>
+      <div class="cat-banner-kr">커트 시작의 출발점</div>
+    </div>
   </div>
-
-  <!-- 2) 타이틀 -->
-  <div class="cat-title-wrap">
-    <!-- 🔧 수정: 영문 타이틀 -->
-    <div class="cat-title-en">BLUNT</div>
-
-    <!-- 🔧 수정: 한글 설명 -->
-    <div class="cat-title-kr">커트 시작의 출발점</div>
-  </div>
-
-  <!-- 3) 구분선 -->
-  <div class="cat-divider"></div>
 
   <!-- 4) 미니 카테고리 -->
   <div class="cat-mini">
