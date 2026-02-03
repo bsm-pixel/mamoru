@@ -1,25 +1,32 @@
+<!-- 🔧 위젯 ID: 여기만 수정하면 전체 적용 -->
+<script>
+var WID = 'w2025082780aa858e21dc6';
+var s = document.currentScript.nextElementSibling;
+s.textContent = s.textContent.replace(/__WID__/g, WID);
+</script>
+
 <style>
 /* =========================================================
    MAMORU 상품 진열 - 이미지 카드 + 골드 호버
-   Widget: w2025082780aa858e21dc6
+   Widget: __WID__ (자동 치환)
    PC + 모바일 통합
    ========================================================= */
 
 /* [1] 위젯 컨테이너 */
-#w2025082780aa858e21dc6 {
+#__WID__ {
   position: relative !important;
   padding: 16px 8px !important;
   background: transparent !important;
 }
 
 /* [2] 그리드 컨테이너 - PC 4열 보험 */
-#container_w2025082780aa858e21dc6 {
+#container___WID__ {
   /* 아임웹 위젯 설정에서 PC 4열로 변경 권장 */
 }
 
 /* [3] 카드 - 배경 투명, ::before 제거 */
-#container_w2025082780aa858e21dc6 .shop-item,
-#container_w2025082780aa858e21dc6 ._shop_item {
+#container___WID__ .shop-item,
+#container___WID__ ._shop_item {
   position: relative !important;
   background: transparent !important;
   display: flex !important;
@@ -31,7 +38,7 @@
 }
 
 /* [4] 썸네일 영역 - 이미지 카드 컨테이너 */
-#container_w2025082780aa858e21dc6 .item-wrap {
+#container___WID__ .item-wrap {
   position: relative !important;
   z-index: 1 !important;
   background: #f4f3f1 !important;
@@ -42,17 +49,17 @@
 }
 
 /* [5] 호버 - 골드 보더 */
-#container_w2025082780aa858e21dc6 .item-wrap:hover {
+#container___WID__ .item-wrap:hover {
   border-color: #C9A962 !important;
   box-shadow: 0 4px 16px rgba(201,169,98,0.12) !important;
 }
 
-#container_w2025082780aa858e21dc6 .item-wrap > a {
+#container___WID__ .item-wrap > a {
   display: block !important;
 }
 
 /* [6] 이미지 - 누끼 이미지 대응 */
-#container_w2025082780aa858e21dc6 img._org_img.org_img {
+#container___WID__ img._org_img.org_img {
   width: 100% !important;
   height: 100% !important;
   display: block !important;
@@ -62,7 +69,7 @@
 }
 
 /* [7] 텍스트 영역 - 카드 바깥 */
-#container_w2025082780aa858e21dc6 .item-detail {
+#container___WID__ .item-detail {
   position: relative !important;
   z-index: 1 !important;
   display: flex !important;
@@ -73,7 +80,7 @@
 }
 
 /* [8] 제품명 */
-#container_w2025082780aa858e21dc6 .shop-title {
+#container___WID__ .shop-title {
   margin: 0 !important;
   padding: 0 !important;
   font-size: 14px !important;
@@ -85,7 +92,7 @@
 }
 
 /* [9] 가격 */
-#container_w2025082780aa858e21dc6 .pay.inline-blocked {
+#container___WID__ .pay.inline-blocked {
   margin: 2px 0 0 0 !important;
   padding: 0 !important;
   border-top: none !important;
@@ -97,8 +104,8 @@
 }
 
 /* [10] NEW 배지 */
-#container_w2025082780aa858e21dc6 .cate-label,
-#container_w2025082780aa858e21dc6 .badge-new {
+#container___WID__ .cate-label,
+#container___WID__ .badge-new {
   display: inline-block !important;
   margin-top: 6px !important;
   padding: 4px 8px !important;
@@ -111,7 +118,7 @@
 }
 
 /* [11] 품절 오버레이 */
-#container_w2025082780aa858e21dc6 .item-overlay {
+#container___WID__ .item-overlay {
   border-radius: 14px !important;
 }
 
@@ -119,19 +126,19 @@
    [12] 모바일 - 2열
    ========================================================= */
 @media screen and (max-width: 768px) {
-  #w2025082780aa858e21dc6 {
+  #__WID__ {
     padding: 12px 4px !important;
   }
 
-  #container_w2025082780aa858e21dc6 > .shop-item._shop_item,
-  #container_w2025082780aa858e21dc6 > .shop-item,
-  #container_w2025082780aa858e21dc6 .shop-item._shop_item[data-product-properties] {
+  #container___WID__ > .shop-item._shop_item,
+  #container___WID__ > .shop-item,
+  #container___WID__ .shop-item._shop_item[data-product-properties] {
     position: relative !important;
     padding: 6px 8px !important;
     background: transparent !important;
   }
 
-  #container_w2025082780aa858e21dc6 .item-wrap {
+  #container___WID__ .item-wrap {
     position: relative !important;
     z-index: 1 !important;
     background: #f4f3f1 !important;
@@ -139,24 +146,24 @@
     overflow: hidden !important;
   }
 
-  #container_w2025082780aa858e21dc6 .item-detail {
+  #container___WID__ .item-detail {
     position: relative !important;
     z-index: 1 !important;
     padding: 8px 4px 0 !important;
   }
 
-  #container_w2025082780aa858e21dc6 .shop-title {
+  #container___WID__ .shop-title {
     font-size: 13px !important;
     color: rgba(0, 0, 0, 0.8) !important;
   }
 
-  #container_w2025082780aa858e21dc6 .pay.inline-blocked {
+  #container___WID__ .pay.inline-blocked {
     font-size: 15px !important;
     font-weight: 700 !important;
     color: #1c1c1e !important;
   }
 
-  #container_w2025082780aa858e21dc6 .item-overlay {
+  #container___WID__ .item-overlay {
     border-radius: 12px !important;
   }
 }
@@ -165,25 +172,25 @@
    [13] 소형 모바일
    ========================================================= */
 @media screen and (max-width: 380px) {
-  #container_w2025082780aa858e21dc6 > .shop-item._shop_item,
-  #container_w2025082780aa858e21dc6 > .shop-item,
-  #container_w2025082780aa858e21dc6 .shop-item._shop_item[data-product-properties] {
+  #container___WID__ > .shop-item._shop_item,
+  #container___WID__ > .shop-item,
+  #container___WID__ .shop-item._shop_item[data-product-properties] {
     padding: 5px 7px !important;
   }
 
-  #container_w2025082780aa858e21dc6 .item-wrap {
+  #container___WID__ .item-wrap {
     border-radius: 10px !important;
   }
 
-  #container_w2025082780aa858e21dc6 .shop-title {
+  #container___WID__ .shop-title {
     font-size: 12px !important;
   }
 
-  #container_w2025082780aa858e21dc6 .pay.inline-blocked {
+  #container___WID__ .pay.inline-blocked {
     font-size: 14px !important;
   }
 
-  #container_w2025082780aa858e21dc6 .item-overlay {
+  #container___WID__ .item-overlay {
     border-radius: 10px !important;
   }
 }
