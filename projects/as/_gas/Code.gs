@@ -547,7 +547,19 @@ function doPost(e){
 
       const qtyM = parseInt(body.qty_mamoru || '0', 10) || 0;
       const qtyO = parseInt(body.qty_other  || '0', 10) || 0;
-      const cost = qtyM * 10000 + qtyO * 20000;
+      const totalQty = qtyM + qtyO;
+      const isPickup = (body.proceed_type || '') === '방문수거';
+
+      // 수거비 계산: 직접발송 무료, 방문수거 1자루 5000원, 2자루 3000원, 3자루+ 무료
+      let shippingFee = 0;
+      if (isPickup) {
+        if (totalQty === 1) shippingFee = 5000;
+        else if (totalQty === 2) shippingFee = 3000;
+        // 3자루 이상: 무료
+      }
+
+      const serviceCost = qtyM * 10000 + qtyO * 20000;  // A/S 비용
+      const cost = serviceCost + shippingFee;           // 총 비용
 
       const row = [
         asId,
@@ -581,10 +593,14 @@ function doPost(e){
             as_id:asId, name:body.name||'', phone:fixedPhone,
             proceed_type:body.proceed_type||'', delivery_method:body.delivery_method||'',
             pickup_date:body.pickup_date||'', qty_mamoru:body.qty_mamoru||'',
-            qty_other:body.qty_other||'', created_at:createdAt, 
-  pickup_address:  String(body.address1 || '').trim(),
-  pickup_address2: String(body.address2 || '').trim(),
-  pickup_address_text: String((body.address1 || '') + ' ' + (body.address2 || '')).trim()
+            qty_other:body.qty_other||'', created_at:createdAt,
+            pickup_address:  String(body.address1 || '').trim(),
+            pickup_address2: String(body.address2 || '').trim(),
+            pickup_address_text: String((body.address1 || '') + ' ' + (body.address2 || '')).trim(),
+            // 금액 정보
+            service_cost: serviceCost,    // A/S 비용 (마모루 1만원×수량 + 타사 2만원×수량)
+            shipping_fee: shippingFee,    // 수거비 (1자루 5천원, 2자루 3천원, 3자루+ 무료)
+            total_amount: cost            // 총 비용
           })
         });
       }catch(e1){ Logger.log('[MAKE] '+e1); }
@@ -600,12 +616,15 @@ function doPost(e){
                          `진행방식: ${body.proceed_type||''}\n` +
                          `마모루 수량: ${body.qty_mamoru||0}개\n` +
                          `타사 수량: ${body.qty_other||0}개\n` +
+                         `A/S 비용: ${serviceCost.toLocaleString()}원\n` +
+                         `수거비: ${shippingFee.toLocaleString()}원\n` +
+                         `총 금액: ${cost.toLocaleString()}원\n` +
                          `접수일시: ${createdAt}`;
-        
+
         GmailApp.sendEmail('bsm@mamoru.kr', emailSubject, emailBody);
         Logger.log('[EMAIL] Successfully sent email for AS: ' + asId);
-      }catch(e2){ 
-        Logger.log('[EMAIL ERROR] Failed to send email: ' + e2.toString()); 
+      }catch(e2){
+        Logger.log('[EMAIL ERROR] Failed to send email: ' + e2.toString());
         Logger.log('[EMAIL ERROR] Stack: ' + e2.stack);
       }
 
