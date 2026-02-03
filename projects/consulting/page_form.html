@@ -2565,8 +2565,13 @@ if (isLoadingDates) return;
         data.timePrefs = state.prefTimes.slice();
       }
     }
-    // CSS flexbox 센터링 사용 (align-items:center; justify-content:center)
+    // 모달 표시 + iframe 환경에서 화면 중앙 배치 요청
+    var mc = successModal.querySelector('.modal-content');
+    if (mc) mc.removeAttribute('style');
     successModal.classList.add('show');
+    if (window !== window.parent) {
+      try { parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*'); } catch(e) {}
+    }
     // 서버 전송: 반환값을 기다리지 않고 실패만 로그합니다.
     gasRun('submitConsultation', data)
       .catch(err => {
@@ -2574,8 +2579,23 @@ if (isLoadingDates) return;
       });
   });
 
+  // iframe 뷰포트 정보 수신 → 모달을 현재 화면 중앙에 배치
+  window.addEventListener('message', function(e) {
+    if (!e.data || e.data.type !== 'MAMORU_VIEWPORT_INFO') return;
+    var vt = e.data.visibleTop, vh = e.data.visibleHeight;
+    if (!vh) return;
+    document.querySelectorAll('.modal-backdrop.show .modal-content').forEach(function(mc) {
+      mc.style.position = 'absolute';
+      mc.style.top = (vt + vh / 2) + 'px';
+      mc.style.left = '50%';
+      mc.style.transform = 'translate(-50%, -50%)';
+    });
+  });
+
   // Success Modal Close
   $('btn-success-close').addEventListener('click', function() {
+    var mc = successModal.querySelector('.modal-content');
+    if (mc) mc.removeAttribute('style'); // 인라인 스타일 정리
     successModal.classList.remove('show');
     // 폼 초기화
     $('name').value = '';

@@ -884,10 +884,9 @@ select.err {
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
   display: none;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   z-index: 10000;
-  padding-bottom: 80px;
 }
 
 .modal-backdrop.show {
@@ -1842,15 +1841,35 @@ select.err {
   window.openModal = function(title, msg, opts = {}) {
     const m = $('asModal');
     const ok = $('asModalOk');
+    const mc = m.querySelector('.modal-content');
     $('asModalTitle').textContent = title || '알림';
     $('asModalMsg').innerHTML = msg || '';
     ok.style.display = opts.loading ? 'none' : 'inline-flex';
     ok.onclick = function() {
       m.classList.remove('show');
+      if (mc) mc.removeAttribute('style'); // 인라인 스타일 정리
       if (opts.redirect) location.href = opts.redirect;
     };
+    if (mc) mc.removeAttribute('style');
     m.classList.add('show');
+    // iframe 환경: 부모에게 뷰포트 정보 요청 → 화면 중앙 배치
+    if (window !== window.parent) {
+      try { parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*'); } catch(e) {}
+    }
   };
+
+  // iframe 뷰포트 정보 수신 → 모달을 현재 화면 중앙에 배치
+  window.addEventListener('message', function(e) {
+    if (!e.data || e.data.type !== 'MAMORU_VIEWPORT_INFO') return;
+    var vt = e.data.visibleTop, vh = e.data.visibleHeight;
+    if (!vh) return;
+    document.querySelectorAll('.modal-backdrop.show .modal-content').forEach(function(mc) {
+      mc.style.position = 'absolute';
+      mc.style.top = (vt + vh / 2) + 'px';
+      mc.style.left = '50%';
+      mc.style.transform = 'translate(-50%, -50%)';
+    });
+  });
 
   // ─────────────────────────────────────────────────────────────
   // iframe 높이 전송 - 스로틀/디바운스/임계값 체크

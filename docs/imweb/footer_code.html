@@ -1,22 +1,43 @@
-<!-- MAMORU: iframe 높이 안전장치 JS -->
+<!-- MAMORU: iframe 높이 안전장치 + 모달 뷰포트 센터링 JS -->
 <script>
 (function(){
-  window.addEventListener('message', function(e){
-    if (!e.data || e.data.type !== 'MAMORU_IFRAME_SIZE') return;
-    var h = e.data.height;
-    if (!h || h < 100) return;
-    var ids = ['asFramePC','csFramePC','mamoruAsGuideFrame',
-               'mamoruConsultGuideFrame','mamoruDiagFrame',
-               'mamoruRecFrame','mamoruIntroFrame'];
-    for (var i = 0; i < ids.length; i++) {
-      var f = document.getElementById(ids[i]);
+  var IDS = ['asFramePC','csFramePC','mamoruAsGuideFrame',
+             'mamoruConsultGuideFrame','mamoruDiagFrame',
+             'mamoruRecFrame','mamoruIntroFrame'];
+
+  function findFrame(source) {
+    for (var i = 0; i < IDS.length; i++) {
+      var f = document.getElementById(IDS[i]);
       if (!f) continue;
-      try {
-        if (f.contentWindow === e.source) {
-          f.style.minHeight = h + 'px';
-          break;
-        }
-      } catch(ex) {}
+      try { if (f.contentWindow === source) return f; } catch(ex) {}
+    }
+    return null;
+  }
+
+  window.addEventListener('message', function(e){
+    if (!e.data) return;
+
+    // 1) iframe 높이 안전장치 (min-height 보장)
+    if (e.data.type === 'MAMORU_IFRAME_SIZE') {
+      var h = e.data.height;
+      if (!h || h < 100) return;
+      var f = findFrame(e.source);
+      if (f) f.style.minHeight = h + 'px';
+    }
+
+    // 2) 모달 뷰포트 센터링: iframe 내 모달이 현재 화면 중앙에 표시되도록
+    if (e.data.type === 'MAMORU_REQUEST_VIEWPORT') {
+      var f = findFrame(e.source);
+      if (!f) return;
+      var rect = f.getBoundingClientRect();
+      var vpH = window.innerHeight;
+      var visTop = Math.max(0, -rect.top);
+      var visH = Math.max(0, Math.min(rect.bottom, vpH) - Math.max(rect.top, 0));
+      f.contentWindow.postMessage({
+        type: 'MAMORU_VIEWPORT_INFO',
+        visibleTop: visTop,
+        visibleHeight: visH
+      }, '*');
     }
   });
 })();
