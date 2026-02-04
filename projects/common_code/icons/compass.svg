@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 외부 원 -->
+  <circle cx="12" cy="12" r="10"/>
+  <!-- 방향 다이아몬드 -->
+  <polygon points="12,4.5 14.5,12 12,19.5 9.5,12" fill="none"/>
+  <!-- 북쪽 삼각형 채움 -->
+  <polygon points="12,4.5 14.5,12 12,12" fill="#C9A962" stroke="none"/>
+  <polygon points="12,4.5 9.5,12 12,12" fill="none" stroke="#C9A962" stroke-width="0"/>
+  <!-- N 표시 -->
+  <text x="12" y="3.5" text-anchor="middle" font-size="3" fill="#C9A962" stroke="none" font-family="sans-serif" font-weight="bold">N</text>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- OK 제스처: 엄지+검지 원 -->
+  <circle cx="9" cy="14" r="3.5"/>
+  <!-- 나머지 손가락 3개 세움 -->
+  <line x1="13" y1="14" x2="13" y2="6"/>
+  <line x1="15.5" y1="14" x2="15.5" y2="5"/>
+  <line x1="18" y1="14" x2="18" y2="7"/>
+  <!-- 손바닥 베이스 -->
+  <path d="M12 17H19V14"/>
+</svg>

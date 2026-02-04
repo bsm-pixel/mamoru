@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 지붕 삼각형 -->
+  <path d="M3 10L12 3l9 7"/>
+  <!-- 벽 -->
+  <rect x="4" y="10" width="16" height="11" rx="0.5"/>
+  <!-- 문 -->
+  <rect x="9" y="15" width="6" height="6" rx="0.5"/>
+  <!-- 문 손잡이 -->
+  <circle cx="13.5" cy="18" r="0.5" fill="#C9A962"/>
+</svg>

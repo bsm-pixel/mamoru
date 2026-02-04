@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 차체 하단 -->
+  <path d="M2 14h20v4H2z"/>
+  <!-- 차체 상단 (캐빈) -->
+  <path d="M5 14l2-5h10l2 5"/>
+  <!-- 앞 바퀴 -->
+  <circle cx="7" cy="18" r="2" fill="#C9A962"/>
+  <!-- 뒷 바퀴 -->
+  <circle cx="17" cy="18" r="2" fill="#C9A962"/>
+  <!-- 바퀴 사이 하단 라인 -->
+  <path d="M9 18h6"/>
+</svg>

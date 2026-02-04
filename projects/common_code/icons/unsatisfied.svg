@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 원형 얼굴 -->
+  <circle cx="12" cy="12" r="9"/>
+  <!-- 눈 -->
+  <circle cx="9" cy="10" r="0.8" fill="#C9A962"/>
+  <circle cx="15" cy="10" r="0.8" fill="#C9A962"/>
+  <!-- 아래로 처진 입 곡선 -->
+  <path d="M8.5 16C9.5 14.5 14.5 14.5 15.5 16"/>
+</svg>

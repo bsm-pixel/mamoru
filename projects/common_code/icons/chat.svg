@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 말풍선 -->
+  <path d="M21 12a9 9 0 0 1-9 9 9.1 9.1 0 0 1-4.68-1.3L3 21l1.3-4.32A9 9 0 1 1 21 12z"/>
+  <!-- 점 3개 (...) -->
+  <circle cx="8" cy="12" r="1" fill="#C9A962" stroke="none"/>
+  <circle cx="12" cy="12" r="1" fill="#C9A962" stroke="none"/>
+  <circle cx="16" cy="12" r="1" fill="#C9A962" stroke="none"/>
+</svg>

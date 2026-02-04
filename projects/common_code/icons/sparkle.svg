@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 4갈래 별 (메인) -->
+  <path d="M12 2l2 6.5L20 12l-6 3.5L12 22l-2-6.5L4 12l6-3.5z" fill="#C9A962" stroke="#C9A962"/>
+  <!-- 작은 점 (우상단) -->
+  <circle cx="20" cy="4" r="1" fill="#C9A962" stroke="none"/>
+  <!-- 작은 점 (좌하단) -->
+  <circle cx="4" cy="20" r="0.75" fill="#C9A962" stroke="none"/>
+</svg>

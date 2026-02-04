@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 전구 벌브 -->
+  <path d="M9 18h6"/>
+  <path d="M10 21h4"/>
+  <path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>
+  <!-- 빛 발산 선 -->
+  <path d="M12 2V0" stroke-width="1"/>
+  <!-- 소켓 선 -->
+  <path d="M9.5 19.5h5"/>
+</svg>
