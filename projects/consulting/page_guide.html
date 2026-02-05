@@ -197,6 +197,7 @@ html, body {
   border-color: #C9A962;
   color: #1C1C1E;
   font-weight: 600;
+  box-shadow: 0 6px 20px rgba(201, 169, 98, 0.4); /* 활성 탭 골드 그림자 */
 }
 
 /* 탭 콘텐츠 */
@@ -251,7 +252,7 @@ html, body {
   padding: 0 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px; /* 12px → 16px: 철칙 항목 간격 증가 */
   max-width: 500px;
   margin: 0 auto;
 }
@@ -291,7 +292,7 @@ html, body {
 .principle-text {
   font-size: 15px;
   color: rgba(255, 255, 255, 0.9);
-  line-height: 1.7;
+  line-height: 1.85; /* 1.7 → 1.85: 가독성 개선 */
 }
 
 /* =========================================================
@@ -519,7 +520,7 @@ html, body {
   padding: 0 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px; /* 8px → 12px: Q&A 항목 간격 증가 */
   max-width: 600px;
   margin: 0 auto;
 }
@@ -528,6 +529,8 @@ html, body {
   background: #2C2C2E;
   border-radius: 12px;
   overflow: hidden;
+  border: 1px solid transparent; /* 호버 효과용 */
+  transition: all 0.3s ease; /* 호버 애니메이션 */
 }
 
 .qna-question {
@@ -541,6 +544,12 @@ html, body {
 
 .qna-question:active {
   background: rgba(255, 255, 255, 0.05);
+}
+
+/* Q&A 항목 호버 효과 */
+.qna-item:hover {
+  background: #343436;
+  border: 1px solid rgba(201, 169, 98, 0.15);
 }
 
 .qna-question-text {
@@ -643,7 +652,8 @@ html, body {
 
 .consult-cta-primary:hover {
   background: linear-gradient(135deg, #D4B56E 0%, #C9A962 100%);
-  transform: translateY(-1px);
+  transform: translateY(-2px); /* -1px → -2px: 호버 리프트 강화 */
+  box-shadow: 0 8px 24px rgba(201, 169, 98, 0.35); /* 골드 그림자 추가 */
 }
 
 /* =========================================================
