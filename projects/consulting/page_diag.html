@@ -323,10 +323,10 @@ body {
   flex-shrink: 0;
 }
 
-/* 커스텀 아이콘 이미지 지원 */
+/* 커스텀 아이콘 이미지 지원 - 인라인 SVG와 동일 크기 */
 .diag-custom-icon {
-  width: 32px;
-  height: 32px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
@@ -978,8 +978,8 @@ const questionsData = [
     condition: null,
     options: [
       { id: 'CE', label: '자격증 준비', desc: '아직 현장 경험이 없어요', icon: '<svg viewBox="0 0 32 32" fill="#C9A962"><path d="M12.5,16.5h-.9c-2.2,0-4-1.8-4-4v-.9c0-2.2,1.8-4,4-4h.9c2.2,0,4,1.8,4,4v.9c0,2.2-1.8,4-4,4ZM11.5,8.5c-1.7,0-3,1.4-3,3v.9c0,1.7,1.4,3,3,3h.9c1.7,0,3-1.4,3-3v-.9c0-1.7-1.4-3-3-3h-.9Z"/><path d="M25.5,28.5H6.5c-2.1,0-3-5.5-3-10.7v-3.7c0-5.1,1-10.7,3-10.7h18.9c2.1,0,3,5.5,3,10.7v3.7c0,5.1-1,10.7-3,10.7ZM6.5,4.5c-.7,0-2,3.4-2,9.7v3.7c0,6.3,1.3,9.7,2,9.7h18.9c.7,0,2-3.4,2-9.7v-3.7c0-6.3-1.3-9.7-2-9.7H6.5Z"/><path d="M15.5,20c0-.1,0-3.5-3.5-3.5s-3.5,3.4-3.5,3.5h-1c0-1.6.9-4.5,4.5-4.5s4.5,2.9,4.5,4.5h-1Z"/><rect x="11.5" y="13.4" width="1" height="1.3" transform="translate(-5 21.5) rotate(-73.1)"/><path d="M24.6,21.1h-6.5c-.4,0-.6-.3-.6-.6s.3-.6.6-.6h6.5c.4,0,.6.3.6.6s-.3.6-.6.6Z"/><path d="M24.6,17.8h-6.5c-.4,0-.6-.3-.6-.6s.3-.6.6-.6h6.5c.4,0,.6.3.6.6s-.3.6-.6.6Z"/><path d="M24.6,24.5h-6.5c-.4,0-.6-.3-.6-.6s.3-.6.6-.6h6.5c.4,0,.6.3.6.6s-.3.6-.6.6Z"/><path d="M10.6,12.6c-.2,0-.4,0-.6-.2-.2-.2-.2-.4-.2-.6s0-.5.2-.6c.3-.3.9-.3,1.2,0,.2.2.2.4.2.6s0,.2,0,.3c0,.1-.1.2-.2.3-.2.2-.4.2-.6.2Z"/><path d="M13.3,12.6c-.2,0-.5,0-.6-.2,0,0-.2-.2-.2-.3,0-.1,0-.2,0-.3s0-.2,0-.3c0-.1.1-.2.2-.3,0,0,.2-.1.3-.2.2,0,.4,0,.7,0,.1,0,.2.1.3.2,0,0,.1.2.2.3,0,.1,0,.2,0,.3,0,.2,0,.4-.2.6,0,0-.2.2-.3.2-.1,0-.2,0-.3,0Z"/></svg>' },
-      { id: 'IN', label: '인턴/스탭', desc: '현장에서 배우는 중이에요', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M7.5 17L16 4"/><path d="M16.5 17L8 4"/></svg>' },
-      { id: 'DE', label: '디자이너', desc: '손님을 직접 담당해요', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="5"/><path d="M6 5c0-2 2-3.5 4-3.5s4 1.5 4 3.5"/><path d="M7 7c-1 2-1 4 0 6"/><path d="M13 7c1 2 1 4 0 6"/><circle cx="18" cy="14" r="1.5" fill="#C9A962"/><circle cx="18" cy="18" r="1.5" fill="#C9A962"/><line x1="18" y1="15.5" x2="18" y2="16.5"/><line x1="15" y1="12" x2="18" y2="14"/><line x1="15" y1="20" x2="18" y2="18"/></svg>' }
+      { id: 'IN', label: '인턴/스탭', desc: '현장에서 배우는 중이에요', icon: './icons/Level_2.svg' },
+      { id: 'DE', label: '디자이너', desc: '손님을 직접 담당해요', icon: './icons/level_3.svg' }
     ]
   },
   {
@@ -998,9 +998,9 @@ const questionsData = [
      */
     options: [
       { id: 'BL', label: '블런트 (커트가위)', desc: '기본 커트용', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M7.5 17L16 4"/><path d="M16.5 17L8 4"/></svg>' },
-      { id: 'TH', label: '틴닝 (숱가위)', desc: '숱 조절용', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="19" r="2.5"/><circle cx="8" cy="13" r="2.5"/><line x1="10.2" y1="18" x2="20" y2="11"/><line x1="10.2" y1="14" x2="14" y2="11.5"/><line x1="14" y1="11.5" x2="14" y2="9.5"/><line x1="14" y1="11.5" x2="15.5" y2="10.5"/><line x1="15.5" y1="10.5" x2="15.5" y2="8.5"/><line x1="15.5" y1="10.5" x2="17" y2="9.5"/><line x1="17" y1="9.5" x2="17" y2="7.5"/><line x1="17" y1="9.5" x2="18.5" y2="8.5"/><line x1="18.5" y1="8.5" x2="18.5" y2="6.5"/><line x1="18.5" y1="8.5" x2="20" y2="7.5"/></svg>' },
+      { id: 'TH', label: '틴닝 (숱가위)', desc: '숱 조절용', icon: './icons/thinning.svg'},
       { id: 'LO', label: '장가위', desc: '긴 날 커트용', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="18" r="2"/><circle cx="5" cy="22" r="2"/><line x1="6.8" y1="17" x2="21" y2="6"/><line x1="6.8" y1="23" x2="21" y2="8"/><circle cx="10" cy="14" r="0.5" fill="#C9A962"/></svg>' },
-      { id: 'SL', label: '슬라이싱', desc: '슬라이드 컷 전용', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="19" r="2"/><circle cx="5" cy="15" r="2"/><path d="M6.8 18c4-2 7-4.5 14-7"/><path d="M6.8 14c4 2 7 4.5 14 3"/><circle cx="9" cy="16.5" r="0.5" fill="#C9A962"/></svg>' }
+      { id: 'SL', label: '슬라이싱', desc: '슬라이드 컷 전용', icon: './icons/Slide.svg' }
     ]
   },
   {
