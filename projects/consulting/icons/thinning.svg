@@ -17,7 +17,7 @@
 
       .cls-3 {
         stroke-linecap: round;
-        stroke-width: .75px;
+        stroke-width: .5px;
       }
     </style>
   </defs>
