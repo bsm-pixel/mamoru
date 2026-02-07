@@ -850,6 +850,7 @@ body {
   .diag-result-actions {
     gap: 12px;
     margin-top: 24px;
+    padding-bottom: 32px; /* 모바일 브라우저 UI 가림 방지 */
   }
   .diag-result-actions .diag-result-btn {
     max-width: 100%;  /* 모바일: 전체폭 */
@@ -1507,6 +1508,16 @@ function diagGoToRecommend() {
     window.diagRenderQuestion = function() {
       origRender.apply(this, arguments);
       setTimeout(notifyHeight, 100);
+    };
+  }
+
+  // ★ 결과 화면 전환 시에도 높이 재계산
+  var origShowResult = window.diagShowResult;
+  if (typeof origShowResult === 'function') {
+    window.diagShowResult = function() {
+      origShowResult.apply(this, arguments);
+      setTimeout(notifyHeight, 100);
+      setTimeout(notifyHeight, 500);
     };
   }
 })();
