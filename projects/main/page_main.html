@@ -1,0 +1,2011 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>MAMORU | 미용가위 전문 브랜드</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet"></noscript>
+<script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   MAMORU Main Page — PC + Mobile Responsive (Unified)
+   브랜드: Modern · Crisp / Emotional Journey 기반 섹션 배치
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 0. 변수 & 리셋 ── */
+:root {
+  /* 색상 */
+  --mm-bg-dark: #1C1C1E;
+  --mm-bg-darker: #141416;
+  --mm-bg-card-dark: #252528;
+  --mm-bg-light: #FFFFFF;
+  --mm-bg-warm: #F9FAFB;
+
+  --mm-gold: #C9A962;
+  --mm-gold-dark: #B8954A;
+  --mm-gold-soft: rgba(201,169,98,0.15);
+  --mm-gold-glow: rgba(201,169,98,0.08);
+
+  --mm-text-w: #F2F2F7;
+  --mm-text-w2: rgba(255,255,255,0.55);
+  --mm-text-w3: rgba(255,255,255,0.4);
+  --mm-text-w4: rgba(255,255,255,0.35);
+  --mm-text-d: #1C1C1E;
+  --mm-text-d2: #7A7A7A;
+  --mm-text-d3: rgba(0,0,0,0.55);
+
+  --mm-border-d: rgba(255,255,255,0.08);
+  --mm-border-l: rgba(0,0,0,0.08);
+
+  /* 레이아웃 */
+  --mm-max-w: 1200px;
+  --mm-radius: 14px;
+
+  /* 트랜지션 */
+  --mm-ease-fast: 0.15s ease;
+  --mm-ease: 0.25s ease;
+  --mm-ease-slow: 0.4s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth; /* 2025+ 필수 — 부드러운 스크롤 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-x: hidden;
+}
+html::-webkit-scrollbar { display: none; }
+
+body {
+  overflow-x: hidden;
+  overflow-y: visible;
+  height: auto !important;
+  min-height: auto !important;
+  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--mm-bg-dark);
+  color: var(--mm-text-w);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; color: inherit; }
+img { display: block; max-width: 100%; }
+
+/* 공통 섹션 내부 폭 제한 */
+.mm-inner {
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+@media (min-width: 768px) {
+  .mm-inner { padding-left: 32px; padding-right: 32px; }
+}
+@media (min-width: 1024px) {
+  .mm-inner { padding-left: 48px; padding-right: 48px; }
+}
+@media (min-width: 1440px) {
+  .mm-inner { padding-left: 64px; padding-right: 64px; }
+}
+
+
+/* ── 스크롤 애니메이션 (IntersectionObserver) ── */
+.mm-anim {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+.mm-anim.mm-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* 카드 stagger */
+.mm-anim-stagger.mm-visible:nth-child(1) { transition-delay: 0s; }
+.mm-anim-stagger.mm-visible:nth-child(2) { transition-delay: 0.07s; }
+.mm-anim-stagger.mm-visible:nth-child(3) { transition-delay: 0.14s; }
+.mm-anim-stagger.mm-visible:nth-child(4) { transition-delay: 0.21s; }
+.mm-anim-stagger.mm-visible:nth-child(5) { transition-delay: 0.28s; }
+
+
+/* ══════════════════════════════════════════════════════════════
+   [1]. 심볼 로티 바 (Emotional: 앵커)
+   ══════════════════════════════════════════════════════════════ */
+.mm-symbol {
+  background: var(--mm-bg-darker);
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mm-symbol dotlottie-player {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [2]. 신뢰 마이크로바 (Emotional: 탐색 진입)
+   ══════════════════════════════════════════════════════════════ */
+.mm-trust-bar {
+  background: var(--mm-bg-darker);
+  padding: 12px 18px;
+}
+.mm-trust-bar__list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+.mm-trust-bar__item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  position: relative;
+}
+.mm-trust-bar__item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 1px; height: 12px;
+  background: rgba(255,255,255,0.1);
+}
+.mm-trust-bar__icon {
+  width: 14px; height: 14px;
+  flex-shrink: 0;
+}
+.mm-trust-bar__icon path,
+.mm-trust-bar__icon circle,
+.mm-trust-bar__icon polyline {
+  stroke: rgba(255,255,255,0.45);
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mm-trust-bar__text {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.65);
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 360px) {
+  .mm-trust-bar { padding: 10px 12px; }
+  .mm-trust-bar__item { padding: 0 8px; gap: 4px; }
+  .mm-trust-bar__text { font-size: 10px; }
+  .mm-trust-bar__icon { width: 12px; height: 12px; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [3]. 히어로 (Emotional: 탐색 — 첫인상)
+   - PC: 2-column (좌 텍스트 / 우 이미지)
+   - 모바일: 이미지 풀폭 + 하단 텍스트
+   ══════════════════════════════════════════════════════════════ */
+.mm-hero {
+  background: var(--mm-bg-dark);
+  overflow: hidden;
+}
+
+/* 모바일 (기본): 세로 배치 */
+.mm-hero__visual {
+  width: 100%;
+  line-height: 0;
+  background: var(--mm-bg-dark);
+}
+.mm-hero__visual img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.mm-hero__body {
+  text-align: center;
+  padding: 52px 20px 40px;
+}
+.mm-hero__kicker {
+  display: inline-block;
+  margin-bottom: 20px;
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mm-text-w3);
+}
+.mm-hero__headline {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+  color: var(--mm-text-w);
+  margin-bottom: 12px;
+}
+.mm-hero__sub {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--mm-text-w2);
+  margin-bottom: 32px;
+}
+.mm-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 32px;
+  min-height: 52px;
+  background: var(--mm-gold);
+  border: none;
+  border-radius: var(--mm-radius);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--mm-bg-dark);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 20px rgba(201,169,98,0.3), 0 0 0 1px rgba(201,169,98,0.2);
+  transition: transform var(--mm-ease-fast), box-shadow var(--mm-ease-fast);
+}
+.mm-hero__cta:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 10px rgba(201,169,98,0.2), 0 0 0 1px rgba(201,169,98,0.15);
+}
+.mm-hero__cta:focus-visible {
+  outline: 2px solid var(--mm-gold);
+  outline-offset: 3px;
+}
+.mm-hero__cta svg { width: 18px; height: 18px; }
+.mm-hero__hint {
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mm-text-w3);
+}
+
+@media (max-width: 360px) {
+  .mm-hero__body { padding: 28px 16px 36px; }
+  .mm-hero__headline { font-size: 24px; }
+  .mm-hero__sub { font-size: 13px; }
+  .mm-hero__cta { padding: 14px 28px; font-size: 15px; }
+}
+
+@media (min-width: 768px) {
+  .mm-hero__body { padding: 64px 32px 56px; }
+  .mm-hero__headline { font-size: 36px; }
+  .mm-hero__sub { font-size: 16px; margin-bottom: 40px; }
+  .mm-hero__cta { padding: 18px 40px; font-size: 17px; min-height: 56px; }
+  .mm-hero__hint { font-size: 13px; }
+}
+
+/* PC 2-column 레이아웃 — 전체폭 흰배경 + 내부 max-width */
+@media (min-width: 1024px) {
+  .mm-hero {
+    background: #FFFFFF; /* 전체 가로폭 흰배경 */
+  }
+  .mm-hero__inner {
+    display: flex;
+    align-items: center;
+    max-width: var(--mm-max-w);
+    margin: 0 auto;
+    min-height: 520px;
+  }
+  .mm-hero__visual {
+    flex: 0 0 55%;
+    max-height: 560px;
+    overflow: hidden;
+    order: 2;
+  }
+  .mm-hero__visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  .mm-hero__body {
+    flex: 0 0 45%;
+    text-align: left;
+    padding: 56px 48px 56px 56px; /* 좌측 여유 확보 */
+    order: 1;
+  }
+  .mm-hero__kicker {
+    margin-bottom: 24px;
+    background: rgba(0,0,0,0.04);
+    border-color: rgba(0,0,0,0.08);
+    color: var(--mm-text-d2);
+  }
+  .mm-hero__headline {
+    font-size: 38px;
+    letter-spacing: -0.04em;
+    color: var(--mm-text-d); /* PC 다크 텍스트 */
+  }
+  .mm-hero__sub {
+    font-size: 15px;
+    color: var(--mm-text-d2);
+    margin-bottom: 36px;
+  }
+  .mm-hero__hint { color: var(--mm-text-d3); }
+  .mm-hero__cta { margin: 0; }
+}
+@media (min-width: 1440px) {
+  .mm-hero__inner { min-height: 580px; }
+  .mm-hero__headline { font-size: 46px; } /* 대형 모니터 임팩트 */
+  .mm-hero__sub { font-size: 17px; }
+}
+
+/* PC hover */
+@media (hover: hover) {
+  .mm-hero__cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 28px rgba(201,169,98,0.4), 0 0 0 1px rgba(201,169,98,0.3);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [4]. 퀵 셀렉트 (Emotional: 탐색 → 정렬)
+   - 🔧 카테고리/칩은 MAMORU_DATA.categories / chips
+   ══════════════════════════════════════════════════════════════ */
+.mm-quick {
+  background: var(--mm-bg-dark);
+  padding: 24px 0 30px;
+}
+.mm-quick__divider {
+  width: 100%;
+  height: 1px;
+  margin-bottom: 24px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.08) 80%, transparent 100%);
+}
+.mm-quick__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mm-text-w4);
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+}
+.mm-quick__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.mm-quick__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 8px;
+  min-height: 80px;
+  background: var(--mm-bg-darker);
+  border: 1px solid var(--mm-border-d);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform var(--mm-ease-fast), background var(--mm-ease-fast), box-shadow var(--mm-ease);
+}
+.mm-quick__card:active { transform: scale(0.95); background: rgba(255,255,255,0.06); }
+.mm-quick__card-icon {
+  width: 56px; height: 56px;
+  object-fit: contain;
+  transition: transform var(--mm-ease);
+}
+.mm-quick__card-label { font-size: 12px; font-weight: 500; color: var(--mm-text-w); text-align: center; }
+
+/* 미니 칩 */
+.mm-quick__chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.mm-quick__chips::-webkit-scrollbar { display: none; }
+.mm-quick__chip {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  white-space: nowrap;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--mm-border-d);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mm-text-w2);
+  transition: all var(--mm-ease-fast);
+}
+.mm-quick__chip:active { transform: scale(0.95); background: rgba(255,255,255,0.08); }
+
+@media (max-width: 360px) {
+  .mm-quick { padding: 20px 0 26px; }
+  .mm-quick__grid { gap: 6px; }
+  .mm-quick__card { padding: 14px 6px; min-height: 72px; }
+  .mm-quick__card-icon { width: 40px; height: 40px; }
+  .mm-quick__card-label { font-size: 11px; }
+  .mm-quick__chip { padding: 7px 12px; font-size: 11px; }
+}
+
+@media (min-width: 768px) {
+  .mm-quick { padding: 32px 0 40px; }
+  .mm-quick__grid { gap: 12px; }
+  .mm-quick__card { padding: 24px 12px; min-height: 110px; gap: 12px; border-radius: 16px; }
+  .mm-quick__card-icon { width: 64px; height: 64px; }
+  .mm-quick__card-label { font-size: 14px; }
+  .mm-quick__chip { padding: 10px 18px; font-size: 13px; border-radius: 10px; }
+}
+
+@media (min-width: 1024px) {
+  .mm-quick__card { padding: 28px 16px; min-height: 130px; }
+  .mm-quick__card-icon { width: 72px; height: 72px; }
+  .mm-quick__card-label { font-size: 15px; font-weight: 600; }
+  /* PC: 칩 중앙 정렬 */
+  .mm-quick__chips {
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-x: visible;
+  }
+}
+
+/* PC hover */
+@media (hover: hover) {
+  .mm-quick__card:hover {
+    transform: translateY(-4px);
+    background: rgba(255,255,255,0.05);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    border-color: rgba(255,255,255,0.12);
+  }
+  .mm-quick__card:hover .mm-quick__card-icon { transform: scale(1.08); }
+  .mm-quick__chip:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.15);
+    color: var(--mm-text-w);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [5]. 다크 → 라이트 전환 (시각 전환)
+   ══════════════════════════════════════════════════════════════ */
+.mm-transition {
+  width: 100%;
+  height: 100px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #1C1C1E 0%, #1C1C1E 30%, #3A3A3C 50%, #F9FAFB 70%, #F9FAFB 100%);
+}
+.mm-transition::before {
+  content: "";
+  position: absolute;
+  left: -5%; right: -5%; top: 0;
+  height: 60%;
+  background: #1C1C1E;
+  border-radius: 0 0 50% 50%;
+}
+.mm-transition::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 30px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.04) 50%, rgba(0,0,0,0) 100%);
+  pointer-events: none;
+}
+
+@media (min-width: 1024px) {
+  .mm-transition { height: 120px; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [6]. 메인 추천 가위 (Emotional: 정렬)
+   - 🔧 상품 데이터: MAMORU_DATA.featured
+   ══════════════════════════════════════════════════════════════ */
+.mm-featured {
+  background: var(--mm-bg-warm);
+  padding: 32px 0 12px;
+}
+.mm-section-head {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  margin-bottom: 20px;
+}
+.mm-section-head__bar {
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--mm-gold) 0%, var(--mm-gold-dark) 100%);
+  flex: 0 0 3px;
+  align-self: stretch;
+  min-height: 40px;
+}
+.mm-section-head__title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--mm-text-d);
+  line-height: 1.25;
+}
+.mm-section-head__desc {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mm-text-d2);
+  letter-spacing: -0.01em;
+  line-height: 1.55;
+}
+
+/* 상품 그리드 */
+.mm-products {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.mm-product-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid var(--mm-border-l);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  transition: all var(--mm-ease);
+}
+.mm-product-card:active { transform: scale(0.97); }
+.mm-product-card__thumb {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f4f3f1;
+  aspect-ratio: 1 / 1;
+}
+.mm-product-card__thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform var(--mm-ease-slow);
+}
+.mm-product-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mm-product-card__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0,0,0,0.88);
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.mm-product-card__price {
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--mm-text-d);
+  line-height: 1.2;
+}
+
+/* 더보기 버튼 */
+.mm-more-btn-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 28px 0 32px; /* 상품↔버튼 간격 확보 */
+  background: var(--mm-bg-warm);
+}
+.mm-more-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 28px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.04);
+  border: 1px solid rgba(0,0,0,0.10);
+  color: rgba(0,0,0,0.75);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  transition: all var(--mm-ease);
+}
+.mm-more-btn:active { background: rgba(0,0,0,0.08); transform: scale(0.97); }
+.mm-more-btn:focus-visible { outline: 2px solid var(--mm-gold); outline-offset: 3px; }
+.mm-more-btn::after { content: "\2192"; font-size: 14px; margin-left: 2px; }
+
+@media (max-width: 360px) {
+  .mm-featured { padding: 28px 0 10px; }
+  .mm-section-head__title { font-size: 18px; }
+  .mm-section-head__desc { font-size: 12px; }
+  .mm-products { gap: 8px; }
+  .mm-product-card { padding: 10px; border-radius: 14px; }
+  .mm-product-card__thumb { border-radius: 10px; }
+  .mm-product-card__name { font-size: 12px; }
+  .mm-product-card__price { font-size: 13px; }
+}
+
+@media (min-width: 768px) {
+  .mm-featured { padding: 40px 0 16px; }
+  .mm-section-head__title { font-size: 24px; }
+  .mm-section-head__desc { font-size: 14px; }
+  .mm-section-head__bar { min-height: 44px; }
+  .mm-products { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .mm-product-card { padding: 14px; border-radius: 18px; }
+  .mm-product-card__thumb { border-radius: 14px; }
+  .mm-product-card__name { font-size: 14px; }
+  .mm-product-card__price { font-size: 15px; }
+}
+
+@media (min-width: 1024px) {
+  .mm-products { gap: 20px; }
+  .mm-product-card { padding: 16px; }
+}
+
+/* PC hover: 상품 카드 */
+@media (hover: hover) {
+  .mm-product-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--mm-gold);
+    box-shadow: 0 8px 24px rgba(201,169,98,0.12);
+  }
+  .mm-product-card:hover .mm-product-card__thumb img {
+    transform: scale(1.04);
+  }
+  .mm-more-btn:hover {
+    background: rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [7]. 첫가위 안심추천 (Emotional: 정렬 → 안심)
+   - 🔧 상품 데이터: MAMORU_DATA.firstScissors
+   ══════════════════════════════════════════════════════════════ */
+.mm-first {
+  background: var(--mm-bg-warm);
+  padding: 32px 0 16px;
+}
+.mm-first .mm-more-link {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 20px;
+}
+.mm-more-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--mm-text-d3);
+  transition: all var(--mm-ease-fast);
+}
+.mm-more-link a:active { opacity: 0.7; transform: translateY(1px); }
+
+@media (min-width: 768px) {
+  .mm-first { padding: 40px 0 20px; }
+}
+
+/* PC hover */
+@media (hover: hover) {
+  .mm-more-link a:hover {
+    color: var(--mm-gold-dark);
+    transform: translateX(3px);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [7.5]. 큐레이션 카드 — 이런 기준도 있어요
+   ══════════════════════════════════════════════════════════════ */
+.mm-curations {
+  background: var(--mm-bg-dark);
+  padding: 40px 0 48px;
+}
+.mm-curations__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mm-text-w3);
+  margin-bottom: 20px;
+  letter-spacing: 0.02em;
+}
+.mm-curations__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.mm-curation-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--mm-bg-darker);
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(var(--mm-bg-darker), var(--mm-bg-darker)),
+    linear-gradient(135deg, rgba(201,169,98,0.25) 0%, rgba(201,169,98,0.06) 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  border-radius: var(--mm-radius);
+  transition: all var(--mm-ease);
+}
+.mm-curation-card:active { transform: scale(0.98); }
+.mm-curation-card__icon {
+  width: 44px; height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mm-gold-soft);
+  border-radius: 12px;
+}
+.mm-curation-card__icon svg { width: 22px; height: 22px; }
+.mm-curation-card__icon path,
+.mm-curation-card__icon circle,
+.mm-curation-card__icon polyline {
+  stroke: var(--mm-gold);
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mm-curation-card__body { flex: 1; min-width: 0; }
+.mm-curation-card__name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mm-text-w);
+  line-height: 1.3;
+}
+.mm-curation-card__desc {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mm-text-w2);
+  margin-top: 4px;
+}
+.mm-curation-card__arrow {
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+  opacity: 0.4;
+  transition: transform var(--mm-ease-fast), opacity var(--mm-ease-fast);
+}
+.mm-curation-card__arrow path {
+  stroke: var(--mm-text-w);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (min-width: 768px) {
+  .mm-curations__grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .mm-curation-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 24px;
+  }
+  .mm-curation-card__arrow {
+    align-self: flex-end;
+    margin-top: auto;
+  }
+}
+
+/* PC hover: 큐레이션 카드 */
+@media (hover: hover) {
+  .mm-curation-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 12px rgba(201,169,98,0.08);
+  }
+  .mm-curation-card:hover .mm-curation-card__arrow {
+    opacity: 0.8;
+    transform: translateX(3px);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [8]. 슬로건 브리더 (Emotional: 안심 — 호흡)
+   ══════════════════════════════════════════════════════════════ */
+.mm-slogan {
+  background: var(--mm-bg-dark);
+  padding: 56px 24px;
+  text-align: center;
+}
+.mm-slogan__en {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mm-text-w);
+  line-height: 1.8;
+  position: relative;
+  display: inline-block;
+}
+.mm-slogan__en mark {
+  background: none;
+  color: var(--mm-gold);
+  font-weight: 700;
+}
+.mm-slogan__en::after {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 1px;
+  margin: 18px auto 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(201,169,98,0.25) 20%, var(--mm-gold) 50%, rgba(201,169,98,0.25) 80%, transparent 100%);
+}
+.mm-slogan__ko {
+  margin: 22px 0 0;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: rgba(255,255,255,0.72);
+  line-height: 1.55;
+}
+.mm-slogan__ko span { display: block; }
+
+@media (max-width: 360px) {
+  .mm-slogan { padding: 40px 20px; }
+  .mm-slogan__en { font-size: 13px; letter-spacing: 0.10em; }
+  .mm-slogan__en::after { width: 48px; margin-top: 16px; }
+  .mm-slogan__ko { margin-top: 12px; font-size: 13px; }
+}
+@media (min-width: 768px) {
+  .mm-slogan { padding: 80px 32px; }
+  .mm-slogan__en { font-size: 24px; letter-spacing: 0.15em; line-height: 2; }
+  .mm-slogan__en::after { width: 80px; margin-top: 20px; }
+  .mm-slogan__ko { margin-top: 16px; font-size: 15px; }
+}
+@media (min-width: 1024px) {
+  .mm-slogan { padding: 100px 48px; }
+  .mm-slogan__en { font-size: 32px; letter-spacing: 0.18em; }
+  .mm-slogan__en::after { width: 100px; margin-top: 24px; }
+  .mm-slogan__ko { font-size: 16px; margin-top: 20px; }
+  .mm-slogan__ko span { display: inline; }
+  .mm-slogan__ko span + span::before { content: " · "; color: var(--mm-gold); }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [9]. 이벤트 배너 (Emotional: 행동 준비)
+   - 🔧 이벤트 데이터: MAMORU_DATA.events
+   ══════════════════════════════════════════════════════════════ */
+.mm-events {
+  background: var(--mm-bg-dark);
+  padding: 32px 0;
+}
+.mm-events__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mm-text-w4);
+  margin-bottom: 14px;
+}
+.mm-events__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mm-event-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  background: var(--mm-bg-darker);
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(var(--mm-bg-darker), var(--mm-bg-darker)),
+    linear-gradient(135deg, rgba(201,169,98,0.35) 0%, rgba(201,169,98,0.08) 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  border-radius: var(--mm-radius);
+  transition: all var(--mm-ease-fast);
+}
+.mm-event-card:active { transform: scale(0.98); }
+.mm-event-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--mm-gold-soft);
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--mm-gold);
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+.mm-event-card__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mm-text-w);
+  margin-top: 6px;
+}
+.mm-event-card__desc {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mm-text-w2);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+.mm-event-card__arrow {
+  width: 20px; height: 20px;
+  opacity: 0.4;
+  flex-shrink: 0;
+  transition: transform var(--mm-ease-fast), opacity var(--mm-ease-fast);
+}
+.mm-event-card__arrow path {
+  stroke: var(--mm-text-w);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (min-width: 768px) {
+  .mm-events { padding: 40px 0; }
+  .mm-events__list { flex-direction: row; gap: 14px; }
+  .mm-event-card { flex: 1; padding: 20px 24px; border-radius: 16px; }
+  .mm-event-card__title { font-size: 17px; }
+  .mm-event-card__desc { font-size: 13px; }
+}
+
+/* PC hover */
+@media (hover: hover) {
+  .mm-event-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(201,169,98,0.3);
+  }
+  .mm-event-card:hover .mm-event-card__arrow {
+    opacity: 0.8;
+    transform: translateX(3px);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [10]. 상담 / AS 트러스트 카드 (Emotional: 망설임 제거)
+   ══════════════════════════════════════════════════════════════ */
+.mm-services {
+  background: var(--mm-bg-dark);
+  padding: 0;
+}
+.mm-service-card {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  display: flex;
+  overflow: hidden;
+  transition: opacity var(--mm-ease-fast);
+}
+.mm-service-card:active { opacity: 0.92; }
+
+/* 상담 (좌 텍스트 / 우 이미지) */
+.mm-service-card--consult { flex-direction: row; background: var(--mm-bg-darker); }
+.mm-service-card--consult .mm-service-card__body {
+  flex: 0 0 55%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 16px 24px 20px;
+  z-index: 2;
+}
+.mm-service-card--consult .mm-service-card__img {
+  flex: 0 0 45%;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-color: #1a1a1c;
+}
+.mm-service-card--consult .mm-service-card__img::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 60%;
+  background: linear-gradient(to right, var(--mm-bg-darker), rgba(20,20,22,0));
+  z-index: 1;
+}
+
+/* AS (좌 이미지 / 우 텍스트) */
+.mm-service-card--as { flex-direction: row-reverse; background: #131315; }
+.mm-service-card--as .mm-service-card__body {
+  flex: 0 0 55%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  text-align: right;
+  padding: 24px 20px 24px 16px;
+  z-index: 2;
+}
+.mm-service-card--as .mm-service-card__img {
+  flex: 0 0 45%;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-color: #1a1a1c;
+}
+.mm-service-card--as .mm-service-card__img::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; right: 0;
+  width: 60%;
+  background: linear-gradient(to left, #131315, rgba(19,19,21,0));
+  z-index: 1;
+}
+
+.mm-service-card__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+.mm-service-card__desc {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mm-text-w2);
+  letter-spacing: -0.01em;
+  line-height: 1.55;
+}
+/* PC 전용 미니 CTA */
+.mm-service-card__cta {
+  display: none;
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mm-gold);
+  letter-spacing: 0.02em;
+  transition: transform var(--mm-ease-fast);
+}
+.mm-service-card__cta::after { content: " \2192"; }
+
+@media (min-width: 768px) {
+  .mm-services {
+    display: flex;
+    gap: 0;
+  }
+  .mm-service-card { flex: 1; height: 200px; }
+  .mm-service-card__title { font-size: 22px; }
+  .mm-service-card__desc { font-size: 14px; }
+}
+@media (min-width: 1024px) {
+  .mm-services {
+    max-width: var(--mm-max-w);
+    margin: 0 auto;
+    gap: 2px;
+  }
+  .mm-service-card {
+    height: 280px;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .mm-service-card__title { font-size: 24px; }
+  .mm-service-card__cta { display: inline-block; }
+}
+
+/* PC hover */
+@media (hover: hover) {
+  .mm-service-card:hover { opacity: 1; }
+  .mm-service-card:hover .mm-service-card__img {
+    filter: brightness(1.1);
+  }
+  .mm-service-card:hover .mm-service-card__cta {
+    transform: translateX(4px);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [11]. 쇼케이스 슬라이더 (Emotional: 추가 탐색)
+   - 🔧 상품 데이터: MAMORU_DATA.showcase
+   - 모바일: 횡스크롤 / PC: 5열 그리드
+   ══════════════════════════════════════════════════════════════ */
+.mm-showcase {
+  background: var(--mm-bg-warm);
+  padding: 32px 0;
+  overflow: hidden;
+}
+.mm-showcase__head {
+  padding: 0 20px 16px;
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+}
+.mm-showcase__scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 8px 20px;
+  -webkit-overflow-scrolling: touch;
+}
+.mm-showcase__scroll::-webkit-scrollbar { display: none; }
+
+.mm-showcase__card {
+  flex: 0 0 200px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05);
+  transition: transform var(--mm-ease), box-shadow var(--mm-ease), border-color var(--mm-ease);
+}
+.mm-showcase__card:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.09);
+}
+.mm-showcase__card-thumb {
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f4f3f1;
+  aspect-ratio: 1 / 1;
+}
+.mm-showcase__card-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform var(--mm-ease-slow);
+}
+.mm-showcase__card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0,0,0,0.90);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mm-showcase__card-price {
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--mm-text-d);
+}
+
+@media (min-width: 768px) {
+  .mm-showcase { padding: 40px 0; }
+  .mm-showcase__head { padding: 0 32px 16px; }
+  .mm-showcase__scroll { padding: 8px 32px; gap: 20px; }
+  .mm-showcase__card { flex: 0 0 240px; padding: 16px; }
+  .mm-showcase__card-name { font-size: 14px; }
+  .mm-showcase__card-price { font-size: 15px; }
+}
+
+/* PC: 5열 그리드 전환 */
+@media (min-width: 1024px) {
+  .mm-showcase__head { padding: 0 48px 16px; }
+  .mm-showcase__scroll {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 18px;
+    overflow: visible;
+    padding: 8px 48px;
+    max-width: var(--mm-max-w);
+    margin: 0 auto;
+  }
+  .mm-showcase__card {
+    flex: none;
+  }
+}
+
+/* PC hover */
+@media (hover: hover) {
+  .mm-showcase__card:hover {
+    transform: translateY(-6px);
+    border-color: var(--mm-gold);
+    box-shadow: 0 8px 24px rgba(201,169,98,0.12);
+  }
+  .mm-showcase__card:hover .mm-showcase__card-thumb img {
+    transform: scale(1.04);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [12]. 하단 링크 위젯 (Emotional: 마무리 신뢰)
+   ══════════════════════════════════════════════════════════════ */
+.mm-bottom {
+  background: var(--mm-bg-dark);
+  padding: 40px 0 48px;
+}
+.mm-bottom__header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.mm-bottom__tagline {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mm-gold);
+  margin-bottom: 8px;
+}
+.mm-bottom__headline {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--mm-text-w);
+  line-height: 1.4;
+}
+
+/* 모바일: WE ARE 풀와이드 + 2열 서브 */
+.mm-bottom__main { margin-bottom: 12px; }
+.mm-bottom__card-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px;
+  background: linear-gradient(135deg, #2A2A2D 0%, #232326 100%);
+  border: 1px solid var(--mm-border-d);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--mm-ease);
+}
+.mm-bottom__card-main::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mm-gold), transparent);
+  opacity: 0.4;
+}
+.mm-bottom__card-main:active { transform: scale(0.99); }
+.mm-bottom__main-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mm-gold);
+}
+.mm-bottom__main-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--mm-text-w);
+  line-height: 1.2;
+}
+.mm-bottom__main-sub {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mm-text-w2);
+  margin-top: 2px;
+}
+.mm-bottom__main-arrow {
+  width: 32px; height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mm-gold-soft);
+  border-radius: 50%;
+  transition: all var(--mm-ease);
+}
+.mm-bottom__main-arrow svg { width: 16px; height: 16px; }
+.mm-bottom__main-arrow path {
+  stroke: var(--mm-gold);
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 서브 그리드 */
+.mm-bottom__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.mm-bottom__card-sub {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 18px;
+  min-height: 120px;
+  background: var(--mm-bg-card-dark);
+  border: 1px solid var(--mm-border-d);
+  border-radius: 16px;
+  transition: all var(--mm-ease);
+}
+.mm-bottom__card-sub:active { transform: scale(0.98); }
+.mm-bottom__sub-icon {
+  width: 36px; height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mm-gold-soft);
+  border-radius: 10px;
+  transition: transform var(--mm-ease);
+}
+.mm-bottom__sub-icon svg { width: 18px; height: 18px; }
+.mm-bottom__sub-icon path,
+.mm-bottom__sub-icon circle {
+  stroke: var(--mm-gold);
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mm-bottom__sub-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mm-text-w);
+}
+.mm-bottom__sub-desc {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mm-text-w3);
+}
+
+/* 하단 마이크로카피 */
+.mm-bottom__footer {
+  text-align: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--mm-border-d);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mm-text-w3);
+}
+
+@media (max-width: 360px) {
+  .mm-bottom { padding: 32px 0 40px; }
+  .mm-bottom__headline { font-size: 16px; }
+  .mm-bottom__card-main { padding: 20px; border-radius: 16px; }
+  .mm-bottom__main-title { font-size: 18px; }
+  .mm-bottom__grid { gap: 8px; }
+  .mm-bottom__card-sub { padding: 16px 14px; min-height: 110px; border-radius: 14px; }
+  .mm-bottom__sub-icon { width: 32px; height: 32px; border-radius: 8px; }
+  .mm-bottom__sub-title { font-size: 14px; }
+}
+
+@media (min-width: 768px) {
+  .mm-bottom { padding: 56px 0 64px; }
+  .mm-bottom__headline { font-size: 22px; }
+  .mm-bottom__card-main { padding: 28px 32px; }
+  .mm-bottom__main-title { font-size: 24px; }
+  .mm-bottom__main-arrow { width: 40px; height: 40px; }
+  .mm-bottom__grid { gap: 14px; }
+  .mm-bottom__card-sub { padding: 24px 22px; min-height: 140px; }
+  .mm-bottom__sub-icon { width: 42px; height: 42px; border-radius: 12px; }
+  .mm-bottom__sub-title { font-size: 17px; }
+  .mm-bottom__sub-desc { font-size: 12px; }
+}
+
+/* PC: 3열 균등 (WE ARE + 상담 + AS) */
+@media (min-width: 1024px) {
+  .mm-bottom__content {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+  }
+  .mm-bottom__main { margin-bottom: 0; }
+  .mm-bottom__card-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    min-height: 180px;
+    height: 100%; /* 그리드 행 높이에 맞춤 */
+    border-radius: 16px;
+  }
+  .mm-bottom__main-arrow {
+    align-self: flex-end;
+    margin-top: auto;
+  }
+  .mm-bottom__grid {
+    display: contents; /* 자식 카드를 부모 3열 그리드에 직접 배치 */
+  }
+  .mm-bottom__card-sub {
+    min-height: 0;
+    padding: 22px 20px;
+    height: 100%; /* 그리드 행 높이에 맞춤 */
+  }
+}
+
+/* PC hover */
+@media (hover: hover) {
+  .mm-bottom__card-main:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .mm-bottom__card-main:hover .mm-bottom__main-arrow {
+    transform: translateX(3px);
+  }
+  .mm-bottom__card-sub:hover {
+    background: #2A2A2D;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
+  .mm-bottom__card-sub:hover .mm-bottom__sub-icon {
+    transform: scale(1.08);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [13]. 푸터 (앵커)
+   ══════════════════════════════════════════════════════════════ */
+.mm-footer {
+  background: var(--mm-bg-dark);
+  border-top: 1px solid var(--mm-border-d);
+  padding: 32px 0 40px;
+  text-align: center;
+}
+.mm-footer__brand {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--mm-text-w3);
+  margin-bottom: 12px;
+}
+.mm-footer__info {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.3);
+  line-height: 1.8;
+}
+.mm-footer__email {
+  color: var(--mm-text-w3);
+}
+</style>
+</head>
+
+<body>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [1]. 심볼 로티 바 (Emotional: 앵커)
+     ══════════════════════════════════════════════════════════════ -->
+<div class="mm-symbol">
+  <dotlottie-player
+    src="https://lottie.host/c4ccb0c1-f1f0-4332-9d53-cd2f28b95882/2XQpRbIhvs.lottie"
+    background="transparent"
+    speed="1"
+    autoplay
+  ></dotlottie-player>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [2]. 신뢰 마이크로바 (Emotional: 탐색 진입)
+     ══════════════════════════════════════════════════════════════ -->
+<div class="mm-trust-bar">
+  <div class="mm-trust-bar__list">
+    <div class="mm-trust-bar__item">
+      <svg class="mm-trust-bar__icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+      <span class="mm-trust-bar__text">고객 우선</span>
+    </div>
+    <div class="mm-trust-bar__item">
+      <svg class="mm-trust-bar__icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="mm-trust-bar__text">자체 A/S 진행</span>
+    </div>
+    <div class="mm-trust-bar__item">
+      <svg class="mm-trust-bar__icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="mm-trust-bar__text">소통 중심</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [3]. 히어로 (Emotional: 탐색 — 첫인상)
+     - PC: 좌 텍스트 / 우 이미지 2-column
+     - 🔧 히어로 이미지: PC/모바일 <picture> srcset 수정
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-hero">
+  <div class="mm-hero__inner">
+    <div class="mm-hero__visual">
+      <picture>
+        <source media="(max-width:768px)" srcset="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/8277857802796.png">
+        <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/8959981922fa7.png" alt="MAMORU 미용가위">
+      </picture>
+    </div>
+
+    <div class="mm-hero__body">
+      <div class="mm-hero__kicker">MAMORU</div>
+      <h1 class="mm-hero__headline mm-anim">좋은 미용가위<br>그 기준을 경험하다</h1>
+      <p class="mm-hero__sub mm-anim">모두에게 비싼 가위는 있지만<br>누구에게나 좋은 가위는 없습니다</p>
+      <a href="/58" class="mm-hero__cta">
+        간편 진단 시작하기
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <p class="mm-hero__hint">30초면 충분해요</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [4]. 퀵 셀렉트 (Emotional: 탐색 → 정렬)
+     - 🔧 카테고리: MAMORU_DATA.categories
+     - 🔧 칩: MAMORU_DATA.chips
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-quick">
+  <div class="mm-inner">
+    <div class="mm-quick__divider"></div>
+    <div class="mm-quick__label">Quick Select</div>
+    <div class="mm-quick__grid" id="mmQuickGrid">
+      <!-- JS 렌더링 -->
+    </div>
+    <div class="mm-quick__chips" id="mmQuickChips">
+      <!-- JS 렌더링 -->
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [5]. 다크 → 라이트 전환
+     ══════════════════════════════════════════════════════════════ -->
+<div class="mm-transition"></div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [6]. 메인 추천 가위 (Emotional: 정렬)
+     - 🔧 상품: MAMORU_DATA.featured
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-featured">
+  <div class="mm-inner">
+    <div class="mm-section-head mm-anim">
+      <span class="mm-section-head__bar"></span>
+      <div>
+        <h2 class="mm-section-head__title">메인 추천 가위</h2>
+        <p class="mm-section-head__desc">지금 가장 안정적인 컨디션과 밸런스를 기준으로<br>먼저 고른 4가지</p>
+      </div>
+    </div>
+    <div class="mm-products" id="mmFeatured">
+      <!-- JS 렌더링 -->
+    </div>
+  </div>
+</section>
+
+<div class="mm-more-btn-wrap">
+  <a href="/29" class="mm-more-btn">추천가위 더보기</a>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [7]. 첫가위 안심추천 (Emotional: 정렬 → 안심)
+     - 🔧 상품: MAMORU_DATA.firstScissors
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-first">
+  <div class="mm-inner">
+    <div class="mm-section-head mm-anim">
+      <span class="mm-section-head__bar"></span>
+      <div>
+        <h2 class="mm-section-head__title">첫 가위 안심추천</h2>
+        <p class="mm-section-head__desc">첫 가위에도 기준이 있다면 괜히 불안하지 않으니까, 10만 원대부터 가볍게</p>
+      </div>
+    </div>
+    <div class="mm-products" id="mmFirstScissors">
+      <!-- JS 렌더링 -->
+    </div>
+  </div>
+</section>
+<div class="mm-more-btn-wrap">
+  <a href="/29" class="mm-more-btn">이 기준에 맞는 가위 더 보기</a>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [7.5]. 큐레이션 카드 — 이런 기준도 있어요
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-curations">
+  <div class="mm-inner">
+    <div class="mm-curations__title">이런 기준도 있어요</div>
+    <div class="mm-curations__grid" id="mmCurations">
+      <!-- JS 렌더링 -->
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [8]. 슬로건 브리더 (Emotional: 안심 — 호흡)
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-slogan">
+  <p class="mm-slogan__en mm-anim">
+    CUT THE FAKE,<br>KEEP THE <mark>REAL</mark>
+  </p>
+  <p class="mm-slogan__ko mm-anim">
+    <span>설득하지 않습니다</span>
+    <span>동행합니다</span>
+  </p>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [9]. 이벤트 배너 (Emotional: 행동 준비)
+     - 🔧 이벤트: MAMORU_DATA.events
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-events">
+  <div class="mm-inner">
+    <div class="mm-events__label">Event</div>
+    <div class="mm-events__list" id="mmEvents">
+      <!-- JS 렌더링 -->
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [10]. 상담 / AS 트러스트 (Emotional: 망설임 제거)
+     - 🔧 이미지 URL: 400x280, 흑백 권장
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-services mm-anim">
+  <a class="mm-service-card mm-service-card--consult" href="/consult">
+    <div class="mm-service-card__body">
+      <div class="mm-service-card__title">Your Solution</div>
+      <div class="mm-service-card__desc">올바른 기준은<br>제품이 아닌 고객입니다</div>
+      <span class="mm-service-card__cta">상담 알아보기</span>
+    </div>
+    <div class="mm-service-card__img" style="background-image:url('https://cdn.imweb.me/upload/S20250825bc9b09c7146df/5440b39c14f9d.jpg')"></div>
+  </a>
+
+  <a class="mm-service-card mm-service-card--as" href="/53">
+    <div class="mm-service-card__body">
+      <div class="mm-service-card__title">Hydro Repair A/S</div>
+      <div class="mm-service-card__desc">가위를 위한 최선의 방식</div>
+      <span class="mm-service-card__cta">A/S 알아보기</span>
+    </div>
+    <div class="mm-service-card__img" style="background-image:url('https://cdn.imweb.me/upload/S20250825bc9b09c7146df/40cb7f6ce0645.jpg')"></div>
+  </a>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [11]. 쇼케이스 슬라이더 (Emotional: 추가 탐색)
+     - 🔧 상품: MAMORU_DATA.showcase
+     - 모바일: 횡스크롤 / PC: 5열 그리드
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-showcase">
+  <div class="mm-showcase__head">
+    <div class="mm-section-head mm-anim">
+      <span class="mm-section-head__bar"></span>
+      <div>
+        <h2 class="mm-section-head__title">MAMORU Collection</h2>
+        <p class="mm-section-head__desc">마모루가 기준으로 선택한 핵심 라인업</p>
+      </div>
+    </div>
+  </div>
+  <div class="mm-showcase__scroll" id="mmShowcase">
+    <!-- JS 렌더링 -->
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [12]. 하단 링크 위젯 (Emotional: 마무리 신뢰)
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-bottom">
+  <div class="mm-inner">
+    <div class="mm-bottom__header mm-anim">
+      <div class="mm-bottom__tagline">Beyond Scissors</div>
+      <div class="mm-bottom__headline">도구 그 이상의 동행</div>
+    </div>
+
+    <div class="mm-bottom__content">
+      <div class="mm-bottom__main">
+        <a href="/we-are" class="mm-bottom__card-main">
+          <div>
+            <div class="mm-bottom__main-label">About</div>
+            <div class="mm-bottom__main-title">WE ARE MAMORU</div>
+            <div class="mm-bottom__main-sub">정밀한 도구, 책임지는 기술 브랜드</div>
+          </div>
+          <div class="mm-bottom__main-arrow">
+            <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+          </div>
+        </a>
+      </div>
+
+      <div class="mm-bottom__grid">
+        <a href="/consulting" class="mm-bottom__card-sub">
+          <div class="mm-bottom__sub-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </div>
+          <div>
+            <div class="mm-bottom__sub-title">가위 컨설팅</div>
+            <div class="mm-bottom__sub-desc">1:1 맞춤 상담 신청</div>
+          </div>
+        </a>
+        <a href="/53" class="mm-bottom__card-sub">
+          <div class="mm-bottom__sub-icon">
+            <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <div>
+            <div class="mm-bottom__sub-title">A/S 접수</div>
+            <div class="mm-bottom__sub-desc">수리 및 연마 신청</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="mm-bottom__footer">구매 전 상담부터, 구매 후 관리까지</div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [13]. 푸터
+     ══════════════════════════════════════════════════════════════ -->
+<footer class="mm-footer">
+  <div class="mm-inner">
+    <div class="mm-footer__brand">MAMORU</div>
+    <div class="mm-footer__info">
+      마모루 · 김종현 · 사업자등록번호 확인 중<br>
+      서울특별시 · 010-0000-0000<br>
+      <a href="mailto:mamoruscissor@gmail.com" class="mm-footer__email">mamoruscissor@gmail.com</a>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     MAMORU_DATA + 렌더링 + 인터랙션
+     ══════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  /* ═══════════════════════════════════════════════════════════════
+     🔧 MAMORU_DATA — 상품/이벤트/카테고리 데이터
+     콘텐츠 변경 시 이 객체만 수정하세요
+     ═══════════════════════════════════════════════════════════════ */
+  var DATA = {
+
+    /* 🔧 [4] 퀵 셀렉트 카테고리 */
+    categories: [
+      { label: '블런트', icon: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/034e160aa5620.png', link: '/29' },
+      { label: '틴닝',   icon: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/547dbc7393589.png', link: '/30' },
+      { label: '장가위', icon: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/bd3dc559f5165.png', link: '/39' },
+      { label: '슬라이싱', icon: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/d6f209ef86490.png', link: '/40' }
+    ],
+
+    /* 🔧 [4] 미니 칩 */
+    chips: [
+      { label: '빗', link: '/comb' },
+      { label: '핀셋', link: '/tweezer' },
+      { label: '가위집', link: '/brush' },
+      { label: '롤브러시', link: '/etc' },
+      { label: '클리퍼', link: '/etc' },
+      { label: '정리용품', link: '/etc' }
+    ],
+
+    /* 🔧 [6] 메인 추천 가위 (4개) */
+    featured: [
+      { name: '마모루 소프트 블런트 5.5', price: '350,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/034e160aa5620.png', link: '/product/1' },
+      { name: '마모루 라이트 블런트 5.5', price: '280,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/547dbc7393589.png', link: '/product/2' },
+      { name: '마모루 파워 블런트 6.0', price: '380,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/bd3dc559f5165.png', link: '/product/3' },
+      { name: '마모루 프리미엄 틴닝 6.0', price: '320,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/d6f209ef86490.png', link: '/product/4' }
+    ],
+
+    /* 🔧 [7] 첫가위 안심추천 (4개) */
+    firstScissors: [
+      { name: 'B3-70M', price: '30,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/034e160aa5620.png', link: '/product/5' },
+      { name: 'B2-3528', price: '30,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/547dbc7393589.png', link: '/product/6' },
+      { name: 'B1-55/6', price: '30,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/bd3dc559f5165.png', link: '/product/7' },
+      { name: '미용가위 복합수리', price: '10,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/d6f209ef86490.png', link: '/product/8' }
+    ],
+
+    /* 🔧 [7.5] 큐레이션 카드 */
+    curations: [
+      { name: '주변제품 전체보기', desc: '빗 · 핀셋 · 가위집 등 주변용품', icon: 'box', link: '/29' },
+      { name: '직급별 추천 가격대', desc: '경력에 맞는 가위를 한눈에', icon: 'target', link: '/29' },
+      { name: '입문자 추천 제품', desc: '부담 없이 시작하는 첫 가위', icon: 'sprout', link: '/29' }
+    ],
+
+    /* 🔧 [9] 이벤트 배너 */
+    events: [
+      { badge: 'SALE', title: '재고전환 특가', desc: '재고 소진 시 종료 · 창고정리 전품목 할인', link: '/clearance' },
+      { badge: 'EVENT', title: '리뷰 이벤트', desc: '마모루 경험을 공유하고 가위받으세요', link: '/review' }
+    ],
+
+    /* 🔧 [11] 쇼케이스 (5개) */
+    showcase: [
+      { name: '마모루 시그니처 블런트 5.5', price: '600,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/034e160aa5620.png', link: '/product/s1' },
+      { name: '마모루 프리미엄 틴닝 6.0', price: '480,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/547dbc7393589.png', link: '/product/s2' },
+      { name: '마모루 장가위 7.0', price: '420,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/bd3dc559f5165.png', link: '/product/s3' },
+      { name: '마모루 슬라이싱 6.0', price: '380,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/d6f209ef86490.png', link: '/product/s4' },
+      { name: '마모루 엔트리 블런트 5.5', price: '180,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/034e160aa5620.png', link: '/product/s5' }
+    ]
+  };
+
+
+  /* ═══════════════════════════════════════════════════════════════
+     렌더링 함수
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* 퀵 셀렉트 카테고리 */
+  function renderCategories() {
+    var el = document.getElementById('mmQuickGrid');
+    if (!el) return;
+    el.innerHTML = DATA.categories.map(function(c) {
+      return '<a href="' + c.link + '" class="mm-quick__card mm-anim mm-anim-stagger">' +
+        '<img src="' + c.icon + '" class="mm-quick__card-icon" alt="' + c.label + '">' +
+        '<span class="mm-quick__card-label">' + c.label + '</span>' +
+        '</a>';
+    }).join('');
+  }
+
+  /* 퀵 셀렉트 칩 */
+  function renderChips() {
+    var el = document.getElementById('mmQuickChips');
+    if (!el) return;
+    el.innerHTML = DATA.chips.map(function(c) {
+      return '<a href="' + c.link + '" class="mm-quick__chip">' + c.label + '</a>';
+    }).join('');
+  }
+
+  /* 상품 카드 (공통) */
+  function renderProducts(containerId, items) {
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = items.map(function(p) {
+      return '<a href="' + p.link + '" class="mm-product-card mm-anim mm-anim-stagger">' +
+        '<div class="mm-product-card__thumb"><img src="' + p.img + '" alt="' + p.name + '"></div>' +
+        '<div class="mm-product-card__info">' +
+          '<div class="mm-product-card__name">' + p.name + '</div>' +
+          '<div class="mm-product-card__price">' + p.price + '</div>' +
+        '</div>' +
+        '</a>';
+    }).join('');
+  }
+
+  /* 이벤트 배너 */
+  function renderEvents() {
+    var el = document.getElementById('mmEvents');
+    if (!el) return;
+    el.innerHTML = DATA.events.map(function(e) {
+      return '<a href="' + e.link + '" class="mm-event-card mm-anim mm-anim-stagger">' +
+        '<div>' +
+          '<span class="mm-event-card__badge">' + e.badge + '</span>' +
+          '<div class="mm-event-card__title">' + e.title + '</div>' +
+          '<div class="mm-event-card__desc">' + e.desc + '</div>' +
+        '</div>' +
+        '<svg class="mm-event-card__arrow" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>' +
+        '</a>';
+    }).join('');
+  }
+
+  /* 큐레이션 카드 */
+  function renderCurations() {
+    var el = document.getElementById('mmCurations');
+    if (!el) return;
+    var icons = {
+      box: '<svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><path d="M12 22.08V12"/></svg>',
+      target: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+      sprout: '<svg viewBox="0 0 24 24"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg>'
+    };
+    el.innerHTML = DATA.curations.map(function(c) {
+      return '<a href="' + c.link + '" class="mm-curation-card mm-anim mm-anim-stagger">' +
+        '<div class="mm-curation-card__icon">' + (icons[c.icon] || '') + '</div>' +
+        '<div class="mm-curation-card__body">' +
+          '<div class="mm-curation-card__name">' + c.name + '</div>' +
+          '<div class="mm-curation-card__desc">' + c.desc + '</div>' +
+        '</div>' +
+        '<svg class="mm-curation-card__arrow" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>' +
+        '</a>';
+    }).join('');
+  }
+
+  /* 쇼케이스 슬라이더 */
+  function renderShowcase() {
+    var el = document.getElementById('mmShowcase');
+    if (!el) return;
+    el.innerHTML = DATA.showcase.map(function(p) {
+      return '<a href="' + p.link + '" class="mm-showcase__card mm-anim mm-anim-stagger">' +
+        '<div class="mm-showcase__card-thumb"><img src="' + p.img + '" alt="' + p.name + '"></div>' +
+        '<div class="mm-showcase__card-name">' + p.name + '</div>' +
+        '<div class="mm-showcase__card-price">' + p.price + '</div>' +
+        '</a>';
+    }).join('');
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════
+     IntersectionObserver — 스크롤 애니메이션
+     ═══════════════════════════════════════════════════════════════ */
+  function initAnimations() {
+    if (!('IntersectionObserver' in window)) {
+      /* fallback: 즉시 표시 */
+      document.querySelectorAll('.mm-anim').forEach(function(el) {
+        el.classList.add('mm-visible');
+      });
+      return;
+    }
+
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('mm-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+
+    document.querySelectorAll('.mm-anim').forEach(function(el) {
+      observer.observe(el);
+    });
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════
+     iframe 높이 자동 전송 (아임웹 parent 통신)
+     ═══════════════════════════════════════════════════════════════ */
+  function initIframeComm() {
+    function send() {
+      var h = document.documentElement.scrollHeight;
+      if (h > 0) window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: h }, '*');
+    }
+
+    if (window.ResizeObserver) {
+      new ResizeObserver(send).observe(document.body);
+    }
+    setInterval(send, 800);
+    window.addEventListener('load', send);
+    send();
+
+    /* 아임웹 parent에서 페이지 이동 위임 */
+    document.addEventListener('click', function(e) {
+      var a = e.target.closest('a[href]');
+      if (!a) return;
+      var href = a.getAttribute('href');
+      if (!href || href.startsWith('http') || href.startsWith('mailto:')) return;
+      e.preventDefault();
+      window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: href }, '*');
+    });
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════
+     초기화
+     ═══════════════════════════════════════════════════════════════ */
+  function init() {
+    renderCategories();
+    renderChips();
+    renderProducts('mmFeatured', DATA.featured);
+    renderProducts('mmFirstScissors', DATA.firstScissors);
+    renderCurations();
+    renderEvents();
+    renderShowcase();
+    initAnimations();
+    initIframeComm();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+
+</body>
+</html>

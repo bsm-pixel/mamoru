@@ -1,0 +1,53 @@
+<!-- MAMORU 메인 페이지 - 아임웹 코드위젯용 -->
+<!-- ★ 이 코드를 아임웹 코드위젯에 전체 복사하세요 ★ -->
+<!-- GitHub Pages 배포 - postMessage 동적 높이 조절 -->
+
+<style>
+#mamoruMainWrap {
+  position: relative;
+  width: 100%;
+}
+#mamoruMainFrame {
+  width: 100%;
+  border: none;
+  display: block;
+}
+</style>
+
+<div id="mamoruMainWrap">
+  <iframe
+    id="mamoruMainFrame"
+    src="https://bsm-pixel.github.io/mamoru/projects/main/page_main.html"
+    scrolling="no"
+    frameborder="0"
+    allowtransparency="true">
+  </iframe>
+</div>
+
+<script>
+(function(){
+  var iframe = document.getElementById('mamoruMainFrame');
+  var currentHeight = 0;
+
+  // postMessage로 동적 높이 수신 (page_main.html → MAMORU_IFRAME_SIZE)
+  window.addEventListener('message', function(e) {
+    if (e.origin !== 'https://bsm-pixel.github.io') return;
+
+    if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && typeof e.data.height === 'number') {
+      var newHeight = Math.ceil(e.data.height);
+      if (newHeight !== currentHeight && newHeight > 0) {
+        currentHeight = newHeight;
+        iframe.style.height = newHeight + 'px';
+      }
+    }
+
+    // 페이지 이동 요청 처리 (cross-origin 해결)
+    if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) {
+      window.location.href = e.data.url;
+    }
+  });
+
+  // 초기 높이 (postMessage 수신 전 fallback) — 메인페이지는 섹션이 많아 높게 설정
+  iframe.style.height = (window.innerWidth <= 768 ? 4200 : 5400) + 'px';
+})();
+</script>
