@@ -183,6 +183,10 @@ img { display: block; max-width: 100%; }
   .mm-trust-bar__text { font-size: 10px; }
   .mm-trust-bar__icon { width: 12px; height: 12px; }
 }
+/* PC: 로티/신뢰바 숨김 — 대화면에서 불필요 */
+@media (min-width: 1024px) {
+  .mm-symbol, .mm-trust-bar { display: none; }
+}
 
 
 /* ══════════════════════════════════════════════════════════════
@@ -271,6 +275,11 @@ img { display: block; max-width: 100%; }
   font-size: 12px;
   font-weight: 500;
   color: var(--mm-text-w3);
+  animation: mm-hint-fade 1.2s ease 0.8s both; /* B-5: 부드러운 등장 */
+}
+@keyframes mm-hint-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 360px) {
@@ -412,16 +421,33 @@ img { display: block; max-width: 100%; }
 .mm-quick__chips::-webkit-scrollbar { display: none; }
 .mm-quick__chip {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 8px 14px;
+  gap: 6px;
+  padding: 12px 10px;
+  min-width: 72px;
   white-space: nowrap;
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--mm-border-d);
-  border-radius: 8px;
-  font-size: 12px;
+  border-radius: 10px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--mm-text-w2);
   transition: all var(--mm-ease-fast);
+}
+.mm-quick__chip-icon {
+  width: 24px; height: 24px;
+  flex-shrink: 0;
+}
+.mm-quick__chip-icon path,
+.mm-quick__chip-icon circle,
+.mm-quick__chip-icon rect,
+.mm-quick__chip-icon line {
+  stroke: rgba(255,255,255,0.45);
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .mm-quick__chip:active { transform: scale(0.95); background: rgba(255,255,255,0.08); }
 
@@ -431,7 +457,8 @@ img { display: block; max-width: 100%; }
   .mm-quick__card { padding: 14px 6px; min-height: 72px; }
   .mm-quick__card-icon { width: 40px; height: 40px; }
   .mm-quick__card-label { font-size: 11px; }
-  .mm-quick__chip { padding: 7px 12px; font-size: 11px; }
+  .mm-quick__chip { padding: 10px 8px; font-size: 10px; min-width: 64px; }
+  .mm-quick__chip-icon { width: 20px; height: 20px; }
 }
 
 @media (min-width: 768px) {
@@ -440,19 +467,23 @@ img { display: block; max-width: 100%; }
   .mm-quick__card { padding: 24px 12px; min-height: 110px; gap: 12px; border-radius: 16px; }
   .mm-quick__card-icon { width: 64px; height: 64px; }
   .mm-quick__card-label { font-size: 14px; }
-  .mm-quick__chip { padding: 10px 18px; font-size: 13px; border-radius: 10px; }
+  .mm-quick__chip { padding: 14px 14px; font-size: 12px; border-radius: 12px; min-width: 80px; }
+  .mm-quick__chip-icon { width: 28px; height: 28px; }
 }
 
 @media (min-width: 1024px) {
   .mm-quick__card { padding: 28px 16px; min-height: 130px; }
   .mm-quick__card-icon { width: 72px; height: 72px; }
   .mm-quick__card-label { font-size: 15px; font-weight: 600; }
-  /* PC: 칩 중앙 정렬 */
+  /* PC: 칩 중앙 정렬 + 카드형 */
   .mm-quick__chips {
     flex-wrap: wrap;
     justify-content: center;
     overflow-x: visible;
+    gap: 10px;
   }
+  .mm-quick__chip { padding: 16px 16px; min-width: 88px; border-radius: 14px; font-size: 13px; }
+  .mm-quick__chip-icon { width: 32px; height: 32px; }
 }
 
 /* PC hover */
@@ -648,6 +679,7 @@ img { display: block; max-width: 100%; }
 }
 
 @media (min-width: 1024px) {
+  .mm-featured { padding: 48px 0 16px; } /* B-2: PC 호흡감 확장 */
   .mm-products { gap: 20px; }
   .mm-product-card { padding: 16px; }
 }
@@ -697,6 +729,9 @@ img { display: block; max-width: 100%; }
 
 @media (min-width: 768px) {
   .mm-first { padding: 40px 0 20px; }
+}
+@media (min-width: 1024px) {
+  .mm-first { padding: 48px 0 20px; } /* B-2: PC 호흡감 */
 }
 
 /* PC hover */
@@ -806,6 +841,10 @@ img { display: block; max-width: 100%; }
   }
 }
 
+@media (min-width: 1024px) {
+  .mm-curations { padding: 48px 0 56px; } /* B-2: PC 호흡감 */
+}
+
 /* PC hover: 큐레이션 카드 */
 @media (hover: hover) {
   .mm-curation-card:hover {
@@ -824,6 +863,7 @@ img { display: block; max-width: 100%; }
    ══════════════════════════════════════════════════════════════ */
 .mm-slogan {
   background: var(--mm-bg-dark);
+  background-image: radial-gradient(ellipse 600px 300px at center, rgba(201,169,98,0.04) 0%, transparent 70%);
   padding: 56px 24px;
   text-align: center;
 }
@@ -965,6 +1005,11 @@ img { display: block; max-width: 100%; }
   .mm-event-card { flex: 1; padding: 20px 24px; border-radius: 16px; }
   .mm-event-card__title { font-size: 17px; }
   .mm-event-card__desc { font-size: 13px; }
+}
+@media (min-width: 1024px) {
+  .mm-events { padding: 48px 0; } /* B-2: PC 호흡감 */
+  .mm-event-card { padding: 24px 28px; border-radius: 18px; } /* B-3: PC 카드 여유 */
+  .mm-event-card__title { font-size: 18px; } /* B-3 */
 }
 
 /* PC hover */
@@ -1209,6 +1254,8 @@ img { display: block; max-width: 100%; }
   }
   .mm-showcase__card {
     flex: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04); /* B-4: PC 기본 shadow */
+    border-radius: 22px; /* B-4 */
   }
 }
 
@@ -1400,6 +1447,7 @@ img { display: block; max-width: 100%; }
 
 /* PC: 3열 균등 (WE ARE + 상담 + AS) */
 @media (min-width: 1024px) {
+  .mm-bottom { padding: 64px 0 72px; } /* B-2: PC 호흡감 */
   .mm-bottom__content {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -1448,31 +1496,7 @@ img { display: block; max-width: 100%; }
 }
 
 
-/* ══════════════════════════════════════════════════════════════
-   [13]. 푸터 (앵커)
-   ══════════════════════════════════════════════════════════════ */
-.mm-footer {
-  background: var(--mm-bg-dark);
-  border-top: 1px solid var(--mm-border-d);
-  padding: 32px 0 40px;
-  text-align: center;
-}
-.mm-footer__brand {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--mm-text-w3);
-  margin-bottom: 12px;
-}
-.mm-footer__info {
-  font-size: 11px;
-  font-weight: 400;
-  color: rgba(255,255,255,0.3);
-  line-height: 1.8;
-}
-.mm-footer__email {
-  color: var(--mm-text-w3);
-}
+/* [13]. 푸터 — 아임웹 자체 하단영역 사용으로 삭제됨 */
 </style>
 </head>
 
@@ -1751,19 +1775,7 @@ img { display: block; max-width: 100%; }
 </section>
 
 
-<!-- ══════════════════════════════════════════════════════════════
-     [13]. 푸터
-     ══════════════════════════════════════════════════════════════ -->
-<footer class="mm-footer">
-  <div class="mm-inner">
-    <div class="mm-footer__brand">MAMORU</div>
-    <div class="mm-footer__info">
-      마모루 · 김종현 · 사업자등록번호 확인 중<br>
-      서울특별시 · 010-0000-0000<br>
-      <a href="mailto:mamoruscissor@gmail.com" class="mm-footer__email">mamoruscissor@gmail.com</a>
-    </div>
-  </div>
-</footer>
+<!-- [13]. 푸터 — 아임웹 자체 하단영역 사용 -->
 
 
 <!-- ══════════════════════════════════════════════════════════════
@@ -1787,14 +1799,14 @@ img { display: block; max-width: 100%; }
       { label: '슬라이싱', icon: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/d6f209ef86490.png', link: '/40' }
     ],
 
-    /* 🔧 [4] 미니 칩 */
+    /* 🔧 [4] 미니 칩 (아이콘+텍스트) */
     chips: [
-      { label: '빗', link: '/comb' },
-      { label: '핀셋', link: '/tweezer' },
-      { label: '가위집', link: '/brush' },
-      { label: '롤브러시', link: '/etc' },
-      { label: '클리퍼', link: '/etc' },
-      { label: '정리용품', link: '/etc' }
+      { label: '빗', icon: 'comb', link: '/comb' },
+      { label: '핀셋', icon: 'tweezer', link: '/tweezer' },
+      { label: '가위집', icon: 'pouch', link: '/brush' },
+      { label: '롤브러시', icon: 'brush', link: '/etc' },
+      { label: '클리퍼', icon: 'clipper', link: '/etc' },
+      { label: '정리용품', icon: 'spray', link: '/etc' }
     ],
 
     /* 🔧 [6] 메인 추천 가위 (4개) */
@@ -1853,12 +1865,23 @@ img { display: block; max-width: 100%; }
     }).join('');
   }
 
-  /* 퀵 셀렉트 칩 */
+  /* 퀵 셀렉트 칩 (아이콘+텍스트) */
   function renderChips() {
     var el = document.getElementById('mmQuickChips');
     if (!el) return;
+    var icons = {
+      comb:    '<svg class="mm-quick__chip-icon" viewBox="0 0 24 24"><path d="M4 4v16"/><path d="M4 8h6"/><path d="M4 12h6"/><path d="M4 16h6"/><rect x="10" y="4" width="4" height="16" rx="1"/></svg>',
+      tweezer: '<svg class="mm-quick__chip-icon" viewBox="0 0 24 24"><path d="M8 3v10l4 8"/><path d="M16 3v10l-4 8"/></svg>',
+      pouch:   '<svg class="mm-quick__chip-icon" viewBox="0 0 24 24"><path d="M4 8h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="M8 8V5a4 4 0 0 1 8 0v3"/><line x1="12" y1="12" x2="12" y2="16"/></svg>',
+      brush:   '<svg class="mm-quick__chip-icon" viewBox="0 0 24 24"><circle cx="12" cy="10" r="6"/><path d="M12 16v5"/><path d="M9 21h6"/></svg>',
+      clipper: '<svg class="mm-quick__chip-icon" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="18" rx="2"/><path d="M10 20v2"/><path d="M14 20v2"/><line x1="6" y1="8" x2="18" y2="8"/></svg>',
+      spray:   '<svg class="mm-quick__chip-icon" viewBox="0 0 24 24"><path d="M8 10h8v11a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V10z"/><path d="M10 10V6h4v4"/><path d="M10 6h1V3"/><path d="M4 5h3"/><path d="M4 3h2"/></svg>'
+    };
     el.innerHTML = DATA.chips.map(function(c) {
-      return '<a href="' + c.link + '" class="mm-quick__chip">' + c.label + '</a>';
+      return '<a href="' + c.link + '" class="mm-quick__chip">' +
+        (icons[c.icon] || '') +
+        '<span>' + c.label + '</span>' +
+        '</a>';
     }).join('');
   }
 
