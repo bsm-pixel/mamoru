@@ -2,12 +2,12 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MAMORU | 미용가위 전문 브랜드</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preload" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet"></noscript>
-<script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+<!-- 로티: 모바일에서만 동적 로딩 (PC에서 display:none이므로 불필요) -->
 <style>
 /* ══════════════════════════════════════════════════════════════
    MAMORU Main Page — PC + Mobile Responsive (Unified)
@@ -16,28 +16,28 @@
 
 /* ── 0. 변수 & 리셋 ── */
 :root {
-  /* 색상 */
-  --mm-bg-dark: #1C1C1E;
-  --mm-bg-darker: #141416;
-  --mm-bg-card-dark: #252528;
-  --mm-bg-light: #FFFFFF;
-  --mm-bg-warm: #FAFAFA; /* sharp crisp: 순수 뉴트럴 */
+  /* 색상 — Terracotta Editorial: #F2F2EA(60%) + #181725(30%) + #D4613E(10%) */
+  --mm-bg-dark: #181725;        /* 인디고 블랙 (30%) */
+  --mm-bg-darker: #100F1C;
+  --mm-bg-card-dark: #1F1E2D;
+  --mm-bg-light: #F2F2EA;       /* 워밍 오프화이트 (60%) */
+  --mm-bg-warm: #F2F2EA;
 
-  --mm-gold: #C9A962;
-  --mm-gold-dark: #B8954A;
-  --mm-gold-soft: rgba(201,169,98,0.15);
-  --mm-gold-glow: rgba(201,169,98,0.08);
+  --mm-gold: #D4613E;           /* 테라코타 (10%) */
+  --mm-gold-dark: #B85232;
+  --mm-gold-soft: rgba(212,97,62,0.14);
+  --mm-gold-glow: rgba(212,97,62,0.07);
 
-  --mm-text-w: #F2F2F7;
-  --mm-text-w2: rgba(255,255,255,0.55);
-  --mm-text-w3: rgba(255,255,255,0.4);
-  --mm-text-w4: rgba(255,255,255,0.35);
-  --mm-text-d: #1C1C1E;
-  --mm-text-d2: #7A7A7A;
-  --mm-text-d3: rgba(0,0,0,0.55);
+  --mm-text-w: #F2F2EA;
+  --mm-text-w2: rgba(242,242,234,0.6);
+  --mm-text-w3: rgba(242,242,234,0.52);
+  --mm-text-w4: rgba(242,242,234,0.45);
+  --mm-text-d: #181725;
+  --mm-text-d2: #6B6980;        /* 인디고 그레이 */
+  --mm-text-d3: rgba(24,23,37,0.55);
 
   --mm-border-d: rgba(255,255,255,0.08);
-  --mm-border-l: rgba(0,0,0,0.08);
+  --mm-border-l: rgba(24,23,37,0.08);
 
   /* 레이아웃 */
   --mm-max-w: 1200px;
@@ -74,6 +74,13 @@ body {
 
 a { text-decoration: none; color: inherit; }
 img { display: block; max-width: 100%; }
+
+/* 접근성: focus-visible 공통 규칙 (키보드 탐색) */
+a[class*="mm-"]:focus-visible,
+button[class*="mm-"]:focus-visible {
+  outline: 2px solid var(--mm-gold);
+  outline-offset: 2px;
+}
 
 /* 공통 섹션 내부 폭 제한 */
 .mm-inner {
@@ -182,7 +189,7 @@ img { display: block; max-width: 100%; }
 @media (max-width: 360px) {
   .mm-trust-bar { padding: 10px 12px; }
   .mm-trust-bar__item { padding: 0 8px; gap: 4px; }
-  .mm-trust-bar__text { font-size: 10px; }
+  .mm-trust-bar__text { font-size: 11px; } /* 최소 폰트 보장 */
   .mm-trust-bar__icon { width: 12px; height: 12px; }
 }
 /* PC: 로티/신뢰바 숨김 — 대화면에서 불필요 */
@@ -215,7 +222,7 @@ img { display: block; max-width: 100%; }
 
 .mm-hero__body {
   text-align: center;
-  padding: 52px 20px 40px;
+  padding: 56px 20px 48px; /* 여백 확대: 위계 명확 */
 }
 .mm-hero__kicker {
   display: inline-block;
@@ -231,9 +238,9 @@ img { display: block; max-width: 100%; }
   color: var(--mm-text-w3);
 }
 .mm-hero__headline {
-  font-size: 26px;
+  font-size: 28px; /* 에디토리얼: 크림 위 절제된 임팩트 */
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.3;
   letter-spacing: -0.03em;
   color: var(--mm-text-w);
   margin-bottom: 12px;
@@ -243,7 +250,7 @@ img { display: block; max-width: 100%; }
   font-weight: 400;
   line-height: 1.6;
   color: var(--mm-text-w2);
-  margin-bottom: 32px;
+  margin-bottom: 40px; /* 여백 확대: 호흡 공간 */
 }
 .mm-hero__cta {
   display: inline-flex;
@@ -255,17 +262,17 @@ img { display: block; max-width: 100%; }
   background: var(--mm-gold);
   border: none;
   border-radius: 999px; /* sharp crisp: pill CTA */
-  font-size: 16px;
+  font-size: 15px; /* 모바일 CTA */
   font-weight: 700;
-  color: var(--mm-bg-dark);
+  color: #FFFFFF; /* 테라코타 배경 → 흰 텍스트 */
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 4px 20px rgba(201,169,98,0.3), 0 0 0 1px rgba(201,169,98,0.2);
+  box-shadow: 0 4px 20px rgba(212,97,62,0.3), 0 0 0 1px rgba(212,97,62,0.2);
   transition: transform var(--mm-ease-fast), box-shadow var(--mm-ease-fast);
 }
 .mm-hero__cta:active {
   transform: scale(0.97);
-  box-shadow: 0 2px 10px rgba(201,169,98,0.2), 0 0 0 1px rgba(201,169,98,0.15);
+  box-shadow: 0 2px 10px rgba(212,97,62,0.2), 0 0 0 1px rgba(212,97,62,0.15);
 }
 .mm-hero__cta:focus-visible {
   outline: 2px solid var(--mm-gold);
@@ -275,7 +282,7 @@ img { display: block; max-width: 100%; }
 .mm-hero__hint {
   margin-top: 14px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--mm-text-w3);
   animation: mm-hint-fade 1.2s ease 0.8s both; /* B-5: 부드러운 등장 */
 }
@@ -286,15 +293,15 @@ img { display: block; max-width: 100%; }
 
 @media (max-width: 360px) {
   .mm-hero__body { padding: 28px 16px 36px; }
-  .mm-hero__headline { font-size: 24px; }
+  .mm-hero__headline { font-size: 24px; } /* 360px 최소 보장 */
   .mm-hero__sub { font-size: 13px; }
   .mm-hero__cta { padding: 14px 28px; font-size: 15px; }
 }
 
 @media (min-width: 768px) {
   .mm-hero__body { padding: 64px 32px 56px; }
-  .mm-hero__headline { font-size: 36px; }
-  .mm-hero__sub { font-size: 16px; margin-bottom: 40px; }
+  .mm-hero__headline { font-size: 38px; } /* 768px */
+  .mm-hero__sub { font-size: 15px; margin-bottom: 48px; }
   .mm-hero__cta { padding: 18px 40px; font-size: 17px; min-height: 56px; }
   .mm-hero__hint { font-size: 13px; }
 }
@@ -302,7 +309,7 @@ img { display: block; max-width: 100%; }
 /* PC 2-column 레이아웃 — 전체폭 흰배경 + 내부 max-width */
 @media (min-width: 1024px) {
   .mm-hero {
-    background: #FFFFFF; /* 전체 가로폭 흰배경 */
+    background: #F2F2EA; /* 오프화이트 배경 */
   }
   .mm-hero__inner {
     position: relative;
@@ -343,7 +350,7 @@ img { display: block; max-width: 100%; }
     color: var(--mm-text-d2);
   }
   .mm-hero__headline {
-    font-size: 38px;
+    font-size: 42px; /* 1024px */
     letter-spacing: -0.04em;
     color: var(--mm-text-d); /* PC 다크 텍스트 */
   }
@@ -357,7 +364,7 @@ img { display: block; max-width: 100%; }
 }
 @media (min-width: 1440px) {
   .mm-hero__inner { min-height: 580px; }
-  .mm-hero__headline { font-size: 46px; } /* 대형 모니터 임팩트 */
+  .mm-hero__headline { font-size: 48px; } /* 1440px */
   .mm-hero__sub { font-size: 17px; }
 }
 
@@ -365,7 +372,7 @@ img { display: block; max-width: 100%; }
 @media (hover: hover) {
   .mm-hero__cta:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 28px rgba(201,169,98,0.4), 0 0 0 1px rgba(201,169,98,0.3);
+    box-shadow: 0 6px 28px rgba(212,97,62,0.4), 0 0 0 1px rgba(212,97,62,0.3);
   }
 }
 
@@ -382,7 +389,7 @@ img { display: block; max-width: 100%; }
   width: 100%;
   height: 1px;
   margin-bottom: 24px;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.08) 80%, transparent 100%);
+  background: rgba(255,255,255,0.06); /* 톤다운: 단순 구분선 */
 }
 .mm-quick__label {
   font-size: 12px;
@@ -429,6 +436,11 @@ img { display: block; max-width: 100%; }
   padding-bottom: 4px;
 }
 .mm-quick__chips::-webkit-scrollbar { display: none; }
+/* UX: 횡스크롤 우측 fade 힌트 (모바일) */
+.mm-quick__chips {
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
+  mask-image: linear-gradient(to right, black 85%, transparent);
+}
 .mm-quick__chip {
   display: flex;
   flex-direction: column;
@@ -467,7 +479,7 @@ img { display: block; max-width: 100%; }
   .mm-quick__card { padding: 14px 6px; min-height: 72px; }
   .mm-quick__card-icon { width: 40px; height: 40px; }
   .mm-quick__card-label { font-size: 11px; }
-  .mm-quick__chip { padding: 10px 8px; font-size: 10px; min-width: 64px; }
+  .mm-quick__chip { padding: 10px 8px; font-size: 11px; min-width: 64px; } /* 최소 폰트 보장 */
   .mm-quick__chip-icon { width: 20px; height: 20px; }
 }
 
@@ -491,6 +503,8 @@ img { display: block; max-width: 100%; }
     justify-content: center;
     overflow-x: visible;
     gap: 10px;
+    -webkit-mask-image: none; /* PC: fade 해제 */
+    mask-image: none;
   }
   .mm-quick__chip { padding: 16px 16px; min-width: 88px; border-radius: 6px; font-size: 13px; }
   .mm-quick__chip-icon { width: 32px; height: 32px; }
@@ -575,13 +589,13 @@ img { display: block; max-width: 100%; }
    ══════════════════════════════════════════════════════════════ */
 .mm-featured {
   background: var(--mm-bg-warm);
-  padding: 32px 0 12px;
+  padding: 40px 0 16px; /* 여백 확대: 시각적 밀도 완화 */
 }
 .mm-section-head {
   display: flex;
   gap: 10px;
   align-items: stretch;
-  margin-bottom: 20px;
+  margin-bottom: 28px; /* 여백 확대: 섹션 진입점 강조 */
 }
 .mm-section-head__bar {
   width: 3px;
@@ -592,16 +606,16 @@ img { display: block; max-width: 100%; }
   min-height: 40px;
 }
 .mm-section-head__title {
-  font-size: 20px;
+  font-size: 20px; /* 에디토리얼: 테라코타 바가 시선 유도 */
   font-weight: 700;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
   color: var(--mm-text-d);
   line-height: 1.25;
 }
 .mm-section-head__desc {
   margin-top: 6px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px; /* 크림 배경 가독성 확보 */
+  font-weight: 400;
   color: var(--mm-text-d2);
   letter-spacing: -0.01em;
   line-height: 1.55;
@@ -611,7 +625,7 @@ img { display: block; max-width: 100%; }
 .mm-products {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 14px; /* 여백 확대: 카드 간 호흡 */
 }
 .mm-product-card {
   display: flex;
@@ -628,7 +642,7 @@ img { display: block; max-width: 100%; }
   width: 100%;
   border-radius: 6px; /* sharp crisp */
   overflow: hidden;
-  background: #F5F5F5; /* 뉴트럴 톤 */
+  background: #EAEAE2; /* 오프화이트 톤 */
   aspect-ratio: 1 / 1;
 }
 .mm-product-card__thumb img {
@@ -642,9 +656,9 @@ img { display: block; max-width: 100%; }
   gap: 4px;
 }
 .mm-product-card__name {
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(0,0,0,0.88);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--mm-text-d);
   letter-spacing: -0.02em;
   line-height: 1.35;
   display: -webkit-box;
@@ -666,8 +680,9 @@ img { display: block; max-width: 100%; }
 .mm-more-btn-wrap {
   display: flex;
   justify-content: center;
-  padding: 28px 0 32px; /* 상품↔버튼 간격 확보 */
+  padding: 36px 0 40px; /* 여백 확대: 섹션 간 호흡 */
   background: var(--mm-bg-warm);
+  border-top: 1px solid rgba(0,0,0,0.06); /* 시각적 분리 */
 }
 .mm-more-btn {
   display: inline-flex;
@@ -678,7 +693,7 @@ img { display: block; max-width: 100%; }
   border-radius: 999px;
   background: transparent;
   border: 1px solid rgba(0,0,0,0.08);
-  color: rgba(0,0,0,0.45); /* 은은하게 */
+  color: var(--mm-text-d2); /* 은은하게 */
   font-weight: 500;
   font-size: 13px;
   letter-spacing: -0.01em;
@@ -694,18 +709,18 @@ img { display: block; max-width: 100%; }
   .mm-section-head__desc { font-size: 12px; }
   .mm-products { gap: 8px; }
   .mm-product-card__thumb { border-radius: 4px; }
-  .mm-product-card__name { font-size: 12px; }
+  .mm-product-card__name { font-size: 14px; }
   .mm-product-card__price { font-size: 13px; }
 }
 
 @media (min-width: 768px) {
-  .mm-featured { padding: 40px 0 16px; }
-  .mm-section-head__title { font-size: 24px; }
+  .mm-featured { padding: 48px 0 20px; } /* 768px: 여백 확대 */
+  .mm-section-head__title { font-size: 26px; font-weight: 700; } /* 768px */
   .mm-section-head__desc { font-size: 14px; }
   .mm-section-head__bar { min-height: 44px; }
-  .mm-products { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .mm-products { grid-template-columns: repeat(4, 1fr); gap: 20px; } /* 여백 확대 */
   .mm-product-card__thumb { border-radius: 6px; }
-  .mm-product-card__name { font-size: 14px; }
+  .mm-product-card__name { font-size: 15px; }
   .mm-product-card__price { font-size: 15px; }
 }
 
@@ -725,11 +740,11 @@ img { display: block; max-width: 100%; }
   .mm-first + .mm-more-btn-wrap {
     border-radius: 0 0 var(--mm-radius-lg) var(--mm-radius-lg); /* 하단 모서리만 */
   }
-  .mm-section-head__title { font-size: 30px; }
+  .mm-section-head__title { font-size: 30px; font-weight: 700; } /* 1024px */
   .mm-section-head__desc { font-size: 16px; }
-  .mm-section-head { margin-bottom: 28px; }
+  .mm-section-head { margin-bottom: 36px; } /* 여백 확대 */
   .mm-products { gap: 24px; }
-  .mm-product-card__name { font-size: 15px; }
+  .mm-product-card__name { font-size: 16px; }
   .mm-product-card__price { font-size: 17px; }
   .mm-quick__label { font-size: 13px; }
   .mm-more-btn-wrap { padding: 20px 0 16px; }
@@ -794,7 +809,7 @@ img { display: block; max-width: 100%; }
    ══════════════════════════════════════════════════════════════ */
 .mm-curations {
   background: var(--mm-bg-dark);
-  padding: 40px 0 48px;
+  padding: 48px 0 56px; /* 여백 통일 */
 }
 .mm-curations__title {
   font-size: 14px;
@@ -814,12 +829,7 @@ img { display: block; max-width: 100%; }
   gap: 16px;
   padding: 20px;
   background: var(--mm-bg-darker);
-  border: 1px solid transparent;
-  background-image:
-    linear-gradient(var(--mm-bg-darker), var(--mm-bg-darker)),
-    linear-gradient(135deg, rgba(201,169,98,0.25) 0%, rgba(201,169,98,0.06) 100%);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+  border: 1px solid rgba(212,97,62,0.15); /* 톤다운: 단순 보더 */
   border-radius: var(--mm-radius);
   transition: all var(--mm-ease);
 }
@@ -906,7 +916,7 @@ img { display: block; max-width: 100%; }
 @media (hover: hover) {
   .mm-curation-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 12px rgba(201,169,98,0.08);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 12px rgba(212,97,62,0.08);
   }
   .mm-curation-card:hover .mm-curation-card__arrow {
     opacity: 0.8;
@@ -920,12 +930,12 @@ img { display: block; max-width: 100%; }
    ══════════════════════════════════════════════════════════════ */
 .mm-slogan {
   background: var(--mm-bg-dark);
-  background-image: radial-gradient(ellipse 600px 300px at center, rgba(201,169,98,0.04) 0%, transparent 70%);
-  padding: 56px 24px;
+  background-image: radial-gradient(ellipse 600px 300px at center, rgba(212,97,62,0.04) 0%, transparent 70%);
+  padding: 72px 24px; /* 여백 확대: 호흡 구간 */
   text-align: center;
 }
 .mm-slogan__en {
-  font-size: 18px;
+  font-size: 18px; /* 에디토리얼 타이포: 모바일 */
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -945,14 +955,14 @@ img { display: block; max-width: 100%; }
   width: 56px;
   height: 1px;
   margin: 18px auto 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(201,169,98,0.25) 20%, var(--mm-gold) 50%, rgba(201,169,98,0.25) 80%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(212,97,62,0.25) 20%, var(--mm-gold) 50%, rgba(212,97,62,0.25) 80%, transparent 100%);
 }
 .mm-slogan__ko {
   margin: 22px 0 0;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
   letter-spacing: -0.01em;
-  color: rgba(255,255,255,0.72);
+  color: rgba(242,242,234,0.72);
   line-height: 1.55;
 }
 .mm-slogan__ko span { display: block; }
@@ -961,11 +971,11 @@ img { display: block; max-width: 100%; }
   .mm-slogan { padding: 40px 20px; }
   .mm-slogan__en { font-size: 13px; letter-spacing: 0.10em; }
   .mm-slogan__en::after { width: 48px; margin-top: 16px; }
-  .mm-slogan__ko { margin-top: 12px; font-size: 13px; }
+  .mm-slogan__ko { margin-top: 14px; font-size: 13px; }
 }
 @media (min-width: 768px) {
-  .mm-slogan { padding: 80px 32px; }
-  .mm-slogan__en { font-size: 24px; letter-spacing: 0.15em; line-height: 2; }
+  .mm-slogan { padding: 96px 32px; } /* 768px: 여백 확대 */
+  .mm-slogan__en { font-size: 26px; font-weight: 800; letter-spacing: 0.15em; line-height: 2; }
   .mm-slogan__en::after { width: 80px; margin-top: 20px; }
   .mm-slogan__ko { margin-top: 16px; font-size: 15px; }
 }
@@ -974,9 +984,9 @@ img { display: block; max-width: 100%; }
     max-width: var(--mm-max-w);
     margin: 0 auto;
     border-radius: var(--mm-radius-lg);
-    padding: 88px 48px; /* 호흡 구간 — 내부 패딩으로 충분 */
+    padding: 112px 48px; /* 1024px: 과감한 여백 */
   }
-  .mm-slogan__en { font-size: 36px; letter-spacing: 0.18em; }
+  .mm-slogan__en { font-size: 38px; font-weight: 800; letter-spacing: 0.18em; } /* 에디토리얼 타이포 */
   .mm-slogan__en::after { width: 100px; margin-top: 24px; }
   .mm-slogan__ko { font-size: 17px; margin-top: 20px; }
   .mm-slogan__ko span { display: inline; }
@@ -1011,12 +1021,7 @@ img { display: block; max-width: 100%; }
   justify-content: space-between;
   padding: 16px 18px;
   background: var(--mm-bg-darker);
-  border: 1px solid transparent;
-  background-image:
-    linear-gradient(var(--mm-bg-darker), var(--mm-bg-darker)),
-    linear-gradient(135deg, rgba(201,169,98,0.35) 0%, rgba(201,169,98,0.08) 100%);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+  border: 1px solid rgba(212,97,62,0.15); /* 톤다운: 단순 보더 */
   border-radius: var(--mm-radius);
   transition: all var(--mm-ease-fast);
 }
@@ -1078,7 +1083,7 @@ img { display: block; max-width: 100%; }
 @media (hover: hover) {
   .mm-event-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(201,169,98,0.3);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 0 0 1px rgba(212,97,62,0.3);
   }
   .mm-event-card:hover .mm-event-card__arrow {
     opacity: 0.8;
@@ -1119,19 +1124,19 @@ img { display: block; max-width: 100%; }
   position: relative;
   background-size: cover;
   background-position: center;
-  background-color: #1a1a1c;
+  background-color: #141320;
 }
 .mm-service-card--consult .mm-service-card__img::before {
   content: "";
   position: absolute;
   top: 0; bottom: 0; left: 0;
   width: 60%;
-  background: linear-gradient(to right, var(--mm-bg-darker), rgba(20,20,22,0));
+  background: linear-gradient(to right, var(--mm-bg-darker), rgba(16,15,28,0));
   z-index: 1;
 }
 
 /* AS (좌 이미지 / 우 텍스트) */
-.mm-service-card--as { flex-direction: row-reverse; background: #131315; }
+.mm-service-card--as { flex-direction: row-reverse; background: #0E0D19; }
 .mm-service-card--as .mm-service-card__body {
   flex: 0 0 55%;
   display: flex;
@@ -1147,14 +1152,14 @@ img { display: block; max-width: 100%; }
   position: relative;
   background-size: cover;
   background-position: center;
-  background-color: #1a1a1c;
+  background-color: #141320;
 }
 .mm-service-card--as .mm-service-card__img::before {
   content: "";
   position: absolute;
   top: 0; bottom: 0; right: 0;
   width: 60%;
-  background: linear-gradient(to left, #131315, rgba(19,19,21,0));
+  background: linear-gradient(to left, #0E0D19, rgba(14,13,25,0));
   z-index: 1;
 }
 
@@ -1252,6 +1257,11 @@ img { display: block; max-width: 100%; }
   -webkit-overflow-scrolling: touch;
 }
 .mm-showcase__scroll::-webkit-scrollbar { display: none; }
+/* UX: 횡스크롤 우측 fade 힌트 (모바일) */
+.mm-showcase__scroll {
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
+  mask-image: linear-gradient(to right, black 85%, transparent);
+}
 
 .mm-showcase__card {
   flex: 0 0 200px;
@@ -1260,7 +1270,7 @@ img { display: block; max-width: 100%; }
   flex-direction: column;
   gap: 10px;
   padding: 14px;
-  background: #ffffff;
+  background: #F8F8F2; /* 카드: 오프화이트보다 약간 밝게 */
   border-radius: var(--mm-radius-lg); /* sharp crisp */
   border: 1px solid rgba(0,0,0,0.06);
   box-shadow: 0 4px 14px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05);
@@ -1274,7 +1284,7 @@ img { display: block; max-width: 100%; }
   width: 100%;
   border-radius: 6px; /* sharp crisp */
   overflow: hidden;
-  background: #F5F5F5; /* 뉴트럴 톤 */
+  background: #EAEAE2; /* 오프화이트 톤 */
   aspect-ratio: 1 / 1;
 }
 .mm-showcase__card-thumb img {
@@ -1285,7 +1295,7 @@ img { display: block; max-width: 100%; }
 .mm-showcase__card-name {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(0,0,0,0.90);
+  color: var(--mm-text-d);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1326,6 +1336,8 @@ img { display: block; max-width: 100%; }
     padding: 8px 48px;
     max-width: var(--mm-max-w);
     margin: 0 auto;
+    -webkit-mask-image: none; /* PC: fade 해제 */
+    mask-image: none;
   }
   .mm-showcase__card {
     flex: none;
@@ -1341,7 +1353,7 @@ img { display: block; max-width: 100%; }
   .mm-showcase__card:hover {
     transform: translateY(-6px);
     border-color: var(--mm-gold);
-    box-shadow: 0 8px 24px rgba(201,169,98,0.12);
+    box-shadow: 0 8px 24px rgba(212,97,62,0.12);
   }
   .mm-showcase__card:hover .mm-showcase__card-thumb img {
     transform: scale(1.04);
@@ -1354,7 +1366,7 @@ img { display: block; max-width: 100%; }
    ══════════════════════════════════════════════════════════════ */
 .mm-bottom {
   background: var(--mm-bg-dark);
-  padding: 40px 0 48px;
+  padding: 48px 0 56px; /* 여백 통일 */
 }
 .mm-bottom__header {
   text-align: center;
@@ -1384,7 +1396,7 @@ img { display: block; max-width: 100%; }
   justify-content: space-between;
   gap: 16px;
   padding: 24px;
-  background: linear-gradient(135deg, #2A2A2D 0%, #232326 100%);
+  background: linear-gradient(135deg, #242335 0%, #1C1B2B 100%);
   border: 1px solid var(--mm-border-d);
   border-radius: var(--mm-radius-lg); /* sharp crisp */
   position: relative;
@@ -1573,7 +1585,7 @@ img { display: block; max-width: 100%; }
     transform: translateX(3px);
   }
   .mm-bottom__card-sub:hover {
-    background: #2A2A2D;
+    background: #242335;
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(0,0,0,0.25);
   }
@@ -2085,8 +2097,9 @@ img { display: block; max-width: 100%; }
 
     if (window.ResizeObserver) {
       new ResizeObserver(send).observe(document.body);
+    } else {
+      setInterval(send, 800); /* fallback: ResizeObserver 미지원 시만 */
     }
-    setInterval(send, 800);
     window.addEventListener('load', send);
     send();
 
@@ -2106,6 +2119,10 @@ img { display: block; max-width: 100%; }
      초기화
      ═══════════════════════════════════════════════════════════════ */
   function init() {
+    /* 로티: 모바일(1023px 이하)에서만 동적 로딩 */
+    if (window.matchMedia('(max-width:1023px)').matches) {
+      import('https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs');
+    }
     renderCategories();
     renderChips();
     renderProducts('mmFeatured', DATA.featured);
