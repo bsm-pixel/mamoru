@@ -326,6 +326,7 @@ button[class*="mm-"]:focus-visible {
     flex: none;
     overflow: hidden;
     order: unset;
+    background: var(--mm-bg-light); /* PC: 투명 이미지 뒤 크림 배경 */
   }
   .mm-hero__visual img {
     width: 100%;
@@ -333,15 +334,15 @@ button[class*="mm-"]:focus-visible {
     object-fit: cover;
     object-position: right center; /* 우측 중심 노출 */
   }
-  /* 텍스트: 좌측 반투명 그라데이션 오버레이 */
+  /* 텍스트: 좌측 크림→투명 그라데이션 (투명 이미지 위 텍스트 가독성 보장) */
   .mm-hero__body {
     position: relative;
     z-index: 2;
-    flex: 0 0 50%;
+    flex: 0 0 55%;
     text-align: left;
     padding: 56px 48px 56px 56px;
     order: 1;
-    background: none;
+    background: linear-gradient(to right, #F2F2EA 40%, rgba(242,242,234,0) 100%);
   }
   .mm-hero__kicker {
     margin-bottom: 24px;
@@ -598,12 +599,13 @@ button[class*="mm-"]:focus-visible {
   margin-bottom: 28px; /* 여백 확대: 섹션 진입점 강조 */
 }
 .mm-section-head__bar {
-  width: 3px;
+  width: 4px;
   border-radius: 2px;
-  background: linear-gradient(180deg, var(--mm-gold) 0%, var(--mm-gold-dark) 100%);
-  flex: 0 0 3px;
+  background: var(--mm-gold);
+  flex: 0 0 4px;
   align-self: stretch;
   min-height: 40px;
+  box-shadow: 2px 0 10px rgba(212,97,62,0.25);
 }
 .mm-section-head__title {
   font-size: 20px; /* 에디토리얼: 테라코타 바가 시선 유도 */
@@ -630,7 +632,7 @@ button[class*="mm-"]:focus-visible {
 .mm-product-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   padding: 0;
   background: transparent;  /* 보더리스: 카드 배경 제거 */
   border: none;
@@ -653,23 +655,24 @@ button[class*="mm-"]:focus-visible {
 .mm-product-card__info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  padding-top: 2px;
 }
 .mm-product-card__name {
   font-size: 15px;
   font-weight: 500;
   color: var(--mm-text-d);
   letter-spacing: -0.02em;
-  line-height: 1.35;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 .mm-product-card__price {
-  margin-top: 2px;
-  padding-top: 0;
-  border-top: none;  /* 보더리스: 구분선 제거 */
+  margin-top: 0;
+  padding-top: 6px;
+  border-top: 1px solid rgba(24,23,37,0.06);  /* 미세 구분선 복원 */
   font-size: 14px;
   font-weight: 800;
   color: var(--mm-text-d);
@@ -680,16 +683,16 @@ button[class*="mm-"]:focus-visible {
 .mm-more-btn-wrap {
   display: flex;
   justify-content: center;
-  padding: 36px 0 40px; /* 여백 확대: 섹션 간 호흡 */
+  padding: 40px 0 44px; /* 여백 확대: 섹션 간 호흡 */
   background: var(--mm-bg-warm);
-  border-top: 1px solid rgba(0,0,0,0.06); /* 시각적 분리 */
+  border-top: 1px solid rgba(24,23,37,0.05); /* 시각적 분리 */
 }
 .mm-more-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  padding: 10px 20px; /* 모바일 톤다운: 컴팩트 */
+  padding: 11px 24px;
   border-radius: 999px;
   background: transparent;
   border: 1px solid rgba(0,0,0,0.08);
@@ -747,7 +750,7 @@ button[class*="mm-"]:focus-visible {
   .mm-product-card__name { font-size: 16px; }
   .mm-product-card__price { font-size: 17px; }
   .mm-quick__label { font-size: 13px; }
-  .mm-more-btn-wrap { padding: 20px 0 16px; }
+  .mm-more-btn-wrap { padding: 24px 0 20px; }
 }
 
 /* PC hover: 상품 이미지 줌 (보더리스) */
@@ -991,6 +994,39 @@ button[class*="mm-"]:focus-visible {
   .mm-slogan__ko { font-size: 17px; margin-top: 20px; }
   .mm-slogan__ko span { display: inline; }
   .mm-slogan__ko span + span::before { content: " · "; color: var(--mm-gold); }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [8.5]. 크래프트 비주얼 브레이크 (슬로건-지식정보방 사이, PC only)
+   ══════════════════════════════════════════════════════════════ */
+.mm-craft-break {
+  display: none; /* 모바일 숨김 */
+}
+@media (min-width: 1024px) {
+  .mm-craft-break {
+    display: block;
+    background: var(--mm-bg-light);
+    padding: 0;
+  }
+  .mm-craft-break__inner {
+    max-width: var(--mm-max-w);
+    margin: 0 auto;
+    border-radius: var(--mm-radius-lg);
+    overflow: hidden;
+    background: var(--mm-bg-darker); /* 이미지 로딩 전 배경 */
+  }
+  .mm-craft-break__img {
+    width: 100%;
+    height: 340px;
+    background-size: cover;
+    background-position: center;
+    filter: grayscale(1) contrast(1.05);
+    transition: filter 0.6s ease;
+  }
+  .mm-craft-break__img:hover {
+    filter: grayscale(0.6) contrast(1.02); /* 미세 컬러 복귀 */
+  }
 }
 
 
@@ -1537,14 +1573,14 @@ button[class*="mm-"]:focus-visible {
 /* PC: 3열 균등 (WE ARE + 상담 + AS) */
 @media (min-width: 1024px) {
   .mm-bottom {
-    background: var(--mm-bg-light); /* 배경 전환 = 영역 구분 */
-    padding: 32px 0;
+    background: var(--mm-bg-dark); /* 풀블리드 다크 → 아임웹 푸터와 자연스럽게 이어짐 */
+    padding: 56px 0 48px;
   }
   .mm-bottom .mm-inner {
-    background: var(--mm-bg-dark);
-    border-radius: var(--mm-radius-lg);
-    padding-top: 40px;
-    padding-bottom: 40px;
+    background: transparent;
+    border-radius: 0;
+    padding-top: 0;
+    padding-bottom: 0;
   }
   .mm-bottom__headline { font-size: 26px; }
   .mm-bottom__content {
@@ -1648,7 +1684,7 @@ button[class*="mm-"]:focus-visible {
       <!-- 모바일: 권장 1500×1000px (2x), 세로형·정방형 OK 모바일 │ <img src="여기"> -->
       <!-- PC: 권장 2400×1120px (2x), 가로 파노라마형, 우측에 주요 피사체 배치 -->
       <picture>
-        <source media="(min-width:1024px)" srcset="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/0738602958dab.png">
+        <source media="(min-width:1024px)" srcset="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/6f78871116922.png">
         <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/9e117f301004e.png" alt="MAMORU 미용가위">
       </picture>
     </div>
@@ -1751,6 +1787,18 @@ button[class*="mm-"]:focus-visible {
     <div class="mm-curations__grid" id="mmCurations">
       <!-- JS 렌더링 -->
     </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [8.5]. 크래프트 비주얼 브레이크 (PC only)
+     - 🔧 이미지: 가위 작업 흑백 사진, 1200×340 이상 권장
+     - CSS grayscale 자동 적용 (hover 시 미세 컬러 복귀)
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-craft-break">
+  <div class="mm-craft-break__inner">
+    <div class="mm-craft-break__img" style="background-image:url('https://cdn.imweb.me/upload/S20250825bc9b09c7146df/5440b39c14f9d.jpg')"></div>
   </div>
 </section>
 
