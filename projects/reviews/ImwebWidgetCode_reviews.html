@@ -1,0 +1,378 @@
+<style>
+/* ══════════════════════════════════════════════════════════════
+   MAMORU 고객 후기 페이지 — Terracotta Editorial
+   아임웹 코드위젯 삽입용 (/62 페이지)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 0. 변수 & 리셋 ── */
+:root {
+  --mm-bg-light: #F2F2EA;
+  --mm-bg-card: #FAFAF5;
+  --mm-bg-dark: #181725;
+  --mm-gold: #D4613E;
+  --mm-gold-dark: #B85232;
+  --mm-gold-soft: rgba(212,97,62,0.14);
+  --mm-text-d: #181725;
+  --mm-text-d2: #6B6980;
+  --mm-text-d3: rgba(24,23,37,0.55);
+  --mm-border-l: rgba(24,23,37,0.08);
+  --mm-radius: 6px;
+  --mm-radius-lg: 8px;
+  --mm-max-w: 960px;
+  --mm-ease-fast: 0.15s ease;
+  --mm-ease: 0.25s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.mm-rv-page {
+  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--mm-bg-light);
+  color: var(--mm-text-d);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow: visible;
+}
+
+a { text-decoration: none; color: inherit; }
+img { display: block; max-width: 100%; }
+
+/* ── 1. 페이지 헤더 ── */
+.mm-rv-header {
+  text-align: center;
+  padding: 48px 20px 32px;
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+}
+.mm-rv-header__bar {
+  display: inline-block;
+  width: 28px;
+  height: 3px;
+  background: var(--mm-gold);
+  border-radius: 2px;
+  margin-bottom: 16px;
+}
+.mm-rv-header__title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--mm-text-d);
+  margin-bottom: 8px;
+}
+.mm-rv-header__desc {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--mm-text-d2);
+}
+
+/* ── 2. 탭 필터 ── */
+.mm-rv-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 20px 24px;
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+}
+.mm-rv-tab {
+  padding: 8px 20px;
+  border: 1px solid var(--mm-border-l);
+  border-radius: 999px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mm-text-d2);
+  cursor: pointer;
+  transition: all var(--mm-ease-fast);
+}
+.mm-rv-tab:active { transform: scale(0.96); }
+.mm-rv-tab--active {
+  background: var(--mm-gold);
+  border-color: var(--mm-gold);
+  color: #F2F2EA;
+  font-weight: 600;
+}
+
+/* ── 3. 리뷰 그리드 ── */
+.mm-rv-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  padding: 0 20px;
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+}
+
+/* ── 4. 리뷰 카드 ── */
+.mm-rv-card {
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: box-shadow var(--mm-ease);
+}
+.mm-rv-card__img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--mm-radius);
+  object-fit: cover;
+}
+.mm-rv-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mm-rv-card__name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+}
+.mm-rv-card__source {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mm-text-d3);
+  padding: 2px 8px;
+  background: rgba(24,23,37,0.04);
+  border-radius: 999px;
+}
+.mm-rv-card__stars {
+  display: flex;
+  gap: 2px;
+  color: var(--mm-gold);
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+.mm-rv-card__text {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--mm-text-d);
+  line-height: 1.7;
+}
+.mm-rv-card__date {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--mm-text-d3);
+  padding-top: 8px;
+  border-top: 1px solid var(--mm-border-l);
+}
+
+/* ── 5. 더보기 버튼 ── */
+.mm-rv-loadmore {
+  display: block;
+  width: fit-content;
+  margin: 32px auto 48px;
+  padding: 12px 32px;
+  border: 1px solid var(--mm-border-l);
+  border-radius: 999px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mm-text-d2);
+  cursor: pointer;
+  transition: all var(--mm-ease-fast);
+}
+.mm-rv-loadmore:hover {
+  border-color: var(--mm-gold);
+  color: var(--mm-gold);
+}
+.mm-rv-loadmore:active { transform: scale(0.97); }
+
+/* 비어있을 때 */
+.mm-rv-empty {
+  text-align: center;
+  padding: 64px 20px;
+  color: var(--mm-text-d3);
+  font-size: 15px;
+}
+
+/* ── 6. 반응형 ── */
+@media (min-width: 768px) {
+  .mm-rv-header { padding: 56px 32px 36px; }
+  .mm-rv-header__title { font-size: 28px; }
+  .mm-rv-header__desc { font-size: 15px; }
+  .mm-rv-tabs { gap: 10px; padding-bottom: 32px; }
+  .mm-rv-tab { padding: 9px 24px; font-size: 14px; }
+  .mm-rv-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 0 32px;
+  }
+  .mm-rv-card { padding: 24px; }
+  .mm-rv-card__text { font-size: 15px; }
+}
+
+@media (min-width: 1024px) {
+  .mm-rv-header { padding: 64px 48px 40px; }
+  .mm-rv-header__title { font-size: 30px; }
+  .mm-rv-header__desc { font-size: 16px; }
+  .mm-rv-tab { padding: 10px 28px; font-size: 15px; }
+  .mm-rv-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    padding: 0 48px;
+  }
+  .mm-rv-card { padding: 24px; }
+  .mm-rv-card__text { font-size: 16px; line-height: 1.7; }
+}
+
+/* PC hover */
+@media (hover: hover) {
+  .mm-rv-card:hover {
+    box-shadow: 0 4px 16px rgba(24,23,37,0.06);
+  }
+  .mm-rv-tab:hover:not(.mm-rv-tab--active) {
+    border-color: var(--mm-gold);
+    color: var(--mm-gold);
+  }
+}
+</style>
+
+<div class="mm-rv-page">
+
+<!-- 페이지 헤더 -->
+<header class="mm-rv-header">
+  <span class="mm-rv-header__bar"></span>
+  <h1 class="mm-rv-header__title">고객 후기</h1>
+  <p class="mm-rv-header__desc">마모루를 경험한 분들의 솔직한 이야기</p>
+</header>
+
+<!-- 탭 필터 -->
+<nav class="mm-rv-tabs" id="rvTabs">
+  <button class="mm-rv-tab mm-rv-tab--active" data-type="all">전체</button>
+  <button class="mm-rv-tab" data-type="consulting">컨설팅상담</button>
+  <button class="mm-rv-tab" data-type="repair">복원수리</button>
+  <button class="mm-rv-tab" data-type="purchase">제품구매</button>
+</nav>
+
+<!-- 리뷰 그리드 -->
+<div class="mm-rv-grid" id="rvGrid">
+  <!-- JS 렌더링 -->
+</div>
+
+<!-- 더보기 -->
+<button class="mm-rv-loadmore" id="rvLoadmore">후기 더보기</button>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ═══════════════════════════════════════════════════════════════
+     🔧 리뷰 데이터
+     추후 GAS fetch로 교체 시 이 DATA 객체를 덮어쓰면 됨
+     img: 아임웹 CDN URL (빈 문자열이면 이미지 생략)
+     ═══════════════════════════════════════════════════════════════ */
+  var DATA = {
+    consulting: [
+      { name: '김○○', stars: 5, text: '처음 상담받았는데 정말 꼼꼼하게 설명해 주셔서 믿음이 갔어요. 제 손 크기나 작업 스타일까지 고려해서 추천해 주셔서 감동이었습니다.', date: '2026.01.15', source: '카카오톡', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/5440b39c14f9d.jpg' },
+      { name: '이○○', stars: 5, text: '온라인 상담인데도 불구하고 디렉터님이 직접 여러 가지 비교해 주시고, 저한테 맞는 가위를 콕 짚어 주셨어요. 가격대별로 장단점도 솔직하게 말씀해 주셔서 신뢰감이 생겼습니다.', date: '2026.01.08', source: '네이버', img: '' },
+      { name: '박○○', stars: 5, text: '독립 준비하면서 가위 선택이 제일 고민이었는데, 상담 한 번에 정리됐어요. 실제로 추천받은 가위가 손에 딱 맞아서 매일 만족하며 쓰고 있습니다.', date: '2025.12.28', source: '카카오톡', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/40cb7f6ce0645.jpg' },
+      { name: '최○○', stars: 4, text: '상담 예약부터 진행까지 깔끔했고, 강요하는 느낌 없이 제 예산에 맞춰서 안내해 주셨어요. 다만 배송이 조금 걸렸지만 품질은 완벽합니다.', date: '2025.12.20', source: '네이버', img: '' },
+      { name: '송○○', stars: 5, text: '미용실에서 10년 일하면서 가위를 제대로 상담받은 건 처음이에요. 커트 스타일별로 어떤 가위가 맞는지 설명해 주시니까 이해가 바로 됐습니다.', date: '2025.12.10', source: '카카오톡', img: '' },
+      { name: '장○○', stars: 5, text: '왼손잡이라 맞는 가위 찾기가 어려웠는데, 마모루에서 전용 라인을 추천받고 나서 작업이 확실히 편해졌습니다.', date: '2025.11.28', source: '네이버', img: '' }
+    ],
+    repair: [
+      { name: '정○○', stars: 5, text: '날이 많이 상한 가위였는데 복원 후에 새것처럼 돌아왔어요. 택배 접수도 간편하고 진행 상황 안내까지 꼼꼼하게 해 주셔서 좋았습니다.', date: '2026.01.12', source: '네이버', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/5440b39c14f9d.jpg' },
+      { name: '한○○', stars: 5, text: '오래된 가위라 새로 사야 하나 했는데, 복원 수리 후 커트감이 완전히 살아났어요. 가격도 새 가위 사는 것보다 훨씬 합리적이었습니다.', date: '2026.01.05', source: '카카오톡', img: '' },
+      { name: '윤○○', stars: 5, text: '하이드로 리페어라고 하셨는데 날 자체가 달라졌어요. 택배로 보내고 일주일이면 돌아오니까 일하면서도 부담이 없었습니다.', date: '2025.12.22', source: '네이버', img: '' },
+      { name: '강○○', stars: 4, text: '수리 퀄리티는 정말 만족인데, 제가 원하는 날 각도를 좀 더 세밀하게 조절해 주셨으면 하는 아쉬움이 있었어요. 다음에는 요청사항을 더 자세히 적을게요.', date: '2025.12.15', source: '카카오톡', img: '' },
+      { name: '오○○', stars: 5, text: '다른 곳에서 연마받았다가 날이 이상해져서 맡겼는데, 원래 상태보다 더 좋아진 느낌입니다. 역시 전문가에게 맡겨야 한다는 걸 느꼈어요.', date: '2025.12.01', source: '네이버', img: '' }
+    ],
+    /* 🔧 제품구매 리뷰 — product: 제품명 (상세페이지 필터용) */
+    purchase: [
+      { name: '임○○', stars: 5, text: '분무기 품질이 좋아요. 미세 분사가 균일하고 손잡이 그립감도 편합니다.', date: '2026.01.20', source: '알림톡', img: '', product: '프리미엄 분무기' },
+      { name: '나○○', stars: 5, text: '가위 정리대가 깔끔하고 안정감 있어요. 매장에 놓으니까 인테리어 효과도 있습니다.', date: '2026.01.10', source: '알림톡', img: '', product: '우드 가위 정리대' },
+      { name: '서○○', stars: 4, text: '가위집 퀄리티가 가격 대비 훌륭합니다. 수납 칸이 넉넉해서 좋아요.', date: '2025.12.18', source: '알림톡', img: '', product: '프리미엄 가위집' }
+    ]
+  };
+
+  var PER_PAGE = 6;
+  var currentType = 'all';
+  var currentPage = 1;
+
+  function getReviews(type) {
+    if (type === 'all') {
+      var all = DATA.consulting.concat(DATA.repair);
+      all.sort(function(a, b) { return b.date.localeCompare(a.date); });
+      return all;
+    }
+    return DATA[type] || [];
+  }
+
+  function renderStars(n) {
+    var s = '';
+    for (var i = 0; i < 5; i++) s += (i < n) ? '★' : '☆';
+    return s;
+  }
+
+  function renderCard(r) {
+    var imgHtml = r.img ? '<img class="mm-rv-card__img" src="' + r.img + '" alt="후기 이미지">' : '';
+    return '<article class="mm-rv-card">' +
+      imgHtml +
+      '<div class="mm-rv-card__header">' +
+        '<span class="mm-rv-card__name">' + r.name + '</span>' +
+        '<span class="mm-rv-card__source">' + r.source + '</span>' +
+      '</div>' +
+      '<div class="mm-rv-card__stars">' + renderStars(r.stars) + '</div>' +
+      '<div class="mm-rv-card__text">' + r.text + '</div>' +
+      '<div class="mm-rv-card__date">' + r.date + '</div>' +
+    '</article>';
+  }
+
+  function render() {
+    var grid = document.getElementById('rvGrid');
+    var btn = document.getElementById('rvLoadmore');
+    var reviews = getReviews(currentType);
+    var visible = reviews.slice(0, currentPage * PER_PAGE);
+
+    grid.innerHTML = visible.length
+      ? visible.map(renderCard).join('')
+      : '<div class="mm-rv-empty">아직 등록된 후기가 없습니다.</div>';
+
+    btn.style.display = (visible.length < reviews.length) ? 'block' : 'none';
+  }
+
+  /* 탭 전환 */
+  document.getElementById('rvTabs').addEventListener('click', function(e) {
+    var btn = e.target.closest('.mm-rv-tab');
+    if (!btn || btn.classList.contains('mm-rv-tab--active')) return;
+    this.querySelectorAll('.mm-rv-tab').forEach(function(t) {
+      t.classList.remove('mm-rv-tab--active');
+    });
+    btn.classList.add('mm-rv-tab--active');
+    currentType = btn.dataset.type;
+    currentPage = 1;
+    render();
+  });
+
+  /* 더보기 */
+  document.getElementById('rvLoadmore').addEventListener('click', function() {
+    currentPage++;
+    render();
+  });
+
+  /* 아임웹 iframe 높이 자동 전달 */
+  function initIframeComm() {
+    function sendHeight() {
+      var h = document.documentElement.scrollHeight;
+      window.parent.postMessage({ type: 'resize', height: h }, '*');
+    }
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(sendHeight).observe(document.body);
+    } else {
+      setInterval(sendHeight, 500);
+    }
+    sendHeight();
+  }
+
+  /* 초기화 */
+  render();
+  initIframeComm();
+})();
+</script>

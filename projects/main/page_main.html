@@ -290,6 +290,12 @@ button[class*="mm-"]:focus-visible {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
+/* CTA + 힌트 그룹: 인라인 센터 정렬 */
+.mm-hero__cta-group {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
 
 @media (max-width: 360px) {
   .mm-hero__body { padding: 28px 16px 36px; }
@@ -422,9 +428,43 @@ button[class*="mm-"]:focus-visible {
 }
 .mm-quick__card:active { transform: scale(0.95); background: rgba(255,255,255,0.06); }
 .mm-quick__card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 56px; height: 56px;
-  object-fit: contain;
   transition: transform var(--mm-ease);
+}
+.mm-quick__card-icon svg {
+  width: 28px; height: 28px;
+}
+/* PC/모바일 아이콘 토글 (기본: 모바일 표시) */
+.mm-quick__card-icon--pc { display: none; }
+.mm-quick__card-icon--mob { display: flex; }
+
+/* PC용 아이콘: 크림 stroke (다크 배경 위) */
+.mm-quick__card-icon--pc svg path,
+.mm-quick__card-icon--pc svg circle,
+.mm-quick__card-icon--pc svg polyline,
+.mm-quick__card-icon--pc svg line,
+.mm-quick__card-icon--pc svg rect {
+  stroke: #F2F2EA; /* 크림 — PC 다크 배경 위 */
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 모바일용 아이콘: 테라코타 stroke (크림 배경 위) */
+.mm-quick__card-icon--mob svg path,
+.mm-quick__card-icon--mob svg circle,
+.mm-quick__card-icon--mob svg polyline,
+.mm-quick__card-icon--mob svg line,
+.mm-quick__card-icon--mob svg rect {
+  stroke: #D4613E; /* 테라코타 — 모바일 크림 배경 위 */
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .mm-quick__card-label { font-size: 12px; font-weight: 500; color: var(--mm-text-w); text-align: center; }
 
@@ -479,6 +519,7 @@ button[class*="mm-"]:focus-visible {
   .mm-quick__grid { gap: 6px; }
   .mm-quick__card { padding: 14px 6px; min-height: 72px; }
   .mm-quick__card-icon { width: 40px; height: 40px; }
+  .mm-quick__card-icon svg { width: 20px; height: 20px; }
   .mm-quick__card-label { font-size: 11px; }
   .mm-quick__chip { padding: 10px 8px; font-size: 11px; min-width: 64px; } /* 최소 폰트 보장 */
   .mm-quick__chip-icon { width: 20px; height: 20px; }
@@ -489,6 +530,7 @@ button[class*="mm-"]:focus-visible {
   .mm-quick__grid { gap: 12px; }
   .mm-quick__card { padding: 24px 12px; min-height: 110px; gap: 12px; border-radius: 6px; }
   .mm-quick__card-icon { width: 64px; height: 64px; }
+  .mm-quick__card-icon svg { width: 32px; height: 32px; }
   .mm-quick__card-label { font-size: 14px; }
   .mm-quick__chip { padding: 14px 14px; font-size: 12px; border-radius: 6px; min-width: 80px; }
   .mm-quick__chip-icon { width: 28px; height: 28px; }
@@ -497,6 +539,9 @@ button[class*="mm-"]:focus-visible {
 @media (min-width: 1024px) {
   .mm-quick__card { padding: 28px 16px; min-height: 130px; }
   .mm-quick__card-icon { width: 72px; height: 72px; }
+  .mm-quick__card-icon svg { width: 36px; height: 36px; }
+  .mm-quick__card-icon--pc { display: flex; }
+  .mm-quick__card-icon--mob { display: none; }
   .mm-quick__card-label { font-size: 15px; font-weight: 600; }
   /* PC: 칩 중앙 정렬 + 카드형 */
   .mm-quick__chips {
@@ -524,6 +569,31 @@ button[class*="mm-"]:focus-visible {
     background: rgba(255,255,255,0.08);
     border-color: rgba(255,255,255,0.15);
     color: var(--mm-text-w);
+  }
+}
+
+/* 퀵셀렉트 모바일: 크림 배경 전환 */
+@media (max-width: 1023px) {
+  .mm-quick { background: var(--mm-bg-light); }
+  .mm-quick__divider { background: var(--mm-border-l); }
+  .mm-quick__label { color: var(--mm-text-d3); }
+  .mm-quick__card {
+    background: rgba(24,23,37,0.03);
+    border-color: var(--mm-border-l);
+  }
+  .mm-quick__card:active { background: rgba(0,0,0,0.05); }
+  .mm-quick__card-label { color: var(--mm-text-d); }
+  .mm-quick__chip {
+    background: rgba(0,0,0,0.03);
+    border-color: var(--mm-border-l);
+    color: var(--mm-text-d2);
+  }
+  .mm-quick__chip:active { background: rgba(0,0,0,0.06); }
+  .mm-quick__chip-icon path,
+  .mm-quick__chip-icon circle,
+  .mm-quick__chip-icon rect,
+  .mm-quick__chip-icon line {
+    stroke: rgba(24,23,37,0.4);
   }
 }
 
@@ -585,6 +655,35 @@ button[class*="mm-"]:focus-visible {
 
 
 /* ══════════════════════════════════════════════════════════════
+   [5.5]. 미니 비주얼 브레이크 (퀵셀렉트 ↔ 상품 사이, 모바일 only)
+   ══════════════════════════════════════════════════════════════ */
+.mm-mini-break {
+  background: var(--mm-bg-warm);
+  padding: 0 20px 8px;
+}
+.mm-mini-break__img {
+  width: 100%;
+  height: 140px;
+  border-radius: var(--mm-radius-lg);
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(1) contrast(1.05);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+@media (max-width: 360px) {
+  .mm-mini-break__img { height: 120px; border-radius: 6px; }
+}
+@media (min-width: 768px) {
+  .mm-mini-break { padding: 0 32px 12px; }
+  .mm-mini-break__img { height: 160px; }
+}
+/* PC: 숨김 — PC는 하단 크래프트 브레이크가 역할 수행 */
+@media (min-width: 1024px) {
+  .mm-mini-break { display: none; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
    [6]. 메인 추천 가위 (Emotional: 정렬)
    - 🔧 상품 데이터: MAMORU_DATA.featured
    ══════════════════════════════════════════════════════════════ */
@@ -594,29 +693,30 @@ button[class*="mm-"]:focus-visible {
 }
 .mm-section-head {
   display: flex;
-  gap: 10px;
-  align-items: stretch;
-  margin-bottom: 28px; /* 여백 확대: 섹션 진입점 강조 */
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 32px;
+  padding-top: 8px;
 }
 .mm-section-head__bar {
-  width: 4px;
+  width: 28px;
+  height: 3px;
   border-radius: 2px;
   background: var(--mm-gold);
-  flex: 0 0 4px;
-  align-self: stretch;
-  min-height: 40px;
-  box-shadow: 2px 0 10px rgba(212,97,62,0.25);
+  margin-bottom: 14px;
+  box-shadow: 0 1px 6px rgba(212,97,62,0.2);
 }
 .mm-section-head__title {
-  font-size: 20px; /* 에디토리얼: 테라코타 바가 시선 유도 */
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--mm-text-d);
   line-height: 1.25;
 }
 .mm-section-head__desc {
-  margin-top: 6px;
-  font-size: 14px; /* 크림 배경 가독성 확보 */
+  margin-top: 8px;
+  font-size: 14px;
   font-weight: 400;
   color: var(--mm-text-d2);
   letter-spacing: -0.01em;
@@ -642,10 +742,10 @@ button[class*="mm-"]:focus-visible {
 .mm-product-card:active { transform: scale(0.97); }
 .mm-product-card__thumb {
   width: 100%;
-  border-radius: 6px; /* sharp crisp */
+  border-radius: 6px;
   overflow: hidden;
-  background: #EAEAE2; /* 오프화이트 톤 */
-  aspect-ratio: 1 / 1;
+  background: #EAEAE2;
+  aspect-ratio: 3 / 4; /* 가위 세로 길이감 + 전 페이지 통일 비율 */
 }
 .mm-product-card__thumb img {
   width: 100%; height: 100%;
@@ -683,9 +783,9 @@ button[class*="mm-"]:focus-visible {
 .mm-more-btn-wrap {
   display: flex;
   justify-content: center;
-  padding: 40px 0 44px; /* 여백 확대: 섹션 간 호흡 */
+  padding: 36px 0 48px; /* 하단 여백 확보: 다음 섹션과 충분한 호흡 */
   background: var(--mm-bg-warm);
-  border-top: 1px solid rgba(24,23,37,0.05); /* 시각적 분리 */
+  border-top: 1px solid rgba(24,23,37,0.05);
 }
 .mm-more-btn {
   display: inline-flex;
@@ -708,6 +808,8 @@ button[class*="mm-"]:focus-visible {
 
 @media (max-width: 360px) {
   .mm-featured { padding: 28px 0 10px; }
+  .mm-section-head { margin-bottom: 24px; }
+  .mm-section-head__bar { width: 24px; }
   .mm-section-head__title { font-size: 18px; }
   .mm-section-head__desc { font-size: 12px; }
   .mm-products { gap: 8px; }
@@ -718,9 +820,9 @@ button[class*="mm-"]:focus-visible {
 
 @media (min-width: 768px) {
   .mm-featured { padding: 48px 0 20px; } /* 768px: 여백 확대 */
-  .mm-section-head__title { font-size: 26px; font-weight: 700; } /* 768px */
+  .mm-section-head { margin-bottom: 36px; }
+  .mm-section-head__title { font-size: 26px; font-weight: 700; }
   .mm-section-head__desc { font-size: 14px; }
-  .mm-section-head__bar { min-height: 44px; }
   .mm-products { grid-template-columns: repeat(4, 1fr); gap: 20px; } /* 여백 확대 */
   .mm-product-card__thumb { border-radius: 6px; }
   .mm-product-card__name { font-size: 15px; }
@@ -736,21 +838,31 @@ button[class*="mm-"]:focus-visible {
     margin-left: auto;
     margin-right: auto;
   }
-  .mm-featured {
+  .mm-first {
     padding: 32px 0 12px;
-    border-radius: var(--mm-radius-lg) var(--mm-radius-lg) 0 0; /* 상단 모서리만 */
+    border-radius: var(--mm-radius-lg) var(--mm-radius-lg) 0 0; /* 상단: 첫가위 */
   }
-  .mm-first + .mm-more-btn-wrap {
-    border-radius: 0 0 var(--mm-radius-lg) var(--mm-radius-lg); /* 하단 모서리만 */
+  .mm-featured + .mm-more-btn-wrap {
+    border-radius: 0 0 var(--mm-radius-lg) var(--mm-radius-lg); /* 하단: 메인추천 */
   }
-  .mm-section-head__title { font-size: 30px; font-weight: 700; } /* 1024px */
-  .mm-section-head__desc { font-size: 16px; }
-  .mm-section-head { margin-bottom: 36px; } /* 여백 확대 */
+  .mm-section-head {
+    margin-bottom: 44px;
+    padding-top: 12px;
+  }
+  .mm-section-head__bar { width: 32px; }
+  .mm-section-head__title { font-size: 30px; font-weight: 700; }
+  .mm-section-head__desc { font-size: 16px; margin-top: 10px; }
   .mm-products { gap: 24px; }
   .mm-product-card__name { font-size: 16px; }
   .mm-product-card__price { font-size: 17px; }
   .mm-quick__label { font-size: 13px; }
-  .mm-more-btn-wrap { padding: 24px 0 20px; }
+  .mm-more-btn-wrap { padding: 28px 0 24px; }
+  /* PC 섹션 간 충분한 여백: 더보기 → 다음 블록 */
+  .mm-more-btn-wrap + .mm-guide,
+  .mm-more-btn-wrap + .mm-featured,
+  .mm-more-btn-wrap + .mm-assurance {
+    margin-top: 56px;
+  }
 }
 
 /* PC hover: 상품 이미지 줌 (보더리스) */
@@ -808,11 +920,166 @@ button[class*="mm-"]:focus-visible {
 
 
 /* ══════════════════════════════════════════════════════════════
+   [7.3]. 상황별 빠른 가이드 (Intent Router)
+   ══════════════════════════════════════════════════════════════ */
+.mm-guide {
+  background: #EDEEE6; /* 크림보다 한 톤 낮은 tint — 크림 연속 구간 분리 */
+  padding: 48px 0 40px;
+  border-top: 1px solid rgba(24,23,37,0.06);
+  border-bottom: 1px solid rgba(24,23,37,0.06);
+}
+/* 가이드 헤드: 섹션 독립성 강화 (section-head 패턴) */
+.mm-guide__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+}
+.mm-guide__bar {
+  width: 28px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--mm-gold);
+  margin-bottom: 14px;
+  box-shadow: 0 1px 6px rgba(212,97,62,0.2);
+}
+.mm-guide__title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--mm-text-d);
+  line-height: 1.25;
+}
+.mm-guide__desc {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--mm-text-d2);
+  line-height: 1.55;
+}
+.mm-guide__scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
+  mask-image: linear-gradient(to right, black 85%, transparent);
+}
+.mm-guide__scroll::-webkit-scrollbar { display: none; }
+.mm-guide__card {
+  flex: 0 0 160px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 16px;
+  background: #F8F8F2;
+  border: 1px solid rgba(24,23,37,0.06);
+  border-left: 3px solid var(--mm-gold); /* 테라코타 accent border */
+  border-radius: var(--mm-radius);
+  transition: all var(--mm-ease);
+}
+.mm-guide__card:active { transform: scale(0.97); }
+/* 가이드 아이콘: 라인 SVG 삽입 영역
+   🔧 색상값: stroke: var(--mm-gold) = #D4613E (테라코타)
+   🔧 크기: width/height 28px, stroke-width: 1.8, fill: none */
+.mm-guide__card-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  line-height: 0;
+}
+.mm-guide__card-icon svg {
+  width: 28px;
+  height: 28px;
+}
+.mm-guide__card-icon svg path,
+.mm-guide__card-icon svg circle,
+.mm-guide__card-icon svg polyline,
+.mm-guide__card-icon svg line,
+.mm-guide__card-icon svg rect {
+  stroke: var(--mm-gold); /* #D4613E 테라코타 */
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mm-guide__card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+.mm-guide__card-desc {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--mm-text-d2);
+  line-height: 1.5;
+}
+
+@media (max-width: 360px) {
+  .mm-guide { padding: 32px 0 28px; }
+  .mm-guide__title { font-size: 18px; }
+  .mm-guide__desc { font-size: 12px; }
+  .mm-guide__card { flex: 0 0 144px; padding: 16px 14px; }
+  .mm-guide__card-title { font-size: 14px; }
+}
+@media (min-width: 768px) {
+  .mm-guide { padding: 56px 0 48px; }
+  .mm-guide__head { margin-bottom: 28px; }
+  .mm-guide__title { font-size: 26px; }
+  .mm-guide__scroll { gap: 14px; }
+  .mm-guide__card { flex: 0 0 180px; padding: 24px 20px; }
+  .mm-guide__card-title { font-size: 16px; }
+  .mm-guide__card-desc { font-size: 13px; }
+}
+@media (min-width: 1024px) {
+  .mm-guide {
+    max-width: var(--mm-max-w);
+    margin: 0 auto;
+    padding: 48px 48px 44px;
+    background: #EDEEE6; /* PC에서도 tint 유지 — 크림 연속 구간 분리 */
+    border: 1px solid rgba(24,23,37,0.06);
+    border-radius: var(--mm-radius-lg);
+  }
+  .mm-guide__head { margin-bottom: 32px; }
+  .mm-guide__title { font-size: 30px; }
+  .mm-guide__scroll {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .mm-guide__card {
+    flex: none;
+    padding: 28px 24px;
+  }
+  .mm-guide__card-title { font-size: 17px; }
+  .mm-guide__card-desc { font-size: 14px; }
+}
+@media (hover: hover) {
+  .mm-guide__card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border-left-color: var(--mm-gold-dark);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
    [7.5]. 큐레이션 카드 — 이런 기준도 있어요
    ══════════════════════════════════════════════════════════════ */
 .mm-curations {
   background: var(--mm-bg-dark);
-  padding: 48px 0 56px; /* 여백 통일 */
+  padding: 48px 0 56px;
+  margin-top: 16px; /* 안심→큐레이션 전환: 크림 위 숨 쉴 틈 */
 }
 .mm-curations__title {
   font-size: 14px;
@@ -902,17 +1169,36 @@ button[class*="mm-"]:focus-visible {
 
 @media (min-width: 1024px) {
   .mm-curations {
-    background: var(--mm-bg-light); /* 배경 전환 = 영역 구분 */
-    padding: 32px 0 20px;
+    background: var(--mm-bg-light);
+    padding: 32px 0 8px; /* 하단 축소: 크래프트와 연속 존 */
+    margin-top: 24px;
   }
   .mm-curations .mm-inner {
     background: var(--mm-bg-dark);
-    border-radius: var(--mm-radius-lg);
-    padding-top: 36px;
-    padding-bottom: 40px;
+    border-radius: var(--mm-radius-lg) var(--mm-radius-lg) 0 0; /* 상단만 — 크래프트로 이어짐 */
+    padding-top: 48px;
+    padding-bottom: 48px;
   }
-  .mm-curations__title { font-size: 16px; }
+  .mm-curations__title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
   .mm-curations__grid { gap: 20px; }
+}
+/* PC: 큐레이션→크래프트→슬로건 연속 다크 존 */
+@media (min-width: 1024px) {
+  .mm-craft-break {
+    padding: 0;
+  }
+  .mm-craft-break__inner {
+    border-radius: 0; /* 큐레이션과 이어짐 */
+  }
+  .mm-slogan {
+    border-radius: 0 0 var(--mm-radius-lg) var(--mm-radius-lg); /* 하단만 — 크래프트에서 이어짐 */
+  }
 }
 
 /* PC hover: 큐레이션 카드 */
@@ -970,17 +1256,29 @@ button[class*="mm-"]:focus-visible {
 }
 .mm-slogan__ko span { display: block; }
 
+/* 브랜드 철학 한 줄 */
+.mm-slogan__philosophy {
+  margin-top: 20px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: rgba(242,242,234,0.38);
+  line-height: 1.5;
+}
+
 @media (max-width: 360px) {
   .mm-slogan { padding: 40px 20px; }
   .mm-slogan__en { font-size: 13px; letter-spacing: 0.10em; }
   .mm-slogan__en::after { width: 48px; margin-top: 16px; }
   .mm-slogan__ko { margin-top: 14px; font-size: 13px; }
+  .mm-slogan__philosophy { margin-top: 14px; font-size: 11px; }
 }
 @media (min-width: 768px) {
   .mm-slogan { padding: 96px 32px; } /* 768px: 여백 확대 */
   .mm-slogan__en { font-size: 26px; font-weight: 800; letter-spacing: 0.15em; line-height: 2; }
   .mm-slogan__en::after { width: 80px; margin-top: 20px; }
   .mm-slogan__ko { margin-top: 16px; font-size: 15px; }
+  .mm-slogan__philosophy { margin-top: 18px; font-size: 13px; }
 }
 @media (min-width: 1024px) {
   .mm-slogan {
@@ -994,6 +1292,7 @@ button[class*="mm-"]:focus-visible {
   .mm-slogan__ko { font-size: 17px; margin-top: 20px; }
   .mm-slogan__ko span { display: inline; }
   .mm-slogan__ko span + span::before { content: " · "; color: var(--mm-gold); }
+  .mm-slogan__philosophy { margin-top: 22px; font-size: 14px; }
 }
 
 
@@ -1026,6 +1325,22 @@ button[class*="mm-"]:focus-visible {
   }
   .mm-craft-break__img:hover {
     filter: grayscale(0.6) contrast(1.02); /* 미세 컬러 복귀 */
+  }
+  /* 텍스트 오버레이 */
+  .mm-craft-break__img::after {
+    content: "CRAFTED FOR PROFESSIONALS";
+    position: absolute;
+    bottom: 28px;
+    left: 36px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(242,242,234,0.45);
+    pointer-events: none;
+  }
+  .mm-craft-break__img {
+    position: relative; /* ::after 앵커 */
   }
 }
 
@@ -1124,6 +1439,220 @@ button[class*="mm-"]:focus-visible {
   .mm-event-card:hover .mm-event-card__arrow {
     opacity: 0.8;
     transform: translateX(3px);
+  }
+}
+
+/* 이벤트 모바일: 다크 배경 유지 — 슬로건→이벤트→후기 다크 연속 존 */
+/* (이전: 크림 배경이었으나 다크 카드와 배경 모순 해소) */
+
+
+/* ══════════════════════════════════════════════════════════════
+   [9.5]. 고객 후기 (템플릿 — 추후 API 연동)
+   ══════════════════════════════════════════════════════════════ */
+.mm-reviews {
+  background: var(--mm-bg-dark);
+  padding: 48px 0 56px;
+}
+.mm-reviews__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+}
+.mm-reviews__bar {
+  width: 28px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--mm-gold);
+  margin-bottom: 14px;
+  box-shadow: 0 1px 6px rgba(212,97,62,0.2);
+}
+.mm-reviews__title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--mm-text-w);
+  line-height: 1.25;
+}
+.mm-reviews__desc {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--mm-text-w2);
+  line-height: 1.55;
+}
+
+/* 탭 pill 토글 */
+.mm-reviews__tabs {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 28px;
+  padding: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 999px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+.mm-reviews__tab {
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mm-text-w3);
+  cursor: pointer;
+  transition: all var(--mm-ease-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+.mm-reviews__tab:active { transform: scale(0.96); }
+.mm-reviews__tab--active {
+  background: var(--mm-gold);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(212,97,62,0.3);
+}
+
+/* 리뷰 카드 그리드 (모바일: 횡스크롤) */
+.mm-reviews__scroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 4px 20px 8px;
+  -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
+  mask-image: linear-gradient(to right, black 85%, transparent);
+}
+.mm-reviews__scroll::-webkit-scrollbar { display: none; }
+
+.mm-review-card {
+  flex: 0 0 280px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--mm-bg-card-dark);
+  border: 1px solid var(--mm-border-d);
+  border-radius: var(--mm-radius-lg);
+  transition: all var(--mm-ease);
+}
+/* 리뷰 카드 이미지 (있을 때만 렌더) */
+.mm-review-card__img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--mm-radius);
+  object-fit: cover;
+  margin-bottom: 4px;
+}
+.mm-review-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mm-review-card__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mm-text-w);
+}
+.mm-review-card__source {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mm-text-w4);
+}
+.mm-review-card__stars {
+  display: flex;
+  gap: 2px;
+  color: var(--mm-gold);
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+.mm-review-card__text {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--mm-text-w2);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.mm-review-card__date {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--mm-text-w4);
+  margin-top: auto;
+}
+/* 후기 더보기 링크 */
+.mm-reviews__more {
+  display: block;
+  text-align: center;
+  margin-top: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mm-text-w3);
+  letter-spacing: 0.01em;
+  transition: color var(--mm-ease-fast);
+}
+.mm-reviews__more:hover { color: var(--mm-gold); }
+
+@media (max-width: 360px) {
+  .mm-reviews { padding: 32px 0 40px; }
+  .mm-reviews__title { font-size: 18px; }
+  .mm-reviews__desc { font-size: 12px; }
+  .mm-reviews__tab { padding: 7px 16px; font-size: 12px; }
+  .mm-review-card { flex: 0 0 260px; padding: 16px; }
+  .mm-review-card__text { font-size: 13px; }
+}
+
+@media (min-width: 768px) {
+  .mm-reviews { padding: 56px 0 64px; }
+  .mm-reviews__title { font-size: 26px; }
+  .mm-reviews__tab { padding: 10px 24px; font-size: 14px; }
+  .mm-reviews__scroll { gap: 16px; padding: 4px 32px 8px; }
+  .mm-review-card { flex: 0 0 300px; padding: 24px; }
+}
+
+/* PC: 4열 그리드 */
+@media (min-width: 1024px) {
+  .mm-reviews {
+    background: var(--mm-bg-light);
+    padding: 32px 0 20px;
+  }
+  .mm-reviews .mm-inner {
+    background: var(--mm-bg-dark);
+    border-radius: var(--mm-radius-lg);
+    padding-top: 48px;
+    padding-bottom: 56px;
+  }
+  .mm-reviews__head { margin-bottom: 28px; }
+  .mm-reviews__title { font-size: 30px; }
+  .mm-reviews__desc { font-size: 16px; }
+  .mm-reviews__tabs { margin-bottom: 36px; }
+  .mm-reviews__tab { padding: 10px 28px; font-size: 15px; }
+  .mm-reviews__scroll {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    overflow: visible;
+    padding: 4px 48px 8px;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .mm-review-card { flex: none; padding: 24px; }
+}
+
+/* PC hover */
+@media (hover: hover) {
+  .mm-review-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    border-color: rgba(212,97,62,0.2);
   }
 }
 
@@ -1269,6 +1798,207 @@ button[class*="mm-"]:focus-visible {
 
 
 /* ══════════════════════════════════════════════════════════════
+   [10.5]. 안심 서비스 + 신뢰 배지 (서비스 이동/변형)
+   - 위치: 첫가위 더보기 ↔ 큐레이션 사이
+   ══════════════════════════════════════════════════════════════ */
+.mm-assurance {
+  background: var(--mm-bg-warm);
+  padding: 48px 0 56px; /* 하단 여백 확대: 큐레이션 다크 전환 전 호흡 */
+}
+.mm-assurance__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 28px;
+}
+.mm-assurance__bar {
+  width: 28px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--mm-gold);
+  margin-bottom: 14px;
+  box-shadow: 0 1px 6px rgba(212,97,62,0.2);
+}
+.mm-assurance__title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--mm-text-d);
+  line-height: 1.25;
+}
+.mm-assurance__desc {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--mm-text-d2);
+  line-height: 1.55;
+}
+
+/* 배지 3개 */
+.mm-assurance__badges {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.mm-assurance__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--mm-gold);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.mm-assurance__badge svg {
+  width: 16px; height: 16px;
+  flex-shrink: 0;
+}
+.mm-assurance__badge path,
+.mm-assurance__badge circle,
+.mm-assurance__badge polyline {
+  stroke: #fff;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 정보 카드 컨테이너 */
+.mm-assurance__container {
+  background: #F8F8F2;
+  border: 1px solid rgba(24,23,37,0.06);
+  border-radius: var(--mm-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+
+/* 텍스트 CTA 링크 행 */
+.mm-assurance__links {
+  display: flex;
+  flex-direction: column;
+}
+.mm-assurance__link {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  transition: background var(--mm-ease-fast);
+}
+.mm-assurance__link:active { background: rgba(24,23,37,0.03); }
+.mm-assurance__link + .mm-assurance__link {
+  border-top: 1px solid rgba(24,23,37,0.06);
+}
+.mm-assurance__link-icon {
+  width: 40px; height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mm-gold-soft);
+  border-radius: var(--mm-radius);
+}
+.mm-assurance__link-icon svg {
+  width: 20px; height: 20px;
+}
+.mm-assurance__link-icon path,
+.mm-assurance__link-icon circle,
+.mm-assurance__link-icon polyline {
+  stroke: var(--mm-gold);
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mm-assurance__link-body { flex: 1; min-width: 0; }
+.mm-assurance__link-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  line-height: 1.3;
+}
+.mm-assurance__link-desc {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--mm-text-d2);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+.mm-assurance__link-arrow {
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+  opacity: 0.3;
+  transition: transform var(--mm-ease-fast), opacity var(--mm-ease-fast);
+}
+.mm-assurance__link-arrow path {
+  stroke: var(--mm-text-d);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 360px) {
+  .mm-assurance { padding: 32px 0 28px; }
+  .mm-assurance__title { font-size: 18px; }
+  .mm-assurance__desc { font-size: 12px; }
+  .mm-assurance__badges { gap: 8px; }
+  .mm-assurance__badge { padding: 6px 12px; font-size: 12px; }
+  .mm-assurance__link { padding: 16px; gap: 12px; }
+  .mm-assurance__link-icon { width: 36px; height: 36px; }
+  .mm-assurance__link-title { font-size: 14px; }
+}
+
+@media (min-width: 768px) {
+  .mm-assurance { padding: 56px 0 48px; }
+  .mm-assurance__head { margin-bottom: 32px; }
+  .mm-assurance__title { font-size: 26px; }
+  .mm-assurance__badges { gap: 12px; margin-bottom: 36px; }
+  .mm-assurance__badge { padding: 10px 20px; font-size: 14px; }
+  .mm-assurance__link { padding: 24px; gap: 20px; }
+  .mm-assurance__link-icon { width: 44px; height: 44px; }
+  .mm-assurance__link-title { font-size: 16px; }
+  .mm-assurance__link-desc { font-size: 13px; }
+}
+
+@media (min-width: 1024px) {
+  .mm-assurance {
+    max-width: var(--mm-max-w);
+    margin: 0 auto;
+    border-radius: var(--mm-radius-lg);
+    padding: 48px 48px 44px;
+  }
+  .mm-assurance__head { margin-bottom: 36px; }
+  .mm-assurance__title { font-size: 30px; }
+  .mm-assurance__desc { font-size: 16px; }
+  .mm-assurance__badges { gap: 14px; margin-bottom: 40px; }
+  .mm-assurance__badge { padding: 10px 22px; font-size: 15px; }
+  .mm-assurance__link { padding: 28px 32px; }
+  .mm-assurance__link-icon { width: 48px; height: 48px; }
+  .mm-assurance__link-icon svg { width: 24px; height: 24px; }
+  .mm-assurance__link-title { font-size: 17px; }
+  .mm-assurance__link-desc { font-size: 14px; }
+}
+
+/* PC hover: 안심 서비스 링크 */
+@media (hover: hover) {
+  .mm-assurance__link:hover {
+    background: rgba(212,97,62,0.04);
+  }
+  .mm-assurance__link:hover .mm-assurance__link-arrow {
+    opacity: 0.7;
+    transform: translateX(3px);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
    [11]. 쇼케이스 슬라이더 (Emotional: 추가 탐색)
    - 🔧 상품 데이터: MAMORU_DATA.showcase
    - 모바일: 횡스크롤 / PC: 5열 그리드
@@ -1289,10 +2019,16 @@ button[class*="mm-"]:focus-visible {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  padding: 8px 20px;
+  padding: 12px 0;
   -webkit-overflow-scrolling: touch;
 }
 .mm-showcase__scroll::-webkit-scrollbar { display: none; }
+/* 횡스크롤 좌우 여백: padding 대신 가상요소로 확보 (overflow 컨테이너 호환) */
+.mm-showcase__scroll::before,
+.mm-showcase__scroll::after {
+  content: '';
+  flex: 0 0 20px; /* 좌우 여백 크기 */
+}
 /* UX: 횡스크롤 우측 fade 힌트 (모바일) */
 .mm-showcase__scroll {
   -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
@@ -1300,14 +2036,14 @@ button[class*="mm-"]:focus-visible {
 }
 
 .mm-showcase__card {
-  flex: 0 0 200px;
+  flex: 0 0 220px; /* 세로 크레딧카드: 폭 확대 */
   scroll-snap-align: start;
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 14px;
-  background: #F8F8F2; /* 카드: 오프화이트보다 약간 밝게 */
-  border-radius: var(--mm-radius-lg); /* sharp crisp */
+  background: #F8F8F2;
+  border-radius: var(--mm-radius-lg);
   border: 1px solid rgba(0,0,0,0.06);
   box-shadow: 0 4px 14px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05);
   transition: transform var(--mm-ease), box-shadow var(--mm-ease), border-color var(--mm-ease);
@@ -1318,10 +2054,10 @@ button[class*="mm-"]:focus-visible {
 }
 .mm-showcase__card-thumb {
   width: 100%;
-  border-radius: 6px; /* sharp crisp */
+  border-radius: 6px;
   overflow: hidden;
-  background: #EAEAE2; /* 오프화이트 톤 */
-  aspect-ratio: 1 / 1;
+  background: #EAEAE2;
+  aspect-ratio: 2 / 3; /* 세로 프리미엄 카드 */
 }
 .mm-showcase__card-thumb img {
   width: 100%; height: 100%;
@@ -1348,7 +2084,9 @@ button[class*="mm-"]:focus-visible {
 @media (min-width: 768px) {
   .mm-showcase { padding: 40px 0; }
   .mm-showcase__head { padding: 0 32px 16px; }
-  .mm-showcase__scroll { padding: 8px 32px; gap: 20px; }
+  .mm-showcase__scroll { padding: 8px 0; gap: 20px; }
+  .mm-showcase__scroll::before,
+  .mm-showcase__scroll::after { flex: 0 0 28px; }
   .mm-showcase__card { flex: 0 0 240px; padding: 16px; }
   .mm-showcase__card-name { font-size: 14px; }
   .mm-showcase__card-price { font-size: 15px; }
@@ -1364,10 +2102,12 @@ button[class*="mm-"]:focus-visible {
     border-radius: var(--mm-radius-lg);
   }
   .mm-showcase__head { padding: 0 48px 16px; }
+  .mm-showcase__scroll::before,
+  .mm-showcase__scroll::after { display: none; } /* PC: 가상요소 제거 */
   .mm-showcase__scroll {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 24px; /* 간격 확대 */
+    grid-template-columns: repeat(4, 1fr); /* 5→4열: 세로 카드 밸런스 */
+    gap: 24px;
     overflow: visible;
     padding: 8px 48px;
     max-width: var(--mm-max-w);
@@ -1690,14 +2430,15 @@ button[class*="mm-"]:focus-visible {
     </div>
 
     <div class="mm-hero__body">
-      <div class="mm-hero__kicker">MAMORU</div>
       <h1 class="mm-hero__headline mm-anim">좋은 미용가위<br>그 기준을 경험하다</h1>
       <p class="mm-hero__sub mm-anim">모두에게 비싼 가위는 있지만<br>누구에게나 좋은 가위는 없습니다</p>
-      <a href="/58" class="mm-hero__cta">
-        간편 진단 시작하기
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </a>
-      <p class="mm-hero__hint">30초면 충분해요</p>
+      <div class="mm-hero__cta-group">
+        <a href="/58" class="mm-hero__cta">
+          간편 진단 시작하기
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <p class="mm-hero__hint">1분이면 충분해요</p>
+      </div>
     </div>
   </div>
 </section>
@@ -1732,31 +2473,16 @@ button[class*="mm-"]:focus-visible {
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     [6]. 메인 추천 가위 (Emotional: 정렬)
-     - 🔧 상품: MAMORU_DATA.featured
+     [5.5]. 미니 비주얼 브레이크 (퀵셀렉트 ↔ 상품, 모바일 only)
+     - 기존 크래프트 브레이크 이미지 재활용
      ══════════════════════════════════════════════════════════════ -->
-<section class="mm-featured">
-  <div class="mm-inner">
-    <div class="mm-section-head mm-anim">
-      <span class="mm-section-head__bar"></span>
-      <div>
-        <h2 class="mm-section-head__title">메인 추천 가위</h2>
-        <p class="mm-section-head__desc">지금 가장 안정적인 컨디션과 밸런스를 기준으로<br>먼저 고른 4가지</p>
-      </div>
-    </div>
-    <div class="mm-products" id="mmFeatured">
-      <!-- JS 렌더링 -->
-    </div>
-  </div>
-</section>
-
-<div class="mm-more-btn-wrap">
-  <a href="/29" class="mm-more-btn">추천가위 더보기</a>
+<div class="mm-mini-break">
+  <div class="mm-mini-break__img" style="background-image:url('https://cdn.imweb.me/upload/S20250825bc9b09c7146df/5440b39c14f9d.jpg')"></div>
 </div>
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     [7]. 첫가위 안심추천 (Emotional: 정렬 → 안심)
+     [7]. 첫가위 안심추천 (Emotional: 탐색 진입 — 입문)
      - 🔧 상품: MAMORU_DATA.firstScissors
      ══════════════════════════════════════════════════════════════ -->
 <section class="mm-first">
@@ -1776,6 +2502,103 @@ button[class*="mm-"]:focus-visible {
 <div class="mm-more-btn-wrap">
   <a href="/29" class="mm-more-btn">이 기준에 맞는 가위 더 보기</a>
 </div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [7.3]. 상황별 빠른 가이드 (Intent Router)
+     - 자격증/인턴/왼손잡이/첫독립 상황별 빠른 연결
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-guide">
+  <div class="mm-inner">
+    <div class="mm-guide__head mm-anim">
+      <span class="mm-guide__bar"></span>
+      <h2 class="mm-guide__title">상황별 맞춤 가이드</h2>
+      <p class="mm-guide__desc">내 상황에 맞는 가위, 바로 찾기</p>
+    </div>
+    <div class="mm-guide__scroll" id="mmGuide">
+      <!-- JS 렌더링 -->
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [6]. 메인 추천 가위 (Emotional: 업셀 — 프리미엄)
+     - 🔧 상품: MAMORU_DATA.featured
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-featured">
+  <div class="mm-inner">
+    <div class="mm-section-head mm-anim">
+      <span class="mm-section-head__bar"></span>
+      <div>
+        <h2 class="mm-section-head__title">메인 추천 가위</h2>
+        <p class="mm-section-head__desc">지금 가장 안정적인 컨디션과 밸런스를 기준으로<br>먼저 고른 4가지</p>
+      </div>
+    </div>
+    <div class="mm-products" id="mmFeatured">
+      <!-- JS 렌더링 -->
+    </div>
+  </div>
+</section>
+
+<div class="mm-more-btn-wrap">
+  <a href="/29" class="mm-more-btn">메인 추천 가위 더보기</a>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [10.5]. 안심 서비스 + 신뢰 배지 (서비스 이동/변형)
+     - 구매 전 상담 ~ 구매 후 관리까지 안심 포인트
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-assurance">
+  <div class="mm-inner">
+    <div class="mm-assurance__head mm-anim">
+      <span class="mm-assurance__bar"></span>
+      <h2 class="mm-assurance__title">안심할 수 있는 이유</h2>
+      <p class="mm-assurance__desc">구매 전 상담부터 구매 후 관리까지</p>
+    </div>
+
+    <div class="mm-assurance__badges mm-anim">
+      <span class="mm-assurance__badge">
+        <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        마모루 자체복원 진행
+      </span>
+      <span class="mm-assurance__badge">
+        <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        완벽 맞춤컨설팅
+      </span>
+      <span class="mm-assurance__badge">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        편리하고 빠른 A/S
+      </span>
+    </div>
+
+    <div class="mm-assurance__container mm-anim">
+      <div class="mm-assurance__links">
+        <a class="mm-assurance__link" href="/consult">
+          <div class="mm-assurance__link-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </div>
+          <div class="mm-assurance__link-body">
+            <div class="mm-assurance__link-title">맞춤 상담 안내</div>
+            <div class="mm-assurance__link-desc">스타일·예산·경력에 맞는 제안</div>
+          </div>
+          <svg class="mm-assurance__link-arrow" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </a>
+        <a class="mm-assurance__link" href="/53">
+          <div class="mm-assurance__link-icon">
+            <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <div class="mm-assurance__link-body">
+            <div class="mm-assurance__link-title">복원 수리 안내</div>
+            <div class="mm-assurance__link-desc">Hydro Repair 공정으로 원래의 날 복원</div>
+          </div>
+          <svg class="mm-assurance__link-arrow" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
 
 
 <!-- ══════════════════════════════════════════════════════════════
@@ -1814,6 +2637,7 @@ button[class*="mm-"]:focus-visible {
     <span>설득하지 않습니다</span>
     <span>동행합니다</span>
   </p>
+  <p class="mm-slogan__philosophy mm-anim">정밀한 도구, 책임지는 기술 — 미용가위에만 집중합니다</p>
 </section>
 
 
@@ -1827,6 +2651,34 @@ button[class*="mm-"]:focus-visible {
     <div class="mm-events__list" id="mmEvents">
       <!-- JS 렌더링 -->
     </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [9.5]. 고객 후기 (Emotional: 사회적 증거)
+     - 🔧 리뷰 데이터: MAMORU_DATA.reviews (placeholder)
+     - 탭: 상담후기 / 구매후기
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-reviews">
+  <div class="mm-inner">
+    <div class="mm-reviews__head mm-anim">
+      <span class="mm-reviews__bar"></span>
+      <h2 class="mm-reviews__title">고객 후기</h2>
+      <p class="mm-reviews__desc">마모루를 경험한 분들의 이야기</p>
+    </div>
+
+    <div class="mm-reviews__tabs" id="mmReviewTabs">
+      <button class="mm-reviews__tab mm-reviews__tab--active" data-type="consulting">컨설팅상담</button>
+      <button class="mm-reviews__tab" data-type="repair">복원수리</button>
+      <button class="mm-reviews__tab" data-type="purchase">제품구매</button>
+    </div>
+
+    <div class="mm-reviews__scroll" id="mmReviews">
+      <!-- JS 렌더링 -->
+    </div>
+
+    <a href="/62" class="mm-reviews__more">후기 더보기 →</a>
   </div>
 </section>
 
@@ -1852,29 +2704,7 @@ button[class*="mm-"]:focus-visible {
 </section>
 
 
-<!-- ══════════════════════════════════════════════════════════════
-     [10]. 상담 / AS 트러스트 (Emotional: 망설임 제거)
-     - 🔧 이미지 URL: 400x280, 흑백 권장
-     ══════════════════════════════════════════════════════════════ -->
-<section class="mm-services mm-anim">
-  <a class="mm-service-card mm-service-card--consult" href="/consult">
-    <div class="mm-service-card__body">
-      <div class="mm-service-card__title">Your Solution</div>
-      <div class="mm-service-card__desc">올바른 기준은<br>제품이 아닌 고객입니다</div>
-      <span class="mm-service-card__cta">상담 알아보기</span>
-    </div>
-    <div class="mm-service-card__img" style="background-image:url('https://cdn.imweb.me/upload/S20250825bc9b09c7146df/5440b39c14f9d.jpg')"></div>
-  </a>
-
-  <a class="mm-service-card mm-service-card--as" href="/53">
-    <div class="mm-service-card__body">
-      <div class="mm-service-card__title">Hydro Repair A/S</div>
-      <div class="mm-service-card__desc">가위를 위한 최선의 방식</div>
-      <span class="mm-service-card__cta">A/S 알아보기</span>
-    </div>
-    <div class="mm-service-card__img" style="background-image:url('https://cdn.imweb.me/upload/S20250825bc9b09c7146df/40cb7f6ce0645.jpg')"></div>
-  </a>
-</section>
+<!-- [10]. 상담/AS 트러스트 → mm-assurance 섹션으로 이동 (기존 삭제) -->
 
 
 <!-- ══════════════════════════════════════════════════════════════
@@ -1907,8 +2737,8 @@ button[class*="mm-"]:focus-visible {
             <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
           </div>
           <div>
-            <div class="mm-bottom__sub-title">가위 컨설팅</div>
-            <div class="mm-bottom__sub-desc">1:1 맞춤 상담 신청</div>
+            <div class="mm-bottom__sub-title">상담 바로 접수</div>
+            <div class="mm-bottom__sub-desc">바로 접수하기</div>
           </div>
         </a>
         <a href="/53" class="mm-bottom__card-sub">
@@ -1916,8 +2746,8 @@ button[class*="mm-"]:focus-visible {
             <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           </div>
           <div>
-            <div class="mm-bottom__sub-title">A/S 접수</div>
-            <div class="mm-bottom__sub-desc">수리 및 연마 신청</div>
+            <div class="mm-bottom__sub-title">A/S 바로 접수</div>
+            <div class="mm-bottom__sub-desc">바로 접수하기</div>
           </div>
         </a>
       </div>
@@ -1944,12 +2774,27 @@ button[class*="mm-"]:focus-visible {
      ═══════════════════════════════════════════════════════════════ */
   var DATA = {
 
-    /* 🔧 [4] 퀵 셀렉트 카테고리 */
+    /* 🔧 [4] 퀵 셀렉트 카테고리
+       iconPc:  PC용 SVG (다크 배경 위 → stroke: #F2F2EA 크림 자동적용)
+       iconMob: 모바일용 SVG (크림 배경 위 → stroke: #D4613E 테라코타 자동적용)
+       SVG: viewBox="0 0 24 24", <path> 태그만 삽입 (stroke/fill은 CSS 처리) */
     categories: [
-      { label: '블런트', icon: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/034e160aa5620.png', link: '/29' },
-      { label: '틴닝',   icon: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/547dbc7393589.png', link: '/30' },
-      { label: '장가위', icon: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/bd3dc559f5165.png', link: '/39' },
-      { label: '슬라이싱', icon: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/d6f209ef86490.png', link: '/40' }
+      { label: '블런트',
+        iconPc:  '<svg viewBox="0 0 24 24"><!-- 🔧 PC 블런트 SVG path --></svg>',
+        iconMob: '<svg viewBox="0 0 24 24"><!-- 🔧 모바일 블런트 SVG path --></svg>',
+        link: '/29' },
+      { label: '틴닝',
+        iconPc:  '<svg viewBox="0 0 24 24"><!-- 🔧 PC 틴닝 SVG path --></svg>',
+        iconMob: '<svg viewBox="0 0 24 24"><!-- 🔧 모바일 틴닝 SVG path --></svg>',
+        link: '/30' },
+      { label: '장가위',
+        iconPc:  '<svg viewBox="0 0 24 24"><!-- 🔧 PC 장가위 SVG path --></svg>',
+        iconMob: '<svg viewBox="0 0 24 24"><!-- 🔧 모바일 장가위 SVG path --></svg>',
+        link: '/39' },
+      { label: '슬라이싱',
+        iconPc:  '<svg viewBox="0 0 24 24"><!-- 🔧 PC 슬라이싱 SVG path --></svg>',
+        iconMob: '<svg viewBox="0 0 24 24"><!-- 🔧 모바일 슬라이싱 SVG path --></svg>',
+        link: '/40' }
     ],
 
     /* 🔧 [4] 미니 칩 (아이콘+텍스트) */
@@ -1978,6 +2823,25 @@ button[class*="mm-"]:focus-visible {
       { name: '미용가위 복합수리', price: '10,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/d6f209ef86490.png', link: '/product/8' }
     ],
 
+    /* 🔧 [7.3] 상황별 맞춤 가이드
+       icon: 라인 SVG 문자열 삽입 (24×24 viewBox)
+       색상: CSS에서 stroke: var(--mm-gold) = #D4613E 자동 적용
+       스타일: stroke-width 1.8, fill none, round cap/join */
+    guides: [
+      { title: '자격증 준비', desc: '실기 시험에 최적화된 구성',
+        icon: '<svg viewBox="0 0 24 24"><path d="M2 10l10-6 10 6-10 6-10-6z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/><path d="M22 10v6"/></svg>',
+        link: '/29' },
+      { title: '인턴 시작', desc: '합리적인 첫 세트',
+        icon: '<svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="12.01"/></svg>',
+        link: '/29' },
+      { title: '왼손잡이 전용', desc: '왼손 전용 가위 모아보기',
+        icon: '<svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10V5a2 2 0 0 0-4 0v9a7 7 0 0 0 14 0v-4a2 2 0 0 0-4 0"/></svg>',
+        link: '/29' },
+      { title: '첫 독립 준비', desc: '나만의 가위를 찾는 시작',
+        icon: '<svg viewBox="0 0 24 24"><path d="M3 10.182L12 3l9 7.182V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10.182z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+        link: '/29' }
+    ],
+
     /* 🔧 [7.5] 큐레이션 카드 */
     curations: [
       { name: '올바른 가위 선택법', desc: '소재 · 날 형태 · 길이, 기준부터 바로잡기', icon: 'target', link: '/29' },
@@ -1985,11 +2849,36 @@ button[class*="mm-"]:focus-visible {
       { name: '자주 묻는 질문', desc: '구매 전 궁금한 점, 미리 정리했습니다', icon: 'sprout', link: '/29' }
     ],
 
-    /* 🔧 [9] 이벤트 배너 */
+    /* 🔧 [9] 이벤트 배너 (3개) */
     events: [
       { badge: 'SALE', title: '재고전환 특가', desc: '재고 소진 시 종료 · 창고정리 전품목 할인', link: '/clearance' },
-      { badge: 'EVENT', title: '리뷰 이벤트', desc: '마모루 경험을 공유하고 가위받으세요', link: '/review' }
+      { badge: 'EVENT', title: '리뷰 이벤트', desc: '마모루 경험을 공유하고 가위받으세요', link: '/review' },
+      { badge: 'GIFT', title: '디렉터 인증샷 선물', desc: '상담 시 디렉터 얼굴 찍으면 특별 선물', link: '/event-photo' }
     ],
+
+    /* 🔧 [9.5] 고객 후기 — img: 아임웹 CDN URL (빈 문자열이면 이미지 생략) */
+    reviews: {
+      /* 🔧 img: 아임웹 CDN 업로드 후 URL 복사 → 여기에 붙여넣기 (빈 문자열이면 이미지 생략)
+         이미지가 있으면 이름 위에 16:9 썸네일로 표시됨 */
+      consulting: [
+        { name: '김○○', stars: 5, text: '처음 가위 구매라 걱정했는데, 상담을 통해 제 커트 스타일에 맞는 가위를 찾을 수 있었어요.', date: '2026.01.15', source: '카카오톡', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/5440b39c14f9d.jpg' },
+        { name: '이○○', stars: 5, text: '블런트와 틴닝 차이를 설명해주시고, 실제 커트 영상까지 보여주셔서 확신을 갖고 선택했습니다.', date: '2026.01.08', source: '네이버', img: '' },
+        { name: '박○○', stars: 5, text: '다른 곳에서는 그냥 비싼 걸 추천하던데, 여기는 제 예산과 경력에 맞춰서 골라주셨어요.', date: '2025.12.28', source: '카카오톡', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/40cb7f6ce0645.jpg' },
+        { name: '최○○', stars: 4, text: '상담 후 바로 구매하지 않아도 전혀 부담이 없었어요. 천천히 결정할 수 있어서 좋았습니다.', date: '2025.12.20', source: '네이버', img: '' }
+      ],
+      repair: [
+        { name: '정○○', stars: 5, text: '연마 후 커트감이 처음 샀을 때처럼 돌아왔어요. 역시 전문가한테 맡기길 잘했습니다.', date: '2026.01.12', source: '네이버', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/5440b39c14f9d.jpg' },
+        { name: '한○○', stars: 5, text: '다른 곳에서 수리받고 오히려 더 나빠졌었는데, 마모루에서 복원받고 완전히 살아났어요.', date: '2026.01.05', source: '카카오톡', img: '' },
+        { name: '윤○○', stars: 5, text: '수리 전후 사진까지 보내주셔서 어떤 공정을 거쳤는지 확인할 수 있었습니다.', date: '2025.12.22', source: '네이버', img: '' },
+        { name: '강○○', stars: 4, text: '오래된 가위인데 Hydro Repair로 날이 살아났어요. 새 가위 안 사도 되겠어요.', date: '2025.12.15', source: '카카오톡', img: '' }
+      ],
+      /* 🔧 제품구매 리뷰 — product: 제품명 (상세페이지 필터용) */
+      purchase: [
+        { name: '임○○', stars: 5, text: '분무기 품질이 좋아요. 미세 분사가 균일하고 손잡이 그립감도 편합니다.', date: '2026.01.20', source: '알림톡', img: '', product: '프리미엄 분무기' },
+        { name: '나○○', stars: 5, text: '가위 정리대가 깔끔하고 안정감 있어요. 매장에 놓으니까 인테리어 효과도 있습니다.', date: '2026.01.10', source: '알림톡', img: '', product: '우드 가위 정리대' },
+        { name: '서○○', stars: 4, text: '가위집 퀄리티가 가격 대비 훌륭합니다. 수납 칸이 넉넉해서 좋아요.', date: '2025.12.18', source: '알림톡', img: '', product: '프리미엄 가위집' }
+      ]
+    },
 
     /* 🔧 [11] 쇼케이스 (5개) */
     showcase: [
@@ -2012,7 +2901,8 @@ button[class*="mm-"]:focus-visible {
     if (!el) return;
     el.innerHTML = DATA.categories.map(function(c) {
       return '<a href="' + c.link + '" class="mm-quick__card mm-anim mm-anim-stagger">' +
-        '<img src="' + c.icon + '" class="mm-quick__card-icon" alt="' + c.label + '">' +
+        '<span class="mm-quick__card-icon mm-quick__card-icon--pc">' + c.iconPc + '</span>' +
+        '<span class="mm-quick__card-icon mm-quick__card-icon--mob">' + c.iconMob + '</span>' +
         '<span class="mm-quick__card-label">' + c.label + '</span>' +
         '</a>';
     }).join('');
@@ -2072,6 +2962,19 @@ button[class*="mm-"]:focus-visible {
     if (el2) el2.innerHTML = html;
   }
 
+  /* 상황별 맞춤 가이드 */
+  function renderGuides() {
+    var el = document.getElementById('mmGuide');
+    if (!el) return;
+    el.innerHTML = DATA.guides.map(function(g) {
+      return '<a href="' + g.link + '" class="mm-guide__card mm-anim mm-anim-stagger">' +
+        '<div class="mm-guide__card-icon">' + g.icon + '</div>' +
+        '<div class="mm-guide__card-title">' + g.title + '</div>' +
+        '<div class="mm-guide__card-desc">' + g.desc + '</div>' +
+        '</a>';
+    }).join('');
+  }
+
   /* 큐레이션 카드 */
   function renderCurations() {
     var el = document.getElementById('mmCurations');
@@ -2091,6 +2994,47 @@ button[class*="mm-"]:focus-visible {
         '<svg class="mm-curation-card__arrow" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>' +
         '</a>';
     }).join('');
+  }
+
+  /* 고객 후기 */
+  function renderReviews(type) {
+    var el = document.getElementById('mmReviews');
+    if (!el) return;
+    var items = (DATA.reviews && DATA.reviews[type]) || [];
+    el.innerHTML = items.map(function(r) {
+      var stars = '';
+      for (var i = 0; i < 5; i++) stars += i < r.stars ? '\u2605' : '\u2606';
+      var imgHtml = (r.img) ? '<img class="mm-review-card__img" src="' + r.img + '" alt="후기 이미지">' : '';
+      return '<div class="mm-review-card mm-anim mm-anim-stagger">' +
+        imgHtml +
+        '<div class="mm-review-card__header">' +
+          '<span class="mm-review-card__name">' + r.name + '</span>' +
+          '<span class="mm-review-card__source">' + r.source + '</span>' +
+        '</div>' +
+        '<div class="mm-review-card__stars">' + stars + '</div>' +
+        '<div class="mm-review-card__text">' + r.text + '</div>' +
+        '<div class="mm-review-card__date">' + r.date + '</div>' +
+        '</div>';
+    }).join('');
+    /* 새로 렌더링된 카드에 애니메이션 재적용 */
+    el.querySelectorAll('.mm-anim').forEach(function(card) {
+      card.classList.add('mm-visible');
+    });
+  }
+
+  /* 리뷰 탭 토글 */
+  function initReviewTabs() {
+    var tabWrap = document.getElementById('mmReviewTabs');
+    if (!tabWrap) return;
+    tabWrap.addEventListener('click', function(e) {
+      var btn = e.target.closest('.mm-reviews__tab');
+      if (!btn || btn.classList.contains('mm-reviews__tab--active')) return;
+      tabWrap.querySelectorAll('.mm-reviews__tab').forEach(function(t) {
+        t.classList.remove('mm-reviews__tab--active');
+      });
+      btn.classList.add('mm-reviews__tab--active');
+      renderReviews(btn.getAttribute('data-type'));
+    });
   }
 
   /* 쇼케이스 슬라이더 */
@@ -2175,8 +3119,11 @@ button[class*="mm-"]:focus-visible {
     renderChips();
     renderProducts('mmFeatured', DATA.featured);
     renderProducts('mmFirstScissors', DATA.firstScissors);
+    renderGuides();
     renderCurations();
     renderEvents();
+    renderReviews('consulting'); /* 기본 탭: 컨설팅상담 */
+    initReviewTabs();
     renderShowcase();
     initAnimations();
     initIframeComm();
