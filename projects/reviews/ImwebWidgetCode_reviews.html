@@ -361,7 +361,7 @@ img { display: block; max-width: 100%; }
   function initIframeComm() {
     function sendHeight() {
       var h = document.documentElement.scrollHeight;
-      window.parent.postMessage({ type: 'resize', height: h }, '*');
+      window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: h }, '*'); /* 표준 타입 통일 */
     }
     if (typeof ResizeObserver !== 'undefined') {
       new ResizeObserver(sendHeight).observe(document.body);

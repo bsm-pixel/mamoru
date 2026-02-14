@@ -27,10 +27,11 @@
 - **UI/UX Rules:**
   - **Hierarchy:** 한 화면에 두 개 이상의 강한 메시지를 두지 않아 시선 분산을 막습니다.
   - **Spacing:** 여백은 미적 요소가 아니라 **'질서의 신호'**로 사용합니다.
-  - **Visual Tokens:**
-    - **Base:** 다크 프리미엄 `#1C1C1E`
-    - **Background:** `#FFFFFF`, `#F5F5F7`
-    - **Point:** 골드 `#C9A962`는 오직 '신뢰/확정' 포인트에만 제한적으로 사용
+  - **Visual Tokens:** → **Terracotta Editorial** (정본: `.claude/BRAND_COLOR_SYSTEM.md`)
+    - **Base (60%):** Cream `#F2F2EA`
+    - **Dark (30%):** Indigo Black `#181725`
+    - **Accent (10%):** Terracotta `#D4613E` (CTA, 배지, 강조)
+    - ~~구 Gold(`#C9A962`) / 구 다크(`#1C1C1E`) / 순백(`#FFFFFF`) → 폐기~~
   - **Consistency:** 위젯 간 CSS 충돌 방지를 위해 **`.mm-` 접두사**를 사용합니다.
 
 ---
@@ -94,7 +95,7 @@ A data-driven architecture separating content from display logic enables iterati
 ### Approach & patterns
 Development follows a widget-based approach with strict namespace rules to prevent conflicts. Each widget supports the customer journey while maintaining a consistent identity.
 
-Performance optimization prioritizes SVG over PNG, inline code over image widgets, and mobile-first responsive layouts. Visual consistency relies on spacing, typography (Pretendard), and the color system (dark base #1C1C1E with limited gold accents #C9A962).
+Performance optimization prioritizes SVG over PNG, inline code over image widgets, and mobile-first responsive layouts. Visual consistency relies on spacing, typography (Pretendard), and the Terracotta Editorial color system (Cream #F2F2EA 60% + Indigo Black #181725 30% + Terracotta #D4613E 10%).
 
 ### Tools & resources
 Primary platform: Imweb with HTML/CSS code widgets. Backend: Apps Script + Google Sheets (data intake and storage), with AppSheet for downstream operations.

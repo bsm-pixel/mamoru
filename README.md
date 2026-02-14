@@ -22,10 +22,10 @@
 - **UI/UX Rules:**
   - **Hierarchy:** 한 화면에 두 개 이상의 강한 메시지를 두지 않습니다.
   - **Spacing:** 여백은 미적 요소가 아니라 **‘질서의 신호’**로 사용합니다.
-  - **Visual Tokens:**
-    - **Base:** 다크 프리미엄 `#1C1C1E`
-    - **Background:** `#FFFFFF`, `#F5F5F7`
-    - **Point:** 골드 `#C9A962` (오직 ‘신뢰/확정’ 포인트에만 제한)
+  - **Visual Tokens:** → Terracotta Editorial (상세: `.claude/BRAND_COLOR_SYSTEM.md`)
+    - **Base (60%):** Cream `#F2F2EA`
+    - **Dark (30%):** Indigo Black `#181725`
+    - **Accent (10%):** Terracotta `#D4613E` (CTA, 배지, 강조)
   - **Consistency:** 아임웹 위젯 간 CSS 충돌 방지를 위해 **`.mm-` 접두사**를 사용합니다.
 
 ## 3. 시스템 아키텍처 & 로직 (Technical Flow)
