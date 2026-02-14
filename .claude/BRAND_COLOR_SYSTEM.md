@@ -65,6 +65,7 @@
 | Warning | `#C49A3E` | `rgba(196,154,62,0.12)` | 재고 소진 임박, 주의사항 |
 | Error | `#C44040` | `rgba(196,64,64,0.12)` | 입력 오류, 실패 |
 | Info | `#7080B8` | `rgba(112,128,184,0.12)` | 안내, 도움말 |
+| Completion | `#829E86` | `rgba(130,158,134,0.08)` | 진단 완료, 첨부 확인, 단계 완료 — Dried Sage. 깊은 톤: `#6E8E73` |
 
 ---
 
@@ -94,6 +95,11 @@
   --mm-text-d: #181725;
   --mm-text-d2: #6B6980;
   --mm-text-d3: rgba(24,23,37,0.55);
+
+  /* Semantic */
+  --mm-completion: #829E86;          /* Dried Sage — 완료/확인 상태 */
+  --mm-completion-deep: #6E8E73;     /* 텍스트/라벨용 깊은 톤 */
+  --mm-completion-soft: rgba(130,158,134,0.08); /* 배경 틴트 */
 
   /* Borders */
   --mm-border-d: rgba(255,255,255,0.08);
