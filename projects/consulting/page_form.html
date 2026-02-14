@@ -76,35 +76,38 @@ html, body {
 .header {
   display: flex;
   align-items: center;
-  padding: 20px 20px 16px;
-  margin: 0 -20px 24px;        /* 음수 마진 → 전폭 다크 */
-  background: var(--mm-bg-dark);
-  border-bottom: none;
+  padding: 24px 0 20px;
+  margin: 0 0 24px;
+  background: transparent;       /* 다크 띠 제거 — 크림 배경 흡수 */
+  border-bottom: 1px solid var(--mm-border-l);
 }
 
 .header-logo {
-  background: var(--mm-gold);  /* Terracotta solid */
+  background: none;              /* 색 박스 제거 */
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
   /* 모바일 기본값 */
-  width: 36px;
-  height: 36px;
-  margin-right: 12px;
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
 }
 
 .header-logo svg {
-  fill: var(--mm-text-cream);  /* 크림 아이콘 */
+  fill: none;
+  stroke: var(--mm-gold);       /* Terracotta 라인 아이콘 */
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   /* 모바일 기본값 */
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .header h1 {
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: var(--mm-text-cream);  /* 크림 텍스트 */
+  color: var(--mm-text-d);       /* 인디고 블랙 */
   /* 모바일 기본값 */
   font-size: 18px;
 }
@@ -117,25 +120,24 @@ body.pc .wrap {
 }
 
 body.pc .header {
-  gap: 16px;
-  padding: 28px 48px 24px;
-  margin: 0 -48px 36px;       /* 음수 마진 → 전폭 다크 */
+  gap: 12px;
+  padding: 32px 0 24px;
+  margin: 0 0 36px;
 }
 
 body.pc .header-logo {
-  width: 44px;
-  height: 44px;
-  margin-right: 14px;
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  margin-right: 12px;
 }
 
 body.pc .header-logo svg {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
 }
 
 body.pc .header h1 {
-  font-size: 28px;
+  font-size: 24px;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1540,7 +1542,7 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
 <div class="wrap">
   <div class="header">
     <div class="header-logo">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9  2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="12" y2="15"/></svg>
     </div>
     <h1>가위 상담 신청</h1>
   </div>
