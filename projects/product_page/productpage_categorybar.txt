@@ -171,3 +171,28 @@
   </div>
 
 </div>
+
+<!-- 카테고리 전환 시 탭 위치로 스크롤 고정 -->
+<script>
+(function(){
+  var KEY = 'mm_cat_switch';
+  var tabs = document.querySelector('.cat-mini');
+  if (!tabs) return;
+
+  /* 탭 클릭 → 플래그 저장 */
+  tabs.addEventListener('click', function(e) {
+    var a = e.target.closest('a');
+    if (a && !a.classList.contains('active')) {
+      sessionStorage.setItem(KEY, '1');
+    }
+  });
+
+  /* 페이지 로드 → 플래그 있으면 탭 위치로 스크롤 */
+  if (sessionStorage.getItem(KEY)) {
+    sessionStorage.removeItem(KEY);
+    requestAnimationFrame(function() {
+      tabs.scrollIntoView({ behavior: 'instant', block: 'start' });
+    });
+  }
+})();
+</script>
