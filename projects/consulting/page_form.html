@@ -1647,7 +1647,7 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
                   <div class="time-slot loading">날짜를 먼저 선택해주세요.</div>
                 </div>
                 <div id="loading-dates" class="time-slot loading hide" style="margin-top:8px;">예약 가능한 날짜를 불러오는 중입니다...</div>
-                <div id="same-day-notice" class="same-day-notice hide">당일예약은 불가합니다. 다른 날짜를 선택해주세요.</div>
+                <div id="same-day-notice" class="same-day-notice hide">당일 예약은 불가합니다.</div>
               </div>
             </div>
             <div class="modal-footer">
@@ -2204,8 +2204,8 @@ function getCachedSlots(dateStr) {
       return true;
     }
     const today = todayStr();
-    // 과거일과 오늘은 선택 불가
-    if (ymd <= today) return true;
+    // 과거일만 선택 불가 (오늘은 클릭 허용 → 안내 표시)
+    if (ymd < today) return true;
     // 서버에서 내려온 휴무 요일 체크
     if (state.serverSettings.disabledWeekdays.includes(dow)) return true;
     // 휴무일 체크
@@ -2420,6 +2420,20 @@ function getCachedSlots(dateStr) {
     // 로딩 중에는 날짜 선택을 무시합니다.
     if (isLoadingDates) return;
 
+    // ★ 당일 클릭: 선택 상태 변경 없이 안내만 표시
+    if (isTodayYMD(dateStr)) {
+      const notice = $('same-day-notice');
+      if (notice) notice.classList.remove('hide');
+      // 시간 슬롯 영역 숨김
+      const slotsBox = $('time-slots');
+      if (slotsBox) { slotsBox.innerHTML = ''; slotsBox.classList.add('hide'); }
+      return;
+    }
+
+    // 당일 안내 숨김
+    const notice = $('same-day-notice');
+    if (notice) notice.classList.add('hide');
+
     // 날짜를 클릭했을 때 처리: 선택 상태 갱신 후 시간 슬롯을 불러옵니다.
     // 캘린더에서 선택 표시 처리
     document.querySelectorAll('#calendar-days .day').forEach(el => {
@@ -2533,30 +2547,42 @@ if (isLoadingDates) return;
   function openDatePickerModal() {
     // ★ 모달 열 때마다 캐시 초기화 (항상 최신 데이터 조회)
     state.slotsCache.clear();
-    
+
     // 모달을 열 때 현재 달 설정 및 선택값 복원
     state.modal.currentDate = state.visitDate ? new Date(state.visitDate + 'T00:00:00') : new Date();
     state.modal.selectedDate = state.visitDate;
     state.modal.selectedTime = state.visitTime;
+
+    // ★ 이전 선택값 없으면 첫 번째 예약 가능일 자동 선택
+    if (!state.modal.selectedDate) {
+      const today = todayStr();
+      const selectable = collectSelectableDatesOfCurrentMonth();
+      const firstAvail = selectable.find(function(d) { return d > today; });
+      if (firstAvail) {
+        state.modal.selectedDate = firstAvail;
+        state.modal.currentDate = new Date(firstAvail + 'T00:00:00');
+      }
+    }
+
     renderCalendar();
     // D. 요약 초기화
     updateModalSummary();
     // 현재 보이는 달에 대해 시간 슬롯을 선조회
     prefetchVisibleMonth();
     if (state.modal.selectedDate) {
-      // 이전에 선택한 날짜가 있으면 해당 날짜의 시간 슬롯을 즉시 로딩
+      // 선택된 날짜의 시간 슬롯을 즉시 로딩
       fetchAndRenderTimes(state.modal.selectedDate);
     } else {
       // 선택된 날짜가 없으면 안내 문구 출력
       $('time-slots').innerHTML = '<div class="time-slot loading">날짜를 먼저 선택해주세요.</div>';
     }
-    // 모달 오픈 시 로딩 메시지 및 당일 안내를 먼저 보여줍니다.
+    // 모달 오픈 시 로딩 메시지, 당일 안내는 숨김 (자동 선택일이 오늘이 아님)
     const ld = $('loading-dates');
     const tl = $('time-slots');
     const sd = $('same-day-notice');
     if (ld) ld.classList.remove('hide');
     if (tl) tl.classList.add('hide');
-    if (sd) sd.classList.remove('hide');
+    if (sd) sd.classList.add('hide');
     // 로딩 중 상태로 설정하여 날짜/시간/월 이동을 임시 차단합니다.
     isLoadingDates = true;
     datePickerModal.classList.add('show');
