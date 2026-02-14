@@ -12,20 +12,32 @@
    반응형: 768px 기준 자동 PC/모바일 전환
    ══════════════════════════════════════════════════════════════ */
 :root {
-  /* 다크 테마 - DiagRef 패밀리 룩 */
-  --void-black: #1c1c1e;
-  --bg-dark: #1C1C1E;
-  --card-bg: rgba(255, 255, 255, 0.03);
-  --card-border: rgba(255, 255, 255, 0.08);
+  /* Terracotta Editorial — 리딩형 (크림 본문 + 다크 헤더) */
+  --mm-bg-dark: #181725;
+  --mm-bg-cream: #F2F2EA;
+  --mm-bg-card: #FAFAF5;
+  --mm-gold: #D4613E;          /* Terracotta Primary (변수명 유지) */
+  --mm-gold-dark: #B85232;
+  --mm-text-d: #181725;
+  --mm-text-d2: #6B6980;
+  --mm-text-cream: #F2F2EA;
+  --mm-border-l: rgba(24,23,37,0.08);
+  --mm-border-m: rgba(24,23,37,0.12);
+  --error: #C44040;
+
+  /* Legacy alias — JS·모달에서 참조하는 이름 유지 */
+  --void-black: #181725;
+  --bg-dark: #181725;
+  --card-bg: var(--mm-bg-card);
+  --card-border: var(--mm-border-l);
   --crisp-white: #FFFFFF;
-  --trust-gold: #C9A962;
-  --gold-dark: #B8963E;
-  --text-primary: #FFFFFF;
-  --text-muted: rgba(255, 255, 255, 0.5);
-  --muted: rgba(255, 255, 255, 0.5);
-  --line: rgba(255, 255, 255, 0.1);
-  --line-strong: rgba(255, 255, 255, 0.15);
-  --error: #ef4444;
+  --trust-gold: #D4613E;
+  --gold-dark: #B85232;
+  --text-primary: var(--mm-text-d);
+  --text-muted: var(--mm-text-d2);
+  --muted: var(--mm-text-d2);
+  --line: var(--mm-border-l);
+  --line-strong: var(--mm-border-m);
 }
 
 * {
@@ -36,8 +48,8 @@
 
 html, body {
   font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: var(--bg-dark);  /* 다크 배경 */
-  color: var(--text-primary);  /* 화이트 텍스트 */
+  background: var(--mm-bg-cream);  /* 크림 본문 */
+  color: var(--mm-text-d);        /* 다크 텍스트 */
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -58,23 +70,24 @@ html, body {
 /* 모바일 기본값 */
 .wrap {
   max-width: 100%;
-  padding: 0 16px 32px;
+  padding: 0 20px 32px;  /* 좌우 20px */
 }
 
 .header {
   display: flex;
   align-items: center;
-  padding: 20px 0 16px;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 24px;
+  padding: 20px 20px 16px;
+  margin: 0 -20px 24px;        /* 음수 마진 → 전폭 다크 */
+  background: var(--mm-bg-dark);
+  border-bottom: none;
 }
 
 .header-logo {
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 그라디언트 */
+  background: var(--mm-gold);  /* Terracotta solid */
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;  /* 둥근 모서리 */
+  border-radius: 8px;
   /* 모바일 기본값 */
   width: 36px;
   height: 36px;
@@ -82,7 +95,7 @@ html, body {
 }
 
 .header-logo svg {
-  fill: var(--void-black);  /* 골드 배경에 다크 아이콘 */
+  fill: var(--mm-text-cream);  /* 크림 아이콘 */
   /* 모바일 기본값 */
   width: 20px;
   height: 20px;
@@ -91,29 +104,29 @@ html, body {
 .header h1 {
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: var(--text-primary);  /* 화이트 */
+  color: var(--mm-text-cream);  /* 크림 텍스트 */
   /* 모바일 기본값 */
   font-size: 18px;
 }
 
-/* PC 레이아웃 - 1200px */
+/* PC 레이아웃 - 960px 리딩형 */
 body.pc .wrap {
-  max-width: 1200px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 60px 80px 80px;
+  padding: 0 48px 60px;
 }
 
 body.pc .header {
   gap: 16px;
-  padding-bottom: 28px;
-  margin-bottom: 36px;
+  padding: 28px 48px 24px;
+  margin: 0 -48px 36px;       /* 음수 마진 → 전폭 다크 */
 }
 
 body.pc .header-logo {
   width: 44px;
   height: 44px;
   margin-right: 14px;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 body.pc .header-logo svg {
@@ -122,16 +135,16 @@ body.pc .header-logo svg {
 }
 
 body.pc .header h1 {
-  font-size: 28px;  /* PC: 더 큰 제목 */
+  font-size: 28px;
 }
 
 /* ─────────────────────────────────────────────────────────────
    Card
    ───────────────────────────────────────────────────────────── */
 .card {
-  background: var(--card-bg);  /* 다크 카드 배경 */
-  border: 1px solid var(--card-border);
-  border-radius: 16px;  /* 둥근 모서리 */
+  background: var(--mm-bg-card);  /* Card White */
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
 }
 
 .card-body {
@@ -142,7 +155,7 @@ body.pc .header h1 {
 }
 
 body.pc .card-body {
-  padding: 48px 56px;  /* PC: 넉넉한 패딩 */
+  padding: 40px 48px;  /* PC: 리딩형 패딩 */
   /* PC: 2열 그리드 레이아웃 */
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -215,7 +228,7 @@ label {
   display: block;
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);  /* 밝은 라벨 */
+  color: var(--mm-text-d2);  /* 라이트 라벨 */
   margin-bottom: 8px;
   letter-spacing: -0.01em;
 }
@@ -231,12 +244,12 @@ textarea,
 select {
   width: 100%;
   height: 48px;
-  border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.05);  /* 반투명 다크 */
-  border-radius: 12px;  /* 둥근 모서리 */
+  border: 1px solid var(--mm-border-m);
+  background: var(--mm-bg-cream);  /* 크림 배경 */
+  border-radius: 6px;
   font-family: inherit;
   font-size: 15px;
-  color: var(--text-primary);  /* 화이트 텍스트 */
+  color: var(--mm-text-d);  /* 다크 텍스트 */
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
   -webkit-appearance: none;
@@ -256,17 +269,17 @@ input[type="text"]:focus,
 input[type="tel"]:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--trust-gold);  /* 골드 포커스 */
-  box-shadow: 0 0 0 1px var(--trust-gold) inset;
+  border-color: var(--mm-gold);  /* Terracotta 포커스 */
+  box-shadow: 0 0 0 1px var(--mm-gold) inset;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: rgba(255, 255, 255, 0.3);  /* 어두운 placeholder */
+  color: rgba(24,23,37,0.35);  /* 라이트 placeholder */
 }
 
 input[readonly] {
-  background: rgba(255, 255, 255, 0.02);  /* 더 어두운 배경 */
+  background: #E8E6DC;  /* readonly 배경 */
   cursor: pointer;
 }
 
@@ -300,7 +313,7 @@ select.err,
 .form-hint {
   margin-top: 8px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);  /* 밝은 힌트 */
+  color: rgba(24,23,37,0.45);  /* 라이트 힌트 */
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -318,7 +331,7 @@ body.pc .segment-wrap {
 .segment-label {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);  /* 화이트 */
+  color: var(--mm-text-d);  /* 다크 */
   letter-spacing: -0.02em;
   margin-bottom: 12px;
 }
@@ -337,10 +350,10 @@ body.pc .segment-control {
 }
 
 body.pc .segment-btn {
-  height: 120px;  /* PC: 큰 아이콘 수용 */
+  height: 120px;
   padding: 20px 16px;
   gap: 10px;
-  border-radius: 16px;
+  border-radius: 8px;  /* 리딩형 */
 }
 
 body.pc .segment-btn .seg-icon {
@@ -354,30 +367,24 @@ body.pc .segment-btn {
 }
 
 .segment-btn {
-  /* 개별 카드 스타일 */
-  border: 1px solid var(--line-strong);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
+  /* 개별 카드 스타일 — 라이트 */
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  background: var(--mm-bg-card);
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--mm-text-d2);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, color 0.15s;
-  -webkit-tap-highlight-color: transparent; /* 모바일 탭 하이라이트 제거 */
-  /* 아이콘+텍스트 세로 배치 */
+  -webkit-tap-highlight-color: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 100px;  /* 큰 아이콘 수용 */
+  height: 100px;
   padding: 16px 8px;
-}
-
-.segment-btn:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.05);
 }
 
 .segment-btn .seg-icon {
@@ -409,9 +416,9 @@ body.pc .segment-btn {
 /* 개별 카드형이므로 last-child 특별 처리 불필요 */
 
 .segment-btn.active {
-  background: rgba(201, 169, 98, 0.15);  /* 골드 틴트 배경 */
-  border-color: var(--trust-gold);  /* 골드 테두리 */
-  color: var(--trust-gold);  /* 골드 텍스트 */
+  background: rgba(212,97,62,0.14);  /* Terracotta 틴트 */
+  border-color: var(--mm-gold);
+  color: var(--mm-gold);
   font-weight: 600;
 }
 
@@ -420,12 +427,12 @@ body.pc .segment-btn {
    ───────────────────────────────────────────────────────────── */
 .type-info {
   padding: 14px 16px;
-  background: rgba(201, 169, 98, 0.08);  /* 골드 틴트 */
-  border-left: 2px solid var(--trust-gold);  /* 골드 보더 */
+  background: rgba(112,128,184,0.10);  /* Info 틴트 — 안내 톤 */
+  border-left: 2px solid #7080B8;      /* Info semantic */
   border-radius: 0 8px 8px 0;
   font-size: 13px;
   line-height: 1.7;
-  color: rgba(255, 255, 255, 0.7);
+  color: #3D3B52;  /* Neutral 700 — 가독성 확보 */
   margin-bottom: 20px;
 }
 
@@ -445,9 +452,9 @@ body.pc .type-info {
   align-items: center;
   justify-content: space-between;
   padding: 0 14px;
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;  /* 둥근 모서리 */
-  background: rgba(255, 255, 255, 0.05);  /* 다크 배경 */
+  border: 1px solid var(--mm-border-m);
+  border-radius: 6px;
+  background: var(--mm-bg-cream);
   cursor: pointer;
   transition: border-color 0.2s;
 }
@@ -456,23 +463,19 @@ body.pc .date-picker-btn {
   padding: 0 16px;
 }
 
-.date-picker-btn:hover {
-  border-color: var(--trust-gold);  /* 골드 hover */
-}
-
 .date-display {
   font-size: 15px;
-  color: var(--text-primary);  /* 화이트 */
+  color: var(--mm-text-d);
 }
 
 .date-display.placeholder {
-  color: rgba(255, 255, 255, 0.3);  /* placeholder */
+  color: rgba(24,23,37,0.35);
 }
 
 .date-picker-btn svg {
   width: 18px;
   height: 18px;
-  color: rgba(255, 255, 255, 0.5);  /* 밝은 아이콘 */
+  color: var(--mm-text-d2);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -494,13 +497,13 @@ body.pc .address-row {
 .btn-search {
   flex-shrink: 0;
   height: 48px;
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);  /* 다크 배경 */
+  border: 1px solid var(--mm-border-m);
+  border-radius: 6px;
+  background: var(--mm-bg-card);  /* 라이트 */
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary);  /* 화이트 */
+  color: var(--mm-text-d);
   cursor: pointer;
   transition: all 0.2s;
   /* 모바일 기본값 */
@@ -509,12 +512,6 @@ body.pc .address-row {
 
 body.pc .btn-search {
   padding: 0 20px;
-}
-
-.btn-search:hover {
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 hover */
-  color: var(--void-black);
-  border-color: var(--trust-gold);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -527,13 +524,13 @@ body.pc .btn-search {
 }
 
 .day-chip {
-  border: 1px solid var(--line-strong);
-  border-radius: 10px;  /* 둥근 모서리 */
-  background: rgba(255, 255, 255, 0.03);  /* 다크 배경 */
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  background: var(--mm-bg-card);
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);  /* 비활성 */
+  color: var(--mm-text-d2);  /* 비활성 */
   cursor: pointer;
   transition: all 0.2s;
   /* 모바일: 7등분 */
@@ -553,9 +550,9 @@ body.pc .day-chip {
 }
 
 .day-chip.active {
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 */
-  color: var(--void-black);
-  border-color: var(--trust-gold);
+  background: var(--mm-gold);  /* Terracotta solid */
+  color: var(--mm-text-cream);
+  border-color: var(--mm-gold);
   font-weight: 600;
 }
 
@@ -575,13 +572,13 @@ body.pc .time-pref-wrap {
 }
 
 .time-pref-btn {
-  border: 1px solid var(--line-strong);
-  border-radius: 10px;  /* 둥근 모서리 */
-  background: rgba(255, 255, 255, 0.03);  /* 다크 배경 */
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  background: var(--mm-bg-card);
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);  /* 비활성 */
+  color: var(--mm-text-d2);  /* 비활성 */
   cursor: pointer;
   transition: all 0.2s;
   /* 모바일: 전체폭 */
@@ -594,9 +591,9 @@ body.pc .time-pref-btn {
 }
 
 .time-pref-btn.active {
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 */
-  color: var(--void-black);
-  border-color: var(--trust-gold);
+  background: var(--mm-gold);  /* Terracotta solid */
+  color: var(--mm-text-cream);
+  border-color: var(--mm-gold);
   font-weight: 600;
 }
 
@@ -604,9 +601,9 @@ body.pc .time-pref-btn {
    Privacy Agreement
    ───────────────────────────────────────────────────────────── */
 .privacy-box {
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;  /* 둥근 모서리 */
-  background: rgba(255, 255, 255, 0.02);  /* 살짝 밝은 배경 */
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  background: var(--mm-bg-card);
   /* 모바일 기본값 */
   padding: 16px;
   margin-top: 24px;
@@ -620,19 +617,19 @@ body.pc .privacy-box {
 .privacy-box h4 {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);  /* 화이트 */
+  color: var(--mm-text-d);
   margin-bottom: 12px;
   letter-spacing: -0.02em;
 }
 
 .privacy-content {
   padding: 12px;
-  background: rgba(0, 0, 0, 0.3);  /* 다크 배경 */
-  border: 1px solid var(--line);
+  background: var(--mm-bg-cream);  /* 크림 배경 */
+  border: 1px solid var(--mm-border-l);
   border-radius: 8px;
   font-size: 11px;
   line-height: 1.7;
-  color: rgba(255, 255, 255, 0.5);  /* 밝은 텍스트 */
+  color: var(--mm-text-d2);
   overflow-y: auto;
   white-space: pre-wrap;
   /* 모바일 기본값 */
@@ -655,7 +652,7 @@ body.pc .privacy-content {
 .privacy-check input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: var(--trust-gold);  /* 골드 체크박스 */
+  accent-color: var(--mm-gold);  /* Terracotta 체크박스 */
   cursor: pointer;
 }
 
@@ -663,7 +660,7 @@ body.pc .privacy-content {
   margin: 0;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary);  /* 화이트 */
+  color: var(--mm-text-d);
   cursor: pointer;
 }
 
@@ -672,23 +669,23 @@ body.pc .privacy-content {
    ───────────────────────────────────────────────────────────── */
 .btn-primary {
   width: 100%;
-  height: 56px;  /* 약간 더 높게 */
+  height: 56px;
   margin-top: 20px;
   border: none;
-  border-radius: 14px;  /* 둥근 모서리 */
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 그라디언트 */
+  border-radius: 999px;  /* pill */
+  background: var(--mm-gold);  /* Terracotta solid */
   font-family: inherit;
   font-size: 16px;
   font-weight: 600;
-  color: var(--crisp-white);
+  color: var(--mm-text-cream);
   letter-spacing: -0.02em;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
 }
 
 body.pc .btn-primary {
   margin-top: 32px;
-  max-width: 400px;  /* PC: 버튼 너비 제한 */
+  max-width: 400px;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -699,8 +696,8 @@ body.pc .btn-primary {
   cursor: not-allowed;
 }
 
-.btn-primary:not(:disabled):hover {
-  opacity: 0.85;
+.btn-primary:not(:disabled):active {
+  transform: scale(0.97);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -738,9 +735,9 @@ body.pc .modal-backdrop {
 }
 
 .modal-content {
-  background: #2C2C2E;  /* 다크 모달 배경 */
+  background: #2A2940;  /* 다크 모달 배경 */
   overflow: hidden;
-  border-radius: 16px;  /* 둥근 모서리 */
+  border-radius: 16px;
   /* 모바일 기본값 */
   width: 100%;
   max-height: 85vh;
@@ -768,8 +765,8 @@ body.pc .modal-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);  /* 다크 라인 */
-  background: rgba(0, 0, 0, 0.2);  /* 살짝 어두운 헤더 */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
   /* 모바일 기본값 */
   padding: 16px 20px;
 }
@@ -782,7 +779,7 @@ body.pc .modal-header {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: var(--text-primary);  /* 화이트 */
+  color: #FFFFFF;  /* 모달 내 화이트 유지 */
 }
 
 .modal-close {
@@ -804,7 +801,7 @@ body.pc .modal-close {
 }
 
 body.pc .modal-close:hover {
-  color: var(--void-black);
+  color: #FFFFFF;
 }
 
 .modal-body {
@@ -824,7 +821,7 @@ body.pc .modal-body {
   font-weight: 700;
   margin-bottom: 8px;
   letter-spacing: -0.03em;
-  color: var(--text-primary);  /* 화이트 */
+  color: #FFFFFF;
 }
 
 body.pc .modal-body h2 {
@@ -876,24 +873,24 @@ body.pc .modal-footer .btn-primary {
   justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);  /* 다크 배경 */
+  background: rgba(255, 255, 255, 0.05);
   font-size: 18px;
-  color: var(--text-primary);  /* 화이트 */
+  color: #FFFFFF;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .calendar-nav button:hover {
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 */
-  color: var(--void-black);
-  border-color: var(--trust-gold);
+  background: var(--mm-gold);  /* Terracotta solid */
+  color: var(--mm-text-cream);
+  border-color: var(--mm-gold);
 }
 
 .calendar-nav .month {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: var(--text-primary);  /* 화이트 */
+  color: #FFFFFF;
 }
 
 .calendar-grid {
@@ -917,28 +914,28 @@ body.pc .modal-footer .btn-primary {
   justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);  /* 다크 배경 */
+  background: rgba(255, 255, 255, 0.03);
   font-size: 14px;
-  color: var(--text-primary);  /* 화이트 */
+  color: #FFFFFF;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .day:hover:not(.disabled) {
-  border-color: var(--trust-gold);  /* 골드 hover */
-  background: rgba(201, 169, 98, 0.1);
+  border-color: var(--mm-gold);
+  background: rgba(212,97,62,0.15);
 }
 
 .day.today {
-  border-color: var(--trust-gold);  /* 브랜드 골드 */
-  color: var(--trust-gold);
+  border-color: var(--mm-gold);
+  color: var(--mm-gold);
   font-weight: 600;
 }
 
 .day.selected {
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 */
-  color: var(--void-black);
-  border-color: var(--trust-gold);
+  background: var(--mm-gold);  /* Terracotta solid */
+  color: var(--mm-text-cream);
+  border-color: var(--mm-gold);
   font-weight: 600;
 }
 
@@ -967,7 +964,7 @@ body.pc .modal-footer .btn-primary {
   font-weight: 600;
   margin-bottom: 12px;
   letter-spacing: -0.02em;
-  color: var(--text-primary);  /* 화이트 */
+  color: #FFFFFF;  /* 모달 내 화이트 */
 }
 
 .time-slots {
@@ -989,9 +986,9 @@ body.pc .time-slots {
   justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);  /* 다크 배경 */
+  background: rgba(255, 255, 255, 0.03);
   font-size: 14px;
-  color: var(--text-primary);  /* 화이트 */
+  color: #FFFFFF;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -1001,14 +998,14 @@ body.pc .time-slot {
 }
 
 .time-slot:hover:not(.unavailable) {
-  border-color: var(--trust-gold);  /* 골드 hover */
-  background: rgba(201, 169, 98, 0.1);
+  border-color: var(--mm-gold);
+  background: rgba(212,97,62,0.15);
 }
 
 .time-slot.selected {
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 */
-  color: var(--void-black);
-  border-color: var(--trust-gold);
+  background: var(--mm-gold);
+  color: var(--mm-text-cream);
+  border-color: var(--mm-gold);
   font-weight: 600;
 }
 
@@ -1054,7 +1051,7 @@ body.pc .time-slot {
 }
 
 .postcode-wrap {
-  background: #2C2C2E;  /* 다크 배경 */
+  background: #2A2940;  /* 다크 배경 */
   border-radius: 16px;
   overflow: hidden;
   display: flex;
@@ -1075,11 +1072,11 @@ body.pc .postcode-wrap {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);  /* 다크 라인 */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.2);
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);  /* 화이트 */
+  color: #FFFFFF;
 }
 
 body.pc .postcode-header {
@@ -1097,7 +1094,7 @@ body.pc .postcode-header {
 }
 
 body.pc .postcode-close:hover {
-  color: var(--void-black);
+  color: #FFFFFF;
 }
 
 #postcode-inner {
@@ -1160,14 +1157,14 @@ body.noscroll {
   align-items: flex-start;
   justify-content: center;
   padding-top: clamp(72px, 22vh, 200px);
-  background: rgba(28, 28, 30, 0.98);  /* 다크 배경 */
+  background: rgba(24,23,37,0.98);  /* 다크 배경 */
   z-index: 99999;
 }
 
 #bootFallback {
   border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.1);  /* 다크 라인 */
-  border-top-color: var(--trust-gold);  /* 골드 스피너 */
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--mm-gold);  /* Terracotta 스피너 */
   animation: bootspin 1s linear infinite;
   /* 모바일 기본값 */
   width: 40px;
@@ -1187,9 +1184,9 @@ body.pc #bootFallback {
    ★ 진단 결과 배너
    ───────────────────────────────────────────────────────────── */
 .diagnosis-banner {
-  background: rgba(201, 169, 98, 0.08);  /* 골드 틴트 배경 */
-  border: 1px solid rgba(201, 169, 98, 0.3);  /* 골드 테두리 */
-  border-radius: 16px;  /* 둥근 모서리 */
+  background: rgba(212,97,62,0.08);  /* Terracotta 틴트 */
+  border: 1px solid rgba(212,97,62,0.25);
+  border-radius: 8px;
   padding: 20px;
   margin-bottom: 24px;
   /* 모바일 렌더링 보장 */
@@ -1207,7 +1204,7 @@ body.pc #bootFallback {
 body.pc .diagnosis-banner {
   padding: 24px 32px;
   margin-bottom: 32px;
-  border-radius: 20px;
+  border-radius: 8px;
 }
 
 body.pc .diagnosis-banner-header {
@@ -1231,8 +1228,8 @@ body.pc .diagnosis-tag {
 }
 
 .diagnosis-banner-badge {
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);  /* 골드 그라디언트 */
-  color: var(--void-black);
+  background: var(--mm-gold);  /* Terracotta solid */
+  color: var(--mm-text-cream);
   font-size: 11px;
   font-weight: 700;
   padding: 5px 10px;
@@ -1241,7 +1238,7 @@ body.pc .diagnosis-tag {
 }
 
 .diagnosis-banner-title {
-  color: var(--trust-gold);  /* 골드 타이틀 */
+  color: var(--mm-gold);
   font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -1254,10 +1251,10 @@ body.pc .diagnosis-tag {
 }
 
 .diagnosis-tag {
-  background: rgba(201, 169, 98, 0.15);  /* 골드 틴트 */
-  border: 1px solid rgba(201, 169, 98, 0.3);
-  border-radius: 100px;  /* 알약형 */
-  color: var(--trust-gold);  /* 골드 텍스트 */
+  background: rgba(212,97,62,0.12);
+  border: 1px solid rgba(212,97,62,0.25);
+  border-radius: 100px;
+  color: var(--mm-gold);
   font-size: 12px;
   font-weight: 500;
   padding: 5px 12px;
@@ -1266,9 +1263,9 @@ body.pc .diagnosis-tag {
 .diagnosis-banner-hint {
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid rgba(201, 169, 98, 0.2);
+  border-top: 1px solid rgba(212,97,62,0.18);
   font-size: 12px;
-  color: rgba(201, 169, 98, 0.7);  /* 골드 힌트 */
+  color: rgba(212,97,62,0.7);
   line-height: 1.5;
 }
 
@@ -1302,18 +1299,236 @@ body.pc .diagnosis-tag {
 
 .diagnosis-banner-btn {
   display: inline-block;
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);
-  color: var(--void-black);
+  background: var(--mm-gold);
+  color: var(--mm-text-cream);
   font-size: 13px;
   font-weight: 600;
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: 999px;
   text-decoration: none;
-  transition: opacity 0.2s;
+  transition: background 0.2s;
 }
 
-.diagnosis-banner-btn:hover {
-  opacity: 0.9;
+/* ─────────────────────────────────────────────────────────────
+   Memo Note (참고사항)
+   ───────────────────────────────────────────────────────────── */
+.memo-note {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: var(--mm-bg-cream);
+  border: 1px solid var(--mm-border-l);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--mm-text-d2);
+}
+.memo-note-title {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8E8CA0;       /* Neutral 400 */
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.memo-note ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.memo-note li {
+  padding-left: 12px;
+  position: relative;
+}
+.memo-note li::before {
+  content: '·';
+  position: absolute;
+  left: 0;
+  color: #B5B3C2;       /* Neutral 300 */
+  font-weight: 700;
+}
+body.pc .memo-note {
+  padding: 14px 16px;
+  font-size: 12px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Inline Date Picker (모달 → 인라인 전환)
+   ───────────────────────────────────────────────────────────── */
+#date-picker-modal {
+  position: static !important;
+  background: none !important;
+  display: none;
+  margin-top: 12px;
+  z-index: auto;
+}
+#date-picker-modal.show {
+  display: block;
+}
+#date-picker-modal .modal-content {
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  animation: none !important;
+  background: var(--mm-bg-card);  /* Card White — 폼과 어우러짐 */
+  border-radius: 8px;
+  border: 1px solid var(--mm-border-l);
+}
+#date-picker-modal .modal-header {
+  display: none;
+}
+#date-picker-modal .modal-body {
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 20px;
+}
+body.pc #date-picker-modal .modal-body {
+  padding: 24px 28px;
+}
+#date-picker-modal .modal-footer {
+  border-top: 1px solid var(--mm-border-l);
+  padding: 14px 20px;
+  background: transparent;
+}
+/* 캘린더 라이트 오버라이드 */
+#date-picker-modal .calendar-nav button {
+  background: var(--mm-bg-cream);
+  border-color: var(--mm-border-l);
+  color: var(--mm-text-d);
+}
+#date-picker-modal .calendar-nav button:hover {
+  background: rgba(212,97,62,0.10);
+  color: var(--mm-gold);
+  border-color: var(--mm-gold);
+}
+#date-picker-modal .calendar-nav .month {
+  color: var(--mm-text-d);
+}
+#date-picker-modal .weekday {
+  color: var(--mm-text-d2);
+}
+#date-picker-modal .day {
+  background: var(--mm-bg-cream);
+  border-color: var(--mm-border-l);
+  color: var(--mm-text-d);
+}
+#date-picker-modal .day:hover:not(.disabled) {
+  background: rgba(212,97,62,0.06);
+  border-color: rgba(212,97,62,0.3);
+}
+#date-picker-modal .day.today {
+  border-color: var(--mm-gold);
+  color: var(--mm-gold);
+}
+#date-picker-modal .day.selected {
+  background: rgba(212,97,62,0.14);  /* Terracotta Soft 틴트 */
+  border-color: var(--mm-gold);
+  color: var(--mm-gold);
+  font-weight: 600;
+}
+#date-picker-modal .day.disabled {
+  background: #E8E6DC;  /* Warm Ivory */
+  color: #B5B3C2;       /* Neutral 300 */
+}
+/* 시간 섹션 라이트 */
+#date-picker-modal .time-section {
+  border-top-color: var(--mm-border-l);
+}
+#date-picker-modal .time-section h4 {
+  color: var(--mm-text-d);
+}
+#date-picker-modal .time-slot {
+  background: var(--mm-bg-cream);
+  border-color: var(--mm-border-l);
+  color: var(--mm-text-d);
+}
+#date-picker-modal .time-slot:hover:not(.unavailable) {
+  background: rgba(212,97,62,0.06);
+  border-color: rgba(212,97,62,0.3);
+}
+#date-picker-modal .time-slot.selected {
+  background: rgba(212,97,62,0.14);
+  border-color: var(--mm-gold);
+  color: var(--mm-gold);
+  font-weight: 600;
+}
+#date-picker-modal .time-slot.unavailable {
+  background: #E8E6DC;
+  color: #B5B3C2;
+}
+#date-picker-modal .time-slot.loading {
+  color: var(--mm-text-d2);
+}
+#date-picker-modal .time-period-label {
+  color: var(--mm-text-d2);
+  border-bottom-color: var(--mm-border-l);
+}
+#date-picker-modal .modal-selection-summary {
+  color: var(--mm-text-d2);
+}
+#date-picker-modal .modal-selection-summary.has-selection {
+  color: var(--mm-gold);
+}
+/* PC: 인라인 피커 열릴 때 sec-visit 전폭 */
+body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
+  grid-column: 1 / -1;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Time Slots Section Divider (오전/오후)
+   ───────────────────────────────────────────────────────────── */
+.time-period-label {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.04em;
+  padding: 6px 0 2px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 2px;
+}
+.time-period-label:first-child { padding-top: 0; }
+
+/* ─────────────────────────────────────────────────────────────
+   Footer Selection Summary
+   ───────────────────────────────────────────────────────────── */
+.modal-selection-summary {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 10px;
+  min-height: 18px;
+  transition: color 0.15s;
+}
+.modal-selection-summary.has-selection {
+  color: var(--mm-gold);
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Hover States — 터치 디바이스에서 유령 hover 방지
+   ───────────────────────────────────────────────────────────── */
+@media (hover: hover) {
+  .segment-btn:hover {
+    border-color: var(--mm-border-m);
+    background: rgba(212,97,62,0.06);
+  }
+  .date-picker-btn:hover {
+    border-color: var(--mm-gold);
+  }
+  .btn-search:hover {
+    background: var(--mm-gold);
+    color: var(--mm-text-cream);
+    border-color: var(--mm-gold);
+  }
+  .btn-primary:not(:disabled):hover {
+    background: var(--mm-gold-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212,97,62,0.3);
+  }
+  .diagnosis-banner-btn:hover {
+    background: var(--mm-gold-dark);
+  }
 }
 </style>
 </head>
@@ -1408,6 +1623,39 @@ body.pc .diagnosis-tag {
           <span id="selected-date-display" class="date-display placeholder">날짜와 시간을 선택하세요</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         </button>
+        <!-- 인라인 날짜/시간 선택 (기존 모달 → 인라인) -->
+        <div id="date-picker-modal" class="modal-backdrop">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>날짜 및 시간 선택</h3>
+              <button type="button" class="modal-close" id="btn-modal-close">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="calendar-nav">
+                <button type="button" id="btn-prev-month">◀</button>
+                <span class="month" id="calendar-month"></span>
+                <button type="button" id="btn-next-month">▶</button>
+              </div>
+              <div class="calendar-grid">
+                <div class="weekday">일</div><div class="weekday">월</div><div class="weekday">화</div>
+                <div class="weekday">수</div><div class="weekday">목</div><div class="weekday">금</div><div class="weekday">토</div>
+              </div>
+              <div id="calendar-days" class="calendar-grid"></div>
+              <div class="time-section">
+                <h4>시간 선택</h4>
+                <div class="time-slots" id="time-slots">
+                  <div class="time-slot loading">날짜를 먼저 선택해주세요.</div>
+                </div>
+                <div id="loading-dates" class="time-slot loading hide" style="margin-top:8px;">예약 가능한 날짜를 불러오는 중입니다...</div>
+                <div id="same-day-notice" class="same-day-notice hide">당일예약은 불가합니다. 다른 날짜를 선택해주세요.</div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <div id="modal-summary" class="modal-selection-summary">날짜와 시간을 선택하세요</div>
+              <button id="btn-modal-confirm" class="btn-primary">선택 완료</button>
+            </div>
+          </div>
+        </div>
         <input type="hidden" id="visit_date">
         <input type="hidden" id="visit_time">
         <div id="err-visit" class="err-msg">날짜와 시간을 선택해주세요</div>
@@ -1456,7 +1704,7 @@ body.pc .diagnosis-tag {
       <div class="form-group" id="memo-group">
         <label>메모</label>
         <textarea id="memo" rows="3" placeholder="예) 특정 시간대 선호, 가위 상태, 요청사항 등"></textarea>
-        <p class="form-hint">※<b>이 경우</b>메모란에 필히 작성해주세요<br>-상담 인원이 2명 이상인 경우<br>-왼손가위를 필요로 하시는 경우 </p>
+        <div class="memo-note" id="memo-note"></div>
       </div>
 
       <!-- 개인정보 동의 -->
@@ -1484,40 +1732,6 @@ body.pc .diagnosis-tag {
       </div>
 
       <button id="btn-submit" class="btn-primary">상담 신청하기</button>
-    </div>
-  </div>
-</div>
-
-<!-- Date Picker Modal -->
-<div id="date-picker-modal" class="modal-backdrop">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>날짜 및 시간 선택</h3>
-      <button type="button" class="modal-close" id="btn-modal-close">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="calendar-nav">
-        <button type="button" id="btn-prev-month">◀</button>
-        <span class="month" id="calendar-month"></span>
-        <button type="button" id="btn-next-month">▶</button>
-      </div>
-      <div class="calendar-grid">
-        <div class="weekday">일</div><div class="weekday">월</div><div class="weekday">화</div>
-        <div class="weekday">수</div><div class="weekday">목</div><div class="weekday">금</div><div class="weekday">토</div>
-      </div>
-      <div id="calendar-days" class="calendar-grid"></div>
-      <div class="time-section">
-        <h4>시간 선택</h4>
-        <!-- 시간 선택 영역: 데이터가 로딩되기 전에는 로딩 메시지를 보여줍니다. -->
-        <div class="time-slots" id="time-slots">
-          <div class="time-slot loading">날짜를 먼저 선택해주세요.</div>
-        </div>
-        <div id="loading-dates" class="time-slot loading hide" style="margin-top:8px;">예약 가능한 날짜를 불러오는 중입니다...</div>
-        <div id="same-day-notice" class="same-day-notice hide">당일예약은 불가합니다. 다른 날짜를 선택해주세요.</div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button id="btn-modal-confirm" class="btn-primary">선택 완료</button>
     </div>
   </div>
 </div>
@@ -2120,11 +2334,24 @@ function getCachedSlots(dateStr) {
    * 인자로 예약 가능한 시간 목록(availableSlots)을 넘기면 그 목록에 포함되지 않은 시간은 비활성화로 표시합니다.
    * availableSlots가 null이면 로딩 중 메시지를 표시합니다.
    */
+  /** 24h → 12h 변환 (슬롯 라벨용, 섹션 헤더가 오전/오후 맥락 제공) */
+  function to12h(t24) {
+    const [h, m] = t24.split(':').map(Number);
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return `${h12}:${String(m).padStart(2, '0')}`;
+  }
+  /** 24h → "오후 1시" / "오후 1시 30분" (요약용) */
+  function to12hFull(t24) {
+    const [h, m] = t24.split(':').map(Number);
+    const period = h < 12 ? '오전' : '오후';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return m === 0 ? `${period} ${h12}시` : `${period} ${h12}시 ${m}분`;
+  }
+
   function renderTimeSlots(availableSlots) {
     const box = $('time-slots');
     const timeline = generateTimeSlots();
 
-    // 로딩 상태: null 전달 시
     if (availableSlots == null) {
       box.innerHTML = '<div class="time-slot loading">로딩 중...</div>';
       return;
@@ -2132,16 +2359,24 @@ function getCachedSlots(dateStr) {
 
     const okSet = new Set(Array.isArray(availableSlots) ? availableSlots : []);
     box.innerHTML = '';
+    let currentPeriod = '';
     timeline.forEach(t => {
+      const hour = parseInt(t.split(':')[0], 10);
+      const period = hour < 12 ? '오전' : '오후';
+      if (period !== currentPeriod) {
+        currentPeriod = period;
+        const label = document.createElement('div');
+        label.className = 'time-period-label';
+        label.textContent = period;
+        box.appendChild(label);
+      }
       const el = document.createElement('div');
       el.className = 'time-slot';
-      el.textContent = t;
-      el.dataset.time = t;
+      el.textContent = to12h(t);  /* 12h 표기 */
+      el.dataset.time = t;        /* data-time은 24h 유지 */
       if (!okSet.has(t)) {
-        // 예약 불가
         el.classList.add('unavailable');
       } else {
-        // 예약 가능
         if (state.modal.selectedTime === t) {
           el.classList.add('selected');
         }
@@ -2152,6 +2387,32 @@ function getCachedSlots(dateStr) {
     // 예약 가능한 슬롯이 하나도 없는 경우 안내 표시
     if (!okSet.size) {
       box.innerHTML = '<div class="time-slot unavailable">예약 가능한 시간이 없습니다.</div>';
+    }
+  }
+
+  // D. Footer 실시간 요약 갱신
+  function updateModalSummary() {
+    const el = $('modal-summary');
+    if (!el) return;
+    const d = state.modal.selectedDate;
+    const t = state.modal.selectedTime;
+    if (!d) {
+      el.textContent = '날짜와 시간을 선택하세요';
+      el.classList.remove('has-selection');
+      return;
+    }
+    const dt = new Date(d + 'T00:00:00');
+    const dayNames = ['일','월','화','수','목','금','토'];
+    const label = `${dt.getMonth()+1}월 ${dt.getDate()}일 (${dayNames[dt.getDay()]})`;
+    if (t) {
+      const biz = state.serverSettings.business || {};
+      const step = Number(biz.stepMin || 30);
+      const durH = Math.floor(step / 60) || 1;  // 최소 1시간 단위 표시
+      el.textContent = `${label} · ${to12hFull(t)} (${durH}시간)`;
+      el.classList.add('has-selection');
+    } else {
+      el.textContent = `${label} · 시간을 선택하세요`;
+      el.classList.remove('has-selection');
     }
   }
 
@@ -2166,6 +2427,8 @@ function getCachedSlots(dateStr) {
     });
     // 비동기적으로 시간 슬롯 로딩
     fetchAndRenderTimes(dateStr);
+    // D. 요약 갱신 (시간은 리셋됨)
+    updateModalSummary();
   }
 
   /**
@@ -2253,9 +2516,11 @@ if (isLoadingDates) return;
     nextEl.classList.add('selected');
   }
 
-  // “선택 완료” 버튼 활성화
+  // "선택 완료" 버튼 활성화
   const confirmBtn = document.getElementById('btn-modal-confirm');
   if (confirmBtn) confirmBtn.disabled = false;
+  // D. 요약 갱신
+  updateModalSummary();
 }
 
 
@@ -2274,6 +2539,8 @@ if (isLoadingDates) return;
     state.modal.selectedDate = state.visitDate;
     state.modal.selectedTime = state.visitTime;
     renderCalendar();
+    // D. 요약 초기화
+    updateModalSummary();
     // 현재 보이는 달에 대해 시간 슬롯을 선조회
     prefetchVisibleMonth();
     if (state.modal.selectedDate) {
@@ -2293,13 +2560,19 @@ if (isLoadingDates) return;
     // 로딩 중 상태로 설정하여 날짜/시간/월 이동을 임시 차단합니다.
     isLoadingDates = true;
     datePickerModal.classList.add('show');
-    document.body.classList.add('noscroll');
+    // 인라인: noscroll 불필요, iframe 높이 재계산
+    requestAnimationFrame(function() {
+      setTimeout(function() { window.__notifyHeight && window.__notifyHeight(true); }, 100);
+    });
   }
 
 
   function closeDatePickerModal() {
     datePickerModal.classList.remove('show');
-    document.body.classList.remove('noscroll');
+    // 인라인: iframe 높이 재계산
+    requestAnimationFrame(function() {
+      setTimeout(function() { window.__notifyHeight && window.__notifyHeight(true); }, 100);
+    });
   }
 
   function confirmSelection() {
@@ -2309,7 +2582,9 @@ if (isLoadingDates) return;
       $('visit_date').value = state.visitDate;
       $('visit_time').value = state.visitTime;
       const displayEl = $('selected-date-display');
-      displayEl.textContent = `${state.visitDate} ${state.visitTime}`;
+      const dt = new Date(state.visitDate + 'T00:00:00');
+      const dn = ['일','월','화','수','목','금','토'];
+      displayEl.textContent = `${dt.getMonth()+1}월 ${dt.getDate()}일 (${dn[dt.getDay()]}) ${to12hFull(state.visitTime)}`;
       displayEl.classList.remove('placeholder');
       closeDatePickerModal();
     } else { alert('날짜와 시간을 모두 선택해주세요.'); }
@@ -2326,11 +2601,15 @@ if (isLoadingDates) return;
   }
 
   // Event Listeners
-  $('btn-open-picker').addEventListener('click', openDatePickerModal);
-  $('btn-modal-close').addEventListener('click', closeDatePickerModal);
-  datePickerModal.addEventListener('click', function(e) {
-    if (e.target === this) closeDatePickerModal();
+  $('btn-open-picker').addEventListener('click', function() {
+    // 토글: 이미 열려있으면 닫기
+    if (datePickerModal.classList.contains('show')) {
+      closeDatePickerModal();
+    } else {
+      openDatePickerModal();
+    }
   });
+  $('btn-modal-close').addEventListener('click', closeDatePickerModal);
 
   $('btn-prev-month').addEventListener('click', function() {
     // 로딩 중에는 월 이동을 제한합니다.
@@ -2352,6 +2631,25 @@ if (isLoadingDates) return;
 
   $('btn-modal-confirm').addEventListener('click', confirmSelection);
 
+  // C. 모바일 스와이프 월 이동
+  (function() {
+    const modalBody = document.querySelector('#date-picker-modal .modal-body');
+    if (!modalBody) return;
+    let sx = 0;
+    modalBody.addEventListener('touchstart', function(e) { sx = e.touches[0].clientX; }, { passive: true });
+    modalBody.addEventListener('touchend', function(e) {
+      const dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) < 50 || isLoadingDates) return;
+      if (dx < 0) { // 왼쪽 스와이프 → 다음 달
+        state.modal.currentDate.setMonth(state.modal.currentDate.getMonth() + 1);
+      } else { // 오른쪽 스와이프 → 이전 달
+        state.modal.currentDate.setMonth(state.modal.currentDate.getMonth() - 1);
+      }
+      renderCalendar();
+      prefetchDebounced();
+    }, { passive: true });
+  })();
+
   // ─────────────────────────────────────────────────────────────
   // Segment Control (상담유형)
   // ─────────────────────────────────────────────────────────────
@@ -2364,6 +2662,21 @@ if (isLoadingDates) return;
     '매장 방문': '마모루 매장에서 직접 만나뵙겠습니다.<br>편하신 <b>날짜와 시간</b>을 알려주세요.',
     '출장 요청': '원하시는 장소로 찾아뵙겠습니다.<br>지역에 따라 <b>1~2주 내외</b>로 일정을 조율해드려요.',
     '톡 상담': '카카오톡으로 편하게 문의해주세요.<br><b>영업시간 내</b> 순차적으로 답변드리겠습니다.'
+  };
+
+  const memoNotes = {
+    '매장 방문': '<span class="memo-note-title">참고사항</span><ul>'
+      + '<li>상담 인원이 2명 이상인 경우 메모란에 기재해 주세요</li>'
+      + '<li>왼손가위가 필요하신 경우 메모란에 기재해 주세요</li></ul>',
+    '출장 요청': '<span class="memo-note-title">참고사항</span><ul>'
+      + '<li>상담 인원이 2명 이상인 경우 메모란에 기재해 주세요</li>'
+      + '<li>주차가 복잡한 경우 미리 메모에 안내해 주시면 감사합니다</li>'
+      + '<li>교통 상황에 따라 방문 시간이 앞뒤 15분 정도 차이 날 수 있으며, 지연 시 사전 연락드리겠습니다</li></ul>',
+    '톡 상담': '<span class="memo-note-title">참고사항</span><ul>'
+      + '<li>상담사 스케줄과 고객님의 시간에 맞춰 진행되므로 답변이 다소 지연될 수 있습니다</li>'
+      + '<li>꼼꼼한 정보 확인을 통해 맞춤 컨설팅에 도움드리겠습니다</li>'
+      + '<li>고객님도 일정에 맞춰 편하게 답변·질문해 주시면 됩니다</li>'
+      + '<li>3일 이상 응답이 없을 경우 상담 종료 처리될 수 있습니다</li></ul>'
   };
 
   seg.addEventListener('click', function(e) {
@@ -2389,6 +2702,7 @@ if (isLoadingDates) return;
     }
     $('consult_type').value = state.type;
     typeInfo.innerHTML = typeMessages[state.type];
+    $('memo-note').innerHTML = memoNotes[state.type];
     // 레이아웃 재계산 후 높이 알림 - 1회만 호출 (과다 호출 제거)
     requestAnimationFrame(function() {
       setTimeout(function() { window.__notifyHeight && window.__notifyHeight(true); }, 100);
@@ -2657,6 +2971,7 @@ if (isLoadingDates) return;
   // ─────────────────────────────────────────────────────────────
   // Init
   // ─────────────────────────────────────────────────────────────
+  $('memo-note').innerHTML = memoNotes[state.type];  // 초기 참고사항 표시
   loadSettings();
 })();
 
