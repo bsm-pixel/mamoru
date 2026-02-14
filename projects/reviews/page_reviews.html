@@ -306,7 +306,7 @@ img { display: block; max-width: 100%; }
 
   function getReviews(type) {
     if (type === 'all') {
-      var all = DATA.consulting.concat(DATA.repair);
+      var all = DATA.consulting.concat(DATA.repair).concat(DATA.purchase); /* 제품구매 포함 */
       all.sort(function(a, b) { return b.date.localeCompare(a.date); });
       return all;
     }
