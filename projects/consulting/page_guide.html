@@ -20,75 +20,102 @@
   ========================================================= -->
 
 <style>
-/* 기본 리셋 */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body {
-  background: #1C1C1E;
-  min-height: 100%;
-}
-
-/* =========================================================
-   MAMORU 상담 안내 페이지 v3
+/* ══════════════════════════════════════════════════════════════
+   MAMORU 상담 안내 페이지 — Terracotta Editorial
+   아임웹 코드위젯 삽입용
 
    ★★★ 수정 가이드 ★★★
    [IMG] = 이미지, [TEXT] = 문구, [URL] = 링크
-   ========================================================= */
+   ══════════════════════════════════════════════════════════════ */
 
-/* 기본 설정 */
+/* ── 0. 변수 & 리셋 ── */
+:root {
+  --mm-bg-light: #F2F2EA;
+  --mm-bg-card: #FAFAF5;
+  --mm-bg-dark: #181725;
+  --mm-bg-darker: #100F1C;
+  --mm-bg-card-dark: #2A2940;
+  --mm-gold: #D4613E;
+  --mm-gold-dark: #B85232;
+  --mm-gold-soft: rgba(212,97,62,0.14);
+  --mm-text-d: #181725;
+  --mm-text-d2: #6B6980;
+  --mm-text-d3: rgba(24,23,37,0.55);
+  --mm-text-w: #F2F2EA;
+  --mm-text-w2: rgba(242,242,234,0.6);
+  --mm-text-w3: rgba(242,242,234,0.52);
+  --mm-border-l: rgba(24,23,37,0.08);
+  --mm-border-d: rgba(255,255,255,0.08);
+  --mm-radius: 6px;
+  --mm-radius-lg: 8px;
+  --mm-ease-fast: 0.15s ease;
+  --mm-ease: 0.25s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--mm-bg-light);
+  min-height: 100%;
+}
+
+/* ── 기본 설정 ── */
 .mamoru-consult-page {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #1C1C1E;
-  color: #ffffff;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--mm-bg-light);
+  color: var(--mm-text-d);
   line-height: 1.6;
-  padding-bottom: 20px; /* iframe용: static CTA */
+  padding-bottom: 20px;
+  -webkit-font-smoothing: antialiased;
 }
 
 .mamoru-consult-page * {
   box-sizing: border-box;
 }
 
-/* 섹션 공통 */
+/* ── 섹션 공통 ── */
 .consult-section {
   padding: 48px 20px;
 }
 
-/* [개선] 섹션 타이틀 - 골드 + 크게 */
 .consult-section-title {
-  font-size: 26px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 700;
   margin-bottom: 12px;
   margin-top: 0;
-  color: #C9A962;
+  color: var(--mm-text-d);
   text-align: center;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
-/* [개선] 섹션 구분선 */
 .consult-section-divider {
-  width: 60px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #C9A962, transparent);
+  width: 28px;
+  height: 3px;
+  background: var(--mm-gold);
+  border-radius: 2px;
   margin: 0 auto 32px;
 }
 
-/* =========================================================
-   [1] 히어로 섹션
-   ========================================================= */
+/* ══════════════════════════════════════════════════════════════
+   [1] 히어로 섹션 — 다크 배경 (30%)
+   ══════════════════════════════════════════════════════════════ */
 .consult-hero {
   padding: 60px 20px;
   text-align: center;
+  background: var(--mm-bg-dark);
 }
 
 .consult-hero-label {
   display: inline-block;
   padding: 6px 16px;
-  background: rgba(201, 169, 98, 0.15);
-  border: 1px solid rgba(201, 169, 98, 0.3);
+  background: var(--mm-gold-soft);
+  border: 1px solid rgba(212,97,62,0.3);
   border-radius: 100px;
-  color: #C9A962;
+  color: var(--mm-gold);
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
   margin-bottom: 24px;
 }
 
@@ -97,32 +124,31 @@ html, body {
   font-weight: 800;
   line-height: 1.3;
   margin-bottom: 16px;
-  letter-spacing: 1px;
+  letter-spacing: -0.03em;
+  color: var(--mm-text-w);
 }
 
 .consult-hero-title .chosen {
-  background: linear-gradient(135deg, #ffffff 0%, #C9A962 50%, #ffffff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--mm-gold);
 }
 
 .consult-hero-title .not-sold {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--mm-text-w2);
   font-weight: 600;
 }
 
 .consult-hero-desc {
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  color: var(--mm-text-w2);
   line-height: 1.8;
   margin-bottom: 32px;
+  letter-spacing: -0.01em;
 }
 
 .consult-hero-image {
   max-width: 350px;
   margin: 0 auto;
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
 }
 
@@ -135,27 +161,29 @@ html, body {
 .consult-hero-image-placeholder {
   width: 100%;
   height: 200px;
-  background: #2C2C2E;
+  background: var(--mm-bg-card-dark);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--mm-text-w3);
   font-size: 13px;
 }
 
-/* =========================================================
-   [2] 카테고리 탭 - 개선: 모바일 가로 스크롤
-   ========================================================= */
+/* ══════════════════════════════════════════════════════════════
+   [2] 카테고리 탭
+   ══════════════════════════════════════════════════════════════ */
 .consult-tabs-container {
   padding: 12px 16px;
   position: sticky;
-  top: 0; /* iframe 내부용 */
-  background: #1C1C1E;
+  top: 0;
+  background: var(--mm-bg-light);
   z-index: 100;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--mm-border-l);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-/* [개선] 탭 - 가로 스크롤 */
 .consult-tabs {
   display: flex;
   gap: 8px;
@@ -171,16 +199,17 @@ html, body {
 }
 
 .consult-tab {
-  flex-shrink: 0;
-  padding: 10px 18px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 100px;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 14px;
+  flex: 1;
+  padding: 8px 20px;
+  background: transparent;
+  border: 1px solid var(--mm-border-l);
+  border-radius: 999px;
+  color: var(--mm-text-d2);
+  font-family: inherit;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all var(--mm-ease-fast);
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
   outline: none;
@@ -188,16 +217,14 @@ html, body {
 }
 
 .consult-tab:active {
-  transform: scale(0.95);
-  opacity: 0.8;
+  transform: scale(0.96);
 }
 
 .consult-tab.active {
-  background: #C9A962;
-  border-color: #C9A962;
-  color: #1C1C1E;
+  background: var(--mm-gold);
+  border-color: var(--mm-gold);
+  color: var(--mm-text-w);
   font-weight: 600;
-  box-shadow: 0 6px 20px rgba(201, 169, 98, 0.4); /* 활성 탭 골드 그림자 */
 }
 
 /* 탭 콘텐츠 */
@@ -209,9 +236,9 @@ html, body {
   display: block;
 }
 
-/* =========================================================
-   [3] 탭별 캐릭터 이미지 영역
-   ========================================================= */
+/* ══════════════════════════════════════════════════════════════
+   [3] 탭별 캐릭터 이미지
+   ══════════════════════════════════════════════════════════════ */
 .tab-character {
   display: flex;
   justify-content: center;
@@ -235,42 +262,41 @@ html, body {
 .tab-character-placeholder {
   width: 100px;
   height: 100px;
-  background: rgba(201, 169, 98, 0.1);
-  border: 2px dashed rgba(201, 169, 98, 0.3);
+  background: var(--mm-gold-soft);
+  border: 2px dashed rgba(212,97,62,0.3);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(201, 169, 98, 0.5);
+  color: var(--mm-gold);
   font-size: 12px;
+  font-weight: 500;
 }
 
-/* =========================================================
-   [4] 상담철칙 섹션 - 개선: 골드 라인 + 호버
-   ========================================================= */
+/* ══════════════════════════════════════════════════════════════
+   [4] 상담철칙
+   ══════════════════════════════════════════════════════════════ */
 .principle-list {
   padding: 0 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px; /* 12px → 16px: 철칙 항목 간격 증가 */
+  gap: 16px;
   max-width: 500px;
   margin: 0 auto;
 }
 
-/* [개선] 철칙 아이템 - 좌측 골드 라인 + 호버 */
 .principle-item {
-  padding: 20px 24px;
-  padding-left: 28px;
-  background: #2C2C2E;
-  border-radius: 16px;
+  padding: 20px 24px 20px 28px;
+  background: var(--mm-bg-card);
+  border-radius: var(--mm-radius-lg);
   text-align: center;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease;
-  border: 1px solid transparent;
+  transition: all var(--mm-ease);
+  border: 1px solid var(--mm-border-l);
 }
 
-/* 좌측 골드 라인 */
+/* 좌측 테라코타 라인 */
 .principle-item::before {
   content: '';
   position: absolute;
@@ -278,57 +304,52 @@ html, body {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #C9A962 0%, #B8963E 100%);
+  background: var(--mm-gold);
   border-radius: 4px 0 0 4px;
-}
-
-/* 호버 효과 */
-.principle-item:hover {
-  background: #343436;
-  border-color: rgba(201, 169, 98, 0.2);
-  transform: translateX(4px);
 }
 
 .principle-text {
   font-size: 15px;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1.85; /* 1.7 → 1.85: 가독성 개선 */
+  color: var(--mm-text-d);
+  line-height: 1.85;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
-/* =========================================================
-   [5] 상담방식 공통 - 개선: 글씨 위계 명확히
-   ========================================================= */
+/* ══════════════════════════════════════════════════════════════
+   [5] 상담방식 공통
+   ══════════════════════════════════════════════════════════════ */
 .method-intro {
   text-align: center;
   padding: 8px 20px 40px;
 }
 
-/* [개선] 서브타이틀 - 더 작고 연하게 */
 .method-intro-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--mm-text-d2);
   margin-bottom: 8px;
+  letter-spacing: -0.01em;
 }
 
 .method-intro-desc {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--mm-text-d3);
+  letter-spacing: -0.01em;
 }
 
-/* [개선] 과정안내 소제목 - 구분 명확 */
 .process-section {
   padding: 0 20px 32px;
 }
 
 .process-section-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--mm-text-d3);
   margin-bottom: 20px;
   text-align: center;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 0.04em;
 }
 
 .process-grid {
@@ -342,8 +363,9 @@ html, body {
 .process-step {
   display: flex;
   gap: 16px;
-  background: #2C2C2E;
-  border-radius: 16px;
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
   overflow: hidden;
   align-items: center;
 }
@@ -352,12 +374,12 @@ html, body {
   flex-shrink: 0;
   width: 100px;
   height: 100px;
-  background: #3C3C3E;
+  background: rgba(24,23,37,0.03);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--mm-text-d3);
   font-size: 12px;
 }
 
@@ -374,12 +396,12 @@ html, body {
   left: 8px;
   width: 24px;
   height: 24px;
-  background: #C9A962;
-  border-radius: 6px;
+  background: var(--mm-gold);
+  border-radius: var(--mm-radius);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1C1C1E;
+  color: var(--mm-text-w);
   font-size: 12px;
   font-weight: 700;
 }
@@ -389,17 +411,17 @@ html, body {
   padding: 16px 16px 16px 0;
 }
 
-/* [개선] 스텝 제목 - 흰색 강조 */
 .process-step-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--mm-text-d);
   margin-bottom: 6px;
+  letter-spacing: -0.01em;
 }
 
 .process-step-desc {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--mm-text-d2);
   line-height: 1.5;
 }
 
@@ -408,7 +430,7 @@ html, body {
   display: flex;
   justify-content: center;
   padding: 4px 0;
-  color: rgba(201, 169, 98, 0.4);
+  color: rgba(212,97,62,0.4);
   font-size: 18px;
 }
 .process-arrow svg {
@@ -418,26 +440,27 @@ html, body {
 
 /* 버튼형 스텝 (시간조율 요청) */
 .process-step-action {
-  background: rgba(201, 169, 98, 0.08);
-  border: 1px solid rgba(201, 169, 98, 0.25);
+  background: var(--mm-gold-soft);
+  border-color: rgba(212,97,62,0.25);
 }
 
 .process-step-action .process-step-image {
-  background: rgba(201, 169, 98, 0.15);
+  background: rgba(212,97,62,0.1);
 }
 
 .process-step-action .process-step-title {
-  color: #C9A962;
+  color: var(--mm-gold-dark);
 }
 
 .action-hint {
   display: inline-block;
   margin-top: 8px;
   padding: 4px 10px;
-  background: rgba(201, 169, 98, 0.2);
-  border-radius: 6px;
+  background: rgba(212,97,62,0.15);
+  border-radius: var(--mm-radius);
   font-size: 11px;
-  color: #C9A962;
+  color: var(--mm-gold-dark);
+  font-weight: 500;
 }
 
 /* 추가설명 */
@@ -448,9 +471,9 @@ html, body {
 }
 
 .method-notes-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
   padding: 20px;
 }
 
@@ -464,13 +487,13 @@ html, body {
   display: flex;
   gap: 8px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--mm-text-d2);
   line-height: 1.5;
 }
 
 .method-note-item::before {
   content: '•';
-  color: #C9A962;
+  color: var(--mm-gold);
   flex-shrink: 0;
 }
 
@@ -478,17 +501,17 @@ html, body {
 .method-tip {
   margin-top: 16px;
   padding: 16px;
-  background: rgba(201, 169, 98, 0.1);
-  border: 1px solid rgba(201, 169, 98, 0.2);
-  border-radius: 12px;
+  background: var(--mm-gold-soft);
+  border: 1px solid rgba(212,97,62,0.2);
+  border-radius: var(--mm-radius-lg);
 }
 
 .method-tip-label {
   display: inline-block;
   padding: 2px 8px;
-  background: #C9A962;
+  background: var(--mm-gold);
   border-radius: 4px;
-  color: #1C1C1E;
+  color: var(--mm-text-w);
   font-size: 11px;
   font-weight: 700;
   margin-bottom: 8px;
@@ -496,7 +519,7 @@ html, body {
 
 .method-tip-text {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--mm-text-d);
   line-height: 1.5;
 }
 
@@ -507,30 +530,31 @@ html, body {
 }
 
 .method-emotion-text {
-  font-size: 16px;
+  font-size: 15px;
   font-style: italic;
-  color: rgba(201, 169, 98, 0.7);
+  color: var(--mm-gold);
   line-height: 1.6;
+  font-weight: 500;
 }
 
-/* =========================================================
+/* ══════════════════════════════════════════════════════════════
    [6] Q&A 토글 섹션
-   ========================================================= */
+   ══════════════════════════════════════════════════════════════ */
 .qna-list {
   padding: 0 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px; /* 8px → 12px: Q&A 항목 간격 증가 */
+  gap: 12px;
   max-width: 600px;
   margin: 0 auto;
 }
 
 .qna-item {
-  background: #2C2C2E;
-  border-radius: 12px;
+  background: var(--mm-bg-card);
+  border-radius: var(--mm-radius-lg);
   overflow: hidden;
-  border: 1px solid transparent; /* 호버 효과용 */
-  transition: all 0.3s ease; /* 호버 애니메이션 */
+  border: 1px solid var(--mm-border-l);
+  transition: all var(--mm-ease);
 }
 
 .qna-question {
@@ -543,20 +567,14 @@ html, body {
 }
 
 .qna-question:active {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-/* Q&A 항목 호버 효과 */
-.qna-item:hover {
-  background: #343436;
-  border: 1px solid rgba(201, 169, 98, 0.15);
+  background: rgba(24,23,37,0.03);
 }
 
 .qna-question-text {
   flex: 1;
   font-size: 14px;
   font-weight: 500;
-  color: #ffffff;
+  color: var(--mm-text-d);
   line-height: 1.4;
   padding-right: 12px;
 }
@@ -568,7 +586,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--mm-text-d3);
   font-size: 18px;
   transition: transform 0.3s ease;
 }
@@ -588,25 +606,25 @@ html, body {
 
 .qna-answer-text {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--mm-text-d2);
   line-height: 1.7;
 }
 
 .qna-answer-sub {
   margin-top: 12px;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  background: rgba(24,23,37,0.03);
+  border-radius: var(--mm-radius-lg);
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--mm-text-d2);
   line-height: 1.6;
 }
 
-/* =========================================================
-   [7] 하단 CTA (iframe용: static)
-   ========================================================= */
+/* ══════════════════════════════════════════════════════════════
+   [7] 하단 CTA
+   ══════════════════════════════════════════════════════════════ */
 .consult-cta-fixed {
-  position: static; /* iframe 내에서 fixed 미작동 → 콘텐츠 내 배치 */
+  position: static;
   display: flex;
   gap: 8px;
   padding: 20px;
@@ -618,59 +636,130 @@ html, body {
 .consult-cta-btn {
   flex: 1;
   padding: 14px 16px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all var(--mm-ease-fast);
   text-align: center;
   -webkit-tap-highlight-color: transparent;
   outline: none;
+  line-height: 1;
 }
 
 .consult-cta-btn:active {
   transform: scale(0.97);
-  opacity: 0.9;
 }
 
 .consult-cta-secondary {
   background: transparent;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.consult-cta-secondary:hover {
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--mm-border-l);
+  color: var(--mm-text-d2);
 }
 
 .consult-cta-primary {
-  background: linear-gradient(135deg, #C9A962 0%, #B8963E 100%);
+  background: var(--mm-gold);
   border: none;
-  color: #ffffff;
+  color: var(--mm-text-w);
 }
 
-.consult-cta-primary:hover {
-  background: linear-gradient(135deg, #D4B56E 0%, #C9A962 100%);
-  transform: translateY(-2px); /* -1px → -2px: 호버 리프트 강화 */
-  box-shadow: 0 8px 24px rgba(201, 169, 98, 0.35); /* 골드 그림자 추가 */
+/* ── 찾아오시는 길 ── */
+.method-location {
+  padding: 0 20px 16px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+.method-location-card {
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
+  padding: 24px;
+  text-align: center;
+}
+.method-location-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mm-gold);
+  letter-spacing: 0.04em;
+  margin-bottom: 12px;
+}
+.method-location-address {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--mm-text-d);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
 }
 
-/* =========================================================
-   반응형 - PC
-   ========================================================= */
+/* ══════════════════════════════════════════════════════════════
+   PC hover
+   ══════════════════════════════════════════════════════════════ */
+@media (hover: hover) {
+  .principle-item:hover {
+    border-color: rgba(212,97,62,0.2);
+    box-shadow: 0 4px 16px rgba(24,23,37,0.06);
+    transform: translateX(4px);
+  }
+  .qna-item:hover {
+    border-color: rgba(212,97,62,0.15);
+    box-shadow: 0 4px 16px rgba(24,23,37,0.06);
+  }
+  .consult-tab:hover:not(.active) {
+    border-color: var(--mm-gold);
+    color: var(--mm-gold);
+  }
+  .consult-cta-secondary:hover {
+    border-color: var(--mm-gold);
+    color: var(--mm-gold);
+  }
+  .consult-cta-primary:hover {
+    background: var(--mm-gold-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(212,97,62,0.25);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   반응형
+   ══════════════════════════════════════════════════════════════ */
 @media screen and (min-width: 768px) {
-  .mamoru-consult-page {
-    max-width: 800px;
-    margin: 0 auto;
+  /* 히어로는 전폭, 콘텐츠 영역만 제약 */
+  .consult-section,
+  .consult-tabs-container,
+  .process-section,
+  .method-intro,
+  .method-notes,
+  .method-location,
+  .method-emotion,
+  .qna-list,
+  .consult-cta-fixed {
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .consult-hero {
+    padding: 72px 48px;
   }
 
   .consult-hero-title {
-    font-size: 40px;
+    font-size: 42px;
+    letter-spacing: -0.04em;
+    line-height: 1.2;
+  }
+
+  .consult-hero-desc {
+    font-size: 16px;
+  }
+
+  .consult-hero-label {
+    font-size: 13px;
   }
 
   .consult-section-title {
     font-size: 30px;
+    letter-spacing: -0.025em;
   }
 
   .tab-character-image {
@@ -678,15 +767,53 @@ html, body {
     height: 150px;
   }
 
-  /* PC에서 탭 중앙정렬 */
   .consult-tabs {
     justify-content: center;
   }
 
+  .consult-tab {
+    flex: 0 1 auto; /* PC에서는 콘텐츠 너비만큼 */
+    padding: 10px 28px;
+    font-size: 15px;
+  }
+
+  .principle-list {
+    max-width: 640px;
+  }
+
+  .process-grid {
+    max-width: 640px;
+  }
+
+  .process-step-title {
+    font-size: 16px;
+  }
+
+  .process-step-desc {
+    font-size: 14px;
+  }
+
+  .principle-text {
+    font-size: 16px;
+  }
+
+  .method-emotion-text {
+    font-size: 16px;
+  }
+
+  .method-location-address {
+    font-size: 16px;
+  }
+
   .consult-cta-fixed {
-    max-width: 800px;
-    margin: 40px auto 0;
+    max-width: 640px;
+    margin-top: 40px;
     padding: 20px;
+  }
+
+  .consult-cta-btn {
+    font-size: 17px;
+    padding: 16px 20px;
   }
 }
 
@@ -696,12 +823,26 @@ html, body {
   }
 
   .consult-section-title {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .process-arrow svg {
     width: 20px;
     height: 20px;
+  }
+}
+
+@media screen and (max-width: 360px) {
+  .consult-hero-title {
+    font-size: 24px;
+  }
+
+  .consult-section-title {
+    font-size: 18px;
+  }
+
+  .principle-text {
+    font-size: 14px;
   }
 }
 </style>
@@ -733,13 +874,16 @@ html, body {
   </section>
 
   <!-- [2] 카테고리 탭 - 개선: 가로 스크롤 -->
+  <!-- [2] 탭 — 1행: 상담철칙 + Q&A / 2행: 상담방법 3종 -->
   <div class="consult-tabs-container">
     <div class="consult-tabs">
       <button class="consult-tab active" data-tab="principle">상담철칙</button>
+      <button class="consult-tab" data-tab="qna">Q&A</button>
+    </div>
+    <div class="consult-tabs">
       <button class="consult-tab" data-tab="visit">직접방문</button>
       <button class="consult-tab" data-tab="dispatch">출장요청</button>
       <button class="consult-tab" data-tab="talk">톡상담</button>
-      <button class="consult-tab" data-tab="qna">Q&A</button>
     </div>
   </div>
 
@@ -841,6 +985,14 @@ html, body {
             <span class="method-tip-label">Tip!</span>
             <p class="method-tip-text">사용중이신 가위를 챙기신다면 <br>무상점검 및 꿀팁을 진행&제공해드립니다</p>
           </div>
+        </div>
+      </div>
+
+      <!-- 찾아오시는 길 -->
+      <div class="method-location">
+        <div class="method-location-card">
+          <p class="method-location-label">찾아오시는 길</p>
+          <p class="method-location-address">서울특별시 구로구 부광로 88 SKV1,<br>B동 311호 마모루</p>
         </div>
       </div>
 
