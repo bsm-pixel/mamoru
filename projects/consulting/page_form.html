@@ -1386,6 +1386,17 @@ body.pc .memo-note {
 body.pc #date-picker-modal .modal-body {
   padding: 24px 28px;
 }
+/* PC: 달력 그리드 최대폭 제한 — 전폭 펼침 시 셀 비대 방지 */
+body.pc #date-picker-modal .calendar-nav,
+body.pc #date-picker-modal .calendar-grid {
+  max-width: 380px;
+  margin-left: auto;
+  margin-right: auto;
+}
+body.pc #date-picker-modal .day {
+  aspect-ratio: auto;       /* 정사각 해제 */
+  height: 38px;             /* 고정 높이로 컴팩트하게 */
+}
 #date-picker-modal .modal-footer {
   border-top: 1px solid var(--mm-border-l);
   padding: 14px 20px;
