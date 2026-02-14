@@ -6,7 +6,7 @@
      ═══════════════════════════════════════════════════════════════════ -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="light">
 <title>A/S 신청서 | MAMORU</title>
 
 <!-- [CONFIG] 외부 폰트 -->
@@ -15,7 +15,7 @@
 
 <style>
 /* ══════════════════════════════════════════════════════════════════════
-   MAMORU Brand Kit: Dark Theme + Gold Accent - A/S 접수
+   MAMORU Brand Kit: Terracotta Editorial - A/S 접수
    - GitHub Pages 정적 호스팅 버전
    ══════════════════════════════════════════════════════════════════════ */
 
@@ -23,18 +23,20 @@
    [CONFIG] 디자인 토큰 - 색상/간격 수정 시 이 영역 변경
    ───────────────────────────────────────────────────────────── */
 :root {
-  --bg-dark: #1C1C1E;
-  --card-bg: rgba(255, 255, 255, 0.03);
-  --card-border: rgba(255, 255, 255, 0.08);
-  --trust-gold: #C9A962;
-  --gold-dark: #B8963E;
-  --text-primary: #FFFFFF;
-  --text-muted: rgba(255, 255, 255, 0.5);
-  --line: rgba(255, 255, 255, 0.1);
-  --line-strong: rgba(255, 255, 255, 0.15);
+  --bg-dark: #181725; /* Indigo Black (다크 섹션용) */
+  --mm-bg-cream: #F2F2EA; /* Cream 배경 */
+  --mm-bg-card: #FAFAF5; /* Card White */
+  --card-bg: #FAFAF5;
+  --card-border: rgba(24, 23, 37, 0.08);
+  --trust-gold: #D4613E; /* Terracotta */
+  --gold-dark: #B85232; /* Terracotta dark */
+  --text-primary: #181725;
+  --text-muted: #6B6980;
+  --line: rgba(24, 23, 37, 0.1);
+  --line-strong: rgba(24, 23, 37, 0.15);
   --error: #ef4444;
-  --void-black: #1c1c1e;
-  --crisp-white: #FFFFFF;
+  --void-black: #181725;
+  --crisp-white: #FAFAF5;
 }
 
 * {
@@ -45,7 +47,7 @@
 
 html, body {
   font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: var(--bg-dark);
+  background: var(--mm-bg-cream); /* Cream 배경 */
   color: var(--text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -92,7 +94,7 @@ html, body {
 }
 
 .header-logo svg {
-  fill: var(--void-black);
+  fill: var(--crisp-white);
   width: 20px;
   height: 20px;
 }
@@ -202,7 +204,7 @@ select {
   height: 48px;
   border: 1px solid var(--line-strong);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: #FAFAF5; /* Card White */
   font-family: inherit;
   font-size: 15px;
   color: var(--text-primary);
@@ -223,8 +225,8 @@ select {
 }
 
 select {
-  color-scheme: dark; /* select option 다크테마 호환 */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.5)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  color-scheme: light; /* 라이트 테마 */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(24,23,37,0.4)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   padding-right: 36px;
@@ -246,17 +248,17 @@ select:focus {
 }
 
 select option {
-  background: #2C2C2E;
-  color: #FFFFFF;
+  background: #FAFAF5;
+  color: #181725;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(24, 23, 37, 0.3);
 }
 
 input[readonly] {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(24, 23, 37, 0.02);
   cursor: pointer;
 }
 
@@ -310,13 +312,13 @@ select.err {
 /* 진행방식 안내문구 */
 .type-info {
   padding: 14px 16px;
-  background: rgba(201, 169, 98, 0.08);
+  background: rgba(212, 97, 62, 0.06);
   border-left: 2px solid var(--trust-gold);
   border-radius: 0 8px 8px 0;
   font-size: 13px;
   line-height: 1.7;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 24px; /* 20→24 안내문구 아래 여유 */
+  color: #6B6980;
+  margin-bottom: 24px;
 }
 
 @media (min-width: 768px) {
@@ -351,7 +353,7 @@ select.err {
   min-height: 88px;
   border: 1px solid var(--line-strong);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(24, 23, 37, 0.02);
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
@@ -369,8 +371,8 @@ select.err {
 }
 
 .segment-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(24, 23, 37, 0.04);
+  border-color: rgba(24, 23, 37, 0.2);
 }
 
 /* [STYLE] 아이콘 크기 - 수정 가능 */
@@ -389,7 +391,7 @@ select.err {
 }
 
 .segment-btn.active {
-  background: rgba(201, 169, 98, 0.15);
+  background: rgba(212, 97, 62, 0.08);
   border-color: var(--trust-gold);
   color: var(--trust-gold);
 }
@@ -421,7 +423,7 @@ select.err {
   height: 48px;
   border: 1px solid var(--line-strong);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(24, 23, 37, 0.03);
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
@@ -519,7 +521,7 @@ select.err {
   bottom: auto;
   width: calc(100% - 32px);
   max-width: 360px;
-  background: #2C2C2E;
+  background: #FAFAF5; /* Card White */
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   transform: translate(-50%, -50%) scale(0.95);
@@ -543,7 +545,7 @@ select.err {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(24,23,37,0.1);
 }
 
 .calendar-title {
@@ -580,7 +582,7 @@ select.err {
   align-items: center;
   justify-content: center;
   border: none;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(24, 23, 37, 0.06);
   border-radius: 8px;
   color: var(--text-primary);
   cursor: pointer;
@@ -589,7 +591,7 @@ select.err {
 }
 
 .calendar-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(24, 23, 37, 0.12);
 }
 
 .calendar-nav-btn:disabled {
@@ -608,7 +610,7 @@ select.err {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   padding: 8px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(24, 23, 37, 0.05);
 }
 
 .calendar-weekday {
@@ -646,7 +648,7 @@ select.err {
 }
 
 .calendar-day:hover:not(.disabled):not(.empty) {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(24, 23, 37, 0.08);
 }
 
 .calendar-day.empty {
@@ -660,7 +662,7 @@ select.err {
 
 .calendar-day.selected {
   background: var(--trust-gold) !important;
-  color: #1C1C1E !important;
+  color: #FAFAF5 !important; /* Terracotta 위 밝은 텍스트 */
   font-weight: 600;
 }
 
@@ -710,10 +712,10 @@ select.err {
    [STYLE] 가격 계산
    ───────────────────────────────────────────────────────────── */
 .mm-price-summary {
-  margin-top: 0; /* 구분선이 대체 */
+  margin-top: 0;
   padding: 20px;
-  background: rgba(201, 169, 98, 0.08);
-  border: 1px solid rgba(201, 169, 98, 0.2);
+  background: rgba(212, 97, 62, 0.05); /* Terracotta tint */
+  border: 1px solid rgba(212, 97, 62, 0.15);
   border-radius: 12px;
 }
 
@@ -737,7 +739,7 @@ select.err {
 
 .mm-price-label {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #6B6980;
 }
 
 .mm-price-value {
@@ -752,7 +754,7 @@ select.err {
 
 .mm-price-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(24, 23, 37, 0.1);
   margin: 16px 0;
 }
 
@@ -775,7 +777,7 @@ select.err {
 .mm-price-hint {
   margin-top: 12px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #6B6980;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -784,9 +786,9 @@ select.err {
 .privacy-box {
   border: 1px solid var(--line-strong);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(24, 23, 37, 0.02);
   padding: 16px;
-  margin-top: 0; /* 구분선이 대체 */
+  margin-top: 0;
 }
 
 @media (min-width: 768px) {
@@ -806,7 +808,7 @@ select.err {
 
 .privacy-content {
   padding: 12px;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(24, 23, 37, 0.03);
   border: 1px solid var(--line);
   border-radius: 8px;
   font-size: 11px;
@@ -902,7 +904,7 @@ select.err {
 }
 
 .modal-content {
-  background: #2C2C2E;
+  background: #FAFAF5;
   border-radius: 16px;
   overflow: hidden;
   width: calc(100% - 32px);
@@ -943,14 +945,14 @@ select.err {
 
 .modal-body p {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #6B6980;
   line-height: 1.6;
 }
 
 .modal-footer {
   padding: 16px 20px;
   border-top: 1px solid var(--line);
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(24, 23, 37, 0.04);
   display: flex;
   justify-content: center;
 }
@@ -985,7 +987,7 @@ select.err {
 }
 
 .postcode-wrap {
-  background: #2C2C2E;
+  background: #FAFAF5;
   border-radius: 16px;
   overflow: hidden;
   display: flex;
@@ -1073,7 +1075,7 @@ select.err {
   align-items: flex-start;
   justify-content: center;
   padding-top: clamp(72px, 22vh, 200px);
-  background: rgba(28, 28, 30, 0.98);
+  background: rgba(242, 242, 234, 0.98); /* Cream 배경 */
   z-index: 99999;
 }
 
@@ -1102,7 +1104,8 @@ select.err {
        ═══════════════════════════════════════════════════════════════ -->
   <div class="header">
     <div class="header-logo">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+      <!-- 공구(렌치) 아이콘 — A/S 수리 -->
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
     </div>
     <h1>A/S 신청서</h1>
   </div>
@@ -1348,7 +1351,7 @@ select.err {
   // ═══════════════════════════════════════════════════════════════════
   const PRICE_MAMORU = 10000;  // 마모루 가위 단가
   const PRICE_OTHER = 20000;   // 타사 가위 단가
-  // 수거비 정책: 1자루 5000원, 2자루 3000원, 3자루 이상 무료
+  // 수거/배송비: 가이드 페이지 참조 (getShippingFee 함수)
 
   // ═══════════════════════════════════════════════════════════════════
   // [CONFIG] 공휴일 목록 (캐시 기반)
@@ -1592,11 +1595,18 @@ select.err {
   // ─────────────────────────────────────────────────────────────
   // 가격 계산 로직
   // ─────────────────────────────────────────────────────────────
+  // 배송비 정책 (가이드 페이지 기준)
+  // 방문수거: 1자루 6,000원 / 2자루 3,000원 / 3자루+ 무료
+  // 직접발송: 1자루 3,000원 / 2자루+ 무료
   function getShippingFee(isPickup, totalQty) {
-    if (!isPickup) return 0;
-    if (totalQty >= 3) return 0;
-    if (totalQty === 2) return 3000;
-    return 5000;
+    if (isPickup) {
+      if (totalQty >= 3) return 0;
+      if (totalQty === 2) return 3000;
+      return 6000;
+    } else {
+      if (totalQty >= 2) return 0;
+      return 3000;
+    }
   }
 
   function formatPrice(n) {
@@ -1620,11 +1630,14 @@ select.err {
       : '0원';
 
     const shippingRow = $('shippingRow');
-    if (isPickup) {
-      shippingRow.style.display = 'flex';
-      $('priceShipping').textContent = shippingFee === 0 ? '무료 (3자루 이상)' : formatPrice(shippingFee);
+    const shippingLabel = shippingRow.querySelector('.mm-price-label');
+    shippingRow.style.display = 'flex';
+    // 라벨: 방문수거→수거비, 직접발송→배송비
+    if (shippingLabel) shippingLabel.textContent = isPickup ? '수거비' : '배송비';
+    if (shippingFee === 0) {
+      $('priceShipping').textContent = isPickup ? '무료 (3자루 이상)' : '무료 (2자루 이상)';
     } else {
-      shippingRow.style.display = 'none';
+      $('priceShipping').textContent = formatPrice(shippingFee);
     }
 
     $('priceTotal').textContent = formatPrice(grandTotal);
