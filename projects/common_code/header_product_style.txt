@@ -25,7 +25,7 @@
 
   /* [4] 썸네일 영역 */
   + '#container___WID__ .item-wrap'
-  + '{position:relative!important;z-index:1!important;background:#f4f3f1!important;border-radius:14px!important;overflow:hidden!important;border:1.5px solid transparent!important;transition:border-color .25s ease,box-shadow .25s ease!important}'
+  + '{position:relative!important;z-index:1!important;background:#FAFAF5!important;border-radius:14px!important;overflow:hidden!important;border:1.5px solid transparent!important;transition:border-color .25s ease,box-shadow .25s ease!important}'
 
   /* [5] 호버 - 골드 보더 */
   + '#container___WID__ .item-wrap:hover'
@@ -64,7 +64,7 @@
   +   '#container___WID__>.shop-item,'
   +   '#container___WID__ .shop-item._shop_item[data-product-properties]'
   +   '{position:relative!important;padding:6px 8px!important;background:transparent!important}'
-  +   '#container___WID__ .item-wrap{position:relative!important;z-index:1!important;background:#f4f3f1!important;border-radius:12px!important;overflow:hidden!important}'
+  +   '#container___WID__ .item-wrap{position:relative!important;z-index:1!important;background:#FAFAF5!important;border-radius:12px!important;overflow:hidden!important}'
   +   '#container___WID__ .item-detail{position:relative!important;z-index:1!important;padding:8px 4px 0!important}'
   +   '#container___WID__ .shop-title{font-size:13px!important;color:rgba(0,0,0,.8)!important}'
   +   '#container___WID__ .pay.inline-blocked{font-size:15px!important;font-weight:700!important;color:#181725!important}'
