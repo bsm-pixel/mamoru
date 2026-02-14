@@ -10,12 +10,12 @@
 -->
 
 <style>
-/* ===== CATEGORY TOP ===== */
+/* ===== CATEGORY TOP — Terracotta Editorial ===== */
 
 /* 0) 배너 이미지 + 텍스트 오버레이 */
 .cat-banner{
   position:relative;
-  background:#1c1c1e;
+  background:#181725;                /* Indigo Black */
   line-height:0;
 }
 
@@ -28,27 +28,27 @@
 
 .cat-banner-text{
   position:absolute;
-  left:32px;
-  bottom:28px;
+  left:48px;
+  bottom:32px;
   line-height:1.2;
 }
 
 .cat-banner-en{
-  font-size:36px;
-  font-weight:900;
+  font-size:38px;
+  font-weight:800;
   letter-spacing:0.02em;
-  color:#ffffff;
+  color:#F2F2EA;                     /* Cream */
 }
 
 .cat-banner-kr{
   margin-top:6px;
-  font-size:14px;
+  font-size:15px;
   font-weight:400;
-  color:rgba(255,255,255,0.65);
+  color:rgba(242,242,234,0.6);       /* --mm-text-w2 */
 }
 
-/* 모바일 오버레이 조정 */
-@media(max-width:768px){
+/* 태블릿 이하 */
+@media(max-width:767px){
   .cat-banner-text{
     left:20px;
     bottom:20px;
@@ -60,60 +60,89 @@
     font-size:13px;
   }
 }
+@media(max-width:360px){
+  .cat-banner-en{
+    font-size:22px;
+  }
+  .cat-banner-kr{
+    font-size:12px;
+  }
+}
 
 .cat-top{
-  max-width:1300px;            /* PC: 1300px 고정 */
+  max-width:1200px;                  /* 쇼윈도형 표준 */
   margin:0 auto;
-  background:#ffffff;
+  background:#F2F2EA;                /* Cream (순백 금지) */
   padding:0;
 }
 
 @media(max-width:1024px){
   .cat-top{
-    max-width:100%;            /* 태블릿~모바일: 전체 너비 */
+    max-width:100%;
   }
 }
 
-/* 4) 미니 카테고리 - 블랙 칩 */
+/* 4) 미니 카테고리 — Terracotta pill 탭 */
 .cat-mini{
   display:flex;
   justify-content:center;
   flex-wrap:wrap;
   gap:10px;
-  padding:14px 16px 18px 16px;
+  padding:14px 20px 18px;           /* 수평 패딩 20px (모바일 표준) */
 }
 
 .cat-mini a{
   display:inline-block;
   padding:8px 20px;
-  border:1.5px solid rgba(0,0,0,0.15);
-  border-radius:20px;           /* 칩(pill) 형태 */
-  font-size:14px;
-  font-weight:600;
-  letter-spacing:0.02em;
+  border:1px solid rgba(24,23,37,0.08);  /* --mm-border-l */
+  border-radius:999px;                    /* pill 표준 */
+  font-size:13px;
+  font-weight:500;
+  letter-spacing:-0.01em;
   text-decoration:none;
-  color:rgba(0,0,0,0.55);
-  background:#ffffff;
-  transition:all .2s ease;
+  color:#6B6980;                          /* --mm-text-d2 */
+  background:#FAFAF5;                     /* Card White */
+  transition:all 0.15s ease;              /* --mm-ease-fast */
+  -webkit-tap-highlight-color:transparent;
 }
 
-/* 호버 */
-.cat-mini a:hover{
-  color:#1c1c1e;
-  border-color:rgba(0,0,0,0.4);
-}
-
-/* 선택된 상태 - 블랙 칩 */
+/* 선택된 상태 — Terracotta */
 .cat-mini a.active{
-  background:#1c1c1e;
-  color:#ffffff;
-  border-color:#1c1c1e;
-  font-weight:700;
+  background:#D4613E;                     /* --mm-gold */
+  color:#F2F2EA;                          /* --mm-text-w */
+  border-color:#D4613E;
+  font-weight:600;
 }
 
 /* 눌림 */
 .cat-mini a:active{
   transform:scale(0.96);
+}
+
+/* 호버 — PC만 */
+@media(hover:hover){
+  .cat-mini a:not(.active):hover{
+    border-color:#D4613E;
+    color:#D4613E;
+  }
+}
+
+/* 태블릿+ 탭 사이즈 업 */
+@media(min-width:768px){
+  .cat-mini{
+    gap:10px;
+    padding:16px 32px 20px;              /* 수평 패딩 32px */
+  }
+  .cat-mini a{
+    padding:9px 24px;
+    font-size:14px;
+  }
+}
+@media(min-width:1024px){
+  .cat-mini a{
+    padding:10px 28px;
+    font-size:15px;
+  }
 }
 </style>
 
