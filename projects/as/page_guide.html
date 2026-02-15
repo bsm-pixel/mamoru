@@ -68,15 +68,42 @@ html, body {
    [1] 히어로 섹션
    ========================================================= */
 .as-hero {
-  padding: 60px 20px;
+  padding: 60px 20px 48px;
   text-align: center;
+  position: relative;
+  /* 메시 그래디언트 — 다크 기조 + 인디고/테라코타 은은한 발광 */
+  background:
+    radial-gradient(circle at 15% 20%, rgba(212,97,62,0.07) 0%, transparent 45%),
+    radial-gradient(circle at 85% 12%, rgba(70,60,120,0.25) 0%, transparent 50%),
+    radial-gradient(circle at 50% 75%, rgba(42,41,64,0.5) 0%, transparent 55%),
+    radial-gradient(circle at 25% 65%, rgba(80,65,130,0.12) 0%, transparent 40%),
+    radial-gradient(circle at 75% 50%, rgba(212,97,62,0.04) 0%, transparent 35%),
+    linear-gradient(180deg, #181725 0%, #1C1B30 88%, #F2F2EA 100%);
+}
+
+/* 그레인 텍스처 오버레이 — 고급 질감 */
+.as-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 히어로 내부 콘텐츠를 노이즈 위로 */
+.as-hero > * {
+  position: relative;
+  z-index: 1;
 }
 
 .as-hero-label {
   display: inline-block;
   padding: 6px 16px;
-  background: rgba(212, 97, 62, 0.1);
-  border: 1px solid rgba(212, 97, 62, 0.25);
+  background: rgba(212, 97, 62, 0.15); /* 다크 배경용 */
+  border: 1px solid rgba(212, 97, 62, 0.35);
   border-radius: 100px;
   color: #D4613E; /* Terracotta */
   font-size: 12px;
@@ -90,16 +117,43 @@ html, body {
   font-weight: 700;
   line-height: 1.4;
   margin-bottom: 20px;
-  color: #181725;
+  color: #F2F2EA; /* 다크 배경 위 크림 텍스트 */
 }
 
 .as-hero-title .highlight {
   color: #D4613E; /* Terracotta */
 }
 
+/* 타이틀 하단 1:1 이미지 — 보조문구 가로폭 맞춤 */
+.as-hero-square-img {
+  width: fit-content; /* 내부 크기에 맞춤 */
+  margin: 0 auto 20px;
+}
+
+.as-hero-square-img img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.as-hero-square-placeholder {
+  /* 보조문구("마모루만의 2대 기술력" 3줄) 폭 ≒ 160px */
+  width: 160px;
+  aspect-ratio: 1 / 1;
+  background: rgba(255, 255, 255, 0.06); /* 다크 배경 위 미세한 밝은 영역 */
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(242, 242, 234, 0.25);
+  font-size: 13px;
+}
+
 .as-hero-desc {
   font-size: 16px; /* 모바일 14→16 */
-  color: #6B6980;
+  color: rgba(242, 242, 234, 0.65); /* 다크 배경 위 은은한 크림 */
   line-height: 1.8;
   margin-bottom: 32px;
 }
@@ -121,7 +175,7 @@ html, body {
   border-radius: 12px;
   overflow: hidden;
   filter: grayscale(100%);
-  background: #FAFAF5; /* Card White */
+  background: rgba(255, 255, 255, 0.06); /* 다크 배경 위 미세 카드 */
 }
 
 .as-hero-image-item img {
@@ -137,7 +191,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(24, 23, 37, 0.25);
+  color: rgba(242, 242, 234, 0.2);
   font-size: 13px;
 }
 
@@ -211,6 +265,9 @@ html, body {
 
 .as-tab-content.active {
   display: block;
+  max-width: 640px; /* 히어로 이미지(600px) + 여유 40px — PC 폭 정렬 */
+  margin: 0 auto;
+  overflow-x: hidden; /* 다크 밴드 100vw 브레이크아웃 가로스크롤 방지 */
 }
 
 /* =========================================================
@@ -412,6 +469,87 @@ html, body {
   font-weight: 500;
   color: #181725;
   line-height: 1.4;
+}
+
+/* =========================================================
+   [3-D] 다크 쇼케이스 밴드 (tab-intro: 유튜브~진행작업)
+   ========================================================= */
+.as-dark-band {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  background: #181725; /* Indigo Black */
+  position: relative;
+}
+
+/* 상단 페이드 (라이트→다크) */
+.as-dark-band::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%;
+  height: 24px;
+  background: linear-gradient(to bottom, #F2F2EA, #181725);
+  z-index: 1;
+}
+
+/* 하단 페이드 (다크→라이트) */
+.as-dark-band::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; width: 100%;
+  height: 24px;
+  background: linear-gradient(to bottom, #181725, #F2F2EA);
+  z-index: 1;
+}
+
+.as-dark-band__inner {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* 다크 밴드: 제목 텍스트 */
+.as-dark-band .as-before-after-title,
+.as-dark-band .as-process-grid-title {
+  color: #F2F2EA;
+}
+
+/* 다크 밴드: 보조 텍스트 */
+.as-dark-band .as-youtube-label {
+  color: rgba(242, 242, 234, 0.6);
+}
+
+/* 다크 밴드: 유튜브 래퍼 */
+.as-dark-band .as-youtube-wrapper {
+  background: #2A2940;
+}
+
+.as-dark-band .as-youtube-placeholder {
+  color: rgba(242, 242, 234, 0.3);
+}
+
+/* 다크 밴드: 슬라이드 카드 */
+.as-dark-band .as-slide-item {
+  background: #2A2940;
+}
+
+/* 다크 밴드: 슬라이더 우측 페이드 */
+.as-dark-band .as-before-after::after {
+  background: linear-gradient(to right, transparent, #181725);
+}
+
+/* 다크 밴드: 그리드 아이템 */
+.as-dark-band .as-grid-item {
+  background: #2A2940;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.as-dark-band .as-grid-item-name {
+  color: #F2F2EA;
+}
+
+.as-dark-band .as-grid-item-icon {
+  background: rgba(212, 97, 62, 0.15);
 }
 
 /* =========================================================
@@ -798,18 +936,30 @@ html, body {
 
 .as-cta-primary {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   width: 100%;
-  padding: 16px 24px;
+  padding: 18px 24px;
   background: linear-gradient(135deg, #D4613E 0%, #B85232 100%);
   border: none;
   border-radius: 12px;
   color: #FAFAF5;
-  font-size: 15px;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.25s ease;
+}
+
+.as-cta-primary .as-cta-label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.as-cta-primary .as-cta-desc {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(250, 250, 245, 0.7);
+  line-height: 1.4;
 }
 
 .as-cta-primary:hover {
@@ -817,34 +967,39 @@ html, body {
   transform: translateY(-1px);
 }
 
-/* 복원수리 진행 — 아웃라인 스타일 */
+/* 타사가위 접수 — 아웃라인 스타일 */
 .as-cta-outline {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   width: 100%;
-  padding: 16px 24px;
+  padding: 18px 24px;
   background: transparent;
   border: 1.5px solid rgba(24, 23, 37, 0.15);
   border-radius: 12px;
   color: #181725;
-  font-size: 15px;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.25s ease;
+}
+
+.as-cta-outline .as-cta-label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.as-cta-outline .as-cta-desc {
+  font-size: 12px;
+  font-weight: 400;
+  color: #6B6980;
+  line-height: 1.4;
 }
 
 .as-cta-outline:hover {
   border-color: #D4613E;
   color: #D4613E;
   background: rgba(212, 97, 62, 0.04);
-}
-
-.as-cta-sub {
-  font-size: 12px;
-  color: #6B6980;
-  margin-left: 6px;
-  font-weight: 400;
 }
 
 .as-cta-top {
@@ -928,7 +1083,7 @@ html, body {
   .as-cta-outline {
     width: auto;
     flex: 1;
-    padding: 16px 32px;
+    padding: 20px 32px;
   }
 
   /* PC: 접수방식 탭 너비 제한 */
@@ -999,6 +1154,11 @@ html, body {
       <span class="highlight">새가위, 첫만남을 재현합니다</span>
     </h1>
 
+    <!-- [IMG] 타이틀 하단 이미지 — 보조문구 폭 맞춤 1:1 -->
+    <div class="as-hero-square-img">
+      <div class="as-hero-square-placeholder">이미지 영역</div>
+    </div>
+
     <!-- [TEXT] 보조 문구 -->
     <p class="as-hero-desc">
       마모루만의 2대 기술력<br>
@@ -1036,6 +1196,10 @@ html, body {
       가업의 기술을 2대로 이어<br>
       기술력을 보완 업그레이드하여 제공합니다</p>
     </div>
+
+    <!-- 다크 쇼케이스 밴드: 유튜브~진행작업 -->
+    <div class="as-dark-band">
+      <div class="as-dark-band__inner">
 
     <!-- [VIDEO] 유튜브 영역 -->
     <div class="as-youtube-section">
@@ -1135,6 +1299,9 @@ html, body {
         </div>
       </div>
     </div>
+
+      </div><!-- /.as-dark-band__inner -->
+    </div><!-- /.as-dark-band -->
   </div>
 
   <!-- [4] 접수방식 탭 -->
@@ -1355,9 +1522,15 @@ html, body {
   <div class="as-cta-area">
     <div class="as-cta-buttons">
       <!-- [URL] AS 접수 폼: /53 (마모루 가위 고객) -->
-      <button class="as-cta-primary" onclick="goToASForm();">A/S 접수하기<span class="as-cta-sub">마모루 가위</span></button>
+      <button class="as-cta-primary" onclick="goToASForm();">
+        <span class="as-cta-label">마모루 A/S접수</span>
+        <span class="as-cta-desc">마모루가위만 접수하거나 마모루가위와 함께 접수할래요</span>
+      </button>
       <!-- [URL] 복원수리 상품페이지: /44/?idx=43 (타사 가위 고객) -->
-      <button class="as-cta-outline" onclick="goToRepairProduct();">복원수리 진행하기<span class="as-cta-sub">타사 가위</span></button>
+      <button class="as-cta-outline" onclick="goToRepairProduct();">
+        <span class="as-cta-label">타사가위 접수</span>
+        <span class="as-cta-desc">타사가위만 복원수리 원해요</span>
+      </button>
     </div>
     <button class="as-cta-top" onclick="scrollToTop();">맨 위로</button>
   </div>
