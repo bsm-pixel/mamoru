@@ -962,6 +962,7 @@ button[class*="mm-"]:focus-visible {
   display: flex;
   gap: 12px;
   overflow-x: auto;
+  overflow-y: hidden; /* 세로 스크롤 차단 */
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   padding-bottom: 4px;
@@ -2017,17 +2018,18 @@ button[class*="mm-"]:focus-visible {
   display: flex;
   gap: 16px;
   overflow-x: auto;
+  overflow-y: hidden; /* 세로 스크롤 차단 */
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  padding: 12px 0;
+  padding: 12px 0 12px 20px; /* 좌측: padding으로 직접 확보 */
+  scroll-padding-left: 20px; /* 스냅 시에도 좌측 여백 유지 */
   -webkit-overflow-scrolling: touch;
 }
 .mm-showcase__scroll::-webkit-scrollbar { display: none; }
-/* 횡스크롤 좌우 여백: padding 대신 가상요소로 확보 (overflow 컨테이너 호환) */
-.mm-showcase__scroll::before,
+/* 횡스크롤 우측 여백: end-side는 가상요소로 확보 */
 .mm-showcase__scroll::after {
   content: '';
-  flex: 0 0 20px; /* 좌우 여백 크기 */
+  flex: 0 0 20px;
 }
 /* UX: 횡스크롤 우측 fade 힌트 (모바일) */
 .mm-showcase__scroll {
@@ -2057,7 +2059,7 @@ button[class*="mm-"]:focus-visible {
   border-radius: 6px;
   overflow: hidden;
   background: #EAEAE2;
-  aspect-ratio: 2 / 3; /* 세로 프리미엄 카드 */
+  aspect-ratio: 3 / 4; /* 가위 카드 통일 비율 (mm-product-card__thumb 동일) */
 }
 .mm-showcase__card-thumb img {
   width: 100%; height: 100%;
@@ -2084,8 +2086,7 @@ button[class*="mm-"]:focus-visible {
 @media (min-width: 768px) {
   .mm-showcase { padding: 40px 0; }
   .mm-showcase__head { padding: 0 32px 16px; }
-  .mm-showcase__scroll { padding: 8px 0; gap: 20px; }
-  .mm-showcase__scroll::before,
+  .mm-showcase__scroll { padding: 8px 0 8px 28px; scroll-padding-left: 28px; gap: 20px; }
   .mm-showcase__scroll::after { flex: 0 0 28px; }
   .mm-showcase__card { flex: 0 0 240px; padding: 16px; }
   .mm-showcase__card-name { font-size: 14px; }
@@ -2102,7 +2103,6 @@ button[class*="mm-"]:focus-visible {
     border-radius: var(--mm-radius-lg);
   }
   .mm-showcase__head { padding: 0 48px 16px; }
-  .mm-showcase__scroll::before,
   .mm-showcase__scroll::after { display: none; } /* PC: 가상요소 제거 */
   .mm-showcase__scroll {
     display: grid;
