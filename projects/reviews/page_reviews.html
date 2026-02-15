@@ -190,6 +190,9 @@ img { display: block; max-width: 100%; }
 }
 .mm-rv-loadmore:active { transform: scale(0.97); }
 
+/* 그리드 하단 여백 — 아임웹 푸터에 짤리지 않도록 */
+.mm-rv-grid { padding-bottom: 16px; }
+
 /* 비어있을 때 */
 .mm-rv-empty {
   text-align: center;
@@ -240,7 +243,10 @@ img { display: block; max-width: 100%; }
 }
 
 /* 아임웹 iframe 통신 */
-.mm-rv-page { overflow: visible; }
+.mm-rv-page {
+  overflow: visible;
+  padding-bottom: 64px;  /* 아임웹 푸터와 콘텐츠 사이 충분한 여유 */
+}
 </style>
 </head>
 <body class="mm-rv-page">

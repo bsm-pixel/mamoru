@@ -1053,11 +1053,12 @@ body.pc .time-slot {
 }
 
 .postcode-wrap {
-  background: #2A2940;  /* 다크 배경 */
+  background: var(--mm-bg-card);  /* 크림 카드 배경 — Terracotta Editorial 통일 */
   border-radius: 16px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 8px 32px rgba(24,23,37,0.18);  /* 부드러운 다크 섀도 */
   /* 모바일 기본값 */
   width: calc(100% - 32px);
   max-width: 480px;
@@ -1074,11 +1075,11 @@ body.pc .postcode-wrap {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--mm-border-l);
+  background: var(--mm-bg-cream);  /* 크림 헤더 — 카드와 미세 구분 */
   font-size: 14px;
   font-weight: 600;
-  color: #FFFFFF;
+  color: var(--mm-text-d);         /* 인디고 블랙 텍스트 */
 }
 
 body.pc .postcode-header {
@@ -1092,11 +1093,11 @@ body.pc .postcode-header {
   line-height: 1;
   cursor: pointer;
   padding: 4px 6px;
-  color: rgba(255, 255, 255, 0.5);  /* 밝은 색 */
+  color: var(--mm-text-d2);  /* 뮤트 다크 — 크림 배경 위 가시성 확보 */
 }
 
 body.pc .postcode-close:hover {
-  color: #FFFFFF;
+  color: var(--mm-gold);  /* 테라코타 호버 */
 }
 
 #postcode-inner {
