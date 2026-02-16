@@ -9,6 +9,7 @@ import type {
   ImwebOrderListData,
   ImwebOrder,
   ImwebOrdersParams,
+  ImwebProdOrder,
 } from './types';
 
 const BASE_URL = 'https://api.imweb.me';
@@ -52,7 +53,7 @@ async function imwebFetch<T>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+      'access-token': token,
       ...options.headers,
     },
   });
@@ -69,8 +70,8 @@ export async function getOrders(
   params: ImwebOrdersParams = {}
 ): Promise<ImwebApiResponse<ImwebOrderListData>> {
   const query = new URLSearchParams();
-  if (params.order_date_from) query.set('order_date_from', params.order_date_from);
-  if (params.order_date_to) query.set('order_date_to', params.order_date_to);
+  if (params.order_date_from) query.set('order_date_from', String(params.order_date_from));
+  if (params.order_date_to) query.set('order_date_to', String(params.order_date_to));
   if (params.status) query.set('status', params.status);
   if (params.page) query.set('page', String(params.page));
   if (params.limit) query.set('limit', String(params.limit || 50));
@@ -84,6 +85,13 @@ export async function getOrder(
   orderNo: string
 ): Promise<ImwebApiResponse<ImwebOrder>> {
   return imwebFetch<ImwebOrder>(`/v2/shop/orders/${orderNo}`);
+}
+
+/** 주문 품목(prod-orders) 조회 */
+export async function getProdOrders(
+  orderNo: string
+): Promise<ImwebApiResponse<ImwebProdOrder[]>> {
+  return imwebFetch<ImwebProdOrder[]>(`/v2/shop/orders/${orderNo}/prod-orders`);
 }
 
 /** 송장 업데이트 */

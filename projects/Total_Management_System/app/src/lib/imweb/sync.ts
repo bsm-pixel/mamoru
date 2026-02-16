@@ -3,13 +3,13 @@
  * 증분 동기화: 마지막 synced_at 이후 변경분만 가져옴
  */
 
-import { getOrders } from './client';
-import type { ImwebOrder } from './types';
+import { getOrders, getProdOrders } from './client';
+import type { ImwebOrder, ImwebProdOrder } from './types';
 import type { OrderStatus } from '@/lib/supabase/types';
 import { createServiceClient } from '@/lib/supabase/server';
-import { format, subDays } from 'date-fns';
+import { subDays } from 'date-fns';
 
-/** 아임웹 status 코드 → TMS status 매핑 */
+/** 아임웹 prod-order status → TMS status 매핑 */
 function mapImwebStatus(status: string): OrderStatus {
   const map: Record<string, OrderStatus> = {
     BEFORE_DEPOSIT: 'pay_wait',
@@ -46,11 +46,11 @@ export async function syncOrders(): Promise<{
     .limit(1)
     .single();
 
-  const fromDate = lastSync?.completed_at
-    ? format(new Date(lastSync.completed_at), 'yyyy-MM-dd')
-    : format(subDays(new Date(), 30), 'yyyy-MM-dd');  // 첫 동기화: 30일 전부터
+  const fromTs = lastSync?.completed_at
+    ? Math.floor(new Date(lastSync.completed_at).getTime() / 1000)
+    : Math.floor(subDays(new Date(), 30).getTime() / 1000);
 
-  const toDate = format(new Date(), 'yyyy-MM-dd');
+  const toTs = Math.floor(Date.now() / 1000);
 
   // 동기화 로그 시작
   const { data: logEntry } = await supabase
@@ -70,13 +70,13 @@ export async function syncOrders(): Promise<{
 
     while (hasMore) {
       const res = await getOrders({
-        order_date_from: fromDate,
-        order_date_to: toDate,
+        order_date_from: fromTs,
+        order_date_to: toTs,
         page,
         limit: 50,
       });
 
-      const orders = res.data.list || [];
+      const orders = res.data?.list || [];
       if (orders.length === 0) {
         hasMore = false;
         break;
@@ -84,14 +84,18 @@ export async function syncOrders(): Promise<{
 
       for (const order of orders) {
         try {
-          await upsertOrder(supabase, order);
+          // 품목(prod-orders) 조회
+          const prodRes = await getProdOrders(order.order_no);
+          const prodOrders = prodRes.data || [];
+          await upsertOrder(supabase, order, prodOrders);
           totalSynced++;
         } catch (err) {
           errors.push(`주문 ${order.order_no}: ${err}`);
         }
       }
 
-      if (orders.length < 50) {
+      const pageSize = res.data?.pagenation?.pagesize || 50;
+      if (orders.length < pageSize) {
         hasMore = false;
       } else {
         page++;
@@ -127,32 +131,40 @@ export async function syncOrders(): Promise<{
   }
 }
 
-/** 단건 upsert */
+/** 단건 upsert — 주문 + 품목 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function upsertOrder(supabase: any, imwebOrder: ImwebOrder) {
+async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: ImwebProdOrder[]) {
+  const addr = imwebOrder.delivery?.address;
+  const pay = imwebOrder.payment;
+
+  // prod-orders에서 상태 가져오기 (첫 번째 품목 기준)
+  const status = prodOrders.length > 0
+    ? mapImwebStatus(prodOrders[0].status)
+    : (pay?.payment_time > 0 ? 'pay_done' : 'pay_wait');
+
   const orderData = {
     imweb_order_no: imwebOrder.order_no,
     imweb_order_id: imwebOrder.order_code,
     orderer_name: imwebOrder.orderer?.name || '',
-    orderer_phone: imwebOrder.orderer?.phone || null,
+    orderer_phone: imwebOrder.orderer?.call || null,
     orderer_email: imwebOrder.orderer?.email || null,
-    recipient_name: imwebOrder.delivery?.name || '',
-    recipient_phone: imwebOrder.delivery?.phone || null,
-    recipient_postcode: imwebOrder.delivery?.zipcode || null,
-    recipient_address: imwebOrder.delivery?.addr || null,
-    recipient_address_detail: imwebOrder.delivery?.addr_detail || null,
+    recipient_name: addr?.name || '',
+    recipient_phone: addr?.phone || null,
+    recipient_postcode: addr?.postcode || null,
+    recipient_address: addr?.address || null,
+    recipient_address_detail: addr?.address_detail || null,
     recipient_memo: imwebOrder.delivery?.memo || null,
-    total_price: imwebOrder.price?.total || 0,
-    delivery_fee: imwebOrder.price?.deliv || 0,
-    discount_amount: imwebOrder.price?.discount || 0,
-    paid_amount: imwebOrder.price?.pay_price || 0,
-    payment_method: imwebOrder.pay_type || null,
-    paid_at: imwebOrder.pay_time
-      ? new Date(imwebOrder.pay_time * 1000).toISOString()
+    total_price: pay?.total_price || 0,
+    delivery_fee: pay?.deliv_price || 0,
+    discount_amount: pay?.coupon || 0,
+    paid_amount: pay?.payment_amount || 0,
+    payment_method: pay?.pay_type || null,
+    paid_at: pay?.payment_time
+      ? new Date(pay.payment_time * 1000).toISOString()
       : null,
     courier_code: imwebOrder.parcel_code || null,
     invoice_number: imwebOrder.invoice_no || null,
-    status: mapImwebStatus(imwebOrder.status),
+    status,
     imweb_raw: imwebOrder as unknown as Record<string, unknown>,
     synced_at: new Date().toISOString(),
     ordered_at: new Date(imwebOrder.order_time * 1000).toISOString(),
@@ -166,21 +178,25 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder) {
 
   if (error) throw error;
 
-  // 주문 품목 동기화
-  if (order && imwebOrder.items?.length) {
+  // 품목 동기화
+  if (order && prodOrders.length > 0) {
     // 기존 품목 삭제 후 재삽입
     await supabase.from('order_items').delete().eq('order_id', order.id);
 
-    const items = imwebOrder.items.map((item) => ({
-      order_id: order.id,
-      imweb_product_no: item.prod_no,
-      product_name: item.prod_name,
-      option_text: item.options || null,
-      quantity: item.qty,
-      unit_price: item.price,
-      total_price: item.total,
-    }));
+    const items = prodOrders.flatMap((po) =>
+      po.items.map((item) => ({
+        order_id: order.id,
+        imweb_product_no: String(item.prod_no),
+        product_name: item.prod_name,
+        option_text: item.prod_sku_no || null,
+        quantity: item.payment.count,
+        unit_price: item.payment.price,
+        total_price: item.payment.price * item.payment.count,
+      }))
+    );
 
-    await supabase.from('order_items').insert(items);
+    if (items.length > 0) {
+      await supabase.from('order_items').insert(items);
+    }
   }
 }

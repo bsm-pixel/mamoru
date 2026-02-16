@@ -1,4 +1,4 @@
-/** 아임웹 API v2 타입 */
+/** 아임웹 API v2 타입 — 실제 응답 구조 반영 */
 
 export interface ImwebAuthResponse {
   access_token: string;
@@ -6,8 +6,8 @@ export interface ImwebAuthResponse {
 }
 
 export interface ImwebOrdersParams {
-  order_date_from?: string;  // YYYY-MM-DD
-  order_date_to?: string;
+  order_date_from?: number;  // Unix timestamp
+  order_date_to?: number;
   status?: string;
   page?: number;
   limit?: number;
@@ -26,32 +26,66 @@ export interface ImwebOrderItem {
 export interface ImwebOrder {
   order_no: string;
   order_code: string;
-  status: string;
-  pay_type: string;
-  pay_time: number;
   order_time: number;
+  order_type: string;
+  complete_time: number;
   orderer: {
+    member_code: string;
     name: string;
     email: string;
-    phone: string;
+    call: string;           // phone → call
   };
   delivery: {
-    name: string;
-    phone: string;
-    zipcode: string;
-    addr: string;
-    addr_detail: string;
+    country: string;
+    address: {              // 중첩 address 객체
+      name: string;
+      phone: string;
+      phone2: string;
+      postcode: string;     // zipcode → postcode
+      address: string;      // addr
+      address_detail: string;
+    };
     memo: string;
   };
-  price: {
-    total: number;
-    deliv: number;
-    discount: number;
-    pay_price: number;
+  payment: {                // price → payment
+    pay_type: string;
+    pg_type: string;
+    deliv_type: string;
+    price_currency: string;
+    total_price: number;
+    deliv_price: number;
+    coupon: number;
+    payment_amount: number;
+    payment_time: number;
   };
-  items: ImwebOrderItem[];
+  items?: ImwebOrderItem[];
   parcel_code?: string;
   invoice_no?: string;
+}
+
+/** prod-orders 응답의 품목 */
+export interface ImwebProdOrderItem {
+  no: number;
+  prod_no: number;
+  prod_name: string;
+  prod_custom_code: string | null;
+  prod_sku_no: string;
+  is_promotion: string;
+  payment: {
+    count: number;
+    price: number;
+    deliv_price: number;
+    price_sale: number;
+    coupon: number;
+  };
+}
+
+/** prod-orders 응답 */
+export interface ImwebProdOrder {
+  order_no: string;        // "202602179557539-001" 형태
+  status: string;          // PAY_COMPLETE, DELIVERY 등
+  pay_time: number;
+  items: ImwebProdOrderItem[];
 }
 
 export interface ImwebApiResponse<T> {
@@ -62,7 +96,10 @@ export interface ImwebApiResponse<T> {
 
 export interface ImwebOrderListData {
   list: ImwebOrder[];
-  total: number;
-  page: number;
-  limit: number;
+  pagenation: {
+    data_count: number;
+    current_page: number;
+    total_page: number;
+    pagesize: number;
+  };
 }

@@ -20,7 +20,26 @@
       "Bash(claude --teleport session_01FseNSNVjWxWfjnHbyqvUbp)",
       "WebFetch(domain:script.google.com)",
       "Bash(gh api:*)",
-      "WebFetch(domain:bsm-pixel.github.io)"
+      "WebFetch(domain:bsm-pixel.github.io)",
+      "Bash(cmdkey:*)",
+      "Bash(git credential-manager:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(xargs -I {} bash -c \"echo ''''=== {} ==='''' && head -20 ''''{}''''\")",
+      "Bash(/dev/null -exec ls -la {} ;)",
+      "WebSearch",
+      "WebFetch(domain:developers-docs.imweb.me)",
+      "WebFetch(domain:sboapi.ecount.com)",
+      "WebFetch(domain:yesnet.kr)",
+      "WebFetch(domain:developers.imweb.me)",
+      "WebFetch(domain:www.inflearn.com)",
+      "WebFetch(domain:guide.bati.ai)",
+      "Bash(npx create-next-app:*)",
+      "Bash(npx next build)",
+      "Bash(git status:*)",
+      "Bash(npm run dev:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }
