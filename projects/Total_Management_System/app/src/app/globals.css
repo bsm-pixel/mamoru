@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+:root {
+  /* Primary 60/30/10 */
+  --mm-cream: #F2F2EA;
+  --mm-indigo-black: #181725;
+  --mm-terracotta: #D4613E;
+
+  /* Dark variants */
+  --mm-indigo-deep: #100F1C;
+  --mm-indigo-mid: #2A2940;
+
+  /* Light variants */
+  --mm-warm-ivory: #E8E6DC;
+  --mm-card-white: #FAFAF5;
+
+  /* Accent variants */
+  --mm-terracotta-soft: #F0C4B3;
+  --mm-terracotta-deep: #B85232;
+
+  /* Neutrals (indigo undertone) */
+  --mm-neutral-900: #181725;
+  --mm-neutral-700: #3D3B52;
+  --mm-neutral-500: #6B6980;
+  --mm-neutral-400: #8E8CA0;
+  --mm-neutral-300: #B5B3C2;
+  --mm-neutral-200: #D4D3DC;
+  --mm-neutral-100: #E8E6DC;
+
+  /* Semantic */
+  --mm-success: #5C8F65;
+  --mm-success-soft: rgba(92,143,101,0.12);
+  --mm-warning: #C49A3E;
+  --mm-warning-soft: rgba(196,154,62,0.12);
+  --mm-error: #C44040;
+  --mm-error-soft: rgba(196,64,64,0.12);
+  --mm-info: #7080B8;
+  --mm-info-soft: rgba(112,128,184,0.12);
+
+  /* Functional aliases */
+  --background: var(--mm-cream);
+  --foreground: var(--mm-indigo-black);
+  --card: var(--mm-card-white);
+  --border: var(--mm-neutral-200);
+  --muted: var(--mm-neutral-500);
+  --accent: var(--mm-terracotta);
+  --accent-hover: var(--mm-terracotta-deep);
+}
+
+@theme inline {
+  /* Colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+
+  --color-cream: #F2F2EA;
+  --color-indigo-black: #181725;
+  --color-indigo-deep: #100F1C;
+  --color-indigo-mid: #2A2940;
+  --color-warm-ivory: #E8E6DC;
+  --color-card-white: #FAFAF5;
+  --color-terracotta: #D4613E;
+  --color-terracotta-soft: #F0C4B3;
+  --color-terracotta-deep: #B85232;
+
+  --color-neutral-900: #181725;
+  --color-neutral-700: #3D3B52;
+  --color-neutral-500: #6B6980;
+  --color-neutral-400: #8E8CA0;
+  --color-neutral-300: #B5B3C2;
+  --color-neutral-200: #D4D3DC;
+  --color-neutral-100: #E8E6DC;
+
+  --color-success: #5C8F65;
+  --color-success-soft: rgba(92,143,101,0.12);
+  --color-warning: #C49A3E;
+  --color-warning-soft: rgba(196,154,62,0.12);
+  --color-error: #C44040;
+  --color-error-soft: rgba(196,64,64,0.12);
+  --color-info: #7080B8;
+  --color-info-soft: rgba(112,128,184,0.12);
+
+  /* Font */
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--mm-neutral-300); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--mm-neutral-400); }
