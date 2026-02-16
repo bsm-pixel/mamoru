@@ -39,7 +39,16 @@
       "Bash(npx next build)",
       "Bash(git status:*)",
       "Bash(npm run dev:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(where:*)",
+      "Bash(/c/Users/백성민/AppData/Local/Programs/Python/Python313/python.exe -c \"print\\(''hello''\\)\")",
+      "Bash(/c/Users/백성민/AppData/Local/Programs/Python/Python313/python.exe -m pip install PyPDF2)",
+      "Bash(PYEXE=\"/c/Users/백성민/AppData/Local/Programs/Python/Python313/python.exe\")",
+      "Bash($PYEXE -c \"\nimport PyPDF2\npdf_path = r''C:\\\\Users\\\\백성민\\\\mamoru\\\\projects\\\\Total_Management_System\\\\3.롯데글로벌로지스 주문처리 API 연계 가이드 v2.2.pdf''\nreader = PyPDF2.PdfReader\\(pdf_path\\)\nprint\\(f''Total pages: {len\\(reader.pages\\)}''\\)\nfor i, page in enumerate\\(reader.pages\\):\n    text = page.extract_text\\(\\)\n    if text:\n        print\\(f''\\\\n===== PAGE {i+1} =====''\\)\n        print\\(text\\)\n\")",
+      "Bash($PYEXE:*)"
     ]
   }
 }
