@@ -11,8 +11,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useOrderSync } from '@/hooks/use-orders';
 import { createClient } from '@/lib/supabase/client';
 import { formatKRW, formatRelative, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
-import { ShoppingCart, Truck, CreditCard, Clock, RefreshCw, ArrowRight } from 'lucide-react';
-import type { Order } from '@/lib/supabase/types';
+import { ShoppingCart, Truck, CreditCard, Clock, RefreshCw, ArrowRight, MessageSquare, UserCheck } from 'lucide-react';
+import type { Order, Consultation } from '@/lib/supabase/types';
+import { CONSULTATION_STATUS_LABEL, CONSULTATION_STATUS_COLOR } from '@/lib/utils/format';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -42,6 +43,24 @@ export default function DashboardPage() {
     },
   });
 
+  // 상담 통계
+  const { data: consultStats } = useQuery({
+    queryKey: ['dashboard-consult-stats'],
+    queryFn: async () => {
+      const [pendingRes, todayRes] = await Promise.all([
+        supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'pending_admin'),
+        supabase
+          .from('consultations')
+          .select('*', { count: 'exact', head: true })
+          .gte('received_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
+      ]);
+      return {
+        pending: pendingRes.count || 0,
+        today: todayRes.count || 0,
+      };
+    },
+  });
+
   // 최근 주문
   const { data: recentOrders, isLoading: recentLoading } = useQuery({
     queryKey: ['recent-orders'],
@@ -52,6 +71,19 @@ export default function DashboardPage() {
         .order('ordered_at', { ascending: false })
         .limit(5);
       return (data || []) as Order[];
+    },
+  });
+
+  // 최근 상담
+  const { data: recentConsults, isLoading: consultsLoading } = useQuery({
+    queryKey: ['recent-consultations'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('consultations')
+        .select('*')
+        .order('received_at', { ascending: false })
+        .limit(5);
+      return (data || []) as Consultation[];
     },
   });
 
@@ -111,6 +143,73 @@ export default function DashboardPage() {
             />
           </div>
         )}
+
+        {/* 상담 통계 */}
+        <div className="grid grid-cols-2 gap-3">
+          <StatsCard
+            label="대기 상담"
+            value={consultStats?.pending || 0}
+            icon={MessageSquare}
+            color="text-warning"
+            bgColor="bg-warning/10"
+          />
+          <StatsCard
+            label="오늘 접수"
+            value={consultStats?.today || 0}
+            icon={UserCheck}
+            color="text-info"
+            bgColor="bg-info/10"
+          />
+        </div>
+
+        {/* 최근 상담 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>최근 상담</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push('/consultations')}
+            >
+              전체보기
+              <ArrowRight size={14} />
+            </Button>
+          </CardHeader>
+
+          {consultsLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-14" />
+              ))}
+            </div>
+          ) : !recentConsults || recentConsults.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-neutral-400">상담 데이터가 없습니다</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-neutral-100 -mx-5">
+              {recentConsults.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => router.push(`/consultations/${c.id}`)}
+                  className="flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-warm-ivory/60 transition"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{c.name}</span>
+                      <Badge className={CONSULTATION_STATUS_COLOR[c.status] || ''}>
+                        {CONSULTATION_STATUS_LABEL[c.status]}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      {formatRelative(c.received_at)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
 
         {/* 최근 주문 */}
         <Card>

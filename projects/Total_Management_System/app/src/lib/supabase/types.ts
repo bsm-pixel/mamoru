@@ -1,4 +1,4 @@
-/** Supabase Database 타입 — 수동 정의 (Phase 1) */
+/** Supabase Database 타입 — 수동 정의 (Phase 1 + Phase 2-1) */
 
 export type OrderStatus =
   | 'pay_wait'
@@ -12,6 +12,19 @@ export type OrderStatus =
   | 'refunded';
 
 export type UserRole = 'owner' | 'staff' | 'director';
+
+// Phase 2-1: 상담/딜러 ENUM
+export type ConsultationStatus =
+  | 'pending_admin'
+  | 'suggested'
+  | 'assigned'
+  | 'confirmed'
+  | 'cancelled'
+  | 'reschedule_requested';
+
+export type ConsultationType = 'store_visit' | 'field_request';
+
+export type DealerStatus = 'active' | 'inactive';
 
 export interface Database {
   public: {
@@ -129,6 +142,129 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['sync_log']['Row'], 'id'>;
         Update: Partial<Database['public']['Tables']['sync_log']['Insert']>;
       };
+      // Phase 2-1: 상담/딜러 테이블
+      dealers: {
+        Row: {
+          id: string;
+          dealer_code: string;
+          name: string;
+          phone: string | null;
+          regions: string[];
+          calendar_id: string | null;
+          status: DealerStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          dealer_code: string;
+          name: string;
+          phone?: string | null;
+          regions?: string[];
+          calendar_id?: string | null;
+          status?: DealerStatus;
+        };
+        Update: {
+          dealer_code?: string;
+          name?: string;
+          phone?: string | null;
+          regions?: string[];
+          calendar_id?: string | null;
+          status?: DealerStatus;
+        };
+      };
+      consultations: {
+        Row: {
+          id: string;
+          customer_id: string | null;
+          name: string;
+          phone: string;
+          phone_normalized: string | null;
+          consultation_type: ConsultationType;
+          visit_date: string | null;
+          visit_time: string | null;
+          postcode: string | null;
+          address_road: string | null;
+          address_detail: string | null;
+          address_sido: string | null;
+          address_sigungu: string | null;
+          address_region: string | null;
+          status: ConsultationStatus;
+          memo: string | null;
+          unique_id: string;
+          dealer_id: string | null;
+          suggestions: Record<string, unknown> | null;
+          gas_raw: Record<string, unknown> | null;
+          received_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          customer_id?: string | null;
+          name: string;
+          phone: string;
+          consultation_type?: ConsultationType;
+          visit_date?: string | null;
+          visit_time?: string | null;
+          postcode?: string | null;
+          address_road?: string | null;
+          address_detail?: string | null;
+          address_sido?: string | null;
+          address_sigungu?: string | null;
+          address_region?: string | null;
+          status?: ConsultationStatus;
+          memo?: string | null;
+          unique_id: string;
+          dealer_id?: string | null;
+          suggestions?: Record<string, unknown> | null;
+          gas_raw?: Record<string, unknown> | null;
+          received_at?: string;
+        };
+        Update: {
+          customer_id?: string | null;
+          name?: string;
+          phone?: string;
+          consultation_type?: ConsultationType;
+          visit_date?: string | null;
+          visit_time?: string | null;
+          postcode?: string | null;
+          address_road?: string | null;
+          address_detail?: string | null;
+          address_sido?: string | null;
+          address_sigungu?: string | null;
+          address_region?: string | null;
+          status?: ConsultationStatus;
+          memo?: string | null;
+          dealer_id?: string | null;
+          suggestions?: Record<string, unknown> | null;
+          gas_raw?: Record<string, unknown> | null;
+          received_at?: string;
+        };
+      };
+      consultation_history: {
+        Row: {
+          id: string;
+          consultation_id: string;
+          from_status: ConsultationStatus | null;
+          to_status: ConsultationStatus;
+          changed_by: string | null;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          consultation_id: string;
+          from_status?: ConsultationStatus | null;
+          to_status: ConsultationStatus;
+          changed_by?: string | null;
+          note?: string | null;
+        };
+        Update: {
+          consultation_id?: string;
+          from_status?: ConsultationStatus | null;
+          to_status?: ConsultationStatus;
+          changed_by?: string | null;
+          note?: string | null;
+        };
+      };
     };
   };
 }
@@ -140,3 +276,8 @@ export type Order = Database['public']['Tables']['orders']['Row'];
 export type OrderItem = Database['public']['Tables']['order_items']['Row'];
 export type Product = Database['public']['Tables']['products']['Row'];
 export type SyncLog = Database['public']['Tables']['sync_log']['Row'];
+
+// Phase 2-1: 편의 타입
+export type Dealer = Database['public']['Tables']['dealers']['Row'];
+export type Consultation = Database['public']['Tables']['consultations']['Row'];
+export type ConsultationHistory = Database['public']['Tables']['consultation_history']['Row'];

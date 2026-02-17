@@ -55,3 +55,33 @@ export const ORDER_STATUS_COLOR: Record<string, string> = {
   refund_request: 'bg-error-soft text-error',
   refunded: 'bg-neutral-100 text-neutral-500',
 };
+
+// ============================================
+// Phase 2-1: 상담 상태 라벨/색상
+// ============================================
+
+/** 상담 상태 한글 매핑 */
+export const CONSULTATION_STATUS_LABEL: Record<string, string> = {
+  pending_admin: '대기중',
+  suggested: '일정 제안',
+  assigned: '딜러 배정',
+  confirmed: '확정',
+  cancelled: '취소',
+  reschedule_requested: '일정 변경 요청',
+};
+
+/** 상담 상태 색상 매핑 (Tailwind 클래스) */
+export const CONSULTATION_STATUS_COLOR: Record<string, string> = {
+  pending_admin: 'bg-warning-soft text-warning',
+  suggested: 'bg-info-soft text-info',
+  assigned: 'bg-terracotta-soft/30 text-terracotta-deep',
+  confirmed: 'bg-success-soft text-success',
+  cancelled: 'bg-error-soft text-error',
+  reschedule_requested: 'bg-warning-soft text-warning',
+};
+
+/** 상담 타입 한글 매핑 */
+export const CONSULTATION_TYPE_LABEL: Record<string, string> = {
+  store_visit: '매장 방문',
+  field_request: '출장 요청',
+};
