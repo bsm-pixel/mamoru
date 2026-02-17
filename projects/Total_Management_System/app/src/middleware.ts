@@ -31,8 +31,8 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // 인증 불필요 경로
-  if (pathname.startsWith('/login') || pathname.startsWith('/api/cron')) {
+  // 인증 불필요 경로 (GAS 동기화 API 포함)
+  if (pathname.startsWith('/login') || pathname.startsWith('/api/cron') || pathname.startsWith('/api/consultation/sync')) {
     if (user && pathname.startsWith('/login')) {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
