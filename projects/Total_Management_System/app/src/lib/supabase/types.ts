@@ -20,9 +20,12 @@ export type ConsultationStatus =
   | 'assigned'
   | 'confirmed'
   | 'cancelled'
-  | 'reschedule_requested';
+  | 'reschedule_requested'
+  | 'on_hold'       // Phase 2-2: 보류
+  | 'in_progress'   // Phase 2-2: 진행중 (톡상담)
+  | 'completed';    // Phase 2-2: 처리완료
 
-export type ConsultationType = 'store_visit' | 'field_request';
+export type ConsultationType = 'store_visit' | 'field_request' | 'talk_consult';
 
 export type DealerStatus = 'active' | 'inactive';
 
@@ -194,6 +197,9 @@ export interface Database {
           dealer_id: string | null;
           suggestions: Record<string, unknown> | null;
           gas_raw: Record<string, unknown> | null;
+          hold_reason: string | null;       // Phase 2-2: 보류 사유
+          latitude: number | null;          // Phase 2-2: 좌표
+          longitude: number | null;
           received_at: string;
           created_at: string;
           updated_at: string;
@@ -217,6 +223,9 @@ export interface Database {
           dealer_id?: string | null;
           suggestions?: Record<string, unknown> | null;
           gas_raw?: Record<string, unknown> | null;
+          hold_reason?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
           received_at?: string;
         };
         Update: {
@@ -237,6 +246,9 @@ export interface Database {
           dealer_id?: string | null;
           suggestions?: Record<string, unknown> | null;
           gas_raw?: Record<string, unknown> | null;
+          hold_reason?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
           received_at?: string;
         };
       };

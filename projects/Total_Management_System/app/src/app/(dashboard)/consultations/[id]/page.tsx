@@ -7,8 +7,17 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useConsultation, useUpdateConsultationStatus, useAssignDealer } from '@/hooks/use-consultations';
+import {
+  useConsultation,
+  useUpdateConsultationStatus,
+  useAssignDealer,
+  useSendNotification,
+} from '@/hooks/use-consultations';
 import { useDealers } from '@/hooks/use-dealers';
+import { RescheduleModal } from '@/components/consultations/reschedule-modal';
+import { SuggestTimeModal } from '@/components/consultations/suggest-time-modal';
+import { HoldReasonModal } from '@/components/consultations/hold-reason-modal';
+import { getAllowedTransitions } from '@/lib/consultation/transitions';
 import {
   formatDate,
   formatDateTime,
@@ -18,31 +27,19 @@ import {
   CONSULTATION_STATUS_COLOR,
   CONSULTATION_TYPE_LABEL,
 } from '@/lib/utils/format';
-import { ArrowLeft, MapPin, Calendar, User, Clock, UserCheck } from 'lucide-react';
-import type { ConsultationStatus } from '@/lib/supabase/types';
+import { ArrowLeft, MapPin, Calendar, User, Clock, UserCheck, AlertCircle } from 'lucide-react';
+import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
-/** 상태 전이 가능 맵 */
-const STATUS_TRANSITIONS: Record<string, { value: ConsultationStatus; label: string }[]> = {
-  pending_admin: [
-    { value: 'suggested', label: '일정 제안' },
-    { value: 'assigned', label: '딜러 배정' },
-    { value: 'cancelled', label: '취소' },
-  ],
-  suggested: [
-    { value: 'confirmed', label: '확정' },
-    { value: 'reschedule_requested', label: '일정 변경' },
-    { value: 'cancelled', label: '취소' },
-  ],
-  assigned: [
-    { value: 'confirmed', label: '확정' },
-    { value: 'reschedule_requested', label: '일정 변경' },
-    { value: 'cancelled', label: '취소' },
-  ],
-  reschedule_requested: [
-    { value: 'suggested', label: '재제안' },
-    { value: 'assigned', label: '딜러 재배정' },
-    { value: 'cancelled', label: '취소' },
-  ],
+/** 상태 전이 → 버튼 라벨 매핑 */
+const STATUS_BUTTON_LABEL: Record<string, string> = {
+  pending_admin: '대기 복원',
+  suggested: '시간 제안',
+  confirmed: '확정',
+  cancelled: '취소',
+  reschedule_requested: '일정 변경 요청',
+  on_hold: '보류',
+  in_progress: '상담 시작',
+  completed: '처리완료',
 };
 
 export default function ConsultationDetailPage() {
@@ -52,8 +49,12 @@ export default function ConsultationDetailPage() {
   const { data, isLoading } = useConsultation(id);
   const updateStatus = useUpdateConsultationStatus();
   const assignDealer = useAssignDealer();
+  const sendNotify = useSendNotification();
   const { data: dealers } = useDealers();
   const [selectedDealer, setSelectedDealer] = useState('');
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [showSuggest, setShowSuggest] = useState(false);
+  const [showHold, setShowHold] = useState(false);
 
   if (isLoading) {
     return (
@@ -81,7 +82,100 @@ export default function ConsultationDetailPage() {
 
   const { consultation: c, history } = data;
   const statusColor = CONSULTATION_STATUS_COLOR[c.status] || 'bg-neutral-100 text-neutral-500';
-  const transitions = STATUS_TRANSITIONS[c.status] || [];
+  const cType = c.consultation_type as ConsultationType;
+  const allowed = getAllowedTransitions(cType, c.status as ConsultationStatus);
+
+  /** 유형별 액션 버튼 렌더링 */
+  const renderTypeActions = () => {
+    switch (cType) {
+      case 'store_visit':
+        return (
+          <>
+            {c.status === 'confirmed' && (
+              <>
+                <Button variant="secondary" size="sm" onClick={() => setShowReschedule(true)}>
+                  일정변경
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={sendNotify.isPending}
+                  onClick={() => sendNotify.mutate({ consultationId: c.id, template: 'confirmed' })}
+                >
+                  알림톡 재발송
+                </Button>
+              </>
+            )}
+            {allowed.includes('on_hold') && (
+              <Button variant="ghost" size="sm" onClick={() => setShowHold(true)}>보류</Button>
+            )}
+            {allowed.includes('confirmed') && c.status !== 'confirmed' && (
+              <Button variant="secondary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
+                확정 복원
+              </Button>
+            )}
+            {allowed.includes('cancelled') && (
+              <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+                취소
+              </Button>
+            )}
+          </>
+        );
+      case 'field_request':
+        return (
+          <>
+            {(c.status === 'pending_admin' || c.status === 'reschedule_requested') && (
+              <Button variant="primary" size="sm" onClick={() => setShowSuggest(true)}>
+                시간 제안
+              </Button>
+            )}
+            {allowed.includes('confirmed') && (
+              <Button variant="secondary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
+                {c.status === 'suggested' ? '수동 확정' : '확정'}
+              </Button>
+            )}
+            {allowed.includes('on_hold') && (
+              <Button variant="ghost" size="sm" onClick={() => setShowHold(true)}>보류</Button>
+            )}
+            {allowed.includes('cancelled') && (
+              <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+                취소
+              </Button>
+            )}
+          </>
+        );
+      case 'talk_consult':
+        return (
+          <>
+            {allowed.includes('in_progress') && (
+              <Button variant="primary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'in_progress' })}>
+                상담 시작
+              </Button>
+            )}
+            {allowed.includes('completed') && (
+              <Button variant="primary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'completed' })}>
+                처리완료
+              </Button>
+            )}
+            {allowed.includes('on_hold') && (
+              <Button variant="ghost" size="sm" onClick={() => setShowHold(true)}>보류</Button>
+            )}
+            {allowed.includes('pending_admin') && (
+              <Button variant="secondary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'pending_admin' })}>
+                대기 복원
+              </Button>
+            )}
+            {allowed.includes('cancelled') && (
+              <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+                취소
+              </Button>
+            )}
+          </>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <>
@@ -102,13 +196,26 @@ export default function ConsultationDetailPage() {
           <div>
             <h2 className="text-lg font-bold">{c.name}</h2>
             <p className="text-xs text-neutral-500 mt-0.5">
-              {c.unique_id} &middot; {formatDateTime(c.received_at)}
+              {c.unique_id} &middot; {formatDateTime(c.received_at)} &middot; {CONSULTATION_TYPE_LABEL[c.consultation_type]}
             </p>
           </div>
           <Badge className={statusColor}>
             {CONSULTATION_STATUS_LABEL[c.status] || c.status}
           </Badge>
         </div>
+
+        {/* 보류 사유 카드 */}
+        {c.status === 'on_hold' && c.hold_reason && (
+          <Card className="border-warning/30 bg-warning-soft/20">
+            <div className="flex items-start gap-2">
+              <AlertCircle size={16} className="text-warning mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-warning">보류 중</p>
+                <p className="text-sm text-neutral-700 mt-0.5">{c.hold_reason}</p>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* 고객 정보 */}
         <Card>
@@ -143,12 +250,14 @@ export default function ConsultationDetailPage() {
             </dd>
             <dt className="text-neutral-500">방문 시간</dt>
             <dd>{c.visit_time || '-'}</dd>
-            {c.suggestions && (c.suggestions as { dates?: string[] }).dates && (
+            {c.suggestions && (c.suggestions as { dates?: unknown[] }).dates && (
               <>
                 <dt className="text-neutral-500">제안 일정</dt>
                 <dd className="col-span-1">
-                  {((c.suggestions as { dates: string[] }).dates).map((d, i) => (
-                    <span key={i} className="block text-xs text-info">{d}</span>
+                  {((c.suggestions as { dates: { date: string; time: string }[] }).dates).map((d, i) => (
+                    <span key={i} className="block text-xs text-info">
+                      {typeof d === 'string' ? d : `${d.date} ${d.time}`}
+                    </span>
                   ))}
                 </dd>
               </>
@@ -171,6 +280,12 @@ export default function ConsultationDetailPage() {
             <dd className="col-span-2">{c.address_road || '-'} {c.address_detail || ''}</dd>
             <dt className="text-neutral-500">지역</dt>
             <dd>{[c.address_sido, c.address_sigungu, c.address_region].filter(Boolean).join(' ') || '-'}</dd>
+            {c.latitude && c.longitude && (
+              <>
+                <dt className="text-neutral-500">좌표</dt>
+                <dd className="text-xs text-neutral-400">{c.latitude}, {c.longitude}</dd>
+              </>
+            )}
           </dl>
         </Card>
 
@@ -220,24 +335,14 @@ export default function ConsultationDetailPage() {
           </Card>
         )}
 
-        {/* 빠른 액션: 상태 변경 */}
-        {transitions.length > 0 && (
+        {/* 유형별 액션 버튼 */}
+        {allowed.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>상태 변경</CardTitle>
+              <CardTitle>액션</CardTitle>
             </CardHeader>
             <div className="flex flex-wrap gap-2">
-              {transitions.map((t) => (
-                <Button
-                  key={t.value}
-                  variant={t.value === 'cancelled' ? 'danger' : 'secondary'}
-                  size="sm"
-                  disabled={updateStatus.isPending}
-                  onClick={() => updateStatus.mutate({ id: c.id, status: t.value })}
-                >
-                  {t.label}
-                </Button>
-              ))}
+              {renderTypeActions()}
             </div>
           </Card>
         )}
@@ -282,6 +387,31 @@ export default function ConsultationDetailPage() {
           )}
         </Card>
       </div>
+
+      {/* 모달 */}
+      {showReschedule && (
+        <RescheduleModal
+          open={showReschedule}
+          onClose={() => setShowReschedule(false)}
+          consultationId={c.id}
+          currentDate={c.visit_date || ''}
+          currentTime={c.visit_time || ''}
+        />
+      )}
+      {showSuggest && (
+        <SuggestTimeModal
+          open={showSuggest}
+          onClose={() => setShowSuggest(false)}
+          consultationId={c.id}
+        />
+      )}
+      {showHold && (
+        <HoldReasonModal
+          open={showHold}
+          onClose={() => setShowHold(false)}
+          consultationId={c.id}
+        />
+      )}
     </>
   );
 }

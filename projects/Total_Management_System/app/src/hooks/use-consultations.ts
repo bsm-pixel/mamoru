@@ -144,3 +144,130 @@ export function useAssignDealer() {
     },
   });
 }
+
+// ============================================
+// Phase 2-2: 추가 훅
+// ============================================
+
+/** 시간 제안 (출장요청) */
+export function useSuggestTimes() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ consultationId, suggestions }: {
+      consultationId: string;
+      suggestions: { date: string; time: string }[];
+    }) => {
+      const res = await fetch('/api/consultation/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consultationId, suggestions }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('시간 제안이 전송되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['consultations'] });
+      queryClient.invalidateQueries({ queryKey: ['consultation'] });
+    },
+    onError: (err) => {
+      toast.error('시간 제안 실패: ' + String(err));
+    },
+  });
+}
+
+/** 알림톡 발송 */
+export function useSendNotification() {
+  return useMutation({
+    mutationFn: async ({ consultationId, template, extraData }: {
+      consultationId: string;
+      template: string;
+      extraData?: Record<string, string>;
+    }) => {
+      const res = await fetch('/api/consultation/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consultationId, template, extraData }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('알림톡이 발송되었습니다');
+    },
+    onError: (err) => {
+      toast.error('알림톡 발송 실패: ' + String(err));
+    },
+  });
+}
+
+/** 보류 처리 (hold_reason 포함) */
+export function useHoldConsultation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, holdReason }: { id: string; holdReason: string }) => {
+      const res = await fetch(`/api/consultation/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'on_hold', hold_reason: holdReason, note: `보류: ${holdReason}` }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('보류 처리되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['consultations'] });
+      queryClient.invalidateQueries({ queryKey: ['consultation'] });
+    },
+    onError: (err) => {
+      toast.error('보류 처리 실패: ' + String(err));
+    },
+  });
+}
+
+/** 일정 변경 (reschedule) */
+export function useRescheduleConsultation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, visitDate, visitTime, notify }: {
+      id: string;
+      visitDate: string;
+      visitTime: string;
+      notify?: boolean;
+    }) => {
+      const res = await fetch(`/api/consultation/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          visit_date: visitDate,
+          visit_time: visitTime,
+          note: `일정 변경: ${visitDate} ${visitTime}`,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+
+      // 알림톡 발송 (선택)
+      if (notify) {
+        await fetch('/api/consultation/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ consultationId: id, template: 'rescheduled' }),
+        }).catch(() => {}); // 실패해도 무시
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('일정이 변경되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['consultations'] });
+      queryClient.invalidateQueries({ queryKey: ['consultation'] });
+    },
+    onError: (err) => {
+      toast.error('일정 변경 실패: ' + String(err));
+    },
+  });
+}

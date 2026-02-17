@@ -24,6 +24,10 @@ function rowToSupabasePayload_(row, col) {
 
   var phone = val('연락처').replace(/^'/, ''); // 시트에 '010... 형태로 저장되므로 앞 따옴표 제거
 
+  // Phase 2-2: lat/lng 최상위 전달 (좌표 직접 저장)
+  var rawLat = val('addressLat');
+  var rawLng = val('addressLng');
+
   return {
     uniqueId: val('UniqueID'),
     name: val('성함'),
@@ -38,6 +42,8 @@ function rowToSupabasePayload_(row, col) {
     status: val('Status') || 'PENDING_ADMIN',
     source: '웹폼',
     receivedAt: val('접수시각') ? new Date(val('접수시각')).toISOString() : new Date().toISOString(),
+    latitude: rawLat ? parseFloat(rawLat) : null,
+    longitude: rawLng ? parseFloat(rawLng) : null,
     raw: {
       address: val('주소'),
       days: val('가능요일'),

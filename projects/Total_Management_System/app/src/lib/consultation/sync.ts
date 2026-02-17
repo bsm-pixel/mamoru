@@ -29,6 +29,8 @@ export interface GasPushPayload {
   adminNote?: string;
   source?: string;
   receivedAt?: string;
+  latitude?: number;   // Phase 2-2: 좌표
+  longitude?: number;
   raw?: Record<string, unknown>;
 }
 
@@ -42,6 +44,9 @@ function mapStatus(gasStatus?: string): ConsultationStatus {
     CONFIRMED: 'confirmed',
     CANCELLED: 'cancelled',
     RESCHEDULE_REQUESTED: 'reschedule_requested',
+    ON_HOLD: 'on_hold',           // Phase 2-2
+    IN_PROGRESS: 'in_progress',   // Phase 2-2
+    COMPLETED: 'completed',       // Phase 2-2
   };
   return map[gasStatus.toUpperCase()] || 'pending_admin';
 }
@@ -49,6 +54,7 @@ function mapStatus(gasStatus?: string): ConsultationStatus {
 /** GAS 상담방식 → consultation_type 매핑 */
 function mapType(gasType?: string): ConsultationType {
   if (gasType?.includes('출장')) return 'field_request';
+  if (gasType?.includes('톡') || gasType?.includes('카카오')) return 'talk_consult'; // Phase 2-2
   return 'store_visit';
 }
 
@@ -122,6 +128,10 @@ export async function upsertConsultation(payload: GasPushPayload): Promise<{
       customerId = newCustomer?.id || null;
     }
 
+    // lat/lng: payload 직접 전달 또는 raw에서 추출
+    const lat = payload.latitude ?? (payload.raw?.lat ? Number(payload.raw.lat) : null);
+    const lng = payload.longitude ?? (payload.raw?.lng ? Number(payload.raw.lng) : null);
+
     // upsert
     const consultData = {
       customer_id: customerId,
@@ -142,6 +152,8 @@ export async function upsertConsultation(payload: GasPushPayload): Promise<{
       dealer_id: dealerId,
       suggestions: payload.suggestedDates?.length ? { dates: payload.suggestedDates } : null,
       gas_raw: payload.raw || null,
+      latitude: (lat && !isNaN(lat)) ? lat : null,
+      longitude: (lng && !isNaN(lng)) ? lng : null,
       received_at: payload.receivedAt || new Date().toISOString(),
     };
 

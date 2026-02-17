@@ -68,6 +68,9 @@ export const CONSULTATION_STATUS_LABEL: Record<string, string> = {
   confirmed: '확정',
   cancelled: '취소',
   reschedule_requested: '일정 변경 요청',
+  on_hold: '보류',           // Phase 2-2
+  in_progress: '진행중',     // Phase 2-2
+  completed: '처리완료',     // Phase 2-2
 };
 
 /** 상담 상태 색상 매핑 (Tailwind 클래스) */
@@ -78,10 +81,14 @@ export const CONSULTATION_STATUS_COLOR: Record<string, string> = {
   confirmed: 'bg-success-soft text-success',
   cancelled: 'bg-error-soft text-error',
   reschedule_requested: 'bg-warning-soft text-warning',
+  on_hold: 'bg-neutral-100 text-neutral-500',    // Phase 2-2
+  in_progress: 'bg-info-soft text-info',          // Phase 2-2
+  completed: 'bg-success-soft text-success',      // Phase 2-2
 };
 
 /** 상담 타입 한글 매핑 */
 export const CONSULTATION_TYPE_LABEL: Record<string, string> = {
   store_visit: '매장 방문',
   field_request: '출장 요청',
+  talk_consult: '톡상담',    // Phase 2-2
 };
