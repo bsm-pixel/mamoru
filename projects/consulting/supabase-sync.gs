@@ -10,7 +10,7 @@
 // ═══════════════════════════════════════
 // Supabase 연동 설정
 // ═══════════════════════════════════════
-var SUPABASE_SYNC_URL = 'https://여기에-vercel-도메인.vercel.app/api/consultation/sync';
+var SUPABASE_SYNC_URL = 'https://app-eta-sandy-75.vercel.app/api/consultation/sync';
 var SUPABASE_SYNC_KEY = 'mamoru-tms-cron-2026';
 
 /**
