@@ -90,6 +90,8 @@ export function StoreVisitList() {
 
   const renderRow = (c: Consultation) => {
     const dday = formatDday(c.visit_date);
+    const busy = updateStatus.isPending && updateStatus.variables?.id === c.id;
+    const busyStatus = busy ? updateStatus.variables?.status : null;
 
     return (
       <div
@@ -133,22 +135,25 @@ export function StoreVisitList() {
         <div className="flex gap-1 shrink-0 flex-wrap">
           {tab === 'upcoming' && (
             <>
-              <Button variant="secondary" size="sm" onClick={() => setRescheduleTarget(c)}>
+              <Button variant="secondary" size="sm" disabled={busy} onClick={() => setRescheduleTarget(c)}>
                 일정변경
               </Button>
               <Button
                 variant="ghost" size="sm"
-                disabled={sendNotify.isPending}
+                disabled={busy || sendNotify.isPending}
+                loading={sendNotify.isPending && sendNotify.variables?.consultationId === c.id}
                 onClick={() => sendNotify.mutate({ consultationId: c.id, template: 'confirmed' })}
               >
                 알림 재발송
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setHoldTarget(c.id)}>보류</Button>
+              <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>
             </>
           )}
           {tab === 'overdue' && (
             <Button
               variant="primary" size="sm"
+              disabled={busy}
+              loading={busyStatus === 'completed'}
               onClick={() => updateStatus.mutate({ id: c.id, status: 'completed', note: '방문 완료 처리' })}
             >
               <CheckCircle size={14} />
@@ -157,10 +162,10 @@ export function StoreVisitList() {
           )}
           {tab === 'on_hold' && (
             <>
-              <Button variant="secondary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
+              <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'confirmed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
                 확정 복원
               </Button>
-              <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+              <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
                 취소
               </Button>
             </>

@@ -95,13 +95,15 @@ export default function ConsultationDetailPage() {
     // 종료 상태: 버튼 없음
     if (c.status === 'completed' || c.status === 'cancelled') return null;
 
+    const busy = updateStatus.isPending;
+    const busyStatus = busy ? updateStatus.variables?.status : null;
+
     switch (cType) {
       case 'store_visit':
         return (
           <>
-            {/* 방문일 지남 → 완료 버튼 강조 */}
             {isOverdue && (
-              <Button variant="primary" size="sm"
+              <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'completed'}
                 onClick={() => updateStatus.mutate({ id: c.id, status: 'completed', note: '방문 완료 처리' })}
               >
                 <CheckCircle size={14} />
@@ -110,13 +112,13 @@ export default function ConsultationDetailPage() {
             )}
             {c.status === 'confirmed' && (
               <>
-                <Button variant="secondary" size="sm" onClick={() => setShowReschedule(true)}>
+                <Button variant="secondary" size="sm" disabled={busy} onClick={() => setShowReschedule(true)}>
                   일정변경
                 </Button>
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={sendNotify.isPending}
+                  variant="ghost" size="sm"
+                  disabled={busy || sendNotify.isPending}
+                  loading={sendNotify.isPending}
                   onClick={() => sendNotify.mutate({ consultationId: c.id, template: 'confirmed' })}
                 >
                   알림톡 재발송
@@ -124,15 +126,15 @@ export default function ConsultationDetailPage() {
               </>
             )}
             {allowed.includes('on_hold') && (
-              <Button variant="ghost" size="sm" onClick={() => setShowHold(true)}>보류</Button>
+              <Button variant="ghost" size="sm" disabled={busy} onClick={() => setShowHold(true)}>보류</Button>
             )}
             {allowed.includes('confirmed') && c.status !== 'confirmed' && (
-              <Button variant="secondary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
+              <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'confirmed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
                 확정 복원
               </Button>
             )}
             {allowed.includes('cancelled') && (
-              <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+              <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
                 취소
               </Button>
             )}
@@ -141,9 +143,8 @@ export default function ConsultationDetailPage() {
       case 'field_request':
         return (
           <>
-            {/* 출장일 지남 → 완료 버튼 강조 */}
             {isOverdue && (
-              <Button variant="primary" size="sm"
+              <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'completed'}
                 onClick={() => updateStatus.mutate({ id: c.id, status: 'completed', note: '출장 완료 처리' })}
               >
                 <CheckCircle size={14} />
@@ -151,20 +152,20 @@ export default function ConsultationDetailPage() {
               </Button>
             )}
             {(c.status === 'pending_admin' || c.status === 'reschedule_requested') && (
-              <Button variant="primary" size="sm" onClick={() => setShowSuggest(true)}>
+              <Button variant="primary" size="sm" disabled={busy} onClick={() => setShowSuggest(true)}>
                 시간 제안
               </Button>
             )}
             {allowed.includes('confirmed') && (
-              <Button variant="secondary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
+              <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'confirmed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
                 {c.status === 'suggested' ? '수동 확정' : '확정'}
               </Button>
             )}
             {allowed.includes('on_hold') && (
-              <Button variant="ghost" size="sm" onClick={() => setShowHold(true)}>보류</Button>
+              <Button variant="ghost" size="sm" disabled={busy} onClick={() => setShowHold(true)}>보류</Button>
             )}
             {allowed.includes('cancelled') && (
-              <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+              <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
                 취소
               </Button>
             )}
@@ -174,25 +175,25 @@ export default function ConsultationDetailPage() {
         return (
           <>
             {allowed.includes('in_progress') && (
-              <Button variant="primary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'in_progress' })}>
+              <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'in_progress'} onClick={() => updateStatus.mutate({ id: c.id, status: 'in_progress' })}>
                 상담 시작
               </Button>
             )}
             {allowed.includes('completed') && (
-              <Button variant="primary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'completed' })}>
+              <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'completed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'completed' })}>
                 처리완료
               </Button>
             )}
             {allowed.includes('on_hold') && (
-              <Button variant="ghost" size="sm" onClick={() => setShowHold(true)}>보류</Button>
+              <Button variant="ghost" size="sm" disabled={busy} onClick={() => setShowHold(true)}>보류</Button>
             )}
             {allowed.includes('pending_admin') && (
-              <Button variant="secondary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'pending_admin' })}>
+              <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'pending_admin'} onClick={() => updateStatus.mutate({ id: c.id, status: 'pending_admin' })}>
                 대기 복원
               </Button>
             )}
             {allowed.includes('cancelled') && (
-              <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+              <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
                 취소
               </Button>
             )}

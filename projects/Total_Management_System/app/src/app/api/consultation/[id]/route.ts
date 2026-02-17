@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidTransition } from '@/lib/consultation/transitions';
+import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
+
+/** 상태→알림 템플릿 매핑 (자동 발송 대상) */
+const AUTO_NOTIFY_MAP: Partial<Record<string, NotifyTemplate>> = {
+  confirmed: 'confirmed',
+  cancelled: 'cancelled',
+};
 
 /** GET /api/consultation/[id] — 상담 단건 + 이력 */
 export async function GET(
@@ -110,6 +117,26 @@ export async function PATCH(
         changed_by: user.id,
         note: note || null,
       });
+
+      // 자동 알림톡 발송 (non-blocking)
+      const template = AUTO_NOTIFY_MAP[newStatus];
+      if (template && data.phone) {
+        const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
+        const typeLabel = data.consultation_type === 'store_visit' ? '매장 방문'
+          : data.consultation_type === 'field_request' ? '출장 요청' : '톡상담';
+        sendNotification({
+          template,
+          phone: data.phone,
+          name: data.name,
+          data: {
+            id: data.unique_id,
+            type: typeLabel,
+            date: data.visit_date || '',
+            time: data.visit_time || '',
+            address,
+          },
+        }).catch((err) => console.error('[auto-notify] 알림톡 발송 실패:', err));
+      }
     }
 
     return NextResponse.json(data);

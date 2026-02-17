@@ -50,15 +50,18 @@ export function TalkConsultList() {
   const updateStatus = useUpdateConsultationStatus();
 
   const renderActions = (c: Consultation) => {
+    const busy = updateStatus.isPending && updateStatus.variables?.id === c.id;
+    const busyStatus = busy ? updateStatus.variables?.status : null;
+
     switch (tab) {
       case 'pending':
         return (
           <>
-            <Button variant="primary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'in_progress' })}>
+            <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'in_progress'} onClick={() => updateStatus.mutate({ id: c.id, status: 'in_progress' })}>
               상담 시작
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setHoldTarget(c.id)}>보류</Button>
-            <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+            <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>
+            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
               취소
             </Button>
           </>
@@ -66,11 +69,11 @@ export function TalkConsultList() {
       case 'in_progress':
         return (
           <>
-            <Button variant="primary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'completed' })}>
+            <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'completed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'completed' })}>
               처리완료
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setHoldTarget(c.id)}>보류</Button>
-            <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+            <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>
+            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
               취소
             </Button>
           </>
@@ -78,13 +81,13 @@ export function TalkConsultList() {
       case 'on_hold':
         return (
           <>
-            <Button variant="secondary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'pending_admin' })}>
+            <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'pending_admin'} onClick={() => updateStatus.mutate({ id: c.id, status: 'pending_admin' })}>
               대기 복원
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'in_progress' })}>
+            <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'in_progress'} onClick={() => updateStatus.mutate({ id: c.id, status: 'in_progress' })}>
               상담 재개
             </Button>
-            <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
               취소
             </Button>
           </>

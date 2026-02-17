@@ -93,18 +93,21 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
   }, [tab, consultations]);
 
   const renderActions = (c: Consultation) => {
+    const busy = updateStatus.isPending && updateStatus.variables?.id === c.id;
+    const busyStatus = busy ? updateStatus.variables?.status : null;
+
     switch (tab) {
       case 'waiting':
         return (
           <>
-            <Button variant="primary" size="sm" onClick={() => setSuggestTarget(c.id)}>
+            <Button variant="primary" size="sm" disabled={busy} onClick={() => setSuggestTarget(c.id)}>
               {c.status === 'reschedule_requested' ? '새 시간 제안' : '시간 제안'}
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
+            <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'confirmed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
               즉시 확정
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setHoldTarget(c.id)}>보류</Button>
-            <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+            <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>
+            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
               취소
             </Button>
           </>
@@ -112,11 +115,11 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
       case 'suggested':
         return (
           <>
-            <Button variant="primary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
+            <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'confirmed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
               수동 확정
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setHoldTarget(c.id)}>보류</Button>
-            <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+            <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>
+            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
               취소
             </Button>
           </>
@@ -124,15 +127,15 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
       case 'upcoming':
         return (
           <>
-            <Button variant="ghost" size="sm" onClick={() => setHoldTarget(c.id)}>보류</Button>
-            <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+            <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>
+            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
               취소
             </Button>
           </>
         );
       case 'overdue':
         return (
-          <Button variant="primary" size="sm"
+          <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'completed'}
             onClick={() => updateStatus.mutate({ id: c.id, status: 'completed', note: '출장 완료 처리' })}
           >
             <CheckCircle size={14} />
@@ -142,10 +145,10 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
       case 'on_hold':
         return (
           <>
-            <Button variant="secondary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'pending_admin' })}>
+            <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'pending_admin'} onClick={() => updateStatus.mutate({ id: c.id, status: 'pending_admin' })}>
               대기 복원
             </Button>
-            <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
               취소
             </Button>
           </>

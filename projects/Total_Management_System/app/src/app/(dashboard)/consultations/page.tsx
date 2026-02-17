@@ -9,6 +9,7 @@ import { StoreVisitList } from '@/components/consultations/store-visit-list';
 import { FieldRequestList } from '@/components/consultations/field-request-list';
 import { TalkConsultList } from '@/components/consultations/talk-consult-list';
 import { MobileFieldDayView } from '@/components/consultations/mobile-field-day-view';
+import { ScheduleCalendar } from '@/components/consultations/schedule-calendar';
 import { RefreshCw, Store, Truck, MessageCircle, Smartphone } from 'lucide-react';
 
 // 카카오맵은 SSR 불가 → dynamic import
@@ -67,37 +68,47 @@ export default function ConsultationsPage() {
           ))}
         </div>
 
-        {/* 탭 콘텐츠 */}
-        {activeTab === 'store_visit' && <StoreVisitList />}
-        {activeTab === 'field_request' && (
-          <>
-            {/* 모바일 출장 뷰 토글 */}
-            <div className="flex justify-end">
-              <Button
-                variant={showMobileView ? 'primary' : 'ghost'}
-                size="sm"
-                onClick={() => setShowMobileView(!showMobileView)}
-              >
-                <Smartphone size={14} />
-                {showMobileView ? '리스트 보기' : '출장 일정'}
-              </Button>
-            </div>
-
-            {showMobileView ? (
-              <MobileFieldDayView />
-            ) : (
+        {/* 메인 콘텐츠: 리스트 + 달력 사이드바 (PC) */}
+        <div className="flex gap-6">
+          {/* 좌측: 탭 콘텐츠 */}
+          <div className="flex-1 min-w-0">
+            {activeTab === 'store_visit' && <StoreVisitList />}
+            {activeTab === 'field_request' && (
               <>
-                {/* 지도 (토글) */}
-                {showMap && <FieldRequestMap />}
-                <FieldRequestList
-                  showMap={showMap}
-                  onToggleMap={() => setShowMap(!showMap)}
-                />
+                <div className="flex justify-end mb-4">
+                  <Button
+                    variant={showMobileView ? 'primary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setShowMobileView(!showMobileView)}
+                  >
+                    <Smartphone size={14} />
+                    {showMobileView ? '리스트 보기' : '출장 일정'}
+                  </Button>
+                </div>
+
+                {showMobileView ? (
+                  <MobileFieldDayView />
+                ) : (
+                  <>
+                    {showMap && <FieldRequestMap />}
+                    <FieldRequestList
+                      showMap={showMap}
+                      onToggleMap={() => setShowMap(!showMap)}
+                    />
+                  </>
+                )}
               </>
             )}
-          </>
-        )}
-        {activeTab === 'talk_consult' && <TalkConsultList />}
+            {activeTab === 'talk_consult' && <TalkConsultList />}
+          </div>
+
+          {/* 우측: 달력 사이드바 (PC만, 매장방문/출장요청 탭일 때) */}
+          {activeTab !== 'talk_consult' && (
+            <div className="hidden lg:block w-[340px] shrink-0">
+              <ScheduleCalendar />
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
