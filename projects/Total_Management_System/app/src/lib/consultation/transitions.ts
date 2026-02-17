@@ -9,7 +9,7 @@ type TransitionMap = Record<string, ConsultationStatus[]>;
 
 /** 매장방문 상태 전이 */
 const STORE_VISIT: TransitionMap = {
-  confirmed: ['on_hold', 'cancelled'],
+  confirmed: ['completed', 'on_hold', 'cancelled'],
   on_hold: ['confirmed', 'cancelled'],
 };
 
@@ -18,7 +18,7 @@ const FIELD_REQUEST: TransitionMap = {
   pending_admin: ['suggested', 'confirmed', 'on_hold', 'cancelled'],
   suggested: ['confirmed', 'reschedule_requested', 'on_hold', 'cancelled'],
   reschedule_requested: ['suggested', 'confirmed', 'on_hold', 'cancelled'],
-  confirmed: ['on_hold', 'cancelled'],
+  confirmed: ['completed', 'on_hold', 'cancelled'],
   on_hold: ['pending_admin', 'suggested', 'confirmed', 'cancelled'],
 };
 

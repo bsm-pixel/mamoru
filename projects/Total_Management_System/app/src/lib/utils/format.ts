@@ -1,4 +1,4 @@
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, differenceInCalendarDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 /** 원 포맷: 350000 → "350,000원" */
@@ -85,6 +85,34 @@ export const CONSULTATION_STATUS_COLOR: Record<string, string> = {
   in_progress: 'bg-info-soft text-info',          // Phase 2-2
   completed: 'bg-success-soft text-success',      // Phase 2-2
 };
+
+// ============================================
+// D-day / 날짜 그룹 유틸
+// ============================================
+
+/** D-day 라벨: "오늘", "내일", "D-3", "D+2(지남)" */
+export function formatDday(dateStr: string | null): { label: string; isPast: boolean; isToday: boolean } {
+  if (!dateStr) return { label: '', isPast: false, isToday: false };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr + 'T00:00:00');
+  const diff = differenceInCalendarDays(target, today);
+
+  if (diff === 0) return { label: '오늘', isPast: false, isToday: true };
+  if (diff === 1) return { label: '내일', isPast: false, isToday: false };
+  if (diff === -1) return { label: '어제', isPast: true, isToday: false };
+  if (diff > 1) return { label: `D-${diff}`, isPast: false, isToday: false };
+  return { label: `D+${Math.abs(diff)}(지남)`, isPast: true, isToday: false };
+}
+
+/** 날짜 그룹 헤더: "2/17 (월) · 오늘" */
+export function formatDateGroup(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+  const base = `${d.getMonth() + 1}/${d.getDate()} (${dayNames[d.getDay()]})`;
+  const { label } = formatDday(dateStr);
+  return label ? `${base} · ${label}` : base;
+}
 
 /** 상담 타입 한글 매핑 */
 export const CONSULTATION_TYPE_LABEL: Record<string, string> = {

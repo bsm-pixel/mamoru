@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,30 +10,52 @@ import { useConsultations, useSendNotification, useUpdateConsultationStatus } fr
 import { RescheduleModal } from './reschedule-modal';
 import { HoldReasonModal } from './hold-reason-modal';
 import {
-  formatDate,
   formatPhone,
+  formatDday,
+  formatDateGroup,
   CONSULTATION_STATUS_LABEL,
   CONSULTATION_STATUS_COLOR,
 } from '@/lib/utils/format';
-import { Calendar, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Search, ChevronLeft, ChevronRight, CheckCircle, AlertTriangle } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
-const STATUS_TABS = [
-  { value: 'confirmed', label: '확정' },
-  { value: 'on_hold', label: '보류' },
-  { value: 'cancelled', label: '취소' },
+type TabKey = 'upcoming' | 'overdue' | 'completed' | 'on_hold' | 'cancelled';
+
+const TABS: { key: TabKey; label: string; icon?: React.ReactNode }[] = [
+  { key: 'upcoming', label: '예정' },
+  { key: 'overdue', label: '완료 필요', icon: <AlertTriangle size={12} /> },
+  { key: 'completed', label: '완료', icon: <CheckCircle size={12} /> },
+  { key: 'on_hold', label: '보류' },
+  { key: 'cancelled', label: '취소' },
 ];
+
+/** 탭별 쿼리 필터 설정 */
+function getTabFilters(tab: TabKey) {
+  switch (tab) {
+    case 'upcoming':
+      return { status: 'confirmed', dateFilter: 'upcoming' as const, orderBy: 'visit_date_asc' };
+    case 'overdue':
+      return { status: 'confirmed', dateFilter: 'past' as const, orderBy: 'visit_date_asc' };
+    case 'completed':
+      return { status: 'completed', orderBy: 'updated_at_desc' };
+    case 'on_hold':
+      return { status: 'on_hold', orderBy: 'updated_at_desc' };
+    case 'cancelled':
+      return { status: 'cancelled', orderBy: 'updated_at_desc' };
+  }
+}
 
 export function StoreVisitList() {
   const router = useRouter();
-  const [status, setStatus] = useState('confirmed');
+  const [tab, setTab] = useState<TabKey>('upcoming');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [rescheduleTarget, setRescheduleTarget] = useState<Consultation | null>(null);
   const [holdTarget, setHoldTarget] = useState<string | null>(null);
 
+  const tabFilters = getTabFilters(tab);
   const { data, isLoading } = useConsultations({
-    status,
+    ...tabFilters,
     type: 'store_visit',
     search,
     page,
@@ -45,6 +67,108 @@ export function StoreVisitList() {
 
   const sendNotify = useSendNotification();
   const updateStatus = useUpdateConsultationStatus();
+
+  // 예정 탭: 날짜 그룹으로 묶기
+  const dateGroups = useMemo(() => {
+    if (tab !== 'upcoming' && tab !== 'overdue') return null;
+    const groups: { dateStr: string; label: string; items: Consultation[] }[] = [];
+    const map = new Map<string, Consultation[]>();
+    for (const c of consultations) {
+      const key = c.visit_date || 'no-date';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(c);
+    }
+    for (const [dateStr, items] of map) {
+      groups.push({
+        dateStr,
+        label: dateStr === 'no-date' ? '날짜 미정' : formatDateGroup(dateStr),
+        items,
+      });
+    }
+    return groups;
+  }, [tab, consultations]);
+
+  const renderRow = (c: Consultation) => {
+    const dday = formatDday(c.visit_date);
+
+    return (
+      <div
+        key={c.id}
+        className={`flex items-center gap-3 px-4 py-3 hover:bg-warm-ivory/60 transition ${
+          dday.isToday ? 'bg-terracotta/5 border-l-2 border-l-terracotta' : ''
+        }`}
+      >
+        <div
+          className="flex-1 min-w-0 cursor-pointer"
+          onClick={() => router.push(`/consultations/${c.id}`)}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-indigo-black truncate">{c.name}</span>
+            {dday.label && (
+              <Badge className={
+                dday.isToday ? 'bg-terracotta/10 text-terracotta'
+                : dday.isPast ? 'bg-error-soft text-error'
+                : 'bg-info-soft text-info'
+              }>
+                {dday.label}
+              </Badge>
+            )}
+            {c.status === 'on_hold' && c.hold_reason && (
+              <span className="text-xs text-neutral-400 truncate max-w-[120px]" title={c.hold_reason}>
+                ({c.hold_reason})
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
+            <span>{formatPhone(c.phone)}</span>
+            {c.visit_date && (
+              <span className="flex items-center gap-1">
+                <Calendar size={12} />
+                {c.visit_date} {c.visit_time || ''}
+              </span>
+            )}
+          </div>
+        </div>
+        {/* 액션 버튼 */}
+        <div className="flex gap-1 shrink-0 flex-wrap">
+          {tab === 'upcoming' && (
+            <>
+              <Button variant="secondary" size="sm" onClick={() => setRescheduleTarget(c)}>
+                일정변경
+              </Button>
+              <Button
+                variant="ghost" size="sm"
+                disabled={sendNotify.isPending}
+                onClick={() => sendNotify.mutate({ consultationId: c.id, template: 'confirmed' })}
+              >
+                알림 재발송
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setHoldTarget(c.id)}>보류</Button>
+            </>
+          )}
+          {tab === 'overdue' && (
+            <Button
+              variant="primary" size="sm"
+              onClick={() => updateStatus.mutate({ id: c.id, status: 'completed', note: '방문 완료 처리' })}
+            >
+              <CheckCircle size={14} />
+              방문 완료
+            </Button>
+          )}
+          {tab === 'on_hold' && (
+            <>
+              <Button variant="secondary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
+                확정 복원
+              </Button>
+              <Button variant="danger" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+                취소
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -60,22 +184,23 @@ export function StoreVisitList() {
         />
       </div>
 
-      {/* 상태 탭 */}
-      <div className="flex items-center gap-1">
-        {STATUS_TABS.map((tab) => (
+      {/* 탭 */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-1">
+        {TABS.map((t) => (
           <button
-            key={tab.value}
-            onClick={() => { setStatus(tab.value); setPage(1); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
-              status === tab.value
-                ? 'bg-terracotta text-cream'
+            key={t.key}
+            onClick={() => { setTab(t.key); setPage(1); }}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
+              tab === t.key
+                ? t.key === 'overdue' ? 'bg-error text-cream' : 'bg-terracotta text-cream'
                 : 'bg-card-white text-neutral-500 hover:bg-warm-ivory'
             }`}
           >
-            {tab.label}
+            {t.icon}
+            {t.label}
           </button>
         ))}
-        <span className="ml-auto text-xs text-neutral-500">{total}건</span>
+        <span className="ml-auto text-xs text-neutral-500 shrink-0">{total}건</span>
       </div>
 
       {/* 목록 */}
@@ -88,89 +213,27 @@ export function StoreVisitList() {
           </div>
         ) : consultations.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-neutral-400">
-            해당 상담이 없습니다
+            {tab === 'upcoming' ? '예정된 방문이 없습니다' : '해당 상담이 없습니다'}
           </div>
-        ) : (
-          <div className="divide-y divide-neutral-100">
-            {consultations.map((c) => (
-              <div
-                key={c.id}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-warm-ivory/60 transition"
-              >
-                <div
-                  className="flex-1 min-w-0 cursor-pointer"
-                  onClick={() => router.push(`/consultations/${c.id}`)}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-indigo-black truncate">{c.name}</span>
-                    <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
-                      {CONSULTATION_STATUS_LABEL[c.status]}
-                    </Badge>
-                    {c.status === 'on_hold' && c.hold_reason && (
-                      <span className="text-xs text-neutral-400 truncate max-w-[120px]" title={c.hold_reason}>
-                        ({c.hold_reason})
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-                    <span>{formatPhone(c.phone)}</span>
-                    {c.visit_date && (
-                      <span className="flex items-center gap-1 text-terracotta">
-                        <Calendar size={12} />
-                        {formatDate(c.visit_date, 'M/d')} {c.visit_time || ''}
-                      </span>
-                    )}
-                  </div>
+        ) : dateGroups ? (
+          /* 날짜 그룹 뷰 */
+          <div>
+            {dateGroups.map((group) => (
+              <div key={group.dateStr}>
+                <div className="px-4 py-2 bg-warm-ivory/80 text-xs font-bold text-neutral-600 sticky top-0">
+                  {group.label}
+                  <span className="ml-2 font-normal text-neutral-400">{group.items.length}건</span>
                 </div>
-                {/* 액션 버튼 */}
-                <div className="flex gap-1 shrink-0">
-                  {c.status === 'confirmed' && (
-                    <>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setRescheduleTarget(c)}
-                      >
-                        일정변경
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={sendNotify.isPending}
-                        onClick={() => sendNotify.mutate({ consultationId: c.id, template: 'confirmed' })}
-                      >
-                        알림 재발송
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setHoldTarget(c.id)}
-                      >
-                        보류
-                      </Button>
-                    </>
-                  )}
-                  {c.status === 'on_hold' && (
-                    <>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}
-                      >
-                        확정 복원
-                      </Button>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}
-                      >
-                        취소
-                      </Button>
-                    </>
-                  )}
+                <div className="divide-y divide-neutral-100">
+                  {group.items.map(renderRow)}
                 </div>
               </div>
             ))}
+          </div>
+        ) : (
+          /* 일반 리스트 */
+          <div className="divide-y divide-neutral-100">
+            {consultations.map(renderRow)}
           </div>
         )}
       </Card>
@@ -199,11 +262,7 @@ export function StoreVisitList() {
         />
       )}
       {holdTarget && (
-        <HoldReasonModal
-          open={!!holdTarget}
-          onClose={() => setHoldTarget(null)}
-          consultationId={holdTarget}
-        />
+        <HoldReasonModal open={!!holdTarget} onClose={() => setHoldTarget(null)} consultationId={holdTarget} />
       )}
     </div>
   );

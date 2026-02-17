@@ -9,35 +9,40 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultations, useUpdateConsultationStatus } from '@/hooks/use-consultations';
 import { HoldReasonModal } from './hold-reason-modal';
 import {
-  formatDate,
+  formatRelative,
   formatPhone,
-  CONSULTATION_STATUS_LABEL,
   CONSULTATION_STATUS_COLOR,
 } from '@/lib/utils/format';
 import { Search, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
-const STATUS_TABS = [
-  { value: 'pending_admin', label: '신규접수' },
-  { value: 'in_progress', label: '진행중' },
-  { value: 'completed', label: '처리완료' },
-  { value: 'on_hold', label: '보류' },
-  { value: 'cancelled', label: '취소' },
+type TabKey = 'pending' | 'in_progress' | 'completed' | 'on_hold';
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'pending', label: '대기' },
+  { key: 'in_progress', label: '진행중' },
+  { key: 'completed', label: '완료' },
+  { key: 'on_hold', label: '보류' },
 ];
+
+function getTabStatus(tab: TabKey): string {
+  return tab === 'pending' ? 'pending_admin' : tab;
+}
 
 export function TalkConsultList() {
   const router = useRouter();
-  const [status, setStatus] = useState('pending_admin');
+  const [tab, setTab] = useState<TabKey>('pending');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [holdTarget, setHoldTarget] = useState<string | null>(null);
 
   const { data, isLoading } = useConsultations({
-    status,
+    status: getTabStatus(tab),
     type: 'talk_consult',
     search,
     page,
     limit: 20,
+    orderBy: tab === 'completed' ? 'updated_at_desc' : undefined,
   });
   const consultations = data?.consultations || [];
   const total = data?.total || 0;
@@ -45,8 +50,8 @@ export function TalkConsultList() {
   const updateStatus = useUpdateConsultationStatus();
 
   const renderActions = (c: Consultation) => {
-    switch (c.status) {
-      case 'pending_admin':
+    switch (tab) {
+      case 'pending':
         return (
           <>
             <Button variant="primary" size="sm" onClick={() => updateStatus.mutate({ id: c.id, status: 'in_progress' })}>
@@ -103,19 +108,19 @@ export function TalkConsultList() {
         />
       </div>
 
-      {/* 상태 탭 */}
+      {/* 탭 */}
       <div className="flex items-center gap-1 overflow-x-auto pb-1">
-        {STATUS_TABS.map((tab) => (
+        {TABS.map((t) => (
           <button
-            key={tab.value}
-            onClick={() => { setStatus(tab.value); setPage(1); }}
+            key={t.key}
+            onClick={() => { setTab(t.key); setPage(1); }}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
-              status === tab.value
+              tab === t.key
                 ? 'bg-terracotta text-cream'
                 : 'bg-card-white text-neutral-500 hover:bg-warm-ivory'
             }`}
           >
-            {tab.label}
+            {t.label}
           </button>
         ))}
         <span className="ml-auto text-xs text-neutral-500 shrink-0">{total}건</span>
@@ -131,21 +136,18 @@ export function TalkConsultList() {
           </div>
         ) : consultations.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-neutral-400">
-            해당 상담이 없습니다
+            {tab === 'pending' ? '대기 중인 톡상담이 없습니다' : '해당 상담이 없습니다'}
           </div>
         ) : (
           <div className="divide-y divide-neutral-100">
             {consultations.map((c) => (
               <div key={c.id} className="px-4 py-3 hover:bg-warm-ivory/60 transition">
-                <div
-                  className="cursor-pointer"
-                  onClick={() => router.push(`/consultations/${c.id}`)}
-                >
+                <div className="cursor-pointer" onClick={() => router.push(`/consultations/${c.id}`)}>
                   <div className="flex items-center gap-2">
                     <MessageCircle size={14} className="text-info shrink-0" />
                     <span className="text-sm font-semibold text-indigo-black truncate">{c.name}</span>
                     <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
-                      {CONSULTATION_STATUS_LABEL[c.status]}
+                      {tab === 'pending' ? formatRelative(c.received_at) : ''}
                     </Badge>
                     {c.status === 'on_hold' && c.hold_reason && (
                       <span className="text-xs text-neutral-400 truncate max-w-[120px]" title={c.hold_reason}>
@@ -155,7 +157,7 @@ export function TalkConsultList() {
                   </div>
                   <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
                     <span>{formatPhone(c.phone)}</span>
-                    <span>{formatDate(c.received_at)}</span>
+                    {tab !== 'pending' && <span>{formatRelative(c.received_at)}</span>}
                   </div>
                   {c.memo && (
                     <p className="mt-1 text-xs text-neutral-500 truncate">{c.memo}</p>
@@ -185,11 +187,7 @@ export function TalkConsultList() {
 
       {/* 모달 */}
       {holdTarget && (
-        <HoldReasonModal
-          open={!!holdTarget}
-          onClose={() => setHoldTarget(null)}
-          consultationId={holdTarget}
-        />
+        <HoldReasonModal open={!!holdTarget} onClose={() => setHoldTarget(null)} consultationId={holdTarget} />
       )}
     </div>
   );

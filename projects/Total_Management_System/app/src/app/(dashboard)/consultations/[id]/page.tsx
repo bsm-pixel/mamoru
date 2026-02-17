@@ -23,11 +23,12 @@ import {
   formatDateTime,
   formatPhone,
   formatRelative,
+  formatDday,
   CONSULTATION_STATUS_LABEL,
   CONSULTATION_STATUS_COLOR,
   CONSULTATION_TYPE_LABEL,
 } from '@/lib/utils/format';
-import { ArrowLeft, MapPin, Calendar, User, Clock, UserCheck, AlertCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, User, Clock, UserCheck, AlertCircle, CheckCircle } from 'lucide-react';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
 /** 상태 전이 → 버튼 라벨 매핑 */
@@ -85,12 +86,28 @@ export default function ConsultationDetailPage() {
   const cType = c.consultation_type as ConsultationType;
   const allowed = getAllowedTransitions(cType, c.status as ConsultationStatus);
 
+  // 방문일 지남 여부
+  const visitDday = formatDday(c.visit_date);
+  const isOverdue = c.status === 'confirmed' && visitDday.isPast;
+
   /** 유형별 액션 버튼 렌더링 */
   const renderTypeActions = () => {
+    // 종료 상태: 버튼 없음
+    if (c.status === 'completed' || c.status === 'cancelled') return null;
+
     switch (cType) {
       case 'store_visit':
         return (
           <>
+            {/* 방문일 지남 → 완료 버튼 강조 */}
+            {isOverdue && (
+              <Button variant="primary" size="sm"
+                onClick={() => updateStatus.mutate({ id: c.id, status: 'completed', note: '방문 완료 처리' })}
+              >
+                <CheckCircle size={14} />
+                방문 완료
+              </Button>
+            )}
             {c.status === 'confirmed' && (
               <>
                 <Button variant="secondary" size="sm" onClick={() => setShowReschedule(true)}>
@@ -124,6 +141,15 @@ export default function ConsultationDetailPage() {
       case 'field_request':
         return (
           <>
+            {/* 출장일 지남 → 완료 버튼 강조 */}
+            {isOverdue && (
+              <Button variant="primary" size="sm"
+                onClick={() => updateStatus.mutate({ id: c.id, status: 'completed', note: '출장 완료 처리' })}
+              >
+                <CheckCircle size={14} />
+                출장 완료
+              </Button>
+            )}
             {(c.status === 'pending_admin' || c.status === 'reschedule_requested') && (
               <Button variant="primary" size="sm" onClick={() => setShowSuggest(true)}>
                 시간 제안

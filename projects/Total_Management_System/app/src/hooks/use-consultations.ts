@@ -5,13 +5,16 @@ import { createClient } from '@/lib/supabase/client';
 import type { Consultation, ConsultationHistory } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
 
-/** 상담 목록 조회 */
+/** 상담 목록 조회 (확장 필터 지원) */
 export function useConsultations(filters?: {
   status?: string;
+  statuses?: string[];        // 복수 상태 필터
   type?: string;
   search?: string;
   page?: number;
   limit?: number;
+  dateFilter?: 'upcoming' | 'past' | 'all';  // visit_date 기준
+  orderBy?: string;           // 'visit_date_asc' | 'updated_at_desc' 등
 }) {
   const supabase = createClient();
   const page = filters?.page || 1;
@@ -22,14 +25,25 @@ export function useConsultations(filters?: {
   return useQuery({
     queryKey: ['consultations', filters],
     queryFn: async () => {
+      // 정렬 설정
+      const orderCol = filters?.orderBy === 'visit_date_asc' ? 'visit_date'
+        : filters?.orderBy === 'updated_at_desc' ? 'updated_at'
+        : 'received_at';
+      const ascending = filters?.orderBy === 'visit_date_asc';
+
       let query = supabase
         .from('consultations')
         .select('*', { count: 'exact' })
-        .order('received_at', { ascending: false })
+        .order(orderCol, { ascending })
         .range(from, to);
 
+      // 단일 상태 필터
       if (filters?.status && filters.status !== 'all') {
         query = query.eq('status', filters.status);
+      }
+      // 복수 상태 필터
+      if (filters?.statuses && filters.statuses.length > 0) {
+        query = query.in('status', filters.statuses);
       }
       if (filters?.type && filters.type !== 'all') {
         query = query.eq('consultation_type', filters.type);
@@ -38,6 +52,13 @@ export function useConsultations(filters?: {
         query = query.or(
           `name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,unique_id.ilike.%${filters.search}%`
         );
+      }
+      // 날짜 필터
+      const today = new Date().toISOString().slice(0, 10);
+      if (filters?.dateFilter === 'upcoming') {
+        query = query.gte('visit_date', today);
+      } else if (filters?.dateFilter === 'past') {
+        query = query.lt('visit_date', today);
       }
 
       const { data, count, error } = await query;
