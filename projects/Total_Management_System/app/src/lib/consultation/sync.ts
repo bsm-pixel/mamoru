@@ -58,15 +58,36 @@ function mapType(gasType?: string): ConsultationType {
   return 'store_visit';
 }
 
-/** 방문일 파싱 */
+/** 방문일 파싱 — 다양한 형식 지원 */
 function parseVisitDate(dateStr?: string): string | null {
   if (!dateStr) return null;
-  const cleaned = dateStr.replace(/[./]/g, '-').trim();
-  const match = cleaned.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if (match) {
-    const [, y, m, d] = match;
+  const trimmed = dateStr.trim();
+
+  // YYYY-MM-DD 형식
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (isoMatch) {
+    const [, y, m, d] = isoMatch;
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   }
+
+  // YYYY.MM.DD 또는 YYYY/MM/DD
+  const dotMatch = trimmed.match(/^(\d{4})[./](\d{1,2})[./](\d{1,2})/);
+  if (dotMatch) {
+    const [, y, m, d] = dotMatch;
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+
+  // Date.toString() 형식 ("Thu Feb 19 2026 ..." 등) — 최후 수단
+  try {
+    const parsed = new Date(trimmed);
+    if (!isNaN(parsed.getTime())) {
+      const y = parsed.getFullYear();
+      const m = String(parsed.getMonth() + 1).padStart(2, '0');
+      const d = String(parsed.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+  } catch { /* ignore */ }
+
   return null;
 }
 

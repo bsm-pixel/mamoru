@@ -22,6 +22,35 @@ function rowToSupabasePayload_(row, col) {
     return (col[key] != null && row[col[key]] != null) ? String(row[col[key]]).trim() : '';
   };
 
+  /** 날짜 셀 → YYYY-MM-DD 문자열로 안전 변환 */
+  var dateVal = function(key) {
+    if (col[key] == null) return '';
+    var cell = row[col[key]];
+    if (!cell) return '';
+    // Date 객체인 경우 (GAS 시트는 날짜를 Date 객체로 반환)
+    if (cell instanceof Date) {
+      var y = cell.getFullYear();
+      var m = ('0' + (cell.getMonth() + 1)).slice(-2);
+      var d = ('0' + cell.getDate()).slice(-2);
+      return y + '-' + m + '-' + d;
+    }
+    // 문자열인 경우 그대로 반환
+    var str = String(cell).trim();
+    // "2026-02-20" 형식이면 그대로
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10);
+    // "Thu Feb 19 2026 ..." 등 Date.toString() 형식이면 파싱
+    try {
+      var parsed = new Date(str);
+      if (!isNaN(parsed.getTime())) {
+        var py = parsed.getFullYear();
+        var pm = ('0' + (parsed.getMonth() + 1)).slice(-2);
+        var pd = ('0' + parsed.getDate()).slice(-2);
+        return py + '-' + pm + '-' + pd;
+      }
+    } catch(e) {}
+    return str;
+  };
+
   var phone = val('연락처').replace(/^'/, ''); // 시트에 '010... 형태로 저장되므로 앞 따옴표 제거
 
   // Phase 2-2: lat/lng 최상위 전달 (좌표 직접 저장)
@@ -33,7 +62,7 @@ function rowToSupabasePayload_(row, col) {
     name: val('성함'),
     phone: phone,
     consultType: val('상담방식'),
-    visitDate: val('방문일'),
+    visitDate: dateVal('방문일'),
     visitTime: val('방문시간'),
     postcode: val('addressZip'),
     addressRoad: val('addressRoad'),
