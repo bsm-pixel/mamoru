@@ -46,7 +46,7 @@ export default function ConsultationsPage() {
             disabled={sync.isPending}
           >
             <RefreshCw size={14} className={sync.isPending ? 'animate-spin' : ''} />
-            {sync.isPending ? '동기화 중...' : 'GAS 동기화'}
+            {sync.isPending ? '새로고침 중...' : '새로고침'}
           </Button>
         </div>
 

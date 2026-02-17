@@ -120,23 +120,23 @@ export function useUpdateConsultationStatus() {
   });
 }
 
-/** 상담 동기화 (GAS → Supabase) */
+/** 상담 동기화 — 캐시 새로고침 (GAS 자동 Push가 이미 Supabase에 저장함) */
 export function useConsultationSync() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/consultation/sync', { method: 'POST' });
-      if (!res.ok) throw new Error(await res.text());
-      return res.json();
+      // 모든 상담 관련 캐시를 강제 갱신
+      await queryClient.invalidateQueries({ queryKey: ['consultations'] });
+      await queryClient.invalidateQueries({ queryKey: ['consultation'] });
+      await queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      return { synced: 0 };
     },
-    onSuccess: (data) => {
-      toast.success(data.synced > 0 ? `${data.synced}건 동기화 완료` : '최신 상태입니다');
-      queryClient.invalidateQueries({ queryKey: ['consultations'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    onSuccess: () => {
+      toast.success('새로고침 완료');
     },
     onError: (err) => {
-      toast.error('상담 동기화 실패: ' + String(err));
+      toast.error('새로고침 실패: ' + String(err));
     },
   });
 }
