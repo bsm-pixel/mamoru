@@ -131,7 +131,7 @@ export function useConsultationSync() {
       return res.json();
     },
     onSuccess: (data) => {
-      toast.success(`${data.synced}건 상담 동기화 완료`);
+      toast.success(data.synced > 0 ? `${data.synced}건 동기화 완료` : '최신 상태입니다');
       queryClient.invalidateQueries({ queryKey: ['consultations'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
     },
