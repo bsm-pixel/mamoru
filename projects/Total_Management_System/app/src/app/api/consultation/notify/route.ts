@@ -24,24 +24,30 @@ export async function POST(req: NextRequest) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
-    const { data: consultation, error: fetchErr } = await db
+    const { data: c, error: fetchErr } = await db
       .from('consultations')
-      .select('name, phone, visit_date, visit_time, address_road, address_detail')
+      .select('unique_id, name, phone, consultation_type, visit_date, visit_time, address_road, address_detail')
       .eq('id', consultationId)
       .single();
 
-    if (fetchErr || !consultation) {
+    if (fetchErr || !c) {
       return NextResponse.json({ error: '상담을 찾을 수 없습니다' }, { status: 404 });
     }
 
+    // GAS postMake_ payload 키와 동일하게 매칭
+    const address = [c.address_road, c.address_detail].filter(Boolean).join(' ');
     const result = await sendNotification({
       template,
-      phone: consultation.phone,
-      name: consultation.name,
+      phone: c.phone,
+      name: c.name,
       data: {
-        visitDate: consultation.visit_date || '',
-        visitTime: consultation.visit_time || '',
-        address: [consultation.address_road, consultation.address_detail].filter(Boolean).join(' '),
+        id: c.unique_id,
+        type: c.consultation_type === 'store_visit' ? '매장 방문'
+            : c.consultation_type === 'field_request' ? '출장 요청'
+            : '톡상담',
+        date: c.visit_date || '',
+        time: c.visit_time || '',
+        address,
         ...extraData,
       },
     });
