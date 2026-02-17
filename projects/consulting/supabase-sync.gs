@@ -51,6 +51,26 @@ function rowToSupabasePayload_(row, col) {
     return str;
   };
 
+  /** 시간 셀 → HH:MM 문자열로 안전 변환 */
+  var timeVal = function(key) {
+    if (col[key] == null) return '';
+    var cell = row[col[key]];
+    if (!cell) return '';
+    // Date 객체인 경우 (GAS 시트는 시간을 1899-12-30 기준 Date 객체로 반환)
+    if (cell instanceof Date) {
+      var h = ('0' + cell.getHours()).slice(-2);
+      var mi = ('0' + cell.getMinutes()).slice(-2);
+      return h + ':' + mi;
+    }
+    var str = String(cell).trim();
+    // 이미 "HH:MM" 형식이면 그대로
+    if (/^\d{1,2}:\d{2}$/.test(str)) return str;
+    // "... 13:30:00 ..." 같은 Date.toString()에서 시간 추출
+    var timeMatch = str.match(/(\d{1,2}):(\d{2}):\d{2}/);
+    if (timeMatch) return timeMatch[1] + ':' + timeMatch[2];
+    return str;
+  };
+
   var phone = val('연락처').replace(/^'/, ''); // 시트에 '010... 형태로 저장되므로 앞 따옴표 제거
 
   // Phase 2-2: lat/lng 최상위 전달 (좌표 직접 저장)
@@ -63,14 +83,21 @@ function rowToSupabasePayload_(row, col) {
     phone: phone,
     consultType: val('상담방식'),
     visitDate: dateVal('방문일'),
-    visitTime: val('방문시간'),
+    visitTime: timeVal('방문시간'),
     postcode: val('addressZip'),
     addressRoad: val('addressRoad'),
     addressDetail: val('addressDetail'),
     memo: val('비고'),
     status: val('Status') || 'PENDING_ADMIN',
     source: '웹폼',
-    receivedAt: val('접수시각') ? new Date(val('접수시각')).toISOString() : new Date().toISOString(),
+    receivedAt: (function() {
+      if (col['접수시각'] == null) return new Date().toISOString();
+      var cell = row[col['접수시각']];
+      if (!cell) return new Date().toISOString();
+      if (cell instanceof Date) return cell.toISOString();
+      try { return new Date(String(cell)).toISOString(); } catch(e) {}
+      return new Date().toISOString();
+    })(),
     latitude: rawLat ? parseFloat(rawLat) : null,
     longitude: rawLng ? parseFloat(rawLng) : null,
     raw: {

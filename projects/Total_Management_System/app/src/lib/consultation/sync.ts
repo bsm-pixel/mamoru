@@ -91,6 +91,25 @@ function parseVisitDate(dateStr?: string): string | null {
   return null;
 }
 
+/** 방문시간 파싱 — "Sat Dec 30 1899 13:30:00 ..." → "13:30" */
+function parseVisitTime(timeStr?: string): string | null {
+  if (!timeStr) return null;
+  const trimmed = timeStr.trim();
+
+  // 이미 "HH:MM" 형식
+  if (/^\d{1,2}:\d{2}$/.test(trimmed)) return trimmed;
+
+  // "HH:MM:SS" 형식
+  const hmsMatch = trimmed.match(/^(\d{1,2}):(\d{2}):\d{2}$/);
+  if (hmsMatch) return `${hmsMatch[1]}:${hmsMatch[2]}`;
+
+  // Date.toString() 형식에서 시간 추출 ("... 13:30:00 ...")
+  const timeMatch = trimmed.match(/(\d{1,2}):(\d{2}):\d{2}/);
+  if (timeMatch) return `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
+
+  return trimmed;
+}
+
 /** 전화번호 정규화 */
 function normalizePhone(phone: string): string {
   return phone.replace(/\D/g, '');
@@ -160,7 +179,7 @@ export async function upsertConsultation(payload: GasPushPayload): Promise<{
       phone: payload.phone,
       consultation_type: mapType(payload.consultType),
       visit_date: parseVisitDate(payload.visitDate),
-      visit_time: payload.visitTime || null,
+      visit_time: parseVisitTime(payload.visitTime),
       postcode: payload.postcode || null,
       address_road: payload.addressRoad || null,
       address_detail: payload.addressDetail || null,
