@@ -964,6 +964,9 @@ function submitConsultation(form){
     Logger.log('[EMAIL ERROR] 신규접수 이메일 발송 실패: ' + emailErr);
   }
 
+  // ★ Supabase TMS 동기화
+  try { pushToSupabase_(uid); } catch(e) { Logger.log('[supabase-sync] push 실패: ' + e); }
+
   } finally {
     lock.releaseLock();
   }
