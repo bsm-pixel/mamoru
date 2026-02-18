@@ -13,6 +13,7 @@ declare global {
         Marker: new (options: { position: unknown; map?: KakaoMap; image?: unknown }) => KakaoMarker;
         MarkerImage: new (src: string, size: unknown, options?: unknown) => unknown;
         Size: new (w: number, h: number) => unknown;
+        Point: new (x: number, y: number) => unknown;
         CustomOverlay: new (options: {
           content: string;
           position: unknown;

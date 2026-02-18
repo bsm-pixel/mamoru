@@ -9,22 +9,25 @@ import { loadKakaoMapSDK, type KakaoMap, type KakaoMarker, type KakaoOverlay } f
 import { formatPhone, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
 import type { Consultation } from '@/lib/supabase/types';
 
-/** 상태별 핀 색상 (SVG circle fill) */
-const PIN_COLORS: Record<string, string> = {
-  pending_admin: '#FBBF24', // 노란색
-  suggested: '#FB923C',     // 오렌지
-  reschedule_requested: '#FBBF24',
-  confirmed: '#3B82F6',     // 파란색
-  on_hold: '#9CA3AF',       // 회색
+/** 상태별 핀 설정 (색상 + 아이콘) */
+const PIN_CONFIG: Record<string, { color: string; icon: string }> = {
+  pending_admin:        { color: '#EF4444', icon: '!' },   // 빨강 + 느낌표
+  suggested:            { color: '#F97316', icon: '→' },   // 오렌지 + 화살표
+  reschedule_requested: { color: '#EAB308', icon: '↻' },   // 노랑 + 회전
+  confirmed:            { color: '#3B82F6', icon: '✓' },   // 파랑 + 체크
+  on_hold:              { color: '#9CA3AF', icon: '⏸' },   // 회색 + 일시정지
 };
+const DEFAULT_PIN = { color: '#6B7280', icon: '?' };
 
-function createPinSVG(color: string, pulse = false): string {
-  const animation = pulse
-    ? '<animate attributeName="r" values="8;12;8" dur="1.5s" repeatCount="indefinite"/>'
-    : '';
+/** 드롭핀 SVG (36x48) — 상태별 색상 + 아이콘 */
+function createPinSVG(status: string): string {
+  const { color, icon } = PIN_CONFIG[status] || DEFAULT_PIN;
   return `data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
-      <circle cx="14" cy="14" r="10" fill="${color}" stroke="white" stroke-width="2">${animation}</circle>
+    `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="48" viewBox="0 0 36 48">
+      <filter id="s"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.3"/></filter>
+      <path d="M18 47C18 47 33 30 33 18A15 15 0 0 0 3 18C3 30 18 47 18 47Z" fill="${color}" stroke="white" stroke-width="2" filter="url(#s)"/>
+      <circle cx="18" cy="18" r="9" fill="white" opacity="0.95"/>
+      <text x="18" y="22" text-anchor="middle" font-size="14" font-weight="700" fill="${color}">${icon}</text>
     </svg>`
   )}`;
 }
@@ -83,11 +86,10 @@ export function FieldRequestMap() {
       const pos = new kakao.maps.LatLng(c.latitude!, c.longitude!);
       bounds.extend(pos);
 
-      const color = PIN_COLORS[c.status] || '#9CA3AF';
-      const pulse = c.status === 'pending_admin';
       const markerImage = new kakao.maps.MarkerImage(
-        createPinSVG(color, pulse),
-        new kakao.maps.Size(28, 28)
+        createPinSVG(c.status),
+        new kakao.maps.Size(36, 48),
+        { offset: new kakao.maps.Point(18, 48) } // 핀 꼭지점이 좌표에 정확히 위치
       );
 
       const marker = new kakao.maps.Marker({
