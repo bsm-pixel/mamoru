@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidTransition } from '@/lib/consultation/transitions';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
@@ -165,48 +165,49 @@ export async function PATCH(
         note: note || null,
       });
 
-      // 후속 작업: GAS 캘린더 삭제 + 알림톡 — 반드시 await 후 return
-      const sideEffects: Promise<unknown>[] = [];
+      // 후속 작업: after()로 응답 반환 후 백그라운드 실행 — UI 빠른 응답
+      after(async () => {
+        const sideEffects: Promise<unknown>[] = [];
 
-      // 취소 시 GAS 연동 — 구글 캘린더 삭제 + 아임웹 슬롯 열기
-      if (newStatus === 'cancelled' && data.unique_id) {
-        sideEffects.push(cancelViaGAS(data.unique_id));
-      }
+        // 취소 시 GAS 연동 — 구글 캘린더 삭제 + 아임웹 슬롯 열기
+        if (newStatus === 'cancelled' && data.unique_id) {
+          sideEffects.push(cancelViaGAS(data.unique_id));
+        }
 
-      // 자동 알림톡 발송
-      const template = AUTO_NOTIFY_MAP[newStatus];
-      if (template && data.phone) {
-        const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
-        const typeLabel = data.consultation_type === 'store_visit' ? '매장 방문'
-          : data.consultation_type === 'field_request' ? '출장 요청' : '톡상담';
-        sideEffects.push(
-          sendNotification({
-            template,
-            phone: data.phone,
-            name: data.name,
-            data: {
-              id: data.unique_id,
-              type: typeLabel,
-              date: data.visit_date || '',
-              time: data.visit_time || '',
-              address,
-            },
-          }).then((r) => {
-            if (!r.success) console.error('[auto-notify] 발송 실패:', r.error);
-            else console.log('[auto-notify] 발송 성공:', template);
-          })
-        );
-      }
+        // 자동 알림톡 발송
+        const template = AUTO_NOTIFY_MAP[newStatus];
+        if (template && data.phone) {
+          const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
+          const typeLabel = data.consultation_type === 'store_visit' ? '매장 방문'
+            : data.consultation_type === 'field_request' ? '출장 요청' : '톡상담';
+          sideEffects.push(
+            sendNotification({
+              template,
+              phone: data.phone,
+              name: data.name,
+              data: {
+                id: data.unique_id,
+                type: typeLabel,
+                date: data.visit_date || '',
+                time: data.visit_time || '',
+                address,
+              },
+            }).then((r) => {
+              if (!r.success) console.error('[auto-notify] 발송 실패:', r.error);
+              else console.log('[auto-notify] 발송 성공:', template);
+            })
+          );
+        }
 
-      // 모든 후속 작업 완료 대기 (개별 실패해도 다른 작업엔 영향 없음)
-      if (sideEffects.length > 0) {
-        const results = await Promise.allSettled(sideEffects);
-        results.forEach((r, i) => {
-          if (r.status === 'rejected') {
-            console.error(`[side-effect ${i}] 실패:`, r.reason);
-          }
-        });
-      }
+        if (sideEffects.length > 0) {
+          const results = await Promise.allSettled(sideEffects);
+          results.forEach((r, i) => {
+            if (r.status === 'rejected') {
+              console.error(`[side-effect ${i}] 실패:`, r.reason);
+            }
+          });
+        }
+      });
     }
 
     return NextResponse.json(data);

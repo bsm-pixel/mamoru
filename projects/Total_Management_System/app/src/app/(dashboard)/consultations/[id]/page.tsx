@@ -56,6 +56,7 @@ export default function ConsultationDetailPage() {
   const [showReschedule, setShowReschedule] = useState(false);
   const [showSuggest, setShowSuggest] = useState(false);
   const [showHold, setShowHold] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   if (isLoading) {
     return (
@@ -134,7 +135,7 @@ export default function ConsultationDetailPage() {
               </Button>
             )}
             {allowed.includes('cancelled') && (
-              <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+              <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => setShowCancelConfirm(true)}>
                 취소
               </Button>
             )}
@@ -165,7 +166,7 @@ export default function ConsultationDetailPage() {
               <Button variant="ghost" size="sm" disabled={busy} onClick={() => setShowHold(true)}>보류</Button>
             )}
             {allowed.includes('cancelled') && (
-              <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+              <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => setShowCancelConfirm(true)}>
                 취소
               </Button>
             )}
@@ -193,7 +194,7 @@ export default function ConsultationDetailPage() {
               </Button>
             )}
             {allowed.includes('cancelled') && (
-              <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
+              <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => setShowCancelConfirm(true)}>
                 취소
               </Button>
             )}
@@ -438,6 +439,37 @@ export default function ConsultationDetailPage() {
           onClose={() => setShowHold(false)}
           consultationId={c.id}
         />
+      )}
+
+      {/* 취소 확인 모달 */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <h3 className="text-lg font-bold text-neutral-900">상담 취소</h3>
+            <p className="text-sm text-neutral-600 mt-2">
+              정말 이 상담을 취소하시겠습니까?<br />
+              <span className="text-danger text-xs">취소 시 캘린더 일정 삭제 및 알림톡이 발송됩니다.</span>
+            </p>
+            <div className="flex gap-2 mt-5 justify-end">
+              <Button variant="ghost" size="sm" onClick={() => setShowCancelConfirm(false)}>
+                돌아가기
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                loading={updateStatus.isPending}
+                onClick={() => {
+                  updateStatus.mutate(
+                    { id: c.id, status: 'cancelled' },
+                    { onSettled: () => setShowCancelConfirm(false) }
+                  );
+                }}
+              >
+                취소 확정
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
