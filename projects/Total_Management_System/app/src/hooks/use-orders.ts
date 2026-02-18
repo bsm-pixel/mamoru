@@ -100,6 +100,7 @@ export function useBookInvoice() {
       rcvAdr: string;
       gdsNm?: string;
       dlvMsg?: string;
+      ordSct?: '1' | '2' | '3';
     }) => {
       const res = await fetch('/api/lotte/book', {
         method: 'POST',
@@ -111,6 +112,12 @@ export function useBookInvoice() {
     },
     onSuccess: (data) => {
       toast.success(`송장 생성 완료: ${data.invNo}`);
+      if (data.imwebNeedsManual) {
+        toast('아임웹에서 "배송대기 처리" 후 자동 연동됩니다', {
+          icon: '⚠️',
+          duration: 6000,
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['order'] });
     },
@@ -135,12 +142,12 @@ export function useCancelInvoice() {
       return res.json();
     },
     onSuccess: () => {
-      toast.success('송장 취소 완료');
+      toast.success('ALPS에서 직접 집하취소 해주세요', { duration: 5000 });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['order'] });
     },
     onError: (err) => {
-      toast.error('송장 취소 실패: ' + String(err));
+      toast.error('취소 처리 실패: ' + String(err));
     },
   });
 }

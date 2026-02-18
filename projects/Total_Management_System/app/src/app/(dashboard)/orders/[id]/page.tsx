@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { Topbar } from '@/components/layout/topbar';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +18,7 @@ import {
   ORDER_STATUS_LABEL,
   ORDER_STATUS_COLOR,
 } from '@/lib/utils/format';
-import { ArrowLeft, Truck, X, Package } from 'lucide-react';
+import { ArrowLeft, Truck, X, Package, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -25,6 +27,70 @@ export default function OrderDetailPage() {
   const { data, isLoading } = useOrder(id);
   const cancelInvoice = useCancelInvoice();
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [isCheckingAlps, setIsCheckingAlps] = useState(false);
+  const [isPushingImweb, setIsPushingImweb] = useState(false);
+  const queryClient = useQueryClient();
+
+  /** ALPS 추적 API로 취소 여부 확인 → 자동 상태 전환 */
+  async function checkAlpsCancel(orderId: string, invNo: string, silent = false) {
+    setIsCheckingAlps(true);
+    try {
+      const res = await fetch('/api/lotte/check-cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, invNo }),
+      });
+      const result = await res.json();
+      if (result.cancelled) {
+        toast.success('ALPS 취소 확인 — 주문이 취소 처리되었습니다');
+        if (result.imwebManual) {
+          toast('아임웹에서도 주문취소 처리해주세요', { icon: '⚠️', duration: 6000 });
+        }
+        queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
+      } else if (!silent) {
+        // 수동 클릭 시에만 "아직 안됨" 알림
+        toast.error('아직 ALPS에서 취소되지 않았습니다');
+      }
+    } catch {
+      if (!silent) toast.error('ALPS 확인 실패');
+    } finally {
+      setIsCheckingAlps(false);
+    }
+  }
+
+  /** 아임웹에 송장번호 재전송 (배송대기 처리 후 사용) */
+  async function pushImwebInvoice(orderId: string) {
+    setIsPushingImweb(true);
+    try {
+      const res = await fetch('/api/imweb/push-invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        toast.success('아임웹 송장 연동 완료');
+      } else if (result.needsManual) {
+        toast.error('아임웹에서 "배송대기 처리"를 먼저 해주세요');
+      } else {
+        toast.error('아임웹 연동 실패');
+      }
+    } catch {
+      toast.error('아임웹 연동 실패');
+    } finally {
+      setIsPushingImweb(false);
+    }
+  }
+
+  // cancel_pending 상태 진입 시 자동으로 ALPS 취소 확인 (1회)
+  const autoChecked = useRef(false);
+  useEffect(() => {
+    if (data?.order.status === 'cancel_pending' && data.order.invoice_number && !autoChecked.current) {
+      autoChecked.current = true;
+      checkAlpsCancel(data.order.id, data.order.invoice_number, true); // silent=true
+    }
+  }, [data?.order.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading) {
     return (
@@ -183,27 +249,72 @@ export default function OrderDetailPage() {
             <CardTitle>배송</CardTitle>
           </CardHeader>
 
-          {order.invoice_number ? (
+          {order.status === 'cancel_pending' ? (
+            /* cancel_pending: ALPS 직접 취소 안내 */
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-warning-soft/50 border border-warning/30">
+                <AlertTriangle size={20} className="text-warning shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-warning">ALPS 집하취소 필요</p>
+                  <p className="text-xs text-neutral-600 mt-0.5">
+                    ALPS에서 송장 <span className="font-bold">{order.invoice_number}</span>을 직접 집하취소 해주세요.
+                    취소 처리 후 자동으로 반영됩니다.
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => checkAlpsCancel(order.id, order.invoice_number!)}
+                disabled={isCheckingAlps}
+              >
+                <CheckCircle size={14} />
+                {isCheckingAlps ? '확인 중...' : 'ALPS 취소 확인'}
+              </Button>
+            </div>
+          ) : order.status === 'cancelled' ? (
+            /* cancelled: 취소 완료 상태 */
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-neutral-50">
+              <X size={20} className="text-neutral-400" />
+              <div>
+                <p className="text-sm font-medium text-neutral-500">취소된 주문</p>
+                {order.invoice_number && (
+                  <p className="text-xs text-neutral-400 mt-0.5">송장: {order.invoice_number}</p>
+                )}
+              </div>
+            </div>
+          ) : order.invoice_number ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 rounded-lg bg-warm-ivory">
                 <div>
                   <p className="text-xs text-neutral-500">{order.courier_name || '롯데택배'}</p>
                   <p className="text-sm font-bold mt-0.5">{order.invoice_number}</p>
                 </div>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() =>
-                    cancelInvoice.mutate({
-                      invNo: order.invoice_number!,
-                      orderId: order.id,
-                    })
-                  }
-                  disabled={cancelInvoice.isPending}
-                >
-                  <X size={14} />
-                  {cancelInvoice.isPending ? '취소 중...' : '송장 취소'}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => pushImwebInvoice(order.id)}
+                    disabled={isPushingImweb}
+                  >
+                    <RefreshCw size={14} className={isPushingImweb ? 'animate-spin' : ''} />
+                    {isPushingImweb ? '연동 중...' : '아임웹 연동'}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() =>
+                      cancelInvoice.mutate({
+                        invNo: order.invoice_number!,
+                        orderId: order.id,
+                      })
+                    }
+                    disabled={cancelInvoice.isPending}
+                  >
+                    <X size={14} />
+                    {cancelInvoice.isPending ? '처리 중...' : '송장 취소'}
+                  </Button>
+                </div>
               </div>
               {order.shipped_at && (
                 <p className="text-xs text-neutral-500">
@@ -225,6 +336,7 @@ export default function OrderDetailPage() {
         open={invoiceOpen}
         onClose={() => setInvoiceOpen(false)}
         order={order}
+        items={items}
       />
     </>
   );

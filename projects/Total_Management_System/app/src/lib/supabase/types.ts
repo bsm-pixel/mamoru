@@ -7,6 +7,7 @@ export type OrderStatus =
   | 'shipping'
   | 'delivered'
   | 'confirmed'
+  | 'cancel_pending'
   | 'cancelled'
   | 'refund_request'
   | 'refunded';

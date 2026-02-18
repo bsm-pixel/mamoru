@@ -18,6 +18,7 @@ const STATUS_TABS = [
   { value: 'preparing', label: '준비중' },
   { value: 'shipping', label: '배송중' },
   { value: 'delivered', label: '배송완료' },
+  { value: 'cancel_pending', label: 'ALPS취소대기' },
   { value: 'cancelled', label: '취소' },
 ];
 

@@ -110,7 +110,7 @@ function buildSndPayload(cfg: LotteConfig, req: LotteBookRequest) {
       {
         jobCustCd: cfg.jobCustCd,
         ustRtgSctCd: '01',
-        ordSct: '3',
+        ordSct: req.ordSct || '1', // 1:일반 2:교환 3:AS
         fareSctCd: cfg.fareSctCd,
         ordNo: req.ordNo || '',
         invNo: req.invNo || '',
@@ -128,7 +128,7 @@ function buildSndPayload(cfg: LotteConfig, req: LotteBookRequest) {
         acperAdr: req.rcvAdr,
 
         boxTypCd: req.boxTypCd || 'A',
-        gdsNm: req.gdsNm || 'A/S 물품',
+        gdsNm: req.gdsNm || '마모루 제품',
         dlvMsgCont: req.dlvMsg || '',
         cusMsgCont: '',
         pickReqYmd: (req.pickReqYmd || '').replace(/-/g, ''),
@@ -181,6 +181,7 @@ export async function cancelPickup(invNo: string): Promise<LotteCancelResult> {
     return { success: false, error: 'CANCEL_CONFIG_MISSING' };
   }
 
+  // 1차: 집하취소 전용 페이로드
   const payload = {
     snd_list: [
       {
@@ -193,20 +194,45 @@ export async function cancelPickup(invNo: string): Promise<LotteCancelResult> {
     ],
   };
 
+  console.log('[cancelPickup] 1차 시도:', cfg.cancelUrl);
   const r = await httpPost(cfg.cancelUrl, alpsHeaders(cfg.clientKey), payload, 1);
   const rtnList = (r.json as Record<string, unknown>).rtn_list;
   const first = (Array.isArray(rtnList) ? rtnList[0] : {}) as Record<string, unknown>;
   const cd = String(first.rtnCd || '').toUpperCase();
+  console.log('[cancelPickup] 1차 응답:', { ok: r.ok, code: r.code, rtnCd: cd, rtnMsg: first.rtnMsg });
 
   if (r.ok && cd === 'S') return { success: true, via: 'pickup_cancel' };
 
+  // 2차: 레거시 페이로드 (GAS lotteCancel_ 방식 — ordSct/fareSctCd 포함)
+  const legacyPayload = {
+    snd_list: [
+      {
+        jobCustCd: cfg.jobCustCd,
+        invNo,
+        ustRtgSctCd: '01',
+        ordSct: '3',
+        fareSctCd: cfg.fareSctCd,
+      },
+    ],
+  };
+
+  console.log('[cancelPickup] 2차 레거시 시도');
+  const r2 = await httpPost(cfg.cancelUrl, alpsHeaders(cfg.clientKey), legacyPayload, 1);
+  const rtnList2 = (r2.json as Record<string, unknown>).rtn_list;
+  const first2 = (Array.isArray(rtnList2) ? rtnList2[0] : {}) as Record<string, unknown>;
+  const cd2 = String(first2.rtnCd || '').toUpperCase();
+  console.log('[cancelPickup] 2차 응답:', { ok: r2.ok, code: r2.code, rtnCd: cd2, rtnMsg: first2.rtnMsg });
+
+  if (r2.ok && cd2 === 'S') return { success: true, via: 'legacy_cancel' };
+
   // 상태 조회로 취소 확인
   const q = await queryStatus(invNo);
+  console.log('[cancelPickup] 상태조회:', q.state);
   if (q.ok && (q.state === 'CANCELLED' || q.state === 'NOT_FOUND')) {
     return { success: true, via: q.state };
   }
 
-  return { success: false, error: 'PICKUP_CANCEL_FAILED' };
+  return { success: false, error: `PICKUP_CANCEL_FAILED (1차:${cd}/${first.rtnMsg || ''} 2차:${cd2}/${first2.rtnMsg || ''})` };
 }
 
 /** 상태 조회 (lotteQueryStatus_ 포팅) */

@@ -131,6 +131,9 @@ export async function syncOrders(): Promise<{
   }
 }
 
+/** TMS에서 직접 관리하는 상태 — 아임웹 동기화 시 덮어쓰지 않음 */
+const TMS_MANAGED_STATUSES: OrderStatus[] = ['cancel_pending', 'shipping'];
+
 /** 단건 upsert — 주문 + 품목 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: ImwebProdOrder[]) {
@@ -138,9 +141,18 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
   const pay = imwebOrder.payment;
 
   // prod-orders에서 상태 가져오기 (첫 번째 품목 기준)
-  const status = prodOrders.length > 0
+  const imwebStatus = prodOrders.length > 0
     ? mapImwebStatus(prodOrders[0].status)
     : (pay?.payment_time > 0 ? 'pay_done' : 'pay_wait');
+
+  // 기존 주문이 TMS 관리 상태인지 확인 → 있으면 상태/배송정보 보존
+  const { data: existing } = await supabase
+    .from('orders')
+    .select('id, status, invoice_number, courier_code, courier_name, shipped_at')
+    .eq('imweb_order_no', imwebOrder.order_no)
+    .single();
+
+  const isTmsManaged = existing && TMS_MANAGED_STATUSES.includes(existing.status);
 
   const orderData = {
     imweb_order_no: imwebOrder.order_no,
@@ -162,9 +174,11 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
     paid_at: pay?.payment_time
       ? new Date(pay.payment_time * 1000).toISOString()
       : null,
-    courier_code: imwebOrder.parcel_code || null,
-    invoice_number: imwebOrder.invoice_no || null,
-    status,
+    // TMS 관리 중이면 배송정보/상태 보존
+    courier_code: isTmsManaged ? existing.courier_code : (imwebOrder.parcel_code || null),
+    invoice_number: isTmsManaged ? existing.invoice_number : (imwebOrder.invoice_no || null),
+    status: isTmsManaged ? existing.status : imwebStatus,
+    ...(isTmsManaged ? { shipped_at: existing.shipped_at } : {}),
     imweb_raw: imwebOrder as unknown as Record<string, unknown>,
     synced_at: new Date().toISOString(),
     ordered_at: new Date(imwebOrder.order_time * 1000).toISOString(),

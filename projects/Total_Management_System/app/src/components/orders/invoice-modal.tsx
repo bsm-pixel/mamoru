@@ -4,17 +4,23 @@ import { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { useBookInvoice } from '@/hooks/use-orders';
-import type { Order } from '@/lib/supabase/types';
+import type { Order, OrderItem } from '@/lib/supabase/types';
 
 interface InvoiceModalProps {
   open: boolean;
   onClose: () => void;
   order: Order;
+  items?: OrderItem[];
 }
 
-export function InvoiceModal({ open, onClose, order }: InvoiceModalProps) {
+export function InvoiceModal({ open, onClose, order, items }: InvoiceModalProps) {
   const bookInvoice = useBookInvoice();
-  const [gdsNm, setGdsNm] = useState('마모루 제품');
+
+  // 상품명 기본값: order_items에서 조합
+  const defaultGdsNm = items && items.length > 0
+    ? items.map(it => it.quantity > 1 ? `${it.product_name} x${it.quantity}` : it.product_name).join(', ')
+    : '';
+  const [gdsNm, setGdsNm] = useState(defaultGdsNm);
 
   const handleSubmit = () => {
     bookInvoice.mutate(
@@ -25,8 +31,9 @@ export function InvoiceModal({ open, onClose, order }: InvoiceModalProps) {
         rcvTel: order.recipient_phone || '',
         rcvZip: order.recipient_postcode || '',
         rcvAdr: `${order.recipient_address || ''} ${order.recipient_address_detail || ''}`.trim(),
-        gdsNm,
+        gdsNm: gdsNm || undefined, // 비어있으면 서버에서 자동 조합
         dlvMsg: order.recipient_memo || '',
+        ordSct: '1', // 일반 제품 출고
       },
       { onSuccess: () => onClose() }
     );

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cancel } from '@/lib/lotte/client';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
-/** POST /api/lotte/cancel — 송장 취소 */
+/** POST /api/lotte/cancel — 소프트 취소 (ALPS 직접 취소 필요) */
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
@@ -10,25 +9,23 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { invNo, orderId } = await request.json();
-    const result = await cancel(invNo);
+    if (!orderId) return NextResponse.json({ error: 'MISSING_ORDER_ID' }, { status: 400 });
 
-    // 성공 시 주문에서 송장 정보 제거
-    if (result.success && orderId) {
-      await (supabase as any)
-        .from('orders')
-        .update({
-          invoice_number: null,
-          courier_code: null,
-          courier_name: null,
-          status: 'pay_done',
-          shipped_at: null,
-        })
-        .eq('id', orderId);
-    }
+    // Supabase 상태를 cancel_pending으로 변경 (송장번호는 유지 — ALPS 확인용)
+    await (supabase as any)
+      .from('orders')
+      .update({ status: 'cancel_pending' })
+      .eq('id', orderId);
 
-    return NextResponse.json(result);
+    console.log('[lotte/cancel] 소프트 취소:', { invNo, orderId });
+
+    return NextResponse.json({
+      success: true,
+      via: 'soft_cancel',
+      message: 'ALPS에서 직접 집하취소 해주세요',
+    });
   } catch (err) {
-    console.error('[lotte/cancel] 송장 취소 실패:', err);
+    console.error('[lotte/cancel] 취소 처리 실패:', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

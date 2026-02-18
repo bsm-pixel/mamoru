@@ -26,6 +26,7 @@ export interface LotteBookRequest {
   gdsNm?: string;
   dlvMsg?: string;
   pickReqYmd?: string;
+  ordSct?: '1' | '2' | '3'; // 1:일반 2:교환 3:AS (기본값 '1')
 }
 
 export interface LotteBookResult {
