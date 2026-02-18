@@ -11,15 +11,15 @@ const AUTO_NOTIFY_MAP: Partial<Record<string, NotifyTemplate>> = {
 };
 
 /** GAS 웹앱에 취소 요청 — 캘린더 삭제 + 시트 상태 + 슬롯 캐시 무효화 */
-async function cancelViaGAS(uniqueId: string): Promise<void> {
+async function cancelViaGAS(uniqueId: string): Promise<{ ok: boolean; detail?: string }> {
   const url = process.env.GAS_CONSULTING_URL;
   if (!url) {
     console.error('[GAS cancel] GAS_CONSULTING_URL 환경변수 미설정');
-    return;
+    return { ok: false, detail: 'GAS_CONSULTING_URL 미설정' };
   }
   if (!uniqueId) {
     console.error('[GAS cancel] uniqueId 없음');
-    return;
+    return { ok: false, detail: 'uniqueId 없음' };
   }
   try {
     const payload = {
@@ -28,26 +28,37 @@ async function cancelViaGAS(uniqueId: string): Promise<void> {
       key: process.env.CRON_SECRET || 'mamoru-tms-cron-2026',
       skipNotify: true, // TMS가 자체 알림톡 발송하므로 GAS 알림 생략
     };
-    console.log('[GAS cancel] 요청:', { url: url.slice(0, 60) + '...', uid: uniqueId });
+    console.log('[GAS cancel] 요청:', { uid: uniqueId });
 
+    // GAS 웹앱은 302 리다이렉트로 응답 — manual로 받아야 redirect loop 방지
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload),
-      redirect: 'follow',
+      redirect: 'manual',
+      signal: AbortSignal.timeout(15000),
     });
+
+    // GAS: 302 = 정상 처리 후 리다이렉트, 200 = 직접 응답
+    if (res.status === 302 || res.status === 301) {
+      console.log('[GAS cancel] 성공 (GAS 302 정상 응답)', { uid: uniqueId });
+      return { ok: true, detail: 'GAS 302' };
+    }
 
     const text = await res.text();
     let body;
     try { body = JSON.parse(text); } catch { body = text; }
 
-    if (!res.ok || (body && body.ok === false)) {
-      console.error('[GAS cancel] 실패 응답:', { status: res.status, body });
-    } else {
+    if (res.ok && body?.ok !== false) {
       console.log('[GAS cancel] 성공:', { status: res.status, body });
+      return { ok: true, detail: JSON.stringify(body) };
     }
+
+    console.error('[GAS cancel] 실패 응답:', { status: res.status, body });
+    return { ok: false, detail: `HTTP ${res.status}: ${JSON.stringify(body)}` };
   } catch (err) {
-    console.error('[GAS cancel] fetch 에러 (non-blocking):', err);
+    console.error('[GAS cancel] fetch 에러:', err);
+    return { ok: false, detail: String(err) };
   }
 }
 
@@ -159,31 +170,47 @@ export async function PATCH(
         note: note || null,
       });
 
-      // 취소 시 GAS 연동 — 구글 캘린더 삭제 + 아임웹 슬롯 열기 (non-blocking)
+      // 후속 작업: GAS 캘린더 삭제 + 알림톡 — 반드시 await 후 return
+      const sideEffects: Promise<unknown>[] = [];
+
+      // 취소 시 GAS 연동 — 구글 캘린더 삭제 + 아임웹 슬롯 열기
       if (newStatus === 'cancelled' && data.unique_id) {
-        cancelViaGAS(data.unique_id).catch((err) =>
-          console.error('[GAS cancel] 비동기 실패:', err)
-        );
+        sideEffects.push(cancelViaGAS(data.unique_id));
       }
 
-      // 자동 알림톡 발송 (non-blocking)
+      // 자동 알림톡 발송
       const template = AUTO_NOTIFY_MAP[newStatus];
       if (template && data.phone) {
         const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
         const typeLabel = data.consultation_type === 'store_visit' ? '매장 방문'
           : data.consultation_type === 'field_request' ? '출장 요청' : '톡상담';
-        sendNotification({
-          template,
-          phone: data.phone,
-          name: data.name,
-          data: {
-            id: data.unique_id,
-            type: typeLabel,
-            date: data.visit_date || '',
-            time: data.visit_time || '',
-            address,
-          },
-        }).catch((err) => console.error('[auto-notify] 알림톡 발송 실패:', err));
+        sideEffects.push(
+          sendNotification({
+            template,
+            phone: data.phone,
+            name: data.name,
+            data: {
+              id: data.unique_id,
+              type: typeLabel,
+              date: data.visit_date || '',
+              time: data.visit_time || '',
+              address,
+            },
+          }).then((r) => {
+            if (!r.success) console.error('[auto-notify] 발송 실패:', r.error);
+            else console.log('[auto-notify] 발송 성공:', template);
+          })
+        );
+      }
+
+      // 모든 후속 작업 완료 대기 (개별 실패해도 다른 작업엔 영향 없음)
+      if (sideEffects.length > 0) {
+        const results = await Promise.allSettled(sideEffects);
+        results.forEach((r, i) => {
+          if (r.status === 'rejected') {
+            console.error(`[side-effect ${i}] 실패:`, r.reason);
+          }
+        });
       }
     }
 
