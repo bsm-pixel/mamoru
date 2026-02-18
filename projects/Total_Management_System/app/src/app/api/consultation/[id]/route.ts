@@ -13,20 +13,41 @@ const AUTO_NOTIFY_MAP: Partial<Record<string, NotifyTemplate>> = {
 /** GAS 웹앱에 취소 요청 — 캘린더 삭제 + 시트 상태 + 슬롯 캐시 무효화 */
 async function cancelViaGAS(uniqueId: string): Promise<void> {
   const url = process.env.GAS_CONSULTING_URL;
-  if (!url || !uniqueId) return;
+  if (!url) {
+    console.error('[GAS cancel] GAS_CONSULTING_URL 환경변수 미설정');
+    return;
+  }
+  if (!uniqueId) {
+    console.error('[GAS cancel] uniqueId 없음');
+    return;
+  }
   try {
-    await fetch(url, {
+    const payload = {
+      action: 'cancelConsultation',
+      uid: uniqueId,
+      key: process.env.CRON_SECRET || 'mamoru-tms-cron-2026',
+      skipNotify: true, // TMS가 자체 알림톡 발송하므로 GAS 알림 생략
+    };
+    console.log('[GAS cancel] 요청:', { url: url.slice(0, 60) + '...', uid: uniqueId });
+
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'cancelConsultation',
-        uid: uniqueId,
-        key: process.env.CRON_SECRET || 'mamoru-tms-cron-2026',
-        skipNotify: true, // TMS가 자체 알림톡 발송하므로 GAS 알림 생략
-      }),
+      body: JSON.stringify(payload),
+      redirect: 'follow',
     });
+
+    const text = await res.text();
+    let body;
+    try { body = JSON.parse(text); } catch { body = text; }
+
+    if (!res.ok || (body && body.ok === false)) {
+      console.error('[GAS cancel] 실패 응답:', { status: res.status, body });
+    } else {
+      console.log('[GAS cancel] 성공:', { status: res.status, body });
+    }
   } catch (err) {
-    console.error('[GAS cancel] 실패 (non-blocking):', err);
+    console.error('[GAS cancel] fetch 에러 (non-blocking):', err);
   }
 }
 
