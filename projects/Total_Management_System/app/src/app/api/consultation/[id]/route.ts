@@ -12,8 +12,8 @@ const AUTO_NOTIFY_MAP: Partial<Record<string, NotifyTemplate>> = {
 
 /** GAS 웹앱에 취소 요청 — 캘린더 삭제 + 시트 상태 + 슬롯 캐시 무효화 */
 async function cancelViaGAS(uniqueId: string): Promise<{ ok: boolean; detail?: string }> {
-  const url = process.env.GAS_CONSULTING_URL;
-  if (!url) {
+  const baseUrl = process.env.GAS_CONSULTING_URL;
+  if (!baseUrl) {
     console.error('[GAS cancel] GAS_CONSULTING_URL 환경변수 미설정');
     return { ok: false, detail: 'GAS_CONSULTING_URL 미설정' };
   }
@@ -22,35 +22,30 @@ async function cancelViaGAS(uniqueId: string): Promise<{ ok: boolean; detail?: s
     return { ok: false, detail: 'uniqueId 없음' };
   }
   try {
-    const payload = {
+    const key = process.env.CRON_SECRET || 'mamoru-tms-cron-2026';
+    // GAS 웹앱은 POST body를 외부에서 받지 못하는 이슈 → GET 쿼리 파라미터 방식 사용
+    const params = new URLSearchParams({
       action: 'cancelConsultation',
       uid: uniqueId,
-      key: process.env.CRON_SECRET || 'mamoru-tms-cron-2026',
-      skipNotify: true, // TMS가 자체 알림톡 발송하므로 GAS 알림 생략
-    };
+      key,
+      skipNotify: 'true',
+    });
+    const url = `${baseUrl}?${params.toString()}`;
     console.log('[GAS cancel] 요청:', { uid: uniqueId });
 
-    // GAS 웹앱은 302 리다이렉트로 응답 — manual로 받아야 redirect loop 방지
+    // GAS 웹앱은 302 리다이렉트로 응답 전달
     const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload),
-      redirect: 'manual',
+      method: 'GET',
+      redirect: 'follow',
       signal: AbortSignal.timeout(15000),
     });
-
-    // GAS: 302 = 정상 처리 후 리다이렉트, 200 = 직접 응답
-    if (res.status === 302 || res.status === 301) {
-      console.log('[GAS cancel] 성공 (GAS 302 정상 응답)', { uid: uniqueId });
-      return { ok: true, detail: 'GAS 302' };
-    }
 
     const text = await res.text();
     let body;
     try { body = JSON.parse(text); } catch { body = text; }
 
-    if (res.ok && body?.ok !== false) {
-      console.log('[GAS cancel] 성공:', { status: res.status, body });
+    if (body?.ok === true) {
+      console.log('[GAS cancel] 성공:', body);
       return { ok: true, detail: JSON.stringify(body) };
     }
 

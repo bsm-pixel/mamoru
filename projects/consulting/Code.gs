@@ -607,6 +607,21 @@ function safeClose(){
   if (p.action === 'getSlots' && p.date) return json({ok:true, slots:getAvailableTimeSlots_(String(p.date))});
   if (p.action === 'ver') return json({ok:true, version:VERSION, ts:new Date().toISOString()});
 
+  // ─── TMS 취소 연동 (GET 쿼리 파라미터 방식 — POST body는 외부에서 수신 불가) ───
+  if (p.action === 'cancelConsultation') {
+    var cancelKey = p.key;
+    if (!cancelKey || cancelKey !== (PropertiesService.getScriptProperties().getProperty('TMS_SYNC_KEY') || 'mamoru-tms-cron-2026')) {
+      return json({ ok: false, error: 'unauthorized' });
+    }
+    try {
+      var cancelResult = adminCancel(p.uid, { skipNotify: p.skipNotify === 'true' });
+      return json(cancelResult);
+    } catch (cancelErr) {
+      Logger.log('cancelConsultation error: ' + cancelErr);
+      return json({ ok: false, error: String(cancelErr) });
+    }
+  }
+
   // ─── GitHub Pages용 API 분기 (CORS 지원) ───
   if (p.action === 'getSettings') {
     return json({ ok: true, data: getSettings() });
