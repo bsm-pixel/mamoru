@@ -687,6 +687,16 @@ function doPost(e) {
       return json({ ok: true, data: result });
     }
 
+    // TMS에서 취소 시 호출 — 캘린더 삭제 + 시트 상태 + 슬롯 캐시 무효화
+    if (action === 'cancelConsultation') {
+      const key = payload.key;
+      if (!key || key !== (PropertiesService.getScriptProperties().getProperty('TMS_SYNC_KEY') || 'mamoru-tms-cron-2026')) {
+        return json({ ok: false, error: 'unauthorized' });
+      }
+      const result = adminCancel(payload.uid, { skipNotify: !!payload.skipNotify });
+      return json(result);
+    }
+
     if (action === 'getSlotsRange') {
       const dateList = payload.dates || [];
       const consultType = payload.type || '매장 방문';
@@ -1180,7 +1190,8 @@ function adminConfirm(uid){
 }
 
 // ===== PATCH 1: adminCancel (매장/출장/홀드 모두 삭제) =====
-function adminCancel(uid){
+function adminCancel(uid, options){
+  options = options || {};
   const sh = sh_(), col = headerMap_(), rows = sh.getDataRange().getValues();
   let row = -1;
   for (let i=1;i<rows.length;i++){
@@ -1246,13 +1257,15 @@ function adminCancel(uid){
     if (dateStr) slotsCacheInvalidate_(dateStr);
   }catch(_){}
 
-  // 5) 알림톡
-  try {
-    const visitDate = r[col['방문일']] instanceof Date ? Utilities.formatDate(r[col['방문일']], TIMEZONE, 'yyyy-MM-dd') : r[col['방문일']];
-    const visitTime = r[col['방문시간']] instanceof Date ? Utilities.formatDate(r[col['방문시간']], TIMEZONE, 'HH:mm') : r[col['방문시간']];
-    const payload3 = { topic: 'alrimtalk', template: 'cancelled', id: r[col['UniqueID']], name: r[col['성함']], phone: r[col['연락처']], type: r[col['상담방식']], date: visitDate, time: visitTime };
-    postMake_('CANCELLED', payload3);
-  } catch (_){}
+  // 5) 알림톡 (TMS에서 호출 시 skipNotify=true로 중복 방지)
+  if (!options.skipNotify) {
+    try {
+      const visitDate = r[col['방문일']] instanceof Date ? Utilities.formatDate(r[col['방문일']], TIMEZONE, 'yyyy-MM-dd') : r[col['방문일']];
+      const visitTime = r[col['방문시간']] instanceof Date ? Utilities.formatDate(r[col['방문시간']], TIMEZONE, 'HH:mm') : r[col['방문시간']];
+      const payload3 = { topic: 'alrimtalk', template: 'cancelled', id: r[col['UniqueID']], name: r[col['성함']], phone: r[col['연락처']], type: r[col['상담방식']], date: visitDate, time: visitTime };
+      postMake_('CANCELLED', payload3);
+    } catch (_){}
+  }
 
   return { ok:true };
 }

@@ -10,6 +10,26 @@ const AUTO_NOTIFY_MAP: Partial<Record<string, NotifyTemplate>> = {
   cancelled: 'cancelled',
 };
 
+/** GAS 웹앱에 취소 요청 — 캘린더 삭제 + 시트 상태 + 슬롯 캐시 무효화 */
+async function cancelViaGAS(uniqueId: string): Promise<void> {
+  const url = process.env.GAS_CONSULTING_URL;
+  if (!url || !uniqueId) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'cancelConsultation',
+        uid: uniqueId,
+        key: process.env.CRON_SECRET || 'mamoru-tms-cron-2026',
+        skipNotify: true, // TMS가 자체 알림톡 발송하므로 GAS 알림 생략
+      }),
+    });
+  } catch (err) {
+    console.error('[GAS cancel] 실패 (non-blocking):', err);
+  }
+}
+
 /** GET /api/consultation/[id] — 상담 단건 + 이력 */
 export async function GET(
   _req: NextRequest,
@@ -117,6 +137,13 @@ export async function PATCH(
         changed_by: user.id,
         note: note || null,
       });
+
+      // 취소 시 GAS 연동 — 구글 캘린더 삭제 + 아임웹 슬롯 열기 (non-blocking)
+      if (newStatus === 'cancelled' && data.unique_id) {
+        cancelViaGAS(data.unique_id).catch((err) =>
+          console.error('[GAS cancel] 비동기 실패:', err)
+        );
+      }
 
       // 자동 알림톡 발송 (non-blocking)
       const template = AUTO_NOTIFY_MAP[newStatus];
