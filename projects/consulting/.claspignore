@@ -1,0 +1,6 @@
+# 웹사이트용 파일 — GAS에 올리지 않음
+page_*.html
+iframe_*.html
+products.js
+.clasp.json
+.claspignore

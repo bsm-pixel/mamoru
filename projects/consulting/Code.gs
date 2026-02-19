@@ -501,7 +501,7 @@ function safeClose(){
 
 // 딜러용 일정 확정 페이지
   if (action === 'dealerConfirm' || p.action === 'dealerConfirm') {
-    const t = HtmlService.createTemplateFromFile('DealerConfirm');
+    const t = HtmlService.createTemplateFromFile('_gas/DealerConfirm');
     t.uid = p.uid || '';
     t.dealerId = p.did || '';
     return t.evaluate()
@@ -511,7 +511,7 @@ function safeClose(){
   if (action === 's' && token) {
     const data = getSuggestionDataByToken_(token);
     if (!data) return createResultPage('오류', '유효하지 않거나 만료된 링크입니다.');
-    const t = HtmlService.createTemplateFromFile('Suggest');
+    const t = HtmlService.createTemplateFromFile('_gas/Suggest');
     t.data = data;
     return t.evaluate().setTitle('마모루 상담 시간 선택');
   }
@@ -528,7 +528,7 @@ function safeClose(){
       if (action === 'r' && token) {
     // 재요청 UI는 먼저 빠르게 보여주고,
     // 실제 HOLD 해제/상태 변경은 Reschedule.html에서 비동기로 호출
-    const t = HtmlService.createTemplateFromFile('Reschedule');
+    const t = HtmlService.createTemplateFromFile('_gas/Reschedule');
     t.token   = token;
     t.baseUrl = ScriptApp.getService().getUrl();
     return t
@@ -670,24 +670,9 @@ function safeClose(){
     return json({ ok: valid });
   }
   
-  // 관리자 페이지 접근 (세션 검증 필요)
+  // 관리자 페이지 — TMS로 이전 완료, GAS 관리 페이지 미사용
  if (p.action === 'admin') {
-    const sessionToken = p.token || '';
-    
-    if (!sessionToken || !adminVerifySession(sessionToken)) {
-      const t = HtmlService.createTemplateFromFile('Admin');
-      t.needLogin = true;
-      return t.evaluate()
-        .setTitle('관리자 로그인')
-        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-    }
-    
-    const t = HtmlService.createTemplateFromFile('Admin');
-    t.needLogin = false;
-    t.sessionToken = sessionToken;
-    return t.evaluate()
-      .setTitle('관리자 — 예약 목록')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    return createResultPage('안내', '관리자 페이지는 TMS로 이전되었습니다.');
   }
   if (p.action === 'adminList') {
     if (!adminVerifySession(p.token)) {
@@ -695,14 +680,8 @@ function safeClose(){
     }
     return json(adminList());
   }
-      // (기본) 고객용 상담 접수 페이지
-  var template = HtmlService.createTemplateFromFile('index');
-  template.diagnosisParam = (e.parameter && e.parameter.diagnosis) ? e.parameter.diagnosis : '';
-
-  return template.evaluate()
-    .setTitle('미용가위 컨설팅 상담접수 | MAMORU')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+      // (기본) 고객용 상담 접수 페이지 — GitHub Pages로 이전 완료
+  return createResultPage('안내', '상담 접수 페이지가 이전되었습니다. mamoru.kr을 방문해주세요.');
 
 
 }
@@ -1218,52 +1197,6 @@ function adminConfirm(uid){
   const curTok=rows[row-1][col['ConfirmationToken']]||Utilities.getUuid();
   if(!rows[row-1][col['ConfirmationToken']]) sh.getRange(row,col['ConfirmationToken']+1).setValue(curTok);
   return confirmByToken_(curTok);
-}
-
-// ===== pushToSupabase_ — GAS → TMS Supabase 동기화 =====
-function pushToSupabase_(uid){
-  const TMS_URL = PropertiesService.getScriptProperties().getProperty('TMS_URL');
-  const TMS_KEY = PropertiesService.getScriptProperties().getProperty('TMS_SYNC_KEY') || 'mamoru-tms-cron-2026';
-  if (!TMS_URL) { Logger.log('[supabase-sync] TMS_URL 미설정 — skip'); return; }
-
-  const sh = sh_(), col = headerMap_(), rows = sh.getDataRange().getValues();
-  let r = null;
-  for (let i = 1; i < rows.length; i++){
-    if (String(rows[i][col['UniqueID']]) === String(uid)) { r = rows[i]; break; }
-  }
-  if (!r) { Logger.log('[supabase-sync] uid not found: ' + uid); return; }
-
-  var fmtDate = function(v){ return v instanceof Date ? Utilities.formatDate(v, TIMEZONE, 'yyyy-MM-dd') : String(v||''); };
-  var fmtTime = function(v){ return v instanceof Date ? Utilities.formatDate(v, TIMEZONE, 'HH:mm') : String(v||''); };
-
-  var payload = {
-    uniqueId:      String(r[col['UniqueID']]||''),
-    name:          String(r[col['성함']]||''),
-    phone:         String(r[col['연락처']]||''),
-    consultType:   String(r[col['상담방식']]||''),
-    visitDate:     fmtDate(r[col['방문일']]),
-    visitTime:     fmtTime(r[col['방문시간']]),
-    status:        String(r[col['Status']]||''),
-    addressRoad:   col['addressRoad']   != null ? String(r[col['addressRoad']]||'')   : '',
-    addressDetail: col['addressDetail'] != null ? String(r[col['addressDetail']]||'') : '',
-    addressSido:   col['addressSido']   != null ? String(r[col['addressSido']]||'')   : '',
-    addressSigungu:col['addressSigungu']!= null ? String(r[col['addressSigungu']]||''): '',
-    memo:          col['memo'] != null ? String(r[col['memo']]||'') : '',
-    source:        'gas'
-  };
-
-  try {
-    var resp = UrlFetchApp.fetch(TMS_URL + '/api/consultation/sync', {
-      method: 'post',
-      contentType: 'application/json',
-      headers: { 'x-sync-key': TMS_KEY },
-      payload: JSON.stringify(payload),
-      muteHttpExceptions: true
-    });
-    Logger.log('[supabase-sync] ' + uid + ' → HTTP ' + resp.getResponseCode());
-  } catch(e){
-    Logger.log('[supabase-sync] fetch 실패: ' + e);
-  }
 }
 
 // ===== PATCH 1: adminCancel (매장/출장/홀드 모두 삭제) =====
