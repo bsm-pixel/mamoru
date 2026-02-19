@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>마모루 상담 시간 선택</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', system-ui, -apple-system, 'Noto Sans KR', sans-serif;
+    background: #F2F2EA;
+    color: #181725;
+    min-height: 100vh;
+    padding: 0;
+  }
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 32px 20px 40px;
+  }
+
+  /* 헤더 */
+  .logo {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .logo span {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #181725;
+  }
+
+  /* 카드 */
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .greeting {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .greeting .name {
+    color: #D4613E;
+  }
+  .sub {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  /* 시간 버튼 */
+  .time-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .time-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 16px 20px;
+    background: #F7F7F3;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #181725;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+  }
+  .time-btn:active,
+  .time-btn:hover {
+    border-color: #D4613E;
+    background: #FDF5F2;
+  }
+  .time-btn .arrow {
+    color: #bbb;
+    font-size: 18px;
+    transition: color 0.2s;
+  }
+  .time-btn:hover .arrow { color: #D4613E; }
+
+  /* 구분선 */
+  .divider {
+    height: 1px;
+    background: #eee;
+    margin: 20px 0;
+  }
+
+  /* 다른 시간 요청 */
+  .resched-link {
+    display: block;
+    text-align: center;
+    font-size: 13px;
+    color: #999;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 8px;
+  }
+  .resched-link:hover { color: #666; }
+
+  /* 모달 오버레이 */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .overlay.active { display: flex; }
+
+  .modal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 24px;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+  .modal h3 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .modal .selected-time {
+    font-size: 20px;
+    font-weight: 700;
+    color: #D4613E;
+    margin-bottom: 8px;
+  }
+  .modal p {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .modal-actions button {
+    flex: 1;
+    padding: 14px 0;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+  }
+  .modal-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-cancel {
+    background: #F0F0F0;
+    color: #666;
+  }
+  .btn-confirm {
+    background: #181725;
+    color: #fff;
+  }
+  .btn-confirm:active { opacity: 0.85; }
+
+  /* 로딩 스피너 */
+  .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="logo"><span>MAMORU</span></div>
+
+  <div class="card">
+    <div class="greeting">
+      <span class="name"><?= data.name ?></span>님,<br>
+      아래 시간 중 편하신 시간을 선택해주세요.
+    </div>
+    <p class="sub">선택하신 시간으로 출장 일정이 확정됩니다.</p>
+
+    <div class="time-list" id="timeList">
+      <? for (var i = 0; i < data.buttons.length; i++) { ?>
+        <button class="time-btn" onclick="openConfirm('<?= data.buttons[i].label ?>', '<?= data.buttons[i].url ?>')">
+          <span><?= data.buttons[i].label ?></span>
+          <span class="arrow">›</span>
+        </button>
+      <? } ?>
+    </div>
+
+    <div class="divider"></div>
+    <a class="resched-link" href="<?= data.rescheduleUrl ?>">원하는 시간이 없으신가요? 다른 시간 요청하기</a>
+  </div>
+</div>
+
+<!-- 확정 확인 모달 -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>일정을 확정하시겠습니까?</h3>
+    <div class="selected-time" id="modalTime"></div>
+    <p>확정 후에는 변경이 어려울 수 있습니다.<br>확인 후 안내톡을 보내드릴게요.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btnCancel" onclick="closeConfirm()">취소</button>
+      <button class="btn-confirm" id="btnConfirm" onclick="doConfirm()">확정하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var selectedUrl = '';
+
+function openConfirm(label, url) {
+  selectedUrl = url;
+  document.getElementById('modalTime').textContent = label;
+  document.getElementById('overlay').classList.add('active');
+}
+
+function closeConfirm() {
+  document.getElementById('overlay').classList.remove('active');
+  selectedUrl = '';
+}
+
+function doConfirm() {
+  if (!selectedUrl) return;
+  var btn = document.getElementById('btnConfirm');
+  var cancel = document.getElementById('btnCancel');
+  btn.disabled = true;
+  cancel.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>확정 중...';
+  window.location.href = selectedUrl;
+}
+
+// 오버레이 배경 클릭으로 닫기
+document.getElementById('overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeConfirm();
+});
+</script>
+
+</body>
+</html>
