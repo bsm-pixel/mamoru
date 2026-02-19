@@ -622,6 +622,22 @@ function safeClose(){
     }
   }
 
+  // ─── TMS 시간제안 연동 — 캘린더 HOLD + 시트 상태 + 슬롯 차단 + 알림톡 ───
+  if (p.action === 'suggestTimes') {
+    var suggestKey = p.key;
+    if (!suggestKey || suggestKey !== (PropertiesService.getScriptProperties().getProperty('TMS_SYNC_KEY') || 'mamoru-tms-cron-2026')) {
+      return json({ ok: false, error: 'unauthorized' });
+    }
+    try {
+      var suggestions = JSON.parse(p.suggestions || '[]');
+      var suggestResult = adminSuggestTimes(p.uid, suggestions);
+      return json(suggestResult);
+    } catch (suggestErr) {
+      Logger.log('suggestTimes error: ' + suggestErr);
+      return json({ ok: false, error: String(suggestErr) });
+    }
+  }
+
   // ─── GitHub Pages용 API 분기 (CORS 지원) ───
   if (p.action === 'getSettings') {
     return json({ ok: true, data: getSettings() });
@@ -1856,6 +1872,9 @@ function adminSuggestTimes(uid, suggestions){
 
 
   const payload = {
+    topic: 'alrimtalk',          // ★ Make 라우팅 키 추가
+    template: 'suggest',         // ★ 솔라피 템플릿명 추가
+    id: uid,                     // ★ 다른 페이로드와 키 통일
     uid,
     token: shortTok,
     name: nameRaw,

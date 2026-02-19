@@ -16,13 +16,14 @@ import {
 import { Search, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
-type TabKey = 'pending' | 'in_progress' | 'completed' | 'on_hold';
+type TabKey = 'pending' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'pending', label: '대기' },
   { key: 'in_progress', label: '진행중' },
   { key: 'completed', label: '완료' },
   { key: 'on_hold', label: '보류' },
+  { key: 'cancelled', label: '취소' },
 ];
 
 function getTabStatus(tab: TabKey): string {
@@ -42,7 +43,7 @@ export function TalkConsultList() {
     search,
     page,
     limit: 20,
-    orderBy: tab === 'completed' ? 'updated_at_desc' : undefined,
+    orderBy: (tab === 'completed' || tab === 'cancelled') ? 'updated_at_desc' : undefined,
   });
   const consultations = data?.consultations || [];
   const total = data?.total || 0;
