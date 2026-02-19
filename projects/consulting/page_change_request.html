@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>일정 변경/취소 요청</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, 'Noto Sans KR', sans-serif;
+      margin: 0; padding: 16px; background: #f3f4f6; color: #111827;
+    }
+    .container { max-width: 480px; margin: 0 auto; }
+    .card {
+      background: #fff; border-radius: 12px; padding: 24px;
+      margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    h1 { font-size: 20px; margin: 0 0 8px; text-align: center; }
+    .subtitle { font-size: 14px; color: #6b7280; text-align: center; margin-bottom: 24px; }
+    .info-section { background: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+    .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #6b7280; }
+    .info-value { font-weight: 500; text-align: right; max-width: 60%; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: #374151; }
+    input, select, textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid #d1d5db;
+      border-radius: 8px; font-size: 15px; color: #111827;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* 라디오 그룹 */
+    .radio-group { display: flex; gap: 12px; margin-bottom: 16px; }
+    .radio-option {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 12px; border: 2px solid #e5e7eb; border-radius: 10px;
+      cursor: pointer; transition: all 0.2s; font-size: 15px; font-weight: 500;
+    }
+    .radio-option:hover { border-color: #9ca3af; }
+    .radio-option.selected { border-color: #111827; background: #f9fafb; }
+    .radio-option input { display: none; }
+
+    .hint { font-size: 13px; color: #6b7280; margin-top: 4px; }
+
+    .btn {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-primary { background: #111827; color: #fff; }
+    .btn-primary:hover { background: #1f2937; }
+    .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; }
+    .btn-close { background: #e5e7eb; color: #374151; margin-top: 12px; }
+    .btn-close:hover { background: #d1d5db; }
+
+    .error-card { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; text-align: center; padding: 40px 20px; }
+    .success-card { background: #f0fdf4; border: 1px solid #a7f3d0; color: #065f46; text-align: center; padding: 40px 20px; }
+    .success-card h2 { margin: 0 0 12px; font-size: 18px; }
+    .success-card p  { margin: 0; font-size: 14px; line-height: 1.6; }
+
+    .loading { text-align: center; padding: 60px 20px; color: #6b7280; }
+    .loading::after {
+      content: ''; display: inline-block; width: 20px; height: 20px;
+      border: 2px solid #d1d5db; border-top-color: #3b82f6;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin-left: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 로딩 -->
+    <div id="loading" class="card loading">예약 정보를 불러오는 중</div>
+
+    <!-- 에러 -->
+    <div id="error" class="card error-card hidden">
+      <h2>오류</h2>
+      <p id="error-message">예약 정보를 찾을 수 없습니다.</p>
+    </div>
+
+    <!-- 성공 -->
+    <div id="success" class="card success-card hidden">
+      <h2>요청이 접수되었습니다</h2>
+      <p>확인 후 안내드리겠습니다.<br>조율이 필요한 경우 별도로 연락드릴 수 있습니다.</p>
+      <button class="btn btn-close" onclick="safeClose()">닫기</button>
+    </div>
+
+    <!-- 메인 폼 -->
+    <div id="main" class="hidden">
+      <div class="card">
+        <h1>일정 변경/취소 요청</h1>
+        <p class="subtitle">확정된 예약에 대한 변경 또는 취소를 요청합니다</p>
+
+        <!-- 현재 예약 정보 -->
+        <div class="info-section">
+          <div class="info-row"><span class="info-label">고객명</span><span class="info-value" id="info-name">-</span></div>
+          <div class="info-row"><span class="info-label">상담유형</span><span class="info-value" id="info-type">-</span></div>
+          <div class="info-row"><span class="info-label">예약일</span><span class="info-value" id="info-date">-</span></div>
+          <div class="info-row"><span class="info-label">예약시간</span><span class="info-value" id="info-time">-</span></div>
+        </div>
+
+        <!-- 요청 유형 선택 -->
+        <div class="form-group">
+          <label>요청 유형</label>
+          <div class="radio-group">
+            <label class="radio-option" id="opt-change">
+              <input type="radio" name="reqType" value="change">
+              일정 변경
+            </label>
+            <label class="radio-option" id="opt-cancel">
+              <input type="radio" name="reqType" value="cancel">
+              예약 취소
+            </label>
+          </div>
+        </div>
+
+        <!-- 일정 변경: 희망 일시 -->
+        <div id="section-change" class="hidden">
+          <div class="form-group">
+            <label>희망 일시</label>
+            <input type="text" id="hopeDate" placeholder="예: 2/25 오후 2시쯤, 다음주 평일 오전">
+            <p class="hint">정확한 일정은 마모루에서 확인 후 안내드립니다.</p>
+          </div>
+        </div>
+
+        <!-- 예약 취소: 사유 선택 -->
+        <div id="section-cancel" class="hidden">
+          <div class="form-group">
+            <label>취소 사유</label>
+            <select id="cancelReason">
+              <option value="">선택해주세요</option>
+              <option value="개인 사정">개인 사정</option>
+              <option value="다른 업체 선택">다른 업체 선택</option>
+              <option value="비용 부담">비용 부담</option>
+              <option value="일정 미정">일정 미정</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 메모 (공통) -->
+        <div id="section-memo" class="hidden">
+          <div class="form-group">
+            <label>메모 <span style="font-weight:400;color:#9ca3af">(선택)</span></label>
+            <textarea id="memo" placeholder="추가로 전달할 내용이 있으면 입력해주세요"></textarea>
+          </div>
+        </div>
+
+        <button id="btnSubmit" class="btn btn-primary" disabled>요청하기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var GAS_API = 'https://script.google.com/macros/s/AKfycbwqJr1JVeSspv6kZ-wpKPapKOjk1wvEvQQ9rTN3ZtmtgMpkn8-HLVP7Plw94m-N1EE5/exec';
+
+    var params = new URLSearchParams(location.search);
+    var uid = params.get('uid') || '';
+    var selectedType = '';
+
+    // ── 예약 정보 로드 ──
+    function loadReservation() {
+      if (!uid) { showError('잘못된 접근입니다. URL을 확인해주세요.'); return; }
+
+      fetch(GAS_API + '?action=getReservationInfo&uid=' + encodeURIComponent(uid))
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          if (!res.ok || !res.data) { showError(res.error || '예약 정보를 찾을 수 없습니다.'); return; }
+          var d = res.data;
+          document.getElementById('info-name').textContent = d.name || '-';
+          document.getElementById('info-type').textContent = d.type || '-';
+          document.getElementById('info-date').textContent = d.date || '-';
+          document.getElementById('info-time').textContent = d.time || '-';
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('main').classList.remove('hidden');
+        })
+        .catch(function() { showError('데이터 로드에 실패했습니다. 잠시 후 다시 시도해주세요.'); });
+    }
+
+    // ── 라디오 선택 ──
+    document.querySelectorAll('.radio-option').forEach(function(el) {
+      el.addEventListener('click', function() {
+        document.querySelectorAll('.radio-option').forEach(function(o) { o.classList.remove('selected'); });
+        el.classList.add('selected');
+        el.querySelector('input').checked = true;
+        selectedType = el.querySelector('input').value;
+
+        document.getElementById('section-change').classList.toggle('hidden', selectedType !== 'change');
+        document.getElementById('section-cancel').classList.toggle('hidden', selectedType !== 'cancel');
+        document.getElementById('section-memo').classList.remove('hidden');
+        document.getElementById('btnSubmit').disabled = false;
+      });
+    });
+
+    // ── 요청 제출 ──
+    document.getElementById('btnSubmit').addEventListener('click', function() {
+      if (!selectedType) { alert('요청 유형을 선택해주세요.'); return; }
+
+      var reason = '';
+      var hopeDate = '';
+      var memo = document.getElementById('memo').value.trim();
+
+      if (selectedType === 'change') {
+        hopeDate = document.getElementById('hopeDate').value.trim();
+        if (!hopeDate) { alert('희망 일시를 입력해주세요.'); return; }
+      } else {
+        reason = document.getElementById('cancelReason').value;
+        if (!reason) { alert('취소 사유를 선택해주세요.'); return; }
+      }
+
+      var btn = this;
+      btn.disabled = true;
+      btn.textContent = '요청 중...';
+
+      var qs = '?action=submitChangeRequest'
+        + '&uid=' + encodeURIComponent(uid)
+        + '&reqType=' + encodeURIComponent(selectedType)
+        + '&reason=' + encodeURIComponent(reason)
+        + '&memo=' + encodeURIComponent(memo)
+        + '&hopeDate=' + encodeURIComponent(hopeDate);
+
+      fetch(GAS_API + qs)
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          if (res.ok) {
+            showSuccess();
+          } else {
+            alert('오류: ' + (res.error || '알 수 없는 오류'));
+            btn.disabled = false;
+            btn.textContent = '요청하기';
+          }
+        })
+        .catch(function(e) {
+          alert('오류: ' + (e.message || e));
+          btn.disabled = false;
+          btn.textContent = '요청하기';
+        });
+    });
+
+    // ── UI 헬퍼 ──
+    function showError(msg) {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('main').classList.add('hidden');
+      document.getElementById('error').classList.remove('hidden');
+      document.getElementById('error-message').textContent = msg;
+    }
+    function showSuccess() {
+      document.getElementById('main').classList.add('hidden');
+      document.getElementById('success').classList.remove('hidden');
+    }
+
+    // ── 카카오 인앱 닫기 ──
+    function safeClose() {
+      try { location.href = 'kakaoweb://closeBrowser'; return; } catch(e) {}
+      try { window.close(); } catch(e) {}
+      setTimeout(function() {
+        if (history.length > 1) { history.go(-2); return; }
+        location.href = 'https://mamoru.kr';
+      }, 150);
+    }
+
+    // ── 초기화 ──
+    loadReservation();
+  </script>
+</body>
+</html>

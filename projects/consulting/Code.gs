@@ -669,6 +669,28 @@ function safeClose(){
     }
   }
 
+  // ─── 고객 일정 변경/취소 요청 API (page_change_request.html) ───
+  if (p.action === 'getReservationInfo' && p.uid) {
+    try {
+      var resInfo = getReservationByUid_(String(p.uid));
+      if (!resInfo) return json({ ok: false, error: '예약 정보를 찾을 수 없습니다.' });
+      if (!['CONFIRMED', 'ASSIGNED'].includes(String(resInfo.status).toUpperCase())) {
+        return json({ ok: false, error: '변경/취소 요청이 불가능한 상태입니다.' });
+      }
+      return json({ ok: true, data: { name: resInfo.name, type: resInfo.type, date: resInfo.date, time: resInfo.time, status: resInfo.status } });
+    } catch (e) {
+      return json({ ok: false, error: String(e) });
+    }
+  }
+  if (p.action === 'submitChangeRequest' && p.uid) {
+    try {
+      var changeResult = submitChangeRequest_(String(p.uid), String(p.reqType || ''), String(p.reason || ''), String(p.memo || ''), String(p.hopeDate || ''));
+      return json(changeResult);
+    } catch (e) {
+      return json({ ok: false, error: String(e) });
+    }
+  }
+
   // ─── GitHub Pages용 API 분기 (CORS 지원) ───
   if (p.action === 'getSettings') {
     return json({ ok: true, data: getSettings() });
@@ -945,7 +967,8 @@ function submitConsultation(form){
     time:     visitTime,
     address,
     days:     daysArr,
-    memo
+    memo,
+    change_request_link: GITHUB_PAGES_CONSULT + '/page_change_request.html?uid=' + uid  // 일정 변경/취소 요청 링크
   };
   try {
     postMake_('CONFIRMED', payload);
@@ -1126,7 +1149,8 @@ function confirmByToken_(token){
       time:     tmStr,
       address:  addrText || '',
       channel:  'kakao',
-      sms_fallback: false
+      sms_fallback: false,
+      change_request_link: GITHUB_PAGES_CONSULT + '/page_change_request.html?uid=' + uid  // 일정 변경/취소 요청 링크
     };
     postMake_('CONFIRMED', payload);
   } catch (e) {
@@ -1436,7 +1460,8 @@ function adminReschedule(uid, newDate, newTime){
     new_time: newTime,
     address:  addrText, // ★ 방문 주소
     channel:  'kakao',
-    sms_fallback: false
+    sms_fallback: false,
+    change_request_link: GITHUB_PAGES_CONSULT + '/page_change_request.html?uid=' + r[col['UniqueID']]  // 일정 변경/취소 요청 링크
   };
   postMake_('RESCHEDULED', payload);  // _meta.func = 'RESCHEDULED'
 
@@ -2504,7 +2529,8 @@ function confirmFieldRequest_(uid, datetime) {
   address:  addrText || '',
   // (선택) 다른 템플릿들과 통일
   channel:      'kakao',
-  sms_fallback: false
+  sms_fallback: false,
+  change_request_link: GITHUB_PAGES_CONSULT + '/page_change_request.html?uid=' + uid  // 일정 변경/취소 요청 링크
 });
 
 
@@ -2520,6 +2546,124 @@ function confirmFieldRequest_(uid, datetime) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// ─── 고객 일정 변경/취소 요청 헬퍼 ───
+
+/** uid로 예약 행 검색 → 핵심 정보 반환 */
+function getReservationByUid_(uid) {
+  const sh = sh_(), col = headerMap_(), rows = sh.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][col['UniqueID']]) !== String(uid)) continue;
+    const r = rows[i];
+    const rawDate = r[col['방문일']];
+    const rawTime = r[col['방문시간']];
+    const dateStr = rawDate instanceof Date ? Utilities.formatDate(rawDate, TIMEZONE, 'yyyy-MM-dd') : String(rawDate || '');
+    const timeStr = rawTime instanceof Date ? Utilities.formatDate(rawTime, TIMEZONE, 'HH:mm') : String(rawTime || '');
+    let addrText = '';
+    if (col['addressRoad'] != null && r[col['addressRoad']]) addrText += String(r[col['addressRoad']]).trim();
+    if (col['addressDetail'] != null && r[col['addressDetail']]) addrText += (addrText ? ' ' : '') + String(r[col['addressDetail']]).trim();
+    if (!addrText && col['주소'] != null) addrText = String(r[col['주소']] || '').trim();
+    return {
+      row: i + 1,
+      name: String(r[col['성함']] || ''),
+      phone: String(r[col['연락처']] || ''),
+      type: String(r[col['상담방식']] || ''),
+      date: dateStr,
+      time: timeStr,
+      status: String(r[col['Status']] || ''),
+      address: addrText
+    };
+  }
+  return null;
+}
+
+/** 고객 변경/취소 요청 처리 */
+function submitChangeRequest_(uid, reqType, reason, memo, hopeDate) {
+  if (!uid) return { ok: false, error: 'uid 누락' };
+  if (!['change', 'cancel'].includes(reqType)) return { ok: false, error: '잘못된 요청 유형' };
+
+  const info = getReservationByUid_(uid);
+  if (!info) return { ok: false, error: '예약 정보를 찾을 수 없습니다.' };
+  if (!['CONFIRMED', 'ASSIGNED'].includes(info.status.toUpperCase())) {
+    return { ok: false, error: '변경/취소 요청이 불가능한 상태입니다. (현재: ' + info.status + ')' };
+  }
+
+  const sh = sh_(), col = headerMap_();
+  const now = Utilities.formatDate(new Date(), TIMEZONE, 'MM-dd HH:mm');
+
+  // 비고 컬럼에 요청 내용 append
+  var noteCol = col['비고'];
+  var prevNote = String(sh.getRange(info.row, noteCol + 1).getValue() || '');
+  var newNote = '';
+  if (reqType === 'change') {
+    newNote = '[고객 변경요청 ' + now + '] 희망: ' + (hopeDate || '미입력') + (memo ? ' | 메모: ' + memo : '');
+  } else {
+    newNote = '[고객 취소요청 ' + now + '] 사유: ' + (reason || '미선택') + (memo ? ' | 메모: ' + memo : '');
+  }
+  sh.getRange(info.row, noteCol + 1).setValue(prevNote ? prevNote + '\n' + newNote : newNote);
+
+  // 상태 → CHANGE_REQUESTED
+  sh.getRange(info.row, col['Status'] + 1).setValue('CHANGE_REQUESTED');
+
+  // TMS Supabase 동기화
+  try { pushToSupabase_(uid); } catch(e) { Logger.log('[supabase-sync] changeRequest push 실패: ' + e); }
+
+  // 관리자 이메일 알림
+  try {
+    var typeLabel = reqType === 'change' ? '일정 변경' : '예약 취소';
+    var emailSubject = '[MAMORU] 고객 ' + typeLabel + ' 요청 - ' + info.name;
+    var emailBody =
+      '고객이 ' + typeLabel + '을 요청했습니다.\n\n' +
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+      '■ 현재 예약 정보\n' +
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+      '• 고객명: ' + info.name + '\n' +
+      '• 연락처: ' + info.phone + '\n' +
+      '• 상담방식: ' + info.type + '\n' +
+      '• 예약일: ' + info.date + '\n' +
+      '• 예약시간: ' + info.time + '\n' +
+      (info.address ? '• 주소: ' + info.address + '\n' : '') +
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+      '■ 요청 내용\n' +
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+      '• 유형: ' + typeLabel + '\n' +
+      (reqType === 'change' ? '• 희망 일시: ' + (hopeDate || '미입력') + '\n' : '• 취소 사유: ' + (reason || '미선택') + '\n') +
+      (memo ? '• 메모: ' + memo + '\n' : '') +
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+      '요청시각: ' + Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
+    GmailApp.sendEmail('bsm@mamoru.kr', emailSubject, emailBody);
+  } catch(emailErr) {
+    Logger.log('[EMAIL ERROR] 변경/취소 요청 이메일 발송 실패: ' + emailErr);
+  }
+
+  // 접수 확인 알림톡 (Make → 솔라피)
+  try {
+    var requestTypeLabel = reqType === 'change' ? '일정 변경' : '예약 취소';
+    var requestSummary = reqType === 'change'
+      ? '희망: ' + (hopeDate || '미입력')
+      : '사유: ' + (reason || '미선택');
+    if (memo) requestSummary += '\n메모: ' + memo;
+
+    postMake_('CHANGE_REQUEST_RECEIVED', {
+      topic: 'alrimtalk',
+      template: 'change_request_received',
+      id: uid,
+      name: info.name,
+      phone: info.phone,
+      type: info.type,
+      date: info.date,
+      time: info.time,
+      request_type_label: requestTypeLabel,
+      request_summary: requestSummary,
+      channel: 'kakao',
+      sms_fallback: false
+    });
+  } catch(makeErr) {
+    Logger.log('Make post error(CHANGE_REQUEST_RECEIVED): ' + makeErr);
+  }
+
+  return { ok: true };
 }
 
 function updateStatus_(uid, status) {

@@ -34,7 +34,7 @@ const TABS: { key: TabKey; label: string; icon?: React.ReactNode }[] = [
 function getTabFilters(tab: TabKey) {
   switch (tab) {
     case 'waiting':
-      return { statuses: ['pending_admin', 'reschedule_requested'], orderBy: 'received_at_desc' };
+      return { statuses: ['pending_admin', 'reschedule_requested', 'change_requested'], orderBy: 'received_at_desc' };
     case 'suggested':
       return { status: 'suggested' };
     case 'upcoming':

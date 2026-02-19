@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-02-19
+> 최종 수정: 2026-02-19 (고객 변경/취소 요청 시스템 추가)
 
 ---
 
@@ -61,6 +61,37 @@
 - GAS 웹앱 외부 POST body 수신 불가 → GET 쿼리 파라미터 전환
 - Vercel 환경변수 `\n` 문제 → 재설정
 - fire-and-forget → after() 백그라운드 처리 (Vercel 실행 컨텍스트 보장)
+
+---
+
+## Phase 1.6: 고객 일정 변경/취소 요청 ✅ 완료
+
+**목적:** 확정된 예약(매장방문/출장)에 대해 고객이 직접 일정 변경 또는 취소를 요청 — 알림톡 → 셀프서비스 폼 → TMS 연동
+
+| # | 작업 | 상태 | 구현 내용 |
+|---|------|------|-----------|
+| 1.6-1 | page_change_request.html | ✅ | GitHub Pages 고객 대면 페이지 (예약조회+변경/취소 폼) |
+| 1.6-2 | GAS API: getReservationInfo | ✅ | uid로 예약 정보 조회 (CONFIRMED/ASSIGNED만) |
+| 1.6-3 | GAS API: submitChangeRequest | ✅ | 비고 append + CHANGE_REQUESTED + Supabase + 이메일 + 알림톡 |
+| 1.6-4 | 확정 알림톡 change_request_link 배치 | ✅ | CONFIRMED/CONFIRMED_BY_TOKEN/RESCHEDULED/FIELD_CONFIRMED에 추가, REMINDER에서 제거 |
+| 1.6-5 | TMS 상태 추가 | ✅ | change_requested 라벨/색상 + 탭 필터 반영 |
+
+### 운영 플로우
+```
+확정 알림톡 (confirmed/rescheduled/field_confirmed)
+  → "일정확인/변경" WL 버튼 (https://#{change_request_link})
+  → page_change_request.html?uid=UID
+  → GAS API (비고 기록 + CHANGE_REQUESTED + Supabase + 이메일 + 접수 알림톡)
+  → TMS "변경/취소 요청" 탭에서 관리자 처리
+```
+
+### 수동 작업 필요 (솔라피/Make) — Phase 1.6-6
+- [ ] 솔라피: confirmed 템플릿에 "일정확인/변경" WL 버튼 추가 → 재검수
+- [ ] 솔라피: rescheduled 템플릿에 "일정확인/변경" WL 버튼 추가 → 재검수
+- [ ] 솔라피: field_confirmed 템플릿에 "일정확인/변경" WL 버튼 추가 → 재검수
+- [ ] 솔라피: change_request_received 신규 템플릿 등록 + 검수
+- [ ] Make: 확정 3개 시나리오에 change_request_link 변수 매핑
+- [ ] Make: CHANGE_REQUEST_RECEIVED 이벤트 분기 + 솔라피 모듈 연결
 
 ---
 
