@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no,address=no,email=no">
+  <title>마모루 상담 시간 선택</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root { --ink: #1c1c1e; --muted: #6b7280; --line: #e5e7eb; --primary: #111; }
+
+    html, body { margin: 0; padding: 0; height: 100%; -webkit-text-size-adjust: 100%; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; background: #F3F4F6; color: var(--ink); display: flex; justify-content: center; align-items: center; }
+
+    .container {
+      width: 100%; max-width: 480px; margin: 0 auto;
+      padding: 32px 24px;
+      background: #fff;
+      min-height: 100vh;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    @media (min-width: 480px) {
+      .container { min-height: auto; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin: 20px; }
+    }
+
+    h1 { margin: 0 0 16px; font-size: 24px; font-weight: 700; line-height: 1.3; text-align: left; }
+    p  { color: var(--muted); font-size: 16px; line-height: 1.6; margin: 0 0 32px; text-align: left; }
+
+    .btn-group { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+
+    .btn {
+      display: flex; align-items: center; justify-content: center; width: 100%;
+      padding: 18px; border-radius: 14px;
+      font-size: 17px; font-weight: 600;
+      border: 1px solid transparent; cursor: pointer;
+      transition: all 0.2s; text-decoration: none;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+    .btn-outline { background: #fff; color: var(--muted); border-color: var(--line); margin-top: 8px; font-size: 15px; }
+
+    /* 모달 */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(2px); }
+    .modal-backdrop.show { display: flex; animation: fadeIn 0.2s; }
+    .modal-content { background: #fff; border-radius: 16px; padding: 24px; width: 90%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .modal-content h2 { margin: 0 0 8px; font-size: 19px; }
+    .modal-text { font-size: 15px; color: #666; margin: 0 0 20px; }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-actions .btn { padding: 14px; font-size: 16px; flex: 1; }
+    .btn-cancel { background: #f3f4f6; color: #333; }
+
+    /* 로딩/에러 */
+    .loading { text-align: center; padding: 60px 0; color: var(--muted); font-size: 15px; }
+    .loading::after { content: ''; display: inline-block; width: 18px; height: 18px; border: 2px solid #d1d5db; border-top-color: #111; border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 8px; vertical-align: middle; }
+    .error-text { text-align: center; color: #991b1b; padding: 40px 0; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes spin  { to { transform: rotate(360deg); } }
+  </style>
+</head>
+
+<body>
+  <div class="container" id="root">
+    <div class="loading" id="loader">불러오는 중</div>
+  </div>
+
+  <!-- 확인 모달 -->
+  <div id="confirm-modal" class="modal-backdrop">
+    <div class="modal-content">
+      <h2>예약을 확정하시겠습니까?</h2>
+      <p class="modal-text" id="confirm-text"></p>
+      <div class="modal-actions">
+        <button type="button" id="btn-modal-cancel" class="btn btn-cancel">취소</button>
+        <button type="button" id="btn-modal-confirm" class="btn btn-primary">확정하기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // GAS 웹앱 URL (배포된 URL)
+    var GAS_API = 'https://script.google.com/macros/s/AKfycbwwKiIbLlBVNUPdnIjBMfNiItRfMfRIVsa7pNm8o2HPYB-lyC__VwpK4rQFfRUC2Q3H/exec';
+
+    var params = new URLSearchParams(location.search);
+    var token  = params.get('t') || '';
+
+    // ── 데이터 로드 ──
+    fetch(GAS_API + '?action=getSuggestData&t=' + encodeURIComponent(token))
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if (!res.ok || !res.data) { showError(res.error || '유효하지 않거나 만료된 링크입니다.'); return; }
+        renderButtons(res.data);
+      })
+      .catch(function(){ showError('데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.'); });
+
+    // ── 버튼 렌더링 ──
+    var weekday = ['일','월','화','수','목','금','토'];
+    var selectedUrl = '';
+
+    function renderButtons(data) {
+      var root = document.getElementById('root');
+      root.innerHTML =
+        '<h1>안녕하세요,<br>' + escHtml(data.name) + '님!</h1>' +
+        '<p>상담을 위해 제안드린 시간입니다.<br>편하신 시간을 선택해주시면<br>즉시 예약이 확정됩니다.</p>' +
+        '<div id="btn-group" class="btn-group"></div>';
+
+      var group = document.getElementById('btn-group');
+
+      data.buttons.forEach(function(b){
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary';
+        btn.dataset.url = b.url;
+
+        // 요일 자동 계산
+        var label = b.label;
+        var m = label.match(/^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/);
+        if (m) {
+          var d = new Date(m[1]);
+          label = m[1] + ' (' + weekday[d.getDay()] + ') ' + m[2];
+        }
+        btn.textContent = label;
+        btn.dataset.label = label;
+        group.appendChild(btn);
+      });
+
+      // 재요청 링크
+      var resLink = document.createElement('a');
+      resLink.href = data.rescheduleUrl;
+      resLink.className = 'btn btn-outline';
+      resLink.textContent = '다른 시간이 편해요';
+      group.appendChild(resLink);
+
+      // 이벤트
+      group.addEventListener('click', function(e){
+        var t = e.target.closest('button.btn-primary');
+        if (!t) return;
+        selectedUrl = t.dataset.url;
+        document.getElementById('confirm-text').textContent = t.dataset.label;
+        document.getElementById('confirm-modal').classList.add('show');
+      });
+    }
+
+    // ── 모달 ──
+    document.getElementById('btn-modal-cancel').addEventListener('click', function(){
+      document.getElementById('confirm-modal').classList.remove('show');
+    });
+    document.getElementById('btn-modal-confirm').addEventListener('click', function(){
+      if (!selectedUrl) return;
+      document.getElementById('confirm-modal').classList.remove('show');
+      showSuccess();
+      fireAndForget(selectedUrl);
+    });
+
+    // ── 성공 화면 ──
+    function showSuccess() {
+      document.getElementById('root').innerHTML =
+        '<div style="text-align:center;padding:40px 0;">' +
+        '<h1 style="margin-bottom:10px;">예약 확정 완료!</h1>' +
+        '<p>일정이 확정되었습니다.<br>잠시 후 알림톡을 보내드립니다.</p>' +
+        '<button class="btn btn-primary" onclick="closeInapp()">닫기</button>' +
+        '</div>';
+    }
+
+    function showError(msg) {
+      document.getElementById('root').innerHTML =
+        '<div class="error-text"><h1>오류</h1><p>' + escHtml(msg) + '</p></div>';
+    }
+
+    // ── Fire & Forget ──
+    function fireAndForget(url) {
+      try { fetch(url, { mode: 'no-cors', keepalive: true }); } catch(_){}
+      try { new Image().src = url; } catch(_){}
+    }
+
+    // ── 카카오 인앱 닫기 ──
+    function closeInapp() {
+      var ua = navigator.userAgent || '';
+      var isKakao = /KAKAOTALK/i.test(ua);
+      var isIOS   = /iPhone|iPad|iPod/i.test(ua);
+
+      if (isKakao) {
+        location.href = isIOS ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
+        setTimeout(function(){ if (history.length > 1) history.back(); }, 600);
+        setTimeout(function(){ window.close(); }, 1200);
+        return;
+      }
+      if (history.length > 1) { history.back(); return; }
+      window.close();
+    }
+
+    function escHtml(s) {
+      var d = document.createElement('div');
+      d.textContent = s || '';
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

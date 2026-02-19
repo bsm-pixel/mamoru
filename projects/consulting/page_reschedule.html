@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>재요청 완료</title>
+  <style>
+    *{box-sizing:border-box}
+    :root{--ink:#1c1c1e;--muted:#6b7280}
+    html,body{margin:0;padding:0;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+    body{font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#f4f4f5}
+    .container{background:#fff;padding:32px 24px;margin:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.1);text-align:center;max-width:720px;margin-left:auto;margin-right:auto}
+    h1{margin:0 0 16px;font-size:48px;color:#1c1c1e}
+    p{color:var(--muted);font-size:24px;line-height:1.8;margin:0 0 28px}
+    .btn{display:inline-block;padding:18px 28px;border-radius:14px;font-size:18px;font-weight:700;background:#1c1c1e;color:#fff;border:none;cursor:pointer;min-height:64px}
+
+    .kakao .container{max-width:none;width:96vw;padding:28px 12px 40px;border-radius:16px;box-shadow:none;margin:0 auto;background:#fff}
+    .kakao h1{font-size:48px}
+    .kakao p{font-size:48px;line-height:1.85}
+    .kakao .btn{font-size:36px;min-height:120px;padding:26px 24px;border-radius:20px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>재요청 완료</h1>
+    <p>스케쥴 조율하여 빠른 시일내에 일정제안 드릴게요.</p>
+    <button class="btn" onclick="closeInapp()">확인</button>
+  </div>
+
+  <script>
+    // GAS 웹앱 URL
+    var GAS_API = 'https://script.google.com/macros/s/AKfycbwwKiIbLlBVNUPdnIjBMfNiItRfMfRIVsa7pNm8o2HPYB-lyC__VwpK4rQFfRUC2Q3H/exec';
+
+    // 카카오 인앱 감지 + 뷰포트 보정
+    (function () {
+      var isKakao = /KAKAOTALK/i.test(navigator.userAgent || '');
+      if (isKakao) {
+        document.documentElement.classList.add('kakao');
+        var m = document.querySelector('meta[name="viewport"]');
+        if (m) {
+          var dw = Math.min(screen.width, screen.height);
+          m.setAttribute('content',
+            'width=' + dw + ',initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover');
+        }
+      }
+    })();
+
+    // 페이지 로드 시 백그라운드로 재요청 처리
+    var params = new URLSearchParams(location.search);
+    var token  = params.get('t') || '';
+
+    function markRescheduleBackground() {
+      if (!token) return;
+      var url = GAS_API + '?action=markResched&t=' + encodeURIComponent(token);
+      try { fetch(url, { mode: 'no-cors', cache: 'no-store', keepalive: true }); } catch(_){}
+    }
+    document.addEventListener('DOMContentLoaded', markRescheduleBackground);
+
+    function closeInapp() {
+      var ua = navigator.userAgent || '';
+      var isKakao = /KAKAOTALK/i.test(ua);
+      var isIOS   = /iPhone|iPad|iPod/i.test(ua);
+
+      if (isKakao) {
+        location.href = isIOS ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
+        setTimeout(function(){ if (history.length > 1) history.back(); }, 600);
+        setTimeout(function(){ window.close(); }, 1200);
+        return;
+      }
+      if (history.length > 1) { history.back(); return; }
+      window.close();
+    }
+  </script>
+</body>
+</html>

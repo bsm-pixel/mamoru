@@ -7,6 +7,8 @@ const VERSION = 'v2.2.0-final';
 
 // GitHub Pages URL (index.html 이전용)
 const GITHUB_PAGES_BASE = 'https://bsm-pixel.github.io/mamoru/projects/01_consulting';
+// GitHub Pages — 고객 대면 페이지 (Suggest/Reschedule/DealerConfirm/Result)
+const GITHUB_PAGES_CONSULT = 'bsm-pixel.github.io/mamoru/projects/consulting';
 
 const MAKE_WEBHOOK_URL = 'https://hook.eu2.make.com/x70jrebxr82odam3eu4oosuar9mm2fg5';
 const CAL_NAME = '마모루 방문예약';
@@ -594,6 +596,9 @@ function safeClose(){
         Logger.log('[EMAIL ERROR] 재요청 이메일 발송 실패: ' + emailErr);
       }
       
+      // TMS Supabase 동기화 — reschedule_requested 상태 반영
+      try { pushToSupabase_(foundUid); } catch(e2) { Logger.log('[supabase-sync] markResched push 실패: ' + e2); }
+
       return json({ ok:true });
     } catch (e) {
       Logger.log('markResched fail: ' + e);
@@ -635,6 +640,32 @@ function safeClose(){
     } catch (suggestErr) {
       Logger.log('suggestTimes error: ' + suggestErr);
       return json({ ok: false, error: String(suggestErr) });
+    }
+  }
+
+  // ─── GitHub Pages 고객 대면 페이지용 API ───
+  // 시간 선택 데이터 (page_suggest.html → fetch)
+  if (p.action === 'getSuggestData' && p.t) {
+    const suggestData = getSuggestionDataByToken_(String(p.t));
+    if (!suggestData) return json({ ok: false, error: 'not_found' });
+    return json({ ok: true, data: suggestData });
+  }
+  // 딜러 배정 목록 (page_dealer_confirm.html → fetch)
+  if (p.action === 'getDealerData' && p.did) {
+    try {
+      const assignments = getDealerAssignments(String(p.did));
+      return json({ ok: true, data: assignments });
+    } catch (e) {
+      return json({ ok: false, error: String(e) });
+    }
+  }
+  // 딜러 일정 확정 (page_dealer_confirm.html → fetch)
+  if (p.action === 'dealerConfirmSchedule' && p.uid && p.did) {
+    try {
+      const result = dealerConfirmSchedule(p.uid, p.did, p.date || '', p.time || '', p.memo || '');
+      return json(result);
+    } catch (e) {
+      return json({ ok: false, error: String(e) });
     }
   }
 
@@ -1534,8 +1565,8 @@ function adminAssignDealer(uid, dealerId) {
   
   // 딜러에게 카톡 알림 발송 (Make 웹훅)
   try {
-    const scriptUrl = ScriptApp.getService().getUrl();
-    const confirmUrl = scriptUrl + '?action=dealerConfirm&uid=' + uid + '&did=' + dealerId;
+    // GitHub Pages URL — 딜러 확정 페이지
+    const confirmUrl = 'https://' + GITHUB_PAGES_CONSULT + '/page_dealer_confirm.html?uid=' + uid + '&did=' + dealerId;
     
     const payload = {
       type: 'DEALER_ASSIGNED',
@@ -1844,10 +1875,9 @@ function adminSuggestTimes(uid, suggestions){
   const suggest2 = labels[1] || '';
   const suggest3 = labels[2] || '';
 
-      const baseUrl      = ScriptApp.getService().getUrl();
-  const baseHostPath = baseUrl.replace(/^https?:\/\//, '');  // "https://" 제거
-  const confirm_link = baseHostPath + '?a=s&t=' + encodeURIComponent(shortTok);
-  const resched_link = baseHostPath + '?a=r&t=' + encodeURIComponent(shortTok);
+      // GitHub Pages URL로 변경 — 카카오 인앱 커스텀 스킴 호환
+  const confirm_link = GITHUB_PAGES_CONSULT + '/page_suggest.html?t=' + encodeURIComponent(shortTok);
+  const resched_link = GITHUB_PAGES_CONSULT + '/page_reschedule.html?t=' + encodeURIComponent(shortTok);
 
 
   const payload = {
@@ -2254,7 +2284,7 @@ function getSuggestionDataByToken_(token) {
           label: dt,
           url: `${baseUrl}?a=c&u=${uid}&d=${encodeURIComponent(dt)}`
         })),
-        rescheduleUrl: `${baseUrl}?a=r&t=${token}`
+        rescheduleUrl: `https://${GITHUB_PAGES_CONSULT}/page_reschedule.html?t=${token}`
       };
     }
   }
