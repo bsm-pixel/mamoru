@@ -152,9 +152,9 @@ export default function ConsultationDetailPage() {
                 출장 완료
               </Button>
             )}
-            {(c.status === 'pending_admin' || c.status === 'reschedule_requested') && (
+            {(c.status === 'pending_admin' || c.status === 'reschedule_requested' || c.status === 'change_requested') && (
               <Button variant="primary" size="sm" disabled={busy} onClick={() => setShowSuggest(true)}>
-                시간 제안
+                {(c.status === 'reschedule_requested' || c.status === 'change_requested') ? '새 시간 제안' : '시간 제안'}
               </Button>
             )}
             {allowed.includes('confirmed') && (
@@ -244,6 +244,25 @@ export default function ConsultationDetailPage() {
             </div>
           </Card>
         )}
+
+        {/* 고객 일정변경 요청 카드 */}
+        {c.status === 'change_requested' && c.memo && (() => {
+          // 비고에서 가장 최근 [고객 변경요청 ...] 파싱
+          const lines = c.memo.split('\n');
+          const changeLine = [...lines].reverse().find(l => l.includes('[고객 변경요청'));
+          if (!changeLine) return null;
+          return (
+            <Card className="border-orange-300/50 bg-orange-50">
+              <div className="flex items-start gap-2">
+                <AlertCircle size={16} className="text-orange-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-orange-700">고객 일정 변경 요청</p>
+                  <p className="text-sm text-neutral-700 mt-0.5 whitespace-pre-wrap">{changeLine.replace(/^\[고객 변경요청 [\d-: ]+\]\s*/, '')}</p>
+                </div>
+              </div>
+            </Card>
+          );
+        })()}
 
         {/* 고객 정보 */}
         <Card>

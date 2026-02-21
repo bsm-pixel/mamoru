@@ -19,11 +19,10 @@ import {
 import { Calendar, Search, ChevronLeft, ChevronRight, CheckCircle, AlertTriangle } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
-type TabKey = 'upcoming' | 'change_requested' | 'overdue' | 'completed' | 'on_hold' | 'cancelled';
+type TabKey = 'upcoming' | 'overdue' | 'completed' | 'on_hold' | 'cancelled';
 
 const TABS: { key: TabKey; label: string; icon?: React.ReactNode }[] = [
   { key: 'upcoming', label: '예정' },
-  { key: 'change_requested', label: '변경/취소' },
   { key: 'overdue', label: '완료 필요', icon: <AlertTriangle size={12} /> },
   { key: 'completed', label: '완료', icon: <CheckCircle size={12} /> },
   { key: 'on_hold', label: '보류' },
@@ -35,8 +34,6 @@ function getTabFilters(tab: TabKey) {
   switch (tab) {
     case 'upcoming':
       return { status: 'confirmed', dateFilter: 'upcoming' as const, orderBy: 'visit_date_asc' };
-    case 'change_requested':
-      return { status: 'change_requested', orderBy: 'updated_at_desc' };
     case 'overdue':
       return { status: 'confirmed', dateFilter: 'past' as const, orderBy: 'visit_date_asc' };
     case 'completed':

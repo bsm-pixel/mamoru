@@ -101,7 +101,7 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
         return (
           <>
             <Button variant="primary" size="sm" disabled={busy} onClick={() => setSuggestTarget(c.id)}>
-              {c.status === 'reschedule_requested' ? '새 시간 제안' : '시간 제안'}
+              {(c.status === 'reschedule_requested' || c.status === 'change_requested') ? '새 시간 제안' : '시간 제안'}
             </Button>
             <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'confirmed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
               즉시 확정

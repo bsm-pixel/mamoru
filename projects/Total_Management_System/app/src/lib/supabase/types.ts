@@ -22,6 +22,7 @@ export type ConsultationStatus =
   | 'confirmed'
   | 'cancelled'
   | 'reschedule_requested'
+  | 'change_requested'  // Phase 1.6: 고객 일정변경 요청 (출장)
   | 'on_hold'       // Phase 2-2: 보류
   | 'in_progress'   // Phase 2-2: 진행중 (톡상담)
   | 'completed';    // Phase 2-2: 처리완료

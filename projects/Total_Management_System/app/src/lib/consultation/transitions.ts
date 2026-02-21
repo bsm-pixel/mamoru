@@ -18,6 +18,7 @@ const FIELD_REQUEST: TransitionMap = {
   pending_admin: ['suggested', 'confirmed', 'on_hold', 'cancelled'],
   suggested: ['confirmed', 'reschedule_requested', 'on_hold', 'cancelled'],
   reschedule_requested: ['suggested', 'confirmed', 'on_hold', 'cancelled'],
+  change_requested: ['suggested', 'confirmed', 'on_hold', 'cancelled'],  // 고객 일정변경 요청
   confirmed: ['completed', 'on_hold', 'cancelled'],
   on_hold: ['pending_admin', 'suggested', 'confirmed', 'cancelled'],
 };

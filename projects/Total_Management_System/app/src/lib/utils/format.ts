@@ -70,7 +70,7 @@ export const CONSULTATION_STATUS_LABEL: Record<string, string> = {
   confirmed: '확정',
   cancelled: '취소',
   reschedule_requested: '일정 변경 요청',
-  change_requested: '변경/취소 요청',
+  change_requested: '일정 변경 요청',
   on_hold: '보류',           // Phase 2-2
   in_progress: '진행중',     // Phase 2-2
   completed: '처리완료',     // Phase 2-2
