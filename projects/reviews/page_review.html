@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>후기 작성 | MAMORU</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #f5f5f0; color: #1a1a2e; line-height: 1.6;
+      -webkit-text-size-adjust: 100%;
+    }
+    .container { max-width: 480px; margin: 0 auto; padding: 0 16px 40px; }
+
+    .header { text-align: center; padding: 32px 0 24px; }
+    .header h1 { font-size: 20px; font-weight: 700; }
+    .header p { font-size: 13px; color: #888; margin-top: 4px; }
+
+    .card {
+      background: #fff; border-radius: 14px; padding: 24px 20px;
+      margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    /* 칩 */
+    .chip {
+      display: inline-block; padding: 4px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 600; margin-bottom: 16px;
+    }
+    .chip-as { background: #fef3c7; color: #92400e; }
+    .chip-restoration { background: #dbeafe; color: #1e40af; }
+    .chip-consult { background: #d1fae5; color: #065f46; }
+
+    /* 고객 정보 */
+    .customer-info {
+      background: #f9fafb; border-radius: 10px; padding: 14px 16px;
+      margin-bottom: 20px; font-size: 14px;
+    }
+    .customer-info .name { font-weight: 600; }
+    .customer-info .meta { font-size: 13px; color: #888; margin-top: 2px; }
+
+    /* 폼 */
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;
+    }
+    .form-group .optional { font-weight: 400; color: #aaa; font-size: 13px; }
+
+    textarea {
+      width: 100%; padding: 14px; border: 1px solid #e0e0d8;
+      border-radius: 10px; font-size: 15px; color: #1a1a2e;
+      resize: vertical; min-height: 120px; font-family: inherit;
+    }
+    textarea:focus { outline: none; border-color: #d4613e; box-shadow: 0 0 0 3px rgba(212,97,62,0.1); }
+    textarea::placeholder { color: #bbb; }
+
+    /* 별점 */
+    .star-rating { display: flex; gap: 8px; margin-bottom: 4px; }
+    .star {
+      width: 36px; height: 36px; cursor: pointer; font-size: 28px;
+      color: #ddd; transition: color 0.15s; user-select: none;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .star.active { color: #d4613e; }
+    .star-hint { font-size: 12px; color: #aaa; }
+
+    /* 사진 업로드 */
+    .photo-area { display: flex; gap: 10px; flex-wrap: wrap; }
+    .photo-btn {
+      width: 80px; height: 80px; border: 2px dashed #ddd; border-radius: 10px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; transition: border-color 0.2s; background: #fafaf8;
+    }
+    .photo-btn:hover { border-color: #d4613e; }
+    .photo-btn .icon { font-size: 24px; color: #bbb; }
+    .photo-btn .text { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .photo-preview {
+      width: 80px; height: 80px; border-radius: 10px; object-fit: cover;
+      position: relative;
+    }
+    .photo-wrap {
+      position: relative; width: 80px; height: 80px;
+    }
+    .photo-wrap img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; }
+    .photo-remove {
+      position: absolute; top: -6px; right: -6px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #ef4444; color: #fff; border: 2px solid #fff;
+      font-size: 12px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* 버튼 */
+    .btn {
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: #1a1a2e; color: #fff; }
+    .btn-primary:hover { background: #2d2d44; }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-close { background: #e8e8e0; color: #555; margin-top: 8px; }
+
+    /* 상태 */
+    .loading { text-align: center; padding: 80px 20px; color: #888; }
+    .loading::after {
+      content: ''; display: inline-block; width: 20px; height: 20px;
+      border: 2px solid #ddd; border-top-color: #d4613e;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin-left: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-card {
+      background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+      text-align: center; padding: 60px 20px; border-radius: 14px;
+    }
+    .success-card {
+      background: #f0fdf4; border: 1px solid #a7f3d0; color: #065f46;
+      text-align: center; padding: 60px 20px; border-radius: 14px;
+    }
+    .success-card h2 { font-size: 18px; margin-bottom: 8px; }
+    .success-card p { font-size: 14px; line-height: 1.6; }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>후기 작성</h1>
+      <p>소중한 후기를 남겨주세요</p>
+    </div>
+
+    <!-- 로딩 -->
+    <div id="loading" class="card loading">정보를 불러오는 중</div>
+
+    <!-- 에러 -->
+    <div id="error" class="error-card hidden">
+      <h2>오류</h2>
+      <p id="error-message">정보를 찾을 수 없습니다</p>
+    </div>
+
+    <!-- 작성 완료 -->
+    <div id="success" class="success-card hidden">
+      <h2>후기가 등록되었습니다</h2>
+      <p>소중한 후기 감사합니다</p>
+      <button class="btn btn-close" style="margin-top:16px" onclick="safeClose()">닫기</button>
+    </div>
+
+    <!-- 메인 폼 -->
+    <div id="main" class="hidden">
+      <div class="card">
+        <!-- 타입 칩 -->
+        <span id="type-chip" class="chip chip-as">A/S 후기</span>
+
+        <!-- 고객 정보 (자동) -->
+        <div class="customer-info">
+          <div class="name" id="r-name">-</div>
+          <div class="meta" id="r-meta">-</div>
+        </div>
+
+        <!-- 별점 -->
+        <div class="form-group">
+          <label>만족도</label>
+          <div class="star-rating" id="stars">
+            <span class="star" data-v="1">★</span>
+            <span class="star" data-v="2">★</span>
+            <span class="star" data-v="3">★</span>
+            <span class="star" data-v="4">★</span>
+            <span class="star" data-v="5">★</span>
+          </div>
+          <p class="star-hint" id="star-hint">별점을 선택해주세요</p>
+        </div>
+
+        <!-- 후기 내용 -->
+        <div class="form-group">
+          <label>후기 내용</label>
+          <textarea id="content" placeholder="수리 결과는 어떠셨나요? 자유롭게 작성해주세요"></textarea>
+        </div>
+
+        <!-- 사진 -->
+        <div class="form-group">
+          <label>사진 <span class="optional">(선택, 최대 3장)</span></label>
+          <div class="photo-area" id="photo-area">
+            <label class="photo-btn" id="photo-add">
+              <span class="icon">📷</span>
+              <span class="text">촬영/선택</span>
+              <input type="file" accept="image/*" capture="environment" multiple style="display:none" id="photo-input">
+            </label>
+          </div>
+        </div>
+
+        <button id="btnSubmit" class="btn btn-primary" disabled onclick="submitReview()">후기 등록</button>
+      </div>
+
+      <button class="btn btn-close" onclick="safeClose()">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    // ── 설정 ──
+    // TODO: 리뷰 시스템 연동 시 API URL 설정
+    var API_URL = '';
+    var MAX_PHOTOS = 3;
+
+    var params = new URLSearchParams(location.search);
+    var uid = params.get('uid') || '';
+    var reviewType = params.get('type') || 'as'; // as, restoration, consult
+
+    var rating = 0;
+    var photos = []; // { file, dataUrl }
+
+    // ── 타입별 칩 설정 ──
+    var TYPE_CONFIG = {
+      as: { label: 'A/S 후기', cls: 'chip-as' },
+      restoration: { label: '복원수리 후기', cls: 'chip-restoration' },
+      consult: { label: '상담 후기', cls: 'chip-consult' }
+    };
+
+    // ── 이름 마스킹: 김미영 → 김*영, 이수 → 이* ──
+    function maskName(name) {
+      if (!name) return '';
+      if (name.length <= 1) return name;
+      if (name.length === 2) return name[0] + '*';
+      return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+    }
+
+    // ── 초기화 ──
+    function init() {
+      if (!uid) { showError('잘못된 접근입니다'); return; }
+
+      // 칩 설정
+      var cfg = TYPE_CONFIG[reviewType] || TYPE_CONFIG.as;
+      var chip = document.getElementById('type-chip');
+      chip.textContent = cfg.label;
+      chip.className = 'chip ' + cfg.cls;
+
+      // TODO: API에서 고객 정보 조회
+      // fetch(API_URL + '?action=getReviewInfo&uid=' + uid)
+      //   .then(...)
+
+      // 임시: 준비 중
+      showError('리뷰 서비스 준비 중입니다');
+    }
+
+    // ── 별점 ──
+    document.getElementById('stars').addEventListener('click', function(e) {
+      var star = e.target.closest('.star');
+      if (!star) return;
+      rating = parseInt(star.dataset.v);
+      document.querySelectorAll('.star').forEach(function(s) {
+        s.classList.toggle('active', parseInt(s.dataset.v) <= rating);
+      });
+      var hints = ['', '별로예요', '그저 그래요', '괜찮아요', '만족해요', '최고예요!'];
+      document.getElementById('star-hint').textContent = hints[rating] || '';
+      checkSubmit();
+    });
+
+    // ── 사진 업로드 ──
+    document.getElementById('photo-input').addEventListener('change', function(e) {
+      var files = Array.from(e.target.files);
+      files.forEach(function(file) {
+        if (photos.length >= MAX_PHOTOS) return;
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          photos.push({ file: file, dataUrl: ev.target.result });
+          renderPhotos();
+        };
+        reader.readAsDataURL(file);
+      });
+      e.target.value = '';
+    });
+
+    function renderPhotos() {
+      var area = document.getElementById('photo-area');
+      // 기존 프리뷰 제거
+      area.querySelectorAll('.photo-wrap').forEach(function(el) { el.remove(); });
+      // 프리뷰 추가
+      photos.forEach(function(p, i) {
+        var wrap = document.createElement('div');
+        wrap.className = 'photo-wrap';
+        wrap.innerHTML = '<img src="' + p.dataUrl + '"><div class="photo-remove" data-idx="' + i + '">✕</div>';
+        area.insertBefore(wrap, document.getElementById('photo-add'));
+      });
+      // 추가 버튼 숨기기
+      document.getElementById('photo-add').classList.toggle('hidden', photos.length >= MAX_PHOTOS);
+    }
+
+    document.getElementById('photo-area').addEventListener('click', function(e) {
+      var rm = e.target.closest('.photo-remove');
+      if (!rm) return;
+      photos.splice(parseInt(rm.dataset.idx), 1);
+      renderPhotos();
+    });
+
+    // ── 제출 가능 여부 ──
+    function checkSubmit() {
+      var content = document.getElementById('content').value.trim();
+      document.getElementById('btnSubmit').disabled = !(rating > 0 && content.length > 0);
+    }
+    document.getElementById('content').addEventListener('input', checkSubmit);
+
+    // ── 제출 ──
+    function submitReview() {
+      var btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.textContent = '등록 중...';
+
+      // TODO: API 연동
+      // var formData = new FormData();
+      // formData.append('uid', uid);
+      // formData.append('type', reviewType);
+      // formData.append('rating', rating);
+      // formData.append('content', document.getElementById('content').value.trim());
+      // photos.forEach(function(p, i) { formData.append('photo' + i, p.file); });
+      // fetch(API_URL, { method: 'POST', body: formData })
+
+      alert('리뷰 서비스 준비 중입니다');
+      btn.disabled = false;
+      btn.textContent = '후기 등록';
+    }
+
+    // ── UI 헬퍼 ──
+    function showError(msg) {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('main').classList.add('hidden');
+      document.getElementById('error').classList.remove('hidden');
+      document.getElementById('error-message').textContent = msg;
+    }
+    function showSuccess() {
+      document.getElementById('main').classList.add('hidden');
+      document.getElementById('success').classList.remove('hidden');
+    }
+
+    // ── 카카오 인앱 닫기 ──
+    function safeClose() {
+      try { location.href = 'kakaoweb://closeBrowser'; return; } catch(e) {}
+      try { window.close(); } catch(e) {}
+      setTimeout(function() {
+        if (history.length > 1) { history.go(-2); return; }
+        location.href = 'https://mamoru.kr';
+      }, 150);
+    }
+
+    init();
+  </script>
+</body>
+</html>

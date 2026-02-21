@@ -115,7 +115,29 @@
 
 ---
 
+## 6. AS 알림톡 안내 페이지 (GitHub Pages)
+
+> 현재 구글 슬라이드로 만들어둔 AS 안내를 GitHub Pages 단일 페이지로 이전
+
+### 확정 링크 (솔라피 템플릿에 먼저 삽입)
+- **AS 안내**: `https://bsm-pixel.github.io/mamoru/projects/as/page_as_guide.html`
+- **1:1 문의하기**: 기존 카카오 채널 상담 링크
+
+### 페이지 구성 (page_as_guide.html)
+- [ ] 섹션 1: 진행과정 — 접수→수거→입고→수리→출고 단계별 안내
+- [ ] 섹션 2: 포장방법 — 이미지+텍스트 가이드
+- [ ] 섹션 3: 비용안내 — AS/복원 가격표
+- [ ] 파일 생성: `projects/as/page_as_guide.html`
+- [ ] GitHub Pages push 후 접근 확인
+
+### 버튼 구성 (AS 관련 모든 알림톡 공통)
+- 버튼 1: `AS 안내` (WL) → `https://bsm-pixel.github.io/mamoru/projects/as/page_as_guide.html`
+- 버튼 2: `1:1 문의하기` (WL) → 카카오 채널 상담 링크
+
+---
+
 ## 참고
 - 전체 흐름도: `projects/consulting/FLOW_change_request.md`
 - GAS 코드: `projects/consulting/Code.gs`
 - 고객 페이지: `projects/consulting/page_change_request.html`
+- AS 안내 원본: https://docs.google.com/presentation/d/1gt4tW0pa1apbTc8g8CPFUQ4ZH4xkZ9zTy5Z9-Qkklcg/edit
