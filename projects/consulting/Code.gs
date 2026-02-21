@@ -540,6 +540,7 @@ function safeClose(){
     // 재요청(markResched): 토큰으로 UID 찾고, HOLD 해제 + 상태를 RESCHEDULE_REQUESTED로 변경
   if (p.action === 'markResched' && p.t) {
     const tok = String(p.t);
+    const customerNote = String(p.reason || '').trim(); // 고객 재요청 사유
     const foundUid = getUidByToken_(tok);
     if (!foundUid) return json({ ok:false, error:'not_found' });
 
@@ -583,10 +584,19 @@ function safeClose(){
               '■ 기존 제안 내용 (취소됨)\n' +
               '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
               (suggestions || '없음') + '\n' +
-              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-              '→ 새로운 시간을 제안해주세요.\n' +
+              '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+              (customerNote ? '\n■ 고객 요청사항\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' + customerNote + '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' : '') +
+              '\n→ 새로운 시간을 제안해주세요.\n' +
               '요청시각: ' + Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
             
+            // 비고 컬럼에 고객 요청사항 append
+            if (customerNote && col['비고'] != null) {
+              const prevNote = String(rows[i][col['비고']] || '');
+              const nowStr = Utilities.formatDate(new Date(), TIMEZONE, 'MM-dd HH:mm');
+              const appendNote = '[고객 재요청 ' + nowStr + '] ' + customerNote;
+              sh.getRange(i + 1, col['비고'] + 1).setValue(prevNote ? prevNote + '\n' + appendNote : appendNote);
+            }
+
             GmailApp.sendEmail('bsm@mamoru.kr', emailSubject, emailBody);
             Logger.log('[EMAIL] 재요청 이메일 발송 완료: ' + customerName);
             break;
