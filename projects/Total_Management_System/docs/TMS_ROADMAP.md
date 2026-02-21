@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-02-19 (고객 변경/취소 요청 시스템 추가)
+> 최종 수정: 2026-02-21 (매장/출장 분기 + TMS 상태 연동)
 
 ---
 
@@ -72,26 +72,50 @@
 |---|------|------|-----------|
 | 1.6-1 | page_change_request.html | ✅ | GitHub Pages 고객 대면 페이지 (예약조회+변경/취소 폼) |
 | 1.6-2 | GAS API: getReservationInfo | ✅ | uid로 예약 정보 조회 (CONFIRMED/ASSIGNED만) |
-| 1.6-3 | GAS API: submitChangeRequest | ✅ | 비고 append + CHANGE_REQUESTED + Supabase + 이메일 + 알림톡 |
+| 1.6-3 | GAS API: submitChangeRequest | ✅ | 매장/출장 분기 처리 (아래 참조) |
 | 1.6-4 | 확정 알림톡 change_request_link 배치 | ✅ | CONFIRMED/CONFIRMED_BY_TOKEN/RESCHEDULED/FIELD_CONFIRMED에 추가, REMINDER에서 제거 |
-| 1.6-5 | TMS 상태 추가 | ✅ | change_requested 라벨/색상 + 탭 필터 반영 |
+| 1.6-5 | TMS 상태/UI 연동 | ✅ | change_requested 타입·라벨·색상·전이·탭·상세카드 |
 
-### 운영 플로우
+### 매장방문 / 출장 분기 (2026-02-21 확정)
+
+**매장방문 일정변경:**
 ```
-확정 알림톡 (confirmed/rescheduled/field_confirmed)
-  → "일정확인/변경" WL 버튼 (https://#{change_request_link})
-  → page_change_request.html?uid=UID
-  → GAS API (비고 기록 + CHANGE_REQUESTED + Supabase + 이메일 + 접수 알림톡)
-  → TMS "변경/취소 요청" 탭에서 관리자 처리
+확정 알림톡 → "일정확인/변경" 버튼 → 셀프서비스 페이지
+  → [일정 변경] 선택 → "기존 예약 취소 후 재예약" 안내
+  → 버튼 클릭 → adminCancel(skipNotify) 자동취소 → 접수페이지(mamoru.kr/52) 이동
+  → 고객이 새로 예약 → 즉시 확정 → 새 confirmed 알림톡
 ```
+- 관리자 개입 없음, 알림톡 없음 (페이지가 피드백)
+
+**출장 일정변경:**
+```
+확정 알림톡 → "일정확인/변경" 버튼 → 셀프서비스 페이지
+  → [일정 변경] 선택 → 요청사항 입력 → 제출
+  → GAS: CHANGE_REQUESTED + Supabase + 이메일 + change_request_received 알림톡
+  → TMS 출장 "처리대기" 탭 → 관리자 "새 시간 제안"
+```
+
+**취소 (공통):**
+```
+셀프서비스 페이지 → [예약 취소] → 사유 선택 → 제출
+  → adminCancel(skipNotify) 즉시 CANCELLED (캘린더 삭제 + 슬롯 해제)
+  → 페이지: "예약이 취소되었습니다" + 관리자 이메일
+  → 알림톡 미발송 (관리자 수동 취소 시에만 알림톡 발송)
+```
+
+### TMS UI 변경 (2026-02-21)
+- 매장방문: `변경/취소` 탭 제거 (자동취소+재예약이므로 불필요)
+- 출장: `처리대기` 탭에 change_requested 포함, 버튼 "새 시간 제안"
+- 상세 페이지: 고객 요청 카드(주황색) — 비고에서 `[고객 변경요청]` 파싱 표시
+- 상태 전이: change_requested → suggested/confirmed/on_hold/cancelled
 
 ### 수동 작업 필요 (솔라피/Make) — Phase 1.6-6
 - [ ] 솔라피: confirmed 템플릿에 "일정확인/변경" WL 버튼 추가 → 재검수
 - [ ] 솔라피: rescheduled 템플릿에 "일정확인/변경" WL 버튼 추가 → 재검수
 - [ ] 솔라피: field_confirmed 템플릿에 "일정확인/변경" WL 버튼 추가 → 재검수
-- [ ] 솔라피: change_request_received 신규 템플릿 등록 + 검수
+- [ ] 솔라피: change_request_received 신규 템플릿 등록 (출장 전용, 변수: name/date/time/address/request_detail) → 검수
 - [ ] Make: 확정 3개 시나리오에 change_request_link 변수 매핑
-- [ ] Make: CHANGE_REQUEST_RECEIVED 이벤트 분기 + 솔라피 모듈 연결
+- [ ] Make: CHANGE_REQUEST_RECEIVED 이벤트 분기 + 솔라피 모듈 연결 (변수: name/phone/date/time/address/request_detail)
 
 ---
 
