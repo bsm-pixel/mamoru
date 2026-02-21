@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>MAMORU 수리 내역</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #f5f5f0; color: #1a1a2e; line-height: 1.6;
+      -webkit-text-size-adjust: 100%;
+    }
+    .container { max-width: 480px; margin: 0 auto; padding: 0 16px 40px; }
+
+    .header { text-align: center; padding: 32px 0 24px; }
+    .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+    .header p { font-size: 13px; color: #888; margin-top: 4px; }
+
+    .card {
+      background: #fff; border-radius: 14px; padding: 24px 20px;
+      margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .card-title {
+      font-size: 15px; font-weight: 700; color: #d4613e;
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* 정보 행 */
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid #f0f0ec; font-size: 14px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #888; }
+    .info-value { font-weight: 600; text-align: right; max-width: 60%; }
+
+    /* 상태 체크 결과 */
+    .check-list { list-style: none; }
+    .check-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid #f0f0ec; font-size: 14px;
+    }
+    .check-item:last-child { border-bottom: none; }
+    .check-icon {
+      width: 24px; height: 24px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+    .check-icon.issue { background: #fef2f2; color: #dc2626; }
+    .check-icon.ok { background: #f0fdf4; color: #16a34a; }
+    .check-label { flex: 1; }
+    .check-result { font-size: 13px; font-weight: 600; }
+    .check-result.issue { color: #dc2626; }
+    .check-result.ok { color: #16a34a; }
+
+    /* 수리 내용 */
+    .repair-note {
+      background: #f9fafb; border-radius: 10px; padding: 14px 16px;
+      font-size: 13px; color: #555; white-space: pre-wrap; line-height: 1.7;
+    }
+
+    /* 버튼 */
+    .btn {
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: #1a1a2e; color: #fff; }
+    .btn-primary:hover { background: #2d2d44; }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-close { background: #e8e8e0; color: #555; margin-top: 8px; }
+
+    /* 로딩/에러/성공 */
+    .loading { text-align: center; padding: 80px 20px; color: #888; }
+    .loading::after {
+      content: ''; display: inline-block; width: 20px; height: 20px;
+      border: 2px solid #ddd; border-top-color: #d4613e;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin-left: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-card {
+      background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+      text-align: center; padding: 60px 20px; border-radius: 14px;
+    }
+    .error-card h2 { font-size: 16px; margin-bottom: 8px; }
+    .error-card p { font-size: 14px; }
+    .hidden { display: none; }
+
+    .footer-note {
+      text-align: center; font-size: 12px; color: #aaa;
+      padding: 16px 0; line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>수리 내역서</h1>
+      <p>MAMORU A/S 복원수리 결과</p>
+    </div>
+
+    <!-- 로딩 -->
+    <div id="loading" class="card loading">수리 내역을 불러오는 중</div>
+
+    <!-- 에러 -->
+    <div id="error" class="error-card hidden">
+      <h2>조회 실패</h2>
+      <p id="error-message">수리 내역을 찾을 수 없습니다</p>
+    </div>
+
+    <!-- 메인 -->
+    <div id="main" class="hidden">
+
+      <!-- 접수 정보 -->
+      <div class="card">
+        <div class="card-title">📋 접수 정보</div>
+        <div class="info-row"><span class="info-label">고객명</span><span class="info-value" id="r-name">-</span></div>
+        <div class="info-row"><span class="info-label">접수일</span><span class="info-value" id="r-date">-</span></div>
+        <div class="info-row"><span class="info-label">마모루 가위</span><span class="info-value" id="r-qty-mamoru">-</span></div>
+        <div class="info-row"><span class="info-label">타사 가위</span><span class="info-value" id="r-qty-other">-</span></div>
+      </div>
+
+      <!-- 검수 결과 -->
+      <div class="card">
+        <div class="card-title">🔍 검수 결과</div>
+        <ul id="check-list" class="check-list">
+          <!-- JS에서 동적 생성 -->
+        </ul>
+      </div>
+
+      <!-- 수리 내용 (관리자 메모) -->
+      <div id="repair-note-card" class="card hidden">
+        <div class="card-title">🔧 수리 내용</div>
+        <div id="r-repair-note" class="repair-note"></div>
+      </div>
+
+      <!-- 비용 -->
+      <div class="card">
+        <div class="card-title">💰 비용</div>
+        <div class="info-row"><span class="info-label">A/S 비용</span><span class="info-value" id="r-as-amount">-</span></div>
+        <div class="info-row"><span class="info-label">배송비</span><span class="info-value" id="r-shipping">-</span></div>
+        <div class="info-row" style="border-top:2px solid #1a1a2e;padding-top:12px">
+          <span class="info-label" style="font-weight:700;color:#1a1a2e">총 결제금액</span>
+          <span class="info-value" style="color:#d4613e;font-size:16px" id="r-total">-</span>
+        </div>
+      </div>
+
+      <!-- 내역서 저장 -->
+      <button id="btnSave" class="btn btn-primary" onclick="saveAsImage()">내역서 이미지 저장</button>
+      <button class="btn btn-close" onclick="safeClose()">닫기</button>
+    </div>
+
+    <div class="footer-note">
+      MAMORU 미용가위<br>
+      상담 운영시간 10:00 ~ 21:00
+    </div>
+  </div>
+
+  <script>
+    // ── 설정 ──
+    // TODO: AS 연동 시 GAS API URL 설정
+    var GAS_API = '';
+
+    var params = new URLSearchParams(location.search);
+    var uid = params.get('uid') || '';
+
+    // ── 검수 항목 정의 ──
+    var CHECK_ITEMS = [
+      { key: 'blade_chipped', label: '날 찍힘' },
+      { key: 'blade_dull', label: '무뎌짐' },
+      { key: 'stopper_replace', label: '스토퍼(부품) 교체' },
+      { key: 'thinning_broken', label: '빗살 깨짐', note: '틴닝' },
+      { key: 'tension_loose', label: '장력 헐거움' }
+    ];
+
+    // ── 데이터 로드 ──
+    function loadReport() {
+      if (!uid) { showError('잘못된 접근입니다'); return; }
+
+      // TODO: AS 연동 시 GAS API 연결
+      // fetch(GAS_API + '?action=getAsReport&uid=' + encodeURIComponent(uid))
+      //   .then(function(r) { return r.json(); })
+      //   .then(function(res) { ... })
+
+      // 임시: 준비 중 안내
+      showError('수리 내역 서비스 준비 중입니다');
+    }
+
+    // ── 검수 결과 렌더링 ──
+    function renderChecks(checks) {
+      var list = document.getElementById('check-list');
+      list.innerHTML = '';
+      CHECK_ITEMS.forEach(function(item) {
+        var hasIssue = checks && checks[item.key];
+        var li = document.createElement('li');
+        li.className = 'check-item';
+        li.innerHTML =
+          '<span class="check-icon ' + (hasIssue ? 'issue' : 'ok') + '">' + (hasIssue ? '!' : '✓') + '</span>' +
+          '<span class="check-label">' + item.label + (item.note ? ' <span style="font-size:12px;color:#aaa">(' + item.note + ')</span>' : '') + '</span>' +
+          '<span class="check-result ' + (hasIssue ? 'issue' : 'ok') + '">' + (hasIssue ? '수리 완료' : '양호') + '</span>';
+        list.appendChild(li);
+      });
+    }
+
+    // ── 내역서 이미지 저장 ──
+    function saveAsImage() {
+      var btn = document.getElementById('btnSave');
+      btn.disabled = true;
+      btn.textContent = '저장 준비 중...';
+
+      // html2canvas 동적 로드
+      var script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      script.onload = function() {
+        html2canvas(document.getElementById('main'), {
+          scale: 2,
+          backgroundColor: '#f5f5f0',
+          useCORS: true
+        }).then(function(canvas) {
+          var link = document.createElement('a');
+          link.download = 'MAMORU_수리내역_' + uid + '.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+          btn.disabled = false;
+          btn.textContent = '내역서 이미지 저장';
+        }).catch(function() {
+          alert('이미지 저장에 실패했습니다');
+          btn.disabled = false;
+          btn.textContent = '내역서 이미지 저장';
+        });
+      };
+      document.head.appendChild(script);
+    }
+
+    // ── UI 헬퍼 ──
+    function showError(msg) {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('main').classList.add('hidden');
+      document.getElementById('error').classList.remove('hidden');
+      document.getElementById('error-message').textContent = msg;
+    }
+
+    // ── 카카오 인앱 닫기 ──
+    function safeClose() {
+      try { location.href = 'kakaoweb://closeBrowser'; return; } catch(e) {}
+      try { window.close(); } catch(e) {}
+      setTimeout(function() {
+        if (history.length > 1) { history.go(-2); return; }
+        location.href = 'https://mamoru.kr';
+      }, 150);
+    }
+
+    // ── 초기화 ──
+    loadReport();
+  </script>
+</body>
+</html>

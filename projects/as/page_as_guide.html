@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>MAMORU A/S 안내</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #f5f5f0; color: #1a1a2e; line-height: 1.6;
+      -webkit-text-size-adjust: 100%;
+    }
+    .container { max-width: 480px; margin: 0 auto; padding: 0 16px 40px; }
+
+    /* 헤더 */
+    .header {
+      text-align: center; padding: 32px 0 24px;
+    }
+    .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+    .header p { font-size: 13px; color: #888; margin-top: 4px; }
+
+    /* 섹션 */
+    .section {
+      background: #fff; border-radius: 14px; padding: 24px 20px;
+      margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .section-title {
+      font-size: 15px; font-weight: 700; color: #d4613e;
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-title .icon { font-size: 18px; }
+
+    /* 진행과정 스텝 */
+    .steps { position: relative; padding-left: 24px; }
+    .steps::before {
+      content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px;
+      width: 2px; background: #e8e8e0;
+    }
+    .step { position: relative; padding-bottom: 20px; }
+    .step:last-child { padding-bottom: 0; }
+    .step-dot {
+      position: absolute; left: -24px; top: 4px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #d4613e; border: 3px solid #fff;
+      box-shadow: 0 0 0 2px #d4613e;
+    }
+    .step-title { font-size: 14px; font-weight: 600; }
+    .step-desc { font-size: 13px; color: #666; margin-top: 2px; }
+
+    /* 포장 안내 */
+    .packing-list { list-style: none; }
+    .packing-list li {
+      font-size: 14px; padding: 8px 0;
+      border-bottom: 1px solid #f0f0ec;
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .packing-list li:last-child { border-bottom: none; }
+    .packing-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #d4613e; color: #fff; font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* 비용 테이블 */
+    .price-table { width: 100%; border-collapse: collapse; }
+    .price-table th {
+      text-align: left; font-size: 13px; font-weight: 600;
+      padding: 10px 0; border-bottom: 2px solid #1a1a2e; color: #1a1a2e;
+    }
+    .price-table td {
+      font-size: 13px; padding: 10px 0;
+      border-bottom: 1px solid #f0f0ec;
+    }
+    .price-table td:last-child { text-align: right; font-weight: 600; }
+    .price-note { font-size: 12px; color: #999; margin-top: 10px; }
+
+    /* 하단 안내 */
+    .footer-note {
+      text-align: center; font-size: 12px; color: #aaa;
+      padding: 16px 0; line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>MAMORU A/S 안내</h1>
+      <p>복원수리 진행과정 · 포장방법 · 비용안내</p>
+    </div>
+
+    <!-- 섹션 1: 진행과정 -->
+    <div class="section">
+      <div class="section-title"><span class="icon">📋</span> 진행과정</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-dot"></div>
+          <div class="step-title">접수</div>
+          <div class="step-desc">A/S 접수 완료 후 알림톡 안내</div>
+        </div>
+        <div class="step">
+          <div class="step-dot"></div>
+          <div class="step-title">수거</div>
+          <div class="step-desc">우체국 기사 방문 수거 또는 직접 발송</div>
+        </div>
+        <div class="step">
+          <div class="step-dot"></div>
+          <div class="step-title">입고 · 검수</div>
+          <div class="step-desc">가위 상태 정밀 검수 후 비용 안내</div>
+        </div>
+        <div class="step">
+          <div class="step-dot"></div>
+          <div class="step-title">입금 확인</div>
+          <div class="step-desc">입금 확인 후 복원 작업 착수</div>
+        </div>
+        <div class="step">
+          <div class="step-dot"></div>
+          <div class="step-title">복원 수리</div>
+          <div class="step-desc">전문 장인이 정밀 복원 작업 진행</div>
+        </div>
+        <div class="step">
+          <div class="step-dot"></div>
+          <div class="step-title">발송</div>
+          <div class="step-desc">수리 완료 후 롯데택배로 발송</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 섹션 2: 포장방법 -->
+    <div class="section">
+      <div class="section-title"><span class="icon">📦</span> 포장방법</div>
+      <ol class="packing-list">
+        <li><span class="packing-num">1</span><span>가위 날 부분을 에어캡(뽁뽁이)으로 감싸주세요</span></li>
+        <li><span class="packing-num">2</span><span>가위가 움직이지 않도록 박스 안을 채워주세요</span></li>
+        <li><span class="packing-num">3</span><span>박스 외부에 "파손주의" 표기를 권장합니다</span></li>
+      </ol>
+    </div>
+
+    <!-- 섹션 3: 비용안내 -->
+    <div class="section">
+      <div class="section-title"><span class="icon">💰</span> 비용안내</div>
+      <table class="price-table">
+        <tr><th>항목</th><th style="text-align:right">비용</th></tr>
+        <tr><td>마모루 가위 A/S</td><td>1자루 기준 가격</td></tr>
+        <tr><td>타사 가위 A/S</td><td>1자루 기준 가격</td></tr>
+        <tr><td>배송비 (편도)</td><td>직접 발송 시</td></tr>
+        <tr><td>배송비 (왕복)</td><td>방문 수거 시</td></tr>
+      </table>
+      <p class="price-note">· 가위 상태에 따라 비용이 달라질 수 있으며, 입고 검수 후 정확한 금액을 안내드립니다</p>
+    </div>
+
+    <div class="footer-note">
+      MAMORU 미용가위<br>
+      상담 운영시간 10:00 ~ 21:00
+    </div>
+  </div>
+</body>
+</html>
