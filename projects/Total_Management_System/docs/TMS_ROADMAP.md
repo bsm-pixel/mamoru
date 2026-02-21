@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-02-21 (매장/출장 분기 + TMS 상태 연동)
+> 최종 수정: 2026-02-21 (출장 일정 제안 캘린더 UI 통합)
 
 ---
 
@@ -116,6 +116,21 @@
 - [ ] 솔라피: change_request_received 신규 템플릿 등록 (출장 전용, 변수: name/date/time/address/request_detail) → 검수
 - [ ] Make: 확정 3개 시나리오에 change_request_link 변수 매핑
 - [ ] Make: CHANGE_REQUEST_RECEIVED 이벤트 분기 + 솔라피 모듈 연결 (변수: name/phone/date/time/address/request_detail)
+
+---
+
+## Phase 1.7: 출장 일정 제안 캘린더 UI 🔧 진행중
+
+**목적:** 출장 상담 일정 제안 페이지를 텍스트 버튼 나열 → 캘린더 + 라디오 카드 + 재요청 폼 통합 UI로 업그레이드
+
+| # | 작업 | 상태 | 구현 내용 |
+|---|------|------|-----------|
+| 1.7-1 | page_suggest.html 캘린더 UI | ✅ | 달력(제안 날짜 강조) + 라디오 카드 + 확정 모달 |
+| 1.7-2 | page_suggest.html 재요청 통합 | ✅ | 하단 토글 → textarea(reason) + 재요청 모달 |
+| 1.7-3 | page_reschedule.html 리다이렉트 | ✅ | 기존 알림톡 링크 호환, page_suggest.html로 자동 이동 |
+| 1.7-4 | Code.gs reason 파라미터 | ✅ | markResched에 reason 읽기 → 이메일+비고 컬럼 반영 |
+| 1.7-5 | GAS 배포 + GitHub Pages 배포 | 📋 | clasp push + 배포 업데이트 + Pages push |
+| 1.7-6 | 통합 테스트 | 📋 | 캘린더 네비, 카드 선택, 확정, 재요청, 카카오 인앱 |
 
 ---
 

@@ -1,8 +1,8 @@
-# 내일 할 일 — 고객 변경/취소 요청 시스템 마무리
+# 할 일 목록 — 상담 시스템 마무리
 
 > 작성: 2026-02-19
-> 수정: 2026-02-21 (매장방문/출장 분기 반영)
-> 상태: GAS 코드 + 고객 페이지 완료, 솔라피/Make 연동 미완료
+> 수정: 2026-02-21 (캘린더 UI 통합 + 매장/출장 분기 반영)
+> 상태: 캘린더 UI 코드 완료, GAS 배포 + 솔라피/Make 연동 미완료
 
 ---
 
@@ -12,6 +12,26 @@
 - **출장 일정변경** → 요청사항 입력 → `change_request_received` 알림톡 발송
 - **취소 (공통)** → 즉시 `CANCELLED` 처리, 페이지에서 완료 안내 (알림톡 없음)
 - `change_request_received` 템플릿: **출장 일정변경 전용**으로 축소
+- **출장 일정 제안 캘린더 UI** → page_suggest.html 전면 교체 (캘린더+제안카드+재요청 통합)
+
+---
+
+## 0. 출장 일정 제안 — 캘린더 UI 업그레이드
+
+### 0-1. 코드 작업 ✅ 완료
+- [x] `page_suggest.html` 캘린더 UI 전면 교체 (달력+라디오 카드+재요청 폼)
+- [x] `page_reschedule.html` → `page_suggest.html` 리다이렉트 (기존 링크 호환)
+- [x] `Code.gs` markResched에 `reason` 파라미터 추가 (이메일+비고 반영)
+
+### 0-2. 배포 + 테스트 🔧 진행중
+- [ ] Code.gs clasp push (reason 파라미터 반영)
+- [ ] GAS 배포 업데이트 (새 배포 X)
+- [ ] GitHub Pages push (page_suggest.html + page_reschedule.html)
+- [ ] 더미 토큰으로 API 호출 테스트
+- [ ] 캘린더 월 네비게이션 (2개 월에 걸치는 제안)
+- [ ] 제안 선택 → 확정 모달 → fireAndForget 동작
+- [ ] 재요청 토글 → textarea 입력 → 모달 → reason 파라미터 전달
+- [ ] 카카오 인앱 브라우저 닫기 동작
 
 ---
 
@@ -75,7 +95,7 @@
 
 ## 3. GAS 배포
 
-- [ ] Code.gs clasp push (매장/출장 분기 + 취소 즉시처리 반영)
+- [ ] Code.gs clasp push (매장/출장 분기 + 취소 즉시처리 + reason 파라미터 반영)
 - [ ] 배포 업데이트 (새 배포 X)
 
 ---
@@ -83,6 +103,8 @@
 ## 4. GitHub Pages 배포
 
 - [ ] page_change_request.html push (매장방문 재예약 + 출장 요청사항 UI)
+- [ ] page_suggest.html push (캘린더 UI)
+- [ ] page_reschedule.html push (리다이렉트)
 
 ---
 
