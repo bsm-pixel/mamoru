@@ -1,7 +1,17 @@
 # 내일 할 일 — 고객 변경/취소 요청 시스템 마무리
 
 > 작성: 2026-02-19
-> 상태: GAS 코드 완료, 솔라피/Make 연동 미완료
+> 수정: 2026-02-21 (매장방문/출장 분기 반영)
+> 상태: GAS 코드 + 고객 페이지 완료, 솔라피/Make 연동 미완료
+
+---
+
+## 변경 요약 (2026-02-21)
+
+- **매장방문 일정변경** → 기존 예약 자동취소 + 접수 페이지 재예약 유도 (알림톡 없음)
+- **출장 일정변경** → 요청사항 입력 → `change_request_received` 알림톡 발송
+- **취소 (공통)** → 즉시 `CANCELLED` 처리, 페이지에서 완료 안내 (알림톡 없음)
+- `change_request_received` 템플릿: **출장 일정변경 전용**으로 축소
 
 ---
 
@@ -26,24 +36,24 @@
 - [ ] "일정확인/변경" WL 버튼 추가 (위와 동일)
 - [ ] 검수 요청 → 승인 확인
 
-### 1-4. change_request_received 신규 템플릿 등록
+### 1-4. change_request_received 신규 템플릿 등록 (출장 일정변경 전용)
 - [ ] 템플릿명: `change_request_received`
 - [ ] 내용 초안:
   ```
-  [마모루] #{name}님, #{request_type_label} 요청이 접수되었습니다.
+  [마모루] #{name}님, 출장 일정 변경 요청이 접수되었습니다.
 
-  ■ 현재 예약 정보
-  - 상담방식: #{type}
+  ■ 현재 출장 예약
   - 예약일: #{date}
   - 예약시간: #{time}
+  - 출장지: #{address}
 
-  ■ 요청 내용
-  #{request_summary}
+  ■ 요청사항
+  #{request_detail}
 
-  담당자 확인 후 연락드리겠습니다.
-  영업시간 외 접수 시 다음 영업일에 처리됩니다.
+  확인 후 새로운 일정을 안내드리겠습니다.
+  영업시간 외 접수 시 다음 영업일에 안내드립니다.
   ```
-- [ ] 변수: name, type, date, time, request_type_label, request_summary
+- [ ] 변수: name, date, time, address, request_detail
 - [ ] 버튼: 없음 (접수 확인 전용)
 - [ ] 검수 요청 → 승인 확인
 
@@ -56,37 +66,51 @@
 - [ ] RESCHEDULED 시나리오: 솔라피 모듈에 `change_request_link` 변수 추가
 - [ ] FIELD_CONFIRMED 시나리오: 솔라피 모듈에 `change_request_link` 변수 추가
 
-### 2-2. CHANGE_REQUEST_RECEIVED 신규 분기
+### 2-2. CHANGE_REQUEST_RECEIVED 신규 분기 (출장 일정변경 전용)
 - [ ] Webhook 라우터에 `CHANGE_REQUEST_RECEIVED` 이벤트 분기 추가
 - [ ] 솔라피 알림톡 모듈 연결 (change_request_received 템플릿)
-- [ ] 변수 매핑: name, phone, type, date, time, request_type_label, request_summary
+- [ ] 변수 매핑: name, phone, date, time, address, request_detail
 
 ---
 
 ## 3. GAS 배포
 
-- [ ] Code.gs clasp push (change_request_link 변경사항 반영)
-- [ ] 새 배포 버전 생성
+- [ ] Code.gs clasp push (매장/출장 분기 + 취소 즉시처리 반영)
+- [ ] 배포 업데이트 (새 배포 X)
 
 ---
 
-## 4. 통합 테스트
+## 4. GitHub Pages 배포
 
-### 4-1. 확정 알림톡 테스트
+- [ ] page_change_request.html push (매장방문 재예약 + 출장 요청사항 UI)
+
+---
+
+## 5. 통합 테스트
+
+### 5-1. 확정 알림톡 테스트
 - [ ] 매장방문 확정 → 알림톡에 "일정확인/변경" 버튼 표시 확인
 - [ ] 토큰 확정 → 버튼 표시 확인
-- [ ] 일정변경 → 버튼 표시 확인
+- [ ] 일정변경(rescheduled) → 버튼 표시 확인
 - [ ] 출장 확정 → 버튼 표시 확인
 - [ ] 버튼 클릭 → page_change_request.html 정상 로드
 
-### 4-2. 리마인드 알림톡 테스트
+### 5-2. 리마인드 알림톡 테스트
 - [ ] 24H 리마인드 → 버튼 **없음** 확인
 - [ ] 2H 리마인드 → 버튼 **없음** 확인
 
-### 4-3. 셀프서비스 E2E
-- [ ] 변경 요청 → 접수 알림톡 수신 확인
-- [ ] 취소 요청 → 접수 알림톡 수신 확인
-- [ ] TMS 대시보드에 "변경/취소" 탭 표시 확인
+### 5-3. 매장방문 셀프서비스 E2E
+- [ ] 일정변경 선택 → 재예약 안내 페이지 표시
+- [ ] "기존 예약 취소 후 재예약하기" 클릭 → 기존 건 CANCELLED + 접수 페이지 이동
+- [ ] 접수 페이지에서 재예약 → 새 confirmed 알림톡 수신
+- [ ] 취소 선택 → 즉시 취소 완료 화면 + TMS 상태 CANCELLED 확인
+- [ ] 관리자 이메일 수신 확인
+
+### 5-4. 출장 셀프서비스 E2E
+- [ ] 일정변경 선택 → 요청사항 입력 폼 표시
+- [ ] 제출 → `change_request_received` 알림톡 수신 확인
+- [ ] TMS 대시보드에 CHANGE_REQUESTED 상태 표시 확인
+- [ ] 취소 선택 → 즉시 취소 완료 화면 + TMS 상태 CANCELLED 확인
 - [ ] 관리자 이메일 수신 확인
 
 ---

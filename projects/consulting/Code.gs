@@ -2591,71 +2591,92 @@ function submitChangeRequest_(uid, reqType, reason, memo, hopeDate) {
 
   const sh = sh_(), col = headerMap_();
   const now = Utilities.formatDate(new Date(), TIMEZONE, 'MM-dd HH:mm');
+  const isField = info.type.indexOf('출장') !== -1; // 출장 여부
 
   // 비고 컬럼에 요청 내용 append
   var noteCol = col['비고'];
   var prevNote = String(sh.getRange(info.row, noteCol + 1).getValue() || '');
   var newNote = '';
   if (reqType === 'change') {
-    newNote = '[고객 변경요청 ' + now + '] 희망: ' + (hopeDate || '미입력') + (memo ? ' | 메모: ' + memo : '');
+    newNote = '[고객 변경요청 ' + now + '] 요청: ' + (hopeDate || '미입력') + (memo ? ' | 메모: ' + memo : '');
   } else {
     newNote = '[고객 취소요청 ' + now + '] 사유: ' + (reason || '미선택') + (memo ? ' | 메모: ' + memo : '');
   }
   sh.getRange(info.row, noteCol + 1).setValue(prevNote ? prevNote + '\n' + newNote : newNote);
 
-  // 상태 → CHANGE_REQUESTED
-  sh.getRange(info.row, col['Status'] + 1).setValue('CHANGE_REQUESTED');
+  // ── 취소: 즉시 CANCELLED (캘린더 정리 포함, 알림톡 미발송) ──
+  if (reqType === 'cancel') {
+    // adminCancel의 캘린더/슬롯 정리 로직 재사용 (skipNotify=true → 알림톡 안 보냄)
+    try { adminCancel(uid, { skipNotify: true }); } catch(e) { Logger.log('[selfCancel] adminCancel 실패, 상태만 변경: ' + e); sh.getRange(info.row, col['Status'] + 1).setValue('CANCELLED'); }
+    try { pushToSupabase_(uid); } catch(e) { Logger.log('[supabase-sync] cancel push 실패: ' + e); }
 
-  // TMS Supabase 동기화
+    // 관리자 이메일 (취소)
+    try {
+      var emailSubject = '[MAMORU] 고객 예약 취소 - ' + info.name;
+      var emailBody =
+        '고객이 예약을 취소했습니다.\n\n' +
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+        '■ 취소된 예약 정보\n' +
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+        '• 고객명: ' + info.name + '\n' +
+        '• 연락처: ' + info.phone + '\n' +
+        '• 상담방식: ' + info.type + '\n' +
+        '• 예약일: ' + info.date + '\n' +
+        '• 예약시간: ' + info.time + '\n' +
+        (info.address ? '• 주소: ' + info.address + '\n' : '') +
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+        '• 취소 사유: ' + (reason || '미선택') + '\n' +
+        (memo ? '• 메모: ' + memo + '\n' : '') +
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+        '취소시각: ' + Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
+      GmailApp.sendEmail('bsm@mamoru.kr', emailSubject, emailBody);
+    } catch(emailErr) {
+      Logger.log('[EMAIL ERROR] 취소 요청 이메일 발송 실패: ' + emailErr);
+    }
+
+    return { ok: true };
+  }
+
+  // ── 일정 변경 (출장만 여기 도달) ──
+  sh.getRange(info.row, col['Status'] + 1).setValue('CHANGE_REQUESTED');
   try { pushToSupabase_(uid); } catch(e) { Logger.log('[supabase-sync] changeRequest push 실패: ' + e); }
 
-  // 관리자 이메일 알림
+  // 관리자 이메일 (출장 일정변경)
   try {
-    var typeLabel = reqType === 'change' ? '일정 변경' : '예약 취소';
-    var emailSubject = '[MAMORU] 고객 ' + typeLabel + ' 요청 - ' + info.name;
+    var emailSubject = '[MAMORU] 출장 일정 변경 요청 - ' + info.name;
     var emailBody =
-      '고객이 ' + typeLabel + '을 요청했습니다.\n\n' +
+      '고객이 출장 일정 변경을 요청했습니다.\n\n' +
       '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
       '■ 현재 예약 정보\n' +
       '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
       '• 고객명: ' + info.name + '\n' +
       '• 연락처: ' + info.phone + '\n' +
-      '• 상담방식: ' + info.type + '\n' +
       '• 예약일: ' + info.date + '\n' +
       '• 예약시간: ' + info.time + '\n' +
       (info.address ? '• 주소: ' + info.address + '\n' : '') +
       '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-      '■ 요청 내용\n' +
+      '■ 요청사항\n' +
       '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-      '• 유형: ' + typeLabel + '\n' +
-      (reqType === 'change' ? '• 희망 일시: ' + (hopeDate || '미입력') + '\n' : '• 취소 사유: ' + (reason || '미선택') + '\n') +
-      (memo ? '• 메모: ' + memo + '\n' : '') +
+      (hopeDate || '미입력') + '\n' +
       '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
       '요청시각: ' + Utilities.formatDate(new Date(), TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
     GmailApp.sendEmail('bsm@mamoru.kr', emailSubject, emailBody);
   } catch(emailErr) {
-    Logger.log('[EMAIL ERROR] 변경/취소 요청 이메일 발송 실패: ' + emailErr);
+    Logger.log('[EMAIL ERROR] 변경 요청 이메일 발송 실패: ' + emailErr);
   }
 
-  // 접수 확인 알림톡 (Make → 솔라피)
+  // 접수 확인 알림톡 (출장 일정변경 전용 — Make → 솔라피)
   try {
-    var requestTypeLabel = reqType === 'change' ? '일정 변경' : '예약 취소';
-    var requestSummary = reqType === 'change'
-      ? '희망: ' + (hopeDate || '미입력')
-      : '사유: ' + (reason || '미선택');
-    if (memo) requestSummary += '\n메모: ' + memo;
-
     postMake_('CHANGE_REQUEST_RECEIVED', {
       topic: 'alrimtalk',
       template: 'change_request_received',
       id: uid,
       name: info.name,
       phone: info.phone,
-      type: info.type,
       date: info.date,
       time: info.time,
-      request_type_label: requestTypeLabel,
-      request_summary: requestSummary,
+      address: info.address || '',
+      request_detail: hopeDate || '미입력',
       channel: 'kakao',
       sms_fallback: false
     });
