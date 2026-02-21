@@ -23,10 +23,13 @@
 - [x] `page_reschedule.html` → `page_suggest.html` 리다이렉트 (기존 링크 호환)
 - [x] `Code.gs` markResched에 `reason` 파라미터 추가 (이메일+비고 반영)
 
-### 0-2. 배포 + 테스트 🔧 진행중
-- [ ] Code.gs clasp push (reason 파라미터 반영)
-- [ ] GAS 배포 업데이트 (새 배포 X)
-- [ ] GitHub Pages push (page_suggest.html + page_reschedule.html)
+### 0-2. 배포 ✅ 완료
+- [x] Code.gs clasp push (reason 파라미터 반영)
+- [x] GAS 배포 업데이트 @285 (새 배포 X, URL 불변)
+- [x] GitHub Pages 배포 확인 (page_suggest.html + page_reschedule.html)
+- [x] page_reschedule.html → page_suggest.html 리다이렉트 확인
+
+### 0-3. 실 환경 테스트 📋 미완료
 - [ ] 더미 토큰으로 API 호출 테스트
 - [ ] 캘린더 월 네비게이션 (2개 월에 걸치는 제안)
 - [ ] 제안 선택 → 확정 모달 → fireAndForget 동작
@@ -95,16 +98,16 @@
 
 ## 3. GAS 배포
 
-- [ ] Code.gs clasp push (매장/출장 분기 + 취소 즉시처리 + reason 파라미터 반영)
-- [ ] 배포 업데이트 (새 배포 X)
+- [x] Code.gs clasp push (매장/출장 분기 + 취소 즉시처리 + reason 파라미터 반영)
+- [x] 배포 업데이트 @285 (새 배포 X)
 
 ---
 
 ## 4. GitHub Pages 배포
 
 - [ ] page_change_request.html push (매장방문 재예약 + 출장 요청사항 UI)
-- [ ] page_suggest.html push (캘린더 UI)
-- [ ] page_reschedule.html push (리다이렉트)
+- [x] page_suggest.html push (캘린더 UI)
+- [x] page_reschedule.html push (리다이렉트)
 
 ---
 

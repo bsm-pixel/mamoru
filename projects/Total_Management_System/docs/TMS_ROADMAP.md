@@ -129,8 +129,8 @@
 | 1.7-2 | page_suggest.html 재요청 통합 | ✅ | 하단 토글 → textarea(reason) + 재요청 모달 |
 | 1.7-3 | page_reschedule.html 리다이렉트 | ✅ | 기존 알림톡 링크 호환, page_suggest.html로 자동 이동 |
 | 1.7-4 | Code.gs reason 파라미터 | ✅ | markResched에 reason 읽기 → 이메일+비고 컬럼 반영 |
-| 1.7-5 | GAS 배포 + GitHub Pages 배포 | 📋 | clasp push + 배포 업데이트 + Pages push |
-| 1.7-6 | 통합 테스트 | 📋 | 캘린더 네비, 카드 선택, 확정, 재요청, 카카오 인앱 |
+| 1.7-5 | GAS 배포 + GitHub Pages 배포 | ✅ | clasp push @285 + Pages 서빙 확인 |
+| 1.7-6 | 실 환경 테스트 | 📋 | 실 토큰 테스트, 카카오 인앱 확인 |
 
 ---
 
