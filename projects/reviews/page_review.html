@@ -210,11 +210,11 @@
     var rating = 0;
     var photos = []; // { file, dataUrl }
 
-    // ── 타입별 칩 설정 ──
+    // ── 타입별 설정 ──
     var TYPE_CONFIG = {
-      as: { label: 'A/S 후기', cls: 'chip-as' },
-      restoration: { label: '복원수리 후기', cls: 'chip-restoration' },
-      consult: { label: '상담 후기', cls: 'chip-consult' }
+      as: { label: 'A/S 후기', cls: 'chip-as', placeholder: '수리 결과는 어떠셨나요? 자유롭게 작성해주세요', header: '소중한 후기를 남겨주세요' },
+      restoration: { label: '복원수리 후기', cls: 'chip-restoration', placeholder: '복원 결과는 어떠셨나요? 자유롭게 작성해주세요', header: '소중한 후기를 남겨주세요' },
+      consult: { label: '상담 후기', cls: 'chip-consult', placeholder: '상담은 어떠셨나요? 자유롭게 작성해주세요', header: '상담 경험을 들려주세요' }
     };
 
     // ── 이름 마스킹: 김미영 → 김*영, 이수 → 이* ──
@@ -229,11 +229,13 @@
     function init() {
       if (!uid) { showError('잘못된 접근입니다'); return; }
 
-      // 칩 설정
+      // 타입별 UI 설정
       var cfg = TYPE_CONFIG[reviewType] || TYPE_CONFIG.as;
       var chip = document.getElementById('type-chip');
       chip.textContent = cfg.label;
       chip.className = 'chip ' + cfg.cls;
+      document.querySelector('.header p').textContent = cfg.header;
+      document.getElementById('content').placeholder = cfg.placeholder;
 
       // TODO: API에서 고객 정보 조회
       // fetch(API_URL + '?action=getReviewInfo&uid=' + uid)
