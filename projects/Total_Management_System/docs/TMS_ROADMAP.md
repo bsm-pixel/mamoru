@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-02-21 (출장 일정 제안 캘린더 UI 통합)
+> 최종 수정: 2026-02-22 (알림톡 13종 출장/매장/톡상담 분기 구현)
 
 ---
 
@@ -119,7 +119,7 @@
 
 ---
 
-## Phase 1.7: 출장 일정 제안 캘린더 UI 🔧 진행중
+## Phase 1.7: 출장 일정 제안 캘린더 UI ✅ 완료
 
 **목적:** 출장 상담 일정 제안 페이지를 텍스트 버튼 나열 → 캘린더 + 라디오 카드 + 재요청 폼 통합 UI로 업그레이드
 
@@ -131,6 +131,52 @@
 | 1.7-4 | Code.gs reason 파라미터 | ✅ | markResched에 reason 읽기 → 이메일+비고 컬럼 반영 |
 | 1.7-5 | GAS 배포 + GitHub Pages 배포 | ✅ | clasp push @285 + Pages 서빙 확인 |
 | 1.7-6 | 실 환경 테스트 | 📋 | 실 토큰 테스트, 카카오 인앱 확인 |
+
+---
+
+## Phase 1.8: 알림톡 13종 출장/매장/톡상담 분기 구현 ✅ 완료
+
+**목적:** 기존 매장방문 전용이던 알림톡을 출장/매장/톡상담 유형별로 분기 — GAS 6개 패치 + TMS 7개 파일 변경
+
+| # | 작업 | 상태 | 구현 내용 |
+|---|------|------|-----------|
+| 1.8-1 | GAS adminFieldDelay 신규 함수 | ✅ | 출장 지연 안내: visit_time + delayMin → visit_time_revised 계산 |
+| 1.8-2 | GAS doGet fieldDelay/talkReady 액션 | ✅ | TMS_SYNC_KEY 인증, TMS→GAS 호출 엔드포인트 |
+| 1.8-3 | GAS submitConsultation 톡상담 알림 | ✅ | type='톡상담' 시 TALK_RECEIVED 자동 발송 |
+| 1.8-4 | GAS adminCancel 출장/매장 분기 | ✅ | 출장→field_cancelled, 매장→cancelled |
+| 1.8-5 | GAS adminReschedule 출장/매장 분기 | ✅ | 출장→field_rescheduled, 매장→rescheduled |
+| 1.8-6 | GAS sendReminders_ 출장/매장 분기 | ✅ | 출장→field_remind_24h/2h, 매장→remind24/2 |
+| 1.8-7 | TMS make-webhook.ts 타입 확장 | ✅ | NotifyTemplate 7종 추가 + TEMPLATE_EVENT_MAP |
+| 1.8-8 | TMS delay API route 생성 | ✅ | POST /api/consultation/delay → GAS fieldDelay 호출 |
+| 1.8-9 | TMS hooks 추가 | ✅ | useFieldDelay + useStartTalkConsult |
+| 1.8-10 | TMS [id]/route.ts 자동 알림 분기 | ✅ | getAutoNotifyTemplate() — 상담유형별 템플릿 선택 |
+| 1.8-11 | TMS talk-consult-list.tsx 상담시작 | ✅ | "상담 시작" → useStartTalkConsult → talk_ready 발송 |
+| 1.8-12 | TMS field-request-list.tsx 지연안내 | ✅ | "지연 안내" 버튼 + DelaySelectModal (5~30분) |
+| 1.8-13 | 고객 페이지 경고 문구 추가 | ✅ | 출장 변경/취소 시 스케줄 조율 안내 (change_request + suggest) |
+| 1.8-14 | 솔라피 버튼·메타데이터 총정리 | ✅ | 17개 템플릿 BC/WL/퀵버튼 + 메타데이터 #{type}_#{template}_#{name} |
+| 1.8-15 | GAS 배포 @286 + GitHub Pages 배포 | ✅ | clasp push + git push |
+
+### 알림톡 템플릿 17종 체계
+```
+매장방문 (5종): confirmed, cancelled, rescheduled, remind24, remind2
+출장요청 (9종): request, suggest, field_confirmed, field_cancelled,
+                field_rescheduled, field_remind_24h, field_remind_2h,
+                field_delayed, change_request_received
+톡상담   (2종): talk_received, talk_ready
+AS       (1종): as_received
+```
+
+### 버튼·메타데이터 설계
+- WL 버튼: 6개 (일정확인/변경, 일정 선택하기, AS 안내 확인)
+- BC 버튼: 12개 (1:1 문의하기 — 메타데이터 #{type}_#{template}_#{name})
+- 퀵버튼: 4개 (리마인드용 1:1 문의하기)
+- 메타데이터 → 해피톡 상담사가 고객명+서비스+상태 즉시 파악
+
+### 잔여 작업
+- [ ] 솔라피 검수 제출 (17종 전체)
+- [ ] Make Router 13개 분기 연결
+- [ ] 검수 승인 후 E2E 테스트
+- [ ] 검수 안정화 후 Make→솔라피 직접 호출 전환 (FLOW_change_request.md 참조)
 
 ---
 
@@ -159,21 +205,21 @@
 
 ---
 
-## Phase 4: 알림톡 연동 (Make + Solapi) 📋 미착수
+## Phase 4: 알림톡 연동 (Make + Solapi) 🔧 진행중
 
 **목적:** 주문 상태 변경 시 고객에게 자동 알림톡 발송
 
 | # | 작업 | 상태 | 설명 |
 |---|------|------|------|
 | 4-1 | 일반 주문 알림 | 📋 | 아임웹 자동 알림톡 활용 (TMS 개입 불필요) |
-| 4-2 | 복원수리 알림 시나리오 | 📋 | 수거예약/입고완료/수리완료+발송 (Make → Solapi) |
-| 4-3 | AS 접수 알림 시나리오 | 📋 | 접수/수거/입고(비용안내)/입금확인/수리완료 (Solapi 전담) |
-| 4-4 | Make 시나리오 분기 | 📋 | source=imweb vs source=as 분기 처리 |
+| 4-2 | 상담 알림톡 13종 분기 | ✅ | Phase 1.8에서 구현 완료 (검수 대기 중) |
+| 4-3 | AS 접수 알림 (as_received) | 📋 | 접수 완료 알림톡 + AS 안내 페이지 링크 |
+| 4-4 | Make → 솔라피 직접 호출 전환 | 📋 | 검수 안정화 후 전환 예정 (비용 절감) |
 
 ### 알림톡 역할 분리
 - **일반 주문 (가위/주변제품)**: 아임웹 알림톡 (결제완료→발송→배송완료)
-- **복원수리 (아임웹 결제)**: 아임웹 자동 + Solapi 혼합
-- **AS 접수 (계좌입금)**: Solapi 전담 (비용안내+입금확인 포함)
+- **상담 (매장/출장/톡상담)**: Solapi 전담 — 17종 템플릿 (Phase 1.8)
+- **AS 접수 (계좌입금)**: Solapi 전담 (접수 → 비용안내 → 입금확인 → 수리완료)
 
 ---
 
