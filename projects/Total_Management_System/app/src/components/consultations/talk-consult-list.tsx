@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useConsultations, useUpdateConsultationStatus } from '@/hooks/use-consultations';
+import { useConsultations, useUpdateConsultationStatus, useStartTalkConsult } from '@/hooks/use-consultations';
 import { HoldReasonModal } from './hold-reason-modal';
 import {
   formatRelative,
@@ -49,16 +49,20 @@ export function TalkConsultList() {
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
   const updateStatus = useUpdateConsultationStatus();
+  const startTalk = useStartTalkConsult();
 
   const renderActions = (c: Consultation) => {
-    const busy = updateStatus.isPending && updateStatus.variables?.id === c.id;
-    const busyStatus = busy ? updateStatus.variables?.status : null;
+    const busy = (updateStatus.isPending && updateStatus.variables?.id === c.id) ||
+                 (startTalk.isPending && startTalk.variables?.id === c.id);
+    const busyStatus = (updateStatus.isPending && updateStatus.variables?.id === c.id)
+      ? updateStatus.variables?.status : null;
+    const isTalkStarting = startTalk.isPending && startTalk.variables?.id === c.id;
 
     switch (tab) {
       case 'pending':
         return (
           <>
-            <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'in_progress'} onClick={() => updateStatus.mutate({ id: c.id, status: 'in_progress' })}>
+            <Button variant="primary" size="sm" disabled={busy} loading={isTalkStarting} onClick={() => startTalk.mutate({ id: c.id })}>
               상담 시작
             </Button>
             <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>

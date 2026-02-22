@@ -10,10 +10,17 @@ const VERSION = 'tms-2.2';
 
 export type NotifyTemplate =
   | 'confirmed'           // 매장방문 확정
-  | 'cancelled'           // 취소 안내
+  | 'cancelled'           // 매장 취소 안내
   | 'suggest'             // 출장 시간 제안 (SUGGESTED_TIMES)
-  | 'rescheduled'         // 일정 변경
-  | 'field_confirmed';    // 출장 확정
+  | 'rescheduled'         // 매장 일정 변경
+  | 'field_confirmed'     // 출장 확정
+  | 'field_cancelled'     // 출장 취소 안내
+  | 'field_rescheduled'   // 출장 일정 변경
+  | 'field_remind_24h'    // 출장 24h 리마인드
+  | 'field_remind_2h'     // 출장 2h 리마인드
+  | 'field_delayed'       // 출장 지연 안내
+  | 'talk_received'       // 톡상담 접수 안내
+  | 'talk_ready';         // 톡상담 시작 안내
 
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
@@ -22,6 +29,13 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   suggest: 'SUGGESTED_TIMES',
   rescheduled: 'RESCHEDULED',
   field_confirmed: 'FIELD_CONFIRMED',
+  field_cancelled: 'FIELD_CANCELLED',
+  field_rescheduled: 'FIELD_RESCHEDULED',
+  field_remind_24h: 'FIELD_REMIND_24H',
+  field_remind_2h: 'FIELD_REMIND_2H',
+  field_delayed: 'FIELD_DELAYED',
+  talk_received: 'TALK_RECEIVED',
+  talk_ready: 'TALK_READY',
 };
 
 interface NotifyPayload {

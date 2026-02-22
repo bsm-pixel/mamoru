@@ -653,6 +653,49 @@ function safeClose(){
     }
   }
 
+  // ─── TMS 출장 지연 안내 ───
+  if (p.action === 'fieldDelay') {
+    var fdKey = p.key;
+    if (!fdKey || fdKey !== (PropertiesService.getScriptProperties().getProperty('TMS_SYNC_KEY') || 'mamoru-tms-cron-2026')) {
+      return json({ ok: false, error: 'unauthorized' });
+    }
+    try {
+      var fdResult = adminFieldDelay(p.uid, p.delayMin);
+      return json(fdResult);
+    } catch (fdErr) {
+      Logger.log('fieldDelay error: ' + fdErr);
+      return json({ ok: false, error: String(fdErr) });
+    }
+  }
+
+  // ─── TMS 톡상담 시작 알림톡 ───
+  if (p.action === 'talkReady') {
+    var trKey = p.key;
+    if (!trKey || trKey !== (PropertiesService.getScriptProperties().getProperty('TMS_SYNC_KEY') || 'mamoru-tms-cron-2026')) {
+      return json({ ok: false, error: 'unauthorized' });
+    }
+    try {
+      var trInfo = getReservationByUid_(String(p.uid));
+      if (!trInfo) return json({ ok: false, error: 'not_found' });
+      var trPayload = {
+        topic: 'alrimtalk',
+        template: 'talk_ready',
+        id: trInfo.name,   // UniqueID 대신 실제 uid로 변경
+        name: trInfo.name,
+        phone: trInfo.phone,
+        type: trInfo.type,
+        channel: 'kakao',
+        sms_fallback: false
+      };
+      trPayload.id = String(p.uid);
+      postMake_('TALK_READY', trPayload);
+      return json({ ok: true });
+    } catch (trErr) {
+      Logger.log('talkReady error: ' + trErr);
+      return json({ ok: false, error: String(trErr) });
+    }
+  }
+
   // ─── GitHub Pages 고객 대면 페이지용 API ───
   // 시간 선택 데이터 (page_suggest.html → fetch)
   if (p.action === 'getSuggestData' && p.t) {
@@ -1022,6 +1065,24 @@ function submitConsultation(form){
     }
   }
 
+  // ★ 톡상담 접수 시 알림톡 발송
+  if (type === '톡상담') {
+    try {
+      postMake_('TALK_RECEIVED', {
+        topic: 'alrimtalk',
+        template: 'talk_received',
+        id: uid,
+        name: name,
+        phone: phone,
+        type: type,
+        channel: 'kakao',
+        sms_fallback: false
+      });
+    } catch(e) {
+      Logger.log('Make post error(TALK_RECEIVED): ' + e);
+    }
+  }
+
   // ★ 신규 접수 이메일 알림 발송
   try {
     const emailSubject = '[MAMORU 상담] 새로운 ' + type + ' 접수';
@@ -1337,8 +1398,23 @@ function adminCancel(uid, options){
     try {
       const visitDate = r[col['방문일']] instanceof Date ? Utilities.formatDate(r[col['방문일']], TIMEZONE, 'yyyy-MM-dd') : r[col['방문일']];
       const visitTime = r[col['방문시간']] instanceof Date ? Utilities.formatDate(r[col['방문시간']], TIMEZONE, 'HH:mm') : r[col['방문시간']];
-      const payload3 = { topic: 'alrimtalk', template: 'cancelled', id: r[col['UniqueID']], name: r[col['성함']], phone: r[col['연락처']], type: r[col['상담방식']], date: visitDate, time: visitTime };
-      postMake_('CANCELLED', payload3);
+      const cancelIsField = String(r[col['상담방식']] || '').indexOf('출장') !== -1;  // 출장/매장 분기
+      // ▼ 방문 주소 텍스트 (출장 취소 시 주소 포함)
+      let cancelAddr = '';
+      if (cancelIsField) {
+        if (col['addressRoad'] != null && r[col['addressRoad']]) cancelAddr += String(r[col['addressRoad']]).trim();
+        if (col['addressDetail'] != null && r[col['addressDetail']]) cancelAddr += (cancelAddr ? ' ' : '') + String(r[col['addressDetail']]).trim();
+        if (!cancelAddr && col['주소'] != null) cancelAddr = String(r[col['주소']] || '').trim();
+      }
+      const payload3 = {
+        topic: 'alrimtalk',
+        template: cancelIsField ? 'field_cancelled' : 'cancelled',   // ★ 출장/매장 분기
+        id: r[col['UniqueID']], name: r[col['성함']], phone: r[col['연락처']], type: r[col['상담방식']],
+        date: visitDate, time: visitTime,
+        address: cancelAddr,  // 출장이면 주소 포함
+        channel: 'kakao', sms_fallback: false
+      };
+      postMake_(cancelIsField ? 'FIELD_CANCELLED' : 'CANCELLED', payload3);
     } catch (_){}
   }
 
@@ -1353,7 +1429,43 @@ function adminChatSetStatus(uid, status){
 
 // ===== PATCH 1 END =====
 
+// ===== 출장 지연 안내 알림톡 =====
+function adminFieldDelay(uid, delayMin) {
+  delayMin = parseInt(delayMin, 10);
+  if (!delayMin || delayMin <= 0) throw new Error('지연 시간이 유효하지 않습니다.');
 
+  const info = getReservationByUid_(uid);
+  if (!info) throw new Error('예약 정보를 찾을 수 없습니다.');
+  if (info.status !== 'CONFIRMED') throw new Error('확정 상태가 아닙니다. (현재: ' + info.status + ')');
+  if (String(info.type).indexOf('출장') === -1) throw new Error('출장 예약만 지연 안내 가능합니다.');
+
+  // visit_time + delayMin → visit_time_revised (HH:mm 문자열 연산)
+  var parts = String(info.time || '10:00').split(':');
+  var h = parseInt(parts[0], 10) || 10;
+  var m = parseInt(parts[1], 10) || 0;
+  var totalMin = h * 60 + m + delayMin;
+  var rh = Math.floor(totalMin / 60) % 24;
+  var rm = totalMin % 60;
+  var visitTimeRevised = (rh < 10 ? '0' : '') + rh + ':' + (rm < 10 ? '0' : '') + rm;
+
+  var payload = {
+    topic: 'alrimtalk',
+    template: 'field_delayed',
+    id: uid,
+    name: info.name,
+    phone: info.phone,
+    type: info.type,
+    date: info.date,
+    time: info.time,
+    delay_min: String(delayMin),
+    visit_time_revised: visitTimeRevised,
+    address: info.address,
+    channel: 'kakao',
+    sms_fallback: false
+  };
+  postMake_('FIELD_DELAYED', payload);
+  return { ok: true, delay_min: delayMin, visit_time_revised: visitTimeRevised };
+}
 
 // ===== PATCH 3: adminReschedule (매장 캘린더 기준) =====
 function adminReschedule(uid, newDate, newTime){
@@ -1456,14 +1568,16 @@ function adminReschedule(uid, newDate, newTime){
     addrText = String(r[col['주소']] || '').trim();
   }
 
-  // Make 로 시간 변경 결과 전달 (주소 포함)
+  // Make 로 시간 변경 결과 전달 (주소 포함) — 출장/매장 분기
+  const reschTemplate = isField ? 'field_rescheduled' : 'rescheduled';
+  const reschEvent    = isField ? 'FIELD_RESCHEDULED' : 'RESCHEDULED';
   const payload = {
     topic:    'alrimtalk',
-    template: 'rescheduled',      // 나중에 솔라피에서 이 템플릿명으로 라우팅
+    template: reschTemplate,
     id:       r[col['UniqueID']],
     name,
     phone,
-    type,               // '매장 방문' / '출장 요청' 구분에 사용 가능
+    type,
     old_date: oldDate,
     old_time: oldTime,
     new_date: newDate,
@@ -1471,9 +1585,9 @@ function adminReschedule(uid, newDate, newTime){
     address:  addrText, // ★ 방문 주소
     channel:  'kakao',
     sms_fallback: false,
-    change_request_link: GITHUB_PAGES_CONSULT + '/page_change_request.html?uid=' + r[col['UniqueID']]  // 일정 변경/취소 요청 링크
+    change_request_link: GITHUB_PAGES_CONSULT + '/page_change_request.html?uid=' + r[col['UniqueID']]
   };
-  postMake_('RESCHEDULED', payload);  // _meta.func = 'RESCHEDULED'
+  postMake_(reschEvent, payload);
 
   return { ok:true };
 }
@@ -2081,7 +2195,8 @@ function sendReminders_() {
     const when    = new Date(yy, (mm || 1) - 1, (dd || 1), HH || 10, MM || 0, 0);
     const diffMin = (when.getTime() - now.getTime()) / 60000;
 
-    // ▼ 주소 텍스트 생성 (도로명+상세 우선, 없으면 기존 "주소" 컬럼 사용)
+    // ▼ 출장 여부 + 주소 텍스트 생성
+    const remindIsField = String(r[col['상담방식']] || '').indexOf('출장') !== -1;
     let addrText = '';
     if (col['addressRoad'] != null && r[col['addressRoad']]) {
       addrText += String(r[col['addressRoad']]).trim();
@@ -2093,24 +2208,24 @@ function sendReminders_() {
       addrText = String(r[col['주소']] || '').trim();
     }
 
-    // 24시간 전 리마인드 (15분 윈도우)
+    // 24시간 전 리마인드 (15분 윈도우) — 출장/매장 분기
     if (diffMin <= 24 * 60 && diffMin > 24 * 60 - 15 && !r[col['Remind24']]) {
       try {
         const payload = {
           topic: 'alrimtalk',
-          template: 'remind24',
+          template: remindIsField ? 'field_remind_24h' : 'remind24',  // ★ 출장/매장 분기
           id: r[col['UniqueID']],
           name: r[col['성함']],
           phone: r[col['연락처']],
           type: r[col['상담방식']],
           date: dt,
           time: tm,
-          address: addrText,      // ★ 방문 주소 추가
+          address: addrText,
           trigger: 'time',
           channel: 'kakao',
           sms_fallback: false
         };
-        const res = postMake_('REMINDER_24H', payload);
+        const res = postMake_(remindIsField ? 'FIELD_REMIND_24H' : 'REMINDER_24H', payload);
 
         if (res && res.ok === true) {
           sh.getRange(i + 1, col['Remind24'] + 1)
@@ -2123,24 +2238,24 @@ function sendReminders_() {
       }
     }
 
-    // 2시간 전 리마인드 (15분 윈도우)
+    // 2시간 전 리마인드 (15분 윈도우) — 출장/매장 분기
     if (diffMin <= 120 && diffMin > 105 && !r[col['Remind2']]) {
       try {
         const payload2 = {
           topic: 'alrimtalk',
-          template: 'remind2',
+          template: remindIsField ? 'field_remind_2h' : 'remind2',  // ★ 출장/매장 분기
           id: r[col['UniqueID']],
           name: r[col['성함']],
           phone: r[col['연락처']],
           type: r[col['상담방식']],
           date: dt,
           time: tm,
-          address: addrText,      // ★ 방문 주소 추가
+          address: addrText,
           trigger: 'time',
           channel: 'kakao',
           sms_fallback: false
         };
-        const res2 = postMake_('REMINDER_2H', payload2);
+        const res2 = postMake_(remindIsField ? 'FIELD_REMIND_2H' : 'REMINDER_2H', payload2);
 
         if (res2 && res2.ok === true) {
           sh.getRange(i + 1, col['Remind2'] + 1)

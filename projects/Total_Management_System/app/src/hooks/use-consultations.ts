@@ -248,6 +248,72 @@ export function useHoldConsultation() {
   });
 }
 
+/** 출장 지연 안내 */
+export function useFieldDelay() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ consultationId, delayMin }: {
+      consultationId: string;
+      delayMin: number;
+    }) => {
+      const res = await fetch('/api/consultation/delay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consultationId, delayMin }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(errBody.error || '지연 안내 실패');
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast.success(`지연 안내 발송 완료 (${data.delay_min}분, 도착 ${data.visit_time_revised})`);
+      queryClient.invalidateQueries({ queryKey: ['consultations'] });
+      queryClient.invalidateQueries({ queryKey: ['consultation'] });
+    },
+    onError: (err) => {
+      toast.error('지연 안내 실패: ' + String(err));
+    },
+  });
+}
+
+/** 톡상담 시작 (상태변경 + talk_ready 알림톡) */
+export function useStartTalkConsult() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id }: { id: string }) => {
+      // 1) 상태를 in_progress로 변경
+      const statusRes = await fetch(`/api/consultation/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'in_progress', note: '톡상담 시작' }),
+      });
+      if (!statusRes.ok) throw new Error(await statusRes.text());
+
+      // 2) talk_ready 알림톡 발송
+      await fetch('/api/consultation/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consultationId: id, template: 'talk_ready' }),
+      }).catch(() => {}); // 알림 실패해도 상태변경은 유지
+
+      return statusRes.json();
+    },
+    onSuccess: () => {
+      toast.success('톡상담 시작 + 알림톡 발송');
+      queryClient.invalidateQueries({ queryKey: ['consultations'] });
+      queryClient.invalidateQueries({ queryKey: ['consultation'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    },
+    onError: (err) => {
+      toast.error('톡상담 시작 실패: ' + String(err));
+    },
+  });
+}
+
 /** 일정 변경 (reschedule) */
 export function useRescheduleConsultation() {
   const queryClient = useQueryClient();

@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useConsultations, useUpdateConsultationStatus } from '@/hooks/use-consultations';
+import { useConsultations, useUpdateConsultationStatus, useFieldDelay } from '@/hooks/use-consultations';
 import { SuggestTimeModal } from './suggest-time-modal';
 import { HoldReasonModal } from './hold-reason-modal';
 import {
@@ -16,7 +16,7 @@ import {
   CONSULTATION_STATUS_LABEL,
   CONSULTATION_STATUS_COLOR,
 } from '@/lib/utils/format';
-import { MapPin, Search, ChevronLeft, ChevronRight, Map as MapIcon, List, CheckCircle, AlertTriangle } from 'lucide-react';
+import { MapPin, Search, ChevronLeft, ChevronRight, Map as MapIcon, List, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
 type TabKey = 'waiting' | 'suggested' | 'upcoming' | 'overdue' | 'completed' | 'on_hold' | 'cancelled';
@@ -62,6 +62,7 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
   const [page, setPage] = useState(1);
   const [suggestTarget, setSuggestTarget] = useState<string | null>(null);
   const [holdTarget, setHoldTarget] = useState<string | null>(null);
+  const [delayTarget, setDelayTarget] = useState<string | null>(null);
 
   const tabFilters = getTabFilters(tab);
   const { data, isLoading } = useConsultations({
@@ -75,6 +76,7 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
   const updateStatus = useUpdateConsultationStatus();
+  const fieldDelay = useFieldDelay();
 
   // 날짜 그룹 (예정/완료필요 탭)
   const dateGroups = useMemo(() => {
@@ -127,6 +129,10 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
       case 'upcoming':
         return (
           <>
+            <Button variant="secondary" size="sm" disabled={busy} onClick={() => setDelayTarget(c.id)}>
+              <Clock size={14} />
+              지연 안내
+            </Button>
             <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>
             <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
               취소
@@ -300,6 +306,81 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
       {holdTarget && (
         <HoldReasonModal open={!!holdTarget} onClose={() => setHoldTarget(null)} consultationId={holdTarget} />
       )}
+      {delayTarget && (
+        <DelaySelectModal
+          open={!!delayTarget}
+          onClose={() => setDelayTarget(null)}
+          consultationId={delayTarget}
+          onSubmit={(min) => {
+            fieldDelay.mutate(
+              { consultationId: delayTarget, delayMin: min },
+              { onSettled: () => setDelayTarget(null) }
+            );
+          }}
+          isPending={fieldDelay.isPending}
+        />
+      )}
+    </div>
+  );
+}
+
+/** 출장 지연 시간 선택 모달 */
+function DelaySelectModal({
+  open,
+  onClose,
+  consultationId: _consultationId,
+  onSubmit,
+  isPending,
+}: {
+  open: boolean;
+  onClose: () => void;
+  consultationId: string;
+  onSubmit: (min: number) => void;
+  isPending: boolean;
+}) {
+  const [selected, setSelected] = useState<number | null>(null);
+  const options = [5, 10, 15, 20, 30];
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-card-white rounded-2xl p-5 w-[320px] shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-sm font-bold text-indigo-black mb-3">지연 안내 발송</h3>
+        <p className="text-xs text-neutral-500 mb-4">
+          고객에게 도착 지연 알림톡을 발송합니다.<br />예상 지연 시간을 선택해주세요.
+        </p>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {options.map((min) => (
+            <button
+              key={min}
+              onClick={() => setSelected(min)}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                selected === min
+                  ? 'bg-terracotta text-cream'
+                  : 'bg-warm-ivory text-neutral-600 hover:bg-neutral-100'
+              }`}
+            >
+              {min}분
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={onClose} className="flex-1">
+            취소
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={!selected || isPending}
+            loading={isPending}
+            onClick={() => selected && onSubmit(selected)}
+            className="flex-1"
+          >
+            발송
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

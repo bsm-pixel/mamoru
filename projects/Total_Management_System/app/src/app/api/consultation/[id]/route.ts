@@ -4,11 +4,19 @@ import { isValidTransition } from '@/lib/consultation/transitions';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
-/** 상태→알림 템플릿 매핑 (자동 발송 대상) */
-const AUTO_NOTIFY_MAP: Partial<Record<string, NotifyTemplate>> = {
-  confirmed: 'confirmed',
-  cancelled: 'cancelled',
-};
+/** 상태→알림 템플릿 매핑 (consultation_type 기반 분기) */
+function getAutoNotifyTemplate(
+  newStatus: string,
+  consultationType: string
+): NotifyTemplate | null {
+  if (newStatus === 'confirmed') {
+    return consultationType === 'field_request' ? 'field_confirmed' : 'confirmed';
+  }
+  if (newStatus === 'cancelled') {
+    return consultationType === 'field_request' ? 'field_cancelled' : 'cancelled';
+  }
+  return null;
+}
 
 /** GAS 웹앱에 취소 요청 — 캘린더 삭제 + 시트 상태 + 슬롯 캐시 무효화 */
 async function cancelViaGAS(uniqueId: string): Promise<{ ok: boolean; detail?: string }> {
@@ -175,8 +183,8 @@ export async function PATCH(
           sideEffects.push(cancelViaGAS(data.unique_id));
         }
 
-        // 자동 알림톡 발송
-        const template = AUTO_NOTIFY_MAP[newStatus];
+        // 자동 알림톡 발송 — consultation_type 기반 분기
+        const template = getAutoNotifyTemplate(newStatus, data.consultation_type);
         if (template && data.phone) {
           const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
           const typeLabel = data.consultation_type === 'store_visit' ? '매장 방문'
