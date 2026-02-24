@@ -1,13 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import { RepairList } from '@/components/repairs/repair-list';
+import { RepairDetailPanel } from '@/components/repairs/repair-detail-panel';
 import { useRepairSync } from '@/hooks/use-repairs';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Scissors } from 'lucide-react';
 
 export default function RepairsPage() {
   const sync = useRepairSync();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   return (
     <>
@@ -27,8 +30,28 @@ export default function RepairsPage() {
           </Button>
         </div>
 
-        {/* 목록 */}
-        <RepairList />
+        {/* PC: 좌측 목록 + 우측 상세 패널 / 모바일: 목록만 */}
+        <div className="flex gap-6">
+          {/* 좌측: 목록 */}
+          <div className="flex-1 min-w-0 lg:max-w-[480px]">
+            <RepairList
+              onSelect={setSelectedId}
+              selectedId={selectedId}
+            />
+          </div>
+
+          {/* 우측: 상세 패널 (PC lg+ 만 표시) */}
+          <div className="hidden lg:block flex-1 min-w-0">
+            {selectedId ? (
+              <RepairDetailPanel repairId={selectedId} />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-60 text-neutral-400">
+                <Scissors size={32} className="mb-2 opacity-50" />
+                <p className="text-sm">목록에서 복원수리 건을 선택하세요</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </>
   );

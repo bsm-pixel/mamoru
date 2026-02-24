@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,11 +22,26 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'cancelled', label: '취소' },
 ];
 
-export function RepairList() {
+interface RepairListProps {
+  onSelect?: (id: string) => void;  // PC: 클릭 시 상세 패널 표시
+  selectedId?: string | null;       // 현재 선택된 항목 하이라이트
+}
+
+export function RepairList({ onSelect, selectedId }: RepairListProps = {}) {
+  const [isLg, setIsLg] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const limit = 20;
+
+  // SSR-safe: lg 이상 여부 감지 (1024px)
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)');
+    setIsLg(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   const { data, isLoading } = useRepairs({
     status: activeTab === 'all' ? undefined : activeTab,
@@ -97,50 +112,60 @@ export function RepairList() {
         <div className="space-y-2">
           {data.repairs.map((r) => {
             const days = getDaysElapsed(r.received_at);
-            return (
-              <Link key={r.id} href={`/repairs/${r.id}`}>
-                <Card className="hover:bg-neutral-50 transition cursor-pointer">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      {/* 접수번호 + 상태 */}
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-mono text-neutral-500">{r.as_id}</span>
-                        <RepairStatusBadge status={r.status} />
-                      </div>
-                      {/* 고객 정보 */}
-                      <p className="text-sm font-semibold truncate">{r.name}</p>
-                      <p className="text-xs text-neutral-500">{formatPhone(r.phone)}</p>
-                      {/* 가위 수량 */}
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-neutral-600">
-                        {r.qty_mamoru > 0 && (
-                          <span>마모루 {r.qty_mamoru}자루</span>
-                        )}
-                        {r.qty_other > 0 && (
-                          <span>타사 {r.qty_other}자루</span>
-                        )}
-                        {r.total_amount > 0 && (
-                          <span className="font-medium text-terracotta-deep">
-                            {formatKRW(r.total_amount)}
-                          </span>
-                        )}
-                      </div>
+            const isSelected = selectedId === r.id;
+            const card = (
+              <Card className={`hover:bg-neutral-50 transition cursor-pointer ${isSelected ? 'ring-2 ring-terracotta bg-terracotta/5' : ''}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    {/* 접수번호 + 상태 */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-mono text-neutral-500">{r.as_id}</span>
+                      <RepairStatusBadge status={r.status} />
                     </div>
-                    {/* 우측: 진행방식 + 경과 */}
-                    <div className="text-right shrink-0">
-                      {r.proceed_type && (
-                        <span className="text-xs text-neutral-500">{r.proceed_type}</span>
+                    {/* 고객 정보 */}
+                    <p className="text-sm font-semibold truncate">{r.name}</p>
+                    <p className="text-xs text-neutral-500">{formatPhone(r.phone)}</p>
+                    {/* 가위 수량 */}
+                    <div className="flex items-center gap-3 mt-1.5 text-xs text-neutral-600">
+                      {r.qty_mamoru > 0 && (
+                        <span>마모루 {r.qty_mamoru}자루</span>
                       )}
-                      <p className="text-[11px] text-neutral-400 mt-1">
-                        {formatRelative(r.received_at)}
-                      </p>
-                      {days > 0 && r.status !== 'completed' && r.status !== 'cancelled' && (
-                        <p className={`text-[11px] mt-0.5 ${days >= 7 ? 'text-error font-medium' : 'text-neutral-400'}`}>
-                          {days}일 경과
-                        </p>
+                      {r.qty_other > 0 && (
+                        <span>타사 {r.qty_other}자루</span>
+                      )}
+                      {r.total_amount > 0 && (
+                        <span className="font-medium text-terracotta-deep">
+                          {formatKRW(r.total_amount)}
+                        </span>
                       )}
                     </div>
                   </div>
-                </Card>
+                  {/* 우측: 진행방식 + 경과 */}
+                  <div className="text-right shrink-0">
+                    {r.proceed_type && (
+                      <span className="text-xs text-neutral-500">{r.proceed_type}</span>
+                    )}
+                    <p className="text-[11px] text-neutral-400 mt-1">
+                      {formatRelative(r.received_at)}
+                    </p>
+                    {days > 0 && r.status !== 'completed' && r.status !== 'cancelled' && (
+                      <p className={`text-[11px] mt-0.5 ${days >= 7 ? 'text-error font-medium' : 'text-neutral-400'}`}>
+                        {days}일 경과
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            );
+
+            // PC(lg+) + onSelect → 패널 선택, 모바일 → 페이지 이동
+            return onSelect && isLg ? (
+              <div key={r.id} onClick={() => onSelect(r.id)} className="cursor-pointer">
+                {card}
+              </div>
+            ) : (
+              <Link key={r.id} href={`/repairs/${r.id}`}>
+                {card}
               </Link>
             );
           })}

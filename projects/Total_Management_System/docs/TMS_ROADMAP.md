@@ -269,6 +269,7 @@
 | 7-10 | GAS Script Properties 설정 | 📋 | TMS_REPAIR_SYNC_URL, TMS_BASE_URL, CRON_SECRET 설정 |
 | 7-11 | 수리내역 페이지 TMS API 연동 | ✅ | page_as_report.html → GitHub Pages + TMS API(CORS) 구조로 구현 |
 | 7-12 | E2E 테스트 | 📋 | 접수→검수→비용안내→입금→수리→출고 전체 플로우 검증 |
+| 7-13 | PC 마스터-디테일 레이아웃 | ✅ | 좌측 목록 + 우측 상세 패널 (lg+), 모바일은 기존 페이지 이동 유지 |
 
 ### 상태 머신 (12상태)
 ```
