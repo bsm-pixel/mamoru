@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>A/S 신청서 | MAMORU</title>
+<title>복원수리 접수 | MAMORU</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
 /* ══════════════════════════════════════════════════════════════
-   MAMORU Brand Kit: Dark Theme + Gold Accent - A/S 접수
+   MAMORU Brand Kit: Dark Theme + Gold Accent - 복원수리 접수
    ══════════════════════════════════════════════════════════════ */
 :root {
   --bg-dark: #1C1C1E;
@@ -867,13 +867,13 @@ select.err {
     <div class="header-logo">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
     </div>
-    <h1>A/S 신청서</h1>
+    <h1>복원수리 접수</h1>
   </div>
 
   <div class="card">
     <div class="card-body">
       <div class="segment-wrap">
-        <div class="section-title">A/S 진행방식</div>
+        <div class="section-title">복원수리 진행방식</div>
         <div class="segment-control" id="seg">
           <button type="button" class="segment-btn active" data-v="pickup">방문수거</button>
           <button type="button" class="segment-btn" data-v="direct">직접발송</button>
@@ -929,7 +929,7 @@ select.err {
 
       <div class="qty-row">
         <div class="form-group">
-          <label class="required">마모루가위 A/S 수량</label>
+          <label class="required">마모루가위 수량</label>
           <select id="qty_mamoru">
             <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
           </select>
@@ -972,23 +972,23 @@ select.err {
 
       <div class="privacy-box">
         <h4>개인정보 수집 및 이용 동의 *</h4>
-        <div class="privacy-content">마모루(이하 '회사')는 A/S 접수 처리와 수거·발송, 수리 진단 및 비용 안내, 발송/배송, 고객 고지, 문의 대응 등 A/S 전 과정 수행을 위해 최소한의 개인정보를 수집·이용합니다.
+        <div class="privacy-content">마모루(이하 '회사')는 복원수리 접수 처리와 수거·발송, 수리 진단 및 비용 안내, 발송/배송, 고객 고지, 문의 대응 등 복원수리 전 과정 수행을 위해 최소한의 개인정보를 수집·이용합니다.
 
 1. 처리 목적
-– A/S 접수 식별 및 진행 안내(안내톡/문자), 수거 및 배송 요청, 수리 결과·비용 고지, 결제/정산, 민원 처리.
+– 복원수리 접수 식별 및 진행 안내(안내톡/문자), 수거 및 배송 요청, 수리 결과·비용 고지, 결제/정산, 민원 처리.
 
 2. 수집 항목
 – 필수: 성명, 연락처(휴대전화), 주소(우편번호·기본·상세), 접수/수거 요청일, 전달방법, 접수내역(수량, 메모).
 – 선택: 타사가위 수량, 기타 요청사항.
 
 3. 보유 기간
-– A/S 처리 완료 후 3년 보관(소비자 분쟁해결 기준). 관계 법령상 보존이 필요한 경우 해당 기간까지 보관.
+– 복원수리 처리 완료 후 3년 보관(소비자 분쟁해결 기준). 관계 법령상 보존이 필요한 경우 해당 기간까지 보관.
 
 4. 제3자 제공·위탁
 – 수거/배송을 위한 택배사, 알림톡/문자 발송 대행사, 결제/정산을 위한 PG사 등에 한해 업무 수행에 필요한 범위에서 위탁 또는 제공될 수 있음.
 
 5. 동의 거부 권리
-– 동의를 거부하실 수 있으나, 이 경우 A/S 접수 및 진행이 제한될 수 있습니다.</div>
+– 동의를 거부하실 수 있으나, 이 경우 복원수리 접수 및 진행이 제한될 수 있습니다.</div>
         <div class="privacy-check">
           <input type="checkbox" id="agreeCk">
           <label for="agreeCk">개인정보 수집 및 이용에 동의합니다.</label>
@@ -1471,7 +1471,7 @@ select.err {
 
     // 3. [중요] 즉시 성공 메시지 표시 (기다리지 않음)
     openModal(
-      'A/S 접수가 완료되었습니다',
+      '복원수리 접수가 완료되었습니다',
       '고객님의 접수가 정상적으로 처리되었습니다.<br><b>잠시 후 접수번호와 안내사항이<br>카카오톡 알림톡으로 발송됩니다.</b>',
       { loading: false }
     );

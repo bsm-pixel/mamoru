@@ -183,7 +183,7 @@ function lotteBuildSnd_(cfg, snd){
       acperAdr:    snd.rcvAdr,
 
       boxTypCd:    snd.boxTypCd || 'A',
-      gdsNm:       snd.gdsNm    || 'A/S 물품',
+      gdsNm:       snd.gdsNm    || '복원수리 물품',
       dlvMsgCont:  snd.dlvMsg   || '',
       cusMsgCont:  snd.cusMsg   || '',
       pickReqYmd:  (snd.pickReqYmd || '').replace(/-/g,'')
@@ -340,7 +340,7 @@ function lotteBookSingle_(order){
     ordNo: order.ordNo || ('TEST-'+Utilities.formatDate(new Date(),'Asia/Seoul','yyyyMMdd-HHmmss')),
     invNo: order.invNo || invNo,
     rcvName: order.rcvName||'', rcvTel:order.rcvTel||'', rcvZip:order.rcvZip||'', rcvAdr:order.rcvAdr||'',
-    boxTypCd: order.boxTypCd||'A', gdsNm: order.gdsNm||'A/S 물품', dlvMsg: order.dlvMsg||'',
+    boxTypCd: order.boxTypCd||'A', gdsNm: order.gdsNm||'복원수리 물품', dlvMsg: order.dlvMsg||'',
     pickReqYmd: (order.pickReqYmd||'')
   });
 
@@ -558,7 +558,7 @@ function doPost(e){
         // 3자루 이상: 무료
       }
 
-      const serviceCost = qtyM * 10000 + qtyO * 20000;  // A/S 비용
+      const serviceCost = qtyM * 10000 + qtyO * 20000;  // 복원수리 비용
       const cost = serviceCost + shippingFee;           // 총 비용
 
       const row = [
@@ -598,7 +598,7 @@ function doPost(e){
             pickup_address2: String(body.address2 || '').trim(),
             pickup_address_text: String((body.address1 || '') + ' ' + (body.address2 || '')).trim(),
             // 금액 정보
-            service_cost: serviceCost,    // A/S 비용 (마모루 1만원×수량 + 타사 2만원×수량)
+            service_cost: serviceCost,    // 복원수리 비용 (마모루 1만원×수량 + 타사 2만원×수량)
             shipping_fee: shippingFee,    // 수거비 (1자루 5천원, 2자루 3천원, 3자루+ 무료)
             total_amount: cost            // 총 비용
           })
@@ -608,15 +608,15 @@ function doPost(e){
       // 이메일 알림 발송
       try{
         Logger.log('[EMAIL] Attempting to send email for AS: ' + asId);
-        const emailSubject = '[MAMORU] 새로운 A/S 접수';
-        const emailBody = `${body.name||'고객'}님이 A/S 접수를 하였습니다.\n\n` +
+        const emailSubject = '[MAMORU] 새로운 복원수리 접수';
+        const emailBody = `${body.name||'고객'}님이 복원수리 접수를 하였습니다.\n\n` +
                          `접수번호: ${asId}\n` +
                          `고객명: ${body.name||''}\n` +
                          `연락처: ${fixedPhone}\n` +
                          `진행방식: ${body.proceed_type||''}\n` +
                          `마모루 수량: ${body.qty_mamoru||0}개\n` +
                          `타사 수량: ${body.qty_other||0}개\n` +
-                         `A/S 비용: ${serviceCost.toLocaleString()}원\n` +
+                         `복원수리 비용: ${serviceCost.toLocaleString()}원\n` +
                          `수거비: ${shippingFee.toLocaleString()}원\n` +
                          `총 금액: ${cost.toLocaleString()}원\n` +
                          `접수일시: ${createdAt}`;
@@ -955,7 +955,7 @@ function manualBook(asId){
     rcvTel:  String(row[COL.연락처-1]||''),
     rcvZip:  String(row[COL.우편번호-1]||''),
     rcvAdr:  String((row[COL.주소-1]||'')+' '+(row[COL.상세주소-1]||'')).trim(),
-    gdsNm:   'AS 출고',
+    gdsNm:   '복원수리 출고',
     dlvMsg:  String(row[COL.메모-1]||'')
   };
 
@@ -1043,7 +1043,7 @@ function bookAS_(asId){
     rcvZip:  String(row[COLS.우편번호-1]||''),
     rcvAdr:  String((row[COLS.주소-1]||'')+' '+(row[COLS.상세주소-1]||'')).trim(),
     boxTypCd:'A',
-    gdsNm:   'AS 출고',
+    gdsNm:   '복원수리 출고',
     dlvMsg:  String(row[COLS.메모-1]||''),
     pickReqYmd: ''
   };

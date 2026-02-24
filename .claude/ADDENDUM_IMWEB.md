@@ -73,12 +73,12 @@
 
 ---
 
-## 6. Data Flow (진단 → 상담/AS 연동)
-- 진단 후 상담/AS: 진단 결과가 접수 데이터에 포함되어 시트에 저장되어야 함
+## 6. Data Flow (진단 → 상담/복원수리 연동)
+- 진단 후 상담/복원수리: 진단 결과가 접수 데이터에 포함되어 시트에 저장되어야 함
 - 진단 없는 접수: 정상 동작해야 하며 진단 컬럼은 빈값 허용
 - 파라미터 키는 프로젝트에서 고정(예시):
   - diag_id, diag_summary, recommend_sku, stage, cut_style
 - 시트 컬럼 최소셋(예시):
-  - created_at, channel, type(상담/AS/QnA), subtype(방문/출장/카톡 등), name, phone, status
+  - created_at, channel, type(상담/복원수리/QnA), subtype(방문/출장/카톡 등), name, phone, status
   - has_diag, diag_id, diag_summary, recommend_sku
   - 출장: address, preferred_time, travel_time, service_time

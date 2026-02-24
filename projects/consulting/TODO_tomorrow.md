@@ -1,7 +1,7 @@
 # 할 일 목록 — 2026-02-23 (일)
 
 > 작성: 2026-02-22
-> 목표: 솔라피 검수 제출 + TMS AS 기능 구현 착수
+> 목표: 솔라피 검수 제출 + TMS 복원수리 기능 구현 착수
 
 ---
 
@@ -28,12 +28,12 @@
 - [ ] talk_received (톡상담 접수) — BC 1:1 문의하기
 - [ ] talk_ready (톡상담 시작) — BC 톡상담 시작하기
 
-### 1-3. AS 알림톡 1종
-- [ ] as_received (AS 접수 완료) — WL AS 안내 확인 + BC 1:1 문의하기
+### 1-3. 복원수리 알림톡 1종
+- [ ] as_received (복원수리 접수 완료) — WL 복원수리 안내 확인 + BC 1:1 문의하기
 
 ### 1-4. 리뷰 유도 알림톡 (초안 작성 필요)
 - [ ] 상담 후기 유도 템플릿 초안 작성
-- [ ] AS 후기 유도 템플릿 초안 작성
+- [ ] 복원수리 후기 유도 템플릿 초안 작성
 - [ ] 검수 제출
 
 ---
@@ -44,21 +44,21 @@
 - [ ] 2-1. 기존 4종 (confirmed/cancelled/rescheduled/remind) 변수 매핑 업데이트
 - [ ] 2-2. 신규 9종 분기 추가 (Router에서 template 값 기준)
 - [ ] 2-3. 톡상담 2종 분기 추가
-- [ ] 2-4. AS 1종 분기 추가
+- [ ] 2-4. 복원수리 1종 분기 추가
 
 ---
 
-## 3. TMS AS 기능 구현 착수
+## 3. TMS 복원수리 기능 구현 착수
 
-### 3-1. AS 안내 페이지 (GitHub Pages)
+### 3-1. 복원수리 안내 페이지 (GitHub Pages)
 - [ ] `projects/as/page_as_guide.html` 생성
 - [ ] 섹션: 진행과정 / 포장방법 / 비용안내
 - [ ] GitHub Pages push + 접근 확인
 
-### 3-2. TMS AS 모듈 (Phase 7 착수)
-- [ ] Supabase AS 테이블 설계 (접수→수거→입고→수리→출고)
-- [ ] AS 접수 UI 스캐폴드
-- [ ] AS 상태 보드 (칸반 or 탭)
+### 3-2. TMS 복원수리 모듈 (Phase 7 착수)
+- [ ] Supabase 복원수리 테이블 설계 (접수→수거→입고→수리→출고)
+- [ ] 복원수리 접수 UI 스캐폴드
+- [ ] 복원수리 상태 보드 (칸반 or 탭)
 
 > 상세: `memory/as_system_brief.md` 참조
 
@@ -103,12 +103,12 @@
 - [ ] 3-2. TMS "상담 시작" → talk_ready 발송
 - [ ] 3-3. 고객 카카오 채널 진입 확인
 
-### 라운드 4: AS 플로우
+### 라운드 4: 복원수리 플로우
 ```
-접수 → as_received → AS 안내 페이지 확인
+접수 → as_received → 복원수리 안내 페이지 확인
 ```
-- [ ] 4-1. AS 접수 → as_received 알림톡
-- [ ] 4-2. "AS 안내 확인" 버튼 → page_as_guide.html 로드
+- [ ] 4-1. 복원수리 접수 → as_received 알림톡
+- [ ] 4-2. "복원수리 안내 확인" 버튼 → page_as_guide.html 로드
 
 ### 라운드 5: 메타데이터 검증
 - [ ] 5-1. BC 버튼 클릭 → 해피톡 상담사 화면에 메타데이터 표시 확인
@@ -121,4 +121,4 @@
 - 전체 흐름도: `projects/consulting/FLOW_change_request.md`
 - GAS 코드: `projects/consulting/Code.gs`
 - TMS 로드맵: `projects/Total_Management_System/docs/TMS_ROADMAP.md`
-- AS 브리프: `memory/as_system_brief.md`
+- 복원수리 브리프: `memory/as_system_brief.md`
