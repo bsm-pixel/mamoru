@@ -132,31 +132,33 @@ export const CONSULTATION_TYPE_LABEL: Record<string, string> = {
 /** 복원수리 상태 한글 매핑 */
 export const REPAIR_STATUS_LABEL: Record<string, string> = {
   intake: '접수',
-  pickup_scheduled: '수거예약',
-  picked_up: '수거완료',
-  inspecting: '검수중',
-  cost_notified: '비용안내',
+  pickup_scheduled: '수거접수 완료',
+  cost_notified: '입고&비용안내 완료',
   payment_confirmed: '입금확인',
-  repairing: '수리중',
-  ready_to_ship: '출고대기',
-  shipped: '발송완료',
+  repairing: '진행중',
+  shipped: '출고 완료',
   delivered: '배송완료',
   completed: '완료',
   cancelled: '취소',
+  // 레거시
+  picked_up: '입고완료',
+  inspecting: '검수중',
+  ready_to_ship: '출고대기',
 };
 
 /** 복원수리 상태 색상 매핑 (Tailwind 클래스) */
 export const REPAIR_STATUS_COLOR: Record<string, string> = {
   intake: 'bg-info-soft text-info',
   pickup_scheduled: 'bg-info-soft text-info',
-  picked_up: 'bg-info-soft text-info',
-  inspecting: 'bg-warning-soft text-warning',
   cost_notified: 'bg-warning-soft text-warning',
   payment_confirmed: 'bg-terracotta-soft/30 text-terracotta-deep',
   repairing: 'bg-terracotta-soft/30 text-terracotta-deep',
-  ready_to_ship: 'bg-success-soft text-success',
   shipped: 'bg-success-soft text-success',
   delivered: 'bg-success-soft text-success',
   completed: 'bg-neutral-100 text-neutral-500',
   cancelled: 'bg-error-soft text-error',
+  // 레거시
+  picked_up: 'bg-info-soft text-info',
+  inspecting: 'bg-warning-soft text-warning',
+  ready_to_ship: 'bg-success-soft text-success',
 };

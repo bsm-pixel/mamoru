@@ -15,9 +15,8 @@ import {
   useUpdateRepairStatus,
   useShipRepair,
   useCancelShipment,
-  useSendRepairNotification,
 } from '@/hooks/use-repairs';
-import { getAllowedRepairTransitions, REPAIR_ACTION_LABEL } from '@/lib/repair/transitions';
+import { getFilteredRepairTransitions, REPAIR_ACTION_LABEL } from '@/lib/repair/transitions';
 import { formatDateTime } from '@/lib/utils/format';
 import type { RepairStatus } from '@/lib/supabase/types';
 import { Package, Truck, X, Scissors } from 'lucide-react';
@@ -32,7 +31,6 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
   const updateStatus = useUpdateRepairStatus();
   const shipRepair = useShipRepair();
   const cancelShipment = useCancelShipment();
-  const sendNotify = useSendRepairNotification();
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showInspection, setShowInspection] = useState(false);
 
@@ -57,53 +55,35 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
 
   const { repair: r, inspections, history } = data;
   const currentStatus = r.status as RepairStatus;
-  const allowed = getAllowedRepairTransitions(currentStatus);
+  const proceedType = r.proceed_type;
+  const filtered = getFilteredRepairTransitions(currentStatus, proceedType);
   const busy = updateStatus.isPending;
 
-  /** 상태별 액션 버튼 */
+  /** 상태별 액션 버튼 — 진행방식별 분기 */
   const renderActions = () => {
     if (currentStatus === 'completed' || currentStatus === 'cancelled') return null;
 
     return (
       <div className="flex flex-wrap gap-2">
-        {allowed
-          .filter((s) => s !== 'cancelled')
-          .map((nextStatus) => {
-            if (nextStatus === 'shipped') return null;
+        {/* cost_notified는 CostSummary에서 처리, shipped는 출고 섹션에서 처리 */}
+        {filtered
+          .filter((s) => s !== 'cancelled' && s !== 'cost_notified' && s !== 'shipped')
+          .map((nextStatus) => (
+            <Button
+              key={nextStatus}
+              variant="primary"
+              size="sm"
+              disabled={busy}
+              loading={updateStatus.variables?.status === nextStatus && busy}
+              onClick={() => updateStatus.mutate({ id: r.id, status: nextStatus })}
+              className="w-full"
+            >
+              {REPAIR_ACTION_LABEL[nextStatus]}
+            </Button>
+          ))}
 
-            if (nextStatus === 'inspecting') {
-              return (
-                <Button
-                  key={nextStatus}
-                  variant="primary"
-                  size="sm"
-                  disabled={busy}
-                  loading={updateStatus.variables?.status === nextStatus && busy}
-                  onClick={() => {
-                    updateStatus.mutate({ id: r.id, status: nextStatus });
-                    setShowInspection(true);
-                  }}
-                >
-                  {REPAIR_ACTION_LABEL[nextStatus]}
-                </Button>
-              );
-            }
-
-            return (
-              <Button
-                key={nextStatus}
-                variant={nextStatus === 'cost_notified' ? 'secondary' : 'primary'}
-                size="sm"
-                disabled={busy}
-                loading={updateStatus.variables?.status === nextStatus && busy}
-                onClick={() => updateStatus.mutate({ id: r.id, status: nextStatus })}
-              >
-                {REPAIR_ACTION_LABEL[nextStatus]}
-              </Button>
-            );
-          })}
-
-        {allowed.includes('cancelled') && (
+        {/* 취소 */}
+        {filtered.includes('cancelled' as RepairStatus) && (
           <Button
             variant="danger"
             size="sm"
@@ -128,7 +108,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
             {r.as_id} &middot; {formatDateTime(r.received_at)}
           </p>
         </div>
-        <RepairStatusBadge status={r.status} />
+        <RepairStatusBadge status={r.status} proceedType={proceedType} />
       </div>
 
       {/* 2컬럼 내부 레이아웃 */}
@@ -139,7 +119,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
 
           {/* 검수 섹션 */}
           {(showInspection || inspections.length > 0 ||
-            ['inspecting', 'cost_notified', 'payment_confirmed', 'repairing', 'ready_to_ship', 'shipped', 'delivered', 'completed'].includes(currentStatus)
+            ['inspecting', 'cost_notified', 'payment_confirmed', 'repairing', 'shipped', 'delivered', 'completed'].includes(currentStatus)
           ) && (
             <>
               <InspectionForm
@@ -164,8 +144,8 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
             {renderActions()}
           </Card>
 
-          {/* 출고 섹션 */}
-          {(['ready_to_ship', 'shipped', 'delivered', 'completed'].includes(currentStatus)) && (
+          {/* 출고 섹션 — repairing 이상에서 표시 */}
+          {(['repairing', 'shipped', 'delivered', 'completed'].includes(currentStatus)) && (
             <Card>
               <CardHeader>
                 <CardTitle>
@@ -209,39 +189,6 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
               )}
             </Card>
           )}
-
-          {/* 알림톡 수동 발송 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>알림톡</CardTitle>
-            </CardHeader>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => sendNotify.mutate({ repairId: r.id, template: 'as_received' })}
-                loading={sendNotify.isPending}
-              >
-                접수 안내
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => sendNotify.mutate({ repairId: r.id, template: 'as_cost_notice' })}
-                loading={sendNotify.isPending}
-              >
-                비용 안내
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => sendNotify.mutate({ repairId: r.id, template: 'as_shipped' })}
-                loading={sendNotify.isPending}
-              >
-                출고 안내
-              </Button>
-            </div>
-          </Card>
 
           {/* 이력 */}
           <RepairTimeline history={history} />

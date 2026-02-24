@@ -122,7 +122,7 @@ export function RepairList({ onSelect, selectedId }: RepairListProps = {}) {
                       <span className="text-xs text-neutral-500">
                         {formatDate(r.received_at, 'yy년 M월 d일 HH:mm')}
                       </span>
-                      <RepairStatusBadge status={r.status} />
+                      <RepairStatusBadge status={r.status} proceedType={r.proceed_type} />
                       {r.proceed_type && (
                         <span className="px-1.5 py-0.5 rounded-full text-[11px] font-medium bg-info-soft text-info">
                           {r.proceed_type}

@@ -113,6 +113,18 @@ export async function PATCH(
         note: note || null,
       });
 
+      // 입금확인 → 자동 진행중 전환
+      if (newStatus === 'payment_confirmed') {
+        await db.from('repairs').update({ status: 'repairing' }).eq('id', id);
+        await db.from('repair_history').insert({
+          repair_id: id,
+          from_status: 'payment_confirmed',
+          to_status: 'repairing',
+          changed_by: user.id,
+          note: '입금확인 → 자동 진행',
+        });
+      }
+
       after(async () => {
         const template = getAutoNotifyTemplate(newStatus);
         if (template && data.phone) {

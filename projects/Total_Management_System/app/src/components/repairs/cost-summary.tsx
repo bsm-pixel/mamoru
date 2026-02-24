@@ -53,7 +53,7 @@ export function CostSummary({ repair }: CostSummaryProps) {
     setEditMode(false);
   };
 
-  const canSendNotice = repair.status === 'inspecting' || repair.status === 'cost_notified';
+  const canSendNotice = ['intake', 'pickup_scheduled', 'picked_up', 'inspecting', 'cost_notified'].includes(repair.status);
 
   return (
     <Card>
@@ -121,7 +121,7 @@ export function CostSummary({ repair }: CostSummaryProps) {
             className="w-full"
           >
             <Send size={14} />
-            비용 안내 발송
+            {repair.status === 'cost_notified' ? '비용 안내 재발송' : '입고 & 비용안내'}
           </Button>
         </div>
       )}
