@@ -20,13 +20,19 @@ export function RepairDetailCard({ repair: r }: RepairDetailCardProps) {
             고객 정보
           </CardTitle>
         </CardHeader>
-        <dl className="grid grid-cols-2 gap-y-2 text-sm">
+        <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
           <dt className="text-neutral-500">이름</dt>
           <dd className="font-medium">{r.name}</dd>
           <dt className="text-neutral-500">전화</dt>
           <dd>{formatPhone(r.phone)}</dd>
           <dt className="text-neutral-500">진행방식</dt>
-          <dd>{r.proceed_type || '-'}</dd>
+          <dd>
+            {r.proceed_type ? (
+              <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-info-soft text-info">
+                {r.proceed_type}
+              </span>
+            ) : '-'}
+          </dd>
           <dt className="text-neutral-500">전달방법</dt>
           <dd>{r.delivery_method || '-'}</dd>
         </dl>
@@ -41,7 +47,7 @@ export function RepairDetailCard({ repair: r }: RepairDetailCardProps) {
               주소
             </CardTitle>
           </CardHeader>
-          <dl className="grid grid-cols-2 gap-y-2 text-sm">
+          <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
             <dt className="text-neutral-500">우편번호</dt>
             <dd>{r.postcode || '-'}</dd>
             <dt className="text-neutral-500">주소</dt>
@@ -58,7 +64,7 @@ export function RepairDetailCard({ repair: r }: RepairDetailCardProps) {
             접수 정보
           </CardTitle>
         </CardHeader>
-        <dl className="grid grid-cols-2 gap-y-2 text-sm">
+        <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
           <dt className="text-neutral-500">마모루</dt>
           <dd className="font-medium">{r.qty_mamoru}자루</dd>
           <dt className="text-neutral-500">타사</dt>
@@ -75,7 +81,7 @@ export function RepairDetailCard({ repair: r }: RepairDetailCardProps) {
         <CardHeader>
           <CardTitle>비용 정보</CardTitle>
         </CardHeader>
-        <dl className="grid grid-cols-2 gap-y-2 text-sm">
+        <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
           <dt className="text-neutral-500">수리비</dt>
           <dd className="font-medium">{formatKRW(r.service_cost)}</dd>
           <dt className="text-neutral-500">수거비</dt>

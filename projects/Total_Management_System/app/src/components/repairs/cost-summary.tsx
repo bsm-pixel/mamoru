@@ -68,7 +68,7 @@ export function CostSummary({ repair }: CostSummaryProps) {
         </CardTitle>
       </CardHeader>
 
-      <dl className="grid grid-cols-2 gap-y-2 text-sm">
+      <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
         <dt className="text-neutral-500">수리비</dt>
         <dd>
           {editMode ? (

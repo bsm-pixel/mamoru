@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RepairStatusBadge } from './repair-status-badge';
 import { useRepairs } from '@/hooks/use-repairs';
-import { formatKRW, formatPhone, formatRelative } from '@/lib/utils/format';
+import { formatKRW, formatPhone, formatRelative, formatDate } from '@/lib/utils/format';
 import { Search, ChevronLeft, ChevronRight, Scissors } from 'lucide-react';
 
 type TabKey = 'all' | 'pickup' | 'inspect' | 'repair' | 'shipping' | 'completed' | 'cancelled';
@@ -117,10 +117,17 @@ export function RepairList({ onSelect, selectedId }: RepairListProps = {}) {
               <Card className={`hover:bg-neutral-50 transition cursor-pointer ${isSelected ? 'ring-2 ring-terracotta bg-terracotta/5' : ''}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    {/* 접수번호 + 상태 */}
+                    {/* 접수일 + 상태 + 진행방식 */}
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-mono text-neutral-500">{r.as_id}</span>
+                      <span className="text-xs text-neutral-500">
+                        {formatDate(r.received_at, 'yy년 M월 d일 HH:mm')}
+                      </span>
                       <RepairStatusBadge status={r.status} />
+                      {r.proceed_type && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[11px] font-medium bg-info-soft text-info">
+                          {r.proceed_type}
+                        </span>
+                      )}
                     </div>
                     {/* 고객 정보 */}
                     <p className="text-sm font-semibold truncate">{r.name}</p>
@@ -140,12 +147,9 @@ export function RepairList({ onSelect, selectedId }: RepairListProps = {}) {
                       )}
                     </div>
                   </div>
-                  {/* 우측: 진행방식 + 경과 */}
+                  {/* 우측: 경과 */}
                   <div className="text-right shrink-0">
-                    {r.proceed_type && (
-                      <span className="text-xs text-neutral-500">{r.proceed_type}</span>
-                    )}
-                    <p className="text-[11px] text-neutral-400 mt-1">
+                    <p className="text-[11px] text-neutral-400">
                       {formatRelative(r.received_at)}
                     </p>
                     {days > 0 && r.status !== 'completed' && r.status !== 'cancelled' && (
