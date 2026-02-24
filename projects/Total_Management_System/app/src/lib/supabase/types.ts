@@ -31,6 +31,21 @@ export type ConsultationType = 'store_visit' | 'field_request' | 'talk_consult';
 
 export type DealerStatus = 'active' | 'inactive';
 
+// Phase 7: 복원수리 ENUM
+export type RepairStatus =
+  | 'intake'
+  | 'pickup_scheduled'
+  | 'picked_up'
+  | 'inspecting'
+  | 'cost_notified'
+  | 'payment_confirmed'
+  | 'repairing'
+  | 'ready_to_ship'
+  | 'shipped'
+  | 'delivered'
+  | 'completed'
+  | 'cancelled';
+
 export interface Database {
   public: {
     Tables: {
@@ -254,6 +269,164 @@ export interface Database {
           received_at?: string;
         };
       };
+      // Phase 7: 복원수리 테이블
+      repairs: {
+        Row: {
+          id: string;
+          as_id: string;
+          customer_id: string | null;
+          name: string;
+          phone: string;
+          phone_normalized: string | null;
+          proceed_type: string | null;
+          postcode: string | null;
+          address: string | null;
+          address_detail: string | null;
+          pickup_date: string | null;
+          delivery_method: string | null;
+          qty_mamoru: number;
+          qty_other: number;
+          memo: string | null;
+          service_cost: number;
+          shipping_fee: number;
+          total_amount: number;
+          status: RepairStatus;
+          invoice_number: string | null;
+          courier_name: string | null;
+          shipped_at: string | null;
+          delivered_at: string | null;
+          admin_note: string | null;
+          gas_raw: Record<string, unknown> | null;
+          received_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          as_id: string;
+          customer_id?: string | null;
+          name: string;
+          phone: string;
+          proceed_type?: string | null;
+          postcode?: string | null;
+          address?: string | null;
+          address_detail?: string | null;
+          pickup_date?: string | null;
+          delivery_method?: string | null;
+          qty_mamoru?: number;
+          qty_other?: number;
+          memo?: string | null;
+          service_cost?: number;
+          shipping_fee?: number;
+          total_amount?: number;
+          status?: RepairStatus;
+          invoice_number?: string | null;
+          courier_name?: string | null;
+          shipped_at?: string | null;
+          delivered_at?: string | null;
+          admin_note?: string | null;
+          gas_raw?: Record<string, unknown> | null;
+          received_at?: string;
+        };
+        Update: {
+          as_id?: string;
+          customer_id?: string | null;
+          name?: string;
+          phone?: string;
+          proceed_type?: string | null;
+          postcode?: string | null;
+          address?: string | null;
+          address_detail?: string | null;
+          pickup_date?: string | null;
+          delivery_method?: string | null;
+          qty_mamoru?: number;
+          qty_other?: number;
+          memo?: string | null;
+          service_cost?: number;
+          shipping_fee?: number;
+          total_amount?: number;
+          status?: RepairStatus;
+          invoice_number?: string | null;
+          courier_name?: string | null;
+          shipped_at?: string | null;
+          delivered_at?: string | null;
+          admin_note?: string | null;
+          gas_raw?: Record<string, unknown> | null;
+          received_at?: string;
+        };
+      };
+      repair_inspections: {
+        Row: {
+          id: string;
+          repair_id: string;
+          scissor_number: number;
+          scissor_type: string | null;
+          blade_tip: string;
+          blade_mid: string;
+          blade_inner: string;
+          comb: string;
+          tension: string;
+          parts: string;
+          stopper: string;
+          photo_url: string | null;
+          photo_marks: Array<{ x: number; y: number; label: string }> | null;
+          worker: string;
+          created_at: string;
+        };
+        Insert: {
+          repair_id: string;
+          scissor_number: number;
+          scissor_type?: string | null;
+          blade_tip?: string;
+          blade_mid?: string;
+          blade_inner?: string;
+          comb?: string;
+          tension?: string;
+          parts?: string;
+          stopper?: string;
+          photo_url?: string | null;
+          photo_marks?: Array<{ x: number; y: number; label: string }> | null;
+          worker?: string;
+        };
+        Update: {
+          scissor_number?: number;
+          scissor_type?: string | null;
+          blade_tip?: string;
+          blade_mid?: string;
+          blade_inner?: string;
+          comb?: string;
+          tension?: string;
+          parts?: string;
+          stopper?: string;
+          photo_url?: string | null;
+          photo_marks?: Array<{ x: number; y: number; label: string }> | null;
+          worker?: string;
+        };
+      };
+      repair_history: {
+        Row: {
+          id: string;
+          repair_id: string;
+          from_status: RepairStatus | null;
+          to_status: RepairStatus;
+          changed_by: string | null;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          repair_id: string;
+          from_status?: RepairStatus | null;
+          to_status: RepairStatus;
+          changed_by?: string | null;
+          note?: string | null;
+        };
+        Update: {
+          repair_id?: string;
+          from_status?: RepairStatus | null;
+          to_status?: RepairStatus;
+          changed_by?: string | null;
+          note?: string | null;
+        };
+      };
       consultation_history: {
         Row: {
           id: string;
@@ -295,3 +468,8 @@ export type SyncLog = Database['public']['Tables']['sync_log']['Row'];
 export type Dealer = Database['public']['Tables']['dealers']['Row'];
 export type Consultation = Database['public']['Tables']['consultations']['Row'];
 export type ConsultationHistory = Database['public']['Tables']['consultation_history']['Row'];
+
+// Phase 7: 편의 타입
+export type Repair = Database['public']['Tables']['repairs']['Row'];
+export type RepairInspection = Database['public']['Tables']['repair_inspections']['Row'];
+export type RepairHistory = Database['public']['Tables']['repair_history']['Row'];

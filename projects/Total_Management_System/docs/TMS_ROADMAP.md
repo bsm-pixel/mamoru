@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-02-22 (알림톡 13종 출장/매장/톡상담 분기 구현)
+> 최종 수정: 2026-02-24 (Phase 7 복원수리 시스템 구현)
 
 ---
 
@@ -213,13 +213,13 @@
 |---|------|------|------|
 | 4-1 | 일반 주문 알림 | 📋 | 아임웹 자동 알림톡 활용 (TMS 개입 불필요) |
 | 4-2 | 상담 알림톡 13종 분기 | ✅ | Phase 1.8에서 구현 완료 (검수 대기 중) |
-| 4-3 | 복원수리 접수 알림 (as_received) | 📋 | 접수 완료 알림톡 + 복원수리 안내 페이지 링크 |
+| 4-3 | 복원수리 알림톡 5종 | ✅ | Phase 7에서 구현 (as_received/cost_notice/payment_confirmed/shipped/satisfaction) |
 | 4-4 | Make → 솔라피 직접 호출 전환 | 📋 | 검수 안정화 후 전환 예정 (비용 절감) |
 
 ### 알림톡 역할 분리
 - **일반 주문 (가위/주변제품)**: 아임웹 알림톡 (결제완료→발송→배송완료)
 - **상담 (매장/출장/톡상담)**: Solapi 전담 — 17종 템플릿 (Phase 1.8)
-- **복원수리 접수 (계좌입금)**: Solapi 전담 (접수 → 비용안내 → 입금확인 → 수리완료)
+- **복원수리 (계좌입금)**: Solapi 전담 5종 — 접수/비용안내/입금확인/출고/만족도 (Phase 7)
 
 ---
 
@@ -251,16 +251,47 @@
 
 ---
 
-## Phase 7: 수리 관리 (AS/복원) 📋 미착수
+## Phase 7: 복원수리 관리 🔧 진행중
 
-**목적:** 수리 접수 → 수거 → 입고 → 수리 → 발송 전 과정을 TMS에서 트래킹
+**목적:** 복원수리 접수→수거→검수→비용안내→입금→수리→출고 전 과정을 TMS에서 관리
 
-| # | 작업 | 상태 | 설명 |
-|---|------|------|------|
-| 7-1 | 수리 접수 폼 (TMS) | 📋 | AS/복원수리 구분, 고객정보+가위정보 입력 |
-| 7-2 | 수리 상태 보드 | 📋 | 접수→수거→입고→수리중→완료→발송 칸반 |
-| 7-3 | 수거/발송 택배 연동 | 📋 | ALPS 역방향 수거 + 발송 |
-| 7-4 | 비용 정산 | 📋 | AS: 입고 후 비용 안내 → 입금 확인 → 수리 진행 |
+| # | 작업 | 상태 | 구현 내용 |
+|---|------|------|-----------|
+| 7-1 | Supabase 스키마 + types.ts | ✅ | repairs/repair_inspections/repair_history 3개 테이블 + RepairStatus ENUM |
+| 7-2 | lib/repair/ 유틸리티 | ✅ | transitions (12상태 전이), cost-calculator, inspection-text (자동 문구), sync |
+| 7-3 | API Routes | ✅ | /api/repair/ (CRUD + 검수 + 출고 + 알림 + 동기화 + 리포트) 7개 라우트 |
+| 7-4 | hooks/use-repairs.ts | ✅ | React Query 훅 8개 (목록/단건/상태변경/검수/출고/취소/알림/동기화) |
+| 7-5 | 목록 UI + NAV | ✅ | /repairs 페이지, 상태 탭(7그룹), 카드 목록, 경과일 표시 |
+| 7-6 | 상세 UI + 검수 UI | ✅ | 2컬럼 레이아웃, 검수 체크리스트(7항목), 자동 문구, 비용 안내, 출고, 타임라인 |
+| 7-7 | GAS 동기화 | ✅ | Code.gs doPost AS_CREATE → TMS sync webhook 추가, 상태변경 시 양방향 동기화 |
+| 7-8 | 알림톡 5종 | ✅ | as_received/as_cost_notice/as_payment_confirmed/as_shipped/as_satisfaction |
+| 7-9 | Supabase SQL 실행 | 📋 | sql/phase7_repairs.sql → Supabase SQL Editor에서 실행 |
+| 7-10 | GAS Script Properties 설정 | 📋 | TMS_REPAIR_SYNC_URL, TMS_BASE_URL, CRON_SECRET 설정 |
+| 7-11 | 수리내역 페이지 TMS API 연동 | ✅ | page_as_report.html → GitHub Pages + TMS API(CORS) 구조로 구현 |
+| 7-12 | E2E 테스트 | 📋 | 접수→검수→비용안내→입금→수리→출고 전체 플로우 검증 |
+
+### 상태 머신 (12상태)
+```
+intake → pickup_scheduled → picked_up → inspecting → cost_notified
+  → payment_confirmed → repairing → ready_to_ship → shipped → delivered → completed
+모든 상태 → cancelled (shipped 이후 제외)
+```
+
+### 운영 플로우
+```
+고객 접수 (page_form.html)
+  → GAS doPost(AS_CREATE) → Sheets 저장 + Make 알림톡 + TMS sync
+  → TMS /repairs 목록에 자동 반영
+  → 관리자: 수거→입고→검수(체크리스트)→비용안내(알림톡)→입금확인→수리→출고(ALPS)→배송완료
+```
+
+### 잔여 작업
+- [ ] Supabase SQL 실행 (sql/phase7_repairs.sql)
+- [ ] GAS Script Properties 설정 (TMS_REPAIR_SYNC_URL 등)
+- [ ] 솔라피 복원수리 템플릿 5종 등록/검수
+- [ ] Make Router에 복원수리 5종 분기 추가
+- [ ] 사진 마킹 (photo-marker.tsx) — html2canvas 캡처 기능
+- [x] 수리내역 페이지 TMS API 연동 (page_as_report.html → GitHub Pages + TMS CORS API)
 
 ---
 

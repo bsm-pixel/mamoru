@@ -605,6 +605,30 @@ function doPost(e){
         });
       }catch(e1){ Logger.log('[MAKE] '+e1); }
 
+      // TMS 동기화 (Phase 7)
+      try{
+        const TMS_SYNC_URL = PropertiesService.getScriptProperties().getProperty('TMS_REPAIR_SYNC_URL');
+        const CRON_SECRET  = PropertiesService.getScriptProperties().getProperty('CRON_SECRET') || 'mamoru-tms-cron-2026';
+        if(TMS_SYNC_URL){
+          UrlFetchApp.fetch(TMS_SYNC_URL, {
+            method:'post', contentType:'application/json', muteHttpExceptions:true,
+            headers: { 'Authorization': 'Bearer ' + CRON_SECRET },
+            payload: JSON.stringify({
+              as_id:asId, name:body.name||'', phone:fixedPhone,
+              proceed_type:body.proceed_type||'', postcode:body.postcode||'',
+              address:body.address1||'', address_detail:body.address2||'',
+              pickup_date:body.pickup_date||'', delivery_method:body.delivery_method||'',
+              qty_mamoru:qtyM, qty_other:qtyO,
+              memo:body.memo||'',
+              service_cost:serviceCost, shipping_fee:shippingFee, total_amount:cost,
+              received_at:createdAt,
+              raw: body  // 원본 데이터
+            })
+          });
+          Logger.log('[TMS SYNC] AS 접수 동기화 완료: ' + asId);
+        }
+      }catch(e3){ Logger.log('[TMS SYNC ERROR] '+e3); }
+
       // 이메일 알림 발송
       try{
         Logger.log('[EMAIL] Attempting to send email for AS: ' + asId);
@@ -800,6 +824,23 @@ function updateAS_(p){
     try{
       UrlFetchApp.fetch(MAKE_STATUS_WEBHOOK_URL, { method:'post', contentType:'application/json', payload: JSON.stringify(payload), muteHttpExceptions:true });
     }catch(err){ Logger.log('[STATUS WH][ERR] '+err); }
+
+    // TMS 상태 동기화 (Phase 7) — GAS 상태 → TMS 상태 매핑
+    try{
+      const TMS_BASE = PropertiesService.getScriptProperties().getProperty('TMS_BASE_URL');
+      const CRON_SECRET = PropertiesService.getScriptProperties().getProperty('CRON_SECRET') || 'mamoru-tms-cron-2026';
+      if(TMS_BASE){
+        const tmsStatusMap = { inbound:'inspecting', paid:'payment_confirmed', shipped:'shipped' };
+        const tmsStatus = tmsStatusMap[statusToSend];
+        if(tmsStatus){
+          UrlFetchApp.fetch(TMS_BASE + '/api/repair/sync', {
+            method:'post', contentType:'application/json', muteHttpExceptions:true,
+            headers: { 'Authorization': 'Bearer ' + CRON_SECRET },
+            payload: JSON.stringify({ as_id:asId, status:tmsStatus })
+          });
+        }
+      }
+    }catch(e4){ Logger.log('[TMS STATUS SYNC ERROR] '+e4); }
   }
 
   const _cache = CacheService.getScriptCache();
@@ -1422,15 +1463,27 @@ function convertToPublicUrl_(relativePath) {
 function testConvertPhoto() {
   const testPath = 'MAMORU_AS사진/bb5ad88b.사진URL.101725.jpg';  // ← jpg로 변경
   Logger.log('Input: ' + testPath);
-  
+
   const result = convertToPublicUrl_(testPath);
   Logger.log('Output: ' + result);
-  
+
   if (result) {
     Logger.log('✅ 성공 - 공개 URL 생성됨');
   } else {
     Logger.log('❌ 실패 - 빈 문자열 반환');
   }
-  
+
   return result;
+}
+
+/** TMS 연동 스크립트 속성 일괄 설정 (1회 실행 후 삭제 가능) */
+function setupTmsProperties() {
+  const props = PropertiesService.getScriptProperties();
+  props.setProperty('TMS_REPAIR_SYNC_URL', 'https://app-eta-sandy-75.vercel.app/api/repair/sync');
+  props.setProperty('TMS_BASE_URL', 'https://app-eta-sandy-75.vercel.app');
+  props.setProperty('CRON_SECRET', 'mamoru-tms-cron-2026');
+  Logger.log('✅ TMS 속성 3개 설정 완료');
+  Logger.log('TMS_REPAIR_SYNC_URL = ' + props.getProperty('TMS_REPAIR_SYNC_URL'));
+  Logger.log('TMS_BASE_URL = ' + props.getProperty('TMS_BASE_URL'));
+  Logger.log('CRON_SECRET = ' + props.getProperty('CRON_SECRET'));
 }

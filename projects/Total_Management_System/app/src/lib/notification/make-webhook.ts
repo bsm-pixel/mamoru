@@ -20,7 +20,13 @@ export type NotifyTemplate =
   | 'field_remind_2h'     // 출장 2h 리마인드
   | 'field_delayed'       // 출장 지연 안내
   | 'talk_received'       // 톡상담 접수 안내
-  | 'talk_ready';         // 톡상담 시작 안내
+  | 'talk_ready'          // 톡상담 시작 안내
+  // Phase 7: 복원수리 알림톡
+  | 'as_received'         // 복원수리 접수 안내
+  | 'as_cost_notice'      // 비용 안내
+  | 'as_payment_confirmed' // 입금 확인
+  | 'as_shipped'          // 출고 안내
+  | 'as_satisfaction';    // 만족도/리뷰 요청
 
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
@@ -36,6 +42,12 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   field_delayed: 'FIELD_DELAYED',
   talk_received: 'TALK_RECEIVED',
   talk_ready: 'TALK_READY',
+  // Phase 7: 복원수리
+  as_received: 'AS_RECEIVED',
+  as_cost_notice: 'AS_COST_NOTICE',
+  as_payment_confirmed: 'AS_PAYMENT_CONFIRMED',
+  as_shipped: 'AS_SHIPPED',
+  as_satisfaction: 'AS_SATISFACTION',
 };
 
 interface NotifyPayload {
