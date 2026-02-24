@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-02-24 (Phase 7 복원수리 시스템 구현)
+> 최종 수정: 2026-02-24 (Phase 7 복원수리 UI 대규모 개선)
 
 ---
 
@@ -271,11 +271,15 @@
 | 7-12 | E2E 테스트 | 📋 | 접수→검수→비용안내→입금→수리→출고 전체 플로우 검증 |
 | 7-13 | PC 마스터-디테일 레이아웃 | ✅ | 좌측 목록 + 우측 상세 패널 (lg+), 모바일은 기존 페이지 이동 유지 |
 
-### 상태 머신 (12상태)
+### 상태 머신 (9상태, 단순화 v2)
 ```
-intake → pickup_scheduled → picked_up → inspecting → cost_notified
-  → payment_confirmed → repairing → ready_to_ship → shipped → delivered → completed
-모든 상태 → cancelled (shipped 이후 제외)
+방문수거: intake(수거접수 필요) → pickup_scheduled(입고대기중) → cost_notified(진행중)
+         → payment_confirmed(자동→repairing 진행중) → shipped(출고 완료) → delivered → completed
+
+직접발송: intake(접수) → cost_notified(진행중)
+         → payment_confirmed(자동→repairing 진행중) → shipped(출고 완료) → delivered → completed
+
+레거시 호환: picked_up, inspecting, ready_to_ship (기존 데이터 전이 가능)
 ```
 
 ### 운영 플로우
@@ -283,16 +287,29 @@ intake → pickup_scheduled → picked_up → inspecting → cost_notified
 고객 접수 (page_form.html)
   → GAS doPost(AS_CREATE) → Sheets 저장 + Make 알림톡 + TMS sync
   → TMS /repairs 목록에 자동 반영
-  → 관리자: 수거→입고→검수(체크리스트)→비용안내(알림톡)→입금확인→수리→출고(ALPS)→배송완료
+
+방문수거: [수거접수 완료] → [입고 & 비용안내](검수+비용+알림톡) → [입금확인](자동 진행중) → 송장생성(출고 알림톡)
+직접발송: [입고 & 비용안내](검수+비용+알림톡) → [입금확인](자동 진행중) → 송장생성(출고 알림톡)
 ```
 
+### 최근 완료 (2026-02-24)
+- [x] 상태 머신 단순화 (12→9상태, 알림톡 수동발송 카드 제거)
+- [x] 사이드바 통합 (비용+비용안내+액션+출고 → SidebarActionCard)
+- [x] 접수정보 수량/주소 인라인 수정 + 비용 자동 재계산
+- [x] 검수 폼 개선 (+ 버튼 추가 방식, 사진 촬영 UI)
+- [x] 목록 날짜 표시 정리 (formatRelative 제거)
+- [x] 수리내역 페이지 TMS API 연동 (page_as_report.html → GitHub Pages + TMS CORS API)
+
 ### 잔여 작업
+- [ ] **주소 수정 시 다음 주소검색 API 연동** (롯데택배 송장 호환)
+- [ ] **사이드바 버튼 배치 순서 조정** (수거접수 완료 → 입고&비용안내 순서)
+- [ ] 사진 업로드 Supabase Storage 연동 (버킷 생성 필요)
+- [ ] 수리내역서 자동 생성 (Before/After 타임라인 웹카드)
 - [ ] Supabase SQL 실행 (sql/phase7_repairs.sql)
 - [ ] GAS Script Properties 설정 (TMS_REPAIR_SYNC_URL 등)
 - [ ] 솔라피 복원수리 템플릿 5종 등록/검수
 - [ ] Make Router에 복원수리 5종 분기 추가
 - [ ] 사진 마킹 (photo-marker.tsx) — html2canvas 캡처 기능
-- [x] 수리내역 페이지 TMS API 연동 (page_as_report.html → GitHub Pages + TMS CORS API)
 
 ---
 
