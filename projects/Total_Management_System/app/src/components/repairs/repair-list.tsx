@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RepairStatusBadge } from './repair-status-badge';
 import { useRepairs } from '@/hooks/use-repairs';
-import { formatKRW, formatPhone, formatRelative, formatDate } from '@/lib/utils/format';
+import { formatKRW, formatPhone, formatDate } from '@/lib/utils/format';
 import { Search, ChevronLeft, ChevronRight, Scissors } from 'lucide-react';
 
 type TabKey = 'all' | 'pickup' | 'inspect' | 'repair' | 'shipping' | 'completed' | 'cancelled';
@@ -147,13 +147,10 @@ export function RepairList({ onSelect, selectedId }: RepairListProps = {}) {
                       )}
                     </div>
                   </div>
-                  {/* 우측: 경과 */}
+                  {/* 우측: 경과일 */}
                   <div className="text-right shrink-0">
-                    <p className="text-[11px] text-neutral-400">
-                      {formatRelative(r.received_at)}
-                    </p>
                     {days > 0 && r.status !== 'completed' && r.status !== 'cancelled' && (
-                      <p className={`text-[11px] mt-0.5 ${days >= 7 ? 'text-error font-medium' : 'text-neutral-400'}`}>
+                      <p className={`text-[11px] ${days >= 7 ? 'text-error font-medium' : 'text-neutral-400'}`}>
                         {days}일 경과
                       </p>
                     )}

@@ -122,6 +122,37 @@ export function useUpdateRepairStatus() {
   });
 }
 
+/** 필드 업데이트 (상태 변경 없이) */
+export function useUpdateRepairFields() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...fields }: {
+      id: string;
+      [key: string]: unknown;
+    }) => {
+      const res = await fetch(`/api/repair/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fields),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || '수정 실패');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('수정되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['repair'] });
+    },
+    onError: (err) => {
+      toast.error('수정 실패: ' + String(err));
+    },
+  });
+}
+
 /** 검수 데이터 저장 */
 export function useSaveInspections() {
   const queryClient = useQueryClient();

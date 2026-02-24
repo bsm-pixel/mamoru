@@ -1,15 +1,77 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { formatPhone, formatKRW, formatDate } from '@/lib/utils/format';
+import { calcTotalCost } from '@/lib/repair/cost-calculator';
 import type { Repair } from '@/lib/supabase/types';
-import { User, MapPin, Scissors } from 'lucide-react';
+import { User, MapPin, Scissors, Pencil, Check, X } from 'lucide-react';
 
 interface RepairDetailCardProps {
   repair: Repair;
+  onUpdate?: (fields: Record<string, unknown>) => Promise<void>;
 }
 
-export function RepairDetailCard({ repair: r }: RepairDetailCardProps) {
+export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps) {
+  // 수량 수정 모드
+  const [editQty, setEditQty] = useState(false);
+  const [qtyMamoru, setQtyMamoru] = useState(r.qty_mamoru);
+  const [qtyOther, setQtyOther] = useState(r.qty_other);
+  const [savingQty, setSavingQty] = useState(false);
+
+  // 주소 수정 모드
+  const [editAddr, setEditAddr] = useState(false);
+  const [postcode, setPostcode] = useState(r.postcode || '');
+  const [address, setAddress] = useState(r.address || '');
+  const [addressDetail, setAddressDetail] = useState(r.address_detail || '');
+  const [savingAddr, setSavingAddr] = useState(false);
+
+  const handleSaveQty = async () => {
+    if (!onUpdate) return;
+    setSavingQty(true);
+    try {
+      const costs = calcTotalCost(qtyMamoru, qtyOther, r.proceed_type);
+      await onUpdate({
+        qty_mamoru: qtyMamoru,
+        qty_other: qtyOther,
+        service_cost: costs.serviceCost,
+        shipping_fee: costs.shippingFee,
+        total_amount: costs.totalAmount,
+      });
+      setEditQty(false);
+    } finally {
+      setSavingQty(false);
+    }
+  };
+
+  const handleSaveAddr = async () => {
+    if (!onUpdate) return;
+    setSavingAddr(true);
+    try {
+      await onUpdate({ postcode, address, address_detail: addressDetail });
+      setEditAddr(false);
+    } finally {
+      setSavingAddr(false);
+    }
+  };
+
+  const cancelQty = () => {
+    setQtyMamoru(r.qty_mamoru);
+    setQtyOther(r.qty_other);
+    setEditQty(false);
+  };
+
+  const cancelAddr = () => {
+    setPostcode(r.postcode || '');
+    setAddress(r.address || '');
+    setAddressDetail(r.address_detail || '');
+    setEditAddr(false);
+  };
+
+  // 수량 변경 시 비용 미리보기
+  const previewCost = editQty ? calcTotalCost(qtyMamoru, qtyOther, r.proceed_type) : null;
+
   return (
     <div className="space-y-4">
       {/* 고객 정보 */}
@@ -39,44 +101,138 @@ export function RepairDetailCard({ repair: r }: RepairDetailCardProps) {
       </Card>
 
       {/* 주소 */}
-      {(r.address || r.postcode) && (
+      {(r.address || r.postcode || editAddr) && (
         <Card>
           <CardHeader>
-            <CardTitle>
-              <MapPin size={16} className="inline mr-1.5" />
-              주소
+            <CardTitle className="flex items-center justify-between">
+              <span>
+                <MapPin size={16} className="inline mr-1.5" />
+                주소
+              </span>
+              {onUpdate && !editAddr && (
+                <button onClick={() => setEditAddr(true)} className="text-neutral-400 hover:text-neutral-600">
+                  <Pencil size={14} />
+                </button>
+              )}
             </CardTitle>
           </CardHeader>
-          <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
-            <dt className="text-neutral-500">우편번호</dt>
-            <dd>{r.postcode || '-'}</dd>
-            <dt className="text-neutral-500">주소</dt>
-            <dd className="col-span-2">{r.address || '-'} {r.address_detail || ''}</dd>
-          </dl>
+          {editAddr ? (
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={postcode}
+                  onChange={(e) => setPostcode(e.target.value)}
+                  placeholder="우편번호"
+                  className="w-28 h-8 px-2 rounded border border-neutral-200 text-sm"
+                />
+              </div>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="주소"
+                className="w-full h-8 px-2 rounded border border-neutral-200 text-sm"
+              />
+              <input
+                type="text"
+                value={addressDetail}
+                onChange={(e) => setAddressDetail(e.target.value)}
+                placeholder="상세주소"
+                className="w-full h-8 px-2 rounded border border-neutral-200 text-sm"
+              />
+              <div className="flex gap-2 pt-1">
+                <Button variant="primary" size="sm" onClick={handleSaveAddr} loading={savingAddr}>
+                  <Check size={12} /> 저장
+                </Button>
+                <Button variant="ghost" size="sm" onClick={cancelAddr}>
+                  <X size={12} /> 취소
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
+              <dt className="text-neutral-500">우편번호</dt>
+              <dd>{r.postcode || '-'}</dd>
+              <dt className="text-neutral-500">주소</dt>
+              <dd>{r.address || '-'} {r.address_detail || ''}</dd>
+            </dl>
+          )}
         </Card>
       )}
 
-      {/* 수량 + 날짜 */}
+      {/* 접수 정보 — 수량 수정 가능 */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            <Scissors size={16} className="inline mr-1.5" />
-            접수 정보
+          <CardTitle className="flex items-center justify-between">
+            <span>
+              <Scissors size={16} className="inline mr-1.5" />
+              접수 정보
+            </span>
+            {onUpdate && !editQty && (
+              <button onClick={() => setEditQty(true)} className="text-neutral-400 hover:text-neutral-600">
+                <Pencil size={14} />
+              </button>
+            )}
           </CardTitle>
         </CardHeader>
-        <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
-          <dt className="text-neutral-500">마모루</dt>
-          <dd className="font-medium">{r.qty_mamoru}자루</dd>
-          <dt className="text-neutral-500">타사</dt>
-          <dd className="font-medium">{r.qty_other}자루</dd>
-          <dt className="text-neutral-500">수거요청일</dt>
-          <dd>{r.pickup_date ? formatDate(r.pickup_date, 'yyyy.MM.dd') : '-'}</dd>
-          <dt className="text-neutral-500">접수일시</dt>
-          <dd>{r.received_at ? formatDate(r.received_at, 'yyyy.MM.dd HH:mm') : '-'}</dd>
-        </dl>
+        {editQty ? (
+          <div className="space-y-3">
+            <div className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
+              <dt className="text-neutral-500 pt-1">마모루</dt>
+              <dd>
+                <input
+                  type="number"
+                  min={0}
+                  value={qtyMamoru}
+                  onChange={(e) => setQtyMamoru(parseInt(e.target.value) || 0)}
+                  className="w-20 h-8 px-2 rounded border border-neutral-200 text-sm text-right"
+                />
+                <span className="text-sm ml-1">자루</span>
+              </dd>
+              <dt className="text-neutral-500 pt-1">타사</dt>
+              <dd>
+                <input
+                  type="number"
+                  min={0}
+                  value={qtyOther}
+                  onChange={(e) => setQtyOther(parseInt(e.target.value) || 0)}
+                  className="w-20 h-8 px-2 rounded border border-neutral-200 text-sm text-right"
+                />
+                <span className="text-sm ml-1">자루</span>
+              </dd>
+            </div>
+            {/* 비용 미리보기 */}
+            {previewCost && (
+              <div className="text-xs text-neutral-500 bg-neutral-50 rounded-lg p-2 space-y-0.5">
+                <p>수리비: {formatKRW(previewCost.serviceCost)} / 수거비: {formatKRW(previewCost.shippingFee)}</p>
+                <p className="font-semibold text-terracotta-deep">합계: {formatKRW(previewCost.totalAmount)}</p>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Button variant="primary" size="sm" onClick={handleSaveQty} loading={savingQty}>
+                <Check size={12} /> 저장
+              </Button>
+              <Button variant="ghost" size="sm" onClick={cancelQty}>
+                <X size={12} /> 취소
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
+            <dt className="text-neutral-500">마모루</dt>
+            <dd className="font-medium">{r.qty_mamoru}자루</dd>
+            <dt className="text-neutral-500">타사</dt>
+            <dd className="font-medium">{r.qty_other}자루</dd>
+            <dt className="text-neutral-500">수거요청일</dt>
+            <dd>{r.pickup_date ? formatDate(r.pickup_date, 'yyyy.MM.dd') : '-'}</dd>
+            <dt className="text-neutral-500">접수일시</dt>
+            <dd>{r.received_at ? formatDate(r.received_at, 'yyyy.MM.dd HH:mm') : '-'}</dd>
+          </dl>
+        )}
       </Card>
 
-      {/* 비용 */}
+      {/* 비용 정보 (읽기 전용 — 수량 수정 시 자동 갱신) */}
       <Card>
         <CardHeader>
           <CardTitle>비용 정보</CardTitle>

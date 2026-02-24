@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSaveInspections } from '@/hooks/use-repairs';
 import type { RepairInspection } from '@/lib/supabase/types';
-import { Plus, Trash2, Save } from 'lucide-react';
+import { Plus, Trash2, Save, Camera, X } from 'lucide-react';
 
 /** 검수 항목 선택지 */
 const BLADE_OPTIONS = ['양호', '무뎌짐', '찍힘'];
@@ -27,6 +27,8 @@ interface InspectionItem {
   stopper: string;
   photo_url: string;
   worker: string;
+  /** 로컬 미리보기용 (업로드 전) */
+  _photoPreview?: string;
 }
 
 function newInspectionItem(num: number): InspectionItem {
@@ -51,7 +53,7 @@ interface InspectionFormProps {
   totalScissors: number;
 }
 
-export function InspectionForm({ repairId, existingInspections, totalScissors }: InspectionFormProps) {
+export function InspectionForm({ repairId, existingInspections }: InspectionFormProps) {
   const [items, setItems] = useState<InspectionItem[]>(() => {
     if (existingInspections.length > 0) {
       return existingInspections.map((e) => ({
@@ -68,8 +70,8 @@ export function InspectionForm({ repairId, existingInspections, totalScissors }:
         worker: e.worker,
       }));
     }
-    // 기본: totalScissors 수만큼 빈 항목
-    return Array.from({ length: Math.max(totalScissors, 1) }, (_, i) => newInspectionItem(i + 1));
+    // 기본: 1개만 생성, + 버튼으로 추가
+    return [newInspectionItem(1)];
   });
   const [activeIdx, setActiveIdx] = useState(0);
 
@@ -98,6 +100,27 @@ export function InspectionForm({ repairId, existingInspections, totalScissors }:
     setActiveIdx(Math.max(0, activeIdx - 1));
   };
 
+  const handlePhotoSelect = (idx: number, file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setItems((prev) => {
+        const next = [...prev];
+        next[idx] = { ...next[idx], _photoPreview: e.target?.result as string };
+        return next;
+      });
+    };
+    reader.readAsDataURL(file);
+    // TODO: Supabase Storage 업로드 후 photo_url 설정
+  };
+
+  const removePhoto = (idx: number) => {
+    setItems((prev) => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], photo_url: '', _photoPreview: undefined };
+      return next;
+    });
+  };
+
   const handleSave = () => {
     saveInspections.mutate({ repairId, inspections: items });
   };
@@ -106,6 +129,7 @@ export function InspectionForm({ repairId, existingInspections, totalScissors }:
   if (!current) return null;
 
   const isThinning = current.scissor_type === '틴닝';
+  const photoSrc = current._photoPreview || current.photo_url;
 
   return (
     <Card>
@@ -124,7 +148,7 @@ export function InspectionForm({ repairId, existingInspections, totalScissors }:
         </CardTitle>
       </CardHeader>
 
-      {/* 가위 탭 */}
+      {/* 가위 탭 — + 버튼으로 추가 */}
       <div className="flex gap-1 mb-4 overflow-x-auto">
         {items.map((item, idx) => (
           <button
@@ -163,6 +187,38 @@ export function InspectionForm({ repairId, existingInspections, totalScissors }:
             <button onClick={() => removeScissor(activeIdx)} className="text-error/60 hover:text-error">
               <Trash2 size={14} />
             </button>
+          )}
+        </div>
+
+        {/* 사진 촬영/업로드 — 종류 바로 밑 */}
+        <div className="flex items-start gap-3">
+          <label className="text-sm text-neutral-500 w-20 shrink-0 pt-2">사진</label>
+          {photoSrc ? (
+            <div className="relative">
+              <img src={photoSrc} alt="검수 사진" className="w-24 h-24 object-cover rounded-lg border border-neutral-200" />
+              <button
+                onClick={() => removePhoto(activeIdx)}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-error text-white rounded-full flex items-center justify-center"
+              >
+                <X size={10} />
+              </button>
+            </div>
+          ) : (
+            <label className="cursor-pointer flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-neutral-300 rounded-lg hover:border-terracotta/50 transition">
+              <Camera size={20} className="text-neutral-400 mb-1" />
+              <span className="text-[11px] text-neutral-400">촬영/업로드</span>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handlePhotoSelect(activeIdx, file);
+                  e.target.value = '';
+                }}
+                className="hidden"
+              />
+            </label>
           )}
         </div>
 
@@ -285,18 +341,6 @@ export function InspectionForm({ repairId, existingInspections, totalScissors }:
             type="text"
             value={current.worker}
             onChange={(e) => updateItem(activeIdx, 'worker', e.target.value)}
-            className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm"
-          />
-        </div>
-
-        {/* 사진 URL */}
-        <div className="flex items-center gap-3">
-          <label className="text-sm text-neutral-500 w-20 shrink-0">사진 URL</label>
-          <input
-            type="text"
-            value={current.photo_url}
-            onChange={(e) => updateItem(activeIdx, 'photo_url', e.target.value)}
-            placeholder="Google Drive 공유 링크..."
             className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm"
           />
         </div>

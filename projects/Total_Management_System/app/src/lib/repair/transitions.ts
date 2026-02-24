@@ -49,9 +49,9 @@ export const REPAIR_STATUS_ORDER: RepairStatus[] = [
 /** 상태 한글 라벨 */
 export const REPAIR_STATUS_LABEL: Record<string, string> = {
   intake: '접수',
-  pickup_scheduled: '수거접수 완료',
-  cost_notified: '입고&비용안내 완료',
-  payment_confirmed: '입금확인',
+  pickup_scheduled: '입고대기중',
+  cost_notified: '진행중',
+  payment_confirmed: '진행중',
   repairing: '진행중',
   shipped: '출고 완료',
   delivered: '배송완료',
@@ -67,7 +67,7 @@ export const REPAIR_STATUS_LABEL: Record<string, string> = {
 export const REPAIR_STATUS_COLOR: Record<string, string> = {
   intake: 'bg-info-soft text-info',
   pickup_scheduled: 'bg-info-soft text-info',
-  cost_notified: 'bg-warning-soft text-warning',
+  cost_notified: 'bg-terracotta-soft/30 text-terracotta-deep',
   payment_confirmed: 'bg-terracotta-soft/30 text-terracotta-deep',
   repairing: 'bg-terracotta-soft/30 text-terracotta-deep',
   shipped: 'bg-success-soft text-success',
