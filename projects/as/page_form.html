@@ -1520,9 +1520,9 @@ select.err {
     saveDraftDebounced();
   }
 
-  // 달력 이벤트 바인딩
-  pickupDateInput.addEventListener('click', openCalendar);
-  pickupDateInput.addEventListener('focus', openCalendar);
+  // 달력 이벤트 바인딩 — PC 외부클릭 핸들러와 버블링 충돌 방지
+  pickupDateInput.addEventListener('click', function(e) { e.stopPropagation(); openCalendar(); });
+  pickupDateInput.addEventListener('focus', function() { openCalendar(); });
 
   calendarClose.addEventListener('click', closeCalendar);
   calendarOverlay.addEventListener('click', closeCalendar);
