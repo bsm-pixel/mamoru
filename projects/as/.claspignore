@@ -1,0 +1,7 @@
+# GitHub Pages / 아임웹 전용 — GAS에 올리지 않음
+page_*.html
+iframe_*.html
+icons/
+holidays_2026_2027.tsv
+.clasp.json
+.claspignore
