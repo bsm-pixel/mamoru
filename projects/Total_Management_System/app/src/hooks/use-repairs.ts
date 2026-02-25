@@ -114,7 +114,8 @@ export function useUpdateRepairStatus() {
       toast.success('상태가 변경되었습니다');
       queryClient.invalidateQueries({ queryKey: ['repairs'] });
       queryClient.invalidateQueries({ queryKey: ['repair'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['repair-dashboard-stats'] });
     },
     onError: (err) => {
       toast.error('상태 변경 실패: ' + String(err));
@@ -272,7 +273,8 @@ export function useRepairSync() {
     mutationFn: async () => {
       await queryClient.invalidateQueries({ queryKey: ['repairs'] });
       await queryClient.invalidateQueries({ queryKey: ['repair'] });
-      await queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      await queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      await queryClient.invalidateQueries({ queryKey: ['repair-dashboard-stats'] });
       return { synced: 0 };
     },
     onSuccess: () => {

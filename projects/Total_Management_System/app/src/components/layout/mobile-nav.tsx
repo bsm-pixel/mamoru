@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ShoppingCart, MessageSquare, Settings, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, MessageSquare, Settings, Wrench, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { NAV_ITEMS } from '@/lib/utils/constants';
 
@@ -10,6 +10,7 @@ const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
   ShoppingCart,
   MessageSquare,
+  Wrench,
   Settings,
 };
 
@@ -21,7 +22,7 @@ export function MobileNav() {
       <div className="flex items-center justify-around h-14">
         {NAV_ITEMS.map((item) => {
           const Icon = iconMap[item.icon];
-          const active = pathname.startsWith(item.href);
+          const active = pathname.startsWith(item.matchPrefix);
           return (
             <Link
               key={item.href}

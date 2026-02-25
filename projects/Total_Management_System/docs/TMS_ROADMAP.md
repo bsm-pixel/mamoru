@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-02-25 (Phase 7 AS 폴더 구조 정리)
+> 최종 수정: 2026-02-25 (Phase 2 대시보드 허브+카테고리 리팩토링)
 
 ---
 
@@ -180,16 +180,35 @@
 
 ---
 
-## Phase 2: 대시보드 📋 미착수
+## Phase 2: 대시보드 (허브 + 카테고리) ✅ 완료
 
-**목적:** 운영자가 한눈에 현황 파악 — 오늘 처리해야 할 주문, 이상 징후, 매출 요약
+**목적:** 운영자가 한눈에 현황 파악 — 허브(3초 전체 파악) + 카테고리별 전용 대시보드 3개
 
-| # | 작업 | 상태 | 설명 |
-|---|------|------|------|
-| 2-1 | 상태별 주문 카운트 카드 | 📋 | 결제완료/준비중/배송중/취소대기 실시간 카운트 |
-| 2-2 | 오늘의 할 일 위젯 | 📋 | 미처리 주문, 취소대기 건 알림 |
-| 2-3 | 최근 주문 타임라인 | 📋 | 최근 10건 주문 빠른 접근 |
-| 2-4 | 간단 매출 요약 | 📋 | 일/주/월 결제금액 합계 |
+| # | 작업 | 상태 | 구현 내용 |
+|---|------|------|-----------|
+| 2-1 | 허브 대시보드 | ✅ | /dashboard → 주문/상담/복원수리 3개 HubCategoryCard (핵심 수치 + 클릭 이동) |
+| 2-2 | 주문 전용 대시보드 | ✅ | /orders/dashboard → 파이프라인바 + 통계 4개 + 결제완료 UrgentList |
+| 2-3 | 상담 전용 대시보드 | ✅ | /consultations/dashboard → 통계 4개 + 오늘 일정 타임라인 + 미확인 UrgentList |
+| 2-4 | 복원수리 전용 대시보드 | ✅ | /repairs/dashboard → 파이프라인바 + 경과일 경고 + 접수/비용안내 UrgentList 2열 |
+| 2-5 | 공유 컴포넌트 | ✅ | hub-category-card, pipeline-bar, urgent-list 3개 재사용 컴포넌트 |
+| 2-6 | 내비게이션 업데이트 | ✅ | NAV_ITEMS matchPrefix 기반 active 판정, href → 카테고리 대시보드 |
+| 2-7 | 캐시 무효화 통합 | ✅ | hub-stats / order-dashboard-stats / consultation-dashboard-stats / repair-dashboard-stats |
+
+### 아키텍처
+```
+/dashboard (허브)
+  ├─ 주문 카드 → /orders/dashboard (주문 전용)
+  ├─ 상담 카드 → /consultations/dashboard (상담 전용)
+  └─ 복원수리 카드 → /repairs/dashboard (복원수리 전용)
+
+각 카테고리 대시보드 → "전체 목록" → /orders, /consultations, /repairs
+```
+
+### 주요 파일
+- `hooks/use-dashboard-stats.ts` — 4개 통계 훅 (useHubStats, useOrderDashboardStats, useConsultationDashboardStats, useRepairDashboardStats)
+- `components/dashboard/hub-category-card.tsx` — 허브 대형 클릭 카드
+- `components/dashboard/pipeline-bar.tsx` — 수평 파이프라인 시각화
+- `components/dashboard/urgent-list.tsx` — 긴급 건 리스트
 
 ---
 

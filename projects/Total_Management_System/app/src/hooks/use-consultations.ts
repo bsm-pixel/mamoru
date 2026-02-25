@@ -112,7 +112,8 @@ export function useUpdateConsultationStatus() {
       toast.success('상태가 변경되었습니다');
       queryClient.invalidateQueries({ queryKey: ['consultations'] });
       queryClient.invalidateQueries({ queryKey: ['consultation'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['consultation-dashboard-stats'] });
     },
     onError: (err) => {
       toast.error('상태 변경 실패: ' + String(err));
@@ -129,7 +130,8 @@ export function useConsultationSync() {
       // 모든 상담 관련 캐시를 강제 갱신
       await queryClient.invalidateQueries({ queryKey: ['consultations'] });
       await queryClient.invalidateQueries({ queryKey: ['consultation'] });
-      await queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      await queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      await queryClient.invalidateQueries({ queryKey: ['consultation-dashboard-stats'] });
       return { synced: 0 };
     },
     onSuccess: () => {
@@ -306,7 +308,8 @@ export function useStartTalkConsult() {
       toast.success('톡상담 시작 + 알림톡 발송');
       queryClient.invalidateQueries({ queryKey: ['consultations'] });
       queryClient.invalidateQueries({ queryKey: ['consultation'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['consultation-dashboard-stats'] });
     },
     onError: (err) => {
       toast.error('톡상담 시작 실패: ' + String(err));

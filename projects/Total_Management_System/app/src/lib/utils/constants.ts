@@ -1,10 +1,10 @@
 /** 사이드바 내비게이션 항목 */
 export const NAV_ITEMS = [
-  { label: '대시보드', href: '/dashboard', icon: 'LayoutDashboard' },
-  { label: '주문관리', href: '/orders', icon: 'ShoppingCart' },
-  { label: '상담관리', href: '/consultations', icon: 'MessageSquare' },
-  { label: '복원수리', href: '/repairs', icon: 'Wrench' },
-  { label: '설정', href: '/settings', icon: 'Settings' },
+  { label: '대시보드', href: '/dashboard', icon: 'LayoutDashboard', matchPrefix: '/dashboard' },
+  { label: '주문관리', href: '/orders/dashboard', icon: 'ShoppingCart', matchPrefix: '/orders' },
+  { label: '상담관리', href: '/consultations/dashboard', icon: 'MessageSquare', matchPrefix: '/consultations' },
+  { label: '복원수리', href: '/repairs/dashboard', icon: 'Wrench', matchPrefix: '/repairs' },
+  { label: '설정', href: '/settings', icon: 'Settings', matchPrefix: '/settings' },
 ] as const;
 
 /** Phase 2+ 메뉴 (비활성) */

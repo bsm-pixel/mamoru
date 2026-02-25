@@ -78,7 +78,8 @@ export function useOrderSync() {
     onSuccess: (data) => {
       toast.success(`${data.synced}건 동기화 완료`);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['order-dashboard-stats'] });
     },
     onError: (err) => {
       toast.error('동기화 실패: ' + String(err));
@@ -120,6 +121,8 @@ export function useBookInvoice() {
       }
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['order'] });
+      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['order-dashboard-stats'] });
     },
     onError: (err) => {
       toast.error('송장 생성 실패: ' + String(err));
