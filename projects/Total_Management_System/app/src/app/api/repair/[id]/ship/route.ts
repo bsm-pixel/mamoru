@@ -95,7 +95,7 @@ export async function POST(
   }
 }
 
-/** DELETE /api/repair/[id]/ship — 송장 취소 */
+/** DELETE /api/repair/[id]/ship — 송장 취소 (DB만 처리, ALPS는 수동 취소) */
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -121,40 +121,9 @@ export async function DELETE(
       return NextResponse.json({ error: '복원수리 건을 찾을 수 없습니다' }, { status: 404 });
     }
 
-    // GAS 송장 취소 — 응답을 확인하여 실패 시 DB 업데이트 차단
-    const gasUrl = process.env.GAS_AS_URL;
-    const adminToken = process.env.GAS_AS_ADMIN_TOKEN;
-    if (gasUrl && adminToken && repair.as_id) {
-      const gasParams = new URLSearchParams({
-        action: 'cancel_by_as_id',
-        as_id: repair.as_id,
-        token: adminToken,
-      });
+    const cancelledInvNo = repair.invoice_number || '';
 
-      let gasResult: { success?: boolean; error?: string } = { success: false };
-      try {
-        const gasRes = await fetch(`${gasUrl}?${gasParams}`, {
-          method: 'GET',
-          redirect: 'follow',
-          signal: AbortSignal.timeout(30000),
-        });
-        const gasText = await gasRes.text();
-        try { gasResult = JSON.parse(gasText); } catch { gasResult = { success: false, error: gasText }; }
-      } catch (e) {
-        console.error('[repair] GAS 송장 취소 네트워크 실패:', e);
-        return NextResponse.json({ error: 'GAS 송장 취소 요청 실패 (네트워크)' }, { status: 502 });
-      }
-
-      if (!gasResult.success) {
-        console.error('[repair] ALPS 송장 취소 실패:', gasResult.error);
-        return NextResponse.json(
-          { error: `ALPS 송장 취소 실패: ${gasResult.error || '알 수 없는 오류'}. 이미 집하/배송 중일 수 있습니다.` },
-          { status: 400 }
-        );
-      }
-    }
-
-    // ALPS 취소 성공 확인 후 DB 업데이트
+    // DB 상태 되돌림 (ALPS 취소 API 미지원 → 수동 취소 필요)
     const { data: updated } = await db
       .from('repairs')
       .update({
@@ -171,10 +140,15 @@ export async function DELETE(
       from_status: repair.status,
       to_status: 'repairing',
       changed_by: user.id,
-      note: `송장 취소: ${repair.invoice_number || ''}`,
+      note: `송장 취소: ${cancelledInvNo} (ALPS 수동 취소 필요)`,
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json({
+      ...updated,
+      warning: cancelledInvNo
+        ? `송장 ${cancelledInvNo}은 ALPS에서 직접 취소해주세요.`
+        : undefined,
+    });
   } catch (err) {
     console.error('[repair] 송장 취소 실패:', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });

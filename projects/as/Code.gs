@@ -89,6 +89,19 @@ function selfTestEnv_(){
 function selfTestEnv(){  return selfTestEnv_(); }
 function lotteResetCurrent(){ lotteResetCurrent_(); }
 function lottePeekDemo(){ lottePeekDemo_(); }
+function diagCancel(){
+  const P = PropertiesService.getScriptProperties();
+  const out = {
+    cancel_url_prod:  P.getProperty('LOTTE_CANCEL_API_URL_PROD') || '(없음)',
+    cncl_url_prod:    P.getProperty('LOTTE_CNCL_API_URL_PROD')   || '(없음)',
+    cncl_reason_main: P.getProperty('LOTTE_CNCL_REASON_MAIN')    || '(기본:01)',
+    cncl_reason_dtl:  P.getProperty('LOTTE_CNCL_REASON_DETAIL')  || '(기본:19)',
+    client_key_len:   (P.getProperty('LOTTE_CLIENT_KEY_PROD')||'').length,
+    jobcustcd:        P.getProperty('LOTTE_JOBCUSTCD_PROD')       || '(없음)',
+  };
+  Logger.log(JSON.stringify(out, null, 2));
+  return out;
+}
 function diagAddr(){ return diagAddr_(); }
 function addrCheckZipAddr(){ 
   const P=PropertiesService.getScriptProperties();
@@ -294,16 +307,19 @@ function lotteCancelPickup_(invNo){
     }]
   };
 
+  Logger.log('[CANCEL_PICKUP] url=%s invNo=%s payload=%s', url, invNo, JSON.stringify(payload));
   const r = httpPostJson_(url, headers, payload, 1);
   const first = ((r.json||{}).rtn_list||[])[0]||{};
   const cd = String(first.rtnCd||'').toUpperCase();
+  Logger.log('[CANCEL_PICKUP] http=%s rtnCd=%s rtnMsg=%s body=%s', r.code, cd, first.rtnMsg||'', JSON.stringify(r.json).slice(0,500));
 
   if (r.ok && cd==='S') return {success:true, via:'pickup_cancel'};
 
   const q = lotteQueryStatus_(invNo);
+  Logger.log('[CANCEL_PICKUP] query_state=%s', q.state);
   if (q.ok && (q.state==='CANCELLED' || q.state==='NOT_FOUND')) return {success:true, via:q.state};
 
-  return {success:false, error:'PICKUP_CANCEL_EXPLICIT_FAIL', diag:{http:r.code, body:first}};
+  return {success:false, error:'PICKUP_CANCEL_EXPLICIT_FAIL', diag:{http:r.code, rtnCd:cd, rtnMsg:first.rtnMsg||'', body:first}};
 }
 
 /* =========================
@@ -353,14 +369,18 @@ function lotteBookSingle_(order){
 
 function lotteCancel_(invNo, ordNo){
   invNo = String(invNo||'').replace(/\D/g,'');
-  
+
   // 송장 생성 직후 취소 시 ALPS 동기화 대기
   Utilities.sleep(2000);
-  
+
   const q0 = lotteQueryStatus_(invNo);
-  if (!q0.ok || (q0.state && !['ACTIVE','UNKNOWN','NOT_FOUND'].includes(q0.state))) {
-    Logger.log('[CANCEL] 취소 불가 상태: ' + (q0.state||'UNKNOWN'));
-    return {success:false, error:'CANNOT_CANCEL_STATE', state:(q0&&q0.state)||'UNKNOWN'};
+  // 이미 취소됨 → 성공으로 간주
+  if (q0.ok && q0.state === 'CANCELLED') return {success:true, via:'already_cancelled'};
+  // 배달완료 등 확실히 취소 불가한 상태만 차단 (조회 실패/지연은 취소 시도 허용)
+  const blockedStates = ['DELIVERED','COMPLETED'];
+  if (q0.ok && blockedStates.includes(q0.state)) {
+    Logger.log('[CANCEL] 취소 불가 상태: ' + q0.state);
+    return {success:false, error:'CANNOT_CANCEL_STATE', state:q0.state};
   }
   ordNo = String(ordNo||'');
   if (!invNo) return {success:false, error:'MISSING_INVNO'};
@@ -395,7 +415,8 @@ function lotteCancel_(invNo, ordNo){
   const q = lotteQueryStatus_(invNo);
   if (q.ok && (q.state==='CANCELLED' || q.state==='NOT_FOUND')) return {success:true, via:q.state};
 
-  return {success:false, error:'EXPLICIT_SUCCESS_NOT_RECEIVED', diag:{ http:last.code, last:firstKeys_(last.json||{}), query:q, payloadFirst:true }};
+  Logger.log('[CANCEL] 최종 실패 — pickup:%s legacy_http:%s query:%s', 'fail', last.code, q.state);
+  return {success:false, error:'EXPLICIT_SUCCESS_NOT_RECEIVED', diag:{ http:last.code, last:firstKeys_(last.json||{}), query_state:q.state, query_ok:q.ok }};
 }
 
 
@@ -431,6 +452,7 @@ function doGet(e){
   if (p.action === 'delete'){ if (ADMIN_TOKEN && p.token !== ADMIN_TOKEN) return _json({success:false,error:'UNAUTHORIZED'}); return _json(deleteAS_(p.as_id)); }
   if (p.action === 'addr_check'){ if (ADMIN_TOKEN && p.token !== ADMIN_TOKEN) return _json({success:false,error:'UNAUTHORIZED'}); return _json(addrCheckMake_(p.zip||'', p.addr||'')); }
   if (p.action === 'diag_addr'){ if (ADMIN_TOKEN && p.token !== ADMIN_TOKEN) return _json({success:false,error:'UNAUTHORIZED'}); return _json(diagAddr_()); }
+  if (p.action === 'diag_cancel'){ if (ADMIN_TOKEN && p.token !== ADMIN_TOKEN) return _json({success:false,error:'UNAUTHORIZED'}); return _json(diagCancel()); }
   if (p.action === 'dupcheck'){ return _json(findDupAS_(p.phone||'', p.addr1||'')); }
   // Admin 로그인
   if (p.action === 'admin_login') {

@@ -237,8 +237,11 @@ export function useCancelShipment() {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success('송장이 취소되었습니다');
+      if (data?.warning) {
+        toast(data.warning, { duration: 8000, icon: '⚠️' });
+      }
       queryClient.invalidateQueries({ queryKey: ['repairs'] });
       queryClient.invalidateQueries({ queryKey: ['repair'] });
     },
