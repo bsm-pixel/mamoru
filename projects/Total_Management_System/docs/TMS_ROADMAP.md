@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-02-25 (Phase 2 대시보드 허브+카테고리 리팩토링)
+> 최종 수정: 2026-02-25 (Phase 7 대시보드 6단계 파이프라인 + paid_at 분리)
 
 ---
 
@@ -189,7 +189,7 @@
 | 2-1 | 허브 대시보드 | ✅ | /dashboard → 주문/상담/복원수리 3개 HubCategoryCard (핵심 수치 + 클릭 이동) |
 | 2-2 | 주문 전용 대시보드 | ✅ | /orders/dashboard → 파이프라인바 + 통계 4개 + 결제완료 UrgentList |
 | 2-3 | 상담 전용 대시보드 | ✅ | /consultations/dashboard → 통계 4개 + 오늘 일정 타임라인 + 미확인 UrgentList |
-| 2-4 | 복원수리 전용 대시보드 | ✅ | /repairs/dashboard → 파이프라인바 + 경과일 경고 + 접수/비용안내 UrgentList 2열 |
+| 2-4 | 복원수리 전용 대시보드 | ✅ | /repairs/dashboard → 6단계 파이프라인바 + 경과일 경고 + 수거접수/직접발송 UrgentList 2열 |
 | 2-5 | 공유 컴포넌트 | ✅ | hub-category-card, pipeline-bar, urgent-list 3개 재사용 컴포넌트 |
 | 2-6 | 내비게이션 업데이트 | ✅ | NAV_ITEMS matchPrefix 기반 active 판정, href → 카테고리 대시보드 |
 | 2-7 | 캐시 무효화 통합 | ✅ | hub-stats / order-dashboard-stats / consultation-dashboard-stats / repair-dashboard-stats |
@@ -277,10 +277,10 @@
 | # | 작업 | 상태 | 구현 내용 |
 |---|------|------|-----------|
 | 7-1 | Supabase 스키마 + types.ts | ✅ | repairs/repair_inspections/repair_history 3개 테이블 + RepairStatus ENUM |
-| 7-2 | lib/repair/ 유틸리티 | ✅ | transitions (12상태 전이), cost-calculator, inspection-text (자동 문구), sync |
+| 7-2 | lib/repair/ 유틸리티 | ✅ | transitions (v3: 6단계 파이프라인, paid_at 분리), cost-calculator, inspection-text, sync |
 | 7-3 | API Routes | ✅ | /api/repair/ (CRUD + 검수 + 출고 + 알림 + 동기화 + 리포트) 7개 라우트 |
 | 7-4 | hooks/use-repairs.ts | ✅ | React Query 훅 8개 (목록/단건/상태변경/검수/출고/취소/알림/동기화) |
-| 7-5 | 목록 UI + NAV | ✅ | /repairs 페이지, 상태 탭(7그룹), 카드 목록, 경과일 표시 |
+| 7-5 | 목록 UI + NAV | ✅ | /repairs 페이지, 상태 탭(6그룹: 신규접수/입고대기/작업중/출고/완료/취소), 경과일 표시 |
 | 7-6 | 상세 UI + 검수 UI | ✅ | 2컬럼 레이아웃, 검수 체크리스트(7항목), 자동 문구, 비용 안내, 출고, 타임라인 |
 | 7-7 | GAS 동기화 | ✅ | Code.gs doPost AS_CREATE → TMS sync webhook 추가, 상태변경 시 양방향 동기화 |
 | 7-8 | 알림톡 5종 | ✅ | as_received/as_cost_notice/as_payment_confirmed/as_shipped/as_satisfaction |
@@ -289,16 +289,20 @@
 | 7-11 | 수리내역 페이지 TMS API 연동 | ✅ | page_as_report.html → GitHub Pages + TMS API(CORS) 구조로 구현 |
 | 7-12 | E2E 테스트 | 📋 | 접수→검수→비용안내→입금→수리→출고 전체 플로우 검증 |
 | 7-13 | PC 마스터-디테일 레이아웃 | ✅ | 좌측 목록 + 우측 상세 패널 (lg+), 모바일은 기존 페이지 이동 유지 |
+| 7-14 | 대시보드 6단계 파이프라인 + paid_at 분리 | ✅ | 8→6단계, 입금확인 독립 플래그, 출고 2단계 분리 |
 
-### 상태 머신 (9상태, 단순화 v2)
+### 상태 머신 (v3 — 6단계 파이프라인 + paid_at 독립)
 ```
-방문수거: intake(수거접수 필요) → pickup_scheduled(입고대기중) → cost_notified(진행중)
-         → payment_confirmed(자동→repairing 진행중) → shipped(출고 완료) → delivered → completed
+파이프라인 6단계: 신규접수 → 입고대기 → 작업중 → 출고대기 → 출고완료 → 배송완료
 
-직접발송: intake(접수) → cost_notified(진행중)
-         → payment_confirmed(자동→repairing 진행중) → shipped(출고 완료) → delivered → completed
+방문수거: intake(신규접수) → pickup_scheduled(입고대기) → cost_notified(작업중)
+         → repairing(작업중) → ready_to_ship(출고대기, 송장생성) → shipped(출고완료) → delivered → completed
 
-레거시 호환: picked_up, inspecting, ready_to_ship (기존 데이터 전이 가능)
+직접발송: intake(신규접수) → cost_notified(작업중)
+         → repairing(작업중) → ready_to_ship(출고대기, 송장생성) → shipped(출고완료) → delivered → completed
+
+입금확인: paid_at 플래그 (파이프라인과 독립, 어느 상태에서든 입금확인 가능)
+레거시 호환: picked_up, inspecting, ready_to_ship, payment_confirmed (기존 데이터 전이 가능)
 ```
 
 ### 운영 플로우
@@ -307,11 +311,19 @@
   → GAS doPost(AS_CREATE) → Sheets 저장 + Make 알림톡 + TMS sync
   → TMS /repairs 목록에 자동 반영
 
-방문수거: [수거접수 완료] → [입고 & 비용안내](검수+비용+알림톡) → [입금확인](자동 진행중) → 송장생성(출고 알림톡)
-직접발송: [입고 & 비용안내](검수+비용+알림톡) → [입금확인](자동 진행중) → 송장생성(출고 알림톡)
+방문수거: [수거접수 완료] → [입고 & 비용안내](검수+비용+알림톡) → [작업 시작] → 송장생성(출고대기) → [출고완료](알림톡)
+직접발송: [입고 & 비용안내](검수+비용+알림톡) → [작업 시작] → 송장생성(출고대기) → [출고완료](알림톡)
+입금확인: 독립 버튼 (비용안내 이후 어느 단계에서든 가능, paid_at 설정 + 알림톡)
 ```
 
 ### 최근 완료 (2026-02-25)
+- [x] 대시보드 6단계 파이프라인 (신규접수/입고대기/작업중/출고대기/출고완료/배송완료)
+- [x] payment_confirmed → paid_at 독립 플래그 분리 (Supabase 마이그레이션 완료)
+- [x] 허브 카드: 접수처리/비용안내→수거접수 필요/작업중
+- [x] 긴급리스트: 수거접수 필요(방문수거) + 직접발송 분리
+- [x] 사이드바: 입금확인 독립 버튼 + 입금완료 배지 + 출고완료 버튼
+- [x] 송장생성→ready_to_ship, 출고완료→shipped 2단계 분리
+- [x] 목록 탭 재설계 (신규접수/입고대기/작업중/출고/완료/취소)
 - [x] AS 폴더 구조 정리 — _gas/ 서브폴더 제거, consulting과 clasp 패턴 통일
 - [x] deprecated 파일 삭제 (index.html 46KB, RepairReport.html 16KB)
 - [x] .claspignore 생성 (page_*.html, iframe_*.html, icons/ 등 GAS 제외)
@@ -326,10 +338,8 @@
 
 ### 잔여 작업
 - [ ] **주소 수정 시 다음 주소검색 API 연동** (롯데택배 송장 호환)
-- [ ] **사이드바 버튼 배치 순서 조정** (수거접수 완료 → 입고&비용안내 순서)
 - [ ] 사진 업로드 Supabase Storage 연동 (버킷 생성 필요)
 - [ ] 수리내역서 자동 생성 (Before/After 타임라인 웹카드)
-- [ ] Supabase SQL 실행 (sql/phase7_repairs.sql)
 - [ ] GAS Script Properties 설정 (TMS_REPAIR_SYNC_URL 등)
 - [ ] 솔라피 복원수리 템플릿 5종 등록/검수
 - [ ] Make Router에 복원수리 5종 분기 추가

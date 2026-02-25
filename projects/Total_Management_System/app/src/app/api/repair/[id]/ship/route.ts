@@ -121,7 +121,7 @@ export async function DELETE(
       return NextResponse.json({ error: '복원수리 건을 찾을 수 없습니다' }, { status: 404 });
     }
 
-    // GAS 송장 취소
+    // GAS 송장 취소 — 응답을 확인하여 실패 시 DB 업데이트 차단
     const gasUrl = process.env.GAS_AS_URL;
     const adminToken = process.env.GAS_AS_ADMIN_TOKEN;
     if (gasUrl && adminToken && repair.as_id) {
@@ -130,14 +130,31 @@ export async function DELETE(
         as_id: repair.as_id,
         token: adminToken,
       });
-      await fetch(`${gasUrl}?${gasParams}`, {
-        method: 'GET',
-        redirect: 'follow',
-        signal: AbortSignal.timeout(15000),
-      }).catch((e) => console.error('[repair] GAS 송장 취소 실패:', e));
+
+      let gasResult: { success?: boolean; error?: string } = { success: false };
+      try {
+        const gasRes = await fetch(`${gasUrl}?${gasParams}`, {
+          method: 'GET',
+          redirect: 'follow',
+          signal: AbortSignal.timeout(30000),
+        });
+        const gasText = await gasRes.text();
+        try { gasResult = JSON.parse(gasText); } catch { gasResult = { success: false, error: gasText }; }
+      } catch (e) {
+        console.error('[repair] GAS 송장 취소 네트워크 실패:', e);
+        return NextResponse.json({ error: 'GAS 송장 취소 요청 실패 (네트워크)' }, { status: 502 });
+      }
+
+      if (!gasResult.success) {
+        console.error('[repair] ALPS 송장 취소 실패:', gasResult.error);
+        return NextResponse.json(
+          { error: `ALPS 송장 취소 실패: ${gasResult.error || '알 수 없는 오류'}. 이미 집하/배송 중일 수 있습니다.` },
+          { status: 400 }
+        );
+      }
     }
 
-    // 상태 복원 → repairing (송장 취소 시 작업중으로 되돌림)
+    // ALPS 취소 성공 확인 후 DB 업데이트
     const { data: updated } = await db
       .from('repairs')
       .update({
