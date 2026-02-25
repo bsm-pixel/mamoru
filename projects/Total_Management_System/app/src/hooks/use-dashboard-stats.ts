@@ -20,7 +20,7 @@ export function useHubStats() {
       today.setHours(0, 0, 0, 0);
       const todayStr = today.toISOString().slice(0, 10);
 
-      const [payDone, shipping, pendingAdmin, todayVisit, intake, costNotified] =
+      const [payDone, shipping, pendingAdmin, todayVisit, pickupNeeded, working] =
         await Promise.all([
           supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pay_done'),
           supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'shipping'),
@@ -30,8 +30,12 @@ export function useHubStats() {
             .select('*', { count: 'exact', head: true })
             .eq('visit_date', todayStr)
             .in('status', ['confirmed', 'assigned']),
-          supabase.from('repairs').select('*', { count: 'exact', head: true }).eq('status', 'intake'),
-          supabase.from('repairs').select('*', { count: 'exact', head: true }).eq('status', 'cost_notified'),
+          // 수거접수 필요 (intake + 방문수거)
+          supabase.from('repairs').select('*', { count: 'exact', head: true })
+            .eq('status', 'intake').eq('proceed_type', '방문수거'),
+          // 작업중 (cost_notified + repairing)
+          supabase.from('repairs').select('*', { count: 'exact', head: true })
+            .in('status', ['cost_notified', 'repairing']),
         ]);
 
       return {
@@ -44,8 +48,8 @@ export function useHubStats() {
           todayVisit: todayVisit.count || 0,
         },
         repairs: {
-          intake: intake.count || 0,
-          costNotified: costNotified.count || 0,
+          pickupNeeded: pickupNeeded.count || 0,
+          working: working.count || 0,
         },
       };
     },
@@ -173,12 +177,12 @@ export function useRepairDashboardStats() {
       const threeDaysAgoISO = threeDaysAgo.toISOString();
 
       const statuses = [
-        'intake', 'pickup_scheduled', 'inspecting',
-        'cost_notified', 'payment_confirmed', 'repairing',
-        'ready_to_ship', 'shipped',
+        'intake', 'pickup_scheduled',
+        'cost_notified', 'repairing',
+        'ready_to_ship', 'shipped', 'delivered',
       ] as const;
 
-      const [counts, staleCount] = await Promise.all([
+      const [counts, staleCount, unpaidCount, intakeDirectCount] = await Promise.all([
         // 상태별 count 병렬
         Promise.all(
           statuses.map((s) =>
@@ -189,28 +193,44 @@ export function useRepairDashboardStats() {
               .then((r) => ({ status: s, count: r.count || 0 }))
           )
         ),
-        // 경과일 3일 이상 미처리
+        // 경과일 3일 이상 미처리 (intake, cost_notified)
         supabase
           .from('repairs')
           .select('*', { count: 'exact', head: true })
-          .in('status', ['inspecting', 'cost_notified'])
+          .in('status', ['intake', 'cost_notified'])
           .lt('updated_at', threeDaysAgoISO),
+        // 미입금 건수 (cost_notified 이후 + paid_at IS NULL)
+        supabase
+          .from('repairs')
+          .select('*', { count: 'exact', head: true })
+          .in('status', ['cost_notified', 'repairing', 'ready_to_ship', 'shipped'])
+          .is('paid_at', null),
+        // 직접발송 대기 (intake + 방문수거 아닌 것)
+        supabase
+          .from('repairs')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'intake')
+          .neq('proceed_type', '방문수거'),
       ]);
 
       const byStatus = Object.fromEntries(counts.map((c) => [c.status, c.count])) as Record<string, number>;
 
+      // 입고대기 = pickup_scheduled + intake(직접발송)
+      const waitingInbound = (byStatus.pickup_scheduled || 0) + (intakeDirectCount.count || 0);
+      // 작업중 = cost_notified + repairing
+      const workingCount = (byStatus.cost_notified || 0) + (byStatus.repairing || 0);
+
       return {
         byStatus,
         staleCount: staleCount.count || 0,
+        unpaidCount: unpaidCount.count || 0,
         pipeline: [
-          { label: '접수', count: byStatus.intake || 0, status: 'intake' },
-          { label: '수거대기', count: byStatus.pickup_scheduled || 0, status: 'pickup_scheduled' },
-          { label: '검수', count: byStatus.inspecting || 0, status: 'inspecting' },
-          { label: '비용안내', count: byStatus.cost_notified || 0, status: 'cost_notified' },
-          { label: '입금확인', count: byStatus.payment_confirmed || 0, status: 'payment_confirmed' },
-          { label: '수리중', count: byStatus.repairing || 0, status: 'repairing' },
+          { label: '신규접수', count: byStatus.intake || 0, status: 'intake' },
+          { label: '입고대기', count: waitingInbound, status: 'pickup_scheduled' },
+          { label: '작업중', count: workingCount, status: 'repairing' },
           { label: '출고대기', count: byStatus.ready_to_ship || 0, status: 'ready_to_ship' },
-          { label: '배송중', count: byStatus.shipped || 0, status: 'shipped' },
+          { label: '출고완료', count: byStatus.shipped || 0, status: 'shipped' },
+          { label: '배송완료', count: byStatus.delivered || 0, status: 'delivered' },
         ],
       };
     },

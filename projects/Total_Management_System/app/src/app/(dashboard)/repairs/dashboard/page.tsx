@@ -15,8 +15,14 @@ import { AlertTriangle, ArrowRight } from 'lucide-react';
 export default function RepairDashboardPage() {
   const router = useRouter();
   const { data: stats, isLoading: statsLoading } = useRepairDashboardStats();
-  const { data: costData, isLoading: costLoading } = useRepairs({ status: 'cost_notified', limit: 5 });
-  const { data: intakeData, isLoading: intakeLoading } = useRepairs({ status: 'intake', limit: 5 });
+  // 수거접수 필요 (intake + 방문수거)
+  const { data: pickupData, isLoading: pickupLoading } = useRepairs({
+    status: 'intake', proceed_type: '방문수거', limit: 5,
+  });
+  // 신규접수 — 직접발송 (intake + 방문수거 아닌 것)
+  const { data: directData, isLoading: directLoading } = useRepairs({
+    status: 'intake', proceed_type_neq: '방문수거', limit: 5,
+  });
 
   return (
     <>
@@ -28,7 +34,7 @@ export default function RepairDashboardPage() {
           <div className="flex items-center gap-2 bg-warning/10 border border-warning/30 rounded-lg px-4 py-3">
             <AlertTriangle size={18} className="text-warning shrink-0" />
             <p className="text-sm text-warning font-medium">
-              검수/비용안내 후 <span className="font-bold">{stats?.staleCount}건</span>이 3일 이상 미처리 상태입니다
+              접수/비용안내 후 <span className="font-bold">{stats?.staleCount}건</span>이 3일 이상 미처리 상태입니다
             </p>
           </div>
         )}
@@ -49,39 +55,39 @@ export default function RepairDashboardPage() {
 
         {/* 긴급 리스트 2열 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* 접수 처리 필요 */}
-          {intakeLoading ? (
+          {/* 수거접수 필요 */}
+          {pickupLoading ? (
             <Skeleton className="h-40" />
           ) : (
             <UrgentList
-              title="접수 처리 필요"
-              items={(intakeData?.repairs || []).map((r) => ({
+              title="수거접수 필요"
+              items={(pickupData?.repairs || []).map((r) => ({
                 id: r.id,
                 label: r.name,
                 sublabel: `${r.as_id || ''} · ${formatRelative(r.received_at)}`,
-                badge: '접수',
+                badge: '방문수거',
                 badgeColor: 'bg-info-soft text-info',
               }))}
               onItemClick={(id) => router.push(`/repairs?selected=${id}`)}
-              emptyMessage="접수 대기 건 없음"
+              emptyMessage="수거접수 대기 건 없음"
             />
           )}
 
-          {/* 비용안내 대기 */}
-          {costLoading ? (
+          {/* 신규접수 — 직접발송 */}
+          {directLoading ? (
             <Skeleton className="h-40" />
           ) : (
             <UrgentList
-              title="비용안내 대기"
-              items={(costData?.repairs || []).map((r) => ({
+              title="신규접수 (직접발송)"
+              items={(directData?.repairs || []).map((r) => ({
                 id: r.id,
                 label: r.name,
-                sublabel: `${r.as_id || ''} · ${formatRelative(r.updated_at)}`,
-                badge: '비용안내',
+                sublabel: `${r.as_id || ''} · ${formatRelative(r.received_at)}`,
+                badge: '직접발송',
                 badgeColor: 'bg-terracotta-soft/30 text-terracotta-deep',
               }))}
               onItemClick={(id) => router.push(`/repairs?selected=${id}`)}
-              emptyMessage="비용안내 대기 건 없음"
+              emptyMessage="직접발송 대기 건 없음"
             />
           )}
         </div>

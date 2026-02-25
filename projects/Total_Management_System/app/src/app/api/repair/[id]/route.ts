@@ -4,10 +4,9 @@ import { isValidRepairTransition } from '@/lib/repair/transitions';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
 import type { RepairStatus } from '@/lib/supabase/types';
 
-/** 상태→자동 알림톡 매핑 */
+/** 상태→자동 알림톡 매핑 (payment_confirmed는 paid_at 플래그로 분리됨) */
 function getAutoNotifyTemplate(newStatus: string): NotifyTemplate | null {
   const map: Record<string, NotifyTemplate> = {
-    payment_confirmed: 'as_payment_confirmed',
     shipped: 'as_shipped',
   };
   return map[newStatus] || null;
@@ -103,6 +102,9 @@ export async function PATCH(
 
     if (error) throw error;
 
+    // paid_at 설정 시 → 입금확인 알림톡 (상태 변경과 독립)
+    const justPaid = rest.paid_at && !current.paid_at;
+
     // 상태 변경 시 이력 기록 + 백그라운드 알림톡
     if (newStatus && newStatus !== current.status) {
       await db.from('repair_history').insert({
@@ -112,18 +114,6 @@ export async function PATCH(
         changed_by: user.id,
         note: note || null,
       });
-
-      // 입금확인 → 자동 진행중 전환
-      if (newStatus === 'payment_confirmed') {
-        await db.from('repairs').update({ status: 'repairing' }).eq('id', id);
-        await db.from('repair_history').insert({
-          repair_id: id,
-          from_status: 'payment_confirmed',
-          to_status: 'repairing',
-          changed_by: user.id,
-          note: '입금확인 → 자동 진행',
-        });
-      }
 
       after(async () => {
         const template = getAutoNotifyTemplate(newStatus);
@@ -142,6 +132,28 @@ export async function PATCH(
           });
           if (!result.success) console.error('[repair auto-notify] 실패:', result.error);
           else console.log('[repair auto-notify] 성공:', template);
+        }
+      });
+    }
+
+    // 입금확인 알림톡 (paid_at 플래그 설정 시)
+    if (justPaid) {
+      after(async () => {
+        if (data.phone) {
+          const result = await sendNotification({
+            template: 'as_payment_confirmed',
+            phone: data.phone,
+            name: data.name,
+            data: {
+              id: data.as_id,
+              as_amount: String(data.service_cost || 0),
+              shipping_amount: String(data.shipping_fee || 0),
+              total_amount: String(data.total_amount || 0),
+              tracking: data.invoice_number || '',
+            },
+          });
+          if (!result.success) console.error('[repair paid_at notify] 실패:', result.error);
+          else console.log('[repair paid_at notify] 입금확인 알림톡 발송');
         }
       });
     }

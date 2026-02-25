@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   useUpdateRepairStatus,
+  useUpdateRepairFields,
   useShipRepair,
   useCancelShipment,
   useSendRepairNotification,
@@ -12,7 +13,7 @@ import {
 import { getFilteredRepairTransitions, REPAIR_ACTION_LABEL } from '@/lib/repair/transitions';
 import { formatKRW, formatDateTime } from '@/lib/utils/format';
 import type { Repair, RepairStatus } from '@/lib/supabase/types';
-import { Package, Truck, X, Send } from 'lucide-react';
+import { Package, Truck, X, Send, CheckCircle, CreditCard } from 'lucide-react';
 
 interface SidebarActionCardProps {
   repair: Repair;
@@ -20,6 +21,7 @@ interface SidebarActionCardProps {
 
 export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const updateStatus = useUpdateRepairStatus();
+  const updateFields = useUpdateRepairFields();
   const shipRepair = useShipRepair();
   const cancelShipment = useCancelShipment();
   const sendNotify = useSendRepairNotification();
@@ -35,8 +37,13 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const canSendCostNotice = ['intake', 'pickup_scheduled', 'picked_up', 'inspecting', 'cost_notified'].includes(currentStatus);
   const isCostResend = currentStatus === 'cost_notified';
 
+  // 입금확인 독립 버튼 표시 조건
+  const canMarkPaid = !r.paid_at && ['cost_notified', 'repairing', 'ready_to_ship', 'shipped'].includes(currentStatus);
+
+  // 출고완료 버튼 조건 (ready_to_ship 상태 + 송장 있음)
+  const canMarkShipped = currentStatus === 'ready_to_ship' && !!r.invoice_number;
+
   const handleSendCostNotice = async () => {
-    // 1) 상태 변경 + 비용 저장
     await updateStatus.mutateAsync({
       id: r.id,
       status: 'cost_notified',
@@ -45,8 +52,6 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
       total_amount: r.total_amount,
       note: `비용 안내: ${formatKRW(r.total_amount)}`,
     });
-
-    // 2) 알림톡 발송
     sendNotify.mutate({
       repairId: r.id,
       template: 'as_cost_notice',
@@ -55,6 +60,24 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
         shipping_amount: String(r.shipping_fee),
         total_amount: String(r.total_amount),
       },
+    });
+  };
+
+  // 입금확인 처리 (paid_at 설정 — 상태 변경 없음)
+  const handleMarkPaid = () => {
+    updateFields.mutate({
+      id: r.id,
+      paid_at: new Date().toISOString(),
+    });
+  };
+
+  // 출고완료 처리 (ready_to_ship → shipped + shipped_at 설정)
+  const handleMarkShipped = () => {
+    updateStatus.mutate({
+      id: r.id,
+      status: 'shipped',
+      shipped_at: new Date().toISOString(),
+      note: '출고완료',
     });
   };
 
@@ -79,6 +102,32 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
             <span className="text-terracotta-deep">{formatKRW(r.total_amount)}</span>
           </div>
         </div>
+
+        {/* 입금 상태 표시 */}
+        {r.paid_at ? (
+          <div className="mt-3 pt-3 border-t border-neutral-100">
+            <div className="flex items-center gap-1.5 text-sm text-success font-medium">
+              <CheckCircle size={14} />
+              입금완료
+              <span className="text-xs text-neutral-400 font-normal ml-auto">
+                {formatDateTime(r.paid_at)}
+              </span>
+            </div>
+          </div>
+        ) : canMarkPaid ? (
+          <div className="mt-3 pt-3 border-t border-neutral-100">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleMarkPaid}
+              loading={updateFields.isPending}
+              className="w-full"
+            >
+              <CreditCard size={14} />
+              입금확인
+            </Button>
+          </div>
+        ) : null}
 
         {/* 입고 & 비용안내 발송 */}
         {canSendCostNotice && (
@@ -132,7 +181,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
       </Card>
 
       {/* 출고 섹션 — repairing 이상 */}
-      {(['repairing', 'shipped', 'delivered', 'completed'].includes(currentStatus)) && (
+      {(['repairing', 'ready_to_ship', 'shipped', 'delivered', 'completed'].includes(currentStatus)) && (
         <Card>
           <CardHeader>
             <CardTitle>
@@ -150,6 +199,32 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
               {r.shipped_at && (
                 <p className="text-xs text-neutral-400">발송: {formatDateTime(r.shipped_at)}</p>
               )}
+              {/* 출고완료 버튼 (ready_to_ship → shipped) */}
+              {canMarkShipped && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleMarkShipped}
+                  loading={updateStatus.isPending}
+                  className="w-full"
+                >
+                  <Truck size={14} />
+                  출고완료
+                </Button>
+              )}
+              {/* 송장 취소 (ready_to_ship에서만) */}
+              {currentStatus === 'ready_to_ship' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => cancelShipment.mutate({ id: r.id })}
+                  loading={cancelShipment.isPending}
+                  className="text-error"
+                >
+                  송장 취소
+                </Button>
+              )}
+              {/* 배송중 상태에서 송장 취소 */}
               {currentStatus === 'shipped' && (
                 <Button
                   variant="ghost"

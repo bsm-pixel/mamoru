@@ -10,14 +10,14 @@ import { useRepairs } from '@/hooks/use-repairs';
 import { formatKRW, formatPhone, formatDate } from '@/lib/utils/format';
 import { Search, ChevronLeft, ChevronRight, Scissors } from 'lucide-react';
 
-type TabKey = 'all' | 'pickup' | 'inspect' | 'repair' | 'shipping' | 'completed' | 'cancelled';
+type TabKey = 'all' | 'intake' | 'waiting' | 'working' | 'shipping' | 'completed' | 'cancelled';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'all', label: '전체' },
-  { key: 'pickup', label: '접수/수거' },
-  { key: 'inspect', label: '검수/입금' },
-  { key: 'repair', label: '수리중' },
-  { key: 'shipping', label: '출고/배송' },
+  { key: 'intake', label: '신규접수' },
+  { key: 'waiting', label: '입고대기' },
+  { key: 'working', label: '작업중' },
+  { key: 'shipping', label: '출고' },
   { key: 'completed', label: '완료' },
   { key: 'cancelled', label: '취소' },
 ];

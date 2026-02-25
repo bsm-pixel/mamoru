@@ -7,12 +7,11 @@ import type { RepairStatus } from '@/lib/supabase/types';
 
 type TransitionMap = Record<string, RepairStatus[]>;
 
-/** 복원수리 상태 전이 맵 (단순화 v2) */
+/** 복원수리 상태 전이 맵 (v3 — payment_confirmed 파이프라인 분리) */
 const REPAIR_TRANSITIONS: TransitionMap = {
   intake:             ['pickup_scheduled', 'cost_notified', 'cancelled'],
   pickup_scheduled:   ['cost_notified', 'cancelled'],
-  cost_notified:      ['payment_confirmed', 'cancelled'],
-  payment_confirmed:  ['repairing', 'cancelled'],
+  cost_notified:      ['repairing', 'cancelled'],   // payment_confirmed 제거
   repairing:          ['shipped'],
   shipped:            ['delivered'],
   delivered:          ['completed'],
@@ -22,6 +21,7 @@ const REPAIR_TRANSITIONS: TransitionMap = {
   picked_up:          ['cost_notified', 'cancelled'],
   inspecting:         ['cost_notified', 'cancelled'],
   ready_to_ship:      ['shipped'],
+  payment_confirmed:  ['repairing', 'cancelled'],    // 레거시 데이터 전이용
 };
 
 /** 주어진 상태에서 전이 가능한 상태 목록 */
@@ -34,12 +34,11 @@ export function isValidRepairTransition(from: RepairStatus, to: RepairStatus): b
   return getAllowedRepairTransitions(from).includes(to);
 }
 
-/** 상태 순서 (진행도 계산용) */
+/** 상태 순서 (진행도 계산용) — payment_confirmed 제거 */
 export const REPAIR_STATUS_ORDER: RepairStatus[] = [
   'intake',
   'pickup_scheduled',
   'cost_notified',
-  'payment_confirmed',
   'repairing',
   'shipped',
   'delivered',
@@ -48,12 +47,12 @@ export const REPAIR_STATUS_ORDER: RepairStatus[] = [
 
 /** 상태 한글 라벨 */
 export const REPAIR_STATUS_LABEL: Record<string, string> = {
-  intake: '접수',
-  pickup_scheduled: '입고대기중',
-  cost_notified: '진행중',
-  payment_confirmed: '진행중',
-  repairing: '진행중',
-  shipped: '출고 완료',
+  intake: '신규접수',
+  pickup_scheduled: '입고대기',
+  cost_notified: '작업중',
+  payment_confirmed: '작업중',  // 레거시
+  repairing: '작업중',
+  shipped: '출고완료',
   delivered: '배송완료',
   completed: '완료',
   cancelled: '취소',
@@ -85,8 +84,7 @@ export const REPAIR_ACTION_LABEL: Record<string, string> = {
   intake: '접수',
   pickup_scheduled: '수거접수 완료',
   cost_notified: '입고 & 비용안내',
-  payment_confirmed: '입금확인',
-  repairing: '진행중',
+  repairing: '작업 시작',
   shipped: '출고',
   delivered: '배송완료',
   completed: '완료',

@@ -294,6 +294,7 @@ export interface Database {
           invoice_number: string | null;
           courier_name: string | null;
           shipped_at: string | null;
+          paid_at: string | null;
           delivered_at: string | null;
           admin_note: string | null;
           gas_raw: Record<string, unknown> | null;
@@ -322,6 +323,7 @@ export interface Database {
           invoice_number?: string | null;
           courier_name?: string | null;
           shipped_at?: string | null;
+          paid_at?: string | null;
           delivered_at?: string | null;
           admin_note?: string | null;
           gas_raw?: Record<string, unknown> | null;
@@ -348,6 +350,7 @@ export interface Database {
           invoice_number?: string | null;
           courier_name?: string | null;
           shipped_at?: string | null;
+          paid_at?: string | null;
           delivered_at?: string | null;
           admin_note?: string | null;
           gas_raw?: Record<string, unknown> | null;

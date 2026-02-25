@@ -47,8 +47,8 @@ export default function DashboardPage() {
               icon={Wrench}
               href="/repairs/dashboard"
               stats={[
-                { label: '접수처리', value: stats?.repairs.intake || 0, color: 'text-info' },
-                { label: '비용안내 대기', value: stats?.repairs.costNotified || 0, color: 'text-warning' },
+                { label: '수거접수 필요', value: stats?.repairs.pickupNeeded || 0, color: 'text-info' },
+                { label: '작업중', value: stats?.repairs.working || 0, color: 'text-warning' },
               ]}
             />
           </div>

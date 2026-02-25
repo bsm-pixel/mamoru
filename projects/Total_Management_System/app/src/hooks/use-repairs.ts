@@ -9,6 +9,8 @@ import toast from 'react-hot-toast';
 export function useRepairs(filters?: {
   status?: string;
   search?: string;
+  proceed_type?: string;
+  proceed_type_neq?: string;
   page?: number;
   limit?: number;
 }) {
@@ -30,10 +32,11 @@ export function useRepairs(filters?: {
       if (filters?.status && filters.status !== 'all') {
         // 탭 그룹 필터
         const statusGroups: Record<string, string[]> = {
-          pickup: ['intake', 'pickup_scheduled', 'picked_up'],
-          inspect: ['inspecting', 'cost_notified', 'payment_confirmed'],
-          repair: ['repairing', 'ready_to_ship'],
-          shipping: ['shipped', 'delivered'],
+          intake: ['intake'],
+          waiting: ['pickup_scheduled'],
+          working: ['cost_notified', 'repairing'],
+          shipping: ['ready_to_ship', 'shipped'],
+          completed: ['delivered', 'completed'],
         };
         const group = statusGroups[filters.status];
         if (group) {
@@ -41,6 +44,14 @@ export function useRepairs(filters?: {
         } else {
           query = query.eq('status', filters.status);
         }
+      }
+
+      // proceed_type 필터
+      if (filters?.proceed_type) {
+        query = query.eq('proceed_type', filters.proceed_type);
+      }
+      if (filters?.proceed_type_neq) {
+        query = query.neq('proceed_type', filters.proceed_type_neq);
       }
 
       if (filters?.search) {

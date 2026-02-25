@@ -28,7 +28,7 @@ export async function POST(
       return NextResponse.json({ error: '복원수리 건을 찾을 수 없습니다' }, { status: 404 });
     }
 
-    if (!['ready_to_ship'].includes(repair.status)) {
+    if (!['repairing', 'ready_to_ship'].includes(repair.status)) {
       return NextResponse.json({ error: `출고 불가 상태: ${repair.status}` }, { status: 400 });
     }
 
@@ -62,14 +62,13 @@ export async function POST(
       );
     }
 
-    // Supabase 업데이트
+    // Supabase 업데이트 — 송장 생성 = ready_to_ship (출고완료는 별도 액션)
     const { data: updated, error: updateErr } = await db
       .from('repairs')
       .update({
-        status: 'shipped',
+        status: 'ready_to_ship',
         invoice_number: gasBody.invNo,
         courier_name: '롯데택배',
-        shipped_at: new Date().toISOString(),
       })
       .eq('id', id)
       .select()
@@ -81,9 +80,9 @@ export async function POST(
     await db.from('repair_history').insert({
       repair_id: id,
       from_status: repair.status,
-      to_status: 'shipped',
+      to_status: 'ready_to_ship',
       changed_by: user.id,
-      note: `송장: ${gasBody.invNo}`,
+      note: `송장 생성: ${gasBody.invNo}`,
     });
 
     return NextResponse.json({
@@ -138,11 +137,11 @@ export async function DELETE(
       }).catch((e) => console.error('[repair] GAS 송장 취소 실패:', e));
     }
 
-    // 상태 복원
+    // 상태 복원 → repairing (송장 취소 시 작업중으로 되돌림)
     const { data: updated } = await db
       .from('repairs')
       .update({
-        status: 'ready_to_ship',
+        status: 'repairing',
         invoice_number: null,
         shipped_at: null,
       })
@@ -153,7 +152,7 @@ export async function DELETE(
     await db.from('repair_history').insert({
       repair_id: id,
       from_status: repair.status,
-      to_status: 'ready_to_ship',
+      to_status: 'repairing',
       changed_by: user.id,
       note: `송장 취소: ${repair.invoice_number || ''}`,
     });
