@@ -4,7 +4,12 @@
  * - SESSION_ID는 서버 메모리 캐시 (만료 시 자동 재발급)
  */
 
-const ECOUNT_BASE = 'https://sboapi.ecount.com';
+// 테스트 모드: http://sboapi.ecount.com (검증용)
+// 정식 모드: https://sboapi{ZONE}.ecount.com
+const isTestMode = process.env.ECOUNT_TEST_MODE === 'true';
+const ECOUNT_BASE = isTestMode
+  ? 'http://sboapi.ecount.com'
+  : 'https://sboapi.ecount.com';
 
 interface EcountConfig {
   comCode: string;
@@ -35,6 +40,8 @@ function getConfig(): EcountConfig {
 }
 
 function getBaseUrl(zone: string): string {
+  // 테스트 모드: ZONE 없이 단일 URL 사용
+  if (isTestMode) return 'http://sboapi.ecount.com';
   return `https://sboapi${zone}.ecount.com`;
 }
 

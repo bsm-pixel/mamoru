@@ -7,11 +7,12 @@
 
 ## 🔴 내일 할 일 (2026-02-27)
 
-### 1순위: 이카운트 ERP 실연동 (R5)
-- [ ] 이카운트 관리자 화면에서 **정식 API 인증키 발급** (테스트/샌드박스 없음, 실전 데이터 직접 연결)
-- [ ] `.env.local`에 환경변수 4개 입력 (`ECOUNT_COM_CODE`, `ECOUNT_USER_ID`, `ECOUNT_API_CERT_KEY`, `ECOUNT_ZONE`)
-- [ ] TMS에서 세션 발급 테스트 (로그인 성공 확인)
-- [ ] 오프라인 판매 1건 테스트 입력 → 이카운트에 판매전표 생성 확인
+### 1순위: 이카운트 ERP 연동 (R5)
+- [ ] **테스트 인증키 발급** (ERP → Self-Customizing → API인증키발급, 2주 유효)
+- [ ] `.env.local` 설정 (COM_CODE, USER_ID, API_CERT_KEY, ZONE, TEST_MODE=true)
+- [ ] ERP 웹자료올리기 항목 추가 (판매 등)
+- [ ] 테스트 URL(`http://sboapi.ecount.com`)로 사용할 API 호출 → 자동 검증
+- [ ] 검증 완료 후 **정식 인증키 발급** (1년 유효) → TEST_MODE 제거
 
 ### 2순위: 솔라피 템플릿 등록 + Make 분기 (Phase 4/7)
 - [ ] 복원수리 알림톡 5종 솔라피 템플릿 등록 (as_received / as_inspected / as_payment_confirmed / as_shipped / as_satisfaction)
