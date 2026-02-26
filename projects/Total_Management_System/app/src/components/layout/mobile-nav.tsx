@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ShoppingCart, MessageSquare, Settings, Wrench, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, MessageSquare, Settings, Wrench, Store, FileSignature, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { NAV_ITEMS } from '@/lib/utils/constants';
 
@@ -11,6 +11,8 @@ const iconMap: Record<string, LucideIcon> = {
   ShoppingCart,
   MessageSquare,
   Wrench,
+  Store,
+  FileSignature,
   Settings,
 };
 

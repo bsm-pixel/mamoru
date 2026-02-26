@@ -154,10 +154,10 @@ export function ScheduleCalendar() {
               {events.length > 0 && (
                 <div className="flex gap-0.5 mt-0.5">
                   {storeCount > 0 && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-terracotta" title={`매장방문 ${storeCount}건`} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" title={`매장방문 ${storeCount}건`} />
                   )}
                   {fieldCount > 0 && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-info" title={`출장요청 ${fieldCount}건`} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" title={`출장요청 ${fieldCount}건`} />
                   )}
                 </div>
               )}
@@ -167,13 +167,14 @@ export function ScheduleCalendar() {
       </div>
 
       {/* 범례 */}
+      {/* R2: 초록=매장, 보라=출장 */}
       <div className="flex items-center gap-4 mt-3 text-xs text-neutral-500">
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-terracotta" />
+          <span className="w-2 h-2 rounded-full bg-green-500" />
           매장방문
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-info" />
+          <span className="w-2 h-2 rounded-full bg-purple-500" />
           출장요청
         </span>
       </div>
@@ -195,16 +196,16 @@ export function ScheduleCalendar() {
                   onClick={() => router.push(`/consultations/${c.id}`)}
                 >
                   {c.consultation_type === 'store_visit' ? (
-                    <Store size={14} className="text-terracotta shrink-0" />
+                    <Store size={14} className="text-green-600 shrink-0" />
                   ) : (
-                    <Truck size={14} className="text-info shrink-0" />
+                    <Truck size={14} className="text-purple-600 shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-semibold text-indigo-black">{c.name}</span>
                     <span className="text-xs text-neutral-400 ml-2">{c.visit_time || ''}</span>
                   </div>
                   <span className="text-xs text-neutral-500">{formatPhone(c.phone)}</span>
-                  <Badge className={c.consultation_type === 'store_visit' ? 'bg-terracotta/10 text-terracotta' : 'bg-info-soft text-info'}>
+                  <Badge className={c.consultation_type === 'store_visit' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'}>
                     {c.consultation_type === 'store_visit' ? '매장' : '출장'}
                   </Badge>
                 </div>

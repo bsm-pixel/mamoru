@@ -8,6 +8,8 @@ import {
   Settings,
   MessageSquare,
   Wrench,
+  Store,
+  FileSignature,
   Package,
   Users,
   type LucideIcon,
@@ -21,6 +23,8 @@ const iconMap: Record<string, LucideIcon> = {
   Settings,
   MessageSquare,
   Wrench,
+  Store,
+  FileSignature,
   Package,
   Users,
 };

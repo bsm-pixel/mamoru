@@ -8,9 +8,8 @@ import { useConsultationSync } from '@/hooks/use-consultations';
 import { StoreVisitList } from '@/components/consultations/store-visit-list';
 import { FieldRequestList } from '@/components/consultations/field-request-list';
 import { TalkConsultList } from '@/components/consultations/talk-consult-list';
-import { MobileFieldDayView } from '@/components/consultations/mobile-field-day-view';
 import { ScheduleCalendar } from '@/components/consultations/schedule-calendar';
-import { RefreshCw, Store, Truck, MessageCircle, Smartphone } from 'lucide-react';
+import { RefreshCw, Store, Truck, MessageCircle } from 'lucide-react';
 
 // 카카오맵은 SSR 불가 → dynamic import
 const FieldRequestMap = dynamic(
@@ -28,8 +27,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
 
 export default function ConsultationsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('store_visit');
-  const [showMap, setShowMap] = useState(false);
-  const [showMobileView, setShowMobileView] = useState(false);
+  const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const sync = useConsultationSync();
 
   return (
@@ -55,7 +53,7 @@ export default function ConsultationsPage() {
           {TABS.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => { setActiveTab(tab.key); setShowMap(false); }}
+              onClick={() => { setActiveTab(tab.key); setSelectedFieldId(null); }}
               className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 transition ${
                 activeTab === tab.key
                   ? 'border-terracotta text-terracotta'
@@ -68,46 +66,44 @@ export default function ConsultationsPage() {
           ))}
         </div>
 
-        {/* 메인 콘텐츠: 리스트 + 달력 사이드바 (PC) */}
+        {/* R2: 메인 콘텐츠 — 탭별 사이드바 분기 */}
         <div className="flex gap-6">
           {/* 좌측: 탭 콘텐츠 */}
           <div className="flex-1 min-w-0">
             {activeTab === 'store_visit' && <StoreVisitList />}
             {activeTab === 'field_request' && (
               <>
-                <div className="flex justify-end mb-4">
-                  <Button
-                    variant={showMobileView ? 'primary' : 'ghost'}
-                    size="sm"
-                    onClick={() => setShowMobileView(!showMobileView)}
-                  >
-                    <Smartphone size={14} />
-                    {showMobileView ? '리스트 보기' : '출장 일정'}
-                  </Button>
+                {/* 모바일: 리스트 상단 접이식 지도 */}
+                <div className="lg:hidden mb-4">
+                  <FieldRequestMap
+                    selectedFieldId={selectedFieldId}
+                    onFieldSelect={setSelectedFieldId}
+                  />
                 </div>
-
-                {showMobileView ? (
-                  <MobileFieldDayView />
-                ) : (
-                  <>
-                    {showMap && <FieldRequestMap />}
-                    <FieldRequestList
-                      showMap={showMap}
-                      onToggleMap={() => setShowMap(!showMap)}
-                    />
-                  </>
-                )}
+                <FieldRequestList
+                  selectedFieldId={selectedFieldId}
+                  onFieldSelect={setSelectedFieldId}
+                />
               </>
             )}
             {activeTab === 'talk_consult' && <TalkConsultList />}
           </div>
 
-          {/* 우측: 달력 사이드바 (PC만, 매장방문/출장요청 탭일 때) */}
-          {activeTab !== 'talk_consult' && (
+          {/* R2: 우측 사이드바 — 출장 탭 = 지도 400px, 매장/톡 탭 = 달력 340px */}
+          {activeTab === 'field_request' ? (
+            <div className="hidden lg:block w-[400px] shrink-0">
+              <div className="sticky top-16">
+                <FieldRequestMap
+                  selectedFieldId={selectedFieldId}
+                  onFieldSelect={setSelectedFieldId}
+                />
+              </div>
+            </div>
+          ) : activeTab !== 'talk_consult' ? (
             <div className="hidden lg:block w-[340px] shrink-0">
               <ScheduleCalendar />
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </>

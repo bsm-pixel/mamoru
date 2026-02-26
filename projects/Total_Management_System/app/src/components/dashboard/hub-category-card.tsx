@@ -13,9 +13,10 @@ interface HubCategoryCardProps {
   icon: LucideIcon;
   href: string;
   stats: StatItem[];
+  summary?: string;  // R3: 하단 요약 라인 (예: "이번주 ₩420,000")
 }
 
-export function HubCategoryCard({ title, icon: Icon, href, stats }: HubCategoryCardProps) {
+export function HubCategoryCard({ title, icon: Icon, href, stats, summary }: HubCategoryCardProps) {
   return (
     <Link
       href={href}
@@ -44,6 +45,13 @@ export function HubCategoryCard({ title, icon: Icon, href, stats }: HubCategoryC
               </div>
             ))}
           </div>
+
+          {/* R3: 요약 라인 */}
+          {summary && (
+            <p className="mt-2 pt-2 border-t border-neutral-100 text-xs text-neutral-500">
+              {summary}
+            </p>
+          )}
         </div>
       </div>
     </Link>

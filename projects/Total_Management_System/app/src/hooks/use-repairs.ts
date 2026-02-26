@@ -127,6 +127,7 @@ export function useUpdateRepairStatus() {
       queryClient.invalidateQueries({ queryKey: ['repair'] });
       queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
       queryClient.invalidateQueries({ queryKey: ['repair-dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
     },
     onError: (err) => {
       toast.error('상태 변경 실패: ' + String(err));
@@ -289,6 +290,7 @@ export function useRepairSync() {
       await queryClient.invalidateQueries({ queryKey: ['repair'] });
       await queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
       await queryClient.invalidateQueries({ queryKey: ['repair-dashboard-stats'] });
+      await queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
       return { synced: 0 };
     },
     onSuccess: () => {

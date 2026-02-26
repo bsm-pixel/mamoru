@@ -46,6 +46,17 @@ export type RepairStatus =
   | 'completed'
   | 'cancelled';
 
+// R5: 오프라인 판매 ENUM
+export type PaymentMethod = 'card' | 'cash' | 'transfer' | 'mixed';
+export type PaymentStatus = 'paid' | 'unpaid' | 'partial';
+export type EcountSyncStatus = 'pending' | 'synced' | 'failed';
+
+// R6: 전자 계약서 ENUM
+export type ContractStatus = 'draft' | 'signed' | 'sent' | 'completed' | 'cancelled';
+
+// R7: 시리얼넘버 ENUM
+export type SerialStatus = 'in_stock' | 'reserved' | 'sold' | 'returned' | 'defective';
+
 export interface Database {
   public: {
     Tables: {
@@ -74,11 +85,12 @@ export interface Database {
           source: 'imweb' | 'consultation' | 'as' | 'manual';
           total_orders: number;
           total_spent: number;
+          ecount_customer_code: string | null;  // R5: 이카운트 거래처 코드
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['customers']['Row'], 'id' | 'created_at' | 'updated_at' | 'phone_normalized' | 'total_orders' | 'total_spent'>;
-        Update: Partial<Database['public']['Tables']['customers']['Insert']>;
+        Insert: Omit<Database['public']['Tables']['customers']['Row'], 'id' | 'created_at' | 'updated_at' | 'phone_normalized' | 'total_orders' | 'total_spent' | 'ecount_customer_code'>;
+        Update: Partial<Database['public']['Tables']['customers']['Insert']> & { ecount_customer_code?: string | null };
       };
       orders: {
         Row: {
@@ -296,6 +308,8 @@ export interface Database {
           shipped_at: string | null;
           paid_at: string | null;
           delivered_at: string | null;
+          confirmed_at: string | null;  // R1: 접수확인 시점
+          packed_at: string | null;     // R1: 포장완료 시점
           admin_note: string | null;
           gas_raw: Record<string, unknown> | null;
           received_at: string;
@@ -325,6 +339,8 @@ export interface Database {
           shipped_at?: string | null;
           paid_at?: string | null;
           delivered_at?: string | null;
+          confirmed_at?: string | null;
+          packed_at?: string | null;
           admin_note?: string | null;
           gas_raw?: Record<string, unknown> | null;
           received_at?: string;
@@ -352,6 +368,8 @@ export interface Database {
           shipped_at?: string | null;
           paid_at?: string | null;
           delivered_at?: string | null;
+          confirmed_at?: string | null;
+          packed_at?: string | null;
           admin_note?: string | null;
           gas_raw?: Record<string, unknown> | null;
           received_at?: string;
@@ -455,6 +473,245 @@ export interface Database {
           note?: string | null;
         };
       };
+      // R5: 오프라인 판매 테이블
+      offline_sales: {
+        Row: {
+          id: string;
+          sale_number: string;
+          customer_id: string | null;
+          customer_name: string;
+          customer_phone: string | null;
+          sale_date: string;
+          total_amount: number;
+          discount_amount: number;
+          paid_amount: number;
+          payment_method: PaymentMethod;
+          payment_status: PaymentStatus;
+          memo: string | null;
+          ecount_sync_status: EcountSyncStatus;
+          ecount_slip_no: string | null;
+          ecount_synced_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          sale_number: string;
+          customer_id?: string | null;
+          customer_name: string;
+          customer_phone?: string | null;
+          sale_date?: string;
+          total_amount?: number;
+          discount_amount?: number;
+          paid_amount?: number;
+          payment_method?: PaymentMethod;
+          payment_status?: PaymentStatus;
+          memo?: string | null;
+          created_by?: string | null;
+        };
+        Update: {
+          customer_id?: string | null;
+          customer_name?: string;
+          customer_phone?: string | null;
+          sale_date?: string;
+          total_amount?: number;
+          discount_amount?: number;
+          paid_amount?: number;
+          payment_method?: PaymentMethod;
+          payment_status?: PaymentStatus;
+          memo?: string | null;
+          ecount_sync_status?: EcountSyncStatus;
+          ecount_slip_no?: string | null;
+          ecount_synced_at?: string | null;
+        };
+      };
+      offline_sale_items: {
+        Row: {
+          id: string;
+          sale_id: string;
+          product_id: string | null;
+          product_name: string;
+          sku: string | null;
+          quantity: number;
+          unit_price: number;
+          total_price: number;
+        };
+        Insert: {
+          sale_id: string;
+          product_id?: string | null;
+          product_name: string;
+          sku?: string | null;
+          quantity?: number;
+          unit_price?: number;
+          total_price?: number;
+        };
+        Update: {
+          product_id?: string | null;
+          product_name?: string;
+          sku?: string | null;
+          quantity?: number;
+          unit_price?: number;
+          total_price?: number;
+        };
+      };
+      // R6: 전자 계약서 테이블
+      contracts: {
+        Row: {
+          id: string;
+          contract_number: string;
+          customer_id: string | null;
+          customer_name: string;
+          customer_phone: string | null;
+          customer_email: string | null;
+          customer_address: string | null;
+          total_amount: number;
+          discount_amount: number;
+          final_amount: number;
+          payment_method: PaymentMethod;
+          installment_months: number;
+          signature_data: string | null;
+          signed_at: string | null;
+          pdf_url: string | null;
+          image_url: string | null;
+          notification_sent_at: string | null;
+          status: ContractStatus;
+          memo: string | null;
+          ecount_sync_status: EcountSyncStatus;
+          ecount_slip_no: string | null;
+          offline_sale_id: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          contract_number: string;
+          customer_id?: string | null;
+          customer_name: string;
+          customer_phone?: string | null;
+          customer_email?: string | null;
+          customer_address?: string | null;
+          total_amount?: number;
+          discount_amount?: number;
+          final_amount?: number;
+          payment_method?: PaymentMethod;
+          installment_months?: number;
+          signature_data?: string | null;
+          signed_at?: string | null;
+          status?: ContractStatus;
+          memo?: string | null;
+          offline_sale_id?: string | null;
+          created_by?: string | null;
+        };
+        Update: {
+          customer_id?: string | null;
+          customer_name?: string;
+          customer_phone?: string | null;
+          customer_email?: string | null;
+          customer_address?: string | null;
+          total_amount?: number;
+          discount_amount?: number;
+          final_amount?: number;
+          payment_method?: PaymentMethod;
+          installment_months?: number;
+          signature_data?: string | null;
+          signed_at?: string | null;
+          pdf_url?: string | null;
+          image_url?: string | null;
+          notification_sent_at?: string | null;
+          status?: ContractStatus;
+          memo?: string | null;
+          ecount_sync_status?: EcountSyncStatus;
+          ecount_slip_no?: string | null;
+          offline_sale_id?: string | null;
+        };
+      };
+      contract_items: {
+        Row: {
+          id: string;
+          contract_id: string;
+          product_id: string | null;
+          product_name: string;
+          sku: string | null;
+          quantity: number;
+          unit_price: number;
+          total_price: number;
+          option_text: string | null;
+        };
+        Insert: {
+          contract_id: string;
+          product_id?: string | null;
+          product_name: string;
+          sku?: string | null;
+          quantity?: number;
+          unit_price?: number;
+          total_price?: number;
+          option_text?: string | null;
+        };
+        Update: {
+          product_id?: string | null;
+          product_name?: string;
+          sku?: string | null;
+          quantity?: number;
+          unit_price?: number;
+          total_price?: number;
+          option_text?: string | null;
+        };
+      };
+      // R7: 시리얼넘버 테이블
+      product_serials: {
+        Row: {
+          id: string;
+          product_id: string;
+          serial_number: string;
+          barcode: string | null;
+          status: SerialStatus;
+          sold_via: string | null;
+          order_id: string | null;
+          offline_sale_id: string | null;
+          contract_id: string | null;
+          sold_at: string | null;
+          sold_to_name: string | null;
+          sold_to_phone: string | null;
+          lot_number: string | null;
+          manufactured_at: string | null;
+          memo: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          product_id: string;
+          serial_number: string;
+          barcode?: string | null;
+          status?: SerialStatus;
+          sold_via?: string | null;
+          order_id?: string | null;
+          offline_sale_id?: string | null;
+          contract_id?: string | null;
+          sold_at?: string | null;
+          sold_to_name?: string | null;
+          sold_to_phone?: string | null;
+          lot_number?: string | null;
+          manufactured_at?: string | null;
+          memo?: string | null;
+          created_by?: string | null;
+        };
+        Update: {
+          serial_number?: string;
+          barcode?: string | null;
+          status?: SerialStatus;
+          sold_via?: string | null;
+          order_id?: string | null;
+          offline_sale_id?: string | null;
+          contract_id?: string | null;
+          sold_at?: string | null;
+          sold_to_name?: string | null;
+          sold_to_phone?: string | null;
+          lot_number?: string | null;
+          manufactured_at?: string | null;
+          memo?: string | null;
+        };
+      };
     };
   };
 }
@@ -476,3 +733,14 @@ export type ConsultationHistory = Database['public']['Tables']['consultation_his
 export type Repair = Database['public']['Tables']['repairs']['Row'];
 export type RepairInspection = Database['public']['Tables']['repair_inspections']['Row'];
 export type RepairHistory = Database['public']['Tables']['repair_history']['Row'];
+
+// R5: 편의 타입
+export type OfflineSale = Database['public']['Tables']['offline_sales']['Row'];
+export type OfflineSaleItem = Database['public']['Tables']['offline_sale_items']['Row'];
+
+// R6: 편의 타입
+export type Contract = Database['public']['Tables']['contracts']['Row'];
+export type ContractItem = Database['public']['Tables']['contract_items']['Row'];
+
+// R7: 편의 타입
+export type ProductSerial = Database['public']['Tables']['product_serials']['Row'];

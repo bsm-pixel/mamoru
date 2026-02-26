@@ -136,6 +136,7 @@ export const REPAIR_STATUS_LABEL: Record<string, string> = {
   cost_notified: '진행중',
   payment_confirmed: '진행중',
   repairing: '진행중',
+  ready_to_ship: '출고대기',  // R1: 활성 상태로 승격
   shipped: '출고 완료',
   delivered: '배송완료',
   completed: '완료',
@@ -143,7 +144,6 @@ export const REPAIR_STATUS_LABEL: Record<string, string> = {
   // 레거시
   picked_up: '입고완료',
   inspecting: '검수중',
-  ready_to_ship: '출고대기',
 };
 
 /** 복원수리 상태 색상 매핑 (Tailwind 클래스) */

@@ -8,7 +8,7 @@ import type { Consultation } from '@/lib/supabase/types';
 // 허브 대시보드 통계
 // ============================================
 
-/** 허브 대시보드: 3개 카테고리별 핵심 수치 */
+/** R3: 허브 대시보드 — 3개 카테고리별 확장 수치 */
 export function useHubStats() {
   const supabase = createClient();
 
@@ -16,40 +16,99 @@ export function useHubStats() {
     queryKey: ['hub-stats'],
     staleTime: 15_000,
     queryFn: async () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayStr = today.toISOString().slice(0, 10);
+      const now = new Date();
+      // 이번주 월~일
+      const dow = now.getDay();
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - ((dow + 6) % 7));
+      monday.setHours(0, 0, 0, 0);
+      const monISO = monday.toISOString();
+      // 이번달 1일
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthISO = monthStart.toISOString();
 
-      const [payDone, shipping, pendingAdmin, todayVisit, pickupNeeded, working] =
-        await Promise.all([
-          supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pay_done'),
-          supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'shipping'),
-          supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'pending_admin'),
-          supabase
-            .from('consultations')
-            .select('*', { count: 'exact', head: true })
-            .eq('visit_date', todayStr)
-            .in('status', ['confirmed', 'assigned']),
-          // 수거접수 필요 (intake + 방문수거)
-          supabase.from('repairs').select('*', { count: 'exact', head: true })
-            .eq('status', 'intake').eq('proceed_type', '방문수거'),
-          // 작업중 (cost_notified + repairing)
-          supabase.from('repairs').select('*', { count: 'exact', head: true })
-            .in('status', ['cost_notified', 'repairing']),
-        ]);
+      const [
+        // 주문: 4단계
+        payDone, preparing, shipping, delivered,
+        // 주문: 주/월 금액
+        weekOrders, monthOrders,
+        // 상담: R3 재설계
+        newConsult, confirmedConsult, needAction,
+        // 복원수리: R3 재설계
+        intakeNew, repairPending, repairWorking,
+        weekRepairs,
+      ] = await Promise.all([
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pay_done'),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparing'),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'shipping'),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'delivered'),
+        // 이번주 주문 금액
+        supabase.from('orders').select('paid_amount').gte('ordered_at', monISO).not('status', 'in', '("cancelled","refunded")'),
+        // 이번달 주문 금액
+        supabase.from('orders').select('paid_amount').gte('ordered_at', monthISO).not('status', 'in', '("cancelled","refunded")'),
+        // 상담: 신규접수 (pending_admin 전체)
+        supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'pending_admin'),
+        // 상담: 확정
+        supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'confirmed'),
+        // 상담: 대응필요 (출장 재제안 + 출장 신규 + 톡상담 신규)
+        supabase.from('consultations').select('*', { count: 'exact', head: true })
+          .in('status', ['reschedule_requested', 'change_requested', 'pending_admin'])
+          .in('consultation_type', ['field_request', 'talk_consult']),
+        // 복원수리: 신규접수 (confirmed_at IS NULL)
+        supabase.from('repairs').select('*', { count: 'exact', head: true })
+          .eq('status', 'intake').is('confirmed_at', null),
+        // 복원수리: 진행대기 (intake confirmed + pickup_scheduled)
+        supabase.from('repairs').select('*', { count: 'exact', head: true })
+          .in('status', ['intake', 'pickup_scheduled']),
+        // 복원수리: 진행중 (cost_notified + repairing + ready_to_ship) + qty
+        supabase.from('repairs').select('qty_mamoru, qty_other')
+          .in('status', ['cost_notified', 'repairing', 'ready_to_ship']),
+        // 복원수리: 이번주 완료
+        supabase.from('repairs').select('qty_mamoru, qty_other')
+          .in('status', ['shipped', 'delivered', 'completed'])
+          .gte('shipped_at', monISO),
+      ]);
+
+      // 금액 합산
+      const sumAmount = (rows: { paid_amount?: number }[]) =>
+        (rows || []).reduce((s, r) => s + (r.paid_amount || 0), 0);
+      const weekAmount = sumAmount(weekOrders.data || []);
+      const monthAmount = sumAmount(monthOrders.data || []);
+
+      // 복원수리 가위 수량
+      const workingRows = (repairWorking.data || []) as { qty_mamoru: number; qty_other: number }[];
+      const workingQty = workingRows.reduce((s, r) => s + (r.qty_mamoru || 0) + (r.qty_other || 0), 0);
+      const workingCount = workingRows.length;
+
+      const weekRepairRows = (weekRepairs.data || []) as { qty_mamoru: number; qty_other: number }[];
+      const weekRepairMamoru = weekRepairRows.reduce((s, r) => s + (r.qty_mamoru || 0), 0);
+      const weekRepairOther = weekRepairRows.reduce((s, r) => s + (r.qty_other || 0), 0);
+
+      // 진행대기 = 전체 intake+pickup - 신규접수
+      const pendingInbound = (repairPending.count || 0) - (intakeNew.count || 0);
 
       return {
         orders: {
           payDone: payDone.count || 0,
+          preparing: preparing.count || 0,
           shipping: shipping.count || 0,
+          delivered: delivered.count || 0,
+          weekAmount,
+          monthAmount,
         },
         consultations: {
-          pendingAdmin: pendingAdmin.count || 0,
-          todayVisit: todayVisit.count || 0,
+          newIntake: newConsult.count || 0,
+          confirmed: confirmedConsult.count || 0,
+          needAction: needAction.count || 0,
         },
         repairs: {
-          pickupNeeded: pickupNeeded.count || 0,
-          working: working.count || 0,
+          intakeNew: intakeNew.count || 0,
+          pendingInbound: Math.max(0, pendingInbound),
+          workingCount,
+          workingQty,
+          weekRepairTotal: weekRepairRows.length,
+          weekRepairMamoru,
+          weekRepairOther,
         },
       };
     },
@@ -106,54 +165,51 @@ export function useConsultationDashboardStats() {
     queryKey: ['consultation-dashboard-stats'],
     staleTime: 15_000,
     queryFn: async () => {
-      const today = new Date();
-      const todayStr = today.toISOString().slice(0, 10);
+      const now = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
+      // R2: 6시간 기준
+      const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
+      // 1달 전
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-      // 이번주 월~일 범위
-      const dayOfWeek = today.getDay();
-      const monday = new Date(today);
-      monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
-      const sunday = new Date(monday);
-      sunday.setDate(monday.getDate() + 6);
-      const monStr = monday.toISOString().slice(0, 10);
-      const sunStr = sunday.toISOString().slice(0, 10);
-
-      const [pendingAdmin, todayStore, todayField, suggested, weekVisits, todaySchedule] =
-        await Promise.all([
-          supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'pending_admin'),
-          supabase
-            .from('consultations')
-            .select('*', { count: 'exact', head: true })
-            .eq('visit_date', todayStr)
-            .eq('consultation_type', 'store_visit'),
-          supabase
-            .from('consultations')
-            .select('*', { count: 'exact', head: true })
-            .eq('visit_date', todayStr)
-            .eq('consultation_type', 'field_request'),
-          supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'suggested'),
-          supabase
-            .from('consultations')
-            .select('*', { count: 'exact', head: true })
-            .gte('visit_date', monStr)
-            .lte('visit_date', sunStr)
-            .in('status', ['confirmed', 'assigned', 'in_progress']),
-          // 오늘 일정 리스트 (full rows)
-          supabase
-            .from('consultations')
-            .select('*')
-            .eq('visit_date', todayStr)
-            .in('status', ['confirmed', 'assigned', 'in_progress', 'pending_admin'])
-            .order('visit_time', { ascending: true })
-            .limit(10),
-        ]);
+      const [
+        newIntake,
+        inProgress,
+        completedMonth,
+        todaySchedule,
+      ] = await Promise.all([
+        // R2: 신규접수 (6시간 이내 + 미처리)
+        supabase
+          .from('consultations')
+          .select('*', { count: 'exact', head: true })
+          .gte('received_at', sixHoursAgo)
+          .in('status', ['pending_admin', 'confirmed']),
+        // R2: 진행중 (6시간 이후 + 미완료/미취소)
+        supabase
+          .from('consultations')
+          .select('*', { count: 'exact', head: true })
+          .lt('received_at', sixHoursAgo)
+          .not('status', 'in', '("completed","cancelled")'),
+        // R2: 상담완료 (1달 이내)
+        supabase
+          .from('consultations')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'completed')
+          .gte('updated_at', oneMonthAgo),
+        // 오늘 일정 리스트 (full rows)
+        supabase
+          .from('consultations')
+          .select('*')
+          .eq('visit_date', todayStr)
+          .in('status', ['confirmed', 'assigned', 'in_progress', 'pending_admin'])
+          .order('visit_time', { ascending: true })
+          .limit(10),
+      ]);
 
       return {
-        pendingAdmin: pendingAdmin.count || 0,
-        todayStore: todayStore.count || 0,
-        todayField: todayField.count || 0,
-        suggested: suggested.count || 0,
-        weekVisits: weekVisits.count || 0,
+        newIntake: newIntake.count || 0,
+        inProgress: inProgress.count || 0,
+        completedMonth: completedMonth.count || 0,
         todaySchedule: (todaySchedule.data || []) as Consultation[],
       };
     },
@@ -182,7 +238,7 @@ export function useRepairDashboardStats() {
         'ready_to_ship', 'shipped', 'delivered',
       ] as const;
 
-      const [counts, staleCount, unpaidCount, intakeDirectCount] = await Promise.all([
+      const [counts, staleCount, unpaidCount, intakeNewCount] = await Promise.all([
         // 상태별 count 병렬
         Promise.all(
           statuses.map((s) =>
@@ -205,29 +261,33 @@ export function useRepairDashboardStats() {
           .select('*', { count: 'exact', head: true })
           .in('status', ['cost_notified', 'repairing', 'ready_to_ship', 'shipped'])
           .is('paid_at', null),
-        // 직접발송 대기 (intake + 방문수거 아닌 것)
+        // R1: 신규접수 (intake + confirmed_at IS NULL)
         supabase
           .from('repairs')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'intake')
-          .neq('proceed_type', '방문수거'),
+          .is('confirmed_at', null),
       ]);
 
       const byStatus = Object.fromEntries(counts.map((c) => [c.status, c.count])) as Record<string, number>;
 
-      // 입고대기 = pickup_scheduled + intake(직접발송)
-      const waitingInbound = (byStatus.pickup_scheduled || 0) + (intakeDirectCount.count || 0);
-      // 작업중 = cost_notified + repairing
-      const workingCount = (byStatus.cost_notified || 0) + (byStatus.repairing || 0);
+      // 진행대기 = intake+pickup_scheduled 중 confirmed_at 있는 것 (입고 전 전체)
+      const pendingInbound = (byStatus.intake || 0) + (byStatus.pickup_scheduled || 0) - (intakeNewCount.count || 0);
+      // 작업중 = cost_notified + repairing + ready_to_ship
+      const workingCount = (byStatus.cost_notified || 0) + (byStatus.repairing || 0) + (byStatus.ready_to_ship || 0);
 
       return {
         byStatus,
         staleCount: staleCount.count || 0,
         unpaidCount: unpaidCount.count || 0,
+        // R1: 탭별 카운트 (대시보드 카드용)
+        intakeNew: intakeNewCount.count || 0,
+        pendingInbound,
+        workingCount,
         pipeline: [
-          { label: '신규접수', count: byStatus.intake || 0, status: 'intake' },
-          { label: '입고대기', count: waitingInbound, status: 'pickup_scheduled' },
-          { label: '작업중', count: workingCount, status: 'repairing' },
+          { label: '신규접수', count: intakeNewCount.count || 0, status: 'intake' },
+          { label: '입고대기', count: pendingInbound, status: 'pickup_scheduled' },
+          { label: '진행중', count: workingCount, status: 'repairing' },
           { label: '출고대기', count: byStatus.ready_to_ship || 0, status: 'ready_to_ship' },
           { label: '출고완료', count: byStatus.shipped || 0, status: 'shipped' },
           { label: '배송완료', count: byStatus.delivered || 0, status: 'delivered' },

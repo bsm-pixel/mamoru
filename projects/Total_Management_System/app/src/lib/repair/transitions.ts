@@ -12,15 +12,15 @@ const REPAIR_TRANSITIONS: TransitionMap = {
   intake:             ['pickup_scheduled', 'cost_notified', 'cancelled'],
   pickup_scheduled:   ['cost_notified', 'cancelled'],
   cost_notified:      ['repairing', 'cancelled'],   // payment_confirmed 제거
-  repairing:          ['shipped'],
+  repairing:          ['ready_to_ship', 'cancelled'],  // R1: ready_to_ship 활성 승격
   shipped:            ['delivered'],
   delivered:          ['completed'],
   completed:          [],
   cancelled:          [],
+  ready_to_ship:      ['shipped'],  // R1: 활성 상태로 승격
   // 레거시 호환 (기존 데이터)
   picked_up:          ['cost_notified', 'cancelled'],
   inspecting:         ['cost_notified', 'cancelled'],
-  ready_to_ship:      ['shipped'],
   payment_confirmed:  ['repairing', 'cancelled'],    // 레거시 데이터 전이용
 };
 
@@ -40,6 +40,7 @@ export const REPAIR_STATUS_ORDER: RepairStatus[] = [
   'pickup_scheduled',
   'cost_notified',
   'repairing',
+  'ready_to_ship',  // R1: 출고대기 활성 추가
   'shipped',
   'delivered',
   'completed',
@@ -52,6 +53,7 @@ export const REPAIR_STATUS_LABEL: Record<string, string> = {
   cost_notified: '작업중',
   payment_confirmed: '작업중',  // 레거시
   repairing: '작업중',
+  ready_to_ship: '출고대기',    // R1: 활성 상태로 승격
   shipped: '출고완료',
   delivered: '배송완료',
   completed: '완료',
@@ -59,7 +61,6 @@ export const REPAIR_STATUS_LABEL: Record<string, string> = {
   // 레거시
   picked_up: '입고완료',
   inspecting: '검수중',
-  ready_to_ship: '출고대기',
 };
 
 /** 상태 색상 (Tailwind 클래스) */

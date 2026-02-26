@@ -4,12 +4,14 @@ export const NAV_ITEMS = [
   { label: '주문관리', href: '/orders/dashboard', icon: 'ShoppingCart', matchPrefix: '/orders' },
   { label: '상담관리', href: '/consultations/dashboard', icon: 'MessageSquare', matchPrefix: '/consultations' },
   { label: '복원수리', href: '/repairs/dashboard', icon: 'Wrench', matchPrefix: '/repairs' },
+  { label: '판매관리', href: '/sales', icon: 'Store', matchPrefix: '/sales' },  // R5: 오프라인 판매
+  { label: '계약서', href: '/contracts', icon: 'FileSignature', matchPrefix: '/contracts' },  // R6: 전자 계약서
+  { label: '제품', href: '/products', icon: 'Package', matchPrefix: '/products' },  // R7: 시리얼넘버/바코드
   { label: '설정', href: '/settings', icon: 'Settings', matchPrefix: '/settings' },
 ] as const;
 
-/** Phase 2+ 메뉴 (비활성) */
+/** 향후 메뉴 (비활성) */
 export const NAV_ITEMS_FUTURE = [
-  { label: '제품', href: '/products', icon: 'Package' },
   { label: '고객', href: '/customers', icon: 'Users' },
 ] as const;
 

@@ -1,68 +1,58 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useConsultations, useUpdateConsultationStatus, useFieldDelay } from '@/hooks/use-consultations';
+import { useConsultations, useUpdateConsultationStatus } from '@/hooks/use-consultations';
+import { RescheduleModal } from './reschedule-modal';
 import { SuggestTimeModal } from './suggest-time-modal';
-import { HoldReasonModal } from './hold-reason-modal';
 import {
   formatPhone,
   formatDday,
-  formatDateGroup,
   CONSULTATION_STATUS_LABEL,
   CONSULTATION_STATUS_COLOR,
 } from '@/lib/utils/format';
-import { MapPin, Search, ChevronLeft, ChevronRight, Map as MapIcon, List, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
+import { MapPin, Search, ChevronLeft, ChevronRight, CalendarClock, X } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
-type TabKey = 'waiting' | 'suggested' | 'upcoming' | 'overdue' | 'completed' | 'on_hold' | 'cancelled';
+// R2: 4탭 (신규요청 / 출장제안 / 재요청 / 확정)
+type TabKey = 'new_request' | 'suggested' | 're_request' | 'confirmed';
 
-const TABS: { key: TabKey; label: string; icon?: React.ReactNode }[] = [
-  { key: 'waiting', label: '처리대기' },
-  { key: 'suggested', label: '제안완료' },
-  { key: 'upcoming', label: '예정' },
-  { key: 'overdue', label: '완료 필요', icon: <AlertTriangle size={12} /> },
-  { key: 'completed', label: '완료', icon: <CheckCircle size={12} /> },
-  { key: 'on_hold', label: '보류' },
-  { key: 'cancelled', label: '취소' },
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'new_request', label: '신규요청' },
+  { key: 'suggested', label: '출장제안' },
+  { key: 're_request', label: '재요청' },
+  { key: 'confirmed', label: '확정' },
 ];
 
 function getTabFilters(tab: TabKey) {
   switch (tab) {
-    case 'waiting':
-      return { statuses: ['pending_admin', 'reschedule_requested', 'change_requested'], orderBy: 'received_at_desc' };
+    case 'new_request':
+      return { status: 'pending_admin', orderBy: 'received_at_desc' };
     case 'suggested':
-      return { status: 'suggested' };
-    case 'upcoming':
+      return { status: 'suggested', orderBy: 'received_at_desc' };
+    case 're_request':
+      return { statuses: ['reschedule_requested', 'change_requested'], orderBy: 'received_at_desc' };
+    case 'confirmed':
       return { status: 'confirmed', dateFilter: 'upcoming' as const, orderBy: 'visit_date_asc' };
-    case 'overdue':
-      return { status: 'confirmed', dateFilter: 'past' as const, orderBy: 'visit_date_asc' };
-    case 'completed':
-      return { status: 'completed', orderBy: 'updated_at_desc' };
-    case 'on_hold':
-      return { status: 'on_hold', orderBy: 'updated_at_desc' };
-    case 'cancelled':
-      return { status: 'cancelled', orderBy: 'updated_at_desc' };
   }
 }
 
 interface Props {
-  onToggleMap?: () => void;
-  showMap?: boolean;
+  selectedFieldId?: string | null;             // R2: 양방향 연동 — 지도에서 선택된 ID
+  onFieldSelect?: (id: string | null) => void; // R2: 리스트→지도 연동
 }
 
-export function FieldRequestList({ onToggleMap, showMap }: Props) {
+export function FieldRequestList({ selectedFieldId, onFieldSelect }: Props) {
   const router = useRouter();
-  const [tab, setTab] = useState<TabKey>('waiting');
+  const [tab, setTab] = useState<TabKey>('new_request');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [rescheduleTarget, setRescheduleTarget] = useState<Consultation | null>(null);
   const [suggestTarget, setSuggestTarget] = useState<string | null>(null);
-  const [holdTarget, setHoldTarget] = useState<string | null>(null);
-  const [delayTarget, setDelayTarget] = useState<string | null>(null);
 
   const tabFilters = getTabFilters(tab);
   const { data, isLoading } = useConsultations({
@@ -76,108 +66,37 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
   const updateStatus = useUpdateConsultationStatus();
-  const fieldDelay = useFieldDelay();
 
-  // 날짜 그룹 (예정/완료필요 탭)
-  const dateGroups = useMemo(() => {
-    if (tab !== 'upcoming' && tab !== 'overdue') return null;
-    const map = new Map<string, Consultation[]>();
-    for (const c of consultations) {
-      const key = c.visit_date || 'no-date';
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(c);
-    }
-    return Array.from(map, ([dateStr, items]) => ({
-      dateStr,
-      label: dateStr === 'no-date' ? '날짜 미정' : formatDateGroup(dateStr),
-      items,
-    }));
-  }, [tab, consultations]);
-
-  const renderActions = (c: Consultation) => {
-    const busy = updateStatus.isPending && updateStatus.variables?.id === c.id;
-    const busyStatus = busy ? updateStatus.variables?.status : null;
-
-    switch (tab) {
-      case 'waiting':
-        return (
-          <>
-            <Button variant="primary" size="sm" disabled={busy} onClick={() => setSuggestTarget(c.id)}>
-              {(c.status === 'reschedule_requested' || c.status === 'change_requested') ? '새 시간 제안' : '시간 제안'}
-            </Button>
-            <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'confirmed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
-              즉시 확정
-            </Button>
-            <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>
-            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
-              취소
-            </Button>
-          </>
-        );
-      case 'suggested':
-        return (
-          <>
-            <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'confirmed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
-              수동 확정
-            </Button>
-            <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>
-            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
-              취소
-            </Button>
-          </>
-        );
-      case 'upcoming':
-        return (
-          <>
-            <Button variant="secondary" size="sm" disabled={busy} onClick={() => setDelayTarget(c.id)}>
-              <Clock size={14} />
-              지연 안내
-            </Button>
-            <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>
-            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
-              취소
-            </Button>
-          </>
-        );
-      case 'overdue':
-        return (
-          <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'completed'}
-            onClick={() => updateStatus.mutate({ id: c.id, status: 'completed', note: '출장 완료 처리' })}
-          >
-            <CheckCircle size={14} />
-            출장 완료
-          </Button>
-        );
-      case 'on_hold':
-        return (
-          <>
-            <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'pending_admin'} onClick={() => updateStatus.mutate({ id: c.id, status: 'pending_admin' })}>
-              대기 복원
-            </Button>
-            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
-              취소
-            </Button>
-          </>
-        );
-      default:
-        return null;
-    }
+  const handleCancel = (c: Consultation) => {
+    updateStatus.mutate({ id: c.id, status: 'cancelled', note: '출장 취소' });
   };
 
   const renderRow = (c: Consultation) => {
     const dday = formatDday(c.visit_date);
+    const busy = updateStatus.isPending && updateStatus.variables?.id === c.id;
+    const isHighlighted = selectedFieldId === c.id;
 
     return (
-      <div key={c.id} className={`px-4 py-3 hover:bg-warm-ivory/60 transition ${
-        dday.isToday ? 'bg-terracotta/5 border-l-2 border-l-terracotta' : ''
-      }`}>
-        <div className="cursor-pointer" onClick={() => router.push(`/consultations/${c.id}`)}>
+      <div
+        key={c.id}
+        id={`field-${c.id}`}
+        className={`px-4 py-3 hover:bg-warm-ivory/60 transition ${
+          isHighlighted ? 'bg-terracotta/5 ring-1 ring-terracotta' : ''
+        } ${dday.isToday ? 'border-l-2 border-l-terracotta' : ''}`}
+      >
+        <div
+          className="cursor-pointer"
+          onClick={() => {
+            onFieldSelect?.(c.id);
+            router.push(`/consultations/${c.id}`);
+          }}
+        >
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-indigo-black truncate">{c.name}</span>
             <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
               {CONSULTATION_STATUS_LABEL[c.status]}
             </Badge>
-            {dday.label && (tab === 'upcoming' || tab === 'overdue') && (
+            {dday.label && tab === 'confirmed' && (
               <Badge className={
                 dday.isToday ? 'bg-terracotta/10 text-terracotta'
                 : dday.isPast ? 'bg-error-soft text-error'
@@ -185,11 +104,6 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
               }>
                 {dday.label}
               </Badge>
-            )}
-            {c.status === 'on_hold' && c.hold_reason && (
-              <span className="text-xs text-neutral-400 truncate max-w-[120px]" title={c.hold_reason}>
-                ({c.hold_reason})
-              </span>
             )}
           </div>
           <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
@@ -200,13 +114,39 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
                 {c.address_sido} {c.address_sigungu}
               </span>
             )}
-            {c.visit_date && (
-              <span>{c.visit_date} {c.visit_time || ''}</span>
-            )}
+            {c.visit_date && <span>{c.visit_date} {c.visit_time || ''}</span>}
           </div>
         </div>
+
+        {/* R2: 모든 탭에 [일정변경][취소] + 탭별 추가 액션 */}
         <div className="flex gap-1 mt-2 flex-wrap">
-          {renderActions(c)}
+          {/* 신규요청 탭: 시간제안 추가 */}
+          {tab === 'new_request' && (
+            <Button variant="primary" size="sm" disabled={busy} onClick={() => setSuggestTarget(c.id)}>
+              시간 제안
+            </Button>
+          )}
+          {/* 재요청 탭: 새 시간 제안 */}
+          {tab === 're_request' && (
+            <Button variant="primary" size="sm" disabled={busy} onClick={() => setSuggestTarget(c.id)}>
+              새 시간 제안
+            </Button>
+          )}
+          {/* 공통: 일정변경 + 취소 */}
+          <Button variant="secondary" size="sm" disabled={busy} onClick={() => setRescheduleTarget(c)}>
+            <CalendarClock size={12} />
+            일정변경
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            disabled={busy}
+            loading={updateStatus.variables?.status === 'cancelled' && busy}
+            onClick={() => handleCancel(c)}
+          >
+            <X size={12} />
+            취소
+          </Button>
         </div>
       </div>
     );
@@ -214,27 +154,19 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* 검색 + 지도 토글 */}
-      <div className="flex items-center gap-2">
-        <div className="flex-1 relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="이름, 전화번호 검색"
-            className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
-          />
-        </div>
-        {onToggleMap && (
-          <Button variant={showMap ? 'primary' : 'secondary'} size="sm" onClick={onToggleMap}>
-            {showMap ? <List size={14} /> : <MapIcon size={14} />}
-            {showMap ? '리스트' : '지도'}
-          </Button>
-        )}
+      {/* 검색 */}
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          placeholder="이름, 전화번호 검색"
+          className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
+        />
       </div>
 
-      {/* 탭 */}
+      {/* R2: 4탭 */}
       <div className="flex items-center gap-1 overflow-x-auto pb-1">
         {TABS.map((t) => (
           <button
@@ -242,11 +174,10 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
             onClick={() => { setTab(t.key); setPage(1); }}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
               tab === t.key
-                ? t.key === 'overdue' ? 'bg-error text-cream' : 'bg-terracotta text-cream'
+                ? 'bg-terracotta text-cream'
                 : 'bg-card-white text-neutral-500 hover:bg-warm-ivory'
             }`}
           >
-            {t.icon}
             {t.label}
           </button>
         ))}
@@ -263,21 +194,7 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
           </div>
         ) : consultations.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-neutral-400">
-            해당 상담이 없습니다
-          </div>
-        ) : dateGroups ? (
-          <div>
-            {dateGroups.map((group) => (
-              <div key={group.dateStr}>
-                <div className="px-4 py-2 bg-warm-ivory/80 text-xs font-bold text-neutral-600 sticky top-0">
-                  {group.label}
-                  <span className="ml-2 font-normal text-neutral-400">{group.items.length}건</span>
-                </div>
-                <div className="divide-y divide-neutral-100">
-                  {group.items.map(renderRow)}
-                </div>
-              </div>
-            ))}
+            해당 출장요청이 없습니다
           </div>
         ) : (
           <div className="divide-y divide-neutral-100">
@@ -300,87 +217,18 @@ export function FieldRequestList({ onToggleMap, showMap }: Props) {
       )}
 
       {/* 모달 */}
+      {rescheduleTarget && (
+        <RescheduleModal
+          open={!!rescheduleTarget}
+          onClose={() => setRescheduleTarget(null)}
+          consultationId={rescheduleTarget.id}
+          currentDate={rescheduleTarget.visit_date || ''}
+          currentTime={rescheduleTarget.visit_time || ''}
+        />
+      )}
       {suggestTarget && (
         <SuggestTimeModal open={!!suggestTarget} onClose={() => setSuggestTarget(null)} consultationId={suggestTarget} />
       )}
-      {holdTarget && (
-        <HoldReasonModal open={!!holdTarget} onClose={() => setHoldTarget(null)} consultationId={holdTarget} />
-      )}
-      {delayTarget && (
-        <DelaySelectModal
-          open={!!delayTarget}
-          onClose={() => setDelayTarget(null)}
-          consultationId={delayTarget}
-          onSubmit={(min) => {
-            fieldDelay.mutate(
-              { consultationId: delayTarget, delayMin: min },
-              { onSettled: () => setDelayTarget(null) }
-            );
-          }}
-          isPending={fieldDelay.isPending}
-        />
-      )}
-    </div>
-  );
-}
-
-/** 출장 지연 시간 선택 모달 */
-function DelaySelectModal({
-  open,
-  onClose,
-  consultationId: _consultationId,
-  onSubmit,
-  isPending,
-}: {
-  open: boolean;
-  onClose: () => void;
-  consultationId: string;
-  onSubmit: (min: number) => void;
-  isPending: boolean;
-}) {
-  const [selected, setSelected] = useState<number | null>(null);
-  const options = [5, 10, 15, 20, 30];
-
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-card-white rounded-2xl p-5 w-[320px] shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-sm font-bold text-indigo-black mb-3">지연 안내 발송</h3>
-        <p className="text-xs text-neutral-500 mb-4">
-          고객에게 도착 지연 알림톡을 발송합니다.<br />예상 지연 시간을 선택해주세요.
-        </p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {options.map((min) => (
-            <button
-              key={min}
-              onClick={() => setSelected(min)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                selected === min
-                  ? 'bg-terracotta text-cream'
-                  : 'bg-warm-ivory text-neutral-600 hover:bg-neutral-100'
-              }`}
-            >
-              {min}분
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={onClose} className="flex-1">
-            취소
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            disabled={!selected || isPending}
-            loading={isPending}
-            onClick={() => selected && onSubmit(selected)}
-            className="flex-1"
-          >
-            발송
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }

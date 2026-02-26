@@ -9,13 +9,14 @@ import { loadKakaoMapSDK, type KakaoMap, type KakaoMarker, type KakaoOverlay } f
 import { formatPhone, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
 import type { Consultation } from '@/lib/supabase/types';
 
-/** 상태별 핀 설정 (색상 + 아이콘) */
+/** R2: 상태별 핀 색상 (노랑/주황/파랑) */
 const PIN_CONFIG: Record<string, { color: string; icon: string }> = {
-  pending_admin:        { color: '#EF4444', icon: '!' },   // 빨강 + 느낌표
-  suggested:            { color: '#F97316', icon: '→' },   // 오렌지 + 화살표
-  reschedule_requested: { color: '#EAB308', icon: '↻' },   // 노랑 + 회전
-  confirmed:            { color: '#3B82F6', icon: '✓' },   // 파랑 + 체크
-  on_hold:              { color: '#9CA3AF', icon: '⏸' },   // 회색 + 일시정지
+  pending_admin:        { color: '#EAB308', icon: '!' },   // 노랑 — 신규
+  suggested:            { color: '#F97316', icon: '→' },   // 주황 — 제안/변경
+  reschedule_requested: { color: '#F97316', icon: '↻' },   // 주황
+  change_requested:     { color: '#F97316', icon: '↻' },   // 주황
+  confirmed:            { color: '#3B82F6', icon: '✓' },   // 파랑 — 확정
+  on_hold:              { color: '#9CA3AF', icon: '⏸' },   // 회색
 };
 const DEFAULT_PIN = { color: '#6B7280', icon: '?' };
 
@@ -32,7 +33,12 @@ function createPinSVG(status: string): string {
   )}`;
 }
 
-export function FieldRequestMap() {
+interface FieldRequestMapProps {
+  selectedFieldId?: string | null;             // R2: 양방향 연동 — 리스트에서 선택된 ID
+  onFieldSelect?: (id: string | null) => void; // R2: 지도→리스트 연동
+}
+
+export function FieldRequestMap({ selectedFieldId, onFieldSelect }: FieldRequestMapProps = {}) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<KakaoMap | null>(null);
@@ -108,6 +114,10 @@ export function FieldRequestMap() {
         // 기존 오버레이 닫기
         overlaysRef.current.forEach((o) => o.setMap(null));
         overlay.setMap(map);
+        // R2: 양방향 연동 — 리스트 해당 카드 스크롤
+        onFieldSelect?.(c.id);
+        const el = document.getElementById(`field-${c.id}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
 
       markersRef.current.push(marker);

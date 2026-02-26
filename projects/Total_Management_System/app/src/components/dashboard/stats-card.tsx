@@ -7,6 +7,7 @@ interface StatsCardProps {
   icon: LucideIcon;
   color?: string;
   bgColor?: string;
+  subtitle?: string;  // R2: 부가 설명
 }
 
 export function StatsCard({
@@ -15,6 +16,7 @@ export function StatsCard({
   icon: Icon,
   color = 'text-terracotta',
   bgColor = 'bg-terracotta/10',
+  subtitle,
 }: StatsCardProps) {
   return (
     <div className="bg-card-white rounded-xl border border-neutral-200 p-4 shadow-sm">
@@ -25,6 +27,7 @@ export function StatsCard({
         <div>
           <p className="text-xs text-neutral-500">{label}</p>
           <p className="text-xl font-bold text-indigo-black mt-0.5">{value}</p>
+          {subtitle && <p className="text-[10px] text-neutral-400 mt-0.5">{subtitle}</p>}
         </div>
       </div>
     </div>

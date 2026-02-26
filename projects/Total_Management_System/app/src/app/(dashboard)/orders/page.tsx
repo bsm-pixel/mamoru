@@ -150,6 +150,16 @@ function OrderRow({ order, onClick }: { order: Order; onClick: () => void }) {
           <Badge className={statusColor}>
             {ORDER_STATUS_LABEL[order.status] || order.status}
           </Badge>
+          {/* R4: 결제/미납 칩 */}
+          {order.paid_at ? (
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">
+              결제완료
+            </span>
+          ) : order.paid_amount > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">
+              미납
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
           <span>{order.imweb_order_no}</span>
@@ -158,6 +168,15 @@ function OrderRow({ order, onClick }: { order: Order; onClick: () => void }) {
             <span className="text-terracotta">{order.invoice_number}</span>
           )}
         </div>
+        {/* R4: 배송 메모 말줄임 + 호버 전문 */}
+        {order.recipient_memo && (
+          <p
+            className="mt-1 text-xs text-neutral-400 truncate max-w-[300px]"
+            title={order.recipient_memo}
+          >
+            📝 {order.recipient_memo}
+          </p>
+        )}
       </div>
       <div className="text-right shrink-0">
         <span className="text-sm font-bold">{formatKRW(order.paid_amount)}</span>

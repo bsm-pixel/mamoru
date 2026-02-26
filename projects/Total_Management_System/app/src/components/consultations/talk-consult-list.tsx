@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultations, useUpdateConsultationStatus, useStartTalkConsult } from '@/hooks/use-consultations';
-import { HoldReasonModal } from './hold-reason-modal';
 import {
   formatRelative,
   formatPhone,
@@ -16,13 +15,13 @@ import {
 import { Search, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
-type TabKey = 'pending' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled';
+// R2: 4탭 (신규 / 진행중 / 완료 / 취소)
+type TabKey = 'pending' | 'in_progress' | 'completed' | 'cancelled';
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'pending', label: '대기' },
+  { key: 'pending', label: '신규' },
   { key: 'in_progress', label: '진행중' },
   { key: 'completed', label: '완료' },
-  { key: 'on_hold', label: '보류' },
   { key: 'cancelled', label: '취소' },
 ];
 
@@ -35,8 +34,6 @@ export function TalkConsultList() {
   const [tab, setTab] = useState<TabKey>('pending');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [holdTarget, setHoldTarget] = useState<string | null>(null);
-
   const { data, isLoading } = useConsultations({
     status: getTabStatus(tab),
     type: 'talk_consult',
@@ -63,9 +60,8 @@ export function TalkConsultList() {
         return (
           <>
             <Button variant="primary" size="sm" disabled={busy} loading={isTalkStarting} onClick={() => startTalk.mutate({ id: c.id })}>
-              상담 시작
+              상담진행
             </Button>
-            <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>
             <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
               취소
             </Button>
@@ -75,22 +71,7 @@ export function TalkConsultList() {
         return (
           <>
             <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'completed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'completed' })}>
-              처리완료
-            </Button>
-            <Button variant="ghost" size="sm" disabled={busy} onClick={() => setHoldTarget(c.id)}>보류</Button>
-            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
-              취소
-            </Button>
-          </>
-        );
-      case 'on_hold':
-        return (
-          <>
-            <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'pending_admin'} onClick={() => updateStatus.mutate({ id: c.id, status: 'pending_admin' })}>
-              대기 복원
-            </Button>
-            <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'in_progress'} onClick={() => updateStatus.mutate({ id: c.id, status: 'in_progress' })}>
-              상담 재개
+              상담완료
             </Button>
             <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
               취소
@@ -154,13 +135,10 @@ export function TalkConsultList() {
                   <div className="flex items-center gap-2">
                     <MessageCircle size={14} className="text-info shrink-0" />
                     <span className="text-sm font-semibold text-indigo-black truncate">{c.name}</span>
-                    <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
-                      {tab === 'pending' ? formatRelative(c.received_at) : ''}
-                    </Badge>
-                    {c.status === 'on_hold' && c.hold_reason && (
-                      <span className="text-xs text-neutral-400 truncate max-w-[120px]" title={c.hold_reason}>
-                        ({c.hold_reason})
-                      </span>
+                    {tab === 'pending' && (
+                      <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
+                        {formatRelative(c.received_at)}
+                      </Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
@@ -193,10 +171,6 @@ export function TalkConsultList() {
         </div>
       )}
 
-      {/* 모달 */}
-      {holdTarget && (
-        <HoldReasonModal open={!!holdTarget} onClose={() => setHoldTarget(null)} consultationId={holdTarget} />
-      )}
     </div>
   );
 }

@@ -2,58 +2,61 @@
 
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { UrgentList } from '@/components/dashboard/urgent-list';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useConsultationDashboardStats } from '@/hooks/use-dashboard-stats';
-import { useConsultations } from '@/hooks/use-consultations';
 import {
-  formatRelative,
   CONSULTATION_STATUS_LABEL,
   CONSULTATION_STATUS_COLOR,
   CONSULTATION_TYPE_LABEL,
 } from '@/lib/utils/format';
-import { AlertCircle, Store, MapPin, Clock, CalendarDays, ArrowRight } from 'lucide-react';
+import { Inbox, Loader, CheckCircle, ArrowRight } from 'lucide-react';
 
 export default function ConsultationDashboardPage() {
   const router = useRouter();
-  const { data: stats, isLoading: statsLoading } = useConsultationDashboardStats();
-  const { data: urgentData, isLoading: urgentLoading } = useConsultations({
-    statuses: ['pending_admin'],
-    limit: 5,
-  });
+  const { data: stats, isLoading } = useConsultationDashboardStats();
 
   return (
     <>
       <Topbar title="상담 대시보드" />
 
       <div className="px-4 md:px-6 py-4 space-y-6">
-        {/* 통계 카드 */}
-        {statsLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {Array.from({ length: 4 }).map((_, i) => (
+        {/* R2: 통계 카드 3개 */}
+        {isLoading ? (
+          <div className="grid grid-cols-3 gap-3">
+            {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-20" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatsCard label="미확인" value={stats?.pendingAdmin || 0} icon={AlertCircle} color="text-warning" bgColor="bg-warning/10" />
-            <StatsCard label="오늘 매장" value={stats?.todayStore || 0} icon={Store} color="text-info" bgColor="bg-info/10" />
-            <StatsCard label="오늘 출장" value={stats?.todayField || 0} icon={MapPin} color="text-terracotta" bgColor="bg-terracotta/10" />
-            <StatsCard label="제안 대기" value={stats?.suggested || 0} icon={Clock} color="text-neutral-600" bgColor="bg-neutral-100" />
-          </div>
-        )}
-
-        {/* 이번주 예약 */}
-        {!statsLoading && (
-          <div className="flex items-center gap-2 px-1">
-            <CalendarDays size={16} className="text-terracotta" />
-            <span className="text-sm text-neutral-600">
-              이번주 예약 <span className="font-bold text-indigo-black">{stats?.weekVisits || 0}</span>건
-            </span>
+          <div className="grid grid-cols-3 gap-3">
+            <StatsCard
+              label="신규접수"
+              value={stats?.newIntake || 0}
+              icon={Inbox}
+              color="text-info"
+              bgColor="bg-info/10"
+              subtitle="6시간 이내"
+            />
+            <StatsCard
+              label="진행중"
+              value={stats?.inProgress || 0}
+              icon={Loader}
+              color="text-terracotta"
+              bgColor="bg-terracotta/10"
+              subtitle="6시간 이후"
+            />
+            <StatsCard
+              label="상담완료"
+              value={stats?.completedMonth || 0}
+              icon={CheckCircle}
+              color="text-success"
+              bgColor="bg-success/10"
+              subtitle="최근 1달"
+            />
           </div>
         )}
 
@@ -62,7 +65,7 @@ export default function ConsultationDashboardPage() {
           <CardHeader>
             <CardTitle>오늘 일정</CardTitle>
           </CardHeader>
-          {statsLoading ? (
+          {isLoading ? (
             <Skeleton className="h-32" />
           ) : !stats?.todaySchedule?.length ? (
             <div className="text-center py-6">
@@ -98,24 +101,6 @@ export default function ConsultationDashboardPage() {
             </div>
           )}
         </Card>
-
-        {/* 미확인 상담 */}
-        {urgentLoading ? (
-          <Skeleton className="h-40" />
-        ) : (
-          <UrgentList
-            title="미확인 상담"
-            items={(urgentData?.consultations || []).map((c) => ({
-              id: c.id,
-              label: c.name,
-              sublabel: `${CONSULTATION_TYPE_LABEL[c.consultation_type] || ''} · ${formatRelative(c.received_at)}`,
-              badge: '대기중',
-              badgeColor: 'bg-warning-soft text-warning',
-            }))}
-            onItemClick={(id) => router.push(`/consultations/${id}`)}
-            emptyMessage="미확인 상담 없음"
-          />
-        )}
 
         {/* 전체 목록 링크 */}
         <Button
