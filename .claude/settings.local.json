@@ -54,7 +54,6 @@
       "Bash(git -v)",
       "Bash(gh:*)",
       "Bash(git check-ignore:*)",
-
       "Bash(/c/Users/user/AppData/Local/Programs/Python/Python313/python.exe -m pip install:*)",
       "Bash(/c/Users/user/AppData/Local/Programs/Python/Python313/python.exe -c \"\nimport fitz\ndoc = fitz.open\\(r''c:\\\\Users\\\\user\\\\Desktop\\\\mamoru\\\\projects\\\\Total_Management_System\\\\3.롯데글로벌로지스 주문처리 API 연계 가이드 v2.2.pdf''\\)\nfor i in range\\(len\\(doc\\)\\):\n    text = doc[i].get_text\\(\\)\n    if any\\(k in text for k in [''취소'', ''cancel'', ''Cancel'', ''apiSnd'', ''URL'', ''url'']\\):\n        print\\(f''=== PAGE {i+1} ===''\\)\n        print\\(text[:3000]\\)\n        print\\(\\)\n\")",
       "Bash(/c/Users/user/AppData/Local/Programs/Python/Python313/python.exe:*)",
@@ -93,7 +92,11 @@
       "WebFetch(domain:claude.com)",
       "Bash(cd:*)",
       "Bash(powershell:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(pdftotext:*)",
+      "WebFetch(domain:sboapiaa.ecount.com)",
+      "Bash(node:*)",
+      "Bash(taskkill:*)"
     ]
   }
 }
