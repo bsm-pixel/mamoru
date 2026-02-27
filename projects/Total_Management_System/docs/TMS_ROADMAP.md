@@ -8,11 +8,13 @@
 ## 🔴 내일 할 일 (2026-02-27)
 
 ### 1순위: 이카운트 ERP 연동 (R5)
-- [ ] **테스트 인증키 발급** (ERP → Self-Customizing → API인증키발급, 2주 유효)
-- [ ] `.env.local` 설정 (COM_CODE, USER_ID, API_CERT_KEY, ZONE, TEST_MODE=true)
-- [ ] ERP 웹자료올리기 항목 추가 (판매 등)
-- [ ] 테스트 URL(`http://sboapi.ecount.com`)로 사용할 API 호출 → 자동 검증
-- [ ] 검증 완료 후 **정식 인증키 발급** (1년 유효) → TEST_MODE 제거
+- [x] **테스트 인증키 발급** (2026-02-27 완료)
+- [x] `.env.local` 설정 (COM_CODE, USER_ID, API_CERT_KEY, ZONE=AA, TEST_MODE=true)
+- [x] ERP 웹자료올리기 항목 추가
+- [x] **6/6 API 검증 완료** (sboapi도메인: 로그인/SaveSale/SaveCust/ProductList/SaveProduct/InvBalance)
+- [x] lib/ecount/ 전체 경로 수정 (oapi→sboapi 분기 + AccountBasic/InventoryBasic/InventoryBalance)
+- [x] **정식 인증키 발급** (1년 유효) + oapi 도메인 전환 3/3 검증 완료
+- [ ] Vercel 환경변수 설정 (배포 시)
 
 ### 2순위: 솔라피 템플릿 등록 + Make 분기 (Phase 4/7)
 - [ ] 복원수리 알림톡 5종 솔라피 템플릿 등록 (as_received / as_inspected / as_payment_confirmed / as_shipped / as_satisfaction)
@@ -282,8 +284,9 @@
 | 5-5 | NAV 추가 | ✅ | 사이드바+모바일 판매관리 메뉴 (Store 아이콘) |
 
 ### 잔여 작업
-- [ ] 이카운트 환경변수 설정 (ECOUNT_COM_CODE, ECOUNT_USER_ID, ECOUNT_API_CERT_KEY, ECOUNT_ZONE)
-- [ ] 이카운트 실전 API 키 발급 후 연동 테스트
+- [x] 이카운트 환경변수 설정 + 테스트 인증키 6/6 검증 (2026-02-27)
+- [x] lib/ecount/ 엔드포인트 전체 수정 (oapi/sboapi 자동 분기)
+- [ ] **정식 인증키 발급** → Vercel 환경변수 설정
 - [ ] 온라인 주문 → 이카운트 자동 전표 연동 (현재 오프라인만)
 
 ---

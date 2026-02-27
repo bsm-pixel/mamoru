@@ -1,7 +1,7 @@
 /**
  * 이카운트 거래처 API
- * - 거래처 등록 (SaveCustomer)
- * - 거래처 조회 (ListCustomerSp)
+ * - 거래처 등록: /OAPI/V2/AccountBasic/SaveBasicCust
+ * - 조회 API는 이카운트에서 미제공 (TMS Supabase에서 관리)
  */
 
 import { ecountFetch, type EcountResponse } from './client';
@@ -17,7 +17,7 @@ interface SaveCustomerParams {
 
 /** 거래처 등록/수정 */
 export async function saveCustomer(params: SaveCustomerParams): Promise<EcountResponse> {
-  return ecountFetch('/OAPI/V2/InventoryBasic/SaveBasicCust', {
+  return ecountFetch('/OAPI/V2/AccountBasic/SaveBasicCust', {
     CustList: [{
       BulkDatas: {
         CUST_CD: params.custCode,
@@ -32,9 +32,4 @@ export async function saveCustomer(params: SaveCustomerParams): Promise<EcountRe
   });
 }
 
-/** 거래처 조회 */
-export async function listCustomers(keyword?: string): Promise<EcountResponse> {
-  return ecountFetch('/OAPI/V2/InventoryBasic/GetListBasicCustSp', {
-    CUST_DES: keyword || '',
-  });
-}
+export type { SaveCustomerParams };

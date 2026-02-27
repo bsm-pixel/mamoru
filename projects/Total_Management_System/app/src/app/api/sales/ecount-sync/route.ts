@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { saveSale } from '@/lib/ecount/sales';
+import { isStatusOk } from '@/lib/ecount/client';
 
 /** POST /api/sales/ecount-sync — 오프라인 판매 → 이카운트 전표 동기화 */
 export async function POST(req: NextRequest) {
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
       remarks: `TMS ${sale.sale_number}`,
     });
 
-    if (result.Status === '200') {
+    if (isStatusOk(result.Status)) {
       await db
         .from('offline_sales')
         .update({

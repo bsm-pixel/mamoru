@@ -1,15 +1,13 @@
 /**
  * 이카운트 OAPI V2 클라이언트
- * - ZONE 조회 → 로그인(SESSION_ID 발급) → API 호출
+ * - 테스트 인증키: https://sboapi{ZONE}.ecount.com
+ * - 정식 인증키: https://oapi{ZONE}.ecount.com
+ * - 로그인(SESSION_ID 발급) → API 호출
  * - SESSION_ID는 서버 메모리 캐시 (만료 시 자동 재발급)
  */
 
-// 테스트 모드: http://sboapi.ecount.com (검증용)
-// 정식 모드: https://sboapi{ZONE}.ecount.com
+// ECOUNT_TEST_MODE=true → sboapi (테스트키), false/미설정 → oapi (정식키)
 const isTestMode = process.env.ECOUNT_TEST_MODE === 'true';
-const ECOUNT_BASE = isTestMode
-  ? 'http://sboapi.ecount.com'
-  : 'https://sboapi.ecount.com';
 
 interface EcountConfig {
   comCode: string;
@@ -19,12 +17,12 @@ interface EcountConfig {
 }
 
 interface EcountResponse<T = unknown> {
-  Status: string;   // '200' = 성공
-  Error: { StatusCode: string; Message: string } | null;
+  Status: string | number;
+  Error: { Code: number; Message: string; MessageDetail: string; XErrors: unknown } | null;
+  Errors?: Array<{ ProgramId: string; Name: string; Code: string; Message: string; Param: unknown }>;
   Data: T;
 }
 
-// 서버 메모리 캐시 (Vercel serverless = 짧은 수명이지만 연속 호출 시 유효)
 let cachedSession: { id: string; expiresAt: number } | null = null;
 
 function getConfig(): EcountConfig {
@@ -40,17 +38,22 @@ function getConfig(): EcountConfig {
 }
 
 function getBaseUrl(zone: string): string {
-  // 테스트 모드: ZONE 없이 단일 URL 사용
-  if (isTestMode) return 'http://sboapi.ecount.com';
-  return `https://sboapi${zone}.ecount.com`;
+  const prefix = isTestMode ? 'sboapi' : 'oapi';
+  return `https://${prefix}${zone}.ecount.com`;
 }
 
-/** ZONE 조회 (초기 1회) */
+/** Status 200 체크 (숫자/문자열 호환) */
+function isStatusOk(status: string | number): boolean {
+  return String(status) === '200';
+}
+
+/** ZONE 조회 (환경변수 검증용) */
 export async function getZone(comCode: string): Promise<string> {
-  const res = await fetch(`${ECOUNT_BASE}/OAPI/V2/Zone?COM_CODE=${comCode}`);
+  const prefix = isTestMode ? 'sboapi' : 'oapi';
+  const res = await fetch(`https://${prefix}.ecount.com/OAPI/V2/Zone?COM_CODE=${comCode}`);
   const json = await res.json() as EcountResponse<{ ZONE: string }>;
-  if (json.Status !== '200' || !json.Data?.ZONE) {
-    throw new Error(`이카운트 ZONE 조회 실패: ${json.Error?.Message || 'Unknown'}`);
+  if (!isStatusOk(json.Status) || !json.Data?.ZONE) {
+    throw new Error(`ZONE 조회 실패: ${json.Error?.Message || JSON.stringify(json)}`);
   }
   return json.Data.ZONE;
 }
@@ -72,26 +75,29 @@ async function login(): Promise<string> {
     }),
   });
 
-  const json = await res.json() as EcountResponse<{ Datas: { SESSION_ID: string } }>;
-  if (json.Status !== '200' || !json.Data?.Datas?.SESSION_ID) {
-    throw new Error(`이카운트 로그인 실패: ${json.Error?.Message || JSON.stringify(json)}`);
+  const json = await res.json() as EcountResponse<{ Datas: { SESSION_ID: string }; Code?: string; Message?: string }>;
+  if (!isStatusOk(json.Status) || !json.Data?.Datas?.SESSION_ID) {
+    // 테스트키를 oapi에 사용하면 Code 204 + "테스트용 인증키" 반환
+    const hint = json.Data?.Code === '204'
+      ? ' (테스트 인증키 → ECOUNT_TEST_MODE=true 필요)'
+      : '';
+    throw new Error(`이카운트 로그인 실패${hint}: ${json.Data?.Message || json.Error?.Message || JSON.stringify(json)}`);
   }
   return json.Data.Datas.SESSION_ID;
 }
 
-/** SESSION_ID 가져오기 (캐시 + 자동 재발급) */
+/** SESSION_ID (캐시 + 자동 재발급) */
 export async function getSessionId(): Promise<string> {
   const now = Date.now();
   if (cachedSession && cachedSession.expiresAt > now) {
     return cachedSession.id;
   }
   const sessionId = await login();
-  // 이카운트 세션은 약 1시간 유효 → 50분 캐시
   cachedSession = { id: sessionId, expiresAt: now + 50 * 60 * 1000 };
   return sessionId;
 }
 
-/** 이카운트 API 호출 래퍼 */
+/** API 호출 래퍼 */
 export async function ecountFetch<T = unknown>(
   path: string,
   body: unknown,
@@ -110,7 +116,7 @@ export async function ecountFetch<T = unknown>(
   const json = await res.json() as EcountResponse<T>;
 
   // 세션 만료 시 1회 재발급 재시도
-  if (json.Status !== '200' && json.Error?.StatusCode === '401' && !retried) {
+  if (!isStatusOk(json.Status) && json.Error?.Message?.includes?.('SESSION') && !retried) {
     cachedSession = null;
     return ecountFetch<T>(path, body, true);
   }
@@ -118,4 +124,5 @@ export async function ecountFetch<T = unknown>(
   return json;
 }
 
+export { isStatusOk };
 export type { EcountResponse, EcountConfig };

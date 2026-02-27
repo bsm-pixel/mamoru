@@ -1,7 +1,7 @@
 /**
  * 이카운트 판매 전표 API
- * - 판매전표 생성 (SaveSale)
- * - 오프라인 판매 → 이카운트 자동 연동
+ * - 판매입력: /OAPI/V2/Sale/SaveSale
+ * - 판매 조회 API는 이카운트에서 미제공 (TMS Supabase에서 관리)
  */
 
 import { ecountFetch, type EcountResponse } from './client';
@@ -49,10 +49,4 @@ export async function saveSale(params: SaveSaleParams): Promise<EcountResponse> 
   return ecountFetch('/OAPI/V2/Sale/SaveSale', { SaleList });
 }
 
-/** 판매전표 조회 (기간별) */
-export async function listSales(fromDate: string, toDate: string): Promise<EcountResponse> {
-  return ecountFetch('/OAPI/V2/Sale/GetListSaleSp', {
-    BASE_DATE_FROM: fromDate.replace(/-/g, ''),
-    BASE_DATE_TO: toDate.replace(/-/g, ''),
-  });
-}
+export type { SaveSaleParams, SaleLineItem };
