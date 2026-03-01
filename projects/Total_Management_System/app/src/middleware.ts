@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
 
   // 인증 불필요 경로 (GAS 동기화 API + 알림톡 API 포함)
   // Phase 7: 복원수리 공개 API + 동기화
-  if (pathname.startsWith('/login') || pathname.startsWith('/api/cron') || pathname.startsWith('/api/consultation/sync') || pathname.startsWith('/api/consultation/notify') || pathname.startsWith('/api/repair/report') || pathname.startsWith('/api/repair/sync')) {
+  if (pathname.startsWith('/login') || pathname.startsWith('/contract') || pathname.startsWith('/api/cron') || pathname.startsWith('/api/consultation/sync') || pathname.startsWith('/api/consultation/notify') || pathname.startsWith('/api/repair/report') || pathname.startsWith('/api/repair/sync')) {
     if (user && pathname.startsWith('/login')) {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
@@ -55,6 +55,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|icon-.*\\.png|sw\\.js).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.*\\.json|icon-.*\\.png|sw\\.js).*)',
   ],
 };

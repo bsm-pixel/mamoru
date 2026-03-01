@@ -6,6 +6,7 @@ import { QueryProvider } from '@/components/providers/query-provider';
 export const metadata: Metadata = {
   title: 'MAMORU TMS',
   description: 'MAMORU 통합관리시스템',
+  manifest: '/manifest.json',
   icons: { apple: '/icon-192.png' },
 };
 
