@@ -694,6 +694,7 @@ export interface Database {
           lot_number: string | null;
           manufactured_at: string | null;
           memo: string | null;
+          warehouse_zone: string;        // storage | display
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -713,6 +714,7 @@ export interface Database {
           lot_number?: string | null;
           manufactured_at?: string | null;
           memo?: string | null;
+          warehouse_zone?: string;
           created_by?: string | null;
         };
         Update: {
@@ -729,6 +731,7 @@ export interface Database {
           lot_number?: string | null;
           manufactured_at?: string | null;
           memo?: string | null;
+          warehouse_zone?: string;
         };
       };
       // Phase D: 매입(발주) 테이블
