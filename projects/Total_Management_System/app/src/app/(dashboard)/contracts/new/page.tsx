@@ -157,8 +157,8 @@ export default function NewContractPage() {
     <>
       <Topbar title="계약서 작성" />
 
-      {/* ── PC 안내 ── */}
-      <div className="hidden md:flex flex-col items-center justify-center h-[60vh] text-center px-6">
+      {/* ── PC 안내 (1024px 이상에서만 표시) ── */}
+      <div className="hidden lg:flex flex-col items-center justify-center h-[60vh] text-center px-6">
         <Tablet size={48} className="text-neutral-300 mb-4" />
         <h2 className="text-lg font-bold text-neutral-700 mb-2">계약서는 태블릿에서 작성해주세요</h2>
         <p className="text-sm text-neutral-500 mb-4">
@@ -169,8 +169,8 @@ export default function NewContractPage() {
         </p>
       </div>
 
-      {/* ── 모바일/태블릿: 전자문서 ── */}
-      <div className="md:hidden px-3 py-4">
+      {/* ── 모바일/태블릿: 전자문서 (1024px 미만에서 표시) ── */}
+      <div className="lg:hidden px-3 py-4">
         <div className="bg-white max-w-[600px] mx-auto border border-neutral-400 rounded-sm shadow-sm">
 
           {/* ── 헤더 ── */}
