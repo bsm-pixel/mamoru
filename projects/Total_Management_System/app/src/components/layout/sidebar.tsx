@@ -18,7 +18,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { NAV_ITEMS } from '@/lib/utils/constants';
+import { NAV_GROUPS } from '@/lib/utils/constants';
 
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -46,28 +46,41 @@ export function Sidebar() {
         <p className="text-[11px] text-cream/50 mt-0.5">TMS v1.0</p>
       </div>
 
-      {/* 메인 내비 */}
-      <nav className="flex-1 px-3 space-y-1">
-        {NAV_ITEMS.map((item) => {
-          const Icon = iconMap[item.icon];
-          const active = pathname.startsWith(item.matchPrefix);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition',
-                active
-                  ? 'bg-terracotta/15 text-terracotta'
-                  : 'text-cream/60 hover:text-cream hover:bg-white/5'
-              )}
-            >
-              {Icon && <Icon size={18} />}
-              {item.label}
-            </Link>
-          );
-        })}
+      {/* 그룹별 내비 */}
+      <nav className="flex-1 px-3 pb-4 overflow-y-auto">
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={gi} className={gi > 0 ? 'mt-4' : ''}>
+            {/* 그룹 레이블 */}
+            {group.group && (
+              <p className="px-3 mb-1.5 text-[10px] font-semibold tracking-wider uppercase text-cream/30">
+                {group.group}
+              </p>
+            )}
 
+            {/* 메뉴 항목 */}
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const Icon = iconMap[item.icon];
+                const active = pathname.startsWith(item.matchPrefix);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition',
+                      active
+                        ? 'bg-terracotta/15 text-terracotta'
+                        : 'text-cream/60 hover:text-cream hover:bg-white/5'
+                    )}
+                  >
+                    {Icon && <Icon size={18} />}
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
     </aside>
   );
