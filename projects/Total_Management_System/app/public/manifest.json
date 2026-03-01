@@ -1,12 +1,13 @@
 {
+  "id": "mamoru-tms",
   "name": "MAMORU 통합관리시스템",
   "short_name": "MAMORU TMS",
   "description": "주문·상담·AS·재고 통합 관리",
   "start_url": "/dashboard",
-  "display": "fullscreen",
+  "scope": "/",
+  "display": "standalone",
   "background_color": "#F2F2EA",
   "theme_color": "#181725",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "/icon-192.png",

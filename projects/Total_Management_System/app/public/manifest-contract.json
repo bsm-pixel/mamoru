@@ -1,8 +1,10 @@
 {
+  "id": "mamoru-contract",
   "name": "MAMORU 계약서",
   "short_name": "계약서",
   "description": "MAMORU 구매 계약서 작성",
   "start_url": "/contract",
+  "scope": "/contract",
   "display": "fullscreen",
   "background_color": "#FFFFFF",
   "theme_color": "#181725",
