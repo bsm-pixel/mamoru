@@ -8,6 +8,7 @@ export const NAV_ITEMS = [
   { label: '계약서', href: '/contracts', icon: 'FileSignature', matchPrefix: '/contracts' },  // R6: 전자 계약서
   { label: '고객', href: '/customers', icon: 'Users', matchPrefix: '/customers' },
   { label: '제품', href: '/products', icon: 'Package', matchPrefix: '/products' },
+  { label: '매입관리', href: '/purchasing', icon: 'Truck', matchPrefix: '/purchasing' },
   { label: '설정', href: '/settings', icon: 'Settings', matchPrefix: '/settings' },
 ] as const;
 

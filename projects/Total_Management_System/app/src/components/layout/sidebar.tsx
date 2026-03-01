@@ -12,6 +12,7 @@ import {
   FileSignature,
   Package,
   Users,
+  Truck,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -27,6 +28,7 @@ const iconMap: Record<string, LucideIcon> = {
   FileSignature,
   Package,
   Users,
+  Truck,
 };
 
 export function Sidebar() {

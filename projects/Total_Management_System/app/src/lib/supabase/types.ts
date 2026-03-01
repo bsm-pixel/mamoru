@@ -731,6 +731,89 @@ export interface Database {
           memo?: string | null;
         };
       };
+      // Phase D: 매입(발주) 테이블
+      purchase_orders: {
+        Row: {
+          id: string;
+          po_number: string;
+          supplier_id: string | null;
+          supplier_name: string;
+          order_date: string;
+          expected_date: string | null;
+          received_date: string | null;
+          total_amount: number;
+          deposit_amount: number;
+          deposit_paid_at: string | null;
+          balance_amount: number;
+          balance_paid_at: string | null;
+          is_vat_included: boolean;
+          supply_amount: number;
+          vat_amount: number;
+          status: string; // draft | ordered | deposit_paid | received | balance_paid | cancelled
+          memo: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          po_number: string;
+          supplier_id?: string | null;
+          supplier_name: string;
+          order_date?: string;
+          expected_date?: string | null;
+          total_amount?: number;
+          deposit_amount?: number;
+          balance_amount?: number;
+          is_vat_included?: boolean;
+          supply_amount?: number;
+          vat_amount?: number;
+          status?: string;
+          memo?: string | null;
+          created_by?: string | null;
+        };
+        Update: {
+          supplier_name?: string;
+          expected_date?: string | null;
+          received_date?: string | null;
+          total_amount?: number;
+          deposit_amount?: number;
+          deposit_paid_at?: string | null;
+          balance_amount?: number;
+          balance_paid_at?: string | null;
+          supply_amount?: number;
+          vat_amount?: number;
+          status?: string;
+          memo?: string | null;
+        };
+      };
+      purchase_order_items: {
+        Row: {
+          id: string;
+          po_id: string;
+          product_id: string | null;
+          product_name: string;
+          sku: string | null;
+          quantity: number;
+          unit_price: number;
+          total_price: number;
+        };
+        Insert: {
+          po_id: string;
+          product_id?: string | null;
+          product_name: string;
+          sku?: string | null;
+          quantity?: number;
+          unit_price?: number;
+          total_price?: number;
+        };
+        Update: {
+          product_name?: string;
+          sku?: string | null;
+          quantity?: number;
+          unit_price?: number;
+          total_price?: number;
+        };
+      };
     };
   };
 }
@@ -763,3 +846,7 @@ export type ContractItem = Database['public']['Tables']['contract_items']['Row']
 
 // R7: 편의 타입
 export type ProductSerial = Database['public']['Tables']['product_serials']['Row'];
+
+// Phase D: 편의 타입
+export type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'];
+export type PurchaseOrderItem = Database['public']['Tables']['purchase_order_items']['Row'];
