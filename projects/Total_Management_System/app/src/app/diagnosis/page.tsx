@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { QUESTIONS, LABEL_MAP } from '@/lib/diagnosis/data';
 import type { DiagnosisAnswers, DiagnosisQuestion } from '@/lib/diagnosis/types';
 
@@ -20,6 +20,92 @@ function Icon({ svg, className }: { svg: string; className?: string }) {
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );
+}
+
+/* ─── PWA 설치 배너 ─── */
+function InstallBanner() {
+  const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
+  const [canInstall, setCanInstall] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    /* 이미 PWA로 실행 중이면 배너 숨김 */
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+    setIsStandalone(standalone);
+
+    const handler = (e: Event) => {
+      e.preventDefault();
+      deferredPrompt.current = e as BeforeInstallPromptEvent;
+      setCanInstall(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt.current) return;
+    deferredPrompt.current.prompt();
+    const { outcome } = await deferredPrompt.current.userChoice;
+    if (outcome === 'accepted') {
+      setCanInstall(false);
+    }
+    deferredPrompt.current = null;
+  };
+
+  /* PWA 실행 중 or 설치 불가 or 닫음 → 숨김 */
+  if (isStandalone || dismissed) return null;
+
+  return (
+    <div className="fixed bottom-0 inset-x-0 z-50 p-4 bg-[#181725]/95 backdrop-blur-sm safe-area-pb animate-fadeIn">
+      <div className="mx-auto max-w-[600px] flex items-center gap-3">
+        {/* 로고 */}
+        <div className="w-12 h-12 rounded-xl bg-[#F2F2EA] flex items-center justify-center flex-shrink-0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#D4613E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+            <circle cx="6" cy="19" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="M7.5 17L16 4" /><path d="M16.5 17L8 4" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[#F2F2EA] font-semibold text-sm">MAMORU 간편진단</div>
+          <div className="text-[#B5B3C2] text-xs">홈 화면에 추가하면 앱처럼 사용할 수 있어요</div>
+        </div>
+        {canInstall ? (
+          <button
+            type="button"
+            onClick={handleInstall}
+            className="flex-shrink-0 px-5 py-2.5 bg-[#D4613E] text-[#F2F2EA] text-sm font-semibold rounded-full
+              hover:bg-[#B85232] active:scale-95 transition-all"
+          >
+            설치
+          </button>
+        ) : (
+          /* beforeinstallprompt 미지원 브라우저 — 수동 안내 */
+          <button
+            type="button"
+            onClick={() => setDismissed(true)}
+            className="flex-shrink-0 px-4 py-2 text-[#B5B3C2] text-xs rounded-full border border-[#B5B3C2]/30
+              hover:border-[#F2F2EA]/50 active:scale-95 transition-all"
+          >
+            닫기
+          </button>
+        )}
+      </div>
+      {!canInstall && !isStandalone && (
+        <p className="text-center text-[#8E8CA0] text-[11px] mt-2">
+          Chrome 메뉴(⋮) → &quot;홈 화면에 추가&quot;로 설치하세요
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* beforeinstallprompt 타입 (Web API 미포함) */
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
 /* ─────────────────────────────────────
@@ -104,6 +190,7 @@ export default function DiagnosisPage() {
 
   return (
     <div className="min-h-dvh bg-[#F2F2EA] text-[#181725] select-none">
+      <InstallBanner />
       <div className="mx-auto max-w-[800px] px-6 py-10 md:px-8 md:py-12">
         {/* 헤더 */}
         <div className="flex items-center justify-between mb-2">
