@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { SignatureCanvas } from '@/components/contracts/signature-canvas';
 import { ProductPickerModal } from '@/components/contracts/product-picker-modal';
@@ -37,11 +37,6 @@ const CAUTION_NOTICE = `제품수령일 기준 5일 이내 제품 교환 및 반
 export default function ContractStandalonePage() {
   const createContract = useCreateContract();
 
-  /* ── 전용 manifest 강제 적용 ── */
-  useEffect(() => {
-    const existing = document.querySelector('link[rel="manifest"]');
-    if (existing) existing.setAttribute('href', '/manifest-contract.json');
-  }, []);
 
   /* ── 완료 상태 ── */
   const [saved, setSaved] = useState(false);

@@ -4,7 +4,6 @@ import type { Metadata, Viewport } from 'next';
 export const metadata: Metadata = {
   title: 'MAMORU 계약서',
   description: 'MAMORU 구매 계약서 작성',
-  manifest: '/manifest-contract.json',
   icons: { apple: '/icon-192.png' },
 };
 
@@ -20,5 +19,12 @@ export default function ContractLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <head>
+        <link rel="manifest" href="/manifest-contract.json" />
+      </head>
+      {children}
+    </>
+  );
 }
