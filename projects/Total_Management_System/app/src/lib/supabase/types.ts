@@ -49,7 +49,7 @@ export type RepairStatus =
 // R5: 오프라인 판매 ENUM
 export type PaymentMethod = 'card' | 'cash' | 'transfer' | 'mixed';
 export type PaymentStatus = 'paid' | 'unpaid' | 'partial';
-export type EcountSyncStatus = 'pending' | 'synced' | 'failed';
+// EcountSyncStatus 제거됨 (이카운트 연동 폐기)
 
 // R6: 전자 계약서 ENUM
 export type ContractStatus = 'draft' | 'signed' | 'sent' | 'completed' | 'cancelled';
@@ -488,9 +488,12 @@ export interface Database {
           payment_method: PaymentMethod;
           payment_status: PaymentStatus;
           memo: string | null;
-          ecount_sync_status: EcountSyncStatus;
-          ecount_slip_no: string | null;
-          ecount_synced_at: string | null;
+          supply_amount: number;
+          vat_amount: number;
+          is_vat_included: boolean;
+          ecount_sync_status?: string | null;  // legacy
+          ecount_slip_no?: string | null;       // legacy
+          ecount_synced_at?: string | null;     // legacy
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -507,6 +510,9 @@ export interface Database {
           payment_method?: PaymentMethod;
           payment_status?: PaymentStatus;
           memo?: string | null;
+          supply_amount?: number;
+          vat_amount?: number;
+          is_vat_included?: boolean;
           created_by?: string | null;
         };
         Update: {
@@ -520,9 +526,9 @@ export interface Database {
           payment_method?: PaymentMethod;
           payment_status?: PaymentStatus;
           memo?: string | null;
-          ecount_sync_status?: EcountSyncStatus;
-          ecount_slip_no?: string | null;
-          ecount_synced_at?: string | null;
+          supply_amount?: number;
+          vat_amount?: number;
+          is_vat_included?: boolean;
         };
       };
       offline_sale_items: {
@@ -535,6 +541,8 @@ export interface Database {
           quantity: number;
           unit_price: number;
           total_price: number;
+          supply_amount: number;
+          vat_amount: number;
         };
         Insert: {
           sale_id: string;
@@ -544,6 +552,8 @@ export interface Database {
           quantity?: number;
           unit_price?: number;
           total_price?: number;
+          supply_amount?: number;
+          vat_amount?: number;
         };
         Update: {
           product_id?: string | null;
@@ -552,6 +562,8 @@ export interface Database {
           quantity?: number;
           unit_price?: number;
           total_price?: number;
+          supply_amount?: number;
+          vat_amount?: number;
         };
       };
       // R6: 전자 계약서 테이블
@@ -576,8 +588,8 @@ export interface Database {
           notification_sent_at: string | null;
           status: ContractStatus;
           memo: string | null;
-          ecount_sync_status: EcountSyncStatus;
-          ecount_slip_no: string | null;
+          ecount_sync_status?: string | null;  // legacy
+          ecount_slip_no?: string | null;       // legacy
           offline_sale_id: string | null;
           created_by: string | null;
           created_at: string;
@@ -620,8 +632,6 @@ export interface Database {
           notification_sent_at?: string | null;
           status?: ContractStatus;
           memo?: string | null;
-          ecount_sync_status?: EcountSyncStatus;
-          ecount_slip_no?: string | null;
           offline_sale_id?: string | null;
         };
       };

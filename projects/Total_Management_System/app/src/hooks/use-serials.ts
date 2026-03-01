@@ -46,6 +46,33 @@ export function useSerials(productId?: string, filters?: {
   });
 }
 
+/** 특정 제품의 재고(in_stock) 시리얼 목록 — 판매 시 선택용 */
+export function useAvailableSerials(productId: string | undefined) {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['serials-available', productId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_serials')
+        .select('id, serial_number, barcode, manufactured_at, memo')
+        .eq('product_id', productId!)
+        .eq('status', 'in_stock')
+        .order('serial_number');
+      if (error) throw error;
+      return (data || []) as Array<{
+        id: string;
+        serial_number: string;
+        barcode: string | null;
+        manufactured_at: string | null;
+        memo: string | null;
+      }>;
+    },
+    enabled: !!productId,
+    staleTime: 10 * 1000,
+  });
+}
+
 /** 바코드/시리얼로 단건 조회 */
 export function useSerialLookup() {
   const supabase = createClient();

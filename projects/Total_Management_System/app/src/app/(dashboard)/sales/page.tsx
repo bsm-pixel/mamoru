@@ -25,12 +25,6 @@ const PAYMENT_STATUS_COLOR: Record<string, string> = {
   partial: 'bg-yellow-100 text-yellow-700',
 };
 
-const ECOUNT_STATUS_COLOR: Record<string, string> = {
-  pending: 'bg-neutral-100 text-neutral-500',
-  synced: 'bg-blue-100 text-blue-700',
-  failed: 'bg-red-100 text-red-700',
-};
-
 export default function SalesPage() {
   const router = useRouter();
   const [search, setSearch] = useState('');
@@ -123,9 +117,6 @@ function SaleRow({ sale, onClick }: { sale: OfflineSale; onClick: () => void }) 
           </span>
           <Badge className={PAYMENT_STATUS_COLOR[sale.payment_status] || ''}>
             {sale.payment_status === 'paid' ? '결제완료' : sale.payment_status === 'unpaid' ? '미결제' : '부분결제'}
-          </Badge>
-          <Badge className={ECOUNT_STATUS_COLOR[sale.ecount_sync_status] || ''}>
-            {sale.ecount_sync_status === 'synced' ? 'ERP' : sale.ecount_sync_status === 'failed' ? 'ERP실패' : 'ERP대기'}
           </Badge>
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">

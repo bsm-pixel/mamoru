@@ -26,11 +26,11 @@ export function useCustomerSearch(query: string) {
       return (data.customers || []) as CustomerResult[];
     },
     enabled: query.length >= 2,
-    staleTime: 30 * 1000, // 30초 캐시
+    staleTime: 30 * 1000,
   });
 }
 
-/** 고객 신규 등록 (TMS + 이카운트 동시) */
+/** 고객 신규 등록 */
 export function useCreateCustomer() {
   const queryClient = useQueryClient();
 
@@ -49,50 +49,14 @@ export function useCreateCustomer() {
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error(await res.text());
-      return res.json() as Promise<{
-        customer: CustomerResult;
-        ecountSynced: boolean;
-        ecountCode: string | null;
-      }>;
+      return res.json() as Promise<{ customer: CustomerResult }>;
     },
-    onSuccess: (data) => {
-      if (data.ecountSynced) {
-        toast.success(`고객 등록 완료 (이카운트: ${data.ecountCode})`);
-      } else {
-        toast.success('고객 등록 완료 (이카운트 미연동)');
-      }
+    onSuccess: () => {
+      toast.success('고객 등록 완료');
       queryClient.invalidateQueries({ queryKey: ['customer-search'] });
     },
     onError: (err) => {
       toast.error('고객 등록 실패: ' + String(err));
-    },
-  });
-}
-
-/** 이카운트 거래처 → TMS 일괄 동기화 */
-export function useSyncEcountCustomers() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      const res = await fetch('/api/customers/sync-ecount', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!res.ok) throw new Error(await res.text());
-      return res.json() as Promise<{
-        total: number;
-        existing: number;
-        inserted: number;
-        message: string;
-      }>;
-    },
-    onSuccess: (data) => {
-      toast.success(data.message);
-      queryClient.invalidateQueries({ queryKey: ['customer-search'] });
-    },
-    onError: (err) => {
-      toast.error('이카운트 동기화 실패: ' + String(err));
     },
   });
 }

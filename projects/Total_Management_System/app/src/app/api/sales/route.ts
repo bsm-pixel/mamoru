@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { saveSale } from '@/lib/ecount/sales';
-import { saveCustomer } from '@/lib/ecount/customer';
-import { isStatusOk } from '@/lib/ecount/client';
 
 /** GET /api/sales — 오프라인 판매 목록 */
 export async function GET(req: NextRequest) {
@@ -60,6 +57,9 @@ export async function POST(req: NextRequest) {
         payment_method: string;
         payment_status?: string;
         memo?: string;
+        supply_amount?: number;
+        vat_amount?: number;
+        is_vat_included?: boolean;
       };
       items: Array<{
         product_id?: string;
@@ -68,6 +68,9 @@ export async function POST(req: NextRequest) {
         quantity: number;
         unit_price: number;
         total_price: number;
+        supply_amount?: number;
+        vat_amount?: number;
+        serial_ids?: string[];
       }>;
     };
 
@@ -84,6 +87,15 @@ export async function POST(req: NextRequest) {
     const seq = String((count || 0) + 1).padStart(3, '0');
     const saleNumber = `OS-${today}-${seq}`;
 
+    // VAT 자동 계산 (카드결제 시)
+    let supplyAmount = sale.supply_amount || 0;
+    let vatAmount = sale.vat_amount || 0;
+    const isVatIncluded = sale.is_vat_included ?? (sale.payment_method === 'card');
+    if (isVatIncluded && !supplyAmount) {
+      supplyAmount = Math.round(sale.paid_amount / 1.1);
+      vatAmount = sale.paid_amount - supplyAmount;
+    }
+
     // 판매 레코드 생성
     const { data: created, error: saleError } = await db
       .from('offline_sales')
@@ -99,6 +111,9 @@ export async function POST(req: NextRequest) {
         payment_method: sale.payment_method,
         payment_status: sale.payment_status || 'paid',
         memo: sale.memo || null,
+        supply_amount: supplyAmount,
+        vat_amount: vatAmount,
+        is_vat_included: isVatIncluded,
         created_by: user.id,
       })
       .select()
@@ -108,15 +123,25 @@ export async function POST(req: NextRequest) {
 
     // 판매 항목 생성
     if (items.length > 0) {
-      const saleItems = items.map((item) => ({
-        sale_id: created.id,
-        product_id: item.product_id || null,
-        product_name: item.product_name,
-        sku: item.sku || null,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price,
-      }));
+      const saleItems = items.map((item) => {
+        let itemSupply = item.supply_amount || 0;
+        let itemVat = item.vat_amount || 0;
+        if (isVatIncluded && !itemSupply) {
+          itemSupply = Math.round(item.total_price / 1.1);
+          itemVat = item.total_price - itemSupply;
+        }
+        return {
+          sale_id: created.id,
+          product_id: item.product_id || null,
+          product_name: item.product_name,
+          sku: item.sku || null,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+          supply_amount: itemSupply,
+          vat_amount: itemVat,
+        };
+      });
 
       const { error: itemsError } = await db
         .from('offline_sale_items')
@@ -125,107 +150,40 @@ export async function POST(req: NextRequest) {
       if (itemsError) throw itemsError;
     }
 
-    // === 이카운트 자동 동기화 ===
-    let ecountSyncStatus = 'pending';
-    try {
-      // 1) 고객 이카운트 거래처 코드 확인/자동등록
-      let customerCode = '';
-      if (sale.customer_id) {
-        const { data: cust } = await db
-          .from('customers')
-          .select('name, phone, email, address_road, address_detail, ecount_customer_code')
-          .eq('id', sale.customer_id)
-          .single();
+    // 시리얼 연결: status → sold, offline_sale_id 설정
+    const allSerialIds = items.flatMap((item) => item.serial_ids || []);
+    if (allSerialIds.length > 0) {
+      await db
+        .from('product_serials')
+        .update({
+          status: 'sold',
+          sold_via: 'offline',
+          offline_sale_id: created.id,
+          sold_at: new Date().toISOString(),
+          sold_to_name: sale.customer_name,
+          sold_to_phone: sale.customer_phone || null,
+        })
+        .in('id', allSerialIds);
 
-        if (cust?.ecount_customer_code) {
-          customerCode = cust.ecount_customer_code;
-        } else if (cust) {
-          // 거래처 코드 없는 기존 고객 → 자동 채번 + 이카운트 등록
-          try {
-            const { data: maxRow } = await db
-              .from('customers')
-              .select('ecount_customer_code')
-              .not('ecount_customer_code', 'is', null)
-              .like('ecount_customer_code', 'MM-%')
-              .order('ecount_customer_code', { ascending: false })
-              .limit(1);
-
-            let nextNum = 1;
-            if (maxRow && maxRow.length > 0 && maxRow[0].ecount_customer_code) {
-              const match = maxRow[0].ecount_customer_code.match(/MM-(\d+)/);
-              if (match) nextNum = parseInt(match[1]) + 1;
-            }
-            const padLen = Math.max(3, String(nextNum).length);
-            const newCode = `MM-${String(nextNum).padStart(padLen, '0')}`;
-
-            const custResult = await saveCustomer({
-              custCode: newCode,
-              custName: cust.name,
-              phone: cust.phone || undefined,
-              email: cust.email || undefined,
-              address: [cust.address_road, cust.address_detail].filter(Boolean).join(' ') || undefined,
-              remarks: 'TMS 자동등록',
-            });
-
-            if (isStatusOk(custResult.Status)) {
-              customerCode = newCode;
-              await db
-                .from('customers')
-                .update({ ecount_customer_code: newCode })
-                .eq('id', sale.customer_id);
-            }
-          } catch (custErr) {
-            console.error('이카운트 거래처 자동등록 실패:', custErr);
+      // 재고 수량 차감 (시리얼 등록 시 증가했으므로 판매 시 차감)
+      for (const item of items) {
+        if (item.serial_ids && item.serial_ids.length > 0 && item.product_id) {
+          const { data: prod } = await db
+            .from('products')
+            .select('stock_quantity')
+            .eq('id', item.product_id)
+            .single();
+          if (prod) {
+            await db
+              .from('products')
+              .update({ stock_quantity: Math.max(0, (prod.stock_quantity || 0) - item.serial_ids.length) })
+              .eq('id', item.product_id);
           }
         }
       }
-
-      // 2) 판매전표 생성
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const ecountItems = items.map((item: any) => ({
-        PROD_CD: item.sku || '',
-        PROD_DES: item.product_name,
-        QTY: String(item.quantity),
-        PRICE: String(item.unit_price),
-        SUPPLY_AMT: String(item.total_price),
-      }));
-
-      const result = await saveSale({
-        saleDate,
-        customerCode,
-        items: ecountItems,
-        remarks: `TMS ${saleNumber}`,
-      });
-
-      // 3) 동기화 상태 업데이트
-      if (isStatusOk(result.Status)) {
-        ecountSyncStatus = 'synced';
-        await db
-          .from('offline_sales')
-          .update({
-            ecount_sync_status: 'synced',
-            ecount_synced_at: new Date().toISOString(),
-          })
-          .eq('id', created.id);
-      } else {
-        ecountSyncStatus = 'failed';
-        await db
-          .from('offline_sales')
-          .update({ ecount_sync_status: 'failed' })
-          .eq('id', created.id);
-      }
-    } catch (ecountErr) {
-      // 이카운트 실패해도 판매 저장은 성공 유지
-      ecountSyncStatus = 'failed';
-      console.error('이카운트 자동 동기화 실패:', ecountErr);
-      await db
-        .from('offline_sales')
-        .update({ ecount_sync_status: 'failed' })
-        .eq('id', created.id)
-        .catch(() => {}); // update 실패도 무시
     }
 
-    return NextResponse.json({ sale: created, saleNumber, ecountSyncStatus });
+    return NextResponse.json({ sale: created, saleNumber });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }

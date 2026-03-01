@@ -7,9 +7,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSale, useEcountSync } from '@/hooks/use-sales';
+import { useSale } from '@/hooks/use-sales';
 import { formatKRW, formatDate } from '@/lib/utils/format';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Hash } from 'lucide-react';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드',
@@ -22,7 +22,6 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
   const { id } = use(params);
   const router = useRouter();
   const { data, isLoading } = useSale(id);
-  const ecountSync = useEcountSync();
 
   if (isLoading) {
     return (
@@ -47,7 +46,7 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  const { sale, items } = data;
+  const { sale, items, serials = [] } = data;
 
   return (
     <>
@@ -63,22 +62,13 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
         <Card>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-indigo-black">{sale.sale_number}</h3>
-            <div className="flex items-center gap-2">
-              <Badge className={
-                sale.payment_status === 'paid' ? 'bg-green-100 text-green-700'
-                  : sale.payment_status === 'unpaid' ? 'bg-red-100 text-red-700'
-                  : 'bg-yellow-100 text-yellow-700'
-              }>
-                {sale.payment_status === 'paid' ? '결제완료' : sale.payment_status === 'unpaid' ? '미결제' : '부분결제'}
-              </Badge>
-              <Badge className={
-                sale.ecount_sync_status === 'synced' ? 'bg-blue-100 text-blue-700'
-                  : sale.ecount_sync_status === 'failed' ? 'bg-red-100 text-red-700'
-                  : 'bg-neutral-100 text-neutral-500'
-              }>
-                {sale.ecount_sync_status === 'synced' ? 'ERP 연동' : sale.ecount_sync_status === 'failed' ? 'ERP 실패' : 'ERP 대기'}
-              </Badge>
-            </div>
+            <Badge className={
+              sale.payment_status === 'paid' ? 'bg-green-100 text-green-700'
+                : sale.payment_status === 'unpaid' ? 'bg-red-100 text-red-700'
+                : 'bg-yellow-100 text-yellow-700'
+            }>
+              {sale.payment_status === 'paid' ? '결제완료' : sale.payment_status === 'unpaid' ? '미결제' : '부분결제'}
+            </Badge>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-sm">
@@ -111,17 +101,31 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
         <Card>
           <h3 className="text-sm font-bold text-indigo-black mb-3">판매 항목</h3>
           <div className="space-y-2">
-            {items.map((item) => (
-              <div key={item.id} className="flex items-center justify-between py-2 border-b border-neutral-50 last:border-0">
-                <div>
-                  <p className="text-sm font-medium">{item.product_name}</p>
-                  <p className="text-xs text-neutral-500">
-                    {item.sku && `${item.sku} · `}{formatKRW(item.unit_price)} x {item.quantity}
-                  </p>
+            {items.map((item) => {
+              const itemSerials = serials.filter((s) => s.product_id === item.product_id);
+              return (
+                <div key={item.id} className="py-2 border-b border-neutral-50 last:border-0">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">{item.product_name}</p>
+                      <p className="text-xs text-neutral-500">
+                        {item.sku && `${item.sku} · `}{formatKRW(item.unit_price)} x {item.quantity}
+                      </p>
+                    </div>
+                    <span className="text-sm font-bold">{formatKRW(item.total_price)}</span>
+                  </div>
+                  {itemSerials.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {itemSerials.map((s) => (
+                        <span key={s.id} className="inline-flex items-center gap-0.5 text-[10px] font-mono bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded">
+                          <Hash size={8} />{s.serial_number}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <span className="text-sm font-bold">{formatKRW(item.total_price)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-3 pt-3 border-t border-neutral-200 space-y-1">
@@ -139,43 +143,22 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
               <span>결제 금액</span>
               <span className="text-terracotta">{formatKRW(sale.paid_amount)}</span>
             </div>
+            {/* VAT 분리 표시 */}
+            {sale.supply_amount > 0 && (
+              <div className="mt-2 pt-2 border-t border-dashed border-neutral-200 space-y-0.5">
+                <div className="flex justify-between text-xs text-neutral-500">
+                  <span>공급가액</span>
+                  <span>{formatKRW(sale.supply_amount)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-neutral-500">
+                  <span>부가세 (10%)</span>
+                  <span>{formatKRW(sale.vat_amount)}</span>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 
-        {/* 이카운트 연동 */}
-        {sale.ecount_sync_status !== 'synced' && (
-          <Card>
-            <h3 className="text-sm font-bold text-indigo-black mb-3">이카운트 ERP 연동</h3>
-            <p className="text-xs text-neutral-500 mb-3">
-              판매 전표를 이카운트 ERP에 동기화합니다.
-              {sale.ecount_sync_status === 'failed' && ' (이전 동기화 실패 — 재시도 가능)'}
-            </p>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => ecountSync.mutate(sale.id)}
-              disabled={ecountSync.isPending}
-            >
-              <RefreshCw size={14} className={ecountSync.isPending ? 'animate-spin' : ''} />
-              {ecountSync.isPending ? '동기화 중...' : '이카운트 동기화'}
-            </Button>
-          </Card>
-        )}
-
-        {sale.ecount_sync_status === 'synced' && sale.ecount_slip_no && (
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-indigo-black">이카운트 ERP 연동</h3>
-                <p className="text-xs text-neutral-500 mt-1">
-                  전표번호: {sale.ecount_slip_no}
-                  {sale.ecount_synced_at && ` · ${formatDate(sale.ecount_synced_at, 'yyyy.MM.dd HH:mm')}`}
-                </p>
-              </div>
-              <Badge className="bg-blue-100 text-blue-700">연동 완료</Badge>
-            </div>
-          </Card>
-        )}
       </div>
     </>
   );

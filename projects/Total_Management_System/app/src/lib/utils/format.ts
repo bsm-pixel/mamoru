@@ -21,6 +21,12 @@ export function formatRelative(date: string | Date): string {
   return formatDistanceToNow(new Date(date), { addSuffix: true, locale: ko });
 }
 
+/** VAT 계산: 총액 → 공급가액 + 부가세(10%) 분리 */
+export function calcVAT(total: number): { supply: number; vat: number } {
+  const supply = Math.round(total / 1.1);
+  return { supply, vat: total - supply };
+}
+
 /** 전화번호 포맷: "01012345678" → "010-1234-5678" */
 export function formatPhone(phone: string | null): string {
   if (!phone) return '';

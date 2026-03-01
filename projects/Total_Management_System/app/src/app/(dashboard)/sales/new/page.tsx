@@ -6,14 +6,16 @@ import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useProducts, useCreateSale } from '@/hooks/use-sales';
-import { formatKRW } from '@/lib/utils/format';
+import { formatKRW, calcVAT } from '@/lib/utils/format';
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
+import { SerialPicker } from '@/components/sales/serial-picker';
 import type { Product } from '@/lib/supabase/types';
 
 interface CartItem {
   product: Product;
   quantity: number;
+  selectedSerialIds: string[];
 }
 
 export default function NewSalePage() {
@@ -40,8 +42,16 @@ export default function NewSalePage() {
           item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { product, quantity: 1, selectedSerialIds: [] }];
     });
+  }
+
+  function updateSerialIds(productId: string, serialIds: string[]) {
+    setCart((prev) =>
+      prev.map((item) =>
+        item.product.id === productId ? { ...item, selectedSerialIds: serialIds } : item
+      )
+    );
   }
 
   function updateQuantity(productId: string, delta: number) {
@@ -83,6 +93,7 @@ export default function NewSalePage() {
         quantity: item.quantity,
         unit_price: item.product.price,
         total_price: item.product.price * item.quantity,
+        serial_ids: item.selectedSerialIds,
       })),
     });
 
@@ -170,34 +181,43 @@ export default function NewSalePage() {
               ) : (
                 <div className="space-y-2">
                   {cart.map((item) => (
-                    <div key={item.product.id} className="flex items-center gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.product.name}</p>
-                        <p className="text-xs text-neutral-500">
-                          {formatKRW(item.product.price)} x {item.quantity} = {formatKRW(item.product.price * item.quantity)}
-                        </p>
+                    <div key={item.product.id}>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{item.product.name}</p>
+                          <p className="text-xs text-neutral-500">
+                            {formatKRW(item.product.price)} x {item.quantity} = {formatKRW(item.product.price * item.quantity)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => updateQuantity(item.product.id, -1)}
+                            className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"
+                          >
+                            <Minus size={12} />
+                          </button>
+                          <span className="text-sm font-semibold w-6 text-center">{item.quantity}</span>
+                          <button
+                            onClick={() => updateQuantity(item.product.id, 1)}
+                            className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"
+                          >
+                            <Plus size={12} />
+                          </button>
+                          <button
+                            onClick={() => removeFromCart(item.product.id)}
+                            className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => updateQuantity(item.product.id, -1)}
-                          className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"
-                        >
-                          <Minus size={12} />
-                        </button>
-                        <span className="text-sm font-semibold w-6 text-center">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.product.id, 1)}
-                          className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"
-                        >
-                          <Plus size={12} />
-                        </button>
-                        <button
-                          onClick={() => removeFromCart(item.product.id)}
-                          className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
+                      {/* 시리얼 선택 */}
+                      <SerialPicker
+                        productId={item.product.id}
+                        quantity={item.quantity}
+                        selectedSerialIds={item.selectedSerialIds}
+                        onSelect={(ids) => updateSerialIds(item.product.id, ids)}
+                      />
                     </div>
                   ))}
                 </div>
@@ -220,6 +240,22 @@ export default function NewSalePage() {
                     <span>결제 금액</span>
                     <span className="text-terracotta">{formatKRW(paidAmount)}</span>
                   </div>
+                  {/* 카드결제 시 VAT 분리 표시 */}
+                  {paymentMethod === 'card' && paidAmount > 0 && (() => {
+                    const { supply, vat } = calcVAT(paidAmount);
+                    return (
+                      <div className="mt-2 pt-2 border-t border-dashed border-neutral-200 space-y-0.5">
+                        <div className="flex justify-between text-xs text-neutral-500">
+                          <span>공급가액</span>
+                          <span>{formatKRW(supply)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-neutral-500">
+                          <span>부가세 (10%)</span>
+                          <span>{formatKRW(vat)}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </Card>

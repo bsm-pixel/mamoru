@@ -39,21 +39,23 @@ export function useSales(filters?: {
   });
 }
 
-/** 오프라인 판매 단건 조회 (항목 포함) */
+/** 오프라인 판매 단건 조회 (항목 + 시리얼 포함) */
 export function useSale(id: string) {
   const supabase = createClient();
 
   return useQuery({
     queryKey: ['sale', id],
     queryFn: async () => {
-      const [saleRes, itemsRes] = await Promise.all([
+      const [saleRes, itemsRes, serialsRes] = await Promise.all([
         supabase.from('offline_sales').select('*').eq('id', id).single(),
         supabase.from('offline_sale_items').select('*').eq('sale_id', id),
+        supabase.from('product_serials').select('id, serial_number, product_id').eq('offline_sale_id', id),
       ]);
       if (saleRes.error) throw saleRes.error;
       return {
         sale: saleRes.data as OfflineSale,
         items: (itemsRes.data || []) as OfflineSaleItem[],
+        serials: (serialsRes.data || []) as Array<{ id: string; serial_number: string; product_id: string }>,
       };
     },
     enabled: !!id,
@@ -105,6 +107,7 @@ export function useCreateSale() {
         quantity: number;
         unit_price: number;
         total_price: number;
+        serial_ids?: string[];
       }>;
     }) => {
       const res = await fetch('/api/sales', {
@@ -116,14 +119,7 @@ export function useCreateSale() {
       return res.json();
     },
     onSuccess: (data) => {
-      if (data.ecountSyncStatus === 'synced') {
-        toast.success(`판매 등록 + 이카운트 동기화 완료: ${data.saleNumber}`);
-      } else if (data.ecountSyncStatus === 'failed') {
-        toast.success(`판매 등록 완료: ${data.saleNumber}`);
-        toast('이카운트 동기화 실패 — 상세 페이지에서 재시도', { icon: '⚠️' });
-      } else {
-        toast.success(`판매 등록 완료: ${data.saleNumber}`);
-      }
+      toast.success(`판매 등록 완료: ${data.saleNumber}`);
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
     },
@@ -133,27 +129,3 @@ export function useCreateSale() {
   });
 }
 
-/** 이카운트 동기화 */
-export function useEcountSync() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (saleId: string) => {
-      const res = await fetch('/api/sales/ecount-sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ saleId }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      return res.json();
-    },
-    onSuccess: () => {
-      toast.success('이카운트 동기화 완료');
-      queryClient.invalidateQueries({ queryKey: ['sales'] });
-      queryClient.invalidateQueries({ queryKey: ['sale'] });
-    },
-    onError: (err) => {
-      toast.error('이카운트 동기화 실패: ' + String(err));
-    },
-  });
-}
