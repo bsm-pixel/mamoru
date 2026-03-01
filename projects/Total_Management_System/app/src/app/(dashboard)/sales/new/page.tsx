@@ -15,7 +15,14 @@ import type { Product } from '@/lib/supabase/types';
 interface CartItem {
   product: Product;
   quantity: number;
+  unitPrice: number; // 고객 유형에 따라 결정된 단가
   selectedSerialIds: string[];
+}
+
+/** 고객 유형에 따른 단가 결정 */
+function getUnitPrice(product: Product, customerType?: string): number {
+  if (customerType === 'dealer' && product.price_dealer > 0) return product.price_dealer;
+  return product.price;
 }
 
 export default function NewSalePage() {
@@ -31,10 +38,12 @@ export default function NewSalePage() {
   const [discount, setDiscount] = useState(0);
   const [memo, setMemo] = useState('');
 
-  const totalAmount = cart.reduce((s, item) => s + item.product.price * item.quantity, 0);
+  const customerType = selectedCustomer?.customer_type;
+  const totalAmount = cart.reduce((s, item) => s + item.unitPrice * item.quantity, 0);
   const paidAmount = totalAmount - discount;
 
   function addToCart(product: Product) {
+    const price = getUnitPrice(product, customerType);
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
@@ -42,8 +51,16 @@ export default function NewSalePage() {
           item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prev, { product, quantity: 1, selectedSerialIds: [] }];
+      return [...prev, { product, quantity: 1, unitPrice: price, selectedSerialIds: [] }];
     });
+  }
+
+  // 고객 변경 시 장바구니 가격 재계산
+  function recalcCartPrices(type?: string) {
+    setCart((prev) => prev.map((item) => ({
+      ...item,
+      unitPrice: getUnitPrice(item.product, type),
+    })));
   }
 
   function updateSerialIds(productId: string, serialIds: string[]) {
@@ -91,8 +108,8 @@ export default function NewSalePage() {
         product_name: item.product.name,
         sku: item.product.sku,
         quantity: item.quantity,
-        unit_price: item.product.price,
-        total_price: item.product.price * item.quantity,
+        unit_price: item.unitPrice,
+        total_price: item.unitPrice * item.quantity,
         serial_ids: item.selectedSerialIds,
       })),
     });
@@ -149,8 +166,11 @@ export default function NewSalePage() {
                           </p>
                           <p className="text-xs text-neutral-500 mt-0.5">{p.sku}</p>
                           <p className="text-sm font-bold text-terracotta mt-1">
-                            {formatKRW(p.price)}
+                            {formatKRW(getUnitPrice(p, customerType))}
                           </p>
+                          {customerType === 'dealer' && p.price_dealer > 0 && (
+                            <p className="text-[10px] text-neutral-400 line-through">{formatKRW(p.price)}</p>
+                          )}
                           {inCart && (
                             <p className="text-xs text-terracotta font-semibold mt-1">
                               x{inCart.quantity}
@@ -186,7 +206,7 @@ export default function NewSalePage() {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{item.product.name}</p>
                           <p className="text-xs text-neutral-500">
-                            {formatKRW(item.product.price)} x {item.quantity} = {formatKRW(item.product.price * item.quantity)}
+                            {formatKRW(item.unitPrice)} x {item.quantity} = {formatKRW(item.unitPrice * item.quantity)}
                           </p>
                         </div>
                         <div className="flex items-center gap-1">
@@ -269,13 +289,18 @@ export default function NewSalePage() {
                   setSelectedCustomer(c);
                   setCustomerName(c.name);
                   setCustomerPhone(c.phone || '');
+                  recalcCartPrices(c.customer_type);
                 }}
                 onClear={() => {
                   setSelectedCustomer(null);
                   setCustomerName('');
                   setCustomerPhone('');
+                  recalcCartPrices(undefined);
                 }}
               />
+              {customerType === 'dealer' && (
+                <p className="text-xs text-purple-600 mt-1">도매가 적용 중</p>
+              )}
             </Card>
 
             {/* 결제 정보 */}

@@ -154,6 +154,11 @@ export interface Database {
           name: string;
           category: string;
           price: number;
+          price_dealer: number;
+          price_purchase: number;
+          supplier_id: string | null;
+          description: string | null;
+          imweb_product_no: string | null;
           image_url: string | null;
           tags: Record<string, unknown> | null;
           stock_quantity: number;
@@ -162,8 +167,8 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['products']['Row'], 'id' | 'created_at' | 'updated_at' | 'stock_quantity' | 'is_active'>;
-        Update: Partial<Database['public']['Tables']['products']['Insert']>;
+        Insert: Omit<Database['public']['Tables']['products']['Row'], 'id' | 'created_at' | 'updated_at' | 'stock_quantity' | 'is_active' | 'price_dealer' | 'price_purchase'>;
+        Update: Partial<Database['public']['Tables']['products']['Insert']> & { price_dealer?: number; price_purchase?: number };
       };
       sync_log: {
         Row: {

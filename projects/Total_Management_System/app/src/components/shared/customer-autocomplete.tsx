@@ -13,6 +13,7 @@ export interface SelectedCustomer {
   address_detail: string | null;
   postcode: string | null;
   ecount_customer_code: string | null;
+  customer_type?: string;
 }
 
 interface Props {
@@ -85,6 +86,7 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
       address_detail: customer.address_detail,
       postcode: customer.postcode,
       ecount_customer_code: customer.ecount_customer_code,
+      customer_type: (customer as unknown as { customer_type?: string }).customer_type,
     });
     setQuery('');
     setDebouncedQuery('');

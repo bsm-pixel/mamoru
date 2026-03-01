@@ -4,9 +4,11 @@ import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProducts } from '@/hooks/use-sales';
 import { formatKRW } from '@/lib/utils/format';
+import { Plus } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -37,6 +39,11 @@ export default function ProductsPage() {
       <Topbar title="제품 관리" />
 
       <div className="px-4 md:px-6 py-4 space-y-6">
+        <Button size="sm" onClick={() => router.push('/products/new')}>
+          <Plus size={14} />
+          제품 등록
+        </Button>
+
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -54,7 +61,7 @@ export default function ProductsPage() {
                   <Card
                     key={product.id}
                     className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => router.push(`/products/${product.id}/serials`)}
+                    onClick={() => router.push(`/products/${product.id}`)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
@@ -65,7 +72,13 @@ export default function ProductsPage() {
                           </Badge>
                         </div>
                         <p className="text-xs text-neutral-500">{product.sku}</p>
-                        <p className="text-sm font-bold text-terracotta mt-2">{formatKRW(product.price)}</p>
+                        {/* 3단 가격 */}
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="text-sm font-bold text-terracotta">{formatKRW(product.price)}</span>
+                          {product.price_dealer > 0 && (
+                            <span className="text-xs text-purple-600">도매 {formatKRW(product.price_dealer)}</span>
+                          )}
+                        </div>
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-neutral-500">재고</p>
@@ -74,8 +87,8 @@ export default function ProductsPage() {
                         </p>
                       </div>
                     </div>
-                    {product.barcode && (
-                      <p className="mt-2 text-xs text-neutral-400 font-mono">{product.barcode}</p>
+                    {product.imweb_product_no && (
+                      <p className="mt-2 text-[10px] text-neutral-400">아임웹 #{product.imweb_product_no}</p>
                     )}
                   </Card>
                 ))}
