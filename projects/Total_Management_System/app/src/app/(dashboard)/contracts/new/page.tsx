@@ -6,7 +6,6 @@ import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import { SignatureCanvas } from '@/components/contracts/signature-canvas';
 import { ProductPickerModal } from '@/components/contracts/product-picker-modal';
-import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
 import { useCreateContract } from '@/hooks/use-contracts';
 import { formatKRW } from '@/lib/utils/format';
 import { Plus, X } from 'lucide-react';
@@ -14,7 +13,7 @@ import type { Product } from '@/lib/supabase/types';
 
 /* ── 제품 행 ────────────────────────── */
 interface ProductRow {
-  id: string; // product.id or temp id
+  id: string;
   product: Product | null;
   quantity: number;
 }
@@ -41,11 +40,7 @@ export default function NewContractPage() {
   const router = useRouter();
   const createContract = useCreateContract();
 
-  /* ── 고객 ── */
-  const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [customerTitle, setCustomerTitle] = useState('');
+  /* ── 매장 정보 ── */
   const [shopName, setShopName] = useState('');
   const [shopAddress, setShopAddress] = useState('');
 
@@ -53,10 +48,6 @@ export default function NewContractPage() {
   const [rows, setRows] = useState<ProductRow[]>([{ id: crypto.randomUUID(), product: null, quantity: 1 }]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
-
-  /* ── 수령 ── */
-  const [deliveryMethod, setDeliveryMethod] = useState<'shipping' | 'pickup'>('shipping');
-  const [unavailableDays, setUnavailableDays] = useState('');
 
   /* ── 결제 ── */
   const [paymentMethod, setPaymentMethod] = useState('transfer');
@@ -108,15 +99,12 @@ export default function NewContractPage() {
 
   /* ── 제출 ── */
   async function handleSubmit() {
-    const name = selectedCustomer?.name || customerName.trim();
     const filledRows = rows.filter((r) => r.product);
-    if (!name || filledRows.length === 0) return;
+    if (filledRows.length === 0) return;
 
     await createContract.mutateAsync({
       contract: {
-        customer_id: selectedCustomer?.id || undefined,
-        customer_name: name,
-        customer_phone: selectedCustomer?.phone || customerPhone.trim() || undefined,
+        customer_name: shopName.trim() || '미입력',
         customer_address: shopAddress.trim() || undefined,
         total_amount: totalAmount,
         discount_amount: discount,
@@ -125,13 +113,10 @@ export default function NewContractPage() {
         installment_months: installment,
         signature_data: buyerSignature || undefined,
         memo: memo.trim() || undefined,
-        // 확장 필드
-        delivery_method: deliveryMethod,
-        unavailable_days: unavailableDays.trim() || undefined,
+        delivery_method: 'shipping',
         deposit_amount: depositAmount,
         balance_amount: balanceAmount,
         seller_signature: sellerSignature || undefined,
-        customer_title: customerTitle.trim() || undefined,
         shop_name: shopName.trim() || undefined,
         shop_address: shopAddress.trim() || undefined,
       },
@@ -148,7 +133,7 @@ export default function NewContractPage() {
     router.push('/contracts');
   }
 
-  const canSubmit = (selectedCustomer || customerName.trim()) && rows.some((r) => r.product) && !createContract.isPending;
+  const canSubmit = rows.some((r) => r.product) && !createContract.isPending;
 
   /* ── 입력 스타일 ── */
   const inputClass = 'border-0 border-b border-neutral-300 bg-transparent px-1 py-1 text-sm focus:outline-none focus:border-neutral-800 w-full';
@@ -157,7 +142,6 @@ export default function NewContractPage() {
     <>
       <Topbar title="계약서 작성" />
 
-      {/* ── 전자문서 ── */}
       <div className="px-3 py-4">
         <div className="bg-white max-w-[600px] mx-auto border border-neutral-400 rounded-sm shadow-sm">
 
@@ -167,71 +151,25 @@ export default function NewContractPage() {
             <h2 className="text-base font-extrabold tracking-[0.3em] text-neutral-900">구 매 계 약 서</h2>
           </div>
 
-          {/* ── 계약자 정보 ── */}
-          <div className="px-5 py-4 border-b border-neutral-300 space-y-3">
-            <p className="text-xs font-bold text-neutral-700 mb-2">계약자</p>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-              <div>
-                <label className="text-[10px] text-neutral-500">성함</label>
-                {selectedCustomer ? (
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm font-semibold">{selectedCustomer.name}</span>
-                    <button onClick={() => { setSelectedCustomer(null); setCustomerName(''); setCustomerPhone(''); }} className="text-neutral-400 hover:text-neutral-600">
-                      <X size={12} />
-                    </button>
-                  </div>
-                ) : (
-                  <CustomerAutocomplete
-                    selectedCustomer={selectedCustomer}
-                    onSelect={(c) => {
-                      setSelectedCustomer(c);
-                      setCustomerName(c.name);
-                      setCustomerPhone(c.phone || '');
-                      setShopAddress([c.address_road, c.address_detail].filter(Boolean).join(' '));
-                    }}
-                    onClear={() => { setSelectedCustomer(null); setCustomerName(''); setCustomerPhone(''); }}
-                  />
-                )}
-              </div>
-              <div>
-                <label className="text-[10px] text-neutral-500">연락처</label>
-                <input
-                  type="tel"
-                  value={selectedCustomer?.phone || customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder="010-0000-0000"
-                  className={inputClass}
-                  readOnly={!!selectedCustomer?.phone}
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-neutral-500">직함</label>
-                <input
-                  type="text"
-                  value={customerTitle}
-                  onChange={(e) => setCustomerTitle(e.target.value)}
-                  placeholder="원장 / 디자이너 / 대표"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-neutral-500">매장명</label>
-                <input
-                  type="text"
-                  value={shopName}
-                  onChange={(e) => setShopName(e.target.value)}
-                  placeholder="매장명"
-                  className={inputClass}
-                />
-              </div>
+          {/* ── 매장 정보 ── */}
+          <div className="px-5 py-4 border-b border-neutral-300 space-y-2">
+            <div>
+              <label className="text-[10px] text-neutral-500">매장명</label>
+              <input
+                type="text"
+                value={shopName}
+                onChange={(e) => setShopName(e.target.value)}
+                placeholder="매장명"
+                className={inputClass}
+              />
             </div>
             <div>
-              <label className="text-[10px] text-neutral-500">매장주소</label>
+              <label className="text-[10px] text-neutral-500">매장주소 (수령지주소)</label>
               <input
                 type="text"
                 value={shopAddress}
                 onChange={(e) => setShopAddress(e.target.value)}
-                placeholder="매장 주소"
+                placeholder="주소"
                 className={inputClass}
               />
             </div>
@@ -245,120 +183,6 @@ export default function NewContractPage() {
               <p className="text-[10px] font-bold text-neutral-700 mb-1">[유의사항]</p>
               <p className="text-[11px] text-neutral-600 leading-relaxed whitespace-pre-line">{CAUTION_NOTICE}</p>
             </div>
-          </div>
-
-          {/* ── 제품 테이블 ── */}
-          <div className="px-5 py-4 border-b border-neutral-300">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-neutral-400">
-                  <th className="text-left py-2 text-xs font-bold text-neutral-700 w-[50%]">품명</th>
-                  <th className="text-center py-2 text-xs font-bold text-neutral-700 w-[15%]">수량</th>
-                  <th className="text-right py-2 text-xs font-bold text-neutral-700 w-[25%]">금액</th>
-                  <th className="w-[10%]"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id} className="border-b border-neutral-200">
-                    <td className="py-3">
-                      {row.product ? (
-                        <button
-                          onClick={() => openPicker(row.id)}
-                          className="text-left"
-                        >
-                          <span className="text-sm font-medium text-neutral-800">{row.product.name}</span>
-                          <span className="text-[10px] text-neutral-500 block">{row.product.sku}</span>
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => openPicker(row.id)}
-                          className="text-sm text-neutral-400 underline underline-offset-4 decoration-dashed py-1"
-                        >
-                          탭하여 선택
-                        </button>
-                      )}
-                    </td>
-                    <td className="text-center py-3">
-                      <input
-                        type="number"
-                        value={row.quantity}
-                        onChange={(e) => updateQty(row.id, parseInt(e.target.value) || 1)}
-                        className="w-12 text-center border-b border-neutral-300 bg-transparent text-sm focus:outline-none focus:border-neutral-800"
-                        min={1}
-                      />
-                    </td>
-                    <td className="text-right py-3 text-sm font-semibold text-neutral-800">
-                      {row.product ? formatKRW(row.product.price * row.quantity) : '-'}
-                    </td>
-                    <td className="text-center py-3">
-                      {rows.length > 1 && (
-                        <button onClick={() => removeRow(row.id)} className="text-neutral-400 hover:text-red-500">
-                          <X size={14} />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <button
-              onClick={addRow}
-              className="flex items-center gap-1.5 mt-3 text-xs text-neutral-500 hover:text-terracotta transition"
-            >
-              <Plus size={14} />
-              제품 추가
-            </button>
-
-            {/* 합계 */}
-            {totalAmount > 0 && (
-              <div className="mt-3 pt-2 border-t border-neutral-300 text-right">
-                {discount > 0 && (
-                  <p className="text-xs text-neutral-500">할인: -{formatKRW(discount)}</p>
-                )}
-                <p className="text-sm font-bold text-neutral-900">합계: {formatKRW(finalAmount)}</p>
-              </div>
-            )}
-          </div>
-
-          {/* ── 수령방법 ── */}
-          <div className="px-5 py-4 border-b border-neutral-300 space-y-2">
-            <p className="text-xs font-bold text-neutral-700">수령방법</p>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                <input
-                  type="radio"
-                  name="delivery"
-                  checked={deliveryMethod === 'shipping'}
-                  onChange={() => setDeliveryMethod('shipping')}
-                  className="accent-neutral-800"
-                />
-                본사 발송 (2~7일)
-              </label>
-              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                <input
-                  type="radio"
-                  name="delivery"
-                  checked={deliveryMethod === 'pickup'}
-                  onChange={() => setDeliveryMethod('pickup')}
-                  className="accent-neutral-800"
-                />
-                직접 수령
-              </label>
-            </div>
-            {deliveryMethod === 'shipping' && (
-              <div>
-                <label className="text-[10px] text-neutral-500">수령 불가 요일</label>
-                <input
-                  type="text"
-                  value={unavailableDays}
-                  onChange={(e) => setUnavailableDays(e.target.value)}
-                  placeholder="예: 일요일, 월요일"
-                  className={inputClass}
-                />
-              </div>
-            )}
           </div>
 
           {/* ── 결제방식 ── */}
@@ -443,6 +267,77 @@ export default function NewContractPage() {
             </div>
           </div>
 
+          {/* ── 제품 테이블 ── */}
+          <div className="px-5 py-4 border-b border-neutral-300">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-neutral-400">
+                  <th className="text-left py-2 text-xs font-bold text-neutral-700 w-[50%]">품명</th>
+                  <th className="text-center py-2 text-xs font-bold text-neutral-700 w-[15%]">수량</th>
+                  <th className="text-right py-2 text-xs font-bold text-neutral-700 w-[25%]">금액</th>
+                  <th className="w-[10%]"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id} className="border-b border-neutral-200">
+                    <td className="py-3">
+                      {row.product ? (
+                        <button onClick={() => openPicker(row.id)} className="text-left">
+                          <span className="text-sm font-medium text-neutral-800">{row.product.name}</span>
+                          <span className="text-[10px] text-neutral-500 block">{row.product.sku}</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => openPicker(row.id)}
+                          className="text-sm text-neutral-400 underline underline-offset-4 decoration-dashed py-1"
+                        >
+                          탭하여 선택
+                        </button>
+                      )}
+                    </td>
+                    <td className="text-center py-3">
+                      <input
+                        type="number"
+                        value={row.quantity}
+                        onChange={(e) => updateQty(row.id, parseInt(e.target.value) || 1)}
+                        className="w-12 text-center border-b border-neutral-300 bg-transparent text-sm focus:outline-none focus:border-neutral-800"
+                        min={1}
+                      />
+                    </td>
+                    <td className="text-right py-3 text-sm font-semibold text-neutral-800">
+                      {row.product ? formatKRW(row.product.price * row.quantity) : '-'}
+                    </td>
+                    <td className="text-center py-3">
+                      {rows.length > 1 && (
+                        <button onClick={() => removeRow(row.id)} className="text-neutral-400 hover:text-red-500">
+                          <X size={14} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <button
+              onClick={addRow}
+              className="flex items-center gap-1.5 mt-3 text-xs text-neutral-500 hover:text-terracotta transition"
+            >
+              <Plus size={14} />
+              제품 추가
+            </button>
+
+            {totalAmount > 0 && (
+              <div className="mt-3 pt-2 border-t border-neutral-300 text-right">
+                {discount > 0 && (
+                  <p className="text-xs text-neutral-500">할인: -{formatKRW(discount)}</p>
+                )}
+                <p className="text-sm font-bold text-neutral-900">합계: {formatKRW(finalAmount)}</p>
+              </div>
+            )}
+          </div>
+
           {/* ── 날짜 + 서명 ── */}
           <div className="px-5 py-4 border-b border-neutral-300 space-y-4">
             <p className="text-center text-sm text-neutral-800 tracking-widest">
@@ -481,7 +376,6 @@ export default function NewContractPage() {
         </div>
       </div>
 
-      {/* ── 제품 선택 모달 ── */}
       <ProductPickerModal
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}

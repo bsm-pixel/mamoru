@@ -20,10 +20,9 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    group: '영업 · 계약',
+    group: '영업',
     items: [
       { label: '고객', href: '/customers', icon: 'Users', matchPrefix: '/customers' },
-      { label: '계약서', href: '/contracts', icon: 'FileSignature', matchPrefix: '/contracts' },
       { label: '판매관리', href: '/sales', icon: 'Store', matchPrefix: '/sales' },
     ],
   },

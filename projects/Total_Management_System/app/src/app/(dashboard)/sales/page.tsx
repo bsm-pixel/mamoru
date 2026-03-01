@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSales } from '@/hooks/use-sales';
+import { useContracts } from '@/hooks/use-contracts';
 import { formatKRW, formatDate } from '@/lib/utils/format';
-import { Search, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, ChevronLeft, ChevronRight, FileSignature } from 'lucide-react';
 import type { OfflineSale } from '@/lib/supabase/types';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
@@ -31,6 +32,8 @@ export default function SalesPage() {
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useSales({ search, page, limit: 20 });
+  const { data: contractData } = useContracts({ status: 'signed', limit: 100 });
+  const newContractCount = contractData?.contracts?.filter((c) => !c.offline_sale_id).length || 0;
   const sales = data?.sales || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
@@ -40,6 +43,20 @@ export default function SalesPage() {
       <Topbar title="판매관리" />
 
       <div className="px-4 md:px-6 py-4 space-y-4">
+        {/* 신규 계약서 알림 */}
+        {newContractCount > 0 && (
+          <button
+            onClick={() => router.push('/contracts')}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-terracotta/10 border border-terracotta/20 hover:bg-terracotta/15 transition text-left"
+          >
+            <FileSignature size={18} className="text-terracotta shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-terracotta">신규 계약서 {newContractCount}건</p>
+              <p className="text-xs text-neutral-500">매칭 대기 중인 계약서가 있습니다</p>
+            </div>
+          </button>
+        )}
+
         {/* 상단: 신규 판매 + 검색 */}
         <div className="flex items-center gap-3">
           <Button
