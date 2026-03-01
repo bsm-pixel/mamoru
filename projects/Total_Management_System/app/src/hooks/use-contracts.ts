@@ -83,6 +83,15 @@ export function useCreateContract() {
         installment_months?: number;
         signature_data?: string;
         memo?: string;
+        // 전자문서 확장 필드
+        delivery_method?: string;
+        unavailable_days?: string;
+        deposit_amount?: number;
+        balance_amount?: number;
+        seller_signature?: string;
+        customer_title?: string;
+        shop_name?: string;
+        shop_address?: string;
       };
       items: Array<{
         product_id?: string;

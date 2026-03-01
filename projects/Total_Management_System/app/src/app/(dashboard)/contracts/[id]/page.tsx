@@ -32,6 +32,12 @@ const PAYMENT_LABEL: Record<string, string> = {
   cash: '현금',
   transfer: '계좌이체',
   mixed: '복합',
+  cms: 'CMS 자동이체',
+};
+
+const DELIVERY_LABEL: Record<string, string> = {
+  shipping: '본사 발송',
+  pickup: '직접 수령',
 };
 
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -114,6 +120,55 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             </div>
           </div>
 
+          {/* 확장 필드: 매장 정보 */}
+          {(contract.customer_title || contract.shop_name || contract.shop_address) && (
+            <div className="mt-3 pt-3 border-t border-neutral-100 grid grid-cols-2 gap-3 text-sm">
+              {contract.customer_title && (
+                <div>
+                  <span className="text-xs text-neutral-500">직함</span>
+                  <p>{contract.customer_title}</p>
+                </div>
+              )}
+              {contract.shop_name && (
+                <div>
+                  <span className="text-xs text-neutral-500">매장명</span>
+                  <p>{contract.shop_name}</p>
+                </div>
+              )}
+              {contract.shop_address && (
+                <div className="col-span-2">
+                  <span className="text-xs text-neutral-500">매장주소</span>
+                  <p>{contract.shop_address}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 수령방법 */}
+          {contract.delivery_method && (
+            <div className="mt-3 pt-3 border-t border-neutral-100 text-sm">
+              <span className="text-xs text-neutral-500">수령방법</span>
+              <p>
+                {DELIVERY_LABEL[contract.delivery_method] || contract.delivery_method}
+                {contract.unavailable_days && ` (불가: ${contract.unavailable_days})`}
+              </p>
+            </div>
+          )}
+
+          {/* 선납/잔금 */}
+          {(contract.deposit_amount > 0 || contract.balance_amount > 0) && (
+            <div className="mt-3 pt-3 border-t border-neutral-100 grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-xs text-neutral-500">선납금</span>
+                <p className="font-semibold">{formatKRW(contract.deposit_amount)}</p>
+              </div>
+              <div>
+                <span className="text-xs text-neutral-500">잔금</span>
+                <p className="font-semibold">{formatKRW(contract.balance_amount)}</p>
+              </div>
+            </div>
+          )}
+
           {contract.memo && (
             <p className="mt-3 pt-3 border-t border-neutral-100 text-sm text-neutral-600">
               {contract.memo}
@@ -158,12 +213,28 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         </Card>
 
         {/* 서명 */}
-        {contract.signature_data && (
+        {(contract.signature_data || contract.seller_signature) && (
           <Card>
-            <h3 className="text-sm font-bold text-indigo-black mb-3">고객 서명</h3>
-            <div className="border border-neutral-200 rounded-lg p-2 bg-white inline-block">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={contract.signature_data} alt="서명" className="max-w-[300px] h-auto" />
+            <h3 className="text-sm font-bold text-indigo-black mb-3">서명</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {contract.signature_data && (
+                <div>
+                  <p className="text-xs text-neutral-500 mb-1">구매자</p>
+                  <div className="border border-neutral-200 rounded-lg p-2 bg-white inline-block">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={contract.signature_data} alt="구매자 서명" className="max-w-[200px] h-auto" />
+                  </div>
+                </div>
+              )}
+              {contract.seller_signature && (
+                <div>
+                  <p className="text-xs text-neutral-500 mb-1">판매자</p>
+                  <div className="border border-neutral-200 rounded-lg p-2 bg-white inline-block">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={contract.seller_signature} alt="판매자 서명" className="max-w-[200px] h-auto" />
+                  </div>
+                </div>
+              )}
             </div>
             {contract.signed_at && (
               <p className="text-xs text-neutral-500 mt-2">

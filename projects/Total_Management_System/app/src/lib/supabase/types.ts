@@ -600,6 +600,14 @@ export interface Database {
           ecount_sync_status?: string | null;  // legacy
           ecount_slip_no?: string | null;       // legacy
           offline_sale_id: string | null;
+          delivery_method: string;
+          unavailable_days: string | null;
+          deposit_amount: number;
+          balance_amount: number;
+          seller_signature: string | null;
+          customer_title: string | null;
+          shop_name: string | null;
+          shop_address: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -621,6 +629,14 @@ export interface Database {
           status?: ContractStatus;
           memo?: string | null;
           offline_sale_id?: string | null;
+          delivery_method?: string;
+          unavailable_days?: string | null;
+          deposit_amount?: number;
+          balance_amount?: number;
+          seller_signature?: string | null;
+          customer_title?: string | null;
+          shop_name?: string | null;
+          shop_address?: string | null;
           created_by?: string | null;
         };
         Update: {
@@ -642,6 +658,14 @@ export interface Database {
           status?: ContractStatus;
           memo?: string | null;
           offline_sale_id?: string | null;
+          delivery_method?: string;
+          unavailable_days?: string | null;
+          deposit_amount?: number;
+          balance_amount?: number;
+          seller_signature?: string | null;
+          customer_title?: string | null;
+          shop_name?: string | null;
+          shop_address?: string | null;
         };
       };
       contract_items: {

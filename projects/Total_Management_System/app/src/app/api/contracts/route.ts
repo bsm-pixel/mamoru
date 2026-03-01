@@ -84,6 +84,15 @@ export async function POST(req: NextRequest) {
         signed_at: contract.signature_data ? new Date().toISOString() : null,
         status,
         memo: contract.memo || null,
+        // 전자문서 확장 필드
+        delivery_method: contract.delivery_method || 'shipping',
+        unavailable_days: contract.unavailable_days || null,
+        deposit_amount: contract.deposit_amount || 0,
+        balance_amount: contract.balance_amount || 0,
+        seller_signature: contract.seller_signature || null,
+        customer_title: contract.customer_title || null,
+        shop_name: contract.shop_name || null,
+        shop_address: contract.shop_address || null,
         created_by: user.id,
       })
       .select()
