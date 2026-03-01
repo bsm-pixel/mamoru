@@ -68,3 +68,31 @@ export function useCreateCustomer() {
     },
   });
 }
+
+/** 이카운트 거래처 → TMS 일괄 동기화 */
+export function useSyncEcountCustomers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/customers/sync-ecount', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{
+        total: number;
+        existing: number;
+        inserted: number;
+        message: string;
+      }>;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message);
+      queryClient.invalidateQueries({ queryKey: ['customer-search'] });
+    },
+    onError: (err) => {
+      toast.error('이카운트 동기화 실패: ' + String(err));
+    },
+  });
+}

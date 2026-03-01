@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Search, X, Plus, User, Loader2 } from 'lucide-react';
-import { useCustomerSearch, useCreateCustomer, type CustomerResult } from '@/hooks/use-customers';
+import { Search, X, Plus, User, Loader2, RefreshCw } from 'lucide-react';
+import { useCustomerSearch, useCreateCustomer, useSyncEcountCustomers, type CustomerResult } from '@/hooks/use-customers';
 
 export interface SelectedCustomer {
   id: string;
@@ -47,6 +47,7 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
 
   const { data: results = [], isLoading } = useCustomerSearch(debouncedQuery);
   const createCustomer = useCreateCustomer();
+  const syncEcount = useSyncEcountCustomers();
 
   // 디바운스 검색
   const handleQueryChange = useCallback((value: string) => {
@@ -226,16 +227,28 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
   // 검색 상태
   return (
     <div ref={containerRef} className="relative">
-      <div className="relative">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => handleQueryChange(e.target.value)}
-          onFocus={() => { if (debouncedQuery.length >= 2) setShowDropdown(true); }}
-          placeholder="고객명 또는 전화번호 검색..."
-          className="w-full h-9 pl-8 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-        />
+      <div className="flex gap-1.5">
+        <div className="relative flex-1">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            onFocus={() => { if (debouncedQuery.length >= 2) setShowDropdown(true); }}
+            placeholder="고객명 또는 전화번호 검색..."
+            className="w-full h-9 pl-8 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+          />
+        </div>
+        {/* 이카운트 거래처 동기화 */}
+        <button
+          type="button"
+          onClick={() => syncEcount.mutate()}
+          disabled={syncEcount.isPending}
+          title="이카운트 거래처 동기화"
+          className="h-9 px-2 rounded-lg border border-neutral-200 bg-warm-ivory hover:bg-neutral-100 text-neutral-500 hover:text-terracotta disabled:opacity-50 shrink-0"
+        >
+          <RefreshCw size={14} className={syncEcount.isPending ? 'animate-spin' : ''} />
+        </button>
       </div>
 
       {/* 드롭다운 */}
