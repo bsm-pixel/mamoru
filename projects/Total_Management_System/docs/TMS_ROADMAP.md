@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-03-01 (고객 자동완성 + 신규등록 + 이카운트 자동 동기화 구현)
+> 최종 수정: 2026-03-01 (Phase A~F 자체 ERP 전환 완료 — 이카운트 제거 + 고객/제품/매입/재고/회계 구축)
 
 ---
 
@@ -14,18 +14,23 @@
 - [ ] Make Router에 복원수리 5종 분기 추가
 - [ ] BC 버튼 chatExtra 메타데이터 통일 (`#{name}_REPAIR`)
 
-### 2순위: 판매 + 고객 UX 개선 ✅ 완료 (2026-03-01)
-- [x] 고객 자동완성 검색 (GET /api/customers/search + CustomerAutocomplete 공유 컴포넌트)
-- [x] 고객 신규등록 (POST /api/customers — TMS + 이카운트 거래처 MM-NNN 동시등록)
-- [x] 판매 저장 시 이카운트 자동 동기화 (POST /api/sales 내부 saveSale 자동 호출)
-- [x] 계약서 입력에도 CustomerAutocomplete 적용 (email/address 확장)
-
-### 3순위: UI 동작 검증 (수동)
-- [ ] /sales/new 판매입력 동작 확인
+### 2순위: UI 동작 검증 (수동)
+- [ ] /sales/new 판매입력 동작 확인 (딜러 고객 시 도매가 자동 적용)
 - [ ] /contracts/new 서명 캔버스 모바일 동작 확인
 - [ ] /products/[id]/serials 시리얼 등록 동작 확인
+- [ ] /customers 고객 목록/상세 동작 확인
+- [ ] /products/new 제품 등록 (3단 가격) 동작 확인
+- [ ] /purchasing/new 발주 작성 → 입고 → 재고 증가 흐름 확인
+- [ ] /inventory 재고 현황 표시 + 저재고 필터 확인
+- [ ] /reports 회계 리포트 + 엑셀 다운로드 확인
+- [ ] /reports/transaction 거래내역서 인쇄 확인
 
 ### ✅ 완료된 이전 할 일
+- [x] **Phase A~F 자체 ERP 전환 완료** (2026-03-01) — 아래 Phase ERP 섹션 참조
+- [x] 고객 자동완성 검색 (GET /api/customers/search + CustomerAutocomplete 공유 컴포넌트)
+- [x] 고객 신규등록 (POST /api/customers)
+- [x] 판매 저장 시 이카운트 자동 동기화 → 이카운트 코드 제거 후 TMS 단독 관리
+- [x] 계약서 입력에도 CustomerAutocomplete 적용 (email/address 확장)
 - [x] 이카운트 ERP 6/6 API 검증 + 정식 인증키 + 프로덕션 검증 (2026-02-28)
 - [x] GAS Script Properties 설정 (TMS_REPAIR_SYNC_URL, CRON_SECRET) (2026-02-28)
 - [x] 복원수리 접수 → GAS → TMS 동기화 테스트 통과 (2026-02-28)
@@ -269,23 +274,20 @@
 
 ---
 
-## Phase 5: 오프라인 판매 + 이카운트 연동 ✅ 완료
+## Phase 5: 오프라인 판매 ✅ 완료 (이카운트 → Phase ERP-A에서 제거)
 
-**목적:** 오프라인 판매 기록 + 이카운트 ERP 판매전표 자동 연동
+**목적:** 오프라인 판매 기록 관리 (이카운트 연동은 Phase ERP-A에서 제거, TMS 단독 관리로 전환)
 
 | # | 작업 | 상태 | 설명 |
 |---|------|------|------|
-| 5-1 | DB 마이그레이션 007 | ✅ | offline_sales + offline_sale_items + customers.ecount_customer_code |
-| 5-2 | 이카운트 API 클라이언트 | ✅ | lib/ecount/ — client(인증/세션), sales(전표), customer(거래처), inventory(재고) |
-| 5-3 | API Routes + Hooks | ✅ | /api/sales CRUD + /api/sales/ecount-sync + use-sales.ts |
+| 5-1 | DB 마이그레이션 007 | ✅ | offline_sales + offline_sale_items |
+| 5-2 | ~~이카운트 API 클라이언트~~ | ❌ | Phase ERP-A에서 삭제됨 (lib/ecount/ 제거) |
+| 5-3 | API Routes + Hooks | ✅ | /api/sales CRUD + use-sales.ts |
 | 5-4 | 판매관리 UI | ✅ | /sales 목록 + /sales/new 입력(제품 카드형) + /sales/[id] 상세 |
 | 5-5 | NAV 추가 | ✅ | 사이드바+모바일 판매관리 메뉴 (Store 아이콘) |
 
-### 잔여 작업
-- [x] 이카운트 환경변수 설정 + 테스트 인증키 6/6 검증 (2026-02-27)
-- [x] lib/ecount/ 엔드포인트 전체 수정 (oapi/sboapi 자동 분기)
-- [x] **정식 인증키 발급** + oapi 도메인 검증 + Vercel 환경변수 설정 + 프로덕션 검증 완료 (2026-02-28)
-- [ ] 온라인 주문 → 이카운트 자동 전표 연동 (현재 오프라인만)
+> **참고:** 이카운트 연동 코드(lib/ecount/, /api/sales/ecount-sync 등)는 Phase ERP-A(2026-03-01)에서 완전 제거됨.
+> 판매 VAT 자동계산, 시리얼 연결, 딜러 가격 자동적용은 Phase ERP-A/C에서 추가됨.
 
 ---
 
@@ -406,6 +408,92 @@
 
 ---
 
+## Phase ERP: 자체 ERP 전환 (이카운트 제거 + 도소매/매입/재고/회계) ✅ 완료 (2026-03-01)
+
+**목적:** 이카운트 ERP 제거 → TMS 단일 시스템에서 판매·고객·제품·매입·재고·회계 직접 관리
+**배경:** 이카운트 API 쓰기 전용(조회 불가), 사용 기능 5가지 미만, 간이사업자로 복잡한 ERP 불필요
+**효과:** 이카운트 구독 비용 절약 + 이중 관리 해소 + 맞춤 UI/UX
+
+### Phase A: 이카운트 제거 + 판매 강화 ✅
+| # | 작업 | 상태 | 구현 내용 |
+|---|------|------|-----------|
+| A-1 | 이카운트 코드 제거 | ✅ | lib/ecount/ 6파일 삭제 + API/훅/페이지에서 이카운트 참조 제거 |
+| A-2 | 판매 VAT 자동 계산 | ✅ | supply_amount/vat_amount 컬럼 + calcVAT() 유틸 + UI 표시 |
+| A-3 | 판매 시 시리얼 연결 | ✅ | SerialPicker + 판매 생성 시 시리얼 status→sold 전환 |
+| A-4 | 모바일 네비 개선 | ✅ | 5탭(대시보드/판매/상담/복원수리/더보기) + 바텀시트 |
+- 커밋: `0beab17` — 22 파일, +462/-896줄
+- DB: 011_remove_ecount.sql, 012_sales_vat.sql
+
+### Phase B: 고객 관리 ✅
+| # | 작업 | 상태 | 구현 내용 |
+|---|------|------|-----------|
+| B-1 | 고객 유형 시스템 | ✅ | customer_type (retail/online/dealer/supplier) + company_name + memo + outstanding_balance |
+| B-2 | 고객 목록 페이지 | ✅ | /customers — 검색 + 유형 필터 + 판매액/미수금 표시 + 페이지네이션 |
+| B-3 | 고객 상세 페이지 | ✅ | /customers/[id] — 인라인 편집 + 판매/계약/상담 관련내역 + 요약 카드 |
+| B-4 | NAV 활성화 | ✅ | '고객' 메뉴 활성화 (Users 아이콘) |
+- 커밋: `78fe991`
+- DB: 013_customer_type.sql
+
+### Phase C: 제품 관리 강화 ✅
+| # | 작업 | 상태 | 구현 내용 |
+|---|------|------|-----------|
+| C-1 | 3단 가격 체계 | ✅ | price(소매) + price_dealer(도매) + price_purchase(매입가) |
+| C-2 | 제품 등록/상세 | ✅ | /products/new + /products/[id] — 가격/매입처/아임웹매핑/바코드/설명 |
+| C-3 | 딜러 가격 자동 적용 | ✅ | 판매 입력 시 customer_type=dealer → price_dealer 자동 적용 |
+| C-4 | 아임웹 매핑 | ✅ | imweb_product_no 필드 (수동 매핑, API 제약으로 동기화 불가) |
+- 커밋: `64b3b0b`
+- DB: 014_product_prices.sql
+
+### Phase D: 매입 관리 ✅
+| # | 작업 | 상태 | 구현 내용 |
+|---|------|------|-----------|
+| D-1 | 발주 시스템 | ✅ | purchase_orders + items 테이블, PO-YYYYMMDD-NNN 자동 채번 |
+| D-2 | 발주 목록/작성 | ✅ | /purchasing — 상태별 탭 + /purchasing/new 제품 선택형 작성 |
+| D-3 | 발주 상세/액션 | ✅ | /purchasing/[id] — 발주확정/선납/입고/잔금/취소 상태 전환 |
+| D-4 | 입고 시 재고 증가 | ✅ | received 전환 시 products.stock_quantity 자동 증가 |
+| D-5 | NAV 추가 | ✅ | '매입관리' (Truck 아이콘) |
+- 커밋: `617957c`
+- DB: 015_purchasing.sql
+- 상태 흐름: draft → ordered → deposit_paid → received → balance_paid | cancelled
+
+### Phase E: 재고 관리 강화 ✅
+| # | 작업 | 상태 | 구현 내용 |
+|---|------|------|-----------|
+| E-1 | 창고 구분 | ✅ | product_serials.warehouse_zone (storage/display) |
+| E-2 | 미입고 수량 | ✅ | v_pending_stock 뷰 (발주 진행 중 수량) |
+| E-3 | 재고 대시보드 | ✅ | /inventory — 요약 카드(총재고/미입고/저재고/원가) + 카테고리 탭 + 저재고 필터 + 정렬 |
+| E-4 | NAV 추가 | ✅ | '재고' (Boxes 아이콘) |
+- 커밋: `bcd8cae`
+- DB: 016_inventory.sql
+
+### Phase F: 회계 리포트 ✅
+| # | 작업 | 상태 | 구현 내용 |
+|---|------|------|-----------|
+| F-1 | 집계 API | ✅ | /api/reports/summary — 기간별 매출/매입/VAT/일별 추이 |
+| F-2 | 엑셀 내보내기 | ✅ | /api/reports/export — xlsx 패키지로 매출/매입 엑셀 다운로드 |
+| F-3 | 리포트 허브 | ✅ | /reports — 기간 프리셋 + 매출/매입/VAT 요약 카드 + 일별 바 차트 |
+| F-4 | 거래내역서 | ✅ | /reports/transaction — 고객별 그룹핑 + @media print A4 + 서명란 |
+| F-5 | NAV 추가 | ✅ | '회계' (BarChart3 아이콘) |
+- 커밋: `dd9cedd` — 10 파일, +966줄
+- DB 변경 없음 (기존 테이블 조회만)
+
+### DB 마이그레이션 총괄 (Phase ERP)
+| # | 파일 | 내용 |
+|---|------|------|
+| 011 | 011_remove_ecount.sql | ecount 기본값 제거 (컬럼 유지) |
+| 012 | 012_sales_vat.sql | 판매 VAT 분리 (supply_amount, vat_amount) |
+| 013 | 013_customer_type.sql | 고객 유형 + 메모 + 미수금 |
+| 014 | 014_product_prices.sql | 도매가 + 매입가 + 매입처 + 아임웹 매핑 |
+| 015 | 015_purchasing.sql | 발주 테이블 (purchase_orders + items) |
+| 016 | 016_inventory.sql | 창고 구분 + 미입고 수량 뷰 |
+
+### NAV 메뉴 (12개 — PC 사이드바)
+```
+대시보드 | 주문관리 | 상담관리 | 복원수리 | 판매관리 | 계약서 | 고객 | 제품 | 매입관리 | 재고 | 회계 | 설정
+```
+
+---
+
 ## Phase R (대규모 리모델) ✅ 코드 구현 완료 / 운영 연동 진행 중
 
 > R1(복원수리) → R2(상담) → R3(허브) → R4(주문) → R5(오프라인판매+이카운트) → R6(계약서) → R7(시리얼)
@@ -422,11 +510,11 @@
 | R7 | 시리얼넘버/바코드 (단건/일괄 등록+상태 추적) | ✅ | 🔧 UI동작 확인 |
 
 ### 남은 운영 연동 작업 요약
-1. ~~**이카운트**: 환경변수 → 세션 테스트~~ ✅ 프로덕션 검증 완료 (2026-02-28)
+1. ~~**이카운트**: 환경변수 → 세션 테스트~~ ✅ 프로덕션 검증 완료 (2026-02-28) → ❌ Phase ERP-A에서 제거
 2. **솔라피**: 복원수리 5종 + 계약서 1종 템플릿 등록 → 검수 제출
 3. **Make**: 복원수리 5종 분기 추가
 4. **GAS**: Script Properties 설정 → 복원수리 동기화 E2E
-5. **UI 확인**: 판매입력 / 계약서 서명(모바일) / 시리얼 등록
+5. **UI 확인**: Phase ERP 전체 모듈 동작 검증 (고객/제품/매입/재고/회계 포함)
 
 ---
 
@@ -454,6 +542,17 @@
 ---
 
 ## 작업 일지
+
+### 2026-03-01 (Phase ERP A~F: 자체 ERP 전환)
+- **Phase A**: 이카운트 코드 완전 제거 (6파일 삭제) + 판매 VAT 자동계산 + 시리얼 연결 + 모바일 5탭 네비
+- **Phase B**: 고객 관리 (목록/상세/유형필터 retail/online/dealer/supplier)
+- **Phase C**: 제품 강화 (3단 가격: 소매/도매/매입가 + 아임웹 매핑 + 딜러 가격 자동적용)
+- **Phase D**: 매입관리 (발주 작성/상세/상태전환 + 입고 시 재고 자동 증가)
+- **Phase E**: 재고 현황 (창고 구분 storage/display + 미입고 수량 + 저재고 알림 + 원가 집계)
+- **Phase F**: 회계 리포트 (매출/매입/VAT 집계 + 일별 추이 + 엑셀 내보내기 + 거래내역서 인쇄)
+- DB 마이그레이션: 011~016 (6개)
+- 커밋 6개: `0beab17` → `78fe991` → `64b3b0b` → `617957c` → `bcd8cae` → `dd9cedd`
+- NAV 12개 완성: 대시보드/주문/상담/복원수리/판매/계약서/고객/제품/매입/재고/회계/설정
 
 ### 2026-02-26 (R1~R7 대규모 리모델)
 - R1~R7 전체 코드 구현 + 빌드 통과
