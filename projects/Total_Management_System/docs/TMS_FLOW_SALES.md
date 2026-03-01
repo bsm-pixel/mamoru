@@ -118,13 +118,20 @@ ECOUNT_TEST_MODE=false  (정식: oapi / 테스트: sboapi)
 
 ---
 
-## 4. 미완료 ❌
+## 4-A. 추가 구현 완료 ✅ (2026-03-01)
+
+| 항목 | 구현 내용 |
+|------|-----------|
+| 고객 자동완성 | GET /api/customers/search — 이름/전화번호 ILIKE 검색, CustomerAutocomplete 공유 컴포넌트 |
+| 고객 신규등록 + 이카운트 동시 | POST /api/customers — customers INSERT + saveCustomer(MM-NNN 채번) |
+| 판매 저장 시 이카운트 자동 동기화 | POST /api/sales 내부에서 saveSale() 자동 호출, 실패 시 판매는 성공 유지 |
+| 거래처 코드 자동 매핑 | 기존 고객 코드 없으면 판매 시 자동 채번+등록+UPDATE |
+| 계약서 고객 자동완성 | contracts/new에도 CustomerAutocomplete 적용 (email/address 확장 필드) |
+
+## 4-B. 미완료 ❌
 
 | 항목 | 의존성 | 우선순위 |
 |------|--------|----------|
-| 고객 자동완성 (전화번호→기존 고객 검색) | 없음 | 높음 |
-| 고객 신규등록 + 이카운트 거래처 동시등록 | SaveBasicCust API (검증완료) | 높음 |
-| 판매 저장 시 이카운트 자동 동기화 (수동 버튼 제거) | 고객 거래처코드 매핑 | 중간 |
 | 온라인 주문 → 이카운트 매출전표 자동 연동 | 주문모듈 연동 | 중간 |
 | 재고 연동 (판매 시 재고 자동 차감) | 재고 현황 API (검증완료) | 낮음 |
 | 판매 수정/삭제 기능 | 없음 | 낮음 |

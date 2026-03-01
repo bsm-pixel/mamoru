@@ -10,6 +10,7 @@ import { useProducts } from '@/hooks/use-sales';
 import { useCreateContract } from '@/hooks/use-contracts';
 import { formatKRW } from '@/lib/utils/format';
 import { Minus, Plus, Trash2, FileSignature } from 'lucide-react';
+import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
 import type { Product } from '@/lib/supabase/types';
 
 interface CartItem {
@@ -24,6 +25,7 @@ export default function NewContractPage() {
   const createContract = useCreateContract();
 
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -60,12 +62,14 @@ export default function NewContractPage() {
   }
 
   async function handleSubmit() {
-    if (!customerName.trim() || cart.length === 0) return;
+    const name = selectedCustomer?.name || customerName.trim();
+    if (!name || cart.length === 0) return;
 
     await createContract.mutateAsync({
       contract: {
-        customer_name: customerName.trim(),
-        customer_phone: customerPhone.trim() || undefined,
+        customer_id: selectedCustomer?.id || undefined,
+        customer_name: name,
+        customer_phone: selectedCustomer?.phone || customerPhone.trim() || undefined,
         customer_email: customerEmail.trim() || undefined,
         customer_address: customerAddress.trim() || undefined,
         total_amount: totalAmount,
@@ -197,15 +201,36 @@ export default function NewContractPage() {
               )}
             </Card>
 
-            {/* 고객 정보 */}
+            {/* 고객 정보 — 자동완성 */}
             <Card>
               <h3 className="text-sm font-semibold text-indigo-black mb-3">고객 정보</h3>
-              <div className="space-y-2">
-                <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="고객명 *" className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-                <input type="text" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="연락처" className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-                <input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="이메일" className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-                <input type="text" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="주소" className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-              </div>
+              <CustomerAutocomplete
+                selectedCustomer={selectedCustomer}
+                showExtendedFields={true}
+                onSelect={(c) => {
+                  setSelectedCustomer(c);
+                  setCustomerName(c.name);
+                  setCustomerPhone(c.phone || '');
+                  setCustomerEmail(c.email || '');
+                  setCustomerAddress(
+                    [c.address_road, c.address_detail].filter(Boolean).join(' ')
+                  );
+                }}
+                onClear={() => {
+                  setSelectedCustomer(null);
+                  setCustomerName('');
+                  setCustomerPhone('');
+                  setCustomerEmail('');
+                  setCustomerAddress('');
+                }}
+              />
+              {/* 선택 후 이메일/주소 수동 수정 가능 */}
+              {selectedCustomer && (
+                <div className="space-y-2 mt-2">
+                  <input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="이메일" className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                  <input type="text" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="주소" className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                </div>
+              )}
             </Card>
 
             {/* 결제 */}
@@ -246,7 +271,7 @@ export default function NewContractPage() {
 
             <Button
               className="w-full"
-              disabled={!customerName.trim() || cart.length === 0 || createContract.isPending}
+              disabled={(!selectedCustomer && !customerName.trim()) || cart.length === 0 || createContract.isPending}
               onClick={handleSubmit}
             >
               {createContract.isPending ? '생성 중...' : `계약서 생성 (${formatKRW(finalAmount)})`}

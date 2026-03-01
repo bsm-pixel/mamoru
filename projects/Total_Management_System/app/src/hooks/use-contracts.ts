@@ -71,6 +71,7 @@ export function useCreateContract() {
   return useMutation({
     mutationFn: async (data: {
       contract: {
+        customer_id?: string;
         customer_name: string;
         customer_phone?: string;
         customer_email?: string;

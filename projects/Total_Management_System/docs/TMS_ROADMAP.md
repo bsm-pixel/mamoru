@@ -1,36 +1,34 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-02-28 (이카운트 프로덕션 검증 완료 + 연동 흐름도 문서화 + 폴더 정리)
+> 최종 수정: 2026-03-01 (고객 자동완성 + 신규등록 + 이카운트 자동 동기화 구현)
 
 ---
 
-## 🔴 내일 할 일 (2026-02-27)
+## 🔴 다음 할 일 (2026-03-01 기준)
 
-### 1순위: 이카운트 ERP 연동 (R5)
-- [x] **테스트 인증키 발급** (2026-02-27 완료)
-- [x] `.env.local` 설정 (COM_CODE, USER_ID, API_CERT_KEY, ZONE=AA, TEST_MODE=true)
-- [x] ERP 웹자료올리기 항목 추가
-- [x] **6/6 API 검증 완료** (sboapi도메인: 로그인/SaveSale/SaveCust/ProductList/SaveProduct/InvBalance)
-- [x] lib/ecount/ 전체 경로 수정 (oapi→sboapi 분기 + AccountBasic/InventoryBasic/InventoryBalance)
-- [x] **정식 인증키 발급** (1년 유효) + oapi 도메인 전환 3/3 검증 완료
-- [x] Vercel 환경변수 설정 + 프로덕션 검증 완료 (로그인/품목786/재고123) (2026-02-28)
-
-### 2순위: 솔라피 템플릿 등록 + Make 분기 (Phase 4/7)
-- [ ] 복원수리 알림톡 5종 솔라피 템플릿 등록 (as_received / as_inspected / as_payment_confirmed / as_shipped / as_satisfaction)
-- [ ] 계약서 알림톡 템플릿 1종 등록
-- [ ] Make Router에 복원수리 5종 분기 추가
+### 1순위: 솔라피 + Make (외부 서비스 설정)
+- [ ] 복원수리 알림톡 5종 솔라피 템플릿 등록 (as_received / as_cost_notice / as_payment_confirmed / as_shipped / as_satisfaction)
+- [ ] 계약서 알림톡 1종 솔라피 템플릿 등록
 - [ ] 솔라피 검수 제출 (상담 17종 + 복원수리 5종 + 계약서 1종)
+- [ ] Make Router에 복원수리 5종 분기 추가
+- [ ] BC 버튼 chatExtra 메타데이터 통일 (`#{name}_REPAIR`)
 
-### 3순위: GAS 연동 확인 + E2E 테스트 (Phase 7)
-- [ ] GAS Script Properties 설정 (`TMS_REPAIR_SYNC_URL`, `TMS_BASE_URL`, `CRON_SECRET`)
-- [ ] 복원수리 접수 → GAS → TMS 동기화 E2E 테스트
-- [ ] 복원수리 전체 플로우 검증: 접수 → 접수확인 → 입고&비용안내 → 입금 → 송장생성 → 출고완료
+### 2순위: 판매 + 고객 UX 개선 ✅ 완료 (2026-03-01)
+- [x] 고객 자동완성 검색 (GET /api/customers/search + CustomerAutocomplete 공유 컴포넌트)
+- [x] 고객 신규등록 (POST /api/customers — TMS + 이카운트 거래처 MM-NNN 동시등록)
+- [x] 판매 저장 시 이카운트 자동 동기화 (POST /api/sales 내부 saveSale 자동 호출)
+- [x] 계약서 입력에도 CustomerAutocomplete 적용 (email/address 확장)
 
-### 4순위: UI 디테일 확인
-- [ ] /sales/new 판매입력 UI 동작 확인 (제품 선택, 수량, 결제방법)
-- [ ] /contracts/new 계약서 작성 UI 서명 캔버스 동작 확인 (모바일/태블릿)
-- [ ] /products/[id]/serials 시리얼 단건/일괄 등록 동작 확인
+### 3순위: UI 동작 검증 (수동)
+- [ ] /sales/new 판매입력 동작 확인
+- [ ] /contracts/new 서명 캔버스 모바일 동작 확인
+- [ ] /products/[id]/serials 시리얼 등록 동작 확인
+
+### ✅ 완료된 이전 할 일
+- [x] 이카운트 ERP 6/6 API 검증 + 정식 인증키 + 프로덕션 검증 (2026-02-28)
+- [x] GAS Script Properties 설정 (TMS_REPAIR_SYNC_URL, CRON_SECRET) (2026-02-28)
+- [x] 복원수리 접수 → GAS → TMS 동기화 테스트 통과 (2026-02-28)
 
 ---
 

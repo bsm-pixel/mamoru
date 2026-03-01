@@ -116,7 +116,14 @@ export function useCreateSale() {
       return res.json();
     },
     onSuccess: (data) => {
-      toast.success(`판매 등록 완료: ${data.saleNumber}`);
+      if (data.ecountSyncStatus === 'synced') {
+        toast.success(`판매 등록 + 이카운트 동기화 완료: ${data.saleNumber}`);
+      } else if (data.ecountSyncStatus === 'failed') {
+        toast.success(`판매 등록 완료: ${data.saleNumber}`);
+        toast('이카운트 동기화 실패 — 상세 페이지에서 재시도', { icon: '⚠️' });
+      } else {
+        toast.success(`판매 등록 완료: ${data.saleNumber}`);
+      }
       queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
     },
