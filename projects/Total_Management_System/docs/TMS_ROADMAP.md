@@ -26,6 +26,7 @@
 - [ ] /reports/transaction 거래내역서 인쇄 확인
 
 ### ✅ 완료된 이전 할 일
+- [x] **간편진단 태블릿 PWA** (2026-03-01) — `/diagnosis` 13개 질문 조건부 분기, manifest 분리, 결과 테이블
 - [x] **Phase A~F 자체 ERP 전환 완료** (2026-03-01) — 아래 Phase ERP 섹션 참조
 - [x] 고객 자동완성 검색 (GET /api/customers/search + CustomerAutocomplete 공유 컴포넌트)
 - [x] 고객 신규등록 (POST /api/customers)
