@@ -10,6 +10,7 @@ export const NAV_ITEMS = [
   { label: '제품', href: '/products', icon: 'Package', matchPrefix: '/products' },
   { label: '매입관리', href: '/purchasing', icon: 'Truck', matchPrefix: '/purchasing' },
   { label: '재고', href: '/inventory', icon: 'Boxes', matchPrefix: '/inventory' },
+  { label: '회계', href: '/reports', icon: 'BarChart3', matchPrefix: '/reports' },
   { label: '설정', href: '/settings', icon: 'Settings', matchPrefix: '/settings' },
 ] as const;
 
