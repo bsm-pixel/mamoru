@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await db
       .from('customers')
-      .select('id, name, phone, email, address_road, address_detail, postcode, ecount_customer_code, source')
+      .select('id, name, phone, email, address_road, address_detail, postcode, ecount_customer_code, source, customer_type, company_name')
       .or(orFilter)
       .order('name')
       .limit(10);

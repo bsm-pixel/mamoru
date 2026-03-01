@@ -83,14 +83,18 @@ export interface Database {
           address_road: string | null;
           address_detail: string | null;
           source: 'imweb' | 'consultation' | 'as' | 'manual';
+          customer_type: 'retail' | 'online' | 'dealer' | 'supplier';
+          company_name: string | null;
+          memo: string | null;
+          outstanding_balance: number;
           total_orders: number;
           total_spent: number;
-          ecount_customer_code: string | null;  // R5: 이카운트 거래처 코드
+          ecount_customer_code: string | null;  // legacy
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['customers']['Row'], 'id' | 'created_at' | 'updated_at' | 'phone_normalized' | 'total_orders' | 'total_spent' | 'ecount_customer_code'>;
-        Update: Partial<Database['public']['Tables']['customers']['Insert']> & { ecount_customer_code?: string | null };
+        Insert: Omit<Database['public']['Tables']['customers']['Row'], 'id' | 'created_at' | 'updated_at' | 'phone_normalized' | 'total_orders' | 'total_spent' | 'ecount_customer_code' | 'outstanding_balance'>;
+        Update: Partial<Database['public']['Tables']['customers']['Insert']>;
       };
       orders: {
         Row: {

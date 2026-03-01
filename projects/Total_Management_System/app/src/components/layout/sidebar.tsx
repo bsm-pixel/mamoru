@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { NAV_ITEMS, NAV_ITEMS_FUTURE } from '@/lib/utils/constants';
+import { NAV_ITEMS } from '@/lib/utils/constants';
 
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -62,26 +62,6 @@ export function Sidebar() {
           );
         })}
 
-        {/* 구분선 */}
-        <div className="pt-4 pb-2">
-          <div className="h-px bg-white/8" />
-          <p className="text-[10px] text-cream/30 uppercase tracking-widest mt-3 mb-1 px-3">
-            Coming Soon
-          </p>
-        </div>
-
-        {NAV_ITEMS_FUTURE.map((item) => {
-          const Icon = iconMap[item.icon];
-          return (
-            <span
-              key={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-cream/25 cursor-not-allowed"
-            >
-              {Icon && <Icon size={18} />}
-              {item.label}
-            </span>
-          );
-        })}
       </nav>
     </aside>
   );
