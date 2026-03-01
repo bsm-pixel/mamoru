@@ -1,0 +1,26 @@
+{
+  "id": "mamoru-diagnosis",
+  "name": "MAMORU 간편진단",
+  "short_name": "간편진단",
+  "description": "MAMORU 가위 간편진단",
+  "start_url": "/diagnosis",
+  "scope": "/diagnosis",
+  "display": "fullscreen",
+  "background_color": "#F2F2EA",
+  "theme_color": "#181725",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -101,3 +101,12 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--mm-neutral-300); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--mm-neutral-400); }
+
+/* 간편진단 전환 애니메이션 */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeInUp 0.3s ease-out;
+}
