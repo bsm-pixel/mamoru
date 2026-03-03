@@ -16,6 +16,8 @@ const CAL_NAME = '마모루 방문예약';
 const BUSINESS = { startHour: 10, endHour: 20, durMin: 60 };
 const SLOT_STEP_MIN_DEFAULT = 10;
 const HOLD_PREFIX = '[HOLD]';
+/** BC 버튼 chatExtra용 영문 타입 코드 (한글 → 영문) */
+function typeCode_(t){ t=String(t||''); if(t.indexOf('출장')!==-1) return 'FIELD'; if(t.indexOf('톡')!==-1) return 'TALK'; return 'STORE'; }
 /**
  * 캘린더 이벤트 제목을 만드는 공통 함수
  * - row: 상담접수 행 객체 (name, phone, address 등을 포함)
@@ -684,6 +686,7 @@ function safeClose(){
         name: trInfo.name,
         phone: trInfo.phone,
         type: trInfo.type,
+        type_code: typeCode_(trInfo.type),
         channel: 'kakao',
         sms_fallback: false
       };
@@ -1016,6 +1019,7 @@ function submitConsultation(form){
     name,
     phone,
     type,
+    type_code: 'STORE',  // BC 버튼 chatExtra용 영문 코드
     date:     visitDate,
     time:     visitTime,
     address,
@@ -1043,6 +1047,7 @@ function submitConsultation(form){
       name,
       phone,
       type,
+      type_code: typeCode_(type),
       date:     visitDate,
       time:     visitTime,
       address,
@@ -1075,6 +1080,7 @@ function submitConsultation(form){
         name: name,
         phone: phone,
         type: type,
+        type_code: typeCode_(type),
         channel: 'kakao',
         sms_fallback: false
       });
@@ -1216,6 +1222,7 @@ function confirmByToken_(token){
       name,
       phone,
       type,
+      type_code: typeCode_(type),
       date:     dtStr,
       time:     tmStr,
       address:  addrText || '',
@@ -1410,6 +1417,7 @@ function adminCancel(uid, options){
         topic: 'alrimtalk',
         template: cancelIsField ? 'field_cancelled' : 'cancelled',   // ★ 출장/매장 분기
         id: r[col['UniqueID']], name: r[col['성함']], phone: r[col['연락처']], type: r[col['상담방식']],
+        type_code: typeCode_(r[col['상담방식']]),
         date: visitDate, time: visitTime,
         address: cancelAddr,  // 출장이면 주소 포함
         channel: 'kakao', sms_fallback: false
@@ -1455,6 +1463,7 @@ function adminFieldDelay(uid, delayMin) {
     name: info.name,
     phone: info.phone,
     type: info.type,
+    type_code: typeCode_(info.type),
     date: info.date,
     time: info.time,
     delay_min: String(delayMin),
@@ -1578,6 +1587,7 @@ function adminReschedule(uid, newDate, newTime){
     name,
     phone,
     type,
+    type_code: typeCode_(type),
     old_date: oldDate,
     old_time: oldTime,
     new_date: newDate,
@@ -2037,6 +2047,7 @@ function adminSuggestTimes(uid, suggestions){
     token: shortTok,
     name: nameRaw,
     phone,                     // Solapi to
+    type_code: 'FIELD',        // suggest는 항상 출장
     confirm_link,              // #{confirm_link}
     resched_link,              // #{resched_link}
     suggest1,                  // #{제안1}
@@ -2218,6 +2229,7 @@ function sendReminders_() {
           name: r[col['성함']],
           phone: r[col['연락처']],
           type: r[col['상담방식']],
+          type_code: typeCode_(r[col['상담방식']]),
           date: dt,
           time: tm,
           address: addrText,
@@ -2248,6 +2260,7 @@ function sendReminders_() {
           name: r[col['성함']],
           phone: r[col['연락처']],
           type: r[col['상담방식']],
+          type_code: typeCode_(r[col['상담방식']]),
           date: dt,
           time: tm,
           address: addrText,
@@ -2335,7 +2348,7 @@ function cleanupExpiredHolds_(){
             const toYMD = v => v instanceof Date ? Utilities.formatDate(v, TIMEZONE, 'yyyy-MM-dd') : String(v).slice(0, 10);
             const toHM = v => v instanceof Date ? Utilities.formatDate(v, TIMEZONE, 'HH:mm') : String(v).slice(0, 5);
             try {
-              const payloadX = { topic: 'alrimtalk', template: 'expired', event: 'HOLD_EXPIRED', id: rows[i][col['UniqueID']], name: rows[i][col['성함']], phone: rows[i][col['연락처']], type: rows[i][col['상담방식']], date: toYMD(rows[i][col['방문일']]), time: toHM(rows[i][col['방문시간']]), trigger: 'time' };
+              const payloadX = { topic: 'alrimtalk', template: 'expired', event: 'HOLD_EXPIRED', id: rows[i][col['UniqueID']], name: rows[i][col['성함']], phone: rows[i][col['연락처']], type: rows[i][col['상담방식']], type_code: typeCode_(rows[i][col['상담방식']]), date: toYMD(rows[i][col['방문일']]), time: toHM(rows[i][col['방문시간']]), trigger: 'time' };
               const r = postMake_('HOLD_EXPIRED', payloadX);
               if (r && r.ok) makeSent++;
             } catch(e){ errors++; Logger.log('Make webhook (expired) error: ' + e); }
@@ -2648,6 +2661,7 @@ function confirmFieldRequest_(uid, datetime) {
   id:       uid,
   name,
   phone,
+  type_code: 'FIELD',  // field_confirmed는 항상 출장
   date,
   time,
   // ★ 추가: 방문 주소 (도로명+상세, 없으면 '주소' 컬럼)
@@ -2798,6 +2812,7 @@ function submitChangeRequest_(uid, reqType, reason, memo, hopeDate) {
       id: uid,
       name: info.name,
       phone: info.phone,
+      type_code: typeCode_(info.type),
       date: info.date,
       time: info.time,
       address: info.address || '',
