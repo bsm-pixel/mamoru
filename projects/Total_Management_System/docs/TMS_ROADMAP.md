@@ -1,18 +1,19 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-03-01 (간편진단 태블릿 PWA 앱 추가 — /diagnosis 라우트, 13개 질문 조건부 분기)
+> 최종 수정: 2026-03-03 (솔라피 23종 검수 승인 + BC 메타데이터 제거 + Make Router 진행 + TMS 일정변경 알림톡 버그 수정)
 
 ---
 
-## 🔴 다음 할 일 (2026-03-01 기준)
+## 🔴 다음 할 일 (2026-03-03 기준)
 
-### 1순위: 솔라피 + Make (외부 서비스 설정)
-- [ ] 복원수리 알림톡 5종 솔라피 템플릿 등록 (as_received / as_cost_notice / as_payment_confirmed / as_shipped / as_satisfaction)
-- [ ] 계약서 알림톡 1종 솔라피 템플릿 등록
-- [ ] 솔라피 검수 제출 (상담 17종 + 복원수리 5종 + 계약서 1종)
-- [ ] Make Router에 복원수리 5종 분기 추가
-- [ ] BC 버튼 chatExtra 메타데이터 통일 (`#{name}_REPAIR`)
+### 1순위: Make Router 연결 + 솔라피 재검수 대기
+- [x] 솔라피 23종 전체 검수 승인 (상담 17종 + 복원수리 5종 + 계약서 1종) ✅ 2026-03-03
+- [x] BC 버튼 chatExtra 한글 불가 발견 → 메타데이터 전체 제거 결정 ✅ 2026-03-03
+- [ ] 솔라피 BC 메타데이터 제거 후 재검수 대기 (1~3 영업일)
+- [ ] Make Router 상담 17종 분기 연결 (진행 중)
+- [ ] Make Router 복원수리 5종 분기 추가
+- [ ] Make Router 계약서 1종 분기 추가
 
 ### 2순위: UI 동작 검증 (수동)
 - [ ] /sales/new 판매입력 동작 확인 (딜러 고객 시 도매가 자동 적용)
@@ -26,6 +27,8 @@
 - [ ] /reports/transaction 거래내역서 인쇄 확인
 
 ### ✅ 완료된 이전 할 일
+- [x] **솔라피 23종 검수 승인 + BC 메타데이터 이슈 해결** (2026-03-03) — 한글 chatExtra 불가 → 메타데이터 제거 + 해피톡 사전 입력 폼으로 대체
+- [x] **TMS 일정변경 알림톡 버그 수정** (2026-03-03) — change_request_link 누락 + template 자동 분기 (rescheduled/field_rescheduled)
 - [x] **간편진단 태블릿 PWA** (2026-03-01) — `/diagnosis` 13개 질문 조건부 분기, manifest 분리, 결과 테이블
 - [x] **Phase A~F 자체 ERP 전환 완료** (2026-03-01) — 아래 Phase ERP 섹션 참조
 - [x] 고객 자동완성 검색 (GET /api/customers/search + CustomerAutocomplete 공유 컴포넌트)
@@ -143,12 +146,12 @@
 - 상태 전이: change_requested → suggested/confirmed/on_hold/cancelled
 
 ### 수동 작업 필요 (솔라피/Make) — Phase 1.6-6
-- [ ] 솔라피: confirmed 템플릿에 "일정확인/변경" WL 버튼 추가 → 재검수
+- [x] 솔라피: change_request_received 템플릿 등록 + 검수 승인 ✅ 2026-03-03
+- [ ] 솔라피: confirmed 템플릿에 "일정확인/변경" WL 버튼 추가 → 재검수 (BC 메타데이터 재검수 시 함께 처리)
 - [ ] 솔라피: rescheduled 템플릿에 "일정확인/변경" WL 버튼 추가 → 재검수
 - [ ] 솔라피: field_confirmed 템플릿에 "일정확인/변경" WL 버튼 추가 → 재검수
-- [ ] 솔라피: change_request_received 신규 템플릿 등록 (출장 전용, 변수: name/date/time/address/request_detail) → 검수
-- [ ] Make: 확정 3개 시나리오에 change_request_link 변수 매핑
-- [ ] Make: CHANGE_REQUEST_RECEIVED 이벤트 분기 + 솔라피 모듈 연결 (변수: name/phone/date/time/address/request_detail)
+- [ ] Make: 확정 3개 시나리오에 change_request_link 변수 매핑 (Make Router 연결 시)
+- [ ] Make: CHANGE_REQUEST_RECEIVED 이벤트 분기 + 솔라피 모듈 연결
 
 ---
 
@@ -199,16 +202,20 @@
 복원수리 (1종): as_received
 ```
 
-### 버튼·메타데이터 설계
+### 버튼·메타데이터 설계 (2026-03-03 최종 확정)
 - WL 버튼: 6개 (일정확인/변경, 일정 선택하기, 복원수리 안내 확인)
-- BC 버튼: 12개 (1:1 문의하기 — 메타데이터 #{type}_#{template}_#{name})
+  - URL에 `https://` 프로토콜 필수 → 솔라피 템플릿에서 `https://#{변수}` 형태
+- BC 버튼: 12개 (1:1 문의하기)
+  - ~~메타데이터 #{type}_#{template}_#{name}~~ → **메타데이터 제거** (한글 chatExtra 3080 에러)
+  - 고객 식별: 해피톡 진입 시 사전 입력 폼(성함/연락처)으로 대체
 - 퀵버튼: 4개 (리마인드용 1:1 문의하기)
-- 메타데이터 → 해피톡 상담사가 고객명+서비스+상태 즉시 파악
 
 ### 잔여 작업
-- [ ] 솔라피 검수 제출 (17종 전체)
-- [ ] Make Router 13개 분기 연결
-- [ ] 검수 승인 후 E2E 테스트
+- [x] 솔라피 검수 제출 (17종 전체) → **승인 완료** ✅ 2026-03-03
+- [x] BC 메타데이터 한글 불가 발견 → 전체 제거 결정 ✅ 2026-03-03
+- [ ] BC 메타데이터 제거 후 솔라피 재검수 대기 (1~3 영업일)
+- [ ] Make Router 17개 분기 연결 (진행 중)
+- [ ] 재검수 승인 후 E2E 테스트
 - [ ] 검수 안정화 후 Make→솔라피 직접 호출 전환 (FLOW_change_request.md 참조)
 
 ---
@@ -257,15 +264,15 @@
 
 ---
 
-## Phase 4: 알림톡 연동 (Make + Solapi) 🔧 솔라피 검수 대기
+## Phase 4: 알림톡 연동 (Make + Solapi) 🔧 검수 승인 완료 / Make 연결 진행 중
 
 **목적:** 주문 상태 변경 시 고객에게 자동 알림톡 발송
 
 | # | 작업 | 상태 | 설명 |
 |---|------|------|------|
 | 4-1 | 일반 주문 알림 | 📋 | 아임웹 자동 알림톡 활용 (TMS 개입 불필요) |
-| 4-2 | 상담 알림톡 13종 분기 | ✅ | Phase 1.8에서 구현 완료 (검수 대기 중) |
-| 4-3 | 복원수리 알림톡 5종 | ✅ | Phase 7에서 구현 (as_received/cost_notice/payment_confirmed/shipped/satisfaction) |
+| 4-2 | 상담 알림톡 17종 분기 | ✅ | Phase 1.8 구현 + 솔라피 검수 승인 (BC 메타데이터 제거 재검수 중) |
+| 4-3 | 복원수리 알림톡 5종 | ✅ | Phase 7 구현 + 솔라피 검수 승인 (BC 메타데이터 제거 재검수 중) |
 | 4-4 | Make → 솔라피 직접 호출 전환 | 📋 | 검수 안정화 후 전환 예정 (비용 절감) |
 
 ### 알림톡 역할 분리
@@ -321,7 +328,7 @@
 
 ### 잔여 작업
 - [ ] 계약서 PDF/이미지 생성 (html2canvas or 서버사이드 렌더링)
-- [ ] 솔라피 계약서 알림톡 템플릿 등록
+- [x] 솔라피 계약서 알림톡 템플릿 등록 + 검수 승인 ✅ 2026-03-03
 
 > 통합 리뷰 시스템: `memory/REVIEW_SYSTEM_BRIEF.md` 참조 (별도 Phase)
 
@@ -413,12 +420,13 @@
 - [x] 수리내역 페이지 TMS API 연동 (page_as_report.html → GitHub Pages + TMS CORS API)
 
 ### 잔여 작업
+- [x] GAS Script Properties 설정 (TMS_REPAIR_SYNC_URL 등) ✅ 2026-02-28
+- [x] 솔라피 복원수리 템플릿 5종 등록/검수 승인 ✅ 2026-03-03
+- [ ] Make Router에 복원수리 5종 분기 추가
+- [ ] BC 메타데이터 제거 후 재검수 대기
 - [ ] **주소 수정 시 다음 주소검색 API 연동** (롯데택배 송장 호환)
 - [ ] 사진 업로드 Supabase Storage 연동 (버킷 생성 필요)
 - [ ] 수리내역서 자동 생성 (Before/After 타임라인 웹카드)
-- [ ] GAS Script Properties 설정 (TMS_REPAIR_SYNC_URL 등)
-- [ ] 솔라피 복원수리 템플릿 5종 등록/검수
-- [ ] Make Router에 복원수리 5종 분기 추가
 - [ ] 사진 마킹 (photo-marker.tsx) — html2canvas 캡처 기능
 
 ---
@@ -527,9 +535,9 @@
 
 ### 남은 운영 연동 작업 요약
 1. ~~**이카운트**: 환경변수 → 세션 테스트~~ ✅ 프로덕션 검증 완료 (2026-02-28) → ❌ Phase ERP-A에서 제거
-2. **솔라피**: 복원수리 5종 + 계약서 1종 템플릿 등록 → 검수 제출
-3. **Make**: 복원수리 5종 분기 추가
-4. **GAS**: Script Properties 설정 → 복원수리 동기화 E2E
+2. ~~**솔라피**: 복원수리 5종 + 계약서 1종 템플릿 등록 → 검수 제출~~ ✅ 23종 전체 검수 승인 (2026-03-03) → BC 메타데이터 제거 재검수 중
+3. **Make**: 상담 17종 Router 연결 진행 중 + 복원수리 5종 + 계약서 1종 연결 예정
+4. ~~**GAS**: Script Properties 설정~~ ✅ 완료 (2026-02-28)
 5. **UI 확인**: Phase ERP 전체 모듈 동작 검증 (고객/제품/매입/재고/회계 포함)
 
 ---
@@ -558,6 +566,20 @@
 ---
 
 ## 작업 일지
+
+### 2026-03-03 (솔라피 검수 승인 + BC 메타데이터 이슈 + Make Router)
+- **솔라피 23종 전체 검수 승인**: 상담 17종 + 복원수리 5종 + 계약서 1종
+- **BC 버튼 chatExtra 한글 불가 발견**: 3080 에러 — 한글 문자가 chatExtra에 포함되면 알림톡 발송 실패 (SMS 대체 발송)
+  - 초기 시도: type_code (STORE/FIELD/TALK) 영문 코드 추가 → name(고객명)도 한글이므로 근본 해결 불가
+  - 최종 결정: BC 버튼 메타데이터 전체 제거 + 해피톡 사전 입력 폼으로 고객 식별 대체
+  - 솔라피 템플릿에서 메타데이터 삭제 후 재검수 요청 완료
+- **TMS 일정변경(reschedule) 알림톡 버그 수정**:
+  - change_request_link 누락 → extraData에 포함하도록 수정
+  - template 자동 분기: store_visit → `rescheduled`, field_request → `field_rescheduled`
+  - reschedule-modal.tsx에 consultationType, uniqueId props 추가
+- **Make Router 연결 시작**: 상담 17종 분기 연결 진행 중 (수동 작업)
+- GAS 배포: v287(type_code 추가), v288(전체 적용), v289(type_code 제거 — 최종)
+- 커밋: 4c6e0d2, 7b94dce, 52dcd3d, cefdfc6, 729e037
 
 ### 2026-03-01 (계약서 전자문서 리디자인)
 - **Phase 6-6~6-9**: 계약서 작성 페이지를 종이 계약서 형태 전자문서 UI로 완전 재작성
