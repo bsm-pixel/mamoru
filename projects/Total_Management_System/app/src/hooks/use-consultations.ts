@@ -322,12 +322,10 @@ export function useRescheduleConsultation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, visitDate, visitTime, oldDate, oldTime, consultationType, uniqueId, notify }: {
+    mutationFn: async ({ id, visitDate, visitTime, consultationType, uniqueId, notify }: {
       id: string;
       visitDate: string;
       visitTime: string;
-      oldDate?: string;
-      oldTime?: string;
       consultationType?: string; // 'store_visit' | 'field_request'
       uniqueId?: string;
       notify?: boolean;
@@ -344,7 +342,7 @@ export function useRescheduleConsultation() {
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
 
-      // 알림톡 발송 (선택) — old/new 날짜 + change_request_link 포함
+      // 알림톡 발송 — change_request_link 포함 (date/time은 notify API가 DB에서 새 값 조회)
       if (notify) {
         const isField = consultationType === 'field_request';
         const template = isField ? 'field_rescheduled' : 'rescheduled';
@@ -358,10 +356,6 @@ export function useRescheduleConsultation() {
             consultationId: id,
             template,
             extraData: {
-              old_date: oldDate || '',
-              old_time: oldTime || '',
-              new_date: visitDate,
-              new_time: visitTime,
               change_request_link: changeLink,
             },
           }),

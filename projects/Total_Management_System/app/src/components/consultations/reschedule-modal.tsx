@@ -28,8 +28,6 @@ export function RescheduleModal({ open, onClose, consultationId, currentDate, cu
         id: consultationId,
         visitDate: date,
         visitTime: time,
-        oldDate: currentDate,
-        oldTime: currentTime,
         consultationType,
         uniqueId,
         notify,
