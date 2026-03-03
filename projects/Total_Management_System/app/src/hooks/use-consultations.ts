@@ -322,10 +322,14 @@ export function useRescheduleConsultation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, visitDate, visitTime, notify }: {
+    mutationFn: async ({ id, visitDate, visitTime, oldDate, oldTime, consultationType, uniqueId, notify }: {
       id: string;
       visitDate: string;
       visitTime: string;
+      oldDate?: string;
+      oldTime?: string;
+      consultationType?: string; // 'store_visit' | 'field_request'
+      uniqueId?: string;
       notify?: boolean;
     }) => {
       const res = await fetch(`/api/consultation/${id}`, {
@@ -340,12 +344,27 @@ export function useRescheduleConsultation() {
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
 
-      // 알림톡 발송 (선택)
+      // 알림톡 발송 (선택) — old/new 날짜 + change_request_link 포함
       if (notify) {
+        const isField = consultationType === 'field_request';
+        const template = isField ? 'field_rescheduled' : 'rescheduled';
+        const changeLink = uniqueId
+          ? `bsm-pixel.github.io/mamoru/projects/consulting/page_change_request.html?uid=${uniqueId}`
+          : '';
         await fetch('/api/consultation/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ consultationId: id, template: 'rescheduled' }),
+          body: JSON.stringify({
+            consultationId: id,
+            template,
+            extraData: {
+              old_date: oldDate || '',
+              old_time: oldTime || '',
+              new_date: visitDate,
+              new_time: visitTime,
+              change_request_link: changeLink,
+            },
+          }),
         }).catch(() => {}); // 실패해도 무시
       }
 

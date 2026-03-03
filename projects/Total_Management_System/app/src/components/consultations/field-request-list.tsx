@@ -224,6 +224,8 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect }: Props) {
           consultationId={rescheduleTarget.id}
           currentDate={rescheduleTarget.visit_date || ''}
           currentTime={rescheduleTarget.visit_time || ''}
+          consultationType={rescheduleTarget.consultation_type}
+          uniqueId={rescheduleTarget.unique_id}
         />
       )}
       {suggestTarget && (

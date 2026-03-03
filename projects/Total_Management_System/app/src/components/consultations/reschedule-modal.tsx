@@ -11,9 +11,11 @@ interface Props {
   consultationId: string;
   currentDate?: string;
   currentTime?: string;
+  consultationType?: string; // 'store_visit' | 'field_request'
+  uniqueId?: string;
 }
 
-export function RescheduleModal({ open, onClose, consultationId, currentDate, currentTime }: Props) {
+export function RescheduleModal({ open, onClose, consultationId, currentDate, currentTime, consultationType, uniqueId }: Props) {
   const [date, setDate] = useState(currentDate || '');
   const [time, setTime] = useState(currentTime || '');
   const [notify, setNotify] = useState(true);
@@ -22,7 +24,16 @@ export function RescheduleModal({ open, onClose, consultationId, currentDate, cu
   const handleSubmit = () => {
     if (!date || !time) return;
     reschedule.mutate(
-      { id: consultationId, visitDate: date, visitTime: time, notify },
+      {
+        id: consultationId,
+        visitDate: date,
+        visitTime: time,
+        oldDate: currentDate,
+        oldTime: currentTime,
+        consultationType,
+        uniqueId,
+        notify,
+      },
       { onSuccess: () => { onClose(); } }
     );
   };

@@ -443,6 +443,8 @@ export default function ConsultationDetailPage() {
           consultationId={c.id}
           currentDate={c.visit_date || ''}
           currentTime={c.visit_time || ''}
+          consultationType={c.consultation_type}
+          uniqueId={c.unique_id}
         />
       )}
       {showSuggest && (
