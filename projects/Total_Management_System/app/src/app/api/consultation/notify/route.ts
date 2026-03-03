@@ -45,6 +45,9 @@ export async function POST(req: NextRequest) {
         type: c.consultation_type === 'store_visit' ? '매장 방문'
             : c.consultation_type === 'field_request' ? '출장 요청'
             : '톡상담',
+        type_code: c.consultation_type === 'store_visit' ? 'STORE'
+            : c.consultation_type === 'field_request' ? 'FIELD'
+            : 'TALK',
         date: c.visit_date || '',
         time: c.visit_time || '',
         address,
