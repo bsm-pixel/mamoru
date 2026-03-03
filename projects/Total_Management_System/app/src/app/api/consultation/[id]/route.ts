@@ -189,8 +189,6 @@ export async function PATCH(
           const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
           const typeLabel = data.consultation_type === 'store_visit' ? '매장 방문'
             : data.consultation_type === 'field_request' ? '출장 요청' : '톡상담';
-          const typeCode = data.consultation_type === 'store_visit' ? 'STORE'
-            : data.consultation_type === 'field_request' ? 'FIELD' : 'TALK';
           sideEffects.push(
             sendNotification({
               template,
@@ -199,7 +197,6 @@ export async function PATCH(
               data: {
                 id: data.unique_id,
                 type: typeLabel,
-                type_code: typeCode,
                 date: data.visit_date || '',
                 time: data.visit_time || '',
                 address,
