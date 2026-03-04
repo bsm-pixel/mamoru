@@ -88,7 +88,6 @@ function selfTestEnv_(){
 }
 function selfTestEnv(){  return selfTestEnv_(); }
 function lotteResetCurrent(){ lotteResetCurrent_(); }
-function lottePeekDemo(){ lottePeekDemo_(); }
 function diagCancel(){
   const P = PropertiesService.getScriptProperties();
   const out = {
@@ -344,7 +343,6 @@ function lotteNextInv_(){
 }
 function lottePeekInv_(){ const cur=lotteGetCurrent11_(); if(cur>LOTTE_END11) throw new Error('운송장 대역 소진'); return lotteToInv_(cur); }
 function lotteResetCurrent_(){ lotteSetCurrent11_(LOTTE_START11); }
-function lottePeekDemo_(){ const a=lottePeekInv_(); const b=lotteNextInv_(); const c=lotteNextInv_(); Logger.log('peek=%s next1=%s next2=%s',a,b,c); }
 
 /* =========================
  * 예약/취소 고수준
@@ -1027,7 +1025,6 @@ function manualBook(asId){
   Logger.log('OK inv=%s asId=%s', out.invNo, asId);
   return {success:true, invNo:out.invNo};
 }
-function manualBookDemo(){ return manualBook('AS-20251020-114503'); }
 
 /* 출고 확정 처리 */
 function markShipped(asId){
@@ -1225,24 +1222,6 @@ function uiCancelShip(){
 }
 function adminFinishShipById_(asId){ try{ return updateAS_({ as_id:String(asId||'').trim(), field:'출고완료', value:'Y' }); }catch(e){ Logger.log('[adminFinishShipById_] '+e); return {success:false, error:String(e)}; } }
 function adminCancelShipById_(asId){ try{ return unshipAS_(String(asId||'').trim()); }catch(e){ Logger.log('[adminCancelShipById_] '+e); return {success:false, error:String(e)}; } }
-function adminCancelShipByIdDemo_(){ return adminCancelShipById_('AS-YYYYMMDD-XXX'); }
-
-/* 이메일 발송 테스트 함수 */
-function testEmailSend(){
-  try{
-    Logger.log('[TEST] Starting email test...');
-    const testSubject = '[MAMORU] 이메일 테스트';
-    const testBody = '이메일 발송 테스트입니다.\n시간: ' + new Date().toLocaleString('ko-KR');
-    
-    GmailApp.sendEmail('bsm@mamoru.kr', testSubject, testBody);
-    Logger.log('[TEST] Email sent successfully!');
-    return { success: true, message: '이메일 발송 성공' };
-  }catch(e){
-    Logger.log('[TEST ERROR] ' + e.toString());
-    Logger.log('[TEST ERROR] Stack: ' + e.stack);
-    return { success: false, error: e.toString() };
-  }
-}
 
 /* =========================
  * 복원수리내역 페이지 생성
@@ -1479,33 +1458,4 @@ function convertToPublicUrl_(relativePath) {
   }
 }
 
-/* =========================
- * 테스트 함수
- * ========================= */
-function testConvertPhoto() {
-  const testPath = 'MAMORU_AS사진/bb5ad88b.사진URL.101725.jpg';  // ← jpg로 변경
-  Logger.log('Input: ' + testPath);
 
-  const result = convertToPublicUrl_(testPath);
-  Logger.log('Output: ' + result);
-
-  if (result) {
-    Logger.log('✅ 성공 - 공개 URL 생성됨');
-  } else {
-    Logger.log('❌ 실패 - 빈 문자열 반환');
-  }
-
-  return result;
-}
-
-/** TMS 연동 스크립트 속성 일괄 설정 (1회 실행 후 삭제 가능) */
-function setupTmsProperties() {
-  const props = PropertiesService.getScriptProperties();
-  props.setProperty('TMS_REPAIR_SYNC_URL', 'https://app-eta-sandy-75.vercel.app/api/repair/sync');
-  props.setProperty('TMS_BASE_URL', 'https://app-eta-sandy-75.vercel.app');
-  props.setProperty('CRON_SECRET', 'mamoru-tms-cron-2026');
-  Logger.log('✅ TMS 속성 3개 설정 완료');
-  Logger.log('TMS_REPAIR_SYNC_URL = ' + props.getProperty('TMS_REPAIR_SYNC_URL'));
-  Logger.log('TMS_BASE_URL = ' + props.getProperty('TMS_BASE_URL'));
-  Logger.log('CRON_SECRET = ' + props.getProperty('CRON_SECRET'));
-}

@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-03-03 (솔라피 23종 검수 승인 + BC 메타데이터 제거 + Make Router 진행 + TMS 일정변경 알림톡 버그 수정)
+> 최종 수정: 2026-03-04 (GAS 데드코드 정리 — AppSheet 래퍼·테스트·데모 함수 제거)
 
 ---
 
@@ -27,6 +27,7 @@
 - [ ] /reports/transaction 거래내역서 인쇄 확인
 
 ### ✅ 완료된 이전 할 일
+- [x] **GAS 데드코드 정리** (2026-03-04) — AppSheet 래퍼 4개 + 테스트/데모 함수 제거, consulting -115줄 / as -50줄
 - [x] **솔라피 23종 검수 승인 + BC 메타데이터 이슈 해결** (2026-03-03) — 한글 chatExtra 불가 → 메타데이터 제거 + 해피톡 사전 입력 폼으로 대체
 - [x] **TMS 일정변경 알림톡 버그 수정** (2026-03-03) — change_request_link 누락 + template 자동 분기 (rescheduled/field_rescheduled)
 - [x] **간편진단 태블릿 PWA** (2026-03-01) — `/diagnosis` 13개 질문 조건부 분기, manifest 분리, 결과 테이블
