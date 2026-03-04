@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAMORU — Complete Brand Guide v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@700;800;900&family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #1A1A1A;
+    --graphite: #2D2D2D;
+    --stone: #4A4A4A;
+    --warm-gray: #8A8580;
+    --mist: #B8B4AF;
+    --sand: #D4D0CB;
+    --parchment: #EDEBE8;
+    --shell: #F5F3F0;
+    --cream: #FAF9F7;
+    --white: #FFFFFF;
+    --font-display: 'Outfit', sans-serif;
+    --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    background: var(--cream);
+    color: var(--void);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ====== FLOATING NAV ====== */
+  .floating-nav {
+    position: fixed; top: 50%; right: 20px;
+    transform: translateY(-50%);
+    z-index: 1000;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  @media (max-width: 900px) {
+    .floating-nav { display: none; }
+  }
+  .floating-nav a {
+    display: block; padding: 8px 14px;
+    background: var(--white);
+    border: 1px solid var(--sand);
+    border-radius: 8px;
+    font-size: 11px; font-weight: 600;
+    color: var(--stone);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .floating-nav a:hover {
+    background: var(--void); color: var(--cream);
+    border-color: var(--void);
+  }
+  .floating-nav .nav-section-label {
+    font-size: 9px; color: var(--mist);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 4px 14px 0;
+  }
+
+  /* ====== HERO ====== */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center; padding: 60px 24px;
+    position: relative; background: var(--void); overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(70,65,60,0.4) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(50,48,45,0.3) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-logo-area { position: relative; z-index: 1; margin-bottom: 48px; }
+  .hero-wordmark {
+    font-family: var(--font-display); font-weight: 900;
+    font-size: clamp(64px, 12vw, 140px);
+    letter-spacing: 0.02em; color: var(--void);
+    -webkit-text-stroke: 1px rgba(180,175,168,0.15);
+    position: relative; user-select: none;
+  }
+  .hero-wordmark .gloss {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, rgba(200,195,188,0) 0%, rgba(200,195,188,0.08) 30%, rgba(220,215,208,0.2) 48%, rgba(255,252,248,0.35) 50%, rgba(220,215,208,0.2) 52%, rgba(200,195,188,0.08) 70%, rgba(200,195,188,0) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: var(--font-display); font-weight: 900;
+    font-size: clamp(64px, 12vw, 140px); letter-spacing: 0.02em;
+    animation: shimmer 6s ease-in-out infinite;
+  }
+  @keyframes shimmer { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+  .hero-tagline {
+    font-weight: 300; font-size: clamp(14px, 2vw, 18px);
+    color: var(--warm-gray); letter-spacing: 0.15em;
+    text-transform: uppercase; position: relative; z-index: 1; margin-bottom: 12px;
+  }
+  .hero-sub {
+    font-weight: 400; font-size: clamp(13px, 1.5vw, 15px);
+    color: var(--mist); letter-spacing: 0.04em;
+    position: relative; z-index: 1; opacity: 0.7;
+  }
+  .hero-divider {
+    width: 40px; height: 1px; background: var(--stone);
+    margin: 32px auto; position: relative; z-index: 1;
+  }
+
+  /* ====== MEGA DIVIDER ====== */
+  .mega-divider {
+    background: var(--void); padding: 80px 24px;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .mega-divider::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(70,65,60,0.3) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .mega-divider-label {
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--warm-gray); margin-bottom: 16px;
+    position: relative; z-index: 1;
+  }
+  .mega-divider h2 {
+    font-family: var(--font-display); font-weight: 900;
+    font-size: clamp(32px, 6vw, 56px);
+    color: var(--cream); position: relative; z-index: 1;
+    margin-bottom: 12px; line-height: 1.1;
+  }
+  .mega-divider-sub {
+    font-size: 14px; color: var(--mist);
+    position: relative; z-index: 1; opacity: 0.7;
+    max-width: 500px; margin: 0 auto; line-height: 1.7;
+  }
+
+  /* ====== SECTION TITLES ====== */
+  .section-title-block { padding: 80px 24px 48px; text-align: center; }
+  .section-label {
+    font-weight: 500; font-size: 11px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--warm-gray); margin-bottom: 16px;
+  }
+  .section-heading {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: clamp(26px, 4vw, 44px);
+    color: var(--void); line-height: 1.15;
+  }
+  .section-desc {
+    font-size: 14px; color: var(--stone);
+    max-width: 700px; margin: 12px auto 0; line-height: 1.7;
+  }
+
+  /* ====== CONTENT CONTAINERS ====== */
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px 60px; }
+  .card {
+    background: var(--white); border-radius: 16px;
+    padding: 40px 36px; margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  @media (max-width: 700px) { .card { padding: 28px 20px; } }
+  .card-dark { background: var(--void); color: var(--cream); }
+  .card-label {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--warm-gray); margin-bottom: 20px;
+    padding-bottom: 14px; border-bottom: 1px solid var(--parchment);
+  }
+  .card-dark .card-label { border-bottom-color: var(--graphite); }
+
+  .item { margin-bottom: 20px; }
+  .item:last-child { margin-bottom: 0; }
+  .item-title { font-weight: 700; font-size: 14px; color: var(--void); margin-bottom: 5px; }
+  .item-text { font-size: 14px; line-height: 1.75; color: var(--stone); }
+  .card-dark .item-title { color: var(--cream); }
+  .card-dark .item-text { color: var(--mist); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* ====== DIRECTION SPECIFIC ====== */
+  .direction-highlight {
+    background: var(--void); color: var(--cream);
+    border-radius: 16px; padding: 48px 40px; margin-bottom: 20px;
+  }
+  .direction-highlight .card-label { color: var(--warm-gray); border-bottom-color: var(--graphite); }
+  .direction-highlight .item-title { color: var(--cream); }
+  .direction-highlight .item-text { color: var(--mist); }
+  .mission-text {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: clamp(22px, 3.5vw, 32px);
+    line-height: 1.35; color: var(--cream); margin-bottom: 16px;
+  }
+  .principle-text { font-size: 15px; color: var(--warm-gray); line-height: 1.7; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .tag { display: inline-block; padding: 5px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; }
+  .tag-dark { background: var(--void); color: var(--cream); }
+  .tag-light { background: var(--parchment); color: var(--stone); }
+  .tag-red { background: transparent; color: #C0756B; border: 1px solid #D4ADA7; text-decoration: line-through; text-decoration-color: #D4ADA7; }
+
+  .vision-block { display: flex; gap: 32px; align-items: flex-start; margin-bottom: 28px; }
+  .vision-block:last-child { margin-bottom: 0; }
+  .vision-year { font-family: var(--font-display); font-weight: 900; font-size: 36px; color: var(--parchment); min-width: 80px; line-height: 1; }
+  .vision-content { font-size: 15px; line-height: 1.75; color: var(--stone); }
+
+  .slogan-card {
+    background: var(--white); border-radius: 12px;
+    padding: 24px; margin-bottom: 12px;
+    border-left: 3px solid var(--sand);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .slogan-text { font-family: var(--font-display); font-weight: 800; font-size: 20px; color: var(--void); margin-bottom: 6px; }
+  .slogan-note { font-size: 13px; color: var(--warm-gray); line-height: 1.6; }
+
+  /* ====== PALETTE ====== */
+  .palette-group-label {
+    font-weight: 600; font-size: 13px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--stone); margin-bottom: 16px; padding-left: 4px;
+  }
+  .palette-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 14px; margin-bottom: 40px;
+  }
+  .color-card {
+    border-radius: 12px; overflow: hidden;
+    background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: transform 0.3s ease;
+  }
+  .color-card:hover { transform: translateY(-3px); }
+  .color-swatch { height: 80px; }
+  .color-info { padding: 12px 14px; }
+  .color-name { font-weight: 600; font-size: 12px; color: var(--void); margin-bottom: 3px; }
+  .color-hex { font-weight: 400; font-size: 11px; color: var(--warm-gray); }
+  .color-role { font-weight: 400; font-size: 10px; color: var(--mist); margin-top: 3px; }
+
+  /* ====== TYPOGRAPHY SHOWCASE ====== */
+  .typo-showcase {
+    background: var(--white); border-radius: 16px;
+    padding: 48px 40px; margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .typo-display {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: clamp(36px, 5vw, 64px);
+    line-height: 1.05; color: var(--void); margin-bottom: 6px;
+  }
+  .typo-label { font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--warm-gray); margin-bottom: 28px; }
+  .typo-body-demo { font-size: 16px; line-height: 1.7; color: var(--stone); max-width: 600px; margin-bottom: 6px; }
+  .typo-scale {
+    background: var(--white); border-radius: 16px;
+    padding: 36px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .typo-scale-item { display: flex; align-items: baseline; gap: 20px; padding: 12px 0; border-bottom: 1px solid var(--parchment); }
+  .typo-scale-item:last-child { border-bottom: none; }
+  .typo-scale-meta { min-width: 110px; font-size: 11px; color: var(--warm-gray); font-weight: 500; }
+  .typo-scale-sample { font-family: var(--font-display); color: var(--void); line-height: 1.1; }
+
+  /* ====== TEXTURE ====== */
+  .texture-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .texture-grid { grid-template-columns: 1fr; } }
+  .texture-card {
+    border-radius: 16px; padding: 40px 32px;
+    position: relative; overflow: hidden; min-height: 200px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .texture-matte-dark { background: var(--void); color: var(--cream); }
+  .texture-matte-dark::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; }
+  .texture-gloss-dark { background: linear-gradient(145deg, #1A1A1A 0%, #2A2928 40%, #1A1A1A 100%); color: var(--cream); }
+  .texture-gloss-dark::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(ellipse at 35% 35%, rgba(255,255,255,0.06) 0%, transparent 50%); pointer-events: none; }
+  .texture-warm-light { background: var(--shell); color: var(--void); border: 1px solid var(--sand); }
+  .texture-pure-light { background: var(--white); color: var(--void); border: 1px solid var(--parchment); }
+  .texture-label { font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.5; margin-bottom: 10px; position: relative; z-index: 1; }
+  .texture-title { font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1.15; position: relative; z-index: 1; margin-bottom: 6px; }
+  .texture-desc { font-size: 12px; line-height: 1.6; opacity: 0.6; position: relative; z-index: 1; }
+
+  /* ====== VOICE DO/DON'T ====== */
+  .voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .voice-grid { grid-template-columns: 1fr; } }
+  .voice-card { border-radius: 16px; padding: 32px 28px; background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .voice-do { border-left: 3px solid var(--void); }
+  .voice-dont { border-left: 3px solid var(--sand); }
+  .voice-card-label { font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--warm-gray); margin-bottom: 16px; }
+  .voice-card-text { font-size: 17px; font-weight: 500; line-height: 1.6; color: var(--void); }
+  .voice-card-text.muted { color: var(--mist); text-decoration: line-through; text-decoration-color: var(--sand); }
+
+  /* ====== INSTAGRAM SPECIFIC ====== */
+  .profile-mockup { background: var(--white); border-radius: 16px; padding: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); max-width: 380px; margin: 0 auto 20px; }
+  .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+  .profile-avatar { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 900; font-size: 20px; flex-shrink: 0; }
+  .profile-avatar-official { background: var(--void); color: var(--cream); }
+  .profile-avatar-personal { background: var(--shell); color: var(--void); }
+  .profile-stats { display: flex; gap: 16px; }
+  .profile-stat { text-align: center; }
+  .profile-stat-num { font-weight: 700; font-size: 14px; color: var(--void); }
+  .profile-stat-label { font-size: 10px; color: var(--warm-gray); }
+  .profile-name { font-weight: 700; font-size: 13px; color: var(--void); margin-bottom: 4px; }
+  .profile-bio { font-size: 12px; line-height: 1.5; color: var(--stone); }
+  .profile-bio-tag { color: var(--warm-gray); font-weight: 500; }
+
+  .feed-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+  .feed-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+  .feed-cell-label { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-align: center; line-height: 1.4; padding: 6px; }
+  .cell-product { background: var(--shell); color: var(--stone); }
+  .cell-restore { background: var(--void); color: var(--cream); }
+  .cell-review { background: var(--white); color: var(--stone); border: 1px solid var(--parchment); }
+  .cell-info { background: var(--graphite); color: var(--cream); }
+
+  .template-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 24px; }
+  .template-card { border-radius: 14px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .template-preview { aspect-ratio: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 24px; position: relative; }
+  .template-preview-label { font-size: 9px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; opacity: 0.5; }
+  .template-preview-title { font-family: var(--font-display); font-weight: 800; font-size: 20px; line-height: 1.2; margin-bottom: 4px; }
+  .template-preview-sub { font-size: 10px; opacity: 0.6; line-height: 1.5; }
+  .template-preview-watermark { position: absolute; top: 14px; right: 14px; font-family: var(--font-display); font-weight: 900; font-size: 9px; letter-spacing: 0.1em; opacity: 0.3; }
+  .template-info { padding: 14px 18px; background: var(--white); }
+  .template-info-name { font-weight: 600; font-size: 12px; color: var(--void); margin-bottom: 2px; }
+  .template-info-use { font-size: 10px; color: var(--warm-gray); }
+  .tmpl-product { background: var(--shell); color: var(--void); }
+  .tmpl-restore { background: var(--void); color: var(--cream); }
+  .tmpl-info { background: var(--graphite); color: var(--cream); }
+  .tmpl-review { background: var(--white); color: var(--void); border: 1px solid var(--parchment); }
+  .tmpl-quote { background: linear-gradient(145deg, var(--void) 0%, var(--graphite) 100%); color: var(--cream); }
+  .tmpl-personal { background: var(--parchment); color: var(--void); }
+
+  .highlights-row { display: flex; gap: 14px; overflow-x: auto; padding: 6px 0 12px; margin-bottom: 12px; }
+  .highlight-item { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+  .highlight-circle { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .highlight-circle-dark { background: var(--void); color: var(--cream); }
+  .highlight-circle-light { background: var(--shell); color: var(--stone); border: 1.5px solid var(--sand); }
+  .highlight-name { font-size: 10px; color: var(--stone); font-weight: 500; }
+
+  .caption-example { background: var(--shell); border-radius: 10px; padding: 20px; margin-top: 10px; font-size: 13px; line-height: 1.8; color: var(--stone); }
+  .caption-example strong { color: var(--void); }
+  .caption-hashtag { color: var(--warm-gray); font-size: 12px; }
+
+  /* ====== SHOP GUIDE SPECIFIC ====== */
+  .alert { padding: 18px 22px; border-radius: 12px; margin-bottom: 20px; font-size: 13px; line-height: 1.7; }
+  .alert-critical { background: var(--void); color: var(--cream); border-left: 4px solid var(--cream); }
+  .alert-info { background: var(--shell); border-left: 4px solid var(--warm-gray); color: var(--stone); }
+  .alert-warn { background: #FBF7F0; border-left: 4px solid #C4A872; color: var(--stone); }
+  .alert strong { display: block; margin-bottom: 4px; }
+  .alert-critical strong { color: var(--cream); }
+
+  .code-block {
+    background: var(--void); border-radius: 12px;
+    padding: 20px; margin: 10px 0; overflow-x: auto;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px; line-height: 1.8; color: var(--sand);
+  }
+  .code-block .comment { color: var(--warm-gray); }
+  .code-block .prop { color: #C4A882; }
+  .code-block .val { color: #A8C4A0; }
+  .code-block .sel { color: var(--cream); }
+  .code-block .edit-mark { color: #E8C170; font-weight: 700; }
+
+  .spec-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+  .spec-table th { text-align: left; padding: 8px 10px; background: var(--shell); color: var(--stone); font-weight: 600; font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; border-bottom: 1px solid var(--sand); }
+  .spec-table td { padding: 8px 10px; border-bottom: 1px solid var(--parchment); color: var(--stone); vertical-align: top; }
+  .spec-table td:first-child { font-weight: 600; color: var(--void); min-width: 120px; }
+
+  .diagram { background: var(--white); border: 1px solid var(--sand); border-radius: 12px; padding: 24px; margin: 12px 0; font-family: 'SF Mono', monospace; font-size: 12px; line-height: 2; color: var(--stone); }
+  .diagram .highlight { color: var(--void); font-weight: 700; }
+  .diagram .dim { color: var(--mist); }
+  .diagram .arrow { color: var(--warm-gray); }
+
+  .annotation { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--cream); border-left: 2px solid var(--void); border-radius: 0 8px 8px 0; margin: 8px 0; font-size: 13px; line-height: 1.65; color: var(--stone); }
+  .annotation-num { font-family: var(--font-display); font-weight: 900; font-size: 14px; color: var(--void); min-width: 20px; }
+
+  /* ====== NEXT STEPS ====== */
+  .next-steps-list { list-style: none; }
+  .next-step { display: flex; align-items: flex-start; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--parchment); }
+  .next-step:last-child { border-bottom: none; }
+  .next-step-num { font-family: var(--font-display); font-weight: 900; font-size: 24px; color: var(--parchment); min-width: 36px; line-height: 1; }
+  .next-step-text { font-size: 14px; line-height: 1.6; color: var(--stone); }
+  .next-step-text strong { color: var(--void); }
+
+  /* ====== FOOTER ====== */
+  .guide-footer { text-align: center; padding: 48px 24px 64px; border-top: 1px solid var(--parchment); max-width: 1100px; margin: 0 auto; }
+  .guide-footer p { font-size: 13px; color: var(--warm-gray); line-height: 1.8; }
+  .guide-footer strong { color: var(--void); }
+</style>
+</head>
+<body>
+
+  <!-- ====== FLOATING NAV ====== -->
+  <nav class="floating-nav">
+    <div class="nav-section-label">Document</div>
+    <a href="#doc-a">A. 브랜드 방향</a>
+    <a href="#doc-b">B. 디자인 시스템</a>
+    <a href="#doc-c">C. 인스타그램</a>
+    <a href="#doc-d">D. 쇼핑몰 가이드</a>
+  </nav>
+
+  <!-- ====== HERO ====== -->
+  <section class="hero">
+    <div class="hero-logo-area">
+      <div class="hero-wordmark">MAMORU<span class="gloss" aria-hidden="true">MAMORU</span></div>
+    </div>
+    <p class="hero-tagline">Complete Brand Guide</p>
+    <div class="hero-divider"></div>
+    <p class="hero-sub">브랜드 방향 · 디자인 시스템 · 인스타그램 · 쇼핑몰 리뉴얼<br>이 파일 하나에 MAMORU의 모든 기준이 담겨 있습니다.</p>
+  </section>
+
+
+  <!-- ╔═══════════════════════════════════════════════╗
+       ║  DOCUMENT A: 브랜드 방향서                       ║
+       ╚═══════════════════════════════════════════════╝ -->
+  <div class="mega-divider" id="doc-a">
+    <p class="mega-divider-label">Document A</p>
+    <h2>브랜드 방향서</h2>
+    <p class="mega-divider-sub">미션 · 가치 · 성격 · 타깃 · 포지션 · 비전</p>
+  </div>
+
+  <!-- Mission -->
+  <div class="section-title-block"><p class="section-label">A-01 — Mission & Principle</p><h2 class="section-heading">미션과 원칙</h2></div>
+  <div class="wrap">
+    <div class="direction-highlight">
+      <div class="card-label">Mission · 미션</div>
+      <p class="mission-text">미용가위의 올바른 기준을 세워,<br>모든 미용사가 스스로 판단할 수 있게 한다.</p>
+      <p class="principle-text">MAMORU는 판매하지 않습니다. 안내할 뿐입니다.<br>할인 없음. 구매 권유 없음. 모든 고객에게 동일한 가격과 서비스.</p>
+    </div>
+
+    <!-- Slogan Confirmed -->
+    <div class="direction-highlight" style="text-align:center; padding: 56px 40px;">
+      <div class="card-label">Slogan · 슬로건 (확정)</div>
+      <p style="font-family: var(--font-display); font-weight: 900; font-size: clamp(28px, 5vw, 48px); color: var(--cream); line-height: 1.25; margin-bottom: 20px;">CUT THE FAKE,<br>KEEP THE REAL</p>
+      <p style="font-size: 14px; color: var(--warm-gray); line-height: 1.7; max-width: 480px; margin: 0 auto;">가짜를 잘라내고, 진짜를 지킨다.<br>미용가위의 Cut과 시장의 거짓을 걷어내는 Cut — 이중 의미.</p>
+    </div>
+  </div>
+
+  <!-- Core Values -->
+  <div class="section-title-block"><p class="section-label">A-02 — Core Values</p><h2 class="section-heading">핵심 가치</h2></div>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-label">3 Core Values</div>
+      <div class="item"><div class="item-title">① 고객이 이해해야 한다</div><div class="item-text">왜 이 가위인지, 왜 이 형태인지, 왜 이 가격인지. 정보를 숨기지 않는다.</div></div>
+      <div class="item"><div class="item-title">② 고객이 선택해야 한다</div><div class="item-text">선택지를 안내할 뿐, 고르는 건 고객이다. "안 사셔도 됩니다"를 두려워하지 않는다.</div></div>
+      <div class="item"><div class="item-title">③ 고객이 만족해야 한다</div><div class="item-text">이해하고, 스스로 선택했기에 진짜 만족이 온다. "앞으로 오래 일해주세요"가 가장 듣고 싶은 말.</div></div>
+    </div>
+  </div>
+
+  <!-- Brand Personality -->
+  <div class="section-title-block"><p class="section-label">A-03 — Brand Personality</p><h2 class="section-heading">브랜드 성격</h2></div>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-label">Personality</div>
+      <div class="item"><div class="item-title">한마디로</div><div class="item-text" style="font-family:var(--font-display);font-weight:800;font-size:24px;color:var(--void);">조용히 압도하는 전문가</div></div>
+      <div class="item"><div class="item-title">형용사 5개</div><div class="tag-row"><span class="tag tag-dark">감각적인</span><span class="tag tag-dark">압도적인</span><span class="tag tag-dark">차분한</span><span class="tag tag-dark">전문적인</span><span class="tag tag-dark">신념이 느껴지는</span></div></div>
+      <div class="item"><div class="item-title">말투</div><div class="item-text">먼저 묻고, 사실을 알려주고, 판단은 고객에게 맡긴다. 소리 지르지 않는데 가장 무서운 사람.</div></div>
+      <div class="item"><div class="item-title">페르소나</div><div class="item-text">사람의 모습을 한 외계인 — 업계 안에 있지만 관성에 물들지 않은 존재. 순하고 깔끔한데 남들이 모르는 걸 꿰뚫고 있다.</div></div>
+      <div class="item"><div class="item-title">절대 피할 이미지</div><div class="tag-row"><span class="tag tag-red">장사꾼 냄새</span><span class="tag tag-red">촌스러움</span><span class="tag tag-red">올드함</span><span class="tag tag-red">장난기</span><span class="tag tag-red">시끄러움</span></div></div>
+    </div>
+  </div>
+
+  <!-- Target & Position -->
+  <div class="section-title-block"><p class="section-label">A-04 — Target & Position</p><h2 class="section-heading">타깃과 포지션</h2></div>
+  <div class="wrap">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-label">Target · 타깃</div>
+        <div class="item"><div class="item-title">대상</div><div class="item-text">모든 미용사</div></div>
+        <div class="item"><div class="item-title">1차 타깃</div><div class="item-text">경력 미용사 — 비교 대상이 많아서 충격이 크고, 그 충격이 입소문이 된다.</div></div>
+        <div class="item"><div class="item-title">자연 확산</div><div class="item-text">입문자 — 경력자가 후배·제자에게 전파하는 구조.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Position · 포지션</div>
+        <div class="item"><div class="item-title">MAMORU는</div><div class="item-text">찾아가는 영업이 아니라 찾아오는 성지. 미용가위의 설명서이자 가이드.</div></div>
+        <div class="item"><div class="item-title">고객 동선</div><div class="item-text">유튜브 → 쇼핑몰 → 인스타그램</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Absolutes & Rules -->
+  <div class="section-title-block"><p class="section-label">A-05 — Absolutes & Rules</p><h2 class="section-heading">불변 요소와 금기</h2></div>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-label">Absolutes · 절대 불변</div>
+      <div class="tag-row"><span class="tag tag-light">MAMORU 상호명</span><span class="tag tag-light">거북이 심볼 로고</span><span class="tag tag-light">맞춤 컨설팅 상담</span><span class="tag tag-light">복원수리 기술력</span><span class="tag tag-light">고객을 위한 진실된 철학</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Golden Rules · 금기</div>
+      <div class="item"><div class="item-title">할인 금지</div><div class="item-text">모든 고객 동일 가격, 동일 서비스.</div></div>
+      <div class="item"><div class="item-title">구매 권유 금지</div><div class="item-text">볼트 조절이면 해결될 문제를 새 가위로 바꾸라 하지 않는다.</div></div>
+      <div class="item"><div class="item-title">한마디로</div><div class="item-text" style="font-weight:700;color:var(--void);">판매하지 않는다. 안내할 뿐이다.</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Supporting Copy · 보조 문구</div>
+      <div class="slogan-card"><div class="slogan-text">돈이 안 아까운 곳,<br>시간이 아깝지 않은 곳</div><div class="slogan-note">고객 언어에 가장 가까운 문구. 카피, 소개글, 후기 영역에 활용.</div></div>
+      <div class="slogan-card"><div class="slogan-text">판매하지 않는다,<br>안내할 뿐이다.</div><div class="slogan-note">내부 원칙문. About 페이지, 브랜드 소개 영역에 활용.</div></div>
+    </div>
+  </div>
+
+  <!-- Vision & Logo -->
+  <div class="section-title-block"><p class="section-label">A-06 — Vision & Logo</p><h2 class="section-heading">비전과 로고</h2></div>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-label">Vision · 비전</div>
+      <div class="vision-block"><div class="vision-year">5Y</div><div class="vision-content">홍대 쇼룸 (1F 쇼룸 + 2F 복원수리 공방), 지방 분점 1개, 유튜브 10만+, 아카데미 납품, 직원 채용 체계.</div></div>
+      <div class="vision-block"><div class="vision-year">10Y</div><div class="vision-content">해외 분점 (뉴욕·호주), 국내 5개+ 분점, 디렉터 자립 운영. 미용 도구 전체로 확장 → "미용사의 모든 도구 = MAMORU".</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Logo Status · 로고 현황</div>
+      <div class="item"><div class="item-title">워드마크</div><div class="item-text">라운드 처리 볼드 버전 유지. 부드러우면서 무게감.</div></div>
+      <div class="item"><div class="item-title">거북이 심볼</div><div class="item-text">리디자인 예정. 트라이벌 → 미니멀/기하학적 방향. 거북이 상징(천천히, 오래, 신뢰) 유지.</div></div>
+    </div>
+  </div>
+
+
+  <!-- ╔═══════════════════════════════════════════════╗
+       ║  DOCUMENT B: 디자인 시스템                       ║
+       ╚═══════════════════════════════════════════════╝ -->
+  <div class="mega-divider" id="doc-b">
+    <p class="mega-divider-label">Document B</p>
+    <h2>디자인 시스템</h2>
+    <p class="mega-divider-sub">컬러 · 타이포그래피 · 텍스처 · 보이스</p>
+  </div>
+
+  <!-- Color -->
+  <div class="section-title-block"><p class="section-label">B-01 — Color Palette</p><h2 class="section-heading">컬러 팔레트</h2></div>
+  <div class="wrap">
+    <p class="palette-group-label">Dark Tones</p>
+    <div class="palette-row">
+      <div class="color-card"><div class="color-swatch" style="background:#1A1A1A;"></div><div class="color-info"><div class="color-name">Void</div><div class="color-hex">#1A1A1A</div><div class="color-role">메인 텍스트 · 로고 · 헤더 배경</div></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#2D2D2D;"></div><div class="color-info"><div class="color-name">Graphite</div><div class="color-hex">#2D2D2D</div><div class="color-role">보조 다크 · 호버</div></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#4A4A4A;"></div><div class="color-info"><div class="color-name">Stone</div><div class="color-hex">#4A4A4A</div><div class="color-role">본문 텍스트</div></div></div>
+    </div>
+    <p class="palette-group-label">Neutral Tones</p>
+    <div class="palette-row">
+      <div class="color-card"><div class="color-swatch" style="background:#8A8580;"></div><div class="color-info"><div class="color-name">Warm Gray</div><div class="color-hex">#8A8580</div><div class="color-role">캡션 · 라벨</div></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#B8B4AF;"></div><div class="color-info"><div class="color-name">Mist</div><div class="color-hex">#B8B4AF</div><div class="color-role">플레이스홀더</div></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#D4D0CB;"></div><div class="color-info"><div class="color-name">Sand</div><div class="color-hex">#D4D0CB</div><div class="color-role">경계선</div></div></div>
+    </div>
+    <p class="palette-group-label">Light Tones</p>
+    <div class="palette-row">
+      <div class="color-card"><div class="color-swatch" style="background:#EDEBE8;"></div><div class="color-info"><div class="color-name">Parchment</div><div class="color-hex">#EDEBE8</div><div class="color-role">섹션 구분 배경</div></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#F5F3F0;"></div><div class="color-info"><div class="color-name">Shell</div><div class="color-hex">#F5F3F0</div><div class="color-role">카드 · 이미지 배경</div></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#FAF9F7;"></div><div class="color-info"><div class="color-name">Cream</div><div class="color-hex">#FAF9F7</div><div class="color-role">메인 페이지 배경</div></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#FFFFFF;border:1px solid #EDEBE8;"></div><div class="color-info"><div class="color-name">White</div><div class="color-hex">#FFFFFF</div><div class="color-role">카드 내부 · 팝업</div></div></div>
+    </div>
+  </div>
+
+  <!-- Typography -->
+  <div class="section-title-block"><p class="section-label">B-02 — Typography</p><h2 class="section-heading">타이포그래피</h2></div>
+  <div class="wrap">
+    <div class="typo-showcase">
+      <div class="typo-display">당신의 기준이<br>되겠습니다.</div>
+      <p class="typo-label">Display — Outfit 800</p>
+      <div style="height:32px"></div>
+      <p class="typo-body-demo">미용가위의 올바른 기준을 세워, 모든 미용사가 스스로 판단할 수 있게. MAMORU는 판매하지 않습니다. 안내할 뿐입니다.</p>
+      <p class="typo-label">Body — Plus Jakarta Sans 400</p>
+    </div>
+    <div class="typo-scale">
+      <div class="typo-scale-item"><span class="typo-scale-meta">Display · 56px</span><span class="typo-scale-sample" style="font-size:48px;font-weight:900;">MAMORU</span></div>
+      <div class="typo-scale-item"><span class="typo-scale-meta">H1 · 40px</span><span class="typo-scale-sample" style="font-size:36px;font-weight:800;">복원수리</span></div>
+      <div class="typo-scale-item"><span class="typo-scale-meta">H2 · 28px</span><span class="typo-scale-sample" style="font-size:26px;font-weight:800;">맞춤 컨설팅</span></div>
+      <div class="typo-scale-item"><span class="typo-scale-meta">H3 · 20px</span><span class="typo-scale-sample" style="font-size:20px;font-weight:700;">블런트 시저 시리즈</span></div>
+      <div class="typo-scale-item"><span class="typo-scale-meta">Body · 16px</span><span style="font-size:15px;color:var(--stone);">고객의 커트 스타일과 습관에 맞는 가위를 안내합니다.</span></div>
+      <div class="typo-scale-item"><span class="typo-scale-meta">Caption · 12px</span><span style="font-size:12px;color:var(--warm-gray);">전 상품 동일 가격 · AS 접수 간편 · 복원수리 전문</span></div>
+    </div>
+  </div>
+
+  <!-- Texture -->
+  <div class="section-title-block"><p class="section-label">B-03 — Texture & Tone</p><h2 class="section-heading">질감과 톤</h2></div>
+  <div class="wrap">
+    <div class="texture-grid">
+      <div class="texture-card texture-matte-dark"><p class="texture-label">Matte Black</p><p class="texture-title">매트 블랙</p><p class="texture-desc">노이즈 텍스처 무광 블랙. 헤더, 히어로, 강조 영역.</p></div>
+      <div class="texture-card texture-gloss-dark"><p class="texture-label">Gloss Accent</p><p class="texture-title">유광 포인트</p><p class="texture-desc">같은 블랙 위 미세 광택. 로고, 강조 텍스트. 먹박 효과.</p></div>
+      <div class="texture-card texture-warm-light"><p class="texture-label">Warm Surface</p><p class="texture-title">따뜻한 표면</p><p class="texture-desc">오프화이트 카드 배경. 순백이 아닌 온기 있는 톤.</p></div>
+      <div class="texture-card texture-pure-light"><p class="texture-label">Clean White</p><p class="texture-title">클린 화이트</p><p class="texture-desc">입력 필드, 팝업, 모달. 집중 필요한 영역.</p></div>
+    </div>
+  </div>
+
+  <!-- Brand Voice -->
+  <div class="section-title-block"><p class="section-label">B-04 — Brand Voice</p><h2 class="section-heading">브랜드 보이스</h2></div>
+  <div class="wrap">
+    <div class="voice-grid">
+      <div class="voice-card voice-do"><p class="voice-card-label">이렇게 말합니다</p><p class="voice-card-text">"이 형태는 지금 단계에서<br>구매하시면 안 됩니다."</p></div>
+      <div class="voice-card voice-dont"><p class="voice-card-label">이렇게 말하지 않습니다</p><p class="voice-card-text muted">"지금 이벤트 기간이라<br>이 가위가 특가예요!"</p></div>
+      <div class="voice-card voice-do"><p class="voice-card-label">이렇게 말합니다</p><p class="voice-card-text">"볼트 조절 한 번이면 됩니다.<br>그냥 쓰세요."</p></div>
+      <div class="voice-card voice-dont"><p class="voice-card-label">이렇게 말하지 않습니다</p><p class="voice-card-text muted">"새 틴닝가위로 바꾸시는 게<br>편하실 거예요."</p></div>
+      <div class="voice-card voice-do"><p class="voice-card-label">이렇게 말합니다</p><p class="voice-card-text">"어떤 스타일로 커트하세요?<br>그에 맞는 형태를 안내드릴게요."</p></div>
+      <div class="voice-card voice-dont"><p class="voice-card-label">이렇게 말하지 않습니다</p><p class="voice-card-text muted">"이거 요즘 인기 많아요,<br>다들 이거 쓰세요!"</p></div>
+    </div>
+  </div>
+
+  <!-- Design Guidelines -->
+  <div class="section-title-block"><p class="section-label">B-05 — Design Guidelines</p><h2 class="section-heading">디자인 가이드라인</h2></div>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-label">Layout Rules</div>
+      <div class="item"><div class="item-title">여백</div><div class="item-text">요소 사이 충분한 공간. 여백 자체가 고급감.</div></div>
+      <div class="item"><div class="item-title">그리드</div><div class="item-text">정돈된 그리드 기반 배치. 이미지 크기·위치에 변화를 줘 단조롭지 않게.</div></div>
+      <div class="item"><div class="item-title">사진</div><div class="item-text">크고 임팩트 있게. 사진 하나가 압도하는 레이아웃.</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Forbidden · 디자인 금기</div>
+      <div class="tag-row"><span class="tag tag-red">잡화점 느낌</span><span class="tag tag-red">난잡한 레이아웃</span><span class="tag tag-red">이미지와 텍스트 따로 노는 것</span><span class="tag tag-red">포인트 컬러 남발</span><span class="tag tag-red">과도한 장식</span></div>
+    </div>
+  </div>
+
+
+  <!-- ╔═══════════════════════════════════════════════╗
+       ║  DOCUMENT C: 인스타그램 가이드                     ║
+       ╚═══════════════════════════════════════════════╝ -->
+  <div class="mega-divider" id="doc-c">
+    <p class="mega-divider-label">Document C</p>
+    <h2>인스타그램<br>디자인 가이드</h2>
+    <p class="mega-divider-sub">오피셜 + 개인(bs.min) 운영 가이드</p>
+  </div>
+
+  <!-- Account Strategy -->
+  <div class="section-title-block"><p class="section-label">C-01 — Account Strategy</p><h2 class="section-heading">두 계정의 역할</h2></div>
+  <div class="wrap">
+    <div class="grid-2">
+      <div>
+        <div class="card-dark card">
+          <div class="card-label">Official · @mamoru_scissors</div>
+          <div class="item"><div class="item-title">역할</div><div class="item-text">MAMORU 브랜드 그 자체. 제품, 복원수리, 정보, 후기.</div></div>
+          <div class="item"><div class="item-title">톤</div><div class="item-text">차분하고 전문적. 말이 적고 이미지가 말하게.</div></div>
+          <div class="item"><div class="item-title">비중</div><div class="tag-row"><span class="tag" style="background:var(--cream);color:var(--void);">제품 30%</span><span class="tag" style="background:var(--cream);color:var(--void);">복원수리 25%</span><span class="tag" style="background:var(--cream);color:var(--void);">정보 25%</span><span class="tag" style="background:var(--cream);color:var(--void);">후기 20%</span></div></div>
+        </div>
+        <div class="profile-mockup">
+          <div class="profile-header"><div class="profile-avatar profile-avatar-official">M</div><div class="profile-stats"><div class="profile-stat"><div class="profile-stat-num">—</div><div class="profile-stat-label">게시물</div></div><div class="profile-stat"><div class="profile-stat-num">—</div><div class="profile-stat-label">팔로워</div></div></div></div>
+          <div class="profile-name">MAMORU 마모루미용가위</div>
+          <div class="profile-bio">CUT THE FAKE, KEEP THE REAL<br><span class="profile-bio-tag">미용가위의 올바른 기준</span><br>맞춤 컨설팅 · 복원수리 전문<br>↓ 상담 · 제품 · AS 접수</div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-label">Personal · @bs.min</div>
+          <div class="item"><div class="item-title">역할</div><div class="item-text">MAMORU 뒤의 사람. 일상, 비하인드, 솔직한 생각.</div></div>
+          <div class="item"><div class="item-title">톤</div><div class="item-text">편하고 솔직한. 격식 없이, 근데 가벼지지 않게.</div></div>
+          <div class="item"><div class="item-title">비중</div><div class="tag-row"><span class="tag tag-light">비하인드 35%</span><span class="tag tag-light">생각·철학 25%</span><span class="tag tag-light">일상 20%</span><span class="tag tag-light">에피소드 20%</span></div></div>
+        </div>
+        <div class="profile-mockup">
+          <div class="profile-header"><div class="profile-avatar profile-avatar-personal">민</div><div class="profile-stats"><div class="profile-stat"><div class="profile-stat-num">—</div><div class="profile-stat-label">게시물</div></div><div class="profile-stat"><div class="profile-stat-num">—</div><div class="profile-stat-label">팔로워</div></div></div></div>
+          <div class="profile-name">민병석 · MAMORU 대표</div>
+          <div class="profile-bio">미용가위 10년 · 복원수리 전문<br><span class="profile-bio-tag">느리지만 정확하게</span><br>MAMORU를 만드는 사람의 이야기<br>↓ @mamoru_scissors</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feed & Highlights -->
+  <div class="section-title-block"><p class="section-label">C-02 — Feed & Templates</p><h2 class="section-heading">피드 구성 & 템플릿</h2></div>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-label">Feed Grid · 9칸 미리보기 (오피셜)</div>
+      <p class="item-text" style="margin-bottom:14px;">밝은(Shell) ↔ 어두운(Void)이 체스판처럼 교차.</p>
+      <div class="feed-grid">
+        <div class="feed-cell cell-product"><span class="feed-cell-label">제품</span></div>
+        <div class="feed-cell cell-restore"><span class="feed-cell-label">복원수리</span></div>
+        <div class="feed-cell cell-review"><span class="feed-cell-label">후기</span></div>
+        <div class="feed-cell cell-info"><span class="feed-cell-label">팁</span></div>
+        <div class="feed-cell cell-product"><span class="feed-cell-label">제품</span></div>
+        <div class="feed-cell cell-restore"><span class="feed-cell-label">복원수리</span></div>
+        <div class="feed-cell cell-review"><span class="feed-cell-label">후기</span></div>
+        <div class="feed-cell cell-info"><span class="feed-cell-label">관리</span></div>
+        <div class="feed-cell cell-product"><span class="feed-cell-label">제품</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Highlights · 하이라이트 (오피셜)</div>
+      <div class="highlights-row">
+        <div class="highlight-item"><div class="highlight-circle highlight-circle-dark">가이드</div><span class="highlight-name">구매가이드</span></div>
+        <div class="highlight-item"><div class="highlight-circle highlight-circle-dark">복원</div><span class="highlight-name">복원수리</span></div>
+        <div class="highlight-item"><div class="highlight-circle highlight-circle-dark">후기</div><span class="highlight-name">고객후기</span></div>
+        <div class="highlight-item"><div class="highlight-circle highlight-circle-light">관리</div><span class="highlight-name">가위관리</span></div>
+        <div class="highlight-item"><div class="highlight-circle highlight-circle-light">FAQ</div><span class="highlight-name">자주묻는</span></div>
+        <div class="highlight-item"><div class="highlight-circle highlight-circle-light">AS</div><span class="highlight-name">AS접수</span></div>
+      </div>
+    </div>
+
+    <p class="section-label" style="margin-bottom:16px;">오피셜 템플릿</p>
+    <div class="template-row">
+      <div class="template-card"><div class="template-preview tmpl-product"><span class="template-preview-watermark">MAMORU</span><p class="template-preview-label">Product</p><p class="template-preview-title">MR-600<br>블런트 시저</p><p class="template-preview-sub">입문 · 올라운드 · 6.0"</p></div><div class="template-info"><p class="template-info-name">제품 소개</p><p class="template-info-use">배경: Shell / 사진 중심</p></div></div>
+      <div class="template-card"><div class="template-preview tmpl-restore"><span class="template-preview-watermark">MAMORU</span><p class="template-preview-label">Restoration</p><p class="template-preview-title">복원수리<br>Before → After</p><p class="template-preview-sub">새 가위의 커트감을 되찾다</p></div><div class="template-info"><p class="template-info-name">복원수리</p><p class="template-info-use">배경: Void / 전후 비교</p></div></div>
+      <div class="template-card"><div class="template-preview tmpl-info"><span class="template-preview-watermark">MAMORU</span><p class="template-preview-label">Tip</p><p class="template-preview-title">틴닝가위<br>찝힘 해결법</p><p class="template-preview-sub">볼트 조절 한 번이면 됩니다</p></div><div class="template-info"><p class="template-info-name">정보 · 팁</p><p class="template-info-use">배경: Graphite / 캐러셀</p></div></div>
+    </div>
+    <div class="template-row">
+      <div class="template-card"><div class="template-preview tmpl-review"><span class="template-preview-watermark">MAMORU</span><p class="template-preview-label">Review</p><p class="template-preview-title" style="font-size:17px;">"진작 알았으면<br>얼마나 좋았을까요"</p><p class="template-preview-sub">미용 15년차 원장님</p></div><div class="template-info"><p class="template-info-name">고객 후기</p><p class="template-info-use">배경: White / 텍스트 중심</p></div></div>
+      <div class="template-card"><div class="template-preview tmpl-quote"><span class="template-preview-watermark">MAMORU</span><p class="template-preview-label">Philosophy</p><p class="template-preview-title">CUT THE FAKE,<br>KEEP THE REAL</p><p class="template-preview-sub">판매하지 않는다. 안내할 뿐이다.</p></div><div class="template-info"><p class="template-info-name">브랜드 철학</p><p class="template-info-use">배경: Void 그라데이션</p></div></div>
+      <div class="template-card"><div class="template-preview tmpl-personal"><span class="template-preview-watermark">bs.min</span><p class="template-preview-label">Behind</p><p class="template-preview-title">오늘의<br>작업대</p><p class="template-preview-sub">수리 3자루, 상담 2건</p></div><div class="template-info"><p class="template-info-name">개인: 비하인드</p><p class="template-info-use">배경: Parchment / 자연광</p></div></div>
+    </div>
+  </div>
+
+  <!-- Caption & Rhythm -->
+  <div class="section-title-block"><p class="section-label">C-03 — Caption & Rhythm</p><h2 class="section-heading">캡션 & 게시 리듬</h2></div>
+  <div class="wrap">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-label">오피셜 캡션</div>
+        <div class="item"><div class="item-title">원칙</div><div class="item-text">짧고 명확. 하나의 메시지. 이모지 최소. 느낌표 남발 금지.</div></div>
+        <div class="caption-example"><strong>틴닝가위, 모발 찝힘.</strong><br><br>대부분 가위 문제가 아닙니다.<br>볼트 한 번 조절이면 해결됩니다.<br><br>새 가위 살 필요 없습니다.<br><br><span class="caption-hashtag">#마모루 #미용가위 #틴닝가위</span></div>
+      </div>
+      <div class="card">
+        <div class="card-label">개인(bs.min) 캡션</div>
+        <div class="item"><div class="item-title">원칙</div><div class="item-text">대화하듯 편하게. 장난기는 없이. 핵심은 앞에.</div></div>
+        <div class="caption-example"><strong>오늘 15년차 원장님이 하신 말.</strong><br><br>"이거 왜 진작 안 알려줬어요?"<br><br>볼트 한 번 돌렸을 뿐인데.<br>그동안 불편하게 쓰고 계셨던 거다.<br><br>이런 순간에 이 일 하길 잘했다 싶다.</div>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:20px;">
+      <div class="card">
+        <div class="card-label">오피셜 게시 리듬</div>
+        <div class="item-text">피드: 주 2~3회 / 스토리: 매일 가능 / 릴스: 주 1~2회<br>퀄리티 > 빈도. "느리지만 정확한" 브랜드.</div>
+      </div>
+      <div class="card">
+        <div class="card-label">개인 게시 리듬</div>
+        <div class="item-text">피드: 주 1~2회 / 스토리: 자유 / 릴스: 필요시<br>부담 없이. 2주 이상 공백만 피하기.</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:20px;">
+      <div class="card-label">Cross-Linking · 두 계정 연결</div>
+      <div class="item"><div class="item-title">궁극적 동선</div><div class="item-text" style="font-weight:600;color:var(--void);">유튜브 → 인스타 개인(사람에 관심) → 인스타 오피셜(브랜드 확인) → 쇼핑몰(구매·상담)</div></div>
+    </div>
+  </div>
+
+
+  <!-- ╔═══════════════════════════════════════════════╗
+       ║  DOCUMENT D: 쇼핑몰 리뉴얼 가이드                  ║
+       ╚═══════════════════════════════════════════════╝ -->
+  <div class="mega-divider" id="doc-d">
+    <p class="mega-divider-label">Document D</p>
+    <h2>쇼핑몰 리뉴얼<br>디자인 가이드</h2>
+    <p class="mega-divider-sub">아임웹 + 코드위젯(iframe) · Claude Code 작업용</p>
+  </div>
+
+  <!-- Implementation Environment -->
+  <div class="section-title-block"><p class="section-label">D-00 — Implementation</p><h2 class="section-heading">구현 환경 & 제약 조건</h2></div>
+  <div class="wrap">
+    <div class="alert alert-critical"><strong>⚠ 이 문서는 "방향 가이드"입니다</strong>와이어프레임과 레이아웃은 톤·구조·느낌의 레퍼런스일 뿐, 그대로 복사하는 설계도가 아닙니다.</div>
+
+    <div class="card-dark card">
+      <div class="card-label">Architecture · 구조</div>
+      <div class="diagram" style="background:var(--graphite);color:var(--mist);border-color:var(--stone);">
+        <span class="dim">[ 아임웹 디자인모드 ]</span><br>
+        &nbsp;&nbsp;├─ 아임웹 기본 헤더/네비 <span class="dim">← 기능 유지, CSS로 디자인 커스텀</span><br>
+        &nbsp;&nbsp;├─ <span class="highlight" style="color:var(--cream);">코드위젯 (iframe)</span> <span class="arrow">→</span> <span class="highlight" style="color:#A8C4A0;">GitHub Pages / Supabase</span><br>
+        &nbsp;&nbsp;├─ 아임웹 기본 상품 목록/상세 <span class="dim">← 기능 유지, CSS로 디자인 커스텀</span><br>
+        &nbsp;&nbsp;└─ 아임웹 기본 푸터 <span class="dim">← 기능 유지, CSS로 디자인 커스텀</span>
+      </div>
+    </div>
+
+    <div class="alert alert-warn"><strong>⚠ "기능"은 건드리지 않는다 / "디자인"은 적극 커스텀한다</strong></div>
+
+    <div class="card">
+      <div class="card-label">❌ 기능 — 절대 안 건드림</div>
+      <div class="item-text">장바구니 로직 · 결제 프로세스 · 회원/로그인 시스템 · 상품 등록 구조 · 카테고리/필터 기능</div>
+    </div>
+
+    <div class="card-dark card">
+      <div class="card-label">✅ 공통 CSS로 디자인 커스텀하는 영역</div>
+      <div class="item"><div class="item-title">헤더 / 네비게이션</div><div class="item-text">기능 유지, CSS로 색상·폰트·간격 커스텀.</div></div>
+      <div class="item"><div class="item-title">상품 목록 / 카드</div><div class="item-text">기존처럼 CSS로 카드 스타일·이미지 비율·호버 효과 적용.</div></div>
+      <div class="item"><div class="item-title">상품 상세 상단</div><div class="item-text">이미지 갤러리·가격·구매버튼 디자인을 CSS로 커스텀.</div></div>
+      <div class="item"><div class="item-title">푸터 / 전체 공통</div><div class="item-text">폰트 로드, 색상 변수, SEO, 공통 함수 유지 및 업데이트.</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">코드위젯(iframe)으로 별도 제작</div>
+      <div class="item-text">메인 히어로 · Trust Numbers · 복원수리 CTA · 브랜드(About) 페이지 · 복원수리 소개 · 상품 상세 하단 · 상담/AS 폼</div>
+    </div>
+  </div>
+
+  <!-- Responsive & Markers -->
+  <div class="section-title-block"><p class="section-label">D-01 — Responsive & Markers</p><h2 class="section-heading">반응형 & 수정 마커</h2></div>
+  <div class="wrap">
+    <div class="card-dark card">
+      <div class="card-label">반응형 필수 규칙</div>
+      <div class="item"><div class="item-title">핵심</div><div class="item-text">PC 코드위젯에 삽입한 HTML이 모바일에서도 자동 반응형으로 보여야 한다. viewport meta, 미디어 쿼리, 터치 영역 44px, 텍스트 최소 14px 필수.</div></div>
+      <div class="code-block">
+        <span class="comment">/* 모든 iframe 페이지 필수 */</span><br>
+        &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;<br><br>
+        <span class="sel">@media (max-width: 767px)</span> {<br>
+        &nbsp;&nbsp;<span class="comment">/* 그리드 1열, 폰트 축소, 간격 축소 */</span><br>
+        }
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">✏️ 수정 가능 마커 시스템</div>
+      <div class="item"><div class="item-text">대표님이 직접 수정할 수 있는 부분에 마커를 달아 표시합니다.</div></div>
+      <div class="code-block">
+        <span class="edit-mark">&lt;!-- ✏️ 수정가능: 히어로 메인 타이틀 --&gt;</span><br>
+        &lt;h1&gt;미용가위의 올바른 기준.&lt;/h1&gt;<br><br>
+        <span class="edit-mark">&lt;!-- ✏️ 수정가능: 이미지 (URL만 교체) --&gt;</span><br>
+        &lt;img src="<span class="val">여기에-이미지-URL</span>"&gt;<br><br>
+        <span class="edit-mark">&lt;!-- 🔒 수정금지 --&gt;</span><br>
+        <span class="comment">&lt;!-- 구조 코드, 건드리면 깨짐 --&gt;</span>
+      </div>
+      <table class="spec-table">
+        <tr><th>마커</th><th>의미</th><th>할 일</th></tr>
+        <tr><td>✏️ 수정가능: [텍스트]</td><td>글자 변경 가능</td><td>태그 안 글자만 바꾸기</td></tr>
+        <tr><td>✏️ 수정가능: [이미지]</td><td>이미지 교체 가능</td><td>src="" 안 URL만 교체</td></tr>
+        <tr><td>✏️ 수정가능: [링크]</td><td>링크 변경 가능</td><td>href="" 안 URL만 교체</td></tr>
+        <tr><td>🔒 수정금지</td><td>건드리면 안 됨</td><td>절대 변경 금지</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- CSS Variables -->
+  <div class="section-title-block"><p class="section-label">D-02 — CSS Foundation</p><h2 class="section-heading">CSS 변수 & 스펙</h2></div>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-label">CSS Variables · 모든 코드위젯에 복사</div>
+      <div class="code-block">
+        <span class="comment">/* ===== MAMORU Design System v1.0 ===== */</span><br>
+        <span class="sel">:root</span> {<br>
+        &nbsp;&nbsp;<span class="prop">--void</span>: <span class="val">#1A1A1A</span>; <span class="prop">--graphite</span>: <span class="val">#2D2D2D</span>; <span class="prop">--stone</span>: <span class="val">#4A4A4A</span>;<br>
+        &nbsp;&nbsp;<span class="prop">--warm-gray</span>: <span class="val">#8A8580</span>; <span class="prop">--mist</span>: <span class="val">#B8B4AF</span>; <span class="prop">--sand</span>: <span class="val">#D4D0CB</span>;<br>
+        &nbsp;&nbsp;<span class="prop">--parchment</span>: <span class="val">#EDEBE8</span>; <span class="prop">--shell</span>: <span class="val">#F5F3F0</span>; <span class="prop">--cream</span>: <span class="val">#FAF9F7</span>;<br>
+        &nbsp;&nbsp;<span class="prop">--font-display</span>: <span class="val">'Outfit', sans-serif</span>;<br>
+        &nbsp;&nbsp;<span class="prop">--font-body</span>: <span class="val">'Plus Jakarta Sans', 'Noto Sans KR', sans-serif</span>;<br>
+        &nbsp;&nbsp;<span class="prop">--radius-sm</span>: <span class="val">8px</span>; <span class="prop">--radius-md</span>: <span class="val">12px</span>; <span class="prop">--radius-lg</span>: <span class="val">16px</span>; <span class="prop">--radius-xl</span>: <span class="val">20px</span>;<br>
+        &nbsp;&nbsp;<span class="prop">--ease</span>: <span class="val">cubic-bezier(0.4, 0, 0.2, 1)</span>; <span class="prop">--duration</span>: <span class="val">0.3s</span>;<br>
+        }
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Button · 버튼 3종</div>
+      <table class="spec-table">
+        <tr><th>타입</th><th>배경</th><th>텍스트</th><th>호버</th></tr>
+        <tr><td>Primary</td><td>--void</td><td>--cream</td><td>--graphite + shadow</td></tr>
+        <tr><td>Secondary</td><td>transparent, border --sand</td><td>--void</td><td>--shell 배경</td></tr>
+        <tr><td>Text Link</td><td>없음</td><td>--warm-gray</td><td>--void 전환</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Page Direction -->
+  <div class="section-title-block"><p class="section-label">D-03 — Page Direction</p><h2 class="section-heading">페이지별 방향</h2></div>
+  <div class="wrap">
+    <div class="card-dark card">
+      <div class="card-label">Main Page · 메인</div>
+      <div class="item"><div class="item-title">톤</div><div class="item-text">"이 브랜드는 다르다"를 느끼게. 잡화점이 아닌 브랜드 쇼룸.</div></div>
+    </div>
+    <div class="annotation"><span class="annotation-num">①</span><div><strong>Hero</strong> — Void 배경. 슬로건 + 한 줄 카피 + CTA. 최소 70vh. 반응형 필수.</div></div>
+    <div class="annotation"><span class="annotation-num">②</span><div><strong>Trust Numbers</strong> — 경력 10+년, 리뷰 160+, 맞춤상담 100%, 할인 0. Outfit 900 큰 사이즈.</div></div>
+    <div class="annotation"><span class="annotation-num">③</span><div><strong>가위 프리뷰</strong> — 대표 가위 3~6종. 아임웹 기본 위젯 또는 코드위젯. 3열/모바일 2열.</div></div>
+    <div class="annotation"><span class="annotation-num">④</span><div><strong>복원수리 CTA</strong> — Void 배경. 전/후 비교. "첫 날의 커트감을 되찾아 드립니다."</div></div>
+    <div class="annotation"><span class="annotation-num">⑤</span><div><strong>고객 후기</strong> — 실제 네이버 리뷰 2~4개. 카드형 또는 캐러셀.</div></div>
+    <div class="annotation"><span class="annotation-num">⑥</span><div><strong>브랜드 한마디</strong> — "판매하지 않는다. 안내할 뿐이다." Void 배경, Display 사이즈.</div></div>
+
+    <div class="card" style="margin-top:24px;">
+      <div class="card-label">Product List · 상품 목록</div>
+      <div class="item"><div class="item-title">구현</div><div class="item-text">아임웹 기본 + 공통 CSS. 카드 radius 12px, 호버 translateY(-4px), 이미지 배경 Shell, 뱃지 제거.</div></div>
+      <div class="item"><div class="item-title">카테고리</div><div class="item-text">가위: 블런트·틴닝·스트록·세트 / 제품: 빗·브러시·클리퍼·기타 / 복원수리: 블런트·틴닝</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Product Detail · 상품 상세</div>
+      <div class="item"><div class="item-title">상단</div><div class="item-text">아임웹 기본(이미지 6컷, 가격, 구매버튼) + CSS 커스텀.</div></div>
+      <div class="item"><div class="item-title">하단 (코드위젯)</div><div class="item-text">① 이 가위에 대하여 ② 스펙 테이블 ③ <strong>MAMORU's Note</strong> (이런 분에게 맞습니다 / 맞지 않을 수 있습니다) ④ 관련 상품</div></div>
+    </div>
+
+    <div class="card-dark card">
+      <div class="card-label">Brand Page · 브랜드(About)</div>
+      <div class="item"><div class="item-text" style="color:var(--cream);">코드위젯 전체 제작. 스크롤 스토리텔링.<br>① Hero(슬로건) → ② 문제 제기 → ③ MAMORU의 답(가치 3개) → ④ 복원수리 → ⑤ 대표 소개 → ⑥ 원칙 → ⑦ CTA</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Restoration · 복원수리</div>
+      <div class="item"><div class="item-text">코드위젯 전체 제작.<br>① Hero(전/후 비교) → ② 일반 vs MAMORU 비교 → ③ 프로세스 → ④ Before/After 갤러리 → ⑤ 가격 → ⑥ CTA</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Consultation & AS · 상담·AS</div>
+      <div class="item"><div class="item-text">코드위젯 폼 제작. 입력 필드: border --sand, radius 8px, focus --void. 여백 넉넉. Primary 버튼.</div></div>
+    </div>
+  </div>
+
+  <!-- Global Rules -->
+  <div class="section-title-block"><p class="section-label">D-04 — Global Rules & Checklist</p><h2 class="section-heading">공통 규칙 & 체크리스트</h2></div>
+  <div class="wrap">
+    <div class="card-dark card">
+      <div class="card-label">디자인 원칙 5개</div>
+      <div class="item"><div class="item-title">① 여백이 곧 고급감</div><div class="item-text">섹션 간 최소 120px(PC), 80px(모바일).</div></div>
+      <div class="item"><div class="item-title">② 사진이 말하게</div><div class="item-text">사진 크게, 텍스트 보조. 배경 Shell 또는 White.</div></div>
+      <div class="item"><div class="item-title">③ 장식 금지</div><div class="item-text">뱃지, 리본, 그라데이션 배경, 포인트 컬러 — 전부 금지.</div></div>
+      <div class="item"><div class="item-title">④ 모바일 우선</div><div class="item-text">미용사는 모바일 접속. 터치 44px, 텍스트 14px+.</div></div>
+      <div class="item"><div class="item-title">⑤ 일관성</div><div class="item-text">모든 페이지에서 같은 컬러, 서체, 간격, radius.</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Claude Code 체크리스트</div>
+      <div class="item"><div class="item-title">작업 전</div><div class="item-text">□ CSS 변수 복사 □ Google Fonts 3종 로드 □ viewport meta □ iframe 높이 자동 조절 스크립트</div></div>
+      <div class="item"><div class="item-title">작업 중</div><div class="item-text">□ ✏️ 마커 삽입 □ 파일 상단 안내문 □ 팔레트 9색+White 내 □ radius 스펙대로 □ 장식 없음 □ 아임웹 기능 침범 안 함</div></div>
+      <div class="item"><div class="item-title">작업 후</div><div class="item-text">□ PC(1200px+) 확인 □ 태블릿(768px) 확인 □ 모바일(375px) 확인 □ 터치 44px+ □ 텍스트 14px+ □ 이미지 안 잘림 □ <strong>"잡화점이 아니다" 최종 점검</strong></div></div>
+    </div>
+  </div>
+
+
+  <!-- ╔═══════════════════════════════════════════════╗
+       ║  FOOTER                                        ║
+       ╚═══════════════════════════════════════════════╝ -->
+  <footer class="guide-footer">
+    <p>
+      <strong>MAMORU Complete Brand Guide v1.0</strong><br><br>
+      A. 브랜드 방향서 · B. 디자인 시스템 · C. 인스타그램 가이드 · D. 쇼핑몰 리뉴얼 가이드<br>
+      이 파일 하나에 MAMORU의 모든 기준이 담겨 있습니다.<br>
+      어디에 가져가든, 누구에게 보여주든, 이 파일이 기준입니다.<br><br>
+      <strong>CUT THE FAKE, KEEP THE REAL</strong>
+    </p>
+  </footer>
+
+</body>
+</html>

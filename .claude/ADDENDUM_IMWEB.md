@@ -3,7 +3,7 @@
 ## 0. Non-Negotiables (아키텍처 절대 규칙)
 - Front-End(접수): 아임웹(코드/iframe 위젯) 유지
 - Backend 수신: code.gs의 doPost(e)는 “삭제/대체/우회 금지”
-- Back-End(관리): 시트에 저장된 직후의 후속 업무(상태/알림/문서/차단)는 AppSheet 네이티브 우선
+- Back-End(관리): TMS에서 전체 관리 (AppSheet 폐기 완료)
 
 ---
 
@@ -17,7 +17,6 @@
 - 금지:
   - 추측으로 단정/기능이 있는 것처럼 말하기
   - 명시적 요청 없이 JS 로직 변경
-  - 후속 자동화를 GAS로 먼저 제안(관리 자동화는 AppSheet 네이티브 우선)
 
 ---
 
@@ -48,17 +47,20 @@
 
 ---
 
-## 4. Design System: Terracotta Editorial (구현 규격 최소셋)
+## 4. Design System: MAMORU Complete Brand Guide v1.0
+- **최우선 참조**: `.claude/MAMORU-Complete-Brand-Guide-v1.0 (1).html` (디자인 작업 전 필수 read_file)
 - 핵심: 클릭 가능한 것 vs 배경이 즉시 구분될 것
-- **컬러 시스템**: `.claude/BRAND_COLOR_SYSTEM.md` 참조 (필수 read_file)
-  - Base 60%: Cream `#F2F2EA` (전체 배경)
-  - Dark 30%: Indigo Black `#181725` (다크 섹션, 메인 텍스트)
-  - Accent 10%: Terracotta `#D4613E` (CTA, 배지, 강조)
-  - ※ 순수 블랙(#000) / 순수 화이트(#FFF) 사용 금지
-  - ※ 금지 조합 및 보조/기능 컬러는 BRAND_COLOR_SYSTEM.md 참조
-- 간격: 8px 단위(8/16/24/32)
-- 브레이크포인트 권장: 360 / 768 / 1024 / 1440 (상세: `PAGE_DESIGN_GUIDE.md` § 3)
+- **컬러**: 모노크롬 팔레트 (액센트 컬러 없음)
+  - Dark: Void `#1A1A1A` · Graphite `#2D2D2D` · Stone `#4A4A4A`
+  - Neutral: Warm Gray `#8A8580` · Mist `#B8B4AF` · Sand `#D4D0CB`
+  - Light: Parchment `#EDEBE8` · Shell `#F5F3F0` · Cream `#FAF9F7` · White `#FFFFFF`
+- **서체**: Outfit(디스플레이) + Plus Jakarta Sans + Noto Sans KR(본문)
+- **CSS 변수**: `--void`, `--graphite`, `--stone`, `--warm-gray`, `--mist`, `--sand`, `--parchment`, `--shell`, `--cream`
+- **버튼**: Primary(Void/Cream) · Secondary(border Sand) · Text Link(Warm Gray→Void)
+- 간격: 섹션 간 최소 120px(PC) / 80px(모바일)
 - CTA 상태: default/hover/focus/disabled를 반드시 정의(접근성 포함)
+- 텍스트 최소: 14px(모바일), 터치 영역 44px
+- ※ 이전 Terracotta Editorial 팔레트 (#D4613E, #181725, #F2F2EA)는 폐기
 
 ---
 
