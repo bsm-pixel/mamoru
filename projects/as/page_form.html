@@ -9,34 +9,42 @@
 <meta name="color-scheme" content="light">
 <title>복원수리 접수 | MAMORU</title>
 
-<!-- [CONFIG] 외부 폰트 -->
-<link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<!-- [CONFIG] 외부 폰트 — Brand Guide v1.0 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@700;800;900&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 /* ══════════════════════════════════════════════════════════════════════
-   MAMORU Brand Kit: Terracotta Editorial - 복원수리 접수
+   MAMORU Brand Guide v1.0 — Monochrome · 복원수리 접수
    - GitHub Pages 정적 호스팅 버전
    ══════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────────────────────────────────────────────────
-   [CONFIG] 디자인 토큰 - 색상/간격 수정 시 이 영역 변경
+   [CONFIG] 디자인 토큰 — Brand Guide v1.0 Monochrome
    ───────────────────────────────────────────────────────────── */
 :root {
-  --bg-dark: #181725; /* Indigo Black (다크 섹션용) */
-  --mm-bg-cream: #F2F2EA; /* Cream 배경 */
-  --mm-bg-card: #FAFAF5; /* Card White */
-  --card-bg: #FAFAF5;
-  --card-border: rgba(24, 23, 37, 0.08);
-  --trust-gold: #D4613E; /* Terracotta */
-  --gold-dark: #B85232; /* Terracotta dark */
-  --text-primary: #181725;
-  --text-muted: #6B6980;
-  --line: rgba(24, 23, 37, 0.1);
-  --line-strong: rgba(24, 23, 37, 0.15);
+  --void: #1A1A1A;
+  --graphite: #2D2D2D;
+  --stone: #4A4A4A;
+  --warm-gray: #8A8580;
+  --mist: #B8B4AF;
+  --sand: #D4D0CB;
+  --parchment: #EDEBE8;
+  --shell: #F5F3F0;
+  --cream: #FAF9F7;
+  --white: #FFFFFF;
   --error: #ef4444;
-  --void-black: #181725;
-  --crisp-white: #FAFAF5;
+  /* 호환 별칭 — JS에서 참조하는 변수 없음, CSS 전용 */
+  --bg-dark: var(--void);
+  --card-bg: var(--white);
+  --card-border: var(--sand);
+  --text-primary: var(--void);
+  --text-muted: var(--warm-gray);
+  --line: var(--sand);
+  --line-strong: rgba(26, 26, 26, 0.15);
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
 }
 
 * {
@@ -46,9 +54,9 @@
 }
 
 html, body {
-  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: var(--mm-bg-cream); /* Cream 배경 */
-  color: var(--text-primary);
+  font-family: var(--font-body);
+  background: var(--cream);
+  color: var(--void);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -83,7 +91,7 @@ html, body {
 }
 
 .header-logo {
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);
+  background: var(--void);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -93,16 +101,24 @@ html, body {
   margin-right: 10px;
 }
 
-.header-logo svg {
-  fill: var(--crisp-white);
-  width: 20px;
-  height: 20px;
+.header-logo-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .header-logo-img {
+    width: 26px;
+    height: 26px;
+  }
 }
 
 .header h1 {
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--void);
   font-size: 18px;
 }
 
@@ -117,10 +133,6 @@ html, body {
     height: 40px;
     margin-right: 0;
   }
-  .header-logo svg {
-    width: 24px;
-    height: 24px;
-  }
   .header h1 {
     font-size: 24px;
   }
@@ -130,9 +142,10 @@ html, body {
    [STYLE] 카드
    ───────────────────────────────────────────────────────────── */
 .card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
+  background: var(--white);
+  border: 1px solid var(--sand);
   border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .card-body {
@@ -202,12 +215,12 @@ textarea,
 select {
   width: 100%;
   height: 48px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--sand);
   border-radius: 12px;
-  background: #FAFAF5; /* Card White */
+  background: var(--white);
   font-family: inherit;
   font-size: 15px;
-  color: var(--text-primary);
+  color: var(--void);
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
   -webkit-appearance: none;
@@ -225,8 +238,8 @@ select {
 }
 
 select {
-  color-scheme: light; /* 라이트 테마 */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(24,23,37,0.4)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  color-scheme: light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238A8580' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   padding-right: 36px;
@@ -243,22 +256,22 @@ input[type="text"]:focus,
 input[type="tel"]:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--trust-gold);
-  box-shadow: 0 0 0 1px var(--trust-gold) inset;
+  border-color: var(--void);
+  box-shadow: 0 0 0 1px var(--void) inset;
 }
 
 select option {
-  background: #FAFAF5;
-  color: #181725;
+  background: var(--white);
+  color: var(--void);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: rgba(24, 23, 37, 0.3);
+  color: var(--mist);
 }
 
 input[readonly] {
-  background: rgba(24, 23, 37, 0.02);
+  background: var(--shell);
   cursor: pointer;
 }
 
@@ -296,8 +309,7 @@ select.err {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   [SECTION] 진행방식 선택 - 아이콘 버튼
-   - 아이콘 경로: ./icons/pickup.svg, ./icons/direct.svg
+   [SECTION] 진행방식 선택
    ═══════════════════════════════════════════════════════════════════ */
 .segment-wrap {
   margin-bottom: 4px; /* 8→4 안내문구와 간격 축소 */
@@ -312,12 +324,12 @@ select.err {
 /* 진행방식 안내문구 */
 .type-info {
   padding: 14px 16px;
-  background: rgba(212, 97, 62, 0.06);
-  border-left: 2px solid var(--trust-gold);
+  background: var(--shell);
+  border-left: 2px solid var(--void);
   border-radius: 0 8px 8px 0;
   font-size: 13px;
   line-height: 1.7;
-  color: #6B6980;
+  color: var(--stone);
   margin-bottom: 24px;
 }
 
@@ -345,59 +357,38 @@ select.err {
 .segment-btn {
   flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   padding: 16px 12px;
-  min-height: 88px;
-  border: 1px solid var(--line-strong);
+  min-height: 56px;
+  border: 1px solid var(--sand);
   border-radius: 12px;
-  background: rgba(24, 23, 37, 0.02);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-muted);
+  background: var(--shell);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--warm-gray);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 @media (min-width: 768px) {
   .segment-btn {
-    min-height: 96px;
-    padding: 20px 16px;
-    gap: 10px;
+    min-height: 60px;
+    padding: 18px 16px;
+    font-size: 17px;
   }
 }
 
 .segment-btn:hover {
-  background: rgba(24, 23, 37, 0.04);
-  border-color: rgba(24, 23, 37, 0.2);
-}
-
-/* [STYLE] 아이콘 크기 - 수정 가능 */
-.segment-icon {
-  width: 32px;
-  height: 32px;
-  opacity: 0.5;
-  transition: opacity 0.2s;
-}
-
-@media (min-width: 768px) {
-  .segment-icon {
-    width: 36px;
-    height: 36px;
-  }
+  background: var(--parchment);
+  border-color: var(--warm-gray);
 }
 
 .segment-btn.active {
-  background: rgba(212, 97, 62, 0.08);
-  border-color: var(--trust-gold);
-  color: var(--trust-gold);
-}
-
-.segment-btn.active .segment-icon {
-  opacity: 1;
+  background: var(--void);
+  border-color: var(--void);
+  color: var(--cream);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -421,13 +412,13 @@ select.err {
 .btn-search {
   flex-shrink: 0;
   height: 48px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--sand);
   border-radius: 12px;
-  background: rgba(24, 23, 37, 0.03);
+  background: var(--shell);
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--void);
   cursor: pointer;
   transition: all 0.2s;
   padding: 0 16px;
@@ -440,9 +431,9 @@ select.err {
 }
 
 .btn-search:hover {
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);
-  color: var(--void-black);
-  border-color: var(--trust-gold);
+  background: var(--void);
+  color: var(--cream);
+  border-color: var(--void);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -473,20 +464,20 @@ select.err {
    [STYLE] 수량 입력
    ───────────────────────────────────────────────────────────── */
 .qty-row {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px; /* 모바일: 가격 영역과 간격 */
+}
+
+.qty-row .form-group {
+  margin-bottom: 0;
 }
 
 @media (min-width: 768px) {
   .qty-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 20px;
     margin-bottom: 24px;
-  }
-  .qty-row .form-group {
-    margin-bottom: 0;
   }
 }
 
@@ -521,7 +512,7 @@ select.err {
   bottom: auto;
   width: calc(100% - 32px);
   max-width: 360px;
-  background: #FAFAF5; /* Card White */
+  background: var(--white);
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   transform: translate(-50%, -50%) scale(0.95);
@@ -545,13 +536,13 @@ select.err {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(24,23,37,0.1);
+  border-bottom: 1px solid var(--sand);
 }
 
 .calendar-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--void);
 }
 
 .calendar-close {
@@ -582,16 +573,16 @@ select.err {
   align-items: center;
   justify-content: center;
   border: none;
-  background: rgba(24, 23, 37, 0.06);
+  background: var(--shell);
   border-radius: 8px;
-  color: var(--text-primary);
+  color: var(--void);
   cursor: pointer;
   font-size: 18px;
   transition: background 0.2s;
 }
 
 .calendar-nav-btn:hover {
-  background: rgba(24, 23, 37, 0.12);
+  background: var(--parchment);
 }
 
 .calendar-nav-btn:disabled {
@@ -602,7 +593,7 @@ select.err {
 .calendar-month-label {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--void);
 }
 
 /* [STYLE] 요일 헤더 */
@@ -610,14 +601,14 @@ select.err {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   padding: 8px 16px;
-  border-bottom: 1px solid rgba(24, 23, 37, 0.05);
+  border-bottom: 1px solid var(--parchment);
 }
 
 .calendar-weekday {
   text-align: center;
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--warm-gray);
   padding: 8px 0;
 }
 
@@ -640,7 +631,7 @@ select.err {
   justify-content: center;
   border-radius: 50%;
   font-size: 14px;
-  color: var(--text-primary);
+  color: var(--void);
   cursor: pointer;
   transition: all 0.15s;
   border: none;
@@ -648,7 +639,7 @@ select.err {
 }
 
 .calendar-day:hover:not(.disabled):not(.empty) {
-  background: rgba(24, 23, 37, 0.08);
+  background: var(--parchment);
 }
 
 .calendar-day.empty {
@@ -657,12 +648,12 @@ select.err {
 
 /* [STYLE] 날짜 상태 */
 .calendar-day.today {
-  border: 1px solid var(--trust-gold);
+  border: 1px solid var(--void);
 }
 
 .calendar-day.selected {
-  background: var(--trust-gold) !important;
-  color: #FAFAF5 !important; /* Terracotta 위 밝은 텍스트 */
+  background: var(--void) !important;
+  color: var(--cream) !important;
   font-weight: 600;
 }
 
@@ -714,8 +705,8 @@ select.err {
 .mm-price-summary {
   margin-top: 0;
   padding: 20px;
-  background: rgba(212, 97, 62, 0.05); /* Terracotta tint */
-  border: 1px solid rgba(212, 97, 62, 0.15);
+  background: var(--shell);
+  border: 1px solid var(--sand);
   border-radius: 12px;
 }
 
@@ -739,7 +730,7 @@ select.err {
 
 .mm-price-label {
   font-size: 14px;
-  color: #6B6980;
+  color: var(--warm-gray);
 }
 
 .mm-price-value {
@@ -749,12 +740,12 @@ select.err {
 }
 
 .mm-price-row--shipping .mm-price-value {
-  color: var(--trust-gold);
+  color: var(--stone);
 }
 
 .mm-price-divider {
   height: 1px;
-  background: rgba(24, 23, 37, 0.1);
+  background: var(--sand);
   margin: 16px 0;
 }
 
@@ -771,22 +762,22 @@ select.err {
 .mm-price-gold {
   font-size: 18px;
   font-weight: 700;
-  color: var(--trust-gold);
+  color: var(--void);
 }
 
 .mm-price-hint {
   margin-top: 12px;
   font-size: 12px;
-  color: #6B6980;
+  color: var(--warm-gray);
 }
 
 /* ─────────────────────────────────────────────────────────────
    [STYLE] 개인정보 동의
    ───────────────────────────────────────────────────────────── */
 .privacy-box {
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--sand);
   border-radius: 12px;
-  background: rgba(24, 23, 37, 0.02);
+  background: var(--shell);
   padding: 16px;
   margin-top: 0;
 }
@@ -808,12 +799,12 @@ select.err {
 
 .privacy-content {
   padding: 12px;
-  background: rgba(24, 23, 37, 0.03);
-  border: 1px solid var(--line);
+  background: var(--white);
+  border: 1px solid var(--sand);
   border-radius: 8px;
   font-size: 11px;
   line-height: 1.7;
-  color: var(--text-muted);
+  color: var(--stone);
   overflow-y: auto;
   white-space: pre-wrap;
   height: 120px;
@@ -837,7 +828,7 @@ select.err {
 .privacy-check input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: var(--trust-gold);
+  accent-color: var(--void);
   cursor: pointer;
 }
 
@@ -855,14 +846,14 @@ select.err {
 .btn-primary {
   width: 100%;
   height: 56px;
-  margin-top: 24px; /* 20→24 */
+  margin-top: 24px;
   border: none;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--trust-gold) 0%, var(--gold-dark) 100%);
+  background: var(--void);
   font-family: inherit;
   font-size: 16px;
   font-weight: 600;
-  color: var(--crisp-white);
+  color: var(--cream);
   letter-spacing: -0.02em;
   cursor: pointer;
   transition: opacity 0.2s;
@@ -904,7 +895,7 @@ select.err {
 }
 
 .modal-content {
-  background: #FAFAF5;
+  background: var(--white);
   border-radius: 16px;
   overflow: hidden;
   width: calc(100% - 32px);
@@ -945,14 +936,14 @@ select.err {
 
 .modal-body p {
   font-size: 14px;
-  color: #6B6980;
+  color: var(--stone);
   line-height: 1.6;
 }
 
 .modal-footer {
   padding: 16px 20px;
-  border-top: 1px solid var(--line);
-  background: rgba(24, 23, 37, 0.04);
+  border-top: 1px solid var(--sand);
+  background: var(--shell);
   display: flex;
   justify-content: center;
 }
@@ -987,7 +978,7 @@ select.err {
 }
 
 .postcode-wrap {
-  background: #FAFAF5;
+  background: var(--white);
   border-radius: 16px;
   overflow: hidden;
   display: flex;
@@ -1075,14 +1066,14 @@ select.err {
   align-items: flex-start;
   justify-content: center;
   padding-top: clamp(72px, 22vh, 200px);
-  background: rgba(242, 242, 234, 0.98); /* Cream 배경 */
+  background: rgba(250, 249, 247, 0.98); /* Cream */
   z-index: 99999;
 }
 
 #bootFallback {
   border-radius: 50%;
-  border: 3px solid var(--line);
-  border-top-color: var(--trust-gold);
+  border: 3px solid var(--sand);
+  border-top-color: var(--void);
   animation: bootspin 1s linear infinite;
   width: 40px;
   height: 40px;
@@ -1104,8 +1095,8 @@ select.err {
        ═══════════════════════════════════════════════════════════════ -->
   <div class="header">
     <div class="header-logo">
-      <!-- 공구(렌치) 아이콘 — 복원수리 -->
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
+      <!-- 거북이 심볼 로고 -->
+      <img src="./vvvv12.svg" alt="MAMORU" class="header-logo-img">
     </div>
     <h1>복원수리 접수</h1>
   </div>
@@ -1113,28 +1104,19 @@ select.err {
   <div class="card">
     <div class="card-body">
       <!-- ═══════════════════════════════════════════════════════════
-           [SECTION] 진행방식 선택 (아이콘 수정 가능)
-           - 아이콘 경로: ./icons/pickup.svg, ./icons/direct.svg
+           [SECTION] 진행방식 선택
            ═══════════════════════════════════════════════════════════ -->
       <div class="segment-wrap">
         <div class="section-title">복원수리 진행방식</div>
         <div class="segment-control" id="seg">
-          <button type="button" class="segment-btn active" data-v="pickup">
-            <!-- [ICON] 방문수거 아이콘 경로 - 변경 가능 -->
-            <img src="./icons/pickup.svg" alt="" class="segment-icon">
-            <span>방문수거</span>
-          </button>
-          <button type="button" class="segment-btn" data-v="direct">
-            <!-- [ICON] 직접발송 아이콘 경로 - 변경 가능 -->
-            <img src="./icons/direct.svg" alt="" class="segment-icon">
-            <span>직접발송</span>
-          </button>
+          <button type="button" class="segment-btn active" data-v="pickup">방문수거</button>
+          <button type="button" class="segment-btn" data-v="direct">직접발송</button>
         </div>
         <input type="hidden" id="proceed_type" value="방문수거">
       </div>
 
       <!-- 진행방식 안내문구 -->
-      <div class="type-info" id="type-info">택배 기사님이 입력하신 주소지로 방문하여 수거해갑니다.<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요.</div>
+      <div class="type-info" id="type-info">우체국 기사님이 요청 날짜에 방문하여 수거해갑니다<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요</div>
 
       <div class="form-divider"></div>
 
@@ -1197,18 +1179,19 @@ select.err {
 
       <div class="qty-row">
         <div class="form-group">
-          <label class="required">마모루가위 수량</label>
+          <label>마모루가위 수량</label>
           <select id="qty_mamoru">
-            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
+            <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
           </select>
         </div>
         <div class="form-group">
-          <label>타사가위 추가진행</label>
+          <label>타사가위 수량</label>
           <select id="qty_other">
             <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
           </select>
         </div>
       </div>
+      <div id="err-qty" class="err-msg">마모루가위 또는 타사가위 중 최소 1자루를 선택하세요</div>
 
       <!-- ═══════════════════════════════════════════════════════════
            [SECTION] 가격 계산
@@ -1216,7 +1199,7 @@ select.err {
       <div class="mm-price-summary" id="priceSummary">
         <div class="mm-price-row">
           <span class="mm-price-label">마모루 가위</span>
-          <span class="mm-price-value" id="priceMaruru">10,000원 × 1 = 10,000원</span>
+          <span class="mm-price-value" id="priceMaruru">0원</span>
         </div>
         <div class="mm-price-row">
           <span class="mm-price-label">타사 가위</span>
@@ -1224,12 +1207,12 @@ select.err {
         </div>
         <div class="mm-price-row mm-price-row--shipping" id="shippingRow">
           <span class="mm-price-label">수거비</span>
-          <span class="mm-price-value" id="priceShipping">5,000원</span>
+          <span class="mm-price-value" id="priceShipping">0원</span>
         </div>
         <div class="mm-price-divider"></div>
         <div class="mm-price-row mm-price-row--total">
           <span class="mm-price-label">예상 금액</span>
-          <span class="mm-price-value mm-price-gold" id="priceTotal">15,000원</span>
+          <span class="mm-price-value mm-price-gold" id="priceTotal">0원</span>
         </div>
         <p class="mm-price-hint">※ 실제 금액은 검수 후 확정됩니다.</p>
       </div>
@@ -1623,7 +1606,7 @@ select.err {
 
   function updatePrice() {
     const isPickup = $('proceed_type').value === '방문수거';
-    const mamoruQty = parseInt($('qty_mamoru').value) || 1;
+    const mamoruQty = parseInt($('qty_mamoru').value) || 0;
     const otherQty = parseInt($('qty_other').value) || 0;
     const totalQty = mamoruQty + otherQty;
 
@@ -1632,7 +1615,9 @@ select.err {
     const shippingFee = getShippingFee(isPickup, totalQty);
     const grandTotal = mamoruTotal + otherTotal + shippingFee;
 
-    $('priceMaruru').textContent = `${formatPrice(PRICE_MAMORU)} × ${mamoruQty} = ${formatPrice(mamoruTotal)}`;
+    $('priceMaruru').textContent = mamoruQty > 0
+      ? `${formatPrice(PRICE_MAMORU)} × ${mamoruQty} = ${formatPrice(mamoruTotal)}`
+      : '0원';
     $('priceOther').textContent = otherQty > 0
       ? `${formatPrice(PRICE_OTHER)} × ${otherQty} = ${formatPrice(otherTotal)}`
       : '0원';
@@ -1651,8 +1636,8 @@ select.err {
     $('priceTotal').textContent = formatPrice(grandTotal);
   }
 
-  $('qty_mamoru').addEventListener('change', updatePrice);
-  $('qty_other').addEventListener('change', updatePrice);
+  $('qty_mamoru').addEventListener('change', function() { updatePrice(); setErr('err-qty', false); });
+  $('qty_other').addEventListener('change', function() { updatePrice(); setErr('err-qty', false); });
 
   // ─────────────────────────────────────────────────────────────
   // 폼 임시저장 (Draft)
@@ -1789,6 +1774,12 @@ select.err {
       setErr('err-pick', false);
     }
 
+    // 수량: 둘 중 하나는 1 이상
+    const qtyTotal = (parseInt($('qty_mamoru').value) || 0) + (parseInt($('qty_other').value) || 0);
+    const qtyOk = qtyTotal >= 1;
+    setErr('err-qty', !qtyOk);
+    ok &= qtyOk;
+
     setErr('err-agree', !agree);
     ok &= agree;
     return !!ok;
@@ -1806,7 +1797,7 @@ select.err {
     $('pickup_date').value = '';
     selectedDate = null;
     $('delivery_method').value = '';
-    $('qty_mamoru').value = '1';
+    $('qty_mamoru').value = '0';
     $('qty_other').value = '0';
     $('agreeCk').checked = false;
 
@@ -1815,7 +1806,7 @@ select.err {
     $('proceed_type').value = '방문수거';
     secPick.style.display = getPickDisplay();
 
-    ['err-name', 'err-phone', 'err-addr', 'err-pick', 'err-agree'].forEach(id => setErr(id, false));
+    ['err-name', 'err-phone', 'err-addr', 'err-pick', 'err-qty', 'err-agree'].forEach(id => setErr(id, false));
     if ($('memo')) $('memo').value = '';
 
     window.__AS_notifyHeight && window.__AS_notifyHeight();
