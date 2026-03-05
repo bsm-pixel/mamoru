@@ -5,8 +5,17 @@
  * Make 시나리오에서 _meta.func (event) + template 으로 분기 → 솔라피 알림톡
  */
 
-const MAKE_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL || '';
+const MAKE_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL || '';           // 상담 알림톡
+const MAKE_REPAIR_WEBHOOK_URL = process.env.MAKE_REPAIR_WEBHOOK_URL || ''; // 복원수리 상태변경
 const VERSION = 'tms-2.2';
+
+/** 복원수리 상태변경 전용 템플릿 (별도 Make 시나리오) */
+const REPAIR_STATUS_TEMPLATES = new Set<NotifyTemplate>([
+  'as_cost_notice',
+  'as_payment_confirmed',
+  'as_shipped',
+  'as_satisfaction',
+]);
 
 export type NotifyTemplate =
   | 'confirmed'           // 매장방문 확정
@@ -67,8 +76,13 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
   success: boolean;
   error?: string;
 }> {
-  if (!MAKE_WEBHOOK_URL) {
-    return { success: false, error: 'MAKE_WEBHOOK_URL 환경변수 미설정' };
+  // 템플릿에 따라 웹훅 URL 분기
+  const isRepairStatus = REPAIR_STATUS_TEMPLATES.has(payload.template);
+  const webhookUrl = isRepairStatus ? MAKE_REPAIR_WEBHOOK_URL : MAKE_WEBHOOK_URL;
+  const envName = isRepairStatus ? 'MAKE_REPAIR_WEBHOOK_URL' : 'MAKE_WEBHOOK_URL';
+
+  if (!webhookUrl) {
+    return { success: false, error: `${envName} 환경변수 미설정` };
   }
 
   const event = TEMPLATE_EVENT_MAP[payload.template] || payload.template.toUpperCase();
@@ -107,7 +121,7 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
 
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const res = await fetch(MAKE_WEBHOOK_URL, {
+      const res = await fetch(webhookUrl, {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
