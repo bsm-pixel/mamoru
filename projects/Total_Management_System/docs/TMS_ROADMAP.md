@@ -273,13 +273,13 @@
 |---|------|------|------|
 | 4-1 | 일반 주문 알림 | 📋 | 아임웹 자동 알림톡 활용 (TMS 개입 불필요) |
 | 4-2 | 상담 알림톡 17종 분기 | ✅ | Phase 1.8 구현 + 솔라피 검수 승인 (BC 메타데이터 제거 재검수 중) |
-| 4-3 | 복원수리 알림톡 5종 | ✅ | Phase 7 구현 + 솔라피 검수 승인 (BC 메타데이터 제거 재검수 중) |
+| 4-3 | 복원수리 알림톡 6종 | ✅ | Phase 7 구현 + as_cancelled 추가 (2026-03-05) + 솔라피 검수 승인 |
 | 4-4 | Make → 솔라피 직접 호출 전환 | 📋 | 검수 안정화 후 전환 예정 (비용 절감) |
 
 ### 알림톡 역할 분리
 - **일반 주문 (가위/주변제품)**: 아임웹 알림톡 (결제완료→발송→배송완료)
 - **상담 (매장/출장/톡상담)**: Solapi 전담 — 17종 템플릿 (Phase 1.8)
-- **복원수리 (계좌입금)**: Solapi 전담 5종 — 접수/비용안내/입금확인/출고/만족도 (Phase 7)
+- **복원수리 (계좌입금)**: Solapi 전담 6종 — 접수/비용안내/입금확인/출고/취소/만족도 (Phase 7)
 
 ---
 
@@ -348,7 +348,7 @@
 | 7-5 | 목록 UI + NAV | ✅ | /repairs 페이지, 상태 탭(6그룹: 신규접수/입고대기/작업중/출고/완료/취소), 경과일 표시 |
 | 7-6 | 상세 UI + 검수 UI | ✅ | 2컬럼 레이아웃, 검수 체크리스트(7항목), 자동 문구, 비용 안내, 출고, 타임라인 |
 | 7-7 | GAS 동기화 | ✅ | Code.gs doPost AS_CREATE → TMS sync webhook 추가, 상태변경 시 양방향 동기화 |
-| 7-8 | 알림톡 5종 | ✅ | as_received/as_cost_notice/as_payment_confirmed/as_shipped/as_satisfaction |
+| 7-8 | 알림톡 6종 | ✅ | as_received/as_cost_notice/as_payment_confirmed/as_shipped/as_cancelled/as_satisfaction |
 | 7-9 | Supabase SQL 실행 | 📋 | sql/phase7_repairs.sql → Supabase SQL Editor에서 실행 |
 | 7-10 | GAS Script Properties 설정 | 📋 | TMS_REPAIR_SYNC_URL, TMS_BASE_URL, CRON_SECRET 설정 |
 | 7-11 | 수리내역 페이지 TMS API 연동 | ✅ | page_as_report.html → GitHub Pages + TMS API(CORS) 구조로 구현 |
@@ -423,7 +423,7 @@
 ### 잔여 작업
 - [x] GAS Script Properties 설정 (TMS_REPAIR_SYNC_URL 등) ✅ 2026-02-28
 - [x] 솔라피 복원수리 템플릿 5종 등록/검수 승인 ✅ 2026-03-03
-- [ ] Make Router에 복원수리 5종 분기 추가
+- [ ] Make Router에 복원수리 6종 분기 추가 (as_cancelled 포함)
 - [ ] BC 메타데이터 제거 후 재검수 대기
 - [ ] **주소 수정 시 다음 주소검색 API 연동** (롯데택배 송장 호환)
 - [ ] 사진 업로드 Supabase Storage 연동 (버킷 생성 필요)
@@ -537,7 +537,7 @@
 ### 남은 운영 연동 작업 요약
 1. ~~**이카운트**: 환경변수 → 세션 테스트~~ ✅ 프로덕션 검증 완료 (2026-02-28) → ❌ Phase ERP-A에서 제거
 2. ~~**솔라피**: 복원수리 5종 + 계약서 1종 템플릿 등록 → 검수 제출~~ ✅ 23종 전체 검수 승인 (2026-03-03) → BC 메타데이터 제거 재검수 중
-3. **Make**: 상담 17종 Router 연결 진행 중 + 복원수리 5종 + 계약서 1종 연결 예정
+3. **Make**: 상담 17종 Router 연결 진행 중 + 복원수리 6종 + 계약서 1종 연결 예정
 4. ~~**GAS**: Script Properties 설정~~ ✅ 완료 (2026-02-28)
 5. **UI 확인**: Phase ERP 전체 모듈 동작 검증 (고객/제품/매입/재고/회계 포함)
 
@@ -567,6 +567,14 @@
 ---
 
 ## 작업 일지
+
+### 2026-03-05 (복원수리 알림톡 보강 + 접수폼 브랜드 전환)
+- **Make 웹훅 URL 분기**: 상담(`MAKE_WEBHOOK_URL`) / 복원수리 상태변경(`MAKE_REPAIR_WEBHOOK_URL`) 분리
+- **복원수리 알림톡 5종→6종**: `as_cancelled` (취소안내) 추가 — TMS 취소 시 자동 발송
+- **courier 필드 추가**: 출고완료 알림톡 배송조회 버튼 활성화 (`롯데택배` 고정)
+- **접수폼 브랜드 전환**: `page_form.html` Terracotta→Brand Guide v1.0 모노크롬 (CSS only)
+- **접수폼 로고 교체**: 거북이 심볼 SVG (`vvvv12.svg`)
+- 커밋: 79895a4, 24ba443, 6d8bebb, f8da8cd
 
 ### 2026-03-03 (솔라피 검수 승인 + BC 메타데이터 이슈 + Make Router)
 - **솔라피 23종 전체 검수 승인**: 상담 17종 + 복원수리 5종 + 계약서 1종

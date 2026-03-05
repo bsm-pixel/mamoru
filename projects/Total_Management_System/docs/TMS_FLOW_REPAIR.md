@@ -1,5 +1,5 @@
 # 복원수리 프로세스 흐름도
-> 최종 업데이트: 2026-03-03
+> 최종 업데이트: 2026-03-05
 
 ---
 
@@ -29,6 +29,8 @@
     → 알림톡 (as_shipped) — PATCH API → getAutoNotifyTemplate 자동
   → 배송 완료 → [status: delivered] → [status: completed]
   → 만족도 알림톡 (as_satisfaction) — 미구현
+  ※ 모든 단계에서 취소 가능 → [status: cancelled]
+    → 알림톡 (as_cancelled) — PATCH API → getAutoNotifyTemplate 자동
 ```
 
 ### 직접발송 흐름
@@ -90,7 +92,23 @@ cancelled → (terminal)
 | `as_cost_notice` (비용안내) | UI "비용안내" 버튼 | UI → POST `/api/repair/[id]/notify` |
 | `as_payment_confirmed` (입금확인) | paid_at 플래그 설정 시 | PATCH `/api/repair/[id]` → after() 자동 |
 | `as_shipped` (출고완료) | shipped 상태 전환 시 | PATCH `/api/repair/[id]` → after() 자동 |
+| `as_cancelled` (취소안내) | cancelled 상태 전환 시 | PATCH `/api/repair/[id]` → after() 자동 |
 | `as_satisfaction` (만족도) | 미구현 | — |
+
+### Make 웹훅 URL 분기 (2026-03-05)
+| 웹훅 | 환경변수 | 대상 템플릿 |
+|------|----------|-------------|
+| 상담 알림톡 | `MAKE_WEBHOOK_URL` | confirmed, cancelled, suggest 등 상담 17종 |
+| 복원수리 접수/취소 | GAS 내부 관리 | as_received (GAS → Make 직접) |
+| 복원수리 상태변경 | `MAKE_REPAIR_WEBHOOK_URL` | as_cost_notice, as_payment_confirmed, as_shipped, as_cancelled, as_satisfaction |
+
+### 웹훅 payload 주요 필드
+| 필드 | 값 | 용도 |
+|------|-----|------|
+| `id` | repair.as_id (AS-YYYYMMDD-NNN) | Make `#{as_uid}` → 수리내역서 링크 |
+| `tracking` | 송장번호 | 배송조회 |
+| `courier` | 롯데택배 (고정) | 배송조회 버튼 활성화 |
+| `as_amount` / `shipping_amount` / `total_amount` | 금액 | 비용 안내 |
 
 ### 비용 계산 규칙
 ```
@@ -157,7 +175,8 @@ cancelled → (terminal)
 
 | 항목 | 의존성 | 우선순위 |
 |------|--------|----------|
-| Make Router에 복원수리 5종 분기 추가 | 상담 17종 Make 연결 완료 후 | 높음 |
+| Make Router에 복원수리 6종 분기 추가 (as_cancelled 포함) | 상담 17종 Make 연결 완료 후 | 높음 |
+| 솔라피 as_cancelled 취소안내 템플릿 등록 + 검수 | 솔라피 검수 (1~3 영업일) | 높음 |
 | BC 메타데이터 제거 후 솔라피 재검수 대기 | 솔라피 검수 (1~3 영업일) | 높음 |
 | 복원수리 E2E 전체 플로우 검증 | Make 분기 + 솔라피 재검수 완료 후 | 높음 |
 | 만족도 알림톡 (as_satisfaction) 자동 발송 로직 | 솔라피 검수 | 중간 |
