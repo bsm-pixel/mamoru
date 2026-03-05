@@ -128,6 +128,7 @@ export async function PATCH(
               shipping_amount: String(data.shipping_fee || 0),
               total_amount: String(data.total_amount || 0),
               tracking: data.invoice_number || '',
+              courier: '롯데택배',
             },
           });
           if (!result.success) console.error('[repair auto-notify] 실패:', result.error);
@@ -150,6 +151,7 @@ export async function PATCH(
               shipping_amount: String(data.shipping_fee || 0),
               total_amount: String(data.total_amount || 0),
               tracking: data.invoice_number || '',
+              courier: '롯데택배',
             },
           });
           if (!result.success) console.error('[repair paid_at notify] 실패:', result.error);

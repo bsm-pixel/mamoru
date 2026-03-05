@@ -45,6 +45,7 @@ export async function POST(
         shipping_amount: String(repair.shipping_fee || 0),
         total_amount: String(repair.total_amount || 0),
         tracking: repair.invoice_number || '',
+        courier: '롯데택배',
         proceed_type: repair.proceed_type || '',
         qty_mamoru: String(repair.qty_mamoru || 0),
         qty_other: String(repair.qty_other || 0),
