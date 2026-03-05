@@ -8,6 +8,7 @@ import type { RepairStatus } from '@/lib/supabase/types';
 function getAutoNotifyTemplate(newStatus: string): NotifyTemplate | null {
   const map: Record<string, NotifyTemplate> = {
     shipped: 'as_shipped',
+    cancelled: 'as_cancelled',
   };
   return map[newStatus] || null;
 }

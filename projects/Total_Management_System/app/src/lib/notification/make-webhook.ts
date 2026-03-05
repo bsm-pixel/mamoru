@@ -14,6 +14,7 @@ const REPAIR_STATUS_TEMPLATES = new Set<NotifyTemplate>([
   'as_cost_notice',
   'as_payment_confirmed',
   'as_shipped',
+  'as_cancelled',
   'as_satisfaction',
 ]);
 
@@ -35,6 +36,7 @@ export type NotifyTemplate =
   | 'as_cost_notice'      // 비용 안내
   | 'as_payment_confirmed' // 입금 확인
   | 'as_shipped'          // 출고 안내
+  | 'as_cancelled'        // 복원수리 취소 안내
   | 'as_satisfaction';    // 만족도/리뷰 요청
 
 /** GAS postMake_ event명 매핑 */
@@ -56,6 +58,7 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   as_cost_notice: 'AS_COST_NOTICE',
   as_payment_confirmed: 'AS_PAYMENT_CONFIRMED',
   as_shipped: 'AS_SHIPPED',
+  as_cancelled: 'AS_CANCELLED',
   as_satisfaction: 'AS_SATISFACTION',
 };
 
