@@ -2,10 +2,14 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <meta name="color-scheme" content="dark">
   <title>MAMORU 복원수리 안내</title>
-  <!-- Pretendard 폰트 -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <!-- Brand Guide v1.0 — Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@700;800;900&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!--
   =========================================================
@@ -22,29 +26,47 @@
 
 <style>
 /* ══════════════════════════════════════════════════════════════
-   MAMORU 복원수리 안내 — Terracotta Editorial · Refined
+   MAMORU 복원수리 안내 — Brand Guide v1.0 · Dark Monochrome
    ══════════════════════════════════════════════════════════════ */
+
+/* ── 0. Design Tokens ── */
+:root {
+  --void: #1A1A1A;
+  --graphite: #2D2D2D;
+  --stone: #4A4A4A;
+  --warm-gray: #8A8580;
+  --mist: #B8B4AF;
+  --sand: #D4D0CB;
+  --parchment: #EDEBE8;
+  --shell: #F5F3F0;
+  --cream: #FAF9F7;
+  --white: #FFFFFF;
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+}
 
 /* ── 0. Reset & Foundation ── */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body {
-  background: #F2F2EA;
+  background: var(--void);
   min-height: 100%;
 }
 
 .mamoru-as-page {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #F2F2EA;
-  color: #181725;
+  font-family: var(--font-body);
+  background: var(--void);
+  color: var(--cream);
   line-height: 1.6;
   padding-bottom: 24px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 .mamoru-as-page * { box-sizing: border-box; }
 
-/* 공통 인터랙션 — 탭/버튼 */
+/* 공통 인터랙션 */
 .as-tab,
 .as-method-tab,
 .as-cta-primary,
@@ -52,7 +74,7 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   outline: none;
   user-select: none;
-  font-family: inherit; /* <button> 폰트 상속 보정 */
+  font-family: inherit;
 }
 
 .as-tab:active,
@@ -67,34 +89,35 @@ html, body {
 
 /* ── 1. Section 공통 ── */
 .as-section {
-  padding: 56px 24px;
+  padding: 48px 24px;
 }
 
 .as-section-title {
+  font-family: var(--font-body);
   font-size: 21px;
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: #181725;
+  color: var(--cream);
   text-align: center;
   margin-bottom: 0;
   padding-bottom: 0;
-  border-bottom: none; /* 기존 밑줄 제거 — 에디토리얼 바로 대체 */
+  border-bottom: none;
 }
 
-/* 타이틀 아래 테라코타 바 — 섹션 시작 시그널 */
+/* 타이틀 아래 모노크롬 바 */
 .as-section-title::after {
   content: '';
   display: block;
   width: 28px;
   height: 2px;
-  background: #D4613E;
+  background: var(--cream);
   border-radius: 1px;
   margin: 16px auto 0;
 }
 
 .as-section-subtitle {
   font-size: 14px;
-  color: #6B6980;
+  color: var(--mist);
   margin-top: 12px;
   margin-bottom: 36px;
   text-align: center;
@@ -108,14 +131,12 @@ html, body {
   padding: 64px 24px 52px;
   text-align: center;
   position: relative;
-  /* Hard Cut — 다크 배경 단절, 크림 전환 그래디언트 제거 */
   background:
-    radial-gradient(ellipse 70% 50% at 50% 25%, rgba(70,60,120,0.18) 0%, transparent 60%),
-    radial-gradient(circle at 25% 75%, rgba(212,97,62,0.05) 0%, transparent 45%),
-    #181725;
+    radial-gradient(ellipse 70% 50% at 50% 25%, rgba(255,255,255,0.04) 0%, transparent 60%),
+    var(--void);
 }
 
-/* 그레인 텍스처 — 미세 질감 */
+/* 그레인 텍스처 */
 .as-hero::after {
   content: '';
   position: absolute;
@@ -135,10 +156,10 @@ html, body {
 .as-hero-label {
   display: inline-block;
   padding: 5px 14px;
-  background: rgba(212, 97, 62, 0.12);
-  border: 1px solid rgba(212, 97, 62, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 100px;
-  color: #D4613E;
+  color: var(--cream);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -146,16 +167,18 @@ html, body {
 }
 
 .as-hero-title {
+  font-family: var(--font-body);
   font-size: 26px;
   font-weight: 700;
   line-height: 1.4;
   letter-spacing: -0.04em;
   margin-bottom: 20px;
-  color: #F2F2EA;
+  color: var(--cream);
 }
 
 .as-hero-title .highlight {
-  color: #D4613E;
+  color: var(--cream);
+  opacity: 0.7;
 }
 
 .as-hero-square-img {
@@ -180,20 +203,20 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(242, 242, 234, 0.18);
+  color: rgba(250, 249, 247, 0.18);
   font-size: 12px;
 }
 
 .as-hero-desc {
   font-size: 15px;
-  color: rgba(242, 242, 234, 0.55);
+  color: var(--mist);
   line-height: 1.8;
   letter-spacing: -0.01em;
   margin-bottom: 36px;
 }
 
 .as-hero-desc .water-blue {
-  color: #D4613E;
+  color: var(--cream);
   font-weight: 600;
 }
 
@@ -225,55 +248,63 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(242, 242, 234, 0.15);
+  color: rgba(250, 249, 247, 0.15);
   font-size: 12px;
 }
 
 /* =========================================================
-   [2] 카테고리 탭 — 글라스모피즘 스티키
+   [2] 카테고리 탭 — 다크 글라스모피즘 스티키
    ========================================================= */
 .as-tabs-container {
   padding: 14px 24px;
   position: sticky;
   top: 0;
-  background: rgba(242, 242, 234, 0.88);
+  background: rgba(26, 26, 26, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 100;
-  border-bottom: 1px solid rgba(24, 23, 37, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .as-tabs {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.as-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .as-tab {
   padding: 8px 16px;
   background: transparent;
-  border: 1px solid rgba(24, 23, 37, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 100px;
-  color: #6B6980;
+  color: rgba(255, 255, 255, 0.5);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .as-tab:hover {
-  color: #181725;
-  border-color: rgba(24, 23, 37, 0.2);
+  color: var(--cream);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .as-tab.active {
-  background: #D4613E;
-  border-color: #D4613E;
-  color: #FAFAF5;
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--void);
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(212, 97, 62, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .as-tab-content {
@@ -288,34 +319,139 @@ html, body {
 }
 
 /* =========================================================
-   [3] 복원수리소개 섹션
+   [3] 과정안내 탭 — 서브탭(방문수거/직접발송) + 타임라인
    ========================================================= */
-.as-intro-header {
+.as-process-header {
   text-align: center;
-  padding: 52px 24px 32px;
+  padding: 48px 24px 8px;
 }
 
-.as-intro-header h2 {
+.as-process-header h2 {
+  font-family: var(--font-body);
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #D4613E;
+  color: var(--cream);
   margin-bottom: 10px;
 }
 
-.as-intro-header p {
+.as-process-header p {
   font-size: 14px;
-  color: #6B6980;
+  color: var(--mist);
   line-height: 1.75;
 }
 
+/* 서브탭 (방문수거/직접발송) */
+.as-method-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 24px 24px 24px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.as-method-tab {
+  flex: 1;
+  padding: 14px 16px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.as-method-tab.active {
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--void);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.as-method-content {
+  display: none;
+  padding: 0 24px;
+}
+
+.as-method-content.active {
+  display: block;
+}
+
+/* 타임라인 카드 */
+.as-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.as-timeline-card {
+  background: var(--graphite);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.as-timeline-label {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 100px;
+  color: var(--cream);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 20px 20px 0;
+}
+
+.as-timeline-body {
+  padding: 12px 20px 20px;
+}
+
+.as-timeline-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--cream);
+  margin-bottom: 4px;
+}
+
+.as-timeline-desc {
+  font-size: 13px;
+  color: var(--mist);
+  line-height: 1.6;
+}
+
+/* [IMG] placeholder 공통 */
+.as-img-placeholder {
+  width: 100%;
+  min-height: 160px;
+  display: block;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.as-img-placeholder[src=""],
+.as-img-placeholder:not([src]) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+}
+
+/* 유튜브 + Before/After + 진행작업 (과정안내 하단) */
 .as-youtube-section {
   padding: 32px 24px;
 }
 
 .as-youtube-label {
   font-size: 13px;
-  color: #6B6980;
+  color: var(--mist);
   margin-bottom: 12px;
 }
 
@@ -323,32 +459,28 @@ html, body {
   position: relative;
   width: 100%;
   padding-bottom: 56.25%;
-  background: #FAFAF5;
+  background: var(--graphite);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(24, 23, 37, 0.06);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
 }
 
 .as-youtube-wrapper iframe {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   border: none;
 }
 
 .as-youtube-placeholder {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: rgba(24, 23, 37, 0.25);
+  color: rgba(250, 249, 247, 0.25);
 }
 
 .as-youtube-placeholder i {
@@ -356,6 +488,7 @@ html, body {
   margin-bottom: 12px;
 }
 
+/* Before/After 슬라이드 */
 .as-before-after {
   padding: 32px 0;
   position: relative;
@@ -367,7 +500,7 @@ html, body {
   letter-spacing: -0.02em;
   padding: 0 24px;
   margin-bottom: 16px;
-  color: #181725;
+  color: var(--cream);
 }
 
 .as-slider-container {
@@ -378,18 +511,15 @@ html, body {
   position: relative;
 }
 
-.as-slider-container::-webkit-scrollbar {
-  display: none;
-}
+.as-slider-container::-webkit-scrollbar { display: none; }
 
 .as-before-after::after {
   content: '';
   position: absolute;
-  top: 48px;
-  right: 0;
+  top: 48px; right: 0;
   width: 48px;
   height: calc(100% - 48px);
-  background: linear-gradient(to right, transparent, #F2F2EA);
+  background: linear-gradient(to right, transparent, var(--void));
   pointer-events: none;
   z-index: 10;
 }
@@ -403,10 +533,10 @@ html, body {
 .as-slide-item {
   flex-shrink: 0;
   width: 280px;
-  background: #FAFAF5;
+  background: var(--graphite);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 6px rgba(24, 23, 37, 0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
 
 .as-slide-images {
@@ -427,17 +557,17 @@ html, body {
 
 .as-slide-images .label {
   position: absolute;
-  bottom: 8px;
-  left: 8px;
+  bottom: 8px; left: 8px;
   padding: 3px 8px;
   background: rgba(0, 0, 0, 0.55);
   border-radius: 4px;
   font-size: 10px;
   font-weight: 500;
-  color: #F2F2EA;
+  color: var(--cream);
   letter-spacing: 0.02em;
 }
 
+/* 진행작업 그리드 */
 .as-process-grid {
   padding: 32px 24px;
 }
@@ -447,7 +577,7 @@ html, body {
   font-weight: 600;
   letter-spacing: -0.02em;
   margin-bottom: 20px;
-  color: #181725;
+  color: var(--cream);
 }
 
 .as-grid {
@@ -457,19 +587,18 @@ html, body {
 }
 
 .as-grid-item {
-  background: #FAFAF5;
-  border: none;
+  background: var(--graphite);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   padding: 16px 10px;
   text-align: center;
-  box-shadow: 0 1px 4px rgba(24, 23, 37, 0.05);
 }
 
 .as-grid-item-icon {
   width: 44px;
   height: 44px;
   margin: 0 auto 10px;
-  background: rgba(212, 97, 62, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -485,220 +614,45 @@ html, body {
 .as-grid-item-icon .placeholder {
   width: 24px;
   height: 24px;
-  background: rgba(212, 97, 62, 0.2);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 6px;
 }
 
 .as-grid-item-name {
   font-size: 12px;
   font-weight: 500;
-  color: #181725;
+  color: var(--cream);
   line-height: 1.4;
 }
 
 /* =========================================================
-   [3-D] 다크 쇼케이스 밴드 — 부드러운 전환
-   ========================================================= */
-.as-dark-band {
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
-  background: #181725;
-  position: relative;
-}
-
-/* Hard Cut — 상하단 그래디언트 페이드 제거, 단절 전환 */
-.as-dark-band::before,
-.as-dark-band::after {
-  display: none;
-}
-
-.as-dark-band__inner {
-  max-width: 640px;
-  margin: 0 auto;
-  padding-top: 12px;
-  padding-bottom: 12px;
-}
-
-.as-dark-band .as-before-after-title,
-.as-dark-band .as-process-grid-title {
-  color: #F2F2EA;
-}
-
-.as-dark-band .as-youtube-label {
-  color: rgba(242, 242, 234, 0.5);
-}
-
-.as-dark-band .as-youtube-wrapper {
-  background: #232238;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
-}
-
-.as-dark-band .as-youtube-placeholder {
-  color: rgba(242, 242, 234, 0.25);
-}
-
-.as-dark-band .as-slide-item {
-  background: #232238;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-}
-
-.as-dark-band .as-before-after::after {
-  background: linear-gradient(to right, transparent, #181725);
-}
-
-.as-dark-band .as-grid-item {
-  background: #232238;
-  border: none;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
-}
-
-.as-dark-band .as-grid-item-name {
-  color: #F2F2EA;
-}
-
-.as-dark-band .as-grid-item-icon {
-  background: rgba(212, 97, 62, 0.12);
-}
-
-/* =========================================================
-   [4] 접수방식 섹션
-   ========================================================= */
-.as-method-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 0 24px;
-  margin-bottom: 24px;
-}
-
-.as-method-tab {
-  flex: 1;
-  padding: 14px 16px;
-  background: transparent;
-  border: 1px solid rgba(24, 23, 37, 0.1);
-  border-radius: 12px;
-  color: #6B6980;
-  font-size: 14px;
-  font-weight: 500;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.as-method-tab.active {
-  background: #D4613E;
-  border-color: #D4613E;
-  color: #FAFAF5;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(212, 97, 62, 0.2);
-}
-
-.as-method-content {
-  display: none;
-  padding: 0 24px;
-}
-
-.as-method-content.active {
-  display: block;
-}
-
-.as-step {
-  background: #FAFAF5;
-  border: none;
-  border-radius: 14px;
-  margin-bottom: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 6px rgba(24, 23, 37, 0.05);
-}
-
-.as-step-image {
-  width: 100%;
-  height: 120px;
-  background: #EEEEE6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(24, 23, 37, 0.2);
-  font-size: 12px;
-}
-
-.as-step-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.as-step-body {
-  display: flex;
-  gap: 16px;
-  padding: 20px;
-  align-items: center;
-}
-
-.as-step-icon {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  background: rgba(212, 97, 62, 0.08);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.as-step-icon .step-number {
-  font-size: 17px;
-  font-weight: 700;
-  color: #D4613E;
-}
-
-.as-step-content {
-  flex: 1;
-}
-
-.as-step-title {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: #181725;
-  margin-bottom: 3px;
-}
-
-.as-step-desc {
-  font-size: 13px;
-  color: #6B6980;
-  line-height: 1.55;
-}
-
-/* =========================================================
-   [5] 소요일 섹션
+   [4] 소요시간 탭
    ========================================================= */
 .as-duration-card {
-  background: #FAFAF5;
-  border: none;
+  background: var(--graphite);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 24px 20px;
   margin: 0 24px 16px;
-  box-shadow: 0 1px 6px rgba(24, 23, 37, 0.05);
 }
 
 .as-duration-card-title {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: #181725;
+  color: var(--cream);
   margin-bottom: 16px;
 }
 
 .as-calendar-placeholder {
   width: 100%;
-  height: 80px;
-  background: rgba(212, 97, 62, 0.04);
-  border: none; /* dashed 제거 — 깔끔한 솔리드 영역 */
+  min-height: 80px;
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(212, 97, 62, 0.35);
+  color: rgba(255, 255, 255, 0.15);
   font-size: 12px;
   margin-bottom: 16px;
   overflow: hidden;
@@ -711,30 +665,95 @@ html, body {
 }
 
 .as-duration-info {
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 600;
-  color: #D4613E;
+  color: var(--cream);
   margin-bottom: 12px;
 }
 
 .as-duration-examples {
   font-size: 13px;
-  color: #6B6980;
+  color: var(--mist);
   line-height: 1.8;
 }
 
 .as-duration-note {
   margin-top: 16px;
   padding: 14px 16px;
-  background: rgba(24, 23, 37, 0.025);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 10px;
   font-size: 12px;
-  color: #6B6980;
+  color: var(--mist);
   line-height: 1.7;
 }
 
+/* 소요시간 — 강조 섹션 */
+.as-duration-highlight {
+  background: var(--graphite);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 24px 20px;
+  margin: 0 24px 16px;
+  text-align: center;
+}
+
+.as-duration-highlight h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.as-duration-highlight p {
+  font-size: 13px;
+  color: var(--mist);
+  line-height: 1.7;
+}
+
+.as-duration-highlight .compare {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.as-duration-highlight .compare-item {
+  flex: 1;
+  padding: 16px 12px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.as-duration-highlight .compare-item.other {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.as-duration-highlight .compare-item.mamoru {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.as-duration-highlight .compare-label {
+  font-size: 11px;
+  color: var(--mist);
+  margin-bottom: 6px;
+}
+
+.as-duration-highlight .compare-value {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--cream);
+}
+
+.as-duration-highlight .compare-item.other .compare-value {
+  color: var(--warm-gray);
+  text-decoration: line-through;
+}
+
 /* =========================================================
-   [6] 비용안내 섹션
+   [5] 비용안내 탭
    ========================================================= */
 .as-price-cards {
   display: grid;
@@ -745,8 +764,8 @@ html, body {
 }
 
 .as-price-card {
-  background: #FAFAF5;
-  border: 1px solid rgba(212, 97, 62, 0.12);
+  background: var(--graphite);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 28px 16px;
   text-align: center;
@@ -754,27 +773,29 @@ html, body {
 
 .as-price-card-label {
   font-size: 12px;
-  color: #6B6980;
+  color: var(--mist);
   font-weight: 500;
   margin-bottom: 10px;
 }
 
 .as-price-card-value {
+  font-family: var(--font-display);
   font-size: 36px;
   font-weight: 800;
-  color: #D4613E;
+  color: var(--cream);
   line-height: 1;
   letter-spacing: -0.03em;
 }
 
 .as-price-card-value span {
+  font-family: var(--font-body);
   font-size: 15px;
   font-weight: 600;
 }
 
 .as-price-card-unit {
   font-size: 11px;
-  color: #6B6980;
+  color: var(--mist);
   margin-top: 6px;
 }
 
@@ -791,13 +812,13 @@ html, body {
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #181725;
+  color: var(--cream);
   margin-bottom: 4px;
 }
 
 .as-shipping-header p {
   font-size: 13px;
-  color: #6B6980;
+  color: var(--mist);
 }
 
 .as-shipping-cards {
@@ -807,20 +828,42 @@ html, body {
 }
 
 .as-shipping-card {
-  background: #FAFAF5;
-  border: none;
+  background: var(--graphite);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   padding: 20px 16px;
-  box-shadow: 0 1px 6px rgba(24, 23, 37, 0.05);
 }
 
 .as-shipping-card-title {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: #181725;
+  color: var(--cream);
   margin-bottom: 14px;
   text-align: center;
+}
+
+/* 원가 취소선 */
+.as-shipping-original {
+  text-align: center;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--warm-gray);
+}
+.as-shipping-original .strike {
+  text-decoration: line-through;
+  margin-right: 2px;
+}
+.as-shipping-original .tag {
+  display: inline-block;
+  padding: 2px 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--cream);
+  margin-left: 4px;
+  vertical-align: middle;
 }
 
 .as-shipping-list {
@@ -834,42 +877,70 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  background: rgba(24, 23, 37, 0.025);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 8px;
   font-size: 13px;
 }
 
 .as-shipping-row.highlight {
-  background: rgba(212, 97, 62, 0.06);
-  border: 1px solid rgba(212, 97, 62, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .as-shipping-row .qty {
-  color: #181725;
+  color: var(--cream);
 }
 
 .as-shipping-row .price {
   font-weight: 600;
-  color: #181725;
+  color: var(--cream);
 }
 
 .as-shipping-row.highlight .price {
-  color: #D4613E;
+  color: var(--cream);
+  font-weight: 700;
 }
 
 .as-shipping-note {
   margin-top: 20px;
   padding: 14px 16px;
-  background: rgba(24, 23, 37, 0.025);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 10px;
   font-size: 12px;
-  color: #6B6980;
+  color: var(--mist);
   line-height: 1.7;
 }
 
 /* =========================================================
-   [7] 포장방법 섹션
+   [6] 포장방법 탭
    ========================================================= */
+.as-packing-header {
+  text-align: center;
+  padding: 0 24px;
+  margin-bottom: 8px;
+}
+
+.as-packing-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--mist);
+  margin-bottom: 8px;
+}
+
+.as-packing-summary {
+  text-align: center;
+  padding: 0 24px;
+  margin-bottom: 28px;
+}
+
+.as-packing-summary p {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cream);
+  letter-spacing: -0.02em;
+}
+
 .as-packing-list {
   padding: 0 24px;
   display: flex;
@@ -878,26 +949,26 @@ html, body {
 }
 
 .as-packing-item {
-  background: #FAFAF5;
-  border: none;
+  background: var(--graphite);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 1px 6px rgba(24, 23, 37, 0.05);
 }
 
 .as-packing-item.important {
-  box-shadow: 0 1px 8px rgba(212, 97, 62, 0.12), inset 0 0 0 1px rgba(212, 97, 62, 0.2);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 
 .as-packing-image {
   width: 100%;
-  height: 180px;
-  background: #EEEEE6;
+  min-height: 180px;
+  background: rgba(255, 255, 255, 0.03);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(24, 23, 37, 0.2);
+  color: rgba(255, 255, 255, 0.12);
   font-size: 12px;
+  overflow: hidden;
 }
 
 .as-packing-image img {
@@ -913,9 +984,9 @@ html, body {
 .as-packing-step {
   display: inline-block;
   padding: 3px 10px;
-  background: rgba(212, 97, 62, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 100px;
-  color: #D4613E;
+  color: var(--cream);
   font-size: 11px;
   font-weight: 600;
   margin-bottom: 8px;
@@ -929,18 +1000,28 @@ html, body {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: #181725;
+  color: var(--cream);
   margin-bottom: 4px;
 }
 
 .as-packing-desc {
   font-size: 13px;
-  color: #6B6980;
+  color: var(--mist);
   line-height: 1.55;
 }
 
+.as-packing-note {
+  margin: 20px 24px 0;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--mist);
+  line-height: 1.7;
+}
+
 /* =========================================================
-   [8] 하단 CTA
+   [7] 하단 CTA
    ========================================================= */
 .as-cta-area {
   padding: 40px 24px 24px;
@@ -962,13 +1043,13 @@ html, body {
   gap: 6px;
   width: 100%;
   padding: 18px 24px;
-  background: linear-gradient(135deg, #D4613E 0%, #B85232 100%);
+  background: var(--cream);
   border: none;
   border-radius: 14px;
-  color: #FAFAF5;
+  color: var(--void);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 16px rgba(212, 97, 62, 0.25); /* 부유감 */
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .as-cta-primary .as-cta-label {
@@ -979,14 +1060,14 @@ html, body {
 .as-cta-primary .as-cta-desc {
   font-size: 12px;
   font-weight: 400;
-  color: rgba(250, 250, 245, 0.7);
+  color: var(--stone);
   line-height: 1.4;
 }
 
 .as-cta-primary:hover {
-  background: linear-gradient(135deg, #E07050 0%, #D4613E 100%);
+  background: var(--white);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(212, 97, 62, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 .as-cta-outline {
@@ -998,9 +1079,9 @@ html, body {
   width: 100%;
   padding: 18px 24px;
   background: transparent;
-  border: 1.5px solid rgba(24, 23, 37, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
   border-radius: 14px;
-  color: #181725;
+  color: var(--cream);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1013,14 +1094,13 @@ html, body {
 .as-cta-outline .as-cta-desc {
   font-size: 12px;
   font-weight: 400;
-  color: #6B6980;
+  color: var(--mist);
   line-height: 1.4;
 }
 
 .as-cta-outline:hover {
-  border-color: #D4613E;
-  color: #D4613E;
-  background: rgba(212, 97, 62, 0.03);
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .as-cta-top {
@@ -1029,7 +1109,7 @@ html, body {
   padding: 10px 20px;
   background: transparent;
   border: none;
-  color: rgba(24, 23, 37, 0.35);
+  color: rgba(255, 255, 255, 0.35);
   font-size: 12px;
   font-family: inherit;
   cursor: pointer;
@@ -1038,7 +1118,7 @@ html, body {
 }
 
 .as-cta-top:hover {
-  color: #D4613E;
+  color: var(--cream);
 }
 
 /* =========================================================
@@ -1046,8 +1126,6 @@ html, body {
    ========================================================= */
 @media screen and (min-width: 768px) {
   .mamoru-as-page {
-    max-width: 960px;
-    margin: 0 auto;
     padding-bottom: 0;
   }
 
@@ -1086,23 +1164,12 @@ html, body {
     height: 200px;
   }
 
-  .as-grid {
-    gap: 14px;
-  }
+  .as-grid { gap: 14px; }
+  .as-grid-item { padding: 20px 14px; }
 
-  .as-grid-item {
-    padding: 20px 14px;
-  }
+  .as-price-card { padding: 32px 20px; }
+  .as-price-card-value { font-size: 48px; }
 
-  .as-price-card {
-    padding: 32px 20px;
-  }
-
-  .as-price-card-value {
-    font-size: 48px;
-  }
-
-  /* PC: CTA 가로 배치 */
   .as-cta-area {
     max-width: 640px;
     padding: 56px 24px 24px;
@@ -1120,29 +1187,10 @@ html, body {
     padding: 22px 32px;
   }
 
-  /* PC: 접수방식 탭 너비 제한 */
   .as-method-tabs {
     max-width: 400px;
     margin-left: auto;
     margin-right: auto;
-  }
-
-  /* PC: 스텝 카드 가로 배치 */
-  .as-step {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-  }
-
-  .as-step-image {
-    width: 200px;
-    min-width: 200px;
-    height: auto;
-    min-height: 100px;
-  }
-
-  .as-step-body {
-    flex: 1;
   }
 
   /* PC: 포장 카드 가로 배치 */
@@ -1211,29 +1259,101 @@ html, body {
     </div>
   </section>
 
-  <!-- [2] 카테고리 탭 -->
+  <!-- [2] 카테고리 탭 — 4탭 -->
   <div class="as-tabs-container">
     <div class="as-tabs">
-      <button class="as-tab active" data-tab="intro">복원수리소개</button>
-      <button class="as-tab" data-tab="method">접수방식</button>
-      <button class="as-tab" data-tab="duration">소요일</button>
+      <button class="as-tab active" data-tab="process">과정안내</button>
+      <button class="as-tab" data-tab="duration">소요시간</button>
       <button class="as-tab" data-tab="price">비용안내</button>
       <button class="as-tab" data-tab="packing">포장방법</button>
     </div>
   </div>
 
-  <!-- [3] 복원수리소개 탭 -->
-  <div class="as-tab-content active" id="tab-intro">
-    <div class="as-intro-header">
+  <!-- [3] 과정안내 탭 — 서브탭(방문수거/직접발송) -->
+  <div class="as-tab-content active" id="tab-process">
+
+    <div class="as-process-header">
       <h2>수냉식 복원수리</h2>
       <p>미용가위를 위한 최선의 방식<br>
       가업의 기술을 2대로 이어<br>
       기술력을 보완 업그레이드하여 제공합니다</p>
     </div>
 
-    <!-- 다크 쇼케이스 밴드: 유튜브~진행작업 -->
-    <div class="as-dark-band">
-      <div class="as-dark-band__inner">
+    <!-- 서브탭: 방문수거 / 직접발송 -->
+    <div class="as-method-tabs">
+      <button class="as-method-tab active" data-method="pickup">방문수거</button>
+      <button class="as-method-tab" data-method="delivery">직접발송</button>
+    </div>
+
+    <!-- 방문수거 타임라인 -->
+    <div class="as-method-content active" id="method-pickup">
+      <div class="as-timeline">
+        <div class="as-timeline-card">
+          <!-- [IMG] 방문수거 D-DAY 이미지 — 투명배경 PNG 권장 -->
+          <img src="" alt="D-DAY 포장 준비 이미지" class="as-img-placeholder">
+          <span class="as-timeline-label">D-DAY</span>
+          <div class="as-timeline-body">
+            <h4 class="as-timeline-title">가위 포장 후, 수거일 전날 미리 준비해주세요</h4>
+            <p class="as-timeline-desc">고객님이 원하시는 수거일에<br>지정하여 A/S 방문수거 접수완료</p>
+          </div>
+        </div>
+
+        <div class="as-timeline-card">
+          <!-- [IMG] 방문수거 D+1 이미지 -->
+          <img src="" alt="수거당일 기사님 전달 이미지" class="as-img-placeholder">
+          <span class="as-timeline-label">D+1</span>
+          <div class="as-timeline-body">
+            <h4 class="as-timeline-title">수거당일 기사님께 전달</h4>
+            <p class="as-timeline-desc">고객님 가위 입고 후<br>상태에 맞추어 복원수리를 진행합니다</p>
+          </div>
+        </div>
+
+        <div class="as-timeline-card">
+          <!-- [IMG] 방문수거 D+2~3 이미지 -->
+          <img src="" alt="안전 포장 배송 이미지" class="as-img-placeholder">
+          <span class="as-timeline-label">D+2~3</span>
+          <div class="as-timeline-body">
+            <h4 class="as-timeline-title">안전하게 포장되어 고객님께 전달됩니다</h4>
+            <p class="as-timeline-desc">작업 완료 후 롯데택배로 출고됩니다</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 직접발송 타임라인 -->
+    <div class="as-method-content" id="method-delivery">
+      <div class="as-timeline">
+        <div class="as-timeline-card">
+          <!-- [IMG] 직접발송 Step 1 이미지 -->
+          <img src="" alt="직접발송 접수 이미지" class="as-img-placeholder">
+          <span class="as-timeline-label">Step 1</span>
+          <div class="as-timeline-body">
+            <h4 class="as-timeline-title">접수 후 안내된 주소로 가위를 발송해주세요</h4>
+            <p class="as-timeline-desc">증상/연락처/수량을 입력하면 발송 주소를 안내드립니다</p>
+          </div>
+        </div>
+
+        <div class="as-timeline-card">
+          <!-- [IMG] 직접발송 Step 2 이미지 -->
+          <img src="" alt="입고 후 복원수리 진행 이미지" class="as-img-placeholder">
+          <span class="as-timeline-label">Step 2</span>
+          <div class="as-timeline-body">
+            <h4 class="as-timeline-title">입고 당일 상태 확인 후 복원수리 진행</h4>
+            <p class="as-timeline-desc">검수 후 비용 안내 알림톡을 보내드립니다</p>
+          </div>
+        </div>
+
+        <div class="as-timeline-card">
+          <!-- [IMG] 직접발송 Step 3 이미지 -->
+          <img src="" alt="작업 완료 출고 이미지" class="as-img-placeholder">
+          <span class="as-timeline-label">Step 3</span>
+          <div class="as-timeline-body">
+            <h4 class="as-timeline-title">작업 완료 후 출고 (롯데택배)</h4>
+            <p class="as-timeline-desc">안전하게 포장하여 발송해드립니다</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- [VIDEO] 유튜브 영역 -->
     <div class="as-youtube-section">
@@ -1333,125 +1453,69 @@ html, body {
         </div>
       </div>
     </div>
-
-      </div><!-- /.as-dark-band__inner -->
-    </div><!-- /.as-dark-band -->
   </div>
 
-  <!-- [4] 접수방식 탭 -->
-  <div class="as-tab-content" id="tab-method">
-    <section class="as-section">
-      <h2 class="as-section-title">접수방식</h2>
-      <p class="as-section-subtitle">편리한 방식을 선택해주세요</p>
-
-      <div class="as-method-tabs">
-        <button class="as-method-tab active" data-method="pickup">방문수거</button>
-        <button class="as-method-tab" data-method="delivery">직접발송</button>
-      </div>
-
-      <!-- 방문수거 -->
-      <div class="as-method-content active" id="method-pickup">
-        <div class="as-step">
-          <div class="as-step-image">이미지 영역</div>
-          <div class="as-step-body">
-            <div class="as-step-icon"><span class="step-number">1</span></div>
-            <div class="as-step-content">
-              <h4 class="as-step-title">접수</h4>
-              <p class="as-step-desc">증상/희망일/연락처/수량을 입력합니다.</p>
-            </div>
-          </div>
-        </div>
-        <div class="as-step">
-          <div class="as-step-image">이미지 영역</div>
-          <div class="as-step-body">
-            <div class="as-step-icon"><span class="step-number">2</span></div>
-            <div class="as-step-content">
-              <h4 class="as-step-title">방문수거</h4>
-              <p class="as-step-desc">일정 확정 후, 수거 및 접수 확인을 진행합니다.</p>
-            </div>
-          </div>
-        </div>
-        <div class="as-step">
-          <div class="as-step-image">이미지 영역</div>
-          <div class="as-step-body">
-            <div class="as-step-icon"><span class="step-number">3</span></div>
-            <div class="as-step-content">
-              <h4 class="as-step-title">작업/반납</h4>
-              <p class="as-step-desc">작업 후 검수 → 안내 → 반납(또는 배송)합니다.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 직접발송 -->
-      <div class="as-method-content" id="method-delivery">
-        <div class="as-step">
-          <div class="as-step-image">이미지 영역</div>
-          <div class="as-step-body">
-            <div class="as-step-icon"><span class="step-number">1</span></div>
-            <div class="as-step-content">
-              <h4 class="as-step-title">접수</h4>
-              <p class="as-step-desc">증상/연락처/수량을 입력합니다.</p>
-            </div>
-          </div>
-        </div>
-        <div class="as-step">
-          <div class="as-step-image">이미지 영역</div>
-          <div class="as-step-body">
-            <div class="as-step-icon"><span class="step-number">2</span></div>
-            <div class="as-step-content">
-              <h4 class="as-step-title">발송</h4>
-              <p class="as-step-desc">안내된 주소로 가위를 발송해주세요.</p>
-            </div>
-          </div>
-        </div>
-        <div class="as-step">
-          <div class="as-step-image">이미지 영역</div>
-          <div class="as-step-body">
-            <div class="as-step-icon"><span class="step-number">3</span></div>
-            <div class="as-step-content">
-              <h4 class="as-step-title">작업/배송</h4>
-              <p class="as-step-desc">입고 당일 작업 후 출고합니다.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- [5] 소요일 탭 -->
+  <!-- [4] 소요시간 탭 -->
   <div class="as-tab-content" id="tab-duration">
     <section class="as-section">
-      <h2 class="as-section-title">소요일</h2>
-
-      <div class="as-duration-card">
-        <h3 class="as-duration-card-title">방문수거 접수 시</h3>
-        <div class="as-calendar-placeholder">달력 이미지 영역</div>
-        <p class="as-duration-info">수거일 기준 2~3일 후 수령</p>
-        <div class="as-duration-examples">
-          <p>예) 월요일 수거 → 수, 목요일 수령 예상</p>
-          <p>예) 수요일 수거 → 금, 토요일 수령 예상</p>
-          <p>예) 금요일 수거 → 화, 수요일 수령 예상</p>
-        </div>
-        <p class="as-duration-note">* 주말 및 공휴일은 소요일에서 제외됩니다.</p>
-      </div>
-
-      <div class="as-duration-card">
-        <h3 class="as-duration-card-title">직접발송 시</h3>
-        <div class="as-calendar-placeholder">달력 이미지 영역</div>
-        <p class="as-duration-info">입고 당일 출고 원칙</p>
-        <div class="as-duration-examples">
-          <p>예) 월요일 입고 시 월요일 또는 화요일 발송처리</p>
-        </div>
-        <div class="as-duration-note">
-          <p>* 부득이한 사정이나 복원작업 물량이 몰리는 경우 지연될 수 있으며, 이점 양해부탁드립니다.</p>
-          <p style="margin-top:8px;">* 방문수거접수 시 수거일 준비를 못하신 경우 그만큼 수령예상일이 밀립니다.</p>
-        </div>
-      </div>
+      <h2 class="as-section-title">소요시간</h2>
+      <p class="as-section-subtitle">빠르고 정확한 복원수리</p>
     </section>
+
+    <!-- 섹션 A: 방문수거 소요일 -->
+    <div class="as-duration-card">
+      <h3 class="as-duration-card-title">수거일 기준 2~3일 소요</h3>
+      <!-- [IMG] 캘린더 이미지 -->
+      <div class="as-calendar-placeholder">캘린더 이미지 영역</div>
+      <p class="as-duration-info">빨간날, 공휴일 ← 기간에서 제외</p>
+      <div class="as-duration-examples">
+        <p>월요일 수거 → 수, 목요일 수령</p>
+        <p>수요일 수거 → 금, 토요일 수령</p>
+        <p>금요일 수거 → 화, 수요일 수령</p>
+      </div>
+      <p class="as-duration-note">* 주말 및 공휴일은 소요일에서 제외됩니다.</p>
+    </div>
+
+    <!-- 섹션 B: 직접발송 소요일 -->
+    <div class="as-duration-card">
+      <h3 class="as-duration-card-title">직접발송 — 입고 당일 출고 원칙</h3>
+      <div class="as-duration-examples">
+        <p>월요일 입고 시 월요일 또는 화요일 발송처리</p>
+      </div>
+      <div class="as-duration-note">
+        <p>* 부득이한 사정이나 복원작업 물량이 몰리는 경우 지연될 수 있으며, 이점 양해부탁드립니다.</p>
+        <p style="margin-top:8px;">* 방문수거접수 시 수거일 준비를 못하신 경우 그만큼 수령예상일이 밀립니다.</p>
+      </div>
+    </div>
+
+    <!-- 섹션 C: 마모루 직접 작업 강조 -->
+    <div class="as-duration-highlight">
+      <h3>마모루는 직접 작업하여 빠릅니다</h3>
+      <p>보통의 가위회사는 외주연마소로 보내기 때문에<br>
+      최소 공유비용+마진까지 기본적으로 7~15일까지 걸립니다</p>
+      <div class="compare">
+        <div class="compare-item other">
+          <p class="compare-label">외주 연마소</p>
+          <p class="compare-value">7~15일</p>
+        </div>
+        <div class="compare-item mamoru">
+          <p class="compare-label">마모루 직접작업</p>
+          <p class="compare-value">2~3일</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 섹션 D: 작업 속도 설명 -->
+    <div class="as-duration-highlight">
+      <h3>하지만, 작업 순간의<br>속도는 빠르지 않습니다</h3>
+      <p>마모루는 수냉식 기법을 사용하여<br>
+      열 변형 없이 날을 복원합니다.<br><br>
+      2대 기술력으로 정밀하게 작업하기 때문에<br>
+      하루 처리량을 제한하고 있습니다.</p>
+    </div>
   </div>
 
-  <!-- [6] 비용안내 탭 -->
+  <!-- [5] 비용안내 탭 -->
   <div class="as-tab-content" id="tab-price">
     <section class="as-section">
       <h2 class="as-section-title">비용안내</h2>
@@ -1478,6 +1542,7 @@ html, body {
         <div class="as-shipping-cards">
           <div class="as-shipping-card">
             <p class="as-shipping-card-title">방문수거 접수 시</p>
+            <p class="as-shipping-original">실제 수거+발송 비용 <span class="strike">8,000원</span><span class="tag">할인</span></p>
             <div class="as-shipping-list">
               <div class="as-shipping-row">
                 <span class="qty">1자루</span>
@@ -1495,6 +1560,7 @@ html, body {
           </div>
           <div class="as-shipping-card">
             <p class="as-shipping-card-title">직접발송 접수 시</p>
+            <p class="as-shipping-original">실제 발송 비용 <span class="strike">3,000원</span><span class="tag">할인</span></p>
             <div class="as-shipping-list">
               <div class="as-shipping-row">
                 <span class="qty">1자루</span>
@@ -1515,44 +1581,65 @@ html, body {
     </section>
   </div>
 
-  <!-- [7] 포장방법 탭 -->
+  <!-- [6] 포장방법 탭 -->
   <div class="as-tab-content" id="tab-packing">
     <section class="as-section">
-      <h2 class="as-section-title">발송 및 수거 전 포장방법</h2>
-      <p class="as-section-subtitle">안전한 발송을 위해 아래 방법을 참고해주세요</p>
+      <h2 class="as-section-title">가위포장 안내</h2>
+      <p class="as-section-subtitle">수리를 보내는데 배송중 다칠까 불안하시죠?<br>간단하고 완벽한 준비방법 알려드리겠습니다</p>
+
+      <div class="as-packing-summary">
+        <p>1. 감고 &nbsp; 2. 감싸고 &nbsp; 3. 담으세요</p>
+      </div>
 
       <div class="as-packing-list">
+        <!-- Step 1: 중요 — GIF 영역 -->
         <div class="as-packing-item important">
-          <div class="as-packing-image">이미지/GIF 영역</div>
+          <div class="as-packing-image">
+            <!-- [IMG] GIF — 고무줄 감기 영상. src에 GIF 경로 삽입 -->
+            <img src="" alt="고무줄로 날 감기 GIF">
+          </div>
           <div class="as-packing-content">
             <span class="as-packing-step star">Step 1</span>
-            <h4 class="as-packing-title">가위 보호</h4>
-            <p class="as-packing-desc">가위날이 맞닿는 부분에 테이프를 감아 보호해주세요.</p>
+            <h4 class="as-packing-title">날이 벌어지지 않도록 고무줄로 감아주세요</h4>
+            <p class="as-packing-desc">벌어진 날 팁에는 날끝에서 가장 위험하니,<br>그물로 한번의 여러번 감아 줄 수 있습니다</p>
           </div>
         </div>
 
+        <!-- Step 2 -->
         <div class="as-packing-item">
-          <div class="as-packing-image">이미지 영역</div>
+          <div class="as-packing-image">
+            <!-- [IMG] 풀/수건으로 감싸기 이미지 -->
+            <img src="" alt="풀이나 수건으로 감싸기">
+          </div>
           <div class="as-packing-content">
             <span class="as-packing-step">Step 2</span>
-            <h4 class="as-packing-title">완충재 포장</h4>
-            <p class="as-packing-desc">에어캡(뽁뽁이)으로 가위를 감싸주세요.</p>
+            <h4 class="as-packing-title">풀이나 수건 등으로 감싸주시고</h4>
+            <p class="as-packing-desc">완충 역할을 해줄 수 있는 재질로 감싸주세요</p>
           </div>
         </div>
 
+        <!-- Step 3 -->
         <div class="as-packing-item">
-          <div class="as-packing-image">이미지 영역</div>
+          <div class="as-packing-image">
+            <!-- [IMG] 박스에 담기 이미지 -->
+            <img src="" alt="메모지와 함께 박스에 담기">
+          </div>
           <div class="as-packing-content">
             <span class="as-packing-step">Step 3</span>
-            <h4 class="as-packing-title">박스 포장</h4>
-            <p class="as-packing-desc">적당한 크기의 박스에 넣고 빈 공간을 채워주세요.</p>
+            <h4 class="as-packing-title">메모지에 "접수자이름" 적어서 한판 박스에 함께 담아주세요</h4>
+            <p class="as-packing-desc">접수 매 선택하신 전달방법에 맞추어 보관, 준비해주시면 됩니다</p>
           </div>
         </div>
+      </div>
+
+      <div class="as-packing-note">
+        수건으로 감싸줘야 배송중 누르더라도 압력이 흡수되어 날에 영향을 주지 않습니다.<br>
+        <span style="display:inline-block;margin-top:4px;">※ 가위틀닷컴 공달발으로 "마모루가위팀" 기재 必</span>
       </div>
     </section>
   </div>
 
-  <!-- [8] 하단 CTA — 마모루 고객 / 타사 고객 분기 -->
+  <!-- [7] 하단 CTA — 마모루 고객 / 타사 고객 분기 -->
   <div class="as-cta-area">
     <div class="as-cta-buttons">
       <!-- [URL] AS 접수 폼: /53 (마모루 가위 고객) -->
@@ -1572,7 +1659,7 @@ html, body {
 </div>
 
 <script>
-// 탭 전환
+// 탭 전환 — 4탭 (process, duration, price, packing)
 document.querySelectorAll('.as-tab').forEach(tab => {
   tab.addEventListener('click', function() {
     document.querySelectorAll('.as-tab').forEach(t => t.classList.remove('active'));
@@ -1584,7 +1671,7 @@ document.querySelectorAll('.as-tab').forEach(tab => {
   });
 });
 
-// 접수방식 내부 탭
+// 과정안내 내부 서브탭 (방문수거/직접발송)
 document.querySelectorAll('.as-method-tab').forEach(tab => {
   tab.addEventListener('click', function() {
     document.querySelectorAll('.as-method-tab').forEach(t => t.classList.remove('active'));
@@ -1607,7 +1694,6 @@ function goToRepairProduct() {
 
 // 맨 위로 스크롤 (iframe 내부 → 부모 페이지에 postMessage로 요청)
 function scrollToTop() {
-  // postMessage로 부모 페이지에 스크롤 요청
   window.parent.postMessage({ type: 'MAMORU_SCROLL_TOP' }, '*');
 }
 

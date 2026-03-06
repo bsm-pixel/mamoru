@@ -570,12 +570,15 @@ function doPost(e){
       const totalQty = qtyM + qtyO;
       const isPickup = (body.proceed_type || '') === '방문수거';
 
-      // 수거비 계산: 직접발송 무료, 방문수거 1자루 5000원, 2자루 3000원, 3자루+ 무료
+      // 수거비 계산: 직접발송 1자루 3000원/2자루+ 무료, 방문수거 1자루 6000원/2자루 3000원/3자루+ 무료
       let shippingFee = 0;
       if (isPickup) {
-        if (totalQty === 1) shippingFee = 5000;
+        if (totalQty === 1) shippingFee = 6000;
         else if (totalQty === 2) shippingFee = 3000;
         // 3자루 이상: 무료
+      } else {
+        if (totalQty === 1) shippingFee = 3000;
+        // 2자루 이상: 무료
       }
 
       const serviceCost = qtyM * 10000 + qtyO * 20000;  // 복원수리 비용
@@ -619,7 +622,7 @@ function doPost(e){
             pickup_address_text: String((body.address1 || '') + ' ' + (body.address2 || '')).trim(),
             // 금액 정보
             service_cost: serviceCost,    // 복원수리 비용 (마모루 1만원×수량 + 타사 2만원×수량)
-            shipping_fee: shippingFee,    // 수거비 (1자루 5천원, 2자루 3천원, 3자루+ 무료)
+            shipping_fee: shippingFee,    // 방문수거 1자루 6천원/2자루 3천원/3자루+ 무료, 직접발송 1자루 3천원/2자루+ 무료
             total_amount: cost            // 총 비용
           })
         });

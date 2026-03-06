@@ -3,156 +3,761 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="color-scheme" content="dark">
   <title>MAMORU 복원수리 안내</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@700;800;900&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-      background: #f5f5f0; color: #1a1a2e; line-height: 1.6;
-      -webkit-text-size-adjust: 100%;
-    }
-    .container { max-width: 480px; margin: 0 auto; padding: 0 16px 40px; }
+/* ══════════════════════════════════════════════════════════
+   MAMORU 복원수리 안내 — Dark Monochrome · Mobile-Only
+   알림톡 버튼 링크 전용 (URL 불변)
+   ══════════════════════════════════════════════════════════ */
+:root {
+  --void: #1A1A1A;
+  --graphite: #2D2D2D;
+  --stone: #4A4A4A;
+  --warm-gray: #8A8580;
+  --mist: #B8B4AF;
+  --sand: #D4D0CB;
+  --cream: #FAF9F7;
+  --white: #FFFFFF;
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+}
 
-    /* 헤더 */
-    .header {
-      text-align: center; padding: 32px 0 24px;
-    }
-    .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
-    .header p { font-size: 13px; color: #888; margin-top: 4px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-body);
+  background: var(--void);
+  color: var(--cream);
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+}
 
-    /* 섹션 */
-    .section {
-      background: #fff; border-radius: 14px; padding: 24px 20px;
-      margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    }
-    .section-title {
-      font-size: 15px; font-weight: 700; color: #d4613e;
-      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
-    }
-    .section-title .icon { font-size: 18px; }
+.container { max-width: 480px; margin: 0 auto; }
 
-    /* 진행과정 스텝 */
-    .steps { position: relative; padding-left: 24px; }
-    .steps::before {
-      content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px;
-      width: 2px; background: #e8e8e0;
-    }
-    .step { position: relative; padding-bottom: 20px; }
-    .step:last-child { padding-bottom: 0; }
-    .step-dot {
-      position: absolute; left: -24px; top: 4px;
-      width: 16px; height: 16px; border-radius: 50%;
-      background: #d4613e; border: 3px solid #fff;
-      box-shadow: 0 0 0 2px #d4613e;
-    }
-    .step-title { font-size: 14px; font-weight: 600; }
-    .step-desc { font-size: 13px; color: #666; margin-top: 2px; }
+/* ── 헤더 ── */
+.header {
+  text-align: center;
+  padding: 40px 20px 20px;
+}
+.header-label {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mist);
+  letter-spacing: 0.03em;
+  margin-bottom: 16px;
+}
+.header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.35;
+}
+.header p {
+  font-size: 13px;
+  color: var(--mist);
+  margin-top: 8px;
+}
 
-    /* 포장 안내 */
-    .packing-list { list-style: none; }
-    .packing-list li {
-      font-size: 14px; padding: 8px 0;
-      border-bottom: 1px solid #f0f0ec;
-      display: flex; align-items: flex-start; gap: 8px;
-    }
-    .packing-list li:last-child { border-bottom: none; }
-    .packing-num {
-      width: 22px; height: 22px; border-radius: 50%;
-      background: #d4613e; color: #fff; font-size: 12px; font-weight: 700;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
+/* ── 탭 바 — 스티키 ── */
+.tab-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(26,26,26,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 12px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab-bar-inner {
+  display: flex;
+  gap: 6px;
+  min-width: max-content;
+}
+.tab-btn {
+  padding: 7px 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 100px;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-btn:active { transform: scale(0.96); }
+.tab-btn.active {
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--void);
+  font-weight: 600;
+}
 
-    /* 비용 테이블 */
-    .price-table { width: 100%; border-collapse: collapse; }
-    .price-table th {
-      text-align: left; font-size: 13px; font-weight: 600;
-      padding: 10px 0; border-bottom: 2px solid #1a1a2e; color: #1a1a2e;
-    }
-    .price-table td {
-      font-size: 13px; padding: 10px 0;
-      border-bottom: 1px solid #f0f0ec;
-    }
-    .price-table td:last-child { text-align: right; font-weight: 600; }
-    .price-note { font-size: 12px; color: #999; margin-top: 10px; }
+/* ── 탭 콘텐츠 ── */
+.tab-panel { display: none; padding: 24px 16px 32px; }
+.tab-panel.active { display: block; }
 
-    /* 하단 안내 */
-    .footer-note {
-      text-align: center; font-size: 12px; color: #aaa;
-      padding: 16px 0; line-height: 1.8;
-    }
+/* ── 공통 카드 ── */
+.card {
+  background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 14px;
+}
+
+/* ══ 탭1: 과정안내 ══ */
+
+/* 서브탭 */
+.sub-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.sub-tab {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sub-tab:active { transform: scale(0.96); }
+.sub-tab.active {
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--void);
+  font-weight: 600;
+}
+.sub-panel { display: none; }
+.sub-panel.active { display: block; }
+
+/* 타임라인 */
+.timeline { display: flex; flex-direction: column; gap: 12px; }
+.tl-card {
+  background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.tl-img {
+  width: 100%;
+  min-height: 140px;
+  background: rgba(255,255,255,0.03);
+  display: block;
+  object-fit: cover;
+}
+.tl-img[src=""], .tl-img:not([src]) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.1);
+  font-size: 11px;
+}
+.tl-label {
+  display: inline-block;
+  margin: 16px 16px 0;
+  padding: 3px 10px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--cream);
+  letter-spacing: 0.02em;
+}
+.tl-body { padding: 10px 16px 18px; }
+.tl-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cream);
+  margin-bottom: 3px;
+  line-height: 1.45;
+}
+.tl-desc {
+  font-size: 12px;
+  color: var(--mist);
+  line-height: 1.6;
+}
+
+/* ══ 탭2: 소요시간 ══ */
+.duration-info {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cream);
+  margin-bottom: 10px;
+}
+.duration-examples {
+  font-size: 12px;
+  color: var(--mist);
+  line-height: 1.9;
+}
+.duration-note {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  font-size: 11px;
+  color: var(--mist);
+  line-height: 1.7;
+}
+/* 비교 카드 */
+.compare-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.compare-item {
+  flex: 1;
+  padding: 14px 10px;
+  border-radius: 10px;
+  text-align: center;
+}
+.compare-item.other { background: rgba(255,255,255,0.04); }
+.compare-item.mamoru {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.compare-label { font-size: 11px; color: var(--mist); margin-bottom: 4px; }
+.compare-value {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--cream);
+}
+.compare-item.other .compare-value {
+  color: var(--warm-gray);
+  text-decoration: line-through;
+}
+
+/* 이미지 placeholder */
+.img-area {
+  width: 100%;
+  min-height: 70px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.1);
+  font-size: 11px;
+}
+.img-area img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ══ 탭3: 비용안내 ══ */
+.price-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.price-card {
+  background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 20px 12px;
+  text-align: center;
+}
+.price-label { font-size: 11px; color: var(--mist); margin-bottom: 8px; }
+.price-value {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--cream);
+  line-height: 1;
+}
+.price-value span {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+}
+.price-unit { font-size: 11px; color: var(--mist); margin-top: 4px; }
+
+.ship-card {
+  background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+.ship-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cream);
+  text-align: center;
+  margin-bottom: 10px;
+}
+/* 원가 취소선 */
+.ship-original {
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--warm-gray);
+}
+.ship-original .strike {
+  text-decoration: line-through;
+  margin-right: 2px;
+}
+.ship-original .tag {
+  display: inline-block;
+  padding: 2px 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--cream);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.ship-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.ship-row:last-child { margin-bottom: 0; }
+.ship-row.hl {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.ship-row .qty { color: var(--cream); }
+.ship-row .price { font-weight: 600; color: var(--cream); }
+
+/* ══ 탭4: 포장방법 ══ */
+.pack-summary {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 20px;
+  letter-spacing: -0.02em;
+}
+.pack-card {
+  background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.pack-card.important {
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
+}
+.pack-img {
+  width: 100%;
+  min-height: 160px;
+  background: rgba(255,255,255,0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.1);
+  font-size: 11px;
+  overflow: hidden;
+}
+.pack-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pack-body { padding: 14px 16px; }
+.pack-step {
+  display: inline-block;
+  padding: 3px 10px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+.pack-step.star::before { content: '★ '; }
+.pack-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cream);
+  margin-bottom: 3px;
+  line-height: 1.45;
+}
+.pack-desc {
+  font-size: 12px;
+  color: var(--mist);
+  line-height: 1.55;
+}
+.pack-note {
+  margin-top: 8px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  font-size: 11px;
+  color: var(--mist);
+  line-height: 1.7;
+}
+
+/* ── CTA ── */
+.cta-area { padding: 28px 16px 40px; }
+.cta-btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  background: var(--cream);
+  border: none;
+  border-radius: 12px;
+  color: var(--void);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  transition: all 0.2s;
+}
+.cta-btn:active { transform: scale(0.98); }
+.cta-btn-sub {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  margin-top: 8px;
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s;
+}
+.cta-btn-sub:active { transform: scale(0.98); }
+.cta-desc {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  margin-top: 4px;
+  opacity: 0.6;
+}
+
+/* ── 푸터 ── */
+.footer {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  padding: 0 16px 32px;
+  line-height: 1.8;
+}
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>MAMORU 복원수리 안내</h1>
-      <p>복원수리 진행과정 · 포장방법 · 비용안내</p>
+
+<div class="container">
+
+  <!-- 헤더 -->
+  <div class="header">
+    <span class="header-label">MAMORU RESTORATION</span>
+    <h1>복원수리 안내</h1>
+    <p>과정안내 · 소요시간 · 비용안내 · 포장방법</p>
+  </div>
+
+  <!-- 탭 바 -->
+  <div class="tab-bar">
+    <div class="tab-bar-inner">
+      <button class="tab-btn active" data-tab="process">과정안내</button>
+      <button class="tab-btn" data-tab="duration">소요시간</button>
+      <button class="tab-btn" data-tab="price">비용안내</button>
+      <button class="tab-btn" data-tab="packing">포장방법</button>
+    </div>
+  </div>
+
+  <!-- ═══ 탭1: 과정안내 ═══ -->
+  <div class="tab-panel active" id="tab-process">
+    <!-- 서브탭 -->
+    <div class="sub-tabs">
+      <button class="sub-tab active" data-method="pickup">방문수거</button>
+      <button class="sub-tab" data-method="delivery">직접발송</button>
     </div>
 
-    <!-- 섹션 1: 진행과정 -->
-    <div class="section">
-      <div class="section-title"><span class="icon">📋</span> 진행과정</div>
-      <div class="steps">
-        <div class="step">
-          <div class="step-dot"></div>
-          <div class="step-title">접수</div>
-          <div class="step-desc">접수 완료 후 알림톡 안내</div>
+    <!-- 방문수거 -->
+    <div class="sub-panel active" id="method-pickup">
+      <div class="timeline">
+        <div class="tl-card">
+          <!-- [IMG] D-DAY 이미지 -->
+          <img src="" alt="포장 준비 이미지" class="tl-img">
+          <span class="tl-label">D-DAY</span>
+          <div class="tl-body">
+            <p class="tl-title">가위 포장 후, 수거일 전날 미리 준비해주세요</p>
+            <p class="tl-desc">고객님이 원하시는 수거일에<br>지정하여 방문수거 접수완료</p>
+          </div>
         </div>
-        <div class="step">
-          <div class="step-dot"></div>
-          <div class="step-title">수거</div>
-          <div class="step-desc">우체국 기사 방문 수거 또는 직접 발송</div>
+        <div class="tl-card">
+          <!-- [IMG] D+1 이미지 -->
+          <img src="" alt="수거 전달 이미지" class="tl-img">
+          <span class="tl-label">D+1</span>
+          <div class="tl-body">
+            <p class="tl-title">수거당일 기사님께 전달</p>
+            <p class="tl-desc">고객님 가위 입고 후<br>상태에 맞추어 복원수리를 진행합니다</p>
+          </div>
         </div>
-        <div class="step">
-          <div class="step-dot"></div>
-          <div class="step-title">입고 · 검수</div>
-          <div class="step-desc">가위 상태 정밀 검수 후 비용 안내</div>
-        </div>
-        <div class="step">
-          <div class="step-dot"></div>
-          <div class="step-title">입금 확인</div>
-          <div class="step-desc">입금 확인 후 복원 작업 착수</div>
-        </div>
-        <div class="step">
-          <div class="step-dot"></div>
-          <div class="step-title">복원 수리</div>
-          <div class="step-desc">전문 장인이 정밀 복원 작업 진행</div>
-        </div>
-        <div class="step">
-          <div class="step-dot"></div>
-          <div class="step-title">발송</div>
-          <div class="step-desc">수리 완료 후 롯데택배로 발송</div>
+        <div class="tl-card">
+          <!-- [IMG] D+2~3 이미지 -->
+          <img src="" alt="출고 배송 이미지" class="tl-img">
+          <span class="tl-label">D+2~3</span>
+          <div class="tl-body">
+            <p class="tl-title">안전하게 포장되어 고객님께 전달됩니다</p>
+            <p class="tl-desc">작업 완료 후 롯데택배로 출고됩니다</p>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 섹션 2: 포장방법 -->
-    <div class="section">
-      <div class="section-title"><span class="icon">📦</span> 포장방법</div>
-      <ol class="packing-list">
-        <li><span class="packing-num">1</span><span>가위 날 부분을 에어캡(뽁뽁이)으로 감싸주세요</span></li>
-        <li><span class="packing-num">2</span><span>가위가 움직이지 않도록 박스 안을 채워주세요</span></li>
-        <li><span class="packing-num">3</span><span>박스 외부에 "파손주의" 표기를 권장합니다</span></li>
-      </ol>
-    </div>
-
-    <!-- 섹션 3: 비용안내 -->
-    <div class="section">
-      <div class="section-title"><span class="icon">💰</span> 비용안내</div>
-      <table class="price-table">
-        <tr><th>항목</th><th style="text-align:right">비용</th></tr>
-        <tr><td>마모루 가위 복원수리</td><td>1자루 기준 가격</td></tr>
-        <tr><td>타사 가위 복원수리</td><td>1자루 기준 가격</td></tr>
-        <tr><td>배송비 (편도)</td><td>직접 발송 시</td></tr>
-        <tr><td>배송비 (왕복)</td><td>방문 수거 시</td></tr>
-      </table>
-      <p class="price-note">· 가위 상태에 따라 비용이 달라질 수 있으며, 입고 검수 후 정확한 금액을 안내드립니다</p>
-    </div>
-
-    <div class="footer-note">
-      MAMORU 미용가위<br>
-      상담 운영시간 10:00 ~ 21:00
+    <!-- 직접발송 -->
+    <div class="sub-panel" id="method-delivery">
+      <div class="timeline">
+        <div class="tl-card">
+          <!-- [IMG] Step 1 이미지 -->
+          <img src="" alt="직접발송 접수" class="tl-img">
+          <span class="tl-label">Step 1</span>
+          <div class="tl-body">
+            <p class="tl-title">접수 후 안내된 주소로 가위를 발송해주세요</p>
+            <p class="tl-desc">증상/연락처/수량 입력 후 발송 주소 안내</p>
+          </div>
+        </div>
+        <div class="tl-card">
+          <!-- [IMG] Step 2 이미지 -->
+          <img src="" alt="입고 검수" class="tl-img">
+          <span class="tl-label">Step 2</span>
+          <div class="tl-body">
+            <p class="tl-title">입고 당일 상태 확인 후 복원수리 진행</p>
+            <p class="tl-desc">검수 후 비용 안내 알림톡을 보내드립니다</p>
+          </div>
+        </div>
+        <div class="tl-card">
+          <!-- [IMG] Step 3 이미지 -->
+          <img src="" alt="작업 완료 출고" class="tl-img">
+          <span class="tl-label">Step 3</span>
+          <div class="tl-body">
+            <p class="tl-title">작업 완료 후 출고 (롯데택배)</p>
+            <p class="tl-desc">안전하게 포장하여 발송해드립니다</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- ═══ 탭2: 소요시간 ═══ -->
+  <div class="tab-panel" id="tab-duration">
+    <!-- 방문수거 소요일 -->
+    <div class="card">
+      <div class="card-title">수거일 기준 2~3일 소요</div>
+      <!-- [IMG] 캘린더 이미지 -->
+      <div class="img-area">캘린더 이미지</div>
+      <p class="duration-info">빨간날, 공휴일 ← 기간에서 제외</p>
+      <div class="duration-examples">
+        <p>월요일 수거 → 수, 목요일 수령</p>
+        <p>수요일 수거 → 금, 토요일 수령</p>
+        <p>금요일 수거 → 화, 수요일 수령</p>
+      </div>
+      <div class="duration-note">* 주말 및 공휴일은 소요일에서 제외됩니다.</div>
+    </div>
+
+    <!-- 직접발송 소요일 -->
+    <div class="card">
+      <div class="card-title">직접발송 — 입고 당일 출고 원칙</div>
+      <div class="duration-examples">
+        <p>월요일 입고 시 월요일 또는 화요일 발송처리</p>
+      </div>
+      <div class="duration-note">
+        * 복원작업 물량이 몰리는 경우 지연될 수 있습니다.<br>
+        * 방문수거 시 수거일 준비를 못하신 경우 그만큼 수령예상일이 밀립니다.
+      </div>
+    </div>
+
+    <!-- 마모루 직접작업 강조 -->
+    <div class="card" style="text-align:center;">
+      <div class="card-title" style="text-align:center;">마모루는 직접 작업하여 빠릅니다</div>
+      <p style="font-size:12px;color:var(--mist);line-height:1.7;">보통의 가위회사는 외주연마소로 보내기 때문에<br>최소 7~15일까지 소요됩니다</p>
+      <div class="compare-row">
+        <div class="compare-item other">
+          <p class="compare-label">외주 연마소</p>
+          <p class="compare-value">7~15일</p>
+        </div>
+        <div class="compare-item mamoru">
+          <p class="compare-label">마모루 직접작업</p>
+          <p class="compare-value">2~3일</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 수냉식 기법 -->
+    <div class="card" style="text-align:center;">
+      <div class="card-title" style="text-align:center;">하지만, 작업 순간의<br>속도는 빠르지 않습니다</div>
+      <p style="font-size:12px;color:var(--mist);line-height:1.7;margin-top:4px;">
+        수냉식 기법으로 열 변형 없이 날을 복원합니다.<br>
+        2대 기술력으로 정밀하게 작업하기 때문에<br>
+        하루 처리량을 제한하고 있습니다.
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══ 탭3: 비용안내 ═══ -->
+  <div class="tab-panel" id="tab-price">
+    <div class="price-grid">
+      <div class="price-card">
+        <p class="price-label">마모루 가위</p>
+        <p class="price-value">1<span>만원</span></p>
+        <p class="price-unit">자루당</p>
+      </div>
+      <div class="price-card">
+        <p class="price-label">타사 가위</p>
+        <p class="price-value">2<span>만원</span></p>
+        <p class="price-unit">자루당</p>
+      </div>
+    </div>
+
+    <!-- 방문수거 배송비 -->
+    <div class="ship-card">
+      <p class="ship-card-title">방문수거 접수 시</p>
+      <p class="ship-original">실제 수거+발송 비용 <span class="strike">8,000원</span><span class="tag">할인</span></p>
+      <div class="ship-row"><span class="qty">1자루</span><span class="price">6,000원</span></div>
+      <div class="ship-row"><span class="qty">2자루</span><span class="price">3,000원</span></div>
+      <div class="ship-row hl"><span class="qty">3자루+</span><span class="price">무료</span></div>
+    </div>
+
+    <!-- 직접발송 배송비 -->
+    <div class="ship-card">
+      <p class="ship-card-title">직접발송 접수 시</p>
+      <p class="ship-original">실제 발송 비용 <span class="strike">3,000원</span><span class="tag">할인</span></p>
+      <div class="ship-row"><span class="qty">1자루</span><span class="price">3,000원</span></div>
+      <div class="ship-row hl"><span class="qty">2자루+</span><span class="price">무료</span></div>
+    </div>
+
+    <div class="duration-note" style="margin-top:0;">
+      * 비용은 입고 후 검수 결과에 따라 자동계산되어 입금 안내 알림톡을 받으시게 됩니다.<br>
+      (수리 불필요한 경우 자루수에서 제외하여 차감)
+    </div>
+  </div>
+
+  <!-- ═══ 탭4: 포장방법 ═══ -->
+  <div class="tab-panel" id="tab-packing">
+    <p class="pack-summary">1. 감고 &nbsp; 2. 감싸고 &nbsp; 3. 담으세요</p>
+
+    <div class="pack-card important">
+      <div class="pack-img">
+        <!-- [IMG] GIF — 고무줄 감기 -->
+        <img src="" alt="고무줄로 날 감기 GIF">
+      </div>
+      <div class="pack-body">
+        <span class="pack-step star">Step 1</span>
+        <p class="pack-title">날이 벌어지지 않도록 고무줄로 감아주세요</p>
+        <p class="pack-desc">벌어진 상태의 날은 가장 위험합니다.<br>꼭꼭꼭 위 방법대로 감아주세요.</p>
+      </div>
+    </div>
+
+    <div class="pack-card">
+      <div class="pack-img">
+        <!-- [IMG] 수건/풀로 감싸기 -->
+        <img src="" alt="풀이나 수건으로 감싸기">
+      </div>
+      <div class="pack-body">
+        <span class="pack-step">Step 2</span>
+        <p class="pack-title">구겨진 종이나 수건 등으로 감싸주세요</p>
+        <p class="pack-desc">수건의 경우 안전하게 다시 돌려보내드립니다</p>
+      </div>
+    </div>
+
+    <div class="pack-card">
+      <div class="pack-img">
+        <!-- [IMG] 박스에 담기 -->
+        <img src="" alt="메모지와 함께 박스에 담기">
+      </div>
+      <div class="pack-body">
+        <span class="pack-step">Step 3</span>
+        <p class="pack-title">메모지에 "접수자이름" 적어서 박스안에 동봉 해주세요</p>
+        <p class="pack-desc">접수 시 선택하신 전달방법에 맞추어 준비해주시면 됩니다</p>
+      </div>
+    </div>
+
+    <div class="pack-note">
+      
+      ※ 직접 전달이 아닌경우엔 박스상단 '마모루가위' 기재해주세요
+    </div>
+  </div>
+
+  <!-- 하단 안내 — 이미 접수 완료 고객 대상 페이지 -->
+  <div style="text-align:center;padding:28px 16px 0;">
+    <p style="font-size:12px;color:var(--mist);">궁금한 점이 있으시면 알림톡으로 문의해주세요</p>
+  </div>
+
+  <div class="footer">
+    MAMORU 미용가위<br>
+    상담 운영시간 10:00 ~ 21:00
+  </div>
+
+</div>
+
+<script>
+/* 탭 전환 */
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    this.classList.add('active');
+    document.getElementById('tab-' + this.getAttribute('data-tab')).classList.add('active');
+  });
+});
+
+/* 서브탭 (방문수거/직접발송) */
+document.querySelectorAll('.sub-tab').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.sub-tab').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.sub-panel').forEach(function(p) { p.classList.remove('active'); });
+    this.classList.add('active');
+    document.getElementById('method-' + this.getAttribute('data-method')).classList.add('active');
+  });
+});
+</script>
+
 </body>
 </html>
