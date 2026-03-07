@@ -131,104 +131,181 @@ body {
 
 /* ══ 탭1: 과정안내 ══ */
 
-/* 서브탭 */
-.sub-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-.sub-tab {
-  flex: 1;
-  padding: 12px;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 10px;
-  background: transparent;
-  color: rgba(255,255,255,0.5);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  -webkit-tap-highlight-color: transparent;
-}
-.sub-tab:active { transform: scale(0.96); }
-.sub-tab.active {
-  background: var(--cream);
-  border-color: var(--cream);
-  color: var(--void);
-  font-weight: 600;
-}
-.sub-panel { display: none; }
-.sub-panel.active { display: block; }
+/* 스텝 플로우 */
+.step-flow { display: flex; flex-direction: column; gap: 36px; }
 
-/* 타임라인 */
-.timeline { display: flex; flex-direction: column; gap: 12px; }
-.tl-card {
-  background: var(--graphite);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
-  overflow: hidden;
+.step-item { text-align: center; }
+.step-num {
+  display: inline-block;
+  width: 28px; height: 28px;
+  line-height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 14px;
 }
-.tl-img {
-  width: 100%;
-  min-height: 140px;
-  background: rgba(255,255,255,0.03);
-  display: block;
-  object-fit: cover;
+.step-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cream);
+  line-height: 1.5;
+  margin-bottom: 6px;
 }
-.tl-img[src=""], .tl-img:not([src]) {
+.step-desc {
+  font-size: 12px;
+  color: var(--mist);
+  line-height: 1.7;
+}
+
+/* 접수방식 선택 영역 */
+.method-group {
+  margin-top: 12px;
+  padding: 16px 14px 18px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+}
+.method-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 10px;
+  letter-spacing: 0.01em;
+}
+.icon-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+.icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.icon-circle {
+  width: 88px; height: 88px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255,255,255,0.1);
-  font-size: 11px;
 }
-.tl-label {
-  display: inline-block;
-  margin: 16px 16px 0;
-  padding: 3px 10px;
+.icon-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+/* 아이콘 placeholder (src 비어있을 때) */
+.icon-circle img[src=""], .icon-circle img:not([src]) {
+  width: 88px; height: 88px;
   background: rgba(255,255,255,0.06);
-  border-radius: 100px;
+  border-radius: 50%;
+}
+.icon-name {
   font-size: 11px;
-  font-weight: 700;
-  color: var(--cream);
-  letter-spacing: 0.02em;
-}
-.tl-body { padding: 10px 16px 18px; }
-.tl-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--cream);
-  margin-bottom: 3px;
-  line-height: 1.45;
-}
-.tl-desc {
-  font-size: 12px;
   color: var(--mist);
-  line-height: 1.6;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* 스텝 내 아이콘 (검수/복원수리/발송) */
+.step-icon {
+  margin: 0 auto 10px;
+  width: 180px; height: auto;
+}
+.step-icon img[src=""], .step-icon img:not([src]) {
+  width: 120px; height: 120px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+}
+
+/* 스텝 구분선 */
+.step-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255,255,255,0.08);
+  margin: 0 auto;
+}
+
+/* 하단 안내 노트 */
+.step-note {
+  margin-top: 8px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  font-size: 11px;
+  color: var(--warm-gray);
+  line-height: 1.7;
+  text-align: center;
 }
 
 /* ══ 탭2: 소요시간 ══ */
-.duration-info {
-  font-size: 14px;
-  font-weight: 600;
+.dur-flow { display: flex; flex-direction: column; gap: 0; }
+.dur-section { text-align: center; padding: 8px 0; }
+.dur-heading {
+  font-size: 16px;
+  font-weight: 700;
   color: var(--cream);
-  margin-bottom: 10px;
+  line-height: 1.45;
+  margin-bottom: 6px;
 }
-.duration-examples {
+.dur-sub {
   font-size: 12px;
   color: var(--mist);
-  line-height: 1.9;
-}
-.duration-note {
-  margin-top: 12px;
-  padding: 12px 14px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 8px;
-  font-size: 11px;
-  color: var(--mist);
   line-height: 1.7;
+  margin-bottom: 14px;
+}
+.dur-footnote {
+  font-size: 11px;
+  color: var(--warm-gray);
+  line-height: 1.7;
+}
+.dur-divider {
+  width: 40px;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 28px auto;
+}
+/* 캘린더 이미지 영역 */
+.dur-cal-img {
+  width: calc(100% - 100px);
+  margin: 16px auto 20px;
+  aspect-ratio: 5 / 7;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dur-cal-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.dur-cal-img img[src=""], .dur-cal-img img:not([src]) {
+  width: 100%; height: 100%;
+  background: rgba(255,255,255,0.04);
+}
+/* 수거→수령 리스트 (플레인 텍스트) */
+.dur-list {
+  font-size: 13px;
+  color: var(--mist);
+  line-height: 2.2;
+  margin-bottom: 14px;
+}
+/* 가로폭 복원수리 이미지 */
+.dur-wide-img {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.dur-wide-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dur-wide-img img[src=""], .dur-wide-img img:not([src]) {
+  width: 100%; height: 100%;
+  background: rgba(255,255,255,0.04);
 }
 /* 비교 카드 */
 .compare-row {
@@ -514,131 +591,150 @@ body {
 
   <!-- ═══ 탭1: 과정안내 ═══ -->
   <div class="tab-panel active" id="tab-process">
-    <!-- 서브탭 -->
-    <div class="sub-tabs">
-      <button class="sub-tab active" data-method="pickup">방문수거</button>
-      <button class="sub-tab" data-method="delivery">직접발송</button>
-    </div>
+    <div class="step-flow">
 
-    <!-- 방문수거 -->
-    <div class="sub-panel active" id="method-pickup">
-      <div class="timeline">
-        <div class="tl-card">
-          <!-- [IMG] D-DAY 이미지 -->
-          <img src="" alt="포장 준비 이미지" class="tl-img">
-          <span class="tl-label">D-DAY</span>
-          <div class="tl-body">
-            <p class="tl-title">가위 포장 후, 수거일 전날 미리 준비해주세요</p>
-            <p class="tl-desc">고객님이 원하시는 수거일에<br>지정하여 방문수거 접수완료</p>
+      <!-- Step 1: 접수 방식 선택 -->
+      <div class="step-item">
+        <span class="step-num">1</span>
+        <p class="step-title">두 가지 진행방식 중<br>선택하여 접수</p>
+
+        <!-- 방문수거 -->
+        <div class="method-group">
+          <p class="method-label">방문수거</p>
+          <p class="step-desc">3가지 방법에 맞추어 수거요청일에 수거 진행</p>
+          <div class="icon-row">
+            <div class="icon-item">
+              <div class="icon-circle"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/3876fc8ff40d5.png" alt="문앞보관"></div>
+              <span class="icon-name">문앞보관</span>
+            </div>
+            <div class="icon-item">
+              <div class="icon-circle"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/899f7ba019566.png" alt="카운터보관"></div>
+              <span class="icon-name">카운터보관</span>
+            </div>
+            <div class="icon-item">
+              <div class="icon-circle"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/fa4a888f822d0.png" alt="직접전달"></div>
+              <span class="icon-name">직접전달</span>
+            </div>
           </div>
         </div>
-        <div class="tl-card">
-          <!-- [IMG] D+1 이미지 -->
-          <img src="" alt="수거 전달 이미지" class="tl-img">
-          <span class="tl-label">D+1</span>
-          <div class="tl-body">
-            <p class="tl-title">수거당일 기사님께 전달</p>
-            <p class="tl-desc">고객님 가위 입고 후<br>상태에 맞추어 복원수리를 진행합니다</p>
-          </div>
-        </div>
-        <div class="tl-card">
-          <!-- [IMG] D+2~3 이미지 -->
-          <img src="" alt="출고 배송 이미지" class="tl-img">
-          <span class="tl-label">D+2~3</span>
-          <div class="tl-body">
-            <p class="tl-title">안전하게 포장되어 고객님께 전달됩니다</p>
-            <p class="tl-desc">작업 완료 후 롯데택배로 출고됩니다</p>
+
+        <!-- 직접발송 -->
+        <div class="method-group">
+          <p class="method-label">직접발송</p>
+          <p class="step-desc">접수 후 7일 이내 직접 발송</p>
+          <div class="icon-row">
+            <div class="icon-item">
+              <div class="icon-circle"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/54b3187745037.png" alt="직접발송"></div>
+            </div>
           </div>
         </div>
       </div>
+
+      <div class="step-divider"></div>
+
+      <!-- Step 2: 입고 -->
+      <div class="step-item">
+        <span class="step-num">2</span>
+        <div class="icon-circle step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/7aec0a5522785.png" alt="포장"></div>
+        <p class="step-title">포장 후 가위 보내기</p>
+        <p class="step-desc">접수 후, 안내드린 포장방법을 참고하여 준비 후<br><b>접수방식에 맞추어</b> 마모루로 보내집니다</p>
+      </div>
+
+      <div class="step-divider"></div>
+
+      <!-- Step 3: 검수 + 비용안내 -->
+      <div class="step-item">
+        <span class="step-num">3</span>
+        <div class="icon-circle step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/71be81048aac2.png" alt="검수 아이콘"></div>
+        <p class="step-title">입고 후 검수 & 비용안내</p>
+        <p class="step-desc">수량 및 상태를 판단하여<br>비용안내 알림톡을 발송해드립니다<br><br>*<br>복원이 불필요한 경우(간편해결로 가능),<br> 해당자루는 미반영하여 비용을 안내합니다</p>
+      </div>
+
+      <div class="step-divider"></div>
+
+      <!-- Step 4: 입금확인 + 복원수리 -->
+      <div class="step-item">
+        <span class="step-num">4</span>
+        <div class="icon-circle step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/015ef4ce00dec.png" alt="복원수리 아이콘"></div>
+        <p class="step-title">복원수리 진행</p>
+        <p class="step-desc">고객님이 남겨주신 메모를 우선 참고하며<br>고객 불편을 직접 해결과 동시에 가위를 복원합니다</p>
+      </div>
+
+      <div class="step-divider"></div>
+
+      <!-- Step 5: 발송 -->
+      <div class="step-item">
+        <span class="step-num">5</span>
+        <div class="icon-circle step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/4d3e32ac11112.png" alt="발송 아이콘"></div>
+        <p class="step-title">복원수리 완료 후<br>고객님께 발송</p>
+        <p class="step-desc">발송시점에 송장정보, 수리내역이 함께 안내되며,<br>수리내역과 배송과정까지 확인 가능합니다</p>
+      </div>
+
     </div>
 
-    <!-- 직접발송 -->
-    <div class="sub-panel" id="method-delivery">
-      <div class="timeline">
-        <div class="tl-card">
-          <!-- [IMG] Step 1 이미지 -->
-          <img src="" alt="직접발송 접수" class="tl-img">
-          <span class="tl-label">Step 1</span>
-          <div class="tl-body">
-            <p class="tl-title">접수 후 안내된 주소로 가위를 발송해주세요</p>
-            <p class="tl-desc">증상/연락처/수량 입력 후 발송 주소 안내</p>
-          </div>
-        </div>
-        <div class="tl-card">
-          <!-- [IMG] Step 2 이미지 -->
-          <img src="" alt="입고 검수" class="tl-img">
-          <span class="tl-label">Step 2</span>
-          <div class="tl-body">
-            <p class="tl-title">입고 당일 상태 확인 후 복원수리 진행</p>
-            <p class="tl-desc">검수 후 비용 안내 알림톡을 보내드립니다</p>
-          </div>
-        </div>
-        <div class="tl-card">
-          <!-- [IMG] Step 3 이미지 -->
-          <img src="" alt="작업 완료 출고" class="tl-img">
-          <span class="tl-label">Step 3</span>
-          <div class="tl-body">
-            <p class="tl-title">작업 완료 후 출고 (롯데택배)</p>
-            <p class="tl-desc">안전하게 포장하여 발송해드립니다</p>
-          </div>
-        </div>
-      </div>
+    <div class="step-note">
+       수리비용 입금이 지연될 경우,<br>발송이 지연될 수 있는 점 참고해주세요
     </div>
   </div>
 
   <!-- ═══ 탭2: 소요시간 ═══ -->
   <div class="tab-panel" id="tab-duration">
-    <!-- 방문수거 소요일 -->
-    <div class="card">
-      <div class="card-title">수거일 기준 2~3일 소요</div>
-      <!-- [IMG] 캘린더 이미지 -->
-      <div class="img-area">캘린더 이미지</div>
-      <p class="duration-info">빨간날, 공휴일 ← 기간에서 제외</p>
-      <div class="duration-examples">
-        <p>월요일 수거 → 수, 목요일 수령</p>
-        <p>수요일 수거 → 금, 토요일 수령</p>
-        <p>금요일 수거 → 화, 수요일 수령</p>
-      </div>
-      <div class="duration-note">* 주말 및 공휴일은 소요일에서 제외됩니다.</div>
-    </div>
+    <div class="dur-flow">
 
-    <!-- 직접발송 소요일 -->
-    <div class="card">
-      <div class="card-title">직접발송 — 입고 당일 출고 원칙</div>
-      <div class="duration-examples">
-        <p>월요일 입고 시 월요일 또는 화요일 발송처리</p>
+      <!-- 섹션 1: 핵심 소요일 -->
+      <div class="dur-section">
+        <p class="dur-heading">가위를 보내주신 날 기준<br>2~3일 후 받아보십니다</p>
+        <!-- [IMG] 캘린더 이미지 -->
+        <div class="dur-cal-img"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/00eeb89f607eb.png" alt="캘린더 이미지"></div>
+        <div class="dur-list">
+          <p>* 주말 및 공휴일은 소요일에서 제외됩니다</p>
+          <p>* 수거처리 및 직접발송이 지연 될 경우<br>그에 따른 수령일도 지연됩니다</p>
+         </div>
+        
       </div>
-      <div class="duration-note">
-        * 복원작업 물량이 몰리는 경우 지연될 수 있습니다.<br>
-        * 방문수거 시 수거일 준비를 못하신 경우 그만큼 수령예상일이 밀립니다.
-      </div>
-    </div>
 
-    <!-- 마모루 직접작업 강조 -->
-    <div class="card" style="text-align:center;">
-      <div class="card-title" style="text-align:center;">마모루는 직접 작업하여 빠릅니다</div>
-      <p style="font-size:12px;color:var(--mist);line-height:1.7;">보통의 가위회사는 외주연마소로 보내기 때문에<br>최소 7~15일까지 소요됩니다</p>
-      <div class="compare-row">
-        <div class="compare-item other">
-          <p class="compare-label">외주 연마소</p>
-          <p class="compare-value">7~15일</p>
+      <div class="dur-divider"></div>
+
+      <!-- 섹션 2: 입고 당일 출고 원칙 -->
+      <div class="dur-section">
+        <p class="dur-heading">입고 당일 출고 원칙</p>
+        <p class="dur-footnote">* 복원작업 물량이 몰리는 경우 지연될 수 있습니다</p>
+      </div>
+
+      <div class="dur-divider"></div>
+
+      <!-- 복원수리 이미지 (가로폭) -->
+      <div class="dur-wide-img"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/24aff72079b18.jpg" alt="복원수리 작업 이미지"></div>
+
+      <!-- 섹션 3: 마모루 직접작업 비교 -->
+      <div class="dur-section" style="text-align:center;">
+        <p class="dur-heading"><br>마모루는 직접 작업하여 빠릅니다</p>
+        <p class="dur-sub">일반적인 가위회사의 경우<br><b>작업을 외주업체로 보내어 진행</b>하기에,<br>보통 7~15일까지도 소요됩니다<br></p>
+        <div class="compare-row">
+          <div class="compare-item other">
+            <p class="compare-label">타 가위회사</p>
+            <p class="compare-value">7~15일</p>
+          </div>
+          <div class="compare-item mamoru">
+            <p class="compare-label">마모루</p>
+            <p class="compare-value">2~3일</p>
+          </div>
         </div>
-        <div class="compare-item mamoru">
-          <p class="compare-label">마모루 직접작업</p>
-          <p class="compare-value">2~3일</p>
-        </div>
       </div>
-    </div>
 
-    <!-- 수냉식 기법 -->
-    <div class="card" style="text-align:center;">
-      <div class="card-title" style="text-align:center;">하지만, 작업 순간의<br>속도는 빠르지 않습니다</div>
-      <p style="font-size:12px;color:var(--mist);line-height:1.7;margin-top:4px;">
-        수냉식 기법으로 열 변형 없이 날을 복원합니다.<br>
-        2대 기술력으로 정밀하게 작업하기 때문에<br>
-        하루 처리량을 제한하고 있습니다.
-      </p>
+      <div class="dur-divider"></div>
+
+      <!-- 섹션 4: 수냉식 기법 -->
+      <div class="dur-section" style="text-align:center;">
+        <p class="dur-heading">하지만, 작업 순간의<br>속도는 빠르지 않습니다</p>
+        <p class="dur-sub" style="margin-top:6px;">
+          수냉식 기법에 의한 ZERO DMG 를 우선하여<br>
+          상처부위만을 잡아내는 작업 기술을 제공합니다<br>
+          
+        </p>
+        <p class="dur-heading"><br>마모루 자체복원의 속도로 진행합니다<br>완벽에의한 만족을 기다려주세요</p>
+      </div>
+
     </div>
   </div>
 
@@ -669,7 +765,6 @@ body {
     <!-- 직접발송 배송비 -->
     <div class="ship-card">
       <p class="ship-card-title">직접발송 접수 시</p>
-      <p class="ship-original">실제 발송 비용 <span class="strike">3,000원</span><span class="tag">할인</span></p>
       <div class="ship-row"><span class="qty">1자루</span><span class="price">3,000원</span></div>
       <div class="ship-row hl"><span class="qty">2자루+</span><span class="price">무료</span></div>
     </div>
@@ -749,15 +844,6 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
   });
 });
 
-/* 서브탭 (방문수거/직접발송) */
-document.querySelectorAll('.sub-tab').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.sub-tab').forEach(function(b) { b.classList.remove('active'); });
-    document.querySelectorAll('.sub-panel').forEach(function(p) { p.classList.remove('active'); });
-    this.classList.add('active');
-    document.getElementById('method-' + this.getAttribute('data-method')).classList.add('active');
-  });
-});
 </script>
 
 </body>
