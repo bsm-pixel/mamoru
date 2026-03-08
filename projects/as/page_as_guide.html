@@ -358,53 +358,76 @@ body {
 }
 
 /* ══ 탭3: 비용안내 ══ */
+.price-section-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+.price-section-sub {
+  text-align: center;
+  font-size: 13px;
+  color: var(--mist);
+  margin-bottom: 24px;
+}
 .price-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 28px;
 }
 .price-card {
   background: var(--graphite);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 12px;
-  padding: 20px 12px;
+  padding: 22px 12px;
   text-align: center;
 }
-.price-label { font-size: 11px; color: var(--mist); margin-bottom: 8px; }
+.price-label { font-size: 13px; color: var(--sand); margin-bottom: 10px; font-weight: 600; }
 .price-value {
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 800;
   color: var(--cream);
   line-height: 1;
 }
 .price-value span {
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
 }
-.price-unit { font-size: 11px; color: var(--mist); margin-top: 4px; }
+.price-unit { font-size: 12px; color: var(--mist); margin-top: 6px; }
 
+/* 배송비 영역 */
+.ship-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--warm-gray);
+  letter-spacing: 0.04em;
+  text-align: center;
+  margin-bottom: 12px;
+}
+.ship-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ship-card {
   background: var(--graphite);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 10px;
+  padding: 16px 14px;
 }
 .ship-card-title {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--cream);
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 /* 원가 취소선 */
 .ship-original {
   text-align: center;
   margin-bottom: 12px;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--warm-gray);
 }
 .ship-original .strike {
@@ -437,8 +460,8 @@ body {
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.12);
 }
-.ship-row .qty { color: var(--cream); }
-.ship-row .price { font-weight: 600; color: var(--cream); }
+.ship-row .qty { color: var(--cream); font-size: 12px; }
+.ship-row .price { font-weight: 600; color: var(--cream); font-size: 13px; }
 
 /* ══ 탭4: 포장방법 ══ */
 .pack-summary {
@@ -742,6 +765,10 @@ body {
 
   <!-- ═══ 탭3: 비용안내 ═══ -->
   <div class="tab-panel" id="tab-price">
+
+    <!-- 핵심: 수리비 -->
+    <p class="price-section-title">복원수리 비용</p>
+    <p class="price-section-sub">자루당 수리비</p>
     <div class="price-grid">
       <div class="price-card">
         <p class="price-label">마모루 가위</p>
@@ -755,23 +782,27 @@ body {
       </div>
     </div>
 
-    <!-- 방문수거 배송비 -->
-    <div class="ship-card">
-      <p class="ship-card-title">방문수거 접수 시</p>
-      <p class="ship-original">실제 수거+발송 비용 <span class="strike">8,000원</span><span class="tag">할인</span></p>
-      <div class="ship-row"><span class="qty">1자루</span><span class="price">6,000원</span></div>
-      <div class="ship-row"><span class="qty">2자루</span><span class="price">3,000원</span></div>
-      <div class="ship-row hl"><span class="qty">3자루+</span><span class="price">무료</span></div>
+    <!-- 부가: 배송비 (2열 병렬) -->
+    <p class="ship-section-label">배송비 안내</p>
+    <div class="ship-cards">
+      <!-- 방문수거 -->
+      <div class="ship-card">
+        <p class="ship-card-title">방문수거</p>
+        <p class="ship-original"><span class="strike">8,000원</span><span class="tag">할인</span></p>
+        <div class="ship-row"><span class="qty">1자루</span><span class="price">6,000원</span></div>
+        <div class="ship-row"><span class="qty">2자루</span><span class="price">3,000원</span></div>
+        <div class="ship-row hl"><span class="qty">3자루+</span><span class="price">무료</span></div>
+      </div>
+      <!-- 직접발송 -->
+      <div class="ship-card">
+        <p class="ship-card-title">직접발송</p>
+        <div class="ship-row"><span class="qty">1자루</span><span class="price">3,000원</span></div>
+        <div class="ship-row hl"><span class="qty">2자루+</span><span class="price">무료</span></div>
+      </div>
     </div>
 
-    <!-- 직접발송 배송비 -->
-    <div class="ship-card">
-      <p class="ship-card-title">직접발송 접수 시</p>
-      <div class="ship-row"><span class="qty">1자루</span><span class="price">3,000원</span></div>
-      <div class="ship-row hl"><span class="qty">2자루+</span><span class="price">무료</span></div>
-    </div>
-
-    <div class="step-note" style="margin-top:12px;">
+    <!-- 참고: 주석 -->
+    <div class="step-note" style="margin-top:16px;">
       비용은 입고 후 검수 결과에 따라 자동계산되어<br>입금 안내 알림톡을 받으시게 됩니다<br>
       (수리 불필요한 경우 자루수에서 제외하여 차감)
     </div>
