@@ -96,7 +96,19 @@
       "Bash(pdftotext:*)",
       "WebFetch(domain:sboapiaa.ecount.com)",
       "Bash(node:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(cp:*)",
+      "Bash(printf 635735:*)",
+      "Bash(printf BSM1991:*)",
+      "Bash(printf 48849c2dbdc5f48deb5196a0acbd282973:*)",
+      "Bash(printf AA:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(rmdir:*)",
+      "Bash(source:*)",
+      "Bash(rm:*)",
+      "WebFetch(domain:app-gdmwvjlh6-bsm-1468s-projects.vercel.app)",
+      "Bash(sed:*)"
     ]
   }
 }
