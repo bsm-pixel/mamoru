@@ -566,6 +566,33 @@
       <div class="typo-scale-item"><span class="typo-scale-meta">Body · 16px</span><span style="font-size:15px;color:var(--stone);">고객의 커트 스타일과 습관에 맞는 가위를 안내합니다.</span></div>
       <div class="typo-scale-item"><span class="typo-scale-meta">Caption · 12px</span><span style="font-size:12px;color:var(--warm-gray);">전 상품 동일 가격 · AS 접수 간편 · 복원수리 전문</span></div>
     </div>
+
+    <!-- 반응형 타입 스케일 (PC vs Mobile) -->
+    <div style="height:36px"></div>
+    <p class="typo-label">Responsive Type Scale — PC vs Mobile</p>
+    <div class="card">
+      <div class="card-label">타입 스케일은 디바이스에 따라 분리 적용</div>
+      <table class="spec-table">
+        <thead>
+          <tr><th>역할</th><th>PC (1200px+)</th><th>모바일 (≤480px)</th><th>Font / Weight</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Display</td><td>56px</td><td>28~32px</td><td>Outfit 900</td></tr>
+          <tr><td>페이지 제목 (H1)</td><td>40px</td><td>22px</td><td>Outfit 700~800</td></tr>
+          <tr><td>섹션 제목 (H2)</td><td>28px</td><td>18px</td><td>Jakarta/Noto 700</td></tr>
+          <tr><td>카드 제목 (H3)</td><td>20px</td><td>15px</td><td>Jakarta/Noto 600~700</td></tr>
+          <tr><td>서브 헤딩</td><td>16px</td><td>14px</td><td>Jakarta/Noto 500~600</td></tr>
+          <tr><td>본문</td><td>16px</td><td>13px (최소)</td><td>Jakarta/Noto 400</td></tr>
+          <tr><td>보조 설명</td><td>14px</td><td>13px</td><td>Jakarta/Noto 400</td></tr>
+          <tr><td>주석 / 캡션</td><td>13px</td><td>12px (최소)</td><td>Jakarta/Noto 400~500</td></tr>
+          <tr><td>라벨 / 배지</td><td>12px</td><td>11px (하한선)</td><td>Jakarta/Noto 500~600</td></tr>
+        </tbody>
+      </table>
+      <div style="height:16px"></div>
+      <div class="item"><div class="item-title">모바일 절대 하한선</div><div class="item-text"><strong>11px</strong> — 이보다 작으면 가독성 실패. 라벨/배지 외에는 사용 금지.</div></div>
+      <div class="item"><div class="item-title">모바일 본문 기준</div><div class="item-text"><strong>13px</strong> — "읽히긴 하는데 읽고 싶지 않은" 12px 대신, 13px을 모바일 본문 최소로 확정. 설명이 여러 줄인 곳에서 체감 차이가 크다.</div></div>
+      <div class="item"><div class="item-title">PC 본문 기준</div><div class="item-text"><strong>16px</strong> — PC에서는 16px이 표준 본문 크기. 14px 이하는 보조 텍스트에만.</div></div>
+    </div>
   </div>
 
   <!-- Texture -->
@@ -604,6 +631,39 @@
     <div class="card">
       <div class="card-label">Forbidden · 디자인 금기</div>
       <div class="tag-row"><span class="tag tag-red">잡화점 느낌</span><span class="tag tag-red">난잡한 레이아웃</span><span class="tag tag-red">이미지와 텍스트 따로 노는 것</span><span class="tag tag-red">포인트 컬러 남발</span><span class="tag tag-red">과도한 장식</span></div>
+    </div>
+
+    <!-- 반응형 레이아웃 규칙 -->
+    <div class="card">
+      <div class="card-label">Responsive Layout · 모바일/PC 배치 규칙</div>
+      <div class="item"><div class="item-title">모바일 전용 페이지 (알림톡 링크 등)</div><div class="item-text">max-width: 480px, 좌우 패딩 16px. 텍스트 center 정렬 기본. 카드 간격 12px.</div></div>
+      <div class="item"><div class="item-title">PC/모바일 겸용 페이지 (쇼핑몰 등)</div><div class="item-text">max-width: 1200px, 모바일 시 단일 컬럼 전환. 그리드 2~3열 → 1열.</div></div>
+      <div style="height:12px"></div>
+      <table class="spec-table">
+        <thead>
+          <tr><th>속성</th><th>PC (1200px+)</th><th>모바일 (≤480px)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>섹션 간 여백</td><td>120px</td><td>80px</td></tr>
+          <tr><td>카드 내부 패딩</td><td>32~40px</td><td>16~20px</td></tr>
+          <tr><td>카드 border-radius</td><td>16px</td><td>12~14px</td></tr>
+          <tr><td>버튼 높이 (CTA)</td><td>52px</td><td>48px (padding 16px)</td></tr>
+          <tr><td>터치 타겟 최소</td><td>—</td><td>44×44px</td></tr>
+          <tr><td>아이콘/썸네일</td><td>120px</td><td>80~88px</td></tr>
+          <tr><td>구분선 (divider)</td><td>60px wide, 1px</td><td>40px wide, 1px</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 모바일 가독성 규칙 -->
+    <div class="card">
+      <div class="card-label">Mobile Readability · 모바일 가독성 규칙</div>
+      <div class="item"><div class="item-title">줄바꿈: &lt;br&gt; 남용 금지</div><div class="item-text">&lt;br&gt;로 강제 줄바꿈하면 기기 너비(360~414px)에 따라 깨짐. max-width + 자연 줄바꿈 우선. 짧은 문구(2어절 이하)만 &lt;br&gt; 허용.</div></div>
+      <div class="item"><div class="item-title">여백으로 공간 만들기</div><div class="item-text">빈 &lt;br&gt;로 세로 간격을 만들지 않는다. margin-top/margin-bottom으로 처리.</div></div>
+      <div class="item"><div class="item-title">위계 분리</div><div class="item-text">동일 스타일(크기+굵기)의 텍스트가 연속 2회 이상 나오면 위계 실패. 제목 vs 결론은 반드시 크기·색상·굵기 중 하나 이상 차별화.</div></div>
+      <div class="item"><div class="item-title">주석/부가 설명 분리</div><div class="item-text">본문 속 * 기호로 주석을 섞지 않는다. step-note / caption 영역으로 시각적 분리 (배경 rgba + border-radius).</div></div>
+      <div class="item"><div class="item-title">강조 (bold)</div><div class="item-text">핵심 키워드에만 &lt;b&gt; 적용. 한 단락에 2곳 이하. 과다 강조 = 강조 없음.</div></div>
+      <div class="item"><div class="item-title">line-height</div><div class="item-text">본문: 1.6~1.7 / 리스트형 텍스트: 2.0~2.2 / 제목: 1.35~1.45</div></div>
     </div>
   </div>
 
@@ -777,7 +837,7 @@
   <div class="wrap">
     <div class="card-dark card">
       <div class="card-label">반응형 필수 규칙</div>
-      <div class="item"><div class="item-title">핵심</div><div class="item-text">PC 코드위젯에 삽입한 HTML이 모바일에서도 자동 반응형으로 보여야 한다. viewport meta, 미디어 쿼리, 터치 영역 44px, 텍스트 최소 14px 필수.</div></div>
+      <div class="item"><div class="item-title">핵심</div><div class="item-text">PC 코드위젯에 삽입한 HTML이 모바일에서도 자동 반응형으로 보여야 한다. viewport meta, 미디어 쿼리, 터치 영역 44px, 모바일 본문 13px+ / PC 본문 16px+ 필수.</div></div>
       <div class="code-block">
         <span class="comment">/* 모든 iframe 페이지 필수 */</span><br>
         &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;<br><br>
@@ -887,7 +947,7 @@
       <div class="item"><div class="item-title">① 여백이 곧 고급감</div><div class="item-text">섹션 간 최소 120px(PC), 80px(모바일).</div></div>
       <div class="item"><div class="item-title">② 사진이 말하게</div><div class="item-text">사진 크게, 텍스트 보조. 배경 Shell 또는 White.</div></div>
       <div class="item"><div class="item-title">③ 장식 금지</div><div class="item-text">뱃지, 리본, 그라데이션 배경, 포인트 컬러 — 전부 금지.</div></div>
-      <div class="item"><div class="item-title">④ 모바일 우선</div><div class="item-text">미용사는 모바일 접속. 터치 44px, 텍스트 14px+.</div></div>
+      <div class="item"><div class="item-title">④ 모바일 우선</div><div class="item-text">미용사는 모바일 접속. 터치 44px, 본문 13px+ (PC는 16px), 라벨 11px 하한선.</div></div>
       <div class="item"><div class="item-title">⑤ 일관성</div><div class="item-text">모든 페이지에서 같은 컬러, 서체, 간격, radius.</div></div>
     </div>
 
@@ -895,7 +955,7 @@
       <div class="card-label">Claude Code 체크리스트</div>
       <div class="item"><div class="item-title">작업 전</div><div class="item-text">□ CSS 변수 복사 □ Google Fonts 3종 로드 □ viewport meta □ iframe 높이 자동 조절 스크립트</div></div>
       <div class="item"><div class="item-title">작업 중</div><div class="item-text">□ ✏️ 마커 삽입 □ 파일 상단 안내문 □ 팔레트 9색+White 내 □ radius 스펙대로 □ 장식 없음 □ 아임웹 기능 침범 안 함</div></div>
-      <div class="item"><div class="item-title">작업 후</div><div class="item-text">□ PC(1200px+) 확인 □ 태블릿(768px) 확인 □ 모바일(375px) 확인 □ 터치 44px+ □ 텍스트 14px+ □ 이미지 안 잘림 □ <strong>"잡화점이 아니다" 최종 점검</strong></div></div>
+      <div class="item"><div class="item-title">작업 후</div><div class="item-text">□ PC(1200px+) 확인 □ 태블릿(768px) 확인 □ 모바일(375px) 확인 □ 터치 44px+ □ 모바일 본문 13px+ / PC 본문 16px+ □ 라벨 11px 하한 □ 위계 연속 중복 없음 □ &lt;br&gt; 남용 없음 □ 이미지 안 잘림 □ <strong>"잡화점이 아니다" 최종 점검</strong></div></div>
     </div>
   </div>
 
