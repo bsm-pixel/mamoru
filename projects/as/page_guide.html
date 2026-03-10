@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-  <meta name="color-scheme" content="dark">
+  <meta name="color-scheme" content="light">
   <title>MAMORU 복원수리 안내</title>
 
   <!-- Brand Guide v1.0 — Google Fonts -->
@@ -26,7 +26,7 @@
 
 <style>
 /* ══════════════════════════════════════════════════════════════
-   MAMORU 복원수리 안내 — Brand Guide v1.0 · Dark Monochrome
+   MAMORU 복원수리 안내 — Brand Guide v1.0 · Light Monochrome
    ══════════════════════════════════════════════════════════════ */
 
 /* ── 0. Design Tokens ── */
@@ -43,24 +43,33 @@
   --white: #FFFFFF;
   --font-display: 'Outfit', sans-serif;
   --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+
+  /* 라이트 모드 시맨틱 변수 */
+  --bg-page: var(--cream);
+  --bg-card: var(--white);
+  --text-primary: var(--void);
+  --text-secondary: var(--stone);
+  --text-tertiary: var(--warm-gray);
+  --border-subtle: rgba(0,0,0,0.06);
+  --bg-subtle: rgba(0,0,0,0.03);
 }
 
 /* ── 0. Reset & Foundation ── */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body {
-  background: var(--void);
+  background: var(--bg-page);
   min-height: 100%;
 }
 
 .mamoru-as-page {
   font-family: var(--font-body);
-  background: var(--void);
-  color: var(--cream);
+  background: var(--bg-page);
+  color: var(--text-primary);
   line-height: 1.6;
   padding-bottom: 24px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  max-width: 720px;
+  max-width: 780px;
   margin: 0 auto;
 }
 
@@ -68,7 +77,6 @@ html, body {
 
 /* 공통 인터랙션 */
 .as-tab,
-.as-method-tab,
 .as-cta-primary,
 .as-cta-outline {
   -webkit-tap-highlight-color: transparent;
@@ -77,8 +85,7 @@ html, body {
   font-family: inherit;
 }
 
-.as-tab:active,
-.as-method-tab:active {
+.as-tab:active {
   transform: scale(0.96);
 }
 
@@ -97,7 +104,7 @@ html, body {
   font-size: 21px;
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: var(--cream);
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: 0;
   padding-bottom: 0;
@@ -110,14 +117,14 @@ html, body {
   display: block;
   width: 28px;
   height: 2px;
-  background: var(--cream);
+  background: var(--void);
   border-radius: 1px;
   margin: 16px auto 0;
 }
 
 .as-section-subtitle {
   font-size: 14px;
-  color: var(--mist);
+  color: var(--text-secondary);
   margin-top: 12px;
   margin-bottom: 36px;
   text-align: center;
@@ -125,152 +132,59 @@ html, body {
 }
 
 /* =========================================================
-   [1] 히어로 섹션
+   [1] 히어로 — 축소 (브랜드 라벨 + 한 줄 제목만)
    ========================================================= */
 .as-hero {
-  padding: 64px 24px 52px;
+  padding: 48px 24px 24px;
   text-align: center;
-  position: relative;
-  background:
-    radial-gradient(ellipse 70% 50% at 50% 25%, rgba(255,255,255,0.04) 0%, transparent 60%),
-    var(--void);
-}
-
-/* 그레인 텍스처 */
-.as-hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  opacity: 0.02;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.as-hero > * {
-  position: relative;
-  z-index: 1;
+  background: var(--bg-page);
 }
 
 .as-hero-label {
   display: inline-block;
   padding: 5px 14px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0,0,0,0.04);
+  border: 1px solid var(--border-subtle);
   border-radius: 100px;
-  color: var(--cream);
+  color: var(--text-secondary);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .as-hero-title {
   font-family: var(--font-body);
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   line-height: 1.4;
   letter-spacing: -0.04em;
-  margin-bottom: 20px;
-  color: var(--cream);
+  color: var(--text-primary);
 }
 
 .as-hero-title .highlight {
-  color: var(--cream);
-  opacity: 0.7;
-}
-
-.as-hero-square-img {
-  width: fit-content;
-  margin: 0 auto 20px;
-}
-
-.as-hero-square-img img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 10px;
-}
-
-.as-hero-square-placeholder {
-  width: 140px;
-  aspect-ratio: 1 / 1;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(250, 249, 247, 0.18);
-  font-size: 12px;
-}
-
-.as-hero-desc {
-  font-size: 15px;
-  color: var(--mist);
-  line-height: 1.8;
-  letter-spacing: -0.01em;
-  margin-bottom: 36px;
-}
-
-.as-hero-desc .water-blue {
-  color: var(--cream);
-  font-weight: 600;
-}
-
-.as-hero-images {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.as-hero-image-item {
-  border-radius: 10px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.as-hero-image-item img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  display: block;
-}
-
-.as-hero-image-placeholder {
-  width: 100%;
-  height: 180px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(250, 249, 247, 0.15);
-  font-size: 12px;
+  color: var(--text-secondary);
 }
 
 /* =========================================================
-   [2] 카테고리 탭 — 다크 글라스모피즘 스티키
+   [2] 카테고리 탭 — 라이트 글라스모피즘 스티키 (6탭)
    ========================================================= */
 .as-tabs-container {
-  padding: 14px 24px;
+  padding: 14px 16px;
   position: sticky;
   top: 0;
-  background: rgba(26, 26, 26, 0.92);
+  background: rgba(250,249,247,0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 100;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .as-tabs {
   display: flex;
   flex-wrap: nowrap;
   gap: 6px;
-  justify-content: flex-start;
+  justify-content: center;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -281,11 +195,11 @@ html, body {
 }
 
 .as-tab {
-  padding: 8px 16px;
+  padding: 7px 13px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0,0,0,0.1);
   border-radius: 100px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-tertiary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -295,16 +209,16 @@ html, body {
 }
 
 .as-tab:hover {
-  color: var(--cream);
-  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+  border-color: rgba(0,0,0,0.2);
 }
 
 .as-tab.active {
-  background: var(--cream);
-  border-color: var(--cream);
-  color: var(--void);
+  background: var(--void);
+  border-color: var(--void);
+  color: var(--cream);
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .as-tab-content {
@@ -313,184 +227,158 @@ html, body {
 
 .as-tab-content.active {
   display: block;
-  max-width: 640px;
+  max-width: 700px;
   margin: 0 auto;
   overflow-x: hidden;
 }
 
 /* =========================================================
-   [3] 과정안내 탭 — 서브탭(방문수거/직접발송) + 타임라인
+   [3] 마모루복원수리 탭 (tab-intro) — 다크 랜딩 히어로형
    ========================================================= */
-.as-process-header {
-  text-align: center;
-  padding: 48px 24px 8px;
-}
 
-.as-process-header h2 {
-  font-family: var(--font-body);
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+/* 첫 탭 전체 다크 배경 */
+#tab-intro {
+  background: var(--void);
   color: var(--cream);
-  margin-bottom: 10px;
+  padding-bottom: 36px;
 }
 
-.as-process-header p {
-  font-size: 14px;
+/* 다크 내부 텍스트 오버라이드 */
+#tab-intro .intro-appeal h2,
+#tab-intro .as-before-after-title,
+#tab-intro .as-process-grid-title,
+#tab-intro .as-grid-item-name,
+#tab-intro .intro-usp-card h4 {
+  color: var(--cream);
+}
+
+#tab-intro .intro-appeal p,
+#tab-intro .intro-usp-card p {
   color: var(--mist);
-  line-height: 1.75;
 }
 
-/* 서브탭 (방문수거/직접발송) */
-.as-method-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 24px 24px 24px;
-  max-width: 400px;
-  margin: 0 auto;
+#tab-intro .intro-appeal-label {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+  color: var(--mist);
 }
 
-.as-method-tab {
-  flex: 1;
-  padding: 14px 16px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 14px;
-  font-weight: 500;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
+#tab-intro .intro-usp-card {
+  background: var(--graphite);
+  border-color: rgba(255,255,255,0.08);
 }
 
-.as-method-tab.active {
-  background: var(--cream);
-  border-color: var(--cream);
-  color: var(--void);
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+#tab-intro .as-grid-item {
+  background: var(--graphite);
+  border-color: rgba(255,255,255,0.06);
 }
 
-.as-method-content {
-  display: none;
-  padding: 0 24px;
+#tab-intro .as-grid-item-icon {
+  background: rgba(255,255,255,0.06);
 }
 
-.as-method-content.active {
+#tab-intro .as-grid-item-icon .placeholder {
+  background: rgba(255,255,255,0.12);
+}
+
+#tab-intro .as-slide-item {
+  background: var(--graphite);
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+/* 다크 배경에서 B/A 페이드 그래디언트 */
+#tab-intro .as-before-after::after {
+  background: linear-gradient(to right, transparent, var(--void));
+}
+
+.intro-hero-video {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: rgba(255,255,255,0.03);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 0 24px;
+  width: calc(100% - 48px);
+}
+
+.intro-hero-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
-/* 타임라인 카드 */
-.as-timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.intro-appeal {
+  text-align: center;
+  padding: 36px 24px 0;
 }
 
-.as-timeline-card {
-  background: var(--graphite);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.as-timeline-label {
+.intro-appeal-label {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0,0,0,0.04);
+  border: 1px solid var(--border-subtle);
   border-radius: 100px;
-  color: var(--cream);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  margin: 20px 20px 0;
-}
-
-.as-timeline-body {
-  padding: 12px 20px 20px;
-}
-
-.as-timeline-title {
-  font-size: 15px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--cream);
+  color: var(--text-tertiary);
+  letter-spacing: 0.03em;
+  margin-bottom: 16px;
+}
+
+.intro-appeal h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+
+.intro-appeal p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* USP 카드 */
+.intro-usp {
+  display: flex;
+  gap: 10px;
+  padding: 28px 24px 0;
+}
+
+.intro-usp-card {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 20px 12px;
+  text-align: center;
+}
+
+.intro-usp-card .icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.intro-usp-card h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
-.as-timeline-desc {
-  font-size: 13px;
-  color: var(--mist);
-  line-height: 1.6;
-}
-
-/* [IMG] placeholder 공통 */
-.as-img-placeholder {
-  width: 100%;
-  min-height: 160px;
-  display: block;
-  object-fit: cover;
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.as-img-placeholder[src=""],
-.as-img-placeholder:not([src]) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.12);
-  font-size: 12px;
-}
-
-/* 유튜브 + Before/After + 진행작업 (과정안내 하단) */
-.as-youtube-section {
-  padding: 32px 24px;
-}
-
-.as-youtube-label {
-  font-size: 13px;
-  color: var(--mist);
-  margin-bottom: 12px;
-}
-
-.as-youtube-wrapper {
-  position: relative;
-  width: 100%;
-  padding-bottom: 56.25%;
-  background: var(--graphite);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
-}
-
-.as-youtube-wrapper iframe {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  border: none;
-}
-
-.as-youtube-placeholder {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: rgba(250, 249, 247, 0.25);
-}
-
-.as-youtube-placeholder i {
-  font-size: 48px;
-  margin-bottom: 12px;
+.intro-usp-card p {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
 }
 
 /* Before/After 슬라이드 */
 .as-before-after {
-  padding: 32px 0;
+  padding: 36px 0 0;
   position: relative;
 }
 
@@ -500,7 +388,7 @@ html, body {
   letter-spacing: -0.02em;
   padding: 0 24px;
   margin-bottom: 16px;
-  color: var(--cream);
+  color: var(--text-primary);
 }
 
 .as-slider-container {
@@ -516,10 +404,10 @@ html, body {
 .as-before-after::after {
   content: '';
   position: absolute;
-  top: 48px; right: 0;
+  top: 52px; right: 0;
   width: 48px;
-  height: calc(100% - 48px);
-  background: linear-gradient(to right, transparent, var(--void));
+  height: calc(100% - 52px);
+  background: linear-gradient(to right, transparent, var(--bg-page));
   pointer-events: none;
   z-index: 10;
 }
@@ -533,10 +421,11 @@ html, body {
 .as-slide-item {
   flex-shrink: 0;
   width: 280px;
-  background: var(--graphite);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
 .as-slide-images {
@@ -559,7 +448,7 @@ html, body {
   position: absolute;
   bottom: 8px; left: 8px;
   padding: 3px 8px;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0,0,0,0.55);
   border-radius: 4px;
   font-size: 10px;
   font-weight: 500;
@@ -569,7 +458,7 @@ html, body {
 
 /* 진행작업 그리드 */
 .as-process-grid {
-  padding: 32px 24px;
+  padding: 36px 24px 0;
 }
 
 .as-process-grid-title {
@@ -577,7 +466,7 @@ html, body {
   font-weight: 600;
   letter-spacing: -0.02em;
   margin-bottom: 20px;
-  color: var(--cream);
+  color: var(--text-primary);
 }
 
 .as-grid {
@@ -587,8 +476,8 @@ html, body {
 }
 
 .as-grid-item {
-  background: var(--graphite);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 16px 10px;
   text-align: center;
@@ -598,7 +487,7 @@ html, body {
   width: 44px;
   height: 44px;
   margin: 0 auto 10px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--shell);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -614,146 +503,203 @@ html, body {
 .as-grid-item-icon .placeholder {
   width: 24px;
   height: 24px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--parchment);
   border-radius: 6px;
 }
 
 .as-grid-item-name {
   font-size: 12px;
   font-weight: 500;
-  color: var(--cream);
+  color: var(--text-primary);
   line-height: 1.4;
 }
 
 /* =========================================================
-   [4] 소요시간 탭
+   [4] 과정안내 — 5단계 스텝 플로우 (라이트)
    ========================================================= */
-.as-duration-card {
-  background: var(--graphite);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 24px 20px;
-  margin: 0 24px 16px;
+.as-step-flow { display: flex; flex-direction: column; gap: 36px; }
+.as-step-item { text-align: center; }
+.as-step-num {
+  display: inline-block;
+  width: 32px; height: 32px;
+  line-height: 32px;
+  border-radius: 50%;
+  background: var(--shell);
+  border: 1px solid var(--border-subtle);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 14px;
 }
-
-.as-duration-card-title {
+.as-step-title {
   font-size: 16px;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--cream);
-  margin-bottom: 16px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+.as-step-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.as-step-icon {
+  margin: 0 auto 10px;
+  width: 120px; height: auto;
+}
+.as-step-icon img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.as-step-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--parchment);
+  margin: 0 auto;
+}
+.as-step-note {
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: var(--shell);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.7;
+  text-align: center;
 }
 
-.as-calendar-placeholder {
-  width: 100%;
-  min-height: 80px;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 10px;
+/* 접수방식 — 아이콘 그룹 */
+.as-method-group {
+  margin-top: 12px;
+  padding: 16px 14px 18px;
+  background: var(--shell);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+}
+.as-method-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  letter-spacing: 0.01em;
+}
+.as-icon-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 12px;
+}
+.as-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.as-icon-circle {
+  width: 88px; height: 88px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.15);
-  font-size: 12px;
-  margin-bottom: 16px;
-  overflow: hidden;
 }
-
-.as-calendar-placeholder img {
+.as-icon-circle img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
-
-.as-duration-info {
-  font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--cream);
-  margin-bottom: 12px;
-}
-
-.as-duration-examples {
-  font-size: 13px;
-  color: var(--mist);
-  line-height: 1.8;
-}
-
-.as-duration-note {
-  margin-top: 16px;
-  padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 10px;
-  font-size: 12px;
-  color: var(--mist);
-  line-height: 1.7;
-}
-
-/* 소요시간 — 강조 섹션 */
-.as-duration-highlight {
-  background: var(--graphite);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 24px 20px;
-  margin: 0 24px 16px;
-  text-align: center;
-}
-
-.as-duration-highlight h3 {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--cream);
-  margin-bottom: 12px;
-  line-height: 1.5;
-}
-
-.as-duration-highlight p {
-  font-size: 13px;
-  color: var(--mist);
-  line-height: 1.7;
-}
-
-.as-duration-highlight .compare {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.as-duration-highlight .compare-item {
-  flex: 1;
-  padding: 16px 12px;
-  border-radius: 10px;
-  text-align: center;
-}
-
-.as-duration-highlight .compare-item.other {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.as-duration-highlight .compare-item.mamoru {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.as-duration-highlight .compare-label {
+.as-icon-name {
   font-size: 11px;
-  color: var(--mist);
+  color: var(--text-tertiary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ── 소요시간 — 플로우 레이아웃 (라이트) ── */
+.as-dur-flow { display: flex; flex-direction: column; gap: 0; }
+.as-dur-section { text-align: center; padding: 8px 0; }
+.as-dur-heading {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.45;
   margin-bottom: 6px;
 }
-
-.as-duration-highlight .compare-value {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--cream);
+.as-dur-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 14px;
 }
-
-.as-duration-highlight .compare-item.other .compare-value {
+.as-dur-footnote {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  line-height: 1.7;
+}
+.as-dur-divider {
+  width: 40px;
+  height: 1px;
+  background: var(--parchment);
+  margin: 28px auto;
+}
+.as-dur-cal-img {
+  width: calc(100% - 160px);
+  margin: 16px auto 20px;
+  aspect-ratio: 5 / 7;
+  background: var(--shell);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.as-dur-cal-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.as-dur-list {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 2.2;
+  margin-bottom: 14px;
+}
+.as-dur-wide-img {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  background: var(--bg-subtle);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.as-dur-wide-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.as-dur-compare {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.as-dur-compare-item {
+  flex: 1;
+  padding: 14px 10px;
+  border-radius: 10px;
+  text-align: center;
+}
+.as-dur-compare-item.other { background: var(--shell); }
+.as-dur-compare-item.mamoru {
+  background: var(--void);
+}
+.as-dur-compare-label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 4px; }
+.as-dur-compare-value {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.as-dur-compare-item.other .as-dur-compare-value {
   color: var(--warm-gray);
   text-decoration: line-through;
 }
+.as-dur-compare-item.mamoru .as-dur-compare-label { color: var(--mist); }
+.as-dur-compare-item.mamoru .as-dur-compare-value { color: var(--cream); }
 
 /* =========================================================
-   [5] 비용안내 탭
+   [6] 비용안내 탭
    ========================================================= */
 .as-price-cards {
   display: grid;
@@ -764,16 +710,17 @@ html, body {
 }
 
 .as-price-card {
-  background: var(--graphite);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
   padding: 28px 16px;
   text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
 .as-price-card-label {
   font-size: 12px;
-  color: var(--mist);
+  color: var(--text-secondary);
   font-weight: 500;
   margin-bottom: 10px;
 }
@@ -782,7 +729,7 @@ html, body {
   font-family: var(--font-display);
   font-size: 36px;
   font-weight: 800;
-  color: var(--cream);
+  color: var(--text-primary);
   line-height: 1;
   letter-spacing: -0.03em;
 }
@@ -795,7 +742,7 @@ html, body {
 
 .as-price-card-unit {
   font-size: 11px;
-  color: var(--mist);
+  color: var(--text-tertiary);
   margin-top: 6px;
 }
 
@@ -812,13 +759,13 @@ html, body {
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--cream);
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .as-shipping-header p {
   font-size: 13px;
-  color: var(--mist);
+  color: var(--text-secondary);
 }
 
 .as-shipping-cards {
@@ -828,17 +775,18 @@ html, body {
 }
 
 .as-shipping-card {
-  background: var(--graphite);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
   padding: 20px 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
 .as-shipping-card-title {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: var(--cream);
+  color: var(--text-primary);
   margin-bottom: 14px;
   text-align: center;
 }
@@ -848,7 +796,7 @@ html, body {
   text-align: center;
   margin-bottom: 14px;
   font-size: 12px;
-  color: var(--warm-gray);
+  color: var(--text-tertiary);
 }
 .as-shipping-original .strike {
   text-decoration: line-through;
@@ -857,7 +805,7 @@ html, body {
 .as-shipping-original .tag {
   display: inline-block;
   padding: 2px 6px;
-  background: rgba(255,255,255,0.08);
+  background: var(--void);
   border-radius: 4px;
   font-size: 10px;
   font-weight: 600;
@@ -877,42 +825,42 @@ html, body {
   justify-content: space-between;
   align-items: center;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--shell);
   border-radius: 8px;
   font-size: 13px;
 }
 
 .as-shipping-row.highlight {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--void);
+  border: none;
 }
 
 .as-shipping-row .qty {
-  color: var(--cream);
+  color: var(--text-primary);
 }
 
 .as-shipping-row .price {
   font-weight: 600;
-  color: var(--cream);
+  color: var(--text-primary);
 }
 
+.as-shipping-row.highlight .qty,
 .as-shipping-row.highlight .price {
   color: var(--cream);
-  font-weight: 700;
 }
 
 .as-shipping-note {
   margin-top: 20px;
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--shell);
   border-radius: 10px;
   font-size: 12px;
-  color: var(--mist);
+  color: var(--text-secondary);
   line-height: 1.7;
 }
 
 /* =========================================================
-   [6] 포장방법 탭
+   [7] 포장방법 탭
    ========================================================= */
 .as-packing-header {
   text-align: center;
@@ -923,7 +871,7 @@ html, body {
 .as-packing-header h3 {
   font-size: 16px;
   font-weight: 600;
-  color: var(--mist);
+  color: var(--text-secondary);
   margin-bottom: 8px;
 }
 
@@ -937,7 +885,7 @@ html, body {
   font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
-  color: var(--cream);
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
@@ -949,29 +897,32 @@ html, body {
 }
 
 .as-packing-item {
-  background: var(--graphite);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 14px;
   overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
 .as-packing-item.important {
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border-color: rgba(0,0,0,0.12);
 }
 
 .as-packing-image {
   width: 100%;
   min-height: 180px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.12);
+  color: var(--mist);
   font-size: 12px;
   overflow: hidden;
 }
 
-.as-packing-image img {
+.as-packing-image img,
+.as-packing-image video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -984,12 +935,17 @@ html, body {
 .as-packing-step {
   display: inline-block;
   padding: 3px 10px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--shell);
   border-radius: 100px;
-  color: var(--cream);
+  color: var(--text-primary);
   font-size: 11px;
   font-weight: 600;
   margin-bottom: 8px;
+}
+
+.as-packing-step.star {
+  background: var(--void);
+  color: var(--cream);
 }
 
 .as-packing-step.star::before {
@@ -1000,28 +956,86 @@ html, body {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: var(--cream);
+  color: var(--text-primary);
   margin-bottom: 4px;
 }
 
 .as-packing-desc {
   font-size: 13px;
-  color: var(--mist);
+  color: var(--text-secondary);
   line-height: 1.55;
 }
 
 .as-packing-note {
   margin: 20px 24px 0;
   padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--shell);
   border-radius: 10px;
   font-size: 12px;
-  color: var(--mist);
+  color: var(--text-secondary);
   line-height: 1.7;
 }
 
 /* =========================================================
-   [7] 하단 CTA
+   [8] QnA 탭 — 아코디언 FAQ
+   ========================================================= */
+.as-faq-list {
+  padding: 0 24px;
+}
+
+.as-faq-item {
+  border-bottom: 1px solid var(--parchment);
+}
+
+.as-faq-question {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0;
+  background: transparent;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  gap: 12px;
+  line-height: 1.5;
+}
+
+.as-faq-icon {
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--text-tertiary);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.as-faq-item.open .as-faq-icon {
+  transform: rotate(45deg);
+}
+
+.as-faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.as-faq-item.open .as-faq-answer {
+  max-height: 500px;
+}
+
+.as-faq-answer p {
+  padding: 0 0 18px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* =========================================================
+   [9] 하단 CTA
    ========================================================= */
 .as-cta-area {
   padding: 40px 24px 24px;
@@ -1043,13 +1057,13 @@ html, body {
   gap: 6px;
   width: 100%;
   padding: 18px 24px;
-  background: var(--cream);
+  background: var(--void);
   border: none;
   border-radius: 14px;
-  color: var(--void);
+  color: var(--cream);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
 
 .as-cta-primary .as-cta-label {
@@ -1060,14 +1074,14 @@ html, body {
 .as-cta-primary .as-cta-desc {
   font-size: 12px;
   font-weight: 400;
-  color: var(--stone);
+  color: var(--mist);
   line-height: 1.4;
 }
 
 .as-cta-primary:hover {
-  background: var(--white);
+  background: var(--graphite);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 }
 
 .as-cta-outline {
@@ -1079,9 +1093,9 @@ html, body {
   width: 100%;
   padding: 18px 24px;
   background: transparent;
-  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(0,0,0,0.12);
   border-radius: 14px;
-  color: var(--cream);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1094,13 +1108,13 @@ html, body {
 .as-cta-outline .as-cta-desc {
   font-size: 12px;
   font-weight: 400;
-  color: var(--mist);
+  color: var(--text-tertiary);
   line-height: 1.4;
 }
 
 .as-cta-outline:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(0,0,0,0.25);
+  background: rgba(0,0,0,0.02);
 }
 
 .as-cta-top {
@@ -1109,7 +1123,7 @@ html, body {
   padding: 10px 20px;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-tertiary);
   font-size: 12px;
   font-family: inherit;
   cursor: pointer;
@@ -1118,7 +1132,7 @@ html, body {
 }
 
 .as-cta-top:hover {
-  color: var(--cream);
+  color: var(--text-primary);
 }
 
 /* =========================================================
@@ -1130,70 +1144,100 @@ html, body {
   }
 
   .as-hero {
-    padding: 80px 48px 64px;
+    padding: 64px 48px 28px;
   }
 
   .as-hero-title {
-    font-size: 38px;
-  }
-
-  .as-hero-desc {
-    font-size: 17px;
+    font-size: 32px;
   }
 
   .as-section {
-    padding: 64px 32px;
+    padding: 64px 40px;
   }
 
   .as-section-title {
     font-size: 26px;
+    margin-bottom: 4px;
   }
 
-  .as-hero-title br.mobile-only {
-    display: none;
+  .as-section-subtitle {
+    font-size: 15px;
+    margin-bottom: 40px;
   }
 
-  .as-hero-images {
-    grid-template-columns: 1fr 1fr;
-    max-width: 600px;
-    gap: 16px;
+  .intro-appeal h2 {
+    font-size: 28px;
   }
 
-  .as-hero-image-item img,
-  .as-hero-image-placeholder {
-    height: 200px;
+  .intro-appeal p {
+    font-size: 15px;
   }
 
+  /* PC: intro USP 카드 */
+  .intro-usp { gap: 14px; padding: 32px 24px 0; }
+  .intro-usp-card { padding: 24px 16px; }
+  .intro-usp-card h4 { font-size: 14px; }
+  .intro-usp-card p { font-size: 12px; }
+
+  /* PC: 진행작업 그리드 */
   .as-grid { gap: 14px; }
   .as-grid-item { padding: 20px 14px; }
+  .as-grid-item-name { font-size: 13px; }
 
-  .as-price-card { padding: 32px 20px; }
+  /* PC: 비용안내 가격카드 */
+  .as-price-card { padding: 36px 24px; }
+  .as-price-card-label { font-size: 13px; }
   .as-price-card-value { font-size: 48px; }
+  .as-price-card-unit { font-size: 12px; }
+
+  /* PC: 배송비 카드 */
+  .as-shipping-header h3 { font-size: 19px; }
+  .as-shipping-header p { font-size: 14px; }
+  .as-shipping-card-title { font-size: 14px; }
+  .as-shipping-row { font-size: 14px; padding: 12px 14px; }
 
   .as-cta-area {
-    max-width: 640px;
+    max-width: 680px;
     padding: 56px 24px 24px;
   }
 
-  .as-cta-buttons {
-    flex-direction: row;
-    gap: 12px;
+  .as-cta-primary {
+    padding: 24px 32px;
   }
 
-  .as-cta-primary,
-  .as-cta-outline {
-    width: auto;
-    flex: 1;
-    padding: 22px 32px;
-  }
+  .as-cta-primary .as-cta-label { font-size: 17px; }
+  .as-cta-primary .as-cta-desc { font-size: 13px; }
 
-  .as-method-tabs {
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
-  }
+  /* PC: 과정안내 스텝 플로우 */
+  .as-step-flow { gap: 48px; }
+  .as-step-num { width: 38px; height: 38px; line-height: 38px; font-size: 15px; }
+  .as-step-title { font-size: 19px; }
+  .as-step-desc { font-size: 14px; }
+  .as-step-note { font-size: 13px; padding: 16px 20px; }
+  .as-step-icon { width: 140px; }
+  .as-method-group { padding: 24px 22px 26px; }
+  .as-method-label { font-size: 16px; }
+  .as-icon-circle { width: 110px; height: 110px; }
+  .as-icon-name { font-size: 12px; }
+  .as-icon-row { gap: 32px; }
+
+  /* PC: 소요시간 */
+  .as-dur-heading { font-size: 24px; }
+  .as-dur-sub { font-size: 15px; }
+  .as-dur-footnote { font-size: 12px; }
+  .as-dur-list { font-size: 14px; }
+  .as-dur-cal-img { width: calc(100% - 240px); }
+  .as-dur-compare { max-width: 420px; margin-left: auto; margin-right: auto; gap: 14px; }
+  .as-dur-compare-value { font-size: 24px; }
+  .as-dur-compare-label { font-size: 12px; }
+  .as-dur-divider { margin: 36px auto; }
+
+  /* PC: 비용안내 */
+  .as-shipping-cards { gap: 16px; }
+  .as-shipping-note { font-size: 13px; padding: 16px 20px; }
 
   /* PC: 포장 카드 가로 배치 */
+  .as-packing-summary p { font-size: 20px; }
   .as-packing-item {
     display: flex;
     flex-direction: row;
@@ -1201,11 +1245,20 @@ html, body {
   }
 
   .as-packing-image {
-    width: 240px;
-    min-width: 240px;
+    width: 260px;
+    min-width: 260px;
     height: auto;
     min-height: 120px;
   }
+
+  .as-packing-content { padding: 20px 24px; }
+  .as-packing-title { font-size: 16px; }
+  .as-packing-desc { font-size: 14px; }
+  .as-packing-note { font-size: 13px; padding: 16px 20px; }
+
+  /* PC: QnA */
+  .as-faq-question { font-size: 15px; padding: 20px 0; }
+  .as-faq-answer p { font-size: 14px; }
 }
 
 /* =========================================================
@@ -1213,11 +1266,16 @@ html, body {
    ========================================================= */
 @media screen and (max-width: 767px) {
   .as-hero-title {
-    font-size: 26px;
+    font-size: 22px;
   }
 
   .as-shipping-cards {
     grid-template-columns: 1fr;
+  }
+
+  .intro-usp {
+    flex-direction: column;
+    gap: 8px;
   }
 }
 </style>
@@ -1226,143 +1284,60 @@ html, body {
 
 <div class="mamoru-as-page">
 
-  <!-- [1] 히어로 섹션 -->
+  <!-- [1] 히어로 — 축소형 (브랜드 라벨 + 한줄 제목) -->
   <section class="as-hero">
-    <span class="as-hero-label">복원수리 안내</span>
-
+    <span class="as-hero-label">MAMORU RESTORATION</span>
     <!-- [TEXT] 메인 타이틀 -->
     <h1 class="as-hero-title">
-      잠깐의 불편해결이 목적이 아닙니다<br>
-      <span class="highlight">새가위, 첫만남을 재현합니다</span>
+      복원수리 안내
     </h1>
-
-    <!-- [IMG] 타이틀 하단 이미지 — 보조문구 폭 맞춤 1:1 -->
-    <div class="as-hero-square-img">
-      <div class="as-hero-square-placeholder">이미지 영역</div>
-    </div>
-
-    <!-- [TEXT] 보조 문구 -->
-    <p class="as-hero-desc">
-      마모루만의 2대 기술력<br>
-      마모루대표 자체 진행<br>
-      <span class="water-blue">수냉식 복원수리</span>
-    </p>
-
-    <!-- [IMG] 메인 이미지 -->
-    <div class="as-hero-images">
-      <div class="as-hero-image-item">
-        <div class="as-hero-image-placeholder">메인 이미지 1</div>
-      </div>
-      <div class="as-hero-image-item">
-        <div class="as-hero-image-placeholder">메인 이미지 2</div>
-      </div>
-    </div>
   </section>
 
-  <!-- [2] 카테고리 탭 — 4탭 -->
+  <!-- [2] 카테고리 탭 — 6탭 -->
   <div class="as-tabs-container">
     <div class="as-tabs">
-      <button class="as-tab active" data-tab="process">과정안내</button>
+      <button class="as-tab active" data-tab="intro">마모루복원수리</button>
+      <button class="as-tab" data-tab="process">과정안내</button>
       <button class="as-tab" data-tab="duration">소요시간</button>
       <button class="as-tab" data-tab="price">비용안내</button>
       <button class="as-tab" data-tab="packing">포장방법</button>
+      <button class="as-tab" data-tab="qna">QnA</button>
     </div>
   </div>
 
-  <!-- [3] 과정안내 탭 — 서브탭(방문수거/직접발송) -->
-  <div class="as-tab-content active" id="tab-process">
+  <!-- ═══ 탭1: 마모루복원수리 (랜딩 히어로형) ═══ -->
+  <div class="as-tab-content active" id="tab-intro">
 
-    <div class="as-process-header">
-      <h2>수냉식 복원수리</h2>
-      <p>미용가위를 위한 최선의 방식<br>
-      가업의 기술을 2대로 이어<br>
-      기술력을 보완 업그레이드하여 제공합니다</p>
+    <!-- [VIDEO] 히어로 영상 — MP4 파일 추가 후 src 교체 -->
+    <div class="intro-hero-video" style="margin:24px auto 0;">
+      <video autoplay muted loop playsinline src="" poster="">
+      </video>
     </div>
 
-    <!-- 서브탭: 방문수거 / 직접발송 -->
-    <div class="as-method-tabs">
-      <button class="as-method-tab active" data-method="pickup">방문수거</button>
-      <button class="as-method-tab" data-method="delivery">직접발송</button>
+    <!-- 어필 문구 -->
+    <div class="intro-appeal">
+      <span class="intro-appeal-label">MAMORU RESTORATION</span>
+      <!-- [TEXT] 어필 타이틀 -->
+      <h2>잠깐의 불편해결이 목적이 아닙니다<br>새가위, 첫만남을 재현합니다</h2>
+      <p>마모루만의 2대 기술력으로<br>마모루대표가 직접 진행하는<br>수냉식 복원수리</p>
     </div>
 
-    <!-- 방문수거 타임라인 -->
-    <div class="as-method-content active" id="method-pickup">
-      <div class="as-timeline">
-        <div class="as-timeline-card">
-          <!-- [IMG] 방문수거 D-DAY 이미지 — 투명배경 PNG 권장 -->
-          <img src="" alt="D-DAY 포장 준비 이미지" class="as-img-placeholder">
-          <span class="as-timeline-label">D-DAY</span>
-          <div class="as-timeline-body">
-            <h4 class="as-timeline-title">가위 포장 후, 수거일 전날 미리 준비해주세요</h4>
-            <p class="as-timeline-desc">고객님이 원하시는 수거일에<br>지정하여 A/S 방문수거 접수완료</p>
-          </div>
-        </div>
-
-        <div class="as-timeline-card">
-          <!-- [IMG] 방문수거 D+1 이미지 -->
-          <img src="" alt="수거당일 기사님 전달 이미지" class="as-img-placeholder">
-          <span class="as-timeline-label">D+1</span>
-          <div class="as-timeline-body">
-            <h4 class="as-timeline-title">수거당일 기사님께 전달</h4>
-            <p class="as-timeline-desc">고객님 가위 입고 후<br>상태에 맞추어 복원수리를 진행합니다</p>
-          </div>
-        </div>
-
-        <div class="as-timeline-card">
-          <!-- [IMG] 방문수거 D+2~3 이미지 -->
-          <img src="" alt="안전 포장 배송 이미지" class="as-img-placeholder">
-          <span class="as-timeline-label">D+2~3</span>
-          <div class="as-timeline-body">
-            <h4 class="as-timeline-title">안전하게 포장되어 고객님께 전달됩니다</h4>
-            <p class="as-timeline-desc">작업 완료 후 롯데택배로 출고됩니다</p>
-          </div>
-        </div>
+    <!-- USP 3카드 -->
+    <div class="intro-usp">
+      <div class="intro-usp-card">
+        <div class="icon">💧</div>
+        <h4>수냉식 기법</h4>
+        <p>열 변형 없이<br>날을 정밀 복원</p>
       </div>
-    </div>
-
-    <!-- 직접발송 타임라인 -->
-    <div class="as-method-content" id="method-delivery">
-      <div class="as-timeline">
-        <div class="as-timeline-card">
-          <!-- [IMG] 직접발송 Step 1 이미지 -->
-          <img src="" alt="직접발송 접수 이미지" class="as-img-placeholder">
-          <span class="as-timeline-label">Step 1</span>
-          <div class="as-timeline-body">
-            <h4 class="as-timeline-title">접수 후 안내된 주소로 가위를 발송해주세요</h4>
-            <p class="as-timeline-desc">증상/연락처/수량을 입력하면 발송 주소를 안내드립니다</p>
-          </div>
-        </div>
-
-        <div class="as-timeline-card">
-          <!-- [IMG] 직접발송 Step 2 이미지 -->
-          <img src="" alt="입고 후 복원수리 진행 이미지" class="as-img-placeholder">
-          <span class="as-timeline-label">Step 2</span>
-          <div class="as-timeline-body">
-            <h4 class="as-timeline-title">입고 당일 상태 확인 후 복원수리 진행</h4>
-            <p class="as-timeline-desc">검수 후 비용 안내 알림톡을 보내드립니다</p>
-          </div>
-        </div>
-
-        <div class="as-timeline-card">
-          <!-- [IMG] 직접발송 Step 3 이미지 -->
-          <img src="" alt="작업 완료 출고 이미지" class="as-img-placeholder">
-          <span class="as-timeline-label">Step 3</span>
-          <div class="as-timeline-body">
-            <h4 class="as-timeline-title">작업 완료 후 출고 (롯데택배)</h4>
-            <p class="as-timeline-desc">안전하게 포장하여 발송해드립니다</p>
-          </div>
-        </div>
+      <div class="intro-usp-card">
+        <div class="icon">👨‍🔧</div>
+        <h4>2대 기술력</h4>
+        <p>가업으로 이어온<br>전문 기술</p>
       </div>
-    </div>
-
-    <!-- [VIDEO] 유튜브 영역 -->
-    <div class="as-youtube-section">
-      <p class="as-youtube-label">틴닝가위 불편 시 하단 영상을 우선 시청해주세요</p>
-      <div class="as-youtube-wrapper">
-        <div class="as-youtube-placeholder">
-          <i>▶</i>
-          <span>틴닝가위 불편해도 구매하지마세요</span>
-        </div>
+      <div class="intro-usp-card">
+        <div class="icon">⚡</div>
+        <h4>자체 직접작업</h4>
+        <p>외주 없이<br>2~3일 완료</p>
       </div>
     </div>
 
@@ -1374,11 +1349,11 @@ html, body {
           <div class="as-slide-item">
             <div class="as-slide-images">
               <div class="before">
-                <img src="" alt="Before" style="background:#3C3C3E;">
+                <img src="" alt="Before" style="background:#E8E6E3;">
                 <span class="label">Before</span>
               </div>
               <div class="after">
-                <img src="" alt="After" style="background:#4C4C4E;">
+                <img src="" alt="After" style="background:#D4D0CB;">
                 <span class="label">After</span>
               </div>
             </div>
@@ -1386,11 +1361,11 @@ html, body {
           <div class="as-slide-item">
             <div class="as-slide-images">
               <div class="before">
-                <img src="" alt="Before" style="background:#3C3C3E;">
+                <img src="" alt="Before" style="background:#E8E6E3;">
                 <span class="label">Before</span>
               </div>
               <div class="after">
-                <img src="" alt="After" style="background:#4C4C4E;">
+                <img src="" alt="After" style="background:#D4D0CB;">
                 <span class="label">After</span>
               </div>
             </div>
@@ -1398,11 +1373,11 @@ html, body {
           <div class="as-slide-item">
             <div class="as-slide-images">
               <div class="before">
-                <img src="" alt="Before" style="background:#3C3C3E;">
+                <img src="" alt="Before" style="background:#E8E6E3;">
                 <span class="label">Before</span>
               </div>
               <div class="after">
-                <img src="" alt="After" style="background:#4C4C4E;">
+                <img src="" alt="After" style="background:#D4D0CB;">
                 <span class="label">After</span>
               </div>
             </div>
@@ -1455,72 +1430,165 @@ html, body {
     </div>
   </div>
 
-  <!-- [4] 소요시간 탭 -->
-  <div class="as-tab-content" id="tab-duration">
+  <!-- ═══ 탭2: 과정안내 — 5단계 스텝 플로우 (page_as_guide.html 콘텐츠 기반) ═══ -->
+  <div class="as-tab-content" id="tab-process">
     <section class="as-section">
-      <h2 class="as-section-title">소요시간</h2>
-      <p class="as-section-subtitle">빠르고 정확한 복원수리</p>
+      <div class="as-step-flow">
+
+        <!-- Step 1: 접수 방식 선택 -->
+        <div class="as-step-item">
+          <span class="as-step-num">1</span>
+          <p class="as-step-title">두 가지 진행방식 중<br>선택하여 접수</p>
+
+          <!-- 방문수거 -->
+          <div class="as-method-group">
+            <p class="as-method-label">방문수거</p>
+            <p class="as-step-desc">3가지 방법에 맞추어 수거요청일에 수거 진행</p>
+            <div class="as-icon-row">
+              <div class="as-icon-item">
+                <div class="as-icon-circle"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/3876fc8ff40d5.png" alt="문앞보관"></div>
+                <span class="as-icon-name">문앞보관</span>
+              </div>
+              <div class="as-icon-item">
+                <div class="as-icon-circle"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/899f7ba019566.png" alt="카운터보관"></div>
+                <span class="as-icon-name">카운터보관</span>
+              </div>
+              <div class="as-icon-item">
+                <div class="as-icon-circle"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/fa4a888f822d0.png" alt="직접전달"></div>
+                <span class="as-icon-name">직접전달</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 직접발송 -->
+          <div class="as-method-group">
+            <p class="as-method-label">직접발송</p>
+            <p class="as-step-desc">접수 후 7일 이내 직접 발송</p>
+            <div class="as-icon-row">
+              <div class="as-icon-item">
+                <div class="as-icon-circle"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/54b3187745037.png" alt="직접발송"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="as-step-divider"></div>
+
+        <!-- Step 2: 포장 후 보내기 -->
+        <div class="as-step-item">
+          <span class="as-step-num">2</span>
+          <div class="as-step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/7aec0a5522785.png" alt="포장"></div>
+          <p class="as-step-title">포장 후 가위 보내기</p>
+          <p class="as-step-desc">접수 후, 안내드린 포장방법을 참고하여 준비 후<br><b>접수방식에 맞추어</b> 마모루로 보내집니다</p>
+        </div>
+
+        <div class="as-step-divider"></div>
+
+        <!-- Step 3: 검수 + 비용안내 -->
+        <div class="as-step-item">
+          <span class="as-step-num">3</span>
+          <div class="as-step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/71be81048aac2.png" alt="검수 아이콘"></div>
+          <p class="as-step-title">입고 후 검수 & 비용안내</p>
+          <p class="as-step-desc">수량 및 상태를 판단하여<br>비용안내 알림톡을 발송해드립니다</p>
+          <div class="as-step-note">복원이 불필요한 경우(간편해결로 가능),<br>해당 자루는 미반영하여 비용을 안내합니다</div>
+        </div>
+
+        <div class="as-step-divider"></div>
+
+        <!-- Step 4: 복원수리 진행 -->
+        <div class="as-step-item">
+          <span class="as-step-num">4</span>
+          <div class="as-step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/015ef4ce00dec.png" alt="복원수리 아이콘"></div>
+          <p class="as-step-title">복원수리 진행</p>
+          <p class="as-step-desc">고객님이 남겨주신 메모를 우선 참고하며<br>고객 불편을 직접 해결과 동시에 가위를 복원합니다</p>
+        </div>
+
+        <div class="as-step-divider"></div>
+
+        <!-- Step 5: 발송 -->
+        <div class="as-step-item">
+          <span class="as-step-num">5</span>
+          <div class="as-step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/4d3e32ac11112.png" alt="발송 아이콘"></div>
+          <p class="as-step-title">복원수리 완료 후<br>고객님께 발송</p>
+          <p class="as-step-desc">발송시점에 <b>송장정보, 수리내역</b>이 함께 안내되며,<br>수리내역과 배송과정까지 확인 가능합니다</p>
+        </div>
+
+      </div>
+
+      <div class="as-step-note" style="margin-top:24px;">
+        수리비용 입금이 지연될 경우,<br>발송이 지연될 수 있는 점 참고해주세요
+      </div>
     </section>
-
-    <!-- 섹션 A: 방문수거 소요일 -->
-    <div class="as-duration-card">
-      <h3 class="as-duration-card-title">수거일 기준 2~3일 소요</h3>
-      <!-- [IMG] 캘린더 이미지 -->
-      <div class="as-calendar-placeholder">캘린더 이미지 영역</div>
-      <p class="as-duration-info">빨간날, 공휴일 ← 기간에서 제외</p>
-      <div class="as-duration-examples">
-        <p>월요일 수거 → 수, 목요일 수령</p>
-        <p>수요일 수거 → 금, 토요일 수령</p>
-        <p>금요일 수거 → 화, 수요일 수령</p>
-      </div>
-      <p class="as-duration-note">* 주말 및 공휴일은 소요일에서 제외됩니다.</p>
-    </div>
-
-    <!-- 섹션 B: 직접발송 소요일 -->
-    <div class="as-duration-card">
-      <h3 class="as-duration-card-title">직접발송 — 입고 당일 출고 원칙</h3>
-      <div class="as-duration-examples">
-        <p>월요일 입고 시 월요일 또는 화요일 발송처리</p>
-      </div>
-      <div class="as-duration-note">
-        <p>* 부득이한 사정이나 복원작업 물량이 몰리는 경우 지연될 수 있으며, 이점 양해부탁드립니다.</p>
-        <p style="margin-top:8px;">* 방문수거접수 시 수거일 준비를 못하신 경우 그만큼 수령예상일이 밀립니다.</p>
-      </div>
-    </div>
-
-    <!-- 섹션 C: 마모루 직접 작업 강조 -->
-    <div class="as-duration-highlight">
-      <h3>마모루는 직접 작업하여 빠릅니다</h3>
-      <p>보통의 가위회사는 외주연마소로 보내기 때문에<br>
-      최소 공유비용+마진까지 기본적으로 7~15일까지 걸립니다</p>
-      <div class="compare">
-        <div class="compare-item other">
-          <p class="compare-label">외주 연마소</p>
-          <p class="compare-value">7~15일</p>
-        </div>
-        <div class="compare-item mamoru">
-          <p class="compare-label">마모루 직접작업</p>
-          <p class="compare-value">2~3일</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 섹션 D: 작업 속도 설명 -->
-    <div class="as-duration-highlight">
-      <h3>하지만, 작업 순간의<br>속도는 빠르지 않습니다</h3>
-      <p>마모루는 수냉식 기법을 사용하여<br>
-      열 변형 없이 날을 복원합니다.<br><br>
-      2대 기술력으로 정밀하게 작업하기 때문에<br>
-      하루 처리량을 제한하고 있습니다.</p>
-    </div>
   </div>
 
-  <!-- [5] 비용안내 탭 -->
+  <!-- ═══ 탭3: 소요시간 (page_as_guide.html 콘텐츠 기반) ═══ -->
+  <div class="as-tab-content" id="tab-duration">
+    <section class="as-section">
+      <div class="as-dur-flow">
+
+        <!-- 섹션 1: 핵심 소요일 -->
+        <div class="as-dur-section">
+          <h2 class="as-dur-heading">가위를 보내주신 날 기준<br>2~3일 후 받아보십니다</h2>
+          <!-- [IMG] 캘린더 이미지 -->
+          <div class="as-dur-cal-img"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/00eeb89f607eb.png" alt="캘린더 이미지"></div>
+          <div class="as-dur-list">
+            <p>* 주말 및 공휴일은 소요일에서 제외됩니다</p>
+            <p>* 수거처리 및 직접발송이 지연 될 경우<br>그에 따른 수령일도 지연됩니다</p>
+          </div>
+        </div>
+
+        <div class="as-dur-divider"></div>
+
+        <!-- 섹션 2: 입고 당일 출고 원칙 -->
+        <div class="as-dur-section">
+          <h3 class="as-dur-heading">입고 당일 출고 원칙</h3>
+          <p class="as-dur-footnote">* 복원작업 물량이 몰리는 경우 지연될 수 있습니다</p>
+        </div>
+
+        <div class="as-dur-divider"></div>
+
+        <!-- 복원수리 이미지 (가로폭) -->
+        <div class="as-dur-wide-img"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/24aff72079b18.jpg" alt="복원수리 작업 이미지"></div>
+
+        <!-- 섹션 3: 마모루 직접작업 비교 -->
+        <div class="as-dur-section">
+          <h3 class="as-dur-heading">마모루는 직접 작업하여 빠릅니다</h3>
+          <p class="as-dur-sub">일반적인 가위회사의 경우<br><b>작업을 외주업체로 보내어 진행</b>하기에,<br>보통 7~15일까지도 소요됩니다</p>
+          <div class="as-dur-compare">
+            <div class="as-dur-compare-item other">
+              <p class="as-dur-compare-label">타 가위회사</p>
+              <p class="as-dur-compare-value">7~15일</p>
+            </div>
+            <div class="as-dur-compare-item mamoru">
+              <p class="as-dur-compare-label">마모루</p>
+              <p class="as-dur-compare-value">2~3일</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="as-dur-divider"></div>
+
+        <!-- 섹션 4: 수냉식 기법 -->
+        <div class="as-dur-section">
+          <h3 class="as-dur-heading">하지만, 작업 순간의<br>속도는 빠르지 않습니다</h3>
+          <p class="as-dur-sub" style="margin-top:6px;">
+            수냉식 기법에 의한 ZERO DMG 를 우선하여<br>
+            상처부위만을 잡아내는 작업 기술을 제공합니다
+          </p>
+          <p class="as-dur-sub" style="margin-top:20px;font-size:15px;font-weight:600;color:var(--stone);">마모루 자체복원의 속도로 진행합니다<br>완벽에 의한 만족을 기다려주세요</p>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- ═══ 탭4: 비용안내 (page_as_guide.html 콘텐츠 기반) ═══ -->
   <div class="as-tab-content" id="tab-price">
     <section class="as-section">
-      <h2 class="as-section-title">비용안내</h2>
 
-      <p class="as-section-subtitle" style="margin-bottom:16px;">복원수리 비용</p>
+      <!-- 수리비 -->
+      <h2 class="as-section-title">복원수리 비용</h2>
+      <p class="as-section-subtitle">자루당 수리비</p>
       <div class="as-price-cards">
         <div class="as-price-card">
           <p class="as-price-card-label">마모루 가위</p>
@@ -1534,15 +1602,16 @@ html, body {
         </div>
       </div>
 
+      <!-- 배송비 (2열 병렬) -->
       <div class="as-shipping-section">
         <div class="as-shipping-header">
-          <h3>수거 및 배송 비용</h3>
-          <p>복원수리 비용과 별도</p>
+          <h3>배송비 안내</h3>
         </div>
         <div class="as-shipping-cards">
+          <!-- 방문수거 -->
           <div class="as-shipping-card">
-            <p class="as-shipping-card-title">방문수거 접수 시</p>
-            <p class="as-shipping-original">실제 수거+발송 비용 <span class="strike">8,000원</span><span class="tag">할인</span></p>
+            <p class="as-shipping-card-title">방문수거</p>
+            <p class="as-shipping-original"><span class="strike">8,000원</span><span class="tag">할인</span></p>
             <div class="as-shipping-list">
               <div class="as-shipping-row">
                 <span class="qty">1자루</span>
@@ -1558,9 +1627,9 @@ html, body {
               </div>
             </div>
           </div>
+          <!-- 직접발송 -->
           <div class="as-shipping-card">
-            <p class="as-shipping-card-title">직접발송 접수 시</p>
-            <p class="as-shipping-original">실제 발송 비용 <span class="strike">3,000원</span><span class="tag">할인</span></p>
+            <p class="as-shipping-card-title">직접발송</p>
             <div class="as-shipping-list">
               <div class="as-shipping-row">
                 <span class="qty">1자루</span>
@@ -1571,86 +1640,162 @@ html, body {
                 <span class="price">무료</span>
               </div>
             </div>
+            <p style="margin-top:10px;font-size:11px;color:var(--text-tertiary);line-height:1.6;text-align:center;">보내실 때 택배비는<br>고객님 선불 부담이며<br>위 비용과 별도입니다</p>
           </div>
         </div>
+
+        <!-- 주석 -->
         <div class="as-shipping-note">
-          * 비용은 접수 및 입고 후 수리 필요 여부에 따라 자동계산되어 입금 안내 알림톡을 받으시게 됩니다.<br>
+          비용은 입고 후 검수 결과에 따라 자동계산되어<br>입금 안내 알림톡을 받으시게 됩니다<br>
           (수리 불필요한 경우 자루수에서 제외하여 차감)
         </div>
       </div>
     </section>
   </div>
 
-  <!-- [6] 포장방법 탭 -->
+  <!-- ═══ 탭5: 포장방법 ═══ -->
   <div class="as-tab-content" id="tab-packing">
     <section class="as-section">
       <h2 class="as-section-title">가위포장 안내</h2>
-      <p class="as-section-subtitle">수리를 보내는데 배송중 다칠까 불안하시죠?<br>간단하고 완벽한 준비방법 알려드리겠습니다</p>
+      <p class="as-section-subtitle">간단하고 완벽한 준비방법 알려드리겠습니다</p>
 
       <div class="as-packing-summary">
-        <p>1. 감고 &nbsp; 2. 감싸고 &nbsp; 3. 담으세요</p>
+        <p>고정하고 · 감싸고 · 담기</p>
       </div>
 
       <div class="as-packing-list">
-        <!-- Step 1: 중요 — GIF 영역 -->
+        <!-- Step 1: 중요 — MP4 영상 -->
         <div class="as-packing-item important">
-          <div class="as-packing-image">
-            <!-- [IMG] GIF — 고무줄 감기 영상. src에 GIF 경로 삽입 -->
-            <img src="" alt="고무줄로 날 감기 GIF">
+          <div class="as-packing-image" style="padding:12px 24px;background:var(--shell);">
+            <video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;display:block;border-radius:10px;" src="videos/고무줄.mp4"></video>
           </div>
           <div class="as-packing-content">
             <span class="as-packing-step star">Step 1</span>
-            <h4 class="as-packing-title">날이 벌어지지 않도록 고무줄로 감아주세요</h4>
-            <p class="as-packing-desc">벌어진 날 팁에는 날끝에서 가장 위험하니,<br>그물로 한번의 여러번 감아 줄 수 있습니다</p>
+            <h4 class="as-packing-title">핸들부를 고무줄로 감아<br>날이 벌어지지 않도록 고정해주세요</h4>
+            <p class="as-packing-desc">벌어진 상태의 날은 가장 위험합니다</p>
           </div>
         </div>
 
         <!-- Step 2 -->
         <div class="as-packing-item">
-          <div class="as-packing-image">
-            <!-- [IMG] 풀/수건으로 감싸기 이미지 -->
-            <img src="" alt="풀이나 수건으로 감싸기">
+          <div class="as-packing-image" style="width:85%;margin:0 auto;">
+            <!-- [IMG] page_as_guide.html과 동일 CDN 이미지 -->
+            <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/bf336bf7a49b6.png" alt="구긴 종이나 수건으로 감싸기">
           </div>
           <div class="as-packing-content">
             <span class="as-packing-step">Step 2</span>
-            <h4 class="as-packing-title">풀이나 수건 등으로 감싸주시고</h4>
-            <p class="as-packing-desc">완충 역할을 해줄 수 있는 재질로 감싸주세요</p>
+            <h4 class="as-packing-title">구긴 종이 또는 수건으로 감싸주세요</h4>
+            <p class="as-packing-desc">수건의경우 안전하게 다시 돌려보내드립니다</p>
           </div>
         </div>
 
         <!-- Step 3 -->
         <div class="as-packing-item">
-          <div class="as-packing-image">
-            <!-- [IMG] 박스에 담기 이미지 -->
-            <img src="" alt="메모지와 함께 박스에 담기">
+          <div class="as-packing-image" style="width:85%;margin:0 auto;">
+            <!-- [IMG] page_as_guide.html과 동일 CDN 이미지 -->
+            <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/1333029d67b25.png" alt="박스에 담기">
           </div>
           <div class="as-packing-content">
             <span class="as-packing-step">Step 3</span>
-            <h4 class="as-packing-title">메모지에 "접수자이름" 적어서 한판 박스에 함께 담아주세요</h4>
-            <p class="as-packing-desc">접수 매 선택하신 전달방법에 맞추어 보관, 준비해주시면 됩니다</p>
+            <h4 class="as-packing-title">주변 박스에 담아주세요</h4>
+            <p class="as-packing-desc">메모지에 접수자 이름을 적어 동봉해주세요</p>
           </div>
         </div>
       </div>
 
       <div class="as-packing-note">
-        수건으로 감싸줘야 배송중 누르더라도 압력이 흡수되어 날에 영향을 주지 않습니다.<br>
-        <span style="display:inline-block;margin-top:4px;">※ 가위틀닷컴 공달발으로 "마모루가위팀" 기재 必</span>
+        직접 발송의 경우,<br>꼭 접수 후 발송해주시길 바랍니다<br>(미접수 상태에서 입고 시 접수자 확인이 어려워 곤란합니다)
       </div>
     </section>
   </div>
 
-  <!-- [7] 하단 CTA — 마모루 고객 / 타사 고객 분기 -->
+  <!-- ═══ 탭6: QnA — 아코디언 FAQ ═══ -->
+  <div class="as-tab-content" id="tab-qna">
+    <section class="as-section">
+      <h2 class="as-section-title">자주 묻는 질문</h2>
+      <p class="as-section-subtitle">궁금한 점을 확인해보세요</p>
+    </section>
+
+    <div class="as-faq-list">
+      <div class="as-faq-item">
+        <button class="as-faq-question">
+          <span>Q. 마모루 가위가 아닌 타사 가위도 복원수리 가능한가요?</span>
+          <span class="as-faq-icon">+</span>
+        </button>
+        <div class="as-faq-answer">
+          <p>네, 타사 가위도 복원수리 가능합니다. 타사 가위는 자루당 2만원이며, 마모루 가위와 함께 접수하실 수도 있습니다.</p>
+        </div>
+      </div>
+
+      <div class="as-faq-item">
+        <button class="as-faq-question">
+          <span>Q. 복원수리 접수 후 취소할 수 있나요?</span>
+          <span class="as-faq-icon">+</span>
+        </button>
+        <div class="as-faq-answer">
+          <p>수거 전이라면 취소 가능합니다. 이미 입고된 경우에는 검수 후 비용 안내 시점에서 진행 여부를 결정하실 수 있습니다.</p>
+        </div>
+      </div>
+
+      <div class="as-faq-item">
+        <button class="as-faq-question">
+          <span>Q. 복원수리 기간은 얼마나 걸리나요?</span>
+          <span class="as-faq-icon">+</span>
+        </button>
+        <div class="as-faq-answer">
+          <p>가위를 보내주신 날 기준 2~3일 후 받아보실 수 있습니다. 입고 당일 출고를 원칙으로 하며, 주말 및 공휴일은 소요일에서 제외됩니다.</p>
+        </div>
+      </div>
+
+      <div class="as-faq-item">
+        <button class="as-faq-question">
+          <span>Q. 수리가 필요 없는 가위는 어떻게 되나요?</span>
+          <span class="as-faq-icon">+</span>
+        </button>
+        <div class="as-faq-answer">
+          <p>검수 후 복원이 불필요한 가위(간편해결로 가능한 경우)는 수리 비용에서 제외되며, 해당 자루수를 차감하여 비용을 안내드립니다.</p>
+        </div>
+      </div>
+
+      <div class="as-faq-item">
+        <button class="as-faq-question">
+          <span>Q. 배송 중 가위가 손상되면 어떻게 하나요?</span>
+          <span class="as-faq-icon">+</span>
+        </button>
+        <div class="as-faq-answer">
+          <p>안내드린 포장방법대로 포장해주시면 배송 중 손상 가능성은 매우 낮습니다. 만약의 경우 마모루에서 책임지고 대응해드립니다.</p>
+        </div>
+      </div>
+
+      <div class="as-faq-item">
+        <button class="as-faq-question">
+          <span>Q. 수건으로 감싸서 보내면 돌려받을 수 있나요?</span>
+          <span class="as-faq-icon">+</span>
+        </button>
+        <div class="as-faq-answer">
+          <p>네, 수건의 경우 안전하게 다시 돌려보내드립니다.</p>
+        </div>
+      </div>
+
+      <div class="as-faq-item">
+        <button class="as-faq-question">
+          <span>Q. 비용은 언제 결제하나요?</span>
+          <span class="as-faq-icon">+</span>
+        </button>
+        <div class="as-faq-answer">
+          <p>가위 입고 후 검수 결과에 따라 자동계산되어 입금 안내 알림톡을 받으시게 됩니다. 안내된 금액을 입금해주시면 복원수리가 진행됩니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- [9] 하단 CTA — 통합 접수 (마모루+타사 모두) -->
   <div class="as-cta-area">
     <div class="as-cta-buttons">
-      <!-- [URL] AS 접수 폼: /53 (마모루 가위 고객) -->
+      <!-- [URL] 통합 접수 폼: /53 -->
       <button class="as-cta-primary" onclick="goToASForm();">
-        <span class="as-cta-label">복원수리 접수</span>
-        <span class="as-cta-desc">마모루가위만 접수하거나 마모루가위와 함께 접수할래요</span>
-      </button>
-      <!-- [URL] 복원수리 상품페이지: /44/?idx=43 (타사 가위 고객) -->
-      <button class="as-cta-outline" onclick="goToRepairProduct();">
-        <span class="as-cta-label">타사가위 접수</span>
-        <span class="as-cta-desc">타사가위만 복원수리 원해요</span>
+        <span class="as-cta-label">복원수리 접수하기</span>
+        <span class="as-cta-desc">마모루 · 타사 가위 모두 접수 가능합니다</span>
       </button>
     </div>
     <button class="as-cta-top" onclick="scrollToTop();">맨 위로</button>
@@ -1659,7 +1804,7 @@ html, body {
 </div>
 
 <script>
-// 탭 전환 — 4탭 (process, duration, price, packing)
+// 탭 전환 — 6탭 (intro, process, duration, price, packing, qna)
 document.querySelectorAll('.as-tab').forEach(tab => {
   tab.addEventListener('click', function() {
     document.querySelectorAll('.as-tab').forEach(t => t.classList.remove('active'));
@@ -1671,25 +1816,22 @@ document.querySelectorAll('.as-tab').forEach(tab => {
   });
 });
 
-// 과정안내 내부 서브탭 (방문수거/직접발송)
-document.querySelectorAll('.as-method-tab').forEach(tab => {
-  tab.addEventListener('click', function() {
-    document.querySelectorAll('.as-method-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.as-method-content').forEach(c => c.classList.remove('active'));
-    this.classList.add('active');
-    document.getElementById('method-' + this.getAttribute('data-method')).classList.add('active');
-    setTimeout(notifyHeight, 100);
+// QnA 아코디언 토글
+document.querySelectorAll('.as-faq-question').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var item = this.closest('.as-faq-item');
+    // 다른 항목 닫기 (하나만 열리게)
+    document.querySelectorAll('.as-faq-item').forEach(function(fi) {
+      if (fi !== item) fi.classList.remove('open');
+    });
+    item.classList.toggle('open');
+    setTimeout(notifyHeight, 350);
   });
 });
 
-// [URL] AS 접수 페이지로 이동 (마모루 가위 고객)
+// [URL] 통합 접수 페이지로 이동 (마모루+타사 모두)
 function goToASForm() {
   window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: '/53' }, '*');
-}
-
-// [URL] 복원수리 상품 페이지로 이동 (타사 가위 고객)
-function goToRepairProduct() {
-  window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: '/44/?idx=43' }, '*');
 }
 
 // 맨 위로 스크롤 (iframe 내부 → 부모 페이지에 postMessage로 요청)
