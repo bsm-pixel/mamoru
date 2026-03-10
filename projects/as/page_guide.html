@@ -353,6 +353,38 @@ html, body {
   aspect-ratio: auto;
 }
 
+/* ⑤-1 진행 방향 — 고객 맞춤형 */
+.intro-approach {
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+.intro-approach-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--warm-gray);
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.intro-approach-block {
+  text-align: center;
+}
+.intro-approach-block h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cream);
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+.intro-approach-block p {
+  font-size: 13px;
+  color: var(--mist);
+  line-height: 1.75;
+}
+
 /* ⑥ 수냉식 — 한 줄 어필 */
 .intro-watercool {
   text-align: center;
@@ -1179,6 +1211,15 @@ html, body {
   .as-slide-item { width: auto; flex-shrink: unset; }
   .as-slide-label { font-size: 13px; padding: 14px 16px; }
 
+  /* PC: 진행 방향 — 세로 유지, 좁은 중앙 */
+  .intro-approach {
+    max-width: 400px;
+    margin: 0 auto;
+    gap: 44px;
+  }
+  .intro-approach-block h4 { font-size: 18px; }
+  .intro-approach-block p { font-size: 14px; }
+
   /* PC: 작업과정 타임라인 — 3열×3행 그리드 */
   .intro-process-story { padding: 0 24px; }
   .intro-process-story-title { font-size: 18px; }
@@ -1367,7 +1408,26 @@ html, body {
 
     <div class="intro-divider"></div>
 
-    <!-- ⑤ 작업과정 — 이미지 타임라인 -->
+    <!-- ⑤-1 진행 방향 — 고객 맞춤형 어필 -->
+    <div class="intro-approach">
+      <p class="intro-approach-title">마모루의 원칙</p>
+      <div class="intro-approach-block">
+        <h4>고객의 불편을 직접 듣습니다</h4>
+        <p>가위의 형태가 고객님의 스타일에 맞지 않아<br>발생하는 불편일 수 있습니다</p>
+      </div>
+      <div class="intro-approach-block">
+        <h4>고객 맞춤형으로 진행합니다</h4>
+        <p>불편의 원인이 가위 형태 자체에 있다면<br>그에 맞추어 교정합니다</p>
+      </div>
+      <div class="intro-approach-block">
+        <h4>방문 시 당일 작업</h4>
+        <p>대면을 통해 문제를 직접 파악하고<br>즉시 해결합니다</p>
+      </div>
+    </div>
+
+    <div class="intro-divider"></div>
+
+    <!-- ⑤-2 작업과정 — 이미지 타임라인 -->
     <div class="intro-process-story">
       <h3 class="intro-process-story-title">복원수리 작업과정</h3>
       <p class="intro-process-story-sub">한 자루의 가위가 거치는 과정입니다</p>
