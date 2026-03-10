@@ -341,15 +341,16 @@ html, body {
   object-fit: cover;
   display: block;
 }
-/* 1열: 2행 세로 관통 */
-.intro-gallery-item:nth-child(1) {
+/* 1열: 정방형 2장 */
+.intro-gallery-item:nth-child(1),
+.intro-gallery-item:nth-child(2) {
+  aspect-ratio: 1/1;
+}
+/* 2열: 2행 세로 관통 */
+.intro-gallery-item:nth-child(3) {
+  grid-column: 2;
   grid-row: 1 / 3;
   aspect-ratio: auto;
-}
-/* 2열: 정방형 2장 */
-.intro-gallery-item:nth-child(2),
-.intro-gallery-item:nth-child(3) {
-  aspect-ratio: 1/1;
 }
 
 /* ⑥ 수냉식 — 한 줄 어필 */
@@ -1333,9 +1334,9 @@ html, body {
     <!-- ③ 작업사진 갤러리 — 잡지형 -->
     <div class="intro-gallery">
       <!-- [IMG] 고퀄리티 작업사진 추가 후 src 교체 -->
-      <div class="intro-gallery-item"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/b1d99de6b4d17.jpg" alt="작업사진 1"></div>
-      <div class="intro-gallery-item"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/4bdab19686e7f.jpg" alt="작업사진 2"></div>
-      <div class="intro-gallery-item"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/0b9d73053b22b.png" alt="작업사진 3"></div>
+      <div class="intro-gallery-item"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/4bdab19686e7f.jpg" alt="작업사진 1"></div>
+      <div class="intro-gallery-item"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/0b9d73053b22b.png" alt="작업사진 2"></div>
+      <div class="intro-gallery-item"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/b1d99de6b4d17.jpg" alt="작업사진 3"></div>
     </div>
 
     <div class="intro-divider"></div>
