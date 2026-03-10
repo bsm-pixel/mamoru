@@ -1,5 +1,5 @@
 # 복원수리 프로세스 흐름도
-> 최종 업데이트: 2026-03-06
+> 최종 업데이트: 2026-03-10
 
 ---
 
@@ -160,7 +160,7 @@ cancelled → (terminal)
 
 ### 고객 대면 페이지 (GitHub Pages)
 - `page_form.html` — 통합 접수 폼 (마모루+타사)
-- `page_guide.html` — 복원수리 안내 (아임웹 iframe용, 4탭: 과정/소요시간/비용/포장)
+- `page_guide.html` — 복원수리 안내 (아임웹 iframe용, 6탭: 마모루복원수리/과정안내/소요시간/비용안내/포장방법/QnA, 라이트모드+다크 intro, CTA 통합접수)
 - `page_as_guide.html` — 복원수리 안내 (알림톡 링크용, 모바일 전용 4탭)
 - `page_as_report.html` — 수리내역 조회 (TMS API 연동)
 

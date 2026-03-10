@@ -245,40 +245,12 @@ html, body {
 
 /* 다크 내부 텍스트 오버라이드 */
 #tab-intro .intro-appeal h2,
-#tab-intro .as-before-after-title,
-#tab-intro .as-process-grid-title,
-#tab-intro .as-grid-item-name,
-#tab-intro .intro-usp-card h4 {
+#tab-intro .as-before-after-title {
   color: var(--cream);
 }
 
-#tab-intro .intro-appeal p,
-#tab-intro .intro-usp-card p {
+#tab-intro .intro-appeal p {
   color: var(--mist);
-}
-
-#tab-intro .intro-appeal-label {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.1);
-  color: var(--mist);
-}
-
-#tab-intro .intro-usp-card {
-  background: var(--graphite);
-  border-color: rgba(255,255,255,0.08);
-}
-
-#tab-intro .as-grid-item {
-  background: var(--graphite);
-  border-color: rgba(255,255,255,0.06);
-}
-
-#tab-intro .as-grid-item-icon {
-  background: rgba(255,255,255,0.06);
-}
-
-#tab-intro .as-grid-item-icon .placeholder {
-  background: rgba(255,255,255,0.12);
 }
 
 #tab-intro .as-slide-item {
@@ -293,12 +265,11 @@ html, body {
 }
 
 .intro-hero-video {
-  width: 100%;
   aspect-ratio: 16/9;
   background: rgba(255,255,255,0.03);
   border-radius: 14px;
   overflow: hidden;
-  margin: 0 24px;
+  margin: 24px 24px 0;
   width: calc(100% - 48px);
 }
 
@@ -309,6 +280,15 @@ html, body {
   display: block;
 }
 
+/* 섹션 구분선 (다크 내부) */
+.intro-divider {
+  width: 40px;
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  margin: 40px auto;
+}
+
+/* ② 선언 멘트 */
 .intro-appeal {
   text-align: center;
   padding: 36px 24px 0;
@@ -317,12 +297,12 @@ html, body {
 .intro-appeal-label {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(0,0,0,0.04);
-  border: 1px solid var(--border-subtle);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 100px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-tertiary);
+  color: var(--mist);
   letter-spacing: 0.03em;
   margin-bottom: 16px;
 }
@@ -331,49 +311,63 @@ html, body {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: var(--text-primary);
+  color: var(--cream);
   line-height: 1.45;
   margin-bottom: 12px;
 }
 
 .intro-appeal p {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--mist);
   line-height: 1.7;
 }
 
-/* USP 카드 */
-.intro-usp {
-  display: flex;
-  gap: 10px;
-  padding: 28px 24px 0;
+/* ③ 작업사진 갤러리 — 잡지형 레이아웃 */
+.intro-gallery {
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+}
+.intro-gallery-item {
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--graphite);
+}
+.intro-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* 1열: 2행 세로 관통 */
+.intro-gallery-item:nth-child(1) {
+  grid-row: 1 / 3;
+  aspect-ratio: auto;
+}
+/* 2열: 정방형 2장 */
+.intro-gallery-item:nth-child(2),
+.intro-gallery-item:nth-child(3) {
+  aspect-ratio: 1/1;
 }
 
-.intro-usp-card {
-  flex: 1;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 20px 12px;
+/* ⑥ 수냉식 — 한 줄 어필 */
+.intro-watercool {
   text-align: center;
+  padding: 0 24px;
 }
-
-.intro-usp-card .icon {
-  font-size: 24px;
-  margin-bottom: 8px;
-}
-
-.intro-usp-card h4 {
-  font-size: 13px;
+.intro-watercool h3 {
+  font-size: 17px;
   font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 4px;
+  color: var(--cream);
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
 }
-
-.intro-usp-card p {
-  font-size: 11px;
-  color: var(--text-tertiary);
-  line-height: 1.5;
+.intro-watercool p {
+  font-size: 13px;
+  color: var(--mist);
+  line-height: 1.7;
 }
 
 /* Before/After 슬라이드 */
@@ -420,98 +414,96 @@ html, body {
 
 .as-slide-item {
   flex-shrink: 0;
-  width: 280px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  width: 260px;
+  background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
 
-.as-slide-images {
-  display: flex;
-}
-
-.as-slide-images .before,
-.as-slide-images .after {
-  flex: 1;
-  position: relative;
-}
-
-.as-slide-images img {
+.as-slide-item video {
   width: 100%;
-  height: 140px;
+  aspect-ratio: 4/3;
   object-fit: cover;
+  display: block;
 }
 
-.as-slide-images .label {
-  position: absolute;
-  bottom: 8px; left: 8px;
-  padding: 3px 8px;
-  background: rgba(0,0,0,0.55);
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--cream);
-  letter-spacing: 0.02em;
-}
-
-/* 진행작업 그리드 */
-.as-process-grid {
-  padding: 36px 24px 0;
-}
-
-.as-process-grid-title {
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  margin-bottom: 20px;
-  color: var(--text-primary);
-}
-
-.as-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.as-grid-item {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 16px 10px;
-  text-align: center;
-}
-
-.as-grid-item-icon {
-  width: 44px;
-  height: 44px;
-  margin: 0 auto 10px;
-  background: var(--shell);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.as-grid-item-icon img {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-}
-
-.as-grid-item-icon .placeholder {
-  width: 24px;
-  height: 24px;
-  background: var(--parchment);
-  border-radius: 6px;
-}
-
-.as-grid-item-name {
+.as-slide-label {
+  padding: 12px 14px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-primary);
-  line-height: 1.4;
+  color: var(--mist);
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+/* 작업과정 타임라인 — 브랜드 연혁 스타일 */
+.intro-process-story {
+  padding: 40px 24px 0;
+}
+.intro-process-story-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cream);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.intro-process-story-sub {
+  font-size: 12px;
+  color: var(--warm-gray);
+  margin-bottom: 24px;
+}
+
+/* 모바일: 가로 스크롤 */
+.intro-process-timeline {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+.intro-process-timeline::-webkit-scrollbar { display: none; }
+
+.intro-timeline-item {
+  flex-shrink: 0;
+  width: 140px;
+  text-align: center;
+}
+.intro-timeline-img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--graphite);
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.intro-timeline-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.intro-timeline-step {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--warm-gray);
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.intro-timeline-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cream);
+  margin-bottom: 2px;
+}
+.intro-timeline-desc {
+  font-size: 11px;
+  color: var(--mist);
+  line-height: 1.5;
 }
 
 /* =========================================================
@@ -1165,24 +1157,44 @@ html, body {
     margin-bottom: 40px;
   }
 
-  .intro-appeal h2 {
-    font-size: 28px;
+  .intro-divider { margin: 48px auto; }
+
+  .intro-appeal h2 { font-size: 28px; }
+  .intro-appeal p { font-size: 15px; }
+
+  /* PC: 작업사진 갤러리 */
+  .intro-gallery { padding: 0 40px; gap: 12px; }
+  .intro-gallery-item { border-radius: 12px; }
+
+  /* PC: 전후 영상 — 3열 그리드 */
+  .as-before-after::after { display: none; }
+  .as-slider-container { overflow-x: visible; padding: 0 24px; }
+  .as-slider {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    padding-right: 0;
   }
+  .as-slide-item { width: auto; flex-shrink: unset; }
+  .as-slide-label { font-size: 13px; padding: 14px 16px; }
 
-  .intro-appeal p {
-    font-size: 15px;
+  /* PC: 작업과정 타임라인 — 3열×3행 그리드 */
+  .intro-process-story { padding: 0 24px; }
+  .intro-process-story-title { font-size: 18px; }
+  .intro-process-story-sub { font-size: 13px; margin-bottom: 28px; }
+  .intro-process-timeline {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    overflow-x: visible;
   }
+  .intro-timeline-item { width: auto; }
+  .intro-timeline-name { font-size: 14px; }
+  .intro-timeline-desc { font-size: 12px; }
 
-  /* PC: intro USP 카드 */
-  .intro-usp { gap: 14px; padding: 32px 24px 0; }
-  .intro-usp-card { padding: 24px 16px; }
-  .intro-usp-card h4 { font-size: 14px; }
-  .intro-usp-card p { font-size: 12px; }
-
-  /* PC: 진행작업 그리드 */
-  .as-grid { gap: 14px; }
-  .as-grid-item { padding: 20px 14px; }
-  .as-grid-item-name { font-size: 13px; }
+  /* PC: 수냉식 어필 */
+  .intro-watercool h3 { font-size: 20px; }
+  .intro-watercool p { font-size: 14px; }
 
   /* PC: 비용안내 가격카드 */
   .as-price-card { padding: 36px 24px; }
@@ -1273,10 +1285,6 @@ html, body {
     grid-template-columns: 1fr;
   }
 
-  .intro-usp {
-    flex-direction: column;
-    gap: 8px;
-  }
 }
 </style>
 </head>
@@ -1308,126 +1316,127 @@ html, body {
   <!-- ═══ 탭1: 마모루복원수리 (랜딩 히어로형) ═══ -->
   <div class="as-tab-content active" id="tab-intro">
 
-    <!-- [VIDEO] 히어로 영상 — MP4 파일 추가 후 src 교체 -->
-    <div class="intro-hero-video" style="margin:24px auto 0;">
-      <video autoplay muted loop playsinline src="" poster="">
-      </video>
+    <!-- ① 히어로 영상 — 작업 장면 클로즈업 -->
+    <div class="intro-hero-video">
+      <video autoplay muted loop playsinline src="videos/복원수리안내히어로영상.mp4"></video>
     </div>
 
-    <!-- 어필 문구 -->
+    <!-- ② 선언 멘트 — 정체성 확립 -->
     <div class="intro-appeal">
       <span class="intro-appeal-label">MAMORU RESTORATION</span>
-      <!-- [TEXT] 어필 타이틀 -->
-      <h2>잠깐의 불편해결이 목적이 아닙니다<br>새가위, 첫만남을 재현합니다</h2>
-      <p>마모루만의 2대 기술력으로<br>마모루대표가 직접 진행하는<br>수냉식 복원수리</p>
+      <h2>잠깐의 불편해결이 목적이라면<br>남들과 다를게 없습니다<span style="display:block;margin-top:12px;">새가위, 첫만남으로 복원합니다</span></h2>
+      <p>마모루만의 2대 기술력으로<br>대표가 직접 진행합니다</p>
     </div>
 
-    <!-- USP 3카드 -->
-    <div class="intro-usp">
-      <div class="intro-usp-card">
-        <div class="icon">💧</div>
-        <h4>수냉식 기법</h4>
-        <p>열 변형 없이<br>날을 정밀 복원</p>
-      </div>
-      <div class="intro-usp-card">
-        <div class="icon">👨‍🔧</div>
-        <h4>2대 기술력</h4>
-        <p>가업으로 이어온<br>전문 기술</p>
-      </div>
-      <div class="intro-usp-card">
-        <div class="icon">⚡</div>
-        <h4>자체 직접작업</h4>
-        <p>외주 없이<br>2~3일 완료</p>
-      </div>
+    <div class="intro-divider"></div>
+
+    <!-- ③ 작업사진 갤러리 — 잡지형 -->
+    <div class="intro-gallery">
+      <!-- [IMG] 고퀄리티 작업사진 추가 후 src 교체 -->
+      <div class="intro-gallery-item"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/b1d99de6b4d17.jpg" alt="작업사진 1"></div>
+      <div class="intro-gallery-item"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/4bdab19686e7f.jpg" alt="작업사진 2"></div>
+      <div class="intro-gallery-item"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/0b9d73053b22b.png" alt="작업사진 3"></div>
     </div>
 
-    <!-- [IMG] 전후사진 슬라이드 -->
+    <div class="intro-divider"></div>
+
+    <!-- ④ 전후 영상 — 결과 증거 -->
     <div class="as-before-after">
-      <h3 class="as-before-after-title">진행 전/후 사진</h3>
+      <h3 class="as-before-after-title">진행 전/후</h3>
       <div class="as-slider-container">
         <div class="as-slider">
+          <!-- [VIDEO] 전후영상 1 -->
           <div class="as-slide-item">
-            <div class="as-slide-images">
-              <div class="before">
-                <img src="" alt="Before" style="background:#E8E6E3;">
-                <span class="label">Before</span>
-              </div>
-              <div class="after">
-                <img src="" alt="After" style="background:#D4D0CB;">
-                <span class="label">After</span>
-              </div>
-            </div>
+            <video autoplay muted loop playsinline src="videos/전후영상1.mp4"></video>
+            <p class="as-slide-label">전후영상 1</p>
           </div>
+          <!-- [VIDEO] 전후영상 2 — MP4 추가 후 src 교체 -->
           <div class="as-slide-item">
-            <div class="as-slide-images">
-              <div class="before">
-                <img src="" alt="Before" style="background:#E8E6E3;">
-                <span class="label">Before</span>
-              </div>
-              <div class="after">
-                <img src="" alt="After" style="background:#D4D0CB;">
-                <span class="label">After</span>
-              </div>
-            </div>
+            <video autoplay muted loop playsinline src=""></video>
+            <p class="as-slide-label">전후영상 2</p>
           </div>
+          <!-- [VIDEO] 전후영상 3 — MP4 추가 후 src 교체 -->
           <div class="as-slide-item">
-            <div class="as-slide-images">
-              <div class="before">
-                <img src="" alt="Before" style="background:#E8E6E3;">
-                <span class="label">Before</span>
-              </div>
-              <div class="after">
-                <img src="" alt="After" style="background:#D4D0CB;">
-                <span class="label">After</span>
-              </div>
-            </div>
+            <video autoplay muted loop playsinline src=""></video>
+            <p class="as-slide-label">전후영상 3</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- [IMG] 진행작업 그리드 -->
-    <div class="as-process-grid">
-      <h3 class="as-process-grid-title">진행 작업</h3>
-      <div class="as-grid">
-        <div class="as-grid-item">
-          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
-          <p class="as-grid-item-name">사전검수</p>
+    <div class="intro-divider"></div>
+
+    <!-- ⑤ 작업과정 — 이미지 타임라인 -->
+    <div class="intro-process-story">
+      <h3 class="intro-process-story-title">복원수리 작업과정</h3>
+      <p class="intro-process-story-sub">한 자루의 가위가 거치는 과정입니다</p>
+      <div class="intro-process-timeline">
+        <!-- [IMG] 각 단계 이미지 추가 후 src 교체 -->
+        <div class="intro-timeline-item">
+          <div class="intro-timeline-img"><img src="" alt="사전검수"></div>
+          <p class="intro-timeline-step">01</p>
+          <p class="intro-timeline-name">사전검수</p>
+          <p class="intro-timeline-desc">수량 및 상태 확인</p>
         </div>
-        <div class="as-grid-item">
-          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
-          <p class="as-grid-item-name">날바닥<br>복원작업</p>
+        <div class="intro-timeline-item">
+          <div class="intro-timeline-img"><img src="" alt="날바닥 복원"></div>
+          <p class="intro-timeline-step">02</p>
+          <p class="intro-timeline-name">날바닥 복원</p>
+          <p class="intro-timeline-desc">수냉식 정밀 연마</p>
         </div>
-        <div class="as-grid-item">
-          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
-          <p class="as-grid-item-name">날등<br>복원작업</p>
+        <div class="intro-timeline-item">
+          <div class="intro-timeline-img"><img src="" alt="날등 복원"></div>
+          <p class="intro-timeline-step">03</p>
+          <p class="intro-timeline-name">날등 복원</p>
+          <p class="intro-timeline-desc">형태 교정 및 정리</p>
         </div>
-        <div class="as-grid-item">
-          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
-          <p class="as-grid-item-name">초음파세척</p>
+        <div class="intro-timeline-item">
+          <div class="intro-timeline-img"><img src="" alt="초음파세척"></div>
+          <p class="intro-timeline-step">04</p>
+          <p class="intro-timeline-name">초음파세척</p>
+          <p class="intro-timeline-desc">미세 이물질 제거</p>
         </div>
-        <div class="as-grid-item">
-          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
-          <p class="as-grid-item-name">녹제거</p>
+        <div class="intro-timeline-item">
+          <div class="intro-timeline-img"><img src="" alt="녹제거"></div>
+          <p class="intro-timeline-step">05</p>
+          <p class="intro-timeline-name">녹제거</p>
+          <p class="intro-timeline-desc">부식 완전 제거</p>
         </div>
-        <div class="as-grid-item">
-          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
-          <p class="as-grid-item-name">폴리싱/광택</p>
+        <div class="intro-timeline-item">
+          <div class="intro-timeline-img"><img src="" alt="폴리싱/광택"></div>
+          <p class="intro-timeline-step">06</p>
+          <p class="intro-timeline-name">폴리싱 · 광택</p>
+          <p class="intro-timeline-desc">표면 마감 처리</p>
         </div>
-        <div class="as-grid-item">
-          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
-          <p class="as-grid-item-name">밸런스교정</p>
+        <div class="intro-timeline-item">
+          <div class="intro-timeline-img"><img src="" alt="밸런스교정"></div>
+          <p class="intro-timeline-step">07</p>
+          <p class="intro-timeline-name">밸런스 교정</p>
+          <p class="intro-timeline-desc">좌우 균형 조율</p>
         </div>
-        <div class="as-grid-item">
-          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
-          <p class="as-grid-item-name">노후부품<br>교체</p>
+        <div class="intro-timeline-item">
+          <div class="intro-timeline-img"><img src="" alt="부품교체"></div>
+          <p class="intro-timeline-step">08</p>
+          <p class="intro-timeline-name">노후부품 교체</p>
+          <p class="intro-timeline-desc">범퍼 · 다이얼 등</p>
         </div>
-        <div class="as-grid-item">
-          <div class="as-grid-item-icon"><div class="placeholder"></div></div>
-          <p class="as-grid-item-name">스토퍼<br>교체/장착</p>
+        <div class="intro-timeline-item">
+          <div class="intro-timeline-img"><img src="" alt="스토퍼 장착"></div>
+          <p class="intro-timeline-step">09</p>
+          <p class="intro-timeline-name">스토퍼 장착</p>
+          <p class="intro-timeline-desc">날 보호 마무리</p>
         </div>
       </div>
     </div>
+
+    <div class="intro-divider"></div>
+
+    <!-- ⑥ 수냉식 — 한 줄 어필 -->
+    <div class="intro-watercool">
+      <h3>열 없이, 손상 없이</h3>
+      <p>수냉식 기법으로 고열에 의한 날 변형을 방지합니다<br>미용가위를 위한 최선의 방식을 고수합니다</p>
+    </div>
+
   </div>
 
   <!-- ═══ 탭2: 과정안내 — 5단계 스텝 플로우 (page_as_guide.html 콘텐츠 기반) ═══ -->
