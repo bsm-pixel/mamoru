@@ -170,7 +170,7 @@ html, body {
    [2] 카테고리 탭 — 라이트 글라스모피즘 스티키 (6탭)
    ========================================================= */
 .as-tabs-container {
-  padding: 14px 16px;
+  padding: 10px 16px;
   position: sticky;
   top: 0;
   background: rgba(250,249,247,0.92);
@@ -180,32 +180,25 @@ html, body {
   border-bottom: 1px solid var(--border-subtle);
 }
 
+/* 모바일: 3열 2행 그리드 */
 .as-tabs {
-  display: flex;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-  justify-content: center;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.as-tabs::-webkit-scrollbar {
-  display: none;
 }
 
 .as-tab {
-  padding: 7px 13px;
+  padding: 6px 0;
   background: transparent;
   border: 1px solid rgba(0,0,0,0.1);
   border-radius: 100px;
   color: var(--text-tertiary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  flex-shrink: 0;
+  text-align: center;
 }
 
 .as-tab:hover {
@@ -1193,91 +1186,17 @@ html, body {
 }
 
 /* =========================================================
-   [9] 하단 CTA
+   [9] 하단 CTA (기존 — 축소: 맨위로 버튼만)
    ========================================================= */
 .as-cta-area {
   padding: 40px 24px 24px;
   max-width: 560px;
   margin: 0 auto;
-}
-
-.as-cta-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.as-cta-primary {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  padding: 18px 24px;
-  background: var(--void);
-  border: none;
-  border-radius: 14px;
-  color: var(--cream);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-}
-
-.as-cta-primary .as-cta-label {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.as-cta-primary .as-cta-desc {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--mist);
-  line-height: 1.4;
-}
-
-.as-cta-primary:hover {
-  background: var(--graphite);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-}
-
-.as-cta-outline {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  padding: 18px 24px;
-  background: transparent;
-  border: 1.5px solid rgba(0,0,0,0.12);
-  border-radius: 14px;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.as-cta-outline .as-cta-label {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.as-cta-outline .as-cta-desc {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-tertiary);
-  line-height: 1.4;
-}
-
-.as-cta-outline:hover {
-  border-color: rgba(0,0,0,0.25);
-  background: rgba(0,0,0,0.02);
+  text-align: center;
 }
 
 .as-cta-top {
-  display: block;
-  margin: 14px auto 0;
+  display: inline-block;
   padding: 10px 20px;
   background: transparent;
   border: none;
@@ -1294,11 +1213,111 @@ html, body {
 }
 
 /* =========================================================
+   [9-1] 모바일 플로팅 하단 CTA 바
+   ========================================================= */
+.as-floating-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(250,249,247,0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border-subtle);
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.as-floating-cta.visible {
+  transform: translateY(0);
+}
+
+.as-floating-cta-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px 24px;
+  background: var(--void);
+  border: none;
+  border-radius: 12px;
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.as-floating-cta-btn:active {
+  transform: scale(0.98);
+}
+
+.as-floating-cta-btn:hover {
+  background: var(--graphite);
+}
+
+/* 다크 탭(마모루복원수리) 활성 시 플로팅 CTA 반전 */
+.as-floating-cta.dark {
+  background: rgba(26,26,26,0.95);
+  border-top-color: rgba(255,255,255,0.08);
+}
+
+.as-floating-cta.dark .as-floating-cta-btn {
+  background: var(--cream);
+  color: var(--void);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.as-floating-cta.dark .as-floating-cta-btn:active {
+  transform: scale(0.98);
+}
+
+.as-floating-cta.dark .as-floating-cta-btn:hover {
+  background: var(--parchment);
+}
+
+/* [9-2] PC: 탭 바 내 CTA 버튼 */
+.as-tab-cta {
+  display: none; /* 모바일에서는 숨김 */
+}
+
+/* 플로팅 바 보일 때 하단 패딩 확보 (모바일) */
+.mamoru-as-page {
+  padding-bottom: 80px; /* 플로팅 바 높이만큼 */
+}
+
+/* =========================================================
    반응형 - PC (768px 이상)
    ========================================================= */
 @media screen and (min-width: 768px) {
   .mamoru-as-page {
     padding-bottom: 0;
+  }
+
+  /* PC: 탭 컨테이너 — relative로 CTA absolute 기준 + overflow 여유 */
+  .as-tabs-container {
+    padding: 14px 16px;
+    position: sticky;
+    overflow: visible;
+  }
+
+  /* PC: 탭 + 접수하기 한 묶음 중앙 배치 */
+  .as-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .as-tab {
+    padding: 7px 16px;
+    font-size: 13px;
   }
 
   .as-hero {
@@ -1404,17 +1423,53 @@ html, body {
   .as-shipping-card-title { font-size: 14px; }
   .as-shipping-row { font-size: 14px; padding: 12px 14px; }
 
+  /* PC: 플로팅 바 숨기고 탭 바 CTA 표시 */
+  .as-floating-cta { display: none !important; }
+
+  .mamoru-as-page {
+    padding-bottom: 0; /* PC에서는 플로팅 바 없으므로 패딩 제거 */
+  }
+
+  .as-tab-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 20px;
+    background: var(--void);
+    border: none;
+    border-radius: 100px;
+    color: var(--cream);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    letter-spacing: -0.01em;
+  }
+
+  .as-tab-cta:hover {
+    background: var(--graphite);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    transform: translateY(-2px);
+  }
+
+  .as-tab-cta::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--cream);
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+
   .as-cta-area {
     max-width: 680px;
     padding: 56px 24px 24px;
   }
-
-  .as-cta-primary {
-    padding: 24px 32px;
-  }
-
-  .as-cta-primary .as-cta-label { font-size: 17px; }
-  .as-cta-primary .as-cta-desc { font-size: 13px; }
 
   /* PC: 과정안내 스텝 플로우 */
   .as-step-flow { gap: 48px; }
@@ -1497,7 +1552,7 @@ html, body {
     </h1>
   </section>
 
-  <!-- [2] 카테고리 탭 — 6탭 -->
+  <!-- [2] 카테고리 탭 — 6탭 + PC용 CTA -->
   <div class="as-tabs-container">
     <div class="as-tabs">
       <button class="as-tab active" data-tab="intro">마모루복원수리</button>
@@ -1506,6 +1561,8 @@ html, body {
       <button class="as-tab" data-tab="price">비용안내</button>
       <button class="as-tab" data-tab="packing">포장방법</button>
       <button class="as-tab" data-tab="qna">QnA</button>
+      <!-- PC 전용: 탭 바 우측 CTA -->
+      <button class="as-tab-cta" onclick="goToASForm();">접수하기</button>
     </div>
   </div>
 
@@ -2099,32 +2156,48 @@ html, body {
     </div>
   </div>
 
-  <!-- [9] 하단 CTA — 통합 접수 (마모루+타사 모두) -->
+  <!-- [9] 하단 — 맨위로 버튼만 (CTA는 플로팅/탭바로 이동) -->
   <div class="as-cta-area">
-    <div class="as-cta-buttons">
-      <!-- [URL] 통합 접수 폼: /53 -->
-      <button class="as-cta-primary" onclick="goToASForm();">
-        <span class="as-cta-label">복원수리 접수하기</span>
-        <span class="as-cta-desc">마모루 · 타사 가위 모두 접수 가능합니다</span>
-      </button>
-    </div>
     <button class="as-cta-top" onclick="scrollToTop();">맨 위로</button>
+  </div>
+
+  <!-- [9-1] 모바일 플로팅 하단 CTA 바 -->
+  <div class="as-floating-cta dark" id="floatingCta">
+    <button class="as-floating-cta-btn" onclick="goToASForm();">
+      복원수리 접수하기
+    </button>
   </div>
 
 </div>
 
 <script>
+// 플로팅 CTA 다크모드 토글 함수
+function syncFloatingCtaTheme(tabName) {
+  var floating = document.getElementById('floatingCta');
+  if (!floating) return;
+  floating.classList.toggle('dark', tabName === 'intro');
+}
+
 // 탭 전환 — 6탭 (intro, process, duration, price, packing, qna)
 document.querySelectorAll('.as-tab').forEach(tab => {
   tab.addEventListener('click', function() {
     document.querySelectorAll('.as-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.as-tab-content').forEach(c => c.classList.remove('active'));
     this.classList.add('active');
-    document.getElementById('tab-' + this.getAttribute('data-tab')).classList.add('active');
+    var tabName = this.getAttribute('data-tab');
+    document.getElementById('tab-' + tabName).classList.add('active');
+    // 플로팅 CTA 테마 동기화
+    syncFloatingCtaTheme(tabName);
     // 탭 변경 시 높이 재계산
     setTimeout(notifyHeight, 100);
   });
 });
+
+// 초기 로드 시 활성 탭 기준으로 테마 적용
+(function() {
+  var activeTab = document.querySelector('.as-tab.active');
+  if (activeTab) syncFloatingCtaTheme(activeTab.getAttribute('data-tab'));
+})();
 
 // QnA 아코디언 토글
 document.querySelectorAll('.as-faq-question').forEach(function(btn) {
@@ -2186,6 +2259,30 @@ function goToASForm() {
   window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: '/53' }, '*');
 }
 
+// 모바일 플로팅 CTA — 탭 바 지나면 표시 (iframe 대응)
+(function() {
+  var floating = document.getElementById('floatingCta');
+  if (!floating) return;
+  var tabs = document.querySelector('.as-tabs-container');
+  if (!tabs) { floating.classList.add('visible'); return; }
+
+  // IntersectionObserver: 탭 바가 화면에서 사라지면 플로팅 표시
+  if ('IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function(entries) {
+      // 탭 바가 보이지 않으면 → 스크롤 내린 상태 → 플로팅 표시
+      // 탭 바가 sticky이므로 항상 intersecting, 대신 히어로 기준 사용
+      entries.forEach(function(entry) {
+        floating.classList.toggle('visible', !entry.isIntersecting);
+      });
+    }, { threshold: 0 });
+    var hero = document.querySelector('.as-hero');
+    observer.observe(hero || tabs);
+  } else {
+    // 폴백: 항상 표시
+    floating.classList.add('visible');
+  }
+})();
+
 // 맨 위로 스크롤 (iframe 내부 → 부모 페이지에 postMessage로 요청)
 function scrollToTop() {
   window.parent.postMessage({ type: 'MAMORU_SCROLL_TOP' }, '*');
@@ -2200,7 +2297,7 @@ function getFullHeight() {
   var pageEl = document.querySelector('.mamoru-as-page');
   if (pageEl) {
     var rect = pageEl.getBoundingClientRect();
-    return Math.ceil(rect.height + 100); // CTA 영역 포함
+    return Math.ceil(rect.height + 120); // CTA 영역 + 플로팅 바 포함
   }
   return Math.ceil(document.body.scrollHeight + 100);
 }
