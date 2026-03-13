@@ -84,3 +84,16 @@
 ## 7. Fix Preservation (수정 완료 상태 유지)
 - 이전에 수정 완료된 로직/버그 픽스/개선사항은 사용자가 재수정을 요청하지 않는 한 100% 유지한다.
 - 임의 롤백 금지.
+
+---
+
+## 8. Notion 연동 (Claude Code ↔ Notion API)
+- 설정 파일: `.claude/notion-config.json` (토큰 + DB ID 보관)
+- 세션 시작 시 `notion-config.json`을 읽어 DB ID를 확보한다.
+- **트리거 패턴:**
+  - "할일에 적어줘" / "노션에 추가" → `POST /v1/pages` (할 일 DB, 소스: Claude)
+  - "프로젝트 업데이트" → 먼저 query로 검색 → `PATCH /v1/pages/{id}`
+  - "오늘 할일?" / "노션 할일 확인" → `POST /v1/databases/{id}/query`
+  - "아이디어 메모" → 아이디어 DB에 추가
+- **API 호출 시:** curl로 직접 Notion API 호출 (별도 서버 불필요)
+- **주의:** `notion-config.json`은 `.gitignore`에 포함 (토큰 노출 방지)
