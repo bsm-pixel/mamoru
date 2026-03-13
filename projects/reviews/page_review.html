@@ -219,6 +219,7 @@
     var rating = 0;
     var photos = [];    // { file, dataUrl, url(업로드 후) }
     var uploading = 0;  // 업로드 진행 중 카운트
+    var STORAGE_KEY = 'mamoru_review_' + uid;
 
     // ── 타입별 설정 ──
     var TYPE_CONFIG = {
@@ -232,6 +233,27 @@
       field_request: '출장 상담',
       talk_consult: '톡상담'
     };
+
+    // ── sessionStorage 상태 보존 (카카오 인앱 카메라 새로고침 대응) ──
+    function saveState() {
+      try {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+          rating: rating,
+          content: document.getElementById('content') ? document.getElementById('content').value : '',
+          photoUrls: photos.map(function(p) { return p.url; }).filter(Boolean)
+        }));
+      } catch(e) {}
+    }
+    function loadState() {
+      try {
+        var saved = sessionStorage.getItem(STORAGE_KEY);
+        if (!saved) return null;
+        return JSON.parse(saved);
+      } catch(e) { return null; }
+    }
+    function clearState() {
+      try { sessionStorage.removeItem(STORAGE_KEY); } catch(e) {}
+    }
 
     // ── 이름 마스킹: 김미영 → 김*영, 이수 → 이* ──
     function maskName(name) {
@@ -276,6 +298,7 @@
         .then(function(data) {
           if (data.url) {
             photo.url = data.url;
+            saveState(); // 업로드 완료 즉시 상태 저장
           } else {
             console.error('업로드 실패:', data.error);
           }
@@ -342,6 +365,7 @@
       var hints = ['', '별로예요', '그저 그래요', '괜찮아요', '만족해요', '최고예요!'];
       document.getElementById('star-hint').textContent = hints[rating] || '';
       checkSubmit();
+      saveState();
     });
 
     // ── 사진 선택 → 리사이즈 → 즉시 업로드 ──
@@ -378,6 +402,7 @@
       if (!rm) return;
       photos.splice(parseInt(rm.dataset.idx), 1);
       renderPhotos();
+      saveState();
     });
 
     // ── 제출 가능 여부 ──
@@ -385,7 +410,7 @@
       var content = document.getElementById('content').value.trim();
       document.getElementById('btnSubmit').disabled = !(rating > 0 && content.length > 0 && uploading === 0);
     }
-    document.getElementById('content').addEventListener('input', checkSubmit);
+    document.getElementById('content').addEventListener('input', function() { checkSubmit(); saveState(); });
 
     // ── 제출 ──
     function submitReview() {
@@ -430,6 +455,32 @@
       document.getElementById('main').classList.remove('hidden');
       document.getElementById('r-name').textContent = nameText;
       document.getElementById('r-meta').textContent = metaText;
+
+      // sessionStorage에서 이전 상태 복원 (카메라 새로고침 대응)
+      var saved = loadState();
+      if (saved) {
+        // 별점 복원
+        if (saved.rating) {
+          rating = saved.rating;
+          document.querySelectorAll('.star').forEach(function(s) {
+            s.classList.toggle('active', parseInt(s.dataset.v) <= rating);
+          });
+          var hints = ['', '별로예요', '그저 그래요', '괜찮아요', '만족해요', '최고예요!'];
+          document.getElementById('star-hint').textContent = hints[rating] || '';
+        }
+        // 텍스트 복원
+        if (saved.content) {
+          document.getElementById('content').value = saved.content;
+        }
+        // 업로드 완료된 사진 URL 복원
+        if (saved.photoUrls && saved.photoUrls.length > 0) {
+          saved.photoUrls.forEach(function(url) {
+            photos.push({ file: null, dataUrl: url, url: url });
+          });
+          renderPhotos();
+        }
+        checkSubmit();
+      }
     }
 
     function showError(msg) {
@@ -439,24 +490,17 @@
       document.getElementById('error-message').textContent = msg;
     }
     function showSuccess() {
+      clearState();
       document.getElementById('main').classList.add('hidden');
       document.getElementById('success').classList.remove('hidden');
     }
 
-    // ── 닫기 (카카오 인앱 + 일반 브라우저 대응) ──
+    // ── 닫기 (카카오 인앱 우선, fallback → mamoru.kr) ──
     function safeClose() {
-      // 1) 카카오 인앱 브라우저 닫기
-      if (navigator.userAgent.indexOf('KAKAOTALK') > -1) {
-        location.href = 'kakaoweb://closeBrowser';
-        return;
-      }
-      // 2) window.close (팝업/새 탭으로 열린 경우)
-      window.close();
-      // 3) close 실패 시 뒤로가기 또는 홈으로
-      setTimeout(function() {
-        if (history.length > 1) { history.back(); return; }
-        location.href = 'https://mamoru.kr';
-      }, 300);
+      // 카카오 인앱 브라우저 닫기 시도
+      location.href = 'kakaoweb://closeBrowser';
+      // 1초 후에도 페이지가 살아있으면 홈으로 이동
+      setTimeout(function() { location.href = 'https://mamoru.kr'; }, 1000);
     }
 
     init();
