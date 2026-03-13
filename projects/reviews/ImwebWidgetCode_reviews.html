@@ -292,6 +292,47 @@ img { display: block; max-width: 100%; }
     color: var(--mm-void);
   }
 }
+
+/* ── 라이트박스 (사진 확대) ── */
+.mm-lb {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,0,0.92);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  touch-action: pan-y;
+}
+.mm-lb--open { opacity: 1; visibility: visible; }
+.mm-lb__img {
+  max-width: 90vw; max-height: 85vh;
+  object-fit: contain; border-radius: 4px;
+  user-select: none; -webkit-user-drag: none;
+}
+.mm-lb__close {
+  position: absolute; top: 16px; right: 16px;
+  width: 40px; height: 40px; border: none;
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(4px);
+  border-radius: 50%; font-size: 20px; color: #fff;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.mm-lb__close:hover { background: rgba(255,255,255,0.3); }
+.mm-lb__arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 44px; height: 44px; border: none;
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(4px);
+  border-radius: 50%; font-size: 20px; color: #fff;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.mm-lb__arrow:hover { background: rgba(255,255,255,0.3); }
+.mm-lb__arrow--prev { left: 16px; }
+.mm-lb__arrow--next { right: 16px; }
+.mm-lb__counter {
+  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+  font-size: 13px; color: rgba(255,255,255,0.7);
+}
+.mm-lb__arrow.hidden, .mm-lb__counter.hidden { display: none; }
 </style>
 
 <div class="mm-rv-page">
@@ -325,6 +366,15 @@ img { display: block; max-width: 100%; }
     <button class="mm-rv-modal__close" id="rvModalClose">✕</button>
     <div id="rvModalBody"></div>
   </div>
+</div>
+
+<!-- 사진 라이트박스 -->
+<div class="mm-lb" id="rvLightbox">
+  <button class="mm-lb__close" id="lbClose">✕</button>
+  <button class="mm-lb__arrow mm-lb__arrow--prev" id="lbPrev">‹</button>
+  <img class="mm-lb__img" id="lbImg" src="" alt="사진 확대">
+  <button class="mm-lb__arrow mm-lb__arrow--next" id="lbNext">›</button>
+  <div class="mm-lb__counter" id="lbCounter"></div>
 </div>
 
 </div>
@@ -424,13 +474,15 @@ img { display: block; max-width: 100%; }
   /* ── 상세 모달 ── */
   var overlay = document.getElementById('rvOverlay');
   var modalBody = document.getElementById('rvModalBody');
+  var currentModalPhotos = [];
 
   function openModal(r) {
+    currentModalPhotos = (r.photo_urls && r.photo_urls.length > 0) ? r.photo_urls : [];
     var photosHtml = '';
-    if (r.photo_urls && r.photo_urls.length > 0) {
+    if (currentModalPhotos.length > 0) {
       photosHtml = '<div class="mm-rv-modal__photos">' +
-        r.photo_urls.map(function(url) {
-          return '<img class="mm-rv-modal__photo" src="' + url + '" alt="후기 사진" onclick="window.open(this.src)">';
+        currentModalPhotos.map(function(url, i) {
+          return '<img class="mm-rv-modal__photo" src="' + url + '" alt="후기 사진" data-lb-idx="' + i + '">';
         }).join('') + '</div>';
     }
     modalBody.innerHTML =
@@ -461,6 +513,69 @@ img { display: block; max-width: 100%; }
     var reviews = getFilteredReviews();
     var visible = reviews.slice(0, currentPage * PER_PAGE);
     if (visible[idx]) openModal(visible[idx]);
+  });
+
+  /* ── 사진 라이트박스 ── */
+  var lb = document.getElementById('rvLightbox');
+  var lbImg = document.getElementById('lbImg');
+  var lbCounter = document.getElementById('lbCounter');
+  var lbPrev = document.getElementById('lbPrev');
+  var lbNext = document.getElementById('lbNext');
+  var lbIdx = 0;
+
+  function openLightbox(idx) {
+    lbIdx = idx;
+    updateLightbox();
+    lb.classList.add('mm-lb--open');
+  }
+
+  function closeLightbox() {
+    lb.classList.remove('mm-lb--open');
+  }
+
+  function updateLightbox() {
+    lbImg.src = currentModalPhotos[lbIdx];
+    var single = currentModalPhotos.length <= 1;
+    lbPrev.classList.toggle('hidden', single);
+    lbNext.classList.toggle('hidden', single);
+    lbCounter.classList.toggle('hidden', single);
+    if (!single) {
+      lbCounter.textContent = (lbIdx + 1) + ' / ' + currentModalPhotos.length;
+    }
+  }
+
+  document.getElementById('lbClose').addEventListener('click', closeLightbox);
+  lb.addEventListener('click', function(e) {
+    if (e.target === lb) closeLightbox();
+  });
+  lbPrev.addEventListener('click', function() {
+    lbIdx = (lbIdx - 1 + currentModalPhotos.length) % currentModalPhotos.length;
+    updateLightbox();
+  });
+  lbNext.addEventListener('click', function() {
+    lbIdx = (lbIdx + 1) % currentModalPhotos.length;
+    updateLightbox();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (!lb.classList.contains('mm-lb--open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lbPrev.click();
+    if (e.key === 'ArrowRight') lbNext.click();
+  });
+
+  var touchStartX = 0;
+  lb.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) {
+      if (dx > 0) lbPrev.click(); else lbNext.click();
+    }
+  });
+
+  modalBody.addEventListener('click', function(e) {
+    var img = e.target.closest('[data-lb-idx]');
+    if (img) openLightbox(parseInt(img.dataset.lbIdx));
   });
 
   function loadReviews() {
