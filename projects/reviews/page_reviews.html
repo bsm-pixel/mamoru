@@ -223,6 +223,31 @@ img { display: block; max-width: 100%; }
 }
 .mm-rv-modal__photo {
   width: 120px; height: 120px; border-radius: 8px; object-fit: cover; cursor: pointer;
+  flex-shrink: 0;
+}
+/* 모바일: 가로 스크롤 캐러셀 */
+@media (max-width: 767px) {
+  .mm-rv-modal__photos {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .mm-rv-modal__photos::-webkit-scrollbar { display: none; }
+  .mm-rv-modal__photo {
+    width: 75vw; height: auto; aspect-ratio: 4/3;
+    scroll-snap-align: center;
+  }
+  /* 사진 1장이면 캐러셀 불필요 → 중앙 정렬 */
+  .mm-rv-modal__photos--single {
+    justify-content: center;
+    overflow-x: hidden;
+    scroll-snap-type: none;
+  }
+  .mm-rv-modal__photos--single .mm-rv-modal__photo {
+    width: 100%; max-width: 320px;
+  }
 }
 .mm-rv-modal__date {
   font-size: 12px; color: var(--mm-text-d3);
@@ -271,6 +296,9 @@ img { display: block; max-width: 100%; }
 }
 /* 사진 1장이면 화살표/카운터 숨김 */
 .mm-lb__arrow.hidden, .mm-lb__counter.hidden { display: none; }
+@media (max-width: 767px) {
+  .mm-lb__arrow { display: none; }
+}
 
 /* ── 5. 더보기 버튼 ── */
 .mm-rv-loadmore {
@@ -499,7 +527,8 @@ img { display: block; max-width: 100%; }
     currentModalPhotos = (r.photo_urls && r.photo_urls.length > 0) ? r.photo_urls : [];
     var photosHtml = '';
     if (currentModalPhotos.length > 0) {
-      photosHtml = '<div class="mm-rv-modal__photos">' +
+      var singleCls = currentModalPhotos.length === 1 ? ' mm-rv-modal__photos--single' : '';
+      photosHtml = '<div class="mm-rv-modal__photos' + singleCls + '">' +
         currentModalPhotos.map(function(url, i) {
           return '<img class="mm-rv-modal__photo" src="' + url + '" alt="후기 사진" data-lb-idx="' + i + '">';
         }).join('') + '</div>';
