@@ -7,6 +7,7 @@ import { getOrders, getProdOrders } from './client';
 import type { ImwebOrder, ImwebProdOrder } from './types';
 import type { OrderStatus } from '@/lib/supabase/types';
 import { createServiceClient } from '@/lib/supabase/server';
+import { sendNotification } from '@/lib/notification/make-webhook';
 import { subDays } from 'date-fns';
 
 /** 아임웹 prod-order status → TMS status 매핑 */
@@ -148,7 +149,7 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
   // 기존 주문이 TMS 관리 상태인지 확인 → 있으면 상태/배송정보 보존
   const { data: existing } = await supabase
     .from('orders')
-    .select('id, status, invoice_number, courier_code, courier_name, shipped_at')
+    .select('id, status, invoice_number, courier_code, courier_name, shipped_at, review_requested_at')
     .eq('imweb_order_no', imwebOrder.order_no)
     .single();
 
@@ -212,5 +213,44 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
     if (items.length > 0) {
       await supabase.from('order_items').insert(items);
     }
+  }
+
+  // 배송완료 전환 감지 → 리뷰 요청 자동 발송
+  const wasNotDelivered = !existing || !['delivered', 'confirmed'].includes(existing.status);
+  const isNowDelivered = imwebStatus === 'delivered';
+  const notYetRequested = !existing?.review_requested_at;
+
+  if (wasNotDelivered && isNowDelivered && notYetRequested && order) {
+    const { data: orderItems } = await supabase
+      .from('order_items')
+      .select('product_name, quantity')
+      .eq('order_id', order.id);
+
+    const productNames = (orderItems || [])
+      .map((it: { product_name: string; quantity: number }) =>
+        it.quantity > 1 ? `${it.product_name} x${it.quantity}` : it.product_name
+      )
+      .join(', ');
+
+    const phone = imwebOrder.orderer?.call;
+    const name = imwebOrder.orderer?.name;
+    if (phone && name) {
+      await sendNotification({
+        template: 'purchase_review_request',
+        phone,
+        name,
+        data: {
+          order_uid: order.id,
+          product_names: productNames,
+          review_type: 'purchase',
+          name,
+        },
+      }).catch((err: unknown) => console.error('[sync] 리뷰 요청 발송 실패:', err));
+    }
+
+    await supabase
+      .from('orders')
+      .update({ review_requested_at: new Date().toISOString() })
+      .eq('id', order.id);
   }
 }

@@ -37,7 +37,7 @@ async function generateReviewId(db: ReturnType<typeof createServiceClient>): Pro
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { uid, type, stars, content, photoUrls } = body;
+    const { uid, type, stars, content, photoUrls, productNo } = body;
 
     if (!uid || !type || !stars || !content) {
       return NextResponse.json(
@@ -58,11 +58,12 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dbAny = db as any;
 
-    // 중복 제출 방지: 같은 source_id로 이미 작성된 리뷰 확인
+    // 중복 제출 방지: purchase는 제품별 source_id, 나머지는 uid
+    const sourceId = type === 'purchase' ? `${uid}:${productNo}` : uid;
     const { data: existing } = await dbAny
       .from('reviews')
       .select('id')
-      .eq('source_id', uid)
+      .eq('source_id', sourceId)
       .limit(1);
 
     if (existing && existing.length > 0) {
@@ -120,6 +121,43 @@ export async function POST(req: NextRequest) {
         proceed_type: repair.proceed_type || '',
         received_at: repair.created_at || '', // 접수일
       };
+    } else if (type === 'purchase') {
+      if (!productNo) {
+        return NextResponse.json(
+          { error: '제품을 선택해주세요' },
+          { status: 400, headers: CORS_HEADERS }
+        );
+      }
+      const { data: order } = await dbAny
+        .from('orders')
+        .select('orderer_name, orderer_phone, ordered_at')
+        .eq('id', uid)
+        .single();
+
+      if (!order) {
+        return NextResponse.json(
+          { error: '주문 정보를 찾을 수 없습니다' },
+          { status: 404, headers: CORS_HEADERS }
+        );
+      }
+
+      const { data: item } = await dbAny
+        .from('order_items')
+        .select('product_name, imweb_product_no')
+        .eq('order_id', uid)
+        .eq('imweb_product_no', productNo)
+        .limit(1)
+        .single();
+
+      name = order.orderer_name;
+      phone = order.orderer_phone || '';
+      subtype = '';
+      meta = {
+        order_id: uid,
+        imweb_product_no: productNo,
+        product_name: item?.product_name || '',
+        received_at: order.ordered_at || '',
+      };
     } else {
       return NextResponse.json(
         { error: '지원하지 않는 리뷰 유형입니다' },
@@ -134,13 +172,14 @@ export async function POST(req: NextRequest) {
       .insert({
         review_id: reviewId,
         type,
-        subtype,
+        subtype: subtype || null,
         name,
         phone,
         stars: Number(stars),
         content: String(content).trim(),
         photo_urls: Array.isArray(photoUrls) ? photoUrls : [],
-        source_id: uid,
+        source_id: sourceId,
+        product: meta.product_name || null,
         status: 'pending',
         meta,
       })

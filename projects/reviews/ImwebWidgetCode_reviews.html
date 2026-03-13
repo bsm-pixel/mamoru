@@ -470,7 +470,10 @@ img { display: block; max-width: 100%; }
     var imgHtml = '';
     if (r.photo_urls && r.photo_urls.length > 0) {
       imgHtml = '<img class="mm-rv-card__img" src="' + r.photo_urls[0] + '" alt="후기 이미지" loading="lazy">';
+    } else if (r.product_image_url) {
+      imgHtml = '<img class="mm-rv-card__img" src="' + r.product_image_url + '" alt="제품 이미지" loading="lazy">';
     }
+    var productHtml = r.product ? '<div style="font-size:13px;color:var(--mm-text-d2);margin-bottom:2px">' + r.product + '</div>' : '';
     var preview = r.content.length > 80 ? r.content.substring(0, 80) + '…' : r.content;
     return '<article class="mm-rv-card" data-idx="' + idx + '" style="cursor:pointer">' +
       imgHtml +
@@ -478,6 +481,7 @@ img { display: block; max-width: 100%; }
         '<span class="mm-rv-card__name">' + maskName(r.name) + '</span>' +
         '<div class="mm-rv-card__chips">' + renderChips(r, 'mm-rv-chip') + '</div>' +
       '</div>' +
+      productHtml +
       '<div class="mm-rv-card__stars">' + renderStars(r.stars) + '</div>' +
       '<div class="mm-rv-card__text">' + preview + '</div>' +
       renderDates(r, 'mm-rv-card__date') +
@@ -512,10 +516,12 @@ img { display: block; max-width: 100%; }
           return '<img class="mm-rv-modal__photo" src="' + url + '" alt="후기 사진" data-lb-idx="' + i + '">';
         }).join('') + '</div>';
     }
+    var productHtml = r.product ? '<div style="font-size:14px;color:var(--mm-text-d2);margin-bottom:12px">' + r.product + '</div>' : '';
     modalBody.innerHTML =
       '<div class="mm-rv-modal__stars">' + renderStars(r.stars) + '</div>' +
       '<div class="mm-rv-modal__name">' + maskName(r.name) + '</div>' +
       '<div class="mm-rv-modal__chips">' + renderChips(r, 'mm-rv-chip') + '</div>' +
+      productHtml +
       '<div class="mm-rv-modal__text">' + r.content + '</div>' +
       photosHtml +
       renderDates(r, 'mm-rv-modal__date');

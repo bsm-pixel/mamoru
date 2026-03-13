@@ -38,7 +38,8 @@ export type NotifyTemplate =
   | 'as_shipped'          // 출고 안내
   | 'as_cancelled'        // 복원수리 취소 안내
   | 'as_review_request'   // 복원수리 리뷰 요청 (MAKE_REPAIR_WEBHOOK_URL)
-  | 'review_request';     // 상담 리뷰 요청 (MAKE_WEBHOOK_URL)
+  | 'review_request'      // 상담 리뷰 요청 (MAKE_WEBHOOK_URL)
+  | 'purchase_review_request'; // 제품구매 리뷰 요청 (MAKE_WEBHOOK_URL)
 
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
@@ -62,6 +63,7 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   as_cancelled: 'AS_CANCELLED',
   as_review_request: 'AS_REVIEW_REQUEST',   // 복원수리 리뷰 요청 → MAKE_REPAIR_WEBHOOK_URL
   review_request: 'REVIEW_REQUEST',          // 상담 리뷰 요청 → MAKE_WEBHOOK_URL
+  purchase_review_request: 'PURCHASE_REVIEW_REQUEST', // 제품구매 리뷰 요청 → MAKE_WEBHOOK_URL
 };
 
 interface NotifyPayload {

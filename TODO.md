@@ -1,7 +1,7 @@
 # MAMORU TODO
 
 > 단일 파일 누적 관리 — 완료 시 [x] 체크, 신규 항목 추가
-> 최종 수정: 2026-03-12
+> 최종 수정: 2026-03-13
 
 ---
 
@@ -46,6 +46,22 @@
 - [ ] Phase 7: 수리내역서 자동 생성 (Before/After 타임라인)
 - [ ] Phase 6: 계약서 PDF/이미지 생성
 - [ ] 재검수 승인 후 E2E 테스트 (상담+복원수리 전체 플로우)
+
+### 제품구매 리뷰 시스템 (03-13 구현 완료, 후속 작업)
+- [x] DB 마이그레이션 011 — orders.review_requested_at ✅ 03-13
+- [x] 리뷰 API (info/submit) purchase 타입 추가 ✅ 03-13
+- [x] 리뷰 폼 purchase 타입 + 제품 선택 UI ✅ 03-13
+- [x] 리뷰 보드 제품 썸네일/제품명 표시 ✅ 03-13
+- [x] TMS sync 배송완료 자동 감지 + 알림톡 트리거 ✅ 03-13
+- [x] 수동 리뷰 요청 API (/api/imweb/orders/[id]/review-request) ✅ 03-13
+- [ ] 솔라피 `purchase_review_request` 템플릿 등록 → 카카오 검수 대기
+- [ ] Make 시나리오 `PURCHASE_REVIEW_REQUEST` 분기 추가
+- [ ] 1:1 문의 버튼 URL 확정 (카카오 채널 채팅 링크)
+- [ ] Vercel 배포 후 E2E 테스트 (수동 버튼 → 알림톡 → 리뷰 폼 → 제출)
+
+### 아임웹 알림 설정
+- [ ] 이메일 발송 설정 (결제완료/발송안내/취소완료/환불완료 등 ON)
+- [ ] 알림톡 발송 설정 확인 (결제완료/발송안내/취소완료/환불완료 ON, 배송준비/배송완료 OFF)
 
 ### 미착수
 - [ ] 통합 리뷰 시스템 (memory/REVIEW_SYSTEM_BRIEF.md 참조)

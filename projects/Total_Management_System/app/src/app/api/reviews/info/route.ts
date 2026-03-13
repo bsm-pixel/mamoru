@@ -36,18 +36,76 @@ export async function GET(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dbAny = db as any;
 
-    // 이미 제출된 리뷰 확인
-    const { data: existing } = await dbAny
-      .from('reviews')
-      .select('id')
-      .eq('source_id', uid)
-      .limit(1);
+    // purchase 타입은 제품별 리뷰라 중복 체크를 items 단위로 수행 (아래 분기에서)
+    if (type !== 'purchase') {
+      const { data: existing } = await dbAny
+        .from('reviews')
+        .select('id')
+        .eq('source_id', uid)
+        .limit(1);
 
-    if (existing && existing.length > 0) {
-      return NextResponse.json(
-        { error: '이미 후기를 작성하셨습니다', code: 'ALREADY_SUBMITTED' },
-        { status: 409, headers: CORS_HEADERS }
+      if (existing && existing.length > 0) {
+        return NextResponse.json(
+          { error: '이미 후기를 작성하셨습니다', code: 'ALREADY_SUBMITTED' },
+          { status: 409, headers: CORS_HEADERS }
+        );
+      }
+    }
+
+    if (type === 'purchase') {
+      const { data: order } = await dbAny
+        .from('orders')
+        .select('id, orderer_name, ordered_at')
+        .eq('id', uid)
+        .single();
+
+      if (!order) {
+        return NextResponse.json(
+          { error: '주문 정보를 찾을 수 없습니다' },
+          { status: 404, headers: CORS_HEADERS }
+        );
+      }
+
+      const { data: items } = await dbAny
+        .from('order_items')
+        .select('id, imweb_product_no, product_name, option_text, quantity')
+        .eq('order_id', uid);
+
+      // 이미 리뷰 작성된 제품 확인
+      const { data: existingReviews } = await dbAny
+        .from('reviews')
+        .select('source_id')
+        .like('source_id', `${uid}:%`);
+
+      const reviewedProducts = new Set(
+        (existingReviews || []).map((r: { source_id: string }) => r.source_id.split(':')[1])
       );
+
+      // 전부 작성 완료 체크
+      const allItems = items || [];
+      const allReviewed = allItems.length > 0 && allItems.every(
+        (it: { imweb_product_no: string }) => reviewedProducts.has(it.imweb_product_no)
+      );
+
+      if (allReviewed) {
+        return NextResponse.json(
+          { error: '모든 제품의 후기를 작성하셨습니다', code: 'ALREADY_SUBMITTED' },
+          { status: 409, headers: CORS_HEADERS }
+        );
+      }
+
+      return NextResponse.json({
+        name: maskName(order.orderer_name),
+        typeLabel: '제품구매',
+        date: order.ordered_at ? new Date(order.ordered_at).toLocaleDateString('ko-KR') : '',
+        items: allItems.map((it: { imweb_product_no: string; product_name: string; option_text: string | null; quantity: number }) => ({
+          imweb_product_no: it.imweb_product_no,
+          product_name: it.product_name,
+          option_text: it.option_text,
+          quantity: it.quantity,
+          reviewed: reviewedProducts.has(it.imweb_product_no),
+        })),
+      }, { headers: CORS_HEADERS });
     }
 
     if (type === 'consult') {

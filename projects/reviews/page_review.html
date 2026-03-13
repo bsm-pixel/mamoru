@@ -128,6 +128,30 @@
     .success-card p { font-size: 14px; line-height: 1.6; }
 
     .hidden { display: none; }
+
+    /* 제품 선택 리스트 */
+    .product-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .product-item {
+      display: flex; align-items: center; gap: 12px; padding: 14px;
+      border: 2px solid #e0e0d8; border-radius: 10px; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .product-item:hover { border-color: #aaa; }
+    .product-item.selected { border-color: #1A1A1A; }
+    .product-item.reviewed { opacity: 0.5; pointer-events: none; }
+    .product-item .pname { font-size: 14px; font-weight: 600; flex: 1; }
+    .product-item .poption { font-size: 12px; color: #888; }
+    .product-item .pbadge {
+      font-size: 11px; padding: 2px 8px; border-radius: 999px;
+      background: #d1fae5; color: #065f46;
+    }
+    .chip-purchase { background: #e0e7ff; color: #3730a3; }
+    .all-reviewed-card {
+      background: #f0fdf4; border: 1px solid #a7f3d0; color: #065f46;
+      text-align: center; padding: 60px 20px; border-radius: 14px;
+    }
+    .all-reviewed-card h2 { font-size: 18px; margin-bottom: 8px; }
+    .all-reviewed-card p { font-size: 14px; }
   </style>
 </head>
 <body>
@@ -151,6 +175,28 @@
       <h2>후기가 등록되었습니다</h2>
       <p>소중한 후기 감사합니다</p>
       <button class="btn btn-close" style="margin-top:16px" onclick="safeClose()">닫기</button>
+    </div>
+
+    <!-- 모든 제품 리뷰 완료 -->
+    <div id="all-reviewed" class="all-reviewed-card hidden">
+      <h2>모든 제품의 후기를 작성하셨습니다</h2>
+      <p>소중한 후기 감사합니다</p>
+      <button class="btn btn-close" style="margin-top:16px" onclick="safeClose()">닫기</button>
+    </div>
+
+    <!-- 제품 선택 (purchase 타입) -->
+    <div id="product-select" class="hidden">
+      <div class="card">
+        <span class="chip chip-purchase">제품 구매 후기</span>
+        <div class="customer-info">
+          <div class="name" id="ps-name">-</div>
+          <div class="meta" id="ps-meta">-</div>
+        </div>
+        <div class="form-group">
+          <label>후기를 작성할 제품을 선택해주세요</label>
+          <div class="product-list" id="product-list"></div>
+        </div>
+      </div>
     </div>
 
     <!-- 메인 폼 -->
@@ -222,9 +268,12 @@
     var STORAGE_KEY = 'mamoru_review_' + uid;
 
     // ── 타입별 설정 ──
+    var selectedProductNo = ''; // purchase 타입: 선택된 제품 번호
+
     var TYPE_CONFIG = {
       repair: { label: '복원수리 후기', cls: 'chip-restoration', placeholder: '복원 결과는 어떠셨나요? 자유롭게 작성해주세요', header: '소중한 후기를 남겨주세요' },
-      consult: { label: '상담 후기', cls: 'chip-consult', placeholder: '상담은 어떠셨나요? 자유롭게 작성해주세요', header: '상담 경험을 들려주세요' }
+      consult: { label: '상담 후기', cls: 'chip-consult', placeholder: '상담은 어떠셨나요? 자유롭게 작성해주세요', header: '상담 경험을 들려주세요' },
+      purchase: { label: '제품 구매 후기', cls: 'chip-purchase', placeholder: '제품 사용 경험을 자유롭게 작성해주세요', header: '구매하신 제품은 어떠셨나요?' }
     };
 
     // ── subtype → 한글 라벨 ──
@@ -340,6 +389,26 @@
             showError(result.data.error || '정보를 찾을 수 없습니다');
             return;
           }
+          // purchase 타입: 제품 선택 → 폼 표시
+          if (reviewType === 'purchase' && result.data.items) {
+            var items = result.data.items;
+            var available = items.filter(function(it) { return !it.reviewed; });
+            if (available.length === 0) {
+              // 모든 제품 리뷰 완료
+              document.getElementById('loading').classList.add('hidden');
+              document.getElementById('all-reviewed').classList.remove('hidden');
+              return;
+            }
+            if (items.length === 1 || available.length === 1) {
+              // 자동 선택: 남은 제품 1개
+              selectedProductNo = available[0].imweb_product_no;
+              showForm(result.data.name, result.data.typeLabel + (result.data.date ? ' · ' + result.data.date : '') + ' · ' + available[0].product_name);
+              return;
+            }
+            // 여러 제품 → 선택 화면 표시
+            showProductSelect(result.data.name, result.data.typeLabel + (result.data.date ? ' · ' + result.data.date : ''), items);
+            return;
+          }
           // 폼 표시
           showForm(result.data.name, result.data.typeLabel + (result.data.date ? ' · ' + result.data.date : ''));
         })
@@ -428,7 +497,8 @@
           type: reviewType,
           stars: rating,
           content: document.getElementById('content').value.trim(),
-          photoUrls: photoUrls
+          photoUrls: photoUrls,
+          productNo: selectedProductNo || undefined
         })
       })
       .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
@@ -446,6 +516,34 @@
         btn.disabled = false;
         btn.textContent = '후기 등록';
         console.error(err);
+      });
+    }
+
+    // ── 제품 선택 화면 (purchase 타입, 아이템 2개+) ──
+    function showProductSelect(nameText, metaText, items) {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('product-select').classList.remove('hidden');
+      document.getElementById('ps-name').textContent = nameText;
+      document.getElementById('ps-meta').textContent = metaText;
+
+      var list = document.getElementById('product-list');
+      list.innerHTML = items.map(function(it) {
+        var cls = 'product-item' + (it.reviewed ? ' reviewed' : '');
+        var badge = it.reviewed ? '<span class="pbadge">작성완료</span>' : '';
+        var opt = it.option_text ? '<div class="poption">' + it.option_text + (it.quantity > 1 ? ' x' + it.quantity : '') + '</div>' : '';
+        return '<div class="' + cls + '" data-pno="' + it.imweb_product_no + '">' +
+          '<div style="flex:1"><div class="pname">' + it.product_name + '</div>' + opt + '</div>' +
+          badge +
+        '</div>';
+      }).join('');
+
+      list.addEventListener('click', function(e) {
+        var item = e.target.closest('.product-item');
+        if (!item || item.classList.contains('reviewed')) return;
+        selectedProductNo = item.dataset.pno;
+        var pname = item.querySelector('.pname').textContent;
+        document.getElementById('product-select').classList.add('hidden');
+        showForm(nameText, metaText + ' · ' + pname);
       });
     }
 

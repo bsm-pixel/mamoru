@@ -122,6 +122,7 @@ export interface Database {
           invoice_number: string | null;
           shipped_at: string | null;
           delivered_at: string | null;
+          review_requested_at: string | null; // 011: 리뷰 요청 발송 시각
           status: OrderStatus;
           imweb_raw: Record<string, unknown> | null;
           synced_at: string;
