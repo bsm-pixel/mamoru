@@ -495,12 +495,20 @@
       document.getElementById('success').classList.remove('hidden');
     }
 
-    // ── 닫기 (카카오 인앱 우선, fallback → mamoru.kr) ──
+    // ── 카카오 인앱 닫기 (page_suggest.html 검증 패턴) ──
     function safeClose() {
-      // 카카오 인앱 브라우저 닫기 시도
-      location.href = 'kakaoweb://closeBrowser';
-      // 1초 후에도 페이지가 살아있으면 홈으로 이동
-      setTimeout(function() { location.href = 'https://mamoru.kr'; }, 1000);
+      var ua = navigator.userAgent || '';
+      var isKakao = /KAKAOTALK/i.test(ua);
+      var isIOS   = /iPhone|iPad|iPod/i.test(ua);
+
+      if (isKakao) {
+        location.href = isIOS ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
+        setTimeout(function(){ if (history.length > 1) history.back(); }, 600);
+        setTimeout(function(){ window.close(); }, 1200);
+        return;
+      }
+      if (history.length > 1) { history.back(); return; }
+      window.close();
     }
 
     init();
