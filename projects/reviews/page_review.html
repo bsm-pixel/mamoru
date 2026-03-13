@@ -191,7 +191,7 @@
             <label class="photo-btn" id="photo-add">
               <span class="icon">📷</span>
               <span class="text">촬영/선택</span>
-              <input type="file" accept="image/*" capture="environment" multiple style="display:none" id="photo-input">
+              <input type="file" accept="image/*" multiple style="display:none" id="photo-input">
             </label>
           </div>
         </div>
@@ -443,14 +443,20 @@
       document.getElementById('success').classList.remove('hidden');
     }
 
-    // ── 카카오 인앱 닫기 ──
+    // ── 닫기 (카카오 인앱 + 일반 브라우저 대응) ──
     function safeClose() {
-      try { location.href = 'kakaoweb://closeBrowser'; return; } catch(e) {}
-      try { window.close(); } catch(e) {}
+      // 1) 카카오 인앱 브라우저 닫기
+      if (navigator.userAgent.indexOf('KAKAOTALK') > -1) {
+        location.href = 'kakaoweb://closeBrowser';
+        return;
+      }
+      // 2) window.close (팝업/새 탭으로 열린 경우)
+      window.close();
+      // 3) close 실패 시 뒤로가기 또는 홈으로
       setTimeout(function() {
-        if (history.length > 1) { history.go(-2); return; }
+        if (history.length > 1) { history.back(); return; }
         location.href = 'https://mamoru.kr';
-      }, 150);
+      }, 300);
     }
 
     init();
