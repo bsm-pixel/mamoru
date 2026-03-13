@@ -15,6 +15,9 @@ function getAutoNotifyTemplate(
   if (newStatus === 'cancelled') {
     return consultationType === 'field_request' ? 'field_cancelled' : 'cancelled';
   }
+  if (newStatus === 'completed') {
+    return 'review_request'; // 상담완료 → 리뷰 요청 알림톡 (MAKE_WEBHOOK_URL)
+  }
   return null;
 }
 
@@ -200,6 +203,11 @@ export async function PATCH(
                 date: data.visit_date || '',
                 time: data.visit_time || '',
                 address,
+                uid: data.unique_id,                 // 리뷰 폼 uid 파라미터
+                review_type: 'consult',              // 리뷰 폼 type 파라미터
+                type_label: typeLabel,               // 알림톡 치환 변수
+                subtype: data.consultation_type || '', // store_visit, field_request, talk_consult
+                consult_uid: data.unique_id,         // 솔라피 #{consult_uid} 치환용
               },
             }).then((r) => {
               if (!r.success) console.error('[auto-notify] 발송 실패:', r.error);

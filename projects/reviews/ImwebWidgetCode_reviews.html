@@ -1,21 +1,19 @@
 <style>
 /* ══════════════════════════════════════════════════════════════
-   MAMORU 고객 후기 페이지 — Terracotta Editorial
+   MAMORU 고객 후기 — Brand Guide v1.0 (Monochrome)
    아임웹 코드위젯 삽입용 (/62 페이지)
    ══════════════════════════════════════════════════════════════ */
 
 /* ── 0. 변수 & 리셋 ── */
 :root {
-  --mm-bg-light: #F2F2EA;
-  --mm-bg-card: #FAFAF5;
-  --mm-bg-dark: #181725;
-  --mm-gold: #D4613E;
-  --mm-gold-dark: #B85232;
-  --mm-gold-soft: rgba(212,97,62,0.14);
-  --mm-text-d: #181725;
-  --mm-text-d2: #6B6980;
-  --mm-text-d3: rgba(24,23,37,0.55);
-  --mm-border-l: rgba(24,23,37,0.08);
+  --mm-bg-light: #FAF9F7;
+  --mm-bg-card: #FFFFFF;
+  --mm-void: #1A1A1A;
+  --mm-shell: #F5F5F0;
+  --mm-text-d: #1A1A1A;
+  --mm-text-d2: #6B6B6B;
+  --mm-text-d3: rgba(26,26,26,0.5);
+  --mm-border-l: rgba(26,26,26,0.08);
   --mm-radius: 6px;
   --mm-radius-lg: 8px;
   --mm-max-w: 960px;
@@ -48,7 +46,7 @@ img { display: block; max-width: 100%; }
   display: inline-block;
   width: 28px;
   height: 3px;
-  background: var(--mm-gold);
+  background: var(--mm-void);
   border-radius: 2px;
   margin-bottom: 16px;
 }
@@ -88,9 +86,9 @@ img { display: block; max-width: 100%; }
 }
 .mm-rv-tab:active { transform: scale(0.96); }
 .mm-rv-tab--active {
-  background: var(--mm-gold);
-  border-color: var(--mm-gold);
-  color: #F2F2EA;
+  background: var(--mm-void);
+  border-color: var(--mm-void);
+  color: var(--mm-bg-light);
   font-weight: 600;
 }
 
@@ -136,13 +134,13 @@ img { display: block; max-width: 100%; }
   font-weight: 500;
   color: var(--mm-text-d3);
   padding: 2px 8px;
-  background: rgba(24,23,37,0.04);
+  background: rgba(26,26,26,0.04);
   border-radius: 999px;
 }
 .mm-rv-card__stars {
   display: flex;
   gap: 2px;
-  color: var(--mm-gold);
+  color: var(--mm-void);
   font-size: 14px;
   letter-spacing: 1px;
 }
@@ -177,13 +175,13 @@ img { display: block; max-width: 100%; }
   transition: all var(--mm-ease-fast);
 }
 .mm-rv-loadmore:hover {
-  border-color: var(--mm-gold);
-  color: var(--mm-gold);
+  border-color: var(--mm-void);
+  color: var(--mm-void);
 }
 .mm-rv-loadmore:active { transform: scale(0.97); }
 
-/* 비어있을 때 */
-.mm-rv-empty {
+/* 비어있을 때 / 로딩 */
+.mm-rv-empty, .mm-rv-loading {
   text-align: center;
   padding: 64px 20px;
   color: var(--mm-text-d3);
@@ -223,11 +221,11 @@ img { display: block; max-width: 100%; }
 /* PC hover */
 @media (hover: hover) {
   .mm-rv-card:hover {
-    box-shadow: 0 4px 16px rgba(24,23,37,0.06);
+    box-shadow: 0 4px 16px rgba(26,26,26,0.06);
   }
   .mm-rv-tab:hover:not(.mm-rv-tab--active) {
-    border-color: var(--mm-gold);
-    color: var(--mm-gold);
+    border-color: var(--mm-void);
+    color: var(--mm-void);
   }
 }
 </style>
@@ -244,18 +242,18 @@ img { display: block; max-width: 100%; }
 <!-- 탭 필터 -->
 <nav class="mm-rv-tabs" id="rvTabs">
   <button class="mm-rv-tab mm-rv-tab--active" data-type="all">전체</button>
-  <button class="mm-rv-tab" data-type="consulting">컨설팅상담</button>
+  <button class="mm-rv-tab" data-type="consult">컨설팅상담</button>
   <button class="mm-rv-tab" data-type="repair">복원수리</button>
   <button class="mm-rv-tab" data-type="purchase">제품구매</button>
 </nav>
 
 <!-- 리뷰 그리드 -->
 <div class="mm-rv-grid" id="rvGrid">
-  <!-- JS 렌더링 -->
+  <div class="mm-rv-loading">후기를 불러오는 중...</div>
 </div>
 
 <!-- 더보기 -->
-<button class="mm-rv-loadmore" id="rvLoadmore">후기 더보기</button>
+<button class="mm-rv-loadmore" id="rvLoadmore" style="display:none">후기 더보기</button>
 
 </div>
 
@@ -263,46 +261,35 @@ img { display: block; max-width: 100%; }
 (function(){
   'use strict';
 
-  /* ═══════════════════════════════════════════════════════════════
-     🔧 리뷰 데이터
-     추후 GAS fetch로 교체 시 이 DATA 객체를 덮어쓰면 됨
-     img: 아임웹 CDN URL (빈 문자열이면 이미지 생략)
-     ═══════════════════════════════════════════════════════════════ */
-  var DATA = {
-    consulting: [
-      { name: '김○○', stars: 5, text: '처음 상담받았는데 정말 꼼꼼하게 설명해 주셔서 믿음이 갔어요. 제 손 크기나 작업 스타일까지 고려해서 추천해 주셔서 감동이었습니다.', date: '2026.01.15', source: '카카오톡', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/5440b39c14f9d.jpg' },
-      { name: '이○○', stars: 5, text: '온라인 상담인데도 불구하고 디렉터님이 직접 여러 가지 비교해 주시고, 저한테 맞는 가위를 콕 짚어 주셨어요. 가격대별로 장단점도 솔직하게 말씀해 주셔서 신뢰감이 생겼습니다.', date: '2026.01.08', source: '네이버', img: '' },
-      { name: '박○○', stars: 5, text: '독립 준비하면서 가위 선택이 제일 고민이었는데, 상담 한 번에 정리됐어요. 실제로 추천받은 가위가 손에 딱 맞아서 매일 만족하며 쓰고 있습니다.', date: '2025.12.28', source: '카카오톡', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/40cb7f6ce0645.jpg' },
-      { name: '최○○', stars: 4, text: '상담 예약부터 진행까지 깔끔했고, 강요하는 느낌 없이 제 예산에 맞춰서 안내해 주셨어요. 다만 배송이 조금 걸렸지만 품질은 완벽합니다.', date: '2025.12.20', source: '네이버', img: '' },
-      { name: '송○○', stars: 5, text: '미용실에서 10년 일하면서 가위를 제대로 상담받은 건 처음이에요. 커트 스타일별로 어떤 가위가 맞는지 설명해 주시니까 이해가 바로 됐습니다.', date: '2025.12.10', source: '카카오톡', img: '' },
-      { name: '장○○', stars: 5, text: '왼손잡이라 맞는 가위 찾기가 어려웠는데, 마모루에서 전용 라인을 추천받고 나서 작업이 확실히 편해졌습니다.', date: '2025.11.28', source: '네이버', img: '' }
-    ],
-    repair: [
-      { name: '정○○', stars: 5, text: '날이 많이 상한 가위였는데 복원 후에 새것처럼 돌아왔어요. 택배 접수도 간편하고 진행 상황 안내까지 꼼꼼하게 해 주셔서 좋았습니다.', date: '2026.01.12', source: '네이버', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/5440b39c14f9d.jpg' },
-      { name: '한○○', stars: 5, text: '오래된 가위라 새로 사야 하나 했는데, 복원 수리 후 커트감이 완전히 살아났어요. 가격도 새 가위 사는 것보다 훨씬 합리적이었습니다.', date: '2026.01.05', source: '카카오톡', img: '' },
-      { name: '윤○○', stars: 5, text: '하이드로 리페어라고 하셨는데 날 자체가 달라졌어요. 택배로 보내고 일주일이면 돌아오니까 일하면서도 부담이 없었습니다.', date: '2025.12.22', source: '네이버', img: '' },
-      { name: '강○○', stars: 4, text: '수리 퀄리티는 정말 만족인데, 제가 원하는 날 각도를 좀 더 세밀하게 조절해 주셨으면 하는 아쉬움이 있었어요. 다음에는 요청사항을 더 자세히 적을게요.', date: '2025.12.15', source: '카카오톡', img: '' },
-      { name: '오○○', stars: 5, text: '다른 곳에서 연마받았다가 날이 이상해져서 맡겼는데, 원래 상태보다 더 좋아진 느낌입니다. 역시 전문가에게 맡겨야 한다는 걸 느꼈어요.', date: '2025.12.01', source: '네이버', img: '' }
-    ],
-    /* 🔧 제품구매 리뷰 — product: 제품명 (상세페이지 필터용) */
-    purchase: [
-      { name: '임○○', stars: 5, text: '분무기 품질이 좋아요. 미세 분사가 균일하고 손잡이 그립감도 편합니다.', date: '2026.01.20', source: '알림톡', img: '', product: '프리미엄 분무기' },
-      { name: '나○○', stars: 5, text: '가위 정리대가 깔끔하고 안정감 있어요. 매장에 놓으니까 인테리어 효과도 있습니다.', date: '2026.01.10', source: '알림톡', img: '', product: '우드 가위 정리대' },
-      { name: '서○○', stars: 4, text: '가위집 퀄리티가 가격 대비 훌륭합니다. 수납 칸이 넉넉해서 좋아요.', date: '2025.12.18', source: '알림톡', img: '', product: '프리미엄 가위집' }
-    ]
-  };
-
+  var API_URL = 'https://mamoru-tms.vercel.app/api/reviews/public';
   var PER_PAGE = 6;
   var currentType = 'all';
   var currentPage = 1;
+  var allReviews = [];
 
-  function getReviews(type) {
-    if (type === 'all') {
-      var all = DATA.consulting.concat(DATA.repair);
-      all.sort(function(a, b) { return b.date.localeCompare(a.date); });
-      return all;
+  function maskName(name) {
+    if (!name) return '';
+    if (name.length <= 1) return name;
+    if (name.length === 2) return name[0] + '*';
+    return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+  }
+
+  function getSourceLabel(review) {
+    if (review.type === 'consult') {
+      var sub = review.subtype || (review.meta && review.meta.consultation_type) || '';
+      if (sub === 'store_visit') return '매장방문';
+      if (sub === 'field_request') return '출장상담';
+      if (sub === 'talk_consult') return '톡상담';
+      return '상담';
     }
-    return DATA[type] || [];
+    if (review.type === 'repair') return '복원수리';
+    if (review.type === 'purchase') return '제품구매';
+    return '';
+  }
+
+  function getFilteredReviews() {
+    if (currentType === 'all') return allReviews;
+    return allReviews.filter(function(r) { return r.type === currentType; });
   }
 
   function renderStars(n) {
@@ -312,23 +299,27 @@ img { display: block; max-width: 100%; }
   }
 
   function renderCard(r) {
-    var imgHtml = r.img ? '<img class="mm-rv-card__img" src="' + r.img + '" alt="후기 이미지">' : '';
+    var imgHtml = '';
+    if (r.photo_urls && r.photo_urls.length > 0) {
+      imgHtml = '<img class="mm-rv-card__img" src="' + r.photo_urls[0] + '" alt="후기 이미지" loading="lazy">';
+    }
+    var date = r.created_at ? new Date(r.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '';
     return '<article class="mm-rv-card">' +
       imgHtml +
       '<div class="mm-rv-card__header">' +
-        '<span class="mm-rv-card__name">' + r.name + '</span>' +
-        '<span class="mm-rv-card__source">' + r.source + '</span>' +
+        '<span class="mm-rv-card__name">' + maskName(r.name) + '</span>' +
+        '<span class="mm-rv-card__source">' + getSourceLabel(r) + '</span>' +
       '</div>' +
       '<div class="mm-rv-card__stars">' + renderStars(r.stars) + '</div>' +
-      '<div class="mm-rv-card__text">' + r.text + '</div>' +
-      '<div class="mm-rv-card__date">' + r.date + '</div>' +
+      '<div class="mm-rv-card__text">' + r.content + '</div>' +
+      '<div class="mm-rv-card__date">' + date + '</div>' +
     '</article>';
   }
 
   function render() {
     var grid = document.getElementById('rvGrid');
     var btn = document.getElementById('rvLoadmore');
-    var reviews = getReviews(currentType);
+    var reviews = getFilteredReviews();
     var visible = reviews.slice(0, currentPage * PER_PAGE);
 
     grid.innerHTML = visible.length
@@ -336,6 +327,20 @@ img { display: block; max-width: 100%; }
       : '<div class="mm-rv-empty">아직 등록된 후기가 없습니다.</div>';
 
     btn.style.display = (visible.length < reviews.length) ? 'block' : 'none';
+  }
+
+  function loadReviews() {
+    fetch(API_URL + '?type=all')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        allReviews = Array.isArray(data) ? data : [];
+        render();
+      })
+      .catch(function(err) {
+        console.error('리뷰 API 에러:', err);
+        allReviews = [];
+        render();
+      });
   }
 
   /* 탭 전환 */
@@ -361,7 +366,7 @@ img { display: block; max-width: 100%; }
   function initIframeComm() {
     function sendHeight() {
       var h = document.documentElement.scrollHeight;
-      window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: h }, '*'); /* 표준 타입 통일 */
+      window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: h }, '*');
     }
     if (typeof ResizeObserver !== 'undefined') {
       new ResizeObserver(sendHeight).observe(document.body);
@@ -372,7 +377,7 @@ img { display: block; max-width: 100%; }
   }
 
   /* 초기화 */
-  render();
+  loadReviews();
   initIframeComm();
 })();
 </script>

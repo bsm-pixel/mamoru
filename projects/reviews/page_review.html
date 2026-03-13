@@ -7,8 +7,8 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-      background: #f5f5f0; color: #1a1a2e; line-height: 1.6;
+      font-family: 'Outfit', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif; /* Brand Guide v1.0 */
+      background: #FAF9F7; color: #1A1A1A; line-height: 1.6; /* Cream / Void */
       -webkit-text-size-adjust: 100%;
     }
     .container { max-width: 480px; margin: 0 auto; padding: 0 16px 40px; }
@@ -48,10 +48,10 @@
 
     textarea {
       width: 100%; padding: 14px; border: 1px solid #e0e0d8;
-      border-radius: 10px; font-size: 15px; color: #1a1a2e;
+      border-radius: 10px; font-size: 15px; color: #1A1A1A;
       resize: vertical; min-height: 120px; font-family: inherit;
     }
-    textarea:focus { outline: none; border-color: #d4613e; box-shadow: 0 0 0 3px rgba(212,97,62,0.1); }
+    textarea:focus { outline: none; border-color: #1A1A1A; box-shadow: 0 0 0 3px rgba(26,26,26,0.08); } /* Void */
     textarea::placeholder { color: #bbb; }
 
     /* 별점 */
@@ -61,7 +61,7 @@
       color: #ddd; transition: color 0.15s; user-select: none;
       display: flex; align-items: center; justify-content: center;
     }
-    .star.active { color: #d4613e; }
+    .star.active { color: #1A1A1A; } /* Void */
     .star-hint { font-size: 12px; color: #aaa; }
 
     /* 사진 업로드 */
@@ -71,7 +71,7 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       cursor: pointer; transition: border-color 0.2s; background: #fafaf8;
     }
-    .photo-btn:hover { border-color: #d4613e; }
+    .photo-btn:hover { border-color: #1A1A1A; } /* Void */
     .photo-btn .icon { font-size: 24px; color: #bbb; }
     .photo-btn .text { font-size: 11px; color: #aaa; margin-top: 2px; }
     .photo-preview {
@@ -89,14 +89,20 @@
       font-size: 12px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
     }
+    /* 업로드 중 표시 */
+    .photo-wrap.uploading::after {
+      content: ''; position: absolute; inset: 0; border-radius: 10px;
+      background: rgba(255,255,255,0.6);
+      display: flex; align-items: center; justify-content: center;
+    }
 
     /* 버튼 */
     .btn {
       width: 100%; padding: 14px; border: none; border-radius: 12px;
       font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
     }
-    .btn-primary { background: #1a1a2e; color: #fff; }
-    .btn-primary:hover { background: #2d2d44; }
+    .btn-primary { background: #1A1A1A; color: #fff; } /* Void */
+    .btn-primary:hover { background: #333; }
     .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
     .btn-close { background: #e8e8e0; color: #555; margin-top: 8px; }
 
@@ -104,7 +110,7 @@
     .loading { text-align: center; padding: 80px 20px; color: #888; }
     .loading::after {
       content: ''; display: inline-block; width: 20px; height: 20px;
-      border: 2px solid #ddd; border-top-color: #d4613e;
+      border: 2px solid #ddd; border-top-color: #1A1A1A; /* Void */
       border-radius: 50%; animation: spin 0.8s linear infinite;
       margin-left: 8px; vertical-align: middle;
     }
@@ -199,22 +205,32 @@
 
   <script>
     // ── 설정 ──
-    // TODO: 리뷰 시스템 연동 시 API URL 설정
-    var API_URL = '';
+    var API_URL = 'https://mamoru-tms.vercel.app/api/reviews';
     var MAX_PHOTOS = 3;
 
     var params = new URLSearchParams(location.search);
     var uid = params.get('uid') || '';
-    var reviewType = params.get('type') || 'as'; // as, restoration, consult
+    var rawType = params.get('type') || 'repair';
+    // 솔라피 템플릿 URL 호환: consulting→consult, as→repair
+    var reviewType = (rawType === 'consulting') ? 'consult' : (rawType === 'as') ? 'repair' : rawType;
+    var urlName = params.get('name') || '';   // 솔라피 URL에서 전달된 이름
+    var urlSubtype = params.get('subtype') || ''; // store_visit, field_request 등
 
     var rating = 0;
-    var photos = []; // { file, dataUrl }
+    var photos = [];    // { file, dataUrl, url(업로드 후) }
+    var uploading = 0;  // 업로드 진행 중 카운트
 
     // ── 타입별 설정 ──
     var TYPE_CONFIG = {
-      as: { label: 'A/S 후기', cls: 'chip-as', placeholder: '수리 결과는 어떠셨나요? 자유롭게 작성해주세요', header: '소중한 후기를 남겨주세요' },
-      restoration: { label: '복원수리 후기', cls: 'chip-restoration', placeholder: '복원 결과는 어떠셨나요? 자유롭게 작성해주세요', header: '소중한 후기를 남겨주세요' },
+      repair: { label: '복원수리 후기', cls: 'chip-restoration', placeholder: '복원 결과는 어떠셨나요? 자유롭게 작성해주세요', header: '소중한 후기를 남겨주세요' },
       consult: { label: '상담 후기', cls: 'chip-consult', placeholder: '상담은 어떠셨나요? 자유롭게 작성해주세요', header: '상담 경험을 들려주세요' }
+    };
+
+    // ── subtype → 한글 라벨 ──
+    var SUBTYPE_LABELS = {
+      store_visit: '매장 방문',
+      field_request: '출장 상담',
+      talk_consult: '톡상담'
     };
 
     // ── 이름 마스킹: 김미영 → 김*영, 이수 → 이* ──
@@ -225,24 +241,94 @@
       return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
     }
 
+    // ── 사진 리사이즈 (Canvas, 최대 1200px, JPEG 0.8) ──
+    function resizeImage(file, maxSize, quality) {
+      return new Promise(function(resolve) {
+        var img = new Image();
+        img.onload = function() {
+          var w = img.width, h = img.height;
+          if (w > maxSize || h > maxSize) {
+            var ratio = Math.min(maxSize / w, maxSize / h);
+            w = Math.round(w * ratio);
+            h = Math.round(h * ratio);
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob(function(blob) { resolve(blob); }, 'image/jpeg', quality || 0.8);
+        };
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    // ── 사진 업로드 (서버) ──
+    function uploadPhoto(photo, idx) {
+      uploading++;
+      checkSubmit();
+      var wrap = document.querySelectorAll('.photo-wrap')[idx];
+      if (wrap) wrap.classList.add('uploading');
+
+      resizeImage(photo.file, 1200, 0.8).then(function(blob) {
+        var fd = new FormData();
+        fd.append('file', blob, 'review.jpg');
+        return fetch(API_URL + '/upload', { method: 'POST', body: fd });
+      }).then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.url) {
+            photo.url = data.url;
+          } else {
+            console.error('업로드 실패:', data.error);
+          }
+        }).catch(function(err) {
+          console.error('업로드 에러:', err);
+        }).finally(function() {
+          uploading--;
+          if (wrap) wrap.classList.remove('uploading');
+          checkSubmit();
+        });
+    }
+
     // ── 초기화 ──
     function init() {
       if (!uid) { showError('잘못된 접근입니다'); return; }
 
       // 타입별 UI 설정
-      var cfg = TYPE_CONFIG[reviewType] || TYPE_CONFIG.as;
+      var cfg = TYPE_CONFIG[reviewType] || TYPE_CONFIG.repair;
       var chip = document.getElementById('type-chip');
       chip.textContent = cfg.label;
       chip.className = 'chip ' + cfg.cls;
       document.querySelector('.header p').textContent = cfg.header;
       document.getElementById('content').placeholder = cfg.placeholder;
 
-      // TODO: API에서 고객 정보 조회
-      // fetch(API_URL + '?action=getReviewInfo&uid=' + uid)
-      //   .then(...)
-
-      // 임시: 준비 중
-      showError('리뷰 서비스 준비 중입니다');
+      // API에서 고객 정보 조회
+      fetch(API_URL + '/info?uid=' + encodeURIComponent(uid) + '&type=' + encodeURIComponent(reviewType))
+        .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, status: res.status, data: d }; }); })
+        .then(function(result) {
+          if (!result.ok) {
+            if (result.data.code === 'ALREADY_SUBMITTED') {
+              showError('이미 후기를 작성하셨습니다');
+              return;
+            }
+            // API 실패 시 URL 파라미터 fallback (솔라피 URL에 이름이 포함됨)
+            if (urlName) {
+              showForm(maskName(urlName), SUBTYPE_LABELS[urlSubtype] || cfg.label);
+              return;
+            }
+            showError(result.data.error || '정보를 찾을 수 없습니다');
+            return;
+          }
+          // 폼 표시
+          showForm(result.data.name, result.data.typeLabel + (result.data.date ? ' · ' + result.data.date : ''));
+        })
+        .catch(function(err) {
+          // 네트워크 실패 시에도 URL 파라미터 fallback
+          if (urlName) {
+            showForm(maskName(urlName), SUBTYPE_LABELS[urlSubtype] || cfg.label);
+            return;
+          }
+          showError('서버 연결에 실패했습니다');
+          console.error(err);
+        });
     }
 
     // ── 별점 ──
@@ -258,15 +344,17 @@
       checkSubmit();
     });
 
-    // ── 사진 업로드 ──
+    // ── 사진 선택 → 리사이즈 → 즉시 업로드 ──
     document.getElementById('photo-input').addEventListener('change', function(e) {
       var files = Array.from(e.target.files);
       files.forEach(function(file) {
         if (photos.length >= MAX_PHOTOS) return;
         var reader = new FileReader();
         reader.onload = function(ev) {
-          photos.push({ file: file, dataUrl: ev.target.result });
+          var photo = { file: file, dataUrl: ev.target.result, url: '' };
+          photos.push(photo);
           renderPhotos();
+          uploadPhoto(photo, photos.length - 1); // 즉시 업로드
         };
         reader.readAsDataURL(file);
       });
@@ -275,16 +363,13 @@
 
     function renderPhotos() {
       var area = document.getElementById('photo-area');
-      // 기존 프리뷰 제거
       area.querySelectorAll('.photo-wrap').forEach(function(el) { el.remove(); });
-      // 프리뷰 추가
       photos.forEach(function(p, i) {
         var wrap = document.createElement('div');
         wrap.className = 'photo-wrap';
         wrap.innerHTML = '<img src="' + p.dataUrl + '"><div class="photo-remove" data-idx="' + i + '">✕</div>';
         area.insertBefore(wrap, document.getElementById('photo-add'));
       });
-      // 추가 버튼 숨기기
       document.getElementById('photo-add').classList.toggle('hidden', photos.length >= MAX_PHOTOS);
     }
 
@@ -298,7 +383,7 @@
     // ── 제출 가능 여부 ──
     function checkSubmit() {
       var content = document.getElementById('content').value.trim();
-      document.getElementById('btnSubmit').disabled = !(rating > 0 && content.length > 0);
+      document.getElementById('btnSubmit').disabled = !(rating > 0 && content.length > 0 && uploading === 0);
     }
     document.getElementById('content').addEventListener('input', checkSubmit);
 
@@ -308,21 +393,45 @@
       btn.disabled = true;
       btn.textContent = '등록 중...';
 
-      // TODO: API 연동
-      // var formData = new FormData();
-      // formData.append('uid', uid);
-      // formData.append('type', reviewType);
-      // formData.append('rating', rating);
-      // formData.append('content', document.getElementById('content').value.trim());
-      // photos.forEach(function(p, i) { formData.append('photo' + i, p.file); });
-      // fetch(API_URL, { method: 'POST', body: formData })
+      var photoUrls = photos.map(function(p) { return p.url; }).filter(Boolean);
 
-      alert('리뷰 서비스 준비 중입니다');
-      btn.disabled = false;
-      btn.textContent = '후기 등록';
+      fetch(API_URL + '/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: uid,
+          type: reviewType,
+          stars: rating,
+          content: document.getElementById('content').value.trim(),
+          photoUrls: photoUrls
+        })
+      })
+      .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
+      .then(function(result) {
+        if (!result.ok) {
+          alert(result.data.error || '등록에 실패했습니다');
+          btn.disabled = false;
+          btn.textContent = '후기 등록';
+          return;
+        }
+        showSuccess();
+      })
+      .catch(function(err) {
+        alert('서버 연결에 실패했습니다');
+        btn.disabled = false;
+        btn.textContent = '후기 등록';
+        console.error(err);
+      });
     }
 
     // ── UI 헬퍼 ──
+    function showForm(nameText, metaText) {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('main').classList.remove('hidden');
+      document.getElementById('r-name').textContent = nameText;
+      document.getElementById('r-meta').textContent = metaText;
+    }
+
     function showError(msg) {
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('main').classList.add('hidden');

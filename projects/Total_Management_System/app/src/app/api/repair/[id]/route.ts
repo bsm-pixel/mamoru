@@ -9,6 +9,7 @@ function getAutoNotifyTemplate(newStatus: string): NotifyTemplate | null {
   const map: Record<string, NotifyTemplate> = {
     shipped: 'as_shipped',
     cancelled: 'as_cancelled',
+    delivered: 'as_review_request', // 배송완료 → 리뷰 요청 (MAKE_REPAIR_WEBHOOK_URL)
   };
   return map[newStatus] || null;
 }
@@ -130,6 +131,10 @@ export async function PATCH(
               total_amount: String(data.total_amount || 0),
               tracking: data.invoice_number || '',
               courier: '롯데택배',
+              uid: data.as_id,                   // 리뷰 폼 uid 파라미터
+              as_uid: data.as_id,                // 솔라피 #{as_uid} 치환용
+              review_type: 'repair',             // 리뷰 폼 type 파라미터
+              type_label: '복원수리',             // 알림톡 치환 변수
             },
           });
           if (!result.success) console.error('[repair auto-notify] 실패:', result.error);

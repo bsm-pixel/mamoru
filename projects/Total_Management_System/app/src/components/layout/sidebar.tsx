@@ -14,6 +14,7 @@ import {
   Truck,
   Boxes,
   BarChart3,
+  Star,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -31,6 +32,7 @@ const iconMap: Record<string, LucideIcon> = {
   Truck,
   Boxes,
   BarChart3,
+  Star,
 };
 
 export function Sidebar() {
