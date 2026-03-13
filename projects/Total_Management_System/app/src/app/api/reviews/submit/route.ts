@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     } else if (type === 'repair') {
       const { data: repair } = await dbAny
         .from('repairs')
-        .select('name, phone, proceed_type, scissor_brand')
+        .select('name, phone, proceed_type')
         .eq('as_id', uid)
         .single();
 
@@ -117,7 +117,6 @@ export async function POST(req: NextRequest) {
       subtype = 'restoration';
       meta = {
         proceed_type: repair.proceed_type || '',
-        scissor_brand: repair.scissor_brand || '',
       };
     } else {
       return NextResponse.json(

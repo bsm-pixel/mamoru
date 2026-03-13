@@ -78,14 +78,14 @@ export async function GET(req: NextRequest) {
     if (type === 'repair') {
       const { data: repair, error: repairErr } = await dbAny
         .from('repairs')
-        .select('name, scissor_brand, status')
+        .select('name, status')
         .eq('as_id', uid)
         .single();
 
       if (repairErr || !repair) {
         console.error('[reviews/info] repair 조회 실패:', { uid, repairErr });
         return NextResponse.json(
-          { error: '복원수리 정보를 찾을 수 없습니다', debug: repairErr?.message || 'no data' },
+          { error: '복원수리 정보를 찾을 수 없습니다' },
           { status: 404, headers: CORS_HEADERS }
         );
       }
@@ -93,7 +93,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         name: maskName(repair.name),
         typeLabel: '복원수리',
-        scissorBrand: repair.scissor_brand || '',
       }, { headers: CORS_HEADERS });
     }
 
