@@ -156,6 +156,70 @@ img { display: block; max-width: 100%; }
   color: var(--mm-text-d3);
   padding-top: 8px;
   border-top: 1px solid var(--mm-border-l);
+  display: flex;
+  gap: 12px;
+}
+.mm-rv-card__chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mm-rv-chip {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mm-text-d3);
+  padding: 2px 8px;
+  background: rgba(26,26,26,0.04);
+  border-radius: 999px;
+}
+
+/* ── 모달 ── */
+.mm-rv-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+.mm-rv-overlay--open { opacity: 1; visibility: visible; }
+.mm-rv-modal {
+  background: #fff; border-radius: 14px;
+  max-width: 520px; width: 100%;
+  max-height: 85vh; overflow-y: auto;
+  padding: 28px 24px;
+  position: relative;
+}
+.mm-rv-modal__close {
+  position: absolute; top: 14px; right: 14px;
+  width: 32px; height: 32px; border: none; background: rgba(26,26,26,0.06);
+  border-radius: 50%; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--mm-text-d2);
+}
+.mm-rv-modal__stars {
+  color: var(--mm-void); font-size: 18px; letter-spacing: 2px; margin-bottom: 12px;
+}
+.mm-rv-modal__name {
+  font-size: 17px; font-weight: 700; margin-bottom: 4px;
+}
+.mm-rv-modal__chips {
+  display: flex; gap: 6px; margin-bottom: 16px;
+}
+.mm-rv-modal__text {
+  font-size: 15px; line-height: 1.8; color: var(--mm-text-d); margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+.mm-rv-modal__photos {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.mm-rv-modal__photo {
+  width: 120px; height: 120px; border-radius: 8px; object-fit: cover; cursor: pointer;
+}
+.mm-rv-modal__date {
+  font-size: 12px; color: var(--mm-text-d3);
+  display: flex; gap: 12px;
+  padding-top: 12px; border-top: 1px solid var(--mm-border-l);
 }
 
 /* ── 5. 더보기 버튼 ── */
@@ -255,6 +319,14 @@ img { display: block; max-width: 100%; }
 <!-- 더보기 -->
 <button class="mm-rv-loadmore" id="rvLoadmore" style="display:none">후기 더보기</button>
 
+<!-- 상세 모달 -->
+<div class="mm-rv-overlay" id="rvOverlay">
+  <div class="mm-rv-modal" id="rvModal">
+    <button class="mm-rv-modal__close" id="rvModalClose">✕</button>
+    <div id="rvModalBody"></div>
+  </div>
+</div>
+
 </div>
 
 <script>
@@ -274,17 +346,37 @@ img { display: block; max-width: 100%; }
     return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
   }
 
-  function getSourceLabel(review) {
-    if (review.type === 'consult') {
-      var sub = review.subtype || (review.meta && review.meta.consultation_type) || '';
-      if (sub === 'store_visit') return '매장방문';
-      if (sub === 'field_request') return '출장상담';
-      if (sub === 'talk_consult') return '톡상담';
-      return '상담';
+  /* ── 타입/서브타입 라벨 ── */
+  var TYPE_LABELS = { consult: '컨설팅상담', repair: '복원수리', purchase: '제품구매' };
+  var SUBTYPE_LABELS = { store_visit: '매장방문', field_request: '출장상담', talk_consult: '톡상담', restoration: '복원수리' };
+
+  function getTypeLabel(r) { return TYPE_LABELS[r.type] || ''; }
+  function getSubtypeLabel(r) {
+    var sub = r.subtype || (r.meta && r.meta.consultation_type) || '';
+    return SUBTYPE_LABELS[sub] || '';
+  }
+
+  function renderChips(r, cls) {
+    var chips = '<span class="' + cls + '">' + getTypeLabel(r) + '</span>';
+    var sub = getSubtypeLabel(r);
+    if (sub && sub !== getTypeLabel(r)) {
+      chips += '<span class="' + cls + '">' + sub + '</span>';
     }
-    if (review.type === 'repair') return '복원수리';
-    if (review.type === 'purchase') return '제품구매';
-    return '';
+    return chips;
+  }
+
+  function fmtDate(d) {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  }
+
+  function renderDates(r, cls) {
+    var receivedAt = r.meta && r.meta.received_at ? fmtDate(r.meta.received_at) : '';
+    var createdAt = fmtDate(r.created_at);
+    var html = '';
+    if (receivedAt) html += '<span>접수 ' + receivedAt + '</span>';
+    if (createdAt) html += '<span>작성 ' + createdAt + '</span>';
+    return '<div class="' + cls + '">' + html + '</div>';
   }
 
   function getFilteredReviews() {
@@ -298,21 +390,21 @@ img { display: block; max-width: 100%; }
     return s;
   }
 
-  function renderCard(r) {
+  function renderCard(r, idx) {
     var imgHtml = '';
     if (r.photo_urls && r.photo_urls.length > 0) {
       imgHtml = '<img class="mm-rv-card__img" src="' + r.photo_urls[0] + '" alt="후기 이미지" loading="lazy">';
     }
-    var date = r.created_at ? new Date(r.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '';
-    return '<article class="mm-rv-card">' +
+    var preview = r.content.length > 80 ? r.content.substring(0, 80) + '…' : r.content;
+    return '<article class="mm-rv-card" data-idx="' + idx + '" style="cursor:pointer">' +
       imgHtml +
       '<div class="mm-rv-card__header">' +
         '<span class="mm-rv-card__name">' + maskName(r.name) + '</span>' +
-        '<span class="mm-rv-card__source">' + getSourceLabel(r) + '</span>' +
+        '<div class="mm-rv-card__chips">' + renderChips(r, 'mm-rv-chip') + '</div>' +
       '</div>' +
       '<div class="mm-rv-card__stars">' + renderStars(r.stars) + '</div>' +
-      '<div class="mm-rv-card__text">' + r.content + '</div>' +
-      '<div class="mm-rv-card__date">' + date + '</div>' +
+      '<div class="mm-rv-card__text">' + preview + '</div>' +
+      renderDates(r, 'mm-rv-card__date') +
     '</article>';
   }
 
@@ -323,11 +415,53 @@ img { display: block; max-width: 100%; }
     var visible = reviews.slice(0, currentPage * PER_PAGE);
 
     grid.innerHTML = visible.length
-      ? visible.map(renderCard).join('')
+      ? visible.map(function(r, i) { return renderCard(r, i); }).join('')
       : '<div class="mm-rv-empty">아직 등록된 후기가 없습니다.</div>';
 
     btn.style.display = (visible.length < reviews.length) ? 'block' : 'none';
   }
+
+  /* ── 상세 모달 ── */
+  var overlay = document.getElementById('rvOverlay');
+  var modalBody = document.getElementById('rvModalBody');
+
+  function openModal(r) {
+    var photosHtml = '';
+    if (r.photo_urls && r.photo_urls.length > 0) {
+      photosHtml = '<div class="mm-rv-modal__photos">' +
+        r.photo_urls.map(function(url) {
+          return '<img class="mm-rv-modal__photo" src="' + url + '" alt="후기 사진" onclick="window.open(this.src)">';
+        }).join('') + '</div>';
+    }
+    modalBody.innerHTML =
+      '<div class="mm-rv-modal__stars">' + renderStars(r.stars) + '</div>' +
+      '<div class="mm-rv-modal__name">' + maskName(r.name) + '</div>' +
+      '<div class="mm-rv-modal__chips">' + renderChips(r, 'mm-rv-chip') + '</div>' +
+      '<div class="mm-rv-modal__text">' + r.content + '</div>' +
+      photosHtml +
+      renderDates(r, 'mm-rv-modal__date');
+    overlay.classList.add('mm-rv-overlay--open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    overlay.classList.remove('mm-rv-overlay--open');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('rvModalClose').addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeModal();
+  });
+
+  document.getElementById('rvGrid').addEventListener('click', function(e) {
+    var card = e.target.closest('.mm-rv-card');
+    if (!card) return;
+    var idx = parseInt(card.dataset.idx);
+    var reviews = getFilteredReviews();
+    var visible = reviews.slice(0, currentPage * PER_PAGE);
+    if (visible[idx]) openModal(visible[idx]);
+  });
 
   function loadReviews() {
     fetch(API_URL + '?type=all')

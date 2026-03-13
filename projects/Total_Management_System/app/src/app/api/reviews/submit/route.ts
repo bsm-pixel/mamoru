@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     if (type === 'consult') {
       const { data: consult } = await dbAny
         .from('consultations')
-        .select('name, phone, consultation_type, visit_date, visit_time')
+        .select('name, phone, consultation_type, visit_date, visit_time, created_at')
         .eq('unique_id', uid)
         .single();
 
@@ -98,11 +98,12 @@ export async function POST(req: NextRequest) {
         visit_date: consult.visit_date || '',
         visit_time: consult.visit_time || '',
         consultation_type: consult.consultation_type || '',
+        received_at: consult.created_at || '', // 접수일
       };
     } else if (type === 'repair') {
       const { data: repair } = await dbAny
         .from('repairs')
-        .select('name, phone, proceed_type')
+        .select('name, phone, proceed_type, created_at')
         .eq('as_id', uid)
         .single();
 
@@ -117,6 +118,7 @@ export async function POST(req: NextRequest) {
       subtype = 'restoration';
       meta = {
         proceed_type: repair.proceed_type || '',
+        received_at: repair.created_at || '', // 접수일
       };
     } else {
       return NextResponse.json(
