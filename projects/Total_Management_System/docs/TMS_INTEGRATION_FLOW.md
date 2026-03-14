@@ -1,7 +1,6 @@
 # TMS 전체 연동 흐름도
 
-> 최종 업데이트: 2026-02-28
-> 이카운트 프로덕션 검증 완료 (로그인 + 품목 786개 + 재고 123개)
+> 최종 업데이트: 2026-03-14
 
 ---
 
@@ -23,13 +22,13 @@
        │            TMS (Supabase)            │
        │                                      │
        │  주문  상담  복원수리  판매  계약서  시리얼 │
-       └──┬──────────┬──────────┬─────────────┘
-          │          │          │
-          ▼          ▼          ▼
-    ┌──────────┐ ┌────────┐ ┌──────────┐
-    │ 롯데택배  │ │ 솔라피  │ │ 이카운트  │
-    │ (배송)   │ │(알림톡) │ │ (ERP)    │
-    └──────────┘ └────────┘ └──────────┘
+       └──┬──────────┬────────────────────────┘
+          │          │
+          ▼          ▼
+    ┌──────────┐ ┌────────┐
+    │ 롯데택배  │ │ 솔라피  │
+    │ (배송)   │ │(알림톡) │
+    └──────────┘ └────────┘
 ```
 
 ---
@@ -95,9 +94,9 @@
 
 ---
 
-## 시나리오 2: 오프라인 판매 → 이카운트 ERP
+## 시나리오 2: 오프라인 판매
 
-> 매장 판매 → TMS → 이카운트 매출전표
+> 매장 판매 → TMS (Supabase) 단일 관리
 
 ### 흐름
 
@@ -116,21 +115,10 @@
             │ 판매번호: OS-YYYYMMDD-NNN
             ▼
  ┌──────────────────────────────────┐
- │ [이카운트 동기화] 클릭             │
- │ POST /api/sales/ecount-sync      │
- └──────────┬───────────────────────┘
-            │ 1) 로그인 (SESSION_ID 발급)
-            │ 2) 고객 → ecount_customer_code 매핑
-            │ 3) SaveSale (판매전표 생성)
-            ▼
- ┌──────────────────────────────────┐
- │ 이카운트 ERP                      │
+ │ /sales/[id] 판매 상세 페이지       │
  │                                  │
- │ - 매출전표 자동 생성               │
- │ - 품목코드/수량/단가 매핑          │
- │ - 재고 차감 + 매출 집계 반영       │
- │                                  │
- │ TMS: ecount_sync_status='synced' │
+ │ - 판매 정보 확인                   │
+ │ - 결제 상태 관리                   │
  └──────────────────────────────────┘
 ```
 
@@ -138,14 +126,7 @@
 
 1. 매장 방문 고객 "박미영"님에게 **마모루 세닝 6인치** 2개 현금 판매
 2. TMS `/sales/new`에서 판매 등록 (고객 + 제품 + 수량 + 결제방법)
-3. **[이카운트 동기화]** 클릭 → 이카운트에 매출전표 자동 생성
-4. 이카운트에서 재고 차감 + 매출 집계 자동 반영
-
-### 주의사항
-
-- 이카운트 SESSION_ID는 **50분** 유효, 만료 시 자동 재발급
-- 판매 조회 API는 이카운트 미제공 → TMS Supabase에서 관리
-- 동기화 실패 시 `ecount_sync_status='failed'` 표시, 재시도 가능
+3. Supabase에 판매 기록 저장, 상세 페이지에서 확인
 
 ---
 
@@ -302,22 +283,6 @@ intake ─┬─→ pickup_scheduled ──→ cost_notified ──→ repairing
 
 ---
 
-## 이카운트 ERP 사용 가능 기능 현황
-
-| 기능 | API | 상태 | 사용 시점 |
-|------|-----|------|----------|
-| 로그인 | `/OAPI/V2/OAPILogin` | ✅ 운영 중 | 모든 API 호출 전 자동 (50분 캐시) |
-| 판매전표 입력 | `/OAPI/V2/Sale/SaveSale` | ✅ 운영 중 | 오프라인 판매 → 이카운트 동기화 |
-| 거래처 등록 | `/OAPI/V2/AccountBasic/SaveBasicCust` | ✅ API 준비 | 고객 신규등록 시 동시 생성 (4순위) |
-| 품목 조회 | `/OAPI/V2/InventoryBasic/GetBasicProductsList` | ✅ API 준비 | 786개 품목 조회 가능 |
-| 품목 등록 | `/OAPI/V2/InventoryBasic/SaveBasicProduct` | ✅ API 준비 | 신규 제품 추가 시 |
-| 품목 단건 | `/OAPI/V2/InventoryBasic/ViewBasicProduct` | ✅ API 준비 | 제품 상세 조회 |
-| 재고 현황 | `/OAPI/V2/InventoryBalance/GetListInventoryBalanceStatus` | ✅ API 준비 | 123개 재고 조회 (BASE_DATE 필수) |
-| 재고 단건 | `/OAPI/V2/InventoryBalance/ViewInventoryBalanceStatus` | ✅ API 준비 | 특정 품목 재고 조회 |
-| 판매 조회 | - | ❌ 미제공 | 이카운트 API 미지원 → TMS DB에서 관리 |
-
----
-
 ## API 엔드포인트 전체 맵
 
 ### 아임웹 연동
@@ -336,12 +301,6 @@ intake ─┬─→ pickup_scheduled ──→ cost_notified ──→ repairing
 | `/api/lotte/track` | GET | 필요 | 배송 상태 조회 |
 | `/api/lotte/cancel` | POST | 필요 | 소프트 취소 (상태 변경) |
 | `/api/lotte/check-cancel` | POST | 필요 | ALPS 취소 확인 |
-
-### 이카운트
-
-| 엔드포인트 | 메서드 | 인증 | 목적 |
-|-----------|--------|------|------|
-| `/api/sales/ecount-sync` | POST | 필요 | 오프라인 판매 → ERP 매출전표 |
 
 ### 복원수리
 
@@ -396,10 +355,6 @@ intake ─┬─→ pickup_scheduled ──→ cost_notified ──→ repairing
 | `LOTTE_JOBCUSTCD` | 롯데택배 고객번호 | ✅ |
 | `LOTTE_SENDER_*` | 발송인 정보 (4개) | ✅ |
 | `LOTTE_DEFAULT_FARE` | 운임 구분 | ✅ |
-| `ECOUNT_COM_CODE` | 이카운트 회사코드 | ✅ |
-| `ECOUNT_USER_ID` | 이카운트 사용자 | ✅ |
-| `ECOUNT_API_CERT_KEY` | 이카운트 인증키 (1년) | ✅ |
-| `ECOUNT_ZONE` | 이카운트 존 (AA) | ✅ |
 | `NEXT_PUBLIC_KAKAO_MAP_KEY` | 카카오맵 | ✅ |
 | `GAS_AS_URL` | 복원수리 GAS | ✅ |
 | `GAS_AS_ADMIN_TOKEN` | GAS 인증토큰 | ✅ |
