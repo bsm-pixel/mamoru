@@ -355,7 +355,8 @@ function lotteBookSingle_(order){
     invNo: order.invNo || invNo,
     rcvName: order.rcvName||'', rcvTel:order.rcvTel||'', rcvZip:order.rcvZip||'', rcvAdr:order.rcvAdr||'',
     boxTypCd: order.boxTypCd||'A', gdsNm: order.gdsNm||'복원수리 물품', dlvMsg: order.dlvMsg||'',
-    pickReqYmd: (order.pickReqYmd||'')
+    pickReqYmd: (order.pickReqYmd||''),
+    ordSct: order.ordSct  // 주문:'1', 복원수리:'3' (lotteBuildSnd_ 기본값 '3')
   });
 
   Logger.log('[BOOK try] ordNo=%s invNo=%s', payload.snd_list[0].ordNo, payload.snd_list[0].invNo);
@@ -451,7 +452,6 @@ function doGet(e){
   if (p.action === 'addr_check'){ if (ADMIN_TOKEN && p.token !== ADMIN_TOKEN) return _json({success:false,error:'UNAUTHORIZED'}); return _json(addrCheckMake_(p.zip||'', p.addr||'')); }
   if (p.action === 'diag_addr'){ if (ADMIN_TOKEN && p.token !== ADMIN_TOKEN) return _json({success:false,error:'UNAUTHORIZED'}); return _json(diagAddr_()); }
   if (p.action === 'diag_cancel'){ if (ADMIN_TOKEN && p.token !== ADMIN_TOKEN) return _json({success:false,error:'UNAUTHORIZED'}); return _json(diagCancel()); }
-  if (p.action === 'diag_config'){ if (ADMIN_TOKEN && p.token !== ADMIN_TOKEN) return _json({success:false,error:'UNAUTHORIZED'}); var r=selfTestEnv_(); var P2=PropertiesService.getScriptProperties(); r.client_key_head30=(P2.getProperty('LOTTE_CLIENT_KEY_PROD')||'').slice(0,30); r.client_key_tail20=(P2.getProperty('LOTTE_CLIENT_KEY_PROD')||'').slice(-20); return _json(r); }
   if (p.action === 'dupcheck'){ return _json(findDupAS_(p.phone||'', p.addr1||'')); }
   // Admin 로그인
   if (p.action === 'admin_login') {

@@ -11,10 +11,16 @@ export async function POST(request: NextRequest) {
     const { invNo, orderId } = await request.json();
     if (!orderId) return NextResponse.json({ error: 'MISSING_ORDER_ID' }, { status: 400 });
 
-    // Supabase 상태를 cancel_pending으로 변경 (송장번호는 유지 — ALPS 확인용)
+    // 송장 정보 초기화 + 배송대기로 복귀 (재생성 가능)
     await (supabase as any)
       .from('orders')
-      .update({ status: 'cancel_pending' })
+      .update({
+        status: 'standby',
+        invoice_number: null,
+        courier_code: null,
+        courier_name: null,
+        shipped_at: null,
+      })
       .eq('id', orderId);
 
     console.log('[lotte/cancel] 소프트 취소:', { invNo, orderId });
