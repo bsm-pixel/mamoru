@@ -11,11 +11,11 @@ export async function POST(request: NextRequest) {
     const { invNo, orderId } = await request.json();
     if (!orderId) return NextResponse.json({ error: 'MISSING_ORDER_ID' }, { status: 400 });
 
-    // 송장 정보 초기화 + 배송대기로 복귀 (재생성 가능)
+    // 송장 정보 초기화 + 결제완료로 복귀 (재생성 가능)
     await (supabase as any)
       .from('orders')
       .update({
-        status: 'standby',
+        status: 'pay_done',
         invoice_number: null,
         courier_code: null,
         courier_name: null,
