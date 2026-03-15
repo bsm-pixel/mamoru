@@ -149,6 +149,11 @@ export async function bookSingle(
   const invNo = await nextWaybill();
   const payload = buildSndPayload(cfg, { ...order, invNo });
 
+  // DEBUG: ALPS 전송 페이로드 로깅
+  console.log('[ALPS_DEBUG] url:', cfg.url);
+  console.log('[ALPS_DEBUG] invNo:', invNo);
+  console.log('[ALPS_DEBUG] payload:', JSON.stringify(payload, null, 2));
+
   const r = await httpPost(cfg.url, alpsHeaders(cfg.clientKey), payload, 3);
   if (!r.ok) {
     throw new Error(`LOTTE_HTTP_${r.code}: ${JSON.stringify(r.json).slice(0, 200)}`);
