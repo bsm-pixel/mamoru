@@ -110,7 +110,7 @@ function buildSndPayload(cfg: LotteConfig, req: LotteBookRequest) {
       {
         jobCustCd: cfg.jobCustCd,
         ustRtgSctCd: '01',
-        ordSct: req.ordSct || '1', // 1:일반 2:교환 3:AS
+        ordSct: req.ordSct || '3', // GAS와 동일 — 거래처 286703 주소 검증 통과용
         fareSctCd: cfg.fareSctCd,
         ordNo: req.ordNo || '',
         invNo: req.invNo || '',
