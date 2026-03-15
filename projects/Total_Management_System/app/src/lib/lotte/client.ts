@@ -14,6 +14,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { randomUUID } from 'crypto';
 
 /** 환경변수에서 설정 로드 (lotteConfig_ 포팅) */
+// 한글 값은 Vercel env var에서 인코딩 깨짐 → 코드에 직접 기입
 function getConfig(): LotteConfig {
   return {
     url: process.env.LOTTE_API_URL || '',
@@ -24,10 +25,10 @@ function getConfig(): LotteConfig {
     clientKey: process.env.LOTTE_CLIENT_KEY || '',
     jobCustCd: process.env.LOTTE_JOBCUSTCD || '',
     sender: {
-      name: process.env.LOTTE_SENDER_NAME || '',
-      tel: process.env.LOTTE_SENDER_TEL || '',
-      zip: process.env.LOTTE_SENDER_ZIP || '',
-      addr: process.env.LOTTE_SENDER_ADDR || '',
+      name: '마모루',
+      tel: '02-6326-0426',
+      zip: '08362',
+      addr: '서울특별시 구로구 부광로 88 SKV1, B동 311호',
     },
     fareSctCd: process.env.LOTTE_DEFAULT_FARE || '03',
   };
@@ -148,11 +149,6 @@ export async function bookSingle(
 
   const invNo = await nextWaybill();
   const payload = buildSndPayload(cfg, { ...order, invNo });
-
-  // DEBUG: ALPS 전송 페이로드 로깅
-  console.log('[ALPS_DEBUG] url:', cfg.url);
-  console.log('[ALPS_DEBUG] invNo:', invNo);
-  console.log('[ALPS_DEBUG] payload:', JSON.stringify(payload, null, 2));
 
   const r = await httpPost(cfg.url, alpsHeaders(cfg.clientKey), payload, 3);
   if (!r.ok) {
