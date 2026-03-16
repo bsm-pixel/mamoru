@@ -1,7 +1,7 @@
 # MAMORU 시스템 구축 — TODO
 
 > 하위 프로젝트 5개로 분류 — 완료 시 [x] 체크, 신규 항목 추가
-> 최종 수정: 2026-03-14
+> 최종 수정: 2026-03-16
 
 ---
 
@@ -18,6 +18,20 @@
 - [ ] /inventory 재고 현황 + 저재고 필터
 - [ ] /reports 회계 리포트 + 엑셀 다운로드
 - [ ] /reports/transaction 거래내역서 인쇄
+
+### 완료 (03-16)
+- [x] staleTime 30s 명시 (7개 목록 훅) ✅
+- [x] 캐시 무효화 스코프 축소 (hub-stats 자연 갱신 위임) ✅
+- [x] 페이지네이션 전체 건수 표시 ✅
+- [x] EmptyState 공통 컴포넌트 (4+2개 페이지) ✅
+- [x] SearchInput / Pagination 공통 컴포넌트 (6개 페이지) ✅
+- [x] Optimistic Update (repair/consultation 상태변경) ✅
+- [x] syncOrders upsert 트랜잭션 보호 ✅
+- [x] 상담→계약서→판매 CTA 연결 ✅
+- [x] useHubStats RPC 최적화 (14쿼리→1 RPC) ✅
+- [x] 액션칩 모바일 줄바꿈 정리 ✅
+- [x] terracotta → 모노크롬 팔레트 전환 (globals.css) ✅
+- [x] repair-detail-panel 높이 flex-1 전환 ✅
 
 ### 기능 개발
 - [ ] 계약서 PDF/이미지 생성 (html2canvas or 서버사이드)
