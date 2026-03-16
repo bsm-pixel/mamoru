@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePurchaseOrders } from '@/hooks/use-purchasing';
 import { formatKRW, formatDate } from '@/lib/utils/format';
-import { Search, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
+import { SearchInput } from '@/components/ui/search-input';
+import { Pagination } from '@/components/ui/pagination';
+import { Plus, Truck } from 'lucide-react';
 import type { PurchaseOrder } from '@/lib/supabase/types';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -66,16 +69,11 @@ export default function PurchasingPage() {
             <Plus size={14} />
             발주 작성
           </Button>
-          <div className="flex-1 relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              placeholder="발주번호, 매입처 검색"
-              className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
-            />
-          </div>
+          <SearchInput
+            value={search}
+            onChange={(v) => { setSearch(v); setPage(1); }}
+            placeholder="발주번호, 매입처 검색"
+          />
         </div>
 
         {/* 상태 탭 */}
@@ -103,9 +101,7 @@ export default function PurchasingPage() {
               ))}
             </div>
           ) : orders.length === 0 ? (
-            <div className="flex items-center justify-center h-40 text-sm text-neutral-400">
-              발주 내역이 없습니다
-            </div>
+            <EmptyState icon={Truck} message="발주 내역이 없습니다" />
           ) : (
             <div className="divide-y divide-neutral-100">
               {orders.map((po) => (
@@ -115,20 +111,7 @@ export default function PurchasingPage() {
           )}
         </Card>
 
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-neutral-400">총 {total}건</span>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                <ChevronLeft size={16} />
-              </Button>
-              <span className="text-sm text-neutral-500">{page} / {totalPages}</span>
-              <Button variant="ghost" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-                <ChevronRight size={16} />
-              </Button>
-            </div>
-          )}
-        </div>
+        <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
       </div>
     </>
   );

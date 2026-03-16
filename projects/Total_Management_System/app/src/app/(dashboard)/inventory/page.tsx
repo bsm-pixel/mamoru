@@ -8,7 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useInventory, type InventoryItem } from '@/hooks/use-inventory';
 import { formatKRW } from '@/lib/utils/format';
-import { Search, AlertTriangle, Package, Boxes, TrendingDown, ArrowUpDown } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
+import { SearchInput } from '@/components/ui/search-input';
+import { AlertTriangle, Package, Boxes, TrendingDown, ArrowUpDown } from 'lucide-react';
 
 const CATEGORY_TABS = [
   { value: '', label: '전체' },
@@ -97,16 +99,11 @@ export default function InventoryPage() {
 
         {/* 검색 + 필터 */}
         <div className="flex items-center gap-3">
-          <div className="flex-1 relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="제품명, SKU, 바코드 검색"
-              className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
-            />
-          </div>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="제품명, SKU, 바코드 검색"
+          />
           <button
             onClick={() => setLowStockOnly(!lowStockOnly)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1 ${
@@ -146,9 +143,7 @@ export default function InventoryPage() {
               ))}
             </div>
           ) : sorted.length === 0 ? (
-            <div className="flex items-center justify-center h-40 text-sm text-neutral-400">
-              {lowStockOnly ? '저재고 제품이 없습니다' : '제품이 없습니다'}
-            </div>
+            <EmptyState icon={Boxes} message={lowStockOnly ? '저재고 제품이 없습니다' : '제품이 없습니다'} />
           ) : (
             <>
               {/* 헤더 (PC) */}
