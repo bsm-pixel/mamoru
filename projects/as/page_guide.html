@@ -242,6 +242,7 @@ img[src=""], video[src=""] {
 #tab-intro {
   background: var(--void);
   color: var(--cream);
+  padding-top: 32px; /* 탭 바와 콘텐츠 사이 여백 */
   padding-bottom: 36px;
 }
 
@@ -271,7 +272,7 @@ img[src=""], video[src=""] {
   background: rgba(255,255,255,0.03);
   border-radius: 14px;
   overflow: hidden;
-  margin: 24px 24px 0;
+  margin: 40px 24px 0; /* 상단 여백 확보 — 다크 배경 상단에 붙지 않게 */
   width: calc(100% - 48px);
 }
 
@@ -1652,6 +1653,9 @@ img[src=""], video[src=""] {
       <video autoplay muted loop playsinline src="videos/복원수리안내히어로영상.mp4"></video>
     </div>
 
+    <!-- 영상 → 카피 전환 구간 -->
+    <div class="intro-divider"></div>
+
     <!-- ② 선언 멘트 — 정체성 확립 -->
     <div class="intro-appeal">
       <span class="intro-appeal-label">MAMORU RESTORATION</span>
@@ -1803,7 +1807,6 @@ img[src=""], video[src=""] {
         </div>
         <p class="intro-ba-hint">좌우로 밀어 더 보기 →</p>
       </div>
-    </div>
 
     <div class="intro-divider"></div>
 
