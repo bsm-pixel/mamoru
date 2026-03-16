@@ -326,165 +326,188 @@ button[class*="mm-"]:focus-visible {
 
 
 /* ══════════════════════════════════════════════════════════════
-   [3]. Trust Numbers — 숫자 4개
+   [3]. 원칙 선언 — "하지 않는 것"
    ══════════════════════════════════════════════════════════════ */
-.mm-trust {
+.mm-principles {
   background: var(--void);
   padding: 64px 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
 }
-.mm-trust__grid {
+.mm-principles__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 32px 16px;
+  gap: 24px 16px;
+}
+.mm-principles__item {
   text-align: center;
+  padding: 20px 12px;
 }
-.mm-trust__number {
-  font-family: var(--font-display);
-  font-size: 36px;
-  font-weight: 900;
+.mm-principles__rule {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
   color: var(--cream);
-  line-height: 1;
-  letter-spacing: -0.02em;
+  line-height: 1.3;
+  margin-bottom: 6px;
 }
-.mm-trust__label {
-  margin-top: 8px;
-  font-size: 13px;
-  font-weight: 500;
+.mm-principles__desc {
+  font-size: 12px;
+  font-weight: 400;
   color: var(--warm-gray);
+  line-height: 1.5;
 }
 
 @media (min-width: 768px) {
-  .mm-trust__grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
-  .mm-trust__number { font-size: 44px; }
-  .mm-trust__label { font-size: 14px; }
+  .mm-principles__grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .mm-principles__rule { font-size: 16px; }
+  .mm-principles__desc { font-size: 13px; }
 }
 @media (min-width: 1024px) {
-  .mm-trust {
+  .mm-principles {
     background: var(--cream);
     padding: 100px 0;
+    border-top: 1px solid var(--sand);
   }
-  .mm-trust__number { font-size: 52px; color: var(--void); }
-  .mm-trust__label { color: var(--warm-gray); font-size: 15px; }
+  .mm-principles__item { padding: 24px 16px; }
+  .mm-principles__rule { font-size: 17px; color: var(--void); }
+  .mm-principles__desc { font-size: 14px; color: var(--warm-gray); }
 }
 
 
 /* ══════════════════════════════════════════════════════════════
-   [4]. 가위 프리뷰 — 대표 4~6종
+   [4]. 목적별 안내 — B안: 가위 찾기(대형) + 복원수리/도구(소형 2개)
    ══════════════════════════════════════════════════════════════ */
-.mm-featured {
+.mm-finder {
   background: var(--void);
-  padding: 80px 0 40px;
+  padding: 80px 0;
 }
-.mm-section-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 32px;
+.mm-finder__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--warm-gray);
+  margin-bottom: 24px;
 }
-.mm-section-head__bar {
-  width: 3px;
-  height: 20px;
-  background: var(--cream);
-  border-radius: 2px;
-  flex-shrink: 0;
-  margin-top: 2px;
+
+/* 대형 카드: 가위 찾기 */
+.mm-finder__main {
+  display: block;
+  background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  margin-bottom: 12px;
+  transition: background var(--duration);
 }
-.mm-section-head__title {
-  font-family: var(--font-body);
+.mm-finder__main-title {
   font-size: 18px;
   font-weight: 700;
   color: var(--cream);
-  letter-spacing: -0.02em;
+  margin-bottom: 6px;
 }
-.mm-section-head__desc {
+.mm-finder__main-desc {
   font-size: 13px;
-  font-weight: 400;
-  color: var(--warm-gray);
-  margin-top: 4px;
-  line-height: 1.5;
+  color: var(--mist);
+  margin-bottom: 20px;
+  line-height: 1.6;
 }
+/* 상황별 칩 */
+.mm-finder__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mm-finder__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cream);
+  transition: all var(--duration-fast);
+}
+.mm-finder__chip:active { transform: scale(0.96); }
 
-.mm-products {
+/* 소형 카드 2개: 복원수리 + 도구 */
+.mm-finder__sub-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
-.mm-product-card {
+.mm-finder__sub {
   display: block;
   background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition: transform var(--duration), box-shadow var(--duration);
+  padding: 24px 20px;
+  transition: background var(--duration);
 }
-.mm-product-card__thumb {
-  aspect-ratio: 1;
-  overflow: hidden;
-  background: var(--shell);
-}
-.mm-product-card__thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.4s var(--ease);
-}
-.mm-product-card__info {
-  padding: 14px 14px 16px;
-}
-.mm-product-card__name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--cream);
-  line-height: 1.35;
-  margin-bottom: 4px;
-}
-.mm-product-card__price {
-  font-family: var(--font-display);
-  font-size: 14px;
+.mm-finder__sub-title {
+  font-size: 15px;
   font-weight: 700;
   color: var(--cream);
+  margin-bottom: 4px;
 }
-
-.mm-more-btn-wrap {
-  text-align: center;
-  padding: 24px 0 0;
-}
-.mm-more-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-  font-weight: 600;
+.mm-finder__sub-desc {
+  font-size: 12px;
   color: var(--warm-gray);
-  padding: 12px 24px;
-  border: 1px solid var(--warm-gray);
-  border-radius: var(--radius-sm);
-  transition: all var(--duration);
+  line-height: 1.5;
+}
+.mm-finder__sub-arrow {
+  display: block;
+  margin-top: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mist);
 }
 
 @media (min-width: 768px) {
-  .mm-products { gap: 16px; }
-  .mm-product-card__info { padding: 16px 16px 20px; }
-  .mm-product-card__name { font-size: 14px; }
-  .mm-product-card__price { font-size: 15px; }
+  .mm-finder__main { padding: 36px 32px; }
+  .mm-finder__main-title { font-size: 20px; }
+  .mm-finder__main-desc { font-size: 14px; }
+  .mm-finder__chip { font-size: 14px; padding: 12px 20px; }
+  .mm-finder__sub { padding: 28px 24px; }
+  .mm-finder__sub-title { font-size: 16px; }
+  .mm-finder__sub-desc { font-size: 13px; }
 }
 @media (min-width: 1024px) {
-  .mm-featured {
+  .mm-finder {
     background: var(--cream);
-    padding: 120px 0 40px;
+    padding: 120px 0;
   }
-  .mm-section-head__bar { background: var(--void); }
-  .mm-section-head__title { color: var(--void); font-size: 22px; }
-  .mm-section-head__desc { color: var(--stone); font-size: 14px; }
-  .mm-products { grid-template-columns: repeat(4, 1fr); gap: 20px; }
-  .mm-product-card { background: var(--white); box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
-  .mm-product-card__name { color: var(--void); }
-  .mm-product-card__price { color: var(--void); }
-  .mm-more-btn { color: var(--stone); border-color: var(--sand); }
+  .mm-finder__label { color: var(--stone); }
+  .mm-finder__main {
+    background: var(--white);
+    border-color: var(--sand);
+    padding: 40px 36px;
+  }
+  .mm-finder__main-title { color: var(--void); font-size: 22px; }
+  .mm-finder__main-desc { color: var(--stone); font-size: 15px; }
+  .mm-finder__chip {
+    background: var(--shell);
+    border-color: var(--sand);
+    color: var(--void);
+  }
+  .mm-finder__sub {
+    background: var(--white);
+    border-color: var(--sand);
+    padding: 32px 28px;
+  }
+  .mm-finder__sub-title { color: var(--void); }
+  .mm-finder__sub-desc { color: var(--stone); font-size: 14px; }
+  .mm-finder__sub-arrow { color: var(--stone); }
 }
 @media (hover: hover) {
-  .mm-product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-  .mm-product-card:hover .mm-product-card__thumb img { transform: scale(1.04); }
-  .mm-more-btn:hover { color: var(--void); border-color: var(--void); background: var(--shell); }
+  .mm-finder__main:hover { background: rgba(255,255,255,0.08); }
+  .mm-finder__chip:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); }
+  .mm-finder__sub:hover { background: rgba(255,255,255,0.08); }
+}
+@media (hover: hover) and (min-width: 1024px) {
+  .mm-finder__main:hover { background: var(--shell); }
+  .mm-finder__chip:hover { background: var(--parchment); border-color: var(--mist); }
+  .mm-finder__sub:hover { background: var(--shell); }
 }
 
 
@@ -825,26 +848,26 @@ button[class*="mm-"]:focus-visible {
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     [3]. Trust Numbers — 숫자 4개
+     [3]. 원칙 선언 — "하지 않는 것"
      ══════════════════════════════════════════════════════════════ -->
-<section class="mm-trust">
+<section class="mm-principles">
   <div class="mm-inner">
-    <div class="mm-trust__grid">
-      <div class="mm-trust__item mm-anim mm-anim-stagger">
-        <div class="mm-trust__number">10+</div>
-        <div class="mm-trust__label">년 미용가위 전문</div>
+    <div class="mm-principles__grid">
+      <div class="mm-principles__item mm-anim mm-anim-stagger">
+        <div class="mm-principles__rule">추천하지 않습니다</div>
+        <div class="mm-principles__desc">고객이 직접 선택합니다</div>
       </div>
-      <div class="mm-trust__item mm-anim mm-anim-stagger">
-        <div class="mm-trust__number">160+</div>
-        <div class="mm-trust__label">고객 리뷰</div>
+      <div class="mm-principles__item mm-anim mm-anim-stagger">
+        <div class="mm-principles__rule">할인하지 않습니다</div>
+        <div class="mm-principles__desc">정가가 곧 신뢰입니다</div>
       </div>
-      <div class="mm-trust__item mm-anim mm-anim-stagger">
-        <div class="mm-trust__number">100%</div>
-        <div class="mm-trust__label">맞춤 상담</div>
+      <div class="mm-principles__item mm-anim mm-anim-stagger">
+        <div class="mm-principles__rule">강매하지 않습니다</div>
+        <div class="mm-principles__desc">상담 후 구매 안 해도 됩니다</div>
       </div>
-      <div class="mm-trust__item mm-anim mm-anim-stagger">
-        <div class="mm-trust__number">0</div>
-        <div class="mm-trust__label">할인 · 강매</div>
+      <div class="mm-principles__item mm-anim mm-anim-stagger">
+        <div class="mm-principles__rule">외주하지 않습니다</div>
+        <div class="mm-principles__desc">복원수리 자체 진행합니다</div>
       </div>
     </div>
   </div>
@@ -852,23 +875,37 @@ button[class*="mm-"]:focus-visible {
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     [4]. 가위 프리뷰 — 대표 추천 가위
+     [4]. 목적별 안내 — B안: 가위 찾기 + 복원수리 + 도구·소모품
      ══════════════════════════════════════════════════════════════ -->
-<section class="mm-featured">
+<section class="mm-finder">
   <div class="mm-inner">
-    <div class="mm-section-head mm-anim">
-      <span class="mm-section-head__bar"></span>
-      <div>
-        <h2 class="mm-section-head__title">대표 추천 가위</h2>
-        <p class="mm-section-head__desc">지금 가장 안정적인 컨디션과 밸런스를 기준으로 먼저 고른 4가지</p>
+    <p class="mm-finder__label mm-anim">무엇을 찾고 계신가요?</p>
+
+    <!-- 대형 카드: 가위 찾기 -->
+    <a href="/58" class="mm-finder__main mm-anim">
+      <div class="mm-finder__main-title">가위를 찾고 있다면</div>
+      <div class="mm-finder__main-desc">상황에 맞는 가위, 같이 찾아드립니다</div>
+      <div class="mm-finder__chips">
+        <span class="mm-finder__chip">처음 구매</span>
+        <span class="mm-finder__chip">인턴 · 스탭</span>
+        <span class="mm-finder__chip">경력 디자이너</span>
+        <span class="mm-finder__chip">내 가위가 안 맞을 때</span>
       </div>
+    </a>
+
+    <!-- 소형 카드 2개 -->
+    <div class="mm-finder__sub-grid">
+      <a href="/53" class="mm-finder__sub mm-anim mm-anim-stagger">
+        <div class="mm-finder__sub-title">복원수리</div>
+        <div class="mm-finder__sub-desc">예전 같지 않은 커트감,<br>되찾아 드립니다</div>
+        <span class="mm-finder__sub-arrow">자세히 보기 →</span>
+      </a>
+      <a href="/29" class="mm-finder__sub mm-anim mm-anim-stagger">
+        <div class="mm-finder__sub-title">도구 · 소모품</div>
+        <div class="mm-finder__sub-desc">빗 · 분무기 · 핀셋 ·<br>가위집 · 정리용품</div>
+        <span class="mm-finder__sub-arrow">둘러보기 →</span>
+      </a>
     </div>
-    <div class="mm-products" id="mmFeatured">
-      <!-- JS 렌더링 -->
-    </div>
-  </div>
-  <div class="mm-more-btn-wrap mm-inner">
-    <a href="/29" class="mm-more-btn">전체 가위 보기 →</a>
   </div>
 </section>
 
@@ -945,14 +982,6 @@ button[class*="mm-"]:focus-visible {
      ═══════════════════════════════════════════════════════════════ */
   var DATA = {
 
-    /* ✏️ [4] 대표 추천 가위 */
-    featured: [
-      { name: '마모루 소프트 블런트 5.5', price: '350,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/034e160aa5620.png', link: '/product/1' },
-      { name: '마모루 라이트 블런트 5.5', price: '280,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/547dbc7393589.png', link: '/product/2' },
-      { name: '마모루 파워 블런트 6.0', price: '380,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/bd3dc559f5165.png', link: '/product/3' },
-      { name: '마모루 프리미엄 틴닝 6.0', price: '320,000원', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/d6f209ef86490.png', link: '/product/4' }
-    ],
-
     /* ✏️ [6] 고객 후기 */
     reviews: {
       consulting: [
@@ -979,21 +1008,6 @@ button[class*="mm-"]:focus-visible {
   /* ═══════════════════════════════════════════════════════════════
      렌더링 함수
      ═══════════════════════════════════════════════════════════════ */
-
-  /* 상품 카드 */
-  function renderProducts(containerId, items) {
-    var el = document.getElementById(containerId);
-    if (!el) return;
-    el.innerHTML = items.map(function(p) {
-      return '<a href="' + p.link + '" class="mm-product-card mm-anim mm-anim-stagger">' +
-        '<div class="mm-product-card__thumb"><img src="' + p.img + '" alt="' + p.name + '"></div>' +
-        '<div class="mm-product-card__info">' +
-          '<div class="mm-product-card__name">' + p.name + '</div>' +
-          '<div class="mm-product-card__price">' + p.price + '</div>' +
-        '</div>' +
-        '</a>';
-    }).join('');
-  }
 
   /* 고객 후기 */
   function renderReviews(type) {
@@ -1094,7 +1108,6 @@ button[class*="mm-"]:focus-visible {
      초기화
      ═══════════════════════════════════════════════════════════════ */
   function init() {
-    renderProducts('mmFeatured', DATA.featured);
     renderReviews('consulting');
     initReviewTabs();
     initAnimations();
