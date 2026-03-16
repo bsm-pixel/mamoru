@@ -10,7 +10,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomers } from '@/hooks/use-customers';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Search, ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import { SearchInput } from '@/components/ui/search-input';
+import { Pagination } from '@/components/ui/pagination';
+import { Users } from 'lucide-react';
 import type { Customer } from '@/lib/supabase/types';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -65,16 +67,11 @@ export default function CustomersPage() {
 
       <div className="px-4 md:px-6 py-4 space-y-4">
         {/* 검색 */}
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="고객명, 전화번호, 업체명 검색"
-            className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
-          />
-        </div>
+        <SearchInput
+          value={search}
+          onChange={(v) => { setSearch(v); setPage(1); }}
+          placeholder="고객명, 전화번호, 업체명 검색"
+        />
 
         {/* 유형 필터 */}
         <div className="flex gap-1.5 overflow-x-auto pb-1">
@@ -116,21 +113,7 @@ export default function CustomersPage() {
           )}
         </Card>
 
-        {/* 건수 + 페이지네이션 */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-neutral-400">총 {total}명</span>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                <ChevronLeft size={16} />
-              </Button>
-              <span className="text-sm text-neutral-500">{page} / {totalPages}</span>
-              <Button variant="ghost" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-                <ChevronRight size={16} />
-              </Button>
-            </div>
-          )}
-        </div>
+        <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} unit="명" />
       </div>
     </>
   );
