@@ -52,13 +52,13 @@ export function RepairActionChips({ repair: r }: RepairActionChipsProps) {
   };
 
   return (
-    <div className="flex flex-wrap gap-1.5 mt-2">
+    <div className="flex flex-wrap gap-1 mt-2">
       {/* 수리내역서 */}
       <button
         onClick={handleOpenReport}
-        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 text-neutral-600 hover:bg-neutral-200 transition"
+        className="inline-flex items-center gap-0.5 px-2 py-1 rounded-md text-[11px] font-medium bg-neutral-100 text-neutral-600 hover:bg-neutral-200 transition"
       >
-        <FileText size={12} />
+        <FileText size={11} />
         내역서
       </button>
 
@@ -66,27 +66,27 @@ export function RepairActionChips({ repair: r }: RepairActionChipsProps) {
       <button
         onClick={isPaid ? undefined : handleMarkPaid}
         disabled={isPaid || updateFields.isPending}
-        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
+        className={`inline-flex items-center gap-0.5 px-2 py-1 rounded-md text-[11px] font-medium transition ${
           isPaid
             ? 'bg-green-100 text-green-700'
             : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
         }`}
       >
-        {isPaid ? <Check size={12} /> : <CreditCard size={12} />}
-        {isPaid ? `입금 ✓ ${formatKRW(r.total_amount)}` : '입금확인'}
+        {isPaid ? <Check size={11} /> : <CreditCard size={11} />}
+        {isPaid ? `입금 ✓` : '입금확인'}
       </button>
 
       {/* 송장생성 */}
       <button
         onClick={hasInvoice ? undefined : handleCreateInvoice}
         disabled={hasInvoice || shipRepair.isPending}
-        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
+        className={`inline-flex items-center gap-0.5 px-2 py-1 rounded-md text-[11px] font-medium transition ${
           hasInvoice
             ? 'bg-green-100 text-green-700'
             : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
         }`}
       >
-        {hasInvoice ? <Check size={12} /> : <Truck size={12} />}
+        {hasInvoice ? <Check size={11} /> : <Truck size={11} />}
         {hasInvoice ? `송장 ✓` : '송장생성'}
       </button>
 
@@ -94,13 +94,13 @@ export function RepairActionChips({ repair: r }: RepairActionChipsProps) {
       <button
         onClick={isPacked ? undefined : handleMarkPacked}
         disabled={isPacked || updateFields.isPending}
-        className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
+        className={`inline-flex items-center gap-0.5 px-2 py-1 rounded-md text-[11px] font-medium transition ${
           isPacked
             ? 'bg-green-100 text-green-700'
             : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
         }`}
       >
-        {isPacked ? <Check size={12} /> : <Package size={12} />}
+        {isPacked ? <Check size={11} /> : <Package size={11} />}
         {isPacked ? '포장 ✓' : '포장완료'}
       </button>
     </div>
