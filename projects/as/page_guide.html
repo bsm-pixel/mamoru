@@ -992,27 +992,12 @@ img[src=""], video[src=""] {
   text-align: center;
 }
 
-/* 원가 취소선 */
+/* 배송비 보조 설명 */
 .as-shipping-original {
   text-align: center;
   margin-bottom: 14px;
   font-size: 12px;
   color: var(--text-tertiary);
-}
-.as-shipping-original .strike {
-  text-decoration: line-through;
-  margin-right: 2px;
-}
-.as-shipping-original .tag {
-  display: inline-block;
-  padding: 2px 6px;
-  background: var(--void);
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--cream);
-  margin-left: 4px;
-  vertical-align: middle;
 }
 
 .as-shipping-list {
@@ -1659,7 +1644,7 @@ img[src=""], video[src=""] {
     <!-- ② 선언 멘트 — 정체성 확립 -->
     <div class="intro-appeal">
       <span class="intro-appeal-label">MAMORU RESTORATION</span>
-      <h2>새 가위를 처음 만났던 그 순간으로, 복원합니다</h2>
+      <h2>새 가위를 처음 만났던 그 순간으로,<br>복원합니다</h2>
       <p style="margin-top:8px;">마모루 복원수리 — 대표 직접 책임 & 진행</p>
     </div>
 
@@ -1887,6 +1872,8 @@ img[src=""], video[src=""] {
   <!-- ═══ 탭2: 과정안내 — 5단계 스텝 플로우 (page_as_guide.html 콘텐츠 기반) ═══ -->
   <div class="as-tab-content" id="tab-process">
     <section class="as-section">
+      <h2 class="as-section-title">복원수리 진행과정</h2>
+      <p class="as-section-subtitle">접수부터 발송까지 5단계</p>
       <div class="as-step-flow">
 
         <!-- Step 1: 접수 방식 선택 -->
@@ -1934,6 +1921,7 @@ img[src=""], video[src=""] {
           <div class="as-step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/7aec0a5522785.png" alt="포장"></div>
           <p class="as-step-title">포장 후 가위 보내기</p>
           <p class="as-step-desc">접수 후, 안내드린 포장방법을 참고하여 준비 후 <b>접수방식에 맞추어</b> 마모루로 보내집니다</p>
+          <p style="margin-top:10px;font-size:12px;color:var(--warm-gray);cursor:pointer;text-decoration:underline;text-underline-offset:3px;" onclick="document.querySelector('[data-tab=packing]').click();">포장방법 보기 →</p>
         </div>
 
         <div class="as-step-divider"></div>
@@ -1978,6 +1966,8 @@ img[src=""], video[src=""] {
   <!-- ═══ 탭3: 소요시간 (page_as_guide.html 콘텐츠 기반) ═══ -->
   <div class="as-tab-content" id="tab-duration">
     <section class="as-section">
+      <h2 class="as-section-title">소요시간 안내</h2>
+      <p class="as-section-subtitle">빠르게, 하지만 정확하게</p>
       <div class="as-dur-flow">
 
         <!-- 섹션 1: 핵심 소요일 -->
@@ -1985,9 +1975,8 @@ img[src=""], video[src=""] {
           <h2 class="as-dur-heading">가위를 보내주신 날 기준 2~3일 후 받아보십니다</h2>
           <!-- [IMG] 캘린더 이미지 -->
           <div class="as-dur-cal-img"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/00eeb89f607eb.png" alt="캘린더 이미지"></div>
-          <div class="as-dur-list">
-            <p>* 주말 및 공휴일은 소요일에서 제외됩니다</p>
-            <p>* 수거처리 및 직접발송이 지연될 경우 그에 따른 수령일도 지연됩니다</p>
+          <div class="as-step-note" style="margin-top:20px;">
+            주말 및 공휴일은 소요일에서 제외됩니다. 수거처리 및 직접발송이 지연될 경우 그에 따른 수령일도 지연됩니다.
           </div>
         </div>
 
@@ -2025,7 +2014,7 @@ img[src=""], video[src=""] {
         <!-- 섹션 4: 수냉식 기법 -->
         <div class="as-dur-section">
           <h3 class="as-dur-heading">하지만, 작업 순간의 속도는 빠르지 않습니다</h3>
-          <p class="as-dur-sub" style="margin-top:6px;">수냉식 기법에 의한 ZERO DMG를 우선하여 상처 부위만을 잡아내는 작업 기술을 제공합니다</p>
+          <p class="as-dur-sub" style="margin-top:6px;">수냉식 기법에 의한 손상 없는 복원(ZERO DMG)을 우선하여 상처 부위만을 잡아내는 작업 기술을 제공합니다</p>
           <p class="as-dur-sub" style="margin-top:20px;font-size:15px;font-weight:600;color:var(--stone);">마모루 자체복원의 속도로 진행합니다. 완벽에 의한 만족을 기다려주세요</p>
         </div>
 
@@ -2098,6 +2087,7 @@ img[src=""], video[src=""] {
         <!-- 주석 -->
         <div class="as-shipping-note">
           비용은 입고 후 검수 결과에 따라 자동계산되어 입금 안내 알림톡을 받으시게 됩니다. 수리 불필요한 경우 자루수에서 제외하여 차감됩니다.
+          <p style="margin-top:12px;font-weight:600;color:var(--text-primary);">예) 마모루 가위 3자루 방문수거 → 수리비 30,000원 + 배송비 무료</p>
         </div>
       </div>
     </section>
@@ -2135,7 +2125,7 @@ img[src=""], video[src=""] {
           <div class="as-packing-content">
             <span class="as-packing-step">Step 2</span>
             <h4 class="as-packing-title">구긴 종이 또는 수건으로 감싸주세요</h4>
-            <p class="as-packing-desc">수건의경우 안전하게 다시 돌려보내드립니다</p>
+            <p class="as-packing-desc">수건의 경우 안전하게 다시 돌려보내드립니다</p>
           </div>
         </div>
 
@@ -2155,6 +2145,11 @@ img[src=""], video[src=""] {
 
       <div class="as-packing-note">
         직접 발송의 경우, 꼭 접수 후 발송해주시길 바랍니다. 미접수 상태에서 입고 시 접수자 확인이 어려워 곤란합니다.
+      </div>
+
+      <div style="text-align:center;margin-top:28px;">
+        <p style="font-size:14px;color:var(--text-secondary);margin-bottom:12px;">포장이 완료되셨나요?</p>
+        <button style="padding:12px 28px;background:var(--void);border:none;border-radius:10px;color:var(--cream);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;" onclick="goToASForm();">복원수리 접수하기</button>
       </div>
     </section>
   </div>
@@ -2236,6 +2231,11 @@ img[src=""], video[src=""] {
           <p>가위 입고 후 검수 결과에 따라 자동계산되어 입금 안내 알림톡을 받으시게 됩니다. 안내된 금액을 입금해주시면 복원수리가 진행됩니다.</p>
         </div>
       </div>
+    </div>
+
+    <div style="text-align:center;padding:32px 24px 0;">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">궁금한 점이 더 있으신가요?</p>
+      <a href="https://pf.kakao.com/_xnKxbxmG/chat" target="_blank" rel="noopener" style="display:inline-block;padding:10px 24px;background:var(--shell);border:1px solid var(--border-subtle);border-radius:100px;color:var(--text-primary);font-size:13px;font-weight:600;text-decoration:none;font-family:inherit;">카카오톡으로 문의하기</a>
     </div>
   </div>
 
@@ -2368,7 +2368,11 @@ function goToASForm() {
 
 // 맨 위로 스크롤 (iframe 내부 → 부모 페이지에 postMessage로 요청)
 function scrollToTop() {
-  window.parent.postMessage({ type: 'MAMORU_SCROLL_TOP' }, '*');
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'MAMORU_SCROLL_TOP' }, '*');
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' }); /* 단독 실행 시 fallback */
+  }
 }
 
 /* =========================================================
