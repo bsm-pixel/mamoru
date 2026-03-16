@@ -288,7 +288,14 @@ export default function OrderDetailPage() {
               <div className="flex items-center justify-between p-3 rounded-lg bg-warm-ivory">
                 <div>
                   <p className="text-xs text-neutral-500">{order.courier_name || '롯데택배'}</p>
-                  <p className="text-sm font-bold mt-0.5">{order.invoice_number}</p>
+                  <a
+                    href={`https://www.lotteglogis.com/home/reservation/tracking/link498?InvNo=${order.invoice_number}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-bold mt-0.5 text-terracotta hover:underline inline-block"
+                  >
+                    {order.invoice_number} →
+                  </a>
                 </div>
                 <div className="flex gap-2">
                   <Button

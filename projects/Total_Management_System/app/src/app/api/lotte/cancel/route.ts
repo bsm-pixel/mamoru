@@ -11,15 +11,11 @@ export async function POST(request: NextRequest) {
     const { invNo, orderId } = await request.json();
     if (!orderId) return NextResponse.json({ error: 'MISSING_ORDER_ID' }, { status: 400 });
 
-    // 송장 정보 초기화 + 결제완료로 복귀 (재생성 가능)
+    // cancel_pending으로 전환 — 송장번호는 ALPS 취소 확인까지 유지
     await (supabase as any)
       .from('orders')
       .update({
-        status: 'pay_done',
-        invoice_number: null,
-        courier_code: null,
-        courier_name: null,
-        shipped_at: null,
+        status: 'cancel_pending',
       })
       .eq('id', orderId);
 

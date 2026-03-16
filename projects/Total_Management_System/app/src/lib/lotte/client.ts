@@ -275,6 +275,12 @@ export async function queryStatus(invNo: string): Promise<LotteTrackResult> {
     );
     if (cancelled) return { ok: true, state: 'CANCELLED', raw: json };
 
+    /* 배달완료 감지: godsStatCd '91' = 배달완료 */
+    const delivered = tracking.some(
+      (x: Record<string, unknown>) => String(x.godsStatCd || '') === '91'
+    );
+    if (delivered) return { ok: true, state: 'DELIVERED', raw: json };
+
     const result = Array.isArray(json.result) ? json.result : [];
     if (tracking.length === 0 && result.length === 0) {
       return { ok: true, state: 'NOT_FOUND', raw: json };

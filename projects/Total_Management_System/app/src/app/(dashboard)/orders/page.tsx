@@ -7,9 +7,10 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useOrders, useOrderSync } from '@/hooks/use-orders';
+import { useOrders, useOrderSync, useOrderCounts } from '@/hooks/use-orders';
 import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
-import { RefreshCw, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { RefreshCw, Search, ChevronLeft, ChevronRight, Truck } from 'lucide-react';
+import { InvoiceModal } from '@/components/orders/invoice-modal';
 import type { Order } from '@/lib/supabase/types';
 
 const STATUS_TABS = [
@@ -27,7 +28,9 @@ export default function OrdersPage() {
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
   const sync = useOrderSync();
+  const { data: counts } = useOrderCounts();
 
   const { data, isLoading } = useOrders({ status, search, page, limit: 20 });
   const orders = data?.orders || [];
@@ -76,6 +79,15 @@ export default function OrdersPage() {
               }`}
             >
               {tab.label}
+              {counts && counts[tab.value] > 0 && (
+                <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  status === tab.value
+                    ? 'bg-cream/20 text-cream'
+                    : 'bg-neutral-200 text-neutral-600'
+                }`}>
+                  {counts[tab.value]}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -99,6 +111,7 @@ export default function OrdersPage() {
                   key={order.id}
                   order={order}
                   onClick={() => router.push(`/orders/${order.id}`)}
+                  onInvoice={() => setInvoiceOrder(order)}
                 />
               ))}
             </div>
@@ -130,11 +143,20 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+
+      {/* 인라인 송장 생성 모달 */}
+      {invoiceOrder && (
+        <InvoiceModal
+          open={!!invoiceOrder}
+          onClose={() => setInvoiceOrder(null)}
+          order={invoiceOrder}
+        />
+      )}
     </>
   );
 }
 
-function OrderRow({ order, onClick }: { order: Order; onClick: () => void }) {
+function OrderRow({ order, onClick, onInvoice }: { order: Order; onClick: () => void; onInvoice: () => void }) {
   const statusColor = ORDER_STATUS_COLOR[order.status] || 'bg-neutral-100 text-neutral-500';
 
   return (
@@ -178,8 +200,17 @@ function OrderRow({ order, onClick }: { order: Order; onClick: () => void }) {
           </p>
         )}
       </div>
-      <div className="text-right shrink-0">
+      <div className="text-right shrink-0 flex flex-col items-end gap-1">
         <span className="text-sm font-bold">{formatKRW(order.paid_amount)}</span>
+        {order.status === 'pay_done' && !order.invoice_number && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onInvoice(); }}
+            className="flex items-center gap-1 px-2 py-1 rounded-md bg-terracotta/10 text-terracotta text-[11px] font-semibold hover:bg-terracotta/20 transition"
+          >
+            <Truck size={12} />
+            송장생성
+          </button>
+        )}
       </div>
     </div>
   );

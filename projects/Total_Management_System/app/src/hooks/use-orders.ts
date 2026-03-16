@@ -43,6 +43,39 @@ export function useOrders(filters?: {
   });
 }
 
+/** 상태별 주문 건수 조회 (탭 배지용) */
+export function useOrderCounts() {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['order-counts'],
+    queryFn: async () => {
+      const statuses = ['pay_done', 'preparing', 'shipping', 'delivered', 'cancel_pending', 'cancelled'];
+      const counts: Record<string, number> = {};
+
+      const results = await Promise.all(
+        statuses.map(async (s) => {
+          const { count } = await supabase
+            .from('orders')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', s);
+          return { status: s, count: count || 0 };
+        })
+      );
+
+      let total = 0;
+      results.forEach((r) => {
+        counts[r.status] = r.count;
+        total += r.count;
+      });
+      counts['all'] = total;
+
+      return counts;
+    },
+    staleTime: 30_000, /* 30초 캐시 — 탭 전환마다 재요청 방지 */
+  });
+}
+
 /** 주문 단건 조회 (품목 포함) */
 export function useOrder(id: string) {
   const supabase = createClient();
