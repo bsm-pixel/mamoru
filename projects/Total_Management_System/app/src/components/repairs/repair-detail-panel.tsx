@@ -54,7 +54,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
   };
 
   return (
-    <div className="overflow-y-auto h-[calc(100vh-130px)] space-y-4 pr-1">
+    <div className="flex-1 overflow-y-auto space-y-4 pr-1">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>

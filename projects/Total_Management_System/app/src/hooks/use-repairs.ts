@@ -22,6 +22,7 @@ export function useRepairs(filters?: {
 
   return useQuery({
     queryKey: ['repairs', filters],
+    staleTime: 30_000,
     queryFn: async () => {
       let query = supabase
         .from('repairs')
@@ -99,7 +100,7 @@ export function useRepair(id: string) {
   });
 }
 
-/** 상태 변경 */
+/** 상태 변경 (optimistic update) */
 export function useUpdateRepairStatus() {
   const queryClient = useQueryClient();
 
@@ -121,21 +122,43 @@ export function useUpdateRepairStatus() {
       }
       return res.json();
     },
+    onMutate: async ({ id, status }) => {
+      // 진행 중인 refetch 취소
+      await queryClient.cancelQueries({ queryKey: ['repair', id] });
+      await queryClient.cancelQueries({ queryKey: ['repair-tabs'] });
+
+      // 스냅샷 저장
+      const prevDetail = queryClient.getQueryData(['repair', id]);
+      const prevTabs = queryClient.getQueryData(['repair-tabs']);
+
+      // repair 상세 캐시 즉시 업데이트
+      queryClient.setQueryData(['repair', id], (old: unknown) => {
+        if (!old || typeof old !== 'object') return old;
+        const data = old as { repair: Repair; inspections: RepairInspection[]; history: RepairHistory[] };
+        return { ...data, repair: { ...data.repair, status } };
+      });
+
+      return { prevDetail, prevTabs };
+    },
+    onError: (err, { id }, context) => {
+      // 롤백
+      if (context?.prevDetail) queryClient.setQueryData(['repair', id], context.prevDetail);
+      if (context?.prevTabs) queryClient.setQueryData(['repair-tabs'], context.prevTabs);
+      toast.error('상태 변경 실패: ' + String(err));
+    },
     onSuccess: () => {
       toast.success('상태가 변경되었습니다');
-      queryClient.invalidateQueries({ queryKey: ['repairs'] });
-      queryClient.invalidateQueries({ queryKey: ['repair'] });
-      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['repair-dashboard-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
     },
-    onError: (err) => {
-      toast.error('상태 변경 실패: ' + String(err));
+    onSettled: (_d, _e, { id }) => {
+      // 서버 응답 후 캐시 재검증
+      queryClient.invalidateQueries({ queryKey: ['repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['repair', id] });
+      queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
     },
   });
 }
 
-/** 필드 업데이트 (상태 변경 없이) */
+/** 필드 업데이트 (상태 변경 없이, optimistic update) */
 export function useUpdateRepairFields() {
   const queryClient = useQueryClient();
 
@@ -155,13 +178,27 @@ export function useUpdateRepairFields() {
       }
       return res.json();
     },
+    onMutate: async ({ id, ...fields }) => {
+      await queryClient.cancelQueries({ queryKey: ['repair', id] });
+      const prevDetail = queryClient.getQueryData(['repair', id]);
+
+      queryClient.setQueryData(['repair', id], (old: unknown) => {
+        if (!old || typeof old !== 'object') return old;
+        const data = old as { repair: Repair; inspections: RepairInspection[]; history: RepairHistory[] };
+        return { ...data, repair: { ...data.repair, ...fields } };
+      });
+
+      return { prevDetail };
+    },
+    onError: (err, { id }, context) => {
+      if (context?.prevDetail) queryClient.setQueryData(['repair', id], context.prevDetail);
+      toast.error('수정 실패: ' + String(err));
+    },
     onSuccess: () => {
       toast.success('수정되었습니다');
-      queryClient.invalidateQueries({ queryKey: ['repairs'] });
-      queryClient.invalidateQueries({ queryKey: ['repair'] });
     },
-    onError: (err) => {
-      toast.error('수정 실패: ' + String(err));
+    onSettled: (_d, _e, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['repair', id] });
     },
   });
 }

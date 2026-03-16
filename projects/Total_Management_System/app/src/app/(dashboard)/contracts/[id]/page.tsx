@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useContract, useSendContractNotification } from '@/hooks/use-contracts';
 import { formatKRW, formatDate, formatDateTime } from '@/lib/utils/format';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, Receipt } from 'lucide-react';
 
 const STATUS_COLOR: Record<string, string> = {
   draft: 'bg-neutral-100 text-neutral-600',
@@ -260,6 +260,27 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               <Send size={14} />
               {sendNotify.isPending ? '발송 중...' : '알림톡 발송'}
             </Button>
+          </Card>
+        )}
+
+        {/* 다음 단계: 판매 등록 CTA */}
+        {(contract.status === 'signed' || contract.status === 'sent') && !contract.offline_sale_id && (
+          <Card className="border-green-200 bg-green-50/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Receipt size={18} className="text-green-600" />
+                <div>
+                  <p className="text-sm font-semibold text-green-700">판매 등록</p>
+                  <p className="text-xs text-neutral-500">계약 완료 → 판매를 등록합니다</p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => router.push(`/sales/new?customer_name=${encodeURIComponent(contract.customer_name)}&customer_phone=${encodeURIComponent(contract.customer_phone || '')}&contract_id=${contract.id}`)}
+              >
+                등록하기
+              </Button>
+            </div>
           </Card>
         )}
 

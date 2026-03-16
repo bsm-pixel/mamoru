@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useContracts } from '@/hooks/use-contracts';
 import { formatKRW, formatDate } from '@/lib/utils/format';
-import { Search, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Search, Plus, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import type { Contract } from '@/lib/supabase/types';
 
 const STATUS_TABS = [
@@ -95,9 +96,7 @@ export default function ContractsPage() {
               ))}
             </div>
           ) : contracts.length === 0 ? (
-            <div className="flex items-center justify-center h-40 text-sm text-neutral-400">
-              계약서가 없습니다
-            </div>
+            <EmptyState icon={FileText} message="계약서가 없습니다" />
           ) : (
             <div className="divide-y divide-neutral-100">
               {contracts.map((c) => (
@@ -107,17 +106,21 @@ export default function ContractsPage() {
           )}
         </Card>
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2">
-            <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-              <ChevronLeft size={16} />
-            </Button>
-            <span className="text-sm text-neutral-500">{page} / {totalPages}</span>
-            <Button variant="ghost" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-              <ChevronRight size={16} />
-            </Button>
-          </div>
-        )}
+        {/* 건수 + 페이지네이션 */}
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-neutral-400">총 {total}건</span>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+                <ChevronLeft size={16} />
+              </Button>
+              <span className="text-sm text-neutral-500">{page} / {totalPages}</span>
+              <Button variant="ghost" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+                <ChevronRight size={16} />
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );

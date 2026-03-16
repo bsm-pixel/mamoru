@@ -24,6 +24,7 @@ export function useConsultations(filters?: {
 
   return useQuery({
     queryKey: ['consultations', filters],
+    staleTime: 30_000,
     queryFn: async () => {
       // 정렬 설정
       const orderCol = filters?.orderBy === 'visit_date_asc' ? 'visit_date'
@@ -94,7 +95,7 @@ export function useConsultation(id: string) {
   });
 }
 
-/** 상담 상태 변경 */
+/** 상담 상태 변경 (optimistic update) */
 export function useUpdateConsultationStatus() {
   const queryClient = useQueryClient();
 
@@ -108,15 +109,28 @@ export function useUpdateConsultationStatus() {
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: ['consultation', id] });
+      const prevDetail = queryClient.getQueryData(['consultation', id]);
+
+      queryClient.setQueryData(['consultation', id], (old: unknown) => {
+        if (!old || typeof old !== 'object') return old;
+        const data = old as { consultation: Consultation; history: ConsultationHistory[] };
+        return { ...data, consultation: { ...data.consultation, status } };
+      });
+
+      return { prevDetail };
+    },
+    onError: (err, { id }, context) => {
+      if (context?.prevDetail) queryClient.setQueryData(['consultation', id], context.prevDetail);
+      toast.error('상태 변경 실패: ' + String(err));
+    },
     onSuccess: () => {
       toast.success('상태가 변경되었습니다');
-      queryClient.invalidateQueries({ queryKey: ['consultations'] });
-      queryClient.invalidateQueries({ queryKey: ['consultation'] });
-      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['consultation-dashboard-stats'] });
     },
-    onError: (err) => {
-      toast.error('상태 변경 실패: ' + String(err));
+    onSettled: (_d, _e, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['consultations'] });
+      queryClient.invalidateQueries({ queryKey: ['consultation', id] });
     },
   });
 }

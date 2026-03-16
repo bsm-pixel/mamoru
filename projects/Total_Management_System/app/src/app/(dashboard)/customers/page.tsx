@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomers } from '@/hooks/use-customers';
 import { formatKRW, formatDate } from '@/lib/utils/format';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Search, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import type { Customer } from '@/lib/supabase/types';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -101,9 +102,7 @@ export default function CustomersPage() {
               ))}
             </div>
           ) : customers.length === 0 ? (
-            <div className="flex items-center justify-center h-40 text-sm text-neutral-400">
-              고객이 없습니다
-            </div>
+            <EmptyState icon={Users} message="고객이 없습니다" />
           ) : (
             <div className="divide-y divide-neutral-100">
               {customers.map((c) => (

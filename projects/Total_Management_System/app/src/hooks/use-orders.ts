@@ -20,6 +20,7 @@ export function useOrders(filters?: {
 
   return useQuery({
     queryKey: ['orders', filters],
+    staleTime: 30_000,
     queryFn: async () => {
       let query = supabase
         .from('orders')
@@ -111,8 +112,8 @@ export function useOrderSync() {
     onSuccess: (data) => {
       toast.success(`${data.synced}건 동기화 완료`);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['order-dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['order-counts'] });
+      // hub-stats / order-dashboard-stats → staleTime 자연 갱신에 위임
     },
     onError: (err) => {
       toast.error('동기화 실패: ' + String(err));
@@ -154,8 +155,7 @@ export function useBookInvoice() {
       }
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['order'] });
-      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['order-dashboard-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['order-counts'] });
     },
     onError: (err) => {
       toast.error('송장 생성 실패: ' + String(err));

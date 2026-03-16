@@ -28,7 +28,7 @@ import {
   CONSULTATION_STATUS_COLOR,
   CONSULTATION_TYPE_LABEL,
 } from '@/lib/utils/format';
-import { ArrowLeft, MapPin, Calendar, User, Clock, UserCheck, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, User, Clock, UserCheck, AlertCircle, CheckCircle, FileSignature } from 'lucide-react';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
 /** 상태 전이 → 버튼 라벨 매핑 */
@@ -390,6 +390,27 @@ export default function ConsultationDetailPage() {
             </CardHeader>
             <div className="flex flex-wrap gap-2">
               {renderTypeActions()}
+            </div>
+          </Card>
+        )}
+
+        {/* 다음 단계: 계약서 작성 CTA */}
+        {c.status === 'completed' && (
+          <Card className="border-blue-200 bg-blue-50/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileSignature size={18} className="text-blue-600" />
+                <div>
+                  <p className="text-sm font-semibold text-blue-700">계약서 작성</p>
+                  <p className="text-xs text-neutral-500">상담 완료 → 계약서를 작성합니다</p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => router.push(`/contracts/new?customer_name=${encodeURIComponent(c.name)}&customer_phone=${encodeURIComponent(c.phone || '')}`)}
+              >
+                작성하기
+              </Button>
             </div>
           </Card>
         )}

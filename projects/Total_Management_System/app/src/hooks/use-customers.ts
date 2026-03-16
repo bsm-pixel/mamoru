@@ -40,6 +40,7 @@ export function useCustomers(filters?: {
 }) {
   return useQuery({
     queryKey: ['customers', filters],
+    staleTime: 30_000,
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters?.search) params.set('search', filters.search);

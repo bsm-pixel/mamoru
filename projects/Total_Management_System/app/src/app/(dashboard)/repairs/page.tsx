@@ -41,7 +41,7 @@ export default function RepairsPage() {
           </div>
 
           {/* 우측: 상세 패널 (PC lg+ 만 표시) */}
-          <div className="hidden lg:block flex-1 min-w-0">
+          <div className="hidden lg:flex lg:flex-col flex-1 min-w-0 h-[calc(100vh-140px)]">
             {selectedId ? (
               <RepairDetailPanel repairId={selectedId} />
             ) : (

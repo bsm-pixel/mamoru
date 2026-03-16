@@ -19,6 +19,7 @@ export function useSales(filters?: {
 
   return useQuery({
     queryKey: ['sales', filters],
+    staleTime: 30_000,
     queryFn: async () => {
       let query = supabase
         .from('offline_sales')

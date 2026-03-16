@@ -20,6 +20,7 @@ export function useContracts(filters?: {
 
   return useQuery({
     queryKey: ['contracts', filters],
+    staleTime: 30_000,
     queryFn: async () => {
       let query = supabase
         .from('contracts')

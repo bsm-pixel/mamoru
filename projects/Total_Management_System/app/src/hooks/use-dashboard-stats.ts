@@ -8,33 +8,86 @@ import type { Consultation } from '@/lib/supabase/types';
 // 허브 대시보드 통계
 // ============================================
 
-/** R3: 허브 대시보드 — 3개 카테고리별 확장 수치 */
+/** 허브 대시보드 통계 타입 */
+interface HubStatsResult {
+  orders: {
+    payDone: number;
+    preparing: number;
+    shipping: number;
+    delivered: number;
+    weekAmount: number;
+    monthAmount: number;
+  };
+  consultations: {
+    newIntake: number;
+    confirmed: number;
+    needAction: number;
+  };
+  repairs: {
+    intakeNew: number;
+    pendingInbound: number;
+    workingCount: number;
+    workingQty: number;
+    weekRepairTotal: number;
+    weekRepairMamoru: number;
+    weekRepairOther: number;
+  };
+}
+
+/** R3+P12: 허브 대시보드 — RPC 1회 호출로 통합 (fallback: 기존 14개 쿼리) */
 export function useHubStats() {
   const supabase = createClient();
 
   return useQuery({
     queryKey: ['hub-stats'],
     staleTime: 15_000,
-    queryFn: async () => {
+    queryFn: async (): Promise<HubStatsResult> => {
+      // RPC 호출 시도 (018_hub_stats_rpc.sql 배포 후 동작)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: rpcData, error: rpcError } = await (supabase as any).rpc('get_hub_stats');
+
+      if (!rpcError && rpcData) {
+        const d = rpcData as HubStatsResult;
+        return {
+          orders: {
+            payDone: d.orders?.payDone ?? 0,
+            preparing: d.orders?.preparing ?? 0,
+            shipping: d.orders?.shipping ?? 0,
+            delivered: d.orders?.delivered ?? 0,
+            weekAmount: d.orders?.weekAmount ?? 0,
+            monthAmount: d.orders?.monthAmount ?? 0,
+          },
+          consultations: {
+            newIntake: d.consultations?.newIntake ?? 0,
+            confirmed: d.consultations?.confirmed ?? 0,
+            needAction: d.consultations?.needAction ?? 0,
+          },
+          repairs: {
+            intakeNew: d.repairs?.intakeNew ?? 0,
+            pendingInbound: Math.max(0, d.repairs?.pendingInbound ?? 0),
+            workingCount: d.repairs?.workingCount ?? 0,
+            workingQty: d.repairs?.workingQty ?? 0,
+            weekRepairTotal: d.repairs?.weekRepairTotal ?? 0,
+            weekRepairMamoru: d.repairs?.weekRepairMamoru ?? 0,
+            weekRepairOther: d.repairs?.weekRepairOther ?? 0,
+          },
+        };
+      }
+
+      // Fallback: RPC 미배포 시 기존 14개 쿼리
       const now = new Date();
-      // 이번주 월~일
       const dow = now.getDay();
       const monday = new Date(now);
       monday.setDate(now.getDate() - ((dow + 6) % 7));
       monday.setHours(0, 0, 0, 0);
       const monISO = monday.toISOString();
-      // 이번달 1일
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthISO = monthStart.toISOString();
 
       const [
-        // 주문: 4단계
         payDone, preparing, shipping, delivered,
-        // 주문: 주/월 금액
         weekOrders, monthOrders,
-        // 상담: R3 재설계
         newConsult, confirmedConsult, needAction,
-        // 복원수리: R3 재설계
         intakeNew, repairPending, repairWorking,
         weekRepairs,
       ] = await Promise.all([
@@ -42,40 +95,29 @@ export function useHubStats() {
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparing'),
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'shipping'),
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'delivered'),
-        // 이번주 주문 금액
         supabase.from('orders').select('paid_amount').gte('ordered_at', monISO).not('status', 'in', '("cancelled","refunded")'),
-        // 이번달 주문 금액
         supabase.from('orders').select('paid_amount').gte('ordered_at', monthISO).not('status', 'in', '("cancelled","refunded")'),
-        // 상담: 신규접수 (pending_admin 전체)
         supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'pending_admin'),
-        // 상담: 확정
         supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'confirmed'),
-        // 상담: 대응필요 (출장 재제안 + 출장 신규 + 톡상담 신규)
         supabase.from('consultations').select('*', { count: 'exact', head: true })
           .in('status', ['reschedule_requested', 'change_requested', 'pending_admin'])
           .in('consultation_type', ['field_request', 'talk_consult']),
-        // 복원수리: 신규접수 (confirmed_at IS NULL)
         supabase.from('repairs').select('*', { count: 'exact', head: true })
           .eq('status', 'intake').is('confirmed_at', null),
-        // 복원수리: 진행대기 (intake confirmed + pickup_scheduled)
         supabase.from('repairs').select('*', { count: 'exact', head: true })
           .in('status', ['intake', 'pickup_scheduled']),
-        // 복원수리: 진행중 (cost_notified + repairing + ready_to_ship) + qty
         supabase.from('repairs').select('qty_mamoru, qty_other')
           .in('status', ['cost_notified', 'repairing', 'ready_to_ship']),
-        // 복원수리: 이번주 완료
         supabase.from('repairs').select('qty_mamoru, qty_other')
           .in('status', ['shipped', 'delivered', 'completed'])
           .gte('shipped_at', monISO),
       ]);
 
-      // 금액 합산
       const sumAmount = (rows: { paid_amount?: number }[]) =>
         (rows || []).reduce((s, r) => s + (r.paid_amount || 0), 0);
       const weekAmount = sumAmount(weekOrders.data || []);
       const monthAmount = sumAmount(monthOrders.data || []);
 
-      // 복원수리 가위 수량
       const workingRows = (repairWorking.data || []) as { qty_mamoru: number; qty_other: number }[];
       const workingQty = workingRows.reduce((s, r) => s + (r.qty_mamoru || 0) + (r.qty_other || 0), 0);
       const workingCount = workingRows.length;
@@ -84,7 +126,6 @@ export function useHubStats() {
       const weekRepairMamoru = weekRepairRows.reduce((s, r) => s + (r.qty_mamoru || 0), 0);
       const weekRepairOther = weekRepairRows.reduce((s, r) => s + (r.qty_other || 0), 0);
 
-      // 진행대기 = 전체 intake+pickup - 신규접수
       const pendingInbound = (repairPending.count || 0) - (intakeNew.count || 0);
 
       return {

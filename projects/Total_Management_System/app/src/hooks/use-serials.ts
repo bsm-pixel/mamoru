@@ -20,6 +20,7 @@ export function useSerials(productId?: string, filters?: {
 
   return useQuery({
     queryKey: ['serials', productId, filters],
+    staleTime: 30_000,
     queryFn: async () => {
       let query = supabase
         .from('product_serials')

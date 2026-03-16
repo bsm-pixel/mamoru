@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-03-06 (가이드 페이지 다크 모노크롬 + 수거비 6000원 개정)
+> 최종 수정: 2026-03-16 (Phase QOL: 체감 속도/UX 개선)
 
 ---
 
@@ -638,3 +638,15 @@
 - 새 모듈: lib/ecount/ (이카운트 ERP API 클라이언트)
 - 새 페이지: /sales(3), /contracts(3), /products(2)
 - 새 컴포넌트: repair-tab-bar, repair-action-chips, 6개 탭, signature-canvas
+
+### 2026-03-16 (Phase QOL: 체감 속도/UX 통합 개선)
+- **P1 staleTime 명시**: 7개 목록 훅에 `staleTime: 30_000` 추가 (repairs/consultations/orders/sales/serials/contracts/customers)
+- **P2 캐시 무효화 스코프 축소**: mutation 후 불필요한 hub-stats/dashboard-stats 즉시 무효화 제거 → staleTime(15s) 자연 갱신 위임
+- **P3 페이지네이션 전체 건수**: orders/sales/contracts 페이지에 `총 N건` 텍스트 추가 (customers는 이미 있음)
+- **P4 EmptyState 공통 컴포넌트**: `components/ui/empty-state.tsx` 생성, orders/sales/contracts/customers 4개 페이지 적용 (아이콘+텍스트 통일)
+- **P5 repair-detail-panel 높이 유연화**: `h-[calc(100vh-130px)]` → `flex-1 overflow-y-auto` + 부모에 flex-col 적용
+- **P6 Optimistic Update**: useUpdateRepairStatus/useUpdateRepairFields/useUpdateConsultationStatus에 onMutate 즉시 캐시 업데이트 + onError 롤백 + onSettled 재검증
+- **P7 syncOrders 트랜잭션 보호**: order_items delete→insert를 upsert 패턴으로 전환 (데이터 유실 방지)
+- **P11 모듈간 CTA 연결**: 상담(완료)→계약서 작성 CTA, 계약서(서명완료)→판매 등록 CTA 추가
+- **P12 useHubStats RPC**: 14개 개별 쿼리를 1개 RPC 함수로 통합 (fallback 유지), DB 마이그레이션 018
+- 파일: 15개 수정, 2개 신규 (empty-state.tsx, 018_hub_stats_rpc.sql)

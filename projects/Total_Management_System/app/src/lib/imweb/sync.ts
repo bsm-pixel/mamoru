@@ -193,11 +193,8 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
 
   if (error) throw error;
 
-  // 품목 동기화
+  // 품목 동기화 — upsert로 트랜잭션 보호 (delete→insert 사이 에러 시 데이터 유실 방지)
   if (order && prodOrders.length > 0) {
-    // 기존 품목 삭제 후 재삽입
-    await supabase.from('order_items').delete().eq('order_id', order.id);
-
     const items = prodOrders.flatMap((po) =>
       po.items.map((item) => ({
         order_id: order.id,
@@ -211,7 +208,18 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
     );
 
     if (items.length > 0) {
-      await supabase.from('order_items').insert(items);
+      // upsert: order_id + imweb_product_no 기준 (중복 시 업데이트)
+      await supabase.from('order_items').upsert(items, {
+        onConflict: 'order_id,imweb_product_no',
+      });
+
+      // upsert 후 이번 동기화에 포함되지 않은 이전 품목 삭제
+      const currentProductNos = items.map((i) => i.imweb_product_no);
+      await supabase
+        .from('order_items')
+        .delete()
+        .eq('order_id', order.id)
+        .not('imweb_product_no', 'in', `(${currentProductNos.map((n) => `"${n}"`).join(',')})`);
     }
   }
 
