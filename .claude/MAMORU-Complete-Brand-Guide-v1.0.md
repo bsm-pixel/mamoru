@@ -182,7 +182,7 @@ MAMORU는 판매하지 않습니다. 안내할 뿐입니다.
 
 ### 서체 역할
 
-- **Display:** Outfit (800~900) — 히어로, 대제목
+- **Display:** Outfit (PC 900 / 모바일 700) — 히어로, 대제목
 - **Body:** Plus Jakarta Sans + Noto Sans KR (400) — 본문
 - **Caption:** Plus Jakarta Sans + Noto Sans KR (400~500) — 주석, 라벨
 
@@ -190,9 +190,9 @@ MAMORU는 판매하지 않습니다. 안내할 뿐입니다.
 
 | 역할 | 크기 | Weight |
 |------|------|--------|
-| Display | 56px | Outfit 900 |
-| H1 | 40px | Outfit 800 |
-| H2 | 28px | Outfit 800 |
+| Display | 56px | Outfit 900 (PC) / 700 (모바일) |
+| H1 | 40px | Outfit 800 (PC) / 700 (모바일) |
+| H2 | 28px | Outfit 800 (PC) / 700 (모바일) |
 | H3 | 20px | Outfit 700 |
 | Body | 16px | 400 |
 | Caption | 12px | 400~500 |
@@ -201,7 +201,7 @@ MAMORU는 판매하지 않습니다. 안내할 뿐입니다.
 
 | 역할 | PC (1200px+) | 모바일 (≤480px) | Font / Weight |
 |------|-------------|----------------|---------------|
-| Display | 56px | 28~32px | Outfit 900 |
+| Display | 56px | 28~32px | Outfit 900 (PC) / 700 (모바일) |
 | 페이지 제목 (H1) | 40px | 22px | Outfit 700~800 |
 | 섹션 제목 (H2) | 28px | 18px | Jakarta/Noto 700 |
 | 카드 제목 (H3) | 20px | 15px | Jakarta/Noto 600~700 |

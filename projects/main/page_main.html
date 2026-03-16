@@ -155,7 +155,7 @@ button[class*="mm-"]:focus-visible {
 .mm-hero__headline {
   font-family: var(--font-display);
   font-size: 30px;
-  font-weight: 900;
+  font-weight: 700; /* 모바일: Bold (PC에서 900으로 업) */
   line-height: 1.25;
   letter-spacing: -0.03em;
   color: var(--cream);
@@ -252,6 +252,7 @@ button[class*="mm-"]:focus-visible {
   .mm-hero__kicker { color: var(--mist); }
   .mm-hero__headline {
     font-size: 48px;
+    font-weight: 900; /* PC: 900 복원 */
     color: var(--cream);
   }
   .mm-hero__sub { color: var(--mist); }
@@ -275,10 +276,14 @@ button[class*="mm-"]:focus-visible {
    [2]. 미니멀 카테고리 바 — 텍스트 링크 1줄
    ══════════════════════════════════════════════════════════════ */
 .mm-catbar {
-  background: var(--void);
-  border-top: 1px solid rgba(255,255,255,0.06);
-  padding: 16px 0;
+  background: var(--cream);
+  border-top: 1px solid var(--sand);
+  border-bottom: 1px solid var(--sand);
+  padding: 14px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.mm-catbar::-webkit-scrollbar { display: none; }
 .mm-catbar__list {
   display: flex;
   align-items: center;
@@ -286,10 +291,10 @@ button[class*="mm-"]:focus-visible {
   gap: 0;
 }
 .mm-catbar__item {
-  padding: 8px 16px;
+  padding: 8px 14px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--mist);
+  color: var(--stone);
   letter-spacing: -0.01em;
   white-space: nowrap;
   transition: color var(--duration-fast);
@@ -301,110 +306,53 @@ button[class*="mm-"]:focus-visible {
   right: 0; top: 50%;
   transform: translateY(-50%);
   width: 1px; height: 12px;
-  background: rgba(255,255,255,0.1);
+  background: var(--sand);
 }
 
 @media (min-width: 1024px) {
-  .mm-catbar {
-    background: var(--cream);
-    border-top: 1px solid var(--sand);
-    border-bottom: 1px solid var(--sand);
-  }
   .mm-catbar__item {
-    color: var(--stone);
     font-size: 14px;
-    padding: 10px 24px;
+    padding: 10px 20px;
   }
-  .mm-catbar__item:not(:last-child)::after { background: var(--sand); }
 }
 @media (hover: hover) {
-  .mm-catbar__item:hover { color: var(--cream); }
-}
-@media (hover: hover) and (min-width: 1024px) {
   .mm-catbar__item:hover { color: var(--void); }
 }
 
 
 /* ══════════════════════════════════════════════════════════════
-   [3]. 원칙 선언 — "하지 않는 것"
-   ══════════════════════════════════════════════════════════════ */
-.mm-principles {
-  background: var(--cream);
-  padding: 80px 0;
-}
-.mm-principles__grid {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.mm-principles__card {
-  background: var(--white);
-  border: 1px solid var(--sand);
-  border-radius: var(--radius-lg);
-  padding: 28px 24px;
-}
-.mm-principles__heading {
-  font-family: var(--font-body);
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--void);
-  margin-bottom: 12px;
-  letter-spacing: -0.01em;
-}
-.mm-principles__body {
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--stone);
-  line-height: 1.75;
-}
-
-@media (min-width: 768px) {
-  .mm-principles__grid { flex-direction: row; gap: 20px; }
-  .mm-principles__card { flex: 1; padding: 32px 28px; }
-  .mm-principles__heading { font-size: 18px; }
-  .mm-principles__body { font-size: 14px; }
-}
-@media (min-width: 1024px) {
-  .mm-principles { padding: 120px 0; }
-  .mm-principles__card { padding: 40px 36px; }
-  .mm-principles__heading { font-size: 20px; margin-bottom: 16px; }
-  .mm-principles__body { font-size: 15px; line-height: 1.8; }
-}
-
-
-/* ══════════════════════════════════════════════════════════════
-   [4]. 목적별 안내 — B안: 가위 찾기(대형) + 복원수리/도구(소형 2개)
+   [3]. 목적별 안내 — B안: 가위 찾기(대형) + 복원수리/도구(소형 2개)
    ══════════════════════════════════════════════════════════════ */
 .mm-finder {
-  background: var(--void);
+  background: var(--shell);
   padding: 80px 0;
 }
 .mm-finder__label {
   font-size: 14px;
   font-weight: 600;
-  color: var(--warm-gray);
+  color: var(--stone);
   margin-bottom: 24px;
 }
 
 /* 대형 카드: 가위 찾기 */
 .mm-finder__main {
   display: block;
-  background: var(--graphite);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: var(--white);
+  border: 1px solid var(--sand);
   border-radius: var(--radius-lg);
   padding: 28px 24px;
   margin-bottom: 12px;
-  transition: background var(--duration);
+  transition: background var(--duration), box-shadow var(--duration);
 }
 .mm-finder__main-title {
   font-size: 18px;
   font-weight: 700;
-  color: var(--cream);
+  color: var(--void);
   margin-bottom: 6px;
 }
 .mm-finder__main-desc {
   font-size: 13px;
-  color: var(--mist);
+  color: var(--stone);
   margin-bottom: 20px;
   line-height: 1.6;
 }
@@ -418,12 +366,12 @@ button[class*="mm-"]:focus-visible {
   display: inline-flex;
   align-items: center;
   padding: 10px 16px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--parchment);
+  border: 1px solid var(--sand);
   border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
-  color: var(--cream);
+  color: var(--void);
   transition: all var(--duration-fast);
 }
 .mm-finder__chip:active { transform: scale(0.96); }
@@ -436,21 +384,21 @@ button[class*="mm-"]:focus-visible {
 }
 .mm-finder__sub {
   display: block;
-  background: var(--graphite);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: var(--white);
+  border: 1px solid var(--sand);
   border-radius: var(--radius-lg);
   padding: 24px 20px;
-  transition: background var(--duration);
+  transition: background var(--duration), box-shadow var(--duration);
 }
 .mm-finder__sub-title {
   font-size: 15px;
   font-weight: 700;
-  color: var(--cream);
+  color: var(--void);
   margin-bottom: 4px;
 }
 .mm-finder__sub-desc {
   font-size: 12px;
-  color: var(--warm-gray);
+  color: var(--stone);
   line-height: 1.5;
 }
 .mm-finder__sub-arrow {
@@ -458,7 +406,7 @@ button[class*="mm-"]:focus-visible {
   margin-top: 16px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--mist);
+  color: var(--warm-gray);
 }
 
 @media (min-width: 768px) {
@@ -471,41 +419,17 @@ button[class*="mm-"]:focus-visible {
   .mm-finder__sub-desc { font-size: 13px; }
 }
 @media (min-width: 1024px) {
-  .mm-finder {
-    background: var(--cream);
-    padding: 120px 0;
-  }
-  .mm-finder__label { color: var(--stone); }
-  .mm-finder__main {
-    background: var(--white);
-    border-color: var(--sand);
-    padding: 40px 36px;
-  }
-  .mm-finder__main-title { color: var(--void); font-size: 22px; }
-  .mm-finder__main-desc { color: var(--stone); font-size: 15px; }
-  .mm-finder__chip {
-    background: var(--shell);
-    border-color: var(--sand);
-    color: var(--void);
-  }
-  .mm-finder__sub {
-    background: var(--white);
-    border-color: var(--sand);
-    padding: 32px 28px;
-  }
-  .mm-finder__sub-title { color: var(--void); }
-  .mm-finder__sub-desc { color: var(--stone); font-size: 14px; }
-  .mm-finder__sub-arrow { color: var(--stone); }
+  .mm-finder { padding: 120px 0; }
+  .mm-finder__main { padding: 40px 36px; }
+  .mm-finder__main-title { font-size: 22px; }
+  .mm-finder__main-desc { font-size: 15px; }
+  .mm-finder__sub { padding: 32px 28px; }
+  .mm-finder__sub-desc { font-size: 14px; }
 }
 @media (hover: hover) {
-  .mm-finder__main:hover { background: rgba(255,255,255,0.08); }
-  .mm-finder__chip:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); }
-  .mm-finder__sub:hover { background: rgba(255,255,255,0.08); }
-}
-@media (hover: hover) and (min-width: 1024px) {
-  .mm-finder__main:hover { background: var(--shell); }
-  .mm-finder__chip:hover { background: var(--parchment); border-color: var(--mist); }
-  .mm-finder__sub:hover { background: var(--shell); }
+  .mm-finder__main:hover { background: var(--cream); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+  .mm-finder__chip:hover { background: var(--sand); }
+  .mm-finder__sub:hover { background: var(--cream); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
 }
 
 
@@ -528,7 +452,7 @@ button[class*="mm-"]:focus-visible {
 .mm-repair-cta__headline {
   font-family: var(--font-display);
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700; /* 모바일: Bold (PC에서 900으로 업) */
   color: var(--cream);
   line-height: 1.35;
   margin-bottom: 12px;
@@ -578,7 +502,7 @@ button[class*="mm-"]:focus-visible {
 }
 @media (min-width: 1024px) {
   .mm-repair-cta { padding: 120px 0; }
-  .mm-repair-cta__headline { font-size: 36px; }
+  .mm-repair-cta__headline { font-size: 36px; font-weight: 900; }
 }
 @media (hover: hover) {
   .mm-repair-cta__btn:hover { transform: translateY(-2px); background: var(--parchment); }
@@ -739,7 +663,7 @@ button[class*="mm-"]:focus-visible {
 .mm-slogan__en {
   font-family: var(--font-display);
   font-size: 28px;
-  font-weight: 900;
+  font-weight: 700; /* 모바일: Bold (PC에서 900으로 업) */
   line-height: 1.25;
   color: var(--cream);
   letter-spacing: -0.02em;
@@ -773,7 +697,7 @@ button[class*="mm-"]:focus-visible {
 }
 @media (min-width: 1024px) {
   .mm-slogan { padding: 120px 20px; }
-  .mm-slogan__en { font-size: 52px; }
+  .mm-slogan__en { font-size: 52px; font-weight: 900; }
   .mm-slogan__ko { font-size: 17px; }
   .mm-slogan__philosophy { font-size: 14px; }
 }
@@ -821,43 +745,15 @@ button[class*="mm-"]:focus-visible {
       <a href="/30" class="mm-catbar__item">틴닝</a>
       <a href="/39" class="mm-catbar__item">장가위</a>
       <a href="/40" class="mm-catbar__item">슬라이싱</a>
+      <a href="/29" class="mm-catbar__item">도구·소모품</a>
+      <a href="/53" class="mm-catbar__item">복원수리</a>
     </div>
   </div>
 </nav>
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     [3]. 브랜드 원칙 — 구매 + 복원수리 2블록
-     ══════════════════════════════════════════════════════════════ -->
-<section class="mm-principles">
-  <div class="mm-inner">
-    <div class="mm-principles__grid">
-      <!-- 가위 구매 -->
-      <div class="mm-principles__card mm-anim mm-anim-stagger">
-        <div class="mm-principles__heading">먼저 묻습니다</div>
-        <div class="mm-principles__body">
-          비싼 가위가 결코 좋은 가위는 아닙니다.<br>
-          경력, 커트 스타일, 손에 맞는 가위가 좋은 가위입니다.<br>
-          구매를 권하지 않습니다. 선택하는 방법을 알려드립니다.
-        </div>
-      </div>
-      <!-- 복원수리 -->
-      <div class="mm-principles__card mm-anim mm-anim-stagger">
-        <div class="mm-principles__heading">끝까지 책임집니다</div>
-        <div class="mm-principles__body">
-          외부에 맡기지 않습니다.<br>
-          2대에 걸쳐 쌓아온 기술에 일본 공장의 정밀함을 더해<br>
-          단순 연마가 아닌, 고객의 커트 스타일에 맞춘<br>
-          날 곡률 조정까지 — 새 가위 이상의 컨디션으로.
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ══════════════════════════════════════════════════════════════
-     [4]. 목적별 안내 — B안: 가위 찾기 + 복원수리 + 도구·소모품
+     [3]. 목적별 안내 — 가위 찾기 + 복원수리 + 도구·소모품
      ══════════════════════════════════════════════════════════════ -->
 <section class="mm-finder">
   <div class="mm-inner">
@@ -893,26 +789,23 @@ button[class*="mm-"]:focus-visible {
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     [5]. 복원수리 CTA — Void 배경
+     [4]. 복원수리 CTA — Void 배경 (원칙 "끝까지 책임집니다" 흡수)
      ══════════════════════════════════════════════════════════════ -->
 <section class="mm-repair-cta">
   <div class="mm-inner">
     <p class="mm-repair-cta__kicker mm-anim">Hydro Repair</p>
     <h2 class="mm-repair-cta__headline mm-anim">첫 날의 커트감을<br>되찾아 드립니다</h2>
-    <p class="mm-repair-cta__desc mm-anim">마모루 자체 복원 공정으로 연마 · 날 교정 · 밸런스 조정까지<br>새 가위처럼 되살립니다</p>
+    <p class="mm-repair-cta__desc mm-anim">2대에 걸친 기술과 일본 공장의 정밀함으로<br>외부에 맡기지 않고 직접 복원합니다</p>
     <a href="/53" class="mm-repair-cta__btn mm-anim">
       복원수리 안내
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </a>
-    <div class="mm-repair-cta__sub-links mm-anim">
-      <a href="/consult" class="mm-repair-cta__sub-link">맞춤 상담 접수 →</a>
-    </div>
   </div>
 </section>
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     [6]. 고객 후기 — 탭 (상담/복원/구매)
+     [5]. 고객 후기 — 탭 (상담/복원/구매)
      ══════════════════════════════════════════════════════════════ -->
 <section class="mm-reviews">
   <div class="mm-inner">
@@ -938,15 +831,15 @@ button[class*="mm-"]:focus-visible {
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     [7]. 브랜드 한마디 — Void + Outfit 900
+     [6]. 브랜드 한마디 — Void + Outfit 900
      ══════════════════════════════════════════════════════════════ -->
 <section class="mm-slogan">
   <p class="mm-slogan__en mm-anim">
     CUT THE FAKE,<br>KEEP THE <mark>REAL</mark>
   </p>
   <p class="mm-slogan__ko mm-anim">
-    <span>설득하지 않습니다</span>
-    <span>동행합니다</span>
+    <span>먼저 묻습니다</span>
+    <span>선택하는 방법을 알려드립니다</span>
   </p>
   <p class="mm-slogan__philosophy mm-anim">정밀한 도구, 책임지는 기술 — 미용가위에만 집중합니다</p>
 </section>
