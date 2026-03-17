@@ -446,14 +446,44 @@ button[class*="mm-"]:focus-visible {
 
 
 /* ══════════════════════════════════════════════════════════════
-   [5]. 복원수리 CTA — Void 배경
+   [4]. 듀얼 CTA — 복원수리 + 컨설팅 (Void 배경, PC 2열)
    ══════════════════════════════════════════════════════════════ */
-.mm-repair-cta {
+.mm-dual-cta {
   background: var(--void);
   padding: 80px 0;
-  text-align: center;
 }
-.mm-repair-cta__kicker {
+.mm-dual-cta__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+/* 개별 블록 공통 */
+.mm-dual-cta__block {
+  position: relative;
+  text-align: center;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  padding: 56px 24px;
+}
+.mm-dual-cta__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.mm-dual-cta__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.15;
+}
+.mm-dual-cta__bg img[src=""] { display: none; }
+.mm-dual-cta__content {
+  position: relative;
+  z-index: 1;
+}
+.mm-dual-cta__kicker {
   font-size: 12px;
   font-weight: 600;
   color: var(--warm-gray);
@@ -461,22 +491,22 @@ button[class*="mm-"]:focus-visible {
   text-transform: uppercase;
   margin-bottom: 16px;
 }
-.mm-repair-cta__headline {
+.mm-dual-cta__headline {
   font-family: var(--font-display);
   font-size: 24px;
-  font-weight: 700; /* 모바일: Bold (PC에서 900으로 업) */
+  font-weight: 700;
   color: var(--cream);
   line-height: 1.35;
   margin-bottom: 12px;
   letter-spacing: -0.02em;
 }
-.mm-repair-cta__desc {
+.mm-dual-cta__desc {
   font-size: 14px;
   color: var(--mist);
   margin-bottom: 36px;
   line-height: 1.7;
 }
-.mm-repair-cta__btn {
+.mm-dual-cta__btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -492,33 +522,44 @@ button[class*="mm-"]:focus-visible {
   cursor: pointer;
   transition: transform var(--duration-fast), background var(--duration-fast);
 }
-.mm-repair-cta__btn svg { width: 16px; height: 16px; }
-.mm-repair-cta__btn:active { transform: scale(0.97); }
-.mm-repair-cta__sub-links {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-}
-.mm-repair-cta__sub-link {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--warm-gray);
-  transition: color var(--duration-fast);
-}
+.mm-dual-cta__btn svg { width: 16px; height: 16px; }
+.mm-dual-cta__btn:active { transform: scale(0.97); }
 
 @media (min-width: 768px) {
-  .mm-repair-cta__headline { font-size: 32px; }
-  .mm-repair-cta__desc { font-size: 15px; }
-  .mm-repair-cta__btn { padding: 18px 40px; font-size: 17px; min-height: 52px; }
+  .mm-dual-cta__headline { font-size: 32px; }
+  .mm-dual-cta__desc { font-size: 15px; }
+  .mm-dual-cta__btn { padding: 18px 40px; font-size: 17px; min-height: 52px; }
 }
 @media (min-width: 1024px) {
-  .mm-repair-cta { padding: 120px 0; }
-  .mm-repair-cta__headline { font-size: 36px; font-weight: 900; }
+  .mm-dual-cta { padding: 120px 0; overflow: hidden; }
+  .mm-dual-cta__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+  }
+  .mm-dual-cta__block { padding: 64px 40px; border-radius: 0; }
+  .mm-dual-cta__bg img { opacity: 0.2; }
+  /* 좌측 블록: 이미지 왼쪽 화면 끝까지 확장 + 오른쪽 페이드 */
+  .mm-dual-cta__block:first-child .mm-dual-cta__bg {
+    left: -50vw;
+    right: 0;
+    -webkit-mask-image: linear-gradient(to right, black 60%, transparent);
+    mask-image: linear-gradient(to right, black 60%, transparent);
+  }
+  /* 우측 블록: 이미지 오른쪽 화면 끝까지 확장 + 왼쪽 페이드 */
+  .mm-dual-cta__block:last-child .mm-dual-cta__bg {
+    left: 0;
+    right: -50vw;
+    -webkit-mask-image: linear-gradient(to left, black 60%, transparent);
+    mask-image: linear-gradient(to left, black 60%, transparent);
+  }
+  .mm-dual-cta__headline { font-size: 30px; font-weight: 900; }
+}
+@media (min-width: 1440px) {
+  .mm-dual-cta__headline { font-size: 36px; }
 }
 @media (hover: hover) {
-  .mm-repair-cta__btn:hover { transform: translateY(-2px); background: var(--parchment); }
-  .mm-repair-cta__sub-link:hover { color: var(--cream); }
+  .mm-dual-cta__btn:hover { transform: translateY(-2px); background: var(--parchment); }
 }
 
 
@@ -833,17 +874,48 @@ button[class*="mm-"]:focus-visible {
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     [4]. 복원수리 CTA — Void 배경 (원칙 "끝까지 책임집니다" 흡수)
+     [4]. 듀얼 CTA — 복원수리 + 컨설팅 (Void 배경, PC 2열)
      ══════════════════════════════════════════════════════════════ -->
-<section class="mm-repair-cta">
+<section class="mm-dual-cta">
   <div class="mm-inner">
-    <p class="mm-repair-cta__kicker mm-anim">Hydro Repair</p>
-    <h2 class="mm-repair-cta__headline mm-anim">첫 날의 커트감을<br>되찾아 드립니다</h2>
-    <p class="mm-repair-cta__desc mm-anim">2대에 걸친 기술과 일본 공장의 정밀함으로<br>외부에 맡기지 않고 직접 복원합니다</p>
-    <a href="/53" class="mm-repair-cta__btn mm-anim">
-      복원수리 안내
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-    </a>
+    <div class="mm-dual-cta__grid">
+
+      <!-- 복원수리 -->
+      <div class="mm-dual-cta__block mm-anim">
+        <!-- ✏️ 수정가능: 복원수리 배경 이미지 URL -->
+        <div class="mm-dual-cta__bg">
+          <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/565feb08b57d4.jpg" alt="">
+        </div>
+        <div class="mm-dual-cta__content">
+          <p class="mm-dual-cta__kicker">Hydro Repair</p>
+          <h2 class="mm-dual-cta__headline">첫 날의 커트감을<br>되찾아 드립니다</h2>
+          <p class="mm-dual-cta__desc">2대에 걸친 기술과 일본 공장의 정밀함으로<br>외부에 맡기지 않고 직접 복원합니다</p>
+          <a href="/53" class="mm-dual-cta__btn">
+            복원수리 안내
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- 컨설팅상담 -->
+      <div class="mm-dual-cta__block mm-anim">
+        <!-- ✏️ 수정가능: 컨설팅 배경 이미지 URL -->
+        <div class="mm-dual-cta__bg">
+          <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/fd3e2b6ab2a74.jpg" alt="cst">
+        </div>
+        <div class="mm-dual-cta__content">
+          <p class="mm-dual-cta__kicker">Consulting</p>
+          <h2 class="mm-dual-cta__headline">어떤 가위가 맞는지<br>같이 찾아드립니다</h2>
+          <p class="mm-dual-cta__desc">추천하지 않습니다<br>선택하는 방법을 알려드립니다</p>
+          <!-- ✏️ 수정가능: 컨설팅 페이지 링크 URL -->
+          <a href="/58" class="mm-dual-cta__btn">
+            컨설팅 안내
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+    </div>
   </div>
 </section>
 
