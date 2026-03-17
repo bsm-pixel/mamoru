@@ -108,7 +108,8 @@
       "Bash(source:*)",
       "Bash(rm:*)",
       "WebFetch(domain:app-gdmwvjlh6-bsm-1468s-projects.vercel.app)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(git log:*)"
     ]
   }
 }
