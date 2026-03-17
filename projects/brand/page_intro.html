@@ -4,39 +4,56 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>MAMORU | 가위 전문 브랜드</title>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="preload" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet"></noscript>
+<!-- 브랜드 가이드 폰트: Outfit(디스플레이) + Plus Jakarta Sans + Noto Sans KR(본문) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════════════════════════════
-   MAMORU Intro - Premium Dark Theme
-   웜 다크 베이스 + 골드 악센트 + 부드러운 그라디언트 흐름
+   MAMORU Intro - Brand Guide v1.0 적용
+   히어로: 다크+골드 / Our Story: 다크 브릿지 / 이후: 모노크롬 라이트
    ══════════════════════════════════════════════════════════════ */
 :root {
-  /* 웜 다크 팔레트 */
+  /* ── 히어로 전용 (다크+골드) ── */
   --bg-base: #0C0C0C;
   --bg-elevated: #141414;
   --bg-card: #1A1A1A;
   --bg-subtle: #0F0F0F;
-
-  /* 골드 계열 (메인 악센트) */
   --gold-primary: #C9A962;
   --gold-light: #E8D5A3;
   --gold-dark: #A08339;
   --gold-glow: rgba(201, 169, 98, 0.15);
-
-  /* 텍스트 */
   --text-primary: #F5F5F3;
   --text-secondary: rgba(245, 245, 243, 0.7);
   --text-muted: rgba(245, 245, 243, 0.45);
-
-  /* 라인/보더 */
   --line-subtle: rgba(255, 255, 255, 0.06);
   --line-medium: rgba(255, 255, 255, 0.1);
-
-  /* 악센트 컬러 */
   --accent-warm: rgba(201, 169, 98, 0.08);
   --accent-cool: rgba(120, 140, 180, 0.05);
+
+  /* ── 브랜드 가이드 팔레트 (모노크롬) ── */
+  --void: #1A1A1A;
+  --graphite: #2D2D2D;
+  --stone: #4A4A4A;
+  --warm-gray: #8A8580;
+  --mist: #B8B4AF;
+  --sand: #D4D0CB;
+  --parchment: #EDEBE8;
+  --shell: #F5F3F0;
+  --cream: #FAF9F7;
+  --white: #FFFFFF;
+
+  /* ── 서체 ── */
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+
+  /* ── 공통 ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration: 0.3s;
 }
 
 * {
@@ -48,39 +65,21 @@
 html {
   scrollbar-width: none;
   -ms-overflow-style: none;
-  overflow-x: hidden; /* #1 가로 스크롤 방지 */
+  overflow-x: hidden;
 }
 
 html::-webkit-scrollbar { display: none; }
 
 body {
-  overflow-x: hidden; /* #1 가로 스크롤 방지 */
+  overflow-x: hidden;
   overflow-y: visible;
   height: auto !important;
   min-height: auto !important;
-  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: var(--bg-base);
-  color: var(--text-primary);
+  font-family: var(--font-body);
+  background: var(--cream);
+  color: var(--void);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-}
-
-/* ─────────────────────────────────────────────────────────────
-   배경 그라디언트 레이어 (전체 페이지)
-   ───────────────────────────────────────────────────────────── */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background:
-    radial-gradient(ellipse 80% 50% at 20% 40%, var(--accent-warm) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 80% 20%, var(--accent-cool) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 30% at 50% 80%, var(--accent-warm) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -99,102 +98,80 @@ body::before {
 }
 
 .section {
-  padding: 100px 0;
+  padding: 80px 0;
   position: relative;
 }
 
 @media screen and (min-width: 769px) {
-  .section { padding: 140px 0; }
+  .section { padding: 120px 0; }
 }
 
-/* 섹션 구분선 (수평 라인 + 골드 포인트) */
-.section-divider {
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--line-medium) 20%, var(--gold-primary) 50%, var(--line-medium) 80%, transparent 100%);
-  position: relative;
-}
-
-.section-divider::before {
-  content: '◆';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--bg-base);
-  padding: 0 16px;
-  color: var(--gold-primary);
-  font-size: 8px;
-}
-
+/* 섹션 라벨 (모노크롬 미니멀) */
 .section-label {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  background: var(--gold-glow);
-  border: 1px solid rgba(201, 169, 98, 0.2);
-  border-radius: 100px;
-  color: var(--gold-primary);
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--warm-gray);
+  font-family: var(--font-display);
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   margin-bottom: 24px;
-}
-
-.section-label::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  background: var(--gold-primary);
-  border-radius: 50%;
 }
 
 @media screen and (min-width: 769px) {
   .section-label {
     font-size: 13px;
-    padding: 10px 20px;
     margin-bottom: 28px;
   }
 }
 
 .section-title {
-  font-size: 32px;
+  font-family: var(--font-display);
+  font-size: 28px;
   font-weight: 700;
   line-height: 1.3;
   margin-bottom: 16px;
-  color: var(--text-primary);
+  color: var(--void);
 }
 
 @media screen and (min-width: 769px) {
   .section-title {
-    font-size: 48px;
+    font-size: 40px;
     margin-bottom: 20px;
   }
 }
 
 .section-desc {
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.7;
-  color: var(--text-secondary);
+  color: var(--stone);
   max-width: 600px;
 }
 
 @media screen and (min-width: 769px) {
-  .section-desc { font-size: 18px; }
-}
-
-/* 골드 그라디언트 텍스트 */
-.text-gold {
-  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-primary) 50%, var(--gold-dark) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  .section-desc { font-size: 16px; }
 }
 
 /* ─────────────────────────────────────────────────────────────
-   글리치 효과
+   다크 섹션 전용 오버라이드 (히어로 + Our Story + CTA)
+   ───────────────────────────────────────────────────────────── */
+.dark-section .section-label {
+  color: var(--mist);
+}
+.dark-section .section-title {
+  color: var(--cream);
+}
+.dark-section .section-desc {
+  color: rgba(245, 245, 243, 0.7);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   글리치 효과 (히어로 전용)
    ───────────────────────────────────────────────────────────── */
 .glitch {
   position: relative;
@@ -250,20 +227,45 @@ body::before {
   60% { opacity: 0.1; }
 }
 
+/* 골드 그라디언트 텍스트 (히어로 전용) */
+.text-gold {
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-primary) 50%, var(--gold-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* ══════════════════════════════════════════════════════════════
-   섹션 1: 히어로
+   섹션 1: 히어로 (다크+골드 유지)
    ══════════════════════════════════════════════════════════════ */
 .hero {
-  min-height: auto; /* iframe 대응: 100vh 제거 */
+  min-height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   padding: 120px 0 100px;
+  background: var(--bg-base);
+}
+
+/* 히어로 배경 그라디언트 (body::before에서 이동) */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, var(--accent-warm) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 20%, var(--accent-cool) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 30% at 50% 80%, var(--accent-warm) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* 히어로 배경 오브 */
-.hero::before {
+.hero::after {
   content: '';
   position: absolute;
   top: 10%;
@@ -274,6 +276,7 @@ body::before {
   background: radial-gradient(circle, var(--gold-glow) 0%, transparent 70%);
   filter: blur(80px);
   pointer-events: none;
+  z-index: 0;
 }
 
 .hero-content {
@@ -315,11 +318,13 @@ body::before {
 }
 
 .hero-title {
+  font-family: var(--font-display);
   font-size: 36px;
-  font-weight: 800;
+  font-weight: 900;
   line-height: 1.2;
   margin-bottom: 24px;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
 }
 
 @media screen and (min-width: 769px) {
@@ -378,7 +383,170 @@ body::before {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   섹션 2: 문제 제기
+   브랜드 스토리 섹션 (다크 브릿지 — 골드 제거, 모노크롬)
+   ══════════════════════════════════════════════════════════════ */
+.story {
+  background: var(--void);
+}
+
+.story-content {
+  display: grid;
+  gap: 40px;
+  margin-top: 48px;
+}
+
+@media screen and (min-width: 769px) {
+  .story-content {
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: start;
+    margin-top: 64px;
+  }
+}
+
+.story-image {
+  aspect-ratio: 4/5;
+  border-radius: 24px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--graphite) 0%, var(--void) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.story-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.story-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
+  pointer-events: none;
+}
+
+.story-text {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media screen and (min-width: 769px) {
+  .story-text {
+    gap: 32px;
+    padding-top: 16px;
+  }
+}
+
+.story-greeting {
+  font-family: var(--font-body);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--cream);
+}
+
+@media screen and (min-width: 769px) {
+  .story-greeting {
+    font-size: 36px;
+  }
+}
+
+.story-paragraph {
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--mist);
+}
+
+@media screen and (min-width: 769px) {
+  .story-paragraph {
+    font-size: 17px;
+  }
+}
+
+/* Our Story 내 강조 — 골드 대신 Parchment */
+.story-paragraph strong {
+  color: var(--parchment);
+  font-weight: 600;
+}
+
+.story-highlight {
+  margin-top: 16px;
+  padding: 28px 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-xl);
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+@media screen and (min-width: 769px) {
+  .story-highlight {
+    padding: 32px 28px;
+    gap: 24px;
+  }
+}
+
+.story-highlight-image {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.story-highlight-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media screen and (min-width: 769px) {
+  .story-highlight-image {
+    width: 88px;
+    height: 88px;
+  }
+}
+
+.story-highlight-text {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--cream);
+}
+
+/* Our Story 내 .text-gold 오버라이드 — 골드 그라디언트 대신 Cream */
+.story .text-gold {
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: var(--cream);
+  background-clip: unset;
+  display: block;
+  font-weight: 700;
+}
+
+@media screen and (min-width: 769px) {
+  .story-highlight-text {
+    font-size: 18px;
+  }
+}
+
+/* ── 다크→라이트 트랜지션 ── */
+.dark-to-light-transition {
+  height: 120px;
+  background: linear-gradient(to bottom, var(--void), var(--cream));
+}
+
+/* ══════════════════════════════════════════════════════════════
+   섹션 2: 문제 제기 (라이트 — Cream)
    ══════════════════════════════════════════════════════════════ */
 .problem-grid {
   display: grid;
@@ -395,29 +563,19 @@ body::before {
 }
 
 .problem-card {
-  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
-  border: 1px solid var(--line-subtle);
-  border-radius: 20px;
+  background: var(--white);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-lg);
   padding: 32px 28px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s var(--ease);
   position: relative;
   overflow: hidden;
 }
 
-.problem-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--line-medium), transparent);
-}
-
 .problem-card:hover {
-  border-color: rgba(239, 100, 100, 0.3);
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+  border-color: var(--mist);
 }
 
 @media screen and (min-width: 769px) {
@@ -428,8 +586,8 @@ body::before {
 .problem-icon {
   width: 52px;
   height: 52px;
-  background: rgba(239, 100, 100, 0.1);
-  border: 1px solid rgba(239, 100, 100, 0.15);
+  background: var(--shell);
+  border: 1px solid var(--sand);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -450,7 +608,7 @@ body::before {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 12px;
-  color: var(--text-primary);
+  color: var(--void);
 }
 
 @media screen and (min-width: 769px) {
@@ -459,7 +617,7 @@ body::before {
 
 .problem-desc {
   font-size: 14px;
-  color: var(--text-muted);
+  color: var(--warm-gray);
   line-height: 1.7;
 }
 
@@ -468,8 +626,12 @@ body::before {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   섹션 3: 핵심 기술력
+   섹션 3: 핵심 기술력 (라이트 — Parchment)
    ══════════════════════════════════════════════════════════════ */
+.tech-section {
+  background: var(--parchment);
+}
+
 .tech-content {
   display: grid;
   gap: 48px;
@@ -488,22 +650,14 @@ body::before {
 /* ★★★ TECH_MAIN_IMAGE ★★★ */
 .tech-image {
   aspect-ratio: 4/3;
-  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
-  border: 1px solid var(--line-subtle);
+  background: var(--shell);
+  border: 1px solid var(--sand);
   border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   position: relative;
-}
-
-.tech-image::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, var(--gold-glow) 0%, transparent 50%);
-  pointer-events: none;
 }
 
 .tech-image img { width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 1; }
@@ -513,7 +667,7 @@ body::before {
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  color: var(--text-muted);
+  color: var(--warm-gray);
   font-size: 14px;
   position: relative;
   z-index: 1;
@@ -535,15 +689,15 @@ body::before {
   display: flex;
   gap: 20px;
   padding: 24px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--line-subtle);
-  border-radius: 16px;
-  transition: all 0.3s ease;
+  background: var(--white);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-lg);
+  transition: all var(--duration) var(--ease);
 }
 
 .tech-feature:hover {
-  border-color: var(--gold-glow);
-  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+  border-color: var(--mist);
+  background: var(--shell);
 }
 
 /* ★★★ TECH_FEATURE_ICON_IMAGE ★★★ */
@@ -551,9 +705,9 @@ body::before {
   width: 48px;
   height: 48px;
   flex-shrink: 0;
-  background: var(--gold-glow);
-  border: 1px solid rgba(201, 169, 98, 0.15);
-  border-radius: 12px;
+  background: var(--shell);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -567,12 +721,12 @@ body::before {
   font-size: 17px;
   font-weight: 600;
   margin-bottom: 8px;
-  color: var(--text-primary);
+  color: var(--void);
 }
 
 .tech-feature-content p {
   font-size: 14px;
-  color: var(--text-muted);
+  color: var(--warm-gray);
   line-height: 1.6;
 }
 
@@ -582,47 +736,45 @@ body::before {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   섹션 4: 맞춤 컨설팅
+   섹션 4: 맞춤 컨설팅 (라이트 — Cream)
    ══════════════════════════════════════════════════════════════ */
 .consult {
-  background: var(--bg-elevated);
-  border-top: 1px solid var(--line-subtle);
-  border-bottom: 1px solid var(--line-subtle);
+  background: var(--cream);
 }
 
 .consult-steps {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);  /* 모바일: 2열 그리드 */
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   margin-top: 48px;
 }
 
 @media screen and (min-width: 769px) {
   .consult-steps {
-    grid-template-columns: repeat(4, 1fr);  /* PC: 4열 */
+    grid-template-columns: repeat(4, 1fr);
     gap: 32px;
     margin-top: 64px;
   }
 }
 
 .consult-step {
-  background: var(--bg-base);
-  border: 1px solid var(--line-subtle);
-  border-radius: 20px;
-  padding: 24px 16px;  /* 모바일 2열에 맞게 패딩 축소 */
+  background: var(--white);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-lg);
+  padding: 24px 16px;
   text-align: center;
   position: relative;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s var(--ease);
 }
 
 .consult-step:hover {
-  border-color: var(--gold-primary);
-  transform: translateY(-6px);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--gold-glow);
+  border-color: var(--void);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
 }
 
 @media screen and (min-width: 769px) {
-  .consult-step { padding: 36px 24px; }  /* PC: 4열에 맞게 조정 */
+  .consult-step { padding: 36px 24px; }
 }
 
 /* ★★★ CONSULT_STEP_ICON_IMAGE ★★★ */
@@ -645,7 +797,7 @@ body::before {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 12px;
-  color: var(--text-primary);
+  color: var(--void);
 }
 
 @media screen and (min-width: 769px) {
@@ -654,7 +806,7 @@ body::before {
 
 .consult-step p {
   font-size: 14px;
-  color: var(--text-muted);
+  color: var(--warm-gray);
   line-height: 1.7;
 }
 
@@ -663,10 +815,11 @@ body::before {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   섹션 5: 비전/목표
+   섹션 5: 비전/목표 (라이트 — Parchment)
    ══════════════════════════════════════════════════════════════ */
 .vision {
   text-align: center;
+  background: var(--parchment);
 }
 
 .goal-list {
@@ -691,35 +844,20 @@ body::before {
 .goal-item {
   flex: 1;
   padding: 40px 28px;
-  background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
-  border: 1px solid var(--line-subtle);
-  border-radius: 24px;
+  background: var(--white);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-lg);
   text-align: center;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s var(--ease);
   position: relative;
   overflow: hidden;
 }
 
-.goal-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
 .goal-item:hover {
-  transform: translateY(-8px);
-  border-color: var(--gold-primary);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+  transform: translateY(-6px);
+  border-color: var(--stone);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06);
 }
-
-.goal-item:hover::before { opacity: 1; }
 
 @media screen and (min-width: 769px) {
   .goal-item { padding: 48px 32px; }
@@ -729,14 +867,14 @@ body::before {
   width: 56px;
   height: 56px;
   margin: 0 auto 24px;
-  background: var(--gold-glow);
-  border: 1px solid rgba(201, 169, 98, 0.2);
-  border-radius: 16px;
+  background: var(--shell);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28px;
-  color: var(--gold-primary);
+  color: var(--stone);
 }
 
 .goal-icon img { width: 32px; height: 32px; object-fit: contain; }
@@ -744,7 +882,7 @@ body::before {
 .goal-title {
   font-size: 18px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--void);
   margin-bottom: 14px;
   line-height: 1.4;
 }
@@ -755,7 +893,7 @@ body::before {
 
 .goal-desc {
   font-size: 14px;
-  color: var(--text-muted);
+  color: var(--warm-gray);
   line-height: 1.7;
   word-break: keep-all;
 }
@@ -765,62 +903,31 @@ body::before {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   섹션 6: CTA
+   섹션 6: CTA (다크 — Void 임팩트)
    ══════════════════════════════════════════════════════════════ */
 .cta-section {
   text-align: center;
-  padding: 100px 0 120px;
+  padding: 80px 0 100px;
   position: relative;
-}
-
-/* CTA 배경 글로우 */
-.cta-section::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 500px;
-  height: 400px;
-  background: radial-gradient(ellipse, var(--gold-glow) 0%, transparent 70%);
-  filter: blur(60px);
-  pointer-events: none;
+  background: var(--void);
 }
 
 @media screen and (min-width: 769px) {
-  .cta-section { padding: 140px 0 160px; }
+  .cta-section { padding: 120px 0 140px; }
 }
 
 .cta-box {
   max-width: 640px;
   margin: 0 auto;
-  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
-  border: 1px solid var(--line-medium);
-  border-radius: 32px;
-  padding: 48px 32px;
   position: relative;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
-}
-
-.cta-box::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 10%;
-  right: 10%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
-}
-
-@media screen and (min-width: 769px) {
-  .cta-box { padding: 64px 56px; border-radius: 36px; }
 }
 
 .cta-title {
+  font-family: var(--font-display);
   font-size: 26px;
   font-weight: 700;
   margin-bottom: 14px;
-  color: var(--text-primary);
+  color: var(--cream);
 }
 
 @media screen and (min-width: 769px) {
@@ -829,7 +936,7 @@ body::before {
 
 .cta-desc {
   font-size: 15px;
-  color: var(--text-secondary);
+  color: var(--mist);
   margin-bottom: 36px;
 }
 
@@ -851,54 +958,56 @@ body::before {
   }
 }
 
+/* Primary 버튼: Cream 배경 + Void 텍스트 (브랜드 가이드) */
 .btn-primary {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-height: 56px;
+  min-height: 52px;
   padding: 16px 32px;
-  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
+  background: var(--cream);
   border: none;
-  border-radius: 14px;
-  font-family: inherit;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 600;
-  color: var(--bg-base);
+  color: var(--void);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--duration) var(--ease);
   text-decoration: none;
-  box-shadow: 0 4px 20px rgba(201, 169, 98, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(201, 169, 98, 0.5);
+  background: var(--white);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
+/* Secondary 버튼: 투명 + Sand border */
 .btn-secondary {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-height: 56px;
+  min-height: 52px;
   padding: 16px 32px;
   background: transparent;
-  border: 1px solid var(--line-medium);
-  border-radius: 14px;
-  font-family: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--cream);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--duration) var(--ease);
   text-decoration: none;
 }
 
 .btn-secondary:hover {
-  border-color: var(--gold-primary);
-  background: var(--gold-glow);
-  color: var(--gold-primary);
+  border-color: var(--cream);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* ★★★ SNS_ICON_IMAGE ★★★ */
@@ -908,21 +1017,21 @@ body::before {
   gap: 16px;
   margin-top: 36px;
   padding-top: 36px;
-  border-top: 1px solid var(--line-subtle);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .cta-link {
   width: 52px;
   height: 52px;
-  background: var(--bg-base);
-  border: 1px solid var(--line-subtle);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22px;
-  color: var(--text-muted);
-  transition: all 0.3s ease;
+  color: var(--mist);
+  transition: all var(--duration) var(--ease);
   text-decoration: none;
   overflow: hidden;
 }
@@ -930,18 +1039,16 @@ body::before {
 .cta-link img { width: 24px; height: 24px; object-fit: contain; }
 
 .cta-link:hover {
-  background: var(--gold-glow);
-  border-color: var(--gold-primary);
-  color: var(--gold-primary);
+  border-color: var(--cream);
+  color: var(--cream);
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   섹션 7: 오시는 길
+   섹션 7: 오시는 길 (라이트 — Cream)
    ══════════════════════════════════════════════════════════════ */
 .location {
-  background: var(--bg-elevated);
-  border-top: 1px solid var(--line-subtle);
-  padding: 100px 0 120px; /* #5 과도한 패딩 제거 (280px → 120px) */
+  background: var(--cream);
+  padding: 80px 0 100px;
 }
 
 @media screen and (min-width: 769px) {
@@ -967,23 +1074,23 @@ body::before {
 .location-map {
   flex: 1;
   min-height: 260px;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  background: var(--bg-card);
-  border: 1px solid var(--line-subtle);
+  background: var(--shell);
+  border: 1px solid var(--sand);
   display: flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all var(--duration) var(--ease);
   cursor: pointer;
 }
 
 .location-map img { width: 100%; height: 100%; object-fit: cover; }
 
 .location-map:hover {
-  border-color: var(--gold-primary);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  border-color: var(--stone);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
 .map-placeholder {
@@ -992,7 +1099,7 @@ body::before {
 }
 
 .map-icon { display: block; font-size: 52px; margin-bottom: 16px; opacity: 0.5; }
-.map-text { display: block; font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+.map-text { display: block; font-size: 14px; color: var(--warm-gray); line-height: 1.6; }
 
 .location-info {
   flex: 1;
@@ -1002,9 +1109,10 @@ body::before {
 }
 
 .location-title {
+  font-family: var(--font-display);
   font-size: 24px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--void);
   margin-bottom: 18px;
 }
 
@@ -1014,7 +1122,7 @@ body::before {
 
 .location-address {
   font-size: 16px;
-  color: var(--text-secondary);
+  color: var(--stone);
   line-height: 1.8;
   margin-bottom: 32px;
 }
@@ -1035,21 +1143,21 @@ body::before {
   justify-content: center;
   gap: 8px;
   padding: 14px 28px;
-  background: var(--bg-card);
-  border: 1px solid var(--line-medium);
-  border-radius: 12px;
-  font-family: inherit;
+  background: var(--white);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--void);
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all var(--duration) var(--ease);
 }
 
 .btn-location:hover {
-  border-color: var(--gold-primary);
-  background: var(--gold-glow);
-  color: var(--gold-primary);
+  background: var(--void);
+  color: var(--cream);
+  border-color: var(--void);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1057,188 +1165,26 @@ body::before {
    ───────────────────────────────────────────────────────────── */
 .fade-in {
   opacity: 0;
-  transform: translateY(30px); /* #7 40px → 30px로 줄여 레이아웃 쉬프트 감소 */
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* #7 0.7s → 0.5s */
-  will-change: opacity, transform; /* #7 GPU 가속 */
+  transform: translateY(30px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  will-change: opacity, transform;
 }
 
 .fade-in.visible {
   opacity: 1;
   transform: translateY(0);
-  will-change: auto; /* #7 애니메이션 완료 후 해제 */
+  will-change: auto;
 }
 
 .delay-1 { transition-delay: 0.1s; }
 .delay-2 { transition-delay: 0.2s; }
 .delay-3 { transition-delay: 0.3s; }
-
-/* ══════════════════════════════════════════════════════════════
-   브랜드 스토리 섹션
-   ══════════════════════════════════════════════════════════════ */
-.story {
-  background: var(--bg-base);
-}
-
-.story-content {
-  display: grid;
-  gap: 40px;
-  margin-top: 48px;
-}
-
-@media screen and (min-width: 769px) {
-  .story-content {
-    grid-template-columns: 1fr 1fr;
-    gap: 64px;
-    align-items: start;
-    margin-top: 64px;
-  }
-}
-
-/* 메인 이미지 (대표님 작업 사진) */
-.story-image {
-  aspect-ratio: 4/5;
-  border-radius: 24px;
-  overflow: hidden;
-  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
-  border: 1px solid var(--line-subtle);
-  position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 80px var(--gold-glow);
-}
-
-.story-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.story-image::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
-  pointer-events: none;
-}
-
-/* 텍스트 영역 */
-.story-text {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-@media screen and (min-width: 769px) {
-  .story-text {
-    gap: 32px;
-    padding-top: 16px;
-  }
-}
-
-.story-greeting {
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1.4;
-  color: var(--text-primary);
-}
-
-@media screen and (min-width: 769px) {
-  .story-greeting {
-    font-size: 36px;
-  }
-}
-
-.story-paragraph {
-  font-size: 15px;
-  line-height: 1.9;
-  color: var(--text-secondary);
-}
-
-@media screen and (min-width: 769px) {
-  .story-paragraph {
-    font-size: 17px;
-  }
-}
-
-.story-paragraph strong {
-  color: var(--gold-primary);
-  font-weight: 600;
-}
-
-/* 강조 블록 (장인의 손 + 문구) */
-.story-highlight {
-  margin-top: 16px;
-  padding: 28px 24px;
-  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
-  border: 1px solid var(--line-medium);
-  border-radius: 20px;
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.story-highlight::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
-}
-
-@media screen and (min-width: 769px) {
-  .story-highlight {
-    padding: 32px 28px;
-    gap: 24px;
-  }
-}
-
-.story-highlight-image {
-  width: 72px;
-  height: 72px;
-  flex-shrink: 0;
-  border-radius: 16px;
-  overflow: hidden;
-  background: var(--bg-base);
-  border: 1px solid var(--line-subtle);
-}
-
-.story-highlight-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-@media screen and (min-width: 769px) {
-  .story-highlight-image {
-    width: 88px;
-    height: 88px;
-  }
-}
-
-.story-highlight-text {
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 1.6;
-  color: var(--text-primary);
-}
-
-.story-highlight-text .text-gold {
-  display: block;
-}
-
-@media screen and (min-width: 769px) {
-  .story-highlight-text {
-    font-size: 18px;
-  }
-}
 </style>
 </head>
 <body>
 
 <!-- ══════════════════════════════════════════════════════════════
-     섹션 1: 히어로
+     섹션 1: 히어로 (다크+골드 유지)
      ══════════════════════════════════════════════════════════════ -->
 <section class="hero section" id="hero">
   <div class="hero-content">
@@ -1262,12 +1208,10 @@ body::before {
   </div>
 </section>
 
-<div class="section-divider"></div>
-
 <!-- ══════════════════════════════════════════════════════════════
-     브랜드 스토리 섹션: Our Story
+     브랜드 스토리 섹션: Our Story (다크 브릿지)
      ══════════════════════════════════════════════════════════════ -->
-<section class="section story" id="story">
+<section class="section story dark-section" id="story">
   <div class="container">
     <span class="section-label fade-in">Our Story</span>
 
@@ -1315,35 +1259,36 @@ body::before {
   </div>
 </section>
 
-<div class="section-divider"></div>
+<!-- 다크→라이트 트랜지션 -->
+<div class="dark-to-light-transition"></div>
 
 <!-- ══════════════════════════════════════════════════════════════
-     섹션 2: 문제 제기
+     섹션 2: 문제 제기 (라이트 — Cream)
      ══════════════════════════════════════════════════════════════ -->
 <section class="section" id="problem">
   <div class="container">
     <span class="section-label fade-in">Why MAMORU</span>
     <h2 class="section-title fade-in">가위시장,<br>이대로 괜찮을까요?</h2>
-    <p class="section-desc fade-in">미용 가위 시장의 현실을 직시하고, 변화를 만들어갑니다</p>
+    <p class="section-desc fade-in">미용 가위 시장에서 궁금했던 것들</p>
 
     <div class="problem-grid">
       <div class="problem-card fade-in delay-1">
         <!-- ★★★ PROBLEM_ICON_IMAGE_1 ★★★ -->
-        <div class="problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="bold" fill="#C9A962" stroke="none" font-family="sans-serif">&#8361;</text></svg></div>
+        <div class="problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="bold" fill="#4A4A4A" stroke="none" font-family="sans-serif">&#8361;</text></svg></div>
         <h3 class="problem-title">높은 가격만 강조하는 판매</h3>
         <p class="problem-desc">비싼 가위가 곧 좋은 가위라는 잘못된 인식으로 불필요한 고가 제품을 권유받는 경우가 많습니다</p>
       </div>
 
       <div class="problem-card fade-in delay-2">
         <!-- ★★★ PROBLEM_ICON_IMAGE_2 ★★★ -->
-        <div class="problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="1"/><circle cx="15.5" cy="12" r="1.25" fill="#C9A962"/></svg></div>
+        <div class="problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="1"/><circle cx="15.5" cy="12" r="1.25" fill="#4A4A4A"/></svg></div>
         <h3 class="problem-title">무분별한 방문판매</h3>
         <p class="problem-desc">일방적인 영업으로 인해 충분한 정보 없이 구매를 결정하게 되는 상황이 발생합니다</p>
       </div>
 
       <div class="problem-card fade-in delay-3">
         <!-- ★★★ PROBLEM_ICON_IMAGE_3 ★★★ -->
-        <div class="problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 손바닥 (약간 작고 중앙) --><rect x="7" y="12.5" width="10" height="7" rx="2.5" ry="2.5"/><!-- 5개 손가락 --><line x1="8.5" y1="12.5" x2="8.5" y2="8"/><line x1="10.5" y1="12.5" x2="10.5" y2="5.5"/><line x1="12.5" y1="12.5" x2="12.5" y2="5"/><line x1="14.5" y1="12.5" x2="14.5" y2="6"/><!-- 엄지 --><path d="M7 14L5 11"/></svg></div>
+        <div class="problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 손바닥 (약간 작고 중앙) --><rect x="7" y="12.5" width="10" height="7" rx="2.5" ry="2.5"/><!-- 5개 손가락 --><line x1="8.5" y1="12.5" x2="8.5" y2="8"/><line x1="10.5" y1="12.5" x2="10.5" y2="5.5"/><line x1="12.5" y1="12.5" x2="12.5" y2="5"/><line x1="14.5" y1="12.5" x2="14.5" y2="6"/><!-- 엄지 --><path d="M7 14L5 11"/></svg></div>
         <h3 class="problem-title">손에 맞지 않는 가위</h3>
         <p class="problem-desc">개인의 손 크기와 습관을 고려하지 않은 가위 선택으로 피로와 불편함이 누적됩니다</p>
       </div>
@@ -1351,12 +1296,10 @@ body::before {
   </div>
 </section>
 
-<div class="section-divider"></div>
-
 <!-- ══════════════════════════════════════════════════════════════
-     섹션 3: 핵심 기술력
+     섹션 3: 핵심 기술력 (라이트 — Parchment)
      ══════════════════════════════════════════════════════════════ -->
-<section class="section" id="tech">
+<section class="section tech-section" id="tech">
   <div class="container">
     <span class="section-label fade-in">기술력</span>
     <h2 class="section-title fade-in">50년 장인의<br>기술을 잇다</h2>
@@ -1366,7 +1309,7 @@ body::before {
       <!-- ★★★ TECH_MAIN_IMAGE ★★★ -->
       <div class="tech-image fade-in">
         <div class="tech-image-placeholder">
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 손잡이 원 (왼쪽 아래) --><circle cx="6" cy="19" r="2.5"/><!-- 손잡이 원 (오른쪽 아래) --><circle cx="18" cy="19" r="2.5"/><!-- 왼쪽 날 --><path d="M7.5 17L16 4"/><!-- 오른쪽 날 --><path d="M16.5 17L8 4"/></svg></span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="#8A8580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 손잡이 원 (왼쪽 아래) --><circle cx="6" cy="19" r="2.5"/><!-- 손잡이 원 (오른쪽 아래) --><circle cx="18" cy="19" r="2.5"/><!-- 왼쪽 날 --><path d="M7.5 17L16 4"/><!-- 오른쪽 날 --><path d="M16.5 17L8 4"/></svg></span>
           <span>수리 작업 이미지</span>
         </div>
       </div>
@@ -1374,7 +1317,7 @@ body::before {
       <div class="tech-features">
         <div class="tech-feature fade-in delay-1">
           <!-- ★★★ TECH_FEATURE_ICON_IMAGE_1 ★★★ -->
-          <div class="tech-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94L6.73 20.15a2.1 2.1 0 0 1-2.88-2.88l6.68-6.68A6 6 0 0 1 18.47 2.53l-3.77 3.77z"/></svg></div>
+          <div class="tech-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94L6.73 20.15a2.1 2.1 0 0 1-2.88-2.88l6.68-6.68A6 6 0 0 1 18.47 2.53l-3.77 3.77z"/></svg></div>
           <div class="tech-feature-content">
             <h4>타사 가위도 수리 가능</h4>
             <p>어떤 브랜드의 가위든 복원수리가 가능합니다. 버리지 마시고 상담해주세요.</p>
@@ -1383,7 +1326,7 @@ body::before {
 
         <div class="tech-feature fade-in delay-2">
           <!-- ★★★ TECH_FEATURE_ICON_IMAGE_2 ★★★ -->
-          <div class="tech-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c-2.67-4.33-8-4.33-8 0s5.33 4.33 8 0c2.67-4.33 8-4.33 8 0s-5.33 4.33-8 0z"/></svg></div>
+          <div class="tech-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c-2.67-4.33-8-4.33-8 0s5.33 4.33 8 0c2.67-4.33 8-4.33 8 0s-5.33 4.33-8 0z"/></svg></div>
           <div class="tech-feature-content">
             <h4>AS 평생 보장</h4>
             <p>마모루에서 구매한 가위는 평생 AS를 보장해드립니다.</p>
@@ -1392,7 +1335,7 @@ body::before {
 
         <div class="tech-feature fade-in delay-3">
           <!-- ★★★ TECH_FEATURE_ICON_IMAGE_3 ★★★ -->
-          <div class="tech-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 큰 사람 (아버지) - 머리 --><circle cx="8" cy="6" r="3"/><!-- 큰 사람 - 어깨/몸 --><path d="M3 16C3 13 5 11 8 11C11 11 13 13 13 16"/><!-- 작은 사람 (아들) - 머리 --><circle cx="17" cy="9" r="2.2"/><!-- 작은 사람 - 어깨/몸 --><path d="M13.5 18C13.5 15.5 15 13.5 17 13.5C19 13.5 20.5 15.5 20.5 18"/></svg></div>
+          <div class="tech-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 큰 사람 (아버지) - 머리 --><circle cx="8" cy="6" r="3"/><!-- 큰 사람 - 어깨/몸 --><path d="M3 16C3 13 5 11 8 11C11 11 13 13 13 16"/><!-- 작은 사람 (아들) - 머리 --><circle cx="17" cy="9" r="2.2"/><!-- 작은 사람 - 어깨/몸 --><path d="M13.5 18C13.5 15.5 15 13.5 17 13.5C19 13.5 20.5 15.5 20.5 18"/></svg></div>
           <div class="tech-feature-content">
             <h4>50년 기술의 계승</h4>
             <p>50년 경력 장인 아버지의 기술을 아들이 이어받아 정직하게 전해드립니다.</p>
@@ -1404,39 +1347,39 @@ body::before {
 </section>
 
 <!-- ══════════════════════════════════════════════════════════════
-     섹션 4: 맞춤 컨설팅
+     섹션 4: 맞춤 컨설팅 (라이트 — Cream)
      ══════════════════════════════════════════════════════════════ -->
 <section class="section consult" id="consult">
   <div class="container">
     <span class="section-label fade-in">맞춤 컨설팅</span>
     <h2 class="section-title fade-in">맞춤 상담으로 찾는<br>나만의 가위</h2>
-    <p class="section-desc fade-in">체계적인 분석을 통해 딱 맞는 가위를 추천해드립니다</p>
+    <p class="section-desc fade-in">어떤 가위가 맞는지, 함께 찾아봅니다</p>
 
     <div class="consult-steps">
       <div class="consult-step fade-in delay-1">
         <!-- ★★★ CONSULT_STEP_ICON_IMAGE_1 ★★★ -->
-        <div class="consult-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 손바닥 --><rect x="6" y="12" width="12" height="8" rx="3" ry="3"/><!-- 5개 손가락 --><line x1="7.5" y1="12" x2="7.5" y2="7"/><line x1="10" y1="12" x2="10" y2="4"/><line x1="12.5" y1="12" x2="12.5" y2="3.5"/><line x1="15" y1="12" x2="15" y2="4.5"/><!-- 엄지 (바깥쪽 각도) --><path d="M6 14L3.5 10.5"/></svg></div>
+        <div class="consult-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 손바닥 --><rect x="6" y="12" width="12" height="8" rx="3" ry="3"/><!-- 5개 손가락 --><line x1="7.5" y1="12" x2="7.5" y2="7"/><line x1="10" y1="12" x2="10" y2="4"/><line x1="12.5" y1="12" x2="12.5" y2="3.5"/><line x1="15" y1="12" x2="15" y2="4.5"/><!-- 엄지 (바깥쪽 각도) --><path d="M6 14L3.5 10.5"/></svg></div>
         <h4>손 크기 · 습관 분석</h4>
         <p>개인의 손 크기와 평소 가위 사용 습관을 파악합니다</p>
       </div>
 
       <div class="consult-step fade-in delay-2">
         <!-- ★★★ CONSULT_STEP_ICON_IMAGE_2 ★★★ -->
-        <div class="consult-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 손잡이 원 (왼쪽 아래) --><circle cx="6" cy="19" r="2.5"/><!-- 손잡이 원 (오른쪽 아래) --><circle cx="18" cy="19" r="2.5"/><!-- 왼쪽 날 --><path d="M7.5 17L16 4"/><!-- 오른쪽 날 --><path d="M16.5 17L8 4"/></svg></div>
+        <div class="consult-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 손잡이 원 (왼쪽 아래) --><circle cx="6" cy="19" r="2.5"/><!-- 손잡이 원 (오른쪽 아래) --><circle cx="18" cy="19" r="2.5"/><!-- 왼쪽 날 --><path d="M7.5 17L16 4"/><!-- 오른쪽 날 --><path d="M16.5 17L8 4"/></svg></div>
         <h4>스타일 맞춤 추천</h4>
         <p>주로 하시는 커트 스타일에 최적화된 가위를 찾아드립니다</p>
       </div>
 
       <div class="consult-step fade-in delay-3">
         <!-- ★★★ CONSULT_STEP_ICON_IMAGE_3 ★★★ -->
-        <div class="consult-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 상단 사다리꼴 --><polygon points="12,2 20,9 12,22 4,9"/><!-- 상단 수평선 --><line x1="4" y1="9" x2="20" y2="9"/><!-- 내부 분할선 --><line x1="8" y1="2.5" x2="4" y2="9"/><line x1="16" y1="2.5" x2="20" y2="9"/><line x1="8" y1="2.5" x2="12" y2="22"/><line x1="16" y1="2.5" x2="12" y2="22"/></svg></div>
+        <div class="consult-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 상단 사다리꼴 --><polygon points="12,2 20,9 12,22 4,9"/><!-- 상단 수평선 --><line x1="4" y1="9" x2="20" y2="9"/><!-- 내부 분할선 --><line x1="8" y1="2.5" x2="4" y2="9"/><line x1="16" y1="2.5" x2="20" y2="9"/><line x1="8" y1="2.5" x2="12" y2="22"/><line x1="16" y1="2.5" x2="12" y2="22"/></svg></div>
         <h4>합리적인 가격 제안</h4>
         <p>필요한 기능만 갖춘 합리적인 가격의 제품을 제안합니다</p>
       </div>
 
       <div class="consult-step fade-in delay-4">
         <!-- ★★★ CONSULT_STEP_ICON_IMAGE_4 ★★★ -->
-        <div class="consult-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94L6.73 20.15a2.1 2.1 0 0 1-2.88-2.88l6.68-6.68A6 6 0 0 1 18.47 2.53l-3.77 3.77z"/></svg></div>
+        <div class="consult-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94L6.73 20.15a2.1 2.1 0 0 1-2.88-2.88l6.68-6.68A6 6 0 0 1 18.47 2.53l-3.77 3.77z"/></svg></div>
         <h4>A/S · 관리 안내</h4>
         <p>구매 후에도 평생 관리와 AS 서비스를 안내합니다</p>
       </div>
@@ -1444,10 +1387,8 @@ body::before {
   </div>
 </section>
 
-<div class="section-divider"></div>
-
 <!-- ══════════════════════════════════════════════════════════════
-     섹션 5: 비전/목표
+     섹션 5: 비전/목표 (라이트 — Parchment)
      ══════════════════════════════════════════════════════════════ -->
 <section class="section vision" id="vision">
   <div class="container">
@@ -1457,21 +1398,21 @@ body::before {
     <div class="goal-list">
       <!-- ★★★ GOAL_ICON_IMAGE_1 ★★★ -->
       <div class="goal-item fade-in delay-1">
-        <div class="goal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="bold" fill="#C9A962" stroke="none" font-family="sans-serif">&#8361;</text></svg></div>
+        <div class="goal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="bold" fill="#4A4A4A" stroke="none" font-family="sans-serif">&#8361;</text></svg></div>
         <h4 class="goal-title">모든 미용사가 부담없이 즐기도록</h4>
         <p class="goal-desc">좋은 가위의 기준이 부담없는 가격이 될 수 있다는 것을 안내합니다</p>
       </div>
 
       <!-- ★★★ GOAL_ICON_IMAGE_2 ★★★ -->
       <div class="goal-item fade-in delay-2">
-        <div class="goal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 보드 --><rect x="4" y="4" width="16" height="18" rx="2"/><!-- 클립 --><rect x="8" y="2" width="8" height="4" rx="1"/><!-- 내부 줄 3개 --><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="14.5" x2="16" y2="14.5"/><line x1="8" y1="18" x2="13" y2="18"/></svg></div>
+        <div class="goal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 보드 --><rect x="4" y="4" width="16" height="18" rx="2"/><!-- 클립 --><rect x="8" y="2" width="8" height="4" rx="1"/><!-- 내부 줄 3개 --><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="14.5" x2="16" y2="14.5"/><line x1="8" y1="18" x2="13" y2="18"/></svg></div>
         <h4 class="goal-title">정직한 정보 전달</h4>
         <p class="goal-desc">과장 없이, 있는 그대로 제품의 특성과 장단점을 안내합니다</p>
       </div>
 
       <!-- ★★★ GOAL_ICON_IMAGE_3 ★★★ -->
       <div class="goal-item fade-in delay-3">
-        <div class="goal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 왼쪽 팔 --><path d="M2 12H6"/><!-- 오른쪽 팔 --><path d="M18 12H22"/><!-- 왼손 (위에서 아래로 잡기) --><path d="M6 12C6 12 7 9 9.5 9C11 9 12 10 12 10"/><!-- 오른손 (아래에서 위로 잡기) --><path d="M18 12C18 12 17 15 14.5 15C13 15 12 14 12 14"/><!-- 교차 악수 부분 --><path d="M9.5 9L14.5 15"/><path d="M12 10L12 14"/><!-- 손가락 디테일 --><path d="M9 11L7.5 13"/><path d="M15 13L16.5 11"/></svg></div>
+        <div class="goal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 왼쪽 팔 --><path d="M2 12H6"/><!-- 오른쪽 팔 --><path d="M18 12H22"/><!-- 왼손 (위에서 아래로 잡기) --><path d="M6 12C6 12 7 9 9.5 9C11 9 12 10 12 10"/><!-- 오른손 (아래에서 위로 잡기) --><path d="M18 12C18 12 17 15 14.5 15C13 15 12 14 12 14"/><!-- 교차 악수 부분 --><path d="M9.5 9L14.5 15"/><path d="M12 10L12 14"/><!-- 손가락 디테일 --><path d="M9 11L7.5 13"/><path d="M15 13L16.5 11"/></svg></div>
         <h4 class="goal-title">평생 함께하는 파트너</h4>
         <p class="goal-desc">한 번 인연을 맺으면 평생 AS와 관리로 함께합니다</p>
       </div>
@@ -1480,32 +1421,32 @@ body::before {
 </section>
 
 <!-- ══════════════════════════════════════════════════════════════
-     섹션 6: CTA
+     섹션 6: CTA (다크 — Void)
      ══════════════════════════════════════════════════════════════ -->
 <section class="section cta-section" id="cta">
   <div class="container">
     <div class="cta-box fade-in">
-      <h2 class="cta-title">지금 바로 상담받아보세요</h2>
-      <p class="cta-desc">맞춤 가위 상담부터 AS까지, MAMORU가 함께합니다</p>
+      <h2 class="cta-title">궁금한 점이 있으시면 편하게 물어보세요</h2>
+      <p class="cta-desc">상담부터 AS까지, 편하게 안내드립니다</p>
 
       <div class="cta-buttons">
-        <a href="javascript:void(0)" onclick="navigateTo('/52')" class="btn-primary">상담 신청하기 <span><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;"><path d="M4 12h16"/><path d="M14 6l6 6-6 6"/></svg></span></a>
+        <a href="javascript:void(0)" onclick="navigateTo('/52')" class="btn-primary">편하게 문의하기 <span><svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;"><path d="M4 12h16"/><path d="M14 6l6 6-6 6"/></svg></span></a>
         <a href="javascript:void(0)" onclick="navigateTo('/58')" class="btn-secondary">간편 진단 해보기</a>
         <a href="javascript:void(0)" onclick="navigateTo('/products')" class="btn-secondary">제품들 보러가기</a>
       </div>
 
       <!-- ★★★ SNS_ICON_IMAGE ★★★ -->
       <div class="cta-links">
-        <a href="#" class="cta-link" title="카카오톡"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 말풍선 --><path d="M21 12a9 9 0 0 1-9 9 9.1 9.1 0 0 1-4.68-1.3L3 21l1.3-4.32A9 9 0 1 1 21 12z"/><!-- 점 3개 (...) --><circle cx="8" cy="12" r="1" fill="#C9A962" stroke="none"/><circle cx="12" cy="12" r="1" fill="#C9A962" stroke="none"/><circle cx="16" cy="12" r="1" fill="#C9A962" stroke="none"/></svg></a>
-        <a href="#" class="cta-link" title="인스타그램"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 바디 --><rect x="2" y="6" width="20" height="14" rx="3"/><!-- 상단 플래시/뷰파인더 --><path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6"/><!-- 렌즈 --><circle cx="12" cy="13" r="4"/><!-- 렌즈 내부 --><circle cx="12" cy="13" r="1.5" fill="#C9A962"/></svg></a>
-        <a href="#" class="cta-link" title="전화"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
+        <a href="#" class="cta-link" title="카카오톡"><svg viewBox="0 0 24 24" fill="none" stroke="#B8B4AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 말풍선 --><path d="M21 12a9 9 0 0 1-9 9 9.1 9.1 0 0 1-4.68-1.3L3 21l1.3-4.32A9 9 0 1 1 21 12z"/><!-- 점 3개 (...) --><circle cx="8" cy="12" r="1" fill="#B8B4AF" stroke="none"/><circle cx="12" cy="12" r="1" fill="#B8B4AF" stroke="none"/><circle cx="16" cy="12" r="1" fill="#B8B4AF" stroke="none"/></svg></a>
+        <a href="#" class="cta-link" title="인스타그램"><svg viewBox="0 0 24 24" fill="none" stroke="#B8B4AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 바디 --><rect x="2" y="6" width="20" height="14" rx="3"/><!-- 상단 플래시/뷰파인더 --><path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6"/><!-- 렌즈 --><circle cx="12" cy="13" r="4"/><!-- 렌즈 내부 --><circle cx="12" cy="13" r="1.5" fill="#B8B4AF"/></svg></a>
+        <a href="#" class="cta-link" title="전화"><svg viewBox="0 0 24 24" fill="none" stroke="#B8B4AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════════════════
-     섹션 7: 오시는 길
+     섹션 7: 오시는 길 (라이트 — Cream)
      ══════════════════════════════════════════════════════════════ -->
 <section class="section location" id="location">
   <div class="container">
@@ -1516,20 +1457,20 @@ body::before {
       <!-- ★★★ MAP_IMAGE ★★★ -->
       <a href="https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C%20%EA%B5%AC%EB%A1%9C%EA%B5%AC%20%EB%B6%80%EA%B4%91%EB%A1%9C%2088" target="_blank" class="location-map fade-in">
         <div class="map-placeholder">
-          <span class="map-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 접힌 지도 --><polygon points="1,6 8,3 16,6 23,3 23,18 16,21 8,18 1,21"/><!-- 접힌 자국 --><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/><!-- 핀 마크 --><circle cx="12" cy="11" r="1.5" fill="#C9A962"/></svg></span>
+          <span class="map-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#8A8580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><!-- 접힌 지도 --><polygon points="1,6 8,3 16,6 23,3 23,18 16,21 8,18 1,21"/><!-- 접힌 자국 --><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/><!-- 핀 마크 --><circle cx="12" cy="11" r="1.5" fill="#8A8580"/></svg></span>
           <span class="map-text">지도를 클릭하면<br>네이버지도에서 열립니다</span>
         </div>
       </a>
 
       <div class="location-info fade-in">
-        <h3 class="location-title"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;"><!-- 물방울 뒤집힌 핀 형태 --><path d="M12 22s-7-5.75-7-11a7 7 0 1 1 14 0c0 5.25-7 11-7 11z"/><!-- 내부 원 --><circle cx="12" cy="11" r="2.5" fill="#C9A962"/></svg> MAMORU</h3>
+        <h3 class="location-title"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;"><!-- 물방울 뒤집힌 핀 형태 --><path d="M12 22s-7-5.75-7-11a7 7 0 1 1 14 0c0 5.25-7 11-7 11z"/><!-- 내부 원 --><circle cx="12" cy="11" r="2.5" fill="#4A4A4A"/></svg> MAMORU</h3>
         <p class="location-address">
           서울특별시 구로구 부광로 88<br>
           SKV1건물 B동 311호
         </p>
         <div class="location-buttons">
-          <a href="https://map.kakao.com/link/to/MAMORU,37.4855,126.8974" target="_blank" class="btn-location"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;"><!-- 외부 원 --><circle cx="12" cy="12" r="10"/><!-- 방향 다이아몬드 --><polygon points="12,4.5 14.5,12 12,19.5 9.5,12" fill="none"/><!-- 북쪽 삼각형 채움 --><polygon points="12,4.5 14.5,12 12,12" fill="#C9A962" stroke="none"/><polygon points="12,4.5 9.5,12 12,12" fill="none" stroke="#C9A962" stroke-width="0"/><!-- N 표시 --><text x="12" y="3.5" text-anchor="middle" font-size="3" fill="#C9A962" stroke="none" font-family="sans-serif" font-weight="bold">N</text></svg> 네비게이션</a>
-          <a href="https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C%20%EA%B5%AC%EB%A1%9C%EA%B5%AC%20%EB%B6%80%EA%B4%91%EB%A1%9C%2088" target="_blank" class="btn-location"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;"><!-- 접힌 지도 --><polygon points="1,6 8,3 16,6 23,3 23,18 16,21 8,18 1,21"/><!-- 접힌 자국 --><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/><!-- 핀 마크 --><circle cx="12" cy="11" r="1.5" fill="#C9A962"/></svg> 지도에서 보기</a>
+          <a href="https://map.kakao.com/link/to/MAMORU,37.4855,126.8974" target="_blank" class="btn-location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;"><!-- 외부 원 --><circle cx="12" cy="12" r="10"/><!-- 방향 다이아몬드 --><polygon points="12,4.5 14.5,12 12,19.5 9.5,12" fill="none"/><!-- 북쪽 삼각형 채움 --><polygon points="12,4.5 14.5,12 12,12" fill="currentColor" stroke="none"/></svg> 네비게이션</a>
+          <a href="https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C%20%EA%B5%AC%EB%A1%9C%EA%B5%AC%20%EB%B6%80%EA%B4%91%EB%A1%9C%2088" target="_blank" class="btn-location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;"><!-- 접힌 지도 --><polygon points="1,6 8,3 16,6 23,3 23,18 16,21 8,18 1,21"/><!-- 접힌 자국 --><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/><!-- 핀 마크 --><circle cx="12" cy="11" r="1.5" fill="currentColor"/></svg> 지도에서 보기</a>
         </div>
       </div>
     </div>
