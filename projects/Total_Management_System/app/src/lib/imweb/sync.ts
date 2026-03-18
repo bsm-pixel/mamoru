@@ -134,6 +134,8 @@ export async function syncOrders(): Promise<{
 
 /** TMS에서 직접 관리하는 상태 — 아임웹 동기화 시 덮어쓰지 않음 */
 const TMS_MANAGED_STATUSES: OrderStatus[] = ['cancel_pending', 'shipping'];
+/** 배송완료 이후 상태 — shipping 보호를 해제하여 delivered 전환 허용 */
+const DELIVERED_OR_LATER: OrderStatus[] = ['delivered', 'confirmed', 'cancelled', 'refund_request', 'refunded'];
 
 /** 단건 upsert — 주문 + 품목 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -153,7 +155,10 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
     .eq('imweb_order_no', imwebOrder.order_no)
     .single();
 
-  const isTmsManaged = existing && TMS_MANAGED_STATUSES.includes(existing.status);
+  // shipping 보호: 아임웹이 delivered 이상으로 진행됐으면 보호 해제 (배송완료 전환 허용)
+  const isTmsManaged = existing
+    && TMS_MANAGED_STATUSES.includes(existing.status)
+    && !DELIVERED_OR_LATER.includes(imwebStatus);
 
   const orderData = {
     imweb_order_no: imwebOrder.order_no,

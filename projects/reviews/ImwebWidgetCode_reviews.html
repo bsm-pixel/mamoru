@@ -172,6 +172,21 @@ img { display: block; max-width: 100%; }
   background: rgba(26,26,26,0.04);
   border-radius: 999px;
 }
+/* 속성 태그 */
+.mm-rv-card__tags, .mm-rv-modal__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mm-rv-tag {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mm-text-d2);
+  padding: 3px 10px;
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  background: transparent;
+}
 
 /* ── 모달 ── */
 .mm-rv-overlay {
@@ -424,6 +439,23 @@ img { display: block; max-width: 100%; }
 
   /* ── 타입/서브타입 라벨 ── */
   var TYPE_LABELS = { consult: '컨설팅상담', repair: '복원수리', purchase: '제품구매' };
+  /* 속성 태그 key→한글 */
+  var TAG_LABELS = {
+    comfortable:'강요없이 편안해요', detailed_guide:'설명이 자세해요', professional:'전문적이에요',
+    personalized:'맞춤 안내', worth_time:'시간이 아깝지 않았어요',
+    reasonable_price:'합리적이에요', fair_price:'적당해요',
+    like_new:'새 가위처럼', better_cut:'커트감이 달라요', above_expect:'기대 이상',
+    precise_edge:'날 조절 정확', thorough_info:'안내 꼼꼼', fast_service:'진행 빠름', good_value:'가격 대비 만족',
+    good_quality:'품질이 좋아요', fast_delivery:'배송이 빨라요', neat_packaging:'포장이 꼼꼼해요',
+    would_recommend:'추천하고 싶어요'
+  };
+  function renderTagChips(r, cls) {
+    var tags = r.meta && r.meta.tags;
+    if (!tags || !tags.length) return '';
+    return '<div class="' + cls + '">' +
+      tags.map(function(t) { return '<span class="mm-rv-tag">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') +
+    '</div>';
+  }
   var SUBTYPE_LABELS = { store_visit: '매장방문', field_request: '출장상담', talk_consult: '톡상담', restoration: '복원수리' };
 
   function getTypeLabel(r) { return TYPE_LABELS[r.type] || ''; }
@@ -483,6 +515,7 @@ img { display: block; max-width: 100%; }
       '</div>' +
       productHtml +
       '<div class="mm-rv-card__stars">' + renderStars(r.stars) + '</div>' +
+      renderTagChips(r, 'mm-rv-card__tags') +
       '<div class="mm-rv-card__text">' + preview + '</div>' +
       renderDates(r, 'mm-rv-card__date') +
     '</article>';
@@ -521,6 +554,7 @@ img { display: block; max-width: 100%; }
       '<div class="mm-rv-modal__stars">' + renderStars(r.stars) + '</div>' +
       '<div class="mm-rv-modal__name">' + maskName(r.name) + '</div>' +
       '<div class="mm-rv-modal__chips">' + renderChips(r, 'mm-rv-chip') + '</div>' +
+      renderTagChips(r, 'mm-rv-modal__tags') +
       productHtml +
       '<div class="mm-rv-modal__text">' + r.content + '</div>' +
       photosHtml +

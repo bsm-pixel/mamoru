@@ -37,7 +37,7 @@ async function generateReviewId(db: ReturnType<typeof createServiceClient>): Pro
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { uid, type, stars, content, photoUrls, productNo } = body;
+    const { uid, type, stars, content, photoUrls, productNo, tags } = body;
 
     if (!uid || !type || !stars || !content) {
       return NextResponse.json(
@@ -181,7 +181,7 @@ export async function POST(req: NextRequest) {
         source_id: sourceId,
         product: meta.product_name || null,
         status: 'pending',
-        meta,
+        meta: { ...meta, ...(Array.isArray(tags) && tags.length > 0 ? { tags } : {}) },
       })
       .select()
       .single();

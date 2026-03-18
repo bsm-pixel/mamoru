@@ -15,83 +15,105 @@
 
     .header { text-align: center; padding: 32px 0 24px; }
     .header h1 { font-size: 20px; font-weight: 700; }
-    .header p { font-size: 13px; color: #888; margin-top: 4px; }
+    .header p { font-size: 13px; color: #8A8580; margin-top: 4px; } /* Warm Gray */
 
     .card {
-      background: #fff; border-radius: 14px; padding: 24px 20px;
+      background: #fff; border-radius: 12px; padding: 24px 20px; /* radius 12px */
       margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
 
-    /* 칩 */
+    /* 칩 — 모노크롬 통일 */
     .chip {
-      display: inline-block; padding: 4px 12px; border-radius: 20px;
+      display: inline-block; padding: 4px 12px; border-radius: 8px; /* Brand Guide radius */
       font-size: 12px; font-weight: 600; margin-bottom: 16px;
+      border: 1px solid #D4D0CB; /* Sand */
+      background: transparent;
+      color: #4A4A4A; /* Stone */
     }
-    .chip-as { background: #fef3c7; color: #92400e; }
-    .chip-restoration { background: #dbeafe; color: #1e40af; }
-    .chip-consult { background: #d1fae5; color: #065f46; }
 
     /* 고객 정보 */
     .customer-info {
-      background: #f9fafb; border-radius: 10px; padding: 14px 16px;
+      background: #F5F3F0; border-radius: 8px; padding: 14px 16px; /* Shell bg, 8px radius */
       margin-bottom: 20px; font-size: 14px;
     }
     .customer-info .name { font-weight: 600; }
-    .customer-info .meta { font-size: 13px; color: #888; margin-top: 2px; }
+    .customer-info .meta { font-size: 13px; color: #8A8580; margin-top: 2px; } /* Warm Gray */
 
     /* 폼 */
     .form-group { margin-bottom: 20px; }
     .form-group label {
       display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;
     }
-    .form-group .optional { font-weight: 400; color: #aaa; font-size: 13px; }
+    .form-group .optional { font-weight: 400; color: #B8B4AF; font-size: 13px; } /* Mist */
 
     textarea {
-      width: 100%; padding: 14px; border: 1px solid #e0e0d8;
-      border-radius: 10px; font-size: 15px; color: #1A1A1A;
+      width: 100%; padding: 14px; border: 1px solid #D4D0CB; /* Sand */
+      border-radius: 8px; font-size: 15px; color: #1A1A1A;
       resize: vertical; min-height: 120px; font-family: inherit;
     }
     textarea:focus { outline: none; border-color: #1A1A1A; box-shadow: 0 0 0 3px rgba(26,26,26,0.08); } /* Void */
-    textarea::placeholder { color: #bbb; }
+    textarea::placeholder { color: #B8B4AF; } /* Mist */
 
     /* 별점 */
     .star-rating { display: flex; gap: 8px; margin-bottom: 4px; }
     .star {
       width: 36px; height: 36px; cursor: pointer; font-size: 28px;
-      color: #ddd; transition: color 0.15s; user-select: none;
+      color: #D4D0CB; /* Sand (비활성) */
+      transition: color 0.15s; user-select: none;
       display: flex; align-items: center; justify-content: center;
     }
     .star.active { color: #1A1A1A; } /* Void */
-    .star-hint { font-size: 12px; color: #aaa; }
+    .star-hint { font-size: 12px; color: #8A8580; } /* Warm Gray */
+
+    /* 속성 태그 선택 */
+    .tag-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag-chip {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 8px 14px; min-height: 44px; /* 터치 타겟 */
+      border: 1px solid #D4D0CB; /* Sand */
+      border-radius: 8px;
+      font-size: 13px; font-weight: 500; line-height: 1.4;
+      color: #4A4A4A; /* Stone */
+      background: transparent;
+      cursor: pointer; transition: all 0.15s ease;
+      user-select: none; -webkit-tap-highlight-color: transparent;
+    }
+    .tag-chip.selected {
+      background: #F5F3F0; /* Shell */
+      border-color: #1A1A1A; /* Void */
+      color: #1A1A1A; /* Void */
+      font-weight: 600;
+    }
+    .tag-hint { font-size: 12px; color: #8A8580; margin-top: 6px; } /* Warm Gray */
 
     /* 사진 업로드 */
     .photo-area { display: flex; gap: 10px; flex-wrap: wrap; }
     .photo-btn {
-      width: 80px; height: 80px; border: 2px dashed #ddd; border-radius: 10px;
+      width: 80px; height: 80px; border: 2px dashed #D4D0CB; border-radius: 8px; /* Sand, 8px */
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      cursor: pointer; transition: border-color 0.2s; background: #fafaf8;
+      cursor: pointer; transition: border-color 0.2s; background: #FAF9F7; /* Cream */
     }
     .photo-btn:hover { border-color: #1A1A1A; } /* Void */
-    .photo-btn .icon { font-size: 24px; color: #bbb; }
-    .photo-btn .text { font-size: 11px; color: #aaa; margin-top: 2px; }
+    .photo-btn .icon { font-size: 24px; color: #B8B4AF; } /* Mist */
+    .photo-btn .text { font-size: 11px; color: #8A8580; margin-top: 2px; } /* Warm Gray */
     .photo-preview {
-      width: 80px; height: 80px; border-radius: 10px; object-fit: cover;
+      width: 80px; height: 80px; border-radius: 8px; object-fit: cover;
       position: relative;
     }
     .photo-wrap {
       position: relative; width: 80px; height: 80px;
     }
-    .photo-wrap img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; }
+    .photo-wrap img { width: 100%; height: 100%; border-radius: 8px; object-fit: cover; }
     .photo-remove {
       position: absolute; top: -6px; right: -6px;
       width: 22px; height: 22px; border-radius: 50%;
-      background: #ef4444; color: #fff; border: 2px solid #fff;
+      background: #1A1A1A; color: #fff; border: 2px solid #fff; /* Void bg */
       font-size: 12px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
     }
     /* 업로드 중 표시 */
     .photo-wrap.uploading::after {
-      content: ''; position: absolute; inset: 0; border-radius: 10px;
+      content: ''; position: absolute; inset: 0; border-radius: 8px;
       background: rgba(255,255,255,0.6);
       display: flex; align-items: center; justify-content: center;
     }
@@ -101,31 +123,33 @@
       width: 100%; padding: 14px; border: none; border-radius: 12px;
       font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
     }
-    .btn-primary { background: #1A1A1A; color: #fff; } /* Void */
-    .btn-primary:hover { background: #333; }
-    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-    .btn-close { background: #e8e8e0; color: #555; margin-top: 8px; }
+    .btn-primary { background: #1A1A1A; color: #FAF9F7; } /* Void / Cream */
+    .btn-primary:hover { background: #2D2D2D; } /* Graphite */
+    .btn-primary:disabled { background: #D4D0CB; color: #8A8580; cursor: not-allowed; } /* Sand / Warm Gray */
+    .btn-close { background: #EDEBE8; color: #4A4A4A; margin-top: 8px; } /* Parchment / Stone */
 
-    /* 상태 */
-    .loading { text-align: center; padding: 80px 20px; color: #888; }
+    /* 상태 — 모노크롬 */
+    .loading { text-align: center; padding: 80px 20px; color: #8A8580; } /* Warm Gray */
     .loading::after {
       content: ''; display: inline-block; width: 20px; height: 20px;
-      border: 2px solid #ddd; border-top-color: #1A1A1A; /* Void */
+      border: 2px solid #D4D0CB; border-top-color: #1A1A1A; /* Sand / Void */
       border-radius: 50%; animation: spin 0.8s linear infinite;
       margin-left: 8px; vertical-align: middle;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .error-card {
-      background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
-      text-align: center; padding: 60px 20px; border-radius: 14px;
+      background: #F5F3F0; border: 1px solid #D4D0CB; color: #1A1A1A; /* Shell / Sand / Void */
+      text-align: center; padding: 60px 20px; border-radius: 12px;
     }
+    .error-card h2 { font-size: 18px; margin-bottom: 8px; }
+    .error-card p { font-size: 14px; color: #4A4A4A; } /* Stone */
     .success-card {
-      background: #f0fdf4; border: 1px solid #a7f3d0; color: #065f46;
-      text-align: center; padding: 60px 20px; border-radius: 14px;
+      background: #F5F3F0; border: 1px solid #D4D0CB; color: #1A1A1A; /* Shell / Sand / Void */
+      text-align: center; padding: 60px 20px; border-radius: 12px;
     }
     .success-card h2 { font-size: 18px; margin-bottom: 8px; }
-    .success-card p { font-size: 14px; line-height: 1.6; }
+    .success-card p { font-size: 14px; line-height: 1.6; color: #4A4A4A; } /* Stone */
 
     .hidden { display: none; }
 
@@ -133,25 +157,24 @@
     .product-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
     .product-item {
       display: flex; align-items: center; gap: 12px; padding: 14px;
-      border: 2px solid #e0e0d8; border-radius: 10px; cursor: pointer;
+      border: 2px solid #D4D0CB; border-radius: 8px; cursor: pointer; /* Sand, 8px */
       transition: border-color 0.15s;
     }
-    .product-item:hover { border-color: #aaa; }
-    .product-item.selected { border-color: #1A1A1A; }
+    .product-item:hover { border-color: #8A8580; } /* Warm Gray */
+    .product-item.selected { border-color: #1A1A1A; } /* Void */
     .product-item.reviewed { opacity: 0.5; pointer-events: none; }
     .product-item .pname { font-size: 14px; font-weight: 600; flex: 1; }
-    .product-item .poption { font-size: 12px; color: #888; }
+    .product-item .poption { font-size: 12px; color: #8A8580; } /* Warm Gray */
     .product-item .pbadge {
-      font-size: 11px; padding: 2px 8px; border-radius: 999px;
-      background: #d1fae5; color: #065f46;
+      font-size: 11px; padding: 2px 8px; border-radius: 8px;
+      background: #F5F3F0; color: #4A4A4A; /* Shell / Stone */
     }
-    .chip-purchase { background: #e0e7ff; color: #3730a3; }
     .all-reviewed-card {
-      background: #f0fdf4; border: 1px solid #a7f3d0; color: #065f46;
-      text-align: center; padding: 60px 20px; border-radius: 14px;
+      background: #F5F3F0; border: 1px solid #D4D0CB; color: #1A1A1A; /* Shell / Sand / Void */
+      text-align: center; padding: 60px 20px; border-radius: 12px;
     }
     .all-reviewed-card h2 { font-size: 18px; margin-bottom: 8px; }
-    .all-reviewed-card p { font-size: 14px; }
+    .all-reviewed-card p { font-size: 14px; color: #4A4A4A; } /* Stone */
   </style>
 </head>
 <body>
@@ -187,7 +210,7 @@
     <!-- 제품 선택 (purchase 타입) -->
     <div id="product-select" class="hidden">
       <div class="card">
-        <span class="chip chip-purchase">제품 구매 후기</span>
+        <span class="chip">제품 구매 후기</span>
         <div class="customer-info">
           <div class="name" id="ps-name">-</div>
           <div class="meta" id="ps-meta">-</div>
@@ -203,7 +226,7 @@
     <div id="main" class="hidden">
       <div class="card">
         <!-- 타입 칩 -->
-        <span id="type-chip" class="chip chip-as">A/S 후기</span>
+        <span id="type-chip" class="chip">복원수리 후기</span>
 
         <!-- 고객 정보 (자동) -->
         <div class="customer-info">
@@ -222,6 +245,13 @@
             <span class="star" data-v="5">★</span>
           </div>
           <p class="star-hint" id="star-hint">별점을 선택해주세요</p>
+        </div>
+
+        <!-- 속성 태그 (선택사항) -->
+        <div class="form-group" id="tag-section" style="display:none">
+          <label>이런 점이 좋았어요 <span class="optional">(선택, 최대 3개)</span></label>
+          <div class="tag-chips" id="tag-chips"></div>
+          <p class="tag-hint" id="tag-hint"></p>
         </div>
 
         <!-- 후기 내용 -->
@@ -265,16 +295,48 @@
     var rating = 0;
     var photos = [];    // { file, dataUrl, url(업로드 후) }
     var uploading = 0;  // 업로드 진행 중 카운트
+    var selectedTags = []; // 속성 태그
     var STORAGE_KEY = 'mamoru_review_' + uid;
 
     // ── 타입별 설정 ──
     var selectedProductNo = ''; // purchase 타입: 선택된 제품 번호
 
     var TYPE_CONFIG = {
-      repair: { label: '복원수리 후기', cls: 'chip-restoration', placeholder: '복원 결과는 어떠셨나요? 자유롭게 작성해주세요', header: '소중한 후기를 남겨주세요' },
-      consult: { label: '상담 후기', cls: 'chip-consult', placeholder: '상담은 어떠셨나요? 자유롭게 작성해주세요', header: '상담 경험을 들려주세요' },
-      purchase: { label: '제품 구매 후기', cls: 'chip-purchase', placeholder: '제품 사용 경험을 자유롭게 작성해주세요', header: '구매하신 제품은 어떠셨나요?' }
+      repair: { label: '복원수리 후기', placeholder: '복원 결과는 어떠셨나요? 자유롭게 작성해주세요', header: '소중한 후기를 남겨주세요' },
+      consult: { label: '상담 후기', placeholder: '상담은 어떠셨나요? 자유롭게 작성해주세요', header: '상담 경험을 들려주세요' },
+      purchase: { label: '제품 구매 후기', placeholder: '제품 사용 경험을 자유롭게 작성해주세요', header: '구매하신 제품은 어떠셨나요?' }
     };
+
+    // ── 카테고리별 속성 태그 ──
+    var TAG_CONFIG = {
+      consult: [
+        { key: 'comfortable', label: '강요없이 편안해요' },
+        { key: 'detailed_guide', label: '설명이 자세해요' },
+        { key: 'professional', label: '전문적이에요' },
+        { key: 'personalized', label: '내 상황에 맞게 안내해줘요' },
+        { key: 'worth_time', label: '시간이 아깝지 않았어요' },
+        { key: 'reasonable_price', label: '가격이 합리적이에요' },
+        { key: 'fair_price', label: '가격이 적당해요' }
+      ],
+      repair: [
+        { key: 'like_new', label: '새 가위처럼 돌아왔어요' },
+        { key: 'better_cut', label: '커트감이 확실히 달라요' },
+        { key: 'above_expect', label: '기대 이상이에요' },
+        { key: 'precise_edge', label: '날 조절이 정확해요' },
+        { key: 'thorough_info', label: '안내가 꼼꼼해요' },
+        { key: 'fast_service', label: '진행이 빨라요' },
+        { key: 'good_value', label: '가격 대비 만족해요' }
+      ],
+      purchase: [
+        { key: 'above_expect', label: '기대 이상이에요' },
+        { key: 'good_quality', label: '품질이 좋아요' },
+        { key: 'fast_delivery', label: '배송이 빨라요' },
+        { key: 'neat_packaging', label: '포장이 꼼꼼해요' },
+        { key: 'good_value', label: '가격 대비 만족해요' },
+        { key: 'would_recommend', label: '다른 분께 추천하고 싶어요' }
+      ]
+    };
+    var MAX_TAGS = 3;
 
     // ── subtype → 한글 라벨 ──
     var SUBTYPE_LABELS = {
@@ -289,7 +351,8 @@
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
           rating: rating,
           content: document.getElementById('content') ? document.getElementById('content').value : '',
-          photoUrls: photos.map(function(p) { return p.url; }).filter(Boolean)
+          photoUrls: photos.map(function(p) { return p.url; }).filter(Boolean),
+          tags: selectedTags
         }));
       } catch(e) {}
     }
@@ -368,7 +431,6 @@
       var cfg = TYPE_CONFIG[reviewType] || TYPE_CONFIG.repair;
       var chip = document.getElementById('type-chip');
       chip.textContent = cfg.label;
-      chip.className = 'chip ' + cfg.cls;
       document.querySelector('.header p').textContent = cfg.header;
       document.getElementById('content').placeholder = cfg.placeholder;
 
@@ -437,6 +499,25 @@
       saveState();
     });
 
+    // ── 속성 태그 선택 ──
+    document.getElementById('tag-chips').addEventListener('click', function(e) {
+      var chip = e.target.closest('.tag-chip');
+      if (!chip) return;
+      var key = chip.dataset.key;
+      var idx = selectedTags.indexOf(key);
+      if (idx > -1) {
+        selectedTags.splice(idx, 1);
+        chip.classList.remove('selected');
+      } else {
+        if (selectedTags.length >= MAX_TAGS) return;
+        selectedTags.push(key);
+        chip.classList.add('selected');
+      }
+      var hint = document.getElementById('tag-hint');
+      hint.textContent = selectedTags.length > 0 ? selectedTags.length + '개 선택됨' : '';
+      saveState();
+    });
+
     // ── 사진 선택 → 리사이즈 → 즉시 업로드 ──
     document.getElementById('photo-input').addEventListener('change', function(e) {
       var files = Array.from(e.target.files);
@@ -498,7 +579,8 @@
           stars: rating,
           content: document.getElementById('content').value.trim(),
           photoUrls: photoUrls,
-          productNo: selectedProductNo || undefined
+          productNo: selectedProductNo || undefined,
+          tags: selectedTags.length > 0 ? selectedTags : undefined
         })
       })
       .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
@@ -554,6 +636,15 @@
       document.getElementById('r-name').textContent = nameText;
       document.getElementById('r-meta').textContent = metaText;
 
+      // 태그 칩 렌더링
+      var tags = TAG_CONFIG[reviewType];
+      if (tags && tags.length > 0) {
+        document.getElementById('tag-section').style.display = '';
+        document.getElementById('tag-chips').innerHTML = tags.map(function(t) {
+          return '<span class="tag-chip" data-key="' + t.key + '">' + t.label + '</span>';
+        }).join('');
+      }
+
       // sessionStorage에서 이전 상태 복원 (카메라 새로고침 대응)
       var saved = loadState();
       if (saved) {
@@ -576,6 +667,16 @@
             photos.push({ file: null, dataUrl: url, url: url });
           });
           renderPhotos();
+        }
+        // 태그 복원
+        if (saved.tags && saved.tags.length > 0) {
+          selectedTags = saved.tags;
+          selectedTags.forEach(function(key) {
+            var chip = document.querySelector('.tag-chip[data-key="' + key + '"]');
+            if (chip) chip.classList.add('selected');
+          });
+          var hint = document.getElementById('tag-hint');
+          hint.textContent = selectedTags.length + '개 선택됨';
         }
         checkSubmit();
       }
