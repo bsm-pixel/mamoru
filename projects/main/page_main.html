@@ -35,7 +35,7 @@
 
   /* 서체 */
   --font-display: 'Outfit', sans-serif;
-  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-body: 'Pretendard Variable', 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
   /* 레이아웃 */
   --mm-max-w: 1200px;
@@ -372,7 +372,48 @@ button[class*="mm-"]:focus-visible {
 .mm-finder__chip-icon { width: 18px; height: 18px; flex-shrink: 0; object-fit: contain; display: inline-block; }
 .mm-finder__chip-icon[src=""] { display: none; } /* src 비어있으면 숨김 */
 
-/* 통합 그리드: 모바일 2열 3행 / PC 3열 2행 */
+/* 클리어런스 배너 */
+.mm-finder__banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
+  background: var(--white);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-sm);
+  transition: background var(--duration), box-shadow var(--duration);
+}
+.mm-finder__banner-tag {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--cream);
+  background: var(--void);
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+.mm-finder__banner-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--void);
+  flex: 1;
+}
+.mm-finder__banner-arrow {
+  font-size: 16px;
+  color: var(--warm-gray);
+  flex-shrink: 0;
+}
+@media (min-width: 768px) {
+  .mm-finder__banner { padding: 16px 24px; }
+  .mm-finder__banner-text { font-size: 14px; }
+}
+@media (hover: hover) {
+  .mm-finder__banner:hover { background: var(--cream); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+}
+
+/* 통합 그리드: 모바일 2열 / PC 3열 */
 .mm-finder__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -380,13 +421,6 @@ button[class*="mm-"]:focus-visible {
 }
 .mm-finder__grid > .mm-finder__main {
   grid-column: 1 / -1;
-}
-/* 이벤트 카드 — 눈에 띄지 않게 톤다운 */
-.mm-finder__sub--event {
-  background: var(--shell);
-}
-.mm-finder__sub--event .mm-finder__sub-title {
-  color: var(--warm-gray);
 }
 .mm-finder__sub {
   display: flex;
@@ -430,8 +464,8 @@ button[class*="mm-"]:focus-visible {
   .mm-finder { padding: 120px 0; }
   .mm-finder__grid { grid-template-columns: repeat(3, 1fr); }
   .mm-finder__grid > .mm-finder__main { grid-column: 1 / 3; }
-  .mm-finder__grid > .mm-finder__sub--tools { grid-column: 3 / 4; }
-  .mm-finder__sub--event { order: 1; } /* PC에서 2행 맨 끝으로 */
+  .mm-finder__grid > .mm-finder__sub--brand { grid-column: 3 / 4; order: 1; } /* PC: 브랜드소개 우측(3열) */
+  .mm-finder__grid > .mm-finder__sub--tools { grid-column: 1 / 3; order: 0; } /* PC: 도구 좌측(1-2열) */
   .mm-finder__main { padding: 40px 36px; }
   .mm-finder__main-title { font-size: 22px; }
   .mm-finder__main-desc { font-size: 15px; }
@@ -470,15 +504,18 @@ button[class*="mm-"]:focus-visible {
   position: absolute;
   inset: 0;
   z-index: 0;
-  -webkit-mask-image: radial-gradient(ellipse at center, black 10%, transparent 60%);
-  mask-image: radial-gradient(ellipse at center, black 10%, transparent 60%);
+}
+.mm-dual-cta__bg picture {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .mm-dual-cta__bg img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
-  opacity: 0.15;
+  opacity: 0.3; /* 모바일: 배경 톤 — 필요 시 조절 */
 }
 .mm-dual-cta__bg img[src=""] { display: none; }
 .mm-dual-cta__content {
@@ -540,17 +577,7 @@ button[class*="mm-"]:focus-visible {
     gap: 0;
   }
   .mm-dual-cta__block { padding: 64px 40px; border-radius: 0; min-height: 380px; }
-  .mm-dual-cta__bg img { opacity: 0.2; }
-  /* 좌측 블록: 중앙 비네팅 */
-  .mm-dual-cta__block:first-child .mm-dual-cta__bg {
-    -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
-    mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
-  }
-  /* 우측 블록: 중앙 비네팅 */
-  .mm-dual-cta__block:last-child .mm-dual-cta__bg {
-    -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
-    mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
-  }
+  .mm-dual-cta__bg img { opacity: 0.35; } /* PC: 좀 더 선명 */
   .mm-dual-cta__headline { font-size: 30px; font-weight: 900; }
 }
 @media (min-width: 1440px) {
@@ -813,8 +840,15 @@ button[class*="mm-"]:focus-visible {
   <div class="mm-inner">
     <p class="mm-finder__label mm-anim">무엇을 찾고 계신가요?</p>
 
+    <!-- 클리어런스 배너 -->
+    <a href="/42" class="mm-finder__banner mm-anim">
+      <span class="mm-finder__banner-tag">CLEARANCE</span>
+      <span class="mm-finder__banner-text">재고 특가 — 한정 수량 할인 상품 보기</span>
+      <span class="mm-finder__banner-arrow">→</span>
+    </a>
+
     <div class="mm-finder__grid">
-      <!-- 대형 카드: 미용가위 품목 (모바일 2col span / PC 3열 중 1-2열) -->
+      <!-- 대형 카드: 미용가위 품목 (모바일 2col span / PC 2열) -->
       <div class="mm-finder__main mm-anim">
         <div class="mm-finder__main-title">미용가위</div>
         <div class="mm-finder__main-desc">커트 스타일에 맞는 가위를 찾아보세요</div>
@@ -839,32 +873,18 @@ button[class*="mm-"]:focus-visible {
         </div>
       </div>
 
-      <!-- 도구·소모품·정리용품 (PC 3열의 3번째) -->
+      <!-- 모바일: 브랜드소개 좌측 (엄지 접근성) / PC: 우측 (order로 전환) -->
+      <a href="/intro" class="mm-finder__sub mm-finder__sub--brand mm-anim">
+        <div class="mm-finder__sub-title">브랜드 소개</div>
+        <div class="mm-finder__sub-desc">마모루는<br>어떤 곳인가요?</div>
+        <span class="mm-finder__sub-arrow">자세히 보기 →</span>
+      </a>
+
+      <!-- 도구·소모품·정리용품 -->
       <a href="/29" class="mm-finder__sub mm-finder__sub--tools mm-anim">
         <div class="mm-finder__sub-title">도구 · 소모품 · 정리용품</div>
         <div class="mm-finder__sub-desc">빗 · 분무기 · 핀셋 · 가위집</div>
         <span class="mm-finder__sub-arrow">둘러보기 →</span>
-      </a>
-
-      <!-- ✏️ 수정가능: 이벤트 페이지 링크 URL -->
-      <a href="#" class="mm-finder__sub mm-finder__sub--event mm-anim">
-        <div class="mm-finder__sub-title">진행중 이벤트</div>
-        <div class="mm-finder__sub-desc">현재 진행중인<br>이벤트를 확인하세요</div>
-        <span class="mm-finder__sub-arrow">이벤트 보기 →</span>
-      </a>
-
-      <!-- 복원수리 -->
-      <a href="/53" class="mm-finder__sub mm-anim">
-        <div class="mm-finder__sub-title">복원수리</div>
-        <div class="mm-finder__sub-desc">예전 같지 않은 커트감,<br>되찾아 드립니다</div>
-        <span class="mm-finder__sub-arrow">자세히 보기 →</span>
-      </a>
-
-      <!-- ✏️ 수정가능: 컨설팅상담 링크 URL -->
-      <a href="/58" class="mm-finder__sub mm-anim">
-        <div class="mm-finder__sub-title">컨설팅상담</div>
-        <div class="mm-finder__sub-desc">어떤 가위가 맞는지<br>같이 찾아드립니다</div>
-        <span class="mm-finder__sub-arrow">상담 안내 →</span>
       </a>
     </div>
   </div>
@@ -880,9 +900,14 @@ button[class*="mm-"]:focus-visible {
 
       <!-- 복원수리 -->
       <div class="mm-dual-cta__block mm-anim">
-        <!-- ✏️ 수정가능: 복원수리 배경 이미지 URL -->
+        <!-- ✏️ 수정가능: 복원수리 배경 이미지
+             PC 권장: 960×480px (2:1), 모바일 권장: 750×500px (3:2)
+             어두운 배경 위에 올라가므로 밝은 피사체 권장 -->
         <div class="mm-dual-cta__bg">
-          <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/565feb08b57d4.jpg" alt="">
+          <picture>
+            <source media="(min-width:1024px)" srcset=""><!-- ✏️ PC 이미지 URL -->
+            <img src="" alt=""><!-- ✏️ 모바일 이미지 URL -->
+          </picture>
         </div>
         <div class="mm-dual-cta__content">
           <p class="mm-dual-cta__kicker">Hydro Repair</p>
@@ -897,9 +922,14 @@ button[class*="mm-"]:focus-visible {
 
       <!-- 컨설팅상담 -->
       <div class="mm-dual-cta__block mm-anim">
-        <!-- ✏️ 수정가능: 컨설팅 배경 이미지 URL -->
+        <!-- ✏️ 수정가능: 컨설팅 배경 이미지
+             PC 권장: 960×480px (2:1), 모바일 권장: 750×500px (3:2)
+             어두운 배경 위에 올라가므로 밝은 피사체 권장 -->
         <div class="mm-dual-cta__bg">
-          <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/fd3e2b6ab2a74.jpg" alt="cst">
+          <picture>
+            <source media="(min-width:1024px)" srcset=""><!-- ✏️ PC 이미지 URL -->
+            <img src="" alt=""><!-- ✏️ 모바일 이미지 URL -->
+          </picture>
         </div>
         <div class="mm-dual-cta__content">
           <p class="mm-dual-cta__kicker">Consulting</p>
@@ -930,7 +960,7 @@ button[class*="mm-"]:focus-visible {
     </div>
 
     <div class="mm-reviews__tabs" id="mmReviewTabs">
-      <button class="mm-reviews__tab mm-reviews__tab--active" data-type="consulting">컨설팅상담</button>
+      <button class="mm-reviews__tab mm-reviews__tab--active" data-type="consult">컨설팅상담</button>
       <button class="mm-reviews__tab" data-type="repair">복원수리</button>
       <button class="mm-reviews__tab" data-type="purchase">제품구매</button>
     </div>
@@ -967,55 +997,73 @@ button[class*="mm-"]:focus-visible {
   'use strict';
 
   /* ═══════════════════════════════════════════════════════════════
-     🔧 MAMORU_DATA — 콘텐츠 변경 시 이 객체만 수정
+     고객 후기 — API 연동
      ═══════════════════════════════════════════════════════════════ */
-  var DATA = {
+  var REVIEW_API = 'https://app-eta-sandy-75.vercel.app/api/reviews/public';
+  var allReviews = [];
 
-    /* ✏️ [6] 고객 후기 */
-    reviews: {
-      consulting: [
-        { name: '김○○', stars: 5, text: '처음 가위 구매라 걱정했는데, 상담을 통해 제 커트 스타일에 맞는 가위를 찾을 수 있었어요.', date: '2026.01.15', source: '카카오톡', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/5440b39c14f9d.jpg' },
-        { name: '이○○', stars: 5, text: '블런트와 틴닝 차이를 설명해주시고, 실제 커트 영상까지 보여주셔서 확신을 갖고 선택했습니다.', date: '2026.01.08', source: '네이버', img: '' },
-        { name: '박○○', stars: 5, text: '다른 곳에서는 그냥 비싼 걸 추천하던데, 여기는 제 예산과 경력에 맞춰서 골라주셨어요.', date: '2025.12.28', source: '카카오톡', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/40cb7f6ce0645.jpg' },
-        { name: '최○○', stars: 4, text: '상담 후 바로 구매하지 않아도 전혀 부담이 없었어요. 천천히 결정할 수 있어서 좋았습니다.', date: '2025.12.20', source: '네이버', img: '' }
-      ],
-      repair: [
-        { name: '정○○', stars: 5, text: '연마 후 커트감이 처음 샀을 때처럼 돌아왔어요. 역시 전문가한테 맡기길 잘했습니다.', date: '2026.01.12', source: '네이버', img: 'https://cdn.imweb.me/upload/S20250825bc9b09c7146df/5440b39c14f9d.jpg' },
-        { name: '한○○', stars: 5, text: '다른 곳에서 수리받고 오히려 더 나빠졌었는데, 마모루에서 복원받고 완전히 살아났어요.', date: '2026.01.05', source: '카카오톡', img: '' },
-        { name: '윤○○', stars: 5, text: '수리 전후 사진까지 보내주셔서 어떤 공정을 거쳤는지 확인할 수 있었습니다.', date: '2025.12.22', source: '네이버', img: '' },
-        { name: '강○○', stars: 4, text: '오래된 가위인데 Hydro Repair로 날이 살아났어요. 새 가위 안 사도 되겠어요.', date: '2025.12.15', source: '카카오톡', img: '' }
-      ],
-      purchase: [
-        { name: '임○○', stars: 5, text: '분무기 품질이 좋아요. 미세 분사가 균일하고 손잡이 그립감도 편합니다.', date: '2026.01.20', source: '알림톡', img: '', product: '프리미엄 분무기' },
-        { name: '나○○', stars: 5, text: '가위 정리대가 깔끔하고 안정감 있어요. 매장에 놓으니까 인테리어 효과도 있습니다.', date: '2026.01.10', source: '알림톡', img: '', product: '우드 가위 정리대' },
-        { name: '서○○', stars: 4, text: '가위집 퀄리티가 가격 대비 훌륭합니다. 수납 칸이 넉넉해서 좋아요.', date: '2025.12.18', source: '알림톡', img: '', product: '프리미엄 가위집' }
-      ]
-    }
+  function maskName(name) {
+    if (!name) return '';
+    if (name.length <= 1) return name;
+    if (name.length === 2) return name[0] + '*';
+    return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+  }
+
+  function fmtDate(d) {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  }
+
+  var TAG_LABELS = {
+    comfortable:'강요없이 편안해요', detailed_guide:'설명이 자세해요', professional:'전문적이에요',
+    personalized:'맞춤 안내', worth_time:'시간이 아깝지 않았어요',
+    reasonable_price:'합리적이에요', fair_price:'적당해요',
+    like_new:'새 가위처럼', better_cut:'커트감이 달라요', above_expect:'기대 이상',
+    precise_edge:'날 조절 정확', thorough_info:'안내 꼼꼼', fast_service:'진행 빠름', good_value:'가격 대비 만족',
+    good_quality:'품질이 좋아요', fast_delivery:'배송이 빨라요', neat_packaging:'포장이 꼼꼼해요',
+    would_recommend:'추천하고 싶어요'
   };
 
+  function loadReviews() {
+    fetch(REVIEW_API + '?type=all')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        allReviews = Array.isArray(data) ? data : [];
+        renderReviews('consult');
+      })
+      .catch(function() { allReviews = []; renderReviews('consult'); });
+  }
 
-  /* ═══════════════════════════════════════════════════════════════
-     렌더링 함수
-     ═══════════════════════════════════════════════════════════════ */
-
-  /* 고객 후기 */
   function renderReviews(type) {
     var el = document.getElementById('mmReviews');
     if (!el) return;
-    var items = (DATA.reviews && DATA.reviews[type]) || [];
-    el.innerHTML = items.map(function(r) {
+    var items = allReviews.filter(function(r) { return r.type === type; });
+    if (items.length === 0) {
+      el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--warm-gray);font-size:14px;">아직 등록된 후기가 없습니다</div>';
+      return;
+    }
+    el.innerHTML = items.slice(0, 8).map(function(r) {
       var stars = '';
       for (var i = 0; i < 5; i++) stars += i < r.stars ? '\u2605' : '\u2606';
-      var imgHtml = (r.img) ? '<img class="mm-review-card__img" src="' + r.img + '" alt="후기 이미지">' : '';
+      var imgUrl = (r.photo_urls && r.photo_urls.length > 0) ? r.photo_urls[0] : (r.product_image_url || '');
+      var imgHtml = imgUrl ? '<img class="mm-review-card__img" src="' + imgUrl + '" alt="후기 이미지" loading="lazy">' : '';
+      var tagsHtml = '';
+      if (r.meta && r.meta.tags && r.meta.tags.length > 0) {
+        tagsHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">' +
+          r.meta.tags.slice(0, 2).map(function(t) {
+            return '<span style="font-size:11px;padding:2px 8px;border:1px solid var(--sand);border-radius:6px;color:var(--stone);">' + (TAG_LABELS[t] || t) + '</span>';
+          }).join('') + '</div>';
+      }
+      var preview = r.content.length > 60 ? r.content.substring(0, 60) + '…' : r.content;
       return '<div class="mm-review-card mm-anim mm-anim-stagger">' +
         imgHtml +
         '<div class="mm-review-card__header">' +
-          '<span class="mm-review-card__name">' + r.name + '</span>' +
-          '<span class="mm-review-card__source">' + r.source + '</span>' +
+          '<span class="mm-review-card__name">' + maskName(r.name) + '</span>' +
         '</div>' +
         '<div class="mm-review-card__stars">' + stars + '</div>' +
-        '<div class="mm-review-card__text">' + r.text + '</div>' +
-        '<div class="mm-review-card__date">' + r.date + '</div>' +
+        tagsHtml +
+        '<div class="mm-review-card__text">' + preview + '</div>' +
+        '<div class="mm-review-card__date">' + fmtDate(r.created_at) + '</div>' +
         '</div>';
     }).join('');
     el.querySelectorAll('.mm-anim').forEach(function(card) {
@@ -1097,7 +1145,7 @@ button[class*="mm-"]:focus-visible {
      초기화
      ═══════════════════════════════════════════════════════════════ */
   function init() {
-    renderReviews('consulting');
+    loadReviews();
     initReviewTabs();
     initAnimations();
     initIframeComm();
