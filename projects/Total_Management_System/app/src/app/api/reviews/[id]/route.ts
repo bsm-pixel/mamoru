@@ -17,17 +17,30 @@ export async function PATCH(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const body = await req.json();
-    const { status } = body;
+    const { status, is_best } = body;
 
-    if (!status || !['approved', 'hidden', 'pending'].includes(status)) {
-      return NextResponse.json({ error: '유효하지 않은 상태입니다' }, { status: 400 });
+    const updateData: Record<string, unknown> = {};
+
+    // 상태 변경
+    if (status) {
+      if (!['approved', 'hidden', 'pending'].includes(status)) {
+        return NextResponse.json({ error: '유효하지 않은 상태입니다' }, { status: 400 });
+      }
+      updateData.status = status;
+      if (status === 'approved') {
+        updateData.approved_at = new Date().toISOString();
+      } else {
+        updateData.approved_at = null;
+      }
     }
 
-    const updateData: Record<string, unknown> = { status };
-    if (status === 'approved') {
-      updateData.approved_at = new Date().toISOString();
-    } else {
-      updateData.approved_at = null;
+    // 베스트 리뷰 토글
+    if (typeof is_best === 'boolean') {
+      updateData.is_best = is_best;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: '변경할 항목이 없습니다' }, { status: 400 });
     }
 
     const { data, error } = await db

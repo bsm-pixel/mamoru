@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Topbar } from '@/components/layout/topbar';
-import { Star, Eye, EyeOff, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { Star, Eye, EyeOff, RefreshCw, Image as ImageIcon, Award, Plus } from 'lucide-react';
+import Link from 'next/link';
 
 interface Review {
   id: string;
@@ -19,6 +20,8 @@ interface Review {
   approved_at: string | null;
   product: string | null;
   meta: Record<string, string>;
+  source: string;
+  is_best: boolean;
 }
 
 const TAB_FILTERS = [
@@ -98,6 +101,22 @@ export default function ReviewsPage() {
     }
   };
 
+  const toggleBest = async (id: string, currentBest: boolean) => {
+    try {
+      const res = await fetch(`/api/reviews/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_best: !currentBest }),
+      });
+      if (!res.ok) throw new Error('베스트 변경 실패');
+      setReviews(prev =>
+        prev.map(r => r.id === id ? { ...r, is_best: !currentBest } : r)
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <>
       <Topbar title="리뷰관리" />
@@ -120,14 +139,23 @@ export default function ReviewsPage() {
               </button>
             ))}
           </div>
-          <button
-            onClick={fetchReviews}
-            disabled={loading}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 hover:bg-neutral-200 transition"
-          >
-            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-            새로고침
-          </button>
+          <div className="flex gap-2">
+            <Link
+              href="/reviews/naver"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-700 hover:bg-green-100 transition"
+            >
+              <Plus size={12} />
+              네이버 리뷰 등록
+            </Link>
+            <button
+              onClick={fetchReviews}
+              disabled={loading}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 hover:bg-neutral-200 transition"
+            >
+              <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
+              새로고침
+            </button>
+          </div>
         </div>
 
         {/* 리뷰 카드 리스트 */}
@@ -149,9 +177,19 @@ export default function ReviewsPage() {
                     <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-500">
                       {TYPE_LABELS[review.type] || review.type}
                     </span>
+                    {review.source === 'naver' && (
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-600">
+                        네이버
+                      </span>
+                    )}
                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${STATUS_STYLES[review.status]}`}>
                       {review.status === 'pending' ? '대기' : review.status === 'approved' ? '노출중' : '숨김'}
                     </span>
+                    {review.is_best && (
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">
+                        BEST
+                      </span>
+                    )}
                   </div>
                   <span className="text-[11px] text-neutral-400">
                     {review.review_id}
@@ -189,20 +227,33 @@ export default function ReviewsPage() {
                     {new Date(review.created_at).toLocaleDateString('ko-KR')}
                     {review.source_id && ` · ${review.source_id}`}
                   </span>
-                  <button
-                    onClick={() => toggleStatus(review.id, review.status)}
-                    className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium transition ${
-                      review.status === 'approved'
-                        ? 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                        : 'bg-green-50 text-green-700 hover:bg-green-100'
-                    }`}
-                  >
-                    {review.status === 'approved' ? (
-                      <><EyeOff size={12} /> 숨기기</>
-                    ) : (
-                      <><Eye size={12} /> 노출</>
-                    )}
-                  </button>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => toggleBest(review.id, review.is_best)}
+                      className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium transition ${
+                        review.is_best
+                          ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                          : 'bg-neutral-50 text-neutral-400 hover:bg-neutral-100'
+                      }`}
+                      title={review.is_best ? '베스트 해제' : '베스트 지정'}
+                    >
+                      <Award size={12} /> BEST
+                    </button>
+                    <button
+                      onClick={() => toggleStatus(review.id, review.status)}
+                      className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium transition ${
+                        review.status === 'approved'
+                          ? 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                          : 'bg-green-50 text-green-700 hover:bg-green-100'
+                      }`}
+                    >
+                      {review.status === 'approved' ? (
+                        <><EyeOff size={12} /> 숨기기</>
+                      ) : (
+                        <><Eye size={12} /> 노출</>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

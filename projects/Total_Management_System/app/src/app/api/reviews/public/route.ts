@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
     let query = dbAny
       .from('reviews')
-      .select('review_id, type, subtype, name, stars, content, photo_urls, created_at, product, meta')
+      .select('review_id, type, subtype, name, stars, content, photo_urls, created_at, product, meta, source, is_best')
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
 
