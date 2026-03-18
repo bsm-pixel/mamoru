@@ -197,7 +197,8 @@
     <div id="success" class="success-card hidden">
       <h2>후기가 등록되었습니다</h2>
       <p>소중한 후기 감사합니다</p>
-      <button class="btn btn-close" style="margin-top:16px" onclick="safeClose()">닫기</button>
+      <button id="btn-next-product" class="btn btn-primary" style="margin-top:16px;display:none" onclick="writeNextProduct()">다른 제품 후기도 작성하기</button>
+      <button class="btn btn-close" style="margin-top:8px" onclick="safeClose()">닫기</button>
     </div>
 
     <!-- 모든 제품 리뷰 완료 -->
@@ -300,6 +301,9 @@
 
     // ── 타입별 설정 ──
     var selectedProductNo = ''; // purchase 타입: 선택된 제품 번호
+    var cachedName = '';        // 제품 선택 복귀용
+    var cachedMeta = '';
+    var cachedItems = [];
 
     var TYPE_CONFIG = {
       repair: { label: '복원수리 후기', placeholder: '복원 결과는 어떠셨나요? 자유롭게 작성해주세요', header: '소중한 후기를 남겨주세요' },
@@ -603,6 +607,9 @@
 
     // ── 제품 선택 화면 (purchase 타입, 아이템 2개+) ──
     function showProductSelect(nameText, metaText, items) {
+      cachedName = nameText;
+      cachedMeta = metaText;
+      cachedItems = items;
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('product-select').classList.remove('hidden');
       document.getElementById('ps-name').textContent = nameText;
@@ -692,6 +699,57 @@
       clearState();
       document.getElementById('main').classList.add('hidden');
       document.getElementById('success').classList.remove('hidden');
+
+      // purchase 타입: 미작성 제품이 남아있으면 "다른 제품 후기" 버튼 표시
+      if (reviewType === 'purchase') {
+        fetch(API_URL + '/info?uid=' + encodeURIComponent(uid) + '&type=purchase')
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.items) {
+              var remaining = data.items.filter(function(it) { return !it.reviewed; });
+              if (remaining.length > 0) {
+                cachedItems = data.items;
+                cachedName = data.name;
+                cachedMeta = data.typeLabel + (data.date ? ' · ' + data.date : '');
+                document.getElementById('btn-next-product').style.display = '';
+              }
+            }
+          }).catch(function() {});
+      }
+    }
+
+    // ── 다른 제품 후기 작성 (purchase 연속 작성) ──
+    function writeNextProduct() {
+      // 폼 상태 리셋
+      rating = 0;
+      photos = [];
+      selectedTags = [];
+      selectedProductNo = '';
+      uploading = 0;
+      document.querySelectorAll('.star').forEach(function(s) { s.classList.remove('active'); });
+      document.getElementById('star-hint').textContent = '별점을 선택해주세요';
+      document.getElementById('content').value = '';
+      document.getElementById('tag-hint').textContent = '';
+      document.querySelectorAll('.tag-chip').forEach(function(c) { c.classList.remove('selected'); });
+      document.getElementById('photo-area').querySelectorAll('.photo-wrap').forEach(function(el) { el.remove(); });
+      document.getElementById('photo-add').classList.remove('hidden');
+      document.getElementById('btnSubmit').disabled = true;
+      document.getElementById('btnSubmit').textContent = '후기 등록';
+
+      // 화면 전환: 성공 → 제품 선택
+      document.getElementById('success').classList.add('hidden');
+      document.getElementById('main').classList.add('hidden');
+      document.getElementById('btn-next-product').style.display = 'none';
+
+      var available = cachedItems.filter(function(it) { return !it.reviewed; });
+      if (available.length === 1) {
+        // 남은 제품 1개 → 바로 폼
+        selectedProductNo = available[0].imweb_product_no;
+        showForm(cachedName, cachedMeta + ' · ' + available[0].product_name);
+      } else {
+        // 2개 이상 → 선택 화면
+        showProductSelect(cachedName, cachedMeta, cachedItems);
+      }
     }
 
     // ── 카카오 인앱 닫기 (page_suggest.html 검증 패턴) ──
