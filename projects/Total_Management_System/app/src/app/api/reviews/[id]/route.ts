@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
-/** PATCH /api/reviews/[id] — 리뷰 상태 변경 (인증 필요) */
+/** 수정 가능한 필드 목록 */
+const EDITABLE_FIELDS = ['name', 'stars', 'content', 'photo_urls', 'type', 'subtype', 'product', 'created_at'] as const;
+
+/** PATCH /api/reviews/[id] — 리뷰 수정 (상태/베스트/내용/사진 등) */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,7 +20,7 @@ export async function PATCH(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const body = await req.json();
-    const { status, is_best } = body;
+    const { status, is_best, ...rest } = body;
 
     const updateData: Record<string, unknown> = {};
 
@@ -39,6 +42,13 @@ export async function PATCH(
       updateData.is_best = is_best;
     }
 
+    // 편집 가능 필드 반영
+    for (const field of EDITABLE_FIELDS) {
+      if (rest[field] !== undefined) {
+        updateData[field] = rest[field];
+      }
+    }
+
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: '변경할 항목이 없습니다' }, { status: 400 });
     }
@@ -54,7 +64,7 @@ export async function PATCH(
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error('[reviews] 상태 변경 실패:', err);
+    console.error('[reviews] 수정 실패:', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

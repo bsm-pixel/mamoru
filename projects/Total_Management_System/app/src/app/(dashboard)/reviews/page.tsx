@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Topbar } from '@/components/layout/topbar';
-import { Star, Eye, EyeOff, RefreshCw, Image as ImageIcon, Award, Plus } from 'lucide-react';
+import { Star, Eye, EyeOff, RefreshCw, Image as ImageIcon, Award, Plus, Pencil, X, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface Review {
@@ -60,11 +60,22 @@ function renderStars(n: number) {
   ));
 }
 
+const TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'consult', label: '컨설팅상담' },
+  { value: 'repair', label: '복원수리' },
+  { value: 'purchase', label: '제품구매' },
+];
+
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [editReview, setEditReview] = useState<Review | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Review>>({});
+  const [saving, setSaving] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const editPhotoRef = useRef<HTMLInputElement>(null);
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
@@ -114,6 +125,72 @@ export default function ReviewsPage() {
       );
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  /* ── 수정 모달 열기 ── */
+  const openEdit = (review: Review) => {
+    setEditReview(review);
+    setEditForm({
+      name: review.name,
+      type: review.type,
+      stars: review.stars,
+      content: review.content,
+      photo_urls: [...(review.photo_urls || [])],
+      product: review.product || '',
+      created_at: review.created_at?.slice(0, 10) || '',
+      is_best: review.is_best,
+    });
+  };
+
+  /* ── 수정 사진 업로드 ── */
+  const handleEditPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setPhotoUploading(true);
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach(f => formData.append('files', f));
+      const res = await fetch('/api/reviews/upload-bulk', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const urls = (data.results || []).filter((r: { url?: string }) => r.url).map((r: { url: string }) => r.url);
+      setEditForm(prev => ({ ...prev, photo_urls: [...(prev.photo_urls || []), ...urls] }));
+    } catch (err) {
+      alert('사진 업로드 실패: ' + String(err));
+    } finally {
+      setPhotoUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  /* ── 수정 저장 ── */
+  const saveEdit = async () => {
+    if (!editReview) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/reviews/${editReview.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editForm.name,
+          type: editForm.type,
+          stars: editForm.stars,
+          content: editForm.content,
+          photo_urls: editForm.photo_urls,
+          product: editForm.product || null,
+          created_at: editForm.created_at || editReview.created_at,
+          is_best: editForm.is_best,
+        }),
+      });
+      if (!res.ok) throw new Error('수정 실패');
+      const updated = await res.json();
+      setReviews(prev => prev.map(r => r.id === editReview.id ? { ...r, ...updated } : r));
+      setEditReview(null);
+    } catch (err) {
+      alert('수정 실패: ' + String(err));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -229,6 +306,13 @@ export default function ReviewsPage() {
                   </span>
                   <div className="flex gap-1.5">
                     <button
+                      onClick={() => openEdit(review)}
+                      className="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
+                      title="수정"
+                    >
+                      <Pencil size={12} /> 수정
+                    </button>
+                    <button
                       onClick={() => toggleBest(review.id, review.is_best)}
                       className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium transition ${
                         review.is_best
@@ -260,6 +344,177 @@ export default function ReviewsPage() {
           </div>
         )}
       </div>
+
+      {/* ━━━ 수정 모달 ━━━ */}
+      {editReview && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center p-4 pt-16 overflow-y-auto">
+          <div
+            className="bg-white rounded-xl w-full max-w-lg p-5 space-y-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-sm">리뷰 수정</h3>
+              <button onClick={() => setEditReview(null)} className="text-neutral-400 hover:text-neutral-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* 유형 */}
+            <div>
+              <label className="block text-xs font-medium text-neutral-500 mb-1.5">리뷰 유형</label>
+              <div className="flex gap-2">
+                {TYPE_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setEditForm(prev => ({ ...prev, type: opt.value as Review['type'] }))}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                      editForm.type === opt.value
+                        ? 'bg-neutral-800 text-white'
+                        : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 이름 + 별점 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 mb-1.5">작성자 이름</label>
+                <input
+                  type="text"
+                  value={editForm.name || ''}
+                  onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-neutral-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 mb-1.5">별점</label>
+                <div className="flex gap-1 pt-1">
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setEditForm(prev => ({ ...prev, stars: n }))}
+                      className="transition hover:scale-110"
+                    >
+                      <Star
+                        size={20}
+                        className={n <= (editForm.stars || 5) ? 'fill-current text-neutral-800' : 'text-neutral-300'}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 작성일 + 제품명 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 mb-1.5">작성일</label>
+                <input
+                  type="date"
+                  value={editForm.created_at?.slice(0, 10) || ''}
+                  onChange={e => setEditForm(prev => ({ ...prev, created_at: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-neutral-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 mb-1.5">제품명 (선택)</label>
+                <input
+                  type="text"
+                  value={editForm.product || ''}
+                  onChange={e => setEditForm(prev => ({ ...prev, product: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-neutral-400"
+                />
+              </div>
+            </div>
+
+            {/* 내용 */}
+            <div>
+              <label className="block text-xs font-medium text-neutral-500 mb-1.5">리뷰 내용</label>
+              <textarea
+                value={editForm.content || ''}
+                onChange={e => setEditForm(prev => ({ ...prev, content: e.target.value }))}
+                rows={5}
+                className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-neutral-400 resize-y"
+              />
+            </div>
+
+            {/* 사진 */}
+            <div>
+              <label className="block text-xs font-medium text-neutral-500 mb-1.5">사진</label>
+              <div className="flex flex-wrap gap-2">
+                {(editForm.photo_urls || []).map((url, i) => (
+                  <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-neutral-100 group">
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => setEditForm(prev => ({
+                        ...prev,
+                        photo_urls: (prev.photo_urls || []).filter((_, idx) => idx !== i),
+                      }))}
+                      className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"
+                    >
+                      <Trash2 size={16} className="text-white" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => editPhotoRef.current?.click()}
+                  disabled={photoUploading}
+                  className="w-20 h-20 rounded-lg border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center text-neutral-400 hover:border-neutral-400 hover:text-neutral-600 transition"
+                >
+                  {photoUploading ? (
+                    <span className="text-xs">업로드중...</span>
+                  ) : (
+                    <>
+                      <ImageIcon size={18} />
+                      <span className="text-[10px] mt-1">추가</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <input
+                ref={editPhotoRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                className="hidden"
+                onChange={handleEditPhotoUpload}
+              />
+            </div>
+
+            {/* 베스트 */}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={editForm.is_best || false}
+                onChange={e => setEditForm(prev => ({ ...prev, is_best: e.target.checked }))}
+                className="rounded border-neutral-300"
+              />
+              <span className="text-sm text-neutral-600">베스트 리뷰</span>
+            </label>
+
+            {/* 저장 버튼 */}
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setEditReview(null)}
+                className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-600 hover:bg-neutral-50 transition"
+              >
+                취소
+              </button>
+              <button
+                onClick={saveEdit}
+                disabled={saving}
+                className="flex-1 py-2.5 rounded-lg bg-neutral-800 text-white text-sm font-medium hover:bg-neutral-700 disabled:opacity-50 transition"
+              >
+                {saving ? '저장 중...' : '저장'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 라이트박스 */}
       {lightbox && (
