@@ -10,6 +10,11 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { subDays } from 'date-fns';
 
+/** 재고 차감이 필요한 상태 (결제 완료 이상) */
+const STOCK_DEDUCT_STATUSES: OrderStatus[] = ['pay_done', 'preparing', 'shipping', 'delivered', 'confirmed'];
+/** 재고 복구가 필요한 상태 (취소/환불) */
+const STOCK_RESTORE_STATUSES: OrderStatus[] = ['cancelled', 'refunded'];
+
 /** 아임웹 prod-order status → TMS status 매핑 */
 function mapImwebStatus(status: string): OrderStatus {
   const map: Record<string, OrderStatus> = {
@@ -151,7 +156,7 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
   // 기존 주문이 TMS 관리 상태인지 확인 → 있으면 상태/배송정보 보존
   const { data: existing } = await supabase
     .from('orders')
-    .select('id, status, invoice_number, courier_code, courier_name, shipped_at, review_requested_at')
+    .select('id, status, invoice_number, courier_code, courier_name, shipped_at, review_requested_at, stock_deducted')
     .eq('imweb_order_no', imwebOrder.order_no)
     .single();
 
@@ -265,5 +270,57 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
       .from('orders')
       .update({ review_requested_at: new Date().toISOString() })
       .eq('id', order.id);
+  }
+
+  // 온라인 주문 재고 차감/복구
+  if (order) {
+    const finalStatus = isTmsManaged ? existing.status : imwebStatus;
+    const alreadyDeducted = existing?.stock_deducted === true;
+
+    // 결제완료 이상 & 아직 차감 안 됨 → 재고 차감
+    if (STOCK_DEDUCT_STATUSES.includes(finalStatus) && !alreadyDeducted) {
+      await adjustOrderStock(supabase, order.id, 'deduct');
+      await supabase.from('orders').update({ stock_deducted: true }).eq('id', order.id);
+    }
+
+    // 취소/환불 & 이미 차감됨 → 재고 복구
+    if (STOCK_RESTORE_STATUSES.includes(finalStatus) && alreadyDeducted) {
+      await adjustOrderStock(supabase, order.id, 'restore');
+      await supabase.from('orders').update({ stock_deducted: false }).eq('id', order.id);
+    }
+  }
+}
+
+/** 주문 품목 기준 TMS 재고 차감/복구 */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function adjustOrderStock(supabase: any, orderId: string, action: 'deduct' | 'restore') {
+  const { data: items } = await supabase
+    .from('order_items')
+    .select('imweb_product_no, quantity')
+    .eq('order_id', orderId);
+
+  if (!items || items.length === 0) return;
+
+  for (const item of items) {
+    if (!item.imweb_product_no) continue;
+
+    // imweb_product_no로 TMS 제품 찾기
+    const { data: product } = await supabase
+      .from('products')
+      .select('id, stock_quantity')
+      .eq('imweb_product_no', item.imweb_product_no)
+      .single();
+
+    if (!product) continue;
+
+    const delta = action === 'deduct' ? -item.quantity : item.quantity;
+    const newQty = Math.max(0, (product.stock_quantity || 0) + delta);
+
+    await supabase
+      .from('products')
+      .update({ stock_quantity: newQty, updated_at: new Date().toISOString() })
+      .eq('id', product.id);
+
+    console.log(`[sync] 재고 ${action}: ${item.imweb_product_no} ${delta > 0 ? '+' : ''}${delta} → ${newQty}`);
   }
 }
