@@ -128,6 +128,7 @@ export default function NewSalePage() {
     TH: '틴닝',
     LO: '장가위',
     SL: '슬라이싱',
+    SUP: '부자재',
   };
 
   return (

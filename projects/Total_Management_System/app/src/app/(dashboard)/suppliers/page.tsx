@@ -90,10 +90,9 @@ function SupplierRow({ supplier: s }: { supplier: Customer }) {
 function AddSupplierModal({ onClose }: { onClose: () => void }) {
   const createCustomer = useCreateCustomer();
   const [form, setForm] = useState({
-    companyName: '',
-    name: '',
-    phone: '',
-    memo: '',
+    companyName: '', name: '', phone: '', memo: '',
+    businessNumber: '', representative: '', businessType: '', businessCategory: '',
+    email: '', address: '', contactChannel: '',
   });
 
   async function handleSubmit() {
@@ -105,6 +104,8 @@ function AddSupplierModal({ onClose }: { onClose: () => void }) {
       name: form.name.trim() || form.companyName.trim(),
       companyName: form.companyName.trim(),
       phone: form.phone.trim() || undefined,
+      email: form.email.trim() || undefined,
+      address: form.address.trim() || undefined,
       memo: form.memo.trim() || undefined,
       customerType: 'supplier',
     });
@@ -120,29 +121,80 @@ function AddSupplierModal({ onClose }: { onClose: () => void }) {
             <X size={16} />
           </button>
         </div>
-        <div className="px-5 py-4 space-y-3">
+        <div className="px-5 py-4 space-y-3 max-h-[60vh] overflow-y-auto">
+          <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider">기본 정보</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <label className="text-xs text-neutral-500">업체명 *</label>
+              <input type="text" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })}
+                placeholder="매입처 업체명" autoFocus
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">사업자등록번호</label>
+              <input type="text" value={form.businessNumber} onChange={(e) => setForm({ ...form, businessNumber: e.target.value })}
+                placeholder="000-00-00000"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">대표자명</label>
+              <input type="text" value={form.representative} onChange={(e) => setForm({ ...form, representative: e.target.value })}
+                placeholder="대표자"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">업태</label>
+              <input type="text" value={form.businessType} onChange={(e) => setForm({ ...form, businessType: e.target.value })}
+                placeholder="제조, 도소매 등"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">종목</label>
+              <input type="text" value={form.businessCategory} onChange={(e) => setForm({ ...form, businessCategory: e.target.value })}
+                placeholder="미용기기, 포장재 등"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+          </div>
+
+          <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider pt-2">연락처</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-neutral-500">담당자명</label>
+              <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="담당자"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">전화번호</label>
+              <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder="010-0000-0000"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">이메일</label>
+              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="email@example.com"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">연락 경로</label>
+              <input type="text" value={form.contactChannel} onChange={(e) => setForm({ ...form, contactChannel: e.target.value })}
+                placeholder="카톡, 전화, 이메일 등"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+          </div>
+
           <div>
-            <label className="text-xs text-neutral-500">업체명 *</label>
-            <input type="text" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-              placeholder="매입처 업체명" autoFocus
+            <label className="text-xs text-neutral-500">사업장 주소</label>
+            <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
+              placeholder="사업장 주소"
               className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
           </div>
-          <div>
-            <label className="text-xs text-neutral-500">담당자명</label>
-            <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="담당자 이름 (선택)"
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-          </div>
-          <div>
-            <label className="text-xs text-neutral-500">연락처</label>
-            <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="전화번호 (선택)"
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-          </div>
+
           <div>
             <label className="text-xs text-neutral-500">메모</label>
             <input type="text" value={form.memo} onChange={(e) => setForm({ ...form, memo: e.target.value })}
-              placeholder="거래 조건 등 (선택)"
+              placeholder="거래 조건, 결제 방식 등"
               className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
           </div>
         </div>

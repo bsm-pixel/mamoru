@@ -18,6 +18,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   TH: '틴닝',
   LO: '장가위',
   SL: '슬라이싱',
+  SUP: '부자재',
 };
 
 const CATEGORY_COLOR: Record<string, string> = {
@@ -25,6 +26,7 @@ const CATEGORY_COLOR: Record<string, string> = {
   TH: 'bg-purple-100 text-purple-700',
   LO: 'bg-green-100 text-green-700',
   SL: 'bg-orange-100 text-orange-700',
+  SUP: 'bg-neutral-200 text-neutral-700',
 };
 
 export default function ProductsPage() {
