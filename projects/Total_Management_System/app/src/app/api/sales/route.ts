@@ -184,17 +184,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 아임웹 재고 동기화: 판매 품목의 수량만큼 아임웹 재고 차감
+    // 아임웹 재고 동기화: TMS 재고를 아임웹에 절대값으로 설정
     for (const item of items) {
       if (item.product_id && item.quantity > 0) {
         const { data: prod } = await db
           .from('products')
-          .select('imweb_product_no')
+          .select('stock_quantity, imweb_product_no')
           .eq('id', item.product_id)
           .single();
         if (prod?.imweb_product_no) {
           try {
-            await updateImwebStock(Number(prod.imweb_product_no), -item.quantity);
+            await updateImwebStock(Number(prod.imweb_product_no), prod.stock_quantity || 0);
           } catch (e) {
             console.error('[imweb] 판매 재고 동기화 실패:', prod.imweb_product_no, e);
           }

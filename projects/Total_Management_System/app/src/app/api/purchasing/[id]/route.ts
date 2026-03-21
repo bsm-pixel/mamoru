@@ -115,15 +115,16 @@ export async function PATCH(
                 .eq('id', item.product_id)
                 .single();
               if (prod) {
+                const newQty = (prod.stock_quantity || 0) + item.quantity;
                 await db
                   .from('products')
-                  .update({ stock_quantity: (prod.stock_quantity || 0) + item.quantity })
+                  .update({ stock_quantity: newQty })
                   .eq('id', item.product_id);
 
-                // 아임웹 재고 동기화
+                // 아임웹 재고 동기화 (절대값 설정)
                 if (prod.imweb_product_no) {
                   try {
-                    await updateImwebStock(Number(prod.imweb_product_no), item.quantity);
+                    await updateImwebStock(Number(prod.imweb_product_no), newQty);
                   } catch (e) {
                     console.error('[imweb] 재고 동기화 실패:', prod.imweb_product_no, e);
                   }

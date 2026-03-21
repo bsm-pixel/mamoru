@@ -3,7 +3,7 @@
  * 증분 동기화: 마지막 synced_at 이후 변경분만 가져옴
  */
 
-import { getOrders, getProdOrders } from './client';
+import { getOrders, getProdOrders, updateImwebStock } from './client';
 import type { ImwebOrder, ImwebProdOrder } from './types';
 import type { OrderStatus } from '@/lib/supabase/types';
 import { createServiceClient } from '@/lib/supabase/server';
@@ -320,6 +320,13 @@ async function adjustOrderStock(supabase: any, orderId: string, action: 'deduct'
       .from('products')
       .update({ stock_quantity: newQty, updated_at: new Date().toISOString() })
       .eq('id', product.id);
+
+    // 아임웹 재고도 동기화 (절대값)
+    try {
+      await updateImwebStock(Number(item.imweb_product_no), newQty);
+    } catch (e) {
+      console.error(`[sync] 아임웹 재고 동기화 실패: ${item.imweb_product_no}`, e);
+    }
 
     console.log(`[sync] 재고 ${action}: ${item.imweb_product_no} ${delta > 0 ? '+' : ''}${delta} → ${newQty}`);
   }

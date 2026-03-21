@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     if (updateErr) throw updateErr;
 
-    // 아임웹 재고 동기화
+    // 아임웹 재고 동기화 (변경 후 절대값으로 설정)
     const { data: prodForImweb } = await db
       .from('products')
       .select('imweb_product_no')
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       .single();
     if (prodForImweb?.imweb_product_no) {
       try {
-        await updateImwebStock(Number(prodForImweb.imweb_product_no), quantity);
+        await updateImwebStock(Number(prodForImweb.imweb_product_no), newQty);
       } catch (e) {
         console.error('[imweb] 재고 조정 동기화 실패:', prodForImweb.imweb_product_no, e);
       }
