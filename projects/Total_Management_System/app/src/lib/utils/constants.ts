@@ -11,7 +11,7 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-/** 사이드바 그룹별 네비게이션 */
+/** 사이드바 그룹별 네비게이션 — 업무 플로우 순서 */
 export const NAV_GROUPS: NavGroup[] = [
   {
     group: '',  // 홈 — 레이블 없음
@@ -20,36 +20,31 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    group: '영업',
+    group: '고객 · 상담',
     items: [
       { label: '고객', href: '/customers', icon: 'Users', matchPrefix: '/customers' },
-      { label: '판매관리', href: '/sales', icon: 'Store', matchPrefix: '/sales' },
+      { label: '상담관리', href: '/consultations/dashboard', icon: 'MessageSquare', matchPrefix: '/consultations' },
+      { label: '복원수리', href: '/repairs/dashboard', icon: 'Wrench', matchPrefix: '/repairs' },
     ],
   },
   {
-    group: 'CS · 수리',
+    group: '판매',
     items: [
-      { label: '상담관리', href: '/consultations/dashboard', icon: 'MessageSquare', matchPrefix: '/consultations' },
-      { label: '복원수리', href: '/repairs/dashboard', icon: 'Wrench', matchPrefix: '/repairs' },
+      { label: '주문관리', href: '/orders/dashboard', icon: 'ShoppingCart', matchPrefix: '/orders' },
+      { label: '판매관리', href: '/sales', icon: 'Store', matchPrefix: '/sales' },
       { label: '리뷰관리', href: '/reviews', icon: 'Star', matchPrefix: '/reviews' },
     ],
   },
   {
-    group: '물류 · 재고',
-    items: [
-      { label: '주문관리', href: '/orders/dashboard', icon: 'ShoppingCart', matchPrefix: '/orders' },
-      { label: '매입관리', href: '/purchasing', icon: 'Truck', matchPrefix: '/purchasing' },
-      { label: '재고', href: '/inventory', icon: 'Boxes', matchPrefix: '/inventory' },
-    ],
-  },
-  {
-    group: '상품',
+    group: '상품 · 재고',
     items: [
       { label: '제품', href: '/products', icon: 'Package', matchPrefix: '/products' },
+      { label: '재고', href: '/inventory', icon: 'Boxes', matchPrefix: '/inventory' },
+      { label: '매입관리', href: '/purchasing', icon: 'Truck', matchPrefix: '/purchasing' },
     ],
   },
   {
-    group: '정산',
+    group: '회계',
     items: [
       { label: '회계', href: '/reports', icon: 'BarChart3', matchPrefix: '/reports' },
     ],
