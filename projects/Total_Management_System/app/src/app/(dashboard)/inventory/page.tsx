@@ -22,7 +22,6 @@ const CATEGORY_TABS = [
   { value: '케이스', label: '케이스' },
   { value: '악세서리', label: '악세서리' },
   { value: '기타', label: '기타' },
-  { value: 'SUP', label: '부자재' },
 ];
 
 type SortKey = 'name' | 'stock_quantity' | 'pending_quantity' | 'value';

@@ -101,14 +101,15 @@ Supabase waybill_counter (싱글턴 테이블)
   → 결과: 12자리 문자열
 ```
 
-### 아임웹 API 제약
+### 아임웹 v2 API
 | 기능 | 가능여부 | 비고 |
 |------|----------|------|
 | 주문 조회 | ✅ | GET /v2/shop/orders |
 | 상품주문 조회 | ✅ | GET /v2/shop/orders/{no}/prod-orders |
 | 송장 입력 | ✅ | PATCH /v2/shop/prod-orders/{no}/invoice (STANDBY 이상) |
+| 상품 목록 조회 | ✅ | GET /v2/shop/products |
+| 상품 재고 수정 | ✅ | PATCH /v2/shop/products/{no} (stock 절대값) |
 | 주문 상태 변경 | ❌ | code -99 |
-| 주문 취소/환불 | ❌ | 수동 처리 |
 | 웹훅 | ❌ | 미지원 |
 
 ### 롯데택배 ALPS API
@@ -156,12 +157,9 @@ Supabase waybill_counter (싱글턴 테이블)
 
 ## 4. 미완료 ❌
 
-| 항목 | 의존성 | 우선순위 |
-|------|--------|----------|
-| 온라인 주문 → 이카운트 매출전표 자동 연동 | 이카운트 API (검증완료), 제품→품목 코드 매핑 | 중간 |
-| 배송완료 자동 전환 (ALPS 추적 → delivered) | Cron + queryStatus | 낮음 |
-| Vercel Cron 5~10분 간격 자동 폴링 활성화 | vercel.json cron 설정 | 낮음 |
-| 동기화 상태 대시보드 표시 (마지막 시간, 에러) | 없음 | 낮음 |
+| 항목 | 우선순위 |
+|------|----------|
+| 동기화 상태 대시보드 표시 (마지막 시간, 에러) | 낮음 |
 
 ---
 

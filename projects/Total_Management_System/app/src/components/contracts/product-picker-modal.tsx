@@ -11,7 +11,6 @@ const CAT_LABEL: Record<string, string> = {
   TH: '틴닝',
   LO: '장가위',
   SL: '슬라이싱',
-  SUP: '부자재',
 };
 
 interface Props {

@@ -12,14 +12,13 @@ import { formatKRW } from '@/lib/utils/format';
 import { Save, Package, Hash, X } from 'lucide-react';
 
 const CATEGORY_LABEL: Record<string, string> = {
-  BL: '블런트', TH: '틴닝', LO: '장가위', SL: '슬라이싱', SUP: '부자재',
+  BL: '블런트', TH: '틴닝', LO: '장가위', SL: '슬라이싱',
 };
 const CATEGORY_OPTIONS = [
   { value: 'BL', label: '블런트' },
   { value: 'TH', label: '틴닝' },
   { value: 'LO', label: '장가위' },
   { value: 'SL', label: '슬라이싱' },
-  { value: 'SUP', label: '부자재' },
 ];
 
 interface Props {

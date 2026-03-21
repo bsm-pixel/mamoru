@@ -14,7 +14,6 @@ const CATEGORY_OPTIONS = [
   { value: 'TH', label: '틴닝' },
   { value: 'LO', label: '장가위' },
   { value: 'SL', label: '슬라이싱' },
-  { value: 'SUP', label: '부자재' },
 ];
 
 export default function NewProductPage() {

@@ -17,7 +17,6 @@ const CATEGORY_LABEL: Record<string, string> = {
   TH: '틴닝',
   LO: '장가위',
   SL: '슬라이싱',
-  SUP: '부자재',
 };
 
 const CATEGORY_OPTIONS = [
@@ -25,7 +24,6 @@ const CATEGORY_OPTIONS = [
   { value: 'TH', label: '틴닝' },
   { value: 'LO', label: '장가위' },
   { value: 'SL', label: '슬라이싱' },
-  { value: 'SUP', label: '부자재' },
 ];
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
