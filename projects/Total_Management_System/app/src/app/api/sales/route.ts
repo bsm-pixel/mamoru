@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
           .select('stock_quantity, imweb_product_no')
           .eq('id', item.product_id)
           .single();
-        if (prod?.imweb_product_no) {
+        if (prod?.imweb_product_no && (prod.stock_quantity ?? 0) >= 0) {
           try {
             await updateImwebStock(Number(prod.imweb_product_no), prod.stock_quantity || 0);
           } catch (e) {

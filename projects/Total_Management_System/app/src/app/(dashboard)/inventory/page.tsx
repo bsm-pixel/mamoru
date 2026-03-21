@@ -238,7 +238,8 @@ function SortHeader({ label, span, sortKey, currentKey, asc, onClick }: {
 }
 
 function InventoryRow({ item, onClick }: { item: InventoryItem; onClick: () => void }) {
-  const isLow = item.stock_quantity <= 3;
+  const isNoStock = item.stock_quantity === -1;
+  const isLow = !isNoStock && item.stock_quantity <= 3;
   const totalValue = item.stock_quantity * (item.price_purchase || 0);
 
   return (
@@ -247,13 +248,16 @@ function InventoryRow({ item, onClick }: { item: InventoryItem; onClick: () => v
       <div className="md:hidden flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-indigo-black truncate">{item.name}</span>
-          {isLow && (
-            <Badge className="bg-amber-100 text-amber-700 text-[10px]">저재고</Badge>
-          )}
+          {isNoStock && <Badge className="bg-neutral-100 text-neutral-500 text-[10px]">미사용</Badge>}
+          {isLow && <Badge className="bg-amber-100 text-amber-700 text-[10px]">저재고</Badge>}
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
           <span>{item.sku}</span>
-          <span>재고 <strong className={isLow ? 'text-amber-600' : 'text-indigo-black'}>{item.stock_quantity}</strong></span>
+          {isNoStock ? (
+            <span className="text-neutral-400">재고 미사용</span>
+          ) : (
+            <span>재고 <strong className={isLow ? 'text-amber-600' : 'text-indigo-black'}>{item.stock_quantity}</strong></span>
+          )}
           {item.pending_quantity > 0 && (
             <span className="text-blue-600">+{item.pending_quantity} 미입고</span>
           )}
@@ -269,14 +273,19 @@ function InventoryRow({ item, onClick }: { item: InventoryItem; onClick: () => v
         <div className="col-span-4">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-indigo-black truncate">{item.name}</span>
+            {isNoStock && <Badge className="bg-neutral-100 text-neutral-500 text-[10px]">미사용</Badge>}
             {isLow && <Badge className="bg-amber-100 text-amber-700 text-[10px]">저재고</Badge>}
           </div>
           <p className="text-xs text-neutral-500">{item.sku}</p>
         </div>
         <div className="col-span-2">
-          <span className={`text-sm font-bold ${isLow ? 'text-amber-600' : 'text-indigo-black'}`}>
-            {item.stock_quantity}개
-          </span>
+          {isNoStock ? (
+            <span className="text-sm text-neutral-400">-</span>
+          ) : (
+            <span className={`text-sm font-bold ${isLow ? 'text-amber-600' : 'text-indigo-black'}`}>
+              {item.stock_quantity}개
+            </span>
+          )}
         </div>
         <div className="col-span-2 text-xs text-neutral-500 space-y-0.5">
           <div>보관 <strong>{item.zone_storage}</strong></div>

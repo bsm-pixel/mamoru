@@ -64,11 +64,14 @@ export async function syncProducts(): Promise<SyncResult> {
             .eq('imweb_product_no', String(p.no))
             .single();
 
+          // 재고 미사용: stock_use=false → stock_quantity=-1 (TMS 규약)
+          const stockQty = p.stock?.stock_use ? (p.stock.stock_no_option || 0) : -1;
+
           const productData = {
             name: p.name,
             imweb_product_no: String(p.no),
             price: p.price || 0,
-            stock_quantity: p.stock?.stock_no_option || 0,
+            stock_quantity: stockQty,
             image_url: getImageUrl(p),
             sku: p.custom_prod_code || `IW-${p.no}`,
             is_active: p.prod_status === 'sale',

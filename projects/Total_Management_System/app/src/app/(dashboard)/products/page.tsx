@@ -90,9 +90,13 @@ export default function ProductsPage() {
                         </div>
                         <div className="text-right">
                           <p className="text-xs text-neutral-500">재고</p>
-                          <p className={`text-lg font-bold ${product.stock_quantity > 0 ? 'text-indigo-black' : 'text-red-500'}`}>
-                            {product.stock_quantity}
-                          </p>
+                          {product.stock_quantity === -1 ? (
+                            <Badge className="bg-neutral-100 text-neutral-500 text-[10px]">미사용</Badge>
+                          ) : (
+                            <p className={`text-lg font-bold ${product.stock_quantity > 0 ? 'text-indigo-black' : 'text-red-500'}`}>
+                              {product.stock_quantity}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </Card>

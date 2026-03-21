@@ -121,8 +121,8 @@ export async function PATCH(
                   .update({ stock_quantity: newQty })
                   .eq('id', item.product_id);
 
-                // 아임웹 재고 동기화 (절대값 설정)
-                if (prod.imweb_product_no) {
+                // 아임웹 재고 동기화 (재고 미사용(-1) 상품은 스킵)
+                if (prod.imweb_product_no && newQty >= 0) {
                   try {
                     await updateImwebStock(Number(prod.imweb_product_no), newQty);
                   } catch (e) {

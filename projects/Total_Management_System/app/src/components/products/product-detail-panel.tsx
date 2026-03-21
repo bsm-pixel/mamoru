@@ -177,7 +177,11 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
               </div>
               <div>
                 <span className="text-xs text-neutral-500">재고</span>
-                <p className={p.stock_quantity > 0 ? 'font-bold' : 'font-bold text-red-500'}>{p.stock_quantity}개</p>
+                {p.stock_quantity === -1 ? (
+                  <p><Badge className="bg-neutral-100 text-neutral-500 text-[10px]">미사용</Badge></p>
+                ) : (
+                  <p className={p.stock_quantity > 0 ? 'font-bold' : 'font-bold text-red-500'}>{p.stock_quantity}개</p>
+                )}
               </div>
               <div>
                 <span className="text-xs text-neutral-500">상태</span>
