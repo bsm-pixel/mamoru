@@ -16,6 +16,7 @@ import {
   BarChart3,
   Star,
   Building2,
+  Handshake,
   PackageOpen,
   type LucideIcon,
 } from 'lucide-react';
@@ -36,6 +37,7 @@ const iconMap: Record<string, LucideIcon> = {
   BarChart3,
   Star,
   Building2,
+  Handshake,
   PackageOpen,
 };
 

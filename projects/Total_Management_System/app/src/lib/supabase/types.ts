@@ -83,7 +83,7 @@ export interface Database {
           address_road: string | null;
           address_detail: string | null;
           source: 'imweb' | 'consultation' | 'as' | 'manual';
-          customer_type: 'retail' | 'online' | 'b2b' | 'dealer' | 'supplier';
+          customer_type: 'retail' | 'online' | 'dealer' | 'academy' | 'supplier';
           company_name: string | null;
           memo: string | null;
           outstanding_balance: number;
@@ -156,6 +156,7 @@ export interface Database {
           category: string;
           price: number;
           price_dealer: number;
+          price_academy: number;
           price_purchase: number;
           supplier_id: string | null;
           description: string | null;
@@ -168,8 +169,8 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['products']['Row'], 'id' | 'created_at' | 'updated_at' | 'stock_quantity' | 'is_active' | 'price_dealer' | 'price_purchase'>;
-        Update: Partial<Database['public']['Tables']['products']['Insert']> & { price_dealer?: number; price_purchase?: number };
+        Insert: Omit<Database['public']['Tables']['products']['Row'], 'id' | 'created_at' | 'updated_at' | 'stock_quantity' | 'is_active' | 'price_dealer' | 'price_academy' | 'price_purchase'>;
+        Update: Partial<Database['public']['Tables']['products']['Insert']> & { price_dealer?: number; price_academy?: number; price_purchase?: number };
       };
       sync_log: {
         Row: {

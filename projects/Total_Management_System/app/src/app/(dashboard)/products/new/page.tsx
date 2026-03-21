@@ -26,6 +26,7 @@ export default function NewProductPage() {
     category: 'BL',
     price: 0,
     price_dealer: 0,
+    price_academy: 0,
     price_purchase: 0,
     description: '',
     imweb_product_no: '',
@@ -42,6 +43,7 @@ export default function NewProductPage() {
       category: form.category,
       price: form.price,
       price_dealer: form.price_dealer || undefined,
+      price_academy: form.price_academy || undefined,
       price_purchase: form.price_purchase || undefined,
       description: form.description.trim() || undefined,
       imweb_product_no: form.imweb_product_no.trim() || undefined,
@@ -105,7 +107,7 @@ export default function NewProductPage() {
 
         <Card>
           <h3 className="text-sm font-bold text-indigo-black mb-4">가격 정보</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
               <label className="text-xs text-neutral-500">소매가</label>
               <input
@@ -117,11 +119,21 @@ export default function NewProductPage() {
               />
             </div>
             <div>
-              <label className="text-xs text-neutral-500">도매가</label>
+              <label className="text-xs text-neutral-500">딜러가</label>
               <input
                 type="number"
                 value={form.price_dealer || ''}
                 onChange={(e) => setForm({ ...form, price_dealer: parseInt(e.target.value) || 0 })}
+                placeholder="0"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">아카데미가</label>
+              <input
+                type="number"
+                value={form.price_academy || ''}
+                onChange={(e) => setForm({ ...form, price_academy: parseInt(e.target.value) || 0 })}
                 placeholder="0"
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
               />

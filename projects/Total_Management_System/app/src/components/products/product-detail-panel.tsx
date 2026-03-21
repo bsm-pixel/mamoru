@@ -32,7 +32,7 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
   const updateProduct = useUpdateProduct();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
-    name: '', category: '', price: 0, price_dealer: 0, price_purchase: 0,
+    name: '', category: '', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0,
     description: '', imweb_product_no: '', barcode: '', supplier_id: '',
   });
 
@@ -45,7 +45,7 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
       const p = data.product;
       setForm({
         name: p.name, category: p.category, price: p.price,
-        price_dealer: p.price_dealer || 0, price_purchase: p.price_purchase || 0,
+        price_dealer: p.price_dealer || 0, price_academy: p.price_academy || 0, price_purchase: p.price_purchase || 0,
         description: p.description || '', imweb_product_no: p.imweb_product_no || '',
         barcode: p.barcode || '', supplier_id: p.supplier_id || '',
       });
@@ -56,7 +56,7 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
     await updateProduct.mutateAsync({
       id: productId,
       name: form.name, category: form.category, price: form.price,
-      price_dealer: form.price_dealer, price_purchase: form.price_purchase,
+      price_dealer: form.price_dealer, price_academy: form.price_academy, price_purchase: form.price_purchase,
       description: form.description || null, imweb_product_no: form.imweb_product_no || null,
       barcode: form.barcode || null, supplier_id: form.supplier_id || null,
     });
@@ -130,15 +130,20 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <label className="text-xs text-neutral-500">소매가</label>
                 <input type="number" value={form.price || ''} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
               </div>
               <div>
-                <label className="text-xs text-neutral-500">도매가</label>
+                <label className="text-xs text-neutral-500">딜러가</label>
                 <input type="number" value={form.price_dealer || ''} onChange={(e) => setForm({ ...form, price_dealer: parseInt(e.target.value) || 0 })}
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+              </div>
+              <div>
+                <label className="text-xs text-neutral-500">아카데미가</label>
+                <input type="number" value={form.price_academy || ''} onChange={(e) => setForm({ ...form, price_academy: parseInt(e.target.value) || 0 })}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
               </div>
               <div>
@@ -197,14 +202,18 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
           {/* 가격 */}
           <Card>
             <h4 className="text-xs text-neutral-500 mb-2">가격 정보</h4>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <p className="text-xs text-neutral-400">소매가</p>
                 <p className="text-sm font-bold">{formatKRW(p.price)}</p>
               </div>
               <div>
-                <p className="text-xs text-neutral-400">도매가</p>
+                <p className="text-xs text-neutral-400">딜러가</p>
                 <p className="text-sm font-bold text-purple-600">{p.price_dealer > 0 ? formatKRW(p.price_dealer) : '-'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-neutral-400">아카데미가</p>
+                <p className="text-sm font-bold text-emerald-600">{p.price_academy > 0 ? formatKRW(p.price_academy) : '-'}</p>
               </div>
               <div>
                 <p className="text-xs text-neutral-400">매입가</p>

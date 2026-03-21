@@ -21,7 +21,8 @@ interface CartItem {
 
 /** 고객 유형에 따른 단가 결정 */
 function getUnitPrice(product: Product, customerType?: string): number {
-  if ((customerType === 'b2b' || customerType === 'dealer') && product.price_dealer > 0) return product.price_dealer;
+  if (customerType === 'dealer' && product.price_dealer > 0) return product.price_dealer;
+  if (customerType === 'academy' && product.price_academy > 0) return product.price_academy;
   return product.price;
 }
 
@@ -168,7 +169,10 @@ export default function NewSalePage() {
                           <p className="text-sm font-bold text-terracotta mt-1">
                             {formatKRW(getUnitPrice(p, customerType))}
                           </p>
-                          {(customerType === 'b2b' || customerType === 'dealer') && p.price_dealer > 0 && (
+                          {customerType === 'dealer' && p.price_dealer > 0 && (
+                            <p className="text-[10px] text-neutral-400 line-through">{formatKRW(p.price)}</p>
+                          )}
+                          {customerType === 'academy' && p.price_academy > 0 && (
                             <p className="text-[10px] text-neutral-400 line-through">{formatKRW(p.price)}</p>
                           )}
                           {inCart && (
@@ -299,7 +303,10 @@ export default function NewSalePage() {
                 }}
               />
               {customerType === 'dealer' && (
-                <p className="text-xs text-purple-600 mt-1">도매가 적용 중</p>
+                <p className="text-xs text-purple-600 mt-1">딜러가 적용 중</p>
+              )}
+              {customerType === 'academy' && (
+                <p className="text-xs text-emerald-600 mt-1">아카데미가 적용 중</p>
               )}
             </Card>
 

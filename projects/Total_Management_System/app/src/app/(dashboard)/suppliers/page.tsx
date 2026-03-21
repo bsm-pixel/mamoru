@@ -10,31 +10,73 @@ import { useCustomers, useCreateCustomer } from '@/hooks/use-customers';
 import { formatKRW } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
-import { Building2, Plus, X } from 'lucide-react';
+import { Building2, Users, GraduationCap, Plus, X } from 'lucide-react';
 import type { Customer } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
 
-export default function SuppliersPage() {
+const B2B_TABS = [
+  { value: 'dealer', label: '딜러', icon: Users, color: 'purple', bgIcon: 'bg-purple-50', textIcon: 'text-purple-600' },
+  { value: 'academy', label: '아카데미', icon: GraduationCap, color: 'emerald', bgIcon: 'bg-emerald-50', textIcon: 'text-emerald-600' },
+  { value: 'supplier', label: '매입처', icon: Building2, color: 'amber', bgIcon: 'bg-amber-50', textIcon: 'text-amber-600' },
+] as const;
+
+const BADGE_STYLE: Record<string, string> = {
+  dealer: 'bg-purple-100 text-purple-700',
+  academy: 'bg-emerald-100 text-emerald-700',
+  supplier: 'bg-amber-100 text-amber-700',
+};
+
+const BADGE_LABEL: Record<string, string> = {
+  dealer: '딜러',
+  academy: '아카데미',
+  supplier: '매입처',
+};
+
+export default function B2BPartnersPage() {
+  const [activeTab, setActiveTab] = useState<'dealer' | 'academy' | 'supplier'>('dealer');
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
 
-  const { data, isLoading } = useCustomers({ type: 'supplier', search, limit: 100 });
-  const suppliers = data?.customers || [];
+  const { data, isLoading } = useCustomers({ type: activeTab, search, limit: 100 });
+  const partners = data?.customers || [];
+
+  const tabConfig = B2B_TABS.find((t) => t.value === activeTab)!;
 
   return (
     <>
-      <Topbar title="매입처 관리" action={
+      <Topbar title="B2B 거래처" action={
         <Button size="sm" onClick={() => setShowAdd(true)}>
           <Plus size={14} />
-          매입처 추가
+          거래처 추가
         </Button>
       } />
 
       <div className="px-4 md:px-6 py-4 space-y-4">
+        {/* 서브탭 */}
+        <div className="flex gap-1.5">
+          {B2B_TABS.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.value}
+                onClick={() => { setActiveTab(tab.value); setSearch(''); }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+                  activeTab === tab.value
+                    ? 'bg-terracotta text-cream'
+                    : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                }`}
+              >
+                <Icon size={12} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
         <SearchInput
           value={search}
           onChange={setSearch}
-          placeholder="매입처명, 담당자명, 전화번호 검색"
+          placeholder={`${tabConfig.label}명, 담당자명, 전화번호 검색`}
         />
 
         <Card padding={false}>
@@ -42,35 +84,37 @@ export default function SuppliersPage() {
             <div className="p-4 space-y-3">
               {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
             </div>
-          ) : suppliers.length === 0 ? (
-            <EmptyState icon={Building2} message="등록된 매입처가 없습니다" />
+          ) : partners.length === 0 ? (
+            <EmptyState icon={tabConfig.icon} message={`등록된 ${tabConfig.label}가 없습니다`} />
           ) : (
             <div className="divide-y divide-neutral-100">
-              {suppliers.map((s) => (
-                <SupplierRow key={s.id} supplier={s} />
+              {partners.map((p) => (
+                <PartnerRow key={p.id} partner={p} tabConfig={tabConfig} />
               ))}
             </div>
           )}
         </Card>
 
-        <p className="text-xs text-neutral-400">총 {suppliers.length}개 매입처</p>
+        <p className="text-xs text-neutral-400">총 {partners.length}개 {tabConfig.label}</p>
       </div>
 
-      {showAdd && <AddSupplierModal onClose={() => setShowAdd(false)} />}
+      {showAdd && <AddPartnerModal defaultType={activeTab} onClose={() => setShowAdd(false)} />}
     </>
   );
 }
 
-function SupplierRow({ supplier: s }: { supplier: Customer }) {
+function PartnerRow({ partner: s, tabConfig }: { partner: Customer; tabConfig: typeof B2B_TABS[number] }) {
   return (
     <div className="flex items-center gap-4 px-4 py-3 hover:bg-warm-ivory/60 transition">
-      <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
-        <Building2 size={18} className="text-amber-600" />
+      <div className={`w-9 h-9 rounded-lg ${tabConfig.bgIcon} flex items-center justify-center shrink-0`}>
+        <tabConfig.icon size={18} className={tabConfig.textIcon} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-indigo-black">{s.company_name || s.name}</span>
-          <Badge className="bg-amber-100 text-amber-700">매입처</Badge>
+          <Badge className={BADGE_STYLE[s.customer_type] || BADGE_STYLE.supplier}>
+            {BADGE_LABEL[s.customer_type] || s.customer_type}
+          </Badge>
         </div>
         <div className="flex items-center gap-3 mt-0.5 text-xs text-neutral-500">
           {s.company_name && <span>담당: {s.name}</span>}
@@ -87,13 +131,16 @@ function SupplierRow({ supplier: s }: { supplier: Customer }) {
   );
 }
 
-function AddSupplierModal({ onClose }: { onClose: () => void }) {
+function AddPartnerModal({ defaultType, onClose }: { defaultType: string; onClose: () => void }) {
   const createCustomer = useCreateCustomer();
+  const [partnerType, setPartnerType] = useState(defaultType);
   const [form, setForm] = useState({
     companyName: '', name: '', phone: '', memo: '',
     businessNumber: '', representative: '', businessType: '', businessCategory: '',
     email: '', address: '', contactChannel: '',
   });
+
+  const inputCls = "w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40";
 
   async function handleSubmit() {
     if (!form.companyName.trim()) {
@@ -107,53 +154,62 @@ function AddSupplierModal({ onClose }: { onClose: () => void }) {
       email: form.email.trim() || undefined,
       address: form.address.trim() || undefined,
       memo: form.memo.trim() || undefined,
-      customerType: 'supplier',
+      customerType: partnerType,
     });
     onClose();
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-white rounded-xl w-full max-w-md mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
-          <h2 className="text-sm font-bold text-indigo-black">매입처 추가</h2>
+      <div className="bg-white rounded-xl w-full max-w-md mx-4 shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 sticky top-0 bg-white rounded-t-xl z-10">
+          <h2 className="text-sm font-bold text-indigo-black">거래처 추가</h2>
           <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center">
             <X size={16} />
           </button>
         </div>
-        <div className="px-5 py-4 space-y-3 max-h-[60vh] overflow-y-auto">
+        <div className="px-5 py-4 space-y-3">
+          {/* 거래처 유형 선택 */}
+          <div>
+            <label className="text-xs text-neutral-500">거래처 유형</label>
+            <select value={partnerType} onChange={(e) => setPartnerType(e.target.value)} className={inputCls}>
+              {B2B_TABS.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+
           <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider">기본 정보</p>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <label className="text-xs text-neutral-500">업체명 *</label>
               <input type="text" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-                placeholder="매입처 업체명" autoFocus
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                placeholder="업체명" autoFocus className={inputCls} />
             </div>
-            <div>
-              <label className="text-xs text-neutral-500">사업자등록번호</label>
-              <input type="text" value={form.businessNumber} onChange={(e) => setForm({ ...form, businessNumber: e.target.value })}
-                placeholder="000-00-00000"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-            </div>
-            <div>
-              <label className="text-xs text-neutral-500">대표자명</label>
-              <input type="text" value={form.representative} onChange={(e) => setForm({ ...form, representative: e.target.value })}
-                placeholder="대표자"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-            </div>
-            <div>
-              <label className="text-xs text-neutral-500">업태</label>
-              <input type="text" value={form.businessType} onChange={(e) => setForm({ ...form, businessType: e.target.value })}
-                placeholder="제조, 도소매 등"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-            </div>
-            <div>
-              <label className="text-xs text-neutral-500">종목</label>
-              <input type="text" value={form.businessCategory} onChange={(e) => setForm({ ...form, businessCategory: e.target.value })}
-                placeholder="미용기기, 포장재 등"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-            </div>
+            {partnerType === 'supplier' && (
+              <>
+                <div>
+                  <label className="text-xs text-neutral-500">사업자등록번호</label>
+                  <input type="text" value={form.businessNumber} onChange={(e) => setForm({ ...form, businessNumber: e.target.value })}
+                    placeholder="000-00-00000" className={inputCls} />
+                </div>
+                <div>
+                  <label className="text-xs text-neutral-500">대표자명</label>
+                  <input type="text" value={form.representative} onChange={(e) => setForm({ ...form, representative: e.target.value })}
+                    placeholder="대표자" className={inputCls} />
+                </div>
+                <div>
+                  <label className="text-xs text-neutral-500">업태</label>
+                  <input type="text" value={form.businessType} onChange={(e) => setForm({ ...form, businessType: e.target.value })}
+                    placeholder="제조, 도소매 등" className={inputCls} />
+                </div>
+                <div>
+                  <label className="text-xs text-neutral-500">종목</label>
+                  <input type="text" value={form.businessCategory} onChange={(e) => setForm({ ...form, businessCategory: e.target.value })}
+                    placeholder="미용기기, 포장재 등" className={inputCls} />
+                </div>
+              </>
+            )}
           </div>
 
           <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider pt-2">연락처</p>
@@ -161,47 +217,42 @@ function AddSupplierModal({ onClose }: { onClose: () => void }) {
             <div>
               <label className="text-xs text-neutral-500">담당자명</label>
               <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="담당자"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                placeholder="담당자" className={inputCls} />
             </div>
             <div>
               <label className="text-xs text-neutral-500">전화번호</label>
               <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder="010-0000-0000"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                placeholder="010-0000-0000" className={inputCls} />
             </div>
             <div>
               <label className="text-xs text-neutral-500">이메일</label>
               <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="email@example.com"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                placeholder="email@example.com" className={inputCls} />
             </div>
             <div>
               <label className="text-xs text-neutral-500">연락 경로</label>
               <input type="text" value={form.contactChannel} onChange={(e) => setForm({ ...form, contactChannel: e.target.value })}
-                placeholder="카톡, 전화, 이메일 등"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                placeholder="카톡, 전화 등" className={inputCls} />
             </div>
           </div>
 
           <div>
             <label className="text-xs text-neutral-500">사업장 주소</label>
             <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
-              placeholder="사업장 주소"
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+              placeholder="사업장 주소" className={inputCls} />
           </div>
 
           <div>
             <label className="text-xs text-neutral-500">메모</label>
-            <input type="text" value={form.memo} onChange={(e) => setForm({ ...form, memo: e.target.value })}
-              placeholder="거래 조건, 결제 방식 등"
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            <textarea value={form.memo} onChange={(e) => setForm({ ...form, memo: e.target.value })}
+              placeholder="거래 조건, 결제 방식 등" rows={2}
+              className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 resize-none" />
           </div>
         </div>
-        <div className="px-5 py-4 border-t border-neutral-100 flex gap-2">
+        <div className="px-5 py-4 border-t border-neutral-100 flex gap-2 sticky bottom-0 bg-white rounded-b-xl">
           <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>
           <Button className="flex-1" disabled={!form.companyName.trim() || createCustomer.isPending} onClick={handleSubmit}>
-            {createCustomer.isPending ? '등록 중...' : '매입처 등록'}
+            {createCustomer.isPending ? '등록 중...' : '거래처 등록'}
           </Button>
         </div>
       </div>

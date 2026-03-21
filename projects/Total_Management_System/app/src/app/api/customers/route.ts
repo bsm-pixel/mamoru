@@ -36,6 +36,8 @@ export async function GET(req: NextRequest) {
 
     if (customerType) {
       query = query.eq('customer_type', customerType);
+    } else {
+      query = query.neq('customer_type', 'supplier'); // 고객 목록에서 매입처 제외
     }
 
     const { data, count, error } = await query;

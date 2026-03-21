@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
  * POST /api/import/customers — 이카운트 고객 CSV 업로드
  *
  * 예상 컬럼: 이름, 영업단가그룹명, 모바일연락처, 매장명, 주소
- * 영업단가그룹명 매핑: B2B_딜러/B2B_아카데미/B2B_교육기관 → b2b, 그 외 → retail
+ * 영업단가그룹명 매핑: 딜러/도매 → dealer, 아카데미/교육 → academy, 그 외 → retail
  */
 export async function POST(req: NextRequest) {
   try {
@@ -36,8 +36,14 @@ export async function POST(req: NextRequest) {
         const shopName = (row['매장명'] || row['상호'] || '').trim();
         const address = (row['주소'] || '').trim();
 
-        // B2B 매핑
-        const customerType = groupName.startsWith('B2B') ? 'b2b' : 'retail';
+        // B2B 매핑 — 딜러/아카데미 세분화
+        function mapCustomerType(g: string): string {
+          if (g.includes('딜러') || g.includes('도매')) return 'dealer';
+          if (g.includes('아카데미') || g.includes('교육')) return 'academy';
+          if (g.startsWith('B2B')) return 'dealer'; // B2B 기본값은 딜러
+          return 'retail';
+        }
+        const customerType = mapCustomerType(groupName);
 
         // 중복 체크 (이름 + 전화번호)
         let query = db.from('customers').select('id').eq('name', name);

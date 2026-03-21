@@ -28,6 +28,7 @@ export function useCreateProduct() {
       category: string;
       price: number;
       price_dealer?: number;
+      price_academy?: number;
       price_purchase?: number;
       supplier_id?: string;
       description?: string;
@@ -64,6 +65,7 @@ export function useUpdateProduct() {
       category?: string;
       price?: number;
       price_dealer?: number;
+      price_academy?: number;
       price_purchase?: number;
       supplier_id?: string | null;
       description?: string | null;
