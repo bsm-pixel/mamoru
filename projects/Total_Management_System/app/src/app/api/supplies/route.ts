@@ -80,12 +80,37 @@ export async function PATCH(req: NextRequest) {
     if (supply_status !== undefined) updates.supply_status = supply_status;
     if (purchase_url !== undefined) updates.purchase_url = purchase_url;
     if (name !== undefined) updates.name = name;
+    if (body.description !== undefined) updates.description = body.description;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
       .from('products')
       .update(updates)
       .eq('id', id);
+
+    if (error) throw error;
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
+/** DELETE /api/supplies — 부자재 삭제 */
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { id } = await req.json();
+    if (!id) return NextResponse.json({ error: 'id 필요' }, { status: 400 });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+      .from('products')
+      .delete()
+      .eq('id', id)
+      .eq('category', 'SUP');
 
     if (error) throw error;
     return NextResponse.json({ success: true });

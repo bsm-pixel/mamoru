@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Package, Plus, ExternalLink, X } from 'lucide-react';
+import { Package, Plus, ExternalLink, X, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Supply {
@@ -18,6 +18,7 @@ interface Supply {
   purchase_url: string | null;
   supply_status: string;
   image_url: string | null;
+  description: string | null;
   price_purchase: number;
 }
 
@@ -32,6 +33,7 @@ const STATUS_CYCLE = ['sufficient', 'needed', 'ordered'];
 export default function SuppliesPage() {
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
+  const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['supplies'],
@@ -53,6 +55,22 @@ export default function SuppliesPage() {
       if (!res.ok) throw new Error(await res.text());
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['supplies'] }),
+  });
+
+  const deleteSupply = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch('/api/supplies', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+    },
+    onSuccess: () => {
+      toast.success('삭제 완료');
+      queryClient.invalidateQueries({ queryKey: ['supplies'] });
+    },
+    onError: (err) => toast.error('삭제 실패: ' + String(err)),
   });
 
   const supplies = data?.supplies || [];
@@ -114,7 +132,7 @@ export default function SuppliesPage() {
                     {/* 정보 */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-indigo-black truncate">{s.name}</p>
-                      <p className="text-xs text-neutral-400">{s.sku}</p>
+                      {s.description && <p className="text-xs text-neutral-400 truncate">{s.description}</p>}
                     </div>
 
                     {/* 주문 링크 */}
@@ -131,6 +149,28 @@ export default function SuppliesPage() {
                     ) : (
                       <span className="text-xs text-neutral-300 shrink-0">링크 없음</span>
                     )}
+
+                    {/* 수정/삭제 */}
+                    <div className="shrink-0 flex items-center gap-1">
+                      <button
+                        onClick={() => setEditingSupply(s)}
+                        className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center text-neutral-400 hover:text-neutral-600"
+                        title="수정"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`"${s.name}" 을(를) 삭제하시겠습니까?`)) {
+                            deleteSupply.mutate(s.id);
+                          }
+                        }}
+                        className="w-7 h-7 rounded-lg hover:bg-red-50 flex items-center justify-center text-neutral-400 hover:text-red-500"
+                        title="삭제"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -144,6 +184,7 @@ export default function SuppliesPage() {
       </div>
 
       {showAdd && <AddSupplyModal onClose={() => setShowAdd(false)} />}
+      {editingSupply && <EditSupplyModal supply={editingSupply} onClose={() => setEditingSupply(null)} />}
     </>
   );
 }
@@ -204,6 +245,78 @@ function AddSupplyModal({ onClose }: { onClose: () => void }) {
           <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>
           <Button className="flex-1" disabled={!form.name.trim() || submitting} onClick={handleSubmit}>
             {submitting ? '등록 중...' : '부자재 등록'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditSupplyModal({ supply, onClose }: { supply: Supply; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState({
+    name: supply.name,
+    purchase_url: supply.purchase_url || '',
+    description: supply.description || '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit() {
+    if (!form.name.trim()) { toast.error('부자재명을 입력해주세요'); return; }
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/supplies', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: supply.id,
+          name: form.name.trim(),
+          purchase_url: form.purchase_url.trim() || null,
+          description: form.description.trim() || null,
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      toast.success('수정 완료');
+      queryClient.invalidateQueries({ queryKey: ['supplies'] });
+      onClose();
+    } catch (err) {
+      toast.error(String(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white rounded-xl w-full max-w-md mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
+          <h2 className="text-sm font-bold text-indigo-black">부자재 수정</h2>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center"><X size={16} /></button>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <div>
+            <label className="text-xs text-neutral-500">부자재명 *</label>
+            <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+              autoFocus
+              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+          </div>
+          <div>
+            <label className="text-xs text-neutral-500">주문 링크</label>
+            <input type="url" value={form.purchase_url} onChange={(e) => setForm({ ...form, purchase_url: e.target.value })}
+              placeholder="https://shopping.naver.com/..."
+              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+          </div>
+          <div>
+            <label className="text-xs text-neutral-500">메모</label>
+            <input type="text" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="규격, 수량 단위 등"
+              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+          </div>
+        </div>
+        <div className="px-5 py-4 border-t border-neutral-100 flex gap-2">
+          <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>
+          <Button className="flex-1" disabled={!form.name.trim() || submitting} onClick={handleSubmit}>
+            {submitting ? '저장 중...' : '저장'}
           </Button>
         </div>
       </div>
