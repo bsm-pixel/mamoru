@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, ShoppingCart, MessageSquare, Wrench, Store,
   FileSignature, Package, Settings, Users, Truck, BarChart3,
-  MoreHorizontal, X, Boxes, Star,
+  MoreHorizontal, X, Boxes, Star, Building2,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -14,7 +14,7 @@ import { NAV_ITEMS } from '@/lib/utils/constants';
 
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard, ShoppingCart, MessageSquare, Wrench, Store,
-  FileSignature, Package, Settings, Users, Truck, BarChart3, Boxes, Star,
+  FileSignature, Package, Settings, Users, Truck, BarChart3, Boxes, Star, Building2,
 };
 
 // 모바일 하단 탭에 고정 표시할 4개 + 더보기

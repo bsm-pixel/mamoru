@@ -41,6 +41,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: '제품', href: '/products', icon: 'Package', matchPrefix: '/products' },
       { label: '재고', href: '/inventory', icon: 'Boxes', matchPrefix: '/inventory' },
       { label: '매입관리', href: '/purchasing', icon: 'Truck', matchPrefix: '/purchasing' },
+      { label: '매입처', href: '/suppliers', icon: 'Building2', matchPrefix: '/suppliers' },
     ],
   },
   {

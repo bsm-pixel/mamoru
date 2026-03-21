@@ -7,13 +7,14 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCustomers } from '@/hooks/use-customers';
+import { useCustomers, useCreateCustomer } from '@/hooks/use-customers';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
-import { Users } from 'lucide-react';
+import { Users, Plus, X } from 'lucide-react';
 import type { Customer } from '@/lib/supabase/types';
+import toast from 'react-hot-toast';
 
 const TYPE_LABEL: Record<string, string> = {
   retail: '일반',
@@ -49,6 +50,7 @@ export default function CustomersPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [showAdd, setShowAdd] = useState(false);
   const limit = 20;
 
   const { data, isLoading } = useCustomers({
@@ -63,7 +65,12 @@ export default function CustomersPage() {
 
   return (
     <>
-      <Topbar title="고객 관리" />
+      <Topbar title="고객 관리" action={
+        <Button size="sm" onClick={() => setShowAdd(true)}>
+          <Plus size={14} />
+          고객 추가
+        </Button>
+      } />
 
       <div className="px-4 md:px-6 py-4 space-y-4">
         {/* 검색 */}
@@ -115,7 +122,62 @@ export default function CustomersPage() {
 
         <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} unit="명" />
       </div>
+
+      {showAdd && <AddCustomerModal onClose={() => setShowAdd(false)} />}
     </>
+  );
+}
+
+function AddCustomerModal({ onClose }: { onClose: () => void }) {
+  const createCustomer = useCreateCustomer();
+  const [form, setForm] = useState({ name: '', phone: '', memo: '' });
+
+  async function handleSubmit() {
+    if (!form.name.trim()) { toast.error('고객명을 입력해주세요'); return; }
+    await createCustomer.mutateAsync({
+      name: form.name.trim(),
+      phone: form.phone.trim() || undefined,
+      memo: form.memo.trim() || undefined,
+      customerType: 'retail',
+    });
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white rounded-xl w-full max-w-md mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
+          <h2 className="text-sm font-bold text-indigo-black">고객 추가</h2>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center"><X size={16} /></button>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <div>
+            <label className="text-xs text-neutral-500">고객명 *</label>
+            <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="고객 이름" autoFocus
+              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+          </div>
+          <div>
+            <label className="text-xs text-neutral-500">전화번호</label>
+            <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="010-0000-0000 (선택)"
+              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+          </div>
+          <div>
+            <label className="text-xs text-neutral-500">메모</label>
+            <input type="text" value={form.memo} onChange={(e) => setForm({ ...form, memo: e.target.value })}
+              placeholder="메모 (선택)"
+              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+          </div>
+        </div>
+        <div className="px-5 py-4 border-t border-neutral-100 flex gap-2">
+          <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>
+          <Button className="flex-1" disabled={!form.name.trim() || createCustomer.isPending} onClick={handleSubmit}>
+            {createCustomer.isPending ? '등록 중...' : '고객 등록'}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
