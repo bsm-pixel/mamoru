@@ -35,6 +35,7 @@ export default function SuppliesPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['supplies'],
+    staleTime: 30_000,
     queryFn: async () => {
       const res = await fetch('/api/supplies');
       if (!res.ok) throw new Error(await res.text());

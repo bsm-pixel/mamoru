@@ -11,7 +11,7 @@ export async function GET() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
       .from('products')
-      .select('id, name, sku, purchase_url, supply_status, image_url, memo, price_purchase')
+      .select('id, name, sku, purchase_url, supply_status, image_url, description, price_purchase')
       .eq('category', 'SUP')
       .order('name');
 
