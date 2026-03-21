@@ -51,6 +51,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     email: '',
     customer_type: 'retail',
     company_name: '',
+    address_road: '',
+    address_detail: '',
     memo: '',
     outstanding_balance: 0,
   });
@@ -64,6 +66,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       email: c.email || '',
       customer_type: c.customer_type || 'retail',
       company_name: c.company_name || '',
+      address_road: c.address_road || '',
+      address_detail: c.address_detail || '',
       memo: c.memo || '',
       outstanding_balance: c.outstanding_balance || 0,
     });
@@ -168,13 +172,30 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 </div>
               </div>
               <div>
-                <label className="text-xs text-neutral-500">업체명</label>
+                <label className="text-xs text-neutral-500">매장명 (근무지)</label>
                 <input
                   type="text"
                   value={form.company_name}
                   onChange={(e) => setForm({ ...form, company_name: e.target.value })}
-                  placeholder="해당 시 입력"
+                  placeholder="매장 또는 근무지명"
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-neutral-500">주소</label>
+                <input
+                  type="text"
+                  value={form.address_road}
+                  onChange={(e) => setForm({ ...form, address_road: e.target.value })}
+                  placeholder="도로명 주소"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                />
+                <input
+                  type="text"
+                  value={form.address_detail}
+                  onChange={(e) => setForm({ ...form, address_detail: e.target.value })}
+                  placeholder="상세 주소 (동/호수)"
+                  className="w-full h-9 px-3 mt-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
                 />
               </div>
               <div>
@@ -227,7 +248,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 </div>
                 {c.company_name && (
                   <div className="col-span-2">
-                    <span className="text-xs text-neutral-500">업체명</span>
+                    <span className="text-xs text-neutral-500">매장명 (근무지)</span>
                     <p>{c.company_name}</p>
                   </div>
                 )}
