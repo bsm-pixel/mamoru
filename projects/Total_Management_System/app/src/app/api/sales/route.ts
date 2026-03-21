@@ -222,7 +222,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ sale: created, saleNumber });
-  } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : JSON.stringify(err);
+    console.error('[sales POST] error:', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
