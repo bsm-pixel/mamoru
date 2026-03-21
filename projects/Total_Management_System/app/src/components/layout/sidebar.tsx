@@ -69,8 +69,8 @@ export function Sidebar() {
                     className={cn(
                       'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition',
                       active
-                        ? 'bg-terracotta/15 text-terracotta'
-                        : 'text-cream/60 hover:text-cream hover:bg-white/5'
+                        ? 'bg-white/10 text-cream border-l-2 border-cream'
+                        : 'text-cream/40 hover:text-cream/80 hover:bg-white/5'
                     )}
                   >
                     {Icon && <Icon size={18} />}
