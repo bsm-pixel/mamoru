@@ -1,4 +1,36 @@
-/** 아임웹 API v2 타입 — 실제 응답 구조 반영 */
+/** 아임웹 API 타입 — v2 + 새 OpenAPI 응답 구조 반영 */
+
+/* ============================================================
+ * 새 OpenAPI 상품 타입 (openapi.imweb.me)
+ * ============================================================ */
+
+export interface ImwebProduct {
+  prodNo: number;
+  name: string;
+  prodStatus: string;          // 'sale' | 'soldout' | 'nosale' 등
+  price: number;
+  priceOrg: number;            // 원래 가격 (할인 전)
+  stock: number;
+  customSkuCode: string | null;
+  imageUrl: string | null;
+  categories: Array<{ categoryNo: number; categoryName: string }>;
+  createTime: string;
+  updateTime: string;
+}
+
+export interface ImwebProductListResponse {
+  statusCode: number;
+  data: {
+    list: ImwebProduct[];
+    totalCount: number;
+    currentPage: number;
+    lastPage: number;
+  };
+}
+
+/* ============================================================
+ * v2 API 주문 타입 (api.imweb.me)
+ * ============================================================ */
 
 export interface ImwebAuthResponse {
   access_token: string;

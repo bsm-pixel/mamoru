@@ -33,13 +33,19 @@
 - [x] terracotta → 모노크롬 팔레트 전환 (globals.css) ✅
 - [x] repair-detail-panel 높이 flex-1 전환 ✅
 
+### 아임웹 ↔ TMS 상품/재고 동기화 (03-21)
+- [x] 아임웹 OpenAPI 클라이언트 확장 (상품 조회 + 재고 수정) ✅
+- [x] 상품 동기화 로직 (product-sync.ts + sync-products API + 설정 UI) ✅
+- [x] 재고 실시간 연동 (입고/판매/조정 → 아임웹 재고 자동 반영) ✅
+- [ ] 기존 테스트 데이터 삭제 후 아임웹 동기화 실행 (수동)
+
 ### 제품/재고/매입/회계 강화 (03-21) — 완료
 - [x] Phase 1: 발주 입고 멱등성 버그 수정 — 재고 중복 증가 방지 가드 ✅
 - [x] Phase 2: 매입처(Supplier) 드롭다운 — 제품/발주 폼에 자동완성 연동 ✅
 - [x] Phase 3: 재고 수동 조정 — stock_adjustments 테이블 + 파손/실사 보정 모달 ✅
 - [x] Phase 4: 회계 COGS/마진 분석 — 제품별 매출이익 랭킹 + VAT 엑셀 내보내기 ✅
 - [x] Phase 5: 미지급금/미수금 현황 — 매입처별 잔금 + 고객 미수금 자동 반영 ✅
-- [ ] DB 마이그레이션: Supabase SQL Editor에서 020_stock_adjustments.sql 실행 (수동)
+- [x] DB 마이그레이션: Supabase SQL Editor에서 020_stock_adjustments.sql 실행 ✅ 03-21
 
 ### 기능 개발
 - [ ] 계약서 PDF/이미지 생성 (html2canvas or 서버사이드)

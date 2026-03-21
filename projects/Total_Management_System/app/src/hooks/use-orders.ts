@@ -121,6 +121,28 @@ export function useOrderSync() {
   });
 }
 
+/** 아임웹 상품 동기화 */
+export function useProductSync() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/imweb/sync-products', { method: 'POST' });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ success: boolean; synced: number; created: number; updated: number; errors: string[] }>;
+    },
+    onSuccess: (data) => {
+      toast.success(`상품 ${data.created}개 생성, ${data.updated}개 업데이트`);
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['sync-logs'] });
+    },
+    onError: (err) => {
+      toast.error('상품 동기화 실패: ' + String(err));
+    },
+  });
+}
+
 /** 송장 생성 */
 export function useBookInvoice() {
   const queryClient = useQueryClient();

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { updateImwebStock } from '@/lib/imweb/client';
 
 /**
  * POST /api/inventory/adjust — 재고 수동 조정
@@ -51,6 +52,20 @@ export async function POST(req: NextRequest) {
       .eq('id', product_id);
 
     if (updateErr) throw updateErr;
+
+    // 아임웹 재고 동기화
+    const { data: prodForImweb } = await db
+      .from('products')
+      .select('imweb_product_no')
+      .eq('id', product_id)
+      .single();
+    if (prodForImweb?.imweb_product_no) {
+      try {
+        await updateImwebStock(Number(prodForImweb.imweb_product_no), quantity);
+      } catch (e) {
+        console.error('[imweb] 재고 조정 동기화 실패:', prodForImweb.imweb_product_no, e);
+      }
+    }
 
     // 조정 이력 기록
     const { data: adjustment, error: insertErr } = await db

@@ -5,15 +5,16 @@ import { Topbar } from '@/components/layout/topbar';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useOrderSync } from '@/hooks/use-orders';
+import { useOrderSync, useProductSync } from '@/hooks/use-orders';
 import { createClient } from '@/lib/supabase/client';
 import { formatDateTime } from '@/lib/utils/format';
-import { RefreshCw, Database, CheckCircle2, AlertCircle } from 'lucide-react';
+import { RefreshCw, Database, CheckCircle2, AlertCircle, Package } from 'lucide-react';
 import type { SyncLog } from '@/lib/supabase/types';
 
 export default function SettingsPage() {
   const supabase = createClient();
   const sync = useOrderSync();
+  const productSync = useProductSync();
 
   const { data: syncLogs } = useQuery({
     queryKey: ['sync-logs'],
@@ -50,6 +51,30 @@ export default function SettingsPage() {
           </Button>
         </Card>
 
+        {/* 아임웹 상품 동기화 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>아임웹 상품 동기화</CardTitle>
+          </CardHeader>
+          <p className="text-sm text-neutral-500 mb-4">
+            아임웹에 등록된 상품을 TMS에 동기화합니다.
+            매입가·거래처는 TMS에서 별도 관리됩니다.
+          </p>
+          <Button
+            onClick={() => productSync.mutate()}
+            disabled={productSync.isPending}
+          >
+            <Package size={16} className={productSync.isPending ? 'animate-spin' : ''} />
+            {productSync.isPending ? '동기화 중...' : '상품 동기화'}
+          </Button>
+          {productSync.data && (
+            <p className="text-xs text-neutral-500 mt-2">
+              {productSync.data.created}개 생성, {productSync.data.updated}개 업데이트
+              {productSync.data.errors?.length > 0 && ` (오류 ${productSync.data.errors.length}건)`}
+            </p>
+          )}
+        </Card>
+
         {/* 동기화 이력 */}
         <Card>
           <CardHeader>
@@ -74,7 +99,7 @@ export default function SettingsPage() {
                         <RefreshCw size={14} className="text-info animate-spin" />
                       )}
                       <span className="text-sm font-medium">
-                        {log.records_synced}건 동기화
+                        {log.sync_type === 'imweb_products' ? '상품' : '주문'} {log.records_synced}건
                       </span>
                       <Badge variant={log.status === 'completed' ? 'success' : log.status === 'failed' ? 'error' : 'info'}>
                         {log.status === 'completed' ? '완료' : log.status === 'failed' ? '실패' : '진행중'}

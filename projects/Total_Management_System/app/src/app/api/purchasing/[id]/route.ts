@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { updateImwebStock } from '@/lib/imweb/client';
 
 /** GET /api/purchasing/[id] — 발주 상세 */
 export async function GET(
@@ -110,7 +111,7 @@ export async function PATCH(
             if (item.product_id) {
               const { data: prod } = await db
                 .from('products')
-                .select('stock_quantity')
+                .select('stock_quantity, imweb_product_no')
                 .eq('id', item.product_id)
                 .single();
               if (prod) {
@@ -118,6 +119,15 @@ export async function PATCH(
                   .from('products')
                   .update({ stock_quantity: (prod.stock_quantity || 0) + item.quantity })
                   .eq('id', item.product_id);
+
+                // 아임웹 재고 동기화
+                if (prod.imweb_product_no) {
+                  try {
+                    await updateImwebStock(Number(prod.imweb_product_no), item.quantity);
+                  } catch (e) {
+                    console.error('[imweb] 재고 동기화 실패:', prod.imweb_product_no, e);
+                  }
+                }
               }
             }
           }

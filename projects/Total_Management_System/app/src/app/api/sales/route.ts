@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { updateImwebStock } from '@/lib/imweb/client';
 
 /** GET /api/sales — 오프라인 판매 목록 */
 export async function GET(req: NextRequest) {
@@ -178,6 +179,24 @@ export async function POST(req: NextRequest) {
               .from('products')
               .update({ stock_quantity: Math.max(0, (prod.stock_quantity || 0) - item.serial_ids.length) })
               .eq('id', item.product_id);
+          }
+        }
+      }
+    }
+
+    // 아임웹 재고 동기화: 판매 품목의 수량만큼 아임웹 재고 차감
+    for (const item of items) {
+      if (item.product_id && item.quantity > 0) {
+        const { data: prod } = await db
+          .from('products')
+          .select('imweb_product_no')
+          .eq('id', item.product_id)
+          .single();
+        if (prod?.imweb_product_no) {
+          try {
+            await updateImwebStock(Number(prod.imweb_product_no), -item.quantity);
+          } catch (e) {
+            console.error('[imweb] 판매 재고 동기화 실패:', prod.imweb_product_no, e);
           }
         }
       }

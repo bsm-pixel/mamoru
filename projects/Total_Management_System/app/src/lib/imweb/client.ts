@@ -1,6 +1,8 @@
 /**
- * 아임웹 API v2 클라이언트
- * 인증 흐름: POST /v2/auth → access_token 발급
+ * 아임웹 API 클라이언트
+ * v2 API: api.imweb.me (주문 관리)
+ * 새 OpenAPI: openapi.imweb.me (상품/재고 관리)
+ * 인증 흐름: POST /v2/auth → access_token 발급 (양쪽 공용)
  */
 
 import type {
@@ -10,9 +12,12 @@ import type {
   ImwebOrder,
   ImwebOrdersParams,
   ImwebProdOrder,
+  ImwebProduct,
+  ImwebProductListResponse,
 } from './types';
 
 const BASE_URL = 'https://api.imweb.me';
+const OPENAPI_URL = 'https://openapi.imweb.me';
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
@@ -64,6 +69,68 @@ async function imwebFetch<T>(
 
   return res.json();
 }
+
+/** 새 OpenAPI 인증된 요청 (Bearer 토큰) */
+async function openapiFetch<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = await getAccessToken();
+  const res = await fetch(`${OPENAPI_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...options.headers,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`아임웹 OpenAPI 오류: ${res.status} ${await res.text()}`);
+  }
+
+  return res.json();
+}
+
+/* ============================================================
+ * 상품 API (새 OpenAPI — openapi.imweb.me)
+ * ============================================================ */
+
+/** 상품 목록 조회 */
+export async function getImwebProducts(
+  page = 1,
+  limit = 100
+): Promise<ImwebProductListResponse> {
+  return openapiFetch<ImwebProductListResponse>(
+    `/products?page=${page}&limit=${limit}`
+  );
+}
+
+/** 상품 단건 조회 */
+export async function getImwebProduct(
+  prodNo: number
+): Promise<{ statusCode: number; data: ImwebProduct }> {
+  return openapiFetch(`/products/${prodNo}`);
+}
+
+/** 상품 재고 수정 (+ or -) */
+export async function updateImwebStock(
+  prodNo: number,
+  quantity: number
+): Promise<{ statusCode: number; data: boolean }> {
+  return openapiFetch(`/products/${prodNo}/stock-info`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      stock: quantity,
+      isUseStock: 'Y',
+      isUnlimitedStock: 'N',
+    }),
+  });
+}
+
+/* ============================================================
+ * 주문 API (v2 — api.imweb.me)
+ * ============================================================ */
 
 /** 주문 목록 조회 */
 export async function getOrders(
