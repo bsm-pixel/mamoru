@@ -73,14 +73,29 @@ export async function PATCH(
     if (body.status) {
       const newStatus = body.status;
 
-      if (newStatus === 'ordered' && current.status === 'draft') {
+      if (newStatus === 'ordered') {
+        if (current.status !== 'draft') {
+          return NextResponse.json({ error: 'draft 상태에서만 발주 확정 가능합니다' }, { status: 400 });
+        }
         updates.status = 'ordered';
       } else if (newStatus === 'deposit_paid') {
+        if (current.status !== 'ordered' && current.status !== 'draft') {
+          return NextResponse.json({ error: `${current.status} 상태에서는 선납 처리할 수 없습니다` }, { status: 400 });
+        }
         updates.status = 'deposit_paid';
         updates.deposit_amount = body.deposit_amount || current.deposit_amount;
         updates.deposit_paid_at = now;
         updates.balance_amount = current.total_amount - (body.deposit_amount || current.deposit_amount || 0);
       } else if (newStatus === 'received') {
+        // 멱등성 가드: 이미 received 이상이면 재고 중복 증가 방지
+        if (current.status === 'received' || current.status === 'balance_paid') {
+          return NextResponse.json({ error: '이미 입고 처리된 발주입니다' }, { status: 409 });
+        }
+        // 유효 전이: ordered 또는 deposit_paid에서만 입고 가능
+        if (current.status !== 'ordered' && current.status !== 'deposit_paid') {
+          return NextResponse.json({ error: `${current.status} 상태에서는 입고 처리할 수 없습니다` }, { status: 400 });
+        }
+
         updates.status = 'received';
         updates.received_date = body.received_date || now.slice(0, 10);
 
@@ -108,13 +123,19 @@ export async function PATCH(
           }
         }
       } else if (newStatus === 'balance_paid') {
+        if (current.status !== 'received') {
+          return NextResponse.json({ error: '입고 완료 후에만 잔금 처리 가능합니다' }, { status: 400 });
+        }
         updates.status = 'balance_paid';
         updates.balance_paid_at = now;
         updates.balance_amount = 0;
       } else if (newStatus === 'cancelled') {
+        if (current.status === 'received' || current.status === 'balance_paid') {
+          return NextResponse.json({ error: '입고 이후에는 취소할 수 없습니다' }, { status: 400 });
+        }
         updates.status = 'cancelled';
       } else {
-        updates.status = newStatus;
+        return NextResponse.json({ error: `유효하지 않은 상태입니다: ${newStatus}` }, { status: 400 });
       }
     }
 

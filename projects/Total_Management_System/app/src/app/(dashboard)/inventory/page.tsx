@@ -2,15 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { useInventory, type InventoryItem } from '@/hooks/use-inventory';
+import { AdjustModal } from '@/components/inventory/adjust-modal';
 import { formatKRW } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
-import { AlertTriangle, Package, Boxes, TrendingDown, ArrowUpDown } from 'lucide-react';
+import { AlertTriangle, Package, Boxes, TrendingDown, ArrowUpDown, Wrench } from 'lucide-react';
 
 const CATEGORY_TABS = [
   { value: '', label: '전체' },
@@ -25,11 +28,13 @@ type SortKey = 'name' | 'stock_quantity' | 'pending_quantity' | 'value';
 
 export default function InventoryPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [category, setCategory] = useState('');
   const [search, setSearch] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortAsc, setSortAsc] = useState(true);
+  const [showAdjust, setShowAdjust] = useState(false);
 
   const { data, isLoading } = useInventory({
     category: category || undefined,
@@ -64,7 +69,20 @@ export default function InventoryPage() {
 
   return (
     <>
-      <Topbar title="재고 현황" />
+      <Topbar title="재고 현황" action={
+        <Button size="sm" variant="ghost" onClick={() => setShowAdjust(true)}>
+          <Wrench size={14} />
+          재고 조정
+        </Button>
+      } />
+
+      {showAdjust && (
+        <AdjustModal
+          items={items}
+          onClose={() => setShowAdjust(false)}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ['inventory'] })}
+        />
+      )}
 
       <div className="px-4 md:px-6 py-4 space-y-4">
         {/* 요약 카드 */}

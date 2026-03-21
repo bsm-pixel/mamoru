@@ -17,7 +17,67 @@ export async function GET(req: NextRequest) {
     let buffer: Buffer;
     let filename: string;
 
-    if (type === 'purchases') {
+    if (type === 'margin') {
+      // 마진 분석 엑셀 — 판매 품목별 매출/원가/이익
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: sales } = await (supabase as any)
+        .from('offline_sales')
+        .select('id')
+        .gte('sale_date', fromDate)
+        .lte('sale_date', toDate);
+
+      const saleIds = (sales || []).map((s: { id: string }) => s.id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: saleItems } = saleIds.length > 0
+        ? await (supabase as any)
+            .from('offline_sale_items')
+            .select('product_id, product_name, sku, quantity, unit_price, total_price')
+            .in('sale_id', saleIds)
+        : { data: [] };
+
+      const productIds = [...new Set((saleItems || []).map((i: { product_id: string }) => i.product_id).filter(Boolean))];
+      const purchasePriceMap: Record<string, number> = {};
+      if (productIds.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: products } = await (supabase as any)
+          .from('products')
+          .select('id, price_purchase')
+          .in('id', productIds);
+        for (const p of (products || [])) purchasePriceMap[p.id] = p.price_purchase || 0;
+      }
+
+      const rows = (saleItems || []).map((item: { product_id: string; product_name: string; sku: string; quantity: number; unit_price: number; total_price: number }) => {
+        const purchasePrice = item.product_id ? (purchasePriceMap[item.product_id] || 0) : 0;
+        const cogs = purchasePrice * item.quantity;
+        const revenue = item.total_price || (item.unit_price * item.quantity);
+        const profit = revenue - cogs;
+        return {
+          product_name: item.product_name,
+          sku: item.sku || '',
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          revenue,
+          purchase_price: purchasePrice,
+          cogs,
+          profit,
+          margin_rate: revenue > 0 ? `${Math.round((profit / revenue) * 1000) / 10}%` : '0%',
+        };
+      });
+
+      buffer = createExcelBuffer('마진분석', [
+        { header: '제품명', key: 'product_name', width: 22 },
+        { header: 'SKU', key: 'sku', width: 16 },
+        { header: '수량', key: 'quantity', width: 8 },
+        { header: '판매단가', key: 'unit_price', width: 14 },
+        { header: '매출', key: 'revenue', width: 14 },
+        { header: '매입단가', key: 'purchase_price', width: 14 },
+        { header: '매출원가', key: 'cogs', width: 14 },
+        { header: '이익', key: 'profit', width: 14 },
+        { header: '이익률', key: 'margin_rate', width: 10 },
+      ], rows);
+
+      filename = `마진분석_${fromDate}_${toDate}.xlsx`;
+    } else if (type === 'purchases') {
       // 매입 내역
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase as any)

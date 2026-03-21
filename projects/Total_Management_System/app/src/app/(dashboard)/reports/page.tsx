@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReportSummary, downloadExcel } from '@/hooks/use-reports';
 import { formatKRW } from '@/lib/utils/format';
-import { Download, FileSpreadsheet, TrendingUp, TrendingDown, Receipt, FileText } from 'lucide-react';
+import { Download, FileSpreadsheet, TrendingUp, TrendingDown, Receipt, FileText, BarChart3, Truck, Wallet, Users } from 'lucide-react';
 
 const METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
@@ -109,13 +109,13 @@ export default function ReportsPage() {
         </Card>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-36" />)}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-36" />)}
           </div>
         ) : data ? (
           <>
-            {/* 요약 카드 3개 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* 요약 카드 4개 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* 매출 */}
               <Card>
                 <div className="flex items-center gap-2 mb-3">
@@ -183,13 +183,28 @@ export default function ReportsPage() {
                   <div className="flex justify-between"><span>매입세액</span><span>-{formatKRW(data.vat.purchase_vat)}</span></div>
                 </div>
 
-                {/* 마진 */}
-                <div className="mt-3 pt-3 border-t border-neutral-100">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-neutral-500">매출이익 (매출-매입)</span>
-                    <span className={`font-bold ${data.sales.total - data.purchases.total >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                      {formatKRW(data.sales.total - data.purchases.total)}
-                    </span>
+              </Card>
+
+              {/* 매출이익 (COGS 기반) */}
+              <Card>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                    <BarChart3 size={18} className="text-amber-600" />
+                  </div>
+                  <h3 className="text-sm font-bold text-indigo-black">매출이익</h3>
+                </div>
+                <p className={`text-2xl font-bold ${data.margin.gross_profit >= 0 ? 'text-amber-600' : 'text-red-500'}`}>
+                  {formatKRW(data.margin.gross_profit)}
+                </p>
+                <p className="text-[10px] text-neutral-400 mt-0.5">
+                  이익률 {data.margin.margin_rate}%
+                </p>
+                <div className="mt-2 space-y-1 text-xs text-neutral-500">
+                  <div className="flex justify-between"><span>매출</span><span>{formatKRW(data.sales.total)}</span></div>
+                  <div className="flex justify-between"><span>매출원가 (COGS)</span><span>-{formatKRW(data.margin.total_cogs)}</span></div>
+                  <div className="flex justify-between font-semibold text-indigo-black">
+                    <span>매출총이익</span>
+                    <span>{formatKRW(data.margin.gross_profit)}</span>
                   </div>
                 </div>
               </Card>
@@ -221,6 +236,15 @@ export default function ReportsPage() {
                 매입 엑셀
                 <Download size={12} />
               </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => downloadExcel('margin' as 'sales', period.from, period.to)}
+              >
+                <BarChart3 size={14} />
+                마진 분석
+                <Download size={12} />
+              </Button>
               <Link href="/reports/transaction">
                 <Button variant="secondary" size="sm">
                   <FileText size={14} />
@@ -228,6 +252,117 @@ export default function ReportsPage() {
                 </Button>
               </Link>
             </div>
+
+            {/* 제품별 매출 랭킹 */}
+            {data.by_product.length > 0 && (
+              <Card>
+                <h3 className="text-sm font-bold text-indigo-black mb-3">제품별 매출 랭킹</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-neutral-200 text-neutral-500">
+                        <th className="text-left py-2 pr-2">제품</th>
+                        <th className="text-right py-2 px-2">수량</th>
+                        <th className="text-right py-2 px-2">매출</th>
+                        <th className="text-right py-2 px-2">원가</th>
+                        <th className="text-right py-2 px-2">이익</th>
+                        <th className="text-right py-2 pl-2">이익률</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-50">
+                      {data.by_product.slice(0, 10).map((p) => (
+                        <tr key={p.product_id} className="hover:bg-warm-ivory/40">
+                          <td className="py-2 pr-2">
+                            <p className="font-medium text-indigo-black truncate max-w-[140px]">{p.product_name}</p>
+                            <p className="text-[10px] text-neutral-400">{p.sku}</p>
+                          </td>
+                          <td className="text-right py-2 px-2">{p.qty}</td>
+                          <td className="text-right py-2 px-2 font-semibold">{formatKRW(p.revenue)}</td>
+                          <td className="text-right py-2 px-2 text-neutral-500">{formatKRW(p.cogs)}</td>
+                          <td className={`text-right py-2 px-2 font-semibold ${p.profit >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                            {formatKRW(p.profit)}
+                          </td>
+                          <td className={`text-right py-2 pl-2 ${p.margin_rate >= 30 ? 'text-green-600' : p.margin_rate >= 0 ? 'text-amber-600' : 'text-red-500'}`}>
+                            {p.margin_rate}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            )}
+
+            {/* 매입처별 지출 */}
+            {data.by_supplier.length > 0 && (
+              <Card>
+                <div className="flex items-center gap-2 mb-3">
+                  <Truck size={16} className="text-neutral-500" />
+                  <h3 className="text-sm font-bold text-indigo-black">매입처별 지출</h3>
+                </div>
+                <div className="space-y-2">
+                  {data.by_supplier.map((s) => (
+                    <div key={s.name} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0">
+                      <div>
+                        <p className="text-sm font-medium">{s.name}</p>
+                        <p className="text-[10px] text-neutral-400">{s.count}건</p>
+                      </div>
+                      <span className="text-sm font-bold text-red-500">{formatKRW(s.total)}</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* 미지급금 / 미수금 */}
+            {(data.payables.total > 0 || data.receivables.total > 0) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 미지급금 */}
+                <Card>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Wallet size={16} className="text-red-500" />
+                    <h3 className="text-sm font-bold text-indigo-black">미지급금</h3>
+                    <span className="ml-auto text-sm font-bold text-red-500">{formatKRW(data.payables.total)}</span>
+                  </div>
+                  {data.payables.items.length === 0 ? (
+                    <p className="text-xs text-neutral-400 text-center py-3">미지급금 없음</p>
+                  ) : (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {data.payables.items.map((p) => (
+                        <div key={p.name} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0">
+                          <div>
+                            <p className="text-sm font-medium">{p.name}</p>
+                            <p className="text-[10px] text-neutral-400">{p.count}건 미완료</p>
+                          </div>
+                          <span className="text-sm font-bold text-red-500">{formatKRW(p.total_owed)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+
+                {/* 미수금 */}
+                <Card>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users size={16} className="text-amber-600" />
+                    <h3 className="text-sm font-bold text-indigo-black">미수금</h3>
+                    <span className="ml-auto text-sm font-bold text-amber-600">{formatKRW(data.receivables.total)}</span>
+                  </div>
+                  {data.receivables.items.length === 0 ? (
+                    <p className="text-xs text-neutral-400 text-center py-3">미수금 없음</p>
+                  ) : (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {data.receivables.items.map((r) => (
+                        <Link key={r.id} href={`/customers/${r.id}`} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0 hover:bg-warm-ivory/40 transition rounded px-1">
+                          <p className="text-sm font-medium">{r.name}</p>
+                          <span className="text-sm font-bold text-amber-600">{formatKRW(r.outstanding)}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </div>
+            )}
 
             {/* 최근 매출 내역 */}
             <Card>

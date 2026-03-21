@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useProducts } from '@/hooks/use-sales';
 import { useCreatePurchaseOrder } from '@/hooks/use-purchasing';
 import { formatKRW, calcVAT } from '@/lib/utils/format';
+import { SupplierSelect } from '@/components/ui/supplier-select';
 import { ArrowLeft, Minus, Plus, Trash2 } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 
@@ -134,13 +135,12 @@ export default function NewPurchaseOrderPage() {
               <h3 className="text-sm font-bold text-indigo-black mb-3">매입처 정보</h3>
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs text-neutral-500">매입처명 *</label>
-                  <input
-                    type="text"
-                    value={supplierName}
-                    onChange={(e) => setSupplierName(e.target.value)}
-                    placeholder="매입처 이름"
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                  <label className="text-xs text-neutral-500">매입처 *</label>
+                  <SupplierSelect
+                    value={supplierId}
+                    displayName={supplierName}
+                    onChange={(id, name) => { setSupplierId(id); setSupplierName(name); }}
+                    placeholder="매입처 선택"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2">

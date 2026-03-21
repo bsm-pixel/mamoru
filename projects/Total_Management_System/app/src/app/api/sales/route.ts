@@ -183,6 +183,25 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 미수금 자동 반영: 미결제/부분결제 시 고객 outstanding_balance 업데이트
+    const paymentStatus = sale.payment_status || 'paid';
+    if (sale.customer_id && paymentStatus !== 'paid') {
+      const unpaidAmount = sale.total_amount - (sale.paid_amount || 0);
+      if (unpaidAmount > 0) {
+        const { data: cust } = await db
+          .from('customers')
+          .select('outstanding_balance')
+          .eq('id', sale.customer_id)
+          .single();
+        if (cust) {
+          await db
+            .from('customers')
+            .update({ outstanding_balance: (cust.outstanding_balance || 0) + unpaidAmount })
+            .eq('id', sale.customer_id);
+        }
+      }
+    }
+
     return NextResponse.json({ sale: created, saleNumber });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

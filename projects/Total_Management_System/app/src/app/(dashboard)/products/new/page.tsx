@@ -6,6 +6,7 @@ import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCreateProduct } from '@/hooks/use-product-detail';
+import { SupplierSelect } from '@/components/ui/supplier-select';
 import { ArrowLeft } from 'lucide-react';
 
 const CATEGORY_OPTIONS = [
@@ -29,6 +30,7 @@ export default function NewProductPage() {
     description: '',
     imweb_product_no: '',
     barcode: '',
+    supplier_id: '',
   });
 
   async function handleSubmit() {
@@ -44,6 +46,7 @@ export default function NewProductPage() {
       description: form.description.trim() || undefined,
       imweb_product_no: form.imweb_product_no.trim() || undefined,
       barcode: form.barcode.trim() || undefined,
+      supplier_id: form.supplier_id || undefined,
     });
 
     router.push('/products');
@@ -139,6 +142,14 @@ export default function NewProductPage() {
         <Card>
           <h3 className="text-sm font-bold text-indigo-black mb-4">추가 정보</h3>
           <div className="space-y-3">
+            <div>
+              <label className="text-xs text-neutral-500">매입처</label>
+              <SupplierSelect
+                value={form.supplier_id}
+                onChange={(id) => setForm({ ...form, supplier_id: id })}
+                placeholder="매입처 선택 (선택)"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-neutral-500">아임웹 상품번호</label>

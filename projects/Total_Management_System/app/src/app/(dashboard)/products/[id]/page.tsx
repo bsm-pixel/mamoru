@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProduct, useUpdateProduct } from '@/hooks/use-product-detail';
 import { formatKRW } from '@/lib/utils/format';
+import { SupplierSelect } from '@/components/ui/supplier-select';
 import { ArrowLeft, Save, Package, Hash } from 'lucide-react';
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -216,6 +217,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-neutral-500">매입처</label>
+                <SupplierSelect
+                  value={form.supplier_id}
+                  displayName={supplier?.name}
+                  onChange={(id) => setForm({ ...form, supplier_id: id })}
+                  placeholder="매입처 선택"
+                />
               </div>
 
               <div>

@@ -8,9 +8,10 @@ import toast from 'react-hot-toast';
 interface TopbarProps {
   title: string;
   onMenuToggle?: () => void;
+  action?: React.ReactNode;
 }
 
-export function Topbar({ title, onMenuToggle }: TopbarProps) {
+export function Topbar({ title, onMenuToggle, action }: TopbarProps) {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -35,6 +36,7 @@ export function Topbar({ title, onMenuToggle }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-2">
+        {action}
         <button
           onClick={() => router.refresh()}
           className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-warm-ivory transition"

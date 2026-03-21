@@ -52,11 +52,51 @@ export interface PurchaseDetail {
   status: string;
 }
 
+export interface MarginSummary {
+  total_cogs: number;
+  gross_profit: number;
+  margin_rate: number;
+}
+
+export interface ProductMargin {
+  product_id: string;
+  product_name: string;
+  sku: string;
+  qty: number;
+  revenue: number;
+  cogs: number;
+  profit: number;
+  margin_rate: number;
+}
+
+export interface SupplierSpend {
+  name: string;
+  total: number;
+  count: number;
+}
+
+export interface PayableItem {
+  name: string;
+  total_owed: number;
+  count: number;
+}
+
+export interface ReceivableItem {
+  id: string;
+  name: string;
+  outstanding: number;
+}
+
 export interface ReportData {
   period: { from: string; to: string };
   sales: SaleSummary;
   purchases: PurchaseSummary;
   vat: VATSummary;
+  margin: MarginSummary;
+  by_product: ProductMargin[];
+  by_supplier: SupplierSpend[];
+  payables: { items: PayableItem[]; total: number };
+  receivables: { items: ReceivableItem[]; total: number };
   daily: {
     sales: Record<string, number>;
     purchases: Record<string, number>;
