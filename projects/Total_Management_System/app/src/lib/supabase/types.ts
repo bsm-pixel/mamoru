@@ -83,7 +83,7 @@ export interface Database {
           address_road: string | null;
           address_detail: string | null;
           source: 'imweb' | 'consultation' | 'as' | 'manual';
-          customer_type: 'retail' | 'online' | 'dealer' | 'supplier';
+          customer_type: 'retail' | 'online' | 'b2b' | 'dealer' | 'supplier';
           company_name: string | null;
           memo: string | null;
           outstanding_balance: number;

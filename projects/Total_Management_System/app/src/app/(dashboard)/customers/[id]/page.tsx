@@ -14,7 +14,7 @@ import { ArrowLeft, Save, ShoppingBag, FileSignature, MessageSquare } from 'luci
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
   { value: 'online', label: '온라인' },
-  { value: 'dealer', label: '딜러' },
+  { value: 'b2b', label: 'B2B' },
   { value: 'supplier', label: '매입처' },
 ];
 
@@ -212,7 +212,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   <span className="text-xs text-neutral-500">유형</span>
                   <p>
                     <Badge className={
-                      c.customer_type === 'dealer' ? 'bg-purple-100 text-purple-700'
+                      (c.customer_type === 'b2b' || c.customer_type === 'dealer') ? 'bg-purple-100 text-purple-700'
                         : c.customer_type === 'supplier' ? 'bg-amber-100 text-amber-700'
                         : c.customer_type === 'online' ? 'bg-blue-100 text-blue-700'
                         : 'bg-neutral-100 text-neutral-600'

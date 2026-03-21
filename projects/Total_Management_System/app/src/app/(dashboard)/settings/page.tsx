@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Topbar } from '@/components/layout/topbar';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useOrderSync, useProductSync } from '@/hooks/use-orders';
 import { createClient } from '@/lib/supabase/client';
 import { formatDateTime } from '@/lib/utils/format';
-import { RefreshCw, Database, CheckCircle2, AlertCircle, Package } from 'lucide-react';
+import { RefreshCw, Database, CheckCircle2, AlertCircle, Package, Upload } from 'lucide-react';
 import type { SyncLog } from '@/lib/supabase/types';
 
 export default function SettingsPage() {
@@ -120,6 +121,28 @@ export default function SettingsPage() {
           )}
         </Card>
 
+        {/* 이카운트 데이터 이관 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>이카운트 데이터 이관</CardTitle>
+          </CardHeader>
+          <p className="text-sm text-neutral-500 mb-4">
+            이카운트에서 추출한 엑셀(CSV)을 업로드하여 고객·판매내역을 TMS로 이관합니다.
+          </p>
+          <div className="space-y-3">
+            <CsvUploadButton
+              label="고객 CSV 업로드"
+              endpoint="/api/import/customers"
+              resultLabel={(d) => `${d.created}명 등록, ${d.skipped}명 스킵`}
+            />
+            <CsvUploadButton
+              label="판매내역 CSV 업로드"
+              endpoint="/api/import/sales"
+              resultLabel={(d) => `${d.sales_created}건 판매, ${d.serials_created}개 시리얼 등록`}
+            />
+          </div>
+        </Card>
+
         {/* 환경변수 안내 */}
         <Card>
           <CardHeader>
@@ -147,5 +170,69 @@ export default function SettingsPage() {
         </Card>
       </div>
     </>
+  );
+}
+
+/** CSV 파일 업로드 + API 호출 버튼 */
+function CsvUploadButton({ label, endpoint, resultLabel }: {
+  label: string;
+  endpoint: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  resultLabel: (data: any) => string;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setResult(null);
+
+    try {
+      const text = await file.text();
+      const lines = text.split('\n').filter((l) => l.trim());
+      if (lines.length < 2) throw new Error('데이터가 없습니다');
+
+      // CSV 파싱 (첫 줄 = 헤더)
+      const headers = lines[0].split(',').map((h) => h.trim().replace(/"/g, ''));
+      const rows = lines.slice(1).map((line) => {
+        const values = line.split(',').map((v) => v.trim().replace(/"/g, ''));
+        const row: Record<string, string> = {};
+        headers.forEach((h, i) => { row[h] = values[i] || ''; });
+        return row;
+      });
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rows }),
+      });
+
+      if (!res.ok) throw new Error((await res.json()).error);
+      const data = await res.json();
+      setResult(resultLabel(data));
+    } catch (err) {
+      setResult(`오류: ${String(err)}`);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  }
+
+  return (
+    <div>
+      <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-100 text-sm font-medium text-neutral-700 hover:bg-neutral-200 transition cursor-pointer">
+        <Upload size={14} />
+        {uploading ? '업로드 중...' : label}
+        <input type="file" accept=".csv,.txt" onChange={handleFile} disabled={uploading} className="hidden" />
+      </label>
+      {result && (
+        <p className={`text-xs mt-1.5 ${result.startsWith('오류') ? 'text-red-500' : 'text-green-600'}`}>
+          {result}
+        </p>
+      )}
+    </div>
   );
 }

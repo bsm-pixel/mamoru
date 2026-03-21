@@ -19,14 +19,16 @@ import toast from 'react-hot-toast';
 const TYPE_LABEL: Record<string, string> = {
   retail: '일반',
   online: '온라인',
-  dealer: '딜러',
+  b2b: 'B2B',
+  dealer: 'B2B',  // 레거시 호환
   supplier: '매입처',
 };
 
 const TYPE_COLOR: Record<string, string> = {
   retail: 'bg-neutral-100 text-neutral-600',
   online: 'bg-blue-100 text-blue-700',
-  dealer: 'bg-purple-100 text-purple-700',
+  b2b: 'bg-purple-100 text-purple-700',
+  dealer: 'bg-purple-100 text-purple-700',  // 레거시 호환
   supplier: 'bg-amber-100 text-amber-700',
 };
 
@@ -41,7 +43,7 @@ const FILTER_TYPES = [
   { value: '', label: '전체' },
   { value: 'retail', label: '일반' },
   { value: 'online', label: '온라인' },
-  { value: 'dealer', label: '딜러' },
+  { value: 'b2b', label: 'B2B' },
   { value: 'supplier', label: '매입처' },
 ];
 
