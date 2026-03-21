@@ -1,5 +1,5 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-03-14
+> 최종 업데이트: 2026-03-21
 
 ---
 
@@ -41,9 +41,10 @@ partial — 부분결제
   ▼
 [TMS /sales/new] ──POST──→ [/api/sales]
                                │
-                               ▼
-                          [Supabase DB]
-                          (offline_sales + offline_sale_items)
+                               ├──→ [Supabase DB] offline_sales + offline_sale_items
+                               ├──→ [TMS 재고 차감] products.stock_quantity -N
+                               ├──→ [아임웹 재고 동기화] PATCH /v2/shop/products/{no} (자동)
+                               └──→ [미수금 반영] 미결제 시 customers.outstanding_balance 업데이트
                                │
                                ▼
                           [/sales/[id]]
@@ -80,11 +81,21 @@ partial — 부분결제
 | 고객 신규등록 | POST /api/customers — customers INSERT |
 | 계약서 고객 자동완성 | contracts/new에도 CustomerAutocomplete 적용 (email/address 확장 필드) |
 
-## 4-B. 미완료 ❌
+## 4-C. 추가 구현 완료 ✅ (2026-03-21)
+
+| 항목 | 구현 내용 |
+|------|-----------|
+| 재고 연동 | 판매 시 TMS 재고 자동 차감 + 아임웹 재고 동기화 |
+| COGS/마진 | 회계에서 제품별 매출원가·이익·이익률 분석 |
+| 매입처 드롭다운 | SupplierSelect 컴포넌트 — 제품/발주 폼 |
+| 재고 수동 조정 | 파손/실사 보정 모달 + stock_adjustments 이력 |
+| 미수금 자동 반영 | 미결제 판매 시 customers.outstanding_balance 업데이트 |
+| 마스터-디테일 | 제품 목록 클릭 → 우측 패널 상세 표시 |
+
+## 4-D. 미완료 ❌
 
 | 항목 | 의존성 | 우선순위 |
 |------|--------|----------|
-| 재고 관리 (TMS 자체) | 없음 | 낮음 |
 | 판매 수정/삭제 기능 | 없음 | 낮음 |
 
 ---
