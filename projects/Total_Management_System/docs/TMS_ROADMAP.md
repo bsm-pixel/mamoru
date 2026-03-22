@@ -316,9 +316,12 @@
 |---|------|------|------|
 | 5-1 | DB 마이그레이션 007 | ✅ | offline_sales + offline_sale_items |
 | 5-2 | ~~이카운트 API 클라이언트~~ | ❌ | Phase ERP-A에서 삭제됨 (lib/ecount/ 제거) |
-| 5-3 | API Routes + Hooks | ✅ | /api/sales CRUD + use-sales.ts |
-| 5-4 | 판매관리 UI | ✅ | /sales 목록 + /sales/new 입력(제품 카드형) + /sales/[id] 상세 |
+| 5-3 | API Routes + Hooks | ✅ | /api/sales CRUD + PATCH 취소/상태변경 + use-sales.ts |
+| 5-4 | 판매관리 UI | ✅ | /sales 목록+모달 + /sales/new 입력(채널선택) + /sales/[id] 상세+취소 |
 | 5-5 | NAV 추가 | ✅ | 사이드바+모바일 판매관리 메뉴 (Store 아이콘) |
+| 5-6 | 판매 취소/상태변경 | ✅ | 취소(시리얼/재고/아임웹 역전) + 결제상태 변경(낙관적) (03-22) |
+| 5-7 | 판매 채널 칩 | ✅ | offline/online/talk 칩 표시 + DB sale_channel 컬럼 (03-22) |
+| 5-8 | 판매 상세 모달 | ✅ | 목록 클릭→모달 즉시 조회 + 인라인 액션 (03-22) |
 
 > **참고:** 이카운트 연동 코드(lib/ecount/, /api/sales/ecount-sync 등)는 Phase ERP-A(2026-03-01)에서 완전 제거됨.
 > 판매 VAT 자동계산, 시리얼 연결, 딜러 가격 자동적용은 Phase ERP-A/C에서 추가됨.
@@ -555,7 +558,7 @@
 | R2 | 상담관리 대시보드/탭 리모델 (지도+달력+양방향) | ✅ | ✅ |
 | R3 | 허브 대시보드 리모델 (useHubStats+카드 확장) | ✅ | ✅ |
 | R4 | 주문관리 온라인 강화 (결제칩, 메모란, 검색) | ✅ | ✅ |
-| R5 | 오프라인 판매 + 이카운트 ERP 연동 | ✅ | ✅ 프로덕션 검증 완료 |
+| R5 | 오프라인 판매 + 취소/상태변경/채널칩/모달 (03-22 강화) | ✅ | ✅ 프로덕션 검증 완료 |
 | R6 | 전자 계약서 (전자문서 리디자인 + 서명 2개 + 제품 모달) | ✅ | 🔧 PDF생성+솔라피 |
 | R7 | 시리얼넘버/바코드 (단건/일괄 등록+상태 추적) | ✅ | 🔧 UI동작 확인 |
 
@@ -576,10 +579,35 @@
 |------|------|------|
 | `docs/TMS_FLOW_CONSULTATION.md` | 상담 (매장/출장/톡) | ✅ |
 | `docs/TMS_FLOW_REPAIR.md` | 복원수리 (접수→출고) | ✅ |
-| `docs/TMS_FLOW_SALES.md` | 판매 (오프라인+이카운트) | ✅ |
+| `docs/TMS_FLOW_SALES.md` | 판매 (오프라인+취소/채널/모달) | ✅ |
 | `docs/TMS_FLOW_ORDERS.md` | 주문 (아임웹+롯데택배) | ✅ |
 
 > 규칙: 모듈 작업 완료 후 해당 흐름도의 완료/미완료 섹션 반드시 업데이트
+
+---
+
+## 성능 최적화 (03-22) ✅ 완료
+
+| # | 작업 | 상태 | 효과 |
+|---|------|------|------|
+| P-1 | Supabase 클라이언트 싱글턴화 | ✅ | 모든 hook 동일 인스턴스 재사용 |
+| P-2 | QueryProvider gcTime 10분 + refetchOnWindowFocus 비활성 | ✅ | 탭 전환 시 불필요한 refetch 제거 |
+| P-3 | 주문 탭 카운트 RPC 통합 (get_order_counts) | ✅ | 6개 쿼리 → 1개 |
+| P-4 | 복원수리 탭 staleTime 20초 | ✅ | 10초마다 8개 → 20초마다 |
+| P-5 | 대시보드 staleTime 30초 | ✅ | 15초 → 30초 (RPC 1회면 충분) |
+| P-6 | 판매 API 재고/아임웹 순차→병렬 | ✅ | for loop 2N번 → Promise.all |
+| P-7 | OrderRow + SaleRow React.memo | ✅ | 리스트 리렌더링 비용 절감 |
+| P-8 | 송장 생성 낙관적 업데이트 | ✅ | 즉시 '배송중' 표시, 서버 후처리 |
+| P-9 | DB: 027_perf_rpc (get_order_counts, get_repair_tab_counts) | ✅ | RPC 함수 2개 |
+
+## UI 개선 (03-22) ✅ 완료
+
+| # | 작업 | 상태 |
+|---|------|------|
+| U-1 | 판매 상세 모달 (목록 클릭→모달 조회+액션) | ✅ |
+| U-2 | 판매 채널 칩 (오프라인/온라인/톡상담) | ✅ |
+| U-3 | 제품 모바일 슬라이드 패널 (우측 시트) | ✅ |
+| U-4 | SlidePanel 범용 컴포넌트 | ✅ |
 
 ---
 
