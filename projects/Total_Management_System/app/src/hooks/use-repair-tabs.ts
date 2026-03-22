@@ -20,7 +20,7 @@ export function useRepairTabData() {
 
   const query = useQuery({
     queryKey: ['repair-tabs'],
-    staleTime: 10_000,
+    staleTime: 20_000, // 20초 — 10초는 너무 공격적
     queryFn: async () => {
       const threeDaysAgo = new Date();
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);

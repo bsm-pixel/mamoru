@@ -167,42 +167,38 @@ export async function POST(req: NextRequest) {
           sold_to_phone: sale.customer_phone || null,
         })
         .in('id', allSerialIds);
-
-      // 재고 수량 차감 (시리얼 등록 시 증가했으므로 판매 시 차감)
-      for (const item of items) {
-        if (item.serial_ids && item.serial_ids.length > 0 && item.product_id) {
-          const { data: prod } = await db
-            .from('products')
-            .select('stock_quantity')
-            .eq('id', item.product_id)
-            .single();
-          if (prod) {
-            await db
-              .from('products')
-              .update({ stock_quantity: Math.max(0, (prod.stock_quantity || 0) - item.serial_ids.length) })
-              .eq('id', item.product_id);
-          }
-        }
-      }
     }
 
-    // 아임웹 재고 동기화: TMS 재고를 아임웹에 절대값으로 설정
+    // 재고 차감 + 아임웹 동기화 — 상품별 병렬 처리
+    const productQtyMap: Record<string, number> = {};
     for (const item of items) {
       if (item.product_id && item.quantity > 0) {
-        const { data: prod } = await db
-          .from('products')
-          .select('stock_quantity, imweb_product_no')
-          .eq('id', item.product_id)
-          .single();
-        if (prod?.imweb_product_no && (prod.stock_quantity ?? 0) >= 0) {
-          try {
-            await updateImwebStock(Number(prod.imweb_product_no), prod.stock_quantity || 0);
-          } catch (e) {
-            console.error('[imweb] 판매 재고 동기화 실패:', prod.imweb_product_no, e);
-          }
-        }
+        const serialQty = item.serial_ids?.length || 0;
+        const qty = serialQty > 0 ? serialQty : item.quantity;
+        productQtyMap[item.product_id] = (productQtyMap[item.product_id] || 0) + qty;
       }
     }
+
+    await Promise.all(Object.entries(productQtyMap).map(async ([productId, qty]) => {
+      const { data: prod } = await db
+        .from('products')
+        .select('stock_quantity, imweb_product_no')
+        .eq('id', productId)
+        .single();
+      if (!prod) return;
+
+      const newStock = Math.max(0, (prod.stock_quantity || 0) - qty);
+      await db.from('products').update({ stock_quantity: newStock }).eq('id', productId);
+
+      // 아임웹 재고 동기화 (실패해도 판매 완료)
+      if (prod.imweb_product_no && newStock >= 0) {
+        try {
+          await updateImwebStock(Number(prod.imweb_product_no), newStock);
+        } catch (e) {
+          console.error('[imweb] 판매 재고 동기화 실패:', prod.imweb_product_no, e);
+        }
+      }
+    }));
 
     // 미수금 자동 반영: 미결제/부분결제 시 고객 outstanding_balance 업데이트
     const paymentStatus = sale.payment_status || 'paid';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -129,7 +129,7 @@ export default function OrdersPage() {
   );
 }
 
-function OrderRow({ order, onClick, onInvoice }: { order: Order; onClick: () => void; onInvoice: () => void }) {
+const OrderRow = memo(function OrderRow({ order, onClick, onInvoice }: { order: Order; onClick: () => void; onInvoice: () => void }) {
   const statusColor = ORDER_STATUS_COLOR[order.status] || 'bg-neutral-100 text-neutral-500';
 
   return (
@@ -187,4 +187,4 @@ function OrderRow({ order, onClick, onInvoice }: { order: Order; onClick: () => 
       </div>
     </div>
   );
-}
+});

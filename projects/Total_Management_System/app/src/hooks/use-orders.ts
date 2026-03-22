@@ -44,16 +44,25 @@ export function useOrders(filters?: {
   });
 }
 
-/** 상태별 주문 건수 조회 (탭 배지용) */
+/** 상태별 주문 건수 조회 (탭 배지용) — RPC 1회 호출 */
 export function useOrderCounts() {
   const supabase = createClient();
 
   return useQuery({
     queryKey: ['order-counts'],
     queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc('get_order_counts');
+
+      if (!error && data) {
+        const d = data as Record<string, number>;
+        const total = Object.values(d).reduce((s, v) => s + (v || 0), 0);
+        return { ...d, all: total } as Record<string, number>;
+      }
+
+      // Fallback: RPC 미배포 시 개별 쿼리
       const statuses = ['pay_done', 'preparing', 'shipping', 'delivered', 'cancel_pending', 'cancelled'];
       const counts: Record<string, number> = {};
-
       const results = await Promise.all(
         statuses.map(async (s) => {
           const { count } = await supabase
@@ -63,17 +72,12 @@ export function useOrderCounts() {
           return { status: s, count: count || 0 };
         })
       );
-
       let total = 0;
-      results.forEach((r) => {
-        counts[r.status] = r.count;
-        total += r.count;
-      });
+      results.forEach((r) => { counts[r.status] = r.count; total += r.count; });
       counts['all'] = total;
-
       return counts;
     },
-    staleTime: 30_000, /* 30초 캐시 — 탭 전환마다 재요청 방지 */
+    staleTime: 60_000, // 60초 — RPC 통합 후 여유있게
   });
 }
 
@@ -143,7 +147,7 @@ export function useProductSync() {
   });
 }
 
-/** 송장 생성 */
+/** 송장 생성 — 낙관적 업데이트 */
 export function useBookInvoice() {
   const queryClient = useQueryClient();
 
@@ -167,6 +171,40 @@ export function useBookInvoice() {
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: ['orders'] });
+      await queryClient.cancelQueries({ queryKey: ['order', data.orderId] });
+
+      // 스냅샷 저장
+      const prevOrders = queryClient.getQueriesData({ queryKey: ['orders'] });
+      const prevOrder = queryClient.getQueryData(['order', data.orderId]);
+
+      // 목록 캐시에서 해당 주문 즉시 '배송중' 표시
+      queryClient.setQueriesData({ queryKey: ['orders'] }, (old: unknown) => {
+        if (!old || typeof old !== 'object') return old;
+        const d = old as { orders: Order[]; total: number };
+        return {
+          ...d,
+          orders: d.orders.map((o) =>
+            o.id === data.orderId ? { ...o, status: 'shipping' as const, invoice_number: '생성중...' } : o
+          ),
+        };
+      });
+
+      return { prevOrders, prevOrder };
+    },
+    onError: (err, data, context) => {
+      // 롤백
+      if (context?.prevOrders) {
+        for (const [key, value] of context.prevOrders) {
+          queryClient.setQueryData(key, value);
+        }
+      }
+      if (context?.prevOrder) {
+        queryClient.setQueryData(['order', data.orderId], context.prevOrder);
+      }
+      toast.error('송장 생성 실패: ' + String(err));
+    },
     onSuccess: (data) => {
       toast.success(`송장 생성 완료: ${data.invNo}`);
       if (data.imwebNeedsManual) {
@@ -175,12 +213,11 @@ export function useBookInvoice() {
           duration: 6000,
         });
       }
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['order'] });
-      queryClient.invalidateQueries({ queryKey: ['order-counts'] });
     },
-    onError: (err) => {
-      toast.error('송장 생성 실패: ' + String(err));
+    onSettled: (_d, _e, data) => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', data.orderId] });
+      queryClient.invalidateQueries({ queryKey: ['order-counts'] });
     },
   });
 }
@@ -199,10 +236,11 @@ export function useCancelInvoice() {
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_d, data) => {
       toast.success('ALPS에서 직접 집하취소 해주세요', { duration: 5000 });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['order'] });
+      queryClient.invalidateQueries({ queryKey: ['order', data.orderId] });
+      queryClient.invalidateQueries({ queryKey: ['order-counts'] });
     },
     onError: (err) => {
       toast.error('취소 처리 실패: ' + String(err));

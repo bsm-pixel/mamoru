@@ -63,33 +63,33 @@ export async function PATCH(
         .eq('sale_id', id);
 
       if (items && items.length > 0) {
+        // 상품별 수량 집계 후 병렬 처리
+        const productQtyMap: Record<string, number> = {};
         for (const item of items) {
-          if (!item.product_id || !item.quantity) continue;
+          if (item.product_id && item.quantity) {
+            productQtyMap[item.product_id] = (productQtyMap[item.product_id] || 0) + item.quantity;
+          }
+        }
 
-          // 재고 복원
+        await Promise.all(Object.entries(productQtyMap).map(async ([productId, qty]) => {
           const { data: prod } = await db
             .from('products')
             .select('stock_quantity, imweb_product_no')
-            .eq('id', item.product_id)
+            .eq('id', productId)
             .single();
+          if (!prod) return;
 
-          if (prod) {
-            const newStock = (prod.stock_quantity || 0) + item.quantity;
-            await db
-              .from('products')
-              .update({ stock_quantity: newStock })
-              .eq('id', item.product_id);
+          const newStock = (prod.stock_quantity || 0) + qty;
+          await db.from('products').update({ stock_quantity: newStock }).eq('id', productId);
 
-            // 아임웹 재고 동기화 (실패해도 취소 자체는 완료)
-            if (prod.imweb_product_no) {
-              try {
-                await updateImwebStock(Number(prod.imweb_product_no), newStock);
-              } catch (e) {
-                console.error('[imweb] 취소 재고 동기화 실패:', prod.imweb_product_no, e);
-              }
+          if (prod.imweb_product_no) {
+            try {
+              await updateImwebStock(Number(prod.imweb_product_no), newStock);
+            } catch (e) {
+              console.error('[imweb] 취소 재고 동기화 실패:', prod.imweb_product_no, e);
             }
           }
-        }
+        }));
       }
 
       // 4. 미수금 차감 (미결제/부분결제였던 경우)

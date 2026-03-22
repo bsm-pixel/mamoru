@@ -40,7 +40,7 @@ export function useHubStats() {
 
   return useQuery({
     queryKey: ['hub-stats'],
-    staleTime: 15_000,
+    staleTime: 30_000, // 30초 — RPC 1회면 충분
     queryFn: async (): Promise<HubStatsResult> => {
       // RPC 호출 시도 (018_hub_stats_rpc.sql 배포 후 동작)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -165,7 +165,7 @@ export function useOrderDashboardStats() {
 
   return useQuery({
     queryKey: ['order-dashboard-stats'],
-    staleTime: 15_000,
+    staleTime: 30_000,
     queryFn: async () => {
       const todayISO = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
@@ -204,7 +204,7 @@ export function useConsultationDashboardStats() {
 
   return useQuery({
     queryKey: ['consultation-dashboard-stats'],
-    staleTime: 15_000,
+    staleTime: 30_000,
     queryFn: async () => {
       const now = new Date();
       const todayStr = now.toISOString().slice(0, 10);
@@ -266,7 +266,7 @@ export function useRepairDashboardStats() {
 
   return useQuery({
     queryKey: ['repair-dashboard-stats'],
-    staleTime: 15_000,
+    staleTime: 30_000,
     queryFn: async () => {
       // 3일 전 기준
       const threeDaysAgo = new Date();
