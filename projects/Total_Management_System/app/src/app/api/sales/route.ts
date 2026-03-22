@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
         supply_amount?: number;
         vat_amount?: number;
         is_vat_included?: boolean;
+        sale_channel?: string;
       };
       items: Array<{
         product_id?: string;
@@ -115,6 +116,7 @@ export async function POST(req: NextRequest) {
         supply_amount: supplyAmount,
         vat_amount: vatAmount,
         is_vat_included: isVatIncluded,
+        sale_channel: sale.sale_channel || 'offline',
         created_by: user.id,
       })
       .select()

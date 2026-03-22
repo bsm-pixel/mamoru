@@ -36,6 +36,7 @@ export default function NewSalePage() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [saleChannel, setSaleChannel] = useState('offline');
   const [discount, setDiscount] = useState(0);
   const [memo, setMemo] = useState('');
 
@@ -102,6 +103,7 @@ export default function NewSalePage() {
         discount_amount: discount,
         paid_amount: paidAmount,
         payment_method: paymentMethod,
+        sale_channel: saleChannel,
         memo: memo.trim() || undefined,
       },
       items: cart.map((item) => ({
@@ -314,6 +316,30 @@ export default function NewSalePage() {
             <Card>
               <h3 className="text-sm font-semibold text-indigo-black mb-3">결제 정보</h3>
               <div className="space-y-3">
+                {/* 판매 채널 */}
+                <div>
+                  <label className="text-xs text-neutral-500 mb-1.5 block">판매 채널</label>
+                  <div className="flex gap-2">
+                    {([
+                      { value: 'offline', label: '오프라인', color: 'bg-neutral-800 text-white' },
+                      { value: 'online', label: '온라인', color: 'bg-blue-600 text-white' },
+                      { value: 'talk', label: '톡상담', color: 'bg-yellow-500 text-white' },
+                    ] as const).map((ch) => (
+                      <button
+                        key={ch.value}
+                        onClick={() => setSaleChannel(ch.value)}
+                        className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${
+                          saleChannel === ch.value
+                            ? ch.color
+                            : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                        }`}
+                      >
+                        {ch.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex gap-2">
                   {(['card', 'cash', 'transfer', 'mixed'] as const).map((method) => (
                     <button

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductDetailPanel } from '@/components/products/product-detail-panel';
+import { SlidePanel } from '@/components/ui/slide-panel';
 import { useProducts } from '@/hooks/use-sales';
 import { formatKRW } from '@/lib/utils/format';
 import { Plus } from 'lucide-react';
@@ -116,6 +117,18 @@ export default function ProductsPage() {
             />
           </div>
         )}
+      </div>
+
+      {/* 모바일: 슬라이드 패널 */}
+      <div className="md:hidden">
+        <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="제품 상세">
+          {selectedId && (
+            <ProductDetailPanel
+              productId={selectedId}
+              onClose={() => setSelectedId(null)}
+            />
+          )}
+        </SlidePanel>
       </div>
     </>
   );

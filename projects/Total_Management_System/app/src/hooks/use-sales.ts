@@ -100,6 +100,7 @@ export function useCreateSale() {
         payment_method: string;
         payment_status?: string;
         memo?: string;
+        sale_channel?: string;
       };
       items: Array<{
         product_id?: string;
@@ -126,6 +127,131 @@ export function useCreateSale() {
     },
     onError: (err) => {
       toast.error('판매 등록 실패: ' + String(err));
+    },
+  });
+}
+
+/** 판매 취소 — 서버 확인 필수 (시리얼/재고/아임웹 역전) */
+export function useCancelSale() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      const res = await fetch(`/api/sales/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel', reason }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || '판매 취소 실패');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('판매가 취소되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+    onError: (err) => {
+      toast.error('판매 취소 실패: ' + String(err));
+    },
+  });
+}
+
+/** 결제상태 변경 — 낙관적 업데이트 */
+export function useUpdatePaymentStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, payment_status, paid_amount }: {
+      id: string;
+      payment_status: string;
+      paid_amount?: number;
+    }) => {
+      const res = await fetch(`/api/sales/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_payment', payment_status, paid_amount }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || '결제상태 변경 실패');
+      }
+      return res.json();
+    },
+    onMutate: async ({ id, payment_status, paid_amount }) => {
+      await queryClient.cancelQueries({ queryKey: ['sale', id] });
+
+      const prevDetail = queryClient.getQueryData(['sale', id]);
+
+      // 상세 캐시 즉시 업데이트
+      queryClient.setQueryData(['sale', id], (old: unknown) => {
+        if (!old || typeof old !== 'object') return old;
+        const data = old as { sale: OfflineSale; items: OfflineSaleItem[]; serials: unknown[] };
+        return {
+          ...data,
+          sale: {
+            ...data.sale,
+            payment_status,
+            ...(paid_amount !== undefined ? { paid_amount } : {}),
+          },
+        };
+      });
+
+      return { prevDetail };
+    },
+    onError: (err, { id }, context) => {
+      if (context?.prevDetail) queryClient.setQueryData(['sale', id], context.prevDetail);
+      toast.error('결제상태 변경 실패: ' + String(err));
+    },
+    onSuccess: () => {
+      toast.success('결제상태가 변경되었습니다');
+    },
+    onSettled: (_d, _e, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['sale', id] });
+      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+    },
+  });
+}
+
+/** 메모 수정 — 낙관적 업데이트 */
+export function useUpdateSaleMemo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, memo }: { id: string; memo: string }) => {
+      const res = await fetch(`/api/sales/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_memo', memo }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || '메모 수정 실패');
+      }
+      return res.json();
+    },
+    onMutate: async ({ id, memo }) => {
+      await queryClient.cancelQueries({ queryKey: ['sale', id] });
+      const prevDetail = queryClient.getQueryData(['sale', id]);
+
+      queryClient.setQueryData(['sale', id], (old: unknown) => {
+        if (!old || typeof old !== 'object') return old;
+        const data = old as { sale: OfflineSale; items: OfflineSaleItem[]; serials: unknown[] };
+        return { ...data, sale: { ...data.sale, memo } };
+      });
+
+      return { prevDetail };
+    },
+    onError: (err, { id }, context) => {
+      if (context?.prevDetail) queryClient.setQueryData(['sale', id], context.prevDetail);
+      toast.error('메모 수정 실패: ' + String(err));
+    },
+    onSettled: (_d, _e, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['sale', id] });
     },
   });
 }

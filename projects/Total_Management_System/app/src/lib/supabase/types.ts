@@ -49,6 +49,7 @@ export type RepairStatus =
 // R5: 오프라인 판매 ENUM
 export type PaymentMethod = 'card' | 'cash' | 'transfer' | 'mixed';
 export type PaymentStatus = 'paid' | 'unpaid' | 'partial';
+export type SaleChannel = 'offline' | 'online' | 'talk';
 // EcountSyncStatus 제거됨 (이카운트 연동 폐기)
 
 // R6: 전자 계약서 ENUM
@@ -505,6 +506,10 @@ export interface Database {
           ecount_sync_status?: string | null;  // legacy
           ecount_slip_no?: string | null;       // legacy
           ecount_synced_at?: string | null;     // legacy
+          cancelled_at: string | null;
+          cancelled_reason: string | null;
+          cancelled_by: string | null;
+          sale_channel: SaleChannel;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -524,6 +529,7 @@ export interface Database {
           supply_amount?: number;
           vat_amount?: number;
           is_vat_included?: boolean;
+          sale_channel?: SaleChannel;
           created_by?: string | null;
         };
         Update: {
@@ -540,6 +546,10 @@ export interface Database {
           supply_amount?: number;
           vat_amount?: number;
           is_vat_included?: boolean;
+          cancelled_at?: string | null;
+          cancelled_reason?: string | null;
+          cancelled_by?: string | null;
+          sale_channel?: SaleChannel;
         };
       };
       offline_sale_items: {
