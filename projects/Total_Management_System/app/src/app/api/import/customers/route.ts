@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         const name = (row['이름'] || row['거래처명'] || '').trim();
         if (!name) { skipped++; continue; }
 
-        const phone = (row['모바일연락처'] || row['전화번호'] || row['연락처'] || '').trim().replace(/[^0-9-]/g, '');
+        const phone = (row['모바일연락처'] || row['모바일'] || row['전화번호'] || row['연락처'] || '').trim().replace(/[^0-9-]/g, '');
         const groupName = (row['영업단가그룹명'] || row['단가그룹'] || '').trim();
         const shopName = (row['매장명'] || row['상호'] || '').trim();
         const address = (row['주소'] || '').trim();
@@ -45,12 +45,14 @@ export async function POST(req: NextRequest) {
         }
         const customerType = mapCustomerType(groupName);
 
-        // 중복 체크 (이름 + 전화번호)
-        let query = db.from('customers').select('id').eq('name', name);
-        if (phone) query = query.eq('phone', phone);
-        const { data: existing } = await query.limit(1);
+        // 중복 체크 (이름 기준)
+        const { data: existing } = await db.from('customers').select('id, phone').eq('name', name).limit(1);
 
         if (existing && existing.length > 0) {
+          // 전화번호 비어있으면 채워넣기
+          if (phone && !existing[0].phone) {
+            await db.from('customers').update({ phone }).eq('id', existing[0].id);
+          }
           skipped++;
           continue;
         }
