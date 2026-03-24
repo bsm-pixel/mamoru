@@ -4,7 +4,7 @@
   "short_name": "MAMORU TMS",
   "description": "주문·상담·AS·재고 통합 관리",
   "start_url": "/dashboard",
-  "scope": "/dashboard",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#F2F2EA",
   "theme_color": "#181725",
