@@ -159,8 +159,8 @@ export function RepairList({ onSelect, selectedId }: RepairListProps = {}) {
               </Card>
             );
 
-            // PC(lg+) + onSelect → 패널 선택, 모바일 → 페이지 이동
-            return onSelect && isLg ? (
+            // onSelect 있으면 항상 사용 (PC: 우측패널, 모바일: 슬라이드패널)
+            return onSelect ? (
               <div key={r.id} onClick={() => onSelect(r.id)} className="cursor-pointer">
                 {card}
               </div>

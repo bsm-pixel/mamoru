@@ -10,13 +10,16 @@ import { InspectionForm } from '@/components/repairs/inspection-form';
 import { InspectionSummary } from '@/components/repairs/inspection-summary';
 import { SidebarActionCard } from '@/components/repairs/sidebar-action-card';
 import { RepairTimeline } from '@/components/repairs/repair-timeline';
+import { RepairPhotos } from '@/components/repairs/repair-photos';
+import { Modal } from '@/components/ui/modal';
+import { Button } from '@/components/ui/button';
 import {
   useRepair,
   useUpdateRepairFields,
 } from '@/hooks/use-repairs';
 import { formatDateTime } from '@/lib/utils/format';
 import type { RepairStatus } from '@/lib/supabase/types';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ClipboardCheck, ClipboardList } from 'lucide-react';
 
 export default function RepairDetailPage() {
   const params = useParams();
@@ -89,19 +92,39 @@ export default function RepairDetailPage() {
           <div className="flex-1 space-y-4 min-w-0">
             <RepairDetailCard repair={r} onUpdate={handleUpdate} />
 
-            {/* 검수 섹션 */}
-            {(showInspection || inspections.length > 0 ||
-              ['inspecting', 'cost_notified', 'payment_confirmed', 'repairing', 'shipped', 'delivered', 'completed'].includes(currentStatus)
-            ) && (
-              <>
-                <InspectionForm
-                  repairId={r.id}
-                  existingInspections={inspections}
-                  totalScissors={r.qty_mamoru + r.qty_other}
-                />
-                <InspectionSummary inspections={inspections} />
-              </>
-            )}
+            {/* 검수 — 모달 트리거 버튼 */}
+            <Button
+              variant={inspections.length > 0 ? 'secondary' : 'primary'}
+              size="sm"
+              onClick={() => setShowInspection(true)}
+              className="w-full"
+            >
+              {inspections.length > 0 ? (
+                <><ClipboardCheck size={14} className="text-green-600" /> 내역작성완료 ({inspections.length}건)</>
+              ) : (
+                <><ClipboardList size={14} /> 내역작성하기</>
+              )}
+            </Button>
+
+            {inspections.length > 0 && <InspectionSummary inspections={inspections} />}
+
+            {/* 검수 모달 */}
+            <Modal
+              open={showInspection}
+              onClose={() => setShowInspection(false)}
+              title="검수 체크리스트"
+              className="max-w-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <InspectionForm
+                repairId={r.id}
+                existingInspections={inspections}
+                totalScissors={r.qty_mamoru + r.qty_other}
+                onSaved={() => setShowInspection(false)}
+              />
+            </Modal>
+
+            {/* 사진 */}
+            <RepairPhotos repairId={r.id} />
           </div>
 
           {/* 우측: 사이드바 — 비용+액션+출고 통합 */}
