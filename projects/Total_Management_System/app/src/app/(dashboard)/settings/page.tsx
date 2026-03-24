@@ -192,13 +192,26 @@ function CsvUploadButton({ label, endpoint, resultLabel }: {
 
     try {
       const text = await file.text();
-      const lines = text.split('\n').filter((l) => l.trim());
+      const lines = text.split(/\r?\n/).filter((l) => l.trim());
       if (lines.length < 2) throw new Error('데이터가 없습니다');
 
-      // CSV 파싱 (첫 줄 = 헤더)
-      const headers = lines[0].split(',').map((h) => h.trim().replace(/"/g, ''));
+      // CSV 파싱 — 큰따옴표 안의 쉼표 보호
+      function parseCsvLine(line: string): string[] {
+        const result: string[] = [];
+        let current = '';
+        let inQuotes = false;
+        for (const ch of line) {
+          if (ch === '"') { inQuotes = !inQuotes; continue; }
+          if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; continue; }
+          current += ch;
+        }
+        result.push(current.trim());
+        return result;
+      }
+
+      const headers = parseCsvLine(lines[0]);
       const rows = lines.slice(1).map((line) => {
-        const values = line.split(',').map((v) => v.trim().replace(/"/g, ''));
+        const values = parseCsvLine(line);
         const row: Record<string, string> = {};
         headers.forEach((h, i) => { row[h] = values[i] || ''; });
         return row;
@@ -210,8 +223,10 @@ function CsvUploadButton({ label, endpoint, resultLabel }: {
         body: JSON.stringify({ rows }),
       });
 
-      if (!res.ok) throw new Error((await res.json()).error);
-      const data = await res.json();
+      const resText = await res.text();
+      let data;
+      try { data = JSON.parse(resText); } catch (_e) { throw new Error(resText.slice(0, 200)); }
+      if (!res.ok) throw new Error(data.error || '서버 오류');
       setResult(resultLabel(data));
     } catch (err) {
       setResult(`오류: ${String(err)}`);
