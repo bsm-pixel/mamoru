@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
     // 일자+거래처명 기준으로 그룹핑 (같은 날 같은 고객 = 1건 판매)
     const salesMap = new Map<string, Array<Record<string, string>>>();
     for (const row of rows) {
-      const date = (row['일자'] || '').trim();
+      const rawDate = (row['일자'] || '').trim();
+      const date = rawDate.replace(/^(\d{4}-\d{2}-\d{2}).*$/, '$1'); // 2025-06-15-1 → 2025-06-15
       const customer = (row['거래처명'] || '').trim();
       if (!date || !customer) continue;
       const key = `${date}__${customer}`;
