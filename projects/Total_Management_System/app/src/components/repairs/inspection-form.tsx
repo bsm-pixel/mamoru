@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useSaveInspections } from '@/hooks/use-repairs';
 import type { RepairInspection } from '@/lib/supabase/types';
 import { Plus, Trash2, Save, Camera, X, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { resizeImage } from '@/lib/utils/resize-image';
 import { createClient } from '@/lib/supabase/client';
 
@@ -139,6 +140,13 @@ export function InspectionForm({ repairId, existingInspections, onSaved }: Inspe
       });
     } catch (err) {
       console.error('검수 사진 업로드 실패:', err);
+      // 업로드 실패 시 미리보기 제거 + 알림
+      setItems((prev) => {
+        const next = [...prev];
+        next[idx] = { ...next[idx], _photoPreview: undefined, photo_url: '' };
+        return next;
+      });
+      toast.error('사진 업로드 실패 — 다시 시도해주세요');
     } finally {
       setUploading(false);
     }
@@ -175,10 +183,11 @@ export function InspectionForm({ repairId, existingInspections, onSaved }: Inspe
             variant="primary"
             size="sm"
             onClick={handleSave}
+            disabled={uploading}
             loading={saveInspections.isPending}
           >
             <Save size={14} />
-            저장
+            {uploading ? '사진 업로드 중...' : '저장'}
           </Button>
         </CardTitle>
       </CardHeader>
