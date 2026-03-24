@@ -65,7 +65,7 @@ export default function RepairDashboardPage() {
         open={!!selectedId}
         onClose={() => setSelectedId(null)}
         title="복원수리 상세"
-        className="sm:w-[480px]"
+        className="sm:w-[640px]"
       >
         {selectedId && <RepairDetailPanel repairId={selectedId} />}
       </SlidePanel>
