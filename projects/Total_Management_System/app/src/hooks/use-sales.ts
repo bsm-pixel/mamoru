@@ -57,7 +57,8 @@ export function useSale(id: string) {
 
       // customer_id가 있으면 최신 연락처 가져오기
       if (sale.customer_id) {
-        const { data: cust } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: cust } = await (supabase as any)
           .from('customers')
           .select('phone')
           .eq('id', sale.customer_id)
