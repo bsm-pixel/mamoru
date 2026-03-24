@@ -165,16 +165,13 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
               ))}
 
             {filtered.includes('cancelled' as RepairStatus) && (
-              <Button
-                variant="danger"
-                size="sm"
+              <button
                 disabled={busy}
                 onClick={() => setShowCancelConfirm(true)}
-                className="w-full"
+                className="w-full text-center text-xs text-red-400 hover:text-red-600 py-1.5 transition disabled:opacity-50"
               >
-                <X size={14} />
                 취소
-              </Button>
+              </button>
             )}
           </div>
         )}
@@ -212,29 +209,15 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                   출고완료
                 </Button>
               )}
-              {/* 송장 취소 (ready_to_ship에서만) */}
-              {currentStatus === 'ready_to_ship' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+              {/* 송장 취소 */}
+              {['ready_to_ship', 'shipped'].includes(currentStatus) && (
+                <button
                   onClick={() => cancelShipment.mutate({ id: r.id })}
-                  loading={cancelShipment.isPending}
-                  className="text-error"
+                  disabled={cancelShipment.isPending}
+                  className="text-xs text-red-400 hover:text-red-600 py-1 transition disabled:opacity-50"
                 >
-                  송장 취소
-                </Button>
-              )}
-              {/* 배송중 상태에서 송장 취소 */}
-              {currentStatus === 'shipped' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => cancelShipment.mutate({ id: r.id })}
-                  loading={cancelShipment.isPending}
-                  className="text-error"
-                >
-                  송장 취소
-                </Button>
+                  {cancelShipment.isPending ? '취소 중...' : '송장 취소'}
+                </button>
               )}
             </div>
           ) : (

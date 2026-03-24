@@ -239,22 +239,43 @@ export function InspectionForm({ repairId, existingInspections, onSaved }: Inspe
           <label className="text-sm text-neutral-500 w-20 shrink-0 pt-2">사진</label>
           {photoSrc ? (
             <div className="relative">
-              <img src={photoSrc} alt="검수 사진" className="w-24 h-24 object-cover rounded-lg border border-neutral-200" />
+              <img src={photoSrc} alt="검수 사진" className="w-28 h-28 object-cover rounded-lg border border-neutral-200" />
+              {/* 업로드 중 오버레이 */}
+              {uploading && (
+                <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
+                  <Loader2 size={24} className="text-white animate-spin" />
+                </div>
+              )}
               <button
                 onClick={() => removePhoto(activeIdx)}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-error text-white rounded-full flex items-center justify-center"
+                className="absolute -top-2 -right-2 w-7 h-7 bg-error text-white rounded-full flex items-center justify-center shadow-md"
               >
-                <X size={10} />
+                <X size={14} />
               </button>
+              {/* 재촬영 */}
+              <label className="absolute bottom-1 right-1 w-7 h-7 bg-white/80 rounded-full flex items-center justify-center cursor-pointer shadow hover:bg-white transition">
+                <Camera size={14} className="text-neutral-600" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handlePhotoSelect(activeIdx, file);
+                    e.target.value = '';
+                  }}
+                  className="hidden"
+                />
+              </label>
             </div>
           ) : (
-            <label className="cursor-pointer flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-neutral-300 rounded-lg hover:border-terracotta/50 transition">
+            <label className="cursor-pointer flex flex-col items-center justify-center w-28 h-28 border-2 border-dashed border-neutral-300 rounded-lg hover:border-terracotta/50 transition">
               {uploading ? (
-                <Loader2 size={20} className="text-neutral-400 mb-1 animate-spin" />
+                <Loader2 size={24} className="text-terracotta mb-1 animate-spin" />
               ) : (
-                <Camera size={20} className="text-neutral-400 mb-1" />
+                <Camera size={24} className="text-neutral-400 mb-1" />
               )}
-              <span className="text-[11px] text-neutral-400">{uploading ? '업로드중' : '촬영/업로드'}</span>
+              <span className="text-[11px] text-neutral-400">{uploading ? '업로드중...' : '촬영/업로드'}</span>
               <input
                 type="file"
                 accept="image/*"
