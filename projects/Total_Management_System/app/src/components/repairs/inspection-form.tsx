@@ -5,7 +5,9 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSaveInspections } from '@/hooks/use-repairs';
 import type { RepairInspection } from '@/lib/supabase/types';
-import { Plus, Trash2, Save, Camera, X } from 'lucide-react';
+import { Plus, Trash2, Save, Camera, X, Loader2 } from 'lucide-react';
+import { resizeImage } from '@/lib/utils/resize-image';
+import { createClient } from '@/lib/supabase/client';
 
 /** 검수 항목 선택지 */
 const BLADE_OPTIONS = ['양호', '무뎌짐', '찍힘'];
@@ -76,6 +78,7 @@ export function InspectionForm({ repairId, existingInspections }: InspectionForm
   const [activeIdx, setActiveIdx] = useState(0);
 
   const saveInspections = useSaveInspections();
+  const [uploading, setUploading] = useState(false);
 
   const updateItem = (idx: number, field: keyof InspectionItem, value: string) => {
     setItems((prev) => {
@@ -100,7 +103,8 @@ export function InspectionForm({ repairId, existingInspections }: InspectionForm
     setActiveIdx(Math.max(0, activeIdx - 1));
   };
 
-  const handlePhotoSelect = (idx: number, file: File) => {
+  const handlePhotoSelect = async (idx: number, file: File) => {
+    // 즉시 미리보기 표시
     const reader = new FileReader();
     reader.onload = (e) => {
       setItems((prev) => {
@@ -110,7 +114,33 @@ export function InspectionForm({ repairId, existingInspections }: InspectionForm
       });
     };
     reader.readAsDataURL(file);
-    // TODO: Supabase Storage 업로드 후 photo_url 설정
+
+    // 리사이징 후 Storage 업로드
+    setUploading(true);
+    try {
+      const resized = await resizeImage(file, 1200, 0.8);
+      const supabase = createClient();
+      const ext = file.name.split('.').pop() || 'jpg';
+      const filePath = `inspections/${repairId}/${Date.now()}_${idx}.${ext}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from('repair-photos')
+        .upload(filePath, resized, { contentType: 'image/jpeg', upsert: false });
+
+      if (uploadErr) throw uploadErr;
+
+      const { data: urlData } = supabase.storage.from('repair-photos').getPublicUrl(filePath);
+
+      setItems((prev) => {
+        const next = [...prev];
+        next[idx] = { ...next[idx], photo_url: urlData.publicUrl };
+        return next;
+      });
+    } catch (err) {
+      console.error('검수 사진 업로드 실패:', err);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removePhoto = (idx: number) => {
@@ -205,8 +235,12 @@ export function InspectionForm({ repairId, existingInspections }: InspectionForm
             </div>
           ) : (
             <label className="cursor-pointer flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-neutral-300 rounded-lg hover:border-terracotta/50 transition">
-              <Camera size={20} className="text-neutral-400 mb-1" />
-              <span className="text-[11px] text-neutral-400">촬영/업로드</span>
+              {uploading ? (
+                <Loader2 size={20} className="text-neutral-400 mb-1 animate-spin" />
+              ) : (
+                <Camera size={20} className="text-neutral-400 mb-1" />
+              )}
+              <span className="text-[11px] text-neutral-400">{uploading ? '업로드중' : '촬영/업로드'}</span>
               <input
                 type="file"
                 accept="image/*"
