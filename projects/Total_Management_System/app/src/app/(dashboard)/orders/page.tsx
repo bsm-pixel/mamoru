@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, memo } from 'react';
-import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +11,8 @@ import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } fro
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
+import { SlidePanel } from '@/components/ui/slide-panel';
+import { OrderDetailPanel } from '@/components/orders/order-detail-panel';
 import { RefreshCw, Truck, ShoppingBag } from 'lucide-react';
 import { InvoiceModal } from '@/components/orders/invoice-modal';
 import type { Order } from '@/lib/supabase/types';
@@ -27,11 +28,11 @@ const STATUS_TABS = [
 ];
 
 export default function OrdersPage() {
-  const router = useRouter();
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const sync = useOrderSync();
   const { data: counts } = useOrderCounts();
 
@@ -106,7 +107,7 @@ export default function OrdersPage() {
                 <OrderRow
                   key={order.id}
                   order={order}
-                  onClick={() => router.push(`/orders/${order.id}`)}
+                  onClick={() => setSelectedId(order.id)}
                   onInvoice={() => setInvoiceOrder(order)}
                 />
               ))}
@@ -116,6 +117,16 @@ export default function OrdersPage() {
 
         <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
       </div>
+
+      {/* 주문 상세 슬라이드 패널 */}
+      <SlidePanel
+        open={!!selectedId}
+        onClose={() => setSelectedId(null)}
+        title="주문 상세"
+        className="sm:w-[480px]"
+      >
+        {selectedId && <OrderDetailPanel orderId={selectedId} />}
+      </SlidePanel>
 
       {/* 인라인 송장 생성 모달 */}
       {invoiceOrder && (

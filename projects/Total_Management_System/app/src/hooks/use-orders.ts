@@ -222,6 +222,31 @@ export function useBookInvoice() {
   });
 }
 
+/** 주문 직접 취소 (송장 없는 주문: pay_done → cancelled) */
+export function useCancelOrder() {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', orderId);
+      if (error) throw error;
+    },
+    onSuccess: (_d, orderId) => {
+      toast.success('주문이 취소되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['order-counts'] });
+    },
+    onError: (err) => {
+      toast.error('취소 실패: ' + String(err));
+    },
+  });
+}
+
 /** 송장 취소 */
 export function useCancelInvoice() {
   const queryClient = useQueryClient();
