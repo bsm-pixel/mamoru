@@ -392,3 +392,68 @@ export function useOutstandingAlert() {
     },
   });
 }
+
+// ============================================
+// 오늘 상담 일정 (confirmed + 오늘 날짜)
+// ============================================
+
+export function useTodayConsultations() {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['today-consultations'],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('consultations')
+        .select('id, name, phone, consultation_type, visit_date, visit_time, status')
+        .eq('status', 'confirmed')
+        .eq('visit_date', today)
+        .order('visit_time', { ascending: true })
+        .limit(10);
+      if (error) throw error;
+      return (data || []) as Array<{
+        id: string;
+        name: string;
+        phone: string | null;
+        consultation_type: string;
+        visit_date: string;
+        visit_time: string | null;
+        status: string;
+      }>;
+    },
+  });
+}
+
+// ============================================
+// 저재고 알림 (stock_quantity 1~3, 재고 사용 상품만)
+// ============================================
+
+export function useLowStockAlert() {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['low-stock-alert'],
+    staleTime: 60_000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('products')
+        .select('id, name, sku, stock_quantity')
+        .gte('stock_quantity', 0)  // 재고 사용 상품만 (-1 제외)
+        .lte('stock_quantity', 3)
+        .eq('is_active', true)
+        .order('stock_quantity', { ascending: true })
+        .limit(10);
+      if (error) throw error;
+      return (data || []) as Array<{
+        id: string;
+        name: string;
+        sku: string;
+        stock_quantity: number;
+      }>;
+    },
+  });
+}

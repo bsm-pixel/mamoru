@@ -5,11 +5,12 @@ import { HubCategoryCard } from '@/components/dashboard/hub-category-card';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useHubStats, useOutstandingAlert } from '@/hooks/use-dashboard-stats';
+import { useHubStats, useOutstandingAlert, useTodayConsultations, useLowStockAlert } from '@/hooks/use-dashboard-stats';
 import { formatPhone } from '@/lib/utils/format';
 import {
   ShoppingCart, MessageSquare, Wrench, Store,
   AlertTriangle, ClipboardList, ArrowRight, CheckCircle2,
+  Calendar, PackageX,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -21,6 +22,8 @@ function fmtKRW(n: number) {
 export default function DashboardPage() {
   const { data: stats, isLoading } = useHubStats();
   const { data: outstanding } = useOutstandingAlert();
+  const { data: todayConsults } = useTodayConsultations();
+  const { data: lowStock } = useLowStockAlert();
 
   // 오늘 할 일 액션 생성
   const actions: Array<{ label: string; count: number; href: string; color: string }> = [];
@@ -117,6 +120,34 @@ export default function DashboardPage() {
                     </div>
                   </Card>
                 )}
+
+                {/* 오늘 상담 일정 */}
+                {todayConsults && todayConsults.length > 0 && (
+                  <Card>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Calendar size={16} className="text-blue-500" />
+                      <span className="text-sm font-bold text-blue-700">오늘 상담 ({todayConsults.length}건)</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {todayConsults.map((c) => {
+                        const typeLabel = c.consultation_type === 'store_visit' ? '매장' : c.consultation_type === 'field_request' ? '출장' : '톡';
+                        return (
+                          <Link
+                            key={c.id}
+                            href={`/consultations/${c.id}`}
+                            className="flex items-center justify-between p-2 rounded-lg hover:bg-blue-50 transition"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-blue-100 text-blue-700 text-[10px]">{typeLabel}</Badge>
+                              <span className="text-sm font-medium">{c.name}</span>
+                            </div>
+                            <span className="text-xs text-neutral-500">{c.visit_time || '-'}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </Card>
+                )}
               </div>
 
               {/* 우측: 현황 카드 세로 */}
@@ -168,6 +199,33 @@ export default function DashboardPage() {
                   ]}
                   summary={stats ? `이번달 ${fmtKRW(stats.sales.monthAmount)}` : ''}
                 />
+
+                {/* 저재고 알림 */}
+                {lowStock && lowStock.length > 0 && (
+                  <Card>
+                    <div className="flex items-center gap-2 mb-3">
+                      <PackageX size={16} className="text-red-500" />
+                      <span className="text-sm font-bold text-red-700">저재고 ({lowStock.length})</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {lowStock.map((p) => (
+                        <Link
+                          key={p.id}
+                          href={`/products/${p.id}`}
+                          className="flex items-center justify-between p-2 rounded-lg hover:bg-red-50 transition"
+                        >
+                          <div>
+                            <span className="text-sm font-medium">{p.name}</span>
+                            <span className="text-xs text-neutral-400 ml-2">{p.sku}</span>
+                          </div>
+                          <Badge className={p.stock_quantity === 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}>
+                            {p.stock_quantity}개
+                          </Badge>
+                        </Link>
+                      ))}
+                    </div>
+                  </Card>
+                )}
               </div>
             </div>
           </>
