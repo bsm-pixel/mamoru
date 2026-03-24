@@ -28,9 +28,14 @@ interface HubStatsResult {
     pendingInbound: number;
     workingCount: number;
     workingQty: number;
+    readyToShip: number;
     weekRepairTotal: number;
     weekRepairMamoru: number;
     weekRepairOther: number;
+  };
+  sales: {
+    monthCount: number;
+    monthAmount: number;
   };
 }
 
@@ -67,9 +72,14 @@ export function useHubStats() {
             pendingInbound: Math.max(0, d.repairs?.pendingInbound ?? 0),
             workingCount: d.repairs?.workingCount ?? 0,
             workingQty: d.repairs?.workingQty ?? 0,
+            readyToShip: d.repairs?.readyToShip ?? 0,
             weekRepairTotal: d.repairs?.weekRepairTotal ?? 0,
             weekRepairMamoru: d.repairs?.weekRepairMamoru ?? 0,
             weekRepairOther: d.repairs?.weekRepairOther ?? 0,
+          },
+          sales: {
+            monthCount: d.sales?.monthCount ?? 0,
+            monthAmount: d.sales?.monthAmount ?? 0,
           },
         };
       }
@@ -84,33 +94,41 @@ export function useHubStats() {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const monthISO = monthStart.toISOString();
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
       const [
         payDone, preparing, shipping, delivered,
         weekOrders, monthOrders,
         newConsult, confirmedConsult, needAction,
-        intakeNew, repairPending, repairWorking,
+        intakeNew, repairPending, repairWorking, readyToShipRes,
         weekRepairs,
+        monthSales,
       ] = await Promise.all([
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pay_done'),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparing'),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'shipping'),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'delivered'),
-        supabase.from('orders').select('paid_amount').gte('ordered_at', monISO).not('status', 'in', '("cancelled","refunded")'),
-        supabase.from('orders').select('paid_amount').gte('ordered_at', monthISO).not('status', 'in', '("cancelled","refunded")'),
-        supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'pending_admin'),
-        supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'confirmed'),
-        supabase.from('consultations').select('*', { count: 'exact', head: true })
+        db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pay_done'),
+        db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparing'),
+        db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'shipping'),
+        db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'delivered'),
+        db.from('orders').select('paid_amount').gte('ordered_at', monISO).not('status', 'in', '("cancelled","refunded")'),
+        db.from('orders').select('paid_amount').gte('ordered_at', monthISO).not('status', 'in', '("cancelled","refunded")'),
+        db.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'pending_admin'),
+        db.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'confirmed'),
+        db.from('consultations').select('*', { count: 'exact', head: true })
           .in('status', ['reschedule_requested', 'change_requested', 'pending_admin'])
           .in('consultation_type', ['field_request', 'talk_consult']),
-        supabase.from('repairs').select('*', { count: 'exact', head: true })
+        db.from('repairs').select('*', { count: 'exact', head: true })
           .eq('status', 'intake').is('confirmed_at', null),
-        supabase.from('repairs').select('*', { count: 'exact', head: true })
+        db.from('repairs').select('*', { count: 'exact', head: true })
           .in('status', ['intake', 'pickup_scheduled']),
-        supabase.from('repairs').select('qty_mamoru, qty_other')
+        db.from('repairs').select('qty_mamoru, qty_other')
           .in('status', ['cost_notified', 'repairing', 'ready_to_ship']),
-        supabase.from('repairs').select('qty_mamoru, qty_other')
+        db.from('repairs').select('*', { count: 'exact', head: true })
+          .eq('status', 'ready_to_ship'),
+        db.from('repairs').select('qty_mamoru, qty_other')
           .in('status', ['shipped', 'delivered', 'completed'])
           .gte('shipped_at', monISO),
+        db.from('offline_sales').select('total_amount')
+          .gte('sale_date', monthStart.toISOString().slice(0, 10))
+          .is('cancelled_at', null),
       ]);
 
       const sumAmount = (rows: { paid_amount?: number }[]) =>
@@ -127,6 +145,9 @@ export function useHubStats() {
       const weekRepairOther = weekRepairRows.reduce((s, r) => s + (r.qty_other || 0), 0);
 
       const pendingInbound = (repairPending.count || 0) - (intakeNew.count || 0);
+
+      const salesRows = (monthSales.data || []) as { total_amount: number }[];
+      const salesMonthAmount = salesRows.reduce((s, r) => s + (r.total_amount || 0), 0);
 
       return {
         orders: {
@@ -147,9 +168,14 @@ export function useHubStats() {
           pendingInbound: Math.max(0, pendingInbound),
           workingCount,
           workingQty,
+          readyToShip: readyToShipRes.count || 0,
           weekRepairTotal: weekRepairRows.length,
           weekRepairMamoru,
           weekRepairOther,
+        },
+        sales: {
+          monthCount: salesRows.length,
+          monthAmount: salesMonthAmount,
         },
       };
     },
