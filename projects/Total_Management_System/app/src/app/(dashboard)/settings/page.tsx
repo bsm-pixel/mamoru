@@ -210,24 +210,42 @@ function CsvUploadButton({ label, endpoint, resultLabel }: {
       }
 
       const headers = parseCsvLine(lines[0]);
-      const rows = lines.slice(1).map((line) => {
+      const allRows = lines.slice(1).map((line) => {
         const values = parseCsvLine(line);
         const row: Record<string, string> = {};
         headers.forEach((h, i) => { row[h] = values[i] || ''; });
         return row;
       });
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rows }),
-      });
+      // 30건씩 분할 업로드 (Vercel 타임아웃 방지)
+      const CHUNK = 30;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const results: any[] = [];
+      for (let i = 0; i < allRows.length; i += CHUNK) {
+        const chunk = allRows.slice(i, i + CHUNK);
+        setResult(`업로드 중... ${Math.min(i + CHUNK, allRows.length)}/${allRows.length}`);
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rows: chunk }),
+        });
+        const resText = await res.text();
+        let data;
+        try { data = JSON.parse(resText); } catch (_e) { throw new Error(resText.slice(0, 200)); }
+        if (!res.ok) throw new Error(data.error || '서버 오류');
+        results.push(data);
+      }
 
-      const resText = await res.text();
-      let data;
-      try { data = JSON.parse(resText); } catch (_e) { throw new Error(resText.slice(0, 200)); }
-      if (!res.ok) throw new Error(data.error || '서버 오류');
-      setResult(resultLabel(data));
+      // 결과 합산
+      const merged = results.reduce((acc, d) => {
+        for (const [k, v] of Object.entries(d)) {
+          if (typeof v === 'number') acc[k] = (acc[k] || 0) + v;
+          else if (Array.isArray(v)) acc[k] = [...(acc[k] || []), ...v];
+          else acc[k] = v;
+        }
+        return acc;
+      }, {} as Record<string, unknown>);
+      setResult(resultLabel(merged));
     } catch (err) {
       setResult(`오류: ${String(err)}`);
     } finally {
