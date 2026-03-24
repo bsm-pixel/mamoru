@@ -44,6 +44,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const canMarkShipped = currentStatus === 'ready_to_ship' && !!r.invoice_number;
 
   const handleSendCostNotice = async () => {
+    // 비용안내 → 자동으로 repairing 전환 (작업시작 별도 클릭 불필요)
     await updateStatus.mutateAsync({
       id: r.id,
       status: 'cost_notified',
@@ -51,6 +52,12 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
       shipping_fee: r.shipping_fee,
       total_amount: r.total_amount,
       note: `비용 안내: ${formatKRW(r.total_amount)}`,
+    });
+    // 비용안내 발송 후 자동으로 수리중 전환
+    await updateStatus.mutateAsync({
+      id: r.id,
+      status: 'repairing',
+      note: '비용안내 후 자동 작업시작',
     });
     sendNotify.mutate({
       repairId: r.id,
@@ -149,7 +156,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
         {!isTerminal && (
           <div className="mt-3 pt-3 border-t border-neutral-100 space-y-2">
             {filtered
-              .filter((s) => s !== 'cancelled' && s !== 'cost_notified' && s !== 'shipped')
+              .filter((s) => s !== 'cancelled' && s !== 'cost_notified' && s !== 'shipped' && s !== 'repairing')
               .map((nextStatus) => (
                 <Button
                   key={nextStatus}

@@ -7,15 +7,15 @@ import { RepairStatusBadge } from '../repair-status-badge';
 import { formatPhone, formatKRW } from '@/lib/utils/format';
 import type { Repair } from '@/lib/supabase/types';
 import { Scissors } from 'lucide-react';
-import Link from 'next/link';
 
 interface InProgressTabProps {
   repairs: Repair[];
   isLoading: boolean;
+  onSelect?: (id: string) => void;
 }
 
 /** 진행중 탭: cost_notified + repairing — 인라인 칩 바 (내역서/입금/송장/포장) */
-export function InProgressTab({ repairs, isLoading }: InProgressTabProps) {
+export function InProgressTab({ repairs, isLoading, onSelect }: InProgressTabProps) {
   if (isLoading) {
     return (
       <div className="space-y-3 p-4">
@@ -36,8 +36,8 @@ export function InProgressTab({ repairs, isLoading }: InProgressTabProps) {
   return (
     <div className="space-y-2 p-4">
       {repairs.map((r) => (
-        <Card key={r.id} className="hover:bg-neutral-50 transition">
-          <Link href={`/repairs/${r.id}`} className="block">
+        <Card key={r.id} className="hover:bg-neutral-50 transition cursor-pointer" onClick={() => onSelect?.(r.id)}>
+          <div className="block">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
@@ -56,8 +56,8 @@ export function InProgressTab({ repairs, isLoading }: InProgressTabProps) {
                 </span>
               )}
             </div>
-          </Link>
-          {/* 인라인 칩 바 — Link 바깥에서 클릭 가능 */}
+          </div>
+          {/* 인라인 칩 바 */}
           <RepairActionChips repair={r} />
         </Card>
       ))}

@@ -10,15 +10,15 @@ import {
 import { formatPhone, formatRelative, formatKRW } from '@/lib/utils/format';
 import type { Repair } from '@/lib/supabase/types';
 import { CheckCircle, Send } from 'lucide-react';
-import Link from 'next/link';
 
 interface InboundWaitingTabProps {
   repairs: Repair[];
   isLoading: boolean;
+  onSelect?: (id: string) => void;
 }
 
 /** 입고대기 탭: 직접발송(confirmed_at + intake) + 방문수거(pickup_scheduled) — [입고 & 비용안내] */
-export function InboundWaitingTab({ repairs, isLoading }: InboundWaitingTabProps) {
+export function InboundWaitingTab({ repairs, isLoading, onSelect }: InboundWaitingTabProps) {
   const updateStatus = useUpdateRepairStatus();
   const sendNotify = useSendRepairNotification();
 
@@ -68,9 +68,9 @@ export function InboundWaitingTab({ repairs, isLoading }: InboundWaitingTabProps
   return (
     <div className="space-y-2 p-4">
       {repairs.map((r) => (
-        <Card key={r.id} className="hover:bg-neutral-50 transition">
+        <Card key={r.id} className="hover:bg-neutral-50 transition cursor-pointer" onClick={() => onSelect?.(r.id)}>
           <div className="flex items-start justify-between gap-3">
-            <Link href={`/repairs/${r.id}`} className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-semibold">{r.name}</span>
                 <span className="text-xs text-neutral-500">{formatPhone(r.phone)}</span>
@@ -83,11 +83,11 @@ export function InboundWaitingTab({ repairs, isLoading }: InboundWaitingTabProps
                 {r.qty_other > 0 && <span>타사 {r.qty_other}자루</span>}
                 <span className="text-neutral-400">{formatRelative(r.received_at)}</span>
               </div>
-            </Link>
+            </div>
             <Button
               variant="primary"
               size="sm"
-              onClick={() => handleCostNotice(r)}
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleCostNotice(r); }}
               loading={updateStatus.isPending && updateStatus.variables?.id === r.id}
               className="shrink-0"
             >

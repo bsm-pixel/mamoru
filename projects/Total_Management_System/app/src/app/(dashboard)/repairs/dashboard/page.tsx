@@ -9,11 +9,14 @@ import { InboundWaitingTab } from '@/components/repairs/tabs/inbound-waiting-tab
 import { InProgressTab } from '@/components/repairs/tabs/in-progress-tab';
 import { ReadyToShipTab } from '@/components/repairs/tabs/ready-to-ship-tab';
 import { ShippedTab } from '@/components/repairs/tabs/shipped-tab';
+import { RepairDetailPanel } from '@/components/repairs/repair-detail-panel';
+import { SlidePanel } from '@/components/ui/slide-panel';
 import { useRepairTabData } from '@/hooks/use-repair-tabs';
 import { AlertTriangle } from 'lucide-react';
 
 export default function RepairDashboardPage() {
   const [activeTab, setActiveTab] = useState<RepairTabKey>('intake');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const { tabs, tabData, isLoading, staleCount } = useRepairTabData();
 
   return (
@@ -39,23 +42,33 @@ export default function RepairDashboardPage() {
 
       {/* 탭별 콘텐츠 */}
       {activeTab === 'intake' && (
-        <IntakeTab repairs={tabData.intake} isLoading={isLoading} />
+        <IntakeTab repairs={tabData.intake} isLoading={isLoading} onSelect={setSelectedId} />
       )}
       {activeTab === 'pickup_needed' && (
-        <PickupNeededTab repairs={tabData.pickup_needed} isLoading={isLoading} />
+        <PickupNeededTab repairs={tabData.pickup_needed} isLoading={isLoading} onSelect={setSelectedId} />
       )}
       {activeTab === 'inbound_waiting' && (
-        <InboundWaitingTab repairs={tabData.inbound_waiting} isLoading={isLoading} />
+        <InboundWaitingTab repairs={tabData.inbound_waiting} isLoading={isLoading} onSelect={setSelectedId} />
       )}
       {activeTab === 'in_progress' && (
-        <InProgressTab repairs={tabData.in_progress} isLoading={isLoading} />
+        <InProgressTab repairs={tabData.in_progress} isLoading={isLoading} onSelect={setSelectedId} />
       )}
       {activeTab === 'ready_to_ship' && (
-        <ReadyToShipTab repairs={tabData.ready_to_ship} isLoading={isLoading} />
+        <ReadyToShipTab repairs={tabData.ready_to_ship} isLoading={isLoading} onSelect={setSelectedId} />
       )}
       {activeTab === 'shipped' && (
-        <ShippedTab repairs={tabData.shipped} isLoading={isLoading} />
+        <ShippedTab repairs={tabData.shipped} isLoading={isLoading} onSelect={setSelectedId} />
       )}
+
+      {/* 상세 슬라이드 패널 */}
+      <SlidePanel
+        open={!!selectedId}
+        onClose={() => setSelectedId(null)}
+        title="복원수리 상세"
+        className="sm:w-[480px]"
+      >
+        {selectedId && <RepairDetailPanel repairId={selectedId} />}
+      </SlidePanel>
     </>
   );
 }

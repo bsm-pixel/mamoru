@@ -7,15 +7,15 @@ import { useUpdateRepairStatus } from '@/hooks/use-repairs';
 import { formatPhone, formatRelative } from '@/lib/utils/format';
 import type { Repair } from '@/lib/supabase/types';
 import { CheckCircle, MapPin } from 'lucide-react';
-import Link from 'next/link';
 
 interface PickupNeededTabProps {
   repairs: Repair[];
   isLoading: boolean;
+  onSelect?: (id: string) => void;
 }
 
 /** 수거접수필요 탭: 방문수거 + confirmed_at IS NULL 또는 접수확인 완료 — [수거접수 완료] */
-export function PickupNeededTab({ repairs, isLoading }: PickupNeededTabProps) {
+export function PickupNeededTab({ repairs, isLoading, onSelect }: PickupNeededTabProps) {
   const updateStatus = useUpdateRepairStatus();
 
   const handlePickupDone = (id: string) => {
@@ -42,9 +42,9 @@ export function PickupNeededTab({ repairs, isLoading }: PickupNeededTabProps) {
   return (
     <div className="space-y-2 p-4">
       {repairs.map((r) => (
-        <Card key={r.id} className="hover:bg-neutral-50 transition">
+        <Card key={r.id} className="hover:bg-neutral-50 transition cursor-pointer" onClick={() => onSelect?.(r.id)}>
           <div className="flex items-start justify-between gap-3">
-            <Link href={`/repairs/${r.id}`} className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-semibold">{r.name}</span>
                 <span className="text-xs text-neutral-500">{formatPhone(r.phone)}</span>
@@ -58,11 +58,11 @@ export function PickupNeededTab({ repairs, isLoading }: PickupNeededTabProps) {
                 {r.qty_other > 0 && <span>타사 {r.qty_other}자루</span>}
                 <span className="text-neutral-400">{formatRelative(r.received_at)}</span>
               </div>
-            </Link>
+            </div>
             <Button
               variant="primary"
               size="sm"
-              onClick={() => handlePickupDone(r.id)}
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); handlePickupDone(r.id); }}
               loading={updateStatus.isPending && updateStatus.variables?.id === r.id}
               className="shrink-0"
             >

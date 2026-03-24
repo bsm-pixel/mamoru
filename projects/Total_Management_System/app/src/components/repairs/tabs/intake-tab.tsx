@@ -7,15 +7,15 @@ import { useUpdateRepairFields } from '@/hooks/use-repairs';
 import { formatPhone, formatRelative } from '@/lib/utils/format';
 import type { Repair } from '@/lib/supabase/types';
 import { Scissors, CheckCircle } from 'lucide-react';
-import Link from 'next/link';
 
 interface IntakeTabProps {
   repairs: Repair[];
   isLoading: boolean;
+  onSelect?: (id: string) => void;
 }
 
 /** 신규접수 탭: confirmed_at IS NULL 건 — [접수확인] 버튼 */
-export function IntakeTab({ repairs, isLoading }: IntakeTabProps) {
+export function IntakeTab({ repairs, isLoading, onSelect }: IntakeTabProps) {
   const updateFields = useUpdateRepairFields();
 
   const handleConfirm = (id: string) => {
@@ -42,9 +42,9 @@ export function IntakeTab({ repairs, isLoading }: IntakeTabProps) {
   return (
     <div className="space-y-2 p-4">
       {repairs.map((r) => (
-        <Card key={r.id} className="hover:bg-neutral-50 transition">
+        <Card key={r.id} className="hover:bg-neutral-50 transition cursor-pointer" onClick={() => onSelect?.(r.id)}>
           <div className="flex items-start justify-between gap-3">
-            <Link href={`/repairs/${r.id}`} className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-semibold">{r.name}</span>
                 <span className="text-xs text-neutral-500">{formatPhone(r.phone)}</span>
@@ -62,11 +62,11 @@ export function IntakeTab({ repairs, isLoading }: IntakeTabProps) {
                 {r.qty_other > 0 && <span>타사 {r.qty_other}자루</span>}
                 <span className="text-neutral-400">{formatRelative(r.received_at)}</span>
               </div>
-            </Link>
+            </div>
             <Button
               variant="primary"
               size="sm"
-              onClick={() => handleConfirm(r.id)}
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleConfirm(r.id); }}
               loading={updateFields.isPending && updateFields.variables?.id === r.id}
               className="shrink-0"
             >

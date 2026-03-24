@@ -7,15 +7,15 @@ import { useUpdateRepairFields } from '@/hooks/use-repairs';
 import { formatPhone, formatKRW, formatDateTime } from '@/lib/utils/format';
 import type { Repair } from '@/lib/supabase/types';
 import { Truck, AlertCircle, CreditCard, Check } from 'lucide-react';
-import Link from 'next/link';
 
 interface ShippedTabProps {
   repairs: Repair[];
   isLoading: boolean;
+  onSelect?: (id: string) => void;
 }
 
 /** 출고완료 탭: shipped + delivered + completed — 미납 시 [입금확인] */
-export function ShippedTab({ repairs, isLoading }: ShippedTabProps) {
+export function ShippedTab({ repairs, isLoading, onSelect }: ShippedTabProps) {
   const updateFields = useUpdateRepairFields();
 
   const handleMarkPaid = (id: string) => {
@@ -42,9 +42,9 @@ export function ShippedTab({ repairs, isLoading }: ShippedTabProps) {
   return (
     <div className="space-y-2 p-4">
       {repairs.map((r) => (
-        <Card key={r.id} className="hover:bg-neutral-50 transition">
+        <Card key={r.id} className="hover:bg-neutral-50 transition cursor-pointer" onClick={() => onSelect?.(r.id)}>
           <div className="flex items-start justify-between gap-3">
-            <Link href={`/repairs/${r.id}`} className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-semibold">{r.name}</span>
                 <span className="text-xs text-neutral-400 font-mono">{r.as_id}</span>
@@ -72,13 +72,13 @@ export function ShippedTab({ repairs, isLoading }: ShippedTabProps) {
                   <span className="font-medium text-neutral-600">{formatKRW(r.total_amount)}</span>
                 )}
               </div>
-            </Link>
+            </div>
             {/* 미납 시 입금확인 버튼 */}
             {!r.paid_at && r.total_amount > 0 && (
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => handleMarkPaid(r.id)}
+                onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleMarkPaid(r.id); }}
                 loading={updateFields.isPending && updateFields.variables?.id === r.id}
                 className="shrink-0"
               >

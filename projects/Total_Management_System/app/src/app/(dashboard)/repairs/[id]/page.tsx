@@ -10,7 +10,6 @@ import { InspectionForm } from '@/components/repairs/inspection-form';
 import { InspectionSummary } from '@/components/repairs/inspection-summary';
 import { SidebarActionCard } from '@/components/repairs/sidebar-action-card';
 import { RepairTimeline } from '@/components/repairs/repair-timeline';
-import { RepairPhotos } from '@/components/repairs/repair-photos';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import {
@@ -86,18 +85,34 @@ export default function RepairDetailPage() {
           <RepairStatusBadge status={r.status} proceedType={proceedType} />
         </div>
 
+        {/* 모바일: 내역작성 버튼 상단 배치 */}
+        <div className="lg:hidden">
+          <Button
+            variant={inspections.length > 0 ? 'secondary' : 'primary'}
+            size="sm"
+            onClick={() => setShowInspection(true)}
+            className="w-full"
+          >
+            {inspections.length > 0 ? (
+              <><ClipboardCheck size={14} className="text-green-600" /> 내역작성완료 ({inspections.length}건)</>
+            ) : (
+              <><ClipboardList size={14} /> 내역작성하기</>
+            )}
+          </Button>
+        </div>
+
         {/* 2컬럼 레이아웃 (PC) */}
         <div className="flex flex-col lg:flex-row gap-4">
           {/* 좌측: 메인 정보 */}
           <div className="flex-1 space-y-4 min-w-0">
             <RepairDetailCard repair={r} onUpdate={handleUpdate} />
 
-            {/* 검수 — 모달 트리거 버튼 */}
+            {/* PC: 검수 — 모달 트리거 버튼 */}
             <Button
               variant={inspections.length > 0 ? 'secondary' : 'primary'}
               size="sm"
               onClick={() => setShowInspection(true)}
-              className="w-full"
+              className="w-full hidden lg:flex"
             >
               {inspections.length > 0 ? (
                 <><ClipboardCheck size={14} className="text-green-600" /> 내역작성완료 ({inspections.length}건)</>
@@ -123,8 +138,6 @@ export default function RepairDetailPage() {
               />
             </Modal>
 
-            {/* 사진 */}
-            <RepairPhotos repairId={r.id} />
           </div>
 
           {/* 우측: 사이드바 — 비용+액션+출고 통합 */}

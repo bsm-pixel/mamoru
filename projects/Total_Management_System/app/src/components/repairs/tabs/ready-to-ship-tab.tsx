@@ -7,15 +7,15 @@ import { useUpdateRepairStatus } from '@/hooks/use-repairs';
 import { formatPhone, formatKRW } from '@/lib/utils/format';
 import type { Repair } from '@/lib/supabase/types';
 import { Package, Truck, AlertCircle } from 'lucide-react';
-import Link from 'next/link';
 
 interface ReadyToShipTabProps {
   repairs: Repair[];
   isLoading: boolean;
+  onSelect?: (id: string) => void;
 }
 
 /** 출고대기 탭: ready_to_ship — [출고완료] + 미입금 칩 */
-export function ReadyToShipTab({ repairs, isLoading }: ReadyToShipTabProps) {
+export function ReadyToShipTab({ repairs, isLoading, onSelect }: ReadyToShipTabProps) {
   const updateStatus = useUpdateRepairStatus();
 
   const handleShipped = (id: string) => {
@@ -47,9 +47,9 @@ export function ReadyToShipTab({ repairs, isLoading }: ReadyToShipTabProps) {
   return (
     <div className="space-y-2 p-4">
       {repairs.map((r) => (
-        <Card key={r.id} className="hover:bg-neutral-50 transition">
+        <Card key={r.id} className="hover:bg-neutral-50 transition cursor-pointer" onClick={() => onSelect?.(r.id)}>
           <div className="flex items-start justify-between gap-3">
-            <Link href={`/repairs/${r.id}`} className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-semibold">{r.name}</span>
                 <span className="text-xs text-neutral-400 font-mono">{r.as_id}</span>
@@ -74,11 +74,11 @@ export function ReadyToShipTab({ repairs, isLoading }: ReadyToShipTabProps) {
                   포장완료
                 </span>
               )}
-            </Link>
+            </div>
             <Button
               variant="primary"
               size="sm"
-              onClick={() => handleShipped(r.id)}
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleShipped(r.id); }}
               loading={updateStatus.isPending && updateStatus.variables?.id === r.id}
               className="shrink-0"
             >
