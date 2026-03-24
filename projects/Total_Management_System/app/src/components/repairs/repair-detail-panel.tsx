@@ -9,6 +9,9 @@ import { InspectionSummary } from './inspection-summary';
 import { SidebarActionCard } from './sidebar-action-card';
 import { RepairTimeline } from './repair-timeline';
 import { RepairPhotos } from './repair-photos';
+import { Modal } from '@/components/ui/modal';
+import { Button } from '@/components/ui/button';
+import { ClipboardCheck, ClipboardList } from 'lucide-react';
 import {
   useRepair,
   useUpdateRepairFields,
@@ -73,19 +76,37 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
         <div className="flex-1 space-y-4 min-w-0">
           <RepairDetailCard repair={r} onUpdate={handleUpdate} />
 
-          {/* 검수 섹션 */}
-          {(showInspection || inspections.length > 0 ||
-            ['inspecting', 'cost_notified', 'payment_confirmed', 'repairing', 'shipped', 'delivered', 'completed'].includes(currentStatus)
-          ) && (
-            <>
-              <InspectionForm
-                repairId={r.id}
-                existingInspections={inspections}
-                totalScissors={r.qty_mamoru + r.qty_other}
-              />
-              <InspectionSummary inspections={inspections} />
-            </>
-          )}
+          {/* 검수 — 모달 트리거 버튼 */}
+          <Button
+            variant={inspections.length > 0 ? 'secondary' : 'primary'}
+            size="sm"
+            onClick={() => setShowInspection(true)}
+            className="w-full"
+          >
+            {inspections.length > 0 ? (
+              <><ClipboardCheck size={14} className="text-green-600" /> 내역작성완료 ({inspections.length}건)</>
+            ) : (
+              <><ClipboardList size={14} /> 내역작성하기</>
+            )}
+          </Button>
+
+          {/* 검수 요약 (저장된 게 있을 때만) */}
+          {inspections.length > 0 && <InspectionSummary inspections={inspections} />}
+
+          {/* 검수 모달 */}
+          <Modal
+            open={showInspection}
+            onClose={() => setShowInspection(false)}
+            title="검수 체크리스트"
+            className="max-w-2xl max-h-[90vh] overflow-y-auto"
+          >
+            <InspectionForm
+              repairId={r.id}
+              existingInspections={inspections}
+              totalScissors={r.qty_mamoru + r.qty_other}
+              onSaved={() => setShowInspection(false)}
+            />
+          </Modal>
 
           {/* 사진 */}
           <RepairPhotos repairId={r.id} />

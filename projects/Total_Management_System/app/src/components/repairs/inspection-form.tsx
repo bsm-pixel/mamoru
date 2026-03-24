@@ -53,9 +53,10 @@ interface InspectionFormProps {
   repairId: string;
   existingInspections: RepairInspection[];
   totalScissors: number;
+  onSaved?: () => void;
 }
 
-export function InspectionForm({ repairId, existingInspections }: InspectionFormProps) {
+export function InspectionForm({ repairId, existingInspections, onSaved }: InspectionFormProps) {
   const [items, setItems] = useState<InspectionItem[]>(() => {
     if (existingInspections.length > 0) {
       return existingInspections.map((e) => ({
@@ -152,7 +153,11 @@ export function InspectionForm({ repairId, existingInspections }: InspectionForm
   };
 
   const handleSave = () => {
-    saveInspections.mutate({ repairId, inspections: items });
+    // _photoPreview(base64) 제거 — photo_url만 서버 전송
+    const cleaned = items.map(({ _photoPreview, ...rest }) => rest);
+    saveInspections.mutate({ repairId, inspections: cleaned }, {
+      onSuccess: () => { onSaved?.(); },
+    });
   };
 
   const current = items[activeIdx];
