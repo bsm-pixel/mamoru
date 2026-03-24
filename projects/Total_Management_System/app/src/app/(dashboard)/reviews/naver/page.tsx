@@ -52,8 +52,10 @@ export default function NaverReviewPage() {
   const uploadPhotos = useCallback(async (files: FileList): Promise<string[]> => {
     setPhotoUploading(true);
     try {
+      const { resizeImage } = await import('@/lib/utils/resize-image');
+      const resized = await Promise.all(Array.from(files).map(f => resizeImage(f, 1200, 0.8)));
       const formData = new FormData();
-      Array.from(files).forEach(f => formData.append('files', f));
+      resized.forEach(f => formData.append('files', f));
 
       const res = await fetch('/api/reviews/upload-bulk', {
         method: 'POST',

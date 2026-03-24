@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Camera, Trash2, Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { resizeImage } from '@/lib/utils/resize-image';
 
 interface Photo {
   id: string;
@@ -63,10 +64,11 @@ export function RepairPhotos({ repairId }: { repairId: string }) {
 
   const photos = data || [];
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    upload.mutate(file);
+    const resized = await resizeImage(file, 1200, 0.8);
+    upload.mutate(resized);
     e.target.value = '';
   }
 
