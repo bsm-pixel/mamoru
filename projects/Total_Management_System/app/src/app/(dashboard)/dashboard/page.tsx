@@ -2,9 +2,11 @@
 
 import { Topbar } from '@/components/layout/topbar';
 import { HubCategoryCard } from '@/components/dashboard/hub-category-card';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useHubStats } from '@/hooks/use-dashboard-stats';
-import { ShoppingCart, MessageSquare, Wrench } from 'lucide-react';
+import { useHubStats, useOutstandingAlert } from '@/hooks/use-dashboard-stats';
+import { ShoppingCart, MessageSquare, Wrench, AlertTriangle } from 'lucide-react';
+import Link from 'next/link';
 
 function fmtKRW(n: number) {
   if (n >= 10000) return `₩${Math.round(n / 10000)}만`;
@@ -13,6 +15,7 @@ function fmtKRW(n: number) {
 
 export default function DashboardPage() {
   const { data: stats, isLoading } = useHubStats();
+  const { data: outstanding } = useOutstandingAlert();
 
   // R3: 주문 요약
   const orderSummary = stats
@@ -78,6 +81,31 @@ export default function DashboardPage() {
               summary={repairSummary}
             />
           </div>
+        )}
+
+        {/* 미수금 경고 */}
+        {outstanding && outstanding.length > 0 && (
+          <Card>
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle size={16} className="text-amber-500" />
+              <span className="text-sm font-bold text-amber-700">미수금 알림 ({outstanding.length}건)</span>
+            </div>
+            <div className="space-y-2">
+              {outstanding.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/customers/${c.id}`}
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-amber-50 transition"
+                >
+                  <div>
+                    <span className="text-sm font-medium">{c.name}</span>
+                    {c.phone && <span className="text-xs text-neutral-400 ml-2">{c.phone}</span>}
+                  </div>
+                  <span className="text-sm font-bold text-amber-700">{fmtKRW(c.outstanding_balance)}</span>
+                </Link>
+              ))}
+            </div>
+          </Card>
         )}
       </div>
     </>

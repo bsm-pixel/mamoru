@@ -6,6 +6,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSerialLookup } from '@/hooks/use-serial-lookup';
+import { formatPhone } from '@/lib/utils/format';
 import { Package, User, ShoppingBag, Wrench, Hash } from 'lucide-react';
 import Link from 'next/link';
 
@@ -169,7 +170,7 @@ export default function SerialsPage() {
                   {(serial.sold_to_phone || sale?.customer_phone) && (
                     <div className="flex justify-between">
                       <span className="text-neutral-400">연락처</span>
-                      <span>{serial.sold_to_phone || sale?.customer_phone}</span>
+                      <span>{formatPhone(serial.sold_to_phone || sale?.customer_phone || null)}</span>
                     </div>
                   )}
                 </div>

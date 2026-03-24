@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomer, useUpdateCustomer } from '@/hooks/use-customers';
-import { formatKRW, formatDate } from '@/lib/utils/format';
+import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { ArrowLeft, Save, ShoppingBag, FileSignature, MessageSquare } from 'lucide-react';
 
 const TYPE_OPTIONS = [
@@ -223,7 +223,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <span className="text-xs text-neutral-500">연락처</span>
-                  <p>{c.phone || '-'}</p>
+                  <p>{formatPhone(c.phone) || '-'}</p>
                 </div>
                 <div>
                   <span className="text-xs text-neutral-500">이메일</span>

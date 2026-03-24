@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomers, useCreateCustomer } from '@/hooks/use-customers';
-import { formatKRW, formatDate } from '@/lib/utils/format';
+import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -134,6 +134,21 @@ function AddCustomerModal({ onClose }: { onClose: () => void }) {
     name: '', phone: '', customerType: 'retail',
     companyName: '', address: '', addressDetail: '', memo: '',
   });
+  const [dupWarning, setDupWarning] = useState<string | null>(null);
+
+  async function checkDuplicate(phone: string) {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length < 10) { setDupWarning(null); return; }
+    try {
+      const res = await fetch(`/api/customers/search?q=${digits}&limit=1`);
+      const data = await res.json();
+      if (data.customers?.length > 0) {
+        setDupWarning(`"${data.customers[0].name}" 고객이 동일 번호로 이미 등록되어 있습니다`);
+      } else {
+        setDupWarning(null);
+      }
+    } catch { setDupWarning(null); }
+  }
 
   const inputCls = "w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40";
 
@@ -179,8 +194,13 @@ function AddCustomerModal({ onClose }: { onClose: () => void }) {
 
           <div>
             <label className="text-xs text-neutral-500">전화번호</label>
-            <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            <input type="tel" value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              onBlur={() => checkDuplicate(form.phone)}
               placeholder="010-0000-0000" className={inputCls} />
+            {dupWarning && (
+              <p className="text-xs text-amber-600 mt-1">{dupWarning}</p>
+            )}
           </div>
 
           <div>
@@ -232,7 +252,7 @@ function CustomerRow({ customer, onClick }: { customer: Customer; onClick: () =>
           </Badge>
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-          {c.phone && <span>{c.phone}</span>}
+          {c.phone && <span>{formatPhone(c.phone)}</span>}
           {c.company_name && <span>{c.company_name}</span>}
           <span>{SOURCE_LABEL[c.source] || c.source}</span>
           <span>{formatDate(c.created_at)}</span>

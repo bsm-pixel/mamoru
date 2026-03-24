@@ -337,3 +337,32 @@ export function useRepairDashboardStats() {
     },
   });
 }
+
+// ============================================
+// 미수금 경고 (outstanding_balance > 0인 고객)
+// ============================================
+
+export function useOutstandingAlert() {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['outstanding-alert'],
+    staleTime: 60_000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('customers')
+        .select('id, name, phone, outstanding_balance')
+        .gt('outstanding_balance', 0)
+        .order('outstanding_balance', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return (data || []) as Array<{
+        id: string;
+        name: string;
+        phone: string | null;
+        outstanding_balance: number;
+      }>;
+    },
+  });
+}
