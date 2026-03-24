@@ -59,10 +59,10 @@ export function Sidebar() {
       {/* 그룹별 내비 */}
       <nav className="flex-1 px-3 pb-4 overflow-y-auto">
         {NAV_GROUPS.map((group, gi) => (
-          <div key={gi} className={gi > 0 ? 'mt-4' : ''}>
+          <div key={gi} className={cn(gi > 0 && 'mt-5 pt-4', gi > 0 && group.group && 'border-t border-white/8')}>
             {/* 그룹 레이블 */}
             {group.group && (
-              <p className="px-3 mb-1.5 text-[10px] font-semibold tracking-wider uppercase text-cream/30">
+              <p className="px-3 mb-2 text-[11px] font-semibold tracking-wider uppercase text-cream/50">
                 {group.group}
               </p>
             )}
@@ -79,11 +79,11 @@ export function Sidebar() {
                     className={cn(
                       'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition',
                       active
-                        ? 'bg-white/10 text-cream border-l-2 border-cream'
-                        : 'text-cream/40 hover:text-cream/80 hover:bg-white/5'
+                        ? 'bg-white/15 text-cream border-l-2 border-cream'
+                        : 'text-cream/55 hover:text-cream/90 hover:bg-white/8'
                     )}
                   >
-                    {Icon && <Icon size={18} />}
+                    {Icon && <Icon size={18} className={active ? 'opacity-100' : 'opacity-50'} />}
                     {item.label}
                   </Link>
                 );
