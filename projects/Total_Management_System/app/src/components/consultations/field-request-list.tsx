@@ -42,11 +42,12 @@ function getTabFilters(tab: TabKey) {
 }
 
 interface Props {
-  selectedFieldId?: string | null;             // R2: 양방향 연동 — 지도에서 선택된 ID
-  onFieldSelect?: (id: string | null) => void; // R2: 리스트→지도 연동
+  selectedFieldId?: string | null;
+  onFieldSelect?: (id: string | null) => void;
+  onSelect?: (id: string) => void;  // 상세 패널 열기
 }
 
-export function FieldRequestList({ selectedFieldId, onFieldSelect }: Props) {
+export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<TabKey>('new_request');
   const [search, setSearch] = useState('');
@@ -88,7 +89,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect }: Props) {
           className="cursor-pointer"
           onClick={() => {
             onFieldSelect?.(c.id);
-            router.push(`/consultations/${c.id}`);
+            onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`);
           }}
         >
           <div className="flex items-center gap-2">

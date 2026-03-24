@@ -29,7 +29,7 @@ function getTabStatus(tab: TabKey): string {
   return tab === 'pending' ? 'pending_admin' : tab;
 }
 
-export function TalkConsultList() {
+export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void } = {}) {
   const router = useRouter();
   const [tab, setTab] = useState<TabKey>('pending');
   const [search, setSearch] = useState('');
@@ -131,7 +131,7 @@ export function TalkConsultList() {
           <div className="divide-y divide-neutral-100">
             {consultations.map((c) => (
               <div key={c.id} className="px-4 py-3 hover:bg-warm-ivory/60 transition">
-                <div className="cursor-pointer" onClick={() => router.push(`/consultations/${c.id}`)}>
+                <div className="cursor-pointer" onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}>
                   <div className="flex items-center gap-2">
                     <MessageCircle size={14} className="text-info shrink-0" />
                     <span className="text-sm font-semibold text-indigo-black truncate">{c.name}</span>

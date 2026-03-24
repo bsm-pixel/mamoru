@@ -9,6 +9,8 @@ import { StoreVisitList } from '@/components/consultations/store-visit-list';
 import { FieldRequestList } from '@/components/consultations/field-request-list';
 import { TalkConsultList } from '@/components/consultations/talk-consult-list';
 import { ScheduleCalendar } from '@/components/consultations/schedule-calendar';
+import { ConsultationDetailPanel } from '@/components/consultations/consultation-detail-panel';
+import { SlidePanel } from '@/components/ui/slide-panel';
 import { RefreshCw, Store, Truck, MessageCircle } from 'lucide-react';
 
 // 카카오맵은 SSR 불가 → dynamic import
@@ -28,6 +30,7 @@ const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
 export default function ConsultationsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('store_visit');
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const sync = useConsultationSync();
 
   return (
@@ -70,7 +73,7 @@ export default function ConsultationsPage() {
         <div className="flex gap-6">
           {/* 좌측: 탭 콘텐츠 */}
           <div className="flex-1 min-w-0">
-            {activeTab === 'store_visit' && <StoreVisitList />}
+            {activeTab === 'store_visit' && <StoreVisitList onSelect={setSelectedId} />}
             {activeTab === 'field_request' && (
               <>
                 {/* 모바일: 리스트 상단 접이식 지도 */}
@@ -83,10 +86,11 @@ export default function ConsultationsPage() {
                 <FieldRequestList
                   selectedFieldId={selectedFieldId}
                   onFieldSelect={setSelectedFieldId}
+                  onSelect={setSelectedId}
                 />
               </>
             )}
-            {activeTab === 'talk_consult' && <TalkConsultList />}
+            {activeTab === 'talk_consult' && <TalkConsultList onSelect={setSelectedId} />}
           </div>
 
           {/* R2: 우측 사이드바 — 출장 탭 = 지도 400px, 매장/톡 탭 = 달력 340px */}
@@ -105,6 +109,15 @@ export default function ConsultationsPage() {
             </div>
           ) : null}
         </div>
+
+        {/* 상담 상세 슬라이드 패널 */}
+        <SlidePanel
+          open={!!selectedId}
+          onClose={() => setSelectedId(null)}
+          title="상담 상세"
+        >
+          {selectedId && <ConsultationDetailPanel consultationId={selectedId} />}
+        </SlidePanel>
       </div>
     </>
   );

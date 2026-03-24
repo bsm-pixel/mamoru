@@ -36,7 +36,7 @@ function getTabFilters(tab: TabKey) {
   }
 }
 
-export function StoreVisitList() {
+export function StoreVisitList({ onSelect }: { onSelect?: (id: string) => void } = {}) {
   const router = useRouter();
   const [tab, setTab] = useState<TabKey>('confirmed');
   const [search, setSearch] = useState('');
@@ -86,7 +86,7 @@ export function StoreVisitList() {
       >
         <div
           className="flex-1 min-w-0 cursor-pointer"
-          onClick={() => router.push(`/consultations/${c.id}`)}
+          onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-indigo-black truncate">{c.name}</span>
