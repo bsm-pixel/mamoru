@@ -229,7 +229,9 @@ export function useCancelOrder() {
 
   return useMutation({
     mutationFn: async (orderId: string) => {
-      const { error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
+      const { error } = await db
         .from('orders')
         .update({ status: 'cancelled' })
         .eq('id', orderId);
