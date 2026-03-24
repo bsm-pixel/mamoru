@@ -111,7 +111,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: P
               <MapPin size={12} className="text-neutral-400 shrink-0" />
               <span className="text-xs text-neutral-600 truncate">{c.address_road} {c.address_detail || ''}</span>
               <a
-                href={`https://map.kakao.com/link/to/${encodeURIComponent(c.name)},${c.address_lat || ''},${c.address_lng || ''}`}
+                href={`https://map.kakao.com/link/search/${encodeURIComponent(c.address_road || '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
