@@ -5,6 +5,7 @@ import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import { RepairList } from '@/components/repairs/repair-list';
 import { RepairDetailPanel } from '@/components/repairs/repair-detail-panel';
+import { SlidePanel } from '@/components/ui/slide-panel';
 import { useRepairSync } from '@/hooks/use-repairs';
 import { RefreshCw, Scissors } from 'lucide-react';
 
@@ -52,6 +53,16 @@ export default function RepairsPage() {
             )}
           </div>
         </div>
+
+        {/* 모바일: 슬라이드 패널로 상세 표시 */}
+        <SlidePanel
+          open={!!selectedId}
+          onClose={() => setSelectedId(null)}
+          title="복원수리 상세"
+          className="lg:hidden w-full"
+        >
+          {selectedId && <RepairDetailPanel repairId={selectedId} />}
+        </SlidePanel>
       </div>
     </>
   );

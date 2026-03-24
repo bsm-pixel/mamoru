@@ -5,7 +5,8 @@ import { HubCategoryCard } from '@/components/dashboard/hub-category-card';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHubStats, useOutstandingAlert } from '@/hooks/use-dashboard-stats';
-import { ShoppingCart, MessageSquare, Wrench, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ShoppingCart, MessageSquare, Wrench, AlertTriangle, ClipboardList, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 function fmtKRW(n: number) {
@@ -82,6 +83,41 @@ export default function DashboardPage() {
             />
           </div>
         )}
+
+        {/* 오늘 할 일 — 대응 필요한 액션만 표시 */}
+        {stats && (() => {
+          const actions: Array<{ label: string; count: number; href: string; color: string }> = [];
+          if (stats.orders.payDone > 0) actions.push({ label: '주문 결제 확인 → 배송 준비', count: stats.orders.payDone, href: '/orders/dashboard', color: 'bg-blue-50 text-blue-700' });
+          if (stats.consultations.newIntake > 0) actions.push({ label: '신규 상담 접수 확인', count: stats.consultations.newIntake, href: '/consultations/dashboard', color: 'bg-yellow-50 text-yellow-700' });
+          if (stats.consultations.needAction > 0) actions.push({ label: '상담 대응 필요', count: stats.consultations.needAction, href: '/consultations/dashboard', color: 'bg-red-50 text-red-700' });
+          if (stats.repairs.intakeNew > 0) actions.push({ label: '복원수리 신규 접수 확인', count: stats.repairs.intakeNew, href: '/repairs/dashboard', color: 'bg-blue-50 text-blue-700' });
+          if (stats.orders.preparing > 0) actions.push({ label: '주문 준비 → 송장 생성', count: stats.orders.preparing, href: '/orders/dashboard', color: 'bg-orange-50 text-orange-700' });
+          if (actions.length === 0) return null;
+          return (
+            <Card>
+              <div className="flex items-center gap-2 mb-3">
+                <ClipboardList size={16} className="text-indigo-black" />
+                <span className="text-sm font-bold">오늘 할 일</span>
+                <Badge className="bg-neutral-100 text-neutral-600">{actions.length}</Badge>
+              </div>
+              <div className="space-y-1.5">
+                {actions.map((a) => (
+                  <Link
+                    key={a.label}
+                    href={a.href}
+                    className={`flex items-center justify-between p-2.5 rounded-lg ${a.color} transition hover:opacity-80`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">{a.label}</span>
+                      <Badge className="bg-white/60 text-inherit">{a.count}건</Badge>
+                    </div>
+                    <ArrowRight size={14} className="opacity-40" />
+                  </Link>
+                ))}
+              </div>
+            </Card>
+          );
+        })()}
 
         {/* 미수금 경고 */}
         {outstanding && outstanding.length > 0 && (
