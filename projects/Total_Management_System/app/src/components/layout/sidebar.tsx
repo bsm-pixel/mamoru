@@ -19,6 +19,7 @@ import {
   Handshake,
   PackageOpen,
   Search,
+  FileSignature,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -41,6 +42,7 @@ const iconMap: Record<string, LucideIcon> = {
   Handshake,
   PackageOpen,
   Search,
+  FileSignature,
 };
 
 export function Sidebar() {

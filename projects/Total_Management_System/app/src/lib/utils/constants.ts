@@ -11,18 +11,23 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-/** 사이드바 그룹별 네비게이션 — 업무 플로우 순서 */
+/** 사이드바 그룹별 네비게이션 — 업무 동선 순서 (IA v2) */
 export const NAV_GROUPS: NavGroup[] = [
   {
-    group: '',  // 홈 — 레이블 없음
+    group: '',  // 홈
     items: [
       { label: '대시보드', href: '/dashboard', icon: 'LayoutDashboard', matchPrefix: '/dashboard' },
     ],
   },
   {
-    group: '고객 · 상담',
+    group: '주문 · 배송',
     items: [
-      { label: '고객', href: '/customers', icon: 'Users', matchPrefix: '/customers' },
+      { label: '주문관리', href: '/orders/dashboard', icon: 'ShoppingCart', matchPrefix: '/orders' },
+    ],
+  },
+  {
+    group: '상담',
+    items: [
       { label: '상담관리', href: '/consultations/dashboard', icon: 'MessageSquare', matchPrefix: '/consultations' },
       { label: '복원수리', href: '/repairs/dashboard', icon: 'Wrench', matchPrefix: '/repairs' },
     ],
@@ -30,9 +35,15 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     group: '판매',
     items: [
-      { label: '주문관리', href: '/orders/dashboard', icon: 'ShoppingCart', matchPrefix: '/orders' },
       { label: '판매관리', href: '/sales', icon: 'Store', matchPrefix: '/sales' },
-      { label: '리뷰관리', href: '/reviews', icon: 'Star', matchPrefix: '/reviews' },
+      { label: '계약서', href: '/contracts', icon: 'FileSignature', matchPrefix: '/contracts' },
+    ],
+  },
+  {
+    group: '고객',
+    items: [
+      { label: '고객', href: '/customers', icon: 'Users', matchPrefix: '/customers' },
+      { label: 'B2B 거래처', href: '/suppliers', icon: 'Handshake', matchPrefix: '/suppliers' },
     ],
   },
   {
@@ -41,7 +52,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: '제품', href: '/products', icon: 'Package', matchPrefix: '/products' },
       { label: '재고', href: '/inventory', icon: 'Boxes', matchPrefix: '/inventory' },
       { label: '매입관리', href: '/purchasing', icon: 'Truck', matchPrefix: '/purchasing' },
-      { label: 'B2B 거래처', href: '/suppliers', icon: 'Handshake', matchPrefix: '/suppliers' },
       { label: '부자재', href: '/supplies', icon: 'PackageOpen', matchPrefix: '/supplies' },
     ],
   },
@@ -49,6 +59,7 @@ export const NAV_GROUPS: NavGroup[] = [
     group: 'CS',
     items: [
       { label: '시리얼 조회', href: '/serials', icon: 'Search', matchPrefix: '/serials' },
+      { label: '리뷰관리', href: '/reviews', icon: 'Star', matchPrefix: '/reviews' },
     ],
   },
   {
@@ -58,7 +69,7 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    group: '',  // 시스템 — 레이블 없음
+    group: '',  // 시스템
     items: [
       { label: '설정', href: '/settings', icon: 'Settings', matchPrefix: '/settings' },
     ],
