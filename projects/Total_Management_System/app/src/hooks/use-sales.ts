@@ -53,8 +53,22 @@ export function useSale(id: string) {
         supabase.from('product_serials').select('id, serial_number, product_id').eq('offline_sale_id', id),
       ]);
       if (saleRes.error) throw saleRes.error;
+      const sale = saleRes.data as OfflineSale;
+
+      // customer_id가 있으면 최신 연락처 가져오기
+      if (sale.customer_id) {
+        const { data: cust } = await supabase
+          .from('customers')
+          .select('phone')
+          .eq('id', sale.customer_id)
+          .single();
+        if (cust?.phone) {
+          (sale as Record<string, unknown>).customer_phone = cust.phone;
+        }
+      }
+
       return {
-        sale: saleRes.data as OfflineSale,
+        sale,
         items: (itemsRes.data || []) as OfflineSaleItem[],
         serials: (serialsRes.data || []) as Array<{ id: string; serial_number: string; product_id: string }>,
       };
