@@ -6,9 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useConsultations, useUpdateConsultationStatus } from '@/hooks/use-consultations';
-import { RescheduleModal } from './reschedule-modal';
-import { SuggestTimeModal } from './suggest-time-modal';
+import { useConsultations } from '@/hooks/use-consultations';
 import {
   formatPhone,
   formatDday,
@@ -46,8 +44,6 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: P
   const [tab, setTab] = useState<TabKey>('action_needed');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [rescheduleTarget, setRescheduleTarget] = useState<Consultation | null>(null);
-  const [suggestTarget, setSuggestTarget] = useState<string | null>(null);
 
   const tabFilters = getTabFilters(tab);
   const { data, isLoading } = useConsultations({
@@ -60,15 +56,8 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: P
   const consultations = data?.consultations || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
-  const updateStatus = useUpdateConsultationStatus();
-
-  const handleCancel = (c: Consultation) => {
-    updateStatus.mutate({ id: c.id, status: 'cancelled', note: '출장 취소' });
-  };
-
   const renderRow = (c: Consultation) => {
     const dday = formatDday(c.visit_date);
-    const busy = updateStatus.isPending && updateStatus.variables?.id === c.id;
     const isHighlighted = selectedFieldId === c.id;
 
     return (
@@ -193,21 +182,6 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: P
         </div>
       )}
 
-      {/* 모달 */}
-      {rescheduleTarget && (
-        <RescheduleModal
-          open={!!rescheduleTarget}
-          onClose={() => setRescheduleTarget(null)}
-          consultationId={rescheduleTarget.id}
-          currentDate={rescheduleTarget.visit_date || ''}
-          currentTime={rescheduleTarget.visit_time || ''}
-          consultationType={rescheduleTarget.consultation_type}
-          uniqueId={rescheduleTarget.unique_id}
-        />
-      )}
-      {suggestTarget && (
-        <SuggestTimeModal open={!!suggestTarget} onClose={() => setSuggestTarget(null)} consultationId={suggestTarget} />
-      )}
     </div>
   );
 }

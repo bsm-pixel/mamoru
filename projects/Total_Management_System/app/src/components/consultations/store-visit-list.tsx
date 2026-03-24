@@ -6,8 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useConsultations, useUpdateConsultationStatus } from '@/hooks/use-consultations';
-import { RescheduleModal } from './reschedule-modal';
+import { useConsultations } from '@/hooks/use-consultations';
 import {
   formatPhone,
   formatDday,
@@ -15,7 +14,7 @@ import {
   CONSULTATION_STATUS_LABEL,
   CONSULTATION_STATUS_COLOR,
 } from '@/lib/utils/format';
-import { Calendar, Search, ChevronLeft, ChevronRight, CheckCircle, X } from 'lucide-react';
+import { Calendar, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
 // #4: 2탭 (확정 / 지난내역)
@@ -40,7 +39,6 @@ export function StoreVisitList({ onSelect }: { onSelect?: (id: string) => void }
   const [tab, setTab] = useState<TabKey>('confirmed');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [rescheduleTarget, setRescheduleTarget] = useState<Consultation | null>(null);
 
   const tabFilters = getTabFilters(tab);
   const { data, isLoading } = useConsultations({
@@ -53,8 +51,6 @@ export function StoreVisitList({ onSelect }: { onSelect?: (id: string) => void }
   const consultations = data?.consultations || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
-
-  const updateStatus = useUpdateConsultationStatus();
 
   // 확정 탭: 날짜 그룹으로 묶기
   const dateGroups = useMemo(() => {
@@ -74,7 +70,6 @@ export function StoreVisitList({ onSelect }: { onSelect?: (id: string) => void }
 
   const renderRow = (c: Consultation) => {
     const dday = formatDday(c.visit_date);
-    const busy = updateStatus.isPending && updateStatus.variables?.id === c.id;
 
     return (
       <div
@@ -197,18 +192,6 @@ export function StoreVisitList({ onSelect }: { onSelect?: (id: string) => void }
         </div>
       )}
 
-      {/* 일정변경 모달 */}
-      {rescheduleTarget && (
-        <RescheduleModal
-          open={!!rescheduleTarget}
-          onClose={() => setRescheduleTarget(null)}
-          consultationId={rescheduleTarget.id}
-          currentDate={rescheduleTarget.visit_date || ''}
-          currentTime={rescheduleTarget.visit_time || ''}
-          consultationType={rescheduleTarget.consultation_type}
-          uniqueId={rescheduleTarget.unique_id}
-        />
-      )}
     </div>
   );
 }

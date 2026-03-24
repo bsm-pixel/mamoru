@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useConsultations, useUpdateConsultationStatus, useStartTalkConsult } from '@/hooks/use-consultations';
+import { useConsultations } from '@/hooks/use-consultations';
 import {
   formatRelative,
   formatPhone,
@@ -14,7 +14,6 @@ import {
   CONSULTATION_STATUS_LABEL,
 } from '@/lib/utils/format';
 import { Search, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
-import type { Consultation } from '@/lib/supabase/types';
 
 // #4: 2탭 (대응필요 / 지난내역)
 type TabKey = 'action_needed' | 'past';
@@ -41,43 +40,6 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
   const consultations = data?.consultations || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
-  const updateStatus = useUpdateConsultationStatus();
-  const startTalk = useStartTalkConsult();
-
-  const renderActions = (c: Consultation) => {
-    const busy = (updateStatus.isPending && updateStatus.variables?.id === c.id) ||
-                 (startTalk.isPending && startTalk.variables?.id === c.id);
-    const busyStatus = (updateStatus.isPending && updateStatus.variables?.id === c.id)
-      ? updateStatus.variables?.status : null;
-    const isTalkStarting = startTalk.isPending && startTalk.variables?.id === c.id;
-
-    switch (tab) {
-      case 'pending':
-        return (
-          <>
-            <Button variant="primary" size="sm" disabled={busy} loading={isTalkStarting} onClick={() => startTalk.mutate({ id: c.id })}>
-              상담진행
-            </Button>
-            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
-              취소
-            </Button>
-          </>
-        );
-      case 'in_progress':
-        return (
-          <>
-            <Button variant="primary" size="sm" disabled={busy} loading={busyStatus === 'completed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'completed' })}>
-              상담완료
-            </Button>
-            <Button variant="danger" size="sm" disabled={busy} loading={busyStatus === 'cancelled'} onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled' })}>
-              취소
-            </Button>
-          </>
-        );
-      default:
-        return null;
-    }
-  };
 
   return (
     <div className="space-y-4">
