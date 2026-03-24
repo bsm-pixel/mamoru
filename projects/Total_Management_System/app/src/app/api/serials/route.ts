@@ -42,3 +42,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
+
+/** PATCH /api/serials — 일괄 warehouse_zone 변경 */
+export async function PATCH(req: NextRequest) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    const { ids, warehouse_zone } = await req.json() as {
+      ids: string[];
+      warehouse_zone: 'raw' | 'ready' | 'display';
+    };
+
+    if (!ids?.length || !warehouse_zone) {
+      return NextResponse.json({ error: 'ids와 warehouse_zone 필수' }, { status: 400 });
+    }
+
+    const { error } = await db
+      .from('product_serials')
+      .update({ warehouse_zone })
+      .in('id', ids);
+
+    if (error) throw error;
+    return NextResponse.json({ success: true, updated: ids.length });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}

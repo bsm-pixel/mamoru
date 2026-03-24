@@ -56,14 +56,16 @@ export async function GET(req: NextRequest) {
     .select('product_id, warehouse_zone')
     .eq('status', 'in_stock');
 
-  const zoneMap: Record<string, { storage: number; display: number }> = {};
+  const zoneMap: Record<string, { raw: number; ready: number; display: number }> = {};
   if (zoneRaw) {
     for (const row of zoneRaw) {
       if (!zoneMap[row.product_id]) {
-        zoneMap[row.product_id] = { storage: 0, display: 0 };
+        zoneMap[row.product_id] = { raw: 0, ready: 0, display: 0 };
       }
-      const zone = row.warehouse_zone === 'display' ? 'display' : 'storage';
-      zoneMap[row.product_id][zone]++;
+      const zone = row.warehouse_zone as 'raw' | 'ready' | 'display';
+      if (zone === 'ready') zoneMap[row.product_id].ready++;
+      else if (zone === 'display') zoneMap[row.product_id].display++;
+      else zoneMap[row.product_id].raw++; // raw 또는 기타
     }
   }
 
@@ -80,7 +82,8 @@ export async function GET(req: NextRequest) {
     barcode: p.barcode,
     stock_quantity: p.stock_quantity || 0,
     pending_quantity: pendingMap[p.id] || 0,
-    zone_storage: zoneMap[p.id]?.storage || 0,
+    zone_raw: zoneMap[p.id]?.raw || 0,
+    zone_ready: zoneMap[p.id]?.ready || 0,
     zone_display: zoneMap[p.id]?.display || 0,
   }));
 

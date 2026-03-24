@@ -57,6 +57,7 @@ export type ContractStatus = 'draft' | 'signed' | 'sent' | 'completed' | 'cancel
 
 // R7: 시리얼넘버 ENUM
 export type SerialStatus = 'in_stock' | 'reserved' | 'sold' | 'returned' | 'defective';
+export type WarehouseZone = 'raw' | 'ready' | 'display';
 
 export interface Database {
   public: {
@@ -730,7 +731,7 @@ export interface Database {
           lot_number: string | null;
           manufactured_at: string | null;
           memo: string | null;
-          warehouse_zone: string;        // storage | display
+          warehouse_zone: WarehouseZone;  // raw | ready | display
           created_by: string | null;
           created_at: string;
           updated_at: string;

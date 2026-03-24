@@ -47,7 +47,7 @@ export function useSerials(productId?: string, filters?: {
   });
 }
 
-/** 특정 제품의 재고(in_stock) 시리얼 목록 — 판매 시 선택용 */
+/** 특정 제품의 판매 가능(in_stock + ready) 시리얼 목록 — 판매 시 선택용 */
 export function useAvailableSerials(productId: string | undefined) {
   const supabase = createClient();
 
@@ -56,15 +56,17 @@ export function useAvailableSerials(productId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('product_serials')
-        .select('id, serial_number, barcode, manufactured_at, memo')
+        .select('id, serial_number, barcode, warehouse_zone, manufactured_at, memo')
         .eq('product_id', productId!)
         .eq('status', 'in_stock')
+        .eq('warehouse_zone', 'ready')  // ready만 판매 가능
         .order('serial_number');
       if (error) throw error;
       return (data || []) as Array<{
         id: string;
         serial_number: string;
         barcode: string | null;
+        warehouse_zone: string;
         manufactured_at: string | null;
         memo: string | null;
       }>;
@@ -161,6 +163,33 @@ export function useCreateSerialBatch() {
     },
     onError: (err) => {
       toast.error('일괄 등록 실패: ' + String(err));
+    },
+  });
+}
+
+/** 시리얼 일괄 zone 변경 */
+export function useUpdateSerialZone() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { ids: string[]; warehouse_zone: 'raw' | 'ready' | 'display' }) => {
+      const res = await fetch('/api/serials', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: (_data, vars) => {
+      const zoneLabel = { raw: '매입원본', ready: '판매준비', display: '진열' }[vars.warehouse_zone];
+      toast.success(`${vars.ids.length}개 → ${zoneLabel}으로 이동`);
+      queryClient.invalidateQueries({ queryKey: ['serials'] });
+      queryClient.invalidateQueries({ queryKey: ['serials-available'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+    onError: (err) => {
+      toast.error('zone 변경 실패: ' + String(err));
     },
   });
 }

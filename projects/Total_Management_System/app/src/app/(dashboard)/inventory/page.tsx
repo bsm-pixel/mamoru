@@ -263,8 +263,9 @@ function InventoryRow({ item, onClick }: { item: InventoryItem; onClick: () => v
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-[10px] text-neutral-400">
-          {item.zone_storage > 0 && <span>보관 {item.zone_storage}</span>}
-          {item.zone_display > 0 && <span>진열 {item.zone_display}</span>}
+          {item.zone_raw > 0 && <span className="text-neutral-400">원본 {item.zone_raw}</span>}
+          {item.zone_ready > 0 && <span className="text-green-600">준비 {item.zone_ready}</span>}
+          {item.zone_display > 0 && <span className="text-blue-600">진열 {item.zone_display}</span>}
         </div>
       </div>
 
@@ -288,8 +289,9 @@ function InventoryRow({ item, onClick }: { item: InventoryItem; onClick: () => v
           )}
         </div>
         <div className="col-span-2 text-xs text-neutral-500 space-y-0.5">
-          <div>보관 <strong>{item.zone_storage}</strong></div>
-          <div>진열 <strong>{item.zone_display}</strong></div>
+          <div className="text-neutral-400">원본 <strong>{item.zone_raw}</strong></div>
+          <div className="text-green-600">준비 <strong>{item.zone_ready}</strong></div>
+          <div className="text-blue-600">진열 <strong>{item.zone_display}</strong></div>
         </div>
         <div className="col-span-2">
           {item.pending_quantity > 0 ? (

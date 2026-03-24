@@ -46,6 +46,12 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    group: 'CS',
+    items: [
+      { label: '시리얼 조회', href: '/serials', icon: 'Search', matchPrefix: '/serials' },
+    ],
+  },
+  {
     group: '회계',
     items: [
       { label: '회계', href: '/reports', icon: 'BarChart3', matchPrefix: '/reports' },

@@ -47,6 +47,7 @@ export async function PATCH(
           .from('product_serials')
           .update({
             status: 'in_stock',
+            warehouse_zone: 'ready', // 포장 상태 유지 — 재판매 가능
             sold_via: null,
             offline_sale_id: null,
             sold_at: null,

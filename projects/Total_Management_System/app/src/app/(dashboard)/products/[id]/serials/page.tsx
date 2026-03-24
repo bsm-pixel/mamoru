@@ -7,10 +7,21 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSerials, useCreateSerial, useCreateSerialBatch, useUpdateSerialStatus } from '@/hooks/use-serials';
+import { useSerials, useCreateSerial, useCreateSerialBatch, useUpdateSerialStatus, useUpdateSerialZone } from '@/hooks/use-serials';
 import { useProducts } from '@/hooks/use-sales';
 import { formatDateTime } from '@/lib/utils/format';
 import { ArrowLeft, Plus, Package, Search, Barcode } from 'lucide-react';
+
+const ZONE_COLOR: Record<string, string> = {
+  raw: 'bg-neutral-100 text-neutral-500',
+  ready: 'bg-green-50 text-green-700',
+  display: 'bg-blue-50 text-blue-700',
+};
+const ZONE_LABEL: Record<string, string> = {
+  raw: '매입원본',
+  ready: '판매준비',
+  display: '진열',
+};
 
 const STATUS_COLOR: Record<string, string> = {
   in_stock: 'bg-green-100 text-green-700',
@@ -56,9 +67,28 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
   const serials = data?.serials || [];
   const total = data?.total || 0;
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const createSerial = useCreateSerial();
   const createBatch = useCreateSerialBatch();
   const updateStatus = useUpdateSerialStatus();
+  const updateZone = useUpdateSerialZone();
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+  function selectAll() {
+    const inStockIds = serials.filter((s) => s.status === 'in_stock').map((s) => s.id);
+    setSelectedIds(new Set(inStockIds));
+  }
+  async function handleBulkZone(zone: 'raw' | 'ready' | 'display') {
+    if (selectedIds.size === 0) return;
+    await updateZone.mutateAsync({ ids: Array.from(selectedIds), warehouse_zone: zone });
+    setSelectedIds(new Set());
+  }
 
   async function handleAddSerial() {
     if (!newSerial.trim()) return;
@@ -164,6 +194,25 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
           </Card>
         )}
 
+        {/* 일괄 zone 변경 */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-2 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+            <span className="text-xs font-semibold text-neutral-600">{selectedIds.size}개 선택</span>
+            <Button size="sm" variant="secondary" onClick={() => handleBulkZone('ready')} disabled={updateZone.isPending}>
+              판매준비로 이동
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => handleBulkZone('display')} disabled={updateZone.isPending}>
+              진열로 이동
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => handleBulkZone('raw')} disabled={updateZone.isPending}>
+              매입원본으로
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+              선택 해제
+            </Button>
+          </div>
+        )}
+
         {/* 상태 탭 */}
         <div className="flex gap-1 overflow-x-auto pb-1">
           {STATUS_TABS.map((tab) => (
@@ -195,8 +244,22 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
             </div>
           ) : (
             <div className="divide-y divide-neutral-100">
+              {serials.length > 0 && serials[0].status === 'in_stock' && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-neutral-50 border-b border-neutral-100">
+                  <button onClick={selectAll} className="text-xs text-blue-600 hover:underline">전체 선택</button>
+                </div>
+              )}
               {serials.map((serial) => (
                 <div key={serial.id} className="flex items-center gap-3 px-4 py-2.5">
+                  {/* 체크박스 (in_stock만) */}
+                  {serial.status === 'in_stock' && (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(serial.id)}
+                      onChange={() => toggleSelect(serial.id)}
+                      className="w-4 h-4 rounded border-neutral-300"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-mono font-semibold text-indigo-black">
@@ -204,6 +267,9 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
                       </span>
                       <Badge className={STATUS_COLOR[serial.status] || ''}>
                         {STATUS_LABEL[serial.status] || serial.status}
+                      </Badge>
+                      <Badge className={ZONE_COLOR[serial.warehouse_zone] || 'bg-neutral-100'}>
+                        {ZONE_LABEL[serial.warehouse_zone] || serial.warehouse_zone}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-3 mt-0.5 text-xs text-neutral-500">
@@ -214,6 +280,22 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
                     </div>
                   </div>
 
+                  {/* zone 변경 (in_stock만) */}
+                  {serial.status === 'in_stock' && (
+                    <select
+                      className="text-xs border border-neutral-200 rounded px-2 py-1 bg-white"
+                      value={serial.warehouse_zone}
+                      onChange={(e) => {
+                        if (e.target.value && e.target.value !== serial.warehouse_zone) {
+                          updateZone.mutate({ ids: [serial.id], warehouse_zone: e.target.value as 'raw' | 'ready' | 'display' });
+                        }
+                      }}
+                    >
+                      <option value="raw">매입원본</option>
+                      <option value="ready">판매준비</option>
+                      <option value="display">진열</option>
+                    </select>
+                  )}
                   {/* 상태 변경 드롭다운 */}
                   {serial.status === 'in_stock' && (
                     <select
@@ -225,7 +307,7 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
                         }
                       }}
                     >
-                      <option value="">변경</option>
+                      <option value="">상태</option>
                       <option value="reserved">예약</option>
                       <option value="defective">불량</option>
                     </select>

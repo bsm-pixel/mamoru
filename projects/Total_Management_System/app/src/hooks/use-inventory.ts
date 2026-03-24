@@ -13,7 +13,8 @@ export interface InventoryItem {
   barcode: string | null;
   stock_quantity: number;
   pending_quantity: number;
-  zone_storage: number;
+  zone_raw: number;
+  zone_ready: number;
   zone_display: number;
 }
 

@@ -18,6 +18,7 @@ import {
   Building2,
   Handshake,
   PackageOpen,
+  Search,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -39,6 +40,7 @@ const iconMap: Record<string, LucideIcon> = {
   Building2,
   Handshake,
   PackageOpen,
+  Search,
 };
 
 export function Sidebar() {
