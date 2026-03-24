@@ -12,27 +12,26 @@ import {
   formatPhone,
   formatDday,
   formatDateGroup,
+  CONSULTATION_STATUS_LABEL,
+  CONSULTATION_STATUS_COLOR,
 } from '@/lib/utils/format';
 import { Calendar, Search, ChevronLeft, ChevronRight, CheckCircle, X } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
-// R2: 3탭 (확정 / 취소 / 완료)
-type TabKey = 'confirmed' | 'cancelled' | 'completed';
+// #4: 2탭 (확정 / 지난내역)
+type TabKey = 'confirmed' | 'past';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'confirmed', label: '확정' },
-  { key: 'cancelled', label: '취소' },
-  { key: 'completed', label: '완료' },
+  { key: 'past', label: '지난내역' },
 ];
 
 function getTabFilters(tab: TabKey) {
   switch (tab) {
     case 'confirmed':
       return { status: 'confirmed', orderBy: 'visit_date_asc' };
-    case 'cancelled':
-      return { status: 'cancelled', orderBy: 'updated_at_desc' };
-    case 'completed':
-      return { status: 'completed', orderBy: 'updated_at_desc' };
+    case 'past':
+      return { statuses: ['completed', 'cancelled'], orderBy: 'updated_at_desc' };
   }
 }
 
@@ -90,6 +89,11 @@ export function StoreVisitList({ onSelect }: { onSelect?: (id: string) => void }
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-indigo-black truncate">{c.name}</span>
+            {tab === 'past' && (
+              <Badge className={CONSULTATION_STATUS_COLOR[c.status] || 'bg-neutral-100 text-neutral-600'}>
+                {CONSULTATION_STATUS_LABEL[c.status] || c.status}
+              </Badge>
+            )}
             {dday.label && tab === 'confirmed' && (
               <Badge className={
                 dday.isToday ? 'bg-terracotta/10 text-terracotta'
@@ -110,24 +114,7 @@ export function StoreVisitList({ onSelect }: { onSelect?: (id: string) => void }
             )}
           </div>
         </div>
-        {/* R2: 확정 탭에서만 인라인 [일정변경][취소] */}
-        {tab === 'confirmed' && (
-          <div className="flex gap-1 shrink-0">
-            <Button variant="secondary" size="sm" disabled={busy} onClick={() => setRescheduleTarget(c)}>
-              일정변경
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              disabled={busy}
-              loading={updateStatus.variables?.status === 'cancelled' && busy}
-              onClick={() => updateStatus.mutate({ id: c.id, status: 'cancelled', note: '매장방문 취소' })}
-            >
-              <X size={12} />
-              취소
-            </Button>
-          </div>
-        )}
+        {/* #3: 인라인 액션 제거 — 클릭 시 슬라이드 패널에서 처리 */}
       </div>
     );
   };
@@ -174,7 +161,7 @@ export function StoreVisitList({ onSelect }: { onSelect?: (id: string) => void }
           </div>
         ) : consultations.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-neutral-400">
-            {tab === 'confirmed' ? '확정된 방문이 없습니다' : '해당 상담이 없습니다'}
+            {tab === 'confirmed' ? '확정된 방문이 없습니다' : '지난 내역이 없습니다'}
           </div>
         ) : dateGroups ? (
           <div>

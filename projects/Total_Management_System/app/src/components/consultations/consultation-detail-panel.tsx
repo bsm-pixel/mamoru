@@ -98,19 +98,28 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
         </div>
       )}
 
-      {/* 액션 버튼 */}
+      {/* 액션 버튼 — #3: 모든 액션을 패널 내부에 집중 */}
       {!['completed', 'cancelled'].includes(c.status) && (
         <div className="space-y-2 pt-2 border-t border-neutral-100">
+          {/* 출장: 신규/재요청 → 시간 제안 */}
+          {c.consultation_type === 'field_request' && ['pending_admin', 'reschedule_requested', 'change_requested'].includes(c.status) && (
+            <Button size="sm" className="w-full" onClick={() => handleStatus('suggested')} disabled={updateStatus.isPending}>
+              시간 제안
+            </Button>
+          )}
+          {/* 확정 → 완료 */}
           {c.status === 'confirmed' && (
             <Button size="sm" className="w-full" onClick={() => handleStatus('completed')} disabled={updateStatus.isPending}>
               상담 완료
             </Button>
           )}
+          {/* 톡: 신규 → 진행 */}
           {c.status === 'pending_admin' && c.consultation_type === 'talk_consult' && (
             <Button size="sm" className="w-full" onClick={() => handleStatus('in_progress')} disabled={updateStatus.isPending}>
               상담 시작
             </Button>
           )}
+          {/* 진행중 → 완료 */}
           {c.status === 'in_progress' && (
             <Button size="sm" className="w-full" onClick={() => handleStatus('completed')} disabled={updateStatus.isPending}>
               상담 완료

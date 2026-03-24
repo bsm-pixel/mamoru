@@ -11,36 +11,32 @@ import {
   formatRelative,
   formatPhone,
   CONSULTATION_STATUS_COLOR,
+  CONSULTATION_STATUS_LABEL,
 } from '@/lib/utils/format';
 import { Search, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
-// R2: 4탭 (신규 / 진행중 / 완료 / 취소)
-type TabKey = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+// #4: 2탭 (대응필요 / 지난내역)
+type TabKey = 'action_needed' | 'past';
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'pending', label: '신규' },
-  { key: 'in_progress', label: '진행중' },
-  { key: 'completed', label: '완료' },
-  { key: 'cancelled', label: '취소' },
+  { key: 'action_needed', label: '대응필요' },
+  { key: 'past', label: '지난내역' },
 ];
-
-function getTabStatus(tab: TabKey): string {
-  return tab === 'pending' ? 'pending_admin' : tab;
-}
 
 export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void } = {}) {
   const router = useRouter();
-  const [tab, setTab] = useState<TabKey>('pending');
+  const [tab, setTab] = useState<TabKey>('action_needed');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const { data, isLoading } = useConsultations({
-    status: getTabStatus(tab),
+    ...(tab === 'action_needed'
+      ? { statuses: ['pending_admin', 'in_progress'] }
+      : { statuses: ['completed', 'cancelled'], orderBy: 'updated_at_desc' }),
     type: 'talk_consult',
     search,
     page,
     limit: 20,
-    orderBy: (tab === 'completed' || tab === 'cancelled') ? 'updated_at_desc' : undefined,
   });
   const consultations = data?.consultations || [];
   const total = data?.total || 0;
@@ -125,7 +121,7 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
           </div>
         ) : consultations.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-neutral-400">
-            {tab === 'pending' ? '대기 중인 톡상담이 없습니다' : '해당 상담이 없습니다'}
+            {tab === 'action_needed' ? '대응 필요한 톡상담이 없습니다' : '지난 내역이 없습니다'}
           </div>
         ) : (
           <div className="divide-y divide-neutral-100">
@@ -135,23 +131,19 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
                   <div className="flex items-center gap-2">
                     <MessageCircle size={14} className="text-info shrink-0" />
                     <span className="text-sm font-semibold text-indigo-black truncate">{c.name}</span>
-                    {tab === 'pending' && (
-                      <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
-                        {formatRelative(c.received_at)}
-                      </Badge>
-                    )}
+                    <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
+                      {tab === 'action_needed' ? formatRelative(c.received_at) : (CONSULTATION_STATUS_LABEL[c.status] || c.status)}
+                    </Badge>
                   </div>
                   <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
                     <span>{formatPhone(c.phone)}</span>
-                    {tab !== 'pending' && <span>{formatRelative(c.received_at)}</span>}
+                    {tab === 'past' && <span>{formatRelative(c.received_at)}</span>}
                   </div>
                   {c.memo && (
                     <p className="mt-1 text-xs text-neutral-500 truncate">{c.memo}</p>
                   )}
                 </div>
-                <div className="flex gap-1 mt-2 flex-wrap">
-                  {renderActions(c)}
-                </div>
+                {/* #3: 인라인 액션 제거 — 클릭 시 슬라이드 패널에서 처리 */}
               </div>
             ))}
           </div>

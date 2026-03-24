@@ -15,29 +15,23 @@ import {
   CONSULTATION_STATUS_LABEL,
   CONSULTATION_STATUS_COLOR,
 } from '@/lib/utils/format';
-import { MapPin, Search, ChevronLeft, ChevronRight, CalendarClock, X } from 'lucide-react';
+import { MapPin, Search, ChevronLeft, ChevronRight, Navigation } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
-// R2: 4탭 (신규요청 / 출장제안 / 재요청 / 확정)
-type TabKey = 'new_request' | 'suggested' | 're_request' | 'confirmed';
+// #4: 2탭 (대응필요 / 확정)
+type TabKey = 'action_needed' | 'confirmed';
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'new_request', label: '신규요청' },
-  { key: 'suggested', label: '출장제안' },
-  { key: 're_request', label: '재요청' },
+  { key: 'action_needed', label: '대응필요' },
   { key: 'confirmed', label: '확정' },
 ];
 
 function getTabFilters(tab: TabKey) {
   switch (tab) {
-    case 'new_request':
-      return { status: 'pending_admin', orderBy: 'received_at_desc' };
-    case 'suggested':
-      return { status: 'suggested', orderBy: 'received_at_desc' };
-    case 're_request':
-      return { statuses: ['reschedule_requested', 'change_requested'], orderBy: 'received_at_desc' };
+    case 'action_needed':
+      return { statuses: ['pending_admin', 'suggested', 'reschedule_requested', 'change_requested'], orderBy: 'received_at_desc' as const };
     case 'confirmed':
-      return { status: 'confirmed', dateFilter: 'upcoming' as const, orderBy: 'visit_date_asc' };
+      return { status: 'confirmed', dateFilter: 'upcoming' as const, orderBy: 'visit_date_asc' as const };
   }
 }
 
@@ -49,7 +43,7 @@ interface Props {
 
 export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: Props) {
   const router = useRouter();
-  const [tab, setTab] = useState<TabKey>('new_request');
+  const [tab, setTab] = useState<TabKey>('action_needed');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [rescheduleTarget, setRescheduleTarget] = useState<Consultation | null>(null);
@@ -109,46 +103,28 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: P
           </div>
           <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
             <span>{formatPhone(c.phone)}</span>
-            {c.address_road && (
-              <span className="flex items-center gap-1">
-                <MapPin size={11} />
-                {c.address_sido} {c.address_sigungu}
-              </span>
-            )}
             {c.visit_date && <span>{c.visit_date} {c.visit_time || ''}</span>}
           </div>
+          {/* #5: 주소 + 네비 버튼 항상 표시 */}
+          {c.address_road && (
+            <div className="flex items-center gap-2 mt-1.5">
+              <MapPin size={12} className="text-neutral-400 shrink-0" />
+              <span className="text-xs text-neutral-600 truncate">{c.address_road} {c.address_detail || ''}</span>
+              <a
+                href={`https://map.kakao.com/link/to/${encodeURIComponent(c.name)},${c.address_lat || ''},${c.address_lng || ''}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 text-blue-600 text-[11px] font-semibold hover:bg-blue-100 transition lg:hidden"
+              >
+                <Navigation size={10} />
+                네비
+              </a>
+            </div>
+          )}
         </div>
 
-        {/* R2: 모든 탭에 [일정변경][취소] + 탭별 추가 액션 */}
-        <div className="flex gap-1 mt-2 flex-wrap">
-          {/* 신규요청 탭: 시간제안 추가 */}
-          {tab === 'new_request' && (
-            <Button variant="primary" size="sm" disabled={busy} onClick={() => setSuggestTarget(c.id)}>
-              시간 제안
-            </Button>
-          )}
-          {/* 재요청 탭: 새 시간 제안 */}
-          {tab === 're_request' && (
-            <Button variant="primary" size="sm" disabled={busy} onClick={() => setSuggestTarget(c.id)}>
-              새 시간 제안
-            </Button>
-          )}
-          {/* 공통: 일정변경 + 취소 */}
-          <Button variant="secondary" size="sm" disabled={busy} onClick={() => setRescheduleTarget(c)}>
-            <CalendarClock size={12} />
-            일정변경
-          </Button>
-          <Button
-            variant="danger"
-            size="sm"
-            disabled={busy}
-            loading={updateStatus.variables?.status === 'cancelled' && busy}
-            onClick={() => handleCancel(c)}
-          >
-            <X size={12} />
-            취소
-          </Button>
-        </div>
+        {/* #3: 인라인 액션 제거 — 클릭 시 슬라이드 패널에서 처리 */}
       </div>
     );
   };
