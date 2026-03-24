@@ -8,6 +8,7 @@ import { InspectionForm } from './inspection-form';
 import { InspectionSummary } from './inspection-summary';
 import { SidebarActionCard } from './sidebar-action-card';
 import { RepairTimeline } from './repair-timeline';
+import { RepairPhotos } from './repair-photos';
 import {
   useRepair,
   useUpdateRepairFields,
@@ -85,6 +86,9 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
               <InspectionSummary inspections={inspections} />
             </>
           )}
+
+          {/* 사진 */}
+          <RepairPhotos repairId={r.id} />
         </div>
 
         {/* 사이드바 — 비용+액션+출고 통합 */}
