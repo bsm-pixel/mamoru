@@ -10,6 +10,14 @@ import { formatKRW, formatDate } from '@/lib/utils/format';
 import { Hash, Ban, CheckCircle, AlertTriangle } from 'lucide-react';
 import type { SaleChannel } from '@/lib/supabase/types';
 
+function formatPhone(phone: string | null): string {
+  if (!phone) return '';
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length === 11) return `${digits.slice(0,3)}-${digits.slice(3,7)}-${digits.slice(7)}`;
+  if (digits.length === 10) return `${digits.slice(0,3)}-${digits.slice(3,6)}-${digits.slice(6)}`;
+  return phone;
+}
+
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
 };
@@ -170,7 +178,7 @@ function SaleInfo({ sale }: { sale: Record<string, unknown> }) {
         </div>
         <div>
           <span className="text-xs text-neutral-500">연락처</span>
-          <p>{s.customer_phone || '-'}</p>
+          <p>{formatPhone(s.customer_phone) || '-'}</p>
         </div>
         <div>
           <span className="text-xs text-neutral-500">판매일</span>
