@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, memo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSales } from '@/hooks/use-sales';
+import { useSales, useSalesTabCounts } from '@/hooks/use-sales';
+import type { SalesTab, SalesChannel, SalesDateRange } from '@/hooks/use-sales';
 import { useContracts } from '@/hooks/use-contracts';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -15,7 +16,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SaleDetailModal } from '@/components/sales/sale-detail-modal';
 import { Plus, FileSignature, Receipt } from 'lucide-react';
-import type { OfflineSale, SaleChannel } from '@/lib/supabase/types';
+import type { OfflineSale, SaleChannel as SaleChannelType } from '@/lib/supabase/types';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드',
@@ -30,24 +31,68 @@ const PAYMENT_STATUS_COLOR: Record<string, string> = {
   partial: 'bg-yellow-100 text-yellow-700',
 };
 
+const PAYMENT_STATUS_LABEL: Record<string, string> = {
+  paid: '결제완료',
+  unpaid: '미결제',
+  partial: '부분결제',
+};
+
 const CHANNEL_CHIP: Record<string, { label: string; className: string }> = {
   offline: { label: '오프라인', className: 'bg-neutral-100 text-neutral-600' },
   online:  { label: '온라인',  className: 'bg-blue-100 text-blue-700' },
   talk:    { label: '톡상담',  className: 'bg-yellow-100 text-yellow-700' },
 };
 
+const TABS: { key: SalesTab; label: string }[] = [
+  { key: 'all', label: '전체' },
+  { key: 'today', label: '오늘' },
+  { key: 'unpaid', label: '미수금' },
+  { key: 'cancelled', label: '취소' },
+];
+
+const CHANNELS: { key: SalesChannel; label: string }[] = [
+  { key: 'all', label: '전체' },
+  { key: 'offline', label: '오프라인' },
+  { key: 'online', label: '온라인' },
+  { key: 'talk', label: '톡상담' },
+];
+
+const DATE_RANGES: { key: SalesDateRange; label: string }[] = [
+  { key: 'all', label: '전체 기간' },
+  { key: 'today', label: '오늘' },
+  { key: 'week', label: '이번주' },
+  { key: 'month', label: '이번달' },
+];
+
 export default function SalesPage() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [tab, setTab] = useState<SalesTab>('all');
+  const [channel, setChannel] = useState<SalesChannel>('all');
+  const [dateRange, setDateRange] = useState<SalesDateRange>('all');
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
+  const [isLg, setIsLg] = useState(false);
 
-  const { data, isLoading } = useSales({ search, page, limit: 20 });
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    setIsLg(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  const { data, isLoading } = useSales({ search, page, limit: 20, tab, channel, dateRange });
+  const { data: tabCounts } = useSalesTabCounts();
   const { data: contractData } = useContracts({ status: 'signed', limit: 100 });
   const newContractCount = contractData?.contracts?.filter((c) => !c.offline_sale_id).length || 0;
   const sales = data?.sales || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
+
+  const handleTabChange = (t: SalesTab) => { setTab(t); setPage(1); };
+  const handleChannelChange = (c: SalesChannel) => { setChannel(c); setPage(1); };
+  const handleDateRangeChange = (d: SalesDateRange) => { setDateRange(d); setPage(1); };
 
   return (
     <>
@@ -58,31 +103,83 @@ export default function SalesPage() {
         {newContractCount > 0 && (
           <button
             onClick={() => router.push('/contracts')}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-terracotta/10 border border-terracotta/20 hover:bg-terracotta/15 transition text-left"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-neutral-100 border border-neutral-200 hover:bg-neutral-150 transition text-left"
           >
-            <FileSignature size={18} className="text-terracotta shrink-0" />
+            <FileSignature size={18} className="text-neutral-700 shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-terracotta">신규 계약서 {newContractCount}건</p>
-              <p className="text-xs text-neutral-500">매칭 대기 중인 계약서가 있습니다</p>
+              <p className="text-sm font-semibold text-neutral-800">신규 계약서 {newContractCount}건</p>
+              <p className="text-xs text-neutral-500">판매 전환 대기 중인 계약서가 있습니다</p>
             </div>
           </button>
         )}
 
-        {/* 상단: 신규 판매 + 검색 */}
+        {/* 상단: 판매 입력 + 검색 */}
         <div className="flex items-center gap-3">
-          <Button
-            size="sm"
-            onClick={() => router.push('/sales/new')}
-          >
+          <Button size="sm" onClick={() => router.push('/sales/new')}>
             <Plus size={14} />
             판매 입력
           </Button>
-
           <SearchInput
             value={search}
             onChange={(v) => { setSearch(v); setPage(1); }}
             placeholder="판매번호, 고객명, 전화번호 검색"
           />
+        </div>
+
+        {/* 탭 바 */}
+        <div className="flex gap-1 border-b border-neutral-200">
+          {TABS.map((t) => {
+            const count = tabCounts?.[t.key] ?? 0;
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => handleTabChange(t.key)}
+                className={`px-3 py-2 text-sm font-medium border-b-2 transition whitespace-nowrap ${
+                  active
+                    ? 'border-neutral-900 text-neutral-900'
+                    : 'border-transparent text-neutral-400 hover:text-neutral-600'
+                }`}
+              >
+                {t.label}
+                {count > 0 && (
+                  <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
+                    active ? 'bg-neutral-900 text-white' : 'bg-neutral-200 text-neutral-500'
+                  }`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 채널 + 기간 필터 */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-1">
+            {CHANNELS.map((c) => (
+              <button
+                key={c.key}
+                onClick={() => handleChannelChange(c.key)}
+                className={`px-2.5 py-1 text-xs rounded-full border transition ${
+                  channel === c.key
+                    ? 'bg-neutral-900 text-white border-neutral-900'
+                    : 'bg-white text-neutral-500 border-neutral-200 hover:border-neutral-400'
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <select
+            value={dateRange}
+            onChange={(e) => handleDateRangeChange(e.target.value as SalesDateRange)}
+            className="text-xs border border-neutral-200 rounded-md px-2 py-1 text-neutral-600 bg-white"
+          >
+            {DATE_RANGES.map((d) => (
+              <option key={d.key} value={d.key}>{d.label}</option>
+            ))}
+          </select>
         </div>
 
         {/* 판매 목록 */}
@@ -95,7 +192,34 @@ export default function SalesPage() {
             </div>
           ) : sales.length === 0 ? (
             <EmptyState icon={Receipt} message="판매 기록이 없습니다" />
+          ) : isLg ? (
+            /* PC 테이블 뷰 */
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-neutral-200 bg-neutral-50">
+                    <th className="px-4 py-3 text-left font-medium text-neutral-500">판매번호</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-500">판매일</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-500">고객명</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-500">채널</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-500">결제방법</th>
+                    <th className="px-4 py-3 text-left font-medium text-neutral-500">결제상태</th>
+                    <th className="px-4 py-3 text-right font-medium text-neutral-500">금액</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sales.map((sale) => (
+                    <SaleTableRow
+                      key={sale.id}
+                      sale={sale}
+                      onClick={() => setSelectedSaleId(sale.id)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
+            /* 모바일 카드 뷰 */
             <div className="divide-y divide-neutral-100">
               {sales.map((sale) => (
                 <SaleRow
@@ -120,9 +244,41 @@ export default function SalesPage() {
   );
 }
 
+/* PC 테이블 행 */
+const SaleTableRow = memo(function SaleTableRow({ sale, onClick }: { sale: OfflineSale; onClick: () => void }) {
+  const isCancelled = !!sale.cancelled_at;
+  const ch = CHANNEL_CHIP[(sale.sale_channel || 'offline') as SaleChannelType] || CHANNEL_CHIP.offline;
+
+  return (
+    <tr
+      onClick={onClick}
+      className={`border-b border-neutral-100 cursor-pointer hover:bg-neutral-50 transition ${isCancelled ? 'opacity-50' : ''}`}
+    >
+      <td className={`px-4 py-3 font-mono text-xs ${isCancelled ? 'line-through' : ''}`}>{sale.sale_number}</td>
+      <td className="px-4 py-3 text-neutral-600">{formatDate(sale.sale_date)}</td>
+      <td className={`px-4 py-3 font-semibold ${isCancelled ? 'line-through' : ''}`}>{sale.customer_name}</td>
+      <td className="px-4 py-3"><Badge className={ch.className}>{ch.label}</Badge></td>
+      <td className="px-4 py-3 text-neutral-600">{PAYMENT_METHOD_LABEL[sale.payment_method] || sale.payment_method}</td>
+      <td className="px-4 py-3">
+        {isCancelled ? (
+          <Badge className="bg-neutral-200 text-neutral-500">취소</Badge>
+        ) : (
+          <Badge className={PAYMENT_STATUS_COLOR[sale.payment_status] || ''}>
+            {PAYMENT_STATUS_LABEL[sale.payment_status] || sale.payment_status}
+          </Badge>
+        )}
+      </td>
+      <td className={`px-4 py-3 text-right font-bold ${isCancelled ? 'line-through text-neutral-400' : ''}`}>
+        {formatKRW(sale.paid_amount)}
+      </td>
+    </tr>
+  );
+});
+
+/* 모바일 카드 행 */
 const SaleRow = memo(function SaleRow({ sale, onClick }: { sale: OfflineSale; onClick: () => void }) {
   const isCancelled = !!sale.cancelled_at;
-  const channel = CHANNEL_CHIP[(sale.sale_channel || 'offline') as SaleChannel] || CHANNEL_CHIP.offline;
+  const channel = CHANNEL_CHIP[(sale.sale_channel || 'offline') as SaleChannelType] || CHANNEL_CHIP.offline;
 
   return (
     <div
@@ -138,7 +294,7 @@ const SaleRow = memo(function SaleRow({ sale, onClick }: { sale: OfflineSale; on
             <Badge className="bg-neutral-200 text-neutral-500">취소</Badge>
           ) : (
             <Badge className={PAYMENT_STATUS_COLOR[sale.payment_status] || ''}>
-              {sale.payment_status === 'paid' ? '결제완료' : sale.payment_status === 'unpaid' ? '미결제' : '부분결제'}
+              {PAYMENT_STATUS_LABEL[sale.payment_status] || sale.payment_status}
             </Badge>
           )}
           <Badge className={channel.className}>{channel.label}</Badge>

@@ -5,11 +5,19 @@ import { createClient } from '@/lib/supabase/client';
 import type { OfflineSale, OfflineSaleItem, Product } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
 
+/** 판매 탭 타입 */
+export type SalesTab = 'all' | 'today' | 'unpaid' | 'cancelled';
+export type SalesChannel = 'all' | 'offline' | 'online' | 'talk';
+export type SalesDateRange = 'all' | 'today' | 'week' | 'month';
+
 /** 오프라인 판매 목록 */
 export function useSales(filters?: {
   search?: string;
   page?: number;
   limit?: number;
+  tab?: SalesTab;
+  channel?: SalesChannel;
+  dateRange?: SalesDateRange;
 }) {
   const supabase = createClient();
   const page = filters?.page || 1;
@@ -21,12 +29,49 @@ export function useSales(filters?: {
     queryKey: ['sales', filters],
     staleTime: 30_000,
     queryFn: async () => {
-      let query = supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query = (supabase as any)
         .from('offline_sales')
         .select('*', { count: 'exact' })
         .order('sale_date', { ascending: false })
+        .order('created_at', { ascending: false })
         .range(from, to);
 
+      // 탭 필터
+      const tab = filters?.tab || 'all';
+      if (tab === 'today') {
+        const today = new Date().toISOString().slice(0, 10);
+        query = query.eq('sale_date', today).is('cancelled_at', null);
+      } else if (tab === 'unpaid') {
+        query = query.in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null);
+      } else if (tab === 'cancelled') {
+        query = query.not('cancelled_at', 'is', null);
+      }
+
+      // 채널 필터
+      if (filters?.channel && filters.channel !== 'all') {
+        query = query.eq('sale_channel', filters.channel);
+      }
+
+      // 기간 필터
+      if (filters?.dateRange && filters.dateRange !== 'all') {
+        const now = new Date();
+        let dateFrom: string;
+        if (filters.dateRange === 'today') {
+          dateFrom = now.toISOString().slice(0, 10);
+        } else if (filters.dateRange === 'week') {
+          const d = new Date(now);
+          d.setDate(d.getDate() - 7);
+          dateFrom = d.toISOString().slice(0, 10);
+        } else {
+          const d = new Date(now);
+          d.setMonth(d.getMonth() - 1);
+          dateFrom = d.toISOString().slice(0, 10);
+        }
+        query = query.gte('sale_date', dateFrom);
+      }
+
+      // 검색
       if (filters?.search) {
         query = query.or(
           `customer_name.ilike.%${filters.search}%,customer_phone.ilike.%${filters.search}%,sale_number.ilike.%${filters.search}%`
@@ -36,6 +81,35 @@ export function useSales(filters?: {
       const { data, count, error } = await query;
       if (error) throw error;
       return { sales: (data || []) as OfflineSale[], total: count || 0 };
+    },
+  });
+}
+
+/** 판매 탭별 건수 */
+export function useSalesTabCounts() {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['sales-tab-counts'],
+    staleTime: 30_000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
+      const today = new Date().toISOString().slice(0, 10);
+
+      const [allRes, todayRes, unpaidRes, cancelledRes] = await Promise.all([
+        db.from('offline_sales').select('*', { count: 'exact', head: true }),
+        db.from('offline_sales').select('*', { count: 'exact', head: true }).eq('sale_date', today).is('cancelled_at', null),
+        db.from('offline_sales').select('*', { count: 'exact', head: true }).in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null),
+        db.from('offline_sales').select('*', { count: 'exact', head: true }).not('cancelled_at', 'is', null),
+      ]);
+
+      return {
+        all: allRes.count || 0,
+        today: todayRes.count || 0,
+        unpaid: unpaidRes.count || 0,
+        cancelled: cancelledRes.count || 0,
+      };
     },
   });
 }

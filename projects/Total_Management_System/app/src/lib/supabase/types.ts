@@ -511,6 +511,7 @@ export interface Database {
           cancelled_reason: string | null;
           cancelled_by: string | null;
           sale_channel: SaleChannel;
+          contract_id: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -551,6 +552,7 @@ export interface Database {
           cancelled_reason?: string | null;
           cancelled_by?: string | null;
           sale_channel?: SaleChannel;
+          contract_id?: string | null;
         };
       };
       offline_sale_items: {
