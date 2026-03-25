@@ -15,7 +15,7 @@ export async function GET(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
-    const [customerRes, salesRes, contractsRes, consultationsRes] = await Promise.all([
+    const [customerRes, salesRes, contractsRes, consultationsRes, repairsRes] = await Promise.all([
       db.from('customers').select('*').eq('id', id).single(),
       db.from('offline_sales')
         .select('id, sale_number, sale_date, total_amount, paid_amount, payment_method, payment_status')
@@ -32,6 +32,11 @@ export async function GET(
         .eq('customer_id', id)
         .order('created_at', { ascending: false })
         .limit(10),
+      db.from('repairs')
+        .select('id, repair_number, status, item_description, total_cost, created_at')
+        .eq('customer_id', id)
+        .order('created_at', { ascending: false })
+        .limit(10),
     ]);
 
     if (customerRes.error) throw customerRes.error;
@@ -45,6 +50,7 @@ export async function GET(
       sales,
       contracts: contractsRes.data || [],
       consultations: consultationsRes.data || [],
+      repairs: repairsRes.data || [],
       summary: {
         totalSales: sales.length,
         totalSalesAmount,

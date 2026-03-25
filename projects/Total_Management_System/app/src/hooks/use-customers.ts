@@ -87,6 +87,14 @@ export function useCustomer(id: string) {
           status: string;
           created_at: string;
         }>;
+        repairs: Array<{
+          id: string;
+          repair_number: string;
+          status: string;
+          item_description: string | null;
+          total_cost: number | null;
+          created_at: string;
+        }>;
         summary: {
           totalSales: number;
           totalSalesAmount: number;

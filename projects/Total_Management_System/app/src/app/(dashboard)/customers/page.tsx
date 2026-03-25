@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +11,8 @@ import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
+import { SlidePanel } from '@/components/ui/slide-panel';
+import { CustomerDetailPanel } from '@/components/customers/customer-detail-panel';
 import { Users, Plus, X } from 'lucide-react';
 import type { Customer } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
@@ -46,11 +47,11 @@ const FILTER_TYPES = [
 ];
 
 export default function CustomersPage() {
-  const router = useRouter();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [page, setPage] = useState(1);
   const [showAdd, setShowAdd] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const limit = 20;
 
   const { data, isLoading } = useCustomers({
@@ -113,7 +114,7 @@ export default function CustomersPage() {
                 <CustomerRow
                   key={c.id}
                   customer={c}
-                  onClick={() => router.push(`/customers/${c.id}`)}
+                  onClick={() => setSelectedId(c.id)}
                 />
               ))}
             </div>
@@ -124,6 +125,16 @@ export default function CustomersPage() {
       </div>
 
       {showAdd && <AddCustomerModal onClose={() => setShowAdd(false)} />}
+
+      {/* 고객 상세 슬라이드 패널 */}
+      <SlidePanel
+        open={!!selectedId}
+        onClose={() => setSelectedId(null)}
+        title="고객 상세"
+        className="sm:w-[640px]"
+      >
+        {selectedId && <CustomerDetailPanel customerId={selectedId} />}
+      </SlidePanel>
     </>
   );
 }
