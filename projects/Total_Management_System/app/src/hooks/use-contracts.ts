@@ -5,10 +5,14 @@ import { createClient } from '@/lib/supabase/client';
 import type { Contract, ContractItem } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
 
+/** 계약서 탭 타입 */
+export type ContractTab = 'all' | 'new' | 'converted' | 'cancelled';
+
 /** 계약서 목록 */
 export function useContracts(filters?: {
   search?: string;
   status?: string;
+  tab?: ContractTab;
   page?: number;
   limit?: number;
 }) {
@@ -28,9 +32,23 @@ export function useContracts(filters?: {
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      if (filters?.status && filters.status !== 'all') {
+      // 탭 필터
+      const tab = filters?.tab || 'all';
+      if (tab === 'new') {
+        // 신규계약: signed/sent + 판매 전환 안 됨
+        query = query.in('status', ['draft', 'signed', 'sent']).is('offline_sale_id', null);
+      } else if (tab === 'converted') {
+        // 전환완료: offline_sale_id 있음
+        query = query.not('offline_sale_id', 'is', null);
+      } else if (tab === 'cancelled') {
+        query = query.eq('status', 'cancelled');
+      }
+
+      // 레거시 status 필터 (다른 곳에서 사용 시)
+      if (filters?.status && filters.status !== 'all' && !filters?.tab) {
         query = query.eq('status', filters.status);
       }
+
       if (filters?.search) {
         query = query.or(
           `customer_name.ilike.%${filters.search}%,customer_phone.ilike.%${filters.search}%,contract_number.ilike.%${filters.search}%`
@@ -40,6 +58,34 @@ export function useContracts(filters?: {
       const { data, count, error } = await query;
       if (error) throw error;
       return { contracts: (data || []) as Contract[], total: count || 0 };
+    },
+  });
+}
+
+/** 계약서 탭별 건수 */
+export function useContractTabCounts() {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['contract-tab-counts'],
+    staleTime: 30_000,
+    queryFn: async () => {
+      const [allRes, newRes, convertedRes, cancelledRes] = await Promise.all([
+        supabase.from('contracts').select('*', { count: 'exact', head: true }),
+        supabase.from('contracts').select('*', { count: 'exact', head: true })
+          .in('status', ['draft', 'signed', 'sent']).is('offline_sale_id', null),
+        supabase.from('contracts').select('*', { count: 'exact', head: true })
+          .not('offline_sale_id', 'is', null),
+        supabase.from('contracts').select('*', { count: 'exact', head: true })
+          .eq('status', 'cancelled'),
+      ]);
+
+      return {
+        all: allRes.count || 0,
+        new: newRes.count || 0,
+        converted: convertedRes.count || 0,
+        cancelled: cancelledRes.count || 0,
+      };
     },
   });
 }
@@ -93,6 +139,11 @@ export function useCreateContract() {
         customer_title?: string;
         shop_name?: string;
         shop_address?: string;
+        // 필기 + 상담 연결
+        consultation_id?: string;
+        handwriting_name?: string;
+        handwriting_phone?: string;
+        handwriting_address?: string;
       };
       items: Array<{
         product_id?: string;

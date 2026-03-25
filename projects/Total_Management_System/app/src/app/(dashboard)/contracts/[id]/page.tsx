@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useContract, useSendContractNotification } from '@/hooks/use-contracts';
 import { formatKRW, formatDate, formatDateTime } from '@/lib/utils/format';
-import { ArrowLeft, Send, Receipt } from 'lucide-react';
+import { ArrowLeft, Send, Receipt, Image, ExternalLink } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const STATUS_COLOR: Record<string, string> = {
   draft: 'bg-neutral-100 text-neutral-600',
@@ -244,41 +245,53 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           </Card>
         )}
 
-        {/* 알림톡 발송 */}
-        {contract.status === 'signed' && !contract.notification_sent_at && (
+        {/* 계약서 이미지 열람 */}
+        {contract.image_url && (
           <Card>
-            <h3 className="text-sm font-bold text-indigo-black mb-2">알림톡 발송</h3>
-            <p className="text-xs text-neutral-500 mb-3">
-              고객에게 계약서 사본을 알림톡으로 발송합니다.
-            </p>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => sendNotify.mutate(contract.id)}
-              disabled={sendNotify.isPending || !contract.customer_phone}
-            >
-              <Send size={14} />
-              {sendNotify.isPending ? '발송 중...' : '알림톡 발송'}
-            </Button>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Image size={16} className="text-neutral-600" />
+                <p className="text-sm font-semibold text-neutral-700">계약서 이미지</p>
+              </div>
+              <a
+                href={contract.image_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+              >
+                열람 <ExternalLink size={12} />
+              </a>
+            </div>
           </Card>
         )}
 
-        {/* 다음 단계: 판매 등록 CTA */}
-        {(contract.status === 'signed' || contract.status === 'sent') && !contract.offline_sale_id && (
-          <Card className="border-green-200 bg-green-50/50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Receipt size={18} className="text-green-600" />
-                <div>
-                  <p className="text-sm font-semibold text-green-700">판매 등록</p>
-                  <p className="text-xs text-neutral-500">계약 완료 → 판매를 등록합니다</p>
-                </div>
+        {/* 다음 단계: 판매 전환 */}
+        {(contract.status === 'signed' || contract.status === 'sent' || contract.status === 'draft') && !contract.offline_sale_id && (
+          <Card className="border-neutral-200">
+            <div className="flex items-center gap-2 mb-3">
+              <Receipt size={18} className="text-neutral-700" />
+              <div>
+                <p className="text-sm font-semibold text-neutral-800">판매 전환</p>
+                <p className="text-xs text-neutral-500">이 계약을 판매로 등록합니다</p>
               </div>
+            </div>
+            <div className="flex gap-2">
               <Button
+                variant="secondary"
                 size="sm"
                 onClick={() => router.push(`/sales/new?customer_name=${encodeURIComponent(contract.customer_name)}&customer_phone=${encodeURIComponent(contract.customer_phone || '')}&contract_id=${contract.id}`)}
               >
-                등록하기
+                판매 전환
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  // TODO: 알림톡 템플릿 등록 후 활성화
+                  toast('알림톡 템플릿 준비 중입니다', { icon: '🔧' });
+                }}
+              >
+                <Send size={14} />
+                판매 전환 + 알림톡
               </Button>
             </div>
           </Card>

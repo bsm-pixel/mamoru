@@ -93,6 +93,11 @@ export async function POST(req: NextRequest) {
         customer_title: contract.customer_title || null,
         shop_name: contract.shop_name || null,
         shop_address: contract.shop_address || null,
+        // 필기 + 상담 연결
+        consultation_id: contract.consultation_id || null,
+        handwriting_name: contract.handwriting_name || null,
+        handwriting_phone: contract.handwriting_phone || null,
+        handwriting_address: contract.handwriting_address || null,
         created_by: user.id,
       })
       .select()

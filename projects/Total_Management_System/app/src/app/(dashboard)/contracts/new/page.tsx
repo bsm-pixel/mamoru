@@ -1,24 +1,26 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import { SignatureCanvas } from '@/components/contracts/signature-canvas';
+import { HandwritingField } from '@/components/contracts/handwriting-field';
 import { ProductPickerModal } from '@/components/contracts/product-picker-modal';
+import { TodayConsultationPicker } from '@/components/contracts/today-consultation-picker';
 import { useCreateContract } from '@/hooks/use-contracts';
 import { formatKRW } from '@/lib/utils/format';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Users } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 
-/* ── 제품 행 ────────────────────────── */
+/* -- 제품 행 -- */
 interface ProductRow {
   id: string;
   product: Product | null;
   quantity: number;
 }
 
-/* ── 법적 문구 (종이 계약서 원문) ────── */
+/* -- 법적 문구 -- */
 const LEGAL_NOTICE = `마모루는 도움을 드리는 회사입니다.
 
 저희는 판매목적의 영리목적이 아니라고 생각하며
@@ -39,40 +41,73 @@ const CAUTION_NOTICE = `제품수령일 기준 5일 이내 제품 교환 및 반
 export default function NewContractPage() {
   const router = useRouter();
   const createContract = useCreateContract();
+  const contractRef = useRef<HTMLDivElement>(null);
 
-  /* ── 매장 정보 ── */
+  /* -- 고객 정보 (DB 저장용 텍스트) -- */
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [customerId, setCustomerId] = useState<string | null>(null);
+  const [consultationId, setConsultationId] = useState<string | null>(null);
+
+  /* -- 필기 데이터 (base64) -- */
+  const [hwName, setHwName] = useState('');
+  const [hwPhone, setHwPhone] = useState('');
+  const [hwAddress, setHwAddress] = useState('');
+
+  /* -- 매장 정보 -- */
   const [shopName, setShopName] = useState('');
-  const [shopAddress, setShopAddress] = useState('');
 
-  /* ── 제품 ── */
+  /* -- 상담자 불러오기 모달 -- */
+  const [consultPickerOpen, setConsultPickerOpen] = useState(false);
+
+  /* -- 제품 -- */
   const [rows, setRows] = useState<ProductRow[]>([{ id: crypto.randomUUID(), product: null, quantity: 1 }]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
 
-  /* ── 결제 ── */
+  /* -- 결제 -- */
   const [paymentMethod, setPaymentMethod] = useState('transfer');
   const [installment, setInstallment] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [depositAmount, setDepositAmount] = useState(0);
   const [memo, setMemo] = useState('');
 
-  /* ── 서명 ── */
+  /* -- 서명 -- */
   const [buyerSignature, setBuyerSignature] = useState('');
   const [sellerSignature, setSellerSignature] = useState('');
 
-  /* ── 계산 ── */
+  /* -- 계산 -- */
   const totalAmount = useMemo(() =>
     rows.reduce((s, r) => s + (r.product?.price || 0) * r.quantity, 0), [rows]);
   const finalAmount = totalAmount - discount;
   const balanceAmount = Math.max(0, finalAmount - depositAmount);
 
-  /* ── 날짜 ── */
+  /* -- 날짜 -- */
   const today = new Date();
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, '0');
   const dd = String(today.getDate()).padStart(2, '0');
 
-  /* ── 제품 모달 ── */
+  /* -- 상담자 불러오기 -- */
+  function handleConsultationSelect(consultation: {
+    id: string;
+    customer_id: string | null;
+    name: string;
+    phone: string;
+    address_road: string | null;
+    address_detail: string | null;
+  }) {
+    setCustomerName(consultation.name);
+    setCustomerPhone(consultation.phone);
+    const addr = [consultation.address_road, consultation.address_detail].filter(Boolean).join(' ');
+    setCustomerAddress(addr);
+    setCustomerId(consultation.customer_id);
+    setConsultationId(consultation.id);
+    setConsultPickerOpen(false);
+  }
+
+  /* -- 제품 모달 -- */
   function openPicker(rowId: string) {
     setActiveRowId(rowId);
     setPickerOpen(true);
@@ -97,15 +132,18 @@ export default function NewContractPage() {
     setRows((prev) => prev.map((r) => r.id === rowId ? { ...r, quantity: Math.max(1, qty) } : r));
   }
 
-  /* ── 제출 ── */
+  /* -- 제출 -- */
   async function handleSubmit() {
     const filledRows = rows.filter((r) => r.product);
     if (filledRows.length === 0) return;
+    const name = customerName.trim() || '미입력';
 
-    await createContract.mutateAsync({
+    const result = await createContract.mutateAsync({
       contract: {
-        customer_name: shopName.trim() || '미입력',
-        customer_address: shopAddress.trim() || undefined,
+        customer_id: customerId || undefined,
+        customer_name: name,
+        customer_phone: customerPhone.trim() || undefined,
+        customer_address: customerAddress.trim() || undefined,
         total_amount: totalAmount,
         discount_amount: discount,
         final_amount: finalAmount,
@@ -118,7 +156,11 @@ export default function NewContractPage() {
         balance_amount: balanceAmount,
         seller_signature: sellerSignature || undefined,
         shop_name: shopName.trim() || undefined,
-        shop_address: shopAddress.trim() || undefined,
+        shop_address: customerAddress.trim() || undefined,
+        consultation_id: consultationId || undefined,
+        handwriting_name: hwName || undefined,
+        handwriting_phone: hwPhone || undefined,
+        handwriting_address: hwAddress || undefined,
       },
       items: filledRows.map((r) => ({
         product_id: r.product!.id,
@@ -130,12 +172,32 @@ export default function NewContractPage() {
       })),
     });
 
+    // 계약서 이미지 캡처 + Storage 업로드 (실패해도 저장은 완료)
+    if (contractRef.current && result?.contract?.id) {
+      try {
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(contractRef.current, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        });
+        const imageBase64 = canvas.toDataURL('image/png');
+        await fetch(`/api/contracts/${result.contract.id}/image`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64 }),
+        });
+      } catch (e) {
+        console.error('[contract image capture] failed:', e);
+      }
+    }
+
     router.push('/contracts');
   }
 
   const canSubmit = rows.some((r) => r.product) && !createContract.isPending;
 
-  /* ── 입력 스타일 ── */
+  /* -- 입력 스타일 -- */
   const inputClass = 'border-0 border-b border-neutral-300 bg-transparent px-1 py-1 text-sm focus:outline-none focus:border-neutral-800 w-full';
 
   return (
@@ -143,16 +205,28 @@ export default function NewContractPage() {
       <Topbar title="계약서 작성" />
 
       <div className="px-3 py-4">
-        <div className="bg-white max-w-[600px] mx-auto border border-neutral-400 rounded-sm shadow-sm">
+        <div ref={contractRef} className="bg-white max-w-[600px] mx-auto border border-neutral-400 rounded-sm shadow-sm">
 
-          {/* ── 헤더 ── */}
+          {/* -- 헤더 -- */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-400">
             <span className="text-sm font-bold tracking-wider text-neutral-800">MAMORU</span>
             <h2 className="text-base font-extrabold tracking-[0.3em] text-neutral-900">구 매 계 약 서</h2>
           </div>
 
-          {/* ── 매장 정보 ── */}
-          <div className="px-5 py-4 border-b border-neutral-300 space-y-2">
+          {/* -- 상담자 불러오기 + 매장명 -- */}
+          <div className="px-5 py-4 border-b border-neutral-300 space-y-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setConsultPickerOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-100 border border-neutral-200 text-xs font-semibold text-neutral-700 hover:bg-neutral-200 transition"
+              >
+                <Users size={14} />
+                상담자 불러오기
+              </button>
+              {consultationId && (
+                <span className="text-[10px] text-green-600 font-medium">상담 연결됨</span>
+              )}
+            </div>
             <div>
               <label className="text-[10px] text-neutral-500">매장명</label>
               <input
@@ -163,19 +237,32 @@ export default function NewContractPage() {
                 className={inputClass}
               />
             </div>
-            <div>
-              <label className="text-[10px] text-neutral-500">매장주소 (수령지주소)</label>
-              <input
-                type="text"
-                value={shopAddress}
-                onChange={(e) => setShopAddress(e.target.value)}
-                placeholder="주소"
-                className={inputClass}
-              />
-            </div>
           </div>
 
-          {/* ── 필독 (유의사항) ── */}
+          {/* -- 고객 필기 영역 (성함 / 연락처 / 주소) -- */}
+          <div className="px-5 py-4 border-b border-neutral-300 space-y-3">
+            <p className="text-[10px] text-neutral-400 mb-1">고객님이 직접 작성해주세요</p>
+            <HandwritingField
+              label="성함"
+              placeholder={customerName || undefined}
+              height={50}
+              onDraw={setHwName}
+            />
+            <HandwritingField
+              label="연락처"
+              placeholder={customerPhone || undefined}
+              height={50}
+              onDraw={setHwPhone}
+            />
+            <HandwritingField
+              label="주소 (수령지)"
+              placeholder={customerAddress || undefined}
+              height={60}
+              onDraw={setHwAddress}
+            />
+          </div>
+
+          {/* -- 필독 (유의사항) -- */}
           <div className="px-5 py-4 border-b border-neutral-300 bg-neutral-50">
             <p className="text-xs font-bold text-neutral-700 mb-2 text-center">※ 필독 ※</p>
             <p className="text-[11px] text-neutral-600 leading-relaxed whitespace-pre-line">{LEGAL_NOTICE}</p>
@@ -185,7 +272,7 @@ export default function NewContractPage() {
             </div>
           </div>
 
-          {/* ── 결제방식 ── */}
+          {/* -- 결제방식 -- */}
           <div className="px-5 py-4 border-b border-neutral-300 space-y-3">
             <p className="text-xs font-bold text-neutral-700">결제방식</p>
             <div className="flex flex-wrap gap-3">
@@ -267,7 +354,7 @@ export default function NewContractPage() {
             </div>
           </div>
 
-          {/* ── 제품 테이블 ── */}
+          {/* -- 제품 테이블 -- */}
           <div className="px-5 py-4 border-b border-neutral-300">
             <table className="w-full border-collapse text-sm">
               <thead>
@@ -322,7 +409,7 @@ export default function NewContractPage() {
 
             <button
               onClick={addRow}
-              className="flex items-center gap-1.5 mt-3 text-xs text-neutral-500 hover:text-terracotta transition"
+              className="flex items-center gap-1.5 mt-3 text-xs text-neutral-500 hover:text-neutral-800 transition"
             >
               <Plus size={14} />
               제품 추가
@@ -338,7 +425,7 @@ export default function NewContractPage() {
             )}
           </div>
 
-          {/* ── 날짜 + 서명 ── */}
+          {/* -- 날짜 + 서명 -- */}
           <div className="px-5 py-4 border-b border-neutral-300 space-y-4">
             <p className="text-center text-sm text-neutral-800 tracking-widest">
               {yyyy} 년 {mm} 월 {dd} 일
@@ -356,7 +443,7 @@ export default function NewContractPage() {
             </div>
           </div>
 
-          {/* ── 계좌 안내 ── */}
+          {/* -- 계좌 안내 -- */}
           <div className="px-5 py-3 bg-neutral-50 text-center">
             <p className="text-[11px] text-neutral-600">
               입금 계좌: <span className="font-semibold">우리은행 1002-439-462514 (백성민)</span>
@@ -364,7 +451,7 @@ export default function NewContractPage() {
           </div>
         </div>
 
-        {/* ── 저장 버튼 ── */}
+        {/* -- 저장 버튼 -- */}
         <div className="max-w-[600px] mx-auto mt-4 pb-8">
           <Button
             className="w-full"
@@ -380,6 +467,12 @@ export default function NewContractPage() {
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         onSelect={handleProductSelect}
+      />
+
+      <TodayConsultationPicker
+        open={consultPickerOpen}
+        onClose={() => setConsultPickerOpen(false)}
+        onSelect={handleConsultationSelect}
       />
     </>
   );

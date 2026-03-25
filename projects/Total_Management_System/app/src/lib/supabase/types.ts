@@ -623,6 +623,10 @@ export interface Database {
           customer_title: string | null;
           shop_name: string | null;
           shop_address: string | null;
+          consultation_id: string | null;
+          handwriting_name: string | null;
+          handwriting_phone: string | null;
+          handwriting_address: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -652,6 +656,10 @@ export interface Database {
           customer_title?: string | null;
           shop_name?: string | null;
           shop_address?: string | null;
+          consultation_id?: string | null;
+          handwriting_name?: string | null;
+          handwriting_phone?: string | null;
+          handwriting_address?: string | null;
           created_by?: string | null;
         };
         Update: {
@@ -681,6 +689,10 @@ export interface Database {
           customer_title?: string | null;
           shop_name?: string | null;
           shop_address?: string | null;
+          consultation_id?: string | null;
+          handwriting_name?: string | null;
+          handwriting_phone?: string | null;
+          handwriting_address?: string | null;
         };
       };
       contract_items: {
