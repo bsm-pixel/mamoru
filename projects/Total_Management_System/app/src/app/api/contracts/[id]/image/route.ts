@@ -25,11 +25,11 @@ export async function POST(
 
     const fileName = `contracts/${id}.png`;
 
-    // Supabase Storage 업로드 (public 버킷)
+    // Supabase Storage 업로드 (contracts 버킷)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const { error: uploadError } = await db.storage
-      .from('public')
+      .from('contracts')
       .upload(fileName, buffer, {
         contentType: 'image/png',
         upsert: true,
@@ -38,7 +38,7 @@ export async function POST(
     if (uploadError) throw uploadError;
 
     // Public URL
-    const { data: urlData } = db.storage.from('public').getPublicUrl(fileName);
+    const { data: urlData } = db.storage.from('contracts').getPublicUrl(fileName);
     const imageUrl = urlData?.publicUrl || '';
 
     // contracts.image_url 업데이트
