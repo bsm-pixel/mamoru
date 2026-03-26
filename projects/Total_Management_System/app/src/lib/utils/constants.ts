@@ -28,7 +28,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     group: '상담',
     items: [
-      { label: '상담관리', href: '/consultations/dashboard', icon: 'MessageSquare', matchPrefix: '/consultations' },
+      { label: '상담관리', href: '/consultations', icon: 'MessageSquare', matchPrefix: '/consultations' },
       { label: '복원수리', href: '/repairs/dashboard', icon: 'Wrench', matchPrefix: '/repairs' },
     ],
   },

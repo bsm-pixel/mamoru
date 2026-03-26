@@ -5,13 +5,14 @@ import dynamic from 'next/dynamic';
 import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import { useConsultationSync, useConsultations } from '@/hooks/use-consultations';
+import { useConsultationDashboardStats } from '@/hooks/use-dashboard-stats';
 import { StoreVisitList } from '@/components/consultations/store-visit-list';
 import { FieldRequestList } from '@/components/consultations/field-request-list';
 import { TalkConsultList } from '@/components/consultations/talk-consult-list';
 import { ScheduleCalendar } from '@/components/consultations/schedule-calendar';
 import { ConsultationDetailPanel } from '@/components/consultations/consultation-detail-panel';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { RefreshCw, Store, Truck, MessageCircle } from 'lucide-react';
+import { RefreshCw, Store, Truck, MessageCircle, Inbox, Loader, CheckCircle } from 'lucide-react';
 
 // 카카오맵은 SSR 불가 → dynamic import
 const FieldRequestMap = dynamic(
@@ -49,19 +50,47 @@ export default function ConsultationsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const sync = useConsultationSync();
   const needAction = useNeedActionCounts();
+  const { data: stats } = useConsultationDashboardStats();
 
   return (
     <>
       <Topbar title="상담관리" />
 
       <div className="px-4 md:px-6 py-4 space-y-4">
-        {/* 상단: 동기화 버튼 */}
-        <div className="flex items-center justify-between">
+        {/* 상단: 요약 카드 + 동기화 버튼 */}
+        <div className="flex items-center gap-3">
+          <div className="flex gap-2 flex-1 min-w-0">
+            <button
+              onClick={() => setActiveTab('field_request')}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 transition min-w-0"
+            >
+              <Inbox size={14} className="text-blue-600 shrink-0" />
+              <span className="text-xs text-neutral-500">신규</span>
+              <span className="text-sm font-bold text-blue-700">{stats?.newIntake || 0}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('field_request')}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 transition min-w-0"
+            >
+              <Loader size={14} className="text-amber-600 shrink-0" />
+              <span className="text-xs text-neutral-500">진행</span>
+              <span className="text-sm font-bold text-amber-700">{stats?.inProgress || 0}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('store_visit')}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 hover:bg-green-100 transition min-w-0"
+            >
+              <CheckCircle size={14} className="text-green-600 shrink-0" />
+              <span className="text-xs text-neutral-500">완료</span>
+              <span className="text-sm font-bold text-green-700">{stats?.completedMonth || 0}</span>
+            </button>
+          </div>
           <Button
             variant="secondary"
             size="sm"
             onClick={() => sync.mutate()}
             disabled={sync.isPending}
+            className="shrink-0"
           >
             <RefreshCw size={14} className={sync.isPending ? 'animate-spin' : ''} />
             {sync.isPending ? '새로고침 중...' : '새로고침'}
