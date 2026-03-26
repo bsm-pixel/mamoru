@@ -12,7 +12,7 @@ import { TalkConsultList } from '@/components/consultations/talk-consult-list';
 import { ScheduleCalendar } from '@/components/consultations/schedule-calendar';
 import { ConsultationDetailPanel } from '@/components/consultations/consultation-detail-panel';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { RefreshCw, Store, Truck, MessageCircle, Inbox, Loader, CheckCircle } from 'lucide-react';
+import { RefreshCw, Store, Truck, MessageCircle, Inbox, Loader, CheckCircle, MapPin } from 'lucide-react';
 
 // 카카오맵은 SSR 불가 → dynamic import
 const FieldRequestMap = dynamic(
@@ -44,10 +44,17 @@ function useNeedActionCounts() {
 }
 
 
+// 서브탭 → 지도 activeStatuses 매핑
+const SUB_TAB_STATUSES: Record<string, string[] | undefined> = {
+  action_needed: ['pending_admin', 'suggested', 'reschedule_requested', 'change_requested'],
+  confirmed: ['confirmed'],
+};
+
 export default function ConsultationsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('store_visit');
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [fieldSubTab, setFieldSubTab] = useState<string>('action_needed');
   const sync = useConsultationSync();
   const needAction = useNeedActionCounts();
   const { data: stats } = useConsultationDashboardStats();
@@ -120,57 +127,101 @@ export default function ConsultationsPage() {
           ))}
         </div>
 
-        {/* R2: 메인 콘텐츠 — 탭별 사이드바 분기 */}
-        <div className="flex gap-6">
-          {/* 좌측: 탭 콘텐츠 */}
-          <div className="flex-1 min-w-0">
-            {activeTab === 'store_visit' && <StoreVisitList onSelect={setSelectedId} />}
-            {activeTab === 'field_request' && (
-              <>
-                {/* 모바일: 리스트 상단 접이식 지도 */}
-                <div className="lg:hidden mb-4">
-                  <FieldRequestMap
-                    selectedFieldId={selectedFieldId}
-                    onFieldSelect={setSelectedFieldId}
-                    onSelect={setSelectedId}
-                  />
-                </div>
-                <FieldRequestList
-                  selectedFieldId={selectedFieldId}
-                  onFieldSelect={setSelectedFieldId}
-                  onSelect={setSelectedId}
-                />
-              </>
-            )}
-            {activeTab === 'talk_consult' && <TalkConsultList onSelect={setSelectedId} />}
-          </div>
-
-          {/* R2: 우측 사이드바 — 출장 탭 = 지도 400px, 매장/톡 탭 = 달력 340px */}
-          {activeTab === 'field_request' ? (
-            <div className="hidden lg:block w-[400px] shrink-0">
-              <div className="sticky top-16">
+        {/* 메인 콘텐츠 — 출장 탭 PC: 3열 / 기타: 2열 */}
+        {activeTab === 'field_request' ? (
+          <>
+            {/* 모바일: 기존 레이아웃 (리스트 + 슬라이드 패널) */}
+            <div className="lg:hidden">
+              <div className="mb-4">
                 <FieldRequestMap
                   selectedFieldId={selectedFieldId}
                   onFieldSelect={setSelectedFieldId}
                   onSelect={setSelectedId}
+                  activeStatuses={SUB_TAB_STATUSES[fieldSubTab]}
                 />
               </div>
+              <FieldRequestList
+                selectedFieldId={selectedFieldId}
+                onFieldSelect={setSelectedFieldId}
+                onSelect={setSelectedId}
+                onSubTabChange={setFieldSubTab}
+              />
             </div>
-          ) : activeTab !== 'talk_consult' ? (
-            <div className="hidden lg:block w-[340px] shrink-0">
-              <ScheduleCalendar />
-            </div>
-          ) : null}
-        </div>
 
-        {/* 상담 상세 슬라이드 패널 */}
-        <SlidePanel
-          open={!!selectedId}
-          onClose={() => setSelectedId(null)}
-          title="상담 상세"
-        >
-          {selectedId && <ConsultationDetailPanel consultationId={selectedId} />}
-        </SlidePanel>
+            {/* PC: 3열 (리스트 | 지도 | 상세 모니터) */}
+            <div className="hidden lg:flex gap-4 h-[calc(100vh-220px)]">
+              {/* 1열: 리스트 */}
+              <div className="w-[340px] shrink-0 overflow-y-auto">
+                <FieldRequestList
+                  selectedFieldId={selectedFieldId}
+                  onFieldSelect={setSelectedFieldId}
+                  onSelect={setSelectedId}
+                  onSubTabChange={setFieldSubTab}
+                />
+              </div>
+
+              {/* 2열: 지도 */}
+              <div className="flex-1 min-w-0">
+                <div className="sticky top-16 h-[calc(100vh-220px)]">
+                  <FieldRequestMap
+                    selectedFieldId={selectedFieldId}
+                    onFieldSelect={setSelectedFieldId}
+                    onSelect={setSelectedId}
+                    activeStatuses={SUB_TAB_STATUSES[fieldSubTab]}
+                  />
+                </div>
+              </div>
+
+              {/* 3열: 상세 모니터 */}
+              <div className="w-[320px] shrink-0 overflow-y-auto">
+                {selectedId ? (
+                  <ConsultationDetailPanel consultationId={selectedId} />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-60 text-neutral-400">
+                    <MapPin size={28} className="mb-2 opacity-40" />
+                    <p className="text-xs text-center">지도 마커 또는<br />리스트를 클릭하세요</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 모바일 슬라이드 패널 (출장 탭) */}
+            <SlidePanel
+              open={!!selectedId}
+              onClose={() => setSelectedId(null)}
+              title="상담 상세"
+              className="lg:hidden"
+            >
+              {selectedId && <ConsultationDetailPanel consultationId={selectedId} />}
+            </SlidePanel>
+          </>
+        ) : (
+          <div className="flex gap-6">
+            {/* 좌측: 탭 콘텐츠 */}
+            <div className="flex-1 min-w-0">
+              {activeTab === 'store_visit' && <StoreVisitList onSelect={setSelectedId} />}
+              {activeTab === 'talk_consult' && <TalkConsultList onSelect={setSelectedId} />}
+            </div>
+
+            {/* 우측 사이드바 — 매장 탭 = 달력, 톡 탭 = 없음 */}
+            {activeTab !== 'talk_consult' && (
+              <div className="hidden lg:block w-[340px] shrink-0">
+                <ScheduleCalendar />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 상담 상세 슬라이드 패널 (매장/톡 탭용) */}
+        {activeTab !== 'field_request' && (
+          <SlidePanel
+            open={!!selectedId}
+            onClose={() => setSelectedId(null)}
+            title="상담 상세"
+          >
+            {selectedId && <ConsultationDetailPanel consultationId={selectedId} />}
+          </SlidePanel>
+        )}
       </div>
     </>
   );

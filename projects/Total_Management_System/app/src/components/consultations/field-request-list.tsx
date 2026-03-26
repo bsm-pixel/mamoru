@@ -45,9 +45,10 @@ interface Props {
   selectedFieldId?: string | null;
   onFieldSelect?: (id: string | null) => void;
   onSelect?: (id: string) => void;  // 상세 패널 열기
+  onSubTabChange?: (tab: string) => void; // 서브탭 변경 → 지도 연동
 }
 
-export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: Props) {
+export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onSubTabChange }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<TabKey>('action_needed');
   const [search, setSearch] = useState('');
@@ -202,7 +203,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: P
         {TABS.map((t) => (
           <button
             key={t.key}
-            onClick={() => { setTab(t.key); setPage(1); }}
+            onClick={() => { setTab(t.key); setPage(1); onSubTabChange?.(t.key); }}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
               tab === t.key
                 ? 'bg-terracotta text-cream'

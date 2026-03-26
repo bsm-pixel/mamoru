@@ -20,11 +20,14 @@ const PIN_CONFIG: Record<string, { color: string; icon: string }> = {
 };
 const DEFAULT_PIN = { color: '#6B7280', icon: '?' };
 
-/** 드롭핀 SVG (36x48) — 상태별 색상 + 아이콘 */
-function createPinSVG(status: string): string {
+/** 드롭핀 SVG — 상태별 색상 + 아이콘, dimmed 시 축소+반투명 */
+function createPinSVG(status: string, dimmed = false): string {
   const { color, icon } = PIN_CONFIG[status] || DEFAULT_PIN;
+  const w = dimmed ? 24 : 36;
+  const h = dimmed ? 32 : 48;
+  const opacity = dimmed ? 0.4 : 1;
   return `data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="48" viewBox="0 0 36 48">
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 36 48" opacity="${opacity}">
       <filter id="s"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.3"/></filter>
       <path d="M18 47C18 47 33 30 33 18A15 15 0 0 0 3 18C3 30 18 47 18 47Z" fill="${color}" stroke="white" stroke-width="2" filter="url(#s)"/>
       <circle cx="18" cy="18" r="9" fill="white" opacity="0.95"/>
@@ -37,9 +40,10 @@ interface FieldRequestMapProps {
   selectedFieldId?: string | null;             // R2: 양방향 연동 — 리스트에서 선택된 ID
   onFieldSelect?: (id: string | null) => void; // R2: 지도→리스트 연동
   onSelect?: (id: string) => void;             // 마커 클릭 → 상세 패널 열기
+  activeStatuses?: string[];                   // 탭 연동 — 해당 상태만 강조, 나머지 희미
 }
 
-export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect }: FieldRequestMapProps = {}) {
+export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect, activeStatuses }: FieldRequestMapProps = {}) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<KakaoMap | null>(null);
@@ -99,10 +103,13 @@ export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect }: Fi
       const pos = new kakao.maps.LatLng(c.latitude!, c.longitude!);
       bounds.extend(pos);
 
+      const dimmed = activeStatuses ? !activeStatuses.includes(c.status) : false;
+      const pinSize = dimmed ? 24 : 36;
+      const pinHeight = dimmed ? 32 : 48;
       const markerImage = new kakao.maps.MarkerImage(
-        createPinSVG(c.status),
-        new kakao.maps.Size(36, 48),
-        { offset: new kakao.maps.Point(18, 48) } // 핀 꼭지점이 좌표에 정확히 위치
+        createPinSVG(c.status, dimmed),
+        new kakao.maps.Size(pinSize, pinHeight),
+        { offset: new kakao.maps.Point(pinSize / 2, pinHeight) }
       );
 
       const marker = new kakao.maps.Marker({
@@ -135,7 +142,7 @@ export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect }: Fi
     if (consultations.length > 1) {
       map.setBounds(bounds);
     }
-  }, [sdkReady, consultations, router]);
+  }, [sdkReady, consultations, router, activeStatuses]);
 
   if (sdkError) {
     return (
@@ -150,20 +157,40 @@ export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect }: Fi
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-80 md:h-[480px] rounded-xl border border-neutral-200 overflow-hidden"
-    />
+    <div className="relative">
+      <div
+        ref={containerRef}
+        className="w-full h-80 md:h-[480px] lg:h-full rounded-xl border border-neutral-200 overflow-hidden"
+      />
+      {/* 범례 */}
+      <div className="absolute bottom-2 left-2 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/90 backdrop-blur-sm shadow-sm text-[10px] text-neutral-600">
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#EAB308]" />신규</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#F97316]" />제안</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#3B82F6]" />확정</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#9CA3AF]" />보류</span>
+      </div>
+    </div>
   );
 }
 
 function buildOverlayHTML(c: Consultation): string {
+  const raw = (c as any).gas_raw;
+  const days = (raw?.days as string)?.split(',').filter(Boolean) || [];
+  const times = (raw?.timePrefs as string)?.split(',').filter(Boolean) || [];
+  const prefHtml = (days.length || times.length) ? `
+    <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px;">
+      ${days.map(d => `<span style="padding:1px 5px;border-radius:4px;background:#EFF6FF;color:#2563EB;font-size:10px;font-weight:600;">${escapeHtml(d)}</span>`).join('')}
+      ${times.map(t => `<span style="padding:1px 5px;border-radius:4px;background:#FFFBEB;color:#D97706;font-size:10px;font-weight:600;">${escapeHtml(t)}</span>`).join('')}
+    </div>
+  ` : '';
+
   return `
-    <div style="background:white;border-radius:12px;padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,.15);min-width:200px;font-family:inherit;">
+    <div style="background:white;border-radius:12px;padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,.15);min-width:200px;max-width:260px;font-family:inherit;">
       <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${escapeHtml(c.name)}</div>
       <div style="font-size:12px;color:#666;margin-bottom:2px;">${escapeHtml(formatPhone(c.phone))}</div>
       <div style="font-size:12px;color:#666;margin-bottom:2px;">${escapeHtml(c.address_road || '')}</div>
-      <div style="font-size:11px;color:#999;margin-bottom:8px;">${CONSULTATION_STATUS_LABEL[c.status] || c.status}</div>
+      <div style="font-size:11px;color:#999;margin-bottom:6px;">${CONSULTATION_STATUS_LABEL[c.status] || c.status}</div>
+      ${prefHtml}
       <button onclick="window.__mamoruOpenDetail&&window.__mamoruOpenDetail('${c.id}')" style="font-size:12px;color:#C75B3F;text-decoration:none;font-weight:600;background:none;border:none;cursor:pointer;padding:0;">
         상세보기 &rarr;
       </button>
