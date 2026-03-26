@@ -87,12 +87,19 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
           </div>
         ) : (
           <div className="divide-y divide-neutral-100">
-            {consultations.map((c) => (
-              <div key={c.id} className="px-4 py-3 hover:bg-warm-ivory/60 transition">
+            {consultations.map((c) => {
+              const isCancelled = c.status === 'cancelled';
+              const isCompleted = c.status === 'completed';
+              return (
+              <div key={c.id} className={`px-4 py-3 hover:bg-warm-ivory/60 transition ${
+                isCancelled ? 'opacity-60 bg-neutral-50 border-l-2 border-l-neutral-300'
+                : isCompleted ? 'border-l-2 border-l-green-400'
+                : ''
+              }`}>
                 <div className="cursor-pointer" onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}>
                   <div className="flex items-center gap-2">
-                    <MessageCircle size={14} className="text-info shrink-0" />
-                    <span className="text-sm font-semibold text-indigo-black truncate">{c.name}</span>
+                    <MessageCircle size={14} className={isCancelled ? 'text-neutral-400 shrink-0' : 'text-info shrink-0'} />
+                    <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{c.name}</span>
                     <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
                       {tab === 'action_needed' ? formatRelative(c.received_at) : (CONSULTATION_STATUS_LABEL[c.status] || c.status)}
                     </Badge>
@@ -105,9 +112,9 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
                     <p className="mt-1 text-xs text-neutral-500 truncate">{c.memo}</p>
                   )}
                 </div>
-                {/* #3: 인라인 액션 제거 — 클릭 시 슬라이드 패널에서 처리 */}
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Card>

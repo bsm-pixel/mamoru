@@ -70,12 +70,17 @@ export function StoreVisitList({ onSelect }: { onSelect?: (id: string) => void }
 
   const renderRow = (c: Consultation) => {
     const dday = formatDday(c.visit_date);
+    const isCancelled = c.status === 'cancelled';
+    const isCompleted = c.status === 'completed';
 
     return (
       <div
         key={c.id}
         className={`flex items-center gap-3 px-4 py-3 hover:bg-warm-ivory/60 transition ${
-          dday.isToday ? 'bg-terracotta/5 border-l-2 border-l-terracotta' : ''
+          isCancelled ? 'opacity-60 bg-neutral-50 border-l-2 border-l-neutral-300'
+          : isCompleted ? 'border-l-2 border-l-green-400'
+          : dday.isToday ? 'bg-terracotta/5 border-l-2 border-l-terracotta'
+          : ''
         }`}
       >
         <div
@@ -83,7 +88,7 @@ export function StoreVisitList({ onSelect }: { onSelect?: (id: string) => void }
           onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}
         >
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-indigo-black truncate">{c.name}</span>
+            <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{c.name}</span>
             {tab === 'past' && (
               <Badge className={CONSULTATION_STATUS_COLOR[c.status] || 'bg-neutral-100 text-neutral-600'}>
                 {CONSULTATION_STATUS_LABEL[c.status] || c.status}
@@ -109,7 +114,6 @@ export function StoreVisitList({ onSelect }: { onSelect?: (id: string) => void }
             )}
           </div>
         </div>
-        {/* #3: 인라인 액션 제거 — 클릭 시 슬라이드 패널에서 처리 */}
       </div>
     );
   };

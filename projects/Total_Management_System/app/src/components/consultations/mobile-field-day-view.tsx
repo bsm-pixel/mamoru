@@ -28,7 +28,11 @@ function dayLabel(dateStr: string): string {
   return `${d.getMonth() + 1}/${d.getDate()} (${dayNames[d.getDay()]})`;
 }
 
-export function MobileFieldDayView() {
+interface MobileFieldDayViewProps {
+  onSelect?: (id: string) => void;
+}
+
+export function MobileFieldDayView({ onSelect }: MobileFieldDayViewProps = {}) {
   const today = toDateStr(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -50,10 +54,12 @@ export function MobileFieldDayView() {
     return dates;
   }, []);
 
-  // 선택 날짜에 해당하는 건 필터
+  // 선택 날짜에 해당하는 건 필터 + 시간순 정렬
   const dayConsultations = useMemo(() => {
     if (!data?.consultations) return [];
-    return data.consultations.filter((c) => c.visit_date === selectedDate);
+    return data.consultations
+      .filter((c) => c.visit_date === selectedDate)
+      .sort((a, b) => (a.visit_time || '99:99').localeCompare(b.visit_time || '99:99'));
   }, [data, selectedDate]);
 
   const handleNavigation = (c: Consultation) => {
@@ -111,21 +117,30 @@ export function MobileFieldDayView() {
           </div>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
           {dayConsultations.map((c) => (
             <Card key={c.id}>
-              <div className="flex items-start justify-between">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-indigo-black">{c.name}</span>
-                    {c.visit_time && (
-                      <Badge variant="info">{c.visit_time}</Badge>
-                    )}
+              <div
+                className={onSelect ? 'cursor-pointer' : ''}
+                onClick={() => onSelect?.(c.id)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-indigo-black">{c.name}</span>
+                      {c.visit_time && (
+                        <Badge variant="info">{c.visit_time}</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-neutral-500 mt-1">
+                      <a href={`tel:${c.phone}`} onClick={(e) => e.stopPropagation()} className="hover:text-blue-600">
+                        {formatPhone(c.phone)}
+                      </a>
+                    </p>
+                    <p className="text-xs text-neutral-500 mt-0.5 truncate">
+                      {c.address_road} {c.address_detail}
+                    </p>
                   </div>
-                  <p className="text-xs text-neutral-500 mt-1">{formatPhone(c.phone)}</p>
-                  <p className="text-xs text-neutral-500 mt-0.5 truncate">
-                    {c.address_road} {c.address_detail}
-                  </p>
                 </div>
               </div>
               <div className="flex gap-2 mt-3">
