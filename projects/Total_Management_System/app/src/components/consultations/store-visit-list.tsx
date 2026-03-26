@@ -28,9 +28,9 @@ const TABS: { key: TabKey; label: string }[] = [
 function getTabFilters(tab: TabKey) {
   switch (tab) {
     case 'confirmed':
-      return { status: 'confirmed', orderBy: 'visit_date_asc' };
+      return { status: 'confirmed', dateFilter: 'upcoming' as const, orderBy: 'visit_date_asc' };
     case 'past':
-      return { statuses: ['completed', 'cancelled'], orderBy: 'updated_at_desc' };
+      return { statuses: ['completed', 'cancelled', 'confirmed'], dateFilter: 'past' as const, orderBy: 'updated_at_desc' };
   }
 }
 
