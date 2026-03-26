@@ -150,10 +150,10 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              {/* 우측: 현황 카드 세로 */}
-              <div className="w-full lg:w-96 shrink-0 space-y-3">
+              {/* 우측: 현황 카드 2열 그리드 */}
+              <div className="w-full lg:w-[520px] shrink-0 space-y-3">
                 <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">현황 요약</h3>
-
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <HubCategoryCard
                   title="주문"
                   icon={ShoppingCart}
@@ -200,6 +200,7 @@ export default function DashboardPage() {
                   summary={stats ? `이번달 ${fmtKRW(stats.sales.monthAmount)}` : ''}
                 />
 
+                </div>
                 {/* 저재고 알림 */}
                 {lowStock && lowStock.length > 0 && (
                   <Card>
