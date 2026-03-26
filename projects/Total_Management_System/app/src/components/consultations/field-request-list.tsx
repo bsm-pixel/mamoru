@@ -58,7 +58,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
   const [showRegionFilter, setShowRegionFilter] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
-  // 오늘 출장 건수 확인 → 기본 탭 결정
+  // 기본 탭 결정용 건수 확인
   const today = new Date().toISOString().slice(0, 10);
   const { data: todayCheck } = useConsultations({
     status: 'confirmed',
@@ -67,14 +67,22 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
   });
   const todayCount = todayCheck?.consultations?.filter(c => c.visit_date === today).length || 0;
 
-  // 최초 로드 시 오늘 출장이 있으면 today 탭으로 전환
+  const { data: actionCheck } = useConsultations({
+    statuses: ['suggested', 'reschedule_requested', 'change_requested'],
+    type: 'field_request',
+    limit: 1,
+  });
+  const actionCount = actionCheck?.total || 0;
+
+  // 최초 로드 시 우선순위: 대응필요 > 오늘출장 > 신규접수
   const [initialTabSet, setInitialTabSet] = useState(false);
   useEffect(() => {
-    if (!initialTabSet && todayCheck) {
-      if (todayCount > 0) setTab('today');
+    if (!initialTabSet && todayCheck && actionCheck) {
+      if (actionCount > 0) { setTab('action_needed'); onSubTabChange?.('action_needed'); }
+      else if (todayCount > 0) { setTab('today'); onSubTabChange?.('today'); }
       setInitialTabSet(true);
     }
-  }, [todayCheck, todayCount, initialTabSet]);
+  }, [todayCheck, actionCheck, todayCount, actionCount, initialTabSet]);
 
   const tabFilters = getTabFilters(tab);
   const { data, isLoading } = useConsultations({
@@ -230,6 +238,14 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
           >
             {t.key === 'today' && <CalendarCheck size={12} />}
             {t.label}
+            {/* 대응필요 건수 뱃지 */}
+            {t.key === 'action_needed' && actionCount > 0 && (
+              <span className={`ml-0.5 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full text-[10px] font-bold leading-none ${
+                tab === 'action_needed' ? 'bg-cream/30 text-cream' : 'bg-red-500 text-white'
+              }`}>
+                {actionCount}
+              </span>
+            )}
             {/* 오늘출장 건수 뱃지 */}
             {t.key === 'today' && todayCount > 0 && (
               <span className={`ml-0.5 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full text-[10px] font-bold leading-none ${
