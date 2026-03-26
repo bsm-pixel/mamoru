@@ -549,10 +549,9 @@
         '</div>';
     }
 
-    /* ── Fire & Forget ── */
+    /* ── Fire & Forget (fetch만 사용 — Image 중복 제거) ── */
     function fireAndForget(url) {
       try { fetch(url, { mode: 'no-cors', keepalive: true }); } catch(_){}
-      try { new Image().src = url; } catch(_){}
     }
 
     /* ── 카카오 인앱 닫기 ── */

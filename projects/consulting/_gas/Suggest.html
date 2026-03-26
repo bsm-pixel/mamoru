@@ -143,7 +143,6 @@
 
     function fireAndForget(url) {
       try { fetch(url, { mode: 'no-cors', keepalive: true }); } catch(_) {}
-      try { new Image().src = url; } catch(_) {}
     }
 
     function closeInapp() {
