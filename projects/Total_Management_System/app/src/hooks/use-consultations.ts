@@ -63,7 +63,10 @@ export function useConsultations(filters?: {
       }
 
       const { data, count, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error('[useConsultations] 쿼리 에러:', error.message, '필터:', filters);
+        throw error;
+      }
       return { consultations: (data || []) as Consultation[], total: count || 0 };
     },
   });

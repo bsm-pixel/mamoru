@@ -141,26 +141,28 @@ export default function ConsultationsPage() {
         {/* 메인 콘텐츠 — 출장 탭 PC: 3열 / 기타: 2열 */}
         {activeTab === 'field_request' ? (
           <>
-            {/* 모바일: 기존 레이아웃 (리스트 + 슬라이드 패널) */}
-            <div className="lg:hidden">
-              <div className="mb-4">
-                <FieldRequestMap
+            {/* 모바일: 기존 레이아웃 — PC에서는 렌더링하지 않음 */}
+            {!isLg && (
+              <div>
+                <div className="mb-4">
+                  <FieldRequestMap
+                    selectedFieldId={selectedFieldId}
+                    onFieldSelect={setSelectedFieldId}
+                    onSelect={setSelectedId}
+                    activeStatuses={SUB_TAB_STATUSES[fieldSubTab]}
+                  />
+                </div>
+                <FieldRequestList
                   selectedFieldId={selectedFieldId}
                   onFieldSelect={setSelectedFieldId}
                   onSelect={setSelectedId}
-                  activeStatuses={SUB_TAB_STATUSES[fieldSubTab]}
+                  onSubTabChange={setFieldSubTab}
                 />
               </div>
-              <FieldRequestList
-                selectedFieldId={selectedFieldId}
-                onFieldSelect={setSelectedFieldId}
-                onSelect={setSelectedId}
-                onSubTabChange={setFieldSubTab}
-              />
-            </div>
+            )}
 
             {/* PC: 3열 (리스트 | 지도 | 상세 모니터) */}
-            <div className="hidden lg:flex gap-4 h-[calc(100vh-220px)]">
+            {isLg && <div className="flex gap-4 h-[calc(100vh-220px)]">
               {/* 1열: 리스트 */}
               <div className="w-[400px] shrink-0 overflow-y-auto">
                 <FieldRequestList
@@ -192,7 +194,7 @@ export default function ConsultationsPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </div>}
 
             {/* 모바일 전용 슬라이드 패널 (PC에서는 3열 우측에 직접 표시) */}
             {!isLg && (
