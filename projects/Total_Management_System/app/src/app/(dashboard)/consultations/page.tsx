@@ -162,7 +162,7 @@ export default function ConsultationsPage() {
             {/* PC: 3열 (리스트 | 지도 | 상세 모니터) */}
             <div className="hidden lg:flex gap-4 h-[calc(100vh-220px)]">
               {/* 1열: 리스트 */}
-              <div className="w-[340px] shrink-0 overflow-y-auto">
+              <div className="w-[360px] shrink-0 overflow-y-auto">
                 <FieldRequestList
                   selectedFieldId={selectedFieldId}
                   onFieldSelect={setSelectedFieldId}
@@ -182,7 +182,7 @@ export default function ConsultationsPage() {
               </div>
 
               {/* 3열: 상세 모니터 */}
-              <div className="w-[320px] shrink-0 overflow-y-auto">
+              <div className="w-[340px] shrink-0 overflow-y-auto">
                 {selectedId ? (
                   <ConsultationDetailPanel consultationId={selectedId} />
                 ) : (

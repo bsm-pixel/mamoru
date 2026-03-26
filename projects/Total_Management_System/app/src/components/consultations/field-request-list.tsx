@@ -87,12 +87,19 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
 
-  // 지역 그룹핑 (대응필요 탭에서만)
+  // 지역 그룹핑 (신규접수/대응필요 탭)
   const regionGroups = useMemo(() => {
     if (!groupByRegion || (tab !== 'action_needed' && tab !== 'new_intake')) return null;
     const map = new Map<string, Consultation[]>();
     for (const c of consultations) {
-      const region = (c as any).address_sigungu || '지역 미분류';
+      // address_sigungu 우선, 없으면 address_road에서 시/군/구 추출
+      let region = (c as any).address_sigungu;
+      if (!region && c.address_road) {
+        // "서울특별시 강남구 ..." → "강남구" / "경기도 수원시 ..." → "수원시"
+        const match = c.address_road.match(/(?:시|도)\s+(\S+[시군구])/);
+        region = match?.[1] || null;
+      }
+      region = region || '지역 미분류';
       if (!map.has(region)) map.set(region, []);
       map.get(region)!.push(c);
     }

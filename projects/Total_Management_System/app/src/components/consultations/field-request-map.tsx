@@ -49,6 +49,7 @@ export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect, acti
   const mapRef = useRef<KakaoMap | null>(null);
   const markersRef = useRef<KakaoMarker[]>([]);
   const overlaysRef = useRef<KakaoOverlay[]>([]);
+  const boundsSetRef = useRef(false); // setBounds 최초 1회만
   const [sdkReady, setSdkReady] = useState(false);
   const [sdkError, setSdkError] = useState<string | null>(null);
 
@@ -139,9 +140,10 @@ export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect, acti
       overlaysRef.current.push(overlay);
     });
 
-    // 모든 마커가 보이도록 범위 설정
-    if (consultations.length > 1) {
+    // 최초 로드 시에만 전체 범위 설정 (이후 마커 클릭 시 뷰 유지)
+    if (!boundsSetRef.current && consultations.length > 1) {
       map.setBounds(bounds);
+      boundsSetRef.current = true;
     }
   }, [sdkReady, consultations, router, activeStatuses]);
 
