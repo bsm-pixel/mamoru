@@ -161,15 +161,13 @@ export default function ConsultationsPage() {
               </div>
 
               {/* 2열: 지도 */}
-              <div className="flex-1 min-w-0">
-                <div className="sticky top-16 h-[calc(100vh-220px)]">
-                  <FieldRequestMap
-                    selectedFieldId={selectedFieldId}
-                    onFieldSelect={setSelectedFieldId}
-                    onSelect={setSelectedId}
-                    activeStatuses={SUB_TAB_STATUSES[fieldSubTab]}
-                  />
-                </div>
+              <div className="flex-1 min-w-0 h-full">
+                <FieldRequestMap
+                  selectedFieldId={selectedFieldId}
+                  onFieldSelect={setSelectedFieldId}
+                  onSelect={setSelectedId}
+                  activeStatuses={SUB_TAB_STATUSES[fieldSubTab]}
+                />
               </div>
 
               {/* 3열: 상세 모니터 */}

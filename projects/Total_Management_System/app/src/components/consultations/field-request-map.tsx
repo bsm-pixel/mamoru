@@ -157,10 +157,10 @@ export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect, acti
   }
 
   return (
-    <div className="relative">
+    <div className="relative h-80 md:h-[480px] lg:h-full">
       <div
         ref={containerRef}
-        className="w-full h-80 md:h-[480px] lg:h-full rounded-xl border border-neutral-200 overflow-hidden"
+        className="w-full h-full rounded-xl border border-neutral-200 overflow-hidden"
       />
       {/* 범례 */}
       <div className="absolute bottom-2 left-2 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/90 backdrop-blur-sm shadow-sm text-[10px] text-neutral-600">
