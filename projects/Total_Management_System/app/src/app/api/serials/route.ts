@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { randomBytes } from 'crypto';
 
 /** POST /api/serials — 시리얼 단건 등록 */
 export async function POST(req: NextRequest) {
@@ -17,7 +18,8 @@ export async function POST(req: NextRequest) {
       .insert({
         product_id: body.product_id,
         serial_number: body.serial_number,
-        barcode: body.barcode || null,
+        barcode: body.barcode || body.serial_number,
+        verify_token: randomBytes(6).toString('hex'),
         lot_number: body.lot_number || null,
         manufactured_at: body.manufactured_at || null,
         memo: body.memo || null,

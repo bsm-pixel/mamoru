@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { randomBytes } from 'crypto';
 
-/** 혼동 문자 제외 랜덤 4자리 생성 (0/O, 1/I/L 제외) */
-function generateRandomSuffix(): string {
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  return Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+/** verify_token 생성 — 12자리 hex (URL-safe, 추측 불가) */
+function generateVerifyToken(): string {
+  return randomBytes(6).toString('hex'); // 6바이트 = 12자리 hex
 }
 
-/** POST /api/serials/batch — 시리얼 일괄 생성 (랜덤 4자리) */
+/**
+ * POST /api/serials/batch — 시리얼 일괄 생성
+ *
+ * body: { product_id, count, start_number, lot_number? }
+ * - start_number: 시작 번호 (이지캐드 연번과 동일하게 입력)
+ * - 포맷: 순차 8자리 숫자 (예: 13792241, 13792242, ...)
+ */
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
@@ -16,10 +22,10 @@ export async function POST(req: NextRequest) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
-    const { product_id, count, prefix, lot_number } = await req.json() as {
+    const { product_id, count, start_number, lot_number } = await req.json() as {
       product_id: string;
       count: number;
-      prefix?: string;
+      start_number: number;
       lot_number?: string;
     };
 
@@ -27,50 +33,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '1~100개 범위로 입력해주세요' }, { status: 400 });
     }
 
-    // 제품 SKU 조회
-    const { data: product } = await db
-      .from('products')
-      .select('sku')
-      .eq('id', product_id)
-      .single();
-
-    const sku = product?.sku || 'XX';
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const basePrefix = prefix || `MM-${sku}-${dateStr}`;
-
-    // 랜덤 4자리 시리얼 생성 (중복 방지)
-    const usedSuffixes = new Set<string>();
-    const serials = [];
-
-    for (let i = 0; i < count; i++) {
-      let suffix: string;
-      let serialNumber: string;
-      let attempts = 0;
-      do {
-        suffix = generateRandomSuffix();
-        serialNumber = `${basePrefix}-${suffix}`;
-        attempts++;
-        if (attempts > 100) throw new Error('시리얼 생성 실패: 중복 초과');
-      } while (usedSuffixes.has(suffix));
-      usedSuffixes.add(suffix);
-
-      serials.push({
-        product_id,
-        serial_number: serialNumber,
-        barcode: serialNumber, // QR 출력용 barcode 자동 채움
-        lot_number: lot_number || null,
-        created_by: user.id,
-      });
+    if (!start_number || start_number < 1) {
+      return NextResponse.json({ error: '시작 번호를 입력해주세요' }, { status: 400 });
     }
 
-    // DB UNIQUE 제약이 최종 안전장치
+    // 순차 시리얼 생성
+    const serials = Array.from({ length: count }, (_, i) => {
+      const serialNumber = String(start_number + i).padStart(8, '0');
+      return {
+        product_id,
+        serial_number: serialNumber,
+        barcode: serialNumber,
+        verify_token: generateVerifyToken(),
+        lot_number: lot_number || null,
+        created_by: user.id,
+      };
+    });
+
+    // DB UNIQUE 제약이 최종 안전장치 (serial_number, barcode, verify_token 모두 UNIQUE)
     const { error } = await db
       .from('product_serials')
       .insert(serials);
 
     if (error) throw error;
 
-    return NextResponse.json({ created: count, prefix: basePrefix });
+    const startStr = String(start_number).padStart(8, '0');
+    const endStr = String(start_number + count - 1).padStart(8, '0');
+
+    return NextResponse.json({
+      created: count,
+      range: `${startStr} ~ ${endStr}`,
+      start_number,
+    });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
