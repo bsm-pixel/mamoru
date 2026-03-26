@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,7 @@ import {
   CONSULTATION_STATUS_LABEL,
   CONSULTATION_STATUS_COLOR,
 } from '@/lib/utils/format';
-import { MapPin, Search, ChevronLeft, ChevronRight, Navigation, CalendarCheck } from 'lucide-react';
+import { MapPin, Search, ChevronLeft, ChevronRight, Navigation, CalendarCheck, LayoutGrid } from 'lucide-react';
 import { MobileFieldDayView } from './mobile-field-day-view';
 import type { Consultation } from '@/lib/supabase/types';
 
@@ -52,6 +52,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: P
   const [tab, setTab] = useState<TabKey>('action_needed');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [groupByRegion, setGroupByRegion] = useState(false);
 
   // 오늘 출장 건수 확인 → 기본 탭 결정
   const today = new Date().toISOString().slice(0, 10);
@@ -82,6 +83,19 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: P
   const consultations = data?.consultations || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
+
+  // 지역 그룹핑 (대응필요 탭에서만)
+  const regionGroups = useMemo(() => {
+    if (!groupByRegion || tab !== 'action_needed') return null;
+    const map = new Map<string, Consultation[]>();
+    for (const c of consultations) {
+      const region = (c as any).address_sigungu || '지역 미분류';
+      if (!map.has(region)) map.set(region, []);
+      map.get(region)!.push(c);
+    }
+    return Array.from(map, ([region, items]) => ({ region, items }))
+      .sort((a, b) => b.items.length - a.items.length);
+  }, [groupByRegion, tab, consultations]);
 
   const renderRow = (c: Consultation) => {
     const dday = formatDday(c.visit_date);
@@ -144,6 +158,24 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: P
               </a>
             </div>
           )}
+          {/* 대응필요: 가능요일/선호시간대 칩 */}
+          {tab === 'action_needed' && (() => {
+            const raw = (c as any).gas_raw;
+            const days = (raw?.days as string)?.split(',').filter(Boolean) || [];
+            const times = (raw?.timePrefs as string)?.split(',').filter(Boolean) || [];
+            if (days.length === 0 && times.length === 0) return null;
+            return (
+              <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                {days.map(d => (
+                  <span key={d} className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[10px] font-medium">{d}</span>
+                ))}
+                {times.length > 0 && days.length > 0 && <span className="text-neutral-300 text-[10px]">·</span>}
+                {times.map(t => (
+                  <span key={t} className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 text-[10px] font-medium">{t}</span>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </div>
     );
@@ -192,6 +224,21 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: P
         {tab !== 'today' && <span className="ml-auto text-xs text-neutral-500 shrink-0">{total}건</span>}
       </div>
 
+      {/* 대응필요 탭: 지역별 보기 토글 */}
+      {tab === 'action_needed' && consultations.length > 0 && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setGroupByRegion(!groupByRegion)}
+            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition ${
+              groupByRegion ? 'bg-terracotta/10 text-terracotta' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+            }`}
+          >
+            <LayoutGrid size={12} />
+            지역별 보기
+          </button>
+        </div>
+      )}
+
       {/* 오늘출장 탭: MobileFieldDayView 렌더링 */}
       {tab === 'today' ? (
         <MobileFieldDayView onSelect={onSelect} />
@@ -208,6 +255,21 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect }: P
             ) : consultations.length === 0 ? (
               <div className="flex items-center justify-center h-32 text-sm text-neutral-400">
                 {tab === 'past' ? '지난 출장 내역이 없습니다' : '해당 출장요청이 없습니다'}
+              </div>
+            ) : regionGroups ? (
+              <div>
+                {regionGroups.map((group) => (
+                  <div key={group.region}>
+                    <div className="px-4 py-2 bg-warm-ivory/80 text-xs font-bold text-neutral-600 sticky top-0 flex items-center gap-1.5">
+                      <MapPin size={12} className="text-terracotta" />
+                      {group.region}
+                      <span className="font-normal text-neutral-400">{group.items.length}건</span>
+                    </div>
+                    <div className="divide-y divide-neutral-100">
+                      {group.items.map(renderRow)}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="divide-y divide-neutral-100">

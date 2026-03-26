@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useConsultation, useUpdateConsultationStatus } from '@/hooks/use-consultations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SuggestTimeModal } from './suggest-time-modal';
 import { formatPhone, formatDate, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
 import { Calendar, MapPin, Phone, User, Clock, FileSignature } from 'lucide-react';
 import Link from 'next/link';
@@ -32,6 +34,7 @@ interface Props {
 export function ConsultationDetailPanel({ consultationId }: Props) {
   const { data, isLoading } = useConsultation(consultationId);
   const updateStatus = useUpdateConsultationStatus();
+  const [suggestModalOpen, setSuggestModalOpen] = useState(false);
 
   if (isLoading) {
     return <div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /><Skeleton className="h-20" /></div>;
@@ -90,6 +93,34 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
         )}
       </div>
 
+      {/* 출장: 가능요일/선호시간대 */}
+      {c.consultation_type === 'field_request' && (() => {
+        const raw = c.gas_raw as any;
+        const prefDays = (raw?.days as string)?.split(',').filter(Boolean) || [];
+        const prefTimes = (raw?.timePrefs as string)?.split(',').filter(Boolean) || [];
+        if (prefDays.length === 0 && prefTimes.length === 0) return null;
+        return (
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            {prefDays.length > 0 && (
+              <>
+                <span className="text-neutral-500 font-medium">가능요일:</span>
+                {prefDays.map(d => (
+                  <span key={d} className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">{d}</span>
+                ))}
+              </>
+            )}
+            {prefTimes.length > 0 && (
+              <>
+                <span className="text-neutral-500 font-medium ml-1">시간대:</span>
+                {prefTimes.map(t => (
+                  <span key={t} className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 font-medium">{t}</span>
+                ))}
+              </>
+            )}
+          </div>
+        );
+      })()}
+
       {/* 메모 */}
       {c.memo && (
         <div className="bg-white border border-neutral-200 rounded-lg p-3">
@@ -101,9 +132,10 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
       {/* 액션 버튼 — #3: 모든 액션을 패널 내부에 집중 */}
       {!['completed', 'cancelled'].includes(c.status) && (
         <div className="space-y-2 pt-2 border-t border-neutral-100">
-          {/* 출장: 신규/재요청 → 시간 제안 */}
+          {/* 출장: 신규/재요청 → 시간 제안 모달 */}
           {c.consultation_type === 'field_request' && ['pending_admin', 'reschedule_requested', 'change_requested'].includes(c.status) && (
-            <Button size="sm" className="w-full" onClick={() => handleStatus('suggested')} disabled={updateStatus.isPending}>
+            <Button size="sm" className="w-full" onClick={() => setSuggestModalOpen(true)} disabled={updateStatus.isPending}>
+              <Clock size={14} />
               시간 제안
             </Button>
           )}
@@ -165,6 +197,17 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* 시간 제안 모달 */}
+      {c.consultation_type === 'field_request' && (
+        <SuggestTimeModal
+          open={suggestModalOpen}
+          onClose={() => setSuggestModalOpen(false)}
+          consultationId={c.id}
+          prefDays={((c.gas_raw as any)?.days as string)?.split(',').filter(Boolean)}
+          prefTimes={((c.gas_raw as any)?.timePrefs as string)?.split(',').filter(Boolean)}
+        />
       )}
     </div>
   );

@@ -103,6 +103,7 @@ export default function ConsultationsPage() {
                   <FieldRequestMap
                     selectedFieldId={selectedFieldId}
                     onFieldSelect={setSelectedFieldId}
+                    onSelect={setSelectedId}
                   />
                 </div>
                 <FieldRequestList
@@ -122,6 +123,7 @@ export default function ConsultationsPage() {
                 <FieldRequestMap
                   selectedFieldId={selectedFieldId}
                   onFieldSelect={setSelectedFieldId}
+                  onSelect={setSelectedId}
                 />
               </div>
             </div>

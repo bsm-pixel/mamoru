@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { useSuggestTimes } from '@/hooks/use-consultations';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Info } from 'lucide-react';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   consultationId: string;
+  prefDays?: string[];    // 고객 가능요일 (예: ["월", "수", "금"])
+  prefTimes?: string[];   // 고객 선호시간대 (예: ["오전", "오후"])
 }
 
 interface TimeSlot {
@@ -17,7 +19,7 @@ interface TimeSlot {
   time: string;
 }
 
-export function SuggestTimeModal({ open, onClose, consultationId }: Props) {
+export function SuggestTimeModal({ open, onClose, consultationId, prefDays, prefTimes }: Props) {
   const [slots, setSlots] = useState<TimeSlot[]>([{ date: '', time: '' }]);
   const suggest = useSuggestTimes();
 
@@ -54,6 +56,31 @@ export function SuggestTimeModal({ open, onClose, consultationId }: Props) {
   return (
     <Modal open={open} onClose={onClose} title="시간 제안">
       <div className="space-y-4">
+        {/* 고객 가능요일/선호시간대 참고 */}
+        {((prefDays && prefDays.length > 0) || (prefTimes && prefTimes.length > 0)) && (
+          <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-50 text-xs text-blue-700">
+            <Info size={14} className="shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              {prefDays && prefDays.length > 0 && (
+                <div className="flex items-center gap-1 flex-wrap">
+                  <span className="font-semibold">가능요일:</span>
+                  {prefDays.map(d => (
+                    <span key={d} className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">{d}</span>
+                  ))}
+                </div>
+              )}
+              {prefTimes && prefTimes.length > 0 && (
+                <div className="flex items-center gap-1 flex-wrap">
+                  <span className="font-semibold">선호시간:</span>
+                  {prefTimes.map(t => (
+                    <span key={t} className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">{t}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {slots.map((slot, idx) => (
           <div key={idx} className="flex items-center gap-2">
             <input

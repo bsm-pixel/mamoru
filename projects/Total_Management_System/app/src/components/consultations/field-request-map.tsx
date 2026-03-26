@@ -36,9 +36,10 @@ function createPinSVG(status: string): string {
 interface FieldRequestMapProps {
   selectedFieldId?: string | null;             // R2: 양방향 연동 — 리스트에서 선택된 ID
   onFieldSelect?: (id: string | null) => void; // R2: 지도→리스트 연동
+  onSelect?: (id: string) => void;             // 마커 클릭 → 상세 패널 열기
 }
 
-export function FieldRequestMap({ selectedFieldId, onFieldSelect }: FieldRequestMapProps = {}) {
+export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect }: FieldRequestMapProps = {}) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<KakaoMap | null>(null);
@@ -59,6 +60,12 @@ export function FieldRequestMap({ selectedFieldId, onFieldSelect }: FieldRequest
       .then(() => setSdkReady(true))
       .catch((err) => setSdkError(String(err)));
   }, []);
+
+  // 전역 함수: 오버레이 "상세보기" 클릭 → 상세 패널 열기
+  useEffect(() => {
+    (window as any).__mamoruOpenDetail = (id: string) => onSelect?.(id);
+    return () => { delete (window as any).__mamoruOpenDetail; };
+  }, [onSelect]);
 
   // 지도 초기화 + 마커 렌더
   useEffect(() => {
@@ -157,9 +164,9 @@ function buildOverlayHTML(c: Consultation): string {
       <div style="font-size:12px;color:#666;margin-bottom:2px;">${escapeHtml(formatPhone(c.phone))}</div>
       <div style="font-size:12px;color:#666;margin-bottom:2px;">${escapeHtml(c.address_road || '')}</div>
       <div style="font-size:11px;color:#999;margin-bottom:8px;">${CONSULTATION_STATUS_LABEL[c.status] || c.status}</div>
-      <a href="/consultations/${c.id}" style="font-size:12px;color:#C75B3F;text-decoration:none;font-weight:600;">
+      <button onclick="window.__mamoruOpenDetail&&window.__mamoruOpenDetail('${c.id}')" style="font-size:12px;color:#C75B3F;text-decoration:none;font-weight:600;background:none;border:none;cursor:pointer;padding:0;">
         상세보기 &rarr;
-      </a>
+      </button>
     </div>
   `;
 }
