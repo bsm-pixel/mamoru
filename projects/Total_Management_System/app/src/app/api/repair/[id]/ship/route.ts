@@ -28,7 +28,7 @@ export async function POST(
       return NextResponse.json({ error: '복원수리 건을 찾을 수 없습니다' }, { status: 404 });
     }
 
-    if (!['repairing', 'ready_to_ship'].includes(repair.status)) {
+    if (!['cost_notified', 'repairing', 'ready_to_ship'].includes(repair.status)) {
       return NextResponse.json({ error: `출고 불가 상태: ${repair.status}` }, { status: 400 });
     }
 
