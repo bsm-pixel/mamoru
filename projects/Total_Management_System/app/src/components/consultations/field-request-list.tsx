@@ -95,8 +95,8 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
       // address_sigungu 우선, 없으면 address_road에서 시/군/구 추출
       let region = (c as any).address_sigungu;
       if (!region && c.address_road) {
-        // "서울특별시 강남구 ..." → "강남구" / "경기도 수원시 ..." → "수원시"
-        const match = c.address_road.match(/(?:시|도)\s+(\S+[시군구])/);
+        // "서울특별시 강남구 ..." / "서울 강남구 ..." / "부산 해운대구 ..." 모두 매칭
+        const match = c.address_road.match(/^\S+\s+(\S+[시군구])/);
         region = match?.[1] || null;
       }
       region = region || '지역 미분류';

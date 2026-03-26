@@ -215,7 +215,7 @@ export default function ConsultationsPage() {
 
             {/* 우측 사이드바 — 매장 탭 = 달력, 톡 탭 = 없음 */}
             {activeTab !== 'talk_consult' && (
-              <div className="hidden lg:block w-[340px] shrink-0">
+              <div className="hidden lg:block w-[420px] shrink-0">
                 <ScheduleCalendar />
               </div>
             )}
