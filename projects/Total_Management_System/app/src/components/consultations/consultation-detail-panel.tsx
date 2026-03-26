@@ -121,13 +121,33 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
         );
       })()}
 
-      {/* 메모 */}
-      {c.memo && (
-        <div className="bg-white border border-neutral-200 rounded-lg p-3">
-          <p className="text-xs text-neutral-500 mb-1">메모</p>
-          <p className="text-sm">{c.memo}</p>
-        </div>
-      )}
+      {/* 메모 — 접수메모 / 재요청메모 분리 */}
+      {c.memo && (() => {
+        const lines = c.memo.split('\n');
+        const reRequestLines = lines.filter(l => l.includes('[고객 재요청'));
+        const originalLines = lines.filter(l => !l.includes('[고객 재요청'));
+        const originalMemo = originalLines.join('\n').trim();
+        const reRequestMemo = reRequestLines.map(l => l.replace(/^\d+\s*/, '').trim()).filter(Boolean);
+
+        return (
+          <div className="space-y-2">
+            {originalMemo && (
+              <div className="bg-white border border-neutral-200 rounded-lg p-3">
+                <p className="text-xs text-neutral-500 mb-1">접수 메모</p>
+                <p className="text-sm whitespace-pre-wrap">{originalMemo}</p>
+              </div>
+            )}
+            {reRequestMemo.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-xs text-amber-600 font-medium mb-1">재요청 메모</p>
+                {reRequestMemo.map((line, i) => (
+                  <p key={i} className="text-sm text-amber-800">{line}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* 액션 버튼 — #3: 모든 액션을 패널 내부에 집중 */}
       {!['completed', 'cancelled'].includes(c.status) && (

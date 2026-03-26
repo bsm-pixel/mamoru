@@ -47,7 +47,8 @@ function useNeedActionCounts() {
 // 서브탭 → 지도 activeStatuses 매핑
 const SUB_TAB_STATUSES: Record<string, string[] | undefined> = {
   new_intake: ['pending_admin'],
-  action_needed: ['suggested', 'reschedule_requested', 'change_requested'],
+  suggested: ['suggested'],
+  action_needed: ['reschedule_requested', 'change_requested'],
   confirmed: ['confirmed'],
 };
 
@@ -164,7 +165,7 @@ export default function ConsultationsPage() {
             {/* PC: 3열 (리스트 | 지도 | 상세 모니터) */}
             {isLg && <div className="flex gap-4 h-[calc(100vh-220px)]">
               {/* 1열: 리스트 */}
-              <div className="w-[400px] shrink-0 overflow-y-auto">
+              <div className="w-[480px] shrink-0 overflow-y-auto">
                 <FieldRequestList
                   selectedFieldId={selectedFieldId}
                   onFieldSelect={setSelectedFieldId}
@@ -207,32 +208,50 @@ export default function ConsultationsPage() {
               </SlidePanel>
             )}
           </>
-        ) : (
-          <div className="flex gap-6">
-            {/* 좌측: 탭 콘텐츠 */}
-            <div className="flex-1 min-w-0">
-              {activeTab === 'store_visit' && <StoreVisitList onSelect={setSelectedId} />}
-              {activeTab === 'talk_consult' && <TalkConsultList onSelect={setSelectedId} />}
-            </div>
-
-            {/* 우측 사이드바 — 매장 탭 = 달력, 톡 탭 = 없음 */}
-            {activeTab !== 'talk_consult' && (
-              <div className="hidden lg:block w-[420px] shrink-0">
-                <ScheduleCalendar />
+        ) : activeTab === 'store_visit' ? (
+          <>
+            {/* 매장방문 — 모바일: 리스트 + 슬라이드 패널 */}
+            {!isLg && (
+              <div>
+                <StoreVisitList onSelect={setSelectedId} />
               </div>
             )}
-          </div>
-        )}
 
-        {/* 상담 상세 슬라이드 패널 (매장/톡 탭용) */}
-        {activeTab !== 'field_request' && (
-          <SlidePanel
-            open={!!selectedId}
-            onClose={() => setSelectedId(null)}
-            title="상담 상세"
-          >
-            {selectedId && <ConsultationDetailPanel consultationId={selectedId} />}
-          </SlidePanel>
+            {/* 매장방문 — PC: 3열 (리스트 | 달력 | 상세모니터) */}
+            {isLg && <div className="flex gap-4 h-[calc(100vh-220px)]">
+              <div className="w-[400px] shrink-0 overflow-y-auto">
+                <StoreVisitList onSelect={setSelectedId} />
+              </div>
+              <div className="flex-1 min-w-0 overflow-y-auto">
+                <ScheduleCalendar onSelect={setSelectedId} />
+              </div>
+              <div className="w-[400px] shrink-0 overflow-y-auto">
+                {selectedId ? (
+                  <ConsultationDetailPanel consultationId={selectedId} />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-60 text-neutral-400">
+                    <Store size={28} className="mb-2 opacity-40" />
+                    <p className="text-xs text-center">목록 또는 달력에서<br />일정을 클릭하세요</p>
+                  </div>
+                )}
+              </div>
+            </div>}
+
+            {/* 매장방문 — 모바일 슬라이드 패널 */}
+            {!isLg && (
+              <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="상담 상세">
+                {selectedId && <ConsultationDetailPanel consultationId={selectedId} />}
+              </SlidePanel>
+            )}
+          </>
+        ) : (
+          /* 톡상담 — 기존 레이아웃 */
+          <div>
+            <TalkConsultList onSelect={setSelectedId} />
+            <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="상담 상세">
+              {selectedId && <ConsultationDetailPanel consultationId={selectedId} />}
+            </SlidePanel>
+          </div>
         )}
       </div>
     </>

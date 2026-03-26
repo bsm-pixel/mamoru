@@ -15,23 +15,34 @@ import {
 } from '@/lib/utils/format';
 import { Search, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 
-// #4: 2탭 (대응필요 / 지난내역)
-type TabKey = 'action_needed' | 'past';
+// 3탭: 신규접수 / 진행중 / 완료
+type TabKey = 'new_intake' | 'in_progress' | 'completed';
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'action_needed', label: '대응필요' },
-  { key: 'past', label: '지난내역' },
+  { key: 'new_intake', label: '신규접수' },
+  { key: 'in_progress', label: '진행중' },
+  { key: 'completed', label: '완료' },
 ];
+
+function getTabFilters(tab: TabKey) {
+  switch (tab) {
+    case 'new_intake':
+      return { status: 'pending_admin', orderBy: 'received_at_desc' as const };
+    case 'in_progress':
+      return { status: 'in_progress', orderBy: 'received_at_desc' as const };
+    case 'completed':
+      return { statuses: ['completed', 'cancelled'], orderBy: 'updated_at_desc' as const };
+  }
+}
 
 export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void } = {}) {
   const router = useRouter();
-  const [tab, setTab] = useState<TabKey>('action_needed');
+  const [tab, setTab] = useState<TabKey>('new_intake');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const tabFilters = getTabFilters(tab);
   const { data, isLoading } = useConsultations({
-    ...(tab === 'action_needed'
-      ? { statuses: ['pending_admin', 'in_progress'] }
-      : { statuses: ['completed', 'cancelled'], orderBy: 'updated_at_desc' }),
+    ...(tabFilters || {}),
     type: 'talk_consult',
     search,
     page,
@@ -83,7 +94,7 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
           </div>
         ) : consultations.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-neutral-400">
-            {tab === 'action_needed' ? '대응 필요한 톡상담이 없습니다' : '지난 내역이 없습니다'}
+            {tab === 'new_intake' ? '신규 톡상담이 없습니다' : tab === 'in_progress' ? '진행중인 톡상담이 없습니다' : '완료된 톡상담이 없습니다'}
           </div>
         ) : (
           <div className="divide-y divide-neutral-100">
@@ -101,12 +112,12 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
                     <MessageCircle size={14} className={isCancelled ? 'text-neutral-400 shrink-0' : 'text-info shrink-0'} />
                     <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{c.name}</span>
                     <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
-                      {tab === 'action_needed' ? formatRelative(c.received_at) : (CONSULTATION_STATUS_LABEL[c.status] || c.status)}
+                      {tab === 'new_intake' ? formatRelative(c.received_at) : (CONSULTATION_STATUS_LABEL[c.status] || c.status)}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
                     <span>{formatPhone(c.phone)}</span>
-                    {tab === 'past' && <span>{formatRelative(c.received_at)}</span>}
+                    {tab === 'completed' && <span>{formatRelative(c.received_at)}</span>}
                   </div>
                   {c.memo && (
                     <p className="mt-1 text-xs text-neutral-500 truncate">{c.memo}</p>

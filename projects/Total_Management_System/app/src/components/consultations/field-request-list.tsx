@@ -17,12 +17,13 @@ import { MapPin, Search, ChevronLeft, ChevronRight, Navigation, CalendarCheck, L
 import { MobileFieldDayView } from './mobile-field-day-view';
 import type { Consultation } from '@/lib/supabase/types';
 
-// 5탭: 오늘출장 | 신규접수 | 대응필요 | 확정 | 지난내역
-type TabKey = 'today' | 'new_intake' | 'action_needed' | 'confirmed' | 'past';
+// 6탭: 오늘출장 | 신규접수 | 제안중 | 일정재요청 | 확정 | 지난내역
+type TabKey = 'today' | 'new_intake' | 'suggested' | 'action_needed' | 'confirmed' | 'past';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'today', label: '오늘출장' },
   { key: 'new_intake', label: '신규접수' },
+  { key: 'suggested', label: '제안중' },
   { key: 'action_needed', label: '일정재요청' },
   { key: 'confirmed', label: '확정' },
   { key: 'past', label: '지난내역' },
@@ -34,8 +35,10 @@ function getTabFilters(tab: TabKey) {
       return null;
     case 'new_intake':
       return { status: 'pending_admin', orderBy: 'received_at_desc' as const };
+    case 'suggested':
+      return { status: 'suggested', orderBy: 'received_at_desc' as const };
     case 'action_needed':
-      return { statuses: ['suggested', 'reschedule_requested', 'change_requested'], orderBy: 'received_at_desc' as const };
+      return { statuses: ['reschedule_requested', 'change_requested'], orderBy: 'received_at_desc' as const };
     case 'confirmed':
       return { status: 'confirmed', dateFilter: 'upcoming' as const, orderBy: 'visit_date_asc' as const };
     case 'past':
@@ -68,13 +71,13 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
   const todayCount = todayCheck?.consultations?.filter(c => c.visit_date === today).length || 0;
 
   const { data: actionCheck } = useConsultations({
-    statuses: ['suggested', 'reschedule_requested', 'change_requested'],
+    statuses: ['reschedule_requested', 'change_requested'],
     type: 'field_request',
     limit: 1,
   });
   const actionCount = actionCheck?.total || 0;
 
-  // 최초 로드 시 우선순위: 대응필요 > 오늘출장 > 신규접수
+  // 최초 로드 시 우선순위: 일정재요청 > 오늘출장 > 신규접수
   const [initialTabSet, setInitialTabSet] = useState(false);
   useEffect(() => {
     if (!initialTabSet && todayCheck && actionCheck) {
@@ -210,21 +213,19 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
 
   return (
     <div className="space-y-4">
-      {/* 검색 — 오늘출장 탭에서는 숨김 (MobileFieldDayView가 자체 UI) */}
-      {tab !== 'today' && (
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="이름, 전화번호 검색"
+      {/* 검색 — 모든 탭에서 동일 위치 유지 */}
+      <div className="relative">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          placeholder="이름, 전화번호 검색"
             className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
           />
         </div>
-      )}
 
-      {/* 4탭 */}
+      {/* 6탭 */}
       <div className="flex items-center gap-1 overflow-x-auto pb-1">
         {TABS.map((t) => (
           <button

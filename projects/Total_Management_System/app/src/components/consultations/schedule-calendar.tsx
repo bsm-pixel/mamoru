@@ -31,7 +31,11 @@ function formatYYYYMMDD(year: number, month: number, day: number): string {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-export function ScheduleCalendar() {
+interface ScheduleCalendarProps {
+  onSelect?: (id: string) => void;
+}
+
+export function ScheduleCalendar({ onSelect }: ScheduleCalendarProps = {}) {
   const router = useRouter();
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
@@ -193,7 +197,7 @@ export function ScheduleCalendar() {
                 <div
                   key={c.id}
                   className="flex items-center gap-2 p-2 rounded-lg hover:bg-warm-ivory/60 cursor-pointer transition"
-                  onClick={() => router.push(`/consultations/${c.id}`)}
+                  onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}
                 >
                   {c.consultation_type === 'store_visit' ? (
                     <Store size={14} className="text-green-600 shrink-0" />
