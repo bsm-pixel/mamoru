@@ -37,20 +37,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '시작 번호를 입력해주세요' }, { status: 400 });
     }
 
-    // 순차 시리얼 생성
-    const serials = Array.from({ length: count }, (_, i) => {
-      const serialNumber = String(start_number + i).padStart(8, '0');
-      return {
-        product_id,
-        serial_number: serialNumber,
-        barcode: serialNumber,
-        verify_token: generateVerifyToken(),
-        lot_number: lot_number || null,
-        created_by: user.id,
-      };
-    });
+    // 생성할 시리얼 번호 목록
+    const serialNumbers = Array.from({ length: count }, (_, i) =>
+      String(start_number + i).padStart(8, '0')
+    );
 
-    // DB UNIQUE 제약이 최종 안전장치 (serial_number, barcode, verify_token 모두 UNIQUE)
+    // 중복 사전 체크
+    const { data: existing } = await db
+      .from('product_serials')
+      .select('serial_number')
+      .in('serial_number', serialNumbers);
+
+    if (existing && existing.length > 0) {
+      const duplicates = existing.map((e: { serial_number: string }) => e.serial_number);
+      return NextResponse.json({
+        error: `이미 존재하는 시리얼번호가 ${duplicates.length}개 있습니다: ${duplicates.join(', ')}`,
+        duplicates,
+      }, { status: 409 });
+    }
+
+    // 순차 시리얼 생성
+    const serials = serialNumbers.map((serialNumber) => ({
+      product_id,
+      serial_number: serialNumber,
+      barcode: serialNumber,
+      verify_token: generateVerifyToken(),
+      lot_number: lot_number || null,
+      created_by: user.id,
+    }));
+
     const { error } = await db
       .from('product_serials')
       .insert(serials);
