@@ -30,8 +30,8 @@ export default function DashboardPage() {
   if (stats) {
     if (stats.orders.payDone > 0) actions.push({ label: '주문 결제 확인 → 배송 준비', count: stats.orders.payDone, href: '/orders/dashboard', color: 'bg-blue-50 text-blue-700' });
     if (stats.orders.preparing > 0) actions.push({ label: '주문 준비 → 송장 생성', count: stats.orders.preparing, href: '/orders/dashboard', color: 'bg-orange-50 text-orange-700' });
-    if (stats.consultations.newIntake > 0) actions.push({ label: '신규 상담 접수 확인', count: stats.consultations.newIntake, href: '/consultations/dashboard', color: 'bg-yellow-50 text-yellow-700' });
-    if (stats.consultations.needAction > 0) actions.push({ label: '상담 대응 필요', count: stats.consultations.needAction, href: '/consultations/dashboard', color: 'bg-red-50 text-red-700' });
+    if (stats.consultations.newIntake > 0) actions.push({ label: '신규 상담 접수 확인', count: stats.consultations.newIntake, href: '/consultations', color: 'bg-yellow-50 text-yellow-700' });
+    if (stats.consultations.needAction > 0) actions.push({ label: '상담 일정 재요청', count: stats.consultations.needAction, href: '/consultations', color: 'bg-red-50 text-red-700' });
     if (stats.repairs.intakeNew > 0) actions.push({ label: '복원수리 신규 접수 확인', count: stats.repairs.intakeNew, href: '/repairs/dashboard', color: 'bg-blue-50 text-blue-700' });
     if (stats.repairs.readyToShip > 0) actions.push({ label: '복원수리 출고 대기', count: stats.repairs.readyToShip, href: '/repairs', color: 'bg-green-50 text-green-700' });
   }
@@ -170,11 +170,11 @@ export default function DashboardPage() {
                 <HubCategoryCard
                   title="상담"
                   icon={MessageSquare}
-                  href="/consultations/dashboard"
+                  href="/consultations"
                   stats={[
                     { label: '신규접수', value: stats?.consultations.newIntake || 0, color: 'text-warning' },
                     { label: '상담예정', value: stats?.consultations.confirmed || 0, color: 'text-info' },
-                    { label: '대응필요', value: stats?.consultations.needAction || 0, color: 'text-error' },
+                    { label: '일정재요청', value: stats?.consultations.needAction || 0, color: 'text-error' },
                   ]}
                 />
 
