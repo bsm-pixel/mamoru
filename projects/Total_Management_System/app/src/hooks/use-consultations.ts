@@ -42,10 +42,9 @@ export function useConsultations(filters?: {
       if (filters?.status && filters.status !== 'all') {
         query = query.eq('status', filters.status);
       }
-      // 복수 상태 필터 — or 조건으로 처리 (enum 타입 .in() 호환성 이슈 방지)
+      // 복수 상태 필터
       if (filters?.statuses && filters.statuses.length > 0) {
-        const orCondition = filters.statuses.map(s => `status.eq.${s}`).join(',');
-        query = query.or(orCondition);
+        query = query.filter('status', 'in', `(${filters.statuses.join(',')})`);
       }
       if (filters?.type && filters.type !== 'all') {
         query = query.eq('consultation_type', filters.type);

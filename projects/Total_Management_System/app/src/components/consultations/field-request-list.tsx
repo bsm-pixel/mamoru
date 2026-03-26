@@ -96,11 +96,6 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
 
-  // 디버그: 리스트 쿼리 결과 확인 (문제 해결 후 제거)
-  if (tab === 'action_needed') {
-    console.log('[일정재요청 탭] 필터:', tabFilters, '결과:', total, '건', consultations.map(c => ({ id: c.id, name: c.name, status: c.status })));
-  }
-
   // 지역 추출 헬퍼
   const getRegion = (c: Consultation): string => {
     let region = (c as any).address_sigungu;
@@ -234,7 +229,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
         {TABS.map((t) => (
           <button
             key={t.key}
-            onClick={() => { setTab(t.key); setPage(1); onSubTabChange?.(t.key); }}
+            onClick={() => { setTab(t.key); setPage(1); setSelectedRegion(null); onSubTabChange?.(t.key); }}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
               tab === t.key
                 ? 'bg-terracotta text-cream'
