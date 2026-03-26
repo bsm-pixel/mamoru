@@ -120,7 +120,7 @@ export default function ConsultationsPage() {
           {TABS.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => { setActiveTab(tab.key); setSelectedFieldId(null); }}
+              onClick={() => { setActiveTab(tab.key); setSelectedFieldId(null); setSelectedId(null); }}
               className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 transition relative ${
                 activeTab === tab.key
                   ? 'border-terracotta text-terracotta'
