@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
@@ -46,7 +46,8 @@ function useNeedActionCounts() {
 
 // 서브탭 → 지도 activeStatuses 매핑
 const SUB_TAB_STATUSES: Record<string, string[] | undefined> = {
-  action_needed: ['pending_admin', 'suggested', 'reschedule_requested', 'change_requested'],
+  new_intake: ['pending_admin'],
+  action_needed: ['suggested', 'reschedule_requested', 'change_requested'],
   confirmed: ['confirmed'],
 };
 
@@ -54,10 +55,20 @@ export default function ConsultationsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('store_visit');
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [fieldSubTab, setFieldSubTab] = useState<string>('action_needed');
+  const [fieldSubTab, setFieldSubTab] = useState<string>('new_intake');
   const sync = useConsultationSync();
   const needAction = useNeedActionCounts();
   const { data: stats } = useConsultationDashboardStats();
+
+  // PC 여부 감지 (lg:1024px+) — SlidePanel 조건부 렌더링용
+  const [isLg, setIsLg] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)');
+    setIsLg(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   return (
     <>
@@ -183,15 +194,16 @@ export default function ConsultationsPage() {
               </div>
             </div>
 
-            {/* 모바일 슬라이드 패널 (출장 탭) */}
-            <SlidePanel
-              open={!!selectedId}
-              onClose={() => setSelectedId(null)}
-              title="상담 상세"
-              className="lg:hidden"
-            >
-              {selectedId && <ConsultationDetailPanel consultationId={selectedId} />}
-            </SlidePanel>
+            {/* 모바일 전용 슬라이드 패널 (PC에서는 3열 우측에 직접 표시) */}
+            {!isLg && (
+              <SlidePanel
+                open={!!selectedId}
+                onClose={() => setSelectedId(null)}
+                title="상담 상세"
+              >
+                {selectedId && <ConsultationDetailPanel consultationId={selectedId} />}
+              </SlidePanel>
+            )}
           </>
         ) : (
           <div className="flex gap-6">

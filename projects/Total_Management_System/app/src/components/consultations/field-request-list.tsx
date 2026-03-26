@@ -17,11 +17,12 @@ import { MapPin, Search, ChevronLeft, ChevronRight, Navigation, CalendarCheck, L
 import { MobileFieldDayView } from './mobile-field-day-view';
 import type { Consultation } from '@/lib/supabase/types';
 
-// 4탭: 오늘출장 | 대응필요 | 확정 | 지난내역
-type TabKey = 'today' | 'action_needed' | 'confirmed' | 'past';
+// 5탭: 오늘출장 | 신규접수 | 대응필요 | 확정 | 지난내역
+type TabKey = 'today' | 'new_intake' | 'action_needed' | 'confirmed' | 'past';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'today', label: '오늘출장' },
+  { key: 'new_intake', label: '신규접수' },
   { key: 'action_needed', label: '대응필요' },
   { key: 'confirmed', label: '확정' },
   { key: 'past', label: '지난내역' },
@@ -30,10 +31,11 @@ const TABS: { key: TabKey; label: string }[] = [
 function getTabFilters(tab: TabKey) {
   switch (tab) {
     case 'today':
-      // today 탭은 MobileFieldDayView가 자체 데이터를 조회하므로 빈 필터
       return null;
+    case 'new_intake':
+      return { status: 'pending_admin', orderBy: 'received_at_desc' as const };
     case 'action_needed':
-      return { statuses: ['pending_admin', 'suggested', 'reschedule_requested', 'change_requested'], orderBy: 'received_at_desc' as const };
+      return { statuses: ['suggested', 'reschedule_requested', 'change_requested'], orderBy: 'received_at_desc' as const };
     case 'confirmed':
       return { status: 'confirmed', dateFilter: 'upcoming' as const, orderBy: 'visit_date_asc' as const };
     case 'past':
@@ -50,7 +52,7 @@ interface Props {
 
 export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onSubTabChange }: Props) {
   const router = useRouter();
-  const [tab, setTab] = useState<TabKey>('action_needed');
+  const [tab, setTab] = useState<TabKey>('new_intake');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [groupByRegion, setGroupByRegion] = useState(false);
@@ -87,7 +89,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
 
   // 지역 그룹핑 (대응필요 탭에서만)
   const regionGroups = useMemo(() => {
-    if (!groupByRegion || tab !== 'action_needed') return null;
+    if (!groupByRegion || (tab !== 'action_needed' && tab !== 'new_intake')) return null;
     const map = new Map<string, Consultation[]>();
     for (const c of consultations) {
       const region = (c as any).address_sigungu || '지역 미분류';
@@ -159,8 +161,8 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
               </a>
             </div>
           )}
-          {/* 대응필요: 가능요일/선호시간대 칩 */}
-          {tab === 'action_needed' && (() => {
+          {/* 신규접수/대응필요: 가능요일/선호시간대 칩 */}
+          {(tab === 'new_intake' || tab === 'action_needed') && (() => {
             const raw = (c as any).gas_raw;
             const days = (raw?.days as string)?.split(',').filter(Boolean) || [];
             const times = (raw?.timePrefs as string)?.split(',').filter(Boolean) || [];
@@ -226,7 +228,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
       </div>
 
       {/* 대응필요 탭: 지역별 보기 토글 */}
-      {tab === 'action_needed' && consultations.length > 0 && (
+      {(tab === 'new_intake' || tab === 'action_needed') && consultations.length > 0 && (
         <div className="flex justify-end">
           <button
             onClick={() => setGroupByRegion(!groupByRegion)}

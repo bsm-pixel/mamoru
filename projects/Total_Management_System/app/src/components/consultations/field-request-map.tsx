@@ -128,8 +128,9 @@ export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect, acti
         // 기존 오버레이 닫기
         overlaysRef.current.forEach((o) => o.setMap(null));
         overlay.setMap(map);
-        // R2: 양방향 연동 — 리스트 해당 카드 스크롤
+        // 양방향 연동 — 리스트 스크롤 + 우측 패널 즉시 열기
         onFieldSelect?.(c.id);
+        onSelect?.(c.id);
         const el = document.getElementById(`field-${c.id}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
