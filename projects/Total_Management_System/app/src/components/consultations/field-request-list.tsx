@@ -55,7 +55,8 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
   const [tab, setTab] = useState<TabKey>('new_intake');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [groupByRegion, setGroupByRegion] = useState(false);
+  const [showRegionFilter, setShowRegionFilter] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
   // 오늘 출장 건수 확인 → 기본 탭 결정
   const today = new Date().toISOString().slice(0, 10);
@@ -87,25 +88,33 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
 
-  // 지역 그룹핑 (신규접수/대응필요 탭)
-  const regionGroups = useMemo(() => {
-    if (!groupByRegion || (tab !== 'action_needed' && tab !== 'new_intake')) return null;
-    const map = new Map<string, Consultation[]>();
-    for (const c of consultations) {
-      // address_sigungu 우선, 없으면 address_road에서 시/군/구 추출
-      let region = (c as any).address_sigungu;
-      if (!region && c.address_road) {
-        // "서울특별시 강남구 ..." / "서울 강남구 ..." / "부산 해운대구 ..." 모두 매칭
-        const match = c.address_road.match(/^\S+\s+(\S+[시군구])/);
-        region = match?.[1] || null;
-      }
-      region = region || '지역 미분류';
-      if (!map.has(region)) map.set(region, []);
-      map.get(region)!.push(c);
+  // 지역 추출 헬퍼
+  const getRegion = (c: Consultation): string => {
+    let region = (c as any).address_sigungu;
+    if (!region && c.address_road) {
+      const match = c.address_road.match(/^\S+\s+(\S+[시군구])/);
+      region = match?.[1] || null;
     }
-    return Array.from(map, ([region, items]) => ({ region, items }))
-      .sort((a, b) => b.items.length - a.items.length);
-  }, [groupByRegion, tab, consultations]);
+    return region || '기타';
+  };
+
+  // 지역 칩 목록 (신규접수/대응필요 탭)
+  const regionChips = useMemo(() => {
+    if (!showRegionFilter || (tab !== 'action_needed' && tab !== 'new_intake')) return null;
+    const countMap = new Map<string, number>();
+    for (const c of consultations) {
+      const r = getRegion(c);
+      countMap.set(r, (countMap.get(r) || 0) + 1);
+    }
+    return Array.from(countMap, ([region, count]) => ({ region, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [showRegionFilter, tab, consultations]);
+
+  // 지역 필터 적용된 목록
+  const filteredConsultations = useMemo(() => {
+    if (!selectedRegion) return consultations;
+    return consultations.filter(c => getRegion(c) === selectedRegion);
+  }, [consultations, selectedRegion]);
 
   const renderRow = (c: Consultation) => {
     const dday = formatDday(c.visit_date);
@@ -234,18 +243,43 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
         {tab !== 'today' && <span className="ml-auto text-xs text-neutral-500 shrink-0">{total}건</span>}
       </div>
 
-      {/* 대응필요 탭: 지역별 보기 토글 */}
+      {/* 지역 필터 토글 + 칩 */}
       {(tab === 'new_intake' || tab === 'action_needed') && consultations.length > 0 && (
-        <div className="flex justify-end">
-          <button
-            onClick={() => setGroupByRegion(!groupByRegion)}
-            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition ${
-              groupByRegion ? 'bg-terracotta/10 text-terracotta' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
-            }`}
-          >
-            <LayoutGrid size={12} />
-            지역별 보기
-          </button>
+        <div className="space-y-2">
+          <div className="flex justify-end">
+            <button
+              onClick={() => { setShowRegionFilter(!showRegionFilter); setSelectedRegion(null); }}
+              className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition ${
+                showRegionFilter ? 'bg-terracotta/10 text-terracotta' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+              }`}
+            >
+              <LayoutGrid size={12} />
+              지역별 보기
+            </button>
+          </div>
+          {regionChips && regionChips.length > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+              <button
+                onClick={() => setSelectedRegion(null)}
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold transition ${
+                  !selectedRegion ? 'bg-terracotta text-cream' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                }`}
+              >
+                전체 {consultations.length}
+              </button>
+              {regionChips.map(({ region, count }) => (
+                <button
+                  key={region}
+                  onClick={() => setSelectedRegion(selectedRegion === region ? null : region)}
+                  className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold transition ${
+                    selectedRegion === region ? 'bg-terracotta text-cream' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                  }`}
+                >
+                  {region} {count}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -262,28 +296,13 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
                   <Skeleton key={i} className="h-20 w-full" />
                 ))}
               </div>
-            ) : consultations.length === 0 ? (
+            ) : filteredConsultations.length === 0 ? (
               <div className="flex items-center justify-center h-32 text-sm text-neutral-400">
-                {tab === 'past' ? '지난 출장 내역이 없습니다' : '해당 출장요청이 없습니다'}
-              </div>
-            ) : regionGroups ? (
-              <div>
-                {regionGroups.map((group) => (
-                  <div key={group.region}>
-                    <div className="px-4 py-2 bg-warm-ivory/80 text-xs font-bold text-neutral-600 sticky top-0 flex items-center gap-1.5">
-                      <MapPin size={12} className="text-terracotta" />
-                      {group.region}
-                      <span className="font-normal text-neutral-400">{group.items.length}건</span>
-                    </div>
-                    <div className="divide-y divide-neutral-100">
-                      {group.items.map(renderRow)}
-                    </div>
-                  </div>
-                ))}
+                {selectedRegion ? `${selectedRegion} 지역에 해당 건이 없습니다` : tab === 'past' ? '지난 출장 내역이 없습니다' : '해당 출장요청이 없습니다'}
               </div>
             ) : (
               <div className="divide-y divide-neutral-100">
-                {consultations.map(renderRow)}
+                {filteredConsultations.map(renderRow)}
               </div>
             )}
           </Card>
