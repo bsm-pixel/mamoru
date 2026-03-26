@@ -184,8 +184,8 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
         )}
       </Card>
 
-      {/* 출고 섹션 — repairing 이상 */}
-      {(['repairing', 'ready_to_ship', 'shipped', 'delivered', 'completed'].includes(currentStatus)) && (
+      {/* 출고 섹션 — cost_notified 이상 (입금확인 후 바로 송장생성 가능) */}
+      {(['cost_notified', 'repairing', 'ready_to_ship', 'shipped', 'delivered', 'completed'].includes(currentStatus)) && (
         <Card>
           <CardHeader>
             <CardTitle>
