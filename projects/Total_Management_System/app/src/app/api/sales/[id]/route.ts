@@ -36,25 +36,28 @@ export async function PATCH(
 
       const reason = body.reason || '';
 
-      // 1. 시리얼 복원
+      // 1. 시리얼 복원 — previous_zone으로 원래 위치 복원
       const { data: serials } = await db
         .from('product_serials')
-        .select('id, product_id')
+        .select('id, product_id, previous_zone')
         .eq('offline_sale_id', id);
 
       if (serials && serials.length > 0) {
-        await db
-          .from('product_serials')
-          .update({
-            status: 'in_stock',
-            warehouse_zone: 'ready', // 포장 상태 유지 — 재판매 가능
-            sold_via: null,
-            offline_sale_id: null,
-            sold_at: null,
-            sold_to_name: null,
-            sold_to_phone: null,
-          })
-          .eq('offline_sale_id', id);
+        for (const serial of serials) {
+          await db
+            .from('product_serials')
+            .update({
+              status: 'in_stock',
+              warehouse_zone: serial.previous_zone || 'ready', // 원래 zone 복원 (NULL이면 ready fallback)
+              previous_zone: null,
+              sold_via: null,
+              offline_sale_id: null,
+              sold_at: null,
+              sold_to_name: null,
+              sold_to_phone: null,
+            })
+            .eq('id', serial.id);
+        }
       }
 
       // 2. 재고 복원 + 3. 아임웹 재고 동기화

@@ -76,6 +76,9 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect 
                   >
                     {isSelected && <Check size={10} className="shrink-0" />}
                     <span className="font-mono truncate">{s.serial_number}</span>
+                    {s.warehouse_zone === 'display' && (
+                      <span className="shrink-0 px-1 py-0.5 rounded text-[9px] font-semibold bg-purple-50 text-purple-600">진열</span>
+                    )}
                   </button>
                 );
               })}

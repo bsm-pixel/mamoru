@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
-/** POST /api/serials/batch — 시리얼 일괄 생성 */
+/** 혼동 문자 제외 랜덤 4자리 생성 (0/O, 1/I/L 제외) */
+function generateRandomSuffix(): string {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+/** POST /api/serials/batch — 시리얼 일괄 생성 (랜덤 4자리) */
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
@@ -32,21 +38,32 @@ export async function POST(req: NextRequest) {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const basePrefix = prefix || `MM-${sku}-${dateStr}`;
 
-    // 기존 시리얼 수 조회 (넘버링 이어서)
-    const { count: existing } = await db
-      .from('product_serials')
-      .select('*', { count: 'exact', head: true })
-      .like('serial_number', `${basePrefix}%`);
+    // 랜덤 4자리 시리얼 생성 (중복 방지)
+    const usedSuffixes = new Set<string>();
+    const serials = [];
 
-    const startNum = (existing || 0) + 1;
+    for (let i = 0; i < count; i++) {
+      let suffix: string;
+      let serialNumber: string;
+      let attempts = 0;
+      do {
+        suffix = generateRandomSuffix();
+        serialNumber = `${basePrefix}-${suffix}`;
+        attempts++;
+        if (attempts > 100) throw new Error('시리얼 생성 실패: 중복 초과');
+      } while (usedSuffixes.has(suffix));
+      usedSuffixes.add(suffix);
 
-    const serials = Array.from({ length: count }, (_, i) => ({
-      product_id,
-      serial_number: `${basePrefix}-${String(startNum + i).padStart(3, '0')}`,
-      lot_number: lot_number || null,
-      created_by: user.id,
-    }));
+      serials.push({
+        product_id,
+        serial_number: serialNumber,
+        barcode: serialNumber, // QR 출력용 barcode 자동 채움
+        lot_number: lot_number || null,
+        created_by: user.id,
+      });
+    }
 
+    // DB UNIQUE 제약이 최종 안전장치
     const { error } = await db
       .from('product_serials')
       .insert(serials);

@@ -43,13 +43,18 @@ export default function NewSalePage() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid' | 'partial'>('paid');
+  const [depositAmount, setDepositAmount] = useState(0);
   const [saleChannel, setSaleChannel] = useState('offline');
   const [discount, setDiscount] = useState(0);
   const [memo, setMemo] = useState('');
 
   const customerType = selectedCustomer?.customer_type;
   const totalAmount = cart.reduce((s, item) => s + item.unitPrice * item.quantity, 0);
-  const paidAmount = totalAmount - discount;
+  const finalAmount = totalAmount - discount;
+  const paidAmount = paymentStatus === 'paid' ? finalAmount
+    : paymentStatus === 'unpaid' ? 0
+    : Math.min(depositAmount, finalAmount);
 
   // 임시 제품 입력 상태
   const [customProductName, setCustomProductName] = useState('');
@@ -126,6 +131,7 @@ export default function NewSalePage() {
         discount_amount: discount,
         paid_amount: paidAmount,
         payment_method: paymentMethod,
+        payment_status: paymentStatus,
         sale_channel: saleChannel,
         memo: memo.trim() || undefined,
       },
@@ -405,20 +411,64 @@ export default function NewSalePage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  {(['card', 'cash', 'transfer', 'mixed'] as const).map((method) => (
-                    <button
-                      key={method}
-                      onClick={() => setPaymentMethod(method)}
-                      className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${
-                        paymentMethod === method
-                          ? 'bg-terracotta text-cream'
-                          : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
-                      }`}
-                    >
-                      {{ card: '카드', cash: '현금', transfer: '이체', mixed: '복합' }[method]}
-                    </button>
-                  ))}
+                <div>
+                  <label className="text-xs text-neutral-500 mb-1.5 block">결제 수단</label>
+                  <div className="flex gap-2">
+                    {(['card', 'cash', 'transfer', 'mixed'] as const).map((method) => (
+                      <button
+                        key={method}
+                        onClick={() => setPaymentMethod(method)}
+                        className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${
+                          paymentMethod === method
+                            ? 'bg-terracotta text-cream'
+                            : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                        }`}
+                      >
+                        {{ card: '카드', cash: '현금', transfer: '이체', mixed: '복합' }[method]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 결제 상태 */}
+                <div>
+                  <label className="text-xs text-neutral-500 mb-1.5 block">결제 상태</label>
+                  <div className="flex gap-2">
+                    {([
+                      { value: 'paid' as const, label: '결제완료', color: 'bg-green-600 text-white' },
+                      { value: 'partial' as const, label: '부분결제', color: 'bg-yellow-500 text-white' },
+                      { value: 'unpaid' as const, label: '미결제', color: 'bg-red-500 text-white' },
+                    ]).map((ps) => (
+                      <button
+                        key={ps.value}
+                        onClick={() => setPaymentStatus(ps.value)}
+                        className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${
+                          paymentStatus === ps.value
+                            ? ps.color
+                            : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                        }`}
+                      >
+                        {ps.label}
+                      </button>
+                    ))}
+                  </div>
+                  {paymentStatus === 'partial' && (
+                    <div className="mt-2">
+                      <label className="text-xs text-neutral-500">입금액</label>
+                      <input
+                        type="number"
+                        value={depositAmount || ''}
+                        onChange={(e) => setDepositAmount(parseInt(e.target.value) || 0)}
+                        placeholder="입금된 금액 입력"
+                        className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                      />
+                    </div>
+                  )}
+                  {paymentStatus !== 'paid' && finalAmount > 0 && (
+                    <p className="text-xs text-red-500 mt-1 font-medium">
+                      미수금: {formatKRW(finalAmount - paidAmount)}
+                    </p>
+                  )}
                 </div>
 
                 <div>

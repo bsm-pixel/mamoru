@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SlidePanel } from '@/components/ui/slide-panel';
+import { SaleDetailPanel } from '@/components/sales/sale-detail-panel';
 import { useSales, useSalesTabCounts } from '@/hooks/use-sales';
 import type { SalesTab, SalesChannel, SalesDateRange } from '@/hooks/use-sales';
 import { useContracts } from '@/hooks/use-contracts';
@@ -14,7 +16,6 @@ import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
-import { SaleDetailModal } from '@/components/sales/sale-detail-modal';
 import { Plus, FileSignature, Receipt } from 'lucide-react';
 import type { OfflineSale, SaleChannel as SaleChannelType } from '@/lib/supabase/types';
 
@@ -68,7 +69,7 @@ export default function SalesPage() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [tab, setTab] = useState<SalesTab>('all');
+  const [tab, setTab] = useState<SalesTab>('today'); // 기본 탭: 오늘
   const [channel, setChannel] = useState<SalesChannel>('all');
   const [dateRange, setDateRange] = useState<SalesDateRange>('all');
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
@@ -94,196 +95,175 @@ export default function SalesPage() {
   const handleChannelChange = (c: SalesChannel) => { setChannel(c); setPage(1); };
   const handleDateRangeChange = (d: SalesDateRange) => { setDateRange(d); setPage(1); };
 
+  /* --- 목록 영역 (좌측/모바일) --- */
+  const listContent = (
+    <>
+      {/* 신규 계약서 알림 */}
+      {newContractCount > 0 && (
+        <button
+          onClick={() => router.push('/contracts')}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-neutral-100 border border-neutral-200 hover:bg-neutral-150 transition text-left"
+        >
+          <FileSignature size={18} className="text-neutral-700 shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-neutral-800">신규 계약서 {newContractCount}건</p>
+            <p className="text-xs text-neutral-500">판매 전환 대기 중인 계약서가 있습니다</p>
+          </div>
+        </button>
+      )}
+
+      {/* 상단: 판매 입력 + 검색 */}
+      <div className="flex items-center gap-3">
+        <Button size="sm" onClick={() => router.push('/sales/new')}>
+          <Plus size={14} />
+          판매 입력
+        </Button>
+        <SearchInput
+          value={search}
+          onChange={(v) => { setSearch(v); setPage(1); }}
+          placeholder="판매번호, 고객명, 전화번호"
+        />
+      </div>
+
+      {/* 탭 바 */}
+      <div className="flex gap-1 border-b border-neutral-200">
+        {TABS.map((t) => {
+          const count = tabCounts?.[t.key] ?? 0;
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => handleTabChange(t.key)}
+              className={`px-3 py-2 text-sm font-medium border-b-2 transition whitespace-nowrap ${
+                active
+                  ? 'border-neutral-900 text-neutral-900'
+                  : 'border-transparent text-neutral-400 hover:text-neutral-600'
+              }`}
+            >
+              {t.label}
+              {count > 0 && (
+                <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
+                  active ? 'bg-neutral-900 text-white' : 'bg-neutral-200 text-neutral-500'
+                }`}>
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 채널 + 기간 필터 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex gap-1">
+          {CHANNELS.map((c) => (
+            <button
+              key={c.key}
+              onClick={() => handleChannelChange(c.key)}
+              className={`px-2.5 py-1 text-xs rounded-full border transition ${
+                channel === c.key
+                  ? 'bg-neutral-900 text-white border-neutral-900'
+                  : 'bg-white text-neutral-500 border-neutral-200 hover:border-neutral-400'
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+        <select
+          value={dateRange}
+          onChange={(e) => handleDateRangeChange(e.target.value as SalesDateRange)}
+          className="text-xs border border-neutral-200 rounded-md px-2 py-1 text-neutral-600 bg-white"
+        >
+          {DATE_RANGES.map((d) => (
+            <option key={d.key} value={d.key}>{d.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* 판매 목록 */}
+      <Card padding={false}>
+        {isLoading ? (
+          <div className="p-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full" />
+            ))}
+          </div>
+        ) : sales.length === 0 ? (
+          <EmptyState icon={Receipt} message={tab === 'today' ? '오늘 판매 기록이 없습니다' : '판매 기록이 없습니다'} />
+        ) : (
+          <div className="divide-y divide-neutral-100">
+            {sales.map((sale) => (
+              <SaleRow
+                key={sale.id}
+                sale={sale}
+                selected={selectedSaleId === sale.id}
+                onClick={() => setSelectedSaleId(sale.id)}
+              />
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+    </>
+  );
+
   return (
     <>
       <Topbar title="판매관리" />
 
-      <div className="px-4 md:px-6 py-4 space-y-4">
-        {/* 신규 계약서 알림 */}
-        {newContractCount > 0 && (
-          <button
-            onClick={() => router.push('/contracts')}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-neutral-100 border border-neutral-200 hover:bg-neutral-150 transition text-left"
-          >
-            <FileSignature size={18} className="text-neutral-700 shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-neutral-800">신규 계약서 {newContractCount}건</p>
-              <p className="text-xs text-neutral-500">판매 전환 대기 중인 계약서가 있습니다</p>
-            </div>
-          </button>
-        )}
-
-        {/* 상단: 판매 입력 + 검색 */}
-        <div className="flex items-center gap-3">
-          <Button size="sm" onClick={() => router.push('/sales/new')}>
-            <Plus size={14} />
-            판매 입력
-          </Button>
-          <SearchInput
-            value={search}
-            onChange={(v) => { setSearch(v); setPage(1); }}
-            placeholder="판매번호, 고객명, 전화번호 검색"
-          />
-        </div>
-
-        {/* 탭 바 */}
-        <div className="flex gap-1 border-b border-neutral-200">
-          {TABS.map((t) => {
-            const count = tabCounts?.[t.key] ?? 0;
-            const active = tab === t.key;
-            return (
-              <button
-                key={t.key}
-                onClick={() => handleTabChange(t.key)}
-                className={`px-3 py-2 text-sm font-medium border-b-2 transition whitespace-nowrap ${
-                  active
-                    ? 'border-neutral-900 text-neutral-900'
-                    : 'border-transparent text-neutral-400 hover:text-neutral-600'
-                }`}
-              >
-                {t.label}
-                {count > 0 && (
-                  <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
-                    active ? 'bg-neutral-900 text-white' : 'bg-neutral-200 text-neutral-500'
-                  }`}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 채널 + 기간 필터 */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex gap-1">
-            {CHANNELS.map((c) => (
-              <button
-                key={c.key}
-                onClick={() => handleChannelChange(c.key)}
-                className={`px-2.5 py-1 text-xs rounded-full border transition ${
-                  channel === c.key
-                    ? 'bg-neutral-900 text-white border-neutral-900'
-                    : 'bg-white text-neutral-500 border-neutral-200 hover:border-neutral-400'
-                }`}
-              >
-                {c.label}
-              </button>
-            ))}
+      {isLg ? (
+        /* PC: 마스터-디테일 2컬럼 */
+        <div className="flex gap-4 px-4 md:px-6 py-4 h-[calc(100vh-64px)]">
+          {/* 좌측: 목록 */}
+          <div className="w-[480px] shrink-0 overflow-y-auto space-y-3 pr-1">
+            {listContent}
           </div>
-          <select
-            value={dateRange}
-            onChange={(e) => handleDateRangeChange(e.target.value as SalesDateRange)}
-            className="text-xs border border-neutral-200 rounded-md px-2 py-1 text-neutral-600 bg-white"
-          >
-            {DATE_RANGES.map((d) => (
-              <option key={d.key} value={d.key}>{d.label}</option>
-            ))}
-          </select>
+          {/* 우측: 상세 패널 */}
+          <div className="flex-1 min-w-0 overflow-y-auto bg-white rounded-xl border border-neutral-200">
+            {selectedSaleId ? (
+              <SaleDetailPanel saleId={selectedSaleId} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-sm text-neutral-400">
+                좌측 목록에서 판매 건을 선택하세요
+              </div>
+            )}
+          </div>
         </div>
+      ) : (
+        /* 모바일: 목록 + SlidePanel */
+        <div className="px-4 md:px-6 py-4 space-y-4">
+          {listContent}
+        </div>
+      )}
 
-        {/* 판매 목록 */}
-        <Card padding={false}>
-          {isLoading ? (
-            <div className="p-4 space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
-            </div>
-          ) : sales.length === 0 ? (
-            <EmptyState icon={Receipt} message="판매 기록이 없습니다" />
-          ) : isLg ? (
-            /* PC 테이블 뷰 */
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-neutral-200 bg-neutral-50">
-                    <th className="px-4 py-3 text-left font-medium text-neutral-500">판매번호</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-500">판매일</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-500">고객명</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-500">채널</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-500">결제방법</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-500">결제상태</th>
-                    <th className="px-4 py-3 text-right font-medium text-neutral-500">금액</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sales.map((sale) => (
-                    <SaleTableRow
-                      key={sale.id}
-                      sale={sale}
-                      onClick={() => setSelectedSaleId(sale.id)}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            /* 모바일 카드 뷰 */
-            <div className="divide-y divide-neutral-100">
-              {sales.map((sale) => (
-                <SaleRow
-                  key={sale.id}
-                  sale={sale}
-                  onClick={() => setSelectedSaleId(sale.id)}
-                />
-              ))}
-            </div>
-          )}
-        </Card>
-
-        <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
-      </div>
-
-      <SaleDetailModal
-        saleId={selectedSaleId}
-        open={!!selectedSaleId}
-        onClose={() => setSelectedSaleId(null)}
-      />
+      {/* 모바일 상세 패널 */}
+      {!isLg && (
+        <SlidePanel
+          open={!!selectedSaleId}
+          onClose={() => setSelectedSaleId(null)}
+          title="판매 상세"
+          className="sm:w-[480px]"
+        >
+          {selectedSaleId && <SaleDetailPanel saleId={selectedSaleId} />}
+        </SlidePanel>
+      )}
     </>
   );
 }
 
-/* PC 테이블 행 */
-const SaleTableRow = memo(function SaleTableRow({ sale, onClick }: { sale: OfflineSale; onClick: () => void }) {
+/* 목록 행 — PC/모바일 공용 (카드형) */
+const SaleRow = memo(function SaleRow({ sale, selected, onClick }: { sale: OfflineSale; selected?: boolean; onClick: () => void }) {
   const isCancelled = !!sale.cancelled_at;
-  const ch = CHANNEL_CHIP[(sale.sale_channel || 'offline') as SaleChannelType] || CHANNEL_CHIP.offline;
-
-  return (
-    <tr
-      onClick={onClick}
-      className={`border-b border-neutral-100 cursor-pointer hover:bg-neutral-50 transition ${isCancelled ? 'opacity-50' : ''}`}
-    >
-      <td className={`px-4 py-3 font-mono text-xs ${isCancelled ? 'line-through' : ''}`}>{sale.sale_number}</td>
-      <td className="px-4 py-3 text-neutral-600">{formatDate(sale.sale_date)}</td>
-      <td className={`px-4 py-3 font-semibold ${isCancelled ? 'line-through' : ''}`}>{sale.customer_name}</td>
-      <td className="px-4 py-3"><Badge className={ch.className}>{ch.label}</Badge></td>
-      <td className="px-4 py-3 text-neutral-600">{PAYMENT_METHOD_LABEL[sale.payment_method] || sale.payment_method}</td>
-      <td className="px-4 py-3">
-        {isCancelled ? (
-          <Badge className="bg-neutral-200 text-neutral-500">취소</Badge>
-        ) : (
-          <Badge className={PAYMENT_STATUS_COLOR[sale.payment_status] || ''}>
-            {PAYMENT_STATUS_LABEL[sale.payment_status] || sale.payment_status}
-          </Badge>
-        )}
-      </td>
-      <td className={`px-4 py-3 text-right font-bold ${isCancelled ? 'line-through text-neutral-400' : ''}`}>
-        {formatKRW(sale.paid_amount)}
-      </td>
-    </tr>
-  );
-});
-
-/* 모바일 카드 행 */
-const SaleRow = memo(function SaleRow({ sale, onClick }: { sale: OfflineSale; onClick: () => void }) {
-  const isCancelled = !!sale.cancelled_at;
-  const channel = CHANNEL_CHIP[(sale.sale_channel || 'offline') as SaleChannelType] || CHANNEL_CHIP.offline;
+  const channelInfo = CHANNEL_CHIP[(sale.sale_channel || 'offline') as SaleChannelType] || CHANNEL_CHIP.offline;
 
   return (
     <div
       onClick={onClick}
-      className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition ${isCancelled ? 'opacity-50' : ''}`}
+      className={`flex items-center gap-4 px-4 py-3 cursor-pointer transition ${
+        selected ? 'bg-neutral-50 border-l-2 border-l-neutral-900' : 'hover:bg-warm-ivory/60'
+      } ${isCancelled ? 'opacity-50' : ''}`}
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -297,7 +277,7 @@ const SaleRow = memo(function SaleRow({ sale, onClick }: { sale: OfflineSale; on
               {PAYMENT_STATUS_LABEL[sale.payment_status] || sale.payment_status}
             </Badge>
           )}
-          <Badge className={channel.className}>{channel.label}</Badge>
+          <Badge className={channelInfo.className}>{channelInfo.label}</Badge>
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
           <span>{sale.sale_number}</span>

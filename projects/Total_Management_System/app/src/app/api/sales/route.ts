@@ -153,20 +153,32 @@ export async function POST(req: NextRequest) {
       if (itemsError) throw itemsError;
     }
 
-    // 시리얼 연결: status → sold, offline_sale_id 설정
+    // 시리얼 연결: previous_zone 저장 후 status → sold
     const allSerialIds = items.flatMap((item) => item.serial_ids || []);
     if (allSerialIds.length > 0) {
-      await db
+      // 현재 zone 조회 → previous_zone에 저장
+      const { data: currentSerials } = await db
         .from('product_serials')
-        .update({
-          status: 'sold',
-          sold_via: 'offline',
-          offline_sale_id: created.id,
-          sold_at: new Date().toISOString(),
-          sold_to_name: sale.customer_name,
-          sold_to_phone: sale.customer_phone || null,
-        })
+        .select('id, warehouse_zone')
         .in('id', allSerialIds);
+
+      if (currentSerials && currentSerials.length > 0) {
+        // 각 시리얼의 현재 zone을 previous_zone에 보존
+        for (const serial of currentSerials) {
+          await db
+            .from('product_serials')
+            .update({
+              previous_zone: serial.warehouse_zone,
+              status: 'sold',
+              sold_via: 'offline',
+              offline_sale_id: created.id,
+              sold_at: new Date().toISOString(),
+              sold_to_name: sale.customer_name,
+              sold_to_phone: sale.customer_phone || null,
+            })
+            .eq('id', serial.id);
+        }
+      }
     }
 
     // 재고 차감 + 아임웹 동기화 — 상품별 병렬 처리

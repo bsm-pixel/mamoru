@@ -59,7 +59,7 @@ export function useAvailableSerials(productId: string | undefined) {
         .select('id, serial_number, barcode, warehouse_zone, manufactured_at, memo')
         .eq('product_id', productId!)
         .eq('status', 'in_stock')
-        .eq('warehouse_zone', 'ready')  // ready만 판매 가능
+        .in('warehouse_zone', ['ready', 'display'])  // ready + display(진열품) 판매 가능
         .order('serial_number');
       if (error) throw error;
       return (data || []) as Array<{
