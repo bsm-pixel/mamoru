@@ -471,9 +471,13 @@ function safeClose(){
     if (!foundUid) return json({ ok:false, error:'not_found' });
 
     try {
+      // 멱등성 가드: 이미 RESCHEDULE_REQUESTED면 중복 처리 방지
+      const curInfo = getReservationByUid_(foundUid);
+      if (curInfo && curInfo.status === 'RESCHEDULE_REQUESTED') return json({ ok:true, msg:'already_requested' });
+
       clearHoldsForUid_(foundUid);
       updateStatus_(foundUid, 'RESCHEDULE_REQUESTED');
-      
+
       // ★ 재요청 이메일 알림 발송
       try {
         const sh = sh_();

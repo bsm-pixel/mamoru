@@ -23,7 +23,7 @@ type TabKey = 'today' | 'new_intake' | 'action_needed' | 'confirmed' | 'past';
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'today', label: '오늘출장' },
   { key: 'new_intake', label: '신규접수' },
-  { key: 'action_needed', label: '대응필요' },
+  { key: 'action_needed', label: '일정재요청' },
   { key: 'confirmed', label: '확정' },
   { key: 'past', label: '지난내역' },
 ];
