@@ -73,12 +73,12 @@ export default function RepairsPage() {
         {/* PC: 좌측 목록 + 우측 상세 모니터 */}
         {isLg && (
           <div className="flex gap-4 h-[calc(100vh-220px)]">
-            {/* 좌측: 목록 */}
-            <div className="w-[480px] shrink-0 overflow-y-auto">
+            {/* 좌측: 목록 (2/5) */}
+            <div className="w-[40%] shrink-0 overflow-y-auto">
               <RepairList onSelect={setSelectedId} selectedId={selectedId} />
             </div>
 
-            {/* 우측: 상세 모니터 */}
+            {/* 우측: 상세 모니터 (3/5) */}
             <div className="flex-1 min-w-0 overflow-y-auto">
               {selectedId ? (
                 <RepairDetailPanel repairId={selectedId} />
