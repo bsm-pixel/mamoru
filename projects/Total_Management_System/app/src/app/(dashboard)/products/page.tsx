@@ -92,7 +92,9 @@ export default function ProductsPage() {
     <>
       <Topbar title="제품 관리" />
 
-      <div className="px-4 md:px-6 py-4 space-y-3">
+      <div className="flex flex-col h-[calc(100vh-64px)] px-4 md:px-6 py-4">
+        {/* ── 상단 고정 영역 ── */}
+        <div className="shrink-0 space-y-3 pb-3">
         {/* 상단: 요약 카드 + 제품 등록 버튼 */}
         <div className="flex items-center gap-3">
           <div className="flex gap-2 flex-1 min-w-0">
@@ -146,10 +148,13 @@ export default function ProductsPage() {
             </button>
           ))}
         </div>
+        </div>{/* 상단 고정 영역 끝 */}
+
+        {/* ── 하단 콘텐츠 영역 (flex-1, 내부 스크롤) ── */}
 
         {/* PC: 2열 레이아웃 */}
         {isLg && (
-          <div className="flex gap-4 h-[calc(100vh-260px)]">
+          <div className="flex gap-4 flex-1 min-h-0">
             {/* 좌측: 제품 그리드 (3/5) */}
             <div className="w-[60%] shrink-0 overflow-y-auto pr-1">
               <p className="text-xs text-neutral-500 mb-2">{filtered.length}개 제품</p>
@@ -233,8 +238,8 @@ export default function ProductsPage() {
 
         {/* 모바일: 그리드만 */}
         {!isLg && (
-          <>
-            <p className="text-xs text-neutral-500">{filtered.length}개 제품</p>
+          <div className="flex-1 min-h-0 overflow-y-auto pt-3">
+            <p className="text-xs text-neutral-500 mb-2">{filtered.length}개 제품</p>
             {isLoading ? (
               <div className="grid grid-cols-2 gap-2">
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -259,7 +264,7 @@ export default function ProductsPage() {
                 ))}
               </div>
             )}
-          </>
+          </div>
         )}
 
         {/* 모바일 전용 슬라이드 패널 */}
