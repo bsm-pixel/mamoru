@@ -27,6 +27,12 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
   const [addressDetail, setAddressDetail] = useState(r.address_detail || '');
   const [savingAddr, setSavingAddr] = useState(false);
 
+  // 비용 수동 편집 모드
+  const [editCost, setEditCost] = useState(false);
+  const [serviceCost, setServiceCost] = useState(r.service_cost);
+  const [shippingFee, setShippingFee] = useState(r.shipping_fee);
+  const [savingCost, setSavingCost] = useState(false);
+
   const handleSaveQty = async () => {
     if (!onUpdate) return;
     setSavingQty(true);
@@ -67,6 +73,27 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
     setAddress(r.address || '');
     setAddressDetail(r.address_detail || '');
     setEditAddr(false);
+  };
+
+  const handleSaveCost = async () => {
+    if (!onUpdate) return;
+    setSavingCost(true);
+    try {
+      await onUpdate({
+        service_cost: serviceCost,
+        shipping_fee: shippingFee,
+        total_amount: serviceCost + shippingFee,
+      });
+      setEditCost(false);
+    } finally {
+      setSavingCost(false);
+    }
+  };
+
+  const cancelCost = () => {
+    setServiceCost(r.service_cost);
+    setShippingFee(r.shipping_fee);
+    setEditCost(false);
   };
 
   // 수량 변경 시 비용 미리보기
@@ -232,19 +259,74 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
         )}
       </Card>
 
-      {/* 비용 정보 (읽기 전용 — 수량 수정 시 자동 갱신) */}
+      {/* 비용 정보 — 수동 편집 가능 */}
       <Card>
         <CardHeader>
-          <CardTitle>비용 정보</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>비용 정보</span>
+            {onUpdate && !editCost && (
+              <button onClick={() => { setServiceCost(r.service_cost); setShippingFee(r.shipping_fee); setEditCost(true); }} className="text-neutral-400 hover:text-neutral-600">
+                <Pencil size={14} />
+              </button>
+            )}
+          </CardTitle>
         </CardHeader>
-        <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
-          <dt className="text-neutral-500">수리비</dt>
-          <dd className="font-medium">{formatKRW(r.service_cost)}</dd>
-          <dt className="text-neutral-500">수거비</dt>
-          <dd>{formatKRW(r.shipping_fee)}</dd>
-          <dt className="text-neutral-500 font-semibold">합계</dt>
-          <dd className="font-bold text-terracotta-deep">{formatKRW(r.total_amount)}</dd>
-        </dl>
+        {editCost ? (
+          <div className="space-y-3">
+            <div className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
+              <dt className="text-neutral-500 pt-1">수리비</dt>
+              <dd>
+                <input
+                  type="number"
+                  min={0}
+                  step={1000}
+                  value={serviceCost}
+                  onChange={(e) => setServiceCost(parseInt(e.target.value) || 0)}
+                  className="w-28 h-8 px-2 rounded border border-neutral-200 text-sm text-right"
+                />
+                <span className="text-xs text-neutral-400 ml-1">원</span>
+              </dd>
+              <dt className="text-neutral-500 pt-1">수거비</dt>
+              <dd>
+                <input
+                  type="number"
+                  min={0}
+                  step={1000}
+                  value={shippingFee}
+                  onChange={(e) => setShippingFee(parseInt(e.target.value) || 0)}
+                  className="w-28 h-8 px-2 rounded border border-neutral-200 text-sm text-right"
+                />
+                <span className="text-xs text-neutral-400 ml-1">원</span>
+              </dd>
+            </div>
+            {/* 합계 미리보기 */}
+            <div className="text-xs bg-neutral-50 rounded-lg p-2">
+              <span className="text-neutral-500">합계: </span>
+              <span className={`font-bold ${serviceCost + shippingFee === 0 ? 'text-green-600' : 'text-terracotta-deep'}`}>
+                {serviceCost + shippingFee === 0 ? '무상 처리' : formatKRW(serviceCost + shippingFee)}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="primary" size="sm" onClick={handleSaveCost} loading={savingCost}>
+                <Check size={12} /> 저장
+              </Button>
+              <Button variant="ghost" size="sm" onClick={cancelCost}>
+                <X size={12} /> 취소
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
+            <dt className="text-neutral-500">수리비</dt>
+            <dd className="font-medium">{formatKRW(r.service_cost)}</dd>
+            <dt className="text-neutral-500">수거비</dt>
+            <dd>{formatKRW(r.shipping_fee)}</dd>
+            <dt className="text-neutral-500 font-semibold">합계</dt>
+            <dd className={`font-bold ${r.total_amount === 0 ? 'text-green-600' : 'text-terracotta-deep'}`}>
+              {r.total_amount === 0 ? '무상 처리' : formatKRW(r.total_amount)}
+            </dd>
+          </dl>
+        )}
       </Card>
 
       {/* 메모 */}

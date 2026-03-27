@@ -44,6 +44,8 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const canMarkShipped = currentStatus === 'ready_to_ship' && !!r.invoice_number;
 
   const handleSendCostNotice = async () => {
+    const isFree = r.total_amount === 0; // 무상 처리 여부
+
     // 비용안내 → 자동으로 repairing 전환 (작업시작 별도 클릭 불필요)
     await updateStatus.mutateAsync({
       id: r.id,
@@ -51,8 +53,17 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
       service_cost: r.service_cost,
       shipping_fee: r.shipping_fee,
       total_amount: r.total_amount,
-      note: `비용 안내: ${formatKRW(r.total_amount)}`,
+      note: isFree ? '무상 처리 비용 안내' : `비용 안내: ${formatKRW(r.total_amount)}`,
     });
+
+    // 0원이면 자동 입금완료 처리
+    if (isFree && !r.paid_at) {
+      await updateFields.mutateAsync({
+        id: r.id,
+        paid_at: new Date().toISOString(),
+      });
+    }
+
     // 비용안내 발송 후 자동으로 수리중 전환
     await updateStatus.mutateAsync({
       id: r.id,
