@@ -111,14 +111,15 @@ export async function PATCH(
             if (item.product_id) {
               const { data: prod } = await db
                 .from('products')
-                .select('stock_quantity, imweb_product_no')
+                .select('stock_quantity, raw_stock, imweb_product_no')
                 .eq('id', item.product_id)
                 .single();
               if (prod) {
                 const newQty = (prod.stock_quantity || 0) + item.quantity;
+                const newRaw = (prod.raw_stock || 0) + item.quantity; // 보관창고에 입고
                 await db
                   .from('products')
-                  .update({ stock_quantity: newQty })
+                  .update({ stock_quantity: newQty, raw_stock: newRaw })
                   .eq('id', item.product_id);
 
                 // 아임웹 재고 동기화 (재고 미사용(-1) 상품은 스킵)

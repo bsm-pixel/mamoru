@@ -166,6 +166,7 @@ export interface Database {
           image_url: string | null;
           tags: Record<string, unknown> | null;
           stock_quantity: number;
+          raw_stock: number;
           barcode: string | null;
           is_active: boolean;
           created_at: string;

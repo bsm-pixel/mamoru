@@ -282,6 +282,7 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
         onClose={() => setShowSerialModal(false)}
         productId={productId}
         productSku={p.sku}
+        rawStock={p.raw_stock || 0}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['product', productId] });
           queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -301,11 +302,12 @@ const ZONE_OPTIONS: { key: 'raw' | 'ready' | 'display'; label: string; desc: str
   { key: 'display', label: '디스플레이', desc: '고객 전시 샘플 (가방)', color: 'border-neutral-200 bg-white text-neutral-600', activeColor: 'border-blue-600 bg-blue-600 text-white' },
 ];
 
-function SerialQuickModal({ open, onClose, productId, productSku, onSuccess }: {
+function SerialQuickModal({ open, onClose, productId, productSku, rawStock, onSuccess }: {
   open: boolean;
   onClose: () => void;
   productId: string;
   productSku: string;
+  rawStock: number;
   onSuccess: () => void;
 }) {
   const [startNumber, setStartNumber] = useState('');
@@ -367,6 +369,13 @@ function SerialQuickModal({ open, onClose, productId, productSku, onSuccess }: {
   return (
     <Modal open={open} onClose={onClose} title="시리얼 등록 · 창고배치" className="max-w-md">
       <div className="space-y-4">
+        {/* 보관 재고 표시 */}
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${rawStock > 0 ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'}`}>
+          <Archive size={14} />
+          보관창고: <strong>{rawStock}개</strong>
+          {rawStock === 0 && <span className="text-xs">(재고 부족 — 입고 필요)</span>}
+        </div>
+
         {/* 시작번호 + 수량 */}
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -386,9 +395,9 @@ function SerialQuickModal({ open, onClose, productId, productSku, onSuccess }: {
             <input
               type="number"
               value={count}
-              onChange={(e) => setCount(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
+              onChange={(e) => setCount(Math.max(1, Math.min(rawStock || 100, parseInt(e.target.value) || 1)))}
               min={1}
-              max={100}
+              max={rawStock || 100}
               className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
             />
           </div>
@@ -435,7 +444,7 @@ function SerialQuickModal({ open, onClose, productId, productSku, onSuccess }: {
           <Button
             size="sm"
             onClick={handleSubmit}
-            disabled={!startNumber || count < 1 || submitting}
+            disabled={!startNumber || count < 1 || count > rawStock || rawStock === 0 || submitting}
             loading={submitting}
             className="flex-1"
           >

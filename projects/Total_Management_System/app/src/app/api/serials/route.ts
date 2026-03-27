@@ -13,6 +13,17 @@ export async function POST(req: NextRequest) {
     const db = supabase as any;
     const body = await req.json();
 
+    // raw_stock 체크 — 보관창고에 재고 있어야 시리얼 생성 가능
+    const { data: product } = await db
+      .from('products')
+      .select('raw_stock')
+      .eq('id', body.product_id)
+      .single();
+
+    if (!product || (product.raw_stock || 0) < 1) {
+      return NextResponse.json({ error: '보관창고 재고가 부족합니다' }, { status: 400 });
+    }
+
     const { data, error } = await db
       .from('product_serials')
       .insert({
@@ -20,6 +31,7 @@ export async function POST(req: NextRequest) {
         serial_number: body.serial_number,
         barcode: body.barcode || body.serial_number,
         verify_token: randomBytes(6).toString('hex'),
+        warehouse_zone: 'ready', // 시리얼 생성 = 마킹 완료 → 준비 창고
         lot_number: body.lot_number || null,
         manufactured_at: body.manufactured_at || null,
         memo: body.memo || null,
@@ -30,14 +42,11 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
-    // stock_quantity 증가
-    await db.rpc('increment_stock', { p_id: body.product_id, qty: 1 }).catch(() => {
-      // RPC 없으면 수동 업데이트
-      return db
-        .from('products')
-        .update({ stock_quantity: db.raw('stock_quantity + 1') })
-        .eq('id', body.product_id);
-    });
+    // raw_stock 차감 (보관에서 꺼냄, stock_quantity는 유지 — 총합 동일)
+    await db
+      .from('products')
+      .update({ raw_stock: (product.raw_stock || 0) - 1 })
+      .eq('id', body.product_id);
 
     return NextResponse.json({ serial: data });
   } catch (err) {

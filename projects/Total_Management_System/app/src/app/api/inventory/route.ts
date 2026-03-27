@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from('products')
-    .select('id, name, sku, category, price, price_dealer, price_purchase, stock_quantity, is_active, barcode')
+    .select('id, name, sku, category, price, price_dealer, price_purchase, stock_quantity, raw_stock, is_active, barcode')
     .eq('is_active', true)
     .order('name');
 
@@ -81,8 +81,9 @@ export async function GET(req: NextRequest) {
     price_purchase: p.price_purchase,
     barcode: p.barcode,
     stock_quantity: p.stock_quantity || 0,
+    raw_stock: p.raw_stock || 0,
     pending_quantity: pendingMap[p.id] || 0,
-    zone_raw: zoneMap[p.id]?.raw || 0,
+    zone_raw: p.raw_stock || 0,  // 보관 = raw_stock (비시리얼 수량)
     zone_ready: zoneMap[p.id]?.ready || 0,
     zone_display: zoneMap[p.id]?.display || 0,
   }));

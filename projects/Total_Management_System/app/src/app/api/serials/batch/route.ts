@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { randomBytes } from 'crypto';
 
-/** verify_token 생성 — 12자리 hex (URL-safe, 추측 불가) */
+/** verify_token 생성 — 12자리 hex */
 function generateVerifyToken(): string {
   return randomBytes(6).toString('hex');
 }
 
 /**
  * GET /api/serials/batch — 다음 시리얼 시작번호 조회
- * 전체 시리얼 중 최대 번호 + 1 반환
  */
 export async function GET() {
   try {
@@ -20,19 +19,16 @@ export async function GET() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
-    // 숫자로 변환 가능한 시리얼 중 최대값 조회
     const { data } = await db
       .from('product_serials')
       .select('serial_number')
       .order('serial_number', { ascending: false })
       .limit(1);
 
-    let nextStart = 13790001; // 기본 시작번호
+    let nextStart = 13790001;
     if (data && data.length > 0) {
       const maxNum = parseInt(data[0].serial_number, 10);
-      if (!isNaN(maxNum)) {
-        nextStart = maxNum + 1;
-      }
+      if (!isNaN(maxNum)) nextStart = maxNum + 1;
     }
 
     return NextResponse.json({ next_start: nextStart });
@@ -44,7 +40,8 @@ export async function GET() {
 /**
  * POST /api/serials/batch — 시리얼 일괄 생성
  *
- * body: { product_id, count, start_number, lot_number?, warehouse_zone? }
+ * 보관(raw_stock)에서 차감 → 시리얼 생성 (zone: ready/display)
+ * raw_stock 부족 시 거부
  */
 export async function POST(req: NextRequest) {
   try {
@@ -65,17 +62,34 @@ export async function POST(req: NextRequest) {
     if (!product_id || !count || count < 1 || count > 100) {
       return NextResponse.json({ error: '1~100개 범위로 입력해주세요' }, { status: 400 });
     }
-
     if (!start_number || start_number < 1) {
       return NextResponse.json({ error: '시작 번호를 입력해주세요' }, { status: 400 });
     }
 
-    // 생성할 시리얼 번호 목록
+    // 제품 조회 — raw_stock 확인
+    const { data: product } = await db
+      .from('products')
+      .select('id, raw_stock, stock_quantity, imweb_product_no')
+      .eq('id', product_id)
+      .single();
+
+    if (!product) {
+      return NextResponse.json({ error: '제품을 찾을 수 없습니다' }, { status: 404 });
+    }
+
+    const rawStock = product.raw_stock || 0;
+    if (rawStock < count) {
+      return NextResponse.json({
+        error: `보관창고 재고가 부족합니다 (보관: ${rawStock}개, 요청: ${count}개)`,
+      }, { status: 400 });
+    }
+
+    // 시리얼 번호 목록 생성
     const serialNumbers = Array.from({ length: count }, (_, i) =>
       String(start_number + i).padStart(8, '0')
     );
 
-    // 중복 사전 체크
+    // 중복 체크
     const { data: existing } = await db
       .from('product_serials')
       .select('serial_number')
@@ -89,10 +103,11 @@ export async function POST(req: NextRequest) {
       }, { status: 409 });
     }
 
-    // zone 결정 (raw/ready/display, 기본값 raw)
-    const validZones = ['raw', 'ready', 'display'];
-    const zone = warehouse_zone && validZones.includes(warehouse_zone) ? warehouse_zone : 'raw';
+    // zone 결정 — 시리얼 생성은 ready 또는 display (보관에서 꺼내는 것이므로)
+    const validZones = ['ready', 'display'];
+    const zone = warehouse_zone && validZones.includes(warehouse_zone) ? warehouse_zone : 'ready';
 
+    // 시리얼 생성
     const serials = serialNumbers.map((serialNumber) => ({
       product_id,
       serial_number: serialNumber,
@@ -103,11 +118,22 @@ export async function POST(req: NextRequest) {
       created_by: user.id,
     }));
 
-    const { error } = await db
-      .from('product_serials')
-      .insert(serials);
+    const { error: insertErr } = await db.from('product_serials').insert(serials);
+    if (insertErr) throw insertErr;
 
-    if (error) throw error;
+    // 보관 수량 차감 (raw_stock -= count, stock_quantity는 유지 — 총 재고는 변하지 않음)
+    const { error: updateErr } = await db
+      .from('products')
+      .update({
+        raw_stock: rawStock - count,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', product_id);
+
+    if (updateErr) throw updateErr;
+
+    // 아임웹 재고 동기화 (stock_quantity는 변하지 않으므로 동기화 불필요하지만 안전을 위해)
+    // stock_quantity = raw_stock + 시리얼 수이므로 총합은 동일
 
     const startStr = String(start_number).padStart(8, '0');
     const endStr = String(start_number + count - 1).padStart(8, '0');
@@ -116,6 +142,7 @@ export async function POST(req: NextRequest) {
       created: count,
       range: `${startStr} ~ ${endStr}`,
       start_number,
+      raw_stock_remaining: rawStock - count,
     });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

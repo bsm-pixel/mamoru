@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     // 현재 재고 조회
     const { data: product, error: fetchErr } = await db
       .from('products')
-      .select('id, name, stock_quantity')
+      .select('id, name, stock_quantity, raw_stock')
       .eq('id', product_id)
       .single();
 
@@ -39,16 +39,21 @@ export async function POST(req: NextRequest) {
     }
 
     const newQty = (product.stock_quantity || 0) + quantity;
+    const newRaw = (product.raw_stock || 0) + quantity; // 보관창고에도 반영
     if (newQty < 0) {
       return NextResponse.json({
         error: `재고가 부족합니다. 현재 ${product.stock_quantity}개, 조정 ${quantity}개`,
       }, { status: 400 });
     }
 
-    // 재고 업데이트
+    // 재고 업데이트 (stock_quantity + raw_stock 둘 다)
     const { error: updateErr } = await db
       .from('products')
-      .update({ stock_quantity: newQty, updated_at: new Date().toISOString() })
+      .update({
+        stock_quantity: newQty,
+        raw_stock: Math.max(0, newRaw), // 음수 방지
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', product_id);
 
     if (updateErr) throw updateErr;

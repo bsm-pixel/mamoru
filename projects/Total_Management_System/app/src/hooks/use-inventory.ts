@@ -12,6 +12,7 @@ export interface InventoryItem {
   price_purchase: number;
   barcode: string | null;
   stock_quantity: number;
+  raw_stock: number;
   pending_quantity: number;
   zone_raw: number;
   zone_ready: number;
