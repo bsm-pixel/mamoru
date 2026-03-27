@@ -147,7 +147,9 @@ export default function InventoryPage() {
         />
       )}
 
-      <div className="px-4 md:px-6 py-4 space-y-3">
+      <div className="flex flex-col h-full min-h-0 px-4 md:px-6 pt-4 overflow-hidden">
+        {/* ── 상단 고정 영역 ── */}
+        <div className="shrink-0 space-y-3 pb-3">
         {/* 요약 카드 — 선택 카테고리 기준 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <SummaryCard
@@ -216,10 +218,11 @@ export default function InventoryPage() {
             </button>
           ))}
         </div>
+        </div>{/* 상단 고정 영역 끝 */}
 
         {/* PC: 2열 레이아웃 (테이블 + 상세 모니터) */}
         {isLg && (
-          <div className="flex gap-4 h-[calc(100vh-320px)]">
+          <div className="flex gap-4 flex-1 min-h-0">
             {/* 좌측: 재고 테이블 */}
             <div className={`${selectedId ? 'w-[55%]' : 'w-full'} shrink-0 overflow-y-auto`}>
               <InventoryTable

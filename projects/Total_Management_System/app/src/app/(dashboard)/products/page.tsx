@@ -92,7 +92,7 @@ export default function ProductsPage() {
     <>
       <Topbar title="제품 관리" />
 
-      <div className="flex flex-col h-[calc(100vh-64px)] px-4 md:px-6 pt-4 overflow-hidden">
+      <div className="flex flex-col h-full min-h-0 px-4 md:px-6 pt-4 overflow-hidden">
         {/* ── 상단 고정 영역 ── */}
         <div className="shrink-0 space-y-3 pb-3">
         {/* 상단: 요약 카드 + 제품 등록 버튼 */}
