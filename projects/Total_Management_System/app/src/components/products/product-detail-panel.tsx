@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { useProduct, useUpdateProduct } from '@/hooks/use-product-detail';
 import { formatKRW } from '@/lib/utils/format';
-import { Save, Package, Hash, X } from 'lucide-react';
+import { Save, Package, Hash, X, Receipt, Boxes } from 'lucide-react';
 
 const CATEGORY_LABEL: Record<string, string> = {
   BL: '블런트', TH: '틴닝', LO: '장가위', SL: '슬라이싱',
@@ -242,6 +242,25 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
                 <p className="text-sm text-neutral-600 whitespace-pre-wrap">{p.description}</p>
               </div>
             )}
+          </Card>
+
+          {/* 퀵 액션 */}
+          <Card>
+            <h4 className="text-xs text-neutral-500 mb-2">바로가기</h4>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={() => router.push('/sales/new')} className="flex-1">
+                <Receipt size={14} />
+                판매 등록
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => router.push(`/products/${productId}/serials`)} className="flex-1">
+                <Hash size={14} />
+                시리얼
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => router.push('/inventory')} className="flex-1">
+                <Boxes size={14} />
+                재고
+              </Button>
+            </div>
           </Card>
         </>
       )}
