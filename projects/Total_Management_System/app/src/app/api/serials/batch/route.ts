@@ -22,11 +22,12 @@ export async function POST(req: NextRequest) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
-    const { product_id, count, start_number, lot_number } = await req.json() as {
+    const { product_id, count, start_number, lot_number, warehouse_zone } = await req.json() as {
       product_id: string;
       count: number;
       start_number: number;
       lot_number?: string;
+      warehouse_zone?: 'raw' | 'ready';
     };
 
     if (!product_id || !count || count < 1 || count > 100) {
@@ -57,11 +58,13 @@ export async function POST(req: NextRequest) {
     }
 
     // 순차 시리얼 생성
+    const zone = warehouse_zone === 'ready' ? 'ready' : 'raw'; // 기본값: raw
     const serials = serialNumbers.map((serialNumber) => ({
       product_id,
       serial_number: serialNumber,
       barcode: serialNumber,
       verify_token: generateVerifyToken(),
+      warehouse_zone: zone,
       lot_number: lot_number || null,
       created_by: user.id,
     }));

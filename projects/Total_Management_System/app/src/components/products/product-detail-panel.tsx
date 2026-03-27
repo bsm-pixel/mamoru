@@ -2,14 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Modal } from '@/components/ui/modal';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { useProduct, useUpdateProduct } from '@/hooks/use-product-detail';
 import { formatKRW } from '@/lib/utils/format';
-import { Save, Package, Hash, X, Receipt, Boxes } from 'lucide-react';
+import { Save, Package, Hash, X, Receipt, Boxes, Plus, Archive } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const CATEGORY_LABEL: Record<string, string> = {
   BL: '블런트', TH: '틴닝', LO: '장가위', SL: '슬라이싱',
@@ -28,9 +31,11 @@ interface Props {
 
 export function ProductDetailPanel({ productId, onClose }: Props) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data, isLoading } = useProduct(productId);
   const updateProduct = useUpdateProduct();
   const [editing, setEditing] = useState(false);
+  const [showSerialModal, setShowSerialModal] = useState(false);
   const [form, setForm] = useState({
     name: '', category: '', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0,
     description: '', imweb_product_no: '', barcode: '', supplier_id: '',
@@ -38,6 +43,7 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
 
   useEffect(() => {
     setEditing(false);
+    setShowSerialModal(false);
   }, [productId]);
 
   useEffect(() => {
@@ -104,9 +110,6 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
               </Button>
             </>
           )}
-          <Button variant="ghost" size="sm" onClick={() => router.push(`/products/${productId}/serials`)}>
-            <Hash size={14} />
-          </Button>
           <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center">
             <X size={16} />
           </button>
@@ -130,7 +133,7 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-neutral-500">소매가</label>
                 <input type="number" value={form.price || ''} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
@@ -202,7 +205,7 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
           {/* 가격 */}
           <Card>
             <h4 className="text-xs text-neutral-500 mb-2">가격 정보</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <p className="text-xs text-neutral-400">소매가</p>
                 <p className="text-sm font-bold">{formatKRW(p.price)}</p>
@@ -246,24 +249,194 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
 
           {/* 퀵 액션 */}
           <Card>
-            <h4 className="text-xs text-neutral-500 mb-2">바로가기</h4>
-            <div className="flex gap-2">
-              <Button variant="secondary" size="sm" onClick={() => router.push('/sales/new')} className="flex-1">
-                <Receipt size={14} />
-                판매 등록
+            <h4 className="text-xs text-neutral-500 mb-2">빠른 작업</h4>
+            <div className="space-y-2">
+              <Button variant="primary" size="sm" onClick={() => setShowSerialModal(true)} className="w-full">
+                <Plus size={14} />
+                시리얼 등록 · 창고배치
               </Button>
-              <Button variant="secondary" size="sm" onClick={() => router.push(`/products/${productId}/serials`)} className="flex-1">
-                <Hash size={14} />
-                시리얼
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => router.push('/inventory')} className="flex-1">
-                <Boxes size={14} />
-                재고
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="secondary" size="sm" onClick={() => router.push('/sales/new')} className="flex-1">
+                  <Receipt size={14} />
+                  판매 등록
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => router.push('/inventory')} className="flex-1">
+                  <Boxes size={14} />
+                  창고·재고
+                </Button>
+              </div>
+              <button
+                onClick={() => router.push(`/products/${productId}/serials`)}
+                className="w-full text-center text-xs text-neutral-400 hover:text-neutral-600 py-1 transition"
+              >
+                시리얼 상세 관리 →
+              </button>
             </div>
           </Card>
         </>
       )}
+
+      {/* 시리얼 빠른 등록 모달 */}
+      <SerialQuickModal
+        open={showSerialModal}
+        onClose={() => setShowSerialModal(false)}
+        productId={productId}
+        productSku={p.sku}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['product', productId] });
+          queryClient.invalidateQueries({ queryKey: ['products'] });
+          queryClient.invalidateQueries({ queryKey: ['inventory'] });
+          queryClient.invalidateQueries({ queryKey: ['serials'] });
+        }}
+      />
     </div>
+  );
+}
+
+/* ── 시리얼 빠른 등록 모달 ── */
+
+function SerialQuickModal({ open, onClose, productId, productSku, onSuccess }: {
+  open: boolean;
+  onClose: () => void;
+  productId: string;
+  productSku: string;
+  onSuccess: () => void;
+}) {
+  const [startNumber, setStartNumber] = useState('');
+  const [count, setCount] = useState(1);
+  const [zone, setZone] = useState<'raw' | 'ready'>('raw');
+  const [submitting, setSubmitting] = useState(false);
+
+  // 모달 열릴 때 초기화
+  useEffect(() => {
+    if (open) {
+      setStartNumber('');
+      setCount(1);
+      setZone('raw');
+    }
+  }, [open]);
+
+  async function handleSubmit() {
+    if (!startNumber || count < 1) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/serials/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: productId,
+          start_number: parseInt(startNumber),
+          count,
+          warehouse_zone: zone,
+        }),
+      });
+      if (!res.ok) {
+        const msg = await res.text();
+        toast.error(`생성 실패: ${msg}`);
+        return;
+      }
+      const data = await res.json();
+      const zoneLabel = zone === 'raw' ? '보관' : '준비';
+      toast.success(`${data.created || count}개 시리얼 → ${zoneLabel} 창고에 등록`);
+      onSuccess();
+      onClose();
+    } catch (err) {
+      toast.error(`오류: ${String(err)}`);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <Modal open={open} onClose={onClose} title="시리얼 등록 · 창고배치" className="max-w-md">
+      <div className="space-y-4">
+        {/* 시작번호 + 수량 */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-neutral-500 mb-1 block">시작번호 *</label>
+            <input
+              type="number"
+              value={startNumber}
+              onChange={(e) => setStartNumber(e.target.value)}
+              placeholder="13790001"
+              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm font-mono focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-neutral-500 mb-1 block">수량</label>
+            <input
+              type="number"
+              value={count}
+              onChange={(e) => setCount(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
+              min={1}
+              max={100}
+              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+            />
+          </div>
+        </div>
+
+        {/* 창고 선택 */}
+        <div>
+          <label className="text-xs text-neutral-500 mb-2 block">등록할 창고</label>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setZone('raw')}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border-2 transition text-sm font-medium ${
+                zone === 'raw'
+                  ? 'border-neutral-900 bg-neutral-900 text-white'
+                  : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
+              }`}
+            >
+              <Archive size={16} />
+              보관
+            </button>
+            <button
+              onClick={() => setZone('ready')}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border-2 transition text-sm font-medium ${
+                zone === 'ready'
+                  ? 'border-green-600 bg-green-600 text-white'
+                  : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
+              }`}
+            >
+              <Package size={16} />
+              준비
+            </button>
+          </div>
+          <p className="text-[11px] text-neutral-400 mt-1.5">
+            {zone === 'raw' ? '매입 원본 보관 (B2B 딜러 각인 전)' : '마모루 각인 완료, B2C 출고 가능'}
+          </p>
+        </div>
+
+        {/* 미리보기 */}
+        {startNumber && count > 0 && (
+          <div className="text-xs bg-neutral-50 rounded-lg p-3 space-y-1">
+            <p className="text-neutral-500">
+              생성 범위: <span className="font-mono font-semibold">{String(parseInt(startNumber) || 0).padStart(8, '0')}</span> ~ <span className="font-mono font-semibold">{String((parseInt(startNumber) || 0) + count - 1).padStart(8, '0')}</span>
+            </p>
+            <p className="text-neutral-400">
+              {count}개 → {zone === 'raw' ? '보관' : '준비'} 창고
+            </p>
+          </div>
+        )}
+
+        {/* 버튼 */}
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={onClose} className="flex-1">
+            취소
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSubmit}
+            disabled={!startNumber || count < 1 || submitting}
+            loading={submitting}
+            className="flex-1"
+          >
+            {submitting ? '생성 중...' : `${count}개 등록`}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 }

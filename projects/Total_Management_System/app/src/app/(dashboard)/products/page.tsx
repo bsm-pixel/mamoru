@@ -148,11 +148,11 @@ export default function ProductsPage() {
         {/* PC: 2열 레이아웃 */}
         {isLg && (
           <div className="flex gap-4 h-[calc(100vh-260px)]">
-            {/* 좌측: 제품 그리드 */}
-            <div className="w-[40%] shrink-0 overflow-y-auto pr-1">
+            {/* 좌측: 제품 그리드 (3/5) */}
+            <div className="w-[60%] shrink-0 overflow-y-auto pr-1">
               <p className="text-xs text-neutral-500 mb-2">{filtered.length}개 제품</p>
               {isLoading ? (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <Skeleton key={i} className="h-24 rounded-xl" />
                   ))}
@@ -163,7 +163,7 @@ export default function ProductsPage() {
                   <p className="text-sm">{search ? '검색 결과가 없습니다' : '제품이 없습니다'}</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {filtered.map((p) => (
                     <CompactProductCard
                       key={p.id}
