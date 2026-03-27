@@ -32,6 +32,8 @@ export default function ProductsPage() {
   const router = useRouter();
   const { data: products = [], isLoading } = useProducts();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [panelMode, setPanelMode] = useState<'view' | 'create' | 'duplicate'>('view');
+  const [duplicateData, setDuplicateData] = useState<Record<string, unknown> | null>(null);
   const [category, setCategory] = useState('all');
   const [search, setSearch] = useState('');
 
@@ -107,7 +109,7 @@ export default function ProductsPage() {
               </div>
             )}
           </div>
-          <Button size="sm" onClick={() => router.push('/products/new')} className="shrink-0">
+          <Button size="sm" onClick={() => { setSelectedId(null); setPanelMode('create'); }} className="shrink-0">
             <Plus size={14} />
             제품 등록
           </Button>
@@ -170,7 +172,7 @@ export default function ProductsPage() {
                       product={p}
                       isSelected={selectedId === p.id}
                       showCategory={category === 'all'}
-                      onSelect={() => setSelectedId(p.id)}
+                      onSelect={() => { setSelectedId(p.id); setPanelMode('view'); }}
                     />
                   ))}
                 </div>
@@ -179,8 +181,46 @@ export default function ProductsPage() {
 
             {/* 우측: 상세 모니터 */}
             <div className="flex-1 min-w-0 overflow-y-auto">
-              {selectedId ? (
-                <ProductDetailPanel productId={selectedId} onClose={() => setSelectedId(null)} />
+              {panelMode === 'create' || panelMode === 'duplicate' ? (
+                <ProductDetailPanel
+                  mode={panelMode}
+                  duplicateData={duplicateData as never}
+                  onClose={() => { setPanelMode('view'); setDuplicateData(null); }}
+                  onCreated={(id) => {
+                    setPanelMode('view');
+                    setDuplicateData(null);
+                    if (id !== '__duplicate__') setSelectedId(id);
+                  }}
+                />
+              ) : selectedId ? (
+                <ProductDetailPanel
+                  productId={selectedId}
+                  mode="view"
+                  onClose={() => setSelectedId(null)}
+                  onCreated={(id) => {
+                    if (id === '__duplicate__') {
+                      // 복제 요청 — 현재 제품 데이터로 duplicate 모드 전환
+                      const prod = products.find((p) => p.id === selectedId);
+                      if (prod) {
+                        setDuplicateData({
+                          name: prod.name,
+                          category: prod.category,
+                          price: prod.price,
+                          price_dealer: prod.price_dealer || 0,
+                          price_academy: prod.price_academy || 0,
+                          price_purchase: prod.price_purchase || 0,
+                          description: prod.description || '',
+                          imweb_product_no: '',
+                          supplier_id: prod.supplier_id || '',
+                        });
+                        setPanelMode('duplicate');
+                        setSelectedId(null);
+                      }
+                    } else {
+                      setSelectedId(id);
+                    }
+                  }}
+                />
               ) : (
                 <div className="flex flex-col items-center justify-center h-60 text-neutral-400">
                   <Package size={28} className="mb-2 opacity-40" />
@@ -224,8 +264,23 @@ export default function ProductsPage() {
 
         {/* 모바일 전용 슬라이드 패널 */}
         {!isLg && (
-          <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="제품 상세">
-            {selectedId && <ProductDetailPanel productId={selectedId} onClose={() => setSelectedId(null)} />}
+          <SlidePanel open={!!selectedId || panelMode !== 'view'} onClose={() => { setSelectedId(null); setPanelMode('view'); setDuplicateData(null); }} title={panelMode === 'create' ? '제품 등록' : panelMode === 'duplicate' ? '제품 복제' : '제품 상세'}>
+            {panelMode === 'create' || panelMode === 'duplicate' ? (
+              <ProductDetailPanel mode={panelMode} duplicateData={duplicateData as never}
+                onClose={() => { setPanelMode('view'); setDuplicateData(null); }}
+                onCreated={(id) => { setPanelMode('view'); setDuplicateData(null); if (id !== '__duplicate__') setSelectedId(id); }} />
+            ) : selectedId ? (
+              <ProductDetailPanel productId={selectedId} mode="view" onClose={() => setSelectedId(null)}
+                onCreated={(id) => {
+                  if (id === '__duplicate__') {
+                    const prod = products.find((p) => p.id === selectedId);
+                    if (prod) {
+                      setDuplicateData({ name: prod.name, category: prod.category, price: prod.price, price_dealer: prod.price_dealer || 0, price_academy: prod.price_academy || 0, price_purchase: prod.price_purchase || 0, description: prod.description || '', imweb_product_no: '', supplier_id: prod.supplier_id || '' });
+                      setPanelMode('duplicate'); setSelectedId(null);
+                    }
+                  } else { setSelectedId(id); }
+                }} />
+            ) : null}
           </SlidePanel>
         )}
       </div>

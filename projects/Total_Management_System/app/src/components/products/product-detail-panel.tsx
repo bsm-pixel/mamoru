@@ -9,9 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Modal } from '@/components/ui/modal';
 import { SupplierSelect } from '@/components/ui/supplier-select';
-import { useProduct, useUpdateProduct } from '@/hooks/use-product-detail';
+import { useProduct, useUpdateProduct, useCreateProduct } from '@/hooks/use-product-detail';
 import { formatKRW } from '@/lib/utils/format';
-import { Save, Package, Hash, X, Receipt, Boxes, Plus, Archive } from 'lucide-react';
+import { Save, Package, Hash, X, Receipt, Boxes, Plus, Archive, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -25,40 +25,73 @@ const CATEGORY_OPTIONS = [
 ];
 
 interface Props {
-  productId: string;
+  productId?: string;
+  mode?: 'view' | 'create' | 'duplicate';
+  duplicateData?: { name: string; category: string; price: number; price_dealer: number; price_academy: number; price_purchase: number; description: string; imweb_product_no: string; supplier_id: string };
   onClose: () => void;
+  onCreated?: (id: string) => void;
 }
 
-export function ProductDetailPanel({ productId, onClose }: Props) {
+export function ProductDetailPanel({ productId, mode = 'view', duplicateData, onClose, onCreated }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data, isLoading } = useProduct(productId);
+  const isCreateMode = mode === 'create' || mode === 'duplicate';
+  const { data, isLoading } = useProduct(productId || '');
   const updateProduct = useUpdateProduct();
+  const createProduct = useCreateProduct();
   const [editing, setEditing] = useState(false);
   const [showSerialModal, setShowSerialModal] = useState(false);
   const [form, setForm] = useState({
-    name: '', category: '', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0,
+    sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0,
     description: '', imweb_product_no: '', barcode: '', supplier_id: '',
   });
+
+  // SKU 자동 채번
+  async function fetchNextSku(cat: string) {
+    try {
+      const res = await fetch(`/api/products/next-sku?category=${cat}`);
+      const data = await res.json();
+      if (data.sku) setForm((prev) => ({ ...prev, sku: data.sku }));
+    } catch { /* ignore */ }
+  }
 
   useEffect(() => {
     setEditing(false);
     setShowSerialModal(false);
   }, [productId]);
 
+  // create/duplicate 모드 초기화
   useEffect(() => {
-    if (data?.product && !editing) {
+    if (mode === 'create') {
+      setForm({ sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0, description: '', imweb_product_no: '', barcode: '', supplier_id: '' });
+      fetchNextSku('BL');
+    } else if (mode === 'duplicate' && duplicateData) {
+      setForm({ sku: '', ...duplicateData, name: '' });
+      fetchNextSku(duplicateData.category || 'BL');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, duplicateData]);
+
+  useEffect(() => {
+    if (data?.product && !editing && mode === 'view') {
       const p = data.product;
       setForm({
-        name: p.name, category: p.category, price: p.price,
+        sku: p.sku || '', name: p.name, category: p.category, price: p.price,
         price_dealer: p.price_dealer || 0, price_academy: p.price_academy || 0, price_purchase: p.price_purchase || 0,
         description: p.description || '', imweb_product_no: p.imweb_product_no || '',
         barcode: p.barcode || '', supplier_id: p.supplier_id || '',
       });
     }
-  }, [data, editing]);
+  }, [data, editing, mode]);
+
+  // 카테고리 변경 시 SKU 자동 재채번 (create/duplicate 모드)
+  function handleCategoryChange(newCat: string) {
+    setForm((prev) => ({ ...prev, category: newCat }));
+    if (isCreateMode) fetchNextSku(newCat);
+  }
 
   async function handleSave() {
+    if (!productId) return;
     await updateProduct.mutateAsync({
       id: productId,
       name: form.name, category: form.category, price: form.price,
@@ -67,6 +100,97 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
       barcode: form.barcode || null, supplier_id: form.supplier_id || null,
     });
     setEditing(false);
+  }
+
+  async function handleCreate() {
+    if (!form.sku.trim() || !form.name.trim()) { toast.error('SKU와 제품명을 입력해주세요'); return; }
+    const result = await createProduct.mutateAsync({
+      sku: form.sku.trim(), name: form.name.trim(), category: form.category, price: form.price,
+      price_dealer: form.price_dealer || undefined, price_academy: form.price_academy || undefined,
+      price_purchase: form.price_purchase || undefined, description: form.description.trim() || undefined,
+      imweb_product_no: form.imweb_product_no.trim() || undefined, barcode: form.barcode.trim() || undefined,
+      supplier_id: form.supplier_id || undefined,
+    });
+    if (result?.product?.id && onCreated) onCreated(result.product.id);
+  }
+
+  // create/duplicate 모드 — 등록 폼 렌더링
+  if (isCreateMode) {
+    return (
+      <div className="flex-1 overflow-y-auto space-y-4 p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-indigo-black">{mode === 'duplicate' ? '제품 복제' : '제품 등록'}</h3>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center"><X size={16} /></button>
+        </div>
+        <Card>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-neutral-500">SKU (자동)</label>
+                <input type="text" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                  placeholder="자동 채번" className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm font-mono focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+              </div>
+              <div>
+                <label className="text-xs text-neutral-500">카테고리</label>
+                <select value={form.category} onChange={(e) => handleCategoryChange(e.target.value)}
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40">
+                  {CATEGORY_OPTIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">제품명 *</label>
+              <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="마모루 블런트 6.0" autoFocus
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-neutral-500">소매가</label>
+                <input type="number" value={form.price || ''} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+              </div>
+              <div>
+                <label className="text-xs text-neutral-500">딜러가</label>
+                <input type="number" value={form.price_dealer || ''} onChange={(e) => setForm({ ...form, price_dealer: parseInt(e.target.value) || 0 })}
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+              </div>
+              <div>
+                <label className="text-xs text-neutral-500">아카데미가</label>
+                <input type="number" value={form.price_academy || ''} onChange={(e) => setForm({ ...form, price_academy: parseInt(e.target.value) || 0 })}
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+              </div>
+              <div>
+                <label className="text-xs text-neutral-500">매입가</label>
+                <input type="number" value={form.price_purchase || ''} onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">매입처</label>
+              <SupplierSelect value={form.supplier_id} onChange={(id) => setForm({ ...form, supplier_id: id })} placeholder="매입처 선택" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">아임웹 상품번호</label>
+              <input type="text" value={form.imweb_product_no} onChange={(e) => setForm({ ...form, imweb_product_no: e.target.value })}
+                placeholder="아임웹 상품관리에서 확인"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">설명</label>
+              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2}
+                className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 resize-none" />
+            </div>
+          </div>
+        </Card>
+        <div className="flex gap-2">
+          <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>
+          <Button className="flex-1" disabled={!form.sku.trim() || !form.name.trim() || createProduct.isPending} onClick={handleCreate}>
+            {createProduct.isPending ? '등록 중...' : '제품 등록'}
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -100,7 +224,18 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {!editing ? (
-            <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>수정</Button>
+            <>
+              <Button variant="ghost" size="sm" onClick={() => {
+                if (onCreated && data?.product) {
+                  const d = data.product;
+                  onCreated('__duplicate__');
+                  // page.tsx에서 duplicate 모드 전환 처리
+                }
+              }} title="복제">
+                <Copy size={14} />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>수정</Button>
+            </>
           ) : (
             <>
               <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>취소</Button>
