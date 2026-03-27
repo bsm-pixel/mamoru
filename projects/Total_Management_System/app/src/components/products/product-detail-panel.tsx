@@ -27,7 +27,7 @@ const CATEGORY_OPTIONS = [
 interface Props {
   productId?: string;
   mode?: 'view' | 'create' | 'duplicate';
-  duplicateData?: { name: string; category: string; price: number; price_dealer: number; price_academy: number; price_purchase: number; description: string; imweb_product_no: string; supplier_id: string };
+  duplicateData?: { name: string; category: string; price: number; price_dealer: number; price_academy: number; price_purchase: number; description: string; imweb_product_no: string; barcode?: string; supplier_id: string };
   onClose: () => void;
   onCreated?: (id: string) => void;
 }
@@ -66,7 +66,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       setForm({ sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0, description: '', imweb_product_no: '', barcode: '', supplier_id: '' });
       fetchNextSku('BL');
     } else if (mode === 'duplicate' && duplicateData) {
-      setForm({ sku: '', ...duplicateData, name: '' });
+      setForm({ sku: '', barcode: '', ...duplicateData, name: '' });
       fetchNextSku(duplicateData.category || 'BL');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -415,7 +415,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       <SerialQuickModal
         open={showSerialModal}
         onClose={() => setShowSerialModal(false)}
-        productId={productId}
+        productId={productId!}
         productSku={p.sku}
         rawStock={p.raw_stock || 0}
         onSuccess={() => {
