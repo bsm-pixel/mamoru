@@ -295,6 +295,12 @@ export function ProductDetailPanel({ productId, onClose }: Props) {
 
 /* ── 시리얼 빠른 등록 모달 ── */
 
+const ZONE_OPTIONS: { key: 'raw' | 'ready' | 'display'; label: string; desc: string; color: string; activeColor: string }[] = [
+  { key: 'raw', label: '보관', desc: '매입 원본 보관', color: 'border-neutral-200 bg-white text-neutral-600', activeColor: 'border-neutral-900 bg-neutral-900 text-white' },
+  { key: 'ready', label: '준비', desc: '마모루 각인 완료, B2C 출고 가능', color: 'border-neutral-200 bg-white text-neutral-600', activeColor: 'border-green-600 bg-green-600 text-white' },
+  { key: 'display', label: '디스플레이', desc: '고객 전시 샘플 (가방)', color: 'border-neutral-200 bg-white text-neutral-600', activeColor: 'border-blue-600 bg-blue-600 text-white' },
+];
+
 function SerialQuickModal({ open, onClose, productId, productSku, onSuccess }: {
   open: boolean;
   onClose: () => void;
@@ -304,17 +310,27 @@ function SerialQuickModal({ open, onClose, productId, productSku, onSuccess }: {
 }) {
   const [startNumber, setStartNumber] = useState('');
   const [count, setCount] = useState(1);
-  const [zone, setZone] = useState<'raw' | 'ready'>('raw');
+  const [zone, setZone] = useState<'raw' | 'ready' | 'display'>('raw');
   const [submitting, setSubmitting] = useState(false);
+  const [loadingNext, setLoadingNext] = useState(false);
 
-  // 모달 열릴 때 초기화
+  // 모달 열릴 때 — 다음 시리얼번호 자동 조회
   useEffect(() => {
     if (open) {
-      setStartNumber('');
       setCount(1);
       setZone('raw');
+      setLoadingNext(true);
+      fetch('/api/serials/batch')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.next_start) setStartNumber(String(data.next_start));
+        })
+        .catch(() => setStartNumber(''))
+        .finally(() => setLoadingNext(false));
     }
   }, [open]);
+
+  const zoneLabel = { raw: '보관', ready: '준비', display: '디스플레이' }[zone];
 
   async function handleSubmit() {
     if (!startNumber || count < 1) return;
@@ -331,12 +347,11 @@ function SerialQuickModal({ open, onClose, productId, productSku, onSuccess }: {
         }),
       });
       if (!res.ok) {
-        const msg = await res.text();
-        toast.error(`생성 실패: ${msg}`);
+        const errData = await res.json().catch(() => ({ error: '알 수 없는 오류' }));
+        toast.error(errData.error || '생성 실패');
         return;
       }
       const data = await res.json();
-      const zoneLabel = zone === 'raw' ? '보관' : '준비';
       toast.success(`${data.created || count}개 시리얼 → ${zoneLabel} 창고에 등록`);
       onSuccess();
       onClose();
@@ -360,9 +375,11 @@ function SerialQuickModal({ open, onClose, productId, productSku, onSuccess }: {
               type="number"
               value={startNumber}
               onChange={(e) => setStartNumber(e.target.value)}
-              placeholder="13790001"
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm font-mono focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+              placeholder={loadingNext ? '조회 중...' : '13790001'}
+              disabled={loadingNext}
+              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm font-mono focus:outline-none focus:ring-2 focus:ring-terracotta/40 disabled:opacity-50"
             />
+            <p className="text-[10px] text-neutral-400 mt-0.5">이전 번호 이어서 자동 입력</p>
           </div>
           <div>
             <label className="text-xs text-neutral-500 mb-1 block">수량</label>
@@ -377,35 +394,24 @@ function SerialQuickModal({ open, onClose, productId, productSku, onSuccess }: {
           </div>
         </div>
 
-        {/* 창고 선택 */}
+        {/* 창고 선택 — 3개 */}
         <div>
           <label className="text-xs text-neutral-500 mb-2 block">등록할 창고</label>
           <div className="flex gap-2">
-            <button
-              onClick={() => setZone('raw')}
-              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border-2 transition text-sm font-medium ${
-                zone === 'raw'
-                  ? 'border-neutral-900 bg-neutral-900 text-white'
-                  : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
-              }`}
-            >
-              <Archive size={16} />
-              보관
-            </button>
-            <button
-              onClick={() => setZone('ready')}
-              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border-2 transition text-sm font-medium ${
-                zone === 'ready'
-                  ? 'border-green-600 bg-green-600 text-white'
-                  : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
-              }`}
-            >
-              <Package size={16} />
-              준비
-            </button>
+            {ZONE_OPTIONS.map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setZone(opt.key)}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg border-2 transition text-sm font-medium ${
+                  zone === opt.key ? opt.activeColor : opt.color
+                } hover:border-neutral-300`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
           <p className="text-[11px] text-neutral-400 mt-1.5">
-            {zone === 'raw' ? '매입 원본 보관 (B2B 딜러 각인 전)' : '마모루 각인 완료, B2C 출고 가능'}
+            {ZONE_OPTIONS.find((o) => o.key === zone)?.desc}
           </p>
         </div>
 
@@ -416,7 +422,7 @@ function SerialQuickModal({ open, onClose, productId, productSku, onSuccess }: {
               생성 범위: <span className="font-mono font-semibold">{String(parseInt(startNumber) || 0).padStart(8, '0')}</span> ~ <span className="font-mono font-semibold">{String((parseInt(startNumber) || 0) + count - 1).padStart(8, '0')}</span>
             </p>
             <p className="text-neutral-400">
-              {count}개 → {zone === 'raw' ? '보관' : '준비'} 창고
+              {count}개 → {zoneLabel} 창고
             </p>
           </div>
         )}
