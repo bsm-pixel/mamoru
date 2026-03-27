@@ -18,9 +18,9 @@ const ZONE_COLOR: Record<string, string> = {
   display: 'bg-blue-50 text-blue-700',
 };
 const ZONE_LABEL: Record<string, string> = {
-  raw: '매입원본',
-  ready: '판매준비',
-  display: '진열',
+  raw: '보관',
+  ready: '준비',
+  display: '디스플레이',
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -213,13 +213,13 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
           <div className="flex items-center gap-2 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
             <span className="text-xs font-semibold text-neutral-600">{selectedIds.size}개 선택</span>
             <Button size="sm" variant="secondary" onClick={() => handleBulkZone('ready')} disabled={updateZone.isPending}>
-              판매준비로 이동
+              준비로 이동
             </Button>
             <Button size="sm" variant="ghost" onClick={() => handleBulkZone('display')} disabled={updateZone.isPending}>
-              진열로 이동
+              디스플레이로 이동
             </Button>
             <Button size="sm" variant="ghost" onClick={() => handleBulkZone('raw')} disabled={updateZone.isPending}>
-              매입원본으로
+              보관으로
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
               선택 해제
@@ -305,9 +305,9 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
                         }
                       }}
                     >
-                      <option value="raw">매입원본</option>
-                      <option value="ready">판매준비</option>
-                      <option value="display">진열</option>
+                      <option value="raw">보관</option>
+                      <option value="ready">준비</option>
+                      <option value="display">디스플레이</option>
                     </select>
                   )}
                   {/* 상태 변경 드롭다운 */}

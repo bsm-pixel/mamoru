@@ -19,9 +19,9 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
 };
 
 const ZONE_LABEL: Record<string, { label: string; color: string }> = {
-  raw: { label: '매입원본', color: 'bg-neutral-100 text-neutral-600' },
-  ready: { label: '판매준비', color: 'bg-green-50 text-green-700' },
-  display: { label: '진열', color: 'bg-blue-50 text-blue-700' },
+  raw: { label: '보관', color: 'bg-neutral-100 text-neutral-600' },
+  ready: { label: '준비', color: 'bg-green-50 text-green-700' },
+  display: { label: '디스플레이', color: 'bg-blue-50 text-blue-700' },
 };
 
 const CHANNEL_LABEL: Record<string, string> = {

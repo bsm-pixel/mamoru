@@ -182,7 +182,7 @@ export function useUpdateSerialZone() {
       return res.json();
     },
     onSuccess: (_data, vars) => {
-      const zoneLabel = { raw: '매입원본', ready: '판매준비', display: '진열' }[vars.warehouse_zone];
+      const zoneLabel = { raw: '보관', ready: '준비', display: '디스플레이' }[vars.warehouse_zone];
       toast.success(`${vars.ids.length}개 → ${zoneLabel}으로 이동`);
       queryClient.invalidateQueries({ queryKey: ['serials'] });
       queryClient.invalidateQueries({ queryKey: ['serials-available'] });
