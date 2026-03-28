@@ -64,7 +64,11 @@ export async function POST(req: NextRequest) {
           .limit(1);
 
         const saleId = sales?.[0]?.id || null;
-        if (!saleId) { noSale++; continue; }
+        if (!saleId) {
+          noSale++;
+          errors.push(`매칭실패: ${date} / ${customerName} / ${productName} / 시리얼:${serial}`);
+          continue;
+        }
 
         // 제품 매칭 (품목명 기준)
         const { data: products } = await db
