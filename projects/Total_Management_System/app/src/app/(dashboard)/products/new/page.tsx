@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCreateProduct } from '@/hooks/use-product-detail';
 import { SupplierSelect } from '@/components/ui/supplier-select';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 
 const CATEGORY_OPTIONS = [
   { value: 'BL', label: '블런트' },
@@ -19,6 +19,7 @@ const CATEGORY_OPTIONS = [
 export default function NewProductPage() {
   const router = useRouter();
   const createProduct = useCreateProduct();
+  const [skuStatus, setSkuStatus] = useState<'idle' | 'checking' | 'available' | 'duplicate'>('idle');
 
   const [form, setForm] = useState({
     sku: '',
@@ -54,6 +55,18 @@ export default function NewProductPage() {
     router.push('/products');
   }
 
+  async function checkSkuDuplicate(sku: string) {
+    if (!sku.trim()) { setSkuStatus('idle'); return; }
+    setSkuStatus('checking');
+    try {
+      const res = await fetch(`/api/products?sku_check=${encodeURIComponent(sku.trim())}`);
+      const data = await res.json();
+      setSkuStatus(data.exists ? 'duplicate' : 'available');
+    } catch {
+      setSkuStatus('idle');
+    }
+  }
+
   return (
     <>
       <Topbar title="제품 등록" />
@@ -73,10 +86,20 @@ export default function NewProductPage() {
                 <input
                   type="text"
                   value={form.sku}
-                  onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                  placeholder="MM-BL-001"
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                  onChange={(e) => { setForm({ ...form, sku: e.target.value }); setSkuStatus('idle'); }}
+                  onBlur={() => checkSkuDuplicate(form.sku)}
+                  placeholder="MAM-BL-060"
+                  className={`w-full h-9 px-3 rounded-lg border text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 ${
+                    skuStatus === 'duplicate' ? 'border-red-400 bg-red-50' : 'border-neutral-200 bg-warm-ivory'
+                  }`}
                 />
+                {skuStatus === 'checking' && <p className="text-xs text-neutral-400 mt-0.5">확인 중...</p>}
+                {skuStatus === 'available' && (
+                  <p className="text-xs text-green-600 mt-0.5 flex items-center gap-1"><CheckCircle size={11} />사용 가능</p>
+                )}
+                {skuStatus === 'duplicate' && (
+                  <p className="text-xs text-red-500 mt-0.5 flex items-center gap-1"><XCircle size={11} />이미 사용 중인 SKU입니다</p>
+                )}
               </div>
               <div>
                 <label className="text-xs text-neutral-500">카테고리</label>
@@ -199,7 +222,7 @@ export default function NewProductPage() {
 
         <Button
           className="w-full"
-          disabled={!form.sku.trim() || !form.name.trim() || createProduct.isPending}
+          disabled={!form.sku.trim() || !form.name.trim() || createProduct.isPending || skuStatus === 'duplicate'}
           onClick={handleSubmit}
         >
           {createProduct.isPending ? '등록 중...' : '제품 등록'}

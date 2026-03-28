@@ -9,6 +9,15 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const url = req.nextUrl;
+
+    // SKU 중복 체크 (빠른 응답)
+    const skuCheck = url.searchParams.get('sku_check');
+    if (skuCheck) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any).from('products').select('id').eq('sku', skuCheck).limit(1);
+      return NextResponse.json({ exists: (data?.length || 0) > 0 });
+    }
+
     const category = url.searchParams.get('category');
     const search = url.searchParams.get('search');
     const activeOnly = url.searchParams.get('active') !== 'false';
