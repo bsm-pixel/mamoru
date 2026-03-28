@@ -72,14 +72,24 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
-        // 제품 매칭 (품목명 기준)
-        const { data: products } = await db
+        // 제품 매칭 (1차: 정확 매칭, 2차: 유사 매칭)
+        let productId: string | null = null;
+        const { data: exactMatch } = await db
           .from('products')
           .select('id')
           .eq('name', productName)
           .limit(1);
+        productId = exactMatch?.[0]?.id || null;
 
-        const productId = products?.[0]?.id || null;
+        if (!productId) {
+          // 유사 검색: 품목명이 제품명에 포함되거나 제품명이 품목명에 포함
+          const { data: likeMatch } = await db
+            .from('products')
+            .select('id')
+            .ilike('name', `%${productName.replace(/\[.*?\]/g, '').trim()}%`)
+            .limit(1);
+          productId = likeMatch?.[0]?.id || null;
+        }
 
         // 시리얼 생성 + 판매 건 연결
         const { error: insertErr } = await db.from('product_serials').insert({
