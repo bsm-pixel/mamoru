@@ -3,9 +3,6 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 /**
  * POST /api/import/serials — 이카운트 CSV에서 시리얼만 재임포트
- *
- * CSV 컬럼: 일자, 품목명, 수량, 공급가액, 부가세, 합계, 거래처명, 시리얼
- * → 기존 판매 건(일자+거래처명)을 찾아서 시리얼을 product_serials에 연결
  */
 export async function POST(req: NextRequest) {
   try {
@@ -30,31 +27,36 @@ export async function POST(req: NextRequest) {
 
     for (const row of rows) {
       try {
-        // 시리얼 값 추출 (컬럼명 여러 변형 대응)
-        const serial = (
+        // 시리얼 값 추출
+        const rawSerial = (
           row['시리얼'] || row['시리얼번호'] || row['일련번호'] || row['S/N'] || row['serial'] || ''
         ).toString().trim();
 
+        // 숫자만 추출 (소수점, 공백 등 제거)
+        const serial = rawSerial.replace(/[^0-9]/g, '');
         if (!serial) { skipped++; continue; }
 
-        // 일자, 거래처명, 품목명 추출
+        // 일자 파싱 — 다양한 형식 대응
         const rawDate = (row['일자'] || '').trim();
-        const date = rawDate.replace(/^(\d{4}\/\d{2}\/\d{2}).*$/, '$1').replace(/\//g, '-'); // 2024/02/24-2 → 2024-02-24
+        // 2024/02/27 -1, 2024/02/27-1, 2024-02-27-1 등 → 2024-02-27
+        const dateMatch = rawDate.match(/(\d{4})[\/\-](\d{2})[\/\-](\d{2})/);
+        if (!dateMatch) { skipped++; continue; }
+        const date = `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`;
+
         const customerName = (row['거래처명'] || '').trim();
         const productName = (row['품목명'] || '').trim();
-
-        if (!date || !customerName || !productName) { skipped++; continue; }
+        if (!customerName || !productName) { skipped++; continue; }
 
         // 시리얼 중복 체크
         const { data: existingSerial } = await db
           .from('product_serials')
           .select('id')
-          .eq('serial_number', String(serial))
+          .eq('serial_number', serial)
           .limit(1);
 
         if (existingSerial && existingSerial.length > 0) { duplicate++; continue; }
 
-        // 기존 판매 건 찾기 (일자+거래처명, 이카운트 이관 메모)
+        // 기존 판매 건 찾기 (일자+거래처명)
         const { data: sales } = await db
           .from('offline_sales')
           .select('id')
@@ -66,7 +68,7 @@ export async function POST(req: NextRequest) {
         const saleId = sales?.[0]?.id || null;
         if (!saleId) {
           noSale++;
-          errors.push(`매칭실패: ${date} / ${customerName} / ${productName} / 시리얼:${serial}`);
+          errors.push(`판매매칭실패: ${date} / ${customerName} / ${productName} / S/N:${serial}`);
           continue;
         }
 
@@ -82,32 +84,30 @@ export async function POST(req: NextRequest) {
         // 시리얼 생성 + 판매 건 연결
         const { error: insertErr } = await db.from('product_serials').insert({
           product_id: productId,
-          serial_number: String(serial),
+          serial_number: serial,
           barcode: null,
           status: 'sold',
           sold_via: 'offline',
           offline_sale_id: saleId,
-          sold_at: date,
+          sold_at: `${date}T00:00:00+09:00`,
           sold_to_name: customerName,
           warehouse_zone: 'raw',
         });
 
-        if (insertErr) throw insertErr;
+        if (insertErr) {
+          errors.push(`INSERT실패: S/N:${serial} / ${insertErr.message || JSON.stringify(insertErr)}`);
+          continue;
+        }
         linked++;
       } catch (err) {
-        errors.push(`${row['시리얼'] || '?'}: ${String(err)}`);
+        const msg = err instanceof Error ? err.message : JSON.stringify(err);
+        errors.push(`오류: S/N:${row['시리얼'] || '?'} / ${msg}`);
       }
     }
 
-    return NextResponse.json({
-      linked,       // 연결 성공
-      skipped,      // 시리얼 없는 행
-      noSale,       // 판매 건 매칭 실패
-      duplicate,    // 이미 존재하는 시리얼
-      errors,
-      total_rows: rows.length,
-    });
+    return NextResponse.json({ linked, skipped, noSale, duplicate, errors, total_rows: rows.length });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    const msg = err instanceof Error ? err.message : JSON.stringify(err);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
