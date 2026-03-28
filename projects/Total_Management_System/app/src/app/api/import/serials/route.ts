@@ -76,18 +76,19 @@ export async function POST(req: NextRequest) {
         const productId = products?.[0]?.id || null;
 
         // 시리얼 생성 + 판매 건 연결
-        await db.from('product_serials').insert({
+        const { error: insertErr } = await db.from('product_serials').insert({
           product_id: productId,
           serial_number: String(serial),
-          barcode: String(serial),
+          barcode: null,
           status: 'sold',
           sold_via: 'offline',
           offline_sale_id: saleId,
           sold_at: date,
           sold_to_name: customerName,
-          warehouse_zone: 'ready',
+          warehouse_zone: 'raw',
         });
 
+        if (insertErr) throw insertErr;
         linked++;
       } catch (err) {
         errors.push(`${row['시리얼'] || '?'}: ${String(err)}`);
