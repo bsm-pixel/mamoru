@@ -140,6 +140,11 @@ export default function SettingsPage() {
               endpoint="/api/import/sales"
               resultLabel={(d) => `${d.sales_created}건 판매, ${d.serials_created}개 시리얼 등록`}
             />
+            <CsvUploadButton
+              label="시리얼 재임포트 (기존 판매 연결)"
+              endpoint="/api/import/serials"
+              resultLabel={(d) => `${d.linked}개 연결, ${d.duplicate}개 중복, ${d.noSale}개 매칭실패`}
+            />
           </div>
         </Card>
 

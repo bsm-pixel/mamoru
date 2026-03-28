@@ -11,7 +11,7 @@ import { Modal } from '@/components/ui/modal';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { useProduct, useUpdateProduct, useCreateProduct } from '@/hooks/use-product-detail';
 import { formatKRW } from '@/lib/utils/format';
-import { Save, Package, Hash, X, Receipt, Boxes, Plus, Archive, Copy } from 'lucide-react';
+import { Save, Package, Hash, X, Receipt, Boxes, Plus, Archive, Copy, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -225,11 +225,25 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
         <div className="flex items-center gap-1 shrink-0">
           {!editing ? (
             <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  if (!productId) return;
+                  await updateProduct.mutateAsync({ id: productId, is_active: !p.is_active });
+                  queryClient.invalidateQueries({ queryKey: ['product', productId] });
+                  queryClient.invalidateQueries({ queryKey: ['products'] });
+                  queryClient.invalidateQueries({ queryKey: ['inventory'] });
+                  toast.success(p.is_active ? '비활성화됨' : '활성화됨');
+                }}
+                title={p.is_active ? '비활성화' : '활성화'}
+                className={p.is_active ? 'text-neutral-400' : 'text-red-500'}
+              >
+                {p.is_active ? <EyeOff size={14} /> : <Eye size={14} />}
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => {
                 if (onCreated && data?.product) {
-                  const d = data.product;
                   onCreated('__duplicate__');
-                  // page.tsx에서 duplicate 모드 전환 처리
                 }
               }} title="복제">
                 <Copy size={14} />
