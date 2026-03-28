@@ -49,6 +49,11 @@ export default function NewSalePage() {
   const [discount, setDiscount] = useState(0);
   const [memo, setMemo] = useState('');
 
+  // 복합 결제 분리 금액
+  const [mixedCard, setMixedCard] = useState(0);
+  const [mixedCash, setMixedCash] = useState(0);
+  const [mixedTransfer, setMixedTransfer] = useState(0);
+
   const customerType = selectedCustomer?.customer_type;
   const totalAmount = cart.reduce((s, item) => s + item.unitPrice * item.quantity, 0);
   const finalAmount = totalAmount - discount;
@@ -132,6 +137,9 @@ export default function NewSalePage() {
         paid_amount: paidAmount,
         payment_method: paymentMethod,
         payment_status: paymentStatus,
+        payment_detail: paymentMethod === 'mixed'
+          ? { card: mixedCard, cash: mixedCash, transfer: mixedTransfer }
+          : { [paymentMethod]: paidAmount },
         sale_channel: saleChannel,
         memo: memo.trim() || undefined,
       },
@@ -337,19 +345,29 @@ export default function NewSalePage() {
                     <span>결제 금액</span>
                     <span className="text-terracotta">{formatKRW(paidAmount)}</span>
                   </div>
-                  {/* 카드결제 시 VAT 분리 표시 */}
-                  {paymentMethod === 'card' && paidAmount > 0 && (() => {
-                    const { supply, vat } = calcVAT(paidAmount);
+                  {/* VAT 분리 표시 — 카드 금액 기준 */}
+                  {(() => {
+                    const cardAmt = paymentMethod === 'card' ? paidAmount
+                      : paymentMethod === 'mixed' ? mixedCard
+                      : 0;
+                    if (cardAmt <= 0) return null;
+                    const { supply, vat } = calcVAT(cardAmt);
                     return (
                       <div className="mt-2 pt-2 border-t border-dashed border-neutral-200 space-y-0.5">
                         <div className="flex justify-between text-xs text-neutral-500">
-                          <span>공급가액</span>
+                          <span>카드 공급가액</span>
                           <span>{formatKRW(supply)}</span>
                         </div>
                         <div className="flex justify-between text-xs text-neutral-500">
                           <span>부가세 (10%)</span>
                           <span>{formatKRW(vat)}</span>
                         </div>
+                        {paymentMethod === 'mixed' && (
+                          <div className="flex justify-between text-xs text-neutral-400">
+                            <span>현금/이체 (VAT 미적용)</span>
+                            <span>{formatKRW(mixedCash + mixedTransfer)}</span>
+                          </div>
+                        )}
                       </div>
                     );
                   })()}
@@ -417,7 +435,12 @@ export default function NewSalePage() {
                     {(['card', 'cash', 'transfer', 'mixed'] as const).map((method) => (
                       <button
                         key={method}
-                        onClick={() => setPaymentMethod(method)}
+                        onClick={() => {
+                          setPaymentMethod(method);
+                          if (method === 'mixed') {
+                            setMixedCard(0); setMixedCash(0); setMixedTransfer(0);
+                          }
+                        }}
                         className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${
                           paymentMethod === method
                             ? 'bg-terracotta text-cream'
@@ -428,6 +451,57 @@ export default function NewSalePage() {
                       </button>
                     ))}
                   </div>
+
+                  {/* 복합 결제 분리 입력 */}
+                  {paymentMethod === 'mixed' && (
+                    <div className="mt-2 p-3 rounded-lg bg-neutral-50 border border-neutral-200 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-neutral-500 w-10 shrink-0">카드</span>
+                        <input
+                          type="number" min={0} value={mixedCard || ''}
+                          onChange={(e) => setMixedCard(parseInt(e.target.value) || 0)}
+                          className="flex-1 h-8 px-2 rounded border border-neutral-200 text-sm text-right bg-white focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                          placeholder="0"
+                        />
+                        <span className="text-xs text-neutral-400">원</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-neutral-500 w-10 shrink-0">현금</span>
+                        <input
+                          type="number" min={0} value={mixedCash || ''}
+                          onChange={(e) => setMixedCash(parseInt(e.target.value) || 0)}
+                          className="flex-1 h-8 px-2 rounded border border-neutral-200 text-sm text-right bg-white focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                          placeholder="0"
+                        />
+                        <span className="text-xs text-neutral-400">원</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-neutral-500 w-10 shrink-0">이체</span>
+                        <input
+                          type="number" min={0} value={mixedTransfer || ''}
+                          onChange={(e) => setMixedTransfer(parseInt(e.target.value) || 0)}
+                          className="flex-1 h-8 px-2 rounded border border-neutral-200 text-sm text-right bg-white focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                          placeholder="0"
+                        />
+                        <span className="text-xs text-neutral-400">원</span>
+                      </div>
+                      <div className="pt-1 border-t border-neutral-200">
+                        {(() => {
+                          const mixedTotal = mixedCard + mixedCash + mixedTransfer;
+                          const isMatch = mixedTotal === finalAmount;
+                          return (
+                            <div className={`flex justify-between text-xs font-semibold ${isMatch ? 'text-green-600' : 'text-red-500'}`}>
+                              <span>합계</span>
+                              <span>
+                                {formatKRW(mixedTotal)}
+                                {isMatch ? ' ✓' : ` (${formatKRW(finalAmount - mixedTotal)} ${mixedTotal > finalAmount ? '초과' : '부족'})`}
+                              </span>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 결제 상태 */}

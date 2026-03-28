@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
         paid_amount: number;
         payment_method: string;
         payment_status?: string;
+        payment_detail?: Record<string, number>;
         memo?: string;
         supply_amount?: number;
         vat_amount?: number;
@@ -89,13 +90,16 @@ export async function POST(req: NextRequest) {
     const seq = String((count || 0) + 1).padStart(3, '0');
     const saleNumber = `OS-${today}-${seq}`;
 
-    // VAT 자동 계산 (카드결제 시)
+    // VAT 자동 계산 — 카드 금액 기준
     let supplyAmount = sale.supply_amount || 0;
     let vatAmount = sale.vat_amount || 0;
-    const isVatIncluded = sale.is_vat_included ?? (sale.payment_method === 'card');
-    if (isVatIncluded && !supplyAmount) {
-      supplyAmount = Math.round(sale.paid_amount / 1.1);
-      vatAmount = sale.paid_amount - supplyAmount;
+    const cardAmount = sale.payment_method === 'mixed'
+      ? (sale.payment_detail?.card || 0)
+      : sale.payment_method === 'card' ? sale.paid_amount : 0;
+    const isVatIncluded = sale.is_vat_included ?? (cardAmount > 0);
+    if (isVatIncluded && !supplyAmount && cardAmount > 0) {
+      supplyAmount = Math.round(cardAmount / 1.1);
+      vatAmount = cardAmount - supplyAmount;
     }
 
     // 판매 레코드 생성
@@ -112,6 +116,7 @@ export async function POST(req: NextRequest) {
         paid_amount: sale.paid_amount,
         payment_method: sale.payment_method,
         payment_status: sale.payment_status || 'paid',
+        payment_detail: sale.payment_detail || null,
         memo: sale.memo || null,
         supply_amount: supplyAmount,
         vat_amount: vatAmount,

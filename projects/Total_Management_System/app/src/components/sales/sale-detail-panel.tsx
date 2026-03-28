@@ -106,6 +106,19 @@ export function SaleDetailPanel({ saleId }: Props) {
           <div>
             <span className="text-xs text-neutral-500">결제방법</span>
             <p>{PAYMENT_METHOD_LABEL[s.payment_method] || s.payment_method}</p>
+            {/* 복합 결제 상세 */}
+            {s.payment_method === 'mixed' && (() => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const pd = (s as any).payment_detail as Record<string, number> | null;
+              if (!pd) return null;
+              return (
+                <div className="mt-1 text-xs text-neutral-500 space-y-0.5">
+                  {pd.card > 0 && <p>카드 {formatKRW(pd.card)}</p>}
+                  {pd.cash > 0 && <p>현금 {formatKRW(pd.cash)}</p>}
+                  {pd.transfer > 0 && <p>이체 {formatKRW(pd.transfer)}</p>}
+                </div>
+              );
+            })()}
           </div>
         </div>
         {/* 메모 인라인 편집 */}

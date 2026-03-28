@@ -188,6 +188,7 @@ export function useCreateSale() {
         paid_amount: number;
         payment_method: string;
         payment_status?: string;
+        payment_detail?: Record<string, number>;
         memo?: string;
         sale_channel?: string;
       };
