@@ -143,7 +143,12 @@ export default function SettingsPage() {
             <CsvUploadButton
               label="시리얼 재임포트 (기존 판매 연결)"
               endpoint="/api/import/serials"
-              resultLabel={(d) => `${d.linked}개 연결, ${d.duplicate}개 중복, ${d.noSale}개 매칭실패`}
+              resultLabel={(d) => {
+                const summary = `${d.linked}개 연결, ${d.duplicate}개 중복, ${d.noSale}개 매칭실패`;
+                const errs = d.errors as string[] | undefined;
+                if (errs && errs.length > 0) return `${summary}\n\n실패 상세:\n${errs.slice(0, 5).join('\n')}${errs.length > 5 ? `\n...외 ${errs.length - 5}건` : ''}`;
+                return summary;
+              }}
             />
           </div>
         </Card>
@@ -267,7 +272,7 @@ function CsvUploadButton({ label, endpoint, resultLabel }: {
         <input type="file" accept=".csv,.txt" onChange={handleFile} disabled={uploading} className="hidden" />
       </label>
       {result && (
-        <p className={`text-xs mt-1.5 ${result.startsWith('오류') ? 'text-red-500' : 'text-green-600'}`}>
+        <p className={`text-xs mt-1.5 whitespace-pre-wrap ${result.startsWith('오류') || result.includes('매칭실패') ? 'text-red-500' : 'text-green-600'}`}>
           {result}
         </p>
       )}
