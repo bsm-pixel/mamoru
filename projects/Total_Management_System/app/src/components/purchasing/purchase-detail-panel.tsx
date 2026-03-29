@@ -8,7 +8,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { usePurchaseOrder, useUpdatePurchaseOrder } from '@/hooks/use-purchasing';
 import { formatKRW, formatDate, calcVAT } from '@/lib/utils/format';
-import { Truck } from 'lucide-react';
+import { useProducts } from '@/hooks/use-sales';
+import { useQueryClient } from '@tanstack/react-query';
+import { Truck, Pencil, Minus, Plus, Trash2, X, Save } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
@@ -27,7 +30,14 @@ interface Props {
 export function PurchaseDetailPanel({ purchaseId }: Props) {
   const { data, isLoading } = usePurchaseOrder(purchaseId);
   const updatePO = useUpdatePurchaseOrder();
+  const queryClient = useQueryClient();
+  const { data: products = [] } = useProducts();
   const [depositInput, setDepositInput] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [editItems, setEditItems] = useState<Array<{ product_id?: string; product_name: string; sku?: string; quantity: number; unit_price: number }>>([]);
+  const [editMemo, setEditMemo] = useState('');
+  const [editExpectedDate, setEditExpectedDate] = useState('');
+  const [saving, setSaving] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     status: string; label: string; msg: string; variant?: 'danger' | 'default'; extra?: Record<string, unknown>;
   } | null>(null);
@@ -59,7 +69,20 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
           <h3 className="text-sm font-bold text-indigo-black">{po.po_number}</h3>
           <p className="text-xs text-neutral-500 mt-0.5">{po.supplier_name} · {formatDate(po.order_date)}</p>
         </div>
-        <Badge className={STATUS_COLOR[po.status] || ''}>{STATUS_LABEL[po.status] || po.status}</Badge>
+        <div className="flex items-center gap-2">
+          {po.status === 'draft' && !editing && (
+            <Button variant="ghost" size="sm" onClick={() => {
+              setEditing(true);
+              setEditItems(items.map((i) => ({ product_id: i.product_id || undefined, product_name: i.product_name, sku: i.sku || undefined, quantity: i.quantity, unit_price: i.unit_price })));
+              setEditMemo(po.memo || '');
+              setEditExpectedDate(po.expected_date || '');
+            }}>
+              <Pencil size={14} />
+              편집
+            </Button>
+          )}
+          <Badge className={STATUS_COLOR[po.status] || ''}>{STATUS_LABEL[po.status] || po.status}</Badge>
+        </div>
       </div>
 
       {/* 발주 정보 */}
@@ -90,6 +113,90 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
       </Card>
 
       {/* 품목 */}
+      {editing ? (
+        /* ── 편집 모드 ── */
+        <Card>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-xs font-semibold text-neutral-500">품목 편집</h4>
+            <div className="flex gap-1">
+              <Button variant="ghost" size="sm" onClick={() => setEditing(false)}><X size={14} />취소</Button>
+              <Button size="sm" loading={saving} onClick={async () => {
+                if (editItems.length === 0) { toast.error('품목을 추가해주세요'); return; }
+                setSaving(true);
+                try {
+                  await updatePO.mutateAsync({
+                    id: purchaseId,
+                    items: editItems,
+                    memo: editMemo,
+                    expected_date: editExpectedDate || undefined,
+                  });
+                  queryClient.invalidateQueries({ queryKey: ['purchase-order', purchaseId] });
+                  setEditing(false);
+                  toast.success('발주 수정 완료');
+                } catch (err) {
+                  toast.error(String(err));
+                } finally { setSaving(false); }
+              }}><Save size={14} />저장</Button>
+            </div>
+          </div>
+
+          {/* 메모 + 예정일 */}
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div>
+              <label className="text-xs text-neutral-500">입고 예정일</label>
+              <input type="date" value={editExpectedDate} onChange={(e) => setEditExpectedDate(e.target.value)}
+                className="w-full h-8 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">메모</label>
+              <input type="text" value={editMemo} onChange={(e) => setEditMemo(e.target.value)} placeholder="메모"
+                className="w-full h-8 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+          </div>
+
+          {/* 편집 품목 목록 */}
+          <div className="space-y-2 mb-3">
+            {editItems.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-2 py-1 border-b border-neutral-50 last:border-0">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate">{item.product_name}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setEditItems(prev => prev.map((it, i) => i === idx ? { ...it, quantity: Math.max(1, it.quantity - 1) } : it))}
+                    className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Minus size={10} /></button>
+                  <span className="text-xs font-semibold w-6 text-center">{item.quantity}</span>
+                  <button onClick={() => setEditItems(prev => prev.map((it, i) => i === idx ? { ...it, quantity: it.quantity + 1 } : it))}
+                    className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Plus size={10} /></button>
+                </div>
+                <input type="number" value={item.unit_price || ''} onChange={(e) => setEditItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_price: parseInt(e.target.value) || 0 } : it))}
+                  className="w-20 h-7 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs text-right" />
+                <button onClick={() => setEditItems(prev => prev.filter((_, i) => i !== idx))}
+                  className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"><Trash2 size={10} /></button>
+              </div>
+            ))}
+          </div>
+
+          {/* 제품 추가 */}
+          <div>
+            <p className="text-xs text-neutral-400 mb-1">제품 추가</p>
+            <div className="flex flex-wrap gap-1">
+              {products.filter(p => !editItems.find(ei => ei.product_id === p.id)).slice(0, 12).map(p => (
+                <button key={p.id} onClick={() => setEditItems(prev => [...prev, {
+                  product_id: p.id, product_name: p.name, sku: p.sku, quantity: 1, unit_price: p.price_purchase || p.price,
+                }])} className="px-2 py-1 rounded text-[10px] bg-neutral-100 hover:bg-neutral-200 transition truncate max-w-[120px]">
+                  + {p.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 합계 */}
+          <div className="mt-3 pt-3 border-t border-neutral-200 flex justify-between text-sm font-bold">
+            <span>합계</span>
+            <span className="text-terracotta">{formatKRW(editItems.reduce((s, i) => s + i.quantity * i.unit_price, 0))}</span>
+          </div>
+        </Card>
+      ) : (
       <Card>
         <h4 className="text-xs font-semibold text-neutral-500 mb-2">발주 품목</h4>
         <div className="space-y-2">
@@ -116,6 +223,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
           </div>
         </div>
       </Card>
+      )}
 
       {/* 결제 현황 */}
       <Card>

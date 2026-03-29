@@ -154,6 +154,39 @@ export async function PATCH(
     // 일반 필드 수정
     if (body.memo !== undefined) updates.memo = body.memo;
     if (body.expected_date !== undefined) updates.expected_date = body.expected_date;
+    if (body.supplier_name !== undefined) updates.supplier_name = body.supplier_name;
+    if (body.supplier_id !== undefined) updates.supplier_id = body.supplier_id || null;
+    if (body.order_date !== undefined) updates.order_date = body.order_date;
+
+    // 품목 수정 (draft 상태에서만)
+    if (body.items && Array.isArray(body.items)) {
+      if (current.status !== 'draft') {
+        return NextResponse.json({ error: '작성중 상태에서만 품목 수정이 가능합니다' }, { status: 400 });
+      }
+
+      // 기존 품목 삭제
+      await db.from('purchase_order_items').delete().eq('po_id', id);
+
+      // 새 품목 삽입
+      const newItems = body.items.map((item: { product_id?: string; product_name: string; sku?: string; quantity: number; unit_price: number }) => ({
+        po_id: id,
+        product_id: item.product_id || null,
+        product_name: item.product_name,
+        sku: item.sku || null,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.quantity * item.unit_price,
+      }));
+
+      if (newItems.length > 0) {
+        await db.from('purchase_order_items').insert(newItems);
+      }
+
+      // 합계 재계산
+      const newTotal = newItems.reduce((s: number, i: { quantity: number; unit_price: number }) => s + i.quantity * i.unit_price, 0);
+      updates.total_amount = newTotal;
+      updates.balance_amount = newTotal - (current.deposit_amount || 0);
+    }
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: '수정할 항목이 없습니다' }, { status: 400 });

@@ -95,6 +95,11 @@ export function useUpdatePurchaseOrder() {
       balance_amount?: number;
       received_date?: string;
       memo?: string;
+      expected_date?: string;
+      supplier_name?: string;
+      supplier_id?: string;
+      order_date?: string;
+      items?: Array<{ product_id?: string; product_name: string; sku?: string; quantity: number; unit_price: number }>;
     }) => {
       const res = await fetch(`/api/purchasing/${id}`, {
         method: 'PATCH',
