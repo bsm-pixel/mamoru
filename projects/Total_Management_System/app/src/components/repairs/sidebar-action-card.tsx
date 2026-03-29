@@ -14,10 +14,13 @@ import { getFilteredRepairTransitions, REPAIR_ACTION_LABEL } from '@/lib/repair/
 import { formatKRW, formatDateTime } from '@/lib/utils/format';
 import type { Repair, RepairStatus } from '@/lib/supabase/types';
 import { Package, Truck, X, Send, CheckCircle, CreditCard } from 'lucide-react';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 interface SidebarActionCardProps {
   repair: Repair;
 }
+
+type ConfirmAction = 'cost_notice' | 'mark_paid' | 'mark_shipped' | 'cancel_shipment' | 'cancel_repair' | null;
 
 export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const updateStatus = useUpdateRepairStatus();
@@ -25,7 +28,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const shipRepair = useShipRepair();
   const cancelShipment = useCancelShipment();
   const sendNotify = useSendRepairNotification();
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
   const currentStatus = r.status as RepairStatus;
   const proceedType = r.proceed_type;
@@ -137,7 +140,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
             <Button
               variant="primary"
               size="sm"
-              onClick={handleMarkPaid}
+              onClick={() => setConfirmAction('mark_paid')}
               loading={updateFields.isPending}
               className="w-full"
             >
@@ -153,7 +156,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
             <Button
               variant="primary"
               size="sm"
-              onClick={handleSendCostNotice}
+              onClick={() => setConfirmAction('cost_notice')}
               loading={updateStatus.isPending || sendNotify.isPending}
               className="w-full"
             >
@@ -185,7 +188,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
             {filtered.includes('cancelled' as RepairStatus) && (
               <button
                 disabled={busy}
-                onClick={() => setShowCancelConfirm(true)}
+                onClick={() => setConfirmAction('cancel_repair')}
                 className="w-full text-center text-xs text-red-400 hover:text-red-600 py-1.5 transition disabled:opacity-50"
               >
                 취소
@@ -219,7 +222,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={handleMarkShipped}
+                  onClick={() => setConfirmAction('mark_shipped')}
                   loading={updateStatus.isPending}
                   className="w-full"
                 >
@@ -230,7 +233,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
               {/* 송장 취소 */}
               {['ready_to_ship', 'shipped'].includes(currentStatus) && (
                 <button
-                  onClick={() => cancelShipment.mutate({ id: r.id })}
+                  onClick={() => setConfirmAction('cancel_shipment')}
                   disabled={cancelShipment.isPending}
                   className="text-xs text-red-400 hover:text-red-600 py-1 transition disabled:opacity-50"
                 >
@@ -253,35 +256,49 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
         </Card>
       )}
 
-      {/* 취소 확인 모달 */}
-      {showCancelConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
-            <h3 className="text-lg font-bold text-neutral-900">복원수리 취소</h3>
-            <p className="text-sm text-neutral-600 mt-2">
-              정말 이 복원수리 접수를 취소하시겠습니까?
-            </p>
-            <div className="flex gap-2 mt-5 justify-end">
-              <Button variant="ghost" size="sm" onClick={() => setShowCancelConfirm(false)}>
-                돌아가기
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                loading={updateStatus.isPending}
-                onClick={() => {
-                  updateStatus.mutate(
-                    { id: r.id, status: 'cancelled', note: '관리자 취소' },
-                    { onSettled: () => setShowCancelConfirm(false) }
-                  );
-                }}
-              >
-                취소 확정
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 확인 모달들 */}
+      <ConfirmModal
+        open={confirmAction === 'cost_notice'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={handleSendCostNotice}
+        title="비용 안내 발송"
+        message={<>고객에게 <strong>비용 안내 알림톡</strong>이 발송됩니다.<br />금액: {formatKRW(r.total_amount)}{r.total_amount === 0 ? ' (무상 처리)' : ''}</>}
+        confirmLabel="발송"
+      />
+      <ConfirmModal
+        open={confirmAction === 'mark_paid'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={handleMarkPaid}
+        title="입금 확인"
+        message={<>{r.name}님의 입금을 확인 처리합니다.<br />금액: {formatKRW(r.total_amount)}</>}
+        confirmLabel="입금 확인"
+      />
+      <ConfirmModal
+        open={confirmAction === 'mark_shipped'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={handleMarkShipped}
+        title="출고 완료"
+        message={<>송장 {r.invoice_number}으로 출고 완료 처리합니다.<br />고객에게 <strong>출고 알림톡</strong>이 자동 발송됩니다.</>}
+        confirmLabel="출고 완료"
+      />
+      <ConfirmModal
+        open={confirmAction === 'cancel_shipment'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={() => cancelShipment.mutateAsync({ id: r.id })}
+        title="송장 취소"
+        message="생성된 송장을 취소합니다. 롯데택배 집하 전에만 가능합니다."
+        confirmLabel="송장 취소"
+        variant="danger"
+      />
+      <ConfirmModal
+        open={confirmAction === 'cancel_repair'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={() => updateStatus.mutateAsync({ id: r.id, status: 'cancelled', note: '관리자 취소' })}
+        title="복원수리 취소"
+        message="정말 이 복원수리 접수를 취소하시겠습니까?"
+        confirmLabel="취소 확정"
+        variant="danger"
+      />
     </>
   );
 }
