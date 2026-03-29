@@ -11,7 +11,7 @@ import { ProductDetailPanel } from '@/components/products/product-detail-panel';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useProducts } from '@/hooks/use-sales';
 import { formatKRW } from '@/lib/utils/format';
-import { Plus, Search, Package, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Package, AlertTriangle, EyeOff } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -30,7 +30,8 @@ const CATEGORY_COLOR: Record<string, string> = {
 
 export default function ProductsPage() {
   const router = useRouter();
-  const { data: products = [], isLoading } = useProducts();
+  const [showInactive, setShowInactive] = useState(false);
+  const { data: products = [], isLoading } = useProducts({ includeInactive: showInactive });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<'view' | 'create' | 'duplicate'>('view');
   const [duplicateData, setDuplicateData] = useState<Record<string, unknown> | null>(null);
@@ -129,8 +130,8 @@ export default function ProductsPage() {
           />
         </div>
 
-        {/* 카테고리 칩 탭 */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        {/* 카테고리 칩 탭 + 비활성 포함 토글 */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide items-center">
           {categoryChips.map((chip) => (
             <button
               key={chip.key}
@@ -147,6 +148,15 @@ export default function ProductsPage() {
               </span>
             </button>
           ))}
+          <button
+            onClick={() => setShowInactive(!showInactive)}
+            className={`shrink-0 ml-auto flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition ${
+              showInactive ? 'bg-neutral-700 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+            }`}
+          >
+            <EyeOff size={11} />
+            비활성 포함
+          </button>
         </div>
         </div>{/* 상단 고정 영역 끝 */}
 
@@ -307,12 +317,15 @@ function CompactProductCard({ product: p, isSelected, showCategory, onSelect }: 
     <Card
       className={`cursor-pointer transition p-3 ${
         isSelected ? 'ring-2 ring-neutral-900 shadow-md' : 'hover:shadow-md'
-      }`}
+      } ${!p.is_active ? 'opacity-50' : ''}`}
       onClick={onSelect}
     >
       {/* 1행: 이름 + 재고 */}
       <div className="flex items-start justify-between gap-1 mb-1">
-        <h4 className="text-sm font-bold text-indigo-black truncate flex-1 min-w-0">{p.name}</h4>
+        <h4 className="text-sm font-bold text-indigo-black truncate flex-1 min-w-0">
+          {p.name}
+          {!p.is_active && <Badge className="bg-red-100 text-red-500 text-[8px] ml-1">비활성</Badge>}
+        </h4>
         {p.stock_quantity === -1 ? (
           <Badge className="bg-neutral-100 text-neutral-400 text-[9px] shrink-0">미사용</Badge>
         ) : (

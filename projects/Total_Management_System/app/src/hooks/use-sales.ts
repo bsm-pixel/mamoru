@@ -153,19 +153,21 @@ export function useSale(id: string) {
 }
 
 /** 제품 목록 (판매 입력용) */
-export function useProducts() {
+export function useProducts(opts?: { includeInactive?: boolean }) {
   const supabase = createClient();
+  const includeInactive = opts?.includeInactive || false;
 
   return useQuery({
-    queryKey: ['products'],
+    queryKey: ['products', { includeInactive }],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('products')
         .select('*')
-        .eq('is_active', true)
         .order('category')
         .order('name');
+      if (!includeInactive) query = query.eq('is_active', true);
+      const { data, error } = await query;
       if (error) throw error;
       return (data || []) as Product[];
     },

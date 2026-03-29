@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +36,16 @@ export default function OrdersPage() {
   const sync = useOrderSync();
   const { data: counts } = useOrderCounts();
 
+  // PC 여부 감지
+  const [isLg, setIsLg] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)');
+    setIsLg(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
+
   const { data, isLoading } = useOrders({ status, search, page, limit: 20 });
   const orders = data?.orders || [];
   const total = data?.total || 0;
@@ -45,7 +55,7 @@ export default function OrdersPage() {
     <>
       <Topbar title="주문관리" />
 
-      <div className="px-4 md:px-6 py-4 space-y-4">
+      <div className="px-4 md:px-6 py-4 space-y-3">
         {/* 상단: 동기화 + 검색 */}
         <div className="flex items-center gap-3">
           <Button
@@ -57,7 +67,6 @@ export default function OrdersPage() {
             <RefreshCw size={14} className={sync.isPending ? 'animate-spin' : ''} />
             {sync.isPending ? '동기화 중...' : '아임웹 동기화'}
           </Button>
-
           <SearchInput
             value={search}
             onChange={(v) => { setSearch(v); setPage(1); }}
@@ -91,42 +100,95 @@ export default function OrdersPage() {
           ))}
         </div>
 
-        {/* 주문 목록 */}
-        <Card padding={false}>
-          {isLoading ? (
-            <div className="p-4 space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
+        {/* PC: 2열 레이아웃 */}
+        {isLg && (
+          <div className="flex gap-4 h-[calc(100vh-240px)]">
+            {/* 좌측: 주문 목록 */}
+            <div className="w-[40%] shrink-0 overflow-y-auto">
+              <Card padding={false}>
+                {isLoading ? (
+                  <div className="p-4 space-y-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
+                  </div>
+                ) : orders.length === 0 ? (
+                  <EmptyState icon={ShoppingBag} message="주문이 없습니다" />
+                ) : (
+                  <div className="divide-y divide-neutral-100">
+                    {orders.map((order) => (
+                      <OrderRow
+                        key={order.id}
+                        order={order}
+                        isSelected={selectedId === order.id}
+                        onClick={() => setSelectedId(order.id)}
+                        onInvoice={() => setInvoiceOrder(order)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </Card>
+              <div className="mt-2">
+                <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+              </div>
             </div>
-          ) : orders.length === 0 ? (
-            <EmptyState icon={ShoppingBag} message="주문이 없습니다" />
-          ) : (
-            <div className="divide-y divide-neutral-100">
-              {orders.map((order) => (
-                <OrderRow
-                  key={order.id}
-                  order={order}
-                  onClick={() => setSelectedId(order.id)}
-                  onInvoice={() => setInvoiceOrder(order)}
-                />
-              ))}
-            </div>
-          )}
-        </Card>
 
-        <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+            {/* 우측: 주문 상세 모니터 */}
+            <div className="flex-1 min-w-0 overflow-y-auto">
+              {selectedId ? (
+                <OrderDetailPanel orderId={selectedId} />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-60 text-neutral-400">
+                  <ShoppingBag size={28} className="mb-2 opacity-40" />
+                  <p className="text-xs">목록에서 주문을 선택하세요</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 모바일: 목록만 */}
+        {!isLg && (
+          <>
+            <Card padding={false}>
+              {isLoading ? (
+                <div className="p-4 space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              ) : orders.length === 0 ? (
+                <EmptyState icon={ShoppingBag} message="주문이 없습니다" />
+              ) : (
+                <div className="divide-y divide-neutral-100">
+                  {orders.map((order) => (
+                    <OrderRow
+                      key={order.id}
+                      order={order}
+                      isSelected={false}
+                      onClick={() => setSelectedId(order.id)}
+                      onInvoice={() => setInvoiceOrder(order)}
+                    />
+                  ))}
+                </div>
+              )}
+            </Card>
+            <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+          </>
+        )}
       </div>
 
-      {/* 주문 상세 슬라이드 패널 */}
-      <SlidePanel
-        open={!!selectedId}
-        onClose={() => setSelectedId(null)}
-        title="주문 상세"
-        className="sm:w-[480px]"
-      >
-        {selectedId && <OrderDetailPanel orderId={selectedId} />}
-      </SlidePanel>
+      {/* 모바일 전용 슬라이드 패널 */}
+      {!isLg && (
+        <SlidePanel
+          open={!!selectedId}
+          onClose={() => setSelectedId(null)}
+          title="주문 상세"
+          className="sm:w-[480px]"
+        >
+          {selectedId && <OrderDetailPanel orderId={selectedId} />}
+        </SlidePanel>
+      )}
 
       {/* 인라인 송장 생성 모달 */}
       {invoiceOrder && (
@@ -140,13 +202,13 @@ export default function OrdersPage() {
   );
 }
 
-const OrderRow = memo(function OrderRow({ order, onClick, onInvoice }: { order: Order; onClick: () => void; onInvoice: () => void }) {
+const OrderRow = memo(function OrderRow({ order, isSelected, onClick, onInvoice }: { order: Order; isSelected: boolean; onClick: () => void; onInvoice: () => void }) {
   const statusColor = ORDER_STATUS_COLOR[order.status] || 'bg-neutral-100 text-neutral-500';
 
   return (
     <div
       onClick={onClick}
-      className="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition"
+      className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition ${isSelected ? 'bg-terracotta/5 border-l-2 border-l-terracotta' : ''}`}
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
@@ -156,7 +218,6 @@ const OrderRow = memo(function OrderRow({ order, onClick, onInvoice }: { order: 
           <Badge className={statusColor}>
             {ORDER_STATUS_LABEL[order.status] || order.status}
           </Badge>
-          {/* R4: 결제/미납 칩 */}
           {order.paid_at ? (
             <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">
               결제완료
@@ -174,12 +235,8 @@ const OrderRow = memo(function OrderRow({ order, onClick, onInvoice }: { order: 
             <span className="text-terracotta">{order.invoice_number}</span>
           )}
         </div>
-        {/* R4: 배송 메모 말줄임 + 호버 전문 */}
         {order.recipient_memo && (
-          <p
-            className="mt-1 text-xs text-neutral-400 truncate max-w-[300px]"
-            title={order.recipient_memo}
-          >
+          <p className="mt-1 text-xs text-neutral-400 truncate max-w-[300px]" title={order.recipient_memo}>
             📝 {order.recipient_memo}
           </p>
         )}
