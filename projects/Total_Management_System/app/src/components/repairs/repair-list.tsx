@@ -13,6 +13,7 @@ import {
   Search, Scissors, Package, MapPin, CheckCircle,
   CreditCard, Truck, ClipboardCheck,
 } from 'lucide-react';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import type { Repair } from '@/lib/supabase/types';
 import type { RepairTabKey } from './repair-tab-bar';
 
@@ -280,79 +281,78 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
   const updateStatus = useUpdateRepairStatus();
   const updateFields = useUpdateRepairFields();
   const shipRepair = useShipRepair();
+  const [showConfirm, setShowConfirm] = useState(false);
   const busy = updateStatus.isPending || updateFields.isPending || shipRepair.isPending;
 
   const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 카드 클릭(상세패널)과 분리
+    e.stopPropagation();
+    setShowConfirm(true);
   };
 
-  switch (tab) {
-    case 'intake':
-      // [접수확인] — confirmed_at 설정
-      return (
-        <button
-          onClick={(e) => { handleClick(e); updateFields.mutate({ id: r.id, confirmed_at: new Date().toISOString() }); }}
-          disabled={busy}
-          className="px-2 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition disabled:opacity-50"
-        >
-          접수확인
-        </button>
-      );
+  // 확인 후 실행할 액션
+  const handleConfirm = async () => {
+    switch (tab) {
+      case 'intake':
+        await updateFields.mutateAsync({ id: r.id, confirmed_at: new Date().toISOString() });
+        break;
+      case 'pickup_needed':
+        await updateStatus.mutateAsync({ id: r.id, status: 'pickup_scheduled', note: '수거접수 완료' });
+        break;
+      case 'in_progress':
+        await updateFields.mutateAsync({ id: r.id, paid_at: new Date().toISOString() });
+        break;
+      case 'ready_to_ship':
+        if (!r.invoice_number) {
+          await shipRepair.mutateAsync({ id: r.id });
+        } else {
+          await updateStatus.mutateAsync({ id: r.id, status: 'shipped', shipped_at: new Date().toISOString(), note: '출고완료' });
+        }
+        break;
+    }
+  };
 
-    case 'pickup_needed':
-      // [수거접수 완료] — pickup_scheduled 전환
-      return (
-        <button
-          onClick={(e) => { handleClick(e); updateStatus.mutate({ id: r.id, status: 'pickup_scheduled', note: '수거접수 완료' }); }}
-          disabled={busy}
-          className="px-2 py-1 rounded-md text-[11px] font-semibold bg-purple-100 text-purple-700 hover:bg-purple-200 transition disabled:opacity-50"
-        >
-          수거접수
-        </button>
-      );
+  const labels: Record<string, { btn: string; title: string; msg: string }> = {
+    intake: { btn: '접수확인', title: '접수 확인', msg: `${r.name}님의 접수를 확인합니다.` },
+    pickup_needed: { btn: '수거접수', title: '수거접수 완료', msg: `${r.name}님의 수거접수를 완료합니다.` },
+    in_progress: { btn: '입금확인', title: '입금 확인', msg: `${r.name}님의 입금을 확인합니다.` },
+    ready_to_ship: !r.invoice_number
+      ? { btn: '송장생성', title: '송장 생성', msg: '롯데택배 송장을 생성합니다.' }
+      : { btn: '출고완료', title: '출고 완료', msg: `송장 ${r.invoice_number}으로 출고합니다. 알림톡이 발송됩니다.` },
+  };
 
-    case 'in_progress':
-      // 미입금 시 [입금확인]
-      if (!r.paid_at) {
-        return (
-          <button
-            onClick={(e) => { handleClick(e); updateFields.mutate({ id: r.id, paid_at: new Date().toISOString() }); }}
-            disabled={busy}
-            className="px-2 py-1 rounded-md text-[11px] font-semibold bg-green-100 text-green-700 hover:bg-green-200 transition disabled:opacity-50"
-          >
-            입금확인
-          </button>
-        );
-      }
-      return null;
+  const label = labels[tab];
+  if (!label) return null;
+  if (tab === 'in_progress' && r.paid_at) return null;
 
-    case 'ready_to_ship':
-      // 송장 없으면 [송장생성], 있으면 [출고완료]
-      if (!r.invoice_number) {
-        return (
-          <button
-            onClick={(e) => { handleClick(e); shipRepair.mutate({ id: r.id }); }}
-            disabled={busy}
-            className="px-2 py-1 rounded-md text-[11px] font-semibold bg-amber-100 text-amber-700 hover:bg-amber-200 transition disabled:opacity-50"
-          >
-            <Truck size={11} className="inline mr-0.5" />송장생성
-          </button>
-        );
-      }
-      return (
-        <button
-          onClick={(e) => {
-            handleClick(e);
-            updateStatus.mutate({ id: r.id, status: 'shipped', shipped_at: new Date().toISOString(), note: '출고완료' });
-          }}
-          disabled={busy}
-          className="px-2 py-1 rounded-md text-[11px] font-semibold bg-green-100 text-green-700 hover:bg-green-200 transition disabled:opacity-50"
-        >
-          출고완료
-        </button>
-      );
+  const btnColors: Record<string, string> = {
+    intake: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+    pickup_needed: 'bg-purple-100 text-purple-700 hover:bg-purple-200',
+    in_progress: 'bg-green-100 text-green-700 hover:bg-green-200',
+    ready_to_ship: !r.invoice_number ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-green-100 text-green-700 hover:bg-green-200',
+  };
 
-    default:
-      return null;
-  }
+  return (
+    <>
+      <button
+        onClick={handleClick}
+        disabled={busy}
+        className={`px-2 py-1 rounded-md text-[11px] font-semibold transition disabled:opacity-50 ${btnColors[tab]}`}
+      >
+        {tab === 'ready_to_ship' && !r.invoice_number && <Truck size={11} className="inline mr-0.5" />}
+        {label.btn}
+      </button>
+      {showConfirm && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ConfirmModal
+            open={showConfirm}
+            onClose={() => setShowConfirm(false)}
+            onConfirm={handleConfirm}
+            title={label.title}
+            message={label.msg}
+            confirmLabel={label.btn}
+          />
+        </div>
+      )}
+    </>
+  );
 }

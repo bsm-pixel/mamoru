@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Modal } from '@/components/ui/modal';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { useProduct, useUpdateProduct, useCreateProduct } from '@/hooks/use-product-detail';
 import { formatKRW } from '@/lib/utils/format';
@@ -42,6 +43,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const [editing, setEditing] = useState(false);
   const [showSerialModal, setShowSerialModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0,
@@ -230,14 +232,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={async () => {
-                  if (!productId) return;
-                  await updateProduct.mutateAsync({ id: productId, is_active: !p.is_active });
-                  queryClient.invalidateQueries({ queryKey: ['product', productId] });
-                  queryClient.invalidateQueries({ queryKey: ['products'] });
-                  queryClient.invalidateQueries({ queryKey: ['inventory'] });
-                  toast.success(p.is_active ? '비활성화됨' : '활성화됨');
-                }}
+                onClick={() => setShowDeactivateConfirm(true)}
                 title={p.is_active ? '비활성화' : '활성화'}
                 className={p.is_active ? 'text-neutral-400' : 'text-red-500'}
               >
@@ -449,6 +444,26 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
           queryClient.invalidateQueries({ queryKey: ['inventory'] });
           queryClient.invalidateQueries({ queryKey: ['serials'] });
         }}
+      />
+
+      {/* 비활성화/활성화 확인 모달 */}
+      <ConfirmModal
+        open={showDeactivateConfirm}
+        onClose={() => setShowDeactivateConfirm(false)}
+        onConfirm={async () => {
+          if (!productId) return;
+          await updateProduct.mutateAsync({ id: productId, is_active: !p.is_active });
+          queryClient.invalidateQueries({ queryKey: ['product', productId] });
+          queryClient.invalidateQueries({ queryKey: ['products'] });
+          queryClient.invalidateQueries({ queryKey: ['inventory'] });
+          toast.success(p.is_active ? '비활성화됨' : '활성화됨');
+        }}
+        title={p.is_active ? '제품 비활성화' : '제품 활성화'}
+        message={p.is_active
+          ? `${p.name}을(를) 비활성화합니다. 목록에서 숨겨지며 판매 시 표시되지 않습니다.`
+          : `${p.name}을(를) 다시 활성화합니다.`}
+        confirmLabel={p.is_active ? '비활성화' : '활성화'}
+        variant={p.is_active ? 'danger' : 'default'}
       />
 
       {/* 삭제 확인 모달 */}

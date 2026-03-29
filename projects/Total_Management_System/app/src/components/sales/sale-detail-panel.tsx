@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSale, useCancelSale, useUpdatePaymentStatus, useUpdateSaleMemo } from '@/hooks/use-sales';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save } from 'lucide-react';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import type { SaleChannel, OfflineSale, OfflineSaleItem } from '@/lib/supabase/types';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
@@ -40,6 +41,8 @@ export function SaleDetailPanel({ saleId }: Props) {
   const updateMemo = useUpdateSaleMemo();
   const [cancelMode, setCancelMode] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [showPaidConfirm, setShowPaidConfirm] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [editingMemo, setEditingMemo] = useState(false);
   const [memoValue, setMemoValue] = useState('');
 
@@ -247,38 +250,51 @@ export function SaleDetailPanel({ saleId }: Props) {
       ) : (
         <div className="flex items-center gap-2 pt-2 border-t border-neutral-100">
           {s.payment_status !== 'paid' && (
-            <Button size="sm" onClick={handleMarkPaid} disabled={updatePayment.isPending}>
+            <Button size="sm" onClick={() => setShowPaidConfirm(true)} disabled={updatePayment.isPending}>
               <CheckCircle size={14} />
               {updatePayment.isPending ? '처리 중...' : '결제완료로 변경'}
             </Button>
           )}
-          {!cancelMode ? (
-            <button onClick={() => setCancelMode(true)} className="text-xs text-red-500 hover:text-red-700 transition">
-              판매 취소
-            </button>
-          ) : (
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-1.5 text-xs text-red-600">
-                <AlertTriangle size={12} />
-                <span>시리얼/재고가 복원됩니다.</span>
-              </div>
-              <input
-                type="text"
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="취소 사유 (선택)"
-                className="w-full h-8 px-3 rounded-lg border border-red-200 bg-red-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
-              />
-              <div className="flex gap-2">
-                <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={handleCancel} disabled={cancelSale.isPending}>
-                  {cancelSale.isPending ? '취소 처리 중...' : '취소 확정'}
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => { setCancelMode(false); setCancelReason(''); }}>돌아가기</Button>
-              </div>
-            </div>
-          )}
+          <button onClick={() => setShowCancelConfirm(true)} className="text-xs text-red-500 hover:text-red-700 transition">
+            판매 취소
+          </button>
         </div>
       )}
+
+      {/* 결제완료 확인 모달 */}
+      <ConfirmModal
+        open={showPaidConfirm}
+        onClose={() => setShowPaidConfirm(false)}
+        onConfirm={() => updatePayment.mutateAsync({ id: saleId, payment_status: 'paid', paid_amount: s.total_amount })}
+        title="결제완료 처리"
+        message={<>{s.customer_name}님의 결제를 완료 처리합니다.<br />금액: {formatKRW(s.total_amount)}</>}
+        confirmLabel="결제완료"
+      />
+
+      {/* 판매 취소 확인 모달 */}
+      <ConfirmModal
+        open={showCancelConfirm}
+        onClose={() => { setShowCancelConfirm(false); setCancelReason(''); }}
+        onConfirm={() => cancelSale.mutateAsync({ id: saleId, reason: cancelReason })}
+        title="판매 취소"
+        message={
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 text-xs text-red-600">
+              <AlertTriangle size={12} />
+              <span>시리얼/재고가 복원됩니다. 이 작업은 되돌릴 수 없습니다.</span>
+            </div>
+            <input
+              type="text"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="취소 사유 (선택)"
+              className="w-full h-8 px-3 rounded-lg border border-red-200 bg-red-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+            />
+          </div>
+        }
+        confirmLabel="취소 확정"
+        variant="danger"
+      />
     </div>
   );
 }

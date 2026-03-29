@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { usePurchaseOrder, useUpdatePurchaseOrder } from '@/hooks/use-purchasing';
 import { formatKRW, formatDate, calcVAT } from '@/lib/utils/format';
 import { ArrowLeft } from 'lucide-react';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중',
@@ -62,6 +63,8 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
 
   const { order: po, items } = data;
   const { supply, vat } = calcVAT(po.total_amount);
+
+  const [pendingAction, setPendingAction] = useState<{ status: string; label: string; msg: string; variant?: 'danger' | 'default'; extra?: Record<string, unknown> } | null>(null);
 
   async function handleAction(status: string, extra?: Record<string, unknown>) {
     await updatePO.mutateAsync({ id, status, ...extra });
@@ -175,7 +178,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
             {po.status === 'draft' && (
               <Button
                 className="w-full"
-                onClick={() => handleAction('ordered')}
+                onClick={() => setPendingAction({ status: 'ordered', label: '발주 확정', msg: '이 발주를 확정합니다.' })}
                 disabled={updatePO.isPending}
               >
                 발주 확정
@@ -193,7 +196,12 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                 />
                 <Button
                   variant="secondary"
-                  onClick={() => handleAction('deposit_paid', { deposit_amount: parseInt(depositInput) || Math.round(po.total_amount / 2) })}
+                  onClick={() => setPendingAction({
+                    status: 'deposit_paid',
+                    label: '선납 처리',
+                    msg: `선납금 ${formatKRW(parseInt(depositInput) || Math.round(po.total_amount / 2))}을 처리합니다.`,
+                    extra: { deposit_amount: parseInt(depositInput) || Math.round(po.total_amount / 2) },
+                  })}
                   disabled={updatePO.isPending}
                 >
                   선납 처리
@@ -204,7 +212,11 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
             {(po.status === 'ordered' || po.status === 'deposit_paid') && (
               <Button
                 className="w-full bg-green-600 hover:bg-green-700"
-                onClick={() => handleAction('received')}
+                onClick={() => setPendingAction({
+                  status: 'received',
+                  label: '입고 확인',
+                  msg: `입고를 확인합니다. 재고가 자동으로 증가합니다.\n\n${items.map((i: { product_name: string; quantity: number }) => `• ${i.product_name} x${i.quantity}`).join('\n')}`,
+                })}
                 disabled={updatePO.isPending}
               >
                 입고 확인 (재고 증가)
@@ -214,7 +226,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
             {po.status === 'received' && po.balance_amount > 0 && (
               <Button
                 className="w-full"
-                onClick={() => handleAction('balance_paid')}
+                onClick={() => setPendingAction({ status: 'balance_paid', label: '잔금 완료', msg: `잔금 ${formatKRW(po.balance_amount)}을 완료 처리합니다.` })}
                 disabled={updatePO.isPending}
               >
                 잔금 완료
@@ -225,11 +237,24 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
               <Button
                 variant="ghost"
                 className="w-full text-red-500 hover:text-red-600"
-                onClick={() => handleAction('cancelled')}
+                onClick={() => setPendingAction({ status: 'cancelled', label: '발주 취소', msg: '이 발주를 취소합니다. 되돌릴 수 없습니다.', variant: 'danger' })}
                 disabled={updatePO.isPending}
               >
                 발주 취소
               </Button>
+            )}
+
+            {/* 확인 모달 */}
+            {pendingAction && (
+              <ConfirmModal
+                open={!!pendingAction}
+                onClose={() => setPendingAction(null)}
+                onConfirm={() => handleAction(pendingAction.status, pendingAction.extra)}
+                title={pendingAction.label}
+                message={<span className="whitespace-pre-wrap">{pendingAction.msg}</span>}
+                confirmLabel={pendingAction.label}
+                variant={pendingAction.variant || 'default'}
+              />
             )}
           </div>
         </Card>

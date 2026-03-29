@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SuggestTimeModal } from './suggest-time-modal';
 import { formatPhone, formatDate, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
 import { Calendar, MapPin, Phone, User, Clock, FileSignature } from 'lucide-react';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import Link from 'next/link';
 const TYPE_LABEL: Record<string, string> = {
   store_visit: '매장방문',
@@ -49,8 +50,16 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
   const statusLabel = CONSULTATION_STATUS_LABEL[c.status] || c.status;
   const statusColor = STATUS_COLOR[c.status] || 'bg-neutral-100';
 
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+
   const handleStatus = (newStatus: string) => {
-    updateStatus.mutate({ id: c.id, status: newStatus });
+    setPendingStatus(newStatus);
+  };
+
+  const confirmStatusLabels: Record<string, { title: string; msg: string; variant?: 'danger' | 'default' }> = {
+    completed: { title: '상담 완료', msg: `${c.name}님의 상담을 완료 처리합니다.` },
+    in_progress: { title: '상담 시작', msg: `${c.name}님의 상담을 시작합니다.` },
+    cancelled: { title: '상담 취소', msg: `${c.name}님의 상담을 취소합니다. 이 작업은 되돌릴 수 없습니다.`, variant: 'danger' },
   };
 
   return (
@@ -201,6 +210,19 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
       >
         상세 페이지에서 보기 →
       </Link>
+
+      {/* 상태 변경 확인 모달 */}
+      {pendingStatus && confirmStatusLabels[pendingStatus] && (
+        <ConfirmModal
+          open={!!pendingStatus}
+          onClose={() => setPendingStatus(null)}
+          onConfirm={() => updateStatus.mutateAsync({ id: c.id, status: pendingStatus })}
+          title={confirmStatusLabels[pendingStatus].title}
+          message={confirmStatusLabels[pendingStatus].msg}
+          confirmLabel={confirmStatusLabels[pendingStatus].title}
+          variant={confirmStatusLabels[pendingStatus].variant || 'default'}
+        />
+      )}
 
       {/* 이력 */}
       {history.length > 0 && (

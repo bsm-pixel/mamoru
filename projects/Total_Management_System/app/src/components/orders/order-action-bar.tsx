@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useBookInvoice, useCancelInvoice, useCancelOrder } from '@/hooks/use-orders';
 import { InvoiceModal } from './invoice-modal';
 import { AlertTriangle, Truck, ExternalLink } from 'lucide-react';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import type { Order, OrderItem } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
 
@@ -15,7 +16,9 @@ interface Props {
 
 export function OrderActionBar({ order, items }: Props) {
   const [invoiceOpen, setInvoiceOpen] = useState(false);
-  const [cancelConfirm, setCancelConfirm] = useState(false);
+  const [showCancelOrder, setShowCancelOrder] = useState(false);
+  const [showCancelInvoice, setShowCancelInvoice] = useState(false);
+  const [showPushImweb, setShowPushImweb] = useState(false);
   const [checkingAlps, setCheckingAlps] = useState(false);
   const bookInvoice = useBookInvoice();
   const cancelInvoice = useCancelInvoice();
@@ -94,31 +97,20 @@ export function OrderActionBar({ order, items }: Props) {
               <Truck size={14} />
               송장 생성
             </Button>
-            {!cancelConfirm ? (
-              <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setCancelConfirm(true)} disabled={busy}>
-                주문 취소
-              </Button>
-            ) : (
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" className="flex-1" onClick={() => setCancelConfirm(false)}>
-                  아니오
-                </Button>
-                <Button variant="danger" size="sm" className="flex-1" onClick={() => { cancelOrder.mutate(order.id); setCancelConfirm(false); }} disabled={busy}>
-                  취소 확인
-                </Button>
-              </div>
-            )}
+            <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelOrder(true)} disabled={busy}>
+              주문 취소
+            </Button>
           </>
         )}
 
         {/* shipping: 아임웹 연동 + 송장 취소 */}
         {(order.status === 'shipping' || (order.status === 'pay_done' && order.invoice_number)) && (
           <>
-            <Button variant="secondary" size="sm" className="w-full" onClick={handlePushImweb} disabled={busy}>
+            <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPushImweb(true)} disabled={busy}>
               <ExternalLink size={14} />
               아임웹 송장 연동
             </Button>
-            <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => cancelInvoice.mutate({ invNo: order.invoice_number!, orderId: order.id })} disabled={busy}>
+            <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelInvoice(true)} disabled={busy}>
               송장 취소
             </Button>
           </>
@@ -134,6 +126,38 @@ export function OrderActionBar({ order, items }: Props) {
           items={items}
         />
       )}
+
+      {/* 주문 취소 확인 */}
+      <ConfirmModal
+        open={showCancelOrder}
+        onClose={() => setShowCancelOrder(false)}
+        onConfirm={() => cancelOrder.mutateAsync(order.id)}
+        title="주문 취소"
+        message="이 주문을 취소합니다. 되돌릴 수 없습니다."
+        confirmLabel="주문 취소"
+        variant="danger"
+      />
+
+      {/* 송장 취소 확인 */}
+      <ConfirmModal
+        open={showCancelInvoice}
+        onClose={() => setShowCancelInvoice(false)}
+        onConfirm={() => cancelInvoice.mutateAsync({ invNo: order.invoice_number!, orderId: order.id })}
+        title="송장 취소"
+        message={<>송장 <strong>{order.invoice_number}</strong>을 취소합니다.<br />ALPS 집하 전에만 가능합니다.</>}
+        confirmLabel="송장 취소"
+        variant="danger"
+      />
+
+      {/* 아임웹 송장 연동 확인 */}
+      <ConfirmModal
+        open={showPushImweb}
+        onClose={() => setShowPushImweb(false)}
+        onConfirm={handlePushImweb}
+        title="아임웹 송장 연동"
+        message={<>송장 <strong>{order.invoice_number}</strong>을 아임웹에 연동합니다.<br />아임웹에서 &quot;배송대기&quot; 상태여야 합니다.</>}
+        confirmLabel="연동"
+      />
     </>
   );
 }
