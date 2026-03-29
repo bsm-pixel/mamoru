@@ -11,7 +11,7 @@ import { Modal } from '@/components/ui/modal';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { useProduct, useUpdateProduct, useCreateProduct } from '@/hooks/use-product-detail';
 import { formatKRW } from '@/lib/utils/format';
-import { Save, Package, Hash, X, Receipt, Boxes, Plus, Archive, Copy, Eye, EyeOff } from 'lucide-react';
+import { Save, Package, Hash, X, Receipt, Boxes, Plus, Archive, Copy, Eye, EyeOff, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -41,6 +41,8 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const createProduct = useCreateProduct();
   const [editing, setEditing] = useState(false);
   const [showSerialModal, setShowSerialModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0,
     description: '', imweb_product_no: '', barcode: '', supplier_id: '',
@@ -241,6 +243,15 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               >
                 {p.is_active ? <EyeOff size={14} /> : <Eye size={14} />}
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(true)}
+                title="삭제"
+                className="text-neutral-400 hover:text-red-500"
+              >
+                <Trash2 size={14} />
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => {
                 if (onCreated && data?.product) {
                   onCreated('__duplicate__');
@@ -439,6 +450,48 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
           queryClient.invalidateQueries({ queryKey: ['serials'] });
         }}
       />
+
+      {/* 삭제 확인 모달 */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <h3 className="text-lg font-bold text-neutral-900">제품 삭제</h3>
+            <p className="text-sm text-neutral-600 mt-2">
+              <span className="font-semibold">{p.name}</span>을(를) 삭제하시겠습니까?
+            </p>
+            <p className="text-xs text-neutral-400 mt-1">
+              시리얼·판매·계약서가 연결된 제품은 삭제할 수 없습니다.
+            </p>
+            <div className="flex gap-2 mt-5 justify-end">
+              <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)}>취소</Button>
+              <Button
+                variant="danger"
+                size="sm"
+                loading={deleting}
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    const res = await fetch(`/api/products/${productId}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (!res.ok) { toast.error(data.error || '삭제 실패'); return; }
+                    toast.success('제품이 삭제되었습니다');
+                    queryClient.invalidateQueries({ queryKey: ['products'] });
+                    queryClient.invalidateQueries({ queryKey: ['inventory'] });
+                    onClose();
+                  } catch (err) {
+                    toast.error(String(err));
+                  } finally {
+                    setDeleting(false);
+                    setShowDeleteConfirm(false);
+                  }
+                }}
+              >
+                삭제
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
