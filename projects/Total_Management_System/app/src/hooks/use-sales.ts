@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 /** 판매 탭 타입 */
 export type SalesTab = 'all' | 'today' | 'unpaid' | 'cancelled';
-export type SalesChannel = 'all' | 'offline' | 'online' | 'talk';
+export type SalesChannel = 'all' | 'offline' | 'online' | 'talk' | 'b2b';
 export type SalesDateRange = 'all' | 'today' | 'week' | 'month';
 
 /** 오프라인 판매 목록 */
@@ -50,7 +50,11 @@ export function useSales(filters?: {
 
       // 채널 필터
       if (filters?.channel && filters.channel !== 'all') {
-        query = query.eq('sale_channel', filters.channel);
+        if (filters.channel === 'b2b') {
+          query = query.in('customer_type', ['dealer', 'academy']);
+        } else {
+          query = query.eq('sale_channel', filters.channel);
+        }
       }
 
       // 기간 필터
@@ -191,6 +195,7 @@ export function useCreateSale() {
         payment_method: string;
         payment_status?: string;
         payment_detail?: Record<string, number>;
+        customer_type?: string;
         memo?: string;
         sale_channel?: string;
       };

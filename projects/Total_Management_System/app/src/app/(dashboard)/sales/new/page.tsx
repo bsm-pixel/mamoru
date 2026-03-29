@@ -141,6 +141,7 @@ export default function NewSalePage() {
           ? { card: mixedCard, cash: mixedCash, transfer: mixedTransfer }
           : { [paymentMethod]: paidAmount },
         sale_channel: saleChannel,
+        customer_type: customerType || undefined,
         memo: memo.trim() || undefined,
       },
       items: cart.map((item) => ({
@@ -313,15 +314,17 @@ export default function NewSalePage() {
                             </button>
                           </div>
                         </div>
-                        {/* 시리얼 선택 (등록 제품만) */}
-                        {item.product && (
+                        {/* 시리얼 선택 — B2C만 (B2B 딜러/아카데미는 보관 출고) */}
+                        {item.product && customerType !== 'dealer' && customerType !== 'academy' ? (
                           <SerialPicker
                             productId={item.product.id}
                             quantity={item.quantity}
                             selectedSerialIds={item.selectedSerialIds}
                             onSelect={(ids) => updateSerialIds(key, ids)}
                           />
-                        )}
+                        ) : item.product && (customerType === 'dealer' || customerType === 'academy') ? (
+                          <p className="text-[10px] text-neutral-400 mt-1">보관창고에서 출고 (시리얼 미부여)</p>
+                        ) : null}
                       </div>
                     );
                   })}

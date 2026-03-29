@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
         payment_method: string;
         payment_status?: string;
         payment_detail?: Record<string, number>;
+        customer_type?: string;
         memo?: string;
         supply_amount?: number;
         vat_amount?: number;
@@ -122,6 +123,7 @@ export async function POST(req: NextRequest) {
         vat_amount: vatAmount,
         is_vat_included: isVatIncluded,
         sale_channel: sale.sale_channel || 'offline',
+        customer_type: sale.customer_type || null,
         created_by: user.id,
       })
       .select()

@@ -51,11 +51,12 @@ const TABS: { key: SalesTab; label: string }[] = [
   { key: 'cancelled', label: '취소' },
 ];
 
-const CHANNELS: { key: SalesChannel; label: string }[] = [
+const CHANNELS: { key: SalesChannel | 'b2b'; label: string }[] = [
   { key: 'all', label: '전체' },
   { key: 'offline', label: '오프라인' },
   { key: 'online', label: '온라인' },
   { key: 'talk', label: '톡상담' },
+  { key: 'b2b', label: 'B2B 납품' },
 ];
 
 const DATE_RANGES: { key: SalesDateRange; label: string }[] = [
@@ -70,7 +71,7 @@ export default function SalesPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [tab, setTab] = useState<SalesTab>('today'); // 기본 탭: 오늘
-  const [channel, setChannel] = useState<SalesChannel>('all');
+  const [channel, setChannel] = useState<SalesChannel | 'b2b'>('all');
   const [dateRange, setDateRange] = useState<SalesDateRange>('all');
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
   const [isLg, setIsLg] = useState(false);
