@@ -457,3 +457,57 @@ export function useLowStockAlert() {
     },
   });
 }
+
+// ============================================
+// 매입 입고대기 알림 (ordered/deposit_paid 상태)
+// ============================================
+
+export function usePurchasingAlert() {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['purchasing-alert'],
+    staleTime: 60_000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('purchase_orders')
+        .select('id, po_number, supplier_name, total_amount, status, expected_date')
+        .in('status', ['ordered', 'deposit_paid'])
+        .order('expected_date', { ascending: true })
+        .limit(10);
+      if (error) throw error;
+      return (data || []) as Array<{
+        id: string;
+        po_number: string;
+        supplier_name: string;
+        total_amount: number;
+        status: string;
+        expected_date: string | null;
+      }>;
+    },
+  });
+}
+
+// ============================================
+// 부자재 주문필요 알림
+// ============================================
+
+export function useSuppliesAlert() {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['supplies-alert'],
+    staleTime: 60_000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('supplies')
+        .select('id, name, status')
+        .eq('status', 'needed')
+        .limit(10);
+      if (error) throw error;
+      return (data || []) as Array<{ id: string; name: string; status: string }>;
+    },
+  });
+}

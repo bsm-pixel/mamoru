@@ -5,12 +5,12 @@ import { HubCategoryCard } from '@/components/dashboard/hub-category-card';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useHubStats, useOutstandingAlert, useTodayConsultations, useLowStockAlert } from '@/hooks/use-dashboard-stats';
+import { useHubStats, useOutstandingAlert, useTodayConsultations, useLowStockAlert, usePurchasingAlert, useSuppliesAlert } from '@/hooks/use-dashboard-stats';
 import { formatPhone } from '@/lib/utils/format';
 import {
   ShoppingCart, MessageSquare, Wrench, Store,
   AlertTriangle, ClipboardList, ArrowRight, CheckCircle2,
-  Calendar, PackageX,
+  Calendar, PackageX, Truck, PackageOpen,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -24,6 +24,8 @@ export default function DashboardPage() {
   const { data: outstanding } = useOutstandingAlert();
   const { data: todayConsults } = useTodayConsultations();
   const { data: lowStock } = useLowStockAlert();
+  const { data: purchasingAlert } = usePurchasingAlert();
+  const { data: suppliesAlert } = useSuppliesAlert();
 
   // 오늘 할 일 액션 생성
   const actions: Array<{ label: string; count: number; href: string; color: string }> = [];
@@ -34,6 +36,12 @@ export default function DashboardPage() {
     if (stats.consultations.needAction > 0) actions.push({ label: '상담 일정 재요청', count: stats.consultations.needAction, href: '/consultations', color: 'bg-red-50 text-red-700' });
     if (stats.repairs.intakeNew > 0) actions.push({ label: '복원수리 신규 접수 확인', count: stats.repairs.intakeNew, href: '/repairs/dashboard', color: 'bg-blue-50 text-blue-700' });
     if (stats.repairs.readyToShip > 0) actions.push({ label: '복원수리 출고 대기', count: stats.repairs.readyToShip, href: '/repairs', color: 'bg-green-50 text-green-700' });
+  }
+  if (purchasingAlert && purchasingAlert.length > 0) {
+    actions.push({ label: '매입 입고 대기', count: purchasingAlert.length, href: '/purchasing', color: 'bg-indigo-50 text-indigo-700' });
+  }
+  if (suppliesAlert && suppliesAlert.length > 0) {
+    actions.push({ label: '부자재 주문 필요', count: suppliesAlert.length, href: '/supplies', color: 'bg-neutral-100 text-neutral-700' });
   }
 
   const orderSummary = stats
@@ -204,9 +212,12 @@ export default function DashboardPage() {
                 {/* 저재고 알림 */}
                 {lowStock && lowStock.length > 0 && (
                   <Card>
-                    <div className="flex items-center gap-2 mb-3">
-                      <PackageX size={16} className="text-red-500" />
-                      <span className="text-sm font-bold text-red-700">저재고 ({lowStock.length})</span>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <PackageX size={16} className="text-red-500" />
+                        <span className="text-sm font-bold text-red-700">저재고 ({lowStock.length})</span>
+                      </div>
+                      <Link href="/purchasing/new" className="text-xs text-terracotta hover:underline">발주 작성 →</Link>
                     </div>
                     <div className="space-y-1.5">
                       {lowStock.map((p) => (
