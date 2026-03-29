@@ -30,6 +30,7 @@ const STATUS_TABS = [
 export default function OrdersPage() {
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
+  const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [page, setPage] = useState(1);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export default function OrdersPage() {
     return () => mql.removeEventListener('change', handler);
   }, []);
 
-  const { data, isLoading } = useOrders({ status, search, page, limit: 20 });
+  const { data, isLoading } = useOrders({ status, search, dateRange, page, limit: 20 });
   const orders = data?.orders || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
@@ -72,6 +73,16 @@ export default function OrdersPage() {
             onChange={(v) => { setSearch(v); setPage(1); }}
             placeholder="주문번호, 이름, 송장번호 검색"
           />
+          <select
+            value={dateRange}
+            onChange={(e) => { setDateRange(e.target.value as typeof dateRange); setPage(1); }}
+            className="shrink-0 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-xs font-medium text-neutral-600 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+          >
+            <option value="all">전체 기간</option>
+            <option value="today">오늘</option>
+            <option value="week">이번주</option>
+            <option value="month">이번달</option>
+          </select>
         </div>
 
         {/* 상태 탭 */}

@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 export function useOrders(filters?: {
   status?: string;
   search?: string;
+  dateRange?: 'all' | 'today' | 'week' | 'month';
   page?: number;
   limit?: number;
 }) {
@@ -35,6 +36,14 @@ export function useOrders(filters?: {
         query = query.or(
           `orderer_name.ilike.%${filters.search}%,recipient_name.ilike.%${filters.search}%,imweb_order_no.ilike.%${filters.search}%,invoice_number.ilike.%${filters.search}%`
         );
+      }
+      if (filters?.dateRange && filters.dateRange !== 'all') {
+        const now = new Date();
+        let dateFrom: string;
+        if (filters.dateRange === 'today') dateFrom = now.toISOString().slice(0, 10);
+        else if (filters.dateRange === 'week') { const d = new Date(now); d.setDate(d.getDate() - 7); dateFrom = d.toISOString().slice(0, 10); }
+        else { const d = new Date(now); d.setMonth(d.getMonth() - 1); dateFrom = d.toISOString().slice(0, 10); }
+        query = query.gte('ordered_at', dateFrom);
       }
 
       const { data, count, error } = await query;
