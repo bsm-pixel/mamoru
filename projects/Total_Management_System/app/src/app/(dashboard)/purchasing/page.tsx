@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -12,27 +12,20 @@ import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
+import { SlidePanel } from '@/components/ui/slide-panel';
+import { PurchaseDetailPanel } from '@/components/purchasing/purchase-detail-panel';
 import { Plus, Truck } from 'lucide-react';
 import type { PurchaseOrder } from '@/lib/supabase/types';
 
 const STATUS_LABEL: Record<string, string> = {
-  draft: '작성중',
-  ordered: '발주완료',
-  deposit_paid: '선납완료',
-  received: '입고완료',
-  balance_paid: '잔금완료',
-  cancelled: '취소',
+  draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
+  received: '입고완료', balance_paid: '잔금완료', cancelled: '취소',
 };
-
 const STATUS_COLOR: Record<string, string> = {
-  draft: 'bg-neutral-100 text-neutral-600',
-  ordered: 'bg-blue-100 text-blue-700',
-  deposit_paid: 'bg-yellow-100 text-yellow-700',
-  received: 'bg-green-100 text-green-700',
-  balance_paid: 'bg-emerald-100 text-emerald-700',
-  cancelled: 'bg-red-100 text-red-700',
+  draft: 'bg-neutral-100 text-neutral-600', ordered: 'bg-blue-100 text-blue-700',
+  deposit_paid: 'bg-yellow-100 text-yellow-700', received: 'bg-green-100 text-green-700',
+  balance_paid: 'bg-emerald-100 text-emerald-700', cancelled: 'bg-red-100 text-red-700',
 };
-
 const STATUS_TABS = [
   { value: '', label: '전체' },
   { value: 'draft', label: '작성중' },
@@ -47,7 +40,17 @@ export default function PurchasingPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const limit = 20;
+
+  const [isLg, setIsLg] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)');
+    setIsLg(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   const { data, isLoading } = usePurchaseOrders({
     status: statusFilter || undefined,
@@ -59,11 +62,27 @@ export default function PurchasingPage() {
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / limit);
 
+  const listContent = isLoading ? (
+    <div className="p-4 space-y-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Skeleton key={i} className="h-16 w-full" />
+      ))}
+    </div>
+  ) : orders.length === 0 ? (
+    <EmptyState icon={Truck} message="발주 내역이 없습니다" />
+  ) : (
+    <div className="divide-y divide-neutral-100">
+      {orders.map((po) => (
+        <PORow key={po.id} po={po} isSelected={selectedId === po.id} onClick={() => setSelectedId(po.id)} />
+      ))}
+    </div>
+  );
+
   return (
     <>
       <Topbar title="매입관리" />
 
-      <div className="px-4 md:px-6 py-4 space-y-4">
+      <div className="px-4 md:px-6 py-4 space-y-3">
         <div className="flex items-center gap-3">
           <Button size="sm" onClick={() => router.push('/purchasing/new')}>
             <Plus size={14} />
@@ -76,7 +95,6 @@ export default function PurchasingPage() {
           />
         </div>
 
-        {/* 상태 탭 */}
         <div className="flex gap-1.5 overflow-x-auto pb-1">
           {STATUS_TABS.map((tab) => (
             <button
@@ -93,33 +111,50 @@ export default function PurchasingPage() {
           ))}
         </div>
 
-        <Card padding={false}>
-          {isLoading ? (
-            <div className="p-4 space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
+        {/* PC: 2열 마스터-디테일 */}
+        {isLg && (
+          <div className="flex gap-4 h-[calc(100vh-240px)]">
+            <div className="w-[40%] shrink-0 overflow-y-auto">
+              <Card padding={false}>{listContent}</Card>
+              <div className="mt-2">
+                <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+              </div>
             </div>
-          ) : orders.length === 0 ? (
-            <EmptyState icon={Truck} message="발주 내역이 없습니다" />
-          ) : (
-            <div className="divide-y divide-neutral-100">
-              {orders.map((po) => (
-                <PORow key={po.id} po={po} onClick={() => router.push(`/purchasing/${po.id}`)} />
-              ))}
+            <div className="flex-1 min-w-0 overflow-y-auto">
+              {selectedId ? (
+                <PurchaseDetailPanel purchaseId={selectedId} />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-60 text-neutral-400">
+                  <Truck size={28} className="mb-2 opacity-40" />
+                  <p className="text-xs">목록에서 발주를 선택하세요</p>
+                </div>
+              )}
             </div>
-          )}
-        </Card>
+          </div>
+        )}
 
-        <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+        {/* 모바일 */}
+        {!isLg && (
+          <>
+            <Card padding={false}>{listContent}</Card>
+            <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+          </>
+        )}
       </div>
+
+      {/* 모바일 전용 슬라이드 패널 */}
+      {!isLg && (
+        <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="발주 상세" className="sm:w-[640px]">
+          {selectedId && <PurchaseDetailPanel purchaseId={selectedId} />}
+        </SlidePanel>
+      )}
     </>
   );
 }
 
-function PORow({ po, onClick }: { po: PurchaseOrder; onClick: () => void }) {
+function PORow({ po, isSelected, onClick }: { po: PurchaseOrder; isSelected: boolean; onClick: () => void }) {
   return (
-    <div onClick={onClick} className="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition">
+    <div onClick={onClick} className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition ${isSelected ? 'bg-terracotta/5 border-l-2 border-l-terracotta' : ''}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-indigo-black truncate">{po.supplier_name}</span>
