@@ -45,6 +45,7 @@ export default function ContractsPage() {
   const router = useRouter();
   const [tab, setTab] = useState<ContractTab>('all');
   const [search, setSearch] = useState('');
+  const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLg, setIsLg] = useState(false);
@@ -57,7 +58,7 @@ export default function ContractsPage() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  const { data, isLoading } = useContracts({ tab, search, page, limit: 20 });
+  const { data, isLoading } = useContracts({ tab, search, dateRange, page, limit: 20 });
   const { data: tabCounts } = useContractTabCounts();
   const contracts = data?.contracts || [];
   const total = data?.total || 0;
@@ -81,6 +82,16 @@ export default function ContractsPage() {
             onChange={(v) => { setSearch(v); setPage(1); }}
             placeholder="계약번호, 고객명, 전화번호 검색"
           />
+          <select
+            value={dateRange}
+            onChange={(e) => { setDateRange(e.target.value as typeof dateRange); setPage(1); }}
+            className="shrink-0 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-xs font-medium text-neutral-600 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+          >
+            <option value="all">전체 기간</option>
+            <option value="today">오늘</option>
+            <option value="week">이번주</option>
+            <option value="month">이번달</option>
+          </select>
         </div>
 
         {/* 탭 바 — 판매관리와 동일 패턴 */}

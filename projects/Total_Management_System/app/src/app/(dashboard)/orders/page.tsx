@@ -14,6 +14,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { OrderDetailPanel } from '@/components/orders/order-detail-panel';
 import { RefreshCw, Truck, ShoppingBag } from 'lucide-react';
+import { useEscapeKey } from '@/hooks/use-media-query';
 import { InvoiceModal } from '@/components/orders/invoice-modal';
 import type { Order } from '@/lib/supabase/types';
 
@@ -47,6 +48,7 @@ export default function OrdersPage() {
     return () => mql.removeEventListener('change', handler);
   }, []);
 
+  useEscapeKey(() => setSelectedId(null), !!selectedId);
   const { data, isLoading } = useOrders({ status, search, dateRange, page, limit: 20 });
   const orders = data?.orders || [];
   const total = data?.total || 0;

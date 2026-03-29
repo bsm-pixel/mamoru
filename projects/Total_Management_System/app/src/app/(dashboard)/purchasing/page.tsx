@@ -39,6 +39,7 @@ export default function PurchasingPage() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const limit = 20;
@@ -55,6 +56,7 @@ export default function PurchasingPage() {
   const { data, isLoading } = usePurchaseOrders({
     status: statusFilter || undefined,
     search: search || undefined,
+    dateRange,
     page,
     limit,
   });
@@ -93,6 +95,16 @@ export default function PurchasingPage() {
             onChange={(v) => { setSearch(v); setPage(1); }}
             placeholder="발주번호, 매입처 검색"
           />
+          <select
+            value={dateRange}
+            onChange={(e) => { setDateRange(e.target.value as typeof dateRange); setPage(1); }}
+            className="shrink-0 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-xs font-medium text-neutral-600 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+          >
+            <option value="all">전체 기간</option>
+            <option value="today">오늘</option>
+            <option value="week">이번주</option>
+            <option value="month">이번달</option>
+          </select>
         </div>
 
         <div className="flex gap-1.5 overflow-x-auto pb-1">

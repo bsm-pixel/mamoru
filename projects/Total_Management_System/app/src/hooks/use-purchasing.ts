@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 export function usePurchaseOrders(filters?: {
   status?: string;
   search?: string;
+  dateRange?: 'all' | 'today' | 'week' | 'month';
   page?: number;
   limit?: number;
 }) {
@@ -17,6 +18,7 @@ export function usePurchaseOrders(filters?: {
       const params = new URLSearchParams();
       if (filters?.status) params.set('status', filters.status);
       if (filters?.search) params.set('search', filters.search);
+      if (filters?.dateRange && filters.dateRange !== 'all') params.set('date_range', filters.dateRange);
       if (filters?.page) params.set('page', String(filters.page));
       if (filters?.limit) params.set('limit', String(filters.limit));
 

@@ -13,6 +13,7 @@ export function useContracts(filters?: {
   search?: string;
   status?: string;
   tab?: ContractTab;
+  dateRange?: 'all' | 'today' | 'week' | 'month';
   page?: number;
   limit?: number;
 }) {
@@ -53,6 +54,14 @@ export function useContracts(filters?: {
         query = query.or(
           `customer_name.ilike.%${filters.search}%,customer_phone.ilike.%${filters.search}%,contract_number.ilike.%${filters.search}%`
         );
+      }
+      if (filters?.dateRange && filters.dateRange !== 'all') {
+        const now = new Date();
+        let dateFrom: string;
+        if (filters.dateRange === 'today') dateFrom = now.toISOString().slice(0, 10);
+        else if (filters.dateRange === 'week') { const d = new Date(now); d.setDate(d.getDate() - 7); dateFrom = d.toISOString().slice(0, 10); }
+        else { const d = new Date(now); d.setMonth(d.getMonth() - 1); dateFrom = d.toISOString().slice(0, 10); }
+        query = query.gte('created_at', dateFrom);
       }
 
       const { data, count, error } = await query;

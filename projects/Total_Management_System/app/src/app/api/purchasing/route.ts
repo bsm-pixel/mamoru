@@ -29,6 +29,15 @@ export async function GET(req: NextRequest) {
     if (search) {
       query = query.or(`supplier_name.ilike.%${search}%,po_number.ilike.%${search}%`);
     }
+    const dateRange = url.searchParams.get('date_range');
+    if (dateRange && dateRange !== 'all') {
+      const now = new Date();
+      let dateFrom: string;
+      if (dateRange === 'today') dateFrom = now.toISOString().slice(0, 10);
+      else if (dateRange === 'week') { const d = new Date(now); d.setDate(d.getDate() - 7); dateFrom = d.toISOString().slice(0, 10); }
+      else { const d = new Date(now); d.setMonth(d.getMonth() - 1); dateFrom = d.toISOString().slice(0, 10); }
+      query = query.gte('order_date', dateFrom);
+    }
 
     const { data, count, error } = await query;
     if (error) throw error;
