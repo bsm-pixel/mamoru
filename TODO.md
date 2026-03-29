@@ -214,7 +214,7 @@
 - [x] Phase 2-1: 주문관리 PC 마스터-디테일 (좌40% + 우60%) ✅ 03-29
 - [x] Phase 2-2: 고객관리 PC 마스터-디테일 ✅ 03-29
 - [x] Phase 2-3: 계약서 PC 마스터-디테일 + ContractDetailPanel 신규 ✅ 03-29
-- [ ] Phase 2-4: 매입관리 마스터-디테일 (PurchaseDetailPanel — 상세 로직 복잡, 추후)
+- [x] Phase 2-4: 매입관리 PC 마스터-디테일 + PurchaseDetailPanel 신규 ✅ 03-29
 - [ ] Phase 3-2: 대시보드 강화 (매입 알림, 저재고 액션)
 - [ ] Phase 3-3: 필터 확장 (주문 기간, 계약서 기간)
 - [ ] Phase 3-4: ESC 키 상세 패널 닫기
