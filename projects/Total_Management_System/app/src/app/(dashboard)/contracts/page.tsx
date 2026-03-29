@@ -13,6 +13,8 @@ import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
+import { SlidePanel } from '@/components/ui/slide-panel';
+import { ContractDetailPanel } from '@/components/contracts/contract-detail-panel';
 import { Plus, FileText } from 'lucide-react';
 import type { Contract } from '@/lib/supabase/types';
 
@@ -44,6 +46,7 @@ export default function ContractsPage() {
   const [tab, setTab] = useState<ContractTab>('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLg, setIsLg] = useState(false);
 
   useEffect(() => {
@@ -108,48 +111,78 @@ export default function ContractsPage() {
           })}
         </div>
 
-        <Card padding={false}>
-          {isLoading ? (
-            <div className="p-4 space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
+        {/* PC: 2열 마스터-디테일 */}
+        {isLg && (
+          <div className="flex gap-4 h-[calc(100vh-240px)]">
+            {/* 좌측: 테이블 */}
+            <div className="w-[50%] shrink-0 overflow-y-auto">
+              <Card padding={false}>
+                {isLoading ? (
+                  <div className="p-4 space-y-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
+                  </div>
+                ) : contracts.length === 0 ? (
+                  <EmptyState icon={FileText} message="계약서가 없습니다" />
+                ) : (
+                  <div className="divide-y divide-neutral-100">
+                    {contracts.map((c) => (
+                      <ContractRow key={c.id} contract={c} isSelected={selectedId === c.id} onClick={() => setSelectedId(c.id)} />
+                    ))}
+                  </div>
+                )}
+              </Card>
+              <div className="mt-2">
+                <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+              </div>
             </div>
-          ) : contracts.length === 0 ? (
-            <EmptyState icon={FileText} message="계약서가 없습니다" />
-          ) : isLg ? (
-            /* PC 테이블 뷰 */
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-neutral-200 bg-neutral-50">
-                    <th className="px-4 py-3 text-left font-medium text-neutral-500">계약번호</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-500">작성일</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-500">고객명</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-500">상태</th>
-                    <th className="px-4 py-3 text-left font-medium text-neutral-500">결제방법</th>
-                    <th className="px-4 py-3 text-right font-medium text-neutral-500">금액</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contracts.map((c) => (
-                    <ContractTableRow key={c.id} contract={c} onClick={() => router.push(`/contracts/${c.id}`)} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            /* 모바일 카드 뷰 */
-            <div className="divide-y divide-neutral-100">
-              {contracts.map((c) => (
-                <ContractRow key={c.id} contract={c} onClick={() => router.push(`/contracts/${c.id}`)} />
-              ))}
-            </div>
-          )}
-        </Card>
 
-        <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+            {/* 우측: 상세 패널 */}
+            <div className="flex-1 min-w-0 overflow-y-auto">
+              {selectedId ? (
+                <ContractDetailPanel contractId={selectedId} />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-60 text-neutral-400">
+                  <FileText size={28} className="mb-2 opacity-40" />
+                  <p className="text-xs">목록에서 계약서를 선택하세요</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 모바일: 카드 뷰 */}
+        {!isLg && (
+          <>
+            <Card padding={false}>
+              {isLoading ? (
+                <div className="p-4 space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              ) : contracts.length === 0 ? (
+                <EmptyState icon={FileText} message="계약서가 없습니다" />
+              ) : (
+                <div className="divide-y divide-neutral-100">
+                  {contracts.map((c) => (
+                    <ContractRow key={c.id} contract={c} isSelected={false} onClick={() => setSelectedId(c.id)} />
+                  ))}
+                </div>
+              )}
+            </Card>
+            <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+          </>
+        )}
       </div>
+
+      {/* 모바일 전용 슬라이드 패널 */}
+      {!isLg && (
+        <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="계약서 상세" className="sm:w-[640px]">
+          {selectedId && <ContractDetailPanel contractId={selectedId} />}
+        </SlidePanel>
+      )}
     </>
   );
 }
@@ -176,10 +209,10 @@ const ContractTableRow = memo(function ContractTableRow({ contract, onClick }: {
 });
 
 /* 모바일 카드 행 */
-const ContractRow = memo(function ContractRow({ contract, onClick }: { contract: Contract; onClick: () => void }) {
+const ContractRow = memo(function ContractRow({ contract, isSelected, onClick }: { contract: Contract; isSelected?: boolean; onClick: () => void }) {
   const isCancelled = contract.status === 'cancelled';
   return (
-    <div onClick={onClick} className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition ${isCancelled ? 'opacity-50' : ''}`}>
+    <div onClick={onClick} className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition ${isCancelled ? 'opacity-50' : ''} ${isSelected ? 'bg-terracotta/5 border-l-2 border-l-terracotta' : ''}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>
