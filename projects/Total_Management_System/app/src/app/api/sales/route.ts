@@ -199,13 +199,24 @@ export async function POST(req: NextRequest) {
     await Promise.all(Object.entries(productQtyMap).map(async ([productId, qty]) => {
       const { data: prod } = await db
         .from('products')
-        .select('stock_quantity, imweb_product_no')
+        .select('stock_quantity, raw_stock, imweb_product_no')
         .eq('id', productId)
         .single();
       if (!prod) return;
 
+      // 해당 제품의 시리얼 사용 여부 확인
+      const itemsForProduct = items.filter((i) => i.product_id === productId);
+      const hasSerials = itemsForProduct.some((i) => i.serial_ids && i.serial_ids.length > 0);
+
       const newStock = Math.max(0, (prod.stock_quantity || 0) - qty);
-      await db.from('products').update({ stock_quantity: newStock }).eq('id', productId);
+      const updateData: Record<string, unknown> = { stock_quantity: newStock };
+
+      // 시리얼 없는 판매(B2B) → 보관창고(raw_stock)에서 차감
+      if (!hasSerials) {
+        updateData.raw_stock = Math.max(0, (prod.raw_stock || 0) - qty);
+      }
+
+      await db.from('products').update(updateData).eq('id', productId);
 
       // 아임웹 재고 동기화 (실패해도 판매 완료)
       if (prod.imweb_product_no && newStock >= 0) {
