@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,6 +54,16 @@ export default function CustomersPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const limit = 20;
 
+  // PC 여부 감지
+  const [isLg, setIsLg] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)');
+    setIsLg(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
+
   const { data, isLoading } = useCustomers({
     search,
     type: typeFilter || undefined,
@@ -64,6 +74,27 @@ export default function CustomersPage() {
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / limit);
 
+  const listContent = isLoading ? (
+    <div className="p-4 space-y-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Skeleton key={i} className="h-16 w-full" />
+      ))}
+    </div>
+  ) : customers.length === 0 ? (
+    <EmptyState icon={Users} message="고객이 없습니다" />
+  ) : (
+    <div className="divide-y divide-neutral-100">
+      {customers.map((c) => (
+        <CustomerRow
+          key={c.id}
+          customer={c}
+          isSelected={selectedId === c.id}
+          onClick={() => setSelectedId(c.id)}
+        />
+      ))}
+    </div>
+  );
+
   return (
     <>
       <Topbar title="고객 관리" action={
@@ -73,7 +104,7 @@ export default function CustomersPage() {
         </Button>
       } />
 
-      <div className="px-4 md:px-6 py-4 space-y-4">
+      <div className="px-4 md:px-6 py-4 space-y-3">
         {/* 검색 */}
         <SearchInput
           value={search}
@@ -81,7 +112,7 @@ export default function CustomersPage() {
           placeholder="고객명, 전화번호, 업체명 검색"
         />
 
-        {/* 유형 필터 */}
+        {/* 유형 필터 칩 */}
         <div className="flex gap-1.5 overflow-x-auto pb-1">
           {FILTER_TYPES.map((f) => (
             <button
@@ -98,43 +129,53 @@ export default function CustomersPage() {
           ))}
         </div>
 
-        {/* 목록 */}
-        <Card padding={false}>
-          {isLoading ? (
-            <div className="p-4 space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
+        {/* PC: 2열 레이아웃 */}
+        {isLg && (
+          <div className="flex gap-4 h-[calc(100vh-240px)]">
+            {/* 좌측: 고객 목록 */}
+            <div className="w-[40%] shrink-0 overflow-y-auto">
+              <Card padding={false}>{listContent}</Card>
+              <div className="mt-2">
+                <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} unit="명" />
+              </div>
             </div>
-          ) : customers.length === 0 ? (
-            <EmptyState icon={Users} message="고객이 없습니다" />
-          ) : (
-            <div className="divide-y divide-neutral-100">
-              {customers.map((c) => (
-                <CustomerRow
-                  key={c.id}
-                  customer={c}
-                  onClick={() => setSelectedId(c.id)}
-                />
-              ))}
-            </div>
-          )}
-        </Card>
 
-        <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} unit="명" />
+            {/* 우측: 고객 상세 모니터 */}
+            <div className="flex-1 min-w-0 overflow-y-auto">
+              {selectedId ? (
+                <CustomerDetailPanel customerId={selectedId} />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-60 text-neutral-400">
+                  <Users size={28} className="mb-2 opacity-40" />
+                  <p className="text-xs">목록에서 고객을 선택하세요</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 모바일: 목록만 */}
+        {!isLg && (
+          <>
+            <Card padding={false}>{listContent}</Card>
+            <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} unit="명" />
+          </>
+        )}
       </div>
 
       {showAdd && <AddCustomerModal onClose={() => setShowAdd(false)} />}
 
-      {/* 고객 상세 슬라이드 패널 */}
-      <SlidePanel
-        open={!!selectedId}
-        onClose={() => setSelectedId(null)}
-        title="고객 상세"
-        className="sm:w-[640px]"
-      >
-        {selectedId && <CustomerDetailPanel customerId={selectedId} />}
-      </SlidePanel>
+      {/* 모바일 전용 슬라이드 패널 */}
+      {!isLg && (
+        <SlidePanel
+          open={!!selectedId}
+          onClose={() => setSelectedId(null)}
+          title="고객 상세"
+          className="sm:w-[640px]"
+        >
+          {selectedId && <CustomerDetailPanel customerId={selectedId} />}
+        </SlidePanel>
+      )}
     </>
   );
 }
@@ -185,7 +226,6 @@ function AddCustomerModal({ onClose }: { onClose: () => void }) {
           <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center"><X size={16} /></button>
         </div>
         <div className="px-5 py-4 space-y-4">
-          {/* 기본 정보 */}
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2 sm:col-span-1">
               <label className="text-xs text-neutral-500">고객명 *</label>
@@ -202,25 +242,19 @@ function AddCustomerModal({ onClose }: { onClose: () => void }) {
               </select>
             </div>
           </div>
-
           <div>
             <label className="text-xs text-neutral-500">전화번호</label>
             <input type="tel" value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               onBlur={() => checkDuplicate(form.phone)}
               placeholder="010-0000-0000" className={inputCls} />
-            {dupWarning && (
-              <p className="text-xs text-amber-600 mt-1">{dupWarning}</p>
-            )}
+            {dupWarning && <p className="text-xs text-amber-600 mt-1">{dupWarning}</p>}
           </div>
-
           <div>
             <label className="text-xs text-neutral-500">매장명 (근무지)</label>
             <input type="text" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })}
               placeholder="매장 또는 근무지명" className={inputCls} />
           </div>
-
-          {/* 주소 */}
           <div className="space-y-2">
             <label className="text-xs text-neutral-500">주소</label>
             <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
@@ -228,8 +262,6 @@ function AddCustomerModal({ onClose }: { onClose: () => void }) {
             <input type="text" value={form.addressDetail} onChange={(e) => setForm({ ...form, addressDetail: e.target.value })}
               placeholder="상세 주소 (동/호수)" className={inputCls} />
           </div>
-
-          {/* 메모 */}
           <div>
             <label className="text-xs text-neutral-500">메모</label>
             <textarea value={form.memo} onChange={(e) => setForm({ ...form, memo: e.target.value })}
@@ -248,12 +280,12 @@ function AddCustomerModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function CustomerRow({ customer, onClick }: { customer: Customer; onClick: () => void }) {
+function CustomerRow({ customer, isSelected, onClick }: { customer: Customer; isSelected: boolean; onClick: () => void }) {
   const c = customer;
   return (
     <div
       onClick={onClick}
-      className="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition"
+      className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition ${isSelected ? 'bg-terracotta/5 border-l-2 border-l-terracotta' : ''}`}
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
