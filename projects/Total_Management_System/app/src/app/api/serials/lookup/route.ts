@@ -47,11 +47,15 @@ export async function GET(req: NextRequest) {
     }
 
     // 2. 제품 정보
-    const { data: product } = await db
-      .from('products')
-      .select('id, name, sku, category, image_url, price')
-      .eq('id', serial.product_id)
-      .single();
+    let product = null;
+    if (serial.product_id) {
+      const { data } = await db
+        .from('products')
+        .select('id, name, sku, category, image_url, price')
+        .eq('id', serial.product_id)
+        .single();
+      product = data;
+    }
 
     // 3. 판매 정보 (sold일 때)
     let sale = null;
@@ -62,6 +66,29 @@ export async function GET(req: NextRequest) {
         .eq('id', serial.offline_sale_id)
         .single();
       sale = data;
+
+      // product_id NULL인 경우 → 판매 항목의 product_name으로 대체
+      if (!product && sale) {
+        const { data: saleItems } = await db
+          .from('offline_sale_items')
+          .select('product_name, sku, unit_price')
+          .eq('sale_id', serial.offline_sale_id)
+          .limit(5);
+        // 첫 번째 가위 항목(시리얼이 있는 제품)을 제품 정보로 사용
+        const matchItem = saleItems?.find((si: { product_name: string }) =>
+          si.product_name && !si.product_name.includes('복원수리')
+        ) || saleItems?.[0];
+        if (matchItem) {
+          product = {
+            id: null,
+            name: matchItem.product_name,
+            sku: matchItem.sku || null,
+            category: null,
+            image_url: null,
+            price: matchItem.unit_price || 0,
+          };
+        }
+      }
     }
 
     // 4. 복원수리 이력 (sold_to_phone 매칭)

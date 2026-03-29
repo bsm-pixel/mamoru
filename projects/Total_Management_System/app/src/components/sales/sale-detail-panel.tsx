@@ -151,31 +151,51 @@ export function SaleDetailPanel({ saleId }: Props) {
       <div className="border-t border-neutral-100 pt-3">
         <h4 className="text-xs font-semibold text-neutral-500 mb-2">판매 항목</h4>
         <div className="space-y-2">
-          {(items as OfflineSaleItem[]).map((item) => {
-            const itemSerials = serials.filter((sr: { product_id: string }) => sr.product_id === item.product_id);
-            return (
-              <div key={item.id} className="py-1.5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">{item.product_name}</p>
-                    <p className="text-xs text-neutral-500">
-                      {item.sku && `${item.sku} · `}{formatKRW(item.unit_price)} x {item.quantity}
-                    </p>
+          {(() => {
+            // 시리얼-항목 매칭: product_id 있으면 매칭, 없으면 순서대로 배분
+            type Sr = { id: string; serial_number: string; product_id: string | null };
+            const allSerials = serials as Sr[];
+            const matched = allSerials.filter((sr) => sr.product_id);
+            const unmatched = allSerials.filter((sr) => !sr.product_id);
+            let unmatchedIdx = 0;
+
+            return (items as OfflineSaleItem[]).map((item) => {
+              // product_id 매칭
+              const byProduct = matched.filter((sr) => sr.product_id === item.product_id);
+              // NULL 시리얼은 항목 수량만큼 순서대로 배분
+              const byOrder: Sr[] = [];
+              if (byProduct.length === 0) {
+                const take = Math.min(item.quantity, unmatched.length - unmatchedIdx);
+                for (let i = 0; i < take; i++) {
+                  byOrder.push(unmatched[unmatchedIdx++]);
+                }
+              }
+              const itemSerials = [...byProduct, ...byOrder];
+
+              return (
+                <div key={item.id} className="py-1.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">{item.product_name}</p>
+                      <p className="text-xs text-neutral-500">
+                        {item.sku && `${item.sku} · `}{formatKRW(item.unit_price)} x {item.quantity}
+                      </p>
+                    </div>
+                    <span className="text-sm font-bold">{formatKRW(item.total_price)}</span>
                   </div>
-                  <span className="text-sm font-bold">{formatKRW(item.total_price)}</span>
+                  {itemSerials.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {itemSerials.map((sr) => (
+                        <span key={sr.id} className="inline-flex items-center gap-0.5 text-[10px] font-mono bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded">
+                          <Hash size={8} />{sr.serial_number}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                {itemSerials.length > 0 && (
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {itemSerials.map((sr: { id: string; serial_number: string }) => (
-                      <span key={sr.id} className="inline-flex items-center gap-0.5 text-[10px] font-mono bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded">
-                        <Hash size={8} />{sr.serial_number}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              );
+            });
+          })()}
         </div>
       </div>
 
