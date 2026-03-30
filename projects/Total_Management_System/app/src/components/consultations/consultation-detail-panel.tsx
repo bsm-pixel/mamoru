@@ -36,6 +36,7 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
   const { data, isLoading } = useConsultation(consultationId);
   const updateStatus = useUpdateConsultationStatus();
   const [suggestModalOpen, setSuggestModalOpen] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
 
   if (isLoading) {
     return <div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /><Skeleton className="h-20" /></div>;
@@ -49,8 +50,6 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
   const history = data.history || [];
   const statusLabel = CONSULTATION_STATUS_LABEL[c.status] || c.status;
   const statusColor = STATUS_COLOR[c.status] || 'bg-neutral-100';
-
-  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
 
   const handleStatus = (newStatus: string) => {
     setPendingStatus(newStatus);
