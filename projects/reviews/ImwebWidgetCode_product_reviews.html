@@ -1,33 +1,42 @@
+<!-- Google Fonts: Outfit (display) + Plus Jakarta Sans + Noto Sans KR (body) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
 /* ══════════════════════════════════════════════════════════════
    MAMORU 제품별 후기 — Brand Guide v1.0 (Monochrome)
-   아임웹 상품 페이지 코드위젯 삽입용
-   사용법: iframe src에 ?group=R4 파라미터 추가
+   아임웹 상품 상세 하단 코드위젯 삽입용
+   자동 감지: URL의 idx 파라미터로 상품 식별 → 리뷰 자동 표시
    ══════════════════════════════════════════════════════════════ */
 
 /* ── 0. 변수 & 리셋 ── */
 :root {
-  --mm-bg-light: #FAF9F7;
-  --mm-bg-card: #FFFFFF;
   --mm-void: #1A1A1A;
-  --mm-shell: #F5F5F0;
-  --mm-text-d: #1A1A1A;
-  --mm-text-d2: #6B6B6B;
-  --mm-text-d3: rgba(26,26,26,0.5);
-  --mm-border-l: rgba(26,26,26,0.08);
-  --mm-radius: 6px;
-  --mm-radius-lg: 8px;
-  --mm-max-w: 960px;
+  --mm-graphite: #2D2D2D;
+  --mm-stone: #4A4A4A;
+  --mm-warm-gray: #8A8580;
+  --mm-mist: #B8B4AF;
+  --mm-sand: #D4D0CB;
+  --mm-parchment: #EDEBE8;
+  --mm-shell: #F5F3F0;
+  --mm-cream: #FAF9F7;
+  --mm-white: #FFFFFF;
+  --mm-border: rgba(26,26,26,0.08);
+  --mm-radius-sm: 8px;
+  --mm-radius-md: 12px;
+  --mm-radius-lg: 16px;
+  --mm-max-w: 780px;
+  --mm-ease: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --mm-ease-fast: 0.15s ease;
-  --mm-ease: 0.25s ease;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-.mm-prv-page {
-  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: var(--mm-bg-light);
-  color: var(--mm-text-d);
+.mm-prv {
+  font-family: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--mm-cream);
+  color: var(--mm-void);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow: visible;
@@ -36,14 +45,14 @@
 a { text-decoration: none; color: inherit; }
 img { display: block; max-width: 100%; }
 
-/* ── 1. 요약 헤더 (별점 + 리뷰 수) ── */
-.mm-prv-summary {
+/* ── 1. 요약 헤더 ── */
+.mm-prv__summary {
   text-align: center;
-  padding: 40px 20px 28px;
+  padding: 48px 24px 32px;
   max-width: var(--mm-max-w);
   margin: 0 auto;
 }
-.mm-prv-summary__bar {
+.mm-prv__bar {
   display: inline-block;
   width: 28px;
   height: 3px;
@@ -51,121 +60,116 @@ img { display: block; max-width: 100%; }
   border-radius: 2px;
   margin-bottom: 16px;
 }
-.mm-prv-summary__title {
-  font-size: 22px;
+.mm-prv__title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--mm-text-d);
-  margin-bottom: 12px;
+  color: var(--mm-void);
+  margin-bottom: 14px;
 }
-.mm-prv-summary__stars {
-  font-size: 28px;
+.mm-prv__stars-display {
+  font-size: 26px;
   letter-spacing: 3px;
   color: var(--mm-void);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
-.mm-prv-summary__meta {
+.mm-prv__meta {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 14px;
-  color: var(--mm-text-d2);
 }
-.mm-prv-summary__avg {
-  font-size: 20px;
+.mm-prv__avg {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
   font-weight: 800;
   color: var(--mm-void);
 }
-.mm-prv-summary__count {
+.mm-prv__count {
   font-size: 14px;
   font-weight: 500;
-  color: var(--mm-text-d3);
+  color: var(--mm-warm-gray);
 }
 
 /* ── 2. 리뷰 그리드 ── */
-.mm-prv-grid {
+.mm-prv__grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
-  padding: 0 20px;
+  padding: 0 24px;
   max-width: var(--mm-max-w);
   margin: 0 auto;
 }
 
 /* ── 3. 리뷰 카드 ── */
-.mm-prv-card {
-  background: var(--mm-bg-card);
-  border: 1px solid var(--mm-border-l);
-  border-radius: var(--mm-radius-lg);
+.mm-prv__card {
+  background: var(--mm-white);
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-md);
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   transition: box-shadow var(--mm-ease);
   cursor: pointer;
 }
-.mm-prv-card__img {
+.mm-prv__card-img {
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: var(--mm-radius);
+  border-radius: var(--mm-radius-sm);
   object-fit: cover;
 }
-.mm-prv-card__header {
+.mm-prv__card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.mm-prv-card__name {
+.mm-prv__card-name {
   font-size: 15px;
   font-weight: 700;
-  color: var(--mm-text-d);
-}
-.mm-prv-card__stars {
-  display: flex;
-  gap: 2px;
   color: var(--mm-void);
-  font-size: 14px;
+}
+.mm-prv__card-stars {
+  color: var(--mm-void);
+  font-size: 13px;
   letter-spacing: 1px;
 }
-.mm-prv-card__text {
-  font-size: 15px;
+.mm-prv__card-product {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mm-warm-gray);
+}
+.mm-prv__card-text {
+  font-size: 14px;
   font-weight: 400;
-  color: var(--mm-text-d);
+  color: var(--mm-stone);
   line-height: 1.7;
 }
-.mm-prv-card__date {
+.mm-prv__card-date {
   font-size: 12px;
-  font-weight: 400;
-  color: var(--mm-text-d3);
+  color: var(--mm-mist);
   padding-top: 8px;
-  border-top: 1px solid var(--mm-border-l);
-  display: flex;
-  gap: 12px;
+  border-top: 1px solid var(--mm-border);
 }
 /* 속성 태그 */
-.mm-prv-card__tags, .mm-prv-modal__tags {
+.mm-prv__tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
-.mm-prv-tag {
+.mm-prv__tag {
   font-size: 12px;
   font-weight: 500;
-  color: var(--mm-text-d2);
+  color: var(--mm-warm-gray);
   padding: 3px 10px;
-  border: 1px solid var(--mm-border-l);
-  border-radius: 8px;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-sm);
   background: transparent;
-}
-.mm-prv-product-badge {
-  font-size: 13px;
-  color: var(--mm-text-d2);
-  margin-bottom: 2px;
 }
 
 /* ── 모달 ── */
-.mm-prv-overlay {
+.mm-prv__overlay {
   position: fixed; inset: 0; z-index: 9999;
   background: rgba(0,0,0,0.5);
   display: flex; align-items: center; justify-content: center;
@@ -173,128 +177,124 @@ img { display: block; max-width: 100%; }
   opacity: 0; visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
 }
-.mm-prv-overlay--open { opacity: 1; visibility: visible; }
-.mm-prv-modal {
-  background: #fff; border-radius: 14px;
+.mm-prv__overlay--open { opacity: 1; visibility: visible; }
+.mm-prv__modal {
+  background: var(--mm-white); border-radius: var(--mm-radius-lg);
   max-width: 520px; width: 100%;
   max-height: 85vh; overflow-y: auto;
   padding: 28px 24px;
   position: relative;
 }
-.mm-prv-modal__close {
+.mm-prv__modal-close {
   position: absolute; top: 14px; right: 14px;
-  width: 32px; height: 32px; border: none; background: rgba(26,26,26,0.06);
+  width: 32px; height: 32px; border: none; background: var(--mm-shell);
   border-radius: 50%; font-size: 16px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  color: var(--mm-text-d2);
+  color: var(--mm-stone);
+  transition: background var(--mm-ease-fast);
 }
-.mm-prv-modal__stars {
+.mm-prv__modal-close:hover { background: var(--mm-parchment); }
+.mm-prv__modal-stars {
   color: var(--mm-void); font-size: 18px; letter-spacing: 2px; margin-bottom: 12px;
 }
-.mm-prv-modal__name {
-  font-size: 17px; font-weight: 700; margin-bottom: 12px;
+.mm-prv__modal-name {
+  font-size: 17px; font-weight: 700; margin-bottom: 4px;
 }
-.mm-prv-modal__text {
-  font-size: 15px; line-height: 1.8; color: var(--mm-text-d); margin-bottom: 16px;
+.mm-prv__modal-product {
+  font-size: 14px; color: var(--mm-warm-gray); margin-bottom: 12px;
+}
+.mm-prv__modal-text {
+  font-size: 15px; line-height: 1.8; color: var(--mm-void); margin-bottom: 16px;
   white-space: pre-wrap;
 }
-.mm-prv-modal__photos {
+.mm-prv__modal-photos {
   display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
 }
-.mm-prv-modal__photo {
-  width: 120px; height: 120px; border-radius: 8px; object-fit: cover; cursor: pointer;
+.mm-prv__modal-photo {
+  width: 120px; height: 120px; border-radius: var(--mm-radius-sm); object-fit: cover; cursor: pointer;
   flex-shrink: 0;
 }
 @media (max-width: 767px) {
-  .mm-prv-modal__photos {
+  .mm-prv__modal-photos {
     flex-wrap: nowrap;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 4px;
   }
-  .mm-prv-modal__photos::-webkit-scrollbar { display: none; }
-  .mm-prv-modal__photo {
+  .mm-prv__modal-photos::-webkit-scrollbar { display: none; }
+  .mm-prv__modal-photo {
     width: 75vw; height: auto; aspect-ratio: 4/3;
     scroll-snap-align: center;
   }
-  .mm-prv-modal__photos--single {
-    justify-content: center;
-    overflow-x: hidden;
-    scroll-snap-type: none;
+  .mm-prv__modal-photos--single {
+    justify-content: center; overflow-x: hidden; scroll-snap-type: none;
   }
-  .mm-prv-modal__photos--single .mm-prv-modal__photo {
+  .mm-prv__modal-photos--single .mm-prv__modal-photo {
     width: 100%; max-width: 320px;
   }
 }
-.mm-prv-modal__date {
-  font-size: 12px; color: var(--mm-text-d3);
-  display: flex; gap: 12px;
-  padding-top: 12px; border-top: 1px solid var(--mm-border-l);
+.mm-prv__modal-date {
+  font-size: 12px; color: var(--mm-mist);
+  padding-top: 12px; border-top: 1px solid var(--mm-border);
 }
 
 /* ── 더보기 버튼 ── */
-.mm-prv-loadmore {
+.mm-prv__loadmore {
   display: block;
   width: fit-content;
   margin: 32px auto 48px;
   padding: 12px 32px;
-  border: 1px solid var(--mm-border-l);
+  border: 1px solid var(--mm-sand);
   border-radius: 999px;
   background: transparent;
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
-  color: var(--mm-text-d2);
+  color: var(--mm-warm-gray);
   cursor: pointer;
   transition: all var(--mm-ease-fast);
 }
-.mm-prv-loadmore:hover {
+.mm-prv__loadmore:hover {
   border-color: var(--mm-void);
   color: var(--mm-void);
 }
-.mm-prv-loadmore:active { transform: scale(0.97); }
-
-/* 비어있을 때 / 로딩 */
-.mm-prv-empty, .mm-prv-loading {
-  text-align: center;
-  padding: 48px 20px;
-  color: var(--mm-text-d3);
-  font-size: 15px;
-}
+.mm-prv__loadmore:active { transform: scale(0.97); }
 
 /* ── 반응형 ── */
 @media (min-width: 768px) {
-  .mm-prv-summary { padding: 48px 32px 32px; }
-  .mm-prv-summary__title { font-size: 26px; }
-  .mm-prv-summary__stars { font-size: 32px; }
-  .mm-prv-grid {
+  .mm-prv__summary { padding: 64px 40px 36px; }
+  .mm-prv__title { font-size: 24px; }
+  .mm-prv__stars-display { font-size: 30px; }
+  .mm-prv__grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
-    padding: 0 32px;
+    padding: 0 40px;
   }
-  .mm-prv-card { padding: 24px; }
+  .mm-prv__card { padding: 24px; }
+  .mm-prv__card-text { font-size: 15px; }
 }
 
 @media (min-width: 1024px) {
-  .mm-prv-summary { padding: 56px 48px 36px; }
-  .mm-prv-summary__title { font-size: 28px; }
-  .mm-prv-grid {
+  .mm-prv__summary { padding: 64px 40px 40px; }
+  .mm-prv__title { font-size: 26px; }
+  .mm-prv__grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
-    padding: 0 48px;
+    padding: 0 40px;
   }
-  .mm-prv-card__text { font-size: 16px; line-height: 1.7; }
+  .mm-prv__card { padding: 32px; }
+  .mm-prv__card-text { font-size: 16px; line-height: 1.7; }
 }
 
 /* PC hover */
 @media (hover: hover) {
-  .mm-prv-card:hover {
-    box-shadow: 0 4px 16px rgba(26,26,26,0.06);
+  .mm-prv__card:hover {
+    box-shadow: 0 4px 20px rgba(26,26,26,0.06);
   }
 }
 
-/* ── 라이트박스 (사진 확대) ── */
+/* ── 라이트박스 ── */
 .mm-lb {
   position: fixed; inset: 0; z-index: 10000;
   background: rgba(0,0,0,0.92);
@@ -315,7 +315,6 @@ img { display: block; max-width: 100%; }
   background: rgba(255,255,255,0.15); backdrop-filter: blur(4px);
   border-radius: 50%; font-size: 20px; color: #fff;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s;
 }
 .mm-lb__close:hover { background: rgba(255,255,255,0.3); }
 .mm-lb__arrow {
@@ -324,7 +323,6 @@ img { display: block; max-width: 100%; }
   background: rgba(255,255,255,0.15); backdrop-filter: blur(4px);
   border-radius: 50%; font-size: 20px; color: #fff;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s;
 }
 .mm-lb__arrow:hover { background: rgba(255,255,255,0.3); }
 .mm-lb__arrow--prev { left: 16px; }
@@ -339,31 +337,29 @@ img { display: block; max-width: 100%; }
 }
 </style>
 
-<div class="mm-prv-page">
+<div class="mm-prv" id="mmPrvRoot" style="display:none">
 
 <!-- 요약 헤더 -->
-<header class="mm-prv-summary" id="prvSummary" style="display:none">
-  <span class="mm-prv-summary__bar"></span>
-  <h2 class="mm-prv-summary__title">고객 후기</h2>
-  <div class="mm-prv-summary__stars" id="prvStars"></div>
-  <div class="mm-prv-summary__meta">
-    <span class="mm-prv-summary__avg" id="prvAvg"></span>
-    <span class="mm-prv-summary__count" id="prvCount"></span>
+<header class="mm-prv__summary" id="prvSummary">
+  <span class="mm-prv__bar"></span>
+  <h2 class="mm-prv__title">고객 후기</h2>
+  <div class="mm-prv__stars-display" id="prvStars"></div>
+  <div class="mm-prv__meta">
+    <span class="mm-prv__avg" id="prvAvg"></span>
+    <span class="mm-prv__count" id="prvCount"></span>
   </div>
 </header>
 
 <!-- 리뷰 그리드 -->
-<div class="mm-prv-grid" id="prvGrid">
-  <div class="mm-prv-loading">후기를 불러오는 중...</div>
-</div>
+<div class="mm-prv__grid" id="prvGrid"></div>
 
 <!-- 더보기 -->
-<button class="mm-prv-loadmore" id="prvLoadmore" style="display:none">후기 더보기</button>
+<button class="mm-prv__loadmore" id="prvLoadmore" style="display:none">후기 더보기</button>
 
 <!-- 상세 모달 -->
-<div class="mm-prv-overlay" id="prvOverlay">
-  <div class="mm-prv-modal" id="prvModal">
-    <button class="mm-prv-modal__close" id="prvModalClose">✕</button>
+<div class="mm-prv__overlay" id="prvOverlay">
+  <div class="mm-prv__modal">
+    <button class="mm-prv__modal-close" id="prvModalClose">✕</button>
     <div id="prvModalBody"></div>
   </div>
 </div>
@@ -387,17 +383,39 @@ img { display: block; max-width: 100%; }
   var PER_PAGE = 6;
   var currentPage = 1;
   var allReviews = [];
+  var root = document.getElementById('mmPrvRoot');
 
-  /* URL에서 group 파라미터 추출 */
+  /* ── 자동 감지: 아임웹 상품번호 추출 ── */
   var urlParams = new URLSearchParams(window.location.search);
-  var group = urlParams.get('group');
 
-  if (!group) {
-    document.getElementById('prvGrid').innerHTML =
-      '<div class="mm-prv-empty">리뷰를 표시할 제품군이 설정되지 않았습니다.</div>';
+  function extractIdx(url) {
+    if (!url) return null;
+    try {
+      var match = url.match(/[?&]idx=(\d+)/);
+      return match ? match[1] : null;
+    } catch(e) { return null; }
+  }
+
+  // 1순위: ?group= (수동 지정, 하위호환)
+  // 2순위: ?idx= (아임웹 URL에서 직접)
+  // 3순위: referrer에서 idx 추출
+  var group = urlParams.get('group');
+  var imwebNo = urlParams.get('idx')
+    || extractIdx(document.referrer)
+    || extractIdx(window.location.href);
+
+  var apiQuery = '';
+  if (group) {
+    apiQuery = '?group=' + encodeURIComponent(group);
+  } else if (imwebNo) {
+    apiQuery = '?imweb_no=' + encodeURIComponent(imwebNo);
+  } else {
+    // 감지 실패 → 위젯 숨김 유지
+    sendHeight(0);
     return;
   }
 
+  /* ── 유틸 ── */
   function maskName(name) {
     if (!name) return '';
     if (name.length <= 1) return name;
@@ -405,7 +423,6 @@ img { display: block; max-width: 100%; }
     return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
   }
 
-  /* 속성 태그 key→한글 */
   var TAG_LABELS = {
     comfortable:'강요없이 편안해요', detailed_guide:'설명이 자세해요', professional:'전문적이에요',
     personalized:'맞춤 안내', worth_time:'시간이 아깝지 않았어요',
@@ -420,13 +437,13 @@ img { display: block; max-width: 100%; }
     var tags = r.meta && r.meta.tags;
     if (!tags || !tags.length) return '';
     return '<div class="' + cls + '">' +
-      tags.map(function(t) { return '<span class="mm-prv-tag">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') +
+      tags.map(function(t) { return '<span class="mm-prv__tag">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') +
     '</div>';
   }
 
   function fmtDate(d) {
     if (!d) return '';
-    return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    return new Date(d).toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
   }
 
   function renderStars(n) {
@@ -437,33 +454,31 @@ img { display: block; max-width: 100%; }
 
   function renderSummaryStars(avg) {
     var s = '';
-    for (var i = 0; i < 5; i++) {
-      s += (i < Math.round(avg)) ? '★' : '☆';
-    }
+    for (var i = 0; i < 5; i++) s += (i < Math.round(avg)) ? '★' : '☆';
     return s;
   }
 
+  /* ── 카드 렌더링 ── */
   function renderCard(r, idx) {
     var imgHtml = '';
     if (r.photo_urls && r.photo_urls.length > 0) {
-      imgHtml = '<img class="mm-prv-card__img" src="' + r.photo_urls[0] + '" alt="후기 이미지" loading="lazy">';
+      imgHtml = '<img class="mm-prv__card-img" src="' + r.photo_urls[0] + '" alt="후기 이미지" loading="lazy">';
     } else if (r.product_image_url) {
-      imgHtml = '<img class="mm-prv-card__img" src="' + r.product_image_url + '" alt="제품 이미지" loading="lazy">';
+      imgHtml = '<img class="mm-prv__card-img" src="' + r.product_image_url + '" alt="제품 이미지" loading="lazy">';
     }
-    var productHtml = r.product ? '<div class="mm-prv-product-badge">' + r.product + '</div>' : '';
+    var productHtml = r.product ? '<div class="mm-prv__card-product">' + r.product + '</div>' : '';
     var preview = r.content.length > 80 ? r.content.substring(0, 80) + '…' : r.content;
-    var dateHtml = '<div class="mm-prv-card__date"><span>' + fmtDate(r.created_at) + '</span></div>';
 
-    return '<article class="mm-prv-card" data-idx="' + idx + '">' +
+    return '<article class="mm-prv__card" data-idx="' + idx + '">' +
       imgHtml +
-      '<div class="mm-prv-card__header">' +
-        '<span class="mm-prv-card__name">' + maskName(r.name) + '</span>' +
+      '<div class="mm-prv__card-header">' +
+        '<span class="mm-prv__card-name">' + maskName(r.name) + '</span>' +
+        '<span class="mm-prv__card-stars">' + renderStars(r.stars) + '</span>' +
       '</div>' +
       productHtml +
-      '<div class="mm-prv-card__stars">' + renderStars(r.stars) + '</div>' +
-      renderTagChips(r, 'mm-prv-card__tags') +
-      '<div class="mm-prv-card__text">' + preview + '</div>' +
-      dateHtml +
+      renderTagChips(r, 'mm-prv__tags') +
+      '<div class="mm-prv__card-text">' + preview + '</div>' +
+      '<div class="mm-prv__card-date">' + fmtDate(r.created_at) + '</div>' +
     '</article>';
   }
 
@@ -471,21 +486,12 @@ img { display: block; max-width: 100%; }
     var grid = document.getElementById('prvGrid');
     var btn = document.getElementById('prvLoadmore');
     var visible = allReviews.slice(0, currentPage * PER_PAGE);
-
-    grid.innerHTML = visible.length
-      ? visible.map(function(r, i) { return renderCard(r, i); }).join('')
-      : '<div class="mm-prv-empty">아직 등록된 후기가 없습니다.</div>';
-
+    grid.innerHTML = visible.map(function(r, i) { return renderCard(r, i); }).join('');
     btn.style.display = (visible.length < allReviews.length) ? 'block' : 'none';
   }
 
   function renderSummary(stats) {
-    var el = document.getElementById('prvSummary');
-    if (!stats || stats.count === 0) {
-      el.style.display = 'none';
-      return;
-    }
-    el.style.display = '';
+    if (!stats || stats.count === 0) return;
     document.getElementById('prvStars').textContent = renderSummaryStars(stats.average);
     document.getElementById('prvAvg').textContent = stats.average.toFixed(1);
     document.getElementById('prvCount').textContent = '후기 ' + stats.count + '건';
@@ -500,44 +506,42 @@ img { display: block; max-width: 100%; }
     currentModalPhotos = (r.photo_urls && r.photo_urls.length > 0) ? r.photo_urls : [];
     var photosHtml = '';
     if (currentModalPhotos.length > 0) {
-      var singleCls = currentModalPhotos.length === 1 ? ' mm-prv-modal__photos--single' : '';
-      photosHtml = '<div class="mm-prv-modal__photos' + singleCls + '">' +
+      var singleCls = currentModalPhotos.length === 1 ? ' mm-prv__modal-photos--single' : '';
+      photosHtml = '<div class="mm-prv__modal-photos' + singleCls + '">' +
         currentModalPhotos.map(function(url, i) {
-          return '<img class="mm-prv-modal__photo" src="' + url + '" alt="후기 사진" data-lb-idx="' + i + '">';
+          return '<img class="mm-prv__modal-photo" src="' + url + '" alt="후기 사진" data-lb-idx="' + i + '">';
         }).join('') + '</div>';
     }
-    var productHtml = r.product ? '<div style="font-size:14px;color:var(--mm-text-d2);margin-bottom:12px">' + r.product + '</div>' : '';
+    var productHtml = r.product ? '<div class="mm-prv__modal-product">' + r.product + '</div>' : '';
     modalBody.innerHTML =
-      '<div class="mm-prv-modal__stars">' + renderStars(r.stars) + '</div>' +
-      '<div class="mm-prv-modal__name">' + maskName(r.name) + '</div>' +
-      renderTagChips(r, 'mm-prv-modal__tags') +
+      '<div class="mm-prv__modal-stars">' + renderStars(r.stars) + '</div>' +
+      '<div class="mm-prv__modal-name">' + maskName(r.name) + '</div>' +
       productHtml +
-      '<div class="mm-prv-modal__text">' + r.content + '</div>' +
+      renderTagChips(r, 'mm-prv__tags') +
+      '<div class="mm-prv__modal-text">' + r.content + '</div>' +
       photosHtml +
-      '<div class="mm-prv-modal__date"><span>' + fmtDate(r.created_at) + '</span></div>';
-    overlay.classList.add('mm-prv-overlay--open');
+      '<div class="mm-prv__modal-date">' + fmtDate(r.created_at) + '</div>';
+    overlay.classList.add('mm-prv__overlay--open');
     document.body.style.overflow = 'hidden';
   }
 
   function closeModal() {
-    overlay.classList.remove('mm-prv-overlay--open');
+    overlay.classList.remove('mm-prv__overlay--open');
     document.body.style.overflow = '';
   }
 
   document.getElementById('prvModalClose').addEventListener('click', closeModal);
-  overlay.addEventListener('click', function(e) {
-    if (e.target === overlay) closeModal();
-  });
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
 
   document.getElementById('prvGrid').addEventListener('click', function(e) {
-    var card = e.target.closest('.mm-prv-card');
+    var card = e.target.closest('.mm-prv__card');
     if (!card) return;
     var idx = parseInt(card.dataset.idx);
     var visible = allReviews.slice(0, currentPage * PER_PAGE);
     if (visible[idx]) openModal(visible[idx]);
   });
 
-  /* ── 사진 라이트박스 ── */
+  /* ── 라이트박스 ── */
   var lb = document.getElementById('prvLightbox');
   var lbImg = document.getElementById('lbImg');
   var lbCounter = document.getElementById('lbCounter');
@@ -545,38 +549,24 @@ img { display: block; max-width: 100%; }
   var lbNext = document.getElementById('lbNext');
   var lbIdx = 0;
 
-  function openLightbox(idx) {
-    lbIdx = idx;
-    updateLightbox();
-    lb.classList.add('mm-lb--open');
-  }
-
-  function closeLightbox() {
-    lb.classList.remove('mm-lb--open');
-  }
-
+  function openLightbox(idx) { lbIdx = idx; updateLightbox(); lb.classList.add('mm-lb--open'); }
+  function closeLightbox() { lb.classList.remove('mm-lb--open'); }
   function updateLightbox() {
     lbImg.src = currentModalPhotos[lbIdx];
     var single = currentModalPhotos.length <= 1;
     lbPrev.classList.toggle('hidden', single);
     lbNext.classList.toggle('hidden', single);
     lbCounter.classList.toggle('hidden', single);
-    if (!single) {
-      lbCounter.textContent = (lbIdx + 1) + ' / ' + currentModalPhotos.length;
-    }
+    if (!single) lbCounter.textContent = (lbIdx + 1) + ' / ' + currentModalPhotos.length;
   }
 
   document.getElementById('lbClose').addEventListener('click', closeLightbox);
-  lb.addEventListener('click', function(e) {
-    if (e.target === lb) closeLightbox();
-  });
+  lb.addEventListener('click', function(e) { if (e.target === lb) closeLightbox(); });
   lbPrev.addEventListener('click', function() {
-    lbIdx = (lbIdx - 1 + currentModalPhotos.length) % currentModalPhotos.length;
-    updateLightbox();
+    lbIdx = (lbIdx - 1 + currentModalPhotos.length) % currentModalPhotos.length; updateLightbox();
   });
   lbNext.addEventListener('click', function() {
-    lbIdx = (lbIdx + 1) % currentModalPhotos.length;
-    updateLightbox();
+    lbIdx = (lbIdx + 1) % currentModalPhotos.length; updateLightbox();
   });
 
   document.addEventListener('keydown', function(e) {
@@ -584,7 +574,7 @@ img { display: block; max-width: 100%; }
       if (e.key === 'Escape') closeLightbox();
       if (e.key === 'ArrowLeft') lbPrev.click();
       if (e.key === 'ArrowRight') lbNext.click();
-    } else if (overlay.classList.contains('mm-prv-overlay--open')) {
+    } else if (overlay.classList.contains('mm-prv__overlay--open')) {
       if (e.key === 'Escape') closeModal();
     }
   });
@@ -593,9 +583,7 @@ img { display: block; max-width: 100%; }
   lb.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; }, { passive: true });
   lb.addEventListener('touchend', function(e) {
     var dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 50) {
-      if (dx > 0) lbPrev.click(); else lbNext.click();
-    }
+    if (Math.abs(dx) > 50) { dx > 0 ? lbPrev.click() : lbNext.click(); }
   });
 
   modalBody.addEventListener('click', function(e) {
@@ -604,47 +592,51 @@ img { display: block; max-width: 100%; }
   });
 
   /* 더보기 */
-  document.getElementById('prvLoadmore').addEventListener('click', function() {
-    currentPage++;
-    render();
-  });
+  document.getElementById('prvLoadmore').addEventListener('click', function() { currentPage++; render(); });
 
-  /* ── 데이터 로드 ── */
-  function loadReviews() {
-    fetch(API_URL + '?group=' + encodeURIComponent(group))
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        if (data && data.reviews) {
-          allReviews = Array.isArray(data.reviews) ? data.reviews : [];
-          renderSummary(data.stats);
-        } else {
-          allReviews = Array.isArray(data) ? data : [];
-        }
-        render();
-      })
-      .catch(function(err) {
-        console.error('리뷰 API 에러:', err);
-        allReviews = [];
-        render();
-      });
+  /* ── iframe 높이 전달 ── */
+  function sendHeight(h) {
+    var height = (h !== undefined) ? h : document.documentElement.scrollHeight;
+    window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: height }, '*');
   }
-
-  /* 아임웹 iframe 높이 자동 전달 */
   function initIframeComm() {
-    function sendHeight() {
-      var h = document.documentElement.scrollHeight;
-      window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: h }, '*');
-    }
     if (typeof ResizeObserver !== 'undefined') {
-      new ResizeObserver(sendHeight).observe(document.body);
+      new ResizeObserver(function() { sendHeight(); }).observe(document.body);
     } else {
-      setInterval(sendHeight, 500);
+      setInterval(function() { sendHeight(); }, 500);
     }
     sendHeight();
   }
 
-  /* 초기화 */
-  loadReviews();
-  initIframeComm();
+  /* ── 데이터 로드 ── */
+  fetch(API_URL + apiQuery)
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var reviews = [];
+      var stats = { count: 0, average: 0 };
+
+      if (data && data.reviews) {
+        reviews = Array.isArray(data.reviews) ? data.reviews : [];
+        stats = data.stats || stats;
+      } else if (Array.isArray(data)) {
+        reviews = data;
+      }
+
+      // 리뷰 0건 → 위젯 숨김 (빈 영역 노출 방지)
+      if (reviews.length === 0) {
+        sendHeight(0);
+        return;
+      }
+
+      allReviews = reviews;
+      root.style.display = '';
+      renderSummary(stats);
+      render();
+      initIframeComm();
+    })
+    .catch(function(err) {
+      console.error('[MAMORU 리뷰] API 에러:', err);
+      sendHeight(0);
+    });
 })();
 </script>
