@@ -1,7 +1,7 @@
 # MAMORU 시스템 구축 — TODO
 
 > 하위 프로젝트 5개로 분류 — 완료 시 [x] 체크, 신규 항목 추가
-> 최종 수정: 2026-03-30 (리뷰 시스템 product_group + 아임웹 제품별 위젯)
+> 최종 수정: 2026-03-30 (리뷰 product_group + 자동 감지 위젯 v2 + Brand Guide 디자인)
 
 ---
 
@@ -453,10 +453,14 @@
 - [x] API: 리뷰 제출 시 product_group 자동 resolve (imweb_product_no → products) ✅ 03-30
 - [x] TMS: 제품 상세 패널 product_group 편집 UI + 뷰 뱃지 ✅ 03-30
 - [x] 아임웹 제품별 리뷰 코드위젯 신규 제작 (ImwebWidgetCode_product_reviews.html) ✅ 03-30
-- [ ] Supabase SQL Editor에서 039_product_group.sql 마이그레이션 실행
+- [x] 위젯 v2: 자동 감지(imweb_no) — URL idx로 상품 자동 식별, 코드위젯 1개로 전 상품 공통 ✅ 03-30
+- [x] API: ?imweb_no=63 파라미터 → product_group 자동 resolve ✅ 03-30
+- [x] Brand Guide v1.0 디자인 리뉴얼 (Outfit/Plus Jakarta Sans, 모노크롬 팔레트) ✅ 03-30
+- [x] 아임웹 네이티브 구매평 CSS 숨김 (._review_wrap) — 탭 유지 ✅ 03-30
+- [x] 리뷰 0건 시 위젯 완전 숨김 ✅ 03-30
+- [x] Supabase SQL Editor에서 039_product_group.sql 마이그레이션 실행 ✅ 03-30
 - [ ] TMS에서 제품별 product_group 설정 (R4-58ST → "R4" 등)
-- [ ] 아임웹 상품 페이지에 코드위젯 삽입 + ?group=R4 설정
-- [ ] 기존 리뷰 product_group 백필 SQL 실행
+- [ ] 아임웹 디자인 모드 → 상품 상세 하단에 코드위젯 삽입 (전체 복사 붙여넣기, 1회)
 
 ### 통합 리뷰 시스템 (미착수)
 - [ ] 설계 및 구현 (memory/REVIEW_SYSTEM_BRIEF.md 참조)
