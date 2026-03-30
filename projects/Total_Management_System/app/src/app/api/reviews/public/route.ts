@@ -11,10 +11,12 @@ export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-/** GET /api/reviews/public?type=all — 승인된 리뷰 공개 조회 (비인증) */
+/** GET /api/reviews/public?type=all — 승인된 리뷰 공개 조회 (비인증)
+ *  GET /api/reviews/public?group=R4 — 제품군별 리뷰 + 통계 (아임웹 상품 페이지용) */
 export async function GET(req: NextRequest) {
   try {
     const type = req.nextUrl.searchParams.get('type') || 'all';
+    const group = req.nextUrl.searchParams.get('group'); // 제품군 필터
 
     const db = createServiceClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,11 +24,14 @@ export async function GET(req: NextRequest) {
 
     let query = dbAny
       .from('reviews')
-      .select('review_id, type, subtype, name, stars, content, photo_urls, created_at, product, meta, source, is_best')
+      .select('review_id, type, subtype, name, stars, content, photo_urls, created_at, product, product_group, meta, source, is_best')
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
 
-    if (type !== 'all') {
+    // product_group 필터 (아임웹 제품별 위젯)
+    if (group) {
+      query = query.eq('product_group', group);
+    } else if (type !== 'all') {
       query = query.eq('type', type);
     }
 
@@ -61,6 +66,18 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // group 파라미터 사용 시: { reviews, stats } 응답 (아임웹 제품 위젯용)
+    if (group) {
+      const reviews = data || [];
+      const totalStars = reviews.reduce((sum: number, r: { stars: number }) => sum + r.stars, 0);
+      const stats = {
+        count: reviews.length,
+        average: reviews.length > 0 ? Math.round((totalStars / reviews.length) * 10) / 10 : 0,
+      };
+      return NextResponse.json({ reviews, stats }, { headers: CORS_HEADERS });
+    }
+
+    // 기존 호환: flat array 응답
     return NextResponse.json(data || [], { headers: CORS_HEADERS });
   } catch (err) {
     console.error('[reviews/public] 조회 실패:', err);

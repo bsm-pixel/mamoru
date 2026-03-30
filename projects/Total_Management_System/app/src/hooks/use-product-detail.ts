@@ -73,6 +73,7 @@ export function useUpdateProduct() {
       barcode?: string | null;
       image_url?: string | null;
       is_active?: boolean;
+      product_group?: string | null;
     }) => {
       const res = await fetch(`/api/products/${id}`, {
         method: 'PATCH',

@@ -168,6 +168,7 @@ export interface Database {
           stock_quantity: number;
           raw_stock: number;
           barcode: string | null;
+          product_group: string | null;
           is_active: boolean;
           created_at: string;
           updated_at: string;

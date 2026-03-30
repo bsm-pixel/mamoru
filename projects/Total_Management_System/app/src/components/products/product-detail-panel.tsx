@@ -47,7 +47,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0,
-    description: '', imweb_product_no: '', barcode: '', supplier_id: '',
+    description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '',
   });
 
   // SKU 자동 채번
@@ -67,10 +67,10 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   // create/duplicate 모드 초기화
   useEffect(() => {
     if (mode === 'create') {
-      setForm({ sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0, description: '', imweb_product_no: '', barcode: '', supplier_id: '' });
+      setForm({ sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0, description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '' });
       fetchNextSku('BL');
     } else if (mode === 'duplicate' && duplicateData) {
-      setForm({ sku: '', barcode: '', ...duplicateData, name: '' });
+      setForm({ sku: '', barcode: '', product_group: '', ...duplicateData, name: '' });
       fetchNextSku(duplicateData.category || 'BL');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,7 +83,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
         sku: p.sku || '', name: p.name, category: p.category, price: p.price,
         price_dealer: p.price_dealer || 0, price_academy: p.price_academy || 0, price_purchase: p.price_purchase || 0,
         description: p.description || '', imweb_product_no: p.imweb_product_no || '',
-        barcode: p.barcode || '', supplier_id: p.supplier_id || '',
+        barcode: p.barcode || '', supplier_id: p.supplier_id || '', product_group: p.product_group || '',
       });
     }
   }, [data, editing, mode]);
@@ -102,6 +102,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       price_dealer: form.price_dealer, price_academy: form.price_academy, price_purchase: form.price_purchase,
       description: form.description || null, imweb_product_no: form.imweb_product_no || null,
       barcode: form.barcode || null, supplier_id: form.supplier_id || null,
+      product_group: form.product_group || null,
     });
     setEditing(false);
   }
@@ -178,6 +179,12 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <label className="text-xs text-neutral-500">아임웹 상품번호</label>
               <input type="text" value={form.imweb_product_no} onChange={(e) => setForm({ ...form, imweb_product_no: e.target.value })}
                 placeholder="아임웹 상품관리에서 확인"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">제품군 (리뷰 그룹)</label>
+              <input type="text" value={form.product_group} onChange={(e) => setForm({ ...form, product_group: e.target.value })}
+                placeholder="예: R4, M5, CS600"
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
             </div>
             <div>
@@ -316,6 +323,12 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
                 onChange={(id) => setForm({ ...form, supplier_id: id })} placeholder="매입처 선택" />
             </div>
             <div>
+              <label className="text-xs text-neutral-500">제품군 (리뷰 그룹)</label>
+              <input type="text" value={form.product_group} onChange={(e) => setForm({ ...form, product_group: e.target.value })}
+                placeholder="예: R4, M5, CS600"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
               <label className="text-xs text-neutral-500">설명</label>
               <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2}
                 className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40 resize-none" />
@@ -386,6 +399,12 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <div className="mb-3">
                 <span className="text-xs text-neutral-500">매입처</span>
                 <p className="text-sm">{supplier.name}</p>
+              </div>
+            )}
+            {p.product_group && (
+              <div className="mb-3">
+                <span className="text-xs text-neutral-500">제품군</span>
+                <p className="text-sm"><Badge className="bg-blue-50 text-blue-700">{p.product_group}</Badge></p>
               </div>
             )}
             {p.imweb_product_no && (

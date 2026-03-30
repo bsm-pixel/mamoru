@@ -1,7 +1,7 @@
 # MAMORU 시스템 구축 — TODO
 
 > 하위 프로젝트 5개로 분류 — 완료 시 [x] 체크, 신규 항목 추가
-> 최종 수정: 2026-03-29 (TMS 전체 개선 Phase 0~3 전체 완료 + 발주 편집 + Vercel 서울 리전)
+> 최종 수정: 2026-03-30 (리뷰 시스템 product_group + 아임웹 제품별 위젯)
 
 ---
 
@@ -447,8 +447,25 @@
 - [ ] 네이버 리뷰 160개 텍스트 → 시트 정리 → CSV 일괄 등록 (수동)
 - [ ] 베스트 리뷰 5~10개 선정 + 사진 첨부 (수동)
 
+### product_group + 제품별 리뷰 위젯 (03-30)
+- [x] DB: products/reviews 테이블 product_group 컬럼 추가 (039 마이그레이션) ✅ 03-30
+- [x] API: /api/reviews/public?group=R4 제품군 필터 + { reviews, stats } 응답 ✅ 03-30
+- [x] API: 리뷰 제출 시 product_group 자동 resolve (imweb_product_no → products) ✅ 03-30
+- [x] TMS: 제품 상세 패널 product_group 편집 UI + 뷰 뱃지 ✅ 03-30
+- [x] 아임웹 제품별 리뷰 코드위젯 신규 제작 (ImwebWidgetCode_product_reviews.html) ✅ 03-30
+- [ ] Supabase SQL Editor에서 039_product_group.sql 마이그레이션 실행
+- [ ] TMS에서 제품별 product_group 설정 (R4-58ST → "R4" 등)
+- [ ] 아임웹 상품 페이지에 코드위젯 삽입 + ?group=R4 설정
+- [ ] 기존 리뷰 product_group 백필 SQL 실행
+
 ### 통합 리뷰 시스템 (미착수)
 - [ ] 설계 및 구현 (memory/REVIEW_SYSTEM_BRIEF.md 참조)
+
+### GAS → Supabase 직접 전환 (반응속도 최적화)
+- [ ] 복원수리 접수 페이지: GAS doPost → Supabase/Vercel API 직접 전환
+- [ ] 고객 상태 조회 페이지: GAS 경유 → Supabase anon key + RLS 직접 조회
+- [ ] 전체 고객 대면 페이지 Supabase 직접 호출 전환 (GAS 제거, 반응속도 5~10배 개선)
+- [ ] 상담 접수: Google Form 유지 (GAS 트리거 필수), 추후 자체 폼 전환 검토
 
 ---
 

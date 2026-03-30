@@ -158,6 +158,18 @@ export async function POST(req: NextRequest) {
         product_name: item?.product_name || '',
         received_at: order.ordered_at || '',
       };
+
+      // product_group 자동 resolve
+      if (productNo) {
+        const { data: prod } = await dbAny
+          .from('products')
+          .select('product_group')
+          .eq('imweb_product_no', productNo)
+          .single();
+        if (prod?.product_group) {
+          meta.product_group = prod.product_group;
+        }
+      }
     } else {
       return NextResponse.json(
         { error: '지원하지 않는 리뷰 유형입니다' },
@@ -180,6 +192,7 @@ export async function POST(req: NextRequest) {
         photo_urls: Array.isArray(photoUrls) ? photoUrls : [],
         source_id: sourceId,
         product: meta.product_name || null,
+        product_group: meta.product_group || null,
         status: 'pending',
         meta: { ...meta, ...(Array.isArray(tags) && tags.length > 0 ? { tags } : {}) },
       })

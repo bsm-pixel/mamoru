@@ -96,7 +96,7 @@ export async function PATCH(
     const body = await req.json();
     const updates: Record<string, unknown> = {};
 
-    const allowed = ['name', 'category', 'price', 'price_dealer', 'price_academy', 'price_purchase', 'supplier_id', 'description', 'imweb_product_no', 'barcode', 'image_url', 'is_active'];
+    const allowed = ['name', 'category', 'price', 'price_dealer', 'price_academy', 'price_purchase', 'supplier_id', 'description', 'imweb_product_no', 'barcode', 'image_url', 'is_active', 'product_group'];
     for (const key of allowed) {
       if (key in body) updates[key] = body[key];
     }
