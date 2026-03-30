@@ -29,6 +29,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const cancelShipment = useCancelShipment();
   const sendNotify = useSendRepairNotification();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+  const [paidNotify, setPaidNotify] = useState(true); // 입금확인 알림톡 발송 여부
 
   const currentStatus = r.status as RepairStatus;
   const proceedType = r.proceed_type;
@@ -89,6 +90,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
     updateFields.mutate({
       id: r.id,
       paid_at: new Date().toISOString(),
+      skip_notify: !paidNotify, // 체크 해제 시 알림톡 스킵
     });
   };
 
@@ -267,11 +269,27 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
       />
       <ConfirmModal
         open={confirmAction === 'mark_paid'}
-        onClose={() => setConfirmAction(null)}
+        onClose={() => { setConfirmAction(null); setPaidNotify(true); }}
         onConfirm={handleMarkPaid}
         title="입금 확인"
-        message={<>{r.name}님의 입금을 확인 처리합니다.<br />금액: {formatKRW(r.total_amount)}</>}
-        confirmLabel="입금 확인"
+        message={
+          <div className="space-y-3">
+            <p>{r.name}님의 입금을 확인 처리합니다.<br />금액: {formatKRW(r.total_amount)}</p>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={paidNotify}
+                onChange={(e) => setPaidNotify(e.target.checked)}
+                className="w-4 h-4 rounded border-neutral-300 text-terracotta focus:ring-terracotta"
+              />
+              <span className="text-sm text-neutral-600">고객에게 입금확인 알림톡 발송</span>
+            </label>
+            {!paidNotify && (
+              <p className="text-xs text-neutral-400">알림톡 없이 내부 입금완료 처리만 합니다</p>
+            )}
+          </div>
+        }
+        confirmLabel={paidNotify ? '입금 확인 + 알림톡' : '입금완료 표시'}
       />
       <ConfirmModal
         open={confirmAction === 'mark_shipped'}

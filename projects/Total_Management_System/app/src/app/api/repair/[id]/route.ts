@@ -143,8 +143,8 @@ export async function PATCH(
       });
     }
 
-    // 입금확인 알림톡 (paid_at 플래그 설정 시)
-    if (justPaid) {
+    // 입금확인 알림톡 (paid_at 플래그 설정 시, skip_notify가 아닐 때)
+    if (justPaid && !rest.skip_notify) {
       after(async () => {
         if (data.phone) {
           const result = await sendNotification({
