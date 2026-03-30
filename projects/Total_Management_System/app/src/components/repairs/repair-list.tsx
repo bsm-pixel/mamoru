@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,10 @@ import type { RepairTabKey } from './repair-tab-bar';
 interface RepairListProps {
   onSelect?: (id: string) => void;
   selectedId?: string | null;
+  initialTab?: RepairTabKey;
+  unpaidOnly?: boolean;
+  staleOnly?: boolean;
+  onClearFilter?: () => void;
 }
 
 /** 경과일 계산 */
@@ -38,17 +42,27 @@ function matchSearch(r: Repair, q: string): boolean {
   );
 }
 
-export function RepairList({ onSelect, selectedId }: RepairListProps = {}) {
-  const [activeTab, setActiveTab] = useState<RepairTabKey>('intake');
+export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, staleOnly, onClearFilter }: RepairListProps = {}) {
+  const [activeTab, setActiveTab] = useState<RepairTabKey>(initialTab || 'intake');
   const [search, setSearch] = useState('');
   const { tabs, tabData, isLoading } = useRepairTabData();
 
-  // 검색 필터 적용
+  // initialTab 변경 시 탭 전환
+  useEffect(() => {
+    if (initialTab) setActiveTab(initialTab);
+  }, [initialTab]);
+
+  // 검색 + 교차 필터 적용
   const filteredRepairs = useMemo(() => {
-    const list = tabData[activeTab] || [];
-    if (!search) return list;
-    return list.filter((r) => matchSearch(r, search));
-  }, [tabData, activeTab, search]);
+    let list = tabData[activeTab] || [];
+    if (search) list = list.filter((r) => matchSearch(r, search));
+    if (unpaidOnly) list = list.filter((r) => !r.paid_at);
+    if (staleOnly) {
+      const threeDaysAgo = Date.now() - 3 * 86400000;
+      list = list.filter((r) => new Date(r.updated_at).getTime() < threeDaysAgo);
+    }
+    return list;
+  }, [tabData, activeTab, search, unpaidOnly, staleOnly]);
 
   return (
     <div className="space-y-3">
@@ -63,6 +77,18 @@ export function RepairList({ onSelect, selectedId }: RepairListProps = {}) {
           className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
         />
       </div>
+
+      {/* 교차 필터 활성 안내 */}
+      {(unpaidOnly || staleOnly) && (
+        <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-red-50 border border-red-200">
+          <span className="text-xs font-semibold text-red-700">
+            {unpaidOnly ? '미입금 건만 표시 중' : '3일 경과 건만 표시 중'}
+          </span>
+          {onClearFilter && (
+            <button onClick={onClearFilter} className="text-xs text-red-500 hover:text-red-700 font-medium">해제</button>
+          )}
+        </div>
+      )}
 
       {/* 6탭 파이프라인 + 카운트 뱃지 */}
       <div className="flex gap-1 overflow-x-auto border-b border-neutral-200 scrollbar-hide">
@@ -138,12 +164,15 @@ function RepairCard({ repair: r, tab, isSelected, onSelect }: RepairCardProps) {
   const isCompleted = r.status === 'completed';
 
   // 카드 좌측 border 색상
+  const isUnpaid = !r.paid_at && ['cost_notified', 'repairing', 'ready_to_ship', 'shipped'].includes(r.status);
   const borderClass = isCancelled
     ? 'border-l-2 border-l-neutral-300'
     : isCompleted
     ? 'border-l-2 border-l-green-400'
-    : (!r.paid_at && ['cost_notified', 'repairing', 'ready_to_ship'].includes(r.status) && days >= 3)
+    : (isUnpaid && days >= 3)
     ? 'border-l-2 border-l-red-400'
+    : isUnpaid
+    ? 'border-l-2 border-l-orange-400'
     : '';
 
   return (

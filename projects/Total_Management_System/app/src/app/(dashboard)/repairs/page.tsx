@@ -14,6 +14,7 @@ export default function RepairsPage() {
   const sync = useRepairSync();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: stats } = useRepairDashboardStats();
+  const [badgeFilter, setBadgeFilter] = useState<{ tab?: 'intake' | 'in_progress'; unpaidOnly?: boolean; staleOnly?: boolean } | null>(null);
 
   // PC 여부 감지 (lg:1024px+) — isLg conditional rendering
   const [isLg, setIsLg] = useState(false);
@@ -33,25 +34,29 @@ export default function RepairsPage() {
         {/* 상단: 요약 카드 + 새로고침 */}
         <div className="flex items-center gap-3">
           <div className="flex gap-2 flex-1 min-w-0">
-            <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 transition min-w-0">
+            <button onClick={() => setBadgeFilter(badgeFilter?.tab === 'intake' ? null : { tab: 'intake' })}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition min-w-0 ${badgeFilter?.tab === 'intake' ? 'bg-blue-200 ring-2 ring-blue-400' : 'bg-blue-50 hover:bg-blue-100'}`}>
               <Inbox size={14} className="text-blue-600 shrink-0" />
               <span className="text-xs text-neutral-500">신규</span>
               <span className="text-sm font-bold text-blue-700">{stats?.intakeNew || 0}</span>
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 transition min-w-0">
+            <button onClick={() => setBadgeFilter(badgeFilter?.tab === 'in_progress' && !badgeFilter.unpaidOnly ? null : { tab: 'in_progress' })}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition min-w-0 ${badgeFilter?.tab === 'in_progress' && !badgeFilter.unpaidOnly ? 'bg-amber-200 ring-2 ring-amber-400' : 'bg-amber-50 hover:bg-amber-100'}`}>
               <Loader size={14} className="text-amber-600 shrink-0" />
               <span className="text-xs text-neutral-500">진행</span>
               <span className="text-sm font-bold text-amber-700">{stats?.workingCount || 0}</span>
             </button>
             {(stats?.unpaidCount || 0) > 0 && (
-              <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 hover:bg-red-100 transition min-w-0">
+              <button onClick={() => setBadgeFilter(badgeFilter?.unpaidOnly ? null : { unpaidOnly: true })}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition min-w-0 ${badgeFilter?.unpaidOnly ? 'bg-red-200 ring-2 ring-red-400' : 'bg-red-50 hover:bg-red-100'}`}>
                 <CreditCard size={14} className="text-red-600 shrink-0" />
                 <span className="text-xs text-neutral-500">미입금</span>
                 <span className="text-sm font-bold text-red-700">{stats?.unpaidCount || 0}</span>
               </button>
             )}
             {(stats?.staleCount || 0) > 0 && (
-              <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-50 hover:bg-orange-100 transition min-w-0">
+              <button onClick={() => setBadgeFilter(badgeFilter?.staleOnly ? null : { staleOnly: true })}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition min-w-0 ${badgeFilter?.staleOnly ? 'bg-orange-200 ring-2 ring-orange-400' : 'bg-orange-50 hover:bg-orange-100'}`}>
                 <AlertTriangle size={14} className="text-orange-600 shrink-0" />
                 <span className="text-xs text-neutral-500">3일경과</span>
                 <span className="text-sm font-bold text-orange-700">{stats?.staleCount || 0}</span>
@@ -75,7 +80,14 @@ export default function RepairsPage() {
           <div className="flex gap-4 h-[calc(100vh-220px)]">
             {/* 좌측: 목록 (2/5) */}
             <div className="w-[40%] shrink-0 overflow-y-auto">
-              <RepairList onSelect={setSelectedId} selectedId={selectedId} />
+              <RepairList
+                onSelect={setSelectedId}
+                selectedId={selectedId}
+                initialTab={badgeFilter?.tab}
+                unpaidOnly={badgeFilter?.unpaidOnly}
+                staleOnly={badgeFilter?.staleOnly}
+                onClearFilter={() => setBadgeFilter(null)}
+              />
             </div>
 
             {/* 우측: 상세 모니터 (3/5) */}
@@ -94,7 +106,14 @@ export default function RepairsPage() {
 
         {/* 모바일: 목록만 */}
         {!isLg && (
-          <RepairList onSelect={setSelectedId} selectedId={selectedId} />
+          <RepairList
+            onSelect={setSelectedId}
+            selectedId={selectedId}
+            initialTab={badgeFilter?.tab}
+            unpaidOnly={badgeFilter?.unpaidOnly}
+            staleOnly={badgeFilter?.staleOnly}
+            onClearFilter={() => setBadgeFilter(null)}
+          />
         )}
 
         {/* 모바일 전용 슬라이드 패널 */}
