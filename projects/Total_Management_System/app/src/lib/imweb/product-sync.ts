@@ -79,17 +79,18 @@ export async function syncProducts(): Promise<SyncResult> {
           };
 
           if (existing) {
-            // 업데이트 — 매입가/거래처/카테고리는 TMS 값 유지
-            await db.from('products').update(productData).eq('id', existing.id);
+            // 업데이트 — 매입가/거래처/카테고리/재고는 TMS 값 유지 (TMS가 마스터)
+            const { stock_quantity: _omit, ...updateData } = productData;
+            await db.from('products').update(updateData).eq('id', existing.id);
             updated++;
           } else {
-            // 신규 생성
+            // 신규 생성 — 아임웹 재고를 보관창고(raw_stock)에 초기화
             await db.from('products').insert({
               ...productData,
               category: 'BL', // 기본값, TMS에서 수동 변경
               price_dealer: 0,
               price_purchase: 0,
-              raw_stock: 0, // 보관창고 초기값
+              raw_stock: stockQty > 0 ? stockQty : 0, // 아임웹 재고 → 보관창고
               created_at: new Date().toISOString(),
             });
             created++;

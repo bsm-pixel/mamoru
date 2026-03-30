@@ -307,7 +307,7 @@ async function adjustOrderStock(supabase: any, orderId: string, action: 'deduct'
     // imweb_product_no로 TMS 제품 찾기
     const { data: product } = await supabase
       .from('products')
-      .select('id, stock_quantity')
+      .select('id, stock_quantity, raw_stock')
       .eq('imweb_product_no', item.imweb_product_no)
       .single();
 
@@ -315,19 +315,27 @@ async function adjustOrderStock(supabase: any, orderId: string, action: 'deduct'
 
     const delta = action === 'deduct' ? -item.quantity : item.quantity;
     const newQty = Math.max(0, (product.stock_quantity || 0) + delta);
+    const newRaw = Math.max(0, (product.raw_stock || 0) + delta); // 보관창고 동시 차감/복원
 
     await supabase
       .from('products')
-      .update({ stock_quantity: newQty, updated_at: new Date().toISOString() })
+      .update({ stock_quantity: newQty, raw_stock: newRaw, updated_at: new Date().toISOString() })
       .eq('id', product.id);
 
-    // 아임웹 재고도 동기화 (절대값)
+    // 아임웹 재고 동기화 — 디스플레이 제외 (보관 + 준비만)
     try {
-      await updateImwebStock(Number(item.imweb_product_no), newQty);
+      const { count: displayCount } = await supabase
+        .from('product_serials')
+        .select('id', { count: 'exact', head: true })
+        .eq('product_id', product.id)
+        .eq('status', 'in_stock')
+        .eq('warehouse_zone', 'display');
+      const sellableStock = Math.max(0, newQty - (displayCount || 0));
+      await updateImwebStock(Number(item.imweb_product_no), sellableStock);
     } catch (e) {
       console.error(`[sync] 아임웹 재고 동기화 실패: ${item.imweb_product_no}`, e);
     }
 
-    console.log(`[sync] 재고 ${action}: ${item.imweb_product_no} ${delta > 0 ? '+' : ''}${delta} → ${newQty}`);
+    console.log(`[sync] 재고 ${action}: ${item.imweb_product_no} stock=${newQty} raw=${newRaw}`);
   }
 }

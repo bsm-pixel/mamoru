@@ -88,7 +88,15 @@ export async function PATCH(
 
           if (prod.imweb_product_no) {
             try {
-              await updateImwebStock(Number(prod.imweb_product_no), newStock);
+              // 디스플레이 제외 판매 가능 재고만 아임웹에 전달
+              const { count: displayCount } = await db
+                .from('product_serials')
+                .select('id', { count: 'exact', head: true })
+                .eq('product_id', productId)
+                .eq('status', 'in_stock')
+                .eq('warehouse_zone', 'display');
+              const sellableStock = Math.max(0, newStock - (displayCount || 0));
+              await updateImwebStock(Number(prod.imweb_product_no), sellableStock);
             } catch (e) {
               console.error('[imweb] 취소 재고 동기화 실패:', prod.imweb_product_no, e);
             }
