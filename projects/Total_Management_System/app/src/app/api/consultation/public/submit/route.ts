@@ -79,7 +79,6 @@ export async function POST(req: NextRequest) {
     const insertData = {
       name: name.trim(),
       phone: phone.trim(),
-      phone_normalized: phoneNorm,
       consultation_type: consultationType,
       visit_date: visitDate || null,
       visit_time: visitTime || null,

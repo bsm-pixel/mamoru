@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
       as_id: asId,
       name: name.trim(),
       phone: phone.trim(),
-      phone_normalized: phoneNorm,
+      // phone_normalized는 DB generated column — INSERT 제외
       proceed_type: proceed_type || '직접발송',
       postcode: postcode || null,
       address1: address1 || null,
