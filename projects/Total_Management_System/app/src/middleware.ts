@@ -31,8 +31,8 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // 인증 불필요 경로 (GAS 동기화 API + 알림톡 API 포함)
-  // Phase 7: 복원수리 공개 API + 동기화
+  // 인증 불필요 경로 — 고객 공개 API + 동기화 + Cron
+  // consultation/public, repair/public 추가 (2026-03-31)
   if (pathname.startsWith('/login') || pathname.startsWith('/contract') || pathname.startsWith('/diagnosis') || pathname.startsWith('/api/cron') || pathname.startsWith('/api/consultation/sync') || pathname.startsWith('/api/consultation/notify') || pathname.startsWith('/api/consultation/public') || pathname.startsWith('/api/repair/report') || pathname.startsWith('/api/repair/sync') || pathname.startsWith('/api/repair/public') || pathname.startsWith('/api/reviews/submit') || pathname.startsWith('/api/reviews/info') || pathname.startsWith('/api/reviews/upload') || pathname.startsWith('/api/reviews/public')) {
     if (user && pathname.startsWith('/login')) {
       const url = request.nextUrl.clone();
