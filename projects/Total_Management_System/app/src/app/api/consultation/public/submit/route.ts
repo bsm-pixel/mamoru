@@ -8,6 +8,9 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
+const GITHUB_PAGES = 'https://bsm-pixel.github.io/mamoru/projects/consulting';
+const ADMIN_EMAIL = 'bsm@mamoru.kr';
+
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
@@ -26,7 +29,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 매장방문은 날짜/시간 필수
     if (type === '매장 방문' && (!visitDate || !visitTime)) {
       return NextResponse.json(
         { ok: false, error: '방문 날짜와 시간을 선택해주세요' },
@@ -38,8 +40,9 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dbAny = db as any;
 
-    // 중복 접수 체크 (같은 전화번호 + 유형 + 날짜 + 시간이 pending/confirmed 상태)
     const phoneNorm = phone.replace(/\D/g, '');
+
+    // 중복 접수 체크
     if (type === '매장 방문' && visitDate && visitTime) {
       const { data: dup } = await dbAny
         .from('consultations')
@@ -65,85 +68,156 @@ export async function POST(req: NextRequest) {
       '톡 상담': 'talk_consult',
     };
     const consultationType = typeMap[type] || 'store_visit';
-
-    // 상태 결정: 매장방문(날짜 있음) → confirmed, 출장/톡 → pending_admin
     const initialStatus = (consultationType === 'store_visit' && visitDate && visitTime) ? 'confirmed' : 'pending_admin';
-
-    // unique_id 생성
     const uniqueId = crypto.randomUUID();
-
-    // 메모 구성 (진단 데이터 포함 가능)
     const memoText = memo?.trim() || null;
 
-    // INSERT
-    const insertData = {
-      name: name.trim(),
-      phone: phone.trim(),
-      consultation_type: consultationType,
-      visit_date: visitDate || null,
-      visit_time: visitTime || null,
-      address_road: addressRoad || null,
-      address_detail: addressDetail || null,
-      status: initialStatus,
-      memo: memoText,
-      unique_id: uniqueId,
-      latitude: addressLat ? parseFloat(addressLat) : null,
-      longitude: addressLng ? parseFloat(addressLng) : null,
-      gas_raw: {
-        days: Array.isArray(days) ? days.join(',') : (days || ''),
-        timePrefs: Array.isArray(timePrefs) ? timePrefs.join(',') : (timePrefs || ''),
-        addressZip: addressZip || '',
-        addressRoad: addressRoad || '',
-        addressDetail: addressDetail || '',
-        addressLat: addressLat || '',
-        addressLng: addressLng || '',
-      },
-      received_at: new Date().toISOString(),
-    };
+    // 희망 요일/시간대 배열 정리
+    const daysArr = Array.isArray(days) ? days : (days ? String(days).split(',').filter(Boolean) : []);
+    const timePrefsArr = Array.isArray(timePrefs) ? timePrefs : (timePrefs ? String(timePrefs).split(',').filter(Boolean) : []);
+    const fullAddress = address || (addressRoad ? `${addressRoad} ${addressDetail || ''}`.trim() : '');
 
+    // INSERT
     const { data: consultation, error: insertErr } = await dbAny
       .from('consultations')
-      .insert(insertData)
+      .insert({
+        name: name.trim(),
+        phone: phone.trim(),
+        consultation_type: consultationType,
+        visit_date: visitDate || null,
+        visit_time: visitTime || null,
+        address_road: addressRoad || null,
+        address_detail: addressDetail || null,
+        status: initialStatus,
+        memo: memoText,
+        unique_id: uniqueId,
+        latitude: addressLat ? parseFloat(addressLat) : null,
+        longitude: addressLng ? parseFloat(addressLng) : null,
+        gas_raw: {
+          days: daysArr.join(','),
+          timePrefs: timePrefsArr.join(','),
+          addressZip: addressZip || '',
+          addressRoad: addressRoad || '',
+          addressDetail: addressDetail || '',
+          addressLat: addressLat || '',
+          addressLng: addressLng || '',
+        },
+        received_at: new Date().toISOString(),
+      })
       .select()
       .single();
 
     if (insertErr) throw new Error(insertErr.message || JSON.stringify(insertErr));
 
-    // 상태 이력 기록
+    // 상태 이력
     await dbAny.from('consultation_history').insert({
       consultation_id: consultation.id,
       to_status: initialStatus,
       note: '고객 접수',
     });
 
-    // 알림톡 발송
+    // ── 알림톡 발송 (GAS postMake_ payload와 동일한 구조) ──
     try {
       if (consultationType === 'store_visit' && initialStatus === 'confirmed') {
-        // 매장방문 확정 → 확정 알림톡
+        // 매장방문 확정 — GAS CONFIRMED payload 동일
         await sendNotification({
           template: 'confirmed',
           phone: phoneNorm,
           name: name.trim(),
           data: {
             id: uniqueId,
-            type: '매장방문',
+            status: initialStatus.toUpperCase(),
+            name: name.trim(),
+            phone: phoneNorm,
+            type,
             date: visitDate || '',
             time: visitTime || '',
+            address: fullAddress,
+            days: daysArr.join(','),
+            memo: memoText || '',
+            change_request_link: `${GITHUB_PAGES}/page_change_request.html?uid=${uniqueId}`,
           },
         });
       } else if (consultationType === 'field_request') {
-        // 출장요청 → 접수 안내 (관리자 확인 후 시간 제안)
-        // GAS에서는 'request' 템플릿으로 발송했으나, TMS에서는 아직 해당 템플릿 미등록 시 스킵
+        // 출장요청 접수 — GAS CONSULT_REQUEST payload 동일
+        await sendNotification({
+          template: 'request' as never,
+          phone: phoneNorm,
+          name: name.trim(),
+          data: {
+            id: uniqueId,
+            status: initialStatus.toUpperCase(),
+            name: name.trim(),
+            phone: phoneNorm,
+            type,
+            date: visitDate || '',
+            time: visitTime || '',
+            address: fullAddress,
+            days: daysArr.join(','),
+            timePrefs: timePrefsArr.join(','),
+            hope_days_text: daysArr.join(', '),
+            hope_times_text: timePrefsArr.join(', '),
+            memo: memoText || '',
+          },
+        });
       } else if (consultationType === 'talk_consult') {
+        // 톡상담 접수 — GAS TALK_RECEIVED payload 동일
         await sendNotification({
           template: 'talk_received',
           phone: phoneNorm,
           name: name.trim(),
-          data: { id: uniqueId },
+          data: {
+            id: uniqueId,
+            name: name.trim(),
+            phone: phoneNorm,
+            type,
+          },
         });
       }
     } catch (notifyErr) {
       console.error('[consultation/submit] 알림톡 발송 실패 (접수는 완료):', notifyErr);
+    }
+
+    // ── Gmail 알림 발송 ──
+    try {
+      const typeLabel = type || consultationType;
+      const emailSubject = `[MAMORU 상담] 새로운 ${typeLabel} 접수`;
+      const emailLines = [
+        `■ ${typeLabel} 접수 알림`,
+        ``,
+        `이름: ${name.trim()}`,
+        `연락처: ${phone}`,
+        `유형: ${typeLabel}`,
+      ];
+      if (visitDate) emailLines.push(`날짜: ${visitDate}`);
+      if (visitTime) emailLines.push(`시간: ${visitTime}`);
+      if (fullAddress) emailLines.push(`주소: ${fullAddress}`);
+      if (daysArr.length > 0) emailLines.push(`희망요일: ${daysArr.join(', ')}`);
+      if (timePrefsArr.length > 0) emailLines.push(`희망시간대: ${timePrefsArr.join(', ')}`);
+      if (memoText) emailLines.push(`메모: ${memoText}`);
+      emailLines.push(``, `접수번호: ${uniqueId}`);
+
+      // Supabase Edge Function 또는 직접 SMTP 대신 Make webhook 활용
+      // GAS의 GmailApp.sendEmail 대체: Make에 이메일 이벤트 전송
+      await fetch(process.env.MAKE_WEBHOOK_URL || '', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          _meta: { ts: new Date().toISOString(), version: 'tms-2.2', func: 'EMAIL_NOTIFY', trigger: 'tms' },
+          topic: 'email',
+          to: ADMIN_EMAIL,
+          subject: emailSubject,
+          body: emailLines.join('\n'),
+          // 기존 알림톡 데이터도 포함 (Make에서 필요 시 참조)
+          id: uniqueId,
+          name: name.trim(),
+          phone: phoneNorm,
+          type: typeLabel,
+        }),
+        signal: AbortSignal.timeout(5000),
+      }).catch(() => {});
+    } catch (emailErr) {
+      console.error('[consultation/submit] 이메일 발송 실패:', emailErr);
     }
 
     return NextResponse.json(

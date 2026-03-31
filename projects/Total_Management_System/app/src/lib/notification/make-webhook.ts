@@ -20,6 +20,7 @@ const REPAIR_STATUS_TEMPLATES = new Set<NotifyTemplate>([
 
 export type NotifyTemplate =
   | 'confirmed'           // 매장방문 확정
+  | 'request'             // 출장요청 접수 안내
   | 'cancelled'           // 매장 취소 안내
   | 'suggest'             // 출장 시간 제안 (SUGGESTED_TIMES)
   | 'rescheduled'         // 매장 일정 변경
@@ -44,6 +45,7 @@ export type NotifyTemplate =
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   confirmed: 'CONFIRMED',
+  request: 'CONSULT_REQUEST',
   cancelled: 'CANCELLED',
   suggest: 'SUGGESTED_TIMES',
   rescheduled: 'RESCHEDULED',
