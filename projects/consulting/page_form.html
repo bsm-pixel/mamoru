@@ -2059,38 +2059,35 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Vercel API (Supabase 직접 — GAS 대체)
+  // API 통신 (GAS 임시 유지 — Vercel 미들웨어 전파 후 전환 예정)
   // ─────────────────────────────────────────────────────────────
-  const API_BASE = 'https://app-eta-sandy-75.vercel.app/api/consultation/public';
+  const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwqJr1JVeSspv6kZ-wpKPapKOjk1wvEvQQ9rTN3ZtmtgMpkn8-HLVP7Plw94m-N1EE5/exec';
 
   async function gasRun(fn, ...args) {
     try {
-      // getSettings: 영업시간 + 휴무 설정
       if (fn === 'getSettings') {
-        const resp = await fetch(API_BASE + '/settings');
+        const resp = await fetch(GAS_WEB_APP_URL + '?action=getSettings');
         const json = await resp.json();
         if (!json.ok) throw new Error(json.error || 'getSettings failed');
         return json.data;
       }
 
-      // getSlotsRange: 예약 가능 슬롯 조회
       if (fn === 'getSlotsRange') {
         const [dates, consultType] = args;
         const datesParam = Array.isArray(dates) ? dates.join(',') : dates;
-        const url = `${API_BASE}/slots?dates=${encodeURIComponent(datesParam)}&type=${encodeURIComponent(consultType || '매장 방문')}`;
+        const url = `${GAS_WEB_APP_URL}?action=getSlotsRange&dates=${encodeURIComponent(datesParam)}&type=${encodeURIComponent(consultType || '매장 방문')}`;
         const resp = await fetch(url);
         const json = await resp.json();
         if (!json.ok) throw new Error(json.error || 'getSlotsRange failed');
         return json.data;
       }
 
-      // submitConsultation: 상담 접수
       if (fn === 'submitConsultation') {
         const [formData] = args;
-        const resp = await fetch(API_BASE + '/submit', {
+        const resp = await fetch(GAS_WEB_APP_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'submitConsultation', data: formData })
         });
         const json = await resp.json();
         if (!json.ok) throw new Error(json.error || 'submitConsultation failed');
