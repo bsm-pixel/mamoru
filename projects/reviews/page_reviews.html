@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>고객 후기 | MAMORU</title>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="preload" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet"></noscript>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════════════════════════════
    MAMORU 고객 후기 페이지 — Brand Guide v1.0 (Monochrome)
@@ -17,13 +17,13 @@
   --mm-bg-light: #FAF9F7;   /* Cream */
   --mm-bg-card: #FFFFFF;
   --mm-void: #1A1A1A;       /* Void */
-  --mm-shell: #F5F5F0;      /* Shell */
+  --mm-shell: #F5F3F0;      /* Shell */
   --mm-text-d: #1A1A1A;
   --mm-text-d2: #6B6B6B;
   --mm-text-d3: rgba(26,26,26,0.5);
   --mm-border-l: rgba(26,26,26,0.08);
-  --mm-radius: 6px;
-  --mm-radius-lg: 8px;
+  --mm-radius: 8px;
+  --mm-radius-lg: 12px;
   --mm-max-w: 960px;
   --mm-ease-fast: 0.15s ease;
   --mm-ease: 0.25s ease;
@@ -32,7 +32,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   background: var(--mm-bg-light);
   color: var(--mm-text-d);
   line-height: 1.6;
@@ -58,6 +58,7 @@ img { display: block; max-width: 100%; }
   margin-bottom: 16px;
 }
 .mm-rv-header__title {
+  font-family: 'Outfit', sans-serif;
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.02em;

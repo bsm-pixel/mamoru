@@ -5,17 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="format-detection" content="telephone=no,address=no,email=no">
   <title>마모루 출장 상담 일정 제안</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --ink: #1c1c1e; --muted: #6b7280; --line: #e5e7eb;
-      --primary: #111; --accent: #D4613E;
-      --accent-bg: rgba(212,97,62,0.10); --accent-light: rgba(212,97,62,0.06);
-      --bg: #F3F4F6; --card: #fff; --radius: 14px;
+      --ink: #1A1A1A; --muted: #8A8580; --line: rgba(26,26,26,0.08);
+      --primary: #1A1A1A; --accent: #1A1A1A;
+      --accent-bg: rgba(26,26,26,0.05); --accent-light: rgba(26,26,26,0.03);
+      --bg: #FAF9F7; --card: #fff; --radius: 14px;
     }
     html, body { margin: 0; padding: 0; height: 100%; -webkit-text-size-adjust: 100%; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      font-family: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       background: var(--bg); color: var(--ink);
       display: flex; justify-content: center; align-items: flex-start;
     }
@@ -70,7 +73,7 @@
     .cal-day.outside { color: #d1d5db; }
     .cal-day.today { outline: 2px solid var(--ink); outline-offset: -2px; border-radius: 10px; font-weight: 700; }
     .cal-day.has-suggest { background: var(--accent-bg); font-weight: 600; cursor: pointer; }
-    .cal-day.has-suggest:active { background: rgba(212,97,62,0.18); }
+    .cal-day.has-suggest:active { background: rgba(26,26,26,0.12); }
     .cal-day.has-suggest::after {
       content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
       width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
@@ -105,7 +108,7 @@
     .card-badge {
       display: inline-block; font-size: 11px; font-weight: 700;
       color: var(--accent); background: var(--accent-bg);
-      padding: 2px 8px; border-radius: 6px; margin-bottom: 4px;
+      padding: 2px 8px; border-radius: 8px; margin-bottom: 4px;
     }
     .card-datetime { font-size: 16px; font-weight: 600; line-height: 1.4; }
     .card-time { color: var(--muted); font-size: 13px; margin-top: 1px; }
@@ -184,7 +187,7 @@
       flex: 1; padding: 14px; border: none; border-radius: 12px;
       font-size: 15px; font-weight: 600; cursor: pointer;
     }
-    .btn-modal-cancel { background: #f3f4f6; color: #333; }
+    .btn-modal-cancel { background: #FAF9F7; color: #333; }
     .btn-modal-ok { background: var(--primary); color: #fff; }
     .btn-modal-ok:active, .btn-modal-cancel:active { opacity: 0.8; }
 

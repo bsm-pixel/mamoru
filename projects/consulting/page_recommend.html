@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>MAMORU 맞춤 추천</title>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="preload" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet"></noscript>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- =========================================================
    MAMORU 맞춤 추천 결과 페이지 v2
 
@@ -39,8 +39,8 @@ body {
   overflow-y: visible;
   height: auto !important;
   min-height: auto !important;
-  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: #1C1C1E;
+  font-family: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: #1A1A1A;
   color: #ffffff;
   -webkit-font-smoothing: antialiased;
 }
@@ -49,7 +49,7 @@ body {
    기본 설정 + 반응형
    ========================================================= */
 .mamoru-recommend {
-  background: #1C1C1E;
+  background: #1A1A1A;
   color: #ffffff;
   min-height: auto;  /* iframe 환경 대응 */
   margin: 0 auto;
@@ -107,6 +107,7 @@ body {
 }
 
 .rec-title {
+  font-family: 'Outfit', sans-serif;
   font-size: 24px;
   font-weight: 700;
   color: #ffffff;
@@ -139,7 +140,7 @@ body {
 
 .rec-summary-label {
   font-size: 13px;
-  color: #C9A962;
+  color: rgba(255, 255, 255, 0.6);
   font-weight: 600;
   margin-bottom: 10px;
 }
@@ -191,6 +192,7 @@ body {
 }
 
 .rec-section-title {
+  font-family: 'Outfit', sans-serif;
   font-size: 20px;
   font-weight: 700;
   color: #ffffff;
@@ -207,12 +209,12 @@ body {
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background: rgba(201, 169, 98, 0.1);
-  border: 1px solid rgba(201, 169, 98, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   margin-bottom: 14px;
   font-size: 14px;
-  color: #C9A962;
+  color: rgba(255, 255, 255, 0.7);
   line-height: 1.5;
 }
 
@@ -284,11 +286,11 @@ body {
 }
 
 .rec-product-card.recommended {
-  border-color: rgba(201, 169, 98, 0.4);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .rec-product-card.recommended:hover {
-  border-color: #C9A962;
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .rec-product-image {
@@ -328,12 +330,12 @@ body {
   top: 10px;
   left: 10px;
   padding: 5px 10px;
-  background: linear-gradient(135deg, #C9A962 0%, #B8963E 100%);
+  background: #FFFFFF;
   border-radius: 100px;
   font-size: 11px;
   font-weight: 700;
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(201, 169, 98, 0.3);
+  color: #1A1A1A;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .rec-product-info {
@@ -363,7 +365,7 @@ body {
 .rec-product-price {
   font-size: 16px;
   font-weight: 700;
-  color: #C9A962;
+  color: #FFFFFF;
 }
 
 @media screen and (max-width: 768px) {
@@ -407,13 +409,13 @@ body {
 .rec-cta-btn {
   width: 100%;
   height: 54px;
-  background: linear-gradient(135deg, #C9A962 0%, #B8963E 100%);
+  background: #FFFFFF;
   border: none;
   border-radius: 12px;
   font-family: inherit;
   font-size: 16px;
   font-weight: 600;
-  color: #ffffff;
+  color: #1A1A1A;
   cursor: pointer;
   transition: opacity 0.2s, transform 0.15s;
 }
@@ -448,6 +450,7 @@ body {
 }
 
 .rec-error-title {
+  font-family: 'Outfit', sans-serif;
   font-size: 22px;
   font-weight: 700;
   color: #ffffff;
@@ -464,13 +467,13 @@ body {
 .rec-error-btn {
   display: inline-block;
   padding: 14px 28px;
-  background: linear-gradient(135deg, #C9A962 0%, #B8963E 100%);
+  background: #FFFFFF;
   border: none;
   border-radius: 12px;
   font-family: inherit;
   font-size: 15px;
   font-weight: 600;
-  color: #ffffff;
+  color: #1A1A1A;
   cursor: pointer;
   text-decoration: none;
   transition: opacity 0.2s;
@@ -496,7 +499,7 @@ body {
   width: 44px;
   height: 44px;
   border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #C9A962;
+  border-top-color: #FFFFFF;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 14px;

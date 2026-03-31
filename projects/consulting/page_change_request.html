@@ -4,11 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>일정 변경/취소 요청</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: system-ui, -apple-system, 'Noto Sans KR', sans-serif;
-      margin: 0; padding: 16px; background: #f3f4f6; color: #111827;
+      font-family: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      margin: 0; padding: 16px; background: #FAF9F7; color: #1A1A1A;
     }
     .container { max-width: 480px; margin: 0 auto; }
     .card {
@@ -16,21 +19,21 @@
       margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     h1 { font-size: 20px; margin: 0 0 8px; text-align: center; }
-    .subtitle { font-size: 14px; color: #6b7280; text-align: center; margin-bottom: 24px; }
+    .subtitle { font-size: 14px; color: #8A8580; text-align: center; margin-bottom: 24px; }
     .info-section { background: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
-    .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+    .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(26,26,26,0.08); font-size: 14px; }
     .info-row:last-child { border-bottom: none; }
-    .info-label { color: #6b7280; }
+    .info-label { color: #8A8580; }
     .info-value { font-weight: 500; text-align: right; max-width: 60%; }
 
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: #374151; }
     input, select, textarea {
       width: 100%; padding: 10px 12px; border: 1px solid #d1d5db;
-      border-radius: 8px; font-size: 15px; color: #111827;
+      border-radius: 8px; font-size: 15px; color: #1A1A1A;
     }
     input:focus, select:focus, textarea:focus {
-      outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+      outline: none; border-color: #1A1A1A; box-shadow: 0 0 0 3px rgba(26,26,26,0.08);
     }
     textarea { resize: vertical; min-height: 80px; }
 
@@ -38,23 +41,23 @@
     .radio-group { display: flex; gap: 12px; margin-bottom: 16px; }
     .radio-option {
       flex: 1; display: flex; align-items: center; justify-content: center;
-      padding: 12px; border: 2px solid #e5e7eb; border-radius: 10px;
+      padding: 12px; border: 2px solid rgba(26,26,26,0.08); border-radius: 10px;
       cursor: pointer; transition: all 0.2s; font-size: 15px; font-weight: 500;
     }
     .radio-option:hover { border-color: #9ca3af; }
-    .radio-option.selected { border-color: #111827; background: #f9fafb; }
+    .radio-option.selected { border-color: #1A1A1A; background: #f9fafb; }
     .radio-option input { display: none; }
 
-    .hint { font-size: 13px; color: #6b7280; margin-top: 4px; }
+    .hint { font-size: 13px; color: #8A8580; margin-top: 4px; }
 
     .btn {
       width: 100%; padding: 14px; border: none; border-radius: 10px;
       font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s;
     }
-    .btn-primary { background: #111827; color: #fff; }
-    .btn-primary:hover { background: #1f2937; }
+    .btn-primary { background: #1A1A1A; color: #fff; }
+    .btn-primary:hover { background: #2C2C2C; }
     .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; }
-    .btn-close { background: #e5e7eb; color: #374151; margin-top: 12px; }
+    .btn-close { background: rgba(26,26,26,0.08); color: #374151; margin-top: 12px; }
     .btn-close:hover { background: #d1d5db; }
 
     .error-card { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; text-align: center; padding: 40px 20px; }
@@ -71,20 +74,20 @@
     .rebook-notice .highlight { font-weight: 600; color: #b45309; }
     .btn-rebook {
       display: inline-block; margin-top: 12px; padding: 12px 24px;
-      background: #111827; color: #fff; border: none; border-radius: 10px;
+      background: #1A1A1A; color: #fff; border: none; border-radius: 10px;
       font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none;
     }
-    .btn-rebook:hover { background: #1f2937; }
+    .btn-rebook:hover { background: #2C2C2C; }
 
     /* 취소 완료 카드 */
     .cancel-done-card { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; text-align: center; padding: 40px 20px; }
     .cancel-done-card h2 { margin: 0 0 12px; font-size: 18px; }
     .cancel-done-card p  { margin: 0; font-size: 14px; line-height: 1.6; }
 
-    .loading { text-align: center; padding: 60px 20px; color: #6b7280; }
+    .loading { text-align: center; padding: 60px 20px; color: #8A8580; }
     .loading::after {
       content: ''; display: inline-block; width: 20px; height: 20px;
-      border: 2px solid #d1d5db; border-top-color: #3b82f6;
+      border: 2px solid #d1d5db; border-top-color: #1A1A1A;
       border-radius: 50%; animation: spin 0.8s linear infinite;
       margin-left: 8px; vertical-align: middle;
     }

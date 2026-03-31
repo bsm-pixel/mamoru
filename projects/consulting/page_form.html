@@ -4,35 +4,46 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>가위 상담 | MAMORU</title>
-<link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════════════════════════════
-   MAMORU Brand Kit: Modern Crisp Ver. - 상담접수 통합
+   MAMORU Brand Guide v1.0 — 상담접수 통합 (Monochrome)
    반응형: 768px 기준 자동 PC/모바일 전환
    ══════════════════════════════════════════════════════════════ */
 :root {
-  /* Terracotta Editorial — 리딩형 (크림 본문 + 다크 헤더) */
-  --mm-bg-dark: #181725;
-  --mm-bg-cream: #F2F2EA;
-  --mm-bg-card: #FAFAF5;
-  --mm-gold: #D4613E;          /* Terracotta Primary (변수명 유지) */
-  --mm-gold-dark: #B85232;
-  --mm-text-d: #181725;
-  --mm-text-d2: #6B6980;
-  --mm-text-cream: #F2F2EA;
-  --mm-border-l: rgba(24,23,37,0.08);
-  --mm-border-m: rgba(24,23,37,0.12);
+  /* MAMORU Brand Guide v1.0 — Monochrome */
+  --mm-void: #1A1A1A;
+  --mm-graphite: #2D2D2D;
+  --mm-stone: #4A4A4A;
+  --mm-warm-gray: #8A8580;
+  --mm-mist: #B8B4AF;
+  --mm-sand: #D4D0CB;
+  --mm-parchment: #EDEBE8;
+  --mm-shell: #F5F3F0;
+  --mm-cream: #FAF9F7;
+  --mm-white: #FFFFFF;
   --error: #C44040;
 
-  /* Legacy alias — JS·모달에서 참조하는 이름 유지 */
-  --void-black: #181725;
-  --bg-dark: #181725;
-  --card-bg: var(--mm-bg-card);
+  /* Legacy alias — 기존 CSS 참조 호환 (변수명 유지, 값만 교체) */
+  --mm-bg-dark: #1A1A1A;
+  --mm-bg-cream: #FAF9F7;
+  --mm-bg-card: #FFFFFF;
+  --mm-gold: #1A1A1A;
+  --mm-gold-dark: #2D2D2D;
+  --mm-text-d: #1A1A1A;
+  --mm-text-d2: #8A8580;
+  --mm-text-cream: #FAF9F7;
+  --mm-border-l: rgba(26,26,26,0.08);
+  --mm-border-m: rgba(26,26,26,0.12);
+  --void-black: #1A1A1A;
+  --bg-dark: #1A1A1A;
+  --card-bg: var(--mm-white);
   --card-border: var(--mm-border-l);
   --crisp-white: #FFFFFF;
-  --trust-gold: #D4613E;
-  --gold-dark: #B85232;
+  --trust-gold: #1A1A1A;
+  --gold-dark: #2D2D2D;
   --text-primary: var(--mm-text-d);
   --text-muted: var(--mm-text-d2);
   --muted: var(--mm-text-d2);
@@ -47,9 +58,9 @@
 }
 
 html, body {
-  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  background: var(--mm-bg-cream);  /* 크림 본문 */
-  color: var(--mm-text-d);        /* 다크 텍스트 */
+  font-family: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--mm-cream);
+  color: var(--mm-void);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
@@ -248,7 +259,7 @@ select {
   height: 48px;
   border: 1px solid var(--mm-border-m);
   background: var(--mm-bg-cream);  /* 크림 배경 */
-  border-radius: 6px;
+  border-radius: 8px;
   font-family: inherit;
   font-size: 15px;
   color: var(--mm-text-d);  /* 다크 텍스트 */
@@ -418,7 +429,7 @@ body.pc .segment-btn {
 /* 개별 카드형이므로 last-child 특별 처리 불필요 */
 
 .segment-btn.active {
-  background: rgba(212,97,62,0.14);  /* Terracotta 틴트 */
+  background: rgba(26,26,26,0.06);  /* Terracotta 틴트 */
   border-color: var(--mm-gold);
   color: var(--mm-gold);
   font-weight: 600;
@@ -429,8 +440,8 @@ body.pc .segment-btn {
    ───────────────────────────────────────────────────────────── */
 .type-info {
   padding: 14px 16px;
-  background: rgba(212,97,62,0.07);    /* 옅은 다홍 틴트 — 미니멀 보조컬러 */
-  border-left: 2px solid rgba(212,97,62,0.35);  /* 다홍 보조 라인 */
+  background: rgba(26,26,26,0.04);    /* 옅은 다홍 틴트 — 미니멀 보조컬러 */
+  border-left: 2px solid rgba(26,26,26,0.2);  /* 다홍 보조 라인 */
   border-radius: 0 8px 8px 0;
   font-size: 13px;
   line-height: 1.7;
@@ -455,7 +466,7 @@ body.pc .type-info {
   justify-content: space-between;
   padding: 0 14px;
   border: 1px solid var(--mm-border-m);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--mm-bg-cream);
   cursor: pointer;
   transition: border-color 0.2s;
@@ -500,7 +511,7 @@ body.pc .address-row {
   flex-shrink: 0;
   height: 48px;
   border: 1px solid var(--mm-border-m);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--mm-bg-card);  /* 라이트 */
   font-family: inherit;
   font-size: 14px;
@@ -925,7 +936,7 @@ body.pc .modal-footer .btn-primary {
 
 .day:hover:not(.disabled) {
   border-color: var(--mm-gold);
-  background: rgba(212,97,62,0.15);
+  background: rgba(26,26,26,0.06);
 }
 
 .day.today {
@@ -1001,7 +1012,7 @@ body.pc .time-slot {
 
 .time-slot:hover:not(.unavailable) {
   border-color: var(--mm-gold);
-  background: rgba(212,97,62,0.15);
+  background: rgba(26,26,26,0.06);
 }
 
 .time-slot.selected {
@@ -1236,7 +1247,7 @@ body.pc .diagnosis-tag {
   font-size: 11px;
   font-weight: 700;
   padding: 5px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   letter-spacing: 0.02em;
 }
 
@@ -1281,11 +1292,11 @@ body.pc .diagnosis-tag {
 
 .diagnosis-banner-badge-empty {
   background: rgba(24, 23, 37, 0.06);
-  color: #6B6980;
+  color: #8A8580;
   font-size: 12px;
   font-weight: 600;
   padding: 5px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .diagnosis-banner-empty .diagnosis-banner-header {
@@ -1320,7 +1331,7 @@ body.pc .diagnosis-tag {
   padding: 12px 14px;
   background: var(--mm-bg-cream);
   border: 1px solid var(--mm-border-l);
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 12px;
   line-height: 1.7;
   color: var(--mm-text-d2);
@@ -1410,7 +1421,7 @@ body.pc #date-picker-modal .day {
   color: var(--mm-text-d);
 }
 #date-picker-modal .calendar-nav button:hover {
-  background: rgba(212,97,62,0.10);
+  background: rgba(26,26,26,0.05);
   color: var(--mm-gold);
   border-color: var(--mm-gold);
 }
@@ -1426,15 +1437,15 @@ body.pc #date-picker-modal .day {
   color: var(--mm-text-d);
 }
 #date-picker-modal .day:hover:not(.disabled) {
-  background: rgba(212,97,62,0.06);
-  border-color: rgba(212,97,62,0.3);
+  background: rgba(26,26,26,0.04);
+  border-color: rgba(26,26,26,0.15);
 }
 #date-picker-modal .day.today {
   border-color: var(--mm-gold);
   color: var(--mm-gold);
 }
 #date-picker-modal .day.selected {
-  background: rgba(212,97,62,0.14);  /* Terracotta Soft 틴트 */
+  background: rgba(26,26,26,0.06);  /* Terracotta Soft 틴트 */
   border-color: var(--mm-gold);
   color: var(--mm-gold);
   font-weight: 600;
@@ -1456,11 +1467,11 @@ body.pc #date-picker-modal .day {
   color: var(--mm-text-d);
 }
 #date-picker-modal .time-slot:hover:not(.unavailable) {
-  background: rgba(212,97,62,0.06);
-  border-color: rgba(212,97,62,0.3);
+  background: rgba(26,26,26,0.04);
+  border-color: rgba(26,26,26,0.15);
 }
 #date-picker-modal .time-slot.selected {
-  background: rgba(212,97,62,0.14);
+  background: rgba(26,26,26,0.06);
   border-color: var(--mm-gold);
   color: var(--mm-gold);
   font-weight: 600;
@@ -1525,7 +1536,7 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
 @media (hover: hover) {
   .segment-btn:hover {
     border-color: var(--mm-border-m);
-    background: rgba(212,97,62,0.06);
+    background: rgba(26,26,26,0.04);
   }
   .date-picker-btn:hover {
     border-color: var(--mm-gold);
@@ -1538,7 +1549,7 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
   .btn-primary:not(:disabled):hover {
     background: var(--mm-gold-dark);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(212,97,62,0.3);
+    box-shadow: 0 4px 12px rgba(26,26,26,0.15);
   }
   .diagnosis-banner-btn:hover {
     background: var(--mm-gold-dark);
@@ -1565,7 +1576,7 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
          ═══════════════════════════════════════════════════════════ -->
       <div id="diagnosis-banner" class="diagnosis-banner hide">
         <div class="diagnosis-banner-header">
-          <span class="diagnosis-banner-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#F2F2EA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 6"/></svg> 진단완료</span>
+          <span class="diagnosis-banner-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF9F7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 6"/></svg> 진단완료</span>
           <span class="diagnosis-banner-title">간편진단 결과가 반영됩니다</span>
         </div>
         <div id="diagnosis-tags" class="diagnosis-banner-tags">
