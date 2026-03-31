@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { sendAdminEmail } from '@/lib/notification/email';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -9,7 +10,6 @@ const CORS_HEADERS = {
 };
 
 const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting';
-const ADMIN_EMAIL = 'bsm@mamoru.kr';
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
@@ -178,10 +178,9 @@ export async function POST(req: NextRequest) {
       console.error('[consultation/submit] 알림톡 발송 실패 (접수는 완료):', notifyErr);
     }
 
-    // ── Gmail 알림 발송 ──
+    // ── Gmail 알림 발송 (GAS GmailApp.sendEmail 대체) ──
     try {
       const typeLabel = type || consultationType;
-      const emailSubject = `[MAMORU 상담] 새로운 ${typeLabel} 접수`;
       const emailLines = [
         `■ ${typeLabel} 접수 알림`,
         ``,
@@ -197,25 +196,10 @@ export async function POST(req: NextRequest) {
       if (memoText) emailLines.push(`메모: ${memoText}`);
       emailLines.push(``, `접수번호: ${uniqueId}`);
 
-      // Supabase Edge Function 또는 직접 SMTP 대신 Make webhook 활용
-      // GAS의 GmailApp.sendEmail 대체: Make에 이메일 이벤트 전송
-      await fetch(process.env.MAKE_WEBHOOK_URL || '', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          _meta: { ts: new Date().toISOString(), version: 'tms-2.2', func: 'EMAIL_NOTIFY', trigger: 'tms' },
-          topic: 'email',
-          to: ADMIN_EMAIL,
-          subject: emailSubject,
-          body: emailLines.join('\n'),
-          // 기존 알림톡 데이터도 포함 (Make에서 필요 시 참조)
-          id: uniqueId,
-          name: name.trim(),
-          phone: phoneNorm,
-          type: typeLabel,
-        }),
-        signal: AbortSignal.timeout(5000),
-      }).catch(() => {});
+      await sendAdminEmail(
+        `[MAMORU 상담] 새로운 ${typeLabel} 접수`,
+        emailLines.join('\n')
+      );
     } catch (emailErr) {
       console.error('[consultation/submit] 이메일 발송 실패:', emailErr);
     }

@@ -2340,7 +2340,7 @@ function getCachedSlots(dateStr) {
     const biz = state.serverSettings.business || {};
     const startHour = Number(biz.startHour || 10);
     const endHour   = Number(biz.endHour   || 19);
-    const stepMin   = Number(biz.stepMin   || 30);
+    const stepMin   = 30;  // 고객 달력 30분 고정
     for (let h = startHour; h < endHour; h++) {
       for (let m = 0; m < 60; m += stepMin) {
         const hh = String(h).padStart(2, '0');
@@ -2428,8 +2428,8 @@ function getCachedSlots(dateStr) {
     const label = `${dt.getMonth()+1}월 ${dt.getDate()}일 (${dayNames[dt.getDay()]})`;
     if (t) {
       const biz = state.serverSettings.business || {};
-      const step = Number(biz.stepMin || 30);
-      const durH = Math.floor(step / 60) || 1;  // 최소 1시간 단위 표시
+      const step = 30;  // 30분 고정
+      const durH = 1;  // 1시간 단위 표시
       el.textContent = `${label} · ${to12hFull(t)} (${durH}시간)`;
       el.classList.add('has-selection');
     } else {
@@ -2540,7 +2540,7 @@ if (isLoadingDates) return;
 
   // 다음 슬롯도 함께 선택해 1시간 단위를 표시
   const biz   = state.serverSettings.business || {};
-  const step  = Number(biz.stepMin || 30);  // 기본 30분 간격
+  const step  = 30;  // 고객 달력 30분 고정
   const parts = time.split(':');
   const baseM = Number(parts[0]) * 60 + Number(parts[1]);
   const nextM = baseM + step;

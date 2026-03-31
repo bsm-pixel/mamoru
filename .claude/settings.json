@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"address_sido\\\\|address_sigungu\" /c/Users/user/Desktop/mamoru/projects/Total_Management_System/app/src/app/\\\\\\(dashboard\\\\\\)/consultations/[id]/page.tsx)",
+      "Bash(git add:*)"
+    ]
+  }
+}

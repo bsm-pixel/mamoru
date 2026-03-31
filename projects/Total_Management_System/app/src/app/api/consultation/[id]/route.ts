@@ -183,11 +183,8 @@ export async function PATCH(
       after(async () => {
         const sideEffects: Promise<unknown>[] = [];
 
-        // 취소 시 GAS 연동 — 구글 캘린더 삭제 + 아임웹 슬롯 열기
-        // 톡상담은 GAS 시트/캘린더/슬롯 없으므로 제외
-        if (newStatus === 'cancelled' && data.unique_id && data.consultation_type !== 'talk_consult') {
-          sideEffects.push(cancelViaGAS(data.unique_id));
-        }
+        // Google Calendar 제거 완료 — GAS 연동 불필요
+        // 슬롯 차단은 Supabase 쿼리로 처리됨
 
         // 자동 알림톡 발송 — consultation_type 기반 분기
         const template = getAutoNotifyTemplate(newStatus, data.consultation_type);

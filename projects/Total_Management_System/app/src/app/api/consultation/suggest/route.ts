@@ -1,55 +1,10 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidTransition } from '@/lib/consultation/transitions';
+import { sendNotification } from '@/lib/notification/make-webhook';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
-/** GAS 웹앱에 시간제안 요청 — 캘린더 HOLD + 시트 상태 + 슬롯 차단 + 알림톡 */
-async function suggestViaGAS(
-  uniqueId: string,
-  suggestions: { date: string; time: string }[]
-): Promise<{ ok: boolean; detail?: string }> {
-  const baseUrl = process.env.GAS_CONSULTING_URL;
-  if (!baseUrl) {
-    console.error('[GAS suggest] GAS_CONSULTING_URL 환경변수 미설정');
-    return { ok: false, detail: 'GAS_CONSULTING_URL 미설정' };
-  }
-  if (!uniqueId) {
-    console.error('[GAS suggest] uniqueId 없음');
-    return { ok: false, detail: 'uniqueId 없음' };
-  }
-  try {
-    const key = process.env.CRON_SECRET || 'mamoru-tms-cron-2026';
-    const params = new URLSearchParams({
-      action: 'suggestTimes',
-      uid: uniqueId,
-      key,
-      suggestions: JSON.stringify(suggestions),
-    });
-    const url = `${baseUrl}?${params.toString()}`;
-    console.log('[GAS suggest] 요청:', { uid: uniqueId, count: suggestions.length });
-
-    const res = await fetch(url, {
-      method: 'GET',
-      redirect: 'follow',
-      signal: AbortSignal.timeout(20000), // HOLD 생성 포함이므로 넉넉히
-    });
-
-    const text = await res.text();
-    let body;
-    try { body = JSON.parse(text); } catch { body = text; }
-
-    if (body?.ok === true) {
-      console.log('[GAS suggest] 성공:', body);
-      return { ok: true, detail: JSON.stringify(body) };
-    }
-
-    console.error('[GAS suggest] 실패 응답:', { status: res.status, body });
-    return { ok: false, detail: `HTTP ${res.status}: ${JSON.stringify(body)}` };
-  } catch (err) {
-    console.error('[GAS suggest] fetch 에러:', err);
-    return { ok: false, detail: String(err) };
-  }
-}
+const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting';
 
 /** POST /api/consultation/suggest — 시간 제안 (출장요청용) */
 export async function POST(req: NextRequest) {
@@ -74,7 +29,7 @@ export async function POST(req: NextRequest) {
     const db = supabase as any;
     const { data: current, error: fetchErr } = await db
       .from('consultations')
-      .select('status, consultation_type, name, phone')
+      .select('status, consultation_type, name, phone, unique_id, address_road, address_detail, gas_raw')
       .eq('id', consultationId)
       .single();
 
@@ -117,16 +72,47 @@ export async function POST(req: NextRequest) {
       note: `시간 제안: ${suggestions.map((s) => `${s.date} ${s.time}`).join(', ')}`,
     });
 
-    // GAS 연동 — 캘린더 HOLD + 시트 상태 SUGGESTED + 슬롯 차단 + 알림톡 발송
-    // 백그라운드 실행 (UI 빠른 응답)
+    // 알림톡 발송 — GAS 대신 직접 (suggest 템플릿)
+    const uid = data.unique_id || current.unique_id;
+    const phoneNorm = (current.phone || '').replace(/\D/g, '');
+    // 단축토큰 생성 (6자리 hex)
+    const shortToken = Array.from(crypto.getRandomValues(new Uint8Array(3)))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // 단축토큰을 gas_raw에 저장 (page_suggest.html에서 사용)
+    await db.from('consultations').update({
+      gas_raw: {
+        ...(current.gas_raw || {}),
+        shortToken,
+      },
+    }).eq('id', consultationId);
+
     after(async () => {
-      if (data.unique_id) {
-        const result = await suggestViaGAS(data.unique_id, suggestions);
-        if (!result.ok) {
-          console.error('[suggest] GAS 연동 실패:', result.detail);
-        }
-      } else {
-        console.warn('[suggest] unique_id 없음 — GAS 연동 건너뜀 (id:', consultationId, ')');
+      try {
+        const confirmLink = `${GITHUB_PAGES}/page_suggest.html?t=${encodeURIComponent(shortToken)}`;
+        const suggestText = suggestions.map((s, i) => `제안${i + 1}: ${s.date} ${s.time}`).join('\n');
+
+        await sendNotification({
+          template: 'suggest',
+          phone: phoneNorm,
+          name: current.name,
+          data: {
+            id: uid,
+            name: current.name,
+            phone: phoneNorm,
+            type: '출장 요청',
+            address: [current.address_road, current.address_detail].filter(Boolean).join(' '),
+            suggest_text: suggestText,
+            suggest_count: String(suggestions.length),
+            confirm_link: confirmLink,
+            // 개별 제안 시간 (Make 템플릿에서 사용)
+            ...(suggestions[0] ? { date1: suggestions[0].date, time1: suggestions[0].time } : {}),
+            ...(suggestions[1] ? { date2: suggestions[1].date, time2: suggestions[1].time } : {}),
+            ...(suggestions[2] ? { date3: suggestions[2].date, time3: suggestions[2].time } : {}),
+          },
+        });
+      } catch (notifyErr) {
+        console.error('[suggest] 알림톡 발송 실패:', notifyErr);
       }
     });
 
