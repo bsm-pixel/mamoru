@@ -2119,11 +2119,9 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
         state.serverSettings.closedDates = new Set((cd || []).map(norm));
 
         // 영업시간 정보: BUSINESS 객체 또는 startHour/endHour/stepMin 값으로 초기화
-        state.serverSettings.business = s.BUSINESS || {
-          startHour: s.startHour || 10,
-          endHour: s.endHour || 19,
-          stepMin: 30  // 고객 달력은 항상 30분 단위 (TMS 시간제안은 10분)
-        };
+        const biz = s.BUSINESS || { startHour: s.startHour || 10, endHour: s.endHour || 19 };
+        biz.stepMin = 30;  // 고객 달력은 항상 30분 단위 (서버값 무시)
+        state.serverSettings.business = biz;
 
         /*
          * 서버 설정 로드 후 초기 캘린더와 시간 슬롯을 준비합니다.

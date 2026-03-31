@@ -8,7 +8,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-const GITHUB_PAGES = 'https://bsm-pixel.github.io/mamoru/projects/consulting';
+const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting';
 const ADMIN_EMAIL = 'bsm@mamoru.kr';
 
 export function OPTIONS() {
