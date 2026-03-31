@@ -2059,45 +2059,44 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Google Apps Script API (GitHub Pages → GAS fetch 방식)
+  // Vercel API (Supabase 직접 — GAS 대체)
   // ─────────────────────────────────────────────────────────────
-  const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwqJr1JVeSspv6kZ-wpKPapKOjk1wvEvQQ9rTN3ZtmtgMpkn8-HLVP7Plw94m-N1EE5/exec';
+  const API_BASE = 'https://app-eta-sandy-75.vercel.app/api/consultation/public';
 
   async function gasRun(fn, ...args) {
     try {
-      // getSettings: GET 요청
+      // getSettings: 영업시간 + 휴무 설정
       if (fn === 'getSettings') {
-        const resp = await fetch(GAS_WEB_APP_URL + '?action=getSettings');
+        const resp = await fetch(API_BASE + '/settings');
         const json = await resp.json();
         if (!json.ok) throw new Error(json.error || 'getSettings failed');
         return json.data;
       }
 
-      // getSlotsRange: GET 요청 (dates를 콤마로 연결)
+      // getSlotsRange: 예약 가능 슬롯 조회
       if (fn === 'getSlotsRange') {
         const [dates, consultType] = args;
         const datesParam = Array.isArray(dates) ? dates.join(',') : dates;
-        const url = `${GAS_WEB_APP_URL}?action=getSlotsRange&dates=${encodeURIComponent(datesParam)}&type=${encodeURIComponent(consultType || '매장 방문')}`;
+        const url = `${API_BASE}/slots?dates=${encodeURIComponent(datesParam)}&type=${encodeURIComponent(consultType || '매장 방문')}`;
         const resp = await fetch(url);
         const json = await resp.json();
         if (!json.ok) throw new Error(json.error || 'getSlotsRange failed');
         return json.data;
       }
 
-      // submitConsultation: POST 요청
+      // submitConsultation: 상담 접수
       if (fn === 'submitConsultation') {
         const [formData] = args;
-        const resp = await fetch(GAS_WEB_APP_URL, {
+        const resp = await fetch(API_BASE + '/submit', {
           method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },  // GAS CORS 우회
-          body: JSON.stringify({ action: 'submitConsultation', data: formData })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
         });
         const json = await resp.json();
         if (!json.ok) throw new Error(json.error || 'submitConsultation failed');
         return json.data;
       }
 
-      // 기타 함수는 빈 객체 반환
       console.warn('gasRun: unknown function', fn);
       return {};
     } catch (err) {

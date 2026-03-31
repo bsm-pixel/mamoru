@@ -1327,7 +1327,7 @@ select.err {
   // ═══════════════════════════════════════════════════════════════════
   // [CONFIG] API 설정 - 필요시 수정
   // ═══════════════════════════════════════════════════════════════════
-  const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbzLx3Qlu6Bz5pLXnnJiboWPKH7aerxqTGWq_hshq62l3B8FfCnMh_E_EMqgZSLXMNQWLw/exec';
+  const API_BASE = 'https://app-eta-sandy-75.vercel.app/api/repair/public';
 
   // ═══════════════════════════════════════════════════════════════════
   // [CONFIG] 가격 설정 (수정 가능)
@@ -1385,10 +1385,10 @@ select.err {
       }
     } catch (_) {}
     const years = ['2025', '2026', '2027'];
-    return fetch(`${GAS_API_URL}?holidays=1&years=${years.join(',')}`)
+    return fetch(`${API_BASE}/holidays?years=${years.join(',')}`)
       .then(r => r.json())
       .then(j => {
-        const list = (j && j.holidays) || [];
+        const list = (j && j.ok && j.data) ? j.data.map(h => h.date) : [];
         HOLIDAYS = new Set(list);
         try { localStorage.setItem(k, JSON.stringify({ t: now, list })); } catch (_) {}
       }).catch(() => {});
@@ -1899,10 +1899,10 @@ select.err {
 
     resetForm();
 
-    // 백그라운드 전송
-    fetch(GAS_API_URL, {
+    // 백그라운드 전송 (Vercel API 직접)
+    fetch(API_BASE + '/submit', {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     }).catch(e => {
       console.error('Background submission error:', e);
