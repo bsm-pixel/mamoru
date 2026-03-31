@@ -958,8 +958,8 @@ function submitConsultation(form){
   } catch(e) {
     Logger.log('Make post error(CONFIRMED): ' + e);
   }
-  } else {
-    // 희망 요일 / 희망 시간대 배열
+  } else if (type !== '톡상담') {
+    // 출장요청만 — 톡상담은 아래 별도 분기에서 처리
     const hopeDaysArr  = daysArr;
     const hopeTimesArr = timePrefsArr;
 
