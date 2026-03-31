@@ -1,7 +1,7 @@
 # MAMORU 시스템 구축 — TODO
 
 > 하위 프로젝트 5개로 분류 — 완료 시 [x] 체크, 신규 항목 추가
-> 최종 수정: 2026-03-31 (GAS→Supabase 전면 이전 + 디자인 리뉴얼 + 리뷰 위젯 + 재고 정합성)
+> 최종 수정: 2026-04-01 (GAS 전면 제거 완료 + Vercel Pro + 디자인 리뉴얼 + 리뷰 위젯 + 재고 정합성)
 
 ---
 
@@ -470,26 +470,78 @@
 ### 통합 리뷰 시스템 (미착수)
 - [ ] 설계 및 구현 (memory/REVIEW_SYSTEM_BRIEF.md 참조)
 
-### GAS → Supabase+Vercel 전면 이전 (03-31 완료)
+### GAS → Supabase+Vercel 전면 이전 (04-01 완료)
 - [x] DB: consultation_settings + closed_dates + holidays + lotte_waybill_config 테이블 ✅ 03-31
-- [x] API: 상담 접수 (public/submit — 비인증 CORS, 중복 체크, 알림톡) ✅ 03-31
-- [x] API: 슬롯 조회 (public/slots — 영업시간+휴무+예약 차단 계산, ~50ms) ✅ 03-31
-- [x] API: 설정 조회 (public/settings — 영업시간+휴무일) ✅ 03-31
-- [x] API: 복원수리 접수 (public/submit — as_id 채번, 비용 계산, 중복 체크) ✅ 03-31
-- [x] API: 공휴일 조회 (public/holidays) ✅ 03-31
-- [x] ALPS 직접 호출 클라이언트 (lib/lotte/alps-client.ts — 송장 발급/취소/조회) ✅ 03-31
-- [x] 리마인더 Cron (24h/2h 알림톡 — Vercel Cron 10분 간격) ✅ 03-31
-- [x] 상담 page_form.html JS 교체 (GAS URL → Vercel API) ✅ 03-31
-- [x] 복원수리 page_form.html JS 교체 (GAS URL → Vercel API) ✅ 03-31
-- [x] Vercel 환경변수 설정 (LOTTE_* 9개) ✅ 03-31
-- [x] Supabase lotte_waybill_config 송장번호 범위 설정 ✅ 03-31
-- [x] Google Calendar 제거 (TMS ScheduleCalendar로 대체) ✅ 03-31
-- [ ] 2주 병렬 운영 후 GAS 비활성화 (배포 보관처리)
-- [ ] 고객 상태 조회 페이지: GAS 경유 → Supabase 직접 조회 (우선순위 낮음)
+- [x] API: 상담 접수/슬롯/설정 공개 엔드포인트 ✅ 03-31
+- [x] API: 복원수리 접수/공휴일 공개 엔드포인트 ✅ 03-31
+- [x] ALPS 직접 호출 클라이언트 (lib/lotte/alps-client.ts) ✅ 03-31
+- [x] 리마인더 Cron (24h/2h — Vercel Pro 10분 간격) ✅ 04-01
+- [x] 고객 페이지 JS 교체 (page_form × 2, page_suggest, page_change_request) ✅ 04-01
+- [x] Vercel LOTTE 환경변수 + Supabase 송장번호 범위 설정 ✅ 03-31
+- [x] Google Calendar 제거 (TMS ScheduleCalendar 대체) ✅ 04-01
+- [x] 시간제안 API: GAS suggestViaGAS → sendNotification 직접 ✅ 04-01
+- [x] 출장지연 API: GAS fieldDelay → sendNotification 직접 ✅ 04-01
+- [x] 취소 API: cancelViaGAS 함수 삭제 ✅ 04-01
+- [x] repair/ship + lotte/book: GAS ALPS 경유 → alps-client.ts 직접 ✅ 04-01
+- [x] 고객 셀프서비스 API 5종 (reservation/cancel/confirm/resched/suggest-data) ✅ 04-01
+- [x] Gmail 알림 nodemailer 구현 ✅ 04-01
+- [x] Vercel Pro 업그레이드 ($20/월) ✅ 04-01
+- [x] 알림톡 payload GAS와 동일 구조로 재구성 ✅ 04-01
+- [x] 상담접수 달력 30분 단위 + "오늘" 표시 ✅ 04-01
+- [x] TMS 시간제안 모달 10분 간격 (step=600) ✅ 03-31
+- [x] 톡상담 시작 알림톡 추가 (talk_ready) ✅ 03-31
+- [x] 계약서 상담자 불러오기 상태 필터 수정 ✅ 03-31
+
+---
+
+## 🔴 긴급 — 전체 흐름 테스트 (04-02 예정)
+
+### 상담접수 흐름 테스트
+- [ ] 직접방문 접수 → 알림톡(confirmed) + TMS + Gmail
+- [ ] 직접방문 확정 알림톡 → 일정변경 버튼 → page_change_request 정상 로딩
+- [ ] 직접방문 확정 알림톡 → 취소 버튼 → 취소 처리 + TMS 반영
+- [ ] 출장요청 접수 → 알림톡(request) + TMS + Gmail
+- [ ] TMS 시간제안 → 알림톡(suggest) + 고객 시간 선택 → 확정
+- [ ] 고객 다른 일정 요청 → TMS 재요청 반영
+- [ ] 톡상담 접수 → 알림톡(talk_received) + TMS
+- [ ] TMS 톡상담 시작 → 알림톡(talk_ready)
+- [ ] 상담완료 → 리뷰요청 알림톡
+
+### 복원수리 흐름 테스트
+- [ ] 복원수리 접수 → 알림톡(as_received) + TMS
+- [ ] TMS 송장생성 (ALPS 직접 호출) → 정상 발급
+- [ ] 비용안내 → 알림톡 + 입금확인 → 출고
+
+### Gmail 환경변수 설정 (사용자 필요)
+- [ ] Vercel에 GMAIL_USER + GMAIL_APP_PASSWORD 환경변수 설정
+- [ ] Gmail 앱 비밀번호 생성 (Google 계정 → 2단계 인증 → 앱 비밀번호)
+
+---
+
+## 🟡 사용자 액션 필요 (수동)
+
+- [ ] TMS에서 제품별 product_group 설정 (R4-58ST → "R4" 등)
+- [ ] 아임웹 디자인 모드 → 상품 상세 하단에 리뷰 코드위젯 삽입 (1회)
+- [ ] 네이버 리뷰 160개 CSV 일괄 등록 (수동)
+- [ ] 베스트 리뷰 5~10개 선정 + 사진 첨부 (수동)
+- [ ] GAS 비활성화 — 2주 병렬 운영 후 배포 보관처리
+
+---
+
+## 🟢 향후 구현 예정
+
+- [ ] 통합 리뷰 시스템 설계 (memory/REVIEW_SYSTEM_BRIEF.md)
+- [ ] PWA 푸시 알림 (Service Worker + 구독)
+- [ ] 딜러 납품가 자동 적용 + 제품별 납품가 등록 필수화
+- [ ] QR 출력 프로그램 연동
+- [ ] 계약서 알림톡 템플릿 등록 (솔라피 검수)
+- [ ] E2E 테스트 (상담+복원수리+계약서)
+- [ ] 판매 모달에서 직접 계약서 작성 CTA
+- [ ] 바코드 스캔 재고 입출고
 
 ---
 
 ## 범례
 - [x] 완료
 - [ ] 미완료
-- 솔라피/Make 관련 항목은 **2. 알림톡** 에 통합 (리뷰 템플릿 포함)
+- 🔴 긴급 (오류/테스트), 🟡 사용자 액션, 🟢 향후 구현
