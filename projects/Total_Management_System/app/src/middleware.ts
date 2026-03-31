@@ -1,37 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-/** 인증 불필요 공개 경로 */
-const PUBLIC_PATHS = [
-  '/login',
-  '/contract',
-  '/diagnosis',
-  '/api/cron',
-  '/api/consultation/sync',
-  '/api/consultation/notify',
-  '/api/consultation/public',
-  '/api/repair/report',
-  '/api/repair/sync',
-  '/api/repair/public',
-  '/api/reviews/submit',
-  '/api/reviews/info',
-  '/api/reviews/upload',
-  '/api/reviews/public',
-  '/api/imweb/orders',
-];
-
-function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some(p => pathname.startsWith(p));
-}
-
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // 공개 경로 → 인증 없이 통과 (getUser 호출 불필요)
-  if (isPublicPath(pathname)) {
-    return NextResponse.next({ request });
-  }
-
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -59,6 +29,8 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const { pathname } = request.nextUrl;
+
   // 로그인 페이지에 인증된 사용자 → 대시보드로 리다이렉트
   if (user && pathname.startsWith('/login')) {
     const url = request.nextUrl.clone();
@@ -79,6 +51,21 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|manifest.*\\.json|icon-.*\\.png|sw\\.js).*)',
+    /*
+     * 인증이 필요한 경로만 매칭 — 공개 API는 matcher에서 제외하여 미들웨어 자체가 실행 안 됨
+     * 제외 목록:
+     * - _next/static, _next/image, favicon 등 정적 파일
+     * - /api/consultation/public/* (고객 접수/슬롯/설정)
+     * - /api/repair/public/* (고객 접수/공휴일)
+     * - /api/repair/report (공개 리포트)
+     * - /api/repair/sync (GAS 동기화)
+     * - /api/consultation/sync, /api/consultation/notify
+     * - /api/reviews/* (공개 리뷰 API)
+     * - /api/cron/* (Vercel Cron)
+     * - /api/imweb/* (아임웹 연동)
+     * - /api/verify/* (QR 인증)
+     * - /login, /contract, /diagnosis
+     */
+    '/((?!_next/static|_next/image|favicon.ico|manifest.*\\.json|icon-.*\\.png|sw\\.js|api/consultation/public|api/repair/public|api/repair/report|api/repair/sync|api/consultation/sync|api/consultation/notify|api/reviews|api/cron|api/imweb|api/verify|login|contract|diagnosis).*)',
   ],
 };

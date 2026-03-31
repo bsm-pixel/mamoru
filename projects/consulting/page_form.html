@@ -2059,14 +2059,14 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // API 통신 (GAS 임시 유지 — Vercel 미들웨어 전파 후 전환 예정)
+  // Vercel API (Supabase 직접 — GAS 완전 대체)
   // ─────────────────────────────────────────────────────────────
-  const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwqJr1JVeSspv6kZ-wpKPapKOjk1wvEvQQ9rTN3ZtmtgMpkn8-HLVP7Plw94m-N1EE5/exec';
+  const API_BASE = 'https://app-eta-sandy-75.vercel.app/api/consultation/public';
 
   async function gasRun(fn, ...args) {
     try {
       if (fn === 'getSettings') {
-        const resp = await fetch(GAS_WEB_APP_URL + '?action=getSettings');
+        const resp = await fetch(API_BASE + '/settings');
         const json = await resp.json();
         if (!json.ok) throw new Error(json.error || 'getSettings failed');
         return json.data;
@@ -2075,7 +2075,7 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
       if (fn === 'getSlotsRange') {
         const [dates, consultType] = args;
         const datesParam = Array.isArray(dates) ? dates.join(',') : dates;
-        const url = `${GAS_WEB_APP_URL}?action=getSlotsRange&dates=${encodeURIComponent(datesParam)}&type=${encodeURIComponent(consultType || '매장 방문')}`;
+        const url = `${API_BASE}/slots?dates=${encodeURIComponent(datesParam)}&type=${encodeURIComponent(consultType || '매장 방문')}`;
         const resp = await fetch(url);
         const json = await resp.json();
         if (!json.ok) throw new Error(json.error || 'getSlotsRange failed');
@@ -2084,10 +2084,10 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
 
       if (fn === 'submitConsultation') {
         const [formData] = args;
-        const resp = await fetch(GAS_WEB_APP_URL, {
+        const resp = await fetch(API_BASE + '/submit', {
           method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ action: 'submitConsultation', data: formData })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
         });
         const json = await resp.json();
         if (!json.ok) throw new Error(json.error || 'submitConsultation failed');
