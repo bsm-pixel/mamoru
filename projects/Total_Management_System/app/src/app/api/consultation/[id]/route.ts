@@ -18,6 +18,9 @@ function getAutoNotifyTemplate(
   if (newStatus === 'completed') {
     return 'review_request'; // 상담완료 → 리뷰 요청 알림톡 (MAKE_WEBHOOK_URL)
   }
+  if (newStatus === 'in_progress' && consultationType === 'talk_consult') {
+    return 'talk_ready'; // 톡상담 시작 → 안내 알림톡
+  }
   return null;
 }
 

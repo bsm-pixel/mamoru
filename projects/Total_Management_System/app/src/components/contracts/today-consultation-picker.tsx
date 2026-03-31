@@ -33,7 +33,7 @@ export function TodayConsultationPicker({ open, onClose, onSelect }: TodayConsul
         .from('consultations')
         .select('id, customer_id, name, phone, address_road, address_detail, visit_time, consultation_type, status')
         .eq('visit_date', today)
-        .in('status', ['confirmed', 'visited', 'pending'])
+        .in('status', ['confirmed', 'completed', 'in_progress'])
         .order('visit_time', { ascending: true });
       if (error) throw error;
       return (data || []) as Array<{
@@ -60,8 +60,8 @@ export function TodayConsultationPicker({ open, onClose, onSelect }: TodayConsul
 
   const STATUS_LABEL: Record<string, string> = {
     confirmed: '확정',
-    visited: '방문',
-    pending: '대기',
+    completed: '완료',
+    in_progress: '진행중',
   };
 
   return (

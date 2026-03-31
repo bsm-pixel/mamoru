@@ -92,8 +92,9 @@ export function SuggestTimeModal({ open, onClose, consultationId, prefDays, pref
             <input
               type="time"
               value={slot.time}
+              step="600"
               onChange={(e) => updateSlot(idx, 'time', e.target.value)}
-              className="w-28 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+              className="w-32 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
             />
             {slots.length > 1 && (
               <button
