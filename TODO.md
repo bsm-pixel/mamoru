@@ -1,7 +1,7 @@
 # MAMORU 시스템 구축 — TODO
 
 > 하위 프로젝트 5개로 분류 — 완료 시 [x] 체크, 신규 항목 추가
-> 최종 수정: 2026-03-30 (리뷰 위젯 v2 + 재고 동기화 정합성 + 모듈별 매뉴얼)
+> 최종 수정: 2026-03-31 (GAS→Supabase 전면 이전 + 디자인 리뉴얼 + 리뷰 위젯 + 재고 정합성)
 
 ---
 
@@ -470,11 +470,22 @@
 ### 통합 리뷰 시스템 (미착수)
 - [ ] 설계 및 구현 (memory/REVIEW_SYSTEM_BRIEF.md 참조)
 
-### GAS → Supabase 직접 전환 (반응속도 최적화)
-- [ ] 복원수리 접수 페이지: GAS doPost → Supabase/Vercel API 직접 전환
-- [ ] 고객 상태 조회 페이지: GAS 경유 → Supabase anon key + RLS 직접 조회
-- [ ] 전체 고객 대면 페이지 Supabase 직접 호출 전환 (GAS 제거, 반응속도 5~10배 개선)
-- [ ] 상담 접수: Google Form 유지 (GAS 트리거 필수), 추후 자체 폼 전환 검토
+### GAS → Supabase+Vercel 전면 이전 (03-31 완료)
+- [x] DB: consultation_settings + closed_dates + holidays + lotte_waybill_config 테이블 ✅ 03-31
+- [x] API: 상담 접수 (public/submit — 비인증 CORS, 중복 체크, 알림톡) ✅ 03-31
+- [x] API: 슬롯 조회 (public/slots — 영업시간+휴무+예약 차단 계산, ~50ms) ✅ 03-31
+- [x] API: 설정 조회 (public/settings — 영업시간+휴무일) ✅ 03-31
+- [x] API: 복원수리 접수 (public/submit — as_id 채번, 비용 계산, 중복 체크) ✅ 03-31
+- [x] API: 공휴일 조회 (public/holidays) ✅ 03-31
+- [x] ALPS 직접 호출 클라이언트 (lib/lotte/alps-client.ts — 송장 발급/취소/조회) ✅ 03-31
+- [x] 리마인더 Cron (24h/2h 알림톡 — Vercel Cron 10분 간격) ✅ 03-31
+- [x] 상담 page_form.html JS 교체 (GAS URL → Vercel API) ✅ 03-31
+- [x] 복원수리 page_form.html JS 교체 (GAS URL → Vercel API) ✅ 03-31
+- [x] Vercel 환경변수 설정 (LOTTE_* 9개) ✅ 03-31
+- [x] Supabase lotte_waybill_config 송장번호 범위 설정 ✅ 03-31
+- [x] Google Calendar 제거 (TMS ScheduleCalendar로 대체) ✅ 03-31
+- [ ] 2주 병렬 운영 후 GAS 비활성화 (배포 보관처리)
+- [ ] 고객 상태 조회 페이지: GAS 경유 → Supabase 직접 조회 (우선순위 낮음)
 
 ---
 
