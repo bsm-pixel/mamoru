@@ -52,20 +52,25 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * 인증이 필요한 경로만 매칭 — 공개 API는 matcher에서 제외하여 미들웨어 자체가 실행 안 됨
-     * 제외 목록:
-     * - _next/static, _next/image, favicon 등 정적 파일
-     * - /api/consultation/public/* (고객 접수/슬롯/설정)
-     * - /api/repair/public/* (고객 접수/공휴일)
-     * - /api/repair/report (공개 리포트)
-     * - /api/repair/sync (GAS 동기화)
-     * - /api/consultation/sync, /api/consultation/notify
-     * - /api/reviews/* (공개 리뷰 API)
-     * - /api/cron/* (Vercel Cron)
-     * - /api/imweb/* (아임웹 연동)
-     * - /api/verify/* (QR 인증)
-     * - /login, /contract, /diagnosis
+     * 대시보드 페이지만 매칭 — API 경로는 미들웨어 대상 아님
+     * 인증이 필요한 TMS 페이지: /dashboard, /orders, /sales, /repairs 등
      */
-    '/((?!_next/static|_next/image|favicon.ico|manifest.*\\.json|icon-.*\\.png|sw\\.js|api/consultation/public|api/repair/public|api/repair/report|api/repair/sync|api/consultation/sync|api/consultation/notify|api/reviews|api/cron|api/imweb|api/verify|login|contract|diagnosis).*)',
+    '/dashboard/:path*',
+    '/orders/:path*',
+    '/sales/:path*',
+    '/repairs/:path*',
+    '/consultations/:path*',
+    '/products/:path*',
+    '/customers/:path*',
+    '/suppliers/:path*',
+    '/supplies/:path*',
+    '/purchasing/:path*',
+    '/contracts/:path*',
+    '/inventory/:path*',
+    '/serials/:path*',
+    '/reports/:path*',
+    '/reviews/:path*',
+    '/settings/:path*',
+    '/login',
   ],
 };
