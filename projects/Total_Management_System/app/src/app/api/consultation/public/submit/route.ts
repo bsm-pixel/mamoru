@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
-    if (insertErr) throw insertErr;
+    if (insertErr) throw new Error(insertErr.message || JSON.stringify(insertErr));
 
     // 상태 이력 기록
     await dbAny.from('consultation_history').insert({
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('[consultation/public/submit] 접수 실패:', err);
     return NextResponse.json(
-      { ok: false, error: String(err) },
+      { ok: false, error: err instanceof Error ? err.message : JSON.stringify(err) },
       { status: 500, headers: CORS_HEADERS }
     );
   }
