@@ -2122,7 +2122,7 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
         state.serverSettings.business = s.BUSINESS || {
           startHour: s.startHour || 10,
           endHour: s.endHour || 19,
-          stepMin: s.stepMin || 30
+          stepMin: 30  // 고객 달력은 항상 30분 단위 (TMS 시간제안은 10분)
         };
 
         /*
@@ -2202,7 +2202,7 @@ function getCachedSlots(dateStr) {
       const disabled = isDateDisabled(ymd);
       const el = document.createElement('div');
       el.className = 'day' + (disabled ? ' disabled' : '') + (ymd === today ? ' today' : '');
-      el.textContent = d;
+      el.textContent = (ymd === today) ? '오늘' : d;
       el.dataset.date = ymd;
       if (!disabled) el.addEventListener('click', () => onDateClick(ymd));
       if (ymd === state.modal.selectedDate) el.classList.add('selected');
