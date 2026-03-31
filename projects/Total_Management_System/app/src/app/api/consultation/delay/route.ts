@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { sendNotification } from '@/lib/notification/make-webhook';
 
-/** POST /api/consultation/delay — 출장 지연 안내 (GAS fieldDelay 액션 호출) */
+/** POST /api/consultation/delay — 출장 지연 안내 (직접 알림톡 발송) */
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
@@ -39,48 +40,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '출장 예약만 지연 안내 가능합니다' }, { status: 400 });
     }
 
-    // GAS fieldDelay 액션 호출
-    const baseUrl = process.env.GAS_CONSULTING_URL;
-    if (!baseUrl) {
-      return NextResponse.json({ error: 'GAS_CONSULTING_URL 미설정' }, { status: 500 });
-    }
+    // 도착 예정 시간 계산
+    const [h, m] = (c.visit_time || '00:00').split(':').map(Number);
+    const revisedMin = h * 60 + m + delayMin;
+    const revisedH = String(Math.floor(revisedMin / 60)).padStart(2, '0');
+    const revisedM = String(revisedMin % 60).padStart(2, '0');
+    const visitTimeRevised = `${revisedH}:${revisedM}`;
 
-    const key = process.env.CRON_SECRET || 'mamoru-tms-cron-2026';
-    const params = new URLSearchParams({
-      action: 'fieldDelay',
-      uid: c.unique_id,
-      delayMin: String(delayMin),
-      key,
+    // 알림톡 발송 — field_delayed
+    const phoneNorm = (c.phone || '').replace(/\D/g, '');
+    await sendNotification({
+      template: 'field_delayed',
+      phone: phoneNorm,
+      name: c.name,
+      data: {
+        id: c.unique_id || c.id,
+        name: c.name,
+        phone: phoneNorm,
+        type: '출장 요청',
+        date: c.visit_date || '',
+        time: c.visit_time || '',
+        delay_min: String(delayMin),
+        visit_time_revised: visitTimeRevised,
+      },
     });
-
-    const gasRes = await fetch(`${baseUrl}?${params.toString()}`, {
-      method: 'GET',
-      redirect: 'follow',
-      signal: AbortSignal.timeout(15000),
-    });
-
-    const text = await gasRes.text();
-    let gasBody;
-    try { gasBody = JSON.parse(text); } catch { gasBody = text; }
-
-    if (!gasBody?.ok) {
-      console.error('[delay] GAS 실패:', gasBody);
-      return NextResponse.json({ error: gasBody?.error || 'GAS 호출 실패' }, { status: 502 });
-    }
 
     // 이력 기록
     await db.from('consultation_history').insert({
       consultation_id: consultationId,
       from_status: c.status,
-      to_status: c.status, // 상태 변경 없이 이력만 기록
+      to_status: c.status,
       changed_by: user.id,
-      note: `출장 지연 안내: ${delayMin}분 (도착 예정 ${gasBody.visit_time_revised})`,
+      note: `출장 지연 안내: ${delayMin}분 (도착 예정 ${visitTimeRevised})`,
     });
 
     return NextResponse.json({
       success: true,
       delay_min: delayMin,
-      visit_time_revised: gasBody.visit_time_revised,
+      visit_time_revised: visitTimeRevised,
     });
   } catch (err) {
     console.error('[delay] 출장 지연 안내 실패:', err);

@@ -203,7 +203,7 @@
   </div>
 
   <script>
-    var GAS_API = 'https://script.google.com/macros/s/AKfycbwqJr1JVeSspv6kZ-wpKPapKOjk1wvEvQQ9rTN3ZtmtgMpkn8-HLVP7Plw94m-N1EE5/exec';
+    var API_BASE = 'https://app-eta-sandy-75.vercel.app/api/consultation/public';
     var STORE_BOOKING_URL = 'https://mamoruscissors63682.imweb.me/52'; // 매장방문 접수 페이지
 
     var params = new URLSearchParams(location.search);
@@ -215,7 +215,7 @@
     function loadReservation() {
       if (!uid) { showError('잘못된 접근입니다. URL을 확인해주세요.'); return; }
 
-      fetch(GAS_API + '?action=getReservationInfo&uid=' + encodeURIComponent(uid))
+      fetch(API_BASE + '/reservation?uid=' + encodeURIComponent(uid))
         .then(function(r) { return r.json(); })
         .then(function(res) {
           if (!res.ok || !res.data) { showError(res.error || '예약 정보를 찾을 수 없습니다.'); return; }
@@ -274,7 +274,7 @@
         + '&reason=' + encodeURIComponent('일정 변경을 위한 자동 취소')
         + '&memo=&hopeDate=';
 
-      fetch(GAS_API + qs)
+      fetch(API_BASE + '/cancel?uid=' + encodeURIComponent(uid) + '&reason=' + encodeURIComponent('일정 변경을 위한 자동 취소'))
         .then(function(r) { return r.json(); })
         .then(function(res) {
           if (res.ok) {
@@ -315,14 +315,11 @@
       btn.disabled = true;
       btn.textContent = '요청 중...';
 
-      var qs = '?action=submitChangeRequest'
-        + '&uid=' + encodeURIComponent(uid)
-        + '&reqType=' + encodeURIComponent(selectedType)
-        + '&reason=' + encodeURIComponent(reason)
-        + '&memo=' + encodeURIComponent(memo)
-        + '&hopeDate=' + encodeURIComponent(hopeDate);
+      var apiUrl = (selectedType === 'cancel')
+        ? API_BASE + '/cancel?uid=' + encodeURIComponent(uid) + '&reason=' + encodeURIComponent(reason + (memo ? ' / ' + memo : ''))
+        : API_BASE + '/resched?t=' + encodeURIComponent(uid) + '&reason=' + encodeURIComponent(reason + (memo ? ' / ' + memo : '') + (hopeDate ? ' / 희망일: ' + hopeDate : ''));
 
-      fetch(GAS_API + qs)
+      fetch(apiUrl)
         .then(function(r) { return r.json(); })
         .then(function(res) {
           if (res.ok) {

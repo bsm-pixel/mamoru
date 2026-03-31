@@ -24,52 +24,7 @@ function getAutoNotifyTemplate(
   return null;
 }
 
-/** GAS 웹앱에 취소 요청 — 캘린더 삭제 + 시트 상태 + 슬롯 캐시 무효화 */
-async function cancelViaGAS(uniqueId: string): Promise<{ ok: boolean; detail?: string }> {
-  const baseUrl = process.env.GAS_CONSULTING_URL;
-  if (!baseUrl) {
-    console.error('[GAS cancel] GAS_CONSULTING_URL 환경변수 미설정');
-    return { ok: false, detail: 'GAS_CONSULTING_URL 미설정' };
-  }
-  if (!uniqueId) {
-    console.error('[GAS cancel] uniqueId 없음');
-    return { ok: false, detail: 'uniqueId 없음' };
-  }
-  try {
-    const key = process.env.CRON_SECRET || 'mamoru-tms-cron-2026';
-    // GAS 웹앱은 POST body를 외부에서 받지 못하는 이슈 → GET 쿼리 파라미터 방식 사용
-    const params = new URLSearchParams({
-      action: 'cancelConsultation',
-      uid: uniqueId,
-      key,
-      skipNotify: 'true',
-    });
-    const url = `${baseUrl}?${params.toString()}`;
-    console.log('[GAS cancel] 요청:', { uid: uniqueId });
-
-    // GAS 웹앱은 302 리다이렉트로 응답 전달
-    const res = await fetch(url, {
-      method: 'GET',
-      redirect: 'follow',
-      signal: AbortSignal.timeout(15000),
-    });
-
-    const text = await res.text();
-    let body;
-    try { body = JSON.parse(text); } catch { body = text; }
-
-    if (body?.ok === true) {
-      console.log('[GAS cancel] 성공:', body);
-      return { ok: true, detail: JSON.stringify(body) };
-    }
-
-    console.error('[GAS cancel] 실패 응답:', { status: res.status, body });
-    return { ok: false, detail: `HTTP ${res.status}: ${JSON.stringify(body)}` };
-  } catch (err) {
-    console.error('[GAS cancel] fetch 에러:', err);
-    return { ok: false, detail: String(err) };
-  }
-}
+/* GAS cancelViaGAS 제거 완료 — Calendar 삭제 불필요, 슬롯 차단은 Supabase 쿼리 */
 
 /** GET /api/consultation/[id] — 상담 단건 + 이력 */
 export async function GET(

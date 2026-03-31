@@ -251,7 +251,7 @@
 
   <script>
     /* ── Config ── */
-    var GAS_API = 'https://script.google.com/macros/s/AKfycbwqJr1JVeSspv6kZ-wpKPapKOjk1wvEvQQ9rTN3ZtmtgMpkn8-HLVP7Plw94m-N1EE5/exec';
+    var API_BASE = 'https://app-eta-sandy-75.vercel.app/api/consultation/public';
     var params = new URLSearchParams(location.search);
     var token  = params.get('t') || '';
 
@@ -264,7 +264,7 @@
     var allowedMonths = [];   // [{ y, m }] 제안이 있는 월 목록
 
     /* ── Data Load ── */
-    fetch(GAS_API + '?action=getSuggestData&t=' + encodeURIComponent(token))
+    fetch(API_BASE + '/suggest-data?t=' + encodeURIComponent(token))
       .then(function(r){ return r.json(); })
       .then(function(res){
         if (!res.ok || !res.data) { showError(res.error || '유효하지 않거나 만료된 링크입니다.'); return; }
@@ -516,7 +516,7 @@
       closeModal('modal-resched');
       var reason = document.getElementById('resched-reason').value.trim();
       showReschedSuccess();
-      var url = GAS_API + '?action=markResched&t=' + encodeURIComponent(token) +
+      var url = API_BASE + '/resched?t=' + encodeURIComponent(token) +
                 '&reason=' + encodeURIComponent(reason);
       fireAndForget(url);
     });

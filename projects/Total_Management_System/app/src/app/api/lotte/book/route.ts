@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateInvoice } from '@/lib/imweb/client';
+import { getNextInvoice, bookShipment } from '@/lib/lotte/alps-client';
 
-/** POST /api/lotte/book — 송장 생성 (GAS ALPS 경유) */
+/** POST /api/lotte/book — 송장 생성 (ALPS 직접 호출) */
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
@@ -13,6 +14,7 @@ export async function POST(request: NextRequest) {
 
     // 상품명 자동 조합: order_items에서 가져오기
     if (!body.gdsNm && body.orderId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: items } = await (supabase as any)
         .from('order_items')
         .select('product_name, quantity')
@@ -27,51 +29,33 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // GAS 경유 ALPS 송장 생성
-    const gasUrl = process.env.GAS_AS_URL;
-    const adminToken = process.env.GAS_AS_ADMIN_TOKEN;
-    if (!gasUrl || !adminToken) {
-      return NextResponse.json({ error: 'GAS_AS_URL 또는 GAS_AS_ADMIN_TOKEN 미설정' }, { status: 500 });
-    }
+    // ALPS 직접 호출 — 송장번호 발급 + 접수
+    const { invoiceNumber } = await getNextInvoice();
 
-    const gasParams = new URLSearchParams({
-      action: 'book_order',
-      token: adminToken,
-      ordNo: body.ordNo || '',
-      rcvName: body.rcvName || '',
-      rcvTel: body.rcvTel || '',
-      rcvZip: body.rcvZip || '',
-      rcvAdr: body.rcvAdr || '',
-      gdsNm: body.gdsNm || '마모루 제품',
-      dlvMsg: body.dlvMsg || '',
-      boxTypCd: body.boxTypCd || 'A',
+    const result = await bookShipment({
+      invoiceNumber,
+      receiverName: body.rcvName || '',
+      receiverTel: body.rcvTel || '',
+      receiverZip: body.rcvZip || '',
+      receiverAddr: body.rcvAdr || '',
+      goodsName: body.gdsNm || '마모루 제품',
+      deliveryMessage: body.dlvMsg || '',
     });
 
-    const gasRes = await fetch(`${gasUrl}?${gasParams}`, {
-      method: 'GET',
-      redirect: 'follow',
-      signal: AbortSignal.timeout(30000),
-    });
-
-    const gasText = await gasRes.text();
-    let gasBody;
-    try { gasBody = JSON.parse(gasText); } catch { gasBody = { ok: false, error: gasText }; }
-
-    if (!gasBody.ok || !gasBody.invNo) {
+    if (!result.success) {
       return NextResponse.json(
-        { error: `GAS 송장 생성 실패: ${gasBody.error || gasBody.msg || gasText}` },
+        { error: `ALPS 송장 생성 실패: ${result.error}` },
         { status: 502 }
       );
     }
 
-    const result = { ok: true, invNo: gasBody.invNo, rtnCd: gasBody.rtnCd || '', rtnMsg: gasBody.rtnMsg || '' };
-
     // 주문에 송장 정보 저장
     if (body.orderId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase as any)
         .from('orders')
         .update({
-          invoice_number: result.invNo,
+          invoice_number: invoiceNumber,
           courier_code: 'LOTTE',
           courier_name: '롯데택배',
           status: 'shipping',
@@ -87,7 +71,7 @@ export async function POST(request: NextRequest) {
       try {
         const imwebResult = await updateInvoice(body.ordNo, {
           parcel_code: 'LOTTE',
-          invoice_no: result.invNo,
+          invoice_no: invoiceNumber,
         });
         imwebSynced = imwebResult.success;
         imwebNeedsManual = imwebResult.needsManual;
@@ -98,12 +82,13 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      ...result,
+      ok: true,
+      invNo: invoiceNumber,
       imwebSynced,
       imwebNeedsManual,
     });
   } catch (err) {
     console.error('[lotte/book] 송장 생성 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }
