@@ -1474,14 +1474,14 @@ body.pc #date-picker-modal .day {
   border-color: rgba(26,26,26,0.15);
 }
 #date-picker-modal .time-slot.selected {
-  background: rgba(26,26,26,0.06);
-  border-color: var(--mm-gold);
-  color: var(--mm-gold);
+  background: var(--mm-void);
+  border-color: var(--mm-void);
+  color: var(--mm-cream);
   font-weight: 600;
 }
 #date-picker-modal .time-slot.unavailable {
-  background: #E8E6DC;
-  color: #B5B3C2;
+  background: var(--mm-parchment);
+  color: var(--mm-mist);
 }
 #date-picker-modal .time-slot.loading {
   color: var(--mm-text-d2);
@@ -2666,19 +2666,17 @@ if (isLoadingDates) return;
   $('btn-modal-close').addEventListener('click', closeDatePickerModal);
 
   $('btn-prev-month').addEventListener('click', function() {
-    // 로딩 중에는 월 이동을 제한합니다.
-    if (isLoadingDates) return;
-    // 이전 달로 이동 후 캘린더 갱신 및 슬롯 선조회
+    // 월 이동은 로딩 중에도 허용 (달력은 즉시 렌더, 슬롯은 백그라운드)
     state.modal.currentDate.setMonth(state.modal.currentDate.getMonth() - 1);
+    isLoadingDates = false; // 이전 요청 무시
     renderCalendar();
     prefetchDebounced();
   });
 
   $('btn-next-month').addEventListener('click', function() {
-    // 로딩 중에는 월 이동을 제한합니다.
-    if (isLoadingDates) return;
-    // 다음 달로 이동 후 캘린더 갱신 및 슬롯 선조회
+    // 월 이동은 로딩 중에도 허용
     state.modal.currentDate.setMonth(state.modal.currentDate.getMonth() + 1);
+    isLoadingDates = false; // 이전 요청 무시
     renderCalendar();
     prefetchDebounced();
   });
@@ -2693,7 +2691,8 @@ if (isLoadingDates) return;
     modalBody.addEventListener('touchstart', function(e) { sx = e.touches[0].clientX; }, { passive: true });
     modalBody.addEventListener('touchend', function(e) {
       const dx = e.changedTouches[0].clientX - sx;
-      if (Math.abs(dx) < 50 || isLoadingDates) return;
+      if (Math.abs(dx) < 50) return;
+      isLoadingDates = false; // 이전 요청 무시
       if (dx < 0) { // 왼쪽 스와이프 → 다음 달
         state.modal.currentDate.setMonth(state.modal.currentDate.getMonth() + 1);
       } else { // 오른쪽 스와이프 → 이전 달
