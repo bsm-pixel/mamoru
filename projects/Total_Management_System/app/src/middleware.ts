@@ -1,7 +1,37 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+/** 인증 불필요 공개 경로 */
+const PUBLIC_PATHS = [
+  '/login',
+  '/contract',
+  '/diagnosis',
+  '/api/cron',
+  '/api/consultation/sync',
+  '/api/consultation/notify',
+  '/api/consultation/public',
+  '/api/repair/report',
+  '/api/repair/sync',
+  '/api/repair/public',
+  '/api/reviews/submit',
+  '/api/reviews/info',
+  '/api/reviews/upload',
+  '/api/reviews/public',
+  '/api/imweb/orders',
+];
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some(p => pathname.startsWith(p));
+}
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // 공개 경로 → 인증 없이 통과 (getUser 호출 불필요)
+  if (isPublicPath(pathname)) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -13,7 +43,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({ request });
@@ -29,17 +59,11 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
-
-  // 인증 불필요 경로 — 고객 공개 API + 동기화 + Cron
-  // consultation/public, repair/public 추가 (2026-03-31)
-  if (pathname.startsWith('/login') || pathname.startsWith('/contract') || pathname.startsWith('/diagnosis') || pathname.startsWith('/api/cron') || pathname.startsWith('/api/consultation/sync') || pathname.startsWith('/api/consultation/notify') || pathname.startsWith('/api/consultation/public') || pathname.startsWith('/api/repair/report') || pathname.startsWith('/api/repair/sync') || pathname.startsWith('/api/repair/public') || pathname.startsWith('/api/reviews/submit') || pathname.startsWith('/api/reviews/info') || pathname.startsWith('/api/reviews/upload') || pathname.startsWith('/api/reviews/public')) {
-    if (user && pathname.startsWith('/login')) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/dashboard';
-      return NextResponse.redirect(url);
-    }
-    return supabaseResponse;
+  // 로그인 페이지에 인증된 사용자 → 대시보드로 리다이렉트
+  if (user && pathname.startsWith('/login')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
   }
 
   // 미인증 → 로그인으로 리다이렉트
