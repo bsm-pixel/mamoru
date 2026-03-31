@@ -719,68 +719,67 @@ body.pc .btn-primary {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: none;
+  background: rgba(0, 0, 0, 0.45);
   z-index: 10000;
-}
-
-#date-picker-modal .modal-content {
-  /* 모바일에서도 센터 모달과 동일한 크기와 애니메이션 적용 */
-  width: calc(100% - 32px);
-  max-width: 480px;
-  max-height: 80vh;
-  animation: modalFadeIn 0.2s ease-out;
-}
-
-.modal-backdrop.show {
+  /* GPU 가속 + 부드러운 페이드 */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s;
+  will-change: opacity;
+  /* 모바일: 중앙 정렬 */
   display: flex;
-}
-
-/* 모바일: 바텀시트 */
-.modal-backdrop {
-  align-items: flex-end;
-}
-
-body.pc .modal-backdrop {
-  /* PC: 센터 모달 */
   align-items: center;
   justify-content: center;
 }
 
+.modal-backdrop.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+body.pc .modal-backdrop {
+  align-items: center;
+  justify-content: center;
+}
+
+#date-picker-modal .modal-content {
+  width: calc(100% - 32px);
+  max-width: 480px;
+  max-height: 80vh;
+}
+
 .modal-content {
-  background: #2A2940;  /* 다크 모달 배경 */
+  background: var(--mm-white);
   overflow: hidden;
   border-radius: 16px;
-  /* 모바일 기본값 */
-  width: 100%;
+  width: calc(100% - 32px);
+  max-width: 520px;
   max-height: 85vh;
-  animation: slideUp 0.3s ease-out;
+  box-shadow: 0 16px 48px rgba(26, 26, 26, 0.18);
+  /* GPU 가속 부드러운 진입 */
+  transform: translateY(12px) scale(0.97);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  will-change: transform, opacity;
+}
+
+.modal-backdrop.show .modal-content {
+  transform: translateY(0) scale(1);
+  opacity: 1;
 }
 
 body.pc .modal-content {
   width: calc(100% - 48px);
   max-width: 520px;
   max-height: 80vh;
-  animation: modalFadeIn 0.2s ease-out;
-}
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
-@keyframes modalFadeIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
-  /* 모바일 기본값 */
+  border-bottom: 1px solid var(--mm-border-l);
+  background: var(--mm-cream);
   padding: 16px 20px;
 }
 
@@ -792,7 +791,7 @@ body.pc .modal-header {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: #FFFFFF;  /* 모달 내 화이트 유지 */
+  color: var(--mm-void);
 }
 
 .modal-close {
@@ -802,10 +801,12 @@ body.pc .modal-header {
   align-items: center;
   justify-content: center;
   border: none;
-  background: none;
-  font-size: 24px;
-  color: rgba(255, 255, 255, 0.5);  /* 밝은 색 */
+  background: var(--mm-shell);
+  border-radius: 50%;
+  font-size: 18px;
+  color: var(--mm-stone);
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 body.pc .modal-close {
@@ -814,12 +815,12 @@ body.pc .modal-close {
 }
 
 body.pc .modal-close:hover {
-  color: #FFFFFF;
+  background: var(--mm-parchment);
+  color: var(--mm-void);
 }
 
 .modal-body {
   overflow-y: auto;
-  /* 모바일 기본값 */
   padding: 20px;
   max-height: calc(85vh - 130px);
 }
@@ -834,7 +835,7 @@ body.pc .modal-body {
   font-weight: 700;
   margin-bottom: 8px;
   letter-spacing: -0.03em;
-  color: #FFFFFF;
+  color: var(--mm-void);
 }
 
 body.pc .modal-body h2 {
@@ -843,14 +844,14 @@ body.pc .modal-body h2 {
 
 .modal-body p {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);  /* 밝은 텍스트 */
+  color: var(--mm-warm-gray);
   line-height: 1.6;
 }
 
 .modal-footer {
   padding: 16px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);  /* 다크 라인 */
-  background: rgba(0, 0, 0, 0.1);  /* 살짝 어두운 푸터 */
+  border-top: 1px solid var(--mm-border-l);
+  background: var(--mm-cream);
 }
 
 body.pc .modal-footer {
@@ -884,26 +885,26 @@ body.pc .modal-footer .btn-primary {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--mm-sand);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
   font-size: 18px;
-  color: #FFFFFF;
+  color: var(--mm-void);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .calendar-nav button:hover {
-  background: var(--mm-gold);  /* Terracotta solid */
-  color: var(--mm-text-cream);
-  border-color: var(--mm-gold);
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  border-color: var(--mm-void);
 }
 
 .calendar-nav .month {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: #FFFFFF;
+  color: var(--mm-void);
 }
 
 .calendar-grid {
@@ -916,7 +917,7 @@ body.pc .modal-footer .btn-primary {
   text-align: center;
   font-size: 12px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);  /* 밝은 색 */
+  color: var(--mm-warm-gray);
   padding: 8px 0;
 }
 
@@ -925,36 +926,36 @@ body.pc .modal-footer .btn-primary {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--mm-border-l);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent;
   font-size: 14px;
-  color: #FFFFFF;
+  color: var(--mm-void);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .day:hover:not(.disabled) {
-  border-color: var(--mm-gold);
-  background: rgba(26,26,26,0.06);
+  border-color: var(--mm-void);
+  background: var(--mm-shell);
 }
 
 .day.today {
-  border-color: var(--mm-gold);
-  color: var(--mm-gold);
+  border-color: var(--mm-void);
+  color: var(--mm-void);
   font-weight: 600;
 }
 
 .day.selected {
-  background: var(--mm-gold);  /* Terracotta solid */
-  color: var(--mm-text-cream);
-  border-color: var(--mm-gold);
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  border-color: var(--mm-void);
   font-weight: 600;
 }
 
 .day.disabled {
-  background: rgba(0, 0, 0, 0.2);  /* 어두운 배경 */
-  color: rgba(255, 255, 255, 0.2);  /* 흐린 텍스트 */
+  background: var(--mm-parchment);
+  color: var(--mm-mist);
   text-decoration: line-through;
   cursor: not-allowed;
 }
@@ -969,7 +970,7 @@ body.pc .modal-footer .btn-primary {
 }
 
 .time-section {
-  border-top-color: rgba(255, 255, 255, 0.1);  /* 다크 라인 */
+  border-top-color: var(--mm-border-l);
 }
 
 .time-section h4 {
@@ -977,7 +978,7 @@ body.pc .modal-footer .btn-primary {
   font-weight: 600;
   margin-bottom: 12px;
   letter-spacing: -0.02em;
-  color: #FFFFFF;  /* 모달 내 화이트 */
+  color: var(--mm-void);
 }
 
 .time-slots {
@@ -997,11 +998,11 @@ body.pc .time-slots {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--mm-sand);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent;
   font-size: 14px;
-  color: #FFFFFF;
+  color: var(--mm-void);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -1011,27 +1012,27 @@ body.pc .time-slot {
 }
 
 .time-slot:hover:not(.unavailable) {
-  border-color: var(--mm-gold);
-  background: rgba(26,26,26,0.06);
+  border-color: var(--mm-void);
+  background: var(--mm-shell);
 }
 
 .time-slot.selected {
-  background: var(--mm-gold);
-  color: var(--mm-text-cream);
-  border-color: var(--mm-gold);
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  border-color: var(--mm-void);
   font-weight: 600;
 }
 
 .time-slot.unavailable {
-  background: rgba(0, 0, 0, 0.2);  /* 어두운 배경 */
-  color: rgba(255, 255, 255, 0.2);  /* 흐린 텍스트 */
+  background: var(--mm-parchment);
+  color: var(--mm-mist);
   text-decoration: line-through;
   cursor: not-allowed;
 }
 
 .time-slot.loading {
   grid-column: 1 / -1;
-  color: rgba(255, 255, 255, 0.5);  /* 밝은 색 */
+  color: var(--mm-warm-gray);
   cursor: default;
   border: none;
   background: none;
@@ -1108,7 +1109,7 @@ body.pc .postcode-header {
 }
 
 body.pc .postcode-close:hover {
-  color: var(--mm-gold);  /* 테라코타 호버 */
+  color: var(--mm-void);
 }
 
 #postcode-inner {
@@ -1146,8 +1147,10 @@ body.pc #success-modal .modal-content {
   justify-content: center;
 }
 
-#success-modal.show .modal-content {
-  animation: modalFadeIn 0.2s ease-out;
+#success-modal.show .modal-content,
+#date-picker-modal.show .modal-content {
+  transform: translateY(0) scale(1);
+  opacity: 1;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1171,14 +1174,14 @@ body.noscroll {
   align-items: flex-start;
   justify-content: center;
   padding-top: clamp(72px, 22vh, 200px);
-  background: rgba(24,23,37,0.98);  /* 다크 배경 */
+  background: rgba(250,249,247,0.98);  /* Cream 배경 */
   z-index: 99999;
 }
 
 #bootFallback {
   border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--mm-gold);  /* Terracotta 스피너 */
+  border: 3px solid var(--mm-sand);
+  border-top-color: var(--mm-void);
   animation: bootspin 1s linear infinite;
   /* 모바일 기본값 */
   width: 40px;
