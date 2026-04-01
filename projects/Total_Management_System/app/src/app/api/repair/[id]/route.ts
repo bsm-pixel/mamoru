@@ -64,7 +64,7 @@ export async function PATCH(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const body = await req.json();
-    const { status: newStatus, note, ...rest } = body;
+    const { status: newStatus, note, skip_notify, ...rest } = body;
 
     // 현재 조회
     const { data: current, error: fetchErr } = await db
@@ -144,7 +144,7 @@ export async function PATCH(
     }
 
     // 입금확인 알림톡 (paid_at 플래그 설정 시, skip_notify가 아닐 때)
-    if (justPaid && !rest.skip_notify) {
+    if (justPaid && !skip_notify) {
       after(async () => {
         if (data.phone) {
           const result = await sendNotification({
