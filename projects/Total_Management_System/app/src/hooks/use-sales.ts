@@ -198,6 +198,7 @@ export function useCreateSale() {
         customer_type?: string;
         memo?: string;
         sale_channel?: string;
+        contract_id?: string | null;
       };
       items: Array<{
         product_id?: string;
@@ -214,7 +215,10 @@ export function useCreateSale() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '판매 등록 실패');
+      }
       return res.json();
     },
     onSuccess: (data) => {
@@ -223,7 +227,7 @@ export function useCreateSale() {
       queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
     },
     onError: (err) => {
-      toast.error('판매 등록 실패: ' + String(err));
+      toast.error('판매 등록 실패: ' + (err instanceof Error ? err.message : String(err)));
     },
   });
 }
@@ -252,7 +256,7 @@ export function useCancelSale() {
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
     onError: (err) => {
-      toast.error('판매 취소 실패: ' + String(err));
+      toast.error('판매 취소 실패: ' + (err instanceof Error ? err.message : String(err)));
     },
   });
 }
@@ -301,7 +305,7 @@ export function useUpdatePaymentStatus() {
     },
     onError: (err, { id }, context) => {
       if (context?.prevDetail) queryClient.setQueryData(['sale', id], context.prevDetail);
-      toast.error('결제상태 변경 실패: ' + String(err));
+      toast.error('결제상태 변경 실패: ' + (err instanceof Error ? err.message : String(err)));
     },
     onSuccess: () => {
       toast.success('결제상태가 변경되었습니다');
@@ -345,7 +349,7 @@ export function useUpdateSaleMemo() {
     },
     onError: (err, { id }, context) => {
       if (context?.prevDetail) queryClient.setQueryData(['sale', id], context.prevDetail);
-      toast.error('메모 수정 실패: ' + String(err));
+      toast.error('메모 수정 실패: ' + (err instanceof Error ? err.message : String(err)));
     },
     onSettled: (_d, _e, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['sale', id] });

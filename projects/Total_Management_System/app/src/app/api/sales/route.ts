@@ -124,12 +124,23 @@ export async function POST(req: NextRequest) {
         is_vat_included: isVatIncluded,
         sale_channel: sale.sale_channel || 'offline',
         customer_type: sale.customer_type || null,
+        contract_id: (sale as Record<string, unknown>).contract_id || null,
         created_by: user.id,
       })
       .select()
       .single();
 
     if (saleError) throw saleError;
+
+    // 시리얼 수량 서버 검증: 시리얼 지정 시 수량과 일치해야 함
+    for (const item of items) {
+      if (item.serial_ids && item.serial_ids.length > 0 && item.serial_ids.length !== item.quantity) {
+        return NextResponse.json(
+          { error: `${item.product_name}: 시리얼 ${item.serial_ids.length}개 ≠ 수량 ${item.quantity}` },
+          { status: 400 }
+        );
+      }
+    }
 
     // 판매 항목 생성
     if (items.length > 0) {
@@ -160,30 +171,44 @@ export async function POST(req: NextRequest) {
       if (itemsError) throw itemsError;
     }
 
-    // 시리얼 연결: previous_zone 저장 후 status → sold
+    // 시리얼 연결: previous_zone 저장 후 status → sold (낙관적 잠금)
     const allSerialIds = items.flatMap((item) => item.serial_ids || []);
     if (allSerialIds.length > 0) {
-      // 현재 zone 조회 → previous_zone에 저장
       const { data: currentSerials } = await db
         .from('product_serials')
         .select('id, warehouse_zone')
-        .in('id', allSerialIds);
+        .in('id', allSerialIds)
+        .eq('status', 'in_stock'); // 이미 sold인 시리얼 제외
 
-      if (currentSerials && currentSerials.length > 0) {
-        // 각 시리얼의 현재 zone을 previous_zone에 보존
-        for (const serial of currentSerials) {
-          await db
-            .from('product_serials')
-            .update({
-              previous_zone: serial.warehouse_zone,
-              status: 'sold',
-              sold_via: 'offline',
-              offline_sale_id: created.id,
-              sold_at: new Date().toISOString(),
-              sold_to_name: sale.customer_name,
-              sold_to_phone: sale.customer_phone || null,
-            })
-            .eq('id', serial.id);
+      if (!currentSerials || currentSerials.length !== allSerialIds.length) {
+        return NextResponse.json(
+          { error: `시리얼 ${allSerialIds.length}개 중 ${currentSerials?.length || 0}개만 판매 가능 (이미 판매/반품된 시리얼 확인)` },
+          { status: 409 }
+        );
+      }
+
+      for (const serial of currentSerials) {
+        // 낙관적 잠금: status='in_stock'인 경우에만 update
+        const { count } = await db
+          .from('product_serials')
+          .update({
+            previous_zone: serial.warehouse_zone,
+            status: 'sold',
+            sold_via: 'offline',
+            offline_sale_id: created.id,
+            sold_at: new Date().toISOString(),
+            sold_to_name: sale.customer_name,
+            sold_to_phone: sale.customer_phone || null,
+          })
+          .eq('id', serial.id)
+          .eq('status', 'in_stock') // Race condition 방지
+          .select('id', { count: 'exact', head: true });
+
+        if (count === 0) {
+          return NextResponse.json(
+            { error: `시리얼 ${serial.id}이(가) 다른 판매에 이미 할당됨` },
+            { status: 409 }
+          );
         }
       }
     }
@@ -240,7 +265,8 @@ export async function POST(req: NextRequest) {
     // 미수금 자동 반영: 미결제/부분결제 시 고객 outstanding_balance 업데이트
     const paymentStatus = sale.payment_status || 'paid';
     if (sale.customer_id && paymentStatus !== 'paid') {
-      const unpaidAmount = sale.total_amount - (sale.paid_amount || 0);
+      const effectiveTotal = sale.total_amount - (sale.discount_amount || 0);
+      const unpaidAmount = effectiveTotal - (sale.paid_amount || 0);
       if (unpaidAmount > 0) {
         const { data: cust } = await db
           .from('customers')

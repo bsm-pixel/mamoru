@@ -78,13 +78,25 @@ export async function PATCH(
         await Promise.all(Object.entries(productQtyMap).map(async ([productId, qty]) => {
           const { data: prod } = await db
             .from('products')
-            .select('stock_quantity, imweb_product_no')
+            .select('stock_quantity, raw_stock, imweb_product_no')
             .eq('id', productId)
             .single();
           if (!prod) return;
 
+          // 이 상품에 시리얼이 연결되어 있었는지 확인 (B2B는 시리얼 없이 raw_stock 차감)
+          const { count: serialCount } = await db
+            .from('product_serials')
+            .select('id', { count: 'exact', head: true })
+            .eq('offline_sale_id', id)
+            .eq('product_id', productId);
+
           const newStock = (prod.stock_quantity || 0) + qty;
-          await db.from('products').update({ stock_quantity: newStock }).eq('id', productId);
+          const updateData: Record<string, unknown> = { stock_quantity: newStock };
+          // B2B 판매(시리얼 없음)였으면 raw_stock도 복원
+          if (!serialCount || serialCount === 0) {
+            updateData.raw_stock = (prod.raw_stock || 0) + qty;
+          }
+          await db.from('products').update(updateData).eq('id', productId);
 
           if (prod.imweb_product_no) {
             try {
@@ -104,9 +116,10 @@ export async function PATCH(
         }));
       }
 
-      // 4. 미수금 차감 (미결제/부분결제였던 경우)
+      // 4. 미수금 차감 (미결제/부분결제였던 경우) — 할인 반영
       if (sale.customer_id && sale.payment_status !== 'paid') {
-        const unpaidAmount = sale.total_amount - (sale.paid_amount || 0);
+        const effectiveTotal = sale.total_amount - (sale.discount_amount || 0);
+        const unpaidAmount = effectiveTotal - (sale.paid_amount || 0);
         if (unpaidAmount > 0) {
           const { data: cust } = await db
             .from('customers')

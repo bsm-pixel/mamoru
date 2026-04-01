@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,8 @@ function getUnitPrice(product: Product, customerType?: string): number {
 
 export default function NewSalePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const contractId = searchParams?.get('contract_id') || null;
   const { data: products = [], isLoading: productsLoading } = useProducts();
   const createSale = useCreateSale();
 
@@ -142,6 +144,7 @@ export default function NewSalePage() {
           : { [paymentMethod]: paidAmount },
         sale_channel: saleChannel,
         customer_type: customerType || undefined,
+        contract_id: contractId,
         memo: memo.trim() || undefined,
       },
       items: cart.map((item) => ({
