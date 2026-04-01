@@ -8,7 +8,7 @@
 
 복원수리는 고객 가위의 복원·수리를 접수부터 출고까지 관리합니다.
 
-**접수 경로**: 고객 접수 페이지(GitHub Pages) → GAS → Supabase → TMS
+**접수 경로**: 고객 접수 페이지(GitHub Pages) → Vercel API → Supabase → TMS
 
 ---
 

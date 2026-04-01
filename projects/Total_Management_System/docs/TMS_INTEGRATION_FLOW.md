@@ -1,3 +1,12 @@
+# ⚠️ DEPRECATED — 이 문서는 더 이상 유효하지 않습니다
+
+> **최신 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) 참조
+> GAS→Vercel 전환 이전(2026-03-14) 기준 문서로, 현재 아키텍처와 다릅니다.
+
+---
+
+# (아래는 구버전 아카이브)
+
 # TMS 전체 연동 흐름도
 
 > 최종 업데이트: 2026-03-14

@@ -10,9 +10,9 @@
 
 | 유형 | 설명 | 접수 경로 |
 |------|------|-----------|
-| 매장방문 | 고객이 매장에 직접 방문하여 상담 | Google Form → GAS → TMS |
-| 출장요청 | 고객 위치로 출장 방문 상담 | Google Form → GAS → TMS |
-| 톡상담 | 카카오톡을 통한 비대면 상담 | Google Form → GAS → TMS |
+| 매장방문 | 고객이 매장에 직접 방문하여 상담 | GitHub Pages 폼 → Vercel API → Supabase |
+| 출장요청 | 고객 위치로 출장 방문 상담 | GitHub Pages 폼 → Vercel API → Supabase |
+| 톡상담 | 카카오톡을 통한 비대면 상담 | GitHub Pages 폼 → Vercel API → Supabase |
 
 ---
 

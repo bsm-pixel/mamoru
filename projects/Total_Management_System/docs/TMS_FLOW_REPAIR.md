@@ -1,5 +1,7 @@
 # 복원수리 프로세스 흐름도
-> 최종 업데이트: 2026-03-26
+> 최종 업데이트: 2026-04-01 | GAS 의존 제거 — Vercel API 직접 접수
+>
+> **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
 
 ---
 
@@ -13,7 +15,7 @@
 ### 방문수거 흐름
 ```
 고객 접수 (page_form.html)
-  → GAS doPost: 시트 저장 + as_id 채번(AS-YYYYMMDD-NNN)
+  → Vercel API: /api/repair/public/submit → Supabase 저장 + as_id 채번(AS-YYYYMMDD-NNN)
   → Make 알림톡 (as_received) + TMS 동기화
   → [status: intake] (신규접수)
   → (관리자) 접수확인 → confirmed_at 기록
@@ -62,7 +64,7 @@ cancelled → (terminal)
 ## 2. 시스템 연동 흐름
 
 ```
-[고객] ──폼──→ [GAS doPost]
+[고객] ──폼──→ [Vercel API: /api/repair/public/submit]
                   │
          ┌───────┼───────────┐
          ▼       ▼           ▼
@@ -88,7 +90,7 @@ cancelled → (terminal)
 
 | 템플릿 | 트리거 | 경로 |
 |--------|--------|------|
-| `as_received` (접수완료) | GAS doPost 내부 | GAS → Make webhook |
+| `as_received` (접수완료) | Vercel submit route | Vercel → Make webhook |
 | `as_cost_notice` (비용안내) | UI "비용안내" 버튼 | UI → POST `/api/repair/[id]/notify` |
 | `as_payment_confirmed` (입금확인) | paid_at 플래그 설정 시 | PATCH `/api/repair/[id]` → after() 자동 |
 | `as_shipped` (출고완료) | shipped 상태 전환 시 | PATCH `/api/repair/[id]` → after() 자동 |
@@ -99,7 +101,7 @@ cancelled → (terminal)
 | 웹훅 | 환경변수 | 대상 템플릿 |
 |------|----------|-------------|
 | 상담 알림톡 | `MAKE_WEBHOOK_URL` | confirmed, cancelled, suggest 등 상담 17종 |
-| 복원수리 접수/취소 | GAS 내부 관리 | as_received (GAS → Make 직접) |
+| 복원수리 접수/취소 | Vercel API | as_received (Vercel → Make webhook) |
 | 복원수리 상태변경 | `MAKE_REPAIR_WEBHOOK_URL` | as_cost_notice, as_payment_confirmed, as_shipped, as_cancelled, as_satisfaction |
 
 ### 웹훅 payload 주요 필드
@@ -133,7 +135,7 @@ cancelled → (terminal)
 | `/api/repair/[id]/inspect` | POST/PUT | 검수 데이터 저장/수정 |
 | `/api/repair/[id]/notify` | POST | 수동 알림톡 발송 |
 | `/api/repair/[id]/ship` | POST/DELETE | 송장 생성(ALPS) / 취소 |
-| `/api/repair/sync` | POST | GAS → TMS 동기화 |
+| `/api/repair/sync` | POST | 외부 동기화 (레거시, 사용 빈도 낮음) |
 | `/api/repair/report` | GET | 수리내역 공개 API (CORS, 인증 불필요) |
 
 ### 컴포넌트 (15+개)
@@ -162,8 +164,8 @@ cancelled → (terminal)
 - `repair_inspections` — 가위별 검수 (blade_tip/mid/inner, comb, tension, parts, stopper)
 - `repair_history` — 상태 변경 이력
 
-### GAS 스크립트
-- `projects/as/Code.gs` — 접수(doPost) + 관리(updateAS_) + 롯데택배(ALPS) + TMS 동기화
+### ~~GAS 스크립트~~ (제거 완료 — 2026-04-01)
+- ~~`projects/as/Code.gs`~~ — Vercel API로 완전 대체, 보관처리 예정
 
 ### 고객 대면 페이지 (GitHub Pages)
 - `page_form.html` — 통합 접수 폼 (마모루+타사)
