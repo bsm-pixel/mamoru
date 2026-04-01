@@ -102,29 +102,7 @@ export async function GET(req: NextRequest) {
     const blockedMap = new Map<string, Set<number>>();
 
     for (const b of (bookings || [])) {
-      if (!b.visit_date || !b.visit_time) continue;
-
-      const dateStr = b.visit_date;
-      if (!blockedMap.has(dateStr)) blockedMap.set(dateStr, new Set());
-      const blocked = blockedMap.get(dateStr)!;
-
-      const baseMin = toMinutes(b.visit_time);
-
-      if (b.consultation_type === 'field_request' && ['confirmed', 'suggested', 'assigned'].includes(b.status)) {
-        // 출장: 전후 버퍼 적용
-        const blockStart = baseMin - fieldBufferBefore;
-        const blockEnd = baseMin + durMin + fieldBufferAfter;
-        for (let m = blockStart; m < blockEnd; m += stepMin) {
-          blocked.add(m);
-        }
-      } else {
-        // 매장방문/기타: 상담 시간만 차단
-        for (let m = baseMin; m < baseMin + durMin; m += stepMin) {
-          blocked.add(m);
-        }
-      }
-
-      // suggested 상태의 제안 시간도 차단
+      // suggested 건은 visit_time이 null일 수 있으므로 suggestions만 처리
       if (b.status === 'suggested' && b.suggestions) {
         const sug = b.suggestions as Array<{ date?: string; time?: string }>;
         for (const s of sug) {
@@ -144,6 +122,30 @@ export async function GET(req: NextRequest) {
               }
             }
           }
+        }
+        continue; // suggestions 처리 완료, visit_time 기반 차단은 건너뜀
+      }
+
+      // visit_date/visit_time이 없는 건은 차단 불가
+      if (!b.visit_date || !b.visit_time) continue;
+
+      const dateStr = b.visit_date;
+      if (!blockedMap.has(dateStr)) blockedMap.set(dateStr, new Set());
+      const blocked = blockedMap.get(dateStr)!;
+
+      const baseMin = toMinutes(b.visit_time);
+
+      if (b.consultation_type === 'field_request' && ['confirmed', 'assigned'].includes(b.status)) {
+        // 출장 확정/배정: 전후 버퍼 적용
+        const blockStart = baseMin - fieldBufferBefore;
+        const blockEnd = baseMin + durMin + fieldBufferAfter;
+        for (let m = blockStart; m < blockEnd; m += stepMin) {
+          blocked.add(m);
+        }
+      } else {
+        // 매장방문/기타: 상담 시간만 차단
+        for (let m = baseMin; m < baseMin + durMin; m += stepMin) {
+          blocked.add(m);
         }
       }
     }

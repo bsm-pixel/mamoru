@@ -9,7 +9,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-const GITHUB_PAGES = 'https://bsm-pixel.github.io/mamoru/projects/consulting';
+const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting'; // Make 시나리오가 https:// 추가
 const KAKAO_REST_KEY = process.env.KAKAO_REST_API_KEY || '';
 
 export function OPTIONS() {

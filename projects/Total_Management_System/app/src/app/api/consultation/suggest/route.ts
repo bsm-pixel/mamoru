@@ -4,7 +4,7 @@ import { isValidTransition } from '@/lib/consultation/transitions';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
-const GITHUB_PAGES = 'https://bsm-pixel.github.io/mamoru/projects/consulting';
+const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting'; // Make 시나리오가 https:// 추가
 
 /** POST /api/consultation/suggest — 시간 제안 (출장요청용) */
 export async function POST(req: NextRequest) {
