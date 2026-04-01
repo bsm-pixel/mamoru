@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
     const endHour = settings?.end_hour ?? 20;
     const durMin = settings?.duration_min ?? 60;
     const stepMin = settings?.step_min ?? 10;
-    const fieldBufferBefore = settings?.field_buffer_before ?? 90;
+    const fieldBufferBefore = settings?.field_buffer_before ?? 60; // 이동 1h (상담종료 후 출발)
     const fieldBufferAfter = settings?.field_buffer_after ?? 60; // 복귀 1h (상담시간 durMin은 별도 합산)
     const disabledWeekdays: number[] = settings?.disabled_weekdays ?? [0];
 
