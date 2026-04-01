@@ -172,3 +172,59 @@ export async function PATCH(
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
+
+/** DELETE /api/repair/[id] — 복원수리 건 완전 삭제 (알림톡 없음) */
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
+    // 현재 건 조회 (송장 확인용)
+    const { data: repair, error: fetchErr } = await db
+      .from('repairs')
+      .select('id, as_id, invoice_number')
+      .eq('id', id)
+      .single();
+
+    if (fetchErr || !repair) {
+      return NextResponse.json({ error: '복원수리 건을 찾을 수 없습니다' }, { status: 404 });
+    }
+
+    // 송장이 있으면 ALPS 취소 시도 (실패해도 삭제 진행)
+    let alpsWarning: string | undefined;
+    if (repair.invoice_number) {
+      try {
+        const { cancelShipment } = await import('@/lib/lotte/alps-client');
+        const cancelResult = await cancelShipment(repair.invoice_number);
+        if (!cancelResult.success) {
+          alpsWarning = `ALPS 취소 실패: ${cancelResult.error}`;
+          console.warn(`[repair delete] ${alpsWarning}`);
+        }
+      } catch (e) {
+        alpsWarning = `ALPS 취소 오류: ${String(e)}`;
+      }
+    }
+
+    // 이력 삭제 → 검수 삭제 → 본건 삭제
+    await db.from('repair_history').delete().eq('repair_id', id);
+    await db.from('repair_inspections').delete().eq('repair_id', id);
+    const { error: delErr } = await db.from('repairs').delete().eq('id', id);
+
+    if (delErr) throw delErr;
+
+    return NextResponse.json({ ok: true, deleted: repair.as_id, warning: alpsWarning });
+  } catch (err) {
+    console.error('[repair] 삭제 실패:', err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}

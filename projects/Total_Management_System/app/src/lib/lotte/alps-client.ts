@@ -137,6 +137,7 @@ export async function bookShipment(order: {
       ustRtgSctCd: '01',
       ordSct: '3',
       fareSctCd: '03',
+      boxTypCd: 'A', // GAS 동일 — 기본 박스타입
     }],
   };
 

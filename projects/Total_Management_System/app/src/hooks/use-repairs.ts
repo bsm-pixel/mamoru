@@ -174,7 +174,8 @@ export function useUpdateRepairFields() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(err.error || '수정 실패');
+        const msg = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
+        throw new Error(msg || '수정 실패');
       }
       return res.json();
     },
@@ -199,6 +200,32 @@ export function useUpdateRepairFields() {
     },
     onSettled: (_d, _e, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['repair', id] });
+    },
+  });
+}
+
+/** 복원수리 건 삭제 (알림톡 없이 완전 삭제) */
+export function useDeleteRepair() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/repair/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        const msg = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
+        throw new Error(msg || '삭제 실패');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('삭제되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
+      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+    },
+    onError: (err) => {
+      toast.error('삭제 실패: ' + String(err));
     },
   });
 }

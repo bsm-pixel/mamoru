@@ -9,6 +9,7 @@ import {
   useShipRepair,
   useCancelShipment,
   useSendRepairNotification,
+  useDeleteRepair,
 } from '@/hooks/use-repairs';
 import { getFilteredRepairTransitions, REPAIR_ACTION_LABEL } from '@/lib/repair/transitions';
 import { formatKRW, formatDateTime } from '@/lib/utils/format';
@@ -20,7 +21,7 @@ interface SidebarActionCardProps {
   repair: Repair;
 }
 
-type ConfirmAction = 'cost_notice' | 'mark_paid' | 'mark_shipped' | 'cancel_shipment' | 'cancel_repair' | null;
+type ConfirmAction = 'cost_notice' | 'mark_paid' | 'mark_shipped' | 'cancel_shipment' | 'cancel_repair' | 'delete_repair' | null;
 
 export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const updateStatus = useUpdateRepairStatus();
@@ -28,6 +29,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const shipRepair = useShipRepair();
   const cancelShipment = useCancelShipment();
   const sendNotify = useSendRepairNotification();
+  const deleteRepair = useDeleteRepair();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [paidNotify, setPaidNotify] = useState(true); // 입금확인 알림톡 발송 여부
 
@@ -196,6 +198,13 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 취소
               </button>
             )}
+            <button
+              disabled={busy}
+              onClick={() => setConfirmAction('delete_repair')}
+              className="w-full text-center text-xs text-neutral-400 hover:text-red-500 py-1 transition disabled:opacity-50"
+            >
+              삭제
+            </button>
           </div>
         )}
       </Card>
@@ -315,6 +324,15 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
         title="복원수리 취소"
         message="정말 이 복원수리 접수를 취소하시겠습니까?"
         confirmLabel="취소 확정"
+        variant="danger"
+      />
+      <ConfirmModal
+        open={confirmAction === 'delete_repair'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={() => deleteRepair.mutateAsync(r.id)}
+        title="복원수리 삭제"
+        message={<>이 건을 <strong>완전히 삭제</strong>합니다.<br />알림톡은 발송되지 않습니다. 복구할 수 없습니다.</>}
+        confirmLabel="삭제"
         variant="danger"
       />
     </>
