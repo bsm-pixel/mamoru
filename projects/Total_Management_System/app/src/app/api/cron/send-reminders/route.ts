@@ -60,11 +60,21 @@ export async function GET(req: NextRequest) {
 
       const isField = c.consultation_type === 'field_request';
 
-      // 24h 리마인더 (20~24시간 전)
+      // 24h 리마인더 (2~24시간 전)
       if (diffHours <= 24 && diffHours > 2 && !c.remind_24h_at) {
         try {
+          // DB 먼저 마킹 → 중복 발송 방지 (동시 Cron 실행 대비)
+          const { count } = await dbAny
+            .from('consultations')
+            .update({ remind_24h_at: now.toISOString() })
+            .eq('id', c.id)
+            .is('remind_24h_at', null)
+            .select('id', { count: 'exact', head: true });
+
+          if (count === 0) continue; // 다른 Cron이 이미 마킹
+
           await sendNotification({
-            template: isField ? 'field_remind_24h' : 'confirmed',
+            template: isField ? 'field_remind_24h' : 'field_remind_24h',
             phone: c.phone,
             name: c.name,
             data: {
@@ -74,11 +84,6 @@ export async function GET(req: NextRequest) {
               type: isField ? '출장' : '매장방문',
             },
           });
-
-          await dbAny
-            .from('consultations')
-            .update({ remind_24h_at: now.toISOString() })
-            .eq('id', c.id);
 
           sent24h.push(c.name);
         } catch (err) {
@@ -89,8 +94,18 @@ export async function GET(req: NextRequest) {
       // 2h 리마인더 (0.5~2시간 전)
       if (diffHours <= 2 && diffHours > 0.5 && !c.remind_2h_at) {
         try {
+          // DB 먼저 마킹 → 중복 발송 방지
+          const { count } = await dbAny
+            .from('consultations')
+            .update({ remind_2h_at: now.toISOString() })
+            .eq('id', c.id)
+            .is('remind_2h_at', null)
+            .select('id', { count: 'exact', head: true });
+
+          if (count === 0) continue; // 다른 Cron이 이미 마킹
+
           await sendNotification({
-            template: isField ? 'field_remind_2h' : 'confirmed',
+            template: isField ? 'field_remind_2h' : 'field_remind_2h',
             phone: c.phone,
             name: c.name,
             data: {
@@ -100,11 +115,6 @@ export async function GET(req: NextRequest) {
               type: isField ? '출장' : '매장방문',
             },
           });
-
-          await dbAny
-            .from('consultations')
-            .update({ remind_2h_at: now.toISOString() })
-            .eq('id', c.id);
 
           sent2h.push(c.name);
         } catch (err) {
