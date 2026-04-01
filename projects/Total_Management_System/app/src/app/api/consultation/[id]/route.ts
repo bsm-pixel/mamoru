@@ -188,3 +188,42 @@ export async function PATCH(
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
+
+/** DELETE /api/consultation/[id] — 상담 건 완전 삭제 (알림톡 없음) */
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
+    const { data: consultation, error: fetchErr } = await db
+      .from('consultations')
+      .select('id, unique_id, name')
+      .eq('id', id)
+      .single();
+
+    if (fetchErr || !consultation) {
+      return NextResponse.json({ error: '상담 건을 찾을 수 없습니다' }, { status: 404 });
+    }
+
+    // 이력 삭제 → 본건 삭제
+    await db.from('consultation_history').delete().eq('consultation_id', id);
+    const { error: delErr } = await db.from('consultations').delete().eq('id', id);
+
+    if (delErr) throw delErr;
+
+    return NextResponse.json({ ok: true, deleted: consultation.unique_id });
+  } catch (err) {
+    console.error('[consultation] 삭제 실패:', err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}

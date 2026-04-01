@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useConsultation, useUpdateConsultationStatus } from '@/hooks/use-consultations';
+import { useConsultation, useUpdateConsultationStatus, useDeleteConsultation } from '@/hooks/use-consultations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,8 +35,10 @@ interface Props {
 export function ConsultationDetailPanel({ consultationId }: Props) {
   const { data, isLoading } = useConsultation(consultationId);
   const updateStatus = useUpdateConsultationStatus();
+  const deleteConsultation = useDeleteConsultation();
   const [suggestModalOpen, setSuggestModalOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (isLoading) {
     return <div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /><Skeleton className="h-20" /></div>;
@@ -239,6 +241,23 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
           </div>
         </div>
       )}
+
+      {/* 삭제 */}
+      <button
+        onClick={() => setShowDeleteConfirm(true)}
+        className="w-full text-center text-xs text-neutral-400 hover:text-red-500 py-1 transition"
+      >
+        삭제
+      </button>
+      <ConfirmModal
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => deleteConsultation.mutateAsync(c.id)}
+        title="상담 건 삭제"
+        message={<>이 건을 <strong>완전히 삭제</strong>합니다.<br />알림톡은 발송되지 않습니다. 복구할 수 없습니다.</>}
+        confirmLabel="삭제"
+        variant="danger"
+      />
 
       {/* 시간 제안 모달 */}
       {c.consultation_type === 'field_request' && (

@@ -242,6 +242,32 @@ export function useSendNotification() {
   });
 }
 
+/** 상담 건 삭제 (알림톡 없이 완전 삭제) */
+export function useDeleteConsultation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/consultation/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        const msg = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
+        throw new Error(msg || '삭제 실패');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('삭제되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['consultations'] });
+      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['consultation-dashboard-stats'] });
+    },
+    onError: (err) => {
+      toast.error('삭제 실패: ' + String(err));
+    },
+  });
+}
+
 /** 보류 처리 (hold_reason 포함) */
 export function useHoldConsultation() {
   const queryClient = useQueryClient();
