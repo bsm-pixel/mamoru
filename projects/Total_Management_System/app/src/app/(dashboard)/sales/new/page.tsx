@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -34,6 +34,14 @@ function getUnitPrice(product: Product, customerType?: string): number {
 }
 
 export default function NewSalePage() {
+  return (
+    <Suspense fallback={null}>
+      <NewSaleContent />
+    </Suspense>
+  );
+}
+
+function NewSaleContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const contractId = searchParams?.get('contract_id') || null;
