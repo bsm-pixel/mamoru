@@ -170,6 +170,17 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
           <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
             <span>{formatPhone(c.phone)}</span>
             {c.visit_date && <span>{c.visit_date} {c.visit_time || ''}</span>}
+            {/* 제안중: suggestions에서 제안 시간 표시 */}
+            {!c.visit_date && c.status === 'suggested' && (c as any).suggestions && (() => {
+              const raw = (c as any).suggestions;
+              const dates: Array<{ date?: string; time?: string }> = Array.isArray(raw) ? raw : (raw.dates || []);
+              if (dates.length === 0) return null;
+              return (
+                <span className="text-amber-600 font-medium">
+                  제안: {dates.map((d, i) => `${d.date} ${d.time}`).join(' / ')}
+                </span>
+              );
+            })()}
           </div>
           {/* 주소 + 네비 버튼 */}
           {c.address_road && (
