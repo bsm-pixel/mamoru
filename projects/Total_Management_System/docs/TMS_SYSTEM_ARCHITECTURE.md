@@ -448,11 +448,22 @@ Vercel API → sendAdminEmail() → Gmail SMTP → 관리자 이메일
 - [x] 달력 suggested 표시
 - [x] .env.local 미사용 변수 정리
 
+### 04-01 판매관리 수정 ✅
+- [x] 시리얼 Race Condition 낙관적 잠금 (eq status=in_stock)
+- [x] previous_zone DB 마이그레이션 (043)
+- [x] contract_id 계약서→판매 연결 (API+폼+훅)
+- [x] raw_stock B2B 취소 시 복원
+- [x] outstanding_balance 할인 반영
+- [x] 에러 핸들링 use-sales.ts (instanceof Error)
+- [x] 시리얼 수량 서버 검증
+- [x] 누락 DB 컬럼 일괄 추가 (payment_detail, supply/vat, sale_channel, customer_type, contract_id)
+
 ### 미완료 / 확인 필요 ❌
 - [ ] Gmail 환경변수 (GMAIL_USER, GMAIL_APP_PASSWORD) Vercel 설정
 - [ ] 계약서 알림톡 템플릿 솔라피 등록 (`contracts/notify` 주석 상태)
 - [ ] GAS 배포 보관처리 (2주 병렬 운영 후)
-- [ ] E2E 테스트: 송장생성 재테스트 + 복원수리 전체 흐름
+- [ ] 실전 시뮬레이션 테스트 A~F (TODO.md 참조)
+- [ ] 판매관리 IA 개편 (TODO.md 상세 플랜 참조)
 - [ ] 네이버 리뷰 160개 CSV 일괄 등록
 - [ ] 아임웹 리뷰 위젯 코드위젯 삽입
 
