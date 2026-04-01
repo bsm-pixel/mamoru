@@ -190,7 +190,23 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
           <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => handleStatus('cancelled')} disabled={updateStatus.isPending}>
             취소
           </Button>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="w-full text-center text-xs text-neutral-400 hover:text-red-500 py-1.5 transition"
+          >
+            삭제 (알림 없이 제거)
+          </button>
         </div>
+      )}
+
+      {/* 취소/완료 상태에서도 삭제 가능 */}
+      {['completed', 'cancelled'].includes(c.status) && (
+        <button
+          onClick={() => setShowDeleteConfirm(true)}
+          className="w-full text-center text-xs text-neutral-400 hover:text-red-500 py-1.5 transition"
+        >
+          삭제 (알림 없이 제거)
+        </button>
       )}
 
       {/* 계약서 CTA — 톡상담 제외, 확정~완료 단계에서 표시 */}
@@ -242,13 +258,7 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
         </div>
       )}
 
-      {/* 삭제 */}
-      <button
-        onClick={() => setShowDeleteConfirm(true)}
-        className="w-full text-center text-xs text-neutral-400 hover:text-red-500 py-1 transition"
-      >
-        삭제
-      </button>
+      {/* 삭제 확인 모달 */}
       <ConfirmModal
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
