@@ -108,6 +108,21 @@
 | **지도** | `app/src/components/consultations/field-request-map.tsx` |
 | **시간 제안 모달** | `app/src/components/consultations/suggest-time-modal.tsx` |
 
+### 상태별 액션 가능 범위
+
+| 상태 | 취소 | 삭제 | 비고 |
+|------|------|------|------|
+| pending_admin | ✅ | ✅ | 신규접수 |
+| suggested | ✅ | ✅ | 시간 제안 중 |
+| confirmed | ✅ | ✅ | 확정 |
+| in_progress | ✅ | ✅ | 진행 중 |
+| completed | ❌ | ✅ | 완료 후 삭제만 |
+| cancelled | ❌ | ✅ | 취소 후 삭제만 |
+| on_hold | ✅ | ✅ | 보류 |
+| reschedule_requested | ✅ | ✅ | 재요청 |
+
+> **취소**: 고객에게 알림톡 발송 + 상태 변경. **삭제**: 알림 없이 DB 완전 제거.
+
 ### 슬롯 차단 로직 (`slots/route.ts`)
 - **매장방문/톡상담**: 상담 시간(durMin, 기본 60분)만 차단
 - **출장 confirmed/assigned**: `예약시간 - 60분(이동)` ~ `예약시간 + 60분(상담) + 60분(복귀)` 차단
@@ -164,6 +179,23 @@
 | **비용 계산** | `app/src/lib/repair/cost-calculator.ts` |
 | **React 훅** | `app/src/hooks/use-repairs.ts` |
 | **액션 카드 (UI)** | `app/src/components/repairs/sidebar-action-card.tsx` |
+
+### 상태별 액션 가능 범위
+
+| 상태 | 다음 전이 | 취소 | 삭제 | 비고 |
+|------|----------|------|------|------|
+| intake (신규접수) | pickup_scheduled / cost_notified | ✅ | ✅ | 방문수거→수거접수, 직접발송→바로 입고 |
+| pickup_scheduled (입고대기) | cost_notified | ✅ | ✅ | |
+| cost_notified (비용안내) | repairing | ✅ | ✅ | paid_at 독립 관리 |
+| repairing (작업중) | ready_to_ship | ✅ | ✅ | |
+| ready_to_ship (출고대기) | shipped | ❌ | ✅ | 송장 생성 완료 상태, 삭제 시 ALPS 취소 시도 |
+| shipped (출고완료) | delivered | ❌ | ✅ | |
+| delivered (배송완료) | completed | ❌ | ✅ | |
+| completed (완료) | — | ❌ | ✅ | |
+| cancelled (취소) | — | ❌ | ✅ | |
+
+> **취소 vs 삭제**: 취소는 고객에게 알림톡 발송 + 상태 변경. 삭제는 알림 없이 DB에서 완전 제거.
+> **파일**: `lib/repair/transitions.ts`
 
 ### ALPS 송장 생성 흐름 (`ship/route.ts → alps-client.ts`)
 1. `getNextInvoice()` — Supabase `lotte_waybill_config`에서 원자적 채번 (11자리 + mod7 체크디짓)
@@ -400,22 +432,27 @@ Vercel API → sendAdminEmail() → Gmail SMTP → 관리자 이메일
 
 ## §13. 현황 체크리스트
 
-### 완료 ✅
+### 완료 ✅ (04-01)
 - [x] 상담 모듈 GAS 완전 제거 (접수/알림톡/Gmail 모두 Vercel)
-- [x] 복원수리 접수 Vercel 직접 처리
-- [x] 알림톡 Make 웹훅 정상 작동
-- [x] ALPS 송장 생성/취소 정상 (boxTypCd 수정 완료)
-- [x] 출장 슬롯 차단 (confirmed + suggested 모두 버퍼 적용)
-- [x] 카카오 Geocoder 좌표 자동 세팅
-- [x] 상담/복원수리 건 삭제 기능
+- [x] 복원수리 접수 Vercel 직접 처리 + Gmail 관리자 알림
+- [x] 알림톡 Make 웹훅 정상 작동 (Make 시나리오 ON 확인)
+- [x] ALPS 송장 생성/취소 정상 (boxTypCd 수정)
+- [x] 출장 슬롯 차단 (confirmed + suggested 버퍼 60/60)
+- [x] 카카오 Geocoder 좌표 자동 세팅 (프론트+서버)
+- [x] 상담/복원수리 건 삭제 기능 (알림 없이)
 - [x] 리뷰 시스템 (접수→승인→위젯)
+- [x] 리마인더 중복 발송 방지 + KST 타임존
+- [x] 복원수리 주소 필드명 정합 (address/address_detail)
+- [x] 에러 메시지 [object Object] 해결 (typeof 체크 6곳)
+- [x] 삭제 시 사진 파일 정리 (repair_photos + Storage)
+- [x] 달력 suggested 표시
+- [x] .env.local 미사용 변수 정리
 
 ### 미완료 / 확인 필요 ❌
 - [ ] Gmail 환경변수 (GMAIL_USER, GMAIL_APP_PASSWORD) Vercel 설정
 - [ ] 계약서 알림톡 템플릿 솔라피 등록 (`contracts/notify` 주석 상태)
-- [ ] 복원수리 GAS 완전 비활성화 (2주 병렬 운영 후 보관처리)
-- [ ] E2E 테스트: 상담 17종 + 복원수리 6종 + 계약서 1종
-- [ ] 롯데송장 Make 시나리오 ON 확인 (현재 OFF 상태)
+- [ ] GAS 배포 보관처리 (2주 병렬 운영 후)
+- [ ] E2E 테스트: 송장생성 재테스트 + 복원수리 전체 흐름
 - [ ] 네이버 리뷰 160개 CSV 일괄 등록
 - [ ] 아임웹 리뷰 위젯 코드위젯 삽입
 

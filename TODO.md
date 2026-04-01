@@ -1,7 +1,7 @@
 # MAMORU 시스템 구축 — TODO
 
 > 하위 프로젝트 5개로 분류 — 완료 시 [x] 체크, 신규 항목 추가
-> 최종 수정: 2026-04-01 (GAS 전면 제거 완료 + Vercel Pro + 디자인 리뉴얼 + 리뷰 위젯 + 재고 정합성)
+> 최종 수정: 2026-04-01 (GAS 전면 제거 + E2E 테스트 + 16건 버그/기능 수정 + 마스터 아키텍처 문서)
 
 ---
 
@@ -494,23 +494,44 @@
 
 ---
 
-## 🔴 긴급 — 전체 흐름 테스트 (04-02 예정)
+## 🔴 긴급 — 전체 흐름 테스트 (04-01 점검 완료)
 
-### 상담접수 흐름 테스트
-- [ ] 직접방문 접수 → 알림톡(confirmed) + TMS + Gmail
-- [ ] 직접방문 확정 알림톡 → 일정변경 버튼 → page_change_request 정상 로딩
-- [ ] 직접방문 확정 알림톡 → 취소 버튼 → 취소 처리 + TMS 반영
-- [ ] 출장요청 접수 → 알림톡(request) + TMS + Gmail
-- [ ] TMS 시간제안 → 알림톡(suggest) + 고객 시간 선택 → 확정
+### 상담접수 흐름 테스트 (04-01 완료)
+- [x] 직접방문 접수 → 알림톡(confirmed) + TMS ✅ 04-01
+- [x] 직접방문 확정 알림톡 → 일정변경 → 돌아가기 버튼 정상 ✅ 04-01
+- [x] 직접방문 확정 알림톡 → 취소 버튼 → 취소 처리 + TMS 반영 ✅ 04-01
+- [x] 출장요청 접수 → 알림톡(request) + TMS ✅ 04-01
+- [x] TMS 시간제안 → 알림톡(suggest) + 고객 시간 선택 → 확정 ✅ 04-01
 - [ ] 고객 다른 일정 요청 → TMS 재요청 반영
-- [ ] 톡상담 접수 → 알림톡(talk_received) + TMS
-- [ ] TMS 톡상담 시작 → 알림톡(talk_ready)
-- [ ] 상담완료 → 리뷰요청 알림톡
+- [x] 톡상담 접수 → 알림톡(talk_received) + TMS ✅ 04-01
+- [x] TMS 톡상담 시작 → 알림톡(talk_ready) ✅ 04-01
+- [x] 상담완료 → 리뷰요청 알림톡 ✅ 04-01
 
 ### 복원수리 흐름 테스트
-- [ ] 복원수리 접수 → 알림톡(as_received) + TMS
-- [ ] TMS 송장생성 (ALPS 직접 호출) → 정상 발급
-- [ ] 비용안내 → 알림톡 + 입금확인 → 출고
+- [x] 복원수리 접수 → 알림톡(as_received) + TMS ✅ (기존 정상)
+- [ ] TMS 송장생성 (ALPS boxTypCd 수정 완료) → 정상 발급 재테스트
+- [x] 입금확인 → 정상 처리 (skip_notify 분리 완료) ✅ 04-01
+- [ ] 비용안내 → 알림톡 + 입금확인 → 출고 → 전체 E2E
+
+### 04-01 수정 완료 항목
+- [x] 알림톡 Make 시나리오 ON + 솔라피 Rate Limit 확인 ✅ 04-01
+- [x] GITHUB_PAGES https:// 롤백 (Make가 자동 추가) ✅ 04-01
+- [x] 출장 슬롯 차단: confirmed + suggested 버퍼 적용 (before=60, after=60) ✅ 04-01
+- [x] 카카오 Geocoder 좌표 자동 세팅 (프론트+서버) ✅ 04-01
+- [x] 계약서 CTA: confirmed/in_progress 표시 + 톡상담 제외 ✅ 04-01
+- [x] ALPS boxTypCd: 'A' 추가 (송장 생성 오류 해결) ✅ 04-01
+- [x] 입금확인 [object Object] → skip_notify 분리 ✅ 04-01
+- [x] 상담/복원수리 삭제 기능 (알림 없이 완전 삭제) ✅ 04-01
+- [x] 리마인더 중복 발송 방지 (DB 먼저 마킹 + 낙관적 잠금) ✅ 04-01
+- [x] 리마인더 KST 타임존 수정 ✅ 04-01
+- [x] 복원수리 주소 필드명 address1→address 수정 ✅ 04-01
+- [x] 에러 typeof 체크 5곳 (repairs 4 + consultations 1) ✅ 04-01
+- [x] 복원수리 접수 Gmail 관리자 알림 추가 ✅ 04-01
+- [x] 삭제 시 repair_photos + Storage 정리 ✅ 04-01
+- [x] 달력에 suggested/in_progress 표시 ✅ 04-01
+- [x] 제안중 탭 제안 날짜/시간 표시 ✅ 04-01
+- [x] .env.local 미사용 변수 정리 (ECOUNT, GAS_AS) ✅ 04-01
+- [x] TMS 마스터 아키텍처 문서 + 기존 문서 GAS 정리 ✅ 04-01
 
 ### Gmail 환경변수 설정 (사용자 필요)
 - [ ] Vercel에 GMAIL_USER + GMAIL_APP_PASSWORD 환경변수 설정
