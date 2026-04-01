@@ -191,8 +191,8 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
         </div>
       )}
 
-      {/* 완료 시 계약서 CTA */}
-      {c.status === 'completed' && (
+      {/* 계약서 CTA — 톡상담 제외, 확정~완료 단계에서 표시 */}
+      {['confirmed', 'in_progress', 'completed'].includes(c.status) && c.consultation_type !== 'talk_consult' && (
         <Link
           href={`/contracts/new?customer_name=${encodeURIComponent(c.name)}&customer_phone=${encodeURIComponent(c.phone || '')}`}
           className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200 hover:bg-green-100 transition"

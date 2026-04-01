@@ -91,6 +91,7 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
   const envName = isRepairStatus ? 'MAKE_REPAIR_WEBHOOK_URL' : 'MAKE_WEBHOOK_URL';
 
   if (!webhookUrl) {
+    console.warn(`[make-webhook] SKIP template=${payload.template} — ${envName} 미설정`);
     return { success: false, error: `${envName} 환경변수 미설정` };
   }
 
@@ -141,12 +142,14 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
       lastBody = await res.text();
 
       if (res.ok) {
+        console.log(`[make-webhook] OK template=${payload.template} phone=${payload.phone.slice(-4)} status=${res.status}`);
         return { success: true };
       }
 
       // 429, 5xx → 재시도
       const shouldRetry = res.status === 429 || (res.status >= 500 && res.status < 600);
       if (!shouldRetry) {
+        console.error(`[make-webhook] FAIL template=${payload.template} status=${res.status} body=${lastBody.slice(0, 200)}`);
         return { success: false, error: `Make HTTP ${res.status}: ${lastBody}` };
       }
     } catch (err) {

@@ -2004,6 +2004,13 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
     s.async = true;
     document.head.appendChild(s);
   }
+  // 카카오 Maps SDK 로드 (Geocoder용 — 주소→좌표 변환)
+  if (!window.kakao || !window.kakao.maps) {
+    var k = document.createElement('script');
+    k.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=a2f66fb456dd6a3808f42b649bbfee94&libraries=services&autoload=false';
+    k.async = true;
+    document.head.appendChild(k);
+  }
 })();
 </script>
 
@@ -2796,15 +2803,37 @@ if (isLoadingDates) return;
       oncomplete: function(d) {
         // 우편번호와 도로명 주소 설정
         $('postcode').value = d.zonecode || '';
-        $('address1').value = d.roadAddress || d.jibunAddress || '';
+        var roadAddr = d.roadAddress || d.jibunAddress || '';
+        $('address1').value = roadAddr;
         $('address2').focus();
-        // PlaceId 및 좌표 정보는 서버에서 채워지므로 초기화
+        // PlaceId 초기화
         var pIdEl = $('addrPlaceId');
+        if (pIdEl) pIdEl.value = '';
+        // 카카오 Geocoder로 주소→좌표 변환 (GAS geocodeAddress_ 대체)
         var latEl = $('addrLat');
         var lngEl = $('addrLng');
-        if (pIdEl) pIdEl.value = '';
         if (latEl) latEl.value = '';
         if (lngEl) lngEl.value = '';
+        if (roadAddr && window.kakao && window.kakao.maps && window.kakao.maps.services) {
+          var geocoder = new kakao.maps.services.Geocoder();
+          geocoder.addressSearch(roadAddr, function(result, status) {
+            if (status === kakao.maps.services.Status.OK && result[0]) {
+              if (latEl) latEl.value = result[0].y;
+              if (lngEl) lngEl.value = result[0].x;
+            }
+          });
+        } else if (roadAddr && window.kakao && window.kakao.maps) {
+          // SDK autoload=false인 경우 load 후 재시도
+          kakao.maps.load(function() {
+            var geocoder = new kakao.maps.services.Geocoder();
+            geocoder.addressSearch(roadAddr, function(result, status) {
+              if (status === kakao.maps.services.Status.OK && result[0]) {
+                if (latEl) latEl.value = result[0].y;
+                if (lngEl) lngEl.value = result[0].x;
+              }
+            });
+          });
+        }
         closePostcodeLayer();
       },
       onclose: closePostcodeLayer

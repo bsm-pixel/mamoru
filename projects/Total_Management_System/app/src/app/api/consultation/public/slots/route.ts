@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
     const durMin = settings?.duration_min ?? 60;
     const stepMin = settings?.step_min ?? 10;
     const fieldBufferBefore = settings?.field_buffer_before ?? 90;
-    const fieldBufferAfter = settings?.field_buffer_after ?? 90;
+    const fieldBufferAfter = settings?.field_buffer_after ?? 120; // 상담1h + 복귀1h
     const disabledWeekdays: number[] = settings?.disabled_weekdays ?? [0];
 
     // 2. 휴무일 조회
@@ -110,7 +110,7 @@ export async function GET(req: NextRequest) {
 
       const baseMin = toMinutes(b.visit_time);
 
-      if (b.consultation_type === 'field_request' && ['suggested', 'assigned'].includes(b.status)) {
+      if (b.consultation_type === 'field_request' && ['confirmed', 'suggested', 'assigned'].includes(b.status)) {
         // 출장: 전후 버퍼 적용
         const blockStart = baseMin - fieldBufferBefore;
         const blockEnd = baseMin + durMin + fieldBufferAfter;

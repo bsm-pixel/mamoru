@@ -9,10 +9,28 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting';
+const GITHUB_PAGES = 'https://bsm-pixel.github.io/mamoru/projects/consulting';
+const KAKAO_REST_KEY = process.env.KAKAO_REST_API_KEY || '';
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
+/** 카카오 REST API로 주소→좌표 변환 (GAS geocodeAddress_ 대체) */
+async function geocodeAddress(query: string): Promise<{ lat: number; lng: number } | null> {
+  if (!KAKAO_REST_KEY || !query) return null;
+  try {
+    const url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(query)}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` },
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const doc = json.documents?.[0];
+    if (doc?.y && doc?.x) return { lat: parseFloat(doc.y), lng: parseFloat(doc.x) };
+  } catch { /* geocoding 실패해도 접수는 계속 */ }
+  return null;
 }
 
 /** POST /api/consultation/public/submit — 고객 상담 접수 (비인증, CORS) */
@@ -77,6 +95,14 @@ export async function POST(req: NextRequest) {
     const timePrefsArr = Array.isArray(timePrefs) ? timePrefs : (timePrefs ? String(timePrefs).split(',').filter(Boolean) : []);
     const fullAddress = address || (addressRoad ? `${addressRoad} ${addressDetail || ''}`.trim() : '');
 
+    // 좌표: 프론트에서 넘어오면 사용, 없으면 서버에서 geocoding (GAS geocodeAddress_ 대체)
+    let lat = addressLat ? parseFloat(addressLat) : null;
+    let lng = addressLng ? parseFloat(addressLng) : null;
+    if ((!lat || !lng) && fullAddress) {
+      const geo = await geocodeAddress(fullAddress);
+      if (geo) { lat = geo.lat; lng = geo.lng; }
+    }
+
     // INSERT
     const { data: consultation, error: insertErr } = await dbAny
       .from('consultations')
@@ -91,8 +117,8 @@ export async function POST(req: NextRequest) {
         status: initialStatus,
         memo: memoText,
         unique_id: uniqueId,
-        latitude: addressLat ? parseFloat(addressLat) : null,
-        longitude: addressLng ? parseFloat(addressLng) : null,
+        latitude: lat,
+        longitude: lng,
         gas_raw: {
           days: daysArr.join(','),
           timePrefs: timePrefsArr.join(','),
@@ -117,10 +143,11 @@ export async function POST(req: NextRequest) {
     });
 
     // ── 알림톡 발송 (GAS postMake_ payload와 동일한 구조) ──
+    let notifyResult: { success: boolean; error?: string } = { success: false, error: 'skipped' };
     try {
       if (consultationType === 'store_visit' && initialStatus === 'confirmed') {
         // 매장방문 확정 — GAS CONFIRMED payload 동일
-        await sendNotification({
+        notifyResult = await sendNotification({
           template: 'confirmed',
           phone: phoneNorm,
           name: name.trim(),
@@ -140,8 +167,8 @@ export async function POST(req: NextRequest) {
         });
       } else if (consultationType === 'field_request') {
         // 출장요청 접수 — GAS CONSULT_REQUEST payload 동일
-        await sendNotification({
-          template: 'request' as never,
+        notifyResult = await sendNotification({
+          template: 'request',
           phone: phoneNorm,
           name: name.trim(),
           data: {
@@ -162,7 +189,7 @@ export async function POST(req: NextRequest) {
         });
       } else if (consultationType === 'talk_consult') {
         // 톡상담 접수 — GAS TALK_RECEIVED payload 동일
-        await sendNotification({
+        notifyResult = await sendNotification({
           template: 'talk_received',
           phone: phoneNorm,
           name: name.trim(),
@@ -176,9 +203,11 @@ export async function POST(req: NextRequest) {
       }
     } catch (notifyErr) {
       console.error('[consultation/submit] 알림톡 발송 실패 (접수는 완료):', notifyErr);
+      notifyResult = { success: false, error: String(notifyErr) };
     }
 
     // ── Gmail 알림 발송 (GAS GmailApp.sendEmail 대체) ──
+    let emailResult = false;
     try {
       const typeLabel = type || consultationType;
       const emailLines = [
@@ -196,7 +225,7 @@ export async function POST(req: NextRequest) {
       if (memoText) emailLines.push(`메모: ${memoText}`);
       emailLines.push(``, `접수번호: ${uniqueId}`);
 
-      await sendAdminEmail(
+      emailResult = await sendAdminEmail(
         `[MAMORU 상담] 새로운 ${typeLabel} 접수`,
         emailLines.join('\n')
       );
@@ -205,7 +234,11 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { ok: true, data: { id: consultation.id, unique_id: uniqueId, status: initialStatus } },
+      {
+        ok: true,
+        data: { id: consultation.id, unique_id: uniqueId, status: initialStatus },
+        _notifications: { alrimtalk: notifyResult, email: emailResult },
+      },
       { headers: CORS_HEADERS }
     );
   } catch (err) {
