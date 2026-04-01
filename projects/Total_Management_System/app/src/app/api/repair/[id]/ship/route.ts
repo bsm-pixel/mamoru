@@ -34,7 +34,7 @@ export async function POST(
 
     // ALPS 직접 호출 — 송장번호 발급 + 접수
     const { invoiceNumber } = await getNextInvoice();
-    const fullAddress = [repair.address1, repair.address2].filter(Boolean).join(' ');
+    const fullAddress = [repair.address, repair.address_detail].filter(Boolean).join(' ');
 
     const result = await bookShipment({
       invoiceNumber,

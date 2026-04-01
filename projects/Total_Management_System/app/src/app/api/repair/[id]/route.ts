@@ -215,6 +215,16 @@ export async function DELETE(
       }
     }
 
+    // 사진 파일 + 메타데이터 삭제
+    try {
+      const { data: photos } = await db.from('repair_photos').select('file_path').eq('repair_id', id);
+      if (photos?.length > 0) {
+        const paths = photos.map((p: { file_path: string }) => p.file_path).filter(Boolean);
+        if (paths.length > 0) await supabase.storage.from('repair-photos').remove(paths);
+        await db.from('repair_photos').delete().eq('repair_id', id);
+      }
+    } catch { /* 사진 삭제 실패해도 본건 삭제 계속 */ }
+
     // 이력 삭제 → 검수 삭제 → 본건 삭제
     await db.from('repair_history').delete().eq('repair_id', id);
     await db.from('repair_inspections').delete().eq('repair_id', id);

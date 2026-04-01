@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { sendAdminEmail } from '@/lib/notification/email';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
-      name, phone, postcode, address1, address2,
+      name, phone, postcode, address1: address, address2: address_detail,
       proceed_type, pickup_date, delivery_method,
       qty_mamoru, qty_other, memo,
     } = body;
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
     // 중복 접수 체크 (같은 전화번호 + 주소, 24시간 이내)
     const phoneNorm = phone.replace(/\D/g, '');
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const addrNorm = (address1 || '').replace(/[\s\-\.]/g, '').toLowerCase();
+    const addrNorm = (address || '').replace(/[\s\-\.]/g, '').toLowerCase();
 
     if (addrNorm) {
       const { data: recent } = await dbAny
@@ -103,11 +104,11 @@ export async function POST(req: NextRequest) {
         // 주소 유사도 체크 (정규화 후 비교)
         const { data: recentFull } = await dbAny
           .from('repairs')
-          .select('as_id, address1')
+          .select('as_id, address')
           .in('as_id', recent.map((r: { as_id: string }) => r.as_id));
 
-        const hasDup = (recentFull || []).some((r: { address1: string }) => {
-          const rAddr = (r.address1 || '').replace(/[\s\-\.]/g, '').toLowerCase();
+        const hasDup = (recentFull || []).some((r: { address: string }) => {
+          const rAddr = (r.address || '').replace(/[\s\-\.]/g, '').toLowerCase();
           return rAddr === addrNorm;
         });
 
@@ -134,8 +135,8 @@ export async function POST(req: NextRequest) {
       // phone_normalized는 DB generated column — INSERT 제외
       proceed_type: proceed_type || '직접발송',
       postcode: postcode || null,
-      address1: address1 || null,
-      address2: address2 || null,
+      address: address || null,
+      address_detail: address_detail || null,
       pickup_date: pickup_date || null,
       delivery_method: delivery_method || null,
       qty_mamoru: qtyM,
@@ -181,6 +182,24 @@ export async function POST(req: NextRequest) {
       });
     } catch (notifyErr) {
       console.error('[repair/submit] 알림톡 발송 실패 (접수는 완료):', notifyErr);
+    }
+
+    // Gmail 관리자 알림 (상담 submit과 동일 패턴)
+    try {
+      const emailLines = [
+        `■ 복원수리 접수 알림`,
+        ``,
+        `접수번호: ${asId}`,
+        `고객명: ${name.trim()}`,
+        `연락처: ${phone}`,
+        `진행방식: ${proceed_type || '직접발송'}`,
+        `마모루: ${qty_mamoru || 0}정, 타사: ${qty_other || 0}정`,
+        `주소: ${[address, address_detail].filter(Boolean).join(' ')}`,
+      ];
+      if (memo) emailLines.push(`메모: ${memo}`);
+      await sendAdminEmail(`[MAMORU 복원수리] 새 접수 — ${asId}`, emailLines.join('\n'));
+    } catch (emailErr) {
+      console.error('[repair/submit] 이메일 발송 실패:', emailErr);
     }
 
     return NextResponse.json(

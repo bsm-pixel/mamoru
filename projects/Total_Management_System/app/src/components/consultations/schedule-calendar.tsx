@@ -48,16 +48,16 @@ export function ScheduleCalendar({ onSelect }: ScheduleCalendarProps = {}) {
   const monthStart = formatYYYYMMDD(year, month, 1);
   const monthEnd = formatYYYYMMDD(year, month, new Date(year, month + 1, 0).getDate());
 
-  // confirmed 매장방문 + 출장요청 조회
+  // confirmed + suggested 매장방문 + 출장요청 조회
   const { data: storeData } = useConsultations({
-    status: 'confirmed',
+    statuses: ['confirmed', 'in_progress'],
     type: 'store_visit',
     limit: 200,
     dateFilter: 'all',
     orderBy: 'visit_date_asc',
   });
   const { data: fieldData } = useConsultations({
-    status: 'confirmed',
+    statuses: ['confirmed', 'suggested', 'in_progress'],
     type: 'field_request',
     limit: 200,
     dateFilter: 'all',

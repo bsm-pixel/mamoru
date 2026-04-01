@@ -29,9 +29,10 @@ export async function GET(req: NextRequest) {
     const sent2h: string[] = [];
     const errors: string[] = [];
 
-    // 오늘 + 내일 날짜 범위의 confirmed 상담 조회
-    const today = now.toISOString().slice(0, 10);
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    // KST 기준 오늘 + 내일 (UTC 자정~09시 사이 날짜 오류 방지)
+    const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+    const today = kstNow.toISOString().slice(0, 10);
+    const tomorrow = new Date(kstNow.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
     const { data: consultations } = await dbAny
       .from('consultations')

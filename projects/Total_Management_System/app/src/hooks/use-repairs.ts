@@ -118,7 +118,7 @@ export function useUpdateRepairStatus() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(err.error || '상태 변경 실패');
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '상태 변경 실패');
       }
       return res.json();
     },
@@ -246,7 +246,7 @@ export function useSaveInspections() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(err.error || '검수 저장 실패');
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '검수 저장 실패');
       }
       return res.json();
     },
@@ -272,7 +272,7 @@ export function useShipRepair() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(err.error || '출고 실패');
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '출고 실패');
       }
       return res.json();
     },
@@ -298,7 +298,7 @@ export function useCancelShipment() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(err.error || '송장 취소 실패');
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '송장 취소 실패');
       }
       return res.json();
     },
@@ -331,7 +331,7 @@ export function useSendRepairNotification() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(err.error || '알림톡 발송 실패');
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '알림톡 발송 실패');
       }
       return res.json();
     },

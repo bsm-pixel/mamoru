@@ -309,7 +309,7 @@ export function useFieldDelay() {
       });
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(errBody.error || '지연 안내 실패');
+        throw new Error(typeof errBody.error === 'string' ? errBody.error : JSON.stringify(errBody.error) || '지연 안내 실패');
       }
       return res.json();
     },
