@@ -91,12 +91,22 @@ export async function GET(req: NextRequest) {
     const minDate = dates.reduce((a, b) => a < b ? a : b);
     const maxDate = dates.reduce((a, b) => a > b ? a : b);
 
-    const { data: bookings } = await dbAny
+    // 확정/배정/대기 건: visit_date 범위로 조회
+    const { data: dateBookings } = await dbAny
       .from('consultations')
       .select('consultation_type, visit_date, visit_time, status, suggestions')
       .gte('visit_date', minDate)
       .lte('visit_date', maxDate)
-      .in('status', ['confirmed', 'suggested', 'assigned', 'pending_admin']);
+      .in('status', ['confirmed', 'assigned', 'pending_admin']);
+
+    // suggested 건: visit_date가 null일 수 있으므로 별도 조회 (suggestions JSONB 안에 날짜 있음)
+    const { data: suggestedBookings } = await dbAny
+      .from('consultations')
+      .select('consultation_type, visit_date, visit_time, status, suggestions')
+      .eq('status', 'suggested')
+      .not('suggestions', 'is', null);
+
+    const bookings = [...(dateBookings || []), ...(suggestedBookings || [])];
 
     // 4. 날짜별 차단 슬롯 계산
     const blockedMap = new Map<string, Set<number>>();
@@ -104,7 +114,9 @@ export async function GET(req: NextRequest) {
     for (const b of (bookings || [])) {
       // suggested 건은 visit_time이 null일 수 있으므로 suggestions만 처리
       if (b.status === 'suggested' && b.suggestions) {
-        const sug = b.suggestions as Array<{ date?: string; time?: string }>;
+        // suggestions 구조: { dates: [{ date, time }, ...] } 또는 [{ date, time }, ...]
+        const raw = b.suggestions as { dates?: Array<{ date?: string; time?: string }> } | Array<{ date?: string; time?: string }>;
+        const sug = Array.isArray(raw) ? raw : (raw.dates || []);
         for (const s of sug) {
           if (s.date && s.time) {
             if (!blockedMap.has(s.date)) blockedMap.set(s.date, new Set());
