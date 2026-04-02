@@ -70,6 +70,7 @@ export const config = {
     '/serials/:path*',
     '/reports/:path*',
     '/expenses/:path*',
+    '/cashflow/:path*',
     '/reviews/:path*',
     '/settings/:path*',
     '/login',
