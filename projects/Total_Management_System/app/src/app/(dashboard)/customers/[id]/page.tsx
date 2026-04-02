@@ -116,6 +116,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const TIMELINE_ICON = { sale: ShoppingBag, contract: FileSignature, consultation: MessageSquare, repair: Wrench };
   const TIMELINE_COLOR = { sale: 'text-green-600 bg-green-50', contract: 'text-purple-600 bg-purple-50', consultation: 'text-blue-600 bg-blue-50', repair: 'text-orange-600 bg-orange-50' };
 
+  // RFM 분류
+  const lastSaleDate = (summary as Record<string, unknown>).lastSaleDate as string | null;
+  const daysSinceLastSale = lastSaleDate ? Math.floor((Date.now() - new Date(lastSaleDate).getTime()) / (1000 * 60 * 60 * 24)) : 999;
+  const rfmLabel = summary.totalSales >= 3 || summary.totalSalesAmount >= 500000 ? 'VIP'
+    : daysSinceLastSale > 180 ? '휴면'
+    : '일반';
+  const rfmColor = rfmLabel === 'VIP' ? 'bg-amber-100 text-amber-700' : rfmLabel === '휴면' ? 'bg-neutral-200 text-neutral-500' : 'bg-blue-100 text-blue-700';
+
   return (
     <>
       <Topbar title="고객 상세" />
@@ -278,7 +286,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           )}
         </Card>
 
-        {/* 요약 카드 */}
+        {/* RFM 뱃지 + 요약 카드 */}
+        <div className="flex items-center gap-2 mb-1">
+          <span className={`px-2 py-0.5 rounded text-xs font-bold ${rfmColor}`}>{rfmLabel}</span>
+          {daysSinceLastSale < 999 && <span className="text-xs text-neutral-400">마지막 거래 {daysSinceLastSale}일 전</span>}
+        </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Card>
             <p className="text-xs text-neutral-500">총 판매건수</p>
