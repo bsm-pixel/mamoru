@@ -169,11 +169,9 @@ function NewSaleContent() {
     router.push('/sales');
   }
 
-  // 카테고리별 그룹핑
-  const grouped = products.reduce<Record<string, Product[]>>((acc, p) => {
-    (acc[p.category] ||= []).push(p);
-    return acc;
-  }, {});
+  // 제품 검색/필터
+  const [productSearch, setProductSearch] = useState('');
+  const [productCategory, setProductCategory] = useState<string>('all');
 
   const CATEGORY_LABEL: Record<string, string> = {
     BL: '블런트',
@@ -182,6 +180,14 @@ function NewSaleContent() {
     SL: '슬라이싱',
   };
 
+  const filteredProducts = products.filter((p) => {
+    const matchSearch = !productSearch ||
+      p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+      (p.sku || '').toLowerCase().includes(productSearch.toLowerCase());
+    const matchCat = productCategory === 'all' || p.category === productCategory;
+    return matchSearch && matchCat;
+  });
+
   return (
     <>
       <Topbar title="판매 입력" />
@@ -189,54 +195,99 @@ function NewSaleContent() {
       <div className="px-4 md:px-6 py-4 space-y-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* 좌측: 제품 선택 */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-3">
             <h3 className="text-sm font-semibold text-neutral-700">제품 선택</h3>
 
+            {/* 검색 + 카테고리 필터 */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                placeholder="제품명 또는 SKU 검색"
+                className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+              />
+              <div className="flex gap-1 shrink-0">
+                <button
+                  onClick={() => setProductCategory('all')}
+                  className={`px-2.5 py-1.5 text-xs rounded-md border transition ${
+                    productCategory === 'all' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'
+                  }`}
+                >전체</button>
+                {Object.entries(CATEGORY_LABEL).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setProductCategory(key)}
+                    className={`px-2.5 py-1.5 text-xs rounded-md border transition ${
+                      productCategory === key ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'
+                    }`}
+                  >{label}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* 제품 목록 테이블 */}
             {productsLoading ? (
-              <div className="text-sm text-neutral-400">로딩중...</div>
+              <div className="text-sm text-neutral-400 py-4">로딩중...</div>
             ) : (
-              Object.entries(grouped).map(([cat, prods]) => (
-                <div key={cat}>
-                  <p className="text-xs font-semibold text-neutral-500 mb-2">
-                    {CATEGORY_LABEL[cat] || cat}
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {prods.map((p) => {
-                      const inCart = cart.find((c) => c.product?.id === p.id);
-                      return (
-                        <button
-                          key={p.id}
-                          onClick={() => addToCart(p)}
-                          className={`p-3 rounded-lg border text-left transition ${
-                            inCart
-                              ? 'border-terracotta bg-terracotta/5'
-                              : 'border-neutral-200 bg-card-white hover:border-terracotta/40'
-                          }`}
-                        >
-                          <p className="text-sm font-semibold text-indigo-black truncate">
-                            {p.name}
-                          </p>
-                          <p className="text-xs text-neutral-500 mt-0.5">{p.sku}</p>
-                          <p className="text-sm font-bold text-terracotta mt-1">
-                            {formatKRW(getUnitPrice(p, customerType))}
-                          </p>
-                          {customerType === 'dealer' && p.price_dealer > 0 && (
-                            <p className="text-[10px] text-neutral-400 line-through">{formatKRW(p.price)}</p>
-                          )}
-                          {customerType === 'academy' && p.price_academy > 0 && (
-                            <p className="text-[10px] text-neutral-400 line-through">{formatKRW(p.price)}</p>
-                          )}
-                          {inCart && (
-                            <p className="text-xs text-terracotta font-semibold mt-1">
-                              x{inCart.quantity}
-                            </p>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+              <Card padding={false}>
+                <div className="max-h-[400px] overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-neutral-50 sticky top-0">
+                      <tr className="text-xs text-neutral-500">
+                        <th className="text-left px-3 py-2 font-medium">제품명</th>
+                        <th className="text-left px-3 py-2 font-medium w-24">SKU</th>
+                        <th className="text-right px-3 py-2 font-medium w-24">단가</th>
+                        <th className="text-right px-3 py-2 font-medium w-16">재고</th>
+                        <th className="text-center px-3 py-2 font-medium w-16">추가</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-100">
+                      {filteredProducts.map((p) => {
+                        const inCart = cart.find((c) => c.product?.id === p.id);
+                        const price = getUnitPrice(p, customerType);
+                        const isDiscounted = (customerType === 'dealer' && p.price_dealer > 0) ||
+                          (customerType === 'academy' && p.price_academy > 0);
+                        return (
+                          <tr
+                            key={p.id}
+                            onClick={() => addToCart(p)}
+                            className={`cursor-pointer transition ${
+                              inCart ? 'bg-neutral-900/5' : 'hover:bg-warm-ivory/60'
+                            }`}
+                          >
+                            <td className="px-3 py-2.5">
+                              <span className="font-medium text-indigo-black">{p.name}</span>
+                              {inCart && <span className="ml-2 text-xs font-bold text-neutral-900">×{inCart.quantity}</span>}
+                            </td>
+                            <td className="px-3 py-2.5 text-xs text-neutral-500">{p.sku}</td>
+                            <td className="px-3 py-2.5 text-right">
+                              <span className="font-bold">{formatKRW(price)}</span>
+                              {isDiscounted && (
+                                <span className="block text-[10px] text-neutral-400 line-through">{formatKRW(p.price)}</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2.5 text-right text-xs text-neutral-500">{p.stock_quantity ?? '-'}</td>
+                            <td className="px-3 py-2.5 text-center">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); addToCart(p); }}
+                                className="w-7 h-7 rounded-md bg-neutral-100 hover:bg-neutral-200 text-neutral-600 text-sm font-bold transition"
+                              >+</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {filteredProducts.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-3 py-6 text-center text-neutral-400 text-xs">
+                            {productSearch ? '검색 결과가 없습니다' : '등록된 제품이 없습니다'}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              ))
+              </Card>
             )}
 
             {/* 임시 제품 직접 입력 */}
