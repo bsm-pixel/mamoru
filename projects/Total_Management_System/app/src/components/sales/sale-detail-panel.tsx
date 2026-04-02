@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSale, useCancelSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts } from '@/hooks/use-sales';
+import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -47,6 +48,7 @@ export function SaleDetailPanel({ saleId }: Props) {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [showCustomer, setShowCustomer] = useState(false);
   const [editingMemo, setEditingMemo] = useState(false);
   const [memoValue, setMemoValue] = useState('');
 
@@ -100,7 +102,11 @@ export function SaleDetailPanel({ saleId }: Props) {
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
             <span className="text-xs text-neutral-500">고객명</span>
-            <p className="font-semibold">{s.customer_name}</p>
+            <p className="font-semibold">
+              {s.customer_id ? (
+                <button onClick={() => setShowCustomer(true)} className="text-blue-600 hover:underline">{s.customer_name}</button>
+              ) : s.customer_name}
+            </p>
           </div>
           <div>
             <span className="text-xs text-neutral-500">연락처</span>
@@ -319,6 +325,11 @@ export function SaleDetailPanel({ saleId }: Props) {
         confirmLabel="취소 확정"
         variant="danger"
       />
+
+      {/* 고객 퀵뷰 모달 */}
+      {s.customer_id && (
+        <CustomerQuickModal customerId={s.customer_id} open={showCustomer} onClose={() => setShowCustomer(false)} />
+      )}
 
       {/* 거래명세서 모달 */}
       {showReceipt && data && (

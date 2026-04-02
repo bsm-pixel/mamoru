@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { Button } from '@/components/ui/button';
 import { formatPhone, formatKRW, formatDate } from '@/lib/utils/format';
 import { calcTotalCost } from '@/lib/repair/cost-calculator';
@@ -111,7 +112,11 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
         </CardHeader>
         <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
           <dt className="text-neutral-500">이름</dt>
-          <dd className="font-medium">{r.name}</dd>
+          <dd className="font-medium">
+            {r.customer_id ? (
+              <CustomerNameLink customerId={r.customer_id} name={r.name} />
+            ) : r.name}
+          </dd>
           <dt className="text-neutral-500">전화</dt>
           <dd>{formatPhone(r.phone)}</dd>
           <dt className="text-neutral-500">진행방식</dt>
@@ -349,5 +354,16 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
         </Card>
       )}
     </div>
+  );
+}
+
+/** 고객명 클릭 → 퀵뷰 모달 */
+function CustomerNameLink({ customerId, name }: { customerId: string; name: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button onClick={() => setOpen(true)} className="text-blue-600 hover:underline">{name}</button>
+      <CustomerQuickModal customerId={customerId} open={open} onClose={() => setOpen(false)} />
+    </>
   );
 }
