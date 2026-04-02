@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSale, useCancelSale, useUpdatePaymentStatus, useUpdateSaleMemo } from '@/hooks/use-sales';
+import { useSale, useCancelSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale } from '@/hooks/use-sales';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -39,10 +39,12 @@ export function SaleDetailPanel({ saleId }: Props) {
   const cancelSale = useCancelSale();
   const updatePayment = useUpdatePaymentStatus();
   const updateMemo = useUpdateSaleMemo();
+  const editSale = useEditSale();
   const [cancelMode, setCancelMode] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [showPaidConfirm, setShowPaidConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [editingMemo, setEditingMemo] = useState(false);
   const [memoValue, setMemoValue] = useState('');
 
@@ -238,14 +240,25 @@ export function SaleDetailPanel({ saleId }: Props) {
         )}
       </div>
 
-      {/* 거래명세서 */}
-      <button
-        onClick={() => window.open(`/reports/transaction?sale_id=${saleId}`, '_blank')}
-        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition"
-      >
-        <FileText size={14} />
-        거래명세서 인쇄
-      </button>
+      {/* 거래명세서 + 수정 */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => window.open(`/reports/transaction?sale_id=${saleId}`, '_blank')}
+          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition"
+        >
+          <FileText size={14} />
+          거래명세서
+        </button>
+        {!s.cancelled_at && (
+          <button
+            onClick={() => setShowEditModal(true)}
+            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition"
+          >
+            <Pencil size={14} />
+            수정
+          </button>
+        )}
+      </div>
 
       {/* 액션 */}
       {s.cancelled_at ? (
@@ -304,6 +317,97 @@ export function SaleDetailPanel({ saleId }: Props) {
         confirmLabel="취소 확정"
         variant="danger"
       />
+
+      {/* 판매 수정 모달 */}
+      {showEditModal && (
+        <EditSaleModal
+          sale={s}
+          onClose={() => setShowEditModal(false)}
+          onSave={(fields) => editSale.mutateAsync({ id: saleId, ...fields }).then(() => setShowEditModal(false))}
+          isPending={editSale.isPending}
+        />
+      )}
+    </div>
+  );
+}
+
+/** 판매 수정 모달 */
+function EditSaleModal({ sale, onClose, onSave, isPending }: {
+  sale: OfflineSale;
+  onClose: () => void;
+  onSave: (fields: Record<string, unknown>) => Promise<unknown>;
+  isPending: boolean;
+}) {
+  const [totalAmount, setTotalAmount] = useState(sale.total_amount);
+  const [discountAmount, setDiscountAmount] = useState(sale.discount_amount || 0);
+  const [paymentMethod, setPaymentMethod] = useState<string>(sale.payment_method);
+  const [saleDate, setSaleDate] = useState(sale.sale_date);
+
+  const METHODS = [
+    { value: 'card', label: '카드' },
+    { value: 'cash', label: '현금' },
+    { value: 'transfer', label: '이체' },
+    { value: 'mixed', label: '복합' },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl w-[90vw] max-w-[400px] p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-sm font-bold text-neutral-800">판매 정보 수정</h3>
+
+        <div>
+          <label className="text-xs text-neutral-500 mb-1 block">판매일</label>
+          <input type="date" value={saleDate} max={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => setSaleDate(e.target.value)}
+            className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+        </div>
+
+        <div>
+          <label className="text-xs text-neutral-500 mb-1 block">총 금액</label>
+          <input type="number" value={totalAmount}
+            onChange={(e) => setTotalAmount(Number(e.target.value))}
+            className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+        </div>
+
+        <div>
+          <label className="text-xs text-neutral-500 mb-1 block">할인</label>
+          <input type="number" value={discountAmount}
+            onChange={(e) => setDiscountAmount(Number(e.target.value))}
+            className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+        </div>
+
+        <div>
+          <label className="text-xs text-neutral-500 mb-1 block">결제방법</label>
+          <div className="flex gap-2">
+            {METHODS.map((m) => (
+              <button key={m.value}
+                onClick={() => setPaymentMethod(m.value)}
+                className={`flex-1 py-1.5 text-xs rounded-md border transition ${
+                  paymentMethod === m.value ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'
+                }`}
+              >{m.label}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600">
+            취소
+          </button>
+          <button
+            onClick={() => onSave({
+              total_amount: totalAmount,
+              discount_amount: discountAmount,
+              payment_method: paymentMethod,
+              sale_date: saleDate,
+            })}
+            disabled={isPending}
+            className="flex-1 py-2 rounded-lg bg-neutral-900 text-white text-sm font-medium disabled:opacity-50"
+          >
+            {isPending ? '저장 중...' : '저장'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

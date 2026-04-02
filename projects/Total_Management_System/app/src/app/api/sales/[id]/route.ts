@@ -216,6 +216,54 @@ export async function PATCH(
       return NextResponse.json({ success: true, action: 'memo_updated' });
     }
 
+    // --- D) 판매 정보 수정 (금액/할인/결제방법/날짜) ---
+    if (action === 'edit_sale') {
+      if (sale.cancelled_at) {
+        return NextResponse.json({ error: '취소된 판매는 수정할 수 없습니다' }, { status: 400 });
+      }
+
+      const { total_amount, discount_amount, payment_method, sale_date, payment_detail } = body as {
+        total_amount?: number;
+        discount_amount?: number;
+        payment_method?: string;
+        sale_date?: string;
+        payment_detail?: Record<string, number>;
+      };
+
+      const updateData: Record<string, unknown> = {};
+      if (total_amount !== undefined) updateData.total_amount = total_amount;
+      if (discount_amount !== undefined) updateData.discount_amount = discount_amount;
+      if (payment_method !== undefined) updateData.payment_method = payment_method;
+      if (sale_date !== undefined) updateData.sale_date = sale_date;
+      if (payment_detail !== undefined) updateData.payment_detail = payment_detail;
+
+      // VAT 재계산 (카드 금액 변경 시)
+      if (total_amount !== undefined || payment_method !== undefined) {
+        const newTotal = total_amount ?? sale.total_amount;
+        const newMethod = payment_method ?? sale.payment_method;
+        const cardAmount = newMethod === 'card' ? newTotal
+          : newMethod === 'mixed' && payment_detail?.card ? payment_detail.card
+          : 0;
+        if (cardAmount > 0) {
+          updateData.supply_amount = Math.round(cardAmount / 1.1);
+          updateData.vat_amount = cardAmount - (updateData.supply_amount as number);
+          updateData.is_vat_included = true;
+        }
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        return NextResponse.json({ error: '수정할 항목이 없습니다' }, { status: 400 });
+      }
+
+      const { error: updateErr } = await db
+        .from('offline_sales')
+        .update(updateData)
+        .eq('id', id);
+
+      if (updateErr) throw updateErr;
+      return NextResponse.json({ success: true, action: 'sale_edited' });
+    }
+
     return NextResponse.json({ error: '알 수 없는 action' }, { status: 400 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : JSON.stringify(err);

@@ -424,3 +424,39 @@ export function useUpdateSaleMemo() {
   });
 }
 
+/** 판매 정보 수정 (금액/할인/결제방법/날짜) */
+export function useEditSale() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...fields }: {
+      id: string;
+      total_amount?: number;
+      discount_amount?: number;
+      payment_method?: string;
+      sale_date?: string;
+      payment_detail?: Record<string, number>;
+    }) => {
+      const res = await fetch(`/api/sales/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'edit_sale', ...fields }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '수정 실패');
+      }
+      return res.json();
+    },
+    onSuccess: (_d, { id }) => {
+      toast.success('판매 정보가 수정되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['sale', id] });
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['sales-stats'] });
+    },
+    onError: (err) => {
+      toast.error('수정 실패: ' + (err instanceof Error ? err.message : String(err)));
+    },
+  });
+}
+
