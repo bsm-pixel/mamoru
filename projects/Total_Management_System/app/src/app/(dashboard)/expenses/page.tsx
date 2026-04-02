@@ -76,6 +76,52 @@ export default function ExpensesPage() {
     },
   });
 
+  // 고정 경비
+  const { data: recurringData } = useQuery({
+    queryKey: ['recurring-expenses'],
+    queryFn: async () => {
+      const res = await fetch('/api/expenses/recurring');
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ items: Array<{ id: string; category: string; amount: number; memo: string | null }> }>;
+    },
+  });
+
+  const [recCategory, setRecCategory] = useState('임대료');
+  const [recAmount, setRecAmount] = useState('');
+  const [recMemo, setRecMemo] = useState('');
+
+  const createRecurring = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/expenses/recurring', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create', category: recCategory, amount: parseInt(recAmount), memo: recMemo.trim() || undefined }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+    },
+    onSuccess: () => { toast.success('고정 경비 등록'); setRecAmount(''); setRecMemo(''); queryClient.invalidateQueries({ queryKey: ['recurring-expenses'] }); },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+  });
+
+  const deleteRecurring = useMutation({
+    mutationFn: async (id: string) => {
+      await fetch('/api/expenses/recurring', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete', id }) });
+    },
+    onSuccess: () => { toast.success('삭제됨'); queryClient.invalidateQueries({ queryKey: ['recurring-expenses'] }); },
+  });
+
+  const generateMonthly = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/expenses/recurring', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'generate' }) });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.generated > 0) { toast.success(`이번달 고정 경비 ${data.generated}건 등록`); queryClient.invalidateQueries({ queryKey: ['expenses'] }); }
+      else toast(data.message || '이미 등록됨');
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+  });
+
   return (
     <>
       <Topbar title="경비 관리" />
@@ -190,6 +236,65 @@ export default function ExpensesPage() {
             </Card>
           </div>
         </div>
+        {/* 고정 경비 */}
+        <Card>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-indigo-black">고정 경비 (매월 반복)</h3>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => generateMonthly.mutate()}
+              disabled={generateMonthly.isPending || !recurringData?.items.length}
+            >
+              {generateMonthly.isPending ? '생성 중...' : '이번달 일괄 등록'}
+            </Button>
+          </div>
+
+          {/* 고정 경비 목록 */}
+          {recurringData?.items && recurringData.items.length > 0 ? (
+            <div className="space-y-2 mb-3">
+              {recurringData.items.map((item) => (
+                <div key={item.id} className="flex items-center gap-3 py-2 border-b border-neutral-50 last:border-0">
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${CATEGORY_COLOR[item.category] || CATEGORY_COLOR['기타']}`}>
+                    {item.category}
+                  </span>
+                  <span className="text-sm text-neutral-700 flex-1">{item.memo || item.category}</span>
+                  <span className="text-sm font-bold">{formatKRW(item.amount)}</span>
+                  <button
+                    onClick={() => { if (confirm('고정 경비를 삭제하시겠습니까?')) deleteRecurring.mutate(item.id); }}
+                    className="w-6 h-6 rounded flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-50"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+              <p className="text-[11px] text-neutral-400">
+                월 고정 합계: {formatKRW(recurringData.items.reduce((s, i) => s + i.amount, 0))}
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-neutral-400 mb-3">등록된 고정 경비가 없습니다</p>
+          )}
+
+          {/* 고정 경비 등록 폼 */}
+          <div className="flex gap-2 items-end">
+            <select value={recCategory} onChange={(e) => setRecCategory(e.target.value)}
+              className="h-9 px-2 rounded-lg border border-neutral-200 text-xs">
+              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <input type="number" value={recAmount} placeholder="금액"
+              onChange={(e) => setRecAmount(e.target.value)}
+              className="w-24 h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+            <input type="text" value={recMemo} placeholder="메모"
+              onChange={(e) => setRecMemo(e.target.value)}
+              className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400" />
+            <Button size="sm" variant="secondary"
+              onClick={() => createRecurring.mutate()}
+              disabled={!recAmount || parseInt(recAmount) <= 0}>
+              추가
+            </Button>
+          </div>
+        </Card>
       </div>
     </>
   );
