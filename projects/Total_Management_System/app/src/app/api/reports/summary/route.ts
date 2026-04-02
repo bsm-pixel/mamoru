@@ -240,6 +240,34 @@ export async function GET(req: NextRequest) {
 
     const totalRevenue = saleSummary.total + repairSalesSummary.total;
 
+    // 10) 경비 집계
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: expensesRaw } = await (supabase as any)
+      .from('expenses')
+      .select('amount, category')
+      .gte('expense_date', fromDate)
+      .lte('expense_date', toDate);
+
+    const totalExpenses = (expensesRaw || []).reduce((s: number, e: { amount: number }) => s + (e.amount || 0), 0);
+    const expensesByCategory: Record<string, number> = {};
+    for (const e of (expensesRaw || [])) {
+      expensesByCategory[e.category] = (expensesByCategory[e.category] || 0) + e.amount;
+    }
+
+    // 손익계산
+    const grossProfit = totalRevenue - margin.total_cogs;
+    const operatingProfit = grossProfit - totalExpenses;
+
+    const profitLoss = {
+      revenue: totalRevenue,
+      cogs: margin.total_cogs,
+      gross_profit: grossProfit,
+      expenses: totalExpenses,
+      expenses_by_category: expensesByCategory,
+      operating_profit: operatingProfit,
+      margin_rate: totalRevenue > 0 ? Math.round((operatingProfit / totalRevenue) * 1000) / 10 : 0,
+    };
+
     return NextResponse.json({
       period: { from: fromDate, to: toDate },
       sales: saleSummary,
@@ -253,6 +281,7 @@ export async function GET(req: NextRequest) {
       payables: { items: payables, total: totalPayables },
       receivables: { items: receivables, total: totalReceivables, aging: agingSummary },
       daily: { sales: dailySales, purchases: dailyPurchases, repairs: dailyRepairs },
+      profit_loss: profitLoss,
       details: { sales, purchases, repairs: repairSales },
     });
   } catch (err) {

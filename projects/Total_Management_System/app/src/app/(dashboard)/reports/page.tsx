@@ -230,28 +230,43 @@ export default function ReportsPage() {
 
               </Card>
 
-              {/* 매출이익 (COGS 기반) */}
+              {/* 손익계산서 */}
               <Card>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
                     <BarChart3 size={18} className="text-amber-600" />
                   </div>
-                  <h3 className="text-sm font-bold text-indigo-black">매출이익</h3>
+                  <h3 className="text-sm font-bold text-indigo-black">손익</h3>
                 </div>
-                <p className={`text-2xl font-bold ${data.margin.gross_profit >= 0 ? 'text-amber-600' : 'text-red-500'}`}>
-                  {formatKRW(data.margin.gross_profit)}
-                </p>
-                <p className="text-[10px] text-neutral-400 mt-0.5">
-                  이익률 {data.margin.margin_rate}%
-                </p>
-                <div className="mt-2 space-y-1 text-xs text-neutral-500">
-                  <div className="flex justify-between"><span>매출</span><span>{formatKRW(data.sales.total)}</span></div>
-                  <div className="flex justify-between"><span>매출원가 (COGS)</span><span>-{formatKRW(data.margin.total_cogs)}</span></div>
-                  <div className="flex justify-between font-semibold text-indigo-black">
-                    <span>매출총이익</span>
-                    <span>{formatKRW(data.margin.gross_profit)}</span>
-                  </div>
-                </div>
+                {(() => {
+                  const pl = (data as unknown as { profit_loss?: { revenue: number; cogs: number; gross_profit: number; expenses: number; operating_profit: number; margin_rate: number } }).profit_loss;
+                  const opProfit = pl?.operating_profit ?? data.margin.gross_profit;
+                  return (
+                    <>
+                      <p className={`text-2xl font-bold ${opProfit >= 0 ? 'text-amber-600' : 'text-red-500'}`}>
+                        {formatKRW(opProfit)}
+                      </p>
+                      <p className="text-[10px] text-neutral-400 mt-0.5">
+                        영업이익률 {pl?.margin_rate ?? data.margin.margin_rate}%
+                      </p>
+                      <div className="mt-2 space-y-1 text-xs text-neutral-500">
+                        <div className="flex justify-between"><span>매출</span><span>{formatKRW(pl?.revenue ?? data.sales.total)}</span></div>
+                        <div className="flex justify-between"><span>매출원가</span><span>-{formatKRW(pl?.cogs ?? data.margin.total_cogs)}</span></div>
+                        <div className="flex justify-between font-semibold text-indigo-black border-t border-neutral-100 pt-1">
+                          <span>매출총이익</span><span>{formatKRW(pl?.gross_profit ?? data.margin.gross_profit)}</span>
+                        </div>
+                        {pl && pl.expenses > 0 && (
+                          <>
+                            <div className="flex justify-between"><span>경비</span><span>-{formatKRW(pl.expenses)}</span></div>
+                            <div className="flex justify-between font-bold text-indigo-black border-t border-neutral-200 pt-1">
+                              <span>영업이익</span><span className={opProfit >= 0 ? '' : 'text-red-500'}>{formatKRW(opProfit)}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
               </Card>
             </div>
 
