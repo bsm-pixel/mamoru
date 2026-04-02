@@ -118,6 +118,73 @@ export function useSalesTabCounts() {
   });
 }
 
+/** 판매 통계 (주간/월간 매출·건수·미수금) */
+export function useSalesStats() {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['sales-stats'],
+    staleTime: 60_000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
+
+      // 이번주 월요일
+      const dayOfWeek = now.getDay();
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + mondayOffset);
+      const weekStart = monday.toISOString().slice(0, 10);
+
+      // 이번달 1일
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+
+      // 주간 매출
+      const { data: weekSales } = await db
+        .from('offline_sales')
+        .select('total_amount, paid_amount, discount_amount')
+        .gte('sale_date', weekStart)
+        .lte('sale_date', today)
+        .is('cancelled_at', null);
+
+      // 월간 매출
+      const { data: monthSales } = await db
+        .from('offline_sales')
+        .select('total_amount, paid_amount, discount_amount')
+        .gte('sale_date', monthStart)
+        .lte('sale_date', today)
+        .is('cancelled_at', null);
+
+      // 미수금 총액
+      const { data: unpaidSales } = await db
+        .from('offline_sales')
+        .select('total_amount, paid_amount, discount_amount')
+        .in('payment_status', ['unpaid', 'partial'])
+        .is('cancelled_at', null);
+
+      const sum = (arr: Array<{ total_amount: number; paid_amount: number; discount_amount: number }> | null) => {
+        if (!arr) return { amount: 0, count: 0 };
+        const amount = arr.reduce((s, r) => s + (r.paid_amount || 0), 0);
+        return { amount, count: arr.length };
+      };
+
+      const unpaidTotal = (unpaidSales || []).reduce(
+        (s: number, r: { total_amount: number; paid_amount: number; discount_amount: number }) =>
+          s + ((r.total_amount - (r.discount_amount || 0)) - (r.paid_amount || 0)),
+        0
+      );
+
+      return {
+        week: sum(weekSales),
+        month: sum(monthSales),
+        outstanding: unpaidTotal,
+      };
+    },
+  });
+}
+
 /** 오프라인 판매 단건 조회 (항목 + 시리얼 포함) */
 export function useSale(id: string) {
   const supabase = createClient();

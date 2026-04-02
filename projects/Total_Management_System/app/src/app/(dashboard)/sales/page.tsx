@@ -9,14 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { SaleDetailPanel } from '@/components/sales/sale-detail-panel';
-import { useSales, useSalesTabCounts } from '@/hooks/use-sales';
+import { useSales, useSalesTabCounts, useSalesStats } from '@/hooks/use-sales';
 import type { SalesTab, SalesChannel, SalesDateRange } from '@/hooks/use-sales';
 import { useContracts } from '@/hooks/use-contracts';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
-import { Plus, FileSignature, Receipt } from 'lucide-react';
+import { Plus, FileSignature, Receipt, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
 import type { OfflineSale, SaleChannel as SaleChannelType } from '@/lib/supabase/types';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
@@ -86,6 +86,7 @@ export default function SalesPage() {
 
   const { data, isLoading } = useSales({ search, page, limit: 20, tab, channel, dateRange });
   const { data: tabCounts } = useSalesTabCounts();
+  const { data: stats } = useSalesStats();
   const { data: contractData } = useContracts({ status: 'signed', limit: 100 });
   const newContractCount = contractData?.contracts?.filter((c) => !c.offline_sale_id).length || 0;
   const sales = data?.sales || [];
@@ -99,6 +100,35 @@ export default function SalesPage() {
   /* --- 목록 영역 (좌측/모바일) --- */
   const listContent = (
     <>
+      {/* 통계 요약 카드 */}
+      {stats && (
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-white rounded-lg border border-neutral-200 p-3">
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
+              <Calendar size={12} />
+              이번주
+            </div>
+            <p className="text-base font-bold text-neutral-900">{formatKRW(stats.week.amount)}</p>
+            <p className="text-[11px] text-neutral-400">{stats.week.count}건</p>
+          </div>
+          <div className="bg-white rounded-lg border border-neutral-200 p-3">
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
+              <TrendingUp size={12} />
+              이번달
+            </div>
+            <p className="text-base font-bold text-neutral-900">{formatKRW(stats.month.amount)}</p>
+            <p className="text-[11px] text-neutral-400">{stats.month.count}건</p>
+          </div>
+          <div className="bg-white rounded-lg border border-neutral-200 p-3">
+            <div className="flex items-center gap-1.5 text-xs text-red-500 mb-1">
+              <AlertCircle size={12} />
+              미수금
+            </div>
+            <p className="text-base font-bold text-red-600">{formatKRW(stats.outstanding)}</p>
+          </div>
+        </div>
+      )}
+
       {/* 신규 계약서 알림 */}
       {newContractCount > 0 && (
         <button
@@ -113,18 +143,12 @@ export default function SalesPage() {
         </button>
       )}
 
-      {/* 상단: 판매 입력 + 검색 */}
-      <div className="flex items-center gap-3">
-        <Button size="sm" onClick={() => router.push('/sales/new')}>
-          <Plus size={14} />
-          판매 입력
-        </Button>
-        <SearchInput
-          value={search}
-          onChange={(v) => { setSearch(v); setPage(1); }}
-          placeholder="판매번호, 고객명, 전화번호"
-        />
-      </div>
+      {/* 검색 */}
+      <SearchInput
+        value={search}
+        onChange={(v) => { setSearch(v); setPage(1); }}
+        placeholder="판매번호, 고객명, 전화번호"
+      />
 
       {/* 탭 바 */}
       <div className="flex gap-1 border-b border-neutral-200">
@@ -212,7 +236,7 @@ export default function SalesPage() {
 
   return (
     <>
-      <Topbar title="판매관리" />
+      <Topbar title="판매 조회" />
 
       {isLg ? (
         /* PC: 마스터-디테일 2컬럼 */

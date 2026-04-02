@@ -71,7 +71,10 @@ export function Sidebar() {
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const Icon = iconMap[item.icon];
-                const active = pathname.startsWith(item.matchPrefix);
+                // matchPrefix 정확 매칭: /sales/new는 /sales와 겹치지 않도록
+                const active = item.matchPrefix === '/sales'
+                  ? pathname === '/sales' || (pathname.startsWith('/sales/') && !pathname.startsWith('/sales/new'))
+                  : pathname.startsWith(item.matchPrefix);
                 return (
                   <Link
                     key={item.href}
