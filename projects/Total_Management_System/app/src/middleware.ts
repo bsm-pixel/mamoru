@@ -38,8 +38,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 미인증 → 로그인으로 리다이렉트
-  if (!user) {
+  // 미인증 → 로그인으로 리다이렉트 (로그인 페이지 자체는 제외)
+  if (!user && !pathname.startsWith('/login')) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', pathname);
