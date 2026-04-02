@@ -48,6 +48,7 @@ function NewSaleContent() {
   const { data: products = [], isLoading: productsLoading } = useProducts();
   const createSale = useCreateSale();
 
+  const [saleDate, setSaleDate] = useState(new Date().toISOString().slice(0, 10));
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
   const [customerName, setCustomerName] = useState('');
@@ -150,6 +151,7 @@ function NewSaleContent() {
         payment_detail: paymentMethod === 'mixed'
           ? { card: mixedCard, cash: mixedCash, transfer: mixedTransfer }
           : { [paymentMethod]: paidAmount },
+        sale_date: saleDate,
         sale_channel: saleChannel,
         customer_type: customerType || undefined,
         contract_id: contractId,
@@ -470,6 +472,18 @@ function NewSaleContent() {
             <Card>
               <h3 className="text-sm font-semibold text-indigo-black mb-3">결제 정보</h3>
               <div className="space-y-3">
+                {/* 판매일 */}
+                <div>
+                  <label className="text-xs text-neutral-500 mb-1.5 block">판매일</label>
+                  <input
+                    type="date"
+                    value={saleDate}
+                    max={new Date().toISOString().slice(0, 10)}
+                    onChange={(e) => setSaleDate(e.target.value)}
+                    className="h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                  />
+                </div>
+
                 {/* 판매 채널 */}
                 <div>
                   <label className="text-xs text-neutral-500 mb-1.5 block">판매 채널</label>
