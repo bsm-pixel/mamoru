@@ -1,16 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReportSummary, type SaleDetail } from '@/hooks/use-reports';
+import { useSale } from '@/hooks/use-sales';
 import { formatKRW } from '@/lib/utils/format';
 import { ArrowLeft, Printer } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TransactionPage() {
+  return (
+    <Suspense fallback={null}>
+      <TransactionContent />
+    </Suspense>
+  );
+}
+
+function TransactionContent() {
+  const searchParams = useSearchParams();
+  const saleId = searchParams?.get('sale_id') || null;
+
+  // 단건 모드: sale_id가 있으면 해당 건만 표시
+  if (saleId) return <SingleSaleReceipt saleId={saleId} />;
+
   const now = new Date();
   const [from, setFrom] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10));
   const [to, setTo] = useState(now.toISOString().slice(0, 10));
@@ -205,6 +221,124 @@ export default function TransactionPage() {
           .print-area [class*="card"] {
             border: none; box-shadow: none; padding: 0;
           }
+        }
+      `}</style>
+    </>
+  );
+}
+
+/** 단건 거래명세서 */
+function SingleSaleReceipt({ saleId }: { saleId: string }) {
+  const { data, isLoading } = useSale(saleId);
+  if (isLoading) return <Skeleton className="h-96 m-6" />;
+  if (!data?.sale) return <p className="p-6 text-neutral-400">판매 건을 찾을 수 없습니다</p>;
+
+  const s = data.sale;
+  const items = data.items || [];
+  const PAYMENT_METHOD: Record<string, string> = { card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합' };
+
+  return (
+    <>
+      <div className="px-4 md:px-6 py-4 space-y-4">
+        <div className="flex items-center justify-between print:hidden">
+          <Button variant="ghost" size="sm" onClick={() => window.close()}>
+            <ArrowLeft size={14} /> 닫기
+          </Button>
+          <Button size="sm" onClick={() => window.print()}>
+            <Printer size={14} /> 인쇄
+          </Button>
+        </div>
+
+        <div className="print-area bg-white">
+          {/* 헤더 */}
+          <div className="mb-6">
+            <h1 className="text-xl font-bold text-center">거 래 명 세 서</h1>
+            <div className="flex justify-between mt-4 text-sm">
+              <div>
+                <p className="font-semibold">MAMORU (마모루)</p>
+                <p className="text-neutral-600">사업자등록번호: 000-00-00000</p>
+                <p className="text-neutral-600">서울특별시 구로구 부광로 88 SKV1, B동 311호</p>
+                <p className="text-neutral-600">TEL: 02-6326-0426</p>
+              </div>
+              <div className="text-right">
+                <p>판매번호: {s.sale_number}</p>
+                <p>판매일: {s.sale_date}</p>
+                <p>발행일: {new Date().toISOString().slice(0, 10)}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 고객 정보 */}
+          <div className="border border-neutral-300 rounded p-3 mb-4 text-sm">
+            <div className="flex gap-8">
+              <div><span className="text-neutral-500">고객명:</span> <strong>{s.customer_name}</strong></div>
+              {s.customer_phone && <div><span className="text-neutral-500">연락처:</span> {s.customer_phone}</div>}
+            </div>
+          </div>
+
+          {/* 품목 테이블 */}
+          <table className="w-full text-sm border-collapse mb-4">
+            <thead>
+              <tr className="border-y-2 border-neutral-800">
+                <th className="text-left py-2 font-medium">품명</th>
+                <th className="text-center py-2 font-medium w-16">수량</th>
+                <th className="text-right py-2 font-medium w-24">단가</th>
+                <th className="text-right py-2 font-medium w-28">금액</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item, i) => (
+                <tr key={i} className="border-b border-neutral-200">
+                  <td className="py-2">{item.product_name}{item.sku ? ` (${item.sku})` : ''}</td>
+                  <td className="py-2 text-center">{item.quantity}</td>
+                  <td className="py-2 text-right">{formatKRW(item.unit_price)}</td>
+                  <td className="py-2 text-right font-medium">{formatKRW(item.total_price)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* 합계 */}
+          <div className="border-t-2 border-neutral-800 pt-3 space-y-1 text-sm">
+            {(s.discount_amount || 0) > 0 && (
+              <div className="flex justify-between"><span>할인</span><span>-{formatKRW(s.discount_amount)}</span></div>
+            )}
+            {(s.supply_amount || 0) > 0 && (
+              <>
+                <div className="flex justify-between text-neutral-600"><span>공급가액</span><span>{formatKRW(s.supply_amount)}</span></div>
+                <div className="flex justify-between text-neutral-600"><span>부가세</span><span>{formatKRW(s.vat_amount)}</span></div>
+              </>
+            )}
+            <div className="flex justify-between text-base font-bold pt-1 border-t border-neutral-300">
+              <span>합계</span>
+              <span>{formatKRW(s.total_amount - (s.discount_amount || 0))}</span>
+            </div>
+            <div className="flex justify-between text-xs text-neutral-500">
+              <span>결제방법</span>
+              <span>{PAYMENT_METHOD[s.payment_method] || s.payment_method}</span>
+            </div>
+          </div>
+
+          {/* 서명란 (인쇄용) */}
+          <div className="flex justify-end mt-12 gap-16">
+            <div className="text-center">
+              <div className="w-24 border-b border-black mb-1 h-10"></div>
+              <p className="text-xs">공급자</p>
+            </div>
+            <div className="text-center">
+              <div className="w-24 border-b border-black mb-1 h-10"></div>
+              <p className="text-xs">공급받는자</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style jsx global>{`
+        @media print {
+          aside, nav, .print\\:hidden { display: none !important; }
+          @page { size: A4; margin: 15mm 20mm; }
+          body { font-size: 11px; color: #000; }
+          .print-area { padding: 0; }
         }
       `}</style>
     </>

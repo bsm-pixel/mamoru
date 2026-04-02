@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSale, useCancelSale, useUpdatePaymentStatus, useUpdateSaleMemo } from '@/hooks/use-sales';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
-import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save } from 'lucide-react';
+import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import type { SaleChannel, OfflineSale, OfflineSaleItem } from '@/lib/supabase/types';
 
@@ -237,6 +237,15 @@ export function SaleDetailPanel({ saleId }: Props) {
           </div>
         )}
       </div>
+
+      {/* 거래명세서 */}
+      <button
+        onClick={() => window.open(`/reports/transaction?sale_id=${saleId}`, '_blank')}
+        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition"
+      >
+        <FileText size={14} />
+        거래명세서 인쇄
+      </button>
 
       {/* 액션 */}
       {s.cancelled_at ? (
