@@ -325,7 +325,12 @@ export function useRepairDashboardStats() {
         'ready_to_ship', 'shipped', 'delivered',
       ] as const;
 
-      const [counts, staleCount, unpaidCount, intakeNewCount] = await Promise.all([
+      // 이번달 매출 계산용
+      const now = new Date();
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      const monthISO = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+      const [counts, staleCount, unpaidCount, intakeNewCount, monthRepairsPaid, monthSalesRepairItems] = await Promise.all([
         // 상태별 count 병렬
         Promise.all(
           statuses.map((s) =>
@@ -354,6 +359,18 @@ export function useRepairDashboardStats() {
           .select('*', { count: 'exact', head: true })
           .eq('status', 'intake')
           .is('confirmed_at', null),
+        // 복원수리 매출 A: 접수시스템 (입금 완료 건)
+        supabase
+          .from('repairs')
+          .select('total_amount')
+          .not('paid_at', 'is', null)
+          .gte('created_at', monthISO)
+          .not('status', 'eq', 'cancelled'),
+        // 복원수리 매출 B: 판매시스템 (제품명에 '복원수리' 포함)
+        (supabase as any)
+          .from('offline_sale_items')
+          .select('total_price, sale_id')
+          .ilike('product_name', '%복원수리%'),
       ]);
 
       const byStatus = Object.fromEntries(counts.map((c) => [c.status, c.count])) as Record<string, number>;
@@ -379,6 +396,13 @@ export function useRepairDashboardStats() {
           { label: '출고완료', count: byStatus.shipped || 0, status: 'shipped' },
           { label: '배송완료', count: byStatus.delivered || 0, status: 'delivered' },
         ],
+        // 복원수리 매출 합산
+        monthRepairAmount: (() => {
+          const a = (monthRepairsPaid.data || []).reduce((s: number, r: { total_amount: number }) => s + (r.total_amount || 0), 0);
+          const b = (monthSalesRepairItems.data || []).reduce((s: number, r: { total_price: number }) => s + (r.total_price || 0), 0);
+          return a + b;
+        })(),
+        monthRepairCount: (monthRepairsPaid.data?.length || 0) + (monthSalesRepairItems.data?.length || 0),
       };
     },
   });

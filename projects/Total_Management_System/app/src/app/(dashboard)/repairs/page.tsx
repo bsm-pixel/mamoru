@@ -8,7 +8,8 @@ import { RepairDetailPanel } from '@/components/repairs/repair-detail-panel';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useRepairSync } from '@/hooks/use-repairs';
 import { useRepairDashboardStats } from '@/hooks/use-dashboard-stats';
-import { RefreshCw, Scissors, Inbox, Loader, CreditCard, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Scissors, Inbox, Loader, CreditCard, AlertTriangle, TrendingUp } from 'lucide-react';
+import { formatKRW } from '@/lib/utils/format';
 
 export default function RepairsPage() {
   const sync = useRepairSync();
@@ -31,6 +32,18 @@ export default function RepairsPage() {
       <Topbar title="복원수리" />
 
       <div className="px-4 md:px-6 py-4 space-y-4">
+        {/* 이번달 복원수리 매출 */}
+        {stats && (stats.monthRepairAmount > 0 || stats.monthRepairCount > 0) && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-neutral-900 text-white">
+            <TrendingUp size={18} className="opacity-70" />
+            <div>
+              <p className="text-xs opacity-70">이번달 복원수리 매출</p>
+              <p className="text-lg font-bold">{formatKRW(stats.monthRepairAmount)}</p>
+            </div>
+            <span className="ml-auto text-xs opacity-60">{stats.monthRepairCount}건</span>
+          </div>
+        )}
+
         {/* 상단: 요약 카드 + 새로고침 */}
         <div className="flex items-center gap-3">
           <div className="flex gap-2 flex-1 min-w-0">
