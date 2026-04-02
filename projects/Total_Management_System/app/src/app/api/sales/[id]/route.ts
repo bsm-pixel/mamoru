@@ -264,6 +264,178 @@ export async function PATCH(
       return NextResponse.json({ success: true, action: 'sale_edited' });
     }
 
+    // --- E) 판매 재구성 (제품 추가/삭제 — 내부적으로 시리얼/재고 복원 후 재적용) ---
+    if (action === 'rebuild_sale') {
+      if (sale.cancelled_at) {
+        return NextResponse.json({ error: '취소된 판매는 수정할 수 없습니다' }, { status: 400 });
+      }
+
+      const { items: newItems, sale_info } = body as {
+        items: Array<{
+          product_id?: string;
+          product_name: string;
+          sku?: string;
+          quantity: number;
+          unit_price: number;
+          total_price: number;
+          serial_ids?: string[];
+        }>;
+        sale_info: {
+          total_amount: number;
+          discount_amount?: number;
+          payment_method: string;
+          payment_status?: string;
+          paid_amount?: number;
+          sale_date?: string;
+          payment_detail?: Record<string, number>;
+          memo?: string;
+        };
+      };
+
+      if (!newItems || newItems.length === 0) {
+        return NextResponse.json({ error: '최소 1개 항목이 필요합니다' }, { status: 400 });
+      }
+
+      // ── STEP 1: 기존 시리얼 복원 ──
+      const { data: oldSerials } = await db
+        .from('product_serials')
+        .select('id, product_id, warehouse_zone, previous_zone')
+        .eq('offline_sale_id', id);
+
+      if (oldSerials && oldSerials.length > 0) {
+        for (const serial of oldSerials) {
+          await db.from('product_serials').update({
+            status: 'in_stock',
+            warehouse_zone: serial.previous_zone || 'ready',
+            previous_zone: null,
+            sold_via: null,
+            offline_sale_id: null,
+            sold_at: null,
+            sold_to_name: null,
+            sold_to_phone: null,
+          }).eq('id', serial.id);
+        }
+      }
+
+      // ── STEP 2: 기존 재고 복원 ──
+      const { data: oldItems } = await db
+        .from('offline_sale_items')
+        .select('product_id, quantity')
+        .eq('sale_id', id);
+
+      if (oldItems) {
+        const oldQtyMap: Record<string, number> = {};
+        for (const item of oldItems) {
+          if (item.product_id) oldQtyMap[item.product_id] = (oldQtyMap[item.product_id] || 0) + item.quantity;
+        }
+        for (const [productId, qty] of Object.entries(oldQtyMap)) {
+          const { data: prod } = await db.from('products').select('stock_quantity, raw_stock').eq('id', productId).single();
+          if (prod) {
+            const hadSerials = oldSerials?.some((s: { product_id: string }) => s.product_id === productId);
+            const updateData: Record<string, unknown> = { stock_quantity: (prod.stock_quantity || 0) + qty };
+            if (!hadSerials) updateData.raw_stock = (prod.raw_stock || 0) + qty;
+            await db.from('products').update(updateData).eq('id', productId);
+          }
+        }
+      }
+
+      // ── STEP 3: 기존 항목 삭제 → 새 항목 생성 ──
+      await db.from('offline_sale_items').delete().eq('sale_id', id);
+
+      const saleItems = newItems.map((item) => ({
+        sale_id: id,
+        product_id: item.product_id || null,
+        product_name: item.product_name,
+        sku: item.sku || null,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.total_price,
+      }));
+      await db.from('offline_sale_items').insert(saleItems);
+
+      // ── STEP 4: 새 시리얼 할당 ──
+      const allNewSerialIds = newItems.flatMap((item) => item.serial_ids || []);
+      if (allNewSerialIds.length > 0) {
+        const { data: serials } = await db
+          .from('product_serials')
+          .select('id, warehouse_zone')
+          .in('id', allNewSerialIds)
+          .eq('status', 'in_stock');
+
+        if (!serials || serials.length !== allNewSerialIds.length) {
+          return NextResponse.json({ error: '일부 시리얼이 판매 불가 상태입니다' }, { status: 409 });
+        }
+
+        for (const serial of serials) {
+          const { count } = await db.from('product_serials').update({
+            previous_zone: serial.warehouse_zone,
+            status: 'sold',
+            sold_via: 'offline',
+            offline_sale_id: id,
+            sold_at: new Date().toISOString(),
+            sold_to_name: sale.customer_name,
+            sold_to_phone: sale.customer_phone || null,
+          }).eq('id', serial.id).eq('status', 'in_stock')
+            .select('id', { count: 'exact', head: true });
+
+          if (count === 0) {
+            return NextResponse.json({ error: `시리얼 충돌 — 다시 시도해주세요` }, { status: 409 });
+          }
+        }
+      }
+
+      // ── STEP 5: 새 재고 차감 ──
+      const newQtyMap: Record<string, number> = {};
+      for (const item of newItems) {
+        if (item.product_id && item.quantity > 0) {
+          const qty = item.serial_ids?.length || item.quantity;
+          newQtyMap[item.product_id] = (newQtyMap[item.product_id] || 0) + qty;
+        }
+      }
+      for (const [productId, qty] of Object.entries(newQtyMap)) {
+        const { data: prod } = await db.from('products').select('stock_quantity, raw_stock, imweb_product_no').eq('id', productId).single();
+        if (!prod) continue;
+        const hasSerials = allNewSerialIds.length > 0 && newItems.some((it) => it.product_id === productId && it.serial_ids?.length);
+        const newStock = Math.max(0, (prod.stock_quantity || 0) - qty);
+        const updateData: Record<string, unknown> = { stock_quantity: newStock };
+        if (!hasSerials) updateData.raw_stock = Math.max(0, (prod.raw_stock || 0) - qty);
+        await db.from('products').update(updateData).eq('id', productId);
+
+        // 아임웹 동기화
+        if (prod.imweb_product_no) {
+          try {
+            const { count: displayCount } = await db.from('product_serials')
+              .select('id', { count: 'exact', head: true })
+              .eq('product_id', productId).eq('status', 'in_stock').eq('warehouse_zone', 'display');
+            await updateImwebStock(Number(prod.imweb_product_no), Math.max(0, newStock - (displayCount || 0)));
+          } catch { /* 실패해도 계속 */ }
+        }
+      }
+
+      // ── STEP 6: 판매 레코드 업데이트 ──
+      const cardAmount = sale_info.payment_method === 'card' ? sale_info.total_amount
+        : sale_info.payment_method === 'mixed' && sale_info.payment_detail?.card ? sale_info.payment_detail.card
+        : 0;
+      const supplyAmount = cardAmount > 0 ? Math.round(cardAmount / 1.1) : 0;
+      const vatAmount = cardAmount > 0 ? cardAmount - supplyAmount : 0;
+
+      await db.from('offline_sales').update({
+        total_amount: sale_info.total_amount,
+        discount_amount: sale_info.discount_amount || 0,
+        payment_method: sale_info.payment_method,
+        payment_status: sale_info.payment_status || sale.payment_status,
+        paid_amount: sale_info.paid_amount ?? sale_info.total_amount,
+        payment_detail: sale_info.payment_detail || null,
+        sale_date: sale_info.sale_date || sale.sale_date,
+        memo: sale_info.memo ?? sale.memo,
+        supply_amount: supplyAmount,
+        vat_amount: vatAmount,
+        is_vat_included: cardAmount > 0,
+      }).eq('id', id);
+
+      return NextResponse.json({ success: true, action: 'sale_rebuilt' });
+    }
+
     return NextResponse.json({ error: '알 수 없는 action' }, { status: 400 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : JSON.stringify(err);

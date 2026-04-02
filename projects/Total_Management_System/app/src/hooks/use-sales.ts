@@ -460,3 +460,54 @@ export function useEditSale() {
   });
 }
 
+/** 판매 재구성 (제품 추가/삭제 — 시리얼/재고 자동 재조정) */
+export function useRebuildSale() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, items, sale_info }: {
+      id: string;
+      items: Array<{
+        product_id?: string;
+        product_name: string;
+        sku?: string;
+        quantity: number;
+        unit_price: number;
+        total_price: number;
+        serial_ids?: string[];
+      }>;
+      sale_info: {
+        total_amount: number;
+        discount_amount?: number;
+        payment_method: string;
+        payment_status?: string;
+        paid_amount?: number;
+        sale_date?: string;
+        payment_detail?: Record<string, number>;
+        memo?: string;
+      };
+    }) => {
+      const res = await fetch(`/api/sales/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'rebuild_sale', items, sale_info }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '수정 실패');
+      }
+      return res.json();
+    },
+    onSuccess: (_d, { id }) => {
+      toast.success('판매가 수정되었습니다 (시리얼/재고 재조정 완료)');
+      queryClient.invalidateQueries({ queryKey: ['sale', id] });
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['sales-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+    onError: (err) => {
+      toast.error('판매 수정 실패: ' + (err instanceof Error ? err.message : String(err)));
+    },
+  });
+}
+

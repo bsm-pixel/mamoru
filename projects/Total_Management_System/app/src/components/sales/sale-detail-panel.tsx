@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSale, useCancelSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale } from '@/hooks/use-sales';
+import { useSale, useCancelSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts } from '@/hooks/use-sales';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -40,6 +40,7 @@ export function SaleDetailPanel({ saleId }: Props) {
   const updatePayment = useUpdatePaymentStatus();
   const updateMemo = useUpdateSaleMemo();
   const editSale = useEditSale();
+  const rebuildSale = useRebuildSale();
   const [cancelMode, setCancelMode] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [showPaidConfirm, setShowPaidConfirm] = useState(false);
@@ -329,29 +330,91 @@ export function SaleDetailPanel({ saleId }: Props) {
       )}
 
       {/* 판매 수정 모달 */}
-      {showEditModal && (
-        <EditSaleModal
+      {showEditModal && data && (
+        <FullEditSaleModal
           sale={s}
+          items={data.items}
+          saleId={saleId}
           onClose={() => setShowEditModal(false)}
-          onSave={(fields) => editSale.mutateAsync({ id: saleId, ...fields }).then(() => setShowEditModal(false))}
-          isPending={editSale.isPending}
+          rebuildSale={rebuildSale}
         />
       )}
     </div>
   );
 }
 
-/** 판매 수정 모달 */
-function EditSaleModal({ sale, onClose, onSave, isPending }: {
+/** 판매 전체 수정 모달 (제품 추가/삭제 + 금액/결제 수정) */
+function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuildSale }: {
   sale: OfflineSale;
+  items: OfflineSaleItem[];
+  saleId: string;
   onClose: () => void;
-  onSave: (fields: Record<string, unknown>) => Promise<unknown>;
-  isPending: boolean;
+  rebuildSale: ReturnType<typeof useRebuildSale>;
 }) {
-  const [totalAmount, setTotalAmount] = useState(sale.total_amount);
-  const [discountAmount, setDiscountAmount] = useState(sale.discount_amount || 0);
+  const { data: products = [] } = useProducts();
+  const [editItems, setEditItems] = useState(
+    originalItems.map((it) => ({
+      product_id: it.product_id || undefined,
+      product_name: it.product_name,
+      sku: it.sku || undefined,
+      quantity: it.quantity,
+      unit_price: it.unit_price,
+      total_price: it.total_price,
+      serial_ids: [] as string[], // 수정 시 시리얼은 새로 할당 불필요 (B2B)
+    }))
+  );
   const [paymentMethod, setPaymentMethod] = useState<string>(sale.payment_method);
+  const [discountAmount, setDiscountAmount] = useState(sale.discount_amount || 0);
   const [saleDate, setSaleDate] = useState(sale.sale_date);
+  const [productSearch, setProductSearch] = useState('');
+
+  const totalAmount = editItems.reduce((s, it) => s + it.unit_price * it.quantity, 0);
+  const finalAmount = totalAmount - discountAmount;
+
+  const removeItem = (idx: number) => setEditItems((prev) => prev.filter((_, i) => i !== idx));
+  const updateQty = (idx: number, delta: number) => {
+    setEditItems((prev) => prev.map((it, i) => i === idx ? { ...it, quantity: Math.max(1, it.quantity + delta), total_price: it.unit_price * Math.max(1, it.quantity + delta) } : it));
+  };
+
+  const addProduct = (p: { id: string; name: string; sku?: string; price: number }) => {
+    const existing = editItems.findIndex((it) => it.product_id === p.id);
+    if (existing >= 0) {
+      updateQty(existing, 1);
+    } else {
+      setEditItems((prev) => [...prev, {
+        product_id: p.id,
+        product_name: p.name,
+        sku: p.sku,
+        quantity: 1,
+        unit_price: p.price,
+        total_price: p.price,
+        serial_ids: [],
+      }]);
+    }
+    setProductSearch('');
+  };
+
+  const filteredProducts = productSearch.length >= 1
+    ? products.filter((p) => p.name.toLowerCase().includes(productSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(productSearch.toLowerCase())).slice(0, 8)
+    : [];
+
+  const handleSave = async () => {
+    await rebuildSale.mutateAsync({
+      id: saleId,
+      items: editItems.map((it) => ({
+        ...it,
+        total_price: it.unit_price * it.quantity,
+      })),
+      sale_info: {
+        total_amount: totalAmount,
+        discount_amount: discountAmount,
+        payment_method: paymentMethod,
+        paid_amount: finalAmount,
+        sale_date: saleDate,
+      },
+    });
+    onClose();
+  };
 
   const METHODS = [
     { value: 'card', label: '카드' },
@@ -362,59 +425,105 @@ function EditSaleModal({ sale, onClose, onSave, isPending }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-xl w-[90vw] max-w-[400px] p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-sm font-bold text-neutral-800">판매 정보 수정</h3>
-
-        <div>
-          <label className="text-xs text-neutral-500 mb-1 block">판매일</label>
-          <input type="date" value={saleDate} max={new Date().toISOString().slice(0, 10)}
-            onChange={(e) => setSaleDate(e.target.value)}
-            className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+      <div className="bg-white rounded-xl shadow-xl w-[95vw] max-w-[550px] max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="px-5 py-3 border-b border-neutral-200 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-neutral-800">판매 수정</h3>
+          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600 text-lg">×</button>
         </div>
 
-        <div>
-          <label className="text-xs text-neutral-500 mb-1 block">총 금액</label>
-          <input type="number" value={totalAmount}
-            onChange={(e) => setTotalAmount(Number(e.target.value))}
-            className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
-        </div>
-
-        <div>
-          <label className="text-xs text-neutral-500 mb-1 block">할인</label>
-          <input type="number" value={discountAmount}
-            onChange={(e) => setDiscountAmount(Number(e.target.value))}
-            className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
-        </div>
-
-        <div>
-          <label className="text-xs text-neutral-500 mb-1 block">결제방법</label>
-          <div className="flex gap-2">
-            {METHODS.map((m) => (
-              <button key={m.value}
-                onClick={() => setPaymentMethod(m.value)}
-                className={`flex-1 py-1.5 text-xs rounded-md border transition ${
-                  paymentMethod === m.value ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'
-                }`}
-              >{m.label}</button>
-            ))}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {/* 항목 목록 */}
+          <div>
+            <label className="text-xs font-semibold text-neutral-600 mb-2 block">품목 ({editItems.length})</label>
+            <div className="space-y-2">
+              {editItems.map((it, idx) => (
+                <div key={idx} className="flex items-center gap-2 p-2 rounded-lg border border-neutral-200 bg-neutral-50">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{it.product_name}</p>
+                    <p className="text-xs text-neutral-500">{formatKRW(it.unit_price)} × {it.quantity} = {formatKRW(it.unit_price * it.quantity)}</p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => updateQty(idx, -1)} className="w-6 h-6 rounded bg-neutral-200 text-xs font-bold">−</button>
+                    <span className="w-6 text-center text-xs font-bold">{it.quantity}</span>
+                    <button onClick={() => updateQty(idx, 1)} className="w-6 h-6 rounded bg-neutral-200 text-xs font-bold">+</button>
+                    <button onClick={() => removeItem(idx)} className="w-6 h-6 rounded bg-red-100 text-red-500 text-xs font-bold ml-1">×</button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* 제품 추가 검색 */}
+          <div>
+            <label className="text-xs font-semibold text-neutral-600 mb-1 block">제품 추가</label>
+            <input
+              type="text"
+              value={productSearch}
+              onChange={(e) => setProductSearch(e.target.value)}
+              placeholder="제품명 또는 SKU 검색"
+              className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400"
+            />
+            {filteredProducts.length > 0 && (
+              <div className="mt-1 border border-neutral-200 rounded-lg max-h-40 overflow-y-auto divide-y divide-neutral-100">
+                {filteredProducts.map((p) => (
+                  <button key={p.id} onClick={() => addProduct(p)}
+                    className="w-full text-left px-3 py-2 hover:bg-neutral-50 transition">
+                    <span className="text-sm font-medium">{p.name}</span>
+                    <span className="text-xs text-neutral-500 ml-2">{p.sku}</span>
+                    <span className="text-xs font-bold text-neutral-700 float-right">{formatKRW(p.price)}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 판매일 + 결제 */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-neutral-500 mb-1 block">판매일</label>
+              <input type="date" value={saleDate} max={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setSaleDate(e.target.value)}
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500 mb-1 block">할인</label>
+              <input type="number" value={discountAmount}
+                onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs text-neutral-500 mb-1 block">결제방법</label>
+            <div className="flex gap-2">
+              {METHODS.map((m) => (
+                <button key={m.value} onClick={() => setPaymentMethod(m.value)}
+                  className={`flex-1 py-1.5 text-xs rounded-md border transition ${paymentMethod === m.value ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'}`}
+                >{m.label}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* 합계 */}
+          <div className="bg-neutral-50 rounded-lg p-3 text-sm">
+            <div className="flex justify-between"><span>합계</span><span className="font-bold">{formatKRW(totalAmount)}</span></div>
+            {discountAmount > 0 && <div className="flex justify-between text-neutral-500"><span>할인</span><span>-{formatKRW(discountAmount)}</span></div>}
+            <div className="flex justify-between font-bold text-base pt-1 border-t border-neutral-200 mt-1">
+              <span>결제금액</span><span>{formatKRW(finalAmount)}</span>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-red-500">⚠ 저장 시 기존 시리얼/재고가 복원된 후 새 구성으로 재적용됩니다.</p>
         </div>
 
-        <div className="flex gap-2 pt-2">
-          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600">
-            취소
-          </button>
+        <div className="px-5 py-3 border-t border-neutral-200 flex gap-2">
+          <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600">취소</button>
           <button
-            onClick={() => onSave({
-              total_amount: totalAmount,
-              discount_amount: discountAmount,
-              payment_method: paymentMethod,
-              sale_date: saleDate,
-            })}
-            disabled={isPending}
+            onClick={handleSave}
+            disabled={rebuildSale.isPending || editItems.length === 0}
             className="flex-1 py-2 rounded-lg bg-neutral-900 text-white text-sm font-medium disabled:opacity-50"
           >
-            {isPending ? '저장 중...' : '저장'}
+            {rebuildSale.isPending ? '저장 중...' : '저장'}
           </button>
         </div>
       </div>
