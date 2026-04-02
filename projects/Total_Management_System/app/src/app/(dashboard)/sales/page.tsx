@@ -129,6 +129,29 @@ export default function SalesPage() {
         </div>
       )}
 
+      {/* B2B 거래처별 매출 (B2B 필터일 때) */}
+      {channel === 'b2b' && stats?.b2b && stats.b2b.length > 0 && (
+        <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+          <div className="px-3 py-2 bg-neutral-50 text-xs font-semibold text-neutral-600">이번달 거래처별 매출</div>
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-neutral-100">
+              {stats.b2b.map((b: { name: string; type: string; amount: number; count: number }) => (
+                <tr key={b.name} className="hover:bg-warm-ivory/40">
+                  <td className="px-3 py-2">
+                    <span className="font-medium">{b.name}</span>
+                    <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium ${b.type === 'dealer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                      {b.type === 'dealer' ? '딜러' : '아카데미'}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-right text-xs text-neutral-500">{b.count}건</td>
+                  <td className="px-3 py-2 text-right font-bold">{formatKRW(b.amount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {/* 신규 계약서 알림 */}
       {newContractCount > 0 && (
         <button

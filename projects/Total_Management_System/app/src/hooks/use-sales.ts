@@ -176,10 +176,29 @@ export function useSalesStats() {
         0
       );
 
+      // B2B 거래처별 이번달 매출
+      const { data: b2bSales } = await db
+        .from('offline_sales')
+        .select('customer_name, customer_type, paid_amount')
+        .in('customer_type', ['dealer', 'academy'])
+        .gte('sale_date', monthStart)
+        .lte('sale_date', today)
+        .is('cancelled_at', null);
+
+      const b2bMap: Record<string, { name: string; type: string; amount: number; count: number }> = {};
+      for (const s of (b2bSales || [])) {
+        const key = s.customer_name || '미지정';
+        if (!b2bMap[key]) b2bMap[key] = { name: key, type: s.customer_type || '', amount: 0, count: 0 };
+        b2bMap[key].amount += s.paid_amount || 0;
+        b2bMap[key].count++;
+      }
+      const b2bRanking = Object.values(b2bMap).sort((a, b) => b.amount - a.amount);
+
       return {
         week: sum(weekSales),
         month: sum(monthSales),
         outstanding: unpaidTotal,
+        b2b: b2bRanking,
       };
     },
   });
