@@ -87,3 +87,29 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
+
+/** PATCH /api/expenses — 경비 수정 */
+export async function PATCH(req: NextRequest) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const body = await req.json();
+    const { id, expense_date, category, amount, memo } = body;
+    if (!id) return NextResponse.json({ error: 'id 필수' }, { status: 400 });
+
+    const updateData: Record<string, unknown> = {};
+    if (expense_date !== undefined) updateData.expense_date = expense_date;
+    if (category !== undefined) updateData.category = category;
+    if (amount !== undefined) updateData.amount = amount;
+    if (memo !== undefined) updateData.memo = memo || null;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).from('expenses').update(updateData).eq('id', id);
+    if (error) throw error;
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}

@@ -81,3 +81,30 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
+
+/** PATCH /api/cashflow — 입출금 수정 */
+export async function PATCH(req: NextRequest) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const body = await req.json();
+    const { id, transaction_date, type, category, amount, memo } = body;
+    if (!id) return NextResponse.json({ error: 'id 필수' }, { status: 400 });
+
+    const updateData: Record<string, unknown> = {};
+    if (transaction_date !== undefined) updateData.transaction_date = transaction_date;
+    if (type !== undefined) updateData.type = type;
+    if (category !== undefined) updateData.category = category;
+    if (amount !== undefined) updateData.amount = amount;
+    if (memo !== undefined) updateData.memo = memo || null;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).from('cash_transactions').update(updateData).eq('id', id);
+    if (error) throw error;
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
