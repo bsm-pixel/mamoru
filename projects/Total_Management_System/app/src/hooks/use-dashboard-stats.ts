@@ -32,6 +32,8 @@ interface HubStatsResult {
     weekRepairTotal: number;
     weekRepairMamoru: number;
     weekRepairOther: number;
+    monthRepairAmount: number;   // 복원수리 매출 (접수시스템 + 판매)
+    monthRepairCount: number;
   };
   sales: {
     monthCount: number;
@@ -76,6 +78,8 @@ export function useHubStats() {
             weekRepairTotal: d.repairs?.weekRepairTotal ?? 0,
             weekRepairMamoru: d.repairs?.weekRepairMamoru ?? 0,
             weekRepairOther: d.repairs?.weekRepairOther ?? 0,
+            monthRepairAmount: d.repairs?.monthRepairAmount ?? 0,
+            monthRepairCount: d.repairs?.monthRepairCount ?? 0,
           },
           sales: {
             monthCount: d.sales?.monthCount ?? 0,
@@ -96,6 +100,7 @@ export function useHubStats() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
+      const monthStartDate = monthStart.toISOString().slice(0, 10);
       const [
         payDone, preparing, shipping, delivered,
         weekOrders, monthOrders,
@@ -103,6 +108,7 @@ export function useHubStats() {
         intakeNew, repairPending, repairWorking, readyToShipRes,
         weekRepairs,
         monthSales,
+        monthRepairsPaid, monthSalesRepairItems,
       ] = await Promise.all([
         db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pay_done'),
         db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparing'),
@@ -127,8 +133,16 @@ export function useHubStats() {
           .in('status', ['shipped', 'delivered', 'completed'])
           .gte('shipped_at', monISO),
         db.from('offline_sales').select('total_amount')
-          .gte('sale_date', monthStart.toISOString().slice(0, 10))
+          .gte('sale_date', monthStartDate)
           .is('cancelled_at', null),
+        // 복원수리 매출 A: 접수시스템 (입금 확인된 건)
+        db.from('repairs').select('total_amount')
+          .not('paid_at', 'is', null)
+          .gte('created_at', monthISO)
+          .not('status', 'eq', 'cancelled'),
+        // 복원수리 매출 B: 판매시스템 (제품명에 '복원수리' 포함)
+        db.from('offline_sale_items').select('total_price, sale_id')
+          .ilike('product_name', '%복원수리%'),
       ]);
 
       const sumAmount = (rows: { paid_amount?: number }[]) =>
@@ -172,6 +186,12 @@ export function useHubStats() {
           weekRepairTotal: weekRepairRows.length,
           weekRepairMamoru,
           weekRepairOther,
+          monthRepairAmount: (() => {
+            const repairA = (monthRepairsPaid.data || []).reduce((s: number, r: { total_amount: number }) => s + (r.total_amount || 0), 0);
+            const repairB = (monthSalesRepairItems.data || []).reduce((s: number, r: { total_price: number }) => s + (r.total_price || 0), 0);
+            return repairA + repairB;
+          })(),
+          monthRepairCount: (monthRepairsPaid.data?.length || 0) + (monthSalesRepairItems.data?.length || 0),
         },
         sales: {
           monthCount: salesRows.length,

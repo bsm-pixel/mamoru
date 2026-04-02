@@ -48,7 +48,7 @@ export default function DashboardPage() {
     ? `이번주 ${fmtKRW(stats.orders.weekAmount)} · 이번달 ${fmtKRW(stats.orders.monthAmount)}`
     : '';
   const repairSummary = stats
-    ? `이번주 복원 ${stats.repairs.weekRepairTotal}건 (마모루 ${stats.repairs.weekRepairMamoru} / 타사 ${stats.repairs.weekRepairOther})`
+    ? `이번달 복원수리 매출 ${fmtKRW(stats.repairs.monthRepairAmount)} (${stats.repairs.monthRepairCount}건)`
     : '';
 
   return (

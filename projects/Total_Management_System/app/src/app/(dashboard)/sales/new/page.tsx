@@ -363,7 +363,16 @@ function NewSaleContent() {
                             >
                               <Minus size={12} />
                             </button>
-                            <span className="text-sm font-semibold w-6 text-center">{item.quantity}</span>
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value) || 1;
+                                setCart((prev) => prev.map((it) => cartItemKey(it) === key ? { ...it, quantity: Math.max(1, val) } : it));
+                              }}
+                              className="w-10 h-6 text-center text-sm font-semibold border border-neutral-200 rounded bg-white focus:outline-none focus:ring-1 focus:ring-neutral-300 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                            />
                             <button
                               onClick={() => updateQuantity(key, 1)}
                               className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"

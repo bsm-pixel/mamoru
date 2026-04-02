@@ -444,7 +444,16 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button onClick={() => updateQty(idx, -1)} className="w-6 h-6 rounded bg-neutral-200 text-xs font-bold">−</button>
-                    <span className="w-6 text-center text-xs font-bold">{it.quantity}</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={it.quantity}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 1;
+                        setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, quantity: Math.max(1, val), total_price: item.unit_price * Math.max(1, val) } : item));
+                      }}
+                      className="w-10 h-6 text-center text-xs font-bold border border-neutral-200 rounded bg-white focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                     <button onClick={() => updateQty(idx, 1)} className="w-6 h-6 rounded bg-neutral-200 text-xs font-bold">+</button>
                     <button onClick={() => removeItem(idx)} className="w-6 h-6 rounded bg-red-100 text-red-500 text-xs font-bold ml-1">×</button>
                   </div>
