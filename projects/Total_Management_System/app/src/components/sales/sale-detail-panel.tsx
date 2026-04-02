@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSale, useCancelSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale } from '@/hooks/use-sales';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
-import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText } from 'lucide-react';
+import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import type { SaleChannel, OfflineSale, OfflineSaleItem } from '@/lib/supabase/types';
 
@@ -45,6 +45,7 @@ export function SaleDetailPanel({ saleId }: Props) {
   const [showPaidConfirm, setShowPaidConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
   const [editingMemo, setEditingMemo] = useState(false);
   const [memoValue, setMemoValue] = useState('');
 
@@ -243,7 +244,7 @@ export function SaleDetailPanel({ saleId }: Props) {
       {/* 거래명세서 + 수정 */}
       <div className="flex gap-2">
         <button
-          onClick={() => window.open(`/reports/transaction?sale_id=${saleId}`, '_blank')}
+          onClick={() => setShowReceipt(true)}
           className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition"
         >
           <FileText size={14} />
@@ -317,6 +318,15 @@ export function SaleDetailPanel({ saleId }: Props) {
         confirmLabel="취소 확정"
         variant="danger"
       />
+
+      {/* 거래명세서 모달 */}
+      {showReceipt && data && (
+        <ReceiptModal
+          sale={s}
+          items={data.items}
+          onClose={() => setShowReceipt(false)}
+        />
+      )}
 
       {/* 판매 수정 모달 */}
       {showEditModal && (
@@ -406,6 +416,183 @@ function EditSaleModal({ sale, onClose, onSave, isPending }: {
           >
             {isPending ? '저장 중...' : '저장'}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** 거래명세서 모달 (A4 비율, 인쇄 + 이미지 저장) */
+function ReceiptModal({ sale, items, onClose }: {
+  sale: OfflineSale;
+  items: OfflineSaleItem[];
+  onClose: () => void;
+}) {
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const [saving, setSaving] = useState(false);
+  const PAYMENT_METHOD: Record<string, string> = { card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합' };
+
+  const handlePrint = () => {
+    const el = receiptRef.current;
+    if (!el) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html><head><title>거래명세서 — ${sale.sale_number}</title>
+      <style>
+        body { font-family: 'Noto Sans KR', sans-serif; font-size: 12px; color: #000; padding: 20mm; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 6px 8px; text-align: left; }
+        thead th { border-bottom: 2px solid #000; }
+        tbody td { border-bottom: 1px solid #ddd; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .bold { font-weight: bold; }
+        .total-row td { border-top: 2px solid #000; font-weight: bold; }
+      </style></head><body>${el.innerHTML}</body></html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const handleSaveImage = async () => {
+    const el = receiptRef.current;
+    if (!el) return;
+    setSaving(true);
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff' });
+      const link = document.createElement('a');
+      link.download = `거래명세서_${sale.sale_number}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (e) {
+      console.error('이미지 저장 실패:', e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+      <div
+        className="bg-white rounded-xl shadow-2xl flex flex-col"
+        style={{ width: '595px', maxHeight: '90vh' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 상단 버튼 */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
+          <h3 className="text-sm font-bold text-neutral-800">거래명세서</h3>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSaveImage}
+              disabled={saving}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-neutral-100 text-xs text-neutral-700 hover:bg-neutral-200 transition disabled:opacity-50"
+            >
+              <Download size={12} />
+              {saving ? '저장 중...' : '이미지 저장'}
+            </button>
+            <button
+              onClick={handlePrint}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-neutral-900 text-xs text-white hover:bg-neutral-800 transition"
+            >
+              <Printer size={12} />
+              인쇄
+            </button>
+            <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600 text-lg leading-none">×</button>
+          </div>
+        </div>
+
+        {/* A4 비율 콘텐츠 */}
+        <div className="overflow-y-auto flex-1 p-6" ref={receiptRef}>
+          {/* 헤더 */}
+          <h1 style={{ fontSize: '20px', fontWeight: 'bold', textAlign: 'center', marginBottom: '24px' }}>
+            거 래 명 세 서
+          </h1>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: '13px' }}>
+            <div>
+              <p style={{ fontWeight: 'bold', fontSize: '15px' }}>MAMORU (마모루)</p>
+              <p style={{ color: '#666' }}>미용가위 전문 브랜드</p>
+              <p style={{ color: '#666' }}>서울특별시 구로구 부광로 88 SKV1, B동 311호</p>
+              <p style={{ color: '#666' }}>TEL: 02-6326-0426</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p>판매번호: {sale.sale_number}</p>
+              <p>판매일: {sale.sale_date}</p>
+              <p>발행일: {new Date().toISOString().slice(0, 10)}</p>
+            </div>
+          </div>
+
+          {/* 고객 */}
+          <div style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px' }}>
+            <span style={{ color: '#888' }}>고객명: </span>
+            <strong>{sale.customer_name}</strong>
+            {sale.customer_phone && (
+              <span style={{ marginLeft: '24px' }}><span style={{ color: '#888' }}>연락처: </span>{sale.customer_phone}</span>
+            )}
+          </div>
+
+          {/* 품목 */}
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '16px', fontSize: '13px' }}>
+            <thead>
+              <tr style={{ borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
+                <th style={{ padding: '8px', textAlign: 'left' }}>품명</th>
+                <th style={{ padding: '8px', textAlign: 'center', width: '60px' }}>수량</th>
+                <th style={{ padding: '8px', textAlign: 'right', width: '100px' }}>단가</th>
+                <th style={{ padding: '8px', textAlign: 'right', width: '120px' }}>금액</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                  <td style={{ padding: '8px' }}>{item.product_name}{item.sku ? ` (${item.sku})` : ''}</td>
+                  <td style={{ padding: '8px', textAlign: 'center' }}>{item.quantity}</td>
+                  <td style={{ padding: '8px', textAlign: 'right' }}>{formatKRW(item.unit_price)}</td>
+                  <td style={{ padding: '8px', textAlign: 'right', fontWeight: '600' }}>{formatKRW(item.total_price)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* 합계 */}
+          <div style={{ borderTop: '2px solid #000', paddingTop: '12px', fontSize: '13px' }}>
+            {(sale.discount_amount || 0) > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span>할인</span><span>-{formatKRW(sale.discount_amount)}</span>
+              </div>
+            )}
+            {(sale.supply_amount || 0) > 0 && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: '#666' }}>
+                  <span>공급가액</span><span>{formatKRW(sale.supply_amount)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: '#666' }}>
+                  <span>부가세</span><span>{formatKRW(sale.vat_amount)}</span>
+                </div>
+              </>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', fontWeight: 'bold', paddingTop: '8px', borderTop: '1px solid #ddd' }}>
+              <span>합계</span>
+              <span>{formatKRW(sale.total_amount - (sale.discount_amount || 0))}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '12px', color: '#888' }}>
+              <span>결제방법</span>
+              <span>{PAYMENT_METHOD[sale.payment_method] || sale.payment_method}</span>
+            </div>
+          </div>
+
+          {/* 서명란 */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '60px', gap: '48px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: '100px', borderBottom: '1px solid #000', height: '40px' }}></div>
+              <p style={{ fontSize: '11px', marginTop: '4px' }}>공급자</p>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: '100px', borderBottom: '1px solid #000', height: '40px' }}></div>
+              <p style={{ fontSize: '11px', marginTop: '4px' }}>공급받는자</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
