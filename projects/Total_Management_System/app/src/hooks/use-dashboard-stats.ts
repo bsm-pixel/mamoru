@@ -140,9 +140,11 @@ export function useHubStats() {
           .not('paid_at', 'is', null)
           .gte('created_at', monthISO)
           .not('status', 'eq', 'cancelled'),
-        // 복원수리 매출 B: 판매시스템 (제품명에 '복원수리' 포함)
-        db.from('offline_sale_items').select('total_price, sale_id')
-          .ilike('product_name', '%복원수리%'),
+        // 복원수리 매출 B: 판매시스템 (이번달, 제품명에 '복원수리' 포함, 취소 제외)
+        db.from('offline_sale_items').select('total_price, offline_sales!inner(sale_date, cancelled_at)')
+          .ilike('product_name', '%복원수리%')
+          .gte('offline_sales.sale_date', monthStartDate)
+          .is('offline_sales.cancelled_at', null),
       ]);
 
       const sumAmount = (rows: { paid_amount?: number }[]) =>
@@ -366,11 +368,13 @@ export function useRepairDashboardStats() {
           .not('paid_at', 'is', null)
           .gte('created_at', monthISO)
           .not('status', 'eq', 'cancelled'),
-        // 복원수리 매출 B: 판매시스템 (제품명에 '복원수리' 포함)
+        // 복원수리 매출 B: 판매시스템 (이번달, 제품명에 '복원수리' 포함, 취소 제외)
         (supabase as any)
           .from('offline_sale_items')
-          .select('total_price, sale_id')
-          .ilike('product_name', '%복원수리%'),
+          .select('total_price, offline_sales!inner(sale_date, cancelled_at)')
+          .ilike('product_name', '%복원수리%')
+          .gte('offline_sales.sale_date', monthStart)
+          .is('offline_sales.cancelled_at', null),
       ]);
 
       const byStatus = Object.fromEntries(counts.map((c) => [c.status, c.count])) as Record<string, number>;
