@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomer, useUpdateCustomer } from '@/hooks/use-customers';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
-import { ArrowLeft, Save, ShoppingBag, FileSignature, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Save, ShoppingBag, FileSignature, MessageSquare, Wrench, Clock } from 'lucide-react';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -102,7 +102,19 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     );
   }
 
-  const { customer: c, sales, contracts, consultations, summary } = data;
+  const { customer: c, sales, contracts, consultations, repairs, summary } = data as Record<string, unknown> & typeof data;
+
+  // 통합 타임라인 생성
+  type TimelineItem = { type: 'sale' | 'contract' | 'consultation' | 'repair'; date: string; id: string; title: string; subtitle: string; amount?: number; status?: string; href?: string };
+  const timeline: TimelineItem[] = [
+    ...sales.map((s) => ({ type: 'sale' as const, date: s.sale_date, id: s.id, title: s.sale_number, subtitle: `판매 · ${PAYMENT_STATUS_LABEL[s.payment_status] || s.payment_status}`, amount: s.paid_amount, href: `/sales/${s.id}` })),
+    ...contracts.map((ct) => ({ type: 'contract' as const, date: ct.created_at, id: ct.id, title: ct.contract_number, subtitle: `계약서 · ${CONTRACT_STATUS_LABEL[ct.status] || ct.status}`, amount: ct.final_amount, href: `/contracts/${ct.id}` })),
+    ...consultations.map((con) => ({ type: 'consultation' as const, date: con.visit_date || con.created_at, id: con.id, title: CONSULTATION_TYPE_LABEL[con.consultation_type] || con.consultation_type, subtitle: `상담 · ${con.status}`, href: `/consultations/${con.id}` })),
+    ...((repairs as unknown as Array<{ id: string; repair_number: string; status: string; total_cost: number | null; created_at: string }>) || []).map((r) => ({ type: 'repair' as const, date: r.created_at, id: r.id, title: r.repair_number || '복원수리', subtitle: `복원수리 · ${r.status}`, amount: r.total_cost || 0, href: `/repairs/${r.id}` })),
+  ].sort((a, b) => b.date.localeCompare(a.date));
+
+  const TIMELINE_ICON = { sale: ShoppingBag, contract: FileSignature, consultation: MessageSquare, repair: Wrench };
+  const TIMELINE_COLOR = { sale: 'text-green-600 bg-green-50', contract: 'text-purple-600 bg-purple-50', consultation: 'text-blue-600 bg-blue-50', repair: 'text-orange-600 bg-orange-50' };
 
   return (
     <>
@@ -290,86 +302,36 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           </Card>
         </div>
 
-        {/* 판매내역 */}
-        {sales.length > 0 && (
+        {/* 통합 타임라인 */}
+        {timeline.length > 0 && (
           <Card>
             <h3 className="text-sm font-bold text-indigo-black mb-3 flex items-center gap-2">
-              <ShoppingBag size={16} />
-              판매내역 ({sales.length})
+              <Clock size={16} />
+              거래 이력 ({timeline.length})
             </h3>
-            <div className="space-y-2">
-              {sales.map((s) => (
-                <div
-                  key={s.id}
-                  onClick={() => router.push(`/sales/${s.id}`)}
-                  className="flex items-center justify-between py-2 border-b border-neutral-50 last:border-0 cursor-pointer hover:bg-warm-ivory/40 -mx-1 px-1 rounded transition"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{s.sale_number}</p>
-                    <p className="text-xs text-neutral-500">{formatDate(s.sale_date)}</p>
+            <div className="space-y-1">
+              {timeline.map((item) => {
+                const Icon = TIMELINE_ICON[item.type];
+                const color = TIMELINE_COLOR[item.type];
+                return (
+                  <div
+                    key={`${item.type}-${item.id}`}
+                    onClick={() => item.href && router.push(item.href)}
+                    className={`flex items-center gap-3 py-2.5 border-b border-neutral-50 last:border-0 ${item.href ? 'cursor-pointer hover:bg-warm-ivory/40' : ''} -mx-1 px-1 rounded transition`}
+                  >
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
+                      <Icon size={14} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{item.title}</p>
+                      <p className="text-xs text-neutral-500">{item.subtitle} · {formatDate(item.date)}</p>
+                    </div>
+                    {item.amount !== undefined && item.amount > 0 && (
+                      <p className="text-sm font-bold text-neutral-800 shrink-0">{formatKRW(item.amount)}</p>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold">{formatKRW(s.paid_amount)}</p>
-                    <p className="text-xs text-neutral-500">{PAYMENT_STATUS_LABEL[s.payment_status] || s.payment_status}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
-        {/* 계약서 */}
-        {contracts.length > 0 && (
-          <Card>
-            <h3 className="text-sm font-bold text-indigo-black mb-3 flex items-center gap-2">
-              <FileSignature size={16} />
-              계약서 ({contracts.length})
-            </h3>
-            <div className="space-y-2">
-              {contracts.map((ct) => (
-                <div
-                  key={ct.id}
-                  onClick={() => router.push(`/contracts/${ct.id}`)}
-                  className="flex items-center justify-between py-2 border-b border-neutral-50 last:border-0 cursor-pointer hover:bg-warm-ivory/40 -mx-1 px-1 rounded transition"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{ct.contract_number}</p>
-                    <p className="text-xs text-neutral-500">{formatDate(ct.created_at)}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold">{formatKRW(ct.final_amount)}</p>
-                    <p className="text-xs text-neutral-500">{CONTRACT_STATUS_LABEL[ct.status] || ct.status}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
-        {/* 상담내역 */}
-        {consultations.length > 0 && (
-          <Card>
-            <h3 className="text-sm font-bold text-indigo-black mb-3 flex items-center gap-2">
-              <MessageSquare size={16} />
-              상담내역 ({consultations.length})
-            </h3>
-            <div className="space-y-2">
-              {consultations.map((con) => (
-                <div
-                  key={con.id}
-                  className="flex items-center justify-between py-2 border-b border-neutral-50 last:border-0"
-                >
-                  <div>
-                    <p className="text-sm font-medium">
-                      {CONSULTATION_TYPE_LABEL[con.consultation_type] || con.consultation_type}
-                    </p>
-                    <p className="text-xs text-neutral-500">
-                      {con.visit_date ? formatDate(con.visit_date) : formatDate(con.created_at)}
-                    </p>
-                  </div>
-                  <Badge className="bg-neutral-100 text-neutral-600">{con.status}</Badge>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
         )}
