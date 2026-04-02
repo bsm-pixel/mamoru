@@ -42,8 +42,12 @@ export async function GET(
     if (customerRes.error) throw customerRes.error;
 
     // 판매 합계 계산
-    const sales = salesRes.data || [];
-    const totalSalesAmount = sales.reduce((s: number, r: { paid_amount: number }) => s + (r.paid_amount || 0), 0);
+    const sales = (salesRes.data || []) as Array<{ paid_amount: number; sale_date: string; cancelled_at?: string }>;
+    const activeSales = sales.filter((s) => !s.cancelled_at);
+    const totalSalesAmount = activeSales.reduce((s, r) => s + (r.paid_amount || 0), 0);
+    const lastSaleDate = activeSales.length > 0
+      ? activeSales.sort((a, b) => b.sale_date.localeCompare(a.sale_date))[0].sale_date
+      : null;
 
     return NextResponse.json({
       customer: customerRes.data,
@@ -52,8 +56,9 @@ export async function GET(
       consultations: consultationsRes.data || [],
       repairs: repairsRes.data || [],
       summary: {
-        totalSales: sales.length,
+        totalSales: activeSales.length,
         totalSalesAmount,
+        lastSaleDate,
       },
     });
   } catch (err) {

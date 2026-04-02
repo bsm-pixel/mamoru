@@ -267,7 +267,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         </Card>
 
         {/* 요약 카드 */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Card>
             <p className="text-xs text-neutral-500">총 판매건수</p>
             <p className="text-lg font-bold text-indigo-black">{summary.totalSales}</p>
@@ -280,6 +280,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <p className="text-xs text-neutral-500">미수금</p>
             <p className={`text-lg font-bold ${c.outstanding_balance > 0 ? 'text-red-500' : 'text-neutral-400'}`}>
               {formatKRW(c.outstanding_balance)}
+            </p>
+          </Card>
+          <Card>
+            <p className="text-xs text-neutral-500">최근 거래일</p>
+            <p className="text-sm font-bold text-neutral-700">
+              {(summary as Record<string, unknown>).lastSaleDate ? formatDate((summary as Record<string, unknown>).lastSaleDate as string) : '-'}
             </p>
           </Card>
         </div>
