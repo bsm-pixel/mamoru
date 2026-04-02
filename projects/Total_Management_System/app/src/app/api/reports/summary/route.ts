@@ -178,12 +178,40 @@ export async function GET(req: NextRequest) {
       .gt('outstanding_balance', 0)
       .order('outstanding_balance', { ascending: false });
 
-    const receivables = (receivablesRaw || []).map((c: { id: string; name: string; company_name: string; outstanding_balance: number }) => ({
-      id: c.id,
-      name: c.company_name || c.name,
-      outstanding: c.outstanding_balance,
-    }));
+    // 미결제 판매 건에서 가장 오래된 날짜 조회 (에이징용)
+    const receivableIds = (receivablesRaw || []).map((c: { id: string }) => c.id);
+    let oldestSaleMap: Record<string, string> = {};
+    if (receivableIds.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: unpaidSales } = await (supabase as any)
+        .from('offline_sales')
+        .select('customer_id, sale_date')
+        .in('customer_id', receivableIds)
+        .in('payment_status', ['unpaid', 'partial'])
+        .is('cancelled_at', null)
+        .order('sale_date', { ascending: true });
+      for (const s of (unpaidSales || [])) {
+        if (!oldestSaleMap[s.customer_id]) oldestSaleMap[s.customer_id] = s.sale_date;
+      }
+    }
+
+    const now = new Date();
+    const receivables = (receivablesRaw || []).map((c: { id: string; name: string; company_name: string; outstanding_balance: number }) => {
+      const oldest = oldestSaleMap[c.id];
+      const daysOverdue = oldest ? Math.floor((now.getTime() - new Date(oldest).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+      const aging = daysOverdue <= 30 ? '30일이내' : daysOverdue <= 60 ? '30~60일' : daysOverdue <= 90 ? '60~90일' : '90일초과';
+      return { id: c.id, name: c.company_name || c.name, outstanding: c.outstanding_balance, daysOverdue, aging };
+    });
     const totalReceivables = receivables.reduce((s: number, r: { outstanding: number }) => s + r.outstanding, 0);
+
+    // 에이징 요약
+    type RItem = { outstanding: number; daysOverdue: number };
+    const agingSummary = {
+      within30: receivables.filter((r: RItem) => r.daysOverdue <= 30).reduce((s: number, r: RItem) => s + r.outstanding, 0),
+      d30to60: receivables.filter((r: RItem) => r.daysOverdue > 30 && r.daysOverdue <= 60).reduce((s: number, r: RItem) => s + r.outstanding, 0),
+      d60to90: receivables.filter((r: RItem) => r.daysOverdue > 60 && r.daysOverdue <= 90).reduce((s: number, r: RItem) => s + r.outstanding, 0),
+      over90: receivables.filter((r: RItem) => r.daysOverdue > 90).reduce((s: number, r: RItem) => s + r.outstanding, 0),
+    };
 
     // 9) 복원수리 매출 집계 (paid_at 기준)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -223,7 +251,7 @@ export async function GET(req: NextRequest) {
       by_product: byProduct,
       by_supplier: supplierRanking,
       payables: { items: payables, total: totalPayables },
-      receivables: { items: receivables, total: totalReceivables },
+      receivables: { items: receivables, total: totalReceivables, aging: agingSummary },
       daily: { sales: dailySales, purchases: dailyPurchases, repairs: dailyRepairs },
       details: { sales, purchases, repairs: repairSales },
     });

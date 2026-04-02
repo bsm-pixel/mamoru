@@ -386,23 +386,50 @@ export default function ReportsPage() {
                   )}
                 </Card>
 
-                {/* 미수금 */}
+                {/* 미수금 + 에이징 */}
                 <Card>
                   <div className="flex items-center gap-2 mb-3">
                     <Users size={16} className="text-amber-600" />
                     <h3 className="text-sm font-bold text-indigo-black">미수금</h3>
                     <span className="ml-auto text-sm font-bold text-amber-600">{formatKRW(data.receivables.total)}</span>
                   </div>
+                  {/* 에이징 바 */}
+                  {(() => {
+                    const aging = (data.receivables as unknown as { aging?: { within30: number; d30to60: number; d60to90: number; over90: number } }).aging;
+                    if (!aging) return null;
+                    return (
+                      <div className="grid grid-cols-4 gap-1 mb-3">
+                        {[
+                          { label: '30일이내', amount: aging.within30, color: 'bg-green-100 text-green-700' },
+                          { label: '30~60일', amount: aging.d30to60, color: 'bg-yellow-100 text-yellow-700' },
+                          { label: '60~90일', amount: aging.d60to90, color: 'bg-orange-100 text-orange-700' },
+                          { label: '90일+', amount: aging.over90, color: 'bg-red-100 text-red-700' },
+                        ].map((a) => (
+                          <div key={a.label} className={`rounded p-1.5 text-center ${a.color}`}>
+                            <p className="text-[10px] font-medium">{a.label}</p>
+                            <p className="text-xs font-bold">{formatKRW(a.amount || 0)}</p>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                   {data.receivables.items.length === 0 ? (
                     <p className="text-xs text-neutral-400 text-center py-3">미수금 없음</p>
                   ) : (
                     <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {data.receivables.items.map((r) => (
-                        <Link key={r.id} href={`/customers/${r.id}`} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0 hover:bg-warm-ivory/40 transition rounded px-1">
-                          <p className="text-sm font-medium">{r.name}</p>
-                          <span className="text-sm font-bold text-amber-600">{formatKRW(r.outstanding)}</span>
-                        </Link>
-                      ))}
+                      {data.receivables.items.map((r) => {
+                        const days = (r as unknown as Record<string, unknown>).daysOverdue as number || 0;
+                        const agingColor = days <= 30 ? 'text-green-600' : days <= 60 ? 'text-yellow-600' : days <= 90 ? 'text-orange-600' : 'text-red-600';
+                        return (
+                          <Link key={r.id} href={`/customers/${r.id}`} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0 hover:bg-warm-ivory/40 transition rounded px-1">
+                            <div>
+                              <p className="text-sm font-medium">{r.name}</p>
+                              {days > 0 && <p className={`text-[10px] font-medium ${agingColor}`}>{days}일 경과</p>}
+                            </div>
+                            <span className="text-sm font-bold text-amber-600">{formatKRW(r.outstanding)}</span>
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </Card>
