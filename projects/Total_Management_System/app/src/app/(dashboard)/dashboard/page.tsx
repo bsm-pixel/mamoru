@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { HubCategoryCard } from '@/components/dashboard/hub-category-card';
 import { Card } from '@/components/ui/card';
@@ -21,6 +22,21 @@ function fmtKRW(n: number) {
 
 export default function DashboardPage() {
   const { data: stats, isLoading } = useHubStats();
+
+  // KPI: 월 목표 (localStorage)
+  const [monthGoal, setMonthGoal] = useState(0);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalInput, setGoalInput] = useState('');
+  useEffect(() => {
+    const saved = localStorage.getItem('mamoru_month_goal');
+    if (saved) setMonthGoal(parseInt(saved) || 0);
+  }, []);
+  const saveGoal = () => {
+    const v = parseInt(goalInput) || 0;
+    setMonthGoal(v);
+    localStorage.setItem('mamoru_month_goal', String(v));
+    setEditingGoal(false);
+  };
   const { data: outstanding } = useOutstandingAlert();
   const { data: todayConsults } = useTodayConsultations();
   const { data: lowStock } = useLowStockAlert();
@@ -56,6 +72,45 @@ export default function DashboardPage() {
       <Topbar title="대시보드" />
 
       <div className="px-4 md:px-6 py-4 space-y-5">
+        {/* KPI: 이번달 매출 달성률 */}
+        {monthGoal > 0 && stats && (() => {
+          const current = (stats.sales.monthAmount || 0) + (stats.repairs?.monthRepairAmount || 0);
+          const pct = Math.min(Math.round((current / monthGoal) * 100), 100);
+          const color = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-red-500';
+          const textColor = pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-yellow-600' : 'text-red-500';
+          return (
+            <div className="bg-white rounded-lg border border-neutral-200 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-neutral-500">이번달 매출 목표</p>
+                <button onClick={() => { setGoalInput(String(monthGoal)); setEditingGoal(true); }} className="text-[10px] text-neutral-400 hover:text-neutral-600">수정</button>
+              </div>
+              <div className="flex items-end gap-3 mb-2">
+                <span className={`text-2xl font-bold ${textColor}`}>{pct}%</span>
+                <span className="text-sm text-neutral-500">{fmtKRW(current)} / {fmtKRW(monthGoal)}</span>
+              </div>
+              <div className="w-full h-2.5 bg-neutral-100 rounded-full overflow-hidden">
+                <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* 목표 미설정 or 편집 */}
+        {(monthGoal === 0 || editingGoal) && (
+          <div className="bg-neutral-50 rounded-lg border border-neutral-200 p-3 flex items-center gap-3">
+            <p className="text-xs text-neutral-500 shrink-0">{editingGoal ? '월 목표 수정' : '월 매출 목표 설정'}</p>
+            <input
+              type="number"
+              value={goalInput}
+              onChange={(e) => setGoalInput(e.target.value)}
+              placeholder="예: 5000000"
+              className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm"
+            />
+            <button onClick={saveGoal} className="px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-xs font-medium">저장</button>
+            {editingGoal && <button onClick={() => setEditingGoal(false)} className="text-xs text-neutral-400">취소</button>}
+          </div>
+        )}
+
         {isLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-40 w-full" />
