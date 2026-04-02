@@ -1,5 +1,18 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-03-25
+> 최종 업데이트: 2026-04-02 | IA 개편 + 수정/거래명세서 추가
+>
+> **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §5, [TMS_PROCESS_MAP.md](TMS_PROCESS_MAP.md) 참조
+
+### 04-02 추가 기능
+- 사이드바: '판매 입력' + '판매 조회' 분리
+- 판매 조회: 주간/월간/미수금 통계 카드
+- 판매 입력: 제품 목록/검색형 + 판매일 선택 + 수량 직접입력
+- 판매 수정: 금액/할인/결제 편집 + 제품 추가/삭제 (내부 취소→재생성)
+- 거래명세서: A4 모달 (인쇄 + 이미지 저장)
+- 계약서→판매 연결 (contract_id)
+- 시리얼 Race Condition 방지 (낙관적 잠금)
+- raw_stock B2B 취소 시 복원
+- outstanding_balance 할인 반영
 
 ---
 

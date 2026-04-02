@@ -1,8 +1,11 @@
 # MAMORU TMS — 시스템 아키텍처 & 프로세스 흐름도
 
-> 최종 수정: 2026-04-01 | GAS 의존 완전 제거 완료 (상담+복원수리 모두 Vercel)
+> 최종 수정: 2026-04-02 | Tier 1~3 기능 로드맵 구현 완료 + 회계 모듈 확장
 
 이 문서는 TMS 전체 시스템의 **마스터 레퍼런스**이다.
+
+> **모듈별 상세**: [상담](TMS_FLOW_CONSULTATION.md) | [복원수리](TMS_FLOW_REPAIR.md) | [주문](TMS_FLOW_ORDERS.md) | [판매](TMS_FLOW_SALES.md) | [재고](TMS_FLOW_INVENTORY.md) | [회계](TMS_FLOW_ACCOUNTING.md) | [고객](TMS_FLOW_CUSTOMERS.md)
+> **전체 연동 지도**: [프로세스 맵](TMS_PROCESS_MAP.md)
 기능 추가/수정 시 이 문서에서 관련 파일을 찾고, 작업 후 변경사항을 반영한다.
 
 > 모듈별 상세 흐름: [상담](TMS_FLOW_CONSULTATION.md) | [복원수리](TMS_FLOW_REPAIR.md) | [주문](TMS_FLOW_ORDERS.md) | [판매](TMS_FLOW_SALES.md) | [재고](TMS_FLOW_INVENTORY.md)
