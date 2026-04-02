@@ -71,6 +71,7 @@ export const config = {
     '/reports/:path*',
     '/expenses/:path*',
     '/cashflow/:path*',
+    '/tax-invoices/:path*',
     '/reviews/:path*',
     '/settings/:path*',
     '/login',
