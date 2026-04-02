@@ -87,9 +87,18 @@ export interface ReceivableItem {
   outstanding: number;
 }
 
+export interface RepairSalesSummary {
+  count: number;
+  total: number;
+  service_cost_total: number;
+  shipping_fee_total: number;
+}
+
 export interface ReportData {
   period: { from: string; to: string };
   sales: SaleSummary;
+  repair_sales?: RepairSalesSummary;
+  total_revenue?: number;
   purchases: PurchaseSummary;
   vat: VATSummary;
   margin: MarginSummary;
@@ -100,6 +109,7 @@ export interface ReportData {
   daily: {
     sales: Record<string, number>;
     purchases: Record<string, number>;
+    repairs?: Record<string, number>;
   };
   details: {
     sales: SaleDetail[];

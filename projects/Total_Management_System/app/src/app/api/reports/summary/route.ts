@@ -185,9 +185,38 @@ export async function GET(req: NextRequest) {
     }));
     const totalReceivables = receivables.reduce((s: number, r: { outstanding: number }) => s + r.outstanding, 0);
 
+    // 9) 복원수리 매출 집계 (paid_at 기준)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: repairSalesRaw } = await (supabase as any)
+      .from('repairs')
+      .select('id, as_id, name, phone, service_cost, shipping_fee, total_amount, paid_at, created_at')
+      .not('paid_at', 'is', null)
+      .gte('paid_at', `${fromDate}T00:00:00`)
+      .lte('paid_at', `${toDate}T23:59:59`)
+      .not('status', 'eq', 'cancelled');
+
+    const repairSales = repairSalesRaw || [];
+    const repairSalesSummary = {
+      count: repairSales.length,
+      total: repairSales.reduce((s: number, r: { total_amount: number }) => s + (r.total_amount || 0), 0),
+      service_cost_total: repairSales.reduce((s: number, r: { service_cost: number }) => s + (r.service_cost || 0), 0),
+      shipping_fee_total: repairSales.reduce((s: number, r: { shipping_fee: number }) => s + (r.shipping_fee || 0), 0),
+    };
+
+    // 복원수리 일별 매출
+    const dailyRepairs: Record<string, number> = {};
+    for (const r of repairSales) {
+      const d = (r.paid_at as string).slice(0, 10);
+      dailyRepairs[d] = (dailyRepairs[d] || 0) + (r.total_amount || 0);
+    }
+
+    const totalRevenue = saleSummary.total + repairSalesSummary.total;
+
     return NextResponse.json({
       period: { from: fromDate, to: toDate },
       sales: saleSummary,
+      repair_sales: repairSalesSummary,
+      total_revenue: totalRevenue,
       purchases: purchaseSummary,
       vat: vatSummary,
       margin,
@@ -195,8 +224,8 @@ export async function GET(req: NextRequest) {
       by_supplier: supplierRanking,
       payables: { items: payables, total: totalPayables },
       receivables: { items: receivables, total: totalReceivables },
-      daily: { sales: dailySales, purchases: dailyPurchases },
-      details: { sales, purchases },
+      daily: { sales: dailySales, purchases: dailyPurchases, repairs: dailyRepairs },
+      details: { sales, purchases, repairs: repairSales },
     });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

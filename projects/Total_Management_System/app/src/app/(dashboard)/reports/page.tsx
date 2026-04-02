@@ -62,6 +62,7 @@ export default function ReportsPage() {
   const [preset, setPreset] = useState('this_month');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
+  const [revenueTab, setRevenueTab] = useState('all');
 
   const period = customFrom && customTo
     ? { from: customFrom, to: customTo }
@@ -114,6 +115,25 @@ export default function ReportsPage() {
           </div>
         ) : data ? (
           <>
+            {/* 매출 탭 바 */}
+            <div className="flex gap-1">
+              {[
+                { key: 'all', label: '전체 매출' },
+                { key: 'product', label: '상품 판매' },
+                { key: 'repair', label: '복원수리' },
+              ].map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setRevenueTab(t.key)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    revenueTab === t.key ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
             {/* 요약 카드 4개 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* 매출 */}
@@ -122,14 +142,39 @@ export default function ReportsPage() {
                   <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
                     <TrendingUp size={18} className="text-green-600" />
                   </div>
-                  <h3 className="text-sm font-bold text-indigo-black">매출</h3>
+                  <h3 className="text-sm font-bold text-indigo-black">
+                    {revenueTab === 'all' ? '전체 매출' : revenueTab === 'repair' ? '복원수리 매출' : '상품 매출'}
+                  </h3>
                 </div>
-                <p className="text-2xl font-bold text-green-600">{formatKRW(data.sales.total)}</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatKRW(
+                    revenueTab === 'all' ? (data.total_revenue || data.sales.total)
+                    : revenueTab === 'repair' ? (data.repair_sales?.total || 0)
+                    : data.sales.total
+                  )}
+                </p>
                 <div className="mt-2 space-y-1 text-xs text-neutral-500">
-                  <div className="flex justify-between"><span>판매 건수</span><span>{data.sales.count}건</span></div>
-                  <div className="flex justify-between"><span>공급가액</span><span>{formatKRW(data.sales.supply)}</span></div>
-                  <div className="flex justify-between"><span>부가세</span><span>{formatKRW(data.sales.vat)}</span></div>
-                  <div className="flex justify-between"><span>할인</span><span>-{formatKRW(data.sales.discount)}</span></div>
+                  {revenueTab !== 'repair' && (
+                    <>
+                      <div className="flex justify-between"><span>상품 판매</span><span>{data.sales.count}건 · {formatKRW(data.sales.total)}</span></div>
+                    </>
+                  )}
+                  {revenueTab !== 'product' && data.repair_sales && (
+                    <div className="flex justify-between"><span>복원수리</span><span>{data.repair_sales.count}건 · {formatKRW(data.repair_sales.total)}</span></div>
+                  )}
+                  {revenueTab === 'repair' && data.repair_sales && (
+                    <>
+                      <div className="flex justify-between"><span>수리비</span><span>{formatKRW(data.repair_sales.service_cost_total)}</span></div>
+                      <div className="flex justify-between"><span>수거/배송비</span><span>{formatKRW(data.repair_sales.shipping_fee_total)}</span></div>
+                    </>
+                  )}
+                  {revenueTab !== 'repair' && (
+                    <>
+                      <div className="flex justify-between"><span>공급가액</span><span>{formatKRW(data.sales.supply)}</span></div>
+                      <div className="flex justify-between"><span>부가세</span><span>{formatKRW(data.sales.vat)}</span></div>
+                      <div className="flex justify-between"><span>할인</span><span>-{formatKRW(data.sales.discount)}</span></div>
+                    </>
+                  )}
                 </div>
                 {/* 결제방식별 */}
                 {Object.keys(data.sales.by_method).length > 0 && (
