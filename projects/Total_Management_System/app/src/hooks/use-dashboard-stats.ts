@@ -332,7 +332,15 @@ export function useRepairDashboardStats() {
       const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
       const monthISO = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-      const [counts, staleCount, unpaidCount, intakeNewCount, monthRepairsPaid, monthSalesRepairItems] = await Promise.all([
+      // 오늘/이번주 작업 일지용
+      const todayStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T00:00:00+09:00`;
+      const dow = now.getDay();
+      const mondayOff = dow === 0 ? -6 : 1 - dow;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + mondayOff);
+      const weekStartISO = monday.toISOString();
+
+      const [counts, staleCount, unpaidCount, intakeNewCount, monthRepairsPaid, monthSalesRepairItems, todayCompleted, weekCompleted] = await Promise.all([
         // 상태별 count 병렬
         Promise.all(
           statuses.map((s) =>
@@ -375,6 +383,18 @@ export function useRepairDashboardStats() {
           .ilike('product_name', '%복원수리%')
           .gte('offline_sales.sale_date', monthStart)
           .is('offline_sales.cancelled_at', null),
+        // 오늘 작업 완료 (shipped/delivered/completed 상태로 변경된 건)
+        (supabase as any)
+          .from('repair_history')
+          .select('repair_id, to_status, repairs:repair_id(qty_mamoru, qty_other)')
+          .in('to_status', ['shipped', 'delivered', 'completed'])
+          .gte('created_at', todayStart),
+        // 이번주 작업 완료
+        (supabase as any)
+          .from('repair_history')
+          .select('repair_id, to_status, repairs:repair_id(qty_mamoru, qty_other)')
+          .in('to_status', ['shipped', 'delivered', 'completed'])
+          .gte('created_at', weekStartISO),
       ]);
 
       const byStatus = Object.fromEntries(counts.map((c) => [c.status, c.count])) as Record<string, number>;
@@ -407,6 +427,29 @@ export function useRepairDashboardStats() {
           return a + b;
         })(),
         monthRepairCount: (monthRepairsPaid.data?.length || 0) + (monthSalesRepairItems.data?.length || 0),
+        // 작업 일지
+        todayWork: (() => {
+          const rows = (todayCompleted.data || []) as Array<{ repair_id: string; repairs: { qty_mamoru: number; qty_other: number } | null }>;
+          const unique = new Set(rows.map(r => r.repair_id));
+          let mamoru = 0, other = 0;
+          unique.forEach(id => {
+            const row = rows.find(r => r.repair_id === id);
+            mamoru += row?.repairs?.qty_mamoru || 0;
+            other += row?.repairs?.qty_other || 0;
+          });
+          return { count: unique.size, mamoru, other };
+        })(),
+        weekWork: (() => {
+          const rows = (weekCompleted.data || []) as Array<{ repair_id: string; repairs: { qty_mamoru: number; qty_other: number } | null }>;
+          const unique = new Set(rows.map(r => r.repair_id));
+          let mamoru = 0, other = 0;
+          unique.forEach(id => {
+            const row = rows.find(r => r.repair_id === id);
+            mamoru += row?.repairs?.qty_mamoru || 0;
+            other += row?.repairs?.qty_other || 0;
+          });
+          return { count: unique.size, mamoru, other };
+        })(),
       };
     },
   });

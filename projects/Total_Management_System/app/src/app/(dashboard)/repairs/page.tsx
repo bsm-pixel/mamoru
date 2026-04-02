@@ -44,6 +44,30 @@ export default function RepairsPage() {
           </div>
         )}
 
+        {/* 작업 일지 */}
+        {stats && (stats.todayWork?.count > 0 || stats.weekWork?.count > 0) && (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white rounded-lg border border-neutral-200 p-3">
+              <p className="text-xs text-neutral-500 mb-1">오늘 작업 완료</p>
+              <p className="text-lg font-bold text-neutral-900">
+                {(stats.todayWork?.mamoru || 0) + (stats.todayWork?.other || 0)}정
+              </p>
+              <p className="text-[11px] text-neutral-400">
+                마모루 {stats.todayWork?.mamoru || 0} · 타사 {stats.todayWork?.other || 0} ({stats.todayWork?.count || 0}건)
+              </p>
+            </div>
+            <div className="bg-white rounded-lg border border-neutral-200 p-3">
+              <p className="text-xs text-neutral-500 mb-1">이번주 누적</p>
+              <p className="text-lg font-bold text-neutral-900">
+                {(stats.weekWork?.mamoru || 0) + (stats.weekWork?.other || 0)}정
+              </p>
+              <p className="text-[11px] text-neutral-400">
+                마모루 {stats.weekWork?.mamoru || 0} · 타사 {stats.weekWork?.other || 0} ({stats.weekWork?.count || 0}건)
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* 상단: 요약 카드 + 새로고침 */}
         <div className="flex items-center gap-3">
           <div className="flex gap-2 flex-1 min-w-0">
