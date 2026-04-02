@@ -69,6 +69,7 @@ export const config = {
     '/inventory/:path*',
     '/serials/:path*',
     '/reports/:path*',
+    '/expenses/:path*',
     '/reviews/:path*',
     '/settings/:path*',
     '/login',

@@ -20,6 +20,7 @@ import {
   PackageOpen,
   Search,
   FileSignature,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -43,6 +44,7 @@ const iconMap: Record<string, LucideIcon> = {
   PackageOpen,
   Search,
   FileSignature,
+  Wallet,
 };
 
 export function Sidebar() {

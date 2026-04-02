@@ -67,6 +67,7 @@ export const NAV_GROUPS: NavGroup[] = [
     group: '회계',
     items: [
       { label: '회계', href: '/reports', icon: 'BarChart3', matchPrefix: '/reports' },
+      { label: '경비', href: '/expenses', icon: 'Wallet', matchPrefix: '/expenses' },
     ],
   },
   {
