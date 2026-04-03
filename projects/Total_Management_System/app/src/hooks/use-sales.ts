@@ -18,6 +18,8 @@ export function useSales(filters?: {
   tab?: SalesTab;
   channel?: SalesChannel;
   dateRange?: SalesDateRange;
+  dateFrom?: string;
+  dateTo?: string;
 }) {
   const supabase = createClient();
   const page = filters?.page || 1;
@@ -57,22 +59,27 @@ export function useSales(filters?: {
         }
       }
 
-      // 기간 필터
-      if (filters?.dateRange && filters.dateRange !== 'all') {
+      // 기간 필터: 커스텀 날짜 범위 우선, 없으면 프리셋
+      if (filters?.dateFrom) {
+        query = query.gte('sale_date', filters.dateFrom);
+      } else if (filters?.dateRange && filters.dateRange !== 'all') {
         const now = new Date();
-        let dateFrom: string;
+        let df: string;
         if (filters.dateRange === 'today') {
-          dateFrom = now.toISOString().slice(0, 10);
+          df = now.toISOString().slice(0, 10);
         } else if (filters.dateRange === 'week') {
           const d = new Date(now);
           d.setDate(d.getDate() - 7);
-          dateFrom = d.toISOString().slice(0, 10);
+          df = d.toISOString().slice(0, 10);
         } else {
           const d = new Date(now);
           d.setMonth(d.getMonth() - 1);
-          dateFrom = d.toISOString().slice(0, 10);
+          df = d.toISOString().slice(0, 10);
         }
-        query = query.gte('sale_date', dateFrom);
+        query = query.gte('sale_date', df);
+      }
+      if (filters?.dateTo) {
+        query = query.lte('sale_date', filters.dateTo);
       }
 
       // 검색

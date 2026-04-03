@@ -70,9 +70,11 @@ export default function SalesPage() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [tab, setTab] = useState<SalesTab>('today'); // 기본 탭: 오늘
+  const [tab, setTab] = useState<SalesTab>('all'); // 기본 탭: 전체
   const [channel, setChannel] = useState<SalesChannel | 'b2b'>('all');
   const [dateRange, setDateRange] = useState<SalesDateRange>('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
   const [isLg, setIsLg] = useState(false);
 
@@ -84,7 +86,7 @@ export default function SalesPage() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  const { data, isLoading } = useSales({ search, page, limit: 20, tab, channel, dateRange });
+  const { data, isLoading } = useSales({ search, page, limit: 20, tab, channel, dateRange, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined });
   const { data: tabCounts } = useSalesTabCounts();
   const { data: stats } = useSalesStats();
   const { data: contractData } = useContracts({ status: 'signed', limit: 100 });
@@ -189,7 +191,7 @@ export default function SalesPage() {
               }`}
             >
               {t.label}
-              {count > 0 && (
+              {count > 0 && (t.key === 'today' || t.key === 'unpaid') && (
                 <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
                   active ? 'bg-neutral-900 text-white' : 'bg-neutral-200 text-neutral-500'
                 }`}>
@@ -218,15 +220,42 @@ export default function SalesPage() {
             </button>
           ))}
         </div>
-        <select
-          value={dateRange}
-          onChange={(e) => handleDateRangeChange(e.target.value as SalesDateRange)}
-          className="text-xs border border-neutral-200 rounded-md px-2 py-1 text-neutral-600 bg-white"
-        >
+        {/* 기간 프리셋 칩 */}
+        <div className="flex gap-1">
           {DATE_RANGES.map((d) => (
-            <option key={d.key} value={d.key}>{d.label}</option>
+            <button
+              key={d.key}
+              onClick={() => { handleDateRangeChange(d.key); setDateFrom(''); setDateTo(''); }}
+              className={`px-2.5 py-1 text-xs rounded-full border transition ${
+                dateRange === d.key && !dateFrom
+                  ? 'bg-neutral-900 text-white border-neutral-900'
+                  : 'bg-white text-neutral-500 border-neutral-200 hover:border-neutral-400'
+              }`}
+            >
+              {d.label}
+            </button>
           ))}
-        </select>
+        </div>
+
+        {/* 날짜 범위 직접 선택 */}
+        <div className="flex items-center gap-1.5 ml-auto">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => { setDateFrom(e.target.value); setDateRange('all'); setPage(1); }}
+            className="h-7 px-2 rounded-md border border-neutral-200 text-xs bg-white"
+          />
+          <span className="text-xs text-neutral-400">~</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => { setDateTo(e.target.value); setDateRange('all'); setPage(1); }}
+            className="h-7 px-2 rounded-md border border-neutral-200 text-xs bg-white"
+          />
+          {(dateFrom || dateTo) && (
+            <button onClick={() => { setDateFrom(''); setDateTo(''); }} className="text-[10px] text-neutral-400 hover:text-neutral-600">초기화</button>
+          )}
+        </div>
       </div>
 
       {/* 판매 목록 */}
