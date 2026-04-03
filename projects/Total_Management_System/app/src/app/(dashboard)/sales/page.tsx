@@ -334,7 +334,7 @@ const SaleRow = memo(function SaleRow({ sale, selected, onClick }: { sale: Offli
         </div>
       </div>
       <div className="text-right shrink-0">
-        <span className={`text-sm font-bold ${isCancelled ? 'line-through text-neutral-400' : ''}`}>{formatKRW(sale.paid_amount)}</span>
+        <span className={`text-sm font-bold ${isCancelled ? 'line-through text-neutral-400' : ''}`}>{formatKRW(sale.total_amount)}</span>
       </div>
     </div>
   );
