@@ -227,8 +227,9 @@ export async function POST(req: NextRequest) {
             .limit(1);
 
           if (existing && existing.length > 0) {
-            // 이미 있으면 sold로 전환
+            // 이미 있으면 sold로 전환 + product_id 업데이트
             await db.from('product_serials').update({
+              product_id: item.product_id || null,
               status: 'sold',
               sold_via: 'offline',
               offline_sale_id: created.id,
