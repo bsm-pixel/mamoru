@@ -221,7 +221,7 @@ export function useSale(id: string) {
       const [saleRes, itemsRes, serialsRes] = await Promise.all([
         supabase.from('offline_sales').select('*').eq('id', id).single(),
         supabase.from('offline_sale_items').select('*').eq('sale_id', id),
-        supabase.from('product_serials').select('id, serial_number, product_id').eq('offline_sale_id', id),
+        supabase.from('product_serials').select('id, serial_number, product_id, sale_item_id').eq('offline_sale_id', id),
       ]);
       if (saleRes.error) throw saleRes.error;
       const sale = saleRes.data as OfflineSale;

@@ -167,25 +167,29 @@ export function SaleDetailPanel({ saleId }: Props) {
         <h4 className="text-xs font-semibold text-neutral-500 mb-2">판매 항목</h4>
         <div className="space-y-2">
           {(() => {
-            // 시리얼-항목 매칭: product_id 있으면 매칭, 없으면 순서대로 배분
-            type Sr = { id: string; serial_number: string; product_id: string | null };
+            // 시리얼-항목 매칭: sale_item_id 우선 → product_id → 순서 배분
+            type Sr = { id: string; serial_number: string; product_id: string | null; sale_item_id?: string | null };
             const allSerials = serials as Sr[];
-            const matched = allSerials.filter((sr) => sr.product_id);
-            const unmatched = allSerials.filter((sr) => !sr.product_id);
-            let unmatchedIdx = 0;
+            const usedIds = new Set<string>();
 
             return (items as OfflineSaleItem[]).map((item) => {
-              // product_id 매칭
-              const byProduct = matched.filter((sr) => sr.product_id === item.product_id);
-              // NULL 시리얼은 항목 수량만큼 순서대로 배분
-              const byOrder: Sr[] = [];
-              if (byProduct.length === 0) {
-                const take = Math.min(item.quantity, unmatched.length - unmatchedIdx);
-                for (let i = 0; i < take; i++) {
-                  byOrder.push(unmatched[unmatchedIdx++]);
-                }
-              }
-              const itemSerials = [...byProduct, ...byOrder];
+              // 1순위: sale_item_id로 정확 매칭
+              const bySaleItem = allSerials.filter((sr) => sr.sale_item_id === item.id && !usedIds.has(sr.id));
+              bySaleItem.forEach((sr) => usedIds.add(sr.id));
+
+              // 2순위: product_id 매칭 (sale_item_id 없는 경우)
+              const byProduct = bySaleItem.length === 0
+                ? allSerials.filter((sr) => sr.product_id && sr.product_id === item.product_id && !usedIds.has(sr.id))
+                : [];
+              byProduct.forEach((sr) => usedIds.add(sr.id));
+
+              // 3순위: 나머지 unmatched 순서 배분
+              const remaining = bySaleItem.length === 0 && byProduct.length === 0
+                ? allSerials.filter((sr) => !sr.product_id && !sr.sale_item_id && !usedIds.has(sr.id)).slice(0, item.quantity)
+                : [];
+              remaining.forEach((sr) => usedIds.add(sr.id));
+
+              const itemSerials = [...bySaleItem, ...byProduct, ...remaining];
 
               return (
                 <div key={item.id} className="py-1.5">

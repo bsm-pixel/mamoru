@@ -132,6 +132,9 @@ export async function POST(req: NextRequest) {
 
     if (saleError) throw saleError;
 
+    // 항목별 id 매핑 (시리얼 → sale_item 연결용)
+    const itemIdMap: Record<number, string> = {};
+
     // 시리얼 수량 서버 검증: 시리얼 지정 시 수량과 일치해야 함
     for (const item of items) {
       if (item.serial_ids && item.serial_ids.length > 0 && item.serial_ids.length !== item.quantity) {
@@ -164,11 +167,17 @@ export async function POST(req: NextRequest) {
         };
       });
 
-      const { error: itemsError } = await db
+      const { data: insertedItems, error: itemsError } = await db
         .from('offline_sale_items')
-        .insert(saleItems);
+        .insert(saleItems)
+        .select('id, product_id, product_name');
 
       if (itemsError) throw itemsError;
+
+      // 항목별 id 매핑 (시리얼 연결용) — 블록 밖에서도 접근 가능하도록
+      for (let i = 0; i < (insertedItems || []).length; i++) {
+        itemIdMap[i] = insertedItems[i].id;
+      }
     }
 
     // 시리얼 연결: previous_zone 저장 후 status → sold (낙관적 잠금)
@@ -213,8 +222,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 직접 입력 시리얼: product_serials에 자동 등록 + 즉시 sold
-    for (const item of items) {
+    // 직접 입력 시리얼: product_serials에 자동 등록 + 즉시 sold + sale_item_id 연결
+    for (let itemIdx = 0; itemIdx < items.length; itemIdx++) {
+      const item = items[itemIdx];
+      const saleItemId = itemIdMap[itemIdx] || null;
       const manualSerials = (item as Record<string, unknown>).manual_serials as string[] | undefined;
       if (manualSerials && manualSerials.length > 0) {
         for (const serialNumber of manualSerials) {
@@ -227,9 +238,10 @@ export async function POST(req: NextRequest) {
             .limit(1);
 
           if (existing && existing.length > 0) {
-            // 이미 있으면 sold로 전환 + product_id 업데이트
+            // 이미 있으면 sold로 전환 + product_id + sale_item_id 업데이트
             await db.from('product_serials').update({
               product_id: item.product_id || null,
+              sale_item_id: saleItemId,
               status: 'sold',
               sold_via: 'offline',
               offline_sale_id: created.id,
@@ -239,10 +251,11 @@ export async function POST(req: NextRequest) {
               previous_zone: 'ready',
             }).eq('id', existing[0].id);
           } else {
-            // 없으면 새로 생성 + 즉시 sold
+            // 없으면 새로 생성 + 즉시 sold + sale_item_id 연결
             await db.from('product_serials').insert({
               serial_number: serialNumber.trim(),
               product_id: item.product_id || null,
+              sale_item_id: saleItemId,
               status: 'sold',
               warehouse_zone: 'ready',
               previous_zone: 'ready',

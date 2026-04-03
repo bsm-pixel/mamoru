@@ -67,17 +67,32 @@ export async function GET(req: NextRequest) {
         .single();
       sale = data;
 
-      // product_id NULL인 경우 → 판매 항목의 product_name으로 대체
+      // product_id NULL인 경우 → sale_item_id로 정확 매칭, 없으면 판매 항목에서 추정
       if (!product && sale) {
-        const { data: saleItems } = await db
-          .from('offline_sale_items')
-          .select('product_name, sku, unit_price')
-          .eq('sale_id', serial.offline_sale_id)
-          .limit(5);
-        // 첫 번째 가위 항목(시리얼이 있는 제품)을 제품 정보로 사용
-        const matchItem = saleItems?.find((si: { product_name: string }) =>
-          si.product_name && !si.product_name.includes('복원수리')
-        ) || saleItems?.[0];
+        let matchItem = null;
+
+        // 1순위: sale_item_id로 정확 매칭
+        if (serial.sale_item_id) {
+          const { data: exactItem } = await db
+            .from('offline_sale_items')
+            .select('product_name, sku, unit_price')
+            .eq('id', serial.sale_item_id)
+            .single();
+          matchItem = exactItem;
+        }
+
+        // 2순위: 판매 항목에서 추정
+        if (!matchItem) {
+          const { data: saleItems } = await db
+            .from('offline_sale_items')
+            .select('product_name, sku, unit_price')
+            .eq('sale_id', serial.offline_sale_id)
+            .limit(5);
+          matchItem = saleItems?.find((si: { product_name: string }) =>
+            si.product_name && !si.product_name.includes('복원수리')
+          ) || saleItems?.[0];
+        }
+
         if (matchItem) {
           product = {
             id: null,
