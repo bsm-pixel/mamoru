@@ -126,14 +126,27 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
             </div>
           )}
 
-          {/* 모드 전환 */}
-          <button
-            type="button"
-            onClick={() => setManualMode(!manualMode)}
-            className="w-full text-center text-[10px] text-blue-500 hover:text-blue-700 pt-1.5 mt-1 border-t border-neutral-100"
-          >
-            {manualMode ? '← 등록된 시리얼에서 선택' : '시리얼 직접 입력 →'}
-          </button>
+          {/* 모드 전환 + 자동 생성 */}
+          <div className="flex items-center gap-2 pt-1.5 mt-1 border-t border-neutral-100">
+            <button type="button" onClick={() => setManualMode(!manualMode)}
+              className="text-[10px] text-blue-500 hover:text-blue-700">
+              {manualMode ? '← 등록된 시리얼' : '직접 입력 →'}
+            </button>
+            {manualMode && (
+              <button type="button" onClick={async () => {
+                try {
+                  const res = await fetch('/api/serials/batch');
+                  const data = await res.json();
+                  let next = data.next_start || 13790001;
+                  const existing = manualSerials.map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
+                  while (existing.includes(next)) next++;
+                  onManualSerialsChange?.([...manualSerials, String(next)]);
+                } catch { /* ignore */ }
+              }} className="ml-auto text-[10px] text-green-600 hover:text-green-800 font-medium">
+                자동 번호 생성
+              </button>
+            )}
+          </div>
         </div>
       )}
 

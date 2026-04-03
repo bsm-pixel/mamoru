@@ -736,6 +736,19 @@ function ManualSerialInput({ serials, onChange }: { serials: string[]; onChange:
             <button type="button" onClick={() => { if (input.trim()) { onChange([...serials, input.trim()]); setInput(''); } }}
               className="px-2 py-1 text-xs bg-neutral-900 text-white rounded">추가</button>
           </div>
+          <button type="button" onClick={async () => {
+            try {
+              const res = await fetch('/api/serials/batch');
+              const data = await res.json();
+              let next = data.next_start || 13790001;
+              // 이미 추가된 번호와 겹치면 +1
+              const existing = serials.map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
+              while (existing.includes(next)) next++;
+              onChange([...serials, String(next)]);
+            } catch { /* ignore */ }
+          }} className="text-[10px] text-green-600 hover:text-green-800 font-medium">
+            자동 번호 생성
+          </button>
         </div>
       )}
       {!open && serials.length > 0 && (
