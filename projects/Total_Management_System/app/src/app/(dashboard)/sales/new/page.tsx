@@ -409,6 +409,12 @@ function NewSaleContent() {
                           />
                         ) : item.product && (customerType === 'dealer' || customerType === 'academy') ? (
                           <p className="text-[10px] text-neutral-400 mt-1">보관창고에서 출고 (시리얼 미부여)</p>
+                        ) : !item.product ? (
+                          /* 직접입력 품목 — 시리얼 직접 입력만 가능 */
+                          <ManualSerialInput
+                            serials={item.manualSerials || []}
+                            onChange={(s) => updateManualSerials(key, s)}
+                          />
                         ) : null}
                       </div>
                     );
@@ -681,5 +687,45 @@ function NewSaleContent() {
         </div>
       </div>
     </>
+  );
+}
+
+/** 직접입력 품목용 시리얼 직접 입력 */
+function ManualSerialInput({ serials, onChange }: { serials: string[]; onChange: (s: string[]) => void }) {
+  const [input, setInput] = useState('');
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="mt-1">
+      <button type="button" onClick={() => setOpen(!open)}
+        className={`text-xs px-2 py-1 rounded transition ${serials.length > 0 ? 'bg-blue-50 text-blue-700' : 'bg-neutral-50 text-neutral-500 hover:bg-neutral-100'}`}>
+        # 시리얼 {serials.length > 0 ? `${serials.length}개` : '직접 입력'}
+      </button>
+      {open && (
+        <div className="mt-1 p-2 rounded border border-neutral-200 bg-white space-y-1.5">
+          {serials.map((s, i) => (
+            <div key={i} className="flex items-center gap-1.5">
+              <span className="font-mono text-xs text-neutral-700 flex-1">{s}</span>
+              <button type="button" onClick={() => onChange(serials.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600 text-xs">×</button>
+            </div>
+          ))}
+          <div className="flex gap-1.5">
+            <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && input.trim()) { e.preventDefault(); onChange([...serials, input.trim()]); setInput(''); } }}
+              placeholder="시리얼 번호 입력 후 엔터"
+              className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs font-mono placeholder:text-neutral-400" />
+            <button type="button" onClick={() => { if (input.trim()) { onChange([...serials, input.trim()]); setInput(''); } }}
+              className="px-2 py-1 text-xs bg-neutral-900 text-white rounded">추가</button>
+          </div>
+        </div>
+      )}
+      {!open && serials.length > 0 && (
+        <div className="mt-0.5 flex flex-wrap gap-1">
+          {serials.map((s, i) => (
+            <span key={i} className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-mono">{s}</span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
