@@ -1,5 +1,5 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-02 | IA 개편 + 수정/거래명세서 추가
+> 최종 업데이트: 2026-04-03 | 시리얼 직접입력/자동생성 + 송장생성 + 수정모달 전체필드 + 고객 주소검색
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §5, [TMS_PROCESS_MAP.md](TMS_PROCESS_MAP.md) 참조
 
