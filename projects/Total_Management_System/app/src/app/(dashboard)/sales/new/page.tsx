@@ -9,6 +9,7 @@ import { useProducts, useCreateSale } from '@/hooks/use-sales';
 import { formatKRW, calcVAT } from '@/lib/utils/format';
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
+import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
 import { SerialPicker } from '@/components/sales/serial-picker';
 import type { Product } from '@/lib/supabase/types';
 
@@ -66,6 +67,7 @@ function NewSaleContent() {
   const [mixedCash, setMixedCash] = useState(0);
   const [mixedTransfer, setMixedTransfer] = useState(0);
 
+  const [showCreateCustomer, setShowCreateCustomer] = useState(false);
   const customerType = selectedCustomer?.customer_type;
   const totalAmount = cart.reduce((s, item) => s + item.unitPrice * item.quantity, 0);
   const finalAmount = totalAmount - discount;
@@ -487,6 +489,12 @@ function NewSaleContent() {
                   recalcCartPrices(undefined);
                 }}
               />
+              {!selectedCustomer && (
+                <button type="button" onClick={() => setShowCreateCustomer(true)}
+                  className="w-full mt-2 py-2 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:bg-neutral-50 transition">
+                  + 신규 고객 등록
+                </button>
+              )}
               {customerType === 'dealer' && (
                 <p className="text-xs text-purple-600 mt-1">딜러가 적용 중</p>
               )}
@@ -494,6 +502,17 @@ function NewSaleContent() {
                 <p className="text-xs text-emerald-600 mt-1">아카데미가 적용 중</p>
               )}
             </Card>
+
+            <CustomerCreateModal
+              open={showCreateCustomer}
+              onClose={() => setShowCreateCustomer(false)}
+              onCreated={(c) => {
+                setSelectedCustomer({ id: c.id, name: c.name, phone: c.phone, customer_type: c.customer_type } as SelectedCustomer);
+                setCustomerName(c.name);
+                setCustomerPhone(c.phone);
+                recalcCartPrices(c.customer_type);
+              }}
+            />
 
             {/* 결제 정보 */}
             <Card>

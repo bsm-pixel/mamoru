@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCustomers, useCreateCustomer } from '@/hooks/use-customers';
+import { useCustomers } from '@/hooks/use-customers';
+import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
@@ -163,7 +164,11 @@ export default function CustomersPage() {
         )}
       </div>
 
-      {showAdd && <AddCustomerModal onClose={() => setShowAdd(false)} />}
+      <CustomerCreateModal
+        open={showAdd}
+        onClose={() => setShowAdd(false)}
+        onCreated={() => { /* 목록 자동 갱신 (queryClient invalidation은 모달 내부에서 처리) */ }}
+      />
 
       {/* 모바일 전용 슬라이드 패널 */}
       {!isLg && (
@@ -180,105 +185,7 @@ export default function CustomersPage() {
   );
 }
 
-function AddCustomerModal({ onClose }: { onClose: () => void }) {
-  const createCustomer = useCreateCustomer();
-  const [form, setForm] = useState({
-    name: '', phone: '', customerType: 'retail',
-    companyName: '', address: '', addressDetail: '', memo: '',
-  });
-  const [dupWarning, setDupWarning] = useState<string | null>(null);
-
-  async function checkDuplicate(phone: string) {
-    const digits = phone.replace(/\D/g, '');
-    if (digits.length < 10) { setDupWarning(null); return; }
-    try {
-      const res = await fetch(`/api/customers/search?q=${digits}&limit=1`);
-      const data = await res.json();
-      if (data.customers?.length > 0) {
-        setDupWarning(`"${data.customers[0].name}" 고객이 동일 번호로 이미 등록되어 있습니다`);
-      } else {
-        setDupWarning(null);
-      }
-    } catch { setDupWarning(null); }
-  }
-
-  const inputCls = "w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40";
-
-  async function handleSubmit() {
-    if (!form.name.trim()) { toast.error('고객명을 입력해주세요'); return; }
-    await createCustomer.mutateAsync({
-      name: form.name.trim(),
-      phone: form.phone.trim() || undefined,
-      customerType: form.customerType,
-      companyName: form.companyName.trim() || undefined,
-      address: form.address.trim() || undefined,
-      addressDetail: form.addressDetail.trim() || undefined,
-      memo: form.memo.trim() || undefined,
-    });
-    onClose();
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-white rounded-xl w-full max-w-md mx-4 shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 sticky top-0 bg-white rounded-t-xl z-10">
-          <h2 className="text-sm font-bold text-indigo-black">고객 추가</h2>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center"><X size={16} /></button>
-        </div>
-        <div className="px-5 py-4 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2 sm:col-span-1">
-              <label className="text-xs text-neutral-500">고객명 *</label>
-              <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="고객 이름" autoFocus className={inputCls} />
-            </div>
-            <div className="col-span-2 sm:col-span-1">
-              <label className="text-xs text-neutral-500">고객 유형</label>
-              <select value={form.customerType} onChange={(e) => setForm({ ...form, customerType: e.target.value })}
-                className={inputCls}>
-                {FILTER_TYPES.filter(f => f.value).map(f => (
-                  <option key={f.value} value={f.value}>{f.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="text-xs text-neutral-500">전화번호</label>
-            <input type="tel" value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              onBlur={() => checkDuplicate(form.phone)}
-              placeholder="010-0000-0000" className={inputCls} />
-            {dupWarning && <p className="text-xs text-amber-600 mt-1">{dupWarning}</p>}
-          </div>
-          <div>
-            <label className="text-xs text-neutral-500">매장명 (근무지)</label>
-            <input type="text" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-              placeholder="매장 또는 근무지명" className={inputCls} />
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs text-neutral-500">주소</label>
-            <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
-              placeholder="도로명 주소" className={inputCls} />
-            <input type="text" value={form.addressDetail} onChange={(e) => setForm({ ...form, addressDetail: e.target.value })}
-              placeholder="상세 주소 (동/호수)" className={inputCls} />
-          </div>
-          <div>
-            <label className="text-xs text-neutral-500">메모</label>
-            <textarea value={form.memo} onChange={(e) => setForm({ ...form, memo: e.target.value })}
-              placeholder="특이사항, 참고사항 등" rows={2}
-              className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 resize-none" />
-          </div>
-        </div>
-        <div className="px-5 py-4 border-t border-neutral-100 flex gap-2 sticky bottom-0 bg-white rounded-b-xl">
-          <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>
-          <Button className="flex-1" disabled={!form.name.trim() || createCustomer.isPending} onClick={handleSubmit}>
-            {createCustomer.isPending ? '등록 중...' : '고객 등록'}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
+/* 기존 AddCustomerModal → CustomerCreateModal 공통 컴포넌트로 교체 (customer-create-modal.tsx) */
 
 function CustomerRow({ customer, isSelected, onClick }: { customer: Customer; isSelected: boolean; onClick: () => void }) {
   const c = customer;
