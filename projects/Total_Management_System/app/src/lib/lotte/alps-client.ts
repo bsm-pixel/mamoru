@@ -124,20 +124,26 @@ export async function bookShipment(order: {
     snd_list: [{
       jobCustCd: LOTTE_JOB_CUST_CD,
       invNo: order.invoiceNumber,
-      sndNm: SENDER.name,
-      sndTel: SENDER.tel,
-      sndZip: SENDER.zip,
-      sndAddr: SENDER.addr,
-      rcvNm: order.receiverName,
-      rcvTel: order.receiverTel.replace(/\D/g, ''),
-      rcvZip: order.receiverZip,
-      rcvAddr: order.receiverAddr,
-      godsNm: order.goodsName || '가위 복원수리',
-      dlvMsg: order.deliveryMessage || '',
+      // 발송인 (ALPS 공식 필드명: snper*)
+      snperNm: SENDER.name,
+      snperTel: SENDER.tel.replace(/\D/g, ''),
+      snperCpno: '',
+      snperZipcd: SENDER.zip,
+      snperAdr: SENDER.addr,
+      // 수화주 (ALPS 공식 필드명: acper*)
+      acperNm: order.receiverName,
+      acperTel: order.receiverTel.replace(/\D/g, ''),
+      acperCpno: order.receiverTel.replace(/\D/g, ''),
+      acperZipcd: order.receiverZip,
+      acperAdr: order.receiverAddr,
+      // 상품/배송
+      gdsNm: order.goodsName || '가위 복원수리',
+      dlvMsgCont: order.deliveryMessage || '',
+      cusMsgCont: '',
       ustRtgSctCd: '01',
       ordSct: '3',
       fareSctCd: '03',
-      boxTypCd: 'A', // GAS 동일 — 기본 박스타입
+      boxTypCd: 'A',
     }],
   };
 
