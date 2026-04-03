@@ -213,6 +213,49 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 직접 입력 시리얼: product_serials에 자동 등록 + 즉시 sold
+    for (const item of items) {
+      const manualSerials = (item as Record<string, unknown>).manual_serials as string[] | undefined;
+      if (manualSerials && manualSerials.length > 0) {
+        for (const serialNumber of manualSerials) {
+          if (!serialNumber.trim()) continue;
+          // 중복 체크
+          const { data: existing } = await db
+            .from('product_serials')
+            .select('id')
+            .eq('serial_number', serialNumber.trim())
+            .limit(1);
+
+          if (existing && existing.length > 0) {
+            // 이미 있으면 sold로 전환
+            await db.from('product_serials').update({
+              status: 'sold',
+              sold_via: 'offline',
+              offline_sale_id: created.id,
+              sold_at: new Date().toISOString(),
+              sold_to_name: sale.customer_name,
+              sold_to_phone: sale.customer_phone || null,
+              previous_zone: 'ready',
+            }).eq('id', existing[0].id);
+          } else {
+            // 없으면 새로 생성 + 즉시 sold
+            await db.from('product_serials').insert({
+              serial_number: serialNumber.trim(),
+              product_id: item.product_id || null,
+              status: 'sold',
+              warehouse_zone: 'ready',
+              previous_zone: 'ready',
+              sold_via: 'offline',
+              offline_sale_id: created.id,
+              sold_at: new Date().toISOString(),
+              sold_to_name: sale.customer_name,
+              sold_to_phone: sale.customer_phone || null,
+            });
+          }
+        }
+      }
+    }
+
     // 재고 차감 + 아임웹 동기화 — 상품별 병렬 처리
     const productQtyMap: Record<string, number> = {};
     for (const item of items) {

@@ -19,6 +19,7 @@ interface CartItem {
   quantity: number;
   unitPrice: number;
   selectedSerialIds: string[];
+  manualSerials?: string[]; // 직접 입력 시리얼 번호
 }
 
 /** cart item의 고유 키 */
@@ -117,6 +118,14 @@ function NewSaleContent() {
     );
   }
 
+  function updateManualSerials(key: string, serials: string[]) {
+    setCart((prev) =>
+      prev.map((item) =>
+        cartItemKey(item) === key ? { ...item, manualSerials: serials } : item
+      )
+    );
+  }
+
   function updateQuantity(key: string, delta: number) {
     setCart((prev) =>
       prev
@@ -165,6 +174,7 @@ function NewSaleContent() {
         unit_price: item.unitPrice,
         total_price: item.unitPrice * item.quantity,
         serial_ids: item.selectedSerialIds,
+        manual_serials: item.manualSerials || [],
       })),
     });
 
@@ -387,13 +397,15 @@ function NewSaleContent() {
                             </button>
                           </div>
                         </div>
-                        {/* 시리얼 선택 — B2C만 (B2B 딜러/아카데미는 보관 출고) */}
+                        {/* 시리얼 선택 — B2C: 등록 시리얼 선택 + 직접 입력 */}
                         {item.product && customerType !== 'dealer' && customerType !== 'academy' ? (
                           <SerialPicker
                             productId={item.product.id}
                             quantity={item.quantity}
                             selectedSerialIds={item.selectedSerialIds}
                             onSelect={(ids) => updateSerialIds(key, ids)}
+                            manualSerials={item.manualSerials || []}
+                            onManualSerialsChange={(s) => updateManualSerials(key, s)}
                           />
                         ) : item.product && (customerType === 'dealer' || customerType === 'academy') ? (
                           <p className="text-[10px] text-neutral-400 mt-1">보관창고에서 출고 (시리얼 미부여)</p>
