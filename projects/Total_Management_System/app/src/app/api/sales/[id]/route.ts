@@ -296,13 +296,18 @@ export async function PATCH(
         return NextResponse.json({ error: '최소 1개 항목이 필요합니다' }, { status: 400 });
       }
 
-      // ── STEP 1: 기존 시리얼 복원 ──
+      // ── STEP 1: 기존 시리얼 보존 여부 판단 ──
+      // serial_ids나 manual_serials가 명시적으로 있을 때만 시리얼 재할당
+      // 없으면 기존 시리얼 유지 (금액/항목만 수정하는 경우)
+      const hasNewSerials = newItems.some((it) => (it.serial_ids && it.serial_ids.length > 0) || ((it as Record<string, unknown>).manual_serials as string[] || []).length > 0);
+
       const { data: oldSerials } = await db
         .from('product_serials')
         .select('id, product_id, warehouse_zone, previous_zone')
         .eq('offline_sale_id', id);
 
-      if (oldSerials && oldSerials.length > 0) {
+      if (hasNewSerials && oldSerials && oldSerials.length > 0) {
+        // 새 시리얼이 명시적으로 있을 때만 기존 시리얼 복원
         for (const serial of oldSerials) {
           await db.from('product_serials').update({
             status: 'in_stock',
@@ -313,6 +318,7 @@ export async function PATCH(
             sold_at: null,
             sold_to_name: null,
             sold_to_phone: null,
+            sale_item_id: null,
           }).eq('id', serial.id);
         }
       }
@@ -353,9 +359,37 @@ export async function PATCH(
       }));
       await db.from('offline_sale_items').insert(saleItems);
 
+      // ── STEP 3.5: 기존 시리얼 보존 시 sale_item_id 재매칭 ──
+      if (!hasNewSerials && oldSerials && oldSerials.length > 0) {
+        // 새 항목 ID로 기존 시리얼의 sale_item_id 업데이트
+        const { data: newSaleItems } = await db
+          .from('offline_sale_items')
+          .select('id, product_id, product_name')
+          .eq('sale_id', id)
+          .order('created_at', { ascending: true });
+
+        if (newSaleItems) {
+          let serialIdx = 0;
+          for (const saleItem of newSaleItems) {
+            // product_id 매칭 또는 순서 배분
+            const matchSerials = oldSerials.filter((s: { product_id: string | null }) =>
+              s.product_id === saleItem.product_id
+            );
+            if (matchSerials.length > 0) {
+              for (const sr of matchSerials) {
+                await db.from('product_serials').update({ sale_item_id: saleItem.id }).eq('id', sr.id);
+              }
+            } else if (serialIdx < oldSerials.length) {
+              await db.from('product_serials').update({ sale_item_id: saleItem.id }).eq('id', oldSerials[serialIdx].id);
+              serialIdx++;
+            }
+          }
+        }
+      }
+
       // ── STEP 4: 새 시리얼 할당 ──
       const allNewSerialIds = newItems.flatMap((item) => item.serial_ids || []);
-      if (allNewSerialIds.length > 0) {
+      if (hasNewSerials && allNewSerialIds.length > 0) {
         const { data: serials } = await db
           .from('product_serials')
           .select('id, warehouse_zone')
