@@ -537,3 +537,45 @@ export function useRebuildSale() {
   });
 }
 
+/** 판매 송장 생성 (ALPS) */
+export function useShipSale() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/sales/${id}/ship`, { method: 'POST' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '송장 생성 실패');
+      }
+      return res.json();
+    },
+    onSuccess: (data, id) => {
+      toast.success(`송장 생성 완료: ${data.invoiceNumber}`);
+      queryClient.invalidateQueries({ queryKey: ['sale', id] });
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+  });
+}
+
+/** 판매 송장 취소 */
+export function useCancelSaleShipment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/sales/${id}/ship`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '송장 취소 실패');
+      }
+      return res.json();
+    },
+    onSuccess: (_d, id) => {
+      toast.success('송장 취소 완료');
+      queryClient.invalidateQueries({ queryKey: ['sale', id] });
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+  });
+}
+

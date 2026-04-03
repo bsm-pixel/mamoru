@@ -51,6 +51,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     email: '',
     customer_type: 'retail',
     company_name: '',
+    postcode: '',
     address_road: '',
     address_detail: '',
     memo: '',
@@ -66,6 +67,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       email: c.email || '',
       customer_type: c.customer_type || 'retail',
       company_name: c.company_name || '',
+      postcode: (c as Record<string, unknown>).postcode as string || '',
       address_road: c.address_road || '',
       address_detail: c.address_detail || '',
       memo: c.memo || '',
@@ -203,20 +205,33 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
               </div>
               <div>
                 <label className="text-xs text-neutral-500">주소</label>
-                <input
-                  type="text"
-                  value={form.address_road}
-                  onChange={(e) => setForm({ ...form, address_road: e.target.value })}
-                  placeholder="도로명 주소"
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                />
-                <input
-                  type="text"
-                  value={form.address_detail}
+                <div className="flex gap-2 mb-2">
+                  <input type="text" value={form.postcode} readOnly placeholder="우편번호"
+                    className="w-24 h-9 px-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm text-neutral-600" />
+                  <button type="button" onClick={() => {
+                    if (!(window as unknown as Record<string, unknown>).daum) {
+                      const s = document.createElement('script');
+                      s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+                      s.onload = () => openPostcode();
+                      document.head.appendChild(s);
+                    } else { openPostcode(); }
+                    function openPostcode() {
+                      new (window as unknown as Record<string, unknown> & { daum: { Postcode: new (opts: Record<string, unknown>) => { open: () => void } } }).daum.Postcode({
+                        oncomplete: (data: { zonecode: string; roadAddress: string; jibunAddress: string }) => {
+                          setForm((prev) => ({ ...prev, postcode: data.zonecode, address_road: data.roadAddress || data.jibunAddress }));
+                        },
+                      }).open();
+                    }
+                  }} className="h-9 px-3 rounded-lg bg-neutral-900 text-white text-xs font-medium">
+                    주소검색
+                  </button>
+                </div>
+                <input type="text" value={form.address_road} readOnly placeholder="도로명 주소"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm text-neutral-600" />
+                <input type="text" value={form.address_detail}
                   onChange={(e) => setForm({ ...form, address_detail: e.target.value })}
                   placeholder="상세 주소 (동/호수)"
-                  className="w-full h-9 px-3 mt-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                />
+                  className="w-full h-9 px-3 mt-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
               </div>
               <div>
                 <label className="text-xs text-neutral-500">메모</label>

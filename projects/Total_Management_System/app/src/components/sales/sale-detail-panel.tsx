@@ -4,10 +4,10 @@ import { useState, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSale, useCancelSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts } from '@/hooks/use-sales';
+import { useSale, useCancelSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
-import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download } from 'lucide-react';
+import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import type { SaleChannel, OfflineSale, OfflineSaleItem } from '@/lib/supabase/types';
 
@@ -42,6 +42,8 @@ export function SaleDetailPanel({ saleId }: Props) {
   const updateMemo = useUpdateSaleMemo();
   const editSale = useEditSale();
   const rebuildSale = useRebuildSale();
+  const shipSale = useShipSale();
+  const cancelShipment = useCancelSaleShipment();
   const [cancelMode, setCancelMode] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [showPaidConfirm, setShowPaidConfirm] = useState(false);
@@ -325,6 +327,33 @@ export function SaleDetailPanel({ saleId }: Props) {
         confirmLabel="취소 확정"
         variant="danger"
       />
+
+      {/* 택배 발송 */}
+      {!s.cancelled_at && (
+        <div className="pt-2 border-t border-neutral-100">
+          {(s as Record<string, unknown>).invoice_number ? (
+            <div className="flex items-center gap-2">
+              <Package size={14} className="text-green-600" />
+              <span className="text-sm font-mono font-medium">{(s as Record<string, unknown>).invoice_number as string}</span>
+              <span className="text-xs text-neutral-400">롯데택배</span>
+              <button onClick={() => cancelShipment.mutate(saleId)}
+                disabled={cancelShipment.isPending}
+                className="ml-auto text-xs text-red-400 hover:text-red-600">
+                {cancelShipment.isPending ? '취소 중...' : '송장 취소'}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => shipSale.mutate(saleId)}
+              disabled={shipSale.isPending}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition"
+            >
+              <Truck size={14} />
+              {shipSale.isPending ? '송장 생성 중...' : '택배 발송 (송장 생성)'}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* 고객 퀵뷰 모달 */}
       {s.customer_id && (
