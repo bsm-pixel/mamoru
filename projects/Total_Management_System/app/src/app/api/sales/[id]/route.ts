@@ -461,6 +461,7 @@ export async function PATCH(
         paid_amount: sale_info.paid_amount ?? sale_info.total_amount,
         payment_detail: sale_info.payment_detail || null,
         sale_date: sale_info.sale_date || sale.sale_date,
+        sale_channel: (sale_info as Record<string, unknown>).sale_channel || sale.sale_channel,
         memo: sale_info.memo ?? sale.memo,
         supply_amount: supplyAmount,
         vat_amount: vatAmount,

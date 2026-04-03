@@ -511,6 +511,7 @@ export function useRebuildSale() {
         sale_date?: string;
         payment_detail?: Record<string, number>;
         memo?: string;
+        sale_channel?: string;
       };
     }) => {
       const res = await fetch(`/api/sales/${id}`, {

@@ -408,8 +408,12 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
     }))
   );
   const [paymentMethod, setPaymentMethod] = useState<string>(sale.payment_method);
+  const [paymentStatus, setPaymentStatus] = useState<string>(sale.payment_status || 'paid');
+  const [paidAmount, setPaidAmount] = useState(sale.paid_amount || 0);
+  const [saleChannel, setSaleChannel] = useState<string>((sale as Record<string, unknown>).sale_channel as string || 'offline');
   const [discountAmount, setDiscountAmount] = useState(sale.discount_amount || 0);
   const [saleDate, setSaleDate] = useState(sale.sale_date);
+  const [editMemo, setEditMemo] = useState(sale.memo || '');
   const [productSearch, setProductSearch] = useState('');
 
   const totalAmount = editItems.reduce((s, it) => s + it.unit_price * it.quantity, 0);
@@ -453,8 +457,11 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
         total_amount: totalAmount,
         discount_amount: discountAmount,
         payment_method: paymentMethod,
-        paid_amount: finalAmount,
+        payment_status: paymentStatus,
+        paid_amount: paymentStatus === 'paid' ? finalAmount : paymentStatus === 'unpaid' ? 0 : paidAmount,
         sale_date: saleDate,
+        memo: editMemo.trim() || undefined,
+        sale_channel: saleChannel,
       },
     });
     onClose();
@@ -555,6 +562,41 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
                 >{m.label}</button>
               ))}
             </div>
+          </div>
+
+          {/* 결제상태 */}
+          <div>
+            <label className="text-xs text-neutral-500 mb-1 block">결제상태</label>
+            <div className="flex gap-2">
+              {[{ value: 'paid', label: '결제완료' }, { value: 'partial', label: '부분결제' }, { value: 'unpaid', label: '미결제' }].map((s) => (
+                <button key={s.value} onClick={() => setPaymentStatus(s.value)}
+                  className={`flex-1 py-1.5 text-xs rounded-md border transition ${paymentStatus === s.value ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'}`}
+                >{s.label}</button>
+              ))}
+            </div>
+            {paymentStatus === 'partial' && (
+              <input type="number" value={paidAmount} onChange={(e) => setPaidAmount(Number(e.target.value))}
+                placeholder="입금액" className="w-full h-9 px-3 mt-2 rounded-lg border border-neutral-200 text-sm" />
+            )}
+          </div>
+
+          {/* 판매채널 */}
+          <div>
+            <label className="text-xs text-neutral-500 mb-1 block">판매채널</label>
+            <div className="flex gap-2">
+              {[{ value: 'offline', label: '오프라인' }, { value: 'online', label: '온라인' }, { value: 'talk', label: '톡상담' }].map((c) => (
+                <button key={c.value} onClick={() => setSaleChannel(c.value)}
+                  className={`flex-1 py-1.5 text-xs rounded-md border transition ${saleChannel === c.value ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'}`}
+                >{c.label}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* 메모 */}
+          <div>
+            <label className="text-xs text-neutral-500 mb-1 block">메모</label>
+            <input type="text" value={editMemo} onChange={(e) => setEditMemo(e.target.value)}
+              placeholder="메모" className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400" />
           </div>
 
           {/* 합계 */}
