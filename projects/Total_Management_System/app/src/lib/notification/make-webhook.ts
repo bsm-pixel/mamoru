@@ -177,6 +177,25 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
 
       if (res.ok) {
         console.log(`[make-webhook] OK template=${payload.template} phone=${payload.phone.slice(-4)} status=${res.status}`);
+
+        // 관리자 푸시 알림 — 신규 접수 건만 (비동기, 실패해도 무시)
+        const PUSH_TEMPLATES = new Set(['confirmed', 'as_received', 'field_request']);
+        if (PUSH_TEMPLATES.has(payload.template)) {
+          const pushTitle: Record<string, string> = {
+            confirmed: '새 상담 접수',
+            as_received: '새 복원수리 접수',
+            field_request: '새 출장 상담 접수',
+          };
+          import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
+            sendPushToAll({
+              title: pushTitle[payload.template] || 'MAMORU TMS',
+              body: `${payload.name}님 ${payload.template === 'as_received' ? '복원수리' : '상담'} 접수`,
+              url: payload.template === 'as_received' ? '/repairs' : '/consultations',
+              tag: `mamoru-${payload.template}`,
+            }).catch(() => {});
+          }).catch(() => {});
+        }
+
         return { success: true };
       }
 
