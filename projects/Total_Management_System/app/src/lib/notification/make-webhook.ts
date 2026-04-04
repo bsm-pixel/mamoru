@@ -5,29 +5,38 @@
  * Make 시나리오에서 _meta.func (event) + template 으로 분기 → 솔라피 알림톡
  */
 
-const ENV_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL || '';           // 환경변수 fallback
-const ENV_REPAIR_WEBHOOK_URL = process.env.MAKE_REPAIR_WEBHOOK_URL || ''; // 환경변수 fallback
+const ENV_WEBHOOK_CONSULTATION = process.env.MAKE_WEBHOOK_URL || '';
+const ENV_WEBHOOK_AS_RECEIVED = process.env.MAKE_AS_RECEIVED_WEBHOOK_URL || '';
+const ENV_WEBHOOK_REPAIR_STATUS = process.env.MAKE_REPAIR_WEBHOOK_URL || '';
 const VERSION = 'tms-2.3';
 
-/** DB 우선 → 환경변수 fallback으로 웹훅 URL 조회 */
-async function getWebhookUrls(): Promise<{ consultation: string; repair: string }> {
+/**
+ * DB 우선 → 환경변수 fallback으로 웹훅 URL 조회
+ *
+ * 3개 Make 시나리오:
+ * 1. consultation  — 상담 접수/확정/취소/리마인더/리뷰
+ * 2. as_received   — 복원수리 접수 안내 (별도 시나리오)
+ * 3. repair_status — 복원수리 상태변경 (입고확인/입금/출고/취소/만족도)
+ */
+async function getWebhookUrls(): Promise<{ consultation: string; as_received: string; repair_status: string }> {
   try {
     const { createServiceClient } = require('@/lib/supabase/server');
     const db = createServiceClient();
     const { data: rows } = await db
       .from('system_settings')
       .select('key, value')
-      .in('key', ['notifications.webhook_consultation', 'notifications.webhook_repair']);
+      .in('key', ['notifications.webhook_consultation', 'notifications.webhook_as_received', 'notifications.webhook_repair']);
 
     const map: Record<string, string> = {};
     (rows || []).forEach((r: { key: string; value: string }) => { if (r.value) map[r.key] = String(r.value).replace(/^"|"$/g, ''); });
 
     return {
-      consultation: map['notifications.webhook_consultation'] || ENV_WEBHOOK_URL,
-      repair: map['notifications.webhook_repair'] || ENV_REPAIR_WEBHOOK_URL,
+      consultation: map['notifications.webhook_consultation'] || ENV_WEBHOOK_CONSULTATION,
+      as_received: map['notifications.webhook_as_received'] || ENV_WEBHOOK_AS_RECEIVED,
+      repair_status: map['notifications.webhook_repair'] || ENV_WEBHOOK_REPAIR_STATUS,
     };
   } catch {
-    return { consultation: ENV_WEBHOOK_URL, repair: ENV_REPAIR_WEBHOOK_URL };
+    return { consultation: ENV_WEBHOOK_CONSULTATION, as_received: ENV_WEBHOOK_AS_RECEIVED, repair_status: ENV_WEBHOOK_REPAIR_STATUS };
   }
 }
 
@@ -82,14 +91,14 @@ export type NotifyTemplate =
   | 'talk_received'       // 톡상담 접수 안내
   | 'talk_ready'          // 톡상담 시작 안내
   // Phase 7: 복원수리 알림톡
-  | 'as_received'         // 복원수리 접수 안내
-  | 'as_cost_notice'      // 비용 안내
-  | 'as_payment_confirmed' // 입금 확인
-  | 'as_shipped'          // 출고 안내
-  | 'as_cancelled'        // 복원수리 취소 안내
-  | 'as_review_request'   // 복원수리 리뷰 요청 (MAKE_REPAIR_WEBHOOK_URL)
-  | 'review_request'      // 상담 리뷰 요청 (MAKE_WEBHOOK_URL)
-  | 'purchase_review_request'; // 제품구매 리뷰 요청 (MAKE_WEBHOOK_URL)
+  | 'as_received'         // 복원수리 접수 안내 → webhook_as_received (별도 시나리오)
+  | 'as_cost_notice'      // 비용 안내 → webhook_repair
+  | 'as_payment_confirmed' // 입금 확인 → webhook_repair
+  | 'as_shipped'          // 출고 안내 → webhook_repair
+  | 'as_cancelled'        // 복원수리 취소 안내 → webhook_repair
+  | 'as_review_request'   // 복원수리 만족도 → webhook_repair
+  | 'review_request'      // 상담 리뷰 요청 → webhook_consultation
+  | 'purchase_review_request'; // 제품구매 리뷰 요청 → webhook_consultation
 
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
@@ -141,11 +150,24 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     return { success: true }; // 성공으로 처리 (에러 아님)
   }
 
-  // 템플릿에 따라 웹훅 URL 분기 (DB 우선 → 환경변수 fallback)
-  const isRepairStatus = REPAIR_STATUS_TEMPLATES.has(payload.template);
+  // 템플릿에 따라 3분기 웹훅 URL (DB 우선 → 환경변수 fallback)
   const urls = await getWebhookUrls();
-  const webhookUrl = isRepairStatus ? urls.repair : urls.consultation;
-  const urlSource = isRepairStatus ? 'webhook_repair' : 'webhook_consultation';
+  let webhookUrl: string;
+  let urlSource: string;
+
+  if (payload.template === 'as_received') {
+    // 복원수리 접수 → 별도 Make 시나리오
+    webhookUrl = urls.as_received;
+    urlSource = 'webhook_as_received';
+  } else if (REPAIR_STATUS_TEMPLATES.has(payload.template)) {
+    // 복원수리 상태변경 (입고확인/입금/출고/취소/만족도)
+    webhookUrl = urls.repair_status;
+    urlSource = 'webhook_repair';
+  } else {
+    // 상담 알림톡 (접수/확정/취소/리마인더/리뷰 등)
+    webhookUrl = urls.consultation;
+    urlSource = 'webhook_consultation';
+  }
 
   if (!webhookUrl) {
     console.warn(`[make-webhook] SKIP template=${payload.template} — ${urlSource} 미설정 (DB·환경변수 모두 비어있음)`);

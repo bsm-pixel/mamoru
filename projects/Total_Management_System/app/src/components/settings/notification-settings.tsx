@@ -20,6 +20,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
   const [repairShipped, setRepairShipped] = useState(true);
   const [reviewRequest, setReviewRequest] = useState(true);
   const [webhookConsultation, setWebhookConsultation] = useState('');
+  const [webhookAsReceived, setWebhookAsReceived] = useState('');
   const [webhookRepair, setWebhookRepair] = useState('');
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     setRepairShipped(parse(settings['notifications.repair_shipped'], true));
     setReviewRequest(parse(settings['notifications.review_request'], true));
     setWebhookConsultation(parse(settings['notifications.webhook_consultation'], ''));
+    setWebhookAsReceived(parse(settings['notifications.webhook_as_received'], ''));
     setWebhookRepair(parse(settings['notifications.webhook_repair'], ''));
   }, [settings]);
 
@@ -44,6 +46,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
       { key: 'notifications.repair_shipped', value: repairShipped },
       { key: 'notifications.review_request', value: reviewRequest },
       { key: 'notifications.webhook_consultation', value: webhookConsultation },
+      { key: 'notifications.webhook_as_received', value: webhookAsReceived },
       { key: 'notifications.webhook_repair', value: webhookRepair },
     ]);
   };
@@ -83,15 +86,20 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
         </div>
       </Field>
 
-      {/* 9-10. Make 웹훅 URL */}
-      <Field label="Make 웹훅 URL (상담)" desc="현재 환경변수로 관리 중. 여기서 변경하면 DB 우선 적용.">
+      {/* Make 웹훅 URL — 3개 시나리오 */}
+      <Field label="Make 웹훅 URL (상담)" desc="상담 접수/확정/취소/리마인더/리뷰 등">
         <input value={webhookConsultation} onChange={(e) => setWebhookConsultation(e.target.value)}
-          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.us1.make.com/..." />
+          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
-      <Field label="Make 웹훅 URL (복원수리)" desc="">
+      <Field label="Make 웹훅 URL (AS접수)" desc="복원수리 접수 안내 (방문수거/직접발송/카운터)">
+        <input value={webhookAsReceived} onChange={(e) => setWebhookAsReceived(e.target.value)}
+          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+      </Field>
+
+      <Field label="Make 웹훅 URL (AS상태변경)" desc="입고확인/입금안내/출고&송장/취소/만족도">
         <input value={webhookRepair} onChange={(e) => setWebhookRepair(e.target.value)}
-          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.us1.make.com/..." />
+          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
       {/* 11-12. API 키 (읽기전용) */}
