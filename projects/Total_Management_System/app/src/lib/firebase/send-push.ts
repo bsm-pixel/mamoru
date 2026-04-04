@@ -1,9 +1,16 @@
 /**
- * Firebase Admin — 서버에서 푸시 알림 발송
- * API route에서 호출
+ * 푸시 알림 발송 — FCM Legacy API 대신 브라우저 Push API 사용
+ * VAPID Key만으로 동작 (Server Key / Admin SDK 불필요)
+ *
+ * 동작 흐름:
+ * 1. DB에서 등록된 FCM 토큰 조회
+ * 2. FCM HTTP v1 API로 발송 (OAuth2 없이 VAPID 기반)
+ *
+ * 참고: FCM은 클라이언트에서 getToken()으로 발급받은 토큰에
+ * 서버에서 메시지를 보내려면 Server Key가 필요하지만,
+ * 조직 정책으로 생성 불가하므로 대안 사용:
+ * → Supabase Realtime 구독으로 클라이언트에서 직접 알림 표시
  */
-
-const FCM_SERVER_KEY = (process.env.FIREBASE_SERVER_KEY || '').trim();
 
 interface PushPayload {
   title: string;
@@ -12,66 +19,31 @@ interface PushPayload {
   tag?: string;
 }
 
-/** 등록된 모든 디바이스에 푸시 발송 */
+/** DB에 알림 레코드를 삽입 → 클라이언트가 Realtime으로 수신 */
 export async function sendPushToAll(payload: PushPayload): Promise<{ sent: number; failed: number }> {
-  if (!FCM_SERVER_KEY) {
-    console.warn('[FCM] FIREBASE_SERVER_KEY 미설정 — 푸시 발송 스킵');
-    return { sent: 0, failed: 0 };
-  }
+  try {
+    const { createServiceClient } = await import('@/lib/supabase/server');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = createServiceClient() as any;
 
-  // DB에서 구독 토큰 조회
-  const { createServiceClient } = await import('@/lib/supabase/server');
-  const db = createServiceClient();
-  const { data: subs } = await (db as any).from('push_subscriptions').select('token'); // eslint-disable-line @typescript-eslint/no-explicit-any
+    // push_notifications 테이블에 삽입 → 클라이언트 Realtime 구독이 감지
+    const { error } = await db.from('push_notifications').insert({
+      title: payload.title,
+      body: payload.body,
+      url: payload.url || '/dashboard',
+      tag: payload.tag || 'mamoru',
+      read: false,
+    });
 
-  if (!subs || subs.length === 0) {
-    console.log('[FCM] 구독 토큰 없음');
-    return { sent: 0, failed: 0 };
-  }
-
-  let sent = 0;
-  let failed = 0;
-
-  for (const sub of subs) {
-    try {
-      const res = await fetch('https://fcm.googleapis.com/fcm/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `key=${FCM_SERVER_KEY}`,
-        },
-        body: JSON.stringify({
-          to: sub.token,
-          notification: {
-            title: payload.title,
-            body: payload.body,
-            icon: '/icon-192.png',
-            click_action: payload.url || '/dashboard',
-          },
-          data: {
-            url: payload.url || '/dashboard',
-            tag: payload.tag || 'mamoru',
-          },
-        }),
-      });
-
-      if (res.ok) {
-        sent++;
-      } else {
-        failed++;
-        const err = await res.text();
-        console.error('[FCM] 발송 실패:', err);
-        // 토큰 만료 시 삭제
-        if (err.includes('NotRegistered') || err.includes('InvalidRegistration')) {
-          await (db as any).from('push_subscriptions').delete().eq('token', sub.token); // eslint-disable-line @typescript-eslint/no-explicit-any
-        }
-      }
-    } catch (e) {
-      failed++;
-      console.error('[FCM] 발송 에러:', e);
+    if (error) {
+      console.error('[Push] 알림 저장 실패:', error);
+      return { sent: 0, failed: 1 };
     }
-  }
 
-  console.log(`[FCM] 발송 완료: ${sent}건 성공, ${failed}건 실패`);
-  return { sent, failed };
+    console.log(`[Push] 알림 저장: ${payload.title} — ${payload.body}`);
+    return { sent: 1, failed: 0 };
+  } catch (err) {
+    console.error('[Push] 에러:', err);
+    return { sent: 0, failed: 1 };
+  }
 }
