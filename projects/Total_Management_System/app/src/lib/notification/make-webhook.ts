@@ -5,9 +5,31 @@
  * Make 시나리오에서 _meta.func (event) + template 으로 분기 → 솔라피 알림톡
  */
 
-const MAKE_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL || '';           // 상담 알림톡
-const MAKE_REPAIR_WEBHOOK_URL = process.env.MAKE_REPAIR_WEBHOOK_URL || ''; // 복원수리 상태변경
+const ENV_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL || '';           // 환경변수 fallback
+const ENV_REPAIR_WEBHOOK_URL = process.env.MAKE_REPAIR_WEBHOOK_URL || ''; // 환경변수 fallback
 const VERSION = 'tms-2.3';
+
+/** DB 우선 → 환경변수 fallback으로 웹훅 URL 조회 */
+async function getWebhookUrls(): Promise<{ consultation: string; repair: string }> {
+  try {
+    const { createServiceClient } = require('@/lib/supabase/server');
+    const db = createServiceClient();
+    const { data: rows } = await db
+      .from('system_settings')
+      .select('key, value')
+      .in('key', ['notifications.webhook_consultation', 'notifications.webhook_repair']);
+
+    const map: Record<string, string> = {};
+    (rows || []).forEach((r: { key: string; value: string }) => { if (r.value) map[r.key] = String(r.value).replace(/^"|"$/g, ''); });
+
+    return {
+      consultation: map['notifications.webhook_consultation'] || ENV_WEBHOOK_URL,
+      repair: map['notifications.webhook_repair'] || ENV_REPAIR_WEBHOOK_URL,
+    };
+  } catch {
+    return { consultation: ENV_WEBHOOK_URL, repair: ENV_REPAIR_WEBHOOK_URL };
+  }
+}
 
 // 설정 기반 알림 on/off 체크를 위한 헬퍼
 async function isNotificationEnabled(template: string): Promise<boolean> {
@@ -119,14 +141,33 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     return { success: true }; // 성공으로 처리 (에러 아님)
   }
 
-  // 템플릿에 따라 웹훅 URL 분기
+  // 템플릿에 따라 웹훅 URL 분기 (DB 우선 → 환경변수 fallback)
   const isRepairStatus = REPAIR_STATUS_TEMPLATES.has(payload.template);
-  const webhookUrl = isRepairStatus ? MAKE_REPAIR_WEBHOOK_URL : MAKE_WEBHOOK_URL;
-  const envName = isRepairStatus ? 'MAKE_REPAIR_WEBHOOK_URL' : 'MAKE_WEBHOOK_URL';
+  const urls = await getWebhookUrls();
+  const webhookUrl = isRepairStatus ? urls.repair : urls.consultation;
+  const urlSource = isRepairStatus ? 'webhook_repair' : 'webhook_consultation';
 
   if (!webhookUrl) {
-    console.warn(`[make-webhook] SKIP template=${payload.template} — ${envName} 미설정`);
-    return { success: false, error: `${envName} 환경변수 미설정` };
+    console.warn(`[make-webhook] SKIP template=${payload.template} — ${urlSource} 미설정 (DB·환경변수 모두 비어있음)`);
+    return { success: false, error: `${urlSource} 미설정` };
+  }
+
+  // 관리자 푸시 알림 — 웹훅과 무관하게 독립 발송
+  const PUSH_TEMPLATES = new Set(['confirmed', 'as_received', 'field_request']);
+  if (PUSH_TEMPLATES.has(payload.template)) {
+    const pushTitle: Record<string, string> = {
+      confirmed: '새 상담 접수',
+      as_received: '새 복원수리 접수',
+      field_request: '새 출장 상담 접수',
+    };
+    import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
+      sendPushToAll({
+        title: pushTitle[payload.template] || 'MAMORU TMS',
+        body: `${payload.name}님 ${payload.template === 'as_received' ? '복원수리' : '상담'} 접수`,
+        url: payload.template === 'as_received' ? '/repairs' : '/consultations',
+        tag: `mamoru-${payload.template}`,
+      }).catch(() => {});
+    }).catch(() => {});
   }
 
   const event = TEMPLATE_EVENT_MAP[payload.template] || payload.template.toUpperCase();
@@ -177,25 +218,6 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
 
       if (res.ok) {
         console.log(`[make-webhook] OK template=${payload.template} phone=${payload.phone.slice(-4)} status=${res.status}`);
-
-        // 관리자 푸시 알림 — 신규 접수 건만 (비동기, 실패해도 무시)
-        const PUSH_TEMPLATES = new Set(['confirmed', 'as_received', 'field_request']);
-        if (PUSH_TEMPLATES.has(payload.template)) {
-          const pushTitle: Record<string, string> = {
-            confirmed: '새 상담 접수',
-            as_received: '새 복원수리 접수',
-            field_request: '새 출장 상담 접수',
-          };
-          import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
-            sendPushToAll({
-              title: pushTitle[payload.template] || 'MAMORU TMS',
-              body: `${payload.name}님 ${payload.template === 'as_received' ? '복원수리' : '상담'} 접수`,
-              url: payload.template === 'as_received' ? '/repairs' : '/consultations',
-              tag: `mamoru-${payload.template}`,
-            }).catch(() => {});
-          }).catch(() => {});
-        }
-
         return { success: true };
       }
 
