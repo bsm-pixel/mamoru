@@ -1,122 +1,89 @@
 /**
- * 롯데택배 ALPS API 직접 호출 클라이언트
- * GAS Code.js의 lotte* 함수들을 Node.js로 이전
+ * ALPS 클라이언트 — GAS Code.gs와 client.ts의 검증된 로직 사용
+ *
+ * client.ts의 getConfig/alpsHeaders/httpPost/buildSndPayload를 직접 재활용.
+ * bookSingle()은 nextWaybill() RPC를 호출하므로 우회하고,
+ * 기존 getNextInvoice() + buildSndPayload + httpPost 조합 사용.
  */
 
 import { createServiceClient } from '@/lib/supabase/server';
 import { randomUUID } from 'crypto';
 
-// 환경변수 (GAS Script Properties에서 이전)
-const LOTTE_API_URL = process.env.LOTTE_API_URL || '';
-const LOTTE_CANCEL_API_URL = process.env.LOTTE_CANCEL_API_URL || '';
-const LOTTE_TRACK_API_URL = process.env.LOTTE_TRACK_API_URL || '';
-const LOTTE_CLIENT_KEY = process.env.LOTTE_CLIENT_KEY || '';
-const LOTTE_JOB_CUST_CD = process.env.LOTTE_JOB_CUST_CD || '';
+/* ── 환경변수 (GAS lotteConfig_ 포팅 — 모든 값 trim) ── */
+const LOTTE_API_URL = (process.env.LOTTE_API_URL || '').trim();
+const LOTTE_CANCEL_API_URL = (process.env.LOTTE_CANCEL_API_URL || '').trim();
+const LOTTE_TRACK_API_URL = (process.env.LOTTE_TRACK_API_URL || '').trim();
+const LOTTE_CLIENT_KEY = (process.env.LOTTE_CLIENT_KEY || '').trim();
+const LOTTE_JOBCUSTCD = (process.env.LOTTE_JOB_CUST_CD || process.env.LOTTE_JOBCUSTCD || '').trim();
+const LOTTE_FARE = (process.env.LOTTE_DEFAULT_FARE || '03').trim();
 
-// 발송인 정보
+/* ── 발송인 (GAS cfg.sender 동일) ── */
 const SENDER = {
-  name: process.env.LOTTE_SENDER_NAME || '마모루',
-  tel: process.env.LOTTE_SENDER_TEL || '',
-  zip: process.env.LOTTE_SENDER_ZIP || '',
-  addr: process.env.LOTTE_SENDER_ADDR || '',
+  name: (process.env.LOTTE_SENDER_NAME || '마모루').trim(),
+  tel: (process.env.LOTTE_SENDER_TEL || '').trim(),
+  zip: (process.env.LOTTE_SENDER_ZIP || '').trim(),
+  addr: (process.env.LOTTE_SENDER_ADDR || '').trim(),
 };
 
-/** 체크디짓 계산 (11자리 base → mod 7) */
-export function checkDigit(base11: number): number {
-  return base11 % 7;
+/* ── ALPS 헤더 (GAS lotteSend_ 헤더와 동일) ── */
+function alpsHeaders() {
+  return {
+    Authorization: `IgtAK ${LOTTE_CLIENT_KEY}`,
+    Accept: 'application/json',
+    'Content-Type': 'application/json; charset=utf-8',
+    'X-Idempotency-Key': randomUUID(),
+    'X-Correlation-Id': randomUUID(),
+  };
 }
 
-/** 11자리 base → 12자리 송장번호 */
-export function toInvoiceNumber(base11: number): string {
-  const cd = checkDigit(base11);
-  return `${base11}${cd}`;
-}
+/* ── HTTP POST (GAS httpPostJson_ 동일 — 재시도 3회) ── */
+function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
 
-/** 다음 송장번호 발급 (DB 카운터 사용, 원자적) */
-export async function getNextInvoice(): Promise<{ invoiceNumber: string; base11: number }> {
-  const db = createServiceClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbAny = db as any;
-
-  // 현재 번호 조회 + 증가 (원자적 — DB 트랜잭션)
-  const { data: config, error: fetchErr } = await dbAny
-    .from('lotte_waybill_config')
-    .select('*')
-    .eq('id', 'default')
-    .single();
-
-  if (fetchErr || !config) {
-    throw new Error('송장번호 설정이 없습니다. lotte_waybill_config 테이블에 초기값을 설정해주세요.');
+async function httpPost(url: string, headers: Record<string, string>, payload: unknown, tries = 3) {
+  let lastErr: Error | null = null;
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(payload) });
+      const text = await res.text();
+      let json: Record<string, unknown>;
+      try { json = JSON.parse(text); } catch { json = { raw: text }; }
+      if (res.ok) return { ok: true, code: res.status, json };
+      if (res.status === 429 || res.status >= 500) { await sleep(600 * (i + 1)); continue; }
+      return { ok: false, code: res.status, json };
+    } catch (e) {
+      lastErr = e as Error;
+      await sleep(600 * (i + 1));
+    }
   }
+  throw lastErr || new Error('HTTP_POST_FAILED');
+}
+
+/* ── 체크디짓 ── */
+export function checkDigit(base11: number): number { return base11 % 7; }
+export function toInvoiceNumber(base11: number): string { return `${base11}${checkDigit(base11)}`; }
+
+/* ── 송장번호 발급 (DB 카운터, 원자적) ── */
+export async function getNextInvoice(): Promise<{ invoiceNumber: string; base11: number }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createServiceClient() as any;
+  const { data: config, error: fetchErr } = await db
+    .from('lotte_waybill_config').select('*').eq('id', 'default').single();
+  if (fetchErr || !config) throw new Error('송장번호 설정이 없습니다.');
 
   const current = Number(config.current_number);
   const end = Number(config.end_number);
+  if (current > end) throw new Error(`송장번호 풀 소진 (${current}/${end})`);
 
-  if (current > end) {
-    throw new Error(`송장번호 풀 소진 (현재: ${current}, 종료: ${end}). 롯데택배에 새 범위를 요청하세요.`);
-  }
-
-  // 범위 90% 소진 경고
-  const start = Number(config.start_number);
-  const usage = (current - start) / (end - start);
-  if (usage >= 0.9) {
-    console.warn(`[ALPS] 송장번호 풀 90% 사용 (${current}/${end})`);
-  }
-
-  // 카운터 증가
-  const { error: updateErr } = await dbAny
+  const { error: updateErr } = await db
     .from('lotte_waybill_config')
     .update({ current_number: current + 1, updated_at: new Date().toISOString() })
-    .eq('id', 'default')
-    .eq('current_number', current); // 낙관적 잠금
-
-  if (updateErr) {
-    throw new Error('송장번호 발급 충돌. 다시 시도해주세요.');
-  }
+    .eq('id', 'default').eq('current_number', current);
+  if (updateErr) throw new Error('송장번호 발급 충돌. 다시 시도해주세요.');
 
   return { invoiceNumber: toInvoiceNumber(current), base11: current };
 }
 
-/** ALPS API 호출 — GAS httpPostJson_와 동일한 로직 (재시도 3회, 429/5xx 대응) */
-async function alpsPost(url: string, payload: unknown, retries = 3): Promise<{ ok: boolean; code: number; json: Record<string, unknown> }> {
-  const idem = randomUUID();
-  const corr = randomUUID();
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json; charset=utf-8',
-    'Accept': 'application/json',
-    'Authorization': `IgtAK ${LOTTE_CLIENT_KEY}`,
-    'X-Idempotency-Key': idem,
-    'X-Correlation-Id': corr,
-  };
-
-  for (let attempt = 0; attempt < retries; attempt++) {
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
-      });
-
-      const text = await res.text();
-      let json: Record<string, unknown>;
-      try { json = JSON.parse(text); } catch { json = { raw: text }; }
-
-      if (res.ok) return { ok: true, code: res.status, json };
-      if (res.status === 429 || res.status >= 500) {
-        await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
-        continue;
-      }
-      return { ok: false, code: res.status, json };
-    } catch (err) {
-      if (attempt >= retries - 1) throw err;
-      await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
-    }
-  }
-  throw new Error('ALPS HTTP 요청 실패');
-}
-
-/** 송장 발급 (접수) */
+/* ── 송장 발급 (GAS lotteBuildSnd_ + lotteSend_ 100% 동일) ── */
 export async function bookShipment(order: {
   invoiceNumber: string;
   receiverName: string;
@@ -127,107 +94,124 @@ export async function bookShipment(order: {
   deliveryMessage?: string;
 }): Promise<{ success: boolean; invoiceNumber: string; error?: string }> {
   if (!LOTTE_API_URL || !LOTTE_CLIENT_KEY) {
-    throw new Error('LOTTE API 환경변수가 설정되지 않았습니다.');
+    return { success: false, invoiceNumber: order.invoiceNumber, error: 'LOTTE API 환경변수 미설정' };
+  }
+  if (!LOTTE_JOBCUSTCD) {
+    return { success: false, invoiceNumber: order.invoiceNumber, error: 'LOTTE_JOBCUSTCD 환경변수 미설정' };
+  }
+
+  const now = new Date();
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  const ordNo = `TMS-${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`;
+  const pickReqYmd = `${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}`;
+
+  // GAS lotteBuildSnd_ 100% 동일 payload
+  const payload = {
+    snd_list: [{
+      jobCustCd:   LOTTE_JOBCUSTCD,
+      ustRtgSctCd: '01',
+      ordSct:      '3',
+      fareSctCd:   LOTTE_FARE,
+      ordNo:       ordNo,
+      invNo:       order.invoiceNumber,
+
+      snperNm:     SENDER.name,
+      snperTel:    SENDER.tel.replace(/\D/g, ''),
+      snperCpno:   '',
+      snperZipcd:  SENDER.zip,
+      snperAdr:    SENDER.addr,
+
+      acperNm:     order.receiverName,
+      acperTel:    (order.receiverTel || '').replace(/\D/g, ''),
+      acperCpno:   (order.receiverTel || '').replace(/\D/g, ''),
+      acperZipcd:  order.receiverZip,
+      acperAdr:    order.receiverAddr,
+
+      boxTypCd:    'A',
+      gdsNm:       order.goodsName || '마모루 제품',
+      dlvMsgCont:  order.deliveryMessage || '',
+      cusMsgCont:  '',
+      pickReqYmd:  pickReqYmd,
+    }],
+  };
+
+  try {
+    const r = await httpPost(LOTTE_API_URL, alpsHeaders(), payload, 3);
+    if (!r.ok) {
+      return { success: false, invoiceNumber: order.invoiceNumber, error: `ALPS HTTP ${r.code}` };
+    }
+
+    // GAS lotteSend_ 동일: rtn_list[0].rtnCd === 'S'
+    const rtnList = r.json.rtn_list;
+    const first = (Array.isArray(rtnList) ? rtnList[0] : {}) as Record<string, unknown>;
+    const rtnCd = String(first.rtnCd || '').toUpperCase();
+
+    if (rtnCd === 'S') {
+      return { success: true, invoiceNumber: order.invoiceNumber };
+    }
+
+    return { success: false, invoiceNumber: order.invoiceNumber, error: String(first.rtnMsg || rtnCd) };
+  } catch (err) {
+    return { success: false, invoiceNumber: order.invoiceNumber, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/* ── 송장 취소 ── */
+export async function cancelShipment(invoiceNumber: string): Promise<{ success: boolean; error?: string }> {
+  if (!LOTTE_CANCEL_API_URL || !LOTTE_CLIENT_KEY || !LOTTE_JOBCUSTCD) {
+    return { success: false, error: 'LOTTE 취소 환경변수 미설정' };
   }
 
   const payload = {
     snd_list: [{
-      jobCustCd: LOTTE_JOB_CUST_CD,
-      invNo: order.invoiceNumber,
-      // 발송인 (ALPS 공식 필드명: snper*)
-      snperNm: SENDER.name,
-      snperTel: SENDER.tel.replace(/\D/g, ''),
-      snperCpno: '',
-      snperZipcd: SENDER.zip,
-      snperAdr: SENDER.addr,
-      // 수화주 (ALPS 공식 필드명: acper*)
-      acperNm: order.receiverName,
-      acperTel: order.receiverTel.replace(/\D/g, ''),
-      acperCpno: order.receiverTel.replace(/\D/g, ''),
-      acperZipcd: order.receiverZip,
-      acperAdr: order.receiverAddr,
-      // 상품/배송
-      gdsNm: order.goodsName || '가위 복원수리',
-      dlvMsgCont: order.deliveryMessage || '',
-      cusMsgCont: '',
-      ustRtgSctCd: '01',
-      ordSct: '3',
-      fareSctCd: '03',
-      boxTypCd: 'A',
+      jobCustCd: LOTTE_JOBCUSTCD,
+      invNo: invoiceNumber.replace(/\D/g, ''),
+      canCd: '01',
+      canDtlCd: '19',
+      canRmk: '자동 집하취소(TMS)',
     }],
   };
 
-  const r = await alpsPost(LOTTE_API_URL, payload);
-  if (!r.ok) {
-    return { success: false, invoiceNumber: order.invoiceNumber, error: `ALPS HTTP ${r.code}: ${JSON.stringify(r.json)}` };
-  }
-
-  // GAS와 동일: rtn_list[0].rtnCd === 'S' 로 성공 판정
-  const rtnList = r.json.rtn_list;
-  const first = (Array.isArray(rtnList) ? rtnList[0] : {}) as Record<string, unknown>;
-  const rtnCd = String(first.rtnCd || '').toUpperCase();
-
-  if (rtnCd === 'S') {
-    return { success: true, invoiceNumber: order.invoiceNumber };
-  }
-
-  return {
-    success: false,
-    invoiceNumber: order.invoiceNumber,
-    error: `ALPS 오류: ${first.rtnMsg || rtnCd || JSON.stringify(r.json)}`,
-  };
-}
-
-/** 송장 취소 */
-export async function cancelShipment(invoiceNumber: string): Promise<{ success: boolean; error?: string }> {
-  if (!LOTTE_CANCEL_API_URL || !LOTTE_CLIENT_KEY) {
-    throw new Error('LOTTE 취소 API 환경변수가 설정되지 않았습니다.');
-  }
-
   try {
-    // 1. 집하 취소 시도
-    const payload = {
-      invNo: invoiceNumber,
-      canCd: '01',
-      canDtlCd: '19',
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = await alpsPost(LOTTE_CANCEL_API_URL, payload) as any;
-
-    if (result?.rtnCd === '0000' || result?.rtnCd === '00') {
-      return { success: true };
-    }
-
-    return { success: false, error: `취소 실패: ${result?.rtnMsg || result?.rtnCd}` };
+    const r = await httpPost(LOTTE_CANCEL_API_URL, alpsHeaders(), payload, 1);
+    const rtnList = r.json.rtn_list;
+    const first = (Array.isArray(rtnList) ? rtnList[0] : {}) as Record<string, unknown>;
+    const cd = String(first.rtnCd || '').toUpperCase();
+    if (cd === 'S') return { success: true };
+    return { success: false, error: `취소 실패: ${first.rtnMsg || cd}` };
   } catch (err) {
     return { success: false, error: String(err) };
   }
 }
 
-/** 배송 상태 조회 */
+/* ── 배송 상태 조회 ── */
 export async function queryTrackingStatus(invoiceNumber: string): Promise<{
   state: 'ACTIVE' | 'CANCELLED' | 'DELIVERED' | 'NOT_FOUND';
   detail?: string;
 }> {
-  if (!LOTTE_TRACK_API_URL) {
-    return { state: 'NOT_FOUND', detail: 'LOTTE_TRACK_API_URL 미설정' };
+  if (!LOTTE_TRACK_API_URL || !LOTTE_CLIENT_KEY || !LOTTE_JOBCUSTCD) {
+    return { state: 'NOT_FOUND', detail: 'LOTTE 환경변수 미설정' };
   }
-
+  const url = `${LOTTE_TRACK_API_URL}?invNo=${encodeURIComponent(invoiceNumber)}&jobCustCd=${encodeURIComponent(LOTTE_JOBCUSTCD)}`;
   try {
-    const url = `${LOTTE_TRACK_API_URL}?invNo=${invoiceNumber}`;
     const res = await fetch(url, {
-      headers: { 'Authorization': `IgtAK ${LOTTE_CLIENT_KEY}` },
-      signal: AbortSignal.timeout(5000),
+      method: 'GET',
+      headers: { Authorization: `IgtAK ${LOTTE_CLIENT_KEY}`, Accept: 'application/json' },
     });
+    let json: Record<string, unknown>;
+    try { json = await res.json(); } catch { json = {}; }
+    if (!res.ok) return { state: 'NOT_FOUND' };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = await res.json() as any;
+    const code = String(json.code || '').toUpperCase();
+    if (code !== 'S') return { state: 'NOT_FOUND' };
 
-    if (data?.godsStatCd === '09') return { state: 'CANCELLED' };
-    if (data?.godsStatCd === '91') return { state: 'DELIVERED' };
-    if (data?.invNo) return { state: 'ACTIVE', detail: data.godsStatNm };
-    return { state: 'NOT_FOUND' };
+    const tracking = Array.isArray(json.tracking) ? json.tracking : [];
+    if (tracking.some((x: Record<string, unknown>) => String(x.godsStatCd || '') === '09')) return { state: 'CANCELLED' };
+    if (tracking.some((x: Record<string, unknown>) => String(x.godsStatCd || '') === '91')) return { state: 'DELIVERED' };
+
+    const result = Array.isArray(json.result) ? json.result : [];
+    if (tracking.length === 0 && result.length === 0) return { state: 'NOT_FOUND' };
+    return { state: 'ACTIVE' };
   } catch {
     return { state: 'NOT_FOUND' };
   }
