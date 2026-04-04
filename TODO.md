@@ -1,6 +1,6 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-04 (설정 리뉴얼 구현 + ALPS 송장 수정 + 롯데택배 문의)
+> 최종 수정: 2026-04-04 (설정 리뉴얼 + ALPS 송장 수정 + 반품 + B2B 납품명 + 푸시 알림 + 거래명세서)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
@@ -9,43 +9,49 @@
 
 > 답변 받으면 Claude에게 전달 → 아래 항목별 코드 반영
 
-- [ ] **1. 출고구분**: 거래처 설정이 A/S 고정인지, ordSct 값으로 제어 가능한지 → 답변에 따라 코드 수정 또는 유지
-- [ ] **2. 운송장 번호 대역**: 새 대역 할당받으면 → TMS 설정 or DB(lotte_waybill_config)에 새 시작/끝 번호 등록
+- [ ] **1. 출고구분**: 거래처 설정이 A/S 고정인지, ordSct 값으로 제어 가능한지 → 답변에 따라 코드 수정
+- [ ] **2. 운송장 번호 대역**: 새 대역 할당받으면 → DB(lotte_waybill_config)에 새 시작/끝 번호 등록
 - [ ] **3. 테스트 접수 건 정리**: 롯데 측 일괄 취소 처리 확인
-- [ ] **4. gdsNm 표시 방식**: 고객 SMS에 gdsNm이 그대로 노출되는지 확인 → 노출되면 판매 건 상품명 형식을 사장님이 직접 지정할 수 있도록 설정 추가
-- [ ] **5. 운송장 취소 올바른 절차**: 집하취소 API만 호출하면 되는지, 송장삭제→집하취소 순서인지 → 답변에 따라 cancelShipment 로직 수정
-- [ ] **6. fareSctCd/pickReqYmd 필수 여부**: 계약과 맞는지, pickReqYmd 미입력 시 동작 확인
+- [ ] **4. gdsNm 표시 방식**: 고객 SMS에 gdsNm 노출 여부 확인 → 노출되면 상품명 형식 조정
+- [ ] **5. 운송장 취소 올바른 절차**: apiSndOutCancel 사용 가능 여부 + 재사용 가능 여부
+- [ ] **6. 동일 수하인 취소→재접수 시 ALPS에 안 보이는 문제**: 답변에서 원인 확인
+
+---
+
+## 📌 내일 할 것 (04-05)
+
+- [ ] 푸시 알림 테스트 (PC + 모바일) — 상담접수/복원수리접수 시 알림 오는지 확인
+- [ ] B2B 납품명 테스트 — 제품에 딜러/아카데미 납품명 입력 → 판매 입력 시 자동 표시 확인
+- [ ] 거래명세서 확인 — SKU 제거 + 공급자/공급받는자 + 로고 정상 표시
+- [ ] 설정 탭 전체 점검 — 각 탭별 저장/로드 정상 동작 확인
+- [ ] 남은 하드코딩 교체 (cost-calculator 수리비, 저재고 기준 등)
 
 ---
 
 ## 📌 미완료 — 설정 탭 리뉴얼 (04-03 승인)
 
-### Phase 0: 인프라 ✅
-- [x] system_settings 테이블 + warehouses 테이블 + 반품 컬럼 (050_system_settings.sql)
-- [x] GET/PATCH /api/settings API
-- [x] useSettings() / useSetting(key, default) / getServerSetting() 훅
-
-### Phase 1+2: 설정 UI + 96개 항목 ✅
-- [x] 설정 페이지 전면 재작성 (좌측 10탭 + 우측 폼, 모바일 아코디언)
-- [x] 10개 탭 컴포넌트 (dashboard/shipping/consultation/repair/sales/customer/inventory/accounting/notification/system)
-- [x] 기존 동기화/이관 → 시스템 탭으로 이동
+### Phase 0~2: 인프라 + UI + 96개 항목 ✅
+- [x] system_settings 테이블 + warehouses + 반품 컬럼 (050)
+- [x] GET/PATCH /api/settings API + useSettings 훅
+- [x] 설정 페이지 10탭 전면 재작성
 
 ### Phase 3: 신규 기능
-- [x] 3-A: 반품 기능 (API action:'return' + useReturnSale + 판매상세 반품버튼)
+- [x] 3-A: 반품 기능 (API + Hook + 판매상세 반품버튼) ✅
+- [x] 3-D: 푸시 알림 (FCM Admin SDK + Supabase Realtime 이중 구조) ✅
 - [ ] 3-B: 검수 다중선택 UI (radio→checkbox) — 별도 작업
 - [ ] 3-C: 배송추적 Cron 디버깅 — 별도 작업
-- [ ] 3-D: 신규 접수 알림음 (PC 브라우저) — 설정 UI 준비됨, 실제 Sound/Push는 별도
 - [ ] 3-E: 다중 창고 재고 이동 UI — DB 준비됨, UI는 별도
 
-### Phase 4: 하드코딩 교체 ✅
-- [x] 대시보드 KPI 목표: localStorage → useSetting('dashboard.monthly_goal')
-- [x] KPI 색상: 80/50 → useSetting('dashboard.kpi_green/yellow')
-- [x] 알림톡 마스터 on/off: make-webhook.ts에서 DB 체크 추가
-- [x] 알림톡 개별 on/off: 템플릿별 DB 체크 추가
+### Phase 4: 하드코딩 교체 (진행중)
+- [x] 대시보드 KPI: localStorage→DB, 색상 설정 연동 ✅
+- [x] 알림톡 마스터/개별 on/off DB 체크 ✅
+- [x] 대시보드 카드 순서/숨김 설정 연동 ✅
+- [ ] cost-calculator 수리비/배송비 → 설정값 교체
+- [ ] 저재고 기준/체류 경고일 → 설정값 교체
+- [ ] 사이드바 커스텀 → 설정값 연동
 
-### 별도 작업 (설정 리뉴얼 이후)
-- [ ] 복원수리 고객 상태 페이지 (진행현황 타임라인 — 고객이 볼 수 있는 public 페이지)
-- [ ] 모바일 Push 알림 (PWA + Service Worker + FCM)
+### 별도 작업
+- [ ] 복원수리 고객 상태 페이지 (진행현황 타임라인)
 
 ---
 
@@ -178,6 +184,59 @@
 ---
 
 ## ✅ 완료 이력
+
+<details>
+<summary>04-04 작업 (클릭하여 펼치기)</summary>
+
+### 설정 탭 리뉴얼 (Phase 0~4)
+- [x] DB: system_settings + warehouses + push_subscriptions + push_notifications 테이블 ✅
+- [x] API: GET/PATCH /api/settings + /api/push/subscribe ✅
+- [x] Hook: useSettings + useSetting + useUpdateSettings + usePushNotifications ✅
+- [x] 설정 페이지 10탭 전면 재작성 (대시보드/주문배송/상담/복원수리/판매/고객/상품재고/회계/알림연동/시스템) ✅
+- [x] 대시보드 카드 순서/숨김 — 2열 그리드 프리뷰 + 드래그 순서변경 + 실제 반영 ✅
+- [x] KPI 목표 localStorage→DB 이관 + 색상 임계치 설정 연동 ✅
+- [x] 알림톡 마스터/개별 on/off DB 체크 (make-webhook.ts) ✅
+
+### ALPS 송장 생성 수정
+- [x] alps-client.ts 완전 재작성 — GAS 로직 100% 재현 ✅
+- [x] 성공 판정: rtnCd === '0000' → 'S' (rtn_list[0]) ✅
+- [x] 헤더: Accept + X-Idempotency-Key + X-Correlation-Id + charset=utf-8 ✅
+- [x] ordNo + pickReqYmd 필드 추가 ✅
+- [x] 환경변수 .trim() 전체 적용 ✅
+- [x] 환경변수 LOTTE_JOB_CUST_CD || LOTTE_JOBCUSTCD 양쪽 읽기 ✅
+- [x] ordSct: '1' (일반출고) 적용 ✅
+- [x] 복원수리 상품명: '[MAMORU] 복원수리' ✅
+- [x] 발송인/수취인 빈값 검증 + 명확한 에러 메시지 ✅
+
+### 반품 기능
+- [x] API: PATCH /api/sales/[id] action:'return' — 재고/시리얼 복귀 ✅
+- [x] Hook: useReturnSale ✅
+- [x] UI: 판매상세 반품 처리 버튼 + 사유 입력 모달 ✅
+
+### B2B 납품명
+- [x] DB: products에 dealer_name, academy_name 컬럼 추가 (052) ✅
+- [x] 제품 수정(PC 패널): 딜러 납품명 / 아카데미 납품명 입력 필드 ✅
+- [x] 판매 입력: 고객 유형별 납품명 자동 표시 + 저장 ✅
+
+### 거래명세서 개선
+- [x] 품명에서 SKU(IW번호) 제거 ✅
+- [x] 서명란 → 공급자(마모루 사업장) + 공급받는자(고객) 정보 ✅
+- [x] 하단 MAMORU 로고 ✅
+
+### 푸시 알림
+- [x] Firebase 프로젝트 생성 + 서비스 계정 키 발급 ✅
+- [x] FCM Admin SDK 서버 발송 (send-push.ts) ✅
+- [x] Supabase Realtime 구독 (use-push-notifications.ts) — 알림음 + 브라우저 알림 ✅
+- [x] Service Worker (firebase-messaging-sw.js) 백그라운드 알림 ✅
+- [x] 상담접수/복원수리접수 시 자동 푸시 (make-webhook.ts 연동) ✅
+
+### 기타
+- [x] 고객명/연락처 수정 시 판매 건 자동 동기화 ✅
+- [x] 대시보드 매출 0원 수정 — RPC에 sales + monthRepairAmount 추가 (051) ✅
+- [x] 카테고리 표시명 편집 (코드 고정, 라벨만 수정 가능) ✅
+- [x] 롯데택배 ALPS 담당자 문의 발송 (6건) ✅
+
+</details>
 
 <details>
 <summary>04-03 작업 (클릭하여 펼치기)</summary>
