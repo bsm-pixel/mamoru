@@ -789,7 +789,7 @@ function ReceiptModal({ sale, items, onClose }: {
             <tbody>
               {items.map((item, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '8px' }}>{item.product_name}{item.sku ? ` (${item.sku})` : ''}</td>
+                  <td style={{ padding: '8px' }}>{item.product_name}</td>
                   <td style={{ padding: '8px', textAlign: 'center' }}>{item.quantity}</td>
                   <td style={{ padding: '8px', textAlign: 'right' }}>{formatKRW(item.unit_price)}</td>
                   <td style={{ padding: '8px', textAlign: 'right', fontWeight: '600' }}>{formatKRW(item.total_price)}</td>
@@ -825,16 +825,24 @@ function ReceiptModal({ sale, items, onClose }: {
             </div>
           </div>
 
-          {/* 서명란 */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '60px', gap: '48px' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ width: '100px', borderBottom: '1px solid #000', height: '40px' }}></div>
-              <p style={{ fontSize: '11px', marginTop: '4px' }}>공급자</p>
+          {/* 공급자 / 공급받는자 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px', fontSize: '11px', color: '#666', gap: '24px' }}>
+            <div style={{ flex: 1, border: '1px solid #ddd', borderRadius: '4px', padding: '10px' }}>
+              <p style={{ fontWeight: 'bold', color: '#333', marginBottom: '4px' }}>공급자</p>
+              <p>MAMORU (마모루)</p>
+              <p>서울특별시 구로구 부광로 88 SKV1, B동 311호</p>
+              <p>TEL: 02-6326-0426</p>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ width: '100px', borderBottom: '1px solid #000', height: '40px' }}></div>
-              <p style={{ fontSize: '11px', marginTop: '4px' }}>공급받는자</p>
+            <div style={{ flex: 1, border: '1px solid #ddd', borderRadius: '4px', padding: '10px' }}>
+              <p style={{ fontWeight: 'bold', color: '#333', marginBottom: '4px' }}>공급받는자</p>
+              <p>{sale.customer_name}</p>
+              {sale.customer_phone && <p>TEL: {sale.customer_phone}</p>}
             </div>
+          </div>
+
+          {/* 하단 로고 */}
+          <div style={{ textAlign: 'center', marginTop: '32px', opacity: 0.3 }}>
+            <p style={{ fontSize: '14px', fontWeight: 'bold', letterSpacing: '4px' }}>MAMORU</p>
           </div>
         </div>
       </div>
