@@ -15,7 +15,9 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
   const [lowStock, setLowStock] = useState(3);
   const [imwebSync, setImwebSync] = useState(true);
   const [categories, setCategories] = useState<string[]>(['BL', 'TH', 'LO', 'SL', 'CB', 'CS', 'AC']);
+  const [catLabels, setCatLabels] = useState<Record<string, string>>({ BL: '블런트', TH: '씨닝', LO: '롱', SL: '슬라이싱', CB: '빗', CS: '케이스', AC: '악세서리' });
   const [newCat, setNewCat] = useState('');
+  const [newCatLabel, setNewCatLabel] = useState('');
   const [safetyStock, setSafetyStock] = useState(5);
   const [adjustReasons, setAdjustReasons] = useState<string[]>([]);
   const [newReason, setNewReason] = useState('');
@@ -30,6 +32,7 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
     setLowStock(parse(settings['inventory.low_stock_threshold'], 3));
     setImwebSync(parse(settings['inventory.imweb_sync'], true));
     setCategories(parse(settings['inventory.categories'], ['BL', 'TH', 'LO', 'SL', 'CB', 'CS', 'AC']));
+    setCatLabels(parse(settings['inventory.category_labels'], { BL: '블런트', TH: '씨닝', LO: '롱', SL: '슬라이싱', CB: '빗', CS: '케이스', AC: '악세서리' }));
     setSafetyStock(parse(settings['inventory.safety_stock'], 5));
     setAdjustReasons(parse(settings['inventory.adjustment_reasons'], ['파손', '분실', '증정', '샘플', '실사 조정', '기타']));
     setSkuDigits(parse(settings['inventory.sku_digits'], 3));
@@ -45,6 +48,7 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
       { key: 'inventory.low_stock_threshold', value: lowStock },
       { key: 'inventory.imweb_sync', value: imwebSync },
       { key: 'inventory.categories', value: categories },
+      { key: 'inventory.category_labels', value: catLabels },
       { key: 'inventory.safety_stock', value: safetyStock },
       { key: 'inventory.adjustment_reasons', value: adjustReasons },
       { key: 'inventory.sku_digits', value: skuDigits },
@@ -71,21 +75,36 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
         <Toggle checked={imwebSync} onChange={setImwebSync} />
       </Field>
 
-      <Field label="상품 카테고리 목록" desc="상품 등록 시 카테고리 드롭다운 + SKU 채번에 사용.">
-        <div className="flex flex-wrap gap-1.5 mb-2">
-          {categories.map((c, i) => (
-            <span key={i} className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-100 rounded-lg">
-              {c} ({CAT_LABELS[c] || ''})
-              <button onClick={() => setCategories(categories.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
-            </span>
+      <Field label="상품 카테고리 목록" desc="코드는 수정 불가 (SKU 채번에 사용). 표시명만 변경 가능.">
+        <div className="space-y-1.5 mb-3">
+          {categories.map((code, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <span className="w-10 text-xs font-mono font-bold text-neutral-700 bg-neutral-100 rounded px-2 py-1 text-center">{code}</span>
+              <input
+                value={catLabels[code] || ''}
+                onChange={(e) => setCatLabels({ ...catLabels, [code]: e.target.value })}
+                placeholder="표시명 입력"
+                className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm"
+              />
+              <button onClick={() => {
+                setCategories(categories.filter((_, j) => j !== i));
+                const next = { ...catLabels }; delete next[code]; setCatLabels(next);
+              }} className="text-neutral-400 hover:text-red-500"><X size={14} /></button>
+            </div>
           ))}
         </div>
         <div className="flex gap-2">
-          <input value={newCat} onChange={(e) => setNewCat(e.target.value.toUpperCase())} placeholder="카테고리 코드 (예: ST)"
-            className="w-32 h-8 px-3 rounded-lg border border-neutral-200 text-sm" maxLength={3}
-            onKeyDown={(e) => { if (e.key === 'Enter' && newCat.trim()) { setCategories([...categories, newCat.trim()]); setNewCat(''); } }} />
-          <button onClick={() => { if (newCat.trim()) { setCategories([...categories, newCat.trim()]); setNewCat(''); } }}
-            className="px-2 rounded-lg bg-neutral-100 hover:bg-neutral-200"><Plus size={14} /></button>
+          <input value={newCat} onChange={(e) => setNewCat(e.target.value.toUpperCase())} placeholder="코드 (예: ST)"
+            className="w-20 h-8 px-2 rounded-lg border border-neutral-200 text-sm font-mono" maxLength={3} />
+          <input value={newCatLabel} onChange={(e) => setNewCatLabel(e.target.value)} placeholder="표시명 (예: 스트레이트)"
+            className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm" />
+          <button onClick={() => {
+            if (newCat.trim()) {
+              setCategories([...categories, newCat.trim()]);
+              if (newCatLabel.trim()) setCatLabels({ ...catLabels, [newCat.trim()]: newCatLabel.trim() });
+              setNewCat(''); setNewCatLabel('');
+            }
+          }} className="px-2 rounded-lg bg-neutral-100 hover:bg-neutral-200"><Plus size={14} /></button>
         </div>
       </Field>
 
