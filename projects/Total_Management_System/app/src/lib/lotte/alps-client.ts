@@ -76,34 +76,43 @@ export async function getNextInvoice(): Promise<{ invoiceNumber: string; base11:
   return { invoiceNumber: toInvoiceNumber(current), base11: current };
 }
 
-/** ALPS API 호출 (재시도 3회) */
-async function alpsPost(url: string, payload: unknown, retries = 3): Promise<unknown> {
+/** ALPS API 호출 — GAS httpPostJson_와 동일한 로직 (재시도 3회, 429/5xx 대응) */
+async function alpsPost(url: string, payload: unknown, retries = 3): Promise<{ ok: boolean; code: number; json: Record<string, unknown> }> {
+  const idem = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const corr = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json; charset=utf-8',
+    'Accept': 'application/json',
     'Authorization': `IgtAK ${LOTTE_CLIENT_KEY}`,
+    'X-Idempotency-Key': idem,
+    'X-Correlation-Id': corr,
   };
 
-  for (let attempt = 1; attempt <= retries; attempt++) {
+  for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const res = await fetch(url, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(10000),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let json: Record<string, unknown>;
+      try { json = JSON.parse(text); } catch { json = { raw: text }; }
 
-      if (!res.ok) {
-        throw new Error(`ALPS HTTP ${res.status}: ${JSON.stringify(data)}`);
+      if (res.ok) return { ok: true, code: res.status, json };
+      if (res.status === 429 || res.status >= 500) {
+        await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
+        continue;
       }
-
-      return data;
+      return { ok: false, code: res.status, json };
     } catch (err) {
-      if (attempt === retries) throw err;
-      await new Promise(r => setTimeout(r, attempt * 1000));
+      if (attempt >= retries - 1) throw err;
+      await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
     }
   }
+  throw new Error('ALPS HTTP 요청 실패');
 }
 
 /** 송장 발급 (접수) */
@@ -147,17 +156,24 @@ export async function bookShipment(order: {
     }],
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = await alpsPost(LOTTE_API_URL, payload) as any;
+  const r = await alpsPost(LOTTE_API_URL, payload);
+  if (!r.ok) {
+    return { success: false, invoiceNumber: order.invoiceNumber, error: `ALPS HTTP ${r.code}: ${JSON.stringify(r.json)}` };
+  }
 
-  if (result?.rtnCd === '0000' || result?.rtnCd === '00') {
+  // GAS와 동일: rtn_list[0].rtnCd === 'S' 로 성공 판정
+  const rtnList = r.json.rtn_list;
+  const first = (Array.isArray(rtnList) ? rtnList[0] : {}) as Record<string, unknown>;
+  const rtnCd = String(first.rtnCd || '').toUpperCase();
+
+  if (rtnCd === 'S') {
     return { success: true, invoiceNumber: order.invoiceNumber };
   }
 
   return {
     success: false,
     invoiceNumber: order.invoiceNumber,
-    error: `ALPS 오류: ${result?.rtnMsg || result?.rtnCd || JSON.stringify(result)}`,
+    error: `ALPS 오류: ${first.rtnMsg || rtnCd || JSON.stringify(r.json)}`,
   };
 }
 
