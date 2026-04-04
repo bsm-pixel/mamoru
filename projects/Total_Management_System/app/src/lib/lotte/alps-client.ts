@@ -153,35 +153,38 @@ export async function bookShipment(order: {
     return { success: false, invoiceNumber: order.invoiceNumber, error: '발송인 정보가 불완전합니다. 설정 > 주문·배송에서 발송인 정보를 입력해주세요.' };
   }
 
-  // ordNo: GAS에서 항상 포함했던 필수 필드 — 없으면 ALPS 거래처 조회 오류 발생
+  // GAS lotteBuildSnd_와 100% 동일한 payload 구성
   const now = new Date();
-  const ordNo = `TMS-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  const ordNo = `TMS-${now.getFullYear()}${pad2(now.getMonth()+1)}${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`;
+  const pickReqYmd = `${now.getFullYear()}${pad2(now.getMonth()+1)}${pad2(now.getDate())}`;
 
   const payload = {
     snd_list: [{
-      jobCustCd: LOTTE_JOBCUSTCD,
+      jobCustCd:   LOTTE_JOBCUSTCD,
       ustRtgSctCd: '01',
-      ordSct: '3',
-      fareSctCd: '03',
+      ordSct:      '3',
+      fareSctCd:   '03',
       ordNo,
-      invNo: order.invoiceNumber,
-      // 발송인 (ALPS 공식 필드명: snper*) — 설정 DB 우선, 환경변수 fallback
-      snperNm: sender.name,
-      snperTel: sender.tel.replace(/\D/g, ''),
-      snperCpno: '',
-      snperZipcd: sender.zip,
-      snperAdr: sender.addr,
-      // 수화주 (ALPS 공식 필드명: acper*)
-      acperNm: order.receiverName,
-      acperTel: order.receiverTel.replace(/\D/g, ''),
-      acperCpno: order.receiverTel.replace(/\D/g, ''),
-      acperZipcd: order.receiverZip,
-      acperAdr: order.receiverAddr,
-      // 상품/배송
-      boxTypCd: 'A',
-      gdsNm: order.goodsName || '가위 복원수리',
-      dlvMsgCont: order.deliveryMessage || '',
-      cusMsgCont: '',
+      invNo:       order.invoiceNumber,
+
+      snperNm:     sender.name,
+      snperTel:    sender.tel.replace(/\D/g, ''),
+      snperCpno:   '',
+      snperZipcd:  sender.zip,
+      snperAdr:    sender.addr,
+
+      acperNm:     order.receiverName,
+      acperTel:    order.receiverTel.replace(/\D/g, ''),
+      acperCpno:   (order.receiverTel || '').replace(/\D/g, ''),
+      acperZipcd:  order.receiverZip,
+      acperAdr:    order.receiverAddr,
+
+      boxTypCd:    'A',
+      gdsNm:       order.goodsName || '복원수리 물품',
+      dlvMsgCont:  order.deliveryMessage || '',
+      cusMsgCont:  '',
+      pickReqYmd,
     }],
   };
 
