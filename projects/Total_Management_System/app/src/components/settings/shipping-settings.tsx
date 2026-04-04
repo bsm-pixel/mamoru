@@ -65,9 +65,10 @@ export default function ShippingSettings({ settings, onSave, saving }: TabProps)
       </Field>
 
       {/* 2. 기본 상품명 */}
-      <Field label="기본 상품명 (송장)" desc="송장에 찍히는 상품명 기본값입니다.">
+      <Field label="복원수리 송장 상품명" desc="복원수리 출고 시 송장에 찍히는 상품명. 판매 건은 품목명이 자동 입력됩니다.">
         <input value={goodsName} onChange={(e) => setGoodsName(e.target.value)}
-          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm"
+          placeholder="[MAMORU] 복원수리" />
       </Field>
 
       {/* 3. 송장번호 범위 — 별도 UI 필요, 여기선 안내만 */}

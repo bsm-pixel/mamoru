@@ -42,7 +42,7 @@ export async function POST(
       receiverTel: repair.phone || '',
       receiverZip: repair.postcode || '',
       receiverAddr: fullAddress,
-      goodsName: '가위 복원수리',
+      goodsName: '[MAMORU] 복원수리',
     });
 
     if (!result.success) {

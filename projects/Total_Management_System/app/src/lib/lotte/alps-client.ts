@@ -12,13 +12,32 @@ const LOTTE_TRACK_API_URL = process.env.LOTTE_TRACK_API_URL || '';
 const LOTTE_CLIENT_KEY = process.env.LOTTE_CLIENT_KEY || '';
 const LOTTE_JOB_CUST_CD = process.env.LOTTE_JOB_CUST_CD || '';
 
-// 발송인 정보
-const SENDER = {
+// 발송인 정보 (환경변수 fallback)
+const ENV_SENDER = {
   name: process.env.LOTTE_SENDER_NAME || '마모루',
   tel: process.env.LOTTE_SENDER_TEL || '',
   zip: process.env.LOTTE_SENDER_ZIP || '',
   addr: process.env.LOTTE_SENDER_ADDR || '',
 };
+
+/** 설정 DB에서 발송인 정보 조회 (없으면 환경변수 fallback) */
+async function getSender(): Promise<typeof ENV_SENDER> {
+  try {
+    const db = createServiceClient();
+    const { data } = await (db as any).from('system_settings').select('value').eq('key', 'shipping.sender').single(); // eslint-disable-line @typescript-eslint/no-explicit-any
+    if (data?.value) {
+      const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+      // 설정값이 비어있으면 환경변수 fallback
+      return {
+        name: parsed.name || ENV_SENDER.name,
+        tel: parsed.tel || ENV_SENDER.tel,
+        zip: parsed.zip || ENV_SENDER.zip,
+        addr: parsed.addr || ENV_SENDER.addr,
+      };
+    }
+  } catch { /* fallback */ }
+  return ENV_SENDER;
+}
 
 /** 체크디짓 계산 (11자리 base → mod 7) */
 export function checkDigit(base11: number): number {
@@ -120,16 +139,18 @@ export async function bookShipment(order: {
     throw new Error('LOTTE API 환경변수가 설정되지 않았습니다.');
   }
 
+  const sender = await getSender();
+
   const payload = {
     snd_list: [{
       jobCustCd: LOTTE_JOB_CUST_CD,
       invNo: order.invoiceNumber,
-      // 발송인 (ALPS 공식 필드명: snper*)
-      snperNm: SENDER.name,
-      snperTel: SENDER.tel.replace(/\D/g, ''),
+      // 발송인 (ALPS 공식 필드명: snper*) — 설정 DB 우선, 환경변수 fallback
+      snperNm: sender.name,
+      snperTel: sender.tel.replace(/\D/g, ''),
       snperCpno: '',
-      snperZipcd: SENDER.zip,
-      snperAdr: SENDER.addr,
+      snperZipcd: sender.zip,
+      snperAdr: sender.addr,
       // 수화주 (ALPS 공식 필드명: acper*)
       acperNm: order.receiverName,
       acperTel: order.receiverTel.replace(/\D/g, ''),
