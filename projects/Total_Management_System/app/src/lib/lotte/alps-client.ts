@@ -110,7 +110,7 @@ export async function bookShipment(order: {
     snd_list: [{
       jobCustCd:   LOTTE_JOBCUSTCD,
       ustRtgSctCd: '01',
-      ordSct:      '1',
+      ordSct:      '3',
       fareSctCd:   LOTTE_FARE,
       ordNo:       ordNo,
       invNo:       order.invoiceNumber,
@@ -141,10 +141,15 @@ export async function bookShipment(order: {
       return { success: false, invoiceNumber: order.invoiceNumber, error: `ALPS HTTP ${r.code}` };
     }
 
+    // ALPS 응답 로그 (디버깅용)
+    console.log('[ALPS bookShipment] 응답:', JSON.stringify(r.json).slice(0, 500));
+
     // GAS lotteSend_ 동일: rtn_list[0].rtnCd === 'S'
     const rtnList = r.json.rtn_list;
     const first = (Array.isArray(rtnList) ? rtnList[0] : {}) as Record<string, unknown>;
     const rtnCd = String(first.rtnCd || '').toUpperCase();
+
+    console.log('[ALPS bookShipment] rtnCd:', rtnCd, 'rtnMsg:', first.rtnMsg);
 
     if (rtnCd === 'S') {
       return { success: true, invoiceNumber: order.invoiceNumber };
