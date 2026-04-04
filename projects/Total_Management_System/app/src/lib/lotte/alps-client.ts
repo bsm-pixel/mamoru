@@ -110,7 +110,7 @@ export async function bookShipment(order: {
     snd_list: [{
       jobCustCd:   LOTTE_JOBCUSTCD,
       ustRtgSctCd: '01',
-      ordSct:      '3',
+      ordSct:      '1',
       fareSctCd:   LOTTE_FARE,
       ordNo:       ordNo,
       invNo:       order.invoiceNumber,
