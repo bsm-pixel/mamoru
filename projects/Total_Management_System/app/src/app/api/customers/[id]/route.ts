@@ -102,6 +102,14 @@ export async function PATCH(
 
     if (error) throw error;
 
+    // 고객명/연락처 변경 시 → 해당 고객의 판매 건도 일괄 업데이트 (송장 등에서 최신 정보 사용)
+    if (updates.name || updates.phone) {
+      const saleUpdates: Record<string, unknown> = {};
+      if (updates.name) saleUpdates.customer_name = updates.name;
+      if (updates.phone) saleUpdates.customer_phone = updates.phone;
+      await db.from('offline_sales').update(saleUpdates).eq('customer_id', id);
+    }
+
     return NextResponse.json({ customer });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
