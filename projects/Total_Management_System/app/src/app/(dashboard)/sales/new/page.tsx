@@ -35,6 +35,13 @@ function getUnitPrice(product: Product, customerType?: string): number {
   return product.price;
 }
 
+/** 고객 유형에 따른 납품명 결정 (B2B 납품명 우선, 없으면 기본 제품명) */
+function getProductDisplayName(product: Product, customerType?: string): string {
+  if (customerType === 'dealer' && (product as Record<string, unknown>).dealer_name) return String((product as Record<string, unknown>).dealer_name);
+  if (customerType === 'academy' && (product as Record<string, unknown>).academy_name) return String((product as Record<string, unknown>).academy_name);
+  return product.name;
+}
+
 export default function NewSalePage() {
   return (
     <Suspense fallback={null}>
@@ -170,7 +177,7 @@ function NewSaleContent() {
       },
       items: cart.map((item) => ({
         product_id: item.product?.id || undefined,
-        product_name: item.product?.name || item.customName || '임시 제품',
+        product_name: item.product ? getProductDisplayName(item.product, customerType) : (item.customName || '임시 제품'),
         sku: item.product?.sku || undefined,
         quantity: item.quantity,
         unit_price: item.unitPrice,
@@ -271,7 +278,7 @@ function NewSaleContent() {
                             }`}
                           >
                             <td className="px-3 py-2.5">
-                              <span className="font-medium text-indigo-black">{p.name}</span>
+                              <span className="font-medium text-indigo-black">{getProductDisplayName(p, customerType)}</span>
                               {inCart && <span className="ml-2 text-xs font-bold text-neutral-900">×{inCart.quantity}</span>}
                             </td>
                             <td className="px-3 py-2.5 text-xs text-neutral-500">{p.sku}</td>
@@ -352,7 +359,7 @@ function NewSaleContent() {
                 <div className="space-y-2">
                   {cart.map((item) => {
                     const key = cartItemKey(item);
-                    const name = item.product?.name || item.customName || '임시 제품';
+                    const name = item.product ? getProductDisplayName(item.product, customerType) : (item.customName || '임시 제품');
                     const isCustom = !item.product;
                     return (
                       <div key={key}>
