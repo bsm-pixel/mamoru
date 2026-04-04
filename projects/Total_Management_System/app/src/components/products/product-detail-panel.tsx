@@ -47,6 +47,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0,
+    dealer_name: '', academy_name: '',
     description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '',
   });
 
@@ -67,10 +68,10 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   // create/duplicate 모드 초기화
   useEffect(() => {
     if (mode === 'create') {
-      setForm({ sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0, description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '' });
+      setForm({ sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0, dealer_name: '', academy_name: '', description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '' });
       fetchNextSku('BL');
     } else if (mode === 'duplicate' && duplicateData) {
-      setForm({ sku: '', barcode: '', product_group: '', ...duplicateData, name: '' });
+      setForm({ sku: '', barcode: '', product_group: '', dealer_name: '', academy_name: '', ...duplicateData, name: '' });
       fetchNextSku(duplicateData.category || 'BL');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,6 +83,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       setForm({
         sku: p.sku || '', name: p.name, category: p.category, price: p.price,
         price_dealer: p.price_dealer || 0, price_academy: p.price_academy || 0, price_purchase: p.price_purchase || 0,
+        dealer_name: (p as Record<string, unknown>).dealer_name as string || '', academy_name: (p as Record<string, unknown>).academy_name as string || '',
         description: p.description || '', imweb_product_no: p.imweb_product_no || '',
         barcode: p.barcode || '', supplier_id: p.supplier_id || '', product_group: p.product_group || '',
       });
@@ -100,6 +102,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       id: productId,
       name: form.name, category: form.category, price: form.price,
       price_dealer: form.price_dealer, price_academy: form.price_academy, price_purchase: form.price_purchase,
+      dealer_name: form.dealer_name || null, academy_name: form.academy_name || null,
       description: form.description || null, imweb_product_no: form.imweb_product_no || null,
       barcode: form.barcode || null, supplier_id: form.supplier_id || null,
       product_group: form.product_group || null,
@@ -168,6 +171,21 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <div>
                 <label className="text-xs text-neutral-500">매입가</label>
                 <input type="number" value={form.price_purchase || ''} onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+              </div>
+            </div>
+            {/* B2B 납품명 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-neutral-500">딜러 납품명</label>
+                <input type="text" value={form.dealer_name} onChange={(e) => setForm({ ...form, dealer_name: e.target.value })}
+                  placeholder="미입력 시 기본 제품명"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+              </div>
+              <div>
+                <label className="text-xs text-neutral-500">아카데미 납품명</label>
+                <input type="text" value={form.academy_name} onChange={(e) => setForm({ ...form, academy_name: e.target.value })}
+                  placeholder="미입력 시 기본 제품명"
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
               </div>
             </div>
@@ -314,6 +332,21 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <div>
                 <label className="text-xs text-neutral-500">매입가</label>
                 <input type="number" value={form.price_purchase || ''} onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+              </div>
+            </div>
+            {/* B2B 납품명 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-neutral-500">딜러 납품명</label>
+                <input type="text" value={form.dealer_name} onChange={(e) => setForm({ ...form, dealer_name: e.target.value })}
+                  placeholder="미입력 시 기본 제품명"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+              </div>
+              <div>
+                <label className="text-xs text-neutral-500">아카데미 납품명</label>
+                <input type="text" value={form.academy_name} onChange={(e) => setForm({ ...form, academy_name: e.target.value })}
+                  placeholder="미입력 시 기본 제품명"
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
               </div>
             </div>
