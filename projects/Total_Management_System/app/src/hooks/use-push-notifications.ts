@@ -1,10 +1,8 @@
 /**
  * 실시간 푸시 알림 훅
- * Supabase Realtime으로 push_notifications 테이블 구독
- * 새 레코드 INSERT 감지 → 브라우저 Notification + 알림음
  *
- * Server Key / Firebase Admin SDK 불필요
- * 설정의 notifications.sound_enabled와 연동
+ * 1. FCM 토큰 발급 → 서버 저장 (모바일 백그라운드 푸시)
+ * 2. Supabase Realtime 구독 (포그라운드 알림음 + 브라우저 Notification)
  */
 
 import { useEffect, useRef } from 'react';
@@ -14,8 +12,37 @@ import { createClient } from '@/lib/supabase/client';
 export function usePushNotifications() {
   const soundEnabled = useSetting<boolean>('notifications.sound_enabled', false);
   const subscribed = useRef(false);
+  const fcmRegistered = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // FCM 토큰 발급 + 서버 등록 (1회)
+  useEffect(() => {
+    if (fcmRegistered.current) return;
+    if (typeof window === 'undefined') return;
+    if (!('serviceWorker' in navigator)) return;
+
+    fcmRegistered.current = true;
+
+    (async () => {
+      try {
+        const { requestPushToken } = await import('@/lib/firebase/client');
+        const token = await requestPushToken();
+        if (!token) return;
+
+        // 서버에 토큰 저장
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+        console.log('[Push] FCM 토큰 등록 완료');
+      } catch (err) {
+        console.error('[Push] FCM 토큰 등록 실패:', err);
+      }
+    })();
+  }, []);
+
+  // Supabase Realtime 구독 (포그라운드 알림)
   useEffect(() => {
     if (!soundEnabled || subscribed.current) return;
     if (typeof window === 'undefined') return;
@@ -39,7 +66,7 @@ export function usePushNotifications() {
         (payload) => {
           const data = payload.new as { title: string; body: string; url?: string };
 
-          // 브라우저 Notification (백그라운드에서도 표시)
+          // 브라우저 Notification
           if ('Notification' in window && Notification.permission === 'granted') {
             const notif = new Notification(data.title, {
               body: data.body,
