@@ -40,6 +40,10 @@ export async function POST(
       return NextResponse.json({ error: '고객 주소(우편번호+도로명)를 먼저 등록해주세요' }, { status: 400 });
     }
 
+    if (!sale.customer_phone) {
+      return NextResponse.json({ error: '고객 연락처가 없습니다. 고객 정보에서 연락처를 입력해주세요.' }, { status: 400 });
+    }
+
     // 판매 항목 조회 (품목명용)
     const { data: items } = await db
       .from('offline_sale_items')

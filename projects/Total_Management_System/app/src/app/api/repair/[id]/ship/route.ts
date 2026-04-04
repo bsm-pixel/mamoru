@@ -32,6 +32,10 @@ export async function POST(
       return NextResponse.json({ error: `출고 불가 상태: ${repair.status}` }, { status: 400 });
     }
 
+    if (!repair.phone) {
+      return NextResponse.json({ error: '고객 연락처가 없습니다. 수리 접수 정보를 확인해주세요.' }, { status: 400 });
+    }
+
     // ALPS 직접 호출 — 송장번호 발급 + 접수
     const { invoiceNumber } = await getNextInvoice();
     const fullAddress = [repair.address, repair.address_detail].filter(Boolean).join(' ');

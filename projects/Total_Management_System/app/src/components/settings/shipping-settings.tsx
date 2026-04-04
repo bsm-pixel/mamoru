@@ -13,6 +13,8 @@ function parse<T>(raw: unknown, fb: T): T {
 
 export default function ShippingSettings({ settings, onSave, saving }: TabProps) {
   const [sender, setSender] = useState({ name: '', tel: '', zip: '', addr: '' });
+  const [senderRoad, setSenderRoad] = useState('');
+  const [senderDetail, setSenderDetail] = useState('');
   const [goodsName, setGoodsName] = useState('가위 복원수리');
   const [memoPresets, setMemoPresets] = useState<string[]>([]);
   const [newMemo, setNewMemo] = useState('');
@@ -22,8 +24,34 @@ export default function ShippingSettings({ settings, onSave, saving }: TabProps)
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [soundTargets, setSoundTargets] = useState({ orders: true, consultations: true, repairs: true });
 
+  // 다음 주소검색
+  function openPostcode() {
+    const w = window as unknown as Record<string, unknown>;
+    if (!w.daum) {
+      const s = document.createElement('script');
+      s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+      s.onload = () => doOpen();
+      document.head.appendChild(s);
+    } else { doOpen(); }
+    function doOpen() {
+      new ((window as unknown as Record<string, unknown> & { daum: { Postcode: new (o: Record<string, unknown>) => { open: () => void } } }).daum.Postcode)({
+        oncomplete: (data: { zonecode: string; roadAddress: string; jibunAddress: string }) => {
+          const road = data.roadAddress || data.jibunAddress;
+          setSender((prev) => ({ ...prev, zip: data.zonecode, addr: [road, senderDetail].filter(Boolean).join(' ') }));
+          setSenderRoad(road);
+        },
+      }).open();
+    }
+  }
+
   useEffect(() => {
-    setSender(parse(settings['shipping.sender'], { name: '마모루', tel: '', zip: '', addr: '' }));
+    const s = parse(settings['shipping.sender'], { name: '마모루', tel: '', zip: '', addr: '' });
+    setSender(s);
+    // addr에서 도로명/상세 분리 시도 (첫 공백 이후를 상세로)
+    if (s.addr) {
+      setSenderRoad(s.addr);
+      setSenderDetail('');
+    }
     setGoodsName(parse(settings['shipping.default_goods_name'], '가위 복원수리'));
     setMemoPresets(parse(settings['shipping.memo_presets'], []));
     setUnshippedDays(parse(settings['shipping.unshipped_warning_days'], 2));
@@ -51,17 +79,32 @@ export default function ShippingSettings({ settings, onSave, saving }: TabProps)
       <h2 className="text-lg font-bold">주문·배송 설정</h2>
 
       {/* 1. 발송인 정보 */}
-      <Field label="발송인 정보" desc="ALPS 송장 생성 시 사용되는 발송인입니다.">
+      <Field label="발송인 정보" desc="ALPS 송장 생성 시 보내는 사람(송하인) 정보입니다. 모든 필드 필수.">
         <div className="grid grid-cols-2 gap-2">
           <input placeholder="이름" value={sender.name} onChange={(e) => setSender({ ...sender, name: e.target.value })}
             className="h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
-          <input placeholder="연락처" value={sender.tel} onChange={(e) => setSender({ ...sender, tel: e.target.value })}
+          <input placeholder="연락처 (숫자만)" value={sender.tel} onChange={(e) => setSender({ ...sender, tel: e.target.value })}
             className="h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
-          <input placeholder="우편번호" value={sender.zip} onChange={(e) => setSender({ ...sender, zip: e.target.value })}
-            className="h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
-          <input placeholder="주소" value={sender.addr} onChange={(e) => setSender({ ...sender, addr: e.target.value })}
+          <div className="col-span-2 flex gap-2">
+            <input placeholder="우편번호" value={sender.zip} readOnly
+              className="w-24 h-9 px-3 rounded-lg border border-neutral-200 text-sm bg-neutral-50" />
+            <button type="button" onClick={openPostcode}
+              className="h-9 px-3 rounded-lg bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-800 transition">
+              주소 검색
+            </button>
+          </div>
+          <input placeholder="도로명주소" value={senderRoad} readOnly
+            className="col-span-2 h-9 px-3 rounded-lg border border-neutral-200 text-sm bg-neutral-50" />
+          <input placeholder="상세주소 (동/호수 등)" value={senderDetail}
+            onChange={(e) => {
+              setSenderDetail(e.target.value);
+              setSender({ ...sender, addr: [senderRoad, e.target.value].filter(Boolean).join(' ') });
+            }}
             className="col-span-2 h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
         </div>
+        {(!sender.name || !sender.tel || !sender.zip || !sender.addr) && (
+          <p className="text-xs text-red-500 mt-1">⚠ 모든 필드를 입력해야 송장 생성이 가능합니다.</p>
+        )}
       </Field>
 
       {/* 2. 기본 상품명 */}

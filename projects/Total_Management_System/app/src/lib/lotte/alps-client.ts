@@ -10,7 +10,7 @@ const LOTTE_API_URL = process.env.LOTTE_API_URL || '';
 const LOTTE_CANCEL_API_URL = process.env.LOTTE_CANCEL_API_URL || '';
 const LOTTE_TRACK_API_URL = process.env.LOTTE_TRACK_API_URL || '';
 const LOTTE_CLIENT_KEY = process.env.LOTTE_CLIENT_KEY || '';
-const LOTTE_JOB_CUST_CD = process.env.LOTTE_JOB_CUST_CD || '';
+const LOTTE_JOBCUSTCD = process.env.LOTTE_JOBCUSTCD || '';
 
 // 발송인 정보 (환경변수 fallback)
 const ENV_SENDER = {
@@ -139,11 +139,19 @@ export async function bookShipment(order: {
     throw new Error('LOTTE API 환경변수가 설정되지 않았습니다.');
   }
 
+  if (!LOTTE_JOBCUSTCD) {
+    throw new Error('LOTTE_JOBCUSTCD 환경변수가 설정되지 않았습니다.');
+  }
+
   const sender = await getSender();
+
+  if (!sender.name || !sender.tel || !sender.zip || !sender.addr) {
+    throw new Error('발송인 정보가 불완전합니다. 설정 > 주문·배송에서 발송인 정보를 입력해주세요.');
+  }
 
   const payload = {
     snd_list: [{
-      jobCustCd: LOTTE_JOB_CUST_CD,
+      jobCustCd: LOTTE_JOBCUSTCD,
       invNo: order.invoiceNumber,
       // 발송인 (ALPS 공식 필드명: snper*) — 설정 DB 우선, 환경변수 fallback
       snperNm: sender.name,
