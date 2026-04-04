@@ -10,7 +10,7 @@ const LOTTE_API_URL = process.env.LOTTE_API_URL || '';
 const LOTTE_CANCEL_API_URL = process.env.LOTTE_CANCEL_API_URL || '';
 const LOTTE_TRACK_API_URL = process.env.LOTTE_TRACK_API_URL || '';
 const LOTTE_CLIENT_KEY = process.env.LOTTE_CLIENT_KEY || '';
-const LOTTE_JOBCUSTCD = process.env.LOTTE_JOBCUSTCD || '';
+const LOTTE_JOBCUSTCD = process.env.LOTTE_JOB_CUST_CD || process.env.LOTTE_JOBCUSTCD || '';
 
 // 발송인 정보 (환경변수 fallback)
 const ENV_SENDER = {
