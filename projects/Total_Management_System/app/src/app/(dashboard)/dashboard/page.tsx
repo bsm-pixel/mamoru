@@ -28,6 +28,8 @@ export default function DashboardPage() {
   const monthGoal = useSetting<number>('dashboard.monthly_goal', 0);
   const kpiGreen = useSetting<number>('dashboard.kpi_green', 80);
   const kpiYellow = useSetting<number>('dashboard.kpi_yellow', 50);
+  const cardVisibility = useSetting<Record<string, boolean>>('dashboard.card_visibility', { sales: true, repairs: true, orders: true, consultations: true });
+  const cardOrder = useSetting<string[]>('dashboard.card_order', ['orders', 'consultations', 'repairs', 'sales']);
   const updateSettings = useUpdateSettings();
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalInput, setGoalInput] = useState('');
@@ -212,56 +214,58 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              {/* 우측: 현황 카드 2열 그리드 */}
+              {/* 우측: 현황 카드 — 설정 기반 순서/표시 */}
               <div className="w-full lg:w-[520px] shrink-0 space-y-3">
                 <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">현황 요약</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <HubCategoryCard
-                  title="주문"
-                  icon={ShoppingCart}
-                  href="/orders/dashboard"
-                  stats={[
-                    { label: '결제완료', value: stats?.orders.payDone || 0, color: 'text-info' },
-                    { label: '준비중', value: stats?.orders.preparing || 0, color: 'text-warning' },
-                    { label: '배송중', value: stats?.orders.shipping || 0, color: 'text-terracotta' },
-                    { label: '완료', value: stats?.orders.delivered || 0, color: 'text-success' },
-                  ]}
-                  summary={orderSummary}
-                />
-
-                <HubCategoryCard
-                  title="상담"
-                  icon={MessageSquare}
-                  href="/consultations"
-                  stats={[
-                    { label: '신규접수', value: stats?.consultations.newIntake || 0, color: 'text-warning' },
-                    { label: '상담예정', value: stats?.consultations.confirmed || 0, color: 'text-info' },
-                    { label: '일정재요청', value: stats?.consultations.needAction || 0, color: 'text-error' },
-                  ]}
-                />
-
-                <HubCategoryCard
-                  title="복원수리"
-                  icon={Wrench}
-                  href="/repairs/dashboard"
-                  stats={[
-                    { label: '신규접수', value: stats?.repairs.intakeNew || 0, color: 'text-info' },
-                    { label: '진행중', value: stats?.repairs.workingCount || 0, color: 'text-terracotta' },
-                    { label: '출고대기', value: stats?.repairs.readyToShip || 0, color: 'text-warning' },
-                  ]}
-                  summary={repairSummary}
-                />
-
-                <HubCategoryCard
-                  title="오프라인 판매"
-                  icon={Store}
-                  href="/sales"
-                  stats={[
-                    { label: '이번달', value: stats?.sales.monthCount || 0, color: 'text-indigo-black' },
-                  ]}
-                  summary={stats ? `이번달 ${fmtKRW(stats.sales.monthAmount)}` : ''}
-                />
-
+                {(() => {
+                  const CARD_MAP: Record<string, React.ReactNode> = {
+                    orders: (
+                      <HubCategoryCard key="orders" title="주문" icon={ShoppingCart} href="/orders/dashboard"
+                        stats={[
+                          { label: '결제완료', value: stats?.orders.payDone || 0, color: 'text-info' },
+                          { label: '준비중', value: stats?.orders.preparing || 0, color: 'text-warning' },
+                          { label: '배송중', value: stats?.orders.shipping || 0, color: 'text-terracotta' },
+                          { label: '완료', value: stats?.orders.delivered || 0, color: 'text-success' },
+                        ]}
+                        summary={orderSummary}
+                      />
+                    ),
+                    consultations: (
+                      <HubCategoryCard key="consultations" title="상담" icon={MessageSquare} href="/consultations"
+                        stats={[
+                          { label: '신규접수', value: stats?.consultations.newIntake || 0, color: 'text-warning' },
+                          { label: '상담예정', value: stats?.consultations.confirmed || 0, color: 'text-info' },
+                          { label: '일정재요청', value: stats?.consultations.needAction || 0, color: 'text-error' },
+                        ]}
+                      />
+                    ),
+                    repairs: (
+                      <HubCategoryCard key="repairs" title="복원수리" icon={Wrench} href="/repairs/dashboard"
+                        stats={[
+                          { label: '신규접수', value: stats?.repairs.intakeNew || 0, color: 'text-info' },
+                          { label: '진행중', value: stats?.repairs.workingCount || 0, color: 'text-terracotta' },
+                          { label: '출고대기', value: stats?.repairs.readyToShip || 0, color: 'text-warning' },
+                        ]}
+                        summary={repairSummary}
+                      />
+                    ),
+                    sales: (
+                      <HubCategoryCard key="sales" title="오프라인 판매" icon={Store} href="/sales"
+                        stats={[
+                          { label: '이번달', value: stats?.sales.monthCount || 0, color: 'text-indigo-black' },
+                        ]}
+                        summary={stats ? `이번달 ${fmtKRW(stats.sales.monthAmount)}` : ''}
+                      />
+                    ),
+                  };
+                  const defaultOrder = ['orders', 'consultations', 'repairs', 'sales'];
+                  const order = cardOrder.length > 0 ? cardOrder : defaultOrder;
+                  return order
+                    .filter((key) => cardVisibility[key] !== false)
+                    .map((key) => CARD_MAP[key])
+                    .filter(Boolean);
+                })()}
                 </div>
                 {/* 저재고 알림 */}
                 {lowStock && lowStock.length > 0 && (
