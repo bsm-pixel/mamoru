@@ -4,6 +4,7 @@
  */
 
 import { createServiceClient } from '@/lib/supabase/server';
+import { randomUUID } from 'crypto';
 
 // 환경변수 (GAS Script Properties에서 이전)
 const LOTTE_API_URL = process.env.LOTTE_API_URL || '';
@@ -78,8 +79,8 @@ export async function getNextInvoice(): Promise<{ invoiceNumber: string; base11:
 
 /** ALPS API 호출 — GAS httpPostJson_와 동일한 로직 (재시도 3회, 429/5xx 대응) */
 async function alpsPost(url: string, payload: unknown, retries = 3): Promise<{ ok: boolean; code: number; json: Record<string, unknown> }> {
-  const idem = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const corr = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const idem = randomUUID();
+  const corr = randomUUID();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json; charset=utf-8',
