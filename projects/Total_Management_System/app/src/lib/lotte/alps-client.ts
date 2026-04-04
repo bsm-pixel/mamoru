@@ -99,8 +99,11 @@ export async function getNextInvoice(): Promise<{ invoiceNumber: string; base11:
 /** ALPS API 호출 (재시도 3회) */
 async function alpsPost(url: string, payload: unknown, retries = 3): Promise<unknown> {
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json; charset=utf-8',
+    'Accept': 'application/json',
     'Authorization': `IgtAK ${LOTTE_CLIENT_KEY}`,
+    'X-Idempotency-Key': crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    'X-Correlation-Id': crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
   };
 
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -150,9 +153,17 @@ export async function bookShipment(order: {
     return { success: false, invoiceNumber: order.invoiceNumber, error: '발송인 정보가 불완전합니다. 설정 > 주문·배송에서 발송인 정보를 입력해주세요.' };
   }
 
+  // ordNo: GAS에서 항상 포함했던 필수 필드 — 없으면 ALPS 거래처 조회 오류 발생
+  const now = new Date();
+  const ordNo = `TMS-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+
   const payload = {
     snd_list: [{
       jobCustCd: LOTTE_JOBCUSTCD,
+      ustRtgSctCd: '01',
+      ordSct: '3',
+      fareSctCd: '03',
+      ordNo,
       invNo: order.invoiceNumber,
       // 발송인 (ALPS 공식 필드명: snper*) — 설정 DB 우선, 환경변수 fallback
       snperNm: sender.name,
@@ -167,13 +178,10 @@ export async function bookShipment(order: {
       acperZipcd: order.receiverZip,
       acperAdr: order.receiverAddr,
       // 상품/배송
+      boxTypCd: 'A',
       gdsNm: order.goodsName || '가위 복원수리',
       dlvMsgCont: order.deliveryMessage || '',
       cusMsgCont: '',
-      ustRtgSctCd: '01',
-      ordSct: '3',
-      fareSctCd: '03',
-      boxTypCd: 'A',
     }],
   };
 
