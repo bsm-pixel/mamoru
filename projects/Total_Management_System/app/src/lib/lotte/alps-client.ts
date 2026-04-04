@@ -10,35 +10,15 @@ const LOTTE_API_URL = process.env.LOTTE_API_URL || '';
 const LOTTE_CANCEL_API_URL = process.env.LOTTE_CANCEL_API_URL || '';
 const LOTTE_TRACK_API_URL = process.env.LOTTE_TRACK_API_URL || '';
 const LOTTE_CLIENT_KEY = process.env.LOTTE_CLIENT_KEY || '';
-const LOTTE_JOBCUSTCD = process.env.LOTTE_JOB_CUST_CD || process.env.LOTTE_JOBCUSTCD || '';
+const LOTTE_JOB_CUST_CD = process.env.LOTTE_JOB_CUST_CD || '';
 
-// 발송인 정보 (환경변수 fallback)
-const ENV_SENDER = {
+// 발송인 정보
+const SENDER = {
   name: process.env.LOTTE_SENDER_NAME || '마모루',
   tel: process.env.LOTTE_SENDER_TEL || '',
   zip: process.env.LOTTE_SENDER_ZIP || '',
   addr: process.env.LOTTE_SENDER_ADDR || '',
 };
-
-/** 설정 DB에서 발송인 정보 조회 (없으면 환경변수 fallback) */
-async function getSender(): Promise<typeof ENV_SENDER> {
-  try {
-    const db = createServiceClient();
-    const { data } = await (db as any).from('system_settings').select('value').eq('key', 'shipping.sender').single(); // eslint-disable-line @typescript-eslint/no-explicit-any
-    if (data?.value) {
-      const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
-      // 설정값이 비어있으면(빈 문자열 포함) 환경변수 fallback
-      const name = (parsed.name || '').trim() || ENV_SENDER.name;
-      const tel = (parsed.tel || '').trim() || ENV_SENDER.tel;
-      const zip = (parsed.zip || '').trim() || ENV_SENDER.zip;
-      const addr = (parsed.addr || '').trim() || ENV_SENDER.addr;
-      if (name || tel || zip || addr) {
-        return { name, tel, zip, addr };
-      }
-    }
-  } catch { /* fallback */ }
-  return ENV_SENDER;
-}
 
 /** 체크디짓 계산 (11자리 base → mod 7) */
 export function checkDigit(base11: number): number {
@@ -99,11 +79,8 @@ export async function getNextInvoice(): Promise<{ invoiceNumber: string; base11:
 /** ALPS API 호출 (재시도 3회) */
 async function alpsPost(url: string, payload: unknown, retries = 3): Promise<unknown> {
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json; charset=utf-8',
-    'Accept': 'application/json',
+    'Content-Type': 'application/json',
     'Authorization': `IgtAK ${LOTTE_CLIENT_KEY}`,
-    'X-Idempotency-Key': crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    'X-Correlation-Id': crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
   };
 
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -143,48 +120,30 @@ export async function bookShipment(order: {
     throw new Error('LOTTE API 환경변수가 설정되지 않았습니다.');
   }
 
-  if (!LOTTE_JOBCUSTCD) {
-    return { success: false, invoiceNumber: order.invoiceNumber, error: 'LOTTE_JOBCUSTCD 환경변수가 설정되지 않았습니다.' };
-  }
-
-  const sender = await getSender();
-
-  if (!sender.name || !sender.tel || !sender.zip || !sender.addr) {
-    return { success: false, invoiceNumber: order.invoiceNumber, error: '발송인 정보가 불완전합니다. 설정 > 주문·배송에서 발송인 정보를 입력해주세요.' };
-  }
-
-  // GAS lotteBuildSnd_와 100% 동일한 payload 구성
-  const now = new Date();
-  const pad2 = (n: number) => String(n).padStart(2, '0');
-  const ordNo = `TMS-${now.getFullYear()}${pad2(now.getMonth()+1)}${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`;
-  const pickReqYmd = `${now.getFullYear()}${pad2(now.getMonth()+1)}${pad2(now.getDate())}`;
-
   const payload = {
     snd_list: [{
-      jobCustCd:   LOTTE_JOBCUSTCD,
+      jobCustCd: LOTTE_JOB_CUST_CD,
+      invNo: order.invoiceNumber,
+      // 발송인 (ALPS 공식 필드명: snper*)
+      snperNm: SENDER.name,
+      snperTel: SENDER.tel.replace(/\D/g, ''),
+      snperCpno: '',
+      snperZipcd: SENDER.zip,
+      snperAdr: SENDER.addr,
+      // 수화주 (ALPS 공식 필드명: acper*)
+      acperNm: order.receiverName,
+      acperTel: order.receiverTel.replace(/\D/g, ''),
+      acperCpno: order.receiverTel.replace(/\D/g, ''),
+      acperZipcd: order.receiverZip,
+      acperAdr: order.receiverAddr,
+      // 상품/배송
+      gdsNm: order.goodsName || '가위 복원수리',
+      dlvMsgCont: order.deliveryMessage || '',
+      cusMsgCont: '',
       ustRtgSctCd: '01',
-      ordSct:      '3',
-      fareSctCd:   '03',
-      ordNo,
-      invNo:       order.invoiceNumber,
-
-      snperNm:     sender.name,
-      snperTel:    sender.tel.replace(/\D/g, ''),
-      snperCpno:   '',
-      snperZipcd:  sender.zip,
-      snperAdr:    sender.addr,
-
-      acperNm:     order.receiverName,
-      acperTel:    order.receiverTel.replace(/\D/g, ''),
-      acperCpno:   (order.receiverTel || '').replace(/\D/g, ''),
-      acperZipcd:  order.receiverZip,
-      acperAdr:    order.receiverAddr,
-
-      boxTypCd:    'A',
-      gdsNm:       order.goodsName || '복원수리 물품',
-      dlvMsgCont:  order.deliveryMessage || '',
-      cusMsgCont:  '',
-      pickReqYmd,
+      ordSct: '3',
+      fareSctCd: '03',
+      boxTypCd: 'A',
     }],
   };
 
