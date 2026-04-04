@@ -7,36 +7,28 @@
 
 ## 📌 미완료 — 설정 탭 리뉴얼 (04-03 승인)
 
-### Phase 0: 인프라
-- [ ] system_settings 테이블 (key TEXT PK, value JSONB)
-- [ ] GET/PATCH /api/settings API
-- [ ] useSettings() / useSetting(key, default) 훅
+### Phase 0: 인프라 ✅
+- [x] system_settings 테이블 + warehouses 테이블 + 반품 컬럼 (050_system_settings.sql)
+- [x] GET/PATCH /api/settings API
+- [x] useSettings() / useSetting(key, default) / getServerSetting() 훅
 
-### Phase 1: 설정 UI
-- [ ] 설정 페이지 전면 재작성 (좌측 10탭 + 우측 폼, 모바일 아코디언)
-- [ ] 기존 동기화/이관 → 시스템 탭으로 이동
+### Phase 1+2: 설정 UI + 96개 항목 ✅
+- [x] 설정 페이지 전면 재작성 (좌측 10탭 + 우측 폼, 모바일 아코디언)
+- [x] 10개 탭 컴포넌트 (dashboard/shipping/consultation/repair/sales/customer/inventory/accounting/notification/system)
+- [x] 기존 동기화/이관 → 시스템 탭으로 이동
 
-### Phase 2: 분류별 설정 구현
-- [ ] 2-1: 대시보드 (8개) — 월 목표, 저재고 기준, 체류 경고, 카드 표시/숨김, KPI 색상, 미수금 경고, 매입 한도, 카드 순서
-- [ ] 2-2: 주문·배송 (11개) — 발송인, 상품명, 송장범위, 택배사(라벨), 배송메모, 미발송경고, 리뷰대기일, 배송추적, 아임웹연동, 알림음, 반품
-- [ ] 2-3: 상담 (12개) — 영업시간, 휴무, 특별휴무, 버퍼, 시간단위, 슬롯, 리마인더, 리뷰자동, 매장주소, Gmail, 유형별시간, 변경제한
-- [ ] 2-4: 복원수리 (9개) — 마모루/타사 수리비, 배송비, 추가서비스(유동), 입금계좌, 체류경고, 검수항목(다중선택), 미입금리마인더, 예상기간
-- [ ] 2-5: 판매 (9개) — 거래명세서(발행인+로고+하단), 결제방법, 채널, 할인율, 재고차단, VAT기본, 자동세금계산서
-- [ ] 2-6: 고객 (7개) — 유형, RFM, 미수금독촉, 소스, 정렬, 메모템플릿, 태그
-- [ ] 2-7: 상품·재고 (12개) — 저재고, 아임웹동기화, 카테고리, 안전재고, 조정사유, SKU형식, 시리얼시점, 실사알림, 다중창고, 바코드, 정렬, 리드타임
-- [ ] 2-8: 회계 (9개) — 사업자정보, 경비카테고리, 부가세율, 계좌, 과세구분, 매출인식, 예산, 회계기간, 고정경비
-- [ ] 2-9: 알림·연동 (11개) — 마스터on/off, 6종개별, 웹훅URL 2개, API키 2개(읽기전용)
-- [ ] 2-10: 시스템 (7개) — 사업장정보, 동기화이력, 환경변수, 행수, 시작페이지, 버전, 사이드바커스텀
+### Phase 3: 신규 기능
+- [x] 3-A: 반품 기능 (API action:'return' + useReturnSale + 판매상세 반품버튼)
+- [ ] 3-B: 검수 다중선택 UI (radio→checkbox) — 별도 작업
+- [ ] 3-C: 배송추적 Cron 디버깅 — 별도 작업
+- [ ] 3-D: 신규 접수 알림음 (PC 브라우저) — 설정 UI 준비됨, 실제 Sound/Push는 별도
+- [ ] 3-E: 다중 창고 재고 이동 UI — DB 준비됨, UI는 별도
 
-### Phase 3: 신규 기능 (설정과 함께)
-- [ ] 3-A: 반품 기능 (판매조회→반품처리→재고/시리얼 복귀)
-- [ ] 3-B: 검수 다중선택 UI (radio→checkbox, 부위별 복수 증상)
-- [ ] 3-C: 배송추적 Cron 디버깅 (아임웹 배송완료 ↔ TMS 불일치)
-- [ ] 3-D: 신규 접수 알림음 (주문+상담+수리, PC 브라우저 알림)
-- [ ] 3-E: 다중 창고 + 재고 이동 (보관→준비, 시리얼 자동생성 연동)
-
-### Phase 4: 하드코딩 교체
-- [ ] 각 모듈 하드코딩값 → useSetting(key, defaultValue) 패턴 교체
+### Phase 4: 하드코딩 교체 ✅
+- [x] 대시보드 KPI 목표: localStorage → useSetting('dashboard.monthly_goal')
+- [x] KPI 색상: 80/50 → useSetting('dashboard.kpi_green/yellow')
+- [x] 알림톡 마스터 on/off: make-webhook.ts에서 DB 체크 추가
+- [x] 알림톡 개별 on/off: 템플릿별 DB 체크 추가
 
 ### 별도 작업 (설정 리뉴얼 이후)
 - [ ] 복원수리 고객 상태 페이지 (진행현황 타임라인 — 고객이 볼 수 있는 public 페이지)

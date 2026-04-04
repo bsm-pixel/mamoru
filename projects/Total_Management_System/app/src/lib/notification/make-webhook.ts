@@ -7,7 +7,34 @@
 
 const MAKE_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL || '';           // 상담 알림톡
 const MAKE_REPAIR_WEBHOOK_URL = process.env.MAKE_REPAIR_WEBHOOK_URL || ''; // 복원수리 상태변경
-const VERSION = 'tms-2.2';
+const VERSION = 'tms-2.3';
+
+// 설정 기반 알림 on/off 체크를 위한 헬퍼
+async function isNotificationEnabled(template: string): Promise<boolean> {
+  try {
+    const { createServiceClient } = require('@/lib/supabase/server');
+    const db = createServiceClient();
+    // 마스터 스위치
+    const { data: master } = await db.from('system_settings').select('value').eq('key', 'notifications.master_enabled').single();
+    if (master?.value === 'false' || master?.value === false) return false;
+    // 개별 템플릿 매핑
+    const templateKeyMap: Record<string, string> = {
+      confirmed: 'notifications.consultation_received',
+      as_received: 'notifications.repair_received',
+      as_cost_notice: 'notifications.repair_cost_notice',
+      as_payment_confirmed: 'notifications.repair_payment_confirmed',
+      as_shipped: 'notifications.repair_shipped',
+      review_request: 'notifications.review_request',
+    };
+    const settingKey = templateKeyMap[template];
+    if (!settingKey) return true; // 매핑 안 된 템플릿은 항상 발송
+    const { data: row } = await db.from('system_settings').select('value').eq('key', settingKey).single();
+    if (row?.value === 'false' || row?.value === false) return false;
+    return true;
+  } catch {
+    return true; // DB 오류 시 발송 (안전)
+  }
+}
 
 /** 복원수리 상태변경 전용 템플릿 (별도 Make 시나리오 → MAKE_REPAIR_WEBHOOK_URL) */
 const REPAIR_STATUS_TEMPLATES = new Set<NotifyTemplate>([
@@ -85,6 +112,13 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
   success: boolean;
   error?: string;
 }> {
+  // 설정 기반 on/off 체크
+  const enabled = await isNotificationEnabled(payload.template);
+  if (!enabled) {
+    console.log(`[make-webhook] SKIP template=${payload.template} — 설정에서 비활성`);
+    return { success: true }; // 성공으로 처리 (에러 아님)
+  }
+
   // 템플릿에 따라 웹훅 URL 분기
   const isRepairStatus = REPAIR_STATUS_TEMPLATES.has(payload.template);
   const webhookUrl = isRepairStatus ? MAKE_REPAIR_WEBHOOK_URL : MAKE_WEBHOOK_URL;

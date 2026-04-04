@@ -151,6 +151,127 @@ export async function PATCH(
       return NextResponse.json({ success: true, action: 'cancelled' });
     }
 
+    // --- A-2) 반품 처리 ---
+    if (action === 'return') {
+      if (sale.cancelled_at) {
+        return NextResponse.json({ error: '취소된 판매는 반품 처리할 수 없습니다' }, { status: 400 });
+      }
+      if (sale.returned_at) {
+        return NextResponse.json({ error: '이미 반품 처리된 판매입니다' }, { status: 400 });
+      }
+
+      const reason = body.reason || '';
+
+      // 1. 시리얼 복원 — previous_zone으로 원래 위치 복원
+      const { data: serials } = await db
+        .from('product_serials')
+        .select('id, product_id, previous_zone')
+        .eq('offline_sale_id', id);
+
+      if (serials && serials.length > 0) {
+        for (const serial of serials) {
+          await db
+            .from('product_serials')
+            .update({
+              status: 'in_stock',
+              warehouse_zone: serial.previous_zone || 'ready',
+              previous_zone: null,
+              sold_via: null,
+              offline_sale_id: null,
+              sold_at: null,
+              sold_to_name: null,
+              sold_to_phone: null,
+            })
+            .eq('id', serial.id);
+        }
+      }
+
+      // 2. 재고 복원 + 3. 아임웹 재고 동기화
+      const { data: items } = await db
+        .from('offline_sale_items')
+        .select('product_id, quantity')
+        .eq('sale_id', id);
+
+      if (items && items.length > 0) {
+        const productQtyMap: Record<string, number> = {};
+        for (const item of items) {
+          if (item.product_id && item.quantity) {
+            productQtyMap[item.product_id] = (productQtyMap[item.product_id] || 0) + item.quantity;
+          }
+        }
+
+        await Promise.all(Object.entries(productQtyMap).map(async ([productId, qty]) => {
+          const { data: prod } = await db
+            .from('products')
+            .select('stock_quantity, raw_stock, imweb_product_no')
+            .eq('id', productId)
+            .single();
+          if (!prod) return;
+
+          const { count: serialCount } = await db
+            .from('product_serials')
+            .select('id', { count: 'exact', head: true })
+            .eq('offline_sale_id', id)
+            .eq('product_id', productId);
+
+          const newStock = (prod.stock_quantity || 0) + qty;
+          const updateData: Record<string, unknown> = { stock_quantity: newStock };
+          if (!serialCount || serialCount === 0) {
+            updateData.raw_stock = (prod.raw_stock || 0) + qty;
+          }
+          await db.from('products').update(updateData).eq('id', productId);
+
+          if (prod.imweb_product_no) {
+            try {
+              const { count: displayCount } = await db
+                .from('product_serials')
+                .select('id', { count: 'exact', head: true })
+                .eq('product_id', productId)
+                .eq('status', 'in_stock')
+                .eq('warehouse_zone', 'display');
+              const sellableStock = Math.max(0, newStock - (displayCount || 0));
+              await updateImwebStock(Number(prod.imweb_product_no), sellableStock);
+            } catch (e) {
+              console.error('[imweb] 반품 재고 동기화 실패:', prod.imweb_product_no, e);
+            }
+          }
+        }));
+      }
+
+      // 4. 미수금 차감
+      if (sale.customer_id && sale.payment_status !== 'paid') {
+        const effectiveTotal = sale.total_amount - (sale.discount_amount || 0);
+        const unpaidAmount = effectiveTotal - (sale.paid_amount || 0);
+        if (unpaidAmount > 0) {
+          const { data: cust } = await db
+            .from('customers')
+            .select('outstanding_balance')
+            .eq('id', sale.customer_id)
+            .single();
+          if (cust) {
+            await db
+              .from('customers')
+              .update({
+                outstanding_balance: Math.max(0, (cust.outstanding_balance || 0) - unpaidAmount),
+              })
+              .eq('id', sale.customer_id);
+          }
+        }
+      }
+
+      // 5. 반품 상태 기록
+      const { error: updateErr } = await db
+        .from('offline_sales')
+        .update({
+          returned_at: new Date().toISOString(),
+          return_reason: reason,
+        })
+        .eq('id', id);
+
+      if (updateErr) throw updateErr;
+      return NextResponse.json({ success: true, action: 'returned' });
+    }
+
     // --- B) 결제상태 변경 ---
     if (action === 'update_payment') {
       if (sale.cancelled_at) {

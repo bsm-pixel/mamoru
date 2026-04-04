@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { HubCategoryCard } from '@/components/dashboard/hub-category-card';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHubStats, useOutstandingAlert, useTodayConsultations, useLowStockAlert, usePurchasingAlert, useSuppliesAlert } from '@/hooks/use-dashboard-stats';
+import { useSetting, useUpdateSettings } from '@/hooks/use-settings';
 import { formatPhone } from '@/lib/utils/format';
 import {
   ShoppingCart, MessageSquare, Wrench, Store,
@@ -23,18 +24,16 @@ function fmtKRW(n: number) {
 export default function DashboardPage() {
   const { data: stats, isLoading } = useHubStats();
 
-  // KPI: 월 목표 (localStorage)
-  const [monthGoal, setMonthGoal] = useState(0);
+  // KPI: 월 목표 (DB 설정)
+  const monthGoal = useSetting<number>('dashboard.monthly_goal', 0);
+  const kpiGreen = useSetting<number>('dashboard.kpi_green', 80);
+  const kpiYellow = useSetting<number>('dashboard.kpi_yellow', 50);
+  const updateSettings = useUpdateSettings();
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalInput, setGoalInput] = useState('');
-  useEffect(() => {
-    const saved = localStorage.getItem('mamoru_month_goal');
-    if (saved) setMonthGoal(parseInt(saved) || 0);
-  }, []);
   const saveGoal = () => {
     const v = parseInt(goalInput) || 0;
-    setMonthGoal(v);
-    localStorage.setItem('mamoru_month_goal', String(v));
+    updateSettings.mutate([{ key: 'dashboard.monthly_goal', value: v }]);
     setEditingGoal(false);
   };
   const { data: outstanding } = useOutstandingAlert();
@@ -76,8 +75,8 @@ export default function DashboardPage() {
         {monthGoal > 0 && stats && (() => {
           const current = (stats.sales.monthAmount || 0) + (stats.repairs?.monthRepairAmount || 0);
           const pct = Math.min(Math.round((current / monthGoal) * 100), 100);
-          const color = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-red-500';
-          const textColor = pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-yellow-600' : 'text-red-500';
+          const color = pct >= kpiGreen ? 'bg-green-500' : pct >= kpiYellow ? 'bg-yellow-500' : 'bg-red-500';
+          const textColor = pct >= kpiGreen ? 'text-green-600' : pct >= kpiYellow ? 'text-yellow-600' : 'text-red-500';
           return (
             <div className="bg-white rounded-lg border border-neutral-200 p-4">
               <div className="flex items-center justify-between mb-2">

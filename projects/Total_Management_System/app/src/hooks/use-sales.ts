@@ -354,6 +354,36 @@ export function useCancelSale() {
   });
 }
 
+/** 반품 처리 */
+export function useReturnSale() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      const res = await fetch(`/api/sales/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'return', reason }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || '반품 처리 실패');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('반품 처리 완료 — 재고/시리얼 복원됨');
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+    onError: (err) => {
+      toast.error('반품 처리 실패: ' + (err instanceof Error ? err.message : String(err)));
+    },
+  });
+}
+
 /** 결제상태 변경 — 낙관적 업데이트 */
 export function useUpdatePaymentStatus() {
   const queryClient = useQueryClient();

@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSale, useCancelSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment } from '@/hooks/use-sales';
+import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package } from 'lucide-react';
@@ -38,6 +38,7 @@ interface Props {
 export function SaleDetailPanel({ saleId }: Props) {
   const { data, isLoading } = useSale(saleId);
   const cancelSale = useCancelSale();
+  const returnSale = useReturnSale();
   const updatePayment = useUpdatePaymentStatus();
   const updateMemo = useUpdateSaleMemo();
   const editSale = useEditSale();
@@ -46,6 +47,8 @@ export function SaleDetailPanel({ saleId }: Props) {
   const cancelShipment = useCancelSaleShipment();
   const [cancelMode, setCancelMode] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [returnMode, setReturnMode] = useState(false);
+  const [returnReason, setReturnReason] = useState('');
   const [showPaidConfirm, setShowPaidConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -283,6 +286,14 @@ export function SaleDetailPanel({ saleId }: Props) {
             {s.cancelled_reason && <p className="text-red-600 mt-0.5">{s.cancelled_reason}</p>}
           </div>
         </div>
+      ) : (s as Record<string, unknown>).returned_at ? (
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-purple-50 border border-purple-100">
+          <Package size={14} className="text-purple-500 shrink-0" />
+          <div className="text-xs">
+            <p className="font-semibold text-purple-700">반품 완료 — {formatDate((s as Record<string, unknown>).returned_at as string)}</p>
+            {(s as Record<string, unknown>).return_reason ? <p className="text-purple-600 mt-0.5">{String((s as Record<string, unknown>).return_reason)}</p> : null}
+          </div>
+        </div>
       ) : (
         <div className="flex items-center gap-2 pt-2 border-t border-neutral-100">
           {s.payment_status !== 'paid' && (
@@ -291,6 +302,9 @@ export function SaleDetailPanel({ saleId }: Props) {
               {updatePayment.isPending ? '처리 중...' : '결제완료로 변경'}
             </Button>
           )}
+          <button onClick={() => setReturnMode(true)} className="text-xs text-purple-500 hover:text-purple-700 transition">
+            반품 처리
+          </button>
           <button onClick={() => setShowCancelConfirm(true)} className="text-xs text-red-500 hover:text-red-700 transition">
             판매 취소
           </button>
@@ -329,6 +343,31 @@ export function SaleDetailPanel({ saleId }: Props) {
           </div>
         }
         confirmLabel="취소 확정"
+        variant="danger"
+      />
+
+      {/* 반품 확인 모달 */}
+      <ConfirmModal
+        open={returnMode}
+        onClose={() => { setReturnMode(false); setReturnReason(''); }}
+        onConfirm={() => returnSale.mutateAsync({ id: saleId, reason: returnReason })}
+        title="반품 처리"
+        message={
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 text-xs text-purple-600">
+              <Package size={12} />
+              <span>제품이 회수되고 재고/시리얼이 원래 창고로 복귀됩니다.</span>
+            </div>
+            <input
+              type="text"
+              value={returnReason}
+              onChange={(e) => setReturnReason(e.target.value)}
+              placeholder="반품 사유 (예: 단순변심, 불량 등)"
+              className="w-full h-8 px-3 rounded-lg border border-purple-200 bg-purple-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+            />
+          </div>
+        }
+        confirmLabel="반품 확정"
         variant="danger"
       />
 
