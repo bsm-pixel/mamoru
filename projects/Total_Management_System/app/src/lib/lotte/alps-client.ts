@@ -27,13 +27,14 @@ async function getSender(): Promise<typeof ENV_SENDER> {
     const { data } = await (db as any).from('system_settings').select('value').eq('key', 'shipping.sender').single(); // eslint-disable-line @typescript-eslint/no-explicit-any
     if (data?.value) {
       const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
-      // 설정값이 비어있으면 환경변수 fallback
-      return {
-        name: parsed.name || ENV_SENDER.name,
-        tel: parsed.tel || ENV_SENDER.tel,
-        zip: parsed.zip || ENV_SENDER.zip,
-        addr: parsed.addr || ENV_SENDER.addr,
-      };
+      // 설정값이 비어있으면(빈 문자열 포함) 환경변수 fallback
+      const name = (parsed.name || '').trim() || ENV_SENDER.name;
+      const tel = (parsed.tel || '').trim() || ENV_SENDER.tel;
+      const zip = (parsed.zip || '').trim() || ENV_SENDER.zip;
+      const addr = (parsed.addr || '').trim() || ENV_SENDER.addr;
+      if (name || tel || zip || addr) {
+        return { name, tel, zip, addr };
+      }
     }
   } catch { /* fallback */ }
   return ENV_SENDER;
@@ -140,13 +141,13 @@ export async function bookShipment(order: {
   }
 
   if (!LOTTE_JOBCUSTCD) {
-    throw new Error('LOTTE_JOBCUSTCD 환경변수가 설정되지 않았습니다.');
+    return { success: false, invoiceNumber: order.invoiceNumber, error: 'LOTTE_JOBCUSTCD 환경변수가 설정되지 않았습니다.' };
   }
 
   const sender = await getSender();
 
   if (!sender.name || !sender.tel || !sender.zip || !sender.addr) {
-    throw new Error('발송인 정보가 불완전합니다. 설정 > 주문·배송에서 발송인 정보를 입력해주세요.');
+    return { success: false, invoiceNumber: order.invoiceNumber, error: '발송인 정보가 불완전합니다. 설정 > 주문·배송에서 발송인 정보를 입력해주세요.' };
   }
 
   const payload = {
