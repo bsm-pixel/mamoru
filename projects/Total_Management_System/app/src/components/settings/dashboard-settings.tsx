@@ -88,22 +88,48 @@ export default function DashboardSettings({ settings, onSave, saving }: TabProps
         </div>
       </Field>
 
-      {/* 4. 대시보드 카드 표시/숨김 */}
-      <Field label="대시보드 카드 표시/숨김" desc="안 쓰는 카드를 끄면 핵심 지표에 집중할 수 있습니다.">
-        <div className="flex flex-wrap gap-2">
-          {cardOrder.map((key) => (
-            <button key={key}
-              onClick={() => setCardVisibility({ ...cardVisibility, [key]: !cardVisibility[key] })}
-              className={`px-3 py-1.5 text-xs rounded-lg border transition ${
-                cardVisibility[key]
-                  ? 'bg-neutral-900 text-white border-neutral-900'
-                  : 'bg-white text-neutral-400 border-neutral-200'
-              }`}
-            >
-              {CARD_LABELS[key] || key}
-            </button>
-          ))}
+      {/* 4+8. 대시보드 카드 배치 — 실제 그리드 프리뷰 */}
+      <Field label="대시보드 카드 배치" desc="실제 대시보드와 동일한 2열 그리드. 클릭으로 숨김/표시, 드래그하여 순서 변경.">
+        <div className="grid grid-cols-2 gap-2 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+          {cardOrder.map((key, idx) => {
+            const visible = cardVisibility[key] !== false;
+            return (
+              <div
+                key={key}
+                className={`relative rounded-lg border-2 p-3 text-center transition cursor-move select-none
+                  ${visible
+                    ? 'bg-white border-neutral-300 shadow-sm'
+                    : 'bg-neutral-100 border-dashed border-neutral-200 opacity-40'
+                  }`}
+                draggable
+                onDragStart={(e) => e.dataTransfer.setData('idx', String(idx))}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const fromIdx = Number(e.dataTransfer.getData('idx'));
+                  if (fromIdx === idx) return;
+                  const next = [...cardOrder];
+                  const [moved] = next.splice(fromIdx, 1);
+                  next.splice(idx, 0, moved);
+                  setCardOrder(next);
+                }}
+              >
+                <div className="text-sm font-semibold">{CARD_LABELS[key] || key}</div>
+                <div className="text-[10px] text-neutral-400 mt-0.5">
+                  {visible ? `${idx + 1}번 위치` : '숨김'}
+                </div>
+                <button
+                  onClick={() => setCardVisibility({ ...cardVisibility, [key]: !visible })}
+                  className={`absolute top-1 right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center
+                    ${visible ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-500'}`}
+                >
+                  {visible ? '✓' : '✕'}
+                </button>
+              </div>
+            );
+          })}
         </div>
+        <p className="text-[10px] text-neutral-400 mt-1.5">드래그로 순서 변경 · 우측 상단 버튼으로 숨김/표시</p>
       </Field>
 
       {/* 5. KPI 색상 임계치 */}
@@ -146,27 +172,7 @@ export default function DashboardSettings({ settings, onSave, saving }: TabProps
         </div>
       </Field>
 
-      {/* 8. 카드 순서 */}
-      <Field label="대시보드 카드 순서" desc="위에 있을수록 대시보드 상단에 표시됩니다.">
-        <div className="space-y-1">
-          {cardOrder.map((key, idx) => (
-            <div key={key} className="flex items-center gap-2">
-              <span className="text-xs text-neutral-400 w-5">{idx + 1}</span>
-              <span className="text-sm flex-1">{CARD_LABELS[key] || key}</span>
-              <button disabled={idx === 0} onClick={() => {
-                const next = [...cardOrder];
-                [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
-                setCardOrder(next);
-              }} className="text-xs px-2 py-1 rounded border border-neutral-200 disabled:opacity-30">▲</button>
-              <button disabled={idx === cardOrder.length - 1} onClick={() => {
-                const next = [...cardOrder];
-                [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
-                setCardOrder(next);
-              }} className="text-xs px-2 py-1 rounded border border-neutral-200 disabled:opacity-30">▼</button>
-            </div>
-          ))}
-        </div>
-      </Field>
+      {/* 8. 카드 순서 — 위 그리드 프리뷰에 통합됨 */}
 
       <div className="pt-4 border-t border-neutral-100">
         <Button onClick={handleSave} disabled={saving}>
