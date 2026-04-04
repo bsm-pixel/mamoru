@@ -181,6 +181,7 @@ export async function POST(req: NextRequest) {
           postcode: postcode || '',
           address: address || '',
           address_detail: address_detail || '',
+          pickup_address_text: [address, address_detail].filter(Boolean).join(' '),
         },
       });
     } catch (notifyErr) {
