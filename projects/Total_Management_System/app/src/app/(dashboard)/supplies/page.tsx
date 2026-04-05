@@ -114,63 +114,47 @@ export default function SuppliesPage() {
           ) : supplies.length === 0 ? (
             <EmptyState icon={Package} message="등록된 부자재가 없습니다" />
           ) : (
-            <div className="divide-y divide-neutral-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-3">
               {supplies.map((s) => {
                 const status = STATUS_CONFIG[s.supply_status] || STATUS_CONFIG.sufficient;
+                const descTruncated = s.description && s.description.length > 40;
                 return (
-                  <div key={s.id} className="flex items-center gap-4 px-4 py-3 hover:bg-warm-ivory/60 transition">
-                    {/* 상태 토글 */}
-                    <button
-                      onClick={() => cycleStatus(s)}
-                      className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1.5 ${status.color} hover:opacity-80`}
-                      title="클릭하여 상태 변경"
-                    >
-                      <span className={`w-2 h-2 rounded-full ${status.dot}`} />
-                      {status.label}
-                    </button>
-
-                    {/* 정보 */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-indigo-black truncate">{s.name}</p>
-                      {s.description && <p className="text-xs text-neutral-400 truncate">{s.description}</p>}
-                    </div>
-
-                    {/* 주문 링크 */}
-                    {s.purchase_url ? (
-                      <a
-                        href={s.purchase_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-neutral-100 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition"
+                  <div key={s.id} className="border border-neutral-100 rounded-xl p-3 hover:shadow-md transition cursor-pointer"
+                    onClick={() => setEditingSupply(s)}>
+                    {/* 상단: 상태 + 액션 */}
+                    <div className="flex items-center justify-between mb-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); cycleStatus(s); }}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition flex items-center gap-1 ${status.color} hover:opacity-80`}
+                        title="클릭하여 상태 변경"
                       >
-                        주문하기
-                        <ExternalLink size={12} />
-                      </a>
-                    ) : (
-                      <span className="text-xs text-neutral-300 shrink-0">링크 없음</span>
+                        <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                        {status.label}
+                      </button>
+                      <div className="flex items-center gap-0.5">
+                        {s.purchase_url && (
+                          <a href={s.purchase_url} target="_blank" rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-6 h-6 rounded-lg hover:bg-neutral-100 flex items-center justify-center text-neutral-400 hover:text-blue-500"
+                            title="주문하기">
+                            <ExternalLink size={12} />
+                          </a>
+                        )}
+                        <button onClick={(e) => { e.stopPropagation(); if (confirm(`"${s.name}" 삭제?`)) deleteSupply.mutate(s.id); }}
+                          className="w-6 h-6 rounded-lg hover:bg-red-50 flex items-center justify-center text-neutral-400 hover:text-red-500"
+                          title="삭제">
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                    {/* 이름 */}
+                    <p className="text-sm font-bold text-indigo-black truncate">{s.name}</p>
+                    {/* 상세 (말줄임) */}
+                    {s.description && (
+                      <p className="text-[11px] text-neutral-400 mt-0.5 line-clamp-2" title={descTruncated ? s.description : undefined}>
+                        {s.description}
+                      </p>
                     )}
-
-                    {/* 수정/삭제 */}
-                    <div className="shrink-0 flex items-center gap-1">
-                      <button
-                        onClick={() => setEditingSupply(s)}
-                        className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center text-neutral-400 hover:text-neutral-600"
-                        title="수정"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm(`"${s.name}" 을(를) 삭제하시겠습니까?`)) {
-                            deleteSupply.mutate(s.id);
-                          }
-                        }}
-                        className="w-7 h-7 rounded-lg hover:bg-red-50 flex items-center justify-center text-neutral-400 hover:text-red-500"
-                        title="삭제"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
                   </div>
                 );
               })}

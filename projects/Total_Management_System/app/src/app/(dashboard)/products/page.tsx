@@ -61,9 +61,9 @@ export default function ProductsPage() {
     [products]
   );
 
-  // 필터링
+  // 필터링 (부자재 SUP 제외 — /supplies에서 별도 관리)
   const filtered = useMemo(() => {
-    let list = products;
+    let list = products.filter((p) => p.category !== 'SUP');
     if (category !== 'all') list = list.filter((p) => p.category === category);
     if (search) {
       const q = search.toLowerCase();
@@ -76,10 +76,10 @@ export default function ProductsPage() {
 
   // 카테고리 칩 목록 (동적 — 설정에서 탭 표시 여부 필터)
   const categoryChips = useMemo(() => {
-    const cats = Object.keys(categoryCounts).sort();
+    const cats = Object.keys(categoryCounts).filter((c) => c !== 'SUP').sort();
     const visibleCats = cats.filter((c) => catTabVisible[c] !== false);
     return [
-      { key: 'all', label: '전체', count: products.length },
+      { key: 'all', label: '전체', count: products.filter((p) => p.category !== 'SUP').length },
       ...visibleCats.map((c) => ({
         key: c,
         label: CATEGORY_LABEL[c] || c,
