@@ -187,10 +187,9 @@
 - [ ] 메인 가위 프리뷰 — 아임웹 상품 위젯 정리 (카테고리/순서)
 - [ ] 메인 도구·소모품 카드 이미지 삽입
 
-### 고객 페이지 — Brand Guide v1.0 미적용 리뉴얼 필요
-> 브랜드 가이드(03-16) 이전에 작업한 페이지 — 모노크롬 팔레트/폰트 미적용
-- [ ] `projects/consulting/page_dealer_confirm.html` — 딜러 확인 페이지 (Tailwind 팔레트 #f3f4f6)
-- [ ] `projects/as/page_as_report.html` — AS 리포트 페이지 (제네릭 #f5f5f5)
+### 고객 페이지 — Brand Guide v1.0 리뉴얼
+- [x] `projects/as/page_as_report.html` — 모노크롬 리뉴얼 완료 ✅
+- [x] `projects/consulting/page_dealer_confirm.html` — 미사용 → 삭제 ✅
 
 ### 향후
 - [ ] 바코드 스캔 재고 입출고
