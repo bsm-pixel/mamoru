@@ -7,7 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
-import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package } from 'lucide-react';
+import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList } from 'lucide-react';
+import { PrepSheetModal } from './prep-sheet-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import type { SaleChannel, OfflineSale, OfflineSaleItem } from '@/lib/supabase/types';
 
@@ -53,6 +54,7 @@ export function SaleDetailPanel({ saleId }: Props) {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [showPrepSheet, setShowPrepSheet] = useState(false);
   const [showCustomer, setShowCustomer] = useState(false);
   const [editingMemo, setEditingMemo] = useState(false);
   const [memoValue, setMemoValue] = useState('');
@@ -257,7 +259,7 @@ export function SaleDetailPanel({ saleId }: Props) {
         )}
       </div>
 
-      {/* 거래명세서 + 수정 */}
+      {/* 거래명세서 + 준비표 + 수정 */}
       <div className="flex gap-2">
         <button
           onClick={() => setShowReceipt(true)}
@@ -265,6 +267,13 @@ export function SaleDetailPanel({ saleId }: Props) {
         >
           <FileText size={14} />
           거래명세서
+        </button>
+        <button
+          onClick={() => setShowPrepSheet(true)}
+          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition"
+        >
+          <ClipboardList size={14} />
+          준비표
         </button>
         {!s.cancelled_at && (
           <button
@@ -409,6 +418,14 @@ export function SaleDetailPanel({ saleId }: Props) {
           sale={s}
           items={data.items}
           onClose={() => setShowReceipt(false)}
+        />
+      )}
+
+      {showPrepSheet && data && (
+        <PrepSheetModal
+          saleIds={[saleId]}
+          preloaded={{ sale: s, items: data.items, serials: data.serials || [] }}
+          onClose={() => setShowPrepSheet(false)}
         />
       )}
 
