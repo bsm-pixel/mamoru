@@ -1,6 +1,6 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-06 (준비표 인쇄 + 제품 슬림카드 + 판매3열 + B2B상세 + 할일메모 + 매입개선)
+> 최종 수정: 2026-04-06 (메인 페이지 대규모 리뉴얼 — 2분할+브랜드쇼룸+서브타입후기)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
@@ -171,11 +171,26 @@
 - [ ] 복원수리 입금 시 고객 미수금 연동
 - [ ] 세금계산서 ↔ 판매/매입 건 연결 (FK)
 
-### 고객 페이지
-- [ ] Before & After 슬라이드 4, 5 이미지 삽입
-- [ ] 전후영상 4, 5 촬영/삽입
-- [ ] 듀얼CTA: 복원수리/컨설팅 PC+모바일 이미지 삽입
-- [ ] 아임웹 상품진열 CSS 브랜드 가이드 톤 수정
+### 고객 페이지 — 메인 리뉴얼 (04-06 완료)
+- [x] 메인 페이지 전면 리뉴얼 (7섹션 → 2분할 구조) ✅
+- [x] iframe 2분할 (top/btm) — 아임웹 상품 위젯 사이 배치 ✅
+- [x] Trust Numbers 브랜드 무기형 (2대/100%/0/직접) + 카운터 애니메이션 ✅
+- [x] Quick Nav 재방문 고객 바로가기 6칩 ✅
+- [x] 클리어런스 배너 "LINEUP CHANGE" 톤 재설계 ✅
+- [x] Service Showcase (복원수리+컨설팅) 통합 ✅
+- [x] 후기: 카드 내 서브타입 칩 + 네이버 출처 배지 ✅
+- [x] Brand Statement blur-to-sharp reveal ✅
+- [x] 상품 위젯 호버 Terracotta→모노크롬(Sand) ✅
+- [ ] 메인 Before/After 이미지 삽입 (사장님 촬영 후)
+- [ ] 메인 복원수리 영상 삽입 (촬영 후)
+- [ ] 메인 컨설팅 분위기 이미지 삽입
+- [ ] 메인 가위 프리뷰 — 아임웹 상품 위젯 정리 (카테고리/순서)
+- [ ] 메인 도구·소모품 카드 이미지 삽입
+
+### 고객 페이지 — Brand Guide v1.0 미적용 리뉴얼 필요
+> 브랜드 가이드(03-16) 이전에 작업한 페이지 — 모노크롬 팔레트/폰트 미적용
+- [ ] `projects/consulting/page_dealer_confirm.html` — 딜러 확인 페이지 (Tailwind 팔레트 #f3f4f6)
+- [ ] `projects/as/page_as_report.html` — AS 리포트 페이지 (제네릭 #f5f5f5)
 
 ### 향후
 - [ ] 바코드 스캔 재고 입출고
@@ -189,6 +204,20 @@
 
 <details>
 <summary>04-06 작업 (클릭하여 펼치기)</summary>
+
+### 쇼핑몰 메인 페이지 대규모 리뉴얼
+- [x] page_main.html → page_main_top.html + page_main_btm.html 2분할 ✅
+- [x] iframe 래퍼 2개 (iframe_main_top/btm.html) — 아임웹 상품 위젯 사이 배치 ✅
+- [x] Trust Numbers: 브랜드 무기형 (2대/100%/0/직접) + 카운터 애니메이션 ✅
+- [x] Quick Nav: 재방문 고객 바로가기 6칩 ("제품 보기" 등) ✅
+- [x] 클리어런스 배너: "LINEUP CHANGE" 톤 (display:none 가이드 포함) ✅
+- [x] Service Showcase: 복원수리(Before/After+영상 플레이스) + 컨설팅 통합 ✅
+- [x] 후기: 카드 내 서브타입 칩(직접방문/출장/톡 등) + 네이버 출처 배지 ✅
+- [x] Brand Statement: blur-to-sharp reveal + "가짜를 잘라내고, 진짜를 지킨다" ✅
+- [x] Marquee/Finder/Dual CTA 제거 → 브랜드 쇼룸 구조 전환 ✅
+- [x] 상품 위젯 호버: Terracotta(#D4613E) → 모노크롬 Sand(#D4D0CB) ✅
+- [x] Ken Burns 히어로 이미지 줌 효과 ✅
+- [x] 이미지/영상 플레이스 15+ 슬롯 확보 ✅
 
 ### 출고 준비표 인쇄
 - [x] PrepSheetModal 컴포넌트 (테이블형 — 고객명/제품명(시리얼)/수량/메모) ✅
