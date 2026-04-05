@@ -14,11 +14,8 @@ import { formatKRW } from '@/lib/utils/format';
 import { Plus, Search, Package, AlertTriangle, EyeOff } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 
-// 카테고리 라벨은 product-detail-panel에서 useSetting으로 동적 로드
-// 이 페이지에서는 배지 표시용으로만 사용 — 설정값 직접 참조 불가 (memo 컴포넌트 외부)
-// → 컴포넌트 내부로 이동 필요하지만, 여기서는 fallback으로 유지
+import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
-const CATEGORY_LABEL = DEFAULT_CAT_LABELS;
 
 const CATEGORY_COLOR: Record<string, string> = {
   BL: 'bg-blue-100 text-blue-700',
@@ -31,6 +28,7 @@ export default function ProductsPage() {
   const router = useRouter();
   const [showInactive, setShowInactive] = useState(false);
   const { data: products = [], isLoading } = useProducts({ includeInactive: showInactive });
+  const CATEGORY_LABEL = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<'view' | 'create' | 'duplicate'>('view');
   const [duplicateData, setDuplicateData] = useState<Record<string, unknown> | null>(null);
@@ -312,6 +310,7 @@ interface CompactProductCardProps {
 }
 
 function CompactProductCard({ product: p, isSelected, showCategory, onSelect }: CompactProductCardProps) {
+  const CATEGORY_LABEL = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
   return (
     <Card
       className={`cursor-pointer transition p-3 ${

@@ -30,8 +30,8 @@ const CATEGORY_GROUPS: { key: string; label: string; codes: string[] }[] = [
   { key: 'etc', label: '기타', codes: [] }, // codes 비어있으면 나머지 전부
 ];
 
+import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
-const CAT_LABEL = DEFAULT_CAT_LABELS;
 const CAT_COLOR: Record<string, string> = {
   BL: 'bg-blue-100 text-blue-700',
   TH: 'bg-purple-100 text-purple-700',
@@ -47,6 +47,7 @@ type SortKey = 'name' | 'stock_quantity' | 'pending_quantity' | 'value';
 export default function InventoryPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const CAT_LABEL = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
   const [categoryGroup, setCategoryGroup] = useState('all');
   const [search, setSearch] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(false);
@@ -356,6 +357,7 @@ function SortHeader({ label, span, sortKey, currentKey, asc, onClick }: {
 }
 
 function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSelected: boolean; onClick: () => void }) {
+  const CAT_LABEL = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
   const isNoStock = item.stock_quantity === -1;
   const isLow = !isNoStock && item.stock_quantity >= 0 && item.stock_quantity <= 3;
   const totalValue = isNoStock ? 0 : item.stock_quantity * (item.price_purchase || 0);
