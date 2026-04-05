@@ -44,7 +44,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
     sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0,
-    dealer_name: '', academy_name: '',
+    dealer_name: '', academy_name: '', use_stock: true,
     description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '',
   });
 
@@ -65,10 +65,10 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   // create/duplicate 모드 초기화
   useEffect(() => {
     if (mode === 'create') {
-      setForm({ sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0, dealer_name: '', academy_name: '', description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '' });
+      setForm({ sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0, dealer_name: '', academy_name: '', use_stock: true, description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '' });
       fetchNextSku('BL');
     } else if (mode === 'duplicate' && duplicateData) {
-      setForm({ sku: '', barcode: '', product_group: '', dealer_name: '', academy_name: '', ...duplicateData, name: '' });
+      setForm({ sku: '', barcode: '', product_group: '', dealer_name: '', academy_name: '', use_stock: true, ...duplicateData, name: '' });
       fetchNextSku(duplicateData.category || 'BL');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,6 +81,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
         sku: p.sku || '', name: p.name, category: p.category, price: p.price,
         price_dealer: p.price_dealer || 0, price_academy: p.price_academy || 0, price_purchase: p.price_purchase || 0,
         dealer_name: (p as Record<string, unknown>).dealer_name as string || '', academy_name: (p as Record<string, unknown>).academy_name as string || '',
+        use_stock: p.stock_quantity !== -1,
         description: p.description || '', imweb_product_no: p.imweb_product_no || '',
         barcode: p.barcode || '', supplier_id: p.supplier_id || '', product_group: p.product_group || '',
       });
@@ -95,11 +96,19 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
 
   async function handleSave() {
     if (!productId) return;
+    // 재고 미사용 전환: use_stock OFF → stock_quantity = -1
+    const stockUpdate = !form.use_stock && data?.product?.stock_quantity !== -1
+      ? { stock_quantity: -1 }
+      : form.use_stock && data?.product?.stock_quantity === -1
+        ? { stock_quantity: 0 }
+        : {};
+
     await updateProduct.mutateAsync({
       id: productId,
       name: form.name, category: form.category, price: form.price,
       price_dealer: form.price_dealer, price_academy: form.price_academy, price_purchase: form.price_purchase,
       dealer_name: form.dealer_name || null, academy_name: form.academy_name || null,
+      ...stockUpdate,
       description: form.description || null, imweb_product_no: form.imweb_product_no || null,
       barcode: form.barcode || null, supplier_id: form.supplier_id || null,
       product_group: form.product_group || null,
@@ -148,6 +157,17 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="마모루 블런트 6.0" autoFocus
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            {/* 재고 관리 토글 */}
+            <div className="flex items-center justify-between py-1">
+              <div>
+                <span className="text-xs text-neutral-500">재고 관리</span>
+                <p className="text-[10px] text-neutral-400">OFF 시 재고 수량을 추적하지 않습니다</p>
+              </div>
+              <button onClick={() => setForm({ ...form, use_stock: !form.use_stock })}
+                className={`relative w-10 h-5 rounded-full transition ${form.use_stock ? 'bg-neutral-900' : 'bg-neutral-200'}`}>
+                <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.use_stock ? 'translate-x-5' : ''}`} />
+              </button>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>

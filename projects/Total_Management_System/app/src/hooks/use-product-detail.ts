@@ -69,6 +69,7 @@ export function useUpdateProduct() {
       price_purchase?: number;
       dealer_name?: string | null;
       academy_name?: string | null;
+      stock_quantity?: number;
       supplier_id?: string | null;
       description?: string | null;
       imweb_product_no?: string | null;

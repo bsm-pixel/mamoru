@@ -29,6 +29,7 @@ export default function ProductsPage() {
   const [showInactive, setShowInactive] = useState(false);
   const { data: products = [], isLoading } = useProducts({ includeInactive: showInactive });
   const CATEGORY_LABEL = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
+  const catTabVisible = useSetting<Record<string, boolean>>('inventory.category_tab_visible', {});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<'view' | 'create' | 'duplicate'>('view');
   const [duplicateData, setDuplicateData] = useState<Record<string, unknown> | null>(null);
@@ -73,18 +74,19 @@ export default function ProductsPage() {
     return list;
   }, [products, category, search]);
 
-  // 카테고리 칩 목록 (동적)
+  // 카테고리 칩 목록 (동적 — 설정에서 탭 표시 여부 필터)
   const categoryChips = useMemo(() => {
     const cats = Object.keys(categoryCounts).sort();
+    const visibleCats = cats.filter((c) => catTabVisible[c] !== false);
     return [
       { key: 'all', label: '전체', count: products.length },
-      ...cats.map((c) => ({
+      ...visibleCats.map((c) => ({
         key: c,
         label: CATEGORY_LABEL[c] || c,
         count: categoryCounts[c],
       })),
     ];
-  }, [categoryCounts, products.length]);
+  }, [categoryCounts, products.length, catTabVisible, CATEGORY_LABEL]);
 
   return (
     <>
@@ -168,7 +170,7 @@ export default function ProductsPage() {
               {isLoading ? (
                 <div className="grid grid-cols-3 gap-2">
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <Skeleton key={i} className="h-24 rounded-xl" />
+                    <Skeleton key={i} className="h-14 rounded-xl" />
                   ))}
                 </div>
               ) : filtered.length === 0 ? (
@@ -250,7 +252,7 @@ export default function ProductsPage() {
             {isLoading ? (
               <div className="grid grid-cols-2 gap-2">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="h-24 rounded-xl" />
+                  <Skeleton key={i} className="h-14 rounded-xl" />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
@@ -311,40 +313,31 @@ interface CompactProductCardProps {
 
 function CompactProductCard({ product: p, isSelected, showCategory, onSelect }: CompactProductCardProps) {
   const CATEGORY_LABEL = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
+  const isUnused = p.stock_quantity === -1;
   return (
     <Card
-      className={`cursor-pointer transition p-3 ${
+      className={`cursor-pointer transition px-3 py-2 ${
         isSelected ? 'ring-2 ring-neutral-900 shadow-md' : 'hover:shadow-md'
       } ${!p.is_active ? 'opacity-50' : ''}`}
       onClick={onSelect}
     >
-      {/* 1행: 이름 + 재고 */}
-      <div className="flex items-start justify-between gap-1 mb-1">
-        <h4 className="text-sm font-bold text-indigo-black truncate flex-1 min-w-0">
+      {/* 1행: 이름 + 카테고리 + 재고 */}
+      <div className="flex items-center gap-1.5">
+        <h4 className="text-sm font-semibold text-indigo-black truncate flex-1 min-w-0">
           {p.name}
           {!p.is_active && <Badge className="bg-red-100 text-red-500 text-[8px] ml-1">비활성</Badge>}
         </h4>
-        {p.stock_quantity === -1 ? (
-          <Badge className="bg-neutral-100 text-neutral-400 text-[9px] shrink-0">미사용</Badge>
-        ) : (
-          <span className={`text-sm font-bold shrink-0 ${p.stock_quantity > 0 ? 'text-indigo-black' : p.stock_quantity === 0 ? 'text-red-500' : 'text-indigo-black'}`}>
-            {p.stock_quantity}
-          </span>
-        )}
+        <Badge className={`${CATEGORY_COLOR[p.category] || 'bg-neutral-100 text-neutral-500'} text-[9px] px-1.5 py-0 shrink-0`}>
+          {CATEGORY_LABEL[p.category] || p.category}
+        </Badge>
+        <span className={`text-sm font-bold w-8 text-right shrink-0 ${
+          isUnused ? '' : p.stock_quantity === 0 ? 'text-red-500' : ''
+        }`}>
+          {isUnused ? '' : p.stock_quantity}
+        </span>
       </div>
-
-      {/* 2행: SKU + 카테고리 */}
-      <div className="flex items-center gap-1.5 mb-1">
-        <span className="text-[11px] text-neutral-400 font-mono truncate">{p.sku}</span>
-        {showCategory && (
-          <Badge className={`${CATEGORY_COLOR[p.category] || 'bg-neutral-100'} text-[9px] px-1 py-0`}>
-            {CATEGORY_LABEL[p.category] || p.category}
-          </Badge>
-        )}
-      </div>
-
-      {/* 3행: 가격 */}
-      <span className="text-sm font-bold">{formatKRW(p.price)}</span>
+      {/* 2행: 가격 */}
+      <div className="text-xs text-neutral-500 mt-0.5">{formatKRW(p.price)}</div>
     </Card>
   );
 }

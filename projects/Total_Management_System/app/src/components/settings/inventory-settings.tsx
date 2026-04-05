@@ -21,6 +21,7 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
   const [safetyStock, setSafetyStock] = useState(5);
   const [adjustReasons, setAdjustReasons] = useState<string[]>([]);
   const [newReason, setNewReason] = useState('');
+  const [catTabVisible, setCatTabVisible] = useState<Record<string, boolean>>({});
   const [skuDigits, setSkuDigits] = useState(3);
   const [serialTrigger, setSerialTrigger] = useState('manual');
   const [stocktakeDay, setStocktakeDay] = useState(0);
@@ -33,6 +34,7 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
     setImwebSync(parse(settings['inventory.imweb_sync'], true));
     setCategories(parse(settings['inventory.categories'], ['BL', 'TH', 'LO', 'SL', 'CB', 'CS', 'AC']));
     setCatLabels(parse(settings['inventory.category_labels'], { BL: '블런트', TH: '씨닝', LO: '롱', SL: '슬라이싱', CB: '빗', CS: '케이스', AC: '악세서리' }));
+    setCatTabVisible(parse(settings['inventory.category_tab_visible'], {}));
     setSafetyStock(parse(settings['inventory.safety_stock'], 5));
     setAdjustReasons(parse(settings['inventory.adjustment_reasons'], ['파손', '분실', '증정', '샘플', '실사 조정', '기타']));
     setSkuDigits(parse(settings['inventory.sku_digits'], 3));
@@ -49,6 +51,7 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
       { key: 'inventory.imweb_sync', value: imwebSync },
       { key: 'inventory.categories', value: categories },
       { key: 'inventory.category_labels', value: catLabels },
+      { key: 'inventory.category_tab_visible', value: catTabVisible },
       { key: 'inventory.safety_stock', value: safetyStock },
       { key: 'inventory.adjustment_reasons', value: adjustReasons },
       { key: 'inventory.sku_digits', value: skuDigits },
@@ -86,6 +89,13 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
                 placeholder="표시명 입력"
                 className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm"
               />
+              <label className="flex items-center gap-1 text-[10px] text-neutral-400 shrink-0 cursor-pointer" title="제품 화면 탭에 표시">
+                <input type="checkbox"
+                  checked={catTabVisible[code] !== false}
+                  onChange={(e) => setCatTabVisible({ ...catTabVisible, [code]: e.target.checked })}
+                  className="rounded w-3.5 h-3.5" />
+                탭
+              </label>
               <button onClick={() => {
                 setCategories(categories.filter((_, j) => j !== i));
                 const next = { ...catLabels }; delete next[code]; setCatLabels(next);
