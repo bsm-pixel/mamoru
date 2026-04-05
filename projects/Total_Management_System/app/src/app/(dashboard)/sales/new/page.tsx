@@ -214,7 +214,7 @@ function NewSaleContent() {
       <Topbar title="판매 입력" />
 
       <div className="px-4 md:px-6 py-4">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4" style={{ minHeight: 'calc(100vh - 120px)' }}>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:items-start">
           {/* 좌: 제품 선택 */}
           <div className="space-y-3 flex flex-col">
             <h3 className="text-sm font-semibold text-neutral-700">제품 선택</h3>
@@ -356,22 +356,27 @@ function NewSaleContent() {
                   + 신규 고객 등록
                 </button>
               )}
-              {selectedCustomer && (
-                <div className="mt-3 pt-3 border-t border-neutral-100 space-y-1.5 text-xs text-neutral-500">
-                  {Boolean((selectedCustomer as unknown as Record<string, unknown>).address_road) && (
-                    <div>
-                      <span className="text-neutral-400">주소: </span>
-                      <span>{String((selectedCustomer as unknown as Record<string, unknown>).postcode || '')} {String((selectedCustomer as unknown as Record<string, unknown>).address_road || '')} {String((selectedCustomer as unknown as Record<string, unknown>).address_detail || '')}</span>
+              {selectedCustomer && (() => {
+                const sc = selectedCustomer as unknown as Record<string, unknown>;
+                return (
+                  <div className="mt-3 pt-3 border-t border-neutral-100 space-y-1.5 text-xs text-neutral-500">
+                    {Boolean(sc.address_road) && (
+                      <div>
+                        <span className="text-neutral-400">주소: </span>
+                        <span>{String(sc.postcode || '')} {String(sc.address_road || '')} {String(sc.address_detail || '')}</span>
+                      </div>
+                    )}
+                    {/* 메모 — 고정 높이 영역 (메모 없어도 공간 유지) */}
+                    <div className="min-h-[48px] p-2 rounded-lg bg-neutral-50 border border-neutral-100">
+                      {sc.memo ? (
+                        <p className="text-xs text-neutral-600">{String(sc.memo)}</p>
+                      ) : (
+                        <p className="text-xs text-neutral-300 italic">고객 메모 없음</p>
+                      )}
                     </div>
-                  )}
-                  {Boolean((selectedCustomer as unknown as Record<string, unknown>).memo) && (
-                    <div>
-                      <span className="text-neutral-400">메모: </span>
-                      <span>{String((selectedCustomer as unknown as Record<string, unknown>).memo)}</span>
-                    </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                );
+              })()}
               {customerType === 'dealer' && <p className="text-xs text-purple-600 mt-1">딜러가 적용 중</p>}
               {customerType === 'academy' && <p className="text-xs text-emerald-600 mt-1">아카데미가 적용 중</p>}
             </Card>
@@ -462,8 +467,8 @@ function NewSaleContent() {
           </div>
 
           {/* 우: 장바구니 + 판매등록 */}
-          <div className="space-y-3 flex flex-col">
-            <Card className="flex-1">
+          <div className="space-y-3">
+            <Card>
               <h3 className="text-sm font-semibold text-indigo-black mb-3 flex items-center gap-2">
                 <ShoppingBag size={16} />
                 장바구니 ({cart.length})
@@ -529,7 +534,7 @@ function NewSaleContent() {
               )}
             </Card>
 
-            <Button className="w-full shrink-0"
+            <Button className="w-full"
               disabled={(!selectedCustomer && !customerName.trim()) || cart.length === 0 || createSale.isPending}
               onClick={handleSubmit}>
               {createSale.isPending ? '등록 중...' : `판매 등록 (${formatKRW(paidAmount)})`}
