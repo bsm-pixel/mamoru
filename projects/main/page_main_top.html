@@ -487,7 +487,11 @@ button[class*="mm-"]:focus-visible {
 <section class="mm-hero">
   <div class="mm-hero__inner">
     <div class="mm-hero__visual">
-      <!-- ✏️ 수정가능: 히어로 이미지 URL (PC/모바일 각각) -->
+      <!-- ✏️ 수정가능: 히어로 이미지 URL (PC/모바일 각각)
+           📐 PC: 1920×800px 이상 (가로형, 우측에 피사체 배치 — 좌측은 텍스트 오버레이)
+           📐 모바일: 750×560px (4:3 비율, 상단 full-bleed)
+           🎨 톤: 어두운 분위기 컷 — 가위 클로즈업, 작업대, 매트블랙 배경.
+                밝은 피사체(가위 날 반사광 등)가 포인트. 누끼보다 분위기 사진 적합 -->
       <!-- ✏️ 영상 사용 시: <img>를 <video autoplay muted loop playsinline poster="이미지URL">로 교체. 모바일은 이미지 유지 권장 -->
       <picture>
         <source media="(min-width:1024px)" srcset="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/6f78871116922.png">
