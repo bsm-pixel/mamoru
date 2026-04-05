@@ -9,7 +9,8 @@ import { formatKRW, formatDate } from '@/lib/utils/format';
 import { Plus, Trash2, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const CATEGORIES = ['택배비', '포장재', '교통비', '사무용품', '식대', '소모품', '임대료', '인건비', '기타'];
+import { DEFAULT_EXPENSE_CATEGORIES } from '@/lib/utils/setting-defaults';
+const CATEGORIES = DEFAULT_EXPENSE_CATEGORIES;
 
 const CATEGORY_COLOR: Record<string, string> = {
   택배비: 'bg-blue-100 text-blue-700',

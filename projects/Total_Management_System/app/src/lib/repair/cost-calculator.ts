@@ -1,5 +1,6 @@
 /**
  * 복원수리 비용 계산 (GAS L548~L562 로직 이식)
+ * 설정값 연동 예정 — 현재는 기본값 사용
  */
 
 /** 수리 단가 */
@@ -14,7 +15,7 @@ export function calcShippingFee(totalQty: number, proceedType: string | null): n
   if (!isPickup) return 0;
   if (totalQty >= 3) return 0;
   if (totalQty === 2) return 3000;
-  return 5000; // 1자루
+  return 6000; // 방문수거 1자루
 }
 
 /** 서비스 비용 계산 */

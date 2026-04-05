@@ -15,15 +15,8 @@ import { formatKRW } from '@/lib/utils/format';
 import { Save, Package, Hash, X, Receipt, Boxes, Plus, Archive, Copy, Eye, EyeOff, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const CATEGORY_LABEL: Record<string, string> = {
-  BL: '블런트', TH: '틴닝', LO: '장가위', SL: '슬라이싱',
-};
-const CATEGORY_OPTIONS = [
-  { value: 'BL', label: '블런트' },
-  { value: 'TH', label: '틴닝' },
-  { value: 'LO', label: '장가위' },
-  { value: 'SL', label: '슬라이싱' },
-];
+import { useSetting } from '@/hooks/use-settings';
+import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 
 interface Props {
   productId?: string;
@@ -40,6 +33,10 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const { data, isLoading } = useProduct(productId || '');
   const updateProduct = useUpdateProduct();
   const createProduct = useCreateProduct();
+  const catLabels = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
+  const categories = useSetting<string[]>('inventory.categories', Object.keys(DEFAULT_CAT_LABELS));
+  const CATEGORY_LABEL = catLabels;
+  const CATEGORY_OPTIONS = categories.map((c) => ({ value: c, label: catLabels[c] || c }));
   const [editing, setEditing] = useState(false);
   const [showSerialModal, setShowSerialModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

@@ -14,12 +14,11 @@ import { formatKRW } from '@/lib/utils/format';
 import { Plus, Search, Package, AlertTriangle, EyeOff } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 
-const CATEGORY_LABEL: Record<string, string> = {
-  BL: '블런트',
-  TH: '틴닝',
-  LO: '장가위',
-  SL: '슬라이싱',
-};
+// 카테고리 라벨은 product-detail-panel에서 useSetting으로 동적 로드
+// 이 페이지에서는 배지 표시용으로만 사용 — 설정값 직접 참조 불가 (memo 컴포넌트 외부)
+// → 컴포넌트 내부로 이동 필요하지만, 여기서는 fallback으로 유지
+import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
+const CATEGORY_LABEL = DEFAULT_CAT_LABELS;
 
 const CATEGORY_COLOR: Record<string, string> = {
   BL: 'bg-blue-100 text-blue-700',

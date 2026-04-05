@@ -12,23 +12,16 @@ import { formatKRW } from '@/lib/utils/format';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { ArrowLeft, Save, Package, Hash } from 'lucide-react';
 
-const CATEGORY_LABEL: Record<string, string> = {
-  BL: '블런트',
-  TH: '틴닝',
-  LO: '장가위',
-  SL: '슬라이싱',
-};
-
-const CATEGORY_OPTIONS = [
-  { value: 'BL', label: '블런트' },
-  { value: 'TH', label: '틴닝' },
-  { value: 'LO', label: '장가위' },
-  { value: 'SL', label: '슬라이싱' },
-];
+import { useSetting } from '@/hooks/use-settings';
+import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const catLabels = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
+  const categories = useSetting<string[]>('inventory.categories', Object.keys(DEFAULT_CAT_LABELS));
+  const CATEGORY_LABEL = catLabels;
+  const CATEGORY_OPTIONS = categories.map((c) => ({ value: c, label: catLabels[c] || c }));
   const { data, isLoading } = useProduct(id);
   const updateProduct = useUpdateProduct();
 

@@ -30,11 +30,8 @@ const CATEGORY_GROUPS: { key: string; label: string; codes: string[] }[] = [
   { key: 'etc', label: '기타', codes: [] }, // codes 비어있으면 나머지 전부
 ];
 
-// 제품 카테고리 코드 → 한글
-const CAT_LABEL: Record<string, string> = {
-  BL: '블런트', TH: '틴닝', LO: '장가위', SL: '슬라이싱',
-  CB: '빗', CS: '가위집', AC: '악세서리',
-};
+import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
+const CAT_LABEL = DEFAULT_CAT_LABELS;
 const CAT_COLOR: Record<string, string> = {
   BL: 'bg-blue-100 text-blue-700',
   TH: 'bg-purple-100 text-purple-700',
