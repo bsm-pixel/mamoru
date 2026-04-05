@@ -213,10 +213,10 @@ function NewSaleContent() {
     <>
       <Topbar title="판매 입력" />
 
-      <div className="px-4 md:px-6 py-4 space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* 좌측: 제품 선택 */}
-          <div className="lg:col-span-2 space-y-3">
+      <div className="px-4 md:px-6 py-4">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4" style={{ minHeight: 'calc(100vh - 120px)' }}>
+          {/* 좌: 제품 선택 */}
+          <div className="space-y-3 flex flex-col">
             <h3 className="text-sm font-semibold text-neutral-700">제품 선택</h3>
 
             {/* 검색 + 카테고리 필터 */}
@@ -252,15 +252,14 @@ function NewSaleContent() {
               <div className="text-sm text-neutral-400 py-4">로딩중...</div>
             ) : (
               <Card padding={false}>
-                <div className="max-h-[400px] overflow-y-auto">
+                <div className="flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 320px)', minHeight: '300px' }}>
                   <table className="w-full text-sm">
                     <thead className="bg-neutral-50 sticky top-0">
                       <tr className="text-xs text-neutral-500">
                         <th className="text-left px-3 py-2 font-medium">제품명</th>
-                        <th className="text-left px-3 py-2 font-medium w-24">SKU</th>
                         <th className="text-right px-3 py-2 font-medium w-24">단가</th>
-                        <th className="text-right px-3 py-2 font-medium w-16">재고</th>
-                        <th className="text-center px-3 py-2 font-medium w-16">추가</th>
+                        <th className="text-right px-3 py-2 font-medium w-14">재고</th>
+                        <th className="text-center px-3 py-2 font-medium w-12">추가</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-100">
@@ -281,7 +280,6 @@ function NewSaleContent() {
                               <span className="font-medium text-indigo-black">{getProductDisplayName(p, customerType)}</span>
                               {inCart && <span className="ml-2 text-xs font-bold text-neutral-900">×{inCart.quantity}</span>}
                             </td>
-                            <td className="px-3 py-2.5 text-xs text-neutral-500">{p.sku}</td>
                             <td className="px-3 py-2.5 text-right">
                               <span className="font-bold">{formatKRW(price)}</span>
                               {isDiscounted && (
@@ -300,7 +298,7 @@ function NewSaleContent() {
                       })}
                       {filteredProducts.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="px-3 py-6 text-center text-neutral-400 text-xs">
+                          <td colSpan={4} className="px-3 py-6 text-center text-neutral-400 text-xs">
                             {productSearch ? '검색 결과가 없습니다' : '등록된 제품이 없습니다'}
                           </td>
                         </tr>
@@ -342,19 +340,136 @@ function NewSaleContent() {
             </Card>
           </div>
 
-          {/* 우측: 장바구니 + 고객 + 결제 */}
-          <div className="space-y-4">
-            {/* 장바구니 */}
+          {/* 중: 고객 + 결제 */}
+          <div className="space-y-3">
+            {/* 고객 정보 */}
             <Card>
+              <h3 className="text-sm font-semibold text-indigo-black mb-3">고객 정보</h3>
+              <CustomerAutocomplete
+                selectedCustomer={selectedCustomer}
+                onSelect={(c) => { setSelectedCustomer(c); setCustomerName(c.name); setCustomerPhone(c.phone || ''); recalcCartPrices(c.customer_type); }}
+                onClear={() => { setSelectedCustomer(null); setCustomerName(''); setCustomerPhone(''); recalcCartPrices(undefined); }}
+              />
+              {!selectedCustomer && (
+                <button type="button" onClick={() => setShowCreateCustomer(true)}
+                  className="w-full mt-2 py-2 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:bg-neutral-50 transition">
+                  + 신규 고객 등록
+                </button>
+              )}
+              {selectedCustomer && (
+                <div className="mt-3 pt-3 border-t border-neutral-100 space-y-1.5 text-xs text-neutral-500">
+                  {Boolean((selectedCustomer as unknown as Record<string, unknown>).address_road) && (
+                    <div>
+                      <span className="text-neutral-400">주소: </span>
+                      <span>{String((selectedCustomer as unknown as Record<string, unknown>).postcode || '')} {String((selectedCustomer as unknown as Record<string, unknown>).address_road || '')} {String((selectedCustomer as unknown as Record<string, unknown>).address_detail || '')}</span>
+                    </div>
+                  )}
+                  {Boolean((selectedCustomer as unknown as Record<string, unknown>).memo) && (
+                    <div>
+                      <span className="text-neutral-400">메모: </span>
+                      <span>{String((selectedCustomer as unknown as Record<string, unknown>).memo)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {customerType === 'dealer' && <p className="text-xs text-purple-600 mt-1">딜러가 적용 중</p>}
+              {customerType === 'academy' && <p className="text-xs text-emerald-600 mt-1">아카데미가 적용 중</p>}
+            </Card>
+
+            <CustomerCreateModal
+              open={showCreateCustomer}
+              onClose={() => setShowCreateCustomer(false)}
+              onCreated={(c) => { setSelectedCustomer({ id: c.id, name: c.name, phone: c.phone, customer_type: c.customer_type } as SelectedCustomer); setCustomerName(c.name); setCustomerPhone(c.phone); recalcCartPrices(c.customer_type); }}
+            />
+
+            {/* 결제 정보 */}
+            <Card>
+              <h3 className="text-sm font-semibold text-indigo-black mb-3">결제 정보</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-neutral-500 mb-1 block">판매일</label>
+                  <input type="date" value={saleDate} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setSaleDate(e.target.value)}
+                    className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                </div>
+                <div>
+                  <label className="text-xs text-neutral-500 mb-1 block">판매 채널</label>
+                  <div className="flex gap-1">
+                    {([{ value: 'offline', label: '오프라인', color: 'bg-neutral-800 text-white' }, { value: 'online', label: '온라인', color: 'bg-blue-600 text-white' }, { value: 'talk', label: '톡상담', color: 'bg-yellow-500 text-white' }] as const).map((ch) => (
+                      <button key={ch.value} onClick={() => setSaleChannel(ch.value)}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${saleChannel === ch.value ? ch.color : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>{ch.label}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-neutral-500 mb-1 block">결제 수단</label>
+                  <div className="flex gap-1">
+                    {(['card', 'cash', 'transfer', 'mixed'] as const).map((method) => (
+                      <button key={method} onClick={() => { setPaymentMethod(method); if (method === 'mixed') { setMixedCard(0); setMixedCash(0); setMixedTransfer(0); } }}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${paymentMethod === method ? 'bg-terracotta text-cream' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
+                        {{ card: '카드', cash: '현금', transfer: '이체', mixed: '복합' }[method]}
+                      </button>
+                    ))}
+                  </div>
+                  {paymentMethod === 'mixed' && (
+                    <div className="mt-2 p-2 rounded-lg bg-neutral-50 border border-neutral-200 space-y-1.5">
+                      {(['카드', '현금', '이체'] as const).map((label, i) => {
+                        const val = [mixedCard, mixedCash, mixedTransfer][i];
+                        const setter = [setMixedCard, setMixedCash, setMixedTransfer][i];
+                        return (
+                          <div key={label} className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-neutral-500 w-8">{label}</span>
+                            <input type="number" min={0} value={val || ''} onChange={(e) => setter(parseInt(e.target.value) || 0)}
+                              className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs text-right bg-white focus:outline-none focus:ring-1 focus:ring-terracotta/40" placeholder="0" />
+                          </div>
+                        );
+                      })}
+                      {(() => { const t = mixedCard + mixedCash + mixedTransfer; const ok = t === finalAmount; return (
+                        <div className={`flex justify-between text-[10px] font-semibold pt-1 border-t border-neutral-200 ${ok ? 'text-green-600' : 'text-red-500'}`}>
+                          <span>합계</span><span>{formatKRW(t)}{ok ? ' ✓' : ` (${formatKRW(Math.abs(finalAmount - t))} ${t > finalAmount ? '초과' : '부족'})`}</span>
+                        </div>
+                      ); })()}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs text-neutral-500 mb-1 block">결제 상태</label>
+                  <div className="flex gap-1">
+                    {([{ value: 'paid' as const, label: '결제완료', color: 'bg-green-600 text-white' }, { value: 'partial' as const, label: '부분결제', color: 'bg-yellow-500 text-white' }, { value: 'unpaid' as const, label: '미결제', color: 'bg-red-500 text-white' }]).map((ps) => (
+                      <button key={ps.value} onClick={() => setPaymentStatus(ps.value)}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${paymentStatus === ps.value ? ps.color : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>{ps.label}</button>
+                    ))}
+                  </div>
+                  {paymentStatus === 'partial' && (
+                    <div className="mt-1.5">
+                      <input type="number" value={depositAmount || ''} onChange={(e) => setDepositAmount(parseInt(e.target.value) || 0)} placeholder="입금액"
+                        className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                    </div>
+                  )}
+                  {paymentStatus !== 'paid' && finalAmount > 0 && <p className="text-[10px] text-red-500 mt-1 font-medium">미수금: {formatKRW(finalAmount - paidAmount)}</p>}
+                </div>
+                <div>
+                  <label className="text-xs text-neutral-500">할인 금액</label>
+                  <input type="number" value={discount || ''} onChange={(e) => setDiscount(parseInt(e.target.value) || 0)} placeholder="0"
+                    className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                </div>
+                <div>
+                  <label className="text-xs text-neutral-500">메모</label>
+                  <input type="text" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="메모 (선택)"
+                    className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* 우: 장바구니 + 판매등록 */}
+          <div className="space-y-3 flex flex-col">
+            <Card className="flex-1">
               <h3 className="text-sm font-semibold text-indigo-black mb-3 flex items-center gap-2">
                 <ShoppingBag size={16} />
                 장바구니 ({cart.length})
               </h3>
-
               {cart.length === 0 ? (
-                <p className="text-xs text-neutral-400 text-center py-4">
-                  제품을 선택해주세요
-                </p>
+                <p className="text-xs text-neutral-400 text-center py-4">제품을 선택해주세요</p>
               ) : (
                 <div className="space-y-2">
                   {cart.map((item) => {
@@ -367,110 +482,46 @@ function NewSaleContent() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
                               <p className="text-sm font-medium truncate">{name}</p>
-                              {isCustom && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-600 font-medium shrink-0">임시</span>
-                              )}
+                              {isCustom && <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-600 font-medium shrink-0">임시</span>}
                             </div>
-                            <p className="text-xs text-neutral-500">
-                              {formatKRW(item.unitPrice)} x {item.quantity} = {formatKRW(item.unitPrice * item.quantity)}
-                            </p>
+                            <p className="text-xs text-neutral-500">{formatKRW(item.unitPrice)} x {item.quantity} = {formatKRW(item.unitPrice * item.quantity)}</p>
                           </div>
                           <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => updateQuantity(key, -1)}
-                              className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"
-                            >
-                              <Minus size={12} />
-                            </button>
-                            <input
-                              type="number"
-                              min="1"
-                              value={item.quantity}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value) || 1;
-                                setCart((prev) => prev.map((it) => cartItemKey(it) === key ? { ...it, quantity: Math.max(1, val) } : it));
-                              }}
-                              className="w-10 h-6 text-center text-sm font-semibold border border-neutral-200 rounded bg-white focus:outline-none focus:ring-1 focus:ring-neutral-300 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
-                            />
-                            <button
-                              onClick={() => updateQuantity(key, 1)}
-                              className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"
-                            >
-                              <Plus size={12} />
-                            </button>
-                            <button
-                              onClick={() => removeFromCart(key)}
-                              className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"
-                            >
-                              <Trash2 size={12} />
-                            </button>
+                            <button onClick={() => updateQuantity(key, -1)} className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Minus size={12} /></button>
+                            <input type="number" min="1" value={item.quantity}
+                              onChange={(e) => { const val = parseInt(e.target.value) || 1; setCart((prev) => prev.map((it) => cartItemKey(it) === key ? { ...it, quantity: Math.max(1, val) } : it)); }}
+                              className="w-10 h-6 text-center text-sm font-semibold border border-neutral-200 rounded bg-white focus:outline-none focus:ring-1 focus:ring-neutral-300 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
+                            <button onClick={() => updateQuantity(key, 1)} className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Plus size={12} /></button>
+                            <button onClick={() => removeFromCart(key)} className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"><Trash2 size={12} /></button>
                           </div>
                         </div>
-                        {/* 시리얼 선택 — B2C: 등록 시리얼 선택 + 직접 입력 */}
                         {item.product && customerType !== 'dealer' && customerType !== 'academy' ? (
-                          <SerialPicker
-                            productId={item.product.id}
-                            quantity={item.quantity}
-                            selectedSerialIds={item.selectedSerialIds}
-                            onSelect={(ids) => updateSerialIds(key, ids)}
-                            manualSerials={item.manualSerials || []}
-                            onManualSerialsChange={(s) => updateManualSerials(key, s)}
-                          />
+                          <SerialPicker productId={item.product.id} quantity={item.quantity} selectedSerialIds={item.selectedSerialIds}
+                            onSelect={(ids) => updateSerialIds(key, ids)} manualSerials={item.manualSerials || []} onManualSerialsChange={(s) => updateManualSerials(key, s)} />
                         ) : item.product && (customerType === 'dealer' || customerType === 'academy') ? (
                           <p className="text-[10px] text-neutral-400 mt-1">보관창고에서 출고 (시리얼 미부여)</p>
                         ) : !item.product ? (
-                          /* 직접입력 품목 — 시리얼 직접 입력만 가능 */
-                          <ManualSerialInput
-                            serials={item.manualSerials || []}
-                            onChange={(s) => updateManualSerials(key, s)}
-                          />
+                          <ManualSerialInput serials={item.manualSerials || []} onChange={(s) => updateManualSerials(key, s)} />
                         ) : null}
                       </div>
                     );
                   })}
                 </div>
               )}
-
-              {/* 합계 */}
               {cart.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-neutral-100 space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-neutral-500">소계</span>
-                    <span className="font-semibold">{formatKRW(totalAmount)}</span>
-                  </div>
-                  {discount > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-neutral-500">할인</span>
-                      <span className="text-red-600">-{formatKRW(discount)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-sm font-bold">
-                    <span>결제 금액</span>
-                    <span className="text-terracotta">{formatKRW(paidAmount)}</span>
-                  </div>
-                  {/* VAT 분리 표시 — 카드 금액 기준 */}
+                  <div className="flex justify-between text-sm"><span className="text-neutral-500">소계</span><span className="font-semibold">{formatKRW(totalAmount)}</span></div>
+                  {discount > 0 && <div className="flex justify-between text-sm"><span className="text-neutral-500">할인</span><span className="text-red-600">-{formatKRW(discount)}</span></div>}
+                  <div className="flex justify-between text-sm font-bold"><span>결제 금액</span><span className="text-terracotta">{formatKRW(paidAmount)}</span></div>
                   {(() => {
-                    const cardAmt = paymentMethod === 'card' ? paidAmount
-                      : paymentMethod === 'mixed' ? mixedCard
-                      : 0;
+                    const cardAmt = paymentMethod === 'card' ? paidAmount : paymentMethod === 'mixed' ? mixedCard : 0;
                     if (cardAmt <= 0) return null;
                     const { supply, vat } = calcVAT(cardAmt);
                     return (
                       <div className="mt-2 pt-2 border-t border-dashed border-neutral-200 space-y-0.5">
-                        <div className="flex justify-between text-xs text-neutral-500">
-                          <span>카드 공급가액</span>
-                          <span>{formatKRW(supply)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs text-neutral-500">
-                          <span>부가세 (10%)</span>
-                          <span>{formatKRW(vat)}</span>
-                        </div>
-                        {paymentMethod === 'mixed' && (
-                          <div className="flex justify-between text-xs text-neutral-400">
-                            <span>현금/이체 (VAT 미적용)</span>
-                            <span>{formatKRW(mixedCash + mixedTransfer)}</span>
-                          </div>
-                        )}
+                        <div className="flex justify-between text-xs text-neutral-500"><span>카드 공급가액</span><span>{formatKRW(supply)}</span></div>
+                        <div className="flex justify-between text-xs text-neutral-500"><span>부가세 (10%)</span><span>{formatKRW(vat)}</span></div>
+                        {paymentMethod === 'mixed' && <div className="flex justify-between text-xs text-neutral-400"><span>현금/이체</span><span>{formatKRW(mixedCash + mixedTransfer)}</span></div>}
                       </div>
                     );
                   })()}
@@ -478,235 +529,9 @@ function NewSaleContent() {
               )}
             </Card>
 
-            {/* 고객 정보 — 자동완성 */}
-            <Card>
-              <h3 className="text-sm font-semibold text-indigo-black mb-3">고객 정보</h3>
-              <CustomerAutocomplete
-                selectedCustomer={selectedCustomer}
-                onSelect={(c) => {
-                  setSelectedCustomer(c);
-                  setCustomerName(c.name);
-                  setCustomerPhone(c.phone || '');
-                  recalcCartPrices(c.customer_type);
-                }}
-                onClear={() => {
-                  setSelectedCustomer(null);
-                  setCustomerName('');
-                  setCustomerPhone('');
-                  recalcCartPrices(undefined);
-                }}
-              />
-              {!selectedCustomer && (
-                <button type="button" onClick={() => setShowCreateCustomer(true)}
-                  className="w-full mt-2 py-2 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:bg-neutral-50 transition">
-                  + 신규 고객 등록
-                </button>
-              )}
-              {customerType === 'dealer' && (
-                <p className="text-xs text-purple-600 mt-1">딜러가 적용 중</p>
-              )}
-              {customerType === 'academy' && (
-                <p className="text-xs text-emerald-600 mt-1">아카데미가 적용 중</p>
-              )}
-            </Card>
-
-            <CustomerCreateModal
-              open={showCreateCustomer}
-              onClose={() => setShowCreateCustomer(false)}
-              onCreated={(c) => {
-                setSelectedCustomer({ id: c.id, name: c.name, phone: c.phone, customer_type: c.customer_type } as SelectedCustomer);
-                setCustomerName(c.name);
-                setCustomerPhone(c.phone);
-                recalcCartPrices(c.customer_type);
-              }}
-            />
-
-            {/* 결제 정보 */}
-            <Card>
-              <h3 className="text-sm font-semibold text-indigo-black mb-3">결제 정보</h3>
-              <div className="space-y-3">
-                {/* 판매일 */}
-                <div>
-                  <label className="text-xs text-neutral-500 mb-1.5 block">판매일</label>
-                  <input
-                    type="date"
-                    value={saleDate}
-                    max={new Date().toISOString().slice(0, 10)}
-                    onChange={(e) => setSaleDate(e.target.value)}
-                    className="h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-300"
-                  />
-                </div>
-
-                {/* 판매 채널 */}
-                <div>
-                  <label className="text-xs text-neutral-500 mb-1.5 block">판매 채널</label>
-                  <div className="flex gap-2">
-                    {([
-                      { value: 'offline', label: '오프라인', color: 'bg-neutral-800 text-white' },
-                      { value: 'online', label: '온라인', color: 'bg-blue-600 text-white' },
-                      { value: 'talk', label: '톡상담', color: 'bg-yellow-500 text-white' },
-                    ] as const).map((ch) => (
-                      <button
-                        key={ch.value}
-                        onClick={() => setSaleChannel(ch.value)}
-                        className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${
-                          saleChannel === ch.value
-                            ? ch.color
-                            : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
-                        }`}
-                      >
-                        {ch.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs text-neutral-500 mb-1.5 block">결제 수단</label>
-                  <div className="flex gap-2">
-                    {(['card', 'cash', 'transfer', 'mixed'] as const).map((method) => (
-                      <button
-                        key={method}
-                        onClick={() => {
-                          setPaymentMethod(method);
-                          if (method === 'mixed') {
-                            setMixedCard(0); setMixedCash(0); setMixedTransfer(0);
-                          }
-                        }}
-                        className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${
-                          paymentMethod === method
-                            ? 'bg-terracotta text-cream'
-                            : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
-                        }`}
-                      >
-                        {{ card: '카드', cash: '현금', transfer: '이체', mixed: '복합' }[method]}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* 복합 결제 분리 입력 */}
-                  {paymentMethod === 'mixed' && (
-                    <div className="mt-2 p-3 rounded-lg bg-neutral-50 border border-neutral-200 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-neutral-500 w-10 shrink-0">카드</span>
-                        <input
-                          type="number" min={0} value={mixedCard || ''}
-                          onChange={(e) => setMixedCard(parseInt(e.target.value) || 0)}
-                          className="flex-1 h-8 px-2 rounded border border-neutral-200 text-sm text-right bg-white focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                          placeholder="0"
-                        />
-                        <span className="text-xs text-neutral-400">원</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-neutral-500 w-10 shrink-0">현금</span>
-                        <input
-                          type="number" min={0} value={mixedCash || ''}
-                          onChange={(e) => setMixedCash(parseInt(e.target.value) || 0)}
-                          className="flex-1 h-8 px-2 rounded border border-neutral-200 text-sm text-right bg-white focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                          placeholder="0"
-                        />
-                        <span className="text-xs text-neutral-400">원</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-neutral-500 w-10 shrink-0">이체</span>
-                        <input
-                          type="number" min={0} value={mixedTransfer || ''}
-                          onChange={(e) => setMixedTransfer(parseInt(e.target.value) || 0)}
-                          className="flex-1 h-8 px-2 rounded border border-neutral-200 text-sm text-right bg-white focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                          placeholder="0"
-                        />
-                        <span className="text-xs text-neutral-400">원</span>
-                      </div>
-                      <div className="pt-1 border-t border-neutral-200">
-                        {(() => {
-                          const mixedTotal = mixedCard + mixedCash + mixedTransfer;
-                          const isMatch = mixedTotal === finalAmount;
-                          return (
-                            <div className={`flex justify-between text-xs font-semibold ${isMatch ? 'text-green-600' : 'text-red-500'}`}>
-                              <span>합계</span>
-                              <span>
-                                {formatKRW(mixedTotal)}
-                                {isMatch ? ' ✓' : ` (${formatKRW(finalAmount - mixedTotal)} ${mixedTotal > finalAmount ? '초과' : '부족'})`}
-                              </span>
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 결제 상태 */}
-                <div>
-                  <label className="text-xs text-neutral-500 mb-1.5 block">결제 상태</label>
-                  <div className="flex gap-2">
-                    {([
-                      { value: 'paid' as const, label: '결제완료', color: 'bg-green-600 text-white' },
-                      { value: 'partial' as const, label: '부분결제', color: 'bg-yellow-500 text-white' },
-                      { value: 'unpaid' as const, label: '미결제', color: 'bg-red-500 text-white' },
-                    ]).map((ps) => (
-                      <button
-                        key={ps.value}
-                        onClick={() => setPaymentStatus(ps.value)}
-                        className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${
-                          paymentStatus === ps.value
-                            ? ps.color
-                            : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
-                        }`}
-                      >
-                        {ps.label}
-                      </button>
-                    ))}
-                  </div>
-                  {paymentStatus === 'partial' && (
-                    <div className="mt-2">
-                      <label className="text-xs text-neutral-500">입금액</label>
-                      <input
-                        type="number"
-                        value={depositAmount || ''}
-                        onChange={(e) => setDepositAmount(parseInt(e.target.value) || 0)}
-                        placeholder="입금된 금액 입력"
-                        className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                      />
-                    </div>
-                  )}
-                  {paymentStatus !== 'paid' && finalAmount > 0 && (
-                    <p className="text-xs text-red-500 mt-1 font-medium">
-                      미수금: {formatKRW(finalAmount - paidAmount)}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-xs text-neutral-500">할인 금액</label>
-                  <input
-                    type="number"
-                    value={discount || ''}
-                    onChange={(e) => setDiscount(parseInt(e.target.value) || 0)}
-                    placeholder="0"
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs text-neutral-500">메모</label>
-                  <input
-                    type="text"
-                    value={memo}
-                    onChange={(e) => setMemo(e.target.value)}
-                    placeholder="메모 (선택)"
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                  />
-                </div>
-              </div>
-            </Card>
-
-            {/* 제출 */}
-            <Button
-              className="w-full"
+            <Button className="w-full shrink-0"
               disabled={(!selectedCustomer && !customerName.trim()) || cart.length === 0 || createSale.isPending}
-              onClick={handleSubmit}
-            >
+              onClick={handleSubmit}>
               {createSale.isPending ? '등록 중...' : `판매 등록 (${formatKRW(paidAmount)})`}
             </Button>
           </div>
