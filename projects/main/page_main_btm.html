@@ -448,29 +448,17 @@ button[class*="mm-"]:focus-visible {
   color: var(--cream);
 }
 
-/* 서브타입 칩 */
-.mm-reviews__subtypes {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-.mm-reviews__subchip {
-  padding: 5px 12px;
+/* 카드 내 서브타입 칩 */
+.mm-review-card__subtype {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
   border: 1px solid var(--sand);
-  border-radius: 999px;
-  background: transparent;
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--stone);
-  cursor: pointer;
-  transition: all var(--duration-fast);
-}
-.mm-reviews__subchip--active {
-  background: var(--graphite);
-  border-color: var(--graphite);
-  color: var(--cream);
+  border-radius: 4px;
+  color: var(--warm-gray);
+  margin-left: 6px;
+  vertical-align: middle;
 }
 
 /* 출처 배지 */
@@ -485,10 +473,6 @@ button[class*="mm-"]:focus-visible {
 .mm-review-card__source-badge--naver {
   background: #03C75A;
   color: #fff;
-}
-.mm-review-card__source-badge--site {
-  background: var(--parchment);
-  color: var(--stone);
 }
 
 .mm-reviews__scroll {
@@ -769,7 +753,6 @@ button[class*="mm-"]:focus-visible {
     </div>
 
     <!-- 서브타입 칩 (JS 렌더링) -->
-    <div class="mm-reviews__subtypes" id="mmReviewSubtypes"></div>
 
     <div class="mm-reviews__scroll" id="mmReviews">
       <!-- JS 렌더링 -->
@@ -837,70 +820,21 @@ button[class*="mm-"]:focus-visible {
   /* ═══════════════════════════════════════════════════════════════
      서브타입 칩 정의 및 렌더링
      ═══════════════════════════════════════════════════════════════ */
-  var SUBTYPE_MAP = {
-    consult: [
-      { key: 'all', label: '전체' },
-      { key: 'store_visit', label: '직접방문' },
-      { key: 'field_request', label: '출장상담' },
-      { key: 'talk_consult', label: '톡상담' }
-    ],
-    repair: [
-      { key: 'all', label: '전체' },
-      { key: 'visit_pickup', label: '방문수거' },
-      { key: 'direct_send', label: '직접발송' },
-      { key: 'same_day', label: '당일수리' }
-    ],
-    purchase: []
+  /* 서브타입 라벨 매핑 — 카드 내 칩 표시용 */
+  var SUBTYPE_LABELS = {
+    store_visit: '직접방문', field_request: '출장상담', talk_consult: '톡상담',
+    visit_pickup: '방문수거', direct_send: '직접발송', same_day: '당일수리',
+    restoration: '복원수리'
   };
-  var currentSubtype = 'all';
-
-  function renderSubtypeChips(type) {
-    var wrap = document.getElementById('mmReviewSubtypes');
-    if (!wrap) return;
-    var chips = SUBTYPE_MAP[type] || [];
-    if (chips.length === 0) {
-      wrap.innerHTML = '';
-      wrap.style.display = 'none';
-      return;
-    }
-    wrap.style.display = 'flex';
-    currentSubtype = 'all';
-    wrap.innerHTML = chips.map(function(c) {
-      var active = c.key === 'all' ? ' mm-reviews__subchip--active' : '';
-      return '<button class="mm-reviews__subchip' + active + '" data-subtype="' + c.key + '">' + c.label + '</button>';
-    }).join('');
-  }
-
-  function initSubtypeChips() {
-    var wrap = document.getElementById('mmReviewSubtypes');
-    if (!wrap) return;
-    wrap.addEventListener('click', function(e) {
-      var btn = e.target.closest('.mm-reviews__subchip');
-      if (!btn || btn.classList.contains('mm-reviews__subchip--active')) return;
-      wrap.querySelectorAll('.mm-reviews__subchip').forEach(function(c) {
-        c.classList.remove('mm-reviews__subchip--active');
-      });
-      btn.classList.add('mm-reviews__subchip--active');
-      currentSubtype = btn.getAttribute('data-subtype');
-      /* 현재 활성 타입 탭 확인 */
-      var activeTab = document.querySelector('.mm-reviews__tab--active');
-      var type = activeTab ? activeTab.getAttribute('data-type') : 'consult';
-      renderReviews(type, currentSubtype);
-    });
-  }
 
 
   /* ═══════════════════════════════════════════════════════════════
      후기 렌더링 (서브타입 필터 지원)
      ═══════════════════════════════════════════════════════════════ */
-  function renderReviews(type, subtype) {
+  function renderReviews(type) {
     var el = document.getElementById('mmReviews');
     if (!el) return;
     var items = allReviews.filter(function(r) { return r.type === type; });
-    /* 서브타입 필터 */
-    if (subtype && subtype !== 'all') {
-      items = items.filter(function(r) { return r.subtype === subtype; });
-    }
     if (items.length === 0) {
       el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--warm-gray);font-size:14px;">아직 등록된 후기가 없습니다</div>';
       return;
@@ -917,14 +851,19 @@ button[class*="mm-"]:focus-visible {
             return '<span style="font-size:11px;padding:2px 8px;border:1px solid var(--sand);border-radius:6px;color:var(--stone);">' + (TAG_LABELS[t] || t) + '</span>';
           }).join('') + '</div>';
       }
-      var sourceBadge = r.source === 'naver'
-        ? '<span class="mm-review-card__source-badge mm-review-card__source-badge--naver">네이버</span>'
-        : '<span class="mm-review-card__source-badge mm-review-card__source-badge--site">자체</span>';
+      /* 이름 옆 칩: 네이버 출처 배지 + 서브타입 */
+      var nameBadges = '';
+      if (r.source === 'naver') {
+        nameBadges += '<span class="mm-review-card__source-badge mm-review-card__source-badge--naver">네이버</span>';
+      }
+      if (r.subtype && SUBTYPE_LABELS[r.subtype]) {
+        nameBadges += '<span class="mm-review-card__subtype">' + SUBTYPE_LABELS[r.subtype] + '</span>';
+      }
       var preview = r.content.length > 60 ? r.content.substring(0, 60) + '\u2026' : r.content;
       return '<div class="mm-review-card mm-anim mm-anim-stagger">' +
         imgHtml +
         '<div class="mm-review-card__header">' +
-          '<span class="mm-review-card__name">' + maskName(r.name) + sourceBadge + '</span>' +
+          '<span class="mm-review-card__name">' + maskName(r.name) + nameBadges + '</span>' +
         '</div>' +
         '<div class="mm-review-card__stars">' + stars + '</div>' +
         tagsHtml +
@@ -946,13 +885,11 @@ button[class*="mm-"]:focus-visible {
       .then(function(res) { return res.json(); })
       .then(function(data) {
         allReviews = Array.isArray(data) ? data : [];
-        renderSubtypeChips('consult');
-        renderReviews('consult', 'all');
+        renderReviews('consult');
       })
       .catch(function() {
         allReviews = [];
-        renderSubtypeChips('consult');
-        renderReviews('consult', 'all');
+        renderReviews('consult');
       });
   }
 
@@ -971,8 +908,7 @@ button[class*="mm-"]:focus-visible {
       });
       btn.classList.add('mm-reviews__tab--active');
       var type = btn.getAttribute('data-type');
-      renderSubtypeChips(type);
-      renderReviews(type, 'all');
+      renderReviews(type);
     });
   }
 
@@ -1062,7 +998,6 @@ button[class*="mm-"]:focus-visible {
   function init() {
     loadReviews();
     initReviewTabs();
-    initSubtypeChips();
     initVideoPlayer();
     initAnimations();
     initIframeComm();
