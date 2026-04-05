@@ -7,22 +7,42 @@
   <meta property="og:title" content="MAMORU 복원수리내역">
   <meta property="og:description" content="가위 복원수리 결과를 확인하세요">
   <title>MAMORU 복원수리내역</title>
+  <!-- Brand Guide v1.0 Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --void: #1A1A1A;
+      --graphite: #2D2D2D;
+      --stone: #4A4A4A;
+      --warm-gray: #8A8580;
+      --mist: #B8B4AF;
+      --sand: #D4D0CB;
+      --parchment: #EDEBE8;
+      --shell: #F5F3F0;
+      --cream: #FAF9F7;
+      --white: #FFFFFF;
+      --font-display: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
+    ::-webkit-scrollbar-thumb { background: var(--sand); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--warm-gray); }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-      background: #f5f5f5; color: #1a1a1a; line-height: 1.5;
+      font-family: var(--font-body);
+      background: var(--shell); color: var(--void); line-height: 1.5;
       -webkit-text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
     }
 
     .container {
-      max-width: 420px; margin: 0 auto; background: #ffffff;
+      max-width: 420px; margin: 0 auto; background: var(--white);
       min-height: 100vh; position: relative;
     }
 
@@ -37,101 +57,105 @@
     .action-bar button {
       display: flex; align-items: center; gap: 6px;
       padding: 10px 16px; border: none; border-radius: 8px;
+      font-family: var(--font-body);
       font-size: 14px; font-weight: 600; cursor: pointer;
       transition: all 0.2s; -webkit-tap-highlight-color: transparent;
     }
-    .btn-back { background: rgba(255,255,255,0.15); color: #fff; }
+    .btn-back { background: rgba(255,255,255,0.15); color: var(--cream); }
     .btn-back:active { background: rgba(255,255,255,0.25); }
-    .btn-save { background: #fff; color: #1a1a1a; }
-    .btn-save:active { background: #e0e0e0; }
+    .btn-save { background: var(--cream); color: var(--void); }
+    .btn-save:active { background: var(--parchment); }
     .btn-save.saving { opacity: 0.6; pointer-events: none; }
 
     /* 캡처 영역 */
-    #capture-area { background: #fff; }
+    #capture-area { background: var(--white); }
 
     /* 헤더 */
     .header {
-      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-      color: #ffffff; padding: 24px 20px; text-align: center;
+      background: var(--void);
+      color: var(--cream); padding: 28px 20px; text-align: center;
     }
     .header .logo { height: 40px; margin-bottom: 16px; }
     .header .doc-title {
-      font-size: 18px; font-weight: 600; color: #ffffff;
-      padding: 8px 20px; background: rgba(255,255,255,0.1);
+      font-family: var(--font-display);
+      font-size: 18px; font-weight: 700; color: var(--cream);
+      padding: 8px 20px; background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 20px; display: inline-block;
     }
 
     /* 고객 정보 */
     .customer-info {
-      padding: 20px; background: #fafafa; border-bottom: 1px solid #eee;
+      padding: 20px; background: var(--cream); border-bottom: 1px solid var(--sand);
     }
     .customer-info .name {
-      font-size: 22px; font-weight: 700; margin-bottom: 12px;
+      font-size: 22px; font-weight: 700; color: var(--void); margin-bottom: 12px;
     }
     .customer-info .name span {
-      font-size: 14px; font-weight: 400; color: #666; margin-left: 4px;
+      font-size: 14px; font-weight: 400; color: var(--warm-gray); margin-left: 4px;
     }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .info-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
     .info-item { display: flex; flex-direction: column; gap: 2px; }
-    .info-item .label { font-size: 11px; color: #888; font-weight: 500; }
-    .info-item .value { font-size: 14px; font-weight: 600; color: #333; }
+    .info-item .label { font-size: 11px; color: var(--warm-gray); font-weight: 500; }
+    .info-item .value { font-size: 14px; font-weight: 600; color: var(--stone); }
 
     /* 섹션 타이틀 */
     .section-title {
       padding: 16px 20px 12px; font-size: 14px; font-weight: 700;
-      color: #1a1a1a; background: #fff; border-bottom: 2px solid #1a1a1a;
+      color: var(--void); background: var(--white); border-bottom: 2px solid var(--void);
     }
 
     /* 가위 수량 요약 */
     .scissor-summary {
-      padding: 16px 20px; background: #f5f5f5;
-      border-top: 1px solid #eee; text-align: center;
+      padding: 16px 20px; background: var(--shell);
+      border-top: 1px solid var(--sand); text-align: center;
     }
     .scissor-summary .total {
-      font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px;
+      font-family: var(--font-display);
+      font-size: 28px; font-weight: 700; color: var(--void); margin-bottom: 4px;
     }
-    .scissor-summary .total-label { font-size: 13px; color: #666; margin-bottom: 10px; }
+    .scissor-summary .total-label { font-size: 13px; color: var(--warm-gray); margin-bottom: 10px; }
     .scissor-summary .types {
       display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
     }
     .scissor-summary .type-item {
-      font-size: 12px; color: #888; background: #fff;
-      padding: 4px 12px; border-radius: 12px; border: 1px solid #e0e0e0;
+      font-size: 12px; color: var(--warm-gray); background: var(--white);
+      padding: 4px 12px; border-radius: 12px; border: 1px solid var(--sand);
     }
-    .scissor-summary .type-item strong { color: #333; font-weight: 600; }
+    .scissor-summary .type-item strong { color: var(--stone); font-weight: 600; }
 
     /* 가위 카드 */
     .scissor-card {
-      margin: 16px; background: #fff; border-radius: 16px;
-      overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      border: 1px solid #eee;
+      margin: 16px; background: var(--white); border-radius: 16px;
+      overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border: 1px solid var(--sand);
     }
     .scissor-header {
-      background: linear-gradient(135deg, #2a2a2a 0%, #3d3d3d 100%);
-      color: #fff; padding: 14px 16px;
+      background: var(--void);
+      color: var(--cream); padding: 14px 16px;
       display: flex; justify-content: space-between; align-items: center;
     }
-    .scissor-header .number { font-size: 18px; font-weight: 700; }
+    .scissor-header .number { font-family: var(--font-display); font-size: 18px; font-weight: 700; }
     .scissor-header .type {
       font-size: 13px; padding: 4px 12px;
-      background: rgba(255,255,255,0.2); border-radius: 12px;
+      background: rgba(255,255,255,0.12); border-radius: 12px;
     }
     .scissor-body { display: grid; grid-template-columns: 160px 1fr; gap: 0; }
     .scissor-photo {
       padding: 16px; display: flex; align-items: center;
-      justify-content: center; background: #f8f8f8;
-      border-right: 1px solid #eee;
+      justify-content: center; background: var(--shell);
+      border-right: 1px solid var(--sand);
     }
     .scissor-photo img {
       width: 140px; height: 250px; object-fit: cover;
-      border-radius: 12px; background: #e0e0e0;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 12px; background: var(--parchment);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
     .scissor-photo .no-photo {
-      width: 140px; height: 250px; background: #e8e8e8;
+      width: 140px; height: 250px; background: var(--parchment);
       border-radius: 12px; display: flex; align-items: center;
-      justify-content: center; font-size: 14px; color: #999;
+      justify-content: center; font-size: 14px; color: var(--warm-gray);
       text-align: center; line-height: 1.5;
     }
     .scissor-status {
@@ -140,11 +164,11 @@
     }
     .status-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 0; border-bottom: 1px solid #f0f0f0;
+      padding: 8px 0; border-bottom: 1px solid var(--parchment);
     }
     .status-row:last-child { border-bottom: none; }
     .status-row .label {
-      font-size: 13px; color: #666; font-weight: 500; white-space: nowrap;
+      font-size: 13px; color: var(--warm-gray); font-weight: 500; white-space: nowrap;
     }
     .status-row .value {
       font-size: 13px; font-weight: 600; padding: 4px 12px;
@@ -156,44 +180,44 @@
 
     /* 진행내역 */
     .comment-section {
-      margin: 16px; padding: 16px; background: #f9f9f9;
-      border-radius: 12px; border-left: 4px solid #1a1a1a;
+      margin: 16px; padding: 16px; background: var(--cream);
+      border-radius: 12px; border-left: 4px solid var(--void);
     }
     .comment-section .comment-header {
-      font-size: 13px; font-weight: 700; color: #1a1a1a;
-      margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0;
+      font-size: 13px; font-weight: 700; color: var(--void);
+      margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--sand);
     }
     .comment-section .content {
-      font-size: 14px; color: #333; line-height: 1.7; white-space: pre-wrap;
+      font-size: 14px; color: var(--stone); line-height: 1.7; white-space: pre-wrap;
     }
     .no-comment {
       margin: 16px; padding: 16px; text-align: center;
-      color: #999; font-size: 14px;
+      color: var(--warm-gray); font-size: 14px;
     }
 
     /* 비용 섹션 */
     .cost-section { padding: 0 20px 16px; }
     .cost-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px;
+      padding: 10px 0; border-bottom: 1px solid var(--parchment); font-size: 14px;
     }
     .cost-row:last-child { border-bottom: none; }
-    .cost-row .label { color: #666; }
-    .cost-row .value { font-weight: 600; }
+    .cost-row .label { color: var(--warm-gray); }
+    .cost-row .value { font-weight: 600; color: var(--stone); }
     .cost-row.total {
-      border-top: 2px solid #1a1a1a; padding-top: 12px; margin-top: 4px;
+      border-top: 2px solid var(--void); padding-top: 12px; margin-top: 4px;
     }
-    .cost-row.total .label { font-weight: 700; color: #1a1a1a; }
-    .cost-row.total .value { font-size: 16px; color: #d4613e; }
+    .cost-row.total .label { font-weight: 700; color: var(--void); }
+    .cost-row.total .value { font-size: 16px; color: var(--void); }
 
     /* 푸터 */
     .footer {
       margin-top: 24px; padding: 24px 20px;
-      background: #1a1a1a; color: #fff; text-align: center;
+      background: var(--void); color: var(--cream); text-align: center;
     }
     .footer .logo { height: 32px; margin-bottom: 16px; }
-    .footer .tagline { font-size: 11px; color: #888; margin-bottom: 16px; }
-    .footer .contact { font-size: 12px; color: #aaa; line-height: 1.8; }
+    .footer .tagline { font-size: 11px; color: var(--warm-gray); margin-bottom: 16px; }
+    .footer .contact { font-size: 12px; color: var(--mist); line-height: 1.8; }
 
     /* 로딩 */
     .loading-wrap {
@@ -202,10 +226,10 @@
     }
     .loading-spinner {
       width: 36px; height: 36px;
-      border: 3px solid #e0e0e0; border-top-color: #1a1a1a;
+      border: 3px solid var(--sand); border-top-color: var(--void);
       border-radius: 50%; animation: spin 0.8s linear infinite;
     }
-    .loading-text { font-size: 14px; color: #888; }
+    .loading-text { font-size: 14px; color: var(--warm-gray); }
 
     /* 에러 */
     .error-wrap {
@@ -213,12 +237,13 @@
       justify-content: center; min-height: 60vh; padding: 40px 20px; text-align: center;
     }
     .error-icon { font-size: 48px; margin-bottom: 16px; }
-    .error-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-    .error-msg { font-size: 14px; color: #888; line-height: 1.6; }
+    .error-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--void); }
+    .error-msg { font-size: 14px; color: var(--warm-gray); line-height: 1.6; }
     .error-retry {
-      margin-top: 20px; padding: 10px 24px; border: 1px solid #ddd;
-      border-radius: 8px; background: #fff; font-size: 14px;
-      cursor: pointer; color: #333;
+      margin-top: 20px; padding: 10px 24px; border: 1px solid var(--sand);
+      border-radius: 8px; background: var(--white); font-size: 14px;
+      font-family: var(--font-body);
+      cursor: pointer; color: var(--stone);
     }
 
     /* 저장 중 오버레이 */
@@ -226,12 +251,12 @@
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.7); z-index: 200;
       justify-content: center; align-items: center;
-      flex-direction: column; color: #fff;
+      flex-direction: column; color: var(--cream);
     }
     .saving-overlay.show { display: flex; }
     .saving-overlay .spinner {
       width: 40px; height: 40px;
-      border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border: 3px solid rgba(255,255,255,0.3); border-top-color: var(--cream);
       border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px;
     }
 
@@ -329,7 +354,7 @@
       <!-- 푸터 -->
       <div class="footer">
         <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/aeef581a55972.png" alt="MAMORU" class="logo" crossorigin="anonymous">
-        <div class="tagline">가격을 뛰어넘는 가치를 제공합니다</div>
+        <div class="tagline">CUT THE FAKE, KEEP THE REAL</div>
         <div class="contact">
           &#128222; 02-6326-0426<br>
           &#128231; bsm@mamoru.kr<br>
