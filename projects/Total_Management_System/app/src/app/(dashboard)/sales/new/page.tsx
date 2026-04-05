@@ -213,13 +213,11 @@ function NewSaleContent() {
     <>
       <Topbar title="판매 입력" />
 
-      <div className="px-4 md:px-6 py-4">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:items-start">
-          {/* 좌: 제품 선택 */}
-          <div className="space-y-3 flex flex-col">
-            <h3 className="text-sm font-semibold text-neutral-700">제품 선택</h3>
-
-            {/* 검색 + 카테고리 필터 */}
+      <div className="px-4 md:px-6 py-4 space-y-3">
+        {/* 제목 + 검색 (그리드 밖 — 좌열 너비만큼만) */}
+        <div className="xl:w-[33.33%]">
+          <h3 className="text-sm font-semibold text-neutral-700 mb-2">제품 선택</h3>
+          {/* 검색 + 카테고리 필터 */}
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -246,7 +244,12 @@ function NewSaleContent() {
                 ))}
               </div>
             </div>
+        </div>
 
+        {/* 3열 그리드 — 검색바 아래 라인부터 동일 높이 시작 */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:items-start">
+          {/* 좌: 제품 목록 */}
+          <div className="space-y-3">
             {/* 제품 목록 테이블 */}
             {productsLoading ? (
               <div className="text-sm text-neutral-400 py-4">로딩중...</div>
