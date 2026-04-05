@@ -176,15 +176,32 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
             ))}
           </div>
 
-          {/* 제품 추가 */}
+          {/* 제품 추가 — 검색 + 스크롤 리스트 */}
           <div>
             <p className="text-xs text-neutral-400 mb-1">제품 추가</p>
-            <div className="flex flex-wrap gap-1">
-              {products.filter(p => !editItems.find(ei => ei.product_id === p.id)).slice(0, 12).map(p => (
-                <button key={p.id} onClick={() => setEditItems(prev => [...prev, {
-                  product_id: p.id, product_name: p.name, sku: p.sku, quantity: 1, unit_price: p.price_purchase || p.price,
-                }])} className="px-2 py-1 rounded text-[10px] bg-neutral-100 hover:bg-neutral-200 transition truncate max-w-[120px]">
-                  + {p.name}
+            <input
+              type="text"
+              placeholder="제품명 검색..."
+              onChange={(e) => {
+                const el = e.target.nextElementSibling;
+                if (el) el.setAttribute('data-search', e.target.value.toLowerCase());
+                // 강제 리렌더 위해 state 불필요 — DOM 직접 필터
+                el?.querySelectorAll('[data-product-row]').forEach((row) => {
+                  const name = row.getAttribute('data-product-name') || '';
+                  (row as HTMLElement).style.display = name.includes(e.target.value.toLowerCase()) ? '' : 'none';
+                });
+              }}
+              className="w-full h-8 px-3 mb-1.5 rounded-lg border border-neutral-200 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
+            />
+            <div className="max-h-[200px] overflow-y-auto border border-neutral-100 rounded-lg divide-y divide-neutral-50">
+              {products.filter(p => !editItems.find(ei => ei.product_id === p.id)).map(p => (
+                <button key={p.id} data-product-row data-product-name={p.name.toLowerCase()}
+                  onClick={() => setEditItems(prev => [...prev, {
+                    product_id: p.id, product_name: p.name, sku: p.sku, quantity: 1, unit_price: p.price_purchase || p.price,
+                  }])}
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-neutral-50 transition text-left">
+                  <span className="truncate font-medium">{p.name}</span>
+                  <span className="text-neutral-400 shrink-0 ml-2">{formatKRW(p.price_purchase || p.price)}</span>
                 </button>
               ))}
             </div>

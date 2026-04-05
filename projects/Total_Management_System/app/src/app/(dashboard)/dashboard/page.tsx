@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Topbar } from '@/components/layout/topbar';
 import { HubCategoryCard } from '@/components/dashboard/hub-category-card';
 import { Card } from '@/components/ui/card';
@@ -15,6 +16,99 @@ import {
   Calendar, PackageX, Truck, PackageOpen,
 } from 'lucide-react';
 import Link from 'next/link';
+
+/* ── 할일 메모 위젯 ── */
+function TodoWidget() {
+  const queryClient = useQueryClient();
+  const [input, setInput] = useState('');
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+
+  const { data } = useQuery({
+    queryKey: ['dashboard-todos'],
+    staleTime: 30_000,
+    queryFn: async () => {
+      const res = await fetch('/api/dashboard/todos');
+      if (!res.ok) return { todos: [] };
+      return res.json() as Promise<{ todos: Array<{ id: string; text: string; created_at: string }> }>;
+    },
+  });
+
+  const addTodo = useMutation({
+    mutationFn: async (text: string) => {
+      const res = await fetch('/api/dashboard/todos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+      if (!res.ok) throw new Error();
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-todos'] }); setInput(''); },
+  });
+
+  const deleteTodo = useMutation({
+    mutationFn: async (id: string) => {
+      await fetch('/api/dashboard/todos', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-todos'] }); setConfirmId(null); },
+  });
+
+  const todos = data?.todos || [];
+
+  return (
+    <Card>
+      <div className="flex items-center gap-2 mb-3">
+        <CheckCircle2 size={16} className="text-neutral-500" />
+        <span className="text-sm font-bold">할 일 메모</span>
+        {todos.length > 0 && <Badge className="bg-neutral-100 text-neutral-600">{todos.length}</Badge>}
+      </div>
+
+      {/* 입력 */}
+      <div className="flex gap-2 mb-3">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && input.trim()) addTodo.mutate(input.trim()); }}
+          placeholder="할 일 입력..."
+          className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+        />
+        <button
+          onClick={() => { if (input.trim()) addTodo.mutate(input.trim()); }}
+          disabled={!input.trim() || addTodo.isPending}
+          className="px-3 h-8 rounded-lg bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-800 transition disabled:opacity-50"
+        >추가</button>
+      </div>
+
+      {/* 목록 */}
+      {todos.length === 0 ? (
+        <p className="text-xs text-neutral-400 text-center py-2">등록된 할 일이 없습니다</p>
+      ) : (
+        <div className="space-y-1">
+          {todos.map((todo) => (
+            <div key={todo.id} className="flex items-center gap-2 py-1 group">
+              <button
+                onClick={() => setConfirmId(todo.id)}
+                className="w-4 h-4 rounded border border-neutral-300 shrink-0 hover:border-green-500 hover:bg-green-50 transition flex items-center justify-center"
+              />
+              <span className="text-sm text-neutral-700 flex-1">{todo.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 완료 확인 모달 */}
+      {confirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setConfirmId(null)}>
+          <div className="bg-white rounded-xl shadow-xl p-5 w-72" onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm font-semibold mb-3">이 할일을 완료했습니까?</p>
+            <div className="flex gap-2">
+              <button onClick={() => deleteTodo.mutate(confirmId)}
+                className="flex-1 py-2 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700">완료</button>
+              <button onClick={() => setConfirmId(null)}
+                className="flex-1 py-2 rounded-lg bg-neutral-100 text-neutral-600 text-xs font-semibold hover:bg-neutral-200">취소</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
 
 function fmtKRW(n: number) {
   if (n >= 10000) return `₩${Math.round(n / 10000)}만`;
@@ -159,6 +253,9 @@ export default function DashboardPage() {
                     </div>
                   )}
                 </Card>
+
+                {/* 할일 메모 */}
+                {cardVisibility.todos !== false && <TodoWidget />}
 
                 {/* 미수금 경고 */}
                 {outstanding && outstanding.length > 0 && (
