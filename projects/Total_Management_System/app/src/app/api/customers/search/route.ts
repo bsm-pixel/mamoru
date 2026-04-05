@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await db
       .from('customers')
-      .select('id, name, phone, email, address_road, address_detail, postcode, ecount_customer_code, source, customer_type, company_name')
+      .select('id, name, phone, email, address_road, address_detail, postcode, ecount_customer_code, source, customer_type, company_name, memo')
       .or(orFilter)
       .neq('customer_type', 'supplier') // 판매 자동완성에서 매입처 제외
       .order('name')
