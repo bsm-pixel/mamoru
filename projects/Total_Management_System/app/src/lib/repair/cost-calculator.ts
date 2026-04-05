@@ -9,13 +9,18 @@ export const REPAIR_PRICE = {
   other: 20000,    // 타사 1자루
 } as const;
 
-/** 수거비 계산 (방문수거일 경우만) */
+/** 배송비 계산 */
 export function calcShippingFee(totalQty: number, proceedType: string | null): number {
-  const isPickup = proceedType === '방문수거';
-  if (!isPickup) return 0;
-  if (totalQty >= 3) return 0;
-  if (totalQty === 2) return 3000;
-  return 6000; // 방문수거 1자루
+  if (proceedType === '방문수거') {
+    if (totalQty >= 3) return 0;
+    if (totalQty === 2) return 3000;
+    return 6000; // 1개
+  }
+  if (proceedType === '직접발송') {
+    if (totalQty >= 2) return 0;
+    return 3000; // 1개
+  }
+  return 0; // 매장방문 등
 }
 
 /** 서비스 비용 계산 */
