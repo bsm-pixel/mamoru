@@ -1,23 +1,23 @@
-<!-- MAMORU 메인 페이지 - 아임웹 코드위젯용 -->
-<!-- ★ 이 코드를 아임웹 코드위젯에 전체 복사하세요 ★ -->
-<!-- GitHub Pages 배포 - postMessage 동적 높이 조절 -->
+<!-- MAMORU 메인 페이지 하단 - 아임웹 코드위젯용 -->
+<!-- ★ 이 코드를 아임웹 코드위젯 B에 전체 복사하세요 ★ -->
+<!-- 도구·소모품 → 서비스 쇼케이스 → 고객 후기 → 브랜드 한마디 -->
 
 <style>
-#mamoruMainWrap {
+#mamoruMainBtmWrap {
   position: relative;
   width: 100%;
 }
-#mamoruMainFrame {
+#mamoruMainBtmFrame {
   width: 100%;
   border: none;
   display: block;
 }
 </style>
 
-<div id="mamoruMainWrap">
+<div id="mamoruMainBtmWrap">
   <iframe
-    id="mamoruMainFrame"
-    src="https://bsm-pixel.github.io/mamoru/projects/main/page_main.html"
+    id="mamoruMainBtmFrame"
+    src="https://bsm-pixel.github.io/mamoru/projects/main/page_main_btm.html"
     scrolling="no"
     frameborder="0"
     allowtransparency="true">
@@ -26,10 +26,9 @@
 
 <script>
 (function(){
-  var iframe = document.getElementById('mamoruMainFrame');
+  var iframe = document.getElementById('mamoruMainBtmFrame');
   var currentHeight = 0;
 
-  // postMessage로 동적 높이 수신 (page_main.html → MAMORU_IFRAME_SIZE)
   window.addEventListener('message', function(e) {
     if (e.origin !== 'https://bsm-pixel.github.io') return;
 
@@ -41,13 +40,12 @@
       }
     }
 
-    // 페이지 이동 요청 처리 (cross-origin 해결)
     if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) {
       window.location.href = e.data.url;
     }
   });
 
-  // 초기 높이 (postMessage 수신 전 fallback) — 리뉴얼 7섹션
-  iframe.style.height = (window.innerWidth <= 768 ? 3600 : 4200) + 'px';
+  // 초기 높이 (postMessage 수신 전 fallback) — 하단: 도구+서비스+후기+슬로건
+  iframe.style.height = (window.innerWidth <= 768 ? 2800 : 3000) + 'px';
 })();
 </script>

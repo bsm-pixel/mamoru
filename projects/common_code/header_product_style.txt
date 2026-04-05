@@ -30,9 +30,9 @@
   + '#container___WID__ .item-wrap'
   + '{position:relative!important;z-index:1!important;background:#FAFAF5!important;border-radius:14px!important;overflow:hidden!important;border:1.5px solid transparent!important;transition:border-color .25s ease,box-shadow .25s ease!important}'
 
-  /* [5] 호버 - 골드 보더 */
+  /* [5] 호버 — Brand Guide v1.0 모노크롬 */
   + '#container___WID__ .item-wrap:hover'
-  + '{border-color:#D4613E!important;box-shadow:0 4px 16px rgba(212,97,62,.12)!important}' /* Terracotta 전환 */
+  + '{border-color:#D4D0CB!important;box-shadow:0 4px 16px rgba(0,0,0,.06)!important}' /* Sand + subtle shadow */
 
   + '#container___WID__ .item-wrap>a{display:block!important}'
 

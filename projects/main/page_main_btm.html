@@ -14,9 +14,8 @@
 <noscript><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet"></noscript>
 <style>
 /* ══════════════════════════════════════════════════════════════
-   MAMORU Main Page — Brand Guide v1.0 Renewal
-   7섹션: Hero → Trust Numbers → Quick Nav → Products
-          → Service Showcase → Reviews → Brand Statement
+   MAMORU Main Page (Bottom Half)
+   섹션: Tools → Service Showcase → Reviews → Brand Statement
    모바일 퍼스트 CSS
    ══════════════════════════════════════════════════════════════ */
 
@@ -63,7 +62,7 @@ body {
   height: auto !important;
   min-height: auto !important;
   font-family: var(--font-body);
-  background: var(--void);
+  background: var(--cream);
   color: var(--cream);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -122,309 +121,12 @@ button[class*="mm-"]:focus-visible {
 
 
 /* ══════════════════════════════════════════════════════════════
-   [1]. 히어로 — Void 배경, 70vh+, Ken Burns
-   ══════════════════════════════════════════════════════════════ */
-.mm-hero {
-  background: var(--void);
-  overflow: hidden;
-}
-.mm-hero__visual {
-  width: 100%;
-  line-height: 0;
-  overflow: hidden;
-}
-.mm-hero__visual img,
-.mm-hero__visual video {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  animation: mm-ken-burns 12s var(--ease) both;
-}
-@keyframes mm-ken-burns {
-  from { transform: scale(1); }
-  to { transform: scale(1.05); }
-}
-.mm-hero__body {
-  text-align: center;
-  padding: 56px 20px 48px;
-}
-.mm-hero__kicker {
-  display: inline-block;
-  margin-bottom: 20px;
-  padding: 6px 14px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--mist);
-}
-.mm-hero__headline {
-  font-family: var(--font-display);
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: -0.03em;
-  color: var(--cream);
-  margin-bottom: 14px;
-}
-.mm-hero__sub {
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.7;
-  color: var(--mist);
-  margin-bottom: 40px;
-}
-.mm-hero__cta-group {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-}
-.mm-hero__cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 16px 32px;
-  min-height: 48px;
-  background: var(--cream);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--void);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 4px 20px rgba(250,249,247,0.15);
-  transition: transform var(--duration-fast), box-shadow var(--duration-fast), background var(--duration-fast);
-}
-.mm-hero__cta:active { transform: scale(0.97); }
-.mm-hero__cta svg { width: 18px; height: 18px; }
-.mm-hero__hint {
-  margin-top: 14px;
-  font-size: 12px;
-  color: var(--warm-gray);
-  animation: mm-hint-fade 1.2s ease 0.8s both;
-}
-@keyframes mm-hint-fade {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 360px) {
-  .mm-hero__body { padding: 28px 16px 36px; }
-  .mm-hero__headline { font-size: 26px; }
-  .mm-hero__sub { font-size: 13px; }
-}
-@media (min-width: 768px) {
-  .mm-hero__body { padding: 64px 32px 56px; }
-  .mm-hero__headline { font-size: 40px; }
-  .mm-hero__sub { font-size: 15px; margin-bottom: 48px; }
-  .mm-hero__cta { padding: 18px 40px; font-size: 17px; min-height: 52px; }
-}
-@media (min-width: 1024px) {
-  .mm-hero__inner {
-    position: relative;
-    display: flex;
-    max-width: var(--mm-max-w);
-    margin: 0 auto;
-    min-height: 560px;
-    overflow: hidden;
-  }
-  .mm-hero__visual {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    overflow: hidden;
-  }
-  .mm-hero__visual img,
-  .mm-hero__visual video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: right center;
-  }
-  .mm-hero__body {
-    position: relative;
-    z-index: 2;
-    flex: 0 0 55%;
-    text-align: left;
-    padding: 80px 48px 80px 56px;
-    background: linear-gradient(to right, var(--void) 40%, rgba(26,26,26,0) 100%);
-    color: var(--cream);
-  }
-  .mm-hero__headline { font-size: 48px; font-weight: 900; }
-  .mm-hero__cta { margin: 0; }
-}
-@media (min-width: 1440px) {
-  .mm-hero__inner { min-height: 620px; }
-  .mm-hero__headline { font-size: 56px; }
-  .mm-hero__sub { font-size: 17px; }
-}
-@media (hover: hover) {
-  .mm-hero__cta:hover {
-    transform: translateY(-2px);
-    background: var(--parchment);
-    box-shadow: 0 6px 28px rgba(250,249,247,0.2);
-  }
-}
-
-
-/* ══════════════════════════════════════════════════════════════
-   [2]. Trust Numbers — Void, 카운터 애니메이션
-   ══════════════════════════════════════════════════════════════ */
-.mm-trust {
-  background: var(--void);
-  padding: 48px 0;
-  border-top: 1px solid rgba(255,255,255,0.06);
-}
-.mm-trust__grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 32px 0;
-  text-align: center;
-}
-.mm-trust__item { position: relative; }
-.mm-trust__number {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 36px;
-  font-weight: 900;
-  color: var(--cream);
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
-.mm-trust__label {
-  display: block;
-  margin-top: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--warm-gray);
-}
-
-@media (min-width: 768px) {
-  .mm-trust { padding: 64px 0; }
-  .mm-trust__grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0;
-  }
-  .mm-trust__item + .mm-trust__item {
-    border-left: 1px solid rgba(255,255,255,0.08);
-  }
-  .mm-trust__number { font-size: 48px; }
-  .mm-trust__label { font-size: 13px; }
-}
-@media (min-width: 1024px) {
-  .mm-trust__number { font-size: 56px; }
-}
-
-
-/* ══════════════════════════════════════════════════════════════
-   [3]. Quick Nav — Shell 배경, 퀵 네비게이션
-   ══════════════════════════════════════════════════════════════ */
-.mm-quicknav {
-  background: var(--shell);
-  padding: 32px 0;
-}
-.mm-quicknav__row {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 4px;
-}
-.mm-quicknav__row::-webkit-scrollbar { display: none; }
-.mm-quicknav__chip {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  background: var(--white);
-  border: 1px solid var(--sand);
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--void);
-  transition: all var(--duration-fast);
-  -webkit-tap-highlight-color: transparent;
-}
-.mm-quicknav__chip:active { transform: scale(0.96); }
-.mm-quicknav__chip-icon { width: 16px; height: 16px; flex-shrink: 0; }
-
-@media (min-width: 768px) {
-  .mm-quicknav { padding: 40px 0; }
-  .mm-quicknav__row {
-    justify-content: center;
-    overflow: visible;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .mm-quicknav__chip { padding: 12px 24px; font-size: 14px; }
-}
-@media (hover: hover) {
-  .mm-quicknav__chip:hover {
-    background: var(--cream);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  }
-}
-
-
-/* ══════════════════════════════════════════════════════════════
-   [4]. Products — Cream 배경, 클리어런스+가위+도구
+   [4]. Products — Tools 영역만
    ══════════════════════════════════════════════════════════════ */
 .mm-products {
   background: var(--cream);
   padding: 80px 0;
   color: var(--void);
-}
-
-/* 4-A: 클리어런스 배너 */
-.mm-products__lineup-banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 20px;
-  margin-bottom: 32px;
-  background: var(--white);
-  border: 1px solid var(--sand);
-  border-radius: var(--radius-sm);
-  transition: background var(--duration), box-shadow var(--duration);
-}
-.mm-products__lineup-tag {
-  flex-shrink: 0;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--cream);
-  background: var(--void);
-  padding: 3px 10px;
-  border-radius: 4px;
-}
-.mm-products__lineup-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--void);
-  flex: 1;
-}
-.mm-products__lineup-arrow {
-  font-size: 16px;
-  color: var(--warm-gray);
-  flex-shrink: 0;
-}
-@media (min-width: 768px) {
-  .mm-products__lineup-banner { padding: 16px 24px; }
-  .mm-products__lineup-text { font-size: 14px; }
-}
-@media (hover: hover) {
-  .mm-products__lineup-banner:hover {
-    background: var(--shell);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  }
 }
 
 /* 섹션 헤더 공통 */
@@ -444,70 +146,6 @@ button[class*="mm-"]:focus-visible {
   margin-bottom: 24px;
 }
 .mm-section-title--light { color: var(--cream); }
-
-/* 카테고리 칩 */
-.mm-products__chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 24px;
-}
-.mm-products__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  background: var(--parchment);
-  border: 1px solid var(--sand);
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--void);
-  transition: all var(--duration-fast);
-}
-.mm-products__chip:active { transform: scale(0.96); }
-
-/* 4-B: 가위 그리드 */
-.mm-products__grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
-}
-.mm-products__card {
-  display: block;
-  background: var(--white);
-  border: 1px solid var(--sand);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition: transform var(--duration), box-shadow var(--duration);
-}
-.mm-products__card-img-wrap {
-  background: var(--shell);
-  overflow: hidden;
-  aspect-ratio: 4/5;
-}
-.mm-products__card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: transform var(--duration);
-}
-.mm-products__card-img[src=""] { display: none; }
-.mm-products__card-info {
-  padding: 14px 16px;
-}
-.mm-products__card-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--void);
-  margin-bottom: 2px;
-}
-.mm-products__card-desc {
-  font-size: 12px;
-  color: var(--stone);
-  line-height: 1.5;
-}
 
 /* 컨설팅 보조 링크 */
 .mm-products__consult-link {
@@ -583,17 +221,9 @@ button[class*="mm-"]:focus-visible {
   color: var(--warm-gray);
 }
 
-@media (min-width: 768px) {
-  .mm-products__grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .mm-products__card-info { padding: 16px 20px; }
-  .mm-products__card-name { font-size: 15px; }
-  .mm-products__card-desc { font-size: 13px; }
-  .mm-products__chip { font-size: 14px; padding: 12px 20px; }
-}
 @media (min-width: 1024px) {
   .mm-products { padding: 120px 0; }
   .mm-section-title { font-size: 28px; }
-  .mm-products__grid { gap: 24px; }
   .mm-products__tools-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -603,12 +233,6 @@ button[class*="mm-"]:focus-visible {
   .mm-products__tool-card { flex: auto; }
 }
 @media (hover: hover) {
-  .mm-products__card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-  }
-  .mm-products__card:hover .mm-products__card-img { transform: scale(1.03); }
-  .mm-products__chip:hover { background: var(--sand); }
   .mm-products__consult-link:hover { color: var(--void); }
   .mm-products__tool-card:hover {
     background: var(--cream);
@@ -783,7 +407,7 @@ button[class*="mm-"]:focus-visible {
 
 
 /* ══════════════════════════════════════════════════════════════
-   [6]. 고객 후기 — Cream, 탭 + 카드
+   [6]. 고객 후기 — Cream, 탭 + 서브타입 칩 + 카드
    ══════════════════════════════════════════════════════════════ */
 .mm-reviews {
   background: var(--cream);
@@ -823,6 +447,50 @@ button[class*="mm-"]:focus-visible {
   border-color: var(--void);
   color: var(--cream);
 }
+
+/* 서브타입 칩 */
+.mm-reviews__subtypes {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.mm-reviews__subchip {
+  padding: 5px 12px;
+  border: 1px solid var(--sand);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--stone);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+.mm-reviews__subchip--active {
+  background: var(--graphite);
+  border-color: var(--graphite);
+  color: var(--cream);
+}
+
+/* 출처 배지 */
+.mm-review-card__source-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+.mm-review-card__source-badge--naver {
+  background: #03C75A;
+  color: #fff;
+}
+.mm-review-card__source-badge--site {
+  background: var(--parchment);
+  color: var(--stone);
+}
+
 .mm-reviews__scroll {
   display: flex;
   gap: 12px;
@@ -965,191 +633,13 @@ button[class*="mm-"]:focus-visible {
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     [1]. 히어로 — Void 배경, Ken Burns, 70vh+
+     [4]. Products — 도구·소모품 + 컨설팅 링크
      ══════════════════════════════════════════════════════════════ -->
-<section class="mm-hero">
-  <div class="mm-hero__inner">
-    <div class="mm-hero__visual">
-      <!-- ✏️ 수정가능: 히어로 이미지 URL (PC/모바일 각각) -->
-      <!-- ✏️ 영상 사용 시: <img>를 <video autoplay muted loop playsinline poster="이미지URL">로 교체. 모바일은 이미지 유지 권장 -->
-      <picture>
-        <source media="(min-width:1024px)" srcset="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/6f78871116922.png">
-        <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/9e117f301004e.png" alt="MAMORU 미용가위">
-      </picture>
-    </div>
-
-    <div class="mm-hero__body">
-      <!-- ✏️ 수정가능: 히어로 키커 -->
-      <span class="mm-hero__kicker mm-anim">Professional Scissors Brand</span>
-      <!-- ✏️ 수정가능: 히어로 메인 타이틀 -->
-      <h1 class="mm-hero__headline mm-anim">좋은 미용가위<br>그 기준을 경험하다</h1>
-      <!-- ✏️ 수정가능: 히어로 서브카피 -->
-      <p class="mm-hero__sub mm-anim">모두에게 비싼 가위는 있지만<br>누구에게나 좋은 가위는 없습니다</p>
-      <div class="mm-hero__cta-group">
-        <!-- ✏️ 수정가능: CTA 링크 URL -->
-        <a href="/58" class="mm-hero__cta">
-          간편 진단 시작하기
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-        <p class="mm-hero__hint">1분이면 충분해요</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ══════════════════════════════════════════════════════════════
-     [2]. Trust Numbers — 숫자가 말하게
-     ══════════════════════════════════════════════════════════════ -->
-<section class="mm-trust" id="mmTrust">
+<section class="mm-products">
   <div class="mm-inner">
-    <div class="mm-trust__grid">
-      <!-- ✏️ 수정가능: 신뢰 수치 (data-target=숫자, data-suffix=접미사, 라벨 텍스트) -->
-      <div class="mm-trust__item mm-anim mm-anim-stagger">
-        <span class="mm-trust__number" data-target="10" data-suffix="+">0</span>
-        <span class="mm-trust__label">년 경력</span>
-      </div>
-      <div class="mm-trust__item mm-anim mm-anim-stagger">
-        <span class="mm-trust__number" data-target="160" data-suffix="+">0</span>
-        <span class="mm-trust__label">고객 후기</span>
-      </div>
-      <div class="mm-trust__item mm-anim mm-anim-stagger">
-        <span class="mm-trust__number" data-target="100" data-suffix="%">0</span>
-        <span class="mm-trust__label">맞춤 상담</span>
-      </div>
-      <div class="mm-trust__item mm-anim mm-anim-stagger">
-        <span class="mm-trust__number" data-target="0" data-suffix="">0</span>
-        <span class="mm-trust__label">할인</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ══════════════════════════════════════════════════════════════
-     [3]. Quick Nav — 재방문 고객 바로가기
-     ══════════════════════════════════════════════════════════════ -->
-<section class="mm-quicknav">
-  <div class="mm-inner">
-    <div class="mm-quicknav__row">
-      <!-- ✏️ 수정가능: 각 칩의 텍스트/링크 URL -->
-      <a href="/29" class="mm-quicknav__chip mm-anim mm-anim-stagger">
-        <svg class="mm-quicknav__chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
-        미용가위
-      </a>
-      <a href="/53" class="mm-quicknav__chip mm-anim mm-anim-stagger">
-        <svg class="mm-quicknav__chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94L6.7 20.2a2.1 2.1 0 01-3-3l6.73-6.73a6 6 0 017.94-7.94L14.7 6.3z"/></svg>
-        복원수리
-      </a>
-      <a href="/58" class="mm-quicknav__chip mm-anim mm-anim-stagger">
-        <svg class="mm-quicknav__chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        컨설팅
-      </a>
-      <a href="/29" class="mm-quicknav__chip mm-anim mm-anim-stagger">
-        <svg class="mm-quicknav__chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/></svg>
-        도구·소모품
-      </a>
-      <a href="/62" class="mm-quicknav__chip mm-anim mm-anim-stagger">
-        <svg class="mm-quicknav__chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        후기
-      </a>
-      <a href="/intro" class="mm-quicknav__chip mm-anim mm-anim-stagger">
-        <svg class="mm-quicknav__chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
-        브랜드 소개
-      </a>
-    </div>
-  </div>
-</section>
-
-
-<!-- ══════════════════════════════════════════════════════════════
-     [4]. Products — 클리어런스 + 가위 프리뷰 + 도구
-     ══════════════════════════════════════════════════════════════ -->
-<section class="mm-products" id="mmProducts">
-  <div class="mm-inner">
-
-    <!-- 4-A: 클리어런스 배너 (라인업 교체 안내) -->
-    <!-- ✏️ 비노출 시 아래 div에 style="display:none" 추가 -->
-    <a href="/42" class="mm-products__lineup-banner mm-anim">
-      <!-- ✏️ 수정가능: 배너 태그/문구/링크 URL -->
-      <span class="mm-products__lineup-tag">LINEUP CHANGE</span>
-      <span class="mm-products__lineup-text">라인업이 교체됩니다 — 이전 모델을 특별가에 만나보세요</span>
-      <span class="mm-products__lineup-arrow">→</span>
-    </a>
-
-    <!-- 4-B: 미용가위 프리뷰 -->
-    <p class="mm-section-kicker mm-anim">Our Scissors</p>
-    <h2 class="mm-section-title mm-anim">대표 라인업</h2>
-
-    <!-- 카테고리 칩 -->
-    <div class="mm-products__chips mm-anim">
-      <!-- ✏️ 수정가능: 각 카테고리 링크 URL -->
-      <a href="/29" class="mm-products__chip">블런트</a>
-      <a href="/30" class="mm-products__chip">틴닝</a>
-      <a href="/39" class="mm-products__chip">장가위</a>
-      <a href="/40" class="mm-products__chip">슬라이싱</a>
-    </div>
-
-    <!-- 제품 그리드 -->
-    <div class="mm-products__grid">
-      <!-- ✏️ 수정가능: 각 제품의 이미지 URL / 제품명 / 설명 / 링크 URL -->
-      <a href="/product1" class="mm-products__card mm-anim mm-anim-stagger">
-        <div class="mm-products__card-img-wrap">
-          <img class="mm-products__card-img" src="" alt="제품 이미지" loading="lazy">
-        </div>
-        <div class="mm-products__card-info">
-          <h3 class="mm-products__card-name">제품명</h3>
-          <p class="mm-products__card-desc">한줄 설명</p>
-        </div>
-      </a>
-      <a href="/product2" class="mm-products__card mm-anim mm-anim-stagger">
-        <div class="mm-products__card-img-wrap">
-          <img class="mm-products__card-img" src="" alt="제품 이미지" loading="lazy">
-        </div>
-        <div class="mm-products__card-info">
-          <h3 class="mm-products__card-name">제품명</h3>
-          <p class="mm-products__card-desc">한줄 설명</p>
-        </div>
-      </a>
-      <a href="/product3" class="mm-products__card mm-anim mm-anim-stagger">
-        <div class="mm-products__card-img-wrap">
-          <img class="mm-products__card-img" src="" alt="제품 이미지" loading="lazy">
-        </div>
-        <div class="mm-products__card-info">
-          <h3 class="mm-products__card-name">제품명</h3>
-          <p class="mm-products__card-desc">한줄 설명</p>
-        </div>
-      </a>
-      <a href="/product4" class="mm-products__card mm-anim mm-anim-stagger">
-        <div class="mm-products__card-img-wrap">
-          <img class="mm-products__card-img" src="" alt="제품 이미지" loading="lazy">
-        </div>
-        <div class="mm-products__card-info">
-          <h3 class="mm-products__card-name">제품명</h3>
-          <p class="mm-products__card-desc">한줄 설명</p>
-        </div>
-      </a>
-      <a href="/product5" class="mm-products__card mm-anim mm-anim-stagger">
-        <div class="mm-products__card-img-wrap">
-          <img class="mm-products__card-img" src="" alt="제품 이미지" loading="lazy">
-        </div>
-        <div class="mm-products__card-info">
-          <h3 class="mm-products__card-name">제품명</h3>
-          <p class="mm-products__card-desc">한줄 설명</p>
-        </div>
-      </a>
-      <a href="/product6" class="mm-products__card mm-anim mm-anim-stagger">
-        <div class="mm-products__card-img-wrap">
-          <img class="mm-products__card-img" src="" alt="제품 이미지" loading="lazy">
-        </div>
-        <div class="mm-products__card-info">
-          <h3 class="mm-products__card-name">제품명</h3>
-          <p class="mm-products__card-desc">한줄 설명</p>
-        </div>
-      </a>
-    </div>
 
     <!-- 컨설팅 보조 링크 -->
+    <!-- ✏️ 수정가능: 컨설팅 링크 URL / 문구 -->
     <a href="/58" class="mm-products__consult-link mm-anim">어떤 가위가 맞을지 모르겠다면 → 맞춤 컨설팅 안내</a>
 
     <!-- 4-C: 도구·소모품 -->
@@ -1262,7 +752,7 @@ button[class*="mm-"]:focus-visible {
 
 
 <!-- ══════════════════════════════════════════════════════════════
-     [6]. 고객 후기 — 탭 (상담/복원/구매)
+     [6]. 고객 후기 — 탭 (상담/복원/구매) + 서브타입 칩
      ══════════════════════════════════════════════════════════════ -->
 <section class="mm-reviews">
   <div class="mm-inner">
@@ -1277,6 +767,9 @@ button[class*="mm-"]:focus-visible {
       <button class="mm-reviews__tab" data-type="repair">복원수리</button>
       <button class="mm-reviews__tab" data-type="purchase">제품구매</button>
     </div>
+
+    <!-- 서브타입 칩 (JS 렌더링) -->
+    <div class="mm-reviews__subtypes" id="mmReviewSubtypes"></div>
 
     <div class="mm-reviews__scroll" id="mmReviews">
       <!-- JS 렌더링 -->
@@ -1340,20 +833,74 @@ button[class*="mm-"]:focus-visible {
     would_recommend:'추천하고 싶어요'
   };
 
-  function loadReviews() {
-    fetch(REVIEW_API + '?type=all')
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        allReviews = Array.isArray(data) ? data : [];
-        renderReviews('consult');
-      })
-      .catch(function() { allReviews = []; renderReviews('consult'); });
+
+  /* ═══════════════════════════════════════════════════════════════
+     서브타입 칩 정의 및 렌더링
+     ═══════════════════════════════════════════════════════════════ */
+  var SUBTYPE_MAP = {
+    consult: [
+      { key: 'all', label: '전체' },
+      { key: 'store_visit', label: '직접방문' },
+      { key: 'field_request', label: '출장상담' },
+      { key: 'talk_consult', label: '톡상담' }
+    ],
+    repair: [
+      { key: 'all', label: '전체' },
+      { key: 'visit_pickup', label: '방문수거' },
+      { key: 'direct_send', label: '직접발송' },
+      { key: 'same_day', label: '당일수리' }
+    ],
+    purchase: []
+  };
+  var currentSubtype = 'all';
+
+  function renderSubtypeChips(type) {
+    var wrap = document.getElementById('mmReviewSubtypes');
+    if (!wrap) return;
+    var chips = SUBTYPE_MAP[type] || [];
+    if (chips.length === 0) {
+      wrap.innerHTML = '';
+      wrap.style.display = 'none';
+      return;
+    }
+    wrap.style.display = 'flex';
+    currentSubtype = 'all';
+    wrap.innerHTML = chips.map(function(c) {
+      var active = c.key === 'all' ? ' mm-reviews__subchip--active' : '';
+      return '<button class="mm-reviews__subchip' + active + '" data-subtype="' + c.key + '">' + c.label + '</button>';
+    }).join('');
   }
 
-  function renderReviews(type) {
+  function initSubtypeChips() {
+    var wrap = document.getElementById('mmReviewSubtypes');
+    if (!wrap) return;
+    wrap.addEventListener('click', function(e) {
+      var btn = e.target.closest('.mm-reviews__subchip');
+      if (!btn || btn.classList.contains('mm-reviews__subchip--active')) return;
+      wrap.querySelectorAll('.mm-reviews__subchip').forEach(function(c) {
+        c.classList.remove('mm-reviews__subchip--active');
+      });
+      btn.classList.add('mm-reviews__subchip--active');
+      currentSubtype = btn.getAttribute('data-subtype');
+      /* 현재 활성 타입 탭 확인 */
+      var activeTab = document.querySelector('.mm-reviews__tab--active');
+      var type = activeTab ? activeTab.getAttribute('data-type') : 'consult';
+      renderReviews(type, currentSubtype);
+    });
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════
+     후기 렌더링 (서브타입 필터 지원)
+     ═══════════════════════════════════════════════════════════════ */
+  function renderReviews(type, subtype) {
     var el = document.getElementById('mmReviews');
     if (!el) return;
     var items = allReviews.filter(function(r) { return r.type === type; });
+    /* 서브타입 필터 */
+    if (subtype && subtype !== 'all') {
+      items = items.filter(function(r) { return r.subtype === subtype; });
+    }
     if (items.length === 0) {
       el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--warm-gray);font-size:14px;">아직 등록된 후기가 없습니다</div>';
       return;
@@ -1370,11 +917,14 @@ button[class*="mm-"]:focus-visible {
             return '<span style="font-size:11px;padding:2px 8px;border:1px solid var(--sand);border-radius:6px;color:var(--stone);">' + (TAG_LABELS[t] || t) + '</span>';
           }).join('') + '</div>';
       }
-      var preview = r.content.length > 60 ? r.content.substring(0, 60) + '…' : r.content;
+      var sourceBadge = r.source === 'naver'
+        ? '<span class="mm-review-card__source-badge mm-review-card__source-badge--naver">네이버</span>'
+        : '<span class="mm-review-card__source-badge mm-review-card__source-badge--site">자체</span>';
+      var preview = r.content.length > 60 ? r.content.substring(0, 60) + '\u2026' : r.content;
       return '<div class="mm-review-card mm-anim mm-anim-stagger">' +
         imgHtml +
         '<div class="mm-review-card__header">' +
-          '<span class="mm-review-card__name">' + maskName(r.name) + '</span>' +
+          '<span class="mm-review-card__name">' + maskName(r.name) + sourceBadge + '</span>' +
         '</div>' +
         '<div class="mm-review-card__stars">' + stars + '</div>' +
         tagsHtml +
@@ -1387,7 +937,29 @@ button[class*="mm-"]:focus-visible {
     });
   }
 
-  /* 리뷰 탭 */
+
+  /* ═══════════════════════════════════════════════════════════════
+     후기 데이터 로드
+     ═══════════════════════════════════════════════════════════════ */
+  function loadReviews() {
+    fetch(REVIEW_API + '?type=all')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        allReviews = Array.isArray(data) ? data : [];
+        renderSubtypeChips('consult');
+        renderReviews('consult', 'all');
+      })
+      .catch(function() {
+        allReviews = [];
+        renderSubtypeChips('consult');
+        renderReviews('consult', 'all');
+      });
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════
+     리뷰 탭 (서브타입 칩 연동)
+     ═══════════════════════════════════════════════════════════════ */
   function initReviewTabs() {
     var tabWrap = document.getElementById('mmReviewTabs');
     if (!tabWrap) return;
@@ -1398,54 +970,10 @@ button[class*="mm-"]:focus-visible {
         t.classList.remove('mm-reviews__tab--active');
       });
       btn.classList.add('mm-reviews__tab--active');
-      renderReviews(btn.getAttribute('data-type'));
+      var type = btn.getAttribute('data-type');
+      renderSubtypeChips(type);
+      renderReviews(type, 'all');
     });
-  }
-
-
-  /* ═══════════════════════════════════════════════════════════════
-     Trust Numbers — 카운터 애니메이션
-     ═══════════════════════════════════════════════════════════════ */
-  function initCounters() {
-    var section = document.getElementById('mmTrust');
-    if (!section || !('IntersectionObserver' in window)) {
-      /* fallback: 즉시 최종값 표시 */
-      section && section.querySelectorAll('.mm-trust__number').forEach(function(el) {
-        el.textContent = el.getAttribute('data-target') + (el.getAttribute('data-suffix') || '');
-      });
-      return;
-    }
-
-    var animated = false;
-    var observer = new IntersectionObserver(function(entries) {
-      if (animated) return;
-      entries.forEach(function(entry) {
-        if (!entry.isIntersecting) return;
-        animated = true;
-        observer.unobserve(section);
-
-        section.querySelectorAll('.mm-trust__number').forEach(function(el) {
-          var target = parseInt(el.getAttribute('data-target'), 10);
-          var suffix = el.getAttribute('data-suffix') || '';
-          if (target === 0) { el.textContent = '0' + suffix; return; }
-
-          var start = performance.now();
-          var duration = 1500;
-
-          function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
-
-          function tick(now) {
-            var progress = Math.min((now - start) / duration, 1);
-            var value = Math.round(easeOut(progress) * target);
-            el.textContent = value + suffix;
-            if (progress < 1) requestAnimationFrame(tick);
-          }
-          requestAnimationFrame(tick);
-        });
-      });
-    }, { threshold: 0.3 });
-
-    observer.observe(section);
   }
 
 
@@ -1534,7 +1062,7 @@ button[class*="mm-"]:focus-visible {
   function init() {
     loadReviews();
     initReviewTabs();
-    initCounters();
+    initSubtypeChips();
     initVideoPlayer();
     initAnimations();
     initIframeComm();

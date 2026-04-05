@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MAMORU | 미용가위 전문 브랜드</title>
+<!-- Fonts: Brand Guide v1.0 — Outfit(Display) + Plus Jakarta Sans + Noto Sans KR(Body) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Pretendard fallback -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet"></noscript>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   MAMORU Main Page (Top Half)
+   Hero → Trust Numbers → Quick Nav → Products (header+chips)
+   모바일 퍼스트 CSS
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 0. 변수 & 리셋 ── */
+:root {
+  --void: #1A1A1A;
+  --graphite: #2D2D2D;
+  --stone: #4A4A4A;
+  --warm-gray: #8A8580;
+  --mist: #B8B4AF;
+  --sand: #D4D0CB;
+  --parchment: #EDEBE8;
+  --shell: #F5F3F0;
+  --cream: #FAF9F7;
+  --white: #FFFFFF;
+
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Pretendard Variable', 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  --mm-max-w: 1200px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration: 0.3s;
+  --duration-fast: 0.15s;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-x: hidden;
+}
+html::-webkit-scrollbar { display: none; }
+
+body {
+  overflow-x: hidden;
+  overflow-y: visible;
+  height: auto !important;
+  min-height: auto !important;
+  font-family: var(--font-body);
+  background: var(--void);
+  color: var(--cream);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; color: inherit; }
+img { display: block; max-width: 100%; }
+
+a[class*="mm-"]:focus-visible,
+button[class*="mm-"]:focus-visible {
+  outline: 2px solid var(--cream);
+  outline-offset: 2px;
+}
+
+.mm-inner {
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+@media (min-width: 768px) {
+  .mm-inner { padding-left: 32px; padding-right: 32px; }
+}
+@media (min-width: 1440px) {
+  .mm-inner { padding-left: 64px; padding-right: 64px; }
+}
+
+
+/* ── 스크롤 애니메이션 ── */
+.mm-anim {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s var(--ease), transform 0.65s var(--ease);
+}
+.mm-anim.mm-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.mm-anim--blur {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(12px);
+  transition: opacity 1s var(--ease), filter 1s var(--ease), transform 1s var(--ease);
+}
+.mm-anim--blur.mm-visible {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+.mm-anim-stagger.mm-visible:nth-child(1) { transition-delay: 0s; }
+.mm-anim-stagger.mm-visible:nth-child(2) { transition-delay: 0.07s; }
+.mm-anim-stagger.mm-visible:nth-child(3) { transition-delay: 0.14s; }
+.mm-anim-stagger.mm-visible:nth-child(4) { transition-delay: 0.21s; }
+.mm-anim-stagger.mm-visible:nth-child(5) { transition-delay: 0.28s; }
+.mm-anim-stagger.mm-visible:nth-child(6) { transition-delay: 0.35s; }
+
+
+/* ══════════════════════════════════════════════════════════════
+   [1]. 히어로 — Void 배경, 70vh+, Ken Burns
+   ══════════════════════════════════════════════════════════════ */
+.mm-hero {
+  background: var(--void);
+  overflow: hidden;
+}
+.mm-hero__visual {
+  width: 100%;
+  line-height: 0;
+  overflow: hidden;
+}
+.mm-hero__visual img,
+.mm-hero__visual video {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  animation: mm-ken-burns 12s var(--ease) both;
+}
+@keyframes mm-ken-burns {
+  from { transform: scale(1); }
+  to { transform: scale(1.05); }
+}
+.mm-hero__body {
+  text-align: center;
+  padding: 56px 20px 48px;
+}
+.mm-hero__kicker {
+  display: inline-block;
+  margin-bottom: 20px;
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mist);
+}
+.mm-hero__headline {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  color: var(--cream);
+  margin-bottom: 14px;
+}
+.mm-hero__sub {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: var(--mist);
+  margin-bottom: 40px;
+}
+.mm-hero__cta-group {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+.mm-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 32px;
+  min-height: 48px;
+  background: var(--cream);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--void);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 20px rgba(250,249,247,0.15);
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast), background var(--duration-fast);
+}
+.mm-hero__cta:active { transform: scale(0.97); }
+.mm-hero__cta svg { width: 18px; height: 18px; }
+.mm-hero__hint {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--warm-gray);
+  animation: mm-hint-fade 1.2s ease 0.8s both;
+}
+@keyframes mm-hint-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 360px) {
+  .mm-hero__body { padding: 28px 16px 36px; }
+  .mm-hero__headline { font-size: 26px; }
+  .mm-hero__sub { font-size: 13px; }
+}
+@media (min-width: 768px) {
+  .mm-hero__body { padding: 64px 32px 56px; }
+  .mm-hero__headline { font-size: 40px; }
+  .mm-hero__sub { font-size: 15px; margin-bottom: 48px; }
+  .mm-hero__cta { padding: 18px 40px; font-size: 17px; min-height: 52px; }
+}
+@media (min-width: 1024px) {
+  .mm-hero__inner {
+    position: relative;
+    display: flex;
+    max-width: var(--mm-max-w);
+    margin: 0 auto;
+    min-height: 560px;
+    overflow: hidden;
+  }
+  .mm-hero__visual {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    overflow: hidden;
+  }
+  .mm-hero__visual img,
+  .mm-hero__visual video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right center;
+  }
+  .mm-hero__body {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 55%;
+    text-align: left;
+    padding: 80px 48px 80px 56px;
+    background: linear-gradient(to right, var(--void) 40%, rgba(26,26,26,0) 100%);
+    color: var(--cream);
+  }
+  .mm-hero__headline { font-size: 48px; font-weight: 900; }
+  .mm-hero__cta { margin: 0; }
+}
+@media (min-width: 1440px) {
+  .mm-hero__inner { min-height: 620px; }
+  .mm-hero__headline { font-size: 56px; }
+  .mm-hero__sub { font-size: 17px; }
+}
+@media (hover: hover) {
+  .mm-hero__cta:hover {
+    transform: translateY(-2px);
+    background: var(--parchment);
+    box-shadow: 0 6px 28px rgba(250,249,247,0.2);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [2]. Trust Numbers — Void, 카운터 애니메이션
+   ══════════════════════════════════════════════════════════════ */
+.mm-trust {
+  background: var(--void);
+  padding: 48px 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.mm-trust__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px 0;
+  text-align: center;
+}
+.mm-trust__item { position: relative; }
+.mm-trust__number {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--cream);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.mm-trust__label {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--warm-gray);
+}
+
+@media (min-width: 768px) {
+  .mm-trust { padding: 64px 0; }
+  .mm-trust__grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .mm-trust__item + .mm-trust__item {
+    border-left: 1px solid rgba(255,255,255,0.08);
+  }
+  .mm-trust__number { font-size: 48px; }
+  .mm-trust__label { font-size: 13px; }
+}
+@media (min-width: 1024px) {
+  .mm-trust__number { font-size: 56px; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [3]. Quick Nav — Shell 배경, 퀵 네비게이션
+   ══════════════════════════════════════════════════════════════ */
+.mm-quicknav {
+  background: var(--shell);
+  padding: 32px 0;
+}
+.mm-quicknav__row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+.mm-quicknav__row::-webkit-scrollbar { display: none; }
+.mm-quicknav__chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: var(--white);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--void);
+  transition: all var(--duration-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+.mm-quicknav__chip:active { transform: scale(0.96); }
+.mm-quicknav__chip-icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+@media (min-width: 768px) {
+  .mm-quicknav { padding: 40px 0; }
+  .mm-quicknav__row {
+    justify-content: center;
+    overflow: visible;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .mm-quicknav__chip { padding: 12px 24px; font-size: 14px; }
+}
+@media (hover: hover) {
+  .mm-quicknav__chip:hover {
+    background: var(--cream);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   [4]. Products — Cream 배경 (header + chips only)
+   ══════════════════════════════════════════════════════════════ */
+.mm-products {
+  background: var(--cream);
+  padding: 80px 0;
+  color: var(--void);
+}
+
+/* 4-A: 클리어런스 배너 */
+.mm-products__lineup-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  margin-bottom: 32px;
+  background: var(--white);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-sm);
+  transition: background var(--duration), box-shadow var(--duration);
+}
+.mm-products__lineup-tag {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cream);
+  background: var(--void);
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+.mm-products__lineup-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--void);
+  flex: 1;
+}
+.mm-products__lineup-arrow {
+  font-size: 16px;
+  color: var(--warm-gray);
+  flex-shrink: 0;
+}
+@media (min-width: 768px) {
+  .mm-products__lineup-banner { padding: 16px 24px; }
+  .mm-products__lineup-text { font-size: 14px; }
+}
+@media (hover: hover) {
+  .mm-products__lineup-banner:hover {
+    background: var(--shell);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+}
+
+/* 섹션 헤더 공통 */
+.mm-section-kicker {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--warm-gray);
+  margin-bottom: 8px;
+}
+.mm-section-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--void);
+  margin-bottom: 24px;
+}
+.mm-section-title--light { color: var(--cream); }
+
+/* 카테고리 칩 */
+.mm-products__chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.mm-products__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--parchment);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--void);
+  transition: all var(--duration-fast);
+}
+.mm-products__chip:active { transform: scale(0.96); }
+
+@media (min-width: 768px) {
+  .mm-products__chip { font-size: 14px; padding: 12px 20px; }
+}
+@media (min-width: 1024px) {
+  .mm-products { padding: 120px 0; }
+  .mm-section-title { font-size: 28px; }
+}
+@media (hover: hover) {
+  .mm-products__chip:hover { background: var(--sand); }
+}
+</style>
+</head>
+<body>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [1]. 히어로 — Void 배경, Ken Burns, 70vh+
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-hero">
+  <div class="mm-hero__inner">
+    <div class="mm-hero__visual">
+      <!-- ✏️ 수정가능: 히어로 이미지 URL (PC/모바일 각각) -->
+      <!-- ✏️ 영상 사용 시: <img>를 <video autoplay muted loop playsinline poster="이미지URL">로 교체. 모바일은 이미지 유지 권장 -->
+      <picture>
+        <source media="(min-width:1024px)" srcset="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/6f78871116922.png">
+        <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/9e117f301004e.png" alt="MAMORU 미용가위">
+      </picture>
+    </div>
+
+    <div class="mm-hero__body">
+      <!-- ✏️ 수정가능: 히어로 키커 -->
+      <span class="mm-hero__kicker mm-anim">Professional Scissors Brand</span>
+      <!-- ✏️ 수정가능: 히어로 메인 타이틀 -->
+      <h1 class="mm-hero__headline mm-anim">좋은 미용가위<br>그 기준을 경험하다</h1>
+      <!-- ✏️ 수정가능: 히어로 서브카피 -->
+      <p class="mm-hero__sub mm-anim">모두에게 비싼 가위는 있지만<br>누구에게나 좋은 가위는 없습니다</p>
+      <div class="mm-hero__cta-group">
+        <!-- ✏️ 수정가능: CTA 링크 URL -->
+        <a href="/58" class="mm-hero__cta">
+          간편 진단 시작하기
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <p class="mm-hero__hint">1분이면 충분해요</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [2]. Trust Numbers — 브랜드 무기
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-trust" id="mmTrust">
+  <div class="mm-inner">
+    <div class="mm-trust__grid">
+      <!-- ✏️ 수정가능: 신뢰 수치 (data-target=숫자, data-suffix=접미사, 라벨 텍스트) -->
+      <div class="mm-trust__item mm-anim mm-anim-stagger">
+        <span class="mm-trust__number" data-target="2" data-suffix="대">0</span>
+        <span class="mm-trust__label">대를 잇는 기술</span>
+      </div>
+      <div class="mm-trust__item mm-anim mm-anim-stagger">
+        <span class="mm-trust__number" data-target="100" data-suffix="%">0</span>
+        <span class="mm-trust__label">맞춤 상담</span>
+      </div>
+      <div class="mm-trust__item mm-anim mm-anim-stagger">
+        <span class="mm-trust__number" data-target="0" data-suffix="">0</span>
+        <span class="mm-trust__label">할인</span>
+      </div>
+      <div class="mm-trust__item mm-anim mm-anim-stagger">
+        <span class="mm-trust__number mm-anim" style="font-size:inherit">직접</span>
+        <span class="mm-trust__label">복원수리</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [3]. Quick Nav — 재방문 고객 바로가기
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-quicknav">
+  <div class="mm-inner">
+    <div class="mm-quicknav__row">
+      <!-- ✏️ 수정가능: 각 칩의 텍스트/링크 URL -->
+      <a href="/29" class="mm-quicknav__chip mm-anim mm-anim-stagger">
+        <svg class="mm-quicknav__chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+        제품 보기
+      </a>
+      <a href="/53" class="mm-quicknav__chip mm-anim mm-anim-stagger">
+        <svg class="mm-quicknav__chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94L6.7 20.2a2.1 2.1 0 01-3-3l6.73-6.73a6 6 0 017.94-7.94L14.7 6.3z"/></svg>
+        복원수리
+      </a>
+      <a href="/58" class="mm-quicknav__chip mm-anim mm-anim-stagger">
+        <svg class="mm-quicknav__chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        컨설팅
+      </a>
+      <a href="/29" class="mm-quicknav__chip mm-anim mm-anim-stagger">
+        <svg class="mm-quicknav__chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/></svg>
+        도구·소모품
+      </a>
+      <a href="/62" class="mm-quicknav__chip mm-anim mm-anim-stagger">
+        <svg class="mm-quicknav__chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        후기
+      </a>
+      <a href="/intro" class="mm-quicknav__chip mm-anim mm-anim-stagger">
+        <svg class="mm-quicknav__chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        브랜드 소개
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     [4]. Products — 클리어런스 배너 + 대표 라인업 헤더 + 카테고리 칩
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-products" id="mmProducts">
+  <div class="mm-inner">
+
+    <!-- 4-A: 클리어런스 배너 (라인업 교체 안내) -->
+    <!-- ✏️ 비노출 시 아래 a에 style="display:none" 추가 -->
+    <a href="/42" class="mm-products__lineup-banner mm-anim">
+      <!-- ✏️ 수정가능: 배너 태그/문구/링크 URL -->
+      <span class="mm-products__lineup-tag">LINEUP CHANGE</span>
+      <span class="mm-products__lineup-text">라인업이 교체됩니다 — 이전 모델을 특별가에 만나보세요</span>
+      <span class="mm-products__lineup-arrow">→</span>
+    </a>
+
+    <!-- 4-B: 미용가위 프리뷰 -->
+    <p class="mm-section-kicker mm-anim">Our Scissors</p>
+    <h2 class="mm-section-title mm-anim">대표 라인업</h2>
+
+    <!-- 카테고리 칩 -->
+    <div class="mm-products__chips mm-anim">
+      <!-- ✏️ 수정가능: 각 카테고리 링크 URL -->
+      <a href="/29" class="mm-products__chip">블런트</a>
+      <a href="/30" class="mm-products__chip">틴닝</a>
+      <a href="/39" class="mm-products__chip">장가위</a>
+      <a href="/40" class="mm-products__chip">슬라이싱</a>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     JS: 카운터 + 스크롤 애니메이션 + iframe 통신
+     ══════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  /* ═══════════════════════════════════════════════════════════════
+     Trust Numbers — 카운터 애니메이션
+     ═══════════════════════════════════════════════════════════════ */
+  function initCounters() {
+    var section = document.getElementById('mmTrust');
+    if (!section || !('IntersectionObserver' in window)) {
+      /* fallback: 즉시 최종값 표시 */
+      section && section.querySelectorAll('.mm-trust__number').forEach(function(el) {
+        if (el.getAttribute('data-target') !== null) {
+          el.textContent = el.getAttribute('data-target') + (el.getAttribute('data-suffix') || '');
+        }
+      });
+      return;
+    }
+
+    var animated = false;
+    var observer = new IntersectionObserver(function(entries) {
+      if (animated) return;
+      entries.forEach(function(entry) {
+        if (!entry.isIntersecting) return;
+        animated = true;
+        observer.unobserve(section);
+
+        section.querySelectorAll('.mm-trust__number').forEach(function(el) {
+          /* data-target이 없으면 텍스트 전용 (예: "직접") — 스킵 */
+          if (!el.hasAttribute('data-target')) return;
+
+          var target = parseInt(el.getAttribute('data-target'), 10);
+          var suffix = el.getAttribute('data-suffix') || '';
+          if (target === 0) { el.textContent = '0' + suffix; return; }
+
+          var start = performance.now();
+          var duration = 1500;
+
+          function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
+
+          function tick(now) {
+            var progress = Math.min((now - start) / duration, 1);
+            var value = Math.round(easeOut(progress) * target);
+            el.textContent = value + suffix;
+            if (progress < 1) requestAnimationFrame(tick);
+          }
+          requestAnimationFrame(tick);
+        });
+      });
+    }, { threshold: 0.3 });
+
+    observer.observe(section);
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════
+     IntersectionObserver — 스크롤 애니메이션
+     ═══════════════════════════════════════════════════════════════ */
+  function initAnimations() {
+    var selectors = '.mm-anim, .mm-anim--blur';
+    if (!('IntersectionObserver' in window)) {
+      document.querySelectorAll(selectors).forEach(function(el) {
+        el.classList.add('mm-visible');
+      });
+      return;
+    }
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('mm-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+
+    document.querySelectorAll(selectors).forEach(function(el) {
+      observer.observe(el);
+    });
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════
+     🔒 iframe 높이 자동 전송 (아임웹 parent 통신) — 수정금지
+     ═══════════════════════════════════════════════════════════════ */
+  function initIframeComm() {
+    function send() {
+      var h = document.documentElement.scrollHeight;
+      if (h > 0) window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: h }, '*');
+    }
+
+    if (window.ResizeObserver) {
+      new ResizeObserver(send).observe(document.body);
+    } else {
+      setInterval(send, 800);
+    }
+    window.addEventListener('load', send);
+    send();
+
+    /* 아임웹 parent에서 페이지 이동 위임 */
+    document.addEventListener('click', function(e) {
+      var a = e.target.closest('a[href]');
+      if (!a) return;
+      var href = a.getAttribute('href');
+      if (!href || href.startsWith('http') || href.startsWith('mailto:')) return;
+      e.preventDefault();
+      window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: href }, '*');
+    });
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════
+     초기화
+     ═══════════════════════════════════════════════════════════════ */
+  function init() {
+    initCounters();
+    initAnimations();
+    initIframeComm();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+
+</body>
+</html>
