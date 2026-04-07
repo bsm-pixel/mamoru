@@ -45,7 +45,7 @@
     }
   });
 
-  // 초기 높이 (postMessage 수신 전 fallback) — 상단: Hero+Trust+Nav+배너+헤더
-  iframe.style.height = (window.innerWidth <= 768 ? 1200 : 1000) + 'px';
+  // 초기 높이: 0으로 시작 → postMessage로 실제 높이 수신 시 자동 조절
+  iframe.style.height = '0px';
 })();
 </script>
