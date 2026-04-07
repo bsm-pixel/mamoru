@@ -189,10 +189,9 @@
       }
     }
 
-    /* 탭 위치로 즉시 스크롤 (페이지 로드 최초 시점) */
+    /* 페이지 최상단으로 스크롤 — 아임웹 헤더가 항상 보이도록 */
     function scrollToTab() {
-      var tabTop = catTop.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo(0, Math.max(0, tabTop - 4));
+      window.scrollTo(0, 0);
     }
     scrollToTab();
 
