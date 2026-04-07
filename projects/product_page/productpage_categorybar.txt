@@ -162,53 +162,84 @@
 
 </div>
 
-<!-- 카테고리 전환 — 깜빡임 방지 + 스크롤 고정 -->
+<!-- 카테고리 전환 — 탭 고정 + 하단만 전환 -->
 <script>
 (function(){
-  var KEY = 'mm_cat_scroll';
-  var tabs = document.querySelector('.cat-mini');
-  if (!tabs) return;
+  var KEY = 'mm_cat_switch';
+  var catTop = document.querySelector('.cat-top');
+  if (!catTop) return;
 
-  /* ── 전환 도착: 저장된 스크롤 위치로 즉시 복원 + fade-in ── */
-  var saved = sessionStorage.getItem(KEY);
-  if (saved) {
+  /* ── 도착: 탭 전환으로 온 경우 — 즉시 탭 위치 고정 + 하단 fade-in ── */
+  if (sessionStorage.getItem(KEY)) {
     sessionStorage.removeItem(KEY);
-    /* 페이지 로드 시 즉시 숨김 (깜빡임 방지) */
-    document.documentElement.style.opacity = '0';
 
-    var scrollY = parseInt(saved, 10) || 0;
-
-    function restore() {
-      /* 탭 위치로 스크롤 복원 */
-      var tabTop = tabs.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo(0, Math.max(0, tabTop - 8));
-      /* fade-in */
-      document.documentElement.style.transition = 'opacity 0.25s ease';
-      document.documentElement.style.opacity = '1';
+    /* 탭 아래 모든 형제 요소 숨김 (상품 영역) */
+    var siblings = [];
+    var el = catTop.parentElement;
+    if (el) {
+      var children = el.children;
+      var found = false;
+      for (var i = 0; i < children.length; i++) {
+        if (children[i] === catTop) { found = true; continue; }
+        if (found) {
+          children[i].style.opacity = '0';
+          children[i].style.transition = 'opacity 0.3s ease';
+          siblings.push(children[i]);
+        }
+      }
     }
 
-    /* 아임웹 상품 위젯 로드 대기 후 복원 */
+    /* 탭 위치로 즉시 스크롤 (페이지 로드 최초 시점) */
+    function scrollToTab() {
+      var tabTop = catTop.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, Math.max(0, tabTop - 4));
+    }
+    scrollToTab();
+
+    /* 상품 로드 완료 후 하단 fade-in */
+    function showContent() {
+      scrollToTab();
+      for (var j = 0; j < siblings.length; j++) {
+        siblings[j].style.opacity = '1';
+      }
+    }
+
     if (document.readyState === 'complete') {
-      restore();
+      setTimeout(showContent, 50);
     } else {
-      window.addEventListener('load', restore);
+      window.addEventListener('load', function() { setTimeout(showContent, 50); });
     }
   }
 
-  /* ── 전환 출발: 탭 클릭 시 현재 스크롤 위치 저장 + fade-out ── */
-  tabs.addEventListener('click', function(e) {
+  /* ── 출발: 탭 클릭 시 하단만 fade-out → 이동 ── */
+  var miniTabs = catTop.querySelector('.cat-mini');
+  if (!miniTabs) return;
+
+  miniTabs.addEventListener('click', function(e) {
     var a = e.target.closest('a');
     if (!a || a.classList.contains('active')) return;
 
     e.preventDefault();
-    /* 스크롤 위치 저장 */
-    sessionStorage.setItem(KEY, String(window.scrollY));
-    /* fade-out 후 이동 */
-    document.documentElement.style.transition = 'opacity 0.15s ease';
-    document.documentElement.style.opacity = '0';
+    sessionStorage.setItem(KEY, '1');
+
+    /* 탭 아래 형제 요소만 fade-out */
+    var parent = catTop.parentElement;
+    if (parent) {
+      var children = parent.children;
+      var found = false;
+      for (var i = 0; i < children.length; i++) {
+        if (children[i] === catTop) { found = true; continue; }
+        if (found) {
+          children[i].style.transition = 'opacity 0.15s ease';
+          children[i].style.opacity = '0';
+        }
+      }
+    }
+
+    /* fade-out 완료 후 이동 */
     setTimeout(function() {
       window.location.href = a.getAttribute('href');
-    }, 150);
+    }, 160);
   });
 })();
 </script>
