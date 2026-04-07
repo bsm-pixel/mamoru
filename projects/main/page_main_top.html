@@ -331,13 +331,22 @@ button[class*="mm-"]:focus-visible {
   position: relative;
 }
 .mm-quicknav::after {
-  content: '';
+  content: '›';
   position: absolute;
-  top: 0; right: 0; bottom: 0;
-  width: 48px;
-  background: linear-gradient(to right, rgba(245,243,240,0), var(--shell));
+  top: 50%; right: 0;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  background: linear-gradient(to right, rgba(245,243,240,0), var(--shell) 60%);
   pointer-events: none;
   z-index: 2;
+  font-size: 18px;
+  color: var(--warm-gray);
+  font-weight: 300;
 }
 .mm-quicknav__row {
   display: flex;
