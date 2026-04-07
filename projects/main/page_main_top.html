@@ -328,6 +328,16 @@ button[class*="mm-"]:focus-visible {
 .mm-quicknav {
   background: var(--shell);
   padding: 32px 0;
+  position: relative;
+}
+.mm-quicknav::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 48px;
+  background: linear-gradient(to right, rgba(245,243,240,0), var(--shell));
+  pointer-events: none;
+  z-index: 2;
 }
 .mm-quicknav__row {
   display: flex;
@@ -358,6 +368,7 @@ button[class*="mm-"]:focus-visible {
 .mm-quicknav__chip-icon { width: 16px; height: 16px; flex-shrink: 0; }
 
 @media (min-width: 768px) {
+  .mm-quicknav::after { display: none; }
   .mm-quicknav { padding: 40px 0; }
   .mm-quicknav__row {
     justify-content: center;
