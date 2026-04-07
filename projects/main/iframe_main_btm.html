@@ -32,7 +32,7 @@
   window.addEventListener('message', function(e) {
     if (e.origin !== 'https://bsm-pixel.github.io') return;
 
-    if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && typeof e.data.height === 'number') {
+    if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && e.data.id === 'btm' && typeof e.data.height === 'number') {
       var newHeight = Math.ceil(e.data.height);
       if (newHeight !== currentHeight && newHeight > 0) {
         currentHeight = newHeight;

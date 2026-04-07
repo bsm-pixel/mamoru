@@ -980,7 +980,7 @@ button[class*="mm-"]:focus-visible {
   function initIframeComm() {
     function send() {
       var h = document.documentElement.scrollHeight;
-      if (h > 0) window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: h }, '*');
+      if (h > 0) window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', id: 'btm', height: h }, '*');
     }
 
     if (window.ResizeObserver) {
