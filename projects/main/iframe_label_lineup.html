@@ -1,0 +1,25 @@
+<!-- MAMORU 이름표: 평생쓰는 라인업 — 아임웹 코드위젯용 -->
+<style>
+#mamoruLabelLineupWrap { position: relative; width: 100%; }
+#mamoruLabelLineupFrame { width: 100%; border: none; display: block; }
+</style>
+<div id="mamoruLabelLineupWrap">
+  <iframe id="mamoruLabelLineupFrame"
+    src="https://bsm-pixel.github.io/mamoru/projects/main/page_label_lineup.html"
+    scrolling="no" frameborder="0" allowtransparency="true"></iframe>
+</div>
+<script>
+(function(){
+  var iframe = document.getElementById('mamoruLabelLineupFrame');
+  var currentHeight = 0;
+  window.addEventListener('message', function(e) {
+    if (e.origin !== 'https://bsm-pixel.github.io') return;
+    if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && e.data.id === 'label-lineup' && typeof e.data.height === 'number') {
+      var h = Math.ceil(e.data.height);
+      if (h !== currentHeight && h > 0) { currentHeight = h; iframe.style.height = h + 'px'; }
+    }
+    if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) { window.location.href = e.data.url; }
+  });
+  iframe.style.height = '0px';
+})();
+</script>

@@ -1,0 +1,25 @@
+<!-- MAMORU 이름표: 첫구매 맞춤 가위 — 아임웹 코드위젯용 -->
+<style>
+#mamoruLabelFirstWrap { position: relative; width: 100%; }
+#mamoruLabelFirstFrame { width: 100%; border: none; display: block; }
+</style>
+<div id="mamoruLabelFirstWrap">
+  <iframe id="mamoruLabelFirstFrame"
+    src="https://bsm-pixel.github.io/mamoru/projects/main/page_label_first.html"
+    scrolling="no" frameborder="0" allowtransparency="true"></iframe>
+</div>
+<script>
+(function(){
+  var iframe = document.getElementById('mamoruLabelFirstFrame');
+  var currentHeight = 0;
+  window.addEventListener('message', function(e) {
+    if (e.origin !== 'https://bsm-pixel.github.io') return;
+    if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && e.data.id === 'label-first' && typeof e.data.height === 'number') {
+      var h = Math.ceil(e.data.height);
+      if (h !== currentHeight && h > 0) { currentHeight = h; iframe.style.height = h + 'px'; }
+    }
+    if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) { window.location.href = e.data.url; }
+  });
+  iframe.style.height = '0px';
+})();
+</script>

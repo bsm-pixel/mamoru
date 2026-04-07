@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root {
+  --void: #1A1A1A;
+  --cream: #FAF9F7;
+  --warm-gray: #8A8580;
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Pretendard Variable', 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background: var(--cream); overflow: hidden; height: auto; }
+body { font-family: var(--font-body); }
+
+.mm-label {
+  padding: 48px 24px 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.mm-label__kicker {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--warm-gray);
+  margin-bottom: 8px;
+}
+.mm-label__title {
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--void);
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+@media (min-width: 1024px) {
+  .mm-label { padding: 64px 32px 20px; }
+  .mm-label__kicker { font-size: 13px; }
+  .mm-label__title { font-size: 28px; }
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Pretendard+Variable:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="mm-label">
+  <!-- ✏️ 수정가능: 키커/제목 -->
+  <p class="mm-label__kicker">First Pick</p>
+  <h2 class="mm-label__title">첫구매 맞춤 가위</h2>
+</div>
+
+<script>
+(function(){
+  function send() {
+    var h = document.documentElement.scrollHeight;
+    if (h > 0) window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', id: 'label-first', height: h }, '*');
+  }
+  if (window.ResizeObserver) new ResizeObserver(send).observe(document.body);
+  window.addEventListener('load', send);
+  send();
+
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (!href || href.startsWith('http')) return;
+    e.preventDefault();
+    window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: href }, '*');
+  });
+})();
+</script>
+</body>
+</html>
