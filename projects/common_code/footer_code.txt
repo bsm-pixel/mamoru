@@ -9,7 +9,8 @@
 (function(){
   var IDS = ['asFramePC','csFramePC','mamoruAsGuideFrame',
              'mamoruConsultGuideFrame','mamoruDiagFrame',
-             'mamoruRecFrame','mamoruIntroFrame'];
+             'mamoruRecFrame','mamoruIntroFrame',
+             'mamoruMainTopFrame','mamoruMainBtmFrame'];
 
   function findFrame(source) {
     for (var i = 0; i < IDS.length; i++) {

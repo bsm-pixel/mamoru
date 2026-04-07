@@ -1,11 +1,25 @@
 <!-- =========================================================
   MAMORU 공통 코드 — Header Code 상단
   위치: 아임웹 → 환경설정 → Header Code 상단
-  역할: <head> 최상단 삽입 (preconnect, 메타태그 등)
+  역할: <head> 최상단 삽입 (preconnect, 폰트, 메타태그)
+  Brand Guide v1.0 적용
   ========================================================= -->
 
-<!-- MAMORU: GitHub Pages iframe 사전 연결 (로딩 속도 개선) -->
+<!-- MAMORU: 사전 연결 (GitHub Pages + CDN + Google Fonts) -->
 <link rel="preconnect" href="https://bsm-pixel.github.io">
 <link rel="dns-prefetch" href="https://bsm-pixel.github.io">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- MAMORU: Brand Guide v1.0 폰트 — 아임웹 전역 적용 -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- MAMORU: 아임웹 전역 서체 오버라이드 -->
+<style>
+body, .shop-title, .item-detail, .pay, .cate-label,
+[class*="category"], [class*="product"], [class*="shop"] {
+  font-family: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+}
+</style>

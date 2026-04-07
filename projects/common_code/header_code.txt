@@ -7,6 +7,8 @@
 #mamoruDiagFrame { min-height: 800px; }
 #mamoruRecFrame { min-height: 1200px; }
 #mamoruIntroFrame { min-height: 1000px; }
+#mamoruMainTopFrame { min-height: 800px; }
+#mamoruMainBtmFrame { min-height: 1600px; }
 </style>
 <!-- =========================================================
   MAMORU 상품 진열 공통 스타일
