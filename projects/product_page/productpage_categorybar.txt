@@ -161,25 +161,53 @@
 
 </div>
 
-<!-- 카테고리 전환 시 탭 위치로 스크롤 고정 -->
+<!-- 카테고리 전환 — 깜빡임 방지 + 스크롤 고정 -->
 <script>
 (function(){
-  var KEY = 'mm_cat_switch';
+  var KEY = 'mm_cat_scroll';
   var tabs = document.querySelector('.cat-mini');
   if (!tabs) return;
 
+  /* ── 전환 도착: 저장된 스크롤 위치로 즉시 복원 + fade-in ── */
+  var saved = sessionStorage.getItem(KEY);
+  if (saved) {
+    sessionStorage.removeItem(KEY);
+    /* 페이지 로드 시 즉시 숨김 (깜빡임 방지) */
+    document.documentElement.style.opacity = '0';
+
+    var scrollY = parseInt(saved, 10) || 0;
+
+    function restore() {
+      /* 탭 위치로 스크롤 복원 */
+      var tabTop = tabs.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, Math.max(0, tabTop - 8));
+      /* fade-in */
+      document.documentElement.style.transition = 'opacity 0.25s ease';
+      document.documentElement.style.opacity = '1';
+    }
+
+    /* 아임웹 상품 위젯 로드 대기 후 복원 */
+    if (document.readyState === 'complete') {
+      restore();
+    } else {
+      window.addEventListener('load', restore);
+    }
+  }
+
+  /* ── 전환 출발: 탭 클릭 시 현재 스크롤 위치 저장 + fade-out ── */
   tabs.addEventListener('click', function(e) {
     var a = e.target.closest('a');
-    if (a && !a.classList.contains('active')) {
-      sessionStorage.setItem(KEY, '1');
-    }
-  });
+    if (!a || a.classList.contains('active')) return;
 
-  if (sessionStorage.getItem(KEY)) {
-    sessionStorage.removeItem(KEY);
-    requestAnimationFrame(function() {
-      tabs.scrollIntoView({ behavior: 'instant', block: 'start' });
-    });
-  }
+    e.preventDefault();
+    /* 스크롤 위치 저장 */
+    sessionStorage.setItem(KEY, String(window.scrollY));
+    /* fade-out 후 이동 */
+    document.documentElement.style.transition = 'opacity 0.15s ease';
+    document.documentElement.style.opacity = '0';
+    setTimeout(function() {
+      window.location.href = a.getAttribute('href');
+    }, 150);
+  });
 })();
 </script>
