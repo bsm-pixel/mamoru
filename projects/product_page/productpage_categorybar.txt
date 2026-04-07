@@ -153,6 +153,7 @@
   <!-- 미니 카테고리 -->
   <div class="cat-mini">
     <!-- ✏️ active 클래스는 현재 페이지에만 -->
+    <a href="/44">전체보기</a>
     <a href="/29" class="active">블런트</a>
     <a href="/30">틴닝</a>
     <a href="/39">장가위</a>
