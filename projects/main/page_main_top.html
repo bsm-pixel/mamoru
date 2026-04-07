@@ -706,7 +706,10 @@ button[class*="mm-"]:focus-visible {
      ═══════════════════════════════════════════════════════════════ */
   function initIframeComm() {
     function send() {
-      var h = document.documentElement.scrollHeight;
+      // 마지막 섹션의 실제 하단 위치로 높이 계산 (scrollHeight보다 정확)
+      var sections = document.querySelectorAll('section');
+      var lastSection = sections[sections.length - 1];
+      var h = lastSection ? (lastSection.offsetTop + lastSection.offsetHeight) : document.body.scrollHeight;
       if (h > 0) window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: h }, '*');
     }
 
