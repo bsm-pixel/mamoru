@@ -1,147 +1,135 @@
 <!--
 ════════════════════════════════════════════
- MAMORU · CATEGORY TOP TEMPLATE
+ MAMORU · CATEGORY TOP TEMPLATE v2.0
+ Brand Guide v1.0 적용 — 모노크롬 팔레트
  역할: 카테고리 진입 인지 + 빠른 전환
  수정 포인트:
- 1) CATEGORY LABEL
- 2) TITLE / SUBTITLE
+ 1) CATEGORY LABEL (영문/한글)
+ 2) 배너 이미지 (PC/모바일)
  3) 미니카테고리 링크 / active 클래스
 ════════════════════════════════════════════
 -->
 
 <style>
-/* ===== CATEGORY TOP — Terracotta Editorial ===== */
+/* ===== CATEGORY TOP — Brand Guide v1.0 Monochrome ===== */
 
 /* 0) 배너 이미지 + 텍스트 오버레이 */
-.cat-banner{
-  position:relative;
-  background:#181725;                /* Indigo Black */
-  line-height:0;
+.cat-banner {
+  position: relative;
+  background: #1A1A1A;
+  line-height: 0;
+  overflow: hidden;
+}
+.cat-banner img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  opacity: 0.7;
+}
+.cat-banner-text {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  line-height: 1.2;
+}
+.cat-banner-en {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #FAF9F7;
+}
+.cat-banner-kr {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(250, 249, 247, 0.5);
 }
 
-.cat-banner img{
-  width:100%;
-  height:auto;
-  display:block;
-  object-fit:cover;
+@media (min-width: 768px) {
+  .cat-banner-text { left: 40px; bottom: 32px; }
+  .cat-banner-en { font-size: 36px; }
+  .cat-banner-kr { font-size: 14px; }
+}
+@media (min-width: 1024px) {
+  .cat-banner-text { left: 48px; bottom: 40px; }
+  .cat-banner-en { font-size: 42px; }
+  .cat-banner-kr { font-size: 15px; margin-top: 6px; }
 }
 
-.cat-banner-text{
-  position:absolute;
-  left:48px;
-  bottom:32px;
-  line-height:1.2;
+/* 1) 컨테이너 */
+.cat-top {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #FAF9F7;
+  padding: 0;
+}
+@media (max-width: 1024px) {
+  .cat-top { max-width: 100%; }
 }
 
-.cat-banner-en{
-  font-size:38px;
-  font-weight:800;
-  letter-spacing:0.02em;
-  color:#F2F2EA;                     /* Cream */
+/* 2) 미니 카테고리 — 모노크롬 pill 탭 */
+.cat-mini {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 20px 16px;
+}
+.cat-mini a {
+  display: inline-block;
+  padding: 8px 18px;
+  border: 1px solid #D4D0CB;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  color: #4A4A4A;
+  background: transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.cat-banner-kr{
-  margin-top:6px;
-  font-size:15px;
-  font-weight:400;
-  color:rgba(242,242,234,0.6);       /* --mm-text-w2 */
-}
-
-/* 태블릿 이하 */
-@media(max-width:767px){
-  .cat-banner-text{
-    left:20px;
-    bottom:20px;
-  }
-  .cat-banner-en{
-    font-size:26px;
-  }
-  .cat-banner-kr{
-    font-size:13px;
-  }
-}
-@media(max-width:360px){
-  .cat-banner-en{
-    font-size:22px;
-  }
-  .cat-banner-kr{
-    font-size:12px;
-  }
-}
-
-.cat-top{
-  max-width:1200px;                  /* 쇼윈도형 표준 */
-  margin:0 auto;
-  background:#F2F2EA;                /* Cream (순백 금지) */
-  padding:0;
-}
-
-@media(max-width:1024px){
-  .cat-top{
-    max-width:100%;
-  }
-}
-
-/* 4) 미니 카테고리 — Terracotta pill 탭 */
-.cat-mini{
-  display:flex;
-  justify-content:center;
-  flex-wrap:wrap;
-  gap:10px;
-  padding:14px 20px 18px;           /* 수평 패딩 20px (모바일 표준) */
-}
-
-.cat-mini a{
-  display:inline-block;
-  padding:8px 20px;
-  border:1px solid rgba(24,23,37,0.08);  /* --mm-border-l */
-  border-radius:999px;                    /* pill 표준 */
-  font-size:13px;
-  font-weight:500;
-  letter-spacing:-0.01em;
-  text-decoration:none;
-  color:#6B6980;                          /* --mm-text-d2 */
-  background:#FAFAF5;                     /* Card White */
-  transition:all 0.15s ease;              /* --mm-ease-fast */
-  -webkit-tap-highlight-color:transparent;
-}
-
-/* 선택된 상태 — Terracotta */
-.cat-mini a.active{
-  background:#D4613E;                     /* --mm-gold */
-  color:#F2F2EA;                          /* --mm-text-w */
-  border-color:#D4613E;
-  font-weight:600;
+/* 선택된 상태 — Void (검정) */
+.cat-mini a.active {
+  background: #1A1A1A;
+  color: #FAF9F7;
+  border-color: #1A1A1A;
+  font-weight: 600;
 }
 
 /* 눌림 */
-.cat-mini a:active{
-  transform:scale(0.96);
+.cat-mini a:active {
+  transform: scale(0.96);
 }
 
 /* 호버 — PC만 */
-@media(hover:hover){
-  .cat-mini a:not(.active):hover{
-    border-color:#D4613E;
-    color:#D4613E;
+@media (hover: hover) {
+  .cat-mini a:not(.active):hover {
+    border-color: #1A1A1A;
+    color: #1A1A1A;
+    background: #F5F3F0;
   }
 }
 
-/* 태블릿+ 탭 사이즈 업 */
-@media(min-width:768px){
-  .cat-mini{
-    gap:10px;
-    padding:16px 32px 20px;              /* 수평 패딩 32px */
+/* 태블릿+ */
+@media (min-width: 768px) {
+  .cat-mini {
+    gap: 10px;
+    padding: 16px 32px 18px;
   }
-  .cat-mini a{
-    padding:9px 24px;
-    font-size:14px;
+  .cat-mini a {
+    padding: 9px 22px;
+    font-size: 14px;
   }
 }
-@media(min-width:1024px){
-  .cat-mini a{
-    padding:10px 28px;
-    font-size:15px;
+@media (min-width: 1024px) {
+  .cat-mini a {
+    padding: 10px 26px;
+    font-size: 15px;
   }
 }
 </style>
@@ -151,19 +139,20 @@
   <!-- 0) 배너 이미지 + 텍스트 오버레이 -->
   <div class="cat-banner">
     <picture>
+      <!-- ✏️ 수정: 모바일/PC 배너 이미지 -->
       <source media="(max-width:768px)" srcset="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/8277857802796.png">
-      <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/8959981922fa7.png" alt="🔧카테고리명 배너">
+      <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/8959981922fa7.png" alt="카테고리 배너">
     </picture>
-    <!-- 🔧 수정: 카테고리명/설명 -->
+    <!-- ✏️ 수정: 카테고리명/설명 -->
     <div class="cat-banner-text">
       <div class="cat-banner-en">BLUNT</div>
       <div class="cat-banner-kr">커트 시작의 출발점</div>
     </div>
   </div>
 
-  <!-- 4) 미니 카테고리 -->
+  <!-- 미니 카테고리 -->
   <div class="cat-mini">
-    <!-- 🔧 active 클래스는 현재 페이지에만 -->
+    <!-- ✏️ active 클래스는 현재 페이지에만 -->
     <a href="/29" class="active">블런트</a>
     <a href="/30">틴닝</a>
     <a href="/39">장가위</a>
@@ -179,7 +168,6 @@
   var tabs = document.querySelector('.cat-mini');
   if (!tabs) return;
 
-  /* 탭 클릭 → 플래그 저장 */
   tabs.addEventListener('click', function(e) {
     var a = e.target.closest('a');
     if (a && !a.classList.contains('active')) {
@@ -187,7 +175,6 @@
     }
   });
 
-  /* 페이지 로드 → 플래그 있으면 탭 위치로 스크롤 */
   if (sessionStorage.getItem(KEY)) {
     sessionStorage.removeItem(KEY);
     requestAnimationFrame(function() {
