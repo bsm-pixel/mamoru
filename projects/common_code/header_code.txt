@@ -107,3 +107,85 @@
   document.head.appendChild(style);
 })();
 </script>
+
+<!-- =========================================================
+  MAMORU 쇼핑기획전 슬라이드 스타일 (상품위젯과 별도)
+  🔧 쇼핑기획전 위젯 ID를 EXHIBITION_IDS에 추가
+  ========================================================= -->
+<script>
+(function(){
+  var EXHIBITION_IDS = [
+    'w202604070007b1fc1da6c'
+  ];
+
+  var CSS_TPL = ''
+  /* [1] 위젯 컨테이너 */
+  + '#__WID__{position:relative!important;padding:0!important;background:transparent!important}'
+
+  /* [2] 슬라이드 래퍼 */
+  + '#__WID__ .owl-carousel .owl-stage{display:flex!important;align-items:stretch!important}'
+
+  /* [3] 카드 */
+  + '#__WID__ .shop-item._shop_item'
+  + '{position:relative!important;background:transparent!important;display:flex!important;flex-direction:column!important;padding:0 4px!important;box-sizing:border-box!important}'
+
+  /* [4] 썸네일 영역 — Brand Guide Shell */
+  + '#__WID__ .item-thumbs'
+  + '{position:relative!important;background:#F5F3F0!important;border-radius:14px!important;overflow:hidden!important;border:1.5px solid transparent!important;transition:border-color .25s ease,box-shadow .25s ease!important}'
+
+  /* [5] 호버 — Brand Guide Sand */
+  + '#__WID__ .item-thumbs:hover'
+  + '{border-color:#D4D0CB!important;box-shadow:0 4px 16px rgba(0,0,0,.06)!important}'
+
+  /* [6] 이미지 */
+  + '#__WID__ .item-thumbs img._org_img'
+  + '{width:100%!important;display:block!important;object-fit:cover!important;object-position:center!important;border-radius:14px!important}'
+
+  /* [7] 오버레이 숨김 */
+  + '#__WID__ .item-overlay{display:none!important}'
+
+  /* [8] 텍스트 영역 */
+  + '#__WID__ .item-detail'
+  + '{position:relative!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:2px!important;padding:10px 4px 0!important}'
+
+  /* [9] 제품명 — Brand Guide Stone */
+  + '#__WID__ .item-detail h2'
+  + '{margin:0!important;padding:0!important;font-size:14px!important;font-weight:500!important;line-height:1.4!important;letter-spacing:-.02em!important;color:#4A4A4A!important}'
+
+  /* [10] 가격 — Brand Guide Void */
+  + '#__WID__ .item-detail .pay'
+  + '{margin:0!important;padding:0!important;border-top:none!important;font-size:15px!important;font-weight:700!important;line-height:1.3!important;color:#1A1A1A!important}'
+
+  /* [11] 뱃지 숨김 */
+  + '#__WID__ .ns-icon{display:none!important}'
+  + '#__WID__ .timesale{display:none!important}'
+
+  /* [12] 슬라이드 화살표 */
+  + '#__WID__ .owl-nav button{background:rgba(255,255,255,.8)!important;border-radius:50%!important;width:36px!important;height:36px!important;box-shadow:0 2px 8px rgba(0,0,0,.1)!important}'
+  + '#__WID__ .owl-nav button span{font-size:20px!important;color:#1A1A1A!important}'
+
+  /* [13] 슬라이드 도트 — Brand Guide Sand/Void */
+  + '#__WID__ .owl-dots{margin-top:12px!important}'
+  + '#__WID__ .owl-dots .owl-dot span{width:8px!important;height:8px!important;background:#D4D0CB!important;border-radius:50%!important}'
+  + '#__WID__ .owl-dots .owl-dot.active span{background:#1A1A1A!important;width:20px!important;border-radius:4px!important}'
+
+  /* [14] 모바일 */
+  + '@media screen and (max-width:768px){'
+  +   '#__WID__{padding:0!important}'
+  +   '#__WID__ .item-thumbs{border-radius:12px!important}'
+  +   '#__WID__ .item-thumbs img._org_img{border-radius:12px!important}'
+  +   '#__WID__ .item-detail h2{font-size:13px!important}'
+  +   '#__WID__ .item-detail .pay{font-size:14px!important}'
+  +   '#__WID__ .owl-nav button{width:30px!important;height:30px!important}'
+  + '}';
+
+  var result = EXHIBITION_IDS.map(function(id){
+    return CSS_TPL.replace(/__WID__/g, id);
+  }).join('\n');
+
+  var style = document.createElement('style');
+  style.id = 'mm-exhibition-style';
+  style.textContent = result;
+  document.head.appendChild(style);
+})();
+</script>
