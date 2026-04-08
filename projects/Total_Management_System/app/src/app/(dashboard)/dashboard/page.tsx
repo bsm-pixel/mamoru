@@ -312,7 +312,7 @@ export default function DashboardPage() {
               </div>
 
               {/* 우측: 현황 카드 — 설정 기반 순서/표시 */}
-              <div className="w-full lg:w-[520px] shrink-0 space-y-3">
+              <div className="w-full lg:w-[600px] shrink-0 space-y-3">
                 <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">현황 요약</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {(() => {
