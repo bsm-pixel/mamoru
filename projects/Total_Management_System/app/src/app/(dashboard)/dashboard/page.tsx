@@ -341,8 +341,9 @@ export default function DashboardPage() {
                       <HubCategoryCard key="repairs" title="복원수리" icon={Wrench} href="/repairs/dashboard"
                         stats={[
                           { label: '신규접수', value: stats?.repairs.intakeNew || 0, color: 'text-info' },
-                          { label: '진행중', value: stats?.repairs.workingCount || 0, color: 'text-terracotta' },
-                          { label: '출고대기', value: stats?.repairs.readyToShip || 0, color: 'text-warning' },
+                          { label: '입고대기', value: stats?.repairs.pendingInbound || 0, color: 'text-warning' },
+                          { label: '작업중', value: stats?.repairs.workingCount || 0, color: 'text-terracotta' },
+                          { label: '출고대기', value: stats?.repairs.readyToShip || 0, color: 'text-success' },
                         ]}
                         summary={repairSummary}
                       />

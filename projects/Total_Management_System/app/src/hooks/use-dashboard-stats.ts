@@ -126,7 +126,7 @@ export function useHubStats() {
         db.from('repairs').select('*', { count: 'exact', head: true })
           .in('status', ['intake', 'pickup_scheduled']),
         db.from('repairs').select('qty_mamoru, qty_other')
-          .in('status', ['cost_notified', 'repairing', 'ready_to_ship']),
+          .in('status', ['cost_notified', 'repairing']),
         db.from('repairs').select('*', { count: 'exact', head: true })
           .eq('status', 'ready_to_ship'),
         db.from('repairs').select('qty_mamoru, qty_other')
