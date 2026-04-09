@@ -34,13 +34,33 @@ export default function RepairsPage() {
       <div className="px-4 md:px-6 py-4 space-y-4">
         {/* 이번달 복원수리 매출 */}
         {stats && (stats.monthRepairAmount > 0 || stats.monthRepairCount > 0) && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-neutral-900 text-white">
-            <TrendingUp size={18} className="opacity-70" />
-            <div>
-              <p className="text-xs opacity-70">이번달 복원수리 매출</p>
-              <p className="text-lg font-bold">{formatKRW(stats.monthRepairAmount)}</p>
+          <div className="rounded-lg bg-neutral-900 text-white overflow-hidden">
+            <div className="flex items-center gap-3 px-4 py-3">
+              <TrendingUp size={18} className="opacity-70" />
+              <div>
+                <p className="text-xs opacity-70">이번달 복원수리 매출</p>
+                <p className="text-lg font-bold">{formatKRW(stats.monthRepairAmount)}</p>
+              </div>
+              <span className="ml-auto text-xs opacity-60">{stats.monthRepairCount}건</span>
             </div>
-            <span className="ml-auto text-xs opacity-60">{stats.monthRepairCount}건</span>
+            {/* 마모루 / 타사 / B2B 구분 */}
+            <div className="grid grid-cols-3 gap-px bg-white/10">
+              <div className="px-3 py-2 text-center">
+                <p className="text-[10px] opacity-50">마모루</p>
+                <p className="text-sm font-bold">{formatKRW(stats.monthRepairMamoru?.amount || 0)}</p>
+                <p className="text-[10px] opacity-40">{stats.monthRepairMamoru?.count || 0}건</p>
+              </div>
+              <div className="px-3 py-2 text-center">
+                <p className="text-[10px] opacity-50">타사</p>
+                <p className="text-sm font-bold">{formatKRW(stats.monthRepairOther?.amount || 0)}</p>
+                <p className="text-[10px] opacity-40">{stats.monthRepairOther?.count || 0}건</p>
+              </div>
+              <div className="px-3 py-2 text-center">
+                <p className="text-[10px] opacity-50">B2B</p>
+                <p className="text-sm font-bold">{formatKRW(stats.monthRepairB2B?.amount || 0)}</p>
+                <p className="text-[10px] opacity-40">{stats.monthRepairB2B?.count || 0}건</p>
+              </div>
+            </div>
           </div>
         )}
 

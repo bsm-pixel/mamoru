@@ -396,6 +396,7 @@ export async function PATCH(
           product_id?: string;
           product_name: string;
           sku?: string;
+          category?: string;
           quantity: number;
           unit_price: number;
           total_price: number;
@@ -474,6 +475,7 @@ export async function PATCH(
         product_id: item.product_id || null,
         product_name: item.product_name,
         sku: item.sku || null,
+        category: item.category || null,
         quantity: item.quantity,
         unit_price: item.unit_price,
         total_price: item.total_price,

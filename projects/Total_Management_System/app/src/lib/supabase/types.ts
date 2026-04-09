@@ -568,6 +568,7 @@ export interface Database {
           quantity: number;
           unit_price: number;
           total_price: number;
+          category: string | null;
           supply_amount: number;
           vat_amount: number;
         };
@@ -576,6 +577,7 @@ export interface Database {
           product_id?: string | null;
           product_name: string;
           sku?: string | null;
+          category?: string | null;
           quantity?: number;
           unit_price?: number;
           total_price?: number;

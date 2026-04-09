@@ -168,6 +168,7 @@ function NewSaleContent() {
         product_id: item.product?.id || undefined,
         product_name: item.product ? getProductDisplayName(item.product, customerType, priceGroups) : (item.customName || '임시 제품'),
         sku: item.product?.sku || undefined,
+        category: item.product?.category || undefined,
         quantity: item.quantity,
         unit_price: item.unitPrice,
         total_price: item.unitPrice * item.quantity,
@@ -188,6 +189,7 @@ function NewSaleContent() {
     TH: '틴닝',
     LO: '장가위',
     SL: '슬라이싱',
+    RS: '복원수리',
   };
 
   const filteredProducts = products.filter((p) => {

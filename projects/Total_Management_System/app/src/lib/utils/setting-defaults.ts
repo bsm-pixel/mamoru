@@ -5,7 +5,7 @@
 
 export const DEFAULT_CAT_LABELS: Record<string, string> = {
   BL: '블런트', TH: '씨닝', LO: '롱', SL: '슬라이싱',
-  CB: '빗', CS: '케이스', AC: '악세서리',
+  CB: '빗', CS: '케이스', AC: '악세서리', RS: '복원수리',
 };
 
 export const DEFAULT_PAYMENT_LABELS: Record<string, string> = {
