@@ -66,8 +66,8 @@ export default function RepairsPage() {
               </div>
             </div>
 
-            {/* 오늘 작업 완료 */}
-            <div className="bg-white rounded-lg border border-neutral-200 p-3 lg:w-44">
+            {/* 오늘 작업 완료 — PC만 표시 */}
+            <div className="hidden lg:block bg-white rounded-lg border border-neutral-200 p-3 lg:w-44">
               <p className="text-xs text-neutral-500 mb-1">오늘 작업 완료</p>
               <p className="text-lg font-bold text-neutral-900">
                 {(stats.todayWork?.mamoru || 0) + (stats.todayWork?.other || 0)}정
@@ -77,8 +77,8 @@ export default function RepairsPage() {
               </p>
             </div>
 
-            {/* 이번주 누적 */}
-            <div className="bg-white rounded-lg border border-neutral-200 p-3 lg:w-44">
+            {/* 이번주 누적 — PC만 표시 */}
+            <div className="hidden lg:block bg-white rounded-lg border border-neutral-200 p-3 lg:w-44">
               <p className="text-xs text-neutral-500 mb-1">이번주 누적</p>
               <p className="text-lg font-bold text-neutral-900">
                 {(stats.weekWork?.mamoru || 0) + (stats.weekWork?.other || 0) + (stats.weekWork?.b2b || 0)}정
