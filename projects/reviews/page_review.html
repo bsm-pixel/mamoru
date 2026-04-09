@@ -430,7 +430,8 @@
 
     // ── 초기화 ──
     function init() {
-      if (!uid) { showError('잘못된 접근입니다'); return; }
+      // uid 없어도 name이 있으면 URL 파라미터 기반으로 진행 (판매 건 후기 요청)
+      if (!uid && !urlName) { showError('잘못된 접근입니다'); return; }
 
       // 타입별 UI 설정
       var cfg = TYPE_CONFIG[reviewType] || TYPE_CONFIG.repair;
@@ -438,6 +439,12 @@
       chip.textContent = cfg.label;
       document.querySelector('.header p').textContent = cfg.header;
       document.getElementById('content').placeholder = cfg.placeholder;
+
+      // uid 없이 name만 있으면 API 건너뛰고 바로 폼 표시 (판매 건 후기 요청)
+      if (!uid && urlName) {
+        showForm(maskName(urlName), SUBTYPE_LABELS[urlSubtype] || cfg.label);
+        return;
+      }
 
       // API에서 고객 정보 조회
       fetch(API_URL + '/info?uid=' + encodeURIComponent(uid) + '&type=' + encodeURIComponent(reviewType))
