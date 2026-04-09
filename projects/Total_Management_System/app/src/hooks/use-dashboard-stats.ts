@@ -469,16 +469,17 @@ export function useRepairDashboardStats() {
           }
           const repairATotal = aMamoru + aOther;
 
-          const salesRepairRows = (monthSalesRepairItems.data || []) as Array<{ total_price: number; product_name: string; offline_sales: { customer_type: string | null } }>;
+          const salesRepairRows = (monthSalesRepairItems.data || []) as Array<{ total_price: number; quantity: number; product_name: string; offline_sales: { customer_type: string | null } }>;
           let bMamoru = 0, bOther = 0, bB2B = 0;
           let cMamoru = 0, cOther = 0, cB2B = 0;
           for (const r of salesRepairRows) {
             const ct = r.offline_sales?.customer_type;
             const isB2B = ct === 'dealer' || ct === 'academy';
             const price = r.total_price || 0;
-            if (isB2B) { bB2B += price; cB2B++; }
-            else if ((r.product_name || '').includes('타사')) { bOther += price; cOther++; }
-            else { bMamoru += price; cMamoru++; }
+            const qty = r.quantity || 1;
+            if (isB2B) { bB2B += price; cB2B += qty; }
+            else if ((r.product_name || '').includes('타사')) { bOther += price; cOther += qty; }
+            else { bMamoru += price; cMamoru += qty; }
           }
           return {
             monthRepairAmount: repairATotal + bMamoru + bOther + bB2B,
