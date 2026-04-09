@@ -76,12 +76,15 @@ img { display: block; max-width: 100%; }
   display: flex;
   justify-content: center;
   gap: 8px;
-  padding: 0 20px 24px;
+  padding: 0 16px 24px;
   max-width: var(--mm-max-w);
   margin: 0 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.mm-rv-tabs::-webkit-scrollbar { display: none; }
 .mm-rv-tab {
-  padding: 8px 20px;
+  padding: 8px 16px;
   border: 1px solid var(--mm-border-l);
   border-radius: 999px;
   background: transparent;
@@ -91,6 +94,8 @@ img { display: block; max-width: 100%; }
   color: var(--mm-text-d2);
   cursor: pointer;
   transition: all var(--mm-ease-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .mm-rv-tab:active { transform: scale(0.96); }
 .mm-rv-tab--active {
