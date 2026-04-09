@@ -369,6 +369,17 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
                 </select>
               </div>
             </div>
+            {/* 재고 관리 토글 */}
+            <div className="flex items-center justify-between py-1">
+              <div>
+                <span className="text-xs text-neutral-500">재고 관리</span>
+                <p className="text-[10px] text-neutral-400">OFF 시 재고 수량을 추적하지 않습니다</p>
+              </div>
+              <button onClick={() => setForm({ ...form, use_stock: !form.use_stock })}
+                className={`relative w-10 h-5 rounded-full transition ${form.use_stock ? 'bg-neutral-900' : 'bg-neutral-200'}`}>
+                <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.use_stock ? 'translate-x-5' : ''}`} />
+              </button>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-neutral-500">소매가</label>
