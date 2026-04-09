@@ -147,7 +147,7 @@ export function useHubStats() {
           .gte('created_at', monthISO)
           .not('status', 'eq', 'cancelled'),
         // 복원수리 매출 B: 판매시스템 (이번달, category=RS, 취소 제외) + 고객유형으로 B2B 구분
-        db.from('offline_sale_items').select('total_price, product_name, category, offline_sales!inner(sale_date, cancelled_at, customer_type)')
+        db.from('offline_sale_items').select('total_price, quantity, product_name, category, offline_sales!inner(sale_date, cancelled_at, customer_type)')
           .eq('category', 'RS')
           .gte('offline_sales.sale_date', monthStartDate)
           .is('offline_sales.cancelled_at', null),
@@ -209,16 +209,17 @@ export function useHubStats() {
             const repairATotal = aMamoru + aOther;
 
             // 판매시스템 매출 (category=RS) — 마모루/타사/B2B 구분
-            const salesRepairRows = (monthSalesRepairItems.data || []) as Array<{ total_price: number; product_name: string; offline_sales: { customer_type: string | null } }>;
+            const salesRepairRows = (monthSalesRepairItems.data || []) as Array<{ total_price: number; quantity: number; product_name: string; offline_sales: { customer_type: string | null } }>;
             let bMamoru = 0, bOther = 0, bB2B = 0;
             let cMamoru = 0, cOther = 0, cB2B = 0;
             for (const r of salesRepairRows) {
               const ct = r.offline_sales?.customer_type;
               const isB2B = ct === 'dealer' || ct === 'academy';
               const price = r.total_price || 0;
-              if (isB2B) { bB2B += price; cB2B++; }
-              else if ((r.product_name || '').includes('타사')) { bOther += price; cOther++; }
-              else { bMamoru += price; cMamoru++; }
+              const qty = r.quantity || 1;
+              if (isB2B) { bB2B += price; cB2B += qty; }
+              else if ((r.product_name || '').includes('타사')) { bOther += price; cOther += qty; }
+              else { bMamoru += price; cMamoru += qty; }
             }
             return {
               monthRepairAmount: repairATotal + bMamoru + bOther + bB2B,
