@@ -60,6 +60,8 @@ export async function POST(req: NextRequest) {
       data: {
         id: sale.sale_number,
         uid: sale.sale_number,
+        consult_uid: sale.sale_number,   // 솔라피 #{consult_uid} 치환용 (상담 리뷰 템플릿)
+        as_uid: sale.sale_number,        // 솔라피 #{as_uid} 치환용 (복원수리 리뷰 템플릿)
         review_type,
         type_label: review_type === 'repair' ? '복원수리' : review_type === 'consult' ? '상담' : '제품구매',
         subtype: subtype || '',
