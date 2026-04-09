@@ -374,8 +374,10 @@ export function useRepairDashboardStats() {
       const monday = new Date(now);
       monday.setDate(now.getDate() + mondayOff);
       const weekStartISO = monday.toISOString();
+      const weekStartDate = monday.toISOString().slice(0, 10);
+      const todayDate = now.toISOString().slice(0, 10);
 
-      const [counts, staleCount, unpaidCount, intakeNewCount, monthRepairsPaid, monthSalesRepairItems, todayCompleted, weekCompleted] = await Promise.all([
+      const [counts, staleCount, unpaidCount, intakeNewCount, monthRepairsPaid, monthSalesRepairItems, todayCompleted, weekCompleted, weekSalesRepair] = await Promise.all([
         // 상태별 count 병렬
         Promise.all(
           statuses.map((s) =>
@@ -430,6 +432,14 @@ export function useRepairDashboardStats() {
           .select('repair_id, to_status, repairs:repair_id(qty_mamoru, qty_other)')
           .in('to_status', ['shipped', 'delivered', 'completed'])
           .gte('created_at', weekStartISO),
+        // 이번주 판매시스템 복원수리 (B2B 포함)
+        (supabase as any)
+          .from('offline_sale_items')
+          .select('quantity, product_name, offline_sales!inner(sale_date, cancelled_at, customer_type)')
+          .eq('category', 'RS')
+          .gte('offline_sales.sale_date', weekStartDate)
+          .lte('offline_sales.sale_date', todayDate)
+          .is('offline_sales.cancelled_at', null),
       ]);
 
       const byStatus = Object.fromEntries(counts.map((c) => [c.status, c.count])) as Record<string, number>;
@@ -502,6 +512,7 @@ export function useRepairDashboardStats() {
           return { count: unique.size, mamoru, other };
         })(),
         weekWork: (() => {
+          // 접수시스템 (출고 이상 상태 전환)
           const rows = (weekCompleted.data || []) as Array<{ repair_id: string; repairs: { qty_mamoru: number; qty_other: number } | null }>;
           const unique = new Set(rows.map(r => r.repair_id));
           let mamoru = 0, other = 0;
@@ -510,7 +521,16 @@ export function useRepairDashboardStats() {
             mamoru += row?.repairs?.qty_mamoru || 0;
             other += row?.repairs?.qty_other || 0;
           });
-          return { count: unique.size, mamoru, other };
+          // 판매시스템 B2B 복원수리
+          const salesRows = (weekSalesRepair.data || []) as Array<{ quantity: number; product_name: string; offline_sales: { customer_type: string | null } }>;
+          let b2b = 0;
+          for (const r of salesRows) {
+            const ct = r.offline_sales?.customer_type;
+            if (ct === 'dealer' || ct === 'academy') {
+              b2b += r.quantity || 1;
+            }
+          }
+          return { count: unique.size, mamoru, other, b2b };
         })(),
       };
     },
