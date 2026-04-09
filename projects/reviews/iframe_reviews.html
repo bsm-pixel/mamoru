@@ -1,0 +1,50 @@
+<!-- MAMORU 고객 후기 페이지 - 아임웹 코드위젯용 -->
+<!-- ★ 이 코드를 아임웹 후기 페이지 코드위젯에 전체 복사하세요 ★ -->
+
+<style>
+#mamoruReviewsWrap {
+  position: relative;
+  width: 100%;
+}
+#mamoruReviewsFrame {
+  width: 100%;
+  border: none;
+  display: block;
+}
+</style>
+
+<div id="mamoruReviewsWrap">
+  <iframe
+    id="mamoruReviewsFrame"
+    src="https://bsm-pixel.github.io/mamoru/projects/reviews/page_reviews.html"
+    scrolling="no"
+    frameborder="0"
+    allowtransparency="true">
+  </iframe>
+</div>
+
+<script>
+(function(){
+  var iframe = document.getElementById('mamoruReviewsFrame');
+  var currentHeight = 0;
+
+  window.addEventListener('message', function(e) {
+    if (e.origin !== 'https://bsm-pixel.github.io') return;
+
+    if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && typeof e.data.height === 'number') {
+      var newHeight = Math.ceil(e.data.height);
+      if (newHeight !== currentHeight && newHeight > 0) {
+        currentHeight = newHeight;
+        iframe.style.height = newHeight + 'px';
+      }
+    }
+
+    if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) {
+      window.location.href = e.data.url;
+    }
+  });
+
+  // 초기 높이 fallback
+  iframe.style.height = (window.innerWidth <= 768 ? 1800 : 1600) + 'px';
+})();
+</script>
