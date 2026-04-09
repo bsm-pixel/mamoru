@@ -414,7 +414,7 @@ export function useRepairDashboardStats() {
         // 복원수리 매출 B: 판매시스템 (이번달, category=RS, 취소 제외)
         (supabase as any)
           .from('offline_sale_items')
-          .select('total_price, product_name, category, offline_sales!inner(sale_date, cancelled_at, customer_type)')
+          .select('total_price, quantity, product_name, category, offline_sales!inner(sale_date, cancelled_at, customer_type)')
           .eq('category', 'RS')
           .gte('offline_sales.sale_date', monthStart)
           .is('offline_sales.cancelled_at', null),
