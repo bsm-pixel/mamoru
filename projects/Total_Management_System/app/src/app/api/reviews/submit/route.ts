@@ -86,21 +86,40 @@ export async function POST(req: NextRequest) {
         .eq('unique_id', uid)
         .single();
 
-      if (!consult) {
-        return NextResponse.json(
-          { error: '상담 정보를 찾을 수 없습니다' },
-          { status: 404, headers: CORS_HEADERS }
-        );
+      if (consult) {
+        name = consult.name;
+        phone = consult.phone || '';
+        subtype = consult.consultation_type || '';
+        meta = {
+          visit_date: consult.visit_date || '',
+          visit_time: consult.visit_time || '',
+          consultation_type: consult.consultation_type || '',
+          received_at: consult.created_at || '',
+        };
+      } else {
+        // 판매 건(OS-*) fallback: offline_sales에서 조회
+        const { data: sale } = await dbAny
+          .from('offline_sales')
+          .select('customer_name, customer_phone, sale_channel, sale_date, created_at')
+          .eq('sale_number', uid)
+          .single();
+
+        if (!sale) {
+          return NextResponse.json(
+            { error: '상담 정보를 찾을 수 없습니다' },
+            { status: 404, headers: CORS_HEADERS }
+          );
+        }
+        name = sale.customer_name;
+        phone = sale.customer_phone || '';
+        subtype = body.subtype || sale.sale_channel || '';
+        meta = {
+          sale_number: uid,
+          sale_channel: sale.sale_channel || '',
+          sale_date: sale.sale_date || '',
+          received_at: sale.created_at || '',
+        };
       }
-      name = consult.name;
-      phone = consult.phone || '';
-      subtype = consult.consultation_type || '';
-      meta = {
-        visit_date: consult.visit_date || '',
-        visit_time: consult.visit_time || '',
-        consultation_type: consult.consultation_type || '',
-        received_at: consult.created_at || '', // 접수일
-      };
     } else if (type === 'repair') {
       const { data: repair } = await dbAny
         .from('repairs')
