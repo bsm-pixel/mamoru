@@ -10,7 +10,7 @@ import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList } from 'lucide-react';
 import { PrepSheetModal } from './prep-sheet-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
-import type { SaleChannel, OfflineSale, OfflineSaleItem } from '@/lib/supabase/types';
+import type { SaleChannel, OfflineSale, OfflineSaleItem, Product } from '@/lib/supabase/types';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
@@ -443,6 +443,20 @@ export function SaleDetailPanel({ saleId }: Props) {
   );
 }
 
+/** 고객 유형에 따른 단가 결정 (딜러/아카데미 → 전용가, 그 외 → 소매가) */
+function getUnitPrice(product: Product, customerType?: string): number {
+  if (customerType === 'dealer' && product.price_dealer > 0) return product.price_dealer;
+  if (customerType === 'academy' && product.price_academy > 0) return product.price_academy;
+  return product.price;
+}
+
+/** 고객 유형에 따른 납품명 결정 (B2B 납품명 우선) */
+function getProductDisplayName(product: Product, customerType?: string): string {
+  if (customerType === 'dealer' && (product as Record<string, unknown>).dealer_name) return String((product as Record<string, unknown>).dealer_name);
+  if (customerType === 'academy' && (product as Record<string, unknown>).academy_name) return String((product as Record<string, unknown>).academy_name);
+  return product.name;
+}
+
 /** 판매 전체 수정 모달 (제품 추가/삭제 + 금액/결제 수정) */
 function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuildSale }: {
   sale: OfflineSale;
@@ -480,18 +494,22 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
     setEditItems((prev) => prev.map((it, i) => i === idx ? { ...it, quantity: Math.max(1, it.quantity + delta), total_price: it.unit_price * Math.max(1, it.quantity + delta) } : it));
   };
 
-  const addProduct = (p: { id: string; name: string; sku?: string; price: number }) => {
+  const customerType = (sale as Record<string, unknown>).customer_type as string | undefined;
+
+  const addProduct = (p: Product) => {
+    const unitPrice = getUnitPrice(p, customerType);
+    const displayName = getProductDisplayName(p, customerType);
     const existing = editItems.findIndex((it) => it.product_id === p.id);
     if (existing >= 0) {
       updateQty(existing, 1);
     } else {
       setEditItems((prev) => [...prev, {
         product_id: p.id,
-        product_name: p.name,
+        product_name: displayName,
         sku: p.sku,
         quantity: 1,
-        unit_price: p.price,
-        total_price: p.price,
+        unit_price: unitPrice,
+        total_price: unitPrice,
         serial_ids: [],
       }]);
     }
@@ -581,14 +599,24 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
             />
             {filteredProducts.length > 0 && (
               <div className="mt-1 border border-neutral-200 rounded-lg max-h-40 overflow-y-auto divide-y divide-neutral-100">
-                {filteredProducts.map((p) => (
-                  <button key={p.id} onClick={() => addProduct(p)}
-                    className="w-full text-left px-3 py-2 hover:bg-neutral-50 transition">
-                    <span className="text-sm font-medium">{p.name}</span>
-                    <span className="text-xs text-neutral-500 ml-2">{p.sku}</span>
-                    <span className="text-xs font-bold text-neutral-700 float-right">{formatKRW(p.price)}</span>
-                  </button>
-                ))}
+                {filteredProducts.map((p) => {
+                  const displayPrice = getUnitPrice(p, customerType);
+                  const displayName = getProductDisplayName(p, customerType);
+                  const isB2B = customerType === 'dealer' || customerType === 'academy';
+                  return (
+                    <button key={p.id} onClick={() => addProduct(p)}
+                      className="w-full text-left px-3 py-2 hover:bg-neutral-50 transition">
+                      <span className="text-sm font-medium">{displayName}</span>
+                      <span className="text-xs text-neutral-500 ml-2">{p.sku}</span>
+                      <span className="float-right">
+                        {isB2B && displayPrice !== p.price && (
+                          <span className="text-[11px] text-neutral-400 line-through mr-1">{formatKRW(p.price)}</span>
+                        )}
+                        <span className="text-xs font-bold text-neutral-700">{formatKRW(displayPrice)}</span>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
