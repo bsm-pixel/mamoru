@@ -100,13 +100,19 @@ img { display: block; max-width: 100%; }
   font-weight: 600;
 }
 
-/* ── 3. 리뷰 그리드 — 모바일 2열 Masonry ── */
+/* ── 3. 리뷰 그리드 — Masonry (JS 열 분배) ── */
 .mm-rv-grid {
-  columns: 2;
-  column-gap: 10px;
+  display: flex;
+  gap: 10px;
   padding: 0 16px 16px;
   max-width: var(--mm-max-w);
   margin: 0 auto;
+}
+.mm-rv-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* ── 4. 리뷰 카드 — 잡지 스타일 ── */
@@ -115,12 +121,10 @@ img { display: block; max-width: 100%; }
   border: 1px solid var(--mm-border-l);
   border-radius: var(--mm-radius-lg);
   padding: 12px;
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
-  break-inside: avoid;
-  margin-bottom: 10px;
   transition: box-shadow var(--mm-ease);
 }
 .mm-rv-card__img {
@@ -456,12 +460,9 @@ img { display: block; max-width: 100%; }
   .mm-rv-header__desc { font-size: 15px; }
   .mm-rv-tabs { gap: 10px; padding-bottom: 32px; }
   .mm-rv-tab { padding: 9px 24px; font-size: 14px; }
-  .mm-rv-grid {
-    columns: 2;
-    column-gap: 20px;
-    padding: 0 32px;
-  }
-  .mm-rv-card { padding: 20px; margin-bottom: 20px; }
+  .mm-rv-grid { gap: 16px; padding: 0 32px; }
+  .mm-rv-col { gap: 16px; }
+  .mm-rv-card { padding: 20px; }
   .mm-rv-card__name { font-size: 15px; }
   .mm-rv-card__stars { font-size: 14px; }
   .mm-rv-card__text { font-size: 15px; -webkit-line-clamp: 4; }
@@ -473,11 +474,8 @@ img { display: block; max-width: 100%; }
   .mm-rv-header__title { font-size: 30px; }
   .mm-rv-header__desc { font-size: 16px; }
   .mm-rv-tab { padding: 10px 28px; font-size: 15px; }
-  .mm-rv-grid {
-    columns: 3;
-    column-gap: 24px;
-    padding: 0 48px;
-  }
+  .mm-rv-grid { gap: 20px; padding: 0 48px; }
+  .mm-rv-col { gap: 20px; }
   .mm-rv-card { padding: 24px; }
   .mm-rv-card__text { font-size: 16px; line-height: 1.7; -webkit-line-clamp: 5; }
 }
@@ -698,15 +696,39 @@ img { display: block; max-width: 100%; }
     };
   }
 
+  /* 열 수 결정 — 반응형 */
+  function getColCount() {
+    var w = window.innerWidth;
+    if (w >= 1024) return 4;
+    if (w >= 768) return 2;
+    return 2;
+  }
+
   function render() {
     var grid = document.getElementById('rvGrid');
     var btn = document.getElementById('rvLoadmore');
     var reviews = getFilteredReviews();
     var visible = reviews.slice(0, currentPage * PER_PAGE);
 
-    grid.innerHTML = visible.length
-      ? visible.map(function(r, i) { return renderCard(r, i); }).join('')
-      : '<div class="mm-rv-empty">아직 등록된 후기가 없습니다.</div>';
+    if (!visible.length) {
+      grid.innerHTML = '<div class="mm-rv-empty">아직 등록된 후기가 없습니다.</div>';
+      btn.style.display = 'none';
+      return;
+    }
+
+    /* Masonry: 가로 우선 → 가장 짧은 열에 배치 */
+    var colCount = getColCount();
+    var cols = [];
+    for (var c = 0; c < colCount; c++) cols.push([]);
+
+    /* 첫 라운드: 순서대로 가로 배분 (높이 동일 가정) */
+    for (var i = 0; i < visible.length; i++) {
+      cols[i % colCount].push(renderCard(visible[i], i));
+    }
+
+    grid.innerHTML = cols.map(function(cards) {
+      return '<div class="mm-rv-col">' + cards.join('') + '</div>';
+    }).join('');
 
     btn.style.display = (visible.length < reviews.length) ? 'block' : 'none';
   }
