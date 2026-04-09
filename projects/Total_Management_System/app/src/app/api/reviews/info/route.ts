@@ -154,9 +154,27 @@ export async function GET(req: NextRequest) {
       }, { headers: CORS_HEADERS });
     }
 
+    // 판매 건 fallback: uid가 판매번호(OS-*)인 경우 offline_sales에서 조회
+    {
+      const { data: sale } = await dbAny
+        .from('offline_sales')
+        .select('customer_name, sale_date, sale_number')
+        .eq('sale_number', uid)
+        .single();
+
+      if (sale) {
+        const typeLabels: Record<string, string> = { consult: '상담', repair: '복원수리', purchase: '제품구매' };
+        return NextResponse.json({
+          name: maskName(sale.customer_name),
+          typeLabel: typeLabels[type] || type,
+          date: sale.sale_date || '',
+        }, { headers: CORS_HEADERS });
+      }
+    }
+
     return NextResponse.json(
-      { error: '지원하지 않는 유형입니다' },
-      { status: 400, headers: CORS_HEADERS }
+      { error: '정보를 찾을 수 없습니다' },
+      { status: 404, headers: CORS_HEADERS }
     );
   } catch (err) {
     console.error('[reviews/info] 조회 실패:', err);
