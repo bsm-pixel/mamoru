@@ -13,6 +13,7 @@ import { SupplierSelect } from '@/components/ui/supplier-select';
 import { ArrowLeft, Save, Package, Hash } from 'lucide-react';
 
 import { useSetting } from '@/hooks/use-settings';
+import { usePriceGroups } from '@/hooks/use-price-groups';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -20,6 +21,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const router = useRouter();
   const catLabels = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
   const categories = useSetting<string[]>('inventory.categories', Object.keys(DEFAULT_CAT_LABELS));
+  const priceGroups = usePriceGroups();
   const CATEGORY_LABEL = catLabels;
   const CATEGORY_OPTIONS = categories.map((c) => ({ value: c, label: catLabels[c] || c }));
   const { data, isLoading } = useProduct(id);
@@ -30,11 +32,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     name: '',
     category: '',
     price: 0,
-    price_dealer: 0,
-    price_academy: 0,
     price_purchase: 0,
-    dealer_name: '',
-    academy_name: '',
+    price_group_values: {} as Record<string, { price: number; display_name: string }>,
     description: '',
     imweb_product_no: '',
     barcode: '',
@@ -44,15 +43,21 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   useEffect(() => {
     if (data?.product && !editing) {
       const p = data.product;
+      const pgv: Record<string, { price: number; display_name: string }> = {};
+      if (p.price_groups) {
+        for (const [k, v] of Object.entries(p.price_groups)) {
+          pgv[k] = { price: v?.price || 0, display_name: v?.display_name || '' };
+        }
+      } else {
+        if (p.price_dealer > 0) pgv['dealer'] = { price: p.price_dealer, display_name: (p as Record<string, unknown>).dealer_name as string || '' };
+        if (p.price_academy > 0) pgv['academy'] = { price: p.price_academy, display_name: (p as Record<string, unknown>).academy_name as string || '' };
+      }
       setForm({
         name: p.name,
         category: p.category,
         price: p.price,
-        price_dealer: p.price_dealer || 0,
-        price_academy: p.price_academy || 0,
         price_purchase: p.price_purchase || 0,
-        dealer_name: (p as Record<string, unknown>).dealer_name as string || '',
-        academy_name: (p as Record<string, unknown>).academy_name as string || '',
+        price_group_values: pgv,
         description: p.description || '',
         imweb_product_no: p.imweb_product_no || '',
         barcode: p.barcode || '',
@@ -62,16 +67,23 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   }, [data, editing]);
 
   async function handleSave() {
+    const pgPayload: Record<string, { price?: number; display_name?: string }> = {};
+    for (const [key, val] of Object.entries(form.price_group_values)) {
+      if (val.price > 0 || val.display_name) {
+        pgPayload[key] = { price: val.price || undefined, display_name: val.display_name || undefined };
+      }
+    }
     await updateProduct.mutateAsync({
       id,
       name: form.name,
       category: form.category,
       price: form.price,
-      price_dealer: form.price_dealer,
-      price_academy: form.price_academy,
+      price_dealer: form.price_group_values['dealer']?.price || 0, // dual-write
+      price_academy: form.price_group_values['academy']?.price || 0, // dual-write
+      dealer_name: form.price_group_values['dealer']?.display_name || null, // dual-write
+      academy_name: form.price_group_values['academy']?.display_name || null, // dual-write
       price_purchase: form.price_purchase,
-      dealer_name: form.dealer_name || null,
-      academy_name: form.academy_name || null,
+      price_groups: pgPayload,
       description: form.description || null,
       imweb_product_no: form.imweb_product_no || null,
       barcode: form.barcode || null,
@@ -168,69 +180,40 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 </div>
               </div>
 
-              {/* 4단 가격 */}
+              {/* 가격 — 동적 단가 그룹 */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
                   <label className="text-xs text-neutral-500">소매가</label>
-                  <input
-                    type="number"
-                    value={form.price || ''}
-                    onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                  />
+                  <input type="number" value={form.price || ''} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
                 </div>
-                <div>
-                  <label className="text-xs text-neutral-500">딜러가</label>
-                  <input
-                    type="number"
-                    value={form.price_dealer || ''}
-                    onChange={(e) => setForm({ ...form, price_dealer: parseInt(e.target.value) || 0 })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-neutral-500">아카데미가</label>
-                  <input
-                    type="number"
-                    value={form.price_academy || ''}
-                    onChange={(e) => setForm({ ...form, price_academy: parseInt(e.target.value) || 0 })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                  />
-                </div>
+                {Object.entries(priceGroups).map(([key, def]) => (
+                  <div key={key}>
+                    <label className="text-xs text-neutral-500">{def.label}</label>
+                    <input type="number" value={form.price_group_values[key]?.price || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: parseInt(e.target.value) || 0, display_name: form.price_group_values[key]?.display_name || '' } } })}
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                  </div>
+                ))}
                 <div>
                   <label className="text-xs text-neutral-500">매입가</label>
-                  <input
-                    type="number"
-                    value={form.price_purchase || ''}
-                    onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                  />
+                  <input type="number" value={form.price_purchase || ''} onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
                 </div>
               </div>
 
-              {/* B2B 납품명 */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-neutral-500">딜러 납품명</label>
-                  <input
-                    type="text"
-                    value={form.dealer_name}
-                    onChange={(e) => setForm({ ...form, dealer_name: e.target.value })}
-                    placeholder="미입력 시 기본 제품명 사용"
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                  />
+              {/* 단가 그룹별 납품명 */}
+              {Object.keys(priceGroups).length > 0 && (
+                <div className="grid grid-cols-2 gap-3">
+                  {Object.entries(priceGroups).map(([key, def]) => (
+                    <div key={`dn-${key}`}>
+                      <label className="text-xs text-neutral-500">{def.label} 납품명</label>
+                      <input type="text" value={form.price_group_values[key]?.display_name || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: form.price_group_values[key]?.price || 0, display_name: e.target.value } } })}
+                        placeholder="미입력 시 기본 제품명 사용"
+                        className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label className="text-xs text-neutral-500">아카데미 납품명</label>
-                  <input
-                    type="text"
-                    value={form.academy_name}
-                    onChange={(e) => setForm({ ...form, academy_name: e.target.value })}
-                    placeholder="미입력 시 기본 제품명 사용"
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-                  />
-                </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -297,7 +280,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 </div>
               </div>
 
-              {/* 4단 가격 */}
+              {/* 가격 — 동적 단가 그룹 */}
               <div className="mt-4 pt-3 border-t border-neutral-100">
                 <h4 className="text-xs text-neutral-500 mb-2">가격 정보</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -305,14 +288,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     <p className="text-xs text-neutral-400">소매가</p>
                     <p className="text-sm font-bold text-terracotta">{formatKRW(p.price)}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-neutral-400">딜러가</p>
-                    <p className="text-sm font-bold text-purple-600">{p.price_dealer > 0 ? formatKRW(p.price_dealer) : '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-neutral-400">아카데미가</p>
-                    <p className="text-sm font-bold text-emerald-600">{p.price_academy > 0 ? formatKRW(p.price_academy) : '-'}</p>
-                  </div>
+                  {Object.entries(priceGroups).map(([key, def]) => {
+                    const groupPrice = p.price_groups?.[key]?.price;
+                    return (
+                      <div key={key}>
+                        <p className="text-xs text-neutral-400">{def.label}</p>
+                        <p className={`text-sm font-bold text-${def.color}-600`}>{groupPrice && groupPrice > 0 ? formatKRW(groupPrice) : '-'}</p>
+                      </div>
+                    );
+                  })}
                   <div>
                     <p className="text-xs text-neutral-400">매입가</p>
                     <p className="text-sm font-bold text-neutral-600">{p.price_purchase > 0 ? formatKRW(p.price_purchase) : '-'}</p>

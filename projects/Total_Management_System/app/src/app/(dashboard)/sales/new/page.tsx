@@ -11,6 +11,8 @@ import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
 import { SerialPicker } from '@/components/sales/serial-picker';
+import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
+import { usePriceGroups } from '@/hooks/use-price-groups';
 import type { Product } from '@/lib/supabase/types';
 
 interface CartItem {
@@ -28,20 +30,6 @@ function cartItemKey(item: CartItem): string {
   return item.product ? item.product.id : `custom-${item.customName}-${item.customPrice}`;
 }
 
-/** 고객 유형에 따른 단가 결정 */
-function getUnitPrice(product: Product, customerType?: string): number {
-  if (customerType === 'dealer' && product.price_dealer > 0) return product.price_dealer;
-  if (customerType === 'academy' && product.price_academy > 0) return product.price_academy;
-  return product.price;
-}
-
-/** 고객 유형에 따른 납품명 결정 (B2B 납품명 우선, 없으면 기본 제품명) */
-function getProductDisplayName(product: Product, customerType?: string): string {
-  if (customerType === 'dealer' && (product as Record<string, unknown>).dealer_name) return String((product as Record<string, unknown>).dealer_name);
-  if (customerType === 'academy' && (product as Record<string, unknown>).academy_name) return String((product as Record<string, unknown>).academy_name);
-  return product.name;
-}
-
 export default function NewSalePage() {
   return (
     <Suspense fallback={null}>
@@ -56,6 +44,7 @@ function NewSaleContent() {
   const contractId = searchParams?.get('contract_id') || null;
   const { data: products = [], isLoading: productsLoading } = useProducts();
   const createSale = useCreateSale();
+  const priceGroups = usePriceGroups();
 
   const [saleDate, setSaleDate] = useState(new Date().toISOString().slice(0, 10));
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -87,7 +76,7 @@ function NewSaleContent() {
   const [customProductPrice, setCustomProductPrice] = useState('');
 
   function addToCart(product: Product) {
-    const price = getUnitPrice(product, customerType);
+    const price = getUnitPrice(product, customerType, priceGroups);
     setCart((prev) => {
       const existing = prev.find((item) => item.product?.id === product.id);
       if (existing) {
@@ -115,7 +104,7 @@ function NewSaleContent() {
   function recalcCartPrices(type?: string) {
     setCart((prev) => prev.map((item) => ({
       ...item,
-      unitPrice: item.product ? getUnitPrice(item.product, type) : item.unitPrice,
+      unitPrice: item.product ? getUnitPrice(item.product, type, priceGroups) : item.unitPrice,
     })));
   }
 
@@ -177,7 +166,7 @@ function NewSaleContent() {
       },
       items: cart.map((item) => ({
         product_id: item.product?.id || undefined,
-        product_name: item.product ? getProductDisplayName(item.product, customerType) : (item.customName || '임시 제품'),
+        product_name: item.product ? getProductDisplayName(item.product, customerType, priceGroups) : (item.customName || '임시 제품'),
         sku: item.product?.sku || undefined,
         quantity: item.quantity,
         unit_price: item.unitPrice,
@@ -268,9 +257,8 @@ function NewSaleContent() {
                     <tbody className="divide-y divide-neutral-100">
                       {filteredProducts.map((p) => {
                         const inCart = cart.find((c) => c.product?.id === p.id);
-                        const price = getUnitPrice(p, customerType);
-                        const isDiscounted = (customerType === 'dealer' && p.price_dealer > 0) ||
-                          (customerType === 'academy' && p.price_academy > 0);
+                        const price = getUnitPrice(p, customerType, priceGroups);
+                        const isDiscounted = hasGroupPrice(p, customerType, priceGroups);
                         return (
                           <tr
                             key={p.id}
@@ -280,7 +268,7 @@ function NewSaleContent() {
                             }`}
                           >
                             <td className="px-3 py-2.5">
-                              <span className="font-medium text-indigo-black">{getProductDisplayName(p, customerType)}</span>
+                              <span className="font-medium text-indigo-black">{getProductDisplayName(p, customerType, priceGroups)}</span>
                               {inCart && <span className="ml-2 text-xs font-bold text-neutral-900">×{inCart.quantity}</span>}
                             </td>
                             <td className="px-3 py-2.5 text-right">

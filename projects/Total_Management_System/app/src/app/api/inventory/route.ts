@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
     .from('products')
-    .select('id, name, sku, category, price, price_dealer, price_purchase, stock_quantity, raw_stock, is_active, barcode')
+    .select('id, name, sku, category, price, price_dealer, price_purchase, price_groups, stock_quantity, raw_stock, is_active, barcode')
     .eq('is_active', true)
     .order('name');
 

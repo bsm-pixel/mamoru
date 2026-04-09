@@ -90,6 +90,7 @@ export async function syncProducts(): Promise<SyncResult> {
               category: 'BL', // 기본값, TMS에서 수동 변경
               price_dealer: 0,
               price_purchase: 0,
+              price_groups: {},
               raw_stock: stockQty > 0 ? stockQty : 0, // 아임웹 재고 → 보관창고
               created_at: new Date().toISOString(),
             });

@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCreateProduct } from '@/hooks/use-product-detail';
 import { SupplierSelect } from '@/components/ui/supplier-select';
+import { usePriceGroups } from '@/hooks/use-price-groups';
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 
 const CATEGORY_OPTIONS = [
@@ -19,6 +20,7 @@ const CATEGORY_OPTIONS = [
 export default function NewProductPage() {
   const router = useRouter();
   const createProduct = useCreateProduct();
+  const priceGroups = usePriceGroups();
   const [skuStatus, setSkuStatus] = useState<'idle' | 'checking' | 'available' | 'duplicate'>('idle');
 
   const [form, setForm] = useState({
@@ -26,9 +28,8 @@ export default function NewProductPage() {
     name: '',
     category: 'BL',
     price: 0,
-    price_dealer: 0,
-    price_academy: 0,
     price_purchase: 0,
+    price_group_values: {} as Record<string, { price: number; display_name: string }>,
     description: '',
     imweb_product_no: '',
     barcode: '',
@@ -38,14 +39,23 @@ export default function NewProductPage() {
   async function handleSubmit() {
     if (!form.sku.trim() || !form.name.trim()) return;
 
+    // price_groups JSONB 조립 (0 이상인 그룹만)
+    const pgPayload: Record<string, { price?: number; display_name?: string }> = {};
+    for (const [key, val] of Object.entries(form.price_group_values)) {
+      if (val.price > 0 || val.display_name) {
+        pgPayload[key] = { price: val.price || undefined, display_name: val.display_name || undefined };
+      }
+    }
+
     await createProduct.mutateAsync({
       sku: form.sku.trim(),
       name: form.name.trim(),
       category: form.category,
       price: form.price,
-      price_dealer: form.price_dealer || undefined,
-      price_academy: form.price_academy || undefined,
+      price_dealer: form.price_group_values['dealer']?.price || undefined,  // dual-write
+      price_academy: form.price_group_values['academy']?.price || undefined, // dual-write
       price_purchase: form.price_purchase || undefined,
+      price_groups: pgPayload,
       description: form.description.trim() || undefined,
       imweb_product_no: form.imweb_product_no.trim() || undefined,
       barcode: form.barcode.trim() || undefined,
@@ -141,26 +151,19 @@ export default function NewProductPage() {
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
               />
             </div>
-            <div>
-              <label className="text-xs text-neutral-500">딜러가</label>
-              <input
-                type="number"
-                value={form.price_dealer || ''}
-                onChange={(e) => setForm({ ...form, price_dealer: parseInt(e.target.value) || 0 })}
-                placeholder="0"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-neutral-500">아카데미가</label>
-              <input
-                type="number"
-                value={form.price_academy || ''}
-                onChange={(e) => setForm({ ...form, price_academy: parseInt(e.target.value) || 0 })}
-                placeholder="0"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-              />
-            </div>
+            {/* 동적 단가 그룹 */}
+            {Object.entries(priceGroups).map(([key, def]) => (
+              <div key={key}>
+                <label className="text-xs text-neutral-500">{def.label}</label>
+                <input
+                  type="number"
+                  value={form.price_group_values[key]?.price || ''}
+                  onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: parseInt(e.target.value) || 0, display_name: form.price_group_values[key]?.display_name || '' } } })}
+                  placeholder="0"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                />
+              </div>
+            ))}
             <div>
               <label className="text-xs text-neutral-500">매입가</label>
               <input
@@ -172,6 +175,23 @@ export default function NewProductPage() {
               />
             </div>
           </div>
+          {/* 단가 그룹별 납품명 */}
+          {Object.entries(priceGroups).length > 0 && (
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              {Object.entries(priceGroups).map(([key, def]) => (
+                <div key={`dn-${key}`}>
+                  <label className="text-xs text-neutral-500">{def.label} 납품명</label>
+                  <input
+                    type="text"
+                    value={form.price_group_values[key]?.display_name || ''}
+                    onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: form.price_group_values[key]?.price || 0, display_name: e.target.value } } })}
+                    placeholder="미입력 시 기본 제품명 사용"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         <Card>

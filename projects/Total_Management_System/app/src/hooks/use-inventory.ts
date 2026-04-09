@@ -10,6 +10,7 @@ export interface InventoryItem {
   price: number;
   price_dealer: number;
   price_purchase: number;
+  price_groups: Record<string, { price?: number | null; display_name?: string | null }> | null;
   barcode: string | null;
   stock_quantity: number;
   raw_stock: number;

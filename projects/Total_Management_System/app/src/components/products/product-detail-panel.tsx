@@ -16,12 +16,13 @@ import { Save, Package, Hash, X, Receipt, Boxes, Plus, Archive, Copy, Eye, EyeOf
 import toast from 'react-hot-toast';
 
 import { useSetting } from '@/hooks/use-settings';
+import { usePriceGroups } from '@/hooks/use-price-groups';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 
 interface Props {
   productId?: string;
   mode?: 'view' | 'create' | 'duplicate';
-  duplicateData?: { name: string; category: string; price: number; price_dealer: number; price_academy: number; price_purchase: number; description: string; imweb_product_no: string; barcode?: string; supplier_id: string };
+  duplicateData?: { name: string; category: string; price: number; price_dealer: number; price_academy: number; price_purchase: number; price_groups?: Record<string, { price?: number | null; display_name?: string | null }> | null; description: string; imweb_product_no: string; barcode?: string; supplier_id: string };
   onClose: () => void;
   onCreated?: (id: string) => void;
 }
@@ -35,6 +36,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const createProduct = useCreateProduct();
   const catLabels = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
   const categories = useSetting<string[]>('inventory.categories', Object.keys(DEFAULT_CAT_LABELS));
+  const priceGroups = usePriceGroups();
   const CATEGORY_LABEL = catLabels;
   const CATEGORY_OPTIONS = categories.map((c) => ({ value: c, label: catLabels[c] || c }));
   const [editing, setEditing] = useState(false);
@@ -43,8 +45,9 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({
-    sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0,
-    dealer_name: '', academy_name: '', use_stock: true,
+    sku: '', name: '', category: 'BL', price: 0, price_purchase: 0,
+    price_group_values: {} as Record<string, { price: number; display_name: string }>,
+    use_stock: true,
     description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '',
   });
 
@@ -65,10 +68,20 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   // create/duplicate 모드 초기화
   useEffect(() => {
     if (mode === 'create') {
-      setForm({ sku: '', name: '', category: 'BL', price: 0, price_dealer: 0, price_academy: 0, price_purchase: 0, dealer_name: '', academy_name: '', use_stock: true, description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '' });
+      setForm({ sku: '', name: '', category: 'BL', price: 0, price_purchase: 0, price_group_values: {}, use_stock: true, description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '' });
       fetchNextSku('BL');
     } else if (mode === 'duplicate' && duplicateData) {
-      setForm({ sku: '', barcode: '', product_group: '', dealer_name: '', academy_name: '', use_stock: true, ...duplicateData, name: '' });
+      // 기존 price_groups 또는 레거시 컬럼에서 price_group_values 복원
+      const pgv: Record<string, { price: number; display_name: string }> = {};
+      if (duplicateData.price_groups) {
+        for (const [k, v] of Object.entries(duplicateData.price_groups)) {
+          pgv[k] = { price: v?.price || 0, display_name: v?.display_name || '' };
+        }
+      } else {
+        if (duplicateData.price_dealer > 0) pgv['dealer'] = { price: duplicateData.price_dealer, display_name: '' };
+        if (duplicateData.price_academy > 0) pgv['academy'] = { price: duplicateData.price_academy, display_name: '' };
+      }
+      setForm({ sku: '', barcode: '', product_group: '', use_stock: true, name: '', category: duplicateData.category, price: duplicateData.price, price_purchase: duplicateData.price_purchase, price_group_values: pgv, description: duplicateData.description, imweb_product_no: duplicateData.imweb_product_no, supplier_id: duplicateData.supplier_id });
       fetchNextSku(duplicateData.category || 'BL');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -77,10 +90,21 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   useEffect(() => {
     if (data?.product && !editing && mode === 'view') {
       const p = data.product;
+      // price_groups JSONB → 폼 state 변환
+      const pgv: Record<string, { price: number; display_name: string }> = {};
+      if (p.price_groups) {
+        for (const [k, v] of Object.entries(p.price_groups)) {
+          pgv[k] = { price: v?.price || 0, display_name: v?.display_name || '' };
+        }
+      } else {
+        // fallback: 레거시 컬럼에서 복원
+        if (p.price_dealer > 0) pgv['dealer'] = { price: p.price_dealer, display_name: (p as Record<string, unknown>).dealer_name as string || '' };
+        if (p.price_academy > 0) pgv['academy'] = { price: p.price_academy, display_name: (p as Record<string, unknown>).academy_name as string || '' };
+      }
       setForm({
         sku: p.sku || '', name: p.name, category: p.category, price: p.price,
-        price_dealer: p.price_dealer || 0, price_academy: p.price_academy || 0, price_purchase: p.price_purchase || 0,
-        dealer_name: (p as Record<string, unknown>).dealer_name as string || '', academy_name: (p as Record<string, unknown>).academy_name as string || '',
+        price_purchase: p.price_purchase || 0,
+        price_group_values: pgv,
         use_stock: p.stock_quantity !== -1,
         description: p.description || '', imweb_product_no: p.imweb_product_no || '',
         barcode: p.barcode || '', supplier_id: p.supplier_id || '', product_group: p.product_group || '',
@@ -103,11 +127,23 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
         ? { stock_quantity: 0 }
         : {};
 
+    // price_groups JSONB 조립
+    const pgPayload: Record<string, { price?: number; display_name?: string }> = {};
+    for (const [key, val] of Object.entries(form.price_group_values)) {
+      if (val.price > 0 || val.display_name) {
+        pgPayload[key] = { price: val.price || undefined, display_name: val.display_name || undefined };
+      }
+    }
+
     await updateProduct.mutateAsync({
       id: productId,
       name: form.name, category: form.category, price: form.price,
-      price_dealer: form.price_dealer, price_academy: form.price_academy, price_purchase: form.price_purchase,
-      dealer_name: form.dealer_name || null, academy_name: form.academy_name || null,
+      price_dealer: form.price_group_values['dealer']?.price || 0,  // dual-write
+      price_academy: form.price_group_values['academy']?.price || 0, // dual-write
+      dealer_name: form.price_group_values['dealer']?.display_name || null, // dual-write
+      academy_name: form.price_group_values['academy']?.display_name || null, // dual-write
+      price_purchase: form.price_purchase,
+      price_groups: pgPayload,
       ...stockUpdate,
       description: form.description || null, imweb_product_no: form.imweb_product_no || null,
       barcode: form.barcode || null, supplier_id: form.supplier_id || null,
@@ -118,10 +154,18 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
 
   async function handleCreate() {
     if (!form.sku.trim() || !form.name.trim()) { toast.error('SKU와 제품명을 입력해주세요'); return; }
+    const pgPayload: Record<string, { price?: number; display_name?: string }> = {};
+    for (const [key, val] of Object.entries(form.price_group_values)) {
+      if (val.price > 0 || val.display_name) {
+        pgPayload[key] = { price: val.price || undefined, display_name: val.display_name || undefined };
+      }
+    }
     const result = await createProduct.mutateAsync({
       sku: form.sku.trim(), name: form.name.trim(), category: form.category, price: form.price,
-      price_dealer: form.price_dealer || undefined, price_academy: form.price_academy || undefined,
-      price_purchase: form.price_purchase || undefined, description: form.description.trim() || undefined,
+      price_dealer: form.price_group_values['dealer']?.price || undefined, // dual-write
+      price_academy: form.price_group_values['academy']?.price || undefined, // dual-write
+      price_purchase: form.price_purchase || undefined, price_groups: pgPayload,
+      description: form.description.trim() || undefined,
       imweb_product_no: form.imweb_product_no.trim() || undefined, barcode: form.barcode.trim() || undefined,
       supplier_id: form.supplier_id || undefined,
     });
@@ -175,37 +219,32 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
                 <input type="number" value={form.price || ''} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
               </div>
-              <div>
-                <label className="text-xs text-neutral-500">딜러가</label>
-                <input type="number" value={form.price_dealer || ''} onChange={(e) => setForm({ ...form, price_dealer: parseInt(e.target.value) || 0 })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-              </div>
-              <div>
-                <label className="text-xs text-neutral-500">아카데미가</label>
-                <input type="number" value={form.price_academy || ''} onChange={(e) => setForm({ ...form, price_academy: parseInt(e.target.value) || 0 })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-              </div>
+              {Object.entries(priceGroups).map(([key, def]) => (
+                <div key={key}>
+                  <label className="text-xs text-neutral-500">{def.label}</label>
+                  <input type="number" value={form.price_group_values[key]?.price || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: parseInt(e.target.value) || 0, display_name: form.price_group_values[key]?.display_name || '' } } })}
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                </div>
+              ))}
               <div>
                 <label className="text-xs text-neutral-500">매입가</label>
                 <input type="number" value={form.price_purchase || ''} onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
               </div>
             </div>
-            {/* B2B 납품명 */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-neutral-500">딜러 납품명</label>
-                <input type="text" value={form.dealer_name} onChange={(e) => setForm({ ...form, dealer_name: e.target.value })}
-                  placeholder="미입력 시 기본 제품명"
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            {/* 단가 그룹별 납품명 */}
+            {Object.keys(priceGroups).length > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(priceGroups).map(([key, def]) => (
+                  <div key={`dn-${key}`}>
+                    <label className="text-xs text-neutral-500">{def.label} 납품명</label>
+                    <input type="text" value={form.price_group_values[key]?.display_name || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: form.price_group_values[key]?.price || 0, display_name: e.target.value } } })}
+                      placeholder="미입력 시 기본 제품명"
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                  </div>
+                ))}
               </div>
-              <div>
-                <label className="text-xs text-neutral-500">아카데미 납품명</label>
-                <input type="text" value={form.academy_name} onChange={(e) => setForm({ ...form, academy_name: e.target.value })}
-                  placeholder="미입력 시 기본 제품명"
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-              </div>
-            </div>
+            )}
             <div>
               <label className="text-xs text-neutral-500">매입처</label>
               <SupplierSelect value={form.supplier_id} onChange={(id) => setForm({ ...form, supplier_id: id })} placeholder="매입처 선택" />
@@ -336,37 +375,32 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
                 <input type="number" value={form.price || ''} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
               </div>
-              <div>
-                <label className="text-xs text-neutral-500">딜러가</label>
-                <input type="number" value={form.price_dealer || ''} onChange={(e) => setForm({ ...form, price_dealer: parseInt(e.target.value) || 0 })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-              </div>
-              <div>
-                <label className="text-xs text-neutral-500">아카데미가</label>
-                <input type="number" value={form.price_academy || ''} onChange={(e) => setForm({ ...form, price_academy: parseInt(e.target.value) || 0 })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-              </div>
+              {Object.entries(priceGroups).map(([key, def]) => (
+                <div key={key}>
+                  <label className="text-xs text-neutral-500">{def.label}</label>
+                  <input type="number" value={form.price_group_values[key]?.price || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: parseInt(e.target.value) || 0, display_name: form.price_group_values[key]?.display_name || '' } } })}
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                </div>
+              ))}
               <div>
                 <label className="text-xs text-neutral-500">매입가</label>
                 <input type="number" value={form.price_purchase || ''} onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
               </div>
             </div>
-            {/* B2B 납품명 */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-neutral-500">딜러 납품명</label>
-                <input type="text" value={form.dealer_name} onChange={(e) => setForm({ ...form, dealer_name: e.target.value })}
-                  placeholder="미입력 시 기본 제품명"
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            {/* 단가 그룹별 납품명 */}
+            {Object.keys(priceGroups).length > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(priceGroups).map(([key, def]) => (
+                  <div key={`dn-${key}`}>
+                    <label className="text-xs text-neutral-500">{def.label} 납품명</label>
+                    <input type="text" value={form.price_group_values[key]?.display_name || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: form.price_group_values[key]?.price || 0, display_name: e.target.value } } })}
+                      placeholder="미입력 시 기본 제품명"
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                  </div>
+                ))}
               </div>
-              <div>
-                <label className="text-xs text-neutral-500">아카데미 납품명</label>
-                <input type="text" value={form.academy_name} onChange={(e) => setForm({ ...form, academy_name: e.target.value })}
-                  placeholder="미입력 시 기본 제품명"
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
-              </div>
-            </div>
+            )}
             <div>
               <label className="text-xs text-neutral-500">매입처</label>
               <SupplierSelect value={form.supplier_id} displayName={supplier?.name}
@@ -428,14 +462,15 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
                 <p className="text-xs text-neutral-400">소매가</p>
                 <p className="text-sm font-bold">{formatKRW(p.price)}</p>
               </div>
-              <div>
-                <p className="text-xs text-neutral-400">딜러가</p>
-                <p className="text-sm font-bold text-purple-600">{p.price_dealer > 0 ? formatKRW(p.price_dealer) : '-'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-neutral-400">아카데미가</p>
-                <p className="text-sm font-bold text-emerald-600">{p.price_academy > 0 ? formatKRW(p.price_academy) : '-'}</p>
-              </div>
+              {Object.entries(priceGroups).map(([key, def]) => {
+                const groupPrice = p.price_groups?.[key]?.price;
+                return (
+                  <div key={key}>
+                    <p className="text-xs text-neutral-400">{def.label}</p>
+                    <p className={`text-sm font-bold text-${def.color}-600`}>{groupPrice && groupPrice > 0 ? formatKRW(groupPrice) : '-'}</p>
+                  </div>
+                );
+              })}
               <div>
                 <p className="text-xs text-neutral-400">매입가</p>
                 <p className="text-sm font-bold text-neutral-600">{p.price_purchase > 0 ? formatKRW(p.price_purchase) : '-'}</p>

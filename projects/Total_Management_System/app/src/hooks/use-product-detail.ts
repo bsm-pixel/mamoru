@@ -30,6 +30,7 @@ export function useCreateProduct() {
       price_dealer?: number;
       price_academy?: number;
       price_purchase?: number;
+      price_groups?: Record<string, { price?: number; display_name?: string }>;
       supplier_id?: string;
       description?: string;
       imweb_product_no?: string;
@@ -67,6 +68,7 @@ export function useUpdateProduct() {
       price_dealer?: number;
       price_academy?: number;
       price_purchase?: number;
+      price_groups?: Record<string, { price?: number; display_name?: string }>;
       dealer_name?: string | null;
       academy_name?: string | null;
       stock_quantity?: number;

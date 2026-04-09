@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Plus, X, Upload } from 'lucide-react';
+import { Save, Plus, X, Upload, Trash2 } from 'lucide-react';
+import type { PriceGroupDef } from '@/lib/utils/pricing';
+import { DEFAULT_PRICE_GROUPS } from '@/lib/utils/pricing';
 import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
@@ -25,8 +27,9 @@ export default function SalesSettings({ settings, onSave, saving }: TabProps) {
   const [newMethod, setNewMethod] = useState('');
   const [channels, setChannels] = useState<string[]>(['offline', 'online', 'talk']);
   const [newChannel, setNewChannel] = useState('');
-  const [dealerDiscount, setDealerDiscount] = useState(0);
-  const [academyDiscount, setAcademyDiscount] = useState(0);
+  const [priceGroupDefs, setPriceGroupDefs] = useState<Record<string, PriceGroupDef>>(DEFAULT_PRICE_GROUPS);
+  const [newGroupSlug, setNewGroupSlug] = useState('');
+  const [newGroupLabel, setNewGroupLabel] = useState('');
   const [blockZeroStock, setBlockZeroStock] = useState(false);
   const [defaultVat, setDefaultVat] = useState(true);
   const [autoTaxInvoice, setAutoTaxInvoice] = useState(false);
@@ -38,8 +41,7 @@ export default function SalesSettings({ settings, onSave, saving }: TabProps) {
     setReceiptFooter(parse(settings['sales.receipt_footer'], ''));
     setPaymentMethods(parse(settings['sales.payment_methods'], ['card', 'cash', 'transfer', 'mixed']));
     setChannels(parse(settings['sales.channels'], ['offline', 'online', 'talk']));
-    setDealerDiscount(parse(settings['sales.dealer_discount'], 0));
-    setAcademyDiscount(parse(settings['sales.academy_discount'], 0));
+    setPriceGroupDefs(parse(settings['pricing.groups'], DEFAULT_PRICE_GROUPS));
     setBlockZeroStock(parse(settings['sales.block_zero_stock'], false));
     setDefaultVat(parse(settings['sales.default_vat_included'], true));
     setAutoTaxInvoice(parse(settings['sales.auto_tax_invoice'], false));
@@ -52,8 +54,7 @@ export default function SalesSettings({ settings, onSave, saving }: TabProps) {
       { key: 'sales.receipt_footer', value: receiptFooter },
       { key: 'sales.payment_methods', value: paymentMethods },
       { key: 'sales.channels', value: channels },
-      { key: 'sales.dealer_discount', value: dealerDiscount },
-      { key: 'sales.academy_discount', value: academyDiscount },
+      { key: 'pricing.groups', value: priceGroupDefs },
       { key: 'sales.block_zero_stock', value: blockZeroStock },
       { key: 'sales.default_vat_included', value: defaultVat },
       { key: 'sales.auto_tax_invoice', value: autoTaxInvoice },
@@ -164,22 +165,84 @@ export default function SalesSettings({ settings, onSave, saving }: TabProps) {
         </div>
       </Field>
 
-      {/* 6. 할인율 */}
-      <Field label="B2B 기본 할인율" desc="딜러/아카데미 고객에게 자동 적용되는 할인.">
-        <div className="flex gap-4">
-          <div className="flex items-center gap-1">
-            <span className="text-sm">딜러</span>
-            <input type="number" value={dealerDiscount} onChange={(e) => setDealerDiscount(Number(e.target.value))}
-              className="w-16 h-9 px-2 rounded-lg border border-neutral-200 text-sm text-center" min={0} max={100} />
-            <span className="text-sm">%</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-sm">아카데미</span>
-            <input type="number" value={academyDiscount} onChange={(e) => setAcademyDiscount(Number(e.target.value))}
-              className="w-16 h-9 px-2 rounded-lg border border-neutral-200 text-sm text-center" min={0} max={100} />
-            <span className="text-sm">%</span>
-          </div>
+      {/* 6. 단가 그룹 관리 */}
+      <Field label="단가 그룹 관리" desc="고객 유형별 전용 가격 그룹. 제품 등록/수정 시 그룹별 가격을 입력할 수 있습니다.">
+        <div className="space-y-2 mb-3">
+          {Object.entries(priceGroupDefs).map(([slug, def]) => (
+            <div key={slug} className="flex items-center gap-2 p-2.5 rounded-lg border border-neutral-200 bg-neutral-50">
+              <div className={`w-3 h-3 rounded-full bg-${def.color}-500 shrink-0`} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{def.label}</span>
+                  <span className="text-[11px] text-neutral-400 font-mono">{slug}</span>
+                </div>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-[11px] text-neutral-400">연결 고객유형:</span>
+                  {def.customerTypes.map((ct) => (
+                    <span key={ct} className="text-[11px] px-1.5 py-0.5 bg-neutral-200 rounded">{ct}</span>
+                  ))}
+                </div>
+              </div>
+              <input
+                type="text"
+                value={def.label}
+                onChange={(e) => setPriceGroupDefs({ ...priceGroupDefs, [slug]: { ...def, label: e.target.value } })}
+                className="w-24 h-7 px-2 text-xs rounded border border-neutral-200"
+                placeholder="라벨"
+              />
+              <select
+                value={def.color}
+                onChange={(e) => setPriceGroupDefs({ ...priceGroupDefs, [slug]: { ...def, color: e.target.value } })}
+                className="h-7 px-1 text-xs rounded border border-neutral-200"
+              >
+                {['purple', 'emerald', 'blue', 'orange', 'rose', 'amber', 'cyan', 'indigo'].map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => {
+                  const next = { ...priceGroupDefs };
+                  delete next[slug];
+                  setPriceGroupDefs(next);
+                }}
+                className="w-6 h-6 rounded hover:bg-red-100 flex items-center justify-center text-neutral-400 hover:text-red-500"
+                title="삭제"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+          ))}
         </div>
+        <div className="flex gap-2">
+          <input
+            value={newGroupSlug}
+            onChange={(e) => setNewGroupSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+            placeholder="키 (영문, 예: wholesale)"
+            className="w-32 h-8 px-3 rounded-lg border border-neutral-200 text-sm font-mono"
+          />
+          <input
+            value={newGroupLabel}
+            onChange={(e) => setNewGroupLabel(e.target.value)}
+            placeholder="라벨 (예: 도매가)"
+            className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm"
+          />
+          <button
+            onClick={() => {
+              if (newGroupSlug && newGroupLabel && !priceGroupDefs[newGroupSlug]) {
+                setPriceGroupDefs({
+                  ...priceGroupDefs,
+                  [newGroupSlug]: { label: newGroupLabel, color: 'blue', customerTypes: [newGroupSlug] },
+                });
+                setNewGroupSlug('');
+                setNewGroupLabel('');
+              }
+            }}
+            className="px-2 rounded-lg bg-neutral-100 hover:bg-neutral-200"
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+        <p className="text-[11px] text-neutral-400 mt-1">그룹 추가 후 고객 관리에서 해당 고객유형을 지정하면 판매 시 자동 적용됩니다.</p>
       </Field>
 
       {/* 7. 재고 부족 시 판매 차단 */}

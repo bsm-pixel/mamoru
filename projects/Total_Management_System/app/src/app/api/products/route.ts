@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { sku, name, category, price, price_dealer, price_academy, price_purchase, supplier_id, description, imweb_product_no, barcode, image_url } = body;
+    const { sku, name, category, price, price_dealer, price_academy, price_purchase, price_groups, supplier_id, description, imweb_product_no, barcode, image_url } = body;
 
     if (!sku?.trim() || !name?.trim()) {
       return NextResponse.json({ error: 'SKU와 제품명은 필수입니다' }, { status: 400 });
@@ -70,9 +70,10 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         category: category || '',
         price: price || 0,
-        price_dealer: price_dealer || 0,
-        price_academy: price_academy || 0,
+        price_dealer: price_dealer || 0, // dual-write (전환기)
+        price_academy: price_academy || 0, // dual-write (전환기)
         price_purchase: price_purchase || 0,
+        price_groups: price_groups || {},
         supplier_id: supplier_id || null,
         description: description || null,
         imweb_product_no: imweb_product_no || null,
