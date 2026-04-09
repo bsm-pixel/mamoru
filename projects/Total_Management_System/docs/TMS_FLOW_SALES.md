@@ -112,6 +112,9 @@
 | 매입처 드롭다운 | SupplierSelect 컴포넌트 |
 | 성능 | SaleRow React.memo, 재고/아임웹 병렬 처리 (03-22) |
 | 이카운트 이관 | CSV 분할 업로드 + 일자 정제 + 금액 보정 (03-24) |
+| 후기 요청 알림톡 | 판매 상세→후기 요청 버튼→솔라피 알림톡→리뷰 페이지 (04-09) |
+| 리뷰 info API OS-* 대응 | uid가 판매번호(OS-*)일 때 offline_sales fallback 조회 (04-09) |
+| 후기 webhook 변수 매핑 | consult_uid/as_uid 추가로 솔라피 템플릿 변수 정상 매핑 (04-09) |
 | 고객 연락처 연동 | 판매 모달에서 customers.phone 최신 표시 (03-24) |
 | 연락처 포맷 | 010-1234-5678 하이픈 자동 표시 (03-24) |
 | 탭 필터 | 전체/오늘/미수금/취소 탭 바 + 탭별 건수 표시 (03-25) |
@@ -140,3 +143,17 @@
 | 판매 수정 기능 | 낮음 |
 | 판매 모달→계약서 작성 CTA | 중간 |
 | 판매전환+알림톡 활성화 (템플릿 등록 필요) | 중간 |
+
+### 후기 요청 흐름 (04-09 완료)
+```
+(판매 상세 페이지)
+  → "후기 요청" 버튼 클릭
+  → POST /api/reviews/request (sale_id, review_type, subtype)
+    → offline_sales에서 고객 정보 조회
+    → 리뷰 URL 생성: page_review.html?type=TYPE&uid=OS-XXX&name=NAME&subtype=...
+    → Make webhook 발송 (uid, consult_uid, as_uid, review_url 포함)
+  → 솔라피 알림톡 발송 (고객에게 리뷰 링크 포함)
+  → 고객이 링크 클릭 → page_review.html
+    → uid(OS-*)로 /api/reviews/info 조회 (offline_sales fallback)
+    → 고객 정보 자동 표시 → 후기 작성 폼
+```
