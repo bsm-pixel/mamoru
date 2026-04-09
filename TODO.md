@@ -1,6 +1,6 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-09 (판매→후기 요청 알림톡 uid 누락 수정 + 리뷰 info API OS-* 대응)
+> 최종 수정: 2026-04-10 (후기 2열 Masonry+네이버칩+모달 뷰포트+tap-highlight+ADDENDUM 동기화)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
@@ -18,17 +18,19 @@
 
 ---
 
-## 📌 내일 할 것 (04-08)
+## 📌 내일 할 것 (04-11)
+
+### 아임웹 반영 (사장님 수동)
+- [ ] 카테고리바 v2.0 각 카테고리 페이지 코드위젯 교체 (5개 — active+배너 텍스트만 변경)
+- [ ] 후기 페이지(/62) 코드위젯 → iframe_reviews.html 교체
+- [ ] 아임웹 Header Code 상단 교체 (header_code_top.txt)
+- [ ] 아임웹 Footer Code 교체 (footer_code.txt)
+- [ ] 메인 이미지 삽입 — Before/After, 컨설팅, 도구 카드 (촬영분)
 
 ### 메인 페이지
-- [ ] 아임웹 배치 최종 확인 — top → 이름표(첫구매) → 기획전 → 이름표(라인업) → 기획전 → btm
+- [ ] 아임웹 배치 최종 확인 — top → 이름표 → 기획전 → btm 순서
 - [ ] 이름표 코드위젯 섹션 배경색 #FAF9F7 설정
-- [ ] 쇼핑기획전 공통 디자인 코드 적용 확인
-- [ ] 카테고리바 v2.0 각 카테고리 페이지에 교체 (active+배너 텍스트만 변경)
-- [ ] 아임웹 Header Code 상단 교체 (header_code_top.txt — 폰트 preconnect)
-- [ ] 아임웹 Footer Code 교체 (footer_code.txt — 메인 top/btm ID 추가)
-- [ ] 모바일 퀵네비 스크롤 힌트(›) 표시 확인
-- [ ] 도구 카드 이미지 삽입
+- [ ] 모바일 퀵네비 스크롤 힌트 확인
 
 ### TMS
 - [ ] 대시보드 할일 메모 테스트
@@ -240,6 +242,28 @@
 
 ### 비용 절감
 - [x] Vercel Ignored Build Step 설정 — TMS 미변경 시 빌드 스킵 ✅
+
+</details>
+
+<details>
+<summary>04-10 작업 (클릭하여 펼치기)</summary>
+
+### 후기 페이지 리뉴얼
+- [x] 모바일 2열 Masonry 레이아웃 (잡지 스타일, 가로 우선 배치) ✅
+- [x] PC 4열 / 태블릿 2열 / 모바일 2열 반응형 ✅
+- [x] 네이버 출처 연녹색 칩 (카드+모달 동일) ✅
+- [x] 이미지 비율 16:9→4:5 세로형 (모바일) ✅
+- [x] 텍스트 3줄 clamp + 미리보기 50자 ✅
+- [x] 탭 버튼 줄바꿈 방지 (nowrap + 가로 스크롤) ✅
+- [x] 모달 iframe 뷰포트 센터링 (MAMORU_REQUEST_VIEWPORT) ✅
+- [x] iframe_reviews.html 래퍼 생성 + ImwebWidgetCode_reviews.html 삭제 ✅
+
+### 전 페이지 공통
+- [x] -webkit-tap-highlight-color: transparent 전 page_*.html 일괄 적용 ✅
+- [x] ADDENDUM_IMWEB.md 전면 동기화 (GAS→Vercel, 파일명 통일, 폰트 하한선, tap-highlight 규칙) ✅
+
+### 정리
+- [x] GAS 시절 구버전 4개 삭제 (consulting/_gas/) ✅
 
 </details>
 
