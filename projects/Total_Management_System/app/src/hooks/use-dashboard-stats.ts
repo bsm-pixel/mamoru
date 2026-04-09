@@ -142,7 +142,7 @@ export function useHubStats() {
           .gte('sale_date', monthStartDate)
           .is('cancelled_at', null),
         // 복원수리 매출 A: 접수시스템 (입금 확인된 건)
-        db.from('repairs').select('total_amount')
+        db.from('repairs').select('total_amount, qty_mamoru, qty_other')
           .not('paid_at', 'is', null)
           .gte('created_at', monthISO)
           .not('status', 'eq', 'cancelled'),
@@ -195,9 +195,19 @@ export function useHubStats() {
           weekRepairMamoru,
           weekRepairOther,
           ...(() => {
-            // 접수시스템 매출 (repairs 테이블)
-            const repairA = (monthRepairsPaid.data || []).reduce((s: number, r: { total_amount: number }) => s + (r.total_amount || 0), 0);
-            const repairACount = (monthRepairsPaid.data || []).length;
+            // 접수시스템 매출 — 마모루 1만원, 타사 2만원 고정단가 (배송비 제외)
+            const REPAIR_PRICE_MAMORU = 10000;
+            const REPAIR_PRICE_OTHER = 20000;
+            const repairRows = (monthRepairsPaid.data || []) as Array<{ total_amount: number; qty_mamoru: number; qty_other: number }>;
+            let aMamoru = 0, aOther = 0, aMamoruQty = 0, aOtherQty = 0;
+            for (const r of repairRows) {
+              aMamoru += (r.qty_mamoru || 0) * REPAIR_PRICE_MAMORU;
+              aOther += (r.qty_other || 0) * REPAIR_PRICE_OTHER;
+              aMamoruQty += r.qty_mamoru || 0;
+              aOtherQty += r.qty_other || 0;
+            }
+            const repairATotal = aMamoru + aOther;
+
             // 판매시스템 매출 (category=RS) — 마모루/타사/B2B 구분
             const salesRepairRows = (monthSalesRepairItems.data || []) as Array<{ total_price: number; product_name: string; offline_sales: { customer_type: string | null } }>;
             let bMamoru = 0, bOther = 0, bB2B = 0;
@@ -210,12 +220,11 @@ export function useHubStats() {
               else if ((r.product_name || '').includes('타사')) { bOther += price; cOther++; }
               else { bMamoru += price; cMamoru++; }
             }
-            // 접수시스템은 마모루 일반으로 합산 (B2B 딜러는 판매시스템 사용)
             return {
-              monthRepairAmount: repairA + bMamoru + bOther + bB2B,
-              monthRepairCount: repairACount + salesRepairRows.length,
-              monthRepairMamoru: { amount: repairA + bMamoru, count: repairACount + cMamoru },
-              monthRepairOther: { amount: bOther, count: cOther },
+              monthRepairAmount: repairATotal + bMamoru + bOther + bB2B,
+              monthRepairCount: repairRows.length + salesRepairRows.length,
+              monthRepairMamoru: { amount: aMamoru + bMamoru, count: aMamoruQty + cMamoru },
+              monthRepairOther: { amount: aOther + bOther, count: aOtherQty + cOther },
               monthRepairB2B: { amount: bB2B, count: cB2B },
             };
           })(),
@@ -397,7 +406,7 @@ export function useRepairDashboardStats() {
         // 복원수리 매출 A: 접수시스템 (입금 완료 건)
         supabase
           .from('repairs')
-          .select('total_amount')
+          .select('total_amount, qty_mamoru, qty_other')
           .not('paid_at', 'is', null)
           .gte('created_at', monthISO)
           .not('status', 'eq', 'cancelled'),
@@ -447,8 +456,18 @@ export function useRepairDashboardStats() {
         ],
         // 복원수리 매출 합산 (마모루/타사/B2B 구분)
         ...(() => {
-          const repairA = (monthRepairsPaid.data || []).reduce((s: number, r: { total_amount: number }) => s + (r.total_amount || 0), 0);
-          const repairACount = (monthRepairsPaid.data || []).length;
+          const REPAIR_PRICE_MAMORU = 10000;
+          const REPAIR_PRICE_OTHER = 20000;
+          const repairRows = (monthRepairsPaid.data || []) as Array<{ total_amount: number; qty_mamoru: number; qty_other: number }>;
+          let aMamoru = 0, aOther = 0, aMamoruQty = 0, aOtherQty = 0;
+          for (const r of repairRows) {
+            aMamoru += (r.qty_mamoru || 0) * REPAIR_PRICE_MAMORU;
+            aOther += (r.qty_other || 0) * REPAIR_PRICE_OTHER;
+            aMamoruQty += r.qty_mamoru || 0;
+            aOtherQty += r.qty_other || 0;
+          }
+          const repairATotal = aMamoru + aOther;
+
           const salesRepairRows = (monthSalesRepairItems.data || []) as Array<{ total_price: number; product_name: string; offline_sales: { customer_type: string | null } }>;
           let bMamoru = 0, bOther = 0, bB2B = 0;
           let cMamoru = 0, cOther = 0, cB2B = 0;
@@ -461,10 +480,10 @@ export function useRepairDashboardStats() {
             else { bMamoru += price; cMamoru++; }
           }
           return {
-            monthRepairAmount: repairA + bMamoru + bOther + bB2B,
-            monthRepairCount: repairACount + salesRepairRows.length,
-            monthRepairMamoru: { amount: repairA + bMamoru, count: repairACount + cMamoru },
-            monthRepairOther: { amount: bOther, count: cOther },
+            monthRepairAmount: repairATotal + bMamoru + bOther + bB2B,
+            monthRepairCount: repairRows.length + salesRepairRows.length,
+            monthRepairMamoru: { amount: aMamoru + bMamoru, count: aMamoruQty + cMamoru },
+            monthRepairOther: { amount: aOther + bOther, count: aOtherQty + cOther },
             monthRepairB2B: { amount: bB2B, count: cB2B },
           };
         })(),
