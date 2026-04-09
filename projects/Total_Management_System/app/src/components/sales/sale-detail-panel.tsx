@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useQueryClient as __useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
-import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList } from 'lucide-react';
+import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, MessageSquare } from 'lucide-react';
 import { PrepSheetModal } from './prep-sheet-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { ReviewRequestModal } from './review-request-modal';
 import type { SaleChannel, OfflineSale, OfflineSaleItem, Product } from '@/lib/supabase/types';
 import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
 import { usePriceGroups } from '@/hooks/use-price-groups';
@@ -39,6 +42,7 @@ interface Props {
 }
 
 export function SaleDetailPanel({ saleId }: Props) {
+  const queryClient = __useQueryClient();
   const { data, isLoading } = useSale(saleId);
   const cancelSale = useCancelSale();
   const returnSale = useReturnSale();
@@ -57,6 +61,7 @@ export function SaleDetailPanel({ saleId }: Props) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showPrepSheet, setShowPrepSheet] = useState(false);
+  const [showReviewRequest, setShowReviewRequest] = useState(false);
   const [showCustomer, setShowCustomer] = useState(false);
   const [editingMemo, setEditingMemo] = useState(false);
   const [memoValue, setMemoValue] = useState('');
@@ -288,6 +293,17 @@ export function SaleDetailPanel({ saleId }: Props) {
         )}
       </div>
 
+      {/* 후기 요청 */}
+      {!s.cancelled_at && s.customer_phone && (
+        <button
+          onClick={() => setShowReviewRequest(true)}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition"
+        >
+          <MessageSquare size={14} />
+          {(s as Record<string, unknown>).review_requested_at ? '후기 요청 완료 ✓' : '후기 요청'}
+        </button>
+      )}
+
       {/* 액션 */}
       {s.cancelled_at ? (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-red-50 border border-red-100">
@@ -428,6 +444,19 @@ export function SaleDetailPanel({ saleId }: Props) {
           saleIds={[saleId]}
           preloaded={{ sale: s, items: data.items, serials: data.serials || [] }}
           onClose={() => setShowPrepSheet(false)}
+        />
+      )}
+
+      {/* 후기 요청 모달 */}
+      {showReviewRequest && data && (
+        <ReviewRequestModal
+          saleId={s.id}
+          customerName={s.customer_name}
+          customerPhone={s.customer_phone || ''}
+          hasRepairItem={data.items.some((it) => String((it as Record<string, unknown>).category || '') === 'RS')}
+          alreadySent={!!(s as Record<string, unknown>).review_requested_at}
+          onClose={() => setShowReviewRequest(false)}
+          onSent={() => { setShowReviewRequest(false); queryClient.invalidateQueries({ queryKey: ['sale', saleId] }); }}
         />
       )}
 
@@ -932,3 +961,5 @@ function ReceiptModal({ sale, items, onClose }: {
     </div>
   );
 }
+
+

@@ -515,6 +515,7 @@ export interface Database {
           cancelled_by: string | null;
           sale_channel: SaleChannel;
           contract_id: string | null;
+          review_requested_at: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
