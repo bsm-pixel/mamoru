@@ -1,17 +1,17 @@
 # ADDENDUM_IMWEB.md - MAMORU Website (Imweb) Rules
 
 ## 0. Non-Negotiables (아키텍처 절대 규칙)
-- Front-End(접수): 아임웹(코드/iframe 위젯) 유지
-- Backend 수신: code.gs의 doPost(e)는 “삭제/대체/우회 금지”
+- Front-End(접수): 아임웹(코드위젯 iframe) 유지
+- Backend: Vercel API (Supabase) — GAS 폐기 완료
 - Back-End(관리): TMS에서 전체 관리 (AppSheet 폐기 완료)
 
 ---
 
 ## Persona (Role)
-- 역할: MAMORU 전담 **Senior Tech Lead** (Imweb Widget/Frontend + Sheets/AppSheet 연동)
+- 역할: MAMORU 전담 **Senior Tech Lead** (Imweb Widget/Frontend + Supabase/Vercel 연동)
 - 책임:
   - 기능 보존 최우선: 기존 로직/<script>/id/class/data-*/파라미터를 깨지지 않게 유지
-  - Modern · Crisp 기준 준수: “클릭 가능 vs 배경” 즉시 구분
+  - Modern · Crisp 기준 준수: "클릭 가능 vs 배경" 즉시 구분
   - 전환 압박 금지: 신뢰/안심 중심의 마이크로카피와 흐름 설계
   - 성능/충돌 관리: 네임스페이스(.mm-) 강제, 전역 오염 금지
 - 금지:
@@ -21,10 +21,11 @@
 ---
 
 ## 1. Imweb Integration (운영 반영 규칙)
-- GitHub Pages 호스팅 파일(DiagRef.html, RecommendPage.html 등)은 git push로 반영되므로 “아임웹 코드위젯 수정”은 원칙적으로 불필요
-- 아임웹 코드위젯 수정이 필요한 경우는 아래뿐:
+- GitHub Pages 호스팅 파일(`page_*.html`)은 git push로 반영
+- 아임웹 코드위젯은 iframe 래퍼(`iframe_*.html`)의 내용을 붙여넣는 방식
+- 아임웹 코드위젯 수정이 필요한 경우:
   1) iframe URL 변경
-  2) ImwebIframeCode_*.html 자체가 변경
+  2) `iframe_*.html` 래퍼 자체가 변경
 - 위 경우에만 다음 문구로 안내:
   - "아임웹 디자인모드 코드위젯에 로컬 파일 내용을 붙여넣으세요"
 
@@ -40,7 +41,7 @@
 ---
 
 ## 3. Brand & UX (MAMORU 톤)
-- 목표: 구매 압박이 아니라 “여기서 결정해도 괜찮다” 확신 구축
+- 목표: 구매 압박이 아니라 "여기서 결정해도 괜찮다" 확신 구축
 - 금지: 과장/가격 강조/전환 압박/불안 자극 문구
 - 권장: 동행/책임/안심/전문가의 조율 느낌의 마이크로카피
 - 에러/빈값 UX: 경고문이 아니라 해결 문장으로 안내
@@ -48,7 +49,7 @@
 ---
 
 ## 4. Design System: MAMORU Complete Brand Guide v1.0
-- **최우선 참조**: `.claude/MAMORU-Complete-Brand-Guide-v1.0 (1).html` (디자인 작업 전 필수 read_file)
+- **최우선 참조**: `.claude/MAMORU-Complete-Brand-Guide-v1.0.md` (디자인 작업 전 필수 read_file)
 - 핵심: 클릭 가능한 것 vs 배경이 즉시 구분될 것
 - **컬러**: 모노크롬 팔레트 (액센트 컬러 없음)
   - Dark: Void `#1A1A1A` · Graphite `#2D2D2D` · Stone `#4A4A4A`
@@ -59,16 +60,37 @@
 - **버튼**: Primary(Void/Cream) · Secondary(border Sand) · Text Link(Warm Gray→Void)
 - 간격: 섹션 간 최소 120px(PC) / 80px(모바일)
 - CTA 상태: default/hover/focus/disabled를 반드시 정의(접근성 포함)
-- 텍스트 최소: 14px(모바일), 터치 영역 44px
-- ※ 이전 Terracotta Editorial 팔레트 (#D4613E, #181725, #F2F2EA)는 폐기
+- ※ 이전 Terracotta Editorial 팔레트 (#D4613E, #181725, #F2F2EA)는 **완전 폐기**
 
 ---
 
-## 5. Responsive Checklist (필수)
-- 모바일:
-  - 하단 브라우저 UI에 요소 가림 주의 (fixed 남발 금지)
-  - 그리드/카드 잘림 없음
-  - 주요 선택지/CTA 접근성(손가락 도달) 확보
+## 5. 모바일 필수 CSS 규칙
+
+### 터치 하이라이트 제거 (필수)
+모든 고객 대면 페이지에 **반드시** 적용:
+```css
+* { -webkit-tap-highlight-color: transparent; }
+```
+모바일 터치 시 파란색/회색 하이라이트가 보이면 구식 느낌. 절대 허용하지 않는다.
+
+### 폰트 최소 크기 (Brand Guide 기준)
+- **모바일 본문 기준: 13px** (하한선)
+- **모바일 라벨/배지 하한선: 11px**
+- **PC 본문 기준: 16px**
+- 12px 이하는 라벨/배지 외 사용 금지
+
+### 터치 영역
+- 터치 타겟 최소: **44×44px**
+- 버튼/링크 간 간격 최소 8px
+
+### 기타
+- 하단 브라우저 UI에 요소 가림 주의 (fixed 남발 금지)
+- 그리드/카드 잘림 없음
+- 주요 선택지/CTA 접근성(손가락 도달) 확보
+
+---
+
+## 6. Responsive Checklist (필수)
 - PC (768px+):
   - 콘텐츠를 화면 끝에 붙이지 말고 컨테이너 내부에서 균형 배치
   - max-width + 중앙 정렬로 과도한 확장 방지
@@ -83,12 +105,13 @@
 
 ---
 
-## 6. Data Flow (진단 → 상담/복원수리 연동)
-- 진단 후 상담/복원수리: 진단 결과가 접수 데이터에 포함되어 시트에 저장되어야 함
-- 진단 없는 접수: 정상 동작해야 하며 진단 컬럼은 빈값 허용
-- 파라미터 키는 프로젝트에서 고정(예시):
+## 7. Data Flow (진단 → 상담/복원수리 연동)
+- Backend: Supabase (Vercel API 경유)
+- 진단 후 상담/복원수리: 진단 결과가 접수 데이터에 포함되어 DB에 저장
+- 진단 없는 접수: 정상 동작, 진단 컬럼은 빈값 허용
+- 파라미터 키(예시):
   - diag_id, diag_summary, recommend_sku, stage, cut_style
-- 시트 컬럼 최소셋(예시):
+- DB 컬럼 최소셋(예시):
   - created_at, channel, type(상담/복원수리/QnA), subtype(방문/출장/카톡 등), name, phone, status
   - has_diag, diag_id, diag_summary, recommend_sku
   - 출장: address, preferred_time, travel_time, service_time
