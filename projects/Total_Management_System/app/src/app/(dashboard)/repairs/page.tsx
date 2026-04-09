@@ -32,42 +32,42 @@ export default function RepairsPage() {
       <Topbar title="복원수리" />
 
       <div className="px-4 md:px-6 py-4 space-y-4">
-        {/* 이번달 복원수리 매출 */}
-        {stats && (stats.monthRepairAmount > 0 || stats.monthRepairCount > 0) && (
-          <div className="rounded-lg bg-neutral-900 text-white overflow-hidden">
-            <div className="flex items-center gap-3 px-4 py-3">
-              <TrendingUp size={18} className="opacity-70" />
-              <div>
-                <p className="text-xs opacity-70">이번달 복원수리 매출</p>
-                <p className="text-lg font-bold">{formatKRW(stats.monthRepairAmount)}</p>
+        {/* 이번달 매출 + 오늘 작업 + 이번주 누적 — PC 3컬럼 / 모바일 세로 */}
+        {stats && (
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-3">
+            {/* 이번달 복원수리 매출 */}
+            <div className="rounded-lg bg-neutral-900 text-white overflow-hidden">
+              <div className="flex items-center gap-3 px-4 py-3">
+                <TrendingUp size={18} className="opacity-70" />
+                <div>
+                  <p className="text-xs opacity-70">이번달 복원수리 매출</p>
+                  <p className="text-lg font-bold">{formatKRW(stats.monthRepairAmount)}</p>
+                </div>
+                <p className="ml-auto text-lg font-bold">
+                  {(stats.monthRepairMamoru?.count || 0) + (stats.monthRepairOther?.count || 0) + (stats.monthRepairB2B?.count || 0)}건
+                </p>
               </div>
-              <span className="ml-auto text-xs opacity-60">{stats.monthRepairCount}건</span>
+              <div className="grid grid-cols-3 gap-px bg-white/10">
+                <div className="px-3 py-2 text-center">
+                  <p className="text-[10px] opacity-50">마모루</p>
+                  <p className="text-sm font-bold">{formatKRW(stats.monthRepairMamoru?.amount || 0)}</p>
+                  <p className="text-[10px] opacity-40">{stats.monthRepairMamoru?.count || 0}건</p>
+                </div>
+                <div className="px-3 py-2 text-center">
+                  <p className="text-[10px] opacity-50">타사</p>
+                  <p className="text-sm font-bold">{formatKRW(stats.monthRepairOther?.amount || 0)}</p>
+                  <p className="text-[10px] opacity-40">{stats.monthRepairOther?.count || 0}건</p>
+                </div>
+                <div className="px-3 py-2 text-center">
+                  <p className="text-[10px] opacity-50">B2B</p>
+                  <p className="text-sm font-bold">{formatKRW(stats.monthRepairB2B?.amount || 0)}</p>
+                  <p className="text-[10px] opacity-40">{stats.monthRepairB2B?.count || 0}건</p>
+                </div>
+              </div>
             </div>
-            {/* 마모루 / 타사 / B2B 구분 */}
-            <div className="grid grid-cols-3 gap-px bg-white/10">
-              <div className="px-3 py-2 text-center">
-                <p className="text-[10px] opacity-50">마모루</p>
-                <p className="text-sm font-bold">{formatKRW(stats.monthRepairMamoru?.amount || 0)}</p>
-                <p className="text-[10px] opacity-40">{stats.monthRepairMamoru?.count || 0}건</p>
-              </div>
-              <div className="px-3 py-2 text-center">
-                <p className="text-[10px] opacity-50">타사</p>
-                <p className="text-sm font-bold">{formatKRW(stats.monthRepairOther?.amount || 0)}</p>
-                <p className="text-[10px] opacity-40">{stats.monthRepairOther?.count || 0}건</p>
-              </div>
-              <div className="px-3 py-2 text-center">
-                <p className="text-[10px] opacity-50">B2B</p>
-                <p className="text-sm font-bold">{formatKRW(stats.monthRepairB2B?.amount || 0)}</p>
-                <p className="text-[10px] opacity-40">{stats.monthRepairB2B?.count || 0}건</p>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* 작업 일지 */}
-        {stats && (stats.todayWork?.count > 0 || stats.weekWork?.count > 0) && (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-lg border border-neutral-200 p-3">
+            {/* 오늘 작업 완료 */}
+            <div className="bg-white rounded-lg border border-neutral-200 p-3 lg:w-44">
               <p className="text-xs text-neutral-500 mb-1">오늘 작업 완료</p>
               <p className="text-lg font-bold text-neutral-900">
                 {(stats.todayWork?.mamoru || 0) + (stats.todayWork?.other || 0)}정
@@ -76,7 +76,9 @@ export default function RepairsPage() {
                 마모루 {stats.todayWork?.mamoru || 0} · 타사 {stats.todayWork?.other || 0} ({stats.todayWork?.count || 0}건)
               </p>
             </div>
-            <div className="bg-white rounded-lg border border-neutral-200 p-3">
+
+            {/* 이번주 누적 */}
+            <div className="bg-white rounded-lg border border-neutral-200 p-3 lg:w-44">
               <p className="text-xs text-neutral-500 mb-1">이번주 누적</p>
               <p className="text-lg font-bold text-neutral-900">
                 {(stats.weekWork?.mamoru || 0) + (stats.weekWork?.other || 0)}정
