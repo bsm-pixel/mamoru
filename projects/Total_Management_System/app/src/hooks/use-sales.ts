@@ -171,9 +171,10 @@ export function useSalesStats() {
         .in('payment_status', ['unpaid', 'partial'])
         .is('cancelled_at', null);
 
+      // 발생주의: 매출 = total_amount - discount_amount (미수금 포함)
       const sum = (arr: Array<{ total_amount: number; paid_amount: number; discount_amount: number }> | null) => {
         if (!arr) return { amount: 0, count: 0 };
-        const amount = arr.reduce((s, r) => s + (r.paid_amount || 0), 0);
+        const amount = arr.reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
         return { amount, count: arr.length };
       };
 
@@ -186,7 +187,7 @@ export function useSalesStats() {
       // B2B 거래처별 이번달 매출
       const { data: b2bSales } = await db
         .from('offline_sales')
-        .select('customer_name, customer_type, paid_amount')
+        .select('customer_name, customer_type, total_amount, discount_amount')
         .in('customer_type', ['dealer', 'academy'])
         .gte('sale_date', monthStart)
         .lte('sale_date', today)
@@ -196,7 +197,7 @@ export function useSalesStats() {
       for (const s of (b2bSales || [])) {
         const key = s.customer_name || '미지정';
         if (!b2bMap[key]) b2bMap[key] = { name: key, type: s.customer_type || '', amount: 0, count: 0 };
-        b2bMap[key].amount += s.paid_amount || 0;
+        b2bMap[key].amount += (s.total_amount || 0) - (s.discount_amount || 0);
         b2bMap[key].count++;
       }
       const b2bRanking = Object.values(b2bMap).sort((a, b) => b.amount - a.amount);

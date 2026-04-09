@@ -132,7 +132,7 @@ export function useHubStats() {
         db.from('repairs').select('qty_mamoru, qty_other')
           .in('status', ['shipped', 'delivered', 'completed'])
           .gte('shipped_at', monISO),
-        db.from('offline_sales').select('total_amount')
+        db.from('offline_sales').select('total_amount, discount_amount')
           .gte('sale_date', monthStartDate)
           .is('cancelled_at', null),
         // 복원수리 매출 A: 접수시스템 (입금 확인된 건)
@@ -162,8 +162,8 @@ export function useHubStats() {
 
       const pendingInbound = (repairPending.count || 0) - (intakeNew.count || 0);
 
-      const salesRows = (monthSales.data || []) as { total_amount: number }[];
-      const salesMonthAmount = salesRows.reduce((s, r) => s + (r.total_amount || 0), 0);
+      const salesRows = (monthSales.data || []) as { total_amount: number; discount_amount: number }[];
+      const salesMonthAmount = salesRows.reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
 
       return {
         orders: {

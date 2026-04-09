@@ -47,7 +47,6 @@ const CHANNEL_CHIP: Record<string, { label: string; className: string }> = {
 
 const TABS: { key: SalesTab; label: string }[] = [
   { key: 'all', label: '전체' },
-  { key: 'today', label: '오늘' },
   { key: 'unpaid', label: '미수금' },
   { key: 'cancelled', label: '취소' },
 ];
@@ -73,7 +72,7 @@ export default function SalesPage() {
   const [page, setPage] = useState(1);
   const [tab, setTab] = useState<SalesTab>('all'); // 기본 탭: 전체
   const [channel, setChannel] = useState<SalesChannel | 'b2b'>('all');
-  const [dateRange, setDateRange] = useState<SalesDateRange>('all');
+  const [dateRange, setDateRange] = useState<SalesDateRange>('month');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
@@ -218,7 +217,7 @@ export default function SalesPage() {
               }`}
             >
               {t.label}
-              {count > 0 && (t.key === 'today' || t.key === 'unpaid') && (
+              {count > 0 && t.key === 'unpaid' && (
                 <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
                   active ? 'bg-neutral-900 text-white' : 'bg-neutral-200 text-neutral-500'
                 }`}>
@@ -230,8 +229,9 @@ export default function SalesPage() {
         })}
       </div>
 
-      {/* 채널 + 기간 필터 */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* 채널 + 기간 필터 (한 줄 통합) */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* 채널 */}
         <div className="flex gap-1">
           {CHANNELS.map((c) => (
             <button
@@ -247,8 +247,12 @@ export default function SalesPage() {
             </button>
           ))}
         </div>
-        {/* 기간 프리셋 칩 */}
-        <div className="flex gap-1">
+
+        {/* 구분선 */}
+        <div className="w-px h-4 bg-neutral-200" />
+
+        {/* 기간 */}
+        <div className="flex gap-1 items-center">
           {DATE_RANGES.map((d) => (
             <button
               key={d.key}
@@ -262,26 +266,25 @@ export default function SalesPage() {
               {d.label}
             </button>
           ))}
-        </div>
-
-        {/* 날짜 범위 직접 선택 */}
-        <div className="flex items-center gap-1.5 ml-auto">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => { setDateFrom(e.target.value); setDateRange('all'); setPage(1); }}
-            className="h-7 px-2 rounded-md border border-neutral-200 text-xs bg-white"
-          />
-          <span className="text-xs text-neutral-400">~</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => { setDateTo(e.target.value); setDateRange('all'); setPage(1); }}
-            className="h-7 px-2 rounded-md border border-neutral-200 text-xs bg-white"
-          />
-          {(dateFrom || dateTo) && (
-            <button onClick={() => { setDateFrom(''); setDateTo(''); }} className="text-[10px] text-neutral-400 hover:text-neutral-600">초기화</button>
-          )}
+          {/* 직접 선택 */}
+          <div className="flex items-center gap-1 ml-1">
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => { setDateFrom(e.target.value); setDateRange('all'); setPage(1); }}
+              className="h-7 px-2 rounded-md border border-neutral-200 text-xs bg-white"
+            />
+            <span className="text-xs text-neutral-400">~</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => { setDateTo(e.target.value); setDateRange('all'); setPage(1); }}
+              className="h-7 px-2 rounded-md border border-neutral-200 text-xs bg-white"
+            />
+            {(dateFrom || dateTo) && (
+              <button onClick={() => { setDateFrom(''); setDateTo(''); }} className="text-[10px] text-neutral-400 hover:text-neutral-600">초기화</button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -294,7 +297,7 @@ export default function SalesPage() {
             ))}
           </div>
         ) : sales.length === 0 ? (
-          <EmptyState icon={Receipt} message={tab === 'today' ? '오늘 판매 기록이 없습니다' : '판매 기록이 없습니다'} />
+          <EmptyState icon={Receipt} message="판매 기록이 없습니다" />
         ) : (
           <div className="divide-y divide-neutral-100">
             {sales.map((sale) => (
