@@ -474,6 +474,8 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
   const [saleDate, setSaleDate] = useState(sale.sale_date);
   const [editMemo, setEditMemo] = useState(sale.memo || '');
   const [productSearch, setProductSearch] = useState('');
+  const [customName, setCustomName] = useState('');
+  const [customPrice, setCustomPrice] = useState('');
 
   const totalAmount = editItems.reduce((s, it) => s + it.unit_price * it.quantity, 0);
   const finalAmount = totalAmount - discountAmount;
@@ -503,6 +505,23 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
       }]);
     }
     setProductSearch('');
+  };
+
+  const addCustomProduct = () => {
+    const name = customName.trim();
+    const price = parseInt(customPrice) || 0;
+    if (!name || price <= 0) return;
+    setEditItems((prev) => [...prev, {
+      product_id: undefined,
+      product_name: name,
+      sku: undefined,
+      quantity: 1,
+      unit_price: price,
+      total_price: price,
+      serial_ids: [],
+    }]);
+    setCustomName('');
+    setCustomPrice('');
   };
 
   const filteredProducts = productSearch.length >= 1
@@ -608,6 +627,33 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
                 })}
               </div>
             )}
+          </div>
+
+          {/* 임시 제품 추가 */}
+          <div>
+            <label className="text-xs font-semibold text-neutral-600 mb-1 block">임시 제품</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                placeholder="제품명"
+                className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400"
+              />
+              <input
+                type="number"
+                value={customPrice}
+                onChange={(e) => setCustomPrice(e.target.value)}
+                placeholder="단가"
+                className="w-24 h-9 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400"
+                onKeyDown={(e) => { if (e.key === 'Enter') addCustomProduct(); }}
+              />
+              <button
+                onClick={addCustomProduct}
+                disabled={!customName.trim() || !customPrice || parseInt(customPrice) <= 0}
+                className="px-3 h-9 rounded-lg bg-neutral-900 text-white text-xs font-medium disabled:opacity-30"
+              >추가</button>
+            </div>
           </div>
 
           {/* 판매일 + 결제 */}
