@@ -33,7 +33,7 @@ const PAYMENT_STATUS_LABEL: Record<string, string> = {
 };
 
 const CONSULTATION_TYPE_LABEL: Record<string, string> = {
-  store_visit: '매장방문', field_request: '출장', talk_consult: '톡상담',
+  store_visit: '매장방문', field_request: '출장', talk_consult: '온라인상담',
 };
 
 const REPAIR_STATUS_LABEL: Record<string, string> = {

@@ -13,7 +13,7 @@ export const DEFAULT_PAYMENT_LABELS: Record<string, string> = {
 };
 
 export const DEFAULT_CHANNEL_LABELS: Record<string, string> = {
-  offline: '오프라인', online: '온라인', talk: '톡상담',
+  offline: '오프라인', talk: '온라인상담',
 };
 
 export const DEFAULT_RFM = {

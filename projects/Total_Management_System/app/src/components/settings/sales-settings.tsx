@@ -82,7 +82,7 @@ export default function SalesSettings({ settings, onSave, saving }: TabProps) {
   };
 
   const METHOD_LABELS: Record<string, string> = { card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합' };
-  const CHANNEL_LABELS: Record<string, string> = { offline: '오프라인', online: '온라인', talk: '톡상담' };
+  const CHANNEL_LABELS: Record<string, string> = { offline: '오프라인', online: '온라인', talk: '온라인상담' };
 
   return (
     <div className="space-y-6">

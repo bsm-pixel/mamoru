@@ -22,7 +22,7 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
 const CHANNEL_CHIP: Record<string, { label: string; className: string }> = {
   offline: { label: '오프라인', className: 'bg-neutral-100 text-neutral-600' },
   online:  { label: '온라인',  className: 'bg-blue-100 text-blue-700' },
-  talk:    { label: '톡상담',  className: 'bg-yellow-100 text-yellow-700' },
+  talk:    { label: '온라인상담',  className: 'bg-yellow-100 text-yellow-700' },
 };
 
 export default function SaleDetailPage({ params }: { params: Promise<{ id: string }> }) {

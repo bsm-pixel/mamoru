@@ -389,7 +389,7 @@ function NewSaleContent() {
                 <div>
                   <label className="text-xs text-neutral-500 mb-1 block">판매 채널</label>
                   <div className="flex gap-1">
-                    {([{ value: 'offline', label: '오프라인', color: 'bg-neutral-800 text-white' }, { value: 'online', label: '온라인', color: 'bg-blue-600 text-white' }, { value: 'talk', label: '톡상담', color: 'bg-yellow-500 text-white' }] as const).map((ch) => (
+                    {([{ value: 'offline', label: '오프라인', color: 'bg-neutral-800 text-white' }, { value: 'talk', label: '온라인상담', color: 'bg-yellow-500 text-white' }] as const).map((ch) => (
                       <button key={ch.value} onClick={() => setSaleChannel(ch.value)}
                         className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${saleChannel === ch.value ? ch.color : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>{ch.label}</button>
                     ))}

@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         id: c.unique_id,
         type: c.consultation_type === 'store_visit' ? '매장 방문'
             : c.consultation_type === 'field_request' ? '출장 요청'
-            : '톡상담',
+            : '온라인상담',
         date: c.visit_date || '',
         time: c.visit_time || '',
         address,

@@ -8,7 +8,7 @@ import { X, ShoppingBag, FileSignature, MessageSquare, Wrench, Copy, ExternalLin
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
-const CONSULTATION_TYPE_LABEL: Record<string, string> = { store_visit: '매장방문', field_request: '출장', talk_consult: '톡상담' };
+const CONSULTATION_TYPE_LABEL: Record<string, string> = { store_visit: '매장방문', field_request: '출장', talk_consult: '온라인상담' };
 
 interface Props {
   customerId: string;

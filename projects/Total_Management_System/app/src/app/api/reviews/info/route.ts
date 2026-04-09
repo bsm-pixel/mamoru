@@ -123,7 +123,7 @@ export async function GET(req: NextRequest) {
       }
 
       const typeLabel = consult.consultation_type === 'store_visit' ? '매장 방문'
-        : consult.consultation_type === 'field_request' ? '출장 상담' : '톡상담';
+        : consult.consultation_type === 'field_request' ? '출장 상담' : '온라인상담';
 
       return NextResponse.json({
         name: maskName(consult.name),

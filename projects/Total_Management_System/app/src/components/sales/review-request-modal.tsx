@@ -48,7 +48,7 @@ export function ReviewRequestModal({ saleId, customerName, customerPhone, hasRep
   const subtypeOptions = [
     { key: 'store_visit', label: '매장방문' },
     { key: 'field_request', label: '출장' },
-    { key: 'talk_consult', label: '톡상담' },
+    { key: 'talk_consult', label: '온라인상담' },
   ];
 
   return (

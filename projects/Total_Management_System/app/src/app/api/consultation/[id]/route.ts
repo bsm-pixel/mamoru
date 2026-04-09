@@ -146,7 +146,7 @@ export async function PATCH(
         if (template && data.phone) {
           const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
           const typeLabel = data.consultation_type === 'store_visit' ? '매장 방문'
-            : data.consultation_type === 'field_request' ? '출장 요청' : '톡상담';
+            : data.consultation_type === 'field_request' ? '출장 요청' : '온라인상담';
           sideEffects.push(
             sendNotification({
               template,

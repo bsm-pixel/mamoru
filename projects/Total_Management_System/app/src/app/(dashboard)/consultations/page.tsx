@@ -25,7 +25,7 @@ type TabKey = 'store_visit' | 'field_request' | 'talk_consult';
 const TABS: { key: TabKey; label: string; icon: React.ReactNode }[] = [
   { key: 'store_visit', label: '매장방문', icon: <Store size={14} /> },
   { key: 'field_request', label: '출장요청', icon: <Truck size={14} /> },
-  { key: 'talk_consult', label: '톡상담', icon: <MessageCircle size={14} /> },
+  { key: 'talk_consult', label: '온라인상담', icon: <MessageCircle size={14} /> },
 ];
 
 /** #6: 대응필요 상태 (탭별) */

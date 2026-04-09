@@ -13,7 +13,7 @@ import Link from 'next/link';
 const TYPE_LABEL: Record<string, string> = {
   store_visit: '매장방문',
   field_request: '출장요청',
-  talk_consult: '톡상담',
+  talk_consult: '온라인상담',
 };
 
 const STATUS_COLOR: Record<string, string> = {

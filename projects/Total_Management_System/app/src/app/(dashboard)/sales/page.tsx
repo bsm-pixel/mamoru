@@ -41,8 +41,8 @@ const PAYMENT_STATUS_LABEL: Record<string, string> = {
 
 const CHANNEL_CHIP: Record<string, { label: string; className: string }> = {
   offline: { label: '오프라인', className: 'bg-neutral-100 text-neutral-600' },
-  online:  { label: '온라인',  className: 'bg-blue-100 text-blue-700' },
-  talk:    { label: '톡상담',  className: 'bg-yellow-100 text-yellow-700' },
+  online:  { label: '온라인',  className: 'bg-blue-100 text-blue-700' },  // 레거시 데이터 호환
+  talk:    { label: '온라인상담',  className: 'bg-yellow-100 text-yellow-700' },
 };
 
 const TABS: { key: SalesTab; label: string }[] = [
@@ -54,8 +54,7 @@ const TABS: { key: SalesTab; label: string }[] = [
 const CHANNELS: { key: SalesChannel | 'b2b'; label: string }[] = [
   { key: 'all', label: '전체' },
   { key: 'offline', label: '오프라인' },
-  { key: 'online', label: '온라인' },
-  { key: 'talk', label: '톡상담' },
+  { key: 'talk', label: '온라인상담' },
   { key: 'b2b', label: 'B2B 납품' },
 ];
 

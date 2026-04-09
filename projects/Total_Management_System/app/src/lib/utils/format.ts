@@ -128,7 +128,7 @@ export function formatDateGroup(dateStr: string): string {
 export const CONSULTATION_TYPE_LABEL: Record<string, string> = {
   store_visit: '매장 방문',
   field_request: '출장 요청',
-  talk_consult: '톡상담',    // Phase 2-2
+  talk_consult: '온라인상담',    // Phase 2-2
 };
 
 // ============================================

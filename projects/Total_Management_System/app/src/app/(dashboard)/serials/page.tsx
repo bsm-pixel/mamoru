@@ -27,7 +27,7 @@ const ZONE_LABEL: Record<string, { label: string; color: string }> = {
 const CHANNEL_LABEL: Record<string, string> = {
   offline: '오프라인',
   online: '온라인',
-  talk: '톡상담',
+  talk: '온라인상담',
 };
 
 function formatDate(d: string | null) {

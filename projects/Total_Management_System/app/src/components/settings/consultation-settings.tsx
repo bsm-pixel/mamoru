@@ -213,7 +213,7 @@ export default function ConsultationSettings({ settings, onSave, saving }: TabPr
       {/* 16. 유형별 기본 시간 */}
       <Field label="상담 유형별 기본 시간" desc="">
         <div className="space-y-2">
-          {([['store_visit', '매장방문'], ['field_request', '출장'], ['talk_consult', '톡상담']] as const).map(([k, label]) => (
+          {([['store_visit', '매장방문'], ['field_request', '출장'], ['talk_consult', '온라인상담']] as const).map(([k, label]) => (
             <div key={k} className="flex items-center gap-2">
               <span className="text-sm w-16">{label}</span>
               <input type="number" value={durationByType[k]} onChange={(e) => setDurationByType({ ...durationByType, [k]: Number(e.target.value) })}

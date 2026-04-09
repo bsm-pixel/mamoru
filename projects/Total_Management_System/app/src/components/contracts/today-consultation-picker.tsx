@@ -55,7 +55,7 @@ export function TodayConsultationPicker({ open, onClose, onSelect }: TodayConsul
   const TYPE_LABEL: Record<string, string> = {
     store_visit: '매장방문',
     field_request: '출장',
-    talk_consult: '톡상담',
+    talk_consult: '온라인상담',
   };
 
   const STATUS_LABEL: Record<string, string> = {
