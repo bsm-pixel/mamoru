@@ -286,12 +286,12 @@ function AddPartnerModal({ defaultType, onClose }: { defaultType: string; onClos
     }
     await createCustomer.mutateAsync({
       name: form.name.trim() || form.companyName.trim(),
-      companyName: form.companyName.trim(),
+      company_name: form.companyName.trim(),
       phone: form.phone.trim() || undefined,
       email: form.email.trim() || undefined,
-      address: form.address.trim() || undefined,
+      address_road: form.address.trim() || undefined,
       memo: form.memo.trim() || undefined,
-      customerType: partnerType,
+      customer_type: partnerType,
     });
     onClose();
   }

@@ -5,6 +5,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useSetting } from '@/hooks/use-settings';
+import { TagSelector } from '@/components/shared/tag-selector';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -21,6 +23,7 @@ interface CustomerCreateData {
   address_detail: string;
   company_name: string;
   memo: string;
+  tags: string[];
 }
 
 interface Props {
@@ -33,10 +36,11 @@ export function CustomerCreateModal({ open, onClose, onCreated }: Props) {
   const [form, setForm] = useState<CustomerCreateData>({
     name: '', phone: '', customer_type: 'retail',
     postcode: '', address_road: '', address_detail: '',
-    company_name: '', memo: '',
+    company_name: '', memo: '', tags: [],
   });
   const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
+  const availableTags = useSetting<string[]>('customer.tags', []);
 
   if (!open) return null;
 
@@ -75,6 +79,7 @@ export function CustomerCreateModal({ open, onClose, onCreated }: Props) {
           address_detail: form.address_detail || undefined,
           company_name: form.company_name || undefined,
           memo: form.memo || undefined,
+          tags: form.tags.length > 0 ? form.tags : undefined,
         }),
       });
       if (!res.ok) {
@@ -86,7 +91,7 @@ export function CustomerCreateModal({ open, onClose, onCreated }: Props) {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       onCreated(data.customer || data);
       onClose();
-      setForm({ name: '', phone: '', customer_type: 'retail', postcode: '', address_road: '', address_detail: '', company_name: '', memo: '' });
+      setForm({ name: '', phone: '', customer_type: 'retail', postcode: '', address_road: '', address_detail: '', company_name: '', memo: '', tags: [] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '등록 실패');
     } finally {
@@ -159,6 +164,14 @@ export function CustomerCreateModal({ open, onClose, onCreated }: Props) {
             <input type="text" value={form.memo} onChange={(e) => setForm({ ...form, memo: e.target.value })}
               placeholder="선택 입력" className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400" />
           </div>
+
+          {/* 태그 */}
+          {availableTags.length > 0 && (
+            <div>
+              <label className="text-xs text-neutral-500 mb-1 block">태그</label>
+              <TagSelector availableTags={availableTags} selectedTags={form.tags} onChange={(tags) => setForm({ ...form, tags })} />
+            </div>
+          )}
         </div>
 
         <div className="px-5 py-3 border-t border-neutral-200 flex gap-2">

@@ -115,12 +115,13 @@ export function useCreateCustomer() {
       name: string;
       phone?: string;
       email?: string;
-      address?: string;
       postcode?: string;
-      addressDetail?: string;
-      customerType?: string;
-      companyName?: string;
+      address_road?: string;
+      address_detail?: string;
+      customer_type?: string;
+      company_name?: string;
       memo?: string;
+      tags?: string[];
     }) => {
       const res = await fetch('/api/customers', {
         method: 'POST',

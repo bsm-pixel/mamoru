@@ -57,16 +57,17 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { name, phone, email, address, postcode, addressDetail, customerType, companyName, memo } = body as {
+    const { name, phone, email, postcode, address_road, address_detail, customer_type, company_name, memo, tags } = body as {
       name: string;
       phone?: string;
       email?: string;
-      address?: string;
       postcode?: string;
-      addressDetail?: string;
-      customerType?: string;
-      companyName?: string;
+      address_road?: string;
+      address_detail?: string;
+      customer_type?: string;
+      company_name?: string;
       memo?: string;
+      tags?: string[];
     };
 
     if (!name?.trim()) {
@@ -83,11 +84,12 @@ export async function POST(req: NextRequest) {
         phone: phone || null,
         email: email || null,
         postcode: postcode || null,
-        address_road: address || null,
-        address_detail: addressDetail || null,
-        customer_type: customerType || 'retail',
-        company_name: companyName || null,
+        address_road: address_road || null,
+        address_detail: address_detail || null,
+        customer_type: customer_type || 'retail',
+        company_name: company_name || null,
         memo: memo || null,
+        tags: Array.isArray(tags) ? tags : [],
         source: 'manual',
       })
       .select()

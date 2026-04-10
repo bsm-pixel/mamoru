@@ -17,6 +17,8 @@ import { CustomerDetailPanel } from '@/components/customers/customer-detail-pane
 import { Users, Plus, X } from 'lucide-react';
 import type { Customer } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
+import { TagBadges } from '@/components/shared/tag-selector';
+import { useSetting } from '@/hooks/use-settings';
 
 const TYPE_LABEL: Record<string, string> = {
   retail: '일반',
@@ -50,10 +52,12 @@ const FILTER_TYPES = [
 export default function CustomersPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [tagFilter, setTagFilter] = useState('');
   const [page, setPage] = useState(1);
   const [showAdd, setShowAdd] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const limit = 20;
+  const availableTags = useSetting<string[]>('customer.tags', []);
 
   // PC 여부 감지
   const [isLg, setIsLg] = useState(false);
@@ -71,9 +75,13 @@ export default function CustomersPage() {
     page,
     limit,
   });
-  const customers = data?.customers || [];
-  const total = data?.total || 0;
-  const totalPages = Math.ceil(total / limit);
+  const rawCustomers = data?.customers || [];
+  // 태그 필터 (클라이언트 사이드)
+  const customers = tagFilter
+    ? rawCustomers.filter((c: Record<string, unknown>) => Array.isArray(c.tags) && (c.tags as string[]).includes(tagFilter))
+    : rawCustomers;
+  const total = tagFilter ? customers.length : (data?.total || 0);
+  const totalPages = Math.ceil((data?.total || 0) / limit);
 
   const listContent = isLoading ? (
     <div className="p-4 space-y-3">
@@ -129,6 +137,27 @@ export default function CustomersPage() {
             </button>
           ))}
         </div>
+
+        {/* 태그 필터 칩 */}
+        {availableTags.length > 0 && (
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            <button
+              onClick={() => { setTagFilter(''); setPage(1); }}
+              className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition ${
+                !tagFilter ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+              }`}
+            >전체 태그</button>
+            {availableTags.map((t) => (
+              <button
+                key={t}
+                onClick={() => { setTagFilter(tagFilter === t ? '' : t); setPage(1); }}
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition ${
+                  tagFilter === t ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                }`}
+              >{t}</button>
+            ))}
+          </div>
+        )}
 
         {/* PC: 2열 레이아웃 */}
         {isLg && (
@@ -207,6 +236,7 @@ function CustomerRow({ customer, isSelected, onClick }: { customer: Customer; is
           <span>{SOURCE_LABEL[c.source] || c.source}</span>
           <span>{formatDate(c.created_at)}</span>
         </div>
+        <TagBadges tags={(c as Record<string, unknown>).tags as string[] | undefined} />
       </div>
       <div className="text-right shrink-0">
         {c.total_spent > 0 && (

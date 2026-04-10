@@ -15,6 +15,7 @@ export interface SelectedCustomer {
   ecount_customer_code: string | null;
   customer_type?: string;
   memo?: string | null;
+  tags?: string[];
 }
 
 interface Props {
@@ -89,6 +90,7 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
       ecount_customer_code: customer.ecount_customer_code,
       customer_type: (customer as unknown as { customer_type?: string }).customer_type,
       memo: (customer as unknown as { memo?: string }).memo || null,
+      tags: (customer as unknown as { tags?: string[] }).tags || [],
     });
     setQuery('');
     setDebouncedQuery('');
@@ -114,7 +116,7 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
       name: newName.trim(),
       phone: newPhone.trim() || undefined,
       email: newEmail.trim() || undefined,
-      address: newAddress.trim() || undefined,
+      address_road: newAddress.trim() || undefined,
     });
 
     onSelect({

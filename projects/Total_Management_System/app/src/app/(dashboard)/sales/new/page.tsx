@@ -13,6 +13,8 @@ import { CustomerCreateModal } from '@/components/customers/customer-create-moda
 import { SerialPicker } from '@/components/sales/serial-picker';
 import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
 import { usePriceGroups } from '@/hooks/use-price-groups';
+import { TagSelector } from '@/components/shared/tag-selector';
+import { useSetting } from '@/hooks/use-settings';
 import type { Product } from '@/lib/supabase/types';
 
 interface CartItem {
@@ -45,6 +47,7 @@ function NewSaleContent() {
   const { data: products = [], isLoading: productsLoading } = useProducts();
   const createSale = useCreateSale();
   const priceGroups = usePriceGroups();
+  const availableTags = useSetting<string[]>('customer.tags', []);
 
   const [saleDate, setSaleDate] = useState(new Date().toISOString().slice(0, 10));
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -355,6 +358,27 @@ function NewSaleContent() {
                     <div>
                       <span className="text-neutral-400">주소: </span>
                       <span>{selectedCustomer.postcode || ''} {selectedCustomer.address_road || ''} {selectedCustomer.address_detail || ''}</span>
+                    </div>
+                  )}
+                  {/* 태그 — 편집 가능 */}
+                  {availableTags.length > 0 && (
+                    <div>
+                      <span className="text-neutral-400 block mb-1">태그</span>
+                      <TagSelector
+                        availableTags={availableTags}
+                        selectedTags={selectedCustomer.tags || []}
+                        onChange={async (tags) => {
+                          setSelectedCustomer({ ...selectedCustomer, tags });
+                          // 즉시 DB 반영
+                          try {
+                            await fetch(`/api/customers/${selectedCustomer.id}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ tags }),
+                            });
+                          } catch { /* 조용히 실패 */ }
+                        }}
+                      />
                     </div>
                   )}
                   {/* 메모 — 고정 높이 영역 (메모 없어도 공간 유지) */}

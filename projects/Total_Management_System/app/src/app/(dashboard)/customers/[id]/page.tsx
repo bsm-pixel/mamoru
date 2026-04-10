@@ -10,6 +10,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomer, useUpdateCustomer } from '@/hooks/use-customers';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { ArrowLeft, Save, ShoppingBag, FileSignature, MessageSquare, Wrench, Clock } from 'lucide-react';
+import { TagBadges, TagSelector } from '@/components/shared/tag-selector';
+import { useSetting } from '@/hooks/use-settings';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -45,6 +47,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   const updateCustomer = useUpdateCustomer();
 
   const [editing, setEditing] = useState(false);
+  const availableTags = useSetting<string[]>('customer.tags', []);
   const [form, setForm] = useState({
     name: '',
     phone: '',
@@ -56,6 +59,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     address_detail: '',
     memo: '',
     outstanding_balance: 0,
+    tags: [] as string[],
   });
 
   function startEdit() {
@@ -72,6 +76,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       address_detail: c.address_detail || '',
       memo: c.memo || '',
       outstanding_balance: c.outstanding_balance || 0,
+      tags: (c as Record<string, unknown>).tags as string[] || [],
     });
     setEditing(true);
   }
@@ -233,6 +238,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   placeholder="상세 주소 (동/호수)"
                   className="w-full h-9 px-3 mt-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
               </div>
+              {availableTags.length > 0 && (
+                <div>
+                  <label className="text-xs text-neutral-500 mb-1 block">태그</label>
+                  <TagSelector availableTags={availableTags} selectedTags={form.tags} onChange={(tags) => setForm({ ...form, tags })} />
+                </div>
+              )}
               <div>
                 <label className="text-xs text-neutral-500">메모</label>
                 <textarea
@@ -261,10 +272,6 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   <p>{formatPhone(c.phone) || '-'}</p>
                 </div>
                 <div>
-                  <span className="text-xs text-neutral-500">이메일</span>
-                  <p>{c.email || '-'}</p>
-                </div>
-                <div>
                   <span className="text-xs text-neutral-500">유형</span>
                   <p>
                     <Badge className={
@@ -281,16 +288,24 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   <span className="text-xs text-neutral-500">등록일</span>
                   <p>{formatDate(c.created_at)}</p>
                 </div>
-                {c.company_name && (
+                <div>
+                  <span className="text-xs text-neutral-500">매장명 (근무지)</span>
+                  <p>{c.company_name || '-'}</p>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-xs text-neutral-500">주소</span>
+                  <p>{[c.postcode, c.address_road, c.address_detail].filter(Boolean).join(' ') || '-'}</p>
+                </div>
+                {(c as unknown as { tags?: string[] }).tags && (c as unknown as { tags?: string[] }).tags!.length > 0 && (
                   <div className="col-span-2">
-                    <span className="text-xs text-neutral-500">매장명 (근무지)</span>
-                    <p>{c.company_name}</p>
+                    <span className="text-xs text-neutral-500 mb-1 block">태그</span>
+                    <TagBadges tags={(c as unknown as { tags?: string[] }).tags} />
                   </div>
                 )}
-                {(c.address_road || c.address_detail) && (
+                {c.email && (
                   <div className="col-span-2">
-                    <span className="text-xs text-neutral-500">주소</span>
-                    <p>{[c.address_road, c.address_detail].filter(Boolean).join(' ')}</p>
+                    <span className="text-xs text-neutral-400">이메일</span>
+                    <p className="text-neutral-500 text-xs">{c.email}</p>
                   </div>
                 )}
               </div>

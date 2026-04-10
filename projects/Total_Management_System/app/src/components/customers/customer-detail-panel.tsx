@@ -13,6 +13,7 @@ import {
   Clock, Pencil, X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { TagBadges } from '@/components/shared/tag-selector';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -189,10 +190,6 @@ export function CustomerDetailPanel({ customerId }: Props) {
                 <p>{formatPhone(c.phone) || '-'}</p>
               </div>
               <div>
-                <span className="text-xs text-neutral-500">이메일</span>
-                <p>{c.email || '-'}</p>
-              </div>
-              <div>
                 <span className="text-xs text-neutral-500">유형</span>
                 <p>{TYPE_OPTIONS.find(t => t.value === c.customer_type)?.label || '일반'}</p>
               </div>
@@ -200,16 +197,24 @@ export function CustomerDetailPanel({ customerId }: Props) {
                 <span className="text-xs text-neutral-500">등록일</span>
                 <p>{formatDate(c.created_at)}</p>
               </div>
-              {c.company_name && (
+              <div>
+                <span className="text-xs text-neutral-500">매장명 (근무지)</span>
+                <p>{c.company_name || '-'}</p>
+              </div>
+              <div className="col-span-2">
+                <span className="text-xs text-neutral-500">주소</span>
+                <p>{[c.postcode, c.address_road, c.address_detail].filter(Boolean).join(' ') || '-'}</p>
+              </div>
+              {(c as unknown as { tags?: string[] }).tags && (c as unknown as { tags?: string[] }).tags!.length > 0 && (
                 <div className="col-span-2">
-                  <span className="text-xs text-neutral-500">매장명 (근무지)</span>
-                  <p>{c.company_name}</p>
+                  <span className="text-xs text-neutral-500 mb-1 block">태그</span>
+                  <TagBadges tags={(c as unknown as { tags?: string[] }).tags} />
                 </div>
               )}
-              {(c.address_road || c.address_detail) && (
+              {c.email && (
                 <div className="col-span-2">
-                  <span className="text-xs text-neutral-500">주소</span>
-                  <p>{[c.address_road, c.address_detail].filter(Boolean).join(' ')}</p>
+                  <span className="text-xs text-neutral-400">이메일</span>
+                  <p className="text-neutral-500 text-xs">{c.email}</p>
                 </div>
               )}
             </div>
