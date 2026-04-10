@@ -535,6 +535,7 @@ export function useRebuildSale() {
         unit_price: number;
         total_price: number;
         serial_ids?: string[];
+        manual_serials?: string[];
       }>;
       sale_info: {
         total_amount: number;

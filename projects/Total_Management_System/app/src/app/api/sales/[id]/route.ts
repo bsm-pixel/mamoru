@@ -401,6 +401,7 @@ export async function PATCH(
           unit_price: number;
           total_price: number;
           serial_ids?: string[];
+          manual_serials?: string[];
         }>;
         sale_info: {
           total_amount: number;
@@ -510,33 +511,88 @@ export async function PATCH(
         }
       }
 
-      // ── STEP 4: 새 시리얼 할당 ──
-      const allNewSerialIds = newItems.flatMap((item) => item.serial_ids || []);
-      if (hasNewSerials && allNewSerialIds.length > 0) {
-        const { data: serials } = await db
-          .from('product_serials')
-          .select('id, warehouse_zone')
-          .in('id', allNewSerialIds)
-          .eq('status', 'in_stock');
+      // ── STEP 4: 새 시리얼 할당 (아이템별 순회 + sale_item_id 매핑) ──
+      if (hasNewSerials) {
+        // 새 항목 ID 조회 (STEP 3에서 생성된 것)
+        const { data: newSaleItems } = await db
+          .from('offline_sale_items')
+          .select('id, product_id')
+          .eq('sale_id', id)
+          .order('created_at', { ascending: true });
 
-        if (!serials || serials.length !== allNewSerialIds.length) {
-          return NextResponse.json({ error: '일부 시리얼이 판매 불가 상태입니다' }, { status: 409 });
-        }
+        for (let itemIdx = 0; itemIdx < newItems.length; itemIdx++) {
+          const item = newItems[itemIdx];
+          const saleItemId = newSaleItems?.[itemIdx]?.id || null;
 
-        for (const serial of serials) {
-          const { count } = await db.from('product_serials').update({
-            previous_zone: serial.warehouse_zone,
-            status: 'sold',
-            sold_via: 'offline',
-            offline_sale_id: id,
-            sold_at: new Date().toISOString(),
-            sold_to_name: sale.customer_name,
-            sold_to_phone: sale.customer_phone || null,
-          }).eq('id', serial.id).eq('status', 'in_stock')
-            .select('id', { count: 'exact', head: true });
+          // 4-A: 기존 등록 시리얼 (serial_ids)
+          const serialIds = item.serial_ids || [];
+          if (serialIds.length > 0) {
+            const { data: serials } = await db
+              .from('product_serials')
+              .select('id, warehouse_zone')
+              .in('id', serialIds)
+              .eq('status', 'in_stock');
 
-          if (count === 0) {
-            return NextResponse.json({ error: `시리얼 충돌 — 다시 시도해주세요` }, { status: 409 });
+            if (!serials || serials.length !== serialIds.length) {
+              return NextResponse.json({ error: '일부 시리얼이 판매 불가 상태입니다' }, { status: 409 });
+            }
+
+            for (const serial of serials) {
+              const { count } = await db.from('product_serials').update({
+                previous_zone: serial.warehouse_zone,
+                status: 'sold',
+                sold_via: 'offline',
+                offline_sale_id: id,
+                sale_item_id: saleItemId,
+                sold_at: new Date().toISOString(),
+                sold_to_name: sale.customer_name,
+                sold_to_phone: sale.customer_phone || null,
+              }).eq('id', serial.id).eq('status', 'in_stock')
+                .select('id', { count: 'exact', head: true });
+
+              if (count === 0) {
+                return NextResponse.json({ error: `시리얼 충돌 — 다시 시도해주세요` }, { status: 409 });
+              }
+            }
+          }
+
+          // 4-B: 직접입력/자동생성 시리얼 (manual_serials)
+          const manualSerials = item.manual_serials || [];
+          for (const serialNumber of manualSerials) {
+            if (!serialNumber.trim()) continue;
+            const { data: existing } = await db
+              .from('product_serials')
+              .select('id')
+              .eq('serial_number', serialNumber.trim())
+              .limit(1);
+
+            if (existing && existing.length > 0) {
+              await db.from('product_serials').update({
+                product_id: item.product_id || null,
+                sale_item_id: saleItemId,
+                status: 'sold',
+                sold_via: 'offline',
+                offline_sale_id: id,
+                sold_at: new Date().toISOString(),
+                sold_to_name: sale.customer_name,
+                sold_to_phone: sale.customer_phone || null,
+                previous_zone: 'ready',
+              }).eq('id', existing[0].id);
+            } else {
+              await db.from('product_serials').insert({
+                serial_number: serialNumber.trim(),
+                product_id: item.product_id || null,
+                sale_item_id: saleItemId,
+                status: 'sold',
+                warehouse_zone: 'ready',
+                previous_zone: 'ready',
+                sold_via: 'offline',
+                offline_sale_id: id,
+                sold_at: new Date().toISOString(),
+                sold_to_name: sale.customer_name,
+                sold_to_phone: sale.customer_phone || null,
+              });
+            }
           }
         }
       }
@@ -552,7 +608,7 @@ export async function PATCH(
       for (const [productId, qty] of Object.entries(newQtyMap)) {
         const { data: prod } = await db.from('products').select('stock_quantity, raw_stock, imweb_product_no').eq('id', productId).single();
         if (!prod) continue;
-        const hasSerials = allNewSerialIds.length > 0 && newItems.some((it) => it.product_id === productId && it.serial_ids?.length);
+        const hasSerials = newItems.some((it) => it.product_id === productId && ((it.serial_ids && it.serial_ids.length > 0) || (it.manual_serials && it.manual_serials.length > 0)));
         const newStock = Math.max(0, (prod.stock_quantity || 0) - qty);
         const updateData: Record<string, unknown> = { stock_quantity: newStock };
         if (!hasSerials) updateData.raw_stock = Math.max(0, (prod.raw_stock || 0) - qty);

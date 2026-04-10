@@ -16,6 +16,7 @@ import { ReviewRequestModal } from './review-request-modal';
 import type { SaleChannel, OfflineSale, OfflineSaleItem, Product } from '@/lib/supabase/types';
 import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
 import { usePriceGroups } from '@/hooks/use-price-groups';
+import { SerialPicker } from './serial-picker';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
@@ -465,6 +466,7 @@ export function SaleDetailPanel({ saleId }: Props) {
         <FullEditSaleModal
           sale={s}
           items={data.items}
+          serials={serials}
           saleId={saleId}
           onClose={() => setShowEditModal(false)}
           rebuildSale={rebuildSale}
@@ -474,18 +476,37 @@ export function SaleDetailPanel({ saleId }: Props) {
   );
 }
 
-/** 판매 전체 수정 모달 (제품 추가/삭제 + 금액/결제 수정) */
-function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuildSale }: {
+/** 판매 전체 수정 모달 (제품 추가/삭제 + 금액/결제 + 시리얼 수정) */
+function FullEditSaleModal({ sale, items: originalItems, serials: existingSerials, saleId, onClose, rebuildSale }: {
   sale: OfflineSale;
   items: OfflineSaleItem[];
+  serials: Array<{ id: string; serial_number: string; product_id: string | null; sale_item_id?: string | null }>;
   saleId: string;
   onClose: () => void;
   rebuildSale: ReturnType<typeof useRebuildSale>;
 }) {
   const { data: products = [] } = useProducts();
   const priceGroups = usePriceGroups();
+
+  // 기존 시리얼을 아이템별로 매칭하여 프리필
+  const buildInitialSerials = () => {
+    const used = new Set<string>();
+    return originalItems.map((item) => {
+      // 1순위: sale_item_id 매칭
+      const bySaleItem = existingSerials.filter((sr) => sr.sale_item_id === item.id && !used.has(sr.id));
+      bySaleItem.forEach((sr) => used.add(sr.id));
+      // 2순위: product_id 매칭
+      const byProduct = bySaleItem.length === 0
+        ? existingSerials.filter((sr) => sr.product_id && sr.product_id === item.product_id && !used.has(sr.id))
+        : [];
+      byProduct.forEach((sr) => used.add(sr.id));
+      return [...bySaleItem, ...byProduct].map((sr) => sr.id);
+    });
+  };
+  const initialSerialIds = buildInitialSerials();
+
   const [editItems, setEditItems] = useState(
-    originalItems.map((it) => ({
+    originalItems.map((it, idx) => ({
       product_id: it.product_id || undefined,
       product_name: it.product_name,
       sku: it.sku || undefined,
@@ -493,7 +514,8 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
       quantity: it.quantity,
       unit_price: it.unit_price,
       total_price: it.total_price,
-      serial_ids: [] as string[], // 수정 시 시리얼은 새로 할당 불필요 (B2B)
+      serial_ids: initialSerialIds[idx] || [] as string[],
+      manualSerials: [] as string[],
     }))
   );
   const [paymentMethod, setPaymentMethod] = useState<string>(sale.payment_method);
@@ -533,6 +555,7 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
         unit_price: unitPrice,
         total_price: unitPrice,
         serial_ids: [],
+        manualSerials: [],
       }]);
     }
     setProductSearch('');
@@ -551,6 +574,7 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
       unit_price: price,
       total_price: price,
       serial_ids: [],
+      manualSerials: [],
     }]);
     setCustomName('');
     setCustomPrice('');
@@ -566,6 +590,7 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
       items: editItems.map((it) => ({
         ...it,
         total_price: it.unit_price * it.quantity,
+        manual_serials: it.manualSerials?.length ? it.manualSerials : undefined,
       })),
       sale_info: {
         total_amount: totalAmount,
@@ -602,26 +627,39 @@ function FullEditSaleModal({ sale, items: originalItems, saleId, onClose, rebuil
             <label className="text-xs font-semibold text-neutral-600 mb-2 block">품목 ({editItems.length})</label>
             <div className="space-y-2">
               {editItems.map((it, idx) => (
-                <div key={idx} className="flex items-center gap-2 p-2 rounded-lg border border-neutral-200 bg-neutral-50">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{it.product_name}</p>
-                    <p className="text-xs text-neutral-500">{formatKRW(it.unit_price)} × {it.quantity} = {formatKRW(it.unit_price * it.quantity)}</p>
+                <div key={idx} className="p-2 rounded-lg border border-neutral-200 bg-neutral-50">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{it.product_name}</p>
+                      <p className="text-xs text-neutral-500">{formatKRW(it.unit_price)} × {it.quantity} = {formatKRW(it.unit_price * it.quantity)}</p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button onClick={() => updateQty(idx, -1)} className="w-6 h-6 rounded bg-neutral-200 text-xs font-bold">−</button>
+                      <input
+                        type="number"
+                        min="1"
+                        value={it.quantity}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 1;
+                          setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, quantity: Math.max(1, val), total_price: item.unit_price * Math.max(1, val) } : item));
+                        }}
+                        className="w-10 h-6 text-center text-xs font-bold border border-neutral-200 rounded bg-white focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                      <button onClick={() => updateQty(idx, 1)} className="w-6 h-6 rounded bg-neutral-200 text-xs font-bold">+</button>
+                      <button onClick={() => removeItem(idx)} className="w-6 h-6 rounded bg-red-100 text-red-500 text-xs font-bold ml-1">×</button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => updateQty(idx, -1)} className="w-6 h-6 rounded bg-neutral-200 text-xs font-bold">−</button>
-                    <input
-                      type="number"
-                      min="1"
-                      value={it.quantity}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value) || 1;
-                        setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, quantity: Math.max(1, val), total_price: item.unit_price * Math.max(1, val) } : item));
-                      }}
-                      className="w-10 h-6 text-center text-xs font-bold border border-neutral-200 rounded bg-white focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                  {/* 시리얼 피커 — product_id가 있는 아이템만 */}
+                  {it.product_id && (
+                    <SerialPicker
+                      productId={it.product_id}
+                      quantity={it.quantity}
+                      selectedSerialIds={it.serial_ids}
+                      onSelect={(ids) => setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, serial_ids: ids } : item))}
+                      manualSerials={it.manualSerials}
+                      onManualSerialsChange={(serials) => setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, manualSerials: serials } : item))}
                     />
-                    <button onClick={() => updateQty(idx, 1)} className="w-6 h-6 rounded bg-neutral-200 text-xs font-bold">+</button>
-                    <button onClick={() => removeItem(idx)} className="w-6 h-6 rounded bg-red-100 text-red-500 text-xs font-bold ml-1">×</button>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
