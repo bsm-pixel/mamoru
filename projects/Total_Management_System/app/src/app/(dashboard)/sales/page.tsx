@@ -326,7 +326,7 @@ export default function SalesPage() {
         /* PC: 마스터-디테일 2컬럼 */
         <div className="flex gap-4 px-4 md:px-6 py-4 h-full min-h-0">
           {/* 좌측: 목록 */}
-          <div className="w-[480px] shrink-0 overflow-y-auto space-y-3 pr-1">
+          <div className="w-2/5 shrink-0 overflow-y-auto space-y-3 pr-1">
             {listContent}
           </div>
           {/* 우측: 상세 패널 */}
