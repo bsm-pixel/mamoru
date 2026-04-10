@@ -874,6 +874,233 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   [4-2] 마모루 컨설팅 탭 — About 섹션
+   ══════════════════════════════════════════════════════════════ */
+.about-block {
+  padding: 0 20px 32px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.about-problem {
+  background: var(--mm-bg-dark);
+  border-radius: var(--mm-radius-lg);
+  padding: 32px 24px;
+  margin-bottom: 24px;
+}
+
+.about-problem-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mm-text-w3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.about-problem-title {
+  font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--mm-text-w);
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.about-problem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.about-problem-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.about-problem-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(250,249,247,0.08);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mm-text-w2);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.about-problem-text {
+  font-size: 14px;
+  color: var(--mm-text-w2);
+  line-height: 1.6;
+}
+
+.about-problem-text strong {
+  color: var(--mm-text-w);
+  font-weight: 600;
+}
+
+/* 약속 카드 */
+.about-promise {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.about-promise-card {
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.about-promise-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: rgba(26,26,26,0.08);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.about-promise-content h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.about-promise-content p {
+  font-size: 13px;
+  color: var(--mm-text-d2);
+  line-height: 1.6;
+}
+
+/* 이미지 + 캡션 */
+.about-image {
+  border-radius: var(--mm-radius-lg);
+  overflow: hidden;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.about-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.about-image-placeholder {
+  width: 100%;
+  height: 200px;
+  background: var(--mm-gold-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mm-text-d3);
+  font-size: 13px;
+}
+
+.about-image-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  background: linear-gradient(transparent, rgba(26,26,26,0.7));
+  color: var(--mm-text-w);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* 기술력 카드 */
+.about-tech {
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.about-tech-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mm-text-d3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.about-tech-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.about-tech-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.about-tech-item {
+  font-size: 14px;
+  color: var(--mm-text-d2);
+  line-height: 1.5;
+  padding-left: 16px;
+  position: relative;
+}
+
+.about-tech-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  background: var(--mm-gold);
+  border-radius: 50%;
+}
+
+/* CTA 인라인 */
+.about-cta {
+  text-align: center;
+  padding: 8px 0 16px;
+}
+
+.about-cta-text {
+  font-size: 15px;
+  font-style: italic;
+  color: var(--mm-text-d3);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+/* PC 반응형 */
+@media screen and (min-width: 768px) {
+  .about-block { max-width: 760px; }
+  .about-problem { padding: 40px 32px; }
+  .about-problem-title { font-size: 24px; }
+  .about-promise { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .about-promise-card { flex-direction: column; text-align: center; }
+  .about-promise-num { margin: 0 auto 4px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
    fade-in 스크롤 애니메이션
    ══════════════════════════════════════════════════════════════ */
 .fade-in {
@@ -944,7 +1171,8 @@ html, body {
   <!-- [2] 탭 — 1행: 상담철칙 + Q&A / 2행: 상담방법 3종 -->
   <div class="consult-tabs-container">
     <div class="consult-tabs">
-      <button class="consult-tab active" data-tab="principle">상담철칙</button>
+      <button class="consult-tab active" data-tab="about">마모루 컨설팅</button>
+      <button class="consult-tab" data-tab="principle">상담철칙</button>
       <button class="consult-tab" data-tab="qna">Q&A</button>
     </div>
     <div class="consult-tabs">
@@ -955,9 +1183,102 @@ html, body {
   </div>
 
   <!-- =========================================================
+       [2.5] 마모루 컨설팅 탭
+       ========================================================= -->
+  <div class="consult-tab-content active" id="tab-about">
+    <section class="consult-section" style="padding-bottom: 0;">
+      <h2 class="consult-section-title fade-in">왜 마모루에서<br>상담해야 할까요?</h2>
+      <div class="consult-section-divider"></div>
+    </section>
+
+    <div class="about-block">
+      <!-- 문제 제기 — 다크 블록 -->
+      <div class="about-problem fade-in">
+        <p class="about-problem-label">가위 시장의 현실</p>
+        <h3 class="about-problem-title">대부분의 가위 회사는<br>판매 회사입니다</h3>
+        <div class="about-problem-list">
+          <div class="about-problem-item fade-in delay-1">
+            <div class="about-problem-icon">💰</div>
+            <p class="about-problem-text"><strong>가격과 브랜드로 판매합니다</strong><br>비싼 가위 = 좋은 가위라는 공식은 없습니다. 가격이 높다고 내 손에 맞는 건 아닙니다.</p>
+          </div>
+          <div class="about-problem-item fade-in delay-2">
+            <div class="about-problem-icon">🏭</div>
+            <p class="about-problem-text"><strong>자체 기술력이 없습니다</strong><br>공장에서 떼어다 로고만 찍어 파는 곳이 대부분입니다. 수리는? 외주로 돌립니다.</p>
+          </div>
+          <div class="about-problem-item fade-in delay-3">
+            <div class="about-problem-icon">🤷</div>
+            <p class="about-problem-text"><strong>고객이 이해 없이 구매합니다</strong><br>왜 이 가위인지 모른 채, 추천받은 대로 구매하고 후회하는 경우가 많습니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 마모루의 약속 -->
+      <div class="about-promise">
+        <div class="about-promise-card fade-in">
+          <span class="about-promise-num">01</span>
+          <div class="about-promise-content">
+            <h4>고객이 이해해야 합니다</h4>
+            <p>왜 이 가위인지, 왜 이 형태인지. 정보를 숨기지 않습니다.</p>
+          </div>
+        </div>
+        <div class="about-promise-card fade-in delay-1">
+          <span class="about-promise-num">02</span>
+          <div class="about-promise-content">
+            <h4>고객이 선택해야 합니다</h4>
+            <p>"안 사셔도 됩니다"를 두려워하지 않습니다.</p>
+          </div>
+        </div>
+        <div class="about-promise-card fade-in delay-2">
+          <span class="about-promise-num">03</span>
+          <div class="about-promise-content">
+            <h4>고객이 만족해야 합니다</h4>
+            <p>이해하고 선택했기에 진짜 만족이 옵니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- [IMG] 상담 이미지 — 사진 삽입 위치 -->
+      <div class="about-image fade-in">
+        <!-- ✏️ 수정가능: 상담 현장 이미지 (src URL만 교체) -->
+        <!-- 📐 추천: 800x500px JPG/WebP (가로형) -->
+        <div class="about-image-placeholder">상담 현장 이미지 삽입</div>
+        <!-- <img src="상담이미지URL" alt="마모루 상담 현장"> -->
+        <!-- <p class="about-image-caption">인모 100% 통가발로 직접 테스트하는 마모루 상담</p> -->
+      </div>
+
+      <!-- 기술력 -->
+      <div class="about-tech fade-in">
+        <p class="about-tech-label">기술력</p>
+        <h3 class="about-tech-title">50년 장인의 기술을 잇다</h3>
+        <div class="about-tech-list">
+          <p class="about-tech-item">아버지로부터 이어받은 복원수리 기술 — 일본 공장 견학 + 수료</p>
+          <p class="about-tech-item">어떤 브랜드의 가위든 복원수리 가능 — 버리지 마시고 상담해주세요</p>
+          <p class="about-tech-item">날 변형(곡률 조절) 가공 — 고객의 커트 스타일과 습관에 맞춤</p>
+          <p class="about-tech-item">마모루 가위 수리비 1만원, 타사 가위 4만원 — 합리적인 비용</p>
+        </div>
+      </div>
+
+      <!-- [IMG] 기술력 이미지 -->
+      <div class="about-image fade-in">
+        <!-- ✏️ 수정가능: 복원수리 작업 이미지 (src URL만 교체) -->
+        <!-- 📐 추천: 800x500px JPG/WebP (가로형) -->
+        <div class="about-image-placeholder">복원수리 작업 이미지 삽입</div>
+        <!-- <img src="기술력이미지URL" alt="마모루 복원수리"> -->
+        <!-- <p class="about-image-caption">50년 장인 기술로 가위를 되살립니다</p> -->
+      </div>
+
+      <!-- 마무리 CTA -->
+      <div class="about-cta fade-in">
+        <p class="about-cta-text">"가위를 팔지 않습니다.<br>올바른 선택을 안내할 뿐입니다."</p>
+        <button class="consult-cta-btn consult-cta-primary" onclick="goToForm();" style="display:inline-block; width:auto; padding:14px 40px;">상담 접수하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
        [3] 상담철칙 탭 - 개선: 골드라인 + 호버
        ========================================================= -->
-  <div class="consult-tab-content active" id="tab-principle">
+  <div class="consult-tab-content" id="tab-principle">
     <!-- [IMG] 캐릭터 이미지 -->
     <div class="tab-character">
       <div class="tab-character-image">
