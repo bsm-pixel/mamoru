@@ -182,24 +182,27 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 시리얼 연결: previous_zone 저장 후 status → sold (낙관적 잠금)
-    const allSerialIds = items.flatMap((item) => item.serial_ids || []);
-    if (allSerialIds.length > 0) {
+    // 시리얼 연결: previous_zone 저장 후 status → sold (낙관적 잠금) + sale_item_id 매핑
+    for (let itemIdx = 0; itemIdx < items.length; itemIdx++) {
+      const item = items[itemIdx];
+      const saleItemId = itemIdMap[itemIdx] || null;
+      const serialIds = item.serial_ids || [];
+      if (serialIds.length === 0) continue;
+
       const { data: currentSerials } = await db
         .from('product_serials')
         .select('id, warehouse_zone')
-        .in('id', allSerialIds)
-        .eq('status', 'in_stock'); // 이미 sold인 시리얼 제외
+        .in('id', serialIds)
+        .eq('status', 'in_stock');
 
-      if (!currentSerials || currentSerials.length !== allSerialIds.length) {
+      if (!currentSerials || currentSerials.length !== serialIds.length) {
         return NextResponse.json(
-          { error: `시리얼 ${allSerialIds.length}개 중 ${currentSerials?.length || 0}개만 판매 가능 (이미 판매/반품된 시리얼 확인)` },
+          { error: `시리얼 ${serialIds.length}개 중 ${currentSerials?.length || 0}개만 판매 가능 (이미 판매/반품된 시리얼 확인)` },
           { status: 409 }
         );
       }
 
       for (const serial of currentSerials) {
-        // 낙관적 잠금: status='in_stock'인 경우에만 update
         const { count } = await db
           .from('product_serials')
           .update({
@@ -207,12 +210,13 @@ export async function POST(req: NextRequest) {
             status: 'sold',
             sold_via: 'offline',
             offline_sale_id: created.id,
+            sale_item_id: saleItemId, // 준비표 매칭용
             sold_at: new Date().toISOString(),
             sold_to_name: sale.customer_name,
             sold_to_phone: sale.customer_phone || null,
           })
           .eq('id', serial.id)
-          .eq('status', 'in_stock') // Race condition 방지
+          .eq('status', 'in_stock')
           .select('id', { count: 'exact', head: true });
 
         if (count === 0) {

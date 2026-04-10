@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAvailableSerials } from '@/hooks/use-serials';
 import { Hash, Check, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -19,18 +19,35 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
   const [manualInput, setManualInput] = useState('');
   const { data: serials = [], isLoading } = useAvailableSerials(productId);
 
+  // 재고 시리얼이 0개이면 자동으로 직접입력 모드
+  useEffect(() => {
+    if (!isLoading && serials.length === 0 && open) {
+      setManualMode(true);
+    }
+  }, [isLoading, serials.length, open]);
+
   function toggleSerial(serialId: string) {
     if (selectedSerialIds.includes(serialId)) {
       onSelect(selectedSerialIds.filter((id) => id !== serialId));
     } else {
-      // 수량 이상 선택 방지
       if (selectedSerialIds.length >= quantity) return;
       onSelect([...selectedSerialIds, serialId]);
     }
   }
 
-  const selectedCount = selectedSerialIds.length;
-  const isComplete = selectedCount === quantity;
+  async function autoGenerate() {
+    try {
+      const res = await fetch('/api/serials/batch');
+      const data = await res.json();
+      let next = data.next_start || 13790001;
+      const existing = manualSerials.map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
+      while (existing.includes(next)) next++;
+      onManualSerialsChange?.([...manualSerials, String(next)]);
+    } catch { /* ignore */ }
+  }
+
+  const selectedCount = selectedSerialIds.length + manualSerials.length;
+  const isComplete = selectedCount >= quantity;
 
   return (
     <div className="mt-1">
@@ -54,7 +71,7 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
       </button>
 
       {open && (
-        <div className="mt-1 p-2 rounded border border-neutral-200 bg-white max-h-40 overflow-y-auto">
+        <div className="mt-1 p-2 rounded border border-neutral-200 bg-white max-h-48 overflow-y-auto">
           {/* 등록된 시리얼 선택 */}
           {!manualMode && (
             <>
@@ -97,6 +114,13 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
           {/* 직접 입력 모드 */}
           {manualMode && (
             <div className="space-y-1.5">
+              {/* 자동 번호 생성 — 최상단 눈에 띄는 버튼 */}
+              <button type="button" onClick={autoGenerate}
+                className="w-full py-2 rounded-lg border border-dashed border-green-300 bg-green-50 text-green-700 text-xs font-semibold hover:bg-green-100 transition">
+                + 자동 번호 생성
+              </button>
+
+              {/* 이미 추가된 시리얼 목록 */}
               {manualSerials.map((s, i) => (
                 <div key={i} className="flex items-center gap-1.5">
                   <span className="font-mono text-xs text-neutral-700 flex-1">{s}</span>
@@ -104,6 +128,8 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
                     className="text-red-400 hover:text-red-600 text-xs">×</button>
                 </div>
               ))}
+
+              {/* 수동 입력 필드 */}
               <div className="flex gap-1.5">
                 <input
                   type="text"
@@ -116,36 +142,23 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
                       setManualInput('');
                     }
                   }}
-                  placeholder="시리얼 번호 입력 후 엔터"
+                  placeholder="직접 입력 후 엔터"
                   className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs font-mono placeholder:text-neutral-400"
                 />
                 <button type="button"
+                  disabled={!manualInput.trim()}
                   onClick={() => { if (manualInput.trim()) { onManualSerialsChange?.([...manualSerials, manualInput.trim()]); setManualInput(''); } }}
-                  className="px-2 py-1 text-xs bg-neutral-900 text-white rounded">추가</button>
+                  className="px-2 py-1 text-xs bg-neutral-900 text-white rounded disabled:opacity-30 disabled:cursor-not-allowed">추가</button>
               </div>
             </div>
           )}
 
-          {/* 모드 전환 + 자동 생성 */}
+          {/* 모드 전환 */}
           <div className="flex items-center gap-2 pt-1.5 mt-1 border-t border-neutral-100">
             <button type="button" onClick={() => setManualMode(!manualMode)}
               className="text-[10px] text-blue-500 hover:text-blue-700">
               {manualMode ? '← 등록된 시리얼' : '직접 입력 →'}
             </button>
-            {manualMode && (
-              <button type="button" onClick={async () => {
-                try {
-                  const res = await fetch('/api/serials/batch');
-                  const data = await res.json();
-                  let next = data.next_start || 13790001;
-                  const existing = manualSerials.map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
-                  while (existing.includes(next)) next++;
-                  onManualSerialsChange?.([...manualSerials, String(next)]);
-                } catch { /* ignore */ }
-              }} className="ml-auto text-[10px] text-green-600 hover:text-green-800 font-medium">
-                자동 번호 생성
-              </button>
-            )}
           </div>
         </div>
       )}
