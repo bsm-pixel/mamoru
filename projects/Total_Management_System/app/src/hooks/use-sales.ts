@@ -39,7 +39,7 @@ export function useSales(filters?: {
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      // 탭 필터
+      // 탭 필터 — 전체/오늘/미수금은 취소 건 제외, 취소 탭만 취소 건 표시
       const tab = filters?.tab || 'all';
       if (tab === 'today') {
         const today = new Date().toISOString().slice(0, 10);
@@ -48,6 +48,9 @@ export function useSales(filters?: {
         query = query.in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null);
       } else if (tab === 'cancelled') {
         query = query.not('cancelled_at', 'is', null);
+      } else {
+        // all: 취소 건 제외
+        query = query.is('cancelled_at', null);
       }
 
       // 채널 필터
@@ -109,7 +112,7 @@ export function useSalesTabCounts() {
       const today = new Date().toISOString().slice(0, 10);
 
       const [allRes, todayRes, unpaidRes, cancelledRes] = await Promise.all([
-        db.from('offline_sales').select('*', { count: 'exact', head: true }),
+        db.from('offline_sales').select('*', { count: 'exact', head: true }).is('cancelled_at', null),
         db.from('offline_sales').select('*', { count: 'exact', head: true }).eq('sale_date', today).is('cancelled_at', null),
         db.from('offline_sales').select('*', { count: 'exact', head: true }).in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null),
         db.from('offline_sales').select('*', { count: 'exact', head: true }).not('cancelled_at', 'is', null),
