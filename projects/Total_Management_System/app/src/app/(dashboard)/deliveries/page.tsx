@@ -269,6 +269,9 @@ const DeliveryRow = memo(function DeliveryRow({ dl, isSelected, onClick }: {
         </div>
       </div>
       <div className="text-right shrink-0">
+        {dl.payment_status === 'partial' && (dl.paid_amount as number) > 0 && (
+          <p className="text-[10px] text-yellow-600 font-medium">{formatKRW((dl.paid_amount as number))} 선납</p>
+        )}
         <p className="text-sm font-bold">{formatKRW((dl.total_amount as number) || 0)}</p>
       </div>
     </div>
@@ -308,7 +311,10 @@ function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCr
   const [paymentStatus, setPaymentStatus] = useState<'unpaid' | 'partial' | 'paid'>('unpaid');
   const [paymentMethod, setPaymentMethod] = useState('transfer');
   const [discount, setDiscount] = useState(0);
+  const [paidAmount, setPaidAmount] = useState(0);
   const [memo, setMemo] = useState('');
+  const [customName, setCustomName] = useState('');
+  const [customPrice, setCustomPrice] = useState('');
 
   const customerType = selectedCustomer?.customer_type;
 
@@ -365,6 +371,7 @@ function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCr
         receipt_type: receiptType,
         payment_status: paymentStatus,
         payment_method: paymentMethod,
+        paid_amount: paymentStatus === 'partial' ? paidAmount : paymentStatus === 'paid' ? totalAmount : 0,
         discount_amount: discount,
         items: cart,
       });
@@ -499,31 +506,47 @@ function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCr
           {/* 제품 선택 */}
           <div>
             <label className="text-xs font-semibold text-neutral-500 mb-1 block">품목</label>
-            <input
-              type="text"
-              value={productSearch}
-              onChange={(e) => setProductSearch(e.target.value)}
-              placeholder="제품명 또는 SKU 검색"
-              className="w-full h-8 px-3 mb-2 rounded-lg border border-neutral-200 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
-            />
-            <div className="max-h-[180px] overflow-y-auto border border-neutral-100 rounded-lg divide-y divide-neutral-50">
-              {filteredProducts.map((p) => {
-                const inCart = cart.find((c) => c.product_id === p.id);
-                const price = getPrice(p);
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => addProduct(p)}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-neutral-50 transition text-left ${inCart ? 'bg-neutral-900/5' : ''}`}
-                  >
-                    <span className="truncate font-medium">
-                      {p.name}
-                      {inCart && <span className="ml-1.5 text-neutral-900 font-bold">x{inCart.quantity}</span>}
-                    </span>
-                    <span className="text-neutral-400 shrink-0 ml-2">{formatKRW(price)}</span>
-                  </button>
-                );
-              })}
+            <div className="relative">
+              <input
+                type="text"
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                placeholder="제품명 또는 SKU 검색"
+                className="w-full h-8 px-3 rounded-lg border border-neutral-200 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
+              />
+              {productSearch && (
+                <div className="absolute z-20 w-full mt-1 max-h-[180px] overflow-y-auto bg-white border border-neutral-200 rounded-lg shadow-lg divide-y divide-neutral-50">
+                  {filteredProducts.map((p) => {
+                    const inCart = cart.find((c) => c.product_id === p.id);
+                    const price = getPrice(p);
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => { addProduct(p); setProductSearch(''); }}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-neutral-50 transition text-left ${inCart ? 'bg-neutral-900/5' : ''}`}
+                      >
+                        <span className="truncate font-medium">
+                          {p.name}
+                          {inCart && <span className="ml-1.5 text-neutral-900 font-bold">x{inCart.quantity}</span>}
+                        </span>
+                        <span className="text-neutral-400 shrink-0 ml-2">{formatKRW(price)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            {/* 임시 제품 직접 입력 */}
+            <div className="flex gap-2 mt-2">
+              <input type="text" value={customName} onChange={(e) => setCustomName(e.target.value)}
+                placeholder="품목명 직접 입력" className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs placeholder:text-neutral-400" />
+              <input type="number" value={customPrice} onChange={(e) => setCustomPrice(e.target.value)}
+                placeholder="금액" className="w-24 h-7 px-2 rounded border border-neutral-200 text-xs text-right placeholder:text-neutral-400" />
+              <button onClick={() => {
+                if (!customName.trim() || !parseInt(customPrice)) return;
+                setCart((prev) => [...prev, { product_name: customName.trim(), quantity: 1, unit_price: parseInt(customPrice) || 0 }]);
+                setCustomName(''); setCustomPrice('');
+              }} className="h-7 px-3 rounded bg-neutral-900 text-white text-[10px] font-semibold shrink-0">추가</button>
             </div>
 
             {/* 장바구니 */}
@@ -556,62 +579,64 @@ function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCr
             )}
           </div>
 
-          {/* VAT + 증빙 + 결제 */}
+          {/* VAT + 증빙 + 결제 — 그루핑 */}
           <div className="grid grid-cols-3 gap-3">
-            {/* VAT */}
-            <div>
-              <label className="text-xs font-semibold text-neutral-500 mb-1 block">부가세</label>
+            <div className="border border-neutral-200 rounded-lg p-2.5">
+              <label className="text-[10px] font-semibold text-neutral-400 mb-1.5 block">부가세</label>
               <div className="flex gap-1">
                 {(['included', 'separate', 'none'] as const).map((v) => (
                   <button key={v} onClick={() => setVatType(v)}
-                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition ${
-                      vatType === v ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                    className={`flex-1 py-1.5 rounded text-[10px] font-semibold transition ${
+                      vatType === v ? 'bg-neutral-900 text-white' : 'bg-neutral-50 text-neutral-500 hover:bg-neutral-100'
                     }`}>
                     {{ included: '포함', separate: '별도', none: '미적용' }[v]}
                   </button>
                 ))}
               </div>
             </div>
-            {/* 증빙 */}
-            <div>
-              <label className="text-xs font-semibold text-neutral-500 mb-1 block">증빙유형</label>
+            <div className="border border-neutral-200 rounded-lg p-2.5">
+              <label className="text-[10px] font-semibold text-neutral-400 mb-1.5 block">증빙유형</label>
               <div className="flex gap-1">
                 {(['expense_proof', 'tax_invoice', 'none'] as const).map((r) => (
                   <button key={r} onClick={() => setReceiptType(r)}
-                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition ${
-                      receiptType === r ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                    className={`flex-1 py-1.5 rounded text-[10px] font-semibold transition ${
+                      receiptType === r ? 'bg-neutral-900 text-white' : 'bg-neutral-50 text-neutral-500 hover:bg-neutral-100'
                     }`}>
                     {RECEIPT_LABEL[r]}
                   </button>
                 ))}
               </div>
             </div>
-            {/* 결제상태 */}
-            <div>
-              <label className="text-xs font-semibold text-neutral-500 mb-1 block">결제상태</label>
+            <div className="border border-neutral-200 rounded-lg p-2.5">
+              <label className="text-[10px] font-semibold text-neutral-400 mb-1.5 block">결제상태</label>
               <div className="flex gap-1">
                 {(['unpaid', 'partial', 'paid'] as const).map((ps) => (
-                  <button key={ps} onClick={() => setPaymentStatus(ps)}
-                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition ${
+                  <button key={ps} onClick={() => { setPaymentStatus(ps); if (ps !== 'partial') setPaidAmount(0); }}
+                    className={`flex-1 py-1.5 rounded text-[10px] font-semibold transition ${
                       paymentStatus === ps
                         ? ps === 'paid' ? 'bg-green-600 text-white' : ps === 'partial' ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white'
-                        : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                        : 'bg-neutral-50 text-neutral-500 hover:bg-neutral-100'
                     }`}>
                     {PAYMENT_LABEL[ps]}
                   </button>
                 ))}
               </div>
+              {paymentStatus === 'partial' && (
+                <input type="number" value={paidAmount || ''} onChange={(e) => setPaidAmount(parseInt(e.target.value) || 0)}
+                  placeholder="선납금 입력"
+                  className="w-full h-7 px-2 mt-2 rounded border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-1 focus:ring-neutral-300" />
+              )}
             </div>
           </div>
 
           {/* 결제수단 */}
-          <div>
-            <label className="text-xs font-semibold text-neutral-500 mb-1 block">결제수단</label>
+          <div className="border border-neutral-200 rounded-lg p-2.5">
+            <label className="text-[10px] font-semibold text-neutral-400 mb-1.5 block">결제수단</label>
             <div className="flex gap-1">
               {(['card', 'cash', 'transfer', 'mixed'] as const).map((m) => (
                 <button key={m} onClick={() => setPaymentMethod(m)}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${
-                    paymentMethod === m ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                  className={`flex-1 py-1.5 rounded text-xs font-semibold transition ${
+                    paymentMethod === m ? 'bg-neutral-900 text-white' : 'bg-neutral-50 text-neutral-500 hover:bg-neutral-100'
                   }`}>
                   {{ card: '카드', cash: '현금', transfer: '이체', mixed: '복합' }[m]}
                 </button>

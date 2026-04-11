@@ -64,10 +64,11 @@ export async function PATCH(
           if (item.product_id) qtyMap[item.product_id] = (qtyMap[item.product_id] || 0) + item.quantity;
         }
         for (const [productId, qty] of Object.entries(qtyMap)) {
-          const { data: prod } = await db.from('products').select('stock_quantity, imweb_product_no').eq('id', productId).single();
+          const { data: prod } = await db.from('products').select('stock_quantity, raw_stock, imweb_product_no').eq('id', productId).single();
           if (!prod) continue;
           const newStock = Math.max(0, (prod.stock_quantity || 0) - qty);
-          await db.from('products').update({ stock_quantity: newStock }).eq('id', productId);
+          const newRaw = Math.max(0, (prod.raw_stock || 0) - qty);
+          await db.from('products').update({ stock_quantity: newStock, raw_stock: newRaw }).eq('id', productId);
 
           // 아임웹 동기화
           if (prod.imweb_product_no) {
@@ -139,10 +140,11 @@ export async function PATCH(
         if (items) {
           for (const item of items) {
             if (!item.product_id) continue;
-            const { data: prod } = await db.from('products').select('stock_quantity, imweb_product_no').eq('id', item.product_id).single();
+            const { data: prod } = await db.from('products').select('stock_quantity, raw_stock, imweb_product_no').eq('id', item.product_id).single();
             if (!prod) continue;
             const newStock = (prod.stock_quantity || 0) + item.quantity;
-            await db.from('products').update({ stock_quantity: newStock }).eq('id', item.product_id);
+            const newRaw = (prod.raw_stock || 0) + item.quantity;
+            await db.from('products').update({ stock_quantity: newStock, raw_stock: newRaw }).eq('id', item.product_id);
 
             if (prod.imweb_product_no) {
               try {
