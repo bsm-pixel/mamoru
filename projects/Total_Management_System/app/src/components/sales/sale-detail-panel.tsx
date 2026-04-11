@@ -649,17 +649,15 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
                       <button onClick={() => removeItem(idx)} className="w-6 h-6 rounded bg-red-100 text-red-500 text-xs font-bold ml-1">×</button>
                     </div>
                   </div>
-                  {/* 시리얼 피커 — product_id가 있는 아이템만 */}
-                  {it.product_id && (
-                    <SerialPicker
-                      productId={it.product_id}
-                      quantity={it.quantity}
-                      selectedSerialIds={it.serial_ids}
-                      onSelect={(ids) => setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, serial_ids: ids } : item))}
-                      manualSerials={it.manualSerials}
-                      onManualSerialsChange={(serials) => setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, manualSerials: serials } : item))}
-                    />
-                  )}
+                  {/* 시리얼 피커 — 모든 아이템 (임시제품 포함) */}
+                  <SerialPicker
+                    productId={it.product_id || ''}
+                    quantity={it.quantity}
+                    selectedSerialIds={it.serial_ids}
+                    onSelect={(ids) => setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, serial_ids: ids } : item))}
+                    manualSerials={it.manualSerials}
+                    onManualSerialsChange={(serials) => setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, manualSerials: serials } : item))}
+                  />
                 </div>
               ))}
             </div>
