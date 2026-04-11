@@ -21,10 +21,19 @@ export function formatRelative(date: string | Date): string {
   return formatDistanceToNow(new Date(date), { addSuffix: true, locale: ko });
 }
 
-/** VAT 계산: 총액 → 공급가액 + 부가세(10%) 분리 */
-export function calcVAT(total: number): { supply: number; vat: number } {
+/** VAT 계산: 총액 → 공급가액 + 부가세(10%) 분리
+ * @param vatType 'included'(포함) | 'separate'(별도) | 'none'(미적용) */
+export function calcVAT(total: number, vatType: 'included' | 'separate' | 'none' = 'included'): { supply: number; vat: number; payment: number } {
+  if (vatType === 'separate') {
+    const vat = Math.round(total * 0.1);
+    return { supply: total, vat, payment: total + vat };
+  }
+  if (vatType === 'none') {
+    return { supply: total, vat: 0, payment: total };
+  }
+  // 'included' (기본)
   const supply = Math.round(total / 1.1);
-  return { supply, vat: total - supply };
+  return { supply, vat: total - supply, payment: total };
 }
 
 /** 전화번호 포맷: "01012345678" → "010-1234-5678" */

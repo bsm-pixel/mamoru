@@ -57,6 +57,7 @@ export function useCreatePurchaseOrder() {
       order_date?: string;
       expected_date?: string;
       memo?: string;
+      vat_type?: 'included' | 'separate' | 'none';
       items: Array<{
         product_id?: string;
         product_name: string;
@@ -116,6 +117,99 @@ export function useUpdatePurchaseOrder() {
     },
     onError: (err) => {
       toast.error('업데이트 실패: ' + String(err));
+    },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// 매입품목 카탈로그 (Supplier Product Catalog)
+// ══════════════════════════════════════════════════════════════
+
+export interface CatalogEntry {
+  id: string;
+  supplier_id: string;
+  product_id: string;
+  order_name: string;
+  features: string;
+  product_name: string;
+  price_purchase: number;
+  sku: string;
+  category: string;
+}
+
+/** 매입품목 조회 */
+export function useSupplierCatalog(supplierId: string) {
+  return useQuery({
+    queryKey: ['supplier-catalog', supplierId],
+    queryFn: async () => {
+      const res = await fetch(`/api/suppliers/${supplierId}/catalog`);
+      if (!res.ok) throw new Error('카탈로그 조회 실패');
+      return res.json() as Promise<{ catalog: CatalogEntry[] }>;
+    },
+    enabled: !!supplierId,
+  });
+}
+
+/** 매입품목 추가 */
+export function useAddToCatalog() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ supplierId, productIds }: { supplierId: string; productIds: string[] }) => {
+      const res = await fetch(`/api/suppliers/${supplierId}/catalog`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_ids: productIds }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: (_d, { supplierId }) => {
+      toast.success('매입품목 추가 완료');
+      queryClient.invalidateQueries({ queryKey: ['supplier-catalog', supplierId] });
+    },
+    onError: (err) => { toast.error('추가 실패: ' + String(err)); },
+  });
+}
+
+/** 매입품목 수정 (주문명/특징) */
+export function useUpdateCatalog() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ supplierId, catalogId, orderName, features }: {
+      supplierId: string; catalogId: string; orderName?: string; features?: string;
+    }) => {
+      const res = await fetch(`/api/suppliers/${supplierId}/catalog`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ catalog_id: catalogId, order_name: orderName, features }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: (_d, { supplierId }) => {
+      toast.success('수정 완료');
+      queryClient.invalidateQueries({ queryKey: ['supplier-catalog', supplierId] });
+    },
+    onError: (err) => { toast.error('수정 실패: ' + String(err)); },
+  });
+}
+
+/** 매입품목 삭제 */
+export function useRemoveFromCatalog() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ supplierId, catalogId }: { supplierId: string; catalogId: string }) => {
+      const res = await fetch(`/api/suppliers/${supplierId}/catalog`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ catalog_id: catalogId }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: (_d, { supplierId }) => {
+      toast.success('매입품목 삭제 완료');
+      queryClient.invalidateQueries({ queryKey: ['supplier-catalog', supplierId] });
     },
   });
 }

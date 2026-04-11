@@ -10,8 +10,9 @@ import { usePurchaseOrder, useUpdatePurchaseOrder } from '@/hooks/use-purchasing
 import { formatKRW, formatDate, calcVAT } from '@/lib/utils/format';
 import { useProducts } from '@/hooks/use-sales';
 import { useQueryClient } from '@tanstack/react-query';
-import { Truck, Pencil, Minus, Plus, Trash2, X, Save } from 'lucide-react';
+import { Truck, Pencil, Minus, Plus, Trash2, X, Save, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { POPrintModal } from './po-print-modal';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
@@ -38,6 +39,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
   const [editMemo, setEditMemo] = useState('');
   const [editExpectedDate, setEditExpectedDate] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showPrint, setShowPrint] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     status: string; label: string; msg: string; variant?: 'danger' | 'default'; extra?: Record<string, unknown>;
   } | null>(null);
@@ -55,7 +57,8 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
   }
 
   const { order: po, items } = data;
-  const { supply, vat } = calcVAT(po.total_amount);
+  const poVatType = ((po as Record<string, unknown>).vat_type as string) || 'included';
+  const { supply, vat } = calcVAT(po.total_amount, poVatType as 'included' | 'separate' | 'none');
 
   async function handleAction(status: string, extra?: Record<string, unknown>) {
     await updatePO.mutateAsync({ id: purchaseId, status, ...extra });
@@ -70,6 +73,11 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
           <p className="text-xs text-neutral-500 mt-0.5">{po.supplier_name} · {formatDate(po.order_date)}</p>
         </div>
         <div className="flex items-center gap-2">
+          {po.status !== 'draft' && po.status !== 'cancelled' && (
+            <Button variant="ghost" size="sm" onClick={() => setShowPrint(true)}>
+              <Printer size={14} />발주서
+            </Button>
+          )}
           {po.status === 'draft' && !editing && (
             <Button variant="ghost" size="sm" onClick={() => {
               setEditing(true);
@@ -236,7 +244,8 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
           </div>
           <div className="flex justify-between text-xs text-neutral-500">
             <span>공급가액 {formatKRW(supply)}</span>
-            <span>부가세 {formatKRW(vat)}</span>
+            {poVatType !== 'none' && <span>부가세 {formatKRW(vat)}</span>}
+            {poVatType === 'none' && <span className="text-neutral-400">부가세 미적용</span>}
           </div>
         </div>
       </Card>
@@ -319,6 +328,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
           variant={pendingAction.variant || 'default'}
         />
       )}
+      {showPrint && <POPrintModal purchaseId={purchaseId} onClose={() => setShowPrint(false)} />}
     </div>
   );
 }

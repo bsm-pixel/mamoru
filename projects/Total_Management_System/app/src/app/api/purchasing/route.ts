@@ -56,12 +56,13 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { supplier_id, supplier_name, order_date, expected_date, memo, items } = body as {
+    const { supplier_id, supplier_name, order_date, expected_date, memo, vat_type, items } = body as {
       supplier_id?: string;
       supplier_name: string;
       order_date?: string;
       expected_date?: string;
       memo?: string;
+      vat_type?: 'included' | 'separate' | 'none';
       items: Array<{
         product_id?: string;
         product_name: string;
@@ -91,10 +92,18 @@ export async function POST(req: NextRequest) {
     const seq = String((count || 0) + 1).padStart(3, '0');
     const poNumber = `PO-${dateStr}-${seq}`;
 
-    // 합계 계산
+    // 합계 계산 — 부가세 유형별
+    const vatTypeVal = vat_type || 'included';
     const totalAmount = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
-    const supplyAmount = Math.round(totalAmount / 1.1);
-    const vatAmount = totalAmount - supplyAmount;
+    const { supply: supplyAmount, vat: vatAmount, payment } = (() => {
+      if (vatTypeVal === 'separate') {
+        const vat = Math.round(totalAmount * 0.1);
+        return { supply: totalAmount, vat, payment: totalAmount + vat };
+      }
+      if (vatTypeVal === 'none') return { supply: totalAmount, vat: 0, payment: totalAmount };
+      const supply = Math.round(totalAmount / 1.1);
+      return { supply, vat: totalAmount - supply, payment: totalAmount };
+    })();
 
     const { data: order, error: poError } = await db
       .from('purchase_orders')
@@ -104,9 +113,10 @@ export async function POST(req: NextRequest) {
         supplier_name: supplier_name.trim(),
         order_date: poDate,
         expected_date: expected_date || null,
-        total_amount: totalAmount,
-        balance_amount: totalAmount,
-        is_vat_included: true,
+        total_amount: vatTypeVal === 'separate' ? payment : totalAmount,
+        balance_amount: vatTypeVal === 'separate' ? payment : totalAmount,
+        is_vat_included: vatTypeVal === 'included',
+        vat_type: vatTypeVal,
         supply_amount: supplyAmount,
         vat_amount: vatAmount,
         memo: memo || null,

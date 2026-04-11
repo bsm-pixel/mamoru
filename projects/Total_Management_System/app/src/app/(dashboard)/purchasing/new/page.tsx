@@ -30,6 +30,7 @@ export default function NewPurchaseOrderPage() {
   const [orderDate, setOrderDate] = useState(new Date().toISOString().slice(0, 10));
   const [expectedDate, setExpectedDate] = useState('');
   const [memo, setMemo] = useState('');
+  const [vatType, setVatType] = useState<'included' | 'separate' | 'none'>('included');
   const [items, setItems] = useState<POItem[]>([]);
 
   const totalAmount = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
@@ -77,6 +78,7 @@ export default function NewPurchaseOrderPage() {
       order_date: orderDate,
       expected_date: expectedDate || undefined,
       memo: memo.trim() || undefined,
+      vat_type: vatType,
       items: items.map((i) => ({
         product_id: i.product?.id,
         product_name: i.product_name,
@@ -215,23 +217,38 @@ export default function NewPurchaseOrderPage() {
                 </div>
               )}
 
+              {/* 부가세 유형 */}
+              <div className="mt-3 pt-3 border-t border-neutral-200">
+                <label className="text-xs font-semibold text-neutral-600 mb-2 block">부가세 유형</label>
+                <div className="flex gap-1.5 mb-3">
+                  {([['included', '포함'], ['separate', '별도'], ['none', '미적용']] as const).map(([key, label]) => (
+                    <button key={key} type="button" onClick={() => setVatType(key)}
+                      className={`flex-1 py-1.5 text-xs rounded-md border transition ${vatType === key ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'}`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {items.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-neutral-200 space-y-1">
-                  <div className="flex justify-between text-sm font-bold">
-                    <span>합계</span>
-                    <span className="text-terracotta">{formatKRW(totalAmount)}</span>
-                  </div>
+                <div className="space-y-1">
                   {(() => {
-                    const { supply, vat } = calcVAT(totalAmount);
+                    const { supply, vat, payment } = calcVAT(totalAmount, vatType);
                     return (
                       <div className="space-y-0.5">
                         <div className="flex justify-between text-xs text-neutral-500">
                           <span>공급가액</span>
                           <span>{formatKRW(supply)}</span>
                         </div>
-                        <div className="flex justify-between text-xs text-neutral-500">
-                          <span>부가세</span>
-                          <span>{formatKRW(vat)}</span>
+                        {vatType !== 'none' && (
+                          <div className="flex justify-between text-xs text-neutral-500">
+                            <span>부가세 (10%)</span>
+                            <span>{formatKRW(vat)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-sm font-bold pt-1">
+                          <span>합계</span>
+                          <span className="text-terracotta">{formatKRW(payment)}</span>
                         </div>
                       </div>
                     );
@@ -245,7 +262,7 @@ export default function NewPurchaseOrderPage() {
               disabled={!supplierName.trim() || items.length === 0 || createPO.isPending}
               onClick={handleSubmit}
             >
-              {createPO.isPending ? '생성 중...' : `발주 생성 (${formatKRW(totalAmount)})`}
+              {createPO.isPending ? '생성 중...' : `발주 생성 (${formatKRW(calcVAT(totalAmount, vatType).payment)})`}
             </Button>
           </div>
         </div>
