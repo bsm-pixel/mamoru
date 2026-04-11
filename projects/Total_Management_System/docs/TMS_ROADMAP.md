@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-03-29 (TMS 전체 개선 Phase 0~3 + 발주 편집 + Vercel 서울 리전)
+> 최종 수정: 2026-04-12 (납품관리 모듈 + B2B 매입품목/부가세/발주서인쇄)
 
 ---
 
@@ -527,6 +527,24 @@
 - 커밋: `617957c`, `c17fb59`
 - DB: 015_purchasing.sql, 061_supplier_catalog_vat.sql
 - 상태 흐름: draft → ordered → deposit_paid → received → balance_paid | cancelled
+
+### Phase D2: 납품관리 (B2B 딜러/아카데미) ✅ 신설 (2026-04-12)
+
+**목적:** B2B 거래처(딜러/아카데미) 납품을 별도 모듈에서 관리 — 납품서 작성·확정·출고·정산
+
+| # | 작업 | 상태 | 구현 내용 |
+|---|------|------|-----------|
+| D2-1 | DB 스키마 | ✅ | deliveries + delivery_items 테이블 (062 마이그레이션) |
+| D2-2 | API Routes | ✅ | GET/POST /api/deliveries + GET/PATCH /api/deliveries/[id] |
+| D2-3 | 상태 흐름 | ✅ | draft→confirmed(재고차감)→shipped(출고)→settled(정산) |
+| D2-4 | 미수금 연동 | ✅ | 생성 시 증가, 정산/취소 시 차감 |
+| D2-5 | UI 페이지 | ✅ | 마스터-디테일 + 납품서 작성 모달 + 상세 패널 |
+| D2-6 | 납품서 인쇄 | ✅ | DLPrintModal (거래처+품목+부가세+증빙) |
+| D2-7 | 부가세/증빙 | ✅ | 포함/별도/미적용 + 지출증빙/세금계산서/미적용 |
+| D2-8 | 사이드바 | ✅ | 판매 그룹 내 '납품관리' 추가 |
+- 채번: DL-YYYYMMDD-NNN
+- 상태: draft → confirmed → shipped → settled | cancelled
+- 잔여: 출고완료 알림톡, 대시보드 매출 합산, 회계 보고서 연동
 
 ### Phase E: 재고 관리 강화 ✅
 | # | 작업 | 상태 | 구현 내용 |
