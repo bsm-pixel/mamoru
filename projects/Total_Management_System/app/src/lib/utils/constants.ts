@@ -37,6 +37,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: '판매 입력', href: '/sales/new', icon: 'PackageOpen', matchPrefix: '/sales/new' },
       { label: '판매 조회', href: '/sales', icon: 'Store', matchPrefix: '/sales' },
+      { label: '납품관리', href: '/deliveries', icon: 'Package', matchPrefix: '/deliveries' },
       { label: '계약서', href: '/contracts', icon: 'FileSignature', matchPrefix: '/contracts' },
     ],
   },
