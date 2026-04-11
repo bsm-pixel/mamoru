@@ -521,8 +521,11 @@
 | D-3 | 발주 상세/액션 | ✅ | /purchasing/[id] — 발주확정/선납/입고/잔금/취소 상태 전환 |
 | D-4 | 입고 시 재고 증가 | ✅ | received 전환 시 products.stock_quantity 자동 증가 |
 | D-5 | NAV 추가 | ✅ | '매입관리' (Truck 아이콘) |
-- 커밋: `617957c`
-- DB: 015_purchasing.sql
+| D-6 | 매입품목 카탈로그 | ✅ | supplier_product_catalog 테이블 — 주문명/특징 + 제품 불러오기 (04-11) |
+| D-7 | 부가세 3유형 | ✅ | 포함/별도/미적용 — calcVAT 확장 + purchase_orders.vat_type (04-11) |
+| D-8 | 발주서 인쇄 | ✅ | POPrintModal — 주문품목+단가+수량+부가세 연동 인쇄 (04-11) |
+- 커밋: `617957c`, `c17fb59`
+- DB: 015_purchasing.sql, 061_supplier_catalog_vat.sql
 - 상태 흐름: draft → ordered → deposit_paid → received → balance_paid | cancelled
 
 ### Phase E: 재고 관리 강화 ✅
