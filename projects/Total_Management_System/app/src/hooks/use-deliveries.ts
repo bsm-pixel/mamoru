@@ -1,0 +1,174 @@
+'use client';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { createClient } from '@/lib/supabase/client';
+
+/** 납품 목록 */
+export function useDeliveries(filters?: {
+  status?: string;
+  search?: string;
+  dateRange?: string;
+  page?: number;
+  limit?: number;
+}) {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['deliveries', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.status) params.set('status', filters.status);
+      if (filters?.search) params.set('search', filters.search);
+      if (filters?.dateRange) params.set('date_range', filters.dateRange);
+      if (filters?.page) params.set('page', String(filters.page));
+      if (filters?.limit) params.set('limit', String(filters.limit));
+
+      const res = await fetch(`/api/deliveries?${params.toString()}`);
+      if (!res.ok) throw new Error('납품 목록 조회 실패');
+      return res.json() as Promise<{ deliveries: Record<string, unknown>[]; total: number }>;
+    },
+  });
+}
+
+/** 납품 상세 */
+export function useDelivery(id: string) {
+  return useQuery({
+    queryKey: ['delivery', id],
+    queryFn: async () => {
+      const res = await fetch(`/api/deliveries/${id}`);
+      if (!res.ok) throw new Error('납품 상세 조회 실패');
+      return res.json() as Promise<{
+        delivery: Record<string, unknown>;
+        items: Array<Record<string, unknown>>;
+      }>;
+    },
+    enabled: !!id,
+  });
+}
+
+/** 납품서 생성 */
+export function useCreateDelivery() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      customer_id?: string;
+      customer_name: string;
+      customer_phone?: string;
+      customer_type?: string;
+      delivery_date?: string;
+      expected_date?: string;
+      memo?: string;
+      vat_type?: string;
+      receipt_type?: string;
+      payment_status?: string;
+      payment_method?: string;
+      paid_amount?: number;
+      discount_amount?: number;
+      items: Array<{
+        product_id?: string;
+        product_name: string;
+        sku?: string;
+        category?: string;
+        quantity: number;
+        unit_price: number;
+      }>;
+    }) => {
+      const res = await fetch('/api/deliveries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : '생성 실패');
+      }
+      return res.json() as Promise<{ delivery: Record<string, unknown>; dlNumber: string }>;
+    },
+    onSuccess: (data) => {
+      toast.success(`납품서 ${data.dlNumber} 생성 완료`);
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['delivery-stats'] });
+    },
+    onError: (err) => { toast.error('납품서 생성 실패: ' + String(err)); },
+  });
+}
+
+/** 납품 상태 변경 / 편집 */
+export function useUpdateDelivery() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...data }: { id: string; [key: string]: unknown }) => {
+      const res = await fetch(`/api/deliveries/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : '업데이트 실패');
+      }
+      return res.json();
+    },
+    onSuccess: (_d, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['delivery', id] });
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['delivery-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+    onError: (err) => { toast.error('업데이트 실패: ' + String(err)); },
+  });
+}
+
+/** 납품 탭 카운트 + 통계 */
+export function useDeliveryStats() {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['delivery-stats'],
+    staleTime: 30_000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
+      const now = new Date();
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      const weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); // Monday
+      const weekStartStr = weekStart.toISOString().slice(0, 10);
+
+      const [allRes, draftRes, confirmedRes, shippedRes, settledRes, weekRes, monthRes, unpaidRes] = await Promise.all([
+        db.from('deliveries').select('*', { count: 'exact', head: true }).is('cancelled_at', null),
+        db.from('deliveries').select('*', { count: 'exact', head: true }).eq('status', 'draft').is('cancelled_at', null),
+        db.from('deliveries').select('*', { count: 'exact', head: true }).eq('status', 'confirmed').is('cancelled_at', null),
+        db.from('deliveries').select('*', { count: 'exact', head: true }).eq('status', 'shipped').is('cancelled_at', null),
+        db.from('deliveries').select('*', { count: 'exact', head: true }).eq('status', 'settled').is('cancelled_at', null),
+        db.from('deliveries').select('total_amount, discount_amount').gte('delivery_date', weekStartStr).is('cancelled_at', null),
+        db.from('deliveries').select('total_amount, discount_amount').gte('delivery_date', monthStart).is('cancelled_at', null),
+        db.from('deliveries').select('total_amount, discount_amount, paid_amount').in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null),
+      ]);
+
+      const sumAmount = (rows: Array<{ total_amount: number; discount_amount?: number }>) =>
+        rows.reduce((s, r) => s + (r.total_amount || 0) - (r.discount_amount || 0), 0);
+
+      const unpaidAmount = (unpaidRes.data || []).reduce(
+        (s: number, r: { total_amount: number; discount_amount?: number; paid_amount?: number }) =>
+          s + (r.total_amount || 0) - (r.discount_amount || 0) - (r.paid_amount || 0), 0
+      );
+
+      return {
+        all: allRes.count || 0,
+        draft: draftRes.count || 0,
+        confirmed: confirmedRes.count || 0,
+        shipped: shippedRes.count || 0,
+        settled: settledRes.count || 0,
+        weekAmount: sumAmount(weekRes.data || []),
+        weekCount: (weekRes.data || []).length,
+        monthAmount: sumAmount(monthRes.data || []),
+        monthCount: (monthRes.data || []).length,
+        outstanding: unpaidAmount,
+      };
+    },
+  });
+}
