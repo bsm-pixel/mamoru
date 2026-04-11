@@ -468,7 +468,7 @@ export async function PATCH(
         }
       }
 
-      // ── STEP 3: 기존 항목 삭제 → 새 항목 생성 ──
+      // ── STEP 3: 기존 항목 삭제 → 새 항목 생성 (.select로 ID 확보) ──
       await db.from('offline_sale_items').delete().eq('sale_id', id);
 
       const saleItems = newItems.map((item) => ({
@@ -481,48 +481,31 @@ export async function PATCH(
         unit_price: item.unit_price,
         total_price: item.total_price,
       }));
-      await db.from('offline_sale_items').insert(saleItems);
+      const { data: insertedSaleItems } = await db.from('offline_sale_items').insert(saleItems).select('id, product_id');
 
       // ── STEP 3.5: 기존 시리얼 보존 시 sale_item_id 재매칭 ──
-      if (!hasNewSerials && oldSerials && oldSerials.length > 0) {
-        // 새 항목 ID로 기존 시리얼의 sale_item_id 업데이트
-        const { data: newSaleItems } = await db
-          .from('offline_sale_items')
-          .select('id, product_id, product_name')
-          .eq('sale_id', id)
-          .order('created_at', { ascending: true });
-
-        if (newSaleItems) {
-          let serialIdx = 0;
-          for (const saleItem of newSaleItems) {
-            // product_id 매칭 또는 순서 배분
-            const matchSerials = oldSerials.filter((s: { product_id: string | null }) =>
-              s.product_id === saleItem.product_id
-            );
-            if (matchSerials.length > 0) {
-              for (const sr of matchSerials) {
-                await db.from('product_serials').update({ sale_item_id: saleItem.id }).eq('id', sr.id);
-              }
-            } else if (serialIdx < oldSerials.length) {
-              await db.from('product_serials').update({ sale_item_id: saleItem.id }).eq('id', oldSerials[serialIdx].id);
-              serialIdx++;
+      if (!hasNewSerials && oldSerials && oldSerials.length > 0 && insertedSaleItems) {
+        let serialIdx = 0;
+        for (const saleItem of insertedSaleItems) {
+          const matchSerials = oldSerials.filter((s: { product_id: string | null }) =>
+            s.product_id === saleItem.product_id
+          );
+          if (matchSerials.length > 0) {
+            for (const sr of matchSerials) {
+              await db.from('product_serials').update({ sale_item_id: saleItem.id }).eq('id', sr.id);
             }
+          } else if (serialIdx < oldSerials.length) {
+            await db.from('product_serials').update({ sale_item_id: saleItem.id }).eq('id', oldSerials[serialIdx].id);
+            serialIdx++;
           }
         }
       }
 
       // ── STEP 4: 새 시리얼 할당 (아이템별 순회 + sale_item_id 매핑) ──
-      if (hasNewSerials) {
-        // 새 항목 ID 조회 (STEP 3에서 생성된 것)
-        const { data: newSaleItems } = await db
-          .from('offline_sale_items')
-          .select('id, product_id')
-          .eq('sale_id', id)
-          .order('created_at', { ascending: true });
-
+      if (hasNewSerials && insertedSaleItems) {
         for (let itemIdx = 0; itemIdx < newItems.length; itemIdx++) {
           const item = newItems[itemIdx];
-          const saleItemId = newSaleItems?.[itemIdx]?.id || null;
+          const saleItemId = insertedSaleItems[itemIdx]?.id || null;
 
           // 4-A: 기존 등록 시리얼 (serial_ids)
           const serialIds = item.serial_ids || [];
