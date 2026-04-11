@@ -12,7 +12,7 @@ import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { useProduct, useUpdateProduct, useCreateProduct } from '@/hooks/use-product-detail';
 import { formatKRW } from '@/lib/utils/format';
-import { Save, Package, Hash, X, Receipt, Boxes, Plus, Archive, Copy, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Save, Package, Hash, X, Plus, Archive, Copy, Eye, EyeOff, Trash2, ArrowRightLeft, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { useSetting } from '@/hooks/use-settings';
@@ -522,19 +522,9 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
             <h4 className="text-xs text-neutral-500 mb-2">빠른 작업</h4>
             <div className="space-y-2">
               <Button variant="primary" size="sm" onClick={() => setShowSerialModal(true)} className="w-full">
-                <Plus size={14} />
-                시리얼 등록 · 창고배치
+                <ArrowRightLeft size={14} />
+                창고 이동
               </Button>
-              <div className="flex gap-2">
-                <Button variant="secondary" size="sm" onClick={() => router.push('/sales/new')} className="flex-1">
-                  <Receipt size={14} />
-                  판매 등록
-                </Button>
-                <Button variant="secondary" size="sm" onClick={() => router.push('/inventory')} className="flex-1">
-                  <Boxes size={14} />
-                  창고·재고
-                </Button>
-              </div>
               <button
                 onClick={() => router.push(`/products/${productId}/serials`)}
                 className="w-full text-center text-xs text-neutral-400 hover:text-neutral-600 py-1 transition"
@@ -628,11 +618,14 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
 
 /* ── 시리얼 빠른 등록 모달 ── */
 
-const ZONE_OPTIONS: { key: 'raw' | 'ready' | 'display'; label: string; desc: string; color: string; activeColor: string }[] = [
-  { key: 'raw', label: '보관', desc: '매입 원본 보관', color: 'border-neutral-200 bg-white text-neutral-600', activeColor: 'border-neutral-900 bg-neutral-900 text-white' },
-  { key: 'ready', label: '준비', desc: '마모루 각인 완료, B2C 출고 가능', color: 'border-neutral-200 bg-white text-neutral-600', activeColor: 'border-green-600 bg-green-600 text-white' },
-  { key: 'display', label: '디스플레이', desc: '고객 전시 샘플 (가방)', color: 'border-neutral-200 bg-white text-neutral-600', activeColor: 'border-blue-600 bg-blue-600 text-white' },
-];
+type Zone = 'raw' | 'ready' | 'display';
+const ZONE_LABEL: Record<Zone, string> = { raw: '보관', ready: '준비', display: '디스플레이' };
+const ZONE_COLOR: Record<Zone, string> = {
+  raw: 'border-neutral-900 bg-neutral-900 text-white',
+  ready: 'border-green-600 bg-green-600 text-white',
+  display: 'border-blue-600 bg-blue-600 text-white',
+};
+const ZONE_INACTIVE = 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300';
 
 function SerialQuickModal({ open, onClose, productId, productSku, rawStock, onSuccess }: {
   open: boolean;
@@ -642,51 +635,88 @@ function SerialQuickModal({ open, onClose, productId, productSku, rawStock, onSu
   rawStock: number;
   onSuccess: () => void;
 }) {
-  const [startNumber, setStartNumber] = useState('');
+  const [from, setFrom] = useState<Zone>('raw');
+  const [to, setTo] = useState<Zone>('ready');
   const [count, setCount] = useState(1);
-  const [zone, setZone] = useState<'raw' | 'ready' | 'display'>('raw');
+  const [startNumber, setStartNumber] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [loadingNext, setLoadingNext] = useState(false);
 
-  // 모달 열릴 때 — 다음 시리얼번호 자동 조회
+  // 보관→시리얼 창고 이동 시에만 시리얼 생성 필요
+  const needsSerial = from === 'raw';
+  // 시리얼 창고→보관 역이동 (시리얼 삭제 + raw_stock 복원)
+  const isReverse = to === 'raw' && from !== 'raw';
+  // 시리얼 창고 간 이동 (zone 변경만)
+  const isZoneTransfer = from !== 'raw' && to !== 'raw';
+
+  // 모달 열릴 때
   useEffect(() => {
     if (open) {
+      setFrom('raw');
+      setTo('ready');
       setCount(1);
-      setZone('raw');
       setLoadingNext(true);
       fetch('/api/serials/batch')
         .then((res) => res.json())
-        .then((data) => {
-          if (data.next_start) setStartNumber(String(data.next_start));
-        })
+        .then((data) => { if (data.next_start) setStartNumber(String(data.next_start)); })
         .catch(() => setStartNumber(''))
         .finally(() => setLoadingNext(false));
     }
   }, [open]);
 
-  const zoneLabel = { raw: '보관', ready: '준비', display: '디스플레이' }[zone];
+  // 출발지 변경 시 도착지 자동 조정
+  function handleFromChange(zone: Zone) {
+    setFrom(zone);
+    if (zone === to) setTo(zone === 'raw' ? 'ready' : 'raw');
+  }
+
+  // 도착지에서 출발지와 같은 건 제외
+  const availableTo = (['raw', 'ready', 'display'] as Zone[]).filter((z) => z !== from);
 
   async function handleSubmit() {
-    if (!startNumber || count < 1) return;
+    if (count < 1) return;
     setSubmitting(true);
     try {
-      const res = await fetch('/api/serials/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product_id: productId,
-          start_number: parseInt(startNumber),
-          count,
-          warehouse_zone: zone,
-        }),
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({ error: '알 수 없는 오류' }));
-        toast.error(errData.error || '생성 실패');
-        return;
+      if (needsSerial) {
+        // 보관 → 시리얼 창고: batch API 호출
+        if (!startNumber) { toast.error('시작번호를 입력해주세요'); setSubmitting(false); return; }
+        const res = await fetch('/api/serials/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_id: productId, start_number: parseInt(startNumber), count, warehouse_zone: to }),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({ error: '생성 실패' }));
+          toast.error(errData.error || '생성 실패'); setSubmitting(false); return;
+        }
+        const data = await res.json();
+        toast.success(`${data.created || count}개 → ${ZONE_LABEL[to]} 창고 (시리얼 생성)`);
+      } else if (isZoneTransfer) {
+        // 시리얼 창고 간 이동: zone 변경
+        // 해당 제품의 from zone 시리얼을 count개만 변경
+        const res = await fetch(`/api/serials/move`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_id: productId, from_zone: from, to_zone: to, count }),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({ error: '이동 실패' }));
+          toast.error(errData.error || '이동 실패'); setSubmitting(false); return;
+        }
+        toast.success(`${count}개 ${ZONE_LABEL[from]} → ${ZONE_LABEL[to]} 이동`);
+      } else if (isReverse) {
+        // 시리얼→보관 역이동: 시리얼 삭제 + raw_stock 증가
+        const res = await fetch(`/api/serials/move`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_id: productId, from_zone: from, to_zone: 'raw', count }),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({ error: '이동 실패' }));
+          toast.error(errData.error || '이동 실패'); setSubmitting(false); return;
+        }
+        toast.success(`${count}개 ${ZONE_LABEL[from]} → 보관 (시리얼 해제)`);
       }
-      const data = await res.json();
-      toast.success(`${data.created || count}개 시리얼 → ${zoneLabel} 창고에 등록`);
       onSuccess();
       onClose();
     } catch (err) {
@@ -699,88 +729,93 @@ function SerialQuickModal({ open, onClose, productId, productSku, rawStock, onSu
   if (!open) return null;
 
   return (
-    <Modal open={open} onClose={onClose} title="시리얼 등록 · 창고배치" className="max-w-md">
+    <Modal open={open} onClose={onClose} title="창고 이동" className="max-w-md">
       <div className="space-y-4">
-        {/* 보관 재고 표시 */}
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${rawStock > 0 ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'}`}>
-          <Archive size={14} />
-          보관창고: <strong>{rawStock}개</strong>
-          {rawStock === 0 && <span className="text-xs">(재고 부족 — 입고 필요)</span>}
+        {/* 현재 재고 현황 */}
+        <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-neutral-50 text-xs text-neutral-500">
+          <span>보관 <strong className="text-neutral-800">{rawStock}</strong></span>
+          <span className="text-neutral-300">|</span>
+          <span>총 재고는 창고·재고 페이지에서 확인</span>
         </div>
 
-        {/* 시작번호 + 수량 */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs text-neutral-500 mb-1 block">시작번호 *</label>
-            <input
-              type="number"
-              value={startNumber}
-              onChange={(e) => setStartNumber(e.target.value)}
-              placeholder={loadingNext ? '조회 중...' : '13790001'}
-              disabled={loadingNext}
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm font-mono focus:outline-none focus:ring-2 focus:ring-terracotta/40 disabled:opacity-50"
-            />
-            <p className="text-[10px] text-neutral-400 mt-0.5">이전 번호 이어서 자동 입력</p>
+        {/* 출발지 → 도착지 */}
+        <div className="flex items-center gap-3">
+          {/* 출발지 */}
+          <div className="flex-1">
+            <label className="text-xs text-neutral-500 mb-1.5 block">출발지</label>
+            <div className="flex gap-1.5">
+              {(['raw', 'ready', 'display'] as Zone[]).map((z) => (
+                <button key={z} onClick={() => handleFromChange(z)}
+                  className={`flex-1 py-2 rounded-lg border-2 text-xs font-semibold transition ${from === z ? ZONE_COLOR[z] : ZONE_INACTIVE}`}>
+                  {ZONE_LABEL[z]}
+                </button>
+              ))}
+            </div>
           </div>
-          <div>
-            <label className="text-xs text-neutral-500 mb-1 block">수량</label>
-            <input
-              type="number"
-              value={count}
-              onChange={(e) => setCount(Math.max(1, Math.min(rawStock || 100, parseInt(e.target.value) || 1)))}
-              min={1}
-              max={rawStock || 100}
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-            />
+          <ArrowRight size={16} className="text-neutral-300 mt-5 shrink-0" />
+          {/* 도착지 */}
+          <div className="flex-1">
+            <label className="text-xs text-neutral-500 mb-1.5 block">도착지</label>
+            <div className="flex gap-1.5">
+              {availableTo.map((z) => (
+                <button key={z} onClick={() => setTo(z)}
+                  className={`flex-1 py-2 rounded-lg border-2 text-xs font-semibold transition ${to === z ? ZONE_COLOR[z] : ZONE_INACTIVE}`}>
+                  {ZONE_LABEL[z]}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* 창고 선택 — 3개 */}
+        {/* 수량 */}
         <div>
-          <label className="text-xs text-neutral-500 mb-2 block">등록할 창고</label>
-          <div className="flex gap-2">
-            {ZONE_OPTIONS.map((opt) => (
-              <button
-                key={opt.key}
-                onClick={() => setZone(opt.key)}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-lg border-2 transition text-sm font-medium ${
-                  zone === opt.key ? opt.activeColor : opt.color
-                } hover:border-neutral-300`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-          <p className="text-[11px] text-neutral-400 mt-1.5">
-            {ZONE_OPTIONS.find((o) => o.key === zone)?.desc}
-          </p>
+          <label className="text-xs text-neutral-500 mb-1 block">이동 수량</label>
+          <input type="number" value={count}
+            onChange={(e) => setCount(Math.max(1, parseInt(e.target.value) || 1))}
+            min={1}
+            className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
         </div>
 
-        {/* 미리보기 */}
-        {startNumber && count > 0 && (
-          <div className="text-xs bg-neutral-50 rounded-lg p-3 space-y-1">
-            <p className="text-neutral-500">
-              생성 범위: <span className="font-mono font-semibold">{String(parseInt(startNumber) || 0).padStart(8, '0')}</span> ~ <span className="font-mono font-semibold">{String((parseInt(startNumber) || 0) + count - 1).padStart(8, '0')}</span>
-            </p>
-            <p className="text-neutral-400">
-              {count}개 → {zoneLabel} 창고
-            </p>
+        {/* 시리얼 생성 UI — 보관→시리얼 창고 일 때만 */}
+        {needsSerial && (
+          <div className="border border-neutral-200 rounded-lg p-3 space-y-2">
+            <label className="text-xs font-semibold text-neutral-600">시리얼 자동생성</label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] text-neutral-400 mb-0.5 block">시작번호</label>
+                <input type="number" value={startNumber}
+                  onChange={(e) => setStartNumber(e.target.value)}
+                  placeholder={loadingNext ? '조회 중...' : '13790001'}
+                  disabled={loadingNext}
+                  className="w-full h-8 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs font-mono focus:outline-none focus:ring-1 focus:ring-terracotta/40 disabled:opacity-50" />
+              </div>
+              <div>
+                <label className="text-[10px] text-neutral-400 mb-0.5 block">생성 범위</label>
+                <p className="h-8 flex items-center text-xs font-mono text-neutral-500">
+                  {startNumber ? `${String(parseInt(startNumber)).padStart(8, '0')} ~ ${String(parseInt(startNumber) + count - 1).padStart(8, '0')}` : '-'}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
+        {/* 미리보기 */}
+        <div className="text-xs bg-neutral-50 rounded-lg p-3">
+          <p className="text-neutral-600 font-medium">
+            {ZONE_LABEL[from]} → {ZONE_LABEL[to]} · {count}개
+            {needsSerial && ' (시리얼 생성)'}
+            {isReverse && ' (시리얼 해제)'}
+            {isZoneTransfer && ' (zone 변경)'}
+          </p>
+        </div>
+
         {/* 버튼 */}
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={onClose} className="flex-1">
-            취소
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSubmit}
-            disabled={!startNumber || count < 1 || count > rawStock || rawStock === 0 || submitting}
-            loading={submitting}
-            className="flex-1"
-          >
-            {submitting ? '생성 중...' : `${count}개 등록`}
+          <Button variant="ghost" size="sm" onClick={onClose} className="flex-1">취소</Button>
+          <Button size="sm" onClick={handleSubmit}
+            disabled={count < 1 || (needsSerial && (!startNumber || rawStock < count)) || submitting}
+            loading={submitting} className="flex-1">
+            {submitting ? '처리 중...' : `${count}개 이동`}
           </Button>
         </div>
       </div>
