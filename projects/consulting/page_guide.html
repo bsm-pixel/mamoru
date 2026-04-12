@@ -570,7 +570,7 @@ html, body {
 .method-emotion-text {
   font-size: 15px;
   font-style: italic;
-  color: var(--mm-gold);
+  color: var(--mm-text-d2);
   line-height: 1.6;
   font-weight: 500;
 }
@@ -1289,7 +1289,7 @@ html, body {
        [1] 히어로 섹션
        ========================================================= -->
   <section class="consult-hero">
-    <span class="consult-hero-label fade-in">Consultation Guide</span>
+    <span class="consult-hero-label fade-in">상담 안내</span>
 
     <h1 class="consult-hero-title fade-in delay-1">
       <span class="chosen">Chosen,</span>
@@ -1300,11 +1300,6 @@ html, body {
       권하지 않습니다.<br>
       올바른 선택을 돕습니다.
     </p>
-
-    <!-- 히어로 CTA -->
-    <div class="fade-in delay-3" style="margin-bottom: 32px;">
-      <button class="consult-cta-btn consult-cta-primary" onclick="goToForm();" style="display:inline-block; width:auto; padding:14px 40px;">상담 접수하기</button>
-    </div>
 
     <!-- [IMG] 히어로 이미지 -->
     <div class="consult-hero-image fade-in delay-4">
@@ -1319,6 +1314,7 @@ html, body {
       <button class="consult-tab active" data-tab="about">마모루 컨설팅</button>
       <button class="consult-tab" data-tab="qna">Q&A</button>
     </div>
+    <p style="font-size: 11px; color: var(--mm-text-d3); font-weight: 500; margin: 2px 0 4px; text-align: center;">상담 진행방식</p>
     <div class="consult-tabs">
       <button class="consult-tab" data-tab="visit">직접방문</button>
       <button class="consult-tab" data-tab="dispatch">출장요청</button>
@@ -1534,6 +1530,10 @@ html, body {
         <div class="method-location-card">
           <p class="method-location-label">찾아오시는 길</p>
           <p class="method-location-address">서울특별시 구로구 부광로 88 SKV1,<br>B동 311호 마모루</p>
+          <a href="https://naver.me/GtYtEMSh" target="_blank" rel="noopener"
+            style="display: inline-block; margin-top: 12px; padding: 8px 20px; background: var(--mm-gold); color: var(--mm-text-w); border-radius: 999px; font-size: 12px; font-weight: 600; text-decoration: none; -webkit-tap-highlight-color: transparent;">
+            네이버 지도로 보기 →
+          </a>
         </div>
       </div>
 
@@ -1651,7 +1651,15 @@ html, body {
        [6] 톡상담 탭
        ========================================================= -->
   <div class="consult-tab-content" id="tab-talk">
-    <section class="consult-section" style="padding-top: 32px;">
+    <!-- ✏️ 수정가능: 톡상담 캐릭터 이미지 (src URL만 교체) -->
+    <!-- 📐 추천: 120x120px PNG(투명배경) -->
+    <div class="tab-character">
+      <div class="tab-character-image">
+        <!-- <img src="톡상담_캐릭터URL" alt="톡상담"> -->
+        <div class="tab-character-placeholder">캐릭터</div>
+      </div>
+    </div>
+    <section class="consult-section" style="padding-top: 16px;">
       <h2 class="consult-section-title">톡상담</h2>
       <div class="consult-section-divider"></div>
 
