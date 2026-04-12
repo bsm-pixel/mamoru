@@ -622,6 +622,51 @@ body {
 .delay-2 { transition-delay: 0.2s; }
 .delay-3 { transition-delay: 0.3s; }
 .delay-4 { transition-delay: 0.4s; }
+
+/* ── 모바일 퀵네비 칩 ── */
+.intro-quicknav-wrap {
+  position: relative;
+  background: var(--cream);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.intro-quicknav-wrap::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 40px;
+  background: linear-gradient(90deg, transparent, var(--cream));
+  pointer-events: none;
+  z-index: 1;
+}
+.intro-quicknav {
+  display: flex;
+  gap: 8px;
+  padding: 14px 40px 14px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.intro-quicknav::-webkit-scrollbar { display: none; }
+.intro-quicknav-chip {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  background: var(--white);
+  border: 1px solid var(--sand);
+  border-radius: 100px;
+  color: var(--stone);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.intro-quicknav-chip:active { transform: scale(0.96); }
+@media screen and (min-width: 769px) {
+  .intro-quicknav-wrap { display: none; }
+}
 </style>
 </head>
 <body>
@@ -648,6 +693,17 @@ body {
 
 <!-- 히어로→라이트 트랜지션 -->
 <div class="hero-to-light"></div>
+
+<!-- 모바일 퀵네비 (PC에서 숨김) -->
+<div class="intro-quicknav-wrap">
+  <nav class="intro-quicknav">
+    <a href="#problem" class="intro-quicknav-chip">의문점</a>
+    <a href="#values" class="intro-quicknav-chip">신념</a>
+    <a href="#tech" class="intro-quicknav-chip">기술력</a>
+    <a href="#consult" class="intro-quicknav-chip">맞춤상담</a>
+    <a href="#story" class="intro-quicknav-chip">인사말</a>
+  </nav>
+</div>
 
 <!-- ══ 섹션 2: 문제 제기 (Cream) ══ -->
 <section class="section" id="problem">
