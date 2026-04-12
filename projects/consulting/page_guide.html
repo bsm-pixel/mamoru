@@ -1101,6 +1101,151 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   [4-3] 큰 메시지 블록
+   ══════════════════════════════════════════════════════════════ */
+.about-message {
+  padding: 48px 20px;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.about-message-big {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  line-height: 1.5;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+.about-message-sub {
+  font-size: 14px;
+  color: var(--mm-text-d2);
+  line-height: 1.7;
+}
+.about-message-sub strong {
+  color: var(--mm-text-d);
+  font-weight: 600;
+}
+.about-message-highlight {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--mm-gold-soft);
+  border-radius: 4px;
+  font-weight: 600;
+  color: var(--mm-text-d);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [4-4] 상담철칙 세로 중앙 배열
+   ══════════════════════════════════════════════════════════════ */
+.about-principles {
+  padding: 0 20px 40px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.about-principles-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mm-text-d3);
+  text-align: center;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.about-principle-item {
+  text-align: center;
+  padding: 24px 16px;
+  border-bottom: 1px solid var(--mm-border-l);
+}
+.about-principle-item:last-child { border-bottom: none; }
+.about-principle-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mm-text-d3);
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.about-principle-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+.about-principle-desc {
+  font-size: 13px;
+  color: var(--mm-text-d2);
+  line-height: 1.7;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [4-5] 마모루 혜택 카드 그리드
+   ══════════════════════════════════════════════════════════════ */
+.about-benefits {
+  padding: 0 20px 40px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.about-benefits-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  text-align: center;
+  margin-bottom: 20px;
+  letter-spacing: -0.02em;
+}
+.about-benefits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.about-benefit-card {
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
+  padding: 20px 16px;
+  text-align: center;
+}
+.about-benefit-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+.about-benefit-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+.about-benefit-desc {
+  font-size: 12px;
+  color: var(--mm-text-d2);
+  line-height: 1.6;
+}
+.about-benefit-link {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  background: var(--mm-gold-soft);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mm-text-d);
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media screen and (min-width: 768px) {
+  .about-message-big { font-size: 26px; }
+  .about-benefits-grid { grid-template-columns: repeat(4, 1fr); }
+  .about-benefit-card { padding: 24px 16px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
    fade-in 스크롤 애니메이션
    ══════════════════════════════════════════════════════════════ */
 .fade-in {
@@ -1172,7 +1317,6 @@ html, body {
   <div class="consult-tabs-container">
     <div class="consult-tabs">
       <button class="consult-tab active" data-tab="about">마모루 컨설팅</button>
-      <button class="consult-tab" data-tab="principle">상담철칙</button>
       <button class="consult-tab" data-tab="qna">Q&A</button>
     </div>
     <div class="consult-tabs">
@@ -1186,143 +1330,130 @@ html, body {
        [2.5] 마모루 컨설팅 탭
        ========================================================= -->
   <div class="consult-tab-content active" id="tab-about">
+    <!-- 타이틀 -->
     <section class="consult-section" style="padding-bottom: 0;">
       <h2 class="consult-section-title fade-in">왜 마모루에서<br>상담해야 할까요?</h2>
       <div class="consult-section-divider"></div>
     </section>
 
     <div class="about-block">
-      <!-- 문제 제기 — 다크 블록 -->
+      <!-- ① 가위 시장의 현실 — 다크 블록 -->
       <div class="about-problem fade-in">
         <p class="about-problem-label">가위 시장의 현실</p>
-        <h3 class="about-problem-title">대부분의 가위 회사는<br>판매 회사입니다</h3>
+        <h3 class="about-problem-title">가격과 인지도,<br>잦은 방문으로 판매합니다</h3>
         <div class="about-problem-list">
           <div class="about-problem-item fade-in delay-1">
-            <div class="about-problem-icon">💰</div>
-            <p class="about-problem-text"><strong>가격과 브랜드로 판매합니다</strong><br>비싼 가위 = 좋은 가위라는 공식은 없습니다. 가격이 높다고 내 손에 맞는 건 아닙니다.</p>
-          </div>
-          <div class="about-problem-item fade-in delay-2">
-            <div class="about-problem-icon">🏭</div>
-            <p class="about-problem-text"><strong>자체 기술력이 없습니다</strong><br>공장에서 떼어다 로고만 찍어 파는 곳이 대부분입니다. 수리는? 외주로 돌립니다.</p>
-          </div>
-          <div class="about-problem-item fade-in delay-3">
-            <div class="about-problem-icon">🤷</div>
-            <p class="about-problem-text"><strong>고객이 이해 없이 구매합니다</strong><br>왜 이 가위인지 모른 채, 추천받은 대로 구매하고 후회하는 경우가 많습니다.</p>
+            <div class="about-problem-icon">🔒</div>
+            <p class="about-problem-text">미용사는 가위회사를 비교할 생각을 하지 못하게 되며<br><strong>프레임 안에 갇혀 본인에게 득이 되는 생각조차 하기 어렵습니다.</strong></p>
           </div>
         </div>
       </div>
 
-      <!-- 마모루의 약속 -->
-      <div class="about-promise">
-        <div class="about-promise-card fade-in">
-          <span class="about-promise-num">01</span>
-          <div class="about-promise-content">
-            <h4>고객이 이해해야 합니다</h4>
-            <p>왜 이 가위인지, 왜 이 형태인지. 정보를 숨기지 않습니다.</p>
+      <!-- ② 당연한 얘기지만… 3가지 약속 -->
+      <div class="about-message fade-in" style="padding-bottom: 24px;">
+        <p class="about-message-sub" style="margin-bottom: 20px; font-style: italic; color: var(--mm-text-d3);">너무나도 당연한 얘기지만…</p>
+        <div class="about-promise">
+          <div class="about-promise-card fade-in">
+            <span class="about-promise-num">01</span>
+            <div class="about-promise-content">
+              <h4>고객이 이해해야 합니다</h4>
+            </div>
           </div>
-        </div>
-        <div class="about-promise-card fade-in delay-1">
-          <span class="about-promise-num">02</span>
-          <div class="about-promise-content">
-            <h4>고객이 선택해야 합니다</h4>
-            <p>"안 사셔도 됩니다"를 두려워하지 않습니다.</p>
+          <div class="about-promise-card fade-in delay-1">
+            <span class="about-promise-num">02</span>
+            <div class="about-promise-content">
+              <h4>고객이 선택해야 합니다</h4>
+            </div>
           </div>
-        </div>
-        <div class="about-promise-card fade-in delay-2">
-          <span class="about-promise-num">03</span>
-          <div class="about-promise-content">
-            <h4>고객이 만족해야 합니다</h4>
-            <p>이해하고 선택했기에 진짜 만족이 옵니다.</p>
+          <div class="about-promise-card fade-in delay-2">
+            <span class="about-promise-num">03</span>
+            <div class="about-promise-content">
+              <h4>고객이 오랫동안 만족해야 합니다</h4>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- [IMG] 상담 이미지 — 사진 삽입 위치 -->
+      <!-- ③ 이미지 영역 -->
       <div class="about-image fade-in">
         <!-- ✏️ 수정가능: 상담 현장 이미지 (src URL만 교체) -->
         <!-- 📐 추천: 800x500px JPG/WebP (가로형) -->
         <div class="about-image-placeholder">상담 현장 이미지 삽입</div>
-        <!-- <img src="상담이미지URL" alt="마모루 상담 현장"> -->
-        <!-- <p class="about-image-caption">인모 100% 통가발로 직접 테스트하는 마모루 상담</p> -->
       </div>
 
-      <!-- 기술력 -->
-      <div class="about-tech fade-in">
-        <p class="about-tech-label">기술력</p>
-        <h3 class="about-tech-title">50년 장인의 기술을 잇다</h3>
-        <div class="about-tech-list">
-          <p class="about-tech-item">아버지로부터 이어받은 복원수리 기술 — 일본 공장 견학 + 수료</p>
-          <p class="about-tech-item">어떤 브랜드의 가위든 복원수리 가능 — 버리지 마시고 상담해주세요</p>
-          <p class="about-tech-item">날 변형(곡률 조절) 가공 — 고객의 커트 스타일과 습관에 맞춤</p>
-          <p class="about-tech-item">마모루 가위 수리비 1만원, 타사 가위 4만원 — 합리적인 비용</p>
+      <!-- ④ 큰 메시지: 주기적 방문 X -->
+      <div class="about-message fade-in">
+        <p class="about-message-big">저희는 판매 후에<br>주기적인 방문을 드리지 않습니다</p>
+        <p class="about-message-sub">
+          미용사가 가위를 알고 이해하면<br>
+          불필요한 구매 및 방문딜러에게 의존에서 <strong>해방</strong>됩니다.
+        </p>
+      </div>
+
+      <!-- ⑤ 큰 메시지: 가위를 아는것 -->
+      <div class="about-message fade-in" style="padding-top: 0;">
+        <p class="about-message-big">가위를 아는것,<br>저희가 책임지겠습니다</p>
+        <p class="about-message-sub">
+          딱 필요할 때.<br>
+          <span class="about-message-highlight">AS</span>와 <span class="about-message-highlight">가위상담</span><br>
+          이 두 상황이 아니면 판매자의 부담스러운 지속방문은 불필요합니다.
+        </p>
+      </div>
+
+      <!-- ⑥ 상담철칙 — 세로 중앙 배열 -->
+      <div class="about-principles fade-in">
+        <p class="about-principles-title">상담철칙</p>
+        <div class="about-principle-item fade-in">
+          <p class="about-principle-num">01</p>
+          <p class="about-principle-title">필요한 구매인지, 불필요한 구매인지<br>판단해드립니다</p>
+          <p class="about-principle-desc">불필요한 구매인 경우가 너무 많습니다.<br>올바른 지출 경로를 안내드립니다.</p>
+        </div>
+        <div class="about-principle-item fade-in delay-1">
+          <p class="about-principle-num">02</p>
+          <p class="about-principle-title">제품을 안내하기 전,<br>고객에게 질문합니다</p>
+          <p class="about-principle-desc">
+            고객의 니즈와 원하는 느낌, 스타일과 여러가지 요건을 들어야 합니다.<br><br>
+            먼저 제품을 권유한다면 설득일 뿐이며,<br>
+            먼저 고객을 안다면 좋은 가위를 안내할 수 있습니다.
+          </p>
         </div>
       </div>
 
-      <!-- [IMG] 기술력 이미지 -->
+      <!-- ⑦ 이미지 영역 -->
       <div class="about-image fade-in">
-        <!-- ✏️ 수정가능: 복원수리 작업 이미지 (src URL만 교체) -->
+        <!-- ✏️ 수정가능: 복원수리/상담 이미지 (src URL만 교체) -->
         <!-- 📐 추천: 800x500px JPG/WebP (가로형) -->
-        <div class="about-image-placeholder">복원수리 작업 이미지 삽입</div>
-        <!-- <img src="기술력이미지URL" alt="마모루 복원수리"> -->
-        <!-- <p class="about-image-caption">50년 장인 기술로 가위를 되살립니다</p> -->
+        <div class="about-image-placeholder">복원수리 / 상담 이미지 삽입</div>
       </div>
 
-      <!-- 마무리 감성 문구 -->
-      <div class="about-cta fade-in">
-        <p class="about-cta-text">"가위를 팔지 않습니다.<br>올바른 선택을 안내할 뿐입니다."</p>
+      <!-- ⑧ 마모루에서 구매하시면 — 4카드 -->
+      <div class="about-benefits fade-in">
+        <h3 class="about-benefits-title">마모루에서 구매하시면</h3>
+        <div class="about-benefits-grid">
+          <div class="about-benefit-card fade-in">
+            <div class="about-benefit-icon">✂️</div>
+            <h4 class="about-benefit-title">가위걱정 부담없는 금액으로<br>불편걱정은 이제 그만</h4>
+            <p class="about-benefit-desc">마모루 가위는 복원수리 50% 할인혜택 제공</p>
+            <span class="about-benefit-link" onclick="window.parent.postMessage({type:'MAMORU_NAVIGATE',url:'/53'},'*')">복원수리 안내 →</span>
+          </div>
+          <div class="about-benefit-card fade-in delay-1">
+            <div class="about-benefit-icon">🔧</div>
+            <h4 class="about-benefit-title">스타일이 바뀌면<br>가위도 맞추어 변형</h4>
+            <p class="about-benefit-desc">커트 스타일에 따른 맞는 가위형태는 다릅니다. 날 변형작업도 할인적용된 가격으로 작업해드립니다.</p>
+          </div>
+          <div class="about-benefit-card fade-in delay-2">
+            <div class="about-benefit-icon">📱</div>
+            <h4 class="about-benefit-title">부담스러운<br>지속방문 X</h4>
+            <p class="about-benefit-desc">필요할 땐 빠르고 편리하게 AS/컨설팅 접수시스템 제공</p>
+          </div>
+          <div class="about-benefit-card fade-in delay-3">
+            <div class="about-benefit-icon">💡</div>
+            <h4 class="about-benefit-title">모든 미용사에게<br>득이되는 정보 제공</h4>
+            <p class="about-benefit-desc">틴닝의 불편해결부터 이해가 쉽도록 도움정보를 제공합니다.</p>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-
-  <!-- =========================================================
-       [3] 상담철칙 탭 - 개선: 골드라인 + 호버
-       ========================================================= -->
-  <div class="consult-tab-content" id="tab-principle">
-    <!-- [IMG] 캐릭터 이미지 -->
-    <div class="tab-character">
-      <div class="tab-character-image">
-        <img class="fr-fic fr-dii" src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/6e900d3a72c0a.png" alt="상담안내_철칙상단.png">
-        <!-- <img src="상담철칙_캐릭터.png" alt="상담철칙"> -->
-      </div>
-    </div>
-
-    <section class="consult-section" style="padding-top: 0px;">
-      <h2 class="consult-section-title">마모루의 상담철칙</h2>
-      <div class="consult-section-divider"></div>
-
-      <div class="principle-list">
-        <div class="principle-item fade-in">
-          <p class="principle-number">01</p>
-          <p class="principle-title">필요에 의한 구매를 돕습니다</p>
-          <p class="principle-desc">원하지 않는 제품을 권하지 않습니다. 고객님의 커트 스타일과 습관에 맞는 가위만 안내합니다.</p>
-        </div>
-        <div class="principle-item fade-in delay-1">
-          <p class="principle-number">02</p>
-          <p class="principle-title">올바른 선택 가이드를 제공합니다</p>
-          <p class="principle-desc">추천이 아닌 기준을 드립니다. 어떤 가위가 왜 좋은지, 고객님이 직접 판단할 수 있도록.</p>
-        </div>
-        <div class="principle-item fade-in delay-2">
-          <p class="principle-number">03</p>
-          <p class="principle-title">가격을 먼저 말하지 않습니다</p>
-          <p class="principle-desc">좋은 가위의 기준에 가격이 먼저가 아닙니다. 성능과 적합성을 먼저, 가격은 그 다음입니다.</p>
-        </div>
-        <div class="principle-item fade-in delay-3">
-          <p class="principle-number">04</p>
-          <p class="principle-title">인모 100% 통가발을 항상 지참합니다</p>
-          <p class="principle-desc">실제 모발로 직접 테스트해보셔야 합니다. 말로 하는 설명보다 한 번의 컷이 더 정확합니다.</p>
-        </div>
-        <div class="principle-item fade-in delay-4">
-          <p class="principle-number">05</p>
-          <p class="principle-title">이유를 이해한 후 판매합니다</p>
-          <p class="principle-desc">왜 이 가위를 선택했는지, 고객님 스스로 납득한 후에만 구매가 이루어집니다.</p>
-        </div>
-        <div class="principle-item fade-in delay-5">
-          <p class="principle-number">06</p>
-          <p class="principle-title">충분한 비교를 권합니다</p>
-          <p class="principle-desc">어떠한 가위도 완벽할 수 없습니다. 올바른 선택지 안에서 충분히 비교해보시길 권합니다.</p>
-        </div>
-      </div>
-    </section>
   </div>
 
   <!-- =========================================================
