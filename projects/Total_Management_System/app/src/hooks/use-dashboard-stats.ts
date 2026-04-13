@@ -116,6 +116,7 @@ export function useHubStats() {
         monthSales,
         monthRepairsPaid, monthSalesRepairItems,
         monthDeliveries,
+        monthDeliveryRepairItems,
       ] = await Promise.all([
         db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pay_done'),
         db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparing'),
@@ -152,11 +153,17 @@ export function useHubStats() {
           .eq('category', 'RS')
           .gte('offline_sales.sale_date', monthStartDate)
           .is('offline_sales.cancelled_at', null),
-        // 납품 매출 (이번달, 확정 이상, 취소 제외)
+        // 납품 매출 + 항목 (이번달, 확정 이상, 취소 제외)
         db.from('deliveries').select('total_amount, discount_amount')
           .gte('delivery_date', monthStartDate)
           .in('status', ['confirmed', 'shipped', 'settled'])
           .is('cancelled_at', null),
+        // 납품 복원수리 항목 (B2B 복원수리 수량 집계용)
+        db.from('delivery_items').select('quantity, category, delivery_id, deliveries!inner(delivery_date, status, cancelled_at)')
+          .eq('category', 'RS')
+          .gte('deliveries.delivery_date', monthStartDate)
+          .in('deliveries.status', ['confirmed', 'shipped', 'settled'])
+          .is('deliveries.cancelled_at', null),
       ]);
 
       const sumAmount = (rows: { paid_amount?: number }[]) =>
@@ -180,6 +187,10 @@ export function useHubStats() {
       // 납품 매출
       const deliveryRows = (monthDeliveries.data || []) as { total_amount: number; discount_amount: number }[];
       const deliveryMonthAmount = deliveryRows.reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
+
+      // 납품 복원수리 B2B 수량
+      const deliveryRepairRows = (monthDeliveryRepairItems.data || []) as { quantity: number }[];
+      const deliveryRepairB2BQty = deliveryRepairRows.reduce((s, r) => s + (r.quantity || 0), 0);
 
       return {
         orders: {
@@ -236,7 +247,7 @@ export function useHubStats() {
               monthRepairCount: repairRows.length + salesRepairRows.length,
               monthRepairMamoru: { amount: aMamoru + bMamoru, count: aMamoruQty + cMamoru },
               monthRepairOther: { amount: aOther + bOther, count: aOtherQty + cOther },
-              monthRepairB2B: { amount: bB2B, count: cB2B },
+              monthRepairB2B: { amount: bB2B, count: cB2B + deliveryRepairB2BQty },
             };
           })(),
         },
