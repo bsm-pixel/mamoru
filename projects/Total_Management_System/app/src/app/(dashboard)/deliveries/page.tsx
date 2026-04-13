@@ -15,7 +15,6 @@ import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-pan
 import { useDeliveries, useDeliveryStats, useCreateDelivery } from '@/hooks/use-deliveries';
 import { useProducts } from '@/hooks/use-sales';
 import { useCustomerSearch } from '@/hooks/use-customers';
-import { useSetting } from '@/hooks/use-settings';
 import { formatKRW, formatDate, formatPhone, calcVAT } from '@/lib/utils/format';
 import { Package, Plus, X, AlertCircle, Calendar, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -282,8 +281,6 @@ const DeliveryRow = memo(function DeliveryRow({ dl, isSelected, onClick }: {
 function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
   const createDelivery = useCreateDelivery();
   const { data: products = [] } = useProducts();
-  const taxType = useSetting<string>('accounting.tax_type', 'simplified');
-
   // 고객 검색
   const [customerQuery, setCustomerQuery] = useState('');
   const { data: searchResults = [] } = useCustomerSearch(customerQuery);
@@ -304,10 +301,8 @@ function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCr
   // 결제/옵션
   const [deliveryDate, setDeliveryDate] = useState(new Date().toISOString().slice(0, 10));
   const [expectedDate, setExpectedDate] = useState('');
-  const [vatType, setVatType] = useState<'included' | 'separate' | 'none'>('included');
-  const [receiptType, setReceiptType] = useState<string>(
-    taxType === 'general' ? 'tax_invoice' : 'expense_proof'
-  );
+  const [vatType, setVatType] = useState<'included' | 'separate' | 'none'>('none');
+  const [receiptType, setReceiptType] = useState<string>('none');
   const [paymentStatus, setPaymentStatus] = useState<'unpaid' | 'partial' | 'paid'>('unpaid');
   const [paymentMethod, setPaymentMethod] = useState('transfer');
   const [discount, setDiscount] = useState(0);
