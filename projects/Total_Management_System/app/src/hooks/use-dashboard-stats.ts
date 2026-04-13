@@ -547,14 +547,16 @@ export function useRepairDashboardStats() {
             else if ((r.product_name || '').includes('타사')) { bOther += price; cOther += qty; }
             else { bMamoru += price; cMamoru += qty; }
           }
+          const dlRepairAmount = ((dlRepairItems.data || []) as { total_price: number }[]).reduce((s, r) => s + (r.total_price || 0), 0);
+          const dlRepairQty = ((dlRepairItems.data || []) as { quantity: number }[]).reduce((s, r) => s + (r.quantity || 0), 0);
           return {
-            monthRepairAmount: repairATotal + bMamoru + bOther + bB2B,
-            monthRepairCount: repairRows.length + salesRepairRows.length,
+            monthRepairAmount: repairATotal + bMamoru + bOther + bB2B + dlRepairAmount,
+            monthRepairCount: repairRows.length + salesRepairRows.length + (dlRepairItems.data || []).length,
             monthRepairMamoru: { amount: aMamoru + bMamoru, count: aMamoruQty + cMamoru },
             monthRepairOther: { amount: aOther + bOther, count: aOtherQty + cOther },
             monthRepairB2B: {
-              amount: bB2B + ((dlRepairItems.data || []) as { total_price: number }[]).reduce((s, r) => s + (r.total_price || 0), 0),
-              count: cB2B + ((dlRepairItems.data || []) as { quantity: number }[]).reduce((s, r) => s + (r.quantity || 0), 0),
+              amount: bB2B + dlRepairAmount,
+              count: cB2B + dlRepairQty,
             },
           };
         })(),
