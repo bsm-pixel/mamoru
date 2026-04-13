@@ -58,6 +58,27 @@ export function useHubStats() {
 
       if (!rpcError && rpcData) {
         const d = rpcData as HubStatsResult;
+
+        // RPC에 없는 deliveries 데이터 추가 쿼리
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const dlDb = supabase as any;
+        const msd = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
+        const [dlRes, dlRepairRes] = await Promise.all([
+          dlDb.from('deliveries').select('total_amount, discount_amount')
+            .gte('delivery_date', msd).in('status', ['confirmed', 'shipped', 'settled']).is('cancelled_at', null),
+          (async () => {
+            const { data: dlIds } = await dlDb.from('deliveries').select('id')
+              .gte('delivery_date', msd).in('status', ['confirmed', 'shipped', 'settled']).is('cancelled_at', null);
+            if (!dlIds || dlIds.length === 0) return { data: [] };
+            return dlDb.from('delivery_items').select('quantity').eq('category', 'RS').in('delivery_id', dlIds.map((x: { id: string }) => x.id));
+          })(),
+        ]);
+        const dlAmount = ((dlRes.data || []) as { total_amount: number; discount_amount?: number }[])
+          .reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
+        const dlCount = (dlRes.data || []).length;
+        const dlRepairQty = ((dlRepairRes.data || []) as { quantity: number }[])
+          .reduce((s, r) => s + (r.quantity || 0), 0);
+
         return {
           orders: {
             payDone: d.orders?.payDone ?? 0,
@@ -85,11 +106,14 @@ export function useHubStats() {
             monthRepairCount: d.repairs?.monthRepairCount ?? 0,
             monthRepairMamoru: d.repairs?.monthRepairMamoru ?? { amount: 0, count: 0 },
             monthRepairOther: d.repairs?.monthRepairOther ?? { amount: 0, count: 0 },
-            monthRepairB2B: d.repairs?.monthRepairB2B ?? { amount: 0, count: 0 },
+            monthRepairB2B: {
+              amount: (d.repairs?.monthRepairB2B?.amount ?? 0),
+              count: (d.repairs?.monthRepairB2B?.count ?? 0) + dlRepairQty,
+            },
           },
           sales: {
-            monthCount: d.sales?.monthCount ?? 0,
-            monthAmount: d.sales?.monthAmount ?? 0,
+            monthCount: (d.sales?.monthCount ?? 0) + dlCount,
+            monthAmount: (d.sales?.monthAmount ?? 0) + dlAmount,
           },
         };
       }
