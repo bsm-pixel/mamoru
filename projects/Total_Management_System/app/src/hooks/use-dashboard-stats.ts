@@ -158,12 +158,16 @@ export function useHubStats() {
           .gte('delivery_date', monthStartDate)
           .in('status', ['confirmed', 'shipped', 'settled'])
           .is('cancelled_at', null),
-        // 납품 복원수리 항목 (B2B 복원수리 수량 집계용)
-        db.from('delivery_items').select('quantity, category, delivery_id, deliveries!inner(delivery_date, status, cancelled_at)')
-          .eq('category', 'RS')
-          .gte('deliveries.delivery_date', monthStartDate)
-          .in('deliveries.status', ['confirmed', 'shipped', 'settled'])
-          .is('deliveries.cancelled_at', null),
+        // 납품 복원수리 수량 — 간단 쿼리 (납품 ID로 필터)
+        (async () => {
+          const { data: dlIds } = await db.from('deliveries').select('id')
+            .gte('delivery_date', monthStartDate)
+            .in('status', ['confirmed', 'shipped', 'settled'])
+            .is('cancelled_at', null);
+          if (!dlIds || dlIds.length === 0) return { data: [] };
+          const ids = dlIds.map((d: { id: string }) => d.id);
+          return db.from('delivery_items').select('quantity').eq('category', 'RS').in('delivery_id', ids);
+        })(),
       ]);
 
       const sumAmount = (rows: { paid_amount?: number }[]) =>
