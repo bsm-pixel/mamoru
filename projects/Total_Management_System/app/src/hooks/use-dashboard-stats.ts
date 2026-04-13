@@ -426,7 +426,7 @@ export function useRepairDashboardStats() {
       const weekStartDate = monday.toISOString().slice(0, 10);
       const todayDate = now.toISOString().slice(0, 10);
 
-      const [counts, staleCount, unpaidCount, intakeNewCount, monthRepairsPaid, monthSalesRepairItems, todayCompleted, weekCompleted, weekSalesRepair] = await Promise.all([
+      const [counts, staleCount, unpaidCount, intakeNewCount, monthRepairsPaid, monthSalesRepairItems, todayCompleted, weekCompleted, weekSalesRepair, dlRepairItems] = await Promise.all([
         // 상태별 count 병렬
         Promise.all(
           statuses.map((s) =>
@@ -489,6 +489,13 @@ export function useRepairDashboardStats() {
           .gte('offline_sales.sale_date', weekStartDate)
           .lte('offline_sales.sale_date', todayDate)
           .is('offline_sales.cancelled_at', null),
+        // 납품 복원수리 B2B 수량 (delivery_items category=RS)
+        (async () => {
+          const { data: dlIds } = await (supabase as any).from('deliveries').select('id')
+            .gte('delivery_date', monthStart).in('status', ['confirmed', 'shipped', 'settled']).is('cancelled_at', null);
+          if (!dlIds || dlIds.length === 0) return { data: [] };
+          return (supabase as any).from('delivery_items').select('quantity, total_price').eq('category', 'RS').in('delivery_id', dlIds.map((x: { id: string }) => x.id));
+        })(),
       ]);
 
       const byStatus = Object.fromEntries(counts.map((c) => [c.status, c.count])) as Record<string, number>;
@@ -545,7 +552,10 @@ export function useRepairDashboardStats() {
             monthRepairCount: repairRows.length + salesRepairRows.length,
             monthRepairMamoru: { amount: aMamoru + bMamoru, count: aMamoruQty + cMamoru },
             monthRepairOther: { amount: aOther + bOther, count: aOtherQty + cOther },
-            monthRepairB2B: { amount: bB2B, count: cB2B },
+            monthRepairB2B: {
+              amount: bB2B + ((dlRepairItems.data || []) as { total_price: number }[]).reduce((s, r) => s + (r.total_price || 0), 0),
+              count: cB2B + ((dlRepairItems.data || []) as { quantity: number }[]).reduce((s, r) => s + (r.quantity || 0), 0),
+            },
           };
         })(),
         // 작업 일지
