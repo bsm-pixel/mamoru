@@ -281,6 +281,11 @@ const DeliveryRow = memo(function DeliveryRow({ dl, isSelected, onClick }: {
 function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
   const createDelivery = useCreateDelivery();
   const { data: products = [] } = useProducts();
+  // 모드: 제품납품 vs 복원수리
+  const [mode, setMode] = useState<'delivery' | 'repair'>('delivery');
+  // 복원수리 전용
+  const [repairQty, setRepairQty] = useState(1);
+  const [repairUnitPrice, setRepairUnitPrice] = useState(8000);
   // 고객 검색
   const [customerQuery, setCustomerQuery] = useState('');
   const { data: searchResults = [] } = useCustomerSearch(customerQuery);
@@ -351,6 +356,31 @@ function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCr
   async function handleSubmit() {
     const name = selectedCustomer?.name || customerName.trim();
     if (!name) { toast.error('거래처를 입력해주세요'); return; }
+
+    // 복원수리 간편 모드
+    if (mode === 'repair') {
+      if (repairQty < 1) { toast.error('수량을 입력해주세요'); return; }
+      try {
+        const repairTotal = repairQty * repairUnitPrice;
+        const result = await createDelivery.mutateAsync({
+          customer_id: selectedCustomer?.id,
+          customer_name: name,
+          customer_phone: selectedCustomer?.phone || customerPhone.trim() || undefined,
+          customer_type: customerType,
+          delivery_date: deliveryDate,
+          memo: memo.trim() || undefined,
+          vat_type: 'none',
+          receipt_type: 'none',
+          payment_status: paymentStatus,
+          payment_method: paymentMethod,
+          paid_amount: paymentStatus === 'partial' ? paidAmount : paymentStatus === 'paid' ? repairTotal : 0,
+          items: [{ product_name: '복원수리', category: 'RS', quantity: repairQty, unit_price: repairUnitPrice }],
+        });
+        onCreated((result.delivery as Record<string, unknown>).id as string);
+      } catch { /* hook handles error */ }
+      return;
+    }
+
     if (cart.length === 0) { toast.error('품목을 추가해주세요'); return; }
 
     try {
@@ -387,6 +417,18 @@ function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCr
         <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800">납품서 작성</h3>
           <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
+        </div>
+
+        {/* 모드 전환 */}
+        <div className="flex border-b border-neutral-200">
+          <button onClick={() => setMode('delivery')}
+            className={`flex-1 py-2.5 text-xs font-semibold text-center transition ${mode === 'delivery' ? 'text-neutral-900 border-b-2 border-neutral-900' : 'text-neutral-400'}`}>
+            제품 납품
+          </button>
+          <button onClick={() => setMode('repair')}
+            className={`flex-1 py-2.5 text-xs font-semibold text-center transition ${mode === 'repair' ? 'text-neutral-900 border-b-2 border-neutral-900' : 'text-neutral-400'}`}>
+            복원수리
+          </button>
         </div>
 
         {/* 본문 */}
@@ -484,6 +526,59 @@ function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCr
             {customerType === 'academy' && <p className="text-xs text-purple-600 mt-1">아카데미가 적용</p>}
           </div>
 
+          {/* ═══ 복원수리 간편 모드 ═══ */}
+          {mode === 'repair' && (
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-neutral-500 mb-1 block">수량 (자루)</label>
+                <input type="number" min={1} value={repairQty}
+                  onChange={(e) => setRepairQty(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-neutral-500 mb-1 block">단가 (원)</label>
+                <input type="number" value={repairUnitPrice}
+                  onChange={(e) => setRepairUnitPrice(parseInt(e.target.value) || 0)}
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                <p className="text-[10px] text-neutral-400 mt-1">기본 8,000원 · 수정 가능</p>
+              </div>
+              <div className="bg-neutral-50 rounded-lg p-3">
+                <div className="flex justify-between text-sm font-bold">
+                  <span>합계</span>
+                  <span>{formatKRW(repairQty * repairUnitPrice)}</span>
+                </div>
+              </div>
+              {/* 결제상태 */}
+              <div className="border border-neutral-200 rounded-lg p-2.5">
+                <label className="text-[10px] font-semibold text-neutral-400 mb-1.5 block">결제상태</label>
+                <div className="flex gap-1">
+                  {(['unpaid', 'partial', 'paid'] as const).map((ps) => (
+                    <button key={ps} onClick={() => { setPaymentStatus(ps); if (ps !== 'partial') setPaidAmount(0); }}
+                      className={`flex-1 py-1.5 rounded text-[10px] font-semibold transition ${
+                        paymentStatus === ps
+                          ? ps === 'paid' ? 'bg-green-600 text-white' : ps === 'partial' ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white'
+                          : 'bg-neutral-50 text-neutral-500 hover:bg-neutral-100'
+                      }`}>
+                      {PAYMENT_LABEL[ps]}
+                    </button>
+                  ))}
+                </div>
+                {paymentStatus === 'partial' && (
+                  <input type="number" value={paidAmount || ''} onChange={(e) => setPaidAmount(parseInt(e.target.value) || 0)}
+                    placeholder="선납금 입력"
+                    className="w-full h-7 px-2 mt-2 rounded border border-neutral-200 bg-warm-ivory text-xs" />
+                )}
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-neutral-500 mb-1 block">메모</label>
+                <input type="text" value={memo} onChange={(e) => setMemo(e.target.value)}
+                  placeholder="메모 (선택)" className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-xs" />
+              </div>
+            </div>
+          )}
+
+          {/* ═══ 제품 납품 모드 ═══ */}
+          {mode === 'delivery' && <>
           {/* 날짜 */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -685,6 +780,7 @@ function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCr
               </div>
             </div>
           )}
+        </>}
         </div>
 
         {/* 푸터 */}
@@ -692,9 +788,9 @@ function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCr
           <Button variant="ghost" onClick={onClose}>취소</Button>
           <Button
             onClick={handleSubmit}
-            disabled={cart.length === 0 || (!selectedCustomer && !customerName.trim()) || createDelivery.isPending}
+            disabled={(mode === 'delivery' ? (cart.length === 0) : (repairQty < 1)) || (!selectedCustomer && !customerName.trim()) || createDelivery.isPending}
           >
-            {createDelivery.isPending ? '생성 중...' : '납품서 생성'}
+            {createDelivery.isPending ? '생성 중...' : mode === 'repair' ? '복원수리 등록' : '납품서 생성'}
           </Button>
         </div>
       </div>
