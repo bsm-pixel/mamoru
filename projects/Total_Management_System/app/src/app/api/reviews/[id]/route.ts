@@ -68,3 +68,26 @@ export async function PATCH(
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
+
+/** DELETE /api/reviews/[id] — 리뷰 삭제 */
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    const { error } = await db.from('reviews').delete().eq('id', id);
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('[reviews] 삭제 실패:', err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}

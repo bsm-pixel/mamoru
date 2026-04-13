@@ -590,7 +590,7 @@ img { display: block; max-width: 100%; }
       tags.map(function(t) { return '<span class="mm-rv-tag">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') +
     '</div>';
   }
-  var SUBTYPE_LABELS = { store_visit: '매장방문', field_request: '출장상담', talk_consult: '톡상담', restoration: '복원수리' };
+  var SUBTYPE_LABELS = { store_visit: '직접방문', field_request: '출장', talk_consult: '톡상담', restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거', parcel_pickup: '방문수거', self_ship: '직접발송' };
 
   function getTypeLabel(r) { return TYPE_LABELS[r.type] || ''; }
   function getSubtypeLabel(r) {
@@ -598,11 +598,15 @@ img { display: block; max-width: 100%; }
     return SUBTYPE_LABELS[sub] || '';
   }
 
-  /* ── 칩 HTML 생성 ── */
+  /* ── 칩 HTML 생성 — 상담은 합치기, 복원수리는 분리 ── */
   function renderChips(r, cls) {
-    var chips = '<span class="' + cls + '">' + getTypeLabel(r) + '</span>';
+    var type = getTypeLabel(r);
     var sub = getSubtypeLabel(r);
-    if (sub && sub !== getTypeLabel(r)) {
+    if (r.type === 'consult' && sub) {
+      return '<span class="' + cls + '">' + type + '·' + sub + '</span>';
+    }
+    var chips = '<span class="' + cls + '">' + type + '</span>';
+    if (sub && sub !== type) {
       chips += '<span class="' + cls + '">' + sub + '</span>';
     }
     return chips;

@@ -45,10 +45,14 @@ export function ReviewRequestModal({ saleId, customerName, customerPhone, hasRep
     { key: 'consult', label: '상담' },
     { key: 'purchase', label: '제품구매' },
   ];
-  const subtypeOptions = [
-    { key: 'store_visit', label: '매장방문' },
+  const consultSubtypes = [
+    { key: 'store_visit', label: '직접방문' },
     { key: 'field_request', label: '출장' },
-    { key: 'talk_consult', label: '온라인상담' },
+    { key: 'talk_consult', label: '톡상담' },
+  ];
+  const repairSubtypes = [
+    { key: 'direct_visit', label: '직접방문' },
+    { key: 'pickup', label: '방문수거' },
   ];
 
   return (
@@ -84,7 +88,23 @@ export function ReviewRequestModal({ saleId, customerName, customerPhone, hasRep
             <div>
               <label className="text-xs font-semibold text-neutral-600 mb-2 block">상담 방식</label>
               <div className="flex gap-2">
-                {subtypeOptions.map((st) => (
+                {consultSubtypes.map((st) => (
+                  <button
+                    key={st.key}
+                    onClick={() => setSubtype(st.key)}
+                    className={`flex-1 py-2 text-xs rounded-lg border transition ${
+                      subtype === st.key ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'
+                    }`}
+                  >{st.label}</button>
+                ))}
+              </div>
+            </div>
+          )}
+          {reviewType === 'repair' && (
+            <div>
+              <label className="text-xs font-semibold text-neutral-600 mb-2 block">수리 방식</label>
+              <div className="flex gap-2">
+                {repairSubtypes.map((st) => (
                   <button
                     key={st.key}
                     onClick={() => setSubtype(st.key)}

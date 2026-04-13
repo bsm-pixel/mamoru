@@ -198,6 +198,17 @@ export async function POST(req: NextRequest) {
 
     const reviewId = await generateReviewId(db);
 
+    // 자동 노출 설정 체크
+    let reviewStatus = 'pending';
+    const { data: autoSetting } = await dbAny
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'review.auto_approve')
+      .single();
+    if (autoSetting && autoSetting.value === 'true') {
+      reviewStatus = 'approved';
+    }
+
     const { data, error } = await dbAny
       .from('reviews')
       .insert({
@@ -212,7 +223,8 @@ export async function POST(req: NextRequest) {
         source_id: sourceId,
         product: meta.product_name || null,
         product_group: meta.product_group || null,
-        status: 'pending',
+        status: reviewStatus,
+        approved_at: reviewStatus === 'approved' ? new Date().toISOString() : null,
         meta: { ...meta, ...(Array.isArray(tags) && tags.length > 0 ? { tags } : {}) },
       })
       .select()

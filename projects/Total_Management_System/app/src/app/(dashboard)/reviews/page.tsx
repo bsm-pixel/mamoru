@@ -37,6 +37,25 @@ const TYPE_LABELS: Record<string, string> = {
   purchase: '제품구매',
 };
 
+const SUBTYPE_LABELS: Record<string, string> = {
+  store_visit: '직접방문', field_request: '출장', talk_consult: '톡상담',
+  restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거',
+  parcel_pickup: '방문수거', self_ship: '직접발송',
+};
+
+function getChipLabel(review: Review): string {
+  const type = TYPE_LABELS[review.type] || review.type;
+  const sub = review.subtype ? (SUBTYPE_LABELS[review.subtype] || review.subtype) : '';
+  if (review.type === 'consult' && sub) return `${type}·${sub}`;
+  return type;
+}
+
+function getSubChip(review: Review): string | null {
+  if (review.type !== 'repair') return null;
+  const sub = review.subtype ? (SUBTYPE_LABELS[review.subtype] || review.subtype) : '';
+  return sub || null;
+}
+
 const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-yellow-50 text-yellow-700',
   approved: 'bg-green-50 text-green-700',
@@ -75,7 +94,38 @@ export default function ReviewsPage() {
   const [editForm, setEditForm] = useState<Partial<Review>>({});
   const [saving, setSaving] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [autoApprove, setAutoApprove] = useState(false);
+  const [autoLoaded, setAutoLoaded] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
+
+  // 자동 노출 토글 로드
+  useEffect(() => {
+    fetch('/api/settings').then(r => r.json()).then(d => {
+      const settings = d.settings || {};
+      setAutoApprove(settings['review.auto_approve'] === 'true');
+      setAutoLoaded(true);
+    }).catch(() => setAutoLoaded(true));
+  }, []);
+
+  const toggleAutoApprove = async () => {
+    const newVal = !autoApprove;
+    setAutoApprove(newVal);
+    await fetch('/api/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'review.auto_approve', value: String(newVal) }),
+    });
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/reviews/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      setReviews(prev => prev.filter(r => r.id !== id));
+      setDeleteTarget(null);
+    } catch { alert('삭제 실패'); }
+  };
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
@@ -218,7 +268,19 @@ export default function ReviewsPage() {
               </button>
             ))}
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            {/* 자동 노출 토글 */}
+            {autoLoaded && (
+              <button
+                onClick={toggleAutoApprove}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                  autoApprove ? 'bg-green-50 text-green-700' : 'bg-neutral-100 text-neutral-500'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${autoApprove ? 'bg-green-500' : 'bg-neutral-300'}`} />
+                즉시 노출 {autoApprove ? 'ON' : 'OFF'}
+              </button>
+            )}
             <Link
               href="/reviews/naver"
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-700 hover:bg-green-100 transition"
@@ -243,7 +305,7 @@ export default function ReviewsPage() {
         ) : reviews.length === 0 ? (
           <div className="text-center py-16 text-neutral-400 text-sm">리뷰가 없습니다</div>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid gap-3 lg:grid-cols-3 md:grid-cols-2">
             {reviews.map(review => (
               <div
                 key={review.id}
@@ -254,8 +316,13 @@ export default function ReviewsPage() {
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-sm">{maskName(review.name)}</span>
                     <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-500">
-                      {TYPE_LABELS[review.type] || review.type}
+                      {getChipLabel(review)}
                     </span>
+                    {getSubChip(review) && (
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-neutral-50 text-neutral-400">
+                        {getSubChip(review)}
+                      </span>
+                    )}
                     {review.source === 'naver' && (
                       <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-600">
                         네이버
@@ -338,6 +405,13 @@ export default function ReviewsPage() {
                       ) : (
                         <><Eye size={12} /> 노출</>
                       )}
+                    </button>
+                    <button
+                      onClick={() => setDeleteTarget(review.id)}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-500 hover:bg-red-100 transition"
+                      title="삭제"
+                    >
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 </div>
@@ -530,6 +604,20 @@ export default function ReviewsPage() {
             className="max-w-full max-h-[80vh] rounded-lg object-contain"
             onClick={e => e.stopPropagation()}
           />
+        </div>
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setDeleteTarget(null)}>
+          <div className="bg-white rounded-xl p-5 w-[320px] space-y-3" onClick={e => e.stopPropagation()}>
+            <h3 className="text-sm font-bold text-neutral-800">리뷰 삭제</h3>
+            <p className="text-xs text-neutral-500">이 리뷰를 삭제하시겠습니까? 삭제된 리뷰는 복구할 수 없습니다.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setDeleteTarget(null)} className="flex-1 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600">취소</button>
+              <button onClick={() => handleDelete(deleteTarget)} className="flex-1 py-2 rounded-lg bg-red-500 text-white text-sm font-medium">삭제</button>
+            </div>
+          </div>
         </div>
       )}
     </>
