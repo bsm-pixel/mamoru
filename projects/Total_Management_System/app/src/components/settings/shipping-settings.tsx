@@ -114,12 +114,9 @@ export default function ShippingSettings({ settings, onSave, saving }: TabProps)
           placeholder="[MAMORU] 복원수리" />
       </Field>
 
-      {/* 3. 송장번호 범위 — 별도 UI 필요, 여기선 안내만 */}
-      <Field label="송장번호 범위 관리" desc="롯데택배 운송장 번호 구간. 잔여 확인 및 새 구간 등록.">
-        <p className="text-xs text-neutral-500 bg-neutral-50 rounded-lg p-3">
-          송장번호 범위는 <span className="font-semibold">lotte_waybill_config</span> 테이블에서 관리됩니다.
-          추후 이 화면에서 직접 관리할 수 있도록 업데이트 예정입니다.
-        </p>
+      {/* 3. 송장번호 잔여 현황 */}
+      <Field label="송장번호 현황" desc="롯데택배 운송장 번호 대역. 100건 미만 시 새 대역 할당 필요.">
+        <WaybillStatus />
       </Field>
 
       {/* 4. 기본 택배사 — 라벨만 */}
@@ -230,5 +227,67 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       className={`relative w-11 h-6 rounded-full transition ${checked ? 'bg-neutral-900' : 'bg-neutral-200'}`}>
       <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
     </button>
+  );
+}
+
+/** 송장번호 잔여 현황 컴포넌트 */
+function WaybillStatus() {
+  const [data, setData] = useState<{
+    current_number: number; start_number: number; end_number: number;
+    total: number; used: number; remaining: number;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/waybill')
+      .then((r) => r.json())
+      .then((d) => { if (d.remaining !== undefined) setData(d); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p className="text-xs text-neutral-400 py-2">조회 중...</p>;
+  if (!data) return <p className="text-xs text-red-500 py-2">송장번호 설정을 찾을 수 없습니다</p>;
+
+  const isLow = data.remaining < 100;
+  const pct = Math.round((data.used / data.total) * 100);
+
+  return (
+    <div className="space-y-3">
+      {/* 잔여 카운트 */}
+      <div className={`flex items-center justify-between px-3 py-2.5 rounded-lg ${isLow ? 'bg-red-50' : 'bg-neutral-50'}`}>
+        <span className="text-xs text-neutral-600">잔여 송장</span>
+        <span className={`text-sm font-bold ${isLow ? 'text-red-600' : 'text-neutral-900'}`}>
+          {data.remaining.toLocaleString()}건
+          {isLow && <span className="text-[10px] font-normal ml-1.5 text-red-500">⚠ 새 대역 할당 필요</span>}
+        </span>
+      </div>
+      {/* 프로그레스 바 */}
+      <div>
+        <div className="flex justify-between text-[10px] text-neutral-400 mb-1">
+          <span>사용 {data.used.toLocaleString()}</span>
+          <span>전체 {data.total.toLocaleString()}</span>
+        </div>
+        <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
+          <div className={`h-full rounded-full transition-all ${isLow ? 'bg-red-500' : 'bg-neutral-900'}`}
+            style={{ width: `${Math.min(100, pct)}%` }} />
+        </div>
+      </div>
+      {/* 번호 범위 */}
+      <div className="grid grid-cols-3 gap-2 text-[10px] text-neutral-500">
+        <div className="bg-neutral-50 rounded px-2 py-1.5 text-center">
+          <span className="block text-neutral-400">시작</span>
+          <span className="font-mono font-semibold text-neutral-700">{data.start_number}</span>
+        </div>
+        <div className="bg-neutral-50 rounded px-2 py-1.5 text-center">
+          <span className="block text-neutral-400">현재</span>
+          <span className="font-mono font-semibold text-neutral-700">{data.current_number}</span>
+        </div>
+        <div className="bg-neutral-50 rounded px-2 py-1.5 text-center">
+          <span className="block text-neutral-400">끝</span>
+          <span className="font-mono font-semibold text-neutral-700">{data.end_number}</span>
+        </div>
+      </div>
+    </div>
   );
 }

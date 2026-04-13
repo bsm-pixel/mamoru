@@ -684,3 +684,36 @@ export function useSuppliesAlert() {
     },
   });
 }
+
+/** 운송장 잔여 알림 (100건 미만 시 경고) */
+export function useWaybillAlert() {
+  return useQuery({
+    queryKey: ['waybill-alert'],
+    staleTime: 300_000, // 5분
+    queryFn: async () => {
+      const res = await fetch('/api/waybill');
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data as { remaining: number; current_number: number; end_number: number } | null;
+    },
+  });
+}
+
+/** 리뷰 신규 등록 알림 (pending 상태 리뷰) */
+export function useNewReviewAlert() {
+  const supabase = createClient();
+  return useQuery({
+    queryKey: ['new-review-alert'],
+    staleTime: 60_000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, count } = await (supabase as any)
+        .from('reviews')
+        .select('id, name, stars, created_at', { count: 'exact' })
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      return { reviews: data || [], count: count || 0 };
+    },
+  });
+}

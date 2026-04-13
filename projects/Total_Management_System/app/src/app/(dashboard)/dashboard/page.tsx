@@ -7,7 +7,7 @@ import { HubCategoryCard } from '@/components/dashboard/hub-category-card';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useHubStats, useOutstandingAlert, useTodayConsultations, useLowStockAlert, usePurchasingAlert, useSuppliesAlert } from '@/hooks/use-dashboard-stats';
+import { useHubStats, useOutstandingAlert, useTodayConsultations, useLowStockAlert, usePurchasingAlert, useSuppliesAlert, useWaybillAlert, useNewReviewAlert } from '@/hooks/use-dashboard-stats';
 import { useSetting, useUpdateSettings } from '@/hooks/use-settings';
 import { formatPhone } from '@/lib/utils/format';
 import {
@@ -137,6 +137,8 @@ export default function DashboardPage() {
   const { data: lowStock } = useLowStockAlert();
   const { data: purchasingAlert } = usePurchasingAlert();
   const { data: suppliesAlert } = useSuppliesAlert();
+  const { data: waybillAlert } = useWaybillAlert();
+  const { data: newReviews } = useNewReviewAlert();
 
   // 오늘 할 일 액션 생성
   const actions: Array<{ label: string; count: number; href: string; color: string }> = [];
@@ -390,6 +392,37 @@ export default function DashboardPage() {
                             {p.stock_quantity}개
                           </Badge>
                         </Link>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+                {/* 운송장 잔여 알림 */}
+                {waybillAlert && waybillAlert.remaining < 100 && (
+                  <Card>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-red-500 text-sm">⚠</span>
+                      <span className="text-sm font-bold text-red-700">운송장 잔여 {waybillAlert.remaining}건</span>
+                    </div>
+                    <p className="text-xs text-neutral-500">롯데택배에 새 운송장 대역 할당을 요청하세요</p>
+                    <Link href="/settings" className="text-xs text-terracotta hover:underline mt-1 inline-block">설정 → 주문·배송 →</Link>
+                  </Card>
+                )}
+                {/* 신규 리뷰 알림 */}
+                {newReviews && newReviews.count > 0 && (
+                  <Card>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">⭐</span>
+                        <span className="text-sm font-bold text-neutral-800">신규 후기 {newReviews.count}건</span>
+                      </div>
+                      <Link href="/reviews" className="text-xs text-terracotta hover:underline">확인하기 →</Link>
+                    </div>
+                    <div className="space-y-1">
+                      {newReviews.reviews.slice(0, 3).map((r: { id: string; name: string; stars: number }) => (
+                        <div key={r.id} className="flex items-center justify-between text-xs">
+                          <span className="text-neutral-600">{r.name}</span>
+                          <span className="text-yellow-500">{'★'.repeat(r.stars)}</span>
+                        </div>
                       ))}
                     </div>
                   </Card>
