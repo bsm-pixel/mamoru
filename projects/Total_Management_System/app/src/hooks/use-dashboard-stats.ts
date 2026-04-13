@@ -115,6 +115,7 @@ export function useHubStats() {
         weekRepairs,
         monthSales,
         monthRepairsPaid, monthSalesRepairItems,
+        monthDeliveries,
       ] = await Promise.all([
         db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pay_done'),
         db.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparing'),
@@ -151,6 +152,11 @@ export function useHubStats() {
           .eq('category', 'RS')
           .gte('offline_sales.sale_date', monthStartDate)
           .is('offline_sales.cancelled_at', null),
+        // 납품 매출 (이번달, 확정 이상, 취소 제외)
+        db.from('deliveries').select('total_amount, discount_amount')
+          .gte('delivery_date', monthStartDate)
+          .in('status', ['confirmed', 'shipped', 'settled'])
+          .is('cancelled_at', null),
       ]);
 
       const sumAmount = (rows: { paid_amount?: number }[]) =>
@@ -170,6 +176,10 @@ export function useHubStats() {
 
       const salesRows = (monthSales.data || []) as { total_amount: number; discount_amount: number }[];
       const salesMonthAmount = salesRows.reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
+
+      // 납품 매출
+      const deliveryRows = (monthDeliveries.data || []) as { total_amount: number; discount_amount: number }[];
+      const deliveryMonthAmount = deliveryRows.reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
 
       return {
         orders: {
@@ -231,8 +241,8 @@ export function useHubStats() {
           })(),
         },
         sales: {
-          monthCount: salesRows.length,
-          monthAmount: salesMonthAmount,
+          monthCount: salesRows.length + deliveryRows.length,
+          monthAmount: salesMonthAmount + deliveryMonthAmount,
         },
       };
     },
