@@ -560,7 +560,13 @@ function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCr
                     <div className="flex items-center gap-1">
                       <button onClick={() => setCart((prev) => prev.map((c, i) => i === idx ? { ...c, quantity: Math.max(1, c.quantity - 1) } : c))}
                         className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200 text-xs">-</button>
-                      <span className="text-xs font-semibold w-6 text-center">{item.quantity}</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={item.quantity}
+                        onChange={(e) => setCart((prev) => prev.map((c, i) => i === idx ? { ...c, quantity: Math.max(1, parseInt(e.target.value) || 1) } : c))}
+                        className="w-10 h-6 text-center text-xs font-bold border border-neutral-200 rounded bg-white focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                      />
                       <button onClick={() => setCart((prev) => prev.map((c, i) => i === idx ? { ...c, quantity: c.quantity + 1 } : c))}
                         className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200 text-xs">+</button>
                     </div>
