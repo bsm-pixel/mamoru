@@ -1,4 +1,4 @@
-// Vercel Ignored Build Step 테스트 v3 — Custom 모드 빌드 확인
+// Vercel 테스트 v6 — --quiet 추가 후 TMS 빌드 확인
 import { redirect } from 'next/navigation';
 
 export default function Home() {
