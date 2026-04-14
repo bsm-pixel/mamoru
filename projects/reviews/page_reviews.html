@@ -522,7 +522,7 @@ img { display: block; max-width: 100%; }
 <!-- 탭 필터 -->
 <nav class="mm-rv-tabs" id="rvTabs">
   <button class="mm-rv-tab mm-rv-tab--active" data-type="all">전체</button>
-  <button class="mm-rv-tab" data-type="consult">컨설팅상담</button>
+  <button class="mm-rv-tab" data-type="consult">상담</button>
   <button class="mm-rv-tab" data-type="repair">복원수리</button>
   <button class="mm-rv-tab" data-type="purchase">제품구매</button>
 </nav>
@@ -572,7 +572,7 @@ img { display: block; max-width: 100%; }
 
   /* ── 타입/서브타입 라벨 ── */
   var SOURCE_LABELS = { naver: '네이버', site: '' };
-  var TYPE_LABELS = { consult: '컨설팅상담', repair: '복원수리', purchase: '제품구매' };
+  var TYPE_LABELS = { consult: '상담', repair: '복원수리', purchase: '제품구매' };
   /* 속성 태그 key→한글 */
   var TAG_LABELS = {
     comfortable:'강요없이 편안해요', detailed_guide:'설명이 자세해요', professional:'전문적이에요',
@@ -606,7 +606,9 @@ img { display: block; max-width: 100%; }
       return '<span class="' + cls + '">' + type + '·' + sub + '</span>';
     }
     var chips = '<span class="' + cls + '">' + type + '</span>';
-    if (sub && sub !== type) {
+    // repair: restoration(기본값)은 type과 의미 동일하므로 생략, 그 외(방문수거 등)만 표시
+    var rawSub = r.subtype || '';
+    if (sub && rawSub !== 'restoration' && sub !== type) {
       chips += '<span class="' + cls + '">' + sub + '</span>';
     }
     return chips;

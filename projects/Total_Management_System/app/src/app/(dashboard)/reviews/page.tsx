@@ -53,8 +53,8 @@ function getChipLabel(review: Review): string {
 
 function getSubChip(review: Review): string | null {
   if (review.type !== 'repair') return null;
-  const sub = review.subtype ? (SUBTYPE_LABELS[review.subtype] || review.subtype) : '';
-  return sub || null;
+  if (!review.subtype || review.subtype === 'restoration') return null; // 기본값은 type과 중복이므로 생략
+  return SUBTYPE_LABELS[review.subtype] || review.subtype;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -103,8 +103,8 @@ export default function ReviewsPage() {
   // 자동 노출 토글 로드
   useEffect(() => {
     fetch('/api/settings').then(r => r.json()).then(d => {
-      const settings = d.settings || {};
-      setAutoApprove(settings['review.auto_approve'] === 'true');
+      // API가 { key: value } 맵을 직접 반환
+      setAutoApprove(d['review.auto_approve'] === 'true');
       setAutoLoaded(true);
     }).catch(() => setAutoLoaded(true));
   }, []);
@@ -115,7 +115,7 @@ export default function ReviewsPage() {
     await fetch('/api/settings', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: 'review.auto_approve', value: String(newVal) }),
+      body: JSON.stringify({ items: [{ key: 'review.auto_approve', value: String(newVal) }] }),
     });
   };
 
