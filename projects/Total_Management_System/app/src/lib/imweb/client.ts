@@ -155,12 +155,30 @@ async function getOpenApiToken(): Promise<string> {
   return newAccess;
 }
 
-/** 상품 재고 수정 — 새 OpenAPI (openapi.imweb.me) 사용 */
+/** 아임웹 상품 현재 재고 조회 */
+async function getImwebCurrentStock(prodNo: number, token: string): Promise<number> {
+  const res = await fetch(`https://openapi.imweb.me/products/${prodNo}`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!res.ok) return 0;
+  const data = await res.json();
+  // 아임웹 상품 상세에서 재고 수량 추출
+  return data?.data?.stock?.stockNoOption ?? data?.data?.stock?.stock_no_option ?? 0;
+}
+
+/** 상품 재고 수정 — 새 OpenAPI (openapi.imweb.me), 절대값→증감값 변환 */
 export async function updateImwebStock(
   prodNo: number,
-  stockQuantity: number
+  targetStock: number
 ): Promise<Record<string, unknown>> {
   const token = await getOpenApiToken();
+
+  // 현재 아임웹 재고 조회
+  const currentStock = await getImwebCurrentStock(prodNo, token);
+  const delta = targetStock - currentStock;
+
+  // 차이가 0이면 스킵
+  if (delta === 0) return { skipped: true, currentStock, targetStock };
 
   const res = await fetch(`https://openapi.imweb.me/products/${prodNo}/stock-info`, {
     method: 'PATCH',
@@ -169,7 +187,7 @@ export async function updateImwebStock(
       'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify({
-      stock: stockQuantity,
+      stock: delta,
       isUseStock: 'Y',
       isUnlimitedStock: 'N',
     }),
