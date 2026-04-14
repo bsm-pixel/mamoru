@@ -35,6 +35,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         error: '토큰 발급 실패',
         detail: tokenData,
+        debug: {
+          clientId_prefix: (clientId || '').substring(0, 8),
+          secret_length: (clientSecret || '').length,
+          redirectUri,
+          code_prefix: code.substring(0, 10),
+        },
       }, { status: 400 });
     }
 
