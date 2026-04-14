@@ -160,6 +160,12 @@
 - **`git push`는 사용자가 명시적으로 요청할 때만** 실행한다.
 - **Vercel ignoreCommand 설정 완료 (2026-04-13)**: `vercel.json`의 `ignoreCommand`로 TMS 폴더(`projects/Total_Management_System/app/`) 변경 시에만 빌드. 페이지만 수정한 push는 자동 스킵 (크레딧 소모 없음).
 
+### 🔒 TMS 빌드 에러 방지 (필수)
+- **TMS 코드(.tsx/.ts) 수정 후 push 전에 반드시** `cd projects/Total_Management_System/app && npx tsc --noEmit` 실행
+- 에러 0건 확인 후에만 push 진행
+- **unsafe 타입 캐스팅 금지**: `(x as unknown as Record<string, unknown>).field` 패턴 사용 금지 → 인터페이스에 필드 추가 후 직접 접근
+- API가 반환하는 필드는 해당 인터페이스(예: `CustomerResult`)에 반드시 타입 정의
+
 ### 📦 배포 프로토콜 (수정 작업 완료 후 필수)
 작업 완료 후 **반드시** 아래 프로토콜을 따른다:
 
