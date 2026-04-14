@@ -511,9 +511,9 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
                         className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-neutral-50 transition text-left"
                       >
                         <div>
-                          <span className="font-medium">{(c as unknown as Record<string, unknown>).company_name || c.name}</span>
+                          <span className="font-medium">{((c as unknown as Record<string, unknown>).company_name as string) || c.name}</span>
                           {(c as unknown as Record<string, unknown>).company_name && <span className="text-xs text-neutral-400 ml-1">({c.name})</span>}
-                          {!((c as unknown as Record<string, unknown>).company_name) && c.phone && <span className="text-xs text-neutral-400 ml-2">{formatPhone(c.phone)}</span>}
+                          {!(c as unknown as Record<string, unknown>).company_name && c.phone && <span className="text-xs text-neutral-400 ml-2">{formatPhone(c.phone)}</span>}
                         </div>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
                           (c as unknown as Record<string, unknown>).customer_type === 'dealer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
