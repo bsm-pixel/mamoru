@@ -78,21 +78,35 @@ export async function getImwebProducts(
   return imwebFetch(`/v2/shop/products?page=${page}&limit=${limit}`);
 }
 
-/** 상품 재고 수정 (절대값 설정) */
+/** 상품 재고 수정 — 새 OpenAPI (openapi.imweb.me) 사용 */
 export async function updateImwebStock(
   prodNo: number,
   stockQuantity: number
-): Promise<ImwebApiResponse<{ prod_no: number }>> {
-  return imwebFetch(`/v2/shop/products/${prodNo}`, {
+): Promise<Record<string, unknown>> {
+  const token = await getAccessToken();
+
+  // 새 OpenAPI: PATCH /products/{prodNo}/stock-info
+  const res = await fetch(`https://openapi.imweb.me/products/${prodNo}/stock-info`, {
     method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
     body: JSON.stringify({
-      stock: {
-        stock_use: true,
-        stock_unlimit: false,
-        stock_no_option: stockQuantity,
-      },
+      stock: stockQuantity,
+      isUseStock: 'Y',
+      isUnlimitedStock: 'N',
     }),
   });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    // v2 토큰으로 실패하면 에러 상세 포함
+    throw new Error(`아임웹 OpenAPI 재고 수정 실패: ${res.status} ${JSON.stringify(data)}`);
+  }
+
+  return data;
 }
 
 /** v2 상품 응답 타입 */
