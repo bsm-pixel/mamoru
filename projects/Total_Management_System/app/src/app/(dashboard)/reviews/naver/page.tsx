@@ -20,7 +20,7 @@ interface NaverReview {
 
 const EMPTY_REVIEW: NaverReview = {
   type: 'consult',
-  subtype: '',
+  subtype: 'field_request',
   name: '',
   stars: 5,
   content: '',
@@ -31,9 +31,14 @@ const EMPTY_REVIEW: NaverReview = {
 };
 
 const TYPE_OPTIONS: { value: ReviewType; label: string }[] = [
-  { value: 'consult', label: '컨설팅상담' },
+  { value: 'consult', label: '상담' },
   { value: 'repair', label: '복원수리' },
   { value: 'purchase', label: '제품구매' },
+];
+
+const CONSULT_SUBTYPES: { value: string; label: string }[] = [
+  { value: 'field_request', label: '출장' },
+  { value: 'store_visit', label: '직접방문' },
 ];
 
 export default function NaverReviewPage() {
@@ -245,7 +250,7 @@ export default function NaverReviewPage() {
                 {TYPE_OPTIONS.map(opt => (
                   <button
                     key={opt.value}
-                    onClick={() => setReview(prev => ({ ...prev, type: opt.value }))}
+                    onClick={() => setReview(prev => ({ ...prev, type: opt.value, subtype: opt.value === 'consult' ? 'field_request' : '' }))}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
                       review.type === opt.value
                         ? 'bg-neutral-800 text-white'
@@ -257,6 +262,28 @@ export default function NaverReviewPage() {
                 ))}
               </div>
             </div>
+
+            {/* 상담 방식 (consult 선택 시) */}
+            {review.type === 'consult' && (
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 mb-1.5">상담 방식</label>
+                <div className="flex gap-2">
+                  {CONSULT_SUBTYPES.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setReview(prev => ({ ...prev, subtype: opt.value }))}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                        review.subtype === opt.value
+                          ? 'bg-neutral-800 text-white'
+                          : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* 이름 + 별점 */}
             <div className="grid grid-cols-2 gap-3">
