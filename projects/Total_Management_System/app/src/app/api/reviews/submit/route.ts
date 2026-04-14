@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
         }
         name = sale.customer_name;
         phone = sale.customer_phone || '';
-        subtype = body.subtype || sale.sale_channel || '';
+        subtype = bodySubtype || sale.sale_channel || '';
         meta = {
           sale_number: uid,
           sale_channel: sale.sale_channel || '',

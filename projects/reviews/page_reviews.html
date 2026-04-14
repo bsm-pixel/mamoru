@@ -622,8 +622,9 @@ img { display: block; max-width: 100%; }
   function renderDates(r, cls) {
     var receivedAt = r.meta && r.meta.received_at ? fmtDate(r.meta.received_at) : '';
     var createdAt = fmtDate(r.created_at);
+    var dateLabel = r.type === 'purchase' ? '구매' : '접수';
     var html = '';
-    if (receivedAt) html += '<span>접수 ' + receivedAt + '</span>';
+    if (receivedAt) html += '<span>' + dateLabel + ' ' + receivedAt + '</span>';
     if (createdAt) html += '<span>작성 ' + createdAt + '</span>';
     return '<div class="' + cls + '">' + html + '</div>';
   }
