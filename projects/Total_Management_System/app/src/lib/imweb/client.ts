@@ -78,14 +78,43 @@ export async function getImwebProducts(
   return imwebFetch(`/v2/shop/products?page=${page}&limit=${limit}`);
 }
 
+/** 새 OpenAPI 토큰 발급 (Rest API 키 사용) */
+let cachedOpenApiToken: { token: string; expiresAt: number } | null = null;
+
+async function getOpenApiToken(): Promise<string> {
+  if (cachedOpenApiToken && Date.now() < cachedOpenApiToken.expiresAt - 60_000) {
+    return cachedOpenApiToken.token;
+  }
+
+  const res = await fetch('https://openapi.imweb.me/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      key: process.env.IMWEB_OPENAPI_KEY,
+      secret: process.env.IMWEB_OPENAPI_SECRET,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`아임웹 OpenAPI 인증 실패: ${res.status} ${text}`);
+  }
+
+  const data = await res.json();
+  cachedOpenApiToken = {
+    token: data.access_token,
+    expiresAt: Date.now() + (data.expires_in || 3600) * 1000,
+  };
+  return cachedOpenApiToken.token;
+}
+
 /** 상품 재고 수정 — 새 OpenAPI (openapi.imweb.me) 사용 */
 export async function updateImwebStock(
   prodNo: number,
   stockQuantity: number
 ): Promise<Record<string, unknown>> {
-  const token = await getAccessToken();
+  const token = await getOpenApiToken();
 
-  // 새 OpenAPI: PATCH /products/{prodNo}/stock-info
   const res = await fetch(`https://openapi.imweb.me/products/${prodNo}/stock-info`, {
     method: 'PATCH',
     headers: {
@@ -102,7 +131,6 @@ export async function updateImwebStock(
   const data = await res.json();
 
   if (!res.ok) {
-    // v2 토큰으로 실패하면 에러 상세 포함
     throw new Error(`아임웹 OpenAPI 재고 수정 실패: ${res.status} ${JSON.stringify(data)}`);
   }
 
