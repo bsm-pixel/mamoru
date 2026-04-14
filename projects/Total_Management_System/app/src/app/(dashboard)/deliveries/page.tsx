@@ -199,7 +199,7 @@ export default function DeliveriesPage() {
 
   return (
     <>
-      <Topbar title="납품관리" />
+      <Topbar title="B2B거래" />
 
       {isLg ? (
         /* PC: 마스터-디테일 2컬럼 */
