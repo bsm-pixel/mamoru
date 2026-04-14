@@ -117,6 +117,23 @@ export async function PATCH(
 
     if (error) throw error;
 
+    // 재고 변경 시 아임웹 자동 반영
+    if ('stock_quantity' in updates && product.imweb_product_no) {
+      try {
+        const { updateImwebStock } = await import('@/lib/imweb/client');
+        const { count: displayCount } = await db
+          .from('product_serials')
+          .select('id', { count: 'exact', head: true })
+          .eq('product_id', id)
+          .eq('status', 'in_stock')
+          .eq('warehouse_zone', 'display');
+        const sellableStock = Math.max(0, (product.stock_quantity || 0) - (displayCount || 0));
+        await updateImwebStock(Number(product.imweb_product_no), sellableStock);
+      } catch (e) {
+        console.error('[products/PATCH] 아임웹 재고 반영 실패:', e);
+      }
+    }
+
     return NextResponse.json({ product });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
