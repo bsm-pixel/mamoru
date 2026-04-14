@@ -581,6 +581,7 @@
         body: JSON.stringify({
           uid: uid,
           type: reviewType,
+          subtype: urlSubtype || undefined,
           stars: rating,
           content: document.getElementById('content').value.trim(),
           photoUrls: photoUrls,

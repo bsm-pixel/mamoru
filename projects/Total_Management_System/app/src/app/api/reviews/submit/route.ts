@@ -37,7 +37,7 @@ async function generateReviewId(db: ReturnType<typeof createServiceClient>): Pro
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { uid, type, stars, content, photoUrls, productNo, tags } = body;
+    const { uid, type, stars, content, photoUrls, productNo, tags, subtype: bodySubtype } = body;
 
     if (!uid || !type || !stars || !content) {
       return NextResponse.json(
@@ -127,19 +127,38 @@ export async function POST(req: NextRequest) {
         .eq('as_id', uid)
         .single();
 
-      if (!repair) {
-        return NextResponse.json(
-          { error: '복원수리 정보를 찾을 수 없습니다' },
-          { status: 404, headers: CORS_HEADERS }
-        );
+      if (repair) {
+        name = repair.name;
+        phone = repair.phone || '';
+        subtype = bodySubtype || 'restoration';
+        meta = {
+          proceed_type: repair.proceed_type || '',
+          received_at: repair.created_at || '',
+        };
+      } else {
+        // 판매 건(OS-*) fallback: offline_sales에서 조회
+        const { data: sale } = await dbAny
+          .from('offline_sales')
+          .select('customer_name, customer_phone, sale_channel, sale_date, created_at')
+          .eq('sale_number', uid)
+          .single();
+
+        if (!sale) {
+          return NextResponse.json(
+            { error: '복원수리 정보를 찾을 수 없습니다' },
+            { status: 404, headers: CORS_HEADERS }
+          );
+        }
+        name = sale.customer_name;
+        phone = sale.customer_phone || '';
+        subtype = bodySubtype || 'restoration';
+        meta = {
+          sale_number: uid,
+          sale_channel: sale.sale_channel || '',
+          sale_date: sale.sale_date || '',
+          received_at: sale.created_at || '',
+        };
       }
-      name = repair.name;
-      phone = repair.phone || '';
-      subtype = 'restoration';
-      meta = {
-        proceed_type: repair.proceed_type || '',
-        received_at: repair.created_at || '', // 접수일
-      };
     } else if (type === 'purchase') {
       if (!productNo) {
         return NextResponse.json(

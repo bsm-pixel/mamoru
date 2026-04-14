@@ -134,24 +134,19 @@ export async function GET(req: NextRequest) {
     }
 
     if (type === 'repair') {
-      const { data: repair, error: repairErr } = await dbAny
+      const { data: repair } = await dbAny
         .from('repairs')
         .select('name, status')
         .eq('as_id', uid)
         .single();
 
-      if (repairErr || !repair) {
-        console.error('[reviews/info] repair 조회 실패:', { uid, repairErr });
-        return NextResponse.json(
-          { error: '복원수리 정보를 찾을 수 없습니다' },
-          { status: 404, headers: CORS_HEADERS }
-        );
+      if (repair) {
+        return NextResponse.json({
+          name: maskName(repair.name),
+          typeLabel: '복원수리',
+        }, { headers: CORS_HEADERS });
       }
-
-      return NextResponse.json({
-        name: maskName(repair.name),
-        typeLabel: '복원수리',
-      }, { headers: CORS_HEADERS });
+      // repairs에 없으면 → 아래 offline_sales fallback으로 진행
     }
 
     // 판매 건 fallback: uid가 판매번호(OS-*)인 경우 offline_sales에서 조회

@@ -41,6 +41,7 @@ const SUBTYPE_LABELS: Record<string, string> = {
   store_visit: '직접방문', field_request: '출장', talk_consult: '톡상담',
   restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거',
   parcel_pickup: '방문수거', self_ship: '직접발송',
+  offline: '오프라인', online: '온라인', talk: '톡상담', // 기존 데이터 호환 (sale_channel 값)
 };
 
 function getChipLabel(review: Review): string {
