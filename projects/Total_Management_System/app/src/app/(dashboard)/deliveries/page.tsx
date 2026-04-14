@@ -297,7 +297,7 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
   const [customerQuery, setCustomerQuery] = useState('');
   const { data: searchResults = [] } = useCustomerSearch(customerQuery);
   const [selectedCustomer, setSelectedCustomer] = useState<{
-    id: string; name: string; phone: string | null; customer_type?: string;
+    id: string; name: string; phone: string | null; customer_type?: string; company_name?: string;
   } | null>(null);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -361,7 +361,7 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
   const { supply, vat, payment: totalAmount } = calcVAT(baseAmount, vatType);
 
   async function handleSubmit() {
-    const name = selectedCustomer?.name || customerName.trim();
+    const name = selectedCustomer?.company_name || selectedCustomer?.name || customerName.trim();
     if (!name) { toast.error('거래처를 입력해주세요'); return; }
 
     // 복원수리 간편 모드
@@ -456,7 +456,7 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
             <div className="relative">
               <input
                 type="text"
-                value={selectedCustomer ? selectedCustomer.name : customerQuery}
+                value={selectedCustomer ? (selectedCustomer.company_name || selectedCustomer.name) : customerQuery}
                 onChange={(e) => {
                   if (selectedCustomer) { setSelectedCustomer(null); setCustomerName(''); }
                   setCustomerQuery(e.target.value);
@@ -485,13 +485,15 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
                       <button
                         key={c.id}
                         onClick={() => {
+                          const companyName = (c as unknown as Record<string, unknown>).company_name as string | undefined;
                           setSelectedCustomer({
                             id: c.id,
                             name: c.name,
                             phone: c.phone,
                             customer_type: (c as unknown as Record<string, unknown>).customer_type as string,
+                            company_name: companyName || undefined,
                           });
-                          setCustomerName(c.name);
+                          setCustomerName(companyName || c.name);
                           setCustomerPhone(c.phone || '');
                           setShowCustomerDropdown(false);
                           // 장바구니 가격 재계산
@@ -509,8 +511,9 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
                         className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-neutral-50 transition text-left"
                       >
                         <div>
-                          <span className="font-medium">{c.name}</span>
-                          {c.phone && <span className="text-xs text-neutral-400 ml-2">{formatPhone(c.phone)}</span>}
+                          <span className="font-medium">{(c as unknown as Record<string, unknown>).company_name || c.name}</span>
+                          {(c as unknown as Record<string, unknown>).company_name && <span className="text-xs text-neutral-400 ml-1">({c.name})</span>}
+                          {!((c as unknown as Record<string, unknown>).company_name) && c.phone && <span className="text-xs text-neutral-400 ml-2">{formatPhone(c.phone)}</span>}
                         </div>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
                           (c as unknown as Record<string, unknown>).customer_type === 'dealer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
