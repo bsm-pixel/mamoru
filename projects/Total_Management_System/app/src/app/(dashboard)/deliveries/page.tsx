@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -290,6 +290,9 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
   // 복원수리 전용
   const [repairQty, setRepairQty] = useState(1);
   const [repairUnitPrice, setRepairUnitPrice] = useState(8000);
+  const [repairExtras, setRepairExtras] = useState<Array<{ product_name: string; quantity: number; unit_price: number }>>([]);
+  const [repairExtraName, setRepairExtraName] = useState('');
+  const [repairExtraPrice, setRepairExtraPrice] = useState('');
   // 고객 검색
   const [customerQuery, setCustomerQuery] = useState('');
   const { data: searchResults = [] } = useCustomerSearch(customerQuery);
@@ -365,7 +368,11 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
     if (mode === 'repair') {
       if (repairQty < 1) { toast.error('수량을 입력해주세요'); return; }
       try {
-        const repairTotal = repairQty * repairUnitPrice;
+        const allItems = [
+          { product_name: '복원수리', category: 'RS', quantity: repairQty, unit_price: repairUnitPrice },
+          ...repairExtras,
+        ];
+        const repairTotal = allItems.reduce((s, i) => s + i.quantity * i.unit_price, 0);
         const result = await createDelivery.mutateAsync({
           customer_id: selectedCustomer?.id,
           customer_name: name,
@@ -378,7 +385,7 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
           payment_status: paymentStatus,
           payment_method: paymentMethod,
           paid_amount: paymentStatus === 'partial' ? paidAmount : paymentStatus === 'paid' ? repairTotal : 0,
-          items: [{ product_name: '복원수리', category: 'RS', quantity: repairQty, unit_price: repairUnitPrice }],
+          items: allItems,
         });
         onCreated((result.delivery as Record<string, unknown>).id as string);
       } catch { /* hook handles error */ }
@@ -410,8 +417,14 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
     }
   }
 
+  // 드래그 중 모달 바깥으로 나가도 닫히지 않도록 mousedown 위치 체크
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const mouseDownTarget = useRef<EventTarget | null>(null);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div ref={overlayRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onMouseDown={(e) => { mouseDownTarget.current = e.target; }}
+      onClick={(e) => { if (e.target === overlayRef.current && mouseDownTarget.current === overlayRef.current) onClose(); }}>
       <div
         className="bg-white rounded-xl shadow-2xl flex flex-col"
         style={{ width: '780px', maxHeight: '90vh' }}
@@ -546,10 +559,46 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
                 <p className="text-[10px] text-neutral-400 mt-1">기본 8,000원 · 수정 가능</p>
               </div>
+              {/* 추가 항목 */}
+              <div>
+                <label className="text-xs font-semibold text-neutral-500 mb-1 block">추가 항목</label>
+                <div className="flex gap-2">
+                  <input type="text" value={repairExtraName} onChange={(e) => setRepairExtraName(e.target.value)}
+                    placeholder="항목명 (예: 급행료)" className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs placeholder:text-neutral-400" />
+                  <input type="number" value={repairExtraPrice} onChange={(e) => setRepairExtraPrice(e.target.value)}
+                    placeholder="금액" className="w-24 h-7 px-2 rounded border border-neutral-200 text-xs text-right placeholder:text-neutral-400" />
+                  <button onClick={() => {
+                    if (!repairExtraName.trim() || !parseInt(repairExtraPrice)) return;
+                    setRepairExtras((prev) => [...prev, { product_name: repairExtraName.trim(), quantity: 1, unit_price: parseInt(repairExtraPrice) || 0 }]);
+                    setRepairExtraName(''); setRepairExtraPrice('');
+                  }} className="h-7 px-3 rounded bg-neutral-900 text-white text-[10px] font-semibold shrink-0">추가</button>
+                </div>
+                <button onClick={() => {
+                  if (repairExtras.some((e) => e.product_name === '배송비')) return;
+                  setRepairExtras((prev) => [...prev, { product_name: '배송비', quantity: 1, unit_price: 3000 }]);
+                }} className="mt-1.5 h-7 px-3 rounded border border-neutral-200 text-[10px] font-medium text-neutral-500 hover:bg-neutral-50 transition">
+                  + 배송비 3,000원
+                </button>
+                {repairExtras.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {repairExtras.map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between py-1 border-b border-neutral-50 last:border-0">
+                        <span className="text-xs">{item.product_name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-neutral-500">{formatKRW(item.unit_price)}</span>
+                          <button onClick={() => setRepairExtras((prev) => prev.filter((_, i) => i !== idx))}
+                            className="w-5 h-5 rounded bg-red-50 flex items-center justify-center text-red-500 text-[10px]">x</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="bg-neutral-50 rounded-lg p-3">
                 <div className="flex justify-between text-sm font-bold">
                   <span>합계</span>
-                  <span>{formatKRW(repairQty * repairUnitPrice)}</span>
+                  <span>{formatKRW(repairQty * repairUnitPrice + repairExtras.reduce((s, e) => s + e.quantity * e.unit_price, 0))}</span>
                 </div>
               </div>
               {/* 결제상태 */}
@@ -642,6 +691,12 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
                 setCustomName(''); setCustomPrice('');
               }} className="h-7 px-3 rounded bg-neutral-900 text-white text-[10px] font-semibold shrink-0">추가</button>
             </div>
+            <button onClick={() => {
+              if (cart.some((c) => c.product_name === '배송비')) return;
+              setCart((prev) => [...prev, { product_name: '배송비', quantity: 1, unit_price: 3000 }]);
+            }} className="mt-1 h-7 px-3 rounded border border-neutral-200 text-[10px] font-medium text-neutral-500 hover:bg-neutral-50 transition">
+              + 배송비 3,000원
+            </button>
 
             {/* 장바구니 */}
             {cart.length > 0 && (
