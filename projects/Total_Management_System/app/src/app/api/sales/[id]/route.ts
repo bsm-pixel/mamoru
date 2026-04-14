@@ -100,15 +100,7 @@ export async function PATCH(
 
           if (prod.imweb_product_no) {
             try {
-              // 디스플레이 제외 판매 가능 재고만 아임웹에 전달
-              const { count: displayCount } = await db
-                .from('product_serials')
-                .select('id', { count: 'exact', head: true })
-                .eq('product_id', productId)
-                .eq('status', 'in_stock')
-                .eq('warehouse_zone', 'display');
-              const sellableStock = Math.max(0, newStock - (displayCount || 0));
-              await updateImwebStock(Number(prod.imweb_product_no), sellableStock);
+              await updateImwebStock(Number(prod.imweb_product_no), +qty); // 취소 → 재고 복구(+)
             } catch (e) {
               console.error('[imweb] 취소 재고 동기화 실패:', prod.imweb_product_no, e);
             }
@@ -223,14 +215,7 @@ export async function PATCH(
 
           if (prod.imweb_product_no) {
             try {
-              const { count: displayCount } = await db
-                .from('product_serials')
-                .select('id', { count: 'exact', head: true })
-                .eq('product_id', productId)
-                .eq('status', 'in_stock')
-                .eq('warehouse_zone', 'display');
-              const sellableStock = Math.max(0, newStock - (displayCount || 0));
-              await updateImwebStock(Number(prod.imweb_product_no), sellableStock);
+              await updateImwebStock(Number(prod.imweb_product_no), +qty); // 반품 → 재고 복구(+)
             } catch (e) {
               console.error('[imweb] 반품 재고 동기화 실패:', prod.imweb_product_no, e);
             }
@@ -597,13 +582,10 @@ export async function PATCH(
         if (!hasSerials) updateData.raw_stock = Math.max(0, (prod.raw_stock || 0) - qty);
         await db.from('products').update(updateData).eq('id', productId);
 
-        // 아임웹 동기화
+        // 아임웹 동기화 — 재구성 시 차감(-)
         if (prod.imweb_product_no) {
           try {
-            const { count: displayCount } = await db.from('product_serials')
-              .select('id', { count: 'exact', head: true })
-              .eq('product_id', productId).eq('status', 'in_stock').eq('warehouse_zone', 'display');
-            await updateImwebStock(Number(prod.imweb_product_no), Math.max(0, newStock - (displayCount || 0)));
+            await updateImwebStock(Number(prod.imweb_product_no), -qty);
           } catch { /* 실패해도 계속 */ }
         }
       }

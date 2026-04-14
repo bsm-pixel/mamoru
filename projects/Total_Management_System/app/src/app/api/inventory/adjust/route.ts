@@ -58,24 +58,17 @@ export async function POST(req: NextRequest) {
 
     if (updateErr) throw updateErr;
 
-    // 아임웹 재고 동기화 (변경 후 절대값으로 설정)
+    // 아임웹 재고 동기화 (증감값 전달)
     const { data: prodForImweb } = await db
       .from('products')
       .select('imweb_product_no')
       .eq('id', product_id)
       .single();
     let imwebResult: unknown = null;
-    if (prodForImweb?.imweb_product_no && newQty >= 0) {
+    if (prodForImweb?.imweb_product_no) {
       try {
-        // 아임웹에는 디스플레이 제외 판매 가능 재고만 전달
-        const { count: displayCount } = await db
-          .from('product_serials')
-          .select('id', { count: 'exact', head: true })
-          .eq('product_id', product_id)
-          .eq('status', 'in_stock')
-          .eq('warehouse_zone', 'display');
-        const sellableStock = Math.max(0, newQty - (displayCount || 0));
-        imwebResult = await updateImwebStock(Number(prodForImweb.imweb_product_no), sellableStock);
+        // quantity가 이미 증감값 (+5 또는 -3 등)이므로 그대로 전달
+        imwebResult = await updateImwebStock(Number(prodForImweb.imweb_product_no), quantity);
       } catch (e) {
         imwebResult = { error: String(e) };
         console.error('[imweb] 재고 조정 동기화 실패:', prodForImweb.imweb_product_no, e);

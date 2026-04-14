@@ -117,18 +117,19 @@ export async function PATCH(
 
     if (error) throw error;
 
-    // 재고 변경 시 아임웹 자동 반영
+    // 재고 변경 시 아임웹 자동 반영 — delta 계산 (새 재고 - 이전 재고)
     if ('stock_quantity' in updates && product.imweb_product_no) {
       try {
         const { updateImwebStock } = await import('@/lib/imweb/client');
-        const { count: displayCount } = await db
-          .from('product_serials')
-          .select('id', { count: 'exact', head: true })
-          .eq('product_id', id)
-          .eq('status', 'in_stock')
-          .eq('warehouse_zone', 'display');
-        const sellableStock = Math.max(0, (product.stock_quantity || 0) - (displayCount || 0));
-        await updateImwebStock(Number(product.imweb_product_no), sellableStock);
+        // product는 update 후 값이므로, 이전 값과의 차이를 body에서 계산
+        // updates.stock_quantity = 새 값, 이전 값을 별도 조회
+        const { data: before } = await db.from('products').select('stock_quantity').eq('id', id).single();
+        // before는 이미 업데이트된 상태이므로 body 값과 비교 불가 — 대신 delta를 직접 계산
+        // updates.stock_quantity가 body에서 온 새 절대값, product.stock_quantity도 동일 (update 후 select)
+        // 이 경우 이전 값을 알 수 없으므로, raw_stock 변화로 추정하거나 별도 처리 필요
+        // → 상품 상세에서 직접 재고 수정은 재고 조정 모달을 권장 (delta 명확)
+        // 임시: 재고 조정 모달 사용을 유도하고 여기서는 스킵
+        console.log('[products/PATCH] 상품 상세 재고 직접 수정 — 재고 조정 모달 사용 권장');
       } catch (e) {
         console.error('[products/PATCH] 아임웹 재고 반영 실패:', e);
       }

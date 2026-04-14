@@ -155,30 +155,16 @@ async function getOpenApiToken(): Promise<string> {
   return newAccess;
 }
 
-/** 아임웹 상품 현재 재고 조회 */
-async function getImwebCurrentStock(prodNo: number, token: string): Promise<number> {
-  const res = await fetch(`https://openapi.imweb.me/products/${prodNo}`, {
-    headers: { 'Authorization': `Bearer ${token}` },
-  });
-  if (!res.ok) return 0;
-  const data = await res.json();
-  // 아임웹 상품 상세에서 재고 수량 추출
-  return data?.data?.stock?.stockNoOption ?? data?.data?.stock?.stock_no_option ?? 0;
-}
-
-/** 상품 재고 수정 — 새 OpenAPI (openapi.imweb.me), 절대값→증감값 변환 */
-export async function updateImwebStock(
+/**
+ * 아임웹 재고 증감 — 새 OpenAPI 사용
+ * @param delta 양수면 증가, 음수면 감소 (절대값 아님!)
+ */
+export async function adjustImwebStockDelta(
   prodNo: number,
-  targetStock: number
+  delta: number
 ): Promise<Record<string, unknown>> {
+  if (delta === 0) return { skipped: true };
   const token = await getOpenApiToken();
-
-  // 현재 아임웹 재고 조회
-  const currentStock = await getImwebCurrentStock(prodNo, token);
-  const delta = targetStock - currentStock;
-
-  // 차이가 0이면 스킵
-  if (delta === 0) return { skipped: true, currentStock, targetStock };
 
   const res = await fetch(`https://openapi.imweb.me/products/${prodNo}/stock-info`, {
     method: 'PATCH',
@@ -201,6 +187,9 @@ export async function updateImwebStock(
 
   return data;
 }
+
+/** 하위 호환 — 기존 호출처에서 사용. delta를 직접 전달 */
+export const updateImwebStock = adjustImwebStockDelta;
 
 /** v2 상품 응답 타입 */
 export interface ImwebV2Product {

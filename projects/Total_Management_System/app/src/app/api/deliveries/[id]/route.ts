@@ -70,13 +70,10 @@ export async function PATCH(
           const newRaw = Math.max(0, (prod.raw_stock || 0) - qty);
           await db.from('products').update({ stock_quantity: newStock, raw_stock: newRaw }).eq('id', productId);
 
-          // 아임웹 동기화
+          // 아임웹 동기화 — 납품 확정 시 차감(-)
           if (prod.imweb_product_no) {
             try {
-              const { count: displayCount } = await db.from('product_serials')
-                .select('id', { count: 'exact', head: true })
-                .eq('product_id', productId).eq('status', 'in_stock').eq('warehouse_zone', 'display');
-              await updateImwebStock(Number(prod.imweb_product_no), Math.max(0, newStock - (displayCount || 0)));
+              await updateImwebStock(Number(prod.imweb_product_no), -qty);
             } catch (e) { console.error('[imweb] 납품 재고 동기화 실패:', e); }
           }
         }
@@ -148,10 +145,7 @@ export async function PATCH(
 
             if (prod.imweb_product_no) {
               try {
-                const { count: displayCount } = await db.from('product_serials')
-                  .select('id', { count: 'exact', head: true })
-                  .eq('product_id', item.product_id).eq('status', 'in_stock').eq('warehouse_zone', 'display');
-                await updateImwebStock(Number(prod.imweb_product_no), Math.max(0, newStock - (displayCount || 0)));
+                await updateImwebStock(Number(prod.imweb_product_no), +item.quantity); // 취소 → 재고 복구(+)
               } catch (e) { console.error('[imweb] 납품취소 재고 동기화 실패:', e); }
             }
           }

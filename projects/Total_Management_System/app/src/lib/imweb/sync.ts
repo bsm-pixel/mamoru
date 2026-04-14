@@ -322,16 +322,9 @@ async function adjustOrderStock(supabase: any, orderId: string, action: 'deduct'
       .update({ stock_quantity: newQty, raw_stock: newRaw, updated_at: new Date().toISOString() })
       .eq('id', product.id);
 
-    // 아임웹 재고 동기화 — 디스플레이 제외 (보관 + 준비만)
+    // 아임웹 재고 동기화 — delta(증감값) 전달
     try {
-      const { count: displayCount } = await supabase
-        .from('product_serials')
-        .select('id', { count: 'exact', head: true })
-        .eq('product_id', product.id)
-        .eq('status', 'in_stock')
-        .eq('warehouse_zone', 'display');
-      const sellableStock = Math.max(0, newQty - (displayCount || 0));
-      await updateImwebStock(Number(item.imweb_product_no), sellableStock);
+      await updateImwebStock(Number(item.imweb_product_no), delta);
     } catch (e) {
       console.error(`[sync] 아임웹 재고 동기화 실패: ${item.imweb_product_no}`, e);
     }
