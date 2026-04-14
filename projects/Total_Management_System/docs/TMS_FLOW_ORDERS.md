@@ -1,5 +1,5 @@
 # 주문관리 프로세스 흐름도
-> 최종 업데이트: 2026-03-21
+> 최종 업데이트: 2026-04-15
 
 ---
 
@@ -29,13 +29,17 @@
   → 아임웹 상태변경은 v2 API 미지원 → 수동 처리
 ```
 
-### 재고 연동 (03-21 추가)
+### 재고 연동 (04-15 업데이트 — 아임웹 자동 동기화 완성)
 ```
 주문 동기화 시 재고 자동 처리:
-- 결제완료(pay_done) 이상 최초 진입 → TMS 재고 -N (stock_deducted=true)
-- 취소/환불 → TMS 재고 +N 복구 (stock_deducted=false)
-- 아임웹 재고는 아임웹 자체 차감 (별도 동기화 불필요)
+- 결제완료(pay_done) 이상 최초 진입 → TMS 재고 -N (stock_deducted=true) + 아임웹 재고 -N
+- 취소/환불 → TMS 재고 +N 복구 (stock_deducted=false) + 아임웹 재고 +N
 - 중복 차감 방지: orders.stock_deducted 플래그로 관리
+
+재고 동기화 방식 (04-15):
+- 새 OpenAPI: PATCH /products/{prodNo}/stock-info (증감값 delta 방식)
+- 인증: OAuth2 Bearer Token (DB system_settings에서 자동 관리)
+- 모든 재고 변동 시 자동 호출 (주문/판매/취소/반품/납품/발주/재고조정)
 ```
 
 ### 동기화 보호 규칙
@@ -101,16 +105,28 @@ Supabase waybill_counter (싱글턴 테이블)
   → 결과: 12자리 문자열
 ```
 
-### 아임웹 v2 API
+### 아임웹 v2 API (주문/송장용)
 | 기능 | 가능여부 | 비고 |
 |------|----------|------|
 | 주문 조회 | ✅ | GET /v2/shop/orders |
 | 상품주문 조회 | ✅ | GET /v2/shop/orders/{no}/prod-orders |
 | 송장 입력 | ✅ | PATCH /v2/shop/prod-orders/{no}/invoice (STANDBY 이상) |
 | 상품 목록 조회 | ✅ | GET /v2/shop/products |
-| 상품 재고 수정 | ✅ | PATCH /v2/shop/products/{no} (stock 절대값) |
+| 상품 재고 수정 | ❌ | v2로는 200 반환하지만 실제 미반영 → 새 OpenAPI 사용 |
 | 주문 상태 변경 | ❌ | code -99 |
-| 웹훅 | ❌ | 미지원 |
+
+### 아임웹 새 OpenAPI (재고+주문 상태용, 04-15 연동 완료)
+| 기능 | 가능여부 | 비고 |
+|------|----------|------|
+| 상품 재고 수정 | ✅ 구현 | PATCH /products/{prodNo}/stock-info (delta 증감값) |
+| 주문 취소 접수 | 🔜 예정 | PATCH /orders (취소 접수 요청) |
+| 송장 등록/수정/삭제 | 🔜 예정 | POST/PATCH/DEL /orders/{no}/invoice |
+| 배송 처리 | 🔜 예정 | PATCH /orders (배송 상태 변경) |
+| 상품 등록/수정 | 🔜 예정 | POST/PUT /products |
+| 인증 | OAuth2 | Bearer Token, DB 자동 관리, refreshToken 갱신 |
+| 환경변수 | — | IMWEB_OPENAPI_KEY (clientId), IMWEB_OPENAPI_SECRET |
+| 콜백 | — | /api/imweb/oauth/callback |
+| OAuth URL | — | openapi.imweb.me/oauth2/authorize?...&siteCode=S20250825bc9b09c7146df |
 
 ### 롯데택배 ALPS API
 | 기능 | 엔드포인트 | 비고 |
