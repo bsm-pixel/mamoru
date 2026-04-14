@@ -140,6 +140,9 @@ export async function POST(req: NextRequest) {
     const paidVal = paid_amount || 0;
     const payStatus = payment_status || 'unpaid';
 
+    // 복원수리(RS) 전용 납품은 재고 차감 없으므로 즉시 confirmed
+    const isRepairOnly = items.every((i) => i.category === 'RS');
+
     const { data: delivery, error: dlError } = await db
       .from('deliveries')
       .insert({
@@ -161,6 +164,7 @@ export async function POST(req: NextRequest) {
         receipt_type: receipt_type || 'expense_proof',
         memo: memo || null,
         created_by: user.id,
+        ...(isRepairOnly ? { status: 'confirmed' } : {}),
       })
       .select()
       .single();

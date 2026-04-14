@@ -56,6 +56,7 @@ export default function DeliveriesPage() {
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [createMode, setCreateMode] = useState<'delivery' | 'repair'>('delivery');
   const limit = 20;
 
   const [isLg, setIsLg] = useState(false);
@@ -110,8 +111,11 @@ export default function DeliveriesPage() {
 
       {/* 검색 + 생성 버튼 */}
       <div className="flex items-center gap-2">
-        <Button size="sm" onClick={() => setShowCreate(true)}>
+        <Button size="sm" onClick={() => { setCreateMode('delivery'); setShowCreate(true); }}>
           <Plus size={14} />납품서 작성
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => { setCreateMode('repair'); setShowCreate(true); }}>
+          <Plus size={14} />B2B 수리
         </Button>
         <SearchInput
           value={search}
@@ -230,7 +234,7 @@ export default function DeliveriesPage() {
 
       {/* 납품서 작성 모달 */}
       {showCreate && (
-        <CreateDeliveryModal onClose={() => setShowCreate(false)} onCreated={(id) => { setShowCreate(false); setSelectedId(id); }} />
+        <CreateDeliveryModal initialMode={createMode} onClose={() => setShowCreate(false)} onCreated={(id) => { setShowCreate(false); setSelectedId(id); }} />
       )}
     </>
   );
@@ -278,11 +282,11 @@ const DeliveryRow = memo(function DeliveryRow({ dl, isSelected, onClick }: {
 });
 
 /* ── 납품서 작성 모달 ── */
-function CreateDeliveryModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
+function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: { initialMode?: 'delivery' | 'repair'; onClose: () => void; onCreated: (id: string) => void }) {
   const createDelivery = useCreateDelivery();
   const { data: products = [] } = useProducts();
   // 모드: 제품납품 vs 복원수리
-  const [mode, setMode] = useState<'delivery' | 'repair'>('delivery');
+  const [mode, setMode] = useState<'delivery' | 'repair'>(initialMode);
   // 복원수리 전용
   const [repairQty, setRepairQty] = useState(1);
   const [repairUnitPrice, setRepairUnitPrice] = useState(8000);
