@@ -15,6 +15,8 @@ export interface CustomerResult {
   ecount_customer_code: string | null;
   source: string;
   memo: string | null;
+  company_name: string | null;
+  customer_type: string | null;
 }
 
 /** 고객 자동완성 검색 (2글자 이상) */
