@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
       .select('imweb_product_no')
       .eq('id', product_id)
       .single();
+    let imwebResult: unknown = null;
     if (prodForImweb?.imweb_product_no && newQty >= 0) {
       try {
         // 아임웹에는 디스플레이 제외 판매 가능 재고만 전달
@@ -74,8 +75,9 @@ export async function POST(req: NextRequest) {
           .eq('status', 'in_stock')
           .eq('warehouse_zone', 'display');
         const sellableStock = Math.max(0, newQty - (displayCount || 0));
-        await updateImwebStock(Number(prodForImweb.imweb_product_no), sellableStock);
+        imwebResult = await updateImwebStock(Number(prodForImweb.imweb_product_no), sellableStock);
       } catch (e) {
+        imwebResult = { error: String(e) };
         console.error('[imweb] 재고 조정 동기화 실패:', prodForImweb.imweb_product_no, e);
       }
     }
@@ -100,6 +102,7 @@ export async function POST(req: NextRequest) {
       product_name: product.name,
       previous_qty: product.stock_quantity,
       new_qty: newQty,
+      imweb_sync: imwebResult,
     });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
