@@ -114,7 +114,7 @@ export default function DeliveriesPage() {
         <Button size="sm" onClick={() => { setCreateMode('delivery'); setShowCreate(true); }}>
           <Plus size={14} />납품서 작성
         </Button>
-        <Button size="sm" variant="outline" onClick={() => { setCreateMode('repair'); setShowCreate(true); }}>
+        <Button size="sm" variant="secondary" onClick={() => { setCreateMode('repair'); setShowCreate(true); }}>
           <Plus size={14} />B2B 수리
         </Button>
         <SearchInput
