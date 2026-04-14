@@ -614,17 +614,22 @@ img { display: block; max-width: 100%; }
     return chips;
   }
 
-  /* ── 날짜 포맷 ── */
+  /* ── 날짜 포맷 YYMMDD ── */
   function fmtDate(d) {
     if (!d) return '';
-    return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    var dt = new Date(d);
+    var yy = String(dt.getFullYear()).slice(2);
+    var mm = String(dt.getMonth() + 1).padStart(2, '0');
+    var dd = String(dt.getDate()).padStart(2, '0');
+    return yy + mm + dd;
   }
 
-  /* ── 날짜 영역 (접수일 + 작성일) ── */
+  /* ── 날짜 영역 — 타입별 라벨 ── */
+  var DATE_LABELS = { consult: '상담', repair: '접수', purchase: '구매' };
   function renderDates(r, cls) {
     var receivedAt = r.meta && r.meta.received_at ? fmtDate(r.meta.received_at) : '';
     var createdAt = fmtDate(r.created_at);
-    var dateLabel = r.type === 'purchase' ? '구매' : '접수';
+    var dateLabel = DATE_LABELS[r.type] || '접수';
     var html = '';
     if (receivedAt) html += '<span>' + dateLabel + ' ' + receivedAt + '</span>';
     if (createdAt) html += '<span>작성 ' + createdAt + '</span>';
