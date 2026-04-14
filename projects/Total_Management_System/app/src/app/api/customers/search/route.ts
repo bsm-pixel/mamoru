@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
 
     // 이름 OR 전화번호(정규화)로 부분매칭 검색
     const orFilter = hasDigits
-      ? `name.ilike.%${q}%,phone_normalized.ilike.%${digits}%`
-      : `name.ilike.%${q}%`;
+      ? `name.ilike.%${q}%,phone_normalized.ilike.%${digits}%,company_name.ilike.%${q}%`
+      : `name.ilike.%${q}%,company_name.ilike.%${q}%`;
 
     const { data, error } = await db
       .from('customers')
