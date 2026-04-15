@@ -36,6 +36,7 @@ export function useCreateProduct() {
       imweb_product_no?: string;
       barcode?: string;
       image_url?: string;
+      purchase_name?: string;
     }) => {
       const res = await fetch('/api/products', {
         method: 'POST',
@@ -79,6 +80,7 @@ export function useUpdateProduct() {
       image_url?: string | null;
       is_active?: boolean;
       product_group?: string | null;
+      purchase_name?: string | null;
     }) => {
       const res = await fetch(`/api/products/${id}`, {
         method: 'PATCH',

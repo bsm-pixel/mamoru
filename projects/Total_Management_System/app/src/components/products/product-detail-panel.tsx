@@ -82,7 +82,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
         if (duplicateData.price_dealer > 0) pgv['dealer'] = { price: duplicateData.price_dealer, display_name: '' };
         if (duplicateData.price_academy > 0) pgv['academy'] = { price: duplicateData.price_academy, display_name: '' };
       }
-      setForm({ sku: '', barcode: '', product_group: '', use_stock: true, name: '', category: duplicateData.category, price: duplicateData.price, price_purchase: duplicateData.price_purchase, price_group_values: pgv, description: duplicateData.description, imweb_product_no: duplicateData.imweb_product_no, supplier_id: duplicateData.supplier_id });
+      setForm({ sku: '', barcode: '', product_group: '', purchase_name: '', use_stock: true, name: '', category: duplicateData.category, price: duplicateData.price, price_purchase: duplicateData.price_purchase, price_group_values: pgv, description: duplicateData.description, imweb_product_no: duplicateData.imweb_product_no, supplier_id: duplicateData.supplier_id });
       fetchNextSku(duplicateData.category || 'BL');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
