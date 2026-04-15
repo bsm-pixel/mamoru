@@ -169,7 +169,7 @@ export function PrepSheetModal({ saleIds, preloaded, onClose }: PrepSheetModalPr
                 <p className="text-xs text-neutral-500 font-semibold">메모 수정 (인쇄에 반영)</p>
                 {salesData.map((sd) => (
                   <div key={sd.sale.id} className="flex items-start gap-2">
-                    <span className="text-xs text-neutral-600 w-16 shrink-0 pt-1.5">{sd.sale.customer_name}</span>
+                    <span className="text-xs text-neutral-600 w-20 shrink-0 pt-1.5">{sd.sale.customer_name} <span className="text-neutral-400">님</span></span>
                     <input
                       value={memos[sd.sale.id] || ''}
                       onChange={(e) => setMemos({ ...memos, [sd.sale.id]: e.target.value })}
@@ -210,7 +210,7 @@ export function PrepSheetModal({ saleIds, preloaded, onClose }: PrepSheetModalPr
                               </td>
                               <td rowSpan={sd.items.length}
                                 style={{ padding: '5px 8px', border: '1px solid #eee', fontWeight: 600, verticalAlign: 'top', fontSize: '11px' }}>
-                                {sd.sale.customer_name}
+                                {sd.sale.customer_name} <span style={{ color: '#888', fontWeight: 'normal' }}>님</span>
                               </td>
                             </>
                           )}

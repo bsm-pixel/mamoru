@@ -918,7 +918,7 @@ function ReceiptModal({ sale, items, onClose }: {
           {/* 고객 */}
           <div style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px' }}>
             <span style={{ color: '#888' }}>고객명: </span>
-            <strong>{sale.customer_name}</strong>
+            <strong>{sale.customer_name}</strong><span style={{ color: '#888', fontWeight: 'normal' }}> 님</span>
             {sale.customer_phone && (
               <span style={{ marginLeft: '24px' }}><span style={{ color: '#888' }}>연락처: </span>{sale.customer_phone}</span>
             )}
@@ -983,7 +983,7 @@ function ReceiptModal({ sale, items, onClose }: {
             </div>
             <div style={{ flex: 1, border: '1px solid #ddd', borderRadius: '4px', padding: '10px' }}>
               <p style={{ fontWeight: 'bold', color: '#333', marginBottom: '4px' }}>공급받는자</p>
-              <p>{sale.customer_name}</p>
+              <p>{sale.customer_name} <span style={{ color: '#888', fontWeight: 'normal' }}>님</span></p>
               {sale.customer_phone && <p>TEL: {sale.customer_phone}</p>}
             </div>
           </div>

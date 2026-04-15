@@ -110,7 +110,7 @@ export function DLPrintModal({ deliveryId, onClose }: Props) {
               <div className="info-box" style={{ width: '48%' }}>
                 <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#666', marginBottom: '8px', borderBottom: '1px solid #ddd', paddingBottom: '4px' }}>거래처 정보</h3>
                 <div style={{ fontSize: '11px', lineHeight: '1.8' }}>
-                  <div><span style={{ color: '#888', display: 'inline-block', width: '50px' }}>거래처</span> {dl.customer_name as string}</div>
+                  <div><span style={{ color: '#888', display: 'inline-block', width: '50px' }}>거래처</span> {dl.customer_name as string} <span style={{ color: '#888' }}>귀중</span></div>
                   {dl.expected_date && <div><span style={{ color: '#888', display: 'inline-block', width: '50px' }}>예정일</span> {dl.expected_date as string}</div>}
                 </div>
               </div>

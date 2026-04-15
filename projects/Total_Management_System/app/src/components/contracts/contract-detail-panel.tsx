@@ -62,7 +62,7 @@ export function ContractDetailPanel({ contractId }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-indigo-black">{contract.contract_number}</h3>
-          <p className="text-xs text-neutral-500 mt-0.5">{contract.customer_name} · {formatDate(contract.created_at)}</p>
+          <p className="text-xs text-neutral-500 mt-0.5">{contract.customer_name} 님 · {formatDate(contract.created_at)}</p>
         </div>
         <Badge className={STATUS_COLOR[contract.status] || ''}>
           {STATUS_LABEL[contract.status] || contract.status}
@@ -74,7 +74,7 @@ export function ContractDetailPanel({ contractId }: Props) {
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <span className="text-xs text-neutral-500">고객명</span>
-            <p className="font-semibold">{contract.customer_name}</p>
+            <p className="font-semibold">{contract.customer_name} <span className="text-neutral-400 font-normal">님</span></p>
           </div>
           <div>
             <span className="text-xs text-neutral-500">연락처</span>

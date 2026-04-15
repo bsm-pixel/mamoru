@@ -46,7 +46,7 @@ export function InvoiceModal({ open, onClose, order, items }: InvoiceModalProps)
         <div className="rounded-lg bg-warm-ivory p-4 space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-neutral-500">수신자</span>
-            <span className="font-medium">{order.recipient_name}</span>
+            <span className="font-medium">{order.recipient_name} <span className="text-neutral-400 font-normal">님</span></span>
           </div>
           <div className="flex justify-between">
             <span className="text-neutral-500">전화</span>

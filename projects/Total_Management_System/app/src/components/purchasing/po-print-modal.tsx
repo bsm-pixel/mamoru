@@ -103,7 +103,7 @@ export function POPrintModal({ purchaseId, onClose }: Props) {
               <div className="info-box" style={{ width: '48%' }}>
                 <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#666', marginBottom: '8px', borderBottom: '1px solid #ddd', paddingBottom: '4px' }}>매입처 정보</h3>
                 <div style={{ fontSize: '11px', lineHeight: '1.8' }}>
-                  <div><span style={{ color: '#888', display: 'inline-block', width: '50px' }}>업체명</span> {po.supplier_name}</div>
+                  <div><span style={{ color: '#888', display: 'inline-block', width: '50px' }}>업체명</span> {po.supplier_name} <span style={{ color: '#888' }}>귀중</span></div>
                   {po.expected_date && <div><span style={{ color: '#888', display: 'inline-block', width: '50px' }}>납기일</span> {po.expected_date}</div>}
                 </div>
               </div>
