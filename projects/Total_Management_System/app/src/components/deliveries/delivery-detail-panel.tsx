@@ -53,6 +53,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const [saving, setSaving] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
   const [trackingInput, setTrackingInput] = useState('');
+  const [bookingInvoice, setBookingInvoice] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     action: string; label: string; msg: string; variant?: 'danger' | 'default'; extra?: Record<string, unknown>;
   } | null>(null);
@@ -72,6 +73,45 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const dl: DL = data.delivery;
   const items: DLItem[] = data.items;
   const status = (dl.status as string) || 'draft';
+
+  // ALPS 송장 생성 (B2B 배송)
+  const handleBookInvoice = async () => {
+    if (!dl.customer_id) { toast.error('거래처 정보가 없어 송장을 생성할 수 없습니다'); return; }
+    setBookingInvoice(true);
+    try {
+      // 고객 주소 조회
+      const custRes = await fetch(`/api/customers/${dl.customer_id}`);
+      const custData = await custRes.json();
+      const cust = custData.customer;
+      if (!cust?.address_road) { toast.error('거래처 주소가 등록되어 있지 않습니다'); return; }
+
+      const gdsNm = items.map((it: DLItem) =>
+        it.quantity > 1 ? `${it.product_name} x${it.quantity}` : it.product_name
+      ).join(', ').slice(0, 750) || '마모루 제품';
+
+      const res = await fetch('/api/lotte/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deliveryId: dl.id,
+          rcvName: dl.customer_name,
+          rcvTel: cust.phone || '',
+          rcvZip: cust.postcode || '',
+          rcvAdr: `${cust.address_road || ''} ${cust.address_detail || ''}`.trim(),
+          gdsNm,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) { toast.error(result.error || '송장 생성 실패'); return; }
+      toast.success(`송장 생성 완료: ${result.invNo}`);
+      queryClient.invalidateQueries({ queryKey: ['delivery', deliveryId] });
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+    } catch (err) {
+      toast.error('송장 생성 중 오류: ' + String(err));
+    } finally {
+      setBookingInvoice(false);
+    }
+  };
   const paymentStatus = (dl.payment_status as string) || 'unpaid';
   const dlVatType = ((dl.vat_type as string) || 'included') as 'included' | 'separate' | 'none';
   const totalAmount = (dl.total_amount as number) || 0;
@@ -350,14 +390,24 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
             {/* 출고 완료 (confirmed -> shipped) */}
             {status === 'confirmed' && (
               <div className="space-y-1.5">
+                {/* ALPS 송장 자동 생성 */}
+                <Button className="w-full" onClick={handleBookInvoice} disabled={bookingInvoice || updateDL.isPending}>
+                  {bookingInvoice ? '송장 생성 중...' : '🚚 송장 생성 (롯데택배)'}
+                </Button>
+                {/* 또는 수동 입력 */}
+                <div className="flex items-center gap-1.5">
+                  <div className="flex-1 h-px bg-neutral-200" />
+                  <span className="text-[10px] text-neutral-400">또는 수동 입력</span>
+                  <div className="flex-1 h-px bg-neutral-200" />
+                </div>
                 <input
                   type="text"
                   value={trackingInput}
                   onChange={(e) => setTrackingInput(e.target.value)}
-                  placeholder="송장번호 (선택)"
+                  placeholder="송장번호 직접 입력"
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
                 />
-                <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setPendingAction({
+                <Button variant="secondary" className="w-full" onClick={() => setPendingAction({
                   action: 'ship', label: '출고 완료',
                   msg: trackingInput ? `송장번호 ${trackingInput}(으)로 출고 처리합니다.` : '출고 완료 처리합니다.',
                   extra: { tracking_number: trackingInput || undefined },

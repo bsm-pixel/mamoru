@@ -49,10 +49,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
     // 주문에 송장 정보 저장
     if (body.orderId) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any)
+      await db
         .from('orders')
         .update({
           invoice_number: invoiceNumber,
@@ -62,6 +64,18 @@ export async function POST(request: NextRequest) {
           shipped_at: new Date().toISOString(),
         })
         .eq('id', body.orderId);
+    }
+
+    // 납품(B2B)에 송장 정보 저장 + 출고 처리
+    if (body.deliveryId) {
+      await db
+        .from('deliveries')
+        .update({
+          tracking_number: invoiceNumber,
+          status: 'shipped',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', body.deliveryId);
     }
 
     // 아임웹에 송장번호 반영 (배송대기 상태일 때만 성공)
