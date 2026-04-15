@@ -46,6 +46,7 @@ export default function DashboardSettings({ settings, onSave, saving }: TabProps
     onSave([
       { key: 'dashboard.monthly_goal', value: monthlyGoal },
       { key: 'dashboard.low_stock_threshold', value: lowStock },
+      { key: 'inventory.low_stock_threshold', value: lowStock },
       { key: 'dashboard.repair_stale_days', value: staleDays },
       { key: 'dashboard.kpi_green', value: kpiGreen },
       { key: 'dashboard.kpi_yellow', value: kpiYellow },

@@ -48,6 +48,7 @@ export default function InventoryPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const CAT_LABEL = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
+  const lowStockThreshold = useSetting<number>('inventory.low_stock_threshold', 3);
   const [categoryGroup, setCategoryGroup] = useState('all');
   const [search, setSearch] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(false);
@@ -70,7 +71,7 @@ export default function InventoryPage() {
   const { data, isLoading } = useInventory({
     search: search || undefined,
     lowStock: lowStockOnly,
-    threshold: 3,
+    threshold: lowStockThreshold,
   });
 
   const allItems = data?.items || [];
@@ -104,7 +105,7 @@ export default function InventoryPage() {
     const items = filtered.filter((i) => i.stock_quantity !== -1); // 미사용 제외
     const totalStock = items.reduce((s, i) => s + i.stock_quantity, 0);
     const totalPending = items.reduce((s, i) => s + i.pending_quantity, 0);
-    const lowCount = items.filter((i) => i.stock_quantity >= 0 && i.stock_quantity <= 3).length;
+    const lowCount = items.filter((i) => i.stock_quantity >= 0 && i.stock_quantity <= lowStockThreshold).length;
     const totalValue = items.reduce((s, i) => s + i.stock_quantity * (i.price_purchase || 0), 0);
     return { totalStock, totalPending, lowCount, totalValue, productCount: items.length };
   }, [filtered]);
@@ -166,7 +167,7 @@ export default function InventoryPage() {
             icon={<AlertTriangle size={16} className="text-amber-500" />}
             label="저재고"
             value={`${summary.lowCount}종`}
-            sub="3개 이하"
+            sub={`${lowStockThreshold}개 이하`}
             alert={summary.lowCount > 0}
           />
           <SummaryCard
@@ -358,8 +359,9 @@ function SortHeader({ label, span, sortKey, currentKey, asc, onClick }: {
 
 function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSelected: boolean; onClick: () => void }) {
   const CAT_LABEL = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
+  const lowThreshold = useSetting<number>('inventory.low_stock_threshold', 3);
   const isNoStock = item.stock_quantity === -1;
-  const isLow = !isNoStock && item.stock_quantity >= 0 && item.stock_quantity <= 3;
+  const isLow = !isNoStock && item.stock_quantity >= 0 && item.stock_quantity <= lowThreshold;
   const totalValue = isNoStock ? 0 : item.stock_quantity * (item.price_purchase || 0);
   const total = item.zone_raw + item.zone_ready + item.zone_display;
 

@@ -48,6 +48,7 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
   const handleSave = () => {
     onSave([
       { key: 'inventory.low_stock_threshold', value: lowStock },
+      { key: 'dashboard.low_stock_threshold', value: lowStock },
       { key: 'inventory.imweb_sync', value: imwebSync },
       { key: 'inventory.categories', value: categories },
       { key: 'inventory.category_labels', value: catLabels },

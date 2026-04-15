@@ -662,7 +662,7 @@ export function useTodayConsultations() {
 }
 
 // ============================================
-// 저재고 알림 (stock_quantity 1~3, 재고 사용 상품만)
+// 저재고 알림 (설정값 기준, 재고 사용 상품만)
 // ============================================
 
 export function useLowStockAlert() {
@@ -673,11 +673,21 @@ export function useLowStockAlert() {
     staleTime: 60_000,
     queryFn: async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
+      const db = supabase as any;
+
+      // 설정에서 저재고 기준수량 읽기
+      const { data: setting } = await db
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'inventory.low_stock_threshold')
+        .single();
+      const threshold = setting?.value ? (typeof setting.value === 'number' ? setting.value : parseInt(String(setting.value)) || 3) : 3;
+
+      const { data, error } = await db
         .from('products')
         .select('id, name, sku, stock_quantity')
         .gte('stock_quantity', 0)  // 재고 사용 상품만 (-1 제외)
-        .lte('stock_quantity', 3)
+        .lte('stock_quantity', threshold)
         .eq('is_active', true)
         .order('stock_quantity', { ascending: true })
         .limit(10);
