@@ -417,15 +417,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
               </div>
             )}
 
-            {/* 정산 완료 (shipped -> settled) */}
-            {status === 'shipped' && (
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700" onClick={() => setPendingAction({
-                action: 'settle', label: '정산 완료',
-                msg: '정산을 완료합니다. 결제상태가 결제완료로 변경됩니다.',
-              })} disabled={updateDL.isPending}>
-                정산 완료
-              </Button>
-            )}
+            {/* 정산완료 버튼 제거 — 출고완료+결제완료가 최종 상태 */}
 
             {/* 결제완료 처리 (결제 미완료 시) */}
             {paymentStatus !== 'paid' && (

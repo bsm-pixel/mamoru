@@ -39,7 +39,6 @@ const STATUS_TABS = [
   { value: 'draft', label: '작성중' },
   { value: 'confirmed', label: '납품확정' },
   { value: 'shipped', label: '출고완료' },
-  { value: 'settled', label: '정산완료' },
 ];
 
 const DATE_RANGES = [
