@@ -259,8 +259,8 @@ const DeliveryRow = memo(function DeliveryRow({ dl, isSelected, onClick }: {
           <span className="text-sm font-semibold text-indigo-black truncate">
             {dl.customer_name as string}
           </span>
-          <Badge className={STATUS_COLOR[status] || STATUS_COLOR.draft}>
-            {STATUS_LABEL[status] || status}
+          <Badge className={STATUS_COLOR[status === 'settled' ? 'shipped' : status] || STATUS_COLOR.draft}>
+            {status === 'settled' ? '출고완료' : (STATUS_LABEL[status] || status)}
           </Badge>
           <Badge className={PAYMENT_COLOR[paymentStatus] || PAYMENT_COLOR.unpaid}>
             {PAYMENT_LABEL[paymentStatus] || paymentStatus}

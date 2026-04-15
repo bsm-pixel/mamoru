@@ -179,7 +179,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
               <Pencil size={14} />편집
             </Button>
           )}
-          <Badge className={STATUS_COLOR[status] || ''}>{STATUS_LABEL[status] || status}</Badge>
+          <Badge className={STATUS_COLOR[status === 'settled' ? 'shipped' : status] || ''}>{status === 'settled' ? '출고완료' : (STATUS_LABEL[status] || status)}</Badge>
         </div>
       </div>
 
