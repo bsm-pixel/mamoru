@@ -7,9 +7,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useProducts } from '@/hooks/use-sales';
 import { useCreatePurchaseOrder } from '@/hooks/use-purchasing';
+import { useSetting } from '@/hooks/use-settings';
 import { formatKRW, calcVAT } from '@/lib/utils/format';
 import { SupplierSelect } from '@/components/ui/supplier-select';
-import { ArrowLeft, Minus, Plus, Trash2 } from 'lucide-react';
+import { LowStockPickerModal } from '@/components/purchasing/low-stock-picker-modal';
+import { ArrowLeft, Minus, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 
 interface POItem {
@@ -32,6 +34,13 @@ export default function NewPurchaseOrderPage() {
   const [memo, setMemo] = useState('');
   const [vatType, setVatType] = useState<'included' | 'separate' | 'none'>('included');
   const [items, setItems] = useState<POItem[]>([]);
+  const [lowStockOpen, setLowStockOpen] = useState(false);
+
+  const lowStockThreshold = useSetting<number>('inventory.low_stock_threshold', 3);
+  const lowStockCount = products.filter(
+    (p) => p.stock_quantity >= 0 && p.stock_quantity <= lowStockThreshold
+  ).length;
+  const alreadyAddedIds = new Set(items.filter((i) => i.product?.id).map((i) => i.product!.id));
 
   const totalAmount = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
 
@@ -51,6 +60,10 @@ export default function NewPurchaseOrderPage() {
         unit_price: product.price_purchase || product.price,
       }];
     });
+  }
+
+  function addMultipleProducts(selected: Product[]) {
+    selected.forEach((p) => addProduct(p));
   }
 
   function updateItemQty(idx: number, delta: number) {
@@ -105,7 +118,18 @@ export default function NewPurchaseOrderPage() {
           {/* 좌측: 제품 선택 */}
           <div className="lg:col-span-2">
             <Card>
-              <h3 className="text-sm font-bold text-indigo-black mb-3">제품 선택</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-indigo-black">제품 선택</h3>
+                {lowStockCount > 0 && (
+                  <button
+                    onClick={() => setLowStockOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 text-amber-600 text-xs font-semibold hover:bg-amber-100 transition"
+                  >
+                    <AlertTriangle size={13} />
+                    저재고 {lowStockCount}건
+                  </button>
+                )}
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {products.map((p) => {
                   const inList = items.find((i) => i.product?.id === p.id);
@@ -267,6 +291,15 @@ export default function NewPurchaseOrderPage() {
           </div>
         </div>
       </div>
+
+      <LowStockPickerModal
+        open={lowStockOpen}
+        onClose={() => setLowStockOpen(false)}
+        products={products}
+        threshold={lowStockThreshold}
+        alreadyAddedIds={alreadyAddedIds}
+        onAdd={addMultipleProducts}
+      />
     </>
   );
 }
