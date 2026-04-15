@@ -54,7 +54,7 @@ export default function NewPurchaseOrderPage() {
       }
       return [...prev, {
         product,
-        product_name: product.name,
+        product_name: (product as Record<string, unknown>).purchase_name as string || product.name,
         sku: product.sku,
         quantity: 1,
         unit_price: product.price_purchase || product.price,

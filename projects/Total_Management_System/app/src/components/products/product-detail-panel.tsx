@@ -49,6 +49,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
     price_group_values: {} as Record<string, { price: number; display_name: string }>,
     use_stock: true,
     description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '',
+    purchase_name: '',
   });
 
   // SKU 자동 채번
@@ -68,7 +69,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   // create/duplicate 모드 초기화
   useEffect(() => {
     if (mode === 'create') {
-      setForm({ sku: '', name: '', category: 'BL', price: 0, price_purchase: 0, price_group_values: {}, use_stock: true, description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '' });
+      setForm({ sku: '', name: '', category: 'BL', price: 0, price_purchase: 0, price_group_values: {}, use_stock: true, description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '', purchase_name: '' });
       fetchNextSku('BL');
     } else if (mode === 'duplicate' && duplicateData) {
       // 기존 price_groups 또는 레거시 컬럼에서 price_group_values 복원
@@ -108,6 +109,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
         use_stock: p.stock_quantity !== -1,
         description: p.description || '', imweb_product_no: p.imweb_product_no || '',
         barcode: p.barcode || '', supplier_id: p.supplier_id || '', product_group: p.product_group || '',
+        purchase_name: (p as Record<string, unknown>).purchase_name as string || '',
       });
     }
   }, [data, editing, mode]);
@@ -148,6 +150,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       description: form.description || null, imweb_product_no: form.imweb_product_no || null,
       barcode: form.barcode || null, supplier_id: form.supplier_id || null,
       product_group: form.product_group || null,
+      purchase_name: form.purchase_name || null,
     });
     setEditing(false);
   }
@@ -168,6 +171,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       description: form.description.trim() || undefined,
       imweb_product_no: form.imweb_product_no.trim() || undefined, barcode: form.barcode.trim() || undefined,
       supplier_id: form.supplier_id || undefined,
+      purchase_name: form.purchase_name.trim() || undefined,
     });
     if (result?.product?.id && onCreated) onCreated(result.product.id);
   }
@@ -259,6 +263,12 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <label className="text-xs text-neutral-500">제품군 (리뷰 그룹)</label>
               <input type="text" value={form.product_group} onChange={(e) => setForm({ ...form, product_group: e.target.value })}
                 placeholder="예: R4, M5, CS600"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">발주명 (매입처 주문 시)</label>
+              <input type="text" value={form.purchase_name} onChange={(e) => setForm({ ...form, purchase_name: e.target.value })}
+                placeholder="매입처에서 사용하는 이름"
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
             </div>
             <div>
@@ -421,6 +431,12 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <label className="text-xs text-neutral-500">제품군 (리뷰 그룹)</label>
               <input type="text" value={form.product_group} onChange={(e) => setForm({ ...form, product_group: e.target.value })}
                 placeholder="예: R4, M5, CS600"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500">발주명 (매입처 주문 시)</label>
+              <input type="text" value={form.purchase_name} onChange={(e) => setForm({ ...form, purchase_name: e.target.value })}
+                placeholder="매입처에서 사용하는 이름"
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
             </div>
             <div>

@@ -169,6 +169,7 @@ export interface Database {
           raw_stock: number;
           barcode: string | null;
           product_group: string | null;
+          purchase_name: string | null;
           price_groups: Record<string, { price?: number | null; display_name?: string | null }> | null;
           is_active: boolean;
           created_at: string;
