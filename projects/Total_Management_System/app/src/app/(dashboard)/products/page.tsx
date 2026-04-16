@@ -8,10 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductDetailPanel } from '@/components/products/product-detail-panel';
+import { ProductBulkEditTable } from '@/components/products/product-bulk-edit-table';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useProducts } from '@/hooks/use-sales';
 import { formatKRW } from '@/lib/utils/format';
-import { Plus, Search, Package, AlertTriangle, EyeOff } from 'lucide-react';
+import { Plus, Search, Package, AlertTriangle, EyeOff, Table as TableIcon } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 
 import { useSetting } from '@/hooks/use-settings';
@@ -35,6 +36,7 @@ export default function ProductsPage() {
   const [duplicateData, setDuplicateData] = useState<Record<string, unknown> | null>(null);
   const [category, setCategory] = useState('all');
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'bulk-edit'>('grid');
 
   // PC 여부 감지 (lg:1024px+)
   const [isLg, setIsLg] = useState(false);
@@ -111,10 +113,18 @@ export default function ProductsPage() {
               </div>
             )}
           </div>
-          <Button size="sm" onClick={() => { setSelectedId(null); setPanelMode('create'); }} className="shrink-0">
-            <Plus size={14} />
-            제품 등록
-          </Button>
+          {isLg && viewMode === 'grid' && (
+            <Button variant="secondary" size="sm" onClick={() => setViewMode('bulk-edit')} className="shrink-0">
+              <TableIcon size={14} />
+              일괄 수정
+            </Button>
+          )}
+          {viewMode === 'grid' && (
+            <Button size="sm" onClick={() => { setSelectedId(null); setPanelMode('create'); }} className="shrink-0">
+              <Plus size={14} />
+              제품 등록
+            </Button>
+          )}
         </div>
 
         {/* 검색 */}
@@ -161,8 +171,15 @@ export default function ProductsPage() {
 
         {/* ── 하단 콘텐츠 영역 (flex-1, 내부 스크롤) ── */}
 
+        {/* 일괄 수정 모드 */}
+        {viewMode === 'bulk-edit' && (
+          <div className="flex-1 min-h-0">
+            <ProductBulkEditTable products={filtered} onClose={() => setViewMode('grid')} />
+          </div>
+        )}
+
         {/* PC: 2열 레이아웃 */}
-        {isLg && (
+        {isLg && viewMode === 'grid' && (
           <div className="flex gap-4 flex-1 min-h-0">
             {/* 좌측: 제품 그리드 (3/5) */}
             <div className="w-[60%] shrink-0 overflow-y-auto pr-1">
@@ -246,7 +263,7 @@ export default function ProductsPage() {
         )}
 
         {/* 모바일: 그리드만 */}
-        {!isLg && (
+        {!isLg && viewMode === 'grid' && (
           <div className="flex-1 min-h-0 overflow-y-auto pt-3">
             <p className="text-xs text-neutral-500 mb-2">{filtered.length}개 제품</p>
             {isLoading ? (
@@ -277,7 +294,7 @@ export default function ProductsPage() {
         )}
 
         {/* 모바일 전용 슬라이드 패널 */}
-        {!isLg && (
+        {!isLg && viewMode === 'grid' && (
           <SlidePanel open={!!selectedId || panelMode !== 'view'} onClose={() => { setSelectedId(null); setPanelMode('view'); setDuplicateData(null); }} title={panelMode === 'create' ? '제품 등록' : panelMode === 'duplicate' ? '제품 복제' : '제품 상세'}>
             {panelMode === 'create' || panelMode === 'duplicate' ? (
               <ProductDetailPanel mode={panelMode} duplicateData={duplicateData as never}
