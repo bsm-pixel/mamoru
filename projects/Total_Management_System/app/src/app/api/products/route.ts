@@ -28,7 +28,8 @@ export async function GET(req: NextRequest) {
     let query = db
       .from('products')
       .select('*')
-      .order('category')
+      .order('product_group', { ascending: true, nullsFirst: false })
+      .order('sort_order', { ascending: true })
       .order('name');
 
     if (activeOnly) query = query.eq('is_active', true);

@@ -135,6 +135,8 @@ export interface CatalogEntry {
   price_purchase: number;
   sku: string;
   category: string;
+  product_group: string;
+  sort_order: number;
 }
 
 /** 매입품목 조회 */

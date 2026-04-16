@@ -17,6 +17,8 @@ type EditedFields = {
   price?: number;
   price_purchase?: number;
   purchase_name?: string;
+  product_group?: string;
+  sort_order?: number;
   // price_groups 하위: { [groupKey]: { price?, display_name? } }
   price_groups?: Record<string, { price?: number; display_name?: string }>;
 };
@@ -166,6 +168,8 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
         if (changes.price !== undefined) payload.price = changes.price;
         if (changes.price_purchase !== undefined) payload.price_purchase = changes.price_purchase;
         if (changes.purchase_name !== undefined) payload.purchase_name = changes.purchase_name;
+        if (changes.product_group !== undefined) payload.product_group = changes.product_group || null;
+        if (changes.sort_order !== undefined) payload.sort_order = changes.sort_order;
 
         // price_groups: 원본 머지 + dual-write
         if (changes.price_groups) {
@@ -267,6 +271,8 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
               <th className="sticky left-0 z-20 bg-neutral-50 w-2" /> {/* 변경 인디케이터 */}
               <th className="sticky left-2 z-20 bg-neutral-50 px-2 py-2 text-left text-xs font-medium text-neutral-500 w-[80px]">SKU</th>
               <th className="sticky left-[98px] z-20 bg-neutral-50 px-2 py-2 text-left text-xs font-medium text-neutral-500 w-[180px] border-r border-neutral-200">제품명</th>
+              <th className="px-2 py-2 text-left text-xs font-medium text-neutral-500 w-[90px]">제품군</th>
+              <th className="px-2 py-2 text-center text-xs font-medium text-neutral-500 w-[60px]">순서</th>
               <th className="px-2 py-2 text-left text-xs font-medium text-neutral-500 w-[100px]">카테고리</th>
               <th className="px-2 py-2 text-right text-xs font-medium text-neutral-500 w-[100px]">소매가</th>
               {groupKeys.map(gk => (
@@ -306,6 +312,24 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
                       className={inputCls}
                       value={getCellValue(p, 'name') as string || ''}
                       onChange={e => updateField(p.id, 'name', e.target.value)}
+                    />
+                  </td>
+                  {/* 제품군 */}
+                  <td>
+                    <input
+                      className={inputCls}
+                      value={getCellValue(p, 'product_group') as string || ''}
+                      onChange={e => updateField(p.id, 'product_group', e.target.value)}
+                      placeholder="예: M5"
+                    />
+                  </td>
+                  {/* 순서 */}
+                  <td>
+                    <input
+                      type="number"
+                      className={`${numCls} text-center`}
+                      value={((getCellValue(p, 'sort_order') as number) ?? (p as Record<string, unknown>).sort_order ?? 0)}
+                      onChange={e => updateField(p.id, 'sort_order', Number(e.target.value) || 0)}
                     />
                   </td>
                   {/* 카테고리 */}

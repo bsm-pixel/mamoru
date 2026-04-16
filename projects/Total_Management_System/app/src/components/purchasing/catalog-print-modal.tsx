@@ -119,6 +119,20 @@ export function CatalogPrintModal({ supplierId, supplierName, onClose }: Props) 
               {supplierName} · {catalog.length}개 품목
             </p>
 
+            {(() => {
+              // 정렬: product_group → sort_order → name
+              const sorted = [...catalog].sort((a, b) => {
+                const ga = a.product_group || '\uffff';
+                const gb = b.product_group || '\uffff';
+                if (ga !== gb) return ga.localeCompare(gb);
+                if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
+                return a.product_name.localeCompare(b.product_name);
+              });
+              const colCount = 1 + Array.from(visibleCols).length;
+              let currentGroup = '';
+              let rowNum = 0;
+
+              return (
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
@@ -132,9 +146,22 @@ export function CatalogPrintModal({ supplierId, supplierName, onClose }: Props) 
                 </tr>
               </thead>
               <tbody>
-                {catalog.map((entry, idx) => (
+                {sorted.map((entry) => {
+                  const group = entry.product_group || '';
+                  const showGroupHeader = group && group !== currentGroup;
+                  if (group) currentGroup = group;
+                  rowNum++;
+                  return (
+                    <>
+                      {showGroupHeader && (
+                        <tr key={`grp-${group}`}>
+                          <td colSpan={colCount} style={{ padding: '10px 10px 4px', fontSize: '13px', fontWeight: 700, color: '#333', borderBottom: '2px solid #ddd', background: '#fafafa' }}>
+                            {group}
+                          </td>
+                        </tr>
+                      )}
                   <tr key={entry.id}>
-                    <td style={{ ...tdStyle, textAlign: 'center' }}>{idx + 1}</td>
+                    <td style={{ ...tdStyle, textAlign: 'center' }}>{rowNum}</td>
                     {visibleCols.has('category') && (
                       <td style={tdStyle}>{catLabels[entry.category] || entry.category}</td>
                     )}
@@ -154,9 +181,13 @@ export function CatalogPrintModal({ supplierId, supplierName, onClose }: Props) 
                       <td style={{ ...tdStyle, textAlign: 'right' }}>{entry.price_purchase > 0 ? formatKRW(entry.price_purchase) : '-'}</td>
                     )}
                   </tr>
-                ))}
+                    </>
+                  );
+                })}
               </tbody>
             </table>
+              );
+            })()}
 
             <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '10px', color: '#ccc' }}>MAMORU</p>
           </div>

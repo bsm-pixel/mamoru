@@ -17,7 +17,7 @@ export async function GET(
 
     const { data, error } = await db
       .from('supplier_product_catalog')
-      .select('id, supplier_id, product_id, order_name, features, created_at, products:product_id(name, price_purchase, sku, category)')
+      .select('id, supplier_id, product_id, order_name, features, created_at, products:product_id(name, price_purchase, sku, category, product_group, sort_order)')
       .eq('supplier_id', id)
       .order('created_at', { ascending: true });
 
@@ -36,6 +36,8 @@ export async function GET(
         price_purchase: product?.price_purchase || 0,
         sku: product?.sku || '',
         category: product?.category || '',
+        product_group: product?.product_group || '',
+        sort_order: product?.sort_order || 0,
       };
     });
 
