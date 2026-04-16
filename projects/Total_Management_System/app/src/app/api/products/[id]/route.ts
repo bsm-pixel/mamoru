@@ -100,6 +100,8 @@ export async function PATCH(
     for (const key of allowed) {
       if (key in body) updates[key] = body[key];
     }
+    // FK 필드: 빈 문자열 → null 변환 (FK 제약 위반 방지)
+    if (updates.supplier_id === '') updates.supplier_id = null;
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: '수정할 항목이 없습니다' }, { status: 400 });
@@ -115,7 +117,10 @@ export async function PATCH(
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[products/PATCH] Supabase error:', JSON.stringify(error));
+      return NextResponse.json({ error: error.message || JSON.stringify(error) }, { status: 400 });
+    }
 
     // 재고 변경 시 아임웹 자동 반영 — delta 계산 (새 재고 - 이전 재고)
     if ('stock_quantity' in updates && product.imweb_product_no) {
@@ -136,7 +141,9 @@ export async function PATCH(
     }
 
     return NextResponse.json({ product });
-  } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : JSON.stringify(err);
+    console.error('[products/PATCH] error:', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

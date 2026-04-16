@@ -87,7 +87,10 @@ export function useUpdateProduct() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof errBody.error === 'string' ? errBody.error : JSON.stringify(errBody.error));
+      }
       return res.json() as Promise<{ product: Product }>;
     },
     onSuccess: (_, vars) => {
@@ -96,7 +99,7 @@ export function useUpdateProduct() {
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
     onError: (err) => {
-      toast.error('수정 실패: ' + String(err));
+      toast.error('수정 실패: ' + (err instanceof Error ? err.message : String(err)));
     },
   });
 }
