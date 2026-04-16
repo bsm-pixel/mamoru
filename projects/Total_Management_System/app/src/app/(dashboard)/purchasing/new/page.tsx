@@ -168,8 +168,15 @@ export default function NewPurchaseOrderPage() {
                           : 'border-neutral-200 bg-card-white hover:border-terracotta/40'
                       }`}
                     >
-                      <p className="text-sm font-semibold text-indigo-black truncate">{p.name}</p>
-                      <p className="text-xs text-neutral-500">{p.sku}</p>
+                      <div className="flex items-center justify-between gap-1">
+                        <p className="text-sm font-semibold text-indigo-black truncate">{p.name}</p>
+                        {p.stock_quantity >= 0 && (
+                          <span className={`text-xs font-bold shrink-0 ${p.stock_quantity === 0 ? 'text-red-500' : p.stock_quantity <= 3 ? 'text-amber-500' : 'text-neutral-400'}`}>
+                            {p.stock_quantity}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-neutral-500">{p.sku.startsWith('IW-') ? '' : p.sku}</p>
                       <p className="text-xs text-neutral-600 mt-1">
                         매입가 {p.price_purchase > 0 ? formatKRW(p.price_purchase) : '-'}
                       </p>
