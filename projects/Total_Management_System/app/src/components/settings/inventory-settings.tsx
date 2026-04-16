@@ -183,9 +183,10 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
         </select>
       </Field>
 
-      <Field label="상품 정렬 기본값" desc="">
+      <Field label="상품 정렬 기본값" desc="제품 목록, 발주 작성 등에 적용됩니다.">
         <select value={defaultSort} onChange={(e) => setDefaultSort(e.target.value)}
           className="h-9 px-3 rounded-lg border border-neutral-200 text-sm">
+          <option value="group">제품군 → 순서 → 이름</option>
           <option value="name">이름순</option>
           <option value="category">카테고리순</option>
           <option value="stock_asc">재고 적은순</option>

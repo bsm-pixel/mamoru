@@ -25,12 +25,31 @@ export async function GET(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
-    let query = db
-      .from('products')
-      .select('*')
-      .order('product_group', { ascending: true, nullsFirst: false })
-      .order('sort_order', { ascending: true })
-      .order('name');
+    // 정렬 설정 조회
+    const sortParam = url.searchParams.get('sort');
+    let defaultSort = sortParam || 'group';
+    if (!sortParam) {
+      const { data: sortSetting } = await db.from('system_settings').select('value').eq('key', 'inventory.default_sort').single();
+      if (sortSetting?.value) defaultSort = String(sortSetting.value).replace(/^"|"$/g, '');
+    }
+
+    let query = db.from('products').select('*');
+
+    // 정렬 적용
+    if (defaultSort === 'group') {
+      query = query
+        .order('product_group', { ascending: true, nullsFirst: false })
+        .order('sort_order', { ascending: true })
+        .order('name');
+    } else if (defaultSort === 'category') {
+      query = query.order('category').order('name');
+    } else if (defaultSort === 'stock_asc') {
+      query = query.order('stock_quantity', { ascending: true }).order('name');
+    } else if (defaultSort === 'stock_desc') {
+      query = query.order('stock_quantity', { ascending: false }).order('name');
+    } else {
+      query = query.order('name');
+    }
 
     if (activeOnly) query = query.eq('is_active', true);
     if (category) query = query.eq('category', category);
