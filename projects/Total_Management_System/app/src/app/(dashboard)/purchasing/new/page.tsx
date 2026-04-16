@@ -6,12 +6,12 @@ import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useProducts } from '@/hooks/use-sales';
-import { useCreatePurchaseOrder } from '@/hooks/use-purchasing';
+import { useCreatePurchaseOrder, useSupplierCatalog } from '@/hooks/use-purchasing';
 import { useSetting } from '@/hooks/use-settings';
 import { formatKRW, calcVAT } from '@/lib/utils/format';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { LowStockPickerModal } from '@/components/purchasing/low-stock-picker-modal';
-import { ArrowLeft, Minus, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, Trash2, AlertTriangle, Filter } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 
 interface POItem {
@@ -35,12 +35,22 @@ export default function NewPurchaseOrderPage() {
   const [vatType, setVatType] = useState<'included' | 'separate' | 'none'>('included');
   const [items, setItems] = useState<POItem[]>([]);
   const [lowStockOpen, setLowStockOpen] = useState(false);
+  const [catalogOnly, setCatalogOnly] = useState(false);
+
+  // 매입처 카탈로그 조회
+  const { data: catalogData } = useSupplierCatalog(supplierId);
+  const catalogProductIds = new Set((catalogData?.catalog || []).map(c => c.product_id));
 
   const lowStockThreshold = useSetting<number>('inventory.low_stock_threshold', 3);
   const lowStockCount = products.filter(
     (p) => p.stock_quantity >= 0 && p.stock_quantity <= lowStockThreshold
   ).length;
   const alreadyAddedIds = new Set(items.filter((i) => i.product?.id).map((i) => i.product!.id));
+
+  // 매입품목 필터링
+  const displayProducts = catalogOnly && supplierId
+    ? products.filter(p => catalogProductIds.has(p.id))
+    : products;
 
   const totalAmount = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
 
@@ -120,18 +130,33 @@ export default function NewPurchaseOrderPage() {
             <Card>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-indigo-black">제품 선택</h3>
-                {lowStockCount > 0 && (
-                  <button
-                    onClick={() => setLowStockOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 text-amber-600 text-xs font-semibold hover:bg-amber-100 transition"
-                  >
-                    <AlertTriangle size={13} />
-                    저재고 {lowStockCount}건
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {supplierId && catalogProductIds.size > 0 && (
+                    <button
+                      onClick={() => setCatalogOnly(!catalogOnly)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+                        catalogOnly
+                          ? 'bg-neutral-900 text-white'
+                          : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                      }`}
+                    >
+                      <Filter size={12} />
+                      매입품목만 ({catalogProductIds.size})
+                    </button>
+                  )}
+                  {lowStockCount > 0 && (
+                    <button
+                      onClick={() => setLowStockOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 text-amber-600 text-xs font-semibold hover:bg-amber-100 transition"
+                    >
+                      <AlertTriangle size={13} />
+                      저재고 {lowStockCount}건
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {products.map((p) => {
+                {displayProducts.map((p) => {
                   const inList = items.find((i) => i.product?.id === p.id);
                   return (
                     <button
@@ -295,7 +320,7 @@ export default function NewPurchaseOrderPage() {
       <LowStockPickerModal
         open={lowStockOpen}
         onClose={() => setLowStockOpen(false)}
-        products={products}
+        products={catalogOnly && supplierId ? displayProducts : products}
         threshold={lowStockThreshold}
         alreadyAddedIds={alreadyAddedIds}
         onAdd={addMultipleProducts}
