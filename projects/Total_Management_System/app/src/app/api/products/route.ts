@@ -39,6 +39,7 @@ export async function GET(req: NextRequest) {
     if (defaultSort === 'group') {
       query = query
         .order('product_group', { ascending: true, nullsFirst: false })
+        .order('category')
         .order('sort_order', { ascending: true })
         .order('name');
     } else if (defaultSort === 'category') {

@@ -360,28 +360,36 @@ function ProductGroupedGrid({ products, columns, selectedId, showCategory, onSel
   showCategory: boolean;
   onSelect: (id: string) => void;
 }) {
-  // 제품군별 그룹핑
-  const groups: { group: string; items: Product[] }[] = [];
-  let currentGroup = '';
+  const CATEGORY_LABEL = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
+  const gridCls = columns === 3 ? 'grid-cols-3' : 'grid-cols-2';
+
+  // 대분류(제품군) → 중분류(카테고리) 2단 그룹핑
+  const majorGroups: { group: string; subs: { cat: string; items: Product[] }[] }[] = [];
+  let curGroup = '';
+  let curCat = '';
 
   for (const p of products) {
     const g = p.product_group || '';
-    if (g !== currentGroup) {
-      groups.push({ group: g, items: [p] });
-      currentGroup = g;
-    } else if (groups.length > 0) {
-      groups[groups.length - 1].items.push(p);
+    const c = p.category || '';
+
+    if (g !== curGroup) {
+      majorGroups.push({ group: g, subs: [{ cat: c, items: [p] }] });
+      curGroup = g;
+      curCat = c;
+    } else if (c !== curCat) {
+      majorGroups[majorGroups.length - 1].subs.push({ cat: c, items: [p] });
+      curCat = c;
     } else {
-      groups.push({ group: '', items: [p] });
+      const lastMajor = majorGroups[majorGroups.length - 1];
+      lastMajor.subs[lastMajor.subs.length - 1].items.push(p);
     }
   }
 
-  // 그룹이 전부 빈 문자열이면 (그룹 미설정) 헤더 없이 표시
-  const hasGroups = groups.some(g => g.group !== '');
+  const hasGroups = majorGroups.some(g => g.group !== '');
 
   if (!hasGroups) {
     return (
-      <div className={`grid gap-2 ${columns === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+      <div className={`grid gap-2 ${gridCls}`}>
         {products.map((p) => (
           <CompactProductCard key={p.id} product={p} isSelected={selectedId === p.id} showCategory={showCategory} onSelect={() => onSelect(p.id)} />
         ))}
@@ -390,26 +398,40 @@ function ProductGroupedGrid({ products, columns, selectedId, showCategory, onSel
   }
 
   return (
-    <div className="space-y-3">
-      {groups.map((g, gi) => (
+    <div className="space-y-4">
+      {majorGroups.map((mg, gi) => (
         <div key={gi}>
-          {g.group && (
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-xs font-bold text-neutral-700">{g.group}</span>
-              <div className="flex-1 h-px bg-neutral-200" />
-              <span className="text-[10px] text-neutral-400">{g.items.length}</span>
+          {/* 대분류 헤더 (제품군) */}
+          {mg.group ? (
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-bold text-neutral-800">{mg.group}</span>
+              <div className="flex-1 h-px bg-neutral-300" />
+              <span className="text-xs text-neutral-400">
+                {mg.subs.reduce((s, sub) => s + sub.items.length, 0)}
+              </span>
             </div>
-          )}
-          {!g.group && gi > 0 && (
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-xs text-neutral-400">기타</span>
+          ) : gi > 0 ? (
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm text-neutral-400">기타</span>
               <div className="flex-1 h-px bg-neutral-200" />
-              <span className="text-[10px] text-neutral-400">{g.items.length}</span>
             </div>
-          )}
-          <div className={`grid gap-2 ${columns === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-            {g.items.map((p) => (
-              <CompactProductCard key={p.id} product={p} isSelected={selectedId === p.id} showCategory={showCategory} onSelect={() => onSelect(p.id)} />
+          ) : null}
+
+          {/* 중분류(카테고리)별 — 같은 대분류 안에서 카테고리가 여러 개일 때만 라벨 표시 */}
+          <div className="space-y-2">
+            {mg.subs.map((sub, si) => (
+              <div key={si}>
+                {mg.subs.length > 1 && (
+                  <p className="text-[11px] text-neutral-400 mb-1 ml-0.5">
+                    {CATEGORY_LABEL[sub.cat] || sub.cat}
+                  </p>
+                )}
+                <div className={`grid gap-2 ${gridCls}`}>
+                  {sub.items.map((p) => (
+                    <CompactProductCard key={p.id} product={p} isSelected={selectedId === p.id} showCategory={showCategory && mg.subs.length <= 1} onSelect={() => onSelect(p.id)} />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>
