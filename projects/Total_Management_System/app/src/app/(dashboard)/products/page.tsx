@@ -196,17 +196,13 @@ export default function ProductsPage() {
                   <p className="text-sm">{search ? '검색 결과가 없습니다' : '제품이 없습니다'}</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {filtered.map((p) => (
-                    <CompactProductCard
-                      key={p.id}
-                      product={p}
-                      isSelected={selectedId === p.id}
-                      showCategory={category === 'all'}
-                      onSelect={() => { setSelectedId(p.id); setPanelMode('view'); }}
-                    />
-                  ))}
-                </div>
+                <ProductGroupedGrid
+                  products={filtered}
+                  columns={3}
+                  selectedId={selectedId}
+                  showCategory={category === 'all'}
+                  onSelect={(id) => { setSelectedId(id); setPanelMode('view'); }}
+                />
               )}
             </div>
 
@@ -278,17 +274,13 @@ export default function ProductsPage() {
                 <p className="text-sm">{search ? '검색 결과가 없습니다' : '제품이 없습니다'}</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {filtered.map((p) => (
-                  <CompactProductCard
-                    key={p.id}
-                    product={p}
-                    isSelected={selectedId === p.id}
-                    showCategory={category === 'all'}
-                    onSelect={() => setSelectedId(p.id)}
-                  />
-                ))}
-              </div>
+              <ProductGroupedGrid
+                products={filtered}
+                columns={2}
+                selectedId={selectedId}
+                showCategory={category === 'all'}
+                onSelect={(id) => setSelectedId(id)}
+              />
             )}
           </div>
         )}
@@ -356,5 +348,72 @@ function CompactProductCard({ product: p, isSelected, showCategory, onSelect }: 
       {/* 2행: 가격 */}
       <div className="text-xs text-neutral-500 mt-0.5">{formatKRW(p.price)}</div>
     </Card>
+  );
+}
+
+// ── 제품군 그룹핑 그리드 ──
+
+function ProductGroupedGrid({ products, columns, selectedId, showCategory, onSelect }: {
+  products: Product[];
+  columns: number;
+  selectedId: string | null;
+  showCategory: boolean;
+  onSelect: (id: string) => void;
+}) {
+  // 제품군별 그룹핑
+  const groups: { group: string; items: Product[] }[] = [];
+  let currentGroup = '';
+
+  for (const p of products) {
+    const g = p.product_group || '';
+    if (g !== currentGroup) {
+      groups.push({ group: g, items: [p] });
+      currentGroup = g;
+    } else if (groups.length > 0) {
+      groups[groups.length - 1].items.push(p);
+    } else {
+      groups.push({ group: '', items: [p] });
+    }
+  }
+
+  // 그룹이 전부 빈 문자열이면 (그룹 미설정) 헤더 없이 표시
+  const hasGroups = groups.some(g => g.group !== '');
+
+  if (!hasGroups) {
+    return (
+      <div className={`grid gap-2 ${columns === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        {products.map((p) => (
+          <CompactProductCard key={p.id} product={p} isSelected={selectedId === p.id} showCategory={showCategory} onSelect={() => onSelect(p.id)} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {groups.map((g, gi) => (
+        <div key={gi}>
+          {g.group && (
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-xs font-bold text-neutral-700">{g.group}</span>
+              <div className="flex-1 h-px bg-neutral-200" />
+              <span className="text-[10px] text-neutral-400">{g.items.length}</span>
+            </div>
+          )}
+          {!g.group && gi > 0 && (
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-xs text-neutral-400">기타</span>
+              <div className="flex-1 h-px bg-neutral-200" />
+              <span className="text-[10px] text-neutral-400">{g.items.length}</span>
+            </div>
+          )}
+          <div className={`grid gap-2 ${columns === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            {g.items.map((p) => (
+              <CompactProductCard key={p.id} product={p} isSelected={selectedId === p.id} showCategory={showCategory} onSelect={() => onSelect(p.id)} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
