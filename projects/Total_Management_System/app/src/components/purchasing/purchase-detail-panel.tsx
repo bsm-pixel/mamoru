@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
-import { usePurchaseOrder, useUpdatePurchaseOrder } from '@/hooks/use-purchasing';
+import { usePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder } from '@/hooks/use-purchasing';
 import { formatKRW, formatDate, calcVAT } from '@/lib/utils/format';
 import { useProducts } from '@/hooks/use-sales';
 import { useQueryClient } from '@tanstack/react-query';
@@ -31,6 +31,7 @@ interface Props {
 export function PurchaseDetailPanel({ purchaseId }: Props) {
   const { data, isLoading } = usePurchaseOrder(purchaseId);
   const updatePO = useUpdatePurchaseOrder();
+  const deletePO = useDeletePurchaseOrder();
   const queryClient = useQueryClient();
   const { data: products = [] } = useProducts();
   const [depositInput, setDepositInput] = useState('');
@@ -313,6 +314,24 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
               발주 취소
             </Button>
           </div>
+        </Card>
+      )}
+
+      {/* 취소 건 삭제 */}
+      {po.status === 'cancelled' && (
+        <Card>
+          <Button
+            variant="ghost"
+            className="w-full text-red-500 hover:text-red-600"
+            onClick={() => {
+              if (!confirm('이 발주를 영구 삭제합니다. 되돌릴 수 없습니다.')) return;
+              deletePO.mutate(purchaseId);
+            }}
+            disabled={deletePO.isPending}
+          >
+            <Trash2 size={14} />
+            {deletePO.isPending ? '삭제 중...' : '발주 삭제'}
+          </Button>
         </Card>
       )}
 

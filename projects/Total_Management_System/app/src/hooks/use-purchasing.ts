@@ -121,6 +121,26 @@ export function useUpdatePurchaseOrder() {
   });
 }
 
+/** 취소된 발주 삭제 */
+export function useDeletePurchaseOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/purchasing/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error));
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('발주 삭제 완료');
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+    },
+    onError: (err) => toast.error('삭제 실패: ' + (err instanceof Error ? err.message : String(err))),
+  });
+}
+
 // ══════════════════════════════════════════════════════════════
 // 매입품목 카탈로그 (Supplier Product Catalog)
 // ══════════════════════════════════════════════════════════════

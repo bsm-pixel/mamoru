@@ -208,3 +208,34 @@ export async function PATCH(
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
+
+/** DELETE /api/purchasing/[id] — 취소된 발주 삭제 */
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
+    // 현재 상태 확인
+    const { data: current } = await db.from('purchase_orders').select('status').eq('id', id).single();
+    if (!current) return NextResponse.json({ error: '발주를 찾을 수 없습니다' }, { status: 404 });
+    if (current.status !== 'cancelled') {
+      return NextResponse.json({ error: '취소된 발주만 삭제할 수 있습니다' }, { status: 400 });
+    }
+
+    // 품목 삭제 → 발주 삭제
+    await db.from('purchase_order_items').delete().eq('po_id', id);
+    await db.from('purchase_orders').delete().eq('id', id);
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
