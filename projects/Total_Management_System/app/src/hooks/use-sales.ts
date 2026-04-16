@@ -615,3 +615,28 @@ export function useCancelSaleShipment() {
   });
 }
 
+/** 판매 출고완료 처리 (shipped_at 설정 + 선택적 알림톡) */
+export function useMarkSaleShipped() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, send_notification }: { id: string; send_notification: boolean }) => {
+      const res = await fetch(`/api/sales/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'mark_shipped', send_notification }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '출고완료 처리 실패');
+      }
+      return res.json();
+    },
+    onSuccess: (_d, { id }) => {
+      toast.success('출고완료 처리되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['sale', id] });
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+  });
+}
+

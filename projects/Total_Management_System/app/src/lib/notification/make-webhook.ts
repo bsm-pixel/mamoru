@@ -55,6 +55,7 @@ async function isNotificationEnabled(template: string): Promise<boolean> {
       as_cost_notice: 'notifications.repair_cost_notice',
       as_payment_confirmed: 'notifications.repair_payment_confirmed',
       as_shipped: 'notifications.repair_shipped',
+      sales_shipped: 'notifications.sales_shipped',
       review_request: 'notifications.review_request',
     };
     const settingKey = templateKeyMap[template];
@@ -98,7 +99,8 @@ export type NotifyTemplate =
   | 'as_cancelled'        // 복원수리 취소 안내 → webhook_repair
   | 'as_review_request'   // 복원수리 만족도 → webhook_repair
   | 'review_request'      // 상담 리뷰 요청 → webhook_consultation
-  | 'purchase_review_request'; // 제품구매 리뷰 요청 → webhook_consultation
+  | 'purchase_review_request' // 제품구매 리뷰 요청 → webhook_consultation
+  | 'sales_shipped';          // 판매 출고 안내 → webhook_consultation
 
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
@@ -124,6 +126,7 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   as_review_request: 'AS_REVIEW_REQUEST',   // 복원수리 리뷰 요청 → MAKE_REPAIR_WEBHOOK_URL
   review_request: 'REVIEW_REQUEST',          // 상담 리뷰 요청 → MAKE_WEBHOOK_URL
   purchase_review_request: 'PURCHASE_REVIEW_REQUEST', // 제품구매 리뷰 요청 → MAKE_WEBHOOK_URL
+  sales_shipped: 'SALES_SHIPPED',            // 판매 출고 안내 → MAKE_WEBHOOK_URL
 };
 
 interface NotifyPayload {

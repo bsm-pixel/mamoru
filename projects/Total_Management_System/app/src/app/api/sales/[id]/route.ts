@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
+import { sendNotification } from '@/lib/notification/make-webhook';
 
 /** PATCH /api/sales/[id] — 취소 / 결제상태 변경 / 메모 수정 */
 export async function PATCH(
@@ -322,7 +323,53 @@ export async function PATCH(
       return NextResponse.json({ success: true, action: 'memo_updated' });
     }
 
-    // --- D) 판매 정보 수정 (금액/할인/결제방법/날짜) ---
+    // --- D) 출고완료 처리 ---
+    if (action === 'mark_shipped') {
+      if (sale.cancelled_at) {
+        return NextResponse.json({ error: '취소된 판매입니다' }, { status: 400 });
+      }
+      if (!sale.invoice_number) {
+        return NextResponse.json({ error: '송장이 없습니다. 먼저 송장을 생성해주세요.' }, { status: 400 });
+      }
+      if (sale.shipped_at) {
+        return NextResponse.json({ error: '이미 출고완료 처리되었습니다' }, { status: 400 });
+      }
+
+      const { send_notification } = body as { send_notification?: boolean };
+
+      const { error: updateErr } = await db
+        .from('offline_sales')
+        .update({ shipped_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (updateErr) throw updateErr;
+
+      // 선택적 알림톡 발송 (백그라운드)
+      if (send_notification && sale.customer_phone) {
+        after(async () => {
+          try {
+            const result = await sendNotification({
+              template: 'sales_shipped',
+              phone: sale.customer_phone,
+              name: sale.customer_name,
+              data: {
+                id: sale.sale_number || id,
+                tracking: sale.invoice_number || '',
+                courier: sale.courier_name || '롯데택배',
+              },
+            });
+            if (!result.success) console.error('[sales mark_shipped notify] 실패:', result.error);
+            else console.log('[sales mark_shipped notify] 출고 알림톡 발송 성공');
+          } catch (e) {
+            console.error('[sales mark_shipped notify] 예외:', e);
+          }
+        });
+      }
+
+      return NextResponse.json({ success: true, action: 'marked_shipped' });
+    }
+
+    // --- E) 판매 정보 수정 (금액/할인/결제방법/날짜) ---
     if (action === 'edit_sale') {
       if (sale.cancelled_at) {
         return NextResponse.json({ error: '취소된 판매는 수정할 수 없습니다' }, { status: 400 });
@@ -370,7 +417,7 @@ export async function PATCH(
       return NextResponse.json({ success: true, action: 'sale_edited' });
     }
 
-    // --- E) 판매 재구성 (제품 추가/삭제 — 내부적으로 시리얼/재고 복원 후 재적용) ---
+    // --- F) 판매 재구성 (제품 추가/삭제 — 내부적으로 시리얼/재고 복원 후 재적용) ---
     if (action === 'rebuild_sale') {
       if (sale.cancelled_at) {
         return NextResponse.json({ error: '취소된 판매는 수정할 수 없습니다' }, { status: 400 });

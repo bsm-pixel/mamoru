@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment } from '@/hooks/use-sales';
+import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, MessageSquare } from 'lucide-react';
@@ -53,6 +53,7 @@ export function SaleDetailPanel({ saleId }: Props) {
   const rebuildSale = useRebuildSale();
   const shipSale = useShipSale();
   const cancelShipment = useCancelSaleShipment();
+  const markShipped = useMarkSaleShipped();
   const [cancelMode, setCancelMode] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [returnMode, setReturnMode] = useState(false);
@@ -66,6 +67,8 @@ export function SaleDetailPanel({ saleId }: Props) {
   const [showCustomer, setShowCustomer] = useState(false);
   const [editingMemo, setEditingMemo] = useState(false);
   const [memoValue, setMemoValue] = useState('');
+  const [showShipConfirm, setShowShipConfirm] = useState(false);
+  const [shipNotify, setShipNotify] = useState(true);
 
   if (isLoading) {
     return (
@@ -403,15 +406,35 @@ export function SaleDetailPanel({ saleId }: Props) {
       {!s.cancelled_at && (
         <div className="pt-2 border-t border-neutral-100">
           {(s as Record<string, unknown>).invoice_number ? (
-            <div className="flex items-center gap-2">
-              <Package size={14} className="text-green-600" />
-              <span className="text-sm font-mono font-medium">{(s as Record<string, unknown>).invoice_number as string}</span>
-              <span className="text-xs text-neutral-400">롯데택배</span>
-              <button onClick={() => cancelShipment.mutate(saleId)}
-                disabled={cancelShipment.isPending}
-                className="ml-auto text-xs text-red-400 hover:text-red-600">
-                {cancelShipment.isPending ? '취소 중...' : '송장 취소'}
-              </button>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Package size={14} className="text-green-600" />
+                <span className="text-sm font-mono font-medium">{(s as Record<string, unknown>).invoice_number as string}</span>
+                <span className="text-xs text-neutral-400">{(s as Record<string, unknown>).courier_name as string || '롯데택배'}</span>
+              </div>
+              {(s as Record<string, unknown>).shipped_at ? (
+                <p className="text-xs text-green-600 flex items-center gap-1">
+                  <CheckCircle size={12} />
+                  출고완료 {formatDate((s as Record<string, unknown>).shipped_at as string)}
+                </p>
+              ) : (
+                <>
+                  <Button
+                    size="sm"
+                    onClick={() => { setShipNotify(true); setShowShipConfirm(true); }}
+                    disabled={markShipped.isPending}
+                    className="w-full"
+                  >
+                    <Truck size={14} />
+                    {markShipped.isPending ? '처리 중...' : '출고완료'}
+                  </Button>
+                  <button onClick={() => cancelShipment.mutate(saleId)}
+                    disabled={cancelShipment.isPending}
+                    className="w-full text-center text-xs text-red-400 hover:text-red-600">
+                    {cancelShipment.isPending ? '취소 중...' : '송장 취소'}
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <button
@@ -425,6 +448,41 @@ export function SaleDetailPanel({ saleId }: Props) {
           )}
         </div>
       )}
+
+      {/* 출고완료 확인 모달 */}
+      <ConfirmModal
+        open={showShipConfirm}
+        onClose={() => setShowShipConfirm(false)}
+        onConfirm={() => {
+          markShipped.mutate({ id: saleId, send_notification: shipNotify && !!s.customer_phone });
+          setShowShipConfirm(false);
+        }}
+        title="출고 완료"
+        message={
+          <div className="space-y-3">
+            <p>
+              송장 <strong className="font-mono">{(s as Record<string, unknown>).invoice_number as string}</strong>으로
+              출고 완료 처리합니다.
+            </p>
+            <label className={`flex items-center gap-2 ${s.customer_phone ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}>
+              <input
+                type="checkbox"
+                checked={shipNotify && !!s.customer_phone}
+                onChange={(e) => setShipNotify(e.target.checked)}
+                disabled={!s.customer_phone}
+                className="w-4 h-4 rounded border-neutral-300"
+              />
+              <span className="text-sm text-neutral-600">알림톡 함께 보내기</span>
+            </label>
+            {!s.customer_phone && (
+              <p className="text-xs text-amber-600">
+                고객 연락처가 없어 알림톡을 보낼 수 없습니다
+              </p>
+            )}
+          </div>
+        }
+        confirmLabel={shipNotify && s.customer_phone ? '출고완료 + 알림톡' : '출고완료'}
+      />
 
       {/* 고객 퀵뷰 모달 */}
       {s.customer_id && (

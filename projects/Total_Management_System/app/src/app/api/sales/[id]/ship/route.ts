@@ -71,10 +71,9 @@ export async function POST(
       return NextResponse.json({ error: `ALPS 송장 생성 실패: ${result.error}` }, { status: 502 });
     }
 
-    // 판매 건 업데이트
+    // 판매 건 업데이트 (shipped_at은 출고완료 시 별도 설정)
     await db.from('offline_sales').update({
       invoice_number: invoiceNumber,
-      shipped_at: new Date().toISOString(),
       delivery_method: 'shipping',
       courier_name: '롯데택배',
     }).eq('id', id);
