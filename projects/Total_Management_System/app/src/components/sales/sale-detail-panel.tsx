@@ -494,6 +494,7 @@ export function SaleDetailPanel({ saleId }: Props) {
         <ReceiptModal
           sale={s}
           items={data.items}
+          customerType={(s as Record<string, unknown>).customer_type as string | undefined}
           onClose={() => setShowReceipt(false)}
         />
       )}
@@ -872,18 +873,49 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
 }
 
 /** 거래명세서 모달 (A4 비율, 인쇄 + 이미지 저장) */
-function ReceiptModal({ sale, items, onClose }: {
+function ReceiptModal({ sale, items, customerType, onClose }: {
   sale: OfflineSale;
   items: OfflineSaleItem[];
+  customerType?: string;
   onClose: () => void;
 }) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
   const PAYMENT_METHOD: Record<string, string> = { card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합' };
+  const { data: allProducts = [] } = useProducts();
+  const priceGroups = usePriceGroups();
+
+  // 품목명 편집용 로컬 state — 납품명 우선 적용
+  const [editNames, setEditNames] = useState<string[]>(() => items.map(i => i.product_name));
+
+  // allProducts 로드 후 납품명 자동 적용 (최초 1회)
+  const [namesApplied, setNamesApplied] = useState(false);
+  if (!namesApplied && allProducts.length > 0 && customerType) {
+    const groupKey = Object.entries(priceGroups).find(
+      ([, def]) => def.customerTypes.includes(customerType)
+    )?.[0];
+    if (groupKey) {
+      const newNames = items.map((item) => {
+        const product = allProducts.find(p => p.id === item.product_id);
+        const displayName = product?.price_groups?.[groupKey]?.display_name;
+        return displayName || item.product_name;
+      });
+      setEditNames(newNames);
+    }
+    setNamesApplied(true);
+  }
 
   const handlePrint = () => {
     const el = receiptRef.current;
     if (!el) return;
+    // input value를 텍스트로 치환한 HTML 생성
+    const clone = el.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('input').forEach((input) => {
+      const span = document.createElement('span');
+      span.textContent = input.value;
+      span.style.cssText = input.style.cssText;
+      input.replaceWith(span);
+    });
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
     printWindow.document.write(`
@@ -898,7 +930,7 @@ function ReceiptModal({ sale, items, onClose }: {
         .text-center { text-align: center; }
         .bold { font-weight: bold; }
         .total-row td { border-top: 2px solid #000; font-weight: bold; }
-      </style></head><body>${el.innerHTML}</body></html>
+      </style></head><body>${clone.innerHTML}</body></html>
     `);
     printWindow.document.close();
     printWindow.print();
@@ -909,8 +941,23 @@ function ReceiptModal({ sale, items, onClose }: {
     if (!el) return;
     setSaving(true);
     try {
+      // input을 임시로 텍스트로 치환 후 캡처
+      const inputs = el.querySelectorAll('input');
+      const originals: { input: HTMLInputElement; parent: Node; next: Node | null }[] = [];
+      inputs.forEach((input) => {
+        const span = document.createElement('span');
+        span.textContent = input.value;
+        span.style.fontSize = '13px';
+        originals.push({ input, parent: input.parentNode!, next: input.nextSibling });
+        input.replaceWith(span);
+      });
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff' });
+      // 원래 input 복원
+      originals.forEach(({ input, parent, next }) => {
+        const span = next ? (next as Element).previousSibling : parent.lastChild;
+        if (span) parent.replaceChild(input, span);
+      });
       const link = document.createElement('a');
       link.download = `거래명세서_${sale.sale_number}.png`;
       link.href = canvas.toDataURL('image/png');
@@ -995,7 +1042,13 @@ function ReceiptModal({ sale, items, onClose }: {
             <tbody>
               {items.map((item, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '8px' }}>{item.product_name}</td>
+                  <td style={{ padding: '4px 8px' }}>
+                    <input
+                      value={editNames[i] || ''}
+                      onChange={(e) => setEditNames(prev => { const next = [...prev]; next[i] = e.target.value; return next; })}
+                      style={{ width: '100%', border: 'none', borderBottom: '1px dashed #ccc', outline: 'none', fontSize: '13px', padding: '4px 0', background: 'transparent' }}
+                    />
+                  </td>
                   <td style={{ padding: '8px', textAlign: 'center' }}>{item.quantity}</td>
                   <td style={{ padding: '8px', textAlign: 'right' }}>{formatKRW(item.unit_price)}</td>
                   <td style={{ padding: '8px', textAlign: 'right', fontWeight: '600' }}>{formatKRW(item.total_price)}</td>
