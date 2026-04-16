@@ -348,6 +348,17 @@ export async function PATCH(
       if (send_notification && sale.customer_phone) {
         after(async () => {
           try {
+            // 품명 조회
+            const { data: saleItems } = await db
+              .from('offline_sale_items')
+              .select('product_name, quantity')
+              .eq('sale_id', id);
+            const goodsName = saleItems && saleItems.length > 0
+              ? saleItems.map((i: { product_name: string; quantity: number }) =>
+                  i.quantity > 1 ? `${i.product_name} ×${i.quantity}` : i.product_name
+                ).join(', ')
+              : '마모루 제품';
+
             const result = await sendNotification({
               template: 'sales_shipped',
               phone: sale.customer_phone,
@@ -356,6 +367,7 @@ export async function PATCH(
                 id: sale.sale_number || id,
                 tracking: sale.invoice_number || '',
                 courier: sale.courier_name || '롯데택배',
+                goods_name: goodsName,
               },
             });
             if (!result.success) console.error('[sales mark_shipped notify] 실패:', result.error);
