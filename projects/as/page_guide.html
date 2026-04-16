@@ -692,6 +692,46 @@ img[src=""], video[src=""] {
   letter-spacing: -0.01em;
 }
 
+/* 대표 서명 + 사진 */
+.intro-ceo {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 32px 24px 0;
+}
+.intro-ceo__text {
+  text-align: right;
+}
+.intro-ceo__role {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--warm-gray);
+  opacity: 0.6;
+  margin-bottom: 2px;
+}
+.intro-ceo__name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cream);
+  letter-spacing: 0.04em;
+}
+.intro-ceo__photo {
+  width: 96px;
+  height: 120px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.15);
+  background-size: cover;
+  background-position: top center;
+  flex-shrink: 0;
+}
+@media (min-width: 768px) {
+  .intro-ceo { padding: 40px 40px 0; }
+  .intro-ceo__role { font-size: 12px; }
+  .intro-ceo__name { font-size: 18px; }
+  .intro-ceo__photo { width: 108px; height: 135px; border-radius: 12px; }
+}
+
 /* 작업과정 타임라인 — 브랜드 연혁 스타일 */
 .intro-process-story {
   padding: 40px 24px 0;
@@ -1861,6 +1901,18 @@ img[src=""], video[src=""] {
       <h3 class="intro-belief-title">수냉식 복원수리 <br>: 고집과 신념</h3>
       <p class="intro-belief-desc">가위에 치명적인 고열발생 및 날 변형을 완벽 차단합니다.<br>거칠지않은 굉장히 고운 가공면을 사용하며, 정밀한 기술력은 가위의 내구성까지 극대화합니다. 단순 수리가 아닌,<br>실제 제작단계의 마무리를 구현합니다</p>
       <p class="intro-belief-closing">잠깐의 불편해결에 복원이란 말은 어울리지 않습니다<br>오래 쓰실 가위를 위한 복원입니다</p>
+    </div>
+
+    <!-- 대표 서명 + 사진 -->
+    <div class="intro-ceo">
+      <div class="intro-ceo__text">
+        <p class="intro-ceo__role">대표책임자</p>
+        <p class="intro-ceo__name">백성민</p>
+      </div>
+      <!-- ✏️ 수정가능: 대표 상체 사진
+           📐 권장: 200×250px (4:5), 상체 정면 or 측면. 무채색 배경 권장
+           사진 넣을 때: 아래 div를 <img class="intro-ceo__photo" src="이미지URL" alt="대표 백성민"> 로 교체 -->
+      <div class="intro-ceo__photo"></div>
     </div>
 
     <div class="intro-divider"></div>
