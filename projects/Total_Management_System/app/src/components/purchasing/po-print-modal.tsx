@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { Printer, X } from 'lucide-react';
-import { usePurchaseOrder } from '@/hooks/use-purchasing';
+import { usePurchaseOrder, useSupplierCatalog } from '@/hooks/use-purchasing';
 import { formatKRW } from '@/lib/utils/format';
 
 interface Props {
@@ -13,6 +13,8 @@ interface Props {
 export function POPrintModal({ purchaseId, onClose }: Props) {
   const printRef = useRef<HTMLDivElement>(null);
   const { data, isLoading } = usePurchaseOrder(purchaseId);
+  const supplierId = data?.order?.supplier_id || '';
+  const { data: catalogData } = useSupplierCatalog(supplierId);
 
   const handlePrint = () => {
     const el = printRef.current;
@@ -58,6 +60,14 @@ export function POPrintModal({ purchaseId, onClose }: Props) {
 
   const { order: po, items } = data;
   const vatType = ((po as Record<string, unknown>).vat_type as string) || 'included';
+
+  // 카탈로그에서 product_id → features 매핑
+  const featuresMap = new Map<string, string>();
+  if (catalogData?.catalog) {
+    for (const entry of catalogData.catalog) {
+      if (entry.features) featuresMap.set(entry.product_id, entry.features);
+    }
+  }
 
   // 부가세 계산
   const itemTotal = items.reduce((s, i) => s + i.total_price, 0);
@@ -121,6 +131,7 @@ export function POPrintModal({ purchaseId, onClose }: Props) {
                 <tr>
                   <th style={{ background: '#f5f5f5', fontWeight: 600, fontSize: '11px', padding: '6px 8px', border: '1px solid #ddd', width: '30px' }}>No</th>
                   <th style={{ background: '#f5f5f5', fontWeight: 600, fontSize: '11px', padding: '6px 8px', border: '1px solid #ddd' }}>주문품목</th>
+                  <th style={{ background: '#f5f5f5', fontWeight: 600, fontSize: '11px', padding: '6px 8px', border: '1px solid #ddd' }}>특징</th>
                   <th style={{ background: '#f5f5f5', fontWeight: 600, fontSize: '11px', padding: '6px 8px', border: '1px solid #ddd', width: '80px', textAlign: 'right' }}>단가</th>
                   <th style={{ background: '#f5f5f5', fontWeight: 600, fontSize: '11px', padding: '6px 8px', border: '1px solid #ddd', width: '50px', textAlign: 'center' }}>수량</th>
                   <th style={{ background: '#f5f5f5', fontWeight: 600, fontSize: '11px', padding: '6px 8px', border: '1px solid #ddd', width: '90px', textAlign: 'right' }}>금액</th>
@@ -131,6 +142,7 @@ export function POPrintModal({ purchaseId, onClose }: Props) {
                   <tr key={item.id}>
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'center', fontSize: '11px' }}>{idx + 1}</td>
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', fontSize: '11px' }}>{item.product_name}</td>
+                    <td style={{ padding: '5px 8px', border: '1px solid #eee', fontSize: '10px', color: '#666' }}>{item.product_id ? featuresMap.get(item.product_id) || '' : ''}</td>
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'right', fontSize: '11px' }}>{formatKRW(item.unit_price)}</td>
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'center', fontSize: '11px' }}>{item.quantity}</td>
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'right', fontSize: '11px' }}>{formatKRW(item.total_price)}</td>

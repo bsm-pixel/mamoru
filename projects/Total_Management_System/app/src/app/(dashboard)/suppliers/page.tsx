@@ -12,7 +12,8 @@ import { useCustomers, useCreateCustomer } from '@/hooks/use-customers';
 import { formatKRW, formatPhone } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
-import { Building2, Users, GraduationCap, Plus, X, Pencil, Package, Save, Trash2, Search } from 'lucide-react';
+import { Building2, Users, GraduationCap, Plus, X, Pencil, Package, Save, Trash2, Search, Printer } from 'lucide-react';
+import { CatalogPrintModal } from '@/components/purchasing/catalog-print-modal';
 import { useSupplierCatalog, useAddToCatalog, useUpdateCatalog, useRemoveFromCatalog } from '@/hooks/use-purchasing';
 import { useProducts } from '@/hooks/use-sales';
 import toast from 'react-hot-toast';
@@ -219,7 +220,7 @@ function PartnerDetailPanel({ partner: p, tabConfig }: { partner: Customer; tabC
 
       {/* 매입품목 탭 */}
       {detailTab === 'catalog' && p.customer_type === 'supplier' && (
-        <SupplierCatalogSection supplierId={p.id} />
+        <SupplierCatalogSection supplierId={p.id} supplierName={p.company_name || p.name} />
       )}
 
       {/* 기본정보 탭 */}
@@ -292,7 +293,7 @@ function PartnerDetailPanel({ partner: p, tabConfig }: { partner: Customer; tabC
 }
 
 /** 매입품목 카탈로그 섹션 */
-function SupplierCatalogSection({ supplierId }: { supplierId: string }) {
+function SupplierCatalogSection({ supplierId, supplierName }: { supplierId: string; supplierName: string }) {
   const { data, isLoading } = useSupplierCatalog(supplierId);
   const { data: products = [] } = useProducts();
   const addToCatalog = useAddToCatalog();
@@ -302,6 +303,7 @@ function SupplierCatalogSection({ supplierId }: { supplierId: string }) {
   const [productSearch, setProductSearch] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ order_name: '', features: '' });
+  const [showCatalogPrint, setShowCatalogPrint] = useState(false);
 
   const catalog = data?.catalog || [];
   const catalogProductIds = new Set(catalog.map((c) => c.product_id));
@@ -336,12 +338,22 @@ function SupplierCatalogSection({ supplierId }: { supplierId: string }) {
       {/* 상단 버튼 */}
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold text-neutral-600">매입품목 ({catalog.length})</p>
-        <button
-          onClick={() => setShowProductPicker(!showProductPicker)}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-800 transition"
-        >
-          <Plus size={12} />제품에서 불러오기
-        </button>
+        <div className="flex items-center gap-2">
+          {catalog.length > 0 && (
+            <button
+              onClick={() => setShowCatalogPrint(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-neutral-200 text-neutral-600 text-xs font-medium hover:bg-neutral-50 transition"
+            >
+              <Printer size={12} />리스트 출력
+            </button>
+          )}
+          <button
+            onClick={() => setShowProductPicker(!showProductPicker)}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-800 transition"
+          >
+            <Plus size={12} />제품에서 불러오기
+          </button>
+        </div>
       </div>
 
       {/* 제품 선택 드롭다운 */}
@@ -437,6 +449,11 @@ function SupplierCatalogSection({ supplierId }: { supplierId: string }) {
             </div>
           ))}
         </div>
+      )}
+
+      {/* 카탈로그 출력 모달 */}
+      {showCatalogPrint && (
+        <CatalogPrintModal supplierId={supplierId} supplierName={supplierName} onClose={() => setShowCatalogPrint(false)} />
       )}
     </div>
   );
