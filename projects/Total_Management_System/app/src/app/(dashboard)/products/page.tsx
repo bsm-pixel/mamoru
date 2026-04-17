@@ -35,6 +35,7 @@ export default function ProductsPage() {
   const [panelMode, setPanelMode] = useState<'view' | 'create' | 'duplicate'>('view');
   const [duplicateData, setDuplicateData] = useState<Record<string, unknown> | null>(null);
   const [category, setCategory] = useState('all');
+  const [productGroup, setProductGroup] = useState('all');
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'bulk-edit'>('grid');
 
@@ -67,6 +68,7 @@ export default function ProductsPage() {
   const filtered = useMemo(() => {
     let list = products.filter((p) => p.category !== 'SUP');
     if (category !== 'all') list = list.filter((p) => p.category === category);
+    if (productGroup !== 'all') list = list.filter((p) => (p.product_group || '') === productGroup);
     if (search) {
       const q = search.toLowerCase();
       list = list.filter((p) =>
@@ -74,7 +76,24 @@ export default function ProductsPage() {
       );
     }
     return list;
-  }, [products, category, search]);
+  }, [products, category, productGroup, search]);
+
+  // 제품군 칩 목록 (카테고리 필터 적용 후 기준)
+  const groupChips = useMemo(() => {
+    let base = products.filter((p) => p.category !== 'SUP');
+    if (category !== 'all') base = base.filter((p) => p.category === category);
+    const groupCounts: Record<string, number> = {};
+    base.forEach((p) => {
+      const g = p.product_group || '';
+      if (g) groupCounts[g] = (groupCounts[g] || 0) + 1;
+    });
+    const groups = Object.keys(groupCounts).sort();
+    if (groups.length === 0) return [];
+    return [
+      { key: 'all', label: '전체', count: base.length },
+      ...groups.map((g) => ({ key: g, label: g, count: groupCounts[g] })),
+    ];
+  }, [products, category]);
 
   // 카테고리 칩 목록 (동적 — 설정에서 탭 표시 여부 필터)
   const categoryChips = useMemo(() => {
@@ -144,7 +163,7 @@ export default function ProductsPage() {
           {categoryChips.map((chip) => (
             <button
               key={chip.key}
-              onClick={() => setCategory(chip.key)}
+              onClick={() => { setCategory(chip.key); setProductGroup('all'); }}
               className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition ${
                 category === chip.key
                   ? 'bg-neutral-900 text-white'
@@ -167,6 +186,28 @@ export default function ProductsPage() {
             비활성 포함
           </button>
         </div>
+
+        {/* 제품군 칩 탭 (제품군이 2개 이상일 때만 표시) */}
+        {groupChips.length > 2 && (
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+            {groupChips.map((chip) => (
+              <button
+                key={chip.key}
+                onClick={() => setProductGroup(chip.key)}
+                className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition ${
+                  productGroup === chip.key
+                    ? 'bg-neutral-800 text-white'
+                    : 'bg-neutral-50 text-neutral-500 hover:bg-neutral-100'
+                }`}
+              >
+                {chip.label}
+                <span className={`text-[10px] ${productGroup === chip.key ? 'text-neutral-400' : 'text-neutral-300'}`}>
+                  {chip.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
         </div>{/* 상단 고정 영역 끝 */}
 
         {/* ── 하단 콘텐츠 영역 (flex-1, 내부 스크롤) ── */}
