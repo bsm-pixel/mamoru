@@ -1,8 +1,10 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Printer } from 'lucide-react';
 import { useDelivery } from '@/hooks/use-deliveries';
+import { useProducts } from '@/hooks/use-sales';
+import { usePriceGroups } from '@/hooks/use-price-groups';
 import { formatKRW } from '@/lib/utils/format';
 
 interface Props {
@@ -13,10 +15,23 @@ interface Props {
 export function DLPrintModal({ deliveryId, onClose }: Props) {
   const printRef = useRef<HTMLDivElement>(null);
   const { data, isLoading } = useDelivery(deliveryId);
+  const { data: allProducts = [] } = useProducts();
+  const priceGroups = usePriceGroups();
+
+  // 품목명 편집용 로컬 state
+  const [editNames, setEditNames] = useState<string[]>([]);
+  const [namesInit, setNamesInit] = useState(false);
 
   const handlePrint = () => {
     const el = printRef.current;
     if (!el) return;
+    // input value를 텍스트로 치환
+    const clone = el.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('input').forEach((input) => {
+      const span = document.createElement('span');
+      span.textContent = input.value;
+      input.replaceWith(span);
+    });
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
     printWindow.document.write(`
@@ -42,7 +57,7 @@ export function DLPrintModal({ deliveryId, onClose }: Props) {
         .total-row.bold { font-weight: 700; font-size: 13px; border-top: 2px solid #333; padding-top: 6px; margin-top: 4px; }
         .memo-section { margin-top: 16px; padding: 12px; background: #f9f9f9; border-radius: 4px; font-size: 11px; color: #555; }
         .footer { text-align: center; margin-top: 24px; font-size: 10px; color: #ccc; }
-      </style></head><body>${el.innerHTML}</body></html>
+      </style></head><body>${clone.innerHTML}</body></html>
     `);
     printWindow.document.close();
     printWindow.print();
@@ -60,6 +75,24 @@ export function DLPrintModal({ deliveryId, onClose }: Props) {
   const dl: any = data.delivery;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const items: any[] = data.items;
+
+  // 납품명 자동 적용 (최초 1회)
+  if (!namesInit && items.length > 0) {
+    const customerType = dl.customer_type as string | undefined;
+    const groupKey = customerType
+      ? Object.entries(priceGroups).find(([, def]) => def.customerTypes.includes(customerType))?.[0]
+      : undefined;
+    const names = items.map((item) => {
+      if (groupKey && item.product_id && allProducts.length > 0) {
+        const product = allProducts.find((p) => p.id === item.product_id);
+        const displayName = product?.price_groups?.[groupKey]?.display_name;
+        if (displayName) return displayName as string;
+      }
+      return item.product_name as string;
+    });
+    setEditNames(names);
+    setNamesInit(true);
+  }
   const vatType = (dl.vat_type || 'included') as string;
   const receiptType = (dl.receipt_type as string) || 'none';
   const receiptLabel = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' }[receiptType] || '미적용';
@@ -138,7 +171,13 @@ export function DLPrintModal({ deliveryId, onClose }: Props) {
                 {items.map((item, idx) => (
                   <tr key={item.id as string}>
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'center', fontSize: '11px' }}>{idx + 1}</td>
-                    <td style={{ padding: '5px 8px', border: '1px solid #eee', fontSize: '11px' }}>{item.product_name as string}</td>
+                    <td style={{ padding: '3px 8px', border: '1px solid #eee' }}>
+                      <input
+                        value={editNames[idx] ?? (item.product_name as string)}
+                        onChange={(e) => setEditNames(prev => { const next = [...prev]; next[idx] = e.target.value; return next; })}
+                        style={{ width: '100%', border: 'none', borderBottom: '1px dashed #ccc', outline: 'none', fontSize: '11px', padding: '2px 0', background: 'transparent' }}
+                      />
+                    </td>
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'right', fontSize: '11px' }}>{formatKRW(item.unit_price as number)}</td>
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'center', fontSize: '11px' }}>{item.quantity as number}</td>
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'right', fontSize: '11px' }}>{formatKRW(item.total_price as number)}</td>
