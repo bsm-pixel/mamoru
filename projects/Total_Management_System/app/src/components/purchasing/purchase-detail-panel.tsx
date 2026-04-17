@@ -254,6 +254,19 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
             {poVatType !== 'none' && <span>부가세 {formatKRW(vat)}</span>}
             {poVatType === 'none' && <span className="text-neutral-400">부가세 미적용</span>}
           </div>
+          {/* 부가세 유형 변경 (입고 전까지) */}
+          {po.status !== 'received' && po.status !== 'balance_paid' && po.status !== 'cancelled' && (
+            <div className="flex gap-1 mt-2">
+              {([['included', '포함'], ['separate', '별도'], ['none', '미적용']] as const).map(([key, label]) => (
+                <button key={key} onClick={() => {
+                  if (key !== poVatType) updatePO.mutate({ id: purchaseId, vat_type: key });
+                }}
+                  className={`flex-1 py-1 text-[10px] rounded border transition ${poVatType === key ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-400 border-neutral-200 hover:border-neutral-300'}`}>
+                  부가세 {label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </Card>
       )}

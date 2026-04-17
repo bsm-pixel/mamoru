@@ -160,6 +160,35 @@ export async function PATCH(
     if (body.currency !== undefined) updates.currency = body.currency;
     if (body.exchange_rate !== undefined) updates.exchange_rate = body.exchange_rate;
 
+    // 부가세 유형 변경 → total_amount 재계산
+    if (body.vat_type !== undefined && body.vat_type !== current.vat_type) {
+      updates.vat_type = body.vat_type;
+      updates.is_vat_included = body.vat_type === 'included';
+      // 품목 합계 재조회
+      const { data: poItems } = await db.from('purchase_order_items').select('quantity, unit_price').eq('po_id', id);
+      const foreignTotal = (poItems || []).reduce((s: number, i: { quantity: number; unit_price: number }) => s + i.quantity * i.unit_price, 0);
+      const rate = updates.exchange_rate || current.exchange_rate || 1;
+      const krwTotal = Math.round(foreignTotal * rate);
+      let newTotal = krwTotal;
+      if (body.vat_type === 'separate') {
+        const vatAmt = Math.round(krwTotal * 0.1);
+        updates.supply_amount = krwTotal;
+        updates.vat_amount = vatAmt;
+        newTotal = krwTotal + vatAmt;
+      } else if (body.vat_type === 'none') {
+        updates.supply_amount = krwTotal;
+        updates.vat_amount = 0;
+        newTotal = krwTotal;
+      } else {
+        const supplyAmt = Math.round(krwTotal / 1.1);
+        updates.supply_amount = supplyAmt;
+        updates.vat_amount = krwTotal - supplyAmt;
+        newTotal = krwTotal;
+      }
+      updates.total_amount = newTotal;
+      updates.balance_amount = newTotal - (current.deposit_amount || 0);
+    }
+
     // 품목 수정 (draft 상태에서만)
     if (body.items && Array.isArray(body.items)) {
       if (current.status !== 'draft') {

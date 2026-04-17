@@ -102,6 +102,9 @@ export function useUpdatePurchaseOrder() {
       supplier_name?: string;
       supplier_id?: string;
       order_date?: string;
+      vat_type?: string;
+      currency?: string;
+      exchange_rate?: number;
       items?: Array<{ product_id?: string; product_name: string; sku?: string; quantity: number; unit_price: number }>;
     }) => {
       const res = await fetch(`/api/purchasing/${id}`, {
