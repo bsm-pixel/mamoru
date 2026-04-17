@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Building2, Users, GraduationCap, Plus, X, Pencil, Package, Save, Trash2, Search, Printer } from 'lucide-react';
 import { CatalogPrintModal } from '@/components/purchasing/catalog-print-modal';
+import { CollectPaymentModal } from '@/components/suppliers/collect-payment-modal';
 import { useSupplierCatalog, useAddToCatalog, useUpdateCatalog, useRemoveFromCatalog } from '@/hooks/use-purchasing';
 import { useProducts } from '@/hooks/use-sales';
 import toast from 'react-hot-toast';
@@ -162,6 +163,7 @@ function PartnerDetailPanel({ partner: p, tabConfig }: { partner: Customer; tabC
   const [editing, setEditing] = useState(false);
   const [detailTab, setDetailTab] = useState<'info' | 'catalog'>('info');
   const [form, setForm] = useState({ name: '', company_name: '', phone: '', email: '', memo: '' });
+  const [showCollect, setShowCollect] = useState(false);
 
   useEffect(() => {
     setForm({
@@ -281,9 +283,28 @@ function PartnerDetailPanel({ partner: p, tabConfig }: { partner: Customer; tabC
             </div>
             {p.outstanding_balance > 0 && (
               <div className="pt-3 border-t border-neutral-100">
-                <p className="text-xs text-neutral-400">미수금</p>
-                <p className="text-lg font-bold text-red-600">{formatKRW(p.outstanding_balance)}</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-neutral-400">미수금</p>
+                    <p className="text-lg font-bold text-red-600">{formatKRW(p.outstanding_balance)}</p>
+                  </div>
+                  <button
+                    onClick={() => setShowCollect(true)}
+                    className="px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-800 transition"
+                  >
+                    수금 처리
+                  </button>
+                </div>
               </div>
+            )}
+            {showCollect && (
+              <CollectPaymentModal
+                open={showCollect}
+                customerId={p.id}
+                customerName={p.company_name || p.name}
+                onClose={() => setShowCollect(false)}
+                onComplete={() => queryClient.invalidateQueries({ queryKey: ['customers'] })}
+              />
             )}
           </>
         )}
