@@ -303,7 +303,15 @@ export default function NewPurchaseOrderPage() {
                           <button onClick={() => updateItemQty(idx, -1)} className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200">
                             <Minus size={12} />
                           </button>
-                          <span className="text-sm font-semibold w-8 text-center">{item.quantity}</span>
+                          <input
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const val = Math.max(1, parseInt(e.target.value) || 1);
+                              setItems((prev) => prev.map((it, i) => i === idx ? { ...it, quantity: val } : it));
+                            }}
+                            className="w-10 h-6 text-sm font-semibold text-center rounded border border-neutral-200 bg-transparent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                          />
                           <button onClick={() => updateItemQty(idx, 1)} className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200">
                             <Plus size={12} />
                           </button>
