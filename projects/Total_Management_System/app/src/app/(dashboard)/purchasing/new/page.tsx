@@ -43,6 +43,7 @@ export default function NewPurchaseOrderPage() {
   // 매입처 카탈로그 조회
   const { data: catalogData } = useSupplierCatalog(supplierId);
   const catalogProductIds = new Set((catalogData?.catalog || []).map(c => c.product_id));
+  const catalogFeaturesMap = new Map((catalogData?.catalog || []).filter(c => c.features).map(c => [c.product_id, c.features]));
 
   const lowStockThreshold = useSetting<number>('inventory.low_stock_threshold', 3);
   const lowStockCount = products.filter(
@@ -202,9 +203,14 @@ export default function NewPurchaseOrderPage() {
                         )}
                       </div>
                       <p className="text-xs text-neutral-500">{p.sku.startsWith('IW-') ? '' : p.sku}</p>
-                      <p className="text-xs text-neutral-600 mt-1">
-                        매입가 {p.price_purchase > 0 ? formatKRW(p.price_purchase) : '-'}
-                      </p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <p className="text-xs text-neutral-600">
+                          매입가 {p.price_purchase > 0 ? formatKRW(p.price_purchase) : '-'}
+                        </p>
+                        {catalogFeaturesMap.has(p.id) && (
+                          <span className="text-[10px] text-blue-500 truncate">{catalogFeaturesMap.get(p.id)}</span>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
