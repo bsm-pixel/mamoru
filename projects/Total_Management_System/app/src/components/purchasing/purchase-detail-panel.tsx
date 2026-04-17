@@ -238,7 +238,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
               <div>
                 <p className="text-sm font-medium">{item.product_name}</p>
                 <p className="text-xs text-neutral-500">
-                  {item.sku && `${item.sku} · `}
+                  {item.sku && !item.sku.startsWith('IW-') && `${item.sku} · `}
                   {isForeign ? `${CURRENCY_SYMBOL[poCurrency]}${item.unit_price.toLocaleString()}` : formatKRW(item.unit_price)} x {item.quantity}
                 </p>
               </div>

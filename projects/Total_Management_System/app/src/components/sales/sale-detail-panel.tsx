@@ -213,7 +213,7 @@ export function SaleDetailPanel({ saleId }: Props) {
                     <div>
                       <p className="text-sm font-medium">{item.product_name}</p>
                       <p className="text-xs text-neutral-500">
-                        {item.sku && `${item.sku} · `}{formatKRW(item.unit_price)} x {item.quantity}
+                        {item.sku && !item.sku.startsWith('IW-') && `${item.sku} · `}{formatKRW(item.unit_price)} x {item.quantity}
                       </p>
                     </div>
                     <span className="text-sm font-bold">{formatKRW(item.total_price)}</span>

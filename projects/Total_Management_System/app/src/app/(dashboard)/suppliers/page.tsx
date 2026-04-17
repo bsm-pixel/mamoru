@@ -402,7 +402,7 @@ function SupplierCatalogSection({ supplierId, supplierName }: { supplierId: stri
               >
                 <div>
                   <span className="text-xs font-medium">{p.name}</span>
-                  {p.sku && <span className="text-[10px] text-neutral-400 ml-2">{p.sku}</span>}
+                  {p.sku && !p.sku.startsWith('IW-') && <span className="text-[10px] text-neutral-400 ml-2">{p.sku}</span>}
                 </div>
                 {p.price_purchase > 0 && <span className="text-[10px] text-neutral-500">{formatKRW(p.price_purchase)}</span>}
               </button>

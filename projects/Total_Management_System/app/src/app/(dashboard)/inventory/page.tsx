@@ -380,7 +380,7 @@ function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSe
           {isLow && <Badge className="bg-amber-100 text-amber-700 text-[9px]">저재고</Badge>}
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-          <span>{item.sku}</span>
+          {!item.sku.startsWith('IW-') && <span>{item.sku}</span>}
           {!isNoStock && (
             <span>재고 <strong className={isLow ? 'text-amber-600' : 'text-indigo-black'}>{item.stock_quantity}</strong></span>
           )}
@@ -405,7 +405,7 @@ function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSe
             {isNoStock && <Badge className="bg-neutral-100 text-neutral-500 text-[9px]">미사용</Badge>}
             {isLow && <Badge className="bg-amber-100 text-amber-700 text-[9px]">저재고</Badge>}
           </div>
-          <p className="text-[11px] text-neutral-400 font-mono">{item.sku}</p>
+          {!item.sku.startsWith('IW-') && <p className="text-[11px] text-neutral-400 font-mono">{item.sku}</p>}
         </div>
         <div className="col-span-2">
           {isNoStock ? (

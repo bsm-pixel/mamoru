@@ -320,7 +320,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
                 <div>
                   <p className="text-sm font-medium">{item.product_name as string}</p>
                   <p className="text-xs text-neutral-500">
-                    {item.sku && `${item.sku} · `}{formatKRW(item.unit_price as number)} x {item.quantity as number}
+                    {item.sku && !String(item.sku).startsWith('IW-') && `${item.sku} · `}{formatKRW(item.unit_price as number)} x {item.quantity as number}
                   </p>
                 </div>
                 <span className="text-sm font-bold">{formatKRW(item.total_price as number)}</span>

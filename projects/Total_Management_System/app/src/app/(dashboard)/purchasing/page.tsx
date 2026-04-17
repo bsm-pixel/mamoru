@@ -175,7 +175,6 @@ function PORow({ po, isSelected, onClick }: { po: PurchaseOrder; isSelected: boo
           </Badge>
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-          <span>{po.po_number}</span>
           <span>{formatDate(po.order_date)}</span>
           {po.expected_date && <span>예정: {formatDate(po.expected_date)}</span>}
         </div>

@@ -405,7 +405,6 @@ const SaleRow = memo(function SaleRow({ sale, selected, onClick, prepMode, check
           <Badge className={channelInfo.className}>{channelInfo.label}</Badge>
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-          <span>{sale.sale_number}</span>
           <span>{formatDate(sale.sale_date)}</span>
           <span>{PAYMENT_METHOD_LABEL[sale.payment_method] || sale.payment_method}</span>
         </div>

@@ -266,7 +266,6 @@ const DeliveryRow = memo(function DeliveryRow({ dl, isSelected, onClick }: {
           </Badge>
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-          <span>{dl.dl_number as string}</span>
           <span>{formatDate(dl.delivery_date as string)}</span>
         </div>
       </div>
