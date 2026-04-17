@@ -72,6 +72,10 @@ export async function POST(
       .upsert(rows, { onConflict: 'supplier_id,product_id', ignoreDuplicates: true });
 
     if (error) throw error;
+
+    // 제품의 supplier_id 자동 설정 (1제품 = 1매입처)
+    await db.from('products').update({ supplier_id: id }).in('id', product_ids);
+
     return NextResponse.json({ success: true, added: product_ids.length });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
