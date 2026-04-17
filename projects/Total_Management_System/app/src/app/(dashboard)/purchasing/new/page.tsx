@@ -11,7 +11,7 @@ import { useSetting } from '@/hooks/use-settings';
 import { formatKRW, calcVAT } from '@/lib/utils/format';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { LowStockPickerModal } from '@/components/purchasing/low-stock-picker-modal';
-import { ArrowLeft, Minus, Plus, Trash2, AlertTriangle, Filter } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, Trash2, AlertTriangle, Filter, Search } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 
 interface POItem {
@@ -36,6 +36,7 @@ export default function NewPurchaseOrderPage() {
   const [items, setItems] = useState<POItem[]>([]);
   const [lowStockOpen, setLowStockOpen] = useState(false);
   const [catalogOnly, setCatalogOnly] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
 
   // 매입처 카탈로그 조회
   const { data: catalogData } = useSupplierCatalog(supplierId);
@@ -47,10 +48,17 @@ export default function NewPurchaseOrderPage() {
   ).length;
   const alreadyAddedIds = new Set(items.filter((i) => i.product?.id).map((i) => i.product!.id));
 
-  // 매입품목 필터링
-  const displayProducts = catalogOnly && supplierId
-    ? products.filter(p => catalogProductIds.has(p.id))
-    : products;
+  // 매입품목 + 검색 필터링
+  const displayProducts = (() => {
+    let list = catalogOnly && supplierId
+      ? products.filter(p => catalogProductIds.has(p.id))
+      : products;
+    if (productSearch) {
+      const q = productSearch.toLowerCase();
+      list = list.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || (p.product_group || '').toLowerCase().includes(q));
+    }
+    return list;
+  })();
 
   const totalAmount = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
 
@@ -154,6 +162,16 @@ export default function NewPurchaseOrderPage() {
                     </button>
                   )}
                 </div>
+              </div>
+              <div className="relative mb-3">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                <input
+                  type="text"
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  placeholder="제품명, SKU, 제품군 검색..."
+                  className="w-full h-8 pl-8 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
+                />
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {displayProducts.map((p) => {
