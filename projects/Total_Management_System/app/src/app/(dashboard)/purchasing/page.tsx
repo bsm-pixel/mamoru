@@ -181,6 +181,13 @@ function PORow({ po, isSelected, onClick }: { po: PurchaseOrder; isSelected: boo
         </div>
       </div>
       <div className="text-right shrink-0">
+        {(() => {
+          const cur = (po as Record<string, unknown>).currency as string | undefined;
+          const rate = (po as Record<string, unknown>).exchange_rate as number | undefined;
+          return cur && cur !== 'KRW' ? (
+            <p className="text-[10px] text-neutral-400">{cur} 환율 {rate?.toLocaleString()}</p>
+          ) : null;
+        })()}
         <p className="text-sm font-bold">{formatKRW(po.total_amount)}</p>
         {po.deposit_amount > 0 && po.status !== 'balance_paid' && (
           <p className="text-xs text-neutral-500">선납 {formatKRW(po.deposit_amount)}</p>
