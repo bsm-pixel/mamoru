@@ -33,6 +33,8 @@ export default function NewPurchaseOrderPage() {
   const [expectedDate, setExpectedDate] = useState('');
   const [memo, setMemo] = useState('');
   const [vatType, setVatType] = useState<'included' | 'separate' | 'none'>('included');
+  const [currency, setCurrency] = useState<'KRW' | 'USD' | 'CNY'>('KRW');
+  const [exchangeRate, setExchangeRate] = useState<number>(1);
   const [items, setItems] = useState<POItem[]>([]);
   const [lowStockOpen, setLowStockOpen] = useState(false);
   const [catalogOnly, setCatalogOnly] = useState(false);
@@ -60,7 +62,10 @@ export default function NewPurchaseOrderPage() {
     return list;
   })();
 
-  const totalAmount = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+  const foreignTotal = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+  const rate = currency !== 'KRW' && exchangeRate > 0 ? exchangeRate : 1;
+  const totalAmount = Math.round(foreignTotal * rate); // KRW 환산
+  const CURRENCY_SYMBOL: Record<string, string> = { KRW: '₩', USD: '$', CNY: '¥' };
 
   function addProduct(product: Product) {
     setItems((prev) => {
@@ -110,6 +115,8 @@ export default function NewPurchaseOrderPage() {
       expected_date: expectedDate || undefined,
       memo: memo.trim() || undefined,
       vat_type: vatType,
+      currency,
+      exchange_rate: rate,
       items: items.map((i) => ({
         product_id: i.product?.id,
         product_name: i.product_name,
@@ -249,6 +256,30 @@ export default function NewPurchaseOrderPage() {
                     className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
                   />
                 </div>
+                {/* 통화 + 환율 */}
+                <div>
+                  <label className="text-xs text-neutral-500">통화</label>
+                  <div className="flex gap-1.5 mt-1">
+                    {(['KRW', 'USD', 'CNY'] as const).map((c) => (
+                      <button key={c} type="button" onClick={() => { setCurrency(c); if (c === 'KRW') setExchangeRate(1); }}
+                        className={`flex-1 py-1.5 text-xs rounded-md border transition ${currency === c ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'}`}>
+                        {c === 'KRW' ? '₩ 원화' : c === 'USD' ? '$ 달러' : '¥ 위안'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {currency !== 'KRW' && (
+                  <div>
+                    <label className="text-xs text-neutral-500">환율 (1 {currency} = ₩)</label>
+                    <input
+                      type="number"
+                      value={exchangeRate || ''}
+                      onChange={(e) => setExchangeRate(Number(e.target.value) || 0)}
+                      placeholder="예: 195"
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                    />
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -284,7 +315,10 @@ export default function NewPurchaseOrderPage() {
                           onChange={(e) => updateItemPrice(idx, parseInt(e.target.value) || 0)}
                           className="w-24 h-7 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs text-right"
                         />
-                        <span className="text-xs font-semibold ml-auto">{formatKRW(item.quantity * item.unit_price)}</span>
+                        <span className="text-xs font-semibold ml-auto">
+                          {currency !== 'KRW' && <span className="text-neutral-400 mr-1">{CURRENCY_SYMBOL[currency]}{(item.quantity * item.unit_price).toLocaleString()}</span>}
+                          {formatKRW(Math.round(item.quantity * item.unit_price * rate))}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -320,8 +354,14 @@ export default function NewPurchaseOrderPage() {
                             <span>{formatKRW(vat)}</span>
                           </div>
                         )}
+                        {currency !== 'KRW' && (
+                          <div className="flex justify-between text-xs text-neutral-400 pt-1">
+                            <span>외화 합계</span>
+                            <span>{CURRENCY_SYMBOL[currency]}{foreignTotal.toLocaleString()} × {rate} = </span>
+                          </div>
+                        )}
                         <div className="flex justify-between text-sm font-bold pt-1">
-                          <span>합계</span>
+                          <span>합계 (KRW)</span>
                           <span className="text-terracotta">{formatKRW(payment)}</span>
                         </div>
                       </div>

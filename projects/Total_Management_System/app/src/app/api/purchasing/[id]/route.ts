@@ -157,6 +157,8 @@ export async function PATCH(
     if (body.supplier_name !== undefined) updates.supplier_name = body.supplier_name;
     if (body.supplier_id !== undefined) updates.supplier_id = body.supplier_id || null;
     if (body.order_date !== undefined) updates.order_date = body.order_date;
+    if (body.currency !== undefined) updates.currency = body.currency;
+    if (body.exchange_rate !== undefined) updates.exchange_rate = body.exchange_rate;
 
     // 품목 수정 (draft 상태에서만)
     if (body.items && Array.isArray(body.items)) {
@@ -182,10 +184,12 @@ export async function PATCH(
         await db.from('purchase_order_items').insert(newItems);
       }
 
-      // 합계 재계산
-      const newTotal = newItems.reduce((s: number, i: { quantity: number; unit_price: number }) => s + i.quantity * i.unit_price, 0);
-      updates.total_amount = newTotal;
-      updates.balance_amount = newTotal - (current.deposit_amount || 0);
+      // 합계 재계산 (외화 → KRW 환산)
+      const rate = updates.exchange_rate || current.exchange_rate || 1;
+      const foreignTotal = newItems.reduce((s: number, i: { quantity: number; unit_price: number }) => s + i.quantity * i.unit_price, 0);
+      const krwTotal = Math.round(foreignTotal * rate);
+      updates.total_amount = krwTotal;
+      updates.balance_amount = krwTotal - (current.deposit_amount || 0);
     }
 
     if (Object.keys(updates).length === 0) {

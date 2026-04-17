@@ -59,7 +59,10 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
 
   const { order: po, items } = data;
   const poVatType = ((po as Record<string, unknown>).vat_type as string) || 'included';
+  const poCurrency = ((po as Record<string, unknown>).currency as string) || 'KRW';
+  const poRate = ((po as Record<string, unknown>).exchange_rate as number) || 1;
   const { supply, vat } = calcVAT(po.total_amount, poVatType as 'included' | 'separate' | 'none');
+  const CURRENCY_SYMBOL: Record<string, string> = { KRW: '₩', USD: '$', CNY: '¥' };
 
   async function handleAction(status: string, extra?: Record<string, unknown>) {
     await updatePO.mutateAsync({ id: purchaseId, status, ...extra });
@@ -71,7 +74,10 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-indigo-black">{po.po_number}</h3>
-          <p className="text-xs text-neutral-500 mt-0.5">{po.supplier_name} · {formatDate(po.order_date)}</p>
+          <p className="text-xs text-neutral-500 mt-0.5">
+            {po.supplier_name} · {formatDate(po.order_date)}
+            {poCurrency !== 'KRW' && <span className="ml-1 text-neutral-400">({poCurrency} 환율 {poRate})</span>}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {po.status !== 'draft' && po.status !== 'cancelled' && (

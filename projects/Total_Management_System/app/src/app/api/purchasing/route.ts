@@ -56,13 +56,15 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { supplier_id, supplier_name, order_date, expected_date, memo, vat_type, items } = body as {
+    const { supplier_id, supplier_name, order_date, expected_date, memo, vat_type, currency, exchange_rate, items } = body as {
       supplier_id?: string;
       supplier_name: string;
       order_date?: string;
       expected_date?: string;
       memo?: string;
       vat_type?: 'included' | 'separate' | 'none';
+      currency?: string;
+      exchange_rate?: number;
       items: Array<{
         product_id?: string;
         product_name: string;
@@ -92,18 +94,27 @@ export async function POST(req: NextRequest) {
     const seq = String((count || 0) + 1).padStart(3, '0');
     const poNumber = `PO-${dateStr}-${seq}`;
 
-    // 합계 계산 — 부가세 유형별
+    // 합계 계산 — 외화 환산 + 부가세
     const vatTypeVal = vat_type || 'included';
-    const totalAmount = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+    const currencyVal = currency || 'KRW';
+    const rateVal = (currencyVal !== 'KRW' && exchange_rate && exchange_rate > 0) ? exchange_rate : 1;
+
+    // 외화 합계 (items의 unit_price는 외화 단가)
+    const foreignTotal = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+    // KRW 환산 합계
+    const krwTotal = Math.round(foreignTotal * rateVal);
+
     const { supply: supplyAmount, vat: vatAmount, payment } = (() => {
       if (vatTypeVal === 'separate') {
-        const vat = Math.round(totalAmount * 0.1);
-        return { supply: totalAmount, vat, payment: totalAmount + vat };
+        const vat = Math.round(krwTotal * 0.1);
+        return { supply: krwTotal, vat, payment: krwTotal + vat };
       }
-      if (vatTypeVal === 'none') return { supply: totalAmount, vat: 0, payment: totalAmount };
-      const supply = Math.round(totalAmount / 1.1);
-      return { supply, vat: totalAmount - supply, payment: totalAmount };
+      if (vatTypeVal === 'none') return { supply: krwTotal, vat: 0, payment: krwTotal };
+      const supply = Math.round(krwTotal / 1.1);
+      return { supply, vat: krwTotal - supply, payment: krwTotal };
     })();
+
+    const storedTotal = vatTypeVal === 'separate' ? payment : krwTotal;
 
     const { data: order, error: poError } = await db
       .from('purchase_orders')
@@ -113,12 +124,14 @@ export async function POST(req: NextRequest) {
         supplier_name: supplier_name.trim(),
         order_date: poDate,
         expected_date: expected_date || null,
-        total_amount: vatTypeVal === 'separate' ? payment : totalAmount,
-        balance_amount: vatTypeVal === 'separate' ? payment : totalAmount,
+        total_amount: storedTotal,
+        balance_amount: storedTotal,
         is_vat_included: vatTypeVal === 'included',
         vat_type: vatTypeVal,
         supply_amount: supplyAmount,
         vat_amount: vatAmount,
+        currency: currencyVal,
+        exchange_rate: rateVal,
         memo: memo || null,
         created_by: user.id,
       })

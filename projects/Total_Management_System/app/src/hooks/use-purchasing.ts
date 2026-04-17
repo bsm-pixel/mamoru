@@ -58,6 +58,8 @@ export function useCreatePurchaseOrder() {
       expected_date?: string;
       memo?: string;
       vat_type?: 'included' | 'separate' | 'none';
+      currency?: string;
+      exchange_rate?: number;
       items: Array<{
         product_id?: string;
         product_name: string;

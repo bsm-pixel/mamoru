@@ -60,6 +60,10 @@ export function POPrintModal({ purchaseId, onClose }: Props) {
 
   const { order: po, items } = data;
   const vatType = ((po as Record<string, unknown>).vat_type as string) || 'included';
+  const poCurrency = ((po as Record<string, unknown>).currency as string) || 'KRW';
+  const poRate = ((po as Record<string, unknown>).exchange_rate as number) || 1;
+  const isForeign = poCurrency !== 'KRW';
+  const CURRENCY_SYMBOL: Record<string, string> = { KRW: '₩', USD: '$', CNY: '¥' };
 
   // 카탈로그에서 product_id → features 매핑
   const featuresMap = new Map<string, string>();
@@ -122,6 +126,7 @@ export function POPrintModal({ purchaseId, onClose }: Props) {
                 <div style={{ fontSize: '11px', lineHeight: '1.8' }}>
                   <div><span style={{ color: '#888', display: 'inline-block', width: '50px' }}>발주일</span> {po.order_date}</div>
                   <div><span style={{ color: '#888', display: 'inline-block', width: '50px' }}>부가세</span> {vatType === 'included' ? '포함' : vatType === 'separate' ? '별도' : '미적용'}</div>
+                  {isForeign && <div><span style={{ color: '#888', display: 'inline-block', width: '50px' }}>환율</span> 1 {poCurrency} = ₩{poRate.toLocaleString()}</div>}
                 </div>
               </div>
             </div>
@@ -143,9 +148,15 @@ export function POPrintModal({ purchaseId, onClose }: Props) {
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'center', fontSize: '11px' }}>{idx + 1}</td>
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', fontSize: '11px' }}>{item.product_name}</td>
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', fontSize: '10px', color: '#666' }}>{item.product_id ? featuresMap.get(item.product_id) || '' : ''}</td>
-                    <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'right', fontSize: '11px' }}>{formatKRW(item.unit_price)}</td>
+                    <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'right', fontSize: '11px' }}>
+                      {isForeign && <span style={{ color: '#999', fontSize: '10px' }}>{CURRENCY_SYMBOL[poCurrency]}{item.unit_price.toLocaleString()} </span>}
+                      {formatKRW(Math.round(item.unit_price * poRate))}
+                    </td>
                     <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'center', fontSize: '11px' }}>{item.quantity}</td>
-                    <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'right', fontSize: '11px' }}>{formatKRW(item.total_price)}</td>
+                    <td style={{ padding: '5px 8px', border: '1px solid #eee', textAlign: 'right', fontSize: '11px' }}>
+                      {isForeign && <span style={{ color: '#999', fontSize: '10px' }}>{CURRENCY_SYMBOL[poCurrency]}{item.total_price.toLocaleString()} </span>}
+                      {formatKRW(Math.round(item.total_price * poRate))}
+                    </td>
                   </tr>
                 ))}
               </tbody>
