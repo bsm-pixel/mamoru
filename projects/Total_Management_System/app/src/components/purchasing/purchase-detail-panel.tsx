@@ -61,6 +61,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
   const poVatType = ((po as Record<string, unknown>).vat_type as string) || 'included';
   const poCurrency = ((po as Record<string, unknown>).currency as string) || 'KRW';
   const poRate = ((po as Record<string, unknown>).exchange_rate as number) || 1;
+  const isForeign = poCurrency !== 'KRW';
   const { supply, vat } = calcVAT(po.total_amount, poVatType as 'included' | 'separate' | 'none');
   const CURRENCY_SYMBOL: Record<string, string> = { KRW: '₩', USD: '$', CNY: '¥' };
 
@@ -237,10 +238,16 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
               <div>
                 <p className="text-sm font-medium">{item.product_name}</p>
                 <p className="text-xs text-neutral-500">
-                  {item.sku && `${item.sku} · `}{formatKRW(item.unit_price)} x {item.quantity}
+                  {item.sku && `${item.sku} · `}
+                  {isForeign ? `${CURRENCY_SYMBOL[poCurrency]}${item.unit_price.toLocaleString()}` : formatKRW(item.unit_price)} x {item.quantity}
                 </p>
               </div>
-              <span className="text-sm font-bold">{formatKRW(item.total_price)}</span>
+              <div className="text-right shrink-0">
+                {isForeign && (
+                  <span className="text-[10px] text-neutral-400 mr-1">{CURRENCY_SYMBOL[poCurrency]}{item.total_price.toLocaleString()}</span>
+                )}
+                <span className="text-sm font-bold">{formatKRW(Math.round(item.total_price * poRate))}</span>
+              </div>
             </div>
           ))}
         </div>
