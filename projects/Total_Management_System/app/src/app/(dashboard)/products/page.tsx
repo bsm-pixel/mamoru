@@ -242,6 +242,7 @@ export default function ProductsPage() {
                   columns={3}
                   selectedId={selectedId}
                   showCategory={category === 'all'}
+                  groupOnly={category === 'all'}
                   onSelect={(id) => { setSelectedId(id); setPanelMode('view'); }}
                 />
               )}
@@ -320,6 +321,7 @@ export default function ProductsPage() {
                 columns={2}
                 selectedId={selectedId}
                 showCategory={category === 'all'}
+                groupOnly={category === 'all'}
                 onSelect={(id) => setSelectedId(id)}
               />
             )}
@@ -394,35 +396,30 @@ function CompactProductCard({ product: p, isSelected, showCategory, onSelect }: 
 
 // ── 제품군 그룹핑 그리드 ──
 
-function ProductGroupedGrid({ products, columns, selectedId, showCategory, onSelect }: {
+function ProductGroupedGrid({ products, columns, selectedId, showCategory, groupOnly, onSelect }: {
   products: Product[];
   columns: number;
   selectedId: string | null;
   showCategory: boolean;
+  groupOnly?: boolean;
   onSelect: (id: string) => void;
 }) {
   const CATEGORY_LABEL = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
   const gridCls = columns === 3 ? 'grid-cols-3' : 'grid-cols-2';
 
-  // 대분류(제품군) → 중분류(카테고리) 2단 그룹핑
-  const majorGroups: { group: string; subs: { cat: string; items: Product[] }[] }[] = [];
+  // 대분류(제품군)별 그룹핑
+  const majorGroups: { group: string; items: Product[] }[] = [];
   let curGroup = '';
-  let curCat = '';
 
   for (const p of products) {
     const g = p.product_group || '';
-    const c = p.category || '';
-
     if (g !== curGroup) {
-      majorGroups.push({ group: g, subs: [{ cat: c, items: [p] }] });
+      majorGroups.push({ group: g, items: [p] });
       curGroup = g;
-      curCat = c;
-    } else if (c !== curCat) {
-      majorGroups[majorGroups.length - 1].subs.push({ cat: c, items: [p] });
-      curCat = c;
+    } else if (majorGroups.length > 0) {
+      majorGroups[majorGroups.length - 1].items.push(p);
     } else {
-      const lastMajor = majorGroups[majorGroups.length - 1];
-      lastMajor.subs[lastMajor.subs.length - 1].items.push(p);
+      majorGroups.push({ group: '', items: [p] });
     }
   }
 
@@ -438,45 +435,69 @@ function ProductGroupedGrid({ products, columns, selectedId, showCategory, onSel
     );
   }
 
+  // groupOnly: 대분류 헤더만, 중분류 구분 없이 플랫
+  // !groupOnly: 대분류 + 중분류 2단 (카테고리 선택 시)
   return (
     <div className="space-y-4">
-      {majorGroups.map((mg, gi) => (
-        <div key={gi}>
-          {/* 대분류 헤더 (제품군) */}
-          {mg.group ? (
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-bold text-neutral-800">{mg.group}</span>
-              <div className="flex-1 h-px bg-neutral-300" />
-              <span className="text-xs text-neutral-400">
-                {mg.subs.reduce((s, sub) => s + sub.items.length, 0)}
-              </span>
-            </div>
-          ) : gi > 0 ? (
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm text-neutral-400">기타</span>
-              <div className="flex-1 h-px bg-neutral-200" />
-            </div>
-          ) : null}
+      {majorGroups.map((mg, gi) => {
+        // 중분류 분리 (groupOnly가 아닐 때만)
+        const subs: { cat: string; items: Product[] }[] = [];
+        if (!groupOnly) {
+          let subCat = '';
+          for (const p of mg.items) {
+            const c = p.category || '';
+            if (c !== subCat) {
+              subs.push({ cat: c, items: [p] });
+              subCat = c;
+            } else if (subs.length > 0) {
+              subs[subs.length - 1].items.push(p);
+            }
+          }
+        }
 
-          {/* 중분류(카테고리)별 — 같은 대분류 안에서 카테고리가 여러 개일 때만 라벨 표시 */}
-          <div className="space-y-2">
-            {mg.subs.map((sub, si) => (
-              <div key={si}>
-                {mg.subs.length > 1 && (
-                  <p className="text-[11px] text-neutral-400 mb-1 ml-0.5">
-                    {CATEGORY_LABEL[sub.cat] || sub.cat}
-                  </p>
-                )}
-                <div className={`grid gap-2 ${gridCls}`}>
-                  {sub.items.map((p) => (
-                    <CompactProductCard key={p.id} product={p} isSelected={selectedId === p.id} showCategory={showCategory && mg.subs.length <= 1} onSelect={() => onSelect(p.id)} />
-                  ))}
-                </div>
+        return (
+          <div key={gi}>
+            {/* 대분류 헤더 (제품군) */}
+            {mg.group ? (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-bold text-neutral-800">{mg.group}</span>
+                <div className="flex-1 h-px bg-neutral-300" />
+                <span className="text-xs text-neutral-400">{mg.items.length}</span>
               </div>
-            ))}
+            ) : gi > 0 ? (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm text-neutral-400">기타</span>
+                <div className="flex-1 h-px bg-neutral-200" />
+              </div>
+            ) : null}
+
+            {groupOnly || subs.length <= 1 ? (
+              /* 플랫 그리드 (전체 탭 or 카테고리 1종) */
+              <div className={`grid gap-2 ${gridCls}`}>
+                {mg.items.map((p) => (
+                  <CompactProductCard key={p.id} product={p} isSelected={selectedId === p.id} showCategory={showCategory} onSelect={() => onSelect(p.id)} />
+                ))}
+              </div>
+            ) : (
+              /* 중분류 2단 (카테고리 여러 개) */
+              <div className="space-y-2">
+                {subs.map((sub, si) => (
+                  <div key={si}>
+                    <p className="text-[11px] text-neutral-400 mb-1 ml-0.5">
+                      {CATEGORY_LABEL[sub.cat] || sub.cat}
+                    </p>
+                    <div className={`grid gap-2 ${gridCls}`}>
+                      {sub.items.map((p) => (
+                        <CompactProductCard key={p.id} product={p} isSelected={selectedId === p.id} showCategory={false} onSelect={() => onSelect(p.id)} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
