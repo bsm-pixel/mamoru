@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
-import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, MessageSquare } from 'lucide-react';
+import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, MessageSquare, Copy } from 'lucide-react';
 import { PrepSheetModal } from './prep-sheet-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { ReviewRequestModal } from './review-request-modal';
@@ -969,6 +969,39 @@ function ReceiptModal({ sale, items, customerType, onClose }: {
     }
   };
 
+  const handleCopyImage = async () => {
+    const el = receiptRef.current;
+    if (!el) return;
+    setSaving(true);
+    try {
+      const inputs = el.querySelectorAll('input');
+      const originals: { input: HTMLInputElement; parent: Node; next: Node | null }[] = [];
+      inputs.forEach((input) => {
+        const span = document.createElement('span');
+        span.textContent = input.value;
+        span.style.fontSize = '13px';
+        originals.push({ input, parent: input.parentNode!, next: input.nextSibling });
+        input.replaceWith(span);
+      });
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff' });
+      originals.forEach(({ input, parent, next }) => {
+        const span = next ? (next as Element).previousSibling : parent.lastChild;
+        if (span) parent.replaceChild(input, span);
+      });
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        toast.success('이미지가 클립보드에 복사되었습니다');
+      }, 'image/png');
+    } catch (e) {
+      console.error('이미지 복사 실패:', e);
+      toast.error('이미지 복사 실패');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div
@@ -981,12 +1014,20 @@ function ReceiptModal({ sale, items, customerType, onClose }: {
           <h3 className="text-sm font-bold text-neutral-800">거래명세서</h3>
           <div className="flex items-center gap-2">
             <button
+              onClick={handleCopyImage}
+              disabled={saving}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-neutral-100 text-xs text-neutral-700 hover:bg-neutral-200 transition disabled:opacity-50"
+            >
+              <Copy size={12} />
+              이미지 복사
+            </button>
+            <button
               onClick={handleSaveImage}
               disabled={saving}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-neutral-100 text-xs text-neutral-700 hover:bg-neutral-200 transition disabled:opacity-50"
             >
               <Download size={12} />
-              {saving ? '저장 중...' : '이미지 저장'}
+              이미지 저장
             </button>
             <button
               onClick={handlePrint}

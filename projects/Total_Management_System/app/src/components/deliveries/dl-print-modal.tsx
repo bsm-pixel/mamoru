@@ -1,7 +1,8 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Printer } from 'lucide-react';
+import { Printer, Copy } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useDelivery } from '@/hooks/use-deliveries';
 import { useProducts } from '@/hooks/use-sales';
 import { usePriceGroups } from '@/hooks/use-price-groups';
@@ -61,6 +62,40 @@ export function DLPrintModal({ deliveryId, onClose }: Props) {
     `);
     printWindow.document.close();
     printWindow.print();
+  };
+
+  const [copying, setCopying] = useState(false);
+
+  const handleCopyImage = async () => {
+    const el = printRef.current;
+    if (!el) return;
+    setCopying(true);
+    try {
+      const clone = el.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll('input').forEach((input) => {
+        const span = document.createElement('span');
+        span.textContent = input.value;
+        input.replaceWith(span);
+      });
+      // 임시 컨테이너로 캡처
+      const temp = document.createElement('div');
+      temp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;background:#fff;padding:20px;';
+      temp.innerHTML = clone.innerHTML;
+      document.body.appendChild(temp);
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(temp, { scale: 2, backgroundColor: '#ffffff' });
+      document.body.removeChild(temp);
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        toast.success('이미지가 클립보드에 복사되었습니다');
+      }, 'image/png');
+    } catch (e) {
+      console.error('이미지 복사 실패:', e);
+      toast.error('이미지 복사 실패');
+    } finally {
+      setCopying(false);
+    }
   };
 
   if (isLoading || !data) {
@@ -126,6 +161,10 @@ export function DLPrintModal({ deliveryId, onClose }: Props) {
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800">납품서 미리보기</h3>
           <div className="flex items-center gap-2">
+            <button onClick={handleCopyImage} disabled={copying}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-neutral-100 text-xs text-neutral-700 hover:bg-neutral-200 transition disabled:opacity-50">
+              <Copy size={12} />{copying ? '복사 중...' : '이미지 복사'}
+            </button>
             <button onClick={handlePrint}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-neutral-900 text-xs text-white hover:bg-neutral-800 transition">
               <Printer size={12} />인쇄
