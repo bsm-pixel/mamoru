@@ -10,6 +10,7 @@
 |------|------|
 | [naver_review_extract.js](naver_review_extract.js) | 네이버 스마트플레이스 리뷰 일괄 추출 |
 | [릴스_광고_마케팅.md](릴스_광고_마케팅.md) | 인스타 릴스 댓글 자동 DM 마케팅 가이드 |
+| [릴스_ManyChat_세팅가이드.md](릴스_ManyChat_세팅가이드.md) | ManyChat 실전 세팅 단계별 매뉴얼 |
 
 ---
 
