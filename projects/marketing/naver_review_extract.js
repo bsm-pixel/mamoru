@@ -195,17 +195,29 @@
       .sort((a,b) => b.txt.length - a.txt.length);
     if (textNodes.length > 0) content = textNodes[0].txt;
 
-    // 태그 칩 (품질이 좋아요, A/S가 세심해요 등)
-    // 특징: 짧고, emoji로 시작하거나 카드 내 여러 개가 연속
+    // 태그 칩 (품질이 좋아요, A/S가 세심해요 등) — 이모지 포함 추출
     const tags = [];
-    el.querySelectorAll('span, li, div').forEach(n => {
-      if (n.querySelector('*')) return; // 리프 요소만
+    // 이모지 유니코드 범위 (Emoticons, Symbols, Misc Symbols, Dingbats 등)
+    const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F02F}]/u;
+    el.querySelectorAll('*').forEach(n => {
+      if (n.children.length > 0) return; // leaf만
       const t = (n.textContent || '').trim();
-      if (t.length >= 3 && t.length <= 30 &&
-          /요$|해요$|있어요$|있어요$|세심해요|자세해요/.test(t) &&
-          !tags.includes(t)) {
-        tags.push(t);
+      if (t.length < 3 || t.length > 30) return;
+      if (!/요$|해요$|세심해요|자세해요|있어요$/.test(t)) return;
+      // 이모지는 부모 텍스트/img alt에서 찾기
+      let emoji = '';
+      const parent = n.parentElement;
+      if (parent) {
+        const parentText = (parent.textContent || '').trim();
+        const m = parentText.match(new RegExp('(' + EMOJI_RE.source + ')', 'u'));
+        if (m) emoji = m[1];
+        if (!emoji) {
+          const emojiImg = parent.querySelector('img[alt]');
+          if (emojiImg && EMOJI_RE.test(emojiImg.alt)) emoji = emojiImg.alt;
+        }
       }
+      const fullTag = emoji ? `${emoji} ${t}` : t;
+      if (!tags.includes(fullTag)) tags.push(fullTag);
     });
 
     // 사진 URL
@@ -287,8 +299,46 @@
 
   console.log(`📥 파일 다운로드 시작 (총 ${totalFiles}개)`);
 
+  // 리뷰 메타데이터를 각 폴더의 review.md로 저장
+  function buildReviewMd(r) {
+    const lines = [];
+    lines.push(`# ${r.reviewer || '(이름없음)'} 고객 리뷰`);
+    lines.push('');
+    lines.push('## 메타데이터');
+    lines.push(`- **작성일**: ${r.write_date || '-'}`);
+    lines.push(`- **방문일**: ${r.visit_date || '-'}${r.visit_time ? ' ' + r.visit_time : ''}`);
+    if (r.status) lines.push(`- **상태**: ${r.status}`);
+    if (r.business) lines.push(`- **업체**: ${r.business}`);
+    if (r.service) lines.push(`- **서비스**: ${r.service}`);
+    lines.push(`- **출처**: 네이버 스마트플레이스`);
+    lines.push('');
+    if (r.tags.length > 0) {
+      lines.push('## 키워드');
+      r.tags.forEach(t => lines.push(`- ${t}`));
+      lines.push('');
+    }
+    lines.push('## 리뷰 본문');
+    lines.push('');
+    lines.push(r.content || '(본문 없음)');
+    lines.push('');
+    if (r.photos.length > 0) {
+      lines.push('## 사진');
+      r.photos.forEach((_, i) => lines.push(`- photo_${String(i+1).padStart(2,'0')}.jpg`));
+      lines.push('');
+    }
+    if (r.videos.length > 0) {
+      lines.push('## 영상');
+      r.videos.forEach((_, i) => lines.push(`- video_${String(i+1).padStart(2,'0')}.mp4`));
+      lines.push('');
+    }
+    return lines.join('\r\n');
+  }
+
   for (const r of reviews) {
     const folder = zip.folder(r.folder);
+
+    // review.md 저장 (본문+태그+메타데이터)
+    folder.file('review.md', buildReviewMd(r));
 
     // 사진
     for (let pi = 0; pi < r.photos.length; pi++) {
@@ -403,7 +453,10 @@
       '   _failed.json            — 다운로드 실패 상세 (디버그용)\r\n' +
       '   urls.tsv                — 다운로드할 경로+URL 목록 (탭 구분)\r\n' +
       '   download_images.ps1     — PowerShell 다운로드 스크립트\r\n' +
-      '   001_날짜_이름/          — 고객별 폴더 (실행 후 이미지 들어감)\r\n'
+      '   001_날짜_이름/          — 고객별 폴더\r\n' +
+      '     ├─ review.md          — 본문+태그+메타데이터 (마크다운)\r\n' +
+      '     ├─ photo_01.jpg       — 사진 (PS1 실행 후 들어감)\r\n' +
+      '     └─ photo_02.jpg\r\n'
     );
   }
 
