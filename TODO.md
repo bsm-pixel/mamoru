@@ -15,7 +15,7 @@
 ### 추출 실행
 4. **F12** 키 누르기 (개발자도구 열림)
 5. **Console** 탭 클릭
-6. `c:\tmp\naver_review_extract.js` 파일 내용을 **전체 복사** (VS Code에서 Ctrl+A → Ctrl+C)
+6. `projects/Total_Management_System/scripts/naver_review_extract.js` 파일 내용을 **전체 복사** (VS Code에서 Ctrl+A → Ctrl+C)
 7. Console 입력창에 **붙여넣기** (Ctrl+V) → **Enter**
 8. 자동으로 `naver_reviews.json` + 이미지 파일들이 다운로드됨
 
