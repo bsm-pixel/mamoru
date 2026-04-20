@@ -59,6 +59,19 @@ export async function POST(req: NextRequest) {
 
         const reviewId = await generateReviewId(dbAny, r.created_at);
 
+        // purchase 타입: 제품명으로 product_group 자동 조회
+        let productGroup: string | null = null;
+        if (r.type === 'purchase' && r.product) {
+          const { data: prod } = await dbAny
+            .from('products')
+            .select('product_group')
+            .eq('name', r.product)
+            .single();
+          productGroup = prod?.product_group || null;
+        }
+
+        const receivedAt = r.received_at || r.created_at || '';
+
         const { error } = await dbAny.from('reviews').insert({
           review_id: reviewId,
           type: r.type,
@@ -70,6 +83,7 @@ export async function POST(req: NextRequest) {
           photo_urls: Array.isArray(r.photo_urls) ? r.photo_urls : [],
           source_id: `naver-${Date.now()}-${i}`,
           product: r.product || null,
+          product_group: productGroup,
           status: 'approved', // 네이버 리뷰는 이미 검증됨 → 바로 승인
           approved_at: new Date().toISOString(),
           source: 'naver',
@@ -78,6 +92,7 @@ export async function POST(req: NextRequest) {
             ...(r.meta || {}),
             naver_date: r.created_at || '',
             imported_at: new Date().toISOString(),
+            ...(receivedAt ? { received_at: receivedAt } : {}),
           },
           created_at: r.created_at || new Date().toISOString(),
         });
@@ -109,5 +124,6 @@ interface NaverReviewInput {
   product?: string;
   is_best?: boolean;
   created_at?: string;
+  received_at?: string; // 상담일/접수일/구매일 (page_reviews 하단 날짜로 표시)
   meta?: Record<string, string>;
 }

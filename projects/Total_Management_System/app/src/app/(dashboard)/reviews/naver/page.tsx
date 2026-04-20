@@ -16,6 +16,7 @@ interface NaverReview {
   product: string;
   is_best: boolean;
   created_at: string;
+  received_at: string; // 상담일/접수일/구매일
 }
 
 const EMPTY_REVIEW: NaverReview = {
@@ -28,6 +29,7 @@ const EMPTY_REVIEW: NaverReview = {
   product: '',
   is_best: false,
   created_at: '',
+  received_at: '',
 };
 
 const TYPE_OPTIONS: { value: ReviewType; label: string }[] = [
@@ -122,7 +124,7 @@ export default function NaverReviewPage() {
           return;
         }
 
-        // 헤더: type,name,stars,content,created_at,product,subtype,is_best
+        // 헤더: type,name,stars,content,created_at,received_at,product,subtype,is_best
         const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
         const reviews: NaverReview[] = [];
 
@@ -137,6 +139,7 @@ export default function NaverReviewPage() {
             stars: Math.min(5, Math.max(1, parseInt(row.stars) || 5)),
             content: row.content || '',
             created_at: row.created_at || '',
+            received_at: row.received_at || '',
             product: row.product || '',
             subtype: row.subtype || '',
             is_best: row.is_best === 'true' || row.is_best === '1',
@@ -316,10 +319,10 @@ export default function NaverReviewPage() {
               </div>
             </div>
 
-            {/* 작성일 + 제품명 */}
+            {/* 작성일 + 상담일/접수일/구매일 */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-neutral-500 mb-1.5">작성일</label>
+                <label className="block text-xs font-medium text-neutral-500 mb-1.5">리뷰 작성일</label>
                 <input
                   type="date"
                   value={review.created_at}
@@ -328,15 +331,28 @@ export default function NaverReviewPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-neutral-500 mb-1.5">제품명 (선택)</label>
+                <label className="block text-xs font-medium text-neutral-500 mb-1.5">
+                  {review.type === 'repair' ? '접수일' : review.type === 'purchase' ? '구매일' : '상담일'}
+                </label>
                 <input
-                  type="text"
-                  value={review.product}
-                  onChange={e => setReview(prev => ({ ...prev, product: e.target.value }))}
-                  placeholder="구매한 제품명"
+                  type="date"
+                  value={review.received_at}
+                  onChange={e => setReview(prev => ({ ...prev, received_at: e.target.value }))}
                   className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-neutral-400"
                 />
               </div>
+            </div>
+
+            {/* 제품명 */}
+            <div>
+              <label className="block text-xs font-medium text-neutral-500 mb-1.5">제품명 (선택)</label>
+              <input
+                type="text"
+                value={review.product}
+                onChange={e => setReview(prev => ({ ...prev, product: e.target.value }))}
+                placeholder={review.type === 'purchase' ? '구매한 제품명 (예: MAMORU M7)' : '관련 제품명'}
+                className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-neutral-400"
+              />
             </div>
 
             {/* 내용 */}
