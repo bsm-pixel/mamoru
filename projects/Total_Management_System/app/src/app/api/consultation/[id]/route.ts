@@ -13,7 +13,9 @@ function getAutoNotifyTemplate(
     return consultationType === 'field_request' ? 'field_confirmed' : 'confirmed';
   }
   if (newStatus === 'cancelled') {
-    return consultationType === 'field_request' ? 'field_cancelled' : 'cancelled';
+    if (consultationType === 'field_request') return 'field_cancelled';
+    if (consultationType === 'talk_consult') return null; // 톡상담은 카톡으로 이미 커뮤니케이션 중 → 알림톡 불필요
+    return 'cancelled';
   }
   if (newStatus === 'completed') {
     return 'review_request'; // 상담완료 → 리뷰 요청 알림톡 (MAKE_WEBHOOK_URL)
