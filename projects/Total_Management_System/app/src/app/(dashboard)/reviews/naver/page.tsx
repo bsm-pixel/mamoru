@@ -108,6 +108,53 @@ export default function NaverReviewPage() {
     }
   };
 
+  /* ── review.md 파싱 (네이버 리뷰 추출 스크립트 출력물) ── */
+  const handleReviewMdUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const text = (evt.target?.result as string) || '';
+
+        // 작성자명: 첫 H1 "# 조*관 고객 리뷰"
+        const nameMatch = text.match(/^#\s+([^\n]+?)\s+고객\s*리뷰/m);
+        const name = nameMatch ? nameMatch[1].trim() : '';
+
+        // 메타데이터
+        const writeMatch = text.match(/작성일[:\s]+(\d{4}-\d{2}-\d{2})/);
+        const visitMatch = text.match(/방문일[:\s]+(\d{4}-\d{2}-\d{2})/);
+
+        // 본문: ## 리뷰 본문 섹션부터 다음 ## 전까지
+        const bodyMatch = text.match(/##\s*리뷰\s*본문\s*\n+([\s\S]+?)(?=\n##\s|$)/);
+        let content = bodyMatch ? bodyMatch[1].trim() : '';
+        // "수정" "삭제" 같은 네이버 UI 잔재 제거
+        content = content
+          .split('\n')
+          .filter(line => {
+            const t = line.trim();
+            return t && t !== '수정' && t !== '삭제' && !t.match(/^\d{4}\.\s*\d+\.\s*\d+\(\S+\)\s*(오전|오후)/);
+          })
+          .join('\n')
+          .trim();
+
+        setReview(prev => ({
+          ...prev,
+          name: name || prev.name,
+          created_at: writeMatch ? writeMatch[1] : prev.created_at,
+          received_at: visitMatch ? visitMatch[1] : prev.received_at,
+          content: content || prev.content,
+          stars: 5, // 네이버는 별점 없음 → 기본 5
+        }));
+        alert(`자동 입력 완료: ${name || '(작성자 미검출)'}\n타입과 사진은 직접 선택/업로드하세요.`);
+      } catch (err) {
+        alert('파일 파싱 실패: ' + String(err));
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+    e.target.value = ''; // 같은 파일 재선택 가능하게
+  };
+
   /* ── CSV 파싱 ── */
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -246,6 +293,23 @@ export default function NaverReviewPage() {
         {/* ━━━ 단건 등록 폼 ━━━ */}
         {mode === 'single' && (
           <div className="bg-white rounded-xl border border-neutral-100 p-5 space-y-4">
+            {/* review.md 불러오기 */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-100">
+              <div>
+                <p className="text-xs font-medium text-blue-900">📄 review.md 파일로 자동 입력</p>
+                <p className="text-[11px] text-blue-700 mt-0.5">네이버 리뷰 추출 스크립트가 만든 review.md 파일을 선택하면 내용이 자동 채워집니다</p>
+              </div>
+              <label className="shrink-0 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium cursor-pointer hover:bg-blue-700 transition">
+                파일 선택
+                <input
+                  type="file"
+                  accept=".md,text/markdown,text/plain"
+                  className="hidden"
+                  onChange={handleReviewMdUpload}
+                />
+              </label>
+            </div>
+
             {/* 유형 */}
             <div>
               <label className="block text-xs font-medium text-neutral-500 mb-1.5">리뷰 유형</label>
