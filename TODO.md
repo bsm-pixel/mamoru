@@ -33,6 +33,96 @@
 
 ---
 
+## 📌 Google Calendar 연동 (다음 작업 — 집에서 이어서)
+
+### 목표
+TMS 상담 확정 시 bsm@mamoru.kr Google Calendar에 자동 등록 → 모바일 기본 달력 위젯으로 확인
+
+### 범위
+- ✅ 매장방문 상담 확정 → 캘린더 등록
+- ✅ 출장 상담 확정 (고객이 시간 선택한 시점) → 캘린더 등록
+- ✅ 상담 시간 변경 → 캘린더 업데이트
+- ✅ 상담 취소/완료 → 캘린더 삭제
+- ❌ 복원수리는 제외
+
+### Phase 1: 사장님 수동 설정 (집에서 진행)
+
+#### A. Google Cloud Console 설정
+1. https://console.cloud.google.com 접속 (bsm@mamoru.kr 로그인)
+2. 프로젝트 생성 또는 기존 사용 (이름: "MAMORU TMS")
+3. 좌측 메뉴 → "API 및 서비스" → "라이브러리" → **"Google Calendar API"** 검색 → 사용 설정
+4. "API 및 서비스" → "사용자 인증 정보" → "사용자 인증 정보 만들기" → **"서비스 계정"**
+   - 이름: `mamoru-tms-calendar`
+   - 권한: 없음 (다음 단계에서 캘린더에 직접 권한 부여)
+5. 생성된 서비스 계정 클릭 → "키" 탭 → "키 추가" → **JSON 다운로드**
+   - 파일 예: `mamoru-tms-xxxxx.json`
+
+#### B. Google Calendar 공유
+1. https://calendar.google.com 접속
+2. 좌측 "내 캘린더" 아래 "+ 기타 캘린더" → "새 캘린더 만들기"
+   - 이름: `마모루 상담일정`
+   - 색상: 녹색 또는 원하는 색
+3. 방금 만든 캘린더 → 설정 → "특정 사용자 또는 그룹과 공유" → 추가
+   - 이메일: Service Account 이메일 (다운받은 JSON의 `client_email` 값)
+   - 권한: **"일정 변경 및 공유 설정 관리"**
+4. "캘린더 통합" 섹션 → **캘린더 ID** 복사 (예: `abc123@group.calendar.google.com`)
+
+#### C. Vercel 환경변수 추가
+Vercel 대시보드 → TMS 프로젝트 → Settings → Environment Variables:
+
+```
+GOOGLE_SERVICE_ACCOUNT_EMAIL=<JSON의 client_email>
+GOOGLE_PRIVATE_KEY=<JSON의 private_key 전체, \n 포함>
+GOOGLE_CALENDAR_ID=<위에서 복사한 캘린더 ID>
+```
+
+> ⚠️ GOOGLE_PRIVATE_KEY는 줄바꿈(`\n`)이 포함되어 있어서 복사할 때 주의.
+> JSON 파일 열어서 `"private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQ...\n-----END PRIVATE KEY-----\n"` 전체를 값으로 넣기.
+
+### Phase 2: 코드 구현 (Claude가 진행)
+
+**신규 파일:**
+- `app/src/lib/google/calendar-client.ts` — Calendar API 래퍼
+  - `createConsultationEvent(consultation)` — 일정 생성
+  - `updateConsultationEvent(eventId, consultation)` — 일정 업데이트
+  - `deleteConsultationEvent(eventId)` — 일정 삭제
+  - `googleapis` npm 패키지 사용
+
+**DB 마이그레이션:**
+- `consultations` 테이블에 `google_event_id` 컬럼 추가
+
+**트리거 위치:**
+- 매장방문 확정 — `/api/consultation/public/submit/route.ts` (즉시 confirmed로 등록되는 지점)
+- 출장 확정 — `/api/consultation/public/confirm/route.ts` (고객이 시간 선택)
+- 시간 변경 (관리자) — `/api/consultation/[id]/route.ts` (visit_date/visit_time 수정 시)
+- 취소/완료 — `/api/consultation/[id]/route.ts` (status 변경 시)
+
+### 이벤트 형식
+
+```
+제목: [매장] 홍길동 / [출장] 김철수
+시간: visit_date + visit_time (기본 1시간)
+설명:
+  📞 010-1234-5678
+  📝 (고객 메모)
+  🔗 TMS 링크: https://app-eta-sandy-75.vercel.app/consultations/[id]
+
+알림:
+  - 30분 전
+  - 하루 전 (오전 9시)
+```
+
+### 결과
+- bsm@mamoru.kr Google Calendar에 상담 일정 자동 등록
+- 폰 기본 달력 앱 위젯에 자동 표시
+- iOS/Android/PC 모두 동기화
+- Google Calendar 기본 리마인더 작동
+
+### 추가 패키지
+`cd projects/Total_Management_System/app && npm install googleapis`
+
+---
+
 ## ✅ 완료 — 04-20 작업
 
 ### 관리자 푸시 알림 확장 (3개 → 8개)
