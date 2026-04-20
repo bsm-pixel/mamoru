@@ -26,6 +26,8 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
   const [pushConsultation, setPushConsultation] = useState(true);
   const [pushFieldRequest, setPushFieldRequest] = useState(true);
   const [pushTalkReceived, setPushTalkReceived] = useState(true);
+  const [pushFieldConfirmed, setPushFieldConfirmed] = useState(true);
+  const [pushFieldReschedule, setPushFieldReschedule] = useState(true);
   const [pushRepairReceived, setPushRepairReceived] = useState(true);
   const [pushReviewSubmitted, setPushReviewSubmitted] = useState(true);
   const [pushOrderReceived, setPushOrderReceived] = useState(true);
@@ -44,6 +46,8 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     setPushConsultation(parse(settings['push.consultation_received'], true));
     setPushFieldRequest(parse(settings['push.field_request'], true));
     setPushTalkReceived(parse(settings['push.talk_received'], true));
+    setPushFieldConfirmed(parse(settings['push.field_confirmed'], true));
+    setPushFieldReschedule(parse(settings['push.field_reschedule'], true));
     setPushRepairReceived(parse(settings['push.repair_received'], true));
     setPushReviewSubmitted(parse(settings['push.review_submitted'], true));
     setPushOrderReceived(parse(settings['push.order_received'], true));
@@ -64,6 +68,8 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
       { key: 'push.consultation_received', value: pushConsultation },
       { key: 'push.field_request', value: pushFieldRequest },
       { key: 'push.talk_received', value: pushTalkReceived },
+      { key: 'push.field_confirmed', value: pushFieldConfirmed },
+      { key: 'push.field_reschedule', value: pushFieldReschedule },
       { key: 'push.repair_received', value: pushRepairReceived },
       { key: 'push.review_submitted', value: pushReviewSubmitted },
       { key: 'push.order_received', value: pushOrderReceived },
@@ -74,6 +80,8 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     { key: 'push_consultation', label: '상담 접수 (매장방문)', state: pushConsultation, setter: setPushConsultation },
     { key: 'push_field', label: '상담 접수 (출장)', state: pushFieldRequest, setter: setPushFieldRequest },
     { key: 'push_talk', label: '상담 접수 (톡상담)', state: pushTalkReceived, setter: setPushTalkReceived },
+    { key: 'push_field_confirmed', label: '출장 일정 확정 ✅ (고객 선택)', state: pushFieldConfirmed, setter: setPushFieldConfirmed },
+    { key: 'push_field_resched', label: '출장 일정 재요청 🔄 (고객 재요청)', state: pushFieldReschedule, setter: setPushFieldReschedule },
     { key: 'push_repair', label: '복원수리 접수', state: pushRepairReceived, setter: setPushRepairReceived },
     { key: 'push_review', label: '고객 리뷰 작성 ⭐', state: pushReviewSubmitted, setter: setPushReviewSubmitted },
     { key: 'push_order', label: '아임웹 주문 접수 📦', state: pushOrderReceived, setter: setPushOrderReceived },

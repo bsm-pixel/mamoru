@@ -74,6 +74,17 @@ export async function GET(req: NextRequest) {
       });
     } catch { /* 알림 실패해도 확정은 완료 */ }
 
+    // 관리자 푸시 (고객 확정)
+    import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
+      sendPushToAll({
+        title: '출장 일정 확정 ✅',
+        body: `${data.name}님이 ${date} ${time}로 확정했습니다`,
+        url: '/consultations',
+        tag: `mamoru-confirm-${data.id}`,
+        settingKey: 'push.field_confirmed',
+      }).catch(() => {});
+    }).catch(() => {});
+
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {
     return NextResponse.json({ ok: false, error: String(err) }, { status: 500, headers: CORS_HEADERS });

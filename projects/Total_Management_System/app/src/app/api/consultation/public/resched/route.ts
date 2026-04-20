@@ -66,6 +66,19 @@ export async function GET(req: NextRequest) {
       );
     } catch { /* 이메일 실패해도 재요청은 완료 */ }
 
+    // 관리자 푸시 (고객 재요청)
+    import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
+      sendPushToAll({
+        title: '출장 일정 재요청 🔄',
+        body: reason
+          ? `${data.name}님 재요청 — ${reason.slice(0, 50)}${reason.length > 50 ? '...' : ''}`
+          : `${data.name}님이 다른 시간을 요청했습니다`,
+        url: '/consultations',
+        tag: `mamoru-resched-${data.id}`,
+        settingKey: 'push.field_reschedule',
+      }).catch(() => {});
+    }).catch(() => {});
+
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {
     return NextResponse.json({ ok: false, error: String(err) }, { status: 500, headers: CORS_HEADERS });

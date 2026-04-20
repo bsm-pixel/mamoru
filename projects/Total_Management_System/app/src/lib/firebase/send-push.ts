@@ -37,6 +37,8 @@ const PUSH_DEFAULTS: Record<string, boolean> = {
   'push.consultation_received': true,
   'push.field_request': true,
   'push.talk_received': true,
+  'push.field_confirmed': true,
+  'push.field_reschedule': true,
   'push.repair_received': true,
   'push.review_submitted': true,
   'push.order_received': true,
