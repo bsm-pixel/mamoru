@@ -251,6 +251,18 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
+    // 관리자 푸시 알림 (비동기, 실패해도 무시)
+    import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
+      const typeLabel = type === 'repair' ? '복원수리' : type === 'consult' ? '상담' : '제품구매';
+      sendPushToAll({
+        title: `새 리뷰 도착 ⭐${stars}`,
+        body: `${name}님 ${typeLabel} 리뷰 — ${String(content).slice(0, 40)}${String(content).length > 40 ? '...' : ''}`,
+        url: '/reviews',
+        tag: 'mamoru-review',
+        settingKey: 'push.review_submitted',
+      }).catch(() => {});
+    }).catch(() => {});
+
     return NextResponse.json(
       { success: true, reviewId: data.review_id },
       { headers: CORS_HEADERS }

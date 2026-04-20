@@ -22,6 +22,13 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
   const [webhookConsultation, setWebhookConsultation] = useState('');
   const [webhookAsReceived, setWebhookAsReceived] = useState('');
   const [webhookRepair, setWebhookRepair] = useState('');
+  // 내 푸시 알림 (사장님이 받는 것)
+  const [pushConsultation, setPushConsultation] = useState(true);
+  const [pushFieldRequest, setPushFieldRequest] = useState(true);
+  const [pushTalkReceived, setPushTalkReceived] = useState(true);
+  const [pushRepairReceived, setPushRepairReceived] = useState(true);
+  const [pushReviewSubmitted, setPushReviewSubmitted] = useState(true);
+  const [pushOrderReceived, setPushOrderReceived] = useState(true);
 
   useEffect(() => {
     setMasterEnabled(parse(settings['notifications.master_enabled'], true));
@@ -34,6 +41,12 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     setWebhookConsultation(parse(settings['notifications.webhook_consultation'], ''));
     setWebhookAsReceived(parse(settings['notifications.webhook_as_received'], ''));
     setWebhookRepair(parse(settings['notifications.webhook_repair'], ''));
+    setPushConsultation(parse(settings['push.consultation_received'], true));
+    setPushFieldRequest(parse(settings['push.field_request'], true));
+    setPushTalkReceived(parse(settings['push.talk_received'], true));
+    setPushRepairReceived(parse(settings['push.repair_received'], true));
+    setPushReviewSubmitted(parse(settings['push.review_submitted'], true));
+    setPushOrderReceived(parse(settings['push.order_received'], true));
   }, [settings]);
 
   const handleSave = () => {
@@ -48,8 +61,23 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
       { key: 'notifications.webhook_consultation', value: webhookConsultation },
       { key: 'notifications.webhook_as_received', value: webhookAsReceived },
       { key: 'notifications.webhook_repair', value: webhookRepair },
+      { key: 'push.consultation_received', value: pushConsultation },
+      { key: 'push.field_request', value: pushFieldRequest },
+      { key: 'push.talk_received', value: pushTalkReceived },
+      { key: 'push.repair_received', value: pushRepairReceived },
+      { key: 'push.review_submitted', value: pushReviewSubmitted },
+      { key: 'push.order_received', value: pushOrderReceived },
     ]);
   };
+
+  const PUSH_ITEMS = [
+    { key: 'push_consultation', label: '상담 접수 (매장방문)', state: pushConsultation, setter: setPushConsultation },
+    { key: 'push_field', label: '상담 접수 (출장)', state: pushFieldRequest, setter: setPushFieldRequest },
+    { key: 'push_talk', label: '상담 접수 (톡상담)', state: pushTalkReceived, setter: setPushTalkReceived },
+    { key: 'push_repair', label: '복원수리 접수', state: pushRepairReceived, setter: setPushRepairReceived },
+    { key: 'push_review', label: '고객 리뷰 작성 ⭐', state: pushReviewSubmitted, setter: setPushReviewSubmitted },
+    { key: 'push_order', label: '아임웹 주문 접수 📦', state: pushOrderReceived, setter: setPushOrderReceived },
+  ];
 
   const NOTIF_ITEMS = [
     { key: 'consultation_received', label: '상담 접수 확인', state: consultationReceived, setter: setConsultationReceived },
@@ -63,6 +91,26 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-bold">알림·연동 설정</h2>
+
+      {/* ── 내 푸시 알림 (사장님이 받는 것) ── */}
+      <div className="rounded-lg border border-neutral-200 bg-warm-ivory p-4 space-y-3">
+        <div>
+          <h3 className="text-sm font-bold text-indigo-black">📱 내 푸시 알림</h3>
+          <p className="text-xs text-neutral-500 mt-0.5">고객 행동이 발생하면 사장님 디바이스로 푸시 알림을 보냅니다. (크롬/모바일 앱)</p>
+        </div>
+        <div className="space-y-2">
+          {PUSH_ITEMS.map((item) => (
+            <div key={item.key} className="flex items-center justify-between py-1">
+              <span className="text-sm">{item.label}</span>
+              <Toggle checked={item.state} onChange={item.setter} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="pt-4 border-t border-neutral-100">
+        <h3 className="text-sm font-bold text-neutral-700 mb-3">💬 고객 알림톡 발송</h3>
+      </div>
 
       {/* 1. 마스터 on/off */}
       <Field label="알림톡 전체 on/off" desc="끄면 모든 알림톡 발송이 즉시 중단됩니다. 점검/테스트 시 사용.">

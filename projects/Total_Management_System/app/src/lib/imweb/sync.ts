@@ -203,6 +203,25 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
 
   if (error) throw error;
 
+  // 신규 주문이면 관리자 푸시 (기존 주문 업데이트는 푸시 안 함)
+  const isNewOrder = !existing;
+  if (isNewOrder && imwebStatus !== 'cancelled') {
+    import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
+      const firstItem = prodOrders[0]?.items?.[0];
+      const itemCount = prodOrders.reduce((s, po) => s + po.items.length, 0);
+      const body = firstItem
+        ? `${imwebOrder.orderer?.name || '고객'}님 — ${firstItem.prod_name}${itemCount > 1 ? ` 외 ${itemCount - 1}건` : ''}`
+        : `${imwebOrder.orderer?.name || '고객'}님 주문`;
+      sendPushToAll({
+        title: '새 아임웹 주문 📦',
+        body,
+        url: '/orders',
+        tag: `mamoru-order-${imwebOrder.order_no}`,
+        settingKey: 'push.order_received',
+      }).catch(() => {});
+    }).catch(() => {});
+  }
+
   // 품목 동기화 — upsert로 트랜잭션 보호 (delete→insert 사이 에러 시 데이터 유실 방지)
   if (order && prodOrders.length > 0) {
     const items = prodOrders.flatMap((po) =>

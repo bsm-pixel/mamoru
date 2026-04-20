@@ -28,10 +28,45 @@ interface PushPayload {
   body: string;
   url?: string;
   tag?: string;
+  /** 설정 키 (system_settings의 push.* 키). 설정 OFF면 발송 안 함 */
+  settingKey?: string;
+}
+
+/** 푸시 이벤트 설정 키 → 기본값 매핑 (설정값이 없으면 이 값 사용) */
+const PUSH_DEFAULTS: Record<string, boolean> = {
+  'push.consultation_received': true,
+  'push.field_request': true,
+  'push.talk_received': true,
+  'push.repair_received': true,
+  'push.review_submitted': true,
+  'push.order_received': true,
+};
+
+async function isPushEnabled(settingKey?: string): Promise<boolean> {
+  if (!settingKey) return true;
+  try {
+    const { createServiceClient } = await import('@/lib/supabase/server');
+    const db = createServiceClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (db as any).from('system_settings').select('value').eq('key', settingKey).single();
+    if (!data) return PUSH_DEFAULTS[settingKey] ?? true;
+    const v = data.value;
+    if (v === 'false' || v === false) return false;
+    return true;
+  } catch {
+    return true; // DB 오류 시 발송 (안전)
+  }
 }
 
 /** 등록된 모든 디바이스에 FCM 푸시 발송 */
 export async function sendPushToAll(payload: PushPayload): Promise<{ sent: number; failed: number }> {
+  // 설정 기반 on/off 체크
+  const enabled = await isPushEnabled(payload.settingKey);
+  if (!enabled) {
+    console.log(`[FCM] SKIP ${payload.settingKey} — 설정에서 비활성`);
+    return { sent: 0, failed: 0 };
+  }
+
   const app = getApp();
   if (!app) return { sent: 0, failed: 0 };
 

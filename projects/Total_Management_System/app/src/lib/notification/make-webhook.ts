@@ -178,19 +178,21 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
   }
 
   // 관리자 푸시 알림 — 웹훅과 무관하게 독립 발송
-  const PUSH_TEMPLATES = new Set(['confirmed', 'as_received', 'field_request']);
-  if (PUSH_TEMPLATES.has(payload.template)) {
-    const pushTitle: Record<string, string> = {
-      confirmed: '새 상담 접수',
-      as_received: '새 복원수리 접수',
-      field_request: '새 출장 상담 접수',
-    };
+  const PUSH_CONFIG: Record<string, { title: string; body: string; url: string; settingKey: string }> = {
+    confirmed: { title: '새 상담 접수', body: `${payload.name}님 상담 접수`, url: '/consultations', settingKey: 'push.consultation_received' },
+    as_received: { title: '새 복원수리 접수', body: `${payload.name}님 복원수리 접수`, url: '/repairs', settingKey: 'push.repair_received' },
+    field_request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },
+    talk_received: { title: '새 톡상담 접수', body: `${payload.name}님 톡상담 접수`, url: '/consultations', settingKey: 'push.talk_received' },
+  };
+  const cfg = PUSH_CONFIG[payload.template];
+  if (cfg) {
     import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
       sendPushToAll({
-        title: pushTitle[payload.template] || 'MAMORU TMS',
-        body: `${payload.name}님 ${payload.template === 'as_received' ? '복원수리' : '상담'} 접수`,
-        url: payload.template === 'as_received' ? '/repairs' : '/consultations',
+        title: cfg.title,
+        body: cfg.body,
+        url: cfg.url,
         tag: `mamoru-${payload.template}`,
+        settingKey: cfg.settingKey,
       }).catch(() => {});
     }).catch(() => {});
   }
