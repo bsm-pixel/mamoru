@@ -116,8 +116,8 @@
 | Solapi | 카카오 알림톡 실제 발송 | 기존과 동일 |
 | Supabase | 모든 데이터 저장 (SSOT) | Sheet 동기화 불필요 |
 | Vercel Cron | 리마인더 24h/2h | GAS 트리거 대체 |
+| **Google Calendar** | **상담 확정/변경/취소 미러링** | 2026-04-21 재도입 (OAuth 2.0) |
 | ~~GAS~~ | ~~제거 완료~~ | 아카이브 보관 |
-| ~~Google Calendar~~ | ~~제거 완료~~ | TMS 달력으로 대체 |
 | ~~Google Sheets~~ | ~~제거 완료~~ | Supabase로 통합 |
 
 ---
@@ -183,3 +183,75 @@
 | Gmail 발송 nodemailer 구현 | 04-01 |
 | Vercel Pro 업그레이드 + Cron 10분 | 04-01 |
 | Google Calendar 제거 | 04-01 |
+
+---
+
+## 5. Google Calendar 연동 (2026-04-21 재도입)
+
+### 목적
+TMS 상담을 사장님의 `bsm@mamoru.kr` Google Calendar에 자동 미러링 → **모바일 기본 달력 위젯에서 일정 즉시 확인**.
+※ SSOT(진실의 원천)은 여전히 TMS DB. 캘린더는 "표시용" 거울.
+
+### 상태별 캘린더 액션 매트릭스
+| 상담 상태 | 캘린더 표시 | 이벤트 액션 | 제목 예시 |
+|----------|------------|------------|----------|
+| `pending_admin` / `assigned` | ❌ | — | — |
+| `suggested` | ❌ | — (고객 미확정) | — |
+| `confirmed` | ✅ 생성/업데이트 | CREATE or UPDATE | `[매장] 홍길동 · 010-xxxx` |
+| `reschedule_requested` / `change_requested` | ⚠️ 유지 | UPDATE (⏳ 노란색) | `[출장] ⏳ 김철수 · 강남구 · 010-xxxx` |
+| `on_hold` | ❌ | DELETE | — |
+| `completed` | ✅ 유지 | UPDATE (✅ 회색) | `[매장] ✅ 박민수 · 010-xxxx` |
+| `cancelled` | ❌ | DELETE | — |
+
+### 트리거 지점 (모두 Next.js `after()` 래퍼 안에서 실행 — Vercel 서버리스 보장)
+| 경로 | 트리거 | 동작 |
+|------|--------|------|
+| `POST /api/consultation/public/submit` | 매장방문 즉시 confirmed | CREATE |
+| `GET /api/consultation/public/confirm` | 출장 고객 시간 수락 | CREATE |
+| `GET /api/consultation/public/resched` | 고객 재요청 | UPDATE (⏳) |
+| `PATCH /api/consultation/[id]` | 관리자 상태/시간 변경 | CREATE/UPDATE/DELETE 자동 분기 |
+| `DELETE /api/consultation/[id]` | 관리자 삭제 | DELETE |
+
+### 이벤트 필드
+- **제목**: `[매장/출장] (⏳/✅)? 이름 · 지역(출장만) · 연락처`
+- **위치(Location)**: 매장 주소(매장방문) 또는 고객 주소(출장) — 탭 시 지도 앱 자동 실행
+- **시간**: visit_date + visit_time, 종료 = 시작 + 60분(기본) — KST
+- **색상**: 매장 파랑(1) / 출장 녹색(2) / 재요청 노랑(5) / 완료 회색(8)
+- **설명**: 상담종류·고객명·연락처·주소·메모·상담번호·접수일시·TMS 링크·tel: 링크
+- **알림**: 기본 OFF (알림톡·푸시 중복 방지)
+- **숨김 메타**: `mamoru_consultation_id` 등 extendedProperties.private
+
+### 파일 구조
+```
+app/src/lib/google/
+  ├ oauth.ts              # OAuth2 클라이언트 + 토큰 관리 (system_settings)
+  ├ calendar-client.ts    # events insert/patch/delete wrapper
+  ├ event-formatter.ts    # Consultation → Event 변환
+  └ calendar-sync.ts      # 상태별 분기 orchestrator
+
+app/src/app/api/google/calendar/
+  ├ auth/         # GET: OAuth 인가 URL
+  ├ callback/     # GET: code 교환 + 토큰 저장 + Workspace 자동 판별
+  ├ disconnect/   # POST: 토큰 삭제
+  ├ status/       # GET: 연결 상태 조회
+  └ resync/       # POST: 과거 60일~미래 180일 일괄 동기화
+
+app/src/components/settings/
+  └ google-calendar-settings.tsx  # 설정 UI (알림·연동 탭 최상단)
+```
+
+### 환경변수 (Vercel)
+```
+GOOGLE_CLIENT_ID          # OAuth 2.0 웹 클라이언트 ID
+GOOGLE_CLIENT_SECRET      # OAuth 2.0 클라이언트 시크릿 (Sensitive)
+GOOGLE_REDIRECT_URI       # https://app-eta-sandy-75.vercel.app/api/google/calendar/callback
+```
+
+### OAuth 스코프
+- `openid email profile` — id_token 발급 (연결 계정 email/hd 자동 판별)
+- `https://www.googleapis.com/auth/calendar.events` — 이벤트 CRUD
+
+### 주의사항
+- **재요청 시 매장방문 슬롯은 해제됨** (기존 로직 유지) — 캘린더는 이벤트 유지하되 제목에 ⏳ 표기
+- **캘린더에서 직접 수정 금지** — SSOT 위반 방지 (description에 경고 문구)
+- **refresh_token 6개월 무사용 시 자동 무효** → 설정 UI에 경고 배너 + 재연결 필요

@@ -1,6 +1,6 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-20 (푸시 알림 확장 + 네이버 리뷰 review.md 자동 입력 + 톡상담 취소 버그)
+> 최종 수정: 2026-04-21 (Google Calendar 연동 완료 + 복원수리 접수 pickup_date 누락 버그 + 푸시 알림 회수 로직)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
@@ -33,93 +33,36 @@
 
 ---
 
-## 📌 Google Calendar 연동 (다음 작업 — 집에서 이어서)
+---
 
-### 목표
-TMS 상담 확정 시 bsm@mamoru.kr Google Calendar에 자동 등록 → 모바일 기본 달력 위젯으로 확인
+## ✅ 완료 — 04-21 작업
 
-### 범위
-- ✅ 매장방문 상담 확정 → 캘린더 등록
-- ✅ 출장 상담 확정 (고객이 시간 선택한 시점) → 캘린더 등록
-- ✅ 상담 시간 변경 → 캘린더 업데이트
-- ✅ 상담 취소/완료 → 캘린더 삭제
-- ❌ 복원수리는 제외
+### Google Calendar 연동 (Phase 1 MVP)
+- [x] **OAuth 2.0 Authorization Code Flow** — Workspace/Gmail 자동 판별 (id_token hd 필드) ✅
+- [x] **상담 확정 자동 캘린더 등록** — 매장방문 즉시 / 출장 고객 시간 수락 ✅
+- [x] **관리자 수동 일정 변경 → 캘린더 자동 UPDATE** — 같은 이벤트 ID 유지 ✅
+- [x] **출장 확정건 "일정변경" 버튼 신설** — 매장방문과 동일 RescheduleModal 재사용 ✅
+- [x] **재요청 상태 → ⏳ 접두어 + 노란색 업데이트** (이벤트 유지) ✅
+- [x] **취소 / 보류 → 이벤트 삭제** ✅
+- [x] **완료 → ✅ 접두어 + 회색 업데이트** (이력 보존) ✅
+- [x] **suggested 상태는 캘린더 미표시** — 고객 미확정 후보 시간 제외 ✅
+- [x] **설정 UI** — 연결 상태·재동기화·해제 버튼 + Workspace 태그 ✅
+- [x] **Vercel `after()` 래퍼로 실시간 반영 보장** — 플로팅 Promise 문제 해결 ✅
+- [x] **openid/email/profile 스코프 추가** — 연결 계정 자동 표시 ✅
+- [x] **이벤트 색상 구분** — 매장 파랑 / 출장 녹색 / 재요청 노랑 / 완료 회색 ✅
+- [x] **이벤트 설명 풍부화** — 고객명·연락처·주소·메모·TMS 링크·tel: 링크 ✅
+- [x] **전체 재동기화 버튼** — 과거 60일 ~ 미래 180일 일괄 처리 ✅
 
-### Phase 1: 사장님 수동 설정 (집에서 진행)
+### 복원수리 접수 MAKE 웹훅 버그 수정
+- [x] **pickup_date 누락 버그 수정** — 방문수거 4종(문앞/카운터/직접전달) 모두 적용 ✅
+- [x] **수거예정일 포맷 한글화** — `YYYY년 MM월 DD일 (X요일)` ✅
+- [x] **TMS_FLOW_REPAIR.md 페이로드 필드표 업데이트** ✅
 
-#### A. Google Cloud Console 설정
-1. https://console.cloud.google.com 접속 (bsm@mamoru.kr 로그인)
-2. 프로젝트 생성 또는 기존 사용 (이름: "MAMORU TMS")
-3. 좌측 메뉴 → "API 및 서비스" → "라이브러리" → **"Google Calendar API"** 검색 → 사용 설정
-4. "API 및 서비스" → "사용자 인증 정보" → "사용자 인증 정보 만들기" → **"서비스 계정"**
-   - 이름: `mamoru-tms-calendar`
-   - 권한: 없음 (다음 단계에서 캘린더에 직접 권한 부여)
-5. 생성된 서비스 계정 클릭 → "키" 탭 → "키 추가" → **JSON 다운로드**
-   - 파일 예: `mamoru-tms-xxxxx.json`
-
-#### B. Google Calendar 공유
-1. https://calendar.google.com 접속
-2. 좌측 "내 캘린더" 아래 "+ 기타 캘린더" → "새 캘린더 만들기"
-   - 이름: `마모루 상담일정`
-   - 색상: 녹색 또는 원하는 색
-3. 방금 만든 캘린더 → 설정 → "특정 사용자 또는 그룹과 공유" → 추가
-   - 이메일: Service Account 이메일 (다운받은 JSON의 `client_email` 값)
-   - 권한: **"일정 변경 및 공유 설정 관리"**
-4. "캘린더 통합" 섹션 → **캘린더 ID** 복사 (예: `abc123@group.calendar.google.com`)
-
-#### C. Vercel 환경변수 추가
-Vercel 대시보드 → TMS 프로젝트 → Settings → Environment Variables:
-
-```
-GOOGLE_SERVICE_ACCOUNT_EMAIL=<JSON의 client_email>
-GOOGLE_PRIVATE_KEY=<JSON의 private_key 전체, \n 포함>
-GOOGLE_CALENDAR_ID=<위에서 복사한 캘린더 ID>
-```
-
-> ⚠️ GOOGLE_PRIVATE_KEY는 줄바꿈(`\n`)이 포함되어 있어서 복사할 때 주의.
-> JSON 파일 열어서 `"private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQ...\n-----END PRIVATE KEY-----\n"` 전체를 값으로 넣기.
-
-### Phase 2: 코드 구현 (Claude가 진행)
-
-**신규 파일:**
-- `app/src/lib/google/calendar-client.ts` — Calendar API 래퍼
-  - `createConsultationEvent(consultation)` — 일정 생성
-  - `updateConsultationEvent(eventId, consultation)` — 일정 업데이트
-  - `deleteConsultationEvent(eventId)` — 일정 삭제
-  - `googleapis` npm 패키지 사용
-
-**DB 마이그레이션:**
-- `consultations` 테이블에 `google_event_id` 컬럼 추가
-
-**트리거 위치:**
-- 매장방문 확정 — `/api/consultation/public/submit/route.ts` (즉시 confirmed로 등록되는 지점)
-- 출장 확정 — `/api/consultation/public/confirm/route.ts` (고객이 시간 선택)
-- 시간 변경 (관리자) — `/api/consultation/[id]/route.ts` (visit_date/visit_time 수정 시)
-- 취소/완료 — `/api/consultation/[id]/route.ts` (status 변경 시)
-
-### 이벤트 형식
-
-```
-제목: [매장] 홍길동 / [출장] 김철수
-시간: visit_date + visit_time (기본 1시간)
-설명:
-  📞 010-1234-5678
-  📝 (고객 메모)
-  🔗 TMS 링크: https://app-eta-sandy-75.vercel.app/consultations/[id]
-
-알림:
-  - 30분 전
-  - 하루 전 (오전 9시)
-```
-
-### 결과
-- bsm@mamoru.kr Google Calendar에 상담 일정 자동 등록
-- 폰 기본 달력 앱 위젯에 자동 표시
-- iOS/Android/PC 모두 동기화
-- Google Calendar 기본 리마인더 작동
-
-### 추가 패키지
-`cd projects/Total_Management_System/app && npm install googleapis`
+### 푸시 알림 회수 로직
+- [x] **복원수리 삭제 시 OS 알림 자동 회수** — tag에 as_id 포함 + SW postMessage ✅
+- [x] **Service Worker DISMISS 메시지 리스너 추가** ✅
+- [x] **useDeleteRepair 성공 시 SW에 알림 회수 요청** ✅
+- [x] **DELETE API에서 push_notifications 테이블 행 정리** ✅
 
 ---
 
