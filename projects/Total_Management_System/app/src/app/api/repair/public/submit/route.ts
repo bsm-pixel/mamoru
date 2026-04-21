@@ -178,6 +178,7 @@ export async function POST(req: NextRequest) {
           shipping_fee: String(shippingFee),
           total_amount: String(totalAmount),
           proceed_type: proceed_type || '직접발송',
+          delivery_method: delivery_method || '',
           postcode: postcode || '',
           address: address || '',
           address_detail: address_detail || '',
