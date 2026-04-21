@@ -232,6 +232,11 @@ export async function DELETE(
 
     if (delErr) throw delErr;
 
+    // Realtime fallback용 push_notifications 행도 함께 정리 (tag 기반)
+    try {
+      await db.from('push_notifications').delete().eq('tag', `mamoru-as_received-${repair.as_id}`);
+    } catch { /* 푸시 알림 정리 실패해도 삭제는 성공 */ }
+
     return NextResponse.json({ ok: true, deleted: repair.as_id, warning: alpsWarning });
   } catch (err) {
     console.error('[repair] 삭제 실패:', err);

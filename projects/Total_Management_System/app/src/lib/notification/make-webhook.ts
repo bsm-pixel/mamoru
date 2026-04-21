@@ -186,12 +186,15 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
   };
   const cfg = PUSH_CONFIG[payload.template];
   if (cfg) {
+    // tag에 건별 고유 ID 포함 — 레코드 삭제 시 SW에서 해당 알림만 정확히 회수 가능
+    const uniqId = payload.data?.as_id || payload.data?.id || '';
+    const pushTag = uniqId ? `mamoru-${payload.template}-${uniqId}` : `mamoru-${payload.template}`;
     import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
       sendPushToAll({
         title: cfg.title,
         body: cfg.body,
         url: cfg.url,
-        tag: `mamoru-${payload.template}`,
+        tag: pushTag,
         settingKey: cfg.settingKey,
       }).catch(() => {});
     }).catch(() => {});

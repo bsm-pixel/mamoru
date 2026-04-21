@@ -329,7 +329,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
       <ConfirmModal
         open={confirmAction === 'delete_repair'}
         onClose={() => setConfirmAction(null)}
-        onConfirm={() => deleteRepair.mutateAsync(r.id)}
+        onConfirm={async () => { await deleteRepair.mutateAsync(r.id); }}
         title="복원수리 삭제"
         message={<>이 건을 <strong>완전히 삭제</strong>합니다.<br />알림톡은 발송되지 않습니다. 복구할 수 없습니다.</>}
         confirmLabel="삭제"

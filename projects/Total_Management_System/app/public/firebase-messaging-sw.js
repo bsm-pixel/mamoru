@@ -34,6 +34,19 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
+// 클라이언트에서 특정 tag 알림 회수 요청 수신
+// { type: 'DISMISS', tag: 'mamoru-as_received-AS-YYYYMMDD-NNN' }
+self.addEventListener('message', (event) => {
+  const data = event.data || {};
+  if (data.type === 'DISMISS' && data.tag) {
+    event.waitUntil(
+      self.registration.getNotifications({ tag: data.tag }).then((notifs) => {
+        notifs.forEach((n) => n.close());
+      })
+    );
+  }
+});
+
 // 알림 클릭 시 TMS 열기
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();

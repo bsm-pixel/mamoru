@@ -216,9 +216,21 @@ export function useDeleteRepair() {
         const msg = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
         throw new Error(msg || '삭제 실패');
       }
-      return res.json();
+      return res.json() as Promise<{ ok: boolean; deleted?: string; warning?: string }>;
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      // 접수 시점에 발송된 '새 복원수리 접수' OS 알림도 함께 회수
+      if (data?.deleted && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          reg.active?.postMessage({
+            type: 'DISMISS',
+            tag: `mamoru-as_received-${data.deleted}`,
+          });
+        } catch {
+          /* SW 미등록/지원 안 됨 — 무시 */
+        }
+      }
       toast.success('삭제되었습니다');
       queryClient.invalidateQueries({ queryKey: ['repairs'] });
       queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
