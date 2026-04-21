@@ -111,6 +111,8 @@ cancelled → (terminal)
 | `tracking` | 송장번호 | 배송조회 |
 | `courier` | 롯데택배 (고정) | 배송조회 버튼 활성화 |
 | `as_amount` / `shipping_amount` / `total_amount` | 금액 | 비용 안내 |
+| `pickup_date` | `YYYY년 MM월 DD일 (X요일)` 포맷 | 방문수거 접수 알림톡 수거예정일 (as_received) · 직접발송은 빈 문자열 |
+| `delivery_method` | 문앞보관 / 매장카운터 / 직접전달 | 방문수거 수령 방식 (as_received) |
 
 ### 비용 계산 규칙
 ```

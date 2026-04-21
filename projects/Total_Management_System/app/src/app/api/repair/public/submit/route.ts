@@ -164,6 +164,19 @@ export async function POST(req: NextRequest) {
       note: '고객 접수',
     });
 
+    // pickup_date 표시 포맷: YYYY년 MM월 DD일 (요일) — 방문수거 알림톡 가독성
+    let pickupDateDisplay = '';
+    if (pickup_date) {
+      const dt = new Date(pickup_date + 'T00:00:00+09:00');
+      if (!isNaN(dt.getTime())) {
+        const y = dt.getFullYear();
+        const m = String(dt.getMonth() + 1).padStart(2, '0');
+        const d = String(dt.getDate()).padStart(2, '0');
+        const dow = ['일', '월', '화', '수', '목', '금', '토'][dt.getDay()];
+        pickupDateDisplay = `${y}년 ${m}월 ${d}일 (${dow}요일)`;
+      }
+    }
+
     // 알림톡 발송 (접수 안내)
     try {
       await sendNotification({
@@ -179,6 +192,7 @@ export async function POST(req: NextRequest) {
           total_amount: String(totalAmount),
           proceed_type: proceed_type || '직접발송',
           delivery_method: delivery_method || '',
+          pickup_date: pickupDateDisplay,
           postcode: postcode || '',
           address: address || '',
           address_detail: address_detail || '',
