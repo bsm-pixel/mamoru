@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidTransition } from '@/lib/consultation/transitions';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
-import { fireAndForgetSync } from '@/lib/google/calendar-sync';
+import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 import { deleteCalendarEvent } from '@/lib/google/calendar-client';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
@@ -150,8 +150,8 @@ export async function PATCH(
       after(async () => {
         const sideEffects: Promise<unknown>[] = [];
 
-        // Google Calendar 동기화 (fire-and-forget — 상담 로직 블록 금지)
-        fireAndForgetSync(id);
+        // Google Calendar 동기화 (await로 완료 보장, 내부에서 예외 모두 캐치)
+        sideEffects.push(syncConsultationToCalendar(id));
 
         // 자동 알림톡 발송 — 상태 변경일 때만
         const template = statusChanged ? getAutoNotifyTemplate(newStatus, data.consultation_type) : null;

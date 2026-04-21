@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
-import { fireAndForgetSync } from '@/lib/google/calendar-sync';
+import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -86,8 +86,14 @@ export async function GET(req: NextRequest) {
       }).catch(() => {});
     }).catch(() => {});
 
-    // Google Calendar 동기화 (fire-and-forget)
-    fireAndForgetSync(data.id);
+    // Google Calendar 동기화 — after()로 응답 후 실행 보장
+    after(async () => {
+      try {
+        await syncConsultationToCalendar(data.id);
+      } catch (e) {
+        console.error('[calendar-sync after confirm] 실패:', e);
+      }
+    });
 
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { sendAdminEmail } from '@/lib/notification/email';
-import { fireAndForgetSync } from '@/lib/google/calendar-sync';
+import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -234,9 +234,15 @@ export async function POST(req: NextRequest) {
       console.error('[consultation/submit] 이메일 발송 실패:', emailErr);
     }
 
-    // Google Calendar 동기화 (매장방문 즉시 confirmed인 경우만 실제로 이벤트 생성됨 — 그 외는 HIDDEN 상태라 스킵)
+    // Google Calendar 동기화 — after()로 응답 후 실행 보장 (Vercel 서버리스)
     if (initialStatus === 'confirmed') {
-      fireAndForgetSync(consultation.id);
+      after(async () => {
+        try {
+          await syncConsultationToCalendar(consultation.id);
+        } catch (e) {
+          console.error('[calendar-sync after submit] 실패:', e);
+        }
+      });
     }
 
     return NextResponse.json(

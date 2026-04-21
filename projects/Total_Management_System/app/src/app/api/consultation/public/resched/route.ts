@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendAdminEmail } from '@/lib/notification/email';
-import { fireAndForgetSync } from '@/lib/google/calendar-sync';
+import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -88,8 +88,14 @@ export async function GET(req: NextRequest) {
       }).catch(() => {});
     }).catch(() => {});
 
-    // Google Calendar 동기화 — ⏳ 접두어로 제목/색상만 변경 (이벤트 유지)
-    fireAndForgetSync(data.id);
+    // Google Calendar 동기화 — after()로 응답 후 실행 보장
+    after(async () => {
+      try {
+        await syncConsultationToCalendar(data.id);
+      } catch (e) {
+        console.error('[calendar-sync after resched] 실패:', e);
+      }
+    });
 
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {

@@ -22,7 +22,14 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || '';
 
-export const SCOPES = ['https://www.googleapis.com/auth/calendar.events'];
+// openid email profile — id_token 발급용 (connected_email 자동 판별)
+// calendar.events — 이벤트 CRUD 권한
+export const SCOPES = [
+  'openid',
+  'email',
+  'profile',
+  'https://www.googleapis.com/auth/calendar.events',
+];
 
 /** 새 OAuth2 클라이언트 (토큰 없음 — 인가 단계에서 사용) */
 export function createOAuthClient(): OAuth2ClientType {
