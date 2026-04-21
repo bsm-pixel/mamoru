@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { sendAdminEmail } from '@/lib/notification/email';
+import { fireAndForgetSync } from '@/lib/google/calendar-sync';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -231,6 +232,11 @@ export async function POST(req: NextRequest) {
       );
     } catch (emailErr) {
       console.error('[consultation/submit] 이메일 발송 실패:', emailErr);
+    }
+
+    // Google Calendar 동기화 (매장방문 즉시 confirmed인 경우만 실제로 이벤트 생성됨 — 그 외는 HIDDEN 상태라 스킵)
+    if (initialStatus === 'confirmed') {
+      fireAndForgetSync(consultation.id);
     }
 
     return NextResponse.json(

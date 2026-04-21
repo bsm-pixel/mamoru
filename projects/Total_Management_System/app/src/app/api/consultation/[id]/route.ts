@@ -2,6 +2,8 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidTransition } from '@/lib/consultation/transitions';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
+import { fireAndForgetSync } from '@/lib/google/calendar-sync';
+import { deleteCalendarEvent } from '@/lib/google/calendar-client';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
 /** 상태→알림 템플릿 매핑 (consultation_type 기반 분기) */
@@ -82,10 +84,10 @@ export async function PATCH(
     const body = await req.json();
     const { status: newStatus, note, ...rest } = body;
 
-    // 현재 상담 조회
+    // 현재 상담 조회 (캘린더 동기화 판단용 visit_date/visit_time 포함)
     const { data: current, error: fetchErr } = await db
       .from('consultations')
-      .select('status, consultation_type')
+      .select('status, consultation_type, visit_date, visit_time')
       .eq('id', id)
       .single();
 
@@ -126,8 +128,14 @@ export async function PATCH(
 
     if (error) throw error;
 
+    // 상태 변경 또는 일정 변경 감지 (캘린더 동기화 트리거 조건)
+    const statusChanged = newStatus && newStatus !== current.status;
+    const dateChanged = 'visit_date' in updateData && updateData.visit_date !== current.visit_date;
+    const timeChanged = 'visit_time' in updateData && updateData.visit_time !== current.visit_time;
+    const scheduleChanged = dateChanged || timeChanged;
+
     // 상태 변경 시 이력 기록
-    if (newStatus && newStatus !== current.status) {
+    if (statusChanged) {
       await db.from('consultation_history').insert({
         consultation_id: id,
         from_status: current.status,
@@ -135,16 +143,18 @@ export async function PATCH(
         changed_by: user.id,
         note: note || null,
       });
+    }
 
-      // 후속 작업: after()로 응답 반환 후 백그라운드 실행 — UI 빠른 응답
+    // 후속 작업: after()로 응답 반환 후 백그라운드 실행 — UI 빠른 응답
+    if (statusChanged || scheduleChanged) {
       after(async () => {
         const sideEffects: Promise<unknown>[] = [];
 
-        // Google Calendar 제거 완료 — GAS 연동 불필요
-        // 슬롯 차단은 Supabase 쿼리로 처리됨
+        // Google Calendar 동기화 (fire-and-forget — 상담 로직 블록 금지)
+        fireAndForgetSync(id);
 
-        // 자동 알림톡 발송 — consultation_type 기반 분기
-        const template = getAutoNotifyTemplate(newStatus, data.consultation_type);
+        // 자동 알림톡 발송 — 상태 변경일 때만
+        const template = statusChanged ? getAutoNotifyTemplate(newStatus, data.consultation_type) : null;
         if (template && data.phone) {
           const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
           const typeLabel = data.consultation_type === 'store_visit' ? '매장 방문'
@@ -209,12 +219,21 @@ export async function DELETE(
 
     const { data: consultation, error: fetchErr } = await db
       .from('consultations')
-      .select('id, unique_id, name')
+      .select('id, unique_id, name, google_event_id')
       .eq('id', id)
       .single();
 
     if (fetchErr || !consultation) {
       return NextResponse.json({ error: '상담 건을 찾을 수 없습니다' }, { status: 404 });
+    }
+
+    // Google Calendar 이벤트 정리 (있으면 삭제, 실패해도 상담 삭제는 진행)
+    if (consultation.google_event_id) {
+      try {
+        await deleteCalendarEvent({ eventId: consultation.google_event_id });
+      } catch (e) {
+        console.warn('[consultation delete] 캘린더 이벤트 삭제 실패:', e);
+      }
     }
 
     // 이력 삭제 → 본건 삭제

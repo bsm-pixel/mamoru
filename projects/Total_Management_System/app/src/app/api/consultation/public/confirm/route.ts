@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { fireAndForgetSync } from '@/lib/google/calendar-sync';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -84,6 +85,9 @@ export async function GET(req: NextRequest) {
         settingKey: 'push.field_confirmed',
       }).catch(() => {});
     }).catch(() => {});
+
+    // Google Calendar 동기화 (fire-and-forget)
+    fireAndForgetSync(data.id);
 
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {

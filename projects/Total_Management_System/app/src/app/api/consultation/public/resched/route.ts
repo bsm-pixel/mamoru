@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendAdminEmail } from '@/lib/notification/email';
+import { fireAndForgetSync } from '@/lib/google/calendar-sync';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -46,9 +47,17 @@ export async function GET(req: NextRequest) {
       ? `${data.memo}\n[고객 재요청 ${new Date().toLocaleString('ko-KR')}] ${reason}`
       : `[고객 재요청 ${new Date().toLocaleString('ko-KR')}] ${reason}`;
 
+    // gas_raw에 재요청 사유 저장 (캘린더 이벤트 설명에 표시)
+    const mergedGasRaw = {
+      ...(data.gas_raw || {}),
+      reschedule_reason: reason || '',
+      reschedule_requested_at: new Date().toISOString(),
+    };
+
     await dbAny.from('consultations').update({
       status: 'reschedule_requested',
       memo: newMemo,
+      gas_raw: mergedGasRaw,
     }).eq('id', data.id);
 
     await dbAny.from('consultation_history').insert({
@@ -78,6 +87,9 @@ export async function GET(req: NextRequest) {
         settingKey: 'push.field_reschedule',
       }).catch(() => {});
     }).catch(() => {});
+
+    // Google Calendar 동기화 — ⏳ 접두어로 제목/색상만 변경 (이벤트 유지)
+    fireAndForgetSync(data.id);
 
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {
