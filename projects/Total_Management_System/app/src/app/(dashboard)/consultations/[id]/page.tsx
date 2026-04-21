@@ -157,6 +157,12 @@ export default function ConsultationDetailPage() {
                 {(c.status === 'reschedule_requested' || c.status === 'change_requested') ? '새 시간 제안' : '시간 제안'}
               </Button>
             )}
+            {/* 출장 확정건 수동 일정 변경 — 유선 연락 등으로 관리자가 직접 변경 */}
+            {c.status === 'confirmed' && (
+              <Button variant="secondary" size="sm" disabled={busy} onClick={() => setShowReschedule(true)}>
+                일정변경
+              </Button>
+            )}
             {allowed.includes('confirmed') && (
               <Button variant="secondary" size="sm" disabled={busy} loading={busyStatus === 'confirmed'} onClick={() => updateStatus.mutate({ id: c.id, status: 'confirmed' })}>
                 {c.status === 'suggested' ? '수동 확정' : '확정'}
