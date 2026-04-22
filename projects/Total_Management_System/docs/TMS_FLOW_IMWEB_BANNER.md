@@ -1,7 +1,7 @@
 # TMS 아임웹 배너/팝업 원격 관리 흐름
 
-> **최종 업데이트**: 2026-04-22
-> **상태**: Phase 1 MVP 가동 중
+> **최종 업데이트**: 2026-04-22 (Phase 2 슬라이드 기능 완료)
+> **상태**: Phase 1 + Phase 2 가동 중
 > **위치**: TMS 설정 → 알림·연동 탭 → 📢 아임웹 배너/팝업 관리
 
 ---
@@ -69,13 +69,26 @@ Supabase Storage: imweb-banners (public)    # 이미지 CDN
 imweb_banners
 ├── id TEXT PRIMARY KEY           -- 'main_modal' (MVP 고정)
 ├── enabled BOOLEAN               -- 노출 토글
-├── title / description            -- 텍스트
-├── image_url / image_path         -- Storage 참조
-├── link_url                       -- 배너 클릭 이동 URL
+├── title / description            -- 텍스트 (모든 슬라이드 공통)
+├── images JSONB                   -- Phase 2: [{url, path, link_url?}, ...] 최대 5장
+├── image_url / image_path         -- legacy (첫 번째 이미지 shortcut, backwards-compat)
+├── link_url                       -- legacy (첫 번째 이미지 link_url)
 ├── starts_at / ends_at            -- 노출 기간 (NULL = 무기한)
 ├── dismiss_cookie_hours INT       -- '오늘 하루 보지 않기' 재노출 대기
 └── updated_at / updated_by
 ```
+
+### images JSONB 구조 (Phase 2)
+```json
+[
+  { "url": "https://...", "path": "main_modal/xxx.png", "link_url": "https://..." },
+  { "url": "https://...", "path": "main_modal/yyy.png", "link_url": "" },
+  ...
+]
+```
+- 배열 순서 = 슬라이드 순서
+- 최대 5장 (애플리케이션 레이어 검증)
+- 이미지 1장 = 정적 배너 / 2장+ = 자동 슬라이드
 
 ---
 
@@ -132,13 +145,48 @@ TMS 설정 UI에서 **unitCode 입력 + "자동 설치"** 버튼
 
 ---
 
-## 8. Phase 2 확장 로드맵 (미구현)
+## 8. Phase 2 슬라이드 기능 (2026-04-22 완료)
 
-- 배너 **슬라이드** (이미지 2+ 업로드 시 자동 슬라이드) — 논의 중
+### 스펙
+| 항목 | 값 |
+|------|-----|
+| 최대 이미지 수 | **5장** |
+| 1장 모드 | 정적 배너 (기존과 동일) |
+| 2장+ 모드 | **자동 슬라이드** |
+| 자동 전환 간격 | **5초 고정** |
+| 루프 | 마지막 → 첫 번째 순환 |
+| 호버 동작 | 자동 전환 일시정지 |
+| 수동 이동 | 점 네비 클릭 / 화살표 / 스와이프 → 타이머 리셋 |
+
+### 인터랙션
+| 인터랙션 | 방식 |
+|---------|------|
+| **점(dot) 네비게이션** | 하단 가운데, 현재 슬라이드는 길쭉한 검정색 |
+| **데스크톱 화살표** | 좌우 < > 버튼 (마우스 hover 시) — `@media (hover:hover) and (pointer:fine)` |
+| **모바일 스와이프** | touchstart/touchend 40px 임계값 |
+| **이미지별 개별 링크** | 각 슬라이드 클릭 시 고유 link_url 새 탭 열림 |
+
+### TMS UI
+- 이미지 그리드 (썸네일 + 번호 뱃지 + 링크 입력)
+- 위/아래 화살표로 순서 변경 (DB 즉시 반영)
+- 개별 이미지 삭제 버튼
+- "+ 이미지 추가" 버튼 (5장 도달 시 disabled)
+- 2장+ 시 "🎠 슬라이드 모드 · 5초 자동 전환" 배지 표시
+- 미리보기 모달에서 실제 슬라이드 동작 시뮬레이션
+
+### 제목/설명 정책
+- **모든 슬라이드에 동일한 제목/설명**이 하단 본문 영역에 표시
+- 이유: 슬라이드별 텍스트 오버레이는 브랜드 톤 관리 복잡 → 이미지 내 텍스트 권장
+
+---
+
+## 9. 추가 확장 로드맵 (미구현)
+
 - 복수 배너 슬롯 (main_modal + top_strip + side_notice)
 - 노출 통계 (노출수/클릭수/닫기율)
 - 특정 페이지(메인/카테고리)별 분기
 - 스케줄 자동화 (추석 D-7 자동 활성화 등)
+- 슬라이드 전환 속도 커스터마이징 (현재 5초 고정)
 
 ---
 

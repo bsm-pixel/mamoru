@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-04-21 (Google Calendar 연동 + 복원수리 pickup_date 버그 + 푸시 알림 회수)
+> 최종 수정: 2026-04-22 (아임웹 배너 원격 관리 Phase 1 + 슬라이드 Phase 2)
 
 ---
 
@@ -52,6 +52,7 @@
 - [x] 제품 마스터-디테일 레이아웃 (우측 패널) ✅
 
 ### ✅ 완료된 이전 할 일
+- [x] **아임웹 배너/팝업 원격 관리 (Phase 1+2)** (2026-04-22) — TMS 설정에서 이미지 업로드/토글/5초 슬라이드로 아임웹 메인 모달 배너 원격 관리. 최대 5장, 이미지별 개별 링크, 스와이프 지원. 상세: `docs/TMS_FLOW_IMWEB_BANNER.md`
 - [x] **Google Calendar 연동 Phase 1 MVP** (2026-04-21) — OAuth 2.0 + 상담 확정/변경/취소 자동 동기화 / 출장 확정건 "일정변경" 버튼 / 설정 UI / 재동기화. 상세: `docs/TMS_FLOW_CONSULTATION.md § 5`
 - [x] **복원수리 접수 MAKE 웹훅 pickup_date 누락 수정** (2026-04-21) — 방문수거 4종 수거예정일 `YYYY년 MM월 DD일 (X요일)` 포맷 추가
 - [x] **복원수리 삭제 시 OS 푸시 알림 자동 회수** (2026-04-21) — tag에 as_id 포함 + Service Worker DISMISS 메시지 + push_notifications 행 정리
