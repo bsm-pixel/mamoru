@@ -60,6 +60,32 @@ export default function BannerSettings() {
   }, [main]);
 
   const handleSave = () => {
+    // 종료일이 과거인데 노출 On이면 경고 — 사장님 실수 예방
+    if (form.enabled && form.ends_at) {
+      const endDate = new Date(form.ends_at);
+      if (!isNaN(endDate.getTime()) && endDate.getTime() < Date.now()) {
+        const ok = window.confirm(
+          `⚠️ 종료일시가 과거로 설정되어 있습니다.\n\n` +
+          `종료일시: ${endDate.toLocaleString('ko-KR')}\n` +
+          `현재:     ${new Date().toLocaleString('ko-KR')}\n\n` +
+          `이 상태로 저장하면 배너가 고객에게 노출되지 않습니다.\n\n` +
+          `계속 저장하시겠습니까?\n` +
+          `(취소하고 종료일시를 비우거나 미래로 수정해주세요)`
+        );
+        if (!ok) return;
+      }
+    }
+
+    // 시작일이 종료일보다 늦어도 경고
+    if (form.starts_at && form.ends_at) {
+      const s = new Date(form.starts_at);
+      const e = new Date(form.ends_at);
+      if (!isNaN(s.getTime()) && !isNaN(e.getTime()) && s >= e) {
+        toast.error('시작일시가 종료일시보다 늦거나 같습니다');
+        return;
+      }
+    }
+
     update.mutate({
       id: BANNER_ID,
       enabled: form.enabled,
@@ -210,23 +236,42 @@ export default function BannerSettings() {
         </Field>
 
         {/* 노출 기간 */}
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="시작일시 (선택)">
-            <input
-              type="datetime-local"
-              value={form.starts_at}
-              onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm"
-            />
-          </Field>
-          <Field label="종료일시 (선택)">
-            <input
-              type="datetime-local"
-              value={form.ends_at}
-              onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm"
-            />
-          </Field>
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-semibold text-neutral-700">노출 기간 (선택)</label>
+            {(form.starts_at || form.ends_at) && (
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, starts_at: '', ends_at: '' })}
+                className="text-[11px] text-neutral-500 hover:text-neutral-700 underline"
+              >
+                기간 지우기 (무기한 노출)
+              </button>
+            )}
+          </div>
+          <p className="text-[11px] text-neutral-400 mb-1.5">
+            💡 비워두면 <b>무기한 노출</b>. 특정 기간만 노출하려면 날짜 입력.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] text-neutral-500 mb-1">시작</label>
+              <input
+                type="datetime-local"
+                value={form.starts_at}
+                onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] text-neutral-500 mb-1">종료</label>
+              <input
+                type="datetime-local"
+                value={form.ends_at}
+                onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm"
+              />
+            </div>
+          </div>
         </div>
 
         {/* 쿠키 시간 */}

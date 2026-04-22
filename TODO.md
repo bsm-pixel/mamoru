@@ -1,6 +1,6 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-21 (Google Calendar 연동 완료 + 복원수리 접수 pickup_date 누락 버그 + 푸시 알림 회수 로직)
+> 최종 수정: 2026-04-22 (아임웹 배너 원격 관리 + 과거 종료일 경고 UX)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
@@ -27,11 +27,26 @@
 
 ## 📌 미완료
 
-- [ ] **Script API 구현**: TMS 설정에서 아임웹 배너/공지 원격 관리
 - [ ] **Order API 전환**: 주문 취소 자동화 + 송장 수정/삭제
 - [ ] **판매 출고 알림톡 외부 설정**: 솔라피 배송조회 버튼 변수명 확인 (솔라피 문의 대기중)
+- [ ] **배너 슬라이드 기능 (Phase 2)**: 이미지 2+ 업로드 시 자동 슬라이드 전환 (1개면 정적)
 
 ---
+
+## ✅ 완료 — 04-22 작업
+
+### 아임웹 배너/팝업 원격 관리 (Script API 구현)
+- [x] **DB 마이그레이션 053** — imweb_banners 테이블 + Storage 버킷 ✅
+- [x] **관리자 API 3종** — GET/PATCH banners + POST upload ✅
+- [x] **공개 API 2종** — banner-config (JSON, CORS) + banner-widget.js (자기완결형) ✅
+- [x] **Script API 자동 주입** — upsertMamoruWidget (GET→POST/PUT 분기) ✅
+- [x] **TMS 설정 UI** — 이미지 업로드 + 토글 + 미리보기 + 자동/수동 설치 ✅
+- [x] **MAMORU Brand Guide 준수 모달** — 모노크롬, Noto Sans KR, 여백 ✅
+- [x] **쿠키 기반 "오늘 하루 보지 않기"** 동작 ✅
+- [x] **노출 기간 필터** — starts_at / ends_at ✅
+- [x] **아임웹 Footer Code 반영** — 공통 코드 footer_code.txt 업데이트 ✅
+- [x] **실제 가동 확인** — 메인 페이지 모달 배너 정상 노출 ✅
+- [x] **과거 종료일 경고 모달** (UX 개선) — 종료일 과거 입력 시 저장 전 경고 ✅
 
 ---
 
