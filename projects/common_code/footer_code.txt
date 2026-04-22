@@ -49,3 +49,6 @@
   });
 })();
 </script>
+
+<!-- MAMORU 배너 위젯 — TMS에서 원격 관리 (설정 > 알림·연동 > 배너/팝업) -->
+<script src="https://app-eta-sandy-75.vercel.app/api/imweb/banner-widget.js" defer></script>
