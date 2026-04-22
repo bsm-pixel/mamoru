@@ -1,25 +1,32 @@
 'use client';
 
 /**
- * 아임웹 배너/팝업 원격 관리 UI
+ * 아임웹 배너/팝업 원격 관리 UI (Phase 2: 슬라이드 지원)
  * 설정 > 알림·연동 탭에 삽입
  *
- * MVP: 메인 모달 배너 1종 (id='main_modal')
- * - 이미지 업로드
- * - 제목/설명/링크
- * - 노출 기간 (선택)
- * - 쿠키 시간
+ * - 이미지 1~5장 업로드 (2+장이면 자동 슬라이드, 5초 전환)
+ * - 이미지별 개별 링크(link_url)
+ * - 순서 변경 (위/아래 화살표)
+ * - 제목/설명은 공통 (모든 슬라이드에 동일하게 표시)
+ * - 노출 기간 (선택) / 쿠키 시간
  * - 노출 On/Off 토글
- * - 아임웹 주입 스크립트 태그 복사
+ * - 미리보기 모달 / 아임웹 주입 스크립트 태그 복사
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Megaphone, Image as ImageIcon, Eye, Copy, CheckCircle2, Upload, Zap, AlertCircle } from 'lucide-react';
+import {
+  Megaphone, Image as ImageIcon, Eye, Copy, CheckCircle2, Upload,
+  Zap, AlertCircle, Plus, Trash2, ArrowUp, ArrowDown, Link as LinkIcon,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useBanners, useUpdateBanner, useUploadBannerImage, type ImwebBanner } from '@/hooks/use-banner';
+import {
+  useBanners, useUpdateBanner, useUploadBannerImage,
+  type ImwebBanner, type BannerImage,
+} from '@/hooks/use-banner';
 
 const BANNER_ID = 'main_modal';
+const MAX_IMAGES = 5;
 
 export default function BannerSettings() {
   const { data: banners, isLoading } = useBanners();
@@ -30,15 +37,14 @@ export default function BannerSettings() {
     enabled: false,
     title: '',
     description: '',
-    image_url: '' as string | null,
-    image_path: '' as string | null,
-    link_url: '',
+    images: [] as BannerImage[],
     starts_at: '',
     ends_at: '',
     dismiss_cookie_hours: 24,
   });
   const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null); // -1 = 신규 추가 중
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const main = (banners || []).find((b) => b.id === BANNER_ID);
@@ -46,13 +52,19 @@ export default function BannerSettings() {
   // 초기 로드 시 폼에 반영
   useEffect(() => {
     if (!main) return;
+
+    // images가 비어있으면 legacy image_url에서 fallback
+    const imgs: BannerImage[] = Array.isArray(main.images) && main.images.length > 0
+      ? main.images
+      : main.image_url
+        ? [{ url: main.image_url, path: main.image_path || '', link_url: main.link_url || '' }]
+        : [];
+
     setForm({
       enabled: main.enabled,
       title: main.title || '',
       description: main.description || '',
-      image_url: main.image_url,
-      image_path: main.image_path,
-      link_url: main.link_url || '',
+      images: imgs,
       starts_at: main.starts_at ? main.starts_at.slice(0, 16) : '',
       ends_at: main.ends_at ? main.ends_at.slice(0, 16) : '',
       dismiss_cookie_hours: main.dismiss_cookie_hours || 24,
@@ -60,7 +72,13 @@ export default function BannerSettings() {
   }, [main]);
 
   const handleSave = () => {
-    // 종료일이 과거인데 노출 On이면 경고 — 사장님 실수 예방
+    // 노출 On인데 이미지 없으면 경고
+    if (form.enabled && form.images.length === 0) {
+      toast.error('이미지를 최소 1장 업로드해주세요');
+      return;
+    }
+
+    // 종료일 과거 경고
     if (form.enabled && form.ends_at) {
       const endDate = new Date(form.ends_at);
       if (!isNaN(endDate.getTime()) && endDate.getTime() < Date.now()) {
@@ -69,14 +87,13 @@ export default function BannerSettings() {
           `종료일시: ${endDate.toLocaleString('ko-KR')}\n` +
           `현재:     ${new Date().toLocaleString('ko-KR')}\n\n` +
           `이 상태로 저장하면 배너가 고객에게 노출되지 않습니다.\n\n` +
-          `계속 저장하시겠습니까?\n` +
-          `(취소하고 종료일시를 비우거나 미래로 수정해주세요)`
+          `계속 저장하시겠습니까?`
         );
         if (!ok) return;
       }
     }
 
-    // 시작일이 종료일보다 늦어도 경고
+    // 시작일 >= 종료일 경고
     if (form.starts_at && form.ends_at) {
       const s = new Date(form.starts_at);
       const e = new Date(form.ends_at);
@@ -91,33 +108,59 @@ export default function BannerSettings() {
       enabled: form.enabled,
       title: form.title || null,
       description: form.description || null,
-      link_url: form.link_url || null,
+      images: form.images,
       starts_at: form.starts_at ? new Date(form.starts_at).toISOString() : null,
       ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : null,
       dismiss_cookie_hours: form.dismiss_cookie_hours,
     } as Partial<ImwebBanner> & { id: string });
   };
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 새 이미지 업로드 → 배열 끝에 추가
+  const handleAddImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (form.images.length >= MAX_IMAGES) {
+      toast.error(`이미지는 최대 ${MAX_IMAGES}장까지 업로드 가능합니다`);
+      return;
+    }
+    setUploadingIdx(-1);
     try {
-      const result = await upload.mutateAsync({
-        file,
-        bannerId: BANNER_ID,
-        oldPath: form.image_path || undefined,
-      });
-      // 즉시 DB에 image_url/image_path 저장 (폼 상태만 바꾸면 저장 전에 소실됨)
-      await update.mutateAsync({
-        id: BANNER_ID,
-        image_url: result.url,
-        image_path: result.path,
-      });
-      setForm((f) => ({ ...f, image_url: result.url, image_path: result.path }));
-      toast.success('이미지 업로드 완료');
+      const result = await upload.mutateAsync({ file, bannerId: BANNER_ID });
+      const newImages = [...form.images, { url: result.url, path: result.path, link_url: '' }];
+      setForm((f) => ({ ...f, images: newImages }));
+
+      // 즉시 DB 저장 (이미지는 저장 즉시 반영해야 새로고침 시 복구 가능)
+      await update.mutateAsync({ id: BANNER_ID, images: newImages } as Partial<ImwebBanner> & { id: string });
+      toast.success('이미지 추가됨');
     } finally {
+      setUploadingIdx(null);
       if (fileRef.current) fileRef.current.value = '';
     }
+  };
+
+  // 이미지 삭제
+  const handleRemoveImage = async (idx: number) => {
+    if (!window.confirm('이 이미지를 삭제하시겠습니까?')) return;
+    const newImages = form.images.filter((_, i) => i !== idx);
+    setForm((f) => ({ ...f, images: newImages }));
+    await update.mutateAsync({ id: BANNER_ID, images: newImages } as Partial<ImwebBanner> & { id: string });
+    toast.success('이미지 삭제됨');
+  };
+
+  // 이미지 순서 변경
+  const handleMove = async (idx: number, dir: -1 | 1) => {
+    const target = idx + dir;
+    if (target < 0 || target >= form.images.length) return;
+    const newImages = [...form.images];
+    [newImages[idx], newImages[target]] = [newImages[target], newImages[idx]];
+    setForm((f) => ({ ...f, images: newImages }));
+    await update.mutateAsync({ id: BANNER_ID, images: newImages } as Partial<ImwebBanner> & { id: string });
+  };
+
+  // 개별 링크 변경 (debounce 없이 blur 시 저장)
+  const handleLinkChange = (idx: number, link_url: string) => {
+    const newImages = form.images.map((img, i) => (i === idx ? { ...img, link_url } : img));
+    setForm((f) => ({ ...f, images: newImages }));
   };
 
   const scriptTag = `<script src="${typeof window !== 'undefined' ? window.location.origin : ''}/api/imweb/banner-widget.js" defer></script>`;
@@ -142,7 +185,8 @@ export default function BannerSettings() {
   }
 
   const saving = update.isPending;
-  const uploading = upload.isPending;
+  const uploading = upload.isPending || uploadingIdx !== null;
+  const isSlider = form.images.length >= 2;
 
   return (
     <div className="rounded-lg border border-neutral-200 bg-warm-ivory p-4 space-y-4">
@@ -171,39 +215,116 @@ export default function BannerSettings() {
 
       {/* 본문 */}
       <div className="rounded-lg bg-white border border-neutral-200 p-4 space-y-4">
-        <h4 className="text-sm font-bold text-neutral-700">메인 모달 배너</h4>
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-bold text-neutral-700">메인 모달 배너</h4>
+          {isSlider && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold">
+              🎠 슬라이드 모드 · 5초 자동 전환
+            </span>
+          )}
+        </div>
 
-        {/* 이미지 업로드 */}
+        {/* 이미지 그리드 */}
         <div>
-          <label className="block text-xs font-semibold text-neutral-700 mb-1.5">이미지</label>
-          {form.image_url ? (
-            <div className="relative rounded-lg overflow-hidden border border-neutral-200 bg-neutral-50">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={form.image_url} alt="배너 미리보기" className="w-full max-h-60 object-contain" />
-              <button
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading}
-                className="absolute bottom-2 right-2 px-2.5 py-1.5 rounded bg-black/70 text-white text-xs hover:bg-black/90 disabled:opacity-50"
-              >
-                <Upload size={12} className="inline mr-1" />
-                이미지 교체
-              </button>
-            </div>
-          ) : (
+          <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
+            이미지 ({form.images.length}/{MAX_IMAGES})
+            <span className="text-[11px] text-neutral-400 ml-2 font-normal">
+              1장 = 정적 배너 / 2장 이상 = 자동 슬라이드
+            </span>
+          </label>
+
+          {form.images.length === 0 ? (
             <button
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
               className="w-full h-32 rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50 hover:bg-neutral-100 flex flex-col items-center justify-center gap-2 text-neutral-500 disabled:opacity-50"
             >
               <ImageIcon size={24} />
-              <span className="text-xs">{uploading ? '업로드 중...' : '이미지 선택 (jpg/png/webp, 최대 2MB)'}</span>
+              <span className="text-xs">
+                {uploading ? '업로드 중...' : '이미지 선택 (jpg/png/webp, 최대 2MB)'}
+              </span>
             </button>
+          ) : (
+            <div className="space-y-2">
+              {form.images.map((img, idx) => (
+                <div
+                  key={idx}
+                  className="flex gap-3 p-2.5 rounded-lg border border-neutral-200 bg-neutral-50"
+                >
+                  {/* 썸네일 + 번호 */}
+                  <div className="relative shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img.url} alt="" className="w-20 h-20 object-cover rounded border border-neutral-200" />
+                    <div className="absolute top-1 left-1 w-5 h-5 rounded-full bg-black/70 text-white text-[10px] font-bold flex items-center justify-center">
+                      {idx + 1}
+                    </div>
+                  </div>
+
+                  {/* 링크 입력 + 액션 */}
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <LinkIcon size={12} className="text-neutral-400 shrink-0" />
+                      <input
+                        type="url"
+                        value={img.link_url || ''}
+                        onChange={(e) => handleLinkChange(idx, e.target.value)}
+                        onBlur={() => {
+                          // 현재 이미지 배열을 DB에 저장
+                          update.mutate({ id: BANNER_ID, images: form.images } as Partial<ImwebBanner> & { id: string });
+                        }}
+                        placeholder="클릭 링크 (선택) — https://..."
+                        className="flex-1 min-w-0 h-7 px-2 rounded border border-neutral-200 text-[11px] font-mono"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleMove(idx, -1)}
+                        disabled={idx === 0 || uploading}
+                        className="p-1 rounded hover:bg-neutral-200 disabled:opacity-30"
+                        title="위로 이동"
+                      >
+                        <ArrowUp size={12} />
+                      </button>
+                      <button
+                        onClick={() => handleMove(idx, 1)}
+                        disabled={idx === form.images.length - 1 || uploading}
+                        className="p-1 rounded hover:bg-neutral-200 disabled:opacity-30"
+                        title="아래로 이동"
+                      >
+                        <ArrowDown size={12} />
+                      </button>
+                      <div className="flex-1" />
+                      <button
+                        onClick={() => handleRemoveImage(idx)}
+                        disabled={uploading}
+                        className="p-1 rounded hover:bg-red-50 text-red-500 disabled:opacity-30"
+                        title="삭제"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* 추가 버튼 */}
+              {form.images.length < MAX_IMAGES && (
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full h-12 rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50 hover:bg-neutral-100 flex items-center justify-center gap-2 text-neutral-500 text-xs disabled:opacity-50"
+                >
+                  <Plus size={14} />
+                  {uploading ? '업로드 중...' : `이미지 추가 (${form.images.length}/${MAX_IMAGES})`}
+                </button>
+              )}
+            </div>
           )}
-          <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFile} />
+          <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleAddImage} />
         </div>
 
         {/* 제목 */}
-        <Field label="제목">
+        <Field label="제목 (선택, 모든 슬라이드 공통)">
           <input
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -214,7 +335,7 @@ export default function BannerSettings() {
         </Field>
 
         {/* 설명 */}
-        <Field label="설명 (선택)">
+        <Field label="설명 (선택, 모든 슬라이드 공통)">
           <textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -222,16 +343,6 @@ export default function BannerSettings() {
             rows={3}
             className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm resize-none"
             maxLength={300}
-          />
-        </Field>
-
-        {/* 링크 */}
-        <Field label="클릭 링크 (선택)" desc="배너 이미지 클릭 시 새 탭으로 이동">
-          <input
-            value={form.link_url}
-            onChange={(e) => setForm({ ...form, link_url: e.target.value })}
-            placeholder="https://..."
-            className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs"
           />
         </Field>
 
@@ -301,20 +412,25 @@ export default function BannerSettings() {
         <Button size="sm" onClick={handleSave} disabled={saving || uploading} loading={saving}>
           저장
         </Button>
-        <Button size="sm" variant="secondary" onClick={() => setShowPreview(true)} disabled={!form.image_url && !form.title}>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => setShowPreview(true)}
+          disabled={form.images.length === 0 && !form.title}
+        >
           <Eye size={13} />
           미리보기
         </Button>
       </div>
 
-      {/* 아임웹 자동 설치 (Script API) + 수동 설치 안내 */}
+      {/* 아임웹 자동 설치 + 수동 설치 */}
       <ScriptInstallSection scriptTag={scriptTag} onCopyScript={handleCopyScript} copied={copied} />
 
       {/* 미리보기 모달 */}
       {showPreview && (
         <PreviewModal
           onClose={() => setShowPreview(false)}
-          imageUrl={form.image_url || ''}
+          images={form.images}
           title={form.title}
           description={form.description}
         />
@@ -338,7 +454,6 @@ function ScriptInstallSection({
   const [installedAt, setInstalledAt] = useState<string>('');
   const [showManual, setShowManual] = useState(false);
 
-  // 현재 설치 상태 로드
   useEffect(() => {
     (async () => {
       try {
@@ -384,11 +499,8 @@ function ScriptInstallSection({
 
   return (
     <div className="rounded-lg bg-neutral-50 border border-neutral-200 p-3 space-y-3">
-      <div className="flex items-center gap-2">
-        <p className="text-xs font-semibold text-neutral-700">📌 아임웹 설치 (최초 1회만)</p>
-      </div>
+      <p className="text-xs font-semibold text-neutral-700">📌 아임웹 설치 (최초 1회만)</p>
 
-      {/* 자동 설치 블록 */}
       <div className="rounded border border-neutral-200 bg-white p-3 space-y-2.5">
         <div className="flex items-center gap-1.5">
           <Zap size={13} className="text-amber-600" />
@@ -429,20 +541,19 @@ function ScriptInstallSection({
         </div>
 
         <p className="text-[10px] text-neutral-400 leading-relaxed">
-          💡 unitCode는 아임웹 관리자 → 사이트 관리 → URL 또는 콘솔에서 확인 가능.
-          position은 footer(권장)를 선택하면 페이지 로딩 지연 없음.
+          💡 현재 설치 방식: <b>아임웹 환경설정 → Footer Code</b> 수동 주입 (04-22 완료).
+          자동 설치는 unitCode 확보 + OAuth script:write 스코프 필요.
         </p>
       </div>
 
-      {/* 수동 설치 블록 (접히는 영역) */}
       {showManual && (
         <div className="rounded border border-neutral-200 bg-white p-3 space-y-2">
           <div className="flex items-center gap-1.5">
             <AlertCircle size={13} className="text-neutral-500" />
-            <span className="text-xs font-bold text-neutral-800">수동 설치 (백업용)</span>
+            <span className="text-xs font-bold text-neutral-800">수동 설치 (현재 사용 중)</span>
           </div>
           <p className="text-[11px] text-neutral-500 leading-relaxed">
-            자동 설치 안 되면 아임웹 관리자 → 디자인 → 코드위젯에 아래 태그를 붙여넣어 주세요.
+            아임웹 관리자 → 환경설정 → Footer Code 맨 아래에 아래 태그 붙여넣기.
           </p>
           <div className="flex items-center gap-1.5 bg-neutral-50 border border-neutral-200 rounded p-2">
             <code className="flex-1 text-[11px] font-mono text-neutral-700 break-all">{scriptTag}</code>
@@ -480,15 +591,24 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 
 function PreviewModal({
   onClose,
-  imageUrl,
+  images,
   title,
   description,
 }: {
   onClose: () => void;
-  imageUrl: string;
+  images: BannerImage[];
   title: string;
   description: string;
 }) {
+  const [idx, setIdx] = useState(0);
+  const isSlider = images.length >= 2;
+
+  useEffect(() => {
+    if (!isSlider) return;
+    const timer = setInterval(() => setIdx((i) => (i + 1) % images.length), 5000);
+    return () => clearInterval(timer);
+  }, [isSlider, images.length]);
+
   return (
     <div
       className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center p-6"
@@ -504,10 +624,33 @@ function PreviewModal({
         >
           ×
         </button>
-        {imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="preview" className="w-full block" />
+
+        {/* 슬라이드 트랙 */}
+        {images.length > 0 && (
+          <div className="relative overflow-hidden bg-[#EEE]">
+            <div
+              className="flex transition-transform duration-400 ease-out"
+              style={{ transform: `translateX(-${idx * 100}%)` }}
+            >
+              {images.map((img, i) => (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img key={i} src={img.url} alt="" className="w-full shrink-0 block" />
+              ))}
+            </div>
+            {isSlider && (
+              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
+                {images.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setIdx(i)}
+                    className={`w-1.5 h-1.5 rounded-full transition-all ${i === idx ? 'bg-white w-4' : 'bg-white/50'}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         )}
+
         {(title || description) && (
           <div className="p-6">
             {title && <h3 className="text-[17px] font-bold text-[#1A1A1A] mb-2 -tracking-[0.3px]">{title}</h3>}

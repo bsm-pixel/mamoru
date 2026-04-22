@@ -34,7 +34,7 @@ export async function GET() {
 
     const { data, error } = await dbAny
       .from('imweb_banners')
-      .select('id, enabled, title, description, image_url, link_url, starts_at, ends_at, dismiss_cookie_hours, updated_at')
+      .select('id, enabled, title, description, image_url, link_url, images, starts_at, ends_at, dismiss_cookie_hours, updated_at')
       .eq('id', 'main_modal')
       .single();
 
@@ -57,13 +57,37 @@ export async function GET() {
       );
     }
 
+    // images 배열 정규화 (Phase 2: 슬라이드 지원)
+    // DB에 images가 비어있으면 legacy image_url을 1개짜리 배열로 fallback
+    let imagesArr: Array<{ url: string; link_url?: string }> = [];
+    if (Array.isArray(data.images) && data.images.length > 0) {
+      imagesArr = data.images
+        .filter((img: { url?: string }) => img && img.url)
+        .map((img: { url: string; link_url?: string }) => ({
+          url: img.url,
+          link_url: img.link_url || '',
+        }));
+    } else if (data.image_url) {
+      imagesArr = [{ url: data.image_url, link_url: data.link_url || '' }];
+    }
+
+    // 이미지 하나도 없으면 배너 자체를 미노출 (텍스트 전용 배너는 MVP 불가)
+    if (imagesArr.length === 0) {
+      return NextResponse.json(
+        { enabled: false },
+        { headers: { ...CORS_HEADERS, ...CACHE_HEADERS } },
+      );
+    }
+
     return NextResponse.json(
       {
         enabled: true,
         title: data.title || '',
         description: data.description || '',
-        image_url: data.image_url || '',
-        link_url: data.link_url || '',
+        images: imagesArr,
+        // backwards-compat: 구 widget도 동작하도록 첫 이미지를 레거시 필드로 노출
+        image_url: imagesArr[0].url,
+        link_url: imagesArr[0].link_url || '',
         dismiss_cookie_hours: data.dismiss_cookie_hours || 24,
         version: data.updated_at || new Date().toISOString(),
       },

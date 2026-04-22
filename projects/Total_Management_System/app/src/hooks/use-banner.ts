@@ -8,11 +8,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
+export interface BannerImage {
+  url: string;
+  path: string;
+  link_url: string;
+}
+
 export interface ImwebBanner {
   id: string;
   enabled: boolean;
   title: string | null;
   description: string | null;
+  /** Phase 2: 이미지 배열 (1개=정적, 2+개=슬라이드). 최대 5장 */
+  images: BannerImage[];
+  /** Legacy — 첫 번째 이미지의 shortcut (backwards-compat) */
   image_url: string | null;
   image_path: string | null;
   link_url: string | null;
