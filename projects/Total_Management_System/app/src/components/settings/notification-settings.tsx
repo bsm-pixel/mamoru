@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
 import GoogleCalendarSettings from '@/components/settings/google-calendar-settings';
+import BannerSettings from '@/components/settings/banner-settings';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -103,6 +104,9 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
 
       {/* ── Google Calendar 연동 ── */}
       <GoogleCalendarSettings />
+
+      {/* ── 아임웹 배너/팝업 관리 ── */}
+      <BannerSettings />
 
       {/* ── 내 푸시 알림 (사장님이 받는 것) ── */}
       <div className="rounded-lg border border-neutral-200 bg-warm-ivory p-4 space-y-3">
