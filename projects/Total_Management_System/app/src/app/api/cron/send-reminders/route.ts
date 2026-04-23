@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
           if (count === 0) continue; // 다른 Cron이 이미 마킹
 
           await sendNotification({
-            template: isField ? 'field_remind_24h' : 'field_remind_24h',
+            template: isField ? 'field_remind_24h' : 'remind24',
             phone: c.phone,
             name: c.name,
             data: {
@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
           if (count === 0) continue; // 다른 Cron이 이미 마킹
 
           await sendNotification({
-            template: isField ? 'field_remind_2h' : 'field_remind_2h',
+            template: isField ? 'field_remind_2h' : 'remind2',
             phone: c.phone,
             name: c.name,
             data: {

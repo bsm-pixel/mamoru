@@ -83,6 +83,8 @@ export type NotifyTemplate =
   | 'cancelled'           // 매장 취소 안내
   | 'suggest'             // 출장 시간 제안 (SUGGESTED_TIMES)
   | 'rescheduled'         // 매장 일정 변경
+  | 'remind24'            // 매장방문 24h 리마인드
+  | 'remind2'             // 매장방문 2h 리마인드
   | 'field_confirmed'     // 출장 확정
   | 'field_cancelled'     // 출장 취소 안내
   | 'field_rescheduled'   // 출장 일정 변경
@@ -109,6 +111,8 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   cancelled: 'CANCELLED',
   suggest: 'SUGGESTED_TIMES',
   rescheduled: 'RESCHEDULED',
+  remind24: 'REMINDER_24H',
+  remind2: 'REMINDER_2H',
   field_confirmed: 'FIELD_CONFIRMED',
   field_cancelled: 'FIELD_CANCELLED',
   field_rescheduled: 'FIELD_RESCHEDULED',
