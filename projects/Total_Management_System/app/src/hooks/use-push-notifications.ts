@@ -64,14 +64,15 @@ export function usePushNotifications() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'push_notifications' },
         (payload) => {
-          const data = payload.new as { title: string; body: string; url?: string };
+          const data = payload.new as { title: string; body: string; url?: string; tag?: string };
 
           // 브라우저 Notification
+          // tag를 data.tag로 사용 → FCM Service Worker와 동일 tag → 브라우저 자동 dedup (중복 표시 방지)
           if ('Notification' in window && Notification.permission === 'granted') {
             const notif = new Notification(data.title, {
               body: data.body,
               icon: '/icon-192.png',
-              tag: 'mamoru-push',
+              tag: data.tag || 'mamoru-push',
               requireInteraction: true,
             });
             notif.onclick = () => {

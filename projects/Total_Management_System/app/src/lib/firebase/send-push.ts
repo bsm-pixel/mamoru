@@ -118,6 +118,7 @@ export async function sendPushToAll(payload: PushPayload): Promise<{ sent: numbe
         },
         data: {
           url: payload.url || '/dashboard',
+          tag: payload.tag || 'mamoru',  // SW/Realtime 중복 dedup 용
         },
       });
       sent++;

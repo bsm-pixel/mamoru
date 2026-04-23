@@ -22,11 +22,13 @@ self.addEventListener('push', (event) => {
 
   const notif = payload.notification || {};
   const title = notif.title || 'MAMORU TMS';
+  // tag 우선순위: data.tag → notification.tag (webpush.notification 경로) → fallback
+  // Realtime/window.Notification 경로와 동일 tag 사용 → 브라우저 자동 dedup
   const options = {
     body: notif.body || '',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
-    tag: payload.data?.tag || 'mamoru-default',
+    tag: payload.data?.tag || notif.tag || 'mamoru-default',
     data: payload.data || {},
     requireInteraction: true,
   };
