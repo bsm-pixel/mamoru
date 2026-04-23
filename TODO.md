@@ -1,6 +1,6 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-22 (아임웹 배너 원격 관리 + 슬라이드 기능 Phase 2 완료)
+> 최종 수정: 2026-04-23 (아임웹 상품 동기화 투명화 + 푸시 알림 사일런트 실패 수정 + 테스트 패널)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
@@ -29,6 +29,27 @@
 
 - [ ] **Order API 전환**: 주문 취소 자동화 + 송장 수정/삭제
 - [ ] **판매 출고 알림톡 외부 설정**: 솔라피 배송조회 버튼 변수명 확인 (솔라피 문의 대기중)
+
+---
+
+## ✅ 완료 — 04-23 작업
+
+### 아임웹 상품 동기화 사일런트 실패 버그 수정
+- [x] **원인 파악** — products.sku UNIQUE 제약 + error 체크 누락으로 31건 조용히 실패 ✅
+- [x] **product-sync.ts 재설계** — 매칭 우선순위 (imweb_product_no → sku → 신규) ✅
+- [x] **`.single()` → `.maybeSingle()`** — no-match 시 에러 대신 null 반환 ✅
+- [x] **update/insert error 반환값 체크** — 실패 수집해 정확한 집계 ✅
+- [x] **동기화 결과 투명화 UI** — total_fetched / synced / created / updated / linked / failed 구분 표시 + 실패 내역 펼쳐보기 ✅
+
+### 고객 행동 푸시 알림 Vercel 서버리스 사일런트 실패 수정
+- [x] **reviews/submit** — after() 래퍼로 리뷰 작성 푸시 실행 보장 ✅
+- [x] **consultation/public/confirm** — 푸시를 기존 after() 블록 안으로 이동 ✅
+- [x] **consultation/public/resched** — 푸시를 after() 블록 안으로 이동 ✅
+
+### 푸시 알림 테스트 발송 패널
+- [x] **POST /api/push/test 신규** — 9가지 타입별 preset 테스트 발송 ✅
+- [x] **설정 UI — 테스트 발송 그리드** — 각 버튼 클릭 시 실제 기기로 [테스트] 접두어 푸시 ✅
+- [x] **진단 흐름 완비** — 기본 테스트(토글 무관) → 기기 연결 검증 → 타입별 토글 검증 ✅
 
 ---
 
