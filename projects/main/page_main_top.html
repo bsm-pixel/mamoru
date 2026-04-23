@@ -321,6 +321,36 @@ button[class*="mm-"]:focus-visible {
   .mm-trust__number { font-size: 56px; }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   [2.5]. Trust ZERO 효과 — 중공형 (옵션 A: 기본)
+   URL 파라미터 ?effect=fill 적용 시 스크롤 진입 시 fill-in 애니메이션
+   ══════════════════════════════════════════════════════════════ */
+.mm-trust__zero {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--cream);
+  position: relative;
+  display: inline-block;
+  letter-spacing: 0.02em;
+}
+@media (min-width: 768px) {
+  .mm-trust__zero { -webkit-text-stroke-width: 2px; }
+}
+
+/* ?effect=fill 파라미터 적용 시 — 스크롤 진입 순간 아래→위로 채워짐 */
+.mm-trust[data-effect="fill"] .mm-trust__zero::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: var(--cream);
+  -webkit-text-stroke: 0;
+  clip-path: inset(100% 0 0 0);
+  transition: clip-path 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s;
+  pointer-events: none;
+}
+.mm-trust[data-effect="fill"].mm-trust--visible .mm-trust__zero::after {
+  clip-path: inset(0 0 0 0);
+}
+
 
 /* ══════════════════════════════════════════════════════════════
    [3]. Quick Nav — Shell 배경, 퀵 네비게이션
@@ -558,11 +588,11 @@ button[class*="mm-"]:focus-visible {
         <span class="mm-trust__label">맞춤 상담</span>
       </div>
       <div class="mm-trust__item mm-anim mm-anim-stagger">
-        <span class="mm-trust__number" data-target="0" data-suffix="">0</span>
-        <span class="mm-trust__label">할인</span>
+        <span class="mm-trust__number mm-trust__zero" data-text="ZERO">ZERO</span>
+        <span class="mm-trust__label">상술</span>
       </div>
       <div class="mm-trust__item mm-anim mm-anim-stagger">
-        <span class="mm-trust__number mm-anim">직접</span>
+        <span class="mm-trust__number">자체</span>
         <span class="mm-trust__label">복원수리</span>
       </div>
     </div>
@@ -637,13 +667,24 @@ button[class*="mm-"]:focus-visible {
      ═══════════════════════════════════════════════════════════════ */
   function initCounters() {
     var section = document.getElementById('mmTrust');
-    if (!section || !('IntersectionObserver' in window)) {
+    if (!section) return;
+
+    /* URL 파라미터 ?effect=fill 감지 → ZERO fill-in 애니메이션 활성화 */
+    try {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('effect') === 'fill') {
+        section.setAttribute('data-effect', 'fill');
+      }
+    } catch (e) { /* URLSearchParams 미지원 시 무시 */ }
+
+    if (!('IntersectionObserver' in window)) {
       /* fallback: 즉시 최종값 표시 */
-      section && section.querySelectorAll('.mm-trust__number').forEach(function(el) {
+      section.querySelectorAll('.mm-trust__number').forEach(function(el) {
         if (el.getAttribute('data-target') !== null) {
           el.textContent = el.getAttribute('data-target') + (el.getAttribute('data-suffix') || '');
         }
       });
+      section.classList.add('mm-trust--visible');
       return;
     }
 
@@ -655,8 +696,11 @@ button[class*="mm-"]:focus-visible {
         animated = true;
         observer.unobserve(section);
 
+        /* ZERO fill 애니메이션 트리거 (?effect=fill일 때만 시각적 효과) */
+        section.classList.add('mm-trust--visible');
+
         section.querySelectorAll('.mm-trust__number').forEach(function(el) {
-          /* data-target이 없으면 텍스트 전용 (예: "직접") — 스킵 */
+          /* data-target이 없으면 텍스트 전용 (예: "자체", "ZERO") — 스킵 */
           if (!el.hasAttribute('data-target')) return;
 
           var target = parseInt(el.getAttribute('data-target'), 10);
