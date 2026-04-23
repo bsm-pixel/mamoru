@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save } from 'lucide-react';
+import { Save, Bell, Send } from 'lucide-react';
+import toast from 'react-hot-toast';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
 import GoogleCalendarSettings from '@/components/settings/google-calendar-settings';
 import BannerSettings from '@/components/settings/banner-settings';
@@ -122,6 +123,9 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
             </div>
           ))}
         </div>
+
+        {/* 테스트 발송 패널 */}
+        <PushTestPanel />
       </div>
 
       <div className="pt-4 border-t border-neutral-100">
@@ -188,6 +192,83 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
 
 function maskEnv(name: string) {
   return `${name}=****` + ' (보안상 마스킹)';
+}
+
+/** 푸시 테스트 패널 — 각 알림 타입별 테스트 발송 */
+function PushTestPanel() {
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const TESTS: Array<{ type: string; label: string; icon: string }> = [
+    { type: 'generic',          label: '기본 테스트 (토글 무관)',      icon: '🔔' },
+    { type: 'review',           label: '리뷰 작성',                    icon: '⭐' },
+    { type: 'consultation',     label: '상담 접수 (매장방문)',         icon: '📋' },
+    { type: 'field_request',    label: '상담 접수 (출장)',             icon: '🚗' },
+    { type: 'talk_received',    label: '상담 접수 (톡)',               icon: '💬' },
+    { type: 'field_confirmed',  label: '출장 일정 확정',               icon: '✅' },
+    { type: 'field_reschedule', label: '출장 일정 재요청',             icon: '🔄' },
+    { type: 'repair_received',  label: '복원수리 접수',                icon: '🛠' },
+    { type: 'order_received',   label: '아임웹 주문 접수',             icon: '📦' },
+  ];
+
+  const fire = async (type: string, label: string) => {
+    setBusy(type);
+    try {
+      const res = await fetch('/api/push/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        toast.error(`테스트 실패: ${json.error || 'unknown'}`);
+        return;
+      }
+      const { sent, failed } = json.data;
+      if (sent === 0 && failed === 0) {
+        toast(`${label} 테스트 — 디바이스 등록 없음 또는 설정 Off`, { icon: '⚠️' });
+      } else if (sent > 0) {
+        toast.success(`${label} 테스트 발송 (${sent}건 성공${failed > 0 ? `, ${failed}건 실패` : ''})`);
+      } else {
+        toast.error(`${label} 테스트 — ${failed}건 모두 실패 (Vercel 로그 확인)`);
+      }
+    } catch (err) {
+      toast.error(`테스트 실패: ${String(err)}`);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="mt-3 pt-3 border-t border-neutral-200 space-y-2">
+      <div className="flex items-center gap-1.5">
+        <Bell size={13} className="text-neutral-600" />
+        <span className="text-xs font-bold text-neutral-700">테스트 발송</span>
+        <span className="text-[10px] text-neutral-400 ml-1">※ 실제 등록된 기기로 발송됩니다</span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+        {TESTS.map((t) => (
+          <button
+            key={t.type}
+            onClick={() => fire(t.type, t.label)}
+            disabled={busy !== null}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded border border-neutral-200 bg-white hover:bg-neutral-50 text-[11px] text-neutral-700 disabled:opacity-50 text-left"
+          >
+            <span>{t.icon}</span>
+            <span className="flex-1 truncate">{t.label}</span>
+            {busy === t.type ? (
+              <span className="text-[9px] text-neutral-400">...</span>
+            ) : (
+              <Send size={10} className="text-neutral-400" />
+            )}
+          </button>
+        ))}
+      </div>
+      <p className="text-[10px] text-neutral-400 leading-relaxed">
+        💡 기본 테스트는 토글 설정 무시하고 무조건 발송 (기기 연결 확인용).
+        나머지는 해당 토글이 On일 때만 발송됩니다.
+      </p>
+    </div>
+  );
 }
 
 function Field({ label, desc, children }: { label: string; desc?: string; children: React.ReactNode }) {
