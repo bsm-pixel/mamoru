@@ -75,19 +75,23 @@ export async function GET(req: NextRequest) {
       });
     } catch { /* 알림 실패해도 확정은 완료 */ }
 
-    // 관리자 푸시 (고객 확정)
-    import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
-      sendPushToAll({
-        title: '출장 일정 확정 ✅',
-        body: `${data.name}님이 ${date} ${time}로 확정했습니다`,
-        url: '/consultations',
-        tag: `mamoru-confirm-${data.id}`,
-        settingKey: 'push.field_confirmed',
-      }).catch(() => {});
-    }).catch(() => {});
-
-    // Google Calendar 동기화 — after()로 응답 후 실행 보장
+    // 관리자 푸시 + Google Calendar 동기화 — after()로 응답 후 실행 보장 (Vercel 서버리스 대응)
     after(async () => {
+      // 관리자 푸시 (고객 확정)
+      try {
+        const { sendPushToAll } = await import('@/lib/firebase/send-push');
+        await sendPushToAll({
+          title: '출장 일정 확정 ✅',
+          body: `${data.name}님이 ${date} ${time}로 확정했습니다`,
+          url: '/consultations',
+          tag: `mamoru-confirm-${data.id}`,
+          settingKey: 'push.field_confirmed',
+        });
+      } catch (e) {
+        console.error('[confirm push] 실패:', e);
+      }
+
+      // Google Calendar 동기화
       try {
         await syncConsultationToCalendar(data.id);
       } catch (e) {

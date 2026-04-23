@@ -75,21 +75,25 @@ export async function GET(req: NextRequest) {
       );
     } catch { /* 이메일 실패해도 재요청은 완료 */ }
 
-    // 관리자 푸시 (고객 재요청)
-    import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
-      sendPushToAll({
-        title: '출장 일정 재요청 🔄',
-        body: reason
-          ? `${data.name}님 재요청 — ${reason.slice(0, 50)}${reason.length > 50 ? '...' : ''}`
-          : `${data.name}님이 다른 시간을 요청했습니다`,
-        url: '/consultations',
-        tag: `mamoru-resched-${data.id}`,
-        settingKey: 'push.field_reschedule',
-      }).catch(() => {});
-    }).catch(() => {});
-
-    // Google Calendar 동기화 — after()로 응답 후 실행 보장
+    // 관리자 푸시 + Google Calendar 동기화 — after()로 응답 후 실행 보장 (Vercel 서버리스 대응)
     after(async () => {
+      // 관리자 푸시 (고객 재요청)
+      try {
+        const { sendPushToAll } = await import('@/lib/firebase/send-push');
+        await sendPushToAll({
+          title: '출장 일정 재요청 🔄',
+          body: reason
+            ? `${data.name}님 재요청 — ${reason.slice(0, 50)}${reason.length > 50 ? '...' : ''}`
+            : `${data.name}님이 다른 시간을 요청했습니다`,
+          url: '/consultations',
+          tag: `mamoru-resched-${data.id}`,
+          settingKey: 'push.field_reschedule',
+        });
+      } catch (e) {
+        console.error('[resched push] 실패:', e);
+      }
+
+      // Google Calendar 동기화 — ⏳ 접두어 업데이트
       try {
         await syncConsultationToCalendar(data.id);
       } catch (e) {
