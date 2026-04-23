@@ -321,6 +321,11 @@ button[class*="mm-"]:focus-visible {
   .mm-trust__number { font-size: 56px; }
 }
 
+/* Trust 전용 — 4글자 이상의 한글 텍스트용 축소 변형 (예: "자체진행") */
+.mm-trust__number--compact { font-size: 26px; letter-spacing: -0.05em; }
+@media (min-width: 768px) { .mm-trust__number--compact { font-size: 34px; } }
+@media (min-width: 1024px) { .mm-trust__number--compact { font-size: 40px; } }
+
 /* ══════════════════════════════════════════════════════════════
    [2.5]. Trust ZERO 효과 — 중공형 (옵션 A: 기본)
    URL 파라미터 ?effect=fill 적용 시 스크롤 진입 시 fill-in 애니메이션
@@ -574,9 +579,9 @@ button[class*="mm-"]:focus-visible {
 
     <div class="mm-hero__body">
       <!-- ✏️ 수정가능: 히어로 키커 -->
-      <span class="mm-hero__kicker mm-anim">Professional Scissors Brand</span>
+      <span class="mm-hero__kicker mm-anim">be humble & honest</span>
       <!-- ✏️ 수정가능: 히어로 메인 타이틀 -->
-      <h1 class="mm-hero__headline mm-anim">좋은 미용가위<br>그 기준을 경험하다</h1>
+      <h1 class="mm-hero__headline mm-anim">좋은 미용가위<br>그 기준을 정의한다</h1>
       <!-- ✏️ 수정가능: 히어로 서브카피 -->
       <p class="mm-hero__sub mm-anim">모두에게 비싼 가위는 있지만<br>누구에게나 좋은 가위는 없습니다</p>
       <div class="mm-hero__cta-group">
@@ -612,7 +617,7 @@ button[class*="mm-"]:focus-visible {
         <span class="mm-trust__label">상술 · 권유</span>
       </div>
       <div class="mm-trust__item mm-anim mm-anim-stagger">
-        <span class="mm-trust__number">자체</span>
+        <span class="mm-trust__number mm-trust__number--compact">자체진행</span>
         <span class="mm-trust__label">수냉식 복원수리</span>
       </div>
     </div>
