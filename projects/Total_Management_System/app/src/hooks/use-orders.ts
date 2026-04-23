@@ -134,6 +134,17 @@ export function useOrderSync() {
   });
 }
 
+/** 아임웹 상품 동기화 결과 (Phase 2: 투명한 실패 집계) */
+export interface ProductSyncResult {
+  success: boolean;
+  total_fetched: number; // 아임웹 API에서 받은 전체 개수
+  synced: number;        // DB 반영 성공 개수
+  created: number;
+  updated: number;
+  linked: number;        // 수동 등록된 상품에 imweb_product_no 연결
+  errors: string[];
+}
+
 /** 아임웹 상품 동기화 */
 export function useProductSync() {
   const queryClient = useQueryClient();
@@ -142,10 +153,18 @@ export function useProductSync() {
     mutationFn: async () => {
       const res = await fetch('/api/imweb/sync-products', { method: 'POST' });
       if (!res.ok) throw new Error(await res.text());
-      return res.json() as Promise<{ success: boolean; synced: number; created: number; updated: number; errors: string[] }>;
+      return res.json() as Promise<ProductSyncResult>;
     },
     onSuccess: (data) => {
-      toast.success(`상품 ${data.created}개 생성, ${data.updated}개 업데이트`);
+      const failed = data.errors?.length || 0;
+      if (failed > 0) {
+        toast(
+          `상품 ${data.synced}/${data.total_fetched}건 반영 (${failed}건 실패)`,
+          { icon: '⚠️', duration: 6000 }
+        );
+      } else {
+        toast.success(`상품 ${data.synced}건 동기화 완료 (생성 ${data.created} · 업데이트 ${data.updated} · 연결 ${data.linked})`);
+      }
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
       queryClient.invalidateQueries({ queryKey: ['sync-logs'] });

@@ -140,9 +140,42 @@ export default function SystemSettings({ settings, onSave, saving }: TabProps) {
         </div>
 
         {productSync.data && (
-          <p className="text-xs text-neutral-500 mb-3">
-            {productSync.data.created}개 생성, {productSync.data.updated}개 업데이트
-          </p>
+          <div className="mb-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-neutral-700">아임웹 API:</span>
+              <span className="text-neutral-600">{productSync.data.total_fetched ?? productSync.data.synced}건 조회</span>
+              <span className="text-neutral-400">→</span>
+              <span className="font-semibold text-green-700">{productSync.data.synced}건 반영</span>
+              {productSync.data.errors?.length > 0 && (
+                <>
+                  <span className="text-neutral-400">·</span>
+                  <span className="font-semibold text-red-600">{productSync.data.errors.length}건 실패</span>
+                </>
+              )}
+            </div>
+            <div className="text-neutral-500">
+              신규 생성 <b className="text-neutral-700">{productSync.data.created}</b> ·
+              기존 업데이트 <b className="text-neutral-700">{productSync.data.updated}</b>
+              {typeof productSync.data.linked === 'number' && productSync.data.linked > 0 && (
+                <> · 수동등록 연결 <b className="text-neutral-700">{productSync.data.linked}</b></>
+              )}
+            </div>
+            {productSync.data.errors?.length > 0 && (
+              <details className="pt-1">
+                <summary className="cursor-pointer text-red-600 font-semibold hover:underline">
+                  실패 내역 {productSync.data.errors.length}건 보기
+                </summary>
+                <div className="mt-2 bg-white border border-red-200 rounded p-2 max-h-48 overflow-y-auto font-mono text-[10px] text-neutral-700 space-y-1">
+                  {productSync.data.errors.slice(0, 50).map((err: string, i: number) => (
+                    <div key={i} className="break-all">{err}</div>
+                  ))}
+                  {productSync.data.errors.length > 50 && (
+                    <div className="text-neutral-400">... {productSync.data.errors.length - 50}건 더 (Vercel 로그에서 전체 확인)</div>
+                  )}
+                </div>
+              </details>
+            )}
+          </div>
         )}
 
         {/* 동기화 이력 */}

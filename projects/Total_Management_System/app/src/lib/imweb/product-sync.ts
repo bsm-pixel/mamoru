@@ -2,6 +2,13 @@
  * 아임웹 상품 동기화 (v2 API)
  * 아임웹 → TMS products 테이블 upsert
  * 매입가/거래처는 동기화하지 않음 (TMS 자체 관리)
+ *
+ * 매칭 우선순위:
+ *   1. imweb_product_no 로 기존 조회 (이미 연동된 상품)
+ *   2. sku (custom_prod_code) 로 기존 조회 (수동 등록된 상품)
+ *   3. 없으면 신규 생성
+ *
+ * 에러 처리: 각 상품별 INSERT/UPDATE 실패 사유를 수집해 반환
  */
 
 import { getImwebProducts, type ImwebV2Product } from './client';
@@ -9,9 +16,11 @@ import { createServiceClient } from '@/lib/supabase/server';
 
 interface SyncResult {
   success: boolean;
-  synced: number;
+  total_fetched: number;   // 아임웹 API에서 받은 전체 개수
+  synced: number;          // 실제 DB에 upsert 성공한 개수
   created: number;
   updated: number;
+  linked: number;          // 수동 등록된 것에 imweb_product_no 연결
   errors: string[];
 }
 
@@ -30,9 +39,11 @@ export async function syncProducts(): Promise<SyncResult> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
   const errors: string[] = [];
+  let totalFetched = 0;
   let synced = 0;
   let created = 0;
   let updated = 0;
+  let linked = 0;
 
   // sync_log 시작
   const { data: logEntry } = await db.from('sync_log').insert({
@@ -54,15 +65,23 @@ export async function syncProducts(): Promise<SyncResult> {
       }
 
       const products = res.data.list;
+      totalFetched += products.length;
 
       for (const p of products) {
         try {
-          // 기존 TMS 제품 조회 (imweb_product_no 기준)
-          const { data: existing } = await db
+          const sku = p.custom_prod_code || `IW-${p.no}`;
+
+          // 1차: imweb_product_no 로 기존 조회
+          const { data: byImwebNo, error: imwebErr } = await db
             .from('products')
-            .select('id, price_purchase, price_dealer, supplier_id, category')
+            .select('id, sku, imweb_product_no')
             .eq('imweb_product_no', String(p.no))
-            .single();
+            .maybeSingle();
+
+          if (imwebErr) {
+            errors.push(`[${p.no}] ${p.name}: imweb_product_no 조회 오류 — ${imwebErr.message}`);
+            continue;
+          }
 
           // 재고 미사용: stock_use=false → stock_quantity=-1 (TMS 규약)
           const stockQty = p.stock?.stock_use ? (p.stock.stock_no_option || 0) : -1;
@@ -73,32 +92,72 @@ export async function syncProducts(): Promise<SyncResult> {
             price: p.price || 0,
             stock_quantity: stockQty,
             image_url: getImageUrl(p),
-            sku: p.custom_prod_code || `IW-${p.no}`,
+            sku,
             is_active: p.prod_status === 'sale',
             updated_at: new Date().toISOString(),
           };
 
-          if (existing) {
-            // 업데이트 — 매입가/거래처/카테고리/재고는 TMS 값 유지 (TMS가 마스터)
+          if (byImwebNo) {
+            // 이미 연동된 상품 → UPDATE (재고는 TMS가 마스터라 제외)
             const { stock_quantity: _omit, ...updateData } = productData;
-            await db.from('products').update(updateData).eq('id', existing.id);
+            const { error: updErr } = await db
+              .from('products')
+              .update(updateData)
+              .eq('id', byImwebNo.id);
+
+            if (updErr) {
+              errors.push(`[${p.no}] ${p.name}: UPDATE 실패 — ${updErr.message}`);
+              continue;
+            }
             updated++;
           } else {
-            // 신규 생성 — 아임웹 재고를 보관창고(raw_stock)에 초기화
-            await db.from('products').insert({
-              ...productData,
-              category: 'BL', // 기본값, TMS에서 수동 변경
-              price_dealer: 0,
-              price_purchase: 0,
-              price_groups: {},
-              raw_stock: stockQty > 0 ? stockQty : 0, // 아임웹 재고 → 보관창고
-              created_at: new Date().toISOString(),
-            });
-            created++;
+            // 2차: sku 로 수동 등록된 상품 조회 (imweb_product_no 아직 안 붙은 상품)
+            const { data: bySku, error: skuErr } = await db
+              .from('products')
+              .select('id, sku, imweb_product_no')
+              .eq('sku', sku)
+              .maybeSingle();
+
+            if (skuErr) {
+              errors.push(`[${p.no}] ${p.name} (sku=${sku}): sku 조회 오류 — ${skuErr.message}`);
+              continue;
+            }
+
+            if (bySku) {
+              // 수동 등록된 상품을 이번 동기화로 imweb와 연결
+              const { stock_quantity: _omit, ...updateData } = productData;
+              const { error: linkErr } = await db
+                .from('products')
+                .update(updateData)
+                .eq('id', bySku.id);
+
+              if (linkErr) {
+                errors.push(`[${p.no}] ${p.name} (sku=${sku}): 연결(link) 실패 — ${linkErr.message}`);
+                continue;
+              }
+              linked++;
+            } else {
+              // 신규 생성 — 아임웹 재고를 보관창고(raw_stock)에 초기화
+              const { error: insErr } = await db.from('products').insert({
+                ...productData,
+                category: 'BL', // 기본값, TMS에서 수동 변경
+                price_dealer: 0,
+                price_purchase: 0,
+                price_groups: {},
+                raw_stock: stockQty > 0 ? stockQty : 0, // 아임웹 재고 → 보관창고
+                created_at: new Date().toISOString(),
+              });
+
+              if (insErr) {
+                errors.push(`[${p.no}] ${p.name} (sku=${sku}): INSERT 실패 — ${insErr.message}`);
+                continue;
+              }
+              created++;
+            }
           }
           synced++;
         } catch (err) {
-          errors.push(`상품 ${p.no}(${p.name}): ${String(err)}`);
+          errors.push(`[${p.no}] ${p.name}: 예외 — ${String(err)}`);
         }
       }
 
@@ -117,7 +176,15 @@ export async function syncProducts(): Promise<SyncResult> {
       }).eq('id', logEntry.id);
     }
 
-    return { success: true, synced, created, updated, errors };
+    // 콘솔에 결과 요약 (Vercel 로그 확인용)
+    console.log(
+      `[syncProducts] fetched=${totalFetched} synced=${synced} created=${created} updated=${updated} linked=${linked} errors=${errors.length}`
+    );
+    if (errors.length > 0) {
+      console.warn('[syncProducts] 실패 상세:\n' + errors.slice(0, 10).join('\n'));
+    }
+
+    return { success: true, total_fetched: totalFetched, synced, created, updated, linked, errors };
   } catch (err) {
     if (logEntry?.id) {
       await db.from('sync_log').update({
@@ -128,6 +195,6 @@ export async function syncProducts(): Promise<SyncResult> {
       }).eq('id', logEntry.id);
     }
 
-    return { success: false, synced, created, updated, errors: [String(err), ...errors] };
+    return { success: false, total_fetched: totalFetched, synced, created, updated, linked, errors: [String(err), ...errors] };
   }
 }
