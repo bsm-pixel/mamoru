@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
     const { data: consultations } = await dbAny
       .from('consultations')
-      .select('id, name, phone, consultation_type, visit_date, visit_time, unique_id, remind_24h_at, remind_2h_at')
+      .select('id, name, phone, consultation_type, visit_date, visit_time, unique_id, address_road, address_detail, remind_24h_at, remind_2h_at')
       .eq('status', 'confirmed')
       .gte('visit_date', today)
       .lte('visit_date', tomorrow)
@@ -59,6 +59,7 @@ export async function GET(req: NextRequest) {
       if (diffHours < 0) continue;
 
       const isField = c.consultation_type === 'field_request';
+      const address = [c.address_road, c.address_detail].filter(Boolean).join(' ');
 
       // 24h 리마인더 (2~24시간 전)
       if (diffHours <= 24 && diffHours > 2 && !c.remind_24h_at) {
@@ -82,6 +83,7 @@ export async function GET(req: NextRequest) {
               date: c.visit_date,
               time: c.visit_time,
               type: isField ? '출장' : '매장방문',
+              address,                  // 출장 리마인더 방문주소 치환 변수
             },
           });
 
@@ -113,6 +115,7 @@ export async function GET(req: NextRequest) {
               date: c.visit_date,
               time: c.visit_time,
               type: isField ? '출장' : '매장방문',
+              address,                  // 출장 리마인더 방문주소 치환 변수
             },
           });
 
