@@ -1,6 +1,6 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-23 (푸시 알림 중복 해결 + 리마인더 Make 설정 수정 + 메인 페이지 카피·디자인)
+> 최종 수정: 2026-04-24 (상담관리 일정 수동 등록 + 모달 UX 정리 + 리마인더 주소 치환 + 테스트 푸시 패널)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
@@ -29,6 +29,35 @@
 
 - [ ] **Order API 전환**: 주문 취소 자동화 + 송장 수정/삭제
 - [ ] **판매 출고 알림톡 외부 설정**: 솔라피 배송조회 버튼 변수명 확인 (솔라피 문의 대기중)
+
+---
+
+## ✅ 완료 — 04-24 작업
+
+### 상담관리 일정 수동 등록 기능 (인스타DM/유선 접수용)
+- [x] **API `/api/consultation/admin-create` 신규** — 관리자 전용 등록 (인증 · 검증 · 중복체크 · 지오코딩) ✅
+- [x] **중복 체크 로직** — phone_normalized 기준 + 오늘 이후 + 같은 visit_date/time → 409 경고 ✅
+- [x] **수기 접수 마킹** — `gas_raw.source = 'admin_manual'` 필드로 리포트 집계 구분 ✅
+- [x] **출장 지오코딩** — 카카오 REST API로 주소→좌표 자동 변환 (지도 표시용) ✅
+- [x] **CreateConsultationModal** — 타입 세그먼트 · 동적 필드 · 알림톡 체크박스 ✅
+- [x] **DuplicateWarningModal** — 기존 상담 정보 카드 + 입력 복귀/기존 확인 옵션 ✅
+- [x] **useCreateConsultation 훅** — AdminCreatePayload 타입 + 409 duplicate 정상 처리 ✅
+- [x] **상담관리 페이지 상단 "일정수동등록" 버튼** — 탭 행 우측 CalendarPlus 아이콘 ✅
+- [x] **알림톡 자동 발송** — confirmed/field_confirmed 템플릿 (notify=true 기본) ✅
+- [x] **Google Calendar 자동 동기화** — after() 래퍼로 이벤트 생성 ✅
+- [x] **리마인더 cron 자동 포함** — status=confirmed + visit_date/time 기반 별도 작업 없이 반영 ✅
+
+### 아임웹 배너 모달 UX 정리
+- [x] **우측 상단 X 버튼 제거** — 하단 "오늘 하루 보지 않기" / "닫기" 버튼만으로 통일 ✅
+- [x] **TMS 미리보기 모달 닫기 버튼 기능 연결** — 실제 onClose 동작 ✅
+
+### 상담 리마인더 방문주소 누락 복구
+- [x] **send-reminders cron** — SELECT 에 address_road/detail 추가 ✅
+- [x] **data.address 치환 변수 전달** — FIELD_REMIND_24H/2H 솔라피 템플릿의 #{address} 정상 ✅
+
+### 푸시 알림 테스트 발송 패널 (어제 04-23 완료분 계속 운용)
+- [x] **알림 구분** — 리뷰/상담 3종/출장 2종/복원수리/주문 9타입 ✅
+- [x] **3건 실패 원인 확인** — 과거 등록 만료 토큰 · 고객 영향 없음 확인 ✅
 
 ---
 

@@ -139,7 +139,8 @@
 ### TMS API Routes (관리자 — 인증 필수)
 | 엔드포인트 | 메서드 | 기능 |
 |------------|--------|------|
-| `/api/consultation` | GET/POST | 목록/생성 |
+| `/api/consultation` | GET/POST | 목록/생성 (기본 CRUD) |
+| `/api/consultation/admin-create` | POST | **수기 등록 전용** (인스타DM/유선 접수 → 확정 + 알림톡 + 캘린더 + 중복체크) |
 | `/api/consultation/[id]` | GET/PATCH | 상세/상태변경 + 알림톡 |
 | `/api/consultation/suggest` | POST | 시간 제안 + 알림톡 (직접) |
 | `/api/consultation/delay` | POST | 출장 지연 안내 + 알림톡 (직접) |
@@ -255,3 +256,84 @@ GOOGLE_REDIRECT_URI       # https://app-eta-sandy-75.vercel.app/api/google/calen
 - **재요청 시 매장방문 슬롯은 해제됨** (기존 로직 유지) — 캘린더는 이벤트 유지하되 제목에 ⏳ 표기
 - **캘린더에서 직접 수정 금지** — SSOT 위반 방지 (description에 경고 문구)
 - **refresh_token 6개월 무사용 시 자동 무효** → 설정 UI에 경고 배너 + 재연결 필요
+
+---
+
+## 6. 관리자 직접 상담 등록 — 수기 접수 흐름 (2026-04-24 추가)
+
+### 목적
+인스타 DM · 유선 전화 · 매장 워크인 등 **외부 채널로 들어온 상담**을 사장님이 TMS에서 직접 입력하여 기존 자동화 흐름(알림톡·리마인더·캘린더·푸시)에 자연스럽게 편입시킴.
+
+### 지원 범위
+| 유형 | 지원 | 비고 |
+|------|------|------|
+| 매장방문 (store_visit) | ✅ | 주소 불필요 |
+| 출장요청 (field_request) | ✅ | 주소 필수 (지도 표시 + 리마인더 문자) |
+| 톡상담 (talk_consult) | ❌ | 일정 없는 유형 → 수기 등록 제외 |
+
+### 진입점
+- **상담관리 페이지 → 탭 행 우측 "일정수동등록" 버튼**
+- 통합 모달에서 유형 선택 → 필드 동적 노출
+
+### 입력 필드
+| 필드 | 매장방문 | 출장요청 | 비고 |
+|------|:-:|:-:|------|
+| 유형 (세그먼트) | ✅ | ✅ | 기본 매장방문 |
+| 고객명 | ✅ | ✅ | 중복 검사 기준 아님 |
+| 연락처 | ✅ | ✅ | **중복 검사 기준** (phone_normalized) |
+| 방문 날짜 | ✅ | ✅ | 필수 |
+| 방문 시간 | ✅ | ✅ | 필수 |
+| 주소 | ❌ | ✅ | 지오코딩으로 lat/lng 자동 설정 |
+| 상세 주소 | ❌ | (선택) | 상호명/층수 등 |
+| 메모 | (선택) | (선택) | 접수 경로 기록 권장 |
+| 알림톡 발송 체크 | ✅ | ✅ | 기본 On |
+
+### 자동 처리 흐름 (등록 버튼 클릭 시)
+```
+POST /api/consultation/admin-create
+├─ 관리자 인증 체크
+├─ 입력 검증 (타입별 필수 분기)
+├─ 중복 체크
+│   └─ phone_normalized + visit_date + visit_time + 미래 → 409 Conflict
+│       → 경고 모달에서 기존 상담 정보 카드 표시
+├─ 출장 지오코딩 (Kakao REST API)
+├─ DB INSERT
+│   ├─ status: 'confirmed' (즉시 확정)
+│   ├─ unique_id: crypto.randomUUID()
+│   └─ gas_raw.source: 'admin_manual' (수기 마킹)
+├─ consultation_history INSERT ('관리자 직접 등록')
+└─ after() {
+     (notify=true) → sendNotification('confirmed' / 'field_confirmed')
+     → syncConsultationToCalendar() (Google Calendar 이벤트 자동 생성)
+   }
+```
+
+### 자동 편입되는 기존 흐름
+| 기능 | 자동 편입 여부 | 근거 |
+|------|:-:|------|
+| 24h/2h 리마인더 | ✅ | cron이 status=confirmed + visit_date/time 조회 |
+| Google Calendar 동기화 | ✅ | calendar-sync가 확정 상태 감지 |
+| 상태 변경 (취소/완료/일정변경) | ✅ | 기존 상세 패널 액션 전부 적용 |
+| 고객 변경/취소 링크 | ✅ | change_request_link 알림톡에 포함 |
+| 리포트 집계 | ✅ | `gas_raw.source = 'admin_manual'` 필터로 수기 N건 / 웹 M건 구분 |
+
+### 중복 감지 정책
+- **기준**: `phone_normalized` (하이픈 유무 무관) + visit_date + visit_time
+- **범위**: 오늘 이후 미래 건만 (과거 같은 고객은 무시)
+- **활성 상태**: pending_admin / assigned / suggested / confirmed / reschedule_requested / change_requested
+- **충돌 시**: 409 Conflict + `existing` 상담 객체 반환 → 경고 모달에서 "기존 확인" or "입력 폼 복귀"
+
+### 파일 구조
+```
+app/src/app/api/consultation/admin-create/route.ts  # 신규 API
+app/src/hooks/use-consultations.ts                  # useCreateConsultation 훅
+app/src/components/consultations/
+  └ create-consultation-modal.tsx                   # 신규 모달 + 중복 경고 서브 모달
+app/src/app/(dashboard)/consultations/page.tsx      # 버튼 + 모달 연결
+```
+
+### 설계 원칙
+- **단일 진실점**: 수기 접수와 웹 접수가 **동일 consultations 테이블 + 동일 상태머신** 사용
+- **유지보수 단순화**: 기존 알림톡/리마인더/캘린더 로직을 전부 재사용 (분기 최소화)
+- **수기 구분 가능**: `gas_raw.source` 필드로 리포트에서만 구분 (운영 흐름은 동일)
+- **UX 일관성**: 기존 상세 패널, 필터, 검색 모두 수기 등록 건에도 적용
