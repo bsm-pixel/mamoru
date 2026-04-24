@@ -618,13 +618,6 @@ function PreviewModal({
         className="bg-[#FAF9F7] max-w-[420px] w-full rounded-lg overflow-hidden shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-[#FAF9F7]/90 hover:bg-white flex items-center justify-center z-10"
-        >
-          ×
-        </button>
-
         {/* 슬라이드 트랙 */}
         {images.length > 0 && (
           <div className="relative overflow-hidden bg-[#EEE]">
@@ -658,8 +651,8 @@ function PreviewModal({
           </div>
         )}
         <div className="flex border-t border-[#EEE]">
-          <button className="flex-1 py-3.5 text-xs text-[#555] hover:bg-[#F5F5F5]">오늘 하루 보지 않기</button>
-          <button className="flex-1 py-3.5 text-xs font-bold text-[#1A1A1A] border-l border-[#EEE] hover:bg-[#F5F5F5]">닫기</button>
+          <button onClick={onClose} className="flex-1 py-3.5 text-xs text-[#555] hover:bg-[#F5F5F5]">오늘 하루 보지 않기</button>
+          <button onClick={onClose} className="flex-1 py-3.5 text-xs font-bold text-[#1A1A1A] border-l border-[#EEE] hover:bg-[#F5F5F5]">닫기</button>
         </div>
       </div>
     </div>

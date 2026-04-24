@@ -64,8 +64,6 @@ const WIDGET_JS = `(function(){
       '#mamoru-banner-overlay{position:fixed;inset:0;z-index:' + Z_INDEX + ';background:rgba(26,26,26,0.72);display:flex;align-items:center;justify-content:center;padding:24px;animation:mamoru-fade-in 0.2s ease-out;}',
       '@keyframes mamoru-fade-in{from{opacity:0}to{opacity:1}}',
       '#mamoru-banner-modal{background:#FAF9F7;max-width:420px;width:100%;border-radius:8px;overflow:hidden;font-family:"Noto Sans KR",-apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;}',
-      '#mamoru-banner-close-x{position:absolute;top:10px;right:10px;width:32px;height:32px;border:none;background:rgba(250,249,247,0.9);border-radius:50%;font-size:18px;cursor:pointer;color:#1A1A1A;line-height:1;display:flex;align-items:center;justify-content:center;z-index:2;}',
-      '#mamoru-banner-close-x:hover{background:#FFF;}',
       // 슬라이드 트랙
       '.mamoru-slide-track{position:relative;width:100%;overflow:hidden;background:#EEE;user-select:none;-webkit-user-select:none;touch-action:pan-y;}',
       '.mamoru-slide-list{display:flex;transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);}',
@@ -225,7 +223,6 @@ const WIDGET_JS = `(function(){
 
     overlay.innerHTML =
       '<div id="mamoru-banner-modal" role="dialog" aria-modal="true">' +
-        '<button id="mamoru-banner-close-x" aria-label="닫기">&times;</button>' +
         slidesHtml +
         bodyHtml +
         '<div id="mamoru-banner-actions">' +
@@ -239,8 +236,7 @@ const WIDGET_JS = `(function(){
       if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
     }
 
-    // X 버튼 + "닫기" 버튼
-    overlay.querySelector('#mamoru-banner-close-x').addEventListener('click', close);
+    // "닫기" 버튼
     overlay.querySelector('#mamoru-banner-close').addEventListener('click', close);
 
     // "오늘 하루 보지 않기"
