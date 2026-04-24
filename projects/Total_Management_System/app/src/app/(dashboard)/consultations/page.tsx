@@ -12,7 +12,8 @@ import { TalkConsultList } from '@/components/consultations/talk-consult-list';
 import { ScheduleCalendar } from '@/components/consultations/schedule-calendar';
 import { ConsultationDetailPanel } from '@/components/consultations/consultation-detail-panel';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { RefreshCw, Store, Truck, MessageCircle, Inbox, Loader, CheckCircle, MapPin } from 'lucide-react';
+import { RefreshCw, Store, Truck, MessageCircle, Inbox, Loader, CheckCircle, MapPin, CalendarPlus } from 'lucide-react';
+import { CreateConsultationModal } from '@/components/consultations/create-consultation-modal';
 
 // 카카오맵은 SSR 불가 → dynamic import
 const FieldRequestMap = dynamic(
@@ -57,6 +58,7 @@ export default function ConsultationsPage() {
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [fieldSubTab, setFieldSubTab] = useState<string>('new_intake');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const sync = useConsultationSync();
   const needAction = useNeedActionCounts();
   const { data: stats } = useConsultationDashboardStats();
@@ -116,27 +118,38 @@ export default function ConsultationsPage() {
           </Button>
         </div>
 
-        {/* 최상위 3탭 + #6 대응필요 뱃지 */}
-        <div className="flex gap-1 border-b border-neutral-200">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => { setActiveTab(tab.key); setSelectedFieldId(null); setSelectedId(null); }}
-              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 transition relative ${
-                activeTab === tab.key
-                  ? 'border-terracotta text-terracotta'
-                  : 'border-transparent text-neutral-500 hover:text-neutral-700'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-              {needAction[tab.key] > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
-                  {needAction[tab.key]}
-                </span>
-              )}
-            </button>
-          ))}
+        {/* 최상위 3탭 + #6 대응필요 뱃지 + 일정 수동 등록 버튼 */}
+        <div className="flex items-center justify-between border-b border-neutral-200">
+          <div className="flex gap-1">
+            {TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => { setActiveTab(tab.key); setSelectedFieldId(null); setSelectedId(null); }}
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 transition relative ${
+                  activeTab === tab.key
+                    ? 'border-terracotta text-terracotta'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-700'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+                {needAction[tab.key] > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
+                    {needAction[tab.key]}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setCreateModalOpen(true)}
+            className="mb-1 shrink-0"
+          >
+            <CalendarPlus size={14} />
+            일정수동등록
+          </Button>
         </div>
 
         {/* 메인 콘텐츠 — 출장 탭 PC: 3열 / 기타: 2열 */}
@@ -254,6 +267,16 @@ export default function ConsultationsPage() {
           </div>
         )}
       </div>
+
+      {/* 관리자 직접 상담 등록 모달 */}
+      <CreateConsultationModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onCreated={(id) => {
+          // 등록된 건을 상세 패널로 바로 열기
+          setSelectedId(id);
+        }}
+      />
     </>
   );
 }

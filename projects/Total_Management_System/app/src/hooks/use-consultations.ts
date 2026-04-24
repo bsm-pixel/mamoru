@@ -243,6 +243,67 @@ export function useSendNotification() {
 }
 
 /** 상담 건 삭제 (알림톡 없이 완전 삭제) */
+/** 관리자 직접 상담 등록 (인스타 DM / 유선 등 외부 채널 수기 입력)
+ *  - type: 'store_visit' | 'field_request'
+ *  - 중복 시 409 + existing 반환 → 모달에서 경고 후 진행 여부 결정
+ */
+export interface AdminCreatePayload {
+  type: 'store_visit' | 'field_request';
+  name: string;
+  phone: string;
+  visitDate: string;   // YYYY-MM-DD
+  visitTime: string;   // HH:MM
+  addressRoad?: string;
+  addressDetail?: string;
+  memo?: string;
+  notify?: boolean;
+}
+
+export interface DuplicateExistingConsultation {
+  id: string;
+  unique_id: string;
+  name: string;
+  phone: string;
+  consultation_type: string;
+  visit_date: string;
+  visit_time: string;
+  status: string;
+}
+
+export function useCreateConsultation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: AdminCreatePayload): Promise<{ ok: true; data: Consultation } | { ok: false; duplicate: DuplicateExistingConsultation }> => {
+      const res = await fetch('/api/consultation/admin-create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+
+      // 409: 중복
+      if (res.status === 409 && json?.error === 'duplicate' && json?.existing) {
+        return { ok: false, duplicate: json.existing as DuplicateExistingConsultation };
+      }
+
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || '등록 실패');
+      }
+      return { ok: true, data: json.data as Consultation };
+    },
+    onSuccess: (result) => {
+      if (result.ok) {
+        toast.success('일정이 등록되었습니다');
+        queryClient.invalidateQueries({ queryKey: ['consultations'] });
+        queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+        queryClient.invalidateQueries({ queryKey: ['consultation-dashboard-stats'] });
+      }
+    },
+    onError: (err) => toast.error('등록 실패: ' + String(err)),
+  });
+}
+
 export function useDeleteConsultation() {
   const queryClient = useQueryClient();
 
