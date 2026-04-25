@@ -1326,7 +1326,7 @@ const questionsData = [
 
 /* 결과 문구 */
 const messagesData = {
-  MSG_CE: '새로운 꿈을 위한 멋진 도전!\n응원하겠습니다!\n마모루 대표는 필기만 따고 중도하차 했답니다 ^-^',
+  MSG_CE: '새로운 꿈을 위한 멋진 도전!\n즐거운 여정 되실 수 있도록\n마모루가 진심으로 응원하겠습니다!',
   MSG_IN: '실무속에서 눈치보랴 움직이느라 힘드시죠?\n미용가위만큼은 든든할 수 있도록 돕겠습니다!',
   MSG_DE: '많은 손님의 스타일과 자신감에 도움을 주시느라 고생많으십니다\n이젠 미용가위의 부담속에서 한결 가벼우시도록 저희가 노력하겠습니다'
 };
@@ -1474,11 +1474,12 @@ let isTransitioning = false;  // ★ 전환 중 플래그
 /* ★ 아이콘 렌더링 함수: SVG/img 태그면 그대로, 경로면 img, 아니면 텍스트 */
 function renderIcon(icon) {
   if (!icon) return '';
-  if (icon.startsWith('<svg') || icon.startsWith('<img')) return icon;
-  if (icon.includes('/') || icon.includes('.')) {
+  // 외부 SVG/이미지 파일만 표시 (사장님이 직접 만든 아이콘)
+  // 인라인 <svg>는 임시 placeholder이므로 빈 공간 처리 (사장님 아이콘 작업 후 경로로 교체)
+  if (/\.(svg|png|jpg|jpeg|webp)(\?|$)/i.test(icon) || icon.startsWith('./icons/') || icon.startsWith('/icons/')) {
     return `<img src="${icon}" alt="" class="diag-custom-icon">`;
   }
-  return icon;
+  return ''; // 임시 인라인 SVG, 이모지 등은 비워둠
 }
 
 function diagInit() {
