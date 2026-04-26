@@ -34,7 +34,7 @@
   --shell: #F5F3F0;
   --cream: #FAF9F7;
   --white: #FFFFFF;
-  --error: #ef4444;
+  --error: var(--void);  /* 모노크롬 — 에러는 굵기·아이콘·테두리로 구분 */
   /* 호환 별칭 — JS에서 참조하는 변수 없음, CSS 전용 */
   --bg-dark: var(--void);
   --card-bg: var(--white);
@@ -73,7 +73,7 @@ html, body {
 
 @media (min-width: 768px) {
   .wrap {
-    max-width: 720px;
+    max-width: 680px;  /* ADDENDUM_IMWEB CTA 영역 기준 */
     margin: 0 auto;
     padding: 40px 24px 60px;
   }

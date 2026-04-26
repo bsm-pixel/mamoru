@@ -174,9 +174,10 @@
       font-size: 13px; font-weight: 600; padding: 4px 12px;
       border-radius: 10px; white-space: nowrap;
     }
-    .status-row .value.good { background: #e8f5e9; color: #2e7d32; }
-    .status-row .value.warning { background: #fff3e0; color: #e65100; }
-    .status-row .value.bad { background: #ffebee; color: #c62828; }
+    /* 상태 배지 — 모노크롬 통일 (의미는 텍스트로 전달, 시각적 구분은 톤 차이로) */
+    .status-row .value.good { background: var(--shell); color: var(--void); }
+    .status-row .value.warning { background: var(--parchment); color: var(--stone); }
+    .status-row .value.bad { background: var(--void); color: var(--cream); }
 
     /* 진행내역 */
     .comment-section {
@@ -597,14 +598,19 @@
       }
     }
 
-    // ── 뒤로가기 (카카오 인앱 대응) ──
+    // ── 뒤로가기 (카카오 인앱 대응 — iOS/안드로이드 분기) ──
     function goBack() {
-      try { location.href = 'kakaoweb://closeBrowser'; return; } catch(e) {}
-      try { window.close(); } catch(e) {}
-      setTimeout(function() {
-        if (history.length > 1) { history.back(); return; }
-        location.href = 'https://mamoru.kr';
-      }, 150);
+      var ua = navigator.userAgent || '';
+      var isKakao = /KAKAOTALK/i.test(ua);
+      var isIOS   = /iPhone|iPad|iPod/i.test(ua);
+      if (isKakao) {
+        location.href = isIOS ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
+        setTimeout(function(){ if (history.length > 1) history.back(); }, 600);
+        setTimeout(function(){ window.close(); }, 1200);
+        return;
+      }
+      if (history.length > 1) { history.back(); return; }
+      window.close();
     }
 
     // ── 초기화 ──
