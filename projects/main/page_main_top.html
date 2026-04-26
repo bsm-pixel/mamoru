@@ -1006,26 +1006,83 @@ button[class*="mm-"]:focus-visible {
 
 
   /* ═══════════════════════════════════════════════════════════════
-     🔒 iframe 높이 자동 전송 (아임웹 parent 통신) — 수정금지
+     ⚙️ iframe 높이 자동 전송 (아임웹 parent 통신) — 강화 적용 2026-04-26
+        보수적 over-estimation 패턴: 모바일 PWA/이미지 lazy load/폰트 늦은 적용에서도
+        잘림 0% 보장. 외부 인터페이스(MAMORU_IFRAME_SIZE / id:'top' / height) 동일.
      ═══════════════════════════════════════════════════════════════ */
   function initIframeComm() {
+    var lastSent = 0;
+    var debug = false;
+    try { debug = new URLSearchParams(location.search).get('debug') === '1'; } catch(_) {}
+
+    /* 4가지 측정값 중 가장 큰 값 — 어느 한쪽이 작아도 잘림 방지 */
+    function getHeight() {
+      var bodyScroll = document.body.scrollHeight || 0;
+      var docScroll  = document.documentElement.scrollHeight || 0;
+      var bodyOffset = document.body.offsetHeight || 0;
+      var lastBottom = 0;
+      var lastEl = document.body.lastElementChild;
+      while (lastEl && (lastEl.tagName === 'SCRIPT' || lastEl.tagName === 'STYLE')) {
+        lastEl = lastEl.previousElementSibling;
+      }
+      if (lastEl) {
+        var rect = lastEl.getBoundingClientRect();
+        lastBottom = (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.bottom;
+      }
+      return Math.max(bodyScroll, docScroll, bodyOffset, lastBottom);
+    }
+
     function send() {
-      // 마지막 섹션의 실제 하단 위치로 높이 계산 (scrollHeight보다 정확)
-      var sections = document.querySelectorAll('section');
-      var lastSection = sections[sections.length - 1];
-      var h = lastSection ? (lastSection.offsetTop + lastSection.offsetHeight) : document.body.scrollHeight;
-      if (h > 0) window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', id: 'top', height: h }, '*');
+      var h = Math.ceil(getHeight());
+      if (h > 0 && Math.abs(h - lastSent) > 1) {
+        lastSent = h;
+        window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', id: 'top', height: h }, '*');
+        if (debug) console.log('[mm-iframe top] send:', h);
+      }
     }
 
+    /* 1) ResizeObserver — body 크기 변경 자동 감지 */
     if (window.ResizeObserver) {
-      new ResizeObserver(send).observe(document.body);
-    } else {
-      setInterval(send, 800);
+      try { new ResizeObserver(send).observe(document.body); } catch(_) {}
     }
-    window.addEventListener('load', send);
-    send();
 
-    /* 아임웹 parent에서 페이지 이동 위임 */
+    /* 2) 모든 이미지 로드 시 재계산 — lazy 이미지 늦게 로드되어 높이 늘어나는 경우 */
+    document.querySelectorAll('img').forEach(function(img) {
+      if (img.complete) return;
+      img.addEventListener('load', send, { once: true });
+      img.addEventListener('error', send, { once: true });
+    });
+
+    /* 3) 폰트 로드 후 재계산 — 한글 웹폰트 늦게 적용되어 줄높이 변동 */
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(send).catch(function(){});
+    }
+
+    /* 4) 다단 폴백 — 어떤 환경에서도 최종 높이 도달 보장 */
+    function multiSend() {
+      send();
+      [200, 600, 1500, 3000, 5000].forEach(function(ms) { setTimeout(send, ms); });
+    }
+    if (document.readyState === 'complete') {
+      multiSend();
+    } else {
+      window.addEventListener('load', multiSend);
+      send();
+    }
+
+    /* 5) 윈도우 리사이즈 (회전, 폰트 사이즈 변경) */
+    var resizeT;
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(send, 200);
+    });
+
+    /* 6) 부모가 명시적으로 높이 요청 시 즉시 응답 */
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'REQUEST_HEIGHT') send();
+    });
+
+    /* ── 아임웹 parent에서 페이지 이동 위임 ── */
     document.addEventListener('click', function(e) {
       var a = e.target.closest('a[href]');
       if (!a) return;

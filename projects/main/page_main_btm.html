@@ -971,21 +971,75 @@ button[class*="mm-"]:focus-visible {
 
 
   /* ═══════════════════════════════════════════════════════════════
-     🔒 iframe 높이 자동 전송 (아임웹 parent 통신) — 수정금지
+     ⚙️ iframe 높이 자동 전송 (아임웹 parent 통신) — 강화 적용 2026-04-26
+        보수적 over-estimation 패턴: 모바일 PWA/이미지 lazy load/폰트 늦은 적용에서도
+        잘림 0% 보장. 외부 인터페이스(MAMORU_IFRAME_SIZE / id:'btm' / height) 동일.
      ═══════════════════════════════════════════════════════════════ */
   function initIframeComm() {
+    var lastSent = 0;
+    var debug = false;
+    try { debug = new URLSearchParams(location.search).get('debug') === '1'; } catch(_) {}
+
+    /* 4가지 측정값 중 가장 큰 값 — 어느 한쪽이 작아도 잘림 방지 */
+    function getHeight() {
+      var bodyScroll = document.body.scrollHeight || 0;
+      var docScroll  = document.documentElement.scrollHeight || 0;
+      var bodyOffset = document.body.offsetHeight || 0;
+      var lastBottom = 0;
+      var lastEl = document.body.lastElementChild;
+      while (lastEl && (lastEl.tagName === 'SCRIPT' || lastEl.tagName === 'STYLE')) {
+        lastEl = lastEl.previousElementSibling;
+      }
+      if (lastEl) {
+        var rect = lastEl.getBoundingClientRect();
+        lastBottom = (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.bottom;
+      }
+      return Math.max(bodyScroll, docScroll, bodyOffset, lastBottom);
+    }
+
     function send() {
-      var h = document.documentElement.scrollHeight;
-      if (h > 0) window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', id: 'btm', height: h }, '*');
+      var h = Math.ceil(getHeight());
+      if (h > 0 && Math.abs(h - lastSent) > 1) {
+        lastSent = h;
+        window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', id: 'btm', height: h }, '*');
+        if (debug) console.log('[mm-iframe btm] send:', h);
+      }
     }
 
     if (window.ResizeObserver) {
-      new ResizeObserver(send).observe(document.body);
-    } else {
-      setInterval(send, 800);
+      try { new ResizeObserver(send).observe(document.body); } catch(_) {}
     }
-    window.addEventListener('load', send);
-    send();
+
+    document.querySelectorAll('img').forEach(function(img) {
+      if (img.complete) return;
+      img.addEventListener('load', send, { once: true });
+      img.addEventListener('error', send, { once: true });
+    });
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(send).catch(function(){});
+    }
+
+    function multiSend() {
+      send();
+      [200, 600, 1500, 3000, 5000].forEach(function(ms) { setTimeout(send, ms); });
+    }
+    if (document.readyState === 'complete') {
+      multiSend();
+    } else {
+      window.addEventListener('load', multiSend);
+      send();
+    }
+
+    var resizeT;
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(send, 200);
+    });
+
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'REQUEST_HEIGHT') send();
+    });
 
     /* 아임웹 parent에서 페이지 이동 위임 */
     document.addEventListener('click', function(e) {
