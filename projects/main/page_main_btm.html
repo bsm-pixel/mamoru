@@ -63,7 +63,7 @@ body {
   min-height: auto !important;
   font-family: var(--font-body);
   background: var(--cream);
-  color: var(--cream);
+  color: var(--void);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
@@ -453,7 +453,7 @@ button[class*="mm-"]:focus-visible {
 /* 카드 내 서브타입 칩 */
 .mm-review-card__subtype {
   display: inline-block;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   padding: 2px 7px;
   border: 1px solid var(--sand);
@@ -463,18 +463,16 @@ button[class*="mm-"]:focus-visible {
   vertical-align: middle;
 }
 
-/* 출처 배지 */
+/* 출처 배지 — 모노크롬 (출처는 텍스트로 식별) */
 .mm-review-card__source-badge {
   display: inline-block;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 4px;
   margin-left: 6px;
-}
-.mm-review-card__source-badge--naver {
-  background: #03C75A;
-  color: #fff;
+  background: var(--sand);
+  color: var(--stone);
 }
 
 .mm-reviews__scroll {
@@ -867,7 +865,7 @@ button[class*="mm-"]:focus-visible {
       /* 이름 옆 칩: 네이버 출처 배지 + 서브타입 */
       var nameBadges = '';
       if (r.source === 'naver') {
-        nameBadges += '<span class="mm-review-card__source-badge mm-review-card__source-badge--naver">네이버</span>';
+        nameBadges += '<span class="mm-review-card__source-badge">네이버</span>';
       }
       if (r.subtype && SUBTYPE_LABELS[r.subtype]) {
         nameBadges += '<span class="mm-review-card__subtype">' + SUBTYPE_LABELS[r.subtype] + '</span>';
