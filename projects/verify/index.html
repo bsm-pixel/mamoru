@@ -18,7 +18,7 @@
       --cream: #FAF9F7;
       --white: #FFFFFF;
       --success: #22C55E;
-      --danger: #EF4444;
+      --danger: #1A1A1A;  /* 모노크롬 — invalid 상태는 텍스트로 명시 ("등록되지 않음") */
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -97,7 +97,7 @@
     }
 
     .status-banner.valid {
-      background: linear-gradient(135deg, var(--void) 0%, var(--graphite) 100%);
+      background: var(--void);
       color: var(--white);
     }
 
@@ -148,9 +148,10 @@
     }
 
     .product-sku {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--warm-gray);
       font-family: monospace;
+      letter-spacing: 0.04em;
       margin-bottom: 16px;
     }
 
@@ -269,10 +270,10 @@
         infoHtml += `<div class="info-item"><div class="info-label">판매처</div><div class="info-value">${d.sold_via}</div></div>`;
       }
       if (d.sold_at) {
-        infoHtml += `<div class="info-item"><div class="info-label">판매일</div><div class="info-value">${new Date(d.sold_at).toLocaleDateString('ko-KR')}</div></div>`;
+        infoHtml += `<div class="info-item"><div class="info-label">판매일</div><div class="info-value">${new Date(d.sold_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}</div></div>`;
       }
       if (d.registered_at) {
-        infoHtml += `<div class="info-item"><div class="info-label">등록일</div><div class="info-value">${new Date(d.registered_at).toLocaleDateString('ko-KR')}</div></div>`;
+        infoHtml += `<div class="info-item"><div class="info-label">등록일</div><div class="info-value">${new Date(d.registered_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}</div></div>`;
       }
       if (p.category) {
         infoHtml += `<div class="info-item"><div class="info-label">카테고리</div><div class="info-value">${p.category}</div></div>`;
