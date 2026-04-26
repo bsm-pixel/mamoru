@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_레이어_2" data-name="레이어 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 210">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke: #000;
+        stroke-linecap: round;
+        stroke-miterlimit: 10;
+        stroke-width: 11px;
+      }
+
+      .cls-2 {
+        fill: none;
+      }
+
+      .cls-3 {
+        font-family: PretendardVariable-ExtraBold, 'Pretendard Variable';
+        font-size: 60px;
+        font-variation-settings: 'wght' 800;
+        font-weight: 700;
+      }
+    </style>
+  </defs>
+  <g id="_레이어_4" data-name="레이어 4">
+    <text class="cls-3" transform="translate(35.14 143.12)"><tspan x="0" y="0">NEW</tspan></text>
+    <rect class="cls-2" width="210" height="210"/>
+    <line class="cls-1" x1="154.98" y1="80.41" x2="173.96" y2="80.41"/>
+    <line class="cls-1" x1="164.47" y1="70.92" x2="164.47" y2="89.9"/>
+  </g>
+</svg>
