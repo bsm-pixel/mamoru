@@ -481,8 +481,7 @@ button[class*="mm-"]:focus-visible {
 
 /* 모바일: 가로 스크롤 (snap)
    touch-action: pan-x — 가로 제스처만 컨테이너가 받고 세로는 부모 페이지 스크롤로 전파
-                         (이거 없으면 영상 위에서 위/아래 슬라이드 시 페이지가 안 내려감)
-   overflow-y: hidden    — 세로 스크롤 영역 자체를 차단 (overflow-x:auto 부작용 방지) */
+   overflow-y: hidden    — 세로 스크롤 영역 자체를 차단 */
 .mm-videos__row {
   display: flex;
   gap: 12px;
@@ -494,16 +493,19 @@ button[class*="mm-"]:focus-visible {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding-bottom: 8px;
-  -webkit-mask-image: linear-gradient(to right, black 90%, transparent);
-  mask-image: linear-gradient(to right, black 90%, transparent);
+  /* 마스크 약화 (90% → 94%) — 다음 카드 끝부분이 fade에 가려지지 않게 */
+  -webkit-mask-image: linear-gradient(to right, black 94%, transparent);
+  mask-image: linear-gradient(to right, black 94%, transparent);
 }
 .mm-videos__row::-webkit-scrollbar { display: none; }
 /* 카드 자체는 탭 응답을 빠르게 (300ms 클릭 지연 제거) */
 .mm-video__card { touch-action: manipulation; }
 
 .mm-video__card {
-  flex: 0 0 80vw;
-  max-width: 320px;
+  /* 75vw + max-width 300px — 화면 360px에서도 다음 카드 38px,
+     412px에서도 60px 노출되어 "더 있음" 시각 힌트 명확 */
+  flex: 0 0 75vw;
+  max-width: 300px;
   scroll-snap-align: start;
   display: block;
   background: var(--white);
