@@ -1,6 +1,6 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-26 (고객 대면 페이지 21개 Brand Guide v1.0 정합성 정비 — 5개 영역, 5 commit, 모두 GitHub Pages 자동 배포)
+> 최종 수정: 2026-04-26 (오전: 페이지 21개 Brand Guide 정비 / 오후: 메인 YouTube 섹션 + iframe 잘림 만성 버그 해결 + 진단 Lottie 도입)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
@@ -33,6 +33,33 @@
 ---
 
 ## ✅ 완료 — 04-26 작업
+
+### 오후 추가 작업
+
+#### 메인 페이지 YouTube 섹션 신설
+> Quick Nav ↔ "라인업 교체" 배너 사이에 영상 콘텐츠 허브 신설. lite-youtube 패턴 자체구현 (라이브러리 0).
+
+- [x] **`page_main_top` [3.5] mm-videos 섹션 추가** — 모바일 가로 스크롤(snap, 75vw 카드 + max 300px) / PC 3열 grid(max-width 960~1080px, 좌측 정렬) / 모노크롬 ▶ Play 버튼 / 16:9 썸네일 ✅ commit `6d67c63`
+- [x] **첫 영상 등록** — `1LZhDgEyrMA` 사장님 본인 제작 "미용가위에 가까워질 감각 — 3가지 감는 방법" ✅ commit `baebe0d`
+- [x] **카드 추가 패턴 정착** — `data-yt="VIDEO_ID"` + 제목 한 줄로 운영. 빈 ID 자동 숨김 + 보일 카드 0개 시 섹션 자동 숨김. 썸네일/href 자동 채움 ✅
+- [x] **모바일 영상 가로 스크롤 → 페이지 세로 스크롤 가로채기 버그 수정** — `touch-action: pan-x` + `overflow-y: hidden` + `overscroll-behavior-x: contain` 적용 ✅ commit `6a149fd`
+- [x] **다음 카드 peek 첫 화면 노출** — 카드 폭 80vw→75vw, max 320→300px / 마스크 페이드 90%→94% 약화 (작은 폰 38px·큰 폰 60px peek) ✅ commit `e36243a`
+
+#### 메인 영역 iframe 통신 강화 — 만성 잘림 현상 해결
+> 사장님이 모바일 PWA(아임웹)에서 자주 겪던 "Trust Numbers 아래 콘텐츠 통째 사라짐" 근본 원인 해결.
+
+- [x] **page_main_top / page_main_btm / page_main 3개 파일 `initIframeComm()` 강화** — 🔒 수정금지 마커 → ⚙️ 강화 적용 2026-04-26 (외부 인터페이스 100% 호환 유지) ✅ commit `d4c6f75`
+- [x] **보수적 over-estimation 7중 안전망**: ① 4가지 측정값(body/document/lastEl) 최댓값 ② img load 이벤트 바인딩 ③ document.fonts.ready 후 재전송 ④ 다단 setTimeout (200/600/1500/3000/5000ms) ⑤ resize 디바운스 ⑥ REQUEST_HEIGHT 양방향 메시지 ⑦ ?debug=1 콘솔 로그 ✅
+- [x] **확인 결과** — 일주일 모니터링 후 잘림 재발 0회 시 consulting/as 영역도 동일 패턴 일괄 적용 검토
+
+#### 진단 페이지 (page_diag.html) Lottie 도입
+> Q_FEEL / Q_STYLE / Q_HABIT 세 질문에 Lottie(.json) 모션 적용. Jitter 작업물 → ./icons/ 폴더 → 데이터 슬롯에 경로 입력 흐름.
+
+- [x] **진단 SVG 아이콘 18종 정비** — 신규 18개(15/25/38/NEW12/blunt/change12/female/level2,3,_1/long/longcut/longsingl/male/nomal/slide1312/thick/up12) + 폐기 3개(Level_2/Slide/level_3) + thinning 업데이트 ✅ commit `84cbf89`
+- [x] **Lottie 인프라 점검 — 이미 완비됨 확인** — `<dotlottie-player>` 라이브러리 head 로드, `renderGif()` lottieUrl→gifUrl→placeholder 분기, 데이터 슬롯 모두 준비. 추가 작업 0 ✅
+- [x] **Q_FEEL/Q_STYLE/Q_HABIT 사용 가이드 코멘트 추가** — Q_FEEL 상단 통합 가이드(4단계 사용법 + 우선순위 + 캔버스 320×180 / 16:9 권장) + Q_STYLE/Q_HABIT 직전 reminder ✅ commit `7f7c79e`
+- [x] **첫 Lottie 작업 등록** (사장님) — `style_go.json` / `style_back.json` 2개 ✅
+- [ ] **남은 7개 옵션 Lottie 채우기** — feel_soft/feel_power/feel_none, style_none, habit_wet/habit_dry/habit_none (사장님 Jitter 작업 진행 중)
 
 ### 고객 대면 페이지 21개 Brand Guide v1.0 정합성 정비
 > 5개 영역 / 5 commit / 모두 GitHub Pages 자동 배포 (Vercel 빌드 0회, 비용 0원)
