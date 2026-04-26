@@ -30,8 +30,8 @@
   --mm-bg-dark: #1A1A1A;
   --mm-bg-cream: #FAF9F7;
   --mm-bg-card: #FFFFFF;
-  --mm-gold: #1A1A1A;
-  --mm-gold-dark: #2D2D2D;
+  --mm-ink: #1A1A1A;
+  --mm-ink-dark: #2D2D2D;
   --mm-text-d: #1A1A1A;
   --mm-text-d2: #8A8580;
   --mm-text-cream: #FAF9F7;
@@ -42,8 +42,8 @@
   --card-bg: var(--mm-white);
   --card-border: var(--mm-border-l);
   --crisp-white: #FFFFFF;
-  --trust-gold: #1A1A1A;
-  --gold-dark: #2D2D2D;
+  --trust-ink: #1A1A1A;
+  --ink-dark: #2D2D2D;
   --text-primary: var(--mm-text-d);
   --text-muted: var(--mm-text-d2);
   --muted: var(--mm-text-d2);
@@ -106,7 +106,7 @@ html, body {
 
 .header-logo svg {
   fill: none;
-  stroke: var(--mm-gold);       /* Terracotta 라인 아이콘 */
+  stroke: var(--mm-ink);       /* Void 라인 아이콘 */
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -282,8 +282,8 @@ input[type="text"]:focus,
 input[type="tel"]:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--mm-gold);  /* Terracotta 포커스 */
-  box-shadow: 0 0 0 1px var(--mm-gold) inset;
+  border-color: var(--mm-ink);  /* Void 포커스 */
+  box-shadow: 0 0 0 1px var(--mm-ink) inset;
 }
 
 input::placeholder,
@@ -311,7 +311,7 @@ body.pc textarea {
 }
 
 .err-msg {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--error);
   margin-top: 6px;
   display: none;
@@ -325,7 +325,7 @@ select.err,
 
 .form-hint {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(24,23,37,0.45);  /* 라이트 힌트 */
 }
 
@@ -429,9 +429,9 @@ body.pc .segment-btn {
 /* 개별 카드형이므로 last-child 특별 처리 불필요 */
 
 .segment-btn.active {
-  background: rgba(26,26,26,0.06);  /* Terracotta 틴트 */
-  border-color: var(--mm-gold);
-  color: var(--mm-gold);
+  background: rgba(26,26,26,0.06);  /* Void 틴트 */
+  border-color: var(--mm-ink);
+  color: var(--mm-ink);
   font-weight: 600;
 }
 
@@ -563,9 +563,9 @@ body.pc .day-chip {
 }
 
 .day-chip.active {
-  background: var(--mm-gold);  /* Terracotta solid */
+  background: var(--mm-ink);  /* Void solid */
   color: var(--mm-text-cream);
-  border-color: var(--mm-gold);
+  border-color: var(--mm-ink);
   font-weight: 600;
 }
 
@@ -604,9 +604,9 @@ body.pc .time-pref-btn {
 }
 
 .time-pref-btn.active {
-  background: var(--mm-gold);  /* Terracotta solid */
+  background: var(--mm-ink);  /* Void solid */
   color: var(--mm-text-cream);
-  border-color: var(--mm-gold);
+  border-color: var(--mm-ink);
   font-weight: 600;
 }
 
@@ -652,7 +652,7 @@ body.pc .privacy-box {
 body.pc .privacy-content {
   height: 140px;
   padding: 14px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .privacy-check {
@@ -665,7 +665,7 @@ body.pc .privacy-content {
 .privacy-check input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: var(--mm-gold);  /* Terracotta 체크박스 */
+  accent-color: var(--mm-ink);  /* Void 체크박스 */
   cursor: pointer;
 }
 
@@ -686,7 +686,7 @@ body.pc .privacy-content {
   margin-top: 20px;
   border: none;
   border-radius: 999px;  /* pill */
-  background: var(--mm-gold);  /* Terracotta solid */
+  background: var(--mm-ink);  /* Void solid */
   font-family: inherit;
   font-size: 16px;
   font-weight: 600;
@@ -1065,7 +1065,7 @@ body.pc .time-slot {
 }
 
 .postcode-wrap {
-  background: var(--mm-bg-card);  /* 크림 카드 배경 — Terracotta Editorial 통일 */
+  background: var(--mm-bg-card);  /* 크림 카드 배경 — 모노크롬 통일 */
   border-radius: 16px;
   overflow: hidden;
   display: flex;
@@ -1281,7 +1281,7 @@ body.pc .diagnosis-tag {
   margin-top: 14px;
   padding-top: 14px;
   border-top: 1px solid rgba(130,158,134,0.15);
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(130,158,134,0.8);
   line-height: 1.5;
 }
@@ -1316,7 +1316,7 @@ body.pc .diagnosis-tag {
 
 .diagnosis-banner-btn {
   display: inline-block;
-  background: var(--mm-gold);
+  background: var(--mm-ink);
   color: var(--mm-text-cream);
   font-size: 13px;
   font-weight: 600;
@@ -1335,7 +1335,7 @@ body.pc .diagnosis-tag {
   background: var(--mm-bg-cream);
   border: 1px solid var(--mm-border-l);
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.7;
   color: var(--mm-text-d2);
 }
@@ -1365,7 +1365,7 @@ body.pc .diagnosis-tag {
 }
 body.pc .memo-note {
   padding: 14px 16px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1425,8 +1425,8 @@ body.pc #date-picker-modal .day {
 }
 #date-picker-modal .calendar-nav button:hover {
   background: rgba(26,26,26,0.05);
-  color: var(--mm-gold);
-  border-color: var(--mm-gold);
+  color: var(--mm-ink);
+  border-color: var(--mm-ink);
 }
 #date-picker-modal .calendar-nav .month {
   color: var(--mm-text-d);
@@ -1444,13 +1444,13 @@ body.pc #date-picker-modal .day {
   border-color: rgba(26,26,26,0.15);
 }
 #date-picker-modal .day.today {
-  border-color: var(--mm-gold);
-  color: var(--mm-gold);
+  border-color: var(--mm-ink);
+  color: var(--mm-ink);
 }
 #date-picker-modal .day.selected {
-  background: rgba(26,26,26,0.06);  /* Terracotta Soft 틴트 */
-  border-color: var(--mm-gold);
-  color: var(--mm-gold);
+  background: rgba(26,26,26,0.06);  /* Void Soft 틴트 */
+  border-color: var(--mm-ink);
+  color: var(--mm-ink);
   font-weight: 600;
 }
 #date-picker-modal .day.disabled {
@@ -1494,7 +1494,7 @@ body.pc #date-picker-modal .day {
   color: var(--mm-text-d2);
 }
 #date-picker-modal .modal-selection-summary.has-selection {
-  color: var(--mm-gold);
+  color: var(--mm-ink);
 }
 /* PC: 인라인 피커 열릴 때 sec-visit 전폭 */
 body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
@@ -1529,7 +1529,7 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
   transition: color 0.15s;
 }
 .modal-selection-summary.has-selection {
-  color: var(--mm-gold);
+  color: var(--mm-ink);
   font-weight: 600;
 }
 
@@ -1542,20 +1542,20 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
     background: rgba(26,26,26,0.04);
   }
   .date-picker-btn:hover {
-    border-color: var(--mm-gold);
+    border-color: var(--mm-ink);
   }
   .btn-search:hover {
-    background: var(--mm-gold);
+    background: var(--mm-ink);
     color: var(--mm-text-cream);
-    border-color: var(--mm-gold);
+    border-color: var(--mm-ink);
   }
   .btn-primary:not(:disabled):hover {
-    background: var(--mm-gold-dark);
+    background: var(--mm-ink-dark);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(26,26,26,0.15);
   }
   .diagnosis-banner-btn:hover {
-    background: var(--mm-gold-dark);
+    background: var(--mm-ink-dark);
   }
 }
 </style>

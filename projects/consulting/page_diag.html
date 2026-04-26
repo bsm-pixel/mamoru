@@ -251,6 +251,7 @@ body {
   line-height: 1.35;
   margin-bottom: 16px;
   color: #1A1A1A;
+  white-space: pre-line;  /* 데이터의 \n을 자연 줄바꿈으로 처리 */
 }
 
 @media screen and (max-width: 768px) {
@@ -1582,7 +1583,7 @@ function diagRenderQuestion(withAnimation = false) {
   const html = `
     <div class="diag-question-wrapper ${animClass}">
       <span class="diag-question-label">${q.label}</span>
-      <h2 class="diag-question-text">${q.question.replace(/\n/g, '<br>')}</h2>
+      <h2 class="diag-question-text">${q.question}</h2>
       ${q.sub ? `<p class="diag-question-sub">${q.sub}</p>` : ''}
       ${optionsHtml}
       ${q.multiple ? '<div class="diag-multiple-hint"><svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;display:inline"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/><path d="M12 2V0" stroke-width="1"/><path d="M9.5 19.5h5"/></svg> 여러 개 선택 가능</div>' : ''}

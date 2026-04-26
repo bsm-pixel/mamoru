@@ -593,8 +593,7 @@ function renderError() {
       <div class="rec-error-icon">🔍</div><!-- [수정아이콘] 에러 아이콘 -->
       <h2 class="rec-error-title">진단 정보가 없습니다</h2><!-- [수정문구] 에러 제목 -->
       <p class="rec-error-desc">
-        맞춤 제품 추천을 받으려면<br>
-        먼저 간편진단을 진행해주세요.<!-- [수정문구] 에러 설명 -->
+        맞춤 제품 추천을 받으려면 먼저 간편진단을 진행해주세요.<!-- [수정문구] 에러 설명 -->
       </p>
       <a href="javascript:void(0)" onclick="goToDiag()" class="rec-error-btn">
         간편진단 시작하기<!-- [수정문구] 에러 버튼 -->
@@ -640,7 +639,7 @@ function renderRecommendations(diagnosis) {
     <div class="rec-header">
       <button class="rec-back-btn" onclick="goBack()">←</button>
       <div class="rec-header-content">
-        <h1 class="rec-title">✨📦 고객님 맞춤 추천 제품</h1><!-- [수정문구] [수정아이콘] 페이지 제목 -->
+        <h1 class="rec-title">고객님 맞춤 추천 제품</h1><!-- [수정문구] 페이지 제목 -->
       </div>
     </div>
 
@@ -711,7 +710,7 @@ function renderProductCard(product, isTop) {
                <span>이미지 준비중</span>
              </div>`
         }
-        ${isTop ? '<span class="rec-product-badge">⭐ 추천</span>' : ''}
+        ${isTop ? '<span class="rec-product-badge">추천</span>' : ''}
       </div>
       <div class="rec-product-info">
         <div class="rec-product-name">${product.name}</div>

@@ -54,14 +54,18 @@
     document.getElementById('page-title').textContent   = title;
     document.getElementById('page-message').textContent = msg;
 
-    // "예약이 확정되었습니다" 뒤에 줄바꿈 강제
+    // "예약이 확정되었습니다" 뒤에 시각적 분리 (margin 사용 — <br> 대신)
     document.addEventListener('DOMContentLoaded', function(){
       var el = document.getElementById('page-message');
       if (!el) return;
       var t = el.textContent.trim();
       if (/예약이 확정되었습니다/.test(t) && !/\n/.test(t)) {
         var match = t.match(/^(예약이 확정되었습니다\.?)(.*)$/);
-        if (match) { el.innerHTML = match[1] + '<br>' + match[2].trim(); }
+        if (match && match[2].trim()) {
+          el.innerHTML =
+            '<span style="display:block;margin-bottom:6px;">' + match[1] + '</span>' +
+            '<span style="display:block;">' + match[2].trim() + '</span>';
+        }
       }
     });
 

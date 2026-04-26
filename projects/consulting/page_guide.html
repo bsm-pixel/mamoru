@@ -37,9 +37,9 @@
   --mm-bg-dark: #1A1A1A;
   --mm-bg-darker: #111111;
   --mm-bg-card-dark: #2D2D2D;
-  --mm-gold: #1A1A1A;
-  --mm-gold-dark: #2D2D2D;
-  --mm-gold-soft: rgba(26,26,26,0.06);
+  --mm-ink: #1A1A1A;
+  --mm-ink-dark: #2D2D2D;
+  --mm-ink-soft: rgba(26,26,26,0.06);
   --mm-text-d: #1A1A1A;
   --mm-text-d2: #8A8580;
   --mm-text-d3: rgba(26,26,26,0.55);
@@ -95,7 +95,7 @@ html, body {
 .consult-section-divider {
   width: 28px;
   height: 3px;
-  background: var(--mm-gold);
+  background: var(--mm-ink);
   border-radius: 2px;
   margin: 0 auto 32px;
 }
@@ -233,8 +233,8 @@ html, body {
 }
 
 .consult-tab.active {
-  background: var(--mm-gold);
-  border-color: var(--mm-gold);
+  background: var(--mm-ink);
+  border-color: var(--mm-ink);
   color: var(--mm-text-w);
   font-weight: 600;
 }
@@ -274,13 +274,13 @@ html, body {
 .tab-character-placeholder {
   width: 100px;
   height: 100px;
-  background: var(--mm-gold-soft);
+  background: var(--mm-ink-soft);
   border: 2px dashed rgba(26,26,26,0.15);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--mm-gold);
+  color: var(--mm-ink);
   font-size: 12px;
   font-weight: 500;
 }
@@ -316,7 +316,7 @@ html, body {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: var(--mm-gold);
+  background: var(--mm-ink);
   border-radius: 3px 0 0 3px;
 }
 
@@ -434,7 +434,7 @@ html, body {
   left: 8px;
   width: 24px;
   height: 24px;
-  background: var(--mm-gold);
+  background: var(--mm-ink);
   border-radius: var(--mm-radius);
   display: flex;
   align-items: center;
@@ -478,7 +478,7 @@ html, body {
 
 /* 버튼형 스텝 (시간조율 요청) */
 .process-step-action {
-  background: var(--mm-gold-soft);
+  background: var(--mm-ink-soft);
   border-color: rgba(26,26,26,0.05);
 }
 
@@ -487,7 +487,7 @@ html, body {
 }
 
 .process-step-action .process-step-title {
-  color: var(--mm-gold-dark);
+  color: var(--mm-ink-dark);
 }
 
 .action-hint {
@@ -497,7 +497,7 @@ html, body {
   background: rgba(26,26,26,0.06);
   border-radius: var(--mm-radius);
   font-size: 11px;
-  color: var(--mm-gold-dark);
+  color: var(--mm-ink-dark);
   font-weight: 500;
 }
 
@@ -531,7 +531,7 @@ html, body {
 
 .method-note-item::before {
   content: '•';
-  color: var(--mm-gold);
+  color: var(--mm-ink);
   flex-shrink: 0;
 }
 
@@ -539,7 +539,7 @@ html, body {
 .method-tip {
   margin-top: 16px;
   padding: 16px;
-  background: var(--mm-gold-soft);
+  background: var(--mm-ink-soft);
   border: 1px solid rgba(26,26,26,0.05);
   border-radius: var(--mm-radius-lg);
 }
@@ -547,7 +547,7 @@ html, body {
 .method-tip-label {
   display: inline-block;
   padding: 2px 8px;
-  background: var(--mm-gold);
+  background: var(--mm-ink);
   border-radius: 4px;
   color: var(--mm-text-w);
   font-size: 11px;
@@ -697,7 +697,7 @@ html, body {
 }
 
 .consult-cta-primary {
-  background: var(--mm-gold);
+  background: var(--mm-ink);
   border: none;
   color: var(--mm-text-w);
 }
@@ -718,7 +718,7 @@ html, body {
 .method-location-label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--mm-gold);
+  color: var(--mm-ink);
   letter-spacing: 0.04em;
   margin-bottom: 12px;
 }
@@ -744,15 +744,15 @@ html, body {
     box-shadow: 0 4px 16px rgba(26,26,26,0.04);
   }
   .consult-tab:hover:not(.active) {
-    border-color: var(--mm-gold);
-    color: var(--mm-gold);
+    border-color: var(--mm-ink);
+    color: var(--mm-ink);
   }
   .consult-cta-secondary:hover {
-    border-color: var(--mm-gold);
-    color: var(--mm-gold);
+    border-color: var(--mm-ink);
+    color: var(--mm-ink);
   }
   .consult-cta-primary:hover {
-    background: var(--mm-gold-dark);
+    background: var(--mm-ink-dark);
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(26,26,26,0.05);
   }
@@ -1003,7 +1003,7 @@ html, body {
 .about-image-placeholder {
   width: 100%;
   height: 200px;
-  background: var(--mm-gold-soft);
+  background: var(--mm-ink-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1072,7 +1072,7 @@ html, body {
   top: 8px;
   width: 6px;
   height: 6px;
-  background: var(--mm-gold);
+  background: var(--mm-ink);
   border-radius: 50%;
 }
 
@@ -1130,7 +1130,7 @@ html, body {
 .about-message-highlight {
   display: inline-block;
   padding: 4px 12px;
-  background: var(--mm-gold-soft);
+  background: var(--mm-ink-soft);
   border-radius: 4px;
   font-weight: 600;
   color: var(--mm-text-d);
@@ -1221,7 +1221,7 @@ html, body {
   line-height: 1.4;
 }
 .about-benefit-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--mm-text-d2);
   line-height: 1.6;
 }
@@ -1229,7 +1229,7 @@ html, body {
   display: inline-block;
   margin-top: 8px;
   padding: 4px 12px;
-  background: var(--mm-gold-soft);
+  background: var(--mm-ink-soft);
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
@@ -1438,10 +1438,11 @@ html, body {
           <div class="about-principle-item fade-in delay-1" style="background: #fff; border-radius: 8px; border-bottom: none; padding: 28px 20px;">
             <p class="about-principle-num">02</p>
             <p class="about-principle-title">제품을 안내하기 전,<br>고객에게 질문합니다</p>
+            <p class="about-principle-desc" style="margin-bottom: 12px;">
+              고객의 니즈와 원하는 느낌, 스타일과 여러가지 요건을 들어야 합니다.
+            </p>
             <p class="about-principle-desc">
-              고객의 니즈와 원하는 느낌, 스타일과 여러가지 요건을 들어야 합니다.<br><br>
-              먼저 제품을 권유한다면 설득일 뿐이며,<br>
-              먼저 고객을 안다면 좋은 가위를 안내할 수 있습니다.
+              먼저 제품을 권유한다면 설득일 뿐이며, 먼저 고객을 안다면 좋은 가위를 안내할 수 있습니다.
             </p>
           </div>
         </div>
@@ -1555,7 +1556,7 @@ html, body {
           <p class="method-location-label">찾아오시는 길</p>
           <p class="method-location-address">서울특별시 구로구 부광로 88 SKV1,<br>B동 311호 마모루</p>
           <a href="https://naver.me/GtYtEMSh" target="_blank" rel="noopener"
-            style="display: inline-block; margin-top: 12px; padding: 8px 20px; background: var(--mm-gold); color: var(--mm-text-w); border-radius: 999px; font-size: 12px; font-weight: 600; text-decoration: none; -webkit-tap-highlight-color: transparent;">
+            style="display: inline-block; margin-top: 12px; padding: 10px 22px; background: var(--mm-ink); color: var(--mm-text-w); border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; -webkit-tap-highlight-color: transparent;">
             네이버 지도로 보기 →
           </a>
         </div>
