@@ -1183,6 +1183,23 @@ const questionsData = [
       { id: 'SL', label: '슬라이싱/스트록', desc: '텍스쳐. 테크닉을 담다', icon: './icons/Slide1312.svg' }
     ]
   },
+  /* ════════════════════════════════════════════════════════════════════════
+     ✏️ Lottie(.json) 애니메이션 적용 가이드 — Q_FEEL / Q_STYLE / Q_HABIT 공통
+
+     ┌─ 사용 방법 ────────────────────────────────────────────────────────────┐
+     │ 1) Jitter 등에서 모션 작업 → "Lottie JSON" 으로 export                  │
+     │    캔버스 사이즈: 320×180 권장 (16:9 비율). 사이즈는 자유 (벡터)         │
+     │ 2) ./icons/ 폴더에 .json 파일 저장                                      │
+     │    예: feel_soft.json, style_go.json, habit_wet.json                   │
+     │ 3) 아래 옵션의 lottieUrl: '' 안에 경로 입력                             │
+     │    예: lottieUrl: './icons/feel_soft.json'                              │
+     │ 4) 새로고침 → 자동재생 + 무한반복으로 표시                              │
+     └────────────────────────────────────────────────────────────────────────┘
+
+     우선순위: lottieUrl → gifUrl → "준비중" placeholder (셋 다 비면 placeholder)
+     라이브러리(@dotlottie/player-component)는 head 에 이미 로드됨 — 추가 작업 X
+     16:9 비율만 지키면 PC/모바일 모두 자동 contain 으로 표시 (cover 처리, 가운데 60% 안전 영역)
+     ════════════════════════════════════════════════════════════════════════ */
   {
     id: 'Q_FEEL',
     label: '커트 느낌',  /* [수정문구] */
@@ -1201,6 +1218,7 @@ const questionsData = [
       { id: 'FEEL_NONE', label: '아직 잘 모르겠어요', desc: '어떤것을 원하는지 감이안와요', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 9c0-3.3 2.7-6 6-6s6 2.7 6 6c0 2-1 3.5-2.5 4.5-.8.5-1.5 1.2-1.5 2v.5"/><circle cx="15" cy="19" r="0.5" fill="#1A1A1A"/></svg>', gifUrl: '', lottieUrl: '' /* [수정미디어] */ }
     ]
   },
+  /* ✏️ Lottie 적용: 위 Q_FEEL 상단 가이드 참조 — 각 옵션 lottieUrl: './icons/xxx.json' 입력 */
   {
     id: 'Q_STYLE',
     label: '커트 스타일',  /* [수정문구] */
@@ -1215,6 +1233,7 @@ const questionsData = [
       { id: 'St_NONE', label: '딱 기준이 없어요', desc: '상황에 따라 달라요', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9"/><polyline points="15,18 12,21 12,17"/><path d="M3 12a9 9 0 0 1 9-9"/><polyline points="9,6 12,3 12,7"/></svg>', gifUrl: '', lottieUrl: '' /* [수정미디어] */ }
     ]
   },
+  /* ✏️ Lottie 적용: 위 Q_FEEL 상단 가이드 참조 — 각 옵션 lottieUrl: './icons/xxx.json' 입력 */
   {
     id: 'Q_HABIT',
     label: '커트 습관',  /* [수정문구] */
