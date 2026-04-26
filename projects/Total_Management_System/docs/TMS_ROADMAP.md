@@ -1,7 +1,7 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-04-24 (상담 일정 수동 등록 기능 — 인스타DM/유선 접수 수기 입력 지원)
+> 최종 수정: 2026-04-26 (고객 대면 페이지 21개 Brand Guide v1.0 정합성 정비 — TMS 외 영역, 시각·코드 정합성만 수정. TMS 내부 흐름은 무변경)
 
 ---
 
@@ -52,6 +52,7 @@
 - [x] 제품 마스터-디테일 레이아웃 (우측 패널) ✅
 
 ### ✅ 완료된 이전 할 일
+- [x] **고객 대면 페이지 21개 Brand Guide v1.0 정합성 정비** (2026-04-26) — 아임웹 연동/GitHub Pages 페이지 전수 점검. 5개 영역(brand 1 / main 5 / consulting 7 / as 4 / reviews+verify 3) / 5 commit. 변경: ① 폐기 컬러 80→10곳(88% 감소, 잔존은 page_intro 히어로 다크+골드 예외 8곳 + page_diag 가드라인 주석 2곳 — 모두 의도적) ② Pretendard 5파일→0(가이드 서체 통일) ③ `--mm-gold/--gold-dark/--trust-gold` 변수명 60+곳 → `--mm-ink` 일괄(시각 무변, 미래 골드 회귀 차단) ④ page_main_btm body color cream→void (잠재 가독성 폭탄) ⑤ 외부 브랜드 컬러(네이버 #03C75A 등) 모두 모노크롬화 ⑥ page_as_report 카카오 인앱 닫기 fallback iOS/안드로이드 분기 + mamoru.kr 강제 이동 제거 ⑦ 본문 12px→13px 부분 상향(라벨 11px 하한은 유지) ⑧ 더블 br/단독 끝 br 위반분만 정리. **TMS 내부 흐름 무변경** — 흐름도 4종 다이어그램 영향 없음. 펜딩: 메인 후기 외부 API `app-eta-sandy-75.vercel.app` 자체 도메인 이관 + Polish 단계(진단 progress bar / Trust Number 카피 / Masonry 동적 컬럼). 플랜 파일: `C:\Users\user\.claude\plans\validated-spinning-tower.md`
 - [x] **상담관리 일정 수동 등록 기능** (2026-04-24) — 인스타DM/유선 등 외부 채널 접수 건을 TMS 상담 탭 우측 "일정수동등록" 버튼으로 수기 입력. 매장방문/출장요청 2유형, 중복 체크(phone_normalized+일시) 시 경고 모달, 출장은 카카오 지오코딩 자동, 알림톡(confirmed/field_confirmed) 발송 선택, Google Calendar/리마인더/푸시 자동 편입. 상세: `docs/TMS_FLOW_CONSULTATION.md § 6`
 - [x] **리마인더 알림톡 방문주소 치환 누락 복구** (2026-04-24) — cron SELECT 에 address_road/detail 추가, FIELD_REMIND_24H/2H 의 #{address} 정상 치환.
 - [x] **아임웹 배너 모달 X 버튼 제거** (2026-04-24) — 하단 "오늘 하루 보지 않기" / "닫기" 버튼만으로 통일 (미니멀 톤).

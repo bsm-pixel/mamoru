@@ -1,6 +1,6 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-24 (상담관리 일정 수동 등록 + 모달 UX 정리 + 리마인더 주소 치환 + 테스트 푸시 패널)
+> 최종 수정: 2026-04-26 (고객 대면 페이지 21개 Brand Guide v1.0 정합성 정비 — 5개 영역, 5 commit, 모두 GitHub Pages 자동 배포)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
@@ -29,6 +29,23 @@
 
 - [ ] **Order API 전환**: 주문 취소 자동화 + 송장 수정/삭제
 - [ ] **판매 출고 알림톡 외부 설정**: 솔라피 배송조회 버튼 변수명 확인 (솔라피 문의 대기중)
+
+---
+
+## ✅ 완료 — 04-26 작업
+
+### 고객 대면 페이지 21개 Brand Guide v1.0 정합성 정비
+> 5개 영역 / 5 commit / 모두 GitHub Pages 자동 배포 (Vercel 빌드 0회, 비용 0원)
+
+- [x] **Phase A 브랜드 (1)** — `page_intro` 골드 팔레트 "히어로 한정 예외" 주석 명시 + PC 본문 16px + `navigateTo` → `window.mm` 네임스페이스 (인라인 핸들러 동시 변경) ✅ commit `4afa23c`
+- [x] **Phase B 메인 (5)** — `page_main_btm` body color cream→void(잠재 가독성 폭탄 제거) + 네이버 칩 #03C75A → Sand+Stone 모노크롬 + 라벨 11px / `page_main` Pretendard 제거 + hero PC 16px + 카드 13px / `page_main_top` Pretendard 제거 / `page_label_first/lineup` Pretendard 제거 + kicker weight 700 + 폰트 로드 정정 ✅
+- [x] **Phase C 상담 (7)** — `page_guide` `--mm-gold` → `--mm-ink` 28곳 + 더블 br 단락 분리 / `page_form` `--mm-gold/--gold-dark/--trust-gold` 31곳+ 치환, Terracotta 주석 9곳 정리, SVG `stroke="#C9A962"` → currentColor, --error 모노크롬, 본문 13px 6곳 / `page_diag` `.replace(/\n/g,'<br>')` → CSS `white-space: pre-line` / `page_suggest` 모달 br 분리, 비표준 #f0f9ff → Parchment+Stone / `page_change_request` 상태 카드 4종(error/success/cancel/rebook) #fef2f2/#f0fdf4/#fffbeb/#fef3c7 → Shell/Parchment+Void/Stone / `page_recommend` 이모지 ✨📦⭐ 제거 / `page_result` 동적 br → display:block ✅ commit `a96e634`
+- [x] **Phase D 복원수리 (4)** — `page_as_report` 상태 배지 #e8f5e9/#fff3e0/#ffebee → 모노크롬 + 카카오 인앱 닫기 fallback iOS/안드로이드 분기 처리(memory/reference_kakao_inapp_close.md 패턴) + mamoru.kr 강제 이동 제거 / `page_form` --error #ef4444 → Void + max-width 720→680px / `page_guide` 탭 콘텐츠 700→680px / `page_as_guide` 더블 br → margin, Sand 강조 → Cream ✅ commit `252506e`
+- [x] **Phase E 리뷰+정품확인 (3)** — `page_reviews` 베스트 카드 다크 박스(Void) → Shell+Void 라이트(가이드 "라이트 페이지 안 다크 박스 = 장식" 위반 해소) + 네이버 칩 모노크롬 + 라벨 11px / `page_review` 사진 호버 #E5E3E0 (가이드 외) → Sand / `verify/index` valid 배너 그라디언트 → 단색 Void + --danger 모노크롬 + SKU 11px + 타임존 Asia/Seoul ✅ commit `9c63f1d`
+- [x] **잔존 마무리** — `page_main_btm` Pretendard 잔존분 + `page_form` --error #C44040 + .same-day-notice 빨강 배경 + SVG 폐기 골드 stroke 3곳 ✅ commit `1ea963a`
+- [x] **검증 통계 (Before → After)**: 폐기 컬러 80곳 → 10곳 (88% 감소, 잔존은 모두 의도적) / Pretendard 5파일 → 0파일 (100% 제거) / 본문 12px 142곳 → 74곳 (라벨 11px 하한 안의 사용은 유지) ✅
+- [x] **사용자 결정 사항** — 작업 범위 Critical+Major / 진행 순서 영역별 순차 / page_intro 다크+골드 히어로 한정 예외 유지 / 외부 브랜드 컬러(네이버 등) 모두 모노크롬화 ✅
+- [x] **펜딩 항목 (별도 결정 필요)**: ① 메인 후기 외부 API `app-eta-sandy-75.vercel.app` 자체 도메인 이관 (도메인·DNS·환경변수 결정 필요) ② Polish 단계(진단 progress bar, Trust Number "할인=0" 카피, Masonry 동적 컬럼) — 플랜 파일: `C:\Users\user\.claude\plans\validated-spinning-tower.md` 참조
 
 ---
 
