@@ -20,23 +20,18 @@ async function getMessaging() {
   }
 
   const { initializeApp, getApps } = await import('firebase/app');
-  const { getMessaging: getMsg, getToken, onMessage } = await import('firebase/messaging');
+  const { getMessaging: getMsg } = await import('firebase/messaging');
 
   const config = { apiKey, authDomain: `${projectId}.firebaseapp.com`, projectId, messagingSenderId, appId };
 
   const app = getApps().length === 0 ? initializeApp(config) : getApps()[0];
   messaging = getMsg(app);
 
-  // 포그라운드 메시지 핸들러 (탭이 열려있을 때)
-  onMessage(messaging, (payload) => {
-    const notif = payload.notification;
-    if (notif && Notification.permission === 'granted') {
-      new Notification(notif.title || 'MAMORU TMS', {
-        body: notif.body || '',
-        icon: '/icon-192.png',
-      });
-    }
-  });
+  // 포그라운드 메시지 핸들러는 의도적으로 비워둠.
+  // Service Worker(/firebase-messaging-sw.js)의 'push' 이벤트가 백그라운드/포그라운드
+  // 모두에서 showNotification을 호출하므로, 여기서 또 new Notification을 만들면
+  // 같은 푸시가 두 번 표시되는 중복 문제가 발생함.
+  // 향후 토스트/사운드 등 inline UI가 필요하면 그때 onMessage 추가.
 
   return messaging;
 }

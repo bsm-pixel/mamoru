@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Bell, Send } from 'lucide-react';
+import { Save, Bell, Send, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
 import GoogleCalendarSettings from '@/components/settings/google-calendar-settings';
 import BannerSettings from '@/components/settings/banner-settings';
+import { requestPushToken } from '@/lib/firebase/client';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -126,6 +127,9 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
 
         {/* 테스트 발송 패널 */}
         <PushTestPanel />
+
+        {/* 디바이스 정리 — 중복 알림 해결 */}
+        <CleanupDevicesPanel />
       </div>
 
       <div className="pt-4 border-t border-neutral-100">
@@ -267,6 +271,67 @@ function PushTestPanel() {
         💡 기본 테스트는 토글 설정 무시하고 무조건 발송 (기기 연결 확인용).
         나머지는 해당 토글이 On일 때만 발송됩니다.
       </p>
+    </div>
+  );
+}
+
+/** 디바이스 정리 패널 — "이 기기만 알림 받기" 버튼
+ *  같은 사용자가 여러 토큰 누적되어 푸시 알림이 중복 도착할 때, 한 번 클릭으로
+ *  현재 기기 토큰만 남기고 본인의 다른 모든 토큰을 정리.
+ */
+function CleanupDevicesPanel() {
+  const [busy, setBusy] = useState(false);
+
+  const handleCleanup = async () => {
+    setBusy(true);
+    try {
+      const token = await requestPushToken();
+      if (!token) {
+        toast.error('현재 기기의 토큰을 발급받지 못했습니다. 알림 권한 허용 후 페이지 새로고침해주세요.');
+        return;
+      }
+      const res = await fetch('/api/push/cleanup-others', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        toast.error(`정리 실패: ${json.error || 'unknown'}`);
+        return;
+      }
+      const deleted = json.deleted ?? 0;
+      if (deleted === 0) {
+        toast('정리할 다른 기기 토큰이 없습니다 — 이미 단일 기기 상태입니다', { icon: '✅' });
+      } else {
+        toast.success(`다른 기기 토큰 ${deleted}건 정리 완료`);
+      }
+    } catch (err) {
+      toast.error(`정리 실패: ${String(err)}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 pt-3 border-t border-neutral-200 space-y-2">
+      <div className="flex items-center gap-1.5">
+        <Smartphone size={13} className="text-neutral-600" />
+        <span className="text-xs font-bold text-neutral-700">기기 정리</span>
+      </div>
+      <p className="text-[11px] text-neutral-500 leading-relaxed">
+        같은 알림이 여러 번 도착할 때 사용. 현재 이 기기의 토큰만 남기고
+        다른 기기·캐시에 등록된 본인의 토큰을 모두 삭제합니다.
+      </p>
+      <button
+        type="button"
+        onClick={handleCleanup}
+        disabled={busy}
+        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 disabled:opacity-50"
+      >
+        <Smartphone size={13} />
+        {busy ? '정리 중...' : '이 기기만 알림 받기'}
+      </button>
     </div>
   );
 }
