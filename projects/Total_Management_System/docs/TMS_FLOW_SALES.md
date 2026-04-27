@@ -1,7 +1,34 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-17 | 수금 처리 + 납품서 편집 + 이미지 복사 + 제품군 필터/그룹핑 정합성
+> 최종 업데이트: 2026-04-27 | 빠른 송장(별도 송장) 발급 신설
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §5, [TMS_PROCESS_MAP.md](TMS_PROCESS_MAP.md) 참조
+
+## 빠른 송장 (2026-04-27 추가)
+
+판매와 무관한 1회성 발송(샘플·간단 AS·거래처 출고·지인 발송 등)을 위해 **저장된 고객 정보로 ALPS 송장만 즉시 발급**하는 화면. 사이드바 '판매' 그룹: 판매 입력 → 판매 조회 → **빠른 송장** → B2B거래 → 계약서.
+
+**핵심 원칙**: 신규 테이블 `manual_invoices`로 분리 → 매출 KPI / 월목표 / B2B 통계 RPC 모두 영향 없음.
+
+```
+TMS /manual-invoices 진입
+  → CustomerAutocomplete로 기존 고객 검색·선택
+  → 주소·연락처 미보유 고객 차단 + 고객 정보 페이지 링크
+  → 품목명 직접 입력(50자, ALPS 송장 인쇄 글씨)
+  → 배송메시지(선택)
+  → "ALPS 송장 발급" → getNextInvoice() + bookShipment()
+  → 송장번호 큰 글씨 + 복사 버튼 → ALPS 별도 PC에서 조회·출력
+  → 페이지 하단 "오늘 발급한 별도 송장 N건" 미니 리스트 + 인라인 취소
+```
+
+**재사용 자산** (수정 없이 호출): `bookShipment()` / `getNextInvoice()` / `cancelShipment()` — `lib/lotte/alps-client.ts` · `<CustomerAutocomplete>` — `components/shared/customer-autocomplete.tsx`
+
+**고객 상세 통합**: 거래 타임라인에 '빠른송장' 배지 항목 추가(취소된 건은 strikethrough + '취소됨'). 고객별 발급 이력은 customer 상세에서 조회.
+
+**알림톡 발송**: v1 제외. 케이스 다양성(샘플/지인/AS/거래처) + 빈도 낮음 + 카카오 검수 오버헤드 감안. 향후 발급 폼에 체크박스 옵션으로 추가 가능 — DB에 `customer_id` `invoice_number` 다 쌓여 있어 데이터 손실 없음.
+
+**파일**: API `/api/manual-invoices` (POST/GET) + `/api/manual-invoices/[id]` (DELETE) / Hook `use-manual-invoices.ts` / 폼 `quick-invoice-form.tsx` / 페이지 `(dashboard)/manual-invoices/page.tsx` / 마이그레이션 `supabase/migrations/066_manual_invoices.sql`
+
+---
 
 ### 04-02 추가 기능
 - 사이드바: '판매 입력' + '판매 조회' 분리

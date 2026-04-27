@@ -1,7 +1,47 @@
 # 상담관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-20 (관리자 푸시 알림 확장 + 톡상담 취소 알림톡 버그 수정)
+> 최종 업데이트: 2026-04-27 (일정 수동 등록 모달 — 고객 검색·우편번호 통합 / 일정변경 페이지 재진입 가드 / cancel 캘린더 동기화 / 푸시 알림 중복 dedup)
 
 ---
+
+## 일정 수동 등록 모달 개선 (04-27)
+
+`CreateConsultationModal`을 판매 입력 화면의 고객 입력 패턴과 일관되게 정렬:
+- 고객명/연락처 텍스트 입력 → **`<CustomerAutocomplete>`** + 외부 "+ 신규 고객 등록"(중첩 `<CustomerCreateModal>`)
+- 출장요청 주소 입력 → **`<DaumPostcodeButton>`** (postcode + road + detail 분리 저장)
+- 출장요청일 때 `consultations.postcode` INSERT (컬럼 기존 존재, 마이그레이션 불필요)
+- 매장↔출장 토글 시 `addressRoad`가 비어있을 때만 selectedCustomer에서 자동 채움 (사용자 임의 주소 보호)
+- **자식 모달 떠 있는 동안 부모 dialog `open=false`**로 일시 닫기 → native `<dialog>` × 일반 fixed-div 중첩 시 가려짐 회피. 자식 닫히면 다시 열림. 입력값 손실 없음.
+- ESC 가드: `showNewCustomer === true`면 부모 close 차단
+
+**재사용 컴포넌트 추출**: `<DaumPostcodeButton>` 신설 + 기존 3곳(고객 신규/고객 수정/배송 설정)의 동일 코드 75줄 정리. CustomerAutocomplete에 `disableInlineNewForm` prop 추가(기본값 false → 다른 사용처 회귀 0).
+
+## 일정변경 페이지 재진입 가드 (04-27)
+
+`page_change_request.html`이 cancelled/completed/reschedule_requested 상태에서도 일정변경 폼이 그대로 노출되던 버그 — GAS getReservationInfo의 CONFIRMED/ASSIGNED 가드가 TMS Vercel API 이행 시 누락됐던 것.
+
+**서버**: `GET /api/consultation/public/reservation`이 `canRequestChange: boolean` 반환 (confirmed/assigned만 true). backward compatible.
+
+**페이지**: `loadReservation()`에서 `canRequestChange === false`면 status별 안내 화면 분기:
+- `cancelled` → 기존 `cancel-done` 재사용 ("예약이 취소되었습니다")
+- `completed` → 신규 `already-completed` ("이미 완료된 상담입니다")
+- `reschedule_requested` → 신규 `already-rescheduled` ("이미 일정 변경 요청 중")
+- 그 외(suggested 등) → 기존 `error` 화면
+
+**카카오 인앱 닫기 fix** 동반: `safeClose`가 `kakaoweb://closeBrowser`(iOS 전용)만 호출하고 `return`으로 떨어져 Android에서 무반응이던 문제 → page_suggest/page_result 동일 패턴으로 UA 분기 + history.back→window.close fallback. mamoru.kr 강제 이동 폴백 제거(메모리 규칙 위반).
+
+## cancel API 캘린더 동기화 (04-27)
+
+admin-create / resched는 호출하던 `syncConsultationToCalendar`를 cancel API만 빠뜨려 DB는 cancelled인데 Google Calendar 일정이 잔류하던 문제. `after()` 블록으로 추가. `syncConsultationToCalendar`는 cancelled 상태에서 자동으로 `deleteCalendarEvent` + `google_event_id NULL` 처리 (기존 구현).
+
+**잔여 정리 admin endpoint**: `GET /api/consultation/admin-cleanup-calendar` — cancelled + google_event_id IS NOT NULL 모든 행에 일괄 sync 호출. idempotent(두 번 호출 안전). 인증 필수.
+
+## 푸시 알림 중복 도착 dedup (04-27)
+
+리뷰/접수 등 푸시가 한 번 발송됐는데 사장님 디바이스에 두 번 표시되던 버그 — 두 가지 원인 동시 차단:
+- **SW × onMessage 중복**: `firebase-messaging-sw.js`의 `push` 핸들러가 백그라운드/포그라운드 모두에서 `showNotification`을 호출하는데, `firebase/client.ts`의 `onMessage`가 또 `new Notification()` 생성 → 포그라운드에서 두 번 표시. → `onMessage` 핸들러 자체 제거(SW가 모든 표시 담당).
+- **토큰 누적**: `push_subscriptions`에 한 사용자의 다중 토큰이 쌓여 모든 토큰에 발송되던 문제. → `subscribe API`에 single-token-per-user 정책(같은 user_id의 옛 토큰 자동 삭제). 신규 `cleanup-others` endpoint + 설정 → 알림 → "이 기기만 알림 받기" 버튼.
+
+**알림 클릭 시 새 창 중복 차단**: SW의 `notificationclick` matchAll 매칭 범위를 same-origin 전체로 확장(기존: /dashboard·/consultations·/repairs 3경로만 → 다른 페이지에서 클릭 시 새 창 열렸음). focused 우선 → 기존 인스턴스 navigate + focus.
 
 ## 관리자 푸시 알림 (04-20 추가)
 
