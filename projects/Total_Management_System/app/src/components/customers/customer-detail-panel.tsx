@@ -7,10 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomer, useUpdateCustomer } from '@/hooks/use-customers';
+import { useCustomerManualInvoices } from '@/hooks/use-manual-invoices';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import {
   Save, ShoppingBag, FileSignature, MessageSquare, Wrench,
-  Clock, Pencil, X,
+  Clock, Pencil, X, Truck,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { TagBadges } from '@/components/shared/tag-selector';
@@ -50,6 +51,7 @@ interface Props {
 export function CustomerDetailPanel({ customerId }: Props) {
   const router = useRouter();
   const { data, isLoading } = useCustomer(customerId);
+  const { data: manualInvoicesData } = useCustomerManualInvoices(customerId);
   const updateCustomer = useUpdateCustomer();
   const [tab, setTab] = useState<'profile' | 'timeline'>('profile');
   const [editing, setEditing] = useState(false);
@@ -63,6 +65,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
   }
 
   const { customer: c, sales, contracts, consultations, repairs, summary } = data;
+  const manualInvoices = manualInvoicesData?.invoices ?? [];
 
   // 통합 타임라인 생성 — 시간순 역순
   const timeline = [
@@ -75,6 +78,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
       amount: s.paid_amount,
       icon: ShoppingBag,
       color: 'text-blue-600 bg-blue-50',
+      cancelled: false,
     })),
     ...contracts.map((ct) => ({
       type: 'contract' as const,
@@ -85,6 +89,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
       amount: ct.final_amount,
       icon: FileSignature,
       color: 'text-purple-600 bg-purple-50',
+      cancelled: false,
     })),
     ...consultations.map((con) => ({
       type: 'consultation' as const,
@@ -95,6 +100,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
       amount: null as number | null,
       icon: MessageSquare,
       color: 'text-amber-600 bg-amber-50',
+      cancelled: false,
     })),
     ...repairs.map((r) => ({
       type: 'repair' as const,
@@ -105,6 +111,18 @@ export function CustomerDetailPanel({ customerId }: Props) {
       amount: r.total_cost,
       icon: Wrench,
       color: 'text-rose-600 bg-rose-50',
+      cancelled: false,
+    })),
+    ...manualInvoices.map((mi) => ({
+      type: 'manual_invoice' as const,
+      id: mi.id,
+      date: mi.created_at,
+      title: mi.goods_name,
+      sub: `송장 ${mi.invoice_number}`,
+      amount: null as number | null,
+      icon: Truck,
+      color: 'text-terracotta bg-terracotta/10',
+      cancelled: !!mi.cancelled_at,
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -270,24 +288,32 @@ export function CustomerDetailPanel({ customerId }: Props) {
                   onClick={() => {
                     if (item.type === 'sale') router.push(`/sales/${item.id}`);
                     else if (item.type === 'contract') router.push(`/contracts/${item.id}`);
+                    else if (item.type === 'manual_invoice') router.push('/manual-invoices');
                   }}
                   className={`flex items-start gap-3 py-3 ${
                     i < timeline.length - 1 ? 'border-b border-neutral-100' : ''
-                  } ${item.type === 'sale' || item.type === 'contract' ? 'cursor-pointer hover:bg-warm-ivory/40 -mx-1 px-1 rounded' : ''}`}
+                  } ${item.type === 'sale' || item.type === 'contract' || item.type === 'manual_invoice' ? 'cursor-pointer hover:bg-warm-ivory/40 -mx-1 px-1 rounded' : ''}`}
                 >
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${item.color}`}>
                     <Icon size={14} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-indigo-black truncate">{item.title}</p>
+                      <p className={`text-sm font-medium truncate ${item.cancelled ? 'text-neutral-400 line-through' : 'text-indigo-black'}`}>
+                        {item.type === 'manual_invoice' && (
+                          <Badge className="bg-terracotta/10 text-terracotta text-[10px] mr-1.5">빠른송장</Badge>
+                        )}
+                        {item.title}
+                      </p>
                       {item.amount != null && item.amount > 0 && (
                         <span className="text-sm font-bold shrink-0 ml-2">{formatKRW(item.amount)}</span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[11px] text-neutral-500">{formatDate(item.date)}</span>
-                      <Badge className="bg-neutral-100 text-neutral-600 text-[10px]">{item.sub}</Badge>
+                      <Badge className={item.cancelled ? 'bg-red-50 text-red-600 text-[10px]' : 'bg-neutral-100 text-neutral-600 text-[10px]'}>
+                        {item.cancelled ? '취소됨' : item.sub}
+                      </Badge>
                     </div>
                   </div>
                 </div>

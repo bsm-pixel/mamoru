@@ -597,6 +597,45 @@ export interface Database {
           vat_amount?: number;
         };
       };
+      // 빠른 송장(별도 송장) — 판매 무관 ALPS 송장 발급
+      manual_invoices: {
+        Row: {
+          id: string;
+          invoice_number: string;
+          customer_id: string;
+          customer_name: string;
+          customer_phone: string;
+          receiver_postcode: string;
+          receiver_address_road: string;
+          receiver_address_detail: string | null;
+          goods_name: string;
+          delivery_message: string | null;
+          created_by: string | null;
+          created_at: string;
+          cancelled_at: string | null;
+          cancelled_by: string | null;
+          cancelled_reason: string | null;
+          alps_cancel_failed: boolean;
+        };
+        Insert: {
+          invoice_number: string;
+          customer_id: string;
+          customer_name: string;
+          customer_phone: string;
+          receiver_postcode: string;
+          receiver_address_road: string;
+          receiver_address_detail?: string | null;
+          goods_name: string;
+          delivery_message?: string | null;
+          created_by?: string | null;
+        };
+        Update: {
+          cancelled_at?: string | null;
+          cancelled_by?: string | null;
+          cancelled_reason?: string | null;
+          alps_cancel_failed?: boolean;
+        };
+      };
       // R6: 전자 계약서 테이블
       contracts: {
         Row: {
@@ -900,6 +939,9 @@ export type RepairHistory = Database['public']['Tables']['repair_history']['Row'
 // R5: 편의 타입
 export type OfflineSale = Database['public']['Tables']['offline_sales']['Row'];
 export type OfflineSaleItem = Database['public']['Tables']['offline_sale_items']['Row'];
+
+// 빠른 송장
+export type ManualInvoice = Database['public']['Tables']['manual_invoices']['Row'];
 
 // R6: 편의 타입
 export type Contract = Database['public']['Tables']['contracts']['Row'];
