@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -67,6 +68,15 @@ export async function GET(req: NextRequest) {
         },
       });
     } catch { /* 알림 실패해도 취소는 완료 */ }
+
+    // Google Calendar 동기화 — cancelled 상태이므로 캘린더 이벤트 자동 삭제
+    after(async () => {
+      try {
+        await syncConsultationToCalendar(data.id);
+      } catch (e) {
+        console.error('[calendar-sync after cancel] 실패:', e);
+      }
+    });
 
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {
