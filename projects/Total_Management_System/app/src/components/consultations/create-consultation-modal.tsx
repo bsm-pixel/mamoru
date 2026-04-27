@@ -161,7 +161,7 @@ export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
 
   return (
     <>
-      <Modal open={open && !duplicate} onClose={handleClose} title="일정 수동 등록">
+      <Modal open={open && !duplicate && !showNewCustomer} onClose={handleClose} title="일정 수동 등록">
         <div className="space-y-4">
           {/* 타입 선택 */}
           <div>
