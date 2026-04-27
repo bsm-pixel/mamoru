@@ -50,22 +50,39 @@ self.addEventListener('message', (event) => {
 });
 
 // 알림 클릭 시 TMS 열기
+// 우선순위: ① 이미 열린 same-origin TMS 인스턴스(PWA/탭)가 있으면 그걸 focus + navigate
+//           ② 없을 때만 새 창 생성
+// 어느 페이지에 있든 (sales/orders/customers/manual-invoices 등) 매칭되도록 origin 기준으로 매칭
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || '/dashboard';
+  const targetUrl = event.notification.data?.url || '/dashboard';
 
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-      // 이미 열린 TMS 탭이 있으면 포커스
-      for (const client of clients) {
-        if (client.url.includes('/dashboard') || client.url.includes('/consultations') || client.url.includes('/repairs')) {
-          client.focus();
-          if (url !== '/dashboard') client.navigate(url);
-          return;
-        }
+  event.waitUntil((async () => {
+    const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+
+    // 같은 origin (TMS) 클라이언트 후보 — PWA standalone 인스턴스도 여기 포함됨
+    const candidates = allClients.filter((c) => {
+      try {
+        return new URL(c.url).origin === self.location.origin;
+      } catch {
+        return false;
       }
-      // 없으면 새 탭
-      return self.clients.openWindow(url);
-    })
-  );
+    });
+
+    if (candidates.length > 0) {
+      // 가장 최근 활성화된 것이 일반적으로 배열 앞쪽이지만, focused 우선 → 그 외 첫 항목
+      const focused = candidates.find((c) => c.focused) || candidates[0];
+      try {
+        if ('navigate' in focused && typeof focused.navigate === 'function') {
+          await focused.navigate(targetUrl);
+        }
+      } catch {
+        // navigate가 막히는 환경(일부 PWA standalone)에선 focus만 진행
+      }
+      return focused.focus();
+    }
+
+    // 같은 origin 인스턴스가 전혀 없을 때만 새 창
+    return self.clients.openWindow(targetUrl);
+  })());
 });
