@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, Plus, X } from 'lucide-react';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
+import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -23,26 +24,6 @@ export default function ShippingSettings({ settings, onSave, saving }: TabProps)
   const [autoPush, setAutoPush] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [soundTargets, setSoundTargets] = useState({ orders: true, consultations: true, repairs: true });
-
-  // 다음 주소검색
-  function openPostcode() {
-    const w = window as unknown as Record<string, unknown>;
-    if (!w.daum) {
-      const s = document.createElement('script');
-      s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
-      s.onload = () => doOpen();
-      document.head.appendChild(s);
-    } else { doOpen(); }
-    function doOpen() {
-      new ((window as unknown as Record<string, unknown> & { daum: { Postcode: new (o: Record<string, unknown>) => { open: () => void } } }).daum.Postcode)({
-        oncomplete: (data: { zonecode: string; roadAddress: string; jibunAddress: string }) => {
-          const road = data.roadAddress || data.jibunAddress;
-          setSender((prev) => ({ ...prev, zip: data.zonecode, addr: [road, senderDetail].filter(Boolean).join(' ') }));
-          setSenderRoad(road);
-        },
-      }).open();
-    }
-  }
 
   useEffect(() => {
     const s = parse(settings['shipping.sender'], { name: '마모루', tel: '', zip: '', addr: '' });
@@ -88,10 +69,12 @@ export default function ShippingSettings({ settings, onSave, saving }: TabProps)
           <div className="col-span-2 flex gap-2">
             <input placeholder="우편번호" value={sender.zip} readOnly
               className="w-24 h-9 px-3 rounded-lg border border-neutral-200 text-sm bg-neutral-50" />
-            <button type="button" onClick={openPostcode}
-              className="h-9 px-3 rounded-lg bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-800 transition">
-              주소 검색
-            </button>
+            <DaumPostcodeButton
+              onSelected={(d) => {
+                setSender((prev) => ({ ...prev, zip: d.zonecode, addr: [d.roadAddress, senderDetail].filter(Boolean).join(' ') }));
+                setSenderRoad(d.roadAddress);
+              }}
+            />
           </div>
           <input placeholder="도로명주소" value={senderRoad} readOnly
             className="col-span-2 h-9 px-3 rounded-lg border border-neutral-200 text-sm bg-neutral-50" />

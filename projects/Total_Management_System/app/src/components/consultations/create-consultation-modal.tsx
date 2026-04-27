@@ -6,17 +6,24 @@
  *
  * 지원: 매장방문 / 출장요청 (톡상담 제외)
  * 중복 감지: 같은 번호 + 같은 일시 → 경고 서브 모달 + 기존 상담 정보 표시
+ *
+ * 고객 입력: CustomerAutocomplete + 외부 "+ 신규 고객 등록" → 중첩 CustomerCreateModal
+ * 출장요청 시 주소: DaumPostcodeButton (우편번호 + 도로명 + 상세주소)
  */
 
 import { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
-import { Store, Truck, AlertTriangle, Info } from 'lucide-react';
+import { Store, Truck, AlertTriangle, Info, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
   useCreateConsultation,
   type DuplicateExistingConsultation,
 } from '@/hooks/use-consultations';
+import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
+import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
+import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
+import { formatPhone } from '@/lib/utils/format';
 
 interface Props {
   open: boolean;
@@ -34,10 +41,11 @@ const TYPE_OPTIONS: { key: ConsultType; label: string; icon: React.ReactNode }[]
 
 export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
   const [type, setType] = useState<ConsultType>('store_visit');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
+  const [showNewCustomer, setShowNewCustomer] = useState(false);
   const [visitDate, setVisitDate] = useState('');
   const [visitTime, setVisitTime] = useState('');
+  const [postcode, setPostcode] = useState('');
   const [addressRoad, setAddressRoad] = useState('');
   const [addressDetail, setAddressDetail] = useState('');
   const [memo, setMemo] = useState('');
@@ -48,10 +56,11 @@ export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
 
   const reset = () => {
     setType('store_visit');
-    setName('');
-    setPhone('');
+    setSelectedCustomer(null);
+    setShowNewCustomer(false);
     setVisitDate('');
     setVisitTime('');
+    setPostcode('');
     setAddressRoad('');
     setAddressDetail('');
     setMemo('');
@@ -61,15 +70,60 @@ export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
 
   const handleClose = () => {
     if (create.isPending) return;
+    if (showNewCustomer) return; // 자식 CustomerCreateModal이 떠 있으면 부모 닫기 차단
     reset();
     onClose();
   };
 
+  /** 출장요청으로 전환 시 자동 채움 (이미 입력된 임의 주소가 없을 때만) */
+  const handleTypeChange = (next: ConsultType) => {
+    setType(next);
+    if (next === 'field_request' && selectedCustomer && !addressRoad) {
+      setPostcode(selectedCustomer.postcode || '');
+      setAddressRoad(selectedCustomer.address_road || '');
+      setAddressDetail(selectedCustomer.address_detail || '');
+    }
+  };
+
+  /** 고객 선택 시 자동 채움 */
+  const handleSelectCustomer = (c: SelectedCustomer) => {
+    setSelectedCustomer(c);
+    if (type === 'field_request') {
+      setPostcode(c.postcode || '');
+      setAddressRoad(c.address_road || '');
+      setAddressDetail(c.address_detail || '');
+    }
+  };
+
+  /** 신규 등록 후 자동 선택 + 자동 채움 */
+  // /api/customers POST는 select() 후 customer 전체 행을 반환함 → SelectedCustomer 형태로 캐스트.
+  const handleCreatedCustomer = (c: { id: string; name: string; phone: string; customer_type: string }) => {
+    const full = c as unknown as SelectedCustomer;
+    setSelectedCustomer({
+      id: full.id,
+      name: full.name,
+      phone: full.phone,
+      email: full.email ?? null,
+      address_road: full.address_road ?? null,
+      address_detail: full.address_detail ?? null,
+      postcode: full.postcode ?? null,
+      ecount_customer_code: full.ecount_customer_code ?? null,
+      customer_type: full.customer_type,
+    });
+    if (type === 'field_request') {
+      setPostcode(full.postcode ?? '');
+      setAddressRoad(full.address_road ?? '');
+      setAddressDetail(full.address_detail ?? '');
+    }
+  };
+
   const handleSubmit = async () => {
     // 검증
-    if (!name.trim()) return toast.error('고객명을 입력해주세요');
-    if (!phone.trim()) return toast.error('연락처를 입력해주세요');
-    if (!/^0\d{8,10}$/.test(phone.replace(/\D/g, ''))) return toast.error('연락처 형식을 확인해주세요');
+    if (!selectedCustomer) return toast.error('고객을 선택해주세요');
+    if (!selectedCustomer.phone) return toast.error('선택한 고객의 연락처가 없습니다. 고객 정보를 먼저 보강해주세요');
+    if (!/^0\d{8,10}$/.test(selectedCustomer.phone.replace(/\D/g, ''))) {
+      return toast.error('연락처 형식이 올바르지 않습니다. 고객 정보 페이지에서 수정해주세요');
+    }
     if (!visitDate) return toast.error('날짜를 선택해주세요');
     if (!visitTime) return toast.error('시간을 선택해주세요');
     if (type === 'field_request' && !addressRoad.trim()) return toast.error('출장은 주소가 필수입니다');
@@ -77,12 +131,13 @@ export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
     try {
       const result = await create.mutateAsync({
         type,
-        name: name.trim(),
-        phone: phone.trim(),
+        name: selectedCustomer.name,
+        phone: selectedCustomer.phone,
         visitDate,
         visitTime,
         addressRoad: type === 'field_request' ? addressRoad.trim() : undefined,
         addressDetail: type === 'field_request' ? addressDetail.trim() : undefined,
+        postcode: type === 'field_request' ? (postcode.trim() || undefined) : undefined,
         memo: memo.trim() || undefined,
         notify,
       });
@@ -115,7 +170,7 @@ export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
               {TYPE_OPTIONS.map((opt) => (
                 <button
                   key={opt.key}
-                  onClick={() => setType(opt.key)}
+                  onClick={() => handleTypeChange(opt.key)}
                   className={`flex-1 flex items-center justify-center gap-1.5 h-10 rounded-lg border text-sm font-semibold transition ${
                     type === opt.key
                       ? 'border-terracotta bg-terracotta/10 text-terracotta'
@@ -129,29 +184,30 @@ export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
             </div>
           </div>
 
-          {/* 고객명 + 연락처 */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1">고객명 *</label>
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="홍길동"
-                className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm"
-                maxLength={30}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1">연락처 *</label>
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="01012345678"
-                inputMode="numeric"
-                className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm font-mono"
-                maxLength={13}
-              />
-            </div>
+          {/* 고객 선택 */}
+          <div>
+            <label className="block text-xs font-semibold text-neutral-700 mb-1.5">고객 *</label>
+            <CustomerAutocomplete
+              selectedCustomer={selectedCustomer}
+              onSelect={handleSelectCustomer}
+              onClear={() => setSelectedCustomer(null)}
+              disableInlineNewForm
+            />
+            {!selectedCustomer && (
+              <button
+                type="button"
+                onClick={() => setShowNewCustomer(true)}
+                className="mt-2 w-full h-9 rounded-lg border border-dashed border-terracotta/40 bg-terracotta/5 text-xs font-semibold text-terracotta hover:bg-terracotta/10 transition flex items-center justify-center gap-1.5"
+              >
+                <Plus size={13} />
+                신규 고객 등록 (우편번호 포함)
+              </button>
+            )}
+            {selectedCustomer && selectedCustomer.phone && (
+              <p className="mt-1.5 text-[11px] text-neutral-500">
+                연락처: <span className="font-mono">{formatPhone(selectedCustomer.phone)}</span>
+              </p>
+            )}
           </div>
 
           {/* 주소 (출장만) */}
@@ -160,16 +216,34 @@ export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
               <div className="flex items-center gap-1.5">
                 <Info size={12} className="text-neutral-500" />
                 <span className="text-[11px] text-neutral-500">
-                  출장 등록 — 주소는 지도 표시·리마인더 문자에 사용됩니다
+                  출장 등록 — 주소·우편번호는 지도 표시·리마인더·송장 발급에 사용됩니다
                 </span>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 mb-1">주소 *</label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={postcode}
+                    readOnly
+                    placeholder="우편번호"
+                    className="w-24 h-9 px-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm text-neutral-600"
+                  />
+                  <DaumPostcodeButton
+                    onSelected={(d) => {
+                      setPostcode(d.zonecode);
+                      setAddressRoad(d.roadAddress);
+                    }}
+                  >
+                    주소 검색
+                  </DaumPostcodeButton>
+                </div>
                 <input
+                  type="text"
                   value={addressRoad}
-                  onChange={(e) => setAddressRoad(e.target.value)}
-                  placeholder="서울 강남구 역삼동 ..."
-                  className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm"
+                  readOnly
+                  placeholder="도로명 주소 (주소 검색으로 입력)"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm text-neutral-600"
                 />
               </div>
               <div>
@@ -265,6 +339,13 @@ export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
           }}
         />
       )}
+
+      {/* 신규 고객 등록 (중첩 모달) */}
+      <CustomerCreateModal
+        open={showNewCustomer}
+        onClose={() => setShowNewCustomer(false)}
+        onCreated={handleCreatedCustomer}
+      />
     </>
   );
 }

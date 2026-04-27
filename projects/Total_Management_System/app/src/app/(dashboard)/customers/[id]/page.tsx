@@ -12,6 +12,7 @@ import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { ArrowLeft, Save, ShoppingBag, FileSignature, MessageSquare, Wrench, Clock } from 'lucide-react';
 import { TagBadges, TagSelector } from '@/components/shared/tag-selector';
 import { useSetting } from '@/hooks/use-settings';
+import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -213,23 +214,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 <div className="flex gap-2 mb-2">
                   <input type="text" value={form.postcode} readOnly placeholder="우편번호"
                     className="w-24 h-9 px-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm text-neutral-600" />
-                  <button type="button" onClick={() => {
-                    if (!(window as unknown as Record<string, unknown>).daum) {
-                      const s = document.createElement('script');
-                      s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
-                      s.onload = () => openPostcode();
-                      document.head.appendChild(s);
-                    } else { openPostcode(); }
-                    function openPostcode() {
-                      new (window as unknown as Record<string, unknown> & { daum: { Postcode: new (opts: Record<string, unknown>) => { open: () => void } } }).daum.Postcode({
-                        oncomplete: (data: { zonecode: string; roadAddress: string; jibunAddress: string }) => {
-                          setForm((prev) => ({ ...prev, postcode: data.zonecode, address_road: data.roadAddress || data.jibunAddress }));
-                        },
-                      }).open();
-                    }
-                  }} className="h-9 px-3 rounded-lg bg-neutral-900 text-white text-xs font-medium">
+                  <DaumPostcodeButton
+                    onSelected={(d) => setForm((prev) => ({ ...prev, postcode: d.zonecode, address_road: d.roadAddress }))}
+                  >
                     주소검색
-                  </button>
+                  </DaumPostcodeButton>
                 </div>
                 <input type="text" value={form.address_road} readOnly placeholder="도로명 주소"
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm text-neutral-600" />

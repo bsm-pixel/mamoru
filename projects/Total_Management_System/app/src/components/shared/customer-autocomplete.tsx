@@ -24,6 +24,8 @@ interface Props {
   onClear: () => void;
   /** 계약서용: email/address 필드도 신규등록 폼에 표시 */
   showExtendedFields?: boolean;
+  /** 인라인 신규등록 버튼/폼 숨김. 외부에서 CustomerCreateModal 등으로 처리할 때 사용. */
+  disableInlineNewForm?: boolean;
 }
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -33,7 +35,7 @@ const SOURCE_LABEL: Record<string, string> = {
   manual: '수동',
 };
 
-export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, showExtendedFields }: Props) {
+export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, showExtendedFields, disableInlineNewForm }: Props) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -268,32 +270,36 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
                 </button>
               ))}
               {/* 신규 등록 버튼 */}
-              <button
-                type="button"
-                onClick={openNewForm}
-                className="w-full px-3 py-2.5 text-left hover:bg-terracotta/5 border-t border-neutral-100 flex items-center gap-2"
-              >
-                <Plus size={14} className="text-terracotta" />
-                <span className="text-sm text-terracotta font-semibold">
-                  &quot;{query}&quot; 신규 등록
-                </span>
-              </button>
+              {!disableInlineNewForm && (
+                <button
+                  type="button"
+                  onClick={openNewForm}
+                  className="w-full px-3 py-2.5 text-left hover:bg-terracotta/5 border-t border-neutral-100 flex items-center gap-2"
+                >
+                  <Plus size={14} className="text-terracotta" />
+                  <span className="text-sm text-terracotta font-semibold">
+                    &quot;{query}&quot; 신규 등록
+                  </span>
+                </button>
+              )}
             </>
           ) : (
             <>
               <div className="px-3 py-3 text-center">
                 <p className="text-xs text-neutral-400">등록된 고객이 없습니다</p>
               </div>
-              <button
-                type="button"
-                onClick={openNewForm}
-                className="w-full px-3 py-2.5 text-left hover:bg-terracotta/5 border-t border-neutral-100 flex items-center gap-2"
-              >
-                <Plus size={14} className="text-terracotta" />
-                <span className="text-sm text-terracotta font-semibold">
-                  &quot;{query}&quot; 신규 등록
-                </span>
-              </button>
+              {!disableInlineNewForm && (
+                <button
+                  type="button"
+                  onClick={openNewForm}
+                  className="w-full px-3 py-2.5 text-left hover:bg-terracotta/5 border-t border-neutral-100 flex items-center gap-2"
+                >
+                  <Plus size={14} className="text-terracotta" />
+                  <span className="text-sm text-terracotta font-semibold">
+                    &quot;{query}&quot; 신규 등록
+                  </span>
+                </button>
+              )}
             </>
           )}
         </div>

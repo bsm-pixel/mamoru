@@ -255,6 +255,7 @@ export interface AdminCreatePayload {
   visitTime: string;   // HH:MM
   addressRoad?: string;
   addressDetail?: string;
+  postcode?: string;
   memo?: string;
   notify?: boolean;
 }

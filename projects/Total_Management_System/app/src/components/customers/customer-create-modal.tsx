@@ -7,6 +7,7 @@ import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSetting } from '@/hooks/use-settings';
 import { TagSelector } from '@/components/shared/tag-selector';
+import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -43,23 +44,6 @@ export function CustomerCreateModal({ open, onClose, onCreated }: Props) {
   const availableTags = useSetting<string[]>('customer.tags', []);
 
   if (!open) return null;
-
-  function openPostcode() {
-    const w = window as unknown as Record<string, unknown>;
-    if (!w.daum) {
-      const s = document.createElement('script');
-      s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
-      s.onload = () => doOpen();
-      document.head.appendChild(s);
-    } else { doOpen(); }
-    function doOpen() {
-      new ((window as unknown as Record<string, unknown> & { daum: { Postcode: new (o: Record<string, unknown>) => { open: () => void } } }).daum.Postcode)({
-        oncomplete: (data: { zonecode: string; roadAddress: string; jibunAddress: string }) => {
-          setForm((prev) => ({ ...prev, postcode: data.zonecode, address_road: data.roadAddress || data.jibunAddress }));
-        },
-      }).open();
-    }
-  }
 
   async function handleSave() {
     if (!form.name.trim()) return toast.error('이름을 입력해주세요');
@@ -148,8 +132,11 @@ export function CustomerCreateModal({ open, onClose, onCreated }: Props) {
             <div className="flex gap-2 mb-2">
               <input type="text" value={form.postcode} readOnly placeholder="우편번호"
                 className="w-24 h-9 px-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm text-neutral-600" />
-              <button type="button" onClick={openPostcode}
-                className="h-9 px-3 rounded-lg bg-neutral-900 text-white text-xs font-medium">주소검색</button>
+              <DaumPostcodeButton
+                onSelected={(d) => setForm((prev) => ({ ...prev, postcode: d.zonecode, address_road: d.roadAddress }))}
+              >
+                주소검색
+              </DaumPostcodeButton>
             </div>
             <input type="text" value={form.address_road} readOnly placeholder="도로명 주소 (주소검색으로 입력)"
               className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm text-neutral-600" />

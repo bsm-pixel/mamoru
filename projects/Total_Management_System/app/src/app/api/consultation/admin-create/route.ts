@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
       visitTime,
       addressRoad,
       addressDetail,
+      postcode,
       memo,
       notify = true, // 기본 On
     } = body;
@@ -134,6 +135,7 @@ export async function POST(req: NextRequest) {
         visit_time: visitTime,
         address_road: addressRoad?.trim() || null,
         address_detail: addressDetail?.trim() || null,
+        postcode: postcode?.trim() || null,
         latitude: lat,
         longitude: lng,
         status: 'confirmed', // 수기 등록은 즉시 확정
