@@ -116,10 +116,24 @@
       <button class="btn btn-close" onclick="safeClose()">닫기</button>
     </div>
 
-    <!-- 성공: 취소 완료 -->
+    <!-- 성공: 취소 완료 (또는 이미 취소된 건 재진입 시에도 동일 화면) -->
     <div id="cancel-done" class="card cancel-done-card hidden">
       <h2>예약이 취소되었습니다</h2>
       <p>다시 예약을 원하시면 마모루 홈페이지를 방문해주세요.</p>
+      <button class="btn btn-close" onclick="safeClose()">닫기</button>
+    </div>
+
+    <!-- 이미 완료된 상담 -->
+    <div id="already-completed" class="card cancel-done-card hidden">
+      <h2>이미 완료된 상담입니다</h2>
+      <p>또 다른 상담이 필요하시면 마모루 홈페이지에서 새로 신청해주세요.</p>
+      <button class="btn btn-close" onclick="safeClose()">닫기</button>
+    </div>
+
+    <!-- 이미 일정 변경 요청 중 -->
+    <div id="already-rescheduled" class="card cancel-done-card hidden">
+      <h2>이미 일정 변경을 요청하셨습니다</h2>
+      <p>새로운 일정 안내를 위해 스케줄을 조율하고 있습니다.<br>안내 알림톡을 기다려주세요.</p>
       <button class="btn btn-close" onclick="safeClose()">닫기</button>
     </div>
 
@@ -222,6 +236,13 @@
         .then(function(res) {
           if (!res.ok || !res.data) { showError(res.error || '예약 정보를 찾을 수 없습니다.'); return; }
           var d = res.data;
+
+          // 이미 처리된 상태(취소/완료/변경요청 중)면 안내 화면으로 분기
+          if (res.canRequestChange === false) {
+            showAlreadyHandled(d.status);
+            return;
+          }
+
           consultType = d.type || '';
           document.getElementById('info-name').textContent = d.name || '-';
           document.getElementById('info-type').textContent = d.type || '-';
@@ -231,6 +252,22 @@
           document.getElementById('main').classList.remove('hidden');
         })
         .catch(function() { showError('데이터 로드에 실패했습니다. 잠시 후 다시 시도해주세요.'); });
+    }
+
+    // ── 이미 처리된 상태 안내 화면 분기 ──
+    function showAlreadyHandled(status) {
+      document.getElementById('loading').classList.add('hidden');
+      var s = String(status || '').toLowerCase();
+      if (s === 'cancelled') {
+        document.getElementById('cancel-done').classList.remove('hidden');
+      } else if (s === 'completed') {
+        document.getElementById('already-completed').classList.remove('hidden');
+      } else if (s === 'reschedule_requested') {
+        document.getElementById('already-rescheduled').classList.remove('hidden');
+      } else {
+        // suggested / pending_admin 등 — 변경/취소 받을 단계 아님
+        showError('이 예약은 변경/취소 요청을 받을 수 없는 상태입니다.');
+      }
     }
 
     // ── 매장방문 여부 판별 ──

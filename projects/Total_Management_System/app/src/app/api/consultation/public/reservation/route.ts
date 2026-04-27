@@ -40,8 +40,13 @@ export async function GET(req: NextRequest) {
       talk_consult: '톡 상담',
     };
 
+    // 변경/취소 요청을 받을 수 있는 상태인지 (page_change_request.html이 분기 처리)
+    const ALLOWED_STATUSES = ['confirmed', 'assigned'];
+    const canRequestChange = ALLOWED_STATUSES.includes(String(data.status));
+
     return NextResponse.json({
       ok: true,
+      canRequestChange,
       data: {
         uid: data.unique_id,
         name: data.name,
