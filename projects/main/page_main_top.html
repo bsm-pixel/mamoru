@@ -1068,10 +1068,10 @@ button[class*="mm-"]:focus-visible {
       document.fonts.ready.then(send).catch(function(){});
     }
 
-    /* 4) 다단 폴백 — 어떤 환경에서도 최종 높이 도달 보장 */
+    /* 4) 다단 폴백 — 어떤 환경에서도 최종 높이 도달 보장 (인앱 첫 송신 누락 보완 강화) */
     function multiSend() {
       send();
-      [200, 600, 1500, 3000, 5000].forEach(function(ms) { setTimeout(send, ms); });
+      [50, 150, 400, 800, 1500, 3000, 5000].forEach(function(ms) { setTimeout(send, ms); });
     }
     if (document.readyState === 'complete') {
       multiSend();
@@ -1090,6 +1090,18 @@ button[class*="mm-"]:focus-visible {
     /* 6) 부모가 명시적으로 높이 요청 시 즉시 응답 */
     window.addEventListener('message', function(e) {
       if (e.data && e.data.type === 'REQUEST_HEIGHT') send();
+    });
+
+    /* 7) 네이버/카카오 인앱 보강 — BFCache 복원, 앱 포그라운드 복귀, 포커스 복귀 시 재송신 */
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) multiSend(); else send();
+    });
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) send();
+    });
+    window.addEventListener('focus', send);
+    window.addEventListener('orientationchange', function() {
+      setTimeout(send, 300);
     });
 
     /* ── 아임웹 parent에서 페이지 이동 위임 ── */
