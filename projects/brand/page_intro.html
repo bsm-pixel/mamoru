@@ -725,21 +725,21 @@ body {
     <div class="problem-grid">
       <div class="problem-card fade-in delay-1">
         <!-- 아이콘: ./icons/ 폴더의 SVG 참조 (page_diag와 동일 패턴) — 추후 svg 파일 교체 시 src만 수정 -->
-        <div class="problem-icon"><img src="./icons/gijun.svg" alt="높은 가격"></div>
+        <div class="problem-icon"><img src="./icons/up.svg" alt="높은 가격"></div>
         <h3 class="problem-title">좋은가위의 기준? '오직 가격뿐'</h3>
         <p class="problem-desc">"100만원 넘게 주고 샀어"<br>"오 좋은가위쓰네. 오래쓰려고 샀구나"<br>"난 잠깐 쓸꺼 20만원주고 샀는데"<span style="display:block;margin-top:0.8em;">가위의 기준이 이게 맞을까요?</p>
       </div>
       <div class="problem-card fade-in delay-2">
         <!-- 아이콘: 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
-        <div class="problem-icon"><img src="./icons/door-open.svg" alt="방문판매"></div>
+        <div class="problem-icon"><img src="./icons/door.svg" alt="방문판매"></div>
         <h3 class="problem-title">주기적인 관리? 불필요한 방문 </h3>
-        <p class="problem-desc">미용가위를 모르기 때문에<br>미용사는 방문딜러를 의지하게 됩니다<br>상술을 알고 기본을 알게 되시면<br>지속적인 방문은 불필요하게 됩니다<span style="display:block;margin-top:0.8em;"></span>고객을 찾는 브랜드 & 고객이 찾는 브랜드 <br><b>고객이 가위를 알기 전, 후로 나뉠것 입니다</b></p>
+        <p class="problem-desc">가위지식을 알 수 없는 시장구조에서<br>미용사는 방문딜러를 의지 할 뿐입니다<span style="display:block;margin-top:0.8em;"></span>고객을 찾아다니는 브랜드와 고객이 찾는 브랜드 <br><b>고객이 가위를 알기 전, 후로 나뉠것 입니다</b></p>
       </div>
       <div class="problem-card fade-in delay-3">
         <!-- 아이콘: 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
         <div class="problem-icon"><img src="./icons/face.svg" alt="맞지 않는 가위"></div>
-        <h3 class="problem-title">맞지 않는 가위 구매</h3>
-        <p class="problem-desc">어떤가위든 첫 느낌은 밀리지않고 잘 잘립니다<br>첫느낌만을 생각하여 제작되어지는 가위가 많이 유통되고있습니다<br>진짜 원하는 것은 오래 썼을때도 유지되는 만족감 아니신가요?</p>
+        <h3 class="problem-title">잘못된 상담방식</h3>
+        <p class="problem-desc">인기제품. 잘나가는제품. 누구나 끌립니다<br>하지만 진짜 원하는 것은 오래 썼을때도 유지되는 만족감 아니신가요?<span style="display:block;margin-top:0.8em;"></span>현재 대부분의 상담방식은 고객을 파악하기보다<br>비싸고 좋은놈 구매해서 오래쓰세요 ~ 입니다<span style="display:block;margin-top:0.8em;"></span>비싸서 좋은게아니라 가격</p>
       </div>
     </div>
   </div>
@@ -770,7 +770,7 @@ body {
       <div class="value-card fade-in delay-3">
         <div class="value-number">04</div>
         <h4 class="value-title">부담없이 즐기도록</h4>
-        <p class="value-desc">인턴의 <u>첫 블런트 한자루에 40만원?</u><br>블런트, 틴닝, 장가위 구매하시고 가위집까지 사세요<br>부담은 넣어두세요<br>즐길 수 있는 가격으로 뵙겠습니다<span style="display:block;margin-top:0.8em;"></span>제품의 판매가격은<br><b>미용사를 생각하는 브랜드의 마음입니다</b></p>
+        <p class="value-desc">인턴의 <u>첫 블런트 한자루에 40만원?</u><br>블런트, 틴닝, 장가위 구매하시고 가위집까지 사세요<br>즐길 수 있는 가격을 제공합니다<span style="display:block;margin-top:0.8em;"></span>제품의 판매가격은<br><b>미용사를 생각하는 브랜드의 마음입니다</b></p>
       </div>
     </div>
   </div>
@@ -1031,7 +1031,23 @@ body {
     }
   }
   window.addEventListener('message', function(e) {
-    if (e.data && e.data.type === 'REQUEST_HEIGHT') notifyHeight();
+    if (!e.data || typeof e.data !== 'object') return;
+    if (e.data.type === 'REQUEST_HEIGHT') {
+      notifyHeight();
+      return;
+    }
+    // 부모 sticky 퀵네비 클릭 → 섹션의 iframe 내부 좌표를 부모에 응답
+    if (e.data.type === 'MAMORU_SCROLL_TO' && typeof e.data.target === 'string') {
+      var el = document.getElementById(e.data.target);
+      if (!el) return;
+      var rect = el.getBoundingClientRect();
+      var iframeOffsetY = rect.top + (window.scrollY || window.pageYOffset || 0);
+      window.parent.postMessage({
+        type: 'MAMORU_SCROLL_TO_OFFSET',
+        sectionId: e.data.target,
+        iframeOffsetY: iframeOffsetY
+      }, '*');
+    }
   });
   window.addEventListener('load', function() {
     setTimeout(notifyHeight, 100);
