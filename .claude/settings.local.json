@@ -210,7 +210,9 @@
       "Bash(git -C /c/Users/user/Desktop/mamoru add \"projects/brand/page_intro.html\" \"projects/main/page_main_top.html\")",
       "Bash(git -C /c/Users/user/Desktop/mamoru add projects/Total_Management_System/docs/TMS_ROADMAP.md projects/Total_Management_System/docs/TMS_FLOW_SALES.md projects/Total_Management_System/docs/TMS_FLOW_CONSULTATION.md)",
       "Bash(git -C /c/Users/user/Desktop/mamoru diff --stat -- \"projects/brand/page_intro.html\" \".claude/settings.local.json\")",
-      "Bash(git -C /c/Users/user/Desktop/mamoru add \"projects/brand/page_intro.html\" \".claude/settings.local.json\")"
+      "Bash(git -C /c/Users/user/Desktop/mamoru add \"projects/brand/page_intro.html\" \".claude/settings.local.json\")",
+      "Bash(git -C /c/Users/user/Desktop/mamoru pull origin GAS_Consulting)",
+      "Bash(git -C /c/Users/user/Desktop/mamoru add \"projects/brand/page_intro.html\" \"projects/brand/icons/\" \".claude/settings.local.json\")"
     ],
     "additionalDirectories": [
       "\\tmp",

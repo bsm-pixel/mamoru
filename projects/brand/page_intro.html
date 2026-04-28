@@ -308,8 +308,9 @@ body {
 }
 @media screen and (min-width: 769px) { .problem-icon { width: 60px; height: 60px; font-size: 28px; margin-bottom: 24px; } }
 
-.problem-icon img { width: 32px; height: 32px; object-fit: contain; }
-@media screen and (min-width: 769px) { .problem-icon img { width: 36px; height: 36px; } }
+/* page_diag와 동일 패턴: 박스 가득 채우되 비율은 svg viewBox에 의해 자동 유지 */
+.problem-icon img { width: 100%; height: 100%; object-fit: contain; }
+.problem-icon svg { width: 100%; height: 100%; color: var(--void); }
 
 .problem-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--void); }
 @media screen and (min-width: 769px) { .problem-title { font-size: 20px; } }
@@ -378,7 +379,7 @@ body {
   border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center;
   font-size: 22px; overflow: hidden;
 }
-.tech-feature-icon img { width: 28px; height: 28px; object-fit: contain; }
+.tech-feature-icon img { width: 100%; height: 100%; object-fit: contain; }
 
 .tech-feature-content h4 { font-size: 17px; font-weight: 600; margin-bottom: 8px; color: var(--void); }
 .tech-feature-content p { font-size: 14px; color: var(--warm-gray); line-height: 1.6; }
@@ -404,11 +405,10 @@ body {
 .consult-step:hover { border-color: var(--void); transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.06); }
 @media screen and (min-width: 769px) { .consult-step { padding: 36px 24px; } }
 
-.consult-step-icon { font-size: 44px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
-@media screen and (min-width: 769px) { .consult-step-icon { font-size: 52px; } }
+.consult-step-icon { width: 64px; height: 64px; font-size: 44px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; }
+@media screen and (min-width: 769px) { .consult-step-icon { width: 80px; height: 80px; font-size: 52px; margin: 0 auto 24px; } }
 
-.consult-step-icon img { width: 48px; height: 48px; object-fit: contain; }
-@media screen and (min-width: 769px) { .consult-step-icon img { width: 56px; height: 56px; } }
+.consult-step-icon img { width: 100%; height: 100%; object-fit: contain; }
 
 .consult-step h4 { font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--void); }
 @media screen and (min-width: 769px) { .consult-step h4 { font-size: 20px; } }
@@ -623,11 +623,21 @@ body {
 .delay-3 { transition-delay: 0.3s; }
 .delay-4 { transition-delay: 0.4s; }
 
-/* ── 모바일 퀵네비 칩 ── */
+/* ── 모바일 퀵네비 칩 (스크롤 시 상단 고정) ── */
 .intro-quicknav-wrap {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 50;
   background: var(--cream);
   border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+/* 스크롤 중 살짝 반투명 + 블러 (지원 브라우저만 점진 향상) */
+@supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+  .intro-quicknav-wrap {
+    background: rgba(250, 249, 247, 0.88);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+  }
 }
 .intro-quicknav-wrap::after {
   content: '';
@@ -714,25 +724,22 @@ body {
 
     <div class="problem-grid">
       <div class="problem-card fade-in delay-1">
-        <!-- ✏️ 수정가능: 문제 아이콘 1 (src URL만 교체) -->
-        <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF / 최소 60x60px -->
-        <div class="problem-icon"><img src="" alt="높은 가격"></div>
+        <!-- 아이콘: ./icons/ 폴더의 SVG 참조 (page_diag와 동일 패턴) — 추후 svg 파일 교체 시 src만 수정 -->
+        <div class="problem-icon"><img src="./icons/gijun.svg" alt="높은 가격"></div>
         <h3 class="problem-title">좋은가위의 기준? '오직 가격뿐'</h3>
-        <p class="problem-desc">"100만원 넘게 주고 샀어"<br>"오 좋은가위쓰네. 오래쓰려고 샀구나"<br>미용사를 위한 기준이 이게 맞을까요?</p>
+        <p class="problem-desc">"100만원 넘게 주고 샀어"<br>"오 좋은가위쓰네. 오래쓰려고 샀구나"<br>"난 잠깐 쓸꺼 20만원주고 샀는데"<span style="display:block;margin-top:0.8em;">가위의 기준이 이게 맞을까요?</p>
       </div>
       <div class="problem-card fade-in delay-2">
-        <!-- ✏️ 수정가능: 문제 아이콘 2 (src URL만 교체) -->
-        <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF / 최소 60x60px -->
-        <div class="problem-icon"><img src="" alt="방문판매"></div>
-        <h3 class="problem-title">찾아가는 친절함? 불필요한 방문 </h3>
-        <p class="problem-desc">알아야 할 아주 기본적인 것은 숨기기에<br>미용사는 방문딜러를 의지하게 됩니다<br>미용사가 기본적인것만 익혀도 지속적인 방문은 필요가 없습니다.<span style="display:block;margin-top:0.8em;"></span>고객을 </p>
+        <!-- 아이콘: 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
+        <div class="problem-icon"><img src="./icons/door-open.svg" alt="방문판매"></div>
+        <h3 class="problem-title">주기적인 관리? 불필요한 방문 </h3>
+        <p class="problem-desc">미용가위를 모르기 때문에<br>미용사는 방문딜러를 의지하게 됩니다<br>상술을 알고 기본을 알게 되시면<br>지속적인 방문은 불필요하게 됩니다<span style="display:block;margin-top:0.8em;"></span>고객을 찾는 브랜드 & 고객이 찾는 브랜드 <br><b>고객이 가위를 알기 전, 후로 나뉠것 입니다</b></p>
       </div>
       <div class="problem-card fade-in delay-3">
-        <!-- ✏️ 수정가능: 문제 아이콘 3 (src URL만 교체) -->
-        <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF / 최소 60x60px -->
-        <div class="problem-icon"><img src="" alt="맞지 않는 가위"></div>
-        <h3 class="problem-title">고객과 맞지 않는 가위</h3>
-        <p class="problem-desc">어떤가위든 첫 느낌은 밀리지않고 잘 잘립니다<br>다이소 가위여도 잘 잘립니다<br>진짜 원하는 가위는 오래 썼을때도 유지되는 만족감 아닐까요?</p>
+        <!-- 아이콘: 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
+        <div class="problem-icon"><img src="./icons/face.svg" alt="맞지 않는 가위"></div>
+        <h3 class="problem-title">맞지 않는 가위 구매</h3>
+        <p class="problem-desc">어떤가위든 첫 느낌은 밀리지않고 잘 잘립니다<br>첫느낌만을 생각하여 제작되어지는 가위가 많이 유통되고있습니다<br>진짜 원하는 것은 오래 썼을때도 유지되는 만족감 아니신가요?</p>
       </div>
     </div>
   </div>
@@ -758,12 +765,12 @@ body {
       <div class="value-card fade-in delay-3">
         <div class="value-number">03</div>
         <h4 class="value-title">진짜 사용설명서</h4>
-        <p class="value-desc">경력이 많은분들도 미용가위는 모릅니다<br>실제 미용학과 교수님도 모릅니다<br>틴닝의 빗살, 홈 형태. 블런트의 날형태<br>틴닝의 불편, 찝힘, 뜯김해결방법 등등<span style="display:block;margin-top:0.8em;"></span>어려운게 아니며 모르시는것은 미용사잘못이 아닙니다<br>가위 시장, 판매자들, 회사들이 문제입니다<span style="display:block;margin-top:0.8em;"></span>알고계셨나요? 틴닝, 슬라이싱은 평생 사용가능해요 <br>모두 알려드리고 </p>
+        <p class="value-desc">경력이 많은분들도 미용가위는 모릅니다<br>실제 미용학과 교수님도 모릅니다<br>틴닝의 빗살, 홈 형태. 블런트의 선택법<br>틴닝의 불편, 찝힘, 뜯김해결방법 등등<span style="display:block;margin-top:0.8em;"></span>저희는 숨기지 않습니다<br>한번구매로 오래 잘쓰는것이 저희 신념입니다<span style="display:block;margin-top:0.8em;"></span>틴닝, 슬라이싱은 평생 사용가능하다는것,<br>알고 계셨나요? </p>
       </div>
       <div class="value-card fade-in delay-3">
         <div class="value-number">04</div>
         <h4 class="value-title">부담없이 즐기도록</h4>
-        <p class="value-desc">인턴의 첫 블런트 구매로 40만원?<br>장난 똥때립니다<br>부담은 넣어두시고 찾아주세요<br>즐길 수 있는 가격으로 뵙겠습니다<span style="display:block;margin-top:0.8em;"></span>제품의 판매가격은<br><b>미용사를 생각하는 브랜드의 마음입니다</b></p>
+        <p class="value-desc">인턴의 <u>첫 블런트 한자루에 40만원?</u><br>블런트, 틴닝, 장가위 구매하시고 가위집까지 사세요<br>부담은 넣어두세요<br>즐길 수 있는 가격으로 뵙겠습니다<span style="display:block;margin-top:0.8em;"></span>제품의 판매가격은<br><b>미용사를 생각하는 브랜드의 마음입니다</b></p>
       </div>
     </div>
   </div>
@@ -773,8 +780,8 @@ body {
 <section class="section" id="tech">
   <div class="container">
     <span class="section-label fade-in">기술력</span>
-    <h2 class="section-title fade-in">50년 장인의<br>기술을 잇다</h2>
-    <p class="section-desc fade-in">아버지로부터 아들로 이어지는 복원수리 기술의 계승</p>
+    <h2 class="section-title fade-in">일반 수리가 아닌<br>수냉식 복원수리</h2>
+    <p class="section-desc fade-in">가위수리를 맡기면 수명이 준다? 첫느낌과 다르다?<br>저희는 제작 과정을 재현합니다</p>
 
     <div class="tech-content">
       <!-- ✏️ 수정가능: 기술력 메인 이미지 (src URL만 교체) -->
@@ -784,27 +791,24 @@ body {
       </div>
       <div class="tech-features">
         <div class="tech-feature fade-in delay-1">
-          <!-- ✏️ 수정가능: 기술력 아이콘 1 (src URL만 교체) -->
-          <!-- 📐 추천: 64x64px PNG(투명배경) 또는 GIF / 최소 48x48px -->
-          <div class="tech-feature-icon"><img src="" alt="수리 아이콘"></div>
+          <!-- 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
+          <div class="tech-feature-icon"><img src="./icons/blunt.svg" alt="수리 아이콘"></div>
           <div class="tech-feature-content">
             <h4>타사 가위도 수리 가능</h4>
             <p>어떤 브랜드의 가위든 복원수리가 가능합니다. 버리지 마시고 상담해주세요.</p>
           </div>
         </div>
         <div class="tech-feature fade-in delay-2">
-          <!-- ✏️ 수정가능: 기술력 아이콘 2 (src URL만 교체) -->
-          <!-- 📐 추천: 64x64px PNG(투명배경) 또는 GIF / 최소 48x48px -->
-          <div class="tech-feature-icon"><img src="" alt="수리비 아이콘"></div>
+          <!-- 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
+          <div class="tech-feature-icon"><img src="./icons/blunt.svg" alt="수리비 아이콘"></div>
           <div class="tech-feature-content">
             <h4>부담 없는 수리비</h4>
             <p>마모루 가위는 1만원, 타사 가위도 2만원이면 수리가 가능합니다.</p>
           </div>
         </div>
         <div class="tech-feature fade-in delay-3">
-          <!-- ✏️ 수정가능: 기술력 아이콘 3 (src URL만 교체) -->
-          <!-- 📐 추천: 64x64px PNG(투명배경) 또는 GIF / 최소 48x48px -->
-          <div class="tech-feature-icon"><img src="" alt="계승 아이콘"></div>
+          <!-- 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
+          <div class="tech-feature-icon"><img src="./icons/blunt.svg" alt="계승 아이콘"></div>
           <div class="tech-feature-content">
             <h4>50년 기술의 계승</h4>
             <p>50년 경력 장인 아버지의 기술을 아들이 이어받아 정직하게 전해드립니다.</p>
@@ -824,30 +828,26 @@ body {
 
     <div class="consult-steps">
       <div class="consult-step fade-in delay-1">
-        <!-- ✏️ 수정가능: 컨설팅 아이콘 1 (src URL만 교체) -->
-        <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF / 최소 52x52px -->
-        <div class="consult-step-icon"><img src="" alt="손 분석"></div>
+        <!-- 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
+        <div class="consult-step-icon"><img src="./icons/blunt.svg" alt="손 분석"></div>
         <h4>손 크기 · 습관 분석</h4>
         <p>개인의 손 크기와 평소 가위 사용 습관을 파악합니다</p>
       </div>
       <div class="consult-step fade-in delay-2">
-        <!-- ✏️ 수정가능: 컨설팅 아이콘 2 (src URL만 교체) -->
-        <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF / 최소 52x52px -->
-        <div class="consult-step-icon"><img src="" alt="스타일 추천"></div>
+        <!-- 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
+        <div class="consult-step-icon"><img src="./icons/blunt.svg" alt="스타일 추천"></div>
         <h4>스타일 맞춤 추천</h4>
         <p>주로 하시는 커트 스타일에 최적화된 가위를 찾아드립니다</p>
       </div>
       <div class="consult-step fade-in delay-3">
-        <!-- ✏️ 수정가능: 컨설팅 아이콘 3 (src URL만 교체) -->
-        <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF / 최소 52x52px -->
-        <div class="consult-step-icon"><img src="" alt="가격 제안"></div>
+        <!-- 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
+        <div class="consult-step-icon"><img src="./icons/blunt.svg" alt="가격 제안"></div>
         <h4>합리적인 가격 제안</h4>
         <p>필요한 기능만 갖춘 합리적인 가격의 제품을 제안합니다</p>
       </div>
       <div class="consult-step fade-in delay-4">
-        <!-- ✏️ 수정가능: 컨설팅 아이콘 4 (src URL만 교체) -->
-        <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF / 최소 52x52px -->
-        <div class="consult-step-icon"><img src="" alt="AS 안내"></div>
+        <!-- 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
+        <div class="consult-step-icon"><img src="./icons/blunt.svg" alt="AS 안내"></div>
         <h4>A/S · 관리 안내</h4>
         <p>구매 후에도 부담 없는 비용으로 수리와 관리를 안내합니다</p>
       </div>
