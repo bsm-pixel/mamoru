@@ -212,7 +212,10 @@
       "Bash(git -C /c/Users/user/Desktop/mamoru diff --stat -- \"projects/brand/page_intro.html\" \".claude/settings.local.json\")",
       "Bash(git -C /c/Users/user/Desktop/mamoru add \"projects/brand/page_intro.html\" \".claude/settings.local.json\")",
       "Bash(git -C /c/Users/user/Desktop/mamoru pull origin GAS_Consulting)",
-      "Bash(git -C /c/Users/user/Desktop/mamoru add \"projects/brand/page_intro.html\" \"projects/brand/icons/\" \".claude/settings.local.json\")"
+      "Bash(git -C /c/Users/user/Desktop/mamoru add \"projects/brand/page_intro.html\" \"projects/brand/icons/\" \".claude/settings.local.json\")",
+      "Bash(git -C /c/Users/user/Desktop/mamoru add \"projects/brand/page_intro.html\")",
+      "Bash(git -C /c/Users/user/Desktop/mamoru add \"projects/main/page_main_top.html\")",
+      "Bash(git -C /c/Users/user/Desktop/mamoru add TODO.md projects/Total_Management_System/docs/TMS_ROADMAP.md projects/brand/icons/ .claude/settings.local.json)"
     ],
     "additionalDirectories": [
       "\\tmp",

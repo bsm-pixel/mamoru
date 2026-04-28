@@ -1,7 +1,13 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-26 (오전: 페이지 21개 Brand Guide 정비 / 오후: 메인 YouTube 섹션 + iframe 잘림 만성 버그 해결 + 진단 Lottie 도입)
+> 최종 수정: 2026-04-28 (브랜드 소개 카피·아이콘 정비 + 모바일 sticky 퀵네비 설계 + 네이버 인앱 page_main_top 잘림 fix)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
+
+---
+
+## 🔴 진행 보류 / 추후 해결
+
+- [ ] **회사소개 페이지(`page_intro`) 모바일 sticky 퀵네비**: iframe 환경에서 부모(아임웹) 코드위젯 + 자식(page_intro) postMessage 통신 패턴으로 구현 시도(커밋 `7b2260a` `6b0c404`). 모바일 스크롤 시 chip이 상단에 따라오지 않음 — 추후 정밀 진단 필요. 후보 원인: ① 아임웹 페이지 빌더의 위젯 컨테이너 `overflow: hidden` 가능성 ② 코드위젯 자체에 `position: sticky` 미적용 (페이지 빌더가 자체 wrapping) ③ iframe `mamoruIntroFrame`이 위젯 위에 있을 때 z-index/scroll 컨텍스트 충돌. 우선 다른 작업 처리 후 재검토.
 
 ---
 

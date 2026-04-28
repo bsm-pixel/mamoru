@@ -2,7 +2,7 @@
 <svg id="_레이어_2" data-name="레이어 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 210">
   <defs>
     <style>
-      .cls-1, .cls-2, .cls-3 {
+      .cls-1, .cls-2, .cls-3, .cls-4 {
         fill: none;
       }
 
@@ -10,7 +10,7 @@
         stroke-width: 6px;
       }
 
-      .cls-2, .cls-3 {
+      .cls-2, .cls-3, .cls-4 {
         stroke: #000;
         stroke-linecap: round;
         stroke-linejoin: round;
@@ -19,10 +19,14 @@
       .cls-3 {
         stroke-width: 11px;
       }
+
+      .cls-4 {
+        stroke-width: 7px;
+      }
     </style>
   </defs>
   <g id="_레이어_4" data-name="레이어 4">
-    <circle class="cls-2" cx="105" cy="105" r="65.89"/>
+    <circle class="cls-4" cx="105" cy="105" r="65.89"/>
     <path class="cls-2" d="M131.36,137.03s-9.88-13.18-26.36-13.18-26.36,13.18-26.36,13.18"/>
     <line class="cls-3" x1="85.23" y1="85.23" x2="85.3" y2="85.23"/>
     <line class="cls-3" x1="124.77" y1="85.23" x2="124.83" y2="85.23"/>
