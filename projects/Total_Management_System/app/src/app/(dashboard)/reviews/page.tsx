@@ -29,6 +29,7 @@ const TAB_FILTERS = [
   { label: '대기중', value: 'pending' },
   { label: '승인', value: 'approved' },
   { label: '숨김', value: 'hidden' },
+  { label: '약속 대기', value: 'promised' },
 ] as const;
 
 const TYPE_LABELS: Record<string, string> = {
@@ -86,8 +87,20 @@ const TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: 'purchase', label: '제품구매' },
 ];
 
+interface PromisedItem {
+  source: 'consultation' | 'repair' | 'sale';
+  id: string;
+  displayId: string;
+  customerName: string;
+  customerPhone: string | null;
+  typeLabel: string;
+  promisedAt: string;
+  requestSentAt: string | null;
+}
+
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [promisedItems, setPromisedItems] = useState<PromisedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [lightbox, setLightbox] = useState<string | null>(null);
@@ -131,10 +144,17 @@ export default function ReviewsPage() {
   const fetchReviews = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/reviews?status=${activeTab}`);
-      if (!res.ok) throw new Error('조회 실패');
-      const data = await res.json();
-      setReviews(data);
+      if (activeTab === 'promised') {
+        const res = await fetch('/api/reviews/promised');
+        if (!res.ok) throw new Error('약속 대기 조회 실패');
+        const data = await res.json();
+        setPromisedItems(data.items || []);
+      } else {
+        const res = await fetch(`/api/reviews?status=${activeTab}`);
+        if (!res.ok) throw new Error('조회 실패');
+        const data = await res.json();
+        setReviews(data);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -300,8 +320,83 @@ export default function ReviewsPage() {
           </div>
         </div>
 
-        {/* 리뷰 카드 리스트 */}
-        {loading ? (
+        {/* 약속 대기 탭 — 별도 리스트 */}
+        {activeTab === 'promised' && (
+          loading ? (
+            <div className="text-center py-16 text-neutral-400 text-sm">불러오는 중...</div>
+          ) : promisedItems.length === 0 ? (
+            <div className="text-center py-16 text-neutral-400 text-sm">약속 대기 중인 고객이 없습니다</div>
+          ) : (
+            <div className="bg-white rounded-xl border border-neutral-100 overflow-hidden">
+              <div className="grid grid-cols-[1fr_90px_90px_90px_120px] gap-3 px-4 py-2.5 bg-neutral-50 text-[11px] font-semibold text-neutral-500">
+                <div>고객 / 식별번호</div>
+                <div>종류</div>
+                <div>약속일</div>
+                <div>발송</div>
+                <div className="text-right">액션</div>
+              </div>
+              {promisedItems.map((it) => {
+                const detailHref = it.source === 'consultation' ? `/consultations/${it.id}` : it.source === 'repair' ? `/repairs/${it.id}` : `/sales/${it.id}`;
+                const promisedDate = new Date(it.promisedAt).toLocaleDateString('ko-KR');
+                const sentDate = it.requestSentAt ? new Date(it.requestSentAt).toLocaleDateString('ko-KR') : null;
+                return (
+                  <div key={`${it.source}-${it.id}`} className="grid grid-cols-[1fr_90px_90px_90px_120px] gap-3 px-4 py-3 border-t border-neutral-100 items-center">
+                    <Link href={detailHref} className="hover:underline">
+                      <div className="text-sm font-semibold text-indigo-black">{maskName(it.customerName)}</div>
+                      <div className="text-[11px] text-neutral-500">{it.displayId}</div>
+                    </Link>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 inline-block w-fit">{it.typeLabel}</span>
+                    <span className="text-xs text-neutral-600">{promisedDate}</span>
+                    <span className={`text-[11px] px-2 py-0.5 rounded-full inline-block w-fit ${sentDate ? 'bg-blue-50 text-blue-700' : 'bg-neutral-100 text-neutral-400'}`}>
+                      {sentDate ?? '미발송'}
+                    </span>
+                    <div className="flex justify-end gap-1.5">
+                      <button
+                        onClick={async () => {
+                          if (!window.confirm(`${it.customerName}님 후기 요청 ${sentDate ? '재발송' : '발송'}하시겠습니까?`)) return;
+                          const reviewType = it.source === 'consultation' ? 'consult' : it.source === 'repair' ? 'repair' : 'purchase';
+                          const res = await fetch('/api/reviews/request', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ source: it.source, id: it.id, review_type: reviewType }),
+                          });
+                          if (res.ok) {
+                            alert('발송 완료');
+                            fetchReviews();
+                          } else {
+                            const e = await res.json().catch(() => ({}));
+                            alert(`발송 실패: ${e.error || '알 수 없음'}`);
+                          }
+                        }}
+                        className="px-2 py-1 rounded text-[11px] font-semibold bg-indigo-black text-cream hover:bg-indigo-black/85"
+                      >
+                        {sentDate ? '재발송' : '발송'}
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!window.confirm(`${it.customerName}님 약속을 취소하시겠습니까?`)) return;
+                          const res = await fetch('/api/reviews/promise', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ source: it.source, id: it.id, on: false }),
+                          });
+                          if (res.ok) fetchReviews();
+                          else alert('취소 실패');
+                        }}
+                        className="px-2 py-1 rounded text-[11px] text-neutral-500 hover:text-red-500 hover:bg-red-50"
+                      >
+                        취소
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
+        )}
+
+        {/* 리뷰 카드 리스트 (promised 외 탭) */}
+        {activeTab !== 'promised' && (loading ? (
           <div className="text-center py-16 text-neutral-400 text-sm">불러오는 중...</div>
         ) : reviews.length === 0 ? (
           <div className="text-center py-16 text-neutral-400 text-sm">리뷰가 없습니다</div>
@@ -419,7 +514,7 @@ export default function ReviewsPage() {
               </div>
             ))}
           </div>
-        )}
+        ))}
       </div>
 
       {/* ━━━ 수정 모달 ━━━ */}

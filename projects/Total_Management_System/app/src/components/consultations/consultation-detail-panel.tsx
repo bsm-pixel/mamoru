@@ -9,6 +9,7 @@ import { SuggestTimeModal } from './suggest-time-modal';
 import { formatPhone, formatDate, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
 import { Calendar, MapPin, Phone, User, Clock, FileSignature } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { ReviewManagementCard } from '@/components/reviews/review-management-card';
 import Link from 'next/link';
 const TYPE_LABEL: Record<string, string> = {
   store_visit: '매장방문',
@@ -33,7 +34,7 @@ interface Props {
 }
 
 export function ConsultationDetailPanel({ consultationId }: Props) {
-  const { data, isLoading } = useConsultation(consultationId);
+  const { data, isLoading, refetch } = useConsultation(consultationId);
   const updateStatus = useUpdateConsultationStatus();
   const deleteConsultation = useDeleteConsultation();
   const [suggestModalOpen, setSuggestModalOpen] = useState(false);
@@ -207,6 +208,20 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
         >
           삭제 (알림 없이 제거)
         </button>
+      )}
+
+      {/* 067: 리뷰 관리 카드 — 활성 상담(취소·신규·제안 외)에서 표시 */}
+      {!['cancelled', 'pending_admin', 'suggested'].includes(c.status) && (
+        <ReviewManagementCard
+          source="consultation"
+          id={c.id}
+          customerName={c.name}
+          customerPhone={c.phone}
+          promisedAt={(c as { review_promised_at?: string | null }).review_promised_at ?? null}
+          requestSentAt={(c as { review_request_sent_at?: string | null }).review_request_sent_at ?? null}
+          submittedAt={(c as { review_submitted_at?: string | null }).review_submitted_at ?? null}
+          onChanged={() => refetch()}
+        />
       )}
 
       {/* 계약서 CTA — 톡상담 제외, 확정~완료 단계에서 표시 */}

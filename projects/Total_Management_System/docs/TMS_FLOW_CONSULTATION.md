@@ -1,5 +1,36 @@
 # 상담관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-27 (일정 수동 등록 모달 — 고객 검색·우편번호 통합 / 일정변경 페이지 재진입 가드 / cancel 캘린더 동기화 / 푸시 알림 중복 dedup)
+> 최종 업데이트: 2026-04-29 (리뷰 요청·약속 추적 — 자동/수동 모드 통합 + 약속 토글 + reviews/submit 자동 매칭)
+
+---
+
+## 리뷰 요청 분기 (2026-04-29 추가)
+
+상담완료(`completed`) 진입 시 후기 알림톡 발송 정책. `system_settings.review.auto_request_on_completion` 토글로 두 모드 양립.
+
+### Mode A — 핀셋 정책 (default, OFF)
+```
+상담완료 클릭 → status='completed' → (자동 발송 X)
+  → 사장님 판단:
+       (고객 약속받음) ☑ 리뷰 약속 토글 → review_promised_at 기록
+       (적당한 시점) [후기 요청 보내기] 클릭 → 알림톡 발송 + review_request_sent_at 기록
+  → 고객 작성 → reviews/submit → consultations.review_submitted_at 자동 기록
+  → 상세 패널 카드 = "작성 완료 ✓ · YYYY-MM-DD" 정적 라벨 / 약속 대기 탭에서 자동 사라짐
+```
+
+### Mode B — 안내문 정책 (toggle ON)
+```
+상담완료 클릭 → status='completed'
+  → 자동 발송 가드 체크:
+       review_promised_at IS NULL AND review_request_sent_at IS NULL → 자동 발송 + review_request_sent_at 기록
+       review_promised_at !== NULL → 자동 skip (사장님 통제권)
+       review_request_sent_at !== NULL → 자동 skip (중복 방지)
+  → 약속 ✓ 고객은 항상 사장님 수동만
+```
+
+### 3 timestamp 의미
+- `review_promised_at`: 사장님이 약속 토글 ✓ 한 시점
+- `review_request_sent_at`: 후기 요청 알림톡 발송 시점 (자동/수동 무관)
+- `review_submitted_at`: 고객이 리뷰 작성 완료 시점 (reviews/submit 역방향 매칭)
 
 ---
 

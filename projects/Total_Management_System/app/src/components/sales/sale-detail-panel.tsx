@@ -9,10 +9,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
-import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, MessageSquare, Copy } from 'lucide-react';
+import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy } from 'lucide-react';
 import { PrepSheetModal } from './prep-sheet-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
-import { ReviewRequestModal } from './review-request-modal';
+import { ReviewManagementCard } from '@/components/reviews/review-management-card';
 import type { SaleChannel, OfflineSale, OfflineSaleItem, Product } from '@/lib/supabase/types';
 import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
 import { usePriceGroups } from '@/hooks/use-price-groups';
@@ -63,7 +63,6 @@ export function SaleDetailPanel({ saleId }: Props) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showPrepSheet, setShowPrepSheet] = useState(false);
-  const [showReviewRequest, setShowReviewRequest] = useState(false);
   const [showCustomer, setShowCustomer] = useState(false);
   const [editingMemo, setEditingMemo] = useState(false);
   const [memoValue, setMemoValue] = useState('');
@@ -297,15 +296,19 @@ export function SaleDetailPanel({ saleId }: Props) {
         )}
       </div>
 
-      {/* 후기 요청 */}
-      {!s.cancelled_at && s.customer_phone && (
-        <button
-          onClick={() => setShowReviewRequest(true)}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition"
-        >
-          <MessageSquare size={14} />
-          {(s as Record<string, unknown>).review_requested_at ? '후기 요청 완료 ✓' : '후기 요청'}
-        </button>
+      {/* 067: 리뷰 관리 카드 (취소 외 상태에서 표시) */}
+      {!s.cancelled_at && (
+        <ReviewManagementCard
+          source="sale"
+          id={s.id}
+          customerName={s.customer_name}
+          customerPhone={s.customer_phone}
+          promisedAt={(s as { review_promised_at?: string | null }).review_promised_at ?? null}
+          requestSentAt={((s as { review_request_sent_at?: string | null }).review_request_sent_at) ?? ((s as { review_requested_at?: string | null }).review_requested_at ?? null)}
+          submittedAt={(s as { review_submitted_at?: string | null }).review_submitted_at ?? null}
+          hasRepairItem={data?.items.some((it) => String((it as Record<string, unknown>).category || '') === 'RS') ?? false}
+          onChanged={() => queryClient.invalidateQueries({ queryKey: ['sale', saleId] })}
+        />
       )}
 
       {/* 액션 */}
@@ -504,19 +507,6 @@ export function SaleDetailPanel({ saleId }: Props) {
           saleIds={[saleId]}
           preloaded={{ sale: s, items: data.items, serials: data.serials || [] }}
           onClose={() => setShowPrepSheet(false)}
-        />
-      )}
-
-      {/* 후기 요청 모달 */}
-      {showReviewRequest && data && (
-        <ReviewRequestModal
-          saleId={s.id}
-          customerName={s.customer_name}
-          customerPhone={s.customer_phone || ''}
-          hasRepairItem={data.items.some((it) => String((it as Record<string, unknown>).category || '') === 'RS')}
-          alreadySent={!!(s as Record<string, unknown>).review_requested_at}
-          onClose={() => setShowReviewRequest(false)}
-          onSent={() => { setShowReviewRequest(false); queryClient.invalidateQueries({ queryKey: ['sale', saleId] }); }}
         />
       )}
 

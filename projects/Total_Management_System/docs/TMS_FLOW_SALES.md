@@ -1,7 +1,19 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-27 | 빠른 송장(별도 송장) 발급 신설
+> 최종 업데이트: 2026-04-29 | 리뷰 요청·약속 추적 통합 (sale source)
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §5, [TMS_PROCESS_MAP.md](TMS_PROCESS_MAP.md) 참조
+
+## 리뷰 요청 분기 (2026-04-29 추가)
+
+판매는 이미 수동 트리거(`ReviewRequestModal`) — 067에서 약속 토글 + 작성 자동 매칭 추가:
+
+- `offline_sales.review_promised_at` (신규): 사장님 약속 ✓ 시점
+- `offline_sales.review_requested_at` (기존, semantic alias of review_request_sent_at): 알림톡 발송 시점
+- `offline_sales.review_submitted_at` (신규): reviews/submit가 sale_number 매칭으로 자동 기록
+
+상세 패널의 기존 후기 요청 버튼은 공용 "리뷰 관리" 카드(`<ReviewManagementCard source="sale" />`)로 교체. `/reviews` "약속 대기" 탭에서 3 source 통합 노출.
+
+---
 
 ## 빠른 송장 (2026-04-27 추가)
 

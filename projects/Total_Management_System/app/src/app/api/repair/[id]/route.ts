@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidRepairTransition } from '@/lib/repair/transitions';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
+import { getServerSetting } from '@/hooks/use-settings';
 import type { RepairStatus } from '@/lib/supabase/types';
 
 /** 상태→자동 알림톡 매핑 (payment_confirmed는 paid_at 플래그로 분리됨) */
@@ -120,6 +121,20 @@ export async function PATCH(
       after(async () => {
         const template = getAutoNotifyTemplate(newStatus);
         if (template && data.phone) {
+          // 067: 후기 요청 자동 발송 가드 — 정책 토글 OFF / 약속 ✓ / 이미 발송 시 skip
+          let allowSend = true;
+          if (template === 'as_review_request') {
+            const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
+            if (!autoEnabled) allowSend = false;
+            else if (data.review_promised_at) allowSend = false;
+            else if (data.review_request_sent_at) allowSend = false;
+          }
+
+          if (!allowSend) {
+            console.log('[repair auto-notify] as_review_request skip (policy/promised/duplicate)');
+            return;
+          }
+
           const result = await sendNotification({
             template,
             phone: data.phone,
@@ -137,8 +152,19 @@ export async function PATCH(
               type_label: '복원수리',             // 알림톡 치환 변수
             },
           });
-          if (!result.success) console.error('[repair auto-notify] 실패:', result.error);
-          else console.log('[repair auto-notify] 성공:', template);
+          if (!result.success) {
+            console.error('[repair auto-notify] 실패:', result.error);
+          } else {
+            console.log('[repair auto-notify] 성공:', template);
+            // 067: 후기 요청 자동 발송 성공 시 시각 기록 (중복 방지)
+            if (template === 'as_review_request') {
+              try {
+                await db.from('repairs')
+                  .update({ review_request_sent_at: new Date().toISOString() })
+                  .eq('id', id);
+              } catch (e) { console.error('[repair auto-notify] review_request_sent_at 기록 실패:', e); }
+            }
+          }
         }
       });
     }

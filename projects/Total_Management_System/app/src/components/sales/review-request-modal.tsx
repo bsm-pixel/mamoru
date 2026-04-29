@@ -4,27 +4,38 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 interface Props {
-  saleId: string;
+  saleId: string;             // 기존 호환: source='sale'에선 sale_id로 사용. 다른 source에선 'id'.
   customerName: string;
   customerPhone: string;
   hasRepairItem: boolean;
   alreadySent: boolean;
   onClose: () => void;
   onSent: () => void;
+  /** 067: 어느 source에서 요청하는지 (기본 'sale' — 기존 호환) */
+  source?: 'consultation' | 'repair' | 'sale';
 }
 
-export function ReviewRequestModal({ saleId, customerName, customerPhone, hasRepairItem, alreadySent, onClose, onSent }: Props) {
-  const [reviewType, setReviewType] = useState<'consult' | 'repair' | 'purchase'>(hasRepairItem ? 'repair' : 'purchase');
+export function ReviewRequestModal({ saleId, customerName, customerPhone, hasRepairItem, alreadySent, onClose, onSent, source = 'sale' }: Props) {
+  // source에 따라 reviewType 초기값 결정 (사장님이 모달 안에서 변경 가능)
+  const defaultType: 'consult' | 'repair' | 'purchase' =
+    source === 'consultation' ? 'consult'
+    : source === 'repair' ? 'repair'
+    : (hasRepairItem ? 'repair' : 'purchase');
+  const [reviewType, setReviewType] = useState<'consult' | 'repair' | 'purchase'>(defaultType);
   const [subtype, setSubtype] = useState('store_visit');
   const [sending, setSending] = useState(false);
 
   const handleSend = async () => {
     setSending(true);
     try {
+      // source에 따라 body 분기 (sale은 레거시 호환 유지)
+      const body = source === 'sale'
+        ? { sale_id: saleId, review_type: reviewType, subtype: reviewType === 'consult' ? subtype : undefined }
+        : { source, id: saleId, review_type: reviewType, subtype: reviewType === 'consult' ? subtype : reviewType === 'repair' ? subtype : undefined };
       const res = await fetch('/api/reviews/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sale_id: saleId, review_type: reviewType, subtype: reviewType === 'consult' ? subtype : undefined }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const data = await res.json();

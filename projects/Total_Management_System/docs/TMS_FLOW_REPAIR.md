@@ -1,7 +1,18 @@
 # 복원수리 프로세스 흐름도
-> 최종 업데이트: 2026-04-01 | GAS 의존 제거 — Vercel API 직접 접수
+> 최종 업데이트: 2026-04-29 (리뷰 요청·약속 추적 — 자동/수동 모드 통합)
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
+
+## 리뷰 요청 분기 (2026-04-29 추가)
+
+배송완료(`delivered`) 진입 시 후기 알림톡 발송 정책. `system_settings.review.auto_request_on_completion` 토글로 두 모드 양립.
+
+- **Mode A (default OFF)**: 자동 발송 X, 사장님 수동만
+- **Mode B (ON)**: 약속 X 고객만 자동, 약속 ✓ 고객은 항상 수동
+
+3 timestamp: `review_promised_at` / `review_request_sent_at` / `review_submitted_at`. reviews/submit가 `repairs.as_id` 매칭으로 review_submitted_at 자동 기록. 상세 패널의 "리뷰 관리" 카드와 `/reviews` "약속 대기" 탭에서 추적.
+
+---
 
 ---
 

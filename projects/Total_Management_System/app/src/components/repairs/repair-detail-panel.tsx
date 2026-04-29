@@ -8,6 +8,7 @@ import { InspectionForm } from './inspection-form';
 import { InspectionSummary } from './inspection-summary';
 import { SidebarActionCard } from './sidebar-action-card';
 import { RepairTimeline } from './repair-timeline';
+import { ReviewManagementCard } from '@/components/reviews/review-management-card';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { ClipboardCheck, ClipboardList } from 'lucide-react';
@@ -25,7 +26,7 @@ interface RepairDetailPanelProps {
 
 /** PC 우측 상세 패널 — repairs/page.tsx 마스터-디테일용 */
 export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
-  const { data, isLoading } = useRepair(repairId);
+  const { data, isLoading, refetch } = useRepair(repairId);
   const updateFields = useUpdateRepairFields();
   const [showInspection, setShowInspection] = useState(false);
 
@@ -128,6 +129,19 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
         {/* 사이드바 — 비용+액션+출고 통합 */}
         <div className="w-full xl:w-72 shrink-0 space-y-4">
           <SidebarActionCard repair={r} />
+          {/* 067: 리뷰 관리 카드 — 취소 외 상태에서 표시 */}
+          {r.status !== 'cancelled' && (
+            <ReviewManagementCard
+              source="repair"
+              id={r.id}
+              customerName={r.name}
+              customerPhone={r.phone}
+              promisedAt={(r as { review_promised_at?: string | null }).review_promised_at ?? null}
+              requestSentAt={(r as { review_request_sent_at?: string | null }).review_request_sent_at ?? null}
+              submittedAt={(r as { review_submitted_at?: string | null }).review_submitted_at ?? null}
+              onChanged={() => refetch()}
+            />
+          )}
           <RepairTimeline history={history} />
         </div>
       </div>

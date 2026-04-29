@@ -246,6 +246,9 @@ export interface Database {
           hold_reason: string | null;       // Phase 2-2: 보류 사유
           latitude: number | null;          // Phase 2-2: 좌표
           longitude: number | null;
+          review_promised_at: string | null;     // 067: 리뷰 약속 시점
+          review_request_sent_at: string | null; // 067: 후기 요청 발송 시점
+          review_submitted_at: string | null;    // 067: 리뷰 작성 완료 시점
           received_at: string;
           created_at: string;
           updated_at: string;
@@ -295,6 +298,9 @@ export interface Database {
           hold_reason?: string | null;
           latitude?: number | null;
           longitude?: number | null;
+          review_promised_at?: string | null;
+          review_request_sent_at?: string | null;
+          review_submitted_at?: string | null;
           received_at?: string;
         };
       };
@@ -329,6 +335,9 @@ export interface Database {
           packed_at: string | null;     // R1: 포장완료 시점
           admin_note: string | null;
           gas_raw: Record<string, unknown> | null;
+          review_promised_at: string | null;     // 067: 리뷰 약속 시점
+          review_request_sent_at: string | null; // 067: 후기 요청 발송 시점
+          review_submitted_at: string | null;    // 067: 리뷰 작성 완료 시점
           received_at: string;
           created_at: string;
           updated_at: string;
@@ -389,6 +398,9 @@ export interface Database {
           packed_at?: string | null;
           admin_note?: string | null;
           gas_raw?: Record<string, unknown> | null;
+          review_promised_at?: string | null;
+          review_request_sent_at?: string | null;
+          review_submitted_at?: string | null;
           received_at?: string;
         };
       };
@@ -516,7 +528,9 @@ export interface Database {
           cancelled_by: string | null;
           sale_channel: SaleChannel;
           contract_id: string | null;
-          review_requested_at: string | null;
+          review_requested_at: string | null;       // semantic alias of review_request_sent_at (legacy)
+          review_promised_at: string | null;        // 067: 리뷰 약속 시점
+          review_submitted_at: string | null;       // 067: 리뷰 작성 완료 시점
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -558,6 +572,9 @@ export interface Database {
           cancelled_by?: string | null;
           sale_channel?: SaleChannel;
           contract_id?: string | null;
+          review_requested_at?: string | null;
+          review_promised_at?: string | null;
+          review_submitted_at?: string | null;
         };
       };
       offline_sale_items: {

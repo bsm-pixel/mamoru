@@ -35,6 +35,8 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
   const [pushRepairReceived, setPushRepairReceived] = useState(true);
   const [pushReviewSubmitted, setPushReviewSubmitted] = useState(true);
   const [pushOrderReceived, setPushOrderReceived] = useState(true);
+  // 067: 후기 요청 자동 발송 정책 토글
+  const [reviewAutoRequest, setReviewAutoRequest] = useState(false);
 
   useEffect(() => {
     setMasterEnabled(parse(settings['notifications.master_enabled'], true));
@@ -55,6 +57,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     setPushRepairReceived(parse(settings['push.repair_received'], true));
     setPushReviewSubmitted(parse(settings['push.review_submitted'], true));
     setPushOrderReceived(parse(settings['push.order_received'], true));
+    setReviewAutoRequest(parse(settings['review.auto_request_on_completion'], false));
   }, [settings]);
 
   const handleSave = () => {
@@ -77,6 +80,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
       { key: 'push.repair_received', value: pushRepairReceived },
       { key: 'push.review_submitted', value: pushReviewSubmitted },
       { key: 'push.order_received', value: pushOrderReceived },
+      { key: 'review.auto_request_on_completion', value: reviewAutoRequest },
     ]);
   };
 
@@ -142,6 +146,19 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
           <Toggle checked={masterEnabled} onChange={setMasterEnabled} />
           <span className={`text-sm font-medium ${masterEnabled ? 'text-green-600' : 'text-red-500'}`}>
             {masterEnabled ? '활성' : '비활성 — 모든 알림 중단'}
+          </span>
+        </div>
+      </Field>
+
+      {/* 067: 후기 요청 자동 발송 정책 */}
+      <Field
+        label="배송완료/상담완료 시 자동 후기 요청"
+        desc="OFF: 핀셋 동봉 등 약속받은 고객만 사장님 수동 발송 (현재 정책) / ON: 안내문 동봉 등 모든 고객 자동 발송 — 단, 약속 ✓ 고객은 자동 모드라도 항상 사장님 수동만"
+      >
+        <div className="flex items-center gap-3">
+          <Toggle checked={reviewAutoRequest} onChange={setReviewAutoRequest} />
+          <span className={`text-sm font-medium ${reviewAutoRequest ? 'text-blue-600' : 'text-neutral-500'}`}>
+            {reviewAutoRequest ? 'ON — 자동 발송' : 'OFF — 수동 발송만'}
           </span>
         </div>
       </Field>

@@ -251,6 +251,38 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
+    // 067: 역방향 매칭 — source 테이블의 review_submitted_at 자동 set
+    // - consult: consultations.unique_id 또는 offline_sales.sale_number (talk 채널 fallback)
+    // - repair:  repairs.as_id 또는 offline_sales.sale_number (repair 채널 fallback)
+    // .is('review_submitted_at', null)로 멱등성 보장 + service role이라 RLS 무관
+    after(async () => {
+      try {
+        const submittedAt = new Date().toISOString();
+        if (type === 'consult') {
+          await dbAny.from('consultations')
+            .update({ review_submitted_at: submittedAt })
+            .eq('unique_id', sourceId)
+            .is('review_submitted_at', null);
+          await dbAny.from('offline_sales')
+            .update({ review_submitted_at: submittedAt })
+            .eq('sale_number', sourceId)
+            .is('review_submitted_at', null);
+        } else if (type === 'repair') {
+          await dbAny.from('repairs')
+            .update({ review_submitted_at: submittedAt })
+            .eq('as_id', sourceId)
+            .is('review_submitted_at', null);
+          await dbAny.from('offline_sales')
+            .update({ review_submitted_at: submittedAt })
+            .eq('sale_number', sourceId)
+            .is('review_submitted_at', null);
+        }
+        // type === 'purchase'는 orders 매칭 — orders.review_submitted_at 컬럼 추가 후 별도 처리
+      } catch (e) {
+        console.error('[reviews/submit reverse-match] 실패:', e);
+      }
+    });
+
     // 관리자 푸시 알림 — after()로 응답 후 실행 보장 (Vercel 서버리스 대응)
     after(async () => {
       try {
