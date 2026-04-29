@@ -98,9 +98,20 @@ interface PromisedItem {
   requestSentAt: string | null;
 }
 
+interface RelatedActivity {
+  source: 'consultation' | 'repair' | 'sale';
+  id: string;
+  displayId: string;
+  typeLabel: string;
+  promisedAt: string | null;
+  requestSentAt: string | null;
+  submittedAt: string | null;
+}
+
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [promisedItems, setPromisedItems] = useState<PromisedItem[]>([]);
+  const [relatedByItem, setRelatedByItem] = useState<Record<string, RelatedActivity[]>>({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [lightbox, setLightbox] = useState<string | null>(null);
@@ -165,6 +176,41 @@ export default function ReviewsPage() {
   useEffect(() => {
     fetchReviews();
   }, [fetchReviews]);
+
+  // 약속 대기 탭: 각 row의 같은 phone 다른 source 활동 fetch (정보 표시용)
+  useEffect(() => {
+    if (activeTab !== 'promised' || promisedItems.length === 0) {
+      setRelatedByItem({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const results = await Promise.all(
+        promisedItems.map(async (it) => {
+          const key = `${it.source}-${it.id}`;
+          if (!it.customerPhone) return [key, [] as RelatedActivity[]] as const;
+          try {
+            const params = new URLSearchParams({
+              phone: it.customerPhone,
+              excludeSource: it.source,
+              excludeId: it.id,
+            });
+            const res = await fetch(`/api/reviews/related-activity?${params}`);
+            if (!res.ok) return [key, [] as RelatedActivity[]] as const;
+            const data = await res.json();
+            return [key, (data.items || []) as RelatedActivity[]] as const;
+          } catch {
+            return [key, [] as RelatedActivity[]] as const;
+          }
+        })
+      );
+      if (cancelled) return;
+      const map: Record<string, RelatedActivity[]> = {};
+      for (const [k, v] of results) map[k] = v;
+      setRelatedByItem(map);
+    })();
+    return () => { cancelled = true; };
+  }, [activeTab, promisedItems]);
 
   const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'approved' ? 'hidden' : 'approved';
@@ -339,12 +385,40 @@ export default function ReviewsPage() {
                 const detailHref = it.source === 'consultation' ? `/consultations/${it.id}` : it.source === 'repair' ? `/repairs/${it.id}` : `/sales/${it.id}`;
                 const promisedDate = new Date(it.promisedAt).toLocaleDateString('ko-KR');
                 const sentDate = it.requestSentAt ? new Date(it.requestSentAt).toLocaleDateString('ko-KR') : null;
+                const related = relatedByItem[`${it.source}-${it.id}`] || [];
                 return (
                   <div key={`${it.source}-${it.id}`} className="grid grid-cols-[1fr_90px_90px_90px_120px] gap-3 px-4 py-3 border-t border-neutral-100 items-center">
-                    <Link href={detailHref} className="hover:underline">
-                      <div className="text-sm font-semibold text-indigo-black">{maskName(it.customerName)}</div>
-                      <div className="text-[11px] text-neutral-500">{it.displayId}</div>
-                    </Link>
+                    <div>
+                      <Link href={detailHref} className="hover:underline block">
+                        <div className="text-sm font-semibold text-indigo-black">{maskName(it.customerName)}</div>
+                        <div className="text-[11px] text-neutral-500">{it.displayId}</div>
+                      </Link>
+                      {related.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {related.slice(0, 2).map((r) => {
+                            const rHref = r.source === 'consultation' ? `/consultations/${r.id}` : r.source === 'repair' ? `/repairs/${r.id}` : `/sales/${r.id}`;
+                            let label = '';
+                            let cls = '';
+                            if (r.submittedAt) { label = `${r.typeLabel} ✅ 작성완료`; cls = 'bg-green-50 text-green-700 hover:bg-green-100'; }
+                            else if (r.requestSentAt) { label = `${r.typeLabel} 📤 발송됨`; cls = 'bg-blue-50 text-blue-700 hover:bg-blue-100'; }
+                            else if (r.promisedAt) { label = `${r.typeLabel} ☑ 약속만`; cls = 'bg-amber-50 text-amber-700 hover:bg-amber-100'; }
+                            return (
+                              <Link
+                                key={`${r.source}-${r.id}`}
+                                href={rHref}
+                                title={`같은 고객 다른 활동 — ${r.displayId}`}
+                                className={`text-[10px] px-1.5 py-0.5 rounded font-semibold transition ${cls}`}
+                              >
+                                🔗 {label}
+                              </Link>
+                            );
+                          })}
+                          {related.length > 2 && (
+                            <span className="text-[10px] text-neutral-400 px-1 self-center">+{related.length - 2}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <span className="text-[11px] px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 inline-block w-fit">{it.typeLabel}</span>
                     <span className="text-xs text-neutral-600">{promisedDate}</span>
                     <span className={`text-[11px] px-2 py-0.5 rounded-full inline-block w-fit ${sentDate ? 'bg-blue-50 text-blue-700' : 'bg-neutral-100 text-neutral-400'}`}>
