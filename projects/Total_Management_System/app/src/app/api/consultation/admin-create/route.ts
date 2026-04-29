@@ -21,22 +21,31 @@ import crypto from 'crypto';
 const KAKAO_REST_KEY = process.env.KAKAO_REST_API_KEY || '';
 const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting';
 
-/** 주소 → 좌표 변환 (출장 지도 표시용) */
+/** 주소 → 좌표 변환 (출장 지도 표시용)
+ *  1차: address.json (도로명/지번 정확 매칭) → 카카오에 등록된 공식 주소만 인식
+ *  2차: keyword.json (장소·건물·상호명) → 신축/오래된 주소도 보다 유연하게 매칭
+ */
 async function geocodeAddress(query: string): Promise<{ lat: number; lng: number } | null> {
   if (!KAKAO_REST_KEY || !query) return null;
-  try {
-    const res = await fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(query)}`, {
-      headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` },
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    const doc = json.documents?.[0];
-    if (doc?.y && doc?.x) return { lat: parseFloat(doc.y), lng: parseFloat(doc.x) };
-  } catch {
-    /* 지오코딩 실패해도 등록은 계속 */
+
+  async function tryEndpoint(path: string): Promise<{ lat: number; lng: number } | null> {
+    try {
+      const res = await fetch(`https://dapi.kakao.com${path}?query=${encodeURIComponent(query)}`, {
+        headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` },
+        signal: AbortSignal.timeout(3000),
+      });
+      if (!res.ok) return null;
+      const json = await res.json();
+      const doc = json.documents?.[0];
+      if (doc?.y && doc?.x) return { lat: parseFloat(doc.y), lng: parseFloat(doc.x) };
+    } catch { /* 다음 fallback으로 진행 */ }
+    return null;
   }
-  return null;
+
+  return (
+    (await tryEndpoint('/v2/local/search/address.json')) ||
+    (await tryEndpoint('/v2/local/search/keyword.json'))
+  );
 }
 
 export async function POST(req: NextRequest) {

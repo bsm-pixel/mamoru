@@ -31,42 +31,59 @@ export async function POST() {
       return NextResponse.json({ updated: 0, message: '좌표 채울 건 없음' });
     }
 
+    /** 다중 fallback geocoding:
+     *  1) address.json (도로명) → 정확 매칭
+     *  2) keyword.json (도로명) → 신축/오래된 주소 유연 매칭
+     *  3) keyword.json (도로명 + 상세) → 상호명·건물명 포함된 케이스
+     */
+    async function geocodeMulti(road: string, detail: string): Promise<{ lat: number; lng: number; via: string } | null> {
+      const tryFetch = async (path: string, q: string) => {
+        try {
+          const res = await fetch(`https://dapi.kakao.com${path}?query=${encodeURIComponent(q)}`, {
+            headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` },
+            signal: AbortSignal.timeout(3000),
+          });
+          if (!res.ok) return null;
+          const json = await res.json();
+          const doc = json.documents?.[0];
+          if (doc?.y && doc?.x) return { lat: parseFloat(doc.y), lng: parseFloat(doc.x) };
+        } catch { /* 다음 시도 */ }
+        return null;
+      };
+
+      const a = await tryFetch('/v2/local/search/address.json', road);
+      if (a) return { ...a, via: 'address' };
+      const k = await tryFetch('/v2/local/search/keyword.json', road);
+      if (k) return { ...k, via: 'keyword(road)' };
+      if (detail) {
+        const k2 = await tryFetch('/v2/local/search/keyword.json', `${road} ${detail}`);
+        if (k2) return { ...k2, via: 'keyword(road+detail)' };
+      }
+      return null;
+    }
+
     let updated = 0;
-    const results: Array<{ id: string; address: string; lat?: number; lng?: number; error?: string }> = [];
+    const results: Array<{ id: string; address: string; lat?: number; lng?: number; via?: string; error?: string }> = [];
 
     for (const row of rows) {
-      // 카카오 주소검색 API는 도로명/지번만 인식. address_detail은 매칭 실패 원인이라 제외.
-      const address = (row.address_road || '').trim();
-      if (!address) continue;
+      const road = (row.address_road || '').trim();
+      const detail = (row.address_detail || '').trim();
+      if (!road) continue;
 
       try {
-        const url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`;
-        const res = await fetch(url, {
-          headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` },
-          signal: AbortSignal.timeout(3000),
-        });
-
-        if (!res.ok) {
-          results.push({ id: row.id, address, error: `HTTP ${res.status}` });
-          continue;
-        }
-
-        const json = await res.json();
-        const doc = json.documents?.[0];
-        if (doc?.y && doc?.x) {
-          const lat = parseFloat(doc.y);
-          const lng = parseFloat(doc.x);
-          await db.from('consultations').update({ latitude: lat, longitude: lng }).eq('id', row.id);
+        const geo = await geocodeMulti(road, detail);
+        if (geo) {
+          await db.from('consultations').update({ latitude: geo.lat, longitude: geo.lng }).eq('id', row.id);
           updated++;
-          results.push({ id: row.id, address, lat, lng });
+          results.push({ id: row.id, address: road, lat: geo.lat, lng: geo.lng, via: geo.via });
         } else {
-          results.push({ id: row.id, address, error: 'no result' });
+          results.push({ id: row.id, address: road, error: 'no result' });
         }
 
         // Rate limit 방지: 100ms 딜레이
         await new Promise(r => setTimeout(r, 100));
       } catch (err) {
-        results.push({ id: row.id, address, error: String(err) });
+        results.push({ id: row.id, address: road, error: String(err) });
       }
     }
 
