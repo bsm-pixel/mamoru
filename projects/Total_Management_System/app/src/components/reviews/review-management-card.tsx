@@ -122,6 +122,27 @@ export function ReviewManagementCard({
       .catch(() => setRelated([]));
   }, [customerPhone, source, id]);
 
+  // 늦게 도착한 리뷰 자동 매칭 — submittedAt 없을 때만 한 번 검사
+  // 067 배포 이전에 작성된 리뷰 또는 source_id 매칭 실패로 누락된 review_submitted_at 백필
+  useEffect(() => {
+    if (submittedAt) return;
+    fetch('/api/reviews/auto-match', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source, id }),
+    })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => {
+        if (d?.matched && !d.alreadySet) {
+          // 백필 성공 — 카드 refresh
+          onChanged?.();
+        }
+      })
+      .catch(() => { /* 조용히 실패, 카드 핵심 기능에 영향 X */ });
+    // submittedAt이 있으면 호출 자체 안 함 (멱등성 보강은 endpoint에서도 가드)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, id]);
+
   // 작성 완료 — 카드 readonly + 정적 라벨
   if (submittedAt) {
     return (
