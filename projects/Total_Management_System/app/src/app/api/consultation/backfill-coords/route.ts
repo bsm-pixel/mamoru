@@ -35,7 +35,8 @@ export async function POST() {
     const results: Array<{ id: string; address: string; lat?: number; lng?: number; error?: string }> = [];
 
     for (const row of rows) {
-      const address = [row.address_road, row.address_detail].filter(Boolean).join(' ');
+      // 카카오 주소검색 API는 도로명/지번만 인식. address_detail은 매칭 실패 원인이라 제외.
+      const address = (row.address_road || '').trim();
       if (!address) continue;
 
       try {

@@ -112,11 +112,12 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 좌표 (출장만) ────────────────────────────────────────
+    // 카카오 주소검색 API는 공식 주소(도로명/지번)만 인식. 상세주소(OO빌딩 3층 등)
+    // 가 붙으면 매칭 실패 → null 반환 → 지도 핀 미표시 문제. addressRoad만 전달.
     let lat: number | null = null;
     let lng: number | null = null;
     if (type === 'field_request' && addressRoad) {
-      const full = [addressRoad, addressDetail].filter(Boolean).join(' ');
-      const geo = await geocodeAddress(full);
+      const geo = await geocodeAddress(addressRoad.trim());
       if (geo) {
         lat = geo.lat;
         lng = geo.lng;
