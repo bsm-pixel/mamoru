@@ -13,12 +13,23 @@
  *  - ON (안내문 정책): 약속 X 고객은 자동 발송 / 약속 ✓ 고객은 항상 사장님 수동만
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
-import { Star, MessageCircle, CheckCircle2, Send } from 'lucide-react';
+import { Star, MessageCircle, CheckCircle2, Send, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ReviewRequestModal } from '@/components/sales/review-request-modal';
 import type { ReviewSource } from '@/lib/notification/review-request';
+
+interface RelatedActivity {
+  source: ReviewSource;
+  id: string;
+  displayId: string;
+  typeLabel: string;
+  promisedAt: string | null;
+  requestSentAt: string | null;
+  submittedAt: string | null;
+}
 
 interface Props {
   source: ReviewSource;
@@ -44,6 +55,44 @@ function formatDate(iso: string | null): string {
   }
 }
 
+/** 같은 고객의 다른 source 활동 표시 영역 (자동 매칭 X — 정보 표시용) */
+function RelatedActivitySection({ items }: { items: RelatedActivity[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-3 pt-3 border-t border-neutral-100">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Info size={11} className="text-neutral-500" />
+        <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">같은 고객 다른 활동</span>
+      </div>
+      <div className="space-y-1.5">
+        {items.map((it) => {
+          const detailHref = it.source === 'consultation' ? `/consultations/${it.id}` : it.source === 'repair' ? `/repairs/${it.id}` : `/sales/${it.id}`;
+          const isCompleted = !!it.submittedAt;
+          const isPending = !isCompleted && !!it.requestSentAt;
+          const isPromised = !isCompleted && !isPending && !!it.promisedAt;
+          let chipLabel = '';
+          let chipClass = '';
+          if (isCompleted) { chipLabel = `✅ 작성완료 ${formatDate(it.submittedAt)}`; chipClass = 'bg-green-50 text-green-700'; }
+          else if (isPending) { chipLabel = `📤 발송 ${formatDate(it.requestSentAt)} · 대기`; chipClass = 'bg-blue-50 text-blue-700'; }
+          else if (isPromised) { chipLabel = `☑ 약속 ${formatDate(it.promisedAt)}`; chipClass = 'bg-amber-50 text-amber-700'; }
+          return (
+            <Link
+              key={`${it.source}-${it.id}`}
+              href={detailHref}
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-md hover:bg-neutral-50 transition group"
+            >
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 font-semibold shrink-0">{it.typeLabel}</span>
+              <span className="text-[11px] text-neutral-500 font-mono truncate">{it.displayId}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${chipClass} shrink-0 ml-auto`}>{chipLabel}</span>
+              <span className="text-[10px] text-neutral-400 group-hover:text-terracotta">→</span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function ReviewManagementCard({
   source,
   id,
@@ -57,6 +106,21 @@ export function ReviewManagementCard({
 }: Props) {
   const [togglingPromise, setTogglingPromise] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [related, setRelated] = useState<RelatedActivity[]>([]);
+
+  // 같은 phone의 다른 source 활동 조회 (정보 표시용 — 자동 매칭 X)
+  useEffect(() => {
+    if (!customerPhone) return;
+    const params = new URLSearchParams({
+      phone: customerPhone,
+      excludeSource: source,
+      excludeId: id,
+    });
+    fetch(`/api/reviews/related-activity?${params.toString()}`)
+      .then((r) => r.ok ? r.json() : { items: [] })
+      .then((d) => setRelated(d.items || []))
+      .catch(() => setRelated([]));
+  }, [customerPhone, source, id]);
 
   // 작성 완료 — 카드 readonly + 정적 라벨
   if (submittedAt) {
@@ -73,6 +137,7 @@ export function ReviewManagementCard({
             <p className="text-[11px] text-green-700">{formatDate(submittedAt)}에 리뷰가 등록되었습니다</p>
           </div>
         </div>
+        <RelatedActivitySection items={related} />
       </Card>
     );
   }
@@ -160,6 +225,8 @@ export function ReviewManagementCard({
             <span>최근 발송 · {formatDate(requestSentAt)}</span>
           </div>
         )}
+
+        <RelatedActivitySection items={related} />
       </Card>
 
       {showRequestModal && (
