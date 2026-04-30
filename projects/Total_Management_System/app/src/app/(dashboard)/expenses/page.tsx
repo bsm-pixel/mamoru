@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { formatKRW, formatDate } from '@/lib/utils/format';
+import { formatKRW, formatDate, toLocalDateString } from '@/lib/utils/format';
 import { Plus, Trash2, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -27,11 +27,11 @@ export default function ExpensesPage() {
   // 075: 설정에서 동적으로 카테고리 읽기 (사장님이 추가한 카테고리 자동 반영)
   const CATEGORIES = useSetting<string[]>('accounting.expense_categories', DEFAULT_EXPENSE_CATEGORIES);
   const now = new Date();
-  const [from, setFrom] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10));
-  const [to, setTo] = useState(now.toISOString().slice(0, 10));
+  const [from, setFrom] = useState(toLocalDateString(new Date(now.getFullYear(), now.getMonth(), 1)));
+  const [to, setTo] = useState(toLocalDateString(now));
 
   // 폼 상태
-  const [expenseDate, setExpenseDate] = useState(now.toISOString().slice(0, 10));
+  const [expenseDate, setExpenseDate] = useState(toLocalDateString(now));
   const [category, setCategory] = useState<string>(CATEGORIES[0] || '기타');
   const [amount, setAmount] = useState('');
   const [memo, setMemo] = useState('');
@@ -160,7 +160,7 @@ export default function ExpensesPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-neutral-500 mb-1 block">날짜</label>
-                <input type="date" value={expenseDate} max={now.toISOString().slice(0, 10)}
+                <input type="date" value={expenseDate} max={toLocalDateString(now)}
                   onChange={(e) => setExpenseDate(e.target.value)}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
               </div>

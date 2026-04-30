@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { formatKRW, formatDate } from '@/lib/utils/format';
+import { formatKRW, formatDate, toLocalDateString } from '@/lib/utils/format';
 import { ArrowDownCircle, ArrowUpCircle, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSetting } from '@/hooks/use-settings';
@@ -14,14 +14,14 @@ import { DEFAULT_CASHFLOW_INCOME_CATEGORIES, DEFAULT_CASHFLOW_EXPENSE_CATEGORIES
 export default function CashflowPage() {
   const queryClient = useQueryClient();
   const now = new Date();
-  const [from, setFrom] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10));
-  const [to, setTo] = useState(now.toISOString().slice(0, 10));
+  const [from, setFrom] = useState(toLocalDateString(new Date(now.getFullYear(), now.getMonth(), 1)));
+  const [to, setTo] = useState(toLocalDateString(now));
 
   // 설정값 (미저장 시 기본값 fallback — 기존 hard-coded와 동일)
   const INCOME_CATEGORIES = useSetting<string[]>('accounting.cashflow_income_categories', DEFAULT_CASHFLOW_INCOME_CATEGORIES);
   const EXPENSE_CATEGORIES = useSetting<string[]>('accounting.cashflow_expense_categories', DEFAULT_CASHFLOW_EXPENSE_CATEGORIES);
 
-  const [txDate, setTxDate] = useState(now.toISOString().slice(0, 10));
+  const [txDate, setTxDate] = useState(toLocalDateString(now));
   const [txType, setTxType] = useState<'income' | 'expense'>('income');
   const [txCategory, setTxCategory] = useState(INCOME_CATEGORIES[0] || '매출입금');
   const [txAmount, setTxAmount] = useState('');

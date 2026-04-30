@@ -60,9 +60,16 @@ export default function ConsultationsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [fieldSubTab, setFieldSubTab] = useState<string>('new_intake');
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  // 077: 매장방문 서브탭 상태 — 상담완료 후 '확정' → '지난내역' 자동 전환용
+  const [storeVisitTab, setStoreVisitTab] = useState<'confirmed' | 'past'>('confirmed');
   const sync = useConsultationSync();
   const needAction = useNeedActionCounts();
   const { data: stats } = useConsultationDashboardStats();
+
+  // 077: 상담완료 후 매장방문 '확정' 탭에 있을 때만 '지난내역'으로 자동 전환
+  const handleStoreVisitAfterComplete = () => {
+    if (storeVisitTab === 'confirmed') setStoreVisitTab('past');
+  };
 
   // PC 여부 감지 (lg:1024px+) — SlidePanel 조건부 렌더링용
   const [isLg, setIsLg] = useState(false);
@@ -227,21 +234,24 @@ export default function ConsultationsPage() {
             {/* 매장방문 — 모바일: 리스트 + 슬라이드 패널 */}
             {!isLg && (
               <div>
-                <StoreVisitList onSelect={setSelectedId} />
+                <StoreVisitList onSelect={setSelectedId} tab={storeVisitTab} onTabChange={setStoreVisitTab} />
               </div>
             )}
 
             {/* 매장방문 — PC: 3열 (리스트 | 달력 | 상세모니터) */}
             {isLg && <div className="flex gap-4 h-[calc(100vh-220px)]">
               <div className="w-[400px] shrink-0 overflow-y-auto">
-                <StoreVisitList onSelect={setSelectedId} />
+                <StoreVisitList onSelect={setSelectedId} tab={storeVisitTab} onTabChange={setStoreVisitTab} />
               </div>
               <div className="flex-1 min-w-0 overflow-y-auto">
                 <ScheduleCalendar onSelect={setSelectedId} />
               </div>
               <div className="w-[400px] shrink-0 overflow-y-auto">
                 {selectedId ? (
-                  <ConsultationDetailPanel consultationId={selectedId} />
+                  <ConsultationDetailPanel
+                    consultationId={selectedId}
+                    onAfterComplete={handleStoreVisitAfterComplete}
+                  />
                 ) : (
                   <div className="flex flex-col items-center justify-center h-60 text-neutral-400">
                     <Store size={28} className="mb-2 opacity-40" />
@@ -254,7 +264,12 @@ export default function ConsultationsPage() {
             {/* 매장방문 — 모바일 슬라이드 패널 */}
             {!isLg && (
               <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="상담 상세">
-                {selectedId && <ConsultationDetailPanel consultationId={selectedId} />}
+                {selectedId && (
+                  <ConsultationDetailPanel
+                    consultationId={selectedId}
+                    onAfterComplete={handleStoreVisitAfterComplete}
+                  />
+                )}
               </SlidePanel>
             )}
           </>

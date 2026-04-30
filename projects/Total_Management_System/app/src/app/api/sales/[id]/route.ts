@@ -141,6 +141,25 @@ export async function PATCH(
         .eq('id', id);
 
       if (updateErr) throw updateErr;
+
+      // 077: 회계 자동 연동 — 입금된 금액이 있으면 환불(expense) 기록
+      if (sale.paid_amount > 0) {
+        try {
+          await db.from('cash_transactions').insert({
+            transaction_date: new Date().toISOString().slice(0, 10),
+            type: 'expense',
+            category: '매출취소환불',
+            amount: sale.paid_amount,
+            memo: `${sale.sale_number} 취소: ${reason || '사유 미기재'}`,
+            source_type: 'offline_sale',
+            source_id: id,
+            created_by: user.id,
+          });
+        } catch (e) {
+          console.error('[sales cancel] cashflow refund insert 실패:', e);
+        }
+      }
+
       return NextResponse.json({ success: true, action: 'cancelled' });
     }
 
@@ -255,6 +274,25 @@ export async function PATCH(
         .eq('id', id);
 
       if (updateErr) throw updateErr;
+
+      // 077: 회계 자동 연동 — 입금된 금액이 있으면 환불(expense) 기록
+      if (sale.paid_amount > 0) {
+        try {
+          await db.from('cash_transactions').insert({
+            transaction_date: new Date().toISOString().slice(0, 10),
+            type: 'expense',
+            category: '매출반품환불',
+            amount: sale.paid_amount,
+            memo: `${sale.sale_number} 반품: ${reason || '사유 미기재'}`,
+            source_type: 'offline_sale',
+            source_id: id,
+            created_by: user.id,
+          });
+        } catch (e) {
+          console.error('[sales return] cashflow refund insert 실패:', e);
+        }
+      }
+
       return NextResponse.json({ success: true, action: 'returned' });
     }
 

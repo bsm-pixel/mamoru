@@ -3,11 +3,12 @@
 import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useProducts, useCreateSale } from '@/hooks/use-sales';
-import { formatKRW, calcVAT } from '@/lib/utils/format';
+import { formatKRW, calcVAT, toLocalDateString } from '@/lib/utils/format';
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
@@ -52,7 +53,7 @@ function NewSaleContent() {
   const priceGroups = usePriceGroups();
   const availableTags = useSetting<string[]>('customer.tags', []);
 
-  const [saleDate, setSaleDate] = useState(new Date().toISOString().slice(0, 10));
+  const [saleDate, setSaleDate] = useState(toLocalDateString(new Date()));
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
 
@@ -80,6 +81,7 @@ function NewSaleContent() {
   const customerType = selectedCustomer?.customer_type;
 
   // 070: 출장/매장상담 → 판매 link prefill
+  // 077: 자동매칭된 기존 고객(이름이 다를 때) 안내 토스트
   useEffect(() => {
     if (!fromConsultationId) return;
     let cancelled = false;
@@ -93,10 +95,29 @@ function NewSaleContent() {
         setCustomerName(consultation.name || '');
         setCustomerPhone(consultation.phone || '');
         if (consultation.customer_id) {
-          // customer_id 있으면 SelectedCustomer 형태로 setting → cart 가격 재계산
+          // 077: 실제 customer 레코드 fetch — phone_normalized로 자동 매칭된 기존 고객의 정확한 이름 사용
+          let customerName: string = consultation.name;
+          try {
+            const custRes = await fetch(`/api/customers/${consultation.customer_id}`);
+            if (custRes.ok) {
+              const { customer } = await custRes.json();
+              if (customer?.name) {
+                customerName = customer.name;
+                // 이름이 다르면 자동매칭 안내 (전화번호 기준 SSOT)
+                if (customer.name !== consultation.name) {
+                  toast(
+                    `동일 전화번호로 자동매칭됨\n접수명: ${consultation.name} → 기존 고객: ${customer.name}`,
+                    { duration: 5000, icon: 'ℹ️' }
+                  );
+                }
+              }
+            }
+          } catch {
+            /* customer fetch 실패해도 consultation 데이터로 진행 */
+          }
           setSelectedCustomer({
             id: consultation.customer_id,
-            name: consultation.name,
+            name: customerName,
             phone: consultation.phone,
             email: null,
             address_road: consultation.address_road || null,
@@ -470,7 +491,7 @@ function NewSaleContent() {
               <div className="space-y-3">
                 <div>
                   <label className="text-xs text-neutral-500 mb-1 block">판매일</label>
-                  <input type="date" value={saleDate} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setSaleDate(e.target.value)}
+                  <input type="date" value={saleDate} max={toLocalDateString(new Date())} onChange={(e) => setSaleDate(e.target.value)}
                     className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
                 </div>
                 <div>

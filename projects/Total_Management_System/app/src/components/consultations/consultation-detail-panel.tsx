@@ -1,14 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import { useConsultation, useUpdateConsultationStatus, useDeleteConsultation } from '@/hooks/use-consultations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SuggestTimeModal } from './suggest-time-modal';
 import { formatPhone, formatDate, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
-import { Calendar, MapPin, Phone, User, Clock, FileSignature, ShoppingCart } from 'lucide-react';
+import { Calendar, MapPin, Phone, User, Clock, FileSignature, ShoppingCart, CheckCircle2 } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { Modal } from '@/components/ui/modal';
 import Link from 'next/link';
 const TYPE_LABEL: Record<string, string> = {
   store_visit: '매장방문',
@@ -30,15 +33,20 @@ const STATUS_COLOR: Record<string, string> = {
 
 interface Props {
   consultationId: string;
+  /** 077: 상담완료 처리 후 호출 (예: 매장방문 탭에서 "지난내역"으로 자동 전환) */
+  onAfterComplete?: () => void;
 }
 
-export function ConsultationDetailPanel({ consultationId }: Props) {
+export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Props) {
+  const router = useRouter();
   const { data, isLoading, refetch } = useConsultation(consultationId);
   const updateStatus = useUpdateConsultationStatus();
   const deleteConsultation = useDeleteConsultation();
   const [suggestModalOpen, setSuggestModalOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // 077: 상담완료 시 판매전환 분기 모달 (linkedSales 없을 때만)
+  const [saleConvertOpen, setSaleConvertOpen] = useState(false);
 
   if (isLoading) {
     return <div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /><Skeleton className="h-20" /></div>;
@@ -52,9 +60,22 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
   const history = data.history || [];
   const statusLabel = CONSULTATION_STATUS_LABEL[c.status] || c.status;
   const statusColor = STATUS_COLOR[c.status] || 'bg-neutral-100';
+  const hasLinkedSales = !!(data?.linkedSales && data.linkedSales.length > 0);
 
   const handleStatus = (newStatus: string) => {
+    // 077: 상담완료 + 판매미연결 + 톡상담 아닌 경우 → 판매전환 분기 모달
+    if (newStatus === 'completed' && !hasLinkedSales && c.consultation_type !== 'talk_consult') {
+      setSaleConvertOpen(true);
+      return;
+    }
     setPendingStatus(newStatus);
+  };
+
+  // 077: 상담완료 mutation 헬퍼 — 성공 시 토스트 + onAfterComplete 호출
+  const completeOnly = async () => {
+    await updateStatus.mutateAsync({ id: c.id, status: 'completed' });
+    toast.success('상담완료 처리됨 — 지난내역 탭에서 확인 가능');
+    onAfterComplete?.();
   };
 
   const confirmStatusLabels: Record<string, { title: string; msg: string; variant?: 'danger' | 'default' }> = {
@@ -226,14 +247,24 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
       )}
 
       {/* 070: 판매로 처리 CTA — 톡상담 제외, 확정~완료 단계에서 표시 */}
+      {/* 077: linkedSales 있으면 "판매연결완료" 배지로 대체 (중복 처리 방지) */}
       {['confirmed', 'in_progress', 'completed'].includes(c.status) && c.consultation_type !== 'talk_consult' && (
-        <Link
-          href={`/sales/new?from_consultation=${c.id}`}
-          className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 transition"
-        >
-          <ShoppingCart size={16} className="text-blue-600" />
-          <span className="text-sm font-medium text-blue-700">판매로 처리</span>
-        </Link>
+        data?.linkedSales && data.linkedSales.length > 0 ? (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200">
+            <CheckCircle2 size={16} className="text-green-600" />
+            <span className="text-sm font-medium text-green-700">
+              판매연결완료 ({data.linkedSales.length}건)
+            </span>
+          </div>
+        ) : (
+          <Link
+            href={`/sales/new?from_consultation=${c.id}`}
+            className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 transition"
+          >
+            <ShoppingCart size={16} className="text-blue-600" />
+            <span className="text-sm font-medium text-blue-700">판매로 처리</span>
+          </Link>
+        )
       )}
 
       {/* 계약서 CTA — 톡상담 제외, 확정~완료 단계에서 표시 */}
@@ -260,13 +291,68 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
         <ConfirmModal
           open={!!pendingStatus}
           onClose={() => setPendingStatus(null)}
-          onConfirm={() => updateStatus.mutateAsync({ id: c.id, status: pendingStatus })}
+          onConfirm={async () => {
+            // 077: 'completed'는 완료 후 토스트 + 탭 자동전환
+            if (pendingStatus === 'completed') {
+              await completeOnly();
+            } else {
+              await updateStatus.mutateAsync({ id: c.id, status: pendingStatus });
+            }
+          }}
           title={confirmStatusLabels[pendingStatus].title}
           message={confirmStatusLabels[pendingStatus].msg}
           confirmLabel={confirmStatusLabels[pendingStatus].title}
           variant={confirmStatusLabels[pendingStatus].variant || 'default'}
         />
       )}
+
+      {/* 077: 상담완료 시 판매전환 분기 모달 (linkedSales 없는 경우만 표시) */}
+      <Modal
+        open={saleConvertOpen}
+        onClose={() => setSaleConvertOpen(false)}
+        title="상담 완료 처리"
+        className="max-w-sm"
+      >
+        <div className="space-y-4">
+          <div className="text-sm text-neutral-700">
+            <p className="mb-2">{c.name}님의 상담을 완료 처리합니다.</p>
+            <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+              아직 연결된 판매가 없습니다.<br />판매를 먼저 등록하시겠습니까?
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                setSaleConvertOpen(false);
+                router.push(`/sales/new?from_consultation=${c.id}`);
+              }}
+            >
+              <ShoppingCart size={14} />
+              판매 등록하기
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={async () => {
+                setSaleConvertOpen(false);
+                await completeOnly();
+              }}
+              loading={updateStatus.isPending}
+            >
+              완료만 처리 (판매 없이)
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSaleConvertOpen(false)}
+            >
+              취소
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* 이력 */}
       {history.length > 0 && (

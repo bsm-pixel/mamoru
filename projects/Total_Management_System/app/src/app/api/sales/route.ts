@@ -340,6 +340,26 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 077: 회계 자동 연동 — 입금된 금액을 cash_transactions(income)에 자동 기록
+    // (paid 또는 partial이고 paid_amount > 0인 경우만 — unpaid는 입금 발생 X)
+    if (sale.paid_amount > 0 && paymentStatus !== 'unpaid') {
+      try {
+        await db.from('cash_transactions').insert({
+          transaction_date: saleDate,
+          type: 'income',
+          category: '매출입금',
+          amount: sale.paid_amount,
+          memo: `${saleNumber} ${sale.customer_name}`,
+          source_type: 'offline_sale',
+          source_id: created.id,
+          created_by: user.id,
+        });
+      } catch (e) {
+        // cashflow INSERT 실패해도 판매는 유지 (회계 페이지에서 수동 보정 가능)
+        console.error('[sales POST] cashflow auto-insert 실패:', e);
+      }
+    }
+
     return NextResponse.json({ sale: created, saleNumber });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : JSON.stringify(err);

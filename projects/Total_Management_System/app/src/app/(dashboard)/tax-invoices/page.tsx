@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { formatKRW, formatDate } from '@/lib/utils/format';
+import { formatKRW, formatDate, toLocalDateString } from '@/lib/utils/format';
 import { FileText, Trash2, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -15,14 +15,14 @@ export default function TaxInvoicesPage() {
   // 이번 분기 기본값
   const quarter = Math.floor(now.getMonth() / 3);
   const qStart = new Date(now.getFullYear(), quarter * 3, 1);
-  const [from, setFrom] = useState(qStart.toISOString().slice(0, 10));
-  const [to, setTo] = useState(now.toISOString().slice(0, 10));
+  const [from, setFrom] = useState(toLocalDateString(qStart));
+  const [to, setTo] = useState(toLocalDateString(now));
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
 
   // 폼
   const [invType, setInvType] = useState<'sales' | 'purchase'>('sales');
-  const [issueDate, setIssueDate] = useState(now.toISOString().slice(0, 10));
+  const [issueDate, setIssueDate] = useState(toLocalDateString(now));
   const [counterparty, setCounterparty] = useState('');
   const [bizNo, setBizNo] = useState('');
   const [supplyAmount, setSupplyAmount] = useState('');

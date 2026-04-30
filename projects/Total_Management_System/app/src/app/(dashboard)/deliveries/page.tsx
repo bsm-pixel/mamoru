@@ -16,7 +16,7 @@ import { useDeliveries, useDeliveryStats, useCreateDelivery } from '@/hooks/use-
 import { useProducts } from '@/hooks/use-sales';
 import { useCustomerSearch } from '@/hooks/use-customers';
 import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
-import { formatKRW, formatDate, formatPhone, calcVAT } from '@/lib/utils/format';
+import { formatKRW, formatDate, formatPhone, calcVAT, toLocalDateString } from '@/lib/utils/format';
 import { Package, Plus, X, AlertCircle, Calendar, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { Product } from '@/lib/supabase/types';
@@ -310,7 +310,7 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
   }>>([]);
 
   // 결제/옵션
-  const [deliveryDate, setDeliveryDate] = useState(new Date().toISOString().slice(0, 10));
+  const [deliveryDate, setDeliveryDate] = useState(toLocalDateString(new Date()));
   const [expectedDate, setExpectedDate] = useState('');
   const [vatType, setVatType] = useState<'included' | 'separate' | 'none'>('none');
   const [receiptType, setReceiptType] = useState<string>('none');

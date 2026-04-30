@@ -34,9 +34,23 @@ function getTabFilters(tab: TabKey) {
   }
 }
 
-export function StoreVisitList({ onSelect }: { onSelect?: (id: string) => void } = {}) {
+export function StoreVisitList({
+  onSelect,
+  tab: externalTab,
+  onTabChange,
+}: {
+  onSelect?: (id: string) => void;
+  /** 077: controlled 모드 — 부모가 탭 상태 관리 (예: 상담완료 후 자동 전환) */
+  tab?: TabKey;
+  onTabChange?: (tab: TabKey) => void;
+} = {}) {
   const router = useRouter();
-  const [tab, setTab] = useState<TabKey>('confirmed');
+  const [internalTab, setInternalTab] = useState<TabKey>('confirmed');
+  const tab = externalTab ?? internalTab;
+  const setTab = (next: TabKey) => {
+    if (onTabChange) onTabChange(next);
+    else setInternalTab(next);
+  };
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 

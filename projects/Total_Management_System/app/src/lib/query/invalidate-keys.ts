@@ -23,6 +23,8 @@ export const FINANCIAL_QUERY_KEYS = [
   'repairs',
   'repair-tabs',
   'orders',
+  // 077: 매출/매입 → 회계 자동 연동 (매출 등록 시 cashflow 페이지 즉시 갱신)
+  'cashflow',
 ] as const;
 
 export function invalidateFinancialQueries(queryClient: QueryClient) {

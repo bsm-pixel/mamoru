@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useProducts } from '@/hooks/use-sales';
 import { useCreatePurchaseOrder, useSupplierCatalog } from '@/hooks/use-purchasing';
 import { useSetting } from '@/hooks/use-settings';
-import { formatKRW, calcVAT } from '@/lib/utils/format';
+import { formatKRW, calcVAT, toLocalDateString } from '@/lib/utils/format';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { LowStockPickerModal } from '@/components/purchasing/low-stock-picker-modal';
 import { ArrowLeft, Minus, Plus, Trash2, AlertTriangle, Filter, Search } from 'lucide-react';
@@ -29,7 +29,7 @@ export default function NewPurchaseOrderPage() {
 
   const [supplierName, setSupplierName] = useState('');
   const [supplierId, setSupplierId] = useState('');
-  const [orderDate, setOrderDate] = useState(new Date().toISOString().slice(0, 10));
+  const [orderDate, setOrderDate] = useState(toLocalDateString(new Date()));
   const [expectedDate, setExpectedDate] = useState('');
   const [memo, setMemo] = useState('');
   const [vatType, setVatType] = useState<'included' | 'separate' | 'none'>('included');
