@@ -1,7 +1,68 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-29 | 리뷰 요청·약속 추적 통합 (sale source)
+> 최종 업데이트: 2026-04-30 | 070 출장상담→판매 link 인프라 + 리뷰 mirror 모드 + 수동 link 모달
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §5, [TMS_PROCESS_MAP.md](TMS_PROCESS_MAP.md) 참조
+
+## 출장/매장상담 → 판매 link 인프라 (070, 2026-04-30 추가)
+
+### 핵심 컬럼 — 마이그 070
+`offline_sales.source_consultation_id UUID NULL REFERENCES consultations(id)` 추가.
+- 있으면(NOT NULL): 이 판매는 출장/매장상담 후속 거래 → ReviewManagementCard가 **mirror 모드**로 전환
+- 없으면(NULL): 일반 판매 (워크인, 수동 입력 등) → 기존 카드 동작 그대로
+- 부분 인덱스 `idx_offline_sales_source_consultation` (NOT NULL일 때만)
+
+### 1. 상담 → 판매 자동 link (신규 거래)
+```
+출장/매장상담 상세 (status: confirmed | in_progress | completed)
+  → "판매로 처리" CTA (파란 카드, 톡상담 제외)
+  → /sales/new?from_consultation={id}
+  → 마운트 시 GET /api/consultation/{id} → 고객 정보 prefill
+       (customerName, customerPhone, address, customerType)
+  → 상단 안내 배너: "출장/매장상담에서 가져옴 · CS-..."
+  → 사장님 결제·SKU만 입력 → 저장
+  → POST /api/sales body.source_consultation_id 포함
+  → INSERT offline_sales(source_consultation_id) → 자동 link
+```
+
+### 2. 수동 link (기존 데이터, 사장님 사후 연결)
+```
+sale 상세 → ReviewManagementCard 아래 작은 텍스트 "🔗 이 판매를 출장/매장상담과 연결"
+  → LinkConsultationModal 열기
+  → 같은 phone의 출장/매장상담 목록 (톡상담·취소 제외, 최대 10건)
+  → 선택 → PATCH /api/sales/{id} { action: 'link_consultation', source_consultation_id }
+  → 서버: phone_normalized 일치 검증 (오링크 방지)
+  → 성공 → mirror 모드 자동 전환
+
+해제: ReviewManagementCard 아래 "상담 연결 해제" → PATCH action='unlink_consultation'
+```
+
+### 3. ReviewManagementCard mirror 모드
+| 조건 | 렌더링 |
+|------|------|
+| `submittedAt` 있음 | "작성 완료" 정적 라벨 (mirror 무시) |
+| `linkedConsultation` 있음 (sale only) | **mirror 박스**: "원본 상담 [CS-...]에서 관리 중" + 상담 링크 |
+| 그 외 | 기존 약속 토글 + 후기 요청 버튼 |
+
+→ sale의 약속/발송 토글이 사라짐 → 원본 상담 한 곳에서만 관리 → 중복 알림톡 위험 0
+
+### 4. 약속 대기 탭 (`/reviews`) 자동 정리
+`/api/reviews/promised`의 offline_sales 쿼리에 `.is('source_consultation_id', null)` 추가.
+- link 있는 sale은 약속 대기 탭에서 자동 제외 → 사장님이 같은 거래에 대해 두 행을 보지 않음
+- consultation row 1개로 통합 노출
+
+### 5. consultation 상세 — 역방향 linkedSales 노출
+`useConsultation` 훅이 `offline_sales WHERE source_consultation_id = id`로 역방향 fetch (최대 5건, 취소 제외).
+- 패널: "이 상담으로 판매 처리:" + 녹색 `[OS-...]` 칩 (클릭 → 판매 상세 이동)
+- 풀 페이지: 녹색 강조 카드
+
+### 회귀 안전
+- link 없는 sale은 동작 변화 0 (모든 신규 prop optional + null 기본값)
+- 기존 ReviewManagementCard 사용처 3곳(consultation/repair/sale) 회귀 X — sale만 linkedConsultation 전달
+- DB 컬럼 추가만, 기존 데이터 그대로
+
+상세 마이그: `supabase/migrations/070_offline_sales_source_consultation_link.sql`
+
+---
 
 ## 리뷰 요청 분기 (2026-04-29 추가)
 

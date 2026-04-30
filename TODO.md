@@ -1,7 +1,15 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-28 (브랜드 소개 카피·아이콘 정비 + 모바일 sticky 퀵네비 설계 + 네이버 인앱 page_main_top 잘림 fix)
+> 최종 수정: 2026-04-30 (GAS 의존 폐기 + 매장 리마인더 회귀 fix + 솔라피 직접 호출 마이그 예정 추가)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
+
+---
+
+## 📅 예정된 작업 (날짜 도래 시 사장님이 "할일 뭐야?" 물으면 안내)
+
+- [ ] **2026-05-07 이후 — GAS 코드 archive (Phase 3)**: 1주 모니터링 후 GAS 코드를 archive 폴더로 이동. 대상: `projects/consulting/Code.gs`, `supabase-sync.gs`, `Total_Management_System/gas/consultation-sync.gs`. 코드 보존 (삭제 X), Apps Script 프로젝트는 유지(트리거만 OFF). 사장님이 1주 동안 알림톡 정상 도착 확인 후 진행.
+
+- [ ] **2026-06-15 이후 — 솔라피(Solapi) 직접 호출 마이그 검토**: 현재 TMS → Make webhook → Solapi 흐름을 TMS → Solapi 직접으로 단축. Make 비용 절감 + 발송 속도 개선 + 디버깅 용이. 작업 시간 ~반나절(코딩 4~5h + 사장님 비즈 콘솔에서 templateId 수집 1~2h). 진행 전 확인 필요: ① 카카오 비즈 콘솔 접근 ② 발신번호 Solapi 등록 ③ Make 월 사용량 / 비용 (ROI). 점진 마이그 안전장치: `NOTIFY_PROVIDER=make|solapi` 환경변수 토글. **GAS 폐기 안정화(약 1.5개월) 후 진행 권장 — 안 깨진 시스템 굳이 깨지 않음 원칙**.
 
 ---
 

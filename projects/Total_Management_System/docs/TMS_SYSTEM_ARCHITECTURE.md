@@ -1,6 +1,12 @@
 # MAMORU TMS — 시스템 아키텍처 & 프로세스 흐름도
 
-> 최종 수정: 2026-04-02 | Tier 1~3 기능 로드맵 구현 완료 + 회계 모듈 확장
+> 최종 수정: 2026-04-30 | GAS 의존 전면 폐기 + 출장상담→판매 link 인프라(070) + 매장 리마인더 회귀 fix(071)
+
+## 📌 운영 도구 정책 (2026-04-30 확정)
+- **AppSheet**: 폐기 (2026-02-26). TMS가 전면 대체.
+- **GAS (Google Apps Script)**: 폐기 (2026-04-30). Apps Script 'MAMORU_Consulting' 트리거 2개 OFF, 코드는 1주 모니터링 후 archive 폴더 이동.
+- **단일 운영체계**: TMS (Vercel + Supabase + GitHub) — 모든 신규 기능은 이 스택으로만 추가
+- 상세: `memory/feedback_gas_deprecated.md`
 
 이 문서는 TMS 전체 시스템의 **마스터 레퍼런스**이다.
 
@@ -81,8 +87,10 @@
 | 시간 제안 | `suggest` | SUGGESTED_TIMES |
 | 출장 확정 (고객 선택) | `field_confirmed` | FIELD_CONFIRMED |
 | 출장 지연 | `field_delayed` | FIELD_DELAYED |
-| 24h 리마인더 | `field_remind_24h` | FIELD_REMIND_24H |
-| 2h 리마인더 | `field_remind_2h` | FIELD_REMIND_2H |
+| 출장 24h 리마인더 | `field_remind_24h` | FIELD_REMIND_24H |
+| 출장 2h 리마인더 | `field_remind_2h` | FIELD_REMIND_2H |
+| 매장 24h 리마인더 (071, 2026-04-30) | `remind24` | REMIND_24H |
+| 매장 2h 리마인더 (071, 2026-04-30) | `remind2` | REMIND_2H |
 | 취소 | `cancelled` / `field_cancelled` | CANCELLED / FIELD_CANCELLED |
 | 상담 완료 | `review_request` | REVIEW_REQUEST |
 | 톡상담 시작 | `talk_ready` | TALK_READY |
@@ -246,6 +254,22 @@ TMS에서 판매 입력 (/sales/new)
   → 시리얼 → sold 상태 전환
   → 아임웹 재고 차감 (API 연동)
 ```
+
+### 출장/매장상담 → 판매 link (070, 2026-04-30 추가)
+```
+출장/매장상담 상세 → "판매로 처리" CTA
+  → /sales/new?from_consultation={id} → 고객 정보 prefill
+  → 저장 시 offline_sales.source_consultation_id 기록
+  → ReviewManagementCard mirror 모드 자동 전환 (원본 상담 한 곳에서만 후기 관리)
+
+기존 sale 수동 link: ReviewManagementCard 아래 "🔗 이 판매를 출장/매장상담과 연결"
+  → LinkConsultationModal → 같은 phone 상담 목록 → 선택
+  → PATCH /api/sales/{id} action='link_consultation'
+  → phone 일치 검증 후 link
+```
+**효과**: 한 거래(상담→판매)가 시스템상 두 record로 분리되어 후기 약속/발송이 중복되던 위험 0. 약속 대기 탭에서 link sale 자동 제외.
+
+상세: `docs/TMS_FLOW_SALES.md` 070 섹션
 
 ### 전자 계약서 흐름
 ```

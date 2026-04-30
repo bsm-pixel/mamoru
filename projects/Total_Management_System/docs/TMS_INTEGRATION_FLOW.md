@@ -2,6 +2,12 @@
 
 > **최신 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) 참조
 > GAS→Vercel 전환 이전(2026-03-14) 기준 문서로, 현재 아키텍처와 다릅니다.
+>
+> **2026-04-30 — GAS 의존 전면 폐기 완료**:
+> - Apps Script 'MAMORU_Consulting' 트리거 2개(`sendReminders_`, `cleanupExpiredHolds_`) 삭제
+> - 모든 알림톡/cron이 TMS Vercel cron으로 단일 운영
+> - GAS 코드는 1주 모니터링 후 archive 폴더 이동 예정
+> - 상세: `docs/TMS_FLOW_CONSULTATION.md` 2026-04-30 섹션, `memory/feedback_gas_deprecated.md`
 
 ---
 
