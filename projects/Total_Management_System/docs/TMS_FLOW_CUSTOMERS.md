@@ -1,6 +1,31 @@
 # 고객 관리 프로세스 흐름도
 
-> 최종 수정: 2026-04-02
+> 최종 수정: 2026-04-30 (심야) — phone 기반 자동 매칭/생성 helper 신설 (`lib/customer/match-or-create.ts`)
+
+---
+
+## 2026-04-30 (심야) — 고객 자동 매칭/생성 (phone 기반 SSOT)
+
+### 핵심
+신규 helper `app/src/lib/customer/match-or-create.ts`가 phone 기준 매칭/생성을 담당:
+1. phone 정규화 (`replace(/\D/g, '')`) → phone_normalized 비교
+2. 매칭됨 → 기존 customerId 반환 (`isNew: false`)
+3. 매칭 X → 신규 INSERT → 신규 customerId (`isNew: true`)
+4. phone 비어있음 → null (호출 측에서 customer_id NULL로 처리)
+
+### 적용 라우트
+- `/api/consultation/public/submit` — source='consultation'
+- `/api/consultation/admin-create` — source='manual'
+- `/api/repair/public/submit` — source='as'
+- `/api/repair` POST — source='manual' (body.customer_id 없을 때만)
+
+### Edge case
+- 동명이인(같은 phone, 다른 이름): 가장 오래된 customer 매칭 (deterministic)
+- 사후 분리: 사장님이 customer 상세에서 직접 분리/병합
+- 이름 변경: phone 기준 매칭 → customers.name 자동 업데이트 X (사장님 직접)
+
+### 백필 마이그 072
+옛 NULL customer_id 데이터를 phone 매칭으로 1회성 채움. 사장님이 SQL Editor에서 1번 실행.
 
 ---
 
@@ -9,9 +34,9 @@
 ### 고객 생성 경로
 | 경로 | 자동/수동 | customer_type |
 |------|----------|--------------|
-| 판매 입력 시 신규 고객 | 수동 | retail/dealer/academy |
-| 상담 접수 | 자동 (미구현) | — |
-| 복원수리 접수 | 자동 (미구현) | — |
+| 판매 입력 시 신규 고객 | 수동 (사장님 customer-autocomplete) | retail/dealer/academy |
+| 상담 접수 (`public/submit`, `admin-create`) | **자동 (2026-04-30 구현됨)** | retail (default) |
+| 복원수리 접수 (`public/submit`, POST) | **자동 (2026-04-30 구현됨)** | retail (default) |
 | 아임웹 주문 동기화 | 자동 | online |
 | CSV 임포트 | 수동 | 매핑 |
 | 고객 직접 등록 | 수동 | 선택 |

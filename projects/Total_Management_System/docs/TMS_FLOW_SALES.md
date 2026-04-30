@@ -1,7 +1,17 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-30 (밤) | **후기는 판매(sale) 단일 진입점** + 070 출장상담→판매 link 인프라 + linkedConsultation 정보 칩
->
-> **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §5, [TMS_PROCESS_MAP.md](TMS_PROCESS_MAP.md) 참조
+> 최종 업데이트: 2026-04-30 (심야) — 고객 자동 매칭/생성 강화 + 후기 sale 단일 진입점 + 070 link
+
+## 2026-04-30 (심야) — 고객 자동 매칭/생성과 판매 흐름 통합
+
+상담/복원수리 접수 시 phone 기준 customer 자동 매칭/생성(`lib/customer/match-or-create.ts`)이 적용되어, **`/sales/new?from_consultation=<id>` 진입 시 SelectedCustomer가 자동 set**:
+- 이전: from_consultation의 phone/이름 prefill (검색 단계 필요)
+- 지금: consultation에 customer_id 채워져 있으니 SelectedCustomer 정식 연결 → customer_type 기반 가격 자동 적용
+
+같은 고객 customer 상세 페이지에 상담/복원수리/판매 통합 표시.
+
+상세: `docs/TMS_FLOW_CONSULTATION.md` "2026-04-30 심야" 섹션
+
+---
 
 ## 2026-04-30 (밤) — 리뷰 진입점 단일화
 

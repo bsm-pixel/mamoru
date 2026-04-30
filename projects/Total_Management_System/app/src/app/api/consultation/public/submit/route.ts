@@ -4,6 +4,7 @@ import { sendNotification } from '@/lib/notification/make-webhook';
 import { sendAdminEmail } from '@/lib/notification/email';
 import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 import { geocodeForConsultation } from '@/lib/kakao/geocode';
+import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -88,10 +89,23 @@ export async function POST(req: NextRequest) {
       if (geo) { lat = geo.lat; lng = geo.lng; }
     }
 
+    // 고객 자동 매칭/생성 — phone 기준 SSOT
+    const { customerId } = await matchOrCreateCustomer(dbAny, {
+      phone: phone.trim(),
+      name: name.trim(),
+      source: 'consultation',
+      extra: {
+        addressRoad: addressRoad || null,
+        addressDetail: addressDetail || null,
+        postcode: addressZip || null,
+      },
+    });
+
     // INSERT
     const { data: consultation, error: insertErr } = await dbAny
       .from('consultations')
       .insert({
+        customer_id: customerId,
         name: name.trim(),
         phone: phone.trim(),
         consultation_type: consultationType,

@@ -1,5 +1,44 @@
 # 상담관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-30 (밤) — **상담관리 리뷰 연동 전면 제거. 후기는 판매(sale) 단일 진입점.**
+> 최종 업데이트: 2026-04-30 (심야) — **고객 자동 매칭/생성** + 상담 리뷰 연동 전면 제거 + 24h 가드 + 모달 IA + 지도 핀 IA + GAS 폐기 + 좌표 helper
+
+---
+
+## 2026-04-30 (심야) — 고객 자동 매칭/생성 (phone 기반 SSOT)
+
+### 변경 배경
+사장님 결정: 상담/복원수리 접수 시 phone 기준으로 고객 자동 매칭/생성. 같은 고객이 재접수 시 단골 자동 인지 + 거래 이력 통합. 사장님 입력 부담 절감.
+
+### Fix
+**신규 helper**: `app/src/lib/customer/match-or-create.ts`
+- 입력: phone, name, source ('consultation'|'as'|'manual'), extra(주소 등)
+- 동작: phone_normalized 검색 → 매칭됨 기존 customerId 반환 / 매칭 X 신규 INSERT
+- 동명이인: 가장 오래된 customer로 매칭 (deterministic)
+- phone 비어있으면 NULL 반환 (호출 측에서 NULL 처리)
+
+**4 라우트에 helper 호출 추가**:
+- `/api/consultation/public/submit` (source='consultation')
+- `/api/consultation/admin-create` (source='manual')
+- `/api/repair/public/submit` (source='as')
+- `/api/repair` POST (source='manual', customer_id 없을 때만)
+
+**백필 마이그 072** (선택, 사장님 SQL Editor에서 1번 실행):
+- consultations / repairs / offline_sales의 NULL customer_id를 phone 매칭으로 1회성 채움
+
+### 흐름
+```
+신규 phone 접수 → customers 신규 INSERT + customer_id 연결
+같은 phone 재접수 → 기존 customer_id 매칭 (단골 자동 추적)
+phone 없음 → customer_id NULL (예: 톡상담)
+```
+
+### 효과 — 판매 흐름 통합
+- 상담 → "판매로 처리" CTA → /sales/new에서 SelectedCustomer 자동 set (customer_type 따라 가격 자동)
+- 같은 고객 customer 상세 → 상담/복원수리/판매 모두 한 곳에 표시 (단골 식별)
+
+### 회귀 안전
+- 기존 동작 0 변경 — public/submit/admin-create는 customer_id가 채워질 뿐
+- /sales/new from_consultation prefill 그대로 동작 (이미 customer_id 처리)
+- workin 직접 판매 / customer-autocomplete / 070 link 모두 영향 0
 
 ---
 

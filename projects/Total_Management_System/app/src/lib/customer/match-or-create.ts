@@ -1,0 +1,87 @@
+/**
+ * 고객 자동 매칭/생성 helper — phone 기반 SSOT 강화 (2026-04-30)
+ *
+ * 사용처:
+ *   - /api/consultation/public/submit (고객 폼)
+ *   - /api/consultation/admin-create (관리자 수기 등록)
+ *   - /api/repair/public/submit (복원수리 고객 폼)
+ *   - /api/repair POST (관리자 수기 등록)
+ *
+ * 동작:
+ *   1. phone을 정규화(digits-only) → phone_normalized
+ *   2. phoneNorm 비어있으면 null 반환 (호출 측에서 customer_id NULL로 INSERT)
+ *   3. customers.phone_normalized = phoneNorm 검색 (가장 오래된 customer 매칭, deterministic)
+ *   4. 매칭됨 → 기존 customerId 반환
+ *   5. 매칭 X → 신규 INSERT → 신규 customerId 반환
+ *
+ * Edge case:
+ *   - 동명이인 (같은 phone, 다른 이름): 첫 매칭 사용 (운영 현실에서 드뭄, 사장님이 사후 분리 가능)
+ *   - INSERT 실패: 에러 로그 + null 반환 (호출 측에서 customer_id 없이 INSERT 진행)
+ */
+
+export interface MatchOrCreateInput {
+  phone: string;
+  name: string;
+  source: 'consultation' | 'as' | 'manual';
+  extra?: {
+    addressRoad?: string | null;
+    addressDetail?: string | null;
+    postcode?: string | null;
+    customerType?: string;
+  };
+}
+
+export interface MatchOrCreateResult {
+  customerId: string | null;
+  isNew: boolean;
+}
+
+export async function matchOrCreateCustomer(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: any,
+  input: MatchOrCreateInput,
+): Promise<MatchOrCreateResult> {
+  const phoneNorm = (input.phone || '').replace(/\D/g, '');
+  if (!phoneNorm) return { customerId: null, isNew: false };
+
+  // 1) 기존 매칭 시도 — 가장 오래된 customer (deterministic)
+  const { data: existing, error: searchErr } = await db
+    .from('customers')
+    .select('id')
+    .eq('phone_normalized', phoneNorm)
+    .order('created_at', { ascending: true })
+    .limit(1);
+
+  if (searchErr) {
+    console.error('[matchOrCreateCustomer] 검색 실패:', searchErr);
+    return { customerId: null, isNew: false };
+  }
+
+  if (existing && existing.length > 0) {
+    return { customerId: existing[0].id as string, isNew: false };
+  }
+
+  // 2) 신규 INSERT — phone_normalized는 DB trigger로 자동 채워짐
+  const insertData: Record<string, unknown> = {
+    name: input.name?.trim() || '미기입',
+    phone: input.phone,
+    source: input.source,
+    customer_type: input.extra?.customerType || 'retail',
+  };
+  if (input.extra?.addressRoad) insertData.address_road = input.extra.addressRoad;
+  if (input.extra?.addressDetail) insertData.address_detail = input.extra.addressDetail;
+  if (input.extra?.postcode) insertData.postcode = input.extra.postcode;
+
+  const { data: created, error: insertErr } = await db
+    .from('customers')
+    .insert(insertData)
+    .select('id')
+    .single();
+
+  if (insertErr || !created) {
+    console.error('[matchOrCreateCustomer] INSERT 실패:', insertErr);
+    return { customerId: null, isNew: false };
+  }
+
+  return { customerId: created.id as string, isNew: true };
+}

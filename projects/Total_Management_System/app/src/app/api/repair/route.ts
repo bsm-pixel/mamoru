@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
 
 /** GET /api/repair — 복원수리 목록 (필터/페이징) */
 export async function GET(req: NextRequest) {
@@ -69,6 +70,22 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const body = await req.json();
+
+    // 고객 자동 매칭/생성 — body에 customer_id 없을 때만 (사장님이 customer-autocomplete로 선택한 경우는 그대로 사용)
+    if (!body.customer_id && body.phone) {
+      const { customerId } = await matchOrCreateCustomer(db, {
+        phone: body.phone,
+        name: body.name || '미기입',
+        source: 'manual',
+        extra: {
+          addressRoad: body.address || null,
+          addressDetail: body.address_detail || null,
+          postcode: body.postcode || null,
+        },
+      });
+      if (customerId) body.customer_id = customerId;
+    }
+
     const { data, error } = await db
       .from('repairs')
       .insert(body)

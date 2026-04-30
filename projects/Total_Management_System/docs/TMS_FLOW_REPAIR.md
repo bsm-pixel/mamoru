@@ -1,7 +1,19 @@
 # 복원수리 프로세스 흐름도
-> 최종 업데이트: 2026-04-29 (리뷰 요청·약속 추적 — 자동/수동 모드 통합)
+> 최종 업데이트: 2026-04-30 (심야) — 고객 자동 매칭/생성 (phone 기반 SSOT) + 리뷰 요청 분기
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
+
+## 2026-04-30 (심야) — 고객 자동 매칭/생성
+
+복원수리 접수 시 phone 기준 자동 매칭/생성:
+- `/api/repair/public/submit` (고객 폼) → `lib/customer/match-or-create.ts` 호출 → repairs.customer_id 자동 연결
+- `/api/repair` POST (관리자 수기) → body.customer_id 없을 때만 자동 매칭 (사장님 customer-autocomplete 선택은 그대로)
+
+같은 phone으로 상담/복원수리/판매 재접수 시 동일 customer_id 매칭 → 거래 이력 통합 + 단골 자동 인지.
+
+상세: `docs/TMS_FLOW_CONSULTATION.md` "2026-04-30 심야" 섹션
+
+---
 
 ## 리뷰 요청 분기 (2026-04-29 추가)
 

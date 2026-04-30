@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { sendAdminEmail } from '@/lib/notification/email';
+import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -127,8 +128,21 @@ export async function POST(req: NextRequest) {
     // AS ID 채번
     const asId = await generateAsId(db);
 
+    // 고객 자동 매칭/생성 — phone 기준 SSOT
+    const { customerId } = await matchOrCreateCustomer(dbAny, {
+      phone: phone.trim(),
+      name: name.trim(),
+      source: 'as',
+      extra: {
+        addressRoad: address || null,
+        addressDetail: address_detail || null,
+        postcode: postcode || null,
+      },
+    });
+
     // INSERT
     const insertData = {
+      customer_id: customerId,
       as_id: asId,
       name: name.trim(),
       phone: phone.trim(),

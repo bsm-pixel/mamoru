@@ -17,6 +17,7 @@ import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 import { geocodeForConsultation } from '@/lib/kakao/geocode';
+import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
 import crypto from 'crypto';
 
 const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting';
@@ -104,11 +105,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // ── 고객 자동 매칭/생성 ──────────────────────────────────
+    const { customerId } = await matchOrCreateCustomer(dbAny, {
+      phone: phone.trim(),
+      name: name.trim(),
+      source: 'manual',
+      extra: {
+        addressRoad: addressRoad?.trim() || null,
+        addressDetail: addressDetail?.trim() || null,
+        postcode: postcode?.trim() || null,
+      },
+    });
+
     // ── INSERT ───────────────────────────────────────────────
     const uniqueId = crypto.randomUUID();
     const { data: consultation, error: insertErr } = await dbAny
       .from('consultations')
       .insert({
+        customer_id: customerId,
         name: name.trim(),
         phone: phone.trim(),
         consultation_type: type,
