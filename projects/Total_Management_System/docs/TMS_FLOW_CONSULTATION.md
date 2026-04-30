@@ -1,5 +1,44 @@
 # 상담관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-30 (GAS 폐기 + 리마인더 템플릿 매장/출장 분기 fix + 마이그 071)
+> 최종 업데이트: 2026-04-30 (출장요청 지도 핀 IA 정리 — 완료 핀 컨텍스트 분리)
+
+---
+
+## 2026-04-30 (오후) — 출장요청 지도 핀 IA 개선
+
+### 문제
+- 처리완료된 출장상담이 지도에 회색 `?` 핀으로 표시됨
+- 원인: PIN_CONFIG에 `completed` 상태 누락 → DEFAULT_PIN fallback
+- IA 관점: 활성 작업 탭에서 완료 핀이 떠 있는 건 시각 노이즈
+
+### Fix — 컨텍스트별 핀 표시
+
+**1. PIN_CONFIG에 `completed` 명시 추가** (`field-request-map.tsx`)
+- 초록 ✓ — "성공/완료" 보편 매핑, on_hold(회색)와 차별화
+
+**2. 필터 강화 — 컨텍스트별 동작**
+| 탭 (activeStatuses) | 핀 표시 정책 |
+|------|---------|
+| 신규접수 / 제안중 / 일정재요청 / 확정 / 오늘출장 | 활성 status만, completed/cancelled 미노출 |
+| **지난내역 (past)** | **completed 핀만 초록 ✓로 강조 표시** |
+| 모든 탭 | cancelled은 항상 미노출 (위치 의미 X) |
+
+**3. SUB_TAB_STATUSES 매핑 추가** (`consultations/page.tsx`)
+- `past: ['completed']` 신규 추가 → 지난내역 탭이 활성일 때 completed 핀 트리거
+
+### 핀 컬러 매트릭스 (전체)
+| Status | 색상 | 아이콘 | 의미 |
+|--------|------|-------|------|
+| pending_admin | 노랑 #EAB308 | ! | 신규 접수 |
+| suggested / reschedule / change_requested | 주황 #F97316 | →/↻ | 제안/재요청 |
+| confirmed | 파랑 #3B82F6 | ✓ | 확정 |
+| on_hold | 회색 #9CA3AF | ⏸ | 보류 |
+| completed | 초록 #10B981 | ✓ | 처리완료 (지난내역에서만) |
+| cancelled | — | — | 핀 X |
+
+### 회귀 안전
+- 활성 탭 동작: 완료 핀이 사라짐 → 사장님 IA 개선 의도
+- 다른 모듈 (repair/sales/talk): 지도 X → 영향 0
+- field-request-list 탭별 list 동작: 변경 0
 
 ---
 

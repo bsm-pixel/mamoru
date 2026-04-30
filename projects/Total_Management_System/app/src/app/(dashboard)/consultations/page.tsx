@@ -51,6 +51,7 @@ const SUB_TAB_STATUSES: Record<string, string[] | undefined> = {
   suggested: ['suggested'],
   action_needed: ['reschedule_requested', 'change_requested'],
   confirmed: ['confirmed'],
+  past: ['completed'],  // 지난내역 탭에서만 완료 핀 노출 (cancelled은 위치 의미 X — 매핑 X)
 };
 
 export default function ConsultationsPage() {

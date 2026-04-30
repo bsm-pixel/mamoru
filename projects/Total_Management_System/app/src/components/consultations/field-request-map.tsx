@@ -10,7 +10,7 @@ import { loadKakaoMapSDK, type KakaoMap, type KakaoMarker, type KakaoOverlay } f
 import { formatPhone, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
 import type { Consultation } from '@/lib/supabase/types';
 
-/** R2: 상태별 핀 색상 (노랑/주황/파랑) */
+/** R2: 상태별 핀 색상 (노랑/주황/파랑/초록) */
 const PIN_CONFIG: Record<string, { color: string; icon: string }> = {
   pending_admin:        { color: '#EAB308', icon: '!' },   // 노랑 — 신규
   suggested:            { color: '#F97316', icon: '→' },   // 주황 — 제안/변경
@@ -18,6 +18,7 @@ const PIN_CONFIG: Record<string, { color: string; icon: string }> = {
   change_requested:     { color: '#F97316', icon: '↻' },   // 주황
   confirmed:            { color: '#3B82F6', icon: '✓' },   // 파랑 — 확정
   on_hold:              { color: '#9CA3AF', icon: '⏸' },   // 회색
+  completed:            { color: '#10B981', icon: '✓' },   // 초록 — 처리완료 (지난내역 탭에서만 노출)
 };
 const DEFAULT_PIN = { color: '#6B7280', icon: '?' };
 
@@ -56,9 +57,16 @@ export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect, acti
 
   // 모든 출장요청 건 (좌표 있는 건만 표시하므로 많이 불러옴)
   const { data } = useConsultations({ type: 'field_request', limit: 200 });
-  const consultations = (data?.consultations || []).filter(
-    (c) => c.latitude && c.longitude && c.status !== 'cancelled'
-  );
+  // 컨텍스트별 핀 표시:
+  // - 좌표 없는 건 X
+  // - cancelled: 항상 핀 X (위치 의미 없음)
+  // - completed: '지난내역' 탭(activeStatuses에 'completed' 포함)에서만 표시 (활성 작업 컨텍스트에서는 시각 노이즈 제거)
+  const consultations = (data?.consultations || []).filter((c) => {
+    if (!c.latitude || !c.longitude) return false;
+    if (c.status === 'cancelled') return false;
+    if (c.status === 'completed') return activeStatuses?.includes('completed') ?? false;
+    return true;
+  });
 
   // 자동 backfill: 좌표 NULL인 활성 출장요청 발견 시 백그라운드로 채우기
   // (사장님이 지도 페이지 한 번 열기만 하면 NULL 건 자동 복구 — 회귀 안전망)
