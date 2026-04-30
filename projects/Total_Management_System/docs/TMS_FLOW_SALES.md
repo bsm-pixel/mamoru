@@ -1,5 +1,59 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-30 (심야 +1) — B2B 납품처 카탈로그 + 납품명 자동 입력 (073)
+> 최종 업데이트: 2026-04-30 (심야 +2) — **B2B 카테고리 동적화 + 거래처별 단가 (074)** + 073 catalog delivery_name + 070 link
+
+## 2026-04-30 (심야 +2) — B2B 카테고리 동적화 + 거래처별 단가 (074)
+
+### 핵심 변경
+사장님 결정: B2B 카테고리(딜러/아카데미/학교/공기관 등)를 설정에서 자유롭게 추가/수정 + 각 거래처 catalog에 **납품가** 등록 → 판매 시 가격까지 자동.
+
+### 마이그 074
+- `system_settings`에 `b2b.categories` seed (dealer/academy 기본값, 사장님이 설정에서 추가)
+- `customer_product_catalog`에 `unit_price` 컬럼 추가 (거래처별 맞춤 가격)
+
+### B2B 카테고리 동적 관리
+**설정 → 고객 관리 → "B2B 납품처 카테고리"**:
+- 기본 (is_default=true): dealer, academy — 삭제 차단
+- 사장님 추가 가능: school, public, hospital 등
+- key (영문) + label (한글) + 아이콘 (8종) + 순서 + 활성 토글
+- 추가 시 `/거래처` 페이지 탭 자동 노출
+
+**/거래처 페이지 탭 동적**:
+- B2B: 사장님 정의 (settings 기반)
+- 매입처(supplier): system 고정 (catalog 흐름 다름)
+- 색상: key 해시 기반 deterministic
+
+### 가격 우선순위 (sales/new addToCart)
+```
+selectedCustomer 있을 때:
+  1순위: customer_product_catalog.unit_price (074, 거래처별 맞춤가)
+  2순위: product.price_groups[customerType].price (group 단가, 기존)
+  3순위: product.price (소매가, 기본)
+```
+
+### 납품명 우선순위 (저장 시 product_name)
+```
+1순위: customer_product_catalog.delivery_name (073)
+2순위: getProductDisplayName(product, customerType, priceGroups)
+3순위: product.name
+```
+
+### catalog UI (3컬럼)
+**납품명** / **납품가** / **특징** — 미입력 시 fallback 자동.
+
+### 신규 카테고리 추가 시 사장님 흐름
+1. 설정 → 고객 관리 → B2B 카테고리 → "추가" → key='school', label='학교', icon='School'
+2. /거래처 → "학교" 탭 자동 노출
+3. 거래처 등록 + 납품품목 catalog에 제품 + 납품가 + 납품명 등록
+4. 판매 시 자동 적용 → 송장 출력에 박힘
+
+### 회귀 안전
+- customer_type DB 값 그대로 (사장님 추가 = 새 값 'school' 등)
+- 29곳 hard-coded `customer_type === 'dealer'` 비교 그대로 (점진 helper 통합 별도 task)
+- price_groups 그대로 (catalog.unit_price 미등록 시 fallback)
+- supplier 흐름 0 변경 (system 고정)
+- 070 link / 072 매칭 / 073 catalog (delivery_name) — 모두 영향 0
+
+---
 
 ## 2026-04-30 (심야 +1) — B2B 납품처 카탈로그 + 납품명 자동 입력 (073)
 

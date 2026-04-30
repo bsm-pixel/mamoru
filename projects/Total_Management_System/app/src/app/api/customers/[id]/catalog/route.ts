@@ -24,7 +24,7 @@ export async function GET(
 
     const { data, error } = await db
       .from('customer_product_catalog')
-      .select('id, customer_id, product_id, delivery_name, features, sort_order, created_at, products:product_id(name, price, sku, category, product_group, sort_order)')
+      .select('id, customer_id, product_id, delivery_name, features, unit_price, sort_order, created_at, products:product_id(name, price, sku, category, product_group, sort_order)')
       .eq('customer_id', id)
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true });
@@ -39,6 +39,7 @@ export async function GET(
         product_id: row.product_id,
         delivery_name: row.delivery_name || '',
         features: row.features || '',
+        unit_price: (row.unit_price as number | null) ?? null,
         sort_order: row.sort_order || 0,
         product_name: product?.name || '',
         price: product?.price || 0,
@@ -96,10 +97,11 @@ export async function PATCH(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { catalog_id, delivery_name, features } = await req.json() as {
+    const { catalog_id, delivery_name, features, unit_price } = await req.json() as {
       catalog_id: string;
       delivery_name?: string;
       features?: string;
+      unit_price?: number | null;
     };
 
     if (!catalog_id) return NextResponse.json({ error: 'catalog_id 필수' }, { status: 400 });
@@ -109,6 +111,7 @@ export async function PATCH(
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (delivery_name !== undefined) updates.delivery_name = delivery_name;
     if (features !== undefined) updates.features = features;
+    if (unit_price !== undefined) updates.unit_price = unit_price;
 
     const { error } = await db
       .from('customer_product_catalog')

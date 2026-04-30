@@ -24,7 +24,7 @@ export function CustomerCatalogSection({ customerId }: { customerId: string }) {
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [productSearch, setProductSearch] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ delivery_name: '', features: '' });
+  const [editForm, setEditForm] = useState({ delivery_name: '', features: '', unit_price: '' });
 
   const catalog = data?.catalog || [];
   const catalogProductIds = new Set(catalog.map((c) => c.product_id));
@@ -35,12 +35,24 @@ export function CustomerCatalogSection({ customerId }: { customerId: string }) {
 
   function startEdit(entry: typeof catalog[0]) {
     setEditingId(entry.id);
-    setEditForm({ delivery_name: entry.delivery_name, features: entry.features });
+    setEditForm({
+      delivery_name: entry.delivery_name,
+      features: entry.features,
+      unit_price: entry.unit_price != null ? String(entry.unit_price) : '',
+    });
   }
 
   async function saveEdit() {
     if (!editingId) return;
-    await updateCatalog.mutateAsync({ customerId, catalogId: editingId, deliveryName: editForm.delivery_name, features: editForm.features });
+    const parsedPrice = editForm.unit_price.trim() ? parseInt(editForm.unit_price.replace(/[^0-9]/g, ''), 10) : null;
+    const unitPrice = parsedPrice != null && !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : null;
+    await updateCatalog.mutateAsync({
+      customerId,
+      catalogId: editingId,
+      deliveryName: editForm.delivery_name,
+      features: editForm.features,
+      unitPrice,
+    });
     setEditingId(null);
   }
 
@@ -116,13 +128,20 @@ export function CustomerCatalogSection({ customerId }: { customerId: string }) {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold">{entry.product_name}</span>
-                    <span className="text-[10px] text-neutral-400">{formatKRW(entry.price)}</span>
+                    <span className="text-[10px] text-neutral-400">정가 {formatKRW(entry.price)}</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <div>
                       <label className="text-[10px] text-neutral-400">납품명</label>
                       <input value={editForm.delivery_name} onChange={(e) => setEditForm({ ...editForm, delivery_name: e.target.value })}
                         placeholder="송장/납품서 출력용 품명"
+                        className="w-full h-7 px-2 rounded border border-neutral-200 text-xs" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-neutral-400">납품가</label>
+                      <input value={editForm.unit_price} onChange={(e) => setEditForm({ ...editForm, unit_price: e.target.value })}
+                        placeholder="비우면 정가/그룹가"
+                        inputMode="numeric"
                         className="w-full h-7 px-2 rounded border border-neutral-200 text-xs" />
                     </div>
                     <div>
@@ -145,10 +164,11 @@ export function CustomerCatalogSection({ customerId }: { customerId: string }) {
                   <div className="flex-1 min-w-0" onClick={() => startEdit(entry)} style={{ cursor: 'pointer' }}>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-semibold truncate">{entry.product_name}</span>
-                      <span className="text-[10px] text-neutral-400">{formatKRW(entry.price)}</span>
+                      <span className="text-[10px] text-neutral-400">정가 {formatKRW(entry.price)}</span>
                     </div>
-                    <div className="flex gap-4 text-[11px] text-neutral-500">
+                    <div className="flex gap-4 text-[11px] text-neutral-500 flex-wrap">
                       <span>납품명: {entry.delivery_name || <em className="text-neutral-300">미입력</em>}</span>
+                      <span>납품가: {entry.unit_price != null ? <span className="text-blue-600 font-semibold">{formatKRW(entry.unit_price)}</span> : <em className="text-neutral-300">미설정</em>}</span>
                       <span>특징: {entry.features || <em className="text-neutral-300">미입력</em>}</span>
                     </div>
                   </div>

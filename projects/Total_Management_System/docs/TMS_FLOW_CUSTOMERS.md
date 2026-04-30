@@ -1,6 +1,42 @@
 # 고객 관리 프로세스 흐름도
 
-> 최종 수정: 2026-04-30 (심야 +1) — B2B 납품처 카탈로그 (073) + phone 기반 자동 매칭
+> 최종 수정: 2026-04-30 (심야 +2) — **B2B 카테고리 동적화 + 거래처별 단가 (074)** + 073 catalog + phone 매칭
+
+---
+
+## 2026-04-30 (심야 +2) — B2B 카테고리 동적 관리 (074)
+
+### 핵심
+사장님이 설정에서 B2B 카테고리(딜러/아카데미/학교/공기관 등)를 자유롭게 추가/수정 가능.
+
+### 위치: 설정 → 고객 관리 → "B2B 납품처 카테고리"
+- 기본 (삭제 차단): dealer / academy
+- 사장님 추가 가능 (예: school / public / hospital / 기타)
+
+### 데이터 구조 (`system_settings.b2b.categories`)
+```json
+[
+  { "key": "dealer", "label": "딜러", "icon": "Users", "display_order": 1, "is_active": true, "is_default": true },
+  { "key": "school", "label": "학교", "icon": "School", "display_order": 3, "is_active": true, "is_default": false }
+]
+```
+
+### 자동 반영
+- /거래처 페이지 → 카테고리 탭 자동 노출
+- 거래처 등록 시 `customer_type='school'` 등 자유 값 사용 가능 (DB가 TEXT라 가능)
+- 색상: key 해시 기반 deterministic 자동
+
+### 운영 매뉴얼 — 신규 카테고리 추가 후
+1. ✅ B2B 카테고리 관리 (074로 추가) — UI 노출
+2. ⚠️ 고객 유형 (`customer.types` 설정)에도 같은 key 추가 (사장님이)
+3. ⚠️ 단가 그룹 관리 (`pricing.groups`)에도 등록 (옵션 — catalog.unit_price만 쓰면 생략 가능)
+
+### catalog 단가 (074)
+- `customer_product_catalog.unit_price` 컬럼 추가
+- 거래처 상세 → 납품품목 탭에서 납품가 입력
+- 판매 시 자동 적용 (가격 우선순위: catalog.unit_price → price_groups → product.price)
+
+상세: `docs/TMS_FLOW_SALES.md` "2026-04-30 심야 +2" 섹션
 
 ---
 

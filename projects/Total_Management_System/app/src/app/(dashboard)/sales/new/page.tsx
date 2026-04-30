@@ -56,12 +56,10 @@ function NewSaleContent() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
 
-  // 073: B2B 납품처 catalog (customer별 납품명 자동 입력용)
+  // 073/074: B2B 납품처 catalog (customer별 납품명 + 단가 자동 입력용)
   const { data: customerCatalogData } = useCustomerCatalog(selectedCustomer?.id);
-  const catalogByProductId = new Map(
-    (customerCatalogData?.catalog || [])
-      .filter((c) => c.delivery_name?.trim())
-      .map((c) => [c.product_id, c.delivery_name])
+  const catalogEntryMap = new Map(
+    (customerCatalogData?.catalog || []).map((c) => [c.product_id, c])
   );
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -124,7 +122,12 @@ function NewSaleContent() {
   const [customProductPrice, setCustomProductPrice] = useState('');
 
   function addToCart(product: Product) {
-    const price = getUnitPrice(product, customerType, priceGroups);
+    // 074: catalog.unit_price 우선 사용 (해당 customer 등록된 맞춤가) → 없으면 group 단가 fallback
+    const catalogEntry = catalogEntryMap.get(product.id);
+    const customPrice = catalogEntry?.unit_price;
+    const price = (customPrice && customPrice > 0)
+      ? customPrice
+      : getUnitPrice(product, customerType, priceGroups);
     setCart((prev) => {
       const existing = prev.find((item) => item.product?.id === product.id);
       if (existing) {
@@ -215,10 +218,9 @@ function NewSaleContent() {
       },
       items: cart.map((item) => ({
         product_id: item.product?.id || undefined,
-        // 073: catalog delivery_name 우선 사용 (선택된 customer의 catalog에 등록된 제품이면)
-        // → 없으면 기존 fallback (price_groups display_name 또는 product.name)
+        // 073/074: catalog delivery_name 우선 사용 → 없으면 기존 fallback (price_groups display_name 또는 product.name)
         product_name: item.product
-          ? (catalogByProductId.get(item.product.id) || getProductDisplayName(item.product, customerType, priceGroups))
+          ? ((catalogEntryMap.get(item.product.id)?.delivery_name?.trim()) || getProductDisplayName(item.product, customerType, priceGroups))
           : (item.customName || '임시 제품'),
         sku: item.product?.sku || undefined,
         category: item.product?.category || undefined,

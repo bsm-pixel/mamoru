@@ -11,6 +11,31 @@ function parse<T>(raw: unknown, fb: T): T {
   return raw as T;
 }
 
+interface B2BCategory {
+  key: string;
+  label: string;
+  icon: string;
+  display_order: number;
+  is_active: boolean;
+  is_default?: boolean;
+}
+
+const ICON_OPTIONS: { value: string; label: string }[] = [
+  { value: 'Users',         label: '👥 사람들 (딜러/도매)' },
+  { value: 'GraduationCap', label: '🎓 졸업모 (아카데미/교육)' },
+  { value: 'School',        label: '🏫 학교' },
+  { value: 'Building2',     label: '🏢 건물 (회사/매입처)' },
+  { value: 'Building',      label: '🏛 관공서/공기관' },
+  { value: 'Briefcase',     label: '💼 사업자' },
+  { value: 'Hospital',      label: '🏥 병원' },
+  { value: 'Store',         label: '🏪 매장' },
+];
+
+const DEFAULT_B2B_CATEGORIES: B2BCategory[] = [
+  { key: 'dealer',  label: '딜러',     icon: 'Users',          display_order: 1, is_active: true, is_default: true },
+  { key: 'academy', label: '아카데미', icon: 'GraduationCap',  display_order: 2, is_active: true, is_default: true },
+];
+
 export default function CustomerSettings({ settings, onSave, saving }: TabProps) {
   const [types, setTypes] = useState<string[]>(['retail', 'online', 'dealer', 'academy']);
   const [newType, setNewType] = useState('');
@@ -23,6 +48,8 @@ export default function CustomerSettings({ settings, onSave, saving }: TabProps)
   const [newMemo, setNewMemo] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
+  // 074: B2B 카테고리 동적 관리
+  const [b2bCategories, setB2bCategories] = useState<B2BCategory[]>(DEFAULT_B2B_CATEGORIES);
 
   useEffect(() => {
     setTypes(parse(settings['customer.types'], ['retail', 'online', 'dealer', 'academy']));
@@ -32,6 +59,7 @@ export default function CustomerSettings({ settings, onSave, saving }: TabProps)
     setDefaultSort(parse(settings['customer.default_sort'], 'name'));
     setMemoTemplates(parse(settings['customer.memo_templates'], []));
     setTags(parse(settings['customer.tags'], []));
+    setB2bCategories(parse(settings['b2b.categories'], DEFAULT_B2B_CATEGORIES));
   }, [settings]);
 
   const handleSave = () => {
@@ -43,8 +71,24 @@ export default function CustomerSettings({ settings, onSave, saving }: TabProps)
       { key: 'customer.default_sort', value: defaultSort },
       { key: 'customer.memo_templates', value: memoTemplates },
       { key: 'customer.tags', value: tags },
+      { key: 'b2b.categories', value: b2bCategories },
     ]);
   };
+
+  function addB2BCategory() {
+    const nextOrder = Math.max(0, ...b2bCategories.map((c) => c.display_order)) + 1;
+    setB2bCategories([
+      ...b2bCategories,
+      { key: '', label: '', icon: 'Briefcase', display_order: nextOrder, is_active: true, is_default: false },
+    ]);
+  }
+  function updateB2BCategory(idx: number, patch: Partial<B2BCategory>) {
+    setB2bCategories(b2bCategories.map((c, i) => i === idx ? { ...c, ...patch } : c));
+  }
+  function removeB2BCategory(idx: number) {
+    if (b2bCategories[idx]?.is_default) return; // is_default는 삭제 차단
+    setB2bCategories(b2bCategories.filter((_, i) => i !== idx));
+  }
 
   const TYPE_LABELS: Record<string, string> = { retail: '일반', online: '온라인', dealer: '딜러', academy: '아카데미' };
   const SOURCE_LABELS: Record<string, string> = { imweb: '아임웹', consultation: '상담', as: '복원수리', manual: '수동' };
@@ -57,6 +101,65 @@ export default function CustomerSettings({ settings, onSave, saving }: TabProps)
       <Field label="고객 유형 목록" desc="고객 등록/검색 시 드롭다운에 표시됩니다.">
         <ChipList items={types} labels={TYPE_LABELS} onRemove={(i) => setTypes(types.filter((_, j) => j !== i))} />
         <AddInput value={newType} onChange={setNewType} onAdd={() => { if (newType.trim()) { setTypes([...types, newType.trim()]); setNewType(''); } }} placeholder="새 유형" />
+      </Field>
+
+      {/* 074: B2B 카테고리 관리 */}
+      <Field label="B2B 납품처 카테고리" desc="딜러/아카데미/학교/공기관 등 B2B 거래처 분류. /거래처 페이지 탭에 자동 노출. 신규 카테고리 추가 시 '고객 유형 목록'에도 같은 key 추가 + 단가 그룹(판매 관리 설정)에도 등록 권장.">
+        <div className="space-y-2">
+          {b2bCategories.sort((a, b) => a.display_order - b.display_order).map((cat, idx) => (
+            <div key={idx} className="grid grid-cols-[80px_1fr_1fr_1fr_60px_60px_36px] gap-2 items-center p-2 rounded-lg border border-neutral-200 bg-neutral-50">
+              <input
+                type="text" value={cat.key}
+                onChange={(e) => updateB2BCategory(b2bCategories.indexOf(cat), { key: e.target.value.replace(/[^a-z0-9_]/gi, '').toLowerCase() })}
+                placeholder="key (영문)"
+                disabled={cat.is_default}
+                className="h-8 px-2 rounded border border-neutral-200 text-xs disabled:bg-neutral-100 disabled:text-neutral-400"
+              />
+              <input
+                type="text" value={cat.label}
+                onChange={(e) => updateB2BCategory(b2bCategories.indexOf(cat), { label: e.target.value })}
+                placeholder="표시명 (예: 학교)"
+                className="h-8 px-2 rounded border border-neutral-200 text-xs"
+              />
+              <select
+                value={cat.icon}
+                onChange={(e) => updateB2BCategory(b2bCategories.indexOf(cat), { icon: e.target.value })}
+                className="h-8 px-1 rounded border border-neutral-200 text-xs"
+              >
+                {ICON_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <input
+                type="number" value={cat.display_order}
+                onChange={(e) => updateB2BCategory(b2bCategories.indexOf(cat), { display_order: Number(e.target.value) })}
+                className="h-8 px-2 rounded border border-neutral-200 text-xs"
+                title="순서"
+              />
+              <label className="flex items-center justify-center gap-1 text-[10px] text-neutral-500">
+                <input
+                  type="checkbox" checked={cat.is_active}
+                  onChange={(e) => updateB2BCategory(b2bCategories.indexOf(cat), { is_active: e.target.checked })}
+                />
+                활성
+              </label>
+              <span className="text-[10px] text-neutral-400 text-center">
+                {cat.is_default ? '기본' : ''}
+              </span>
+              <button
+                onClick={() => removeB2BCategory(b2bCategories.indexOf(cat))}
+                disabled={cat.is_default}
+                className="text-neutral-400 hover:text-red-500 disabled:text-neutral-200 disabled:cursor-not-allowed"
+                title={cat.is_default ? '기본 카테고리는 삭제 불가 (비활성 토글로 숨김 가능)' : '삭제'}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+          <button onClick={addB2BCategory} className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:bg-neutral-50">
+            <Plus size={12} />새 카테고리 추가
+          </button>
+        </div>
       </Field>
 
       {/* 2. RFM 분류 기준 */}

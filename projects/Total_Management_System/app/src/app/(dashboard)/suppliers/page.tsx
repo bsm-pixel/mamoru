@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,39 +12,109 @@ import { useCustomers, useCreateCustomer } from '@/hooks/use-customers';
 import { formatKRW, formatPhone } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
-import { Building2, Users, GraduationCap, Plus, X, Pencil, Package, Save, Trash2, Search, Printer } from 'lucide-react';
+import { Building2, Users, GraduationCap, Plus, X, Pencil, Package, Save, Trash2, Search, Printer, School, Briefcase, Building, Hospital, Store } from 'lucide-react';
 import { CatalogPrintModal } from '@/components/purchasing/catalog-print-modal';
 import { CollectPaymentModal } from '@/components/suppliers/collect-payment-modal';
 import { CustomerCatalogSection } from '@/components/customers/customer-catalog-section';
 import { useSupplierCatalog, useAddToCatalog, useUpdateCatalog, useRemoveFromCatalog } from '@/hooks/use-purchasing';
+import { useSetting } from '@/hooks/use-settings';
 import { useProducts } from '@/hooks/use-sales';
 import toast from 'react-hot-toast';
 import type { Customer } from '@/lib/supabase/types';
 
-const B2B_TABS = [
-  { value: 'dealer', label: '딜러', icon: Users, color: 'purple', bgIcon: 'bg-purple-50', textIcon: 'text-purple-600' },
-  { value: 'academy', label: '아카데미', icon: GraduationCap, color: 'emerald', bgIcon: 'bg-emerald-50', textIcon: 'text-emerald-600' },
-  { value: 'supplier', label: '매입처', icon: Building2, color: 'amber', bgIcon: 'bg-amber-50', textIcon: 'text-amber-600' },
-] as const;
+// 074: B2B 카테고리 동적 관리 — system_settings('b2b.categories')에서 로드
+// supplier(매입처)는 catalog 흐름이 다르므로 system 고정으로 별도 관리
+type IconName = 'Users' | 'GraduationCap' | 'School' | 'Building2' | 'Building' | 'Briefcase' | 'Hospital' | 'Store';
+const ICON_MAP: Record<IconName, typeof Users> = {
+  Users, GraduationCap, School, Building2, Building, Briefcase, Hospital, Store,
+};
+function getIconByName(name: string): typeof Users {
+  return ICON_MAP[name as IconName] || Users;
+}
 
-const BADGE_STYLE: Record<string, string> = {
-  dealer: 'bg-purple-100 text-purple-700',
-  academy: 'bg-emerald-100 text-emerald-700',
-  supplier: 'bg-amber-100 text-amber-700',
+interface B2BCategory {
+  key: string;
+  label: string;
+  icon: string;
+  display_order: number;
+  is_active: boolean;
+  is_default?: boolean;
+}
+
+// 카테고리별 색상 — key 해시 기반 deterministic (사장님 추가 카테고리도 색상 자동 부여)
+const COLOR_PALETTE = [
+  { color: 'purple', bgIcon: 'bg-purple-50', textIcon: 'text-purple-600', badge: 'bg-purple-100 text-purple-700' },
+  { color: 'emerald', bgIcon: 'bg-emerald-50', textIcon: 'text-emerald-600', badge: 'bg-emerald-100 text-emerald-700' },
+  { color: 'blue', bgIcon: 'bg-blue-50', textIcon: 'text-blue-600', badge: 'bg-blue-100 text-blue-700' },
+  { color: 'rose', bgIcon: 'bg-rose-50', textIcon: 'text-rose-600', badge: 'bg-rose-100 text-rose-700' },
+  { color: 'sky', bgIcon: 'bg-sky-50', textIcon: 'text-sky-600', badge: 'bg-sky-100 text-sky-700' },
+  { color: 'orange', bgIcon: 'bg-orange-50', textIcon: 'text-orange-600', badge: 'bg-orange-100 text-orange-700' },
+];
+function colorByKey(key: string) {
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) | 0;
+  return COLOR_PALETTE[Math.abs(hash) % COLOR_PALETTE.length];
+}
+
+// supplier(매입처)는 system 고정 — 고유 색상
+const SUPPLIER_TAB = {
+  value: 'supplier' as const,
+  label: '매입처',
+  icon: Building2,
+  color: 'amber',
+  bgIcon: 'bg-amber-50',
+  textIcon: 'text-amber-600',
+  badge: 'bg-amber-100 text-amber-700',
+  is_default: true,
 };
 
-const BADGE_LABEL: Record<string, string> = {
-  dealer: '딜러',
-  academy: '아카데미',
-  supplier: '매입처',
-};
+// 074 이전 fallback (마이그 안 된 경우 또는 settings 없음)
+const DEFAULT_B2B_CATEGORIES: B2BCategory[] = [
+  { key: 'dealer',  label: '딜러',     icon: 'Users',          display_order: 1, is_active: true, is_default: true },
+  { key: 'academy', label: '아카데미', icon: 'GraduationCap',  display_order: 2, is_active: true, is_default: true },
+];
 
 export default function B2BPartnersPage() {
-  const [activeTab, setActiveTab] = useState<'dealer' | 'academy' | 'supplier'>('dealer');
+  const [activeTab, setActiveTab] = useState<string>('dealer');
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLg, setIsLg] = useState(false);
+
+  // 074: B2B 카테고리 동적 (사장님이 설정에서 추가/수정 가능)
+  const b2bCategories = useSetting<B2BCategory[]>('b2b.categories', DEFAULT_B2B_CATEGORIES);
+  const B2B_TABS = useMemo(() => {
+    const dynamicTabs = (b2bCategories || [])
+      .filter((c) => c.is_active)
+      .sort((a, b) => a.display_order - b.display_order)
+      .map((c) => {
+        const palette = colorByKey(c.key);
+        return {
+          value: c.key,
+          label: c.label,
+          icon: getIconByName(c.icon),
+          color: palette.color,
+          bgIcon: palette.bgIcon,
+          textIcon: palette.textIcon,
+          badge: palette.badge,
+          is_default: !!c.is_default,
+        };
+      });
+    // supplier(매입처)는 항상 마지막 — system 고정
+    return [...dynamicTabs, SUPPLIER_TAB];
+  }, [b2bCategories]);
+
+  // BADGE 매핑도 동적
+  const BADGE_STYLE = useMemo(() => {
+    const m: Record<string, string> = {};
+    B2B_TABS.forEach((t) => { m[t.value] = t.badge; });
+    return m;
+  }, [B2B_TABS]);
+  const BADGE_LABEL = useMemo(() => {
+    const m: Record<string, string> = {};
+    B2B_TABS.forEach((t) => { m[t.value] = t.label; });
+    return m;
+  }, [B2B_TABS]);
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -58,7 +128,7 @@ export default function B2BPartnersPage() {
   const partners = data?.customers || [];
   const selectedPartner = partners.find((p) => p.id === selectedId) || null;
 
-  const tabConfig = B2B_TABS.find((t) => t.value === activeTab)!;
+  const tabConfig = B2B_TABS.find((t) => t.value === activeTab) || B2B_TABS[0];
 
   const listContent = (
     <div className="space-y-3">
@@ -88,6 +158,7 @@ export default function B2BPartnersPage() {
           <div className="divide-y divide-neutral-100">
             {partners.map((p) => (
               <PartnerRow key={p.id} partner={p} tabConfig={tabConfig}
+                badgeStyle={BADGE_STYLE} badgeLabel={BADGE_LABEL}
                 selected={selectedId === p.id} onClick={() => setSelectedId(p.id)} />
             ))}
           </div>
@@ -109,7 +180,7 @@ export default function B2BPartnersPage() {
             <div className="w-[480px] shrink-0">{listContent}</div>
             <div className="flex-1 min-w-0">
               {selectedPartner ? (
-                <PartnerDetailPanel partner={selectedPartner} tabConfig={tabConfig} />
+                <PartnerDetailPanel partner={selectedPartner} tabConfig={tabConfig} badgeStyle={BADGE_STYLE} badgeLabel={BADGE_LABEL} />
               ) : (
                 <div className="flex items-center justify-center h-64 text-sm text-neutral-400">거래처를 선택해주세요</div>
               )}
@@ -119,18 +190,18 @@ export default function B2BPartnersPage() {
           <>
             {listContent}
             <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="거래처 상세">
-              {selectedPartner && <PartnerDetailPanel partner={selectedPartner} tabConfig={tabConfig} />}
+              {selectedPartner && <PartnerDetailPanel partner={selectedPartner} tabConfig={tabConfig} badgeStyle={BADGE_STYLE} badgeLabel={BADGE_LABEL} />}
             </SlidePanel>
           </>
         )}
       </div>
 
-      {showAdd && <AddPartnerModal defaultType={activeTab} onClose={() => setShowAdd(false)} />}
+      {showAdd && <AddPartnerModal defaultType={activeTab} tabs={B2B_TABS} onClose={() => setShowAdd(false)} />}
     </>
   );
 }
 
-function PartnerRow({ partner: s, tabConfig, selected, onClick }: { partner: Customer; tabConfig: typeof B2B_TABS[number]; selected?: boolean; onClick?: () => void }) {
+function PartnerRow({ partner: s, tabConfig, badgeStyle, badgeLabel, selected, onClick }: { partner: Customer; tabConfig: TabConfig; badgeStyle: Record<string, string>; badgeLabel: Record<string, string>; selected?: boolean; onClick?: () => void }) {
   return (
     <div onClick={onClick} className={`flex items-center gap-4 px-4 py-3 cursor-pointer transition ${selected ? 'bg-neutral-50 border-l-2 border-l-neutral-900' : 'hover:bg-warm-ivory/60'}`}>
       <div className={`w-9 h-9 rounded-lg ${tabConfig.bgIcon} flex items-center justify-center shrink-0`}>
@@ -139,8 +210,8 @@ function PartnerRow({ partner: s, tabConfig, selected, onClick }: { partner: Cus
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-indigo-black">{s.company_name || s.name}</span>
-          <Badge className={BADGE_STYLE[s.customer_type] || BADGE_STYLE.supplier}>
-            {BADGE_LABEL[s.customer_type] || s.customer_type}
+          <Badge className={badgeStyle[s.customer_type] || 'bg-neutral-100 text-neutral-600'}>
+            {badgeLabel[s.customer_type] || s.customer_type}
           </Badge>
         </div>
         <div className="flex items-center gap-3 mt-0.5 text-xs text-neutral-500">
@@ -159,7 +230,18 @@ function PartnerRow({ partner: s, tabConfig, selected, onClick }: { partner: Cus
 }
 
 /* ── 거래처 상세 패널 ── */
-function PartnerDetailPanel({ partner: p, tabConfig }: { partner: Customer; tabConfig: typeof B2B_TABS[number] }) {
+interface TabConfig {
+  value: string;
+  label: string;
+  icon: typeof Users;
+  color: string;
+  bgIcon: string;
+  textIcon: string;
+  badge: string;
+  is_default?: boolean;
+}
+
+function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel }: { partner: Customer; tabConfig: TabConfig; badgeStyle: Record<string, string>; badgeLabel: Record<string, string> }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [detailTab, setDetailTab] = useState<'info' | 'catalog'>('info');
@@ -199,7 +281,7 @@ function PartnerDetailPanel({ partner: p, tabConfig }: { partner: Customer; tabC
           </div>
           <div>
             <h3 className="text-base font-bold text-indigo-black">{p.company_name || p.name}</h3>
-            <Badge className={BADGE_STYLE[p.customer_type]}>{BADGE_LABEL[p.customer_type]}</Badge>
+            <Badge className={badgeStyle[p.customer_type] || 'bg-neutral-100 text-neutral-600'}>{badgeLabel[p.customer_type] || p.customer_type}</Badge>
           </div>
         </div>
         <button onClick={() => setEditing(!editing)} className="text-sm text-neutral-500 hover:text-neutral-700">
@@ -207,8 +289,9 @@ function PartnerDetailPanel({ partner: p, tabConfig }: { partner: Customer; tabC
         </button>
       </div>
 
-      {/* 거래처 종류별 탭 바 (supplier=매입품목, dealer/academy=납품품목) */}
-      {(p.customer_type === 'supplier' || p.customer_type === 'dealer' || p.customer_type === 'academy') && (
+      {/* 거래처 종류별 탭 바 (supplier=매입품목, B2B=납품품목)
+          074: B2C(retail/online) 외 모든 customer_type에 catalog 탭 — 사장님 추가 카테고리 자동 인지 */}
+      {!['retail', 'online'].includes(p.customer_type) && (
         <div className="flex border-b border-neutral-100">
           <button
             onClick={() => setDetailTab('info')}
@@ -221,13 +304,13 @@ function PartnerDetailPanel({ partner: p, tabConfig }: { partner: Customer; tabC
         </div>
       )}
 
-      {/* 매입품목 탭 (supplier) */}
+      {/* 매입품목 탭 (supplier) — 별도 catalog 흐름 */}
       {detailTab === 'catalog' && p.customer_type === 'supplier' && (
         <SupplierCatalogSection supplierId={p.id} supplierName={p.company_name || p.name} />
       )}
 
-      {/* 납품품목 탭 (dealer / academy) — 073 */}
-      {detailTab === 'catalog' && (p.customer_type === 'dealer' || p.customer_type === 'academy') && (
+      {/* 납품품목 탭 (B2B — dealer/academy/school/공기관 등 사장님 추가 카테고리 모두) — 073/074 */}
+      {detailTab === 'catalog' && !['retail', 'online', 'supplier'].includes(p.customer_type) && (
         <CustomerCatalogSection customerId={p.id} />
       )}
 
@@ -486,7 +569,7 @@ function SupplierCatalogSection({ supplierId, supplierName }: { supplierId: stri
   );
 }
 
-function AddPartnerModal({ defaultType, onClose }: { defaultType: string; onClose: () => void }) {
+function AddPartnerModal({ defaultType, tabs, onClose }: { defaultType: string; tabs: TabConfig[]; onClose: () => void }) {
   const createCustomer = useCreateCustomer();
   const [partnerType, setPartnerType] = useState(defaultType);
   const [form, setForm] = useState({
@@ -528,7 +611,7 @@ function AddPartnerModal({ defaultType, onClose }: { defaultType: string; onClos
           <div>
             <label className="text-xs text-neutral-500">거래처 유형</label>
             <select value={partnerType} onChange={(e) => setPartnerType(e.target.value)} className={inputCls}>
-              {B2B_TABS.map((t) => (
+              {tabs.map((t) => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>

@@ -14,9 +14,10 @@ export interface CustomerCatalogEntry {
   product_id: string;
   delivery_name: string;
   features: string;
+  unit_price: number | null;  // 074: 거래처별 맞춤 단가
   sort_order: number;
   product_name: string;
-  price: number;
+  price: number;               // 제품 기본 소매가 (참고용)
   sku: string;
   category: string;
   product_group: string;
@@ -60,13 +61,13 @@ export function useAddToCustomerCatalog() {
 export function useUpdateCustomerCatalog() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ customerId, catalogId, deliveryName, features }: {
-      customerId: string; catalogId: string; deliveryName?: string; features?: string;
+    mutationFn: async ({ customerId, catalogId, deliveryName, features, unitPrice }: {
+      customerId: string; catalogId: string; deliveryName?: string; features?: string; unitPrice?: number | null;
     }) => {
       const res = await fetch(`/api/customers/${customerId}/catalog`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ catalog_id: catalogId, delivery_name: deliveryName, features }),
+        body: JSON.stringify({ catalog_id: catalogId, delivery_name: deliveryName, features, unit_price: unitPrice }),
       });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
