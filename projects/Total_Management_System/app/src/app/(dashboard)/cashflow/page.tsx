@@ -8,9 +8,8 @@ import { Button } from '@/components/ui/button';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { ArrowDownCircle, ArrowUpCircle, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-const INCOME_CATEGORIES = ['매출입금', '기타입금', '환불수령', '투자금'];
-const EXPENSE_CATEGORIES = ['매입결제', '경비', '세금', '인건비', '임대료', '기타출금'];
+import { useSetting } from '@/hooks/use-settings';
+import { DEFAULT_CASHFLOW_INCOME_CATEGORIES, DEFAULT_CASHFLOW_EXPENSE_CATEGORIES } from '@/lib/utils/setting-defaults';
 
 export default function CashflowPage() {
   const queryClient = useQueryClient();
@@ -18,9 +17,13 @@ export default function CashflowPage() {
   const [from, setFrom] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10));
   const [to, setTo] = useState(now.toISOString().slice(0, 10));
 
+  // 설정값 (미저장 시 기본값 fallback — 기존 hard-coded와 동일)
+  const INCOME_CATEGORIES = useSetting<string[]>('accounting.cashflow_income_categories', DEFAULT_CASHFLOW_INCOME_CATEGORIES);
+  const EXPENSE_CATEGORIES = useSetting<string[]>('accounting.cashflow_expense_categories', DEFAULT_CASHFLOW_EXPENSE_CATEGORIES);
+
   const [txDate, setTxDate] = useState(now.toISOString().slice(0, 10));
   const [txType, setTxType] = useState<'income' | 'expense'>('income');
-  const [txCategory, setTxCategory] = useState('매출입금');
+  const [txCategory, setTxCategory] = useState(INCOME_CATEGORIES[0] || '매출입금');
   const [txAmount, setTxAmount] = useState('');
   const [txMemo, setTxMemo] = useState('');
 
@@ -87,11 +90,11 @@ export default function CashflowPage() {
             <div className="space-y-3">
               {/* 입금/출금 토글 */}
               <div className="flex gap-2">
-                <button onClick={() => { setTxType('income'); setTxCategory('매출입금'); }}
+                <button onClick={() => { setTxType('income'); setTxCategory(INCOME_CATEGORIES[0] || ''); }}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${txType === 'income' ? 'bg-green-600 text-white' : 'bg-neutral-100 text-neutral-500'}`}>
                   입금
                 </button>
-                <button onClick={() => { setTxType('expense'); setTxCategory('매입결제'); }}
+                <button onClick={() => { setTxType('expense'); setTxCategory(EXPENSE_CATEGORIES[0] || ''); }}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${txType === 'expense' ? 'bg-red-500 text-white' : 'bg-neutral-100 text-neutral-500'}`}>
                   출금
                 </button>

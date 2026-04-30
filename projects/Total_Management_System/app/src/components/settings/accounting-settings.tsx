@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, Plus, X } from 'lucide-react';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
+import {
+  DEFAULT_EXPENSE_CATEGORIES,
+  DEFAULT_CASHFLOW_INCOME_CATEGORIES,
+  DEFAULT_CASHFLOW_EXPENSE_CATEGORIES,
+} from '@/lib/utils/setting-defaults';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -21,6 +26,10 @@ export default function AccountingSettings({ settings, onSave, saving }: TabProp
   const [vatRate, setVatRate] = useState(10);
   const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
   const [newCat, setNewCat] = useState('');
+  const [cashflowIncomeCats, setCashflowIncomeCats] = useState<string[]>([]);
+  const [newCfIncome, setNewCfIncome] = useState('');
+  const [cashflowExpenseCats, setCashflowExpenseCats] = useState<string[]>([]);
+  const [newCfExpense, setNewCfExpense] = useState('');
   const [bankAccounts, setBankAccounts] = useState<BankAccountItem[]>([]);
   const [taxType, setTaxType] = useState('general');
   const [revenueBasis, setRevenueBasis] = useState('sale_date');
@@ -30,7 +39,9 @@ export default function AccountingSettings({ settings, onSave, saving }: TabProp
   useEffect(() => {
     setBusinessInfo(parse(settings['business.info'], businessInfo));
     setVatRate(parse(settings['accounting.vat_rate'], 10));
-    setExpenseCategories(parse(settings['accounting.expense_categories'], ['택배비', '포장재', '교통비', '사무용품', '식대', '소모품', '임대료', '인건비', '기타']));
+    setExpenseCategories(parse(settings['accounting.expense_categories'], DEFAULT_EXPENSE_CATEGORIES));
+    setCashflowIncomeCats(parse(settings['accounting.cashflow_income_categories'], DEFAULT_CASHFLOW_INCOME_CATEGORIES));
+    setCashflowExpenseCats(parse(settings['accounting.cashflow_expense_categories'], DEFAULT_CASHFLOW_EXPENSE_CATEGORIES));
     setBankAccounts(parse(settings['accounting.bank_accounts'], []));
     setTaxType(parse(settings['accounting.tax_type'], 'general'));
     setRevenueBasis(parse(settings['accounting.revenue_basis'], 'sale_date'));
@@ -43,6 +54,8 @@ export default function AccountingSettings({ settings, onSave, saving }: TabProp
       { key: 'business.info', value: businessInfo },
       { key: 'accounting.vat_rate', value: vatRate },
       { key: 'accounting.expense_categories', value: expenseCategories },
+      { key: 'accounting.cashflow_income_categories', value: cashflowIncomeCats },
+      { key: 'accounting.cashflow_expense_categories', value: cashflowExpenseCats },
       { key: 'accounting.bank_accounts', value: bankAccounts },
       { key: 'accounting.tax_type', value: taxType },
       { key: 'accounting.revenue_basis', value: revenueBasis },
@@ -90,6 +103,44 @@ export default function AccountingSettings({ settings, onSave, saving }: TabProp
             className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm"
             onKeyDown={(e) => { if (e.key === 'Enter' && newCat.trim()) { setExpenseCategories([...expenseCategories, newCat.trim()]); setNewCat(''); } }} />
           <button onClick={() => { if (newCat.trim()) { setExpenseCategories([...expenseCategories, newCat.trim()]); setNewCat(''); } }}
+            className="px-2 rounded-lg bg-neutral-100 hover:bg-neutral-200"><Plus size={14} /></button>
+        </div>
+      </Field>
+
+      {/* 2-B. 입출금 — 입금 카테고리 */}
+      <Field label="입출금 — 입금 카테고리" desc="입출금 페이지에서 입금 등록 시 선택 가능한 카테고리.">
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {cashflowIncomeCats.map((c, i) => (
+            <span key={i} className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-100 rounded-lg">
+              {c}
+              <button onClick={() => setCashflowIncomeCats(cashflowIncomeCats.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input value={newCfIncome} onChange={(e) => setNewCfIncome(e.target.value)} placeholder="새 입금 카테고리"
+            className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm"
+            onKeyDown={(e) => { if (e.key === 'Enter' && newCfIncome.trim()) { setCashflowIncomeCats([...cashflowIncomeCats, newCfIncome.trim()]); setNewCfIncome(''); } }} />
+          <button onClick={() => { if (newCfIncome.trim()) { setCashflowIncomeCats([...cashflowIncomeCats, newCfIncome.trim()]); setNewCfIncome(''); } }}
+            className="px-2 rounded-lg bg-neutral-100 hover:bg-neutral-200"><Plus size={14} /></button>
+        </div>
+      </Field>
+
+      {/* 2-C. 입출금 — 출금 카테고리 */}
+      <Field label="입출금 — 출금 카테고리" desc="입출금 페이지에서 출금 등록 시 선택 가능한 카테고리.">
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {cashflowExpenseCats.map((c, i) => (
+            <span key={i} className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-100 rounded-lg">
+              {c}
+              <button onClick={() => setCashflowExpenseCats(cashflowExpenseCats.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input value={newCfExpense} onChange={(e) => setNewCfExpense(e.target.value)} placeholder="새 출금 카테고리"
+            className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm"
+            onKeyDown={(e) => { if (e.key === 'Enter' && newCfExpense.trim()) { setCashflowExpenseCats([...cashflowExpenseCats, newCfExpense.trim()]); setNewCfExpense(''); } }} />
+          <button onClick={() => { if (newCfExpense.trim()) { setCashflowExpenseCats([...cashflowExpenseCats, newCfExpense.trim()]); setNewCfExpense(''); } }}
             className="px-2 rounded-lg bg-neutral-100 hover:bg-neutral-200"><Plus size={14} /></button>
         </div>
       </Field>

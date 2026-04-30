@@ -23,3 +23,13 @@ export const DEFAULT_RFM = {
 export const DEFAULT_EXPENSE_CATEGORIES = [
   '택배비', '포장재', '교통비', '사무용품', '식대', '소모품', '임대료', '인건비', '기타',
 ];
+
+/** 현금흐름(cashflow) 입금 카테고리 기본값 */
+export const DEFAULT_CASHFLOW_INCOME_CATEGORIES = [
+  '매출입금', '기타입금', '환불수령', '투자금',
+];
+
+/** 현금흐름(cashflow) 출금 카테고리 기본값 */
+export const DEFAULT_CASHFLOW_EXPENSE_CATEGORIES = [
+  '매입결제', '경비', '세금', '인건비', '임대료', '기타출금',
+];
