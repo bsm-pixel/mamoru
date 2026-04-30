@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { sendAdminEmail } from '@/lib/notification/email';
 import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
+import { geocodeForConsultation } from '@/lib/kakao/geocode';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -11,27 +12,9 @@ const CORS_HEADERS = {
 };
 
 const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting'; // Make 시나리오가 https:// 추가
-const KAKAO_REST_KEY = process.env.KAKAO_REST_API_KEY || '';
 
 export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
-}
-
-/** 카카오 REST API로 주소→좌표 변환 (GAS geocodeAddress_ 대체) */
-async function geocodeAddress(query: string): Promise<{ lat: number; lng: number } | null> {
-  if (!KAKAO_REST_KEY || !query) return null;
-  try {
-    const url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(query)}`;
-    const res = await fetch(url, {
-      headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` },
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    const doc = json.documents?.[0];
-    if (doc?.y && doc?.x) return { lat: parseFloat(doc.y), lng: parseFloat(doc.x) };
-  } catch { /* geocoding 실패해도 접수는 계속 */ }
-  return null;
 }
 
 /** POST /api/consultation/public/submit — 고객 상담 접수 (비인증, CORS) */
@@ -96,11 +79,12 @@ export async function POST(req: NextRequest) {
     const timePrefsArr = Array.isArray(timePrefs) ? timePrefs : (timePrefs ? String(timePrefs).split(',').filter(Boolean) : []);
     const fullAddress = address || (addressRoad ? `${addressRoad} ${addressDetail || ''}`.trim() : '');
 
-    // 좌표: 프론트에서 넘어오면 사용, 없으면 서버에서 geocoding (GAS geocodeAddress_ 대체)
+    // 좌표: 프론트에서 넘어오면 사용, 없으면 서버에서 geocoding (lib/kakao/geocode 공통 helper)
+    // ⚠️ 회귀 방지: addressRoad만 1단계에 사용. fullAddress(상세 포함) 합치면 매칭 실패.
     let lat = addressLat ? parseFloat(addressLat) : null;
     let lng = addressLng ? parseFloat(addressLng) : null;
-    if ((!lat || !lng) && fullAddress) {
-      const geo = await geocodeAddress(fullAddress);
+    if ((!lat || !lng) && addressRoad) {
+      const geo = await geocodeForConsultation(addressRoad, addressDetail);
       if (geo) { lat = geo.lat; lng = geo.lng; }
     }
 

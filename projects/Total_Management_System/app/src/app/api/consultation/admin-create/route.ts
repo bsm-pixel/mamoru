@@ -16,37 +16,10 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
+import { geocodeForConsultation } from '@/lib/kakao/geocode';
 import crypto from 'crypto';
 
-const KAKAO_REST_KEY = process.env.KAKAO_REST_API_KEY || '';
 const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting';
-
-/** 주소 → 좌표 변환 (출장 지도 표시용)
- *  1차: address.json (도로명/지번 정확 매칭) → 카카오에 등록된 공식 주소만 인식
- *  2차: keyword.json (장소·건물·상호명) → 신축/오래된 주소도 보다 유연하게 매칭
- */
-async function geocodeAddress(query: string): Promise<{ lat: number; lng: number } | null> {
-  if (!KAKAO_REST_KEY || !query) return null;
-
-  async function tryEndpoint(path: string): Promise<{ lat: number; lng: number } | null> {
-    try {
-      const res = await fetch(`https://dapi.kakao.com${path}?query=${encodeURIComponent(query)}`, {
-        headers: { Authorization: `KakaoAK ${KAKAO_REST_KEY}` },
-        signal: AbortSignal.timeout(3000),
-      });
-      if (!res.ok) return null;
-      const json = await res.json();
-      const doc = json.documents?.[0];
-      if (doc?.y && doc?.x) return { lat: parseFloat(doc.y), lng: parseFloat(doc.x) };
-    } catch { /* 다음 fallback으로 진행 */ }
-    return null;
-  }
-
-  return (
-    (await tryEndpoint('/v2/local/search/address.json')) ||
-    (await tryEndpoint('/v2/local/search/keyword.json'))
-  );
-}
 
 export async function POST(req: NextRequest) {
   // 관리자 인증 필수
@@ -120,13 +93,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── 좌표 (출장만) ────────────────────────────────────────
-    // 카카오 주소검색 API는 공식 주소(도로명/지번)만 인식. 상세주소(OO빌딩 3층 등)
-    // 가 붙으면 매칭 실패 → null 반환 → 지도 핀 미표시 문제. addressRoad만 전달.
+    // ── 좌표 (출장만) — lib/kakao/geocode 공통 helper 사용 ──
     let lat: number | null = null;
     let lng: number | null = null;
     if (type === 'field_request' && addressRoad) {
-      const geo = await geocodeAddress(addressRoad.trim());
+      const geo = await geocodeForConsultation(addressRoad, addressDetail);
       if (geo) {
         lat = geo.lat;
         lng = geo.lng;

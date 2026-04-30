@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultations } from '@/hooks/use-consultations';
@@ -58,6 +59,29 @@ export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect, acti
   const consultations = (data?.consultations || []).filter(
     (c) => c.latitude && c.longitude && c.status !== 'cancelled'
   );
+
+  // 자동 backfill: 좌표 NULL인 활성 출장요청 발견 시 백그라운드로 채우기
+  // (사장님이 지도 페이지 한 번 열기만 하면 NULL 건 자동 복구 — 회귀 안전망)
+  const queryClient = useQueryClient();
+  const backfillTriggeredRef = useRef(false);
+  useEffect(() => {
+    if (backfillTriggeredRef.current) return;
+    if (!data?.consultations || data.consultations.length === 0) return;
+    const missingCoords = data.consultations.filter(
+      (c) => (!c.latitude || !c.longitude) && c.status !== 'cancelled' && c.address_road
+    );
+    if (missingCoords.length === 0) return;
+
+    backfillTriggeredRef.current = true;
+    fetch('/api/consultation/backfill-coords', { method: 'POST' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.updated && d.updated > 0) {
+          queryClient.invalidateQueries({ queryKey: ['consultations'] });
+        }
+      })
+      .catch(() => { /* 조용히 실패 — 핀 안 꽂혀도 카드/리스트는 정상 */ });
+  }, [data, queryClient]);
 
   // SDK 로드
   useEffect(() => {
