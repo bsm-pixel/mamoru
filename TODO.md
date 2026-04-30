@@ -1,7 +1,29 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-30 심야 +3 (075 사장님 보고 3건 fix + 즉각 반영 풀 연동 강화)
+> 최종 수정: 2026-05-01 (대시보드 5/1 첫날 KST 타임존 버그 통합 fix + Root-First 지침 신설)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
+
+---
+
+## 📅 2026-05-01 작업 이력
+
+### 통합 수정 — 상담/캘린더/대시보드 KST 정합성
+- ✅ 상담 취소/삭제 안전화 (consultation/[id] DELETE — 이력 침묵 제거 + errMsg 통일)
+- ✅ 클라이언트 에러 직렬화 통일 (use-consultations 7개 mutation)
+- ✅ 출장 흐름 캘린더 동기화 일관성 (cancel/resched/suggest 모두 await + errMsg)
+- ✅ 입출금 카테고리 설정화 + 회계 흐름도 매뉴얼 보강
+- ✅ 076 RPC KST timezone fix (대시보드 월 시작이 UTC라 4월 데이터 합산되던 버그)
+- ✅ **클라이언트 toISOString UTC 버그 통합 fix**: useHubStats msd, useSalesStats today/weekStart 등
+  - 원인: `new Date(...).toISOString().slice(0,10)`이 KST 5/1 자정 → '2026-04-30'으로 잘못 변환
+  - 결과: 4/30자 deliveries 23만원이 5월 매출에 합산됨
+  - 수정: `lib/utils/format.ts`에 `toLocalDateString(d)` 헬퍼 신설 + 모든 핵심 위치 교체
+
+### 새 지침 (CLAUDE.md + memory)
+- ✅ **Root-First 원칙**: CLAUDE.md 1.5섹션 신설 — 표면 패치 금지, Phase 1~5 절차 강제
+- 사장님 강조: 한 번 수정으로 깔끔히 끝나야 함. 표면만 보고 끝내지 말고 뿌리부터 모든 경로 훑기
+
+### 남은 잠재 이슈 (낮음, 입력 폼 default — 사용자 직접 선택 가능)
+- [ ] `toISOString().slice(0, 10)` 패턴 78곳 (대부분 입력 폼 기본값) — 자정~09시 사이 새 입력 시 어제 날짜로 default 잡힐 수 있음. 별도 작업으로 분리 (회귀 위험 격리).
 
 ---
 
