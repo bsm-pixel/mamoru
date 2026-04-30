@@ -1,5 +1,52 @@
 # 상담관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-29 (리뷰 요청·약속 추적 — 자동/수동 모드 통합 + 약속 토글 + reviews/submit 자동 매칭)
+> 최종 업데이트: 2026-04-30 (GAS 폐기 + 리마인더 템플릿 매장/출장 분기 fix + 마이그 071)
+
+---
+
+## 2026-04-30 — GAS 의존 폐기 + 리마인더 회귀 fix
+
+### GAS 트리거 OFF 완료
+사장님 Apps Script 'MAMORU_Consulting' 프로젝트의 트리거 2개 모두 삭제:
+- `sendReminders_` (15분 cron, 시트 기반 24h/2h 리마인더) — **삭제**
+- `cleanupExpiredHolds_` (1시간 cron, 시트+캘린더 HOLD 정리) — **삭제**
+
+GAS 코드(consulting/Code.gs, supabase-sync.gs, Total_Management_System/gas/consultation-sync.gs)는 1주 모니터링 후 archive 폴더로 이동 예정(완전 삭제 X).
+
+### 리마인더 흐름 — TMS 단일 운영
+```
+Vercel Cron (10분 간격) → GET /api/cron/send-reminders
+  → consultations WHERE status='confirmed' AND visit_date BETWEEN today AND tomorrow
+  → 24h 윈도우 (2~24h 전) + remind_24h_at IS NULL → 마킹 후 sendNotification
+  → 2h 윈도우 (0.5~2h 전) + remind_2h_at IS NULL → 마킹 후 sendNotification
+  → Make webhook → Solapi 알림톡
+```
+
+### 리마인더 템플릿 매핑 (Make 시나리오 필터와 정확히 일치)
+| consultation_type | 24h 템플릿 | 2h 템플릿 |
+|------------------|----------|---------|
+| `field_request` (출장) | `field_remind_24h` | `field_remind_2h` |
+| `store_visit` (매장) | `remind24` | `remind2` |
+
+⚠️ **회귀 fix 이력**: 2026-04-30 이전 코드는 매장/출장 모두 `field_remind_24h` / `field_remind_2h` 호출 → 매장 고객 메시지 발송 불일치 가능성. enum에 `remind24` / `remind2` 추가 + 분기 fix.
+
+### 마이그 071 — remind_24h_at / remind_2h_at 컬럼 추가
+TMS cron이 이미 사용 중이었던 컬럼이 DB에 누락 상태였음 → 마이그 071로 추가:
+```sql
+ALTER TABLE consultations
+  ADD COLUMN IF NOT EXISTS remind_24h_at TIMESTAMPTZ NULL,
+  ADD COLUMN IF NOT EXISTS remind_2h_at  TIMESTAMPTZ NULL;
+CREATE INDEX idx_consult_reminder_pending
+  ON consultations (visit_date, visit_time)
+  WHERE status = 'confirmed';
+```
+
+### 폐기된 흐름 (참고용)
+~~Google Sheets '상담접수' → onFormSubmit → /api/consultation/sync → Supabase~~
+- 이미 onFormSubmit 트리거 없었음 (사장님 스크린샷 확인)
+- 모든 신규 접수는 `/api/consultation/public/submit`으로 직접 들어옴
+- consultation-sync.gs 파일은 archive 예정 (코드 보존)
+
+상세: `memory/feedback_gas_deprecated.md` 참조
 
 ---
 

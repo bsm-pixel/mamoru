@@ -88,6 +88,8 @@ export type NotifyTemplate =
   | 'field_rescheduled'   // 출장 일정 변경
   | 'field_remind_24h'    // 출장 24h 리마인드
   | 'field_remind_2h'     // 출장 2h 리마인드
+  | 'remind24'            // 매장방문 24h 리마인드 (Make 필터: template equal to remind24)
+  | 'remind2'             // 매장방문 2h 리마인드 (Make 필터: template equal to remind2)
   | 'field_delayed'       // 출장 지연 안내
   | 'talk_received'       // 톡상담 접수 안내
   | 'talk_ready'          // 톡상담 시작 안내
@@ -114,6 +116,8 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   field_rescheduled: 'FIELD_RESCHEDULED',
   field_remind_24h: 'FIELD_REMIND_24H',
   field_remind_2h: 'FIELD_REMIND_2H',
+  remind24: 'REMIND_24H',
+  remind2: 'REMIND_2H',
   field_delayed: 'FIELD_DELAYED',
   talk_received: 'TALK_RECEIVED',
   talk_ready: 'TALK_READY',

@@ -249,6 +249,8 @@ export interface Database {
           review_promised_at: string | null;     // 067: 리뷰 약속 시점
           review_request_sent_at: string | null; // 067: 후기 요청 발송 시점
           review_submitted_at: string | null;    // 067: 리뷰 작성 완료 시점
+          remind_24h_at: string | null;          // 071: 24h 리마인더 발송 시각
+          remind_2h_at: string | null;           // 071: 2h 리마인더 발송 시각
           received_at: string;
           created_at: string;
           updated_at: string;
@@ -301,6 +303,8 @@ export interface Database {
           review_promised_at?: string | null;
           review_request_sent_at?: string | null;
           review_submitted_at?: string | null;
+          remind_24h_at?: string | null;
+          remind_2h_at?: string | null;
           received_at?: string;
         };
       };
