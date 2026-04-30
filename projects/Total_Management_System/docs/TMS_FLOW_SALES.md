@@ -1,5 +1,48 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-30 (심야) — 고객 자동 매칭/생성 강화 + 후기 sale 단일 진입점 + 070 link
+> 최종 업데이트: 2026-04-30 (심야 +1) — B2B 납품처 카탈로그 + 납품명 자동 입력 (073)
+
+## 2026-04-30 (심야 +1) — B2B 납품처 카탈로그 + 납품명 자동 입력 (073)
+
+### 변경 배경
+사장님 결정: 매입처(supplier)에 있는 발주명 시스템을 B2B 납품처(dealer/academy)에 mirror로 복제. dealer A는 "MMR-150 BL", dealer B는 "마모루 150" 등 같은 제품을 납품처마다 다른 이름으로 부름 → 송장에 그 이름이 박혀서 출력.
+
+### 구현
+**마이그 073 — `customer_product_catalog` 테이블** (supplier_product_catalog와 별개):
+- customer_id × product_id UNIQUE
+- delivery_name (송장/명세서 출력용 납품명)
+- features (규격/특이사항)
+
+**API**: `/api/customers/[id]/catalog` GET/POST/PATCH/DELETE (supplier API mirror)
+**Hook**: `useCustomerCatalog`, `useAddToCustomerCatalog`, `useUpdateCustomerCatalog`, `useRemoveFromCustomerCatalog`
+**UI**: `/suppliers` 페이지 dealer/academy 탭에 "납품품목" 섹션 노출 (`CustomerCatalogSection` 컴포넌트)
+
+### 자동 입력 흐름
+```
+/sales/new — 사장님이 customer 선택
+  ↓ useCustomerCatalog(customer.id) fetch
+  ↓ catalog에 등록된 product 매핑 (delivery_name)
+저장 시 cart.map → offline_sale_items.product_name 결정:
+  1순위: catalog.delivery_name (해당 customer의 등록된 납품명)
+  2순위: price_groups display_name (customer_type별, 기존 fallback)
+  3순위: product.name (기본)
+  ↓
+INSERT offline_sale_items
+  ↓
+모든 출력에 자동 반영:
+  - 송장 (ALPS goodsName) — ship/route.ts가 product_name 그대로 사용
+  - 거래명세서 (ReceiptModal)
+  - 준비표 (PrepSheetModal)
+```
+
+→ 저장 시점 한 곳만 정확하면 모든 출력에 자동 반영. 송장 인쇄 코드 변경 X.
+
+### 회귀 안전
+- supplier 흐름 0 변경 (별도 테이블, 별도 API, 별도 UI)
+- catalog 없는 dealer/academy → 기존 fallback (price_groups display_name → product.name)
+- retail customer → catalog 미사용
+- 이미 저장된 sale → product_name 보존 (catalog 변경되어도 거래 당시 이름 유지)
+
+---
 
 ## 2026-04-30 (심야) — 고객 자동 매칭/생성과 판매 흐름 통합
 

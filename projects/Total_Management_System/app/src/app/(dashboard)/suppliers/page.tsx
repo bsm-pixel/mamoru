@@ -15,6 +15,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Building2, Users, GraduationCap, Plus, X, Pencil, Package, Save, Trash2, Search, Printer } from 'lucide-react';
 import { CatalogPrintModal } from '@/components/purchasing/catalog-print-modal';
 import { CollectPaymentModal } from '@/components/suppliers/collect-payment-modal';
+import { CustomerCatalogSection } from '@/components/customers/customer-catalog-section';
 import { useSupplierCatalog, useAddToCatalog, useUpdateCatalog, useRemoveFromCatalog } from '@/hooks/use-purchasing';
 import { useProducts } from '@/hooks/use-sales';
 import toast from 'react-hot-toast';
@@ -206,8 +207,8 @@ function PartnerDetailPanel({ partner: p, tabConfig }: { partner: Customer; tabC
         </button>
       </div>
 
-      {/* 매입처일 때 탭 바 */}
-      {p.customer_type === 'supplier' && (
+      {/* 거래처 종류별 탭 바 (supplier=매입품목, dealer/academy=납품품목) */}
+      {(p.customer_type === 'supplier' || p.customer_type === 'dealer' || p.customer_type === 'academy') && (
         <div className="flex border-b border-neutral-100">
           <button
             onClick={() => setDetailTab('info')}
@@ -216,13 +217,18 @@ function PartnerDetailPanel({ partner: p, tabConfig }: { partner: Customer; tabC
           <button
             onClick={() => setDetailTab('catalog')}
             className={`flex-1 py-2.5 text-xs font-semibold text-center transition flex items-center justify-center gap-1 ${detailTab === 'catalog' ? 'text-neutral-900 border-b-2 border-neutral-900' : 'text-neutral-400'}`}
-          ><Package size={12} />매입품목</button>
+          ><Package size={12} />{p.customer_type === 'supplier' ? '매입품목' : '납품품목'}</button>
         </div>
       )}
 
-      {/* 매입품목 탭 */}
+      {/* 매입품목 탭 (supplier) */}
       {detailTab === 'catalog' && p.customer_type === 'supplier' && (
         <SupplierCatalogSection supplierId={p.id} supplierName={p.company_name || p.name} />
+      )}
+
+      {/* 납품품목 탭 (dealer / academy) — 073 */}
+      {detailTab === 'catalog' && (p.customer_type === 'dealer' || p.customer_type === 'academy') && (
+        <CustomerCatalogSection customerId={p.id} />
       )}
 
       {/* 기본정보 탭 */}

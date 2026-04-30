@@ -1,6 +1,30 @@
 # 고객 관리 프로세스 흐름도
 
-> 최종 수정: 2026-04-30 (심야) — phone 기반 자동 매칭/생성 helper 신설 (`lib/customer/match-or-create.ts`)
+> 최종 수정: 2026-04-30 (심야 +1) — B2B 납품처 카탈로그 (073) + phone 기반 자동 매칭
+
+---
+
+## 2026-04-30 (심야 +1) — B2B 납품처 카탈로그 (073)
+
+### 핵심
+dealer/academy 거래처에 **납품품목 사전 등록** 가능. 각 납품처별 납품명(delivery_name) 별도 설정 → 판매 작성 시 자동 입력 → 송장 출력에 그 이름 박힘.
+
+### 사장님 운영 흐름
+1. /suppliers → 딜러 또는 아카데미 탭 → 거래처 선택 → "납품품목" 탭 클릭
+2. "제품에서 불러오기" → 제품 선택 → catalog 항목 추가
+3. 각 항목에 **납품명** + **특징** 입력 (저장)
+4. 이후 그 거래처에 판매할 때 자동으로 납품명이 product_name으로 들어감
+
+### 컴포넌트
+- 신규 컴포넌트: `app/src/components/customers/customer-catalog-section.tsx`
+- /suppliers 페이지 PartnerDetailPanel에서 customer_type='dealer'/'academy'일 때 노출
+
+### Helper 인프라
+- 마이그 073: `customer_product_catalog` 테이블
+- API: `/api/customers/[id]/catalog`
+- Hook: `useCustomerCatalog`, `useAddToCustomerCatalog`, `useUpdateCustomerCatalog`, `useRemoveFromCustomerCatalog`
+
+상세: `docs/TMS_FLOW_SALES.md` "2026-04-30 심야 +1" 섹션
 
 ---
 

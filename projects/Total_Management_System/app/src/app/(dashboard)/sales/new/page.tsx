@@ -14,6 +14,7 @@ import { CustomerCreateModal } from '@/components/customers/customer-create-moda
 import { SerialPicker } from '@/components/sales/serial-picker';
 import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
 import { usePriceGroups } from '@/hooks/use-price-groups';
+import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
 import { TagSelector } from '@/components/shared/tag-selector';
 import { useSetting } from '@/hooks/use-settings';
 import type { Product } from '@/lib/supabase/types';
@@ -54,6 +55,14 @@ function NewSaleContent() {
   const [saleDate, setSaleDate] = useState(new Date().toISOString().slice(0, 10));
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
+
+  // 073: B2B 납품처 catalog (customer별 납품명 자동 입력용)
+  const { data: customerCatalogData } = useCustomerCatalog(selectedCustomer?.id);
+  const catalogByProductId = new Map(
+    (customerCatalogData?.catalog || [])
+      .filter((c) => c.delivery_name?.trim())
+      .map((c) => [c.product_id, c.delivery_name])
+  );
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('card');
@@ -206,7 +215,11 @@ function NewSaleContent() {
       },
       items: cart.map((item) => ({
         product_id: item.product?.id || undefined,
-        product_name: item.product ? getProductDisplayName(item.product, customerType, priceGroups) : (item.customName || '임시 제품'),
+        // 073: catalog delivery_name 우선 사용 (선택된 customer의 catalog에 등록된 제품이면)
+        // → 없으면 기존 fallback (price_groups display_name 또는 product.name)
+        product_name: item.product
+          ? (catalogByProductId.get(item.product.id) || getProductDisplayName(item.product, customerType, priceGroups))
+          : (item.customName || '임시 제품'),
         sku: item.product?.sku || undefined,
         category: item.product?.category || undefined,
         quantity: item.quantity,
