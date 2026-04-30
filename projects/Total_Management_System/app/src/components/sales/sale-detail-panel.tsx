@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Link from 'next/link';
 import { useQueryClient as __useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { Badge } from '@/components/ui/badge';
@@ -298,7 +299,21 @@ export function SaleDetailPanel({ saleId }: Props) {
         )}
       </div>
 
-      {/* 067: 리뷰 관리 카드 (취소 외 상태에서 표시) — 070: linkedConsultation 있으면 mirror 모드 */}
+      {/* 070: 출장/매장상담 link 정보 칩 — 사장님이 이 판매가 어떤 상담에서 시작됐는지 한눈에 확인 */}
+      {!s.cancelled_at && data?.linkedConsultation && (
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500 px-1">
+          <span>이 판매는 출장/매장상담</span>
+          <Link
+            href={`/consultations/${data.linkedConsultation.id}`}
+            className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-mono font-semibold hover:bg-blue-100 transition"
+          >
+            {data.linkedConsultation.unique_id}
+          </Link>
+          <span>에서 시작됨</span>
+        </div>
+      )}
+
+      {/* 067: 리뷰 관리 카드 — 후기는 sale source 단일 진입점 (사장님이 review_type 자유 선택) */}
       {!s.cancelled_at && (
         <ReviewManagementCard
           source="sale"
@@ -309,7 +324,6 @@ export function SaleDetailPanel({ saleId }: Props) {
           requestSentAt={((s as { review_request_sent_at?: string | null }).review_request_sent_at) ?? ((s as { review_requested_at?: string | null }).review_requested_at ?? null)}
           submittedAt={(s as { review_submitted_at?: string | null }).review_submitted_at ?? null}
           hasRepairItem={data?.items.some((it) => String((it as Record<string, unknown>).category || '') === 'RS') ?? false}
-          linkedConsultation={data?.linkedConsultation ?? null}
           onChanged={() => queryClient.invalidateQueries({ queryKey: ['sale', saleId] })}
         />
       )}

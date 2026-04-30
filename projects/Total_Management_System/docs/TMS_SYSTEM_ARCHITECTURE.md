@@ -1,6 +1,6 @@
 # MAMORU TMS — 시스템 아키텍처 & 프로세스 흐름도
 
-> 최종 수정: 2026-04-30 | GAS 의존 전면 폐기 + 출장상담→판매 link 인프라(070) + 매장 리마인더 회귀 fix(071)
+> 최종 수정: 2026-04-30 (밤) | **상담관리 리뷰 연동 전면 제거 — 후기는 sale 단일 진입점** + GAS 폐기 + 070 link + 071 매장 리마인더
 
 ## 📌 운영 도구 정책 (2026-04-30 확정)
 - **AppSheet**: 폐기 (2026-02-26). TMS가 전면 대체.
@@ -92,8 +92,8 @@
 | 매장 24h 리마인더 (071, 2026-04-30) | `remind24` | REMIND_24H |
 | 매장 2h 리마인더 (071, 2026-04-30) | `remind2` | REMIND_2H |
 | 취소 | `cancelled` / `field_cancelled` | CANCELLED / FIELD_CANCELLED |
-| 상담 완료 | `review_request` | REVIEW_REQUEST |
 | 톡상담 시작 | `talk_ready` | TALK_READY |
+| ~~상담 완료 → 후기 요청~~ | ~~`review_request`~~ | **2026-04-30 제거** — 후기는 sale source 단일 진입점 |
 
 ### 파일 매핑
 
@@ -260,14 +260,16 @@ TMS에서 판매 입력 (/sales/new)
 출장/매장상담 상세 → "판매로 처리" CTA
   → /sales/new?from_consultation={id} → 고객 정보 prefill
   → 저장 시 offline_sales.source_consultation_id 기록
-  → ReviewManagementCard mirror 모드 자동 전환 (원본 상담 한 곳에서만 후기 관리)
+  → sale 상세에 linkedConsultation 정보 칩 표시 (원본 상담 가시화)
 
 기존 sale 수동 link: ReviewManagementCard 아래 "🔗 이 판매를 출장/매장상담과 연결"
   → LinkConsultationModal → 같은 phone 상담 목록 → 선택
   → PATCH /api/sales/{id} action='link_consultation'
   → phone 일치 검증 후 link
 ```
-**효과**: 한 거래(상담→판매)가 시스템상 두 record로 분리되어 후기 약속/발송이 중복되던 위험 0. 약속 대기 탭에서 link sale 자동 제외.
+**효과**: 사장님 입력 부담 절감 + 양방향 link 가시화 (sale ↔ consultation).
+
+**리뷰 연동 (2026-04-30 밤)**: 상담관리에서 후기 진입점 전면 제거. 후기 약속/발송은 sale 또는 repair source에서만. linkedConsultation은 정보 가시화 용도(mirror 박스 제거).
 
 상세: `docs/TMS_FLOW_SALES.md` 070 섹션
 

@@ -40,33 +40,9 @@ export async function GET(req: NextRequest) {
 
     const items: Item[] = [];
 
-    // 1) consultations — phone_normalized 사용
-    if (excludeSource !== 'consultation' || true) {
-      let q = db.from('consultations')
-        .select('id, unique_id, consultation_type, review_promised_at, review_request_sent_at, review_submitted_at')
-        .eq('phone_normalized', phoneNorm)
-        .or('review_promised_at.not.is.null,review_request_sent_at.not.is.null,review_submitted_at.not.is.null')
-        .limit(10);
-      if (excludeSource === 'consultation' && excludeId) q = q.neq('id', excludeId);
-      const { data: rows } = await q;
-      for (const r of (rows || [])) {
-        const typeLabel =
-          r.consultation_type === 'store_visit' ? '매장상담'
-          : r.consultation_type === 'field_request' ? '출장상담'
-          : '톡상담';
-        items.push({
-          source: 'consultation',
-          id: r.id,
-          displayId: r.unique_id,
-          typeLabel,
-          promisedAt: r.review_promised_at,
-          requestSentAt: r.review_request_sent_at,
-          submittedAt: r.review_submitted_at,
-        });
-      }
-    }
+    // 후기 활동은 sale + repair source만 (consultation은 더 이상 리뷰 진입점 X — 2026-04-30 IA 정리)
 
-    // 2) repairs — phone_normalized 사용
+    // 1) repairs — phone_normalized 사용
     {
       let q = db.from('repairs')
         .select('id, as_id, review_promised_at, review_request_sent_at, review_submitted_at')

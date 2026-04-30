@@ -1,7 +1,24 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-30 | 070 출장상담→판매 link 인프라 + 리뷰 mirror 모드 + 수동 link 모달
+> 최종 업데이트: 2026-04-30 (밤) | **후기는 판매(sale) 단일 진입점** + 070 출장상담→판매 link 인프라 + linkedConsultation 정보 칩
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §5, [TMS_PROCESS_MAP.md](TMS_PROCESS_MAP.md) 참조
+
+## 2026-04-30 (밤) — 리뷰 진입점 단일화
+
+상담관리 리뷰 연동이 전면 제거되어, **후기 약속/발송은 판매(sale) 또는 복원수리(repair) source에서만** 진행. 사장님이 sale 상세의 ReviewManagementCard에서 review_type을 자유롭게 선택(상담/복원수리/제품구매) → 솔라피 알림톡 정상 발송 → 후기 페이지가 sale_number를 fallback으로 매칭해 정상 동작.
+
+### linkedConsultation 정보 칩 (070 link의 정보 가치 보존)
+sale에 source_consultation_id가 있을 때 (출장/매장상담에서 시작된 거래), ReviewManagementCard 위에 작은 정보 칩 표시:
+```
+이 판매는 출장/매장상담 [CS-...]에서 시작됨
+```
+클릭 시 원본 상담 상세로 이동. mirror 박스(이전) 제거 — 정보 칩만.
+
+### 양방향 가시화
+- sale 상세 → 정보 칩으로 원본 상담 표시
+- consultation 상세 → linkedSales 칩으로 후속 판매 표시 (변경 없음)
+
+---
 
 ## 출장/매장상담 → 판매 link 인프라 (070, 2026-04-30 추가)
 

@@ -1,5 +1,48 @@
 # 상담관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-30 (24h 리마인더 등록-방문 간격 가드 + 후기요청 모달 IA 고정)
+> 최종 업데이트: 2026-04-30 (밤) — **상담관리 리뷰 연동 전면 제거. 후기는 판매(sale) 단일 진입점.**
+
+---
+
+## 2026-04-30 (밤) — 상담 리뷰 연동 전면 제거 (IA 단순화)
+
+### 결정 배경
+사장님 운영 현실: 매장방문 후 가위 안 사고 복원수리만 하거나 상담만 받고 가는 등 다양한 경우. 상담에서 후기요청 영역을 만들면 "어떤 후기?"라는 IA 모호함 발생. 한 거래(상담→가위/복원수리)는 거래 record(sale/repair)에서만 후기 관리하는 게 SSOT 친화.
+
+### 제거된 영역
+- **consultation-detail-panel**의 ReviewManagementCard 미노출 (매장/출장/톡상담 모두)
+- **자동 후기요청 발송**: 상담완료 → review_request 알림톡 자동 트리거 제거 (`auto_request_on_completion` 토글도 무효)
+- **약속 대기 탭** (`/reviews`)에서 consultation row 제거
+- **B 칩** (related-activity) consultation 분기 제거
+- **070 mirror 모드** (sale의 ReviewManagementCard) 제거 — sale은 일반 카드만
+
+### 유지된 영역 (통계/이력 가치)
+- DB 컬럼 `consultations.review_promised_at` / `review_request_sent_at` / `review_submitted_at` (NULL로 남거나 auto-match로 자동 채움)
+- `/api/reviews/auto-match` (reviews/submit 시 source_id 매칭으로 자동 기록)
+
+### 후기 흐름 — sale 단일 진입점
+```
+출장/매장상담 → "판매로 처리" CTA → /sales/new prefill (070 link) → sale 저장
+  ↓ (sale 상세에서)
+ReviewManagementCard → "후기 요청 보내기" 모달
+  → review_type 자유 선택 (상담/복원수리/제품구매)
+  → 알림톡 발송 → 후기 페이지 정상 동작
+```
+
+### 매장상담 → 복원수리만 한 케이스
+- TMS에서 매장방문 상담 등록 (그대로)
+- 별도 `/repairs/new`에서 복원수리 record 만들기 (고객 정보 직접 입력)
+- 복원수리 record 카드에서 후기요청 (review_type='repair' 자동 고정)
+- 향후 072 (상담→복원수리 link 인프라)로 입력 부담 절감 가능 (별도 task)
+
+### 양방향 가시화
+- consultation 상세에 linkedSales 칩 (녹색 [OS-...]) — 어떤 판매로 이어졌는지
+- sale 상세에 linkedConsultation 정보 칩 (파란 [CS-...]) — 어떤 상담에서 시작됐는지
+
+### 회귀 안전
+- repair 모듈의 ReviewManagementCard 그대로 (별도 진입점)
+- 070 link 인프라 (CTA / prefill / Modal / PATCH) 모두 유지
+- consultation의 다른 흐름 (cancel/suggest/confirm/캘린더 sync) 0 영향
+- DB 컬럼 보존 (auto-match 동작)
 
 ---
 

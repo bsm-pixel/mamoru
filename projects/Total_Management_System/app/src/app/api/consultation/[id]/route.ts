@@ -4,7 +4,6 @@ import { isValidTransition } from '@/lib/consultation/transitions';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
 import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 import { deleteCalendarEvent } from '@/lib/google/calendar-client';
-import { getServerSetting } from '@/hooks/use-settings';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
 /** 상태→알림 템플릿 매핑 (consultation_type 기반 분기) */
@@ -20,9 +19,7 @@ function getAutoNotifyTemplate(
     if (consultationType === 'talk_consult') return null; // 톡상담은 카톡으로 이미 커뮤니케이션 중 → 알림톡 불필요
     return 'cancelled';
   }
-  if (newStatus === 'completed') {
-    return 'review_request'; // 상담완료 → 리뷰 요청 알림톡 (MAKE_WEBHOOK_URL)
-  }
+  // 2026-04-30: 상담완료 → 리뷰 요청 자동 발송 제거. 후기는 sale source 단일 진입점.
   if (newStatus === 'in_progress' && consultationType === 'talk_consult') {
     return 'talk_ready'; // 톡상담 시작 → 안내 알림톡
   }
@@ -154,58 +151,33 @@ export async function PATCH(
         // Google Calendar 동기화 (await로 완료 보장, 내부에서 예외 모두 캐치)
         sideEffects.push(syncConsultationToCalendar(id));
 
-        // 자동 알림톡 발송 — 상태 변경일 때만
+        // 자동 알림톡 발송 — 상태 변경일 때만 (후기 요청은 더 이상 자동 발송 안 함, sale 단일 진입점)
         const template = statusChanged ? getAutoNotifyTemplate(newStatus, data.consultation_type) : null;
         if (template && data.phone) {
-          // 067: 후기 요청 자동 발송 가드 — 정책 토글 OFF / 약속 ✓ / 이미 발송 시 skip
-          let allowSend = true;
-          if (template === 'review_request') {
-            const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
-            if (!autoEnabled) allowSend = false;
-            else if (data.review_promised_at) allowSend = false;     // 약속 고객은 사장님 수동만
-            else if (data.review_request_sent_at) allowSend = false; // 중복 방지
-          }
-
-          if (allowSend) {
-            const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
-            const typeLabel = data.consultation_type === 'store_visit' ? '매장 방문'
-              : data.consultation_type === 'field_request' ? '출장 요청' : '온라인상담';
-            sideEffects.push(
-              sendNotification({
-                template,
-                phone: data.phone,
-                name: data.name,
-                data: {
-                  id: data.unique_id,
-                  type: typeLabel,
-                  date: data.visit_date || '',
-                  time: data.visit_time || '',
-                  address,
-                  uid: data.unique_id,                 // 리뷰 폼 uid 파라미터
-                  review_type: 'consult',              // 리뷰 폼 type 파라미터
-                  type_label: typeLabel,               // 알림톡 치환 변수
-                  subtype: data.consultation_type || '', // store_visit, field_request, talk_consult
-                  consult_uid: data.unique_id,         // 솔라피 #{consult_uid} 치환용
-                },
-              }).then(async (r) => {
-                if (!r.success) {
-                  console.error('[auto-notify] 발송 실패:', r.error);
-                } else {
-                  console.log('[auto-notify] 발송 성공:', template);
-                  // 067: 후기 요청 자동 발송 성공 시 시각 기록 (중복 방지)
-                  if (template === 'review_request') {
-                    try {
-                      await db.from('consultations')
-                        .update({ review_request_sent_at: new Date().toISOString() })
-                        .eq('id', id);
-                    } catch (e) { console.error('[auto-notify] review_request_sent_at 기록 실패:', e); }
-                  }
-                }
-              })
-            );
-          } else {
-            console.log('[auto-notify] review_request skip (policy/promised/duplicate)');
-          }
+          const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
+          const typeLabel = data.consultation_type === 'store_visit' ? '매장 방문'
+            : data.consultation_type === 'field_request' ? '출장 요청' : '온라인상담';
+          sideEffects.push(
+            sendNotification({
+              template,
+              phone: data.phone,
+              name: data.name,
+              data: {
+                id: data.unique_id,
+                type: typeLabel,
+                date: data.visit_date || '',
+                time: data.visit_time || '',
+                address,
+                uid: data.unique_id,
+                type_label: typeLabel,
+                subtype: data.consultation_type || '',
+                consult_uid: data.unique_id,
+              },
+            }).then((r) => {
+              if (!r.success) console.error('[auto-notify] 발송 실패:', r.error);
+              else console.log('[auto-notify] 발송 성공:', template);
+            })
+          );
         }
 
         if (sideEffects.length > 0) {

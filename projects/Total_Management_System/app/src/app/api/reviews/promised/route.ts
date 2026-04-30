@@ -14,13 +14,8 @@ export async function GET() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
-    const [consultRes, repairRes, saleRes] = await Promise.all([
-      db.from('consultations')
-        .select('id, unique_id, name, phone, consultation_type, review_promised_at, review_request_sent_at')
-        .not('review_promised_at', 'is', null)
-        .is('review_submitted_at', null)
-        .order('review_promised_at', { ascending: false })
-        .limit(100),
+    // 후기 약속/발송은 sale + repair source만 (consultation은 더 이상 리뷰 진입점 X — 2026-04-30 IA 정리)
+    const [repairRes, saleRes] = await Promise.all([
       db.from('repairs')
         .select('id, as_id, name, phone, review_promised_at, review_request_sent_at')
         .not('review_promised_at', 'is', null)
@@ -32,13 +27,12 @@ export async function GET() {
         .not('review_promised_at', 'is', null)
         .is('review_submitted_at', null)
         .is('cancelled_at', null)
-        .is('source_consultation_id', null) // 070: link된 sale은 원본 상담에서 관리 → 제외
         .order('review_promised_at', { ascending: false })
         .limit(100),
     ]);
 
     type Item = {
-      source: 'consultation' | 'repair' | 'sale';
+      source: 'repair' | 'sale';
       id: string;
       displayId: string;
       customerName: string;
@@ -50,22 +44,6 @@ export async function GET() {
 
     const items: Item[] = [];
 
-    for (const c of (consultRes.data || [])) {
-      const typeLabel =
-        c.consultation_type === 'store_visit' ? '매장상담'
-        : c.consultation_type === 'field_request' ? '출장상담'
-        : '톡상담';
-      items.push({
-        source: 'consultation',
-        id: c.id,
-        displayId: c.unique_id,
-        customerName: c.name,
-        customerPhone: c.phone,
-        typeLabel,
-        promisedAt: c.review_promised_at,
-        requestSentAt: c.review_request_sent_at,
-      });
-    }
     for (const r of (repairRes.data || [])) {
       items.push({
         source: 'repair',
