@@ -9,10 +9,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
-import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy } from 'lucide-react';
+import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2 } from 'lucide-react';
 import { PrepSheetModal } from './prep-sheet-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { ReviewManagementCard } from '@/components/reviews/review-management-card';
+import { LinkConsultationModal } from './link-consultation-modal';
 import type { SaleChannel, OfflineSale, OfflineSaleItem, Product } from '@/lib/supabase/types';
 import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
 import { usePriceGroups } from '@/hooks/use-price-groups';
@@ -68,6 +69,7 @@ export function SaleDetailPanel({ saleId }: Props) {
   const [memoValue, setMemoValue] = useState('');
   const [showShipConfirm, setShowShipConfirm] = useState(false);
   const [shipNotify, setShipNotify] = useState(true);
+  const [showLinkConsultation, setShowLinkConsultation] = useState(false);
 
   if (isLoading) {
     return (
@@ -296,7 +298,7 @@ export function SaleDetailPanel({ saleId }: Props) {
         )}
       </div>
 
-      {/* 067: 리뷰 관리 카드 (취소 외 상태에서 표시) */}
+      {/* 067: 리뷰 관리 카드 (취소 외 상태에서 표시) — 070: linkedConsultation 있으면 mirror 모드 */}
       {!s.cancelled_at && (
         <ReviewManagementCard
           source="sale"
@@ -307,7 +309,56 @@ export function SaleDetailPanel({ saleId }: Props) {
           requestSentAt={((s as { review_request_sent_at?: string | null }).review_request_sent_at) ?? ((s as { review_requested_at?: string | null }).review_requested_at ?? null)}
           submittedAt={(s as { review_submitted_at?: string | null }).review_submitted_at ?? null}
           hasRepairItem={data?.items.some((it) => String((it as Record<string, unknown>).category || '') === 'RS') ?? false}
+          linkedConsultation={data?.linkedConsultation ?? null}
           onChanged={() => queryClient.invalidateQueries({ queryKey: ['sale', saleId] })}
+        />
+      )}
+
+      {/* 070: 수동 link 액션 — link 없는 sale + phone 있을 때만 노출 */}
+      {!s.cancelled_at && !data?.linkedConsultation && s.customer_phone && (
+        <button
+          type="button"
+          onClick={() => setShowLinkConsultation(true)}
+          className="w-full flex items-center justify-center gap-1.5 text-[11px] text-neutral-500 hover:text-blue-600 py-1.5 transition"
+        >
+          <Link2 size={11} />
+          이 판매를 출장/매장상담과 연결
+        </button>
+      )}
+
+      {/* 070: link 있는 sale은 해제 옵션도 제공 (오링크 복구) */}
+      {!s.cancelled_at && data?.linkedConsultation && (
+        <button
+          type="button"
+          onClick={async () => {
+            if (!window.confirm('상담 연결을 해제하시겠습니까? 후기 관리가 다시 이 판매에서 활성화됩니다.')) return;
+            const res = await fetch(`/api/sales/${saleId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'unlink_consultation' }),
+            });
+            if (res.ok) {
+              toast.success('연결 해제 완료');
+              queryClient.invalidateQueries({ queryKey: ['sale', saleId] });
+            } else {
+              toast.error('해제 실패');
+            }
+          }}
+          className="w-full flex items-center justify-center gap-1.5 text-[11px] text-neutral-400 hover:text-red-500 py-1.5 transition"
+        >
+          상담 연결 해제
+        </button>
+      )}
+
+      {showLinkConsultation && (
+        <LinkConsultationModal
+          saleId={saleId}
+          customerPhone={s.customer_phone}
+          onClose={() => setShowLinkConsultation(false)}
+          onLinked={() => {
+            setShowLinkConsultation(false);
+            queryClient.invalidateQueries({ queryKey: ['sale', saleId] });
+          }}
         />
       )}
 

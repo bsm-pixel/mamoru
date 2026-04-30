@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
     const status = url.searchParams.get('status');
     const type = url.searchParams.get('type');
     const search = url.searchParams.get('search');
+    const phone = url.searchParams.get('phone'); // 070: 정규화된 phone 일치 검색
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const from = (page - 1) * limit;
@@ -31,6 +32,11 @@ export async function GET(req: NextRequest) {
     }
     if (type && type !== 'all') {
       query = query.eq('consultation_type', type);
+    }
+    if (phone) {
+      // 070: phone_normalized 정확 매칭 (digits-only)
+      const phoneDigits = phone.replace(/\D/g, '');
+      if (phoneDigits) query = query.eq('phone_normalized', phoneDigits);
     }
     if (search) {
       query = query.or(

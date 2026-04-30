@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,7 @@ function NewSaleContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const contractId = searchParams?.get('contract_id') || null;
+  const fromConsultationId = searchParams?.get('from_consultation') || null;
   const { data: products = [], isLoading: productsLoading } = useProducts();
   const createSale = useCreateSale();
   const priceGroups = usePriceGroups();
@@ -67,7 +69,41 @@ function NewSaleContent() {
   const [mixedTransfer, setMixedTransfer] = useState(0);
 
   const [showCreateCustomer, setShowCreateCustomer] = useState(false);
+  const [sourceConsultation, setSourceConsultation] = useState<{ id: string; unique_id: string } | null>(null);
   const customerType = selectedCustomer?.customer_type;
+
+  // 070: 출장/매장상담 → 판매 link prefill
+  useEffect(() => {
+    if (!fromConsultationId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/consultation/${fromConsultationId}`);
+        if (!res.ok) return;
+        const { consultation } = await res.json();
+        if (cancelled || !consultation) return;
+        setSourceConsultation({ id: consultation.id, unique_id: consultation.unique_id });
+        setCustomerName(consultation.name || '');
+        setCustomerPhone(consultation.phone || '');
+        if (consultation.customer_id) {
+          // customer_id 있으면 SelectedCustomer 형태로 setting → cart 가격 재계산
+          setSelectedCustomer({
+            id: consultation.customer_id,
+            name: consultation.name,
+            phone: consultation.phone,
+            email: null,
+            address_road: consultation.address_road || null,
+            address_detail: consultation.address_detail || null,
+            postcode: consultation.postcode || null,
+            ecount_customer_code: null,
+          } as SelectedCustomer);
+        }
+      } catch {
+        /* 조용히 실패, 수동 입력 가능 */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [fromConsultationId]);
   const totalAmount = cart.reduce((s, item) => s + item.unitPrice * item.quantity, 0);
   const finalAmount = totalAmount - discount;
   const paidAmount = paymentStatus === 'paid' ? finalAmount
@@ -165,6 +201,7 @@ function NewSaleContent() {
         sale_channel: saleChannel,
         customer_type: customerType || undefined,
         contract_id: contractId,
+        source_consultation_id: sourceConsultation?.id || undefined,
         memo: memo.trim() || undefined,
       },
       items: cart.map((item) => ({
@@ -208,6 +245,17 @@ function NewSaleContent() {
       <Topbar title="판매 입력" />
 
       <div className="px-4 md:px-6 py-4 space-y-3">
+        {/* 070: 상담 link 안내 배너 */}
+        {sourceConsultation && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-xs">
+            <span className="text-blue-700 font-semibold">출장/매장상담에서 가져옴 ·</span>
+            <Link href={`/consultations/${sourceConsultation.id}`} className="text-blue-700 font-mono font-bold underline">
+              {sourceConsultation.unique_id}
+            </Link>
+            <span className="text-neutral-500 ml-auto">저장 시 이 판매가 상담에 연결되어 후기 관리가 자동 통합됩니다</span>
+          </div>
+        )}
+
         {/* 제목 + 검색 (그리드 밖 — 좌열 너비만큼만) */}
         <div className="xl:w-[33.33%]">
           <h3 className="text-sm font-semibold text-neutral-700 mb-2">제품 선택</h3>

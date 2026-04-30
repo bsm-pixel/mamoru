@@ -28,7 +28,7 @@ import {
   CONSULTATION_STATUS_COLOR,
   CONSULTATION_TYPE_LABEL,
 } from '@/lib/utils/format';
-import { ArrowLeft, MapPin, Calendar, User, Clock, UserCheck, AlertCircle, CheckCircle, FileSignature } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, User, Clock, UserCheck, AlertCircle, CheckCircle, FileSignature, ShoppingCart } from 'lucide-react';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
 /** 상태 전이 → 버튼 라벨 매핑 */
@@ -396,6 +396,50 @@ export default function ConsultationDetailPage() {
             </CardHeader>
             <div className="flex flex-wrap gap-2">
               {renderTypeActions()}
+            </div>
+          </Card>
+        )}
+
+        {/* 070: 이 상담으로 처리된 판매 노출 (역방향 link) */}
+        {data?.linkedSales && data.linkedSales.length > 0 && (
+          <Card className="border-green-200 bg-green-50/50">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <ShoppingCart size={18} className="text-green-600" />
+                <p className="text-sm font-semibold text-green-700">이 상담으로 판매 처리됨</p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {data.linkedSales.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => router.push(`/sales/${s.id}`)}
+                    className="px-2 py-1 rounded bg-white border border-green-300 text-xs font-semibold text-green-700 hover:bg-green-100 transition"
+                  >
+                    {s.sale_number}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* 070: 다음 단계 — 판매로 처리 CTA (톡상담 제외, 확정~완료) */}
+        {['confirmed', 'in_progress', 'completed'].includes(c.status) && c.consultation_type !== 'talk_consult' && (
+          <Card className="border-blue-200 bg-blue-50/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShoppingCart size={18} className="text-blue-600" />
+                <div>
+                  <p className="text-sm font-semibold text-blue-700">판매로 처리</p>
+                  <p className="text-xs text-neutral-500">고객 정보를 가져가서 판매 등록 폼을 채웁니다</p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => router.push(`/sales/new?from_consultation=${c.id}`)}
+              >
+                등록하기
+              </Button>
             </div>
           </Card>
         )}

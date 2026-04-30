@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SuggestTimeModal } from './suggest-time-modal';
 import { formatPhone, formatDate, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
-import { Calendar, MapPin, Phone, User, Clock, FileSignature } from 'lucide-react';
+import { Calendar, MapPin, Phone, User, Clock, FileSignature, ShoppingCart } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { ReviewManagementCard } from '@/components/reviews/review-management-card';
 import Link from 'next/link';
@@ -210,6 +210,22 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
         </button>
       )}
 
+      {/* 070: 이 상담으로 처리된 판매 노출 (역방향 link) */}
+      {data?.linkedSales && data.linkedSales.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="text-neutral-500 font-medium">이 상담으로 판매 처리:</span>
+          {data.linkedSales.map((s) => (
+            <Link
+              key={s.id}
+              href={`/sales/${s.id}`}
+              className="px-1.5 py-0.5 rounded bg-green-50 text-green-700 font-semibold hover:bg-green-100 transition"
+            >
+              {s.sale_number}
+            </Link>
+          ))}
+        </div>
+      )}
+
       {/* 067: 리뷰 관리 카드 — 활성 상담(취소·신규·제안 외)에서 표시 */}
       {!['cancelled', 'pending_admin', 'suggested'].includes(c.status) && (
         <ReviewManagementCard
@@ -222,6 +238,17 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
           submittedAt={(c as { review_submitted_at?: string | null }).review_submitted_at ?? null}
           onChanged={() => refetch()}
         />
+      )}
+
+      {/* 070: 판매로 처리 CTA — 톡상담 제외, 확정~완료 단계에서 표시 */}
+      {['confirmed', 'in_progress', 'completed'].includes(c.status) && c.consultation_type !== 'talk_consult' && (
+        <Link
+          href={`/sales/new?from_consultation=${c.id}`}
+          className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 transition"
+        >
+          <ShoppingCart size={16} className="text-blue-600" />
+          <span className="text-sm font-medium text-blue-700">판매로 처리</span>
+        </Link>
       )}
 
       {/* 계약서 CTA — 톡상담 제외, 확정~완료 단계에서 표시 */}

@@ -531,6 +531,7 @@ export interface Database {
           review_requested_at: string | null;       // semantic alias of review_request_sent_at (legacy)
           review_promised_at: string | null;        // 067: 리뷰 약속 시점
           review_submitted_at: string | null;       // 067: 리뷰 작성 완료 시점
+          source_consultation_id: string | null;    // 070: 출장/매장상담 → 판매 link (mirror 모드 트리거)
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -575,6 +576,7 @@ export interface Database {
           review_requested_at?: string | null;
           review_promised_at?: string | null;
           review_submitted_at?: string | null;
+          source_consultation_id?: string | null;
         };
       };
       offline_sale_items: {

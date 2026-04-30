@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
         vat_amount?: number;
         is_vat_included?: boolean;
         sale_channel?: string;
+        source_consultation_id?: string;     // 070: 상담 → 판매 link
       };
       items: Array<{
         product_id?: string;
@@ -126,6 +127,7 @@ export async function POST(req: NextRequest) {
         sale_channel: sale.sale_channel || 'offline',
         customer_type: sale.customer_type || null,
         contract_id: (sale as Record<string, unknown>).contract_id || null,
+        source_consultation_id: sale.source_consultation_id || null,
         created_by: user.id,
       })
       .select()

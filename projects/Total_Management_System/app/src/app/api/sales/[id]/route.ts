@@ -674,6 +674,48 @@ export async function PATCH(
       return NextResponse.json({ success: true, action: 'sale_rebuilt' });
     }
 
+    // --- G) 070: 상담 연결 (mirror 모드 활성화) ---
+    if (action === 'link_consultation') {
+      if (sale.cancelled_at) {
+        return NextResponse.json({ error: '취소된 판매입니다' }, { status: 400 });
+      }
+      const { source_consultation_id } = body as { source_consultation_id: string };
+      if (!source_consultation_id) {
+        return NextResponse.json({ error: 'source_consultation_id 필수' }, { status: 400 });
+      }
+      // 상담 존재 + phone 일치 검증 (오링크 방지)
+      const { data: consult, error: consultErr } = await db
+        .from('consultations')
+        .select('id, name, phone')
+        .eq('id', source_consultation_id)
+        .single();
+      if (consultErr || !consult) {
+        return NextResponse.json({ error: '상담 건을 찾을 수 없습니다' }, { status: 404 });
+      }
+      const salePhoneNorm = (sale.customer_phone || '').replace(/\D/g, '');
+      const consultPhoneNorm = (consult.phone || '').replace(/\D/g, '');
+      if (salePhoneNorm && consultPhoneNorm && salePhoneNorm !== consultPhoneNorm) {
+        return NextResponse.json({ error: '판매와 상담의 고객 전화번호가 다릅니다' }, { status: 400 });
+      }
+
+      const { error: updateErr } = await db
+        .from('offline_sales')
+        .update({ source_consultation_id })
+        .eq('id', id);
+      if (updateErr) throw updateErr;
+      return NextResponse.json({ success: true, action: 'consultation_linked', consultation: { id: consult.id, name: consult.name } });
+    }
+
+    // --- H) 070: 상담 연결 해제 ---
+    if (action === 'unlink_consultation') {
+      const { error: updateErr } = await db
+        .from('offline_sales')
+        .update({ source_consultation_id: null })
+        .eq('id', id);
+      if (updateErr) throw updateErr;
+      return NextResponse.json({ success: true, action: 'consultation_unlinked' });
+    }
+
     return NextResponse.json({ error: '알 수 없는 action' }, { status: 400 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : JSON.stringify(err);

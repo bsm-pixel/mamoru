@@ -32,6 +32,7 @@ export async function GET() {
         .not('review_promised_at', 'is', null)
         .is('review_submitted_at', null)
         .is('cancelled_at', null)
+        .is('source_consultation_id', null) // 070: link된 sale은 원본 상담에서 관리 → 제외
         .order('review_promised_at', { ascending: false })
         .limit(100),
     ]);

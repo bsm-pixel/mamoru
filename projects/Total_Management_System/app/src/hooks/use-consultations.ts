@@ -72,26 +72,41 @@ export function useConsultations(filters?: {
   });
 }
 
-/** 상담 단건 조회 (이력 포함) */
+/** 상담 단건 조회 (이력 + 070: 역방향 linked sale 포함) */
 export function useConsultation(id: string) {
   const supabase = createClient();
 
   return useQuery({
     queryKey: ['consultation', id],
     queryFn: async () => {
-      const [consultRes, historyRes] = await Promise.all([
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
+      const [consultRes, historyRes, linkedSalesRes] = await Promise.all([
         supabase.from('consultations').select('*').eq('id', id).single(),
         supabase
           .from('consultation_history')
           .select('*')
           .eq('consultation_id', id)
           .order('created_at', { ascending: false }),
+        // 070: 이 상담을 source로 가진 판매들 (취소 제외, 최대 5건)
+        db.from('offline_sales')
+          .select('id, sale_number, sale_date, total_amount')
+          .eq('source_consultation_id', id)
+          .is('cancelled_at', null)
+          .order('sale_date', { ascending: false })
+          .limit(5),
       ]);
 
       if (consultRes.error) throw consultRes.error;
       return {
         consultation: consultRes.data as Consultation,
         history: (historyRes.data || []) as ConsultationHistory[],
+        linkedSales: (linkedSalesRes.data || []) as Array<{
+          id: string;
+          sale_number: string;
+          sale_date: string;
+          total_amount: number;
+        }>,
       };
     },
     enabled: !!id,

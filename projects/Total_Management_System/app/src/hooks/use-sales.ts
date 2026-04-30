@@ -215,7 +215,7 @@ export function useSalesStats() {
   });
 }
 
-/** 오프라인 판매 단건 조회 (항목 + 시리얼 포함) */
+/** 오프라인 판매 단건 조회 (항목 + 시리얼 + 070: 원본 상담 link 포함) */
 export function useSale(id: string) {
   const supabase = createClient();
 
@@ -243,10 +243,24 @@ export function useSale(id: string) {
         }
       }
 
+      // 070: source_consultation_id 있으면 원본 상담 정보 조회 (mirror 모드용)
+      let linkedConsultation: { id: string; unique_id: string; name: string; status: string; consultation_type: string } | null = null;
+      const sourceId = (sale as { source_consultation_id?: string | null }).source_consultation_id;
+      if (sourceId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: consult } = await (supabase as any)
+          .from('consultations')
+          .select('id, unique_id, name, status, consultation_type')
+          .eq('id', sourceId)
+          .single();
+        if (consult) linkedConsultation = consult;
+      }
+
       return {
         sale,
         items: (itemsRes.data || []) as OfflineSaleItem[],
         serials: (serialsRes.data || []) as Array<{ id: string; serial_number: string; product_id: string }>,
+        linkedConsultation,
       };
     },
     enabled: !!id,
@@ -296,6 +310,7 @@ export function useCreateSale() {
         memo?: string;
         sale_channel?: string;
         contract_id?: string | null;
+        source_consultation_id?: string;        // 070: 상담 → 판매 link
       };
       items: Array<{
         product_id?: string;

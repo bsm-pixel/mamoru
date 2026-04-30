@@ -43,6 +43,8 @@ interface Props {
   onChanged?: () => void;
   /** sale source일 때 수리 상품 포함 여부 (ReviewRequestModal 기본값 결정) */
   hasRepairItem?: boolean;
+  /** 070: sale에 source_consultation_id 있을 때 원본 상담 정보 — mirror 모드 트리거 */
+  linkedConsultation?: { id: string; unique_id: string; name: string; status: string } | null;
 }
 
 function formatDate(iso: string | null): string {
@@ -103,6 +105,7 @@ export function ReviewManagementCard({
   submittedAt,
   onChanged,
   hasRepairItem = false,
+  linkedConsultation = null,
 }: Props) {
   const [togglingPromise, setTogglingPromise] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
@@ -156,6 +159,32 @@ export function ReviewManagementCard({
           <div className="flex-1">
             <p className="text-sm font-semibold text-green-800">작성 완료</p>
             <p className="text-[11px] text-green-700">{formatDate(submittedAt)}에 리뷰가 등록되었습니다</p>
+          </div>
+        </div>
+        <RelatedActivitySection items={related} />
+      </Card>
+    );
+  }
+
+  // 070: mirror 모드 — sale에 source_consultation_id 있으면 원본 상담 한 곳에서만 관리
+  if (linkedConsultation) {
+    return (
+      <Card>
+        <div className="flex items-center gap-2 mb-2">
+          <Star size={14} className="text-terracotta" />
+          <h3 className="text-xs font-bold text-indigo-black">리뷰 관리</h3>
+        </div>
+        <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-blue-50 border border-blue-200">
+          <Info size={14} className="text-blue-600 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-blue-800">원본 상담에서 관리 중</p>
+            <p className="text-[11px] text-blue-700 mt-0.5">
+              이 판매의 후기 약속/발송은{' '}
+              <Link href={`/consultations/${linkedConsultation.id}`} className="font-bold underline">
+                {linkedConsultation.unique_id}
+              </Link>
+              에서 관리됩니다 → 중복 발송 위험 0
+            </p>
           </div>
         </div>
         <RelatedActivitySection items={related} />
