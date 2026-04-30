@@ -1,6 +1,24 @@
 # 판매관리 프로세스 흐름도
 > 최종 업데이트: 2026-04-30 (심야 +2) — **B2B 카테고리 동적화 + 거래처별 단가 (074)** + 073 catalog delivery_name + 070 link
 
+## 2026-04-30 (심야 +3) — /deliveries(B2B 거래/납품서)에도 catalog 자동 입력 적용
+
+### 문제
+사장님이 074 push 후 "B2B 거래 → 납품서 작성"에서 catalog 등록한 제품을 추가했는데 **모델명(A2-2522-PT)이 그대로** 표시됨. 074에서 /sales/new만 수정하고 /deliveries 누락.
+
+### Fix
+`/deliveries/page.tsx`에 동일 패턴 적용:
+- `useCustomerCatalog(selectedCustomer?.id)` 호출
+- `getPrice(p)` — 1순위 `catalog.unit_price`, 2순위 price_dealer/academy, 3순위 price
+- 신규 `getDeliveryName(p)` — 1순위 `catalog.delivery_name`, 2순위 product.name
+- `addProduct`에서 두 함수 모두 적용 → cart에 즉시 catalog 이름/가격 표시
+
+### 회귀 안전
+- catalog 미등록 제품 → 기존 fallback 그대로
+- /sales/new 흐름 0 변경
+
+---
+
 ## 2026-04-30 (심야 +2) — B2B 카테고리 동적화 + 거래처별 단가 (074)
 
 ### 핵심 변경

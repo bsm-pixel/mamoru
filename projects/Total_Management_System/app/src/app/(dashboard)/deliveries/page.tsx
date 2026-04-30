@@ -15,6 +15,7 @@ import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-pan
 import { useDeliveries, useDeliveryStats, useCreateDelivery } from '@/hooks/use-deliveries';
 import { useProducts } from '@/hooks/use-sales';
 import { useCustomerSearch } from '@/hooks/use-customers';
+import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
 import { formatKRW, formatDate, formatPhone, calcVAT } from '@/lib/utils/format';
 import { Package, Plus, X, AlertCircle, Calendar, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -323,6 +324,12 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
 
   const customerType = selectedCustomer?.customer_type;
 
+  // 074: catalog 자동 입력 — 거래처별 납품명 + 납품가 우선 사용
+  const { data: customerCatalogData } = useCustomerCatalog(selectedCustomer?.id);
+  const catalogEntryMap = new Map(
+    (customerCatalogData?.catalog || []).map((c) => [c.product_id, c])
+  );
+
   // 제품 필터
   const filteredProducts = products.filter((p) => {
     if (!productSearch) return true;
@@ -330,11 +337,19 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
     return p.name.toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q);
   });
 
-  // 가격 결정: 고객 유형별
+  // 가격 결정: catalog.unit_price 우선 → 고객 유형별 → 기본가
   function getPrice(p: Product): number {
+    const catalogEntry = catalogEntryMap.get(p.id);
+    if (catalogEntry?.unit_price && catalogEntry.unit_price > 0) return catalogEntry.unit_price;
     if (customerType === 'dealer' && (p as Record<string, unknown>).price_dealer) return (p as Record<string, unknown>).price_dealer as number;
     if (customerType === 'academy' && (p as Record<string, unknown>).price_academy) return (p as Record<string, unknown>).price_academy as number;
     return p.price;
+  }
+
+  // 납품명 결정: catalog.delivery_name 우선 → product.name
+  function getDeliveryName(p: Product): string {
+    const catalogEntry = catalogEntryMap.get(p.id);
+    return catalogEntry?.delivery_name?.trim() || p.name;
   }
 
   function addProduct(p: Product) {
@@ -344,7 +359,7 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
     } else {
       setCart((prev) => [...prev, {
         product_id: p.id,
-        product_name: p.name,
+        product_name: getDeliveryName(p),  // 074: catalog.delivery_name 우선
         sku: p.sku || undefined,
         category: p.category || undefined,
         quantity: 1,
