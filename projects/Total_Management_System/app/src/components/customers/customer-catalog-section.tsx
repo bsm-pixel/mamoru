@@ -159,17 +159,24 @@ export function CustomerCatalogSection({ customerId }: { customerId: string }) {
                   </div>
                 </div>
               ) : (
-                /* 읽기 모드 */
+                /* 읽기 모드 — 납품명을 헤더로 (송장에 출력될 이름) */
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0" onClick={() => startEdit(entry)} style={{ cursor: 'pointer' }}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold truncate">{entry.product_name}</span>
-                      <span className="text-[10px] text-neutral-400">정가 {formatKRW(entry.price)}</span>
+                    <div className="flex items-baseline gap-2 mb-1 flex-wrap">
+                      {entry.delivery_name ? (
+                        <>
+                          <span className="text-sm font-bold text-blue-700 truncate">{entry.delivery_name}</span>
+                          <span className="text-[10px] text-neutral-400">송장 출력명</span>
+                        </>
+                      ) : (
+                        <span className="text-sm font-semibold text-neutral-400 italic">납품명 미입력 → 클릭하여 등록</span>
+                      )}
                     </div>
-                    <div className="flex gap-4 text-[11px] text-neutral-500 flex-wrap">
-                      <span>납품명: {entry.delivery_name || <em className="text-neutral-300">미입력</em>}</span>
-                      <span>납품가: {entry.unit_price != null ? <span className="text-blue-600 font-semibold">{formatKRW(entry.unit_price)}</span> : <em className="text-neutral-300">미설정</em>}</span>
-                      <span>특징: {entry.features || <em className="text-neutral-300">미입력</em>}</span>
+                    <div className="flex gap-3 text-[11px] text-neutral-500 flex-wrap">
+                      <span className="text-neutral-400">TMS 제품: <span className="text-neutral-600">{entry.product_name}</span></span>
+                      <span>정가 {formatKRW(entry.price)}</span>
+                      <span>납품가: {entry.unit_price != null ? <span className="text-blue-600 font-semibold">{formatKRW(entry.unit_price)}</span> : <em className="text-neutral-300">정가 사용</em>}</span>
+                      {entry.features && <span>특징: {entry.features}</span>}
                     </div>
                   </div>
                   <button onClick={() => handleRemove(entry.id)} className="text-neutral-300 hover:text-red-500 ml-2 shrink-0">
