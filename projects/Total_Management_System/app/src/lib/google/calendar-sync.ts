@@ -136,7 +136,10 @@ export async function syncConsultationToCalendar(consultationId: string): Promis
       }
     }
   } catch (err) {
-    console.error('[calendar-sync] 예상치 못한 오류', consultationId, err);
+    console.error('[calendar-sync] 예상치 못한 오류', {
+      consultationId,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 

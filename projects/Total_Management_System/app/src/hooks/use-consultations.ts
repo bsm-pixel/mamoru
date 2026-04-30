@@ -5,6 +5,31 @@ import { createClient } from '@/lib/supabase/client';
 import type { Consultation, ConsultationHistory } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
 
+/** 응답 에러를 사람이 읽을 수 있는 string으로 직렬화 ([object Object] 방지) */
+async function parseApiError(res: Response, fallback: string): Promise<string> {
+  const errBody = await res.json().catch(() => ({ error: res.statusText || fallback }));
+  const e = errBody?.error;
+  if (typeof e === 'string') return e;
+  if (e && typeof e === 'object') {
+    const obj = e as { message?: unknown };
+    if (typeof obj.message === 'string') return obj.message;
+    try { return JSON.stringify(e); } catch { /* fallthrough */ }
+  }
+  return fallback;
+}
+
+/** mutation onError에서 안전하게 에러 메시지 추출 */
+function errMsg(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  if (err && typeof err === 'object') {
+    const e = err as { message?: unknown };
+    if (typeof e.message === 'string') return e.message;
+    try { return JSON.stringify(err); } catch { return String(err); }
+  }
+  return String(err);
+}
+
 /** 상담 목록 조회 (확장 필터 지원) */
 export function useConsultations(filters?: {
   status?: string;
@@ -124,7 +149,7 @@ export function useUpdateConsultationStatus() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, note }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) throw new Error(await parseApiError(res, '상태 변경 실패'));
       return res.json();
     },
     onMutate: async ({ id, status }) => {
@@ -141,7 +166,7 @@ export function useUpdateConsultationStatus() {
     },
     onError: (err, { id }, context) => {
       if (context?.prevDetail) queryClient.setQueryData(['consultation', id], context.prevDetail);
-      toast.error('상태 변경 실패: ' + String(err));
+      toast.error('상태 변경 실패: ' + errMsg(err));
     },
     onSuccess: () => {
       toast.success('상태가 변경되었습니다');
@@ -170,7 +195,7 @@ export function useConsultationSync() {
       toast.success('새로고침 완료');
     },
     onError: (err) => {
-      toast.error('새로고침 실패: ' + String(err));
+      toast.error('새로고침 실패: ' + errMsg(err));
     },
   });
 }
@@ -186,7 +211,7 @@ export function useAssignDealer() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ consultationId, dealerId }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) throw new Error(await parseApiError(res, '요청 실패'));
       return res.json();
     },
     onSuccess: () => {
@@ -195,7 +220,7 @@ export function useAssignDealer() {
       queryClient.invalidateQueries({ queryKey: ['consultation'] });
     },
     onError: (err) => {
-      toast.error('딜러 배정 실패: ' + String(err));
+      toast.error('딜러 배정 실패: ' + errMsg(err));
     },
   });
 }
@@ -218,7 +243,7 @@ export function useSuggestTimes() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ consultationId, suggestions }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) throw new Error(await parseApiError(res, '요청 실패'));
       return res.json();
     },
     onSuccess: () => {
@@ -227,7 +252,7 @@ export function useSuggestTimes() {
       queryClient.invalidateQueries({ queryKey: ['consultation'] });
     },
     onError: (err) => {
-      toast.error('시간 제안 실패: ' + String(err));
+      toast.error('시간 제안 실패: ' + errMsg(err));
     },
   });
 }
@@ -245,14 +270,14 @@ export function useSendNotification() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ consultationId, template, extraData }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) throw new Error(await parseApiError(res, '요청 실패'));
       return res.json();
     },
     onSuccess: () => {
       toast.success('알림톡이 발송되었습니다');
     },
     onError: (err) => {
-      toast.error('알림톡 발송 실패: ' + String(err));
+      toast.error('알림톡 발송 실패: ' + errMsg(err));
     },
   });
 }
@@ -316,7 +341,7 @@ export function useCreateConsultation() {
         queryClient.invalidateQueries({ queryKey: ['consultation-dashboard-stats'] });
       }
     },
-    onError: (err) => toast.error('등록 실패: ' + String(err)),
+    onError: (err) => toast.error('등록 실패: ' + errMsg(err)),
   });
 }
 
@@ -326,11 +351,7 @@ export function useDeleteConsultation() {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/consultation/${id}`, { method: 'DELETE' });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }));
-        const msg = typeof err.error === 'string' ? err.error : JSON.stringify(err.error);
-        throw new Error(msg || '삭제 실패');
-      }
+      if (!res.ok) throw new Error(await parseApiError(res, '삭제 실패'));
       return res.json();
     },
     onSuccess: () => {
@@ -340,7 +361,7 @@ export function useDeleteConsultation() {
       queryClient.invalidateQueries({ queryKey: ['consultation-dashboard-stats'] });
     },
     onError: (err) => {
-      toast.error('삭제 실패: ' + String(err));
+      toast.error('삭제 실패: ' + errMsg(err));
     },
   });
 }
@@ -356,7 +377,7 @@ export function useHoldConsultation() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'on_hold', hold_reason: holdReason, note: `보류: ${holdReason}` }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) throw new Error(await parseApiError(res, '요청 실패'));
       return res.json();
     },
     onSuccess: () => {
@@ -365,7 +386,7 @@ export function useHoldConsultation() {
       queryClient.invalidateQueries({ queryKey: ['consultation'] });
     },
     onError: (err) => {
-      toast.error('보류 처리 실패: ' + String(err));
+      toast.error('보류 처리 실패: ' + errMsg(err));
     },
   });
 }
@@ -384,10 +405,7 @@ export function useFieldDelay() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ consultationId, delayMin }),
       });
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(typeof errBody.error === 'string' ? errBody.error : JSON.stringify(errBody.error) || '지연 안내 실패');
-      }
+      if (!res.ok) throw new Error(await parseApiError(res, '지연 안내 실패'));
       return res.json();
     },
     onSuccess: (data) => {
@@ -396,7 +414,7 @@ export function useFieldDelay() {
       queryClient.invalidateQueries({ queryKey: ['consultation'] });
     },
     onError: (err) => {
-      toast.error('지연 안내 실패: ' + String(err));
+      toast.error('지연 안내 실패: ' + errMsg(err));
     },
   });
 }
@@ -432,7 +450,7 @@ export function useStartTalkConsult() {
       queryClient.invalidateQueries({ queryKey: ['consultation-dashboard-stats'] });
     },
     onError: (err) => {
-      toast.error('톡상담 시작 실패: ' + String(err));
+      toast.error('톡상담 시작 실패: ' + errMsg(err));
     },
   });
 }
@@ -459,7 +477,7 @@ export function useRescheduleConsultation() {
           note: `일정 변경: ${visitDate} ${visitTime}`,
         }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) throw new Error(await parseApiError(res, '요청 실패'));
       const data = await res.json();
 
       // 알림톡 발송 — change_request_link 포함 (date/time은 notify API가 DB에서 새 값 조회)
@@ -490,7 +508,7 @@ export function useRescheduleConsultation() {
       queryClient.invalidateQueries({ queryKey: ['consultation'] });
     },
     onError: (err) => {
-      toast.error('일정 변경 실패: ' + String(err));
+      toast.error('일정 변경 실패: ' + errMsg(err));
     },
   });
 }

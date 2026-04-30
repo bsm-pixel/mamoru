@@ -28,6 +28,21 @@ function getAutoNotifyTemplate(
 
 /* GAS cancelViaGAS 제거 완료 — Calendar 삭제 불필요, 슬롯 차단은 Supabase 쿼리 */
 
+/** 에러를 사람이 읽을 수 있는 string으로 직렬화 ([object Object] 방지) */
+function errMsg(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'string') return err;
+  if (err && typeof err === 'object') {
+    const e = err as { message?: unknown; error?: unknown; details?: unknown; hint?: unknown };
+    if (typeof e.message === 'string') return e.message;
+    if (typeof e.error === 'string') return e.error;
+    if (typeof e.details === 'string') return e.details;
+    if (typeof e.hint === 'string') return e.hint;
+    try { return JSON.stringify(err); } catch { return String(err); }
+  }
+  return String(err);
+}
+
 /** GET /api/consultation/[id] — 상담 단건 + 이력 */
 export async function GET(
   _req: NextRequest,
@@ -60,7 +75,7 @@ export async function GET(
     });
   } catch (err) {
     console.error('[consultation] 상세 조회 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -194,7 +209,7 @@ export async function PATCH(
     return NextResponse.json(data);
   } catch (err) {
     console.error('[consultation] 업데이트 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -225,23 +240,42 @@ export async function DELETE(
     }
 
     // Google Calendar 이벤트 정리 (있으면 삭제, 실패해도 상담 삭제는 진행)
+    const calendarResult: { attempted: boolean; ok: boolean; error?: string } = {
+      attempted: false,
+      ok: true,
+    };
     if (consultation.google_event_id) {
+      calendarResult.attempted = true;
       try {
         await deleteCalendarEvent({ eventId: consultation.google_event_id });
       } catch (e) {
+        calendarResult.ok = false;
+        calendarResult.error = errMsg(e);
         console.warn('[consultation delete] 캘린더 이벤트 삭제 실패:', e);
       }
     }
 
-    // 이력 삭제 → 본건 삭제
-    await db.from('consultation_history').delete().eq('consultation_id', id);
-    const { error: delErr } = await db.from('consultations').delete().eq('id', id);
+    // 이력 삭제 (실패 시 명확히 throw — 침묵 금지)
+    const { error: histErr } = await db
+      .from('consultation_history')
+      .delete()
+      .eq('consultation_id', id);
+    if (histErr) {
+      console.error('[consultation delete] 이력 삭제 실패:', histErr);
+      throw histErr;
+    }
 
+    // 본건 삭제
+    const { error: delErr } = await db.from('consultations').delete().eq('id', id);
     if (delErr) throw delErr;
 
-    return NextResponse.json({ ok: true, deleted: consultation.unique_id });
+    return NextResponse.json({
+      ok: true,
+      deleted: consultation.unique_id,
+      calendar: calendarResult,
+    });
   } catch (err) {
     console.error('[consultation] 삭제 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

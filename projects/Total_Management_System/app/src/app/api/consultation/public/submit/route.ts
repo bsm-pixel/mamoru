@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, after } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { sendAdminEmail } from '@/lib/notification/email';
@@ -232,21 +232,33 @@ export async function POST(req: NextRequest) {
       console.error('[consultation/submit] 이메일 발송 실패:', emailErr);
     }
 
-    // Google Calendar 동기화 — after()로 응답 후 실행 보장 (Vercel 서버리스)
+    // Google Calendar 동기화 — confirmed 상담은 즉시 await로 처리 (google_event_id 누락 방지)
+    // 향후 추적/취소 흐름에서 event_id 없는 잔존 건을 만들지 않기 위해 동기 실행
+    let calendarEventId: string | null = null;
     if (initialStatus === 'confirmed') {
-      after(async () => {
-        try {
-          await syncConsultationToCalendar(consultation.id);
-        } catch (e) {
-          console.error('[calendar-sync after submit] 실패:', e);
-        }
-      });
+      try {
+        await syncConsultationToCalendar(consultation.id);
+        const { data: refreshed } = await dbAny
+          .from('consultations')
+          .select('google_event_id')
+          .eq('id', consultation.id)
+          .single();
+        calendarEventId = refreshed?.google_event_id || null;
+      } catch (e) {
+        console.error('[calendar-sync submit] 실패:', {
+          err: e,
+          consultation_id: consultation.id,
+          consultation_type: consultationType,
+          status: initialStatus,
+        });
+        // 캘린더 실패는 접수 자체를 막지 않음
+      }
     }
 
     return NextResponse.json(
       {
         ok: true,
-        data: { id: consultation.id, unique_id: uniqueId, status: initialStatus },
+        data: { id: consultation.id, unique_id: uniqueId, status: initialStatus, google_event_id: calendarEventId },
         _notifications: { alrimtalk: notifyResult, email: emailResult },
       },
       { headers: CORS_HEADERS }
