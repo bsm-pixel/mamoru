@@ -150,8 +150,9 @@ export function useHubStats() {
         db.from('orders').select('paid_amount').gte('ordered_at', monthISO).not('status', 'in', '("cancelled","refunded")'),
         db.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'pending_admin'),
         db.from('consultations').select('*', { count: 'exact', head: true }).eq('status', 'confirmed'),
+        // 075: pending_admin 제거 — 신규 상담이 재요청으로 중복 카운트되던 버그 fix
         db.from('consultations').select('*', { count: 'exact', head: true })
-          .in('status', ['reschedule_requested', 'change_requested', 'pending_admin'])
+          .in('status', ['reschedule_requested', 'change_requested'])
           .in('consultation_type', ['field_request', 'talk_consult']),
         db.from('repairs').select('*', { count: 'exact', head: true })
           .eq('status', 'intake').is('confirmed_at', null),
@@ -167,14 +168,14 @@ export function useHubStats() {
         db.from('offline_sales').select('total_amount, discount_amount')
           .gte('sale_date', monthStartDate)
           .is('cancelled_at', null),
-        // 복원수리 매출 A: 접수시스템 (입금 확인된 건)
+        // 075: 복원수리 매출 A — 옵션 A "발생 기준" 적용 (paid_at 조건 제거 → 미입금도 매출 발생으로 카운트)
         db.from('repairs').select('total_amount, qty_mamoru, qty_other')
-          .not('paid_at', 'is', null)
           .gte('created_at', monthISO)
           .not('status', 'eq', 'cancelled'),
-        // 복원수리 매출 B: 판매시스템 (이번달, category=RS, 취소 제외) + 고객유형으로 B2B 구분
+        // 075: 복원수리 매출 B — 판매시스템 (category=RS, 취소 제외, 0원 무상 제외) + 고객유형으로 B2B 구분
         db.from('offline_sale_items').select('total_price, quantity, product_name, category, offline_sales!inner(sale_date, cancelled_at, customer_type)')
           .eq('category', 'RS')
+          .gt('total_price', 0)
           .gte('offline_sales.sale_date', monthStartDate)
           .is('offline_sales.cancelled_at', null),
         // 납품 매출 + 항목 (이번달, 확정 이상, 취소 제외)

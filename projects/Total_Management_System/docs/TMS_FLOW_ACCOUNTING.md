@@ -1,16 +1,27 @@
 # 회계 모듈 프로세스 흐름도
 
-> 최종 수정: 2026-04-02
+> 최종 수정: 2026-04-30 (075) — 복원수리 매출 정의 통일 (발생 기준) + 경비 카테고리 동적화 + invalidate helper
+
+## 2026-04-30 정리 (075)
+
+| 변경 | 내용 |
+|------|------|
+| **복원수리 매출 정의 통일 (옵션 A)** | A채널(접수)+B채널(판매 RS)+C채널(납품 RS) 모두 **발생 기준** (sale_date/created_at/delivery_date) — 미입금도 매출로 카운트, 취소만 제외 |
+| **경비 카테고리 동적화** | 설정 → 회계 → 경비 카테고리 추가/수정 → 즉시 /expenses 화면 반영 (이전엔 hard-coded) |
+| **일정 재요청 카운트 fix** | 대시보드 needAction에서 pending_admin 잘못 포함 제거 (신규 상담이 재요청으로 카운트되던 버그) |
+| **invalidate 풀 연동** | `lib/query/invalidate-keys.ts` 신설 → 모든 sale/repair mutation 후 대시보드 매출/통계 즉각 갱신 |
 
 ---
 
 ## 1. 회계 리포트 (`/reports`)
 
-### 데이터 소스
+### 데이터 소스 (075 발생 기준 적용)
 | 소스 | 테이블 | 조건 |
 |------|--------|------|
 | 상품 매출 | `offline_sales` | sale_date 범위, 취소 제외 |
-| 복원수리 매출 | `repairs` | paid_at 범위, 취소 제외 |
+| 복원수리 매출 A (접수) | `repairs` | **created_at 범위, 취소 제외** (paid_at 무관 — 075) |
+| 복원수리 매출 B (판매 RS) | `offline_sale_items` | category='RS', sale_date 범위, 0원 제외, 취소 제외 |
+| 복원수리 매출 C (납품 RS) | `delivery_items` | category='RS', delivery_date 범위, status≥confirmed, 취소 제외 |
 | 매입 | `purchase_orders` | order_date 범위, 상태 filtered |
 | 경비 | `expenses` | expense_date 범위 |
 

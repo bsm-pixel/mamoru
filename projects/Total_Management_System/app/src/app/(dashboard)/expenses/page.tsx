@@ -10,7 +10,7 @@ import { Plus, Trash2, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { DEFAULT_EXPENSE_CATEGORIES } from '@/lib/utils/setting-defaults';
-const CATEGORIES = DEFAULT_EXPENSE_CATEGORIES;
+import { useSetting } from '@/hooks/use-settings';
 
 const CATEGORY_COLOR: Record<string, string> = {
   택배비: 'bg-blue-100 text-blue-700',
@@ -24,13 +24,15 @@ const CATEGORY_COLOR: Record<string, string> = {
 
 export default function ExpensesPage() {
   const queryClient = useQueryClient();
+  // 075: 설정에서 동적으로 카테고리 읽기 (사장님이 추가한 카테고리 자동 반영)
+  const CATEGORIES = useSetting<string[]>('accounting.expense_categories', DEFAULT_EXPENSE_CATEGORIES);
   const now = new Date();
   const [from, setFrom] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10));
   const [to, setTo] = useState(now.toISOString().slice(0, 10));
 
   // 폼 상태
   const [expenseDate, setExpenseDate] = useState(now.toISOString().slice(0, 10));
-  const [category, setCategory] = useState('택배비');
+  const [category, setCategory] = useState<string>(CATEGORIES[0] || '기타');
   const [amount, setAmount] = useState('');
   const [memo, setMemo] = useState('');
 
@@ -87,7 +89,7 @@ export default function ExpensesPage() {
     },
   });
 
-  const [recCategory, setRecCategory] = useState('임대료');
+  const [recCategory, setRecCategory] = useState<string>(CATEGORIES.find((c) => c === '임대료') || CATEGORIES[0] || '기타');
   const [recAmount, setRecAmount] = useState('');
   const [recMemo, setRecMemo] = useState('');
 

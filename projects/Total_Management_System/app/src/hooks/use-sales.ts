@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { OfflineSale, OfflineSaleItem, Product } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
+// 075: cross-domain invalidation 일원화 — mutation 후 대시보드/통계가 즉각 갱신되도록
+import { invalidateFinancialQueries } from '@/lib/query/invalidate-keys';
 
 /** 판매 탭 타입 */
 export type SalesTab = 'all' | 'today' | 'unpaid' | 'cancelled';
@@ -134,7 +136,7 @@ export function useSalesStats() {
 
   return useQuery({
     queryKey: ['sales-stats'],
-    staleTime: 60_000,
+    staleTime: 30_000, // 075: 60s → 30s (대시보드 즉각 반영)
     queryFn: async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
@@ -274,7 +276,7 @@ export function useProducts(opts?: { includeInactive?: boolean }) {
 
   return useQuery({
     queryKey: ['products', { includeInactive }],
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000, // 075: 5분 → 1분 (시리얼 sold/재고 변경 후 빠른 반영)
     queryFn: async () => {
       let query = supabase
         .from('products')
@@ -335,8 +337,7 @@ export function useCreateSale() {
     },
     onSuccess: (data) => {
       toast.success(`판매 등록 완료: ${data.saleNumber}`);
-      queryClient.invalidateQueries({ queryKey: ['sales'] });
-      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      invalidateFinancialQueries(queryClient);
     },
     onError: (err) => {
       toast.error('판매 등록 실패: ' + (err instanceof Error ? err.message : String(err)));
@@ -363,9 +364,7 @@ export function useCancelSale() {
     },
     onSuccess: () => {
       toast.success('판매가 취소되었습니다');
-      queryClient.invalidateQueries({ queryKey: ['sales'] });
-      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      invalidateFinancialQueries(queryClient);
     },
     onError: (err) => {
       toast.error('판매 취소 실패: ' + (err instanceof Error ? err.message : String(err)));
@@ -392,10 +391,7 @@ export function useReturnSale() {
     },
     onSuccess: () => {
       toast.success('반품 처리 완료 — 재고/시리얼 복원됨');
-      queryClient.invalidateQueries({ queryKey: ['sales'] });
-      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      invalidateFinancialQueries(queryClient);
     },
     onError: (err) => {
       toast.error('반품 처리 실패: ' + (err instanceof Error ? err.message : String(err)));
@@ -453,9 +449,8 @@ export function useUpdatePaymentStatus() {
       toast.success('결제상태가 변경되었습니다');
     },
     onSettled: (_d, _e, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['sales'] });
       queryClient.invalidateQueries({ queryKey: ['sale', id] });
-      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      invalidateFinancialQueries(queryClient);
     },
   });
 }
@@ -526,8 +521,7 @@ export function useEditSale() {
     onSuccess: (_d, { id }) => {
       toast.success('판매 정보가 수정되었습니다');
       queryClient.invalidateQueries({ queryKey: ['sale', id] });
-      queryClient.invalidateQueries({ queryKey: ['sales'] });
-      queryClient.invalidateQueries({ queryKey: ['sales-stats'] });
+      invalidateFinancialQueries(queryClient);
     },
     onError: (err) => {
       toast.error('수정 실패: ' + (err instanceof Error ? err.message : String(err)));
@@ -578,9 +572,7 @@ export function useRebuildSale() {
     onSuccess: (_d, { id }) => {
       toast.success('판매가 수정되었습니다 (시리얼/재고 재조정 완료)');
       queryClient.invalidateQueries({ queryKey: ['sale', id] });
-      queryClient.invalidateQueries({ queryKey: ['sales'] });
-      queryClient.invalidateQueries({ queryKey: ['sales-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      invalidateFinancialQueries(queryClient);
     },
     onError: (err) => {
       toast.error('판매 수정 실패: ' + (err instanceof Error ? err.message : String(err)));
@@ -603,7 +595,7 @@ export function useShipSale() {
     onSuccess: (data, id) => {
       toast.success(`송장 생성 완료: ${data.invoiceNumber}`);
       queryClient.invalidateQueries({ queryKey: ['sale', id] });
-      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      invalidateFinancialQueries(queryClient);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
   });
@@ -624,7 +616,7 @@ export function useCancelSaleShipment() {
     onSuccess: (_d, id) => {
       toast.success('송장 취소 완료');
       queryClient.invalidateQueries({ queryKey: ['sale', id] });
-      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      invalidateFinancialQueries(queryClient);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
   });
@@ -649,7 +641,7 @@ export function useMarkSaleShipped() {
     onSuccess: (_d, { id }) => {
       toast.success('출고완료 처리되었습니다');
       queryClient.invalidateQueries({ queryKey: ['sale', id] });
-      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      invalidateFinancialQueries(queryClient);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
   });

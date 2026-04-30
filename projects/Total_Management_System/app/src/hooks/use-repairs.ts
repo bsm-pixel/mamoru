@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { Repair, RepairInspection, RepairHistory } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
+// 075: cross-domain invalidation — repair status/완료/출고/삭제 후 대시보드 매출 즉각 갱신
+import { invalidateFinancialQueries } from '@/lib/query/invalidate-keys';
 
 /** 복원수리 목록 조회 */
 export function useRepairs(filters?: {
@@ -150,10 +152,9 @@ export function useUpdateRepairStatus() {
       toast.success('상태가 변경되었습니다');
     },
     onSettled: (_d, _e, { id }) => {
-      // 서버 응답 후 캐시 재검증
-      queryClient.invalidateQueries({ queryKey: ['repairs'] });
+      // 서버 응답 후 캐시 재검증 + 대시보드 매출 갱신 (status 변경이 매출 카운트에 영향)
       queryClient.invalidateQueries({ queryKey: ['repair', id] });
-      queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
+      invalidateFinancialQueries(queryClient);
     },
   });
 }
@@ -200,6 +201,8 @@ export function useUpdateRepairFields() {
     },
     onSettled: (_d, _e, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['repair', id] });
+      // 075: 필드 수정에 paid_at/total_amount/cost 등 매출 관련 필드가 포함될 수 있음 → 대시보드 즉각 갱신
+      invalidateFinancialQueries(queryClient);
     },
   });
 }
@@ -232,9 +235,7 @@ export function useDeleteRepair() {
         }
       }
       toast.success('삭제되었습니다');
-      queryClient.invalidateQueries({ queryKey: ['repairs'] });
-      queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
-      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
+      invalidateFinancialQueries(queryClient);
     },
     onError: (err) => {
       toast.error('삭제 실패: ' + String(err));
@@ -265,6 +266,8 @@ export function useSaveInspections() {
     onSuccess: () => {
       toast.success('검수 데이터가 저장되었습니다');
       queryClient.invalidateQueries({ queryKey: ['repair'] });
+      // 075: 검수 후 total_amount 자동 반영 → 대시보드 매출 즉각 갱신
+      invalidateFinancialQueries(queryClient);
     },
     onError: (err) => {
       toast.error('검수 저장 실패: ' + String(err));
@@ -290,8 +293,8 @@ export function useShipRepair() {
     },
     onSuccess: (data) => {
       toast.success(`송장 생성 완료: ${data.invNo}`);
-      queryClient.invalidateQueries({ queryKey: ['repairs'] });
       queryClient.invalidateQueries({ queryKey: ['repair'] });
+      invalidateFinancialQueries(queryClient);
     },
     onError: (err) => {
       toast.error('출고 실패: ' + String(err));
@@ -319,8 +322,8 @@ export function useCancelShipment() {
       if (data?.warning) {
         toast(data.warning, { duration: 8000, icon: '⚠️' });
       }
-      queryClient.invalidateQueries({ queryKey: ['repairs'] });
       queryClient.invalidateQueries({ queryKey: ['repair'] });
+      invalidateFinancialQueries(queryClient);
     },
     onError: (err) => {
       toast.error('송장 취소 실패: ' + String(err));
