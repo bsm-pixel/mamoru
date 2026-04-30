@@ -141,17 +141,19 @@ export function useSalesStats() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
       const now = new Date();
-      const today = now.toISOString().slice(0, 10);
+      // 로컬(KST) 기준 ISO date — toISOString은 UTC라 KST 자정 직후 4/30로 잘못 변환되는 버그 회피
+      const pad2 = (n: number) => String(n).padStart(2, '0');
+      const today = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
 
       // 이번주 월요일
       const dayOfWeek = now.getDay();
       const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
       const monday = new Date(now);
       monday.setDate(now.getDate() + mondayOffset);
-      const weekStart = monday.toISOString().slice(0, 10);
+      const weekStart = `${monday.getFullYear()}-${pad2(monday.getMonth() + 1)}-${pad2(monday.getDate())}`;
 
       // 이번달 1일
-      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      const monthStart = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-01`;
 
       // 주간 매출
       const { data: weekSales } = await db

@@ -6,6 +6,21 @@ export function formatKRW(amount: number): string {
   return new Intl.NumberFormat('ko-KR').format(amount) + '원';
 }
 
+/**
+ * 로컬(KST) 날짜를 ISO date string('YYYY-MM-DD')으로 변환
+ * `Date.toISOString()`은 UTC 변환을 거치므로 KST 5/1 자정을 4/30으로 잘못 계산하는 버그 회피
+ *
+ * @example
+ *   const today = toLocalDateString(new Date());      // '2026-05-01' (KST 기준)
+ *   const monthStart = toLocalDateString(new Date(now.getFullYear(), now.getMonth(), 1));
+ */
+export function toLocalDateString(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 /** 날짜 포맷: "2026-02-16" → "2월 16일" */
 export function formatDate(date: string | Date, fmt = 'M월 d일'): string {
   return format(new Date(date), fmt, { locale: ko });

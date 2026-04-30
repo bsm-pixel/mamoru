@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
+import { toLocalDateString } from '@/lib/utils/format';
 import type { Consultation } from '@/lib/supabase/types';
 
 // ============================================
@@ -62,7 +63,8 @@ export function useHubStats() {
         // RPC에 없는 deliveries 데이터 추가 쿼리
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const dlDb = supabase as any;
-        const msd = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
+        // 월 시작 KST 명시 변환 (toISOString은 UTC라 KST 5/1 자정→4/30으로 잘못 변환되는 버그 회피)
+        const msd = toLocalDateString(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
         const [dlRes, dlRepairRes] = await Promise.all([
           dlDb.from('deliveries').select('total_amount, discount_amount')
             .gte('delivery_date', msd).in('status', ['confirmed', 'shipped', 'settled']).is('cancelled_at', null),
@@ -130,7 +132,7 @@ export function useHubStats() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
-      const monthStartDate = monthStart.toISOString().slice(0, 10);
+      const monthStartDate = toLocalDateString(monthStart);
       const [
         payDone, preparing, shipping, delivered,
         weekOrders, monthOrders,
@@ -340,7 +342,7 @@ export function useConsultationDashboardStats() {
     staleTime: 30_000,
     queryFn: async () => {
       const now = new Date();
-      const todayStr = now.toISOString().slice(0, 10);
+      const todayStr = toLocalDateString(now);
       // R2: 6시간 기준
       const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
       // 1달 전
@@ -424,8 +426,8 @@ export function useRepairDashboardStats() {
       const monday = new Date(now);
       monday.setDate(now.getDate() + mondayOff);
       const weekStartISO = monday.toISOString();
-      const weekStartDate = monday.toISOString().slice(0, 10);
-      const todayDate = now.toISOString().slice(0, 10);
+      const weekStartDate = toLocalDateString(monday);
+      const todayDate = toLocalDateString(now);
 
       const [counts, staleCount, unpaidCount, intakeNewCount, monthRepairsPaid, monthSalesRepairItems, todayCompleted, weekCompleted, weekSalesRepair, dlRepairItems] = await Promise.all([
         // 상태별 count 병렬
@@ -639,7 +641,7 @@ export function useTodayConsultations() {
     queryKey: ['today-consultations'],
     staleTime: 60_000,
     queryFn: async () => {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = toLocalDateString(new Date());
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from('consultations')
