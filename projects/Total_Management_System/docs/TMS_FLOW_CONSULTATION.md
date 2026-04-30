@@ -46,6 +46,27 @@ ReviewManagementCard → "후기 요청 보내기" 모달
 
 ---
 
+## 2026-04-30 (오전) — 출장요청 좌표 회귀 fix + Kakao geocode helper 통합
+
+### 문제
+고객 폼(`/api/consultation/public/submit`)에서 `geocodeAddress`가 address.json만 호출 + `addressRoad+addressDetail` 합친 query → 빌라/오피스텔 매칭 실패율 매우 높음 → 좌표 NULL → 지도 핀 미표시. admin-create는 이전에 fix됐지만 public/submit은 누락 (부분 fix 회귀).
+
+### Fix
+**신규 helper**: `app/src/lib/kakao/geocode.ts` — 3단계 fallback 표준화 (DRY)
+1. address.json(road) — 도로명/지번 정확 매칭
+2. keyword.json(road) — 신축/오래된 주소 유연 매칭
+3. keyword.json(road+detail) — 상호명·건물명 케이스
+
+**3 라우트 모두 helper 사용**: public/submit, admin-create, backfill-coords (이전엔 inline 함수 복제)
+
+**클라이언트 안전망**: field-request-map.tsx 마운트 시 좌표 NULL 활성 출장요청 발견 → 자동으로 backfill-coords 호출 → GAS sync 등으로 들어온 NULL 건도 사장님이 지도 한 번 열면 자동 복구.
+
+### 회귀 안전
+- 기존 admin-create 외부 동작 0 변경 (helper로 추출만)
+- field-request-map 필터 조건 그대로 (좌표 NULL 제외)
+
+---
+
 ## 2026-04-30 (저녁) — 24h 리마인더 등록-방문 간격 가드
 
 ### 문제
