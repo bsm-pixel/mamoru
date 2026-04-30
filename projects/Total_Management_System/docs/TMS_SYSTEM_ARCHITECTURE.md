@@ -1,6 +1,13 @@
 # MAMORU TMS — 시스템 아키텍처 & 프로세스 흐름도
 
-> 최종 수정: 2026-04-30 (심야 +2) | **B2B 카테고리 동적화 + 거래처별 단가 (074)** + B2B 카탈로그 (073) + 고객 자동 매칭 (072) + 070 link
+> 최종 수정: 2026-04-30 (심야 +3) | **즉각 반영 풀 연동 (075)** — 설정-실전 연동 누락 fix + 대시보드 수치 버그 + invalidate 일원화 + B2B 카테고리 동적화 (074) + B2B 카탈로그 (073) + 고객 자동 매칭 (072) + 070 link
+
+## 📌 075 (2026-04-30 심야 +3): 사장님 보고 3건 + 풀 연동 강화
+- **경비 카테고리 동적화**: 설정 → 회계 → 카테고리 추가 → 즉시 /expenses 반영 (이전 hard-coded)
+- **"일정 재요청" 카운트 fix**: needAction status에서 pending_admin 잘못 포함 제거 (TS fallback + RPC v3)
+- **복원수리 매출 통일 (옵션 A 발생 기준)**: 모든 채널이 sale_date/created_at/delivery_date 기준 + 미입금 포함 (취소만 제외)
+- **invalidate 일원화**: `lib/query/invalidate-keys.ts` — 모든 sale/repair mutation 후 대시보드 매출 즉각 갱신 (60초 지연 → 즉시)
+- **staleTime**: sales-stats 60→30s, products 5분→1분
 
 ## 📌 운영 도구 정책 (2026-04-30 확정)
 - **AppSheet**: 폐기 (2026-02-26). TMS가 전면 대체.

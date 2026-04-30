@@ -1,6 +1,6 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-04-30 (GAS 의존 폐기 + 매장 리마인더 회귀 fix + 솔라피 직접 호출 마이그 예정 추가)
+> 최종 수정: 2026-04-30 심야 +3 (075 사장님 보고 3건 fix + 즉각 반영 풀 연동 강화)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
@@ -43,6 +43,12 @@
 
 - [ ] **Order API 전환**: 주문 취소 자동화 + 송장 수정/삭제
 - [ ] **판매 출고 알림톡 외부 설정**: 솔라피 배송조회 버튼 변수명 확인 (솔라피 문의 대기중)
+
+---
+
+## ✅ 완료 — 04-30 심야 +3 (075)
+
+- [x] **TMS 즉각 반영 풀 연동 + 사장님 보고 3건 fix** (2026-04-30 심야 +3) — 사장님 보고: ① 설정에서 추가한 경비 카테고리 실전 화면 미반영 ② 대시보드 "일정 재요청" 0건인데 1건 표시 ③ 복원수리 이번달 매출 표기 부정확. 진단 결과 3개 근본 패턴 발견(hard-coded 누락 / status 필터 버그 / cross-domain invalidation 끊김). 수정: ① `expenses/page.tsx` `useSetting('accounting.expense_categories')` 적용 ② `use-dashboard-stats.ts:154` + `migrations/075_hub_stats_rpc_v3.sql`에서 `pending_admin` 제거 ③ 복원수리 매출 정의 옵션 A "발생 기준"(사장님 합의) — A채널 paid_at 조건 제거, B채널 category='RS' + total_price>0 ④ `lib/query/invalidate-keys.ts` helper + 모든 sale/repair mutation에 `invalidateFinancialQueries(qc)` ⑤ staleTime sales-stats 60s→30s, products 5분→1분. 흐름도/매뉴얼 4종 갱신. 사장님이 SQL Editor에서 075 실행 완료. commit `20d4752`
 
 ---
 
