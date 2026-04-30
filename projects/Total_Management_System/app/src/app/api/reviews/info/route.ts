@@ -23,7 +23,9 @@ function maskName(name: string): string {
 export async function GET(req: NextRequest) {
   try {
     const uid = req.nextUrl.searchParams.get('uid');
-    const type = req.nextUrl.searchParams.get('type');
+    const rawType = req.nextUrl.searchParams.get('type');
+    // 'as'는 'repair'의 별칭으로 정규화 (솔라피 측 정적 URL이 'as'로 박혀있는 경우 방어망)
+    const type = rawType === 'as' ? 'repair' : rawType;
 
     if (!uid || !type) {
       return NextResponse.json(

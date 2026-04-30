@@ -37,7 +37,9 @@ async function generateReviewId(db: ReturnType<typeof createServiceClient>): Pro
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { uid, type, stars, content, photoUrls, productNo, tags, subtype: bodySubtype } = body;
+    const { uid, type: rawType, stars, content, photoUrls, productNo, tags, subtype: bodySubtype } = body;
+    // 'as'는 'repair'의 별칭으로 정규화 (info route와 동일 패턴)
+    const type = rawType === 'as' ? 'repair' : rawType;
 
     if (!uid || !type || !stars || !content) {
       return NextResponse.json(

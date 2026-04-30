@@ -139,6 +139,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
               promisedAt={(r as { review_promised_at?: string | null }).review_promised_at ?? null}
               requestSentAt={(r as { review_request_sent_at?: string | null }).review_request_sent_at ?? null}
               submittedAt={(r as { review_submitted_at?: string | null }).review_submitted_at ?? null}
+              sourceType={(r as { proceed_type?: string | null }).proceed_type ?? null}
               onChanged={() => refetch()}
             />
           )}

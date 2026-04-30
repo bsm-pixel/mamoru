@@ -1,5 +1,68 @@
 # 상담관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-30 (출장요청 지도 핀 IA 정리 — 완료 핀 컨텍스트 분리)
+> 최종 업데이트: 2026-04-30 (24h 리마인더 등록-방문 간격 가드 + 후기요청 모달 IA 고정)
+
+---
+
+## 2026-04-30 (저녁) — 24h 리마인더 등록-방문 간격 가드
+
+### 문제
+당일 예약(예: 오늘 9시 등록 + 오늘 16시 visit) 케이스에 24h 리마인더가 발송됨. 의도: 24h 리마인더는 "방문 하루 전 안내"라 등록-방문 간격이 24h 미만이면 의미 없음.
+
+### Fix — `send-reminders/route.ts`
+24h 윈도우 통과 조건에 `intervalHours = (visit_at - created_at) / 1h >= 24` 가드 추가:
+```ts
+const intervalHours = (visitAt.getTime() - new Date(c.created_at).getTime()) / (1000 * 60 * 60);
+if (diffHours <= 24 && diffHours > 2 && !c.remind_24h_at && intervalHours >= 24) { ... }
+```
+
+select 컬럼에 `created_at` 추가 (조회 보강).
+
+**효과**:
+- 당일 등록+visit (간격 < 24h) → 24h 리마인더 skip
+- 어제 등록+오늘 visit (간격 ≥ 24h) → 정상 발송
+- 2h 리마인더는 변화 0
+
+---
+
+## 2026-04-30 (저녁) — 후기요청 모달 IA 고정 (review_type 잠금 + subtype 자동)
+
+### 문제
+매장방문 후기요청 모달에서 사장님이 "복원수리" 옵션을 선택할 수 있어 → 솔라피 복원수리 템플릿(자체 정적 URL `?uid=#{as_uid}&type=as`)으로 발송 → 매장방문 UUID가 `type=as`로 후기 페이지 호출 → /api/reviews/info 'as' 미처리 → 404 오류.
+
+### Fix — `review-request-modal.tsx`
+**source 컨텍스트 기반 review_type 잠금**:
+
+| source | review_type | UI |
+|--------|------------|-----|
+| consultation | `'consult'` 고정 | typeOptions 미노출, "자동 선택됨" 라벨 |
+| repair | `'repair'` 고정 | 동일 |
+| sale | `hasRepairItem`에 따라 default | typeOptions 노출 (사장님 변경 가능) |
+
+**subtype 자동 추론**:
+- 새 prop `sourceType?: string | null` 추가
+- consultation → `consultations.consultation_type` 전달
+- repair → `repairs.proceed_type` 전달
+- 모달 초기값: `subtype = sourceType || 'store_visit'` (회귀 fallback)
+
+### prop 전달 경로
+```
+consultation-detail-panel → ReviewManagementCard sourceType={c.consultation_type} → ReviewRequestModal
+repair-detail-panel → ReviewManagementCard sourceType={r.proceed_type} → ReviewRequestModal
+sale-detail-panel → ReviewManagementCard (sourceType 미전달) → ReviewRequestModal (sale은 그대로)
+```
+
+### 방어망 — `reviews/info`, `reviews/submit`에 type='as' alias
+솔라피 측 정적 URL이 `?type=as`로 박혀있는 케이스 방어:
+```ts
+const type = rawType === 'as' ? 'repair' : rawType;
+```
+
+근본 fix는 모달 IA 잠금. alias는 안전망.
+
+### 회귀 안전
+- sale source 동작 0 변경 (사장님 typeOptions 선택 그대로)
+- 자동 발송 흐름 (consultation/repair completed) 변화 0
+- 070 mirror 모드 영향 0
 
 ---
 

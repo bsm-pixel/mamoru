@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
     const { data: consultations } = await dbAny
       .from('consultations')
-      .select('id, name, phone, consultation_type, visit_date, visit_time, unique_id, address_road, address_detail, remind_24h_at, remind_2h_at')
+      .select('id, name, phone, consultation_type, visit_date, visit_time, unique_id, address_road, address_detail, remind_24h_at, remind_2h_at, created_at')
       .eq('status', 'confirmed')
       .gte('visit_date', today)
       .lte('visit_date', tomorrow)
@@ -61,8 +61,13 @@ export async function GET(req: NextRequest) {
       const isField = c.consultation_type === 'field_request';
       const address = [c.address_road, c.address_detail].filter(Boolean).join(' ');
 
-      // 24h 리마인더 (2~24시간 전)
-      if (diffHours <= 24 && diffHours > 2 && !c.remind_24h_at) {
+      // 등록(created_at)부터 방문까지 간격 — 24h 리마인더 의미 가드용
+      const intervalHours = c.created_at
+        ? (visitAt.getTime() - new Date(c.created_at).getTime()) / (1000 * 60 * 60)
+        : 0;
+
+      // 24h 리마인더 (2~24시간 전) — 단 등록-방문 간격이 24h 이상일 때만 (당일 예약 케이스 제외)
+      if (diffHours <= 24 && diffHours > 2 && !c.remind_24h_at && intervalHours >= 24) {
         try {
           // DB 먼저 마킹 → 중복 발송 방지 (동시 Cron 실행 대비)
           const { count } = await dbAny

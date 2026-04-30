@@ -236,6 +236,7 @@ export function ConsultationDetailPanel({ consultationId }: Props) {
           promisedAt={(c as { review_promised_at?: string | null }).review_promised_at ?? null}
           requestSentAt={(c as { review_request_sent_at?: string | null }).review_request_sent_at ?? null}
           submittedAt={(c as { review_submitted_at?: string | null }).review_submitted_at ?? null}
+          sourceType={c.consultation_type}
           onChanged={() => refetch()}
         />
       )}

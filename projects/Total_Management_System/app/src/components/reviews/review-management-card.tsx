@@ -43,6 +43,8 @@ interface Props {
   onChanged?: () => void;
   /** sale source일 때 수리 상품 포함 여부 (ReviewRequestModal 기본값 결정) */
   hasRepairItem?: boolean;
+  /** source의 실제 sub-type (consultation_type / proceed_type 등) — ReviewRequestModal subtype 자동 추론 */
+  sourceType?: string | null;
   /** 070: sale에 source_consultation_id 있을 때 원본 상담 정보 — mirror 모드 트리거 */
   linkedConsultation?: { id: string; unique_id: string; name: string; status: string } | null;
 }
@@ -105,6 +107,7 @@ export function ReviewManagementCard({
   submittedAt,
   onChanged,
   hasRepairItem = false,
+  sourceType = null,
   linkedConsultation = null,
 }: Props) {
   const [togglingPromise, setTogglingPromise] = useState(false);
@@ -286,6 +289,7 @@ export function ReviewManagementCard({
           customerName={customerName}
           customerPhone={customerPhone || ''}
           hasRepairItem={hasRepairItem}
+          sourceType={sourceType}
           alreadySent={!!requestSentAt}
           onClose={() => setShowRequestModal(false)}
           onSent={() => {
