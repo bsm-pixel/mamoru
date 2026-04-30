@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-04-30 (심야 +3) — B2B 거래처 페이지에서 카테고리 직접 변경 가능
+
+PartnerDetailPanel 편집 모드에 **"거래처 카테고리" 드롭다운** 추가. 이전엔 customer_type 변경하려면 `/customers/[id]` 고객 화면으로 이동해야 했음 (IA 위반).
+
+- 위치: /거래처 → 거래처 선택 → ✏️ 편집 버튼 → 상단 "거래처 카테고리" 드롭다운
+- 옵션: 동적 B2B 카테고리 (사장님 추가) + 매입처
+- 저장 시 다른 카테고리 탭으로 자동 이동 (invalidateQueries)
+
+상세: /suppliers/page.tsx PartnerDetailPanel `customer_type` form state
+
+---
+
 ## 2026-04-30 (심야 +2) — B2B 카테고리 동적 관리 (074)
 
 ### 핵심
