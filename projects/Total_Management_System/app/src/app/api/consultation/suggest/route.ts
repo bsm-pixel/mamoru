@@ -2,6 +2,8 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidTransition } from '@/lib/consultation/transitions';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
+import { errMsg } from '@/lib/utils/err';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
 const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting'; // Make 시나리오가 https:// 추가
@@ -116,9 +118,17 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    // 캘린더 동기화 — suggested 상태는 HIDDEN_STATES이므로 기존 이벤트 있으면 삭제
+    // (confirmed에서 다시 suggested로 돌아간 경우 잔존 방지)
+    try {
+      await syncConsultationToCalendar(consultationId);
+    } catch (e) {
+      console.error('[calendar-sync suggest] 실패:', { id: consultationId, error: errMsg(e) });
+    }
+
     return NextResponse.json(data);
   } catch (err) {
     console.error('[suggest] 시간 제안 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

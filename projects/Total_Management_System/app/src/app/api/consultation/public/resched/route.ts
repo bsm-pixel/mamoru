@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendAdminEmail } from '@/lib/notification/email';
 import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
+import { errMsg } from '@/lib/utils/err';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -75,9 +76,15 @@ export async function GET(req: NextRequest) {
       );
     } catch { /* 이메일 실패해도 재요청은 완료 */ }
 
-    // 관리자 푸시 + Google Calendar 동기화 — after()로 응답 후 실행 보장 (Vercel 서버리스 대응)
+    // Google Calendar 동기화 — reschedule_requested 상태로 이벤트 ⏳ 접두어 업데이트 (즉시)
+    try {
+      await syncConsultationToCalendar(data.id);
+    } catch (e) {
+      console.error('[calendar-sync resched] 실패:', { id: data.id, error: errMsg(e) });
+    }
+
+    // 관리자 푸시는 응답 후 실행 (지연 허용)
     after(async () => {
-      // 관리자 푸시 (고객 재요청)
       try {
         const { sendPushToAll } = await import('@/lib/firebase/send-push');
         await sendPushToAll({
@@ -92,17 +99,10 @@ export async function GET(req: NextRequest) {
       } catch (e) {
         console.error('[resched push] 실패:', e);
       }
-
-      // Google Calendar 동기화 — ⏳ 접두어 업데이트
-      try {
-        await syncConsultationToCalendar(data.id);
-      } catch (e) {
-        console.error('[calendar-sync after resched] 실패:', e);
-      }
     });
 
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500, headers: CORS_HEADERS });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500, headers: CORS_HEADERS });
   }
 }

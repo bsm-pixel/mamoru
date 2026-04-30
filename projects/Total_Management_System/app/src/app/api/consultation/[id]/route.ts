@@ -28,20 +28,7 @@ function getAutoNotifyTemplate(
 
 /* GAS cancelViaGAS 제거 완료 — Calendar 삭제 불필요, 슬롯 차단은 Supabase 쿼리 */
 
-/** 에러를 사람이 읽을 수 있는 string으로 직렬화 ([object Object] 방지) */
-function errMsg(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  if (typeof err === 'string') return err;
-  if (err && typeof err === 'object') {
-    const e = err as { message?: unknown; error?: unknown; details?: unknown; hint?: unknown };
-    if (typeof e.message === 'string') return e.message;
-    if (typeof e.error === 'string') return e.error;
-    if (typeof e.details === 'string') return e.details;
-    if (typeof e.hint === 'string') return e.hint;
-    try { return JSON.stringify(err); } catch { return String(err); }
-  }
-  return String(err);
-}
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/consultation/[id] — 상담 단건 + 이력 */
 export async function GET(

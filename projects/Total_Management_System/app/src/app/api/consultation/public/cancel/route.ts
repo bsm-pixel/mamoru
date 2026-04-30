@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse, after } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
+import { errMsg } from '@/lib/utils/err';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -69,17 +70,15 @@ export async function GET(req: NextRequest) {
       });
     } catch { /* 알림 실패해도 취소는 완료 */ }
 
-    // Google Calendar 동기화 — cancelled 상태이므로 캘린더 이벤트 자동 삭제
-    after(async () => {
-      try {
-        await syncConsultationToCalendar(data.id);
-      } catch (e) {
-        console.error('[calendar-sync after cancel] 실패:', e);
-      }
-    });
+    // Google Calendar 동기화 — cancelled 상태이므로 캘린더 이벤트 즉시 삭제 (잔존 방지)
+    try {
+      await syncConsultationToCalendar(data.id);
+    } catch (e) {
+      console.error('[calendar-sync cancel] 실패:', { id: data.id, error: errMsg(e) });
+    }
 
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500, headers: CORS_HEADERS });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500, headers: CORS_HEADERS });
   }
 }

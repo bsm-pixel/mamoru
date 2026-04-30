@@ -4,30 +4,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { Consultation, ConsultationHistory } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
+import { errMsg } from '@/lib/utils/err';
 
 /** 응답 에러를 사람이 읽을 수 있는 string으로 직렬화 ([object Object] 방지) */
 async function parseApiError(res: Response, fallback: string): Promise<string> {
   const errBody = await res.json().catch(() => ({ error: res.statusText || fallback }));
-  const e = errBody?.error;
-  if (typeof e === 'string') return e;
-  if (e && typeof e === 'object') {
-    const obj = e as { message?: unknown };
-    if (typeof obj.message === 'string') return obj.message;
-    try { return JSON.stringify(e); } catch { /* fallthrough */ }
-  }
-  return fallback;
-}
-
-/** mutation onError에서 안전하게 에러 메시지 추출 */
-function errMsg(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  if (typeof err === 'string') return err;
-  if (err && typeof err === 'object') {
-    const e = err as { message?: unknown };
-    if (typeof e.message === 'string') return e.message;
-    try { return JSON.stringify(err); } catch { return String(err); }
-  }
-  return String(err);
+  return errMsg(errBody?.error) || fallback;
 }
 
 /** 상담 목록 조회 (확장 필터 지원) */
