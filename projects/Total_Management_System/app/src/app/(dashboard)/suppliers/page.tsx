@@ -180,7 +180,7 @@ export default function B2BPartnersPage() {
             <div className="w-[480px] shrink-0">{listContent}</div>
             <div className="flex-1 min-w-0">
               {selectedPartner ? (
-                <PartnerDetailPanel partner={selectedPartner} tabConfig={tabConfig} badgeStyle={BADGE_STYLE} badgeLabel={BADGE_LABEL} />
+                <PartnerDetailPanel partner={selectedPartner} tabConfig={tabConfig} badgeStyle={BADGE_STYLE} badgeLabel={BADGE_LABEL} allTabs={B2B_TABS} />
               ) : (
                 <div className="flex items-center justify-center h-64 text-sm text-neutral-400">거래처를 선택해주세요</div>
               )}
@@ -190,7 +190,7 @@ export default function B2BPartnersPage() {
           <>
             {listContent}
             <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="거래처 상세">
-              {selectedPartner && <PartnerDetailPanel partner={selectedPartner} tabConfig={tabConfig} badgeStyle={BADGE_STYLE} badgeLabel={BADGE_LABEL} />}
+              {selectedPartner && <PartnerDetailPanel partner={selectedPartner} tabConfig={tabConfig} badgeStyle={BADGE_STYLE} badgeLabel={BADGE_LABEL} allTabs={B2B_TABS} />}
             </SlidePanel>
           </>
         )}
@@ -241,11 +241,11 @@ interface TabConfig {
   is_default?: boolean;
 }
 
-function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel }: { partner: Customer; tabConfig: TabConfig; badgeStyle: Record<string, string>; badgeLabel: Record<string, string> }) {
+function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel, allTabs }: { partner: Customer; tabConfig: TabConfig; badgeStyle: Record<string, string>; badgeLabel: Record<string, string>; allTabs: TabConfig[] }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [detailTab, setDetailTab] = useState<'info' | 'catalog'>('info');
-  const [form, setForm] = useState({ name: '', company_name: '', phone: '', email: '', memo: '' });
+  const [form, setForm] = useState({ name: '', company_name: '', phone: '', email: '', memo: '', customer_type: '' });
   const [showCollect, setShowCollect] = useState(false);
 
   useEffect(() => {
@@ -253,6 +253,7 @@ function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel }: {
       name: p.name || '', company_name: p.company_name || '',
       phone: p.phone || '', email: p.email || '',
       memo: p.memo || '',
+      customer_type: p.customer_type || '',
     });
     setEditing(false);
     setDetailTab('info');
@@ -318,6 +319,16 @@ function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel }: {
       {detailTab === 'info' && <div className="px-5 py-4 space-y-4">
         {editing ? (
           <div className="space-y-3">
+            <div>
+              <label className="text-xs text-neutral-500">거래처 카테고리</label>
+              <select value={form.customer_type} onChange={(e) => setForm({ ...form, customer_type: e.target.value })}
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm">
+                {allTabs.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+              <p className="text-[10px] text-neutral-400 mt-0.5">변경 시 다른 카테고리 탭으로 이동됩니다</p>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-neutral-500">업체명</label>
