@@ -45,7 +45,10 @@
     }
   });
 
-  // 초기 높이: 0으로 시작 → postMessage로 실제 높이 수신 시 자동 조절
-  iframe.style.height = '0px';
+  // 초기 높이: 보수적 추정값 (다른 wrapper와 동일 패턴) → 부모 페이지 레이아웃 안정 후
+  // 정확한 높이가 postMessage로 도착하면 자동 조정.
+  // 0으로 시작하면 카카오 인앱에서 첫 메시지 도착 전 부모 레이아웃이 작은 iframe 기준으로 잡혀
+  // 그 후 갑자기 늘어날 때 사용자 스크롤 위치가 어긋나며 Hero 위쪽이 잘려 보이는 사고 발생.
+  iframe.style.height = (window.innerWidth <= 768 ? 2400 : 2800) + 'px';
 })();
 </script>
