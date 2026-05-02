@@ -1,7 +1,27 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-02 (078 — 상담 달력 관리 + 휴무 SSOT 통합 + 리뷰 모달 viewport fix + 페이지별 iframe 환경 메모리 박제)
+> 최종 수정: 2026-05-03 (가이드 페이지 위계 정합 + iframe wrapper 부모 floating CTA + 사장님 룰 박제 "전체 흐름 점검")
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
+
+---
+
+## ✅ 2026-05-03 작업 이력
+
+### 가이드 페이지 위계/중복 정리 (사장님 룰 적용)
+- [x] **상담 가이드 CTA 3중 보장 + Brand Guide 정합성** (commits `108d292` `1b115c2` `439e377` `55051c3`) — Hero CTA + PC 탭 인라인 CTA + 모바일 floating + Brand Guide ADDENDUM § 5 PC 수치(680px) 정합 + Hero CTA 다크 배경 묻힘 fix
+- [x] **iframe wrapper 부모 측 모바일 floating CTA** (commit `ec6ebfc`) — iframe 안 fixed가 iframe document 끝점 기준이라 작동 X. 부모 wrapper에 직접 fixed로 추가 (상담 + 복원수리 가이드 둘 다)
+- [x] **모바일 CTA 중복 제거** (commit `298ebd2`) — page 내부 floating 영구 숨김 (wrapper로 단일화) + Hero secondary "Q&A 보기" HTML 제거 (탭과 중복) + Hero CTA 모바일 숨김 (wrapper로 단일 진입점)
+- [x] **사장님 룰 박제 "전체 흐름 + UI/UX 위계 점검 필수"** — `memory/feedback_page_holistic_review.md` + MEMORY.md 인덱스
+- [x] **페이지 작업 전 iframe 환경 식별 메모리** — `memory/reference_iframe_pages.md` + MEMORY.md 인덱스
+
+### 가이드 페이지 콘텐츠 정합화
+- [x] **과정안내 Step 1 위계 강화 + "또는" 구분자** (commits `aeb3128` `e2b9ad3`) — page_as_guide(다크) + page_guide(라이트) 두 가이드 동일 패턴. step-title 18px 굵게 + method-group 카드 강화 + "또는" divider
+- [x] **"마모루 컨설팅" 탭 시장 문제점 3블록 제거** (commit `f412525`) — brand/page_intro와 70~80% 중복. 페이지 간 메시지 분담: brand=Why / consulting·as guide=How
+- [x] **상담철칙 ↔ 다크 메시지 영역 swap** (commit `67da51e`) — 실무 원칙 먼저 → 다크 메시지로 결심 강화
+
+### 메인 페이지 + 사장님 직접 수정
+- [x] **메인 슬로건 "거짓 없는 본질"** (commit `85e9cad`) — Brand Guide "조용히 압도" 톤 + 영문 슬로건과 한국어 일관
+- [x] **상담철칙 03 추가 + 텍스트 정제** (commit `1885869`) — 사장님 직접 수정 (01 desc / 02 타이틀 간결 / 03 신규 "고객님께 맞는 제품이 없다면")
 
 ---
 
