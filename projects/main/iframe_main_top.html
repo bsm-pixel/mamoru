@@ -29,15 +29,29 @@
   var iframe = document.getElementById('mamoruMainTopFrame');
   var currentHeight = 0;
 
+  /* 디버그 모드: ?mmdebug=1 쿼리 시 활성화 (사장님이 PC 크롬에서 진단용) */
+  var MM_DEBUG = false;
+  try { MM_DEBUG = new URLSearchParams(location.search).get('mmdebug') === '1'; } catch(_) {}
+  if (MM_DEBUG) console.log('[mm-top wrapper] 초기 높이 적용:', iframe.style.height);
+
   window.addEventListener('message', function(e) {
-    if (e.origin !== 'https://bsm-pixel.github.io') return;
+    if (MM_DEBUG) console.log('[mm-top wrapper] message 수신:', e.origin, e.data);
+
+    if (e.origin !== 'https://bsm-pixel.github.io') {
+      if (MM_DEBUG) console.warn('[mm-top wrapper] origin 미일치 — 무시:', e.origin);
+      return;
+    }
 
     if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && e.data.id === 'top' && typeof e.data.height === 'number') {
       var newHeight = Math.ceil(e.data.height);
+      if (MM_DEBUG) console.log('[mm-top wrapper] height 메시지 처리:', newHeight, '(현재:', currentHeight, ')');
       if (newHeight !== currentHeight && newHeight > 0) {
         currentHeight = newHeight;
         iframe.style.height = newHeight + 'px';
+        if (MM_DEBUG) console.log('[mm-top wrapper] iframe height 변경:', newHeight + 'px');
       }
+    } else if (MM_DEBUG && e.data && e.data.type === 'MAMORU_IFRAME_SIZE') {
+      console.warn('[mm-top wrapper] MAMORU_IFRAME_SIZE이지만 조건 불통과:', { id: e.data.id, expected: 'top', height: e.data.height });
     }
 
     if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) {
