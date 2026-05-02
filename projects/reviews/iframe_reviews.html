@@ -42,6 +42,21 @@
     if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) {
       window.location.href = e.data.url;
     }
+
+    // 모달 뷰포트 센터링: iframe 안 모달이 부모 viewport 가시 영역 중앙에 표시되도록
+    // (다른 wrapper들과 동일 패턴 — as/iframe_form.html L50-58 참조)
+    if (e.data && e.data.type === 'MAMORU_REQUEST_VIEWPORT') {
+      var rect = iframe.getBoundingClientRect();
+      var visibleTop = Math.max(0, -rect.top);
+      var visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+      if (visibleHeight > 0) {
+        iframe.contentWindow.postMessage({
+          type: 'MAMORU_VIEWPORT_INFO',
+          visibleTop: visibleTop,
+          visibleHeight: visibleHeight
+        }, '*');
+      }
+    }
   });
 
   // 초기 높이 fallback
