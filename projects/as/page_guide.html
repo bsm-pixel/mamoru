@@ -824,6 +824,12 @@ img[src=""], video[src=""] {
   line-height: 1.5;
   margin-bottom: 6px;
 }
+/* Step 1 ("두 가지 진행방식 중 선택하여 접수") 위계 강화 — 두 옵션 카드의 부모 라벨 */
+.as-step-flow > .as-step-item:first-child > .as-step-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
 .as-step-desc {
   font-size: 13px;
   color: var(--text-secondary);
@@ -855,20 +861,40 @@ img[src=""], video[src=""] {
   text-align: center;
 }
 
-/* 접수방식 — 아이콘 그룹 */
+/* 접수방식 — 아이콘 그룹 (위계 강화: "두 가지 진행방식"이 명확히 두 카드로 인식되도록) */
 .as-method-group {
   margin-top: 12px;
-  padding: 16px 14px 18px;
+  padding: 20px 18px 22px;
   background: var(--shell);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--sand);
   border-radius: 12px;
 }
 .as-method-label {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 10px;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
+}
+
+/* "또는" 구분자 — 두 method-group 사이 시각 분리 */
+.as-method-or-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 6px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.as-method-or-divider::before,
+.as-method-or-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--sand);
 }
 .as-icon-row {
   display: flex;
@@ -2094,6 +2120,9 @@ img[src=""], video[src=""] {
               </div>
             </div>
           </div>
+
+          <!-- 두 옵션 사이 "또는" 구분자 -->
+          <div class="as-method-or-divider" aria-hidden="true">또는</div>
 
           <!-- 직접발송 -->
           <div class="as-method-group">
