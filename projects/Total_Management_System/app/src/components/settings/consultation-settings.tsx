@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Plus, X } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
@@ -18,17 +18,12 @@ interface ConsultSettings {
   disabled_weekdays: number[]; field_buffer_before: number; field_buffer_after: number;
 }
 
-interface ClosedDate { id?: string; date: string; reason: string; }
-
 export default function ConsultationSettings({ settings, onSave, saving }: TabProps) {
   const supabase = createClient();
   const [cs, setCs] = useState<ConsultSettings>({
     start_hour: 10, end_hour: 20, duration_min: 60, step_min: 10,
     disabled_weekdays: [0], field_buffer_before: 90, field_buffer_after: 90,
   });
-  const [closedDates, setClosedDates] = useState<ClosedDate[]>([]);
-  const [newDate, setNewDate] = useState('');
-  const [newReason, setNewReason] = useState('');
   const [reminder24h, setReminder24h] = useState(true);
   const [reminder2h, setReminder2h] = useState(true);
   const [autoReview, setAutoReview] = useState(false);
@@ -38,8 +33,9 @@ export default function ConsultationSettings({ settings, onSave, saving }: TabPr
   const [storeAddress, setStoreAddress] = useState('');
 
   useEffect(() => {
-    // consultation_settings 테이블에서 직접 조회
+    // consultation_settings 테이블에서 직접 조회 (disabled_weekdays는 그대로 보존 — 달력 관리에서 변경)
     (async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase as any).from('consultation_settings').select('*').eq('id', 'default').single();
       if (data) {
         setCs({
@@ -49,8 +45,6 @@ export default function ConsultationSettings({ settings, onSave, saving }: TabPr
           field_buffer_before: data.field_buffer_before ?? 90, field_buffer_after: data.field_buffer_after ?? 90,
         });
       }
-      const { data: cd } = await (supabase as any).from('closed_dates').select('*').order('date', { ascending: true });
-      setClosedDates((cd || []) as ClosedDate[]);
     })();
     setReminder24h(parse(settings['consultation.reminder_24h_enabled'], true));
     setReminder2h(parse(settings['consultation.reminder_2h_enabled'], true));
@@ -62,7 +56,8 @@ export default function ConsultationSettings({ settings, onSave, saving }: TabPr
   }, [settings]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
-    // consultation_settings 업데이트 (직접 DB)
+    // consultation_settings 업데이트 (직접 DB) — disabled_weekdays는 cs 객체 유지값 그대로 보존
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
       .from('consultation_settings')
       .upsert({ id: 'default', ...cs, updated_at: new Date().toISOString() });
@@ -80,22 +75,6 @@ export default function ConsultationSettings({ settings, onSave, saving }: TabPr
     ]);
   };
 
-  const addClosedDate = async () => {
-    if (!newDate) return;
-    const { error } = await (supabase as any).from('closed_dates').insert({ date: newDate, reason: newReason || '휴무' });
-    if (error) { toast.error('휴무일 추가 실패'); return; }
-    setClosedDates([...closedDates, { date: newDate, reason: newReason || '휴무' }]);
-    setNewDate(''); setNewReason('');
-    toast.success('휴무일 추가 완료');
-  };
-
-  const removeClosedDate = async (cd: ClosedDate) => {
-    if (cd.id) await (supabase as any).from('closed_dates').delete().eq('id', cd.id);
-    setClosedDates(closedDates.filter((d) => d.date !== cd.date));
-  };
-
-  const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
-
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-bold">상담 관리 설정</h2>
@@ -112,43 +91,14 @@ export default function ConsultationSettings({ settings, onSave, saving }: TabPr
         </div>
       </Field>
 
-      {/* 2. 휴무 요일 */}
-      <Field label="휴무 요일" desc="체크한 요일은 접수 폼에서 예약 불가.">
-        <div className="flex gap-2">
-          {WEEKDAYS.map((d, i) => (
-            <button key={i}
-              onClick={() => {
-                const next = cs.disabled_weekdays.includes(i)
-                  ? cs.disabled_weekdays.filter((w) => w !== i)
-                  : [...cs.disabled_weekdays, i];
-                setCs({ ...cs, disabled_weekdays: next });
-              }}
-              className={`w-9 h-9 rounded-lg text-sm font-medium transition ${
-                cs.disabled_weekdays.includes(i) ? 'bg-red-500 text-white' : 'bg-neutral-100 text-neutral-600'
-              }`}
-            >{d}</button>
-          ))}
-        </div>
-      </Field>
-
-      {/* 3. 특별 휴무일 */}
-      <Field label="특별 휴무일" desc="연휴/개인 사정 등 임시 휴무.">
-        <div className="space-y-1.5 mb-2">
-          {closedDates.map((cd, i) => (
-            <div key={i} className="flex items-center gap-2 text-sm">
-              <span className="font-mono">{cd.date}</span>
-              <span className="text-neutral-500">{cd.reason}</span>
-              <button onClick={() => removeClosedDate(cd)} className="text-neutral-400 hover:text-red-500 ml-auto"><X size={14} /></button>
-            </div>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)}
-            className="h-8 px-2 rounded-lg border border-neutral-200 text-sm" />
-          <input value={newReason} onChange={(e) => setNewReason(e.target.value)} placeholder="사유"
-            className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm" />
-          <button onClick={addClosedDate} className="px-2 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200"><Plus size={14} /></button>
-        </div>
+      {/* 휴무 요일 + 특별 휴무일 → 달력 관리 화면으로 이전 (078) */}
+      <Field label="휴무 관리" desc="정기 휴무 요일 + 특정 날짜 휴무는 한 화면에서 통합 관리합니다.">
+        <a
+          href="/consultations/calendar"
+          className="inline-flex items-center gap-2 px-3 h-9 rounded-lg bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition"
+        >
+          상담 → 달력 관리로 이동
+        </a>
       </Field>
 
       {/* 4. 출장 버퍼 */}

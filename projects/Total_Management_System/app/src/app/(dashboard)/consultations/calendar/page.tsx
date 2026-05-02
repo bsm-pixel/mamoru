@@ -20,6 +20,8 @@ import {
   useBlackouts,
   useCreateBlackout,
   useDeleteBlackout,
+  useConsultationSettings,
+  useUpdateDisabledWeekdays,
   type BlackoutConsultation,
 } from '@/hooks/use-blackouts';
 import { formatPhone } from '@/lib/utils/format';
@@ -68,6 +70,17 @@ export default function CalendarManagePage() {
   const toDate = ymd(lastMonth.year, lastMonth.month, lastDay);
 
   const { data, isLoading } = useBlackouts(fromDate, toDate);
+  const { data: cs } = useConsultationSettings();
+  const updateWeekdays = useUpdateDisabledWeekdays();
+
+  const disabledWeekdays = cs?.disabled_weekdays ?? [0];
+
+  const toggleWeekday = (i: number) => {
+    const next = disabledWeekdays.includes(i)
+      ? disabledWeekdays.filter((w) => w !== i)
+      : [...disabledWeekdays, i];
+    updateWeekdays.mutate(next);
+  };
 
   // 데이터 → 빠른 조회용 Set/Map
   const blackoutSet = useMemo(() => {
@@ -116,6 +129,36 @@ export default function CalendarManagePage() {
           </div>
         </Card>
 
+        {/* 정기 휴무 요일 토글 */}
+        <Card>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold text-neutral-800">정기 휴무 요일</h3>
+            <span className="text-[11px] text-neutral-400">매주 반복</span>
+          </div>
+          <p className="text-xs text-neutral-500 mb-3">선택한 요일은 매주 자동으로 고객 예약 차단됩니다.</p>
+          <div className="flex gap-2 flex-wrap">
+            {DAY_NAMES.map((d, i) => {
+              const isOff = disabledWeekdays.includes(i);
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => toggleWeekday(i)}
+                  disabled={updateWeekdays.isPending}
+                  className={`w-10 h-10 rounded-lg text-sm font-medium transition ${
+                    isOff
+                      ? 'bg-red-500 text-white border border-red-500'
+                      : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-400'
+                  } ${updateWeekdays.isPending ? 'opacity-50 cursor-wait' : ''}`}
+                  title={isOff ? `매주 ${d}요일 휴무 (해제하려면 클릭)` : `${d}요일 정기 휴무로 설정`}
+                >
+                  {d}
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+
         {/* 4개월 달력 grid (PC 2x2 / 모바일 1열) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {months.map(({ year, month }, i) => (
@@ -126,6 +169,7 @@ export default function CalendarManagePage() {
               isFirstMonth={i === 0}
               todayStr={todayStr}
               blackoutSet={blackoutSet}
+              disabledWeekdays={disabledWeekdays}
               consultMap={consultMap}
               onSelect={setSelectedDate}
             />
@@ -145,6 +189,11 @@ export default function CalendarManagePage() {
           isBlackout={blackoutSet.has(selectedDate)}
           existingReason={blackoutReasonMap.get(selectedDate) || ''}
           consultations={consultMap.get(selectedDate) || []}
+          isWeekdayOff={disabledWeekdays.includes(new Date(
+            Number(selectedDate.slice(0, 4)),
+            Number(selectedDate.slice(5, 7)) - 1,
+            Number(selectedDate.slice(8, 10)),
+          ).getDay())}
           onClose={() => setSelectedDate(null)}
         />
       )}
@@ -158,12 +207,13 @@ interface MonthCalendarProps {
   isFirstMonth: boolean;
   todayStr: string;
   blackoutSet: Set<string>;
+  disabledWeekdays: number[];
   consultMap: Map<string, BlackoutConsultation[]>;
   onSelect: (date: string) => void;
 }
 
 function MonthCalendar({
-  year, month, isFirstMonth, todayStr, blackoutSet, consultMap, onSelect,
+  year, month, isFirstMonth, todayStr, blackoutSet, disabledWeekdays, consultMap, onSelect,
 }: MonthCalendarProps) {
   const days = getCalendarDays(year, month);
 
@@ -203,10 +253,11 @@ function MonthCalendar({
           const isPast = date < todayStr;
           const isToday = date === todayStr;
           const isBlackout = blackoutSet.has(date);
+          const dow = idx % 7;
+          const isWeekdayOff = disabledWeekdays.includes(dow);
           const consults = consultMap.get(date) || [];
           const storeCount = consults.filter((c) => c.consultation_type === 'store_visit').length;
           const fieldCount = consults.filter((c) => c.consultation_type === 'field_request').length;
-          const dow = idx % 7;
 
           return (
             <button
@@ -219,6 +270,8 @@ function MonthCalendar({
                   ? 'bg-neutral-50 text-neutral-300 border-neutral-100 cursor-not-allowed'
                   : isBlackout
                   ? 'bg-red-50 border-red-200 hover:border-red-300'
+                  : isWeekdayOff
+                  ? 'bg-neutral-100 border-neutral-200 hover:border-neutral-400'
                   : isToday
                   ? 'bg-blue-50 border-blue-300 hover:border-blue-400'
                   : 'bg-white border-neutral-200 hover:border-neutral-400'
@@ -228,6 +281,8 @@ function MonthCalendar({
                 className={`font-medium ${
                   isBlackout
                     ? 'text-red-600 line-through'
+                    : isWeekdayOff
+                    ? 'text-neutral-400 line-through'
                     : dow === 0
                     ? 'text-red-500'
                     : dow === 6
@@ -237,12 +292,14 @@ function MonthCalendar({
               >
                 {day}
               </span>
-              {/* 휴무 라벨 */}
-              {isBlackout && (
+              {/* 휴무 라벨 (특정날짜 우선, 정기 그 다음) */}
+              {isBlackout ? (
                 <span className="text-[9px] text-red-500 font-semibold mt-0.5">휴무</span>
-              )}
+              ) : isWeekdayOff ? (
+                <span className="text-[9px] text-neutral-400 font-medium mt-0.5">정기휴무</span>
+              ) : null}
               {/* 예약 dot */}
-              {!isBlackout && (storeCount > 0 || fieldCount > 0) && (
+              {!isBlackout && !isWeekdayOff && (storeCount > 0 || fieldCount > 0) && (
                 <div className="flex gap-0.5 mt-auto mb-1">
                   {storeCount > 0 && (
                     <span
@@ -272,7 +329,10 @@ function MonthCalendar({
           <span className="w-1.5 h-1.5 rounded-full bg-purple-500" /> 출장
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded bg-red-100 border border-red-200" /> 휴무
+          <span className="w-2 h-2 rounded bg-red-100 border border-red-200" /> 임시 휴무
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-2 h-2 rounded bg-neutral-100 border border-neutral-200" /> 정기 휴무
         </span>
       </div>
     </Card>
@@ -284,11 +344,12 @@ interface BlackoutDetailModalProps {
   isBlackout: boolean;
   existingReason: string;
   consultations: BlackoutConsultation[];
+  isWeekdayOff: boolean;
   onClose: () => void;
 }
 
 function BlackoutDetailModal({
-  date, isBlackout, existingReason, consultations, onClose,
+  date, isBlackout, existingReason, consultations, isWeekdayOff, onClose,
 }: BlackoutDetailModalProps) {
   const [reason, setReason] = useState(existingReason);
   const create = useCreateBlackout();
@@ -315,6 +376,17 @@ function BlackoutDetailModal({
   return (
     <Modal open={true} onClose={onClose} title={dateLabel}>
       <div className="space-y-4">
+        {/* 정기 휴무 요일 안내 (해당하면) */}
+        {isWeekdayOff && !isBlackout && (
+          <div className="flex items-start gap-2 p-2 rounded-lg bg-neutral-100 text-xs text-neutral-600">
+            <Info size={14} className="shrink-0 mt-0.5" />
+            <span>
+              이 날짜는 <span className="font-bold">정기 휴무 요일</span>입니다 (매주 반복).
+              위 "정기 휴무 요일" 토글에서 해제하면 매주 영향. 이 날짜만 임시로 막으려면 아래 "이 날짜 막기" 버튼 사용 (사유: 임시 추가 휴무).
+            </span>
+          </div>
+        )}
+
         {/* 기존 예약 list */}
         {consultations.length > 0 && (
           <div className="space-y-2">

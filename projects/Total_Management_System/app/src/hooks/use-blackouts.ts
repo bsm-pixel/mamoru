@@ -81,3 +81,55 @@ export function useDeleteBlackout() {
     onError: (err: Error) => toast.error('해제 실패: ' + err.message),
   });
 }
+
+// ============================================
+// 정기 휴무 요일 (consultation_settings.disabled_weekdays)
+// ============================================
+
+export interface ConsultationSettings {
+  start_hour: number;
+  end_hour: number;
+  duration_min: number;
+  step_min: number;
+  disabled_weekdays: number[];
+  field_buffer_before: number;
+  field_buffer_after: number;
+}
+
+/** consultation_settings 조회 */
+export function useConsultationSettings() {
+  return useQuery<ConsultationSettings>({
+    queryKey: ['consultation-settings'],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const res = await fetch('/api/consultation/settings');
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+  });
+}
+
+/** 정기 휴무 요일 토글 (consultation_settings.disabled_weekdays UPSERT) */
+export function useUpdateDisabledWeekdays() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (disabled_weekdays: number[]) => {
+      const res = await fetch('/api/consultation/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ disabled_weekdays }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || '정기 휴무 변경 실패');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('정기 휴무가 변경되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['consultation-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['blackouts'] });
+    },
+    onError: (err: Error) => toast.error('변경 실패: ' + err.message),
+  });
+}
