@@ -685,13 +685,15 @@ html, body {
 }
 
 .consult-hero-cta-primary {
-  /* Brand Guide: 모바일 CTA 48px, padding 14px 24px → 정확히 48px 높이 */
+  /* Brand Guide: 모바일 CTA 48px, padding 14px 24px */
+  /* Hero 영역 배경이 var(--mm-bg-dark) #1A1A1A 다크라서 반전 적용:
+     Cream 배경 + Void 텍스트 (Brand Guide 다크 모드 대응 패턴) */
   width: 100%;
   padding: 14px 24px;
-  background: var(--mm-ink);
+  background: var(--mm-text-w);   /* Cream #FAF9F7 */
   border: none;
   border-radius: 999px;
-  color: var(--mm-text-w);
+  color: var(--mm-ink);            /* Void #1A1A1A */
   font-family: inherit;
   font-size: 16px;
   font-weight: 700;
@@ -699,7 +701,7 @@ html, body {
   transition: all var(--mm-ease-fast);
   -webkit-tap-highlight-color: transparent;
   letter-spacing: -0.01em;
-  box-shadow: 0 4px 16px rgba(26,26,26,0.10);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.30);
 }
 
 .consult-hero-cta-primary:active {
@@ -707,10 +709,11 @@ html, body {
 }
 
 .consult-hero-cta-secondary {
+  /* Hero 다크 배경 위 — 연한 Cream 텍스트로 반전 */
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
-  color: var(--mm-text-d3);
+  color: var(--mm-text-w2);        /* rgba(250,249,247,0.6) 연한 Cream */
   background: transparent;
   border: none;
   cursor: pointer;
@@ -721,7 +724,7 @@ html, body {
 }
 
 .consult-hero-cta-secondary:active {
-  color: var(--mm-text-d);
+  color: var(--mm-text-w);          /* Cream */
 }
 
 /* ══════════════════════════════════════════════════════════════

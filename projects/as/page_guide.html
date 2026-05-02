@@ -1354,19 +1354,20 @@ img[src=""], video[src=""] {
 
 .as-hero-cta-primary {
   /* Brand Guide: 모바일 CTA 48px (padding 14 24) */
+  /* #tab-intro 영역이 다크 배경이라 반전: Cream 배경 + Void 텍스트 */
   width: 100%;
   padding: 14px 24px;
-  background: var(--void);
+  background: var(--cream);         /* Cream #FAF9F7 */
   border: none;
   border-radius: 12px;
-  color: var(--cream);
+  color: var(--void);                /* Void #1A1A1A */
   font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   letter-spacing: -0.01em;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.30);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -1375,15 +1376,15 @@ img[src=""], video[src=""] {
 }
 
 .as-hero-cta-primary:hover {
-  background: var(--graphite);
+  background: var(--parchment);      /* 다크 위 hover 시 살짝 톤 다운 */
 }
 
 .as-hero-cta-secondary {
-  /* Brand Guide Text Link 패턴: warm-gray → void on hover */
+  /* 다크 배경 위 — 연한 Cream 텍스트 */
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 500;
-  color: var(--warm-gray);
+  color: var(--mist);                /* 다크 배경 위 부드러운 보조 텍스트 */
   background: transparent;
   border: none;
   cursor: pointer;
@@ -1394,7 +1395,7 @@ img[src=""], video[src=""] {
 }
 
 .as-hero-cta-secondary:hover {
-  color: var(--void);
+  color: var(--cream);
 }
 
 /* =========================================================
