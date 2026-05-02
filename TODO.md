@@ -1,7 +1,31 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-01 (대시보드 5/1 첫날 KST 타임존 버그 통합 fix + Root-First 지침 신설)
+> 최종 수정: 2026-05-02 (078 — 상담 달력 관리 + 휴무 SSOT 통합 + 리뷰 모달 viewport fix + 페이지별 iframe 환경 메모리 박제)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
+
+---
+
+## ✅ 2026-05-02 작업 이력
+
+### 078 — 상담 달력 관리 + 휴무 SSOT 통합
+- [x] **신규 화면 `/consultations/calendar`**: 4개월 달력(현재월 ~ +3) + 정기 휴무 요일 토글(7개) + 임시 휴무일 토글 모달
+- [x] **신규 API**: `/api/consultation/blackouts` (closed_dates CRUD), `/api/consultation/settings` (consultation_settings PATCH)
+- [x] **신규 hook**: `use-blackouts.ts` (조회/추가/삭제/요일 토글)
+- [x] **SSOT 통합**: 설정 → 상담 설정의 "휴무 요일" + "특별 휴무일" UI 삭제 → "달력 관리로 이동" 링크로 대체
+- [x] **사장님 룰 박제**: 막힘은 고객 셀프 예약에만 적용, 사장님 측 흐름(일정수동등록/시간제안)은 항상 유동 — `memory/feedback_consultation_blackout_rule.md`
+- [x] **흐름도/매뉴얼/로드맵 갱신**: MANUAL_CONSULTATION + TMS_FLOW_CONSULTATION + TMS_SYSTEM_ARCHITECTURE + TMS_ROADMAP
+- commits: `ca95025` (1차) + `b270439` (옵션 C 통합)
+
+### 리뷰 모달 viewport 중앙 fix + 페이지별 iframe 환경 메모리
+- [x] **리뷰 모달 fix**: `iframe_reviews.html` wrapper에 `MAMORU_REQUEST_VIEWPORT` 응답 코드 추가 (commit `f066717`)
+- [x] **페이지별 iframe 환경 메모리 박제**: `memory/reference_iframe_pages.md` (13개 iframe + 8개 단독 페이지 표)
+- [x] **사장님 룰 메모리 추가**: 페이지 작업 전 iframe 환경 식별 필수 + 상담 블랙아웃 룰
+
+### 075/076 잔여 (Phase 3) 진행
+- [x] **SSOT 점검 SQL** (customer.outstanding_balance ↔ 미수금 합계): 정합성 완벽 (0 rows) — commit `1de203c`
+- [x] **사장님 SQL 실행**: 075/076 마이그레이션 완료
+
+---
 
 ---
 

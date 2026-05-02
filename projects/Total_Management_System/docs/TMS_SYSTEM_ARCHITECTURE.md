@@ -1,13 +1,21 @@
 # MAMORU TMS — 시스템 아키텍처 & 프로세스 흐름도
 
-> 최종 수정: 2026-04-30 (심야 +3) | **즉각 반영 풀 연동 (075)** — 설정-실전 연동 누락 fix + 대시보드 수치 버그 + invalidate 일원화 + B2B 카테고리 동적화 (074) + B2B 카탈로그 (073) + 고객 자동 매칭 (072) + 070 link
+> 최종 수정: 2026-05-02 | **달력 관리 + 휴무 SSOT 통합 (078)** + 즉각 반영 풀 연동 (075/076) + B2B 카테고리 동적화 (074) + B2B 카탈로그 (073) + 고객 자동 매칭 (072) + 070 link
 
-## 📌 075 (2026-04-30 심야 +3): 사장님 보고 3건 + 풀 연동 강화
+## 📌 078 (2026-05-02): 상담 달력 관리 + 휴무 SSOT 통합
+- **달력 관리 화면 신설**: `/consultations/calendar` — 사장님이 4개월 달력에서 휴무 토글 (정기 요일 + 임시 날짜 통합)
+- **사장님 룰 박제**: 막힘은 고객 셀프 예약에만 적용. 사장님 측 흐름(일정수동등록/시간제안)은 항상 유동
+- **SSOT 통합**: 설정 → 상담 설정의 "휴무 요일" + "특별 휴무일" UI 삭제 → 달력 관리에서 통합
+- **휴무 사유**: 사장님 자유 입력 (예: "결혼식"), 고객 폼에는 자동 제외 (date만 응답)
+- **신규 API**: `/api/consultation/blackouts` (closed_dates), `/api/consultation/settings` (disabled_weekdays)
+
+## 📌 075/076 (2026-04-30 심야 +3): 사장님 보고 3건 + 풀 연동 강화
 - **경비 카테고리 동적화**: 설정 → 회계 → 카테고리 추가 → 즉시 /expenses 반영 (이전 hard-coded)
 - **"일정 재요청" 카운트 fix**: needAction status에서 pending_admin 잘못 포함 제거 (TS fallback + RPC v3)
 - **복원수리 매출 통일 (옵션 A 발생 기준)**: 모든 채널이 sale_date/created_at/delivery_date 기준 + 미입금 포함 (취소만 제외)
 - **invalidate 일원화**: `lib/query/invalidate-keys.ts` — 모든 sale/repair mutation 후 대시보드 매출 즉각 갱신 (60초 지연 → 즉시)
 - **staleTime**: sales-stats 60→30s, products 5분→1분
+- **076 KST timezone fix**: `now() AT TIME ZONE 'Asia/Seoul'` — 매월 1일 자정~9시 매출이 전월에 잘못 합산되던 버그 fix
 
 ## 📌 운영 도구 정책 (2026-04-30 확정)
 - **AppSheet**: 폐기 (2026-02-26). TMS가 전면 대체.

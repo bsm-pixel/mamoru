@@ -1,5 +1,68 @@
 # 상담관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-30 (심야) — **고객 자동 매칭/생성** + 상담 리뷰 연동 전면 제거 + 24h 가드 + 모달 IA + 지도 핀 IA + GAS 폐기 + 좌표 helper
+> 최종 업데이트: 2026-05-02 — **달력 관리 + 휴무 SSOT 통합 (078)** + 고객 자동 매칭(072) + 상담 리뷰 제거 + 24h 가드 + GAS 폐기
+
+---
+
+## 2026-05-02 (078) — 달력 관리 + 휴무 SSOT 통합
+
+### 변경 배경
+사장님 결정: 휴무 관리를 한 화면에서 통합. 정기 휴무 요일(매주) + 임시 휴무일(특정 날짜)을 분리된 두 곳(설정 페이지 + 별도 SQL)에서 관리하던 것을 **달력 관리** 단일 화면으로 일원화.
+
+### 핵심 룰 (불변)
+**막힘은 고객 셀프 예약 흐름에만 적용. 사장님 측 흐름은 항상 유동.**
+
+| 흐름 | 입력자 | closed_dates / disabled_weekdays 검증 |
+|------|--------|--------------------------------------|
+| 고객 셀프 예약 폼 (`page_form.html`) | 고객 | ✅ 적용 (`/api/consultation/public/slots`, `/settings`) |
+| 일정수동등록 (`CreateConsultationModal`) | 사장님 | ❌ 무시 — 단순 input, 항상 유동 |
+| 시간 제안 (`SuggestTimeModal`) | 사장님 | ❌ 무시 — 단순 input, 항상 유동 |
+| 알림톡 / 리마인더 / Google Calendar | 시스템 | ❌ 무시 — status 변화 trigger만 |
+
+### 신규 파일
+- `app/src/app/(dashboard)/consultations/calendar/page.tsx` — 4개월 달력 + 휴무 토글 모달
+- `app/src/app/api/consultation/blackouts/route.ts` — closed_dates GET/POST/DELETE
+- `app/src/app/api/consultation/settings/route.ts` — consultation_settings GET/PATCH (disabled_weekdays 등)
+- `app/src/hooks/use-blackouts.ts` — useBlackouts / useCreateBlackout / useDeleteBlackout / useConsultationSettings / useUpdateDisabledWeekdays
+
+### 수정 (SSOT 통합)
+- `components/settings/consultation-settings.tsx`: 휴무 요일 + 특별 휴무일 UI **삭제** → "달력 관리로 이동" 링크 카드로 대체
+- `lib/utils/constants.ts`: NAV_GROUPS 상담 그룹에 "달력 관리" 메뉴 추가
+- `components/layout/sidebar.tsx` + `mobile-nav.tsx`: CalendarOff 아이콘 추가, matchPrefix 분기
+
+### DB
+- `closed_dates` 테이블 (이미 존재, 041_consultation_settings.sql) 그대로 사용 — 마이그레이션 불필요
+- `consultation_settings.disabled_weekdays` (이미 존재) 그대로 사용
+
+### 흐름
+```
+사장님 → /consultations/calendar
+  ├─ 정기 휴무 요일 토글 (월~일 7개)
+  │   → PATCH /api/consultation/settings { disabled_weekdays: [...] }
+  │   → consultation_settings UPSERT
+  │
+  └─ 날짜 클릭 → 모달
+      ├─ 그 날 예약 list 표시 (매장/출장)
+      ├─ 정기 휴무 요일 안내 (해당하면)
+      ├─ 사유 입력 (선택, 고객 비공개)
+      └─ "이 날짜 막기" → POST /api/consultation/blackouts → closed_dates UPSERT
+         "휴무 해제" → DELETE /api/consultation/blackouts → closed_dates DELETE
+
+자동 반영:
+  → /api/consultation/public/settings 응답에 자동 포함
+  → 고객 폼이 30초 TTL 캐시로 1분 안에 반영
+  → 사장님 측 모달은 검증 0 (영향 없음)
+```
+
+### 휴무 사유 노출 정책
+- DB: `closed_dates.reason` (TEXT, 사장님 자유 입력)
+- 사장님 UI: 모달에서 표시
+- 고객 폼: API 응답에서 `reason` 필드 자동 제외 (`/api/consultation/public/settings/route.ts:46` — `(d) => d.date`만 추출)
+- → 고객은 사유 못 봄. 사장님이 "결혼식" 같은 사적 메모도 자유 입력 가능
+
+### 회귀 안전
+- consultations 테이블 schema 0 변경
+- 기존 예약(confirmed/suggested 등): 정기 휴무 토글에 영향 받지 X (slot 생성 단계만 검증)
+- 알림톡/리마인더/Google Calendar: closed_dates 무관 — 정상 동작 유지
 
 ---
 
