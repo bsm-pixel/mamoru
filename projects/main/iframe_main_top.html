@@ -50,8 +50,9 @@
     }
   });
 
-  // 초기 높이: 보수적 추정값 (잘림 방지) → postMessage로 정확값 도착 시 자동 조정
-  iframe.style.height = (window.innerWidth <= 768 ? 2400 : 2800) + 'px';
+  // 초기 높이: 0px → postMessage 도착 시 정확값으로 즉시 늘어남
+  // (REQUEST_HEIGHT 동기화로 50ms 안에 도달, 빈 공간 0)
+  iframe.style.height = '0px';
 
   // iframe load 후 즉시 정확한 height 요청 (init 추정값 빈 공간 fix)
   function requestHeight() {
