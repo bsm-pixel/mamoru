@@ -1339,6 +1339,65 @@ img[src=""], video[src=""] {
 }
 
 /* =========================================================
+   [8.5] Hero 영역 인라인 CTA — 페이지 진입 즉시 보임
+   (Brand Guide ADDENDUM § 5: PC CTA max-width 680px)
+   ========================================================= */
+.as-hero-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 24px 32px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.as-hero-cta-primary {
+  /* Brand Guide: 모바일 CTA 48px (padding 14 24) */
+  width: 100%;
+  padding: 14px 24px;
+  background: var(--void);
+  border: none;
+  border-radius: 12px;
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: -0.01em;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.as-hero-cta-primary:active {
+  transform: scale(0.98);
+}
+
+.as-hero-cta-primary:hover {
+  background: var(--graphite);
+}
+
+.as-hero-cta-secondary {
+  /* Brand Guide Text Link 패턴: warm-gray → void on hover */
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--warm-gray);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  -webkit-tap-highlight-color: transparent;
+  padding: 4px 8px;
+}
+
+.as-hero-cta-secondary:hover {
+  color: var(--void);
+}
+
+/* =========================================================
    [9-1] 모바일 플로팅 하단 CTA 바
    ========================================================= */
 .as-floating-cta {
@@ -1590,11 +1649,21 @@ img[src=""], video[src=""] {
   .as-shipping-card-title { font-size: 14px; }
   .as-shipping-row { font-size: 14px; padding: 12px 14px; }
 
-  /* PC: 플로팅 바 숨기고 탭 바 CTA 표시 */
+  /* PC: 플로팅 바 숨김. 탭 CTA는 HTML에서 제거됨 (ADDENDUM 중복 CTA 룰 — Hero/페이지끝 2중으로 충분) */
   .as-floating-cta { display: none !important; }
 
   .mamoru-as-page {
     padding-bottom: 0; /* PC에서는 플로팅 바 없으므로 패딩 제거 */
+  }
+
+  /* PC: Hero CTA max-width 680px (Brand Guide ADDENDUM § 5) */
+  .as-hero-cta {
+    max-width: 680px;
+  }
+  .as-hero-cta-primary {
+    /* PC CTA 52px (padding 16 32) */
+    padding: 16px 32px;
+    font-size: 17px;
   }
 
   .as-tab-cta {
@@ -1726,8 +1795,7 @@ img[src=""], video[src=""] {
       <button class="as-tab" data-tab="price">비용안내</button>
       <button class="as-tab" data-tab="packing">포장방법</button>
       <button class="as-tab" data-tab="qna">QnA</button>
-      <!-- PC 전용: 탭 바 우측 CTA -->
-      <button class="as-tab-cta" onclick="goToASForm();">접수하기</button>
+      <!-- PC 탭 CTA 제거 (ADDENDUM_IMWEB 중복 CTA 금지 룰 준수) — Hero/모바일 floating/페이지 끝 3중으로 충분 -->
     </div>
   </div>
 
@@ -1747,6 +1815,12 @@ img[src=""], video[src=""] {
       <span class="intro-appeal-label">MAMORU RESTORATION</span>
       <h2>새 가위를 처음 만났던 그 순간으로,<br>복원합니다</h2>
       <p style="margin-top:8px;">마모루 복원수리 — 대표 직접 책임 & 진행</p>
+    </div>
+
+    <!-- ✨ Hero 영역 인라인 CTA — 페이지 진입 즉시 보이는 1차 진입점 -->
+    <div class="as-hero-cta">
+      <button class="as-hero-cta-primary" onclick="goToASForm();">복원수리 접수하기</button>
+      <button class="as-hero-cta-secondary" onclick="document.querySelector('[data-tab=qna]').click();">먼저 QnA 보기</button>
     </div>
 
     <div class="intro-divider"></div>
