@@ -685,8 +685,9 @@ html, body {
 }
 
 .consult-hero-cta-primary {
+  /* Brand Guide: 모바일 CTA 48px, padding 14px 24px → 정확히 48px 높이 */
   width: 100%;
-  padding: 16px 24px;
+  padding: 14px 24px;
   background: var(--mm-ink);
   border: none;
   border-radius: 999px;
@@ -734,6 +735,7 @@ html, body {
    [7.3] 모바일 플로팅 하단 CTA — 항상 화면 하단 보임 (3중 보장 3/3)
    ══════════════════════════════════════════════════════════════ */
 .consult-floating-cta {
+  /* Brand Guide ADDENDUM § 5: 모바일 max-width 480px (좌우 여백 16px) */
   position: fixed;
   bottom: 0;
   left: 0;
@@ -745,9 +747,15 @@ html, body {
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--mm-border-l);
   display: flex;
+  justify-content: center;
   gap: 8px;
   transform: translateY(100%);
   transition: transform 0.3s ease;
+}
+
+.consult-floating-cta > * {
+  /* 자식 합산 max-width = 240 + 240 + gap 8 = 488 (모바일 480px 가이드 근사) */
+  max-width: 240px;
 }
 
 .consult-floating-cta.visible {
@@ -932,18 +940,29 @@ html, body {
   /* PC: 모바일 floating CTA 숨김 (PC는 hero CTA + 탭 인라인 CTA로 충분) */
   .consult-floating-cta { display: none !important; }
 
-  /* PC: 탭 바 우측 인라인 CTA 노출 */
+  /* PC: Hero CTA max-width 680px (Brand Guide ADDENDUM § 5) */
+  .consult-hero-cta {
+    max-width: 680px;
+  }
+
+  .consult-hero-cta-primary {
+    /* PC CTA 높이 52px (Brand Guide) — padding 16px 32px → 약 52px */
+    padding: 16px 32px;
+    font-size: 17px;
+  }
+
+  /* PC: 탭 바 우측 인라인 CTA 노출 (탭과 동일 폰트 15px / padding 12x24) */
   .consult-tab-cta {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 10px 22px;
+    padding: 12px 24px;
     background: var(--mm-ink);
     color: var(--mm-text-w);
     border: none;
     border-radius: 999px;
     font-family: inherit;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
     cursor: pointer;
     transition: all var(--mm-ease-fast);
