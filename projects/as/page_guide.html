@@ -1339,11 +1339,11 @@ img[src=""], video[src=""] {
 }
 
 /* =========================================================
-   [8.5] Hero 영역 인라인 CTA — 페이지 진입 즉시 보임
-   (Brand Guide ADDENDUM § 5: PC CTA max-width 680px)
+   [8.5] Hero 영역 인라인 CTA — PC 전용 (모바일은 wrapper floating으로 단일화)
+   사장님 룰: 전체 흐름·UI/UX 위계 점검 → 모바일 중복 제거
    ========================================================= */
 .as-hero-cta {
-  display: flex;
+  display: none; /* 모바일 기본 숨김 (PC media에서 flex 복원) */
   flex-direction: column;
   align-items: center;
   gap: 10px;
@@ -1402,6 +1402,9 @@ img[src=""], video[src=""] {
    [9-1] 모바일 플로팅 하단 CTA 바
    ========================================================= */
 .as-floating-cta {
+  /* 075 → 사장님 룰: page 내부 floating 사용 안 함 (wrapper 부모 floating으로 단일화)
+     HTML은 회귀 안전상 그대로 두고 CSS로만 영구 숨김 */
+  display: none !important;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -1657,8 +1660,9 @@ img[src=""], video[src=""] {
     padding-bottom: 0; /* PC에서는 플로팅 바 없으므로 패딩 제거 */
   }
 
-  /* PC: Hero CTA max-width 680px (Brand Guide ADDENDUM § 5) */
+  /* PC: Hero CTA 노출 (모바일은 wrapper floating으로 단일화) + max-width 680px */
   .as-hero-cta {
+    display: flex;
     max-width: 680px;
   }
   .as-hero-cta-primary {
@@ -1818,10 +1822,10 @@ img[src=""], video[src=""] {
       <p style="margin-top:8px;">마모루 복원수리 — 대표 직접 책임 & 진행</p>
     </div>
 
-    <!-- ✨ Hero 영역 인라인 CTA — 페이지 진입 즉시 보이는 1차 진입점 -->
+    <!-- ✨ Hero 영역 인라인 CTA — PC 전용 (모바일은 wrapper floating으로 단일화) -->
+    <!-- secondary "QnA 보기" 제거 — 탭 영역 QnA 버튼과 중복 -->
     <div class="as-hero-cta">
       <button class="as-hero-cta-primary" onclick="goToASForm();">복원수리 접수하기</button>
-      <button class="as-hero-cta-secondary" onclick="document.querySelector('[data-tab=qna]').click();">먼저 QnA 보기</button>
     </div>
 
     <div class="intro-divider"></div>

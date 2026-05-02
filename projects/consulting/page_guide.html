@@ -672,10 +672,11 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   [7.1] Hero 영역 인라인 CTA — 페이지 진입 즉시 보임 (3중 보장 1/3)
+   [7.1] Hero 영역 인라인 CTA — PC 전용 (모바일은 wrapper floating으로 단일화)
+   사장님 룰: 전체 흐름·UI/UX 위계 점검 → 모바일 중복 제거
    ══════════════════════════════════════════════════════════════ */
 .consult-hero-cta {
-  display: flex;
+  display: none; /* 모바일 기본 숨김 (PC media에서 flex 복원) */
   flex-direction: column;
   align-items: center;
   gap: 10px;
@@ -738,7 +739,9 @@ html, body {
    [7.3] 모바일 플로팅 하단 CTA — 항상 화면 하단 보임 (3중 보장 3/3)
    ══════════════════════════════════════════════════════════════ */
 .consult-floating-cta {
-  /* Brand Guide ADDENDUM § 5: 모바일 max-width 480px (좌우 여백 16px) */
+  /* 075 → 사장님 룰: page 내부 floating 사용 안 함 (wrapper 부모 floating으로 단일화)
+     HTML은 회귀 안전상 그대로 두고 CSS로만 영구 숨김 */
+  display: none !important;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -749,7 +752,6 @@ html, body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--mm-border-l);
-  display: flex;
   justify-content: center;
   gap: 8px;
   transform: translateY(100%);
@@ -943,8 +945,9 @@ html, body {
   /* PC: 모바일 floating CTA 숨김 (PC는 hero CTA + 탭 인라인 CTA로 충분) */
   .consult-floating-cta { display: none !important; }
 
-  /* PC: Hero CTA max-width 680px (Brand Guide ADDENDUM § 5) */
+  /* PC: Hero CTA 노출 (모바일은 wrapper floating으로 단일화) + max-width 680px */
   .consult-hero-cta {
+    display: flex;
     max-width: 680px;
   }
 
@@ -1472,10 +1475,10 @@ html, body {
       <img class="fr-fic fr-dii" src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/39e904d6a61a4.png" alt="MAMORU 상담 안내">
     </div>
 
-    <!-- ✨ Hero 영역 인라인 CTA — 페이지 진입 즉시 보이는 1차 진입점 -->
+    <!-- ✨ Hero 영역 인라인 CTA — PC 전용 (모바일은 wrapper floating으로 단일화) -->
+    <!-- secondary "Q&A 보기" 제거 — 탭 영역 Q&A 버튼과 중복 -->
     <div class="consult-hero-cta fade-in delay-4">
       <button class="consult-hero-cta-primary" onclick="goToForm();">상담 접수하기</button>
-      <button class="consult-hero-cta-secondary" onclick="document.querySelector('[data-tab=qna]').click();">먼저 Q&amp;A 보기</button>
     </div>
   </section>
 
