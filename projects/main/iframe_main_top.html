@@ -29,46 +29,31 @@
   var iframe = document.getElementById('mamoruMainTopFrame');
   var currentHeight = 0;
 
-  /* 디버그 모드: ?mmdebug=1 쿼리 시 활성화 (사장님이 PC 크롬에서 진단용) */
-  var MM_DEBUG = false;
-  try { MM_DEBUG = new URLSearchParams(location.search).get('mmdebug') === '1'; } catch(_) {}
-  if (MM_DEBUG) console.log('[mm-top wrapper] 초기 높이 적용:', iframe.style.height);
-
   window.addEventListener('message', function(e) {
-    if (MM_DEBUG) console.log('[mm-top wrapper] message 수신:', e.origin, e.data);
+    // ① 우리 iframe에서 온 메시지만 처리 (다른 iframe 메시지 차단)
+    if (e.source !== iframe.contentWindow) return;
+    // ② origin 체크
+    if (e.origin !== 'https://bsm-pixel.github.io') return;
 
-    if (e.origin !== 'https://bsm-pixel.github.io') {
-      if (MM_DEBUG) console.warn('[mm-top wrapper] origin 미일치 — 무시:', e.origin);
-      return;
-    }
-
-    if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && e.data.id === 'top' && typeof e.data.height === 'number') {
+    // height 메시지 — id 체크 불필요 (e.source로 이미 우리 iframe임 확정)
+    if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && typeof e.data.height === 'number') {
       var newHeight = Math.ceil(e.data.height);
-      if (MM_DEBUG) console.log('[mm-top wrapper] height 메시지 처리:', newHeight, '(현재:', currentHeight, ')');
       if (newHeight !== currentHeight && newHeight > 0) {
         currentHeight = newHeight;
         iframe.style.height = newHeight + 'px';
-        if (MM_DEBUG) console.log('[mm-top wrapper] iframe height 변경:', newHeight + 'px');
       }
-    } else if (MM_DEBUG && e.data && e.data.type === 'MAMORU_IFRAME_SIZE') {
-      console.warn('[mm-top wrapper] MAMORU_IFRAME_SIZE이지만 조건 불통과:', { id: e.data.id, expected: 'top', height: e.data.height });
     }
 
+    // 페이지 이동 위임
     if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) {
       window.location.href = e.data.url;
     }
   });
 
-  // ──────────────────────────────────────────────────────────────
-  // 초기 높이 전략 (잘림 방지 + 빈 공간 방지)
-  //
-  // ① init: 보수적 추정값 (모바일 2400 / PC 2800) — 첫 메시지 도착 전 잘림 방지
-  // ② iframe load 즉시 REQUEST_HEIGHT 발송 → page가 정확한 height 응답
-  //    → 0.1~0.3초 안에 정확값으로 동기화 (사용자가 빈 공간 거의 못 느낌)
-  // ③ 추가 재시도 — 카카오 인앱 BFCache/늦은 paint 케이스 대응
-  // ──────────────────────────────────────────────────────────────
+  // 초기 높이: 보수적 추정값 (잘림 방지) → postMessage로 정확값 도착 시 자동 조정
   iframe.style.height = (window.innerWidth <= 768 ? 2400 : 2800) + 'px';
 
+  // iframe load 후 즉시 정확한 height 요청 (init 추정값 빈 공간 fix)
   function requestHeight() {
     try {
       if (iframe.contentWindow) {
@@ -77,12 +62,10 @@
     } catch (_) {}
   }
 
-  // iframe load 시점 + 짧은 대기 후 즉시 정확값 요청 (init 추정값 빈 공간 fix)
   iframe.addEventListener('load', function() {
     [50, 200, 500, 1000].forEach(function(ms) { setTimeout(requestHeight, ms); });
   });
 
-  // 부모 페이지 자체 load 시점 — iframe이 이미 캐시되어 load 이벤트 안 뜰 경우 대비
   if (document.readyState === 'complete') {
     [100, 400, 1000].forEach(function(ms) { setTimeout(requestHeight, ms); });
   } else {
