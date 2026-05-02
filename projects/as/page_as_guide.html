@@ -154,26 +154,53 @@ body {
   line-height: 1.5;
   margin-bottom: 6px;
 }
+/* Step 1 ("두 가지 진행방식 중 선택하여 접수") 위계 강화 — 두 옵션 카드의 부모 라벨 */
+/* 첫 step만 적용 (호환성 좋은 :first-child 사용) */
+.step-flow > .step-item:first-child > .step-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
 .step-desc {
   font-size: 13px;
   color: var(--mist);
   line-height: 1.7;
 }
 
-/* 접수방식 선택 영역 */
+/* 접수방식 선택 영역 — 시각 위계 강화 (사장님 룰: "두 가지 진행방식"이 명확히 두 카드로 인식되도록) */
 .method-group {
   margin-top: 12px;
-  padding: 16px 14px 18px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.06);
+  padding: 20px 18px 22px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
 }
 .method-label {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--cream);
   margin-bottom: 10px;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
+}
+
+/* "또는" 구분자 — 두 method-group 사이 시각 분리 */
+.method-or-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 6px;
+  color: var(--mist);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.method-or-divider::before,
+.method-or-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.12);
 }
 .icon-row {
   display: flex;
@@ -688,6 +715,9 @@ body {
             </div>
           </div>
         </div>
+
+        <!-- 두 옵션 사이 "또는" 구분자 -->
+        <div class="method-or-divider" aria-hidden="true">또는</div>
 
         <!-- 직접발송 -->
         <div class="method-group">
