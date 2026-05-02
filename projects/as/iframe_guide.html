@@ -12,6 +12,47 @@
   border: none;
   display: block;
 }
+
+/* ── 부모 측 모바일 floating CTA (iframe 안 fixed가 iframe document 끝점 기준이라 작동 X — 부모에서 직접 fixed) ── */
+#mamoruAsFloatingCta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(250,249,247,0.95);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(26,26,26,0.08);
+  display: flex;
+  justify-content: center;
+  font-family: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+#mamoruAsFloatingCta > button {
+  max-width: 480px;
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: none;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1;
+  background: #1A1A1A;
+  color: #FAF9F7;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+#mamoruAsFloatingCta > button:active {
+  transform: scale(0.98);
+}
+/* PC 768px 이상에서는 숨김 */
+@media (min-width: 768px) {
+  #mamoruAsFloatingCta { display: none !important; }
+}
 </style>
 
 <div id="mamoruAsGuideWrap">
@@ -22,6 +63,11 @@
     frameborder="0"
     allowtransparency="true">
   </iframe>
+</div>
+
+<!-- 부모 측 floating CTA (모바일 한정, iframe 박스 외부 — 부모 viewport 기준 fixed) -->
+<div id="mamoruAsFloatingCta" role="region" aria-label="복원수리 빠른 진입">
+  <button onclick="window.location.href='/56'">복원수리 접수하기</button>
 </div>
 
 <script>
