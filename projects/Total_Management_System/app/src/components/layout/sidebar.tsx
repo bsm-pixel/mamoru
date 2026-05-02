@@ -21,6 +21,7 @@ import {
   Search,
   FileSignature,
   Wallet,
+  CalendarOff,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -45,6 +46,7 @@ const iconMap: Record<string, LucideIcon> = {
   Search,
   FileSignature,
   Wallet,
+  CalendarOff,
 };
 
 export function Sidebar() {
@@ -73,9 +75,11 @@ export function Sidebar() {
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const Icon = iconMap[item.icon];
-                // matchPrefix 정확 매칭: /sales/new는 /sales와 겹치지 않도록
+                // matchPrefix 정확 매칭: 하위 경로가 별도 메뉴인 경우 부모와 겹치지 않도록
                 const active = item.matchPrefix === '/sales'
                   ? pathname === '/sales' || (pathname.startsWith('/sales/') && !pathname.startsWith('/sales/new'))
+                  : item.matchPrefix === '/consultations'
+                  ? pathname === '/consultations' || (pathname.startsWith('/consultations/') && !pathname.startsWith('/consultations/calendar'))
                   : pathname.startsWith(item.matchPrefix);
                 return (
                   <Link
