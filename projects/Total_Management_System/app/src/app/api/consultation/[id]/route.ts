@@ -6,6 +6,8 @@ import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 import { deleteCalendarEvent } from '@/lib/google/calendar-client';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
+const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting';
+
 /** 상태→알림 템플릿 매핑 (consultation_type 기반 분기) */
 function getAutoNotifyTemplate(
   newStatus: string,
@@ -165,11 +167,19 @@ export async function PATCH(
               phone: data.phone,
               name: data.name,
               data: {
+                // admin-create와 동일 필드 (카카오 알림톡 템플릿 변수 매칭 보장 — 누락 시 3109 SMS 대체 발송 사고)
                 id: data.unique_id,
+                status: newStatus.toUpperCase(),
+                name: data.name,
+                phone: data.phone,
                 type: typeLabel,
                 date: data.visit_date || '',
                 time: data.visit_time || '',
                 address,
+                days: '',
+                memo: data.memo || '',
+                change_request_link: `${GITHUB_PAGES}/page_change_request.html?uid=${data.unique_id}`,
+                // 추가 메타 (다른 곳에서 사용 가능)
                 uid: data.unique_id,
                 type_label: typeLabel,
                 subtype: data.consultation_type || '',
