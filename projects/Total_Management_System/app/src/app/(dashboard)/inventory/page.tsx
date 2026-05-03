@@ -17,8 +17,9 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import {
   AlertTriangle, Package, Boxes, TrendingDown,
-  ArrowUpDown, Wrench, Eye, EyeOff,
+  ArrowUpDown, Wrench, Eye, EyeOff, Printer,
 } from 'lucide-react';
+import { InventoryPrintModal } from '@/components/inventory/inventory-print-modal';
 
 // 대분류 카테고리 (재고 페이지용)
 const CATEGORY_GROUPS: { key: string; label: string; codes: string[] }[] = [
@@ -56,6 +57,7 @@ export default function InventoryPage() {
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortAsc, setSortAsc] = useState(true);
   const [showAdjust, setShowAdjust] = useState(false);
+  const [showPrint, setShowPrint] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // PC 여부 감지
@@ -132,10 +134,16 @@ export default function InventoryPage() {
   return (
     <>
       <Topbar title="창고·재고 관리" action={
-        <Button size="sm" variant="ghost" onClick={() => setShowAdjust(true)}>
-          <Wrench size={14} />
-          재고 조정
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button size="sm" variant="ghost" onClick={() => setShowPrint(true)}>
+            <Printer size={14} />
+            재고조사 인쇄
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setShowAdjust(true)}>
+            <Wrench size={14} />
+            재고 조정
+          </Button>
+        </div>
       } />
 
       {showAdjust && (
@@ -143,6 +151,22 @@ export default function InventoryPage() {
           items={allItems}
           onClose={() => setShowAdjust(false)}
           onSuccess={() => queryClient.invalidateQueries({ queryKey: ['inventory'] })}
+        />
+      )}
+
+      {showPrint && (
+        <InventoryPrintModal
+          items={sorted}
+          categoryLabel={CATEGORY_GROUPS.find((g) => g.key === categoryGroup)?.label || '전체'}
+          categoryLabels={CAT_LABEL}
+          filters={{
+            search: search || undefined,
+            lowStockOnly,
+            hideUnused,
+            sortKey,
+            sortAsc,
+          }}
+          onClose={() => setShowPrint(false)}
         />
       )}
 
