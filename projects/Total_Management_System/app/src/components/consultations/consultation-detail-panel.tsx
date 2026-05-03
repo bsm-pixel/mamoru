@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SuggestTimeModal } from './suggest-time-modal';
+import { ManualConfirmModal } from './manual-confirm-modal';
 import { formatPhone, formatDate, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
-import { Calendar, MapPin, Phone, User, Clock, FileSignature, ShoppingCart, CheckCircle2 } from 'lucide-react';
+import { Calendar, MapPin, Phone, User, Clock, FileSignature, ShoppingCart, CheckCircle2, CheckCircle } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { Modal } from '@/components/ui/modal';
 import Link from 'next/link';
@@ -43,6 +44,7 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
   const updateStatus = useUpdateConsultationStatus();
   const deleteConsultation = useDeleteConsultation();
   const [suggestModalOpen, setSuggestModalOpen] = useState(false);
+  const [manualConfirmOpen, setManualConfirmOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   // 077: 상담완료 시 판매전환 분기 모달 (linkedSales 없을 때만)
@@ -188,6 +190,13 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
             <Button size="sm" className="w-full" onClick={() => setSuggestModalOpen(true)} disabled={updateStatus.isPending}>
               <Clock size={14} />
               시간 제안
+            </Button>
+          )}
+          {/* 079: 수동 일정 확정 — DM/유선 협의 후 즉시 확정 (매장/출장 한정, 톡상담 제외) */}
+          {c.consultation_type !== 'talk_consult' && c.status !== 'in_progress' && (
+            <Button size="sm" variant="secondary" className="w-full" onClick={() => setManualConfirmOpen(true)} disabled={updateStatus.isPending}>
+              <CheckCircle size={14} />
+              수동 일정 확정
             </Button>
           )}
           {/* 확정 → 완료 */}
@@ -390,6 +399,20 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
           consultationId={c.id}
           prefDays={((c.gas_raw as any)?.days as string)?.split(',').filter(Boolean)}
           prefTimes={((c.gas_raw as any)?.timePrefs as string)?.split(',').filter(Boolean)}
+        />
+      )}
+
+      {/* 079: 수동 일정 확정 모달 (매장/출장 한정) */}
+      {c.consultation_type !== 'talk_consult' && (
+        <ManualConfirmModal
+          open={manualConfirmOpen}
+          onClose={() => setManualConfirmOpen(false)}
+          consultationId={c.id}
+          customerName={c.name}
+          consultationType={c.consultation_type as 'store_visit' | 'field_request'}
+          currentStatus={c.status}
+          currentVisitDate={c.visit_date}
+          currentVisitTime={c.visit_time}
         />
       )}
     </div>

@@ -1,5 +1,51 @@
 # 상담관리 프로세스 흐름도
-> 최종 업데이트: 2026-05-02 — **달력 관리 + 휴무 SSOT 통합 (078)** + 고객 자동 매칭(072) + 상담 리뷰 제거 + 24h 가드 + GAS 폐기
+> 최종 업데이트: 2026-05-03 — **수동 일정 확정 버튼 (079)** + 달력 관리(078) + 고객 자동 매칭(072)
+
+---
+
+## 2026-05-03 (079) — 수동 일정 확정 버튼 신설
+
+### 변경 배경
+사장님 1인 운영 — DM/유선으로 협의된 일정을 즉시 시스템에 박제할 수단 필요. 기존 "시간 제안 → 고객 선택" 흐름 외에 **사장님 직접 확정 진입점** 추가.
+
+### 사용 흐름
+```
+이미 접수된 건 (pending_admin / suggested / reschedule_requested 등)
+  → 사장님 DM/유선 협의
+  → TMS 우측 상세 패널 → "수동 일정 확정" 버튼
+  → 모달 (날짜 + 시간 입력)
+  → 확정 처리
+
+자동 후속 작업 (기존 PATCH 로직 재사용):
+  → 상태 confirmed로 전환
+  → consultation_history 이력 기록
+  → Google Calendar 갱신 (이전 상태 이벤트 정리 + 새 이벤트)
+  → 알림톡 자동 발송 (field_confirmed/confirmed 템플릿)
+```
+
+### 신규 파일
+- `app/src/components/consultations/manual-confirm-modal.tsx` — 모달 + PATCH 호출
+
+### 수정
+- `app/src/components/consultations/consultation-detail-panel.tsx` — 버튼 + 모달 통합
+
+### 미수정 (회귀 안전)
+- `/api/consultation/[id]/route.ts` — 기존 PATCH 그대로 활용 (status + visit_date + visit_time 모두 처리)
+- `lib/google/calendar-sync.ts` 0 변경
+- `lib/consultation/transitions.ts` 0 변경 (모든 active 상태 → confirmed 이미 허용)
+- `CreateConsultationModal` (일정 수동 등록), `SuggestTimeModal` (시간 제안) 별개로 존재
+
+### 사장님 룰 준수
+- closed_dates 검증 추가 X (사장님 측 흐름 = 항상 유동, `feedback_consultation_blackout_rule.md`)
+- 노출 조건: `consultation_type !== 'talk_consult'` AND `status NOT IN ('completed', 'cancelled', 'in_progress')`
+
+### 기존 "일정 수동 등록"과의 분담
+| | 일정 수동 등록 | 수동 일정 확정 (079) |
+|--|---|---|
+| 진입점 | 상담관리 상단 버튼 | 우측 상세 패널 |
+| 대상 | 접수 X 새 고객 | 기존 접수 건 |
+| DB | INSERT | UPDATE |
+| API | `admin-create` | `[id]` PATCH |
 
 ---
 
