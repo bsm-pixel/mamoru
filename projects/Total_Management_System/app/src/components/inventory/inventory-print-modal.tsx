@@ -73,8 +73,8 @@ export function InventoryPrintModal({ items, categoryLabel, categoryLabels, filt
         h1 { text-align: center; font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: 4px; }
         .subtitle { text-align: center; font-size: 10px; color: #666; margin-bottom: 16px; }
         .filter-info { font-size: 10px; color: #555; margin-bottom: 12px; padding: 6px 10px; background: #f5f5f5; border-radius: 3px; }
-        .group-header { background: #1a1a1a; color: #fff; padding: 6px 10px; font-size: 12px; font-weight: 700; margin-top: 16px; border-radius: 3px; }
-        .group-subtotal { font-size: 10px; color: #aaa; font-weight: 400; }
+        .group-header { background: #fff; color: #000; padding: 6px 10px; font-size: 13px; font-weight: 800; margin-top: 16px; border: 2.5px solid #000; }
+        .group-subtotal { font-size: 10px; color: #666; font-weight: 500; margin-left: 8px; }
         table { width: 100%; border-collapse: collapse; margin-top: 4px; }
         th { background: #f5f5f5; font-weight: 600; font-size: 10px; padding: 5px 6px; border: 1px solid #ddd; text-align: center; }
         td { padding: 5px 6px; border: 1px solid #eee; font-size: 11px; }
@@ -128,9 +128,9 @@ export function InventoryPrintModal({ items, categoryLabel, categoryLabels, filt
               const groupTotal = list.reduce((s, i) => s + (i.stock_quantity > 0 ? i.stock_quantity : 0), 0);
               return (
                 <div key={cat}>
-                  <div className="group-header" style={{ background: '#1a1a1a', color: '#fff', padding: '6px 10px', fontSize: '12px', fontWeight: 700, marginTop: '16px', borderRadius: '3px' }}>
+                  <div className="group-header" style={{ background: '#fff', color: '#000', padding: '6px 10px', fontSize: '13px', fontWeight: 800, marginTop: '16px', border: '2.5px solid #000' }}>
                     {categoryLabels[cat] || cat}
-                    <span className="group-subtotal" style={{ fontSize: '10px', color: '#aaa', fontWeight: 400, marginLeft: '8px' }}>
+                    <span className="group-subtotal" style={{ fontSize: '10px', color: '#666', fontWeight: 500, marginLeft: '8px' }}>
                       ({list.length}종 · 소계 {groupTotal}개)
                     </span>
                   </div>
