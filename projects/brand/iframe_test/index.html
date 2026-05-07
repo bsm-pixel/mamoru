@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>MAMORU — iframe 작동 테스트</title>
+<!--
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  MAMORU 상품 상세 iframe 작동 검증용 테스트 페이지
+  Brand Guide v1.0 정식 적용 (모노크롬 10색만, 골드 X)
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  사용법:
+  1. 이 파일을 GitHub Pages에 push (자동 배포)
+  2. URL: https://bsm-pixel.github.io/mamoru/projects/brand/iframe_test/
+  3. 아임웹 admin → 상품 등록 → "상품 상세 설명" → </> 코드보기
+  4. 다음 코드 입력 후 저장:
+     <iframe src="위 URL" style="width:100%; border:0;" id="mamoru-test"></iframe>
+     <script>
+       window.addEventListener('message', function(e){
+         if(e.data && e.data.type === 'MAMORU_IFRAME_SIZE'){
+           document.getElementById('mamoru-test').style.height = e.data.height + 'px';
+         }
+       });
+     </script>
+  5. 작동 확인: PC + 모바일에서 박스 정상 표시 + 높이 자동 맞춤
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── Brand Guide v1.0 모노크롬 팔레트 (10색만) ── */
+:root {
+  --void: #1A1A1A;
+  --graphite: #2D2D2D;
+  --stone: #4A4A4A;
+  --warm-gray: #8A8580;
+  --mist: #B8B4AF;
+  --sand: #D4D0CB;
+  --parchment: #EDEBE8;
+  --shell: #F5F3F0;
+  --cream: #FAF9F7;
+  --white: #FFFFFF;
+
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--cream);
+  font-family: var(--font-body);
+  color: var(--void);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  padding: 64px 24px;
+  min-height: auto;
+}
+
+.test-frame {
+  max-width: 760px;
+  margin: 0 auto;
+  background: var(--white);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-lg);
+  padding: 48px 40px;
+  text-align: center;
+}
+
+.label {
+  display: inline-block;
+  padding: 6px 14px;
+  background: var(--void);
+  color: var(--cream);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  border-radius: 999px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--void);
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: var(--stone);
+  margin-bottom: 40px;
+  line-height: 1.7;
+}
+
+.check-list {
+  text-align: left;
+  background: var(--shell);
+  border-radius: var(--radius-md);
+  padding: 28px 32px;
+  margin-bottom: 32px;
+}
+
+.check-list-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--graphite);
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.check-item {
+  font-size: 15px;
+  color: var(--graphite);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--sand);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.check-item:last-child { border-bottom: 0; }
+.check-item::before {
+  content: '✓';
+  color: var(--void);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.note {
+  font-size: 12px;
+  color: var(--warm-gray);
+  letter-spacing: 0.04em;
+  margin-top: 8px;
+}
+
+.viewport-info {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--sand);
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--warm-gray);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.viewport-info span#vp-size {
+  color: var(--void);
+  font-weight: 900;
+}
+
+/* ── 모바일 반응형 (Brand Guide B-05 그대로) ── */
+@media (max-width: 767px) {
+  body { padding: 40px 16px; }
+
+  .test-frame {
+    padding: 32px 20px;
+    border-radius: var(--radius-md);
+  }
+
+  .title { font-size: 22px; }
+  .subtitle { font-size: 13px; margin-bottom: 32px; }
+
+  .check-list { padding: 20px 18px; }
+  .check-item { font-size: 13px; padding: 7px 0; }
+
+  .viewport-info { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<section class="test-frame">
+  <div class="label">IFRAME TEST</div>
+
+  <h1 class="title">MAMORU iframe 작동 테스트</h1>
+  <p class="subtitle">
+    이 박스가 보인다면 아임웹 상품 상세 설명 영역에<br>
+    GitHub Pages 페이지가 정상 임베드된 것입니다.
+  </p>
+
+  <div class="check-list">
+    <div class="check-list-title">CHECK</div>
+    <div class="check-item">텍스트가 정상적으로 표시되는가</div>
+    <div class="check-item">PC와 모바일 모두 폭이 자동 맞춰지는가</div>
+    <div class="check-item">iframe 높이가 콘텐츠에 맞게 자동 조절되는가</div>
+    <div class="check-item">Brand Guide 모노크롬 톤이 깨끗하게 적용되었는가</div>
+  </div>
+
+  <p class="note">CUT THE FAKE, KEEP THE REAL</p>
+
+  <div class="viewport-info">
+    VIEWPORT: <span id="vp-size">—</span>
+  </div>
+</section>
+
+<script>
+(function() {
+  // ── 뷰포트 크기 표시 (테스트 가독성용) ──────────────────
+  function updateVp() {
+    var el = document.getElementById('vp-size');
+    if (el) el.textContent = window.innerWidth + 'PX';
+  }
+  updateVp();
+  window.addEventListener('resize', updateVp);
+
+  // ── 부모 iframe 높이 자동 조절 통신 (마모루 표준 패턴) ─
+  var lastSentHeight = 0;
+  function getFullHeight() {
+    var maxBottom = 0;
+    var children = document.body.children;
+    for (var i = 0; i < children.length; i++) {
+      var child = children[i];
+      if (child.tagName !== 'SCRIPT' && child.tagName !== 'STYLE') {
+        var rect = child.getBoundingClientRect();
+        maxBottom = Math.max(maxBottom, rect.top + rect.height);
+      }
+    }
+    return Math.ceil(maxBottom + 24);
+  }
+  function notifyHeight() {
+    if (!window.parent || window.parent === window) return;
+    var height = getFullHeight();
+    if (height > 0 && Math.abs(height - lastSentHeight) > 5) {
+      lastSentHeight = height;
+      window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: height }, '*');
+    }
+  }
+  window.addEventListener('message', function(e) {
+    if (!e.data || typeof e.data !== 'object') return;
+    if (e.data.type === 'REQUEST_HEIGHT') notifyHeight();
+  });
+  window.addEventListener('load', function() {
+    setTimeout(notifyHeight, 100);
+    setTimeout(notifyHeight, 500);
+    setTimeout(notifyHeight, 1500);
+  });
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(notifyHeight, 150);
+  });
+
+  // ResizeObserver — 콘텐츠 변경 감지 (폰트 로드 등)
+  if ('ResizeObserver' in window) {
+    var ro = new ResizeObserver(function() { notifyHeight(); });
+    ro.observe(document.body);
+  }
+})();
+</script>
+
+</body>
+</html>
