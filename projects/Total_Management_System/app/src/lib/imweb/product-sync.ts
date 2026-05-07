@@ -86,6 +86,8 @@ export async function syncProducts(): Promise<SyncResult> {
           // 재고 미사용: stock_use=false → stock_quantity=-1 (TMS 규약)
           const stockQty = p.stock?.stock_use ? (p.stock.stock_no_option || 0) : -1;
 
+          // is_active는 productData에서 제외 — TMS가 운영 마스터라 아임웹 prod_status로 덮어쓰지 않음.
+          // 아임웹 "품절"이어도 TMS에선 활성 유지 (창고재고 화면에 노출). 신규 생성/링크 시에만 true로 시작.
           const productData = {
             name: p.name,
             imweb_product_no: String(p.no),
@@ -93,12 +95,11 @@ export async function syncProducts(): Promise<SyncResult> {
             stock_quantity: stockQty,
             image_url: getImageUrl(p),
             sku,
-            is_active: p.prod_status === 'sale',
             updated_at: new Date().toISOString(),
           };
 
           if (byImwebNo) {
-            // 이미 연동된 상품 → UPDATE (재고는 TMS가 마스터라 제외)
+            // 이미 연동된 상품 → UPDATE (재고는 TMS가 마스터라 제외, is_active도 productData에서 빠져 있음)
             const { stock_quantity: _omit, ...updateData } = productData;
             const { error: updErr } = await db
               .from('products')
@@ -124,7 +125,7 @@ export async function syncProducts(): Promise<SyncResult> {
             }
 
             if (bySku) {
-              // 수동 등록된 상품을 이번 동기화로 imweb와 연결
+              // 수동 등록된 상품을 이번 동기화로 imweb와 연결 (기존 is_active 유지)
               const { stock_quantity: _omit, ...updateData } = productData;
               const { error: linkErr } = await db
                 .from('products')
@@ -137,9 +138,10 @@ export async function syncProducts(): Promise<SyncResult> {
               }
               linked++;
             } else {
-              // 신규 생성 — 아임웹 재고를 보관창고(raw_stock)에 초기화
+              // 신규 생성 — 아임웹 재고를 보관창고(raw_stock)에 초기화. is_active=true로 시작.
               const { error: insErr } = await db.from('products').insert({
                 ...productData,
+                is_active: true,
                 category: 'BL', // 기본값, TMS에서 수동 변경
                 price_dealer: 0,
                 price_purchase: 0,
