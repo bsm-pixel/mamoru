@@ -1,7 +1,68 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-03 (저녁) — 상담 수동 일정 확정 (079) + 재고조사 인쇄 + 알림톡 변수 fix + 가이드 페이지 위계 정합
+> 최종 수정: 2026-05-07 — 상품 상세페이지 양산 시스템 구축 (진행 중)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
+
+---
+
+## 🚧 진행 중 — 상품 상세페이지 양산 시스템 (2026-05-07~)
+
+### 핵심 결정사항 (이미 확정)
+- **양산 방식**: 아임웹 상품 상세 설명 → `</>` 코드보기 → inline style HTML 직접 paste
+  - `<style>`/`<script>`/`<iframe>` 모두 차단됨 (검증 완료)
+  - inline `style=""` + `clamp()` 함수가 정답
+  - 상세: `memory/reference_imweb_product_detail_inline.md`
+- **흐름맵**: 8~10섹션 압축 (사장님 결정)
+  - Hero / 공감 / 시장진실 / MAMORU의답 / 작동방식 / 대표이야기 / 비교 / Target Filter / CTA
+  - 선택: Story / 후기
+  - 원본 참조: landing-page-generator/agents 5단계 (흐름은 차용, 톤은 Brand Guide 우선)
+- **디자인 톤**: **A 타이포 + B 사진 하이브리드** (사장님 결정 2026-05-07)
+  - A의 거대 Outfit 타이포 + B의 풀폭 사진 진열 결합
+- **출력처**: 아임웹 상품 상세 본문 (`상품 상세 설명` 영역)
+  - 각 제품마다 코드 통째로 paste — 마스터 1곳 자동 반영 X (양산 시 변수만 갈아낀 코드 복붙)
+
+### 검증 완료 (Phase 0)
+- [x] iframe vs inline 검증 — inline 확정 (commits `70640c0` `be46017` `20e7493` `1f50db7`)
+- [x] 아임웹 상품 상세 설명에 직접 paste 작동 확인
+- [x] 펼치기 자동 동작 + 콘텐츠 충돌 없음 확인
+- [x] PC/모바일 자동 반응형 (clamp + viewport meta wrapper)
+- [x] v5 3개 컨셉 시안 (A 타이포 / B 사진 / C 장인 스토리) (commits `10727dd` `a1b9d8f`)
+- [x] 사장님 컨셉 결정: **A + B 하이브리드**
+
+### 🎯 다음 액션 (사장님 복귀 후 1순위)
+- [ ] **v6 하이브리드 시안 제작** — A 타이포 임팩트 + B 풀폭 사진 진열 결합
+  - 같은 2섹션(Hero + 시장진실)으로 비교 가능하게
+  - 위치: `projects/brand/iframe_test/v6_hybrid.html`
+  - PC + 모바일 둘 다 자동 반응형 확인
+- [ ] 사장님 v6 검토 → 미세 조정 → 확정
+- [ ] **8~10섹션 풀 마스터 제작** (확정된 톤으로)
+  - 위치: `projects/brand/product_detail_template.html`
+  - 각 섹션 변수화 (제품별 텍스트/이미지 슬롯)
+- [ ] **변수 시트 양식 commit**
+  - 위치: `projects/brand/templates/spec_sheet_scissors.md`
+  - 가위 변수: name / sku / 길이 / 무게 / 소재 / 베어링 / 곡률 / 권장 사용자 / 카피 / 이미지 슬롯
+- [ ] **카피 가이드 commit**
+  - 위치: `projects/brand/templates/copy_brief.md`
+  - Brand Guide B-04 보이스 적용 (긴급성/할인/구매권유 ❌)
+
+### 🎯 다음 액션 (Phase 1 시제품 — 사장님과 함께)
+- [ ] **CL1-4T 변수 시트 채우기** — 사장님 답변 (AskUserQuestion 패턴)
+- [ ] **CL1-4T 누끼 PNG 5장** (사장님 직접 촬영/누끼)
+  - hero (정면) / side (측면) / detail (날 끝) / in_hand (손) / maker (선택)
+  - 위치: `projects/brand/product_detail/CL1-4T/images/`
+- [ ] **CL1-4T 정식 HTML 생성** → 사장님 아임웹 paste → 실제 상품 페이지 검증
+
+### 🎯 추후 (Phase 2~)
+- [ ] 양산 (제품별 변수 시트 채우고 HTML 생성 반복)
+- [ ] 주변제품 마스터 추가 (빗 / 롤브러시 / 핀셋 등)
+- [ ] (선택) Figma 시안 단계 — 사장님이 디자인 조정 원할 때만
+
+### 핵심 파일 위치 (이어서 작업 시 참조)
+- 검증 시안: `projects/brand/iframe_test/v5_concept_a.html` `v5_concept_b.html` `v5_concept_c.html`
+- v4 4섹션 더미: `projects/brand/iframe_test/inline_long.html`
+- 메모리 룰: `memory/reference_imweb_product_detail_inline.md`
+- 플랜 원본: `C:\Users\user\.claude\plans\tms-stateful-valiant.md`
+- Brand Guide: `.claude/MAMORU-Complete-Brand-Guide-v1.0.md` (D-03 상품 상세 명시)
 
 ---
 
