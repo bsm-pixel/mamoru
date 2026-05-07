@@ -1,0 +1,117 @@
+<!--
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  MAMORU 상품 상세 — inline 긴 콘텐츠 v4
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  목적: 아임웹 "상세정보 펼치기" 자동 트리거 + 자체 디자인 충돌 확인
+
+  Brand Guide D-03 4섹션 시뮬레이션:
+  ① 히어로 (제품 이미지 + 한 줄 카피)
+  ② 이 가위에 대하여 (본문)
+  ③ 스펙 테이블
+  ④ MAMORU's Note (이런 분에게 / 맞지 않을 수 있습니다)
+
+  사용법:
+  1. 아래 <div>...</div> 코드 통째로 복사 (주석 제외)
+  2. 아임웹 → 상품 상세 설명 → </> 코드보기 → paste → 저장
+  3. 실제 상품 페이지에서 확인:
+     - 4섹션 모두 정상 표시
+     - "상세정보 펼치기" 버튼 등장 여부 + 펼침 시 우리 콘텐츠 충돌 없는지
+     - PC/모바일 폰트 자동 스케일
+-->
+
+<div style="max-width:760px;margin:40px auto;padding:0 16px;font-family:'Plus Jakarta Sans','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;line-height:1.6;-webkit-font-smoothing:antialiased;box-sizing:border-box;">
+
+  <!-- ═══ ① 히어로 ═══════════════════════════════ -->
+  <div style="text-align:center;padding:clamp(40px,7vw,80px) clamp(24px,4vw,48px);background:#1A1A1A;color:#FAF9F7;border-radius:clamp(12px,2vw,20px);margin-bottom:clamp(40px,5vw,64px);">
+    <div style="display:inline-block;padding:6px 14px;background:rgba(255,255,255,0.1);color:#FAF9F7;font-size:11px;font-weight:600;letter-spacing:0.12em;border-radius:999px;margin-bottom:clamp(20px,3vw,32px);">BLUNT 4.0</div>
+
+    <div style="width:clamp(160px,22vw,240px);height:clamp(120px,16vw,180px);background:#2D2D2D;border-radius:8px;margin:0 auto clamp(24px,3vw,40px);display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:11px;letter-spacing:0.1em;">[제품 누끼 이미지]</div>
+
+    <h1 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(28px,5.5vw,56px);font-weight:900;color:#FAF9F7;letter-spacing:-0.02em;line-height:1.1;margin:0 0 clamp(12px,2vw,20px) 0;">CL1-4T</h1>
+
+    <p style="font-size:clamp(13px,2vw,18px);color:rgba(245,245,243,0.7);line-height:1.6;margin:0;">한 손에 머무는 무게,<br>일관된 끝매김.</p>
+  </div>
+
+  <!-- ═══ ② 이 가위에 대하여 ═══════════════════════ -->
+  <div style="background:#FFFFFF;padding:clamp(32px,5vw,64px) clamp(24px,4vw,48px);border-radius:clamp(12px,2vw,16px);border:1px solid #EDEBE8;margin-bottom:clamp(32px,4vw,48px);">
+
+    <div style="font-size:clamp(11px,1.5vw,12px);font-weight:600;color:#8A8580;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:clamp(16px,2vw,24px);">SECTION 01 / ABOUT</div>
+
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(22px,3.5vw,36px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.25;margin:0 0 clamp(20px,3vw,32px) 0;">이 가위에 대하여</h2>
+
+    <p style="font-size:clamp(14px,1.8vw,17px);color:#2D2D2D;line-height:1.85;margin:0 0 clamp(16px,2vw,20px) 0;">CL1-4T는 4인치 블런트 커트를 위해 설계된 가위입니다. 짧은 날 길이는 손가락 끝과 가위 끝 사이의 거리를 줄여, 미세한 텍스처 컨트롤을 가능하게 합니다.</p>
+
+    <p style="font-size:clamp(14px,1.8vw,17px);color:#2D2D2D;line-height:1.85;margin:0 0 clamp(16px,2vw,20px) 0;">날 곡률은 직선에 가깝게 가공되어 있어, 모발이 가위에 끌려가지 않고 깔끔하게 절단됩니다. 베어링은 마모루 자체 조정 기준에 따라 출고 시 점검됩니다.</p>
+
+    <p style="font-size:clamp(14px,1.8vw,17px);color:#2D2D2D;line-height:1.85;margin:0;">"가위를 바꾸기 전에, 먼저 자신의 커트 스타일을 알아야 합니다." — 이 가위는 본인의 커트 비중을 명확히 알고 있는 미용사를 위한 도구입니다.</p>
+
+  </div>
+
+  <!-- ═══ ③ 스펙 테이블 ═══════════════════════════ -->
+  <div style="background:#F5F3F0;padding:clamp(32px,5vw,56px) clamp(24px,4vw,48px);border-radius:clamp(12px,2vw,16px);margin-bottom:clamp(32px,4vw,48px);">
+
+    <div style="font-size:clamp(11px,1.5vw,12px);font-weight:600;color:#8A8580;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:clamp(16px,2vw,24px);">SECTION 02 / SPEC</div>
+
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(22px,3.5vw,36px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.25;margin:0 0 clamp(24px,3vw,40px) 0;">사양</h2>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:clamp(14px,2vw,18px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
+      <span style="color:#8A8580;font-weight:500;">길이</span>
+      <span style="color:#1A1A1A;font-weight:700;">4.0 inch</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:clamp(14px,2vw,18px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
+      <span style="color:#8A8580;font-weight:500;">무게</span>
+      <span style="color:#1A1A1A;font-weight:700;">48 g</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:clamp(14px,2vw,18px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
+      <span style="color:#8A8580;font-weight:500;">소재</span>
+      <span style="color:#1A1A1A;font-weight:700;">일본 ATS-314</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:clamp(14px,2vw,18px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
+      <span style="color:#8A8580;font-weight:500;">베어링</span>
+      <span style="color:#1A1A1A;font-weight:700;">A-grade 자체 조정</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:clamp(14px,2vw,18px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
+      <span style="color:#8A8580;font-weight:500;">날 곡률</span>
+      <span style="color:#1A1A1A;font-weight:700;">직선형</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:clamp(14px,2vw,18px) 0;font-size:clamp(13px,1.7vw,15px);">
+      <span style="color:#8A8580;font-weight:500;">권장 사용</span>
+      <span style="color:#1A1A1A;font-weight:700;">블런트 80%↑</span>
+    </div>
+
+  </div>
+
+  <!-- ═══ ④ MAMORU's Note ═══════════════════════ -->
+  <div style="background:#FFFFFF;padding:clamp(32px,5vw,64px) clamp(24px,4vw,48px);border-radius:clamp(12px,2vw,16px);border:1px solid #EDEBE8;margin-bottom:clamp(32px,4vw,48px);">
+
+    <div style="font-size:clamp(11px,1.5vw,12px);font-weight:600;color:#8A8580;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:clamp(16px,2vw,24px);">SECTION 03 / NOTE</div>
+
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(22px,3.5vw,36px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.25;margin:0 0 clamp(20px,3vw,32px) 0;">MAMORU's Note</h2>
+
+    <!-- 이런 분에게 맞습니다 -->
+    <div style="margin-bottom:clamp(24px,3vw,32px);">
+      <div style="font-size:clamp(13px,1.7vw,15px);font-weight:700;color:#1A1A1A;margin-bottom:clamp(12px,1.5vw,16px);">이런 분에게 맞습니다</div>
+      <div style="font-size:clamp(13px,1.7vw,15px);color:#2D2D2D;line-height:1.85;padding:6px 0;">— 블런트 커트가 작업의 80% 이상</div>
+      <div style="font-size:clamp(13px,1.7vw,15px);color:#2D2D2D;line-height:1.85;padding:6px 0;">— 짧은 날 가위로 끝매김의 일관성을 원함</div>
+      <div style="font-size:clamp(13px,1.7vw,15px);color:#2D2D2D;line-height:1.85;padding:6px 0;">— 가벼운 손맛, 미세한 텍스처 컨트롤 선호</div>
+    </div>
+
+    <div style="height:1px;background:#EDEBE8;margin:clamp(24px,3vw,32px) 0;"></div>
+
+    <!-- 맞지 않을 수 있습니다 -->
+    <div>
+      <div style="font-size:clamp(13px,1.7vw,15px);font-weight:700;color:#8A8580;margin-bottom:clamp(12px,1.5vw,16px);">맞지 않을 수 있습니다</div>
+      <div style="font-size:clamp(13px,1.7vw,15px);color:#8A8580;line-height:1.85;padding:6px 0;">— 슬라이드 커트 비중이 50% 이상</div>
+      <div style="font-size:clamp(13px,1.7vw,15px);color:#8A8580;line-height:1.85;padding:6px 0;">— 손이 큰 편 (긴 날 가위가 편한 경우)</div>
+      <div style="font-size:clamp(13px,1.7vw,15px);color:#8A8580;line-height:1.85;padding:6px 0;">— 입문자 (먼저 본인 스타일 파악이 우선)</div>
+    </div>
+
+  </div>
+
+  <!-- ═══ 풋터 ═══════════════════════════════════ -->
+  <div style="text-align:center;padding:clamp(20px,3vw,32px) 0;border-top:1px solid #EDEBE8;">
+    <p style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,12px);color:#8A8580;letter-spacing:0.1em;font-weight:700;margin:0;">CUT THE FAKE, KEEP THE REAL</p>
+    <p style="font-size:clamp(10px,1.3vw,11px);color:#B8B4AF;margin:8px 0 0 0;">MAMORU · 마모루미용가위</p>
+  </div>
+
+</div>
