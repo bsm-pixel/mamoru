@@ -61,14 +61,28 @@
 - [ ] 본문 → `</>` 코드보기 → v10 코드 paste → 저장
 - [ ] PC + 모바일 미리보기 확인
 
-#### G. Figma 셋업 (선택, 1~2시간)
-- [ ] Tokens Studio for Figma 플러그인 설치
-- [ ] (필요 시) Outfit + Plus Jakarta Sans + Paperlogy 폰트 설치
-- [ ] Figma 새 파일 생성 ("MAMORU 상세페이지 마스터")
-- [ ] `figma_tokens.json` import → Apply
-- [ ] `html.to.design` 플러그인으로 v10 import
-- [ ] SVG 아이콘 6개 import (`projects/brand/icons/*.svg`) → 사장님 톤으로 개량
-- [ ] 8섹션 Component 변환 + Master Page 조립
+#### G. Figma 셋업 (사장님 결정 — **A 옵션 확정**, 1~1.5시간)
+
+> **방향 확정 (2026-05-09)**: 클로드가 자료 제공 + 사장님이 Figma에서 마무리 셋업.
+> 클로드 자료(이미 완성): `figma_tokens.json` / `figma_master_spec.md` / `figma_tokens_usage.md` / `icons/*.svg`
+
+**사장님 진행 단계** (순서대로):
+1. [ ] Figma 새 파일 생성 ("MAMORU 상세페이지 마스터")
+2. [ ] (필요 시) Outfit + Plus Jakarta Sans + Paperlogy 폰트 설치
+3. [ ] **Tokens Studio for Figma 플러그인** 설치 → `figma_tokens.json` import → Apply (5분)
+   - Color 10개 + Typography 8개 + Spacing/Radius Variables 자동 등록
+4. [ ] **html.to.design 플러그인** 설치 → URL import (10분):
+   ```
+   https://bsm-pixel.github.io/mamoru/projects/brand/iframe_test/v10_trendy.html
+   ```
+5. [ ] import된 디자인 정리 + 8섹션을 Component로 변환 (30~60분)
+6. [ ] **SVG 아이콘 6개 import** (`projects/brand/icons/blade-*.svg`) → 사장님 톤으로 개량
+7. [ ] (선택) Master Page 조립 + Products Page (제품별 인스턴스)
+
+**왜 A 옵션인가** (참고):
+- 클로드가 100% 자동 생성은 한계 (Figma Plugin API 외부 접근 X)
+- 클로드 자료 + 사장님 셋업 = 가장 빠른 1~1.5시간 완성
+- 향후 디자인 조정/실험은 사장님이 Figma에서 자유롭게
 
 ---
 
