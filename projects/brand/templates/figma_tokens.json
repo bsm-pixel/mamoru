@@ -1,0 +1,215 @@
+{
+  "$themes": [],
+  "$metadata": {
+    "tokenSetOrder": ["mamoru"]
+  },
+  "mamoru": {
+    "color": {
+      "void": {
+        "value": "#1A1A1A",
+        "type": "color",
+        "description": "메인 텍스트, 헤더 배경, CTA 다크"
+      },
+      "graphite": {
+        "value": "#2D2D2D",
+        "type": "color",
+        "description": "본문 진한 텍스트, 호버"
+      },
+      "stone": {
+        "value": "#4A4A4A",
+        "type": "color",
+        "description": "보조 본문 텍스트"
+      },
+      "warm-gray": {
+        "value": "#8A8580",
+        "type": "color",
+        "description": "캡션, 라벨"
+      },
+      "mist": {
+        "value": "#B8B4AF",
+        "type": "color",
+        "description": "플레이스홀더"
+      },
+      "sand": {
+        "value": "#D4D0CB",
+        "type": "color",
+        "description": "구분선, 경계선"
+      },
+      "parchment": {
+        "value": "#EDEBE8",
+        "type": "color",
+        "description": "섹션 구분 배경 (Why MAMORU)"
+      },
+      "shell": {
+        "value": "#F5F3F0",
+        "type": "color",
+        "description": "카드 배경 (Spec Table)"
+      },
+      "cream": {
+        "value": "#FAF9F7",
+        "type": "color",
+        "description": "메인 배경, CTA 다크 텍스트"
+      },
+      "white": {
+        "value": "#FFFFFF",
+        "type": "color",
+        "description": "카드 내부 (Note 박스)"
+      }
+    },
+    "spacing": {
+      "xs": { "value": "8", "type": "spacing" },
+      "sm": { "value": "16", "type": "spacing" },
+      "md": { "value": "24", "type": "spacing" },
+      "lg": { "value": "40", "type": "spacing" },
+      "xl": { "value": "64", "type": "spacing" },
+      "2xl": { "value": "96", "type": "spacing" },
+      "3xl": { "value": "140", "type": "spacing" }
+    },
+    "borderRadius": {
+      "sm": { "value": "8", "type": "borderRadius" },
+      "md": { "value": "12", "type": "borderRadius" },
+      "lg": { "value": "16", "type": "borderRadius" },
+      "xl": { "value": "20", "type": "borderRadius" },
+      "full": { "value": "999", "type": "borderRadius" }
+    },
+    "fontFamilies": {
+      "display": {
+        "value": "Outfit",
+        "type": "fontFamilies"
+      },
+      "body": {
+        "value": "Plus Jakarta Sans",
+        "type": "fontFamilies"
+      },
+      "korean": {
+        "value": "Noto Sans KR",
+        "type": "fontFamilies"
+      }
+    },
+    "fontWeights": {
+      "regular": { "value": "400", "type": "fontWeights" },
+      "medium": { "value": "500", "type": "fontWeights" },
+      "semibold": { "value": "600", "type": "fontWeights" },
+      "bold": { "value": "700", "type": "fontWeights" },
+      "extrabold": { "value": "800", "type": "fontWeights" },
+      "black": { "value": "900", "type": "fontWeights" }
+    },
+    "fontSize": {
+      "display": { "value": "112", "type": "fontSizes" },
+      "h1": { "value": "64", "type": "fontSizes" },
+      "h2": { "value": "52", "type": "fontSizes" },
+      "h3": { "value": "36", "type": "fontSizes" },
+      "body-large": { "value": "18", "type": "fontSizes" },
+      "body": { "value": "16", "type": "fontSizes" },
+      "spec-value": { "value": "16", "type": "fontSizes" },
+      "label": { "value": "13", "type": "fontSizes" }
+    },
+    "lineHeights": {
+      "display": { "value": "100%", "type": "lineHeights" },
+      "h1": { "value": "110%", "type": "lineHeights" },
+      "h2": { "value": "115%", "type": "lineHeights" },
+      "h3": { "value": "140%", "type": "lineHeights" },
+      "body-large": { "value": "185%", "type": "lineHeights" },
+      "body": { "value": "170%", "type": "lineHeights" },
+      "label": { "value": "150%", "type": "lineHeights" }
+    },
+    "letterSpacing": {
+      "display": { "value": "-4%", "type": "letterSpacing" },
+      "h1": { "value": "-3%", "type": "letterSpacing" },
+      "h2": { "value": "-2%", "type": "letterSpacing" },
+      "h3": { "value": "-1%", "type": "letterSpacing" },
+      "body": { "value": "0%", "type": "letterSpacing" },
+      "label": { "value": "25%", "type": "letterSpacing" }
+    },
+    "typography": {
+      "display": {
+        "value": {
+          "fontFamily": "{fontFamilies.display}",
+          "fontWeight": "{fontWeights.black}",
+          "fontSize": "{fontSize.display}",
+          "lineHeight": "{lineHeights.display}",
+          "letterSpacing": "{letterSpacing.display}"
+        },
+        "type": "typography",
+        "description": "Hero 제품명 (Outfit 900, 112px)"
+      },
+      "h1": {
+        "value": {
+          "fontFamily": "{fontFamilies.display}",
+          "fontWeight": "{fontWeights.extrabold}",
+          "fontSize": "{fontSize.h1}",
+          "lineHeight": "{lineHeights.h1}",
+          "letterSpacing": "{letterSpacing.h1}"
+        },
+        "type": "typography",
+        "description": "큰 제목 (Outfit 800, 64px)"
+      },
+      "h2": {
+        "value": {
+          "fontFamily": "{fontFamilies.display}",
+          "fontWeight": "{fontWeights.extrabold}",
+          "fontSize": "{fontSize.h2}",
+          "lineHeight": "{lineHeights.h2}",
+          "letterSpacing": "{letterSpacing.h2}"
+        },
+        "type": "typography",
+        "description": "섹션 제목 (Outfit 800, 52px)"
+      },
+      "h3": {
+        "value": {
+          "fontFamily": "{fontFamilies.body}",
+          "fontWeight": "{fontWeights.semibold}",
+          "fontSize": "{fontSize.h3}",
+          "lineHeight": "{lineHeights.h3}",
+          "letterSpacing": "{letterSpacing.h3}"
+        },
+        "type": "typography",
+        "description": "Why MAMORU 인용문 (PJS 600, 36px)"
+      },
+      "body-large": {
+        "value": {
+          "fontFamily": "{fontFamilies.body}",
+          "fontWeight": "{fontWeights.regular}",
+          "fontSize": "{fontSize.body-large}",
+          "lineHeight": "{lineHeights.body-large}",
+          "letterSpacing": "{letterSpacing.body}"
+        },
+        "type": "typography",
+        "description": "본문 큰 사이즈 (PJS+Noto KR 400, 18px)"
+      },
+      "body": {
+        "value": {
+          "fontFamily": "{fontFamilies.body}",
+          "fontWeight": "{fontWeights.regular}",
+          "fontSize": "{fontSize.body}",
+          "lineHeight": "{lineHeights.body}",
+          "letterSpacing": "{letterSpacing.body}"
+        },
+        "type": "typography",
+        "description": "본문 (PJS+Noto KR 400, 16px)"
+      },
+      "spec-value": {
+        "value": {
+          "fontFamily": "{fontFamilies.body}",
+          "fontWeight": "{fontWeights.bold}",
+          "fontSize": "{fontSize.spec-value}",
+          "lineHeight": "{lineHeights.body}",
+          "letterSpacing": "{letterSpacing.body}"
+        },
+        "type": "typography",
+        "description": "사양 표 값 (PJS 700, 16px)"
+      },
+      "label": {
+        "value": {
+          "fontFamily": "{fontFamilies.display}",
+          "fontWeight": "{fontWeights.bold}",
+          "fontSize": "{fontSize.label}",
+          "lineHeight": "{lineHeights.label}",
+          "letterSpacing": "{letterSpacing.label}"
+        },
+        "type": "typography",
+        "description": "섹션 라벨 (Outfit 700, 13px, +25% letter-spacing)"
+      }
+    }
+  }
+}
