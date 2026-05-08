@@ -1,11 +1,104 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-08 — 상품 상세페이지 양산 시스템 (v8 트렌디 마스터 + Figma 하이브리드)
+> 최종 수정: 2026-05-09 — v10 13섹션 풀 마스터 안정화 (디자인 거의 완성, 콘텐츠 채우기 단계)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
 
-## 📋 2026-05-08 진행 순서 (사장님 오늘 할 일 — 우선순위 순)
+## 🌅 다음 작업 시작 시 (사장님이 클로드에게 한 마디 입력 → 즉시 가이드)
+
+**입력할 명령어 (자연어, 이 중 하나)**:
+- `v10 이어서`
+- `어제 작업 이어서`
+- `상품 상세 v10 진행`
+- `MAMORU 이어서`
+
+→ 클로드가 받으면:
+1. 본 TODO.md 상단 (이 섹션) 읽기
+2. 우선순위 작업 안내
+3. 사장님이 어디부터 시작할지 결정
+
+### 🎯 우선순위 작업 (다음 시작 시 즉시 가능한 순)
+
+#### A. 사장님 명세 확정 (클로드 직접 작업 X — 사장님 정보 필요)
+- [ ] **CL → 정식 모델로 변경** (CL은 Clearance 임시)
+  - 정식 마스터 모델명 결정 (예: A1-4T 또는 다른 코드)
+  - hero/About/SPEC/PROFILE 모두 변경
+- [ ] **핸들 분류 정확한 명칭** (현재 더미: A/B/C 핸들)
+  - A 핸들 = ? / B 핸들 = ? / C 핸들 = ?
+- [ ] **등급 분류 정확한 명칭** (현재 더미: R/A/E/S)
+  - 영문/한글 정확한 명칭 알려주기
+- [ ] **날등 형태 정확한 명칭** (현재 더미: S/K/B = Straight/Ken-form/Byeol-form)
+- [ ] **본 모델의 핸들 그룹** (예: A2 핸들이면 SAME HANDLE 섹션 데이터 갱신)
+- [ ] **본 모델의 BLADE 형태** (F/A/G 중 어느?)
+- [ ] **본 모델의 BLADE BACK 형태** (S/K/B 중 어느?)
+
+#### B. 사진 촬영 + 추가 (사장님 직접 작업)
+- [ ] **back.png** — 뒷면 사선 전체샷 (모델명 보이는 각도, 3:2)
+- [ ] **사장님 얼굴** — Why MAMORU 섹션 (원형 작게)
+- [ ] **공방 사진** — 가위 점검 / 공방 내부 (3:2)
+- [ ] **모델별 날부 2:3 세로 사진** (SAME HANDLE 그리드 5장 — A2-4T/6T/7A/55T/55SL)
+
+#### C. 영상 (cut.gif) — 사장님 직접
+- [ ] 블런트 커트 동작 3~5초 촬영 (1280px 이상)
+- [ ] [ezgif.com](https://ezgif.com)에서 GIF 변환 + 압축 (3MB 이하)
+- [ ] `cut.gif` 파일명으로 폴더에 추가
+
+#### D. 본문 카피 채우기 (사장님 답변 → 클로드 갱신)
+- [ ] 한 줄 카피 ("한 손에 머무는 무게, 일관된 끝매김" 유지 or 변경)
+- [ ] About 본문 단락 2개 (CL1-4T 특성 — 사장님 직접 작성)
+- [ ] FOR YOU? "이런 분에게" 3 bullet
+- [ ] FOR YOU? "맞지 않을 수 있습니다" 3 bullet
+- [ ] Why MAMORU 인용문 (사장님 직접 메시지)
+- [ ] 사장님 자기소개 한 줄
+- [ ] VOICES 후기 3개 (실제 상담 후기 사용 가능 시)
+
+#### E. 사진 압축 (사장님 직접, 10분)
+- [ ] [TinyPNG](https://tinypng.com)에 7장 드래그 → 압축본 다운로드 → 폴더 덮어쓰기 (28MB → ~10MB)
+
+#### F. 아임웹 실 상품 검증 (사장님 직접, 15분)
+- [ ] CL1-4T 또는 정식 모델로 아임웹 상품 등록
+- [ ] 본문 → `</>` 코드보기 → v10 코드 paste → 저장
+- [ ] PC + 모바일 미리보기 확인
+
+#### G. Figma 셋업 (선택, 1~2시간)
+- [ ] Tokens Studio for Figma 플러그인 설치
+- [ ] (필요 시) Outfit + Plus Jakarta Sans + Paperlogy 폰트 설치
+- [ ] Figma 새 파일 생성 ("MAMORU 상세페이지 마스터")
+- [ ] `figma_tokens.json` import → Apply
+- [ ] `html.to.design` 플러그인으로 v10 import
+- [ ] SVG 아이콘 6개 import (`projects/brand/icons/*.svg`) → 사장님 톤으로 개량
+- [ ] 8섹션 Component 변환 + Master Page 조립
+
+---
+
+## 📋 2026-05-08~09 진행 상황 (오늘 한 일)
+
+### ✅ 디자인 안정화 — v10 13섹션 풀 마스터
+- v5~v9 정리 (8개 파일 삭제)
+- 모델명 폰트 페이퍼로지 적용 (commit `563a7ab`)
+- 사양 인라인 "일본 ATS-314" → "Blunt" (사장님 직접)
+- 사진 영역 배경 Parchment → Shell (Brand Guide D-04 정식)
+- Hero 메인 2 (전면 가로) 제거 + DETAIL 풀폭 3장 + 1:1 클로즈업 2장
+- DETAIL 비율 1:1 → 3:2 + auto-fit minmax(360, 1fr)
+- PROFILE 카드 SVG 우측 상단 + ✓ 체크만
+- HANDLE → BLADE BACK (날등 형태) 전환
+- SAME HANDLE 신설 (07번, SPEC 직후)
+- VOICES 위치 이동 (08번, SAME HANDLE 직후)
+- BRAND TRANSITION 신설 (Void 슬로건, VOICES 직후)
+- LINEUP → GRADE 분리 (등급 카드만)
+- SVG 아이콘 6개 별도 파일 export (`projects/brand/icons/*.svg`)
+
+### 🎯 디자인 톤 확정 (확정 사항)
+- v10 = 13섹션 풀 마스터
+- 흐름: 객관(Hero/Detail/Action/About/PROFILE/SPEC/SAME HANDLE) → 외부 시각(VOICES) → BRAND TRANSITION → 내부 정체성(VS/WHY/CARE/GRADE/CTA)
+- 사진 톤: Shell 배경 + object-fit:contain
+- 모델명 폰트: Paperlogy
+- BLADE TYPE 카드: SVG 라인 일러스트 (사장님 Figma 개량 예정)
+
+---
+
+## 📋 2026-05-08 진행 순서 (이전)
 
 ### 현재 상태 (확정)
 - ✅ HTML 마스터: `projects/brand/iframe_test/v8_trendy.html` (8섹션, 사진 7장 적용)
