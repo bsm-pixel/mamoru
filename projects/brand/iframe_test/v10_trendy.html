@@ -303,86 +303,33 @@
     <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(20px,3vw,32px) 0;">이 핸들로 만나는<br>다른 가위</h2>
     <p style="font-size:clamp(13px,1.6vw,15px);color:#8A8580;line-height:1.7;margin:0 0 clamp(48px,6vw,72px) 0;font-style:italic;">— A2 핸들 시리즈 (Ace · 핸들 2형). 한 핸들로 가위 종류를 통일.</p>
 
-    <!-- 카테고리별 모델 진열 (날부 2:3 사진 + 모델명) -->
-    <div style="display:grid;grid-template-columns:1fr;gap:clamp(40px,5vw,64px);">
+    <!-- 모델 통합 그리드 (카테고리 구분 X — 한 핸들 그룹은 모델 수가 적음) -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:clamp(8px,1.2vw,16px);">
 
-      <!-- 블런트 -->
-      <div style="border-top:1px solid #D4D0CB;padding-top:clamp(24px,3vw,32px);">
-        <div style="font-family:'Outfit',sans-serif;font-size:clamp(13px,1.7vw,15px);font-weight:800;color:#1A1A1A;letter-spacing:0.1em;margin-bottom:clamp(20px,2.5vw,28px);">[ 블런트 ]</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:clamp(8px,1.2vw,16px);">
-          <!-- 모델 카드 -->
-          <div>
-            <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-4T<br>날부 2:3 ]</div>
-            <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-4T</div>
-            <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">4 inch</div>
-          </div>
-          <div>
-            <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-5T<br>날부 2:3 ]</div>
-            <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-5T</div>
-            <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">5 inch</div>
-          </div>
-          <div>
-            <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-6T<br>날부 2:3 ]</div>
-            <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-6T</div>
-            <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">6 inch</div>
-          </div>
-          <div>
-            <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-7T<br>날부 2:3 ]</div>
-            <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-7T</div>
-            <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">7 inch</div>
-          </div>
-        </div>
+      <div>
+        <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-4T<br>날부 2:3 ]</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-4T</div>
+        <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">4 inch</div>
       </div>
-
-      <!-- 장가위 -->
-      <div style="border-top:1px solid #D4D0CB;padding-top:clamp(24px,3vw,32px);">
-        <div style="font-family:'Outfit',sans-serif;font-size:clamp(13px,1.7vw,15px);font-weight:800;color:#1A1A1A;letter-spacing:0.1em;margin-bottom:clamp(20px,2.5vw,28px);">[ 장가위 ]</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:clamp(8px,1.2vw,16px);">
-          <div>
-            <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-65A<br>날부 2:3 ]</div>
-            <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-65A</div>
-            <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">6.5 inch</div>
-          </div>
-          <div>
-            <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-7A<br>날부 2:3 ]</div>
-            <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-7A</div>
-            <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">7 inch</div>
-          </div>
-        </div>
+      <div>
+        <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-6T<br>날부 2:3 ]</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-6T</div>
+        <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">6 inch</div>
       </div>
-
-      <!-- 틴닝 -->
-      <div style="border-top:1px solid #D4D0CB;padding-top:clamp(24px,3vw,32px);">
-        <div style="font-family:'Outfit',sans-serif;font-size:clamp(13px,1.7vw,15px);font-weight:800;color:#1A1A1A;letter-spacing:0.1em;margin-bottom:clamp(20px,2.5vw,28px);">[ 틴닝 ]</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:clamp(8px,1.2vw,16px);">
-          <div>
-            <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-55T<br>날부 2:3 ]</div>
-            <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-55T</div>
-            <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">감모량 25%</div>
-          </div>
-          <div>
-            <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-6T<br>날부 2:3 ]</div>
-            <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-6T</div>
-            <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">감모량 30%</div>
-          </div>
-        </div>
+      <div>
+        <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-7A<br>날부 2:3 ]</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-7A</div>
+        <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">7 inch</div>
       </div>
-
-      <!-- 슬라이싱 -->
-      <div style="border-top:1px solid #D4D0CB;padding-top:clamp(24px,3vw,32px);">
-        <div style="font-family:'Outfit',sans-serif;font-size:clamp(13px,1.7vw,15px);font-weight:800;color:#1A1A1A;letter-spacing:0.1em;margin-bottom:clamp(20px,2.5vw,28px);">[ 슬라이싱 ]</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:clamp(8px,1.2vw,16px);">
-          <div>
-            <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-55SL<br>날부 2:3 ]</div>
-            <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-55SL</div>
-            <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">5.5 inch</div>
-          </div>
-          <div>
-            <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-6SL<br>날부 2:3 ]</div>
-            <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-6SL</div>
-            <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">6 inch</div>
-          </div>
-        </div>
+      <div>
+        <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-55T<br>날부 2:3 ]</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-55T</div>
+        <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">감모량 25%</div>
+      </div>
+      <div>
+        <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ A2-55SL<br>날부 2:3 ]</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">A2-55SL</div>
+        <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">5.5 inch</div>
       </div>
 
     </div>
@@ -390,53 +337,9 @@
     <p style="font-size:clamp(11px,1.4vw,13px);color:#8A8580;line-height:1.7;margin:clamp(32px,4vw,48px) 0 0;font-style:italic;">※ 위 라인업은 예시입니다. 정확한 모델 정보 + 사진은 양산 시 사장님 추가 촬영 후 갱신.</p>
   </div>
 
-  <!-- ═══ 08.5. BRAND TRANSITION (신설 — 슬로건 분기점) ═══ -->
-  <div style="background:#1A1A1A;color:#FAF9F7;padding:clamp(120px,15vw,200px) clamp(24px,4vw,48px);text-align:left;">
-    <div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:rgba(245,245,243,0.4);letter-spacing:0.25em;margin-bottom:clamp(40px,6vw,72px);">— MAMORU</div>
-    <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(36px,8vw,112px);font-weight:900;color:#FAF9F7;letter-spacing:-0.04em;line-height:0.95;margin:0;">CUT THE FAKE,<br>KEEP THE REAL.</h2>
-    <p style="font-size:clamp(13px,1.6vw,15px);color:rgba(245,245,243,0.5);line-height:1.7;margin:clamp(40px,5vw,64px) 0 0;letter-spacing:0.05em;">— 가짜를 잘라내고, 진짜를 지킨다</p>
-  </div>
-
-  <!-- ═══ 09. VS GENERAL (비교) ═══════════ -->
-  <div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">
-    <div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.25em;margin-bottom:clamp(24px,3vw,40px);">— 08 / VS GENERAL</div>
-    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(48px,7vw,72px) 0;">MAMORU vs<br>일반 가위 브랜드</h2>
-
-    <div style="border-top:2px solid #1A1A1A;">
-      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.05em;text-transform:uppercase;">
-        <span></span><span style="color:#1A1A1A;">MAMORU</span><span>일반</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
-        <span style="color:#8A8580;font-weight:500;">선택 방식</span>
-        <span style="color:#1A1A1A;font-weight:700;">손/스타일 진단 우선</span>
-        <span style="color:#8A8580;">브랜드/가격 우선</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
-        <span style="color:#8A8580;font-weight:500;">가격 정책</span>
-        <span style="color:#1A1A1A;font-weight:700;">동일 — 할인 없음</span>
-        <span style="color:#8A8580;">시즌·이벤트 할인</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
-        <span style="color:#8A8580;font-weight:500;">복원수리</span>
-        <span style="color:#1A1A1A;font-weight:700;">자체 기술 — 평생</span>
-        <span style="color:#8A8580;">외주 또는 신품 권장</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
-        <span style="color:#8A8580;font-weight:500;">상담</span>
-        <span style="color:#1A1A1A;font-weight:700;">맞춤 진단 무료</span>
-        <span style="color:#8A8580;">판매 중심 응대</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;font-size:clamp(13px,1.7vw,15px);">
-        <span style="color:#8A8580;font-weight:500;">"안 사셔도 됩니다"</span>
-        <span style="color:#1A1A1A;font-weight:700;">합니다</span>
-        <span style="color:#8A8580;">못 합니다</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ 09. VOICES ═══════════════════════════════ -->
+  <!-- ═══ 08. VOICES (이동 — 07 SAME HANDLE 직후) ═══ -->
   <div style="background:#EDEBE8;padding:clamp(80px,10vw,140px) clamp(24px,4vw,48px);">
-    <div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.25em;margin-bottom:clamp(24px,3vw,40px);">— 09 / VOICES</div>
+    <div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.25em;margin-bottom:clamp(24px,3vw,40px);">— 08 / VOICES</div>
     <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(20px,3vw,32px) 0;">고객 목소리</h2>
     <p style="font-size:clamp(13px,1.6vw,15px);color:#8A8580;line-height:1.7;margin:0 0 clamp(48px,6vw,72px) 0;font-style:italic;">— 제품 후기가 아닌, 상담을 통해 느낀 점</p>
 
@@ -478,6 +381,50 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ═══ 08.5. BRAND TRANSITION (VOICES 직후 — 외부시각 → 내부 정체성 분기) ═══ -->
+  <div style="background:#1A1A1A;color:#FAF9F7;padding:clamp(120px,15vw,200px) clamp(24px,4vw,48px);text-align:left;">
+    <div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:rgba(245,245,243,0.4);letter-spacing:0.25em;margin-bottom:clamp(40px,6vw,72px);">— MAMORU</div>
+    <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(36px,8vw,112px);font-weight:900;color:#FAF9F7;letter-spacing:-0.04em;line-height:0.95;margin:0;">CUT THE FAKE,<br>KEEP THE REAL.</h2>
+    <p style="font-size:clamp(13px,1.6vw,15px);color:rgba(245,245,243,0.5);line-height:1.7;margin:clamp(40px,5vw,64px) 0 0;letter-spacing:0.05em;">— 가짜를 잘라내고, 진짜를 지킨다</p>
+  </div>
+
+  <!-- ═══ 09. VS GENERAL (비교) ═══════════ -->
+  <div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">
+    <div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.25em;margin-bottom:clamp(24px,3vw,40px);">— 09 / VS GENERAL</div>
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(48px,7vw,72px) 0;">MAMORU vs<br>일반 가위 브랜드</h2>
+
+    <div style="border-top:2px solid #1A1A1A;">
+      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.05em;text-transform:uppercase;">
+        <span></span><span style="color:#1A1A1A;">MAMORU</span><span>일반</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
+        <span style="color:#8A8580;font-weight:500;">선택 방식</span>
+        <span style="color:#1A1A1A;font-weight:700;">손/스타일 진단 우선</span>
+        <span style="color:#8A8580;">브랜드/가격 우선</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
+        <span style="color:#8A8580;font-weight:500;">가격 정책</span>
+        <span style="color:#1A1A1A;font-weight:700;">동일 — 할인 없음</span>
+        <span style="color:#8A8580;">시즌·이벤트 할인</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
+        <span style="color:#8A8580;font-weight:500;">복원수리</span>
+        <span style="color:#1A1A1A;font-weight:700;">자체 기술 — 평생</span>
+        <span style="color:#8A8580;">외주 또는 신품 권장</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(13px,1.7vw,15px);">
+        <span style="color:#8A8580;font-weight:500;">상담</span>
+        <span style="color:#1A1A1A;font-weight:700;">맞춤 진단 무료</span>
+        <span style="color:#8A8580;">판매 중심 응대</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;font-size:clamp(13px,1.7vw,15px);">
+        <span style="color:#8A8580;font-weight:500;">"안 사셔도 됩니다"</span>
+        <span style="color:#1A1A1A;font-weight:700;">합니다</span>
+        <span style="color:#8A8580;">못 합니다</span>
+      </div>
     </div>
   </div>
 
