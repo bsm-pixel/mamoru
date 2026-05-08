@@ -1,68 +1,145 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-07 — 상품 상세페이지 양산 시스템 구축 (진행 중)
+> 최종 수정: 2026-05-08 — 상품 상세페이지 양산 시스템 (v8 트렌디 마스터 + Figma 하이브리드)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
 
-## 🚧 진행 중 — 상품 상세페이지 양산 시스템 (2026-05-07~)
+## 📋 2026-05-08 진행 순서 (사장님 오늘 할 일 — 우선순위 순)
 
-### 핵심 결정사항 (이미 확정)
-- **양산 방식**: 아임웹 상품 상세 설명 → `</>` 코드보기 → inline style HTML 직접 paste
-  - `<style>`/`<script>`/`<iframe>` 모두 차단됨 (검증 완료)
-  - inline `style=""` + `clamp()` 함수가 정답
-  - 상세: `memory/reference_imweb_product_detail_inline.md`
-- **흐름맵**: 8~10섹션 압축 (사장님 결정)
-  - Hero / 공감 / 시장진실 / MAMORU의답 / 작동방식 / 대표이야기 / 비교 / Target Filter / CTA
-  - 선택: Story / 후기
-  - 원본 참조: landing-page-generator/agents 5단계 (흐름은 차용, 톤은 Brand Guide 우선)
-- **디자인 톤**: **A 타이포 + B 사진 하이브리드** (사장님 결정 2026-05-07)
-  - A의 거대 Outfit 타이포 + B의 풀폭 사진 진열 결합
-- **출력처**: 아임웹 상품 상세 본문 (`상품 상세 설명` 영역)
-  - 각 제품마다 코드 통째로 paste — 마스터 1곳 자동 반영 X (양산 시 변수만 갈아낀 코드 복붙)
+### 현재 상태 (확정)
+- ✅ HTML 마스터: `projects/brand/iframe_test/v8_trendy.html` (8섹션, 사진 7장 적용)
+- ✅ 양산 방식: inline HTML 직접 paste (검증 완료)
+- ✅ 흐름맵: 8섹션 (Hero / Detail / In Action / About / Spec / For You / Why MAMORU / CTA)
+- ✅ 디자인 톤: A 타이포 + B 사진 하이브리드
+- ✅ 사진 7장 폴더: `projects/brand/product_detail/CL1-4T/images/`
+- ✅ Figma 하이브리드 (C 옵션) 결정
+- ✅ Figma 토큰 JSON + 가이드: `projects/brand/templates/figma_tokens.json` `figma_tokens_usage.md` `figma_master_spec.md`
 
-### 검증 완료 (Phase 0)
-- [x] iframe vs inline 검증 — inline 확정 (commits `70640c0` `be46017` `20e7493` `1f50db7`)
-- [x] 아임웹 상품 상세 설명에 직접 paste 작동 확인
-- [x] 펼치기 자동 동작 + 콘텐츠 충돌 없음 확인
-- [x] PC/모바일 자동 반응형 (clamp + viewport meta wrapper)
-- [x] v5 3개 컨셉 시안 (A 타이포 / B 사진 / C 장인 스토리) (commits `10727dd` `a1b9d8f`)
-- [x] 사장님 컨셉 결정: **A + B 하이브리드**
+### 🎯 Step 1 — v8 디자인 검증 (5~10분, 즉시)
+- [ ] [v8_trendy 미리보기](https://bsm-pixel.github.io/mamoru/projects/brand/iframe_test/v8_trendy.html) PC + 모바일에서 다시 보기
+- [ ] 만족스러운지 결정:
+  - ✅ OK → Step 2로
+  - ⚠️ 부분 조정 → 어디 수정 원하는지 클로드에게 알림 → 코드 갱신 후 다시 검증
+  - ❌ 큰 방향 변경 → v9 시안 (드물게)
 
-### 🎯 다음 액션 (사장님 복귀 후 1순위)
-- [ ] **v6 하이브리드 시안 제작** — A 타이포 임팩트 + B 풀폭 사진 진열 결합
-  - 같은 2섹션(Hero + 시장진실)으로 비교 가능하게
-  - 위치: `projects/brand/iframe_test/v6_hybrid.html`
-  - PC + 모바일 둘 다 자동 반응형 확인
-- [ ] 사장님 v6 검토 → 미세 조정 → 확정
-- [ ] **8~10섹션 풀 마스터 제작** (확정된 톤으로)
-  - 위치: `projects/brand/product_detail_template.html`
-  - 각 섹션 변수화 (제품별 텍스트/이미지 슬롯)
-- [ ] **변수 시트 양식 commit**
-  - 위치: `projects/brand/templates/spec_sheet_scissors.md`
-  - 가위 변수: name / sku / 길이 / 무게 / 소재 / 베어링 / 곡률 / 권장 사용자 / 카피 / 이미지 슬롯
-- [ ] **카피 가이드 commit**
-  - 위치: `projects/brand/templates/copy_brief.md`
-  - Brand Guide B-04 보이스 적용 (긴급성/할인/구매권유 ❌)
+### 🎯 Step 2 — 본문 카피 채우기 (30분, 사장님은 답변만)
+v8 디자인 OK 후 진행. 클로드가 항목별 질문 → 사장님 답변 → HTML 갱신.
+- [ ] 한 줄 카피 ("한 손에 머무는 무게, 일관된 끝매김" 유지 or 변경)
+- [ ] 사양 정확한 값 (길이/무게/소재/베어링/곡률 — 더미가 정확한지 확인)
+- [ ] About 본문 단락 (CL1-4T 특성 — 사장님 직접 작성)
+- [ ] "이런 분에게 맞습니다" 3 bullet
+- [ ] "맞지 않을 수 있습니다" 3 bullet
+- [ ] Why MAMORU 인용문 (사장님 메시지)
+- [ ] 사장님 자기소개 (한 줄)
 
-### 🎯 다음 액션 (Phase 1 시제품 — 사장님과 함께)
-- [ ] **CL1-4T 변수 시트 채우기** — 사장님 답변 (AskUserQuestion 패턴)
-- [ ] **CL1-4T 누끼 PNG 5장** (사장님 직접 촬영/누끼)
-  - hero (정면) / side (측면) / detail (날 끝) / in_hand (손) / maker (선택)
-  - 위치: `projects/brand/product_detail/CL1-4T/images/`
-- [ ] **CL1-4T 정식 HTML 생성** → 사장님 아임웹 paste → 실제 상품 페이지 검증
+### 🎯 Step 3 — 사진 압축 (10분, 사장님 직접)
+- [ ] [TinyPNG](https://tinypng.com)에 7장 드래그
+- [ ] 다운로드 → `projects/brand/product_detail/CL1-4T/images/` 폴더에 덮어쓰기
+- [ ] 결과: 28MB → ~10MB (모바일 로딩 ↑)
+- [ ] 클로드에게 알리면 commit + push
 
-### 🎯 추후 (Phase 2~)
-- [ ] 양산 (제품별 변수 시트 채우고 HTML 생성 반복)
-- [ ] 주변제품 마스터 추가 (빗 / 롤브러시 / 핀셋 등)
-- [ ] (선택) Figma 시안 단계 — 사장님이 디자인 조정 원할 때만
+### 🎯 Step 4 — 영상(cut.gif) 촬영 (별도 시간)
+- [ ] 블런트 커트 동작 3~5초 촬영 (1280px 이상 권장)
+- [ ] [ezgif.com](https://ezgif.com)에서 GIF 변환 + 압축 (3MB 이하)
+- [ ] `cut.gif` 파일명으로 폴더에 추가
+- [ ] 클로드에게 알림 → IN ACTION 섹션 placeholder 교체
 
-### 핵심 파일 위치 (이어서 작업 시 참조)
-- 검증 시안: `projects/brand/iframe_test/v5_concept_a.html` `v5_concept_b.html` `v5_concept_c.html`
-- v4 4섹션 더미: `projects/brand/iframe_test/inline_long.html`
-- 메모리 룰: `memory/reference_imweb_product_detail_inline.md`
-- 플랜 원본: `C:\Users\user\.claude\plans\tms-stateful-valiant.md`
-- Brand Guide: `.claude/MAMORU-Complete-Brand-Guide-v1.0.md` (D-03 상품 상세 명시)
+### 🎯 Step 5 — 아임웹 실 상품 검증 (15분)
+- [ ] CL1-4T 아임웹 상품 등록 (이미 있으면 skip)
+- [ ] 본문 → `</>` 코드보기 → v8_trendy 코드 paste
+- [ ] PC + 모바일 미리보기 확인
+- [ ] 펼치기 동작 정상 확인
+- [ ] ✅ 통과 → CL1-4T 시제품 1호 완성
+
+---
+
+## 🅱️ 병행 가능 작업 — Figma 셋업 (선택, 1~2시간)
+
+급한 거 아니면 다음 제품 양산 전에 진행 권장. 디자인 조정 자유도 ↑.
+
+- [ ] **Tokens Studio for Figma** 플러그인 설치
+- [ ] (필요 시) Google Fonts에서 Outfit + Plus Jakarta Sans 시스템 설치
+- [ ] Figma 새 파일 생성 ("MAMORU 상세페이지 마스터")
+- [ ] `figma_tokens.json` import → Apply → Color/Typography/Spacing 자동 등록 (5분)
+- [ ] **html.to.design** 플러그인 설치 → v8_trendy URL import → 자동 시작점 (5분)
+- [ ] import된 디자인 정리 + 8섹션을 Component로 변환 (30~60분)
+- [ ] Master Page 조립 (CL1-4T 더미)
+- [ ] 향후 디자인 조정 시 → Figma에서 변경 → 클로드에게 알림 → HTML 동기화
+
+가이드:
+- `projects/brand/templates/figma_tokens_usage.md` (토큰 import)
+- `projects/brand/templates/figma_master_spec.md` (마스터 사양)
+
+---
+
+## 🅲️ 시제품 1호 완성 후 (클로드 작업)
+
+- [ ] v8_trendy → `projects/brand/product_detail_template.html` 정식 마스터로 이동
+- [ ] 변수 시트 양식 commit (`templates/spec_sheet_scissors.md`)
+- [ ] 카피 가이드 commit (`templates/copy_brief.md` — Brand Guide B-04 보이스)
+- [ ] 양산 매뉴얼 commit (`MANUAL_PRODUCT_DETAIL.md` — 사장님/직원이 보고 양산 가능)
+
+---
+
+## 🅳️ 양산 (Phase C, 추후 반복)
+
+각 새 제품(CL1-70 등)마다:
+1. 사장님: 변수 시트 채우기 (클로드 AskUserQuestion 패턴)
+2. 사장님: 사진 7장 + 영상 촬영/압축
+3. 사장님: `projects/brand/product_detail/{SKU}/images/` 폴더에 추가
+4. 클로드: 마스터 → `product_detail/{SKU}/index.html` 생성
+5. 사장님: GitHub push (자동 GitHub Pages 배포)
+6. 사장님: 아임웹 새 상품 등록 + 본문 paste
+7. 1제품 ~30분 내 완성
+
+---
+
+## 🅴️ 추후 (별도 작업)
+
+- [ ] 주변제품 마스터 추가 (빗 / 롤브러시 / 핀셋 — 다른 톤, 별도 마스터)
+- [ ] 양산 매뉴얼 직원용 작성 (사진 촬영 가이드 / 변수 시트 작성법)
+
+---
+
+## 🗂️ 핵심 파일 위치 (이어서 작업 시 참조)
+
+| 파일 | 용도 |
+|------|------|
+| `projects/brand/iframe_test/v8_trendy.html` | HTML 마스터 (시안 단계) |
+| `projects/brand/product_detail/CL1-4T/images/` | CL1-4T 사진 폴더 (7장 + cut.gif 추후) |
+| `projects/brand/templates/figma_tokens.json` | Figma 토큰 (Tokens Studio import용) |
+| `projects/brand/templates/figma_tokens_usage.md` | 토큰 import 가이드 |
+| `projects/brand/templates/figma_master_spec.md` | Figma 마스터 사양서 (8섹션) |
+| `memory/reference_imweb_product_detail_inline.md` | 아임웹 inline style 검증된 패턴 |
+| `.claude/MAMORU-Complete-Brand-Guide-v1.0.md` | Brand Guide (D-03 상품 상세) |
+| `C:\Users\user\.claude\plans\tms-stateful-valiant.md` | 플랜 원본 |
+
+---
+
+## ✅ 2026-05-07~08 작업 이력
+
+### 양산 방식 검증 (commits `70640c0` `be46017` `20e7493` `1f50db7`)
+- iframe → inline 전환 (script 차단 발견 → inline style + clamp() 정착)
+- v3/v4 검증 — 펼치기 동작 + 4섹션 더미 흐름
+
+### 디자인 컨셉 (commits `10727dd` `a1b9d8f`)
+- v5 3개 컨셉 시안 (A 타이포 / B 사진 / C 장인 스토리)
+- 사장님 결정: **A + B 하이브리드**
+
+### v6/v7/v8 진화
+- v6 하이브리드 (commit `7218592`) — Hero + 시장진실 결합 시안
+- v6 풀 마스터 (commit `ad705d3`) — 11섹션
+- v7 (commit `9d2ac85`) — 사진 6컷 + 영상 섹션
+- v8 트렌디 (commit `371bc54`) — 8섹션 압축 + 라벨 영문화 + 영상 위로
+- v8 fix (commit `c9aad32`) — 모델명 1줄 + 구매 버튼 제거 (CLAUDE.md 중복 CTA 룰 적용)
+- v8 사진 7장 매핑 재구성 (commit `f6a1722`) — 사장님 앵글 정리 (사선/전면/날부2/모델명/볼트부/핸들부)
+- 실 사진 7장 적용 (commit `b2a8389`) — 28MB
+
+### Figma 하이브리드 (commits `834c94c` `07a714e`)
+- Figma 마스터 사양서 commit
+- Tokens Studio JSON + 사용 가이드 commit
+- 사장님 결정: **C 옵션 (HTML 양산 + Figma 미러)**
 
 ---
 
