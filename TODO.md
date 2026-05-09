@@ -1,7 +1,25 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-09 — v10 13섹션 풀 마스터 안정화 (디자인 거의 완성, 콘텐츠 채우기 단계)
+> 최종 수정: 2026-05-09 — v10 PROFILE 영역 완전 재설계 + 사장님 일러스트 SVG 11개 적용 (디자인 마스터 완성도 ↑)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
+
+---
+
+## 💡 양산 워크플로 (사장님 확정 방향 2026-05-09)
+
+> **"틀(v10 마스터) 잡아놓고 → 이미지만 로컬 폴더에 넣고 → 그에 맞춰 자동화 느낌으로 클로드와 함께 제작"**
+
+### 다음 모델 양산 시 사장님 액션 (간단)
+1. 사진 7~8장 + SVG 아이콘 → `projects/brand/product_detail/{모델}/images/` 또는 `icons/` 에 넣기
+2. 클로드에게 `다음 모델 진행` 한 마디 + 모델명/변수 답변
+3. 클로드가 v10 마스터를 갈아끼워 새 모델 HTML 생성 → push
+
+### 클로드 자동 흐름
+1. v10_trendy.html 마스터 복사 → `product_detail/{모델}/index.html`
+2. 사장님 변수 시트 답변 받아서 placeholder 갈아끼움
+3. `images/` 폴더 사진 자동 참조
+4. SVG 아이콘 inline 적용 (currentColor)
+5. push → GitHub Pages 자동 배포 → 아임웹 inline paste 준비 완료
 
 ---
 
@@ -86,7 +104,43 @@
 
 ---
 
-## 📋 2026-05-08~09 진행 상황 (오늘 한 일)
+## 📋 2026-05-09 진행 상황 (오늘 한 일 — PROFILE 영역 완전 재설계)
+
+### ✅ HANDLE 영역 (5개 카드)
+- PROFILE [3] HANDLE 5 카드 짧은 설명 추가 (commit `049abca`)
+- CORE / DETAIL 그룹 위계 분리 (commit `6b1a5fe`)
+- HANDLE SVG placeholder 가로 비율 96×40 + 박스 제거 (commit `1fdf0d2`)
+- 사장님 핸들 일러스트 5종 inline 삽입 (commit `0e8fc94`) — 세미오프셋/스탠다드/오프셋/플랫/카멜
+- 미선택 SVG opacity:0.35 (commit `95d7e59`)
+- [3] HANDLE 라벨 제거 (영문 위계 단순화, commit `673f89d`)
+
+### ✅ BLADE / BLADE BACK 영역 (6개 카드 — Priority 1 + 사장님 SVG)
+- 시각적 위계 재설계 (commit `eddb55b`):
+  - 알파벳 32~72px → 13~20px (코드 라벨 강등) → 다시 28~64px (시각 영웅 회복)
+  - SVG 24~44px → width 100% (메인)
+  - 한글명 11~14px → 15~22px → 13~18px (균형)
+  - 미선택 카드 SVG opacity:0.35 일관 적용
+  - 영문 라벨(FORCE/ALL-ROUND/GLIDE/SWORD/CONVEX/BEVELED) 제거
+- 사장님 일러스트 SVG 6종 적용 (commit `b695c1e`):
+  - F/A/G — 가로 viewBox 21.65×10
+  - S/C/B — 정사각형 viewBox 24.32×24.32 (3D 입체)
+- 알파벳 큼직 + 한글명 가로 한 줄 배치 (commit `501c2c9`)
+- SVG 위 → 헤더(F 직선형 ✓) → 구분선 → 설명 (Editorial 캡션 패턴, commit `4d4c0ae`)
+
+### ✅ 자산 보존
+- 사장님 SVG 11개 원본 commit (`83f4edc`) — `projects/brand/icons/`
+  - BLADE/BLADE BACK 6개 (F/A/G/S/C/B)
+  - HANDLE 5개 (handle-flat/camel/semi-offset/standard/offset)
+
+### 🎯 디자인 톤 추가 확정
+- BLADE/BLADE BACK 카드 = SVG 위 → 라벨 → 구분선 → 설명 (4단 흐름)
+- 알파벳 + 한글명 = 한 줄 가로 정렬 (baseline align)
+- 미선택 카드 SVG opacity:0.35 통일 룰 (HANDLE / BLADE / BLADE BACK 모두)
+- CORE (가위의 본질) / DETAIL (잡는 느낌) 그룹 라벨로 위계 분리
+
+---
+
+## 📋 2026-05-08 진행 상황 (이전)
 
 ### ✅ 디자인 안정화 — v10 13섹션 풀 마스터
 - v5~v9 정리 (8개 파일 삭제)
