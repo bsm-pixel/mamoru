@@ -317,28 +317,37 @@
         <span style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;letter-spacing:0.02em;">— 손가락 구멍 크기</span>
       </div>
 
-      <!-- 가위 일러스트 (공통 SVG — products/shared/scissors-grip.svg, 모든 모델 공유) -->
-      <div style="background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.2vw,12px);aspect-ratio:5/4;display:flex;align-items:center;justify-content:center;color:#B8B4AF;font-size:clamp(10px,1.3vw,12px);letter-spacing:0.1em;text-align:center;padding:24px;margin-bottom:clamp(28px,4vw,44px);">[ SVG_scissors_grip — 가위 라인 일러스트 (공통)<br>위/아래 핸들 명확 · 5:4 비율 · stroke 라인만<br>products/shared/scissors-grip.svg ]</div>
+      <!-- 좌(일러스트) / 우(라벨 그룹) 가로 분할 — 모바일은 auto-fit으로 1열 자동 -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(20px,2.5vw,40px);align-items:start;">
 
-      <!-- 엄지부 (Thumb) — 라벨 그룹 -->
-      <div style="margin-bottom:clamp(20px,2.5vw,32px);">
-        <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);color:#8A8580;font-weight:700;letter-spacing:0.15em;margin-bottom:clamp(10px,1.3vw,14px);">Thumb · 엄지부</div>
-        <div style="display:flex;gap:clamp(8px,1.2vw,14px);flex-wrap:wrap;">
-          <!-- ✓ 본 모델 -->
-          <span style="display:inline-block;background:#1A1A1A;color:#FAF9F7;padding:clamp(8px,1vw,11px) clamp(20px,2.8vw,32px);border-radius:999px;font-size:clamp(13px,1.6vw,15px);font-weight:500;letter-spacing:0.02em;line-height:1;">small</span>
-          <span style="display:inline-block;background:#FFFFFF;border:1px solid #EDEBE8;color:#1A1A1A;padding:clamp(8px,1vw,11px) clamp(20px,2.8vw,32px);border-radius:999px;font-size:clamp(13px,1.6vw,15px);font-weight:500;letter-spacing:0.02em;line-height:1;">normal</span>
-          <span style="display:inline-block;background:#FFFFFF;border:1px solid #EDEBE8;color:#1A1A1A;padding:clamp(8px,1vw,11px) clamp(20px,2.8vw,32px);border-radius:999px;font-size:clamp(13px,1.6vw,15px);font-weight:500;letter-spacing:0.02em;line-height:1;">wide</span>
-        </div>
-      </div>
+        <!-- 좌측: 가위 일러스트 (공통 SVG — products/shared/scissors-grip.svg) -->
+        <div style="background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.2vw,12px);aspect-ratio:5/4;display:flex;align-items:center;justify-content:center;color:#B8B4AF;font-size:clamp(10px,1.3vw,12px);letter-spacing:0.1em;text-align:center;padding:24px;">[ SVG_scissors_grip — 가위 라인 일러스트 (공통)<br>5:4 · stroke 라인만 · 위/아래 핸들 명확<br>products/shared/scissors-grip.svg ]</div>
 
-      <!-- 약지부 (Ring) — 라벨 그룹 -->
-      <div>
-        <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);color:#8A8580;font-weight:700;letter-spacing:0.15em;margin-bottom:clamp(10px,1.3vw,14px);">Ring · 약지부</div>
-        <div style="display:flex;gap:clamp(8px,1.2vw,14px);flex-wrap:wrap;">
-          <span style="display:inline-block;background:#FFFFFF;border:1px solid #EDEBE8;color:#1A1A1A;padding:clamp(8px,1vw,11px) clamp(20px,2.8vw,32px);border-radius:999px;font-size:clamp(13px,1.6vw,15px);font-weight:500;letter-spacing:0.02em;line-height:1;">small</span>
-          <!-- ✓ 본 모델 -->
-          <span style="display:inline-block;background:#1A1A1A;color:#FAF9F7;padding:clamp(8px,1vw,11px) clamp(20px,2.8vw,32px);border-radius:999px;font-size:clamp(13px,1.6vw,15px);font-weight:500;letter-spacing:0.02em;line-height:1;">normal</span>
-          <span style="display:inline-block;background:#FFFFFF;border:1px solid #EDEBE8;color:#1A1A1A;padding:clamp(8px,1vw,11px) clamp(20px,2.8vw,32px);border-radius:999px;font-size:clamp(13px,1.6vw,15px);font-weight:500;letter-spacing:0.02em;line-height:1;">wide</span>
+        <!-- 우측: 엄지부 + 약지부 라벨 그룹 (세로 적층) -->
+        <div style="display:flex;flex-direction:column;gap:clamp(24px,3vw,40px);">
+
+          <!-- Thumb · 엄지부 -->
+          <div>
+            <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);color:#8A8580;font-weight:700;letter-spacing:0.18em;margin-bottom:clamp(12px,1.5vw,16px);">Thumb · 엄지부</div>
+            <div style="display:flex;gap:clamp(8px,1.2vw,14px);flex-wrap:wrap;">
+              <!-- ✓ 본 모델 -->
+              <span style="display:inline-block;background:#1A1A1A;color:#FAF9F7;padding:clamp(9px,1.2vw,13px) clamp(20px,2.8vw,32px);border-radius:999px;font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;letter-spacing:0.15em;line-height:1;">SMALL</span>
+              <span style="display:inline-block;background:#FFFFFF;border:1px solid #EDEBE8;color:#1A1A1A;padding:clamp(9px,1.2vw,13px) clamp(20px,2.8vw,32px);border-radius:999px;font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;letter-spacing:0.15em;line-height:1;">NORMAL</span>
+              <span style="display:inline-block;background:#FFFFFF;border:1px solid #EDEBE8;color:#1A1A1A;padding:clamp(9px,1.2vw,13px) clamp(20px,2.8vw,32px);border-radius:999px;font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;letter-spacing:0.15em;line-height:1;">WIDE</span>
+            </div>
+          </div>
+
+          <!-- Ring · 약지부 -->
+          <div>
+            <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);color:#8A8580;font-weight:700;letter-spacing:0.18em;margin-bottom:clamp(12px,1.5vw,16px);">Ring · 약지부</div>
+            <div style="display:flex;gap:clamp(8px,1.2vw,14px);flex-wrap:wrap;">
+              <span style="display:inline-block;background:#FFFFFF;border:1px solid #EDEBE8;color:#1A1A1A;padding:clamp(9px,1.2vw,13px) clamp(20px,2.8vw,32px);border-radius:999px;font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;letter-spacing:0.15em;line-height:1;">SMALL</span>
+              <!-- ✓ 본 모델 -->
+              <span style="display:inline-block;background:#1A1A1A;color:#FAF9F7;padding:clamp(9px,1.2vw,13px) clamp(20px,2.8vw,32px);border-radius:999px;font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;letter-spacing:0.15em;line-height:1;">NORMAL</span>
+              <span style="display:inline-block;background:#FFFFFF;border:1px solid #EDEBE8;color:#1A1A1A;padding:clamp(9px,1.2vw,13px) clamp(20px,2.8vw,32px);border-radius:999px;font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;letter-spacing:0.15em;line-height:1;">WIDE</span>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
