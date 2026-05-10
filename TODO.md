@@ -10,7 +10,7 @@
 > **"틀(v10 마스터) 잡아놓고 → 이미지만 로컬 폴더에 넣고 → 그에 맞춰 자동화 느낌으로 클로드와 함께 제작"**
 
 ### 다음 모델 양산 시 사장님 액션 (간단)
-1. 사진 7~8장 + SVG 아이콘 → `projects/brand/product_detail/{모델}/images/` 또는 `icons/` 에 넣기
+1. 사진 7~8장 + SVG 아이콘 → `projects/products/product_detail/{모델}/images/` 또는 `icons/` 에 넣기
 2. 클로드에게 `다음 모델 진행` 한 마디 + 모델명/변수 답변
 3. 클로드가 v10 마스터를 갈아끼워 새 모델 HTML 생성 → push
 
@@ -91,10 +91,10 @@
    - Color 10개 + Typography 8개 + Spacing/Radius Variables 자동 등록
 4. [ ] **html.to.design 플러그인** 설치 → URL import (10분):
    ```
-   https://bsm-pixel.github.io/mamoru/projects/brand/iframe_test/v10_trendy.html
+   https://bsm-pixel.github.io/mamoru/projects/products/master/v10_trendy.html
    ```
 5. [ ] import된 디자인 정리 + 8섹션을 Component로 변환 (30~60분)
-6. [ ] **SVG 아이콘 6개 import** (`projects/brand/icons/blade-*.svg`) → 사장님 톤으로 개량
+6. [ ] **SVG 아이콘 6개 import** (`projects/products/icons/blade-*.svg`) → 사장님 톤으로 개량
 7. [ ] (선택) Master Page 조립 + Products Page (제품별 인스턴스)
 
 **왜 A 옵션인가** (참고):
@@ -128,7 +128,7 @@
 - SVG 위 → 헤더(F 직선형 ✓) → 구분선 → 설명 (Editorial 캡션 패턴, commit `4d4c0ae`)
 
 ### ✅ 자산 보존
-- 사장님 SVG 11개 원본 commit (`83f4edc`) — `projects/brand/icons/`
+- 사장님 SVG 11개 원본 commit (`83f4edc`) — `projects/products/icons/`
   - BLADE/BLADE BACK 6개 (F/A/G/S/C/B)
   - HANDLE 5개 (handle-flat/camel/semi-offset/standard/offset)
 
@@ -155,7 +155,7 @@
 - VOICES 위치 이동 (08번, SAME HANDLE 직후)
 - BRAND TRANSITION 신설 (Void 슬로건, VOICES 직후)
 - LINEUP → GRADE 분리 (등급 카드만)
-- SVG 아이콘 6개 별도 파일 export (`projects/brand/icons/*.svg`)
+- SVG 아이콘 6개 별도 파일 export (`projects/products/icons/*.svg`)
 
 ### 🎯 디자인 톤 확정 (확정 사항)
 - v10 = 13섹션 풀 마스터
@@ -169,16 +169,16 @@
 ## 📋 2026-05-08 진행 순서 (이전)
 
 ### 현재 상태 (확정)
-- ✅ HTML 마스터: `projects/brand/iframe_test/v8_trendy.html` (8섹션, 사진 7장 적용)
+- ✅ HTML 마스터: `projects/products/master/v8_trendy.html` (8섹션, 사진 7장 적용)
 - ✅ 양산 방식: inline HTML 직접 paste (검증 완료)
 - ✅ 흐름맵: 8섹션 (Hero / Detail / In Action / About / Spec / For You / Why MAMORU / CTA)
 - ✅ 디자인 톤: A 타이포 + B 사진 하이브리드
-- ✅ 사진 7장 폴더: `projects/brand/product_detail/CL1-4T/images/`
+- ✅ 사진 7장 폴더: `projects/products/product_detail/CL1-4T/images/`
 - ✅ Figma 하이브리드 (C 옵션) 결정
-- ✅ Figma 토큰 JSON + 가이드: `projects/brand/templates/figma_tokens.json` `figma_tokens_usage.md` `figma_master_spec.md`
+- ✅ Figma 토큰 JSON + 가이드: `projects/products/templates/figma_tokens.json` `figma_tokens_usage.md` `figma_master_spec.md`
 
 ### 🎯 Step 1 — v8 디자인 검증 (5~10분, 즉시)
-- [ ] [v8_trendy 미리보기](https://bsm-pixel.github.io/mamoru/projects/brand/iframe_test/v8_trendy.html) PC + 모바일에서 다시 보기
+- [ ] [v8_trendy 미리보기](https://bsm-pixel.github.io/mamoru/projects/products/master/v8_trendy.html) PC + 모바일에서 다시 보기
 - [ ] 만족스러운지 결정:
   - ✅ OK → Step 2로
   - ⚠️ 부분 조정 → 어디 수정 원하는지 클로드에게 알림 → 코드 갱신 후 다시 검증
@@ -196,7 +196,7 @@ v8 디자인 OK 후 진행. 클로드가 항목별 질문 → 사장님 답변 �
 
 ### 🎯 Step 3 — 사진 압축 (10분, 사장님 직접)
 - [ ] [TinyPNG](https://tinypng.com)에 7장 드래그
-- [ ] 다운로드 → `projects/brand/product_detail/CL1-4T/images/` 폴더에 덮어쓰기
+- [ ] 다운로드 → `projects/products/product_detail/CL1-4T/images/` 폴더에 덮어쓰기
 - [ ] 결과: 28MB → ~10MB (모바일 로딩 ↑)
 - [ ] 클로드에게 알리면 commit + push
 
@@ -229,14 +229,14 @@ v8 디자인 OK 후 진행. 클로드가 항목별 질문 → 사장님 답변 �
 - [ ] 향후 디자인 조정 시 → Figma에서 변경 → 클로드에게 알림 → HTML 동기화
 
 가이드:
-- `projects/brand/templates/figma_tokens_usage.md` (토큰 import)
-- `projects/brand/templates/figma_master_spec.md` (마스터 사양)
+- `projects/products/templates/figma_tokens_usage.md` (토큰 import)
+- `projects/products/templates/figma_master_spec.md` (마스터 사양)
 
 ---
 
 ## 🅲️ 시제품 1호 완성 후 (클로드 작업)
 
-- [ ] v8_trendy → `projects/brand/product_detail_template.html` 정식 마스터로 이동
+- [ ] v8_trendy → `projects/products/product_detail_template.html` 정식 마스터로 이동
 - [ ] 변수 시트 양식 commit (`templates/spec_sheet_scissors.md`)
 - [ ] 카피 가이드 commit (`templates/copy_brief.md` — Brand Guide B-04 보이스)
 - [ ] 양산 매뉴얼 commit (`MANUAL_PRODUCT_DETAIL.md` — 사장님/직원이 보고 양산 가능)
@@ -248,7 +248,7 @@ v8 디자인 OK 후 진행. 클로드가 항목별 질문 → 사장님 답변 �
 각 새 제품(CL1-70 등)마다:
 1. 사장님: 변수 시트 채우기 (클로드 AskUserQuestion 패턴)
 2. 사장님: 사진 7장 + 영상 촬영/압축
-3. 사장님: `projects/brand/product_detail/{SKU}/images/` 폴더에 추가
+3. 사장님: `projects/products/product_detail/{SKU}/images/` 폴더에 추가
 4. 클로드: 마스터 → `product_detail/{SKU}/index.html` 생성
 5. 사장님: GitHub push (자동 GitHub Pages 배포)
 6. 사장님: 아임웹 새 상품 등록 + 본문 paste
@@ -267,11 +267,11 @@ v8 디자인 OK 후 진행. 클로드가 항목별 질문 → 사장님 답변 �
 
 | 파일 | 용도 |
 |------|------|
-| `projects/brand/iframe_test/v8_trendy.html` | HTML 마스터 (시안 단계) |
-| `projects/brand/product_detail/CL1-4T/images/` | CL1-4T 사진 폴더 (7장 + cut.gif 추후) |
-| `projects/brand/templates/figma_tokens.json` | Figma 토큰 (Tokens Studio import용) |
-| `projects/brand/templates/figma_tokens_usage.md` | 토큰 import 가이드 |
-| `projects/brand/templates/figma_master_spec.md` | Figma 마스터 사양서 (8섹션) |
+| `projects/products/master/v8_trendy.html` | HTML 마스터 (시안 단계) |
+| `projects/products/product_detail/CL1-4T/images/` | CL1-4T 사진 폴더 (7장 + cut.gif 추후) |
+| `projects/products/templates/figma_tokens.json` | Figma 토큰 (Tokens Studio import용) |
+| `projects/products/templates/figma_tokens_usage.md` | 토큰 import 가이드 |
+| `projects/products/templates/figma_master_spec.md` | Figma 마스터 사양서 (8섹션) |
 | `memory/reference_imweb_product_detail_inline.md` | 아임웹 inline style 검증된 패턴 |
 | `.claude/MAMORU-Complete-Brand-Guide-v1.0.md` | Brand Guide (D-03 상품 상세) |
 | `C:\Users\user\.claude\plans\tms-stateful-valiant.md` | 플랜 원본 |

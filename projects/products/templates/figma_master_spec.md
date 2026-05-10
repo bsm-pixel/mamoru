@@ -189,7 +189,7 @@ Figma Local Variables 또는 메모로 관리:
 1. Figma Plugin **`html.to.design`** 설치 (Figma 우측 상단 → Plugins → Browse → 검색)
 2. 플러그인 실행 → URL 입력:
    ```
-   https://bsm-pixel.github.io/mamoru/projects/brand/iframe_test/v8_trendy.html
+   https://bsm-pixel.github.io/mamoru/projects/products/master/v10_trendy.html
    ```
 3. Import → 자동 변환 → 디자인 정리 (간격/Auto Layout 매뉴얼 정돈 필요)
 
@@ -231,7 +231,7 @@ Figma 우측 상단 Share → Copy link (View 권한) → 클로드에게 링크
 
 1. **사장님 (Figma)**: Master Page 복제 → CL1-70 인스턴스 → 사진/텍스트 오버라이드 → 디자인 검토
 2. **사장님 (변수 시트)**: 클로드에게 변경 사항 답변 (제품명/사양/카피/Note 등)
-3. **클로드 (HTML)**: 마스터 코드 복사 → 변수 갈아끼움 → `projects/brand/product_detail/{SKU}/index.html` 생성 + push
+3. **클로드 (HTML)**: 마스터 코드 복사 → 변수 갈아끼움 → `projects/products/product_detail/{SKU}/index.html` 생성 + push
 4. **사장님 (아임웹)**: 새 상품 등록 → 본문에 코드 paste
 
 → Figma는 시각 검토 + 디자인 시안 보존 / HTML은 실 양산 = 두 흐름 동시 진행.

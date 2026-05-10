@@ -33,7 +33,7 @@
 
 ## 진행 순서
 
-1. Windows 탐색기에서 이 폴더(`projects/brand/product_detail/CL1-4T/images/`) 열기
+1. Windows 탐색기에서 이 폴더(`projects/products/product_detail/CL1-4T/images/`) 열기
 2. 사장님 사진 7장을 위 파일명으로 복사 (TinyPNG 압축 권장)
 3. 클로드에게 "넣었어" 알리기
 4. 클로드가 v8_trendy.html의 placeholder를 `<img src="...">`로 교체 + push
