@@ -1,7 +1,30 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-09 — v10 PROFILE 영역 완전 재설계 + 사장님 일러스트 SVG 11개 적용 (디자인 마스터 완성도 ↑)
+> 최종 수정: 2026-05-10 — v10 PROFILE 추가 영역(GRIP SIZE) 신설 + 사장님 카피 반영 + brand→products 폴더 정리
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
+
+---
+
+## 🔥 즉시 작업 가능 — v10 첫 아임웹 paste (2026-05-10)
+
+### Step 1 — 아임웹 paste 검증 (사장님 직접, 15분)
+- [ ] 미리보기 확인: https://bsm-pixel.github.io/mamoru/projects/products/master/v10_trendy.html
+- [ ] 아임웹 상품 등록 (A2-55FS 또는 시제 모델)
+- [ ] 본문 → `</>` 코드보기 → v10_trendy.html 본문 div paste
+- [ ] PC/모바일 미리보기 확인
+- [ ] 폰트 fallback 확인 (Google Fonts link strip 시 시스템 sans-serif)
+
+### Step 2 — 사장님 자산 작업 (병렬 가능)
+- [ ] **사진 PNG** — `product_detail/A2-55FS/images/` (hero/blade1/blade2/handle/back/bolt/model/cut)
+- [ ] **공통 자산** — `shared/face.png`, `workshop.png`, `scissors-grip.svg`
+- [ ] **라인업 사진** — `lineup/A2/A2-*.png` (5~6장)
+
+### Step 3 — 데이터 답변 (사장님 → 클로드 갱신)
+- [ ] GRIP SIZE 측정값 (A2-55FS 엄지부/약지부 가로×세로 mm)
+- [ ] 핸들 특성 한 단락 (예: "표준에 가까워...")
+- [ ] About / FOR YOU / Why MAMORU 본문 카피
+- [ ] VOICES 후기 3개 (실 후기 또는 가공)
+- [ ] SAME HANDLE 정확한 라인업 모델 목록
 
 ---
 
