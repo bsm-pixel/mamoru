@@ -1,9 +1,20 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-10 — v10 PROFILE 추가 영역(GRIP SIZE) 신설 + 사장님 카피 반영 + brand→products 폴더 정리
+> 최종 수정: 2026-05-12 — TMS 2단계 매출 3분할 코드 완료 (2-A~2-E + 3-A), push·SQL 실행 대기
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
+
+## 🟡 배포 대기 — TMS 2단계 매출 3분할 (2026-05-12, 커밋만 완료)
+
+코드 6커밋 완료(`5c96d1b`~`e7142e3`), `tsc --noEmit` + `next build` 통과. **push 안 함** (Vercel 빌드 크레딧 — 사장님 승인 시).
+
+- [ ] **push 승인** → Vercel 배포
+- [ ] **사장님 Supabase SQL Editor 에서 실행**: `078_hub_stats_b2c_b2b_split.sql`, `079_customers_default_repair_price.sql`
+   - 미실행이어도 화면 정상 동작(클라이언트 fallback). 078은 후처리 쿼리 최적화, 079는 거래처 단가 기능 필수.
+- [ ] 배포 후 확인: 메인 대시보드 총매출 = B2C 제품 + B2B 제품 + 복원수리 전체 3분할 / 회계 리포트 탭별(전체·제품·복원수리) / 거래처 정보 화면(딜러·아카데미) 복원수리 기본 단가 입력 / 납품 "+B2B수리" 거래처 선택 시 단가 자동 / 판매 입력 "복원수리" 모드(마모루·타사 자루)
+
+내역: 2-A useHubStats salesB2C/salesB2B / 2-B RPC 078 / 2-C 대시보드 KPI 3분할 / 2-D 회계 리포트 RS 집계 정확화(복원수리=A접수+B판매RS+C납품RS, 제품=B2C+B2B 납품포함, by_product RS 제외) / 2-E customers.default_repair_price / 3-A 판매 입력 복원수리 모드. 상세: `memory/project_tms_repair_revenue_split.md`
 
 ## 🔥 즉시 작업 가능 — v10 첫 아임웹 paste (2026-05-10)
 

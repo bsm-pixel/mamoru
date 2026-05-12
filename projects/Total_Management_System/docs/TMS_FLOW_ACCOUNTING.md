@@ -1,6 +1,18 @@
 # 회계 모듈 프로세스 흐름도
 
-> 최종 수정: 2026-04-30 (075) — 복원수리 매출 정의 통일 (발생 기준) + 경비 카테고리 동적화 + invalidate helper
+> 최종 수정: 2026-05-12 — **매출 3분할 (제품 B2C/B2B + 복원수리 A/B/C) + 회계 리포트 RS 집계 정확화** (코드 완료, push 대기)
+
+## 2026-05-12 — 매출 3분할 (2-D 회계 리포트)
+
+`api/reports/summary/route.ts` 개편:
+- **제품 매출** = offline_sales (total−discount − 그 주문 RS_total) + **deliveries** (total−discount − 납품 RS_total). B2C(소매·온라인) / B2B(딜러·아카데미 offline + 납품 전체) 분리. ← 기존엔 deliveries 가 회계 리포트에서 통째로 누락돼 있었음.
+- **복원수리 매출** = A(repairs, paid_at 기준 실제 금액 service_cost+shipping_fee) + B(offline_sale_items category='RS' total_price) + C(delivery_items category='RS' total_price). ← 기존엔 A(repairs)만 집계.
+- **by_product / margin** — RS 항목 제외(RS는 제품 아님 → 제품 랭킹·원가 오염 제거), 납품 제품도 합산.
+- **total_revenue** = 제품 매출 + 복원수리 매출 (offline RS 중복 계상 제거).
+- offline_sales 조회에 `cancelled_at IS NULL AND returned_at IS NULL` 필터 추가 (취소·반품 매출이 회계에 잡히던 버그 fix).
+- 응답: `product_sales{total,b2c,b2b,b2b_offline,b2b_delivery,offline_count,delivery_count}`, `repair_sales{total,a_intake,b_offline_rs,c_delivery_rs,a_count,b_count,c_count,bc_qty,service_cost_total,shipping_fee_total,count}`, `details.deliveries` 추가. `sales` 객체(offline 전체, RS 포함)는 호환용 유지.
+- `reports/page.tsx` 매출 카드 = 전체(제품·복원수리 2분할 + 하위 내역) / 제품(B2C·B2B오프라인·B2B납품) / 복원수리(접수·판매RS·납품RS) 탭별 표시.
+- ⚠️ 한계: 복원수리 A채널만 paid_at 기준이고 B/C는 sale_date/delivery_date 기준 — 회계 정밀화 필요시 추후 날짜 기준 통일.
 
 ## 2026-04-30 정리 (075)
 

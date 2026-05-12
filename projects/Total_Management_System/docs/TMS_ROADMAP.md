@@ -1,9 +1,21 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-05-03 (저녁) — **상담 수동 일정 확정 (079) + 재고조사 인쇄 + 알림톡 변수 fix** + 가이드 페이지 위계 정리
+> 최종 수정: 2026-05-12 — **매출 3분할 (B2C 제품 + B2B 제품 + 복원수리 전체) 코드 완료** (2-A~2-E + 3-A), push·SQL 실행 대기
 
 ---
+
+## ✅ 완료 (05-12): 매출 3분할 — 코드 완료 (push·SQL 대기, 커밋 5c96d1b~e7142e3)
+1단계(05-12, 배포·검증OK)에 이어 2단계. 총매출 = B2C 제품 + B2B 제품(딜러·아카데미+납품) + 복원수리 전체(A 접수 + B 판매RS + C 납품RS). RS는 제품 매출에서 제외 → 복원수리로만(중복 없음). 가정: RS 항목엔 할인 미적용.
+- [x] 2-A useHubStats — HubStatsResult.sales 에 salesB2C/salesB2B 신설 (RPC 후처리 + fallback 양쪽 계산, RPC 077/078 자동 분기)
+- [x] 2-B RPC `078_hub_stats_b2c_b2b_split.sql` — get_hub_stats 'sales' 객체에 salesB2C/salesB2B + deliveries 통합 (orders/consultations/repairs 는 077과 동일)
+- [x] 2-C 대시보드 — 월 목표 KPI = salesB2C+salesB2B+monthRepairAmount, 3분할 내역 표시, '제품 판매' 카드
+- [x] 2-D 회계 리포트 — 복원수리=A(접수,paid_at)+B(판매RS)+C(납품RS), 제품=B2C+B2B(납품 포함), by_product/margin RS 제외, total_revenue 중복 제거. offline_sales 취소/반품 필터 추가(기존 누락 fix). reports/page 탭별(전체·제품·복원수리) 표시
+- [x] 2-E `079_customers_default_repair_price.sql` — 거래처별 복원수리 기본 단가 + 고객 상세 화면 입력(딜러/아카데미) + 납품 "+B2B수리" 거래처 선택 시 단가 자동 채움
+- [x] 3-A 판매 입력 "복원수리" 모드 — 마모루(1만)/타사(2만) 자루+단가, offline_sale_items category='RS' 저장 (B2C 복원수리 입력 경로 완성)
+- [ ] **push 승인 → Vercel 배포**
+- [ ] **사장님 Supabase SQL Editor: `078_hub_stats_b2c_b2b_split.sql` + `079_customers_default_repair_price.sql` 실행** (미실행이어도 화면 정상 — 078은 후처리 최적화, 079는 거래처 단가 기능 필수)
+- 상세: `memory/project_tms_repair_revenue_split.md`
 
 ## 🔴 다음 할 일 (2026-03-03 기준)
 

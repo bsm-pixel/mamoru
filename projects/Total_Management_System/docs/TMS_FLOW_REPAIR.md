@@ -1,7 +1,17 @@
 # 복원수리 프로세스 흐름도
-> 최종 업데이트: 2026-04-30 (심야) — 고객 자동 매칭/생성 (phone 기반 SSOT) + 리뷰 요청 분기
+> 최종 업데이트: 2026-05-12 — **복원수리 매출 3채널 통합 (A 접수 + B 판매RS + C 납품RS) + 거래처별 단가 + 판매입력 복원수리 모드** (코드 완료, push 대기)
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
+
+## 2026-05-12 — 복원수리 매출 3채널 통합 + 입력 경로 정리
+
+복원수리 매출이 3개 채널에서 발생 → 대시보드·회계 모두 통합 집계:
+- **A채널 (접수시스템 `repairs`)**: 고객이 접수페이지로 가위 보냄 → 입고·검수·수리·출고. 단가는 마모루 1만 / 타사 2만 고정(대시보드) 또는 service_cost+shipping_fee 실제 금액(회계, paid_at 기준).
+- **B채널 (판매시스템 `offline_sale_items` category='RS')**: 매장에서 즉석 복원수리 판매. 입력: `/sales/new` "복원수리" 모드 (마모루 N자루 / 타사 M자루 + 단가, 기본 1만/2만). product_name 고정 "복원수리 (마모루)" / "복원수리 (타사)" → `includes('타사')` 로 마모루/타사 분류. parent 판매의 customer_type 이 dealer/academy 면 B2B 버킷으로.
+- **C채널 (납품 `delivery_items` category='RS')**: B2B 거래처 복원수리. 입력: `/deliveries` "+B2B수리" 모드. 마모루/타사 구분 없음(자루당 거래처 단가). 거래처 마스터의 `default_repair_price` 가 있으면 거래처 선택 시 단가 자동 채움(없으면 기본 8천).
+- 대시보드 `monthRepairAmount` = A + B + C 전체, `monthRepairCount` = 세 채널 자루(quantity) 합. `monthRepairMamoru/Other` = A + B채널 B2C분, `monthRepairB2B` = B채널 B2B분 + C채널 전체.
+- 회계 리포트(2-D): `repair_sales.total` = A(repairs, paid_at, 실제금액) + B(offline RS) + C(delivery RS), 채널별 분해 표시.
+- 거래처 단가: `customers.default_repair_price` (마이그레이션 079). 고객 상세 화면(딜러/아카데미)에서 입력.
 
 ## 2026-04-30 (심야) — 고객 자동 매칭/생성
 
