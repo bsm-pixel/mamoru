@@ -169,18 +169,21 @@ export default function DashboardPage() {
       <Topbar title="대시보드" />
 
       <div className="px-4 md:px-6 py-4 space-y-5">
-        {/* KPI: 이번달 매출 달성률 */}
+        {/* KPI: 이번달 총매출 달성률 — 3분할 (B2C 제품 + B2B 제품 + 복원수리 전체) */}
         {monthGoal > 0 && stats && (() => {
-          // 총매출 = 판매(B2C+B2B 제품, 판매시스템 RS, 납품 전체 포함) + 접수시스템 복원수리(A채널만)
-          //   B/C채널 복원수리 RS는 이미 sales.monthAmount 안에 포함 → A채널만 추가해야 중복 안 됨
-          const current = (stats.sales.monthAmount || 0) + (stats.repairs?.monthRepairAOnly || 0);
+          // 총매출 = B2C 제품(소매/온라인 판매 − RS) + B2B 제품(딜러/아카데미 판매 − RS + 납품 전체 − RS) + 복원수리 전체(A 접수 + B 판매RS + C 납품RS)
+          //   RS(복원수리)는 제품 매출에서 제외되어 "복원수리 전체"로만 잡히므로 중복 없음
+          const b2c = stats.sales.salesB2C || 0;
+          const b2b = stats.sales.salesB2B || 0;
+          const repair = stats.repairs?.monthRepairAmount || 0;
+          const current = b2c + b2b + repair;
           const pct = Math.min(Math.round((current / monthGoal) * 100), 100);
           const color = pct >= kpiGreen ? 'bg-green-500' : pct >= kpiYellow ? 'bg-yellow-500' : 'bg-red-500';
           const textColor = pct >= kpiGreen ? 'text-green-600' : pct >= kpiYellow ? 'text-yellow-600' : 'text-red-500';
           return (
             <div className="bg-white rounded-lg border border-neutral-200 p-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-neutral-500">이번달 매출 목표 <span className="text-neutral-400">(판매 + 복원수리 전체)</span></p>
+                <p className="text-xs text-neutral-500">이번달 총매출 목표 <span className="text-neutral-400">(B2C 제품 + B2B 제품 + 복원수리)</span></p>
                 <button onClick={() => { setGoalInput(String(monthGoal)); setEditingGoal(true); }} className="text-[10px] text-neutral-400 hover:text-neutral-600">수정</button>
               </div>
               <div className="flex items-end gap-3 mb-2">
@@ -189,6 +192,21 @@ export default function DashboardPage() {
               </div>
               <div className="w-full h-2.5 bg-neutral-100 rounded-full overflow-hidden">
                 <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+              </div>
+              {/* 매출 3분할 내역 */}
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg bg-neutral-50 py-1.5">
+                  <p className="text-[10px] text-neutral-400">B2C 제품</p>
+                  <p className="text-xs font-bold text-neutral-700 mt-0.5">{fmtKRW(b2c)}</p>
+                </div>
+                <div className="rounded-lg bg-neutral-50 py-1.5">
+                  <p className="text-[10px] text-neutral-400">B2B 제품 <span className="text-neutral-300">(납품 포함)</span></p>
+                  <p className="text-xs font-bold text-neutral-700 mt-0.5">{fmtKRW(b2b)}</p>
+                </div>
+                <div className="rounded-lg bg-neutral-50 py-1.5">
+                  <p className="text-[10px] text-neutral-400">복원수리 전체</p>
+                  <p className="text-xs font-bold text-neutral-700 mt-0.5">{fmtKRW(repair)}</p>
+                </div>
               </div>
             </div>
           );
@@ -353,11 +371,11 @@ export default function DashboardPage() {
                       />
                     ),
                     sales: (
-                      <HubCategoryCard key="sales" title="오프라인 판매" icon={Store} href="/sales"
+                      <HubCategoryCard key="sales" title="제품 판매" icon={Store} href="/sales"
                         stats={[
-                          { label: '이번달', value: stats?.sales.monthCount || 0, color: 'text-indigo-black' },
+                          { label: '이번달 판매·납품', value: stats?.sales.monthCount || 0, color: 'text-indigo-black' },
                         ]}
-                        summary={stats ? `이번달 ${fmtKRW(stats.sales.monthAmount)}` : ''}
+                        summary={stats ? `B2C ${fmtKRW(stats.sales.salesB2C)} · B2B ${fmtKRW(stats.sales.salesB2B)} (납품 포함)` : ''}
                       />
                     ),
                   };
