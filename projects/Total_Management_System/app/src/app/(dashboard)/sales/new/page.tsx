@@ -59,6 +59,7 @@ function NewSaleContent() {
   // 3-A: 판매 모드 — 제품 판매 vs 복원수리(마모루/타사 자루 + 단가). deliveries "+B2B수리" 와 대칭.
   const [saleMode, setSaleMode] = useState<'product' | 'repair'>('product');
   const [rep, setRep] = useState({ mamoruQty: 0, mamoruPrice: 10000, otherQty: 0, otherPrice: 20000 });
+  const [repShipping, setRepShipping] = useState(false); // 복원수리 배송비 3,000원 포함 여부
 
   // 073/074: B2B 납품처 catalog (customer별 납품명 + 단가 자동 입력용)
   const { data: customerCatalogData } = useCustomerCatalog(selectedCustomer?.id);
@@ -136,7 +137,8 @@ function NewSaleContent() {
     return () => { cancelled = true; };
   }, [fromConsultationId]);
   const productTotal = cart.reduce((s, item) => s + item.unitPrice * item.quantity, 0);
-  const repairTotal = rep.mamoruQty * rep.mamoruPrice + rep.otherQty * rep.otherPrice;
+  const REPAIR_SHIPPING_FEE = 3000;
+  const repairTotal = rep.mamoruQty * rep.mamoruPrice + rep.otherQty * rep.otherPrice + (repShipping ? REPAIR_SHIPPING_FEE : 0);
   const totalAmount = saleMode === 'repair' ? repairTotal : productTotal;
   const finalAmount = totalAmount - discount;
   const paidAmount = paymentStatus === 'paid' ? finalAmount
@@ -226,10 +228,11 @@ function NewSaleContent() {
     const repairItems = saleMode === 'repair' ? [
       ...(rep.mamoruQty > 0 ? [{ product_name: '복원수리 (마모루)', category: 'RS', quantity: rep.mamoruQty, unit_price: rep.mamoruPrice, total_price: rep.mamoruQty * rep.mamoruPrice, serial_ids: [] as string[], manual_serials: [] as string[] }] : []),
       ...(rep.otherQty > 0 ? [{ product_name: '복원수리 (타사)', category: 'RS', quantity: rep.otherQty, unit_price: rep.otherPrice, total_price: rep.otherQty * rep.otherPrice, serial_ids: [] as string[], manual_serials: [] as string[] }] : []),
+      ...(repShipping ? [{ product_name: '배송비', category: 'RS', quantity: 1, unit_price: REPAIR_SHIPPING_FEE, total_price: REPAIR_SHIPPING_FEE, serial_ids: [] as string[], manual_serials: [] as string[] }] : []),
     ] : [];
 
     if (saleMode === 'repair') {
-      if (repairItems.length === 0) { toast.error('마모루 또는 타사 수량을 입력해주세요'); return; }
+      if (rep.mamoruQty <= 0 && rep.otherQty <= 0) { toast.error('마모루 또는 타사 수량을 입력해주세요'); return; }
     } else {
       if (cart.length === 0) return;
     }
@@ -282,10 +285,10 @@ function NewSaleContent() {
     TH: '틴닝',
     LO: '장가위',
     SL: '슬라이싱',
-    RS: '복원수리',
   };
 
   const filteredProducts = products.filter((p) => {
+    if (p.category === 'RS') return false; // 복원수리는 상단 "복원수리" 모드로 입력 — 제품 선택 목록에서 제외
     const matchSearch = !productSearch ||
       p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
       (p.sku || '').toLowerCase().includes(productSearch.toLowerCase());
@@ -479,8 +482,14 @@ function NewSaleContent() {
                     <p className="text-[10px] text-neutral-400">기본 {r.basePrice}원 · 수정 가능 · 소계 {formatKRW(r.qty * r.price)}</p>
                   </div>
                 ))}
+                {/* 배송비 (택배 발송 시) */}
+                <button type="button" onClick={() => setRepShipping((v) => !v)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition ${repShipping ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'}`}>
+                  <span>{repShipping ? '✓ ' : '+ '}배송비 {formatKRW(REPAIR_SHIPPING_FEE)} 포함</span>
+                  {repShipping && <span>{formatKRW(REPAIR_SHIPPING_FEE)}</span>}
+                </button>
                 <div className="flex justify-between text-sm font-bold pt-1 border-t border-neutral-100">
-                  <span>복원수리 소계 ({rep.mamoruQty + rep.otherQty}자루)</span>
+                  <span>복원수리 소계 ({rep.mamoruQty + rep.otherQty}자루{repShipping ? ' + 배송비' : ''})</span>
                   <span className="text-terracotta">{formatKRW(repairTotal)}</span>
                 </div>
               </div>
@@ -644,6 +653,7 @@ function NewSaleContent() {
                   <div className="space-y-1.5">
                     {rep.mamoruQty > 0 && <div className="flex justify-between text-sm"><span className="font-medium">복원수리 (마모루) × {rep.mamoruQty}자루</span><span className="text-neutral-600">{formatKRW(rep.mamoruQty * rep.mamoruPrice)}</span></div>}
                     {rep.otherQty > 0 && <div className="flex justify-between text-sm"><span className="font-medium">복원수리 (타사) × {rep.otherQty}자루</span><span className="text-neutral-600">{formatKRW(rep.otherQty * rep.otherPrice)}</span></div>}
+                    {repShipping && <div className="flex justify-between text-sm"><span className="font-medium">배송비</span><span className="text-neutral-600">{formatKRW(REPAIR_SHIPPING_FEE)}</span></div>}
                   </div>
                 ) : (
                   <p className="text-xs text-neutral-400 text-center py-4">왼쪽에서 마모루 또는 타사 수량을 입력해주세요</p>

@@ -7,47 +7,33 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReportSummary, downloadExcel } from '@/hooks/use-reports';
-import { formatKRW } from '@/lib/utils/format';
+import { formatKRW, toLocalDateString } from '@/lib/utils/format';
 import { Download, FileSpreadsheet, TrendingUp, TrendingDown, Receipt, FileText, BarChart3, Truck, Wallet, Users } from 'lucide-react';
 
 const METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
 };
 
-// 기간 프리셋
+// 기간 프리셋 — toLocalDateString 사용 (toISOString().slice(0,10) 은 UTC라 KST 월초가 전달 말일로 잘못 잡힘)
 function getPreset(key: string): { from: string; to: string } {
   const now = new Date();
   const y = now.getFullYear();
   const m = now.getMonth();
+  const today = toLocalDateString(now);
 
   switch (key) {
     case 'this_month':
-      return {
-        from: new Date(y, m, 1).toISOString().slice(0, 10),
-        to: now.toISOString().slice(0, 10),
-      };
+      return { from: toLocalDateString(new Date(y, m, 1)), to: today };
     case 'last_month':
-      return {
-        from: new Date(y, m - 1, 1).toISOString().slice(0, 10),
-        to: new Date(y, m, 0).toISOString().slice(0, 10),
-      };
+      return { from: toLocalDateString(new Date(y, m - 1, 1)), to: toLocalDateString(new Date(y, m, 0)) };
     case 'this_quarter': {
       const qStart = Math.floor(m / 3) * 3;
-      return {
-        from: new Date(y, qStart, 1).toISOString().slice(0, 10),
-        to: now.toISOString().slice(0, 10),
-      };
+      return { from: toLocalDateString(new Date(y, qStart, 1)), to: today };
     }
     case 'this_year':
-      return {
-        from: new Date(y, 0, 1).toISOString().slice(0, 10),
-        to: now.toISOString().slice(0, 10),
-      };
+      return { from: toLocalDateString(new Date(y, 0, 1)), to: today };
     default:
-      return {
-        from: new Date(y, m, 1).toISOString().slice(0, 10),
-        to: now.toISOString().slice(0, 10),
-      };
+      return { from: toLocalDateString(new Date(y, m, 1)), to: today };
   }
 }
 
@@ -119,7 +105,7 @@ export default function ReportsPage() {
             <div className="flex gap-1">
               {[
                 { key: 'all', label: '전체 매출' },
-                { key: 'product', label: '상품 판매' },
+                { key: 'product', label: '제품 판매' },
                 { key: 'repair', label: '복원수리' },
               ].map((t) => (
                 <button
@@ -181,9 +167,10 @@ export default function ReportsPage() {
                           <>
                             {ps ? (
                               <>
-                                <div className="flex justify-between"><span>B2C (소매·온라인)</span><span>{ps.offline_count}건 · {formatKRW(ps.b2c)}</span></div>
-                                <div className="flex justify-between"><span>B2B (딜러·아카데미)</span><span>{formatKRW(ps.b2b_offline)}</span></div>
-                                <div className="flex justify-between"><span>B2B (납품)</span><span>{ps.delivery_count}건 · {formatKRW(ps.b2b_delivery)}</span></div>
+                                <div className="flex justify-between font-medium text-neutral-600"><span>B2C 제품 (소매·온라인)</span><span>{formatKRW(ps.b2c)}</span></div>
+                                <div className="flex justify-between font-medium text-neutral-600 pt-1"><span>B2B 제품 (딜러·아카데미·납품)</span><span>{formatKRW(ps.b2b)}</span></div>
+                                {ps.b2b_offline > 0 && <div className="flex justify-between pl-2 text-[10px] text-neutral-400"><span>· 매장 딜러·아카데미</span><span>{formatKRW(ps.b2b_offline)}</span></div>}
+                                {ps.b2b_delivery > 0 && <div className="flex justify-between pl-2 text-[10px] text-neutral-400"><span>· 납품 {ps.delivery_count}건</span><span>{formatKRW(ps.b2b_delivery)}</span></div>}
                               </>
                             ) : (
                               <div className="flex justify-between"><span>오프라인 판매</span><span>{data.sales.count}건 · {formatKRW(data.sales.total)}</span></div>

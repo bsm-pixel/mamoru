@@ -289,7 +289,7 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
   // 복원수리 전용
   const [repairQty, setRepairQty] = useState(1);
   const [repairUnitPrice, setRepairUnitPrice] = useState(8000);
-  const [repairExtras, setRepairExtras] = useState<Array<{ product_name: string; quantity: number; unit_price: number }>>([]);
+  const [repairExtras, setRepairExtras] = useState<Array<{ product_name: string; quantity: number; unit_price: number; category?: string }>>([]);
   const [repairExtraName, setRepairExtraName] = useState('');
   const [repairExtraPrice, setRepairExtraPrice] = useState('');
   // 고객 검색
@@ -592,13 +592,13 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
                     placeholder="금액" className="w-24 h-7 px-2 rounded border border-neutral-200 text-xs text-right placeholder:text-neutral-400" />
                   <button onClick={() => {
                     if (!repairExtraName.trim() || !parseInt(repairExtraPrice)) return;
-                    setRepairExtras((prev) => [...prev, { product_name: repairExtraName.trim(), quantity: 1, unit_price: parseInt(repairExtraPrice) || 0 }]);
+                    setRepairExtras((prev) => [...prev, { product_name: repairExtraName.trim(), quantity: 1, unit_price: parseInt(repairExtraPrice) || 0, category: 'RS' }]);
                     setRepairExtraName(''); setRepairExtraPrice('');
                   }} className="h-7 px-3 rounded bg-neutral-900 text-white text-[10px] font-semibold shrink-0">추가</button>
                 </div>
                 <button onClick={() => {
                   if (repairExtras.some((e) => e.product_name === '배송비')) return;
-                  setRepairExtras((prev) => [...prev, { product_name: '배송비', quantity: 1, unit_price: 3000 }]);
+                  setRepairExtras((prev) => [...prev, { product_name: '배송비', quantity: 1, unit_price: 3000, category: 'RS' }]);
                 }} className="mt-1.5 h-7 px-3 rounded border border-neutral-200 text-[10px] font-medium text-neutral-500 hover:bg-neutral-50 transition">
                   + 배송비 3,000원
                 </button>
