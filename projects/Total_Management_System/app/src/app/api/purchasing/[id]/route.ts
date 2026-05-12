@@ -97,7 +97,9 @@ export async function PATCH(
           return NextResponse.json({ error: `${current.status} 상태에서는 입고 처리할 수 없습니다` }, { status: 400 });
         }
 
-        updates.status = 'received';
+        // 잔금을 이미 냈으면(balance_paid_at 기록됨 또는 잔금 0) 입고와 동시에 잔금완료(terminal) 로 — 결제/입고 독립 흐름
+        const balanceAlreadyPaid = !!current.balance_paid_at || (current.balance_amount ?? 0) <= 0;
+        updates.status = balanceAlreadyPaid ? 'balance_paid' : 'received';
         updates.received_date = body.received_date || now.slice(0, 10);
 
         // 입고 시 재고 증가
@@ -135,12 +137,19 @@ export async function PATCH(
           }
         }
       } else if (newStatus === 'balance_paid') {
-        if (current.status !== 'received') {
-          return NextResponse.json({ error: '입고 완료 후에만 잔금 처리 가능합니다' }, { status: 400 });
+        // 잔금 지불 기록 — 입고 전(ordered/deposit_paid)이어도 허용. 결제와 입고를 독립 처리.
+        if (current.status === 'balance_paid' || current.balance_paid_at) {
+          return NextResponse.json({ error: '이미 잔금 지불 처리된 발주입니다' }, { status: 409 });
         }
-        updates.status = 'balance_paid';
+        if (current.status === 'cancelled' || current.status === 'draft') {
+          return NextResponse.json({ error: `${current.status} 상태에서는 잔금 처리할 수 없습니다` }, { status: 400 });
+        }
         updates.balance_paid_at = now;
         updates.balance_amount = 0;
+        // 입고 완료(received) 후면 → 잔금완료(terminal) 로 전이. 입고 전(ordered/deposit_paid)이면 → status 유지 (입고 확인은 나중에 별도로).
+        if (current.status === 'received') {
+          updates.status = 'balance_paid';
+        }
       } else if (newStatus === 'cancelled') {
         if (current.status === 'received' || current.status === 'balance_paid') {
           return NextResponse.json({ error: '입고 이후에는 취소할 수 없습니다' }, { status: 400 });
