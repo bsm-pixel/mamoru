@@ -234,10 +234,10 @@ export async function PATCH(
       updates.balance_amount = newTotal - (current.deposit_amount || 0);
     }
 
-    // 품목 수정 (draft 상태에서만)
+    // 품목 수정 — 입고 전(draft/ordered/deposit_paid)까지 허용 (공장 제작 수량이 발주와 다를 때 대응). 입고·잔금지불·취소 이후엔 차단.
     if (body.items && Array.isArray(body.items)) {
-      if (current.status !== 'draft') {
-        return NextResponse.json({ error: '작성중 상태에서만 품목 수정이 가능합니다' }, { status: 400 });
+      if (current.status === 'received' || current.status === 'balance_paid' || current.status === 'cancelled' || current.balance_paid_at) {
+        return NextResponse.json({ error: '입고·잔금 지불·취소 이후에는 품목을 수정할 수 없습니다' }, { status: 400 });
       }
 
       // 기존 품목 삭제
@@ -258,12 +258,12 @@ export async function PATCH(
         await db.from('purchase_order_items').insert(newItems);
       }
 
-      // 합계 재계산 (외화 → KRW 환산)
+      // 합계 재계산 (외화 → KRW 환산). 잔금 = 새 총액 − 선납 (선납이 더 크면 0 — 과지급은 화면에서 안내).
       const rate = updates.exchange_rate || current.exchange_rate || 1;
       const foreignTotal = newItems.reduce((s: number, i: { quantity: number; unit_price: number }) => s + i.quantity * i.unit_price, 0);
       const krwTotal = Math.round(foreignTotal * rate);
       updates.total_amount = krwTotal;
-      updates.balance_amount = krwTotal - (current.deposit_amount || 0);
+      updates.balance_amount = Math.max(0, krwTotal - (current.deposit_amount || 0));
     }
 
     if (Object.keys(updates).length === 0) {

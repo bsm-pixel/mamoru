@@ -90,7 +90,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
               <Printer size={14} />발주서
             </Button>
           )}
-          {po.status === 'draft' && !editing && (
+          {(po.status === 'draft' || po.status === 'ordered' || po.status === 'deposit_paid') && !po.balance_paid_at && !editing && (
             <Button variant="ghost" size="sm" onClick={() => {
               setEditing(true);
               setEditItems(items.map((i) => ({ product_id: i.product_id || undefined, product_name: i.product_name, sku: i.sku || undefined, quantity: i.quantity, unit_price: i.unit_price })));
@@ -159,6 +159,9 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
               }}><Save size={14} />저장</Button>
             </div>
           </div>
+          {po.status !== 'draft' && (
+            <p className="text-[10px] text-amber-600 mb-2">선납/발주 후 수정 — 저장 시 총액·잔금이 자동 재계산됩니다 (선납이 새 총액보다 많으면 잔금 0·과지급). 입고 후엔 수정 불가.</p>
+          )}
 
           {/* 메모 + 예정일 */}
           <div className="grid grid-cols-2 gap-2 mb-3">
