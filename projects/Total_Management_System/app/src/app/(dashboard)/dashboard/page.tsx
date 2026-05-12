@@ -161,7 +161,7 @@ export default function DashboardPage() {
     ? `이번주 ${fmtKRW(stats.orders.weekAmount)} · 이번달 ${fmtKRW(stats.orders.monthAmount)}`
     : '';
   const repairSummary = stats
-    ? `이번달 복원수리 매출 ${fmtKRW(stats.repairs.monthRepairAmount)} (${stats.repairs.monthRepairCount}건)`
+    ? `이번달 복원수리 매출 ${fmtKRW(stats.repairs.monthRepairAmount)} (${stats.repairs.monthRepairCount}자루)`
     : '';
 
   return (
@@ -171,14 +171,16 @@ export default function DashboardPage() {
       <div className="px-4 md:px-6 py-4 space-y-5">
         {/* KPI: 이번달 매출 달성률 */}
         {monthGoal > 0 && stats && (() => {
-          const current = (stats.sales.monthAmount || 0) + (stats.repairs?.monthRepairAmount || 0);
+          // 총매출 = 판매(B2C+B2B 제품, 판매시스템 RS, 납품 전체 포함) + 접수시스템 복원수리(A채널만)
+          //   B/C채널 복원수리 RS는 이미 sales.monthAmount 안에 포함 → A채널만 추가해야 중복 안 됨
+          const current = (stats.sales.monthAmount || 0) + (stats.repairs?.monthRepairAOnly || 0);
           const pct = Math.min(Math.round((current / monthGoal) * 100), 100);
           const color = pct >= kpiGreen ? 'bg-green-500' : pct >= kpiYellow ? 'bg-yellow-500' : 'bg-red-500';
           const textColor = pct >= kpiGreen ? 'text-green-600' : pct >= kpiYellow ? 'text-yellow-600' : 'text-red-500';
           return (
             <div className="bg-white rounded-lg border border-neutral-200 p-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-neutral-500">이번달 매출 목표</p>
+                <p className="text-xs text-neutral-500">이번달 매출 목표 <span className="text-neutral-400">(판매 + 복원수리 전체)</span></p>
                 <button onClick={() => { setGoalInput(String(monthGoal)); setEditingGoal(true); }} className="text-[10px] text-neutral-400 hover:text-neutral-600">수정</button>
               </div>
               <div className="flex items-end gap-3 mb-2">

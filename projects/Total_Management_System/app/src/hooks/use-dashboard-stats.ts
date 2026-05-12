@@ -33,8 +33,9 @@ interface HubStatsResult {
     weekRepairTotal: number;
     weekRepairMamoru: number;
     weekRepairOther: number;
-    monthRepairAmount: number;   // 복원수리 매출 (접수시스템 + 판매)
-    monthRepairCount: number;
+    monthRepairAmount: number;   // 복원수리 매출 전체 (A 접수시스템 + B 판매RS + C 납품RS)
+    monthRepairCount: number;    // 복원수리 수량 전체 (자루 기준)
+    monthRepairAOnly: number;    // 접수시스템(A채널) 매출만 — 월 목표 계산용 (B/C채널 RS는 sales.monthAmount에 이미 포함되므로 중복 방지)
     monthRepairMamoru: { amount: number; count: number };
     monthRepairOther: { amount: number; count: number };
     monthRepairB2B: { amount: number; count: number };
@@ -60,26 +61,41 @@ export function useHubStats() {
       if (!rpcError && rpcData) {
         const d = rpcData as HubStatsResult;
 
-        // RPC에 없는 deliveries 데이터 추가 쿼리
+        // RPC에 없는 deliveries 데이터 + 접수시스템 A채널 매출(월 목표 계산용) 추가 쿼리
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const dlDb = supabase as any;
         // 월 시작 KST 명시 변환 (toISOString은 UTC라 KST 5/1 자정→4/30으로 잘못 변환되는 버그 회피)
         const msd = toLocalDateString(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-        const [dlRes, dlRepairRes] = await Promise.all([
+        const msISO = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+        const [dlRes, dlRepairRes, repairAOnlyRes] = await Promise.all([
           dlDb.from('deliveries').select('total_amount, discount_amount')
             .gte('delivery_date', msd).in('status', ['confirmed', 'shipped', 'settled']).is('cancelled_at', null),
           (async () => {
             const { data: dlIds } = await dlDb.from('deliveries').select('id')
               .gte('delivery_date', msd).in('status', ['confirmed', 'shipped', 'settled']).is('cancelled_at', null);
             if (!dlIds || dlIds.length === 0) return { data: [] };
-            return dlDb.from('delivery_items').select('quantity').eq('category', 'RS').in('delivery_id', dlIds.map((x: { id: string }) => x.id));
+            return dlDb.from('delivery_items').select('quantity, total_price').eq('category', 'RS').gt('total_price', 0).in('delivery_id', dlIds.map((x: { id: string }) => x.id));
           })(),
+          // 접수시스템(A채널) 복원수리 — 옵션A(미입금 포함). monthRepairAOnly 계산 (RPC 077 배포 여부 무관하게 정확)
+          dlDb.from('repairs').select('qty_mamoru, qty_other').gte('created_at', msISO).not('status', 'eq', 'cancelled'),
         ]);
         const dlAmount = ((dlRes.data || []) as { total_amount: number; discount_amount?: number }[])
           .reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
         const dlCount = (dlRes.data || []).length;
-        const dlRepairQty = ((dlRepairRes.data || []) as { quantity: number }[])
-          .reduce((s, r) => s + (r.quantity || 0), 0);
+        const dlRepairRows = (dlRepairRes.data || []) as { quantity: number; total_price: number }[];
+        const dlRepairQty = dlRepairRows.reduce((s, r) => s + (r.quantity || 0), 0);
+        const dlRepairAmount = dlRepairRows.reduce((s, r) => s + (r.total_price || 0), 0);
+        // 접수시스템 A채널 매출 (마모루 1만 / 타사 2만 고정단가) — sales.monthAmount에 없는 유일한 복원수리 매출
+        const REPAIR_PRICE_MAMORU = 10000, REPAIR_PRICE_OTHER = 20000;
+        let aQtyM = 0, aQtyO = 0;
+        for (const r of (repairAOnlyRes.data || []) as { qty_mamoru: number; qty_other: number }[]) { aQtyM += r.qty_mamoru || 0; aQtyO += r.qty_other || 0; }
+        const repairAOnly = aQtyM * REPAIR_PRICE_MAMORU + aQtyO * REPAIR_PRICE_OTHER;
+        // 복원수리 전체 수량 = A(repairs qty) + B(offline RS qty) + C(deliveries RS qty)
+        //   monthRepairMamoru/Other/B2B.count 는 RPC 076에서 이미 수량 기준 → 합산하면 A+B 수량. C는 dlRepairQty 추가.
+        const mamoruCnt = d.repairs?.monthRepairMamoru?.count ?? 0;
+        const otherCnt = d.repairs?.monthRepairOther?.count ?? 0;
+        const b2bCntRpc = d.repairs?.monthRepairB2B?.count ?? 0;
+        const totalRepairCount = mamoruCnt + otherCnt + b2bCntRpc + dlRepairQty;
 
         return {
           orders: {
@@ -104,13 +120,14 @@ export function useHubStats() {
             weekRepairTotal: d.repairs?.weekRepairTotal ?? 0,
             weekRepairMamoru: d.repairs?.weekRepairMamoru ?? 0,
             weekRepairOther: d.repairs?.weekRepairOther ?? 0,
-            monthRepairAmount: d.repairs?.monthRepairAmount ?? 0,
-            monthRepairCount: d.repairs?.monthRepairCount ?? 0,
+            monthRepairAmount: (d.repairs?.monthRepairAmount ?? 0) + dlRepairAmount,  // RPC=A+B채널, C(납품RS) 추가
+            monthRepairCount: totalRepairCount,                                       // A+B+C 수량 (자루)
+            monthRepairAOnly: repairAOnly,                                            // 접수시스템 A채널 매출만
             monthRepairMamoru: d.repairs?.monthRepairMamoru ?? { amount: 0, count: 0 },
             monthRepairOther: d.repairs?.monthRepairOther ?? { amount: 0, count: 0 },
             monthRepairB2B: {
-              amount: (d.repairs?.monthRepairB2B?.amount ?? 0),
-              count: (d.repairs?.monthRepairB2B?.count ?? 0) + dlRepairQty,
+              amount: (d.repairs?.monthRepairB2B?.amount ?? 0) + dlRepairAmount,      // B2B에 납품RS 금액 추가
+              count: (d.repairs?.monthRepairB2B?.count ?? 0) + dlRepairQty,           // B2B에 납품RS 수량 추가
             },
           },
           sales: {
@@ -193,7 +210,7 @@ export function useHubStats() {
             .is('cancelled_at', null);
           if (!dlIds || dlIds.length === 0) return { data: [] };
           const ids = dlIds.map((d: { id: string }) => d.id);
-          return db.from('delivery_items').select('quantity').eq('category', 'RS').in('delivery_id', ids);
+          return db.from('delivery_items').select('quantity, total_price').eq('category', 'RS').gt('total_price', 0).in('delivery_id', ids);
         })(),
       ]);
 
@@ -220,8 +237,9 @@ export function useHubStats() {
       const deliveryMonthAmount = deliveryRows.reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
 
       // 납품 복원수리 B2B 수량
-      const deliveryRepairRows = (monthDeliveryRepairItems.data || []) as { quantity: number }[];
+      const deliveryRepairRows = (monthDeliveryRepairItems.data || []) as { quantity: number; total_price: number }[];
       const deliveryRepairB2BQty = deliveryRepairRows.reduce((s, r) => s + (r.quantity || 0), 0);
+      const deliveryRepairAmount = deliveryRepairRows.reduce((s, r) => s + (r.total_price || 0), 0);
 
       return {
         orders: {
@@ -274,11 +292,15 @@ export function useHubStats() {
               else { bMamoru += price; cMamoru += qty; }
             }
             return {
-              monthRepairAmount: repairATotal + bMamoru + bOther + bB2B,
-              monthRepairCount: repairRows.length + salesRepairRows.length,
+              // 복원수리 매출 전체 = A(접수시스템) + B(판매RS) + C(납품RS)
+              monthRepairAmount: repairATotal + bMamoru + bOther + bB2B + deliveryRepairAmount,
+              // 복원수리 수량 전체 (자루) = A(repairs qty) + B(offline RS qty) + C(deliveries RS qty)
+              monthRepairCount: aMamoruQty + aOtherQty + cMamoru + cOther + cB2B + deliveryRepairB2BQty,
+              // 접수시스템 A채널 매출만 — sales.monthAmount에 없는 유일한 복원수리 매출 (월 목표 계산용)
+              monthRepairAOnly: repairATotal,
               monthRepairMamoru: { amount: aMamoru + bMamoru, count: aMamoruQty + cMamoru },
               monthRepairOther: { amount: aOther + bOther, count: aOtherQty + cOther },
-              monthRepairB2B: { amount: bB2B, count: cB2B + deliveryRepairB2BQty },
+              monthRepairB2B: { amount: bB2B + deliveryRepairAmount, count: cB2B + deliveryRepairB2BQty },
             };
           })(),
         },
@@ -458,11 +480,11 @@ export function useRepairDashboardStats() {
           .select('*', { count: 'exact', head: true })
           .eq('status', 'intake')
           .is('confirmed_at', null),
-        // 복원수리 매출 A: 접수시스템 (입금 완료 건)
+        // 복원수리 매출 A: 접수시스템 — 옵션A(발생 기준, 미입금 포함). useHubStats와 동일 정책으로 통일
+        //   (거래처/고객이 미입금으로 몰아서 입금하는 케이스가 있어 paid_at 조건 제거)
         supabase
           .from('repairs')
           .select('total_amount, qty_mamoru, qty_other')
-          .not('paid_at', 'is', null)
           .gte('created_at', monthISO)
           .not('status', 'eq', 'cancelled'),
         // 복원수리 매출 B: 판매시스템 (이번달, category=RS, 취소 제외)
@@ -497,7 +519,7 @@ export function useRepairDashboardStats() {
           const { data: dlIds } = await (supabase as any).from('deliveries').select('id')
             .gte('delivery_date', monthStart).in('status', ['confirmed', 'shipped', 'settled']).is('cancelled_at', null);
           if (!dlIds || dlIds.length === 0) return { data: [] };
-          return (supabase as any).from('delivery_items').select('quantity, total_price').eq('category', 'RS').in('delivery_id', dlIds.map((x: { id: string }) => x.id));
+          return (supabase as any).from('delivery_items').select('quantity, total_price').eq('category', 'RS').gt('total_price', 0).in('delivery_id', dlIds.map((x: { id: string }) => x.id));
         })(),
       ]);
 
@@ -554,7 +576,8 @@ export function useRepairDashboardStats() {
           const dlRepairQty = ((dlRepairItems.data || []) as { quantity: number }[]).reduce((s, r) => s + (r.quantity || 0), 0);
           return {
             monthRepairAmount: repairATotal + bMamoru + bOther + bB2B + dlRepairAmount,
-            monthRepairCount: repairRows.length + salesRepairRows.length + (dlRepairItems.data || []).length,
+            // 복원수리 수량 전체 (자루) = A(repairs qty) + B(offline RS qty) + C(deliveries RS qty). useHubStats와 동일 기준
+            monthRepairCount: aMamoruQty + aOtherQty + cMamoru + cOther + cB2B + dlRepairQty,
             monthRepairMamoru: { amount: aMamoru + bMamoru, count: aMamoruQty + cMamoru },
             monthRepairOther: { amount: aOther + bOther, count: aOtherQty + cOther },
             monthRepairB2B: {

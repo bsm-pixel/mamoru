@@ -44,24 +44,24 @@ export default function RepairsPage() {
                   <p className="text-lg font-bold">{formatKRW(stats.monthRepairAmount)}</p>
                 </div>
                 <p className="ml-auto text-lg font-bold">
-                  {(stats.monthRepairMamoru?.count || 0) + (stats.monthRepairOther?.count || 0) + (stats.monthRepairB2B?.count || 0)}건
+                  {(stats.monthRepairMamoru?.count || 0) + (stats.monthRepairOther?.count || 0) + (stats.monthRepairB2B?.count || 0)}자루
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-px bg-white/10">
                 <div className="px-3 py-2 text-center">
                   <p className="text-[10px] opacity-50">마모루</p>
                   <p className="text-sm font-bold">{formatKRW(stats.monthRepairMamoru?.amount || 0)}</p>
-                  <p className="text-[10px] opacity-40">{stats.monthRepairMamoru?.count || 0}건</p>
+                  <p className="text-[10px] opacity-40">{stats.monthRepairMamoru?.count || 0}자루</p>
                 </div>
                 <div className="px-3 py-2 text-center">
                   <p className="text-[10px] opacity-50">타사</p>
                   <p className="text-sm font-bold">{formatKRW(stats.monthRepairOther?.amount || 0)}</p>
-                  <p className="text-[10px] opacity-40">{stats.monthRepairOther?.count || 0}건</p>
+                  <p className="text-[10px] opacity-40">{stats.monthRepairOther?.count || 0}자루</p>
                 </div>
                 <div className="px-3 py-2 text-center">
                   <p className="text-[10px] opacity-50">B2B</p>
                   <p className="text-sm font-bold">{formatKRW(stats.monthRepairB2B?.amount || 0)}</p>
-                  <p className="text-[10px] opacity-40">{stats.monthRepairB2B?.count || 0}건</p>
+                  <p className="text-[10px] opacity-40">{stats.monthRepairB2B?.count || 0}자루</p>
                 </div>
               </div>
             </div>
