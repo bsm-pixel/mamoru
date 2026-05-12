@@ -42,13 +42,13 @@ export async function GET(req: NextRequest) {
         .in('sale_id', saleIds);
       saleItems = data || [];
     }
-    // 오프라인 복원수리(RS) 항목 — 0원 무상 제외, sale_id 별 합계
+    // 오프라인 복원수리(RS) 항목 — 0원 무상 제외, sale_id 별 합계 (배송비는 금액엔 포함, 자루 수엔 제외)
     const offlineRsBySale: Record<string, { amount: number; qty: number }> = {};
     for (const it of saleItems) {
       if (it.category === 'RS' && (it.total_price || 0) > 0) {
         if (!offlineRsBySale[it.sale_id]) offlineRsBySale[it.sale_id] = { amount: 0, qty: 0 };
         offlineRsBySale[it.sale_id].amount += it.total_price || 0;
-        offlineRsBySale[it.sale_id].qty += it.quantity || 0;
+        if (it.product_name !== '배송비') offlineRsBySale[it.sale_id].qty += it.quantity || 0;
       }
     }
     const productSaleItems = saleItems.filter((it) => it.category !== 'RS'); // 제품 항목만 (COGS·랭킹용)
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
       if (it.category === 'RS' && (it.total_price || 0) > 0) {
         if (!dlRsByDelivery[it.delivery_id]) dlRsByDelivery[it.delivery_id] = { amount: 0, qty: 0 };
         dlRsByDelivery[it.delivery_id].amount += it.total_price || 0;
-        dlRsByDelivery[it.delivery_id].qty += it.quantity || 0;
+        if (it.product_name !== '배송비') dlRsByDelivery[it.delivery_id].qty += it.quantity || 0;
       }
     }
     const productDlItems = dlItems.filter((it) => it.category !== 'RS');
