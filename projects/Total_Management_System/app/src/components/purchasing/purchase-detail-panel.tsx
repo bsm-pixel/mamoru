@@ -292,9 +292,16 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
           </div>
           <div>
             <p className="text-xs text-neutral-400">잔금</p>
-            <p className={`text-sm font-bold ${po.balance_amount > 0 ? 'text-red-500' : 'text-green-600'}`}>
-              {formatKRW(po.balance_amount)}
-            </p>
+            {po.balance_paid_at ? (
+              <>
+                <p className="text-sm font-bold text-green-600">{formatKRW(Math.max(0, po.total_amount - po.deposit_amount))}</p>
+                <p className="text-[10px] text-green-600">지불완료 ✓ {formatDate(po.balance_paid_at)}</p>
+              </>
+            ) : (
+              <p className={`text-sm font-bold ${po.balance_amount > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                {formatKRW(po.balance_amount)}
+              </p>
+            )}
           </div>
         </div>
       </Card>
@@ -326,12 +333,21 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
             {(po.status === 'ordered' || po.status === 'deposit_paid') && (
               <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setPendingAction({
                 status: 'received', label: '입고 확인',
-                msg: `입고를 확인합니다. 재고가 자동으로 증가합니다.\n\n${items.map((i: { product_name: string; quantity: number }) => `• ${i.product_name} x${i.quantity}`).join('\n')}`,
+                msg: `입고를 확인합니다. 재고가 자동으로 증가합니다.${po.balance_paid_at ? '\n(잔금은 이미 지불완료 → 입고와 동시에 "잔금완료" 처리됩니다)' : ''}\n\n${items.map((i: { product_name: string; quantity: number }) => `• ${i.product_name} x${i.quantity}`).join('\n')}`,
               })} disabled={updatePO.isPending}>
                 입고 확인 (재고 증가)
               </Button>
             )}
-            {po.status === 'received' && po.balance_amount > 0 && (
+            {/* 입고 전 잔금 지불 기록 — 업체가 발송 시작했고 잔금만 먼저 보낸 경우 */}
+            {(po.status === 'ordered' || po.status === 'deposit_paid') && po.balance_amount > 0 && !po.balance_paid_at && (
+              <Button className="w-full" variant="secondary" onClick={() => setPendingAction({
+                status: 'balance_paid', label: '잔금 지불 처리',
+                msg: `잔금 ${formatKRW(po.balance_amount)} 을 지불완료로 기록합니다.\n(입고 상태는 그대로 — 물건 도착 후 "입고 확인"을 누르면 자동으로 잔금완료가 됩니다)`,
+              })} disabled={updatePO.isPending}>
+                잔금 지불 처리 (입고 전)
+              </Button>
+            )}
+            {po.status === 'received' && po.balance_amount > 0 && !po.balance_paid_at && (
               <Button className="w-full" onClick={() => setPendingAction({ status: 'balance_paid', label: '잔금 완료', msg: `잔금 ${formatKRW(po.balance_amount)}을 완료 처리합니다.` })} disabled={updatePO.isPending}>
                 잔금 완료
               </Button>
