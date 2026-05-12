@@ -81,7 +81,7 @@ export async function PATCH(
     const updates: Record<string, unknown> = {};
 
     // 허용 필드만 추출
-    const allowed = ['name', 'phone', 'email', 'postcode', 'address_road', 'address_detail', 'customer_type', 'company_name', 'memo', 'outstanding_balance', 'tags'];
+    const allowed = ['name', 'phone', 'email', 'postcode', 'address_road', 'address_detail', 'customer_type', 'company_name', 'memo', 'outstanding_balance', 'tags', 'default_repair_price'];
     for (const key of allowed) {
       if (key in body) updates[key] = body[key];
     }

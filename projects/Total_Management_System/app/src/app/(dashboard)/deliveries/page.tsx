@@ -296,7 +296,7 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
   const [customerQuery, setCustomerQuery] = useState('');
   const { data: searchResults = [] } = useCustomerSearch(customerQuery);
   const [selectedCustomer, setSelectedCustomer] = useState<{
-    id: string; name: string; phone: string | null; customer_type?: string; company_name?: string;
+    id: string; name: string; phone: string | null; customer_type?: string; company_name?: string; default_repair_price?: number | null;
   } | null>(null);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -505,10 +505,13 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
                             phone: c.phone,
                             customer_type: c.customer_type || '',
                             company_name: companyName || undefined,
+                            default_repair_price: c.default_repair_price ?? null,
                           });
                           setCustomerName(companyName || c.name);
                           setCustomerPhone(c.phone || '');
                           setShowCustomerDropdown(false);
+                          // 거래처 복원수리 기본 단가 자동 적용 (2-E)
+                          if (c.default_repair_price && c.default_repair_price > 0) setRepairUnitPrice(c.default_repair_price);
                           // 장바구니 가격 재계산
                           const type = c.customer_type || '';
                           setCart((prev) => prev.map((item) => {
@@ -573,7 +576,11 @@ function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: {
                 <input type="number" value={repairUnitPrice}
                   onChange={(e) => setRepairUnitPrice(parseInt(e.target.value) || 0)}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
-                <p className="text-[10px] text-neutral-400 mt-1">기본 8,000원 · 수정 가능</p>
+                <p className="text-[10px] text-neutral-400 mt-1">
+                  {selectedCustomer?.default_repair_price && selectedCustomer.default_repair_price > 0
+                    ? '거래처 기본 단가 자동 적용 · 수정 가능'
+                    : '기본 8,000원 · 수정 가능 (거래처 정보에 기본 단가 등록 시 자동 적용)'}
+                </p>
               </div>
               {/* 추가 항목 */}
               <div>

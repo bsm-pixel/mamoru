@@ -60,6 +60,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     address_detail: '',
     memo: '',
     outstanding_balance: 0,
+    default_repair_price: 0,
     tags: [] as string[],
   });
 
@@ -77,6 +78,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       address_detail: c.address_detail || '',
       memo: c.memo || '',
       outstanding_balance: c.outstanding_balance || 0,
+      default_repair_price: (c as Record<string, unknown>).default_repair_price as number || 0,
       tags: (c as Record<string, unknown>).tags as string[] || [],
     });
     setEditing(true);
@@ -251,6 +253,19 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
                 />
               </div>
+              {(form.customer_type === 'dealer' || form.customer_type === 'academy') && (
+                <div>
+                  <label className="text-xs text-neutral-500">복원수리 기본 단가 (자루당)</label>
+                  <input
+                    type="number"
+                    value={form.default_repair_price || ''}
+                    onChange={(e) => setForm({ ...form, default_repair_price: parseInt(e.target.value) || 0 })}
+                    placeholder="예: 8000 — 납품 복원수리 입력 시 자동 적용"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                  />
+                  <p className="text-[10px] text-neutral-400 mt-1">납품 → 복원수리 입력 시 이 단가가 자동으로 채워집니다 (비워두면 기본 8,000원)</p>
+                </div>
+              )}
               <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>취소</Button>
             </div>
           ) : (
@@ -281,6 +296,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   <span className="text-xs text-neutral-500">매장명 (근무지)</span>
                   <p>{c.company_name || '-'}</p>
                 </div>
+                {(c.customer_type === 'dealer' || c.customer_type === 'academy') && (
+                  <div>
+                    <span className="text-xs text-neutral-500">복원수리 기본 단가</span>
+                    <p>{c.default_repair_price ? `${formatKRW(c.default_repair_price)} / 자루` : <span className="text-neutral-400">미설정 (기본 8,000원)</span>}</p>
+                  </div>
+                )}
                 <div className="col-span-2">
                   <span className="text-xs text-neutral-500">주소</span>
                   <p>{[c.postcode, c.address_road, c.address_detail].filter(Boolean).join(' ') || '-'}</p>

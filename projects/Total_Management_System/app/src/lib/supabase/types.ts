@@ -89,13 +89,14 @@ export interface Database {
           company_name: string | null;
           memo: string | null;
           outstanding_balance: number;
+          default_repair_price: number | null;  // 079: 거래처별 복원수리 기본 단가(자루당, 원)
           total_orders: number;
           total_spent: number;
           ecount_customer_code: string | null;  // legacy
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['customers']['Row'], 'id' | 'created_at' | 'updated_at' | 'phone_normalized' | 'total_orders' | 'total_spent' | 'ecount_customer_code' | 'outstanding_balance'>;
+        Insert: Omit<Database['public']['Tables']['customers']['Row'], 'id' | 'created_at' | 'updated_at' | 'phone_normalized' | 'total_orders' | 'total_spent' | 'ecount_customer_code' | 'outstanding_balance' | 'default_repair_price'>;
         Update: Partial<Database['public']['Tables']['customers']['Insert']>;
       };
       orders: {

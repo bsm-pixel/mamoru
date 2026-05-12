@@ -17,6 +17,7 @@ export interface CustomerResult {
   memo: string | null;
   company_name: string | null;
   customer_type: string | null;
+  default_repair_price: number | null;  // 079: 거래처별 복원수리 기본 단가(자루당)
 }
 
 /** 고객 자동완성 검색 (2글자 이상) */
@@ -161,6 +162,7 @@ export function useUpdateCustomer() {
       company_name?: string;
       memo?: string;
       outstanding_balance?: number;
+      default_repair_price?: number | null;
     }) => {
       const res = await fetch(`/api/customers/${id}`, {
         method: 'PATCH',
