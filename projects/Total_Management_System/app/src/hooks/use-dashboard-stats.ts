@@ -42,7 +42,9 @@ interface HubStatsResult {
   };
   sales: {
     monthCount: number;
-    monthAmount: number;
+    monthAmount: number;       // 오프라인판매(RS 포함) + 납품(RS 포함) 전체 — 호환 유지 (오프라인 판매 카드용)
+    salesB2C: number;          // B2C 제품 매출 = offline_sales(소매/온라인) total−discount − 그 주문 RS_total
+    salesB2B: number;          // B2B 제품 매출 = offline_sales(딜러/아카데미) total−discount − RS_total + 납품 total−discount − 납품 RS_total
   };
 }
 
@@ -61,19 +63,59 @@ export function useHubStats() {
       if (!rpcError && rpcData) {
         const d = rpcData as HubStatsResult;
 
-        // RPC 077 이후 — get_hub_stats 가 복원수리 매출(A 접수 + B 판매RS + C 납품RS) / 카운트(수량) /
+        // RPC 077/078 — get_hub_stats 가 복원수리 매출(A 접수 + B 판매RS + C 납품RS) / 카운트(수량) /
         //   monthRepairAOnly / monthRepairB2B(offline B2B + 납품RS) 를 모두 계산한다.
-        //   후처리는 sales.monthCount/monthAmount 에 deliveries 전체(제품 + RS)만 추가 (RPC 의 sales 객체는 offline_sales 만 집계).
-        //   ⚠️ 복원수리 관련 값에 dlRepairAmount/dlRepairQty 를 또 더하면 C채널 중복 계상이 됨 — 절대 더하지 말 것.
+        //   RPC 078+ 는 sales.salesB2C/salesB2B (제품 매출, RS 제외) + deliveries 포함 monthCount/monthAmount 도 반환.
+        //   RPC 077(078 미배포) 일 때만 후처리에서 deliveries 추가 + 제품매출 B2C/B2B 분리를 직접 쿼리한다.
+        //   ⚠️ 복원수리(monthRepairAmount 등) 에 납품 RS(dlRs) 를 또 더하면 C채널 중복 계상 — 절대 더하지 말 것.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const dlDb = supabase as any;
         // 월 시작 KST 명시 변환 (toISOString은 UTC라 KST 5/1 자정→4/30으로 잘못 변환되는 버그 회피)
         const msd = toLocalDateString(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-        const dlRes = await dlDb.from('deliveries').select('total_amount, discount_amount')
-          .gte('delivery_date', msd).in('status', ['confirmed', 'shipped', 'settled']).is('cancelled_at', null);
-        const dlAmount = ((dlRes.data || []) as { total_amount: number; discount_amount?: number }[])
-          .reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
-        const dlCount = (dlRes.data || []).length;
+        const ds = d.sales as { monthCount?: number; monthAmount?: number; salesB2C?: number; salesB2B?: number };
+        let salesMonthCount: number, salesMonthAmount: number, salesB2C: number, salesB2B: number;
+
+        if (ds.salesB2C !== undefined && ds.salesB2B !== undefined) {
+          // RPC 078+ : sales 객체가 제품매출 분리 + deliveries 포함 값을 모두 반환 → 그대로 사용
+          salesMonthCount = ds.monthCount ?? 0;
+          salesMonthAmount = ds.monthAmount ?? 0;
+          salesB2C = ds.salesB2C;
+          salesB2B = ds.salesB2B;
+        } else {
+          // RPC 077 : 후처리에서 deliveries 추가 + 제품매출 B2C/B2B 분리 (RS 제외) 직접 계산
+          const isB2BCt = (ct: string | null | undefined) => ct === 'dealer' || ct === 'academy';
+          const [dlRes, osRes, osRsRes, dlRsRes] = await Promise.all([
+            dlDb.from('deliveries').select('total_amount, discount_amount')
+              .gte('delivery_date', msd).in('status', ['confirmed', 'shipped', 'settled']).is('cancelled_at', null),
+            dlDb.from('offline_sales').select('total_amount, discount_amount, customer_type')
+              .gte('sale_date', msd).is('cancelled_at', null),
+            dlDb.from('offline_sale_items').select('total_price, offline_sales!inner(sale_date, cancelled_at, customer_type)')
+              .eq('category', 'RS').gt('total_price', 0).gte('offline_sales.sale_date', msd).is('offline_sales.cancelled_at', null),
+            (async () => {
+              const { data: dlIds } = await dlDb.from('deliveries').select('id')
+                .gte('delivery_date', msd).in('status', ['confirmed', 'shipped', 'settled']).is('cancelled_at', null);
+              if (!dlIds || dlIds.length === 0) return { data: [] };
+              return dlDb.from('delivery_items').select('total_price').eq('category', 'RS').gt('total_price', 0)
+                .in('delivery_id', dlIds.map((x: { id: string }) => x.id));
+            })(),
+          ]);
+          const dlRows = (dlRes.data || []) as { total_amount: number; discount_amount?: number }[];
+          const dlAmount = dlRows.reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
+          let osB2C = 0, osB2B = 0;
+          for (const r of (osRes.data || []) as { total_amount: number; discount_amount?: number; customer_type: string | null }[]) {
+            const net = (r.total_amount || 0) - (r.discount_amount || 0);
+            if (isB2BCt(r.customer_type)) osB2B += net; else osB2C += net;
+          }
+          let osRsB2C = 0, osRsB2B = 0;
+          for (const r of (osRsRes.data || []) as { total_price: number; offline_sales: { customer_type: string | null } }[]) {
+            if (isB2BCt(r.offline_sales?.customer_type)) osRsB2B += (r.total_price || 0); else osRsB2C += (r.total_price || 0);
+          }
+          const dlRs = ((dlRsRes.data || []) as { total_price: number }[]).reduce((s, r) => s + (r.total_price || 0), 0);
+          salesMonthCount = (ds.monthCount ?? 0) + dlRows.length;
+          salesMonthAmount = (ds.monthAmount ?? 0) + dlAmount;
+          salesB2C = osB2C - osRsB2C;
+          salesB2B = (osB2B - osRsB2B) + (dlAmount - dlRs);
+        }
 
         return {
           orders: {
@@ -106,8 +148,10 @@ export function useHubStats() {
             monthRepairB2B: d.repairs?.monthRepairB2B ?? { amount: 0, count: 0 },  // RPC 077 = offline B2B + 납품RS 전체
           },
           sales: {
-            monthCount: (d.sales?.monthCount ?? 0) + dlCount,
-            monthAmount: (d.sales?.monthAmount ?? 0) + dlAmount,
+            monthCount: salesMonthCount,
+            monthAmount: salesMonthAmount,
+            salesB2C,
+            salesB2B,
           },
         };
       }
@@ -159,7 +203,7 @@ export function useHubStats() {
         db.from('repairs').select('qty_mamoru, qty_other')
           .in('status', ['shipped', 'delivered', 'completed'])
           .gte('shipped_at', monISO),
-        db.from('offline_sales').select('total_amount, discount_amount')
+        db.from('offline_sales').select('total_amount, discount_amount, customer_type')
           .gte('sale_date', monthStartDate)
           .is('cancelled_at', null),
         // 075: 복원수리 매출 A — 옵션 A "발생 기준" 적용 (paid_at 조건 제거 → 미입금도 매출 발생으로 카운트)
@@ -204,7 +248,7 @@ export function useHubStats() {
 
       const pendingInbound = (repairPending.count || 0) - (intakeNew.count || 0);
 
-      const salesRows = (monthSales.data || []) as { total_amount: number; discount_amount: number }[];
+      const salesRows = (monthSales.data || []) as { total_amount: number; discount_amount: number; customer_type?: string | null }[];
       const salesMonthAmount = salesRows.reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
 
       // 납품 매출
@@ -215,6 +259,18 @@ export function useHubStats() {
       const deliveryRepairRows = (monthDeliveryRepairItems.data || []) as { quantity: number; total_price: number }[];
       const deliveryRepairB2BQty = deliveryRepairRows.reduce((s, r) => s + (r.quantity || 0), 0);
       const deliveryRepairAmount = deliveryRepairRows.reduce((s, r) => s + (r.total_price || 0), 0);
+
+      // 2단계 매출 3분할 — 제품 매출 B2C/B2B 분리 (RS 제외)
+      //   B2C 제품 = offline_sales(소매/온라인) (total−discount) − 그 채널 RS_total
+      //   B2B 제품 = offline_sales(딜러/아카데미) (total−discount) − RS_total + 납품 전체 (total−discount − 납품 RS_total)
+      const isB2BCt = (ct: string | null | undefined) => ct === 'dealer' || ct === 'academy';
+      const osProductB2C = salesRows.reduce((s, r) => s + (isB2BCt(r.customer_type) ? 0 : (r.total_amount || 0) - (r.discount_amount || 0)), 0);
+      const osProductB2B = salesRows.reduce((s, r) => s + (isB2BCt(r.customer_type) ? (r.total_amount || 0) - (r.discount_amount || 0) : 0), 0);
+      const osRepairRowsForSplit = (monthSalesRepairItems.data || []) as Array<{ total_price: number; offline_sales: { customer_type: string | null } }>;
+      const osRsB2C = osRepairRowsForSplit.reduce((s, r) => s + (isB2BCt(r.offline_sales?.customer_type) ? 0 : (r.total_price || 0)), 0);
+      const osRsB2B = osRepairRowsForSplit.reduce((s, r) => s + (isB2BCt(r.offline_sales?.customer_type) ? (r.total_price || 0) : 0), 0);
+      const salesB2C = osProductB2C - osRsB2C;
+      const salesB2B = (osProductB2B - osRsB2B) + (deliveryMonthAmount - deliveryRepairAmount);
 
       return {
         orders: {
@@ -282,6 +338,8 @@ export function useHubStats() {
         sales: {
           monthCount: salesRows.length + deliveryRows.length,
           monthAmount: salesMonthAmount + deliveryMonthAmount,
+          salesB2C,
+          salesB2B,
         },
       };
     },
