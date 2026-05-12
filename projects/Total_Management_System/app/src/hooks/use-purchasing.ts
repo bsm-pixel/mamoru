@@ -106,6 +106,7 @@ export function useUpdatePurchaseOrder() {
       currency?: string;
       exchange_rate?: number;
       items?: Array<{ product_id?: string; product_name: string; sku?: string; quantity: number; unit_price: number }>;
+      received_items?: Array<{ id: string; received_quantity: number }>; // 입고검수 실수령 수량
     }) => {
       const res = await fetch(`/api/purchasing/${id}`, {
         method: 'PATCH',

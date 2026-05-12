@@ -102,23 +102,39 @@ export async function PATCH(
         updates.status = balanceAlreadyPaid ? 'balance_paid' : 'received';
         updates.received_date = body.received_date || now.slice(0, 10);
 
-        // 입고 시 재고 증가
+        // 입고검수: body.received_items = [{ id, received_quantity }] (없는 품목은 주문 수량 그대로)
+        const receivedMap: Record<string, number> = {};
+        if (Array.isArray(body.received_items)) {
+          for (const ri of body.received_items) {
+            if (ri && ri.id != null) receivedMap[String(ri.id)] = Math.max(0, Math.floor(Number(ri.received_quantity) || 0));
+          }
+        }
+
+        // 입고 시 재고 증가 (실수령 수량 기준) + 품목별 received_quantity 기록
         const { data: poItems } = await db
           .from('purchase_order_items')
-          .select('product_id, quantity')
+          .select('id, product_id, quantity, unit_price')
           .eq('po_id', id);
 
+        let anyAdjusted = false;
+        let foreignTotal = 0; // 실수령 기준 외화(또는 KRW) 합계
         if (poItems) {
           for (const item of poItems) {
-            if (item.product_id) {
+            const recvQty = Object.prototype.hasOwnProperty.call(receivedMap, item.id) ? receivedMap[item.id] : item.quantity;
+            foreignTotal += recvQty * (item.unit_price || 0);
+            if (recvQty !== item.quantity) anyAdjusted = true;
+            // received_quantity 확정 기록 (조정 여부 무관 — 입고 시점 실수령값)
+            await db.from('purchase_order_items').update({ received_quantity: recvQty }).eq('id', item.id);
+
+            if (item.product_id && recvQty > 0) {
               const { data: prod } = await db
                 .from('products')
                 .select('stock_quantity, raw_stock, imweb_product_no')
                 .eq('id', item.product_id)
                 .single();
               if (prod) {
-                const newQty = (prod.stock_quantity || 0) + item.quantity;
-                const newRaw = (prod.raw_stock || 0) + item.quantity; // 보관창고에 입고
+                const newQty = (prod.stock_quantity || 0) + recvQty;
+                const newRaw = (prod.raw_stock || 0) + recvQty; // 보관창고에 입고
                 await db
                   .from('products')
                   .update({ stock_quantity: newQty, raw_stock: newRaw })
@@ -127,7 +143,7 @@ export async function PATCH(
                 // 아임웹 재고 동기화 — 입고 시 증가(+)
                 if (prod.imweb_product_no && newQty >= 0) {
                   try {
-                    await updateImwebStock(Number(prod.imweb_product_no), +item.quantity);
+                    await updateImwebStock(Number(prod.imweb_product_no), +recvQty);
                   } catch (e) {
                     console.error('[imweb] 재고 동기화 실패:', prod.imweb_product_no, e);
                   }
@@ -135,6 +151,26 @@ export async function PATCH(
               }
             }
           }
+        }
+
+        // 실수령이 주문과 다르면 total_amount / balance 재계산 (환율·부가세 유형 적용 — 작성 로직과 동일 규칙)
+        if (anyAdjusted) {
+          const rate = current.exchange_rate || 1;
+          const vatType = current.vat_type || (current.is_vat_included ? 'included' : 'none');
+          const krwTotal = Math.round(foreignTotal * rate);
+          let newTotal = krwTotal;
+          if (vatType === 'separate') {
+            const vatAmt = Math.round(krwTotal * 0.1);
+            updates.supply_amount = krwTotal; updates.vat_amount = vatAmt; newTotal = krwTotal + vatAmt;
+          } else if (vatType === 'none') {
+            updates.supply_amount = krwTotal; updates.vat_amount = 0; newTotal = krwTotal;
+          } else { // included
+            const supplyAmt = Math.round(krwTotal / 1.1);
+            updates.supply_amount = supplyAmt; updates.vat_amount = krwTotal - supplyAmt; newTotal = krwTotal;
+          }
+          updates.total_amount = newTotal;
+          // 잔금 재계산: 이미 잔금 냈으면 0, 아니면 max(0, 새 total − 선납). 선납 > 새 total 이면 과지급(차액은 화면에서 안내).
+          updates.balance_amount = current.balance_paid_at ? 0 : Math.max(0, newTotal - (current.deposit_amount || 0));
         }
       } else if (newStatus === 'balance_paid') {
         // 잔금 지불 기록 — 입고 전(ordered/deposit_paid)이어도 허용. 결제와 입고를 독립 처리.

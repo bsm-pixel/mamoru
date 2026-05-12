@@ -41,6 +41,10 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
   const [editExpectedDate, setEditExpectedDate] = useState('');
   const [saving, setSaving] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
+  // 입고검수 모달 — 품목별 실수령 수량
+  const [receiveItems, setReceiveItems] = useState<Array<{ id: string; name: string; ordered: number; received: number; unit_price: number }>>([]);
+  const [showReceive, setShowReceive] = useState(false);
+  const [receiving, setReceiving] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     status: string; label: string; msg: string; variant?: 'danger' | 'default'; extra?: Record<string, unknown>;
   } | null>(null);
@@ -233,27 +237,35 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
       <Card>
         <h4 className="text-xs font-semibold text-neutral-500 mb-2">발주 품목</h4>
         <div className="space-y-2">
-          {items.map((item) => (
+          {items.map((item) => {
+            const adjusted = item.received_quantity != null && item.received_quantity !== item.quantity;
+            const lineKrw = Math.round((item.received_quantity ?? item.quantity) * item.unit_price * poRate);
+            return (
             <div key={item.id} className="flex items-center justify-between py-1.5">
               <div>
                 <p className="text-sm font-medium">{item.product_name}</p>
                 <p className="text-xs text-neutral-500">
                   {item.sku && !item.sku.startsWith('IW-') && `${item.sku} · `}
-                  {isForeign ? `${CURRENCY_SYMBOL[poCurrency]}${item.unit_price.toLocaleString()}` : formatKRW(item.unit_price)} x {item.quantity}
+                  {isForeign ? `${CURRENCY_SYMBOL[poCurrency]}${item.unit_price.toLocaleString()}` : formatKRW(item.unit_price)} ×{' '}
+                  {adjusted ? (
+                    <span className="text-orange-600 font-medium">입고 {item.received_quantity} / 주문 {item.quantity}</span>
+                  ) : (
+                    <>{item.quantity}{item.received_quantity != null ? ' (입고완료)' : ''}</>
+                  )}
                 </p>
               </div>
               <div className="text-right shrink-0">
                 {isForeign && (
-                  <span className="text-[10px] text-neutral-400 mr-1">{CURRENCY_SYMBOL[poCurrency]}{item.total_price.toLocaleString()}</span>
+                  <span className="text-[10px] text-neutral-400 mr-1">{CURRENCY_SYMBOL[poCurrency]}{((item.received_quantity ?? item.quantity) * item.unit_price).toLocaleString()}</span>
                 )}
-                <span className="text-sm font-bold">{formatKRW(Math.round(item.total_price * poRate))}</span>
+                <span className={`text-sm font-bold ${adjusted ? 'text-orange-600' : ''}`}>{formatKRW(lineKrw)}</span>
               </div>
             </div>
-          ))}
+          ); })}
         </div>
         <div className="mt-3 pt-3 border-t border-neutral-200 space-y-1">
           <div className="flex justify-between text-sm font-bold">
-            <span>합계</span>
+            <span>합계 {items.some((i) => i.received_quantity != null && i.received_quantity !== i.quantity) && <span className="text-[10px] font-normal text-orange-600">(입고 기준)</span>}</span>
             <span className="text-terracotta">{formatKRW(po.total_amount)}</span>
           </div>
           <div className="flex justify-between text-xs text-neutral-500">
@@ -331,10 +343,10 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
               </div>
             )}
             {(po.status === 'ordered' || po.status === 'deposit_paid') && (
-              <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setPendingAction({
-                status: 'received', label: '입고 확인',
-                msg: `입고를 확인합니다. 재고가 자동으로 증가합니다.${po.balance_paid_at ? '\n(잔금은 이미 지불완료 → 입고와 동시에 "잔금완료" 처리됩니다)' : ''}\n\n${items.map((i: { product_name: string; quantity: number }) => `• ${i.product_name} x${i.quantity}`).join('\n')}`,
-              })} disabled={updatePO.isPending}>
+              <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => {
+                setReceiveItems(items.map((i) => ({ id: i.id, name: i.product_name, ordered: i.quantity, received: i.quantity, unit_price: i.unit_price })));
+                setShowReceive(true);
+              }} disabled={updatePO.isPending}>
                 입고 확인 (재고 증가)
               </Button>
             )}
@@ -390,6 +402,63 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
         />
       )}
       {showPrint && <POPrintModal purchaseId={purchaseId} onClose={() => setShowPrint(false)} />}
+
+      {/* 입고검수 모달 — 품목별 실수령 수량 (제작품이라 주문≠입고 흔함) */}
+      {showReceive && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { if (!receiving) setShowReceive(false); }}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b border-neutral-100">
+              <h3 className="text-sm font-bold text-indigo-black">입고 검수</h3>
+              <p className="text-xs text-neutral-400 mt-0.5">실제로 받은 수량을 확인하세요. 주문과 다른 품목만 고치면 됩니다.</p>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1 space-y-2">
+              {receiveItems.map((r, idx) => (
+                <div key={r.id} className="flex items-center gap-2">
+                  <span className="flex-1 text-sm truncate">{r.name}</span>
+                  <span className="text-xs text-neutral-400 shrink-0">주문 {r.ordered}</span>
+                  <input type="number" min={0} value={r.received}
+                    onChange={(e) => { const v = Math.max(0, parseInt(e.target.value) || 0); setReceiveItems((prev) => prev.map((it, i) => i === idx ? { ...it, received: v } : it)); }}
+                    className={`w-16 h-8 px-2 rounded border text-sm text-right focus:outline-none focus:ring-1 focus:ring-neutral-300 ${r.received !== r.ordered ? 'border-orange-400 bg-orange-50' : 'border-neutral-200'}`} />
+                  <span className="text-[10px] text-neutral-400 w-6 shrink-0">자루</span>
+                </div>
+              ))}
+            </div>
+            {(() => {
+              const newForeign = receiveItems.reduce((s, r) => s + r.received * r.unit_price, 0);
+              const newKrw = Math.round(newForeign * poRate);
+              const newTotal = poVatType === 'separate' ? newKrw + Math.round(newKrw * 0.1) : newKrw;
+              const changed = receiveItems.some((r) => r.received !== r.ordered);
+              const newBalance = po.balance_paid_at ? 0 : Math.max(0, newTotal - po.deposit_amount);
+              const overpaid = !po.balance_paid_at && po.deposit_amount > newTotal ? po.deposit_amount - newTotal : 0;
+              return (
+                <div className="px-4 py-3 border-t border-neutral-100 text-xs space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">{changed ? '입고 기준 총액 (재계산)' : '총액'}</span>
+                    <span className="font-semibold">{formatKRW(newTotal)}{changed && newTotal !== po.total_amount && <span className="text-orange-600 ml-1">({newTotal < po.total_amount ? '−' : '+'}{formatKRW(Math.abs(newTotal - po.total_amount))})</span>}</span>
+                  </div>
+                  <div className="flex justify-between"><span className="text-neutral-500">선납</span><span className="text-blue-600">{formatKRW(po.deposit_amount)}</span></div>
+                  <div className="flex justify-between"><span className="text-neutral-500">잔금</span><span className={po.balance_paid_at ? 'text-green-600' : newBalance > 0 ? 'text-red-500' : 'text-green-600'}>{po.balance_paid_at ? '지불완료 ✓' : formatKRW(newBalance)}</span></div>
+                  {overpaid > 0 && <p className="text-[11px] text-amber-600">⚠ 선납이 입고 기준 총액보다 {formatKRW(overpaid)} 많습니다 — 환불 또는 다음 발주 이월 검토</p>}
+                  <p className="text-[10px] text-neutral-400 pt-1">확인 시 재고가 입고 수량만큼 늘어나고(아임웹 동기화 포함){po.balance_paid_at ? ', 잔금 이미 지불 → 잔금완료로' : ''} 입고완료 처리됩니다. 주문 수량 기록은 그대로 보존됩니다.</p>
+                </div>
+              );
+            })()}
+            <div className="p-4 border-t border-neutral-100 flex gap-2">
+              <button onClick={() => { if (!receiving) setShowReceive(false); }} disabled={receiving}
+                className="flex-1 py-2 rounded-lg bg-neutral-100 text-neutral-600 text-sm font-semibold hover:bg-neutral-200 disabled:opacity-50">취소</button>
+              <button disabled={receiving} onClick={async () => {
+                setReceiving(true);
+                try {
+                  await updatePO.mutateAsync({ id: purchaseId, status: 'received', received_items: receiveItems.map((r) => ({ id: r.id, received_quantity: r.received })) });
+                  queryClient.invalidateQueries({ queryKey: ['purchase-order', purchaseId] });
+                  setShowReceive(false);
+                } catch (err) { toast.error(String(err)); }
+                finally { setReceiving(false); }
+              }} className="flex-1 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-50">{receiving ? '처리 중...' : '입고 확인'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

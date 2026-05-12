@@ -917,7 +917,8 @@ export interface Database {
           product_id: string | null;
           product_name: string;
           sku: string | null;
-          quantity: number;
+          quantity: number;            // 주문 수량 (발주 기록 — 입고 시에도 덮어쓰지 않음)
+          received_quantity: number | null;  // 081: 입고검수 실수령 수량. NULL = 입고 전
           unit_price: number;
           total_price: number;
         };
@@ -934,6 +935,7 @@ export interface Database {
           product_name?: string;
           sku?: string | null;
           quantity?: number;
+          received_quantity?: number | null;
           unit_price?: number;
           total_price?: number;
         };
