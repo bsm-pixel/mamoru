@@ -136,50 +136,80 @@ export default function ReportsPage() {
 
             {/* 요약 카드 4개 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* 매출 */}
+              {/* 매출 — 2단계 3분할: 제품(B2C+B2B) + 복원수리(접수+판매RS+납품RS) */}
               <Card>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
                     <TrendingUp size={18} className="text-green-600" />
                   </div>
                   <h3 className="text-sm font-bold text-indigo-black">
-                    {revenueTab === 'all' ? '전체 매출' : revenueTab === 'repair' ? '복원수리 매출' : '상품 매출'}
+                    {revenueTab === 'all' ? '전체 매출' : revenueTab === 'repair' ? '복원수리 매출' : '제품 매출'}
                   </h3>
                 </div>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatKRW(
-                    revenueTab === 'all' ? (data.total_revenue || data.sales.total)
-                    : revenueTab === 'repair' ? (data.repair_sales?.total || 0)
-                    : data.sales.total
-                  )}
-                </p>
-                <div className="mt-2 space-y-1 text-xs text-neutral-500">
-                  {revenueTab !== 'repair' && (
+                {(() => {
+                  const ps = data.product_sales;
+                  const rep = data.repair_sales;
+                  const productTotal = ps?.total ?? data.sales.total;
+                  const repairTotal = rep?.total ?? 0;
+                  const big = revenueTab === 'all' ? (data.total_revenue ?? (productTotal + repairTotal))
+                    : revenueTab === 'repair' ? repairTotal
+                    : productTotal;
+                  return (
                     <>
-                      <div className="flex justify-between"><span>상품 판매</span><span>{data.sales.count}건 · {formatKRW(data.sales.total)}</span></div>
+                      <p className="text-2xl font-bold text-green-600">{formatKRW(big)}</p>
+                      <div className="mt-2 space-y-1 text-xs text-neutral-500">
+                        {revenueTab === 'all' && (
+                          <>
+                            <div className="flex justify-between font-medium text-neutral-600"><span>제품 매출</span><span>{formatKRW(productTotal)}</span></div>
+                            {ps && (
+                              <>
+                                <div className="flex justify-between pl-2"><span>· B2C</span><span>{formatKRW(ps.b2c)}</span></div>
+                                <div className="flex justify-between pl-2"><span>· B2B (납품 포함)</span><span>{formatKRW(ps.b2b)}</span></div>
+                              </>
+                            )}
+                            <div className="flex justify-between font-medium text-neutral-600 pt-1"><span>복원수리</span><span>{formatKRW(repairTotal)}</span></div>
+                            {rep && (
+                              <>
+                                <div className="flex justify-between pl-2"><span>· 접수시스템</span><span>{formatKRW(rep.a_intake)}</span></div>
+                                <div className="flex justify-between pl-2"><span>· 판매 RS</span><span>{formatKRW(rep.b_offline_rs)}</span></div>
+                                <div className="flex justify-between pl-2"><span>· 납품 RS</span><span>{formatKRW(rep.c_delivery_rs)}</span></div>
+                              </>
+                            )}
+                          </>
+                        )}
+                        {revenueTab === 'product' && (
+                          <>
+                            {ps ? (
+                              <>
+                                <div className="flex justify-between"><span>B2C (소매·온라인)</span><span>{ps.offline_count}건 · {formatKRW(ps.b2c)}</span></div>
+                                <div className="flex justify-between"><span>B2B (딜러·아카데미)</span><span>{formatKRW(ps.b2b_offline)}</span></div>
+                                <div className="flex justify-between"><span>B2B (납품)</span><span>{ps.delivery_count}건 · {formatKRW(ps.b2b_delivery)}</span></div>
+                              </>
+                            ) : (
+                              <div className="flex justify-between"><span>오프라인 판매</span><span>{data.sales.count}건 · {formatKRW(data.sales.total)}</span></div>
+                            )}
+                            <div className="flex justify-between pt-1 border-t border-neutral-100"><span>공급가액 <span className="text-neutral-300">(오프라인)</span></span><span>{formatKRW(data.sales.supply)}</span></div>
+                            <div className="flex justify-between"><span>부가세 <span className="text-neutral-300">(오프라인)</span></span><span>{formatKRW(data.sales.vat)}</span></div>
+                            <div className="flex justify-between"><span>할인</span><span>-{formatKRW(data.sales.discount)}</span></div>
+                          </>
+                        )}
+                        {revenueTab === 'repair' && rep && (
+                          <>
+                            <div className="flex justify-between"><span>접수시스템</span><span>{rep.a_count}건 · {formatKRW(rep.a_intake)}</span></div>
+                            <div className="flex justify-between"><span>판매 RS</span><span>{rep.b_count}건 · {formatKRW(rep.b_offline_rs)}</span></div>
+                            <div className="flex justify-between"><span>납품 RS</span><span>{rep.c_count}건 · {formatKRW(rep.c_delivery_rs)}</span></div>
+                            <div className="flex justify-between pt-1 border-t border-neutral-100"><span>수리비 <span className="text-neutral-300">(접수분)</span></span><span>{formatKRW(rep.service_cost_total)}</span></div>
+                            <div className="flex justify-between"><span>수거·배송비 <span className="text-neutral-300">(접수분)</span></span><span>{formatKRW(rep.shipping_fee_total)}</span></div>
+                          </>
+                        )}
+                      </div>
                     </>
-                  )}
-                  {revenueTab !== 'product' && data.repair_sales && (
-                    <div className="flex justify-between"><span>복원수리</span><span>{data.repair_sales.count}건 · {formatKRW(data.repair_sales.total)}</span></div>
-                  )}
-                  {revenueTab === 'repair' && data.repair_sales && (
-                    <>
-                      <div className="flex justify-between"><span>수리비</span><span>{formatKRW(data.repair_sales.service_cost_total)}</span></div>
-                      <div className="flex justify-between"><span>수거/배송비</span><span>{formatKRW(data.repair_sales.shipping_fee_total)}</span></div>
-                    </>
-                  )}
-                  {revenueTab !== 'repair' && (
-                    <>
-                      <div className="flex justify-between"><span>공급가액</span><span>{formatKRW(data.sales.supply)}</span></div>
-                      <div className="flex justify-between"><span>부가세</span><span>{formatKRW(data.sales.vat)}</span></div>
-                      <div className="flex justify-between"><span>할인</span><span>-{formatKRW(data.sales.discount)}</span></div>
-                    </>
-                  )}
-                </div>
-                {/* 결제방식별 */}
-                {Object.keys(data.sales.by_method).length > 0 && (
+                  );
+                })()}
+                {/* 결제방식별 — 제품/전체 탭 (오프라인 판매 기준) */}
+                {revenueTab !== 'repair' && Object.keys(data.sales.by_method).length > 0 && (
                   <div className="mt-3 pt-3 border-t border-neutral-100">
-                    <p className="text-[10px] text-neutral-400 mb-1">결제방식별</p>
+                    <p className="text-[10px] text-neutral-400 mb-1">결제방식별 <span className="text-neutral-300">(오프라인 판매)</span></p>
                     <div className="space-y-0.5">
                       {Object.entries(data.sales.by_method).map(([k, v]) => (
                         <div key={k} className="flex justify-between text-xs">

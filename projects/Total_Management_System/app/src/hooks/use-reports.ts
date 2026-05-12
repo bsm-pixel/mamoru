@@ -87,16 +87,36 @@ export interface ReceivableItem {
   outstanding: number;
 }
 
+/** 복원수리 매출 = A(접수 repairs) + B(판매시스템 RS) + C(납품 RS) */
 export interface RepairSalesSummary {
-  count: number;
+  total: number;            // A + B + C
+  a_intake: number;         // 접수시스템 (repairs, 입금 기준 실제 금액)
+  b_offline_rs: number;     // 판매시스템 RS (offline_sale_items category='RS')
+  c_delivery_rs: number;    // 납품 RS (delivery_items category='RS')
+  a_count: number;
+  b_count: number;
+  c_count: number;
+  bc_qty: number;           // B+C 자루 수
+  service_cost_total: number; // (A 기준)
+  shipping_fee_total: number; // (A 기준)
+  count: number;            // 전체 건수 (호환)
+}
+
+/** 제품 매출 = B2C(소매/온라인) + B2B(딜러/아카데미 + 납품) — RS 제외 */
+export interface ProductSalesSummary {
   total: number;
-  service_cost_total: number;
-  shipping_fee_total: number;
+  b2c: number;
+  b2b: number;
+  b2b_offline: number;
+  b2b_delivery: number;
+  offline_count: number;
+  delivery_count: number;
 }
 
 export interface ReportData {
   period: { from: string; to: string };
-  sales: SaleSummary;
+  sales: SaleSummary;             // 오프라인 판매 전체 (RS 포함 — 호환 "오프라인 판매 총액")
+  product_sales?: ProductSalesSummary;  // 제품 매출 (RS 제외, 납품 포함)
   repair_sales?: RepairSalesSummary;
   total_revenue?: number;
   purchases: PurchaseSummary;
