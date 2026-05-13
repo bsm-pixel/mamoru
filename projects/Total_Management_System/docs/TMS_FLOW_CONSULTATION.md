@@ -1,7 +1,10 @@
 # 상담관리 프로세스 흐름도
-> 최종 업데이트: 2026-05-03 — **수동 일정 확정 버튼 (079)** + 달력 관리(078) + 고객 자동 매칭(072)
+> 최종 업데이트: 2026-05-13 — 출장 "확정 알림톡" SMS 떨어짐 fix (변수 누락) + 수동 일정 확정 버튼 (079) + 달력 관리(078)
 
 ---
+
+## 2026-05-13 fix — 출장 확정 알림톡(`field_confirmed`)이 문자로 발송되던 버그
+`api/consultation/public/confirm/route.ts` (고객이 page_suggest.html 에서 시간 확정 시 호출)가 알림톡 발송 시 `address`(방문 주소)와 `change_request_link`(일정 변경 버튼 URL)를 안 보냄 → 솔라피가 빈 버튼 URL 등으로 알림톡 발송 거부 → 문자 대체발송. GAS→TMS 이식 시 누락된 변수. → confirm route 에서 `address_road/address_detail` 조회 + `change_request_link` 생성해서 `sendNotification` data 에 포함 (submit/suggest 라우트와 동일 패턴). DB·Make·솔라피 변경 없음.
 
 ## 2026-05-03 (079) — 수동 일정 확정 버튼 신설
 

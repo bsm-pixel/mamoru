@@ -3,6 +3,8 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 
+const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting'; // Make 시나리오가 https:// 추가
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -32,7 +34,7 @@ export async function GET(req: NextRequest) {
     // shortToken으로 조회
     const { data: list } = await dbAny
       .from('consultations')
-      .select('id, unique_id, name, phone, consultation_type, status, gas_raw')
+      .select('id, unique_id, name, phone, consultation_type, status, gas_raw, address_road, address_detail')
       .eq('status', 'suggested');
 
     const data = (list || []).find((c: { gas_raw?: { shortToken?: string } }) =>
@@ -57,8 +59,10 @@ export async function GET(req: NextRequest) {
       note: `고객 선택 확정: ${date} ${time}`,
     });
 
-    // 확정 알림톡
+    // 확정 알림톡 — 다른 출장 알림톡(submit/suggest)과 동일하게 address·change_request_link 포함해야 함
+    //   (이 두 변수가 빠지면 솔라피가 알림톡 발송 거부 → 문자 대체발송. 특히 change_request_link 는 "일정확인/변경" 버튼 URL)
     const phoneNorm = (data.phone || '').replace(/\D/g, '');
+    const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
     try {
       await sendNotification({
         template: 'field_confirmed',
@@ -71,6 +75,8 @@ export async function GET(req: NextRequest) {
           type: '출장 요청',
           date,
           time,
+          address,
+          change_request_link: `${GITHUB_PAGES}/page_change_request.html?uid=${data.unique_id}`,
         },
       });
     } catch { /* 알림 실패해도 확정은 완료 */ }
