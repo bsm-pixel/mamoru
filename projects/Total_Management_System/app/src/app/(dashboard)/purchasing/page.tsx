@@ -165,13 +165,15 @@ export default function PurchasingPage() {
 }
 
 function PORow({ po, isSelected, onClick }: { po: PurchaseOrder; isSelected: boolean; onClick: () => void }) {
+  // 입고 전이지만 잔금까지 다 냈으면 '선납완료' 대신 '결제완료' 로 (선납완료 뱃지가 잔금 남은 것처럼 보이는 오해 방지)
+  const paidEarly = !!po.balance_paid_at && (po.status === 'ordered' || po.status === 'deposit_paid');
   return (
     <div onClick={onClick} className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition ${isSelected ? 'bg-terracotta/5 border-l-2 border-l-terracotta' : ''}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-indigo-black truncate">{po.supplier_name}</span>
-          <Badge className={STATUS_COLOR[po.status] || STATUS_COLOR.draft}>
-            {STATUS_LABEL[po.status] || po.status}
+          <Badge className={paidEarly ? 'bg-emerald-100 text-emerald-700' : (STATUS_COLOR[po.status] || STATUS_COLOR.draft)}>
+            {paidEarly ? '결제완료' : (STATUS_LABEL[po.status] || po.status)}
           </Badge>
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
@@ -188,9 +190,11 @@ function PORow({ po, isSelected, onClick }: { po: PurchaseOrder; isSelected: boo
           ) : null;
         })()}
         <p className="text-sm font-bold">{formatKRW(po.total_amount)}</p>
-        {po.deposit_amount > 0 && po.status !== 'balance_paid' && (
+        {po.balance_paid_at && po.status !== 'balance_paid' ? (
+          <p className="text-xs text-emerald-600">잔금 지불완료 ✓</p>
+        ) : po.deposit_amount > 0 && po.status !== 'balance_paid' ? (
           <p className="text-xs text-neutral-500">선납 {formatKRW(po.deposit_amount)}</p>
-        )}
+        ) : null}
       </div>
     </div>
   );

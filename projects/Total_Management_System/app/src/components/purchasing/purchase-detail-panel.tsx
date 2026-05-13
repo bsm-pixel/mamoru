@@ -101,7 +101,11 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
               편집
             </Button>
           )}
-          <Badge className={STATUS_COLOR[po.status] || ''}>{STATUS_LABEL[po.status] || po.status}</Badge>
+          {(() => {
+            // 입고 전이지만 잔금까지 다 냈으면 '선납완료' 대신 '결제완료' 로
+            const paidEarly = !!po.balance_paid_at && (po.status === 'ordered' || po.status === 'deposit_paid');
+            return <Badge className={paidEarly ? 'bg-emerald-100 text-emerald-700' : (STATUS_COLOR[po.status] || '')}>{paidEarly ? '결제완료' : (STATUS_LABEL[po.status] || po.status)}</Badge>;
+          })()}
         </div>
       </div>
 
