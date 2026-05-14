@@ -1,7 +1,21 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-05-14 — 출장 상담 알림톡 흐름 전반 정상화 (확정·변경·취소 변수 누락 + 일정변경 페이지 404 + 수동변경 분기 + 라벨 동적화) — 전부 배포 완료 ✅
+> 최종 수정: 2026-05-14 — **자체 도메인 전환** (`page.mamoru.kr` + `mamoru.kr` 아임웹). 코드·배포 완료 / 사장님 마무리 5단계 잔여
+
+---
+
+## ✅ 완료 (05-14): 자체 도메인 전환 — 커밋 `749c0af`
+
+GitHub Pages (`bsm-pixel.github.io/mamoru/...`) → **`page.mamoru.kr`**, 아임웹 쇼핑몰 (`mamoruscissors63682.imweb.me`) → **`mamoru.kr` apex**. TMS Vercel 도메인은 영구 유지(사장님 결정).
+- [x] WHOIS 분석으로 등록대행자=가비아 / 등록기관 실제 진입은 카페24 호스팅 어드민 확인. 도메인 갱신 22,000원 결제 (만료 2027-05-24)
+- [x] 메일 안전 흐름: NS 변경 **전에** 아임웹 DNS 어드민에 MX/SPF/google-site-verification/CNAME page 사전 입력 → 카페24 NS → 아임웹 NS(`bns1~4.hostcocoa.com`) 변경. Google Workspace 메일 끊김 0
+- [x] 알림톡 호환: 옛 `*.github.io` URL 은 GitHub Pages custom domain 자동 redirect 로 계속 작동 → 이미 발송된 알림톡 영향 없음
+- [x] 코드 일괄 갱신: TMS 7개 + GAS + 아임웹 iframe 13개 + v10_trendy 2개 + 페이지 3개 아임웹 도메인 + 공통 preconnect 2개. TypeScript 0 에러, Vercel/GitHub Pages 배포 success
+- [x] `type` 표준 4인 회의 결정: `consult / repair / purchase` (사장님 솔라피 콘솔의 `type=as` 는 재검수 사이클에 `type=repair` 로 통일)
+- [x] 메모리 카탈로그 신규 작성: `memory/reference_solapi_templates.md` — 26종 템플릿 trigger/변수/링크/코드 위치 전수
+- [x] 문서 6개 도메인 갱신: PAGES_INDEX, TMS_SYSTEM_ARCHITECTURE, SOLAPI_TEMPLATES_ORDERS, FLOW_change_request, figma_master_spec, figma_tokens_usage
+- 사장님 마무리 5단계 (출근 후 15~20분): `DOMAIN_MIGRATION_NEXT_STEPS.md` 참조 — 아임웹 SSL 확인 / 대표 도메인 전환 / 카페24 쇼핑몰 연결 해제 / 솔라피 후기 URL 2개 갱신 + 재검수
 
 ---
 

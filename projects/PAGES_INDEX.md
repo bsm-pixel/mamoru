@@ -1,6 +1,6 @@
 # 단독 페이지 인덱스 (GitHub Pages)
-> 최종 업데이트: 2026-03-03
-> 베이스 URL: `https://bsm-pixel.github.io/mamoru/`
+> 최종 업데이트: 2026-05-14 — 자체 도메인 전환 (`page.mamoru.kr`)
+> 베이스 URL: `https://page.mamoru.kr/` (옛 `bsm-pixel.github.io/mamoru/` 는 GitHub Pages 자동 redirect 로 호환 유지)
 
 ---
 
@@ -39,24 +39,24 @@
 
 ```
 # 고객 대면 (단독)
-https://bsm-pixel.github.io/mamoru/projects/consulting/page_suggest.html?t={token}
-https://bsm-pixel.github.io/mamoru/projects/consulting/page_change_request.html?uid={unique_id}
-https://bsm-pixel.github.io/mamoru/projects/consulting/page_result.html?title={제목}&msg={메시지}
-https://bsm-pixel.github.io/mamoru/projects/consulting/page_dealer_confirm.html
-https://bsm-pixel.github.io/mamoru/projects/as/page_form.html
-https://bsm-pixel.github.io/mamoru/projects/as/page_as_guide.html
-https://bsm-pixel.github.io/mamoru/projects/as/page_as_report.html?uid={as_id}
-https://bsm-pixel.github.io/mamoru/projects/reviews/page_review.html?uid={id}&type={type}
-https://bsm-pixel.github.io/mamoru/projects/brand/page_intro.html
+https://page.mamoru.kr/projects/consulting/page_suggest.html?t={token}
+https://page.mamoru.kr/projects/consulting/page_change_request.html?uid={unique_id}
+https://page.mamoru.kr/projects/consulting/page_result.html?title={제목}&msg={메시지}
+https://page.mamoru.kr/projects/consulting/page_dealer_confirm.html
+https://page.mamoru.kr/projects/as/page_form.html
+https://page.mamoru.kr/projects/as/page_as_guide.html
+https://page.mamoru.kr/projects/as/page_as_report.html?uid={as_id}
+https://page.mamoru.kr/projects/reviews/page_review.html?uid={id}&type={type}
+https://page.mamoru.kr/projects/brand/page_intro.html
 
 # 아임웹 iframe (직접 접근은 비정상)
-https://bsm-pixel.github.io/mamoru/projects/main/page_main.html
-https://bsm-pixel.github.io/mamoru/projects/consulting/page_guide.html
-https://bsm-pixel.github.io/mamoru/projects/consulting/page_diag.html
-https://bsm-pixel.github.io/mamoru/projects/consulting/page_form.html
-https://bsm-pixel.github.io/mamoru/projects/consulting/page_recommend.html
-https://bsm-pixel.github.io/mamoru/projects/as/page_guide.html
-https://bsm-pixel.github.io/mamoru/projects/reviews/page_reviews.html
+https://page.mamoru.kr/projects/main/page_main.html
+https://page.mamoru.kr/projects/consulting/page_guide.html
+https://page.mamoru.kr/projects/consulting/page_diag.html
+https://page.mamoru.kr/projects/consulting/page_form.html
+https://page.mamoru.kr/projects/consulting/page_recommend.html
+https://page.mamoru.kr/projects/as/page_guide.html
+https://page.mamoru.kr/projects/reviews/page_reviews.html
 ```
 
 ---
@@ -65,5 +65,5 @@ https://bsm-pixel.github.io/mamoru/projects/reviews/page_reviews.html
 
 - **GitHub Pages 배포**: `git push` → 자동 반영 (별도 빌드 없음)
 - **아임웹 iframe**: `initIframeComm()` — ResizeObserver 우선, setInterval fallback
-- **알림톡 링크**: GAS `GITHUB_PAGES_CONSULT` 변수에 프로토콜 미포함 (`bsm-pixel.github.io/mamoru/projects/consulting`)
+- **알림톡 링크**: GAS `GITHUB_PAGES_CONSULT` 변수에 프로토콜 미포함 (`page.mamoru.kr/projects/consulting`)
   → 솔라피 템플릿 WL 버튼에서 `https://#{change_request_link}` 형태로 사용

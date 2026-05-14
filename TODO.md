@@ -1,13 +1,44 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-14 — 출장 상담 알림톡 흐름 전반 정상화 (확정·변경·취소·일정변경요청) + 수동 일정 확정/변경 라벨 동적화 — 배포 완료 ✅
+> 최종 수정: 2026-05-14 — **자체 도메인 전환** (`page.mamoru.kr` GitHub Pages + `mamoru.kr` 아임웹 apex). 코드·배포 완료, 사장님 마무리 5단계 잔여
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
 
-## 🎯 다음 세션 — 아임웹 도메인 전환 작업 (2026-05-14 예정)
+## 🌅 사장님 마무리 5단계 (출근 후 ~15~20분)
 
-(상세 요건은 새 세션에서 사장님이 브리프)
+상세: [DOMAIN_MIGRATION_NEXT_STEPS.md](DOMAIN_MIGRATION_NEXT_STEPS.md)
+
+- [ ] **1.** `https://mamoru.kr` 접속 → 아임웹 쇼핑몰 정상 표시 확인 (1분)
+- [ ] **2.** 아임웹 어드민 → 도메인·SSL 화면에서 SSL 발급 상태 확인, 미발급 시 신청 (1분)
+- [ ] **3.** 아임웹 어드민 → 대표 도메인 라디오를 `mamoru.kr` 로 전환 + 저장 (3분)
+- [ ] **4.** 카페24 쇼핑몰 어드민 → mamoru.kr 설정 → **연결 해제** 클릭 (2분, 카페24 쇼핑몰 격리)
+- [ ] **5.** 솔라피 콘솔 → 후기 템플릿 2개 URL 갱신 + 재검수 (5분 + 검수 1~3 영업일)
+  - `purchase_review_request` : `page.mamoru.kr` 으로 도메인만 교체
+  - `as_review_request` : `page.mamoru.kr` + `type=as` → `type=repair` 표준 통일
+
+검증 체크리스트 + 위험 대응표는 안내문 참조.
+
+---
+
+## ✅ 완료 — 자체 도메인 전환 코드/배포 (2026-05-14, 커밋 `749c0af`)
+
+GitHub Pages → `page.mamoru.kr`, 아임웹 쇼핑몰 → `mamoru.kr` apex 자체 도메인 전환. TMS는 `app-eta-sandy-75.vercel.app` 영구 유지.
+- [x] 도메인 등록기관 확인: WHOIS = 가비아(카페24 등록대행). NS 변경 권한은 카페24 호스팅 어드민에서 진행
+- [x] 도메인 갱신 결제 22,000원/1년 (만료일 2027-05-24 로 연장)
+- [x] 아임웹 자체 도메인 DNS 사전 입력 (MX SMTP.GOOGLE.COM / SPF / google-site-verification / CNAME page → bsm-pixel.github.io)
+- [x] 카페24 호스팅 어드민에서 NS 4개를 아임웹 NS(`bns1~4.hostcocoa.com`)로 변경 → 1시간 내 4곳 중 3곳 전파 완료
+- [x] GitHub Pages CNAME 파일 (`page.mamoru.kr`)
+- [x] TMS 7개 파일 도메인 상수 갱신 (5 routes + hook + lib)
+- [x] GAS Code.gs `GITHUB_PAGES_BASE/CONSULT` 갱신
+- [x] 아임웹 코드위젯 iframe 13개 (`src=` + postMessage origin)
+- [x] 상품 상세 v10_trendy.html 2개 (master + brand/iframe_test 백업)
+- [x] 페이지 3개 아임웹 도메인 교체 (`page_form`, `page_diag`, `page_change_request`)
+- [x] 공통 preconnect 2개
+- [x] TypeScript 컴파일 0 에러, Vercel 자동 빌드·GitHub Pages 배포 success
+- [x] `reference_solapi_templates.md` 카탈로그 생성 + 26종 템플릿 trigger/변수/코드 위치 전수 기록
+- [x] PAGES_INDEX·TMS_SYSTEM_ARCHITECTURE·SOLAPI_TEMPLATES_ORDERS·FLOW_change_request·figma_master_spec·figma_tokens_usage 문서 6개 도메인 갱신
+- 잔여: 솔라피 콘솔 후기 URL 2개 갱신 + 재검수 + 아임웹 대표 도메인 전환 + 카페24 쇼핑몰 연결 해제 → 위 5단계 안내문
 
 ---
 

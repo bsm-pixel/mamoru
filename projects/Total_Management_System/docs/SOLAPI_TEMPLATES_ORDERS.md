@@ -93,7 +93,7 @@
 
 | 버튼 | 타입 | URL |
 |------|------|-----|
-| 후기 남기기 | WL | `https://bsm-pixel.github.io/mamoru/projects/reviews/page_review.html?uid=#{order_uid}&type=purchase&name=#{name}` |
+| 후기 남기기 | WL | `https://page.mamoru.kr/projects/reviews/page_review.html?uid=#{order_uid}&type=purchase&name=#{name}` |
 | 1:1 문의 | WL | `https://mamoru.kr/counsel` |
 
 **변수:**
@@ -182,7 +182,7 @@
 현재 `https://mamoru.kr/counsel`로 기재했으나, 실제 상담 채널이 다르면 수정 필요:
 - 카카오 채널 채팅: `https://pf.kakao.com/XXXX/chat`
 - 아임웹 상담 페이지: 아임웹 URL
-- GitHub Pages 상담 접수: `https://bsm-pixel.github.io/mamoru/projects/consulting/page_counsel.html`
+- GitHub Pages 상담 접수: `https://page.mamoru.kr/projects/consulting/page_counsel.html`
 
 ---
 

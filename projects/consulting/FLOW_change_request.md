@@ -38,7 +38,7 @@
       │
 5. 솔라피: 확정 알림톡 + "일정확인/변경" WL 버튼
       │  └─ 버튼 URL: https://#{change_request_link}
-      │     = https://bsm-pixel.github.io/mamoru/projects/consulting/page_change_request.html?uid=UID
+      │     = https://page.mamoru.kr/projects/consulting/page_change_request.html?uid=UID
       │
 6. 고객: 카톡 대화방에서 버튼 상시 접근 가능
 ```

@@ -65,7 +65,7 @@
 1. Figma Plugin **`html.to.design`** 설치
 2. URL 입력:
    ```
-   https://bsm-pixel.github.io/mamoru/projects/products/master/v10_trendy.html
+   https://page.mamoru.kr/projects/products/master/v10_trendy.html
    ```
 3. Import → 디자인이 캔버스에 자동 변환됨
 

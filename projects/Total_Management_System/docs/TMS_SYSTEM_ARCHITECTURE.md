@@ -453,7 +453,7 @@ Vercel API → sendAdminEmail() → Gmail SMTP → 관리자 이메일
 
 ## §12. 고객 페이지 (GitHub Pages)
 
-**Base URL**: `https://bsm-pixel.github.io/mamoru/`
+**Base URL**: `https://page.mamoru.kr/`
 
 | 파일 | 용도 | 호출 API |
 |------|------|---------|

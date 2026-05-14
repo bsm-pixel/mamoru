@@ -189,7 +189,7 @@ Figma Local Variables 또는 메모로 관리:
 1. Figma Plugin **`html.to.design`** 설치 (Figma 우측 상단 → Plugins → Browse → 검색)
 2. 플러그인 실행 → URL 입력:
    ```
-   https://bsm-pixel.github.io/mamoru/projects/products/master/v10_trendy.html
+   https://page.mamoru.kr/projects/products/master/v10_trendy.html
    ```
 3. Import → 자동 변환 → 디자인 정리 (간격/Auto Layout 매뉴얼 정돈 필요)
 
