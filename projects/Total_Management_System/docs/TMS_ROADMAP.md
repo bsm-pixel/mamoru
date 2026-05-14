@@ -1,9 +1,18 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-05-13 — **매출 3분할 + 매입 흐름 보강 (잔금 선지불 / 입고검수 / 입고 전 발주 편집) 전부 배포·SQL(078·079·080·081) 실행 완료** ✅
+> 최종 수정: 2026-05-14 — 출장 상담 알림톡 흐름 전반 정상화 (확정·변경·취소 변수 누락 + 일정변경 페이지 404 + 수동변경 분기 + 라벨 동적화) — 전부 배포 완료 ✅
 
 ---
+
+## ✅ 완료 (05-13~14): 출장 상담 알림톡 흐름 fix 묶음 (커밋 209ef65~4a9cd78)
+GAS→TMS 이식 시 출장 흐름 알림톡 변수가 곳곳에서 빠져 있어 일괄 복구. DB·Make·솔라피 변경 없음 (TMS 코드만).
+- [x] 출장 확정(`field_confirmed`) 알림톡이 SMS로 떨어지던 버그 — `address`·`change_request_link` 누락 복구 (`209ef65`)
+- [x] 수동 일정 변경 — 확정 후 시간 변경 시 `field_rescheduled` 알림톡 발송 분기 추가 + data 페이로드에 `visit_date`/`visit_time` 추가 + 버튼/모달 라벨 동적화 (확정 후엔 "수동 일정 변경") (`a215a09`)
+- [x] notify route — defensive `visit_date`/`visit_time` 추가 (`useRescheduleConsultation` 훅 경로도 호환) (`a215a09`)
+- [x] 일정변경 요청 페이지 404 — `resched` route 가 `uid` 도 받게 + page_change_request.html 가 `?uid=` 로 호출 (`f083f43`)
+- [x] 출장 취소(`field_cancelled`) 알림톡 본문에 `#{visit_date}` 등 원본 변수 그대로 발송되던 버그 — `visit_date`/`visit_time`/`address` 추가 (`4a9cd78`)
+- 흐름도(TMS_FLOW_CONSULTATION) + 매뉴얼(MANUAL_CONSULTATION) 갱신.
 
 ## ✅ 완료 (05-13): 매입(발주→입고) 흐름 보강 — 배포·SQL(081) 완료 (커밋 bc03567~6056a63)
 가위는 제작품이라 주문≠입고가 흔하고, 업체가 발송 시작 후 잔금만 먼저 보내는 경우도 많음 → 결제/입고 독립 + 실수령 보정 흐름 추가.

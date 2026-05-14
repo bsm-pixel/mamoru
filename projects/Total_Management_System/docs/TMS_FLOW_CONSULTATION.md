@@ -1,10 +1,40 @@
 # 상담관리 프로세스 흐름도
-> 최종 업데이트: 2026-05-13 — 출장 "확정 알림톡" SMS 떨어짐 fix (변수 누락) + 수동 일정 확정 버튼 (079) + 달력 관리(078)
+> 최종 업데이트: 2026-05-14 — 출장 상담 알림톡 흐름 전반 정상화 (확정·변경·취소 변수 누락 + 일정변경 페이지 404 + 수동변경 분기 + 라벨 동적화)
 
 ---
 
-## 2026-05-13 fix — 출장 확정 알림톡(`field_confirmed`)이 문자로 발송되던 버그
-`api/consultation/public/confirm/route.ts` (고객이 page_suggest.html 에서 시간 확정 시 호출)가 알림톡 발송 시 `address`(방문 주소)와 `change_request_link`(일정 변경 버튼 URL)를 안 보냄 → 솔라피가 빈 버튼 URL 등으로 알림톡 발송 거부 → 문자 대체발송. GAS→TMS 이식 시 누락된 변수. → confirm route 에서 `address_road/address_detail` 조회 + `change_request_link` 생성해서 `sendNotification` data 에 포함 (submit/suggest 라우트와 동일 패턴). DB·Make·솔라피 변경 없음.
+## 2026-05-13~14 — 출장 상담 알림톡 흐름 fix 묶음 (GAS→TMS 이식 누락 일괄 복구)
+
+GAS→TMS 이식 시 알림톡 변수가 곳곳에서 빠져 있어 출장 흐름의 알림이 깨져 있던 것을 묶어서 fix. 5건 모두 DB·Make·솔라피 변경 없음 (TMS 코드만).
+
+### 1) 출장 확정 알림톡(`field_confirmed`)이 문자(SMS)로 발송되던 버그 — `209ef65`
+`api/consultation/public/confirm/route.ts` (고객이 page_suggest.html 에서 시간 확정 시 호출)가 알림톡 발송 시 `address`(방문 주소)와 `change_request_link`(일정 변경 버튼 URL)를 안 보냄 → 솔라피가 빈 버튼 URL 등으로 알림톡 거부 → SMS 대체발송. → `.select` 에 `address_road/address_detail` 추가, `change_request_link` 생성해서 `sendNotification` data 에 포함.
+
+### 2) 수동 일정 변경 시 알림톡 미발송 + 버튼/모달 라벨 동적화 — `a215a09`
+**증상**: 이미 `confirmed` 상태인 출장 상담에서 "수동 일정 확정"으로 시간만 바꾸면 `field_rescheduled` 알림톡이 발송되지 않음 (Make 웹훅 자체 미호출).
+**원인**: `api/consultation/[id]` PATCH 핸들러의 알림톡 분기가 `statusChanged` 만 봄. 일정만 변경(status 동일 + visit_date/time 다름) 케이스 누락.
+**수정**:
+- 알림톡 분기에 `else if (scheduleChanged && current.status === 'confirmed') → field_request 면 field_rescheduled, 그 외 rescheduled` 추가
+- data 페이로드에 `visit_date`/`visit_time` 키 추가 (솔라피 `field_rescheduled` 템플릿이 `#{visit_date}`/`#{visit_time}` 사용; 기존 `date`/`time` 도 유지 — 다른 템플릿 호환)
+- 상세 패널 버튼: `c.status === 'confirmed'` 면 "수동 일정 **변경**", 아니면 "수동 일정 **확정**"
+- 모달 제목: `isAlreadyConfirmed` 면 "수동 일정 **변경**" / 아니면 "수동 일정 **확정**"
+
+### 3) `notify` route — `visit_date`/`visit_time` 추가 (defensive) — `a215a09`
+`useRescheduleConsultation` 훅이 호출하는 경로. data 페이로드에 `visit_date`/`visit_time` 추가해 `field_rescheduled` 등 `#{visit_date}` 사용 템플릿 호환.
+
+### 4) 일정변경 요청 페이지 "예약 정보를 찾을 수 없습니다" 404 — `f083f43`
+**증상**: `field_rescheduled` 알림톡의 "일정확인/변경" 버튼 → page_change_request.html → "일정 변경" + 요청사항 입력 → 요청하기 → **404**. 취소(`/cancel?uid=`)는 정상.
+**원인**: page_change_request.html `:359` 가 일정변경 요청 시 `/resched?t={uid}` 로 호출했는데, `resched` route 는 `t` 를 shortToken(page_suggest 흐름용)으로만 처리 → `gas_raw.shortToken === <uid>` 매칭 실패 → 404.
+**수정**:
+- `api/consultation/public/resched/route.ts`: `t`(shortToken) **또는** `uid`(unique_id) 둘 다 받게 분기. `uid` 우선 — cancel route 와 동일 `WHERE unique_id = uid AND status IN (suggested, confirmed)` 패턴
+- `projects/consulting/page_change_request.html:359`: `?t=` → `?uid=` (의미상 정확)
+
+### 5) 출장 취소 알림톡(`field_cancelled`) 본문에 `#{visit_date}` 등 원본 변수 그대로 발송 — `4a9cd78`
+**원인**: `api/consultation/public/cancel/route.ts` 가 `.select()` 에서 visit_date/time/주소 안 가져오고 `sendNotification` data 에도 안 보냄 → 솔라피가 변수 못 채우고 원본 `#{...}` 그대로 발송. 관리자 측 취소(`[id]` PATCH)는 이전에 이미 수정돼 정상이었음 — 고객 측 취소(public/cancel)만 깨져 있었음.
+**수정**: `.select()` 에 visit_date/visit_time/address_road/address_detail 추가, data 에 `visit_date`/`visit_time`/`date`/`time`(defensive)/`address` 포함.
+
+### 결과 — 출장 상담 알림톡 흐름 전반 정상화
+접수(`request`) → 시간 제안(`suggest`) → 확정(`field_confirmed`) → 수동 변경(`field_rescheduled`) → 고객 일정변경/취소 요청(page_change_request.html → `resched`/`cancel`) → 변경된 일정(`field_rescheduled`) 또는 취소 안내(`field_cancelled`) — 전 구간에서 변수가 올바르게 채워져 발송됨.
 
 ## 2026-05-03 (079) — 수동 일정 확정 버튼 신설
 
