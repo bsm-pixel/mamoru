@@ -192,11 +192,11 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
               시간 제안
             </Button>
           )}
-          {/* 079: 수동 일정 확정 — DM/유선 협의 후 즉시 확정 (매장/출장 한정, 톡상담 제외) */}
+          {/* 079: 수동 일정 확정 — DM/유선 협의 후 즉시 확정 (매장/출장 한정, 톡상담 제외). 이미 확정된 건이면 라벨은 "변경" */}
           {c.consultation_type !== 'talk_consult' && c.status !== 'in_progress' && (
             <Button size="sm" variant="secondary" className="w-full" onClick={() => setManualConfirmOpen(true)} disabled={updateStatus.isPending}>
               <CheckCircle size={14} />
-              수동 일정 확정
+              {c.status === 'confirmed' ? '수동 일정 변경' : '수동 일정 확정'}
             </Button>
           )}
           {/* 확정 → 완료 */}

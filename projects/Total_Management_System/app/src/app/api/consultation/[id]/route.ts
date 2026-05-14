@@ -155,12 +155,19 @@ export async function PATCH(
         // Google Calendar 동기화 (await로 완료 보장, 내부에서 예외 모두 캐치)
         sideEffects.push(syncConsultationToCalendar(id));
 
-        // 자동 알림톡 발송 — 상태 변경일 때만 (후기 요청은 더 이상 자동 발송 안 함, sale 단일 진입점)
-        const template = statusChanged ? getAutoNotifyTemplate(newStatus, data.consultation_type) : null;
+        // 자동 알림톡 발송 — 상태 변경일 때 또는 (확정 상태에서 일정만 변경됐을 때) 발송
+        //   확정 상태에서 일정만 바뀐 경우(수동 일정 변경) → field_rescheduled/rescheduled 로 분기 — Make `출장_일정변경(관리자변경)` 모듈로 라우팅됨
+        let template: NotifyTemplate | null = null;
+        if (statusChanged) {
+          template = getAutoNotifyTemplate(newStatus, data.consultation_type);
+        } else if (scheduleChanged && current.status === 'confirmed') {
+          template = data.consultation_type === 'field_request' ? 'field_rescheduled' : 'rescheduled';
+        }
         if (template && data.phone) {
           const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
           const typeLabel = data.consultation_type === 'store_visit' ? '매장 방문'
             : data.consultation_type === 'field_request' ? '출장 요청' : '온라인상담';
+          const effectiveStatus = (newStatus || current.status || '').toString().toUpperCase();
           sideEffects.push(
             sendNotification({
               template,
@@ -169,12 +176,15 @@ export async function PATCH(
               data: {
                 // admin-create와 동일 필드 (카카오 알림톡 템플릿 변수 매칭 보장 — 누락 시 3109 SMS 대체 발송 사고)
                 id: data.unique_id,
-                status: newStatus.toUpperCase(),
+                status: effectiveStatus,
                 name: data.name,
                 phone: data.phone,
                 type: typeLabel,
                 date: data.visit_date || '',
                 time: data.visit_time || '',
+                // field_rescheduled 등 #{visit_date}/#{visit_time} 변수를 쓰는 템플릿 호환 (date/time 도 함께 보냄)
+                visit_date: data.visit_date || '',
+                visit_time: data.visit_time || '',
                 address,
                 days: '',
                 memo: data.memo || '',

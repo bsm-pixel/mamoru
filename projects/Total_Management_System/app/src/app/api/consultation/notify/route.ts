@@ -47,6 +47,9 @@ export async function POST(req: NextRequest) {
             : '온라인상담',
         date: c.visit_date || '',
         time: c.visit_time || '',
+        // field_rescheduled 등 #{visit_date}/#{visit_time} 변수를 쓰는 템플릿 호환 (date/time 도 함께 보냄)
+        visit_date: c.visit_date || '',
+        visit_time: c.visit_time || '',
         address,
         ...extraData,
       },

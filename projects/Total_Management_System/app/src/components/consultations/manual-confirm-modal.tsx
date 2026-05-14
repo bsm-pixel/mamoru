@@ -98,7 +98,7 @@ export function ManualConfirmModal({
   };
 
   return (
-    <Modal open={open} onClose={handleClose} title="수동 일정 확정">
+    <Modal open={open} onClose={handleClose} title={isAlreadyConfirmed ? '수동 일정 변경' : '수동 일정 확정'}>
       <div className="space-y-4">
         {/* 안내 */}
         <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 text-xs text-blue-700">
