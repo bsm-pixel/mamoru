@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await dbAny
       .from('consultations')
-      .select('id, unique_id, name, phone, consultation_type, status')
+      .select('id, unique_id, name, phone, consultation_type, status, visit_date, visit_time, address_road, address_detail')
       .eq('unique_id', uid)
       .single();
 
@@ -53,9 +53,10 @@ export async function GET(req: NextRequest) {
       note: reason ? `고객 취소: ${reason}` : '고객 취소',
     });
 
-    // 취소 알림톡
+    // 취소 알림톡 — 본문에 #{visit_date}/#{visit_time}/#{address} 변수가 있으므로 모두 채워서 전송 (누락 시 알림톡에 원본 #{...} 그대로 발송)
     const phoneNorm = (data.phone || '').replace(/\D/g, '');
     const template = data.consultation_type === 'field_request' ? 'field_cancelled' : 'cancelled';
+    const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
     try {
       await sendNotification({
         template,
@@ -66,6 +67,11 @@ export async function GET(req: NextRequest) {
           name: data.name,
           phone: phoneNorm,
           type: data.consultation_type === 'store_visit' ? '매장 방문' : '출장 요청',
+          date: data.visit_date || '',
+          time: data.visit_time || '',
+          visit_date: data.visit_date || '',
+          visit_time: data.visit_time || '',
+          address,
         },
       });
     } catch { /* 알림 실패해도 취소는 완료 */ }
