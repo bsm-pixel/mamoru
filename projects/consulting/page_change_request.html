@@ -354,9 +354,10 @@
       btn.disabled = true;
       btn.textContent = '요청 중...';
 
+      // resched/cancel 둘 다 uid(unique_id) 기준으로 조회 — 일관성 (이전엔 resched 가 ?t= 로 보내져서 shortToken 매칭 실패 → 404 버그)
       var apiUrl = (selectedType === 'cancel')
         ? API_BASE + '/cancel?uid=' + encodeURIComponent(uid) + '&reason=' + encodeURIComponent(reason + (memo ? ' / ' + memo : ''))
-        : API_BASE + '/resched?t=' + encodeURIComponent(uid) + '&reason=' + encodeURIComponent(reason + (memo ? ' / ' + memo : '') + (hopeDate ? ' / 희망일: ' + hopeDate : ''));
+        : API_BASE + '/resched?uid=' + encodeURIComponent(uid) + '&reason=' + encodeURIComponent(reason + (memo ? ' / ' + memo : '') + (hopeDate ? ' / 희망일: ' + hopeDate : ''));
 
       fetch(apiUrl)
         .then(function(r) { return r.json(); })

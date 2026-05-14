@@ -14,30 +14,42 @@ export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-/** GET /api/consultation/public/resched?t=xxx&reason=yyy
- *  고객이 다른 일정 요청 (page_suggest.html에서 사용, GAS markResched 대체) */
+/** GET /api/consultation/public/resched?t=xxx&reason=yyy  (page_suggest.html — shortToken 흐름)
+ *  또는 GET /api/consultation/public/resched?uid=xxx&reason=yyy  (page_change_request.html — unique_id 흐름)
+ *  고객이 다른 일정 요청 (GAS markResched 대체) */
 export async function GET(req: NextRequest) {
   try {
     const token = req.nextUrl.searchParams.get('t');
+    const uid = req.nextUrl.searchParams.get('uid');
     const reason = req.nextUrl.searchParams.get('reason') || '';
 
-    if (!token) {
-      return NextResponse.json({ ok: false, error: 'token 필수' }, { status: 400, headers: CORS_HEADERS });
+    if (!token && !uid) {
+      return NextResponse.json({ ok: false, error: 't 또는 uid 필수' }, { status: 400, headers: CORS_HEADERS });
     }
 
     const db = createServiceClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dbAny = db as any;
 
-    // shortToken으로 조회
-    const { data: list } = await dbAny
-      .from('consultations')
-      .select('id, unique_id, name, phone, consultation_type, status, memo, gas_raw')
-      .in('status', ['suggested', 'confirmed']);
-
-    const data = (list || []).find((c: { gas_raw?: { shortToken?: string } }) =>
-      c.gas_raw?.shortToken === token
-    );
+    // 식별자에 따라 조회 분기 — uid 우선(page_change_request.html), 없으면 shortToken(page_suggest.html)
+    let data: { id: string; unique_id: string; name: string; phone: string; consultation_type: string; status: string; memo: string | null; gas_raw?: { shortToken?: string } } | null = null;
+    if (uid) {
+      const res = await dbAny
+        .from('consultations')
+        .select('id, unique_id, name, phone, consultation_type, status, memo, gas_raw')
+        .eq('unique_id', uid)
+        .in('status', ['suggested', 'confirmed'])
+        .maybeSingle();
+      data = res.data || null;
+    } else if (token) {
+      const { data: list } = await dbAny
+        .from('consultations')
+        .select('id, unique_id, name, phone, consultation_type, status, memo, gas_raw')
+        .in('status', ['suggested', 'confirmed']);
+      data = (list || []).find((c: { gas_raw?: { shortToken?: string } }) =>
+        c.gas_raw?.shortToken === token
+      ) || null;
+    }
 
     if (!data) {
       return NextResponse.json({ ok: false, error: '예약 정보를 찾을 수 없습니다' }, { status: 404, headers: CORS_HEADERS });
