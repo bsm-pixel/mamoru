@@ -16,7 +16,7 @@
 <div id="mamoruReviewsWrap">
   <iframe
     id="mamoruReviewsFrame"
-    src="https://bsm-pixel.github.io/mamoru/projects/reviews/page_reviews.html"
+    src="https://page.mamoru.kr/projects/reviews/page_reviews.html"
     scrolling="no"
     frameborder="0"
     allowtransparency="true">
@@ -29,7 +29,7 @@
   var currentHeight = 0;
 
   window.addEventListener('message', function(e) {
-    if (e.origin !== 'https://bsm-pixel.github.io') return;
+    if (e.origin !== 'https://page.mamoru.kr') return;
 
     if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && typeof e.data.height === 'number') {
       var newHeight = Math.ceil(e.data.height);

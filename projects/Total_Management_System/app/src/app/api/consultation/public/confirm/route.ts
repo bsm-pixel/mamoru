@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 
-const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting'; // Make 시나리오가 https:// 추가
+const GITHUB_PAGES = 'page.mamoru.kr/projects/consulting'; // Make 시나리오가 https:// 추가
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',

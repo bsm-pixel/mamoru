@@ -467,7 +467,7 @@ export function useRescheduleConsultation() {
         const isField = consultationType === 'field_request';
         const template = isField ? 'field_rescheduled' : 'rescheduled';
         const changeLink = uniqueId
-          ? `bsm-pixel.github.io/mamoru/projects/consulting/page_change_request.html?uid=${uniqueId}`
+          ? `page.mamoru.kr/projects/consulting/page_change_request.html?uid=${uniqueId}`
           : '';
         await fetch('/api/consultation/notify', {
           method: 'POST',

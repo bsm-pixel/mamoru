@@ -6,7 +6,7 @@ import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 import { deleteCalendarEvent } from '@/lib/google/calendar-client';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
-const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting';
+const GITHUB_PAGES = 'page.mamoru.kr/projects/consulting';
 
 /** 상태→알림 템플릿 매핑 (consultation_type 기반 분기) */
 function getAutoNotifyTemplate(

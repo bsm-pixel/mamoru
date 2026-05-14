@@ -20,7 +20,7 @@ import { geocodeForConsultation } from '@/lib/kakao/geocode';
 import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
 import crypto from 'crypto';
 
-const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting';
+const GITHUB_PAGES = 'page.mamoru.kr/projects/consulting';
 
 export async function POST(req: NextRequest) {
   // 관리자 인증 필수

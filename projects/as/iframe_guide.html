@@ -58,7 +58,7 @@
 <div id="mamoruAsGuideWrap">
   <iframe
     id="mamoruAsGuideFrame"
-    src="https://bsm-pixel.github.io/mamoru/projects/as/page_guide.html"
+    src="https://page.mamoru.kr/projects/as/page_guide.html"
     scrolling="no"
     frameborder="0"
     allowtransparency="true">
@@ -76,7 +76,7 @@
   var currentHeight = 0;
 
   window.addEventListener('message', function(e) {
-    if (e.origin !== 'https://bsm-pixel.github.io') return;
+    if (e.origin !== 'https://page.mamoru.kr') return;
 
     // iframe 높이 조절
     if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && typeof e.data.height === 'number') {

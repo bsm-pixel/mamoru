@@ -5,7 +5,7 @@
 </style>
 <div id="mamoruLabelFirstWrap">
   <iframe id="mamoruLabelFirstFrame"
-    src="https://bsm-pixel.github.io/mamoru/projects/main/page_label_first.html"
+    src="https://page.mamoru.kr/projects/main/page_label_first.html"
     scrolling="no" frameborder="0" allowtransparency="true"></iframe>
 </div>
 <script>
@@ -13,7 +13,7 @@
   var iframe = document.getElementById('mamoruLabelFirstFrame');
   var currentHeight = 0;
   window.addEventListener('message', function(e) {
-    if (e.origin !== 'https://bsm-pixel.github.io') return;
+    if (e.origin !== 'https://page.mamoru.kr') return;
     if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && e.data.id === 'label-first' && typeof e.data.height === 'number') {
       var h = Math.ceil(e.data.height);
       if (h !== currentHeight && h > 0) { currentHeight = h; iframe.style.height = h + 'px'; }

@@ -6,8 +6,8 @@
   ========================================================= -->
 
 <!-- MAMORU: 사전 연결 (GitHub Pages + CDN + Google Fonts) -->
-<link rel="preconnect" href="https://bsm-pixel.github.io">
-<link rel="dns-prefetch" href="https://bsm-pixel.github.io">
+<link rel="preconnect" href="https://page.mamoru.kr">
+<link rel="dns-prefetch" href="https://page.mamoru.kr">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://fonts.googleapis.com">

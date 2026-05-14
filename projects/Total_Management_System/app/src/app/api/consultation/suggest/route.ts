@@ -6,7 +6,7 @@ import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 import { errMsg } from '@/lib/utils/err';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
-const GITHUB_PAGES = 'bsm-pixel.github.io/mamoru/projects/consulting'; // Make 시나리오가 https:// 추가
+const GITHUB_PAGES = 'page.mamoru.kr/projects/consulting'; // Make 시나리오가 https:// 추가
 
 /** POST /api/consultation/suggest — 시간 제안 (출장요청용) */
 export async function POST(req: NextRequest) {

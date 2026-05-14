@@ -29,7 +29,7 @@ export interface ReviewSubject {
   subtype?: string;
 }
 
-const REVIEW_FORM_BASE = 'https://bsm-pixel.github.io/mamoru/projects/reviews/page_review.html';
+const REVIEW_FORM_BASE = 'https://page.mamoru.kr/projects/reviews/page_review.html';
 
 /** 후기 요청 알림톡 발송 — 템플릿/URL/페이로드 통일된 단일 진입점 */
 export async function sendReviewRequestNotification(subject: ReviewSubject) {

@@ -5,10 +5,10 @@ const SHEET_NAME = '상담접수';
 const DEALER_SHEET_NAME = '딜러';
 const VERSION = 'v2.2.0-final';
 
-// GitHub Pages URL (index.html 이전용)
-const GITHUB_PAGES_BASE = 'https://bsm-pixel.github.io/mamoru/projects/01_consulting';
-// GitHub Pages — 고객 대면 페이지 (Suggest/Reschedule/DealerConfirm/Result)
-const GITHUB_PAGES_CONSULT = 'bsm-pixel.github.io/mamoru/projects/consulting';
+// GitHub Pages URL (index.html 이전용) — page.mamoru.kr 자체 도메인 (2026-05-14 전환)
+const GITHUB_PAGES_BASE = 'https://page.mamoru.kr/projects/01_consulting';
+// page.mamoru.kr — 고객 대면 페이지 (Suggest/Reschedule/DealerConfirm/Result)
+const GITHUB_PAGES_CONSULT = 'page.mamoru.kr/projects/consulting';
 
 const MAKE_WEBHOOK_URL = 'https://hook.eu2.make.com/x70jrebxr82odam3eu4oosuar9mm2fg5';
 const CAL_NAME = '마모루 방문예약';

@@ -17,7 +17,7 @@
 <div id="mamoruMainTopWrap">
   <iframe
     id="mamoruMainTopFrame"
-    src="https://bsm-pixel.github.io/mamoru/projects/main/page_main_top.html"
+    src="https://page.mamoru.kr/projects/main/page_main_top.html"
     scrolling="no"
     frameborder="0"
     allowtransparency="true">
@@ -33,7 +33,7 @@
     // ① 우리 iframe에서 온 메시지만 처리 (다른 iframe 메시지 차단)
     if (e.source !== iframe.contentWindow) return;
     // ② origin 체크
-    if (e.origin !== 'https://bsm-pixel.github.io') return;
+    if (e.origin !== 'https://page.mamoru.kr') return;
 
     // height 메시지 — id 체크 불필요 (e.source로 이미 우리 iframe임 확정)
     if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && typeof e.data.height === 'number') {

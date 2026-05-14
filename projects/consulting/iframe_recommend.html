@@ -17,7 +17,7 @@
 <div id="mamoruRecWrap">
   <iframe
     id="mamoruRecFrame"
-    src="https://bsm-pixel.github.io/mamoru/projects/consulting/page_recommend.html"
+    src="https://page.mamoru.kr/projects/consulting/page_recommend.html"
     scrolling="no"
     frameborder="0"
     allowtransparency="true">
@@ -32,7 +32,7 @@
   // postMessage로 동적 높이 수신
   window.addEventListener('message', function(e) {
     // GitHub Pages origin 확인
-    if (e.origin !== 'https://bsm-pixel.github.io') return;
+    if (e.origin !== 'https://page.mamoru.kr') return;
 
     if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && typeof e.data.height === 'number') {
       var newHeight = Math.ceil(e.data.height);

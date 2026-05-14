@@ -17,7 +17,7 @@
 <div id="mamoruIntroWrap">
   <iframe
     id="mamoruIntroFrame"
-    src="https://bsm-pixel.github.io/mamoru/projects/brand/page_intro.html"
+    src="https://page.mamoru.kr/projects/brand/page_intro.html"
     scrolling="no"
     frameborder="0"
     allowtransparency="true">
@@ -32,7 +32,7 @@
   // postMessage로 동적 높이 수신 (index.html에서 MAMORU_IFRAME_SIZE 타입으로 전송)
   window.addEventListener('message', function(e) {
     // GitHub Pages origin 확인
-    if (e.origin !== 'https://bsm-pixel.github.io') return;
+    if (e.origin !== 'https://page.mamoru.kr') return;
 
     if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && typeof e.data.height === 'number') {
       var newHeight = Math.ceil(e.data.height);
