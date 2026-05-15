@@ -1,23 +1,59 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-14 — **자체 도메인 전환** (`page.mamoru.kr` GitHub Pages + `mamoru.kr` 아임웹 apex). 코드·배포 완료, 사장님 마무리 5단계 잔여
+> 최종 수정: 2026-05-15 — **자체 도메인 전환 95% 완료**. 카페24 쇼핑몰 연결 해제 + 아임웹 스크롤 로고 403 이슈 잔여
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
 
-## 🌅 사장님 마무리 5단계 (출근 후 ~15~20분)
+## 🟡 잔여 2건 — 가벼운 마무리
 
-상세: [DOMAIN_MIGRATION_NEXT_STEPS.md](DOMAIN_MIGRATION_NEXT_STEPS.md)
+### 1. 카페24 쇼핑몰 ↔ mamoru.kr 연결 해제 (2분)
+카페24 쇼핑몰 어드민 → mamoru.kr 설정 → **"연결 해제"** 클릭. mamoru.kr 가 이미 아임웹으로 잘 가니까 안전. 카페24 쇼핑몰 데이터는 보존됨.
 
-- [ ] **1.** `https://mamoru.kr` 접속 → 아임웹 쇼핑몰 정상 표시 확인 (1분)
-- [ ] **2.** 아임웹 어드민 → 도메인·SSL 화면에서 SSL 발급 상태 확인, 미발급 시 신청 (1분)
-- [ ] **3.** 아임웹 어드민 → 대표 도메인 라디오를 `mamoru.kr` 로 전환 + 저장 (3분)
-- [ ] **4.** 카페24 쇼핑몰 어드민 → mamoru.kr 설정 → **연결 해제** 클릭 (2분, 카페24 쇼핑몰 격리)
-- [ ] **5.** 솔라피 콘솔 → 후기 템플릿 2개 URL 갱신 + 재검수 (5분 + 검수 1~3 영업일)
-  - `purchase_review_request` : `page.mamoru.kr` 으로 도메인만 교체
-  - `as_review_request` : `page.mamoru.kr` + `type=as` → `type=repair` 표준 통일
+### 2. 아임웹 스크롤 로고 403 Forbidden 이슈 (아임웹 상담원 연결)
+대표 도메인 전환 후 사이트 스크롤 로고(`<img class="scroll_logo">`) 가 깨짐. 원인: AWS S3 권한 누락 (아임웹 측 인프라 이슈).
 
-검증 체크리스트 + 위험 대응표는 안내문 참조.
+**상담원 연결 메시지** (비비에게 그대로 복사):
+```
+네, 상담원 연결 부탁드립니다.
+
+이미 시크릿 모드 + 외부 도구(curl) 로도 동일하게 HTTP 403 Forbidden 확인했습니다.
+
+URL: cdn.imweb.me/thumbnail/20260515/580dc4fef4ec3.png
+응답: HTTP/1.1 403 Forbidden / Server: AmazonS3
+
+AWS S3 권한이 누락된 것으로 보이는데, 오늘 mamoru.kr 자체 도메인 + 대표 도메인 전환 작업 직후 발생했습니다. 권한 확인 부탁드립니다.
+```
+
+상담원에게 전달할 정보:
+| 항목 | 값 |
+|---|---|
+| 사이트 | mamoru.kr |
+| 깨진 URL | `https://cdn.imweb.me/thumbnail/20260515/580dc4fef4ec3.png` |
+| 에러 | HTTP 403 Forbidden / Server: AmazonS3 |
+| 이미지 용도 | 사이트 스크롤 로고 (`<img class="scroll_logo">`) |
+| 검증 | 시크릿 모드, 외부 curl 모두 동일 403 |
+| 발생 시점 | 2026-05-15 (오늘) 자체 도메인 mamoru.kr 전환 직후 |
+| 요청 | S3 권한 확인 + 재발급 |
+
+---
+
+## ✅ 완료 (05-15): 자체 도메인 전환 마무리 작업
+
+사장님 직접 작업 분 — 같은 날 완료:
+- [x] **NS 변경 신청** — 카페24 호스팅 어드민에서 `bns1~4.hostcocoa.com` 으로. 1~4시간 내 4곳 중 3곳 전파 완료 (KT만 캐시)
+- [x] **아임웹 DNS 레코드 사전 입력** — MX(SMTP.GOOGLE.COM) + SPF + google-site-verification + CNAME `page.mamoru.kr` → `bsm-pixel.github.io`
+- [x] **아임웹 대표 도메인 mamoru.kr 전환** — 라디오 클릭 후 자동 적용
+- [x] **아임웹 SSL 결제 + 적용** — COMODO Basic SSL 38,500원/년(VAT 포함). Sectigo 인증서 ~2026-11-29 (자동 갱신, 사장님 결제 1년 내 두 번 갱신)
+- [x] **GitHub Pages page.mamoru.kr SSL 발급** — Let's Encrypt 자동, 90일 단위 자동 갱신
+- [x] **아임웹 코드위젯 13개 paste** — main(상단/하단 포함), brand, consulting(4), as(2), reviews
+- [x] **아임웹 헤더 코드 갱신** — preconnect / Plus Jakarta Sans · Noto Sans KR · Outfit 전역 폰트
+- [x] **솔라피 후기 템플릿 3종 URL 갱신 + 재검수 신청** — `review_request` / `purchase_review_request` / `as_review_request`. 카카오 검수 1~3 영업일 대기
+- [x] **자가 검증** — `https://mamoru.kr` 자물쇠 정상 + 메인 코드위젯 디자인 정상 + 옛 URL → 새 URL 자동 redirect 확인
+- 검증 사이클에서 발견된 별건: 아임웹 스크롤 로고 403 (위 잔여 #2 참조)
+
+## ✅ 완료 (05-14): 자체 도메인 전환 코드/배포 (커밋 `749c0af`, `47d0f5c`)
+
 
 ---
 

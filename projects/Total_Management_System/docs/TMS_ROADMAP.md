@@ -1,7 +1,22 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-05-14 — **자체 도메인 전환** (`page.mamoru.kr` + `mamoru.kr` 아임웹). 코드·배포 완료 / 사장님 마무리 5단계 잔여
+> 최종 수정: 2026-05-15 — 자체 도메인 전환 **95% 완료**. 카페24 쇼핑몰 연결 해제 + 아임웹 스크롤 로고 403 (아임웹 상담원) 2건만 잔여
+
+---
+
+## ✅ 완료 (05-15): 자체 도메인 전환 — 마무리 운영 작업
+
+사장님이 같은 날 진행한 사용자측 작업 — DNS 1~4시간 전파 + SSL 자동 발급 + 코드위젯 paste + 솔라피 재검수.
+- [x] 카페24 호스팅 어드민에서 NS 변경 (`bns1~4.hostcocoa.com`) → Google·Cloudflare·LGU 1~4시간 내 전파, KT 캐시는 약간 지연
+- [x] 아임웹 어드민 DNS 레코드 사전 입력 (NS 전환 전): MX `SMTP.GOOGLE.COM` + SPF + google-site-verification + CNAME `page.mamoru.kr` → `bsm-pixel.github.io`. **메일 끊김 0** 보장 흐름
+- [x] 아임웹 대표 도메인 `mamoru.kr` 전환
+- [x] 아임웹 SSL 결제·발급 — COMODO Basic SSL 38,500원/년(VAT 포함). Sectigo 발급, ~2026-11-29 만료 후 자동 갱신 (사장님 결제 1년 내 두 번 갱신)
+- [x] GitHub Pages page.mamoru.kr SSL 발급 — Let's Encrypt 무료, 90일 자동 갱신
+- [x] 아임웹 코드위젯 13개 + 헤더 코드 paste (main 5 + brand + consulting 4 + as 2 + reviews)
+- [x] 솔라피 후기 템플릿 3종 URL 갱신 + 재검수 신청 — `review_request` (상담, 현재 미사용이지만 카탈로그 청소 + 미래 대비) / `purchase_review_request` (판매·구매) / `as_review_request` (복원수리, `type=as` → `type=repair` 표준 통일). 카카오 검수 1~3 영업일 대기, 옛 템플릿은 검수 중에도 발송 가능 → 운영 무중단
+- [x] 자가 검증: `https://mamoru.kr` 자물쇠 정상, 메인 코드위젯 디자인 정상, 옛 `bsm-pixel.github.io` URL 자동 redirect 확인
+- 잔여 2건: 카페24 쇼핑몰 연결 해제 (2분) / 아임웹 스크롤 로고 403 Forbidden (아임웹 상담원 연결 — S3 권한 누락 추정)
 
 ---
 
