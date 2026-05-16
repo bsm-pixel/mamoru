@@ -188,13 +188,12 @@ a[href*="exchange"][class*="tab"], a[href*="refund"][class*="tab"] { display: no
 }
 
 /* ⚠️ JS가 후기 위젯을 상세정보 부모(그리드 안)로 이동 → 좌우 여백 발생
-   모바일에서 viewport 풀폭 강제 (2026-05-17). 내부 콘텐츠는 자체 max-width 유지 */
-@media (max-width: 767px) {
-  .mm-prv {
-    margin-left: calc((100% - 100vw) / 2);
-    margin-right: calc((100% - 100vw) / 2);
-    width: 100vw;
-  }
+   PC + 모바일 양쪽에서 viewport 풀폭 강제 (2026-05-17 갱신 — 공통 영역과 폭 통일)
+   내부 콘텐츠는 자체 max-width 컨테이너로 중앙 정렬 유지 */
+.mm-prv {
+  margin-left: calc((100% - 100vw) / 2);
+  margin-right: calc((100% - 100vw) / 2);
+  width: 100vw;
 }
 
 a { text-decoration: none; color: inherit; }
