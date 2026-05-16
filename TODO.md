@@ -1,40 +1,69 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-15 — **자체 도메인 전환 95% 완료**. 카페24 쇼핑몰 연결 해제 + 아임웹 스크롤 로고 403 이슈 잔여
+> 최종 수정: 2026-05-17 — **상품 상세 페이지 후기 위젯 Phase 2-C 완료**. sticky 탭바 + 모달 좌우 화살표 + Warm Premium v5 + 코드위젯 SSOT 표준화
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
 
-## 🟡 잔여 2건 — 가벼운 마무리
+## 🟡 진행중·대기
 
-### 1. 카페24 쇼핑몰 ↔ mamoru.kr 연결 해제 (2분)
-카페24 쇼핑몰 어드민 → mamoru.kr 설정 → **"연결 해제"** 클릭. mamoru.kr 가 이미 아임웹으로 잘 가니까 안전. 카페24 쇼핑몰 데이터는 보존됨.
+### [자동] 솔라피 후기 알림톡 3종 카카오 재검수 결과 대기 (D-?, 1~3 영업일)
+도메인 전환 사이클에서 URL 갱신 후 재검수 신청한 3종:
+- `review_request` (상담 후기, 현재 미사용)
+- `purchase_review_request` (구매 후기) — 새 URL: `page.mamoru.kr/.../page_review.html?uid=#{order_uid}&type=purchase`
+- `as_review_request` (복원수리 후기) — 새 URL: `type=repair`로 통일
 
-### 2. 아임웹 스크롤 로고 403 Forbidden 이슈 (아임웹 상담원 연결)
-대표 도메인 전환 후 사이트 스크롤 로고(`<img class="scroll_logo">`) 가 깨짐. 원인: AWS S3 권한 누락 (아임웹 측 인프라 이슈).
+검수 통과 시 자동 활성화. 운영 무중단 (GitHub Pages 자동 301 redirect 로 옛 URL도 작동).
 
-**상담원 연결 메시지** (비비에게 그대로 복사):
-```
-네, 상담원 연결 부탁드립니다.
+---
 
-이미 시크릿 모드 + 외부 도구(curl) 로도 동일하게 HTTP 403 Forbidden 확인했습니다.
+## ✅ 완료 (05-17): 상품 상세 페이지 후기 위젯 Phase 2-C + Warm Premium v5
 
-URL: cdn.imweb.me/thumbnail/20260515/580dc4fef4ec3.png
-응답: HTTP/1.1 403 Forbidden / Server: AmazonS3
+**상품 상세 페이지 통합 디자인 + 자체 후기 시스템 완성**. 무신사 패턴 적용 (모바일 sticky 탭바 + 모달 좌우 화살표 + 빈 상태 처리).
 
-AWS S3 권한이 누락된 것으로 보이는데, 오늘 mamoru.kr 자체 도메인 + 대표 도메인 전환 작업 직후 발생했습니다. 권한 확인 부탁드립니다.
-```
+후기 위젯 (`ImwebWidgetCode_product_reviews.html`):
+- [x] **자체 sticky 탭바** `[정보 | 후기 | 문의]` (모바일 전용) — 아임웹 네이티브 탭바 강제 숨김 + scroll spy로 active 자동 갱신
+- [x] **DOM 배치 변경** — 후기 위젯 = "상세정보 펼쳐보기 버튼" *직후* (`findExpandAnchor()` 함수 — 텍스트·클래스 매칭). 탭바 = 상세정보 직전
+- [x] **모달 좌우 화살표** + 키보드 ←/→ + 터치 스와이프 (60px) + 카운터 `1/12` 표시
+- [x] **후기 0건 빈 상태** (`renderZeroState()`) — "아직 등록된 후기가 없어요" + ☆☆☆☆☆ + 탭바는 정상 작동 (정보/문의 점프 가능)
+- [x] **viewport 풀폭 강제** — `.mm-tabs` + `.mm-prv` 에 음수 마진 트릭 (그리드 안에 갇힘 방지)
+- [x] **PC/모바일 DOM 분리 대응** (Phase 2 기반) — `findVisible()` + offsetParent 체크 + resize 재배치
 
-상담원에게 전달할 정보:
-| 항목 | 값 |
-|---|---|
-| 사이트 | mamoru.kr |
-| 깨진 URL | `https://cdn.imweb.me/thumbnail/20260515/580dc4fef4ec3.png` |
-| 에러 | HTTP 403 Forbidden / Server: AmazonS3 |
-| 이미지 용도 | 사이트 스크롤 로고 (`<img class="scroll_logo">`) |
-| 검증 | 시크릿 모드, 외부 curl 모두 동일 403 |
-| 발생 시점 | 2026-05-15 (오늘) 자체 도메인 mamoru.kr 전환 직후 |
-| 요청 | S3 권한 확인 + 재발급 |
+Warm Premium v5 — 상품 메인 디자인 (`product_detail_warm_premium.html`, git 신규 백업):
+- [x] **A1** delivery_ico Gold(`#C9A962`) → Stone(`#4A4A4A`) — Brand Guide v1.0 Gold 체계 폐기 반영
+- [x] **A2** 아임웹 네이티브 탭 메뉴 스타일 [2] 제거 (자체 sticky 탭바가 대체)
+- [x] **B1** Void 컬러 `#1C1C1E` → `#1A1A1A` / hover `#2C2C2E` → `#2D2D2D`
+- [x] **B2** Shell 배경 `#f7f6f4` → `#F5F3F0` (Brand Guide 변수 통일)
+- [x] **B3** 가격 PC 24→32px / 모바일 20→26px (위계 강조, weight 800)
+- [x] **B4** 구매하기 weight 700 / 장바구니 500 (Primary vs Secondary 위계)
+- [x] **B5** rgba(0,0,0,X) → Brand Guide hex 매핑 (`#8A8580`, `#4A4A4A`, `#2D2D2D`, `#1A1A1A`, `#D4D0CB`, `#EDEBE8`, `#F5F3F0`, `#FAF9F7`)
+
+공통 영역 (`product_detail_common.html`):
+- [x] **`id="mm-contact-anchor"`** 추가 — sticky 탭바 "문의" 탭이 카카오 채널 섹션으로 점프
+- [x] PROMISE 카피 사장님 수정 (01 "합리적인 구매", 02 "권하지 않습니다, 안내 할 뿐입니다")
+- [x] FAQ Q4 "1:1 문의" 영역 카피 정비
+
+상품 상세 v10_trendy 마스터:
+- [x] LINE UP 등급 영역 카피 수정 (사장님 직접) — `MAMORU 등급` → `MAMORU LINE UP`, 등급별 설명 톤 변경
+
+코드위젯 SSOT 표준화 (사장님 강조 룰):
+- [x] **표준 식별 박스 첫 줄** (`📦 FILE / 📍 PASTE / 📝 기능 / 🔧 최종 / ⚠️ 함께`) — paste 대상 6개 파일 일괄 적용:
+  - `projects/reviews/ImwebWidgetCode_product_reviews.html`
+  - `projects/common_code/product_detail_common.html`
+  - `projects/common_code/product_detail_warm_premium.html` (신규)
+  - `projects/common_code/header_code_top.txt`
+  - `projects/common_code/header_code.txt`
+  - `projects/common_code/header_product_style.txt`
+  - `projects/common_code/footer_code.txt`
+- [x] SSOT 메모리 `reference_imweb_codewidgets.md` 신규 — 슬롯 ①②③ 표 + 변경 이력 + 작업 SOP + 식별 박스 룰 박제
+
+---
+
+## ✅ 완료 (05-16): 자체 도메인 전환 100% 마무리
+
+도메인 전환 잔여 2건 모두 해결:
+- [x] 카페24 쇼핑몰 ↔ mamoru.kr 연결 해제 — 사장님 카페24 어드민에서 직접 처리
+- [x] 아임웹 스크롤 로고 403 Forbidden — 사장님 확인 시점에 자가 복구 (아임웹 측 S3 권한 재발급 추정). 별도 상담원 연결 불필요
 
 ---
 

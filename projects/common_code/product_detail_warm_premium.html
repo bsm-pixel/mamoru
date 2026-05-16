@@ -1,0 +1,285 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 FILE   : projects/common_code/product_detail_warm_premium.html
+  📍 PASTE  : 아임웹 디자인 모드 → 상품 상세 공통 → 코드위젯 ① (최상단)
+  📝 기능   : 상품 메인 영역(이미지·구매·배송·옵션) Warm Premium 디자인 통일
+  🔧 최종   : v5 (Brand Guide v1.0 완전 정렬, 2026-05-17)
+  ⚠️ 함께   : ImwebWidgetCode_product_reviews.html (후기) + product_detail_common.html (공통 하단)
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  v5 변경 (v4 → v5, 2026-05-17):
+   - [A1] delivery_ico Gold(#C9A962) → Stone(#4A4A4A) — Brand Guide Gold 체계 폐기 반영
+   - [A2] 아임웹 네이티브 탭 메뉴 스타일 [2] 전체 제거 — Phase 2-C 자체 sticky 탭바가 덮음
+   - [B1] 모든 #1C1C1E → #1A1A1A (--mm-void), hover #2C2C2E → #2D2D2D (--mm-graphite)
+   - [B2] 모든 #f7f6f4 → #F5F3F0 (--mm-shell)
+   - [B3] 가격 폰트 PC 24→32px / 모바일 20→26px (위계 강조)
+   - [B4] 구매하기 weight 700 / 장바구니 weight 500 (Primary vs Secondary 위계)
+   - [B5] rgba(0,0,0,X) → Brand Guide 컬러 변수로 매핑
+═══════════════════════════════════════════════════════════════ -->
+
+<style>
+/* =========================================================
+   MAMORU 상세페이지 - Warm Premium (v5 - Brand Guide 정렬)
+   디자인만 적용, 버튼 숨김 제어는 아임웹에 맡김
+   Brand Guide v1.0 Monochrome — 모든 컬러는 디자인 시스템 변수 매핑
+   ========================================================= */
+
+/* [1] 제품 이미지 영역 - 따뜻한 배경 (Shell) */
+#main-image {
+  background: #F5F3F0 !important;
+  border-radius: 16px !important;
+}
+
+/* [2] 아임웹 네이티브 탭 메뉴 — Phase 2-C 자체 sticky 탭바가 대체 → 스타일 불필요
+   (후기 위젯 코드가 ._prod_detail_tab_fixed 를 display:none 처리) */
+
+/* [3] 구매하기 버튼 - Void Primary (모든 buy 버튼) */
+.cart_btn .btn.buy,
+.pay-box .btn.buy {
+  background: #1A1A1A !important;
+  border: none !important;
+  border-radius: 12px !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  padding: 16px 32px !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
+  letter-spacing: -0.01em !important;
+}
+
+.cart_btn .btn.buy:hover,
+.pay-box .btn.buy:hover {
+  background: #2D2D2D !important;
+}
+
+/* [4] 장바구니 버튼 - Secondary 테두리 (모든 cart 버튼) */
+.cart_btn .btn.defualt-cart,
+.cart_btn .btn.cart,
+.cart_btn_child .btn.defualt-cart,
+.cart_btn_child .btn.cart,
+.pay-box .btn.defualt-cart,
+.pay-box .btn.cart {
+  background: transparent !important;
+  border: 1.5px solid #D4D0CB !important;
+  border-radius: 12px !important;
+  color: #2D2D2D !important;
+  font-weight: 500 !important;
+  font-size: 15px !important;
+  padding: 16px 32px !important;
+  transition: all 0.2s ease !important;
+  letter-spacing: -0.01em !important;
+}
+
+.cart_btn .btn.defualt-cart:hover,
+.cart_btn .btn.cart:hover,
+.cart_btn_child .btn.defualt-cart:hover,
+.cart_btn_child .btn.cart:hover,
+.pay-box .btn.defualt-cart:hover,
+.pay-box .btn.cart:hover {
+  border-color: #8A8580 !important;
+  background: #FAF9F7 !important;
+}
+
+/* [5] 배송안내 (오늘출발) - 카드 스타일 + 모노크롬 아이콘 */
+.delivery_info {
+  background: #F5F3F0 !important;
+  border-radius: 12px !important;
+  padding: 16px 20px !important;
+  border: none !important;
+}
+
+.delivery_info .delivery_ico {
+  color: #4A4A4A !important;
+}
+
+/* [6] 옵션 영역 (구매혜택, 배송비) - 정돈 */
+.option_wrap {
+  padding: 8px 0 !important;
+  border-bottom: 1px solid #EDEBE8 !important;
+}
+
+.option_wrap .option_title {
+  color: #8A8580 !important;
+  font-size: 13px !important;
+}
+
+.option_wrap .option_data {
+  color: #2D2D2D !important;
+  font-size: 13px !important;
+}
+
+/* [7] 헤더 - 제품명 */
+header .view_tit,
+header .title_font_style {
+  font-weight: 700 !important;
+  color: #1A1A1A !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* [8] 헤더 - 가격 (위계 강조) */
+header .pay_detail .real_price {
+  font-weight: 800 !important;
+  color: #1A1A1A !important;
+  font-size: 32px !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* [9] 수량 선택 - 라운드 */
+.qty_ctrl,
+.quantity-wrap {
+  border-radius: 8px !important;
+  border: 1px solid #D4D0CB !important;
+}
+
+/* [10] 상세정보 펼쳐보기 버튼 */
+.btn-more,
+.view-more,
+.detail-more-btn {
+  border: 1.5px solid #D4D0CB !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: #4A4A4A !important;
+  font-weight: 500 !important;
+  padding: 12px 24px !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-more:hover,
+.view-more:hover {
+  border-color: #8A8580 !important;
+  color: #1A1A1A !important;
+}
+
+/* [11] 구매평/Q&A 작성 버튼 */
+.btn-review-write,
+.btn-qna-write {
+  background: #1A1A1A !important;
+  border: none !important;
+  border-radius: 8px !important;
+  color: #FFFFFF !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  padding: 10px 16px !important;
+}
+
+/* [12] 수량 선택 영역 - 디자인 통일 */
+.opt_block.order_quantity_area {
+  background: #F5F3F0 !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  margin: 12px 0 !important;
+}
+
+.opt_block .option_title {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #8A8580 !important;
+}
+
+.option_btn_tools {
+  display: inline-flex !important;
+  align-items: center !important;
+  border: 1px solid #D4D0CB !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  background: #FFFFFF !important;
+}
+
+.option_btn_tools a {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  color: #8A8580 !important;
+  transition: all 0.2s ease !important;
+}
+
+.option_btn_tools a:hover {
+  background: #F5F3F0 !important;
+  color: #1A1A1A !important;
+}
+
+.option_btn_tools input._order_count_mobile,
+.option_btn_tools input.form-control {
+  width: 48px !important;
+  height: 36px !important;
+  border: none !important;
+  border-left: 1px solid #EDEBE8 !important;
+  border-right: 1px solid #EDEBE8 !important;
+  text-align: center !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #2D2D2D !important;
+  background: transparent !important;
+}
+
+.opt_block .area_price {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #2D2D2D !important;
+}
+
+/* =========================================================
+   [13] 모바일 대응
+   ========================================================= */
+@media screen and (max-width: 768px) {
+  /* 제품 이미지 */
+  #main-image {
+    border-radius: 12px !important;
+  }
+
+  /* 버튼 - 모바일 스타일 */
+  .cart_btn .btn.buy,
+  .pay-box .btn.buy {
+    height: 48px !important;
+    line-height: 48px !important;
+    padding: 0 24px !important;
+    font-size: 14px !important;
+    border-radius: 10px !important;
+    text-align: center !important;
+  }
+
+  .cart_btn .btn.defualt-cart,
+  .cart_btn .btn.cart,
+  .cart_btn_child .btn.defualt-cart,
+  .cart_btn_child .btn.cart,
+  .pay-box .btn.defualt-cart,
+  .pay-box .btn.cart {
+    height: 48px !important;
+    line-height: 48px !important;
+    padding: 0 24px !important;
+    font-size: 14px !important;
+    border-radius: 10px !important;
+    text-align: center !important;
+  }
+
+  /* 배송안내 */
+  .delivery_info {
+    padding: 14px 16px !important;
+    border-radius: 10px !important;
+  }
+
+  /* 헤더 가격 (위계 강조) */
+  header .pay_detail .real_price {
+    font-size: 26px !important;
+  }
+
+  /* 수량 영역 */
+  .opt_block.order_quantity_area {
+    padding: 14px !important;
+    border-radius: 10px !important;
+  }
+
+  .option_btn_tools a {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .option_btn_tools input._order_count_mobile,
+  .option_btn_tools input.form-control {
+    width: 44px !important;
+    height: 32px !important;
+    font-size: 13px !important;
+  }
+}
+</style>

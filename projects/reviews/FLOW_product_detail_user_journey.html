@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상품 상세 페이지 — 사용자 흐름 와이어프레임 (디자인 X, 흐름만)</title>
+<style>
+  body {
+    font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+    background: #F5F5F5;
+    margin: 0;
+    padding: 20px;
+    color: #1A1A1A;
+    line-height: 1.5;
+  }
+  .legend {
+    max-width: 720px;
+    margin: 0 auto 20px;
+    background: #FFFFFF;
+    padding: 16px 20px;
+    border-radius: 8px;
+    border: 1px solid #DDD;
+    font-size: 13px;
+  }
+  .legend h2 { margin: 0 0 8px; font-size: 14px; }
+  .legend .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .tag-imweb { background: #FFF3CD; color: #856404; }
+  .tag-ours { background: #D4EDDA; color: #155724; }
+  .tag-hidden { background: #F8D7DA; color: #721C24; }
+  .tag-interact { background: #D1ECF1; color: #0C5460; }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    background: #FFFFFF;
+    border: 2px solid #1A1A1A;
+    border-radius: 4px;
+  }
+  .section {
+    border-bottom: 2px dashed #BBB;
+    padding: 24px 20px;
+    position: relative;
+  }
+  .section:last-child { border-bottom: none; }
+  .section-label {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #666;
+    letter-spacing: 0.1em;
+  }
+  .section h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .section .desc {
+    font-size: 12px;
+    color: #666;
+    margin: 0 0 12px;
+  }
+  .box {
+    background: #FAFAFA;
+    border: 1px dashed #999;
+    padding: 16px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #555;
+    text-align: center;
+  }
+
+  /* 영역별 색 구분 (디자인 아님, 영역 구분만) */
+  .imweb { background: #FFFCE5; border-left: 4px solid #F0C040; }
+  .ours { background: #E8F5E9; border-left: 4px solid #4CAF50; }
+  .hidden { background: #FFEBEE; border-left: 4px solid #F44336; opacity: 0.5; text-decoration: line-through; }
+
+  .interact {
+    background: #E3F2FD;
+    border: 1px dashed #2196F3;
+    padding: 12px;
+    border-radius: 4px;
+    margin: 8px 0;
+    font-size: 11px;
+    color: #0C5460;
+  }
+  .interact::before {
+    content: "👆 인터랙션  ";
+    font-weight: 700;
+  }
+
+  .arrow {
+    text-align: center;
+    color: #999;
+    font-size: 24px;
+    margin: 4px 0;
+  }
+
+  /* 후기 카드 그리드 (예시) */
+  .review-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .review-card {
+    background: #FFF;
+    border: 1px solid #DDD;
+    padding: 12px;
+    font-size: 11px;
+    text-align: left;
+    color: #444;
+  }
+  .review-card .stars { color: #1A1A1A; margin-bottom: 4px; }
+  .review-card .name { font-weight: 700; }
+  .review-card .preview { color: #888; font-size: 10px; margin-top: 6px; }
+
+  @media (max-width: 600px) {
+    .review-grid { grid-template-columns: 1fr; }
+  }
+
+  .tab-bar {
+    display: flex;
+    border-bottom: 2px solid #1A1A1A;
+    margin-bottom: 12px;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    background: #FAFAFA;
+    border-right: 1px solid #DDD;
+  }
+  .tab:last-child { border-right: none; }
+  .tab.hidden-tab {
+    background: #FFEBEE;
+    color: #999;
+    text-decoration: line-through;
+  }
+  .tab.active { background: #1A1A1A; color: #FFF; }
+
+  .flow-summary {
+    max-width: 720px;
+    margin: 24px auto;
+    background: #1A1A1A;
+    color: #FAF9F7;
+    padding: 24px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .flow-summary h3 { color: #FAF9F7; margin: 0 0 12px; font-size: 16px; }
+  .flow-summary ol { padding-left: 20px; margin: 0; }
+  .flow-summary code {
+    background: rgba(255,255,255,0.15);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ════════════════ 범례 ════════════════ -->
+<div class="legend">
+  <h2>📋 와이어프레임 범례 (디자인 X, 흐름만)</h2>
+  <div>
+    <span class="tag tag-imweb">아임웹 네이티브</span> 아임웹이 자동 제공 (수정 불가)
+  </div>
+  <div>
+    <span class="tag tag-ours">우리가 만든 자체</span> 코드위젯으로 paste한 영역
+  </div>
+  <div>
+    <span class="tag tag-hidden">CSS로 숨김</span> 존재하지만 화면에 안 보임
+  </div>
+  <div>
+    <span class="tag tag-interact">👆 인터랙션</span> 사용자 클릭/스크롤 시 동작
+  </div>
+</div>
+
+<!-- ════════════════ 페이지 흐름 ════════════════ -->
+<div class="page">
+
+  <!-- ① 헤더 -->
+  <div class="section">
+    <span class="section-label">① 헤더 (아임웹)</span>
+    <h3>사이트 헤더</h3>
+    <div class="box imweb">
+      [MAMORU 로고]&nbsp;&nbsp;[메뉴: 컨설팅·복원수리·미용가위·...]&nbsp;&nbsp;[로그인·장바구니]
+    </div>
+  </div>
+
+  <!-- ② 상품 메인 -->
+  <div class="section">
+    <span class="section-label">② 상품 메인 (아임웹)</span>
+    <h3>상품 정보 + 구매 영역</h3>
+    <p class="desc">아임웹이 자동으로 처리 — 수정 불가</p>
+    <div class="box imweb">
+      [상품 메인 이미지]<br><br>
+      A2-55FS · 블런트 5.5인치<br>
+      ₩ XXX,XXX<br><br>
+      [옵션 선택] [수량] [장바구니] [바로구매]
+    </div>
+  </div>
+
+  <!-- ③ 자체 후기 위젯 — ⭐ 사장님 제안: 구매 영역 바로 아래 ⭐ -->
+  <div class="section">
+    <span class="section-label">③ 자체 후기 ⭐ (자체)</span>
+    <h3>마모루 자체 후기 시스템 ⭐ 구매 영역 바로 아래 (사회적 증명 우선)</h3>
+    <p class="desc">URL의 <code>idx=123</code> 파라미터로 해당 상품 후기 자동 표시</p>
+
+    <!-- 후기 있을 때 -->
+    <div class="box ours">
+      <strong>━━━ 후기 ▸ 있을 때 ━━━</strong><br><br>
+      [요약 헤더]<br>
+      ★★★★★ &nbsp; 4.8 &nbsp; 후기 12건<br><br>
+
+      <div class="review-grid">
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <div class="name">김○○</div>
+          <div class="preview">정말 만족합니다. 손에 잘 맞고...</div>
+        </div>
+        <div class="review-card">
+          <div class="stars">★★★★☆</div>
+          <div class="name">박○○</div>
+          <div class="preview">컷감이 부드러워요. 다음에도...</div>
+        </div>
+        <div class="review-card">
+          <div class="stars">★★★★★</div>
+          <div class="name">이○○</div>
+          <div class="preview">평생 복원수리가 진짜 좋네요...</div>
+        </div>
+      </div>
+      <br>
+      [후기 더보기 ▼]
+    </div>
+    <div class="interact">
+      <strong>인터랙션 3단계</strong>:<br>
+      1. 후기 카드 클릭 → 모달 (전체 내용 + 사진 여러 장)<br>
+      2. 모달의 사진 클릭 → 라이트박스 (큰 화면 확대 + 좌우 스와이프)<br>
+      3. "후기 더보기" 클릭 → 다음 6개 로드 (페이징)
+    </div>
+
+    <!-- 후기 없을 때 -->
+    <div class="box ours" style="margin-top:16px;">
+      <strong>━━━ 후기 ▸ 없을 때 ━━━</strong><br><br>
+      ⚠️ 영역 자체가 화면에서 사라짐 (height=0)<br>
+      <em>빈 후기 영역 노출 방지 → 신규 상품은 자연스럽게 v10 본문으로 흐름 전환</em>
+    </div>
+  </div>
+
+  <!-- ④ 상품 상세 설명 (v10) -->
+  <div class="section">
+    <span class="section-label">④ 상세 설명 (자체)</span>
+    <h3>상품 상세 본문 — v10</h3>
+    <p class="desc">후기 확인 후 관심 생긴 사용자가 깊이 학습하는 영역</p>
+    <div class="box ours">
+      [Hero] BLUNT 5.5 INCH · A2-55FS<br><br>
+      [Detail 사진 3장 + 클로즈업 2장]<br>
+      [In Action GIF]<br>
+      [About — 가위 특성]<br>
+      [Profile — BLADE / HANDLE / WEIGHT]<br>
+      [For You? — 솔직한 선택 가이드]<br>
+      [Spec — 사양]<br>
+      [Same Handle — A2 시리즈 라인업]<br>
+      [Voices — 고객 목소리]<br>
+      [Brand Transition — CUT THE FAKE, KEEP THE REAL]<br>
+      [VS General — 비교]<br>
+      [Why MAMORU — 작업자 신뢰]<br>
+      [Lifetime Care — 평생 복원수리]<br>
+      [Grade — 마모루 등급]<br>
+      [CTA — 안 사셔도 괜찮습니다 → 깊이 관심 있는 사용자에게 강한 효과]
+    </div>
+    <div class="interact">
+      ⬇️ 길이 길면 아임웹 자동 접기 <strong>"상세정보 펼쳐보기"</strong> (모바일). PC는 펼쳐진 기본.
+    </div>
+  </div>
+
+  <!-- ⑤ 탭 영역 (구매평 탭 숨김, Q&A 만 남김) -->
+  <div class="section">
+    <span class="section-label">⑤ 탭 (아임웹 - 구매평 숨김)</span>
+    <h3>아임웹 네이티브 탭</h3>
+    <p class="desc"><strong>구매평 탭 = CSS로 숨김</strong> · Q&A 탭만 표시</p>
+    <div class="tab-bar">
+      <div class="tab hidden-tab">구매평 (0)</div>
+      <div class="tab active">Q&A (0)</div>
+    </div>
+    <div class="box imweb">
+      [Q&A 목록 — 아임웹 네이티브]<br>
+      "등록된 문의가 없습니다"<br><br>
+      [상품 문의] [1:1 문의] 버튼
+    </div>
+    <div class="interact">
+      Q&A 탭 클릭 → 아임웹 네이티브 Q&A 화면 (마모루 디자인 통일 X, 다만 운영상 OK)
+    </div>
+  </div>
+
+  <!-- ⑥ 공통 영역 (PROMISE + 카카오 + FAQ + 슬로건) -->
+  <div class="section">
+    <span class="section-label">⑥ 공통 영역 (자체)</span>
+    <h3>모든 상품 공통 메시지</h3>
+    <p class="desc">product_detail_common.html paste — 모든 상품에 동일 표시</p>
+    <div class="box ours">
+      [PROMISE — 마모루의 약속]<br>
+      01. 모든 고객 동일 가격 (라이트)<br>
+      02. 판매하지 않습니다, 안내합니다 (다크)<br><br>
+
+      [카카오 채널]<br>
+      마모루 카카오 채널 — 알림 받기 [+ 채널 추가]<br><br>
+
+      [FAQ]<br>
+      Q. 배송 / 결제 / 환불 / 1:1 문의<br><br>
+
+      [SLOGAN]<br>
+      CUT THE FAKE, KEEP THE REAL<br>
+      — 거짓 없는 본질
+    </div>
+    <div class="interact">
+      카카오 채널 [+ 채널 추가] 클릭 → <code>https://pf.kakao.com/_KHWNb/friend</code> 카톡 채널 추가 다이얼로그
+    </div>
+  </div>
+
+  <!-- ⑦ 푸터 -->
+  <div class="section">
+    <span class="section-label">⑦ 푸터 (아임웹)</span>
+    <h3>사이트 푸터</h3>
+    <div class="box imweb">
+      [SNS] Instagram · Youtube · KakaoTalk<br><br>
+      마모루 대표 백성민<br>
+      사업자 651-26-01622<br>
+      서울특별시 부광로 88, SKV1 B동 311호<br>
+      Call. 02-6326-0426 · mamoruscissors@gmail.com<br><br>
+      [이용약관] [개인정보처리방침]<br>
+      Copyright © 2026 MAMORU
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════ 흐름 요약 ════════════════ -->
+<div class="flow-summary">
+  <h3>🎯 사용자 시각 — 본 흐름 (사장님 제안 반영 ⭐)</h3>
+  <ol>
+    <li><strong>진입</strong>: 메뉴 → 상품 클릭 → 상품 상세 페이지 진입</li>
+    <li><strong>탐색</strong>: 메인 이미지 + 가격 확인 → 옵션·수량 선택</li>
+    <li><strong>⭐ 신뢰 확보 (먼저)</strong>: 자체 후기 — 별점 + 사진 + 태그로 다른 미용사 경험 확인 (구매 결정 직전)</li>
+    <li><strong>학습 (관심 생긴 사용자만)</strong>: 상세 설명 본문 (v10) — 마모루 톤 풀 디자인</li>
+    <li><strong>문의 확인</strong>: Q&A 탭 클릭 → 다른 고객 질문 + 본인 문의 등록 가능 (아임웹 네이티브)</li>
+    <li><strong>브랜드 가치 인식</strong>: PROMISE — 동일 가격 / 판매 X 안내 O</li>
+    <li><strong>재방문 유도</strong>: 카카오 채널 친추 (할인 X, 알림 수신 목적)</li>
+    <li><strong>의문 해소</strong>: FAQ — 배송 / 결제 / 환불 / 문의</li>
+    <li><strong>브랜드 잔상</strong>: 슬로건 — CUT THE FAKE, KEEP THE REAL</li>
+    <li><strong>법적 정보</strong>: 푸터 — 사업자 정보 + 약관 + 연락처</li>
+  </ol>
+</div>
+
+<!-- ════════════════ 변경 사항 요약 ════════════════ -->
+<div class="flow-summary" style="background:#2D2D2D;">
+  <h3>🔧 기존 흐름 → 새 흐름 변경점</h3>
+  <ol>
+    <li>
+      <strong>구매평 탭 자체 숨김</strong> — 사용자가 "구매평 (0)" 클릭해서 빈 화면 보는 사고 방지<br>
+      <code>CSS: [class*="review-tab"] { display: none !important; }</code>
+    </li>
+    <li>
+      <strong>자체 후기 위젯 자동 매칭</strong> — URL <code>?idx=123</code> 으로 해당 상품 후기만 표시<br>
+      후기 0건 → 위젯 자체 숨김 (빈 영역 노출 X)
+    </li>
+    <li>
+      <strong>Q&A는 아임웹 네이티브 유지</strong> — 디자인 통일성보다 기능 안정성 우선<br>
+      향후 별도 사이클로 자체 Q&A 시스템 구축 검토 가능
+    </li>
+    <li>
+      <strong>공통 영역(PROMISE+카카오+FAQ+슬로건) 한 번 paste = 모든 상품 자동 적용</strong>
+    </li>
+  </ol>
+</div>
+
+</body>
+</html>

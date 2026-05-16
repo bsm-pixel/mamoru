@@ -1,3 +1,10 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 FILE   : projects/common_code/header_code.txt
+  📍 PASTE  : 아임웹 어드민 → 환경설정 → Header Code (하단)
+  📝 기능   : iframe 높이 안전장치 CSS + 상품 진열 공통 스타일
+  🔧 상품 위젯 추가 시: header_product_style.txt 의 IDS 배열에 ID 추가
+═══════════════════════════════════════════════════════════════ -->
+
 <!-- MAMORU: iframe 높이 안전장치 CSS -->
 <style>
 #asFramePC { min-height: 1600px; }

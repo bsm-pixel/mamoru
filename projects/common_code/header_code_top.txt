@@ -1,9 +1,9 @@
-<!-- =========================================================
-  MAMORU 공통 코드 — Header Code 상단
-  위치: 아임웹 → 환경설정 → Header Code 상단
-  역할: <head> 최상단 삽입 (preconnect, 폰트, 메타태그)
-  Brand Guide v1.0 적용
-  ========================================================= -->
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 FILE   : projects/common_code/header_code_top.txt
+  📍 PASTE  : 아임웹 어드민 → 환경설정 → Header Code 상단
+  📝 기능   : <head> 최상단 — preconnect, 폰트, 메타태그
+  🎨 가이드 : Brand Guide v1.0
+═══════════════════════════════════════════════════════════════ -->
 
 <!-- MAMORU: 사전 연결 (GitHub Pages + CDN + Google Fonts) -->
 <link rel="preconnect" href="https://page.mamoru.kr">

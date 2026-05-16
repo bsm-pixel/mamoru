@@ -1,3 +1,11 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 FILE   : projects/reviews/ImwebWidgetCode_product_reviews.html
+  📍 PASTE  : 아임웹 디자인 모드 → 상품 상세 공통 → 코드위젯 (후기 영역)
+  📝 기능   : 자체 후기 위젯 + sticky 탭바(정보/후기/문의) + 모달 좌우 화살표
+  🔧 최종   : Phase 2-C (2026-05-16)
+  ⚠️ 함께   : product_detail_common.html (공통 영역 코드위젯) 도 같이 paste
+═══════════════════════════════════════════════════════════════ -->
+
 <!-- Google Fonts: Outfit (display) + Plus Jakarta Sans + Noto Sans KR (body) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,8 +18,142 @@
    자동 감지: URL의 idx 파라미터로 상품 식별 → 리뷰 자동 표시
    ══════════════════════════════════════════════════════════════ */
 
-/* ── 아임웹 네이티브 구매평 내용 숨김 — 탭은 유지 ── */
+/* ── 아임웹 네이티브 구매평 내용 + 탭 자체 숨김 (2026-05-15 Phase 1) ── */
 ._review_wrap { display: none !important; }
+[class*="review-tab"],
+[class*="review_tab"],
+.shop_review_tab,
+li[data-tab="review"],
+a[href*="review"][class*="tab"] { display: none !important; }
+
+/* ── 아임웹 네이티브 Q&A 영역 자체 숨김 (2026-05-15 Phase 1) ──
+   자체 시스템 없음 + 고객 문의는 공통 영역 카톡/이메일/전화로 유도
+   탭 설정에서 "사용안함" 1차 + CSS 강제 숨김 2차 (이중 안전) */
+._detail_qna_wrap, ._detail_qna_wrap_mobile,
+.detail_qna_wrap, .detail_qna_wrap_mobile,
+._qna_wrap, ._qna,
+.prod_detail_qna,
+#first_qna,
+#prod_detail_qna_target,
+#prod_detail_qna_target_mobile,
+[class*="qna-tab"], [class*="qna_tab"],
+li[data-tab="qna"],
+a[href*="qna"][class*="tab"] { display: none !important; }
+
+/* ── 반품/교환 영역 자체 숨김 (FAQ에 정책 포함되어 있음) ── */
+[class*="exchange_wrap"], [class*="refund_wrap"],
+[class*="exchange-tab"], [class*="refund-tab"],
+li[data-tab="exchange"], li[data-tab="refund"],
+a[href*="exchange"][class*="tab"], a[href*="refund"][class*="tab"] { display: none !important; }
+
+/* ── 아임웹 네이티브 sticky 탭바 자체 숨김 (Phase 2-C 2026-05-16) ──
+   자체 탭바 [정보 | 후기 | 문의] 로 대체 → 중복 방지 */
+._prod_detail_tab_fixed,
+.site_prod_nav_wrap,
+.background_tab { display: none !important; }
+
+/* ── 위젯 초기 숨김 (DOM 이동 완료 후 표시 → 깜빡임 방지) ── */
+.mm-prv--ready { opacity: 1 !important; transition: opacity 0.2s ease; }
+.mm-prv-initial-hidden { opacity: 0; pointer-events: none; }
+
+/* ══════════════════════════════════════════════════════════════
+   Phase 2-C — 자체 sticky 탭바 (모바일 전용) + 모달 화살표
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 자체 탭바 (모바일에서만 표시) ── */
+.mm-tabs {
+  display: none; /* 기본 숨김, 모바일에서만 표시 */
+  position: sticky;
+  top: 0;
+  z-index: 99;
+  background: var(--mm-cream);
+  border-bottom: 1px solid var(--mm-border);
+  width: 100%;
+  font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* ⚠️ JS가 탭바를 상세정보 부모(그리드 안)로 이동 → 좌우 여백 발생
+     음수 마진 트릭으로 viewport 풀폭 강제 (2026-05-17) */
+  margin-left: calc((100% - 100vw) / 2);
+  margin-right: calc((100% - 100vw) / 2);
+}
+.mm-tabs__inner {
+  display: flex;
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+}
+.mm-tab {
+  flex: 1;
+  padding: 14px 8px 12px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mm-warm-gray);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  transition: color 0.2s ease, border-bottom-color 0.2s ease;
+}
+.mm-tab.active {
+  color: var(--mm-void);
+  font-weight: 700;
+  border-bottom-color: var(--mm-void);
+}
+.mm-tab:focus { outline: none; }
+
+@media (max-width: 767px) {
+  .mm-tabs { display: block; }
+}
+
+/* ── 모달 좌우 화살표 (Phase 2-C 신규) ── */
+.mm-prv__modal-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: var(--mm-shell);
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mm-void);
+  transition: background var(--mm-ease-fast), opacity var(--mm-ease-fast);
+  z-index: 2;
+}
+.mm-prv__modal-nav:hover { background: var(--mm-parchment); }
+.mm-prv__modal-nav--prev { left: -52px; }
+.mm-prv__modal-nav--next { right: -52px; }
+.mm-prv__modal-nav.hidden { display: none; }
+.mm-prv__modal-counter {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  color: var(--mm-warm-gray);
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+.mm-prv__modal-counter.hidden { display: none; }
+
+@media (max-width: 767px) {
+  /* 모바일: 화살표를 모달 밖이 아닌 안쪽 상단에 배치 (공간 절약) */
+  .mm-prv__modal-nav { position: absolute; top: 14px; transform: none; width: 32px; height: 32px; font-size: 16px; }
+  .mm-prv__modal-nav--prev { left: 14px; }
+  .mm-prv__modal-nav--next { right: 56px; } /* 닫기(✕) 좌측 */
+  .mm-prv__modal-counter { top: 18px; bottom: auto; transform: translateX(-50%); }
+  /* 모바일 모달은 상단 padding 더 → 화살표·카운터 자리 확보 */
+  .mm-prv__modal { padding-top: 56px; }
+}
 
 /* ── 0. 변수 & 리셋 ── */
 :root {
@@ -45,54 +187,288 @@
   overflow: visible;
 }
 
+/* ⚠️ JS가 후기 위젯을 상세정보 부모(그리드 안)로 이동 → 좌우 여백 발생
+   모바일에서 viewport 풀폭 강제 (2026-05-17). 내부 콘텐츠는 자체 max-width 유지 */
+@media (max-width: 767px) {
+  .mm-prv {
+    margin-left: calc((100% - 100vw) / 2);
+    margin-right: calc((100% - 100vw) / 2);
+    width: 100vw;
+  }
+}
+
 a { text-decoration: none; color: inherit; }
 img { display: block; max-width: 100%; }
 
-/* ── 1. 요약 헤더 ── */
+/* ── 1. 요약 헤더 — 큰 평균숫자 + 영문 라벨 (Phase 2) ── */
 .mm-prv__summary {
   text-align: center;
-  padding: 48px 24px 32px;
+  padding: 56px 24px 28px;
   max-width: var(--mm-max-w);
   margin: 0 auto;
 }
 .mm-prv__bar {
   display: inline-block;
-  width: 28px;
-  height: 3px;
+  width: 24px;
+  height: 2px;
   background: var(--mm-void);
   border-radius: 2px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 .mm-prv__title {
   font-family: 'Outfit', sans-serif;
-  font-size: 20px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--mm-void);
-  margin-bottom: 14px;
-}
-.mm-prv__stars-display {
-  font-size: 26px;
-  letter-spacing: 3px;
-  color: var(--mm-void);
-  margin-bottom: 8px;
-}
-.mm-prv__meta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mm-warm-gray);
+  margin-bottom: 16px;
 }
 .mm-prv__avg {
   font-family: 'Outfit', sans-serif;
-  font-size: 22px;
+  font-size: 48px;
   font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
   color: var(--mm-void);
+  display: block;
+  margin-bottom: 12px;
+}
+.mm-prv__stars-display {
+  font-size: 16px;
+  letter-spacing: 4px;
+  color: var(--mm-void);
+  margin-bottom: 8px;
 }
 .mm-prv__count {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--mm-warm-gray);
+  letter-spacing: 0.02em;
+}
+
+/* ── 1-B. 별점 분포 그래프 — 슬림화 (Phase 2 미세조정) ── */
+.mm-prv__dist {
+  max-width: 360px;
+  margin: 0 auto 8px;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mm-prv__dist-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: opacity var(--mm-ease-fast);
+}
+.mm-prv__dist-row:hover { opacity: 0.7; }
+.mm-prv__dist-row.active { font-weight: 700; }
+.mm-prv__dist-star {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  color: var(--mm-warm-gray);
+  width: 28px;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.mm-prv__dist-row.active .mm-prv__dist-star { color: var(--mm-void); }
+.mm-prv__dist-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--mm-parchment);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.mm-prv__dist-bar-fill {
+  height: 100%;
+  background: var(--mm-void);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.mm-prv__dist-count {
+  font-size: 10px;
+  color: var(--mm-mist);
+  width: 32px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 1-C. 필터/정렬 바 — 슬림 (Phase 2 미세조정) ── */
+.mm-prv__controls {
+  max-width: var(--mm-max-w);
+  margin: 20px auto 4px;
+  padding: 0 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+.mm-prv__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mm-prv__filter-btn {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mm-warm-gray);
+  background: transparent;
+  border: 1px solid var(--mm-border);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all var(--mm-ease-fast);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.mm-prv__filter-btn:hover {
+  border-color: var(--mm-stone);
+  color: var(--mm-void);
+}
+.mm-prv__filter-btn.active {
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  border-color: var(--mm-void);
+  font-weight: 600;
+}
+.mm-prv__sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--mm-warm-gray);
+}
+.mm-prv__sort-select {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mm-void);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--mm-border);
+  border-radius: 0;
+  padding: 4px 22px 4px 4px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%231A1A1A' stroke-width='1.5' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+}
+.mm-prv__sort-select:focus { outline: none; border-bottom-color: var(--mm-void); }
+
+/* ── 1-D. 포토 후기 갤러리 — 호흡 (Phase 2 미세조정) ── */
+.mm-prv__gallery-wrap {
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+  padding: 28px 24px 4px;
+}
+.mm-prv__gallery-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mm-warm-gray);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.mm-prv__gallery-count {
+  font-size: 10px;
+  color: var(--mm-mist);
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
+}
+.mm-prv__gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.mm-prv__gallery-item {
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  background: var(--mm-shell);
+}
+.mm-prv__gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--mm-ease);
+}
+.mm-prv__gallery-item:hover img { transform: scale(1.05); }
+.mm-prv__gallery-item.more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+/* ── 빈 상태 (필터 결과 0건 / 후기 0건) ── */
+.mm-prv__empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--mm-warm-gray);
+  font-size: 14px;
+}
+.mm-prv__zero {
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+  padding: 80px 24px 96px;
+  text-align: center;
+}
+.mm-prv__zero-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mm-warm-gray);
+  margin-bottom: 24px;
+}
+.mm-prv__zero-icon {
+  font-family: 'Outfit', sans-serif;
+  font-size: 32px;
+  letter-spacing: 4px;
+  color: var(--mm-sand);
+  margin-bottom: 20px;
+  line-height: 1;
+}
+.mm-prv__zero-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--mm-void);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.mm-prv__zero-sub {
+  font-size: 13px;
+  color: var(--mm-warm-gray);
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+}
+@media (min-width: 768px) {
+  .mm-prv__zero { padding: 96px 40px 112px; }
+  .mm-prv__zero-icon { font-size: 36px; }
+  .mm-prv__zero-title { font-size: 17px; }
+  .mm-prv__zero-sub { font-size: 14px; }
 }
 
 /* ── 2. 리뷰 그리드 ── */
@@ -100,21 +476,21 @@ img { display: block; max-width: 100%; }
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
-  padding: 0 24px;
+  padding: 16px 24px 0;
   max-width: var(--mm-max-w);
   margin: 0 auto;
 }
 
-/* ── 3. 리뷰 카드 ── */
+/* ── 3. 리뷰 카드 — 호흡 강화 (Phase 2 미세조정) ── */
 .mm-prv__card {
   background: var(--mm-white);
   border: 1px solid var(--mm-border);
   border-radius: var(--mm-radius-md);
-  padding: 20px;
+  padding: 22px 22px 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  transition: box-shadow var(--mm-ease);
+  gap: 12px;
+  transition: box-shadow var(--mm-ease), transform var(--mm-ease-fast);
   cursor: pointer;
 }
 .mm-prv__card-img {
@@ -127,48 +503,53 @@ img { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 }
 .mm-prv__card-name {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--mm-void);
+  letter-spacing: -0.01em;
 }
 .mm-prv__card-stars {
   color: var(--mm-void);
-  font-size: 13px;
-  letter-spacing: 1px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
 }
 .mm-prv__card-product {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--mm-warm-gray);
+  letter-spacing: 0.01em;
 }
 .mm-prv__card-text {
   font-size: 14px;
   font-weight: 400;
-  color: var(--mm-stone);
-  line-height: 1.7;
+  color: var(--mm-graphite);
+  line-height: 1.75;
 }
 .mm-prv__card-date {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--mm-mist);
-  padding-top: 8px;
+  padding-top: 12px;
   border-top: 1px solid var(--mm-border);
+  letter-spacing: 0.02em;
 }
-/* 속성 태그 */
+/* 속성 태그 — 미니멀 (Phase 2) */
 .mm-prv__tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
 }
 .mm-prv__tag {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 500;
   color: var(--mm-warm-gray);
-  padding: 3px 10px;
+  padding: 2px 8px;
   border: 1px solid var(--mm-border);
   border-radius: var(--mm-radius-sm);
   background: transparent;
+  letter-spacing: 0.02em;
 }
 
 /* ── 모달 ── */
@@ -242,21 +623,22 @@ img { display: block; max-width: 100%; }
   padding-top: 12px; border-top: 1px solid var(--mm-border);
 }
 
-/* ── 더보기 버튼 ── */
+/* ── 더보기 버튼 — 미니멀 (Phase 2) ── */
 .mm-prv__loadmore {
   display: block;
   width: fit-content;
-  margin: 32px auto 48px;
-  padding: 12px 32px;
+  margin: 36px auto 56px;
+  padding: 11px 28px;
   border: 1px solid var(--mm-sand);
   border-radius: 999px;
   background: transparent;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--mm-warm-gray);
   cursor: pointer;
   transition: all var(--mm-ease-fast);
+  letter-spacing: 0.02em;
 }
 .mm-prv__loadmore:hover {
   border-color: var(--mm-void);
@@ -264,30 +646,68 @@ img { display: block; max-width: 100%; }
 }
 .mm-prv__loadmore:active { transform: scale(0.97); }
 
-/* ── 반응형 ── */
+/* ── 모바일 가로 스크롤 — 무신사 패턴 + 더보기 숨김 (Phase 2 수정) ── */
+@media (max-width: 767px) {
+  .mm-prv__grid {
+    display: flex !important;
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 12px;
+    padding: 16px 24px 8px;
+    grid-template-columns: none;
+    scrollbar-width: none;
+  }
+  .mm-prv__grid::-webkit-scrollbar { display: none; }
+  .mm-prv__card {
+    flex: 0 0 78%;
+    max-width: 300px;
+    scroll-snap-align: start;
+  }
+  /* 카드 텍스트 3줄로 제한 (높이 균일화) */
+  .mm-prv__card-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  /* 모바일은 가로 스크롤이 곧 전체 노출 → "후기 더보기" 버튼 불필요 (인지 부조화 방지) */
+  .mm-prv__loadmore { display: none !important; }
+}
+
+/* ── 반응형 (PC: 호흡 더 크게) ── */
 @media (min-width: 768px) {
-  .mm-prv__summary { padding: 64px 40px 36px; }
-  .mm-prv__title { font-size: 24px; }
-  .mm-prv__stars-display { font-size: 30px; }
+  .mm-prv__summary { padding: 72px 40px 32px; }
+  .mm-prv__title { font-size: 12px; }
+  .mm-prv__avg { font-size: 56px; }
+  .mm-prv__stars-display { font-size: 18px; letter-spacing: 5px; }
+  .mm-prv__count { font-size: 13px; }
+  .mm-prv__dist { padding-left: 40px; padding-right: 40px; }
+  .mm-prv__controls, .mm-prv__gallery-wrap { padding-left: 40px; padding-right: 40px; }
+  .mm-prv__gallery { grid-template-columns: repeat(5, 1fr); gap: 8px; }
   .mm-prv__grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
-    padding: 0 40px;
+    padding: 20px 40px 0;
   }
-  .mm-prv__card { padding: 24px; }
+  .mm-prv__card { padding: 28px 28px 20px; gap: 14px; }
   .mm-prv__card-text { font-size: 15px; }
+  .mm-prv__card-name { font-size: 15px; }
 }
 
 @media (min-width: 1024px) {
-  .mm-prv__summary { padding: 64px 40px 40px; }
-  .mm-prv__title { font-size: 26px; }
+  .mm-prv__summary { padding: 80px 40px 36px; }
+  .mm-prv__avg { font-size: 64px; }
+  .mm-prv__gallery { grid-template-columns: repeat(6, 1fr); gap: 10px; }
   .mm-prv__grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
-    padding: 0 40px;
+    padding: 24px 40px 0;
   }
-  .mm-prv__card { padding: 32px; }
-  .mm-prv__card-text { font-size: 16px; line-height: 1.7; }
+  .mm-prv__card { padding: 32px 32px 24px; }
+  .mm-prv__card-text { font-size: 15px; line-height: 1.75; }
 }
 
 /* PC hover */
@@ -340,29 +760,81 @@ img { display: block; max-width: 100%; }
 }
 </style>
 
+<!-- 자체 sticky 탭바 (모바일 전용) — JS가 상세정보 직전으로 DOM 이동 (Phase 2-C) -->
+<nav class="mm-tabs" id="mmTabs">
+  <div class="mm-tabs__inner">
+    <button class="mm-tab active" data-target="info" type="button">정보</button>
+    <button class="mm-tab" data-target="reviews" type="button">후기</button>
+    <button class="mm-tab" data-target="contact" type="button">문의</button>
+  </div>
+</nav>
+
 <div class="mm-prv" id="mmPrvRoot" style="display:none">
 
-<!-- 요약 헤더 -->
+<!-- 요약 헤더 — 큰 평점 숫자가 메인, 영문 라벨 보조 (Phase 2) -->
 <header class="mm-prv__summary" id="prvSummary">
   <span class="mm-prv__bar"></span>
-  <h2 class="mm-prv__title">고객 후기</h2>
+  <p class="mm-prv__title">CUSTOMER REVIEWS · 고객 후기</p>
+  <span class="mm-prv__avg" id="prvAvg"></span>
   <div class="mm-prv__stars-display" id="prvStars"></div>
-  <div class="mm-prv__meta">
-    <span class="mm-prv__avg" id="prvAvg"></span>
-    <span class="mm-prv__count" id="prvCount"></span>
-  </div>
+  <div class="mm-prv__count" id="prvCount"></div>
 </header>
+
+<!-- 별점 분포 그래프 (Phase 1 신규) -->
+<div class="mm-prv__dist" id="prvDist"></div>
+
+<!-- 포토 후기 갤러리 (Phase 1 신규) -->
+<div class="mm-prv__gallery-wrap" id="prvGalleryWrap" style="display:none">
+  <div class="mm-prv__gallery-title">
+    PHOTO REVIEW
+    <span class="mm-prv__gallery-count" id="prvGalleryCount"></span>
+  </div>
+  <div class="mm-prv__gallery" id="prvGallery"></div>
+</div>
+
+<!-- 필터 + 정렬 바 (Phase 1 신규) -->
+<div class="mm-prv__controls">
+  <div class="mm-prv__filters" id="prvFilters">
+    <button class="mm-prv__filter-btn active" data-filter="all">전체</button>
+    <button class="mm-prv__filter-btn" data-filter="photo">포토</button>
+    <button class="mm-prv__filter-btn" data-filter="5">★ 5</button>
+    <button class="mm-prv__filter-btn" data-filter="4">★ 4</button>
+    <button class="mm-prv__filter-btn" data-filter="3">★ 3</button>
+  </div>
+  <div class="mm-prv__sort">
+    <span>정렬</span>
+    <select class="mm-prv__sort-select" id="prvSort">
+      <option value="recent">최신순</option>
+      <option value="rating_high">별점 높은순</option>
+      <option value="rating_low">별점 낮은순</option>
+    </select>
+  </div>
+</div>
 
 <!-- 리뷰 그리드 -->
 <div class="mm-prv__grid" id="prvGrid"></div>
 
+<!-- 필터 결과 빈 상태 -->
+<div class="mm-prv__empty" id="prvEmpty" style="display:none">조건에 맞는 후기가 없어요.</div>
+
+<!-- 후기 0건 빈 상태 — 위젯 본체 (Phase 2-C+) -->
+<div class="mm-prv__zero" id="prvZero" style="display:none">
+  <div class="mm-prv__zero-label">CUSTOMER REVIEWS · 고객 후기</div>
+  <div class="mm-prv__zero-icon">☆ ☆ ☆ ☆ ☆</div>
+  <div class="mm-prv__zero-title">아직 등록된 후기가 없어요</div>
+  <div class="mm-prv__zero-sub">첫 후기의 주인공이 되어 주세요.</div>
+</div>
+
 <!-- 더보기 -->
 <button class="mm-prv__loadmore" id="prvLoadmore" style="display:none">후기 더보기</button>
 
-<!-- 상세 모달 -->
+<!-- 상세 모달 — 좌우 화살표로 다음/이전 후기 (Phase 2-C) -->
 <div class="mm-prv__overlay" id="prvOverlay">
   <div class="mm-prv__modal">
-    <button class="mm-prv__modal-close" id="prvModalClose">✕</button>
+    <button class="mm-prv__modal-nav mm-prv__modal-nav--prev" id="prvModalPrev" type="button" aria-label="이전 후기">‹</button>
+    <button class="mm-prv__modal-nav mm-prv__modal-nav--next" id="prvModalNext" type="button" aria-label="다음 후기">›</button>
+    <button class="mm-prv__modal-close" id="prvModalClose" type="button" aria-label="닫기">✕</button>
+    <div class="mm-prv__modal-counter" id="prvModalCounter"></div>
     <div id="prvModalBody"></div>
   </div>
 </div>
@@ -385,11 +857,17 @@ img { display: block; max-width: 100%; }
   var API_URL = 'https://app-eta-sandy-75.vercel.app/api/reviews/public';
   var PER_PAGE = 6;
   var currentPage = 1;
-  var allReviews = [];
+  var allReviews = [];       // 원본 데이터 (불변)
+  var filteredReviews = [];  // 필터/정렬 적용된 데이터
+  var currentFilter = 'all'; // all | photo | 5 | 4 | 3
+  var currentSort = 'recent';
   var root = document.getElementById('mmPrvRoot');
 
   /* ── 자동 감지: 아임웹 상품번호 추출 ── */
   var urlParams = new URLSearchParams(window.location.search);
+
+  /* ── 데모 모드 체크 (?demo=1 — 검증용, 일반 사용자 영향 X) ── */
+  var DEMO_MODE = urlParams.get('demo') === '1';
 
   function extractIdx(url) {
     if (!url) return null;
@@ -412,8 +890,8 @@ img { display: block; max-width: 100%; }
     apiQuery = '?group=' + encodeURIComponent(group);
   } else if (imwebNo) {
     apiQuery = '?imweb_no=' + encodeURIComponent(imwebNo);
-  } else {
-    // 감지 실패 → 위젯 숨김 유지
+  } else if (!DEMO_MODE) {
+    // 감지 실패 → 위젯 숨김 유지 (데모 모드는 imweb_no 없어도 통과)
     sendHeight(0);
     return;
   }
@@ -485,12 +963,27 @@ img { display: block; max-width: 100%; }
     '</article>';
   }
 
+  // 모바일은 가로 스크롤 → 처음부터 전체 노출 (더보기 버튼 없음)
+  function getEffectivePerPage() {
+    return window.innerWidth < 768 ? 999 : PER_PAGE;
+  }
+
   function render() {
     var grid = document.getElementById('prvGrid');
     var btn = document.getElementById('prvLoadmore');
-    var visible = allReviews.slice(0, currentPage * PER_PAGE);
+    var empty = document.getElementById('prvEmpty');
+    var perPage = getEffectivePerPage();
+    var visible = filteredReviews.slice(0, currentPage * perPage);
+    if (filteredReviews.length === 0) {
+      grid.innerHTML = '';
+      empty.style.display = 'block';
+      btn.style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none';
     grid.innerHTML = visible.map(function(r, i) { return renderCard(r, i); }).join('');
-    btn.style.display = (visible.length < allReviews.length) ? 'block' : 'none';
+    // PC에서만 더보기 버튼 노출 (모바일은 CSS로 추가 숨김)
+    btn.style.display = (visible.length < filteredReviews.length) ? 'block' : 'none';
   }
 
   function renderSummary(stats) {
@@ -500,12 +993,161 @@ img { display: block; max-width: 100%; }
     document.getElementById('prvCount').textContent = '후기 ' + stats.count + '건';
   }
 
-  /* ── 상세 모달 ── */
+  /* ── Phase 1: 별점 분포 그래프 ── */
+  function renderDist() {
+    var total = allReviews.length;
+    if (total === 0) return;
+    var counts = [0, 0, 0, 0, 0]; // index 0=★5, 1=★4, 2=★3, 3=★2, 4=★1
+    allReviews.forEach(function(r) {
+      var s = Math.max(1, Math.min(5, parseInt(r.stars) || 0));
+      counts[5 - s]++;
+    });
+    var distEl = document.getElementById('prvDist');
+    distEl.innerHTML = counts.map(function(c, i) {
+      var star = 5 - i;
+      var pct = total > 0 ? Math.round((c / total) * 100) : 0;
+      return '<div class="mm-prv__dist-row" data-filter="' + star + '">' +
+        '<span class="mm-prv__dist-star">★ ' + star + '</span>' +
+        '<div class="mm-prv__dist-bar"><div class="mm-prv__dist-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<span class="mm-prv__dist-count">' + c + '건</span>' +
+      '</div>';
+    }).join('');
+    // 분포 막대 클릭 → 해당 별점 필터 적용
+    distEl.addEventListener('click', function(e) {
+      var row = e.target.closest('.mm-prv__dist-row');
+      if (!row) return;
+      var star = row.dataset.filter;
+      setFilter(star);
+    });
+  }
+
+  /* ── Phase 1: 포토 후기 갤러리 ── */
+  function renderGallery() {
+    var photos = [];
+    allReviews.forEach(function(r, idx) {
+      if (r.photo_urls && r.photo_urls.length > 0) {
+        photos.push({ url: r.photo_urls[0], reviewIdx: idx, review: r });
+      }
+    });
+    if (photos.length === 0) return;
+
+    var wrap = document.getElementById('prvGalleryWrap');
+    var galleryEl = document.getElementById('prvGallery');
+    var countEl = document.getElementById('prvGalleryCount');
+    wrap.style.display = 'block';
+    countEl.textContent = '· ' + photos.length + '장';
+
+    // 최대 5장(모바일 3장 + 더보기) — 미디어 쿼리로 PC는 6장
+    var maxShow = 6;
+    var displayed = photos.slice(0, maxShow);
+    var hasMore = photos.length > maxShow;
+
+    var html = displayed.map(function(p, i) {
+      // 마지막 칸에 "+N" 오버레이 (더 있을 때)
+      if (hasMore && i === maxShow - 1) {
+        return '<div class="mm-prv__gallery-item more" data-gallery-more="1">+' + (photos.length - maxShow + 1) + '</div>';
+      }
+      return '<div class="mm-prv__gallery-item" data-review-idx="' + p.reviewIdx + '">' +
+        '<img src="' + p.url + '" alt="포토 후기" loading="lazy">' +
+      '</div>';
+    }).join('');
+    galleryEl.innerHTML = html;
+
+    // 갤러리 클릭 → 포토 후기만 모은 리스트로 모달 (좌우 화살표 = 포토 후기 사이 순환)
+    galleryEl.addEventListener('click', function(e) {
+      var more = e.target.closest('[data-gallery-more]');
+      if (more) {
+        setFilter('photo');
+        return;
+      }
+      var item = e.target.closest('[data-review-idx]');
+      if (item) {
+        var clickedIdx = parseInt(item.dataset.reviewIdx);
+        // 포토 후기만 추출한 리스트
+        var photoList = allReviews.filter(function(r) { return r.photo_urls && r.photo_urls.length > 0; });
+        // clickedIdx 는 allReviews 기준 → photoList 안에서 위치 찾기
+        var posInPhotoList = photoList.indexOf(allReviews[clickedIdx]);
+        if (posInPhotoList >= 0) {
+          openModalAt(photoList, posInPhotoList, 'gallery');
+        }
+      }
+    });
+  }
+
+  /* ── Phase 1: 필터 + 정렬 ── */
+  function applyFilterSort() {
+    var arr = allReviews.slice();
+
+    // 필터
+    if (currentFilter === 'photo') {
+      arr = arr.filter(function(r) { return r.photo_urls && r.photo_urls.length > 0; });
+    } else if (currentFilter === '5' || currentFilter === '4' || currentFilter === '3') {
+      var target = parseInt(currentFilter);
+      arr = arr.filter(function(r) { return parseInt(r.stars) === target; });
+    }
+
+    // 정렬
+    if (currentSort === 'recent') {
+      arr.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+    } else if (currentSort === 'rating_high') {
+      arr.sort(function(a, b) {
+        if (b.stars !== a.stars) return b.stars - a.stars;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+    } else if (currentSort === 'rating_low') {
+      arr.sort(function(a, b) {
+        if (a.stars !== b.stars) return a.stars - b.stars;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+    }
+
+    filteredReviews = arr;
+    currentPage = 1; // 필터 변경 시 페이지 초기화
+  }
+
+  function setFilter(filter) {
+    currentFilter = filter;
+    // 버튼 active 상태 갱신
+    var btns = document.querySelectorAll('.mm-prv__filter-btn');
+    btns.forEach(function(b) {
+      b.classList.toggle('active', b.dataset.filter === filter);
+    });
+    // 분포 행 active 표시
+    var rows = document.querySelectorAll('.mm-prv__dist-row');
+    rows.forEach(function(r) {
+      r.classList.toggle('active', r.dataset.filter === filter);
+    });
+    applyFilterSort();
+    render();
+    // 그리드 위로 스크롤
+    var grid = document.getElementById('prvGrid');
+    if (grid && grid.scrollIntoView) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // 필터 버튼 클릭
+  document.getElementById('prvFilters').addEventListener('click', function(e) {
+    var btn = e.target.closest('.mm-prv__filter-btn');
+    if (!btn) return;
+    setFilter(btn.dataset.filter);
+  });
+
+  // 정렬 변경
+  document.getElementById('prvSort').addEventListener('change', function(e) {
+    currentSort = e.target.value;
+    applyFilterSort();
+    render();
+  });
+
+  /* ── 상세 모달 — 좌우 화살표로 다음/이전 후기 순환 (Phase 2-C) ── */
   var overlay = document.getElementById('prvOverlay');
   var modalBody = document.getElementById('prvModalBody');
+  var modalPrev = document.getElementById('prvModalPrev');
+  var modalNext = document.getElementById('prvModalNext');
+  var modalCounter = document.getElementById('prvModalCounter');
   var currentModalPhotos = [];
+  var modalContext = { list: [], idx: -1, source: 'card' }; // list = 순회 대상, idx = 현재 인덱스
 
-  function openModal(r) {
+  function renderModalContent(r) {
     currentModalPhotos = (r.photo_urls && r.photo_urls.length > 0) ? r.photo_urls : [];
     var photosHtml = '';
     if (currentModalPhotos.length > 0) {
@@ -524,8 +1166,36 @@ img { display: block; max-width: 100%; }
       '<div class="mm-prv__modal-text">' + r.content + '</div>' +
       photosHtml +
       '<div class="mm-prv__modal-date">' + fmtDate(r.created_at) + '</div>';
+  }
+
+  function updateModalNav() {
+    var total = modalContext.list.length;
+    var showNav = total > 1;
+    modalPrev.classList.toggle('hidden', !showNav);
+    modalNext.classList.toggle('hidden', !showNav);
+    modalCounter.classList.toggle('hidden', !showNav);
+    if (showNav) {
+      modalCounter.textContent = (modalContext.idx + 1) + ' / ' + total;
+    }
+  }
+
+  function openModalAt(list, idx, source) {
+    if (!list || list.length === 0) return;
+    var safeIdx = ((idx % list.length) + list.length) % list.length; // 음수 보정 + 순환
+    modalContext = { list: list, idx: safeIdx, source: source || 'card' };
+    renderModalContent(list[safeIdx]);
+    updateModalNav();
     overlay.classList.add('mm-prv__overlay--open');
     document.body.style.overflow = 'hidden';
+    // 모달 내용 위로 스크롤 (긴 후기 후 다음 후기 진입 시 상단부터 보이도록)
+    var modalEl = document.querySelector('.mm-prv__modal');
+    if (modalEl) modalEl.scrollTop = 0;
+  }
+
+  function navigateModal(dir) {
+    if (!modalContext.list || modalContext.list.length === 0) return;
+    var newIdx = modalContext.idx + dir;
+    openModalAt(modalContext.list, newIdx, modalContext.source);
   }
 
   function closeModal() {
@@ -534,14 +1204,31 @@ img { display: block; max-width: 100%; }
   }
 
   document.getElementById('prvModalClose').addEventListener('click', closeModal);
+  modalPrev.addEventListener('click', function(e) { e.stopPropagation(); navigateModal(-1); });
+  modalNext.addEventListener('click', function(e) { e.stopPropagation(); navigateModal(1); });
   overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
 
   document.getElementById('prvGrid').addEventListener('click', function(e) {
     var card = e.target.closest('.mm-prv__card');
     if (!card) return;
     var idx = parseInt(card.dataset.idx);
-    var visible = allReviews.slice(0, currentPage * PER_PAGE);
-    if (visible[idx]) openModal(visible[idx]);
+    var perPage = getEffectivePerPage();
+    var visible = filteredReviews.slice(0, currentPage * perPage);
+    if (visible[idx]) openModalAt(visible, idx, 'card');
+  });
+
+  // 모달이 열려있을 때 스와이프 (모바일) — 라이트박스 닫혀있을 때만
+  var modalTouchStartX = 0;
+  overlay.addEventListener('touchstart', function(e) {
+    if (!overlay.classList.contains('mm-prv__overlay--open')) return;
+    modalTouchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  overlay.addEventListener('touchend', function(e) {
+    if (!overlay.classList.contains('mm-prv__overlay--open')) return;
+    // 라이트박스가 열려있으면 라이트박스 스와이프가 우선 (모달 스와이프 무시)
+    if (document.getElementById('prvLightbox').classList.contains('mm-lb--open')) return;
+    var dx = e.changedTouches[0].clientX - modalTouchStartX;
+    if (Math.abs(dx) > 60) navigateModal(dx > 0 ? -1 : 1);
   });
 
   /* ── 라이트박스 ── */
@@ -579,6 +1266,8 @@ img { display: block; max-width: 100%; }
       if (e.key === 'ArrowRight') lbNext.click();
     } else if (overlay.classList.contains('mm-prv__overlay--open')) {
       if (e.key === 'Escape') closeModal();
+      if (e.key === 'ArrowLeft') navigateModal(-1);
+      if (e.key === 'ArrowRight') navigateModal(1);
     }
   });
 
@@ -611,35 +1300,371 @@ img { display: block; max-width: 100%; }
     sendHeight();
   }
 
-  /* ── 데이터 로드 ── */
-  fetch(API_URL + apiQuery)
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      var reviews = [];
-      var stats = { count: 0, average: 0 };
+  /* ══════════════════════════════════════════════════════════════
+     Phase 2-C: DOM 배치 + sticky 탭바 (2026-05-16)
+     ──────────────────────────────────────────────────────────────
+     배치 흐름 (무신사 표준):
+       1) 상품 메인 (이미지·가격·구매하기)
+       2) [sticky 탭바: 정보 | 후기 | 문의]  ← 모바일만 표시
+       3) 상세정보 (아임웹 네이티브)
+       4) 후기 위젯
+       5) 공통 영역 (PROMISE·카카오·FAQ) — 외부 코드위젯
 
-      if (data && data.reviews) {
-        reviews = Array.isArray(data.reviews) ? data.reviews : [];
-        stats = data.stats || stats;
-      } else if (Array.isArray(data)) {
-        reviews = data;
+     아임웹 PC/모바일 DOM 분리 대응:
+       findVisible(selector) — offsetParent !== null 인 노드만 선택
+       resize 이벤트에서 viewport 변경 시 재배치 */
+
+  // 보이는(현재 viewport에서 렌더되는) 노드 1개만 반환
+  function findVisible(selector) {
+    var nodes = document.querySelectorAll(selector);
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].offsetParent !== null) return nodes[i];
+    }
+    return null;
+  }
+
+  // 상세정보 본문 영역 (PC: lazy_load, 모바일: lazy_load_mobile)
+  function findDetailSection() {
+    var selectors = [
+      '._prod_detail_detail_lazy_load',
+      '._prod_detail_detail_lazy_load_mobile',
+      '._detail_detail_wrap',
+      '._detail_detail_wrap_mobile'
+    ];
+    for (var i = 0; i < selectors.length; i++) {
+      var el = findVisible(selectors[i]);
+      if (el) return el;
+    }
+    return null;
+  }
+
+  // ⚠️ 상세정보 블록 끝(펼쳐보기 버튼) 찾기 — 후기 위젯을 *그 다음*에 배치하기 위함
+  //    아임웹 lazy_load_mobile 은 미리보기만 감싸고, "펼쳐보기" 버튼은 형제로 존재
+  //    → 펼쳐보기 버튼 다음으로 후기 위젯을 옮겨야 사장님 의도(상세정보 블록 전체 아래) 일치
+  function findExpandAnchor(detail) {
+    if (!detail || !detail.parentNode) return null;
+    var parent = detail.parentNode;
+    var children = parent.children;
+    var passed = false;
+    for (var i = 0; i < children.length; i++) {
+      var el = children[i];
+      if (el === detail) { passed = true; continue; }
+      if (!passed) continue;
+      // detail 다음 형제 중 "펼쳐보기"·"더보기" 텍스트 or 일반적인 more/expand 클래스
+      var text = (el.textContent || '').trim();
+      if (text.length < 30 && /펼쳐보기|상세보기|더보기|펼치기/.test(text)) return el;
+      var cls = el.className || '';
+      if (typeof cls === 'string' && /\b(view_more|view-more|btn_more|btn-more|_more|more_btn|expand|detail_more)\b/i.test(cls)) return el;
+      // 또는 자식에 펼쳐보기 버튼이 포함된 경우 (감싸는 div)
+      if (el.querySelector && el.querySelector('a, button')) {
+        var inner = el.querySelector('a, button');
+        var innerText = (inner.textContent || '').trim();
+        if (innerText.length < 30 && /펼쳐보기|상세보기|더보기|펼치기/.test(innerText)) return el;
+      }
+    }
+    return null; // 못 찾으면 null → fallback 으로 detail 직후 사용
+  }
+
+  function tryArrangeLayout() {
+    try {
+      var widget = root && root.parentElement; // 후기 위젯 코드위젯 래퍼
+      var tabs = document.getElementById('mmTabs');
+      if (!widget) return false;
+
+      var detail = findDetailSection();
+      if (!detail || !detail.parentNode) {
+        console.log('[MAMORU 리뷰] 상세정보 영역 미발견 — 재시도 대기');
+        return false;
       }
 
-      // 리뷰 0건 → 위젯 숨김 (빈 영역 노출 방지)
-      if (reviews.length === 0) {
-        sendHeight(0);
-        return;
+      // (1) 후기 위젯 위치 결정:
+      //     1순위: "상세정보 펼쳐보기" 버튼 *직후* (사장님 의도)
+      //     2순위: 펼쳐보기 버튼 못 찾으면 상세정보 미리보기 직후 (fallback)
+      var expand = findExpandAnchor(detail);
+      var widgetAnchor = expand || detail;
+      var anchorLabel = expand ? '펼쳐보기 버튼 직후' : '상세정보 직후 (펼쳐보기 미발견)';
+
+      if (widgetAnchor.nextElementSibling !== widget) {
+        widgetAnchor.parentNode.insertBefore(widget, widgetAnchor.nextElementSibling);
+        console.log('[MAMORU 리뷰] 후기 위젯 배치:', anchorLabel,
+          expand ? '(matched: ' + (expand.className || expand.tagName) + ')' : '');
       }
 
-      allReviews = reviews;
-      root.style.display = '';
-      renderSummary(stats);
-      render();
-      initIframeComm();
-    })
-    .catch(function(err) {
-      console.error('[MAMORU 리뷰] API 에러:', err);
-      sendHeight(0);
+      // (2) sticky 탭바 → 상세정보 *직전* (모바일에서만 보임, CSS 처리)
+      if (tabs && detail.previousElementSibling !== tabs) {
+        detail.parentNode.insertBefore(tabs, detail);
+        console.log('[MAMORU 리뷰] 탭바 배치: 상세정보 직전');
+      }
+
+      return true;
+    } catch(e) {
+      console.warn('[MAMORU 리뷰] 레이아웃 배치 실패:', e.message);
+      return false;
+    }
+  }
+
+  // 아임웹은 페이지 동적 로딩 → 여러 시점에 시도 + viewport 변경 대응
+  function scheduleMove() {
+    if (root) root.classList.add('mm-prv-initial-hidden');
+
+    var attempts = [50, 200, 500, 1000, 2000];
+    var arranged = false;
+    attempts.forEach(function(ms) {
+      setTimeout(function() {
+        if (!arranged) arranged = tryArrangeLayout();
+        if (ms === attempts[attempts.length - 1] && root) {
+          root.classList.remove('mm-prv-initial-hidden');
+          root.classList.add('mm-prv--ready');
+        }
+      }, ms);
     });
+
+    // viewport 변경(PC↔모바일 전환) 시 재배치 (visible 노드 갱신)
+    var resizeTimer = null;
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function() { tryArrangeLayout(); }, 200);
+    });
+  }
+
+  /* ── 탭 클릭 핸들러 + scroll spy (Phase 2-C) ── */
+  function getTabTargets() {
+    return {
+      info: findDetailSection(),
+      reviews: root,
+      contact: document.getElementById('mm-contact-anchor')
+    };
+  }
+
+  function setActiveTab(name) {
+    var tabs = document.querySelectorAll('.mm-tab');
+    tabs.forEach(function(t) {
+      t.classList.toggle('active', t.dataset.target === name);
+    });
+  }
+
+  function scrollToSection(name) {
+    var targets = getTabTargets();
+    var el = targets[name];
+    if (!el) {
+      console.log('[MAMORU 리뷰] 탭 대상 미발견:', name);
+      return;
+    }
+    var stickyOffset = 56; // sticky 탭바 높이 보정
+    var top = el.getBoundingClientRect().top + window.pageYOffset - stickyOffset;
+    window.scrollTo({ top: top, behavior: 'smooth' });
+    setActiveTab(name);
+  }
+
+  function initTabs() {
+    var tabBar = document.getElementById('mmTabs');
+    if (!tabBar) return;
+    tabBar.addEventListener('click', function(e) {
+      var btn = e.target.closest('.mm-tab');
+      if (!btn) return;
+      scrollToSection(btn.dataset.target);
+    });
+
+    // scroll spy: 현재 viewport에 보이는 영역에 따라 active 탭 갱신
+    var spyTimer = null;
+    window.addEventListener('scroll', function() {
+      clearTimeout(spyTimer);
+      spyTimer = setTimeout(updateActiveTabByScroll, 80);
+    }, { passive: true });
+  }
+
+  function updateActiveTabByScroll() {
+    // 모바일만 (PC는 탭바 자체 숨김)
+    if (window.innerWidth >= 768) return;
+    var targets = getTabTargets();
+    var triggerY = 80; // sticky 탭바 아래 80px 지점 기준
+    var active = 'info';
+    ['info', 'reviews', 'contact'].forEach(function(name) {
+      var el = targets[name];
+      if (!el) return;
+      var rect = el.getBoundingClientRect();
+      if (rect.top <= triggerY) active = name;
+    });
+    setActiveTab(active);
+  }
+
+  /* ── 데모 데이터 (?demo=1 일 때만 사용) ── */
+  function getDemoData() {
+    var IMG_BASE = 'https://page.mamoru.kr/projects/products/product_detail/CL1-4T/images/';
+    var PRODUCT = 'A2-55FS · 블런트 5.5인치';
+    var now = Date.now();
+    var day = 24 * 60 * 60 * 1000;
+
+    var reviews = [
+      {
+        name: '김민수', stars: 5, product: PRODUCT,
+        content: '10년차 미용사인데 이렇게 손맛 좋은 가위는 처음이에요. 컷감이 정말 부드럽고 끝매김이 일관적이라 작업이 훨씬 편해졌습니다. 무엇보다 상담받을 때 "안 사셔도 됩니다"라는 말을 들어본 게 처음이라 신선했어요. 다른 브랜드와 다른 진정성이 느껴집니다.',
+        photo_urls: [IMG_BASE + 'hero.png', IMG_BASE + 'blade1.png'],
+        created_at: new Date(now - 3 * day).toISOString(),
+        meta: { tags: ['comfortable', 'professional', 'better_cut'] }
+      },
+      {
+        name: '박지혜', stars: 5, product: PRODUCT,
+        content: '컨설팅 받고 결정했는데 정말 만족스러워요. 제 손과 작업 스타일에 딱 맞는 가위를 추천해 주셔서 결정하기 편했고, 실제로 써보니 컷감이 달라요. 평생 복원수리도 가능하다니 마음이 편합니다.',
+        photo_urls: [IMG_BASE + 'blade2.png', IMG_BASE + 'handle.png'],
+        created_at: new Date(now - 7 * day).toISOString(),
+        meta: { tags: ['personalized', 'detailed_guide', 'professional'] }
+      },
+      {
+        name: '이서연', stars: 4, product: PRODUCT,
+        content: '처음에는 가격이 부담스러웠는데 써보니 그 값을 합니다. 가벼워서 손목 부담이 적고 끝매김이 깔끔해요. 다만 적응하는데 며칠 걸렸어요.',
+        photo_urls: [],
+        created_at: new Date(now - 10 * day).toISOString(),
+        meta: { tags: ['good_quality', 'reasonable_price'] }
+      },
+      {
+        name: '최유진', stars: 5, product: PRODUCT,
+        content: '컷감 진짜 부드러워요!! 5.5인치 블런트 작업이 이렇게 일관성 있게 나올 수 있는지 처음 알았네요. 추천합니다.',
+        photo_urls: [IMG_BASE + 'bolt.png'],
+        created_at: new Date(now - 14 * day).toISOString(),
+        meta: { tags: ['better_cut', 'would_recommend', 'above_expect'] }
+      },
+      {
+        name: '정현우', stars: 5, product: PRODUCT,
+        content: '대표님께서 직접 상담해 주시는데 미용가위에 대한 지식이 정말 깊으세요. 판매하려는 게 아니라 진짜로 안내해 주신다는 느낌. 가위도 명품이고요.',
+        photo_urls: [IMG_BASE + 'model.png', IMG_BASE + 'hero.png', IMG_BASE + 'handle.png'],
+        created_at: new Date(now - 18 * day).toISOString(),
+        meta: { tags: ['detailed_guide', 'thorough_info', 'professional'] }
+      },
+      {
+        name: '강수민', stars: 4, product: PRODUCT,
+        content: '디자인이 깔끔하고 모노톤이라 매장 어느 곳에 둬도 잘 어울려요. 무엇보다 손에 잡히는 그립감이 좋습니다. 약지부 카멜 형태가 안정적이에요.',
+        photo_urls: [],
+        created_at: new Date(now - 22 * day).toISOString(),
+        meta: { tags: ['comfortable', 'good_quality'] }
+      },
+      {
+        name: '한지영', stars: 5, product: PRODUCT,
+        content: '평생 복원수리가 진짜 좋네요. 다른 브랜드는 무뎌지면 신품 사라고 하는데 여긴 자체 기술로 복원해 주신다고. 그동안 가위 여러 자루 산 게 아까울 정도예요.',
+        photo_urls: [IMG_BASE + 'blade1.png'],
+        created_at: new Date(now - 26 * day).toISOString(),
+        meta: { tags: ['like_new', 'precise_edge', 'professional'] }
+      },
+      {
+        name: '오태호', stars: 5, product: PRODUCT,
+        content: '다른 가위 못 쓰겠어요. 손에 너무 잘 맞고 절삭력이 좋아서 작업 시간이 줄었습니다. 적극 추천!',
+        photo_urls: [],
+        created_at: new Date(now - 30 * day).toISOString(),
+        meta: { tags: ['better_cut', 'would_recommend'] }
+      },
+      {
+        name: '윤소희', stars: 3, product: PRODUCT,
+        content: '처음 받았을 때 약간 무거운 느낌이 있었는데 며칠 쓰니까 적응됐어요. 좋은 가위인 건 분명한데 손이 작은 분은 한 번 잡아보고 결정하시면 좋겠습니다.',
+        photo_urls: [],
+        created_at: new Date(now - 35 * day).toISOString(),
+        meta: { tags: ['fair_price'] }
+      },
+      {
+        name: '신재민', stars: 4, product: PRODUCT,
+        content: '포장도 꼼꼼하고 송장 알림톡도 빠르게 왔어요. 가위는 5.5인치라 블런트 작업에 적합하고 일관성이 좋습니다.',
+        photo_urls: [IMG_BASE + 'handle.png'],
+        created_at: new Date(now - 40 * day).toISOString(),
+        meta: { tags: ['fast_delivery', 'neat_packaging', 'good_quality'] }
+      },
+      {
+        name: '임가람', stars: 5, product: PRODUCT,
+        content: '대표님이 친절하시고 컨설팅이 정말 도움됩니다. 가격은 정직하고 할인이 없는 것도 신뢰가 가요. "이 가위 안 사도 된다" 솔직한 말 듣고 오히려 더 사고 싶어졌어요.',
+        photo_urls: [],
+        created_at: new Date(now - 45 * day).toISOString(),
+        meta: { tags: ['fair_price', 'comfortable', 'worth_time'] }
+      },
+      {
+        name: '조민재', stars: 3, product: PRODUCT,
+        content: '나쁘진 않은데 기대가 너무 컸나봐요. 본인 손에 맞는지 컨설팅 꼭 받고 결정하세요.',
+        photo_urls: [],
+        created_at: new Date(now - 55 * day).toISOString(),
+        meta: { tags: ['personalized'] }
+      }
+    ];
+
+    var avg = reviews.reduce(function(s, r) { return s + r.stars; }, 0) / reviews.length;
+    return {
+      reviews: reviews,
+      stats: { count: reviews.length, average: Math.round(avg * 10) / 10 }
+    };
+  }
+
+  /* ── 후기 0건 빈 상태 렌더 — 위젯 본체는 유지(탭바 작동 위해) ── */
+  function renderZeroState() {
+    // 후기 데이터가 없을 때: 요약/분포/갤러리/필터/그리드/더보기 모두 숨김
+    var summary = document.getElementById('prvSummary');
+    var dist = document.getElementById('prvDist');
+    var galleryWrap = document.getElementById('prvGalleryWrap');
+    var controls = document.querySelector('.mm-prv__controls');
+    var grid = document.getElementById('prvGrid');
+    var loadmore = document.getElementById('prvLoadmore');
+    var zero = document.getElementById('prvZero');
+    if (summary) summary.style.display = 'none';
+    if (dist) dist.style.display = 'none';
+    if (galleryWrap) galleryWrap.style.display = 'none';
+    if (controls) controls.style.display = 'none';
+    if (grid) grid.style.display = 'none';
+    if (loadmore) loadmore.style.display = 'none';
+    if (zero) zero.style.display = 'block';
+  }
+
+  /* ── 데이터 로드 ── */
+  if (DEMO_MODE) {
+    // 데모 모드 — 임시 더미 데이터로 즉시 렌더 (검증용)
+    var demo = getDemoData();
+    allReviews = demo.reviews;
+    root.style.display = '';
+    renderSummary(demo.stats);
+    renderDist();
+    renderGallery();
+    applyFilterSort();
+    render();
+    initIframeComm();
+    scheduleMove();   // DOM 배치 (상세정보 직후 + 탭바 상세정보 직전)
+    initTabs();       // 탭 클릭 핸들러 + scroll spy (Phase 2-C)
+    console.log('[MAMORU 리뷰 — 데모 모드] 더미 데이터 ' + demo.reviews.length + '건 표시');
+  } else {
+    fetch(API_URL + apiQuery)
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        var reviews = [];
+        var stats = { count: 0, average: 0 };
+
+        if (data && data.reviews) {
+          reviews = Array.isArray(data.reviews) ? data.reviews : [];
+          stats = data.stats || stats;
+        } else if (Array.isArray(data)) {
+          reviews = data;
+        }
+
+        allReviews = reviews;
+        root.style.display = '';
+
+        if (reviews.length === 0) {
+          // 후기 0건 — 빈 상태 메시지만 + sticky 탭바 정상 작동 (정보/문의 점프)
+          renderZeroState();
+        } else {
+          renderSummary(stats);
+          renderDist();
+          renderGallery();
+          applyFilterSort();
+          render();
+        }
+
+        initIframeComm();
+        scheduleMove();   // DOM 배치 (Phase 2-C) — 후기 0건이어도 탭바 배치
+        initTabs();       // 탭 핸들러 — 후기 0건이어도 [정보]/[문의] 점프 작동
+      })
+      .catch(function(err) {
+        console.error('[MAMORU 리뷰] API 에러:', err);
+        // 에러 시에도 위젯·탭바는 유지 (정보/문의는 작동)
+        allReviews = [];
+        root.style.display = '';
+        renderZeroState();
+        initIframeComm();
+        scheduleMove();
+        initTabs();
+      });
+  }
 })();
 </script>
