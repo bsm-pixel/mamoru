@@ -1,6 +1,6 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-17 — **상품 상세 페이지 후기 위젯 Phase 2-C 완료**. sticky 탭바 + 모달 좌우 화살표 + Warm Premium v5 + 코드위젯 SSOT 표준화
+> 최종 수정: 2026-05-17 — **상품 상세 페이지 후기 위젯 Phase 2-C + v10 본문 중복 정리 완료**. sticky 탭바 + 모달 화살표 + Warm Premium v5 + v10 본문 11섹션 압축 (Brand Transition·Lifetime Care 제거)
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
@@ -14,6 +14,21 @@
 - `as_review_request` (복원수리 후기) — 새 URL: `type=repair`로 통일
 
 검수 통과 시 자동 활성화. 운영 무중단 (GitHub Pages 자동 301 redirect 로 옛 URL도 작동).
+
+---
+
+## ✅ 완료 (05-17): v10 본문 × 공통 영역 중복 정리 (방향 B)
+
+**문제**: v10 본문(13섹션·약 5000px·PC 4~5 화면)이 공통 영역과 메시지 중복 (슬로건 3번·평생 복원수리 4~5번·"안 사셔도 괜찮습니다" 3번) → 임팩트 분산
+
+**결정**: 공통 영역을 메시지 SSOT로 확정, v10 본문은 상품 자체 설명에 집중
+
+변경 (v10_trendy 마스터 1파일):
+- [x] **08.5 Brand Transition 섹션 제거** — 슬로건은 공통 SLOGAN에만 1회 노출
+- [x] **11 Lifetime Care 섹션 제거** — 공통 PROMISE 02 + FAQ에 위임
+- [x] **13 CTA 내부 슬로건 문구 제거** — CTA 메시지("안 사셔도 괜찮습니다")는 유지
+- [x] 결과: 13섹션 → **11섹션**, 스크롤 ~20% 단축, 본문 슬로건 노출 0건 (공통 SLOGAN만)
+- [x] SSOT 메모리 `project_brand_v10_assembly.md` 변경 이력 갱신
 
 ---
 
