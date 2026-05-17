@@ -190,14 +190,19 @@ function SaleInfo({ sale }: { sale: Record<string, unknown> }) {
 
 function SaleItems({ items, serials }: {
   items: import('@/lib/supabase/types').OfflineSaleItem[];
-  serials: Array<{ id: string; serial_number: string; product_id: string }>;
+  serials: Array<{ id: string; serial_number: string; product_id: string | null; sale_item_id?: string | null }>;
 }) {
   return (
     <div className="border-t border-neutral-100 pt-3">
       <h4 className="text-xs font-semibold text-neutral-500 mb-2">판매 항목</h4>
       <div className="space-y-2">
         {items.map((item) => {
-          const itemSerials = serials.filter((s) => s.product_id === item.product_id);
+          // 시리얼 매칭: 1순위 sale_item_id 정확 / 2순위 product_id fallback (레거시 데이터용)
+          // (2026-05-17 fix — 다중 상품 판매 시리얼 잘못 표시 버그)
+          const bySaleItem = serials.filter((s) => s.sale_item_id === item.id);
+          const itemSerials = bySaleItem.length > 0
+            ? bySaleItem
+            : serials.filter((s) => !s.sale_item_id && s.product_id === item.product_id);
           return (
             <div key={item.id} className="py-1.5">
               <div className="flex items-center justify-between">

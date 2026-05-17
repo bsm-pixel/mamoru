@@ -566,20 +566,34 @@ export async function PATCH(
       const { data: insertedSaleItems } = await db.from('offline_sale_items').insert(saleItems).select('id, product_id');
 
       // ── STEP 3.5: 기존 시리얼 보존 시 sale_item_id 재매칭 ──
+      // 핵심: 같은 product_id 인 sale_item 이 여러 줄(qty=1 짜리 2줄 등)일 때도
+      //       정확히 분배되도록 product_id 별 큐(FIFO) + quantity 만큼 pop (2026-05-17 fix)
+      //       이전 버그: filter() 가 매번 같은 시리얼 배열 반환 → 마지막 sale_item 만 시리얼 보유
       if (!hasNewSerials && oldSerials && oldSerials.length > 0 && insertedSaleItems) {
-        let serialIdx = 0;
-        for (const saleItem of insertedSaleItems) {
-          const matchSerials = oldSerials.filter((s: { product_id: string | null }) =>
-            s.product_id === saleItem.product_id
-          );
-          if (matchSerials.length > 0) {
-            for (const sr of matchSerials) {
+        const serialQueue: Record<string, Array<{ id: string; product_id: string | null }>> = {};
+        for (const sr of oldSerials as Array<{ id: string; product_id: string | null }>) {
+          const key = sr.product_id || '__null__';
+          if (!serialQueue[key]) serialQueue[key] = [];
+          serialQueue[key].push(sr);
+        }
+        for (let i = 0; i < insertedSaleItems.length; i++) {
+          const saleItem = insertedSaleItems[i];
+          const item = newItems[i];
+          if (!saleItem || !item) continue;
+          const key = saleItem.product_id || '__null__';
+          const queue = serialQueue[key];
+          if (!queue || queue.length === 0) continue;
+          const take = Math.min(item.quantity || 1, queue.length);
+          for (let j = 0; j < take; j++) {
+            const sr = queue.shift();
+            if (sr) {
               await db.from('product_serials').update({ sale_item_id: saleItem.id }).eq('id', sr.id);
             }
-          } else if (serialIdx < oldSerials.length) {
-            await db.from('product_serials').update({ sale_item_id: saleItem.id }).eq('id', oldSerials[serialIdx].id);
-            serialIdx++;
           }
+        }
+        const leftover = Object.values(serialQueue).flat();
+        if (leftover.length > 0) {
+          console.warn(`[rebuild_sale] sale_id=${id} 시리얼 ${leftover.length}건 미매칭 (수량 변경 등으로 sale_item_id=null 유지)`);
         }
       }
 

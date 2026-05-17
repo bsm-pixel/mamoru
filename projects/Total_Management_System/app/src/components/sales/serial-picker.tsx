@@ -17,6 +17,7 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
   const [open, setOpen] = useState(false);
   const [manualMode, setManualMode] = useState(false);
   const [manualInput, setManualInput] = useState('');
+  const [generating, setGenerating] = useState(false);
   const { data: serials = [], isLoading } = useAvailableSerials(productId);
 
   // 재고 시리얼이 0개이면 자동으로 직접입력 모드
@@ -36,6 +37,9 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
   }
 
   async function autoGenerate() {
+    // 중복 호출 방지 — 빠른 다중 클릭 시 같은 번호 추가되던 버그 차단 (2026-05-17 fix)
+    if (generating) return;
+    setGenerating(true);
     try {
       const res = await fetch('/api/serials/batch');
       const data = await res.json();
@@ -44,6 +48,9 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
       while (existing.includes(next)) next++;
       onManualSerialsChange?.([...manualSerials, String(next)]);
     } catch { /* ignore */ }
+    finally {
+      setGenerating(false);
+    }
   }
 
   const selectedCount = selectedSerialIds.length + manualSerials.length;
@@ -114,10 +121,10 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
           {/* 직접 입력 모드 */}
           {manualMode && (
             <div className="space-y-1.5">
-              {/* 자동 번호 생성 — 최상단 눈에 띄는 버튼 */}
-              <button type="button" onClick={autoGenerate}
-                className="w-full py-2 rounded-lg border border-dashed border-green-300 bg-green-50 text-green-700 text-xs font-semibold hover:bg-green-100 transition">
-                + 자동 번호 생성
+              {/* 자동 번호 생성 — 최상단 눈에 띄는 버튼 (중복 클릭 방지 disabled) */}
+              <button type="button" onClick={autoGenerate} disabled={generating}
+                className="w-full py-2 rounded-lg border border-dashed border-green-300 bg-green-50 text-green-700 text-xs font-semibold hover:bg-green-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                {generating ? '생성 중...' : '+ 자동 번호 생성'}
               </button>
 
               {/* 이미 추가된 시리얼 목록 */}

@@ -132,7 +132,12 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
           <h3 className="text-sm font-bold text-indigo-black mb-3">판매 항목</h3>
           <div className="space-y-2">
             {items.map((item) => {
-              const itemSerials = serials.filter((s) => s.product_id === item.product_id);
+              // 시리얼 매칭: 1순위 sale_item_id 정확 매칭 / 2순위 product_id fallback (레거시 데이터용)
+              // (2026-05-17 fix — 다중 상품 판매에서 시리얼 잘못 표시되던 버그)
+              const bySaleItem = serials.filter((s) => s.sale_item_id === item.id);
+              const itemSerials = bySaleItem.length > 0
+                ? bySaleItem
+                : serials.filter((s) => !s.sale_item_id && s.product_id === item.product_id);
               return (
                 <div key={item.id} className="py-2 border-b border-neutral-50 last:border-0">
                   <div className="flex items-center justify-between">

@@ -263,7 +263,8 @@ export function useSale(id: string) {
       return {
         sale,
         items: (itemsRes.data || []) as OfflineSaleItem[],
-        serials: (serialsRes.data || []) as Array<{ id: string; serial_number: string; product_id: string }>,
+        // sale_item_id 포함 — 상세 페이지에서 정확한 시리얼-상품 매칭에 사용 (2026-05-17 fix)
+        serials: (serialsRes.data || []) as Array<{ id: string; serial_number: string; product_id: string | null; sale_item_id: string | null }>,
         linkedConsultation,
       };
     },
