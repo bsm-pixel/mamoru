@@ -57,3 +57,39 @@ export function useSerialLookup(query: string) {
     staleTime: 5 * 60_000,
   });
 }
+
+/** 시리얼 이동 이력 — DB 트리거가 자동 기록한 append-only ledger */
+export interface SerialAuditLog {
+  id: string;
+  serial_id: string;
+  serial_number: string | null;
+  action: 'INSERT' | 'UPDATE' | 'DELETE';
+  old_status: string | null;
+  new_status: string | null;
+  old_warehouse_zone: string | null;
+  new_warehouse_zone: string | null;
+  old_sale_item_id: string | null;
+  new_sale_item_id: string | null;
+  old_offline_sale_id: string | null;
+  new_offline_sale_id: string | null;
+  old_contract_id: string | null;
+  new_contract_id: string | null;
+  old_product_id: string | null;
+  new_product_id: string | null;
+  changed_by: string | null;
+  changed_by_name: string;
+  changed_at: string;
+}
+
+export function useSerialAudit(serialId: string | null | undefined) {
+  return useQuery<{ logs: SerialAuditLog[] }>({
+    queryKey: ['serial-audit', serialId],
+    queryFn: async () => {
+      const res = await fetch(`/api/serials/audit?serial_id=${serialId}`);
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    enabled: !!serialId,
+    staleTime: 30_000,
+  });
+}

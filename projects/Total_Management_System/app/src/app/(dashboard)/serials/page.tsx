@@ -5,9 +5,9 @@ import { Topbar } from '@/components/layout/topbar';
 import { SearchInput } from '@/components/ui/search-input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSerialLookup } from '@/hooks/use-serial-lookup';
+import { useSerialLookup, useSerialAudit, type SerialAuditLog } from '@/hooks/use-serial-lookup';
 import { formatPhone } from '@/lib/utils/format';
-import { Package, User, ShoppingBag, Wrench, Hash } from 'lucide-react';
+import { Package, User, ShoppingBag, Wrench, Hash, Activity, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
@@ -35,6 +35,68 @@ function formatDate(d: string | null) {
   return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+function formatDateTime(d: string | null) {
+  if (!d) return '-';
+  return new Date(d).toLocaleString('ko-KR', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
+const ACTION_LABEL: Record<string, { label: string; color: string }> = {
+  INSERT: { label: '생성', color: 'bg-green-50 text-green-700' },
+  UPDATE: { label: '변경', color: 'bg-blue-50 text-blue-700' },
+  DELETE: { label: '삭제', color: 'bg-red-50 text-red-700' },
+};
+
+/** audit log 한 줄을 사람이 읽기 쉬운 요약으로 변환 */
+function describeChange(log: SerialAuditLog): string[] {
+  const parts: string[] = [];
+
+  if (log.action === 'INSERT') {
+    const s = log.new_status ? STATUS_LABEL[log.new_status]?.label || log.new_status : null;
+    const z = log.new_warehouse_zone ? ZONE_LABEL[log.new_warehouse_zone]?.label || log.new_warehouse_zone : null;
+    if (s || z) parts.push([s, z].filter(Boolean).join(' / '));
+    return parts;
+  }
+
+  if (log.action === 'DELETE') {
+    const s = log.old_status ? STATUS_LABEL[log.old_status]?.label || log.old_status : '없음';
+    parts.push(`마지막 상태: ${s}`);
+    return parts;
+  }
+
+  // UPDATE — 변경 필드만 골라서 표시
+  if (log.old_status !== log.new_status) {
+    const from = log.old_status ? STATUS_LABEL[log.old_status]?.label || log.old_status : '없음';
+    const to = log.new_status ? STATUS_LABEL[log.new_status]?.label || log.new_status : '없음';
+    parts.push(`상태: ${from} → ${to}`);
+  }
+  if (log.old_warehouse_zone !== log.new_warehouse_zone) {
+    const from = log.old_warehouse_zone ? ZONE_LABEL[log.old_warehouse_zone]?.label || log.old_warehouse_zone : '없음';
+    const to = log.new_warehouse_zone ? ZONE_LABEL[log.new_warehouse_zone]?.label || log.new_warehouse_zone : '없음';
+    parts.push(`위치: ${from} → ${to}`);
+  }
+  if (log.old_sale_item_id !== log.new_sale_item_id) {
+    if (!log.old_sale_item_id && log.new_sale_item_id) parts.push('판매 연결됨');
+    else if (log.old_sale_item_id && !log.new_sale_item_id) parts.push('판매 해제됨');
+    else parts.push('판매 항목 교체');
+  }
+  if (log.old_offline_sale_id !== log.new_offline_sale_id) {
+    if (!log.old_offline_sale_id && log.new_offline_sale_id) parts.push('판매 건 연결');
+    else if (log.old_offline_sale_id && !log.new_offline_sale_id) parts.push('판매 건 해제');
+  }
+  if (log.old_contract_id !== log.new_contract_id) {
+    if (!log.old_contract_id && log.new_contract_id) parts.push('계약 연결됨');
+    else if (log.old_contract_id && !log.new_contract_id) parts.push('계약 해제됨');
+  }
+  if (log.old_product_id !== log.new_product_id) {
+    parts.push('제품 변경');
+  }
+
+  return parts.length > 0 ? parts : ['변경'];
+}
+
 export default function SerialsPage() {
   const [query, setQuery] = useState('');
   const { data, isLoading, isFetched } = useSerialLookup(query);
@@ -43,6 +105,10 @@ export default function SerialsPage() {
   const product = data?.product;
   const sale = data?.sale;
   const repairs = data?.repairs || [];
+
+  // 시리얼 이동 이력 (Phase C — DB 트리거 자동 캡처)
+  const { data: auditData } = useSerialAudit(serial?.id);
+  const auditLogs = auditData?.logs || [];
 
   return (
     <div className="flex flex-col h-full">
@@ -202,6 +268,41 @@ export default function SerialsPage() {
                       <Badge className="bg-neutral-100 text-neutral-600 text-xs">{r.status}</Badge>
                     </Link>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* 이동 이력 (Phase C — append-only ledger) */}
+            {auditLogs.length > 0 && (
+              <div className="bg-white rounded-xl border border-neutral-200 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Activity size={16} className="text-neutral-400" />
+                  <span className="text-xs font-semibold text-neutral-500">이동 이력</span>
+                  <span className="text-[10px] text-neutral-300 ml-auto">최신순 · 최대 100건</span>
+                </div>
+                <div className="space-y-2">
+                  {auditLogs.map((log) => {
+                    const action = ACTION_LABEL[log.action] || ACTION_LABEL.UPDATE;
+                    const changes = describeChange(log);
+                    return (
+                      <div key={log.id} className="flex items-start gap-2 p-2 rounded-lg hover:bg-neutral-50 transition">
+                        <Badge className={`${action.color} text-[10px] shrink-0 mt-0.5`}>{action.label}</Badge>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-1 text-sm">
+                            {changes.map((c, i) => (
+                              <span key={i} className="text-neutral-700">
+                                {i > 0 && <ArrowRight size={11} className="inline mx-1 text-neutral-300" />}
+                                {c}
+                              </span>
+                            ))}
+                          </div>
+                          <p className="text-[11px] text-neutral-400 mt-0.5">
+                            {formatDateTime(log.changed_at)} · {log.changed_by_name}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
