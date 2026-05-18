@@ -152,7 +152,7 @@ export default function ContractsPage() {
             {/* 우측: 상세 패널 */}
             <div className="flex-1 min-w-0 overflow-y-auto">
               {selectedId ? (
-                <ContractDetailPanel contractId={selectedId} />
+                <ContractDetailPanel contractId={selectedId} onDeleted={() => setSelectedId(null)} />
               ) : (
                 <div className="flex flex-col items-center justify-center h-60 text-neutral-400">
                   <FileText size={28} className="mb-2 opacity-40" />
@@ -191,7 +191,7 @@ export default function ContractsPage() {
       {/* 모바일 전용 슬라이드 패널 */}
       {!isLg && (
         <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="계약서 상세" className="sm:w-[640px]">
-          {selectedId && <ContractDetailPanel contractId={selectedId} />}
+          {selectedId && <ContractDetailPanel contractId={selectedId} onDeleted={() => setSelectedId(null)} />}
         </SlidePanel>
       )}
     </>

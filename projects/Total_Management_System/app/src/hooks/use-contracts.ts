@@ -182,6 +182,30 @@ export function useCreateContract() {
   });
 }
 
+/** 계약서 영구 삭제 — 판매 전환된 계약은 서버에서 409로 거부 */
+export function useDeleteContract() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (contractId: string) => {
+      const res = await fetch(`/api/contracts/${contractId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'unknown' }));
+        throw new Error(data.error || `삭제 실패 (${res.status})`);
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast.success(`계약서 삭제: ${data.contract_number}`);
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['contract-tab-counts'] });
+    },
+    onError: (err) => {
+      toast.error(String(err instanceof Error ? err.message : err));
+    },
+  });
+}
+
 /** 계약서 알림톡 발송 */
 export function useSendContractNotification() {
   const queryClient = useQueryClient();

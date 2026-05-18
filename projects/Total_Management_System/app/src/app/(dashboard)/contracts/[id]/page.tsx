@@ -1,15 +1,16 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useContract, useSendContractNotification } from '@/hooks/use-contracts';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { useContract, useSendContractNotification, useDeleteContract } from '@/hooks/use-contracts';
 import { formatKRW, formatDate, formatDateTime } from '@/lib/utils/format';
-import { ArrowLeft, Send, Receipt, Image, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Send, Receipt, Image, ExternalLink, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const STATUS_COLOR: Record<string, string> = {
@@ -46,6 +47,8 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
   const router = useRouter();
   const { data, isLoading } = useContract(id);
   const sendNotify = useSendContractNotification();
+  const deleteContract = useDeleteContract();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (isLoading) {
     return (
@@ -302,7 +305,50 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             알림톡 발송 완료: {formatDateTime(contract.notification_sent_at)}
           </p>
         )}
+
+        {/* 위험 영역 — 계약서 영구 삭제 */}
+        <Card>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-neutral-700">계약서 삭제</p>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                {contract.offline_sale_id
+                  ? '판매 전환된 계약은 삭제할 수 없습니다. 먼저 연결된 판매 건을 취소해주세요.'
+                  : '계약 항목·서명·시리얼 연결이 함께 정리됩니다. 복구할 수 없습니다.'}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-500 hover:text-red-600 shrink-0"
+              disabled={!!contract.offline_sale_id || deleteContract.isPending}
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              <Trash2 size={14} />
+              {deleteContract.isPending ? '삭제 중...' : '삭제'}
+            </Button>
+          </div>
+        </Card>
       </div>
+
+      <ConfirmModal
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={async () => {
+          await deleteContract.mutateAsync(contract.id);
+          router.push('/contracts');
+        }}
+        title="계약서 영구 삭제"
+        message={
+          <span>
+            <strong className="text-neutral-900">{contract.contract_number}</strong> 계약서를 영구 삭제합니다.
+            <br />
+            계약 항목·서명·시리얼 연결이 모두 정리되며 <strong>복구할 수 없습니다</strong>.
+          </span>
+        }
+        confirmLabel="영구 삭제"
+        variant="danger"
+      />
     </>
   );
 }

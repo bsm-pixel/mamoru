@@ -6,9 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
-import { useContract, useSendContractNotification } from '@/hooks/use-contracts';
+import { useContract, useSendContractNotification, useDeleteContract } from '@/hooks/use-contracts';
 import { formatKRW, formatDate, formatDateTime } from '@/lib/utils/format';
-import { Send, Receipt, Image, ExternalLink, FileText } from 'lucide-react';
+import { Send, Receipt, Image, ExternalLink, FileText, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 
@@ -34,13 +34,17 @@ const DELIVERY_LABEL: Record<string, string> = {
 
 interface Props {
   contractId: string;
+  /** 삭제 후 부모에서 선택 해제할 수 있도록 — 사이드 패널 닫기용 */
+  onDeleted?: () => void;
 }
 
-export function ContractDetailPanel({ contractId }: Props) {
+export function ContractDetailPanel({ contractId, onDeleted }: Props) {
   const router = useRouter();
   const { data, isLoading } = useContract(contractId);
   const sendNotify = useSendContractNotification();
+  const deleteContract = useDeleteContract();
   const [showConvertConfirm, setShowConvertConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-48" /><Skeleton className="h-32" /></div>;
@@ -226,6 +230,50 @@ export function ContractDetailPanel({ contractId }: Props) {
         title="판매 전환"
         message={`${contract.customer_name}님의 계약을 판매로 전환합니다. 판매 입력 화면으로 이동합니다.`}
         confirmLabel="판매 전환"
+      />
+
+      {/* 위험 영역 — 계약서 영구 삭제 (판매 전환된 계약은 disabled) */}
+      <Card>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-neutral-700">계약서 삭제</p>
+            <p className="text-[11px] text-neutral-400 mt-0.5">
+              {contract.offline_sale_id
+                ? '판매 전환된 계약은 삭제할 수 없습니다'
+                : '계약 항목·서명·시리얼 연결이 함께 정리됩니다 (복구 불가)'}
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-500 hover:text-red-600 shrink-0"
+            disabled={!!contract.offline_sale_id || deleteContract.isPending}
+            onClick={() => setShowDeleteConfirm(true)}
+            title={contract.offline_sale_id ? '판매 전환된 계약은 삭제할 수 없습니다' : '계약서 영구 삭제'}
+          >
+            <Trash2 size={14} />
+            {deleteContract.isPending ? '삭제 중...' : '삭제'}
+          </Button>
+        </div>
+      </Card>
+
+      <ConfirmModal
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={async () => {
+          await deleteContract.mutateAsync(contract.id);
+          onDeleted?.();
+        }}
+        title="계약서 영구 삭제"
+        message={
+          <span>
+            <strong className="text-neutral-900">{contract.contract_number}</strong> 계약서를 영구 삭제합니다.
+            <br />
+            계약 항목·서명·시리얼 연결이 모두 정리되며 <strong>복구할 수 없습니다</strong>.
+          </span>
+        }
+        confirmLabel="영구 삭제"
+        variant="danger"
       />
 
       {/* 상세 페이지 링크 */}
