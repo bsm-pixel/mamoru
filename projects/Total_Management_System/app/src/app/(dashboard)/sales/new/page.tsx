@@ -13,6 +13,7 @@ import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
 import { SerialPicker } from '@/components/sales/serial-picker';
+import { useSerialConflictPrompt } from '@/components/sales/serial-conflict-dialog';
 import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
 import { usePriceGroups } from '@/hooks/use-price-groups';
 import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
@@ -740,32 +741,26 @@ function NewSaleContent() {
 function ManualSerialInput({ serials, onChange, onTransferConsent }: { serials: string[]; onChange: (s: string[]) => void; onTransferConsent?: () => void }) {
   const [input, setInput] = useState('');
   const [open, setOpen] = useState(false);
+  const { prompt: promptConflict, dialog: conflictDialog } = useSerialConflictPrompt();
 
-  // Phase A — 시리얼 추가 전 다른 판매와 중복 검증 (사장님 명시 동의) (2026-05-18)
+  // Phase A — 시리얼 추가 전 다른 판매와 중복 검증 (모달 다이얼로그) (2026-05-18)
   async function confirmIfDuplicate(serial: string): Promise<boolean> {
     try {
       const res = await fetch(`/api/serials/check-duplicate?serial=${encodeURIComponent(serial)}`);
       const data = await res.json();
       if (!data.exists) return true;
-      const ok = window.confirm(
-        [
-          `⚠️ 시리얼 "${serial}" 은 이미 다른 판매에 등록되어 있습니다.`,
-          '',
-          `📋 현재 위치:`,
-          `   판매번호: ${data.sale_number || '-'}`,
-          `   고객: ${data.customer_name || '-'}`,
-          `   제품: ${data.product_name || '-'}`,
-          `   판매일: ${data.sale_date || '-'}`,
-          `   상태: ${data.status === 'sold' ? '판매완료' : data.status}`,
-          '',
-          '확인 = 이전 판매에서 분리하여 이쪽으로 가져옵니다 (이전 판매의 시리얼 사라짐)',
-          '취소 = 시리얼 추가하지 않음 (다른 번호 입력)',
-        ].join('\n')
-      );
+      const ok = await promptConflict({
+        serial,
+        sale_number: data.sale_number,
+        customer_name: data.customer_name,
+        product_name: data.product_name,
+        sale_date: data.sale_date,
+        status: data.status,
+      });
       if (ok) onTransferConsent?.();
       return ok;
     } catch {
-      return true; // API 실패 시 보수적 허용 (서버 검증은 후속 Phase)
+      return true; // API 실패 시 보수적 허용
     }
   }
 
@@ -780,6 +775,7 @@ function ManualSerialInput({ serials, onChange, onTransferConsent }: { serials: 
 
   return (
     <div className="mt-1">
+      {conflictDialog}
       <button type="button" onClick={() => setOpen(!open)}
         className={`text-xs px-2 py-1 rounded transition ${serials.length > 0 ? 'bg-blue-50 text-blue-700' : 'bg-neutral-50 text-neutral-500 hover:bg-neutral-100'}`}>
         # 시리얼 {serials.length > 0 ? `${serials.length}개` : '직접 입력'}

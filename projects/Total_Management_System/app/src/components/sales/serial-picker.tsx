@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAvailableSerials } from '@/hooks/use-serials';
 import { Hash, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { useSerialConflictPrompt } from './serial-conflict-dialog';
 
 interface Props {
   productId: string;
@@ -19,39 +20,33 @@ interface Props {
   onTransferConsent?: () => void;
 }
 
-/** 시리얼 추가 전 다른 판매와 중복 여부 검증 — 충돌 시 사장님 명시 동의 필요 (Phase A) */
-async function confirmIfDuplicate(serial: string, excludeSaleId: string | undefined, onConsent: (() => void) | undefined): Promise<boolean> {
-  try {
-    const params = new URLSearchParams({ serial });
-    if (excludeSaleId) params.set('excludeSaleId', excludeSaleId);
-    const res = await fetch(`/api/serials/check-duplicate?${params}`);
-    const data = await res.json();
-    if (!data.exists) return true;
-
-    // 충돌 — 사장님 동의 받기
-    const detail = [
-      `⚠️ 시리얼 "${serial}" 은 이미 다른 판매에 등록되어 있습니다.`,
-      '',
-      `📋 현재 위치:`,
-      `   판매번호: ${data.sale_number || '-'}`,
-      `   고객: ${data.customer_name || '-'}`,
-      `   제품: ${data.product_name || '-'}`,
-      `   판매일: ${data.sale_date || '-'}`,
-      `   상태: ${data.status === 'sold' ? '판매완료' : data.status}`,
-      '',
-      '확인 = 이전 판매에서 분리하여 이쪽으로 가져옵니다 (이전 판매의 시리얼 사라짐)',
-      '취소 = 시리얼 추가하지 않음 (다른 번호 입력)',
-    ].join('\n');
-    const ok = window.confirm(detail);
-    if (ok) onConsent?.(); // 사장님 명시 동의 → 부모에 플래그 전달
-    return ok;
-  } catch {
-    // API 실패 시 보수적으로 진행 허용 (서버 측 검증은 후속 Phase에서)
-    return true;
-  }
-}
-
 export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect, manualSerials = [], onManualSerialsChange, currentSerials = [], currentSaleId, onTransferConsent }: Props) {
+  // Phase A 모달 — Promise 기반 prompt + dialog 노드 (2026-05-18)
+  const { prompt: promptConflict, dialog: conflictDialog } = useSerialConflictPrompt();
+
+  /** 시리얼 추가 전 중복 검증 — 충돌 시 사장님 모달 동의 받음 */
+  async function confirmIfDuplicate(serial: string): Promise<boolean> {
+    try {
+      const params = new URLSearchParams({ serial });
+      if (currentSaleId) params.set('excludeSaleId', currentSaleId);
+      const res = await fetch(`/api/serials/check-duplicate?${params}`);
+      const data = await res.json();
+      if (!data.exists) return true;
+      const ok = await promptConflict({
+        serial,
+        sale_number: data.sale_number,
+        customer_name: data.customer_name,
+        product_name: data.product_name,
+        sale_date: data.sale_date,
+        status: data.status,
+      });
+      if (ok) onTransferConsent?.(); // 명시 동의 → 부모 플래그 set
+      return ok;
+    } catch {
+      return true; // API 실패 시 보수적 허용
+    }
+  }
+
   const [open, setOpen] = useState(false);
   const [manualMode, setManualMode] = useState(false);
   const [manualInput, setManualInput] = useState('');
@@ -85,7 +80,7 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
       const existing = manualSerials.map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
       while (existing.includes(next)) next++;
       // Phase A — 자동 생성된 번호도 DB 중복 가능성 (이전 등록·재고 시리얼 등) → 검증 (2026-05-18)
-      const ok = await confirmIfDuplicate(String(next), currentSaleId, onTransferConsent);
+      const ok = await confirmIfDuplicate(String(next));
       if (!ok) return;
       onManualSerialsChange?.([...manualSerials, String(next)]);
     } catch { /* ignore */ }
@@ -98,7 +93,7 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
   async function addManualSerial(value: string) {
     const trimmed = value.trim();
     if (!trimmed) return;
-    const ok = await confirmIfDuplicate(trimmed, currentSaleId, onTransferConsent);
+    const ok = await confirmIfDuplicate(trimmed);
     if (!ok) return;
     onManualSerialsChange?.([...manualSerials, trimmed]);
     setManualInput('');
@@ -109,6 +104,7 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
 
   return (
     <div className="mt-1">
+      {conflictDialog}
       <button
         type="button"
         onClick={() => setOpen(!open)}
