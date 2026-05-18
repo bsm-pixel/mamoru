@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSerialLookup, useSerialAudit, type SerialAuditLog } from '@/hooks/use-serial-lookup';
 import { formatPhone } from '@/lib/utils/format';
-import { Package, User, ShoppingBag, Wrench, Hash, Activity, ArrowRight } from 'lucide-react';
+import { Package, User, ShoppingBag, Wrench, Hash, Activity, ArrowRight, ArrowLeftRight } from 'lucide-react';
+import { SerialSwapDialog } from '@/components/serials/serial-swap-dialog';
 import Link from 'next/link';
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
@@ -110,6 +111,9 @@ export default function SerialsPage() {
   const { data: auditData } = useSerialAudit(serial?.id);
   const auditLogs = auditData?.logs || [];
 
+  // 시리얼 교환 모달 (Phase B)
+  const [swapOpen, setSwapOpen] = useState(false);
+
   return (
     <div className="flex flex-col h-full">
       <Topbar title="시리얼 조회" />
@@ -197,6 +201,17 @@ export default function SerialsPage() {
                 <div className="flex items-center gap-2 mb-3">
                   <ShoppingBag size={16} className="text-neutral-400" />
                   <span className="text-xs font-semibold text-neutral-500">판매 정보</span>
+                  {serial.status === 'sold' && serial.offline_sale_id && (
+                    <button
+                      type="button"
+                      onClick={() => setSwapOpen(true)}
+                      className="ml-auto flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-neutral-100 text-neutral-600 hover:bg-neutral-200 transition"
+                      title="다른 시리얼과 양방향 교환"
+                    >
+                      <ArrowLeftRight size={10} />
+                      교환
+                    </button>
+                  )}
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -318,6 +333,26 @@ export default function SerialsPage() {
           </div>
         )}
       </div>
+
+      {/* 시리얼 교환 모달 (Phase B) */}
+      {swapOpen && serial && (
+        <SerialSwapDialog
+          currentSerial={{
+            id: serial.id,
+            serial_number: serial.serial_number,
+            status: serial.status,
+            product_id: serial.product_id,
+            offline_sale_id: serial.offline_sale_id,
+            sold_to_name: serial.sold_to_name,
+            sold_to_phone: serial.sold_to_phone,
+          }}
+          currentMeta={{
+            product_name: product?.name || null,
+            sale_number: sale?.sale_number || null,
+          }}
+          onClose={() => setSwapOpen(false)}
+        />
+      )}
     </div>
   );
 }

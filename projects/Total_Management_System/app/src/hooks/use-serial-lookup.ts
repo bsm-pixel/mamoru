@@ -1,6 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 
 interface SerialLookupResult {
   serial: {
@@ -91,5 +92,39 @@ export function useSerialAudit(serialId: string | null | undefined) {
     },
     enabled: !!serialId,
     staleTime: 30_000,
+  });
+}
+
+/**
+ * 시리얼 양방향 교환 (Phase B) — 트랜잭션 안전 RPC 호출.
+ * 가드 5겹은 DB RPC 안에서. 클라이언트는 결과만 처리.
+ */
+export function useSwapSerials() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { serial_a_id: string; serial_b_id: string }) => {
+      const res = await fetch('/api/serials/swap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: '교환 실패' }));
+        throw new Error(data.error || `교환 실패 (${res.status})`);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('시리얼 교환 완료');
+      // 두 시리얼의 lookup·audit 모두 무효화
+      queryClient.invalidateQueries({ queryKey: ['serial-lookup'] });
+      queryClient.invalidateQueries({ queryKey: ['serial-audit'] });
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['sale'] });
+    },
+    onError: (err) => {
+      toast.error(String(err instanceof Error ? err.message : err));
+    },
   });
 }
