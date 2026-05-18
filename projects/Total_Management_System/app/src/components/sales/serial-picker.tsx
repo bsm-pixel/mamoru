@@ -11,9 +11,11 @@ interface Props {
   onSelect: (serialIds: string[]) => void;
   manualSerials?: string[];
   onManualSerialsChange?: (serials: string[]) => void;
+  /** 수정 모드에서 *이미 이 판매에 등록된* 시리얼 (sold 상태) — 해제 가능하게 표시 (2026-05-18 fix) */
+  currentSerials?: Array<{ id: string; serial_number: string }>;
 }
 
-export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect, manualSerials = [], onManualSerialsChange }: Props) {
+export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect, manualSerials = [], onManualSerialsChange, currentSerials = [] }: Props) {
   const [open, setOpen] = useState(false);
   const [manualMode, setManualMode] = useState(false);
   const [manualInput, setManualInput] = useState('');
@@ -78,7 +80,32 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
       </button>
 
       {open && (
-        <div className="mt-1 p-2 rounded border border-neutral-200 bg-white max-h-48 overflow-y-auto">
+        <div className="mt-1 p-2 rounded border border-neutral-200 bg-white max-h-64 overflow-y-auto">
+          {/* 현재 이 판매에 등록된 시리얼 (sold 상태) — 해제 가능 (2026-05-18 fix) */}
+          {currentSerials.length > 0 && (
+            <div className="mb-2 pb-2 border-b border-neutral-100">
+              <div className="text-[10px] font-semibold text-neutral-500 mb-1 px-1">현재 등록된 시리얼</div>
+              <div className="space-y-0.5">
+                {currentSerials.map((cs) => {
+                  const stillSelected = selectedSerialIds.includes(cs.id);
+                  if (!stillSelected) return null; // 해제된 건 표시 안 함
+                  return (
+                    <div key={cs.id} className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs bg-blue-50 text-blue-700">
+                      <Check size={10} className="shrink-0" />
+                      <span className="font-mono flex-1 truncate">{cs.serial_number}</span>
+                      <button
+                        type="button"
+                        onClick={() => onSelect(selectedSerialIds.filter((id) => id !== cs.id))}
+                        className="shrink-0 text-red-400 hover:text-red-600 text-sm leading-none px-1"
+                        title="이 판매에서 해제"
+                      >×</button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* 등록된 시리얼 선택 */}
           {!manualMode && (
             <>

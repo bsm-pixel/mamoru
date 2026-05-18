@@ -602,7 +602,8 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
   const { data: products = [] } = useProducts();
   const priceGroups = usePriceGroups();
 
-  // 기존 시리얼을 아이템별로 매칭하여 프리필
+  // 기존 시리얼을 아이템별로 매칭하여 프리필 (객체 + ID 모두 보관 — 2026-05-18 fix)
+  // SerialPicker UI에 "현재 등록된 시리얼" 표시 + 해제 버튼을 위해 객체 필요
   const buildInitialSerials = () => {
     const used = new Set<string>();
     return originalItems.map((item) => {
@@ -614,10 +615,11 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
         ? existingSerials.filter((sr) => sr.product_id && sr.product_id === item.product_id && !used.has(sr.id))
         : [];
       byProduct.forEach((sr) => used.add(sr.id));
-      return [...bySaleItem, ...byProduct].map((sr) => sr.id);
+      return [...bySaleItem, ...byProduct].map((sr) => ({ id: sr.id, serial_number: sr.serial_number }));
     });
   };
-  const initialSerialIds = buildInitialSerials();
+  const initialSerials = buildInitialSerials();
+  const initialSerialIds = initialSerials.map((arr) => arr.map((sr) => sr.id));
 
   const [editItems, setEditItems] = useState(
     originalItems.map((it, idx) => ({
@@ -763,7 +765,8 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
                       <button onClick={() => removeItem(idx)} className="w-6 h-6 rounded bg-red-100 text-red-500 text-xs font-bold ml-1">×</button>
                     </div>
                   </div>
-                  {/* 시리얼 피커 — 모든 아이템 (임시제품 포함) */}
+                  {/* 시리얼 피커 — 모든 아이템 (임시제품 포함)
+                       currentSerials: 이 판매에 이미 등록된 시리얼 (sold 상태) — 해제 가능 표시 (2026-05-18 fix) */}
                   <SerialPicker
                     productId={it.product_id || ''}
                     quantity={it.quantity}
@@ -771,6 +774,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
                     onSelect={(ids) => setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, serial_ids: ids } : item))}
                     manualSerials={it.manualSerials}
                     onManualSerialsChange={(serials) => setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, manualSerials: serials } : item))}
+                    currentSerials={initialSerials[idx] || []}
                   />
                 </div>
               ))}
