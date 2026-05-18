@@ -766,7 +766,8 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
                     </div>
                   </div>
                   {/* 시리얼 피커 — 모든 아이템 (임시제품 포함)
-                       currentSerials: 이 판매에 이미 등록된 시리얼 (sold 상태) — 해제 가능 표시 (2026-05-18 fix) */}
+                       currentSerials: 이 판매에 이미 등록된 시리얼 (sold 상태) — 해제 가능 표시 (2026-05-18 fix)
+                       currentSaleId: 중복 검증 시 같은 판매 시리얼은 충돌로 보지 않음 (Phase A 2026-05-18) */}
                   <SerialPicker
                     productId={it.product_id || ''}
                     quantity={it.quantity}
@@ -775,6 +776,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
                     manualSerials={it.manualSerials}
                     onManualSerialsChange={(serials) => setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, manualSerials: serials } : item))}
                     currentSerials={initialSerials[idx] || []}
+                    currentSaleId={saleId}
                   />
                 </div>
               ))}
