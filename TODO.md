@@ -1,7 +1,48 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-17 — **시리얼 무결성 복구 (93.92% → 0%) 완료** + 상품 상세 후기 위젯 Phase 2-C + v10 중복 정리. 다음 사이클: 카탈로그 시스템 Phase 1A 사장님 검토 대기
+> 최종 수정: 2026-05-18 — **시리얼 다층 안전망 구축 완료** (Phase C audit log + Phase B 양방향 교환) + 계약서 영구 삭제 기능 + 사이드바 IA 정리. 다음 사이클: 카탈로그 시스템 Phase 1A 사장님 검토 대기
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
+
+---
+
+## ✅ 완료 (05-18): 시리얼 다층 안전망 + 계약서 삭제 + 사이드바 IA
+
+오늘 4건 마무리. 모두 빌드 검증(tsc + next build) 0건 통과 + 푸시 완료.
+
+### 1. 사이드바 IA 정리 (`f782f15`)
+- 사이드바 "판매 입력" 항목 제거 → 판매 관리 페이지 우상단 Primary 버튼화 (Gmail/Notion/Linear 표준 패턴)
+- "판매 조회" → "판매 관리" 라벨 변경
+- sidebar.tsx active 매칭 단순화 (`/sales/new` 도 부모 메뉴 active)
+- `/sales/new` 라우트 유지 → 상담·계약서 기존 5개 진입점 회귀 0
+- 흐름도: [TMS_FLOW_SALES](projects/Total_Management_System/docs/TMS_FLOW_SALES.md)
+
+### 2. 계약서 영구 삭제 기능 (`1a44beb`)
+- DELETE `/api/contracts/[id]` 신규 + useDeleteContract 훅
+- 가드 4겹: offline_sale_id 가드(판매 전환 시 거부) + product_serials.contract_id NULL + contracts DELETE + contract_items CASCADE
+- 사이드 패널 + 전체화면 양쪽 하단에 위험 카드 + ConfirmModal(danger)
+- 매뉴얼: [MANUAL_CONTRACT](projects/Total_Management_System/docs/MANUAL_CONTRACT.md)
+
+### 3. Phase C 시리얼 이동 이력 ledger (`cca7653`)
+- 마이그레이션 086: `product_serial_audit_log` 테이블 + AFTER 트리거 + RLS(SELECT only)
+- 추적 6개 필드: status / warehouse_zone / sale_item_id / offline_sale_id / contract_id / product_id
+- FK 없음 → 시리얼 삭제돼도 이력 보존 (append-only 정신)
+- SECURITY DEFINER + auth.uid() 자동 캡처 → 위변조 방지
+- GET `/api/serials/audit?serial_id=…` + useSerialAudit 훅 + 시리얼 조회 페이지 "이동 이력" 카드
+- 사장님 SQL 실행 완료 (0 / 3 / 1 검증)
+
+### 4. Phase B 시리얼 양방향 교환 (`944c878`)
+- 마이그레이션 087: `swap_serials(uuid, uuid)` PL/pgSQL RPC
+- 가드 5겹: SAME_SERIAL / SERIAL_NOT_FOUND / NOT_SOLD / NO_SALE+SAME_SALE / PRODUCT_MISMATCH
+- SELECT FOR UPDATE 두 행 동시 lock → race 차단
+- 5개 필드 스왑: offline_sale_id / sale_item_id / sold_to_name / sold_to_phone / sold_via
+- POST `/api/serials/swap` + useSwapSerials 훅 + SerialSwapDialog 모달 + 시리얼 조회 페이지 [⟷ 교환] 버튼
+- 사장님 SQL 실행 완료 (rpc_count=1, auth_can_execute=true)
+- 흐름도: [TMS_FLOW_SERIAL](projects/Total_Management_System/docs/TMS_FLOW_SERIAL.md) / 매뉴얼: [MANUAL_SERIAL](projects/Total_Management_System/docs/MANUAL_SERIAL.md)
+
+### 보강된 메모리
+- `memory/feedback_serial_integrity_strict.md` — Phase B/C 안전망 추가 명시 + 시리얼 변경 호출처 7개 전수 + 진단 SQL 강화
+
+---
 
 ---
 

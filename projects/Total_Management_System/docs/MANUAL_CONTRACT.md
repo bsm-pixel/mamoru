@@ -1,6 +1,35 @@
 # 전자 계약서 매뉴얼
 
-> 최종 업데이트: 2026-03-30
+> 최종 업데이트: 2026-05-18 — **계약서 영구 삭제 기능** 추가 (4겹 안전장치)
+
+## 2026-05-18 — 계약서 영구 삭제 기능
+
+### 어디서 삭제하나
+- **사이드 패널**: 계약서 목록에서 선택 → 우측 상세 패널 하단 **"계약서 삭제"** 카드 → [삭제] 버튼
+- **전체 화면**: 계약서 상세(`/contracts/[id]`) 페이지 하단 동일 위치
+
+### 자동 가드 4겹
+1. **판매 전환된 계약은 삭제 불가** — `offline_sale_id` 가 있으면 버튼 자체 회색 비활성 + "판매 전환된 계약은 삭제할 수 없습니다. 먼저 연결된 판매 건을 취소해주세요." 안내
+2. **확인 모달** — 계약번호 + "복구할 수 없습니다" 빨간 경고 명시
+3. **시리얼 연결 자동 해제** — `product_serials.contract_id` NULL로 풀어준 뒤 계약서 삭제 (시리얼 자체는 보존)
+4. **계약 항목 자동 정리** — `contract_items` 는 ON DELETE CASCADE 로 자동 정리
+
+### 상담 ↔ 계약서 단방향
+계약서가 상담을 참조(`contracts.consultation_id`)하지만 반대 방향(상담 → 계약서)은 없음. 즉 계약서 삭제해도 **상담 데이터 영향 0**.
+
+### 운영 권장 흐름
+- **테스트 계약**: 바로 영구 삭제 OK
+- **실제 고객 계약**: 가능하면 보존 (운영 데이터). 향후 운영 데이터 누적 시 soft delete(status='cancelled') 옵션 도입 검토 — 현재는 hard delete만
+
+### 핵심 파일
+- `app/api/contracts/[id]/route.ts` — DELETE endpoint
+- `hooks/use-contracts.ts` — useDeleteContract()
+- `components/contracts/contract-detail-panel.tsx` — 사이드 패널 삭제 UI
+- `app/(dashboard)/contracts/[id]/page.tsx` — 전체화면 삭제 UI
+
+### 커밋 `1a44beb`
+
+---
 
 ---
 
