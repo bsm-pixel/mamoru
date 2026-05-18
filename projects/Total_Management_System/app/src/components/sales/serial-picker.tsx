@@ -15,10 +15,12 @@ interface Props {
   currentSerials?: Array<{ id: string; serial_number: string }>;
   /** 현재 편집 중인 판매 id — 중복 검증 시 같은 판매 시리얼은 충돌로 보지 않기 위함 (Phase A 2026-05-18) */
   currentSaleId?: string;
+  /** 사장님이 중복 시리얼 이전 동의 시 호출 — 부모에서 allow_serial_transfer 플래그 set */
+  onTransferConsent?: () => void;
 }
 
 /** 시리얼 추가 전 다른 판매와 중복 여부 검증 — 충돌 시 사장님 명시 동의 필요 (Phase A) */
-async function confirmIfDuplicate(serial: string, excludeSaleId?: string): Promise<boolean> {
+async function confirmIfDuplicate(serial: string, excludeSaleId: string | undefined, onConsent: (() => void) | undefined): Promise<boolean> {
   try {
     const params = new URLSearchParams({ serial });
     if (excludeSaleId) params.set('excludeSaleId', excludeSaleId);
@@ -40,14 +42,16 @@ async function confirmIfDuplicate(serial: string, excludeSaleId?: string): Promi
       '확인 = 이전 판매에서 분리하여 이쪽으로 가져옵니다 (이전 판매의 시리얼 사라짐)',
       '취소 = 시리얼 추가하지 않음 (다른 번호 입력)',
     ].join('\n');
-    return window.confirm(detail);
+    const ok = window.confirm(detail);
+    if (ok) onConsent?.(); // 사장님 명시 동의 → 부모에 플래그 전달
+    return ok;
   } catch {
     // API 실패 시 보수적으로 진행 허용 (서버 측 검증은 후속 Phase에서)
     return true;
   }
 }
 
-export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect, manualSerials = [], onManualSerialsChange, currentSerials = [], currentSaleId }: Props) {
+export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect, manualSerials = [], onManualSerialsChange, currentSerials = [], currentSaleId, onTransferConsent }: Props) {
   const [open, setOpen] = useState(false);
   const [manualMode, setManualMode] = useState(false);
   const [manualInput, setManualInput] = useState('');
@@ -81,7 +85,7 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
       const existing = manualSerials.map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
       while (existing.includes(next)) next++;
       // Phase A — 자동 생성된 번호도 DB 중복 가능성 (이전 등록·재고 시리얼 등) → 검증 (2026-05-18)
-      const ok = await confirmIfDuplicate(String(next), currentSaleId);
+      const ok = await confirmIfDuplicate(String(next), currentSaleId, onTransferConsent);
       if (!ok) return;
       onManualSerialsChange?.([...manualSerials, String(next)]);
     } catch { /* ignore */ }
@@ -94,7 +98,7 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
   async function addManualSerial(value: string) {
     const trimmed = value.trim();
     if (!trimmed) return;
-    const ok = await confirmIfDuplicate(trimmed, currentSaleId);
+    const ok = await confirmIfDuplicate(trimmed, currentSaleId, onTransferConsent);
     if (!ok) return;
     onManualSerialsChange?.([...manualSerials, trimmed]);
     setManualInput('');

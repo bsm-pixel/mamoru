@@ -326,6 +326,8 @@ export function useCreateSale() {
         total_price: number;
         serial_ids?: string[];
       }>;
+      /** Phase A — 시리얼 다른 판매에서 이전 명시 동의 (2026-05-18) */
+      allow_serial_transfer?: boolean;
     }) => {
       const res = await fetch('/api/sales', {
         method: 'POST',
@@ -537,7 +539,7 @@ export function useRebuildSale() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, items, sale_info }: {
+    mutationFn: async ({ id, items, sale_info, allow_serial_transfer }: {
       id: string;
       items: Array<{
         product_id?: string;
@@ -560,11 +562,13 @@ export function useRebuildSale() {
         memo?: string;
         sale_channel?: string;
       };
+      /** Phase A — 시리얼 다른 판매에서 이전 명시 동의 (2026-05-18) */
+      allow_serial_transfer?: boolean;
     }) => {
       const res = await fetch(`/api/sales/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'rebuild_sale', items, sale_info }),
+        body: JSON.stringify({ action: 'rebuild_sale', items, sale_info, allow_serial_transfer }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));

@@ -55,6 +55,8 @@ function NewSaleContent() {
 
   const [saleDate, setSaleDate] = useState(toLocalDateString(new Date()));
   const [cart, setCart] = useState<CartItem[]>([]);
+  // Phase A — 시리얼 다른 판매에서 이전 동의 플래그 (2026-05-18)
+  const [allowSerialTransfer, setAllowSerialTransfer] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
   // 3-A: 판매 모드 — 제품 판매 vs 복원수리(마모루/타사 자루 + 단가). deliveries "+B2B수리" 와 대칭.
   const [saleMode, setSaleMode] = useState<'product' | 'repair'>('product');
@@ -271,6 +273,7 @@ function NewSaleContent() {
         serial_ids: item.selectedSerialIds,
         manual_serials: item.manualSerials || [],
       })),
+      allow_serial_transfer: allowSerialTransfer, // Phase A — 사장님 명시 동의 시 서버 강탈 허용
     });
 
     router.push('/sales');
@@ -687,11 +690,13 @@ function NewSaleContent() {
                         </div>
                         {item.product && customerType !== 'dealer' && customerType !== 'academy' ? (
                           <SerialPicker productId={item.product.id} quantity={item.quantity} selectedSerialIds={item.selectedSerialIds}
-                            onSelect={(ids) => updateSerialIds(key, ids)} manualSerials={item.manualSerials || []} onManualSerialsChange={(s) => updateManualSerials(key, s)} />
+                            onSelect={(ids) => updateSerialIds(key, ids)} manualSerials={item.manualSerials || []} onManualSerialsChange={(s) => updateManualSerials(key, s)}
+                            onTransferConsent={() => setAllowSerialTransfer(true)} />
                         ) : item.product && (customerType === 'dealer' || customerType === 'academy') ? (
                           <p className="text-[10px] text-neutral-400 mt-1">보관창고에서 출고 (시리얼 미부여)</p>
                         ) : !item.product ? (
-                          <ManualSerialInput serials={item.manualSerials || []} onChange={(s) => updateManualSerials(key, s)} />
+                          <ManualSerialInput serials={item.manualSerials || []} onChange={(s) => updateManualSerials(key, s)}
+                            onTransferConsent={() => setAllowSerialTransfer(true)} />
                         ) : null}
                       </div>
                     );
@@ -732,9 +737,46 @@ function NewSaleContent() {
 }
 
 /** 직접입력 품목용 시리얼 직접 입력 */
-function ManualSerialInput({ serials, onChange }: { serials: string[]; onChange: (s: string[]) => void }) {
+function ManualSerialInput({ serials, onChange, onTransferConsent }: { serials: string[]; onChange: (s: string[]) => void; onTransferConsent?: () => void }) {
   const [input, setInput] = useState('');
   const [open, setOpen] = useState(false);
+
+  // Phase A — 시리얼 추가 전 다른 판매와 중복 검증 (사장님 명시 동의) (2026-05-18)
+  async function confirmIfDuplicate(serial: string): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/serials/check-duplicate?serial=${encodeURIComponent(serial)}`);
+      const data = await res.json();
+      if (!data.exists) return true;
+      const ok = window.confirm(
+        [
+          `⚠️ 시리얼 "${serial}" 은 이미 다른 판매에 등록되어 있습니다.`,
+          '',
+          `📋 현재 위치:`,
+          `   판매번호: ${data.sale_number || '-'}`,
+          `   고객: ${data.customer_name || '-'}`,
+          `   제품: ${data.product_name || '-'}`,
+          `   판매일: ${data.sale_date || '-'}`,
+          `   상태: ${data.status === 'sold' ? '판매완료' : data.status}`,
+          '',
+          '확인 = 이전 판매에서 분리하여 이쪽으로 가져옵니다 (이전 판매의 시리얼 사라짐)',
+          '취소 = 시리얼 추가하지 않음 (다른 번호 입력)',
+        ].join('\n')
+      );
+      if (ok) onTransferConsent?.();
+      return ok;
+    } catch {
+      return true; // API 실패 시 보수적 허용 (서버 검증은 후속 Phase)
+    }
+  }
+
+  async function addSerial(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    const ok = await confirmIfDuplicate(trimmed);
+    if (!ok) return;
+    onChange([...serials, trimmed]);
+    setInput('');
+  }
 
   return (
     <div className="mt-1">
@@ -752,10 +794,10 @@ function ManualSerialInput({ serials, onChange }: { serials: string[]; onChange:
           ))}
           <div className="flex gap-1.5">
             <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && input.trim()) { e.preventDefault(); onChange([...serials, input.trim()]); setInput(''); } }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && input.trim()) { e.preventDefault(); addSerial(input); } }}
               placeholder="시리얼 번호 입력 후 엔터"
               className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs font-mono placeholder:text-neutral-400" />
-            <button type="button" onClick={() => { if (input.trim()) { onChange([...serials, input.trim()]); setInput(''); } }}
+            <button type="button" onClick={() => addSerial(input)}
               className="px-2 py-1 text-xs bg-neutral-900 text-white rounded">추가</button>
           </div>
           <button type="button" onClick={async () => {
@@ -763,9 +805,10 @@ function ManualSerialInput({ serials, onChange }: { serials: string[]; onChange:
               const res = await fetch('/api/serials/batch');
               const data = await res.json();
               let next = data.next_start || 13790001;
-              // 이미 추가된 번호와 겹치면 +1
               const existing = serials.map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
               while (existing.includes(next)) next++;
+              const ok = await confirmIfDuplicate(String(next));
+              if (!ok) return;
               onChange([...serials, String(next)]);
             } catch { /* ignore */ }
           }} className="text-[10px] text-green-600 hover:text-green-800 font-medium">

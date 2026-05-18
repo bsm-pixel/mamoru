@@ -231,6 +231,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 직접 입력 시리얼: product_serials에 자동 등록 + 즉시 sold + sale_item_id 연결
+    // Phase A 서버 안전망 — 다른 판매에 sold 시리얼은 명시 동의(allow_serial_transfer) 없이 강탈 금지 (2026-05-18)
+    const allowTransfer = (body as Record<string, unknown>).allow_serial_transfer === true;
     for (let itemIdx = 0; itemIdx < items.length; itemIdx++) {
       const item = items[itemIdx];
       const saleItemId = itemIdMap[itemIdx] || null;
@@ -241,11 +243,21 @@ export async function POST(req: NextRequest) {
           // 중복 체크
           const { data: existing } = await db
             .from('product_serials')
-            .select('id')
+            .select('id, offline_sale_id, status')
             .eq('serial_number', serialNumber.trim())
             .limit(1);
 
           if (existing && existing.length > 0) {
+            const sr = existing[0] as { id: string; offline_sale_id: string | null; status: string };
+            // 다른 판매에 이미 매핑되어 있으면 강탈 금지 (명시 동의 없이)
+            if (sr.offline_sale_id && sr.offline_sale_id !== created.id && !allowTransfer) {
+              return NextResponse.json({
+                error: `시리얼 "${serialNumber.trim()}" 은 이미 다른 판매에 등록되어 있습니다. 명시적 이전 동의가 필요합니다.`,
+                code: 'SERIAL_DUPLICATE_TRANSFER_BLOCKED',
+                conflicting_serial: serialNumber.trim(),
+                conflicting_sale_id: sr.offline_sale_id,
+              }, { status: 409 });
+            }
             // 이미 있으면 sold로 전환 + product_id + sale_item_id 업데이트
             await db.from('product_serials').update({
               product_id: item.product_id || null,
@@ -257,7 +269,7 @@ export async function POST(req: NextRequest) {
               sold_to_name: sale.customer_name,
               sold_to_phone: sale.customer_phone || null,
               previous_zone: 'ready',
-            }).eq('id', existing[0].id);
+            }).eq('id', sr.id);
           } else {
             // 없으면 새로 생성 + 즉시 sold + sale_item_id 연결
             await db.from('product_serials').insert({

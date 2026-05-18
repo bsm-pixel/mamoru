@@ -634,6 +634,8 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
       manualSerials: [] as string[],
     }))
   );
+  // Phase A — 시리얼 다른 판매에서 이전 동의 플래그 (2026-05-18)
+  const [allowSerialTransfer, setAllowSerialTransfer] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>(sale.payment_method);
   const [paymentStatus, setPaymentStatus] = useState<string>(sale.payment_status || 'paid');
   const [paidAmount, setPaidAmount] = useState(sale.paid_amount || 0);
@@ -718,6 +720,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
         memo: editMemo.trim() || undefined,
         sale_channel: saleChannel,
       },
+      allow_serial_transfer: allowSerialTransfer, // Phase A — 사장님 명시 동의 시 강탈 허용
     });
     onClose();
   };
@@ -777,6 +780,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
                     onManualSerialsChange={(serials) => setEditItems((prev) => prev.map((item, i) => i === idx ? { ...item, manualSerials: serials } : item))}
                     currentSerials={initialSerials[idx] || []}
                     currentSaleId={saleId}
+                    onTransferConsent={() => setAllowSerialTransfer(true)}
                   />
                 </div>
               ))}

@@ -637,15 +637,28 @@ export async function PATCH(
 
           // 4-B: 직접입력/자동생성 시리얼 (manual_serials)
           const manualSerials = item.manual_serials || [];
+          // Phase A 서버 안전망 — manual_serials 중 *다른 판매에 sold 상태*인 시리얼은
+          // 클라이언트 동의 플래그(allow_serial_transfer) 없으면 강탈 금지 (2026-05-18)
+          const allowTransfer = (body as Record<string, unknown>).allow_serial_transfer === true;
           for (const serialNumber of manualSerials) {
             if (!serialNumber.trim()) continue;
             const { data: existing } = await db
               .from('product_serials')
-              .select('id')
+              .select('id, offline_sale_id, status')
               .eq('serial_number', serialNumber.trim())
               .limit(1);
 
             if (existing && existing.length > 0) {
+              const sr = existing[0] as { id: string; offline_sale_id: string | null; status: string };
+              // 다른 판매(현재 판매 id 가 아닌)에 sold 상태로 매핑되어 있으면 강탈 금지
+              if (sr.offline_sale_id && sr.offline_sale_id !== id && !allowTransfer) {
+                return NextResponse.json({
+                  error: `시리얼 "${serialNumber.trim()}" 은 이미 다른 판매에 등록되어 있습니다. 명시적 이전 동의가 필요합니다.`,
+                  code: 'SERIAL_DUPLICATE_TRANSFER_BLOCKED',
+                  conflicting_serial: serialNumber.trim(),
+                  conflicting_sale_id: sr.offline_sale_id,
+                }, { status: 409 });
+              }
               await db.from('product_serials').update({
                 product_id: item.product_id || null,
                 sale_item_id: saleItemId,
@@ -656,7 +669,7 @@ export async function PATCH(
                 sold_to_name: sale.customer_name,
                 sold_to_phone: sale.customer_phone || null,
                 previous_zone: 'ready',
-              }).eq('id', existing[0].id);
+              }).eq('id', sr.id);
             } else {
               await db.from('product_serials').insert({
                 serial_number: serialNumber.trim(),
