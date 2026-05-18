@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAMORU 카탈로그 검토 페이지 — Phase 1A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+    background: #FAF9F7;
+    color: #1A1A1A;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 120px;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+
+  /* 헤더 */
+  .header {
+    background: #1A1A1A;
+    color: #FAF9F7;
+    padding: 48px 24px;
+    text-align: center;
+    margin-bottom: 56px;
+  }
+  .header h1 { font-family: 'Outfit', sans-serif; font-size: 32px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 12px; }
+  .header p { font-size: 14px; color: rgba(245,245,243,0.7); letter-spacing: 0.05em; }
+
+  /* 섹션 */
+  .section { margin-bottom: 72px; }
+  .section-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #8A8580;
+    letter-spacing: 0.25em;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  .section h2 {
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: #1A1A1A;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .section .subtitle {
+    font-size: 14px;
+    color: #8A8580;
+    margin-bottom: 32px;
+    font-style: italic;
+  }
+
+  .note {
+    background: #FFF8E1;
+    border-left: 4px solid #F0C040;
+    padding: 16px 20px;
+    margin-bottom: 32px;
+    font-size: 13px;
+    color: #5D4E1F;
+    line-height: 1.7;
+  }
+  .note strong { color: #1A1A1A; }
+
+  /* BLADE EDGE 카드 (v10과 동일 디자인) */
+  .blade-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .blade-card {
+    background: #FFFFFF;
+    border: 1px solid #EDEBE8;
+    border-radius: 12px;
+    padding: 28px;
+  }
+  .blade-card.selected {
+    background: #1A1A1A;
+    color: #FAF9F7;
+    border-color: #1A1A1A;
+  }
+  .blade-card .svg-wrap {
+    width: 100%;
+    margin-bottom: 28px;
+  }
+  .blade-card svg { width: 100%; height: auto; display: block; }
+  .blade-card.dim svg { opacity: 0.35; }
+  .blade-card .name-row {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+    justify-content: space-between;
+  }
+  .blade-card .name-inner {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .blade-card .id-letter {
+    font-family: 'Outfit', sans-serif;
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    color: #8A8580;
+  }
+  .blade-card.selected .id-letter { color: #FAF9F7; }
+  .blade-card .name-ko { font-size: 18px; font-weight: 700; color: #8A8580; line-height: 1.2; display: block; }
+  .blade-card.selected .name-ko { color: #FAF9F7; }
+  .blade-card .name-en {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #B8B4AF;
+    letter-spacing: 0.15em;
+    display: block;
+    margin-top: 4px;
+  }
+  .blade-card.selected .name-en { color: rgba(245,245,243,0.45); }
+  .blade-card .checkmark { font-size: 20px; font-weight: 700; }
+  .blade-card .divider { height: 1px; background: #EDEBE8; margin-bottom: 16px; }
+  .blade-card.selected .divider { background: rgba(245,245,243,0.15); }
+  .blade-card .description { font-size: 13px; color: #B8B4AF; line-height: 1.6; }
+  .blade-card.selected .description { color: rgba(245,245,243,0.75); }
+
+  .id-tag {
+    display: inline-block;
+    background: #F5F3F0;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 10px;
+    color: #8A8580;
+    letter-spacing: 0.1em;
+    margin-top: 12px;
+  }
+
+  /* Hero subtitle 카피 풀 */
+  .copy-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .copy-card {
+    background: #FFFFFF;
+    border: 1px solid #EDEBE8;
+    border-radius: 12px;
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .copy-card.selected {
+    background: #1A1A1A;
+    color: #FAF9F7;
+    border-color: #1A1A1A;
+  }
+  .copy-card .copy-text {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.5;
+    white-space: pre-line;
+    color: #1A1A1A;
+    flex: 1;
+  }
+  .copy-card.selected .copy-text { color: #FAF9F7; }
+  .copy-card .copy-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 11px;
+    color: #8A8580;
+    letter-spacing: 0.02em;
+    padding-top: 16px;
+    border-top: 1px solid #EDEBE8;
+  }
+  .copy-card.selected .copy-meta { color: rgba(245,245,243,0.6); border-top-color: rgba(245,245,243,0.15); }
+  .copy-card .meta-row { display: flex; justify-content: space-between; }
+  .copy-card .copy-id {
+    font-family: 'Outfit', sans-serif;
+    font-size: 10px;
+    color: #B8B4AF;
+    letter-spacing: 0.1em;
+  }
+  .copy-card.selected .copy-id { color: rgba(245,245,243,0.45); }
+
+  .selected-badge {
+    background: #1A1A1A;
+    color: #FAF9F7;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+  .copy-card.selected .selected-badge { background: #FAF9F7; color: #1A1A1A; }
+
+  /* spec 미리보기 (A2-55FS) */
+  .spec-card {
+    background: #FFFFFF;
+    border: 1px solid #EDEBE8;
+    border-radius: 12px;
+    padding: 32px;
+  }
+  .spec-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #EDEBE8;
+    font-size: 14px;
+  }
+  .spec-row:last-child { border-bottom: none; }
+  .spec-label { color: #8A8580; font-weight: 500; }
+  .spec-value { color: #1A1A1A; font-weight: 600; }
+  .spec-section-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #8A8580;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding-top: 20px;
+    margin-bottom: 8px;
+  }
+  .spec-section-title:first-child { padding-top: 0; }
+
+  /* 검토 안내 */
+  .review-guide {
+    background: #1A1A1A;
+    color: #FAF9F7;
+    padding: 40px 32px;
+    border-radius: 12px;
+    margin-top: 40px;
+  }
+  .review-guide h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .review-guide ol {
+    padding-left: 20px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: rgba(245,245,243,0.85);
+  }
+  .review-guide ol li { margin-bottom: 10px; }
+  .review-guide strong { color: #FAF9F7; }
+
+  @media (max-width: 767px) {
+    .blade-cards { grid-template-columns: 1fr; }
+    .spec-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>MAMORU 카탈로그 검토</h1>
+  <p>Phase 1A — 블런트 카드·카피 풀·spec 첫 샘플</p>
+</div>
+
+<div class="container">
+
+  <!-- 검토 안내 -->
+  <div class="review-guide">
+    <h3>📋 사장님 검토 방법</h3>
+    <ol>
+      <li><strong>1번 BLADE EDGE 카드</strong> — F·A·G 3개 카드가 사장님 의도대로 보이는지. SVG 그림·이름·설명·선택된 상태(검은 카드)가 직관적인지</li>
+      <li><strong>2번 Hero subtitle 카피 풀</strong> — 5개 카피 중 어떤 게 마음에 들고 어떤 건 별로인지. 추가하고 싶은 톤·뉘앙스가 있는지</li>
+      <li><strong>3번 A2-55FS spec 미리보기</strong> — 빌더가 만들어낼 데이터 구조가 사장님 모델 카탈로그로 보관하기 적당한지</li>
+    </ol>
+    <p style="margin-top:20px;font-size:13px;color:rgba(245,245,243,0.6);">검토 OK면 → 나머지 카드(BLADE DESIGN · HANDLE GRIP · CAMEL · GRADE) + 카피 풀 일괄 추출</p>
+  </div>
+
+  <!-- ═══ 1. BLADE EDGE 카드 미리보기 ═══ -->
+  <div class="section" style="margin-top:64px;">
+    <div class="section-label">— 01 / 카드 카탈로그 (블런트)</div>
+    <h2>BLADE EDGE — 날 선 형태</h2>
+    <p class="subtitle">블런트 모델에서 사용자가 클릭으로 선택할 3개 옵션. 선택된 옵션이 검은 카드 (예시: A2-55FS의 F)</p>
+    <div class="note">
+      <strong>읽는 법</strong>: 빌더 페이지에서 사장님이 이 3개 카드 중 하나를 클릭 = 그 모델의 BLADE EDGE 결정.
+      현재 보이는 화면은 v10 실제 디자인 그대로. 사장님이 직관적으로 어떤 가위인지 알 수 있어야 함.
+    </div>
+
+    <div class="blade-cards">
+      <!-- F (선택됨) -->
+      <div class="blade-card selected">
+        <div class="svg-wrap">
+          <svg viewBox="0 0 21.65 10" stroke="currentColor" stroke-width="0.75" fill="none" stroke-linejoin="round">
+            <polyline points="4.33 2.5 17.32 5 4.33 7.5"/>
+          </svg>
+        </div>
+        <div class="name-row">
+          <div class="name-inner">
+            <span class="id-letter">F</span>
+            <div>
+              <span class="name-ko">직선형</span>
+              <span class="name-en">FORCE</span>
+            </div>
+          </div>
+          <span class="checkmark">✓</span>
+        </div>
+        <div class="divider"></div>
+        <div class="description">거친 커트감 · 모발 밀림 적음</div>
+        <div class="id-tag" style="background:rgba(245,245,243,0.1);color:rgba(245,245,243,0.5);">id: F</div>
+      </div>
+
+      <!-- A -->
+      <div class="blade-card dim">
+        <div class="svg-wrap">
+          <svg viewBox="0 0 21.65 10" stroke="currentColor" stroke-width="0.75" fill="none" stroke-linejoin="round">
+            <path d="M4.33,2.5c3.7,1.22,8.09,1.96,12.99,2.5-4.68.7-9.07,1.49-12.99,2.5"/>
+          </svg>
+        </div>
+        <div class="name-row">
+          <div class="name-inner">
+            <span class="id-letter">A</span>
+            <div>
+              <span class="name-ko">밸런스형</span>
+              <span class="name-en">ALL-ROUND</span>
+            </div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="description">F와 G 중간 · 올라운드</div>
+        <div class="id-tag">id: A</div>
+      </div>
+
+      <!-- G -->
+      <div class="blade-card dim">
+        <div class="svg-wrap">
+          <svg viewBox="0 0 21.65 10" stroke="currentColor" stroke-width="0.75" fill="none" stroke-linejoin="round">
+            <path d="M4.33,2.5c3.82,2.1,8.23,2.73,12.99,2.5-4.81.08-9.28.7-12.99,2.5"/>
+          </svg>
+        </div>
+        <div class="name-row">
+          <div class="name-inner">
+            <span class="id-letter">G</span>
+            <div>
+              <span class="name-ko">둥근형</span>
+              <span class="name-en">GLIDE</span>
+            </div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="description">부드러운 컷 · 밀림 빠름</div>
+        <div class="id-tag">id: G</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 2. Hero subtitle 카피 풀 ═══ -->
+  <div class="section">
+    <div class="section-label">— 02 / 카피 풀 (블런트 Hero subtitle)</div>
+    <h2>감성 카피 라이브러리</h2>
+    <p class="subtitle">모델 이름 아래 두 줄짜리 감성 문구. 빌더에서 1개 선택. 사장님이 직접 추가/수정 가능</p>
+    <div class="note">
+      <strong>읽는 법</strong>: 5개 카피 중 사장님 의도와 맞는 게 있는지. 톤(안정·정밀·균형 등) 표시로 어떤 모델에 어울리는지 직관적으로 알 수 있게 정리. <strong>마음에 안 드는 카피는 ✗ 표시 + 추가 카피 의견</strong> 주시면 됩니다.
+    </div>
+
+    <div class="copy-list">
+      <div class="copy-card selected">
+        <div class="copy-text">한 손에 머무는 무게,
+일관된 끝매김.</div>
+        <div class="copy-meta">
+          <div class="meta-row">
+            <span>톤: 안정·일관성</span>
+            <span class="selected-badge">A2-55FS 적용</span>
+          </div>
+          <div class="meta-row">
+            <span>어울림: 5.5인치 · F+S · 라이트</span>
+            <span class="copy-id">blunt_consistency_55</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="copy-card">
+        <div class="copy-text">짧은 날,
+정확한 끝매김.</div>
+        <div class="copy-meta">
+          <div class="meta-row">
+            <span>톤: 정밀·컨트롤</span>
+          </div>
+          <div class="meta-row">
+            <span>어울림: 4.5 · 5.0 · F</span>
+            <span class="copy-id">blunt_precision_short</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="copy-card">
+        <div class="copy-text">한 호흡으로 닿는 길이,
+끝까지 평평한 결.</div>
+        <div class="copy-meta">
+          <div class="meta-row">
+            <span>톤: 안정·균형</span>
+          </div>
+          <div class="meta-row">
+            <span>어울림: 6.0 · A+S</span>
+            <span class="copy-id">blunt_balance_60</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="copy-card">
+        <div class="copy-text">긴 호흡, 부드러운 결.</div>
+        <div class="copy-meta">
+          <div class="meta-row">
+            <span>톤: 유려·길이</span>
+          </div>
+          <div class="meta-row">
+            <span>어울림: 6.5 · 7.0 · G</span>
+            <span class="copy-id">blunt_long_smooth</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="copy-card">
+        <div class="copy-text">결을 받아내는 손맛.</div>
+        <div class="copy-meta">
+          <div class="meta-row">
+            <span>톤: 감각·시그니처</span>
+          </div>
+          <div class="meta-row">
+            <span>어울림: F · S</span>
+            <span class="copy-id">blunt_force_signature</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 3. A2-55FS spec 미리보기 ═══ -->
+  <div class="section">
+    <div class="section-label">— 03 / 모델 spec (A2-55FS)</div>
+    <h2>빌더가 만들 모델 자료</h2>
+    <p class="subtitle">사장님이 빌더에서 선택·입력한 결과가 이 형식으로 저장됩니다. 사장님 영구 모델 카탈로그 = git 보관</p>
+    <div class="note">
+      <strong>읽는 법</strong>: 위의 카드 선택(F)·카피 선택(blunt_consistency_55) + 자유 입력 필드(무게 58g·핸들 설명 등)가 어떻게 한 모델 자료로 정리되는지.<br>
+      이 정도 정보가 모델 자료로 보관 적당한지. 추가/제거할 필드 있으면 알려주세요.
+    </div>
+
+    <div class="spec-card">
+      <div class="spec-section-title">▸ 기본 정보</div>
+      <div class="spec-row"><span class="spec-label">모델명</span><span class="spec-value">A2-55FS</span></div>
+      <div class="spec-row"><span class="spec-label">종류 (type)</span><span class="spec-value">blunt · 블런트</span></div>
+      <div class="spec-row"><span class="spec-label">카테고리 라벨</span><span class="spec-value">BLUNT 5.5 INCH</span></div>
+      <div class="spec-row"><span class="spec-label">사이즈</span><span class="spec-value">5.5 inch</span></div>
+      <div class="spec-row"><span class="spec-label">무게</span><span class="spec-value">58 g</span></div>
+      <div class="spec-row"><span class="spec-label">등급</span><span class="spec-value">A · ACE</span></div>
+
+      <div class="spec-section-title">▸ 카드 선택 (카탈로그에서 클릭)</div>
+      <div class="spec-row"><span class="spec-label">BLADE EDGE</span><span class="spec-value">F · 직선형 · FORCE</span></div>
+      <div class="spec-row"><span class="spec-label">BLADE DESIGN</span><span class="spec-value">S · 검형 · SWORD</span></div>
+      <div class="spec-row"><span class="spec-label">HANDLE GRIP</span><span class="spec-value">세미오프셋</span></div>
+      <div class="spec-row"><span class="spec-label">CAMEL / PLAT</span><span class="spec-value">카멜</span></div>
+
+      <div class="spec-section-title">▸ 카피 선택 (풀에서 체크)</div>
+      <div class="spec-row"><span class="spec-label">Hero subtitle</span><span class="spec-value">"한 손에 머무는 무게, 일관된 끝매김."</span></div>
+      <div class="spec-row"><span class="spec-label">For You 맞음 (3개)</span><span class="spec-value">블런트 80% · 짧은 날 일관성 · 가벼운 손맛</span></div>
+      <div class="spec-row"><span class="spec-label">For You 안 맞음 (3개)</span><span class="spec-value">슬라이드 50% · 손 큼 · 입문자</span></div>
+
+      <div class="spec-section-title">▸ 자유 입력 (그때그때 사장님 직접)</div>
+      <div class="spec-row"><span class="spec-label">엄지부 그립</span><span class="spec-value">15 × 21 mm</span></div>
+      <div class="spec-row"><span class="spec-label">약지부 그립</span><span class="spec-value">15 × 18 mm</span></div>
+      <div class="spec-row"><span class="spec-label">핸들 설명</span><span class="spec-value" style="font-weight:400;font-size:13px;color:#4A4A4A;">표준 사이즈에 가까워 대부분의 손에 자연스럽게 맞습니다. 약지부 카멜 형태가 그립 안정감을 더합니다.</span></div>
+      <div class="spec-row"><span class="spec-label">무게 밴드</span><span class="spec-value">중간</span></div>
+
+      <div class="spec-section-title">▸ 메타 정보</div>
+      <div class="spec-row"><span class="spec-label">소재</span><span class="spec-value">440C JAPAN</span></div>
+      <div class="spec-row"><span class="spec-label">베어링</span><span class="spec-value">베어링 장착</span></div>
+      <div class="spec-row"><span class="spec-label">라인업 (Same Handle)</span><span class="spec-value" style="font-size:13px;">A2-45FS · A2-65FS · A2-55FC · A2-55GS · A2-65GC</span></div>
+      <div class="spec-row"><span class="spec-label">이미지 폴더</span><span class="spec-value">A2-55FS</span></div>
+      <div class="spec-row"><span class="spec-label">작성일 · 갱신일</span><span class="spec-value">2026-05-17</span></div>
+    </div>
+  </div>
+
+  <!-- ═══ 사장님 검토 후 액션 안내 ═══ -->
+  <div class="review-guide" style="margin-top:64px;">
+    <h3>✅ 사장님 검토 후 알려주세요</h3>
+    <ol>
+      <li><strong>전체 구조 OK?</strong> — 카드·카피 풀·spec 3박자가 모델 양산에 충분한지</li>
+      <li><strong>카피 풀 평가</strong> — 5개 중 마음에 드는·별로인 것 / 추가하고 싶은 톤</li>
+      <li><strong>spec 필드</strong> — 빠진 항목 / 불필요한 항목</li>
+    </ol>
+    <p style="margin-top:20px;font-size:13px;color:rgba(245,245,243,0.6);">
+      OK 신호 받으면 <strong>나머지 카드(4종) + 카피 풀(4종)</strong> 일괄 추출 → Phase 1A 완료.<br>
+      그다음 Phase 2 = 빌더 페이지(시각적 선택 UI) 개발.
+    </p>
+  </div>
+
+</div>
+
+</body>
+</html>

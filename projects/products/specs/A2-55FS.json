@@ -1,0 +1,58 @@
+{
+  "model": "A2-55FS",
+  "type": "blunt",
+  "category_label": "BLUNT 5.5 INCH",
+  "size_inch": 5.5,
+  "weight_g": 58,
+  "price_grade": "A",
+
+  "selections": {
+    "blade_edge": "F",
+    "blade_design": "S",
+    "handle_grip": "semi_offset",
+    "handle_camel": "camel"
+  },
+
+  "copy_selections": {
+    "hero_subtitle": "blunt_consistency_55",
+    "for_you_match": ["blunt_80pct", "short_blade_consistency", "light_touch"],
+    "for_you_miss": ["slide_50pct", "big_hand", "beginner"]
+  },
+
+  "custom_fields": {
+    "hero_quote_about": "5.5인치 날 길이는 블런트 작업의 안정감과 컨트롤의 균형을 잡아줍니다. 검형 날등(S) + 직선형 날선(F)의 조합으로 깔끔한 절삭과 일관된 끝매김을 만들어냅니다.",
+    "about_brand_quote": "가위를 바꾸기 전에, 먼저 자신의 커트 스타일을 알아야 합니다.",
+    "grip_thumb": "15 × 21",
+    "grip_ring": "15 × 18",
+    "handle_description": "표준 사이즈에 가까워 대부분의 손에 자연스럽게 맞습니다. 약지부 카멜 형태가 그립 안정감을 더합니다.",
+    "weight_band": "중간",
+    "weight_description": "짧은 4인치 + 48g — 한 손 작업에 적정. 장시간 사용에도 손목 부담 적음."
+  },
+
+  "spec_meta": {
+    "material": "440C JAPAN",
+    "bearing": "베어링 장착",
+    "edge_label": "F · 포스 (직선형)",
+    "design_label": "S · 스워드 (검형)",
+    "handle_label": "카멜 + 세미오프셋"
+  },
+
+  "lineup": ["A2-45FS", "A2-65FS", "A2-55FC", "A2-55GS", "A2-65GC"],
+
+  "images_folder": "A2-55FS",
+  "images": {
+    "hero": "hero.png",
+    "blade1": "blade1.png",
+    "blade2": "blade2.png",
+    "handle": "handle.png",
+    "back": "back.png",
+    "bolt": "bolt.png",
+    "model": "model.png",
+    "cut": "cut.gif",
+    "workshop": "workshop.png"
+  },
+
+  "created_at": "2026-05-17",
+  "updated_at": "2026-05-17",
+  "notes": "v10_trendy 마스터에서 역추출. Phase 1A 첫 spec 샘플. 이후 빌더로 양산되는 모든 모델은 동일 스키마 사용"
+}

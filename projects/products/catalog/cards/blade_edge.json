@@ -1,0 +1,32 @@
+{
+  "card_type": "blade_edge",
+  "applies_to": ["blunt", "long"],
+  "label_ko": "BLADE EDGE",
+  "label_subtitle_ko": "날 선 형태",
+  "select_mode": "single",
+  "viewbox": "0 0 21.65 10",
+  "svg_stroke_width": "0.75",
+  "options": [
+    {
+      "id": "F",
+      "name_ko": "직선형",
+      "name_en": "FORCE",
+      "svg_inline": "<polyline points=\"4.33 2.5 17.32 5 4.33 7.5\"/>",
+      "description_ko": "거친 커트감 · 모발 밀림 적음"
+    },
+    {
+      "id": "A",
+      "name_ko": "밸런스형",
+      "name_en": "ALL-ROUND",
+      "svg_inline": "<path d=\"M4.33,2.5c3.7,1.22,8.09,1.96,12.99,2.5-4.68.7-9.07,1.49-12.99,2.5\"/>",
+      "description_ko": "F와 G 중간 · 올라운드"
+    },
+    {
+      "id": "G",
+      "name_ko": "둥근형",
+      "name_en": "GLIDE",
+      "svg_inline": "<path d=\"M4.33,2.5c3.82,2.1,8.23,2.73,12.99,2.5-4.81.08-9.28.7-12.99,2.5\"/>",
+      "description_ko": "부드러운 컷 · 밀림 빠름"
+    }
+  ]
+}

@@ -1,9 +1,30 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-17 — **상품 상세 페이지 후기 위젯 Phase 2-C + v10 본문 중복 정리 완료**. sticky 탭바 + 모달 화살표 + Warm Premium v5 + v10 본문 11섹션 압축 (Brand Transition·Lifetime Care 제거)
+> 최종 수정: 2026-05-17 — **시리얼 무결성 복구 (93.92% → 0%) 완료** + 상품 상세 후기 위젯 Phase 2-C + v10 중복 정리. 다음 사이클: 카탈로그 시스템 Phase 1A 사장님 검토 대기
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
+
+## 🟡 진행중 (사장님 검토 대기)
+
+### 상품 상세 빌더 시스템 — Phase 1A 카탈로그 검토 대기
+**작업 자료**: [memory/project_product_detail_builder.md](memory/project_product_detail_builder.md)
+
+- 카탈로그 스키마 README: `projects/products/catalog/README.md`
+- BLADE EDGE 카드 카탈로그 예시: `projects/products/catalog/cards/blade_edge.json`
+- Hero subtitle 카피 풀 예시: `projects/products/catalog/copy_pool/hero_subtitle_blunt.json`
+- A2-55FS spec 예시: `projects/products/specs/A2-55FS.json`
+- **사장님 검토 페이지**: `projects/products/catalog/preview.html` (브라우저로 열기)
+
+**검토 후 다음 단계**:
+- 블런트 나머지 카드 4종 일괄 추출 (BLADE DESIGN · HANDLE GRIP · CAMEL · GRADE)
+- 블런트 카피 풀 4종 일괄 작성 (About 본문 · For You match · miss · 핸들 특성)
+- Phase 1B (틴닝 카드 + 카피)
+- Phase 2 (빌더 페이지 HTML+JS 구축)
+
+---
+
+## 🟡 자동 대기
 
 ## 🟡 진행중·대기
 
@@ -14,6 +35,31 @@
 - `as_review_request` (복원수리 후기) — 새 URL: `type=repair`로 통일
 
 검수 통과 시 자동 활성화. 운영 무중단 (GitHub Pages 자동 301 redirect 로 옛 URL도 작동).
+
+---
+
+## ✅ 완료 (05-17): TMS 시리얼 sale_item_id 무결성 복구 (Critical)
+
+**문제**: 판매 수정 후 다중 상품 시리얼이 누락·잘못 표시. DB 진단 결과 `product_serials.sale_item_id` 가 93.92% (818/871건) NULL 상태.
+
+**Root cause (복합)**:
+- `rebuild_sale` STEP 3.5: 같은 product_id 인 sale_item 여러 줄일 때 filter() 매번 같은 시리얼 반환 → 마지막 줄만 시리얼 보유
+- `useSale` hook 반환 타입에 sale_item_id 누락 → 상세 페이지 product_id만으로 매칭
+- `serial-picker` autoGenerate 중복 호출 방지 없음
+
+**Fix (코드 4파일 + DB 마이그레이션 3개)**:
+- [x] api/sales/[id]/route.ts STEP 3.5 재매칭 로직 재작성 (큐 FIFO + quantity pop)
+- [x] hooks/use-sales.ts 반환 타입 sale_item_id 추가
+- [x] sales/[id]/page.tsx + sale-detail-modal.tsx 매칭 우선순위 (sale_item_id → product_id fallback)
+- [x] serial-picker.tsx 자동생성 중복 방지 + disabled
+- [x] 082 마이그레이션: 단순 케이스 자동 복구 → 효과 미미 (product_id NULL 때문)
+- [x] 083 마이그레이션: product_id + sale_item_id 동시 복구 → 818 → 2 (99.77%)
+- [x] 084 마이그레이션: 잔여 2건 강제 매핑 → 2 → 0 (100%)
+- [x] TypeScript 컴파일 0건
+- [x] memory/feedback_serial_integrity_strict.md 신규 — 시리얼 무결성 절대 원칙 영구 박제
+- [x] MEMORY.md 인덱스 🚨🚨 표시 + 다시 이 문제 발생 시 클로드 책임 명문화
+
+**커밋**: `7b87a0e` (8 파일, +236/-18)
 
 ---
 

@@ -1,0 +1,39 @@
+{
+  "copy_type": "hero_subtitle",
+  "applies_to": ["blunt"],
+  "label_ko": "Hero subtitle (감성 카피)",
+  "label_subtitle_ko": "모델 이름 아래 두 줄짜리 짧은 감성 문구",
+  "select_mode": "single",
+  "options": [
+    {
+      "id": "blunt_consistency_55",
+      "text": "한 손에 머무는 무게,\n일관된 끝매김.",
+      "tone": "안정·일관성",
+      "matches": ["5.5", "F+S", "라이트"]
+    },
+    {
+      "id": "blunt_precision_short",
+      "text": "짧은 날,\n정확한 끝매김.",
+      "tone": "정밀·컨트롤",
+      "matches": ["4.5", "5.0", "F"]
+    },
+    {
+      "id": "blunt_balance_60",
+      "text": "한 호흡으로 닿는 길이,\n끝까지 평평한 결.",
+      "tone": "안정·균형",
+      "matches": ["6.0", "A+S"]
+    },
+    {
+      "id": "blunt_long_smooth",
+      "text": "긴 호흡, 부드러운 결.",
+      "tone": "유려·길이",
+      "matches": ["6.5", "7.0", "G"]
+    },
+    {
+      "id": "blunt_force_signature",
+      "text": "결을 받아내는 손맛.",
+      "tone": "감각·시그니처",
+      "matches": ["F", "S"]
+    }
+  ]
+}
