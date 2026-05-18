@@ -76,9 +76,8 @@ export function Sidebar() {
               {group.items.map((item) => {
                 const Icon = iconMap[item.icon];
                 // matchPrefix 정확 매칭: 하위 경로가 별도 메뉴인 경우 부모와 겹치지 않도록
-                const active = item.matchPrefix === '/sales'
-                  ? pathname === '/sales' || (pathname.startsWith('/sales/') && !pathname.startsWith('/sales/new'))
-                  : item.matchPrefix === '/consultations'
+                // /sales/new 는 별도 메뉴 아님 → 부모 /sales 메뉴 active 처리 (IA 정리 2026-05-18)
+                const active = item.matchPrefix === '/consultations'
                   ? pathname === '/consultations' || (pathname.startsWith('/consultations/') && !pathname.startsWith('/consultations/calendar'))
                   : pathname.startsWith(item.matchPrefix);
                 return (

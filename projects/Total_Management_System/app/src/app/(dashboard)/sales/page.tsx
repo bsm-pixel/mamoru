@@ -320,7 +320,15 @@ export default function SalesPage() {
 
   return (
     <>
-      <Topbar title="판매 조회" />
+      <Topbar
+        title="판매 관리"
+        action={
+          <Button onClick={() => router.push('/sales/new')} size="sm">
+            <Plus size={14} />
+            판매 입력
+          </Button>
+        }
+      />
 
       {isLg ? (
         /* PC: 마스터-디테일 2컬럼 */
