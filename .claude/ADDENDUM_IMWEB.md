@@ -29,6 +29,20 @@
 - 위 경우에만 다음 문구로 안내:
   - "아임웹 디자인모드 코드위젯에 로컬 파일 내용을 붙여넣으세요"
 
+### 1.1 🚨 iframe + page 통신 표준 패턴 (2026-05-18 사장님 강조, 시행착오 3회 후 정립)
+
+**iframe height 동기화 + 다중 iframe 환경 코드를 새로 작성하거나 수정할 때 반드시 다음 패턴 사용**:
+
+- 표준 패턴 + 절대 금지 패턴 + 시행착오 이력: **`memory/reference_iframe_codewidget_pattern.md` 필독**
+- 핵심 4룰:
+  1. **iframe parent fallback = 0px** (큰 fallback + monotonic 은 영구 잠금 위험)
+  2. **source + origin + id 3중 가드** (다중 iframe 메시지 오염 방지)
+  3. **monotonic** `h > currentHeight` (측정 노이즈로 줄어드는 것 차단)
+  4. **`setTimeout(revealAll, 2500)`** IntersectionObserver fallback (iframe 안 트리거 누락 대비)
+- 코드위젯 SSOT: `memory/reference_imweb_codewidgets.md` 슬롯 ④ (메인 페이지 4쌍 검증된 모범 사례)
+
+**사장님 코드위젯 교체 비용 의식**: page_*.html은 GitHub Pages 자동 반영이지만 iframe_*.html은 사장님 수동 교체 필요. 가능하면 page만 수정으로 해결, iframe parent 수정은 처음부터 표준 패턴으로 한 번에 정리.
+
 ---
 
 ## 2. CSS/JS 충돌 방지(필수)
