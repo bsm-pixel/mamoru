@@ -58,13 +58,55 @@ body { font-family: var(--font-body); }
 
 <script>
 (function(){
-  function send() {
-    var h = document.documentElement.scrollHeight;
-    if (h > 0) window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', id: 'label-lineup', height: h }, '*');
+  /* iframe height 송신 — 강화 패턴 (2026-05-18 fix). 자세한 주석은 page_label_first.html 참조 */
+  var lastSent = 0;
+
+  function getHeight() {
+    var bodyScroll = document.body.scrollHeight || 0;
+    var docScroll  = document.documentElement.scrollHeight || 0;
+    var bodyOffset = document.body.offsetHeight || 0;
+    var lastBottom = 0;
+    var lastEl = document.body.lastElementChild;
+    while (lastEl && (lastEl.tagName === 'SCRIPT' || lastEl.tagName === 'STYLE')) {
+      lastEl = lastEl.previousElementSibling;
+    }
+    if (lastEl) {
+      var rect = lastEl.getBoundingClientRect();
+      lastBottom = (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.bottom;
+    }
+    return Math.max(bodyScroll, docScroll, bodyOffset, lastBottom);
   }
-  if (window.ResizeObserver) new ResizeObserver(send).observe(document.body);
-  window.addEventListener('load', send);
-  send();
+
+  function send() {
+    var h = Math.ceil(getHeight());
+    if (h > lastSent + 1) {
+      lastSent = h;
+      window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', id: 'label-lineup', height: h }, '*');
+    }
+  }
+
+  function multiSend() {
+    send();
+    [50, 150, 400, 800, 1500, 3000].forEach(function(ms) { setTimeout(send, ms); });
+  }
+
+  if (window.ResizeObserver) {
+    try { new ResizeObserver(send).observe(document.body); } catch(_) {}
+  }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(send).catch(function(){});
+  }
+  if (document.readyState === 'complete') {
+    multiSend();
+  } else {
+    window.addEventListener('load', multiSend);
+    send();
+  }
+  window.addEventListener('pageshow', function(e) { if (e.persisted) multiSend(); else send(); });
+  document.addEventListener('visibilitychange', function() { if (!document.hidden) send(); });
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'REQUEST_HEIGHT') send();
+  });
 
   document.addEventListener('click', function(e) {
     var a = e.target.closest('a[href]');

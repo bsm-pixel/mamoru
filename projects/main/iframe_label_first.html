@@ -11,15 +11,24 @@
 <script>
 (function(){
   var iframe = document.getElementById('mamoruLabelFirstFrame');
-  var currentHeight = 0;
+  // 초기 fallback — 라벨 단순 영역이라 작게 (실제 값 도달 시 늘어남, monotonic으로 안 줄어듦)
+  var fallbackH = 120;
+  iframe.style.height = fallbackH + 'px';
+  var currentHeight = fallbackH;
+
   window.addEventListener('message', function(e) {
+    // ① source 체크 (다른 iframe 메시지 차단, 2026-05-18 fix)
+    if (e.source !== iframe.contentWindow) return;
+    // ② origin 체크
     if (e.origin !== 'https://page.mamoru.kr') return;
+
+    // ③ id 체크 (이중 가드)
     if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && e.data.id === 'label-first' && typeof e.data.height === 'number') {
       var h = Math.ceil(e.data.height);
-      if (h !== currentHeight && h > 0) { currentHeight = h; iframe.style.height = h + 'px'; }
+      // monotonic increasing — 한 번 도달한 큰 값에서 줄어들지 않음
+      if (h > currentHeight) { currentHeight = h; iframe.style.height = h + 'px'; }
     }
     if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) { window.location.href = e.data.url; }
   });
-  iframe.style.height = '0px';
 })();
 </script>
