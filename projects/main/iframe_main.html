@@ -27,29 +27,35 @@
 <script>
 (function(){
   var iframe = document.getElementById('mamoruMainFrame');
-  // 초기 높이 (postMessage 수신 전 fallback) — 리뉴얼 7섹션
+  // 초기 fallback — 첫 송신 도착 즉시 정확값으로 교체됨
   var fallbackH = window.innerWidth <= 768 ? 3600 : 4200;
   iframe.style.height = fallbackH + 'px';
   var currentHeight = fallbackH;
+  var hasReceivedMessage = false;
 
-  // postMessage로 동적 높이 수신 (page_main.html → MAMORU_IFRAME_SIZE)
   window.addEventListener('message', function(e) {
-    // ① 우리 iframe에서 온 메시지만 처리 (다른 iframe 메시지 차단, 2026-05-18 fix)
+    // ① source 체크
     if (e.source !== iframe.contentWindow) return;
     // ② origin 체크
     if (e.origin !== 'https://page.mamoru.kr') return;
 
-    // ③ id 체크 (방어 심층화 — 2026-05-18 fix): source + id 'main' 이중 가드
+    // ③ id 체크
     if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && e.data.id === 'main' && typeof e.data.height === 'number') {
       var newHeight = Math.ceil(e.data.height);
-      // monotonic increasing — 한 번 도달한 큰 값에서 줄어들지 않음
-      if (newHeight > currentHeight) {
+      if (newHeight <= 0) return;
+
+      if (!hasReceivedMessage) {
+        // 첫 메시지 무조건 적용 (fallback 빈 공간 차단, 2026-05-18 fix)
+        hasReceivedMessage = true;
+        currentHeight = newHeight;
+        iframe.style.height = newHeight + 'px';
+      } else if (newHeight > currentHeight) {
+        // 이후 monotonic
         currentHeight = newHeight;
         iframe.style.height = newHeight + 'px';
       }
     }
 
-    // 페이지 이동 요청 처리 (cross-origin 해결)
     if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) {
       window.location.href = e.data.url;
     }
