@@ -1,7 +1,42 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-18 — **시리얼 다층 안전망 구축 완료** (Phase C audit log + Phase B 양방향 교환) + 계약서 영구 삭제 기능 + 사이드바 IA 정리. 다음 사이클: 카탈로그 시스템 Phase 1A 사장님 검토 대기
+> 최종 수정: 2026-05-18 — **메인 페이지 iframe height fix** (시행착오 3회 후 `f17fce8` 단순화 완료) + **iframe 코드위젯 표준 패턴 영구 박제** (재발 방지 3중 안전망). 다음 사이클: 카탈로그 시스템 Phase 1A 사장님 검토 대기
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
+
+---
+
+## ✅ 완료 (05-18 늦은밤): 메인 페이지 iframe height fix + 표준 패턴 영구 박제
+
+### 증상
+- Quick Nav 칩 영역이 자주 사라짐
+- top 아래 큰 빈 공간
+- 스크롤 어색
+
+### Root cause 2가지
+1. 큰 fallback(2400/3400) + monotonic 조합 → 실제 콘텐츠 작으면 영구 잠금 → 빈 공간
+2. iframe 안에서 `.mm-anim` IntersectionObserver 일부 element 트리거 누락 → opacity:0 영구 고착
+
+### 시행착오 → 최종 fix
+| 커밋 | 시도 | 결과 |
+|---|---|---|
+| 51088c7 | iframe 가드 + monotonic + 큰 fallback | top 빈 공간 |
+| c8887ce | 라벨도 동일 | 라벨 코드 길어짐 |
+| f38d1cd | hasReceivedMessage 플래그 | 코드 길어지고 효과 미미 |
+| **f17fce8** ✅ | **fallback 0 + monotonic 단순화 + revealAll 2.5초** | 빈 공간 0 + Quick Nav 정상 + 코드 짧음 |
+
+### 영구 박제 (재발 방지)
+- 새 메모리: `memory/reference_iframe_codewidget_pattern.md` — 표준 코드 + 절대 금지 패턴 4가지 + 시행착오 이력
+- SSOT 갱신: `memory/reference_imweb_codewidgets.md` 슬롯 ④ 정합 테이블 + 패턴 링크
+- MEMORY.md 인덱스 4중 가드 룰 명시
+- **`.claude/ADDENDUM_IMWEB.md § 1.1` 가이드 추가** (`f279ebc`) — 키워드 트리거(iframe/코드위젯/postMessage)로 다음 세션 자동 로드 → 처음부터 표준 패턴 사용 → **시행착오 0**
+
+### 변경 파일
+- `projects/main/iframe_*.html` (5개) — fallback 0 + monotonic + 3중 가드
+- `projects/main/page_main_top.html` / `page_main_btm.html` — `setTimeout(revealAll, 2500)` 안전망
+- `projects/main/page_main.html` — id: 'main' 명시 송신
+- `projects/main/page_label_first/lineup.html` — 강화된 send (4종 max + monotonic + multiSend)
+
+---
 
 ---
 
