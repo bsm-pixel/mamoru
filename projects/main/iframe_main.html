@@ -27,15 +27,23 @@
 <script>
 (function(){
   var iframe = document.getElementById('mamoruMainFrame');
-  var currentHeight = 0;
+  // 초기 높이 (postMessage 수신 전 fallback) — 리뉴얼 7섹션
+  var fallbackH = window.innerWidth <= 768 ? 3600 : 4200;
+  iframe.style.height = fallbackH + 'px';
+  var currentHeight = fallbackH;
 
   // postMessage로 동적 높이 수신 (page_main.html → MAMORU_IFRAME_SIZE)
   window.addEventListener('message', function(e) {
+    // ① 우리 iframe에서 온 메시지만 처리 (다른 iframe 메시지 차단, 2026-05-18 fix)
+    if (e.source !== iframe.contentWindow) return;
+    // ② origin 체크
     if (e.origin !== 'https://page.mamoru.kr') return;
 
-    if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && typeof e.data.height === 'number') {
+    // ③ id 체크 (방어 심층화 — 2026-05-18 fix): source + id 'main' 이중 가드
+    if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && e.data.id === 'main' && typeof e.data.height === 'number') {
       var newHeight = Math.ceil(e.data.height);
-      if (newHeight !== currentHeight && newHeight > 0) {
+      // monotonic increasing — 한 번 도달한 큰 값에서 줄어들지 않음
+      if (newHeight > currentHeight) {
         currentHeight = newHeight;
         iframe.style.height = newHeight + 'px';
       }
@@ -46,8 +54,5 @@
       window.location.href = e.data.url;
     }
   });
-
-  // 초기 높이 (postMessage 수신 전 fallback) — 리뉴얼 7섹션
-  iframe.style.height = (window.innerWidth <= 768 ? 3600 : 4200) + 'px';
 })();
 </script>

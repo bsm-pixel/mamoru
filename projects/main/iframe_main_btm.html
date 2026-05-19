@@ -27,14 +27,22 @@
 <script>
 (function(){
   var iframe = document.getElementById('mamoruMainBtmFrame');
-  var currentHeight = 0;
+  // 초기 높이 (postMessage 수신 전 fallback) — 하단: 도구+서비스+후기+슬로건
+  var fallbackH = window.innerWidth <= 768 ? 2800 : 3000;
+  iframe.style.height = fallbackH + 'px';
+  var currentHeight = fallbackH;
 
   window.addEventListener('message', function(e) {
+    // ① 우리 iframe에서 온 메시지만 처리 (다른 iframe 메시지 차단, 2026-05-18 fix)
+    if (e.source !== iframe.contentWindow) return;
+    // ② origin 체크
     if (e.origin !== 'https://page.mamoru.kr') return;
 
+    // ③ id 체크 (방어 심층화): source + id 'btm' 이중 가드
     if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && e.data.id === 'btm' && typeof e.data.height === 'number') {
       var newHeight = Math.ceil(e.data.height);
-      if (newHeight !== currentHeight && newHeight > 0) {
+      // monotonic increasing — 한 번 도달한 큰 값에서 줄어들지 않음
+      if (newHeight > currentHeight) {
         currentHeight = newHeight;
         iframe.style.height = newHeight + 'px';
       }
@@ -44,8 +52,5 @@
       window.location.href = e.data.url;
     }
   });
-
-  // 초기 높이 (postMessage 수신 전 fallback) — 하단: 도구+서비스+후기+슬로건
-  iframe.style.height = (window.innerWidth <= 768 ? 2800 : 3000) + 'px';
 })();
 </script>
