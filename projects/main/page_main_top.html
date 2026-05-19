@@ -991,13 +991,18 @@ button[class*="mm-"]:focus-visible {
 
   /* ═══════════════════════════════════════════════════════════════
      IntersectionObserver — 스크롤 애니메이션
+     iframe 환경에서 일부 element가 트리거 안 되는 케이스 대비 — 2.5초 강제 fallback (2026-05-18 fix)
      ═══════════════════════════════════════════════════════════════ */
   function initAnimations() {
     var selectors = '.mm-anim, .mm-anim--blur';
-    if (!('IntersectionObserver' in window)) {
+    var revealAll = function() {
       document.querySelectorAll(selectors).forEach(function(el) {
         el.classList.add('mm-visible');
       });
+    };
+
+    if (!('IntersectionObserver' in window)) {
+      revealAll();
       return;
     }
     var observer = new IntersectionObserver(function(entries) {
@@ -1012,6 +1017,10 @@ button[class*="mm-"]:focus-visible {
     document.querySelectorAll(selectors).forEach(function(el) {
       observer.observe(el);
     });
+
+    // 🛡️ 2.5초 안전망 — 어떤 환경(iframe BFCache, 인앱, 빠른 스크롤)에서도 element 가
+    // 영구 opacity:0 상태로 남지 않도록 강제 visible. 정상 트리거된 건 영향 없음(idempotent).
+    setTimeout(revealAll, 2500);
   }
 
 

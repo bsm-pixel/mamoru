@@ -27,37 +27,17 @@
 <script>
 (function(){
   var iframe = document.getElementById('mamoruMainTopFrame');
-
-  // 초기 fallback — 첫 송신 전 빈 공간 차단용. 첫 송신 도착 즉시 정확값으로 교체됨 (작아도 됨).
-  var fallbackH = window.innerWidth <= 768 ? 2400 : 3400;
-  iframe.style.height = fallbackH + 'px';
-  var currentHeight = fallbackH;
-  var hasReceivedMessage = false;  // ⭐ 첫 메시지 도착 여부 — fallback 잠금 해제용
+  iframe.style.height = '0px';   // page 첫 송신(~50ms)이 정확값 설정. fallback 잠금 위험 0
+  var currentHeight = 0;
 
   window.addEventListener('message', function(e) {
-    // ① 우리 iframe에서 온 메시지만 처리 (다른 iframe 메시지 차단)
-    if (e.source !== iframe.contentWindow) return;
-    // ② origin 체크
-    if (e.origin !== 'https://page.mamoru.kr') return;
+    if (e.source !== iframe.contentWindow) return;             // source 가드
+    if (e.origin !== 'https://page.mamoru.kr') return;          // origin 가드
 
-    // ③ id 체크 (방어 심층화): source 체크 + id 'top' 이중 가드
     if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && e.data.id === 'top' && typeof e.data.height === 'number') {
-      var newHeight = Math.ceil(e.data.height);
-      if (newHeight <= 0) return;
-
-      if (!hasReceivedMessage) {
-        // 첫 메시지 — 무조건 적용 (fallback 이 실제보다 클 때 빈 공간 차단, 2026-05-18 fix)
-        hasReceivedMessage = true;
-        currentHeight = newHeight;
-        iframe.style.height = newHeight + 'px';
-      } else if (newHeight > currentHeight) {
-        // 이후 — monotonic increasing (측정 노이즈로 줄어드는 것만 차단)
-        currentHeight = newHeight;
-        iframe.style.height = newHeight + 'px';
-      }
+      var h = Math.ceil(e.data.height);
+      if (h > currentHeight) { currentHeight = h; iframe.style.height = h + 'px'; }  // monotonic
     }
-
-    // 페이지 이동 위임
     if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) {
       window.location.href = e.data.url;
     }

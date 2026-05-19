@@ -949,12 +949,10 @@ button[class*="mm-"]:focus-visible {
      ═══════════════════════════════════════════════════════════════ */
   function initAnimations() {
     var selectors = '.mm-anim, .mm-anim--blur';
-    if (!('IntersectionObserver' in window)) {
-      document.querySelectorAll(selectors).forEach(function(el) {
-        el.classList.add('mm-visible');
-      });
-      return;
-    }
+    var revealAll = function() {
+      document.querySelectorAll(selectors).forEach(function(el) { el.classList.add('mm-visible'); });
+    };
+    if (!('IntersectionObserver' in window)) { revealAll(); return; }
     var observer = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
         if (entry.isIntersecting) {
@@ -963,10 +961,9 @@ button[class*="mm-"]:focus-visible {
         }
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
-
-    document.querySelectorAll(selectors).forEach(function(el) {
-      observer.observe(el);
-    });
+    document.querySelectorAll(selectors).forEach(function(el) { observer.observe(el); });
+    // 🛡️ 2.5초 안전망 — iframe 환경에서 일부 element가 트리거 안 되어 opacity:0 영구 고착 방지
+    setTimeout(revealAll, 2500);
   }
 
 

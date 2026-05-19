@@ -27,35 +27,17 @@
 <script>
 (function(){
   var iframe = document.getElementById('mamoruMainFrame');
-  // 초기 fallback — 첫 송신 도착 즉시 정확값으로 교체됨
-  var fallbackH = window.innerWidth <= 768 ? 3600 : 4200;
-  iframe.style.height = fallbackH + 'px';
-  var currentHeight = fallbackH;
-  var hasReceivedMessage = false;
+  iframe.style.height = '0px';
+  var currentHeight = 0;
 
   window.addEventListener('message', function(e) {
-    // ① source 체크
     if (e.source !== iframe.contentWindow) return;
-    // ② origin 체크
     if (e.origin !== 'https://page.mamoru.kr') return;
 
-    // ③ id 체크
     if (e.data && e.data.type === 'MAMORU_IFRAME_SIZE' && e.data.id === 'main' && typeof e.data.height === 'number') {
-      var newHeight = Math.ceil(e.data.height);
-      if (newHeight <= 0) return;
-
-      if (!hasReceivedMessage) {
-        // 첫 메시지 무조건 적용 (fallback 빈 공간 차단, 2026-05-18 fix)
-        hasReceivedMessage = true;
-        currentHeight = newHeight;
-        iframe.style.height = newHeight + 'px';
-      } else if (newHeight > currentHeight) {
-        // 이후 monotonic
-        currentHeight = newHeight;
-        iframe.style.height = newHeight + 'px';
-      }
+      var h = Math.ceil(e.data.height);
+      if (h > currentHeight) { currentHeight = h; iframe.style.height = h + 'px'; }
     }
-
     if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) {
       window.location.href = e.data.url;
     }
