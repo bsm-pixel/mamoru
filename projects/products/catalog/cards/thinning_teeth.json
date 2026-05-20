@@ -1,0 +1,16 @@
+{
+  "card_type": "thinning_teeth",
+  "applies_to": ["thinning"],
+  "label_ko": "THINNING TEETH",
+  "label_subtitle_ko": "빗살 수",
+  "select_mode": "single",
+  "_note": "옵션값은 임시 (24/26/28/30/32/40). 사장님 실제 라인업에 맞게 조정 필요",
+  "options": [
+    { "id": "T24", "name_ko": "24발", "value": 24 },
+    { "id": "T26", "name_ko": "26발", "value": 26 },
+    { "id": "T28", "name_ko": "28발", "value": 28 },
+    { "id": "T30", "name_ko": "30발", "value": 30 },
+    { "id": "T32", "name_ko": "32발", "value": 32 },
+    { "id": "T40", "name_ko": "40발", "value": 40 }
+  ]
+}

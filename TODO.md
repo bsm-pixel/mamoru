@@ -1,7 +1,89 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-18 — **메인 페이지 iframe height fix** (시행착오 3회 후 `f17fce8` 단순화 완료) + **iframe 코드위젯 표준 패턴 영구 박제** (재발 방지 3중 안전망). 다음 사이클: 카탈로그 시스템 Phase 1A 사장님 검토 대기
+> 최종 수정: 2026-05-18 늦은밤 — **Phase 1A 카탈로그 9개 카드 + preview.html 4가위 매트릭스 완성** (사장님 검토 대기). 다음 컴퓨터(노트북)에서 이어갈 수 있도록 컨텍스트 박제 완료
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
+
+---
+
+## 💻 노트북에서 이어가는 방법 (사장님 컴퓨터 이동 시)
+
+1. **git pull** — 모든 코드·docs·.claude/ ADDENDUM 자동 동기화
+2. **claude code 실행** — CLAUDE.md 자동 로드 → 키워드 트리거로 ADDENDUM_IMWEB/ADMIN 자동 로드
+3. **현재 컨텍스트 파악**: `TODO.md` (이 파일) 의 "🟡 진행중" 섹션 읽기 → 즉시 어디서 멈췄는지 파악
+4. **상세 메모리 (선택)**: `~/.claude/projects/c--*/memory/` 폴더는 PC별 분리. 노트북 새 세션에서는 비어있음. 사장님이 "MEMORY.md 인덱스 + 핵심 메모리(시리얼 무결성·iframe 패턴) 다시 정리" 한 마디면 클로드가 git 추적 파일들 (TODO + docs + .claude/ + memory_index)에서 복원
+
+**git 추적 위치 = 노트북 자동 동기화**:
+- `.claude/CLAUDE.md` / `.claude/ADDENDUM_*.md` — 작업 가이드
+- `projects/Total_Management_System/docs/TMS_FLOW_*.md` / `MANUAL_*.md` — TMS 흐름·매뉴얼
+- `TODO.md` — 진행 상황 (이 파일)
+- 모든 `projects/` 코드
+
+**메모리 (PC 로컬, git 추적 X)**:
+- `~/.claude/projects/c--*/memory/MEMORY.md` 인덱스 + 개별 `.md` 파일들 — 별도 백업 안 함
+
+---
+
+## 🟡 진행중 (사장님 검토 대기)
+
+### Phase 1A 카탈로그 완성 (9개 카드 + 매트릭스) — **사장님 검토 단계** ⭐
+
+**검토 위치**: `projects/products/catalog/preview.html` 브라우저로 열기
+
+**검토 항목**:
+1. **§ 0 매트릭스** — 4가위(블런트/장가위/틴닝/드라이) × 9카드 매핑 정확성
+2. **§ 1~7 카드 시각화** — 각 카드 옵션값·SVG·설명
+3. **틴닝 옵션값** — 24/26/28/30/32/40 발 / 1·2·3·4 홈 / 15·20·25·30·40% 감모 (사장님 실제 라인업과 맞춤)
+4. **드라이 옵션 가격** — 스트록 기본 / 정통 +1만 / 멀티(SHIFT ONE) +2만
+5. **§ A 카피 풀 / § B spec** — 기존 (변경 없음)
+
+**카드 카탈로그 9개** (`projects/products/catalog/cards/`):
+- blade_edge.json (applies_to: blunt/long/dry)
+- blade_design.json (S/C/B)
+- handle_grip.json (세미/스탠/오프셋)
+- handle_camel.json (플랫/카멜)
+- grade.json (R/A/E/S)
+- thinning_teeth.json / thinning_holes.json / thinning_reduction.json
+- dry_cutting_style.json (★ 주문 옵션, 가격 차등)
+
+**사장님 검토 후 액션**:
+- "이 옵션 추가/빼기/이름·SVG/가격 수정" 한 마디 → 즉시 반영
+- OK → Phase 1B (틴닝 카피 풀) + Phase 1C (드라이 카피 풀)
+- 그 다음 → Phase 2 빌더 페이지 개발
+
+---
+
+## 🟡 자동 대기
+
+### [자동] 솔라피 후기 알림톡 3종 카카오 재검수 결과 대기 (1~3 영업일)
+도메인 전환 사이클에서 URL 갱신 후 재검수 신청한 3종:
+- `review_request` / `purchase_review_request` / `as_review_request`
+- 검수 통과 시 자동 활성화 (운영 무중단)
+
+---
+
+## ✅ 완료 (05-18 늦은밤): 메인 페이지 iframe height fix + 표준 패턴 영구 박제
+
+### 증상
+- Quick Nav 칩 영역이 자주 사라짐 / top 아래 큰 빈 공간 / 스크롤 어색
+
+### Root cause 2가지
+1. 큰 fallback(2400/3400) + monotonic 조합 → 실제 콘텐츠 작으면 영구 잠금 → 빈 공간
+2. iframe 안에서 `.mm-anim` IntersectionObserver 일부 element 트리거 누락 → opacity:0 영구 고착
+
+### 시행착오 → 최종 fix
+| 커밋 | 시도 | 결과 |
+|---|---|---|
+| 51088c7 | iframe 가드 + monotonic + 큰 fallback | top 빈 공간 |
+| c8887ce | 라벨도 동일 | 라벨 코드 길어짐 |
+| f38d1cd | hasReceivedMessage 플래그 | 코드 길어지고 효과 미미 |
+| **f17fce8** ✅ | **fallback 0 + monotonic 단순화 + revealAll 2.5초** | 빈 공간 0 + Quick Nav 정상 + 코드 짧음 |
+
+### 영구 박제 (재발 방지)
+- `memory/reference_iframe_codewidget_pattern.md` — 표준 코드 + 절대 금지 패턴 4가지 + 시행착오 이력 (PC 로컬)
+- `memory/reference_imweb_codewidgets.md` SSOT — 메인 페이지 4쌍 정합 테이블 (PC 로컬)
+- `.claude/ADDENDUM_IMWEB.md § 1.1` ⭐ (`f279ebc`) — **git 추적 → 노트북 자동 동기화** → 키워드 트리거로 자동 로드 → 시행착오 0
+
+---
 
 ---
 

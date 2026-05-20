@@ -1,0 +1,14 @@
+{
+  "card_type": "thinning_holes",
+  "applies_to": ["thinning"],
+  "label_ko": "THINNING HOLES",
+  "label_subtitle_ko": "홈 수",
+  "select_mode": "single",
+  "_note": "옵션값은 임시 (1홈/2홈/3홈/4홈). 사장님 실제 라인업에 맞게 조정 필요",
+  "options": [
+    { "id": "H1", "name_ko": "1홈", "value": 1 },
+    { "id": "H2", "name_ko": "2홈", "value": 2 },
+    { "id": "H3", "name_ko": "3홈", "value": 3 },
+    { "id": "H4", "name_ko": "4홈", "value": 4 }
+  ]
+}

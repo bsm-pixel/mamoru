@@ -1,6 +1,6 @@
 {
   "card_type": "blade_edge",
-  "applies_to": ["blunt", "long"],
+  "applies_to": ["blunt", "long", "dry"],
   "label_ko": "BLADE EDGE",
   "label_subtitle_ko": "날 선 형태",
   "select_mode": "single",
