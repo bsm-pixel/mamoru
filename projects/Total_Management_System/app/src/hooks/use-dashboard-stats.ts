@@ -296,16 +296,28 @@ export function useHubStats() {
           weekRepairMamoru,
           weekRepairOther,
           ...(() => {
-            // 접수시스템 매출 — 마모루 1만원, 타사 2만원 고정단가 (배송비 제외)
+            // 접수시스템 매출 — 실제청구액(total_amount) 을 단가 비중으로 마모루/타사 안분 (2026-05-19)
+            //   배송비·가공비 포함 + 분리합 = total_amount 일치 (회계 금액 기준과 통일)
             const REPAIR_PRICE_MAMORU = 10000;
             const REPAIR_PRICE_OTHER = 20000;
             const repairRows = (monthRepairsPaid.data || []) as Array<{ total_amount: number; qty_mamoru: number; qty_other: number }>;
             let aMamoru = 0, aOther = 0, aMamoruQty = 0, aOtherQty = 0;
             for (const r of repairRows) {
-              aMamoru += (r.qty_mamoru || 0) * REPAIR_PRICE_MAMORU;
-              aOther += (r.qty_other || 0) * REPAIR_PRICE_OTHER;
-              aMamoruQty += r.qty_mamoru || 0;
-              aOtherQty += r.qty_other || 0;
+              const qm = r.qty_mamoru || 0;
+              const qo = r.qty_other || 0;
+              const total = r.total_amount || 0;
+              const baseM = qm * REPAIR_PRICE_MAMORU;
+              const baseO = qo * REPAIR_PRICE_OTHER;
+              const baseSum = baseM + baseO;
+              if (baseSum > 0) {
+                const mPart = Math.round(total * (baseM / baseSum));
+                aMamoru += mPart;
+                aOther += total - mPart;
+              } else if (total > 0) {
+                aMamoru += total;
+              }
+              aMamoruQty += qm;
+              aOtherQty += qo;
             }
             const repairATotal = aMamoru + aOther;
 
@@ -587,10 +599,23 @@ export function useRepairDashboardStats() {
           const repairRows = (monthRepairsPaid.data || []) as Array<{ total_amount: number; qty_mamoru: number; qty_other: number }>;
           let aMamoru = 0, aOther = 0, aMamoruQty = 0, aOtherQty = 0;
           for (const r of repairRows) {
-            aMamoru += (r.qty_mamoru || 0) * REPAIR_PRICE_MAMORU;
-            aOther += (r.qty_other || 0) * REPAIR_PRICE_OTHER;
-            aMamoruQty += r.qty_mamoru || 0;
-            aOtherQty += r.qty_other || 0;
+            const qm = r.qty_mamoru || 0;
+            const qo = r.qty_other || 0;
+            const total = r.total_amount || 0;
+            // 실제청구액(total_amount = 수리비+배송비+가공비)을 단가 비중으로 마모루/타사 안분 (2026-05-19)
+            // → 배송비·날변형 가공비 포함 + 분리합 = total_amount 정확 일치 (회계 금액 기준과 통일)
+            const baseM = qm * REPAIR_PRICE_MAMORU;
+            const baseO = qo * REPAIR_PRICE_OTHER;
+            const baseSum = baseM + baseO;
+            if (baseSum > 0) {
+              const mPart = Math.round(total * (baseM / baseSum));
+              aMamoru += mPart;
+              aOther += total - mPart; // 잔액 = 타사 (반올림 오차 흡수 → 분리합 정확)
+            } else if (total > 0) {
+              aMamoru += total; // qty 둘 다 0인 이상치 → 전액 마모루로 흡수
+            }
+            aMamoruQty += qm;
+            aOtherQty += qo;
           }
           const repairATotal = aMamoru + aOther;
 
