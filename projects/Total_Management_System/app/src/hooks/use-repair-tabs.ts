@@ -46,13 +46,15 @@ export function useRepairTabData() {
           .order('received_at', { ascending: false })
           .limit(50),
 
-        // 2) 수거접수필요: intake + 방문수거 + confirmed_at IS NULL
+        // 2) 수거접수필요: intake + 방문수거 + confirmed_at IS NOT NULL
+        //    = 접수확인 완료 후 수거 예약이 필요한 방문수거 건 (2026-05-19 fix:
+        //      이전엔 confirmed_at IS NULL 이라 접수확인 누르면 orphan 으로 사라졌음)
         supabase
           .from('repairs')
           .select('*')
           .eq('status', 'intake')
           .eq('proceed_type', '방문수거')
-          .is('confirmed_at', null)
+          .not('confirmed_at', 'is', null)
           .order('received_at', { ascending: false })
           .limit(50),
 

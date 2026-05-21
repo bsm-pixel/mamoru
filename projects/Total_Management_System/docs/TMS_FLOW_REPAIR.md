@@ -177,6 +177,27 @@ cancelled → (terminal)
 | `/api/repair/sync` | POST | 외부 동기화 (레거시, 사용 빈도 낮음) |
 | `/api/repair/report` | GET | 수리내역 공개 API (CORS, 인증 불필요) |
 
+### 탭별 필터 조건 (use-repair-tabs.ts) — 2026-05-19 정정
+
+| 탭 | 필터 조건 |
+|---|---|
+| **신규접수** | `status='intake' AND confirmed_at IS NULL` (접수확인 전 — 방문수거·직접발송 모두) |
+| **수거접수필요** | `status='intake' AND proceed_type='방문수거' AND confirmed_at IS NOT NULL` ⭐ (접수확인 완료한 방문수거 = 수거 예약 필요) |
+| **입고대기** | (직접발송) `status='intake' AND proceed_type!='방문수거' AND confirmed_at IS NOT NULL` + (수거완료) `status='pickup_scheduled'` |
+| **진행중** | `status IN ('cost_notified', 'repairing')` |
+| **출고대기** | `status='ready_to_ship'` |
+| **출고완료** | `status IN ('shipped', 'delivered', 'completed')` |
+
+> 🐛 **2026-05-19 fix**: "수거접수필요" 탭이 `confirmed_at IS NULL`(접수확인 전)로 잘못 설정되어 있었음. 방문수거 건에 "접수확인" 누르면 → confirmed_at 채워짐 → 신규접수·수거접수필요·입고대기 3개 탭 조건 모두 탈락 → **orphan(리스트에서 사라짐)**. 대시보드 카운트는 status 기반이라 별개로 정상 표시되어 불일치 발견. `confirmed_at IS NOT NULL`로 정정 → 접수확인 후 수거접수필요 탭에 정상 표시.
+
+### 정상 흐름 (정정 후)
+```
+신규접수(미확인 전체)
+   │ 접수확인 (confirmed_at 기록)
+   ├─[방문수거] → 수거접수필요 → 수거접수완료(pickup_scheduled) → 입고대기
+   └─[직접발송] → 입고대기(intake+confirmed)
+```
+
 ### 컴포넌트 (15+개)
 - 고정 탭 바 6개: 신규접수 / 수거접수필요 / 입고대기 / 진행중 / 출고대기 / 출고완료
 - **인라인 퀵 액션** (03-26 리모델): 탭별 특화 — 접수확인/수거접수/입금확인/송장생성/출고완료
