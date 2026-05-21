@@ -1,7 +1,29 @@
 # 복원수리 프로세스 흐름도
-> 최종 업데이트: 2026-05-13 — 복원수리 매출 3채널 통합 (A 접수 + B 판매RS + C 납품RS) + 거래처별 단가 + 판매입력 복원수리 모드 + 배송비 (배포 완료)
+> 최종 업데이트: 2026-05-19 — 수거접수필요 탭 orphan fix + 복원수리 매출 A채널 실제청구액 안분 (회계와 금액 통일, 시점은 목적별 분리 유지)
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
+
+## 2026-05-19 — 복원수리 매출 집계 기준 (회계 vs 대시보드) ⭐ 박제
+
+복원수리 매출은 **A 접수(repairs) + B 판매RS(offline_sale_items) + C 납품RS(delivery_items)** 3채널 합산.
+B·C는 두 화면 완전 동일. **A채널만 화면 목적에 따라 기준이 다름** (의도된 설계, 사장님 결정 2026-05-19):
+
+| 구분 | 복원수리 대시보드 `/repairs` | 회계 `/reports` |
+|---|---|---|
+| **목적** | 이번달 들어온 일감 (운영 현황) | 실제 받은 돈 (재무) |
+| **A채널 시점** | 접수 발생 (`created_at`) — 미입금 포함 | 입금 완료 (`paid_at`) |
+| **A채널 금액** | `total_amount` 안분 (실제청구액) | `total_amount` (실제청구액) |
+
+→ **금액 계산식은 통일**(실제청구액 = 수리비+배송비+가공비), **시점만 다름**. 두 화면 숫자가 약간 다른 건 정상 (미입금/시점차 = 대시보드엔 포함, 회계엔 미포함).
+
+### A채널 마모루/타사 안분 (2026-05-19, `088` RPC + use-dashboard-stats)
+- `repairs.total_amount`(건당 합산값)를 단가 비중으로 마모루/타사 분리:
+  - 마모루분 = `ROUND(total_amount × (qty_mamoru×10000) / (qty_mamoru×10000 + qty_other×20000))`
+  - 타사분 = `total_amount − 마모루분` (반올림 잔액 흡수 → 분리합 = total_amount 정확)
+- **이전(080)은 고정단가**(자루×만원)였음 → 배송비·날변형 가공비 누락. 안분으로 실제청구액 반영.
+- qty 수정 시 `calcTotalCost`(repair-detail-card)가 `total_amount` 자동 재계산 → 대시보드·회계 즉시 반영.
+- 자루 수(count)는 그대로 `qty_mamoru + qty_other` (배송비 무관).
+- 수정 파일: `use-dashboard-stats.ts`(/repairs), `088_hub_stats_repair_amount_prorate.sql`(/dashboard 허브 RPC). 회계 `summary/route.ts`는 원래 total_amount라 변경 없음.
 
 ## 2026-05-13 후속 — 배송비 처리
 - 복원수리 입력 시 "배송비 3,000원" 항목(`/sales/new` 복원수리 모드 토글 / `/deliveries` "+B2B수리" 버튼)은 `category='RS'`, product_name='배송비' 로 저장.
