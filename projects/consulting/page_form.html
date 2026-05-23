@@ -996,10 +996,17 @@ body.pc .modal-footer .btn-primary {
   background: var(--mm-shell);
 }
 
+/* 오늘 표시 — 옅은 톤 (선택된 날짜와 시각 위계 명확 분리, 2026-05-23 fix)
+   사장님 룰: 선택된 날짜와 헷갈리지 않게 비활성 가까운 톤. 단 클릭은 허용 → hover 시 약간 진해짐 */
 .day.today {
-  border-color: var(--mm-void);
-  color: var(--mm-void);
-  font-weight: 600;
+  border-color: var(--mm-border-l);
+  color: var(--mm-text-d2);
+  font-weight: 400;
+  background: rgba(26,26,26,0.03);
+}
+.day.today:hover:not(.disabled):not(.selected) {
+  background: rgba(26,26,26,0.08);
+  color: var(--mm-text-d);
 }
 
 .day.selected {
@@ -1500,9 +1507,16 @@ body.pc #date-picker-modal .day {
   background: rgba(26,26,26,0.04);
   border-color: rgba(26,26,26,0.15);
 }
+/* 오늘 표시 — 옅은 톤 (선택과 위계 분리, 2026-05-23 fix) */
 #date-picker-modal .day.today {
-  border-color: var(--mm-ink);
-  color: var(--mm-ink);
+  border-color: rgba(26,26,26,0.08);
+  color: var(--mm-text-d2);
+  font-weight: 400;
+  background: rgba(26,26,26,0.03);
+}
+#date-picker-modal .day.today:hover:not(.disabled):not(.selected) {
+  background: rgba(26,26,26,0.08);
+  color: var(--mm-text-d);
 }
 #date-picker-modal .day.selected {
   background: rgba(26,26,26,0.06);  /* Void Soft 틴트 */
