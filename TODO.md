@@ -54,10 +54,33 @@
 
 ## 🟡 자동 대기
 
-### [자동] 솔라피 후기 알림톡 3종 카카오 재검수 결과 대기 (1~3 영업일)
-도메인 전환 사이클에서 URL 갱신 후 재검수 신청한 3종:
-- `review_request` / `purchase_review_request` / `as_review_request`
-- 검수 통과 시 자동 활성화 (운영 무중단)
+(현재 자동 대기 항목 없음)
+
+---
+
+## ✅ 완료 (05-23): 푸시 알림 시스템 4건 fix + 솔라피 검수 완료
+
+### 1. 출장 신규 푸시 매핑 (`63e72ac`)
+- PUSH_CONFIG 에 `'request'` 키 누락 → 출장 신규 접수 시 사장님 폰 푸시 발송 0
+- fix: 'request' 키 추가 (1줄)
+
+### 2. PWA 알림 클릭 시 페이지 이동 (`a901814`)
+- SW `focused.navigate()` 가 Android Chrome PWA standalone 에서 막힘 → focus 만 되고 페이지 이동 X
+- fix: SW → 클라이언트 `postMessage('NAVIGATE_FROM_NOTIFICATION')` + 신규 `NotificationNavigator` 컴포넌트가 Next.js router 로 이동. root layout 마운트
+
+### 3. 예약 취소 푸시 매핑 (`b5cd8d6`)
+- PUSH_CONFIG 에 `'field_cancelled'` / `'cancelled'` 누락 → 고객 취소 시 사장님 푸시 발송 0
+- fix: 두 키 추가 + PUSH_DEFAULTS 에 settingKey 등록
+
+### 4. 솔라피 후기 알림톡 3종 카카오 검수 통과 + Make 시나리오 교체
+- `review_request` / `purchase_review_request` / `as_review_request` — 모두 새 URL(`page.mamoru.kr`) 로 검수 통과
+- 사장님이 Make 시나리오에서 새 템플릿 버전 선택 완료 → 후기 알림톡 도메인 마이그레이션 완전 종료
+
+### 통합 검증 (사장님 확인)
+- 출장 신규/취소 푸시 정상 도착 ✓
+- 알림 클릭 → 페이지 자동 이동 ✓
+- 후기 알림톡 새 URL 작동 ✓
+- 잔존 이슈: "app-eta-sandy-75.vercel.app" origin 표기 (Chrome 자동 표시, 자체 도메인 도입 시 해결 — 현재 미진행 사장님 결정)
 
 ---
 
