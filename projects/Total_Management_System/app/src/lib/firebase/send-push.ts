@@ -39,6 +39,8 @@ const PUSH_DEFAULTS: Record<string, boolean> = {
   'push.talk_received': true,
   'push.field_confirmed': true,
   'push.field_reschedule': true,
+  'push.field_cancelled': true,         // 출장 예약 취소 (2026-05-23 추가)
+  'push.consultation_cancelled': true,  // 매장방문·톡상담 예약 취소 (2026-05-23 추가)
   'push.repair_received': true,
   'push.review_submitted': true,
   'push.order_received': true,

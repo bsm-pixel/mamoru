@@ -189,6 +189,9 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },
     field_request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },
     talk_received: { title: '새 톡상담 접수', body: `${payload.name}님 톡상담 접수`, url: '/consultations', settingKey: 'push.talk_received' },
+    // 취소: 고객이 page_change_request 에서 취소 누름 → public/cancel/route.ts → 사장님 푸시 (2026-05-23 fix)
+    field_cancelled: { title: '⚠️ 출장 예약 취소', body: `${payload.name}님 출장 예약 취소`, url: '/consultations', settingKey: 'push.field_cancelled' },
+    cancelled: { title: '⚠️ 상담 예약 취소', body: `${payload.name}님 상담 예약 취소`, url: '/consultations', settingKey: 'push.consultation_cancelled' },
   };
   const cfg = PUSH_CONFIG[payload.template];
   if (cfg) {
