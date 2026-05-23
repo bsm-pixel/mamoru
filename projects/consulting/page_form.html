@@ -2755,9 +2755,12 @@ if (isLoadingDates) return;
   });
   $('btn-modal-close').addEventListener('click', closeDatePickerModal);
 
-  // 월 이동 활성 범위 — TMS 달력 관리(/consultations/calendar)의 4개월(현재월~+3) 룰과 동기.
-  // ⚠️ TMS calendar page.tsx의 `for (let i = 0; i < 4; i++)` 와 일치 유지. 한 곳 변경 시 양쪽 수정 (2026-05-23 fix)
-  var MAX_ADVANCE_MONTHS = 3;
+  // 월 이동 활성 범위 — TMS 달력 관리(/consultations/calendar) 룰과 동기.
+  //   TMS calendar 는 현재월~+3 (4개월) 표시하지만 +3 (마지막 1개월) 은 "사장님 전용 — 고객 예약 불가"
+  //   (calendar page.tsx:227: month - getMonth() === 3 → 사장님 전용 라벨).
+  //   따라서 고객 페이지에서 실제 예약 가능한 범위는 현재월~+2 (3개월).
+  // ⚠️ TMS calendar page.tsx 의 룰(전용 달 위치) 변경 시 양쪽 동시 수정 (2026-05-23 fix)
+  var MAX_ADVANCE_MONTHS = 2;
   function isPastMaxMonth(date) {
     var t = new Date();
     var maxMonth = new Date(t.getFullYear(), t.getMonth() + MAX_ADVANCE_MONTHS, 1);
