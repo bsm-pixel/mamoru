@@ -456,6 +456,62 @@ body.pc .type-info {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   Store Location Card (매장 방문 선택 시 노출, 2026-05-23 추가)
+   page_guide.html 의 method-location-card 와 동일 톤 (Brand Guide 모노크롬)
+   ───────────────────────────────────────────────────────────── */
+.store-location-card {
+  margin-bottom: 20px;
+  padding: 18px 18px 16px;
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-m);
+  border-radius: 12px;
+  text-align: center;
+}
+.store-location-card.hide { display: none; }
+.store-location-label {
+  display: inline-block;
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--mm-text-d2);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.store-location-address {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--mm-text-d);
+  margin: 0 0 14px;
+}
+.store-location-map {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  background: var(--mm-ink);
+  color: #FAF9F7;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.store-location-map:active { background: var(--mm-ink-dark); }
+@media (hover: hover) {
+  .store-location-map:hover { background: var(--mm-ink-dark); }
+}
+
+body.pc .store-location-card {
+  padding: 22px 24px 20px;
+  margin-bottom: 28px;
+}
+body.pc .store-location-address { font-size: 15px; }
+body.pc .store-location-map { font-size: 14px; padding: 11px 26px; }
+
+/* ─────────────────────────────────────────────────────────────
    Date Picker Button
    ───────────────────────────────────────────────────────────── */
 .date-picker-btn {
@@ -1631,6 +1687,15 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
         방문주시는 그날 만나뵙겠습니다<br>편하신 <b>날짜와 시간</b>을 선택해주세요
       </div>
 
+      <!-- 매장 방문 선택 시 — 매장 위치 안내 (기본 노출, segment 변경 시 toggle. SSOT: page_guide.html 동일 주소) -->
+      <div class="store-location-card" id="store-location-card">
+        <p class="store-location-label">마모루 매장 위치</p>
+        <p class="store-location-address">서울특별시 구로구 부광로 88 SKV1,<br>B동 311호 마모루</p>
+        <a href="https://naver.me/GtYtEMSh" target="_blank" rel="noopener" class="store-location-map">
+          네이버 지도로 보기 →
+        </a>
+      </div>
+
       <!-- 기본 정보 -->
       <div class="form-row">
         <div class="form-group">
@@ -2714,6 +2779,7 @@ if (isLoadingDates) return;
   const secVisit = $('sec-visit');
   const secField = $('sec-field');
   const typeInfo = $('type-info');
+  const storeLocationCard = $('store-location-card');
 
   const typeMessages = {
     '매장 방문': '마모루 매장에서 직접 만나뵙겠습니다.<br>편하신 <b>날짜와 시간</b>을 알려주세요.',
@@ -2746,16 +2812,19 @@ if (isLoadingDates) return;
       state.type = '매장 방문';
       secVisit.classList.remove('hide');
       secField.classList.add('hide');
+      storeLocationCard && storeLocationCard.classList.remove('hide');
       // 매장 방문 선택 시 다음 달 슬롯을 미리 조회
       prefetchVisibleMonth();
     } else if (v === 'field') {
       state.type = '출장 요청';
       secVisit.classList.add('hide');
       secField.classList.remove('hide');
+      storeLocationCard && storeLocationCard.classList.add('hide');
     } else {
       state.type = '톡 상담';
       secVisit.classList.add('hide');
       secField.classList.add('hide');
+      storeLocationCard && storeLocationCard.classList.add('hide');
     }
     $('consult_type').value = state.type;
     typeInfo.innerHTML = typeMessages[state.type];
