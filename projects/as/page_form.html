@@ -1375,7 +1375,8 @@ select.err {
   // 공휴일 로드
   // ─────────────────────────────────────────────────────────────
   function loadHolidays() {
-    const k = 'AS_HOLIDAYS_CACHE';
+    // 캐시 키 V2 (2026-05-23) — 089 마이그레이션으로 holidays DB 데이터 신규 입력. 기존 빈 캐시 무효화 위해 키 버전 업
+    const k = 'AS_HOLIDAYS_CACHE_V2';
     const now = Date.now();
     try {
       const cached = JSON.parse(localStorage.getItem(k) || 'null');
