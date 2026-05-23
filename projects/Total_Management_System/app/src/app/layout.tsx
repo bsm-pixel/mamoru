@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import { QueryProvider } from '@/components/providers/query-provider';
+import { NotificationNavigator } from '@/components/notification-navigator';
 
 export const metadata: Metadata = {
   title: 'MAMORU TMS',
@@ -35,6 +36,7 @@ export default function RootLayout({
       <body className="antialiased">
         <QueryProvider>
           {children}
+          <NotificationNavigator />
         </QueryProvider>
         <Toaster
           position="top-right"

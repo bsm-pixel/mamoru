@@ -72,12 +72,21 @@ self.addEventListener('notificationclick', (event) => {
     if (candidates.length > 0) {
       // 가장 최근 활성화된 것이 일반적으로 배열 앞쪽이지만, focused 우선 → 그 외 첫 항목
       const focused = candidates.find((c) => c.focused) || candidates[0];
+
+      // PWA standalone(Android Chrome 등)에서 focused.navigate() 가 막히는 경우 대비:
+      // 클라이언트(NotificationNavigator)에 postMessage 로 navigate 요청 → Next.js router 가 처리 (2026-05-23 fix)
+      try {
+        focused.postMessage({ type: 'NAVIGATE_FROM_NOTIFICATION', url: targetUrl });
+      } catch {
+        // postMessage 실패해도 navigate 시도는 진행
+      }
+
       try {
         if ('navigate' in focused && typeof focused.navigate === 'function') {
           await focused.navigate(targetUrl);
         }
       } catch {
-        // navigate가 막히는 환경(일부 PWA standalone)에선 focus만 진행
+        // navigate 막힘 → postMessage 가 클라이언트에서 처리할 것
       }
       return focused.focus();
     }
