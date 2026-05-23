@@ -185,6 +185,8 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
   const PUSH_CONFIG: Record<string, { title: string; body: string; url: string; settingKey: string }> = {
     confirmed: { title: '새 상담 접수', body: `${payload.name}님 상담 접수`, url: '/consultations', settingKey: 'push.consultation_received' },
     as_received: { title: '새 복원수리 접수', body: `${payload.name}님 복원수리 접수`, url: '/repairs', settingKey: 'push.repair_received' },
+    // 출장 신규: submit/route.ts 는 template='request' 로 호출 (솔라피 템플릿명과 일치) — 푸시 매핑 동기화 (2026-05-23 fix)
+    request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },
     field_request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },
     talk_received: { title: '새 톡상담 접수', body: `${payload.name}님 톡상담 접수`, url: '/consultations', settingKey: 'push.talk_received' },
   };
