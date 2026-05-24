@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 import { queryStatus } from '@/lib/lotte/client';
 import { queryTrackingStatus } from '@/lib/lotte/alps-client';
 
@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabase = await createServerSupabaseClient();
+    // 🚨 cron 은 user 인증 없으므로 service role 클라이언트 필수 (RLS 우회)
+    //    2026-05-24: createServerSupabaseClient (cookie 기반) 쓰던 버그 발견 → RLS 막혀 0건 처리됨
+    const supabase = createServiceClient();
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // [1] 아임웹 orders 추적 (shipping → delivered)
