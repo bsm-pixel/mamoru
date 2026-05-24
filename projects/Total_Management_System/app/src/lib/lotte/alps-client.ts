@@ -212,7 +212,12 @@ export async function queryTrackingStatus(invoiceNumber: string): Promise<{
 
     const tracking = Array.isArray(json.tracking) ? json.tracking : [];
     if (tracking.some((x: Record<string, unknown>) => String(x.godsStatCd || '') === '09')) return { state: 'CANCELLED' };
-    if (tracking.some((x: Record<string, unknown>) => String(x.godsStatCd || '') === '91')) return { state: 'DELIVERED' };
+    // 배달완료 감지 (2026-05-24 버그 수정): '91' → '41'(배달완료) 또는 '45'(인수자등록)
+    // 실제 ALPS API 응답: 41 = 기사 배달완료, 45 = 고객 인수확인. 옛 코드 '91' 은 영원히 매칭 안 됐음.
+    if (tracking.some((x: Record<string, unknown>) => {
+      const code = String(x.godsStatCd || '');
+      return code === '41' || code === '45';
+    })) return { state: 'DELIVERED' };
 
     const result = Array.isArray(json.result) ? json.result : [];
     if (tracking.length === 0 && result.length === 0) return { state: 'NOT_FOUND' };

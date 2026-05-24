@@ -139,6 +139,9 @@ cost_notified → [repairing, cancelled]
 repairing → [ready_to_ship, cancelled]
 ready_to_ship → [shipped]  // (1) 송장 생성 → 출고완료 (정상)
                           // (2) 판매건 합포장 출고 → POST /merged-ship (송장 복사)
+shipped → [delivered]      // 🆕 (2026-05-24) ALPS 인수자등록('91') 자동 감지 → cron 자동 전환
+                          //   (4시간마다 폴링, /api/cron/track-delivery)
+                          //   fallback: 사이드 패널 "수동 배송완료 처리" 텍스트 링크
 shipped → [delivered]
 delivered → [completed]
 completed → (terminal)

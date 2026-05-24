@@ -275,10 +275,17 @@ export async function queryStatus(invNo: string): Promise<LotteTrackResult> {
     );
     if (cancelled) return { ok: true, state: 'CANCELLED', raw: json };
 
-    /* 배달완료 감지: godsStatCd '91' = 배달완료 */
-    const delivered = tracking.some(
-      (x: Record<string, unknown>) => String(x.godsStatCd || '') === '91'
-    );
+    /**
+     * 배달완료 감지 (2026-05-24 버그 수정):
+     *   - '41' = 배달완료 (기사 처리)
+     *   - '45' = 인수자등록 (고객 인증)
+     *   기존 '91' 체크는 옛 ALPS 시스템 기준이었음 — 실제 API는 41/45 사용.
+     *   둘 중 하나라도 있으면 DELIVERED 로 간주 (무인 인수 케이스 포함).
+     */
+    const delivered = tracking.some((x: Record<string, unknown>) => {
+      const code = String(x.godsStatCd || '');
+      return code === '41' || code === '45';
+    });
     if (delivered) return { ok: true, state: 'DELIVERED', raw: json };
 
     const result = Array.isArray(json.result) ? json.result : [];

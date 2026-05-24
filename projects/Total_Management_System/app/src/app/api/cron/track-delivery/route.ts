@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { queryStatus } from '@/lib/lotte/client';
+import { queryTrackingStatus } from '@/lib/lotte/alps-client';
 
-/** GET /api/cron/track-delivery — 배송중 주문 추적 → 배송완료 자동 전환 */
+/**
+ * GET /api/cron/track-delivery
+ *
+ * 1) 아임웹 orders: shipping → delivered (queryStatus, 기존)
+ * 2) 복원수리 repairs: shipped → delivered (queryTrackingStatus = ALPS '91' 인수자등록, 2026-05-24 추가)
+ *
+ * → 사장님이 ALPS 직접 확인 없이 TMS 카드 status 로 배송완료 즉시 확인 가능
+ */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -12,25 +20,22 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
 
-    /* shipping 상태 + 송장번호 있는 주문만 조회 */
-    const { data: orders, error } = await (supabase as any)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // [1] 아임웹 orders 추적 (shipping → delivered)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const { data: orders, error: ordersErr } = await (supabase as any)
       .from('orders')
       .select('id, invoice_number, imweb_order_no, orderer_name, review_requested_at')
       .eq('status', 'shipping')
       .not('invoice_number', 'is', null)
       .limit(50);
 
-    if (error) throw error;
-    if (!orders || orders.length === 0) {
-      return NextResponse.json({ checked: 0, delivered: 0 });
-    }
+    if (ordersErr) throw ordersErr;
 
-    let deliveredCount = 0;
-
-    for (const order of orders) {
+    let ordersDelivered = 0;
+    for (const order of orders || []) {
       try {
         const result = await queryStatus(order.invoice_number);
-
         if (result.ok && result.state === 'DELIVERED') {
           await (supabase as any)
             .from('orders')
@@ -39,18 +44,62 @@ export async function GET(request: NextRequest) {
               delivered_at: new Date().toISOString(),
             })
             .eq('id', order.id);
-
-          deliveredCount++;
-          console.log(`[track-delivery] ${order.imweb_order_no} → 배송완료`);
+          ordersDelivered++;
+          console.log(`[track-delivery/orders] ${order.imweb_order_no} → 배송완료`);
         }
       } catch (e) {
-        console.error(`[track-delivery] ${order.imweb_order_no} 추적 실패:`, e);
+        console.error(`[track-delivery/orders] ${order.imweb_order_no} 추적 실패:`, e);
+      }
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // [2] 복원수리 repairs 추적 (shipped → delivered) — 2026-05-24 추가
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //   - status='shipped' + invoice_number 있는 건 50건 폴링
+    //   - ALPS queryTrackingStatus '91' (인수자등록) 감지 시 자동 delivered 전환
+    //   - 합포장 출고 케이스(다른 주문 송장 복사된 건)도 동일 흐름 (invoice_number 채워져 있음)
+    const { data: repairs, error: repairsErr } = await (supabase as any)
+      .from('repairs')
+      .select('id, as_id, invoice_number, name')
+      .eq('status', 'shipped')
+      .not('invoice_number', 'is', null)
+      .limit(50);
+
+    if (repairsErr) throw repairsErr;
+
+    let repairsDelivered = 0;
+    for (const repair of repairs || []) {
+      try {
+        const result = await queryTrackingStatus(repair.invoice_number);
+        if (result.state === 'DELIVERED') {
+          await (supabase as any)
+            .from('repairs')
+            .update({
+              status: 'delivered',
+              delivered_at: new Date().toISOString(),
+            })
+            .eq('id', repair.id);
+
+          // 이력 기록 (자동 전환임을 명시)
+          await (supabase as any).from('repair_history').insert({
+            repair_id: repair.id,
+            from_status: 'shipped',
+            to_status: 'delivered',
+            changed_by: null, // 자동 cron
+            note: 'ALPS 추적 자동 감지 (인수자등록)',
+          });
+
+          repairsDelivered++;
+          console.log(`[track-delivery/repairs] ${repair.as_id} (${repair.name}) → 배송완료`);
+        }
+      } catch (e) {
+        console.error(`[track-delivery/repairs] ${repair.as_id} 추적 실패:`, e);
       }
     }
 
     return NextResponse.json({
-      checked: orders.length,
-      delivered: deliveredCount,
+      orders: { checked: orders?.length || 0, delivered: ordersDelivered },
+      repairs: { checked: repairs?.length || 0, delivered: repairsDelivered },
     });
   } catch (err) {
     console.error('[cron/track-delivery] 실패:', err);

@@ -189,7 +189,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
         {!isTerminal && (
           <div className="mt-3 pt-3 border-t border-neutral-100 space-y-2">
             {filtered
-              .filter((s) => s !== 'cancelled' && s !== 'cost_notified' && s !== 'shipped' && s !== 'repairing')
+              .filter((s) => s !== 'cancelled' && s !== 'cost_notified' && s !== 'shipped' && s !== 'repairing' && s !== 'delivered')
               .map((nextStatus) => (
                 <Button
                   key={nextStatus}
@@ -255,6 +255,28 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                   <Truck size={14} />
                   출고완료
                 </Button>
+              )}
+              {/* shipped 상태 — ALPS 자동 추적 안내 + 수동 fallback */}
+              {currentStatus === 'shipped' && (
+                <div className="pt-1 space-y-1">
+                  <p className="text-xs text-neutral-400 leading-relaxed">
+                    ALPS 인수자등록 자동 감지 시 배송완료 전환됩니다 (4시간마다 자동 확인)
+                  </p>
+                  <button
+                    onClick={() =>
+                      updateStatus.mutate({
+                        id: r.id,
+                        status: 'delivered',
+                        delivered_at: new Date().toISOString(),
+                        note: '수동 배송완료 처리 (ALPS 추적 fallback)',
+                      })
+                    }
+                    disabled={updateStatus.isPending}
+                    className="text-xs text-neutral-500 hover:text-neutral-700 underline transition disabled:opacity-50"
+                  >
+                    수동 배송완료 처리
+                  </button>
+                </div>
               )}
               {/* 송장 취소 */}
               {['ready_to_ship', 'shipped'].includes(currentStatus) && (
