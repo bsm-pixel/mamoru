@@ -102,13 +102,43 @@ B·C는 두 화면 완전 동일. **A채널만 화면 목적에 따라 기준이
   → 이하 방문수거와 동일
 ```
 
+### 🆕 판매건 합포장 출고 분기 (2026-05-24 추가)
+
+**케이스**: 같은 고객이 같은 시기 제품 주문도 하여, **판매건 송장에 복원수리를 합쳐 발송**한 경우. 복원수리 단독 송장 없음.
+
+```
+출고대기 [ready_to_ship, invoice_number=NULL]
+  → (관리자) 사이드 패널 "판매건 합포장 출고" 버튼 클릭
+  → MergedShipModal 자동 열림
+    → GET /api/repair/[id]/related-shipments
+      → 같은 phone(정규화)으로 offline_sales + orders 검색
+      → 송장 보유 + 미취소/배송중·완료 건만 노출
+  → (관리자) 검색 결과 1클릭 선택 (또는 fallback 직접 송장번호 입력)
+  → 알림톡 발송 체크박스 (default ON — 수리내역서 노출로 신뢰감)
+  → POST /api/repair/[id]/merged-ship
+    → 선택한 송장의 invoice_number/courier_name → repairs 에 복사
+    → status='shipped' + shipped_at=now
+    → repair_history 이력 박제 (출처: sale/order/manual + id)
+    → 알림톡 (as_shipped) 발송 — invoice_number 채워짐 → 기존 흐름 그대로
+      → [수리내역 조회] 버튼 정상 (#{as_uid})
+      → [배송조회] 버튼 정상 (#{tracking_number} = 판매건 송장)
+  → [status: shipped] (출고완료) — 일반 출고와 동일 카드로 표시
+```
+
+**핵심 설계 원칙**:
+- 새 솔라피 템플릿 0개 (기존 `as_shipped` 그대로 활용)
+- 새 DB 컬럼 0개 (invoice_number 단순 복사로 모든 흐름 자동 작동)
+- 매출 집계 영향 0 (RPC 088 status != 'cancelled' 조건 — 이미 잡혀있음)
+- 자동 매칭 효율: 같은 phone 정규화 → 사장님 검색 수고 0
+
 ### 상태 전이 규칙
 ```
 intake → [pickup_scheduled, cost_notified, cancelled]
 pickup_scheduled → [cost_notified, cancelled]
 cost_notified → [repairing, cancelled]
 repairing → [ready_to_ship, cancelled]
-ready_to_ship → [shipped]
+ready_to_ship → [shipped]  // (1) 송장 생성 → 출고완료 (정상)
+                          // (2) 판매건 합포장 출고 → POST /merged-ship (송장 복사)
 shipped → [delivered]
 delivered → [completed]
 completed → (terminal)
@@ -196,6 +226,8 @@ cancelled → (terminal)
 | `/api/repair/[id]/inspect` | POST/PUT | 검수 데이터 저장/수정 |
 | `/api/repair/[id]/notify` | POST | 수동 알림톡 발송 |
 | `/api/repair/[id]/ship` | POST/DELETE | 송장 생성(ALPS) / 취소 |
+| `/api/repair/[id]/related-shipments` | GET | 🆕 같은 phone 의 offline_sales + orders 송장 보유건 검색 (합포장 매칭용, 2026-05-24) |
+| `/api/repair/[id]/merged-ship` | POST | 🆕 판매건 합포장 출고 처리 — invoice 복사 + status='shipped' + as_shipped 자동 발송 (2026-05-24) |
 | `/api/repair/sync` | POST | 외부 동기화 (레거시, 사용 빈도 낮음) |
 | `/api/repair/report` | GET | 수리내역 공개 API (CORS, 인증 불필요) |
 
