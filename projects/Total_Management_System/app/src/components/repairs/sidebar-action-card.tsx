@@ -21,7 +21,7 @@ interface SidebarActionCardProps {
   repair: Repair;
 }
 
-type ConfirmAction = 'cost_notice' | 'mark_paid' | 'mark_shipped' | 'cancel_shipment' | 'cancel_repair' | 'delete_repair' | null;
+type ConfirmAction = 'cost_notice' | 'mark_paid' | 'mark_shipped' | 'merged_ship' | 'cancel_shipment' | 'cancel_repair' | 'delete_repair' | null;
 
 export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const updateStatus = useUpdateRepairStatus();
@@ -48,6 +48,9 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
 
   // 출고완료 버튼 조건 (ready_to_ship 상태 + 송장 있음)
   const canMarkShipped = currentStatus === 'ready_to_ship' && !!r.invoice_number;
+
+  // 합포장 출고 버튼 조건 (송장 없을 때 — 다른 주문 송장에 합쳐 발송한 케이스)
+  const canMergedShip = currentStatus === 'ready_to_ship' && !r.invoice_number;
 
   const handleSendCostNotice = async () => {
     const isFree = r.total_amount === 0; // 무상 처리 여부
@@ -103,6 +106,18 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
       status: 'shipped',
       shipped_at: new Date().toISOString(),
       note: '출고완료',
+    });
+  };
+
+  // 합포장 출고 처리 (송장 미생성 → 다른 주문 송장에 합쳐 발송한 케이스)
+  // invoice_number NULL 유지 → 식별 키. skip_notify=true 로 자동 알림톡 우회
+  const handleMergedShip = () => {
+    updateStatus.mutate({
+      id: r.id,
+      status: 'shipped',
+      shipped_at: new Date().toISOString(),
+      note: '판매건 합포장 출고',
+      skip_notify: true,
     });
   };
 
@@ -252,17 +267,42 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 </button>
               )}
             </div>
+          ) : currentStatus === 'shipped' ? (
+            // 합포장 출고 (송장 미생성 + 출고완료 상태) — 판매건에 합쳐 발송한 케이스
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-sm text-neutral-700">
+                <Package size={14} className="text-neutral-400" />
+                <span>판매건 합포장 출고</span>
+              </div>
+              {r.shipped_at && (
+                <p className="text-xs text-neutral-400">출고: {formatDateTime(r.shipped_at)}</p>
+              )}
+            </div>
           ) : (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => shipRepair.mutate({ id: r.id })}
-              loading={shipRepair.isPending}
-              className="w-full"
-            >
-              <Truck size={14} />
-              송장 생성
-            </Button>
+            <div className="space-y-2">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => shipRepair.mutate({ id: r.id })}
+                loading={shipRepair.isPending}
+                className="w-full"
+              >
+                <Truck size={14} />
+                송장 생성
+              </Button>
+              {canMergedShip && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setConfirmAction('merged_ship')}
+                  loading={updateStatus.isPending}
+                  className="w-full"
+                >
+                  <Package size={14} />
+                  판매건 합포장 출고
+                </Button>
+              )}
+            </div>
           )}
         </Card>
       )}
@@ -307,6 +347,14 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
         title="출고 완료"
         message={<>송장 {r.invoice_number}으로 출고 완료 처리합니다.<br />고객에게 <strong>출고 알림톡</strong>이 자동 발송됩니다.</>}
         confirmLabel="출고 완료"
+      />
+      <ConfirmModal
+        open={confirmAction === 'merged_ship'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={handleMergedShip}
+        title="판매건 합포장 출고"
+        message={<>이 복원수리 건은 <strong>다른 주문의 송장에 합쳐 발송</strong>한 것으로 표시됩니다.<br />고객에게 <strong>출고 알림톡은 발송되지 않습니다</strong> (제품 주문 송장 알림으로 안내됨).</>}
+        confirmLabel="합포장 출고 처리"
       />
       <ConfirmModal
         open={confirmAction === 'cancel_shipment'}

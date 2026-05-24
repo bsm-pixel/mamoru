@@ -119,6 +119,7 @@ export async function PATCH(
       });
 
       after(async () => {
+        if (skip_notify) return;  // 합포장 출고 등 알림톡 우회 케이스
         const template = getAutoNotifyTemplate(newStatus);
         if (template && data.phone) {
           // 067: 후기 요청 자동 발송 가드 — 정책 토글 OFF / 약속 ✓ / 이미 발송 시 skip
