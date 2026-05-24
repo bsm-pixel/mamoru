@@ -17,6 +17,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const url = new URL(request.url);
+  const debug = url.searchParams.get('debug') === '1';
+  const debugResults: Array<{ as_id: string; invoice: string; state: string; detail?: string }> = [];
+
   try {
     // 🚨 cron 은 user 인증 없으므로 service role 클라이언트 필수 (RLS 우회)
     //    2026-05-24: createServerSupabaseClient (cookie 기반) 쓰던 버그 발견 → RLS 막혀 0건 처리됨
@@ -73,6 +77,14 @@ export async function GET(request: NextRequest) {
     for (const repair of repairs || []) {
       try {
         const result = await queryTrackingStatus(repair.invoice_number);
+        if (debug) {
+          debugResults.push({
+            as_id: repair.as_id,
+            invoice: repair.invoice_number,
+            state: result.state,
+            detail: result.detail,
+          });
+        }
         if (result.state === 'DELIVERED') {
           await (supabase as any)
             .from('repairs')
@@ -102,6 +114,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       orders: { checked: orders?.length || 0, delivered: ordersDelivered },
       repairs: { checked: repairs?.length || 0, delivered: repairsDelivered },
+      ...(debug && {
+        debug: {
+          env: {
+            LOTTE_TRACK_API_URL: process.env.LOTTE_TRACK_API_URL ? `set:${process.env.LOTTE_TRACK_API_URL.length}chars` : 'MISSING',
+            LOTTE_CLIENT_KEY:    process.env.LOTTE_CLIENT_KEY    ? `set:${process.env.LOTTE_CLIENT_KEY.length}chars`    : 'MISSING',
+            LOTTE_JOBCUSTCD:     (process.env.LOTTE_JOB_CUST_CD || process.env.LOTTE_JOBCUSTCD) ? `set:${(process.env.LOTTE_JOB_CUST_CD || process.env.LOTTE_JOBCUSTCD || '').length}chars` : 'MISSING',
+          },
+          // 첫 3건만 상세 노출 (보안 + payload 크기)
+          firstResults: debugResults.slice(0, 3),
+        },
+      }),
     });
   } catch (err) {
     console.error('[cron/track-delivery] 실패:', err);
