@@ -205,10 +205,10 @@ export async function queryTrackingStatus(invoiceNumber: string): Promise<{
     });
     let json: Record<string, unknown>;
     try { json = await res.json(); } catch { json = {}; }
-    if (!res.ok) return { state: 'NOT_FOUND' };
+    if (!res.ok) return { state: 'NOT_FOUND', detail: `HTTP ${res.status}` };
 
     const code = String(json.code || '').toUpperCase();
-    if (code !== 'S') return { state: 'NOT_FOUND' };
+    if (code !== 'S') return { state: 'NOT_FOUND', detail: `code=${code || 'empty'} msg=${String(json.message || '').slice(0, 100)}` };
 
     const tracking = Array.isArray(json.tracking) ? json.tracking : [];
     if (tracking.some((x: Record<string, unknown>) => String(x.godsStatCd || '') === '09')) return { state: 'CANCELLED' };
@@ -220,9 +220,9 @@ export async function queryTrackingStatus(invoiceNumber: string): Promise<{
     })) return { state: 'DELIVERED' };
 
     const result = Array.isArray(json.result) ? json.result : [];
-    if (tracking.length === 0 && result.length === 0) return { state: 'NOT_FOUND' };
+    if (tracking.length === 0 && result.length === 0) return { state: 'NOT_FOUND', detail: 'tracking empty' };
     return { state: 'ACTIVE' };
-  } catch {
-    return { state: 'NOT_FOUND' };
+  } catch (e) {
+    return { state: 'NOT_FOUND', detail: `exception: ${String(e).slice(0, 150)}` };
   }
 }
