@@ -54,7 +54,27 @@
 
 ## 🟡 자동 대기
 
-(현재 자동 대기 항목 없음)
+### 복원수리 직접방문(당일수리) Phase 4 — 솔라피 검수 대기 (2026-05-25)
+
+**현재 상태**: Phase 1~3-B 운영 시작. 알림톡 5종 사양 확정 + 솔라피 검수 사장님 진행 중.
+
+**사장님 외부 작업**:
+1. 솔라피 콘솔에서 5종 신규 템플릿 본문 작성 + 변수/버튼 등록
+   - `as_visit_booked` / `as_visit_remind` / `as_visit_rescheduled` / `as_visit_cancelled` / `as_visit_completed`
+2. 카카오 검수 신청 (1~3 영업일)
+3. 검수 통과 후 Make 시나리오 라우터 분기 추가:
+   - 접수 알림 시나리오: `as_visit_booked` 분기 1개
+   - 상태변경 시나리오: 4종 분기 (`remind/rescheduled/cancelled/completed`)
+4. (선택) 리마인드 시점 결정 (A/B/C안 중)
+
+**검수 통과 후 TMS 코드 변경 (클로드에게 요청)**:
+- `lib/notification/make-webhook.ts` 5종 추가
+- 라우팅: `as_visit_booked` 도 `as_received` 시나리오 합류
+- `api/repair/public/submit/route.ts` 직접방문 분기 알림톡
+- `api/repair/[id]/route.ts` PATCH 분기 알림톡
+- `api/cron/repair-visit-remind/route.ts` 신규 (사장님 리마인드 시점 결정 후)
+
+**상세 사양**: [memory/project_repair_direct_visit.md](../../.claude/projects/c--Users-user-Desktop-mamoru/memory/project_repair_direct_visit.md) + [memory/reference_solapi_templates.md](../../.claude/projects/c--Users-user-Desktop-mamoru/memory/reference_solapi_templates.md) "직접방문 알림톡 5종" 섹션
 
 ---
 

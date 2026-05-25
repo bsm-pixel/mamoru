@@ -1,6 +1,32 @@
 # 복원수리 매뉴얼
 
-> 최종 업데이트: 2026-05-13 — 복원수리 매출 3채널 통합 (접수 + 판매RS + 납품RS) + 입력 경로 정리 + 거래처별 단가 + 배송비
+> 최종 업데이트: 2026-05-25 — 직접방문(당일수리) 운영 시작. 매장 워크인 30분 슬롯 + Google Calendar 자동 박힘 + 알림톡 5종 검수 대기.
+
+## 2026-05-25 정리 — 직접방문(당일수리) 운영 시작 ⭐
+
+복원수리 진행방식이 **3가지**로 확장됨 (방문수거 / 직접발송 / **🆕 직접방문(당일수리)**).
+
+| 항목 | 직접방문(당일수리) 운영 룰 |
+|---|---|
+| 매장 시간 | 평일 10:00 ~ 20:00 (일요일 휴무) |
+| 슬롯 | 30분 단위 |
+| 차단 시간 | 1~5자루 = 30분 / 6자루+ = 60분 (자동) |
+| 일정 충돌 | 컨설팅 매장방문/출장과 양방향 차단 — 고객 페이지·TMS 양쪽에서 동시 점유 슬롯 자동 비활성 |
+| 결제 시점 | 매장 사후 결제 (수리 완료 후) — 사전 입금 불필요 |
+| 흐름 단축 | intake → (즉석 수리) → delivered(=수령완료) → completed. pickup/검수/송장 모두 스킵 |
+| Google Calendar | 자동 박힘 (proceed_type='직접방문' 만, colorId 6 = Tangerine 주황) |
+| 알림톡 5종 | as_visit_booked / remind / rescheduled / cancelled / completed — Phase 4 검수 대기 (검수 통과 후 자동 작동) |
+
+운영 절차 (수리 당일):
+1. 고객이 접수페이지에서 직접방문 선택 → 30분 슬롯 예약
+2. 사장님 TMS 달력에 amber 도트 자동 표시 (Google Calendar 도 자동 박힘)
+3. 고객 방문 시 즉석 검수 + 수리 (소요시간 30~60분)
+4. 사이드 패널 **"고객 수령 완료"** 버튼 → status=delivered → as_visit_completed 알림톡 (검수 통과 후)
+5. 취소·일정 변경은 TMS 에서 변경 → 알림톡 자동 발송 + Google 이벤트 자동 동기화
+
+상세 설계: [project_repair_direct_visit](../../../C:/Users/user/.claude/projects/c--Users-user-Desktop-mamoru/memory/project_repair_direct_visit.md) 메모리 / [TMS_FLOW_REPAIR § 직접방문 흐름](TMS_FLOW_REPAIR.md)
+
+---
 
 ## 2026-05-13 정리 — 복원수리 매출/입력 경로 (사장님 영향 큼)
 
@@ -129,13 +155,28 @@ intake (접수)
 
 ## 7. 알림톡 자동 발송
 
+### 방문수거 / 직접발송 (운영중)
+
 | 트리거 | 템플릿 | 내용 |
 |--------|--------|------|
+| 접수 | as_received | 접수 안내 (4 변형: 직접발송/직접전달/카운터보관/문앞보관) |
 | 비용안내 발송 | as_cost_notice | 수리비/수거비/합계 안내 |
 | 입금확인 | as_payment_confirmed | 입금 확인 알림 (선택적) |
 | 출고완료 | as_shipped | 송장번호 + 택배사 안내 |
 | 배송완료 | as_review_request | 리뷰 작성 요청 |
 | 취소 | as_cancelled | 취소 안내 |
+
+### 🆕 직접방문(당일수리) — Phase 4 검수 대기 (2026-05-25 사양 확정)
+
+| 트리거 | 템플릿 | Make 시나리오 | 내용 |
+|---|---|---|---|
+| 접수 즉시 | `as_visit_booked` | 접수 알림 (`MAKE_AS_RECEIVED_WEBHOOK_URL`) | 방문 일정 확정 안내 |
+| 방문 D-1 21:00 + 당일 09:00 (사장님 결정) | `as_visit_remind` | 상태변경 (`MAKE_REPAIR_WEBHOOK_URL`) | 방문 리마인드 (노쇼 방지) |
+| 일정 변경 | `as_visit_rescheduled` | 상태변경 | 기존→변경 일시 안내 |
+| 취소 | `as_visit_cancelled` | 상태변경 | 취소 + 재예약 링크 |
+| 수령 완료 | `as_visit_completed` | 상태변경 | 완료 + 후기 링크 (auto_request_on_completion 토글 ON 시 자동) |
+
+→ 솔라피 검수 통과 후 TMS 코드 변경 (`lib/notification/make-webhook.ts` 5종 추가). 상세: [reference_solapi_templates](../../../C:/Users/user/.claude/projects/c--Users-user-Desktop-mamoru/memory/reference_solapi_templates.md) "직접방문 알림톡 5종" 섹션.
 
 ---
 

@@ -1,5 +1,5 @@
 # 복원수리 프로세스 흐름도
-> 최종 업데이트: 2026-05-19 — 수거접수필요 탭 orphan fix + 복원수리 매출 A채널 실제청구액 안분 (회계와 금액 통일, 시점은 목적별 분리 유지)
+> 최종 업데이트: 2026-05-25 — 직접방문(당일수리) Phase 1~3-B 운영 시작 + Google Calendar 자동 동기화 + Phase 4 알림톡 5종 검수 대기
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
 
@@ -102,6 +102,44 @@ B·C는 두 화면 완전 동일. **A채널만 화면 목적에 따라 기준이
   → 이하 방문수거와 동일
 ```
 
+### 🆕 직접방문(당일수리) 흐름 — 2026-05-25 추가
+> 사장님 비전: 매장 워크인. 가위 들고 와서 30분~1시간 내 당일 수리받아 감.
+> 컨설팅 매장방문/출장 일정과 양방향 충돌 차단. Google Calendar 자동 박힘.
+> 상세: [[project_repair_direct_visit]] 메모리
+
+```
+고객 접수 (page_form.html "직접방문" segment)
+  → 방문 날짜 선택 → /api/repair/public/slots?date=&qty= → 30분 슬롯 그리드
+    │  • 1~5자루 → 30분 차단 (1슬롯 점유)
+    │  • 6자루+ → 60분 차단 (2슬롯 점유)
+    │  • 충돌 검사: consultations 매장방문/출장 ↔ repairs 직접방문 양방향
+  → 방문 시간 선택 → submit (proceed_type='직접방문', visit_date/time)
+  → /api/repair/public/submit
+    • visit_duration_min 서버 계산 (qty + thresholdQty)
+    • address 컬럼 NULL (매장 워크인, 주소 불필요)
+    • shipping_fee = 0
+    • Google Calendar 이벤트 자동 생성 (lib/google/repair-calendar-sync.ts, colorId '6' Tangerine)
+  → 알림톡 (as_visit_booked) — Phase 4 검수 통과 후 발송
+  → [status: intake]
+  → (관리자) 접수확인 → confirmed_at
+  → 방문 D-1 21:00 + 당일 09:00 리마인드 (as_visit_remind) — cron 신규, Phase 4
+  → 매장 방문 → 즉석 검수 + 수리
+  → 사이드 패널 "고객 수령 완료" 버튼
+  → [status: delivered] (배송 없으니 delivered=수령완료 의미 전환)
+    → 알림톡 (as_visit_completed) — Phase 4 검수 통과 후 발송 (후기 링크 포함)
+  → [status: completed]
+  ※ 시간 변경: TMS PATCH visit_date/time → as_visit_rescheduled + Google 이벤트 자동 update
+  ※ 취소: status='cancelled' → as_visit_cancelled + Google 이벤트 자동 삭제
+```
+
+**직접방문 핵심 설계 원칙**:
+- 입출고 단계 스킵 (현장 즉시 검수, 송장 없음)
+- 결제는 매장 사후 결제 (검수 후 금액 확정)
+- DB 분기 컬럼 3개만 추가 (`visit_date`/`visit_time`/`visit_duration_min`) — 092 마이그레이션
+- 슬롯 정책 4컬럼 추가 (`repair_slot_step_min`/`threshold_qty`/`block_under_min`/`block_over_min`) — 092
+- Google Calendar 동기화 컬럼 2개 추가 (`google_event_id`/`updated_at`) — 093
+- 기존 방문수거/직접발송 흐름 무영향 (proceed_type 분기로 격리)
+
 ### 🆕 판매건 합포장 출고 분기 (2026-05-24 추가)
 
 **케이스**: 같은 고객이 같은 시기 제품 주문도 하여, **판매건 송장에 복원수리를 합쳐 발송**한 경우. 복원수리 단독 송장 없음.
@@ -148,7 +186,12 @@ completed → (terminal)
 cancelled → (terminal)
 
 * paid_at: 파이프라인과 독립된 플래그 (어느 상태에서든 입금확인 가능)
-* proceed_type 필터: 방문수거는 pickup_scheduled 필수, 직접발송은 생략
+* proceed_type 필터:
+  - 방문수거: pickup_scheduled 필수
+  - 직접발송: pickup_scheduled 생략
+  - 🆕 직접방문(당일수리): pickup_scheduled / cost_notified / paid_at 모두 스킵 가능
+    intake → (즉석 검수+수리+수령) → delivered → completed (단축 흐름)
+    visit_date/visit_time 필수, address NULL, shipping_fee 0
 ```
 
 ---
