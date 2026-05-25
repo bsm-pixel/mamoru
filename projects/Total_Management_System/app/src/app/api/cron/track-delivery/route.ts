@@ -162,9 +162,81 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // [3] offline_sales 추적 (shipped → delivered) — 2026-05-25 추가 (Phase 2)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //   진입 조건: 송장 발급됨(invoice_number) + 출고완료(shipped_at) + 배송 미완료(delivered_at NULL) + 미취소
+    //   매장 직접 수령은 invoice_number NULL → 자연 제외
+    const { data: sales, error: salesErr } = await (supabase as any)
+      .from('offline_sales')
+      .select('id, sale_number, invoice_number, customer_name, customer_phone, review_requested_at, review_promised_at')
+      .not('shipped_at', 'is', null)
+      .is('delivered_at', null)
+      .not('invoice_number', 'is', null)
+      .is('cancelled_at', null)
+      .limit(50);
+
+    if (salesErr) throw salesErr;
+
+    let salesDelivered = 0;
+    for (const sale of sales || []) {
+      try {
+        const result = await queryTrackingStatus(sale.invoice_number);
+        if (result.state === 'DELIVERED') {
+          await (supabase as any)
+            .from('offline_sales')
+            .update({ delivered_at: new Date().toISOString() })
+            .eq('id', sale.id);
+          salesDelivered++;
+          console.log(`[track-delivery/offline_sales] ${sale.sale_number} (${sale.customer_name}) → 배송완료`);
+
+          // 자동 후기요청 (3단계 가드 — repairs 표준 패턴)
+          after(async () => {
+            try {
+              const autoEnabled = await getServerSetting<boolean>(supabase as any, 'review.auto_request_on_completion', false);
+              if (!autoEnabled) {
+                console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} skip — 토글 OFF`);
+                return;
+              }
+              if (sale.review_promised_at) {
+                console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} skip — 약속받음`);
+                return;
+              }
+              if (sale.review_requested_at) {
+                console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} skip — 이미 발송됨`);
+                return;
+              }
+              if (!sale.customer_phone) return;
+
+              const r = await sendReviewRequestNotification({
+                source: 'sale',
+                sourceId: sale.sale_number,
+                customerName: sale.customer_name || '고객',
+                customerPhone: sale.customer_phone,
+                reviewType: 'purchase',
+              });
+              if (r.success) {
+                await (supabase as any).from('offline_sales')
+                  .update({ review_requested_at: new Date().toISOString() })
+                  .eq('id', sale.id);
+                console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} 발송 성공`);
+              } else {
+                console.error(`[track-delivery/offline_sales auto-review] 실패:`, r.error);
+              }
+            } catch (e) {
+              console.error(`[track-delivery/offline_sales auto-review] 예외:`, e);
+            }
+          });
+        }
+      } catch (e) {
+        console.error(`[track-delivery/offline_sales] ${sale.sale_number} 추적 실패:`, e);
+      }
+    }
+
     return NextResponse.json({
       orders: { checked: orders?.length || 0, delivered: ordersDelivered },
       repairs: { checked: repairs?.length || 0, delivered: repairsDelivered },
+      sales: { checked: sales?.length || 0, delivered: salesDelivered },
       ...(debug && {
         debug: {
           env: (() => {

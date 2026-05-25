@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped } from '@/hooks/use-sales';
+import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped, useMarkSaleDelivered } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2 } from 'lucide-react';
@@ -40,6 +40,18 @@ const CHANNEL_CHIP: Record<string, { label: string; className: string }> = {
   talk:    { label: '온라인상담',  className: 'bg-yellow-100 text-yellow-700' },
 };
 
+/**
+ * 운영 상태 칩 (2026-05-25 — 사장님 결정: '판매완료' 단일 통일 + '미수금' 우선)
+ *   우선순위: 취소 > 판매완료 > 배송중 > (default 없음, 결제상태 칩이 별도 표시)
+ *   미수금은 결제상태 칩에서 빨강으로 이미 강조됨 (중복 칩 X)
+ */
+function getSaleOperationChip(sale: OfflineSale): { label: string; className: string } | null {
+  if (sale.cancelled_at) return { label: '취소', className: 'bg-red-100 text-red-700' };
+  if (sale.delivered_at) return { label: '판매완료', className: 'bg-neutral-100 text-neutral-600' };
+  if (sale.shipped_at)   return { label: '배송중', className: 'bg-green-100 text-green-700' };
+  return null;
+}
+
 interface Props {
   saleId: string;
 }
@@ -56,6 +68,8 @@ export function SaleDetailPanel({ saleId }: Props) {
   const shipSale = useShipSale();
   const cancelShipment = useCancelSaleShipment();
   const markShipped = useMarkSaleShipped();
+  const markDelivered = useMarkSaleDelivered();
+  const [showPickupConfirm, setShowPickupConfirm] = useState(false);
   const [cancelMode, setCancelMode] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [returnMode, setReturnMode] = useState(false);
@@ -112,11 +126,16 @@ export function SaleDetailPanel({ saleId }: Props) {
     <div className="p-4 space-y-4">
       {/* 헤더 */}
       <div>
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
           <span className="text-sm font-bold text-indigo-black">{s.sale_number}</span>
           <Badge className={PAYMENT_STATUS_COLOR[s.payment_status] || ''}>
             {PAYMENT_STATUS_LABEL[s.payment_status] || s.payment_status}
           </Badge>
+          {/* 운영 상태 칩 (2026-05-25): 취소 / 판매완료 / 배송중 */}
+          {(() => {
+            const op = getSaleOperationChip(s);
+            return op ? <Badge className={op.className}>{op.label}</Badge> : null;
+          })()}
           <Badge className={channel.className}>{channel.label}</Badge>
         </div>
         <div className="grid grid-cols-2 gap-2 text-sm">
@@ -470,21 +489,43 @@ export function SaleDetailPanel({ saleId }: Props) {
         variant="danger"
       />
 
-      {/* 택배 발송 */}
+      {/* 택배 발송 / 매장 수령 */}
       {!s.cancelled_at && (
         <div className="pt-2 border-t border-neutral-100">
-          {(s as Record<string, unknown>).invoice_number ? (
+          {s.invoice_number ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Package size={14} className="text-green-600" />
-                <span className="text-sm font-mono font-medium">{(s as Record<string, unknown>).invoice_number as string}</span>
-                <span className="text-xs text-neutral-400">{(s as Record<string, unknown>).courier_name as string || '롯데택배'}</span>
+                <span className="text-sm font-mono font-medium">{s.invoice_number}</span>
+                <span className="text-xs text-neutral-400">{s.courier_name || '롯데택배'}</span>
               </div>
-              {(s as Record<string, unknown>).shipped_at ? (
-                <p className="text-xs text-green-600 flex items-center gap-1">
-                  <CheckCircle size={12} />
-                  출고완료 {formatDate((s as Record<string, unknown>).shipped_at as string)}
-                </p>
+              {s.shipped_at ? (
+                <>
+                  <p className="text-xs text-green-600 flex items-center gap-1">
+                    <CheckCircle size={12} />
+                    출고완료 {formatDate(s.shipped_at)}
+                  </p>
+                  {/* 배송완료 표시 (자동 cron OR 수동 fallback) */}
+                  {s.delivered_at ? (
+                    <p className="text-xs text-neutral-500 flex items-center gap-1">
+                      <CheckCircle size={12} className="text-neutral-400" />
+                      배송완료 {formatDate(s.delivered_at)}
+                    </p>
+                  ) : (
+                    <div className="space-y-1 pt-1">
+                      <p className="text-xs text-neutral-400 leading-relaxed">
+                        ALPS 인수자등록 자동 감지 시 배송완료 전환됩니다 (4시간마다 자동 확인)
+                      </p>
+                      <button
+                        onClick={() => markDelivered.mutate({ id: saleId, mode: 'delivery' })}
+                        disabled={markDelivered.isPending}
+                        className="text-xs text-neutral-500 hover:text-neutral-700 underline transition disabled:opacity-50"
+                      >
+                        수동 배송완료 처리
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <>
                   <Button
@@ -505,17 +546,56 @@ export function SaleDetailPanel({ saleId }: Props) {
               )}
             </div>
           ) : (
-            <button
-              onClick={() => shipSale.mutate(saleId)}
-              disabled={shipSale.isPending}
-              className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition"
-            >
-              <Truck size={14} />
-              {shipSale.isPending ? '송장 생성 중...' : '택배 발송 (송장 생성)'}
-            </button>
+            // 송장 없음 — 택배 발송 OR 매장 수령 두 옵션
+            <div className="space-y-2">
+              {s.delivered_at ? (
+                <p className="text-xs text-neutral-500 flex items-center gap-1">
+                  <CheckCircle size={12} className="text-neutral-400" />
+                  고객 수령 완료 {formatDate(s.delivered_at)}
+                </p>
+              ) : (
+                <>
+                  <button
+                    onClick={() => shipSale.mutate(saleId)}
+                    disabled={shipSale.isPending}
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition"
+                  >
+                    <Truck size={14} />
+                    {shipSale.isPending ? '송장 생성 중...' : '택배 발송 (송장 생성)'}
+                  </button>
+                  <button
+                    onClick={() => setShowPickupConfirm(true)}
+                    disabled={markDelivered.isPending}
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition disabled:opacity-50"
+                  >
+                    <Package size={14} />
+                    {markDelivered.isPending ? '처리 중...' : '고객 수령 완료'}
+                  </button>
+                </>
+              )}
+            </div>
           )}
         </div>
       )}
+
+      {/* 고객 수령 완료 확인 모달 */}
+      <ConfirmModal
+        open={showPickupConfirm}
+        onClose={() => setShowPickupConfirm(false)}
+        onConfirm={() => {
+          markDelivered.mutate({ id: saleId, mode: 'pickup' });
+          setShowPickupConfirm(false);
+        }}
+        title="고객 수령 완료"
+        message={
+          <div className="space-y-2">
+            <p>{s.customer_name} 고객이 매장에서 제품을 직접 받아가신 것으로 처리합니다.</p>
+            <p className="text-xs text-neutral-500">송장 없이 판매완료 상태로 전환됩니다.</p>
+          </div>
+        }
+        confirmLabel="수령 완료"
+      />
+
 
       {/* 출고완료 확인 모달 */}
       <ConfirmModal

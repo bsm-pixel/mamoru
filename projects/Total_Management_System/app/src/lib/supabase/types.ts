@@ -537,6 +537,12 @@ export interface Database {
           review_promised_at: string | null;        // 067: 리뷰 약속 시점
           review_submitted_at: string | null;       // 067: 리뷰 작성 완료 시점
           source_consultation_id: string | null;    // 070: 출장/매장상담 → 판매 link (mirror 모드 트리거)
+          // 048: 택배 발송 (송장 / 출고시각 / 택배사)
+          invoice_number: string | null;
+          shipped_at: string | null;
+          courier_name: string | null;
+          // 091: 배송완료/고객수령 시각 (cron ALPS 자동 OR "고객 수령 완료" 수동)
+          delivered_at: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -582,6 +588,12 @@ export interface Database {
           review_promised_at?: string | null;
           review_submitted_at?: string | null;
           source_consultation_id?: string | null;
+          // 048: 택배 발송
+          invoice_number?: string | null;
+          shipped_at?: string | null;
+          courier_name?: string | null;
+          // 091: 배송완료/수령완료
+          delivered_at?: string | null;
         };
       };
       offline_sale_items: {

@@ -419,6 +419,47 @@ export async function PATCH(
       return NextResponse.json({ success: true, action: 'marked_shipped' });
     }
 
+    // --- D-2) 배송완료/고객수령 처리 (2026-05-25 Phase 2) ---
+    //   mode='delivery': 송장 있는 택배 발송 — ALPS 추적 실패 fallback (수동 배송완료)
+    //   mode='pickup':   송장 없는 매장 직접 수령 — "고객 수령 완료"
+    if (action === 'mark_delivered') {
+      if (sale.cancelled_at) {
+        return NextResponse.json({ error: '취소된 판매입니다' }, { status: 400 });
+      }
+      if (sale.delivered_at) {
+        return NextResponse.json({ error: '이미 배송완료 처리되었습니다' }, { status: 400 });
+      }
+
+      const { mode } = body as { mode?: 'delivery' | 'pickup' };
+      if (mode !== 'delivery' && mode !== 'pickup') {
+        return NextResponse.json({ error: 'invalid_mode' }, { status: 400 });
+      }
+
+      // delivery 모드: 송장 있어야 함 (ALPS 추적 fallback 케이스)
+      if (mode === 'delivery' && !sale.invoice_number) {
+        return NextResponse.json({ error: '송장이 없습니다. 매장 수령 모드로 처리하세요.' }, { status: 400 });
+      }
+      // pickup 모드: 송장 없어야 함 (매장 직접 수령 — 송장 있으면 delivery 모드로)
+      if (mode === 'pickup' && sale.invoice_number) {
+        return NextResponse.json({ error: '송장이 있는 건은 배송완료(delivery) 모드로 처리하세요.' }, { status: 400 });
+      }
+
+      const now = new Date().toISOString();
+      const { error: updateErr } = await db
+        .from('offline_sales')
+        .update({ delivered_at: now })
+        .eq('id', id);
+
+      if (updateErr) throw updateErr;
+
+      return NextResponse.json({
+        success: true,
+        action: 'marked_delivered',
+        mode,
+        delivered_at: now,
+      });
+    }
+
     // --- E) 판매 정보 수정 (금액/할인/결제방법/날짜) ---
     if (action === 'edit_sale') {
       if (sale.cancelled_at) {

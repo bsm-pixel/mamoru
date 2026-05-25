@@ -654,3 +654,34 @@ export function useMarkSaleShipped() {
   });
 }
 
+/**
+ * 판매 배송완료 처리 — 두 경로 통합 (2026-05-25)
+ *   1. mode='delivery': 송장 있는 택배 발송 케이스 — ALPS 추적 실패 fallback (수동 배송완료)
+ *   2. mode='pickup':   송장 없는 매장 직접 수령 케이스 — "고객 수령 완료" 처리
+ *   두 경로 모두 offline_sales.delivered_at 설정. invoice_number 유무로 칩 표시 분기.
+ */
+export function useMarkSaleDelivered() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, mode }: { id: string; mode: 'delivery' | 'pickup' }) => {
+      const res = await fetch(`/api/sales/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'mark_delivered', mode }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '배송완료 처리 실패');
+      }
+      return res.json();
+    },
+    onSuccess: (_d, { id, mode }) => {
+      toast.success(mode === 'pickup' ? '고객 수령 완료 처리되었습니다' : '배송완료 처리되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['sale', id] });
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      invalidateFinancialQueries(queryClient);
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+  });
+}
+

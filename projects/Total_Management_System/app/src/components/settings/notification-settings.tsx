@@ -150,10 +150,10 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
         </div>
       </Field>
 
-      {/* 067: 후기 요청 자동 발송 정책 */}
+      {/* 067 → 2026-05-25 갱신: 3채널 통합 토글 (복원수리 / 아임웹 주문 / TMS 판매) */}
       <Field
-        label="배송완료/상담완료 시 자동 후기 요청"
-        desc="OFF: 핀셋 동봉 등 약속받은 고객만 사장님 수동 발송 (현재 정책) / ON: 안내문 동봉 등 모든 고객 자동 발송 — 단, 약속 ✓ 고객은 자동 모드라도 항상 사장님 수동만"
+        label="배송완료 시 자동 후기요청"
+        desc="복원수리·아임웹 주문·TMS 판매 3채널 공통. OFF → 사이드 패널 '후기요청' 버튼으로 수동 발송. ON → ALPS 인수자등록 자동 감지 후 즉시 발송. ※ 약속받은 고객(review_promised_at 체크)은 ON 이어도 사장님 수동만. ※ 상담은 정책상 영구 수동만 (2026-04-30)."
       >
         <div className="flex items-center gap-3">
           <Toggle checked={reviewAutoRequest} onChange={setReviewAutoRequest} />

@@ -410,6 +410,13 @@ const SaleRow = memo(function SaleRow({ sale, selected, onClick, prepMode, check
               {PAYMENT_STATUS_LABEL[sale.payment_status] || sale.payment_status}
             </Badge>
           )}
+          {/* 운영 상태 칩 (2026-05-25): 판매완료 / 배송중 (취소는 위에서 처리) */}
+          {!isCancelled && sale.delivered_at && (
+            <Badge className="bg-neutral-100 text-neutral-600">판매완료</Badge>
+          )}
+          {!isCancelled && !sale.delivered_at && sale.shipped_at && (
+            <Badge className="bg-green-100 text-green-700">배송중</Badge>
+          )}
           <Badge className={channelInfo.className}>{channelInfo.label}</Badge>
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
