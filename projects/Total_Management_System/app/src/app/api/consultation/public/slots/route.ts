@@ -108,8 +108,32 @@ export async function GET(req: NextRequest) {
 
     const bookings = [...(dateBookings || []), ...(suggestedBookings || [])];
 
+    // 3-2. 복원수리 직접방문 충돌 데이터 조회 (2026-05-25 — 양방향 차단 완성)
+    //   직접방문은 visit_date + visit_time + visit_duration_min 사용 (092 마이그레이션)
+    //   매장방문/출장 슬롯 검색 시에도 직접방문 일정을 차단해야 양방향 유기적 흐름
+    const { data: directVisits } = await dbAny
+      .from('repairs')
+      .select('visit_date, visit_time, visit_duration_min')
+      .gte('visit_date', minDate)
+      .lte('visit_date', maxDate)
+      .eq('proceed_type', '직접방문')
+      .neq('status', 'cancelled');
+
     // 4. 날짜별 차단 슬롯 계산
     const blockedMap = new Map<string, Set<number>>();
+
+    // 4-A. 복원수리 직접방문 차단 (먼저 처리, 단순 시간 + duration 차단)
+    for (const v of (directVisits || [])) {
+      if (!v.visit_date || !v.visit_time) continue;
+      const dateStr = v.visit_date as string;
+      if (!blockedMap.has(dateStr)) blockedMap.set(dateStr, new Set());
+      const blocked = blockedMap.get(dateStr)!;
+      const baseMin = toMinutes(v.visit_time as string);
+      const visitDur = (v.visit_duration_min as number) || 30;
+      for (let m = baseMin; m < baseMin + visitDur; m += stepMin) {
+        blocked.add(m);
+      }
+    }
 
     for (const b of (bookings || [])) {
       // suggested 건은 visit_time이 null일 수 있으므로 suggestions만 처리
