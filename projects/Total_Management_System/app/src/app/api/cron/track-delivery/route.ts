@@ -116,11 +116,17 @@ export async function GET(request: NextRequest) {
       repairs: { checked: repairs?.length || 0, delivered: repairsDelivered },
       ...(debug && {
         debug: {
-          env: {
-            LOTTE_TRACK_API_URL: process.env.LOTTE_TRACK_API_URL ? `set:${process.env.LOTTE_TRACK_API_URL.length}chars` : 'MISSING',
-            LOTTE_CLIENT_KEY:    process.env.LOTTE_CLIENT_KEY    ? `set:${process.env.LOTTE_CLIENT_KEY.length}chars`    : 'MISSING',
-            LOTTE_JOBCUSTCD:     (process.env.LOTTE_JOB_CUST_CD || process.env.LOTTE_JOBCUSTCD) ? `set:${(process.env.LOTTE_JOB_CUST_CD || process.env.LOTTE_JOBCUSTCD || '').length}chars` : 'MISSING',
-          },
+          env: (() => {
+            const trackUrl = process.env.LOTTE_TRACK_API_URL || '';
+            // URL 의 cus/XXX 부분만 추출해서 노출 (전체 URL 노출 아님, endpoint 식별용)
+            const cusMatch = trackUrl.match(/cus\/([^/]+)\//);
+            return {
+              LOTTE_TRACK_API_URL_length: trackUrl.length,
+              LOTTE_TRACK_API_URL_cus: cusMatch ? cusMatch[1] : 'NOT_MATCHED',
+              LOTTE_CLIENT_KEY_length: (process.env.LOTTE_CLIENT_KEY || '').length,
+              LOTTE_JOBCUSTCD_length: (process.env.LOTTE_JOB_CUST_CD || process.env.LOTTE_JOBCUSTCD || '').length,
+            };
+          })(),
           // 첫 3건만 상세 노출 (보안 + payload 크기)
           firstResults: debugResults.slice(0, 3),
         },
