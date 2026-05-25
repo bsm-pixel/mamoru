@@ -413,31 +413,33 @@ select.err {
   display: none;
   margin-top: 20px;
 }
-#sec-visit .visit-store-card {
+#visit-store-info {
+  margin-top: 14px;
+}
+.visit-store-card {
   background: var(--parchment);
   border: 1px solid var(--sand);
   border-radius: 12px;
   padding: 16px;
-  margin-bottom: 16px;
   font-size: 14px;
   line-height: 1.6;
   color: var(--graphite);
 }
-#sec-visit .visit-store-card strong {
+.visit-store-card strong {
   display: block;
   font-size: 15px;
   font-weight: 700;
   color: var(--void);
   margin-bottom: 6px;
 }
-#sec-visit .visit-store-card .store-line {
+.visit-store-card .store-line {
   display: flex;
   align-items: flex-start;
   gap: 6px;
   margin-top: 4px;
   color: var(--stone);
 }
-#sec-visit .visit-store-card .store-line .lbl {
+.visit-store-card .store-line .lbl {
   flex: 0 0 auto;
   min-width: 44px;
   font-size: 12px;
@@ -475,6 +477,22 @@ select.err {
   background: var(--void);
   border-color: var(--void);
   color: var(--cream);
+}
+/* 현재 선택의 차단 범위 안에 들어가는 후속 슬롯 (예: 12:30 선택 + 60분 → 13:00 covered) */
+/* 클릭은 허용 — 다시 누르면 그 시간으로 선택 이동 */
+#sec-visit .slot-btn.in-range {
+  background: var(--graphite);
+  border-color: var(--graphite);
+  color: var(--cream);
+  opacity: 0.85;
+  cursor: pointer;
+}
+#sec-visit .slot-btn.in-range::after {
+  content: ' (예약중)';
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.85;
+  margin-left: 2px;
 }
 #sec-visit .slot-btn.disabled {
   background: var(--neutral-50, #f5f4f1);
@@ -1234,6 +1252,33 @@ select.err {
       <!-- 진행방식 안내문구 -->
       <div class="type-info" id="type-info">우체국 기사님이 요청 날짜에 방문하여 수거해갑니다<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요</div>
 
+      <!-- 직접방문(당일수리) 매장 안내 카드 — 안내문구 바로 아래, 고객정보 위 -->
+      <div id="visit-store-info" style="display:none">
+        <div class="visit-store-card">
+          <strong>📍 MAMORU 매장</strong>
+          <div class="store-line">
+            <span class="lbl">주소</span>
+            <span>서울특별시 구로구 부광로 88 SKV1, B동 311호</span>
+          </div>
+          <div class="store-line">
+            <span class="lbl">영업</span>
+            <span>평일 10:00 ~ 20:00 (일요일 휴무)</span>
+          </div>
+          <div class="store-line">
+            <span class="lbl">안내</span>
+            <span>방문하신 시간에 맞춰 30분~1시간 내 당일 수리해드립니다</span>
+          </div>
+          <div class="store-line">
+            <span class="lbl">결제</span>
+            <span>매장에서 수리 작업 완료 후 진행 (방문 시 사전 결제 불필요)</span>
+          </div>
+          <div class="store-line">
+            <span class="lbl">금액</span>
+            <span>매장에서 검수 후 가위 상태에 따라 최종 확정</span>
+          </div>
+        </div>
+      </div>
+
       <div class="form-divider"></div>
 
       <div class="section-title">고객 정보</div>
@@ -1250,7 +1295,7 @@ select.err {
         </div>
       </div>
 
-      <div class="form-group">
+      <div class="form-group" id="sec-address">
         <div class="section-title">주소지 입력</div>
         <input id="postcode" type="hidden">
         <div class="address-row">
@@ -1295,29 +1340,7 @@ select.err {
            [SECTION] 직접방문(당일수리) — 2026-05-25 신규
            ═══════════════════════════════════════════════════════════ -->
       <div id="sec-visit">
-        <div class="visit-store-card">
-          <strong>📍 MAMORU 매장</strong>
-          <div class="store-line">
-            <span class="lbl">주소</span>
-            <span>서울특별시 구로구 부광로 88 SKV1, B동 311호</span>
-          </div>
-          <div class="store-line">
-            <span class="lbl">영업</span>
-            <span>평일 10:00 ~ 20:00 (일요일 휴무)</span>
-          </div>
-          <div class="store-line">
-            <span class="lbl">안내</span>
-            <span>방문하신 시간에 맞춰 30분~1시간 내 당일 수리해드립니다</span>
-          </div>
-          <div class="store-line">
-            <span class="lbl">결제</span>
-            <span>매장에서 수리 작업 완료 후 진행 (방문 시 사전 결제 불필요)</span>
-          </div>
-          <div class="store-line">
-            <span class="lbl">금액</span>
-            <span>매장에서 검수 후 가위 상태에 따라 최종 확정</span>
-          </div>
-        </div>
+        <!-- 매장 안내 카드는 type-info 바로 아래(#visit-store-info)로 이동됨 -->
         <!-- 직접방문 시 가위 수량 영역이 여기로 동적 이동됩니다 (JS qty-host) -->
         <div id="visit-qty-host"></div>
         <div class="form-group">
@@ -1754,11 +1777,17 @@ select.err {
         </button>
       `).join('');
 
-      // 이미 선택된 시간 있으면 미리보기 갱신
+      // 이미 선택된 시간 있으면 미리보기 + in-range 시각화 재적용
       if (selectedVisitTime) {
         const stillAvailable = slots.some(s => s.time === selectedVisitTime && s.available);
-        if (stillAvailable) updateVisitPreview(dateStr, selectedVisitTime, blockMin, qty);
-        else { selectedVisitTime = ''; preview.style.display = 'none'; }
+        if (stillAvailable) {
+          // selectVisitSlot 재호출로 selected + in-range 모두 재계산
+          // (blockMin 이 수량 변경으로 30↔60 전환됐을 때도 정확히 반영)
+          selectVisitSlot(selectedVisitTime);
+        } else {
+          selectedVisitTime = '';
+          preview.style.display = 'none';
+        }
       }
     } catch (e) {
       if (reqId !== __visitSlotInflight) return;
@@ -1777,10 +1806,26 @@ select.err {
   function selectVisitSlot(time) {
     const grid = $('visit-slot-grid');
     selectedVisitTime = time;
-    [...grid.querySelectorAll('.slot-btn')].forEach(b => b.classList.remove('selected'));
-    const btn = grid.querySelector(`.slot-btn[data-time="${time}"]`);
-    if (btn) btn.classList.add('selected');
     const blockMin = parseInt(grid.dataset.blockMin || '30', 10);
+    // 시작·끝 분 환산 (선택된 슬롯이 차지하는 범위)
+    const [sh, sm] = time.split(':').map(Number);
+    const startMin = sh * 60 + sm;
+    const endMin = startMin + blockMin;
+    // 모든 슬롯에서 selected/in-range 제거 후 재계산
+    [...grid.querySelectorAll('.slot-btn')].forEach(b => {
+      b.classList.remove('selected', 'in-range');
+      const t = b.dataset.time || '';
+      if (t === time) {
+        b.classList.add('selected');
+        return;
+      }
+      const [bh, bm] = t.split(':').map(Number);
+      const bMin = bh * 60 + bm;
+      // 시작 위치가 [start, end) 안에 들어가면 차단 범위 표시
+      if (bMin > startMin && bMin < endMin && !b.classList.contains('disabled')) {
+        b.classList.add('in-range');
+      }
+    });
     const qty = getVisitQty();
     updateVisitPreview(selectedDate || pickupDateInput.value, time, blockMin, qty);
     setErr('err-visit', false);
@@ -1846,6 +1891,8 @@ select.err {
   const seg = $('seg');
   const secPick = $('sec-pick');
   const secVisit = $('sec-visit');
+  const secAddress = $('sec-address');
+  const visitStoreInfo = $('visit-store-info');
   const typeInfo = $('type-info');
 
   // 2026-05-25: 가위 수량 영역 DOM 이동 (직접방문 시 sec-visit 안으로)
@@ -1905,6 +1952,9 @@ select.err {
 
     // sec-visit (방문 시간 슬롯)
     secVisit.style.display = isVisit ? 'block' : 'none';
+    // 직접방문: 매장 안내 카드 표시 + 주소 입력 영역 숨김 (매장 워크인이라 주소 불필요)
+    if (visitStoreInfo) visitStoreInfo.style.display = isVisit ? 'block' : 'none';
+    if (secAddress)     secAddress.style.display     = isVisit ? 'none'  : '';
     // 가위 수량 영역 DOM 이동 (직접방문 시 sec-visit 안으로 — 한 화면 자연 흐름)
     moveQtyTo(isVisit ? 'visit' : 'default');
     if (isVisit && $('pickup_date').value) {
@@ -2065,6 +2115,8 @@ select.err {
         secPick.style.display = getPickDisplay();
         $('delivery_method').closest('.form-group').style.display = 'none';
         secVisit.style.display = 'block';
+        if (visitStoreInfo) visitStoreInfo.style.display = 'block';
+        if (secAddress)     secAddress.style.display     = 'none';
         moveQtyTo('visit');
         const pickupDateLabel = $('pickup_date').closest('.form-group').querySelector('label');
         if (pickupDateLabel) pickupDateLabel.textContent = '방문 날짜';
@@ -2072,6 +2124,8 @@ select.err {
       } else { // direct
         secPick.style.display = 'none';
         secVisit.style.display = 'none';
+        if (visitStoreInfo) visitStoreInfo.style.display = 'none';
+        if (secAddress)     secAddress.style.display     = '';
         moveQtyTo('default');
         typeInfo.innerHTML = typeMessages['direct'];
       }
@@ -2211,6 +2265,8 @@ select.err {
     secPick.style.display = getPickDisplay();
     // 2026-05-25: 직접방문 섹션 + 시간 슬롯 + 수량 영역 위치 초기화
     secVisit.style.display = 'none';
+    if (visitStoreInfo) visitStoreInfo.style.display = 'none';
+    if (secAddress)     secAddress.style.display     = '';
     moveQtyTo('default');
     $('delivery_method').closest('.form-group').style.display = '';
     const pickupDateLabel = $('pickup_date').closest('.form-group').querySelector('label');
