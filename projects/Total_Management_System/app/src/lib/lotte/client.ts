@@ -21,7 +21,8 @@ function getConfig(): LotteConfig {
     cancelUrl: process.env.LOTTE_CANCEL_API_URL || '',
     trackingUrl:
       process.env.LOTTE_TRACK_API_URL ||
-      'https://apigw.llogis.com:10100/api/pid/cus/714a/custmer-view-tracking',
+      // 2026-05-25: fallback URL 갱신 (cus/714a → cus/806) — 환경변수 우선 사용, fallback 은 최후 안전망
+      'https://apigw.llogis.com:10100/api/pid/cus/806/custmer-view-tracking',
     clientKey: process.env.LOTTE_CLIENT_KEY || '',
     // 2026-05-25: alps-client.ts:17 패턴 통일 — LOTTE_JOB_CUST_CD 변수명도 fallback 으로 인식
     // (Vercel 환경변수가 LOTTE_JOB_CUST_CD 로 등록돼있어 orders 자동 추적이 영원히 빈 jobCustCd 로 호출됐던 버그 수정)

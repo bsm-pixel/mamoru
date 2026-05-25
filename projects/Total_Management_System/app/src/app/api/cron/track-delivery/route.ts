@@ -25,6 +25,10 @@ export async function GET(request: NextRequest) {
   }
 
   const url = new URL(request.url);
+  // ?debug=1 : 운영 진단 도구 (CRON_SECRET 인증 필요)
+  //   응답에 LOTTE 환경변수 길이/cus path + 첫 3건 ALPS 결과 노출
+  //   사장님 운영 중 자동 추적 의문 발생 시 즉시 진단 가능
+  //   (2026-05-25 client.ts jobCustCd fallback 버그 발견에 활용 — 백성민 케이스)
   const debug = url.searchParams.get('debug') === '1';
   const debugResults: Array<{ as_id: string; invoice: string; state: string; detail?: string }> = [];
   const ordersDebugResults: Array<{ order_no: string; invoice: string; state: string; raw_code?: string }> = [];
