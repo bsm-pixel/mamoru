@@ -391,6 +391,121 @@ select.err {
   color: var(--cream);
 }
 
+/* 2026-05-25: 3-segment (직접방문 추가) 보조 라벨 (당일수리) */
+.segment-btn .seg-sub {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.7;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+@media (max-width: 380px) {
+  /* 좁은 화면: 3-segment 폰트 축소 (Brand Guide 11px 라벨 하한) */
+  .segment-btn { font-size: 13px; padding: 12px 6px; }
+  .segment-btn .seg-sub { font-size: 10px; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   [STYLE] 직접방문 (당일수리) 섹션 — 2026-05-25 신규
+   ───────────────────────────────────────────────────────────── */
+#sec-visit {
+  display: none;
+  margin-top: 20px;
+}
+#sec-visit .visit-store-card {
+  background: var(--parchment);
+  border: 1px solid var(--sand);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--graphite);
+}
+#sec-visit .visit-store-card strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--void);
+  margin-bottom: 6px;
+}
+#sec-visit .visit-store-card .store-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--stone);
+}
+#sec-visit .visit-store-card .store-line .lbl {
+  flex: 0 0 auto;
+  min-width: 44px;
+  font-size: 12px;
+  color: var(--warm-gray);
+}
+#sec-visit .slot-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+@media (min-width: 768px) {
+  #sec-visit .slot-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+}
+#sec-visit .slot-btn {
+  padding: 12px 6px;
+  border: 1px solid var(--sand);
+  border-radius: 8px;
+  background: var(--shell);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--graphite);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+#sec-visit .slot-btn:hover:not(.disabled):not(.selected) {
+  background: var(--parchment);
+  border-color: var(--warm-gray);
+}
+#sec-visit .slot-btn.selected {
+  background: var(--void);
+  border-color: var(--void);
+  color: var(--cream);
+}
+#sec-visit .slot-btn.disabled {
+  background: var(--neutral-50, #f5f4f1);
+  color: var(--mist);
+  cursor: not-allowed;
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+#sec-visit .slot-preview {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--cream);
+  border: 1px solid var(--void);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--void);
+  text-align: center;
+  display: none;
+}
+#sec-visit .slot-empty {
+  margin-top: 12px;
+  padding: 20px;
+  background: var(--parchment);
+  border: 1px dashed var(--sand);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--warm-gray);
+  font-size: 13px;
+}
+
 /* ─────────────────────────────────────────────────────────────
    [STYLE] 주소 입력
    ───────────────────────────────────────────────────────────── */
@@ -1111,6 +1226,7 @@ select.err {
         <div class="segment-control" id="seg">
           <button type="button" class="segment-btn active" data-v="pickup">방문수거</button>
           <button type="button" class="segment-btn" data-v="direct">직접발송</button>
+          <button type="button" class="segment-btn" data-v="visit">직접방문<span class="seg-sub">(당일수리)</span></button>
         </div>
         <input type="hidden" id="proceed_type" value="방문수거">
       </div>
@@ -1173,6 +1289,34 @@ select.err {
           </select>
         </div>
         <div id="err-pick" class="err-msg">수거일·전달방법을 선택하세요</div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════
+           [SECTION] 직접방문(당일수리) — 2026-05-25 신규
+           ═══════════════════════════════════════════════════════════ -->
+      <div id="sec-visit">
+        <div class="visit-store-card">
+          <strong>📍 MAMORU 매장</strong>
+          <div class="store-line">
+            <span class="lbl">주소</span>
+            <span>서울특별시 구로구 부광로 88 SKV1, B동 311호</span>
+          </div>
+          <div class="store-line">
+            <span class="lbl">영업</span>
+            <span>평일 10:00 ~ 20:00 (일요일 휴무)</span>
+          </div>
+          <div class="store-line">
+            <span class="lbl">안내</span>
+            <span>방문하신 시간에 맞춰 30분~1시간 내 당일 수리해드립니다</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="required">방문 시간 선택</label>
+          <div id="visit-slot-status" class="slot-empty">위 "수거 요청일" 영역에서 날짜를 먼저 선택해주세요</div>
+          <div id="visit-slot-grid" class="slot-grid" style="display:none"></div>
+          <div id="visit-slot-preview" class="slot-preview"></div>
+        </div>
+        <div id="err-visit" class="err-msg">방문 시간을 선택해주세요</div>
       </div>
 
       <div class="form-divider"></div>
@@ -1505,7 +1649,128 @@ select.err {
     pickupDateInput.value = dateStr;
     closeCalendar();
     saveDraftDebounced();
+    // 2026-05-25: 직접방문 모드면 슬롯 그리드 재로드
+    if ($('proceed_type').value === '직접방문') {
+      selectedVisitTime = ''; // 날짜 바뀌면 기존 시간 선택 초기화
+      loadVisitSlots(dateStr);
+    }
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // 2026-05-25 신규: 직접방문(당일수리) — 시간 슬롯 그리드
+  // ─────────────────────────────────────────────────────────────
+  let selectedVisitTime = '';
+  let __visitSlotInflight = 0; // race-condition 방지 (마지막 요청만 반영)
+
+  function getVisitQty() {
+    return (parseInt($('qty_mamoru').value) || 0) + (parseInt($('qty_other').value) || 0);
+  }
+
+  function addMinToTime(hhmm, addMin) {
+    const [h, m] = hhmm.split(':').map(Number);
+    const t = h * 60 + m + addMin;
+    return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+  }
+
+  async function loadVisitSlots(dateStr) {
+    const qty = getVisitQty();
+    const status = $('visit-slot-status');
+    const grid = $('visit-slot-grid');
+    const preview = $('visit-slot-preview');
+
+    if (!dateStr) {
+      status.textContent = '위 "방문 날짜" 영역에서 날짜를 먼저 선택해주세요';
+      status.style.display = 'block';
+      grid.style.display = 'none';
+      preview.style.display = 'none';
+      return;
+    }
+    if (qty < 1) {
+      status.textContent = '가위 수량을 먼저 입력해주세요';
+      status.style.display = 'block';
+      grid.style.display = 'none';
+      preview.style.display = 'none';
+      return;
+    }
+
+    status.textContent = '예약 가능 시간 조회 중...';
+    status.style.display = 'block';
+    grid.style.display = 'none';
+    preview.style.display = 'none';
+
+    const reqId = ++__visitSlotInflight;
+    try {
+      const res = await fetch(`${API_BASE}/slots?date=${encodeURIComponent(dateStr)}&qty=${qty}`);
+      const j = await res.json();
+      if (reqId !== __visitSlotInflight) return; // 더 최신 요청이 있으면 폐기
+
+      if (!j.ok) {
+        status.textContent = '시간 조회 실패: ' + (j.error || '잠시 후 다시 시도해주세요');
+        return;
+      }
+      if (j.closedDay) {
+        status.textContent = '해당 날짜는 휴무일입니다. 다른 날짜를 선택해주세요';
+        return;
+      }
+      const slots = j.slots || [];
+      const blockMin = j.blockMin || 30;
+      if (slots.length === 0) {
+        status.textContent = '예약 가능한 시간이 없습니다. 다른 날짜를 선택해주세요';
+        return;
+      }
+
+      // 슬롯 그리드 렌더
+      status.style.display = 'none';
+      grid.style.display = 'grid';
+      grid.dataset.blockMin = String(blockMin);
+      grid.innerHTML = slots.map(s => `
+        <button type="button"
+                class="slot-btn ${s.available ? '' : 'disabled'} ${selectedVisitTime === s.time ? 'selected' : ''}"
+                ${s.available ? '' : 'disabled'}
+                data-time="${s.time}">
+          ${s.time}
+        </button>
+      `).join('');
+
+      // 이미 선택된 시간 있으면 미리보기 갱신
+      if (selectedVisitTime) {
+        const stillAvailable = slots.some(s => s.time === selectedVisitTime && s.available);
+        if (stillAvailable) updateVisitPreview(dateStr, selectedVisitTime, blockMin, qty);
+        else { selectedVisitTime = ''; preview.style.display = 'none'; }
+      }
+    } catch (e) {
+      if (reqId !== __visitSlotInflight) return;
+      status.textContent = '시간 조회 실패 — 네트워크를 확인해주세요';
+      console.error('[loadVisitSlots]', e);
+    }
+  }
+
+  function updateVisitPreview(dateStr, time, blockMin, qty) {
+    const preview = $('visit-slot-preview');
+    const endTime = addMinToTime(time, blockMin);
+    preview.textContent = `✓ ${dateStr} ${time} ~ ${endTime} (${qty}자루, ${blockMin}분 소요 예상)`;
+    preview.style.display = 'block';
+  }
+
+  function selectVisitSlot(time) {
+    const grid = $('visit-slot-grid');
+    selectedVisitTime = time;
+    [...grid.querySelectorAll('.slot-btn')].forEach(b => b.classList.remove('selected'));
+    const btn = grid.querySelector(`.slot-btn[data-time="${time}"]`);
+    if (btn) btn.classList.add('selected');
+    const blockMin = parseInt(grid.dataset.blockMin || '30', 10);
+    const qty = getVisitQty();
+    updateVisitPreview(selectedDate || pickupDateInput.value, time, blockMin, qty);
+    setErr('err-visit', false);
+    saveDraftDebounced();
+  }
+
+  // 슬롯 그리드 클릭 위임
+  $('visit-slot-grid').addEventListener('click', function(e) {
+    const btn = e.target.closest('.slot-btn:not(.disabled)');
+    if (!btn) return;
+    selectVisitSlot(btn.dataset.time);
+  });
 
   // 달력 이벤트 바인딩 — PC 외부클릭 핸들러와 버블링 충돌 방지
   pickupDateInput.addEventListener('click', function(e) { e.stopPropagation(); openCalendar(); });
@@ -1558,12 +1823,16 @@ select.err {
   // ─────────────────────────────────────────────────────────────
   const seg = $('seg');
   const secPick = $('sec-pick');
+  const secVisit = $('sec-visit');
   const typeInfo = $('type-info');
 
   const typeMessages = {
     'pickup': '지정수거일에 맞추어 수거해드립니다<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요',
-    'direct': '아래 주소로 직접 발송해주세요<br><b>서울특별시 구로구 부광로 88 SKV1, B동 311호 마모루</b>'
+    'direct': '아래 주소로 직접 발송해주세요<br><b>서울특별시 구로구 부광로 88 SKV1, B동 311호 마모루</b>',
+    'visit':  '매장에 직접 방문하여 <b>당일 수리</b>받으실 수 있습니다<br><b>날짜와 방문 시간</b>을 선택해주세요'
   };
+
+  const PROCEED_TYPE_MAP = { pickup: '방문수거', direct: '직접발송', visit: '직접방문' };
 
   function getPickDisplay() {
     return window.matchMedia('(min-width: 768px)').matches ? 'grid' : 'flex';
@@ -1576,8 +1845,40 @@ select.err {
     btn.classList.add('active');
     const v = btn.getAttribute('data-v');
     const isPickup = v === 'pickup';
-    $('proceed_type').value = isPickup ? '방문수거' : '직접발송';
-    secPick.style.display = isPickup ? getPickDisplay() : 'none';
+    const isVisit  = v === 'visit';
+    $('proceed_type').value = PROCEED_TYPE_MAP[v] || '방문수거';
+
+    // sec-pick: pickup 전체 / visit 날짜만 / direct 숨김
+    if (isPickup) {
+      secPick.style.display = getPickDisplay();
+      $('delivery_method').closest('.form-group').style.display = '';
+    } else if (isVisit) {
+      secPick.style.display = getPickDisplay();
+      // 방문 시간은 슬롯 그리드로 선택 → delivery_method 영역 숨김
+      $('delivery_method').closest('.form-group').style.display = 'none';
+    } else {
+      secPick.style.display = 'none';
+      $('delivery_method').closest('.form-group').style.display = '';
+    }
+
+    // sec-visit (방문 시간 슬롯)
+    secVisit.style.display = isVisit ? 'block' : 'none';
+    if (isVisit && $('pickup_date').value) {
+      // 모드 전환 시 이미 날짜가 있다면 슬롯 즉시 로드
+      loadVisitSlots($('pickup_date').value);
+    } else if (!isVisit) {
+      // pickup/direct 로 전환 시 슬롯 상태 초기화
+      selectedVisitTime = '';
+      $('visit-slot-grid').style.display = 'none';
+      $('visit-slot-preview').style.display = 'none';
+    }
+
+    // pickup_date label 동적 변경
+    const pickupDateLabel = $('pickup_date').closest('.form-group').querySelector('label');
+    if (pickupDateLabel) {
+      pickupDateLabel.textContent = isVisit ? '방문 날짜' : '수거 요청일';
+    }
+
     typeInfo.innerHTML = typeMessages[v];
     window.__AS_notifyHeight && window.__AS_notifyHeight();
     updatePrice();
@@ -1590,15 +1891,17 @@ select.err {
   // 배송비 정책 (가이드 페이지 기준)
   // 방문수거: 1자루 6,000원 / 2자루 3,000원 / 3자루+ 무료
   // 직접발송: 1자루 3,000원 / 2자루+ 무료
-  function getShippingFee(isPickup, totalQty) {
-    if (isPickup) {
+  function getShippingFee(proceedType, totalQty) {
+    // 2026-05-25: 직접방문(당일수리) — 배송 없음
+    if (proceedType === '직접방문') return 0;
+    if (proceedType === '방문수거') {
       if (totalQty >= 3) return 0;
       if (totalQty === 2) return 3000;
       return 6000;
-    } else {
-      if (totalQty >= 2) return 0;
-      return 3000;
     }
+    // 직접발송
+    if (totalQty >= 2) return 0;
+    return 3000;
   }
 
   function formatPrice(n) {
@@ -1606,14 +1909,16 @@ select.err {
   }
 
   function updatePrice() {
-    const isPickup = $('proceed_type').value === '방문수거';
+    const proceedType = $('proceed_type').value;
+    const isPickup = proceedType === '방문수거';
+    const isVisit  = proceedType === '직접방문';
     const mamoruQty = parseInt($('qty_mamoru').value) || 0;
     const otherQty = parseInt($('qty_other').value) || 0;
     const totalQty = mamoruQty + otherQty;
 
     const mamoruTotal = PRICE_MAMORU * mamoruQty;
     const otherTotal = PRICE_OTHER * otherQty;
-    const shippingFee = getShippingFee(isPickup, totalQty);
+    const shippingFee = getShippingFee(proceedType, totalQty);
     const grandTotal = mamoruTotal + otherTotal + shippingFee;
 
     $('priceMaruru').textContent = mamoruQty > 0
@@ -1625,20 +1930,33 @@ select.err {
 
     const shippingRow = $('shippingRow');
     const shippingLabel = shippingRow.querySelector('.mm-price-label');
-    shippingRow.style.display = 'flex';
-    // 라벨: 방문수거→수거비, 직접발송→배송비
-    if (shippingLabel) shippingLabel.textContent = isPickup ? '수거&발송 비용' : '발송비용';
-    if (shippingFee === 0) {
-      $('priceShipping').textContent = isPickup ? '무료 (3자루 이상)' : '무료 (2자루 이상)';
+    if (isVisit) {
+      // 매장 직접방문 = 배송비 자체가 의미 없음 → 행 숨김
+      shippingRow.style.display = 'none';
     } else {
-      $('priceShipping').textContent = formatPrice(shippingFee);
+      shippingRow.style.display = 'flex';
+      if (shippingLabel) shippingLabel.textContent = isPickup ? '수거&발송 비용' : '발송비용';
+      $('priceShipping').textContent = shippingFee === 0
+        ? (isPickup ? '무료 (3자루 이상)' : '무료 (2자루 이상)')
+        : formatPrice(shippingFee);
     }
 
     $('priceTotal').textContent = formatPrice(grandTotal);
   }
 
-  $('qty_mamoru').addEventListener('change', function() { updatePrice(); setErr('err-qty', false); });
-  $('qty_other').addEventListener('change', function() { updatePrice(); setErr('err-qty', false); });
+  $('qty_mamoru').addEventListener('change', function() {
+    updatePrice(); setErr('err-qty', false);
+    // 2026-05-25: 직접방문 모드면 수량 변경 시 슬롯 재로드 (차단 시간 바뀜)
+    if ($('proceed_type').value === '직접방문' && pickupDateInput.value) {
+      loadVisitSlots(pickupDateInput.value);
+    }
+  });
+  $('qty_other').addEventListener('change', function() {
+    updatePrice(); setErr('err-qty', false);
+    if ($('proceed_type').value === '직접방문' && pickupDateInput.value) {
+      loadVisitSlots(pickupDateInput.value);
+    }
+  });
 
   // ─────────────────────────────────────────────────────────────
   // 폼 임시저장 (Draft)
@@ -1674,6 +1992,8 @@ select.err {
       qty_mamoru: $('qty_mamoru').value,
       qty_other: $('qty_other').value,
       memo: $('memo')?.value || '',
+      // 2026-05-25: 직접방문 시간 (날짜는 pickup_date 공유)
+      visit_time: selectedVisitTime || '',
       _ts: Date.now()
     };
   }
@@ -1688,12 +2008,27 @@ select.err {
     const d = getDraft();
     if (!d || !d._ts) return;
 
-    if (d.proceed_type === '직접발송' && seg) {
+    // 2026-05-25: 3가지 진행방식 (방문수거/직접발송/직접방문)
+    const PROCEED_REVERSE = { '방문수거': 'pickup', '직접발송': 'direct', '직접방문': 'visit' };
+    const draftV = PROCEED_REVERSE[d.proceed_type] || 'pickup';
+    if (seg && draftV !== 'pickup') {
       [...seg.querySelectorAll('.segment-btn')].forEach(b => b.classList.remove('active'));
-      const directBtn = seg.querySelector('[data-v="direct"]');
-      if (directBtn) directBtn.classList.add('active');
-      $('proceed_type').value = '직접발송';
-      secPick.style.display = 'none';
+      const targetBtn = seg.querySelector(`[data-v="${draftV}"]`);
+      if (targetBtn) targetBtn.classList.add('active');
+      $('proceed_type').value = d.proceed_type;
+      // 모드별 섹션 표시 (setMethod 클릭 핸들러와 동일 로직)
+      if (draftV === 'visit') {
+        secPick.style.display = getPickDisplay();
+        $('delivery_method').closest('.form-group').style.display = 'none';
+        secVisit.style.display = 'block';
+        const pickupDateLabel = $('pickup_date').closest('.form-group').querySelector('label');
+        if (pickupDateLabel) pickupDateLabel.textContent = '방문 날짜';
+        typeInfo.innerHTML = typeMessages['visit'];
+      } else { // direct
+        secPick.style.display = 'none';
+        secVisit.style.display = 'none';
+        typeInfo.innerHTML = typeMessages['direct'];
+      }
     }
 
     if (d.name) $('name').value = d.name;
@@ -1709,6 +2044,11 @@ select.err {
     if (d.qty_mamoru) $('qty_mamoru').value = d.qty_mamoru;
     if (d.qty_other) $('qty_other').value = d.qty_other;
     if ($('memo') && d.memo) $('memo').value = d.memo;
+    // 2026-05-25: 직접방문 visit_time 복원 + 슬롯 재로드
+    if (d.visit_time) selectedVisitTime = d.visit_time;
+    if (d.proceed_type === '직접방문' && d.pickup_date) {
+      loadVisitSlots(d.pickup_date);
+    }
 
     window.__AS_notifyHeight && window.__AS_notifyHeight();
     updatePrice();
@@ -1745,7 +2085,9 @@ select.err {
     const addr1El = $('address1');
     const postcodeEl = $('postcode');
     const agree = $('agreeCk').checked;
-    const isPickup = $('proceed_type').value === '방문수거';
+    const proceedType = $('proceed_type').value;
+    const isPickup = proceedType === '방문수거';
+    const isVisit  = proceedType === '직접방문';
 
     const nameOk = !!nameEl.value.trim();
     markCtl(nameEl, !nameOk);
@@ -1759,11 +2101,16 @@ select.err {
     ok &= phoneOk;
     if (!phoneOk && !focus) { phoneEl.focus(); focus = true; }
 
-    const addrOk = !!(postcodeEl.value && addr1El.value.trim());
-    markCtl(addr1El, !addrOk);
-    setErr('err-addr', !addrOk);
-    ok &= addrOk;
-    if (!addrOk && !focus) { addr1El.focus(); focus = true; }
+    // 직접방문은 매장 워크인이라 주소 입력 불필요
+    if (isVisit) {
+      setErr('err-addr', false);
+    } else {
+      const addrOk = !!(postcodeEl.value && addr1El.value.trim());
+      markCtl(addr1El, !addrOk);
+      setErr('err-addr', !addrOk);
+      ok &= addrOk;
+      if (!addrOk && !focus) { addr1El.focus(); focus = true; }
+    }
 
     if (isPickup) {
       const pd = $('pickup_date').value;
@@ -1771,8 +2118,18 @@ select.err {
       const pickOk = !!(pd && dm) && !isDisabledDateStr(pd);
       setErr('err-pick', !pickOk);
       ok &= pickOk;
+    } else if (isVisit) {
+      // 직접방문: 날짜 + 시간 슬롯 둘 다 필수
+      const pd = $('pickup_date').value;
+      const dateOk = !!pd && !isDisabledDateStr(pd);
+      setErr('err-pick', !dateOk);
+      ok &= dateOk;
+      const timeOk = !!selectedVisitTime;
+      setErr('err-visit', !timeOk);
+      ok &= timeOk;
     } else {
       setErr('err-pick', false);
+      setErr('err-visit', false);
     }
 
     // 수량: 둘 중 하나는 1 이상
@@ -1806,8 +2163,17 @@ select.err {
     seg.querySelector('[data-v="pickup"]').classList.add('active');
     $('proceed_type').value = '방문수거';
     secPick.style.display = getPickDisplay();
+    // 2026-05-25: 직접방문 섹션 + 시간 슬롯 초기화
+    secVisit.style.display = 'none';
+    $('delivery_method').closest('.form-group').style.display = '';
+    const pickupDateLabel = $('pickup_date').closest('.form-group').querySelector('label');
+    if (pickupDateLabel) pickupDateLabel.textContent = '수거 요청일';
+    selectedVisitTime = '';
+    $('visit-slot-grid').style.display = 'none';
+    $('visit-slot-grid').innerHTML = '';
+    $('visit-slot-preview').style.display = 'none';
 
-    ['err-name', 'err-phone', 'err-addr', 'err-pick', 'err-qty', 'err-agree'].forEach(id => setErr(id, false));
+    ['err-name', 'err-phone', 'err-addr', 'err-pick', 'err-visit', 'err-qty', 'err-agree'].forEach(id => setErr(id, false));
     if ($('memo')) $('memo').value = '';
 
     window.__AS_notifyHeight && window.__AS_notifyHeight();
@@ -1876,19 +2242,25 @@ select.err {
   $('btn-submit').addEventListener('click', function() {
     if (!validate()) return;
 
+    const proceedType = $('proceed_type').value;
+    const isVisit = proceedType === '직접방문';
     const payload = {
       event: 'AS_CREATE',
-      proceed_type: $('proceed_type').value,
+      proceed_type: proceedType,
       name: $('name').value.trim(),
       phone: $('phone').value.replace(/\D/g, ''),
-      postcode: $('postcode').value.trim(),
-      address1: $('address1').value.trim(),
-      address2: $('address2').value.trim(),
-      pickup_date: $('pickup_date')?.value || '',
-      delivery_method: $('delivery_method')?.value || '',
+      // 직접방문은 주소/수거일/전달방법 의미 없음 → 빈 값 전송 (서버 측에서도 NULL 저장)
+      postcode: isVisit ? '' : $('postcode').value.trim(),
+      address1: isVisit ? '' : $('address1').value.trim(),
+      address2: isVisit ? '' : $('address2').value.trim(),
+      pickup_date: isVisit ? '' : ($('pickup_date')?.value || ''),
+      delivery_method: isVisit ? '' : ($('delivery_method')?.value || ''),
       qty_mamoru: $('qty_mamoru')?.value || '',
       qty_other: $('qty_other')?.value || '',
-      memo: $('memo')?.value.trim() || ''
+      memo: $('memo')?.value.trim() || '',
+      // 2026-05-25: 직접방문(당일수리) — pickup_date input 을 visit_date 로 매핑
+      visit_date: isVisit ? ($('pickup_date')?.value || '') : '',
+      visit_time: isVisit ? selectedVisitTime : ''
     };
 
     // 즉시 성공 메시지 표시
