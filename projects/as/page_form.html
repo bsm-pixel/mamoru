@@ -1309,10 +1309,20 @@ select.err {
             <span class="lbl">안내</span>
             <span>방문하신 시간에 맞춰 30분~1시간 내 당일 수리해드립니다</span>
           </div>
+          <div class="store-line">
+            <span class="lbl">결제</span>
+            <span>매장에서 수리 작업 완료 후 진행 (방문 시 사전 결제 불필요)</span>
+          </div>
+          <div class="store-line">
+            <span class="lbl">금액</span>
+            <span>매장에서 검수 후 가위 상태에 따라 최종 확정</span>
+          </div>
         </div>
+        <!-- 직접방문 시 가위 수량 영역이 여기로 동적 이동됩니다 (JS qty-host) -->
+        <div id="visit-qty-host"></div>
         <div class="form-group">
           <label class="required">방문 시간 선택</label>
-          <div id="visit-slot-status" class="slot-empty">위 "수거 요청일" 영역에서 날짜를 먼저 선택해주세요</div>
+          <div id="visit-slot-status" class="slot-empty">위 "방문 날짜"를 먼저 선택해주세요</div>
           <div id="visit-slot-grid" class="slot-grid" style="display:none"></div>
           <div id="visit-slot-preview" class="slot-preview"></div>
         </div>
@@ -1321,21 +1331,24 @@ select.err {
 
       <div class="form-divider"></div>
 
-      <div class="qty-row">
-        <div class="form-group">
-          <label>마모루가위 수량</label>
-          <select id="qty_mamoru">
-            <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
-          </select>
+      <!-- 가위 수량 영역 — 직접방문 모드 시 #visit-qty-host 안으로 동적 이동 (JS) -->
+      <div id="sec-qty">
+        <div class="qty-row">
+          <div class="form-group">
+            <label>마모루가위 수량</label>
+            <select id="qty_mamoru">
+              <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>타사가위 수량</label>
+            <select id="qty_other">
+              <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
+            </select>
+          </div>
         </div>
-        <div class="form-group">
-          <label>타사가위 수량</label>
-          <select id="qty_other">
-            <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
-          </select>
-        </div>
+        <div id="err-qty" class="err-msg">마모루가위 또는 타사가위 중 최소 1자루를 선택하세요</div>
       </div>
-      <div id="err-qty" class="err-msg">마모루가위 또는 타사가위 중 최소 1자루를 선택하세요</div>
 
       <!-- ═══════════════════════════════════════════════════════════
            [SECTION] 가격 계산
@@ -1649,10 +1662,19 @@ select.err {
     pickupDateInput.value = dateStr;
     closeCalendar();
     saveDraftDebounced();
-    // 2026-05-25: 직접방문 모드면 슬롯 그리드 재로드
+    // 2026-05-25: 직접방문 모드면 슬롯 그리드 재로드 + 수량 미입력 시 친절 안내
     if ($('proceed_type').value === '직접방문') {
       selectedVisitTime = ''; // 날짜 바뀌면 기존 시간 선택 초기화
-      loadVisitSlots(dateStr);
+      loadVisitSlots(dateStr); // 수량 0 케이스도 내부에서 friendly 안내
+      // 수량 영역으로 부드럽게 스크롤 (사용자가 자연스럽게 다음 단계 인지)
+      if (getVisitQty() < 1) {
+        setTimeout(() => {
+          const qtyEl = $('sec-qty');
+          if (qtyEl && qtyEl.scrollIntoView) {
+            qtyEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 200);
+      }
     }
   }
 
@@ -1679,14 +1701,14 @@ select.err {
     const preview = $('visit-slot-preview');
 
     if (!dateStr) {
-      status.textContent = '위 "방문 날짜" 영역에서 날짜를 먼저 선택해주세요';
+      status.innerHTML = '위 <b>"방문 날짜"</b>를 먼저 선택해주세요';
       status.style.display = 'block';
       grid.style.display = 'none';
       preview.style.display = 'none';
       return;
     }
     if (qty < 1) {
-      status.textContent = '가위 수량을 먼저 입력해주세요';
+      status.innerHTML = '⬆️ 가위 수량을 먼저 선택해주세요<br><span style="font-size:12px;opacity:0.7">(예약 가능 시간 계산에 필요합니다)</span>';
       status.style.display = 'block';
       grid.style.display = 'none';
       preview.style.display = 'none';
@@ -1826,6 +1848,26 @@ select.err {
   const secVisit = $('sec-visit');
   const typeInfo = $('type-info');
 
+  // 2026-05-25: 가위 수량 영역 DOM 이동 (직접방문 시 sec-visit 안으로)
+  let __qtyOrigParent = null;
+  let __qtyOrigNext = null;
+  function moveQtyTo(target) {
+    const qtyEl = $('sec-qty');
+    if (!qtyEl) return;
+    if (target === 'visit') {
+      if (!__qtyOrigParent) {
+        __qtyOrigParent = qtyEl.parentNode;
+        __qtyOrigNext = qtyEl.nextSibling;
+      }
+      const host = $('visit-qty-host');
+      if (host && qtyEl.parentNode !== host) host.appendChild(qtyEl);
+    } else {
+      if (__qtyOrigParent && qtyEl.parentNode !== __qtyOrigParent) {
+        __qtyOrigParent.insertBefore(qtyEl, __qtyOrigNext);
+      }
+    }
+  }
+
   const typeMessages = {
     'pickup': '지정수거일에 맞추어 수거해드립니다<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요',
     'direct': '아래 주소로 직접 발송해주세요<br><b>서울특별시 구로구 부광로 88 SKV1, B동 311호 마모루</b>',
@@ -1863,6 +1905,8 @@ select.err {
 
     // sec-visit (방문 시간 슬롯)
     secVisit.style.display = isVisit ? 'block' : 'none';
+    // 가위 수량 영역 DOM 이동 (직접방문 시 sec-visit 안으로 — 한 화면 자연 흐름)
+    moveQtyTo(isVisit ? 'visit' : 'default');
     if (isVisit && $('pickup_date').value) {
       // 모드 전환 시 이미 날짜가 있다면 슬롯 즉시 로드
       loadVisitSlots($('pickup_date').value);
@@ -2021,12 +2065,14 @@ select.err {
         secPick.style.display = getPickDisplay();
         $('delivery_method').closest('.form-group').style.display = 'none';
         secVisit.style.display = 'block';
+        moveQtyTo('visit');
         const pickupDateLabel = $('pickup_date').closest('.form-group').querySelector('label');
         if (pickupDateLabel) pickupDateLabel.textContent = '방문 날짜';
         typeInfo.innerHTML = typeMessages['visit'];
       } else { // direct
         secPick.style.display = 'none';
         secVisit.style.display = 'none';
+        moveQtyTo('default');
         typeInfo.innerHTML = typeMessages['direct'];
       }
     }
@@ -2163,8 +2209,9 @@ select.err {
     seg.querySelector('[data-v="pickup"]').classList.add('active');
     $('proceed_type').value = '방문수거';
     secPick.style.display = getPickDisplay();
-    // 2026-05-25: 직접방문 섹션 + 시간 슬롯 초기화
+    // 2026-05-25: 직접방문 섹션 + 시간 슬롯 + 수량 영역 위치 초기화
     secVisit.style.display = 'none';
+    moveQtyTo('default');
     $('delivery_method').closest('.form-group').style.display = '';
     const pickupDateLabel = $('pickup_date').closest('.form-group').querySelector('label');
     if (pickupDateLabel) pickupDateLabel.textContent = '수거 요청일';
