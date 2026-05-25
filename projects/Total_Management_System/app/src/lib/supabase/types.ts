@@ -343,6 +343,10 @@ export interface Database {
           review_promised_at: string | null;     // 067: 리뷰 약속 시점
           review_request_sent_at: string | null; // 067: 후기 요청 발송 시점
           review_submitted_at: string | null;    // 067: 리뷰 작성 완료 시점
+          // 092: 직접방문(당일수리)
+          visit_date: string | null;             // 'YYYY-MM-DD'
+          visit_time: string | null;             // 'HH:MM' (30분 단위)
+          visit_duration_min: number | null;     // 30 or 60 (서버 계산, 충돌 검사용)
           received_at: string;
           created_at: string;
           updated_at: string;
@@ -374,6 +378,10 @@ export interface Database {
           packed_at?: string | null;
           admin_note?: string | null;
           gas_raw?: Record<string, unknown> | null;
+          // 092: 직접방문(당일수리)
+          visit_date?: string | null;
+          visit_time?: string | null;
+          visit_duration_min?: number | null;
           received_at?: string;
         };
         Update: {
@@ -406,6 +414,10 @@ export interface Database {
           review_promised_at?: string | null;
           review_request_sent_at?: string | null;
           review_submitted_at?: string | null;
+          // 092: 직접방문(당일수리)
+          visit_date?: string | null;
+          visit_time?: string | null;
+          visit_duration_min?: number | null;
           received_at?: string;
         };
       };

@@ -44,7 +44,10 @@ function calculateCosts(qtyMamoru: number, qtyOther: number, proceedType: string
 
   // 수거비 계산
   let shippingFee = 0;
-  if (proceedType === '방문수거') {
+  if (proceedType === '직접방문') {
+    // 2026-05-25: 매장 직접방문(당일수리) — 배송 없음
+    shippingFee = 0;
+  } else if (proceedType === '방문수거') {
     if (totalQty === 1) shippingFee = 6000;
     else if (totalQty === 2) shippingFee = 3000;
     // 3+ : 무료
@@ -64,6 +67,8 @@ export async function POST(req: NextRequest) {
       name, phone, postcode, address1: address, address2: address_detail,
       proceed_type, pickup_date, delivery_method,
       qty_mamoru, qty_other, memo,
+      // 2026-05-25: 직접방문(당일수리) 신규
+      visit_date, visit_time,
     } = body;
 
     // 필수값 검증
@@ -81,6 +86,22 @@ export async function POST(req: NextRequest) {
         { ok: false, error: '가위 수량을 입력해주세요' },
         { status: 400, headers: CORS_HEADERS }
       );
+    }
+
+    // 직접방문 입력 검증
+    if (proceed_type === '직접방문') {
+      if (!visit_date || !/^\d{4}-\d{2}-\d{2}$/.test(visit_date)) {
+        return NextResponse.json(
+          { ok: false, error: '방문 날짜를 선택해주세요' },
+          { status: 400, headers: CORS_HEADERS }
+        );
+      }
+      if (!visit_time || !/^\d{2}:\d{2}$/.test(visit_time)) {
+        return NextResponse.json(
+          { ok: false, error: '방문 시간을 선택해주세요' },
+          { status: 400, headers: CORS_HEADERS }
+        );
+      }
     }
 
     const db = createServiceClient();
@@ -140,6 +161,23 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // 직접방문 차단 시간 서버 계산 (클라이언트 값 신뢰 X — 충돌 검사 정합성)
+    let visitDuration: number | null = null;
+    if (proceed_type === '직접방문') {
+      // consultation_settings 의 운영 정책 로드 (qty 임계 + 차단 시간)
+      const { data: rSettings } = await dbAny
+        .from('consultation_settings')
+        .select('repair_threshold_qty, repair_block_under_min, repair_block_over_min')
+        .eq('id', 'default')
+        .single();
+      const thresholdQty = rSettings?.repair_threshold_qty ?? 6;
+      const blockUnder = rSettings?.repair_block_under_min ?? 30;
+      const blockOver = rSettings?.repair_block_over_min ?? 60;
+      visitDuration = (qtyM + qtyO) >= thresholdQty ? blockOver : blockUnder;
+    }
+
+    const isVisit = proceed_type === '직접방문';
+
     // INSERT
     const insertData = {
       customer_id: customerId,
@@ -148,11 +186,15 @@ export async function POST(req: NextRequest) {
       phone: phone.trim(),
       // phone_normalized는 DB generated column — INSERT 제외
       proceed_type: proceed_type || '직접발송',
-      postcode: postcode || null,
-      address: address || null,
-      address_detail: address_detail || null,
-      pickup_date: pickup_date || null,
-      delivery_method: delivery_method || null,
+      postcode: isVisit ? null : (postcode || null),
+      address: isVisit ? null : (address || null),
+      address_detail: isVisit ? null : (address_detail || null),
+      pickup_date: isVisit ? null : (pickup_date || null),
+      delivery_method: isVisit ? null : (delivery_method || null),
+      // 2026-05-25: 직접방문(당일수리) 신규 컬럼
+      visit_date: isVisit ? visit_date : null,
+      visit_time: isVisit ? visit_time : null,
+      visit_duration_min: visitDuration,
       qty_mamoru: qtyM,
       qty_other: qtyO,
       memo: memo?.trim() || null,
@@ -191,7 +233,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 방문일 표시 포맷 (직접방문 알림톡 가독성)
+    let visitDateDisplay = '';
+    if (isVisit && visit_date) {
+      const dt = new Date(visit_date + 'T00:00:00+09:00');
+      if (!isNaN(dt.getTime())) {
+        const y = dt.getFullYear();
+        const m = String(dt.getMonth() + 1).padStart(2, '0');
+        const d = String(dt.getDate()).padStart(2, '0');
+        const dow = ['일', '월', '화', '수', '목', '금', '토'][dt.getDay()];
+        visitDateDisplay = `${y}년 ${m}월 ${d}일 (${dow}요일)`;
+      }
+    }
+
     // 알림톡 발송 (접수 안내)
+    // 직접방문은 별도 템플릿 'as_visit_booked' Phase 4 검수 후 활성화 — 현재는 as_received 임시 사용
     try {
       await sendNotification({
         template: 'as_received',
@@ -211,6 +267,10 @@ export async function POST(req: NextRequest) {
           address: address || '',
           address_detail: address_detail || '',
           pickup_address_text: [address, address_detail].filter(Boolean).join(' '),
+          // 직접방문 신규 변수 (Phase 4 템플릿 신청 시 활용)
+          visit_date: visitDateDisplay,
+          visit_time: isVisit ? (visit_time || '') : '',
+          visit_duration_min: visitDuration ? String(visitDuration) : '',
         },
       });
     } catch (notifyErr) {
