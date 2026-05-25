@@ -1,13 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { queryStatus } from '@/lib/lotte/client';
 import { queryTrackingStatus } from '@/lib/lotte/alps-client';
+import { sendReviewRequestNotification } from '@/lib/notification/review-request';
+import { getServerSetting } from '@/hooks/use-settings';
 
 /**
  * GET /api/cron/track-delivery
  *
- * 1) 아임웹 orders: shipping → delivered (queryStatus, 기존)
- * 2) 복원수리 repairs: shipped → delivered (queryTrackingStatus = ALPS '91' 인수자등록, 2026-05-24 추가)
+ * 1) 아임웹 orders: shipping → delivered (queryStatus)
+ * 2) 복원수리 repairs: shipped → delivered (queryTrackingStatus = ALPS 41/45 인수자등록)
+ * 3) [예정] offline_sales: shipped_at→delivered_at (Phase 2)
+ *
+ * 2026-05-25 추가:
+ *   - orders 자동 후기요청 발송 (settings 토글 ON + 가드 통과 시)
+ *   - debug=1 시 ordersFirstResults 노출
  *
  * → 사장님이 ALPS 직접 확인 없이 TMS 카드 status 로 배송완료 즉시 확인 가능
  */
@@ -20,6 +27,7 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const debug = url.searchParams.get('debug') === '1';
   const debugResults: Array<{ as_id: string; invoice: string; state: string; detail?: string }> = [];
+  const ordersDebugResults: Array<{ order_no: string; invoice: string; state: string; raw_code?: string }> = [];
 
   try {
     // 🚨 cron 은 user 인증 없으므로 service role 클라이언트 필수 (RLS 우회)
@@ -27,11 +35,11 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient();
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // [1] 아임웹 orders 추적 (shipping → delivered)
+    // [1] 아임웹 orders 추적 (shipping → delivered) + 자동 후기요청 (2026-05-25 확장)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     const { data: orders, error: ordersErr } = await (supabase as any)
       .from('orders')
-      .select('id, invoice_number, imweb_order_no, orderer_name, review_requested_at')
+      .select('id, invoice_number, imweb_order_no, orderer_name, orderer_phone, review_requested_at')
       .eq('status', 'shipping')
       .not('invoice_number', 'is', null)
       .limit(50);
@@ -42,6 +50,14 @@ export async function GET(request: NextRequest) {
     for (const order of orders || []) {
       try {
         const result = await queryStatus(order.invoice_number);
+        if (debug) {
+          ordersDebugResults.push({
+            order_no: order.imweb_order_no,
+            invoice: order.invoice_number,
+            state: result.state,
+            raw_code: String((result.raw as Record<string, unknown> | undefined)?.code || ''),
+          });
+        }
         if (result.ok && result.state === 'DELIVERED') {
           await (supabase as any)
             .from('orders')
@@ -52,6 +68,41 @@ export async function GET(request: NextRequest) {
             .eq('id', order.id);
           ordersDelivered++;
           console.log(`[track-delivery/orders] ${order.imweb_order_no} → 배송완료`);
+
+          // 후기요청 자동 발송 (settings 토글 ON + 중복 방지)
+          // orders 에는 review_promised_at 컬럼 미존재 → review_requested_at 만 가드 (YAGNI)
+          after(async () => {
+            try {
+              const autoEnabled = await getServerSetting<boolean>(supabase as any, 'review.auto_request_on_completion', false);
+              if (!autoEnabled) {
+                console.log(`[track-delivery/orders auto-review] ${order.imweb_order_no} skip — 토글 OFF`);
+                return;
+              }
+              if (order.review_requested_at) {
+                console.log(`[track-delivery/orders auto-review] ${order.imweb_order_no} skip — 이미 발송됨`);
+                return;
+              }
+              if (!order.orderer_phone) return;
+
+              const r = await sendReviewRequestNotification({
+                source: 'sale',
+                sourceId: order.imweb_order_no,
+                customerName: order.orderer_name || '고객',
+                customerPhone: order.orderer_phone,
+                reviewType: 'purchase',
+              });
+              if (r.success) {
+                await (supabase as any).from('orders')
+                  .update({ review_requested_at: new Date().toISOString() })
+                  .eq('id', order.id);
+                console.log(`[track-delivery/orders auto-review] ${order.imweb_order_no} 발송 성공`);
+              } else {
+                console.error(`[track-delivery/orders auto-review] 실패:`, r.error);
+              }
+            } catch (e) {
+              console.error(`[track-delivery/orders auto-review] 예외:`, e);
+            }
+          });
         }
       } catch (e) {
         console.error(`[track-delivery/orders] ${order.imweb_order_no} 추적 실패:`, e);
@@ -129,6 +180,7 @@ export async function GET(request: NextRequest) {
           })(),
           // 첫 3건만 상세 노출 (보안 + payload 크기)
           firstResults: debugResults.slice(0, 3),
+          ordersFirstResults: ordersDebugResults.slice(0, 3),  // 2026-05-25 추가
         },
       }),
     });

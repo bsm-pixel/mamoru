@@ -23,7 +23,9 @@ function getConfig(): LotteConfig {
       process.env.LOTTE_TRACK_API_URL ||
       'https://apigw.llogis.com:10100/api/pid/cus/714a/custmer-view-tracking',
     clientKey: process.env.LOTTE_CLIENT_KEY || '',
-    jobCustCd: process.env.LOTTE_JOBCUSTCD || '',
+    // 2026-05-25: alps-client.ts:17 패턴 통일 — LOTTE_JOB_CUST_CD 변수명도 fallback 으로 인식
+    // (Vercel 환경변수가 LOTTE_JOB_CUST_CD 로 등록돼있어 orders 자동 추적이 영원히 빈 jobCustCd 로 호출됐던 버그 수정)
+    jobCustCd: (process.env.LOTTE_JOB_CUST_CD || process.env.LOTTE_JOBCUSTCD || '').trim(),
     sender: {
       name: '마모루',
       tel: '02-6326-0426',
