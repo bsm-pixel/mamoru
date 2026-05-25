@@ -6,9 +6,15 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useConsultations } from '@/hooks/use-consultations';
+import { useRepairSchedule, type RepairScheduleItem } from '@/hooks/use-repairs';
 import { formatPhone } from '@/lib/utils/format';
-import { ChevronLeft, ChevronRight, Calendar, Store, Truck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Store, Truck, Wrench } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
+
+// 2026-05-25 Phase 3-A: 달력 일정 통합 (매장방문 / 출장 / 직접방문)
+type CalendarEvent =
+  | { kind: 'consult'; data: Consultation }
+  | { kind: 'repair';  data: RepairScheduleItem };
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -63,23 +69,40 @@ export function ScheduleCalendar({ onSelect }: ScheduleCalendarProps = {}) {
     dateFilter: 'all',
     orderBy: 'visit_date_asc',
   });
+  // 2026-05-25 Phase 3-A: 복원수리 직접방문 일정도 함께 표시
+  const { data: repairData } = useRepairSchedule(monthStart, monthEnd);
 
-  // 날짜별 상담 그룹핑
+  // 날짜별 일정 그룹핑 (3종 통합)
   const dateMap = useMemo(() => {
-    const map = new Map<string, Consultation[]>();
-    const all = [
-      ...(storeData?.consultations || []),
-      ...(fieldData?.consultations || []),
-    ];
-    for (const c of all) {
+    const map = new Map<string, CalendarEvent[]>();
+    for (const c of (storeData?.consultations || [])) {
       if (!c.visit_date) continue;
-      // 해당 월 범위만
       if (c.visit_date < monthStart || c.visit_date > monthEnd) continue;
       if (!map.has(c.visit_date)) map.set(c.visit_date, []);
-      map.get(c.visit_date)!.push(c);
+      map.get(c.visit_date)!.push({ kind: 'consult', data: c });
+    }
+    for (const c of (fieldData?.consultations || [])) {
+      if (!c.visit_date) continue;
+      if (c.visit_date < monthStart || c.visit_date > monthEnd) continue;
+      if (!map.has(c.visit_date)) map.set(c.visit_date, []);
+      map.get(c.visit_date)!.push({ kind: 'consult', data: c });
+    }
+    for (const r of (repairData || [])) {
+      if (!r.visit_date) continue;
+      // 위 hook 이 monthStart/monthEnd 로 필터링하므로 추가 범위 검사 불필요
+      if (!map.has(r.visit_date)) map.set(r.visit_date, []);
+      map.get(r.visit_date)!.push({ kind: 'repair', data: r });
+    }
+    // 시간 순 정렬 (각 날짜 안)
+    for (const arr of map.values()) {
+      arr.sort((a, b) => {
+        const tA = a.kind === 'consult' ? (a.data.visit_time || '') : (a.data.visit_time || '');
+        const tB = b.kind === 'consult' ? (b.data.visit_time || '') : (b.data.visit_time || '');
+        return tA.localeCompare(tB);
+      });
     }
     return map;
-  }, [storeData, fieldData, monthStart, monthEnd]);
+  }, [storeData, fieldData, repairData, monthStart, monthEnd]);
 
   const calendarDays = getCalendarDays(year, month);
 
@@ -135,8 +158,9 @@ export function ScheduleCalendar({ onSelect }: ScheduleCalendarProps = {}) {
           const events = dateMap.get(dateStr) || [];
           const isToday = dateStr === todayStr;
           const isSelected = dateStr === selectedDate;
-          const storeCount = events.filter((e) => e.consultation_type === 'store_visit').length;
-          const fieldCount = events.filter((e) => e.consultation_type === 'field_request').length;
+          const storeCount = events.filter((e) => e.kind === 'consult' && e.data.consultation_type === 'store_visit').length;
+          const fieldCount = events.filter((e) => e.kind === 'consult' && e.data.consultation_type === 'field_request').length;
+          const repairCount = events.filter((e) => e.kind === 'repair').length;
           const dayOfWeek = (idx % 7);
 
           return (
@@ -163,6 +187,9 @@ export function ScheduleCalendar({ onSelect }: ScheduleCalendarProps = {}) {
                   {fieldCount > 0 && (
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-500" title={`출장요청 ${fieldCount}건`} />
                   )}
+                  {repairCount > 0 && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title={`복원수리 직접방문 ${repairCount}건`} />
+                  )}
                 </div>
               )}
             </button>
@@ -170,9 +197,8 @@ export function ScheduleCalendar({ onSelect }: ScheduleCalendarProps = {}) {
         })}
       </div>
 
-      {/* 범례 */}
-      {/* R2: 초록=매장, 보라=출장 */}
-      <div className="flex items-center gap-4 mt-3 text-xs text-neutral-500">
+      {/* 범례 — 3종 통합 (Phase 3-A, 2026-05-25) */}
+      <div className="flex items-center gap-3 mt-3 text-xs text-neutral-500 flex-wrap">
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-green-500" />
           매장방문
@@ -181,9 +207,13 @@ export function ScheduleCalendar({ onSelect }: ScheduleCalendarProps = {}) {
           <span className="w-2 h-2 rounded-full bg-purple-500" />
           출장요청
         </span>
+        <span className="flex items-center gap-1">
+          <span className="w-2 h-2 rounded-full bg-amber-500" />
+          복원수리 직접방문
+        </span>
       </div>
 
-      {/* 선택된 날짜 일정 목록 */}
+      {/* 선택된 날짜 일정 목록 — 3종 분기 (Phase 3-A) */}
       {selectedDate && (
         <div className="mt-4 border-t border-neutral-100 pt-3">
           <h4 className="text-xs font-bold text-neutral-600 mb-2">
@@ -193,27 +223,53 @@ export function ScheduleCalendar({ onSelect }: ScheduleCalendarProps = {}) {
             <p className="text-xs text-neutral-400">일정이 없습니다</p>
           ) : (
             <div className="space-y-2">
-              {selectedConsultations.map((c) => (
-                <div
-                  key={c.id}
-                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-warm-ivory/60 cursor-pointer transition"
-                  onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}
-                >
-                  {c.consultation_type === 'store_visit' ? (
-                    <Store size={14} className="text-green-600 shrink-0" />
-                  ) : (
-                    <Truck size={14} className="text-purple-600 shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold text-indigo-black">{c.name}</span>
-                    <span className="text-xs text-neutral-400 ml-2">{c.visit_time || ''}</span>
+              {selectedConsultations.map((ev) => {
+                if (ev.kind === 'repair') {
+                  const r = ev.data;
+                  const qty = (r.qty_mamoru || 0) + (r.qty_other || 0);
+                  return (
+                    <div
+                      key={`repair-${r.id}`}
+                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-warm-ivory/60 cursor-pointer transition"
+                      onClick={() => router.push(`/repairs/${r.id}`)}
+                    >
+                      <Wrench size={14} className="text-amber-600 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-semibold text-indigo-black">{r.name}</span>
+                        <span className="text-xs text-neutral-400 ml-2">
+                          {r.visit_time || ''}
+                          {r.visit_duration_min ? ` · ${r.visit_duration_min}분` : ''}
+                          {qty > 0 ? ` · ${qty}자루` : ''}
+                        </span>
+                      </div>
+                      <span className="text-xs text-neutral-500">{formatPhone(r.phone)}</span>
+                      <Badge className="bg-amber-100 text-amber-700">직접방문</Badge>
+                    </div>
+                  );
+                }
+                const c = ev.data;
+                return (
+                  <div
+                    key={`consult-${c.id}`}
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-warm-ivory/60 cursor-pointer transition"
+                    onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}
+                  >
+                    {c.consultation_type === 'store_visit' ? (
+                      <Store size={14} className="text-green-600 shrink-0" />
+                    ) : (
+                      <Truck size={14} className="text-purple-600 shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-semibold text-indigo-black">{c.name}</span>
+                      <span className="text-xs text-neutral-400 ml-2">{c.visit_time || ''}</span>
+                    </div>
+                    <span className="text-xs text-neutral-500">{formatPhone(c.phone)}</span>
+                    <Badge className={c.consultation_type === 'store_visit' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'}>
+                      {c.consultation_type === 'store_visit' ? '매장' : '출장'}
+                    </Badge>
                   </div>
-                  <span className="text-xs text-neutral-500">{formatPhone(c.phone)}</span>
-                  <Badge className={c.consultation_type === 'store_visit' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'}>
-                    {c.consultation_type === 'store_visit' ? '매장' : '출장'}
-                  </Badge>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

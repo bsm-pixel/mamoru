@@ -380,3 +380,44 @@ export function useRepairSync() {
     },
   });
 }
+
+/**
+ * 복원수리 직접방문(당일수리) 일정 조회 — 달력 표시용 (2026-05-25 Phase 3-A)
+ *   사장님 비전: TMS 달력에 매장방문/출장/직접방문 3종 일정을 함께 표시
+ *
+ * 조건: proceed_type='직접방문' + visit_date NOT NULL + status != 'cancelled'
+ * useConsultations 와 동일 패턴 (createClient + staleTime 30초)
+ */
+export interface RepairScheduleItem {
+  id: string;
+  as_id: string;
+  name: string;
+  phone: string;
+  visit_date: string;
+  visit_time: string | null;
+  visit_duration_min: number | null;
+  status: string;
+  qty_mamoru: number;
+  qty_other: number;
+}
+
+export function useRepairSchedule(fromDate?: string, toDate?: string) {
+  const supabase = createClient();
+  return useQuery({
+    queryKey: ['repair-schedule', fromDate, toDate],
+    staleTime: 30_000,
+    queryFn: async () => {
+      let query = supabase
+        .from('repairs')
+        .select('id, as_id, name, phone, visit_date, visit_time, visit_duration_min, status, qty_mamoru, qty_other')
+        .eq('proceed_type', '직접방문')
+        .not('visit_date', 'is', null)
+        .neq('status', 'cancelled');
+      if (fromDate) query = query.gte('visit_date', fromDate);
+      if (toDate) query = query.lte('visit_date', toDate);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data || []) as RepairScheduleItem[];
+    },
+  });
+}
