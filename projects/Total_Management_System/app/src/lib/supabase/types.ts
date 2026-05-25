@@ -347,6 +347,9 @@ export interface Database {
           visit_date: string | null;             // 'YYYY-MM-DD'
           visit_time: string | null;             // 'HH:MM' (30분 단위)
           visit_duration_min: number | null;     // 30 or 60 (서버 계산, 충돌 검사용)
+          // 093: Google Calendar 단방향 동기화 (Phase 3-B) — consultations 052 와 동일 패턴
+          google_event_id: string | null;        // Google Calendar 이벤트 ID (NULL=미동기화)
+          google_event_updated_at: string | null; // 마지막 동기화 시각
           received_at: string;
           created_at: string;
           updated_at: string;
@@ -382,6 +385,9 @@ export interface Database {
           visit_date?: string | null;
           visit_time?: string | null;
           visit_duration_min?: number | null;
+          // 093: Google Calendar
+          google_event_id?: string | null;
+          google_event_updated_at?: string | null;
           received_at?: string;
         };
         Update: {
@@ -418,6 +424,9 @@ export interface Database {
           visit_date?: string | null;
           visit_time?: string | null;
           visit_duration_min?: number | null;
+          // 093: Google Calendar
+          google_event_id?: string | null;
+          google_event_updated_at?: string | null;
           received_at?: string;
         };
       };

@@ -4,6 +4,7 @@ import { isValidRepairTransition } from '@/lib/repair/transitions';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
 import { getServerSetting } from '@/hooks/use-settings';
 import type { RepairStatus } from '@/lib/supabase/types';
+import { fireAndForgetRepairSync } from '@/lib/google/repair-calendar-sync';
 
 /** 상태→자동 알림톡 매핑 (payment_confirmed는 paid_at 플래그로 분리됨) */
 function getAutoNotifyTemplate(newStatus: string): NotifyTemplate | null {
@@ -193,6 +194,14 @@ export async function PATCH(
       });
     }
 
+    // 2026-05-25 Phase 3-B: 직접방문 건 → Google Calendar 자동 동기화 (fire-and-forget)
+    //   - status / visit_date / visit_time 등 변경 시 자동 반영
+    //   - cancelled 시 이벤트 자동 삭제 (sync 내부 로직)
+    //   - 비직접방문 건은 sync 내부에서 자연 skip (proceed_type 가드)
+    if (data.proceed_type === '직접방문') {
+      after(() => fireAndForgetRepairSync(data.id));
+    }
+
     return NextResponse.json(data);
   } catch (err) {
     console.error('[repair] 업데이트 실패:', err);
@@ -216,15 +225,26 @@ export async function DELETE(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
-    // 현재 건 조회 (송장 확인용)
+    // 현재 건 조회 (송장 + Google 이벤트 확인용)
     const { data: repair, error: fetchErr } = await db
       .from('repairs')
-      .select('id, as_id, invoice_number')
+      .select('id, as_id, invoice_number, google_event_id, proceed_type')
       .eq('id', id)
       .single();
 
     if (fetchErr || !repair) {
       return NextResponse.json({ error: '복원수리 건을 찾을 수 없습니다' }, { status: 404 });
+    }
+
+    // 2026-05-25 Phase 3-B: 직접방문 + Google 이벤트 있으면 이벤트 먼저 삭제
+    //   삭제는 best-effort — 실패해도 DB 삭제 진행
+    if (repair.proceed_type === '직접방문' && repair.google_event_id) {
+      try {
+        const { deleteCalendarEvent } = await import('@/lib/google/calendar-client');
+        await deleteCalendarEvent({ eventId: repair.google_event_id });
+      } catch (e) {
+        console.warn(`[repair DELETE] Google Calendar 이벤트 삭제 실패 (DB 삭제 진행):`, e);
+      }
     }
 
     // 송장이 있으면 ALPS 취소 시도 (실패해도 삭제 진행)

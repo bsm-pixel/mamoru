@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { sendAdminEmail } from '@/lib/notification/email';
 import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
+import { fireAndForgetRepairSync } from '@/lib/google/repair-calendar-sync';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -219,6 +220,11 @@ export async function POST(req: NextRequest) {
       to_status: 'intake',
       note: '고객 접수',
     });
+
+    // 2026-05-25 Phase 3-B: 직접방문 → Google Calendar 자동 동기화 (fire-and-forget)
+    if (isVisit) {
+      after(() => fireAndForgetRepairSync(repair.id));
+    }
 
     // pickup_date 표시 포맷: YYYY년 MM월 DD일 (요일) — 방문수거 알림톡 가독성
     let pickupDateDisplay = '';

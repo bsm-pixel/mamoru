@@ -210,3 +210,121 @@ export function formatConsultationToEvent(
 
   return event;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// 2026-05-25 Phase 3-B: 복원수리 직접방문(당일수리) → Google Calendar
+// 컨설팅 패턴 동일 (재사용) — repairs.proceed_type='직접방문' 전용
+// ═══════════════════════════════════════════════════════════════════
+
+export interface RepairForCalendar {
+  id: string;
+  as_id: string;
+  name: string | null;
+  phone: string | null;
+  visit_date: string | null;
+  visit_time: string | null;
+  visit_duration_min: number | null;
+  status: string;
+  qty_mamoru: number | null;
+  qty_other: number | null;
+  memo?: string | null;
+  service_cost?: number | null;
+  total_amount?: number | null;
+  created_at?: string | null;
+}
+
+function getRepairColorId(status: string): string {
+  // 복원수리 직접방문 색상 — 컨설팅(파랑/녹색) 과 구분되는 색
+  if (status === 'cancelled') return '8';      // Graphite (회색)
+  if (status === 'completed') return '8';      // Graphite (회색) — 완료
+  return '6';                                  // Tangerine (주황) — TMS 달력의 amber 와 매칭
+}
+
+/**
+ * 복원수리 직접방문 → Calendar Event 변환
+ * 컨설팅 패턴 동일 (재사용)
+ */
+export function formatRepairToEvent(
+  r: RepairForCalendar,
+  settings: EventFormatSettings,
+  baseUrl: string,
+): calendar_v3.Schema$Event {
+  const name = r.name || '고객';
+  const phone = r.phone || '';
+  const qty = (r.qty_mamoru || 0) + (r.qty_other || 0);
+  const durMin = r.visit_duration_min || (qty >= 6 ? 60 : 30);
+
+  // 제목: [복원수리 직접방문] 고객명 · N자루 · 010-xxxx
+  const qtyLabel = qty > 0 ? ` · ${qty}자루` : '';
+  const summary = `[복원수리 직접방문] ${name}${qtyLabel}${phone ? ' · ' + phone : ''}`.trim();
+
+  // 위치: 매장 (직접방문은 매장 워크인)
+  const location = settings.store_address || '';
+
+  // Description
+  const lines: string[] = [];
+  lines.push('━━━━━━━━━━━━━━━━━━━━━━');
+  lines.push('🔧 복원수리 (당일수리)');
+  lines.push(`👤 고객명: ${name}`);
+  if (phone) lines.push(`📱 연락처: ${phone}`);
+  if (settings.store_name) lines.push(`🏪 방문지: ${settings.store_name}`);
+  if (qty > 0) {
+    lines.push(`✂️ 가위 수량: 마모루 ${r.qty_mamoru || 0}자루 / 타사 ${r.qty_other || 0}자루 (총 ${qty}자루)`);
+  }
+  lines.push(`⏱ 예상 소요: ${durMin}분`);
+  if (r.memo) lines.push(`💬 고객 메모: ${r.memo}`);
+  lines.push('━━━━━━━━━━━━━━━━━━━━━━');
+  lines.push(`🆔 접수번호: ${r.as_id}`);
+  if (r.created_at) lines.push(`📅 접수일시: ${formatDateKR(r.created_at)}`);
+  if (r.status) {
+    const statusKr =
+      r.status === 'intake' ? '신규접수' :
+      r.status === 'completed' ? '완료' :
+      r.status === 'cancelled' ? '취소' :
+      r.status;
+    lines.push(`📋 상태: ${statusKr}`);
+  }
+  lines.push('━━━━━━━━━━━━━━━━━━━━━━');
+  lines.push('');
+  lines.push('🔗 TMS 상세보기:');
+  lines.push(`${baseUrl}/repairs/${r.id}`);
+  if (phone) {
+    const phoneDigits = phone.replace(/\D/g, '');
+    lines.push('');
+    lines.push(`📞 바로 전화: tel:${phoneDigits}`);
+  }
+  lines.push('');
+  lines.push('⚠ 이 일정은 MAMORU TMS에서 자동 생성됩니다.');
+  lines.push('  변경·취소는 반드시 TMS에서 진행해 주세요.');
+  const description = lines.join('\n');
+
+  // 시작/종료 (visit_time 기준 + duration)
+  const startTime = r.visit_time && r.visit_time.match(/^\d{1,2}:\d{2}/) ? r.visit_time.slice(0, 5) : '10:00';
+  const endTime = addMinutes(startTime, durMin);
+  const visitDate = r.visit_date || '';
+
+  const event: calendar_v3.Schema$Event = {
+    summary,
+    description,
+    location: location || undefined,
+    start: visitDate
+      ? { dateTime: toKSTIso(visitDate, startTime), timeZone: 'Asia/Seoul' }
+      : undefined,
+    end: visitDate
+      ? { dateTime: toKSTIso(visitDate, endTime), timeZone: 'Asia/Seoul' }
+      : undefined,
+    colorId: getRepairColorId(r.status),
+    reminders: { useDefault: false, overrides: [] },
+    extendedProperties: {
+      private: {
+        mamoru_repair_id: r.id,
+        mamoru_repair_as_id: r.as_id,
+        mamoru_repair_status: r.status,
+        mamoru_source: 'repair_direct_visit',
+        mamoru_version: '1.0',
+      },
+    },
+  };
+
+  return event;
+}
