@@ -167,7 +167,7 @@ export function DashboardCalendarPanel() {
 
         <div className="grid grid-cols-7 gap-1">
           {calendarDays.map((day, idx) => {
-            if (day === null) return <div key={`e-${idx}`} className="aspect-square" />;
+            if (day === null) return <div key={`e-${idx}`} className="h-10" />;
             const dateStr = formatYYYYMMDD(year, month, day);
             const events = dateMap.get(dateStr) || [];
             const storeCount = events.filter((e) => e.kind === 'consult' && e.data.consultation_type === 'store_visit').length;
@@ -179,7 +179,7 @@ export function DashboardCalendarPanel() {
               <button
                 key={dateStr}
                 onClick={() => setSelectedDate(dateStr)}
-                className={`aspect-square rounded-lg p-1 text-[11px] transition flex flex-col items-center justify-start ${
+                className={`h-10 rounded-lg p-1 text-[11px] transition flex flex-col items-center justify-start ${
                   isSelected ? 'bg-stone-900 text-white' :
                   isToday ? 'bg-amber-50 text-amber-900 border border-amber-300' :
                   'bg-white hover:bg-stone-50 text-stone-700'
@@ -215,7 +215,7 @@ export function DashboardCalendarPanel() {
         </div>
 
         {selectedEvents.length === 0 ? (
-          <div className="py-8 text-center text-xs text-stone-400">
+          <div className="py-4 text-center text-xs text-stone-400">
             일정이 없습니다
           </div>
         ) : (
