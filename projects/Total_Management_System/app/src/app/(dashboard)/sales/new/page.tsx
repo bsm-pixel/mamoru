@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { CreateDeliveryModal } from '@/components/deliveries/create-delivery-modal';
 import { useProducts, useCreateSale } from '@/hooks/use-sales';
 import { formatKRW, calcVAT, toLocalDateString } from '@/lib/utils/format';
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
@@ -39,8 +40,37 @@ function cartItemKey(item: CartItem): string {
 export default function NewSalePage() {
   return (
     <Suspense fallback={null}>
-      <NewSaleContent />
+      <NewSaleRouter />
     </Suspense>
+  );
+}
+
+/** 2026-05-26 Phase C: mode 분기 라우터 — ?mode=b2b 면 거래처 매출 입력 (모달), 그 외 기존 B2C 흐름 */
+function NewSaleRouter() {
+  const searchParams = useSearchParams();
+  const mode = searchParams?.get('mode');
+  if (mode === 'b2b') {
+    return <B2BSaleEntry />;
+  }
+  return <NewSaleContent />;
+}
+
+/** B2B 거래처 매출 — CreateDeliveryModal 자동 표시 (풀스크린 모달 = 페이지 IA 등가) */
+function B2BSaleEntry() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // ?initial=repair 면 복원수리 탭으로 시작, 그 외 'delivery' (제품 납품)
+  const initialMode = (searchParams?.get('initial') === 'repair' ? 'repair' : 'delivery') as 'delivery' | 'repair';
+
+  return (
+    <>
+      <Topbar title="거래처 매출 입력" />
+      <CreateDeliveryModal
+        initialMode={initialMode}
+        onClose={() => router.push('/sales')}
+        onCreated={() => router.push('/sales')}
+      />
+    </>
   );
 }
 

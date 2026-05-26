@@ -164,11 +164,9 @@ export default function SalesPage() {
     setPage(1);
   };
 
-  /** 거래처 매출 입력 — Phase C 에서 /sales/new?mode=b2b 라우팅 예정. 현재는 안내. */
+  /** 2026-05-26 Phase C: 거래처 매출 입력 → /sales/new?mode=b2b 라우팅 (CreateDeliveryModal 풀스크린 표시) */
   const handlePartnerSaleClick = () => {
-    if (confirm('거래처 매출 입력은 현재 [B2B거래] 메뉴(/deliveries)에서 진행해주세요. 이동하시겠습니까?')) {
-      router.push('/deliveries');
-    }
+    router.push('/sales/new?mode=b2b');
   };
 
   /** 거래처(B2B) 카드 합산값 — offline_sales (dealer/academy) + deliveries 매출 */
