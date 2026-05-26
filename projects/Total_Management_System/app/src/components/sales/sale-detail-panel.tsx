@@ -190,6 +190,10 @@ export function SaleDetailPanel({ saleId }: Props) {
                 hasRepairItem={data?.items.some((it) => String((it as Record<string, unknown>).category || '') === 'RS') ?? false}
                 onChanged={() => queryClient.invalidateQueries({ queryKey: ['sale', saleId] })}
                 compact={true}
+                // 2026-05-26: 자동 발송 예정 판정용 sale 정보 전달
+                shippedAt={(s as { shipped_at?: string | null }).shipped_at ?? null}
+                deliveredAt={(s as { delivered_at?: string | null }).delivered_at ?? null}
+                invoiceNumber={(s as { invoice_number?: string | null }).invoice_number ?? null}
               />
             </div>
           )}

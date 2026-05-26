@@ -16,9 +16,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
-import { Star, MessageCircle, CheckCircle2, Send, Info } from 'lucide-react';
+import { Star, MessageCircle, CheckCircle2, Send, Info, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ReviewRequestModal } from '@/components/sales/review-request-modal';
+import { useSetting } from '@/hooks/use-settings';
 import type { ReviewSource } from '@/lib/notification/review-request';
 
 interface RelatedActivity {
@@ -47,6 +48,10 @@ interface Props {
   sourceType?: string | null;
   /** 2026-05-26: 컴팩트 모드 — 상세 패널 헤더 우측에 미니 UI 로 표시 (시각 부담 ↓) */
   compact?: boolean;
+  /** 2026-05-26: 자동 발송 예정 판정용 (compact 모드에서 "⏳ 자동 발송 예정" 표시) */
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
+  invoiceNumber?: string | null;
 }
 
 function formatDate(iso: string | null): string {
@@ -109,10 +114,25 @@ export function ReviewManagementCard({
   hasRepairItem = false,
   sourceType = null,
   compact = false,
+  shippedAt = null,
+  deliveredAt = null,
+  invoiceNumber = null,
 }: Props) {
   const [togglingPromise, setTogglingPromise] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [related, setRelated] = useState<RelatedActivity[]>([]);
+
+  // 2026-05-26: 자동 발송 예정 판정 (사장님 우려 → 시각 신호)
+  //   조건 5중: 토글 ON + 약속 ✓ + 미발송 + 송장 있음 + 배송중(shipped + !delivered)
+  //   ALPS cron 4시간마다 자동 추적 → '41'/'45' 코드 감지 시 자동 발송 예정
+  const autoEnabled = useSetting<boolean>('review.auto_request_on_completion', false);
+  const autoSendPending =
+    autoEnabled &&
+    !!promisedAt &&
+    !requestSentAt &&
+    !!invoiceNumber &&
+    !!shippedAt &&
+    !deliveredAt;
 
   // 같은 phone의 다른 source 활동 조회 (정보 표시용 — 자동 매칭 X)
   useEffect(() => {
@@ -230,18 +250,35 @@ export function ReviewManagementCard({
             {promisedAt && <span className="text-[10px] text-neutral-400">{formatDate(promisedAt)}</span>}
           </button>
 
-          {/* 후기 요청 작은 버튼 */}
+          {/* 후기 요청 작은 버튼 — 자동 발송 예정 시 시각 약화 + confirm 가드 */}
           <button
             type="button"
             onClick={() => {
               if (!customerPhone) { toast.error('고객 연락처가 없어 발송할 수 없습니다'); return; }
+              // 자동 발송 예정인 경우 사장님이 의식적 수동 발송하는지 확인
+              if (autoSendPending) {
+                const ok = confirm('이 건은 배송완료 시 자동 발송될 예정입니다.\n\n지금 수동으로 발송하시겠습니까?');
+                if (!ok) return;
+              }
               setShowRequestModal(true);
             }}
-            title={requestSentAt ? `최근 발송: ${formatDate(requestSentAt)}` : '후기 요청 알림톡 발송'}
-            className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md bg-indigo-black text-cream hover:bg-indigo-black/85 transition"
+            title={
+              autoSendPending
+                ? '배송완료 자동 감지 시 자동 발송 예정 (ALPS cron 4시간마다)'
+                : requestSentAt ? `최근 발송: ${formatDate(requestSentAt)}` : '후기 요청 알림톡 발송'
+            }
+            className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition ${
+              autoSendPending
+                ? 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+                : 'bg-indigo-black text-cream hover:bg-indigo-black/85'
+            }`}
           >
-            <Send size={10} />
-            <span>{requestSentAt ? '재발송' : '후기 요청'}</span>
+            {autoSendPending ? <Clock size={10} /> : <Send size={10} />}
+            <span>
+              {autoSendPending
+                ? '자동 발송 예정'
+                : requestSentAt ? '재발송' : '후기 요청'}
+            </span>
           </button>
         </div>
 
