@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,11 +11,9 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-panel';
-import { CreateDeliveryModal } from '@/components/deliveries/create-delivery-modal';
 import { useDeliveries, useDeliveryStats } from '@/hooks/use-deliveries';
-import { formatKRW, formatDate, calcVAT } from '@/lib/utils/format';
+import { formatKRW, formatDate } from '@/lib/utils/format';
 import { Package, Plus, AlertCircle, Calendar, TrendingUp } from 'lucide-react';
 
 /* ── 상수 ── */
@@ -46,13 +45,12 @@ const DATE_RANGES = [
 ] as const;
 
 export default function DeliveriesPage() {
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
   const [dateRange, setDateRange] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
-  const [createMode, setCreateMode] = useState<'delivery' | 'repair'>('delivery');
   const limit = 20;
 
   const [isLg, setIsLg] = useState(false);
@@ -105,12 +103,12 @@ export default function DeliveriesPage() {
         </div>
       )}
 
-      {/* 검색 + 생성 버튼 */}
+      {/* 검색 + 생성 버튼 — 2026-05-26 Phase E: 입력 진입점 /sales/new?mode=b2b 로 일원화 */}
       <div className="flex items-center gap-2">
-        <Button size="sm" onClick={() => { setCreateMode('delivery'); setShowCreate(true); }}>
+        <Button size="sm" onClick={() => router.push('/sales/new?mode=b2b')}>
           <Plus size={14} />납품서 작성
         </Button>
-        <Button size="sm" variant="secondary" onClick={() => { setCreateMode('repair'); setShowCreate(true); }}>
+        <Button size="sm" variant="secondary" onClick={() => router.push('/sales/new?mode=b2b&initial=repair')}>
           <Plus size={14} />B2B 수리
         </Button>
         <SearchInput
@@ -228,10 +226,7 @@ export default function DeliveriesPage() {
         </SlidePanel>
       )}
 
-      {/* 납품서 작성 모달 */}
-      {showCreate && (
-        <CreateDeliveryModal initialMode={createMode} onClose={() => setShowCreate(false)} onCreated={(id) => { setShowCreate(false); setSelectedId(id); }} />
-      )}
+      {/* 2026-05-26 Phase E: 납품서 작성 모달은 /sales/new?mode=b2b 페이지에서 처리 (IA 통합) */}
     </>
   );
 }
