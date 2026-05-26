@@ -31,11 +31,15 @@ const STATS = {
  * 목록 행 상태 분류 — 좌측 색 줄 + 우측 도트로 표현
  *
  * 색 줄 (왼쪽 4px 세로 줄):
- *   - green  = 마무리 완료 (배송완료/매장수령/정산완료 + 결제완료)  ⭐ 한눈에 "끝났네"
+ *   - green  = 판매완료 (B2C 배송완료/매장수령) / 정산완료 (B2B) — 모든 처리 끝남
  *   - red    = 미결제 (가장 시급)
  *   - yellow = 부분결제
  *   - gray   = 취소 + 카드 흐림
  *   - none   = 진행중 (결제완료지만 아직 배송 중 또는 정산 대기)
+ *
+ * 배송중 → 배송완료 자동 전환 (2026-05-25 운영 시작):
+ *   ALPS 추적 cron 4시간마다 → '41'/'45' 코드 감지 → delivered_at 자동 기록
+ *   → 좌측 색 줄: 투명(진행중) → 초록(판매완료) 자동 이동
  *
  * 우측 도트 (작은 ●):
  *   - green  = 배송중 / 정산 진행
@@ -61,10 +65,10 @@ type SampleRow = {
 };
 
 const SAMPLE_ROWS: SampleRow[] = [
-  // 마무리 완료 (초록 줄)
-  { id: '1', sourceType: 'sale', state: 'paid_done', name: '서윤 점장님 (박미애)', date: '5월 26일', amount: 100000, paymentMethod: '카드', channelOrType: '온라인상담', note: '배송완료 → 마무리' },
-  { id: '2', sourceType: 'sale', state: 'paid_done', name: '김매장 (매장수령)', date: '5월 25일', amount: 240000, paymentMethod: '카드', channelOrType: '오프라인', note: '매장 직접수령 (배송 X, 즉시 완료)' },
-  { id: '3', sourceType: 'delivery', state: 'settled', name: '○○매장', date: '5월 24일', amount: 1240000, paymentMethod: '이체', channelOrType: '딜러', note: '정산완료 → 마무리' },
+  // 판매완료 / 정산완료 (초록 줄)
+  { id: '1', sourceType: 'sale', state: 'paid_done', name: '서윤 점장님 (박미애)', date: '5월 26일', amount: 100000, paymentMethod: '카드', channelOrType: '온라인상담', note: '배송완료 → 판매완료 자동 전환' },
+  { id: '2', sourceType: 'sale', state: 'paid_done', name: '김매장 (매장수령)', date: '5월 25일', amount: 240000, paymentMethod: '카드', channelOrType: '오프라인', note: '매장 직접수령 (배송 X, 즉시 판매완료)' },
+  { id: '3', sourceType: 'delivery', state: 'settled', name: '○○매장', date: '5월 24일', amount: 1240000, paymentMethod: '이체', channelOrType: '딜러', note: 'B2B 정산완료' },
 
   // 진행 중 (색 줄 없음)
   { id: '4', sourceType: 'sale', state: 'paid_shipping', name: '전아연', date: '5월 25일', amount: 780000, paymentMethod: '이체', channelOrType: '온라인상담', note: '결제완료 · 배송중' },
@@ -112,14 +116,15 @@ export default function SalesDesignPreviewPage() {
           {/* 색상 규칙 범례 */}
           <ColorLegend />
 
-          {/* 케이스 1 — 마무리 완료 (초록 줄) */}
+          {/* 케이스 1 — 판매완료 / 정산완료 (초록 줄) */}
           <CaseBlock
-            title="① 마무리 완료 — 초록색 왼편 라인 ⭐"
+            title="① 판매완료 · 정산완료 — 초록색 왼편 라인 ⭐"
             description={[
               '판매·납품 흐름이 모두 끝난 건. 사장님이 "이건 다 됐다" 인식할 1순위.',
-              '• B2C 판매: 결제완료 + 배송완료 (delivered_at 채워짐)',
-              '• B2C 매장 직접수령: 결제완료 + 송장 없음 (즉시 완료)',
-              '• B2B 거래처: 결제완료 + 정산완료 (status=\'settled\')',
+              '• B2C 판매: 결제완료 + 배송완료 (delivered_at 채워짐) → "판매완료"',
+              '• B2C 매장 직접수령: 결제완료 + 송장 없음 (즉시 완료) → "판매완료"',
+              '• B2B 거래처: 결제완료 + 정산완료 (status=\'settled\') → "정산완료"',
+              '• 배송중 → 배송완료 자동 전환: ALPS cron 4시간마다 자동 추적 (운영 검증 완료)',
             ]}
           >
             {SAMPLE_ROWS.filter((r) => r.state === 'paid_done' || r.state === 'settled').map((r) => <RowA key={r.id} row={r} />)}
@@ -200,7 +205,7 @@ export default function SalesDesignPreviewPage() {
 // ═══════════════════════════════════════════════════════════════
 function ColorLegend() {
   const items = [
-    { strip: 'bg-green-500', label: '마무리 완료', desc: '배송완료 / 매장수령 / 정산완료' },
+    { strip: 'bg-green-500', label: '판매완료 · 정산완료', desc: 'B2C 배송완료/매장수령 · B2B 정산완료' },
     { strip: 'bg-red-500', label: '미결제', desc: '돈 안 들어온 건 (시급)' },
     { strip: 'bg-yellow-400', label: '부분결제', desc: '선납금만 입금됨' },
     { strip: 'bg-neutral-300', label: '취소', desc: '카드 흐림 + 취소선' },
@@ -313,7 +318,7 @@ function rightDot(state: RowState): { color: string; title: string } | null {
 
 function statusLabel(state: RowState): string {
   switch (state) {
-    case 'paid_done': return '마무리';
+    case 'paid_done': return '판매완료';
     case 'paid_shipping': return '배송중';
     case 'paid_wait_ship': return '출고 대기';
     case 'unpaid': return '미결제';
