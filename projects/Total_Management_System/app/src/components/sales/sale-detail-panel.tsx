@@ -650,7 +650,7 @@ export function SaleDetailPanel({ saleId }: Props) {
       {showPrepSheet && data && (
         <PrepSheetModal
           saleIds={[saleId]}
-          preloaded={{ sale: s, items: data.items, serials: data.serials || [] }}
+          preloaded={{ sourceType: 'sale', sale: s, items: data.items, serials: data.serials || [] }}
           onClose={() => setShowPrepSheet(false)}
         />
       )}

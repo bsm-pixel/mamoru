@@ -101,6 +101,7 @@ export default function SalesPage() {
   const [isLg, setIsLg] = useState(false);
   const [prepMode, setPrepMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [checkedDeliveryIds, setCheckedDeliveryIds] = useState<Set<string>>(new Set()); // 2026-05-26 Phase D: 거래처 납품 준비표 통합
   const [showPrepSheet, setShowPrepSheet] = useState(false);
 
   useEffect(() => {
@@ -154,6 +155,10 @@ export default function SalesPage() {
   const toggleCheck = (id: string) => {
     setCheckedIds((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   };
+  const toggleCheckDelivery = (id: string) => {
+    setCheckedDeliveryIds((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  };
+  const totalChecked = checkedIds.size + checkedDeliveryIds.size;
   const handleChannelChange = (c: SalesChannel | 'b2b') => { setChannel(c); setPage(1); };
   const handleDateRangeChange = (d: SalesDateRange) => { setDateRange(d); setPage(1); };
 
@@ -266,7 +271,7 @@ export default function SalesPage() {
       {/* 준비표 뽑기 + 검색 */}
       <div className="flex items-center gap-2">
         <button
-          onClick={() => { setPrepMode(!prepMode); setCheckedIds(new Set()); }}
+          onClick={() => { setPrepMode(!prepMode); setCheckedIds(new Set()); setCheckedDeliveryIds(new Set()); }}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
             prepMode ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
           }`}
@@ -274,13 +279,13 @@ export default function SalesPage() {
           <ClipboardList size={14} />
           {prepMode ? '선택 취소' : '준비표 뽑기'}
         </button>
-        {prepMode && checkedIds.size > 0 && (
+        {prepMode && totalChecked > 0 && (
           <button
             onClick={() => setShowPrepSheet(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition shrink-0"
           >
             <Receipt size={14} />
-            준비표 인쇄 ({checkedIds.size}건)
+            준비표 인쇄 ({totalChecked}건)
           </button>
         )}
         <SearchInput
@@ -428,6 +433,9 @@ export default function SalesPage() {
                   delivery={item.data}
                   selected={selected?.sourceType === 'delivery' && selected.id === item.id}
                   onClick={() => setSelected({ id: item.id, sourceType: 'delivery' })}
+                  prepMode={prepMode}
+                  checked={checkedDeliveryIds.has(item.id)}
+                  onCheck={() => toggleCheckDelivery(item.id)}
                 />
               );
             })}
@@ -506,10 +514,11 @@ export default function SalesPage() {
         </SlidePanel>
       )}
 
-      {/* 준비표 모달 — 복수 건 */}
+      {/* 준비표 모달 — 복수 건 (2026-05-26 Phase D: B2C + B2B 통합) */}
       {showPrepSheet && (
         <PrepSheetModal
           saleIds={Array.from(checkedIds)}
+          deliveryIds={Array.from(checkedDeliveryIds)}
           onClose={() => setShowPrepSheet(false)}
         />
       )}
@@ -591,19 +600,25 @@ const CUSTOMER_TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy:
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DeliveryRowData = any;
 
-const DeliveryRow = memo(function DeliveryRow({ delivery, selected, onClick }: {
+const DeliveryRow = memo(function DeliveryRow({ delivery, selected, onClick, prepMode, checked, onCheck }: {
   delivery: DeliveryRowData; selected?: boolean; onClick: () => void;
+  prepMode?: boolean; checked?: boolean; onCheck?: () => void;
 }) {
   const isCancelled = !!delivery.cancelled_at;
   const ctypeLabel = CUSTOMER_TYPE_LABEL[delivery.customer_type as string] || delivery.customer_type || '';
 
   return (
     <div
-      onClick={onClick}
+      onClick={prepMode ? onCheck : onClick}
       className={`flex items-center gap-4 px-4 py-3 cursor-pointer transition ${
         selected ? 'bg-neutral-50 border-l-2 border-l-neutral-900' : 'hover:bg-warm-ivory/60'
-      } ${isCancelled ? 'opacity-50' : ''}`}
+      } ${isCancelled ? 'opacity-50' : ''} ${checked ? 'bg-blue-50 border-l-2 border-l-blue-500' : ''}`}
     >
+      {prepMode && (
+        <input type="checkbox" checked={checked} onChange={onCheck}
+          onClick={(e) => e.stopPropagation()}
+          className="w-4 h-4 rounded border-neutral-300 shrink-0" />
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>

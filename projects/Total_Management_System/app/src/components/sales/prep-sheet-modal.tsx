@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Printer, X } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
+/** 2026-05-26 Phase D: B2C(sale) + B2B(delivery) 통합 준비표 출력 */
 interface SaleData {
+  sourceType: 'sale' | 'delivery';
   sale: {
     id: string;
-    sale_number: string;
-    sale_date: string;
+    sale_number: string;       // delivery 의 경우 dl_number 매핑
+    sale_date: string;          // delivery 의 경우 delivery_date 매핑
     customer_name: string;
     customer_phone?: string | null;
     memo?: string | null;
@@ -36,12 +38,14 @@ interface SaleData {
 
 interface PrepSheetModalProps {
   saleIds: string[];
+  /** 2026-05-26 Phase D: 거래처 납품 ID — B2B 카드 체크 시 합산 표시 */
+  deliveryIds?: string[];
   /** 단건 모드: 이미 로드된 데이터 직접 전달 */
   preloaded?: SaleData;
   onClose: () => void;
 }
 
-export function PrepSheetModal({ saleIds, preloaded, onClose }: PrepSheetModalProps) {
+export function PrepSheetModal({ saleIds, deliveryIds = [], preloaded, onClose }: PrepSheetModalProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const [salesData, setSalesData] = useState<SaleData[]>([]);
   const [memos, setMemos] = useState<Record<string, string>>({});
@@ -55,7 +59,7 @@ export function PrepSheetModal({ saleIds, preloaded, onClose }: PrepSheetModalPr
       return;
     }
 
-    if (saleIds.length === 0) return;
+    if (saleIds.length === 0 && deliveryIds.length === 0) return;
 
     (async () => {
       setLoading(true);
@@ -64,6 +68,7 @@ export function PrepSheetModal({ saleIds, preloaded, onClose }: PrepSheetModalPr
       const db = supabase as any;
       const results: SaleData[] = [];
 
+      // B2C — offline_sales + items + serials
       await Promise.all(saleIds.map(async (id) => {
         const [saleRes, itemsRes, serialsRes] = await Promise.all([
           db.from('offline_sales').select('*').eq('id', id).single(),
@@ -72,6 +77,7 @@ export function PrepSheetModal({ saleIds, preloaded, onClose }: PrepSheetModalPr
         ]);
         if (saleRes.data) {
           results.push({
+            sourceType: 'sale',
             sale: saleRes.data,
             items: itemsRes.data || [],
             serials: serialsRes.data || [],
@@ -79,8 +85,42 @@ export function PrepSheetModal({ saleIds, preloaded, onClose }: PrepSheetModalPr
         }
       }));
 
-      // 판매일 순으로 정렬
-      results.sort((a, b) => a.sale.sale_number.localeCompare(b.sale.sale_number));
+      // 2026-05-26 Phase D: B2B — deliveries + delivery_items (시리얼 미부여)
+      await Promise.all(deliveryIds.map(async (id) => {
+        const [dlRes, dlItemsRes] = await Promise.all([
+          db.from('deliveries').select('*').eq('id', id).single(),
+          db.from('delivery_items').select('*').eq('delivery_id', id),
+        ]);
+        if (dlRes.data) {
+          const d = dlRes.data;
+          results.push({
+            sourceType: 'delivery',
+            sale: {
+              ...d,
+              // 통합 표시용 — 키 매핑 (sale_number ← dl_number, sale_date ← delivery_date)
+              sale_number: d.dl_number || d.id,
+              sale_date: d.delivery_date || d.created_at || '',
+              customer_name: d.company_name || d.customer_name || '미지정',
+              customer_phone: d.customer_phone,
+              memo: d.memo,
+            },
+            items: (dlItemsRes.data || []).map((it: Record<string, unknown>) => ({
+              ...it,
+              id: it.id as string,
+              product_name: (it.product_name as string) || '',
+              quantity: (it.quantity as number) || 0,
+              unit_price: (it.unit_price as number) || 0,
+            })),
+            serials: [], // B2B 는 시리얼 미부여
+          });
+        }
+      }));
+
+      // 정렬: B2C(sale_number) → B2B(dl_number) 순, 각 그룹 내에서 번호순
+      results.sort((a, b) => {
+        if (a.sourceType !== b.sourceType) return a.sourceType === 'sale' ? -1 : 1;
+        return a.sale.sale_number.localeCompare(b.sale.sale_number);
+      });
       setSalesData(results);
 
       const initMemos: Record<string, string> = {};
@@ -88,7 +128,7 @@ export function PrepSheetModal({ saleIds, preloaded, onClose }: PrepSheetModalPr
       setMemos(initMemos);
       setLoading(false);
     })();
-  }, [saleIds, preloaded]);
+  }, [saleIds, deliveryIds, preloaded]);
 
   // 시리얼 매칭 (sale-detail-panel과 동일 로직)
   function getItemSerials(saleData: SaleData, item: SaleData['items'][0]): string[] {
@@ -210,7 +250,12 @@ export function PrepSheetModal({ saleIds, preloaded, onClose }: PrepSheetModalPr
                               </td>
                               <td rowSpan={sd.items.length}
                                 style={{ padding: '5px 8px', border: '1px solid #eee', fontWeight: 600, verticalAlign: 'top', fontSize: '11px' }}>
-                                {sd.sale.customer_name} <span style={{ color: '#888', fontWeight: 'normal' }}>님</span>
+                                {sd.sale.customer_name}
+                                {sd.sourceType === 'delivery' ? (
+                                  <span style={{ color: '#666', fontWeight: 'normal', fontSize: '10px', marginLeft: '4px' }}>[거래처]</span>
+                                ) : (
+                                  <span style={{ color: '#888', fontWeight: 'normal' }}> 님</span>
+                                )}
                               </td>
                             </>
                           )}
