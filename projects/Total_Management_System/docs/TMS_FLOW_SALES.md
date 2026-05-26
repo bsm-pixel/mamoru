@@ -1,5 +1,65 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-05-18 — **사이드바 IA 정리** (판매 입력 사이드바 제거 → 판매 관리 페이지 내 Primary 버튼화) + **시리얼 양방향 교환·이동 이력** ([TMS_FLOW_SERIAL](TMS_FLOW_SERIAL.md) 참조)
+> 최종 업데이트: 2026-05-26 — **B2C+B2B IA 통합** (Phase A~G 사이클 완료) + 매출 카드 어두운 디자인 + 목록 카드 좌측 색 줄·우측 도트 + 리뷰 관리 헤더 우측 compact 이동
+
+## 2026-05-26 — B2C+B2B IA 통합 완료 ⭐⭐⭐
+
+### 핵심 변경
+**`/sales` 페이지가 B2C 판매 + B2B 거래처 매출 통합 진입점** 으로 재설계됨.
+
+**기존**: `/sales` (B2C 만) + `/deliveries` (B2B 전용) 2개 화면 분리
+**현재**: `/sales` 가 모든 매출 관리 + `/deliveries` 는 URL 직접 접근만 (B2B 깊은 시야 보존)
+
+### 영역 칩 IA
+- `[고객 (default) / 거래처 / 전체]` — 한 클릭으로 영역 전환
+- 매출 카드 상단 (고객 B2C + 거래처 B2B 동등 50:50 어두운 카드)
+- 통합 목록 (날짜 desc 정렬, 좌측 색 줄로 1초 상태 인지)
+
+### 입력 진입점 통합
+- **B2C**: `/sales` 헤더 `[+ 판매 입력]` → `/sales/new`
+- **B2B**: `/sales` 헤더 `[+ 거래처 매출]` OR `/deliveries` 헤더 → `/sales/new?mode=b2b` (CreateDeliveryModal 풀스크린)
+- `?initial=repair` param 지원 (복원수리 탭 시작)
+
+### 시각 시스템 (안 A — 좌측 색 줄 + 우측 도트)
+
+| 색 줄 | 상태 |
+|---|---|
+| 🟢 green | 판매완료 (B2C 배송완료/매장수령 + B2B 출고+결제완료) |
+| 🔴 red | 미결제 (가장 시급) |
+| 🟡 yellow | 부분결제 |
+| ⚪ gray | 취소 + opacity-50 + line-through |
+| ▫️ 투명 | 진행 중 (배송중/출고대기/결제대기) |
+
+| 우측 도트 | 의미 |
+|---|---|
+| 🟢 green | 배송중 (ALPS 추적 중) |
+| 🟠 amber | 출고 대기 / 결제 대기 |
+
+### 라벨 통일 (사장님 결정)
+- B2C 판매완료 + B2B 출고+결제완료 = **"판매완료"** 단일 라벨
+- `status='settled'` enum 은 legacy (사장님 폐기, UI 에선 "출고완료" 로 표시)
+- "마무리" / "정산완료" 표기 폐기
+
+### 자동 배송완료 추적 (2026-05-25 운영)
+- `api/cron/track-delivery` Vercel Cron 4시간마다 → ALPS 코드 `41`/`45` → `delivered_at` 자동 기록
+- 좌측 색 줄: **투명(진행중) → 초록(판매완료) 자동 전환**
+- 사장님 수동 처리 불필요
+
+### 데이터 모델 (분리 유지)
+- `offline_sales` (B2C) + `offline_sale_items` + `product_serials`
+- `deliveries` (B2B) + `delivery_items` (시리얼 미부여)
+- **합집합은 `/sales/page.tsx` useMemo (unifiedItems)** 에서 처리
+- 회계 RPC 088 / 시리얼 무결성 / 매출 집계 모두 무영향
+
+### 사장님 채택 디자인 (2026-05-26)
+- 매출 카드: **안 3** (어두운 카드 `bg-neutral-900` + 화이트 텍스트 + amber 미수금)
+- 목록 카드: **안 A** (좌측 색 줄 + 우측 도트)
+- 리뷰 관리: 헤더 우측 compact 모드 (시각 부담 ↓)
+
+상세 박제: [`memory/project_sales_b2c_b2b_unified.md`](../../../C:/Users/user/.claude/projects/c--Users-user-Desktop-mamoru/memory/project_sales_b2c_b2b_unified.md)
+
+---
+
+## 2026-05-18 — 사이드바 IA 정리 (회규 0)
 
 ## 2026-05-18 — 사이드바 IA 정리 (회귀 0)
 

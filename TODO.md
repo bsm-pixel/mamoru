@@ -52,6 +52,39 @@
 
 ---
 
+## 🟢 최근 완료 (사장님 검증 완료)
+
+### /sales 페이지 B2C+B2B IA 통합 (2026-05-26 Phase A~G) ⭐⭐⭐
+
+**완료 사이클**: 7 phase + 디자인 비교 페이지 + 사장님 검증 완료
+
+| Phase | 커밋 | 변경 |
+|---|---|---|
+| A | `db6f5eb` | 매출 카드 2섹션 + 영역 칩 + useSalesStats 확장 |
+| B | `714935c` | 목록 합집합 + sourceType 상세 패널 분기 + DeliveryRow 신규 |
+| C | `c45a654` | `/sales/new?mode=b2b` 입력 진입점 + CreateDeliveryModal 분리 |
+| D | `933cd9e` | 준비표 뽑기 B2C+B2B 통합 |
+| E | `dc1154d` | `/deliveries` 헤더 → `/sales/new?mode=b2b` 일원화 |
+| G-1+G-2 | `22d8b02` | 사이드바 B2B거래 삭제 + 채널 칩 폐기 |
+| G-3 | `c51f9c6` ~ `d8a6370` | 디자인 프리뷰 페이지 (안 1~3 매출 + 안 A~D 목록 비교) |
+| G-4 | `45904f6` | 매출 카드 안 3 + 목록 카드 안 A 실제 적용 |
+| G-4 후속 | `574a43e` | 리뷰 관리 카드 헤더 우측 compact 이동 |
+
+**사장님 채택안**:
+- 매출 카드: 안 3 (어두운 카드 `bg-neutral-900`)
+- 목록 카드: 안 A (좌측 색 줄 + 우측 도트)
+- 라벨 통일 "판매완료" (B2C/B2B)
+
+**박제 위치**:
+- 메모리: `memory/project_sales_b2c_b2b_unified.md`
+- 흐름도: `docs/TMS_FLOW_SALES.md` (2026-05-26 섹션)
+- 매뉴얼: `docs/MANUAL_SALES.md` (2026-05-26 섹션)
+
+**선택 작업 (미진행)**:
+- `/sales/design-preview` 페이지 거취 결정 (유지 vs 삭제) — 사장님 향후 디자인 검토 도구로 유지 중
+
+---
+
 ## 🟡 자동 대기
 
 ### 복원수리 직접방문(당일수리) Phase 4 — 솔라피 검수 대기 (2026-05-25)
