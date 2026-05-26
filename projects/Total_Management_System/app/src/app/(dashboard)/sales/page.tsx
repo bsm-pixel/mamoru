@@ -4,7 +4,6 @@ import { useState, memo, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlidePanel } from '@/components/ui/slide-panel';
@@ -18,9 +17,9 @@ import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
-import { Plus, FileSignature, Receipt, TrendingUp, Calendar, AlertCircle, ClipboardList } from 'lucide-react';
+import { Plus, FileSignature, Receipt, ClipboardList } from 'lucide-react';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
-import type { OfflineSale, SaleChannel as SaleChannelType } from '@/lib/supabase/types';
+import type { OfflineSale } from '@/lib/supabase/types';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드',
@@ -29,23 +28,77 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
   mixed: '복합',
 };
 
-const PAYMENT_STATUS_COLOR: Record<string, string> = {
-  paid: 'bg-green-100 text-green-700',
-  unpaid: 'bg-red-100 text-red-700',
-  partial: 'bg-yellow-100 text-yellow-700',
+const CHANNEL_LABEL: Record<string, string> = {
+  offline: '오프라인',
+  online: '온라인',  // 레거시 데이터 호환
+  talk: '온라인상담',
 };
 
-const PAYMENT_STATUS_LABEL: Record<string, string> = {
-  paid: '결제완료',
-  unpaid: '미결제',
-  partial: '부분결제',
-};
+const CUSTOMER_TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy: '아카데미' };
 
-const CHANNEL_CHIP: Record<string, { label: string; className: string }> = {
-  offline: { label: '오프라인', className: 'bg-neutral-100 text-neutral-600' },
-  online:  { label: '온라인',  className: 'bg-blue-100 text-blue-700' },  // 레거시 데이터 호환
-  talk:    { label: '온라인상담',  className: 'bg-yellow-100 text-yellow-700' },
-};
+/** 2026-05-26 Phase G-4: 안 A 상태 분류 — 좌측 색 줄 + 우측 도트 결정 */
+type RowState = 'paid_done' | 'paid_shipping' | 'paid_wait_ship' | 'unpaid' | 'partial' | 'shipped_b2b_unpaid' | 'cancelled';
+
+function getRowStateSale(s: OfflineSale): RowState {
+  if (s.cancelled_at) return 'cancelled';
+  if (s.payment_status === 'partial') return 'partial';
+  if (s.payment_status === 'unpaid') return 'unpaid';
+  // payment_status === 'paid'
+  if (s.delivered_at) return 'paid_done';            // 배송완료 자동 전환
+  if (!s.invoice_number) return 'paid_done';         // 매장 직접수령 (송장 없음)
+  if (s.shipped_at) return 'paid_shipping';          // 출고됨, 배송 중
+  return 'paid_wait_ship';                            // 송장 발급 대기
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getRowStateDelivery(d: any): RowState {
+  if (d.cancelled_at) return 'cancelled';
+  if (d.payment_status === 'partial') return 'partial';
+  const isShipped = d.status === 'shipped' || d.status === 'settled';
+  if (d.payment_status === 'unpaid' && isShipped) return 'shipped_b2b_unpaid'; // 출고됐는데 결제 대기
+  if (d.payment_status === 'unpaid') return 'unpaid';
+  // payment_status === 'paid'
+  if (isShipped) return 'paid_done';                  // 출고완료 + 결제완료 = 판매완료
+  return 'paid_wait_ship';                            // 결제완료 + 출고 전
+}
+
+function stripColor(state: RowState): string {
+  switch (state) {
+    case 'paid_done': return 'bg-green-500';
+    case 'unpaid': return 'bg-red-500';
+    case 'partial': return 'bg-yellow-400';
+    case 'cancelled': return 'bg-neutral-300';
+    default: return 'bg-transparent';
+  }
+}
+
+function rightDot(state: RowState): { color: string; title: string } | null {
+  switch (state) {
+    case 'paid_shipping': return { color: 'bg-green-500', title: '배송중' };
+    case 'paid_wait_ship': return { color: 'bg-amber-400', title: '출고 대기' };
+    case 'shipped_b2b_unpaid': return { color: 'bg-amber-400', title: '출고완료 · 결제 대기' };
+    default: return null;
+  }
+}
+
+function statusLabel(state: RowState): string {
+  switch (state) {
+    case 'paid_done': return '판매완료';
+    case 'paid_shipping': return '배송중';
+    case 'paid_wait_ship': return '출고 대기';
+    case 'unpaid': return '미결제';
+    case 'partial': return '부분결제';
+    case 'shipped_b2b_unpaid': return '출고완료 · 결제대기';
+    case 'cancelled': return '취소';
+  }
+}
+
+function statusTextClass(state: RowState): string {
+  if (state === 'unpaid') return 'text-red-600 font-medium';
+  if (state === 'partial') return 'text-yellow-700 font-medium';
+  if (state === 'paid_done') return 'text-green-700 font-medium';
+  return 'text-neutral-500';
+}
 
 const TABS: { key: SalesTab; label: string }[] = [
   { key: 'all', label: '전체' },
@@ -171,47 +224,39 @@ export default function SalesPage() {
   /* --- 목록 영역 (좌측/모바일) --- */
   const listContent = (
     <>
-      {/* 통계 요약 카드 — 2026-05-26: 고객(B2C) / 거래처(B2B) 2섹션 동등 비율 (사장님 A-1) */}
+      {/* 통계 요약 카드 — 2026-05-26 Phase G-4: 안 3 어두운 카드 채택 (사장님 결정) */}
       {stats && (
-        <div className="grid grid-cols-2 gap-2">
-          {/* 고객 (B2C) 섹션 */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-3 space-y-2">
-            <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">고객 (B2C)</div>
-            <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-2 gap-3">
+          {/* 고객 (B2C) — 어두운 카드 */}
+          <div className="bg-neutral-900 text-white rounded-xl p-5">
+            <div className="text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-2">고객 (B2C)</div>
+            <div className="text-3xl font-bold tracking-tight">{formatKRW(stats.customerMonth?.amount || 0)}</div>
+            <div className="text-xs opacity-70 mt-1">이번달 · {stats.customerMonth?.count || 0}건</div>
+            <div className="mt-4 pt-3 border-t border-white/10 grid grid-cols-2 gap-2 text-xs">
               <div>
-                <div className="flex items-center gap-1 text-[10px] text-neutral-400 mb-0.5"><Calendar size={10} />이번주</div>
-                <p className="text-sm font-bold text-neutral-900">{formatKRW(stats.customerWeek?.amount || 0)}</p>
-                <p className="text-[10px] text-neutral-400">{stats.customerWeek?.count || 0}건</p>
+                <span className="opacity-60">이번주</span>
+                <div className="font-semibold mt-0.5">{formatKRW(stats.customerWeek?.amount || 0)}</div>
               </div>
               <div>
-                <div className="flex items-center gap-1 text-[10px] text-neutral-400 mb-0.5"><TrendingUp size={10} />이번달</div>
-                <p className="text-sm font-bold text-neutral-900">{formatKRW(stats.customerMonth?.amount || 0)}</p>
-                <p className="text-[10px] text-neutral-400">{stats.customerMonth?.count || 0}건</p>
-              </div>
-              <div>
-                <div className="flex items-center gap-1 text-[10px] text-red-400 mb-0.5"><AlertCircle size={10} />미수금</div>
-                <p className="text-sm font-bold text-red-600">{formatKRW(stats.customerOutstanding || 0)}</p>
+                <span className="text-amber-300">미수금</span>
+                <div className="font-semibold mt-0.5 text-amber-300">{formatKRW(stats.customerOutstanding || 0)}</div>
               </div>
             </div>
           </div>
 
-          {/* 거래처 (B2B) 섹션 */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-3 space-y-2">
-            <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">거래처 (B2B)</div>
-            <div className="grid grid-cols-3 gap-1.5">
+          {/* 거래처 (B2B) — 어두운 카드 */}
+          <div className="bg-neutral-900 text-white rounded-xl p-5">
+            <div className="text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-2">거래처 (B2B)</div>
+            <div className="text-3xl font-bold tracking-tight">{formatKRW(partnerMonth)}</div>
+            <div className="text-xs opacity-70 mt-1">이번달 · {partnerMonthCount}건</div>
+            <div className="mt-4 pt-3 border-t border-white/10 grid grid-cols-2 gap-2 text-xs">
               <div>
-                <div className="flex items-center gap-1 text-[10px] text-neutral-400 mb-0.5"><Calendar size={10} />이번주</div>
-                <p className="text-sm font-bold text-neutral-900">{formatKRW(partnerWeek)}</p>
-                <p className="text-[10px] text-neutral-400">{partnerWeekCount}건</p>
+                <span className="opacity-60">이번주</span>
+                <div className="font-semibold mt-0.5">{formatKRW(partnerWeek)}</div>
               </div>
               <div>
-                <div className="flex items-center gap-1 text-[10px] text-neutral-400 mb-0.5"><TrendingUp size={10} />이번달</div>
-                <p className="text-sm font-bold text-neutral-900">{formatKRW(partnerMonth)}</p>
-                <p className="text-[10px] text-neutral-400">{partnerMonthCount}건</p>
-              </div>
-              <div>
-                <div className="flex items-center gap-1 text-[10px] text-red-400 mb-0.5"><AlertCircle size={10} />미수금</div>
-                <p className="text-sm font-bold text-red-600">{formatKRW(partnerOutstanding)}</p>
+                <span className="text-amber-300">미수금</span>
+                <div className="font-semibold mt-0.5 text-amber-300">{formatKRW(partnerOutstanding)}</div>
               </div>
             </div>
           </div>
@@ -494,77 +539,63 @@ export default function SalesPage() {
   );
 }
 
-/* 목록 행 — PC/모바일 공용 (카드형) */
+/* 목록 행 — 2026-05-26 Phase G-4: 안 A (좌측 색 줄 + 우측 도트 + 판매완료 라벨 통일) */
 const SaleRow = memo(function SaleRow({ sale, selected, onClick, prepMode, checked, onCheck }: {
   sale: OfflineSale; selected?: boolean; onClick: () => void;
   prepMode?: boolean; checked?: boolean; onCheck?: () => void;
 }) {
-  const isCancelled = !!sale.cancelled_at;
-  const channelInfo = CHANNEL_CHIP[(sale.sale_channel || 'offline') as SaleChannelType] || CHANNEL_CHIP.offline;
+  const state = getRowStateSale(sale);
+  const isCancelled = state === 'cancelled';
+  const dot = rightDot(state);
+  const channelLabel = CHANNEL_LABEL[sale.sale_channel || 'offline'] || '오프라인';
 
   return (
     <div
       onClick={prepMode ? onCheck : onClick}
-      className={`flex items-center gap-4 px-4 py-3 cursor-pointer transition ${
-        selected ? 'bg-neutral-50 border-l-2 border-l-neutral-900' : 'hover:bg-warm-ivory/60'
-      } ${isCancelled ? 'opacity-50' : ''} ${checked ? 'bg-blue-50 border-l-2 border-l-blue-500' : ''}`}
+      className={`flex items-stretch gap-3 px-4 py-3 cursor-pointer transition ${
+        selected ? 'bg-neutral-50' : 'hover:bg-warm-ivory/40'
+      } ${isCancelled ? 'opacity-50' : ''} ${checked ? 'bg-blue-50' : ''}`}
     >
+      {/* 좌측 색 줄 */}
+      <div className={`w-1 rounded ${stripColor(state)}`} style={{ alignSelf: 'stretch' }} />
+
+      {/* 체크박스 (준비표 모드) */}
       {prepMode && (
         <input type="checkbox" checked={checked} onChange={onCheck}
           onClick={(e) => e.stopPropagation()}
-          className="w-4 h-4 rounded border-neutral-300 shrink-0" />
+          className="w-4 h-4 rounded border-neutral-300 shrink-0 self-center" />
       )}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>
+
+      {/* 본문 */}
+      <div className="flex-1 min-w-0 flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <div className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>
             {sale.customer_name}
+          </div>
+          <div className="text-xs text-neutral-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
+            <span>{formatDate(sale.sale_date)}</span>
+            <span className="text-neutral-300">·</span>
+            <span>{PAYMENT_METHOD_LABEL[sale.payment_method] || sale.payment_method}</span>
+            <span className="text-neutral-300">·</span>
+            <span>{channelLabel}</span>
+            <span className="text-neutral-300">·</span>
+            <span className={statusTextClass(state)}>{statusLabel(state)}</span>
+          </div>
+        </div>
+
+        {/* 우측: 도트 + 금액 */}
+        <div className="flex items-center gap-2 shrink-0">
+          {dot && <span className={`w-2 h-2 rounded-full ${dot.color}`} title={dot.title} />}
+          <span className={`text-sm font-bold ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>
+            {formatKRW(sale.total_amount)}
           </span>
-          {isCancelled ? (
-            <Badge className="bg-neutral-200 text-neutral-500">취소</Badge>
-          ) : (
-            <Badge className={PAYMENT_STATUS_COLOR[sale.payment_status] || ''}>
-              {PAYMENT_STATUS_LABEL[sale.payment_status] || sale.payment_status}
-            </Badge>
-          )}
-          {/* 운영 상태 칩 (2026-05-25): 판매완료 / 배송중 (취소는 위에서 처리) */}
-          {!isCancelled && sale.delivered_at && (
-            <Badge className="bg-neutral-100 text-neutral-600">판매완료</Badge>
-          )}
-          {!isCancelled && !sale.delivered_at && sale.shipped_at && (
-            <Badge className="bg-green-100 text-green-700">배송중</Badge>
-          )}
-          <Badge className={channelInfo.className}>{channelInfo.label}</Badge>
         </div>
-        <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-          <span>{formatDate(sale.sale_date)}</span>
-          <span>{PAYMENT_METHOD_LABEL[sale.payment_method] || sale.payment_method}</span>
-        </div>
-      </div>
-      <div className="text-right shrink-0">
-        <span className={`text-sm font-bold ${isCancelled ? 'line-through text-neutral-400' : ''}`}>{formatKRW(sale.total_amount)}</span>
       </div>
     </div>
   );
 });
 
-/* 거래처 납품 행 — 2026-05-26 Phase B 신규 */
-const DELIVERY_STATUS_LABEL: Record<string, string> = {
-  draft: '작성중', confirmed: '납품확정', shipped: '출고완료', settled: '정산완료',
-};
-const DELIVERY_STATUS_COLOR: Record<string, string> = {
-  draft: 'bg-neutral-100 text-neutral-600',
-  confirmed: 'bg-blue-100 text-blue-700',
-  shipped: 'bg-green-100 text-green-700',
-  settled: 'bg-emerald-100 text-emerald-700',
-};
-const DELIVERY_PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
-const DELIVERY_PAYMENT_COLOR: Record<string, string> = {
-  unpaid: 'bg-red-100 text-red-700',
-  partial: 'bg-yellow-100 text-yellow-700',
-  paid: 'bg-green-100 text-green-700',
-};
-const CUSTOMER_TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy: '아카데미' };
-
+/* 거래처 납품 행 — 2026-05-26 Phase G-4: 안 A 통합 디자인 (SaleRow 와 동일 패턴, B2B 분류 로직만 분기) */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DeliveryRowData = any;
 
@@ -572,54 +603,52 @@ const DeliveryRow = memo(function DeliveryRow({ delivery, selected, onClick, pre
   delivery: DeliveryRowData; selected?: boolean; onClick: () => void;
   prepMode?: boolean; checked?: boolean; onCheck?: () => void;
 }) {
-  const isCancelled = !!delivery.cancelled_at;
-  const ctypeLabel = CUSTOMER_TYPE_LABEL[delivery.customer_type as string] || delivery.customer_type || '';
+  const state = getRowStateDelivery(delivery);
+  const isCancelled = state === 'cancelled';
+  const dot = rightDot(state);
+  const ctypeLabel = CUSTOMER_TYPE_LABEL[delivery.customer_type as string] || '거래처';
 
   return (
     <div
       onClick={prepMode ? onCheck : onClick}
-      className={`flex items-center gap-4 px-4 py-3 cursor-pointer transition ${
-        selected ? 'bg-neutral-50 border-l-2 border-l-neutral-900' : 'hover:bg-warm-ivory/60'
-      } ${isCancelled ? 'opacity-50' : ''} ${checked ? 'bg-blue-50 border-l-2 border-l-blue-500' : ''}`}
+      className={`flex items-stretch gap-3 px-4 py-3 cursor-pointer transition ${
+        selected ? 'bg-neutral-50' : 'hover:bg-warm-ivory/40'
+      } ${isCancelled ? 'opacity-50' : ''} ${checked ? 'bg-blue-50' : ''}`}
     >
+      {/* 좌측 색 줄 */}
+      <div className={`w-1 rounded ${stripColor(state)}`} style={{ alignSelf: 'stretch' }} />
+
+      {/* 체크박스 (준비표 모드) */}
       {prepMode && (
         <input type="checkbox" checked={checked} onChange={onCheck}
           onClick={(e) => e.stopPropagation()}
-          className="w-4 h-4 rounded border-neutral-300 shrink-0" />
+          className="w-4 h-4 rounded border-neutral-300 shrink-0 self-center" />
       )}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>
-            {delivery.customer_name || delivery.company_name || '미지정'}
+
+      {/* 본문 */}
+      <div className="flex-1 min-w-0 flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <div className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>
+            {delivery.company_name || delivery.customer_name || '미지정'}
+          </div>
+          <div className="text-xs text-neutral-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
+            <span>{formatDate(delivery.delivery_date || delivery.expected_date || '')}</span>
+            <span className="text-neutral-300">·</span>
+            <span>{PAYMENT_METHOD_LABEL[delivery.payment_method as string] || delivery.payment_method || '-'}</span>
+            <span className="text-neutral-300">·</span>
+            <span>{ctypeLabel}</span>
+            <span className="text-neutral-300">·</span>
+            <span className={statusTextClass(state)}>{statusLabel(state)}</span>
+          </div>
+        </div>
+
+        {/* 우측: 도트 + 금액 */}
+        <div className="flex items-center gap-2 shrink-0">
+          {dot && <span className={`w-2 h-2 rounded-full ${dot.color}`} title={dot.title} />}
+          <span className={`text-sm font-bold ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>
+            {formatKRW(((delivery.total_amount as number) || 0) - ((delivery.discount_amount as number) || 0))}
           </span>
-          {isCancelled ? (
-            <Badge className="bg-neutral-200 text-neutral-500">취소</Badge>
-          ) : (
-            <Badge className={DELIVERY_PAYMENT_COLOR[delivery.payment_status as string] || ''}>
-              {DELIVERY_PAYMENT_LABEL[delivery.payment_status as string] || delivery.payment_status}
-            </Badge>
-          )}
-          {/* 납품 상태 (draft/confirmed/shipped/settled) */}
-          {!isCancelled && delivery.status && (
-            <Badge className={DELIVERY_STATUS_COLOR[delivery.status as string] || ''}>
-              {DELIVERY_STATUS_LABEL[delivery.status as string] || delivery.status}
-            </Badge>
-          )}
-          {/* sourceType 뱃지 — 거래처(B2B) 구분 */}
-          <Badge className="bg-indigo-50 text-indigo-700 border border-indigo-200">거래처</Badge>
-          {ctypeLabel && (
-            <span className="text-[10px] text-neutral-500">{ctypeLabel}</span>
-          )}
         </div>
-        <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-          <span>{formatDate(delivery.delivery_date || delivery.expected_date || '')}</span>
-          <span>{delivery.dl_number || ''}</span>
-        </div>
-      </div>
-      <div className="text-right shrink-0">
-        <span className={`text-sm font-bold ${isCancelled ? 'line-through text-neutral-400' : ''}`}>
-          {formatKRW(((delivery.total_amount as number) || 0) - ((delivery.discount_amount as number) || 0))}
-        </span>
       </div>
     </div>
   );
