@@ -74,7 +74,9 @@ export async function GET(request: NextRequest) {
           console.log(`[track-delivery/orders] ${order.imweb_order_no} → 배송완료`);
 
           // 후기요청 자동 발송 (settings 토글 ON + 중복 방지)
-          // orders 에는 review_promised_at 컬럼 미존재 → review_requested_at 만 가드 (YAGNI)
+          // 2026-05-26 메모: 사장님 정책 "약속 받은 고객만 자동 발송" 적용 불가 — orders 에 review_promised_at 컬럼 미존재
+          //   아임웹 무인 주문 흐름이라 사장님이 약속 받을 일 거의 없음 → 현재 정책 유지 (토글 ON 시 모든 배송완료 자동 발송)
+          //   향후 사장님 정책 통일 원하면 orders.review_promised_at 컬럼 마이그레이션 필요
           after(async () => {
             try {
               const autoEnabled = await getServerSetting<boolean>(supabase as any, 'review.auto_request_on_completion', false);
@@ -194,7 +196,9 @@ export async function GET(request: NextRequest) {
           salesDelivered++;
           console.log(`[track-delivery/offline_sales] ${sale.sale_number} (${sale.customer_name}) → 배송완료`);
 
-          // 자동 후기요청 (3단계 가드 — repairs 표준 패턴)
+          // 자동 후기요청 (2026-05-26 정책 정정: 약속 ✓ 고객만 자동 발송 — 보수적)
+          //   사장님 의도: "약속 받은 고객 + 배송완료(인수자등록) 자동 감지 → 자동 알림톡"
+          //   약속 X 고객은 사장님 수동 발송만 (compact UI 의 후기 요청 버튼 사용)
           after(async () => {
             try {
               const autoEnabled = await getServerSetting<boolean>(supabase as any, 'review.auto_request_on_completion', false);
@@ -202,8 +206,8 @@ export async function GET(request: NextRequest) {
                 console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} skip — 토글 OFF`);
                 return;
               }
-              if (sale.review_promised_at) {
-                console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} skip — 약속받음`);
+              if (!sale.review_promised_at) {
+                console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} skip — 약속 X (사장님 수동만)`);
                 return;
               }
               if (sale.review_requested_at) {

@@ -123,13 +123,15 @@ export async function PATCH(
         if (skip_notify) return;  // 합포장 출고 등 알림톡 우회 케이스
         const template = getAutoNotifyTemplate(newStatus);
         if (template && data.phone) {
-          // 067: 후기 요청 자동 발송 가드 — 정책 토글 OFF / 약속 ✓ / 이미 발송 시 skip
+          // 067: 후기 요청 자동 발송 가드
+          // 2026-05-26 정책 정정 (사장님 의도): 약속 ✓ 고객만 자동 발송 — 보수적
+          //   기존 정책 (약속 X 고객만 자동) 폐기 → 약속 받은 고객만 자동, 약속 X 고객은 사장님 수동만
           let allowSend = true;
           if (template === 'as_review_request') {
             const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
             if (!autoEnabled) allowSend = false;
-            else if (data.review_promised_at) allowSend = false;
-            else if (data.review_request_sent_at) allowSend = false;
+            else if (!data.review_promised_at) allowSend = false;   // 약속 X → 자동 발송 안 함
+            else if (data.review_request_sent_at) allowSend = false; // 중복 방지
           }
 
           if (!allowSend) {

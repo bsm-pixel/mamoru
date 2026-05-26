@@ -202,23 +202,32 @@ export function ReviewManagementCard({
     }
   };
 
-  // 2026-05-26: 컴팩트 모드 — 헤더 우측 미니 UI (사장님 시선 부담 ↓)
+  // 2026-05-26 Phase G-6 후속: 컴팩트 모드 시안 3 (토글 스위치 + 날짜)
   if (compact) {
     return (
       <>
-        <div className="flex items-center gap-1.5">
-          {/* 약속 작은 체크 토글 */}
+        <div className="flex items-center gap-2">
+          {/* 약속 토글 스위치 (시안 3) */}
           <button
             type="button"
             onClick={handleTogglePromise}
             disabled={togglingPromise}
-            title={promisedAt ? `리뷰 약속 ✓ (${formatDate(promisedAt)})` : '리뷰 약속 받음 체크'}
-            className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition ${
-              promisedAt ? 'bg-terracotta/10 text-terracotta' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
-            }`}
+            title={promisedAt ? `리뷰 약속 ON (${formatDate(promisedAt)})` : '리뷰 약속 받음 토글'}
+            className="flex items-center gap-2 text-[11px] px-2 py-1 rounded-md hover:bg-neutral-50 transition disabled:opacity-50"
           >
-            <span className="text-[10px]">{promisedAt ? '✓' : '○'}</span>
-            <span>약속</span>
+            <span
+              className={`relative inline-block w-7 h-4 rounded-full transition ${
+                promisedAt ? 'bg-neutral-900' : 'bg-neutral-300'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-all ${
+                  promisedAt ? 'left-3.5' : 'left-0.5'
+                }`}
+              />
+            </span>
+            <span className={promisedAt ? 'font-semibold text-neutral-900' : 'text-neutral-500'}>리뷰 약속</span>
+            {promisedAt && <span className="text-[10px] text-neutral-400">{formatDate(promisedAt)}</span>}
           </button>
 
           {/* 후기 요청 작은 버튼 */}
