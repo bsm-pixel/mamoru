@@ -1,5 +1,53 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-05-26 — **B2C+B2B IA 통합** (Phase A~G 사이클 완료) + 매출 카드 어두운 디자인 + 목록 카드 좌측 색 줄·우측 도트 + 리뷰 관리 헤더 우측 compact 이동
+> 최종 업데이트: 2026-05-26 — Phase G + 자동 후기 요청 정책 정정 (약속 ✓ 만 자동) + autoSendPending amber 시각 신호 + 약속 토글 시안 3 (스위치) 적용
+
+## 2026-05-26 후속 — 자동 후기 요청 정책 + 시각 신호 ⭐
+
+### 정책 정정 (사장님 의도)
+- **OFF (default)**: 모든 후기 요청 수동만 (자동 발송 안 됨)
+- **ON + 카드 약속 ✓**: ALPS 인수자등록(`41`/`45`) 자동 감지 시 알림톡 자동 발송
+- **ON + 카드 약속 ✗**: 자동 발송 안 됨 (사장님 수동만)
+
+### 코드 가드 (3채널 일관)
+- `api/repair/[id]/route.ts:132` — `if (!data.review_promised_at) allowSend = false`
+- `api/cron/track-delivery/route.ts:205` — `if (!sale.review_promised_at) return` (offline_sales)
+- `orders` 는 `review_promised_at` 컬럼 미존재 → 약속 가드 적용 안 됨 (아임웹 무인 흐름이라 영향 X)
+
+### 자동 발송 예정 시각 신호 (autoSendPending)
+
+상세 패널 헤더 우측 미니 UI 의 후기 요청 버튼이 5중 조건 충족 시 자동 변형:
+
+| 조건 | 정상 동작 |
+|---|---|
+| 글로벌 토글 ON | 1번 필수 |
+| 카드 약속 ✓ | `review_promised_at IS NOT NULL` |
+| 미발송 | `review_request_sent_at IS NULL` |
+| 송장 있음 | `invoice_number IS NOT NULL` (매장수령 제외) |
+| 배송중 | `shipped_at IS NOT NULL && delivered_at IS NULL` |
+
+→ 5중 충족 시:
+- 버튼 색상: 검정 → amber (`bg-amber-50 + border-amber-200`)
+- 라벨: "후기 요청" → "**자동 발송 예정**"
+- 아이콘: Send → Clock
+- 클릭 시 confirm 가드 (의식적 수동 발송 가능)
+
+### 약속 토글 시안 3 (운영 적용)
+iOS 스타일 ON/OFF 스위치 + "리뷰 약속" 라벨 + ON 시 약속 날짜 표시.
+스위치 위치 자체로 ON/OFF 1초 인지 + 날짜로 약속 시점 추적.
+
+### 매장 직접수령 처리
+- `invoice_number IS NULL` → ALPS 추적 대상 X
+- 자동 발송 자체 안 됨 → 사장님 수동 발송만
+- 후기 요청 버튼 검정 일반 모드 유지
+
+### .nojekyll 추가 (GitHub Pages 안정성)
+- 루트에 `.nojekyll` 빈 파일 추가
+- GitHub Pages Jekyll 빌드 완전 스킵 → 정적 파일 직접 서빙
+- GitHub 인프라 일시 장애 영향 0
+
+---
+
+## 2026-05-26 — B2C+B2B IA 통합 완료 ⭐⭐⭐
 
 ## 2026-05-26 — B2C+B2B IA 통합 완료 ⭐⭐⭐
 
