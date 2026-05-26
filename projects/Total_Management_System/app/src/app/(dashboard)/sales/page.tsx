@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, memo, useEffect } from 'react';
+import { useState, memo, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { SaleDetailPanel } from '@/components/sales/sale-detail-panel';
+import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-panel';
 import { useSales, useSalesTabCounts, useSalesStats } from '@/hooks/use-sales';
 import type { SalesTab, SalesChannel, SalesDateRange } from '@/hooks/use-sales';
-import { useDeliveryStats } from '@/hooks/use-deliveries';
+import { useDeliveryStats, useDeliveries } from '@/hooks/use-deliveries';
 import { useContracts } from '@/hooks/use-contracts';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -95,7 +96,8 @@ export default function SalesPage() {
   const [dateRange, setDateRange] = useState<SalesDateRange>('month');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
+  /** 2026-05-26 Phase B: 우측 상세 패널 — sourceType 분기. 'sale' → SaleDetailPanel / 'delivery' → DeliveryDetailPanel */
+  const [selected, setSelected] = useState<{ id: string; sourceType: 'sale' | 'delivery' } | null>(null);
   const [isLg, setIsLg] = useState(false);
   const [prepMode, setPrepMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
@@ -113,11 +115,40 @@ export default function SalesPage() {
   const { data: tabCounts } = useSalesTabCounts();
   const { data: stats } = useSalesStats();
   const { data: deliveryStats } = useDeliveryStats(); // 2026-05-26: 거래처 카드 — deliveries 합산용
+  // 2026-05-26 Phase B: 영역 'partner'/'all' 일 때 deliveries 목록 합집합. limit 30 (사장님 운영 규모 충분)
+  const { data: deliveryData, isLoading: isDeliveriesLoading } = useDeliveries({ search, dateRange, page: 1, limit: 30 });
   const { data: contractData } = useContracts({ status: 'signed', limit: 100 });
   const newContractCount = contractData?.contracts?.filter((c) => !c.offline_sale_id).length || 0;
   const sales = data?.sales || [];
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
+
+  /** 2026-05-26 Phase B: 통합 목록 — 영역 칩 따라 sale/delivery 합집합. 날짜 desc 정렬 */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type Delivery = any;
+  const unifiedItems = useMemo(() => {
+    const items: Array<
+      | { sourceType: 'sale'; id: string; date: string; data: OfflineSale }
+      | { sourceType: 'delivery'; id: string; date: string; data: Delivery }
+    > = [];
+    if (section === 'customer' || section === 'all') {
+      for (const s of sales) {
+        items.push({ sourceType: 'sale', id: s.id, date: s.sale_date || s.created_at || '', data: s });
+      }
+    }
+    if (section === 'partner' || section === 'all') {
+      const dls = (deliveryData?.deliveries || []) as Delivery[];
+      for (const d of dls) {
+        if (d.cancelled_at && tab !== 'cancelled') continue; // 영역 partner/all 에서도 취소 탭 외엔 cancelled 숨김
+        if (tab === 'unpaid' && !['unpaid', 'partial'].includes(d.payment_status)) continue;
+        items.push({ sourceType: 'delivery', id: d.id, date: d.delivery_date || d.created_at || '', data: d });
+      }
+    }
+    return items.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  }, [sales, deliveryData, section, tab]);
+  const listLoading = (section === 'customer' && isLoading)
+    || (section === 'partner' && isDeliveriesLoading)
+    || (section === 'all' && (isLoading || isDeliveriesLoading));
 
   const handleTabChange = (t: SalesTab) => { setTab(t); setPage(1); };
   const toggleCheck = (id: string) => {
@@ -367,34 +398,52 @@ export default function SalesPage() {
         </div>
       </div>
 
-      {/* 판매 목록 */}
+      {/* 판매 목록 (2026-05-26 Phase B: sale + delivery 통합) */}
       <Card padding={false}>
-        {isLoading ? (
+        {listLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
               <Skeleton key={i} className="h-14 w-full" />
             ))}
           </div>
-        ) : sales.length === 0 ? (
-          <EmptyState icon={Receipt} message="판매 기록이 없습니다" />
+        ) : unifiedItems.length === 0 ? (
+          <EmptyState icon={Receipt} message="판매/거래 기록이 없습니다" />
         ) : (
           <div className="divide-y divide-neutral-100">
-            {sales.map((sale) => (
-              <SaleRow
-                key={sale.id}
-                sale={sale}
-                selected={selectedSaleId === sale.id}
-                onClick={() => setSelectedSaleId(sale.id)}
-                prepMode={prepMode}
-                checked={checkedIds.has(sale.id)}
-                onCheck={() => toggleCheck(sale.id)}
-              />
-            ))}
+            {unifiedItems.map((item) => {
+              if (item.sourceType === 'sale') {
+                return (
+                  <SaleRow
+                    key={`sale-${item.id}`}
+                    sale={item.data}
+                    selected={selected?.sourceType === 'sale' && selected.id === item.id}
+                    onClick={() => setSelected({ id: item.id, sourceType: 'sale' })}
+                    prepMode={prepMode}
+                    checked={checkedIds.has(item.id)}
+                    onCheck={() => toggleCheck(item.id)}
+                  />
+                );
+              }
+              return (
+                <DeliveryRow
+                  key={`delivery-${item.id}`}
+                  delivery={item.data}
+                  selected={selected?.sourceType === 'delivery' && selected.id === item.id}
+                  onClick={() => setSelected({ id: item.id, sourceType: 'delivery' })}
+                />
+              );
+            })}
           </div>
         )}
       </Card>
 
-      <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+      {/* 페이지네이션 — 영역 'customer' 일 때만 (sales 만 서버 페이지네이션). partner/all 은 limit 30 안에서 표시 */}
+      {section === 'customer' && (
+        <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+      )}
+      {section !== 'customer' && unifiedItems.length >= 30 && (
+        <p className="text-xs text-neutral-400 text-center py-2">최대 30건까지 표시됩니다. 더 자세히는 [B2B거래] 메뉴에서 확인하세요.</p>
+      )}
     </>
   );
 
@@ -424,13 +473,17 @@ export default function SalesPage() {
           <div className="w-2/5 shrink-0 overflow-y-auto space-y-3 pr-1">
             {listContent}
           </div>
-          {/* 우측: 상세 패널 */}
+          {/* 우측: 상세 패널 — 2026-05-26 Phase B: sourceType 분기 */}
           <div className="flex-1 min-w-0 overflow-y-auto bg-white rounded-xl border border-neutral-200">
-            {selectedSaleId ? (
-              <SaleDetailPanel saleId={selectedSaleId} />
+            {selected ? (
+              selected.sourceType === 'sale' ? (
+                <SaleDetailPanel saleId={selected.id} />
+              ) : (
+                <DeliveryDetailPanel deliveryId={selected.id} />
+              )
             ) : (
               <div className="flex items-center justify-center h-full text-sm text-neutral-400">
-                좌측 목록에서 판매 건을 선택하세요
+                좌측 목록에서 판매/거래 건을 선택하세요
               </div>
             )}
           </div>
@@ -442,15 +495,16 @@ export default function SalesPage() {
         </div>
       )}
 
-      {/* 모바일 상세 패널 */}
+      {/* 모바일 상세 패널 — 2026-05-26 Phase B: sourceType 분기 */}
       {!isLg && (
         <SlidePanel
-          open={!!selectedSaleId}
-          onClose={() => setSelectedSaleId(null)}
-          title="판매 상세"
+          open={!!selected}
+          onClose={() => setSelected(null)}
+          title={selected?.sourceType === 'delivery' ? '거래처 납품 상세' : '판매 상세'}
           className="sm:w-[480px]"
         >
-          {selectedSaleId && <SaleDetailPanel saleId={selectedSaleId} />}
+          {selected && selected.sourceType === 'sale' && <SaleDetailPanel saleId={selected.id} />}
+          {selected && selected.sourceType === 'delivery' && <DeliveryDetailPanel deliveryId={selected.id} />}
         </SlidePanel>
       )}
 
@@ -513,6 +567,78 @@ const SaleRow = memo(function SaleRow({ sale, selected, onClick, prepMode, check
       </div>
       <div className="text-right shrink-0">
         <span className={`text-sm font-bold ${isCancelled ? 'line-through text-neutral-400' : ''}`}>{formatKRW(sale.total_amount)}</span>
+      </div>
+    </div>
+  );
+});
+
+/* 거래처 납품 행 — 2026-05-26 Phase B 신규 */
+const DELIVERY_STATUS_LABEL: Record<string, string> = {
+  draft: '작성중', confirmed: '납품확정', shipped: '출고완료', settled: '정산완료',
+};
+const DELIVERY_STATUS_COLOR: Record<string, string> = {
+  draft: 'bg-neutral-100 text-neutral-600',
+  confirmed: 'bg-blue-100 text-blue-700',
+  shipped: 'bg-green-100 text-green-700',
+  settled: 'bg-emerald-100 text-emerald-700',
+};
+const DELIVERY_PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
+const DELIVERY_PAYMENT_COLOR: Record<string, string> = {
+  unpaid: 'bg-red-100 text-red-700',
+  partial: 'bg-yellow-100 text-yellow-700',
+  paid: 'bg-green-100 text-green-700',
+};
+const CUSTOMER_TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy: '아카데미' };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DeliveryRowData = any;
+
+const DeliveryRow = memo(function DeliveryRow({ delivery, selected, onClick }: {
+  delivery: DeliveryRowData; selected?: boolean; onClick: () => void;
+}) {
+  const isCancelled = !!delivery.cancelled_at;
+  const ctypeLabel = CUSTOMER_TYPE_LABEL[delivery.customer_type as string] || delivery.customer_type || '';
+
+  return (
+    <div
+      onClick={onClick}
+      className={`flex items-center gap-4 px-4 py-3 cursor-pointer transition ${
+        selected ? 'bg-neutral-50 border-l-2 border-l-neutral-900' : 'hover:bg-warm-ivory/60'
+      } ${isCancelled ? 'opacity-50' : ''}`}
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>
+            {delivery.customer_name || delivery.company_name || '미지정'}
+          </span>
+          {isCancelled ? (
+            <Badge className="bg-neutral-200 text-neutral-500">취소</Badge>
+          ) : (
+            <Badge className={DELIVERY_PAYMENT_COLOR[delivery.payment_status as string] || ''}>
+              {DELIVERY_PAYMENT_LABEL[delivery.payment_status as string] || delivery.payment_status}
+            </Badge>
+          )}
+          {/* 납품 상태 (draft/confirmed/shipped/settled) */}
+          {!isCancelled && delivery.status && (
+            <Badge className={DELIVERY_STATUS_COLOR[delivery.status as string] || ''}>
+              {DELIVERY_STATUS_LABEL[delivery.status as string] || delivery.status}
+            </Badge>
+          )}
+          {/* sourceType 뱃지 — 거래처(B2B) 구분 */}
+          <Badge className="bg-indigo-50 text-indigo-700 border border-indigo-200">거래처</Badge>
+          {ctypeLabel && (
+            <span className="text-[10px] text-neutral-500">{ctypeLabel}</span>
+          )}
+        </div>
+        <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
+          <span>{formatDate(delivery.delivery_date || delivery.expected_date || '')}</span>
+          <span>{delivery.dl_number || ''}</span>
+        </div>
+      </div>
+      <div className="text-right shrink-0">
+        <span className={`text-sm font-bold ${isCancelled ? 'line-through text-neutral-400' : ''}`}>
+          {formatKRW(((delivery.total_amount as number) || 0) - ((delivery.discount_amount as number) || 0))}
+        </span>
       </div>
     </div>
   );
