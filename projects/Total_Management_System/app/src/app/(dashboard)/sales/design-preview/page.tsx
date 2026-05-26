@@ -30,12 +30,16 @@ const STATS = {
 /**
  * 목록 행 상태 분류 — 좌측 색 줄 + 우측 도트로 표현
  *
+ * 사장님 결정 (2026-05-26): B2C/B2B 모두 "판매완료" 라벨 통일
+ *   - B2C 판매완료 = payment_status='paid' + delivered_at (또는 매장수령 시 송장 없음)
+ *   - B2B 판매완료 = status='shipped' + payment_status='paid' (정산완료 단계는 폐기됨)
+ *
  * 색 줄 (왼쪽 4px 세로 줄):
- *   - green  = 판매완료 (B2C 배송완료/매장수령) / 정산완료 (B2B) — 모든 처리 끝남
+ *   - green  = 판매완료 (B2C 배송완료/매장수령, B2B 출고완료+결제완료) — 모든 처리 끝남
  *   - red    = 미결제 (가장 시급)
  *   - yellow = 부분결제
  *   - gray   = 취소 + 카드 흐림
- *   - none   = 진행중 (결제완료지만 아직 배송 중 또는 정산 대기)
+ *   - none   = 진행중 (결제완료지만 배송 중 / 출고완료지만 결제 대기 등)
  *
  * 배송중 → 배송완료 자동 전환 (2026-05-25 운영 시작):
  *   ALPS 추적 cron 4시간마다 → '41'/'45' 코드 감지 → delivered_at 자동 기록
@@ -50,7 +54,7 @@ const STATS = {
  *   - B2C: "오프라인" / "온라인상담"
  *   - B2B: "딜러" / "아카데미"
  */
-type RowState = 'paid_done' | 'paid_shipping' | 'paid_wait_ship' | 'unpaid' | 'partial' | 'settled' | 'shipped_b2b' | 'cancelled';
+type RowState = 'paid_done' | 'paid_shipping' | 'paid_wait_ship' | 'unpaid' | 'partial' | 'shipped_b2b_unpaid' | 'cancelled';
 
 type SampleRow = {
   id: string;
@@ -65,15 +69,15 @@ type SampleRow = {
 };
 
 const SAMPLE_ROWS: SampleRow[] = [
-  // 판매완료 / 정산완료 (초록 줄)
+  // 판매완료 (초록 줄) — B2C/B2B 통합
   { id: '1', sourceType: 'sale', state: 'paid_done', name: '서윤 점장님 (박미애)', date: '5월 26일', amount: 100000, paymentMethod: '카드', channelOrType: '온라인상담', note: '배송완료 → 판매완료 자동 전환' },
   { id: '2', sourceType: 'sale', state: 'paid_done', name: '김매장 (매장수령)', date: '5월 25일', amount: 240000, paymentMethod: '카드', channelOrType: '오프라인', note: '매장 직접수령 (배송 X, 즉시 판매완료)' },
-  { id: '3', sourceType: 'delivery', state: 'settled', name: '○○매장', date: '5월 24일', amount: 1240000, paymentMethod: '이체', channelOrType: '딜러', note: 'B2B 정산완료' },
+  { id: '3', sourceType: 'delivery', state: 'paid_done', name: '○○매장', date: '5월 24일', amount: 1240000, paymentMethod: '이체', channelOrType: '딜러', note: 'B2B 출고완료 + 결제완료 = 판매완료' },
 
   // 진행 중 (색 줄 없음)
   { id: '4', sourceType: 'sale', state: 'paid_shipping', name: '전아연', date: '5월 25일', amount: 780000, paymentMethod: '이체', channelOrType: '온라인상담', note: '결제완료 · 배송중' },
   { id: '5', sourceType: 'sale', state: 'paid_wait_ship', name: '곽경진', date: '5월 25일', amount: 60000, paymentMethod: '이체', channelOrType: '오프라인', note: '결제완료 · 송장발급 대기' },
-  { id: '6', sourceType: 'delivery', state: 'shipped_b2b', name: '△△아카데미', date: '5월 23일', amount: 580000, paymentMethod: '이체', channelOrType: '아카데미', note: '출고완료 · 정산 대기' },
+  { id: '6', sourceType: 'delivery', state: 'shipped_b2b_unpaid', name: '△△아카데미', date: '5월 23일', amount: 580000, paymentMethod: '이체', channelOrType: '아카데미', note: 'B2B 출고완료 · 결제 대기' },
 
   // 미수금 (빨강 줄)
   { id: '7', sourceType: 'sale', state: 'unpaid', name: '김승한', date: '5월 18일', amount: 280000, paymentMethod: '카드', channelOrType: '오프라인', note: '미결제 — 가장 시급' },
@@ -116,31 +120,31 @@ export default function SalesDesignPreviewPage() {
           {/* 색상 규칙 범례 */}
           <ColorLegend />
 
-          {/* 케이스 1 — 판매완료 / 정산완료 (초록 줄) */}
+          {/* 케이스 1 — 판매완료 (초록 줄) — B2C/B2B 통합 */}
           <CaseBlock
-            title="① 판매완료 · 정산완료 — 초록색 왼편 라인 ⭐"
+            title="① 판매완료 — 초록색 왼편 라인 ⭐"
             description={[
-              '판매·납품 흐름이 모두 끝난 건. 사장님이 "이건 다 됐다" 인식할 1순위.',
-              '• B2C 판매: 결제완료 + 배송완료 (delivered_at 채워짐) → "판매완료"',
-              '• B2C 매장 직접수령: 결제완료 + 송장 없음 (즉시 완료) → "판매완료"',
-              '• B2B 거래처: 결제완료 + 정산완료 (status=\'settled\') → "정산완료"',
+              '판매 흐름이 모두 끝난 건. 사장님이 "이건 다 됐다" 인식할 1순위. B2C/B2B 모두 통합 라벨.',
+              '• B2C 판매: 결제완료 + 배송완료 (delivered_at 채워짐)',
+              '• B2C 매장 직접수령: 결제완료 + 송장 없음 (즉시 완료)',
+              '• B2B 거래처: 출고완료 (status=\'shipped\') + 결제완료 (payment_status=\'paid\') — 별도 정산 단계 없음 (사장님 폐기)',
               '• 배송중 → 배송완료 자동 전환: ALPS cron 4시간마다 자동 추적 (운영 검증 완료)',
             ]}
           >
-            {SAMPLE_ROWS.filter((r) => r.state === 'paid_done' || r.state === 'settled').map((r) => <RowA key={r.id} row={r} />)}
+            {SAMPLE_ROWS.filter((r) => r.state === 'paid_done').map((r) => <RowA key={r.id} row={r} />)}
           </CaseBlock>
 
           {/* 케이스 2 — 진행중 (색 줄 없음) */}
           <CaseBlock
             title="② 진행 중 — 왼편 라인 없음 (투명)"
             description={[
-              '결제는 완료됐지만 후속 처리가 남은 건. 사장님이 "이건 처리해야 한다" 인식.',
+              '결제는 완료됐지만 후속 처리가 남았거나, 출고는 완료됐지만 결제 대기 중인 건.',
               '• 배송중: 송장 발급 + ALPS 추적 중 (우측 ● 초록 도트)',
               '• 출고 대기: 송장 발급됐지만 미출고 (우측 ● 황색 도트)',
-              '• B2B 출고완료 · 정산 대기: 거래처 납품 후 settle 전',
+              '• B2B 출고완료 · 결제 대기: 거래처 납품 후 결제 들어오기 전',
             ]}
           >
-            {SAMPLE_ROWS.filter((r) => ['paid_shipping', 'paid_wait_ship', 'shipped_b2b'].includes(r.state)).map((r) => <RowA key={r.id} row={r} />)}
+            {SAMPLE_ROWS.filter((r) => ['paid_shipping', 'paid_wait_ship', 'shipped_b2b_unpaid'].includes(r.state)).map((r) => <RowA key={r.id} row={r} />)}
           </CaseBlock>
 
           {/* 케이스 3 — 미결제 (빨강 줄) */}
@@ -205,11 +209,11 @@ export default function SalesDesignPreviewPage() {
 // ═══════════════════════════════════════════════════════════════
 function ColorLegend() {
   const items = [
-    { strip: 'bg-green-500', label: '판매완료 · 정산완료', desc: 'B2C 배송완료/매장수령 · B2B 정산완료' },
+    { strip: 'bg-green-500', label: '판매완료', desc: 'B2C 배송완료/매장수령 · B2B 출고완료+결제완료' },
     { strip: 'bg-red-500', label: '미결제', desc: '돈 안 들어온 건 (시급)' },
     { strip: 'bg-yellow-400', label: '부분결제', desc: '선납금만 입금됨' },
     { strip: 'bg-neutral-300', label: '취소', desc: '카드 흐림 + 취소선' },
-    { strip: 'bg-transparent border border-dashed border-neutral-300', label: '진행 중', desc: '결제 완료 + 후속 처리 중 (라인 없음)' },
+    { strip: 'bg-transparent border border-dashed border-neutral-300', label: '진행 중', desc: '결제 완료 후 배송/출고 대기, 또는 출고완료 후 결제 대기' },
   ];
   return (
     <div className="bg-white rounded-xl border border-neutral-200 p-4">
@@ -228,9 +232,9 @@ function ColorLegend() {
       <div className="mt-4 pt-3 border-t border-neutral-100">
         <h4 className="text-xs font-bold text-neutral-700 mb-2">우측 도트 (작은 ●)</h4>
         <div className="flex flex-wrap items-center gap-4 text-xs">
-          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500" /><span className="text-neutral-600">배송중 / 정산 진행</span></div>
-          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-400" /><span className="text-neutral-600">출고 대기</span></div>
-          <div className="flex items-center gap-2"><span className="text-neutral-400">없음 = 마무리됐거나 미결제 등 다른 상태</span></div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500" /><span className="text-neutral-600">배송중 (ALPS 추적 중)</span></div>
+          <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-400" /><span className="text-neutral-600">출고 대기 / 결제 대기</span></div>
+          <div className="flex items-center gap-2"><span className="text-neutral-400">없음 = 판매완료됐거나 미결제 등 다른 상태</span></div>
         </div>
       </div>
     </div>
@@ -290,8 +294,7 @@ function Option3Stats() {
 function stripColor(state: RowState): string {
   switch (state) {
     case 'paid_done':
-    case 'settled':
-      return 'bg-green-500'; // 마무리 완료
+      return 'bg-green-500'; // 판매완료 (B2C/B2B 통합)
     case 'unpaid':
       return 'bg-red-500'; // 미결제
     case 'partial':
@@ -309,8 +312,8 @@ function rightDot(state: RowState): { color: string; title: string } | null {
       return { color: 'bg-green-500', title: '배송중' };
     case 'paid_wait_ship':
       return { color: 'bg-amber-400', title: '출고 대기' };
-    case 'shipped_b2b':
-      return { color: 'bg-green-500', title: '출고완료 · 정산 대기' };
+    case 'shipped_b2b_unpaid':
+      return { color: 'bg-amber-400', title: '출고완료 · 결제 대기' };
     default:
       return null;
   }
@@ -323,8 +326,7 @@ function statusLabel(state: RowState): string {
     case 'paid_wait_ship': return '출고 대기';
     case 'unpaid': return '미결제';
     case 'partial': return '부분결제';
-    case 'settled': return '정산완료';
-    case 'shipped_b2b': return '출고완료';
+    case 'shipped_b2b_unpaid': return '출고완료 · 결제대기';
     case 'cancelled': return '취소';
   }
 }
@@ -361,7 +363,7 @@ function RowA({ row }: { row: SampleRow }) {
             <span className={
               row.state === 'unpaid' ? 'text-red-600 font-medium' :
               row.state === 'partial' ? 'text-yellow-700 font-medium' :
-              row.state === 'paid_done' || row.state === 'settled' ? 'text-green-700 font-medium' :
+              row.state === 'paid_done' ? 'text-green-700 font-medium' :
               'text-neutral-500'
             }>{statusLabel(row.state)}</span>
           </div>
