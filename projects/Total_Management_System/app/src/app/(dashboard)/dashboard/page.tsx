@@ -1,24 +1,224 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+/**
+ * /dashboard — TMS 메인 대시보드
+ *
+ * 시안 B+ (2026-05-26 사장님 채택, 시안 디자인 모니터 비교 후 확정):
+ *   - 1행: 매출 KPI(SVG 도넛, 5/12) + 4카드(7/12, 카테고리별 컴팩트)
+ *   - 2행: DashboardCalendarPanel (달력 + 선택일 타임라인, 기본=오늘)
+ *   - 3행: 미수금 + 할일 + 알림 5종(가로 5분할)
+ *
+ * TMS 디자인 가이드라인 (memory/feedback_tms_design_direction.md):
+ *   마모루 모노크롬(stone-50/white/stone-900) 베이스 + 절제된 상태색.
+ *   회계 합산 로직(RPC 077·078·080·088) 무수정 — UI 재배치 + 컴포넌트 분리만.
+ */
+
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Topbar } from '@/components/layout/topbar';
-import { HubCategoryCard } from '@/components/dashboard/hub-category-card';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useHubStats, useOutstandingAlert, useTodayConsultations, useLowStockAlert, usePurchasingAlert, useSuppliesAlert, useWaybillAlert, useNewReviewAlert } from '@/hooks/use-dashboard-stats';
-import { useSetting, useUpdateSettings } from '@/hooks/use-settings';
-import { formatPhone } from '@/lib/utils/format';
+import Link from 'next/link';
 import {
   ShoppingCart, MessageSquare, Wrench, Store,
-  AlertTriangle, ClipboardList, ArrowRight, CheckCircle2,
-  Calendar, PackageX, Truck, PackageOpen,
+  CheckCircle2, AlertTriangle,
+  PackageX, Truck, PackageOpen, Star, ClipboardList,
+  ArrowRight, Plus,
 } from 'lucide-react';
-import Link from 'next/link';
 
-/* ── 할일 메모 위젯 ── */
-function TodoWidget() {
+import { Topbar } from '@/components/layout/topbar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DashboardCalendarPanel } from '@/components/dashboard/dashboard-calendar';
+import {
+  useHubStats, useOutstandingAlert,
+  useLowStockAlert, usePurchasingAlert, useSuppliesAlert,
+  useWaybillAlert, useNewReviewAlert,
+} from '@/hooks/use-dashboard-stats';
+import { useSetting, useUpdateSettings } from '@/hooks/use-settings';
+import { formatPhone } from '@/lib/utils/format';
+
+function fmtKRW(n: number) {
+  if (n >= 10000) return `₩${Math.round(n / 10000)}만`;
+  return `₩${n.toLocaleString()}`;
+}
+
+/* ──────────────────────────────────────────────────────────
+ * 매출 KPI 도넛 (1행 좌측)
+ * ──────────────────────────────────────────────────────── */
+function RevenueKPIDonut({
+  current, monthGoal, b2c, b2b, repair, kpiGreen, kpiYellow, onEditClick,
+}: {
+  current: number; monthGoal: number;
+  b2c: number; b2b: number; repair: number;
+  kpiGreen: number; kpiYellow: number;
+  onEditClick: () => void;
+}) {
+  const pct = monthGoal > 0 ? Math.min(Math.round((current / monthGoal) * 100), 100) : 0;
+  const ringColor = pct >= kpiGreen ? '#10B981' : pct >= kpiYellow ? '#F59E0B' : '#EF4444';
+  const textColor = pct >= kpiGreen ? 'text-emerald-600' : pct >= kpiYellow ? 'text-amber-600' : 'text-rose-500';
+  const radius = 30;
+  const circ = 2 * Math.PI * radius;
+  const dash = (pct / 100) * circ;
+
+  return (
+    <div className="bg-white rounded-2xl border border-stone-200 p-5 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold">이번달 매출</p>
+        <button onClick={onEditClick} className="text-[10px] text-stone-400 hover:text-stone-700 transition">목표 수정</button>
+      </div>
+      <div className="flex items-center gap-4 flex-1">
+        <div className="relative w-[88px] h-[88px] shrink-0">
+          <svg viewBox="0 0 72 72" className="w-full h-full -rotate-90">
+            <circle cx="36" cy="36" r={radius} fill="none" stroke="#F5F5F4" strokeWidth="6" />
+            <circle
+              cx="36" cy="36" r={radius} fill="none"
+              stroke={ringColor} strokeWidth="6" strokeLinecap="round"
+              strokeDasharray={`${dash} ${circ}`}
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className={`text-xl font-bold ${textColor}`}>{pct}<span className="text-xs text-stone-500">%</span></span>
+          </div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-lg font-bold text-stone-900 leading-tight">{fmtKRW(current)}</p>
+          <p className="text-[11px] text-stone-500 mt-0.5">목표 {fmtKRW(monthGoal)}</p>
+          <div className="grid grid-cols-3 gap-1 mt-3">
+            <div className="text-center">
+              <p className="text-[9px] text-stone-400">B2C</p>
+              <p className="text-[11px] font-semibold text-stone-700">{fmtKRW(b2c)}</p>
+            </div>
+            <div className="text-center border-l border-stone-100">
+              <p className="text-[9px] text-stone-400">B2B</p>
+              <p className="text-[11px] font-semibold text-stone-700">{fmtKRW(b2b)}</p>
+            </div>
+            <div className="text-center border-l border-stone-100">
+              <p className="text-[9px] text-stone-400">수리</p>
+              <p className="text-[11px] font-semibold text-stone-700">{fmtKRW(repair)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────
+ * 매출 목표 미설정/편집 박스 (도넛 자리 대체)
+ * ──────────────────────────────────────────────────────── */
+function GoalEditBox({
+  goalInput, setGoalInput, onSave, onCancel, isEdit,
+}: {
+  goalInput: string; setGoalInput: (v: string) => void;
+  onSave: () => void; onCancel?: () => void; isEdit: boolean;
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-stone-200 p-5 h-full flex items-center gap-3">
+      <p className="text-xs text-stone-500 shrink-0">{isEdit ? '월 목표 수정' : '월 매출 목표 설정'}</p>
+      <input
+        type="number"
+        value={goalInput}
+        onChange={(e) => setGoalInput(e.target.value)}
+        placeholder="예: 5000000"
+        className="flex-1 h-8 px-3 rounded-lg border border-stone-200 text-sm focus:outline-none focus:border-stone-400 transition"
+      />
+      <button onClick={onSave} className="px-3 py-1.5 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition">저장</button>
+      {isEdit && onCancel && (
+        <button onClick={onCancel} className="text-xs text-stone-400 hover:text-stone-600 transition">취소</button>
+      )}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────
+ * 카테고리 카드 (1행 우측 4분할)
+ * ──────────────────────────────────────────────────────── */
+function CategoryCard({
+  title, icon: Icon, mainValue, mainLabel, subStats, href, accent,
+}: {
+  title: string;
+  icon: typeof ShoppingCart;
+  mainValue: number;
+  mainLabel: string;
+  subStats?: string;
+  href: string;
+  accent: 'blue' | 'amber' | 'emerald' | 'stone';
+}) {
+  const accentColors = {
+    blue:    'text-blue-600',
+    amber:   'text-amber-600',
+    emerald: 'text-emerald-600',
+    stone:   'text-stone-800',
+  };
+  return (
+    <Link
+      href={href}
+      className="bg-white rounded-2xl border border-stone-200 p-4 h-full flex flex-col hover:border-stone-300 transition group"
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5">
+          <Icon size={13} className="text-stone-400" />
+          <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold">{title}</p>
+        </div>
+        <ArrowRight size={12} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition" />
+      </div>
+      <div className="flex-1 flex flex-col justify-center">
+        <p className={`text-3xl font-bold leading-none ${accentColors[accent]}`}>{mainValue}</p>
+        <p className="text-[10px] text-stone-500 mt-1">{mainLabel}</p>
+      </div>
+      {subStats && (
+        <p className="text-[10px] text-stone-400 mt-2 pt-2 border-t border-stone-100 truncate">{subStats}</p>
+      )}
+    </Link>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────
+ * 미수금 카드 (3행 좌)
+ * ──────────────────────────────────────────────────────── */
+function OutstandingCard({
+  outstanding,
+}: {
+  outstanding?: Array<{ id: string; name: string; phone: string | null; outstanding_balance: number }>;
+}) {
+  const items = outstanding || [];
+  return (
+    <div className="bg-white rounded-2xl border border-stone-200 p-4 h-full">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
+          <AlertTriangle size={13} className={items.length > 0 ? 'text-rose-500' : 'text-stone-400'} />
+          <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold">미수금</p>
+        </div>
+        {items.length > 0 ? (
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 font-semibold">{items.length}건</span>
+        ) : (
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 font-semibold">0건</span>
+        )}
+      </div>
+      {items.length === 0 ? (
+        <div className="py-6 text-center text-xs text-stone-400">미수금이 없습니다</div>
+      ) : (
+        <div className="space-y-1.5">
+          {items.map((c) => (
+            <Link
+              key={c.id}
+              href={`/customers/${c.id}`}
+              className="flex items-center justify-between p-2 rounded-lg hover:bg-rose-50/40 transition"
+            >
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-stone-800 truncate">{c.name}</p>
+                {c.phone && <p className="text-[10px] text-stone-400 truncate">{formatPhone(c.phone)}</p>}
+              </div>
+              <span className="text-xs font-bold text-rose-600 shrink-0">{fmtKRW(c.outstanding_balance)}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────
+ * 할 일 메모 카드 (3행 중)
+ * ──────────────────────────────────────────────────────── */
+function TodoCard() {
   const queryClient = useQueryClient();
   const [input, setInput] = useState('');
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -35,58 +235,73 @@ function TodoWidget() {
 
   const addTodo = useMutation({
     mutationFn: async (text: string) => {
-      const res = await fetch('/api/dashboard/todos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+      const res = await fetch('/api/dashboard/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
       if (!res.ok) throw new Error();
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-todos'] }); setInput(''); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-todos'] });
+      setInput('');
+    },
   });
 
   const deleteTodo = useMutation({
     mutationFn: async (id: string) => {
-      await fetch('/api/dashboard/todos', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      await fetch('/api/dashboard/todos', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['dashboard-todos'] }); setConfirmId(null); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-todos'] });
+      setConfirmId(null);
+    },
   });
 
   const todos = data?.todos || [];
 
   return (
-    <Card>
-      <div className="flex items-center gap-2 mb-3">
-        <CheckCircle2 size={16} className="text-neutral-500" />
-        <span className="text-sm font-bold">할 일 메모</span>
-        {todos.length > 0 && <Badge className="bg-neutral-100 text-neutral-600">{todos.length}</Badge>}
+    <div className="bg-white rounded-2xl border border-stone-200 p-4 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
+          <CheckCircle2 size={13} className="text-stone-400" />
+          <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold">할 일 메모</p>
+        </div>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 font-semibold">{todos.length}</span>
       </div>
-
-      {/* 입력 */}
-      <div className="flex gap-2 mb-3">
+      <div className="flex gap-1.5 mb-3">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && input.trim()) addTodo.mutate(input.trim()); }}
           placeholder="할 일 입력..."
-          className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+          className="flex-1 h-7 px-2.5 rounded-lg border border-stone-200 text-xs placeholder:text-stone-400 focus:outline-none focus:border-stone-400 transition"
         />
         <button
           onClick={() => { if (input.trim()) addTodo.mutate(input.trim()); }}
           disabled={!input.trim() || addTodo.isPending}
-          className="px-3 h-8 rounded-lg bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-800 transition disabled:opacity-50"
-        >추가</button>
+          className="px-2 h-7 rounded-lg bg-stone-900 text-white text-[10px] font-semibold hover:bg-stone-800 transition disabled:opacity-40 flex items-center gap-0.5"
+        >
+          <Plus size={11} />추가
+        </button>
       </div>
-
-      {/* 목록 */}
       {todos.length === 0 ? (
-        <p className="text-xs text-neutral-400 text-center py-2">등록된 할 일이 없습니다</p>
+        <div className="py-2 text-center text-xs text-stone-400 flex-1">등록된 할 일이 없습니다</div>
       ) : (
-        <div className="space-y-1">
+        <div className="space-y-1 flex-1">
           {todos.map((todo) => (
             <div key={todo.id} className="flex items-center gap-2 py-1 group">
               <button
                 onClick={() => setConfirmId(todo.id)}
-                className="w-4 h-4 rounded border border-neutral-300 shrink-0 hover:border-green-500 hover:bg-green-50 transition flex items-center justify-center"
+                className="w-3.5 h-3.5 rounded border border-stone-300 shrink-0 hover:border-emerald-500 hover:bg-emerald-50 transition flex items-center justify-center"
+                aria-label="완료"
               />
-              <span className="text-sm text-neutral-700 flex-1">{todo.text}</span>
+              <span className="text-xs text-stone-700 flex-1">{todo.text}</span>
             </div>
           ))}
         </div>
@@ -95,34 +310,101 @@ function TodoWidget() {
       {/* 완료 확인 모달 */}
       {confirmId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setConfirmId(null)}>
-          <div className="bg-white rounded-xl shadow-xl p-5 w-72" onClick={(e) => e.stopPropagation()}>
-            <p className="text-sm font-semibold mb-3">이 할일을 완료했습니까?</p>
+          <div className="bg-white rounded-2xl shadow-xl p-5 w-72" onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm font-semibold mb-3 text-stone-800">이 할일을 완료했습니까?</p>
             <div className="flex gap-2">
-              <button onClick={() => deleteTodo.mutate(confirmId)}
-                className="flex-1 py-2 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700">완료</button>
-              <button onClick={() => setConfirmId(null)}
-                className="flex-1 py-2 rounded-lg bg-neutral-100 text-neutral-600 text-xs font-semibold hover:bg-neutral-200">취소</button>
+              <button
+                onClick={() => deleteTodo.mutate(confirmId)}
+                className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition"
+              >완료</button>
+              <button
+                onClick={() => setConfirmId(null)}
+                className="flex-1 py-2 rounded-lg bg-stone-100 text-stone-600 text-xs font-semibold hover:bg-stone-200 transition"
+              >취소</button>
             </div>
           </div>
         </div>
       )}
-    </Card>
+    </div>
   );
 }
 
-function fmtKRW(n: number) {
-  if (n >= 10000) return `₩${Math.round(n / 10000)}만`;
-  return `₩${n.toLocaleString()}`;
+/* ──────────────────────────────────────────────────────────
+ * 알림 5종 카드 (3행 우) — 가로 5분할
+ * ──────────────────────────────────────────────────────── */
+function AlertsCard({
+  lowStock, waybill, newReviews, purchasing, supplies,
+}: {
+  lowStock?: Array<unknown>;
+  waybill?: { remaining: number } | null;
+  newReviews?: { count: number } | null;
+  purchasing?: Array<unknown>;
+  supplies?: Array<unknown>;
+}) {
+  const lowStockCount = lowStock?.length || 0;
+  const waybillCount = waybill?.remaining ?? 0;
+  const reviewCount = newReviews?.count || 0;
+  const purchasingCount = purchasing?.length || 0;
+  const suppliesCount = supplies?.length || 0;
+
+  const alerts: Array<{
+    icon: typeof PackageX; label: string; count: number; href: string;
+    active: boolean; color: 'rose' | 'amber' | 'yellow' | 'blue' | 'stone';
+  }> = [
+    { icon: PackageX,      label: '저재고',   count: lowStockCount,  href: '/purchasing/new', active: lowStockCount > 0,  color: 'rose'   },
+    { icon: Truck,         label: '운송장',   count: waybillCount,    href: '/settings',       active: waybillCount < 100, color: 'amber'  },
+    { icon: Star,          label: '신규 후기', count: reviewCount,     href: '/reviews',        active: reviewCount > 0,    color: 'yellow' },
+    { icon: PackageOpen,   label: '매입 대기', count: purchasingCount, href: '/purchasing',     active: purchasingCount > 0,color: 'blue'   },
+    { icon: ClipboardList, label: '부자재',   count: suppliesCount,    href: '/supplies',       active: suppliesCount > 0,  color: 'stone'  },
+  ];
+
+  const palette = {
+    rose:   { text: 'text-rose-700',   bg: 'bg-rose-50',   icon: 'text-rose-500'   },
+    amber:  { text: 'text-amber-700',  bg: 'bg-amber-50',  icon: 'text-amber-500'  },
+    yellow: { text: 'text-yellow-700', bg: 'bg-yellow-50', icon: 'text-yellow-500' },
+    blue:   { text: 'text-blue-700',   bg: 'bg-blue-50',   icon: 'text-blue-500'   },
+    stone:  { text: 'text-stone-700',  bg: 'bg-stone-100', icon: 'text-stone-500'  },
+  } as const;
+  const inactivePalette = { text: 'text-stone-400', bg: 'bg-stone-50', icon: 'text-stone-300' };
+
+  return (
+    <div className="bg-white rounded-2xl border border-stone-200 p-4 h-full">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold">시스템 알림</p>
+      </div>
+      <div className="grid grid-cols-5 gap-1.5">
+        {alerts.map((a) => {
+          const c = a.active ? palette[a.color] : inactivePalette;
+          return (
+            <Link
+              key={a.label}
+              href={a.href}
+              className={`${c.bg} rounded-lg p-2 hover:opacity-80 transition`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <a.icon size={11} className={c.icon} />
+                <span className={`text-xs font-bold ${c.text}`}>{a.count}</span>
+              </div>
+              <p className={`text-[9px] font-medium ${c.text} truncate`}>{a.label}</p>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
+/* ──────────────────────────────────────────────────────────
+ * 페이지 본체
+ * ──────────────────────────────────────────────────────── */
 export default function DashboardPage() {
   const { data: stats, isLoading } = useHubStats();
-
-  // KPI: 월 목표 (DB 설정)
   const monthGoal = useSetting<number>('dashboard.monthly_goal', 0);
   const kpiGreen = useSetting<number>('dashboard.kpi_green', 80);
   const kpiYellow = useSetting<number>('dashboard.kpi_yellow', 50);
-  const cardVisibility = useSetting<Record<string, boolean>>('dashboard.card_visibility', { sales: true, repairs: true, orders: true, consultations: true });
+  const cardVisibility = useSetting<Record<string, boolean>>('dashboard.card_visibility', {
+    sales: true, repairs: true, orders: true, consultations: true,
+  });
   const cardOrder = useSetting<string[]>('dashboard.card_order', ['orders', 'consultations', 'repairs', 'sales']);
   const updateSettings = useUpdateSettings();
   const [editingGoal, setEditingGoal] = useState(false);
@@ -132,324 +414,112 @@ export default function DashboardPage() {
     updateSettings.mutate([{ key: 'dashboard.monthly_goal', value: v }]);
     setEditingGoal(false);
   };
+
   const { data: outstanding } = useOutstandingAlert();
-  const { data: todayConsults } = useTodayConsultations();
   const { data: lowStock } = useLowStockAlert();
   const { data: purchasingAlert } = usePurchasingAlert();
   const { data: suppliesAlert } = useSuppliesAlert();
   const { data: waybillAlert } = useWaybillAlert();
   const { data: newReviews } = useNewReviewAlert();
 
-  // 오늘 할 일 액션 생성
-  const actions: Array<{ label: string; count: number; href: string; color: string }> = [];
-  if (stats) {
-    if (stats.orders.payDone > 0) actions.push({ label: '주문 결제 확인 → 배송 준비', count: stats.orders.payDone, href: '/orders/dashboard', color: 'bg-blue-50 text-blue-700' });
-    if (stats.orders.preparing > 0) actions.push({ label: '주문 준비 → 송장 생성', count: stats.orders.preparing, href: '/orders/dashboard', color: 'bg-orange-50 text-orange-700' });
-    if (stats.consultations.newIntake > 0) actions.push({ label: '신규 상담 접수 확인', count: stats.consultations.newIntake, href: '/consultations', color: 'bg-yellow-50 text-yellow-700' });
-    if (stats.consultations.needAction > 0) actions.push({ label: '상담 일정 재요청', count: stats.consultations.needAction, href: '/consultations', color: 'bg-red-50 text-red-700' });
-    if (stats.repairs.intakeNew > 0) actions.push({ label: '복원수리 신규 접수 확인', count: stats.repairs.intakeNew, href: '/repairs/dashboard', color: 'bg-blue-50 text-blue-700' });
-    if (stats.repairs.readyToShip > 0) actions.push({ label: '복원수리 출고 대기', count: stats.repairs.readyToShip, href: '/repairs', color: 'bg-green-50 text-green-700' });
-  }
-  if (purchasingAlert && purchasingAlert.length > 0) {
-    actions.push({ label: '매입 입고 대기', count: purchasingAlert.length, href: '/purchasing', color: 'bg-indigo-50 text-indigo-700' });
-  }
-  if (suppliesAlert && suppliesAlert.length > 0) {
-    actions.push({ label: '부자재 주문 필요', count: suppliesAlert.length, href: '/supplies', color: 'bg-neutral-100 text-neutral-700' });
-  }
+  // 매출 3분할 (회계 합산 로직 기존 그대로 유지)
+  // B2C 제품 + B2B 제품(딜러/아카데미+납품) + 복원수리 전체(A 접수+B 판매RS+C 납품RS)
+  const b2c = stats?.sales.salesB2C || 0;
+  const b2b = stats?.sales.salesB2B || 0;
+  const repair = stats?.repairs?.monthRepairAmount || 0;
+  const current = b2c + b2b + repair;
 
-  const orderSummary = stats
-    ? `이번주 ${fmtKRW(stats.orders.weekAmount)} · 이번달 ${fmtKRW(stats.orders.monthAmount)}`
-    : '';
-  const repairSummary = stats
-    ? `이번달 복원수리 매출 ${fmtKRW(stats.repairs.monthRepairAmount)} (${stats.repairs.monthRepairCount}자루)`
-    : '';
+  // 4카드 정의 (설정 기반 순서/표시)
+  const CARD_DEF: Record<string, React.ReactNode> = {
+    orders: (
+      <CategoryCard
+        key="orders" title="주문" icon={ShoppingCart} accent="blue" href="/orders/dashboard"
+        mainValue={stats?.orders.payDone || 0} mainLabel="결제완료"
+        subStats={stats ? `준비 ${stats.orders.preparing} · 완료 ${stats.orders.delivered}` : ''}
+      />
+    ),
+    consultations: (
+      <CategoryCard
+        key="consultations" title="상담" icon={MessageSquare} accent="amber" href="/consultations"
+        mainValue={stats?.consultations.newIntake || 0} mainLabel="신규접수"
+        subStats={stats ? `예정 ${stats.consultations.confirmed} · 재요청 ${stats.consultations.needAction}` : ''}
+      />
+    ),
+    repairs: (
+      <CategoryCard
+        key="repairs" title="복원수리" icon={Wrench} accent="emerald" href="/repairs/dashboard"
+        mainValue={stats?.repairs.readyToShip || 0} mainLabel="출고대기"
+        subStats={stats ? `이번달 ${stats.repairs.monthRepairCount}자루` : ''}
+      />
+    ),
+    sales: (
+      <CategoryCard
+        key="sales" title="제품 판매" icon={Store} accent="stone" href="/sales"
+        mainValue={stats?.sales.monthCount || 0} mainLabel="이번달 판매"
+        subStats={stats ? `B2C ${fmtKRW(b2c)} · B2B ${fmtKRW(b2b)}` : ''}
+      />
+    ),
+  };
+  const defaultOrder = ['orders', 'consultations', 'repairs', 'sales'];
+  const order = cardOrder.length > 0 ? cardOrder : defaultOrder;
+  const visibleCards = order
+    .filter((key) => cardVisibility[key] !== false)
+    .map((key) => CARD_DEF[key])
+    .filter(Boolean);
 
   return (
     <>
       <Topbar title="대시보드" />
-
-      <div className="px-4 md:px-6 py-4 space-y-5">
-        {/* KPI: 이번달 총매출 달성률 — 3분할 (B2C 제품 + B2B 제품 + 복원수리 전체) */}
-        {monthGoal > 0 && stats && (() => {
-          // 총매출 = B2C 제품(소매/온라인 판매 − RS) + B2B 제품(딜러/아카데미 판매 − RS + 납품 전체 − RS) + 복원수리 전체(A 접수 + B 판매RS + C 납품RS)
-          //   RS(복원수리)는 제품 매출에서 제외되어 "복원수리 전체"로만 잡히므로 중복 없음
-          const b2c = stats.sales.salesB2C || 0;
-          const b2b = stats.sales.salesB2B || 0;
-          const repair = stats.repairs?.monthRepairAmount || 0;
-          const current = b2c + b2b + repair;
-          const pct = Math.min(Math.round((current / monthGoal) * 100), 100);
-          const color = pct >= kpiGreen ? 'bg-green-500' : pct >= kpiYellow ? 'bg-yellow-500' : 'bg-red-500';
-          const textColor = pct >= kpiGreen ? 'text-green-600' : pct >= kpiYellow ? 'text-yellow-600' : 'text-red-500';
-          return (
-            <div className="bg-white rounded-lg border border-neutral-200 p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-neutral-500">이번달 총매출 목표 <span className="text-neutral-400">(B2C 제품 + B2B 제품 + 복원수리)</span></p>
-                <button onClick={() => { setGoalInput(String(monthGoal)); setEditingGoal(true); }} className="text-[10px] text-neutral-400 hover:text-neutral-600">수정</button>
-              </div>
-              <div className="flex items-end gap-3 mb-2">
-                <span className={`text-2xl font-bold ${textColor}`}>{pct}%</span>
-                <span className="text-sm text-neutral-500">{fmtKRW(current)} / {fmtKRW(monthGoal)}</span>
-              </div>
-              <div className="w-full h-2.5 bg-neutral-100 rounded-full overflow-hidden">
-                <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
-              </div>
-              {/* 매출 3분할 내역 */}
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-lg bg-neutral-50 py-1.5">
-                  <p className="text-[10px] text-neutral-400">B2C 제품</p>
-                  <p className="text-xs font-bold text-neutral-700 mt-0.5">{fmtKRW(b2c)}</p>
-                </div>
-                <div className="rounded-lg bg-neutral-50 py-1.5">
-                  <p className="text-[10px] text-neutral-400">B2B 제품 <span className="text-neutral-300">(납품 포함)</span></p>
-                  <p className="text-xs font-bold text-neutral-700 mt-0.5">{fmtKRW(b2b)}</p>
-                </div>
-                <div className="rounded-lg bg-neutral-50 py-1.5">
-                  <p className="text-[10px] text-neutral-400">복원수리 전체</p>
-                  <p className="text-xs font-bold text-neutral-700 mt-0.5">{fmtKRW(repair)}</p>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* 목표 미설정 or 편집 */}
-        {(monthGoal === 0 || editingGoal) && (
-          <div className="bg-neutral-50 rounded-lg border border-neutral-200 p-3 flex items-center gap-3">
-            <p className="text-xs text-neutral-500 shrink-0">{editingGoal ? '월 목표 수정' : '월 매출 목표 설정'}</p>
-            <input
-              type="number"
-              value={goalInput}
-              onChange={(e) => setGoalInput(e.target.value)}
-              placeholder="예: 5000000"
-              className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm"
-            />
-            <button onClick={saveGoal} className="px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-xs font-medium">저장</button>
-            {editingGoal && <button onClick={() => setEditingGoal(false)} className="text-xs text-neutral-400">취소</button>}
-          </div>
-        )}
-
+      <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4">
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Skeleton className="h-40 w-full" />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
+            <Skeleton className="h-64 w-full" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <Skeleton className="h-40" />
+              <Skeleton className="h-40" />
+              <Skeleton className="h-40" />
             </div>
           </div>
         ) : (
-          <>
-            {/* PC: 2단 레이아웃 / 모바일: 수직 */}
-            <div className="flex flex-col lg:flex-row gap-5">
-
-              {/* 좌측: 오늘 할 일 + 미수금 */}
-              <div className="flex-1 min-w-0 space-y-4">
-                {/* 오늘 할 일 */}
-                <Card>
-                  <div className="flex items-center gap-2 mb-3">
-                    <ClipboardList size={18} className="text-indigo-black" />
-                    <h3 className="text-sm font-bold">오늘 할 일</h3>
-                    {actions.length > 0 && (
-                      <Badge className="bg-red-100 text-red-700">{actions.length}</Badge>
-                    )}
-                  </div>
-                  {actions.length > 0 ? (
-                    <div className="space-y-1.5">
-                      {actions.map((a) => (
-                        <Link
-                          key={a.label}
-                          href={a.href}
-                          className={`flex items-center justify-between p-2.5 rounded-lg ${a.color} transition hover:opacity-80`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{a.label}</span>
-                            <Badge className="bg-white/60 text-inherit">{a.count}건</Badge>
-                          </div>
-                          <ArrowRight size={14} className="opacity-40" />
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 py-4 justify-center text-green-600">
-                      <CheckCircle2 size={18} />
-                      <span className="text-sm font-medium">모든 업무가 처리되었습니다</span>
-                    </div>
-                  )}
-                </Card>
-
-                {/* 할일 메모 */}
-                {cardVisibility.todos !== false && <TodoWidget />}
-
-                {/* 미수금 경고 */}
-                {outstanding && outstanding.length > 0 && (
-                  <Card>
-                    <div className="flex items-center gap-2 mb-3">
-                      <AlertTriangle size={16} className="text-amber-500" />
-                      <span className="text-sm font-bold text-amber-700">미수금 ({outstanding.length}건)</span>
-                    </div>
-                    <div className="space-y-1.5">
-                      {outstanding.map((c) => (
-                        <Link
-                          key={c.id}
-                          href={`/customers/${c.id}`}
-                          className="flex items-center justify-between p-2 rounded-lg hover:bg-amber-50 transition"
-                        >
-                          <div>
-                            <span className="text-sm font-medium">{c.name}</span>
-                            {c.phone && <span className="text-xs text-neutral-400 ml-2">{formatPhone(c.phone)}</span>}
-                          </div>
-                          <span className="text-sm font-bold text-amber-700">{fmtKRW(c.outstanding_balance)}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </Card>
-                )}
-
-                {/* 오늘 상담 일정 */}
-                {todayConsults && todayConsults.length > 0 && (
-                  <Card>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Calendar size={16} className="text-blue-500" />
-                      <span className="text-sm font-bold text-blue-700">오늘 상담 ({todayConsults.length}건)</span>
-                    </div>
-                    <div className="space-y-1.5">
-                      {todayConsults.map((c) => {
-                        const typeLabel = c.consultation_type === 'store_visit' ? '매장' : c.consultation_type === 'field_request' ? '출장' : '톡';
-                        return (
-                          <Link
-                            key={c.id}
-                            href={`/consultations/${c.id}`}
-                            className="flex items-center justify-between p-2 rounded-lg hover:bg-blue-50 transition"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-blue-100 text-blue-700 text-[10px]">{typeLabel}</Badge>
-                              <span className="text-sm font-medium">{c.name}</span>
-                            </div>
-                            <span className="text-xs text-neutral-500">{c.visit_time || '-'}</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </Card>
+          <div className="space-y-3">
+            {/* 1행: 매출 KPI + 4카드 */}
+            <div className="grid grid-cols-12 gap-3">
+              <div className="col-span-12 lg:col-span-5">
+                {monthGoal > 0 && !editingGoal ? (
+                  <RevenueKPIDonut
+                    current={current} monthGoal={monthGoal}
+                    b2c={b2c} b2b={b2b} repair={repair}
+                    kpiGreen={kpiGreen} kpiYellow={kpiYellow}
+                    onEditClick={() => { setGoalInput(String(monthGoal)); setEditingGoal(true); }}
+                  />
+                ) : (
+                  <GoalEditBox
+                    goalInput={goalInput} setGoalInput={setGoalInput}
+                    onSave={saveGoal}
+                    onCancel={editingGoal ? () => setEditingGoal(false) : undefined}
+                    isEdit={editingGoal}
+                  />
                 )}
               </div>
-
-              {/* 우측: 현황 카드 — 설정 기반 순서/표시 */}
-              <div className="w-full lg:w-[600px] shrink-0 space-y-3">
-                <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">현황 요약</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {(() => {
-                  const CARD_MAP: Record<string, React.ReactNode> = {
-                    orders: (
-                      <HubCategoryCard key="orders" title="주문" icon={ShoppingCart} href="/orders/dashboard"
-                        stats={[
-                          { label: '결제완료', value: stats?.orders.payDone || 0, color: 'text-info' },
-                          { label: '준비중', value: stats?.orders.preparing || 0, color: 'text-warning' },
-                          { label: '배송중', value: stats?.orders.shipping || 0, color: 'text-terracotta' },
-                          { label: '완료', value: stats?.orders.delivered || 0, color: 'text-success' },
-                        ]}
-                        summary={orderSummary}
-                      />
-                    ),
-                    consultations: (
-                      <HubCategoryCard key="consultations" title="상담" icon={MessageSquare} href="/consultations"
-                        stats={[
-                          { label: '신규접수', value: stats?.consultations.newIntake || 0, color: 'text-warning' },
-                          { label: '상담예정', value: stats?.consultations.confirmed || 0, color: 'text-info' },
-                          { label: '일정재요청', value: stats?.consultations.needAction || 0, color: 'text-error' },
-                        ]}
-                      />
-                    ),
-                    repairs: (
-                      <HubCategoryCard key="repairs" title="복원수리" icon={Wrench} href="/repairs/dashboard"
-                        stats={[
-                          { label: '신규접수', value: stats?.repairs.intakeNew || 0, color: 'text-info' },
-                          { label: '입고대기', value: stats?.repairs.pendingInbound || 0, color: 'text-warning' },
-                          { label: '작업중', value: stats?.repairs.workingCount || 0, color: 'text-terracotta' },
-                          { label: '출고대기', value: stats?.repairs.readyToShip || 0, color: 'text-success' },
-                        ]}
-                        summary={repairSummary}
-                      />
-                    ),
-                    sales: (
-                      <HubCategoryCard key="sales" title="제품 판매" icon={Store} href="/sales"
-                        stats={[
-                          { label: '이번달 판매·납품', value: stats?.sales.monthCount || 0, color: 'text-indigo-black' },
-                        ]}
-                        summary={stats ? `B2C ${fmtKRW(stats.sales.salesB2C)} · B2B ${fmtKRW(stats.sales.salesB2B)} (납품 포함)` : ''}
-                      />
-                    ),
-                  };
-                  const defaultOrder = ['orders', 'consultations', 'repairs', 'sales'];
-                  const order = cardOrder.length > 0 ? cardOrder : defaultOrder;
-                  return order
-                    .filter((key) => cardVisibility[key] !== false)
-                    .map((key) => CARD_MAP[key])
-                    .filter(Boolean);
-                })()}
-                </div>
-                {/* 저재고 알림 */}
-                {lowStock && lowStock.length > 0 && (
-                  <Card>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <PackageX size={16} className="text-red-500" />
-                        <span className="text-sm font-bold text-red-700">저재고 ({lowStock.length})</span>
-                      </div>
-                      <Link href="/purchasing/new" className="text-xs text-terracotta hover:underline">발주 작성 →</Link>
-                    </div>
-                    <div className="space-y-1.5">
-                      {lowStock.map((p) => (
-                        <Link
-                          key={p.id}
-                          href={`/products/${p.id}`}
-                          className="flex items-center justify-between p-2 rounded-lg hover:bg-red-50 transition"
-                        >
-                          <div>
-                            <span className="text-sm font-medium">{p.name}</span>
-                            <span className="text-xs text-neutral-400 ml-2">{p.sku}</span>
-                          </div>
-                          <Badge className={p.stock_quantity === 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}>
-                            {p.stock_quantity}개
-                          </Badge>
-                        </Link>
-                      ))}
-                    </div>
-                  </Card>
-                )}
-                {/* 운송장 잔여 알림 */}
-                {waybillAlert && waybillAlert.remaining < 100 && (
-                  <Card>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-red-500 text-sm">⚠</span>
-                      <span className="text-sm font-bold text-red-700">운송장 잔여 {waybillAlert.remaining}건</span>
-                    </div>
-                    <p className="text-xs text-neutral-500">롯데택배에 새 운송장 대역 할당을 요청하세요</p>
-                    <Link href="/settings" className="text-xs text-terracotta hover:underline mt-1 inline-block">설정 → 주문·배송 →</Link>
-                  </Card>
-                )}
-                {/* 신규 리뷰 알림 */}
-                {newReviews && newReviews.count > 0 && (
-                  <Card>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">⭐</span>
-                        <span className="text-sm font-bold text-neutral-800">신규 후기 {newReviews.count}건</span>
-                      </div>
-                      <Link href="/reviews" className="text-xs text-terracotta hover:underline">확인하기 →</Link>
-                    </div>
-                    <div className="space-y-1">
-                      {newReviews.reviews.slice(0, 3).map((r: { id: string; name: string; stars: number }) => (
-                        <div key={r.id} className="flex items-center justify-between text-xs">
-                          <span className="text-neutral-600">{r.name}</span>
-                          <span className="text-yellow-500">{'★'.repeat(r.stars)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </Card>
-                )}
+              <div className="col-span-12 lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {visibleCards}
               </div>
             </div>
-          </>
+
+            {/* 2행: 달력 + 선택일 타임라인 */}
+            <DashboardCalendarPanel />
+
+            {/* 3행: 미수금 + 할일 + 알림 */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <OutstandingCard outstanding={outstanding} />
+              {cardVisibility.todos !== false && <TodoCard />}
+              <AlertsCard
+                lowStock={lowStock} waybill={waybillAlert} newReviews={newReviews}
+                purchasing={purchasingAlert} supplies={suppliesAlert}
+              />
+            </div>
+          </div>
         )}
       </div>
     </>
