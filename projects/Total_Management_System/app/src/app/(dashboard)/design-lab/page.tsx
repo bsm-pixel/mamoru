@@ -155,7 +155,142 @@ export default function DesignLabPage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════════ */}
-        {/* § 2~N. 향후 다른 페이지 디자인 검토 시 여기에 § 추가 */}
+        {/* § 2. 리뷰 약속 칩 — ON/OFF 시각 구분 명확화 (3 시안) */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        <section className="space-y-6">
+          <div className="border-l-4 border-blue-500 pl-4">
+            <h2 className="text-lg font-bold text-indigo-black">§ 2. 리뷰 약속 칩 — ON/OFF 시각 구분 (3 시안)</h2>
+            <p className="text-xs text-neutral-500 mt-1">
+              사장님 피드백 (2026-05-26): 현재 <code className="px-1 bg-neutral-100 rounded">○ 약속</code> /
+              <code className="px-1 bg-neutral-100 rounded">✓ 약속</code> 가 너무 비슷해 구분 어려움.
+              <br />→ ON/OFF 상태가 1초에 인지되는 시안 3종 비교.
+            </p>
+          </div>
+
+          {/* 현재 (참고) */}
+          <div>
+            <h3 className="text-sm font-bold text-neutral-700 mb-2">현재 (운영 중) — 사장님이 구분 어렵다고 한 디자인</h3>
+            <div className="bg-white rounded-xl border border-neutral-200 p-4">
+              <p className="text-[10px] text-neutral-400 mb-2">OFF (약속 안 받음):</p>
+              <PromiseChipCurrent on={false} />
+              <p className="text-[10px] text-neutral-400 mb-2 mt-3">ON (약속 ✓ 받음):</p>
+              <PromiseChipCurrent on={true} />
+            </div>
+          </div>
+
+          {/* 시안 1 — 색상 강조 + 라벨 다이내믹 */}
+          <CaseBlock
+            title="시안 1 — 색상 강조 + 라벨 다이내믹"
+            description={[
+              'OFF 상태에서 텍스트 자체가 행위 유도 ("약속 받기"), ON 상태에서 상태 표현 ("약속 ✓").',
+              '체크 안 됨 = 외곽선만 + 회색 / 체크됨 = filled 배경 + 강한 색',
+              '장점: 색·외형·텍스트 3중 차이 → 1초 인지 강함',
+            ]}
+          >
+            <div className="px-4 py-4 bg-white">
+              <div className="flex items-center gap-4 text-xs">
+                <span className="text-neutral-500 w-16">OFF:</span>
+                <PromiseChipV1 on={false} />
+                <span className="text-neutral-400 ml-2">← 클릭해서 약속 받기 (체크 안 됨)</span>
+              </div>
+              <div className="flex items-center gap-4 text-xs mt-3">
+                <span className="text-neutral-500 w-16">ON:</span>
+                <PromiseChipV1 on={true} />
+                <span className="text-neutral-400 ml-2">← 약속 받음 (체크됨)</span>
+              </div>
+            </div>
+          </CaseBlock>
+
+          {/* 시안 2 — 체크박스 형태 (전형적) */}
+          <CaseBlock
+            title="시안 2 — 체크박스 형태 (전형적·직관)"
+            description={[
+              '명확한 체크박스 사각형 (☐ → ☑). 모든 사용자가 직관적으로 인지.',
+              'OFF = 빈 사각형 + "리뷰 약속" 라벨 / ON = 채워진 체크 사각형 + "리뷰 약속" 라벨 (동일 라벨)',
+              '장점: 익숙한 패턴 / 단점: 다른 옵션보다 시선 약함 (전형적이라 새로움 없음)',
+            ]}
+          >
+            <div className="px-4 py-4 bg-white">
+              <div className="flex items-center gap-4 text-xs">
+                <span className="text-neutral-500 w-16">OFF:</span>
+                <PromiseChipV2 on={false} />
+              </div>
+              <div className="flex items-center gap-4 text-xs mt-3">
+                <span className="text-neutral-500 w-16">ON:</span>
+                <PromiseChipV2 on={true} />
+              </div>
+            </div>
+          </CaseBlock>
+
+          {/* 시안 3 — 토글 스위치 + 날짜 */}
+          <CaseBlock
+            title="시안 3 — 토글 스위치 + 활성 시 날짜"
+            description={[
+              'iOS 스타일 ON/OFF 토글 스위치 + 라벨 + 활성 시 약속 날짜 표시',
+              'OFF = 회색 스위치 + "리뷰 약속" / ON = 검정 스위치 + "리뷰 약속" + 날짜',
+              '장점: 상태가 가장 명확 (스위치 위치 자체로 인지) + 날짜 정보 추가',
+            ]}
+          >
+            <div className="px-4 py-4 bg-white">
+              <div className="flex items-center gap-4 text-xs">
+                <span className="text-neutral-500 w-16">OFF:</span>
+                <PromiseChipV3 on={false} />
+              </div>
+              <div className="flex items-center gap-4 text-xs mt-3">
+                <span className="text-neutral-500 w-16">ON:</span>
+                <PromiseChipV3 on={true} />
+              </div>
+            </div>
+          </CaseBlock>
+
+          {/* 실제 헤더 우측에 배치되었을 때 시뮬레이션 */}
+          <div>
+            <h3 className="text-sm font-bold text-indigo-black mb-2">▶ 실제 상세 패널 헤더 우측 배치 시뮬레이션</h3>
+            <p className="text-xs text-neutral-500 mb-3">각 시안 + 후기 요청 버튼 함께 배치한 모습</p>
+            <div className="space-y-3">
+              <div className="bg-white border border-neutral-200 rounded-lg p-3 flex items-center justify-end gap-2">
+                <span className="text-[10px] text-neutral-400 mr-2">시안 1 OFF</span>
+                <PromiseChipV1 on={false} />
+                <SendButton sent={false} />
+              </div>
+              <div className="bg-white border border-neutral-200 rounded-lg p-3 flex items-center justify-end gap-2">
+                <span className="text-[10px] text-neutral-400 mr-2">시안 1 ON</span>
+                <PromiseChipV1 on={true} />
+                <SendButton sent={false} />
+              </div>
+              <div className="bg-white border border-neutral-200 rounded-lg p-3 flex items-center justify-end gap-2">
+                <span className="text-[10px] text-neutral-400 mr-2">시안 2 OFF</span>
+                <PromiseChipV2 on={false} />
+                <SendButton sent={false} />
+              </div>
+              <div className="bg-white border border-neutral-200 rounded-lg p-3 flex items-center justify-end gap-2">
+                <span className="text-[10px] text-neutral-400 mr-2">시안 2 ON</span>
+                <PromiseChipV2 on={true} />
+                <SendButton sent={true} />
+              </div>
+              <div className="bg-white border border-neutral-200 rounded-lg p-3 flex items-center justify-end gap-2">
+                <span className="text-[10px] text-neutral-400 mr-2">시안 3 OFF</span>
+                <PromiseChipV3 on={false} />
+                <SendButton sent={false} />
+              </div>
+              <div className="bg-white border border-neutral-200 rounded-lg p-3 flex items-center justify-end gap-2">
+                <span className="text-[10px] text-neutral-400 mr-2">시안 3 ON</span>
+                <PromiseChipV3 on={true} />
+                <SendButton sent={true} />
+              </div>
+            </div>
+          </div>
+
+          {/* 자동 후기 요청 정책 연동 안내 */}
+          <div className="px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-800">
+            <p className="font-bold mb-1">🔗 자동 후기 요청 정책 정정 (별도 작업, 사장님 결정 대기)</p>
+            <p>약속 ✓ 고객 + 배송완료 자동 감지 (ALPS 41/45 코드) → <strong>자동 알림톡 발송</strong> 으로 정책 정정 가능</p>
+            <p className="mt-1 opacity-70">현재 정책: 약속 X 고객만 자동 → 정정: 약속 ✓ 고객만 자동 (보수적, 사장님 의도 부합)</p>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* § 3~N. 향후 다른 페이지 디자인 검토 시 여기에 § 추가 */}
         {/* ═══════════════════════════════════════════════════════════ */}
         <section className="border-2 border-dashed border-neutral-300 rounded-xl p-8 text-center bg-neutral-50">
           <div className="text-3xl mb-2">🚧</div>
@@ -295,6 +430,101 @@ function statusLabel(state: RowState): string {
     case 'cancelled': return '취소';
   }
 }
+// ═══════════════════════════════════════════════════════════════
+// § 2 — 리뷰 약속 칩 3 시안
+// ═══════════════════════════════════════════════════════════════
+
+/** 현재 (운영 중) — 사장님이 구분 어렵다고 한 디자인 */
+function PromiseChipCurrent({ on }: { on: boolean }) {
+  return (
+    <button
+      type="button"
+      className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition ${
+        on ? 'bg-terracotta/10 text-terracotta' : 'bg-neutral-100 text-neutral-500'
+      }`}
+    >
+      <span className="text-[10px]">{on ? '✓' : '○'}</span>
+      <span>약속</span>
+    </button>
+  );
+}
+
+/** 시안 1 — 색상 강조 + 라벨 다이내믹 */
+function PromiseChipV1({ on }: { on: boolean }) {
+  return (
+    <button
+      type="button"
+      className={`flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-md font-medium transition ${
+        on
+          ? 'bg-terracotta text-white shadow-sm'
+          : 'bg-white text-neutral-500 border border-dashed border-neutral-300 hover:border-neutral-500'
+      }`}
+    >
+      {on ? <span className="text-[10px]">✓</span> : <span className="text-[10px]">+</span>}
+      <span>{on ? '약속 받음' : '약속 받기'}</span>
+    </button>
+  );
+}
+
+/** 시안 2 — 체크박스 형태 (전형적) */
+function PromiseChipV2({ on }: { on: boolean }) {
+  return (
+    <button
+      type="button"
+      className={`flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md transition ${
+        on ? 'bg-terracotta/10 text-terracotta' : 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100'
+      }`}
+    >
+      <span
+        className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center text-[9px] font-bold transition ${
+          on ? 'bg-terracotta border-terracotta text-white' : 'bg-white border-neutral-400 text-transparent'
+        }`}
+      >
+        {on ? '✓' : ''}
+      </span>
+      <span className={on ? 'font-semibold' : ''}>리뷰 약속</span>
+    </button>
+  );
+}
+
+/** 시안 3 — 토글 스위치 + 날짜 */
+function PromiseChipV3({ on }: { on: boolean }) {
+  return (
+    <button
+      type="button"
+      className="flex items-center gap-2 text-[11px] px-2 py-1 rounded-md hover:bg-neutral-50 transition"
+    >
+      {/* 토글 스위치 */}
+      <span
+        className={`relative inline-block w-7 h-4 rounded-full transition ${
+          on ? 'bg-neutral-900' : 'bg-neutral-300'
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-all ${
+            on ? 'left-3.5' : 'left-0.5'
+          }`}
+        />
+      </span>
+      <span className={on ? 'font-semibold text-neutral-900' : 'text-neutral-500'}>리뷰 약속</span>
+      {on && <span className="text-[10px] text-neutral-400">2026-05-25</span>}
+    </button>
+  );
+}
+
+/** 후기 요청 버튼 (시안 비교용) */
+function SendButton({ sent }: { sent: boolean }) {
+  return (
+    <button
+      type="button"
+      className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md bg-indigo-black text-cream"
+    >
+      <span className="text-[10px]">✈</span>
+      <span>{sent ? '재발송' : '후기 요청'}</span>
+    </button>
+  );
+}
+
 function RowA({ row }: { row: SampleRow }) {
   const isCancelled = row.state === 'cancelled';
   const strip = stripColor(row.state);
