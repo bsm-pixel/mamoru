@@ -1,6 +1,6 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-05-18 늦은밤 — **Phase 1A 카탈로그 9개 카드 + preview.html 4가위 매트릭스 완성** (사장님 검토 대기). 다음 컴퓨터(노트북)에서 이어갈 수 있도록 컨텍스트 박제 완료
+> 최종 수정: 2026-05-27 — **대시보드 시안 B+ 적용 완료** + **전체 TMS 톤 통일 점진 작업 박제** (페이지 그룹별 진행). Phase 1A 카탈로그 검토 대기 유지.
 > **미완료 항목을 상단에, 완료 이력을 하단에 배치**
 
 ---
@@ -52,7 +52,62 @@
 
 ---
 
+### 🎨 TMS 톤 통일 — 시안 B+ 스타일 전체 확장 (점진 작업)
+
+**시작 배경**: 2026-05-27 대시보드(`/dashboard`)에 시안 B+ 적용 완료 → 사장님 "이 톤 너무 좋다, 전체 TMS에 확장하자" 결정.
+
+**디자인 기준 (필독)**:
+- 룰: [feedback_tms_design_direction](../.claude/projects/c--Users-user-Desktop-mamoru/memory/feedback_tms_design_direction.md) — 마모루 가이드 100% 추종 X, 트렌드 + 작업효율 우선
+- 레퍼런스 코드: `projects/Total_Management_System/app/src/app/(dashboard)/dashboard/page.tsx` + `src/components/dashboard/dashboard-calendar.tsx`
+- 핵심 톤: `bg-stone-50` 배경 + `rounded-2xl` 카드 + `border-stone-200` + 절제된 상태색(emerald/violet/amber/rose/blue) + uppercase tracking-wider 라벨 + 큰 숫자 위계
+
+**페이지 그룹별 진행 순서** (사장님 한 마디 "다음 OOO 가자"로 시작):
+
+- [ ] **1. 상담 페이지군** (`/consultations` 대시보드/리스트/달력/상세) — 가장 자주 사용
+- [ ] **2. 복원수리 페이지군** (`/repairs` 대시보드/리스트/입고/출고/상세)
+- [ ] **3. 주문 페이지군** (`/orders` 대시보드/리스트/송장/상세)
+- [ ] **4. 판매 페이지군** (`/sales` B2C+B2B 통합, `/sales/new`, `/deliveries`)
+- [ ] **5. 매입 페이지군** (`/purchasing` 발주/입고/상세 — 매입 상세는 `purchase-detail-panel.tsx`)
+- [ ] **6. 고객/상품 페이지군** (`/customers`, `/products`, `/categories`)
+- [ ] **7. 시리얼/계약서/설정** (`/serials`, `/contracts`, `/settings`)
+
+**각 그룹 진행 절차** (재사용):
+1. 디자인 모니터(`/design-lab`)에 § 시안 1~2개 추가 → 사장님 비교
+2. 채택안 결정 → 실제 페이지에 적용
+3. 흐름도(`docs/TMS_FLOW_*.md`) 영향 시 동일 커밋에 업데이트 ([flow doc 룰](../.claude/projects/c--Users-user-Desktop-mamoru/memory/feedback_flow_doc_update.md))
+4. `npx tsc --noEmit` 통과 확인
+5. 사장님 승인 → push → Vercel 빌드 확인 → 링크 제공
+6. design-lab § 즉시 삭제 (운영 룰)
+
+**절대 제약**:
+- 회계 RPC (077·078·080·088 등) 미수정
+- 데이터 hook 흐름 무수정 — UI 재배치/스타일 변경만
+- 매출 합산식 결과 = 적용 전과 동일해야 함 (사장님 진입 시 검증)
+
+---
+
 ## 🟢 최근 완료 (사장님 검증 완료)
+
+### 대시보드 시안 B+ 적용 (2026-05-27)
+
+**채택안**: 매출 도넛 KPI + 4카드 1행 통합 + 컴팩트 달력 + 선택일 타임라인 + 5분할 알림 카드 (스크롤 ~60% 감소, 5행 → 3행)
+
+| 변경 | 커밋 | 비고 |
+|---|---|---|
+| 디자인 모니터에 시안 A/B/C 3시안 + 추천 마크 | `9f556b0` | 사장님 비교 |
+| 시안 B+ (압축 트렌디) 추가 | `97b053e` | 매출+4카드 1행 통합 |
+| 실제 `/dashboard` 적용 + design-lab 비우기 | `70e6e56` | Vercel 배포 success |
+
+**박제 위치**:
+- 룰 메모리: `memory/feedback_tms_design_direction.md` (TMS 디자인 가이드라인 — 마모루 가이드 100% 추종 X, 트렌드 우선)
+- MEMORY.md 인덱스: "🚨 TMS 디자인 가이드라인 예외" 항목
+- 적용 코드: `src/app/(dashboard)/dashboard/page.tsx` + `src/components/dashboard/dashboard-calendar.tsx` (신규)
+
+**회계 안전성 검증**: RPC 077~088 무수정, 매출 합산식 b2c+b2b+repair 그대로. 사장님 실제 진입 후 수치 일치 1회 확인 권장.
+
+---
+
+
 
 ### /sales 페이지 B2C+B2B IA 통합 (2026-05-26 Phase A~G) ⭐⭐⭐
 
