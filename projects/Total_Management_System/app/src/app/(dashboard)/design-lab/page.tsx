@@ -1,13 +1,16 @@
 'use client';
 
 /**
- * /sales 페이지 디자인 프리뷰 — 사장님 비교 선택용 (운영 X)
+ * /design-lab — TMS 디자인 모니터 (사장님 + 클로드 협업 도구)
  *
- * 2026-05-26 Phase G-3: 매출 카드 3안 + 목록 카드 4안 비교 → 사장님 선택
- *   - 매출 카드: ✅ 안 3 (어두운 카드) 채택 (2026-05-26)
- *   - 목록 카드: 안 A 기준 상세 설계 (색상 규칙 + 케이스 확장)
+ * 2026-05-26 Phase G-6: /sales/design-preview 에서 /design-lab 로 이동.
+ *   - 향후 다른 페이지 디자인 검토 시 § 추가하여 한 화면에서 비교
+ *   - 사이드바 메뉴 미등록 (URL 직접 접근 — 운영 메뉴 정돈 유지)
+ *   - 운영 데이터 호출 X (모두 하드코딩 임시)
  *
- * 실제 데이터 호출 X — 모두 하드코딩 임시 데이터.
+ * 사용법:
+ *   사장님: 새 디자인 검토 필요 시 "디자인 모니터에 § XXX 페이지 추가해줘" 한 마디
+ *   클로드: 해당 § 섹션 추가 + 비교 옵션 3~4개 렌더 → 사장님 진입 → 결정 → 적용
  */
 
 import { Topbar } from '@/components/layout/topbar';
@@ -27,33 +30,6 @@ const STATS = {
   },
 };
 
-/**
- * 목록 행 상태 분류 — 좌측 색 줄 + 우측 도트로 표현
- *
- * 사장님 결정 (2026-05-26): B2C/B2B 모두 "판매완료" 라벨 통일
- *   - B2C 판매완료 = payment_status='paid' + delivered_at (또는 매장수령 시 송장 없음)
- *   - B2B 판매완료 = status='shipped' + payment_status='paid' (정산완료 단계는 폐기됨)
- *
- * 색 줄 (왼쪽 4px 세로 줄):
- *   - green  = 판매완료 (B2C 배송완료/매장수령, B2B 출고완료+결제완료) — 모든 처리 끝남
- *   - red    = 미결제 (가장 시급)
- *   - yellow = 부분결제
- *   - gray   = 취소 + 카드 흐림
- *   - none   = 진행중 (결제완료지만 배송 중 / 출고완료지만 결제 대기 등)
- *
- * 배송중 → 배송완료 자동 전환 (2026-05-25 운영 시작):
- *   ALPS 추적 cron 4시간마다 → '41'/'45' 코드 감지 → delivered_at 자동 기록
- *   → 좌측 색 줄: 투명(진행중) → 초록(판매완료) 자동 이동
- *
- * 우측 도트 (작은 ●):
- *   - green  = 배송중 / 정산 진행
- *   - amber  = 출고 대기 (송장 발급됨, 미출고)
- *   - 없음   = 도트 표시 안 함 (마무리됐거나 미결제 등 다른 상태)
- *
- * 채널/유형 표시 (작은 텍스트):
- *   - B2C: "오프라인" / "온라인상담"
- *   - B2B: "딜러" / "아카데미"
- */
 type RowState = 'paid_done' | 'paid_shipping' | 'paid_wait_ship' | 'unpaid' | 'partial' | 'shipped_b2b_unpaid' | 'cancelled';
 
 type SampleRow = {
@@ -64,141 +40,142 @@ type SampleRow = {
   date: string;
   amount: number;
   paymentMethod: string;
-  channelOrType: string; // "오프라인" / "온라인상담" / "딜러" / "아카데미"
-  note?: string; // 케이스 설명
+  channelOrType: string;
+  note?: string;
 };
 
 const SAMPLE_ROWS: SampleRow[] = [
-  // 판매완료 (초록 줄) — B2C/B2B 통합
+  // 판매완료 (초록 줄)
   { id: '1', sourceType: 'sale', state: 'paid_done', name: '서윤 점장님 (박미애)', date: '5월 26일', amount: 100000, paymentMethod: '카드', channelOrType: '온라인상담', note: '배송완료 → 판매완료 자동 전환' },
   { id: '2', sourceType: 'sale', state: 'paid_done', name: '김매장 (매장수령)', date: '5월 25일', amount: 240000, paymentMethod: '카드', channelOrType: '오프라인', note: '매장 직접수령 (배송 X, 즉시 판매완료)' },
   { id: '3', sourceType: 'delivery', state: 'paid_done', name: '○○매장', date: '5월 24일', amount: 1240000, paymentMethod: '이체', channelOrType: '딜러', note: 'B2B 출고완료 + 결제완료 = 판매완료' },
-
-  // 진행 중 (색 줄 없음)
+  // 진행 중
   { id: '4', sourceType: 'sale', state: 'paid_shipping', name: '전아연', date: '5월 25일', amount: 780000, paymentMethod: '이체', channelOrType: '온라인상담', note: '결제완료 · 배송중' },
   { id: '5', sourceType: 'sale', state: 'paid_wait_ship', name: '곽경진', date: '5월 25일', amount: 60000, paymentMethod: '이체', channelOrType: '오프라인', note: '결제완료 · 송장발급 대기' },
   { id: '6', sourceType: 'delivery', state: 'shipped_b2b_unpaid', name: '△△아카데미', date: '5월 23일', amount: 580000, paymentMethod: '이체', channelOrType: '아카데미', note: 'B2B 출고완료 · 결제 대기' },
-
-  // 미수금 (빨강 줄)
+  // 미수금
   { id: '7', sourceType: 'sale', state: 'unpaid', name: '김승한', date: '5월 18일', amount: 280000, paymentMethod: '카드', channelOrType: '오프라인', note: '미결제 — 가장 시급' },
   { id: '8', sourceType: 'delivery', state: 'unpaid', name: '□□아카데미', date: '5월 20일', amount: 1500000, paymentMethod: '이체', channelOrType: '아카데미', note: '거래처 미결제 (큰 금액)' },
-
-  // 부분결제 (노랑 줄)
+  // 부분결제
   { id: '9', sourceType: 'sale', state: 'partial', name: '박상민', date: '5월 22일', amount: 350000, paymentMethod: '카드', channelOrType: '온라인상담', note: '부분결제 (선납금만)' },
-
-  // 취소 (회색 줄)
+  // 취소
   { id: '10', sourceType: 'sale', state: 'cancelled', name: '취소건 예시', date: '5월 20일', amount: 150000, paymentMethod: '카드', channelOrType: '오프라인', note: '취소 — 흐림 표시' },
 ];
 
 // ─── 페이지 ────────────────────────────────────────────────────
-export default function SalesDesignPreviewPage() {
+export default function DesignLabPage() {
   return (
     <>
-      <Topbar title="디자인 프리뷰 (사장님 선택용)" />
-      <div className="px-6 py-6 space-y-10 max-w-[1100px] mx-auto">
-        {/* 안내 */}
-        <div className="px-4 py-3 rounded-lg bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
-          💡 <strong>디자인 프리뷰</strong> — 운영 데이터 X, UI 미리보기만.
-          <span className="ml-2 text-xs">매출 카드 = ✅ <strong>안 3 채택</strong> / 목록 카드 = <strong>안 A 상세 설계</strong> 진행 중</span>
+      <Topbar title="🎨 디자인 모니터" />
+      <div className="px-6 py-6 space-y-12 max-w-[1100px] mx-auto">
+        {/* 헤더 안내 */}
+        <div className="px-5 py-4 rounded-xl bg-neutral-900 text-white">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-base font-bold">🎨 TMS 디자인 모니터</span>
+            <span className="text-[10px] px-2 py-0.5 rounded bg-white/15 uppercase tracking-wider">internal tool</span>
+          </div>
+          <p className="text-xs opacity-80 leading-relaxed">
+            사장님 + 클로드 협업 디자인 검토 도구. 향후 다른 페이지 디자인 변경 시 옵션 비교 후 결정.
+            <br />
+            <span className="opacity-60">운영 데이터 X · 사이드바 메뉴 미노출 · URL 직접 접근만</span>
+          </p>
         </div>
 
-        {/* § A 매출 카드 — 안 3 채택 확정 */}
-        <section>
-          <h2 className="text-base font-bold text-indigo-black mb-3">
-            § A. 상단 매출 카드 — ✅ <span className="text-green-600">안 3 채택</span>
-          </h2>
-          <Option3Stats />
-          <p className="mt-2 text-xs text-neutral-500">사장님 결정 (2026-05-26): 어두운 카드 + 화이트 텍스트. /sales 메인 페이지 Phase G-4 에서 이 디자인 적용 예정.</p>
-        </section>
-
-        {/* § B 목록 카드 — 안 A 상세 설계 */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* § 1. /sales 페이지 — 사장님 채택안 (2026-05-26 Phase G-4 적용 완료) */}
+        {/* ═══════════════════════════════════════════════════════════ */}
         <section className="space-y-6">
-          <h2 className="text-base font-bold text-indigo-black">
-            § B. 좌측 목록 카드 — <span className="text-green-600">안 A 기준 상세 설계</span>
-          </h2>
+          <div className="border-l-4 border-green-500 pl-4">
+            <h2 className="text-lg font-bold text-indigo-black">§ 1. /sales 페이지 — 채택안 (운영 적용 완료)</h2>
+            <p className="text-xs text-neutral-500 mt-1">매출 카드 = <strong className="text-green-700">안 3 (어두운 카드)</strong> · 목록 카드 = <strong className="text-green-700">안 A (좌측 색 줄 + 우측 도트)</strong></p>
+          </div>
 
-          {/* 색상 규칙 범례 */}
+          {/* 매출 카드 */}
+          <div>
+            <h3 className="text-sm font-bold text-indigo-black mb-2">상단 매출 카드 (안 3 — 어두운 카드)</h3>
+            <Option3Stats />
+          </div>
+
+          {/* 목록 카드 색상 규칙 */}
           <ColorLegend />
 
-          {/* 케이스 1 — 판매완료 (초록 줄) — B2C/B2B 통합 */}
+          {/* 케이스별 비교 */}
           <CaseBlock
             title="① 판매완료 — 초록색 왼편 라인 ⭐"
             description={[
-              '판매 흐름이 모두 끝난 건. 사장님이 "이건 다 됐다" 인식할 1순위. B2C/B2B 모두 통합 라벨.',
-              '• B2C 판매: 결제완료 + 배송완료 (delivered_at 채워짐)',
-              '• B2C 매장 직접수령: 결제완료 + 송장 없음 (즉시 완료)',
-              '• B2B 거래처: 출고완료 (status=\'shipped\') + 결제완료 (payment_status=\'paid\') — 별도 정산 단계 없음 (사장님 폐기)',
-              '• 배송중 → 배송완료 자동 전환: ALPS cron 4시간마다 자동 추적 (운영 검증 완료)',
+              '판매 흐름이 모두 끝난 건. B2C/B2B 모두 통합 라벨.',
+              '• B2C: 결제완료 + 배송완료 (delivered_at) 또는 매장수령 (송장 없음)',
+              '• B2B: 출고완료 (status=\'shipped\') + 결제완료 (payment_status=\'paid\')',
+              '• 배송중 → 자동 전환: ALPS cron 4시간마다',
             ]}
           >
             {SAMPLE_ROWS.filter((r) => r.state === 'paid_done').map((r) => <RowA key={r.id} row={r} />)}
           </CaseBlock>
 
-          {/* 케이스 2 — 진행중 (색 줄 없음) */}
           <CaseBlock
             title="② 진행 중 — 왼편 라인 없음 (투명)"
             description={[
-              '결제는 완료됐지만 후속 처리가 남았거나, 출고는 완료됐지만 결제 대기 중인 건.',
-              '• 배송중: 송장 발급 + ALPS 추적 중 (우측 ● 초록 도트)',
-              '• 출고 대기: 송장 발급됐지만 미출고 (우측 ● 황색 도트)',
-              '• B2B 출고완료 · 결제 대기: 거래처 납품 후 결제 들어오기 전',
+              '결제완료 + 배송/출고 대기 OR 출고완료 + 결제 대기.',
+              '• 배송중: 우측 ● 초록 도트',
+              '• 출고 대기 / 결제 대기: 우측 ● 황색 도트',
             ]}
           >
             {SAMPLE_ROWS.filter((r) => ['paid_shipping', 'paid_wait_ship', 'shipped_b2b_unpaid'].includes(r.state)).map((r) => <RowA key={r.id} row={r} />)}
           </CaseBlock>
 
-          {/* 케이스 3 — 미결제 (빨강 줄) */}
           <CaseBlock
             title="③ 미결제 — 빨강색 왼편 라인 🔥"
-            description={[
-              '돈 안 들어온 건. 사장님 자금 흐름 1순위 — 가장 시각적으로 강조.',
-              '• B2C 미결제 (외상 거래)',
-              '• B2B 거래처 미결제 (큰 금액 — 사장님이 한눈에 인지해야 함)',
-            ]}
+            description={['돈 안 들어온 건. 자금 흐름 1순위 — 가장 시각적 강조.']}
           >
             {SAMPLE_ROWS.filter((r) => r.state === 'unpaid').map((r) => <RowA key={r.id} row={r} />)}
           </CaseBlock>
 
-          {/* 케이스 4 — 부분결제 (노랑 줄) */}
           <CaseBlock
             title="④ 부분결제 — 노랑색 왼편 라인"
-            description={[
-              '선납금만 들어온 건. 사장님 후속 추가 입금 받아야 할 건.',
-              '• 결제수단 옆에 "부분결제" 표기 + 노랑 라인',
-            ]}
+            description={['선납금만 들어온 건. 추가 입금 받아야 할 건.']}
           >
             {SAMPLE_ROWS.filter((r) => r.state === 'partial').map((r) => <RowA key={r.id} row={r} />)}
           </CaseBlock>
 
-          {/* 케이스 5 — 취소 (회색 줄 + 흐림) */}
           <CaseBlock
             title="⑤ 취소건 — 회색 왼편 라인 + 카드 흐림 (50%)"
-            description={[
-              '취소된 건. 시각적으로 약화 (opacity 50%) + 텍스트 취소선',
-              '• 카드 자체가 흐려져서 사장님 시선이 안 감 — 정상',
-            ]}
+            description={['취소된 건. opacity 50% + 텍스트 취소선. 사장님 시선 자동 약화.']}
           >
             {SAMPLE_ROWS.filter((r) => r.state === 'cancelled').map((r) => <RowA key={r.id} row={r} />)}
           </CaseBlock>
 
-          {/* 전체 통합 미리보기 — 실제 운영 화면 시뮬레이션 */}
-          <section>
-            <h3 className="text-sm font-bold text-indigo-black mb-2">▶ 전체 통합 미리보기 (실제 운영 화면 시뮬레이션)</h3>
-            <p className="text-xs text-neutral-500 mb-3">날짜 desc 정렬 — 사장님이 /sales 페이지에 진입했을 때 보일 모습</p>
+          {/* 전체 통합 미리보기 */}
+          <div>
+            <h3 className="text-sm font-bold text-indigo-black mb-2">▶ 전체 통합 미리보기 (실제 운영 시뮬레이션)</h3>
+            <p className="text-xs text-neutral-500 mb-3">날짜 desc 정렬 — 사장님이 /sales 진입했을 때 보일 모습</p>
             <Wrap>
               {[...SAMPLE_ROWS].sort((a, b) => b.date.localeCompare(a.date)).map((r) => <RowA key={r.id} row={r} />)}
             </Wrap>
-          </section>
+          </div>
         </section>
 
-        {/* 추가 메모 */}
-        <section className="px-4 py-3 rounded-lg bg-neutral-50 border border-neutral-200 text-xs text-neutral-600 space-y-1">
-          <p className="font-bold text-neutral-900 mb-1">📝 사장님 추가 변경 요청 시 알려주세요:</p>
-          <p>• 색상 규칙 조정 (어떤 상태를 어떤 색으로?)</p>
-          <p>• 우측 도트 표시 케이스 추가/제거</p>
-          <p>• 채널/유형 표기 방식 (텍스트 vs 아이콘 vs 작은 칩)</p>
-          <p>• 폰트 크기 / 간격 / 호버 효과</p>
+        {/* ═══════════════════════════════════════════════════════════ */}
+        {/* § 2~N. 향후 다른 페이지 디자인 검토 시 여기에 § 추가 */}
+        {/* ═══════════════════════════════════════════════════════════ */}
+        <section className="border-2 border-dashed border-neutral-300 rounded-xl p-8 text-center bg-neutral-50">
+          <div className="text-3xl mb-2">🚧</div>
+          <h3 className="text-base font-bold text-neutral-700 mb-1">향후 § 추가 위치</h3>
+          <p className="text-xs text-neutral-500 max-w-md mx-auto leading-relaxed">
+            다른 페이지(예: /repairs, /orders, /customers, /dashboard 등) 디자인 검토 시
+            <br />사장님이 클로드에게 <span className="font-semibold">"디자인 모니터에 § XXX 추가해줘"</span> 한 마디 하시면
+            <br />여기에 비교 옵션 3~4개가 렌더링됩니다.
+          </p>
+          <div className="mt-4 text-[11px] text-neutral-400 space-y-0.5">
+            <p>• 매출 카드 / 목록 카드 / 상세 패널 / 헤더 / 사이드바 등 모든 영역 가능</p>
+            <p>• 비교 후 결정 → 클로드가 실제 페이지에 적용</p>
+            <p>• 비교 결과는 § 1 처럼 채택안으로 박제 가능</p>
+          </div>
         </section>
+
+        {/* 푸터 */}
+        <div className="text-center text-[11px] text-neutral-400 pt-4 border-t border-neutral-200">
+          🎨 MAMORU TMS Design Lab · 사장님 + 클로드 협업 도구
+        </div>
       </div>
     </>
   );
@@ -242,7 +219,7 @@ function ColorLegend() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 케이스 블록 (제목 + 설명 + 행 리스트)
+// 케이스 블록 + Wrap
 // ═══════════════════════════════════════════════════════════════
 function CaseBlock({ title, description, children }: { title: string; description: string[]; children: React.ReactNode }) {
   return (
@@ -288,37 +265,25 @@ function Option3Stats() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 목록 행 — 안 A 상세 (색 줄 + 도트 + 채널 + 케이스 노트)
+// 목록 행 — 안 A (좌측 색 줄 + 우측 도트)
 // ═══════════════════════════════════════════════════════════════
-
 function stripColor(state: RowState): string {
   switch (state) {
-    case 'paid_done':
-      return 'bg-green-500'; // 판매완료 (B2C/B2B 통합)
-    case 'unpaid':
-      return 'bg-red-500'; // 미결제
-    case 'partial':
-      return 'bg-yellow-400'; // 부분결제
-    case 'cancelled':
-      return 'bg-neutral-300'; // 취소
-    default:
-      return 'bg-transparent'; // 진행 중
+    case 'paid_done': return 'bg-green-500';
+    case 'unpaid': return 'bg-red-500';
+    case 'partial': return 'bg-yellow-400';
+    case 'cancelled': return 'bg-neutral-300';
+    default: return 'bg-transparent';
   }
 }
-
 function rightDot(state: RowState): { color: string; title: string } | null {
   switch (state) {
-    case 'paid_shipping':
-      return { color: 'bg-green-500', title: '배송중' };
-    case 'paid_wait_ship':
-      return { color: 'bg-amber-400', title: '출고 대기' };
-    case 'shipped_b2b_unpaid':
-      return { color: 'bg-amber-400', title: '출고완료 · 결제 대기' };
-    default:
-      return null;
+    case 'paid_shipping': return { color: 'bg-green-500', title: '배송중' };
+    case 'paid_wait_ship': return { color: 'bg-amber-400', title: '출고 대기' };
+    case 'shipped_b2b_unpaid': return { color: 'bg-amber-400', title: '출고완료 · 결제 대기' };
+    default: return null;
   }
 }
-
 function statusLabel(state: RowState): string {
   switch (state) {
     case 'paid_done': return '판매완료';
@@ -330,7 +295,6 @@ function statusLabel(state: RowState): string {
     case 'cancelled': return '취소';
   }
 }
-
 function RowA({ row }: { row: SampleRow }) {
   const isCancelled = row.state === 'cancelled';
   const strip = stripColor(row.state);
@@ -338,17 +302,13 @@ function RowA({ row }: { row: SampleRow }) {
 
   return (
     <div className={`flex items-stretch gap-3 px-4 py-3 hover:bg-warm-ivory/40 transition cursor-pointer ${isCancelled ? 'opacity-50' : ''}`}>
-      {/* 좌측 색 줄 */}
       <div className={`w-1 rounded ${strip}`} style={{ alignSelf: 'stretch' }} />
-
-      {/* 본문 */}
       <div className="flex-1 min-w-0 flex items-center gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>
               {row.name}
             </span>
-            {/* 케이스 노트 — 디자인 프리뷰 전용 (실제 운영 페이지에는 표시 안 함) */}
             {row.note && (
               <span className="text-[10px] text-neutral-400 italic shrink-0">({row.note})</span>
             )}
@@ -368,8 +328,6 @@ function RowA({ row }: { row: SampleRow }) {
             }>{statusLabel(row.state)}</span>
           </div>
         </div>
-
-        {/* 우측: 도트 + 금액 */}
         <div className="flex items-center gap-2 shrink-0">
           {dot && <span className={`w-2 h-2 rounded-full ${dot.color}`} title={dot.title} />}
           <span className={`text-sm font-bold ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>
