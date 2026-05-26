@@ -45,6 +45,8 @@ interface Props {
   hasRepairItem?: boolean;
   /** source의 실제 sub-type (consultation_type / proceed_type 등) — ReviewRequestModal subtype 자동 추론 */
   sourceType?: string | null;
+  /** 2026-05-26: 컴팩트 모드 — 상세 패널 헤더 우측에 미니 UI 로 표시 (시각 부담 ↓) */
+  compact?: boolean;
 }
 
 function formatDate(iso: string | null): string {
@@ -106,6 +108,7 @@ export function ReviewManagementCard({
   onChanged,
   hasRepairItem = false,
   sourceType = null,
+  compact = false,
 }: Props) {
   const [togglingPromise, setTogglingPromise] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
@@ -148,6 +151,15 @@ export function ReviewManagementCard({
 
   // 작성 완료 — 카드 readonly + 정적 라벨
   if (submittedAt) {
+    if (compact) {
+      // 컴팩트: 상세 패널 헤더 우측에 미니 표시
+      return (
+        <div className="flex items-center gap-1.5 text-[11px] text-green-700" title={`${formatDate(submittedAt)} 작성 완료`}>
+          <CheckCircle2 size={13} />
+          <span className="font-semibold">리뷰 작성 완료</span>
+        </div>
+      );
+    }
     return (
       <Card>
         <div className="flex items-center gap-2 mb-2">
@@ -189,6 +201,57 @@ export function ReviewManagementCard({
       setTogglingPromise(false);
     }
   };
+
+  // 2026-05-26: 컴팩트 모드 — 헤더 우측 미니 UI (사장님 시선 부담 ↓)
+  if (compact) {
+    return (
+      <>
+        <div className="flex items-center gap-1.5">
+          {/* 약속 작은 체크 토글 */}
+          <button
+            type="button"
+            onClick={handleTogglePromise}
+            disabled={togglingPromise}
+            title={promisedAt ? `리뷰 약속 ✓ (${formatDate(promisedAt)})` : '리뷰 약속 받음 체크'}
+            className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition ${
+              promisedAt ? 'bg-terracotta/10 text-terracotta' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+            }`}
+          >
+            <span className="text-[10px]">{promisedAt ? '✓' : '○'}</span>
+            <span>약속</span>
+          </button>
+
+          {/* 후기 요청 작은 버튼 */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!customerPhone) { toast.error('고객 연락처가 없어 발송할 수 없습니다'); return; }
+              setShowRequestModal(true);
+            }}
+            title={requestSentAt ? `최근 발송: ${formatDate(requestSentAt)}` : '후기 요청 알림톡 발송'}
+            className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md bg-indigo-black text-cream hover:bg-indigo-black/85 transition"
+          >
+            <Send size={10} />
+            <span>{requestSentAt ? '재발송' : '후기 요청'}</span>
+          </button>
+        </div>
+
+        {showRequestModal && (
+          <ReviewRequestModal
+            saleId={id}
+            source={source}
+            customerName={customerName}
+            customerPhone={customerPhone || ''}
+            hasRepairItem={hasRepairItem}
+            sourceType={sourceType}
+            alreadySent={!!requestSentAt}
+            onClose={() => setShowRequestModal(false)}
+            onSent={() => { setShowRequestModal(false); onChanged?.(); }}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <>

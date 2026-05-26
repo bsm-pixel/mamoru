@@ -138,40 +138,61 @@ export function SaleDetailPanel({ saleId }: Props) {
           })()}
           <Badge className={channel.className}>{channel.label}</Badge>
         </div>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <span className="text-xs text-neutral-500">고객명</span>
-            <p className="font-semibold">
-              {s.customer_id ? (
-                <button onClick={() => setShowCustomer(true)} className="text-blue-600 hover:underline">{s.customer_name}</button>
-              ) : s.customer_name}
-            </p>
+        {/* 2026-05-26: 헤더 정보 좌측 + 리뷰 관리 미니 우측 (사장님 시선 부담 ↓) */}
+        <div className="flex items-start gap-4">
+          <div className="flex-1 grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span className="text-xs text-neutral-500">고객명</span>
+              <p className="font-semibold">
+                {s.customer_id ? (
+                  <button onClick={() => setShowCustomer(true)} className="text-blue-600 hover:underline">{s.customer_name}</button>
+                ) : s.customer_name}
+              </p>
+            </div>
+            <div>
+              <span className="text-xs text-neutral-500">연락처</span>
+              <p>{formatPhone(s.customer_phone) || '-'}</p>
+            </div>
+            <div>
+              <span className="text-xs text-neutral-500">판매일</span>
+              <p>{formatDate(s.sale_date, 'yyyy.MM.dd')}</p>
+            </div>
+            <div>
+              <span className="text-xs text-neutral-500">결제방법</span>
+              <p>{PAYMENT_METHOD_LABEL[s.payment_method] || s.payment_method}</p>
+              {/* 복합 결제 상세 */}
+              {s.payment_method === 'mixed' && (() => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const pd = (s as any).payment_detail as Record<string, number> | null;
+                if (!pd) return null;
+                return (
+                  <div className="mt-1 text-xs text-neutral-500 space-y-0.5">
+                    {pd.card > 0 && <p>카드 {formatKRW(pd.card)}</p>}
+                    {pd.cash > 0 && <p>현금 {formatKRW(pd.cash)}</p>}
+                    {pd.transfer > 0 && <p>이체 {formatKRW(pd.transfer)}</p>}
+                  </div>
+                );
+              })()}
+            </div>
           </div>
-          <div>
-            <span className="text-xs text-neutral-500">연락처</span>
-            <p>{formatPhone(s.customer_phone) || '-'}</p>
-          </div>
-          <div>
-            <span className="text-xs text-neutral-500">판매일</span>
-            <p>{formatDate(s.sale_date, 'yyyy.MM.dd')}</p>
-          </div>
-          <div>
-            <span className="text-xs text-neutral-500">결제방법</span>
-            <p>{PAYMENT_METHOD_LABEL[s.payment_method] || s.payment_method}</p>
-            {/* 복합 결제 상세 */}
-            {s.payment_method === 'mixed' && (() => {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const pd = (s as any).payment_detail as Record<string, number> | null;
-              if (!pd) return null;
-              return (
-                <div className="mt-1 text-xs text-neutral-500 space-y-0.5">
-                  {pd.card > 0 && <p>카드 {formatKRW(pd.card)}</p>}
-                  {pd.cash > 0 && <p>현금 {formatKRW(pd.cash)}</p>}
-                  {pd.transfer > 0 && <p>이체 {formatKRW(pd.transfer)}</p>}
-                </div>
-              );
-            })()}
-          </div>
+
+          {/* 리뷰 관리 미니 — 취소건엔 표시 X */}
+          {!s.cancelled_at && (
+            <div className="shrink-0 pt-1">
+              <ReviewManagementCard
+                source="sale"
+                id={s.id}
+                customerName={s.customer_name}
+                customerPhone={s.customer_phone}
+                promisedAt={(s as { review_promised_at?: string | null }).review_promised_at ?? null}
+                requestSentAt={((s as { review_request_sent_at?: string | null }).review_request_sent_at) ?? ((s as { review_requested_at?: string | null }).review_requested_at ?? null)}
+                submittedAt={(s as { review_submitted_at?: string | null }).review_submitted_at ?? null}
+                hasRepairItem={data?.items.some((it) => String((it as Record<string, unknown>).category || '') === 'RS') ?? false}
+                onChanged={() => queryClient.invalidateQueries({ queryKey: ['sale', saleId] })}
+                compact={true}
+              />
+            </div>
+          )}
         </div>
         {/* 메모 인라인 편집 */}
         <div className="mt-2 pt-2 border-t border-neutral-100">
@@ -332,20 +353,7 @@ export function SaleDetailPanel({ saleId }: Props) {
         </div>
       )}
 
-      {/* 067: 리뷰 관리 카드 — 후기는 sale source 단일 진입점 (사장님이 review_type 자유 선택) */}
-      {!s.cancelled_at && (
-        <ReviewManagementCard
-          source="sale"
-          id={s.id}
-          customerName={s.customer_name}
-          customerPhone={s.customer_phone}
-          promisedAt={(s as { review_promised_at?: string | null }).review_promised_at ?? null}
-          requestSentAt={((s as { review_request_sent_at?: string | null }).review_request_sent_at) ?? ((s as { review_requested_at?: string | null }).review_requested_at ?? null)}
-          submittedAt={(s as { review_submitted_at?: string | null }).review_submitted_at ?? null}
-          hasRepairItem={data?.items.some((it) => String((it as Record<string, unknown>).category || '') === 'RS') ?? false}
-          onChanged={() => queryClient.invalidateQueries({ queryKey: ['sale', saleId] })}
-        />
-      )}
+      {/* 2026-05-26: 리뷰 관리 카드 → 헤더 우측 compact 모드로 이동됨 (시각 부담 ↓) */}
 
       {/* 070: 수동 link 액션 — link 없는 sale + phone 있을 때만 노출 */}
       {!s.cancelled_at && !data?.linkedConsultation && s.customer_phone && (
