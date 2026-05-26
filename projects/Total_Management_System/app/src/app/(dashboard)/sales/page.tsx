@@ -11,6 +11,7 @@ import { SlidePanel } from '@/components/ui/slide-panel';
 import { SaleDetailPanel } from '@/components/sales/sale-detail-panel';
 import { useSales, useSalesTabCounts, useSalesStats } from '@/hooks/use-sales';
 import type { SalesTab, SalesChannel, SalesDateRange } from '@/hooks/use-sales';
+import { useDeliveryStats } from '@/hooks/use-deliveries';
 import { useContracts } from '@/hooks/use-contracts';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -51,12 +52,31 @@ const TABS: { key: SalesTab; label: string }[] = [
   { key: 'cancelled', label: '취소' },
 ];
 
-const CHANNELS: { key: SalesChannel | 'b2b'; label: string }[] = [
+/** 2026-05-26 IA 통합: 영역 칩 — 고객(B2C) / 거래처(B2B) / 전체. default 고객 */
+type SalesSection = 'customer' | 'partner' | 'all';
+const SECTIONS: { key: SalesSection; label: string }[] = [
+  { key: 'customer', label: '고객' },
+  { key: 'partner', label: '거래처' },
   { key: 'all', label: '전체' },
-  { key: 'offline', label: '오프라인' },
-  { key: 'talk', label: '온라인상담' },
-  { key: 'b2b', label: 'B2B 납품' },
 ];
+
+/** 영역별 채널 옵션 — 영역 칩 선택에 따라 동적 표시 */
+const CHANNELS_BY_SECTION: Record<SalesSection, { key: SalesChannel | 'b2b'; label: string }[]> = {
+  customer: [
+    { key: 'all', label: '전체' },
+    { key: 'offline', label: '오프라인' },
+    { key: 'talk', label: '온라인상담' },
+  ],
+  partner: [
+    { key: 'b2b', label: '전체' },  // Phase B 에서 dealer/academy 세분화 예정
+  ],
+  all: [
+    { key: 'all', label: '전체' },
+    { key: 'offline', label: '오프라인' },
+    { key: 'talk', label: '온라인상담' },
+    { key: 'b2b', label: 'B2B 납품' },
+  ],
+};
 
 const DATE_RANGES: { key: SalesDateRange; label: string }[] = [
   { key: 'all', label: '전체 기간' },
@@ -70,6 +90,7 @@ export default function SalesPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [tab, setTab] = useState<SalesTab>('all'); // 기본 탭: 전체
+  const [section, setSection] = useState<SalesSection>('customer'); // 2026-05-26: default 고객
   const [channel, setChannel] = useState<SalesChannel | 'b2b'>('all');
   const [dateRange, setDateRange] = useState<SalesDateRange>('month');
   const [dateFrom, setDateFrom] = useState('');
@@ -91,6 +112,7 @@ export default function SalesPage() {
   const { data, isLoading } = useSales({ search, page, limit: 20, tab, channel, dateRange, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined });
   const { data: tabCounts } = useSalesTabCounts();
   const { data: stats } = useSalesStats();
+  const { data: deliveryStats } = useDeliveryStats(); // 2026-05-26: 거래처 카드 — deliveries 합산용
   const { data: contractData } = useContracts({ status: 'signed', limit: 100 });
   const newContractCount = contractData?.contracts?.filter((c) => !c.offline_sale_id).length || 0;
   const sales = data?.sales || [];
@@ -101,37 +123,76 @@ export default function SalesPage() {
   const toggleCheck = (id: string) => {
     setCheckedIds((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   };
-  const handleChannelChange = (c: SalesChannel) => { setChannel(c); setPage(1); };
+  const handleChannelChange = (c: SalesChannel | 'b2b') => { setChannel(c); setPage(1); };
   const handleDateRangeChange = (d: SalesDateRange) => { setDateRange(d); setPage(1); };
+
+  /** 영역 칩 변경 — 채널 칩의 첫 옵션으로 자동 매핑 (옵션 셋이 달라지므로 stale 방지) */
+  const handleSectionChange = (s: SalesSection) => {
+    setSection(s);
+    setChannel(CHANNELS_BY_SECTION[s][0].key);
+    setPage(1);
+  };
+
+  /** 거래처 매출 입력 — Phase C 에서 /sales/new?mode=b2b 라우팅 예정. 현재는 안내. */
+  const handlePartnerSaleClick = () => {
+    if (confirm('거래처 매출 입력은 현재 [B2B거래] 메뉴(/deliveries)에서 진행해주세요. 이동하시겠습니까?')) {
+      router.push('/deliveries');
+    }
+  };
+
+  /** 거래처(B2B) 카드 합산값 — offline_sales (dealer/academy) + deliveries 매출 */
+  const partnerWeek = (stats?.partnerWeek?.amount || 0) + (deliveryStats?.weekAmount || 0);
+  const partnerWeekCount = (stats?.partnerWeek?.count || 0) + (deliveryStats?.weekCount || 0);
+  const partnerMonth = (stats?.partnerMonth?.amount || 0) + (deliveryStats?.monthAmount || 0);
+  const partnerMonthCount = (stats?.partnerMonth?.count || 0) + (deliveryStats?.monthCount || 0);
+  const partnerOutstanding = (stats?.partnerOutstanding || 0) + (deliveryStats?.outstanding || 0);
 
   /* --- 목록 영역 (좌측/모바일) --- */
   const listContent = (
     <>
-      {/* 통계 요약 카드 */}
+      {/* 통계 요약 카드 — 2026-05-26: 고객(B2C) / 거래처(B2B) 2섹션 동등 비율 (사장님 A-1) */}
       {stats && (
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-white rounded-lg border border-neutral-200 p-3">
-            <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
-              <Calendar size={12} />
-              이번주
+        <div className="grid grid-cols-2 gap-2">
+          {/* 고객 (B2C) 섹션 */}
+          <div className="bg-white rounded-lg border border-neutral-200 p-3 space-y-2">
+            <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">고객 (B2C)</div>
+            <div className="grid grid-cols-3 gap-1.5">
+              <div>
+                <div className="flex items-center gap-1 text-[10px] text-neutral-400 mb-0.5"><Calendar size={10} />이번주</div>
+                <p className="text-sm font-bold text-neutral-900">{formatKRW(stats.customerWeek?.amount || 0)}</p>
+                <p className="text-[10px] text-neutral-400">{stats.customerWeek?.count || 0}건</p>
+              </div>
+              <div>
+                <div className="flex items-center gap-1 text-[10px] text-neutral-400 mb-0.5"><TrendingUp size={10} />이번달</div>
+                <p className="text-sm font-bold text-neutral-900">{formatKRW(stats.customerMonth?.amount || 0)}</p>
+                <p className="text-[10px] text-neutral-400">{stats.customerMonth?.count || 0}건</p>
+              </div>
+              <div>
+                <div className="flex items-center gap-1 text-[10px] text-red-400 mb-0.5"><AlertCircle size={10} />미수금</div>
+                <p className="text-sm font-bold text-red-600">{formatKRW(stats.customerOutstanding || 0)}</p>
+              </div>
             </div>
-            <p className="text-base font-bold text-neutral-900">{formatKRW(stats.week.amount)}</p>
-            <p className="text-[11px] text-neutral-400">{stats.week.count}건</p>
           </div>
-          <div className="bg-white rounded-lg border border-neutral-200 p-3">
-            <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
-              <TrendingUp size={12} />
-              이번달
+
+          {/* 거래처 (B2B) 섹션 */}
+          <div className="bg-white rounded-lg border border-neutral-200 p-3 space-y-2">
+            <div className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">거래처 (B2B)</div>
+            <div className="grid grid-cols-3 gap-1.5">
+              <div>
+                <div className="flex items-center gap-1 text-[10px] text-neutral-400 mb-0.5"><Calendar size={10} />이번주</div>
+                <p className="text-sm font-bold text-neutral-900">{formatKRW(partnerWeek)}</p>
+                <p className="text-[10px] text-neutral-400">{partnerWeekCount}건</p>
+              </div>
+              <div>
+                <div className="flex items-center gap-1 text-[10px] text-neutral-400 mb-0.5"><TrendingUp size={10} />이번달</div>
+                <p className="text-sm font-bold text-neutral-900">{formatKRW(partnerMonth)}</p>
+                <p className="text-[10px] text-neutral-400">{partnerMonthCount}건</p>
+              </div>
+              <div>
+                <div className="flex items-center gap-1 text-[10px] text-red-400 mb-0.5"><AlertCircle size={10} />미수금</div>
+                <p className="text-sm font-bold text-red-600">{formatKRW(partnerOutstanding)}</p>
+              </div>
             </div>
-            <p className="text-base font-bold text-neutral-900">{formatKRW(stats.month.amount)}</p>
-            <p className="text-[11px] text-neutral-400">{stats.month.count}건</p>
-          </div>
-          <div className="bg-white rounded-lg border border-neutral-200 p-3">
-            <div className="flex items-center gap-1.5 text-xs text-red-500 mb-1">
-              <AlertCircle size={12} />
-              미수금
-            </div>
-            <p className="text-base font-bold text-red-600">{formatKRW(stats.outstanding)}</p>
           </div>
         </div>
       )}
@@ -228,11 +289,30 @@ export default function SalesPage() {
         })}
       </div>
 
+      {/* 영역 칩 (★ 2026-05-26 신규) — 고객(B2C) / 거래처(B2B) / 전체. default 고객 */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex gap-1">
+          {SECTIONS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => handleSectionChange(s.key)}
+              className={`px-3 py-1 text-xs rounded-full border transition font-medium ${
+                section === s.key
+                  ? 'bg-neutral-900 text-white border-neutral-900'
+                  : 'bg-white text-neutral-600 border-neutral-300 hover:border-neutral-500'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 채널 + 기간 필터 (한 줄 통합) */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* 채널 */}
+        {/* 채널 — 영역 칩 따라 동적 표시 */}
         <div className="flex gap-1">
-          {CHANNELS.map((c) => (
+          {CHANNELS_BY_SECTION[section].map((c) => (
             <button
               key={c.key}
               onClick={() => handleChannelChange(c.key)}
@@ -323,10 +403,17 @@ export default function SalesPage() {
       <Topbar
         title="판매 관리"
         action={
-          <Button onClick={() => router.push('/sales/new')} size="sm">
-            <Plus size={14} />
-            판매 입력
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => router.push('/sales/new')} size="sm">
+              <Plus size={14} />
+              판매 입력
+            </Button>
+            {/* 2026-05-26 IA 통합: 거래처 매출 (B2B). Phase C 에서 /sales/new?mode=b2b 라우팅으로 교체 예정 */}
+            <Button onClick={handlePartnerSaleClick} size="sm" variant="secondary">
+              <Plus size={14} />
+              거래처 매출
+            </Button>
+          </div>
         }
       />
 

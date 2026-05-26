@@ -155,10 +155,11 @@ export function useSalesStats() {
       // 이번달 1일
       const monthStart = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-01`;
 
+      // 2026-05-26 IA 통합: customer_type 도 select — 화면에서 고객(B2C) / 거래처(B2B) 영역별 분리 집계
       // 주간 매출
       const { data: weekSales } = await db
         .from('offline_sales')
-        .select('total_amount, paid_amount, discount_amount')
+        .select('total_amount, paid_amount, discount_amount, customer_type')
         .gte('sale_date', weekStart)
         .lte('sale_date', today)
         .is('cancelled_at', null);
@@ -166,7 +167,7 @@ export function useSalesStats() {
       // 월간 매출
       const { data: monthSales } = await db
         .from('offline_sales')
-        .select('total_amount, paid_amount, discount_amount')
+        .select('total_amount, paid_amount, discount_amount, customer_type')
         .gte('sale_date', monthStart)
         .lte('sale_date', today)
         .is('cancelled_at', null);
@@ -174,22 +175,40 @@ export function useSalesStats() {
       // 미수금 총액
       const { data: unpaidSales } = await db
         .from('offline_sales')
-        .select('total_amount, paid_amount, discount_amount')
+        .select('total_amount, paid_amount, discount_amount, customer_type')
         .in('payment_status', ['unpaid', 'partial'])
         .is('cancelled_at', null);
 
       // 발생주의: 매출 = total_amount - discount_amount (미수금 포함)
-      const sum = (arr: Array<{ total_amount: number; paid_amount: number; discount_amount: number }> | null) => {
+      type SalesRow = { total_amount: number; paid_amount: number; discount_amount: number; customer_type?: string };
+      const isPartner = (t?: string) => t === 'dealer' || t === 'academy';
+      const sum = (arr: SalesRow[] | null) => {
         if (!arr) return { amount: 0, count: 0 };
         const amount = arr.reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
         return { amount, count: arr.length };
       };
+      const sumOutstanding = (arr: SalesRow[] | null) => {
+        if (!arr) return 0;
+        return arr.reduce(
+          (s, r) => s + ((r.total_amount - (r.discount_amount || 0)) - (r.paid_amount || 0)),
+          0
+        );
+      };
+      const partition = (arr: SalesRow[] | null): { customer: SalesRow[]; partner: SalesRow[] } => {
+        const customer: SalesRow[] = [];
+        const partner: SalesRow[] = [];
+        for (const r of arr || []) {
+          if (isPartner(r.customer_type)) partner.push(r);
+          else customer.push(r);
+        }
+        return { customer, partner };
+      };
 
-      const unpaidTotal = (unpaidSales || []).reduce(
-        (s: number, r: { total_amount: number; paid_amount: number; discount_amount: number }) =>
-          s + ((r.total_amount - (r.discount_amount || 0)) - (r.paid_amount || 0)),
-        0
-      );
+      const weekParts = partition(weekSales);
+      const monthParts = partition(monthSales);
+      const unpaidParts = partition(unpaidSales);
+
+      const unpaidTotal = sumOutstanding(unpaidSales);
 
       // B2B 거래처별 이번달 매출
       const { data: b2bSales } = await db
@@ -210,10 +229,18 @@ export function useSalesStats() {
       const b2bRanking = Object.values(b2bMap).sort((a, b) => b.amount - a.amount);
 
       return {
+        // 기존 필드 — 전체 합계 (B2C+B2B 합산, 기존 사용처 무영향)
         week: sum(weekSales),
         month: sum(monthSales),
         outstanding: unpaidTotal,
         b2b: b2bRanking,
+        // 2026-05-26 신규 — 영역별 분리 (offline_sales 기준만, deliveries 합산은 화면에서)
+        customerWeek: sum(weekParts.customer),
+        customerMonth: sum(monthParts.customer),
+        customerOutstanding: sumOutstanding(unpaidParts.customer),
+        partnerWeek: sum(weekParts.partner),
+        partnerMonth: sum(monthParts.partner),
+        partnerOutstanding: sumOutstanding(unpaidParts.partner),
       };
     },
   });
