@@ -150,15 +150,15 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
         </div>
       </Field>
 
-      {/* 067 → 2026-05-25 갱신: 3채널 통합 토글 (복원수리 / 아임웹 주문 / TMS 판매) */}
+      {/* 067 → 2026-05-25 → 2026-05-26 정책 정정: 약속 ✓ 고객만 자동 발송 (사장님 의도) */}
       <Field
         label="배송완료 시 자동 후기요청"
-        desc="복원수리·아임웹 주문·TMS 판매 3채널 공통. OFF → 사이드 패널 '후기요청' 버튼으로 수동 발송. ON → ALPS 인수자등록 자동 감지 후 즉시 발송. ※ 약속받은 고객(review_promised_at 체크)은 ON 이어도 사장님 수동만. ※ 상담은 정책상 영구 수동만 (2026-04-30)."
+        desc="복원수리·아임웹 주문·TMS 판매 3채널 공통. OFF → 모든 후기 요청 수동만 (자동 발송 안 됨). ON → 판매 상세에서 '리뷰 약속' 토글 ON 한 건만, ALPS 인수자등록(코드 41/45) 자동 감지 시 알림톡 자동 발송. ※ 약속 OFF 건은 토글 ON 이어도 사장님 수동 발송만. ※ 상담은 정책상 영구 수동만 (2026-04-30)."
       >
         <div className="flex items-center gap-3">
           <Toggle checked={reviewAutoRequest} onChange={setReviewAutoRequest} />
           <span className={`text-sm font-medium ${reviewAutoRequest ? 'text-blue-600' : 'text-neutral-500'}`}>
-            {reviewAutoRequest ? 'ON — 자동 발송' : 'OFF — 수동 발송만'}
+            {reviewAutoRequest ? 'ON — 약속 ✓ 건 자동 발송' : 'OFF — 모두 수동 발송'}
           </span>
         </div>
       </Field>
