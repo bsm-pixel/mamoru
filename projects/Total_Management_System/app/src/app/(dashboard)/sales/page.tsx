@@ -61,23 +61,11 @@ const SECTIONS: { key: SalesSection; label: string }[] = [
   { key: 'all', label: '전체' },
 ];
 
-/** 영역별 채널 옵션 — 영역 칩 선택에 따라 동적 표시 */
-const CHANNELS_BY_SECTION: Record<SalesSection, { key: SalesChannel | 'b2b'; label: string }[]> = {
-  customer: [
-    { key: 'all', label: '전체' },
-    { key: 'offline', label: '오프라인' },
-    { key: 'talk', label: '온라인상담' },
-  ],
-  partner: [
-    { key: 'b2b', label: '전체' },  // Phase B 에서 dealer/academy 세분화 예정
-  ],
-  all: [
-    { key: 'all', label: '전체' },
-    { key: 'offline', label: '오프라인' },
-    { key: 'talk', label: '온라인상담' },
-    { key: 'b2b', label: 'B2B 납품' },
-  ],
-};
+/** 2026-05-26 Phase G-2: 채널 칩 폐기 — 영역 칩만으로 데이터 분기 충분
+ *  - section='customer' → useSales(channel='all') + customer_type IN (소매/온라인/상담) 자동
+ *  - section='partner'  → useDeliveries + offline_sales 의 dealer/academy 합집합 (useMemo 안에서)
+ *  - section='all'      → 둘 다 합집합
+ */
 
 const DATE_RANGES: { key: SalesDateRange; label: string }[] = [
   { key: 'all', label: '전체 기간' },
@@ -92,7 +80,8 @@ export default function SalesPage() {
   const [page, setPage] = useState(1);
   const [tab, setTab] = useState<SalesTab>('all'); // 기본 탭: 전체
   const [section, setSection] = useState<SalesSection>('customer'); // 2026-05-26: default 고객
-  const [channel, setChannel] = useState<SalesChannel | 'b2b'>('all');
+  // 2026-05-26 Phase G-2: 채널 칩 폐기 — channel state 는 hook 호환용으로 'all' 고정
+  const channel: SalesChannel = 'all';
   const [dateRange, setDateRange] = useState<SalesDateRange>('month');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -159,13 +148,11 @@ export default function SalesPage() {
     setCheckedDeliveryIds((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   };
   const totalChecked = checkedIds.size + checkedDeliveryIds.size;
-  const handleChannelChange = (c: SalesChannel | 'b2b') => { setChannel(c); setPage(1); };
   const handleDateRangeChange = (d: SalesDateRange) => { setDateRange(d); setPage(1); };
 
-  /** 영역 칩 변경 — 채널 칩의 첫 옵션으로 자동 매핑 (옵션 셋이 달라지므로 stale 방지) */
+  /** 영역 칩 변경 — 데이터 분기는 unifiedItems useMemo 가 처리 */
   const handleSectionChange = (s: SalesSection) => {
     setSection(s);
-    setChannel(CHANNELS_BY_SECTION[s][0].key);
     setPage(1);
   };
 
@@ -231,8 +218,8 @@ export default function SalesPage() {
         </div>
       )}
 
-      {/* B2B 거래처별 매출 (B2B 필터일 때) */}
-      {channel === 'b2b' && stats?.b2b && stats.b2b.length > 0 && (
+      {/* B2B 거래처별 매출 (영역 '거래처' 일 때만) — 2026-05-26 Phase G-2: channel='b2b' → section='partner' 매핑 */}
+      {section === 'partner' && stats?.b2b && stats.b2b.length > 0 && (
         <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
           <div className="px-3 py-2 bg-neutral-50 text-xs font-semibold text-neutral-600">이번달 거래처별 매출</div>
           <table className="w-full text-sm">
@@ -323,8 +310,9 @@ export default function SalesPage() {
         })}
       </div>
 
-      {/* 영역 칩 (★ 2026-05-26 신규) — 고객(B2C) / 거래처(B2B) / 전체. default 고객 */}
+      {/* 영역 칩 + 기간 필터 (한 줄 통합) — 2026-05-26 Phase G-2: 채널 칩 폐기 */}
       <div className="flex flex-wrap items-center gap-3">
+        {/* 영역 — 고객(B2C) / 거래처(B2B) / 전체. default 고객 */}
         <div className="flex gap-1">
           {SECTIONS.map((s) => (
             <button
@@ -337,26 +325,6 @@ export default function SalesPage() {
               }`}
             >
               {s.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 채널 + 기간 필터 (한 줄 통합) */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* 채널 — 영역 칩 따라 동적 표시 */}
-        <div className="flex gap-1">
-          {CHANNELS_BY_SECTION[section].map((c) => (
-            <button
-              key={c.key}
-              onClick={() => handleChannelChange(c.key)}
-              className={`px-2.5 py-1 text-xs rounded-full border transition ${
-                channel === c.key
-                  ? 'bg-neutral-900 text-white border-neutral-900'
-                  : 'bg-white text-neutral-500 border-neutral-200 hover:border-neutral-400'
-              }`}
-            >
-              {c.label}
             </button>
           ))}
         </div>
