@@ -32,12 +32,16 @@ interface RelatedActivity {
   submittedAt: string | null;
 }
 
+type PromiseType = 'purchase' | 'repair' | 'consult';
+
 interface Props {
   source: ReviewSource;
   id: string;
   customerName: string;
   customerPhone: string | null;
   promisedAt: string | null;
+  /** 094: 약속한 후기 유형 (자동 발송 시 솔라피 템플릿 결정) — NULL이면 source 디폴트 매핑 */
+  promisedType?: PromiseType | null;
   requestSentAt: string | null;
   submittedAt: string | null;
   /** 변경 후 부모 쿼리 invalidate / refetch 트리거 */
@@ -53,6 +57,20 @@ interface Props {
   deliveredAt?: string | null;
   invoiceNumber?: string | null;
 }
+
+/** source → 디폴트 유형 매핑 (094) */
+function defaultPromiseType(source: ReviewSource, hasRepairItem: boolean): PromiseType {
+  if (source === 'repair') return 'repair';
+  if (source === 'consultation') return 'consult';
+  // source === 'sale'
+  return hasRepairItem ? 'repair' : 'purchase';
+}
+
+const TYPE_LABEL: Record<PromiseType, string> = {
+  repair: '복원수리',
+  consult: '상담',
+  purchase: '제품구매',
+};
 
 function formatDate(iso: string | null): string {
   if (!iso) return '';
@@ -108,6 +126,7 @@ export function ReviewManagementCard({
   customerName,
   customerPhone,
   promisedAt,
+  promisedType = null,
   requestSentAt,
   submittedAt,
   onChanged,
@@ -198,15 +217,20 @@ export function ReviewManagementCard({
     );
   }
 
+  // 094: 약속 토글 — ON 시 source 디폴트 유형으로 시작, 사용자가 칩으로 변경 가능
+  const activeType: PromiseType = promisedType ?? defaultPromiseType(source, hasRepairItem);
+
   const handleTogglePromise = async () => {
     if (togglingPromise) return;
     setTogglingPromise(true);
     try {
       const next = !promisedAt;
+      const body: Record<string, unknown> = { source, id, on: next };
+      if (next) body.type = activeType; // ON 시 디폴트 유형 함께 전달
       const res = await fetch('/api/reviews/promise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source, id, on: next }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -222,11 +246,36 @@ export function ReviewManagementCard({
     }
   };
 
+  // 094: 약속 유형 변경 (토글이 ON 상태에서만 호출)
+  const handleChangePromiseType = async (next: PromiseType) => {
+    if (togglingPromise || next === activeType) return;
+    setTogglingPromise(true);
+    try {
+      const res = await fetch('/api/reviews/promise', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source, id, on: true, type: next }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || '유형 변경 실패');
+        return;
+      }
+      toast.success(`약속 유형: ${TYPE_LABEL[next]}`);
+      onChanged?.();
+    } catch (e) {
+      toast.error(`오류: ${String(e)}`);
+    } finally {
+      setTogglingPromise(false);
+    }
+  };
+
   // 2026-05-26 Phase G-6 후속: 컴팩트 모드 시안 3 (토글 스위치 + 날짜)
+  // 2026-05-27 (094): 토글 ON 시 [복원수리/상담/제품구매] 라디오 칩 인라인 표시
   if (compact) {
     return (
       <>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* 약속 토글 스위치 (시안 3) */}
           <button
             type="button"
@@ -249,6 +298,28 @@ export function ReviewManagementCard({
             <span className={promisedAt ? 'font-semibold text-neutral-900' : 'text-neutral-500'}>리뷰 약속</span>
             {promisedAt && <span className="text-[10px] text-neutral-400">{formatDate(promisedAt)}</span>}
           </button>
+
+          {/* 094: 약속 ON 시 유형 라디오 칩 (자동 발송 시 솔라피 템플릿 분기) */}
+          {promisedAt && (
+            <div className="flex items-center gap-1">
+              {(['repair', 'consult', 'purchase'] as PromiseType[]).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => handleChangePromiseType(t)}
+                  disabled={togglingPromise}
+                  title={`자동 발송 유형: ${TYPE_LABEL[t]}`}
+                  className={`text-[10px] px-1.5 py-0.5 rounded transition disabled:opacity-50 ${
+                    activeType === t
+                      ? 'bg-stone-900 text-white font-semibold'
+                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  }`}
+                >
+                  {TYPE_LABEL[t]}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* 후기 요청 작은 버튼 — 자동 발송 예정 시 시각 약화 + confirm 가드 */}
           <button
@@ -314,7 +385,7 @@ export function ReviewManagementCard({
           disabled={togglingPromise}
           className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border transition mb-2 ${
             promisedAt
-              ? 'bg-terracotta/10 border-terracotta/40'
+              ? 'bg-stone-900/5 border-stone-900/40'
               : 'bg-white border-neutral-200 hover:bg-neutral-50'
           }`}
         >
@@ -322,7 +393,7 @@ export function ReviewManagementCard({
             <span
               className={`w-4 h-4 rounded border-2 flex items-center justify-center text-[10px] font-bold transition ${
                 promisedAt
-                  ? 'bg-terracotta border-terracotta text-white'
+                  ? 'bg-stone-900 border-stone-900 text-white'
                   : 'bg-white border-neutral-300 text-transparent'
               }`}
             >
@@ -334,6 +405,30 @@ export function ReviewManagementCard({
           </div>
           {promisedAt && <span className="text-[11px] text-neutral-500">{formatDate(promisedAt)}</span>}
         </button>
+
+        {/* 094: 약속 ON 시 유형 라디오 칩 (자동 발송 시 솔라피 템플릿 분기) */}
+        {promisedAt && (
+          <div className="mb-2 flex items-center gap-1.5">
+            <span className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold">자동 발송 유형</span>
+            <div className="flex items-center gap-1 ml-auto">
+              {(['repair', 'consult', 'purchase'] as PromiseType[]).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => handleChangePromiseType(t)}
+                  disabled={togglingPromise}
+                  className={`text-[11px] px-2 py-0.5 rounded transition disabled:opacity-50 ${
+                    activeType === t
+                      ? 'bg-stone-900 text-white font-semibold'
+                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  }`}
+                >
+                  {TYPE_LABEL[t]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 후기 요청 발송 버튼 */}
         <button

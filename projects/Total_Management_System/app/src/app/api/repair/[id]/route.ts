@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidRepairTransition } from '@/lib/repair/transitions';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
+import { sendReviewRequestNotification } from '@/lib/notification/review-request';
 import { getServerSetting } from '@/hooks/use-settings';
 import type { RepairStatus } from '@/lib/supabase/types';
 import { fireAndForgetRepairSync } from '@/lib/google/repair-calendar-sync';
@@ -122,53 +123,57 @@ export async function PATCH(
       after(async () => {
         if (skip_notify) return;  // 합포장 출고 등 알림톡 우회 케이스
         const template = getAutoNotifyTemplate(newStatus);
-        if (template && data.phone) {
-          // 067: 후기 요청 자동 발송 가드
-          // 2026-05-26 정책 정정 (사장님 의도): 약속 ✓ 고객만 자동 발송 — 보수적
-          //   기존 정책 (약속 X 고객만 자동) 폐기 → 약속 받은 고객만 자동, 약속 X 고객은 사장님 수동만
-          let allowSend = true;
-          if (template === 'as_review_request') {
-            const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
-            if (!autoEnabled) allowSend = false;
-            else if (!data.review_promised_at) allowSend = false;   // 약속 X → 자동 발송 안 함
-            else if (data.review_request_sent_at) allowSend = false; // 중복 방지
-          }
+        if (!template || !data.phone) return;
 
-          if (!allowSend) {
-            console.log('[repair auto-notify] as_review_request skip (policy/promised/duplicate)');
-            return;
-          }
+        // 067: 후기 요청 자동 발송 가드
+        // 2026-05-26 정책 정정: 약속 ✓ 고객만 자동 발송
+        // 094 (2026-05-27): review_promised_type 으로 솔라피 템플릿 분기
+        if (template === 'as_review_request') {
+          const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
+          if (!autoEnabled) { console.log('[repair auto-review] skip — 토글 OFF'); return; }
+          if (!data.review_promised_at) { console.log('[repair auto-review] skip — 약속 X'); return; }
+          if (data.review_request_sent_at) { console.log('[repair auto-review] skip — 이미 발송'); return; }
 
-          const result = await sendNotification({
-            template,
-            phone: data.phone,
-            name: data.name,
-            data: {
-              id: data.as_id,
-              as_amount: String(data.service_cost || 0),
-              shipping_amount: String(data.shipping_fee || 0),
-              total_amount: String(data.total_amount || 0),
-              tracking: data.invoice_number || '',
-              courier: '롯데택배',
-              uid: data.as_id,                   // 리뷰 폼 uid 파라미터
-              as_uid: data.as_id,                // 솔라피 #{as_uid} 치환용
-              review_type: 'repair',             // 리뷰 폼 type 파라미터
-              type_label: '복원수리',             // 알림톡 치환 변수
-            },
+          // 094: 약속 시 선택한 유형으로 발송 (NULL이면 'repair' 디폴트)
+          const reviewType = (data.review_promised_type as 'purchase' | 'repair' | 'consult' | null) || 'repair';
+          const r = await sendReviewRequestNotification({
+            source: 'repair',
+            sourceId: data.as_id,
+            customerName: data.name,
+            customerPhone: data.phone,
+            reviewType,
           });
-          if (!result.success) {
-            console.error('[repair auto-notify] 실패:', result.error);
+          if (r.success) {
+            try {
+              await db.from('repairs')
+                .update({ review_request_sent_at: new Date().toISOString() })
+                .eq('id', id);
+              console.log(`[repair auto-review] ${data.as_id} 발송 성공 (type=${reviewType})`);
+            } catch (e) { console.error('[repair auto-review] review_request_sent_at 기록 실패:', e); }
           } else {
-            console.log('[repair auto-notify] 성공:', template);
-            // 067: 후기 요청 자동 발송 성공 시 시각 기록 (중복 방지)
-            if (template === 'as_review_request') {
-              try {
-                await db.from('repairs')
-                  .update({ review_request_sent_at: new Date().toISOString() })
-                  .eq('id', id);
-              } catch (e) { console.error('[repair auto-notify] review_request_sent_at 기록 실패:', e); }
-            }
+            console.error('[repair auto-review] 실패:', r.error);
           }
+          return;
+        }
+
+        // 비-후기 자동 알림(as_shipped / as_cancelled): 기존 흐름 유지
+        const result = await sendNotification({
+          template,
+          phone: data.phone,
+          name: data.name,
+          data: {
+            id: data.as_id,
+            as_amount: String(data.service_cost || 0),
+            shipping_amount: String(data.shipping_fee || 0),
+            total_amount: String(data.total_amount || 0),
+            tracking: data.invoice_number || '',
+            courier: '롯데택배',
+          },
+        });
+        if (!result.success) {
+          console.error('[repair auto-notify] 실패:', result.error);
+        } else {
+          console.log('[repair auto-notify] 성공:', template);
         }
       });
     }
