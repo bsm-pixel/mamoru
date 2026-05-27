@@ -322,6 +322,46 @@ export function ReviewManagementCard({
     : activeType === 'consult' ? [...CONSULT_SUBTYPES]
     : [];
 
+  /** 후기 요청 발송 — 약속 ON 시 모달 우회 (이미 유형/subtype 선택됨), OFF 시 모달 열기 */
+  const handleRequestClick = async () => {
+    if (!customerPhone) { toast.error('고객 연락처가 없어 발송할 수 없습니다'); return; }
+    // 자동 발송 예정 confirm 가드 (compact 모드에서만 의미 — 기존 동작 유지)
+    if (autoSendPending) {
+      const ok = confirm('이 건은 배송완료 시 자동 발송될 예정입니다.\n\n지금 수동으로 발송하시겠습니까?');
+      if (!ok) return;
+    }
+    // 약속 OFF → 모달 열기 (유형 선택 → 발송)
+    if (!promisedAt) {
+      setShowRequestModal(true);
+      return;
+    }
+    // 약속 ON → 토글+칩 선택값 그대로 즉시 발송 (IA: SSOT 일관)
+    setTogglingPromise(true);
+    try {
+      const res = await fetch('/api/reviews/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source,
+          id,
+          review_type: activeType,
+          subtype: activeType === 'purchase' ? undefined : (activeSubtype || undefined),
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || '발송 실패');
+        return;
+      }
+      toast.success('후기 요청 알림톡을 발송했습니다');
+      onChanged?.();
+    } catch (e) {
+      toast.error(`오류: ${String(e)}`);
+    } finally {
+      setTogglingPromise(false);
+    }
+  };
+
   // 2026-05-26 Phase G-6 후속: 컴팩트 모드 시안 3 (토글 스위치 + 날짜)
   // 2026-05-27 (094): 토글 ON 시 [복원수리/상담/제품구매] 라디오 칩 인라인 표시
   if (compact) {
@@ -395,18 +435,11 @@ export function ReviewManagementCard({
             </div>
           )}
 
-          {/* 후기 요청 작은 버튼 — 자동 발송 예정 시 시각 약화 + confirm 가드 */}
+          {/* 후기 요청 작은 버튼 — 약속 ON 시 모달 없이 즉시 발송, OFF 시 모달 */}
           <button
             type="button"
-            onClick={() => {
-              if (!customerPhone) { toast.error('고객 연락처가 없어 발송할 수 없습니다'); return; }
-              // 자동 발송 예정인 경우 사장님이 의식적 수동 발송하는지 확인
-              if (autoSendPending) {
-                const ok = confirm('이 건은 배송완료 시 자동 발송될 예정입니다.\n\n지금 수동으로 발송하시겠습니까?');
-                if (!ok) return;
-              }
-              setShowRequestModal(true);
-            }}
+            onClick={handleRequestClick}
+            disabled={togglingPromise}
             title={
               autoSendPending
                 ? '배송완료 자동 감지 시 자동 발송 예정 (ALPS cron 4시간마다)'
@@ -528,17 +561,12 @@ export function ReviewManagementCard({
           </div>
         )}
 
-        {/* 후기 요청 발송 버튼 */}
+        {/* 후기 요청 발송 버튼 — 약속 ON 시 모달 없이 즉시 발송, OFF 시 모달 */}
         <button
           type="button"
-          onClick={() => {
-            if (!customerPhone) {
-              toast.error('고객 연락처가 없어 발송할 수 없습니다');
-              return;
-            }
-            setShowRequestModal(true);
-          }}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-indigo-black text-cream text-sm font-semibold hover:bg-indigo-black/85 transition disabled:opacity-50"
+          onClick={handleRequestClick}
+          disabled={togglingPromise}
+          className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 transition disabled:opacity-50"
         >
           <Send size={13} />
           {requestSentAt ? '재발송' : '후기 요청 보내기'}
