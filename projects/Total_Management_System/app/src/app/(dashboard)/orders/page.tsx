@@ -58,7 +58,7 @@ export default function OrdersPage() {
     <>
       <Topbar title="주문관리" />
 
-      <div className="px-4 md:px-6 py-4 space-y-3">
+      <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
         {/* 상단: 동기화 + 검색 */}
         <div className="flex items-center gap-3">
           <Button
@@ -78,7 +78,7 @@ export default function OrdersPage() {
           <select
             value={dateRange}
             onChange={(e) => { setDateRange(e.target.value as typeof dateRange); setPage(1); }}
-            className="shrink-0 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-xs font-medium text-neutral-600 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+            className="shrink-0 h-9 px-3 rounded-xl border border-stone-200 bg-white text-xs font-medium text-stone-700 focus:outline-none focus:border-stone-400 transition"
           >
             <option value="all">전체 기간</option>
             <option value="today">오늘</option>
@@ -95,16 +95,16 @@ export default function OrdersPage() {
               onClick={() => { setStatus(tab.value); setPage(1); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
                 status === tab.value
-                  ? 'bg-terracotta text-cream'
-                  : 'bg-card-white text-neutral-500 hover:bg-warm-ivory'
+                  ? 'bg-stone-900 text-white'
+                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
               }`}
             >
               {tab.label}
               {counts && counts[tab.value] > 0 && (
                 <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
                   status === tab.value
-                    ? 'bg-cream/20 text-cream'
-                    : 'bg-neutral-200 text-neutral-600'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-stone-200 text-stone-600'
                 }`}>
                   {counts[tab.value]}
                 </span>
@@ -216,50 +216,50 @@ export default function OrdersPage() {
 }
 
 const OrderRow = memo(function OrderRow({ order, isSelected, onClick, onInvoice }: { order: Order; isSelected: boolean; onClick: () => void; onInvoice: () => void }) {
-  const statusColor = ORDER_STATUS_COLOR[order.status] || 'bg-neutral-100 text-neutral-500';
+  const statusColor = ORDER_STATUS_COLOR[order.status] || 'bg-stone-100 text-stone-500';
 
   return (
     <div
       onClick={onClick}
-      className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition ${isSelected ? 'bg-terracotta/5 border-l-2 border-l-terracotta' : ''}`}
+      className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-stone-50 transition ${isSelected ? 'bg-stone-50 border-l-2 border-l-stone-900' : ''}`}
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-indigo-black truncate">
+          <span className="text-sm font-semibold text-stone-800 truncate">
             {order.orderer_name}
           </span>
           <Badge className={statusColor}>
             {ORDER_STATUS_LABEL[order.status] || order.status}
           </Badge>
           {order.paid_at ? (
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">
               결제완료
             </span>
           ) : order.paid_amount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700">
               미납
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
+        <div className="flex items-center gap-3 mt-1 text-xs text-stone-500">
           <span>{order.imweb_order_no}</span>
           <span>{formatDateTime(order.ordered_at)}</span>
           {order.invoice_number && (
-            <span className="text-terracotta">{order.invoice_number}</span>
+            <span className="text-stone-700 font-medium">{order.invoice_number}</span>
           )}
         </div>
         {order.recipient_memo && (
-          <p className="mt-1 text-xs text-neutral-400 truncate max-w-[300px]" title={order.recipient_memo}>
+          <p className="mt-1 text-xs text-stone-400 truncate max-w-[300px]" title={order.recipient_memo}>
             📝 {order.recipient_memo}
           </p>
         )}
       </div>
       <div className="text-right shrink-0 flex flex-col items-end gap-1">
-        <span className="text-sm font-bold">{formatKRW(order.paid_amount)}</span>
+        <span className="text-sm font-bold text-stone-900">{formatKRW(order.paid_amount)}</span>
         {order.status === 'pay_done' && !order.invoice_number && (
           <button
             onClick={(e) => { e.stopPropagation(); onInvoice(); }}
-            className="flex items-center gap-1 px-2 py-1 rounded-md bg-terracotta/10 text-terracotta text-[11px] font-semibold hover:bg-terracotta/20 transition"
+            className="flex items-center gap-1 px-2 py-1 rounded-md bg-stone-900 text-white text-[11px] font-semibold hover:bg-stone-800 transition"
           >
             <Truck size={12} />
             송장생성

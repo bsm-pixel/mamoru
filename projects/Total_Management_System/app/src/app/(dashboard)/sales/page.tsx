@@ -19,6 +19,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { Plus, FileSignature, Receipt, ClipboardList } from 'lucide-react';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
+import { RevenueDarkCard } from '@/components/ui/revenue-dark-card';
 import type { OfflineSale } from '@/lib/supabase/types';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
@@ -224,42 +225,27 @@ export default function SalesPage() {
   /* --- 목록 영역 (좌측/모바일) --- */
   const listContent = (
     <>
-      {/* 통계 요약 카드 — 2026-05-26 Phase G-4: 안 3 어두운 카드 채택 (사장님 결정) */}
+      {/* 통계 요약 카드 — 2026-05-26 Phase G-4 안 3 + 2026-05-27 공통 RevenueDarkCard 추출 */}
       {stats && (
         <div className="grid grid-cols-2 gap-3">
-          {/* 고객 (B2C) — 어두운 카드 */}
-          <div className="bg-gradient-to-br from-stone-800 to-stone-900 text-white rounded-2xl p-5 ring-1 ring-white/5">
-            <div className="text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-2">고객 (B2C)</div>
-            <div className="text-3xl font-bold tracking-tight">{formatKRW(stats.customerMonth?.amount || 0)}</div>
-            <div className="text-xs opacity-70 mt-1">이번달 · {stats.customerMonth?.count || 0}건</div>
-            <div className="mt-4 pt-3 border-t border-white/10 grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <span className="opacity-60">이번주</span>
-                <div className="font-semibold mt-0.5">{formatKRW(stats.customerWeek?.amount || 0)}</div>
-              </div>
-              <div>
-                <span className="text-amber-300">미수금</span>
-                <div className="font-semibold mt-0.5 text-amber-300">{formatKRW(stats.customerOutstanding || 0)}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* 거래처 (B2B) — 어두운 카드 */}
-          <div className="bg-gradient-to-br from-stone-800 to-stone-900 text-white rounded-2xl p-5 ring-1 ring-white/5">
-            <div className="text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-2">거래처 (B2B)</div>
-            <div className="text-3xl font-bold tracking-tight">{formatKRW(partnerMonth)}</div>
-            <div className="text-xs opacity-70 mt-1">이번달 · {partnerMonthCount}건</div>
-            <div className="mt-4 pt-3 border-t border-white/10 grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <span className="opacity-60">이번주</span>
-                <div className="font-semibold mt-0.5">{formatKRW(partnerWeek)}</div>
-              </div>
-              <div>
-                <span className="text-amber-300">미수금</span>
-                <div className="font-semibold mt-0.5 text-amber-300">{formatKRW(partnerOutstanding)}</div>
-              </div>
-            </div>
-          </div>
+          <RevenueDarkCard
+            label="고객 (B2C)"
+            amount={formatKRW(stats.customerMonth?.amount || 0)}
+            amountSub={`이번달 · ${stats.customerMonth?.count || 0}건`}
+            bottomGrid={[
+              { label: '이번주', value: formatKRW(stats.customerWeek?.amount || 0) },
+              { label: '미수금', value: formatKRW(stats.customerOutstanding || 0), highlight: 'amber' },
+            ]}
+          />
+          <RevenueDarkCard
+            label="거래처 (B2B)"
+            amount={formatKRW(partnerMonth)}
+            amountSub={`이번달 · ${partnerMonthCount}건`}
+            bottomGrid={[
+              { label: '이번주', value: formatKRW(partnerWeek) },
+              { label: '미수금', value: formatKRW(partnerOutstanding), highlight: 'amber' },
+            ]}
+          />
         </div>
       )}
 

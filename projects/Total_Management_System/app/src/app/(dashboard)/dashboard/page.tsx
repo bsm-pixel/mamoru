@@ -20,11 +20,12 @@ import {
   ShoppingCart, MessageSquare, Wrench, Store,
   CheckCircle2, AlertTriangle,
   PackageX, Truck, PackageOpen, Star, ClipboardList,
-  ArrowRight, Plus,
+  Plus,
 } from 'lucide-react';
 
 import { Topbar } from '@/components/layout/topbar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StatCard } from '@/components/ui/stat-card';
 import { DashboardCalendarPanel } from '@/components/dashboard/dashboard-calendar';
 import {
   useHubStats, useOutstandingAlert,
@@ -124,49 +125,6 @@ function GoalEditBox({
         <button onClick={onCancel} className="text-xs text-stone-400 hover:text-stone-600 transition">취소</button>
       )}
     </div>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────
- * 카테고리 카드 (1행 우측 4분할)
- * ──────────────────────────────────────────────────────── */
-function CategoryCard({
-  title, icon: Icon, mainValue, mainLabel, subStats, href, accent,
-}: {
-  title: string;
-  icon: typeof ShoppingCart;
-  mainValue: number;
-  mainLabel: string;
-  subStats?: string;
-  href: string;
-  accent: 'blue' | 'amber' | 'emerald' | 'stone';
-}) {
-  const accentColors = {
-    blue:    'text-blue-600',
-    amber:   'text-amber-600',
-    emerald: 'text-emerald-600',
-    stone:   'text-stone-800',
-  };
-  return (
-    <Link
-      href={href}
-      className="bg-white rounded-2xl border border-stone-200 p-4 h-full flex flex-col hover:border-stone-300 transition group"
-    >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
-          <Icon size={13} className="text-stone-400" />
-          <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold">{title}</p>
-        </div>
-        <ArrowRight size={12} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition" />
-      </div>
-      <div className="flex-1 flex flex-col justify-center">
-        <p className={`text-3xl font-bold leading-none ${accentColors[accent]}`}>{mainValue}</p>
-        <p className="text-[10px] text-stone-500 mt-1">{mainLabel}</p>
-      </div>
-      {subStats && (
-        <p className="text-[10px] text-stone-400 mt-2 pt-2 border-t border-stone-100 truncate">{subStats}</p>
-      )}
-    </Link>
   );
 }
 
@@ -429,34 +387,34 @@ export default function DashboardPage() {
   const repair = stats?.repairs?.monthRepairAmount || 0;
   const current = b2c + b2b + repair;
 
-  // 4카드 정의 (설정 기반 순서/표시)
+  // 4카드 정의 (설정 기반 순서/표시) — 공통 StatCard 재사용
   const CARD_DEF: Record<string, React.ReactNode> = {
     orders: (
-      <CategoryCard
-        key="orders" title="주문" icon={ShoppingCart} accent="blue" href="/orders/dashboard"
-        mainValue={stats?.orders.payDone || 0} mainLabel="결제완료"
-        subStats={stats ? `준비 ${stats.orders.preparing} · 완료 ${stats.orders.delivered}` : ''}
+      <StatCard
+        key="orders" label="주문" icon={ShoppingCart} accent="blue" href="/orders/dashboard"
+        value={stats?.orders.payDone || 0} primarySub="결제완료"
+        secondarySub={stats ? `준비 ${stats.orders.preparing} · 완료 ${stats.orders.delivered}` : undefined}
       />
     ),
     consultations: (
-      <CategoryCard
-        key="consultations" title="상담" icon={MessageSquare} accent="amber" href="/consultations"
-        mainValue={stats?.consultations.newIntake || 0} mainLabel="신규접수"
-        subStats={stats ? `예정 ${stats.consultations.confirmed} · 재요청 ${stats.consultations.needAction}` : ''}
+      <StatCard
+        key="consultations" label="상담" icon={MessageSquare} accent="amber" href="/consultations"
+        value={stats?.consultations.newIntake || 0} primarySub="신규접수"
+        secondarySub={stats ? `예정 ${stats.consultations.confirmed} · 재요청 ${stats.consultations.needAction}` : undefined}
       />
     ),
     repairs: (
-      <CategoryCard
-        key="repairs" title="복원수리" icon={Wrench} accent="emerald" href="/repairs/dashboard"
-        mainValue={stats?.repairs.readyToShip || 0} mainLabel="출고대기"
-        subStats={stats ? `이번달 ${stats.repairs.monthRepairCount}자루` : ''}
+      <StatCard
+        key="repairs" label="복원수리" icon={Wrench} accent="emerald" href="/repairs/dashboard"
+        value={stats?.repairs.readyToShip || 0} primarySub="출고대기"
+        secondarySub={stats ? `이번달 ${stats.repairs.monthRepairCount}자루` : undefined}
       />
     ),
     sales: (
-      <CategoryCard
-        key="sales" title="제품 판매" icon={Store} accent="stone" href="/sales"
-        mainValue={stats?.sales.monthCount || 0} mainLabel="이번달 판매"
-        subStats={stats ? `B2C ${fmtKRW(b2c)} · B2B ${fmtKRW(b2b)}` : ''}
+      <StatCard
+        key="sales" label="제품 판매" icon={Store} accent="stone" href="/sales"
+        value={stats?.sales.monthCount || 0} primarySub="이번달 판매"
+        secondarySub={stats ? `B2C ${fmtKRW(b2c)} · B2B ${fmtKRW(b2b)}` : undefined}
       />
     ),
   };

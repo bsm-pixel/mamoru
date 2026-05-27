@@ -13,8 +13,9 @@ import { AllConsultationsList } from '@/components/consultations/all-consultatio
 import { ScheduleCalendar } from '@/components/consultations/schedule-calendar';
 import { ConsultationDetailPanel } from '@/components/consultations/consultation-detail-panel';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { RefreshCw, Store, Truck, MessageCircle, Inbox, Loader, CheckCircle, MapPin, CalendarPlus, LayoutGrid, ArrowRight } from 'lucide-react';
+import { RefreshCw, Store, Truck, MessageCircle, Inbox, Loader, CheckCircle, MapPin, CalendarPlus, LayoutGrid } from 'lucide-react';
 import { CreateConsultationModal } from '@/components/consultations/create-consultation-modal';
+import { StatCard } from '@/components/ui/stat-card';
 
 // 카카오맵은 SSR 불가 → dynamic import
 const FieldRequestMap = dynamic(
@@ -92,51 +93,21 @@ export default function ConsultationsPage() {
       <Topbar title="상담관리" />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-4">
-        {/* 1행: 요약 3카드 (대시보드 CategoryCard 톤) + 새로고침 */}
+        {/* 1행: 요약 3카드 (공통 StatCard) + 새로고침 */}
         <div className="grid grid-cols-12 gap-3">
           <div className="col-span-12 lg:col-span-9 grid grid-cols-3 gap-3">
-            <button
+            <StatCard label="신규" icon={Inbox} accent="blue"
+              value={stats?.newIntake || 0} primarySub="확인 필요"
               onClick={() => setActiveTab('field_request')}
-              className="bg-white rounded-2xl border border-stone-200 p-4 hover:border-stone-300 transition group text-left"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  <Inbox size={13} className="text-stone-400" />
-                  <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold">신규</p>
-                </div>
-                <ArrowRight size={12} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition" />
-              </div>
-              <p className="text-3xl font-bold leading-none text-blue-600">{stats?.newIntake || 0}</p>
-              <p className="text-[10px] text-stone-500 mt-1">확인 필요</p>
-            </button>
-            <button
+            />
+            <StatCard label="진행" icon={Loader} accent="amber"
+              value={stats?.inProgress || 0} primarySub="일정 조율 중"
               onClick={() => setActiveTab('field_request')}
-              className="bg-white rounded-2xl border border-stone-200 p-4 hover:border-stone-300 transition group text-left"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  <Loader size={13} className="text-stone-400" />
-                  <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold">진행</p>
-                </div>
-                <ArrowRight size={12} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition" />
-              </div>
-              <p className="text-3xl font-bold leading-none text-amber-600">{stats?.inProgress || 0}</p>
-              <p className="text-[10px] text-stone-500 mt-1">일정 조율 중</p>
-            </button>
-            <button
+            />
+            <StatCard label="완료" icon={CheckCircle} accent="emerald"
+              value={stats?.completedMonth || 0} primarySub="이번달"
               onClick={() => setActiveTab('store_visit')}
-              className="bg-white rounded-2xl border border-stone-200 p-4 hover:border-stone-300 transition group text-left"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle size={13} className="text-stone-400" />
-                  <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold">완료</p>
-                </div>
-                <ArrowRight size={12} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition" />
-              </div>
-              <p className="text-3xl font-bold leading-none text-emerald-600">{stats?.completedMonth || 0}</p>
-              <p className="text-[10px] text-stone-500 mt-1">이번달</p>
-            </button>
+            />
           </div>
           <div className="col-span-12 lg:col-span-3 flex items-stretch">
             <button
