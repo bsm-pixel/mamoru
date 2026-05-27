@@ -248,7 +248,8 @@ export interface Database {
           latitude: number | null;          // Phase 2-2: 좌표
           longitude: number | null;
           review_promised_at: string | null;     // 067: 리뷰 약속 시점
-          review_promised_type: 'purchase' | 'repair' | 'consult' | null; // 094: 리뷰 약속 유형 (자동 발송 분기)
+          review_promised_type: 'purchase' | 'repair' | 'consult' | null; // 094: 리뷰 약속 유형
+          review_promised_subtype: string | null; // 095: 약속 세부 유형 (direct_visit/pickup/store_visit/field_request/talk_consult) (자동 발송 분기)
           review_request_sent_at: string | null; // 067: 후기 요청 발송 시점
           review_submitted_at: string | null;    // 067: 리뷰 작성 완료 시점
           remind_24h_at: string | null;          // 071: 24h 리마인더 발송 시각
@@ -304,6 +305,7 @@ export interface Database {
           longitude?: number | null;
           review_promised_at?: string | null;
           review_promised_type?: 'purchase' | 'repair' | 'consult' | null;
+          review_promised_subtype?: string | null;
           review_request_sent_at?: string | null;
           review_submitted_at?: string | null;
           remind_24h_at?: string | null;
@@ -344,6 +346,7 @@ export interface Database {
           gas_raw: Record<string, unknown> | null;
           review_promised_at: string | null;     // 067: 리뷰 약속 시점
           review_promised_type: 'purchase' | 'repair' | 'consult' | null; // 094: 리뷰 약속 유형
+          review_promised_subtype: string | null; // 095: 약속 세부 유형 (direct_visit/pickup/store_visit/field_request/talk_consult)
           review_request_sent_at: string | null; // 067: 후기 요청 발송 시점
           review_submitted_at: string | null;    // 067: 리뷰 작성 완료 시점
           // 092: 직접방문(당일수리)
@@ -422,6 +425,7 @@ export interface Database {
           gas_raw?: Record<string, unknown> | null;
           review_promised_at?: string | null;
           review_promised_type?: 'purchase' | 'repair' | 'consult' | null;
+          review_promised_subtype?: string | null;
           review_request_sent_at?: string | null;
           review_submitted_at?: string | null;
           // 092: 직접방문(당일수리)
@@ -561,6 +565,7 @@ export interface Database {
           review_requested_at: string | null;       // semantic alias of review_request_sent_at (legacy)
           review_promised_at: string | null;        // 067: 리뷰 약속 시점
           review_promised_type: 'purchase' | 'repair' | 'consult' | null; // 094: 리뷰 약속 유형
+          review_promised_subtype: string | null; // 095: 약속 세부 유형 (direct_visit/pickup/store_visit/field_request/talk_consult)
           review_submitted_at: string | null;       // 067: 리뷰 작성 완료 시점
           source_consultation_id: string | null;    // 070: 출장/매장상담 → 판매 link (mirror 모드 트리거)
           // 048: 택배 발송 (송장 / 출고시각 / 택배사)
@@ -613,6 +618,7 @@ export interface Database {
           review_requested_at?: string | null;
           review_promised_at?: string | null;
           review_promised_type?: 'purchase' | 'repair' | 'consult' | null;
+          review_promised_subtype?: string | null;
           review_submitted_at?: string | null;
           source_consultation_id?: string | null;
           // 048: 택배 발송

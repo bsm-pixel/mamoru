@@ -186,6 +186,7 @@ export function SaleDetailPanel({ saleId }: Props) {
                 customerPhone={s.customer_phone}
                 promisedAt={(s as { review_promised_at?: string | null }).review_promised_at ?? null}
                 promisedType={(s as { review_promised_type?: 'purchase' | 'repair' | 'consult' | null }).review_promised_type ?? null}
+                promisedSubtype={(s as { review_promised_subtype?: string | null }).review_promised_subtype ?? null}
                 requestSentAt={((s as { review_request_sent_at?: string | null }).review_request_sent_at) ?? ((s as { review_requested_at?: string | null }).review_requested_at ?? null)}
                 submittedAt={(s as { review_submitted_at?: string | null }).review_submitted_at ?? null}
                 hasRepairItem={data?.items.some((it) => String((it as Record<string, unknown>).category || '') === 'RS') ?? false}

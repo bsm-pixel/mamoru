@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
-/** POST /api/reviews/promise — 리뷰 약속 토글 + 유형
- *  body: { source: 'consultation' | 'repair' | 'sale', id: string, on: boolean, type?: 'purchase'|'repair'|'consult' }
- *  - on=true  → review_promised_at = now() + review_promised_type = type
- *               (type 필수 — 자동 발송 시 어떤 솔라피 템플릿 쓸지 결정용. 094 마이그레이션)
- *  - on=false → review_promised_at = null, review_promised_type = null
+/** POST /api/reviews/promise — 리뷰 약속 토글 + 유형 + 세부유형
+ *  body: {
+ *    source: 'consultation' | 'repair' | 'sale',
+ *    id: string,
+ *    on: boolean,
+ *    type?: 'purchase' | 'repair' | 'consult',  // on=true 일 때 필수 (094)
+ *    subtype?: 'direct_visit' | 'pickup' | 'store_visit' | 'field_request' | 'talk_consult' | null  // (095) repair/consult 일 때 선택
+ *  }
+ *  - on=true  → review_promised_at = now() + review_promised_type = type + review_promised_subtype = subtype
+ *  - on=false → 모두 NULL
  *
- *  자동 발송 분기 (cron/track-delivery + repair/[id]):
- *    type='repair'   → as_review_request 템플릿
- *    type='consult'  → review_request 템플릿
- *    type='purchase' → purchase_review_request 템플릿
+ *  자동 발송 분기:
+ *    type=repair   + subtype=direct_visit/pickup → as_review_request (subtype 전달)
+ *    type=consult  + subtype=store_visit/field_request/talk_consult → review_request (subtype 전달)
+ *    type=purchase                                                    → purchase_review_request (subtype X)
  */
 export async function POST(req: NextRequest) {
   try {
@@ -23,6 +28,9 @@ export async function POST(req: NextRequest) {
     const id = body.id as string;
     const on = body.on === true;
     const type = body.type as 'purchase' | 'repair' | 'consult' | undefined;
+    // subtype 은 undefined / null / 빈문자 / 실제값 모두 가능
+    const subtypeRaw = body.subtype as string | null | undefined;
+    const subtype: string | null = (subtypeRaw === undefined || subtypeRaw === null || subtypeRaw === '') ? null : subtypeRaw;
 
     if (!['consultation', 'repair', 'sale'].includes(source)) {
       return NextResponse.json({ error: 'source는 consultation/repair/sale 중 하나' }, { status: 400 });
@@ -36,6 +44,19 @@ export async function POST(req: NextRequest) {
     if (on && !['purchase', 'repair', 'consult'].includes(type!)) {
       return NextResponse.json({ error: "type은 'purchase' | 'repair' | 'consult' 중 하나" }, { status: 400 });
     }
+    // subtype 유효성: type=repair → direct_visit|pickup, type=consult → store_visit|field_request|talk_consult, type=purchase → null 권장
+    if (on && subtype !== null) {
+      const repairSub = ['direct_visit', 'pickup'];
+      const consultSub = ['store_visit', 'field_request', 'talk_consult'];
+      if (type === 'repair' && !repairSub.includes(subtype)) {
+        return NextResponse.json({ error: "repair subtype은 'direct_visit' | 'pickup'" }, { status: 400 });
+      }
+      if (type === 'consult' && !consultSub.includes(subtype)) {
+        return NextResponse.json({ error: "consult subtype은 'store_visit' | 'field_request' | 'talk_consult'" }, { status: 400 });
+      }
+      // type === 'purchase' → subtype 무시 (NULL 강제)
+    }
+    const effectiveSubtype: string | null = (on && type === 'purchase') ? null : subtype;
 
     const tableMap: Record<typeof source, string> = {
       consultation: 'consultations',
@@ -48,7 +69,6 @@ export async function POST(req: NextRequest) {
     const db = supabase as any;
 
     if (on) {
-      // ON: 약속 시각 + 유형 동시 set (유형은 이미 설정되어 있어도 새 값으로 갱신)
       const { data: row, error: fetchErr } = await db
         .from(table)
         .select('id, review_promised_at')
@@ -57,16 +77,22 @@ export async function POST(req: NextRequest) {
       if (fetchErr || !row) {
         return NextResponse.json({ error: '대상을 찾을 수 없습니다' }, { status: 404 });
       }
-      const update: Record<string, unknown> = { review_promised_type: type };
+      const update: Record<string, unknown> = {
+        review_promised_type: type,
+        review_promised_subtype: effectiveSubtype,
+      };
       if (!row.review_promised_at) {
         update.review_promised_at = new Date().toISOString();
       }
       await db.from(table).update(update).eq('id', id);
     } else {
-      // OFF: 시각 + 유형 모두 NULL
       await db
         .from(table)
-        .update({ review_promised_at: null, review_promised_type: null })
+        .update({
+          review_promised_at: null,
+          review_promised_type: null,
+          review_promised_subtype: null,
+        })
         .eq('id', id);
     }
 

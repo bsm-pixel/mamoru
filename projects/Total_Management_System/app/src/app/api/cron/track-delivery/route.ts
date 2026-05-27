@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
     //   매장 직접 수령은 invoice_number NULL → 자연 제외
     const { data: sales, error: salesErr } = await (supabase as any)
       .from('offline_sales')
-      .select('id, sale_number, invoice_number, customer_name, customer_phone, review_requested_at, review_promised_at, review_promised_type')
+      .select('id, sale_number, invoice_number, customer_name, customer_phone, review_requested_at, review_promised_at, review_promised_type, review_promised_subtype')
       .not('shipped_at', 'is', null)
       .is('delivered_at', null)
       .not('invoice_number', 'is', null)
@@ -217,13 +217,16 @@ export async function GET(request: NextRequest) {
               if (!sale.customer_phone) return;
 
               // 094: 약속 시 선택한 유형으로 발송 (NULL이면 'purchase' 디폴트 — 백필 데이터 호환)
+              // 095: subtype 도 함께 전달 (purchase 면 무시)
               const reviewType = (sale.review_promised_type as 'purchase' | 'repair' | 'consult' | null) || 'purchase';
+              const subtype = reviewType === 'purchase' ? undefined : (sale.review_promised_subtype as string | null) || undefined;
               const r = await sendReviewRequestNotification({
                 source: 'sale',
                 sourceId: sale.sale_number,
                 customerName: sale.customer_name || '고객',
                 customerPhone: sale.customer_phone,
                 reviewType,
+                subtype,
               });
               if (r.success) {
                 await (supabase as any).from('offline_sales')

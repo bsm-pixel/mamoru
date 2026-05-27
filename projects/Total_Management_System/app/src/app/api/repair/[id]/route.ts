@@ -135,13 +135,16 @@ export async function PATCH(
           if (data.review_request_sent_at) { console.log('[repair auto-review] skip — 이미 발송'); return; }
 
           // 094: 약속 시 선택한 유형으로 발송 (NULL이면 'repair' 디폴트)
+          // 095: subtype 도 함께 전달 (purchase 면 무시)
           const reviewType = (data.review_promised_type as 'purchase' | 'repair' | 'consult' | null) || 'repair';
+          const subtype = reviewType === 'purchase' ? undefined : (data.review_promised_subtype as string | null) || undefined;
           const r = await sendReviewRequestNotification({
             source: 'repair',
             sourceId: data.as_id,
             customerName: data.name,
             customerPhone: data.phone,
             reviewType,
+            subtype,
           });
           if (r.success) {
             try {

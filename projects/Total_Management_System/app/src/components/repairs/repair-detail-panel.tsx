@@ -138,6 +138,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
               customerPhone={r.phone}
               promisedAt={(r as { review_promised_at?: string | null }).review_promised_at ?? null}
               promisedType={(r as { review_promised_type?: 'purchase' | 'repair' | 'consult' | null }).review_promised_type ?? null}
+              promisedSubtype={(r as { review_promised_subtype?: string | null }).review_promised_subtype ?? null}
               requestSentAt={(r as { review_request_sent_at?: string | null }).review_request_sent_at ?? null}
               submittedAt={(r as { review_submitted_at?: string | null }).review_submitted_at ?? null}
               sourceType={(r as { proceed_type?: string | null }).proceed_type ?? null}

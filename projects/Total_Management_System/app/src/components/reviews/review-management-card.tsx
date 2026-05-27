@@ -33,6 +33,9 @@ interface RelatedActivity {
 }
 
 type PromiseType = 'purchase' | 'repair' | 'consult';
+type RepairSubtype = 'direct_visit' | 'pickup';
+type ConsultSubtype = 'store_visit' | 'field_request' | 'talk_consult';
+type PromiseSubtype = RepairSubtype | ConsultSubtype;
 
 interface Props {
   source: ReviewSource;
@@ -42,6 +45,8 @@ interface Props {
   promisedAt: string | null;
   /** 094: 약속한 후기 유형 (자동 발송 시 솔라피 템플릿 결정) — NULL이면 source 디폴트 매핑 */
   promisedType?: PromiseType | null;
+  /** 095: 약속 세부 유형 (repair: direct_visit|pickup / consult: store_visit|field_request|talk_consult) */
+  promisedSubtype?: string | null;
   requestSentAt: string | null;
   submittedAt: string | null;
   /** 변경 후 부모 쿼리 invalidate / refetch 트리거 */
@@ -66,11 +71,38 @@ function defaultPromiseType(source: ReviewSource, hasRepairItem: boolean): Promi
   return hasRepairItem ? 'repair' : 'purchase';
 }
 
+/** type + sourceType → 디폴트 subtype (095) */
+function defaultPromiseSubtype(type: PromiseType, sourceType: string | null): PromiseSubtype | null {
+  if (type === 'purchase') return null;
+  if (type === 'repair') {
+    // sourceType이 repair proceed_type(직접방문/방문수거)이면 매핑, 아니면 direct_visit
+    if (sourceType === '직접방문' || sourceType === 'direct_visit') return 'direct_visit';
+    if (sourceType === '방문수거' || sourceType === 'pickup') return 'pickup';
+    return 'direct_visit';
+  }
+  // type === 'consult'
+  if (sourceType === 'store_visit' || sourceType === 'field_request' || sourceType === 'talk_consult') {
+    return sourceType;
+  }
+  return 'store_visit';
+}
+
 const TYPE_LABEL: Record<PromiseType, string> = {
   repair: '복원수리',
   consult: '상담',
   purchase: '제품구매',
 };
+
+const SUBTYPE_LABEL: Record<PromiseSubtype, string> = {
+  direct_visit: '직접방문',
+  pickup: '방문수거',
+  store_visit: '직접방문',
+  field_request: '출장',
+  talk_consult: '톡상담',
+};
+
+const REPAIR_SUBTYPES: RepairSubtype[] = ['direct_visit', 'pickup'];
+const CONSULT_SUBTYPES: ConsultSubtype[] = ['store_visit', 'field_request', 'talk_consult'];
 
 function formatDate(iso: string | null): string {
   if (!iso) return '';
@@ -127,6 +159,7 @@ export function ReviewManagementCard({
   customerPhone,
   promisedAt,
   promisedType = null,
+  promisedSubtype = null,
   requestSentAt,
   submittedAt,
   onChanged,
@@ -217,16 +250,31 @@ export function ReviewManagementCard({
     );
   }
 
-  // 094: 약속 토글 — ON 시 source 디폴트 유형으로 시작, 사용자가 칩으로 변경 가능
+  // 094: 활성 유형 — DB 값 우선, 없으면 source 디폴트
   const activeType: PromiseType = promisedType ?? defaultPromiseType(source, hasRepairItem);
+  // 095: 활성 subtype — DB 값 우선, 없으면 type+sourceType 디폴트 (purchase 면 null)
+  const activeSubtype: PromiseSubtype | null = (() => {
+    if (activeType === 'purchase') return null;
+    const fromDb = promisedSubtype as PromiseSubtype | null;
+    if (fromDb && (REPAIR_SUBTYPES as string[]).concat(CONSULT_SUBTYPES as string[]).includes(fromDb)) return fromDb;
+    return defaultPromiseSubtype(activeType, sourceType);
+  })();
 
-  const handleTogglePromise = async () => {
+  /** /api/reviews/promise 호출 공통 헬퍼 — on=true 일 때 type + subtype 모두 전달 */
+  const callPromiseApi = async (
+    on: boolean,
+    nextType?: PromiseType,
+    nextSubtype?: PromiseSubtype | null,
+    successMsg?: string,
+  ) => {
     if (togglingPromise) return;
     setTogglingPromise(true);
     try {
-      const next = !promisedAt;
-      const body: Record<string, unknown> = { source, id, on: next };
-      if (next) body.type = activeType; // ON 시 디폴트 유형 함께 전달
+      const body: Record<string, unknown> = { source, id, on };
+      if (on) {
+        body.type = nextType;
+        body.subtype = nextType === 'purchase' ? null : (nextSubtype ?? null);
+      }
       const res = await fetch('/api/reviews/promise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -237,7 +285,7 @@ export function ReviewManagementCard({
         toast.error(err.error || '저장 실패');
         return;
       }
-      toast.success(next ? '리뷰 약속 체크' : '약속 해제');
+      if (successMsg) toast.success(successMsg);
       onChanged?.();
     } catch (e) {
       toast.error(`오류: ${String(e)}`);
@@ -246,29 +294,33 @@ export function ReviewManagementCard({
     }
   };
 
-  // 094: 약속 유형 변경 (토글이 ON 상태에서만 호출)
-  const handleChangePromiseType = async (next: PromiseType) => {
-    if (togglingPromise || next === activeType) return;
-    setTogglingPromise(true);
-    try {
-      const res = await fetch('/api/reviews/promise', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source, id, on: true, type: next }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.error || '유형 변경 실패');
-        return;
-      }
-      toast.success(`약속 유형: ${TYPE_LABEL[next]}`);
-      onChanged?.();
-    } catch (e) {
-      toast.error(`오류: ${String(e)}`);
-    } finally {
-      setTogglingPromise(false);
+  const handleTogglePromise = async () => {
+    const next = !promisedAt;
+    if (next) {
+      await callPromiseApi(true, activeType, activeSubtype, '리뷰 약속 체크');
+    } else {
+      await callPromiseApi(false, undefined, undefined, '약속 해제');
     }
   };
+
+  // 094: 유형 변경 — subtype 은 새 유형의 디폴트로 리셋
+  const handleChangePromiseType = async (next: PromiseType) => {
+    if (next === activeType) return;
+    const nextSubtype = next === 'purchase' ? null : defaultPromiseSubtype(next, sourceType);
+    await callPromiseApi(true, next, nextSubtype, `약속 유형: ${TYPE_LABEL[next]}`);
+  };
+
+  // 095: subtype 변경 (현재 유형 유지)
+  const handleChangePromiseSubtype = async (next: PromiseSubtype) => {
+    if (next === activeSubtype) return;
+    await callPromiseApi(true, activeType, next, `세부 유형: ${SUBTYPE_LABEL[next]}`);
+  };
+
+  /** 현재 유형에 맞는 subtype 옵션 (purchase 면 빈 배열) */
+  const availableSubtypes: PromiseSubtype[] =
+    activeType === 'repair' ? [...REPAIR_SUBTYPES]
+    : activeType === 'consult' ? [...CONSULT_SUBTYPES]
+    : [];
 
   // 2026-05-26 Phase G-6 후속: 컴팩트 모드 시안 3 (토글 스위치 + 날짜)
   // 2026-05-27 (094): 토글 ON 시 [복원수리/상담/제품구매] 라디오 칩 인라인 표시
@@ -316,6 +368,28 @@ export function ReviewManagementCard({
                   }`}
                 >
                   {TYPE_LABEL[t]}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* 095: 약속 ON + repair/consult 일 때 subtype 라디오 칩 */}
+          {promisedAt && availableSubtypes.length > 0 && (
+            <div className="flex items-center gap-1 pl-1 border-l border-stone-200">
+              {availableSubtypes.map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => handleChangePromiseSubtype(st)}
+                  disabled={togglingPromise}
+                  title={`${TYPE_LABEL[activeType]} · ${SUBTYPE_LABEL[st]}`}
+                  className={`text-[10px] px-1.5 py-0.5 rounded transition disabled:opacity-50 ${
+                    activeSubtype === st
+                      ? 'bg-stone-700 text-white font-semibold'
+                      : 'bg-stone-50 text-stone-500 hover:bg-stone-100'
+                  }`}
+                >
+                  {SUBTYPE_LABEL[st]}
                 </button>
               ))}
             </div>
@@ -424,6 +498,30 @@ export function ReviewManagementCard({
                   }`}
                 >
                   {TYPE_LABEL[t]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 095: 약속 ON + repair/consult 일 때 subtype 라디오 칩 */}
+        {promisedAt && availableSubtypes.length > 0 && (
+          <div className="mb-2 flex items-center gap-1.5">
+            <span className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold">세부 유형</span>
+            <div className="flex items-center gap-1 ml-auto">
+              {availableSubtypes.map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => handleChangePromiseSubtype(st)}
+                  disabled={togglingPromise}
+                  className={`text-[11px] px-2 py-0.5 rounded transition disabled:opacity-50 ${
+                    activeSubtype === st
+                      ? 'bg-stone-700 text-white font-semibold'
+                      : 'bg-stone-50 text-stone-500 border border-stone-200 hover:bg-stone-100'
+                  }`}
+                >
+                  {SUBTYPE_LABEL[st]}
                 </button>
               ))}
             </div>
