@@ -114,7 +114,7 @@ export const CONSULTATION_STATUS_COLOR: Record<string, string> = {
   confirmed: 'bg-success-soft text-success',
   cancelled: 'bg-error-soft text-error',
   reschedule_requested: 'bg-warning-soft text-warning',
-  change_requested: 'bg-orange-100 text-orange-700',
+  change_requested: 'bg-warning-soft text-warning',
   on_hold: 'bg-neutral-100 text-neutral-500',    // Phase 2-2
   in_progress: 'bg-info-soft text-info',          // Phase 2-2
   completed: 'bg-success-soft text-success',      // Phase 2-2

@@ -154,8 +154,8 @@ export function StoreVisitList({
             onClick={() => { setTab(t.key); setPage(1); }}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
               tab === t.key
-                ? 'bg-terracotta text-cream'
-                : 'bg-card-white text-neutral-500 hover:bg-warm-ivory'
+                ? 'bg-stone-900 text-white'
+                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
             }`}
           >
             {t.label}

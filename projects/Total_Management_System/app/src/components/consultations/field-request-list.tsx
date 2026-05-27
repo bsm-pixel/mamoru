@@ -244,8 +244,8 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
             onClick={() => { setTab(t.key); setPage(1); setSelectedRegion(null); onSubTabChange?.(t.key); }}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
               tab === t.key
-                ? 'bg-terracotta text-cream'
-                : 'bg-card-white text-neutral-500 hover:bg-warm-ivory'
+                ? 'bg-stone-900 text-white'
+                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
             }`}
           >
             {t.key === 'today' && <CalendarCheck size={12} />}
@@ -290,7 +290,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
               <button
                 onClick={() => setSelectedRegion(null)}
                 className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold transition ${
-                  !selectedRegion ? 'bg-terracotta text-cream' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                  !selectedRegion ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
                 }`}
               >
                 전체 {consultations.length}
@@ -300,7 +300,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
                   key={region}
                   onClick={() => setSelectedRegion(selectedRegion === region ? null : region)}
                   className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold transition ${
-                    selectedRegion === region ? 'bg-terracotta text-cream' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
+                    selectedRegion === region ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
                   }`}
                 >
                   {region} {count}
