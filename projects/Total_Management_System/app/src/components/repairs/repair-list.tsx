@@ -74,7 +74,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="이름, 전화번호, 접수번호 검색..."
-          className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
+          className="w-full h-9 pl-9 pr-3 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-stone-400 transition"
         />
       </div>
 
@@ -91,7 +91,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
       )}
 
       {/* 6탭 파이프라인 + 카운트 뱃지 */}
-      <div className="flex gap-1 overflow-x-auto border-b border-neutral-200 scrollbar-hide">
+      <div className="flex gap-1 overflow-x-auto border-b border-stone-200 scrollbar-hide">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           return (
@@ -100,14 +100,14 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
               onClick={() => setActiveTab(tab.key)}
               className={`shrink-0 flex items-center gap-1.5 px-3 py-2.5 text-sm font-semibold border-b-2 transition whitespace-nowrap ${
                 isActive
-                  ? 'border-terracotta text-terracotta'
-                  : 'border-transparent text-neutral-500 hover:text-neutral-700'
+                  ? 'border-stone-900 text-stone-900'
+                  : 'border-transparent text-stone-500 hover:text-stone-700'
               }`}
             >
               {tab.label}
               {tab.count > 0 && (
                 <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold leading-none ${
-                  isActive ? 'bg-terracotta text-white' : 'bg-neutral-200 text-neutral-600'
+                  isActive ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600'
                 }`}>
                   {tab.count}
                 </span>

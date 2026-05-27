@@ -228,7 +228,7 @@ export default function SalesPage() {
       {stats && (
         <div className="grid grid-cols-2 gap-3">
           {/* 고객 (B2C) — 어두운 카드 */}
-          <div className="bg-neutral-900 text-white rounded-xl p-5">
+          <div className="bg-gradient-to-br from-stone-800 to-stone-900 text-white rounded-2xl p-5 ring-1 ring-white/5">
             <div className="text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-2">고객 (B2C)</div>
             <div className="text-3xl font-bold tracking-tight">{formatKRW(stats.customerMonth?.amount || 0)}</div>
             <div className="text-xs opacity-70 mt-1">이번달 · {stats.customerMonth?.count || 0}건</div>
@@ -245,7 +245,7 @@ export default function SalesPage() {
           </div>
 
           {/* 거래처 (B2B) — 어두운 카드 */}
-          <div className="bg-neutral-900 text-white rounded-xl p-5">
+          <div className="bg-gradient-to-br from-stone-800 to-stone-900 text-white rounded-2xl p-5 ring-1 ring-white/5">
             <div className="text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-2">거래처 (B2B)</div>
             <div className="text-3xl font-bold tracking-tight">{formatKRW(partnerMonth)}</div>
             <div className="text-xs opacity-70 mt-1">이번달 · {partnerMonthCount}건</div>
