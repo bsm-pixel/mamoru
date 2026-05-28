@@ -20,7 +20,7 @@
 import { Topbar } from '@/components/layout/topbar';
 
 // 미리보기 iframe 캐시버스터 — page_*.html 수정 시 이 값을 바꾸면 design-lab이 최신을 강제 로드
-const PREVIEW_CB = '20260529b';
+const PREVIEW_CB = '20260529c';
 
 export default function DesignLabPage() {
   return (
