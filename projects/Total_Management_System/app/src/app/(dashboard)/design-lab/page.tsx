@@ -19,6 +19,9 @@
 
 import { Topbar } from '@/components/layout/topbar';
 
+// 미리보기 iframe 캐시버스터 — page_*.html 수정 시 이 값을 바꾸면 design-lab이 최신을 강제 로드
+const PREVIEW_CB = '20260528b';
+
 export default function DesignLabPage() {
   return (
     <>
@@ -52,10 +55,10 @@ export default function DesignLabPage() {
             <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden flex flex-col">
               <div className="flex items-center justify-between px-4 py-2.5 border-b border-stone-100">
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-sky-50 text-sky-700">PC 화면</span>
-                <a href="https://page.mamoru.kr/projects/reviews/page_reviews.html" target="_blank" rel="noopener noreferrer" className="text-[11px] text-stone-400 hover:text-stone-600 underline">새 탭</a>
+                <a href={`https://page.mamoru.kr/projects/reviews/page_reviews.html?cb=${PREVIEW_CB}`} target="_blank" rel="noopener noreferrer" className="text-[11px] text-stone-400 hover:text-stone-600 underline">새 탭</a>
               </div>
               <iframe
-                src="https://page.mamoru.kr/projects/reviews/page_reviews.html"
+                src={`https://page.mamoru.kr/projects/reviews/page_reviews.html?cb=${PREVIEW_CB}`}
                 title="후기 보기 — PC"
                 className="w-full bg-[#FAF9F7]"
                 style={{ height: 1400, border: 'none' }}
@@ -69,7 +72,7 @@ export default function DesignLabPage() {
               </div>
               <div className="flex justify-center bg-stone-100 py-3">
                 <iframe
-                  src="https://page.mamoru.kr/projects/reviews/page_reviews.html"
+                  src={`https://page.mamoru.kr/projects/reviews/page_reviews.html?cb=${PREVIEW_CB}`}
                   title="후기 보기 — 모바일"
                   className="bg-[#FAF9F7] rounded-[20px] shadow"
                   style={{ width: 390, height: 1360, border: 'none' }}
@@ -103,7 +106,7 @@ export default function DesignLabPage() {
               { key: 'consult', label: '상담 후기 (출장)', sub: 'field_request', tone: 'bg-violet-50 text-violet-700' },
               { key: 'purchase', label: '제품구매 후기', sub: '', tone: 'bg-emerald-50 text-emerald-700' },
             ].map((t) => {
-              const src = `https://page.mamoru.kr/projects/reviews/page_review.html?type=${t.key}&uid=demo&name=${encodeURIComponent('홍길동')}${t.sub ? `&subtype=${t.sub}` : ''}`;
+              const src = `https://page.mamoru.kr/projects/reviews/page_review.html?type=${t.key}&uid=demo&name=${encodeURIComponent('홍길동')}${t.sub ? `&subtype=${t.sub}` : ''}&cb=${PREVIEW_CB}`;
               return (
                 <div key={t.key} className="rounded-2xl border border-stone-200 bg-white overflow-hidden flex flex-col">
                   <div className="flex items-center justify-between px-4 py-2.5 border-b border-stone-100">
