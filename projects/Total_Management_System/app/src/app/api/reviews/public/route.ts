@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
 
     let query = dbAny
       .from('reviews')
-      .select('review_id, type, subtype, name, stars, content, photo_urls, created_at, product, product_group, meta, source, is_best, source_id')
+      .select('review_id, type, subtype, name, stars, content, photo_urls, created_at, product, product_group, meta, source, is_best, phone')
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
 
@@ -92,51 +92,41 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 출장상담 리뷰: 고객 매장명(company_name) enrichment
-    //   review.source_id(=consultations.unique_id) → consultation.customer_id → customers.company_name
-    //   마스킹은 클라이언트(page_reviews.html)에서 처리 (기존 name 패턴과 동일)
+    // 출장상담 리뷰: 고객 매장명(company_name) enrichment — phone 기준 매칭
+    //   review.phone → customers.phone_normalized → company_name
+    //   (consultation.customer_id 미설정 케이스도 커버. 마스킹은 page_reviews.html 클라이언트 처리)
     if (data && data.length > 0) {
       const fieldConsults = data.filter(
-        (r: { type: string; subtype: string | null; source_id: string | null }) =>
-          r.type === 'consult' && r.subtype === 'field_request' && r.source_id
+        (r: { type: string; subtype: string | null; phone: string | null }) =>
+          r.type === 'consult' && r.subtype === 'field_request' && r.phone
       );
       if (fieldConsults.length > 0) {
-        const uniqueIds = [...new Set(fieldConsults.map((r: { source_id: string }) => r.source_id))];
-        const { data: consults } = await dbAny
-          .from('consultations')
-          .select('unique_id, customer_id')
-          .in('unique_id', uniqueIds);
-
-        const custIds = [...new Set((consults || [])
-          .map((c: { customer_id: string | null }) => c.customer_id)
-          .filter(Boolean))];
-
-        const storeByCustId: Record<string, string> = {};
-        if (custIds.length > 0) {
+        const phones = [...new Set(
+          fieldConsults
+            .map((r: { phone: string }) => String(r.phone).replace(/\D/g, ''))
+            .filter(Boolean)
+        )];
+        if (phones.length > 0) {
           const { data: custs } = await dbAny
             .from('customers')
-            .select('id, company_name')
-            .in('id', custIds);
-          (custs || []).forEach((c: { id: string; company_name: string | null }) => {
-            if (c.company_name) storeByCustId[c.id] = c.company_name;
+            .select('phone_normalized, company_name')
+            .in('phone_normalized', phones);
+
+          const storeByPhone: Record<string, string> = {};
+          (custs || []).forEach((c: { phone_normalized: string | null; company_name: string | null }) => {
+            if (c.phone_normalized && c.company_name) storeByPhone[c.phone_normalized] = c.company_name;
+          });
+
+          data.forEach((r: { type: string; subtype: string | null; phone: string | null; store_name?: string }) => {
+            if (r.type === 'consult' && r.subtype === 'field_request' && r.phone) {
+              const np = String(r.phone).replace(/\D/g, '');
+              if (storeByPhone[np]) r.store_name = storeByPhone[np];
+            }
           });
         }
-
-        const storeByUniqueId: Record<string, string> = {};
-        (consults || []).forEach((c: { unique_id: string; customer_id: string | null }) => {
-          if (c.customer_id && storeByCustId[c.customer_id]) {
-            storeByUniqueId[c.unique_id] = storeByCustId[c.customer_id];
-          }
-        });
-
-        data.forEach((r: { type: string; subtype: string | null; source_id: string | null; store_name?: string }) => {
-          if (r.type === 'consult' && r.subtype === 'field_request' && r.source_id && storeByUniqueId[r.source_id]) {
-            r.store_name = storeByUniqueId[r.source_id];
-          }
-        });
       }
-      // 내부 식별자(source_id)는 공개 응답에서 제거
-      data.forEach((r: { source_id?: string }) => { delete r.source_id; });
+      // 내부 식별자(phone)는 공개 응답에서 제거
+      data.forEach((r: { phone?: string }) => { delete r.phone; });
     }
 
     // group 또는 imweb_no 파라미터 사용 시: { reviews, stats } 응답 (아임웹 제품 위젯용)

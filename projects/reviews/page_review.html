@@ -49,7 +49,7 @@
     textarea {
       width: 100%; padding: 14px; border: 1px solid #D4D0CB; /* Sand */
       border-radius: 8px; font-size: 15px; color: #1A1A1A;
-      resize: vertical; min-height: 120px; font-family: inherit;
+      resize: vertical; min-height: 150px; font-family: inherit;
     }
     textarea:focus { outline: none; border-color: #1A1A1A; box-shadow: 0 0 0 3px rgba(26,26,26,0.08); } /* Void */
     textarea::placeholder { color: #B8B4AF; } /* Mist */
@@ -69,10 +69,10 @@
     .tag-chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .tag-chip {
       display: inline-flex; align-items: center; justify-content: center;
-      padding: 8px 14px; min-height: 44px; /* 터치 타겟 */
+      padding: 7px 12px; min-height: 38px; /* 살짝 축소 (터치 타겟 유지) */
       border: 1px solid #D4D0CB; /* Sand */
       border-radius: 8px;
-      font-size: 13px; font-weight: 500; line-height: 1.4;
+      font-size: 12px; font-weight: 500; line-height: 1.35;
       color: #4A4A4A; /* Stone */
       background: transparent;
       cursor: pointer; transition: all 0.15s ease;
@@ -89,14 +89,15 @@
     /* 사진 업로드 */
     .photo-area { display: flex; gap: 10px; flex-wrap: wrap; }
     .photo-btn {
-      width: 80px; height: 80px; border: 1.5px solid #D4D0CB; border-radius: 12px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.2s; background: #EDEBE8;
+      width: 80px; height: 80px; border: 1.5px dashed #CFCAC4; border-radius: 12px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      cursor: pointer; transition: all 0.18s ease; background: #FCFBFA;
+      -webkit-tap-highlight-color: transparent;
     }
-    .photo-btn:hover { border-color: #1A1A1A; background: #D4D0CB; } /* Sand */
-    .photo-btn .icon { color: #8A8580; display: flex; align-items: center; justify-content: center; }
-    .photo-btn .icon svg { width: 22px; height: 22px; }
-    .photo-btn .text { font-size: 11px; color: #8A8580; margin-top: 4px; font-weight: 500; }
+    .photo-btn:hover, .photo-btn:active { border-color: #1A1A1A; background: #F5F3F0; }
+    .photo-btn .icon { color: #A29D97; line-height: 0; display: block; }
+    .photo-btn .icon svg { width: 24px; height: 24px; display: block; }
+    .photo-btn .text { font-size: 11px; color: #8A8580; font-weight: 600; line-height: 1; letter-spacing: -0.01em; }
     .photo-preview {
       width: 80px; height: 80px; border-radius: 8px; object-fit: cover;
       position: relative;
@@ -251,7 +252,7 @@
 
         <!-- 속성 태그 (선택사항) -->
         <div class="form-group" id="tag-section" style="display:none">
-          <label>이런 점이 좋았어요 <span class="optional">(선택, 최대 3개)</span></label>
+          <label>이런 점이 좋았어요 <span class="optional">(선택, 최대 5개)</span></label>
           <div class="tag-chips" id="tag-chips"></div>
           <p class="tag-hint" id="tag-hint"></p>
         </div>
@@ -319,18 +320,20 @@
         { key: 'detailed_guide', label: '설명이 자세해요' },
         { key: 'professional', label: '전문적이에요' },
         { key: 'personalized', label: '내 상황에 맞게 안내해줘요' },
-        { key: 'worth_time', label: '시간이 아깝지 않았어요' },
+        { key: 'worth_time', label: '시간이 아깝지 않아요' },
         { key: 'reasonable_price', label: '가격이 합리적이에요' },
-        { key: 'fair_price', label: '가격이 적당해요' }
+        { key: 'kind', label: '친절해요' }
       ],
       repair: [
         { key: 'like_new', label: '새 가위처럼 돌아왔어요' },
-        { key: 'better_cut', label: '커트감이 확실히 달라요' },
+        { key: 'better_cut', label: '커트감이 개선됐어요' },
         { key: 'above_expect', label: '기대 이상이에요' },
-        { key: 'precise_edge', label: '날 조절이 정확해요' },
+        { key: 'kind_response', label: '응대가 친절해요' },
         { key: 'thorough_info', label: '안내가 꼼꼼해요' },
         { key: 'fast_service', label: '진행이 빨라요' },
-        { key: 'good_value', label: '가격 대비 만족해요' }
+        { key: 'worth_money', label: '돈이 아깝지 않아요' },
+        { key: 'good_value', label: '가격 대비 만족해요' },
+        { key: 'will_return', label: '또 이용할게요' }
       ],
       purchase: [
         { key: 'above_expect', label: '기대 이상이에요' },
@@ -341,7 +344,7 @@
         { key: 'would_recommend', label: '다른 분께 추천하고 싶어요' }
       ]
     };
-    var MAX_TAGS = 3;
+    var MAX_TAGS = 5;
 
     // ── subtype → 한글 라벨 ──
     var SUBTYPE_LABELS = {
