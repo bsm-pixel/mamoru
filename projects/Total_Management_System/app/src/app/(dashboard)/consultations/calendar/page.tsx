@@ -556,6 +556,7 @@ function BlackoutDetailModal({
               <span className="text-xs font-bold text-neutral-700">시간대 차단 (개인 일정 등)</span>
             </div>
             <p className="text-[11px] text-neutral-400">막은 시간은 모든 셀프예약(매장/출장/톡 + 복원수리 직접방문)에서 비활성. 사장님 직접 등록은 가능.</p>
+            <p className="text-[11px] text-orange-500">‘예약 재개’ 시각부터 다시 예약이 열립니다. (예: 12:00~16:00 차단 → 16:00부터 예약 가능)</p>
 
             {/* 기존 차단 시간대 목록 */}
             {blockedSlots.length > 0 && (
@@ -589,7 +590,7 @@ function BlackoutDetailModal({
               <span className="text-xs text-neutral-500">~</span>
               <select value={slotEnd} onChange={(e) => setSlotEnd(e.target.value)}
                 className="h-8 px-2 rounded-lg border border-stone-200 text-xs focus:outline-none focus:border-stone-400">
-                <option value="">종료</option>
+                <option value="">예약 재개</option>
                 {timeOptions.filter((t) => !slotStart || t > slotStart).map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
               <input
