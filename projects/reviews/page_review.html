@@ -88,9 +88,12 @@
 
     /* 사진 업로드 */
     .photo-area { display: flex; gap: 10px; flex-wrap: wrap; }
-    .photo-btn {
+    /* .photo-btn 은 <label> — .form-group label(display:block, 특이성 0,1,1)에 눌리면
+       flex 가 무력화돼 글씨가 좌측/상단으로 쏠림. .photo-area 스코프(0,2,0)로 특이성 ↑ */
+    .photo-area .photo-btn {
       width: 80px; height: 80px; border: 1.5px dashed #CFCAC4; border-radius: 12px;
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      margin: 0;
       cursor: pointer; transition: all 0.18s ease; background: #FCFBFA;
       -webkit-tap-highlight-color: transparent;
     }
