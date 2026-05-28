@@ -114,8 +114,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 3. 같은 날 충돌 데이터 3종 병렬 조회
-    const [consultsRes, repairsRes] = await Promise.all([
+    // 3. 같은 날 충돌 데이터 3종 + 시간대 차단(096) 병렬 조회
+    const [consultsRes, repairsRes, blockedRes] = await Promise.all([
       // 컨설팅 매장방문 + 출장 (visit_date 기준, 확정/배정 상태만)
       dbAny.from('consultations')
         .select('consultation_type, visit_time, status')
@@ -127,10 +127,20 @@ export async function GET(req: NextRequest) {
         .eq('visit_date', date)
         .eq('proceed_type', '직접방문')
         .neq('status', 'cancelled'),
+      // 096: 사장님 개인 일정 등 시간대 차단
+      dbAny.from('blocked_time_slots')
+        .select('start_time, end_time')
+        .eq('date', date),
     ]);
 
     // 4. 차단 범위 수집 [start_min, end_min)
     const busy: Array<[number, number]> = [];
+
+    // 096: 시간대 차단 (달력관리에서 막은 구간)
+    for (const bs of (blockedRes.data || [])) {
+      if (!bs.start_time || !bs.end_time) continue;
+      busy.push([toMinutes(bs.start_time), toMinutes(bs.end_time)]);
+    }
 
     for (const c of (consultsRes.data || [])) {
       if (!c.visit_time) continue;

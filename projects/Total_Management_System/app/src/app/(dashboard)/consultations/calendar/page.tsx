@@ -10,21 +10,35 @@
  *   상세: memory/feedback_consultation_blackout_rule.md
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
-import { CalendarOff, Store, Truck, Info, AlertTriangle } from 'lucide-react';
+import { CalendarOff, Store, Truck, Info, AlertTriangle, Clock, Ban, Trash2 } from 'lucide-react';
 import {
   useBlackouts,
   useCreateBlackout,
   useDeleteBlackout,
   useConsultationSettings,
   useUpdateDisabledWeekdays,
+  useUpdateBusinessHours,
+  useBlockedSlots,
+  useCreateBlockedSlot,
+  useDeleteBlockedSlot,
   type BlackoutConsultation,
+  type BlockedSlot,
 } from '@/hooks/use-blackouts';
 import { formatPhone } from '@/lib/utils/format';
+
+/** 30분 단위 시간 옵션 생성 (영업시간 범위) */
+function genTimeOptions(startHour: number, endHour: number): string[] {
+  const out: string[] = [];
+  for (let m = startHour * 60; m <= endHour * 60; m += 30) {
+    out.push(`${pad2(Math.floor(m / 60))}:${pad2(m % 60)}`);
+  }
+  return out;
+}
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -70,10 +84,20 @@ export default function CalendarManagePage() {
   const toDate = ymd(lastMonth.year, lastMonth.month, lastDay);
 
   const { data, isLoading } = useBlackouts(fromDate, toDate);
+  const { data: blockedData } = useBlockedSlots(fromDate, toDate);
   const { data: cs } = useConsultationSettings();
   const updateWeekdays = useUpdateDisabledWeekdays();
+  const updateBizHours = useUpdateBusinessHours();
 
   const disabledWeekdays = cs?.disabled_weekdays ?? [0];
+
+  // 영업 기본시간 — 로컬 입력 상태 (cs 로드 시 동기화)
+  const [bizStart, setBizStart] = useState(10);
+  const [bizEnd, setBizEnd] = useState(20);
+  useEffect(() => {
+    if (cs) { setBizStart(cs.start_hour ?? 10); setBizEnd(cs.end_hour ?? 20); }
+  }, [cs]);
+  const bizDirty = cs ? (bizStart !== cs.start_hour || bizEnd !== cs.end_hour) : false;
 
   const toggleWeekday = (i: number) => {
     const next = disabledWeekdays.includes(i)
@@ -105,6 +129,16 @@ export default function CalendarManagePage() {
     return m;
   }, [data]);
 
+  // 096: 날짜별 시간대 차단 Map
+  const blockedSlotMap = useMemo(() => {
+    const m = new Map<string, BlockedSlot[]>();
+    for (const b of blockedData?.blockedSlots || []) {
+      if (!m.has(b.date)) m.set(b.date, []);
+      m.get(b.date)!.push(b);
+    }
+    return m;
+  }, [blockedData]);
+
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   return (
@@ -118,14 +152,49 @@ export default function CalendarManagePage() {
             <Info size={16} className="shrink-0 mt-0.5 text-blue-500" />
             <div className="text-xs text-neutral-600 space-y-1">
               <p>
-                <span className="font-bold text-neutral-800">막힌 날짜는 고객 셀프 예약 폼(매장/출장/톡상담)에서만 비활성화</span>됩니다.
-                사장님이 직접 등록(일정수동등록/시간제안)할 때는 막힌 날짜에도 자유롭게 등록 가능합니다.
+                <span className="font-bold text-neutral-800">막힌 날짜·시간은 모든 고객 셀프예약(매장/출장/톡상담 + 복원수리 직접방문)에서 비활성화</span>됩니다.
+                사장님이 직접 등록(일정수동등록/시간제안)할 때는 막힌 날짜·시간에도 자유롭게 등록 가능합니다.
               </p>
               <p>
                 현재월부터 4개월(<span className="font-medium">{months[0].year}년 {months[0].month + 1}월 ~ {lastMonth.year}년 {lastMonth.month + 1}월</span>)을 관리할 수 있습니다.
                 고객은 이번달부터 3개월(<span className="font-medium">{months[0].year}년 {months[0].month + 1}월 ~ {months[2].year}년 {months[2].month + 1}월</span>)까지 예약 가능.
               </p>
             </div>
+          </div>
+        </Card>
+
+        {/* 영업 기본시간 (096: 설정 탭에서 이전) */}
+        <Card>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <Clock size={14} className="text-neutral-400" />
+              <h3 className="text-sm font-bold text-neutral-800">영업 기본시간</h3>
+            </div>
+            <span className="text-[11px] text-neutral-400">고객 예약 가능 시간대</span>
+          </div>
+          <p className="text-xs text-neutral-500 mb-3">모든 고객 셀프예약 폼의 가용 시간 슬롯 범위에 반영됩니다.</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <input
+              type="number" min={0} max={23} value={bizStart}
+              onChange={(e) => setBizStart(Number(e.target.value))}
+              className="w-16 h-9 px-2 rounded-lg border border-stone-200 text-sm text-center focus:outline-none focus:border-stone-400"
+            />
+            <span className="text-sm text-neutral-600">시 ~</span>
+            <input
+              type="number" min={0} max={23} value={bizEnd}
+              onChange={(e) => setBizEnd(Number(e.target.value))}
+              className="w-16 h-9 px-2 rounded-lg border border-stone-200 text-sm text-center focus:outline-none focus:border-stone-400"
+            />
+            <span className="text-sm text-neutral-600">시</span>
+            <Button
+              size="sm"
+              onClick={() => updateBizHours.mutate({ start_hour: bizStart, end_hour: bizEnd })}
+              disabled={!bizDirty || bizStart >= bizEnd || updateBizHours.isPending}
+              className="ml-2"
+            >
+              {updateBizHours.isPending ? '저장 중...' : '저장'}
+            </Button>
+            {bizStart >= bizEnd && <span className="text-[11px] text-red-500">종료 시간이 시작보다 늦어야 합니다</span>}
           </div>
         </Card>
 
@@ -171,6 +240,7 @@ export default function CalendarManagePage() {
               blackoutSet={blackoutSet}
               disabledWeekdays={disabledWeekdays}
               consultMap={consultMap}
+              blockedSlotMap={blockedSlotMap}
               onSelect={setSelectedDate}
             />
           ))}
@@ -189,6 +259,9 @@ export default function CalendarManagePage() {
           isBlackout={blackoutSet.has(selectedDate)}
           existingReason={blackoutReasonMap.get(selectedDate) || ''}
           consultations={consultMap.get(selectedDate) || []}
+          blockedSlots={blockedSlotMap.get(selectedDate) || []}
+          bizStart={cs?.start_hour ?? 10}
+          bizEnd={cs?.end_hour ?? 20}
           isWeekdayOff={disabledWeekdays.includes(new Date(
             Number(selectedDate.slice(0, 4)),
             Number(selectedDate.slice(5, 7)) - 1,
@@ -209,11 +282,12 @@ interface MonthCalendarProps {
   blackoutSet: Set<string>;
   disabledWeekdays: number[];
   consultMap: Map<string, BlackoutConsultation[]>;
+  blockedSlotMap: Map<string, BlockedSlot[]>;
   onSelect: (date: string) => void;
 }
 
 function MonthCalendar({
-  year, month, isFirstMonth, todayStr, blackoutSet, disabledWeekdays, consultMap, onSelect,
+  year, month, isFirstMonth, todayStr, blackoutSet, disabledWeekdays, consultMap, blockedSlotMap, onSelect,
 }: MonthCalendarProps) {
   const days = getCalendarDays(year, month);
 
@@ -258,6 +332,7 @@ function MonthCalendar({
           const consults = consultMap.get(date) || [];
           const storeCount = consults.filter((c) => c.consultation_type === 'store_visit').length;
           const fieldCount = consults.filter((c) => c.consultation_type === 'field_request').length;
+          const blockedCount = (blockedSlotMap.get(date) || []).length;
 
           return (
             <button
@@ -297,9 +372,11 @@ function MonthCalendar({
                 <span className="text-[9px] text-red-500 font-semibold mt-0.5">휴무</span>
               ) : isWeekdayOff ? (
                 <span className="text-[9px] text-neutral-400 font-medium mt-0.5">정기휴무</span>
+              ) : blockedCount > 0 ? (
+                <span className="text-[9px] text-orange-500 font-semibold mt-0.5">시간차단</span>
               ) : null}
-              {/* 예약 dot */}
-              {!isBlackout && !isWeekdayOff && (storeCount > 0 || fieldCount > 0) && (
+              {/* 예약 dot + 시간차단 dot */}
+              {!isBlackout && !isWeekdayOff && (storeCount > 0 || fieldCount > 0 || blockedCount > 0) && (
                 <div className="flex gap-0.5 mt-auto mb-1">
                   {storeCount > 0 && (
                     <span
@@ -311,6 +388,12 @@ function MonthCalendar({
                     <span
                       className="w-1.5 h-1.5 rounded-full bg-purple-500"
                       title={`출장요청 ${fieldCount}건`}
+                    />
+                  )}
+                  {blockedCount > 0 && (
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-orange-500"
+                      title={`시간대 차단 ${blockedCount}건`}
                     />
                   )}
                 </div>
@@ -334,6 +417,9 @@ function MonthCalendar({
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded bg-neutral-100 border border-neutral-200" /> 정기 휴무
         </span>
+        <span className="flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-orange-500" /> 시간 차단
+        </span>
       </div>
     </Card>
   );
@@ -344,16 +430,35 @@ interface BlackoutDetailModalProps {
   isBlackout: boolean;
   existingReason: string;
   consultations: BlackoutConsultation[];
+  blockedSlots: BlockedSlot[];
+  bizStart: number;
+  bizEnd: number;
   isWeekdayOff: boolean;
   onClose: () => void;
 }
 
 function BlackoutDetailModal({
-  date, isBlackout, existingReason, consultations, isWeekdayOff, onClose,
+  date, isBlackout, existingReason, consultations, blockedSlots, bizStart, bizEnd, isWeekdayOff, onClose,
 }: BlackoutDetailModalProps) {
   const [reason, setReason] = useState(existingReason);
   const create = useCreateBlackout();
   const remove = useDeleteBlackout();
+
+  // 096: 시간대 차단
+  const createSlot = useCreateBlockedSlot();
+  const deleteSlot = useDeleteBlockedSlot();
+  const timeOptions = useMemo(() => genTimeOptions(bizStart, bizEnd), [bizStart, bizEnd]);
+  const [slotStart, setSlotStart] = useState('');
+  const [slotEnd, setSlotEnd] = useState('');
+  const [slotReason, setSlotReason] = useState('');
+
+  const handleAddSlot = () => {
+    if (!slotStart || !slotEnd || slotStart >= slotEnd) return;
+    createSlot.mutate(
+      { date, start_time: slotStart, end_time: slotEnd, reason: slotReason.trim() || undefined },
+      { onSuccess: () => { setSlotStart(''); setSlotEnd(''); setSlotReason(''); } },
+    );
+  };
 
   // 날짜 표시 — 한국어 포맷
   const dateLabel = (() => {
@@ -440,6 +545,62 @@ function BlackoutDetailModal({
           <div className="p-2 rounded-lg bg-red-50 text-xs">
             <span className="font-bold text-red-700">사유:</span>{' '}
             <span className="text-red-600">{existingReason}</span>
+          </div>
+        )}
+
+        {/* 096: 시간대 차단 (전일 휴무 아닐 때만 — 전일 휴무면 어차피 종일 막힘) */}
+        {!isBlackout && (
+          <div className="border-t border-neutral-100 pt-3 space-y-2">
+            <div className="flex items-center gap-1.5">
+              <Ban size={13} className="text-orange-500" />
+              <span className="text-xs font-bold text-neutral-700">시간대 차단 (개인 일정 등)</span>
+            </div>
+            <p className="text-[11px] text-neutral-400">막은 시간은 모든 셀프예약(매장/출장/톡 + 복원수리 직접방문)에서 비활성. 사장님 직접 등록은 가능.</p>
+
+            {/* 기존 차단 시간대 목록 */}
+            {blockedSlots.length > 0 && (
+              <div className="space-y-1">
+                {blockedSlots.map((bs) => (
+                  <div key={bs.id} className="flex items-center gap-2 p-2 rounded-lg bg-orange-50 text-xs">
+                    <Clock size={12} className="text-orange-500 shrink-0" />
+                    <span className="font-semibold text-orange-700">{bs.start_time} ~ {bs.end_time}</span>
+                    {bs.reason && <span className="text-orange-600">· {bs.reason}</span>}
+                    <button
+                      type="button"
+                      onClick={() => deleteSlot.mutate(bs.id)}
+                      disabled={deleteSlot.isPending}
+                      className="ml-auto text-neutral-400 hover:text-red-500 transition"
+                      title="삭제"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 새 차단 추가 */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <select value={slotStart} onChange={(e) => setSlotStart(e.target.value)}
+                className="h-8 px-2 rounded-lg border border-stone-200 text-xs focus:outline-none focus:border-stone-400">
+                <option value="">시작</option>
+                {timeOptions.slice(0, -1).map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <span className="text-xs text-neutral-500">~</span>
+              <select value={slotEnd} onChange={(e) => setSlotEnd(e.target.value)}
+                className="h-8 px-2 rounded-lg border border-stone-200 text-xs focus:outline-none focus:border-stone-400">
+                <option value="">종료</option>
+                {timeOptions.filter((t) => !slotStart || t > slotStart).map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <input
+                type="text" value={slotReason} onChange={(e) => setSlotReason(e.target.value)}
+                placeholder="사유(선택)"
+                className="flex-1 min-w-[80px] h-8 px-2 rounded-lg border border-stone-200 text-xs focus:outline-none focus:border-stone-400"
+              />
+              <Button size="sm" onClick={handleAddSlot} disabled={!slotStart || !slotEnd || slotStart >= slotEnd || createSlot.isPending}>
+                {createSlot.isPending ? '추가 중' : '추가'}
+              </Button>
+            </div>
           </div>
         )}
 

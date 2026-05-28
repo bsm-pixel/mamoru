@@ -79,25 +79,13 @@ export default function ConsultationSettings({ settings, onSave, saving }: TabPr
     <div className="space-y-6">
       <h2 className="text-lg font-bold">상담 관리 설정</h2>
 
-      {/* 1-2. 영업시간 */}
-      <Field label="영업 시간" desc="고객 접수 폼의 예약 가능 시간대에 반영됩니다.">
-        <div className="flex items-center gap-2">
-          <input type="number" value={cs.start_hour} onChange={(e) => setCs({ ...cs, start_hour: Number(e.target.value) })}
-            className="w-16 h-9 px-2 rounded-lg border border-neutral-200 text-sm text-center" min={0} max={23} />
-          <span className="text-sm">시 ~</span>
-          <input type="number" value={cs.end_hour} onChange={(e) => setCs({ ...cs, end_hour: Number(e.target.value) })}
-            className="w-16 h-9 px-2 rounded-lg border border-neutral-200 text-sm text-center" min={0} max={23} />
-          <span className="text-sm">시</span>
-        </div>
-      </Field>
-
-      {/* 휴무 요일 + 특별 휴무일 → 달력 관리 화면으로 이전 (078) */}
-      <Field label="휴무 관리" desc="정기 휴무 요일 + 특정 날짜 휴무는 한 화면에서 통합 관리합니다.">
+      {/* 영업시간 + 휴무 + 시간대 차단 → 달력 관리 화면으로 통합 이전 (078 / 096) */}
+      <Field label="영업시간 · 휴무 관리" desc="영업 기본시간, 정기 휴무 요일, 특정 날짜 휴무, 30분 단위 시간대 차단을 달력 관리 한 화면에서 통합 관리합니다.">
         <a
           href="/consultations/calendar"
-          className="inline-flex items-center gap-2 px-3 h-9 rounded-lg bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800 transition"
+          className="inline-flex items-center gap-2 px-3 h-9 rounded-lg bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 transition"
         >
-          상담 → 달력 관리로 이동
+          달력 관리로 이동
         </a>
       </Field>
 

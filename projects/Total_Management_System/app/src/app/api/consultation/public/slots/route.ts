@@ -87,6 +87,12 @@ export async function GET(req: NextRequest) {
       .in('date', dates);
     const closedSet = new Set((closedDatesData || []).map((d: { date: string }) => d.date));
 
+    // 2-2. 시간대 차단 조회 (096) — 사장님 개인 일정 등 30분 단위 부분 차단
+    const { data: blockedSlotsData } = await dbAny
+      .from('blocked_time_slots')
+      .select('date, start_time, end_time')
+      .in('date', dates);
+
     // 3. 해당 날짜 범위의 확정/제안 상담 조회 (슬롯 차단용)
     const minDate = dates.reduce((a, b) => a < b ? a : b);
     const maxDate = dates.reduce((a, b) => a > b ? a : b);
@@ -121,6 +127,17 @@ export async function GET(req: NextRequest) {
 
     // 4. 날짜별 차단 슬롯 계산
     const blockedMap = new Map<string, Set<number>>();
+
+    // 4-0. 시간대 차단 (096) — 사장님이 달력관리에서 막은 30분 단위 구간
+    for (const bs of (blockedSlotsData || [])) {
+      if (!bs.date || !bs.start_time || !bs.end_time) continue;
+      const dateStr = bs.date as string;
+      if (!blockedMap.has(dateStr)) blockedMap.set(dateStr, new Set());
+      const blocked = blockedMap.get(dateStr)!;
+      const s = toMinutes(bs.start_time as string);
+      const e = toMinutes(bs.end_time as string);
+      for (let m = s; m < e; m += stepMin) blocked.add(m);
+    }
 
     // 4-A. 복원수리 직접방문 차단 (먼저 처리, 단순 시간 + duration 차단)
     for (const v of (directVisits || [])) {

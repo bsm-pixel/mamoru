@@ -133,3 +133,96 @@ export function useUpdateDisabledWeekdays() {
     onError: (err: Error) => toast.error('변경 실패: ' + err.message),
   });
 }
+
+/** 096: 영업 기본시간 업데이트 (start_hour/end_hour) — 달력관리 화면으로 이전 */
+export function useUpdateBusinessHours() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ start_hour, end_hour }: { start_hour: number; end_hour: number }) => {
+      const res = await fetch('/api/consultation/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start_hour, end_hour }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || '영업시간 변경 실패');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('영업시간이 변경되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['consultation-settings'] });
+    },
+    onError: (err: Error) => toast.error('변경 실패: ' + err.message),
+  });
+}
+
+// ============================================
+// 096: 날짜별 시간대 차단 (blocked_time_slots)
+// ============================================
+
+export interface BlockedSlot {
+  id: string;
+  date: string;        // YYYY-MM-DD
+  start_time: string;  // HH:MM
+  end_time: string;    // HH:MM
+  reason: string | null;
+}
+
+/** 기간 시간대 차단 목록 조회 */
+export function useBlockedSlots(from: string, to: string) {
+  return useQuery<{ blockedSlots: BlockedSlot[] }>({
+    queryKey: ['blocked-slots', from, to],
+    staleTime: 30_000,
+    queryFn: async () => {
+      const res = await fetch(`/api/consultation/blocked-slots?from=${from}&to=${to}`);
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+  });
+}
+
+/** 시간대 차단 추가 */
+export function useCreateBlockedSlot() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ date, start_time, end_time, reason }: { date: string; start_time: string; end_time: string; reason?: string }) => {
+      const res = await fetch('/api/consultation/blocked-slots', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, start_time, end_time, reason }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || '시간대 차단 등록 실패');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('시간대 차단이 등록되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['blocked-slots'] });
+    },
+    onError: (err: Error) => toast.error('등록 실패: ' + err.message),
+  });
+}
+
+/** 시간대 차단 삭제 (id 단위) */
+export function useDeleteBlockedSlot() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/consultation/blocked-slots?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || '시간대 차단 해제 실패');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('시간대 차단이 해제되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['blocked-slots'] });
+    },
+    onError: (err: Error) => toast.error('해제 실패: ' + err.message),
+  });
+}
