@@ -227,7 +227,7 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
                 }}
                 onFocus={() => customerQuery.length >= 2 && setShowCustomerDropdown(true)}
                 placeholder="거래처 검색 (2자 이상)"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
               />
               {selectedCustomer && (
                 <button onClick={() => { setSelectedCustomer(null); setCustomerQuery(''); setCustomerName(''); }}
@@ -302,10 +302,10 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="거래처명 직접 입력"
-                  className="h-8 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                  className="h-8 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
                 <input type="text" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="연락처"
-                  className="h-8 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                  className="h-8 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
               </div>
             )}
             {customerType === 'dealer' && <p className="text-xs text-blue-600 mt-1">딜러가 적용</p>}
@@ -319,13 +319,13 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
                 <label className="text-xs font-semibold text-neutral-500 mb-1 block">수량 (자루)</label>
                 <input type="number" min={1} value={repairQty}
                   onChange={(e) => setRepairQty(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
               </div>
               <div>
                 <label className="text-xs font-semibold text-neutral-500 mb-1 block">단가 (원)</label>
                 <input type="number" value={repairUnitPrice}
                   onChange={(e) => setRepairUnitPrice(parseInt(e.target.value) || 0)}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
                 <p className="text-[10px] text-neutral-400 mt-1">
                   {selectedCustomer?.default_repair_price && selectedCustomer.default_repair_price > 0
                     ? '거래처 기본 단가 자동 적용 · 수정 가능'
@@ -392,13 +392,13 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
                 {paymentStatus === 'partial' && (
                   <input type="number" value={paidAmount || ''} onChange={(e) => setPaidAmount(parseInt(e.target.value) || 0)}
                     placeholder="선납금 입력"
-                    className="w-full h-7 px-2 mt-2 rounded border border-neutral-200 bg-warm-ivory text-xs" />
+                    className="w-full h-7 px-2 mt-2 rounded border border-neutral-200 bg-stone-50 text-xs" />
                 )}
               </div>
               <div>
                 <label className="text-xs font-semibold text-neutral-500 mb-1 block">메모</label>
                 <input type="text" value={memo} onChange={(e) => setMemo(e.target.value)}
-                  placeholder="메모 (선택)" className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-xs" />
+                  placeholder="메모 (선택)" className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs" />
               </div>
             </div>
           )}
@@ -410,12 +410,12 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
             <div>
               <label className="text-xs font-semibold text-neutral-500 mb-1 block">납품일</label>
               <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)}
-                className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
             </div>
             <div>
               <label className="text-xs font-semibold text-neutral-500 mb-1 block">납품 예정일</label>
               <input type="date" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)}
-                className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
             </div>
           </div>
 
@@ -496,7 +496,7 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
                       type="number"
                       value={item.unit_price || ''}
                       onChange={(e) => setCart((prev) => prev.map((c, i) => i === idx ? { ...c, unit_price: parseInt(e.target.value) || 0 } : c))}
-                      className="w-20 h-7 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs text-right"
+                      className="w-20 h-7 px-2 rounded border border-neutral-200 bg-stone-50 text-xs text-right"
                     />
                     <span className="text-xs text-neutral-500 w-20 text-right">{formatKRW(item.quantity * item.unit_price)}</span>
                     <button onClick={() => setCart((prev) => prev.filter((_, i) => i !== idx))}
@@ -552,7 +552,7 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
               {paymentStatus === 'partial' && (
                 <input type="number" value={paidAmount || ''} onChange={(e) => setPaidAmount(parseInt(e.target.value) || 0)}
                   placeholder="선납금 입력"
-                  className="w-full h-7 px-2 mt-2 rounded border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-1 focus:ring-neutral-300" />
+                  className="w-full h-7 px-2 mt-2 rounded border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-1 focus:ring-neutral-300" />
               )}
             </div>
           </div>
@@ -578,13 +578,13 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
               <label className="text-xs font-semibold text-neutral-500 mb-1 block">할인금액</label>
               <input type="number" value={discount || ''} onChange={(e) => setDiscount(parseInt(e.target.value) || 0)}
                 placeholder="0"
-                className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
             </div>
             <div>
               <label className="text-xs font-semibold text-neutral-500 mb-1 block">메모</label>
               <input type="text" value={memo} onChange={(e) => setMemo(e.target.value)}
                 placeholder="메모 (선택)"
-                className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
             </div>
           </div>
 

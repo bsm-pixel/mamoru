@@ -101,7 +101,7 @@ export default function GoogleCalendarSettings() {
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-warm-ivory p-4">
+      <div className="rounded-lg border border-neutral-200 bg-stone-50 p-4">
         <div className="text-sm text-neutral-500">Google Calendar 상태 로드 중...</div>
       </div>
     );
@@ -111,12 +111,12 @@ export default function GoogleCalendarSettings() {
   const isWorkspace = !!status?.hd;
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-warm-ivory p-4 space-y-4">
+    <div className="rounded-lg border border-neutral-200 bg-stone-50 p-4 space-y-4">
       {/* 헤더 */}
       <div className="flex items-start gap-3">
         <Calendar size={20} className="text-neutral-700 mt-0.5 shrink-0" />
         <div className="flex-1">
-          <h3 className="text-sm font-bold text-indigo-black">📅 Google Calendar 연동</h3>
+          <h3 className="text-sm font-bold text-stone-900">📅 Google Calendar 연동</h3>
           <p className="text-xs text-neutral-500 mt-0.5">
             상담 확정·변경·취소가 사장님의 Google Calendar에 자동 반영됩니다.
             <br />

@@ -178,7 +178,7 @@ export default function BannerSettings() {
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-neutral-200 bg-warm-ivory p-4">
+      <div className="rounded-lg border border-neutral-200 bg-stone-50 p-4">
         <div className="text-sm text-neutral-500">배너 설정 로드 중...</div>
       </div>
     );
@@ -189,12 +189,12 @@ export default function BannerSettings() {
   const isSlider = form.images.length >= 2;
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-warm-ivory p-4 space-y-4">
+    <div className="rounded-lg border border-neutral-200 bg-stone-50 p-4 space-y-4">
       {/* 헤더 */}
       <div className="flex items-start gap-3">
         <Megaphone size={20} className="text-neutral-700 mt-0.5 shrink-0" />
         <div className="flex-1">
-          <h3 className="text-sm font-bold text-indigo-black">📢 아임웹 배너/팝업 관리</h3>
+          <h3 className="text-sm font-bold text-stone-900">📢 아임웹 배너/팝업 관리</h3>
           <p className="text-xs text-neutral-500 mt-0.5">
             TMS에서 이미지와 텍스트를 설정하면 아임웹 사이트에 모달 배너로 즉시 표시됩니다.
             {main?.updated_at && (

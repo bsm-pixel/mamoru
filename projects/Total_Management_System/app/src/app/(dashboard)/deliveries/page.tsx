@@ -80,21 +80,21 @@ export default function DeliveriesPage() {
       {/* 통계 카드 */}
       {stats && (
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-white rounded-lg border border-neutral-200 p-3">
+          <div className="bg-white rounded-2xl border border-stone-200 p-3">
             <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
               <Calendar size={12} />이번주
             </div>
             <p className="text-base font-bold text-neutral-900">{formatKRW(stats.weekAmount)}</p>
             <p className="text-[11px] text-neutral-400">{stats.weekCount}건</p>
           </div>
-          <div className="bg-white rounded-lg border border-neutral-200 p-3">
+          <div className="bg-white rounded-2xl border border-stone-200 p-3">
             <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
               <TrendingUp size={12} />이번달
             </div>
             <p className="text-base font-bold text-neutral-900">{formatKRW(stats.monthAmount)}</p>
             <p className="text-[11px] text-neutral-400">{stats.monthCount}건</p>
           </div>
-          <div className="bg-white rounded-lg border border-neutral-200 p-3">
+          <div className="bg-white rounded-2xl border border-stone-200 p-3">
             <div className="flex items-center gap-1.5 text-xs text-red-500 mb-1">
               <AlertCircle size={12} />미수금
             </div>
@@ -197,11 +197,11 @@ export default function DeliveriesPage() {
 
       {isLg ? (
         /* PC: 마스터-디테일 2컬럼 */
-        <div className="flex gap-4 px-4 md:px-6 py-4 h-full min-h-0">
+        <div className="flex gap-4 px-4 md:px-6 py-4 h-full min-h-0 bg-stone-50">
           <div className="w-2/5 shrink-0 overflow-y-auto space-y-3 pr-1">
             {listContent}
           </div>
-          <div className="flex-1 min-w-0 overflow-y-auto bg-white rounded-xl border border-neutral-200">
+          <div className="flex-1 min-w-0 overflow-y-auto bg-white rounded-2xl border border-stone-200">
             {selectedId ? (
               <DeliveryDetailPanel deliveryId={selectedId} />
             ) : (
@@ -214,7 +214,7 @@ export default function DeliveriesPage() {
         </div>
       ) : (
         /* 모바일: 목록 */
-        <div className="px-4 md:px-6 py-4 space-y-4">
+        <div className="px-4 md:px-6 py-4 space-y-4 bg-stone-50 min-h-screen">
           {listContent}
         </div>
       )}
@@ -242,12 +242,12 @@ const DeliveryRow = memo(function DeliveryRow({ dl, isSelected, onClick }: {
     <div
       onClick={onClick}
       className={`flex items-center gap-4 px-4 py-3 cursor-pointer transition ${
-        isSelected ? 'bg-neutral-50 border-l-2 border-l-neutral-900' : 'hover:bg-warm-ivory/60'
+        isSelected ? 'bg-stone-50 border-l-2 border-l-stone-900' : 'hover:bg-stone-50'
       }`}
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-indigo-black truncate">
+          <span className="text-sm font-semibold text-stone-900 truncate">
             {dl.customer_name as string}
           </span>
           <Badge className={STATUS_COLOR[status === 'settled' ? 'shipped' : status] || STATUS_COLOR.draft}>

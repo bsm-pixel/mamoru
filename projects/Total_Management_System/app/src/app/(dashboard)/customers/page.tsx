@@ -113,7 +113,7 @@ export default function CustomersPage() {
         </Button>
       } />
 
-      <div className="px-4 md:px-6 py-4 space-y-3">
+      <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
         {/* 검색 */}
         <SearchInput
           value={search}
@@ -129,7 +129,7 @@ export default function CustomersPage() {
               onClick={() => { setTypeFilter(f.value); setPage(1); }}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
                 typeFilter === f.value
-                  ? 'bg-terracotta text-cream'
+                  ? 'bg-stone-900 text-white'
                   : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
               }`}
             >
@@ -221,11 +221,11 @@ function CustomerRow({ customer, isSelected, onClick }: { customer: Customer; is
   return (
     <div
       onClick={onClick}
-      className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition ${isSelected ? 'bg-terracotta/5 border-l-2 border-l-terracotta' : ''}`}
+      className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-stone-50/60 transition ${isSelected ? 'bg-stone-100 border-l-2 border-l-stone-900' : ''}`}
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-indigo-black truncate">{c.name}</span>
+          <span className="text-sm font-semibold text-stone-900 truncate">{c.name}</span>
           <Badge className={TYPE_COLOR[c.customer_type] || TYPE_COLOR.retail}>
             {TYPE_LABEL[c.customer_type] || '일반'}
           </Badge>

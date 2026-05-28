@@ -128,7 +128,7 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
 
           {product && (
             <div className="flex items-center gap-2">
-              <Package size={16} className="text-terracotta" />
+              <Package size={16} className="text-stone-900" />
               <span className="text-sm font-bold">{product.name}</span>
               <span className="text-xs text-neutral-500">({product.sku})</span>
               <Badge className="bg-neutral-100 text-neutral-600">
@@ -156,7 +156,7 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="시리얼번호, 바코드, 고객명 검색"
-              className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
+              className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm text-stone-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400 transition"
             />
           </div>
         </div>
@@ -166,8 +166,8 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
           <Card>
             <h4 className="text-sm font-semibold mb-2">시리얼 단건 등록</h4>
             <div className="flex gap-2">
-              <input type="text" value={newSerial} onChange={(e) => setNewSerial(e.target.value)} placeholder="시리얼번호 *" className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm" />
-              <input type="text" value={newBarcode} onChange={(e) => setNewBarcode(e.target.value)} placeholder="바코드" className="w-40 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm" />
+              <input type="text" value={newSerial} onChange={(e) => setNewSerial(e.target.value)} placeholder="시리얼번호 *" className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm" />
+              <input type="text" value={newBarcode} onChange={(e) => setNewBarcode(e.target.value)} placeholder="바코드" className="w-40 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm" />
               <Button size="sm" onClick={handleAddSerial} disabled={!newSerial.trim() || createSerial.isPending}>
                 {createSerial.isPending ? '...' : '등록'}
               </Button>
@@ -183,15 +183,15 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
             <div className="flex gap-2 items-end flex-wrap">
               <div>
                 <label className="text-xs text-neutral-500">시작번호 *</label>
-                <input type="number" value={batchStart} onChange={(e) => setBatchStart(e.target.value)} placeholder="13790001" className="w-32 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm font-mono" />
+                <input type="number" value={batchStart} onChange={(e) => setBatchStart(e.target.value)} placeholder="13790001" className="w-32 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm font-mono" />
               </div>
               <div>
                 <label className="text-xs text-neutral-500">수량</label>
-                <input type="number" value={batchCount} onChange={(e) => setBatchCount(parseInt(e.target.value) || 0)} min={1} max={100} className="w-20 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm" />
+                <input type="number" value={batchCount} onChange={(e) => setBatchCount(parseInt(e.target.value) || 0)} min={1} max={100} className="w-20 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm" />
               </div>
               <div>
                 <label className="text-xs text-neutral-500">로트번호</label>
-                <input type="text" value={batchLot} onChange={(e) => setBatchLot(e.target.value)} placeholder="선택사항" className="w-28 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm" />
+                <input type="text" value={batchLot} onChange={(e) => setBatchLot(e.target.value)} placeholder="선택사항" className="w-28 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm" />
               </div>
               <Button size="sm" onClick={handleBatch} disabled={!batchStart || batchCount < 1 || createBatch.isPending}>
                 {createBatch.isPending ? '생성 중...' : `${batchCount}개 생성`}
@@ -235,8 +235,8 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
               onClick={() => setStatus(tab.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
                 status === tab.value
-                  ? 'bg-terracotta text-cream'
-                  : 'bg-card-white text-neutral-500 hover:bg-warm-ivory'
+                  ? 'bg-stone-900 text-white'
+                  : 'bg-white text-neutral-500 hover:bg-stone-50'
               }`}
             >
               {tab.label}
@@ -276,7 +276,7 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-mono font-semibold text-indigo-black">
+                      <span className="text-sm font-mono font-semibold text-stone-900">
                         {serial.serial_number}
                       </span>
                       <Badge className={STATUS_COLOR[serial.status] || ''}>

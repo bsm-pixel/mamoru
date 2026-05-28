@@ -83,7 +83,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
         {/* 발주 정보 */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-indigo-black">{po.po_number}</h3>
+            <h3 className="text-sm font-bold text-stone-900">{po.po_number}</h3>
             <Badge className={STATUS_COLOR[po.status] || ''}>
               {STATUS_LABEL[po.status] || po.status}
             </Badge>
@@ -119,7 +119,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
 
         {/* 품목 */}
         <Card>
-          <h3 className="text-sm font-bold text-indigo-black mb-3">발주 품목</h3>
+          <h3 className="text-sm font-bold text-stone-900 mb-3">발주 품목</h3>
           <div className="space-y-2">
             {items.map((item) => (
               <div key={item.id} className="flex items-center justify-between py-2 border-b border-neutral-50 last:border-0">
@@ -137,7 +137,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
           <div className="mt-3 pt-3 border-t border-neutral-200 space-y-1">
             <div className="flex justify-between text-sm font-bold">
               <span>합계</span>
-              <span className="text-terracotta">{formatKRW(po.total_amount)}</span>
+              <span className="text-stone-900">{formatKRW(po.total_amount)}</span>
             </div>
             <div className="flex justify-between text-xs text-neutral-500">
               <span>공급가액</span>
@@ -152,7 +152,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
 
         {/* 결제 현황 */}
         <Card>
-          <h3 className="text-sm font-bold text-indigo-black mb-3">결제 현황</h3>
+          <h3 className="text-sm font-bold text-stone-900 mb-3">결제 현황</h3>
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
               <p className="text-xs text-neutral-500">총액</p>
@@ -180,7 +180,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
 
         {/* 액션 버튼 */}
         <Card>
-          <h3 className="text-sm font-bold text-indigo-black mb-3">액션</h3>
+          <h3 className="text-sm font-bold text-stone-900 mb-3">액션</h3>
           <div className="space-y-2">
             {po.status === 'draft' && (
               <Button
@@ -199,7 +199,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                   value={depositInput}
                   onChange={(e) => setDepositInput(e.target.value)}
                   placeholder={`선납금 (총 ${formatKRW(po.total_amount)})`}
-                  className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                  className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
                 />
                 <Button
                   variant="secondary"

@@ -88,7 +88,7 @@ export default function NewProductPage() {
         </Button>
 
         <Card>
-          <h3 className="text-sm font-bold text-indigo-black mb-4">기본 정보</h3>
+          <h3 className="text-sm font-bold text-stone-900 mb-4">기본 정보</h3>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -99,8 +99,8 @@ export default function NewProductPage() {
                   onChange={(e) => { setForm({ ...form, sku: e.target.value }); setSkuStatus('idle'); }}
                   onBlur={() => checkSkuDuplicate(form.sku)}
                   placeholder="MAM-BL-060"
-                  className={`w-full h-9 px-3 rounded-lg border text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 ${
-                    skuStatus === 'duplicate' ? 'border-red-400 bg-red-50' : 'border-neutral-200 bg-warm-ivory'
+                  className={`w-full h-9 px-3 rounded-lg border text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400 ${
+                    skuStatus === 'duplicate' ? 'border-red-400 bg-red-50' : 'border-neutral-200 bg-stone-50'
                   }`}
                 />
                 {skuStatus === 'checking' && <p className="text-xs text-neutral-400 mt-0.5">확인 중...</p>}
@@ -116,7 +116,7 @@ export default function NewProductPage() {
                 <select
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                 >
                   {CATEGORY_OPTIONS.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
@@ -132,14 +132,14 @@ export default function NewProductPage() {
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="마모루 블런트 6.0"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
               />
             </div>
           </div>
         </Card>
 
         <Card>
-          <h3 className="text-sm font-bold text-indigo-black mb-4">가격 정보</h3>
+          <h3 className="text-sm font-bold text-stone-900 mb-4">가격 정보</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
               <label className="text-xs text-neutral-500">소매가</label>
@@ -148,7 +148,7 @@ export default function NewProductPage() {
                 value={form.price || ''}
                 onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
                 placeholder="0"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
               />
             </div>
             {/* 동적 단가 그룹 */}
@@ -160,7 +160,7 @@ export default function NewProductPage() {
                   value={form.price_group_values[key]?.price || ''}
                   onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: parseInt(e.target.value) || 0, display_name: form.price_group_values[key]?.display_name || '' } } })}
                   placeholder="0"
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
                 />
               </div>
             ))}
@@ -171,7 +171,7 @@ export default function NewProductPage() {
                 value={form.price_purchase || ''}
                 onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
                 placeholder="0"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
               />
             </div>
           </div>
@@ -186,7 +186,7 @@ export default function NewProductPage() {
                     value={form.price_group_values[key]?.display_name || ''}
                     onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: form.price_group_values[key]?.price || 0, display_name: e.target.value } } })}
                     placeholder="미입력 시 기본 제품명 사용"
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
                   />
                 </div>
               ))}
@@ -195,7 +195,7 @@ export default function NewProductPage() {
         </Card>
 
         <Card>
-          <h3 className="text-sm font-bold text-indigo-black mb-4">추가 정보</h3>
+          <h3 className="text-sm font-bold text-stone-900 mb-4">추가 정보</h3>
           <div className="space-y-3">
             <div>
               <label className="text-xs text-neutral-500">매입처</label>
@@ -213,7 +213,7 @@ export default function NewProductPage() {
                   value={form.imweb_product_no}
                   onChange={(e) => setForm({ ...form, imweb_product_no: e.target.value })}
                   placeholder="아임웹 상품관리에서 확인"
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
                 />
               </div>
               <div>
@@ -222,7 +222,7 @@ export default function NewProductPage() {
                   type="text"
                   value={form.barcode}
                   onChange={(e) => setForm({ ...form, barcode: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
                 />
               </div>
             </div>
@@ -234,7 +234,7 @@ export default function NewProductPage() {
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={3}
                 placeholder="제품 설명 (선택)"
-                className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 resize-none"
+                className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400 resize-none"
               />
             </div>
           </div>

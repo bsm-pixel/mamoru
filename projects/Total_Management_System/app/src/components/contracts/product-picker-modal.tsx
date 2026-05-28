@@ -38,7 +38,7 @@ export function ProductPickerModal({ open, onClose, onSelect }: Props) {
         <button
           onClick={() => setCategory('all')}
           className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
-            category === 'all' ? 'bg-terracotta text-cream' : 'bg-neutral-100 text-neutral-500'
+            category === 'all' ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500'
           }`}
         >
           전체
@@ -48,7 +48,7 @@ export function ProductPickerModal({ open, onClose, onSelect }: Props) {
             key={cat}
             onClick={() => setCategory(cat)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
-              category === cat ? 'bg-terracotta text-cream' : 'bg-neutral-100 text-neutral-500'
+              category === cat ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500'
             }`}
           >
             {CAT_LABEL[cat] || cat}

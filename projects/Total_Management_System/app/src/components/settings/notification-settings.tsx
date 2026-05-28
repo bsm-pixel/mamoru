@@ -115,9 +115,9 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
       <BannerSettings />
 
       {/* ── 내 푸시 알림 (사장님이 받는 것) ── */}
-      <div className="rounded-lg border border-neutral-200 bg-warm-ivory p-4 space-y-3">
+      <div className="rounded-lg border border-neutral-200 bg-stone-50 p-4 space-y-3">
         <div>
-          <h3 className="text-sm font-bold text-indigo-black">📱 내 푸시 알림</h3>
+          <h3 className="text-sm font-bold text-stone-900">📱 내 푸시 알림</h3>
           <p className="text-xs text-neutral-500 mt-0.5">고객 행동이 발생하면 사장님 디바이스로 푸시 알림을 보냅니다. (크롬/모바일 앱)</p>
         </div>
         <div className="space-y-2">

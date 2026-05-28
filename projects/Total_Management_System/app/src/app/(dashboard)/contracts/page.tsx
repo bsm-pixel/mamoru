@@ -85,7 +85,7 @@ export default function ContractsPage() {
           <select
             value={dateRange}
             onChange={(e) => { setDateRange(e.target.value as typeof dateRange); setPage(1); }}
-            className="shrink-0 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-xs font-medium text-neutral-600 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+            className="shrink-0 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-xs font-medium text-neutral-600 focus:outline-none focus:ring-2 focus:ring-stone-400"
           >
             <option value="all">전체 기간</option>
             <option value="today">오늘</option>
@@ -223,10 +223,10 @@ const ContractTableRow = memo(function ContractTableRow({ contract, onClick }: {
 const ContractRow = memo(function ContractRow({ contract, isSelected, onClick }: { contract: Contract; isSelected?: boolean; onClick: () => void }) {
   const isCancelled = contract.status === 'cancelled';
   return (
-    <div onClick={onClick} className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition ${isCancelled ? 'opacity-50' : ''} ${isSelected ? 'bg-terracotta/5 border-l-2 border-l-terracotta' : ''}`}>
+    <div onClick={onClick} className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-stone-50/60 transition ${isCancelled ? 'opacity-50' : ''} ${isSelected ? 'bg-stone-100 border-l-2 border-l-stone-900' : ''}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>
+          <span className={`text-sm font-semibold text-stone-900 truncate ${isCancelled ? 'line-through' : ''}`}>
             {contract.customer_name}
           </span>
           <Badge className={STATUS_COLOR[contract.status] || ''}>

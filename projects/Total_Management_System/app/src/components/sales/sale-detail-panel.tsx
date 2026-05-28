@@ -127,7 +127,7 @@ export function SaleDetailPanel({ saleId }: Props) {
       {/* 헤더 */}
       <div>
         <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span className="text-sm font-bold text-indigo-black">{s.sale_number}</span>
+          <span className="text-sm font-bold text-stone-900">{s.sale_number}</span>
           <Badge className={PAYMENT_STATUS_COLOR[s.payment_status] || ''}>
             {PAYMENT_STATUS_LABEL[s.payment_status] || s.payment_status}
           </Badge>
@@ -209,10 +209,10 @@ export function SaleDetailPanel({ saleId }: Props) {
                 value={memoValue}
                 onChange={(e) => setMemoValue(e.target.value)}
                 placeholder="메모 입력"
-                className="flex-1 h-8 px-2 rounded border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                className="flex-1 h-8 px-2 rounded border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                 autoFocus
               />
-              <button onClick={handleSaveMemo} className="p-1 hover:bg-neutral-100 rounded"><Save size={14} className="text-terracotta" /></button>
+              <button onClick={handleSaveMemo} className="p-1 hover:bg-neutral-100 rounded"><Save size={14} className="text-stone-900" /></button>
               <button onClick={() => setEditingMemo(false)} className="p-1 hover:bg-neutral-100 rounded text-xs text-neutral-500">취소</button>
             </div>
           ) : (
@@ -296,7 +296,7 @@ export function SaleDetailPanel({ saleId }: Props) {
         )}
         <div className="flex justify-between text-sm font-bold">
           <span>결제 금액</span>
-          <span className="text-terracotta">{formatKRW(s.paid_amount)}</span>
+          <span className="text-stone-900">{formatKRW(s.paid_amount)}</span>
         </div>
         {s.payment_status !== 'paid' && (
           <div className="flex justify-between text-sm font-semibold text-red-500">

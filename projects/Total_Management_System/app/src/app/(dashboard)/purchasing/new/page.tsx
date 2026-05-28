@@ -145,7 +145,7 @@ export default function NewPurchaseOrderPage() {
           <div className="lg:col-span-2">
             <Card>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-indigo-black">제품 선택</h3>
+                <h3 className="text-sm font-bold text-stone-900">제품 선택</h3>
                 <div className="flex items-center gap-2">
                   {supplierId && catalogProductIds.size > 0 && (
                     <button
@@ -178,7 +178,7 @@ export default function NewPurchaseOrderPage() {
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
                   placeholder="제품명, SKU, 제품군 검색..."
-                  className="w-full h-8 pl-8 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
+                  className="w-full h-8 pl-8 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400 transition"
                 />
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -190,12 +190,12 @@ export default function NewPurchaseOrderPage() {
                       onClick={() => addProduct(p)}
                       className={`p-3 rounded-lg border text-left transition ${
                         inList
-                          ? 'border-terracotta bg-terracotta/5'
-                          : 'border-neutral-200 bg-card-white hover:border-terracotta/40'
+                          ? 'border-stone-900 bg-stone-100'
+                          : 'border-neutral-200 bg-white hover:border-stone-900/40'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-1">
-                        <p className="text-sm font-semibold text-indigo-black truncate">{p.name}</p>
+                        <p className="text-sm font-semibold text-stone-900 truncate">{p.name}</p>
                         {p.stock_quantity >= 0 && (
                           <span className={`text-xs font-bold shrink-0 ${p.stock_quantity === 0 ? 'text-red-500' : p.stock_quantity <= 3 ? 'text-amber-500' : 'text-neutral-400'}`}>
                             {p.stock_quantity}
@@ -221,7 +221,7 @@ export default function NewPurchaseOrderPage() {
           {/* 우측: 발주 정보 */}
           <div className="space-y-4">
             <Card>
-              <h3 className="text-sm font-bold text-indigo-black mb-3">매입처 정보</h3>
+              <h3 className="text-sm font-bold text-stone-900 mb-3">매입처 정보</h3>
               <div className="space-y-3">
                 <div>
                   <label className="text-xs text-neutral-500">매입처 *</label>
@@ -239,7 +239,7 @@ export default function NewPurchaseOrderPage() {
                       type="date"
                       value={orderDate}
                       onChange={(e) => setOrderDate(e.target.value)}
-                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                     />
                   </div>
                   <div>
@@ -248,7 +248,7 @@ export default function NewPurchaseOrderPage() {
                       type="date"
                       value={expectedDate}
                       onChange={(e) => setExpectedDate(e.target.value)}
-                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                     />
                   </div>
                 </div>
@@ -259,7 +259,7 @@ export default function NewPurchaseOrderPage() {
                     value={memo}
                     onChange={(e) => setMemo(e.target.value)}
                     placeholder="메모 (선택)"
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
                   />
                 </div>
                 {/* 통화 + 환율 */}
@@ -282,7 +282,7 @@ export default function NewPurchaseOrderPage() {
                       value={exchangeRate || ''}
                       onChange={(e) => setExchangeRate(Number(e.target.value) || 0)}
                       placeholder="예: 195"
-                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                     />
                   </div>
                 )}
@@ -291,7 +291,7 @@ export default function NewPurchaseOrderPage() {
 
             {/* 품목 목록 */}
             <Card>
-              <h3 className="text-sm font-bold text-indigo-black mb-3">발주 품목 ({items.length})</h3>
+              <h3 className="text-sm font-bold text-stone-900 mb-3">발주 품목 ({items.length})</h3>
               {items.length === 0 ? (
                 <p className="text-xs text-neutral-400 text-center py-4">제품을 선택해주세요</p>
               ) : (
@@ -327,7 +327,7 @@ export default function NewPurchaseOrderPage() {
                           type="number"
                           value={item.unit_price || ''}
                           onChange={(e) => updateItemPrice(idx, parseInt(e.target.value) || 0)}
-                          className="w-24 h-7 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs text-right"
+                          className="w-24 h-7 px-2 rounded border border-neutral-200 bg-stone-50 text-xs text-right"
                         />
                         <span className="text-xs font-semibold ml-auto">
                           {currency !== 'KRW' && <span className="text-neutral-400 mr-1">{CURRENCY_SYMBOL[currency]}{(item.quantity * item.unit_price).toLocaleString()}</span>}
@@ -376,7 +376,7 @@ export default function NewPurchaseOrderPage() {
                         )}
                         <div className="flex justify-between text-sm font-bold pt-1">
                           <span>합계 (KRW)</span>
-                          <span className="text-terracotta">{formatKRW(payment)}</span>
+                          <span className="text-stone-900">{formatKRW(payment)}</span>
                         </div>
                       </div>
                     );

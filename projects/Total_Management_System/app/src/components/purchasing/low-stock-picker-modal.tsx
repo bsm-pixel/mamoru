@@ -74,7 +74,7 @@ export function LowStockPickerModal({
         <>
           {/* 전체 선택 */}
           {selectableProducts.length > 0 && (
-            <label className="flex items-center gap-2 px-3 py-2 rounded-lg bg-warm-ivory mb-2 cursor-pointer select-none">
+            <label className="flex items-center gap-2 px-3 py-2 rounded-lg bg-stone-50 mb-2 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={allSelected}
@@ -101,7 +101,7 @@ export function LowStockPickerModal({
                       ? 'border-neutral-100 bg-neutral-50 opacity-50 cursor-default'
                       : isChecked
                         ? 'border-neutral-300 bg-neutral-50'
-                        : 'border-transparent hover:bg-warm-ivory'
+                        : 'border-transparent hover:bg-stone-50'
                   }`}
                 >
                   <input
@@ -114,7 +114,7 @@ export function LowStockPickerModal({
 
                   {/* 제품 정보 */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-indigo-black truncate">{p.name}</p>
+                    <p className="text-sm font-semibold text-stone-900 truncate">{p.name}</p>
                     <p className="text-xs text-neutral-500">{p.sku}</p>
                   </div>
 

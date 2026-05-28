@@ -248,7 +248,7 @@ function SaleSummary({ sale }: { sale: Record<string, unknown> }) {
       )}
       <div className="flex justify-between text-sm font-bold">
         <span>결제 금액</span>
-        <span className="text-terracotta">{formatKRW(s.paid_amount)}</span>
+        <span className="text-stone-900">{formatKRW(s.paid_amount)}</span>
       </div>
       {s.supply_amount > 0 && (
         <div className="mt-2 pt-2 border-t border-dashed border-neutral-200 space-y-0.5">

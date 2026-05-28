@@ -85,7 +85,7 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
         <Card>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-indigo-black">{sale.sale_number}</h3>
+              <h3 className="text-sm font-bold text-stone-900">{sale.sale_number}</h3>
               <Badge className={channel.className}>{channel.label}</Badge>
             </div>
             {isCancelled ? (
@@ -129,7 +129,7 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* 판매 항목 */}
         <Card>
-          <h3 className="text-sm font-bold text-indigo-black mb-3">판매 항목</h3>
+          <h3 className="text-sm font-bold text-stone-900 mb-3">판매 항목</h3>
           <div className="space-y-2">
             {items.map((item) => {
               // 시리얼 매칭: 1순위 sale_item_id 정확 매칭 / 2순위 product_id fallback (레거시 데이터용)
@@ -176,7 +176,7 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
             )}
             <div className="flex justify-between text-sm font-bold">
               <span>결제 금액</span>
-              <span className="text-terracotta">{formatKRW(sale.paid_amount)}</span>
+              <span className="text-stone-900">{formatKRW(sale.paid_amount)}</span>
             </div>
             {/* VAT 분리 표시 */}
             {sale.supply_amount > 0 && (

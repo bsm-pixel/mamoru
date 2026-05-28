@@ -181,7 +181,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
     return (
       <div className="flex-1 overflow-y-auto space-y-4 p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-indigo-black">{mode === 'duplicate' ? '제품 복제' : '제품 등록'}</h3>
+          <h3 className="text-sm font-bold text-stone-900">{mode === 'duplicate' ? '제품 복제' : '제품 등록'}</h3>
           <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center"><X size={16} /></button>
         </div>
         <Card>
@@ -190,12 +190,12 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <div>
                 <label className="text-xs text-neutral-500">SKU (자동)</label>
                 <input type="text" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                  placeholder="자동 채번" className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm font-mono focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                  placeholder="자동 채번" className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-stone-400" />
               </div>
               <div>
                 <label className="text-xs text-neutral-500">카테고리</label>
                 <select value={form.category} onChange={(e) => handleCategoryChange(e.target.value)}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40">
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
                   {CATEGORY_OPTIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </div>
@@ -204,7 +204,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <label className="text-xs text-neutral-500">제품명 *</label>
               <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="마모루 블런트 6.0" autoFocus
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
             </div>
             {/* 재고 관리 토글 */}
             <div className="flex items-center justify-between py-1">
@@ -221,19 +221,19 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <div>
                 <label className="text-xs text-neutral-500">소매가</label>
                 <input type="number" value={form.price || ''} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
               </div>
               {Object.entries(priceGroups).map(([key, def]) => (
                 <div key={key}>
                   <label className="text-xs text-neutral-500">{def.label}</label>
                   <input type="number" value={form.price_group_values[key]?.price || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: parseInt(e.target.value) || 0, display_name: form.price_group_values[key]?.display_name || '' } } })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
               ))}
               <div>
                 <label className="text-xs text-neutral-500">매입가</label>
                 <input type="number" value={form.price_purchase || ''} onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
               </div>
             </div>
             {/* 단가 그룹별 납품명 */}
@@ -244,7 +244,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
                     <label className="text-xs text-neutral-500">{def.label} 납품명</label>
                     <input type="text" value={form.price_group_values[key]?.display_name || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: form.price_group_values[key]?.price || 0, display_name: e.target.value } } })}
                       placeholder="미입력 시 기본 제품명"
-                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                   </div>
                 ))}
               </div>
@@ -257,24 +257,24 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <label className="text-xs text-neutral-500">아임웹 상품번호</label>
               <input type="text" value={form.imweb_product_no} onChange={(e) => setForm({ ...form, imweb_product_no: e.target.value })}
                 placeholder="아임웹 상품관리에서 확인"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
             </div>
             <div>
               <label className="text-xs text-neutral-500">제품군 (리뷰 그룹)</label>
               <input type="text" value={form.product_group} onChange={(e) => setForm({ ...form, product_group: e.target.value })}
                 placeholder="예: R4, M5, CS600"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
             </div>
             <div>
               <label className="text-xs text-neutral-500">발주명 (매입처 주문 시)</label>
               <input type="text" value={form.purchase_name} onChange={(e) => setForm({ ...form, purchase_name: e.target.value })}
                 placeholder="매입처에서 사용하는 이름"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
             </div>
             <div>
               <label className="text-xs text-neutral-500">설명</label>
               <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2}
-                className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 resize-none" />
+                className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400 resize-none" />
             </div>
           </div>
         </Card>
@@ -314,7 +314,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
           <Package size={18} className="text-neutral-700 shrink-0" />
-          <h3 className="text-sm font-bold text-indigo-black truncate">{p.name}</h3>
+          <h3 className="text-sm font-bold text-stone-900 truncate">{p.name}</h3>
           <Badge className="bg-neutral-100 text-neutral-600 shrink-0">{p.sku}</Badge>
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -369,12 +369,12 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <div>
                 <label className="text-xs text-neutral-500">제품명</label>
                 <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
               </div>
               <div>
                 <label className="text-xs text-neutral-500">카테고리</label>
                 <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40">
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
                   {CATEGORY_OPTIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </div>
@@ -394,19 +394,19 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <div>
                 <label className="text-xs text-neutral-500">소매가</label>
                 <input type="number" value={form.price || ''} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
               </div>
               {Object.entries(priceGroups).map(([key, def]) => (
                 <div key={key}>
                   <label className="text-xs text-neutral-500">{def.label}</label>
                   <input type="number" value={form.price_group_values[key]?.price || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: parseInt(e.target.value) || 0, display_name: form.price_group_values[key]?.display_name || '' } } })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
               ))}
               <div>
                 <label className="text-xs text-neutral-500">매입가</label>
                 <input type="number" value={form.price_purchase || ''} onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
               </div>
             </div>
             {/* 단가 그룹별 납품명 */}
@@ -417,7 +417,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
                     <label className="text-xs text-neutral-500">{def.label} 납품명</label>
                     <input type="text" value={form.price_group_values[key]?.display_name || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: form.price_group_values[key]?.price || 0, display_name: e.target.value } } })}
                       placeholder="미입력 시 기본 제품명"
-                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                   </div>
                 ))}
               </div>
@@ -431,18 +431,18 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               <label className="text-xs text-neutral-500">제품군 (리뷰 그룹)</label>
               <input type="text" value={form.product_group} onChange={(e) => setForm({ ...form, product_group: e.target.value })}
                 placeholder="예: R4, M5, CS600"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
             </div>
             <div>
               <label className="text-xs text-neutral-500">발주명 (매입처 주문 시)</label>
               <input type="text" value={form.purchase_name} onChange={(e) => setForm({ ...form, purchase_name: e.target.value })}
                 placeholder="매입처에서 사용하는 이름"
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
             </div>
             <div>
               <label className="text-xs text-neutral-500">설명</label>
               <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2}
-                className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40 resize-none" />
+                className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 resize-none" />
             </div>
           </div>
         </Card>
@@ -789,7 +789,7 @@ function SerialQuickModal({ open, onClose, productId, productSku, rawStock, onSu
           <input type="number" value={count}
             onChange={(e) => setCount(Math.max(1, parseInt(e.target.value) || 1))}
             min={1}
-            className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+            className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
         </div>
 
         {/* 시리얼 생성 UI — 보관→시리얼 창고 일 때만 */}
@@ -803,7 +803,7 @@ function SerialQuickModal({ open, onClose, productId, productSku, rawStock, onSu
                   onChange={(e) => setStartNumber(e.target.value)}
                   placeholder={loadingNext ? '조회 중...' : '13790001'}
                   disabled={loadingNext}
-                  className="w-full h-8 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs font-mono focus:outline-none focus:ring-1 focus:ring-terracotta/40 disabled:opacity-50" />
+                  className="w-full h-8 px-2 rounded border border-neutral-200 bg-stone-50 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-stone-400 disabled:opacity-50" />
               </div>
               <div>
                 <label className="text-[10px] text-neutral-400 mb-0.5 block">생성 범위</label>

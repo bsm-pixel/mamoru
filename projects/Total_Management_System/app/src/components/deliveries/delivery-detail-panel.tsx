@@ -163,7 +163,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-bold text-indigo-black">{dl.dl_number as string}</h3>
+          <h3 className="text-sm font-bold text-stone-900">{dl.dl_number as string}</h3>
           <p className="text-xs text-neutral-500 mt-0.5">
             {dl.customer_name as string} · {formatDate(dl.delivery_date as string)}
           </p>
@@ -245,12 +245,12 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
             <div>
               <label className="text-xs text-neutral-500">납품 예정일</label>
               <input type="date" value={editExpectedDate} onChange={(e) => setEditExpectedDate(e.target.value)}
-                className="w-full h-8 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                className="w-full h-8 px-2 rounded border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
             </div>
             <div>
               <label className="text-xs text-neutral-500">메모</label>
               <input type="text" value={editMemo} onChange={(e) => setEditMemo(e.target.value)} placeholder="메모"
-                className="w-full h-8 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                className="w-full h-8 px-2 rounded border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
             </div>
           </div>
 
@@ -269,7 +269,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
                     className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Plus size={10} /></button>
                 </div>
                 <input type="number" value={item.unit_price || ''} onChange={(e) => setEditItems((prev) => prev.map((it, i) => i === idx ? { ...it, unit_price: parseInt(e.target.value) || 0 } : it))}
-                  className="w-20 h-7 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs text-right" />
+                  className="w-20 h-7 px-2 rounded border border-neutral-200 bg-stone-50 text-xs text-right" />
                 <button onClick={() => setEditItems((prev) => prev.filter((_, i) => i !== idx))}
                   className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"><Trash2 size={10} /></button>
               </div>
@@ -405,7 +405,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
                   value={trackingInput}
                   onChange={(e) => setTrackingInput(e.target.value)}
                   placeholder="송장번호 직접 입력"
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
                 />
                 <Button variant="secondary" className="w-full" onClick={() => setPendingAction({
                   action: 'ship', label: '출고 완료',

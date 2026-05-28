@@ -334,7 +334,7 @@ function NewSaleContent() {
     <>
       <Topbar title="판매 입력" />
 
-      <div className="px-4 md:px-6 py-4 space-y-3">
+      <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
         {/* 070: 상담 link 안내 배너 */}
         {sourceConsultation && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-xs">
@@ -367,7 +367,7 @@ function NewSaleContent() {
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
                 placeholder="제품명 또는 SKU 검색"
-                className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
               />
               <div className="flex gap-1 shrink-0">
                 <button
@@ -421,11 +421,11 @@ function NewSaleContent() {
                             key={p.id}
                             onClick={() => addToCart(p)}
                             className={`cursor-pointer transition ${
-                              inCart ? 'bg-neutral-900/5' : 'hover:bg-warm-ivory/60'
+                              inCart ? 'bg-neutral-900/5' : 'hover:bg-stone-50/60'
                             }`}
                           >
                             <td className="px-3 py-2.5">
-                              <span className="font-medium text-indigo-black">{getProductDisplayName(p, customerType, priceGroups)}</span>
+                              <span className="font-medium text-stone-900">{getProductDisplayName(p, customerType, priceGroups)}</span>
                               {inCart && <span className="ml-2 text-xs font-bold text-neutral-900">×{inCart.quantity}</span>}
                             </td>
                             <td className="px-3 py-2.5 text-right">
@@ -467,14 +467,14 @@ function NewSaleContent() {
                   value={customProductName}
                   onChange={(e) => setCustomProductName(e.target.value)}
                   placeholder="제품명"
-                  className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                  className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
                 />
                 <input
                   type="number"
                   value={customProductPrice}
                   onChange={(e) => setCustomProductPrice(e.target.value)}
                   placeholder="금액"
-                  className="w-28 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                  className="w-28 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
                 />
                 <Button
                   size="sm"
@@ -490,14 +490,14 @@ function NewSaleContent() {
             ) : (
             /* 3-A: 복원수리 입력 — 마모루/타사 자루 + 단가 (B2B 거래처 복원수리는 "납품 → 복원수리" 화면 사용) */
             <Card>
-              <h3 className="text-sm font-semibold text-indigo-black mb-1">복원수리 입력</h3>
+              <h3 className="text-sm font-semibold text-stone-900 mb-1">복원수리 입력</h3>
               <p className="text-xs text-neutral-400 mb-3">마모루 / 타사 가위를 자루 수와 단가로 입력합니다.</p>
               <div className="space-y-3">
                 {([
                   { key: 'mamoru' as const, label: '마모루 가위', qty: rep.mamoruQty, price: rep.mamoruPrice, basePrice: '10,000' },
                   { key: 'other' as const, label: '타사 가위', qty: rep.otherQty, price: rep.otherPrice, basePrice: '20,000' },
                 ]).map((r) => (
-                  <div key={r.key} className="p-3 rounded-lg border border-neutral-200 bg-warm-ivory/40 space-y-2">
+                  <div key={r.key} className="p-3 rounded-lg border border-neutral-200 bg-stone-50/40 space-y-2">
                     <p className="text-xs font-semibold text-neutral-700">{r.label}</p>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
@@ -524,7 +524,7 @@ function NewSaleContent() {
                 </button>
                 <div className="flex justify-between text-sm font-bold pt-1 border-t border-neutral-100">
                   <span>복원수리 소계 ({rep.mamoruQty + rep.otherQty}자루{repShipping ? ' + 배송비' : ''})</span>
-                  <span className="text-terracotta">{formatKRW(repairTotal)}</span>
+                  <span className="text-stone-900">{formatKRW(repairTotal)}</span>
                 </div>
               </div>
             </Card>
@@ -535,7 +535,7 @@ function NewSaleContent() {
           <div className="space-y-3">
             {/* 고객 정보 */}
             <Card>
-              <h3 className="text-sm font-semibold text-indigo-black mb-3">고객 정보</h3>
+              <h3 className="text-sm font-semibold text-stone-900 mb-3">고객 정보</h3>
               <CustomerAutocomplete
                 selectedCustomer={selectedCustomer}
                 onSelect={(c) => { setSelectedCustomer(c); setCustomerName(c.name); setCustomerPhone(c.phone || ''); recalcCartPrices(c.customer_type); }}
@@ -598,12 +598,12 @@ function NewSaleContent() {
 
             {/* 결제 정보 */}
             <Card>
-              <h3 className="text-sm font-semibold text-indigo-black mb-3">결제 정보</h3>
+              <h3 className="text-sm font-semibold text-stone-900 mb-3">결제 정보</h3>
               <div className="space-y-3">
                 <div>
                   <label className="text-xs text-neutral-500 mb-1 block">판매일</label>
                   <input type="date" value={saleDate} max={toLocalDateString(new Date())} onChange={(e) => setSaleDate(e.target.value)}
-                    className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                    className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
                 </div>
                 <div>
                   <label className="text-xs text-neutral-500 mb-1 block">판매 채널</label>
@@ -619,7 +619,7 @@ function NewSaleContent() {
                   <div className="flex gap-1">
                     {(['card', 'cash', 'transfer', 'mixed'] as const).map((method) => (
                       <button key={method} onClick={() => { setPaymentMethod(method); if (method === 'mixed') { setMixedCard(0); setMixedCash(0); setMixedTransfer(0); } }}
-                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${paymentMethod === method ? 'bg-terracotta text-cream' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${paymentMethod === method ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
                         {{ card: '카드', cash: '현금', transfer: '이체', mixed: '복합' }[method]}
                       </button>
                     ))}
@@ -633,7 +633,7 @@ function NewSaleContent() {
                           <div key={label} className="flex items-center gap-1.5">
                             <span className="text-[10px] text-neutral-500 w-8">{label}</span>
                             <input type="number" min={0} value={val || ''} onChange={(e) => setter(parseInt(e.target.value) || 0)}
-                              className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs text-right bg-white focus:outline-none focus:ring-1 focus:ring-terracotta/40" placeholder="0" />
+                              className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs text-right bg-white focus:outline-none focus:ring-1 focus:ring-stone-400" placeholder="0" />
                           </div>
                         );
                       })}
@@ -656,7 +656,7 @@ function NewSaleContent() {
                   {paymentStatus === 'partial' && (
                     <div className="mt-1.5">
                       <input type="number" value={depositAmount || ''} onChange={(e) => setDepositAmount(parseInt(e.target.value) || 0)} placeholder="입금액"
-                        className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                        className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                     </div>
                   )}
                   {paymentStatus !== 'paid' && finalAmount > 0 && <p className="text-[10px] text-red-500 mt-1 font-medium">미수금: {formatKRW(finalAmount - paidAmount)}</p>}
@@ -664,12 +664,12 @@ function NewSaleContent() {
                 <div>
                   <label className="text-xs text-neutral-500">할인 금액</label>
                   <input type="number" value={discount || ''} onChange={(e) => setDiscount(parseInt(e.target.value) || 0)} placeholder="0"
-                    className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                    className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
                 <div>
                   <label className="text-xs text-neutral-500">메모</label>
                   <input type="text" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="메모 (선택)"
-                    className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                    className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
               </div>
             </Card>
@@ -678,7 +678,7 @@ function NewSaleContent() {
           {/* 우: 장바구니 + 판매등록 */}
           <div className="space-y-3">
             <Card>
-              <h3 className="text-sm font-semibold text-indigo-black mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
                 <ShoppingBag size={16} />
                 {saleMode === 'repair' ? '복원수리' : `장바구니 (${cart.length})`}
               </h3>
@@ -738,7 +738,7 @@ function NewSaleContent() {
                 <div className="mt-3 pt-3 border-t border-neutral-100 space-y-1">
                   <div className="flex justify-between text-sm"><span className="text-neutral-500">소계</span><span className="font-semibold">{formatKRW(totalAmount)}</span></div>
                   {discount > 0 && <div className="flex justify-between text-sm"><span className="text-neutral-500">할인</span><span className="text-red-600">-{formatKRW(discount)}</span></div>}
-                  <div className="flex justify-between text-sm font-bold"><span>결제 금액</span><span className="text-terracotta">{formatKRW(paidAmount)}</span></div>
+                  <div className="flex justify-between text-sm font-bold"><span>결제 금액</span><span className="text-stone-900">{formatKRW(paidAmount)}</span></div>
                   {(() => {
                     const cardAmt = paymentMethod === 'card' ? paidAmount : paymentMethod === 'mixed' ? mixedCard : 0;
                     if (cardAmt <= 0) return null;

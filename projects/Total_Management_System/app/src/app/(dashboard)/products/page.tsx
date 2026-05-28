@@ -115,7 +115,7 @@ export default function ProductsPage() {
     <>
       <Topbar title="제품 관리" />
 
-      <div className="flex flex-col h-full min-h-0 px-4 md:px-6 pt-4 overflow-hidden">
+      <div className="flex flex-col h-full min-h-0 px-4 md:px-6 pt-4 overflow-hidden bg-stone-50">
         {/* ── 상단 고정 영역 ── */}
         <div className="shrink-0 space-y-3 pb-3">
         {/* 상단: 요약 카드 + 제품 등록 버튼 */}
@@ -156,7 +156,7 @@ export default function ProductsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="제품명, SKU 검색..."
-            className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
+            className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm text-stone-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400 transition"
           />
         </div>
 
@@ -379,7 +379,7 @@ function CompactProductCard({ product: p, isSelected, showCategory, onSelect }: 
     >
       {/* 1행: 이름 + 카테고리 + 재고 */}
       <div className="flex items-center gap-1.5">
-        <h4 className="text-sm font-semibold text-indigo-black truncate flex-1 min-w-0">
+        <h4 className="text-sm font-semibold text-stone-900 truncate flex-1 min-w-0">
           {p.name}
           {!p.is_active && <Badge className="bg-red-100 text-red-500 text-[8px] ml-1">비활성</Badge>}
         </h4>

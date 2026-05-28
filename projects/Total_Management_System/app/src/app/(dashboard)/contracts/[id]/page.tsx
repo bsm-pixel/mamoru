@@ -88,7 +88,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         {/* 계약 정보 */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-indigo-black">{contract.contract_number}</h3>
+            <h3 className="text-sm font-bold text-stone-900">{contract.contract_number}</h3>
             <Badge className={STATUS_COLOR[contract.status] || ''}>
               {STATUS_LABEL[contract.status] || contract.status}
             </Badge>
@@ -182,7 +182,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
         {/* 항목 */}
         <Card>
-          <h3 className="text-sm font-bold text-indigo-black mb-3">계약 항목</h3>
+          <h3 className="text-sm font-bold text-stone-900 mb-3">계약 항목</h3>
           <div className="space-y-2">
             {items.map((item) => (
               <div key={item.id} className="flex items-center justify-between py-2 border-b border-neutral-50 last:border-0">
@@ -211,7 +211,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             )}
             <div className="flex justify-between text-sm font-bold">
               <span>최종 금액</span>
-              <span className="text-terracotta">{formatKRW(contract.final_amount)}</span>
+              <span className="text-stone-900">{formatKRW(contract.final_amount)}</span>
             </div>
           </div>
         </Card>
@@ -219,7 +219,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         {/* 서명 */}
         {(contract.signature_data || contract.seller_signature) && (
           <Card>
-            <h3 className="text-sm font-bold text-indigo-black mb-3">서명</h3>
+            <h3 className="text-sm font-bold text-stone-900 mb-3">서명</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {contract.signature_data && (
                 <div>

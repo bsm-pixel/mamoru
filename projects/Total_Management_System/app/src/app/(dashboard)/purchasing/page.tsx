@@ -84,7 +84,7 @@ export default function PurchasingPage() {
     <>
       <Topbar title="매입관리" />
 
-      <div className="px-4 md:px-6 py-4 space-y-3">
+      <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
         <div className="flex items-center gap-3">
           <Button size="sm" onClick={() => router.push('/purchasing/new')}>
             <Plus size={14} />
@@ -98,7 +98,7 @@ export default function PurchasingPage() {
           <select
             value={dateRange}
             onChange={(e) => { setDateRange(e.target.value as typeof dateRange); setPage(1); }}
-            className="shrink-0 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-xs font-medium text-neutral-600 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+            className="shrink-0 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-xs font-medium text-neutral-600 focus:outline-none focus:ring-2 focus:ring-stone-400"
           >
             <option value="all">전체 기간</option>
             <option value="today">오늘</option>
@@ -114,7 +114,7 @@ export default function PurchasingPage() {
               onClick={() => { setStatusFilter(tab.value); setPage(1); }}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
                 statusFilter === tab.value
-                  ? 'bg-terracotta text-cream'
+                  ? 'bg-stone-900 text-white'
                   : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
               }`}
             >
@@ -168,10 +168,10 @@ function PORow({ po, isSelected, onClick }: { po: PurchaseOrder; isSelected: boo
   // 입고 전이지만 잔금까지 다 냈으면 '선납완료' 대신 '결제완료' 로 (선납완료 뱃지가 잔금 남은 것처럼 보이는 오해 방지)
   const paidEarly = !!po.balance_paid_at && (po.status === 'ordered' || po.status === 'deposit_paid');
   return (
-    <div onClick={onClick} className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-warm-ivory/60 transition ${isSelected ? 'bg-terracotta/5 border-l-2 border-l-terracotta' : ''}`}>
+    <div onClick={onClick} className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-stone-50/60 transition ${isSelected ? 'bg-stone-100 border-l-2 border-l-stone-900' : ''}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-indigo-black truncate">{po.supplier_name}</span>
+          <span className="text-sm font-semibold text-stone-900 truncate">{po.supplier_name}</span>
           <Badge className={paidEarly ? 'bg-emerald-100 text-emerald-700' : (STATUS_COLOR[po.status] || STATUS_COLOR.draft)}>
             {paidEarly ? '결제완료' : (STATUS_LABEL[po.status] || po.status)}
           </Badge>

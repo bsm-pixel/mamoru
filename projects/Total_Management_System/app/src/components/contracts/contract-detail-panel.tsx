@@ -65,7 +65,7 @@ export function ContractDetailPanel({ contractId, onDeleted }: Props) {
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-bold text-indigo-black">{contract.contract_number}</h3>
+          <h3 className="text-sm font-bold text-stone-900">{contract.contract_number}</h3>
           <p className="text-xs text-neutral-500 mt-0.5">{contract.customer_name} 님 · {formatDate(contract.created_at)}</p>
         </div>
         <Badge className={STATUS_COLOR[contract.status] || ''}>
@@ -143,7 +143,7 @@ export function ContractDetailPanel({ contractId, onDeleted }: Props) {
           )}
           <div className="flex justify-between text-sm font-bold">
             <span>최종 금액</span>
-            <span className="text-terracotta">{formatKRW(contract.final_amount)}</span>
+            <span className="text-stone-900">{formatKRW(contract.final_amount)}</span>
           </div>
           {(contract.deposit_amount > 0 || contract.balance_amount > 0) && (
             <div className="flex justify-between text-xs text-neutral-500 pt-1">

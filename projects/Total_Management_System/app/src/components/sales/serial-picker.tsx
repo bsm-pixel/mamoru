@@ -171,7 +171,7 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
                         disabled={isDisabled}
                         className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left text-xs transition ${
                           isSelected
-                            ? 'bg-terracotta/10 text-terracotta font-semibold'
+                            ? 'bg-stone-100 text-stone-900 font-semibold'
                             : isDisabled
                               ? 'text-neutral-300 cursor-not-allowed'
                               : 'hover:bg-neutral-50 text-neutral-700'

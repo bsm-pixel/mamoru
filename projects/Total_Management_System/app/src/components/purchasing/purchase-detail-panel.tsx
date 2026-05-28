@@ -78,7 +78,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-bold text-indigo-black">{po.po_number}</h3>
+          <h3 className="text-sm font-bold text-stone-900">{po.po_number}</h3>
           <p className="text-xs text-neutral-500 mt-0.5">
             {po.supplier_name} · {formatDate(po.order_date)}
             {poCurrency !== 'KRW' && <span className="ml-1 text-neutral-400">({poCurrency} 환율 {poRate})</span>}
@@ -172,12 +172,12 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
             <div>
               <label className="text-xs text-neutral-500">입고 예정일</label>
               <input type="date" value={editExpectedDate} onChange={(e) => setEditExpectedDate(e.target.value)}
-                className="w-full h-8 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                className="w-full h-8 px-2 rounded border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400" />
             </div>
             <div>
               <label className="text-xs text-neutral-500">메모</label>
               <input type="text" value={editMemo} onChange={(e) => setEditMemo(e.target.value)} placeholder="메모"
-                className="w-full h-8 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                className="w-full h-8 px-2 rounded border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400" />
             </div>
           </div>
 
@@ -196,7 +196,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
                     className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Plus size={10} /></button>
                 </div>
                 <input type="number" value={item.unit_price || ''} onChange={(e) => setEditItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_price: parseInt(e.target.value) || 0 } : it))}
-                  className="w-20 h-7 px-2 rounded border border-neutral-200 bg-warm-ivory text-xs text-right" />
+                  className="w-20 h-7 px-2 rounded border border-neutral-200 bg-stone-50 text-xs text-right" />
                 <button onClick={() => setEditItems(prev => prev.filter((_, i) => i !== idx))}
                   className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"><Trash2 size={10} /></button>
               </div>
@@ -237,7 +237,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
           {/* 합계 */}
           <div className="mt-3 pt-3 border-t border-neutral-200 flex justify-between text-sm font-bold">
             <span>합계</span>
-            <span className="text-terracotta">{formatKRW(editItems.reduce((s, i) => s + i.quantity * i.unit_price, 0))}</span>
+            <span className="text-stone-900">{formatKRW(editItems.reduce((s, i) => s + i.quantity * i.unit_price, 0))}</span>
           </div>
         </Card>
       ) : (
@@ -273,7 +273,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
         <div className="mt-3 pt-3 border-t border-neutral-200 space-y-1">
           <div className="flex justify-between text-sm font-bold">
             <span>합계 {items.some((i) => i.received_quantity != null && i.received_quantity !== i.quantity) && <span className="text-[10px] font-normal text-orange-600">(입고 기준)</span>}</span>
-            <span className="text-terracotta">{formatKRW(po.total_amount)}</span>
+            <span className="text-stone-900">{formatKRW(po.total_amount)}</span>
           </div>
           <div className="flex justify-between text-xs text-neutral-500">
             <span>공급가액 {formatKRW(supply)}</span>
@@ -339,7 +339,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
               <div className="flex gap-2">
                 <input type="number" value={depositInput} onChange={(e) => setDepositInput(e.target.value)}
                   placeholder={`선납금`}
-                  className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                  className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 <Button variant="secondary" onClick={() => setPendingAction({
                   status: 'deposit_paid', label: '선납 처리',
                   msg: `선납금 ${formatKRW(parseInt(depositInput) || Math.round(po.total_amount / 2))}을 처리합니다.`,
@@ -415,7 +415,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { if (!receiving) setShowReceive(false); }}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 border-b border-neutral-100">
-              <h3 className="text-sm font-bold text-indigo-black">입고 검수</h3>
+              <h3 className="text-sm font-bold text-stone-900">입고 검수</h3>
               <p className="text-xs text-neutral-400 mt-0.5">실제로 받은 수량을 확인하세요. 주문과 다른 품목만 고치면 됩니다.</p>
             </div>
             <div className="p-4 overflow-y-auto flex-1 space-y-2">

@@ -147,7 +147,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         {/* 고객 정보 카드 */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-indigo-black">{c.name}</h3>
+            <h3 className="text-sm font-bold text-stone-900">{c.name}</h3>
             {!editing ? (
               <Button variant="ghost" size="sm" onClick={startEdit}>수정</Button>
             ) : (
@@ -167,7 +167,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                   />
                 </div>
                 <div>
@@ -176,7 +176,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     type="text"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                   />
                 </div>
                 <div>
@@ -185,7 +185,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     type="email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                   />
                 </div>
                 <div>
@@ -193,7 +193,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   <select
                     value={form.customer_type}
                     onChange={(e) => setForm({ ...form, customer_type: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                   >
                     {TYPE_OPTIONS.map((t) => (
                       <option key={t.value} value={t.value}>{t.label}</option>
@@ -208,7 +208,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   value={form.company_name}
                   onChange={(e) => setForm({ ...form, company_name: e.target.value })}
                   placeholder="매장 또는 근무지명"
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
                 />
               </div>
               <div>
@@ -227,7 +227,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 <input type="text" value={form.address_detail}
                   onChange={(e) => setForm({ ...form, address_detail: e.target.value })}
                   placeholder="상세 주소 (동/호수)"
-                  className="w-full h-9 px-3 mt-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                  className="w-full h-9 px-3 mt-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
               </div>
               {availableTags.length > 0 && (
                 <div>
@@ -241,7 +241,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   value={form.memo}
                   onChange={(e) => setForm({ ...form, memo: e.target.value })}
                   rows={2}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 resize-none"
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400 resize-none"
                 />
               </div>
               <div>
@@ -250,7 +250,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   type="number"
                   value={form.outstanding_balance || ''}
                   onChange={(e) => setForm({ ...form, outstanding_balance: parseInt(e.target.value) || 0 })}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                 />
               </div>
               {(form.customer_type === 'dealer' || form.customer_type === 'academy') && (
@@ -261,7 +261,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     value={form.default_repair_price || ''}
                     onChange={(e) => setForm({ ...form, default_repair_price: parseInt(e.target.value) || 0 })}
                     placeholder="예: 8000 — 납품 복원수리 입력 시 자동 적용"
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
                   />
                   <p className="text-[10px] text-neutral-400 mt-1">납품 → 복원수리 입력 시 이 단가가 자동으로 채워집니다 (비워두면 기본 8,000원)</p>
                 </div>
@@ -334,11 +334,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Card>
             <p className="text-xs text-neutral-500">총 판매건수</p>
-            <p className="text-lg font-bold text-indigo-black">{summary.totalSales}</p>
+            <p className="text-lg font-bold text-stone-900">{summary.totalSales}</p>
           </Card>
           <Card>
             <p className="text-xs text-neutral-500">총 판매액</p>
-            <p className="text-lg font-bold text-terracotta">{formatKRW(summary.totalSalesAmount)}</p>
+            <p className="text-lg font-bold text-stone-900">{formatKRW(summary.totalSalesAmount)}</p>
           </Card>
           <Card>
             <p className="text-xs text-neutral-500">미수금</p>
@@ -357,7 +357,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         {/* 통합 타임라인 */}
         {timeline.length > 0 && (
           <Card>
-            <h3 className="text-sm font-bold text-indigo-black mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-bold text-stone-900 mb-3 flex items-center gap-2">
               <Clock size={16} />
               거래 이력 ({timeline.length})
             </h3>
@@ -369,7 +369,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                   <div
                     key={`${item.type}-${item.id}`}
                     onClick={() => item.href && router.push(item.href)}
-                    className={`flex items-center gap-3 py-2.5 border-b border-neutral-50 last:border-0 ${item.href ? 'cursor-pointer hover:bg-warm-ivory/40' : ''} -mx-1 px-1 rounded transition`}
+                    className={`flex items-center gap-3 py-2.5 border-b border-neutral-50 last:border-0 ${item.href ? 'cursor-pointer hover:bg-stone-50/40' : ''} -mx-1 px-1 rounded transition`}
                   >
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
                       <Icon size={14} />

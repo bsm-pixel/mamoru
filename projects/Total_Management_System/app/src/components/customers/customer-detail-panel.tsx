@@ -121,7 +121,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
       sub: `송장 ${mi.invoice_number}`,
       amount: null as number | null,
       icon: Truck,
-      color: 'text-terracotta bg-terracotta/10',
+      color: 'text-stone-900 bg-stone-100',
       cancelled: !!mi.cancelled_at,
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -147,7 +147,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold text-indigo-black">{c.name}</h2>
+            <h2 className="text-base font-bold text-stone-900">{c.name}</h2>
             <Badge className={TYPE_COLOR[c.customer_type] || TYPE_COLOR.retail}>
               {TYPE_OPTIONS.find(t => t.value === c.customer_type)?.label || '일반'}
             </Badge>
@@ -188,7 +188,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
             onClick={() => setTab(t.key)}
             className={`px-4 py-2 text-xs font-semibold border-b-2 transition ${
               tab === t.key
-                ? 'border-indigo-black text-indigo-black'
+                ? 'border-indigo-black text-stone-900'
                 : 'border-transparent text-neutral-400 hover:text-neutral-600'
             }`}
           >
@@ -241,7 +241,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
           {/* 메모 */}
           <Card>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-bold text-indigo-black">메모</h3>
+              <h3 className="text-xs font-bold text-stone-900">메모</h3>
               {!editing ? (
                 <button onClick={startMemoEdit} className="text-neutral-400 hover:text-neutral-600">
                   <Pencil size={14} />
@@ -264,7 +264,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
                 onChange={(e) => setEditMemo(e.target.value)}
                 rows={4}
                 placeholder="고객 특이사항, 참고사항 등"
-                className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 resize-none"
+                className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400 resize-none"
                 autoFocus
               />
             ) : (
@@ -292,16 +292,16 @@ export function CustomerDetailPanel({ customerId }: Props) {
                   }}
                   className={`flex items-start gap-3 py-3 ${
                     i < timeline.length - 1 ? 'border-b border-neutral-100' : ''
-                  } ${item.type === 'sale' || item.type === 'contract' || item.type === 'manual_invoice' ? 'cursor-pointer hover:bg-warm-ivory/40 -mx-1 px-1 rounded' : ''}`}
+                  } ${item.type === 'sale' || item.type === 'contract' || item.type === 'manual_invoice' ? 'cursor-pointer hover:bg-stone-50/40 -mx-1 px-1 rounded' : ''}`}
                 >
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${item.color}`}>
                     <Icon size={14} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className={`text-sm font-medium truncate ${item.cancelled ? 'text-neutral-400 line-through' : 'text-indigo-black'}`}>
+                      <p className={`text-sm font-medium truncate ${item.cancelled ? 'text-neutral-400 line-through' : 'text-stone-900'}`}>
                         {item.type === 'manual_invoice' && (
-                          <Badge className="bg-terracotta/10 text-terracotta text-[10px] mr-1.5">빠른송장</Badge>
+                          <Badge className="bg-stone-100 text-stone-900 text-[10px] mr-1.5">빠른송장</Badge>
                         )}
                         {item.title}
                       </p>

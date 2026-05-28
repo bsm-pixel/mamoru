@@ -137,8 +137,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         <Card>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Package size={18} className="text-terracotta" />
-              <h3 className="text-sm font-bold text-indigo-black">{p.name}</h3>
+              <Package size={18} className="text-stone-900" />
+              <h3 className="text-sm font-bold text-stone-900">{p.name}</h3>
               <Badge className="bg-neutral-100 text-neutral-600">{p.sku}</Badge>
             </div>
             {!editing ? (
@@ -163,7 +163,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                   />
                 </div>
                 <div>
@@ -171,7 +171,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   <select
                     value={form.category}
                     onChange={(e) => setForm({ ...form, category: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                   >
                     {CATEGORY_OPTIONS.map((c) => (
                       <option key={c.value} value={c.value}>{c.label}</option>
@@ -185,19 +185,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <div>
                   <label className="text-xs text-neutral-500">소매가</label>
                   <input type="number" value={form.price || ''} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
                 {Object.entries(priceGroups).map(([key, def]) => (
                   <div key={key}>
                     <label className="text-xs text-neutral-500">{def.label}</label>
                     <input type="number" value={form.price_group_values[key]?.price || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: parseInt(e.target.value) || 0, display_name: form.price_group_values[key]?.display_name || '' } } })}
-                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                   </div>
                 ))}
                 <div>
                   <label className="text-xs text-neutral-500">매입가</label>
                   <input type="number" value={form.price_purchase || ''} onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
               </div>
 
@@ -209,7 +209,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                       <label className="text-xs text-neutral-500">{def.label} 납품명</label>
                       <input type="text" value={form.price_group_values[key]?.display_name || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: form.price_group_values[key]?.price || 0, display_name: e.target.value } } })}
                         placeholder="미입력 시 기본 제품명 사용"
-                        className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
+                        className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                     </div>
                   ))}
                 </div>
@@ -223,7 +223,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     value={form.imweb_product_no}
                     onChange={(e) => setForm({ ...form, imweb_product_no: e.target.value })}
                     placeholder="아임웹 상품 URL의 번호"
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
                   />
                 </div>
                 <div>
@@ -232,7 +232,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     type="text"
                     value={form.barcode}
                     onChange={(e) => setForm({ ...form, barcode: e.target.value })}
-                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                   />
                 </div>
               </div>
@@ -253,7 +253,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 resize-none"
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400 resize-none"
                 />
               </div>
             </div>
@@ -286,7 +286,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
                     <p className="text-xs text-neutral-400">소매가</p>
-                    <p className="text-sm font-bold text-terracotta">{formatKRW(p.price)}</p>
+                    <p className="text-sm font-bold text-stone-900">{formatKRW(p.price)}</p>
                   </div>
                   {Object.entries(priceGroups).map(([key, def]) => {
                     const groupPrice = p.price_groups?.[key]?.price;
