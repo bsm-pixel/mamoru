@@ -22,5 +22,31 @@
     }
     if (e.data && e.data.type === 'MAMORU_NAVIGATE' && e.data.url) { window.location.href = e.data.url; }
   });
+
+  // iframe load 후 즉시 정확한 height 요청 (정적 페이지 0px 잠금 fix)
+  function requestHeight() {
+    try {
+      if (iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'REQUEST_HEIGHT' }, '*');
+      }
+    } catch (_) {}
+  }
+
+  iframe.addEventListener('load', function() {
+    [50, 200, 500, 1000].forEach(function(ms) { setTimeout(requestHeight, ms); });
+  });
+
+  if (document.readyState === 'complete') {
+    [100, 400, 1000].forEach(function(ms) { setTimeout(requestHeight, ms); });
+  } else {
+    window.addEventListener('load', function() {
+      [100, 400, 1000].forEach(function(ms) { setTimeout(requestHeight, ms); });
+    });
+  }
+
+  // BFCache / 카카오 인앱 forward navigation 복귀 시
+  window.addEventListener('pageshow', function(e) {
+    if (e.persisted) requestHeight();
+  });
 })();
 </script>
