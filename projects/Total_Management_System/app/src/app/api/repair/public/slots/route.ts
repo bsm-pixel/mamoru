@@ -83,14 +83,13 @@ export async function GET(req: NextRequest) {
     const consultDurMin: number = settings?.duration_min ?? 60;       // 매장방문/출장 차단 길이
     const disabledWeekdays: number[] = settings?.disabled_weekdays ?? [0];
 
-    // 092 신규 정책 컬럼
+    // 092 슬롯 간격 (30분 단위 슬롯 시작) — 유지
     const slotStep: number = settings?.repair_slot_step_min ?? 30;
-    const thresholdQty: number = settings?.repair_threshold_qty ?? 6;
-    const blockUnder: number = settings?.repair_block_under_min ?? 30;
-    const blockOver: number = settings?.repair_block_over_min ?? 60;
 
-    // 차단 시간 결정 (qty 기준)
-    const blockMin: number = qty >= thresholdQty ? blockOver : blockUnder;
+    // 소요시간(점유) = 10분 + 자루당 5분 (2026-05-27 사장님 공식)
+    //   1자루 10분 / 2자루 15분 / 5자루 30분 / 7자루 40분 ...
+    //   submit route 의 visit_duration_min 과 동일 공식 (정합성 필수)
+    const blockMin: number = 10 + (Math.max(qty, 1) - 1) * 5;
 
     // 2. 휴무일/요일 체크
     const dayOfWeek = new Date(date + 'T00:00:00').getDay();

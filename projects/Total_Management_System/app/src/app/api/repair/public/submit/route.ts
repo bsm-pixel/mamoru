@@ -163,18 +163,10 @@ export async function POST(req: NextRequest) {
     });
 
     // 직접방문 차단 시간 서버 계산 (클라이언트 값 신뢰 X — 충돌 검사 정합성)
+    // 소요시간 = 10분 + 자루당 5분 (slots API 와 동일 공식, 2026-05-27 사장님 공식)
     let visitDuration: number | null = null;
     if (proceed_type === '직접방문') {
-      // consultation_settings 의 운영 정책 로드 (qty 임계 + 차단 시간)
-      const { data: rSettings } = await dbAny
-        .from('consultation_settings')
-        .select('repair_threshold_qty, repair_block_under_min, repair_block_over_min')
-        .eq('id', 'default')
-        .single();
-      const thresholdQty = rSettings?.repair_threshold_qty ?? 6;
-      const blockUnder = rSettings?.repair_block_under_min ?? 30;
-      const blockOver = rSettings?.repair_block_over_min ?? 60;
-      visitDuration = (qtyM + qtyO) >= thresholdQty ? blockOver : blockUnder;
+      visitDuration = 10 + (Math.max(qtyM + qtyO, 1) - 1) * 5;
     }
 
     const isVisit = proceed_type === '직접방문';
