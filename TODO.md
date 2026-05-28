@@ -60,10 +60,13 @@
 - [x] **2. 상담 페이지군** (2026-05-27 완료) — 4탭(전체/매장/출장/톡), 전체 탭 기본값
 - [x] **3. 복원수리 페이지군 + /sales 매출 카드** (2026-05-27 완료) — A2 그라데이션 다크 매출 카드
 - [x] **4. 주문 페이지군** (2026-05-27 완료) — 상태 7탭 stone-900 + OrderRow 모노크롬
-- [ ] **5. 판매 상세 페이지군** (`/sales/[id]`, `/sales/new`, `/deliveries`, `/deliveries/[id]`) ← 다음
-- [ ] **6. 매입 페이지군** (`/purchasing` 발주/입고/상세 — purchase-detail-panel.tsx)
-- [ ] **7. 고객/상품 페이지군** (`/customers`, `/products`, `/categories`)
-- [ ] **8. 시리얼/계약서/설정** (`/serials`, `/contracts`, `/settings`)
+- [x] **5. 판매 상세 페이지군** (2026-05-27 완료, `6a90411`) — sales/[id], sales/new, deliveries, detail panels
+- [x] **6. 매입 페이지군** (2026-05-27 완료) — purchasing page/new/[id], purchase-detail-panel
+- [x] **7. 고객/상품 페이지군** (2026-05-27 완료) — customers, products(+new/[id]/serials), detail panels
+- [x] **8. 시리얼/계약서/설정** (2026-05-27 완료) — contracts, settings(banner/calendar/notification). 시리얼은 이미 준수
+
+**🎉 TMS 톤 통일 전체 완료 (2026-05-27).** 단독 terracotta 0건. 상태색·terracotta-soft 배지는 의도적 유지.
+**잔여 미세 조정 (선택)**: 일부 페이지 배경 `bg-stone-50` 미적용분 + 설정 카드 `rounded-lg → rounded-2xl` (낮은 우선순위).
 
 **각 그룹 진행 절차** (재사용):
 1. 디자인 모니터(`/design-lab`)에 § 시안 1~2개 추가 → 사장님 비교 (또는 톤 일관성 확인되면 § 단계 생략 가능)
