@@ -1726,6 +1726,20 @@ select.err {
     return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
   }
 
+  // 2026-05-27: 슬롯 버튼 표시용 12시간제 (오후 13:00 → 1:00). data-time/계산은 24h 유지
+  function fmtSlotLabel(hhmm) {
+    const [h, m] = hhmm.split(':').map(Number);
+    const h12 = h > 12 ? h - 12 : h;
+    return `${h12}:${String(m).padStart(2, '0')}`;
+  }
+  // 미리보기용 오전/오후 + 12시간제 (단독 표기라 접두어로 명확화)
+  function fmtTime12(hhmm) {
+    const [h, m] = hhmm.split(':').map(Number);
+    const period = h < 12 ? '오전' : '오후';
+    const h12 = h > 12 ? h - 12 : h;
+    return `${period} ${h12}:${String(m).padStart(2, '0')}`;
+  }
+
   async function loadVisitSlots(dateStr) {
     const qty = getVisitQty();
     const status = $('visit-slot-status');
@@ -1778,7 +1792,7 @@ select.err {
       grid.style.display = 'block'; // 오전/오후 섹션 컨테이너
       grid.dataset.blockMin = String(blockMin);
       const slotToMin = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-      const slotBtn = (s) => `<button type="button" class="slot-btn ${s.available ? '' : 'disabled'} ${selectedVisitTime === s.time ? 'selected' : ''}" ${s.available ? '' : 'disabled'} data-time="${s.time}">${s.time}</button>`;
+      const slotBtn = (s) => `<button type="button" class="slot-btn ${s.available ? '' : 'disabled'} ${selectedVisitTime === s.time ? 'selected' : ''}" ${s.available ? '' : 'disabled'} data-time="${s.time}">${fmtSlotLabel(s.time)}</button>`;
       const amSlots = slots.filter(s => slotToMin(s.time) < 12 * 60);
       const pmSlots = slots.filter(s => slotToMin(s.time) >= 12 * 60);
       grid.innerHTML =
@@ -1808,7 +1822,7 @@ select.err {
     const preview = $('visit-slot-preview');
     const endTime = addMinToTime(time, blockMin);
     // 소요시간 = 10분 + 자루당 5분 (서버 blockMin 그대로 표기) + 무상개선 안내 (줄바꿈)
-    preview.innerHTML = `✓ ${dateStr} ${time} ~ ${endTime} (${qty}자루, ${blockMin}분 소요 예상)`
+    preview.innerHTML = `✓ ${dateStr} ${fmtTime12(time)} ~ ${fmtTime12(endTime)} (${qty}자루, ${blockMin}분 소요 예상)`
       + `<br><span style="display:block;margin-top:6px;font-size:12px;font-weight:400;opacity:0.8;line-height:1.5">사용중인 가위를 모두 챙겨주시면 뜯김, 찝힘 등 간단히 개선할 수 있는 경우 무상으로 개선해드립니다</span>`;
     preview.style.display = 'block';
   }
