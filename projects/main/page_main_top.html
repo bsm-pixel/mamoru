@@ -480,14 +480,15 @@ button[class*="mm-"]:focus-visible {
 }
 
 /* 모바일: 가로 스크롤 (snap)
-   touch-action: pan-x — 가로 제스처만 컨테이너가 받고 세로는 부모 페이지 스크롤로 전파
-   overflow-y: hidden    — 세로 스크롤 영역 자체를 차단 */
+   touch-action: pan-x pan-y — 가로 드래그=행 가로스크롤 / 세로 드래그=페이지 스크롤 (둘 다 허용).
+     ⚠️ pan-x 단독은 조상→자식 교집합으로 세로 패닝까지 차단 → 영상 영역 위 페이지 스크롤 먹통 (2026-05-28 fix)
+   overflow-y: hidden — 행 자체 세로 스크롤만 차단 (세로 드래그는 페이지로 전파) */
 .mm-videos__row {
   display: flex;
   gap: 12px;
   overflow-x: auto;
   overflow-y: hidden;
-  touch-action: pan-x;
+  touch-action: pan-x pan-y;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
