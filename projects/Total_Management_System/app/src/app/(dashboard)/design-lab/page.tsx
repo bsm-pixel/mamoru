@@ -37,6 +37,50 @@ export default function DesignLabPage() {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════
+            § 고객 후기 보기 페이지 (page_reviews) — PC / 모바일 한 화면
+            실제 데이터. 출장상담 후기에 매장명(마스킹) 동반 + 칩 우측 상단.
+            ═══════════════════════════════════════════════════════════ */}
+        <section className="space-y-4">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <h2 className="text-lg font-bold text-stone-800">§ 고객 후기 보기 페이지 — PC / 모바일</h2>
+            <span className="text-[11px] text-stone-500">page.mamoru.kr/projects/reviews/page_reviews.html (실제 데이터)</span>
+          </div>
+          <p className="text-xs text-stone-500 leading-relaxed">
+            후기 더보기 전용 화면. 출장상담 후기에는 매장명(마스킹)이 이름 옆에, 유형 칩은 카드 우측 상단에 표시됩니다.
+          </p>
+          <div className="grid gap-4 lg:grid-cols-[1fr_410px]">
+            <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-stone-100">
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-sky-50 text-sky-700">PC 화면</span>
+                <a href="https://page.mamoru.kr/projects/reviews/page_reviews.html" target="_blank" rel="noopener noreferrer" className="text-[11px] text-stone-400 hover:text-stone-600 underline">새 탭</a>
+              </div>
+              <iframe
+                src="https://page.mamoru.kr/projects/reviews/page_reviews.html"
+                title="후기 보기 — PC"
+                className="w-full bg-[#FAF9F7]"
+                style={{ height: 1400, border: 'none' }}
+                loading="lazy"
+              />
+            </div>
+            <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-stone-100">
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-pink-50 text-pink-700">모바일 화면</span>
+                <span className="text-[11px] text-stone-400">390px</span>
+              </div>
+              <div className="flex justify-center bg-stone-100 py-3">
+                <iframe
+                  src="https://page.mamoru.kr/projects/reviews/page_reviews.html"
+                  title="후기 보기 — 모바일"
+                  className="bg-[#FAF9F7] rounded-[20px] shadow"
+                  style={{ width: 390, height: 1360, border: 'none' }}
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════
             § 고객 후기작성 페이지 (현재 형태) — 복원수리 / 상담 / 제품구매
             실제 page_review.html 을 iframe 으로 임베드 (uid=demo → urlName fallback 으로 폼 렌더).
             항상 실제 페이지와 동기화. 사장님 검토 후 수정 지시 → 클로드 반영 → 이 § 삭제.

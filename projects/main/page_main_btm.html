@@ -455,8 +455,7 @@ button[class*="mm-"]:focus-visible {
   border: 1px solid var(--sand);
   border-radius: 4px;
   color: var(--warm-gray);
-  margin-left: 6px;
-  vertical-align: middle;
+  white-space: nowrap;
 }
 
 /* 출처 배지 — 모노크롬 (출처는 텍스트로 식별) */
@@ -466,7 +465,7 @@ button[class*="mm-"]:focus-visible {
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 4px;
-  margin-left: 6px;
+  white-space: nowrap;
   background: var(--sand);
   color: var(--stone);
 }
@@ -502,12 +501,25 @@ button[class*="mm-"]:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
   margin-bottom: 6px;
 }
 .mm-review-card__name {
   font-size: 14px;
   font-weight: 700;
   color: var(--void);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 칩 묶음 — 카드 우측 상단 (page_reviews 화면과 동일 배치) */
+.mm-review-card__chips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex-shrink: 0;
 }
 .mm-review-card__source {
   font-size: 11px;
@@ -808,6 +820,21 @@ button[class*="mm-"]:focus-visible {
     return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
   }
 
+  /* 매장명 마스킹: 박승철헤어 삼산점 → 박**헤어 삼산점 (page_reviews와 동일) */
+  function maskStore(s) {
+    if (!s) return '';
+    s = String(s).trim();
+    if (s.length <= 1) return s;
+    if (s.length === 2) return s[0] + '*';
+    if (s.length === 3) return s[0] + '**';
+    return s[0] + '**' + s.slice(3);
+  }
+  /* 출장상담 리뷰에만 매장명 동반 (API가 store_name 부착) */
+  function storeHtml(r, fs) {
+    if (!r.store_name) return '';
+    return ' <span style="font-size:' + fs + 'px;color:#8A8580;font-weight:500;">· ' + maskStore(r.store_name) + '</span>';
+  }
+
   function fmtDate(d) {
     if (!d) return '';
     return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -815,10 +842,11 @@ button[class*="mm-"]:focus-visible {
 
   var TAG_LABELS = {
     comfortable:'강요없이 편안해요', detailed_guide:'설명이 자세해요', professional:'전문적이에요',
-    personalized:'맞춤 안내', worth_time:'시간이 아깝지 않았어요',
-    reasonable_price:'합리적이에요', fair_price:'적당해요',
-    like_new:'새 가위처럼', better_cut:'커트감이 달라요', above_expect:'기대 이상',
+    personalized:'맞춤 안내', worth_time:'시간이 아깝지 않아요',
+    reasonable_price:'합리적이에요', fair_price:'적당해요', kind:'친절해요',
+    like_new:'새 가위처럼', better_cut:'커트감 개선', above_expect:'기대 이상',
     precise_edge:'날 조절 정확', thorough_info:'안내 꼼꼼', fast_service:'진행 빠름', good_value:'가격 대비 만족',
+    kind_response:'응대 친절', worth_money:'돈 안 아까워요', will_return:'또 이용할게요',
     good_quality:'품질이 좋아요', fast_delivery:'배송이 빨라요', neat_packaging:'포장이 꼼꼼해요',
     would_recommend:'추천하고 싶어요'
   };
@@ -858,19 +886,21 @@ button[class*="mm-"]:focus-visible {
             return '<span style="font-size:11px;padding:2px 8px;border:1px solid var(--sand);border-radius:6px;color:var(--stone);">' + (TAG_LABELS[t] || t) + '</span>';
           }).join('') + '</div>';
       }
-      /* 이름 옆 칩: 네이버 출처 배지 + 서브타입 */
-      var nameBadges = '';
-      if (r.source === 'naver') {
-        nameBadges += '<span class="mm-review-card__source-badge">네이버</span>';
-      }
+      /* 우측 상단 칩: 서브타입 + 네이버 출처 (page_reviews 화면과 동일 배치) */
+      var chips = '';
       if (r.subtype && SUBTYPE_LABELS[r.subtype]) {
-        nameBadges += '<span class="mm-review-card__subtype">' + SUBTYPE_LABELS[r.subtype] + '</span>';
+        chips += '<span class="mm-review-card__subtype">' + SUBTYPE_LABELS[r.subtype] + '</span>';
       }
+      if (r.source === 'naver') {
+        chips += '<span class="mm-review-card__source-badge">네이버</span>';
+      }
+      var chipsHtml = chips ? '<div class="mm-review-card__chips">' + chips + '</div>' : '';
       var preview = r.content.length > 60 ? r.content.substring(0, 60) + '\u2026' : r.content;
       return '<div class="mm-review-card mm-anim mm-anim-stagger">' +
         imgHtml +
         '<div class="mm-review-card__header">' +
-          '<span class="mm-review-card__name">' + maskName(r.name) + nameBadges + '</span>' +
+          '<span class="mm-review-card__name">' + maskName(r.name) + storeHtml(r, 11) + '</span>' +
+          chipsHtml +
         '</div>' +
         '<div class="mm-review-card__stars">' + stars + '</div>' +
         tagsHtml +
