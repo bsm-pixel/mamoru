@@ -64,13 +64,6 @@ const STATUS_STYLES: Record<string, string> = {
   hidden: 'bg-neutral-100 text-neutral-500',
 };
 
-function maskName(name: string): string {
-  if (!name) return '';
-  if (name.length <= 1) return name;
-  if (name.length === 2) return name[0] + '*';
-  return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
-}
-
 function renderStars(n: number) {
   return Array.from({ length: 5 }, (_, i) => (
     <Star
@@ -390,7 +383,7 @@ export default function ReviewsPage() {
                   <div key={`${it.source}-${it.id}`} className="grid grid-cols-[1fr_90px_90px_90px_120px] gap-3 px-4 py-3 border-t border-neutral-100 items-center">
                     <div>
                       <Link href={detailHref} className="hover:underline block">
-                        <div className="text-sm font-semibold text-indigo-black">{maskName(it.customerName)}</div>
+                        <div className="text-sm font-semibold text-indigo-black">{it.customerName}</div>
                         <div className="text-[11px] text-neutral-500">{it.displayId}</div>
                       </Link>
                       {related.length > 0 && (
@@ -484,7 +477,7 @@ export default function ReviewsPage() {
                 {/* 헤더: 이름 + 유형 칩 + 상태 칩 */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">{maskName(review.name)}</span>
+                    <span className="font-semibold text-sm">{review.name}</span>
                     <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-500">
                       {getChipLabel(review)}
                     </span>

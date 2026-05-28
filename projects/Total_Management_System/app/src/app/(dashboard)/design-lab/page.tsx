@@ -36,22 +36,46 @@ export default function DesignLabPage() {
           </p>
         </div>
 
-        <section className="border-2 border-dashed border-stone-300 rounded-2xl p-12 text-center bg-white">
-          <div className="text-4xl mb-3">🎨</div>
-          <h3 className="text-base font-bold text-stone-700 mb-2">진행 중인 디자인 작업 없음</h3>
-          <p className="text-xs text-stone-500 max-w-md mx-auto leading-relaxed">
-            새 페이지 디자인 검토가 필요하면 클로드에게 한 마디 하세요.
+        {/* ═══════════════════════════════════════════════════════════
+            § 고객 후기작성 페이지 (현재 형태) — 복원수리 / 상담 / 제품구매
+            실제 page_review.html 을 iframe 으로 임베드 (uid=demo → urlName fallback 으로 폼 렌더).
+            항상 실제 페이지와 동기화. 사장님 검토 후 수정 지시 → 클로드 반영 → 이 § 삭제.
+            ═══════════════════════════════════════════════════════════ */}
+        <section className="space-y-4">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <h2 className="text-lg font-bold text-stone-800">§ 고객 후기작성 페이지 — 현재 형태</h2>
+            <span className="text-[11px] text-stone-500">알림톡 링크로 고객이 여는 실제 페이지 (3 유형)</span>
+          </div>
+          <p className="text-xs text-stone-500 leading-relaxed">
+            아래는 <span className="font-semibold text-stone-700">page.mamoru.kr/projects/reviews/page_review.html</span> 실제 페이지를
+            유형별로 임베드한 것입니다. 보면서 수정할 점을 말씀해 주세요.
             <br />
-            <span className="font-semibold text-stone-700">&quot;디자인 모니터에 § XXX 추가해줘&quot;</span>
-            <br />
-            → 비교 옵션 1~3개가 여기에 렌더됩니다.
+            <span className="text-stone-400">※ 데모 모드(uid=demo)라 이름은 &quot;홍**&quot;(마스킹)으로 표시되고, 제품구매는 제품선택 화면을 건너뛰고 후기 폼이 바로 보입니다(실제 사용 시 제품선택 화면 먼저 등장).</span>
           </p>
-          <div className="mt-5 text-[11px] text-stone-400 space-y-1 text-left max-w-sm mx-auto">
-            <p>운영 룰:</p>
-            <p>• 매출 카드 / 목록 카드 / 상세 패널 / 헤더 등 모든 UI 영역 가능</p>
-            <p>• 비교 후 결정 → 클로드가 실제 페이지에 적용</p>
-            <p>• 적용 완료 후 § 자동 삭제 → 페이지 클린 상태 유지</p>
-            <p>• 채택안 박제는 memory/docs 에 (영구), 여기는 회전 도구</p>
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            {[
+              { key: 'repair', label: '복원수리 후기', sub: 'restoration', tone: 'bg-amber-50 text-amber-700' },
+              { key: 'consult', label: '상담 후기 (출장)', sub: 'field_request', tone: 'bg-violet-50 text-violet-700' },
+              { key: 'purchase', label: '제품구매 후기', sub: '', tone: 'bg-emerald-50 text-emerald-700' },
+            ].map((t) => {
+              const src = `https://page.mamoru.kr/projects/reviews/page_review.html?type=${t.key}&uid=demo&name=${encodeURIComponent('홍길동')}${t.sub ? `&subtype=${t.sub}` : ''}`;
+              return (
+                <div key={t.key} className="rounded-2xl border border-stone-200 bg-white overflow-hidden flex flex-col">
+                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-stone-100">
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${t.tone}`}>{t.label}</span>
+                    <a href={src} target="_blank" rel="noopener noreferrer" className="text-[11px] text-stone-400 hover:text-stone-600 underline">새 탭</a>
+                  </div>
+                  <iframe
+                    src={src}
+                    title={`후기작성 — ${t.label}`}
+                    className="w-full bg-[#FAF9F7]"
+                    style={{ height: 940, border: 'none' }}
+                    loading="lazy"
+                  />
+                </div>
+              );
+            })}
           </div>
         </section>
 
