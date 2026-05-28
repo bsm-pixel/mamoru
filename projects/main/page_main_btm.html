@@ -513,6 +513,7 @@ button[class*="mm-"]:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.mm-hon { font-size: 0.82em; font-weight: 400; color: var(--warm-gray); } /* 이름 뒤 '님' 작은 폰트 */
 /* 칩 묶음 — 카드 우측 상단 (page_reviews 화면과 동일 배치) */
 .mm-review-card__chips {
   display: flex;
@@ -834,6 +835,10 @@ button[class*="mm-"]:focus-visible {
     if (!r.store_name) return '';
     return ' <span style="font-size:' + fs + 'px;color:#8A8580;font-weight:500;">· ' + maskStore(r.store_name) + '</span>';
   }
+  /* 이름 뒤 작은 폰트 '님' (예의) */
+  function honHtml(name) {
+    return name ? ' <span class="mm-hon">님</span>' : '';
+  }
 
   function fmtDate(d) {
     if (!d) return '';
@@ -899,7 +904,7 @@ button[class*="mm-"]:focus-visible {
       return '<div class="mm-review-card mm-anim mm-anim-stagger">' +
         imgHtml +
         '<div class="mm-review-card__header">' +
-          '<span class="mm-review-card__name">' + maskName(r.name) + storeHtml(r, 11) + '</span>' +
+          '<span class="mm-review-card__name">' + maskName(r.name) + honHtml(r.name) + storeHtml(r, 11) + '</span>' +
           chipsHtml +
         '</div>' +
         '<div class="mm-review-card__stars">' + stars + '</div>' +

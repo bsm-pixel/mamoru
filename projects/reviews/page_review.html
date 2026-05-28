@@ -37,6 +37,7 @@
       margin-bottom: 20px; font-size: 14px;
     }
     .customer-info .name { font-weight: 600; }
+    .mm-hon { font-size: 0.82em; font-weight: 400; color: #8A8580; } /* 이름 뒤 '님' 작은 폰트 */
     .customer-info .meta { font-size: 13px; color: #8A8580; margin-top: 2px; } /* Warm Gray */
 
     /* 폼 */
@@ -386,6 +387,19 @@
       return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
     }
 
+    /* 이름 + 작은 폰트 '님' (예의) — XSS 방지 위해 DOM API 사용 */
+    function setNameWithHonorific(elId, nameText) {
+      var el = document.getElementById(elId);
+      if (!el) return;
+      el.textContent = nameText || '';
+      if (nameText) {
+        var hon = document.createElement('span');
+        hon.className = 'mm-hon';
+        hon.textContent = ' 님';
+        el.appendChild(hon);
+      }
+    }
+
     // ── 사진 리사이즈 (Canvas, 최대 1200px, JPEG 0.8) ──
     function resizeImage(file, maxSize, quality) {
       return new Promise(function(resolve) {
@@ -620,7 +634,7 @@
       cachedItems = items;
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('product-select').classList.remove('hidden');
-      document.getElementById('ps-name').textContent = nameText;
+      setNameWithHonorific('ps-name', nameText);
       document.getElementById('ps-meta').textContent = metaText;
 
       var list = document.getElementById('product-list');
@@ -648,7 +662,7 @@
     function showForm(nameText, metaText) {
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('main').classList.remove('hidden');
-      document.getElementById('r-name').textContent = nameText;
+      setNameWithHonorific('r-name', nameText);
       document.getElementById('r-meta').textContent = metaText;
 
       // 태그 칩 렌더링
