@@ -13,7 +13,7 @@
  */
 
 import { Topbar } from '@/components/layout/topbar';
-import { InspectionForm } from '@/components/repairs/inspection-form';
+import { RepairReportDemo } from '@/components/repairs/repair-report-demo';
 
 export default function DesignLabPage() {
   return (
@@ -33,37 +33,21 @@ export default function DesignLabPage() {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════
-            § 복원수리 수리내역서 — 디지털 핀 마킹 폼 (모바일 데모)
-            실제 InspectionForm(demo 모드): 핀 마킹·멘트 프리셋 모두 동작.
-            데모라 사진은 로컬 미리보기, 저장은 비활성(API/스토리지 호출 X).
-            채택 결정 후 이 § 삭제.
+            § 수리내역서 — 좌(검수 입력) / 우(실시간 고객 화면) 데모
+            좌측에서 마킹·멘트를 바꾸면 우측 고객 수리내역서가 즉시 반영.
+            데모라 저장/업로드 없음. 채택 후 라이브 승격 → 이 § 삭제.
             ═══════════════════════════════════════════════════════════ */}
         <section className="space-y-4">
           <div className="flex items-baseline gap-2 flex-wrap">
-            <h2 className="text-lg font-bold text-stone-800">§ 수리내역서 — 핀 마킹 폼 (모바일 데모)</h2>
-            <span className="text-[11px] text-stone-500">실제 동작 · 저장 안 됨</span>
+            <h2 className="text-lg font-bold text-stone-800">§ 수리내역서 — 입력 ↔ 고객 화면 실시간</h2>
+            <span className="text-[11px] text-stone-500">저장 안 됨 · 미리보기</span>
           </div>
           <p className="text-xs text-stone-500 leading-relaxed">
-            ① 사진 「촬영/업로드」로 가위 사진을 넣고 → ② 상처 유형 칩 선택 → ③ 사진을 탭해 핀을 찍어보세요(핀 탭 = 삭제).
-            ④ 아래 「진단 멘트」 칩을 체크하면 줄바꿈으로 본문에 들어갑니다. 이대로 갈지 보시고 알려주세요.
-            <br />
-            <span className="text-stone-400">※ 데모 모드: 사진은 이 화면 안에서만 보이고 어디에도 저장되지 않습니다.</span>
+            좌측에서 ① 사진 넣고 → ② 상처 유형 선택 → ③ 사진 탭=점 / 드래그=범위(선) → ④ 멘트 칩 체크.
+            바꾸는 즉시 <span className="font-semibold text-stone-700">우측 「고객 화면」</span>에 그대로 반영됩니다. 이대로 갈지 보시고 알려주세요.
           </p>
 
-          {/* 모바일(390px) 프레임 */}
-          <div className="flex justify-center bg-stone-100 rounded-2xl py-6">
-            <div className="w-[390px] max-w-full bg-[#FAF9F7] rounded-[24px] shadow-lg border border-stone-200 overflow-hidden">
-              <div className="p-3 max-h-[78vh] overflow-y-auto">
-                <InspectionForm
-                  demo
-                  repairId="demo"
-                  existingInspections={[]}
-                  totalScissors={1}
-                  initialComment=""
-                />
-              </div>
-            </div>
-          </div>
+          <RepairReportDemo />
         </section>
 
         <div className="text-center text-[11px] text-stone-400 pt-4 border-t border-stone-200">
