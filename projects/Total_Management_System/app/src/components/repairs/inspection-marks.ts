@@ -16,15 +16,15 @@ export const MARK_TYPES: { label: string; color: string; hint?: string }[] = [
   { label: '무뎌짐', color: '#D97706', hint: '드래그=범위' },
   { label: '찍힘', color: '#DC2626' },
   { label: '빗살 손상', color: '#7C3AED' },
-  { label: '장력조절 필요', color: '#0D9488' },
   { label: '부품교체 필요', color: '#EA580C' },
-  { label: '스토퍼 불량', color: '#475569' },
+  { label: '스토퍼 문제', color: '#475569' },
 ];
 
-/** 우측 상단 플래그 (위치 없음 — 부위 특정 불가 항목) */
-export const FLAG_TYPES: { label: string; note: string }[] = [
-  { label: '밸런스 불균형', note: '가위 밸런스 불균형 — 교정 필요' },
-  { label: '날각 문제', note: '날각 문제 — 날등 각도 개선 필요' },
+/** 우측 상단 플래그 (위치 없음 — 부위 특정 불가, 선택 시 진단멘트 자동삽입) */
+export const FLAG_TYPES: { key: string; label: string; note: string }[] = [
+  { key: 'tension', label: '장력조절 필요', note: '장력이 헐거운 상태 - 조절 필요' },
+  { key: 'balance', label: '밸런스 불균형', note: '가위 밸런스 불균형 — 교정 필요' },
+  { key: 'edgeangle', label: '날각 문제', note: '날각 문제 — 날등 각도 개선 필요' },
 ];
 
 export const FLAG_COLOR = '#B45309';

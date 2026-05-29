@@ -10,8 +10,7 @@ import toast from 'react-hot-toast';
 import { resizeImage } from '@/lib/utils/resize-image';
 import { createClient } from '@/lib/supabase/client';
 import { InspectionPhotoMarker, type PhotoMark } from './inspection-photo-marker';
-import { InspectionMarkBoard } from './inspection-mark-board';
-import { COMMENT_PRESETS, COMMENT_PRESETS_COMMON, COMMENT_PRESETS_BY_TYPE } from '@/lib/repair/comment-presets';
+import { COMMENT_PRESETS } from '@/lib/repair/comment-presets';
 
 const SCISSOR_TYPES = ['블런트', '틴닝', '장가위', '슬라이싱', '기타'];
 
@@ -248,10 +247,7 @@ export function InspectionForm({ repairId, existingInspections, initialComment, 
 
   const photoSrc = current._photoPreview || current.photo_url;
   const busy = uploading || savingComment || saveInspections.isPending;
-  // 데모(v2): 공통 + 가위 종류별 멘트 / 라이브(v1): 평면 목록
-  const presetList = demo
-    ? [...COMMENT_PRESETS_COMMON, ...(COMMENT_PRESETS_BY_TYPE[current.scissor_type] || [])]
-    : COMMENT_PRESETS;
+  const presetList = COMMENT_PRESETS;
 
   return (
     <Card>
@@ -368,15 +364,11 @@ export function InspectionForm({ repairId, existingInspections, initialComment, 
         {/* 핀 마킹 — 사진 위 상처 표시 (체크리스트 대체) */}
         <div>
           <label className="block text-sm text-neutral-500 mb-2">상처 표시 (사진 위 핀)</label>
-          {demo ? (
-            <InspectionMarkBoard key={current.photo_url || 'empty'} photoUrl={current.photo_url} />
-          ) : (
-            <InspectionPhotoMarker
-              photoUrl={current.photo_url}
-              marks={current.photo_marks}
-              onChange={(marks) => updateMarks(activeIdx, marks)}
-            />
-          )}
+          <InspectionPhotoMarker
+            photoUrl={current.photo_url}
+            marks={current.photo_marks}
+            onChange={(marks) => updateMarks(activeIdx, marks)}
+          />
         </div>
 
         {/* 작업자 */}
