@@ -1,7 +1,18 @@
 # 복원수리 프로세스 흐름도
-> 최종 업데이트: 2026-05-25 — 직접방문(당일수리) Phase 1~3-B 운영 시작 + Google Calendar 자동 동기화 + Phase 4 알림톡 5종 검수 대기
+> 최종 업데이트: 2026-05-29 — 수리내역서 v2(디지털 핀마킹) 라이브 승격
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
+
+## 2026-05-29 — 수리내역서 v2 (디지털 핀 마킹) ⭐ 박제
+
+검수(수리내역서 작성)를 7항목 체크리스트 → **가위 사진 위 디지털 핀 마킹**으로 전환. 디자인모니터(`/design-lab`) 좌/우 실시간 데모로 확정 후 라이브 승격.
+
+- **입력(`components/repairs/inspection-form.tsx`)**: 가위별 탭. 사진 촬영 → 위치형 핀(무뎌짐=드래그 선 / 찍힘·부품 문제·스토퍼 문제=탭 점 ✓꼭지점 / 빗살 손상=틴닝만) + 플래그(장력조절 필요·밸런스 불균형·날각 문제 = 우측 상단 표기). 가위별 **진단 및 내역(comment)** + **핀/플래그 선택 시 멘트 자동삽입**(`components/repairs/ment-linkage.ts`, 공통/종류별 문구 = `lib/repair/comment-presets.ts`).
+- **저장**: `repair_inspections.photo_marks`(jsonb)에 점/선(x2,y2)/플래그(flag:true) 한 배열로. 가위별 멘트 = `repair_inspections.comment`(마이그레이션 **097**). 7항목 컬럼(blade_*/comb/tension/parts/stopper)은 비파괴 보존(미사용).
+- **고객(`projects/as/page_as_report.html`)**: 가위 사진 위 점(✓)·선·플래그 오버레이 + 가위별 "진단 및 내역"(항목별 `–`). 구 데이터 `repairs.admin_note`는 "추가 안내"로 하위호환.
+- **버그 fix(동반)**: 모바일 카메라 촬영 후 dialog 임의 close로 목록 튕기던 문제 → `components/ui/modal.tsx` `preventAutoClose` 가드. 검수 화면 모바일 가로 차단 오버레이("세로로 돌려주세요").
+- 공용 컴포넌트: `inspection-mark-board.tsx`(편집·controlled), `mark-overlay.tsx`(읽기전용), `inspection-marks.ts`(유형/색/타입).
+- 관련 메모리: [[reference_repair_inspection_v2]]
 
 ## 2026-05-19 — 복원수리 매출 집계 기준 (회계 vs 대시보드) ⭐ 박제
 
