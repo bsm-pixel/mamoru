@@ -41,6 +41,8 @@ interface InspectionFormProps {
   /** 고객 노출 코멘트 초기값 (repairs.admin_note) */
   initialComment?: string;
   onSaved?: () => void;
+  /** 디자인 모니터 데모 모드 — 스토리지 업로드/API 저장/draft 모두 비활성 (로컬 미리보기만) */
+  demo?: boolean;
 }
 
 /** 모바일 가로 감지 (검수 화면 세로 고정용) */
@@ -77,8 +79,8 @@ function loadDraft(repairId: string): Draft | null {
   }
 }
 
-export function InspectionForm({ repairId, existingInspections, initialComment, onSaved }: InspectionFormProps) {
-  const draft = typeof window !== 'undefined' ? loadDraft(repairId) : null;
+export function InspectionForm({ repairId, existingInspections, initialComment, onSaved, demo = false }: InspectionFormProps) {
+  const draft = !demo && typeof window !== 'undefined' ? loadDraft(repairId) : null;
 
   const [items, setItems] = useState<InspectionItem[]>(() => {
     if (draft?.items?.length) return draft.items;
@@ -103,11 +105,11 @@ export function InspectionForm({ repairId, existingInspections, initialComment, 
 
   // 작성 중 draft 보존 (카메라/포커스 손실로 모달 재마운트 시 복원)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (demo || typeof window === 'undefined') return;
     try {
       sessionStorage.setItem(draftKey(repairId), JSON.stringify({ items, comment, activeIdx }));
     } catch { /* quota 초과 등 무시 */ }
-  }, [repairId, items, comment, activeIdx]);
+  }, [demo, repairId, items, comment, activeIdx]);
 
   const updateItem = (idx: number, field: 'scissor_type' | 'worker', value: string) => {
     setItems((prev) => {
@@ -140,13 +142,17 @@ export function InspectionForm({ repairId, existingInspections, initialComment, 
     // 즉시 미리보기
     const reader = new FileReader();
     reader.onload = (e) => {
+      const url = e.target?.result as string;
       setItems((prev) => {
         const next = [...prev];
-        next[idx] = { ...next[idx], _photoPreview: e.target?.result as string };
+        // 데모: 로컬 data URL 을 photo_url 로 바로 사용(스토리지 업로드 없이 핀 마킹 가능)
+        next[idx] = { ...next[idx], _photoPreview: url, ...(demo ? { photo_url: url } : {}) };
         return next;
       });
     };
     reader.readAsDataURL(file);
+
+    if (demo) return; // 데모: 스토리지 업로드 생략
 
     setUploading(true);
     try {
@@ -202,6 +208,10 @@ export function InspectionForm({ repairId, existingInspections, initialComment, 
     comment.split('\n').map((l) => l.trim()).includes(phrase);
 
   const handleSave = async () => {
+    if (demo) {
+      toast('데모 화면입니다 — 실제로 저장되지 않습니다', { icon: '🎨' });
+      return;
+    }
     // 1) 고객 노출 코멘트(admin_note) 저장
     setSavingComment(true);
     try {

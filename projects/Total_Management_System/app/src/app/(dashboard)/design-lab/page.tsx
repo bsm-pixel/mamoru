@@ -4,23 +4,16 @@
  * /design-lab — TMS 디자인 모니터 (사장님 + 클로드 협업 도구)
  *
  * 2026-05-26 사장님 운영 룰:
- *   ▶ 진행 중인 디자인 작업만 표시 → 완료 후 § 자동 삭제 (회전 도구)
+ *   ▶ 진행 중인 디자인/기능 작업만 표시 → 완료 후 § 자동 삭제 (회전 도구)
  *   ▶ 영구 박제는 운영 페이지 + memory/docs
  *
- * 현재 상태: 진행 중인 디자인 작업 없음 (클린 골격)
- *
- * 직전 완료:
- *   - 2026-05-27 § 대시보드 리모델 시안 B+ → /dashboard 적용
- *   - 2026-05-27 § 상담 페이지군 시안 B → /consultations 적용 (전체 탭 추가)
- *   - 2026-05-27 § 어두운 매출 카드 A2(그라데이션) → /repairs + /sales 동시 적용
+ * 현재 진행: 복원수리 수리내역서 — 디지털 핀 마킹 폼 (모바일 데모, 채택 여부 확인용)
  *
  * 운영 데이터 호출 X · 사이드바 메뉴 미노출 · URL 직접 접근만
  */
 
 import { Topbar } from '@/components/layout/topbar';
-
-// 미리보기 iframe 캐시버스터 — page_*.html 수정 시 이 값을 바꾸면 design-lab이 최신을 강제 로드
-const PREVIEW_CB = '20260529c';
+import { InspectionForm } from '@/components/repairs/inspection-form';
 
 export default function DesignLabPage() {
   return (
@@ -33,96 +26,43 @@ export default function DesignLabPage() {
             <span className="text-[10px] px-2 py-0.5 rounded bg-white/15 uppercase tracking-wider">internal tool</span>
           </div>
           <p className="text-xs opacity-80 leading-relaxed">
-            사장님 + 클로드 협업 디자인 검토 도구. 진행 중인 작업만 표시하고 완료 후 비웁니다.
+            사장님 + 클로드 협업 검토 도구. 진행 중인 작업만 표시하고 완료 후 비웁니다.
             <br />
             <span className="opacity-60">운영 데이터 X · 사이드바 메뉴 미노출 · URL 직접 접근만</span>
           </p>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════
-            § 고객 후기 보기 페이지 (page_reviews) — PC / 모바일 한 화면
-            실제 데이터. 출장상담 후기에 매장명(마스킹) 동반 + 칩 우측 상단.
+            § 복원수리 수리내역서 — 디지털 핀 마킹 폼 (모바일 데모)
+            실제 InspectionForm(demo 모드): 핀 마킹·멘트 프리셋 모두 동작.
+            데모라 사진은 로컬 미리보기, 저장은 비활성(API/스토리지 호출 X).
+            채택 결정 후 이 § 삭제.
             ═══════════════════════════════════════════════════════════ */}
         <section className="space-y-4">
           <div className="flex items-baseline gap-2 flex-wrap">
-            <h2 className="text-lg font-bold text-stone-800">§ 고객 후기 보기 페이지 — PC / 모바일</h2>
-            <span className="text-[11px] text-stone-500">page.mamoru.kr/projects/reviews/page_reviews.html (실제 데이터)</span>
+            <h2 className="text-lg font-bold text-stone-800">§ 수리내역서 — 핀 마킹 폼 (모바일 데모)</h2>
+            <span className="text-[11px] text-stone-500">실제 동작 · 저장 안 됨</span>
           </div>
           <p className="text-xs text-stone-500 leading-relaxed">
-            후기 더보기 전용 화면. 출장상담 후기에는 매장명(마스킹)이 이름 옆에, 유형 칩은 카드 우측 상단에 표시됩니다.
+            ① 사진 「촬영/업로드」로 가위 사진을 넣고 → ② 상처 유형 칩 선택 → ③ 사진을 탭해 핀을 찍어보세요(핀 탭 = 삭제).
+            ④ 아래 「진단 멘트」 칩을 체크하면 줄바꿈으로 본문에 들어갑니다. 이대로 갈지 보시고 알려주세요.
+            <br />
+            <span className="text-stone-400">※ 데모 모드: 사진은 이 화면 안에서만 보이고 어디에도 저장되지 않습니다.</span>
           </p>
-          <div className="grid gap-4 lg:grid-cols-[1fr_410px]">
-            <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden flex flex-col">
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-stone-100">
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-sky-50 text-sky-700">PC 화면</span>
-                <a href={`https://page.mamoru.kr/projects/reviews/page_reviews.html?cb=${PREVIEW_CB}`} target="_blank" rel="noopener noreferrer" className="text-[11px] text-stone-400 hover:text-stone-600 underline">새 탭</a>
-              </div>
-              <iframe
-                src={`https://page.mamoru.kr/projects/reviews/page_reviews.html?cb=${PREVIEW_CB}`}
-                title="후기 보기 — PC"
-                className="w-full bg-[#FAF9F7]"
-                style={{ height: 1400, border: 'none' }}
-                loading="lazy"
-              />
-            </div>
-            <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden flex flex-col">
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-stone-100">
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-pink-50 text-pink-700">모바일 화면</span>
-                <span className="text-[11px] text-stone-400">390px</span>
-              </div>
-              <div className="flex justify-center bg-stone-100 py-3">
-                <iframe
-                  src={`https://page.mamoru.kr/projects/reviews/page_reviews.html?cb=${PREVIEW_CB}`}
-                  title="후기 보기 — 모바일"
-                  className="bg-[#FAF9F7] rounded-[20px] shadow"
-                  style={{ width: 390, height: 1360, border: 'none' }}
-                  loading="lazy"
+
+          {/* 모바일(390px) 프레임 */}
+          <div className="flex justify-center bg-stone-100 rounded-2xl py-6">
+            <div className="w-[390px] max-w-full bg-[#FAF9F7] rounded-[24px] shadow-lg border border-stone-200 overflow-hidden">
+              <div className="p-3 max-h-[78vh] overflow-y-auto">
+                <InspectionForm
+                  demo
+                  repairId="demo"
+                  existingInspections={[]}
+                  totalScissors={1}
+                  initialComment=""
                 />
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════
-            § 고객 후기작성 페이지 (현재 형태) — 복원수리 / 상담 / 제품구매
-            실제 page_review.html 을 iframe 으로 임베드 (uid=demo → urlName fallback 으로 폼 렌더).
-            항상 실제 페이지와 동기화. 사장님 검토 후 수정 지시 → 클로드 반영 → 이 § 삭제.
-            ═══════════════════════════════════════════════════════════ */}
-        <section className="space-y-4">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <h2 className="text-lg font-bold text-stone-800">§ 고객 후기작성 페이지 — 현재 형태</h2>
-            <span className="text-[11px] text-stone-500">알림톡 링크로 고객이 여는 실제 페이지 (3 유형)</span>
-          </div>
-          <p className="text-xs text-stone-500 leading-relaxed">
-            아래는 <span className="font-semibold text-stone-700">page.mamoru.kr/projects/reviews/page_review.html</span> 실제 페이지를
-            유형별로 임베드한 것입니다. 보면서 수정할 점을 말씀해 주세요.
-            <br />
-            <span className="text-stone-400">※ 데모 모드(uid=demo)라 이름은 &quot;홍**&quot;(마스킹)으로 표시되고, 제품구매는 제품선택 화면을 건너뛰고 후기 폼이 바로 보입니다(실제 사용 시 제품선택 화면 먼저 등장).</span>
-          </p>
-
-          <div className="grid gap-4 lg:grid-cols-3">
-            {[
-              { key: 'repair', label: '복원수리 후기', sub: 'restoration', tone: 'bg-amber-50 text-amber-700' },
-              { key: 'consult', label: '상담 후기 (출장)', sub: 'field_request', tone: 'bg-violet-50 text-violet-700' },
-              { key: 'purchase', label: '제품구매 후기', sub: '', tone: 'bg-emerald-50 text-emerald-700' },
-            ].map((t) => {
-              const src = `https://page.mamoru.kr/projects/reviews/page_review.html?type=${t.key}&uid=demo&name=${encodeURIComponent('홍길동')}${t.sub ? `&subtype=${t.sub}` : ''}&cb=${PREVIEW_CB}`;
-              return (
-                <div key={t.key} className="rounded-2xl border border-stone-200 bg-white overflow-hidden flex flex-col">
-                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-stone-100">
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${t.tone}`}>{t.label}</span>
-                    <a href={src} target="_blank" rel="noopener noreferrer" className="text-[11px] text-stone-400 hover:text-stone-600 underline">새 탭</a>
-                  </div>
-                  <iframe
-                    src={src}
-                    title={`후기작성 — ${t.label}`}
-                    className="w-full bg-[#FAF9F7]"
-                    style={{ height: 940, border: 'none' }}
-                    loading="lazy"
-                  />
-                </div>
-              );
-            })}
           </div>
         </section>
 
