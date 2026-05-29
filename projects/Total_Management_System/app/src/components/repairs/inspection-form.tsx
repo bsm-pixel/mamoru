@@ -10,7 +10,8 @@ import toast from 'react-hot-toast';
 import { resizeImage } from '@/lib/utils/resize-image';
 import { createClient } from '@/lib/supabase/client';
 import { InspectionPhotoMarker, type PhotoMark } from './inspection-photo-marker';
-import { COMMENT_PRESETS } from '@/lib/repair/comment-presets';
+import { InspectionMarkBoard } from './inspection-mark-board';
+import { COMMENT_PRESETS, COMMENT_PRESETS_COMMON, COMMENT_PRESETS_BY_TYPE } from '@/lib/repair/comment-presets';
 
 const SCISSOR_TYPES = ['블런트', '틴닝', '장가위', '슬라이싱', '기타'];
 
@@ -195,17 +196,20 @@ export function InspectionForm({ repairId, existingInspections, initialComment, 
     });
   };
 
+  // 멘트 프리셋: 라이브(v1)는 줄 단위, 데모(v2)는 블록 단위(\n\n) — 여러 줄 멘트 보존
+  const presetSep = demo ? '\n\n' : '\n';
   const togglePreset = (phrase: string) => {
+    const target = phrase.trim();
     setComment((prev) => {
-      const lines = prev.split('\n').map((l) => l.trim()).filter(Boolean);
-      const idx = lines.indexOf(phrase);
-      if (idx >= 0) lines.splice(idx, 1);
-      else lines.push(phrase);
-      return lines.join('\n');
+      const blocks = prev.split(presetSep).map((b) => b.trim()).filter(Boolean);
+      const idx = blocks.indexOf(target);
+      if (idx >= 0) blocks.splice(idx, 1);
+      else blocks.push(target);
+      return blocks.join(presetSep);
     });
   };
   const presetActive = (phrase: string) =>
-    comment.split('\n').map((l) => l.trim()).includes(phrase);
+    comment.split(presetSep).map((b) => b.trim()).includes(phrase.trim());
 
   const handleSave = async () => {
     if (demo) {
@@ -244,6 +248,10 @@ export function InspectionForm({ repairId, existingInspections, initialComment, 
 
   const photoSrc = current._photoPreview || current.photo_url;
   const busy = uploading || savingComment || saveInspections.isPending;
+  // 데모(v2): 공통 + 가위 종류별 멘트 / 라이브(v1): 평면 목록
+  const presetList = demo
+    ? [...COMMENT_PRESETS_COMMON, ...(COMMENT_PRESETS_BY_TYPE[current.scissor_type] || [])]
+    : COMMENT_PRESETS;
 
   return (
     <Card>
@@ -360,11 +368,15 @@ export function InspectionForm({ repairId, existingInspections, initialComment, 
         {/* 핀 마킹 — 사진 위 상처 표시 (체크리스트 대체) */}
         <div>
           <label className="block text-sm text-neutral-500 mb-2">상처 표시 (사진 위 핀)</label>
-          <InspectionPhotoMarker
-            photoUrl={current.photo_url}
-            marks={current.photo_marks}
-            onChange={(marks) => updateMarks(activeIdx, marks)}
-          />
+          {demo ? (
+            <InspectionMarkBoard key={current.photo_url || 'empty'} photoUrl={current.photo_url} />
+          ) : (
+            <InspectionPhotoMarker
+              photoUrl={current.photo_url}
+              marks={current.photo_marks}
+              onChange={(marks) => updateMarks(activeIdx, marks)}
+            />
+          )}
         </div>
 
         {/* 작업자 */}
@@ -382,20 +394,21 @@ export function InspectionForm({ repairId, existingInspections, initialComment, 
         <div className="pt-3 border-t border-neutral-100">
           <label className="block text-sm font-medium text-neutral-600 mb-2">진단 멘트 (고객 안내문)</label>
           <div className="flex gap-1.5 flex-wrap mb-2">
-            {COMMENT_PRESETS.map((p) => {
+            {presetList.map((p) => {
               const active = presetActive(p);
               return (
                 <button
                   key={p}
                   type="button"
                   onClick={() => togglePreset(p)}
-                  className={`px-2.5 py-1 text-[11px] rounded-lg border text-left leading-snug transition max-w-full ${
+                  title={p}
+                  className={`px-2.5 py-1 text-[11px] rounded-lg border text-left leading-snug transition max-w-[280px] truncate ${
                     active
                       ? 'bg-neutral-800 text-white border-neutral-800'
                       : 'bg-white text-neutral-500 border-neutral-200 hover:border-neutral-300'
                   }`}
                 >
-                  {p}
+                  {p.split('\n')[0]}{p.includes('\n') ? ' …' : ''}
                 </button>
               );
             })}
