@@ -21,9 +21,11 @@ interface Props {
   flags?: string[];
   onMarks?: (marks: MarkV2[]) => void;
   onFlags?: (flags: string[]) => void;
+  /** 가위 종류 — 특정 유형 노출 제한(빗살 손상=틴닝) */
+  scissorType?: string;
 }
 
-export function InspectionMarkBoard({ photoUrl, marks: marksProp, flags: flagsProp, onMarks, onFlags }: Props) {
+export function InspectionMarkBoard({ photoUrl, marks: marksProp, flags: flagsProp, onMarks, onFlags, scissorType }: Props) {
   const [internalMarks, setInternalMarks] = useState<MarkV2[]>([]);
   const [internalFlags, setInternalFlags] = useState<string[]>([]);
   const marks = marksProp ?? internalMarks;
@@ -36,6 +38,11 @@ export function InspectionMarkBoard({ photoUrl, marks: marksProp, flags: flagsPr
   const dragRef = useRef<{ x: number; y: number } | null>(null);
   const [preview, setPreview] = useState<{ x: number; y: number; x2: number; y2: number } | null>(null);
 
+  // 종류 제한 반영 + 활성 유형 보정
+  const visibleTypes = MARK_TYPES.filter((t) => !t.only || t.only === scissorType);
+  const at = visibleTypes.some((t) => t.label === activeType) ? activeType : (visibleTypes[0]?.label || activeType);
+  const lineCapable = !!MARK_TYPES.find((t) => t.label === at)?.line;
+
   const pos = (e: React.PointerEvent) => {
     const r = wrapRef.current!.getBoundingClientRect();
     return { x: clamp01((e.clientX - r.left) / r.width), y: clamp01((e.clientY - r.top) / r.height) };
@@ -47,7 +54,7 @@ export function InspectionMarkBoard({ photoUrl, marks: marksProp, flags: flagsPr
     dragRef.current = pos(e);
   };
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!dragRef.current) return;
+    if (!dragRef.current || !lineCapable) return; // 선 가능 유형(무뎌짐)만 드래그 미리보기
     const p = pos(e);
     setPreview({ x: dragRef.current.x, y: dragRef.current.y, x2: p.x, y2: p.y });
   };
@@ -58,8 +65,9 @@ export function InspectionMarkBoard({ photoUrl, marks: marksProp, flags: flagsPr
     dragRef.current = null;
     setPreview(null);
     const dist = Math.hypot(p.x - start.x, p.y - start.y);
-    if (dist > DRAG_THRESHOLD) commitMarks([...marks, { label: activeType, x: start.x, y: start.y, x2: p.x, y2: p.y }]);
-    else commitMarks([...marks, { label: activeType, x: start.x, y: start.y }]);
+    // 무뎌짐(line)만 드래그 시 선. 나머지는 탭=점(드래그해도 시작점에 점).
+    if (lineCapable && dist > DRAG_THRESHOLD) commitMarks([...marks, { label: at, x: start.x, y: start.y, x2: p.x, y2: p.y }]);
+    else commitMarks([...marks, { label: at, x: start.x, y: start.y }]);
   };
 
   const removeMark = (idx: number) => commitMarks(marks.filter((_, i) => i !== idx));
@@ -77,8 +85,8 @@ export function InspectionMarkBoard({ photoUrl, marks: marksProp, flags: flagsPr
     <div className="space-y-2">
       {/* 위치형 유형 칩 */}
       <div className="flex gap-1.5 flex-wrap">
-        {MARK_TYPES.map((t) => {
-          const active = activeType === t.label;
+        {visibleTypes.map((t) => {
+          const active = at === t.label;
           return (
             <button key={t.label} type="button" onClick={() => setActiveType(t.label)}
               className="px-2.5 py-1 text-xs rounded-full border font-medium transition flex items-center gap-1.5"
@@ -100,7 +108,7 @@ export function InspectionMarkBoard({ photoUrl, marks: marksProp, flags: flagsPr
         {/* 드래그 미리보기 */}
         {preview && (
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none">
-            <line x1={preview.x * 100} y1={preview.y * 100} x2={preview.x2 * 100} y2={preview.y2 * 100} stroke={colorOf(activeType)} strokeWidth={3} strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" opacity={0.85} />
+            <line x1={preview.x * 100} y1={preview.y * 100} x2={preview.x2 * 100} y2={preview.y2 * 100} stroke={colorOf(at)} strokeWidth={3} strokeDasharray="4 3" vectorEffect="non-scaling-stroke" strokeLinecap="round" opacity={0.85} />
           </svg>
         )}
 

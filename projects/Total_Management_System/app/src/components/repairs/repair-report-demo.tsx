@@ -118,7 +118,7 @@ export function RepairReportDemo() {
           <span className="text-[11px] text-stone-400">핀/플래그 선택 → 진단멘트 자동삽입</span>
         </div>
         <div className="mx-auto w-[390px] max-w-full bg-[#FAF9F7] rounded-[24px] shadow-lg border border-stone-200 overflow-hidden">
-          <div className="p-4 space-y-4 max-h-[76vh] overflow-y-auto">
+          <div className="p-4 space-y-4">
             {/* 가위 탭 */}
             <div className="flex gap-1 overflow-x-auto">
               {scissors.map((s, idx) => (
@@ -166,7 +166,7 @@ export function RepairReportDemo() {
             {/* 핀 마킹 (controlled, 자동 멘트 연동) */}
             <div>
               <label className="block text-sm text-neutral-500 mb-2">상처 표시</label>
-              <InspectionMarkBoard photoUrl={active.photoUrl} marks={active.marks} flags={active.flags} onMarks={handleMarks} onFlags={handleFlags} />
+              <InspectionMarkBoard photoUrl={active.photoUrl} marks={active.marks} flags={active.flags} onMarks={handleMarks} onFlags={handleFlags} scissorType={active.type} />
             </div>
 
             {/* 진단 멘트 — 종류별 수동 칩 (공통은 핀/플래그로 자동 삽입) */}
@@ -201,7 +201,7 @@ export function RepairReportDemo() {
           <span className="text-[11px] text-stone-400">알림톡 수리내역서로 보이는 형태</span>
         </div>
         <div className="mx-auto w-[390px] max-w-full bg-[#FAF9F7] rounded-[24px] shadow-lg border border-stone-200 overflow-hidden">
-          <div className="max-h-[76vh] overflow-y-auto">
+          <div>
             <div className="bg-[#1A1A1A] text-[#FAF9F7] px-4 py-4 text-center">
               <div className="text-[11px] tracking-widest opacity-70">MAMORU</div>
               <div className="text-base font-bold mt-0.5">수리내역서</div>
@@ -233,8 +233,15 @@ export function RepairReportDemo() {
                   {s.comment.trim() && (
                     <div className="px-4 pb-4 -mt-1">
                       <div className="rounded-xl bg-[#F5F3F0] border border-[#E7E2DC] px-3.5 py-3">
-                        <div className="text-[11px] font-bold tracking-wide text-[#8A8580] mb-1.5">진단 안내</div>
-                        <div className="text-[13.5px] text-[#3D3A36] leading-[1.75] whitespace-pre-wrap">{s.comment}</div>
+                        <div className="text-[11px] font-bold tracking-wide text-[#8A8580] mb-2">진단 안내</div>
+                        <div className="space-y-2.5">
+                          {s.comment.split('\n\n').map((b) => b.trim()).filter(Boolean).map((b, bi) => (
+                            <div key={bi} className="flex gap-2 text-[13.5px] text-[#3D3A36] leading-[1.7]">
+                              <span className="text-[#C2B6A6] shrink-0 select-none mt-px">–</span>
+                              <span className="whitespace-pre-wrap">{b}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}

@@ -11,11 +11,13 @@ export interface MarkV2 {
   y2?: number;
 }
 
-/** 위치형 문제 유형 (사진 위 핀) */
-export const MARK_TYPES: { label: string; color: string; hint?: string }[] = [
-  { label: '무뎌짐', color: '#D97706', hint: '드래그=범위' },
+/** 위치형 문제 유형 (사진 위 핀)
+ *  - line: 드래그로 선(범위) 입력 가능 (무뎌짐만). 나머지는 탭=점 전용.
+ *  - only: 특정 가위 종류에서만 노출 (빗살 손상=틴닝). */
+export const MARK_TYPES: { label: string; color: string; hint?: string; line?: boolean; only?: string }[] = [
+  { label: '무뎌짐', color: '#D97706', hint: '드래그=범위', line: true },
   { label: '찍힘', color: '#DC2626' },
-  { label: '빗살 손상', color: '#7C3AED' },
+  { label: '빗살 손상', color: '#7C3AED', only: '틴닝' },
   { label: '부품교체 필요', color: '#EA580C' },
   { label: '스토퍼 문제', color: '#475569' },
 ];
