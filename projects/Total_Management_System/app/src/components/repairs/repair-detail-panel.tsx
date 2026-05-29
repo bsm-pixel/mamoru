@@ -121,7 +121,6 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
               repairId={r.id}
               existingInspections={inspections}
               totalScissors={r.qty_mamoru + r.qty_other}
-              initialComment={r.admin_note || ''}
               onSaved={() => setShowInspection(false)}
             />
           </Modal>

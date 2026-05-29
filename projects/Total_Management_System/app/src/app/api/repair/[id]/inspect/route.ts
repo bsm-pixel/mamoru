@@ -40,6 +40,7 @@ export async function POST(
       stopper: insp.stopper || '양호',
       photo_url: insp.photo_url || null,
       photo_marks: insp.photo_marks || null,
+      comment: insp.comment ?? null,  // 097: 가위별 진단 및 내역
       worker: insp.worker || '백성민',
     }));
 

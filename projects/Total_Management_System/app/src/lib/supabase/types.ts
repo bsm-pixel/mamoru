@@ -452,7 +452,8 @@ export interface Database {
           parts: string;
           stopper: string;
           photo_url: string | null;
-          photo_marks: Array<{ x: number; y: number; label: string }> | null;
+          photo_marks: Array<{ label: string; x?: number; y?: number; x2?: number; y2?: number; flag?: boolean }> | null;
+          comment: string | null;  // 097: 가위별 진단 및 내역
           worker: string;
           created_at: string;
         };
@@ -468,7 +469,8 @@ export interface Database {
           parts?: string;
           stopper?: string;
           photo_url?: string | null;
-          photo_marks?: Array<{ x: number; y: number; label: string }> | null;
+          photo_marks?: Array<{ label: string; x?: number; y?: number; x2?: number; y2?: number; flag?: boolean }> | null;
+          comment?: string | null;
           worker?: string;
         };
         Update: {
@@ -482,7 +484,8 @@ export interface Database {
           parts?: string;
           stopper?: string;
           photo_url?: string | null;
-          photo_marks?: Array<{ x: number; y: number; label: string }> | null;
+          photo_marks?: Array<{ label: string; x?: number; y?: number; x2?: number; y2?: number; flag?: boolean }> | null;
+          comment?: string | null;
           worker?: string;
         };
       };

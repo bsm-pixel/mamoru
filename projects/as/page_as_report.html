@@ -204,6 +204,20 @@
     .mark-legend .leg .ldot { width: 10px; height: 10px; border-radius: 50%; }
     .mark-none { margin-top: 10px; font-size: 13px; color: var(--warm-gray); }
 
+    /* v2 마킹: 선 / 점(✓) / 플래그 */
+    .mk-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .mk-pt { position: absolute; width: 0; height: 0; pointer-events: none; }
+    .mk-flags { position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .mk-flag { font-size: 11px; font-weight: 700; color: #fff; background: #B45309; padding: 2px 8px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); white-space: nowrap; }
+
+    /* 가위별 진단 및 내역 */
+    .card-ment { margin: 0 16px 16px; padding: 14px 16px; background: var(--shell); border: 1px solid var(--sand); border-radius: 12px; }
+    .card-ment__h { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--warm-gray); margin-bottom: 10px; }
+    .card-ment__row { display: flex; gap: 8px; font-size: 14px; color: var(--stone); line-height: 1.7; }
+    .card-ment__row + .card-ment__row { margin-top: 9px; }
+    .card-ment__dash { color: #C2B6A6; flex-shrink: 0; }
+    .card-ment__row span:last-child { white-space: pre-wrap; }
+
     /* 진행내역 */
     .comment-section {
       margin: 16px; padding: 16px; background: var(--cream);
@@ -464,17 +478,11 @@
         cardsEl.appendChild(buildScissorCard(scissors[i]));
       }
 
-      // 진행내역
+      // 진행내역 — 가위별 진단 및 내역은 각 카드에 표시. 여기는 건 단위 추가 안내(구 데이터 호환)만.
       var commentsEl = document.getElementById('comments-area');
       commentsEl.innerHTML = '';
-      if (d.work_summary) {
-        commentsEl.innerHTML += '<div class="comment-section"><div class="content">' + escapeHtml(d.work_summary) + '</div></div>';
-      }
       if (d.comment) {
-        commentsEl.innerHTML += '<div class="comment-section"><div class="comment-header">추가 안내</div><div class="content">' + escapeHtml(d.comment) + '</div></div>';
-      }
-      if (!d.work_summary && !d.comment) {
-        commentsEl.innerHTML = '<div class="no-comment">진행내역이 없습니다.</div>';
+        commentsEl.innerHTML = '<div class="comment-section"><div class="comment-header">추가 안내</div><div class="content">' + escapeHtml(d.comment) + '</div></div>';
       }
 
       // 비용
@@ -507,30 +515,52 @@
         '<span class="type">' + escapeHtml(s.type || '기타') + '</span>' +
         '</div>';
 
-      // 사진 + 핀 마킹 오버레이 (2026-05-29: 체크리스트 배지 → 사진 위 핀)
-      var marks = Array.isArray(s.photo_marks) ? s.photo_marks : [];
+      // 사진 + 핀 마킹 오버레이 (v2: 점=✓꼭지점 / 선=드래그 범위 / 플래그=우측상단)
+      var all = Array.isArray(s.photo_marks) ? s.photo_marks : [];
+      var pos = all.filter(function (m) { return !m.flag && typeof m.x === 'number'; });
+      var lineMarks = pos.filter(function (m) { return typeof m.x2 === 'number'; });
+      var pointMarks = pos.filter(function (m) { return typeof m.x2 !== 'number'; });
+      var flagMarks = all.filter(function (m) { return m.flag; });
+
       var bodyInner = '';
       if (s.photo) {
-        var pins = marks.map(function (m, i) {
+        // 선
+        var lineSvg = '';
+        if (lineMarks.length) {
+          lineSvg = '<svg class="mk-lines" viewBox="0 0 100 100" preserveAspectRatio="none">' +
+            lineMarks.map(function (m) {
+              var c = markColor(m.label);
+              return '<line x1="' + (m.x * 100) + '" y1="' + (m.y * 100) + '" x2="' + (m.x2 * 100) + '" y2="' + (m.y2 * 100) + '" stroke="#fff" stroke-width="6" vector-effect="non-scaling-stroke" stroke-linecap="round"/>' +
+                '<line x1="' + (m.x * 100) + '" y1="' + (m.y * 100) + '" x2="' + (m.x2 * 100) + '" y2="' + (m.y2 * 100) + '" stroke="' + c + '" stroke-width="3.5" vector-effect="non-scaling-stroke" stroke-linecap="round"/>';
+            }).join('') + '</svg>';
+        }
+        // 점(✓ 꼭지점이 정확히 그 지점)
+        var pointHtml = pointMarks.map(function (m) {
           var c = markColor(m.label);
-          return '<div class="mark-pin" style="left:' + (m.x * 100) + '%;top:' + (m.y * 100) + '%">' +
-            '<span class="dot" style="background:' + c + '">' + (i + 1) + '</span>' +
-            '<span class="tag" style="background:' + c + '">' + escapeHtml(m.label) + '</span>' +
-          '</div>';
+          return '<div class="mk-pt" style="left:' + (m.x * 100) + '%;top:' + (m.y * 100) + '%">' +
+            '<svg width="26" height="26" viewBox="0 0 26 26" style="position:absolute;left:-11px;top:-20px;overflow:visible;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))">' +
+              '<path d="M5 13 L11 20 L21 6" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+              '<path d="M5 13 L11 20 L21 6" stroke="' + c + '" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '</svg></div>';
         }).join('');
+        // 플래그(우측 상단)
+        var flagHtml = flagMarks.length
+          ? '<div class="mk-flags">' + flagMarks.map(function (m) { return '<span class="mk-flag">⚠ ' + escapeHtml(m.label) + '</span>'; }).join('') + '</div>'
+          : '';
+
         bodyInner = '<div class="mark-photo-wrap">' +
-          '<img src="' + escapeHtml(s.photo) + '" alt="가위 사진" crossorigin="anonymous" />' + pins +
+          '<img src="' + escapeHtml(s.photo) + '" alt="가위 사진" crossorigin="anonymous" />' + lineSvg + pointHtml + flagHtml +
           '</div>';
-        if (marks.length > 0) {
+
+        // 범례 (위치형 라벨 개수)
+        if (pos.length > 0) {
           var counts = {};
-          marks.forEach(function (m) { counts[m.label] = (counts[m.label] || 0) + 1; });
+          pos.forEach(function (m) { counts[m.label] = (counts[m.label] || 0) + 1; });
           var legs = Object.keys(counts).map(function (label) {
-            var c = markColor(label);
-            return '<span class="leg"><span class="ldot" style="background:' + c + '"></span>' +
-              escapeHtml(label) + ' ' + counts[label] + '</span>';
+            return '<span class="leg"><span class="ldot" style="background:' + markColor(label) + '"></span>' + escapeHtml(label) + ' ' + counts[label] + '</span>';
           }).join('');
           bodyInner += '<div class="mark-legend">' + legs + '</div>';
-        } else {
+        } else if (flagMarks.length === 0) {
           bodyInner += '<div class="mark-none">표시된 상처 없음 (양호)</div>';
         }
       } else {
@@ -539,7 +569,16 @@
 
       var body = '<div class="scissor-body">' + bodyInner + '</div>';
 
-      card.innerHTML = header + body;
+      // 가위별 진단 및 내역 (항목별 – 표시)
+      var ment = '';
+      if (s.comment && s.comment.trim()) {
+        var blocks = s.comment.split('\n\n').map(function (b) { return b.trim(); }).filter(Boolean);
+        ment = '<div class="card-ment"><div class="card-ment__h">진단 및 내역</div>' +
+          blocks.map(function (b) { return '<div class="card-ment__row"><span class="card-ment__dash">–</span><span>' + escapeHtml(b) + '</span></div>'; }).join('') +
+          '</div>';
+      }
+
+      card.innerHTML = header + body + ment;
       return card;
     }
 
@@ -555,8 +594,9 @@
     // ── 핀 라벨 → 색상 (TMS inspection-photo-marker WOUND_TYPES 와 동일) ──
     var WOUND_COLORS = {
       '무뎌짐': '#D97706', '찍힘': '#DC2626', '빗살 손상': '#7C3AED',
-      '날 보정': '#2563EB', '장력 조정': '#0D9488', '부품 교체': '#EA580C', '스토퍼 교체': '#475569'
+      '부품 문제': '#EA580C', '스토퍼 문제': '#475569'
     };
+    var FLAG_COLOR = '#B45309';
     function markColor(label) {
       return WOUND_COLORS[label] || '#1A1A1A';
     }

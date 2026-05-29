@@ -56,6 +56,7 @@ export async function GET(req: NextRequest) {
       stopper: insp.stopper,
       photo: insp.photo_url || '',
       photo_marks: insp.photo_marks || [],
+      comment: insp.comment || '',  // 097: 가위별 진단 및 내역
       worker: insp.worker,
     }));
 
