@@ -35,7 +35,9 @@ export function InspectionMarkBoard({ photoUrl, marks: marksProp, flags: flagsPr
 
   const [activeType, setActiveType] = useState(MARK_TYPES[0].label);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{ x: number; y: number } | null>(null);
+  const downRef = useRef<{ x: number; y: number } | null>(null);
+  const movedRef = useRef(false);
+  const justDraggedRef = useRef(false);
   const [preview, setPreview] = useState<{ x: number; y: number; x2: number; y2: number } | null>(null);
 
   // 종류 제한 반영 + 활성 유형 보정
@@ -43,31 +45,44 @@ export function InspectionMarkBoard({ photoUrl, marks: marksProp, flags: flagsPr
   const at = visibleTypes.some((t) => t.label === activeType) ? activeType : (visibleTypes[0]?.label || activeType);
   const lineCapable = !!MARK_TYPES.find((t) => t.label === at)?.line;
 
-  const pos = (e: React.PointerEvent) => {
+  const pos = (e: React.PointerEvent | React.MouseEvent) => {
     const r = wrapRef.current!.getBoundingClientRect();
     return { x: clamp01((e.clientX - r.left) / r.width), y: clamp01((e.clientY - r.top) / r.height) };
   };
 
+  // 탭=점: click 이벤트로 처리 (모바일에서 가장 확실 — iOS 가 tap 을 pointercancel 로 흘려도 click 은 발생)
+  const placePoint = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('[data-mark]')) return; // 마크 삭제 클릭은 제외
+    if (justDraggedRef.current) { justDraggedRef.current = false; return; } // 방금 드래그(선) 처리됨
+    const p = pos(e);
+    commitMarks([...marks, { label: at, x: p.x, y: p.y }]);
+  };
+
+  // 드래그=선: 무뎌짐(lineCapable)만. 움직일 때만 capture+미리보기
   const onPointerDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest('[data-mark]')) return;
-    wrapRef.current?.setPointerCapture(e.pointerId);
-    dragRef.current = pos(e);
+    downRef.current = pos(e);
+    movedRef.current = false;
   };
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!dragRef.current || !lineCapable) return; // 선 가능 유형(무뎌짐)만 드래그 미리보기
+    if (!downRef.current || !lineCapable) return;
     const p = pos(e);
-    setPreview({ x: dragRef.current.x, y: dragRef.current.y, x2: p.x, y2: p.y });
+    if (Math.hypot(p.x - downRef.current.x, p.y - downRef.current.y) > DRAG_THRESHOLD) {
+      if (!movedRef.current) { movedRef.current = true; try { wrapRef.current?.setPointerCapture(e.pointerId); } catch { /* noop */ } }
+      setPreview({ x: downRef.current.x, y: downRef.current.y, x2: p.x, y2: p.y });
+    }
   };
   const onPointerUp = (e: React.PointerEvent) => {
-    if (!dragRef.current) return;
-    const start = dragRef.current;
-    const p = pos(e);
-    dragRef.current = null;
+    if (downRef.current && lineCapable && movedRef.current) {
+      const start = downRef.current;
+      const p = pos(e);
+      commitMarks([...marks, { label: at, x: start.x, y: start.y, x2: p.x, y2: p.y }]);
+      justDraggedRef.current = true; // 뒤따르는 click 이 점을 추가하지 않도록
+      window.setTimeout(() => { justDraggedRef.current = false; }, 400);
+    }
+    downRef.current = null;
+    movedRef.current = false;
     setPreview(null);
-    const dist = Math.hypot(p.x - start.x, p.y - start.y);
-    // 무뎌짐(line)만 드래그 시 선. 나머지는 탭=점(드래그해도 시작점에 점).
-    if (lineCapable && dist > DRAG_THRESHOLD) commitMarks([...marks, { label: at, x: start.x, y: start.y, x2: p.x, y2: p.y }]);
-    else commitMarks([...marks, { label: at, x: start.x, y: start.y }]);
   };
 
   const removeMark = (idx: number) => commitMarks(marks.filter((_, i) => i !== idx));
@@ -99,8 +114,8 @@ export function InspectionMarkBoard({ photoUrl, marks: marksProp, flags: flagsPr
       </div>
 
       {/* 사진 + 마킹 (편집) */}
-      <div ref={wrapRef} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp}
-        onPointerCancel={() => { dragRef.current = null; setPreview(null); }}
+      <div ref={wrapRef} onClick={placePoint} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp}
+        onPointerCancel={() => { downRef.current = null; movedRef.current = false; setPreview(null); }}
         className="relative w-full select-none rounded-lg overflow-hidden border border-neutral-200 cursor-crosshair"
         style={{ touchAction: 'none' }}>
         <MarkOverlay photoUrl={photoUrl} marks={marks} flags={flags} />
@@ -117,13 +132,13 @@ export function InspectionMarkBoard({ photoUrl, marks: marksProp, flags: flagsPr
           if (m.x2 != null && m.y2 != null) {
             const mx = (m.x + m.x2) / 2, my = (m.y + m.y2) / 2;
             return (
-              <button key={`l${i}`} data-mark type="button" onClick={() => removeMark(i)} title={`${m.label} (탭 삭제)`}
+              <button key={`l${i}`} data-mark type="button" onClick={(e) => { e.stopPropagation(); removeMark(i); }} title={`${m.label} (탭 삭제)`}
                 className="absolute -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 border-white text-white text-[11px] leading-none flex items-center justify-center shadow"
                 style={{ left: `${mx * 100}%`, top: `${my * 100}%`, background: colorOf(m.label) }}>×</button>
             );
           }
           return (
-            <button key={`p${i}`} data-mark type="button" onClick={() => removeMark(i)} title={`${m.label} (탭 삭제)`}
+            <button key={`p${i}`} data-mark type="button" onClick={(e) => { e.stopPropagation(); removeMark(i); }} title={`${m.label} (탭 삭제)`}
               className="absolute -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full"
               style={{ left: `${m.x * 100}%`, top: `${m.y * 100}%`, background: 'transparent' }} />
           );
