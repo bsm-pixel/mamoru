@@ -127,13 +127,15 @@ export default function RepairDetailPage() {
             <Modal
               open={showInspection}
               onClose={() => setShowInspection(false)}
-              title="검수 체크리스트"
+              title="수리내역서 작성"
               className="max-w-2xl max-h-[90vh] overflow-y-auto"
+              preventAutoClose
             >
               <InspectionForm
                 repairId={r.id}
                 existingInspections={inspections}
                 totalScissors={r.qty_mamoru + r.qty_other}
+                initialComment={r.admin_note || ''}
                 onSaved={() => setShowInspection(false)}
               />
             </Modal>

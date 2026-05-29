@@ -179,6 +179,31 @@
     .status-row .value.warning { background: var(--parchment); color: var(--stone); }
     .status-row .value.bad { background: var(--void); color: var(--cream); }
 
+    /* 핀 마킹 사진 (2026-05-29 — 체크리스트 배지 대체) */
+    .scissor-body { display: block; padding: 16px; text-align: center; }
+    .mark-photo-wrap { position: relative; display: inline-block; max-width: 300px; width: 100%; }
+    .mark-photo-wrap img {
+      width: 100%; height: auto; display: block; border-radius: 12px;
+      background: var(--parchment); box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .mark-pin { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 4px; pointer-events: none; }
+    .mark-pin .dot {
+      width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .mark-pin .tag {
+      font-size: 10px; font-weight: 700; color: #fff; padding: 1px 6px;
+      border-radius: 6px; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .mark-legend { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .mark-legend .leg {
+      display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--stone);
+      background: var(--white); border: 1px solid var(--sand); border-radius: 12px; padding: 3px 10px;
+    }
+    .mark-legend .leg .ldot { width: 10px; height: 10px; border-radius: 50%; }
+    .mark-none { margin-top: 10px; font-size: 13px; color: var(--warm-gray); }
+
     /* 진행내역 */
     .comment-section {
       margin: 16px; padding: 16px; background: var(--cream);
@@ -482,41 +507,58 @@
         '<span class="type">' + escapeHtml(s.type || '기타') + '</span>' +
         '</div>';
 
-      // 사진
-      var photo = '<div class="scissor-photo">';
+      // 사진 + 핀 마킹 오버레이 (2026-05-29: 체크리스트 배지 → 사진 위 핀)
+      var marks = Array.isArray(s.photo_marks) ? s.photo_marks : [];
+      var bodyInner = '';
       if (s.photo) {
-        photo += '<img src="' + escapeHtml(s.photo) + '" alt="가위 사진" crossorigin="anonymous" />';
+        var pins = marks.map(function (m, i) {
+          var c = markColor(m.label);
+          return '<div class="mark-pin" style="left:' + (m.x * 100) + '%;top:' + (m.y * 100) + '%">' +
+            '<span class="dot" style="background:' + c + '">' + (i + 1) + '</span>' +
+            '<span class="tag" style="background:' + c + '">' + escapeHtml(m.label) + '</span>' +
+          '</div>';
+        }).join('');
+        bodyInner = '<div class="mark-photo-wrap">' +
+          '<img src="' + escapeHtml(s.photo) + '" alt="가위 사진" crossorigin="anonymous" />' + pins +
+          '</div>';
+        if (marks.length > 0) {
+          var counts = {};
+          marks.forEach(function (m) { counts[m.label] = (counts[m.label] || 0) + 1; });
+          var legs = Object.keys(counts).map(function (label) {
+            var c = markColor(label);
+            return '<span class="leg"><span class="ldot" style="background:' + c + '"></span>' +
+              escapeHtml(label) + ' ' + counts[label] + '</span>';
+          }).join('');
+          bodyInner += '<div class="mark-legend">' + legs + '</div>';
+        } else {
+          bodyInner += '<div class="mark-none">표시된 상처 없음 (양호)</div>';
+        }
       } else {
-        photo += '<div class="no-photo">&#128247;<br>사진 없음</div>';
+        bodyInner = '<div class="no-photo">&#128247;<br>사진 없음</div>';
       }
-      photo += '</div>';
 
-      // 상태 행
-      var rows = '';
-      rows += statusRow('날 끝', s.blade_tip);
-      rows += statusRow('날 중간', s.blade_mid);
-      rows += statusRow('날 안쪽', s.blade_inner);
-      if (isThinning && s.comb) {
-        rows += statusRow('빗살', s.comb);
-      }
-      rows += statusRow('장력', s.tension);
-      rows += statusRow('내부부품', s.parts);
-      rows += statusRow('스토퍼', s.stopper);
-
-      var body = '<div class="scissor-body">' + photo +
-        '<div class="scissor-status">' + rows + '</div></div>';
+      var body = '<div class="scissor-body">' + bodyInner + '</div>';
 
       card.innerHTML = header + body;
       return card;
     }
 
-    // ── 상태 행 HTML ──
+    // ── 상태 행 HTML (레거시 — 핀 마킹 전환 후 미사용) ──
     function statusRow(label, val) {
       var v = val || '양호';
       return '<div class="status-row">' +
         '<span class="label">' + label + '</span>' +
         '<span class="value ' + statusClass(v) + '">' + escapeHtml(v) + '</span>' +
         '</div>';
+    }
+
+    // ── 핀 라벨 → 색상 (TMS inspection-photo-marker WOUND_TYPES 와 동일) ──
+    var WOUND_COLORS = {
+      '무뎌짐': '#D97706', '찍힘': '#DC2626', '빗살 손상': '#7C3AED',
+      '날 보정': '#2563EB', '장력 조정': '#0D9488', '부품 교체': '#EA580C', '스토퍼 교체': '#475569'
+    };
+    function markColor(label) {
+      return WOUND_COLORS[label] || '#1A1A1A';
     }
 
     // ── HTML 이스케이프 ──
