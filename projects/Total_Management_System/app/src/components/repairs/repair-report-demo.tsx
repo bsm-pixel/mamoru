@@ -13,6 +13,7 @@ const SCISSOR_TYPES = ['블런트', '틴닝', '장가위', '슬라이싱', '기�
 const PIN_MENT: Record<string, string> = {
   '무뎌짐': COMMON_MENT.dull,
   '찍힘': COMMON_MENT.nick,
+  '빗살 손상': COMMON_MENT.comb,
   '부품 문제': COMMON_MENT.parts,
   '스토퍼 문제': COMMON_MENT.stopper,
 };
