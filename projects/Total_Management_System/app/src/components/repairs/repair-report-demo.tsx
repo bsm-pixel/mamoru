@@ -14,18 +14,18 @@ interface DemoScissor {
   photoUrl: string;
   marks: MarkV2[];
   flags: string[];
+  comment: string;
 }
 
-const newScissor = (): DemoScissor => ({ type: '블런트', photoUrl: '', marks: [], flags: [] });
+const newScissor = (): DemoScissor => ({ type: '블런트', photoUrl: '', marks: [], flags: [], comment: '' });
 
 /**
  * 디자인모니터 데모 — 좌(검수 편집, 여러 가위) / 우(실시간 고객 수리내역서).
- * 좌측에서 마킹/멘트를 바꾸면 우측 고객 화면이 즉시 갱신. (저장/업로드 없음)
+ * 진단 멘트는 가위별 독립. 우측 고객 화면은 가위 카드마다 사진·마킹·진단안내가 한 카드에 어우러짐.
  */
 export function RepairReportDemo() {
   const [scissors, setScissors] = useState<DemoScissor[]>([newScissor()]);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [comment, setComment] = useState('');
 
   const active = scissors[activeIdx];
   const presetList = [...COMMENT_PRESETS_COMMON, ...(COMMENT_PRESETS_BY_TYPE[active.type] || [])];
@@ -49,16 +49,15 @@ export function RepairReportDemo() {
     reader.readAsDataURL(file);
   };
 
+  // 진단 멘트: 활성 가위 기준 (가위별 독립)
   const togglePreset = (p: string) => {
     const t = p.trim();
-    setComment((prev) => {
-      const blocks = prev.split('\n\n').map((b) => b.trim()).filter(Boolean);
-      const i = blocks.indexOf(t);
-      if (i >= 0) blocks.splice(i, 1); else blocks.push(t);
-      return blocks.join('\n\n');
-    });
+    const blocks = active.comment.split('\n\n').map((b) => b.trim()).filter(Boolean);
+    const i = blocks.indexOf(t);
+    if (i >= 0) blocks.splice(i, 1); else blocks.push(t);
+    updateActive({ comment: blocks.join('\n\n') });
   };
-  const presetActive = (p: string) => comment.split('\n\n').map((b) => b.trim()).includes(p.trim());
+  const presetActive = (p: string) => active.comment.split('\n\n').map((b) => b.trim()).includes(p.trim());
 
   const countsOf = (marks: MarkV2[]) => {
     const c: Record<string, number> = {};
@@ -72,7 +71,7 @@ export function RepairReportDemo() {
       <div>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-stone-800 text-white">사장님 입력 (검수)</span>
-          <span className="text-[11px] text-stone-400">체크/마킹하면 → 우측 고객 화면 실시간 반영</span>
+          <span className="text-[11px] text-stone-400">가위별 마킹·진단 → 우측 고객 화면 실시간</span>
         </div>
         <div className="mx-auto w-[390px] max-w-full bg-[#FAF9F7] rounded-[24px] shadow-lg border border-stone-200 overflow-hidden">
           <div className="p-4 space-y-4 max-h-[76vh] overflow-y-auto">
@@ -132,9 +131,9 @@ export function RepairReportDemo() {
               />
             </div>
 
-            {/* 진단 멘트 (가위 종류별, 공통은 항상) */}
+            {/* 진단 멘트 — 활성 가위별 (공통 + 종류별) */}
             <div className="pt-3 border-t border-neutral-100">
-              <label className="block text-sm font-medium text-neutral-600 mb-2">진단 멘트 ({active.type})</label>
+              <label className="block text-sm font-medium text-neutral-600 mb-2">진단 멘트 — #{activeIdx + 1} {active.type}</label>
               <div className="flex gap-1.5 flex-wrap mb-2">
                 {presetList.map((p) => {
                   const on = presetActive(p);
@@ -146,15 +145,15 @@ export function RepairReportDemo() {
                   );
                 })}
               </div>
-              <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={5}
-                placeholder="멘트 칩을 선택하거나 직접 작성. 줄바꿈 그대로 고객에게 표시됩니다."
+              <textarea value={active.comment} onChange={(e) => updateActive({ comment: e.target.value })} rows={5}
+                placeholder="이 가위의 진단 멘트. 칩 선택 또는 직접 작성. 줄바꿈 그대로 고객에게 표시됩니다."
                 className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-white text-sm leading-relaxed resize-y focus:outline-none focus:border-neutral-400" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* ─── RIGHT: 고객이 보는 수리내역서 (실시간, 가위 전체) ─── */}
+      {/* ─── RIGHT: 고객이 보는 수리내역서 (실시간, 가위별 진단 통합) ─── */}
       <div>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-600 text-white">고객 화면 (실시간)</span>
@@ -171,10 +170,13 @@ export function RepairReportDemo() {
               const counts = countsOf(s.marks);
               return (
                 <div key={i} className="m-4 bg-white rounded-2xl border border-[#D4D0CB] overflow-hidden shadow-sm">
+                  {/* 헤더 */}
                   <div className="bg-[#1A1A1A] text-[#FAF9F7] px-4 py-3 flex items-center justify-between">
                     <span className="font-bold">{i + 1}번 가위</span>
                     <span className="text-[12px] px-2.5 py-0.5 rounded-full bg-white/15">{s.type}</span>
                   </div>
+
+                  {/* 사진 + 마킹 */}
                   <div className="p-4 text-center">
                     <div className="inline-block w-full max-w-[280px]">
                       <MarkOverlay photoUrl={s.photoUrl} marks={s.marks} flags={s.flags} />
@@ -190,18 +192,21 @@ export function RepairReportDemo() {
                     )}
                     {s.marks.length === 0 && s.photoUrl && <div className="mt-2 text-[13px] text-[#8A8580]">표시된 상처 없음 (양호)</div>}
                   </div>
+
+                  {/* 진단 안내 — 같은 카드 하단에 어우러지게 */}
+                  {s.comment.trim() && (
+                    <div className="px-4 pb-4 -mt-1">
+                      <div className="rounded-xl bg-[#F5F3F0] border border-[#E7E2DC] px-3.5 py-3">
+                        <div className="text-[11px] font-bold tracking-wide text-[#8A8580] mb-1.5">진단 안내</div>
+                        <div className="text-[13.5px] text-[#3D3A36] leading-[1.75] whitespace-pre-wrap">{s.comment}</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
 
-            {comment.trim() ? (
-              <div className="mx-4 mb-5 p-4 bg-[#FAF9F7] rounded-xl border-l-4 border-[#1A1A1A]">
-                <div className="text-[13px] font-bold text-[#1A1A1A] mb-2 pb-2 border-b border-[#D4D0CB]">진단 안내</div>
-                <div className="text-[14px] text-[#4A4A4A] leading-[1.7] whitespace-pre-wrap">{comment}</div>
-              </div>
-            ) : (
-              <div className="mx-4 mb-5 p-4 text-center text-[13px] text-[#8A8580]">진단 멘트를 입력하면 여기에 표시됩니다</div>
-            )}
+            <div className="h-2" />
           </div>
         </div>
       </div>
