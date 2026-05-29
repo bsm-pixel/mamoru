@@ -8,7 +8,13 @@ import { type MarkV2, colorOf, FLAG_TYPES } from './inspection-marks';
 import { COMMON_MENT, COMMENT_PRESETS_BY_TYPE, TININ_INTRO } from '@/lib/repair/comment-presets';
 
 const SCISSOR_TYPES = ['블런트', '틴닝', '장가위', '슬라이싱', '기타'];
-const STOPPER_LABEL = '스토퍼 문제';
+
+/** 위치형 핀 라벨 → 자동 진단멘트 */
+const PIN_MENT: Record<string, string> = {
+  '무뎌짐': COMMON_MENT.dull,
+  '찍힘': COMMON_MENT.nick,
+  '스토퍼 문제': COMMON_MENT.stopper,
+};
 
 interface DemoScissor {
   type: string;
@@ -67,19 +73,22 @@ export function RepairReportDemo() {
     setActiveIdx((cur) => Math.max(0, cur - (idx <= cur ? 1 : 0)));
   };
 
+  // 다시 촬영(새 사진) → 마킹·플래그·진단멘트 모두 초기화
   const pickPhoto = (file: File) => {
     const reader = new FileReader();
-    reader.onload = (e) => updateActive({ photoUrl: e.target?.result as string, marks: [], flags: [] });
+    reader.onload = (e) => updateActive({ photoUrl: e.target?.result as string, marks: [], flags: [], comment: '' });
     reader.readAsDataURL(file);
   };
 
-  // 핀 변경 → 스토퍼 문제 표시 시 멘트 자동삽입/해제
+  // 핀 변경 → 라벨별(무뎌짐/찍힘/스토퍼) 멘트 자동삽입/해제
   const handleMarks = (newMarks: MarkV2[]) => {
-    const had = active.marks.some((m) => m.label === STOPPER_LABEL);
-    const has = newMarks.some((m) => m.label === STOPPER_LABEL);
     let c = active.comment;
-    if (has && !had) c = addBlocks(c, [COMMON_MENT.stopper]);
-    if (!has && had) c = removeBlocks(c, [COMMON_MENT.stopper]);
+    for (const [label, ment] of Object.entries(PIN_MENT)) {
+      const had = active.marks.some((m) => m.label === label);
+      const has = newMarks.some((m) => m.label === label);
+      if (has && !had) c = addBlocks(c, [ment]);
+      if (!has && had) c = removeBlocks(c, [ment]);
+    }
     updateActive({ marks: newMarks, comment: c });
   };
 
@@ -233,7 +242,7 @@ export function RepairReportDemo() {
                   {s.comment.trim() && (
                     <div className="px-4 pb-4 -mt-1">
                       <div className="rounded-xl bg-[#F5F3F0] border border-[#E7E2DC] px-3.5 py-3">
-                        <div className="text-[11px] font-bold tracking-wide text-[#8A8580] mb-2">진단 안내</div>
+                        <div className="text-[11px] font-bold tracking-wide text-[#8A8580] mb-2">진단 및 내역</div>
                         <div className="space-y-2.5">
                           {s.comment.split('\n\n').map((b) => b.trim()).filter(Boolean).map((b, bi) => (
                             <div key={bi} className="flex gap-2 text-[13.5px] text-[#3D3A36] leading-[1.7]">
