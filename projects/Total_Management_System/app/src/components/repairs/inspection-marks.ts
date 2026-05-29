@@ -18,7 +18,7 @@ export const MARK_TYPES: { label: string; color: string; hint?: string; line?: b
   { label: '무뎌짐', color: '#D97706', hint: '드래그=범위', line: true },
   { label: '찍힘', color: '#DC2626' },
   { label: '빗살 손상', color: '#7C3AED', only: '틴닝' },
-  { label: '부품교체 필요', color: '#EA580C' },
+  { label: '부품 문제', color: '#EA580C' },
   { label: '스토퍼 문제', color: '#475569' },
 ];
 
