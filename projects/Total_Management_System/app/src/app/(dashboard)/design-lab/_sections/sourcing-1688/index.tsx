@@ -42,7 +42,7 @@ export function Sourcing1688Section() {
           </span>
         </div>
         <p className="text-xs text-stone-700 leading-relaxed">
-          PO 작성 → 라벨 50×30mm 인쇄 → QR 스캔 입고매칭(폰) → PC 그리드 현황 → 정식 SKU 승격 흐름.
+          PO 작성 → 라벨 인쇄(라벨프린터 1클릭) → QR 스캔 입고매칭(폰) → PC 그리드 현황 → 정식 SKU 승격 흐름.
           <br />
           <span className="text-stone-500">
             ※ 모든 상태는 화면 새로고침 시 초기화. 저장/업로드/API 호출 없음. 운영 데이터 무영향.

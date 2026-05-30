@@ -363,35 +363,38 @@ export function LabelPreview({ po }: { po: DemoPO }) {
         <div className="flex-1 min-w-[100px]" />
 
         <div className="flex items-end gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={handleCsv}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 text-stone-900 text-xs font-bold hover:bg-amber-300"
-            title="NiceLabel에서 데이터 소스로 연결해 자동 N장 인쇄 (가장 정확)"
-          >
-            <FileDown size={13} /> NiceLabel용 CSV
-          </button>
+          {/* 테스트 — 사이즈/여백 점검 (보조) */}
           <button
             type="button"
             onClick={() => handlePrint('test')}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 text-white text-xs font-medium hover:bg-white/25 border border-white/10"
-            title="첫 번째 라벨 1장만 브라우저 인쇄 — 사이즈/여백 점검용"
+            title="첫 번째 라벨 1장만 인쇄 — 사이즈/여백 점검용"
           >
             <Printer size={13} /> 테스트 1장
           </button>
+          {/* PRIMARY — 라벨프린터 직접 인쇄 (B방식 1클릭) */}
           <button
             type="button"
             onClick={() => handlePrint('all')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-stone-900 text-xs font-bold hover:bg-stone-100"
-            title="전체 인쇄 — 다이얼로그에서 'PDF로 저장' 선택 시 PDF로 저장"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-400 text-stone-900 text-xs font-bold hover:bg-amber-300"
+            title="라벨프린터로 바로 인쇄 — 다이얼로그에서 [인쇄] 1번. 'PDF로 저장' 선택 시 PDF."
           >
-            <Printer size={13} /> 전체 {items.length}장 인쇄 / PDF
+            <Printer size={13} /> 라벨 {items.length}장 인쇄
+          </button>
+          {/* CSV — 정렬 틀어질 때 보조 경로 */}
+          <button
+            type="button"
+            onClick={handleCsv}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-white/80 text-xs font-medium hover:bg-white/20 border border-white/10"
+            title="보조 경로 — NiceLabel에서 데이터 소스로 연결해 자동 N장 인쇄 (정렬이 틀어질 때)"
+          >
+            <FileDown size={13} /> CSV
           </button>
           <button
             type="button"
             onClick={handlePng}
             disabled={pngBusy}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 text-white text-xs font-medium hover:bg-white/25 border border-white/10 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-white/80 text-xs font-medium hover:bg-white/20 border border-white/10 disabled:opacity-50"
             title="현재 미리보기를 PNG 이미지로 저장"
           >
             <FileImage size={13} /> {pngBusy ? '생성 중…' : 'PNG'}
@@ -399,37 +402,43 @@ export function LabelPreview({ po }: { po: DemoPO }) {
         </div>
       </div>
 
-      {/* 추천 경로 — NiceLabel CSV */}
+      {/* 권장 경로 — 라벨프린터 직접 인쇄 (B방식 1클릭) */}
       <div className="label-meta flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border-2 border-amber-300 text-[11px] text-stone-800 leading-relaxed">
-        <FileDown size={14} className="text-amber-700 flex-shrink-0 mt-0.5" />
+        <Printer size={14} className="text-amber-700 flex-shrink-0 mt-0.5" />
         <div>
-          <strong className="text-stone-900">✨ 권장 워크플로 — NiceLabel + CSV (가장 정확)</strong>
+          <strong className="text-stone-900">✨ 권장 — 라벨프린터 직접 인쇄 (버튼 1클릭)</strong>
           <ol className="mt-1 ml-4 space-y-0.5 list-decimal">
-            <li>위 <strong>[NiceLabel용 CSV]</strong> 버튼 → CSV 다운로드</li>
-            <li>NiceLabel에서 라벨 템플릿 1번 디자인 (QR / 번호 / 품목명 자리)</li>
-            <li>CSV를 <strong>데이터 소스</strong>로 연결 → 자동 N장 인쇄 (위치·회전 NiceLabel이 보정)</li>
+            <li>
+              <strong>(최초 1회)</strong> 라벨프린터를 Windows <strong>기본 프린터</strong>로 지정 +
+              드라이버 용지 <strong>{size.w}×{size.h}mm · 여백 없음</strong> 저장
+            </li>
+            <li>
+              위 <strong>[라벨 {items.length}장 인쇄]</strong> → 인쇄 다이얼로그{' '}
+              <strong>[인쇄] 1번</strong> = 라벨프린터 바로 출력
+            </li>
           </ol>
           <div className="mt-1.5 text-[10px] text-stone-500">
-            CSV 컬럼: sticker_no, product_name, qr_url, unit_price_cny, quantity, moq, po_number, vendor_url, features_memo
+            🖨️ 권장 기종: <strong>Zebra ZD421T (300dpi)</strong> — 열전사+감열 겸용(확장성), 범용 무지 갭롤, QR 선명
           </div>
         </div>
       </div>
 
-      {/* 브라우저 인쇄 가이드 (보조) */}
+      {/* 라벨프린터 드라이버 1회 설정 가이드 (보조) */}
       <details className="label-meta">
         <summary className="cursor-pointer text-[11px] text-stone-500 hover:text-stone-700 select-none">
-          ⋯ 브라우저 인쇄 ([테스트 1장] / [전체 인쇄] 사용 시 설정) 펼치기
+          ⋯ 라벨프린터 드라이버 용지 설정 (최초 1회) 펼치기
         </summary>
         <div className="mt-2 flex items-start gap-2 px-3 py-2 rounded-lg bg-stone-50 border border-stone-200 text-[11px] text-stone-700 leading-relaxed">
           <AlertCircle size={13} className="text-stone-500 flex-shrink-0 mt-0.5" />
           <div>
-            <strong>인쇄 다이얼로그 → &lsquo;설정 더보기&rsquo; 펼치고 ↓</strong>
+            <strong>드라이버 환경설정(또는 인쇄 다이얼로그 &lsquo;설정 더보기&rsquo;)에서 ↓</strong>
             <ul className="mt-1 ml-3 space-y-0.5 list-disc">
               <li><strong>용지 크기</strong>: &lsquo;사용자 지정&rsquo; → <strong>{size.w} × {size.h} mm</strong></li>
               <li><strong>여백</strong>: 없음 / <strong>배율</strong>: 100%</li>
               <li><strong>머리글·바닥글</strong>: <span className="text-rose-600 font-bold">반드시 끄기</span></li>
               <li><strong>배경 그래픽</strong>: 켜기 (QR 출력)</li>
-              <li>※ Rongta 같은 영수증 프린터 계열은 좌측 치우침 발생 가능 — 그때는 위 NiceLabel CSV 경로 사용</li>
+              <li>한 번 저장하면 이후 <strong>[라벨 N장 인쇄] → [인쇄]</strong> 1클릭으로 바로 출력</li>
+              <li className="text-stone-500">※ 정렬이 좌측으로 치우치면(영수증 겸용 계열) → 상단 <strong>[CSV]</strong> 받아 NiceLabel 데이터 소스로 연결</li>
             </ul>
           </div>
         </div>
