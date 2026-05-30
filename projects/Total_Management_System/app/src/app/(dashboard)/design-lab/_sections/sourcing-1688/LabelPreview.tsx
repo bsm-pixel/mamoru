@@ -1,0 +1,502 @@
+'use client';
+
+import { useMemo, useRef, useState } from 'react';
+import QRCode from 'react-qr-code';
+import { Printer, FileImage, AlertCircle } from 'lucide-react';
+import type { DemoPO, DemoPOItem } from './types';
+
+/**
+ * 50×30mm 기본 + 사이즈 선택 가능한 열전사 라벨 미리보기.
+ *
+ * 동작:
+ * - 화면 미리보기: px 단위(2배 스케일)로 가독성 우선
+ * - 인쇄: @media print 에서 mm 단위로 강제 override → 실제 라벨지 사이즈 정확
+ * - 테스트 1장: data-mode="test" 시 첫 라벨만 보이도록 CSS 필터
+ * - PDF 저장: 시스템 인쇄 다이얼로그에서 "PDF로 저장" 선택 (별도 코드 X)
+ * - PNG: html2canvas (이미 설치됨)
+ */
+
+type LabelSize = {
+  id: string;
+  name: string;
+  w: number; // mm
+  h: number; // mm
+};
+
+const LABEL_PRESETS: LabelSize[] = [
+  { id: 'sm', name: '30 × 20', w: 30, h: 20 },
+  { id: 'md', name: '50 × 30 (표준)', w: 50, h: 30 },
+  { id: 'lg', name: '60 × 40', w: 60, h: 40 },
+  { id: 'xl', name: '70 × 50', w: 70, h: 50 },
+  { id: 'wide', name: '100 × 50 (가로 긴)', w: 100, h: 50 },
+];
+
+const MM_TO_PX = 3.78; // 96dpi 기준
+const SCREEN_SCALE = 2; // 화면 미리보기는 2배 키워서 보기
+const DEMO_BASE_URL = 'https://app-eta-sandy-75.vercel.app/purchasing/inbound';
+
+export function LabelPreview({ po }: { po: DemoPO }) {
+  const items = useMemo(() => po.items.filter((it) => it.product_name), [po.items]);
+  const [sizeId, setSizeId] = useState<string>('md');
+  const [customW, setCustomW] = useState(50);
+  const [customH, setCustomH] = useState(30);
+  const [printMode, setPrintMode] = useState<'idle' | 'test' | 'all'>('idle');
+  const [pngBusy, setPngBusy] = useState(false);
+  const printAreaRef = useRef<HTMLDivElement>(null);
+
+  const size = useMemo<LabelSize>(() => {
+    if (sizeId === 'custom') {
+      const w = Math.max(15, Math.min(200, customW || 50));
+      const h = Math.max(10, Math.min(200, customH || 30));
+      return { id: 'custom', name: `${w} × ${h}`, w, h };
+    }
+    return LABEL_PRESETS.find((p) => p.id === sizeId) || LABEL_PRESETS[1];
+  }, [sizeId, customW, customH]);
+
+  const handlePrint = (mode: 'test' | 'all') => {
+    if (!printAreaRef.current) return;
+    const cardsInDom = Array.from(
+      printAreaRef.current.querySelectorAll('.label-card')
+    ) as HTMLElement[];
+    if (cardsInDom.length === 0) return;
+
+    const targetItems = mode === 'test' ? items.slice(0, 1) : items;
+    const cards = mode === 'test' ? cardsInDom.slice(0, 1) : cardsInDom;
+
+    // 각 라벨의 QR SVG outerHTML 추출 (라이브 DOM 그대로 사용)
+    const labelHtml = targetItems
+      .map((it, i) => {
+        const card = cards[i];
+        const svgEl = card?.querySelector('svg');
+        const qrSvg = svgEl ? svgEl.outerHTML : '';
+        const seq = it.sticker_no.split('-').pop() || '000';
+        const poShort = po.po_number.replace('PO-', '').replace('-DEMO', '');
+        const moqText = it.moq ? ` · MOQ ${it.moq}` : '';
+        return `
+          <div class="label">
+            <div class="qr">${qrSvg}</div>
+            <div class="text">
+              <div class="num">#${escapeHtml(seq)}</div>
+              <div class="name">${escapeHtml(it.product_name)}</div>
+              <div class="price">¥${it.unit_price} × ${it.quantity}${escapeHtml(moqText)}</div>
+              <div class="po">${escapeHtml(poShort)}</div>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    // 새 창에 인쇄 전용 HTML 주입 — 부모 페이지의 빈 영역이 페이지 수를 늘리지 않음
+    const win = window.open('', '_blank', 'width=720,height=560');
+    if (!win) {
+      alert('팝업 차단을 해제해 주세요.');
+      return;
+    }
+    win.document.open();
+    win.document.write(`<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>라벨 인쇄 ${size.w}×${size.h}mm</title>
+  <style>
+    @page {
+      size: ${size.w}mm ${size.h}mm;
+      margin: 0;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      font-family: 'Noto Sans KR', -apple-system, sans-serif;
+      color: #000;
+    }
+    .label {
+      width: ${size.w}mm;
+      height: ${size.h}mm;
+      padding: 1mm;
+      display: grid;
+      grid-template-columns: ${qrMm}mm ${size.w - qrMm - 2}mm;
+      gap: 1mm;
+      align-items: center;
+      overflow: hidden;
+      page-break-after: always;
+      break-after: page;
+    }
+    .label:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+    .qr {
+      width: ${qrMm}mm;
+      height: ${qrMm}mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qr svg {
+      width: ${qrMm}mm !important;
+      height: ${qrMm}mm !important;
+      display: block;
+    }
+    .text {
+      padding-left: 0.5mm;
+      line-height: 1.15;
+      overflow: hidden;
+    }
+    .num {
+      font-size: ${numFontPt}pt;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      line-height: 1.1;
+    }
+    .name {
+      font-size: ${nameFontPt}pt;
+      margin-top: 0.6mm;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-all;
+      line-height: 1.15;
+    }
+    .price {
+      font-size: ${priceFontPt}pt;
+      color: #444;
+      margin-top: 0.5mm;
+    }
+    .po {
+      font-size: ${poFontPt}pt;
+      color: #888;
+      font-family: monospace;
+      margin-top: 0.4mm;
+    }
+  </style>
+</head>
+<body>
+  ${labelHtml}
+  <script>
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        window.focus();
+        window.print();
+      }, 150);
+    });
+    window.addEventListener('afterprint', function() {
+      setTimeout(function() { window.close(); }, 100);
+    });
+  </script>
+</body>
+</html>`);
+    win.document.close();
+    setPrintMode(mode);
+    setTimeout(() => setPrintMode('idle'), 200);
+  };
+
+  const handlePng = async () => {
+    if (!printAreaRef.current) return;
+    setPngBusy(true);
+    try {
+      const { default: html2canvas } = await import('html2canvas');
+      const canvas = await html2canvas(printAreaRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+      });
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `labels-${po.po_number}-${size.w}x${size.h}mm.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      });
+    } catch (e) {
+      // 데모이므로 silent fail
+      console.error('PNG export failed', e);
+    } finally {
+      setPngBusy(false);
+    }
+  };
+
+  if (items.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-stone-300 bg-stone-50 p-8 text-center">
+        <Printer className="mx-auto text-stone-300 mb-2" size={28} />
+        <p className="text-xs text-stone-500">
+          품목명을 입력하면 라벨 미리보기가 여기에 표시됩니다.
+        </p>
+      </div>
+    );
+  }
+
+  // 화면 미리보기 px
+  const labelW = size.w * MM_TO_PX * SCREEN_SCALE;
+  const labelH = size.h * MM_TO_PX * SCREEN_SCALE;
+  // QR은 짧은 변의 80% (양쪽 여백 10%)
+  const qrMm = Math.min(size.w, size.h) * 0.8;
+  const qrPx = qrMm * MM_TO_PX * SCREEN_SCALE;
+  // 텍스트 영역
+  const textColMm = size.w - qrMm - 2; // padding 1mm × 2
+  const textColPx = textColMm * MM_TO_PX * SCREEN_SCALE;
+
+  // 사이즈에 따른 폰트 스케일 (작은 라벨 = 작은 폰트)
+  const shortSide = Math.min(size.w, size.h);
+  const fontScale = shortSide / 30; // 30mm 짧은 변 기준
+  const numFontPt = Math.max(8, Math.min(14, 10 * fontScale));
+  const nameFontPt = Math.max(5, Math.min(9, 6.5 * fontScale));
+  const priceFontPt = Math.max(4.5, Math.min(7, 5.5 * fontScale));
+  const poFontPt = Math.max(4, Math.min(6, 4.5 * fontScale));
+
+  return (
+    <div className="space-y-3">
+      {/* 컨트롤 바 */}
+      <div className="label-controls flex items-end flex-wrap gap-3 p-3.5 bg-stone-900 text-white rounded-xl">
+        <div>
+          <label className="text-[10px] uppercase tracking-wider opacity-60 block mb-1 font-medium">
+            라벨 사이즈
+          </label>
+          <select
+            value={sizeId}
+            onChange={(e) => setSizeId(e.target.value)}
+            className="px-2.5 py-1.5 rounded-lg bg-white/10 text-white text-xs font-medium border border-white/15 focus:outline-none focus:ring-2 focus:ring-white/30"
+          >
+            {LABEL_PRESETS.map((p) => (
+              <option key={p.id} value={p.id} className="text-stone-900">
+                {p.name} mm
+              </option>
+            ))}
+            <option value="custom" className="text-stone-900">
+              사용자 지정
+            </option>
+          </select>
+        </div>
+
+        {sizeId === 'custom' && (
+          <div className="flex items-end gap-1.5">
+            <div>
+              <label className="text-[10px] uppercase tracking-wider opacity-60 block mb-1 font-medium">
+                가로 (mm)
+              </label>
+              <input
+                type="number"
+                min={15}
+                max={200}
+                value={customW}
+                onChange={(e) => setCustomW(Number(e.target.value) || 50)}
+                className="w-16 px-2 py-1.5 rounded-lg bg-white/10 text-white text-xs font-medium border border-white/15 focus:outline-none focus:ring-2 focus:ring-white/30"
+              />
+            </div>
+            <div className="pb-1.5 text-white/40 text-sm">×</div>
+            <div>
+              <label className="text-[10px] uppercase tracking-wider opacity-60 block mb-1 font-medium">
+                세로 (mm)
+              </label>
+              <input
+                type="number"
+                min={10}
+                max={200}
+                value={customH}
+                onChange={(e) => setCustomH(Number(e.target.value) || 30)}
+                className="w-16 px-2 py-1.5 rounded-lg bg-white/10 text-white text-xs font-medium border border-white/15 focus:outline-none focus:ring-2 focus:ring-white/30"
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 min-w-[100px]" />
+
+        <div className="flex items-end gap-2">
+          <button
+            type="button"
+            onClick={() => handlePrint('test')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 text-white text-xs font-medium hover:bg-white/25 border border-white/10"
+            title="첫 번째 라벨 1장만 인쇄 — 사이즈/여백 점검용"
+          >
+            <Printer size={13} /> 테스트 1장
+          </button>
+          <button
+            type="button"
+            onClick={() => handlePrint('all')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-stone-900 text-xs font-bold hover:bg-stone-100"
+            title="전체 인쇄 — 다이얼로그에서 'PDF로 저장' 선택 시 PDF로 저장"
+          >
+            <Printer size={13} /> 전체 {items.length}장 인쇄 / PDF 저장
+          </button>
+          <button
+            type="button"
+            onClick={handlePng}
+            disabled={pngBusy}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 text-white text-xs font-medium hover:bg-white/25 border border-white/10 disabled:opacity-50"
+            title="현재 미리보기를 PNG 이미지로 저장"
+          >
+            <FileImage size={13} /> {pngBusy ? '생성 중…' : 'PNG'}
+          </button>
+        </div>
+      </div>
+
+      {/* 인쇄 가이드 */}
+      <div className="label-meta flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-stone-700 leading-relaxed">
+        <AlertCircle size={13} className="text-amber-600 flex-shrink-0 mt-0.5" />
+        <div>
+          <strong>인쇄 전 체크</strong> ① 라벨프린터가 시스템 프린터로 등록되어 있어야 함{' '}
+          ② 인쇄 다이얼로그에서 <strong>여백: 없음</strong> 선택{' '}
+          ③ <strong>배경 그래픽 켜기</strong> (QR이 출력됨){' '}
+          ④ <strong>PDF 저장</strong>은 다이얼로그에서 &lsquo;대상: PDF로 저장&rsquo; 선택
+        </div>
+      </div>
+
+      <div className="label-meta text-xs text-stone-500">
+        실제 출력 사이즈: <strong className="text-stone-900">{size.w} × {size.h} mm</strong> · 한 품목당 1매 · 총{' '}
+        <strong className="text-stone-900">{items.length}장</strong>
+      </div>
+
+      {/* 라벨 미리보기 영역 (인쇄 타겟) */}
+      <div
+        ref={printAreaRef}
+        className="label-print-area"
+        data-mode={printMode}
+      >
+        <div className="label-grid flex flex-wrap gap-4">
+          {items.map((it) => (
+            <div key={it.id} className="inline-flex flex-col items-start">
+              <div className="label-stickerno text-[10px] text-stone-400 mb-1 font-mono">
+                {it.sticker_no}
+              </div>
+              <LabelCard
+                item={it}
+                poNumber={po.po_number}
+                labelW={labelW}
+                labelH={labelH}
+                qrPx={qrPx}
+                textColPx={textColPx}
+                numFontPt={numFontPt}
+                nameFontPt={nameFontPt}
+                priceFontPt={priceFontPt}
+                poFontPt={poFontPt}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="label-meta text-[10px] text-stone-400 italic">
+        ※ 미리보기는 가독성을 위해 실제 크기의 2배로 표시됩니다. 실제 출력은 정확히 {size.w}×{size.h}mm.
+      </div>
+    </div>
+  );
+}
+
+function LabelCard({
+  item,
+  poNumber,
+  labelW,
+  labelH,
+  qrPx,
+  textColPx,
+  numFontPt,
+  nameFontPt,
+  priceFontPt,
+  poFontPt,
+}: {
+  item: DemoPOItem;
+  poNumber: string;
+  labelW: number;
+  labelH: number;
+  qrPx: number;
+  textColPx: number;
+  numFontPt: number;
+  nameFontPt: number;
+  priceFontPt: number;
+  poFontPt: number;
+}) {
+  const qrUrl = `${DEMO_BASE_URL}/${item.id}`;
+  const seq = item.sticker_no.split('-').pop() || '000';
+  // pt → px (화면용): 1pt ≈ 1.333px × SCREEN_SCALE
+  const ptToPx = (pt: number) => pt * 1.333 * SCREEN_SCALE;
+
+  return (
+    <div
+      className="label-card bg-white border border-stone-300 shadow-sm"
+      style={{
+        width: labelW,
+        height: labelH,
+        padding: 4 * SCREEN_SCALE,
+        display: 'grid',
+        gridTemplateColumns: `${qrPx}px ${textColPx}px`,
+        gap: 4 * SCREEN_SCALE,
+        alignItems: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      <div className="qr-box flex items-center justify-center" style={{ width: qrPx, height: qrPx }}>
+        <QRCode value={qrUrl} size={qrPx} level="M" />
+      </div>
+      <div
+        className="label-text leading-tight"
+        style={{ color: '#0a0a0a', overflow: 'hidden' }}
+      >
+        <div
+          className="ln-num"
+          style={{
+            fontSize: ptToPx(numFontPt),
+            fontWeight: 800,
+            letterSpacing: 0.3,
+            lineHeight: 1.1,
+          }}
+        >
+          #{seq}
+        </div>
+        <div
+          className="ln-name"
+          style={{
+            fontSize: ptToPx(nameFontPt),
+            marginTop: 2 * SCREEN_SCALE,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            wordBreak: 'break-all',
+            lineHeight: 1.15,
+          }}
+        >
+          {item.product_name}
+        </div>
+        <div
+          className="ln-price"
+          style={{
+            fontSize: ptToPx(priceFontPt),
+            marginTop: 2 * SCREEN_SCALE,
+            color: '#444',
+          }}
+        >
+          ¥{item.unit_price} × {item.quantity}
+          {item.moq ? ` · MOQ ${item.moq}` : ''}
+        </div>
+        <div
+          className="ln-po"
+          style={{
+            fontSize: ptToPx(poFontPt),
+            marginTop: 2 * SCREEN_SCALE,
+            color: '#888',
+            fontFamily: 'monospace',
+          }}
+        >
+          {poNumber.replace('PO-', '').replace('-DEMO', '')}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
