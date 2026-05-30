@@ -70,8 +70,8 @@ export function Sourcing1688Section() {
       {/* STEP 2. 라벨 미리보기 */}
       <StepBlock
         n={2}
-        title="라벨 미리보기 (50×30mm)"
-        sub="STEP 1 입력 기반 자동 생성 · QR 스캔 시 해당 품목 입고매칭 페이지 직진입"
+        title="라벨 미리보기 · 인쇄"
+        sub="사이즈 선택 → STEP 1 입력 기반 자동 생성 · QR 스캔 시 해당 품목 입고매칭 페이지 직진입"
         open={openSteps.s2}
         onToggle={() => toggle('s2')}
       >
