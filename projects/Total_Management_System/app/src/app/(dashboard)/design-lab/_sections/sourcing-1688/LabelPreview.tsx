@@ -24,12 +24,9 @@ type LabelSize = {
 };
 
 const LABEL_PRESETS: LabelSize[] = [
-  { id: 'xs', name: '30 × 20', w: 30, h: 20 },
-  { id: 'sm', name: '40 × 20', w: 40, h: 20 },
-  { id: 'md', name: '50 × 30 (표준)', w: 50, h: 30 },
-  { id: 'lg', name: '60 × 40', w: 60, h: 40 },
-  { id: 'xl', name: '70 × 50', w: 70, h: 50 },
-  { id: 'wide', name: '100 × 50 (가로 긴)', w: 100, h: 50 },
+  { id: 'p30x15', name: '3 × 1.5 cm (30 × 15 mm)', w: 30, h: 15 },
+  { id: 'p40x20', name: '4 × 2 cm (40 × 20 mm)', w: 40, h: 20 },
+  { id: 'p40x30', name: '4 × 3 cm (40 × 30 mm)', w: 40, h: 30 },
 ];
 
 const MM_TO_PX = 3.78; // 96dpi 기준
@@ -38,9 +35,9 @@ const DEMO_BASE_URL = 'https://app-eta-sandy-75.vercel.app/purchasing/inbound';
 
 export function LabelPreview({ po }: { po: DemoPO }) {
   const items = useMemo(() => po.items.filter((it) => it.product_name), [po.items]);
-  const [sizeId, setSizeId] = useState<string>('md');
-  const [customW, setCustomW] = useState(50);
-  const [customH, setCustomH] = useState(30);
+  const [sizeId, setSizeId] = useState<string>('p40x20');
+  const [customW, setCustomW] = useState(40);
+  const [customH, setCustomH] = useState(20);
   const [printMode, setPrintMode] = useState<'idle' | 'test' | 'all'>('idle');
   const [pngBusy, setPngBusy] = useState(false);
   const printAreaRef = useRef<HTMLDivElement>(null);
