@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import QRCode from 'react-qr-code';
-import { Printer, FileImage, AlertCircle } from 'lucide-react';
+import { Printer, FileImage, AlertCircle, FileDown } from 'lucide-react';
 import type { DemoPO, DemoPOItem } from './types';
 
 /**
@@ -198,6 +198,54 @@ export function LabelPreview({ po }: { po: DemoPO }) {
     setTimeout(() => setPrintMode('idle'), 200);
   };
 
+  const handleCsv = () => {
+    if (items.length === 0) return;
+    // UTF-8 BOM + CRLF (Excel/NiceLabel 호환)
+    const headers = [
+      'sticker_no',
+      'product_name',
+      'qr_url',
+      'unit_price_cny',
+      'quantity',
+      'moq',
+      'po_number',
+      'vendor_url',
+      'features_memo',
+    ];
+    const esc = (v: string | number | null | undefined): string => {
+      const s = v == null ? '' : String(v);
+      return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [
+      headers.join(','),
+      ...items.map((it) =>
+        [
+          it.sticker_no,
+          it.product_name,
+          `${DEMO_BASE_URL}/${it.id}`,
+          it.unit_price,
+          it.quantity,
+          it.moq ?? '',
+          po.po_number,
+          it.vendor_url,
+          it.features_memo,
+        ]
+          .map(esc)
+          .join(',')
+      ),
+    ];
+    const csv = '﻿' + lines.join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `labels-${po.po_number}-${items.length}items.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   const handlePng = async () => {
     if (!printAreaRef.current) return;
     setPngBusy(true);
@@ -314,12 +362,20 @@ export function LabelPreview({ po }: { po: DemoPO }) {
 
         <div className="flex-1 min-w-[100px]" />
 
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={handleCsv}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 text-stone-900 text-xs font-bold hover:bg-amber-300"
+            title="NiceLabel에서 데이터 소스로 연결해 자동 N장 인쇄 (가장 정확)"
+          >
+            <FileDown size={13} /> NiceLabel용 CSV
+          </button>
           <button
             type="button"
             onClick={() => handlePrint('test')}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 text-white text-xs font-medium hover:bg-white/25 border border-white/10"
-            title="첫 번째 라벨 1장만 인쇄 — 사이즈/여백 점검용"
+            title="첫 번째 라벨 1장만 브라우저 인쇄 — 사이즈/여백 점검용"
           >
             <Printer size={13} /> 테스트 1장
           </button>
@@ -329,7 +385,7 @@ export function LabelPreview({ po }: { po: DemoPO }) {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-stone-900 text-xs font-bold hover:bg-stone-100"
             title="전체 인쇄 — 다이얼로그에서 'PDF로 저장' 선택 시 PDF로 저장"
           >
-            <Printer size={13} /> 전체 {items.length}장 인쇄 / PDF 저장
+            <Printer size={13} /> 전체 {items.length}장 인쇄 / PDF
           </button>
           <button
             type="button"
@@ -343,21 +399,41 @@ export function LabelPreview({ po }: { po: DemoPO }) {
         </div>
       </div>
 
-      {/* 인쇄 가이드 */}
-      <div className="label-meta flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-stone-700 leading-relaxed">
-        <AlertCircle size={13} className="text-amber-600 flex-shrink-0 mt-0.5" />
+      {/* 추천 경로 — NiceLabel CSV */}
+      <div className="label-meta flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border-2 border-amber-300 text-[11px] text-stone-800 leading-relaxed">
+        <FileDown size={14} className="text-amber-700 flex-shrink-0 mt-0.5" />
         <div>
-          <strong>인쇄 다이얼로그 → &lsquo;설정 더보기&rsquo; 펼치고 ↓</strong>
-          <ul className="mt-1 ml-3 space-y-0.5 list-disc">
-            <li><strong>용지 크기</strong>: &lsquo;사용자 지정&rsquo; → <strong>{size.w} × {size.h} mm</strong> 입력 (드라이버 기본값 무시되도록)</li>
-            <li><strong>여백</strong>: 없음</li>
-            <li><strong>배율</strong>: 기본값 (100%)</li>
-            <li><strong>옵션 → 머리글 및 바닥글</strong>: <span className="text-rose-600 font-bold">반드시 끄기</span> (안 끄면 페이지 제목·시간이 라벨에 겹쳐 인쇄됨)</li>
-            <li><strong>옵션 → 배경 그래픽</strong>: 켜기 (QR이 출력됨)</li>
-            <li><strong>PDF 저장</strong>: 대상 = &lsquo;PDF로 저장&rsquo; 선택</li>
-          </ul>
+          <strong className="text-stone-900">✨ 권장 워크플로 — NiceLabel + CSV (가장 정확)</strong>
+          <ol className="mt-1 ml-4 space-y-0.5 list-decimal">
+            <li>위 <strong>[NiceLabel용 CSV]</strong> 버튼 → CSV 다운로드</li>
+            <li>NiceLabel에서 라벨 템플릿 1번 디자인 (QR / 번호 / 품목명 자리)</li>
+            <li>CSV를 <strong>데이터 소스</strong>로 연결 → 자동 N장 인쇄 (위치·회전 NiceLabel이 보정)</li>
+          </ol>
+          <div className="mt-1.5 text-[10px] text-stone-500">
+            CSV 컬럼: sticker_no, product_name, qr_url, unit_price_cny, quantity, moq, po_number, vendor_url, features_memo
+          </div>
         </div>
       </div>
+
+      {/* 브라우저 인쇄 가이드 (보조) */}
+      <details className="label-meta">
+        <summary className="cursor-pointer text-[11px] text-stone-500 hover:text-stone-700 select-none">
+          ⋯ 브라우저 인쇄 ([테스트 1장] / [전체 인쇄] 사용 시 설정) 펼치기
+        </summary>
+        <div className="mt-2 flex items-start gap-2 px-3 py-2 rounded-lg bg-stone-50 border border-stone-200 text-[11px] text-stone-700 leading-relaxed">
+          <AlertCircle size={13} className="text-stone-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <strong>인쇄 다이얼로그 → &lsquo;설정 더보기&rsquo; 펼치고 ↓</strong>
+            <ul className="mt-1 ml-3 space-y-0.5 list-disc">
+              <li><strong>용지 크기</strong>: &lsquo;사용자 지정&rsquo; → <strong>{size.w} × {size.h} mm</strong></li>
+              <li><strong>여백</strong>: 없음 / <strong>배율</strong>: 100%</li>
+              <li><strong>머리글·바닥글</strong>: <span className="text-rose-600 font-bold">반드시 끄기</span></li>
+              <li><strong>배경 그래픽</strong>: 켜기 (QR 출력)</li>
+              <li>※ Rongta 같은 영수증 프린터 계열은 좌측 치우침 발생 가능 — 그때는 위 NiceLabel CSV 경로 사용</li>
+            </ul>
+          </div>
+        </div>
+      </details>
 
       <div className="label-meta text-xs text-stone-500">
         실제 출력 사이즈: <strong className="text-stone-900">{size.w} × {size.h} mm</strong> · 한 품목당 1매 · 총{' '}
