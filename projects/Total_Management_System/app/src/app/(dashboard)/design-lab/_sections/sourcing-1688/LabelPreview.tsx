@@ -24,7 +24,8 @@ type LabelSize = {
 };
 
 const LABEL_PRESETS: LabelSize[] = [
-  { id: 'sm', name: '30 × 20', w: 30, h: 20 },
+  { id: 'xs', name: '30 × 20', w: 30, h: 20 },
+  { id: 'sm', name: '40 × 20', w: 40, h: 20 },
   { id: 'md', name: '50 × 30 (표준)', w: 50, h: 30 },
   { id: 'lg', name: '60 × 40', w: 60, h: 40 },
   { id: 'xl', name: '70 × 50', w: 70, h: 50 },
@@ -93,11 +94,12 @@ export function LabelPreview({ po }: { po: DemoPO }) {
       return;
     }
     win.document.open();
+    // 머리글·바닥글 제거: title 비우기 (브라우저 자동 머리글 = 페이지 title)
     win.document.write(`<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <title>라벨 인쇄 ${size.w}×${size.h}mm</title>
+  <title></title>
   <style>
     @page {
       size: ${size.w}mm ${size.h}mm;
@@ -143,6 +145,11 @@ export function LabelPreview({ po }: { po: DemoPO }) {
       padding-left: 0.5mm;
       line-height: 1.15;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      align-items: center;
     }
     .num {
       font-size: ${numFontPt}pt;
@@ -159,6 +166,7 @@ export function LabelPreview({ po }: { po: DemoPO }) {
       overflow: hidden;
       word-break: break-all;
       line-height: 1.15;
+      text-align: center;
     }
     .price {
       font-size: ${priceFontPt}pt;
@@ -342,10 +350,15 @@ export function LabelPreview({ po }: { po: DemoPO }) {
       <div className="label-meta flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-stone-700 leading-relaxed">
         <AlertCircle size={13} className="text-amber-600 flex-shrink-0 mt-0.5" />
         <div>
-          <strong>인쇄 전 체크</strong> ① 라벨프린터가 시스템 프린터로 등록되어 있어야 함{' '}
-          ② 인쇄 다이얼로그에서 <strong>여백: 없음</strong> 선택{' '}
-          ③ <strong>배경 그래픽 켜기</strong> (QR이 출력됨){' '}
-          ④ <strong>PDF 저장</strong>은 다이얼로그에서 &lsquo;대상: PDF로 저장&rsquo; 선택
+          <strong>인쇄 다이얼로그 → &lsquo;설정 더보기&rsquo; 펼치고 ↓</strong>
+          <ul className="mt-1 ml-3 space-y-0.5 list-disc">
+            <li><strong>용지 크기</strong>: &lsquo;사용자 지정&rsquo; → <strong>{size.w} × {size.h} mm</strong> 입력 (드라이버 기본값 무시되도록)</li>
+            <li><strong>여백</strong>: 없음</li>
+            <li><strong>배율</strong>: 기본값 (100%)</li>
+            <li><strong>옵션 → 머리글 및 바닥글</strong>: <span className="text-rose-600 font-bold">반드시 끄기</span> (안 끄면 페이지 제목·시간이 라벨에 겹쳐 인쇄됨)</li>
+            <li><strong>옵션 → 배경 그래픽</strong>: 켜기 (QR이 출력됨)</li>
+            <li><strong>PDF 저장</strong>: 대상 = &lsquo;PDF로 저장&rsquo; 선택</li>
+          </ul>
         </div>
       </div>
 
