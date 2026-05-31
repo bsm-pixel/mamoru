@@ -5,6 +5,7 @@ import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSourcingList, useCreateSourcing } from '@/hooks/use-sourcing';
+import { ScanBox } from '@/components/sourcing/scan-box';
 import { Plus, Sparkles, PackageSearch, CheckCircle2, XCircle } from 'lucide-react';
 
 /**
@@ -35,6 +36,9 @@ export default function SourcingListPage() {
             <Plus size={16} className="mr-1" /> 새 소싱
           </Button>
         </div>
+
+        {/* PC 바코드 스캐너 — 라벨 QR 스캔 시 해당 품목 입고매칭 열림 */}
+        <ScanBox />
 
         {isLoading ? (
           <div className="text-center py-16 text-sm text-neutral-400">불러오는 중…</div>
