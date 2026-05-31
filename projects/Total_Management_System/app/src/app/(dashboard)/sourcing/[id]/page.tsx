@@ -66,7 +66,7 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
   }
 
   const handleDelete = async () => {
-    if (!confirm(`${po.po_number} 발주를 삭제할까요? (품목 전부 삭제)`)) return;
+    if (!confirm(`${po.po_number} 소싱을 삭제할까요? (품목 전부 삭제)`)) return;
     await deletePo.mutateAsync(id);
     router.push('/sourcing');
   };
@@ -93,33 +93,31 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
     <div className="min-h-screen bg-warm-ivory pb-16">
       <Topbar title="샘플 소싱" />
       <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-5">
-        {/* 헤더 */}
+        {/* 헤더 — 소싱 회차 (매입처는 제품별 1688 링크로 분산, 단일 매입처 헤더 제거) */}
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => router.push('/sourcing')} className="text-neutral-500 hover:text-indigo-black">
             <ArrowLeft size={20} />
           </button>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="font-mono text-base font-bold text-indigo-black">{po.po_number}</div>
-            <div className="text-[11px] text-neutral-400">{po.order_date}</div>
+            <div className="text-[11px] text-neutral-400">{po.order_date} · 소싱 회차</div>
           </div>
           <Button variant="ghost" size="sm" onClick={handleDelete} className="text-rose-500">
-            <Trash2 size={14} className="mr-1" /> 발주 삭제
+            <Trash2 size={14} className="mr-1" /> 소싱 삭제
           </Button>
         </div>
 
-        {/* 매입처 */}
-        <section className="rounded-xl border border-neutral-200 bg-white p-4">
-          <div className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-3">매입처 (1688)</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <LabeledInput label="회사명 (중문 가능)" defaultValue={po.supplier_name ?? ''} placeholder="예) 光达美容工具"
-              onBlur={(v) => v !== (po.supplier_name ?? '') && updatePo.mutate({ id, supplier_name: v })} />
-            <LabeledInput label="회사 홈 URL" defaultValue={po.supplier_url ?? ''} placeholder="https://shop....1688.com"
-              onBlur={(v) => v !== (po.supplier_url ?? '') && updatePo.mutate({ id, supplier_url: v })} />
-          </div>
-        </section>
+        {/* 선택: 회차명 (배치 식별용) */}
+        <input
+          type="text"
+          defaultValue={po.memo ?? ''}
+          placeholder="소싱 회차명 (선택) — 예: 5월 가위 1차"
+          onBlur={(e) => e.target.value !== (po.memo ?? '') && updatePo.mutate({ id, memo: e.target.value })}
+          className="w-full px-3 py-2 text-sm rounded-lg border border-neutral-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-black/10 focus:border-neutral-400"
+        />
 
         {/* STEP 1. 품목 */}
-        <Section n={1} title="품목" sub="1688 링크·품목명·단가·특징 입력 (수량 입력 없음 — 선별용)">
+        <Section n={1} title="품목" sub="제품마다 1688 링크 + 품목명·단가·특징 (제품별로 다른 상점이어도 OK · 수량 없음)">
           <div className="space-y-3">
             {items.map((it, idx) => (
               <ItemRow
@@ -224,23 +222,6 @@ function Section({ n, title, sub, children }: { n: number; title: string; sub: s
 
 function Empty({ children }: { children: React.ReactNode }) {
   return <div className="text-center py-8 text-xs text-neutral-400">{children}</div>;
-}
-
-function LabeledInput({ label, defaultValue, placeholder, onBlur }: {
-  label: string; defaultValue: string; placeholder?: string; onBlur: (v: string) => void;
-}) {
-  return (
-    <label className="block">
-      <span className="block text-[11px] text-neutral-500 mb-1 font-medium">{label}</span>
-      <input
-        type="text"
-        defaultValue={defaultValue}
-        placeholder={placeholder}
-        onBlur={(e) => onBlur(e.target.value)}
-        className="w-full px-3 py-2 text-sm rounded-lg border border-neutral-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-black/10 focus:border-neutral-400"
-      />
-    </label>
-  );
 }
 
 function ItemRow({ item, idx, onPatch, onDelete }: {

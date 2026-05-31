@@ -60,7 +60,7 @@ export default function SourcingListPage() {
                   <span className="text-[11px] text-neutral-400">{po.order_date}</span>
                 </div>
                 <div className="text-sm text-neutral-700 truncate mb-3">
-                  {po.supplier_name || <span className="text-neutral-400">매입처 미입력</span>}
+                  {po.memo || <span className="text-neutral-400">샘플 {po.counts.total}종</span>}
                 </div>
                 <div className="flex items-center gap-3 text-[11px]">
                   <span className="inline-flex items-center gap-1 text-neutral-500">
