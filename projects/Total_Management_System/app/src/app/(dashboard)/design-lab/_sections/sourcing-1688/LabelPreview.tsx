@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import QRCode from 'react-qr-code';
-import { Printer, FileImage, AlertCircle, FileDown } from 'lucide-react';
+import { Printer, FileImage, AlertCircle, FileDown, FileCode } from 'lucide-react';
 import type { DemoPO, DemoPOItem } from './types';
 
 /**
@@ -40,6 +40,8 @@ export function LabelPreview({ po }: { po: DemoPO }) {
   const [customH, setCustomH] = useState(20);
   const [printMode, setPrintMode] = useState<'idle' | 'test' | 'all'>('idle');
   const [pngBusy, setPngBusy] = useState(false);
+  const [zplBusy, setZplBusy] = useState(false);
+  const [dpi, setDpi] = useState<203 | 300>(300); // ZPL 출력 해상도 (ZD421T=300, 일부 모델=203)
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   const size = useMemo<LabelSize>(() => {
@@ -275,6 +277,94 @@ export function LabelPreview({ po }: { po: DemoPO }) {
     }
   };
 
+  // Zebra 네이티브 ZPL(.zpl) 저장
+  // 한글 폰트 깨짐 방지를 위해 라벨 전체를 1비트 비트맵(^GFA)으로 래스터화 →
+  // QR·한글·레이아웃이 미리보기와 100% 동일, 프린터 폰트 설치 불필요.
+  const handleZpl = async () => {
+    if (!printAreaRef.current || items.length === 0) return;
+    setZplBusy(true);
+    try {
+      const { default: html2canvas } = await import('html2canvas');
+      const dotsPerMm = dpi / 25.4;
+      const pw = Math.round(size.w * dotsPerMm); // print width (dots)
+      const ll = Math.round(size.h * dotsPerMm); // label length (dots)
+      const bytesPerRow = Math.ceil(pw / 8);
+
+      const cards = Array.from(
+        printAreaRef.current.querySelectorAll('.label-card')
+      ) as HTMLElement[];
+
+      const blocks: string[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const card = cards[i];
+        if (!card) continue;
+
+        // 고해상 렌더 후 타겟 dot 크기로 다운스케일 (QR 모듈 가독 위해 scale 3)
+        const src = await html2canvas(card, {
+          backgroundColor: '#ffffff',
+          scale: 3,
+          useCORS: true,
+        });
+        const dest = document.createElement('canvas');
+        dest.width = pw;
+        dest.height = ll;
+        const ctx = dest.getContext('2d');
+        if (!ctx) continue;
+        ctx.imageSmoothingEnabled = false; // QR 엣지 뭉개짐 방지
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, pw, ll);
+        ctx.drawImage(src, 0, 0, pw, ll);
+        const img = ctx.getImageData(0, 0, pw, ll).data;
+
+        // 1비트 패킹 (1=흑=출력), MSB=좌측 픽셀
+        const bytes: number[] = [];
+        for (let y = 0; y < ll; y++) {
+          for (let b = 0; b < bytesPerRow; b++) {
+            let byte = 0;
+            for (let bit = 0; bit < 8; bit++) {
+              const x = b * 8 + bit;
+              let dark = 0;
+              if (x < pw) {
+                const idx = (y * pw + x) * 4;
+                const lum =
+                  0.299 * img[idx] + 0.587 * img[idx + 1] + 0.114 * img[idx + 2];
+                dark = lum < 128 ? 1 : 0;
+              }
+              byte = (byte << 1) | dark;
+            }
+            bytes.push(byte);
+          }
+        }
+        const total = bytes.length;
+        const hex = bytes
+          .map((v) => v.toString(16).padStart(2, '0'))
+          .join('')
+          .toUpperCase();
+
+        // ^GFA,총바이트,총바이트,행당바이트,16진데이터
+        blocks.push(
+          `^XA\n^PW${pw}\n^LL${ll}\n^LH0,0\n^FO0,0^GFA,${total},${total},${bytesPerRow},${hex}^FS\n^PQ1\n^XZ`
+        );
+      }
+
+      const zpl = blocks.join('\n');
+      const blob = new Blob([zpl], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `labels-${po.po_number}-${items.length}items-${dpi}dpi.zpl`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('ZPL export failed', e);
+      alert('ZPL 생성 실패 — 콘솔을 확인해 주세요.');
+    } finally {
+      setZplBusy(false);
+    }
+  };
+
   if (items.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-stone-300 bg-stone-50 p-8 text-center">
@@ -360,6 +450,21 @@ export function LabelPreview({ po }: { po: DemoPO }) {
           </div>
         )}
 
+        {/* ZPL 출력 해상도 — 프린터 모델에 맞춤 (ZD421T=300) */}
+        <div>
+          <label className="text-[10px] uppercase tracking-wider opacity-60 block mb-1 font-medium">
+            ZPL 해상도
+          </label>
+          <select
+            value={dpi}
+            onChange={(e) => setDpi(Number(e.target.value) as 203 | 300)}
+            className="px-2.5 py-1.5 rounded-lg bg-white/10 text-white text-xs font-medium border border-white/15 focus:outline-none focus:ring-2 focus:ring-white/30"
+          >
+            <option value={300} className="text-stone-900">300 dpi</option>
+            <option value={203} className="text-stone-900">203 dpi</option>
+          </select>
+        </div>
+
         <div className="flex-1 min-w-[100px]" />
 
         <div className="flex items-end gap-2 flex-wrap">
@@ -380,6 +485,16 @@ export function LabelPreview({ po }: { po: DemoPO }) {
             title="라벨프린터로 바로 인쇄 — 다이얼로그에서 [인쇄] 1번. 'PDF로 저장' 선택 시 PDF."
           >
             <Printer size={13} /> 라벨 {items.length}장 인쇄
+          </button>
+          {/* ZPL — Zebra 네이티브 라벨 파일 저장 (오늘 프린터 없이 prep) */}
+          <button
+            type="button"
+            onClick={handleZpl}
+            disabled={zplBusy}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-stone-900 text-xs font-bold hover:bg-stone-100 disabled:opacity-50"
+            title="Zebra 라벨프린터 네이티브 .zpl 파일로 저장 — 프린터 없이 labelary.com에서 미리보기 가능"
+          >
+            <FileCode size={13} /> {zplBusy ? '생성 중…' : 'ZPL 저장'}
           </button>
           {/* CSV — 정렬 틀어질 때 보조 경로 */}
           <button
@@ -419,6 +534,9 @@ export function LabelPreview({ po }: { po: DemoPO }) {
           </ol>
           <div className="mt-1.5 text-[10px] text-stone-500">
             🖨️ 권장 기종: <strong>Zebra ZD421T (300dpi)</strong> — 열전사+감열 겸용(확장성), 범용 무지 갭롤, QR 선명
+          </div>
+          <div className="mt-1 text-[10px] text-stone-600 bg-white/60 rounded px-2 py-1 border border-amber-200">
+            📁 <strong>프린터 없는 오늘은</strong> 위 <strong>[ZPL 저장]</strong> → <strong>labelary.com/viewer.html</strong> 에 붙여넣어 라벨 실물 모양 미리 확인. (Zebra 네이티브 .zpl — 도착 후 그대로 출력)
           </div>
         </div>
       </div>
