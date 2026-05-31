@@ -278,57 +278,125 @@ export function LabelPreview({ po }: { po: DemoPO }) {
   };
 
   // Zebra 네이티브 ZPL(.zpl) 저장
-  // 한글 폰트 깨짐 방지를 위해 라벨 전체를 1비트 비트맵(^GFA)으로 래스터화 →
-  // QR·한글·레이아웃이 미리보기와 100% 동일, 프린터 폰트 설치 불필요.
+  // ⚠️ html2canvas는 Tailwind v4 oklch() 색상에서 예외를 던지므로 사용 안 함.
+  // 라벨을 네이티브 canvas에 직접 그린다 (QR=라이브 SVG 이미지, 텍스트=fillText 한글 그대로)
+  // → oklch·canvas taint 문제 원천 회피 + 1비트 ^GFA로 패킹.
   const handleZpl = async () => {
     if (!printAreaRef.current || items.length === 0) return;
     setZplBusy(true);
     try {
-      const { default: html2canvas } = await import('html2canvas');
       const dotsPerMm = dpi / 25.4;
       const pw = Math.round(size.w * dotsPerMm); // print width (dots)
       const ll = Math.round(size.h * dotsPerMm); // label length (dots)
       const bytesPerRow = Math.ceil(pw / 8);
+      const ptToDots = (pt: number) => Math.round((pt * dpi) / 72);
+      const pad = Math.max(2, Math.round(dotsPerMm)); // 약 1mm
+      const qrSize = Math.round(Math.min(pw, ll) * 0.8);
 
       const cards = Array.from(
         printAreaRef.current.querySelectorAll('.label-card')
       ) as HTMLElement[];
 
+      const loadImage = (src: string) =>
+        new Promise<HTMLImageElement>((res, rej) => {
+          const im = new Image();
+          im.onload = () => res(im);
+          im.onerror = () => rej(new Error('QR SVG 이미지 로드 실패'));
+          im.src = src;
+        });
+
       const blocks: string[] = [];
       for (let i = 0; i < items.length; i++) {
+        const it = items[i];
         const card = cards[i];
-        if (!card) continue;
 
-        // 고해상 렌더 후 타겟 dot 크기로 다운스케일 (QR 모듈 가독 위해 scale 3)
-        const src = await html2canvas(card, {
-          backgroundColor: '#ffffff',
-          scale: 3,
-          useCORS: true,
-        });
-        const dest = document.createElement('canvas');
-        dest.width = pw;
-        dest.height = ll;
-        const ctx = dest.getContext('2d');
+        const canvas = document.createElement('canvas');
+        canvas.width = pw;
+        canvas.height = ll;
+        const ctx = canvas.getContext('2d');
         if (!ctx) continue;
-        ctx.imageSmoothingEnabled = false; // QR 엣지 뭉개짐 방지
         ctx.fillStyle = '#fff';
         ctx.fillRect(0, 0, pw, ll);
-        ctx.drawImage(src, 0, 0, pw, ll);
-        const img = ctx.getImageData(0, 0, pw, ll).data;
+        ctx.imageSmoothingEnabled = false;
+
+        // QR — 라이브 SVG 복제 + xmlns 보강 후 이미지로 그림 (inline SVG라 taint 없음)
+        const qrX = pad;
+        const qrY = Math.round((ll - qrSize) / 2);
+        const svgEl = card?.querySelector('svg');
+        if (svgEl) {
+          const clone = svgEl.cloneNode(true) as SVGElement;
+          clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          const svgStr = new XMLSerializer().serializeToString(clone);
+          const url = URL.createObjectURL(
+            new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' })
+          );
+          try {
+            const im = await loadImage(url);
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(im, qrX, qrY, qrSize, qrSize);
+          } finally {
+            URL.revokeObjectURL(url);
+          }
+        }
+
+        // 텍스트 — 전부 #000 (열전사 1비트라 회색은 임계값에서 사라질 수 있음)
+        const tx = qrX + qrSize + pad;
+        const maxW = pw - tx - pad;
+        ctx.fillStyle = '#000';
+        ctx.textBaseline = 'top';
+
+        const seq = it.sticker_no.split('-').pop() || '000';
+        const poShort = po.po_number.replace('PO-', '').replace('-DEMO', '');
+        const priceText = `¥${it.unit_price} x ${it.quantity}${
+          it.moq ? ` MOQ${it.moq}` : ''
+        }`;
+
+        const numPx = ptToDots(numFontPt);
+        const namePx = ptToDots(nameFontPt);
+        const pricePx = ptToDots(priceFontPt);
+        const poPx = ptToDots(poFontPt);
+        const gap = Math.max(1, Math.round(namePx * 0.25));
+
+        ctx.font = `${namePx}px 'Noto Sans KR', sans-serif`;
+        const nameLines = wrapTextChars(ctx, it.product_name, maxW, 2);
+
+        const totalH =
+          numPx + gap + nameLines.length * (namePx + 2) + gap + pricePx + gap + poPx;
+        let y = Math.max(pad, Math.round((ll - totalH) / 2));
+
+        ctx.font = `800 ${numPx}px 'Noto Sans KR', sans-serif`;
+        ctx.fillText(`#${seq}`, tx, y);
+        y += numPx + gap;
+
+        ctx.font = `${namePx}px 'Noto Sans KR', sans-serif`;
+        for (const ln of nameLines) {
+          ctx.fillText(ln, tx, y);
+          y += namePx + 2;
+        }
+        y += gap;
+
+        ctx.font = `${pricePx}px 'Noto Sans KR', sans-serif`;
+        ctx.fillText(priceText, tx, y);
+        y += pricePx + gap;
+
+        ctx.font = `${poPx}px monospace`;
+        ctx.fillText(poShort, tx, y);
 
         // 1비트 패킹 (1=흑=출력), MSB=좌측 픽셀
+        const data = ctx.getImageData(0, 0, pw, ll).data;
         const bytes: number[] = [];
-        for (let y = 0; y < ll; y++) {
+        for (let yy = 0; yy < ll; yy++) {
           for (let b = 0; b < bytesPerRow; b++) {
             let byte = 0;
             for (let bit = 0; bit < 8; bit++) {
               const x = b * 8 + bit;
               let dark = 0;
               if (x < pw) {
-                const idx = (y * pw + x) * 4;
+                const idx = (yy * pw + x) * 4;
+                const alpha = data[idx + 3];
                 const lum =
-                  0.299 * img[idx] + 0.587 * img[idx + 1] + 0.114 * img[idx + 2];
-                dark = lum < 128 ? 1 : 0;
+                  0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                dark = alpha > 128 && lum < 128 ? 1 : 0;
               }
               byte = (byte << 1) | dark;
             }
@@ -359,7 +427,7 @@ export function LabelPreview({ po }: { po: DemoPO }) {
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error('ZPL export failed', e);
-      alert('ZPL 생성 실패 — 콘솔을 확인해 주세요.');
+      alert(`ZPL 생성 실패: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setZplBusy(false);
     }
@@ -703,6 +771,32 @@ function LabelCard({
       </div>
     </div>
   );
+}
+
+// canvas 텍스트 줄바꿈 (한글은 공백이 없어 글자 단위로 끊고, 마지막 줄 초과 시 … 처리)
+function wrapTextChars(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxW: number,
+  maxLines: number
+): string[] {
+  const lines: string[] = [];
+  let cur = '';
+  for (const ch of text) {
+    if (ctx.measureText(cur + ch).width > maxW && cur) {
+      lines.push(cur);
+      cur = ch;
+    } else {
+      cur += ch;
+    }
+  }
+  if (cur) lines.push(cur);
+  if (lines.length <= maxLines) return lines;
+  const kept = lines.slice(0, maxLines);
+  let last = kept[maxLines - 1];
+  while (last && ctx.measureText(last + '…').width > maxW) last = last.slice(0, -1);
+  kept[maxLines - 1] = last + '…';
+  return kept;
 }
 
 function escapeHtml(s: string): string {
