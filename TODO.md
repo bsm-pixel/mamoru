@@ -26,6 +26,22 @@
 
 ## 🟡 진행중
 
+### ⏸️ 1688 사입 매입관리 + 라벨 인쇄 — 제브라 프린터 입고 후 재개 (2026-05-31 보류)
+
+**현재 상태**: design-lab `/design-lab` § 1688 에 4스텝 데모 완성 (PO작성 → 라벨생성/인쇄 → 입고매칭 → 정식 SKU 승격). § 유지(삭제 X). 커밋 `066ac93` 까지 배포 완료.
+**보류 사유**: 라벨 인쇄 흐름은 **제브라 ZD421T(또는 확정 기종) 실물 도착 후** 검증해야 완성. 현재 연결된 KM-106D(4인치 송장 감열)로는 [라벨 N장 인쇄] 브라우저 직접인쇄 임시 테스트만 가능 (ZPL은 Zebra 전용이라 KM-106D 불가).
+**재개 트리거**: **제브라 프린터 입고**
+**재개 시 할 일**:
+1. 실물로 라벨 사이즈·QR 스캔률·정렬 검증 (ZD421T = [ZPL 저장] 파일 전송 / 그 외 = [라벨 N장 인쇄] 브라우저 직접인쇄)
+2. design-lab 데모 → 운영 매입관리(`/purchasing`)로 **Phase B 이전** (DB `purchase_orders` / `purchase_order_items` 테이블 + API, 현재는 useState 메모리만)
+3. 입고매칭 모바일 페이지 `/purchasing/inbound/[itemId]` 실제 구현 (라벨 QR 스캔 직진입)
+4. 정식 SKU 승격 → `products` 테이블 INSERT 연결 (재고/판매 흐름 진입)
+5. Phase B 운영 안착 후 design-lab § 삭제
+**기종 선정 미결**: ZD421T 1688직구 ~61~70만(A/S✗) vs 국내정품 77~79만(A/S○) vs TSC/Godex 국내정품 15~22만(QR엔 충분).
+**상세**: memory `project_1688_label_printer.md`
+
+---
+
 ### 1. 자동 후기요청 발송 진단 — `purchase_review_request` 템플릿 확인 ⚠️ 사장님 외부 작업
 
 **배경**: OS-20260525-004 자동 cron(track-delivery) 후기요청 미발송. TMS는 success 기록(DB review_requested_at set) 했으나 솔라피에 도달 X. 사장님 수동 발송([상담→톡상담], review_request 템플릿)은 정상 도달 확인됨 — TMS→Make→솔라피 흐름은 정상.
