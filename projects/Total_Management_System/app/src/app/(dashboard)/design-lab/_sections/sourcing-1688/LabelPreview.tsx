@@ -42,6 +42,11 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
   const [pngBusy, setPngBusy] = useState(false);
   const [zplBusy, setZplBusy] = useState(false);
   const [dpi, setDpi] = useState<203 | 300>(300); // ZPL 출력 해상도 (ZD421T=300, 일부 모델=203)
+  // 품목별 라벨 매수 (동일 라벨 N장 — 한 종류 제품에 여러 장 부착용). 발주 수량과 무관.
+  const [copies, setCopies] = useState<Record<string, number>>({});
+  const getCopies = (id: string) => Math.max(1, Math.min(99, copies[id] ?? 1));
+  const setCopy = (id: string, n: number) =>
+    setCopies((c) => ({ ...c, [id]: Math.max(1, Math.min(99, Math.round(n) || 1)) }));
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   const size = useMemo<LabelSize>(() => {
@@ -70,7 +75,7 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
         const svgEl = card?.querySelector('svg');
         const qrSvg = svgEl ? svgEl.outerHTML : '';
         const seq = it.sticker_no.split('-').pop() || '000';
-        return `
+        const single = `
           <div class="label">
             <div class="qr">${qrSvg}</div>
             <div class="text">
@@ -79,6 +84,9 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
             </div>
           </div>
         `;
+        // 매수만큼 동일 라벨 반복 (테스트는 1장)
+        const n = mode === 'test' ? 1 : getCopies(it.id);
+        return Array.from({ length: n }, () => single).join('');
       })
       .join('');
 
@@ -193,7 +201,7 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
       'product_name',
       'qr_url',
       'unit_price_cny',
-      'quantity',
+      'copies',
       'moq',
       'po_number',
       'vendor_url',
@@ -211,7 +219,7 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
           it.product_name,
           `${qrBaseUrl}/${it.id}`,
           it.unit_price,
-          it.quantity,
+          getCopies(it.id),
           it.moq ?? '',
           po.po_number,
           it.vendor_url,
@@ -381,7 +389,7 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
 
         // ^GFA,총바이트,총바이트,행당바이트,16진데이터
         blocks.push(
-          `^XA\n^PW${pw}\n^LL${ll}\n^LH0,0\n^FO0,0^GFA,${total},${total},${bytesPerRow},${hex}^FS\n^PQ1\n^XZ`
+          `^XA\n^PW${pw}\n^LL${ll}\n^LH0,0\n^FO0,0^GFA,${total},${total},${bytesPerRow},${hex}^FS\n^PQ${getCopies(it.id)}\n^XZ`
         );
       }
 
@@ -430,6 +438,8 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
   const fontScale = shortSide / 20;
   const numFontPt = Math.max(11, Math.min(20, 12 * fontScale)); // 40×20→12, 30×15→11, 40×30→18
   const nameFontPt = Math.max(10, Math.min(18, 11 * fontScale)); // 40×20→11, 30×15→10, 40×30→16.5
+
+  const totalLabels = items.reduce((s, it) => s + getCopies(it.id), 0);
 
   return (
     <div className="space-y-3">
@@ -521,7 +531,7 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-400 text-stone-900 text-xs font-bold hover:bg-amber-300"
             title="라벨프린터로 바로 인쇄 — 다이얼로그에서 [인쇄] 1번. 'PDF로 저장' 선택 시 PDF."
           >
-            <Printer size={13} /> 라벨 {items.length}장 인쇄
+            <Printer size={13} /> 라벨 {totalLabels}장 인쇄
           </button>
           {/* ZPL — Zebra 네이티브 라벨 파일 저장 (오늘 프린터 없이 prep) */}
           <button
@@ -565,7 +575,7 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
               드라이버 용지 <strong>{size.w}×{size.h}mm · 여백 없음</strong> 저장
             </li>
             <li>
-              위 <strong>[라벨 {items.length}장 인쇄]</strong> → 인쇄 다이얼로그{' '}
+              위 <strong>[라벨 {totalLabels}장 인쇄]</strong> → 인쇄 다이얼로그{' '}
               <strong>[인쇄] 1번</strong> = 라벨프린터 바로 출력
             </li>
           </ol>
@@ -600,8 +610,8 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
       </details>
 
       <div className="label-meta text-xs text-stone-500">
-        실제 출력 사이즈: <strong className="text-stone-900">{size.w} × {size.h} mm</strong> · 한 품목당 1매 · 총{' '}
-        <strong className="text-stone-900">{items.length}장</strong>
+        실제 출력 사이즈: <strong className="text-stone-900">{size.w} × {size.h} mm</strong> · 품목 {items.length}종 · 총{' '}
+        <strong className="text-stone-900">{totalLabels}장</strong>
       </div>
 
       {/* 라벨 미리보기 영역 (인쇄 타겟) */}
@@ -626,6 +636,35 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
                 numFontPt={numFontPt}
                 nameFontPt={nameFontPt}
               />
+              {/* 품목별 라벨 매수 (동일 라벨 N장) — 인쇄/ZPL/PNG 캡처 제외 */}
+              <div
+                data-html2canvas-ignore
+                className="mt-1.5 inline-flex items-center gap-1 rounded-lg bg-stone-100 px-1.5 py-1"
+              >
+                <span className="text-[10px] text-stone-500 font-medium mr-0.5">매수</span>
+                <button
+                  type="button"
+                  onClick={() => setCopy(it.id, getCopies(it.id) - 1)}
+                  className="w-5 h-5 rounded bg-white text-stone-700 text-sm font-bold leading-none hover:bg-stone-200"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  min={1}
+                  max={99}
+                  value={getCopies(it.id)}
+                  onChange={(e) => setCopy(it.id, Number(e.target.value))}
+                  className="w-9 text-center text-xs font-bold text-stone-900 bg-white rounded border border-stone-200 py-0.5 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setCopy(it.id, getCopies(it.id) + 1)}
+                  className="w-5 h-5 rounded bg-white text-stone-700 text-sm font-bold leading-none hover:bg-stone-200"
+                >
+                  +
+                </button>
+              </div>
             </div>
           ))}
         </div>
