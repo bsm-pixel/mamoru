@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, ShoppingCart, MessageSquare, Wrench, Store,
   FileSignature, Package, Settings, Users, Truck, BarChart3,
-  MoreHorizontal, X, Boxes, Star, Building2, Handshake, PackageOpen, Search,
+  MoreHorizontal, X, Boxes, Star, Building2, Handshake, PackageOpen, PackageSearch, Search,
   Wallet, CalendarOff,
   type LucideIcon,
 } from 'lucide-react';
@@ -15,7 +15,7 @@ import { NAV_ITEMS } from '@/lib/utils/constants';
 
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard, ShoppingCart, MessageSquare, Wrench, Store,
-  FileSignature, Package, Settings, Users, Truck, BarChart3, Boxes, Star, Building2, Handshake, PackageOpen, Search,
+  FileSignature, Package, Settings, Users, Truck, BarChart3, Boxes, Star, Building2, Handshake, PackageOpen, PackageSearch, Search,
   Wallet, CalendarOff,
 };
 
