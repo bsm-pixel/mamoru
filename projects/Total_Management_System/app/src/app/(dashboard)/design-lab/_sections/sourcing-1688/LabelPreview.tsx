@@ -70,16 +70,12 @@ export function LabelPreview({ po }: { po: DemoPO }) {
         const svgEl = card?.querySelector('svg');
         const qrSvg = svgEl ? svgEl.outerHTML : '';
         const seq = it.sticker_no.split('-').pop() || '000';
-        const poShort = po.po_number.replace('PO-', '').replace('-DEMO', '');
-        const moqText = it.moq ? ` · MOQ ${it.moq}` : '';
         return `
           <div class="label">
             <div class="qr">${qrSvg}</div>
             <div class="text">
               <div class="num">#${escapeHtml(seq)}</div>
               <div class="name">${escapeHtml(it.product_name)}</div>
-              <div class="price">¥${it.unit_price} × ${it.quantity}${escapeHtml(moqText)}</div>
-              <div class="po">${escapeHtml(poShort)}</div>
             </div>
           </div>
         `;
@@ -166,17 +162,6 @@ export function LabelPreview({ po }: { po: DemoPO }) {
       word-break: break-all;
       line-height: 1.15;
       text-align: center;
-    }
-    .price {
-      font-size: ${priceFontPt}pt;
-      color: #444;
-      margin-top: 0.5mm;
-    }
-    .po {
-      font-size: ${poFontPt}pt;
-      color: #888;
-      font-family: monospace;
-      margin-top: 0.4mm;
     }
   </style>
 </head>
@@ -346,22 +331,15 @@ export function LabelPreview({ po }: { po: DemoPO }) {
         ctx.textBaseline = 'top';
 
         const seq = it.sticker_no.split('-').pop() || '000';
-        const poShort = po.po_number.replace('PO-', '').replace('-DEMO', '');
-        const priceText = `¥${it.unit_price} x ${it.quantity}${
-          it.moq ? ` MOQ${it.moq}` : ''
-        }`;
 
         const numPx = ptToDots(numFontPt);
         const namePx = ptToDots(nameFontPt);
-        const pricePx = ptToDots(priceFontPt);
-        const poPx = ptToDots(poFontPt);
         const gap = Math.max(1, Math.round(namePx * 0.25));
 
         ctx.font = `${namePx}px 'Noto Sans KR', sans-serif`;
         const nameLines = wrapTextChars(ctx, it.product_name, maxW, 2);
 
-        const totalH =
-          numPx + gap + nameLines.length * (namePx + 2) + gap + pricePx + gap + poPx;
+        const totalH = numPx + gap + nameLines.length * (namePx + 2);
         let y = Math.max(pad, Math.round((ll - totalH) / 2));
 
         ctx.font = `800 ${numPx}px 'Noto Sans KR', sans-serif`;
@@ -373,14 +351,6 @@ export function LabelPreview({ po }: { po: DemoPO }) {
           ctx.fillText(ln, tx, y);
           y += namePx + 2;
         }
-        y += gap;
-
-        ctx.font = `${pricePx}px 'Noto Sans KR', sans-serif`;
-        ctx.fillText(priceText, tx, y);
-        y += pricePx + gap;
-
-        ctx.font = `${poPx}px monospace`;
-        ctx.fillText(poShort, tx, y);
 
         // 1비트 패킹 (1=흑=출력), MSB=좌측 픽셀
         const data = ctx.getImageData(0, 0, pw, ll).data;
@@ -456,11 +426,10 @@ export function LabelPreview({ po }: { po: DemoPO }) {
 
   // 사이즈에 따른 폰트 스케일 (작은 라벨 = 작은 폰트)
   const shortSide = Math.min(size.w, size.h);
-  const fontScale = shortSide / 30; // 30mm 짧은 변 기준
-  const numFontPt = Math.max(8, Math.min(14, 10 * fontScale));
-  const nameFontPt = Math.max(5, Math.min(9, 6.5 * fontScale));
-  const priceFontPt = Math.max(4.5, Math.min(7, 5.5 * fontScale));
-  const poFontPt = Math.max(4, Math.min(6, 4.5 * fontScale));
+  // 단가·수량·PO 제거 → 번호+품목명에 세로 공간 몰아주고 크게 (40×20 라벨 = 짧은변 20mm 기준 1.0)
+  const fontScale = shortSide / 20;
+  const numFontPt = Math.max(11, Math.min(20, 12 * fontScale)); // 40×20→12, 30×15→11, 40×30→18
+  const nameFontPt = Math.max(10, Math.min(18, 11 * fontScale)); // 40×20→11, 30×15→10, 40×30→16.5
 
   return (
     <div className="space-y-3">
@@ -649,15 +618,12 @@ export function LabelPreview({ po }: { po: DemoPO }) {
               </div>
               <LabelCard
                 item={it}
-                poNumber={po.po_number}
                 labelW={labelW}
                 labelH={labelH}
                 qrPx={qrPx}
                 textColPx={textColPx}
                 numFontPt={numFontPt}
                 nameFontPt={nameFontPt}
-                priceFontPt={priceFontPt}
-                poFontPt={poFontPt}
               />
             </div>
           ))}
@@ -673,26 +639,20 @@ export function LabelPreview({ po }: { po: DemoPO }) {
 
 function LabelCard({
   item,
-  poNumber,
   labelW,
   labelH,
   qrPx,
   textColPx,
   numFontPt,
   nameFontPt,
-  priceFontPt,
-  poFontPt,
 }: {
   item: DemoPOItem;
-  poNumber: string;
   labelW: number;
   labelH: number;
   qrPx: number;
   textColPx: number;
   numFontPt: number;
   nameFontPt: number;
-  priceFontPt: number;
-  poFontPt: number;
 }) {
   const qrUrl = `${DEMO_BASE_URL}/${item.id}`;
   const seq = item.sticker_no.split('-').pop() || '000';
@@ -745,28 +705,6 @@ function LabelCard({
           }}
         >
           {item.product_name}
-        </div>
-        <div
-          className="ln-price"
-          style={{
-            fontSize: ptToPx(priceFontPt),
-            marginTop: 2 * SCREEN_SCALE,
-            color: '#444',
-          }}
-        >
-          ¥{item.unit_price} × {item.quantity}
-          {item.moq ? ` · MOQ ${item.moq}` : ''}
-        </div>
-        <div
-          className="ln-po"
-          style={{
-            fontSize: ptToPx(poFontPt),
-            marginTop: 2 * SCREEN_SCALE,
-            color: '#888',
-            fontFamily: 'monospace',
-          }}
-        >
-          {poNumber.replace('PO-', '').replace('-DEMO', '')}
         </div>
       </div>
     </div>
