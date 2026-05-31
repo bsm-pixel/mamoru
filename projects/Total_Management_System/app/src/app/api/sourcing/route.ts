@@ -89,6 +89,8 @@ export async function POST(req: NextRequest) {
       const itemsToInsert = rawItems.map((it, idx) => ({
         po_id: po.id,
         sticker_no: `${po_number}-${String(idx + 1).padStart(3, '0')}`,
+        supplier_name: it.supplier_name || null,
+        supplier_url: it.supplier_url || null,
         vendor_url: it.vendor_url || null,
         product_name: it.product_name || '',
         features_memo: it.features_memo || null,

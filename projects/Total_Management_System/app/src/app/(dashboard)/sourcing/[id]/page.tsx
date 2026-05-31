@@ -56,6 +56,22 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
 
   const selected = items.filter((it) => it.inspection_status === 'selected');
 
+  // 업체별 채택 현황 — "어느 공장이 좋은 제품을 많이 내놓나"
+  const vendorSummary = useMemo(() => {
+    const map = new Map<string, { total: number; selected: number; rejected: number }>();
+    for (const it of items) {
+      const key = (it.supplier_name || '').trim() || '(회사명 미입력)';
+      const cur = map.get(key) ?? { total: 0, selected: 0, rejected: 0 };
+      cur.total++;
+      if (it.inspection_status === 'selected') cur.selected++;
+      if (it.inspection_status === 'rejected') cur.rejected++;
+      map.set(key, cur);
+    }
+    return Array.from(map.entries())
+      .map(([name, c]) => ({ name, ...c }))
+      .sort((a, b) => b.selected - a.selected || b.total - a.total);
+  }, [items]);
+
   if (isLoading || !po) {
     return (
       <div className="min-h-screen bg-warm-ivory">
@@ -75,6 +91,8 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
     if (selected.length === 0) return;
     const lines = selected.map((it) => {
       const cols = [
+        it.supplier_name || '',
+        it.supplier_url || '',
         it.product_name,
         it.vendor_url || '',
         `¥${it.unit_price}`,
@@ -82,7 +100,7 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
       ];
       return cols.join('\t');
     });
-    const text = ['품목명\t1688링크\t단가(CNY)\t특징', ...lines].join('\n');
+    const text = ['회사명\t회사링크\t품목명\t품목링크\t단가(CNY)\t특징', ...lines].join('\n');
     navigator.clipboard.writeText(text).then(
       () => toast.success(`선별 ${selected.length}건 복사됨 (탭 구분 — 엑셀/시트에 붙여넣기)`),
       () => toast.error('복사 실패')
@@ -138,6 +156,15 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
                 idx={idx}
                 exchangeRate={po.exchange_rate}
                 onPatch={(patch) => updateItem.mutate({ itemId: it.id, ...patch })}
+                onDuplicate={() => addItem.mutate({
+                  supplier_name: it.supplier_name,
+                  supplier_url: it.supplier_url,
+                  vendor_url: it.vendor_url,
+                  product_name: it.product_name,
+                  features_memo: it.features_memo,
+                  unit_price: it.unit_price,
+                  moq: it.moq,
+                })}
                 onDelete={() => deleteItem.mutate(it.id)}
               />
             ))}
@@ -162,21 +189,34 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
         </Section>
 
         {/* STEP 3. 선별 */}
-        <Section n={3} title="선별 (실테스트 후)" sub="실테스트 결과로 채택 / 탈락 결정">
+        <Section n={3} title="선별 (실테스트 후)" sub="실테스트 결과로 채택 / 탈락 결정 · 업체별 채택 현황으로 좋은 공장 선정">
           {items.length === 0 ? (
             <Empty>STEP 1에서 품목을 먼저 입력하세요.</Empty>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {items.map((it) => (
-                <SelectionCell
-                  key={it.id}
-                  item={it}
-                  onSelect={() => updateItem.mutate({ itemId: it.id, inspection_status: 'selected' })}
-                  onReject={() => updateItem.mutate({ itemId: it.id, inspection_status: 'rejected' })}
-                  onReset={() => updateItem.mutate({ itemId: it.id, inspection_status: 'pending' })}
-                />
-              ))}
-            </div>
+            <>
+              {/* 업체별 채택 현황 */}
+              <div className="mb-3 flex flex-wrap gap-2">
+                {vendorSummary.map((v) => (
+                  <div key={v.name} className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-neutral-100 border border-neutral-200 text-xs">
+                    <span className="font-bold text-indigo-black truncate max-w-[160px]">{v.name}</span>
+                    <span className="text-emerald-700 font-bold">채택 {v.selected}</span>
+                    <span className="text-neutral-400">/ {v.total}</span>
+                    {v.rejected > 0 && <span className="text-rose-400">탈락 {v.rejected}</span>}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {items.map((it) => (
+                  <SelectionCell
+                    key={it.id}
+                    item={it}
+                    onSelect={() => updateItem.mutate({ itemId: it.id, inspection_status: 'selected' })}
+                    onReject={() => updateItem.mutate({ itemId: it.id, inspection_status: 'rejected' })}
+                    onReset={() => updateItem.mutate({ itemId: it.id, inspection_status: 'pending' })}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </Section>
 
@@ -202,11 +242,19 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
+                    {it.supplier_name && (
+                      <div className="text-[11px] text-neutral-500 mb-0.5 inline-flex items-center gap-1 max-w-full">
+                        <span className="truncate">🏢 {it.supplier_name}</span>
+                        {it.supplier_url && (
+                          <a href={it.supplier_url} target="_blank" rel="noreferrer" className="text-blue-600 flex-shrink-0"><ExternalLink size={9} /></a>
+                        )}
+                      </div>
+                    )}
                     <div className="text-sm font-bold text-indigo-black truncate">{it.product_name || '(품목명 없음)'}</div>
                     <div className="text-[11px] text-neutral-500 mt-0.5">¥{it.unit_price}{it.features_memo ? ` · ${it.features_memo}` : ''}</div>
                     {it.vendor_url && (
                       <a href={it.vendor_url} target="_blank" rel="noreferrer" className="text-[11px] text-blue-600 inline-flex items-center gap-0.5 mt-0.5">
-                        1688 상품 링크 <ExternalLink size={10} />
+                        품목 링크 <ExternalLink size={10} />
                       </a>
                     )}
                   </div>
@@ -242,11 +290,12 @@ function Empty({ children }: { children: React.ReactNode }) {
   return <div className="text-center py-8 text-xs text-neutral-400">{children}</div>;
 }
 
-function ItemRow({ item, idx, exchangeRate, onPatch, onDelete }: {
+function ItemRow({ item, idx, exchangeRate, onPatch, onDuplicate, onDelete }: {
   item: SourcingItem;
   idx: number;
   exchangeRate: number;
   onPatch: (patch: Partial<SourcingItem>) => void;
+  onDuplicate: () => void;
   onDelete: () => void;
 }) {
   const cls = 'w-full px-2.5 py-1.5 text-sm rounded-lg border border-neutral-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-black/10 focus:border-neutral-400';
@@ -258,11 +307,31 @@ function ItemRow({ item, idx, exchangeRate, onPatch, onDelete }: {
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-black text-white text-[11px] font-bold">{String(idx + 1).padStart(2, '0')}</span>
           <span className="font-mono text-[11px] text-neutral-500">{item.sticker_no}</span>
         </div>
-        <button type="button" onClick={onDelete} className="text-neutral-400 hover:text-rose-500"><Trash2 size={14} /></button>
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={onDuplicate} title="복제 (회사 정보 유지 · 새 바코드)" className="text-neutral-400 hover:text-indigo-black p-0.5"><Copy size={14} /></button>
+          <button type="button" onClick={onDelete} title="삭제" className="text-neutral-400 hover:text-rose-500 p-0.5"><Trash2 size={14} /></button>
+        </div>
       </div>
+
+      {/* 업체 (회사명 · 회사링크) — 복제 시 유지되는 부분 */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-2 mb-2 pb-2.5 border-b border-dashed border-neutral-300">
+        <div className="md:col-span-5">
+          <input type="text" defaultValue={item.supplier_name ?? ''} placeholder="회사명 (예: 光达美容工具)"
+            onBlur={(e) => e.target.value !== (item.supplier_name ?? '') && onPatch({ supplier_name: e.target.value })} className={cls} />
+        </div>
+        <div className="md:col-span-7 relative">
+          <input type="url" defaultValue={item.supplier_url ?? ''} placeholder="회사 링크 (https://shop....1688.com)"
+            onBlur={(e) => e.target.value !== (item.supplier_url ?? '') && onPatch({ supplier_url: e.target.value })} className={cls + ' pr-8'} />
+          {item.supplier_url && (
+            <a href={item.supplier_url} target="_blank" rel="noreferrer" className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-indigo-black"><ExternalLink size={13} /></a>
+          )}
+        </div>
+      </div>
+
+      {/* 품목 (품목링크 · 품목명 · 단가 · MOQ · 특징) */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
         <div className="md:col-span-12 relative">
-          <input type="url" defaultValue={item.vendor_url ?? ''} placeholder="1688 상품 URL (https://detail.1688.com/offer/...)"
+          <input type="url" defaultValue={item.vendor_url ?? ''} placeholder="품목 링크 (https://detail.1688.com/offer/...)"
             onBlur={(e) => e.target.value !== (item.vendor_url ?? '') && onPatch({ vendor_url: e.target.value })} className={cls + ' pr-8'} />
           {item.vendor_url && (
             <a href={item.vendor_url} target="_blank" rel="noreferrer" className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-indigo-black"><ExternalLink size={13} /></a>
@@ -311,8 +380,9 @@ function SelectionCell({ item, onSelect, onReject, onReset }: {
           <div className="absolute inset-0 flex items-center justify-center text-neutral-300"><PackageSearch size={28} /></div>
         )}
         <span className="absolute top-2 left-2 inline-flex items-center justify-center min-w-[26px] h-6 px-1.5 rounded-full bg-white/95 text-indigo-black text-[11px] font-bold shadow-sm">{seq}</span>
-        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/75 to-transparent">
           <div className="text-[11px] font-bold text-white truncate">{item.product_name || '(품목명 없음)'}</div>
+          {item.supplier_name && <div className="text-[9px] text-white/70 truncate">🏢 {item.supplier_name}</div>}
         </div>
       </div>
       <div className="p-1.5 flex items-center gap-1 justify-center">

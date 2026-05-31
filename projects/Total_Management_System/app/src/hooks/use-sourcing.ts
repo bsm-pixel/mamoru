@@ -9,6 +9,8 @@ export interface SourcingItem {
   id: string;
   po_id: string;
   sticker_no: string;
+  supplier_name: string | null;
+  supplier_url: string | null;
   vendor_url: string | null;
   product_name: string;
   features_memo: string | null;
@@ -131,7 +133,15 @@ export function useDeleteSourcingPo() {
 export function useAddSourcingItem(poId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (data?: { vendor_url?: string; product_name?: string; unit_price?: number }) => {
+    mutationFn: async (data?: {
+      supplier_name?: string | null;
+      supplier_url?: string | null;
+      vendor_url?: string | null;
+      product_name?: string;
+      features_memo?: string | null;
+      unit_price?: number;
+      moq?: number | null;
+    }) => {
       const res = await fetch(`/api/sourcing/${poId}/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

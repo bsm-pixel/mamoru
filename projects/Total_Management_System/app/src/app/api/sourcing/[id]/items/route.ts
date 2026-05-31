@@ -36,6 +36,8 @@ export async function POST(
       .insert({
         po_id: id,
         sticker_no,
+        supplier_name: body.supplier_name || null,
+        supplier_url: body.supplier_url || null,
         vendor_url: body.vendor_url || null,
         product_name: body.product_name || '',
         features_memo: body.features_memo || null,
