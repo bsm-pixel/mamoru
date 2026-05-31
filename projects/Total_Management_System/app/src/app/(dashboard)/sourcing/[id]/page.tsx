@@ -140,7 +140,12 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
 
         {/* STEP 2. 라벨 */}
         <Section n={2} title="라벨 인쇄" sub="QR + 번호 + 품목명 · 라벨프린터로 출력해 샘플에 부착">
-          {demoPo && <LabelPreview po={demoPo} />}
+          {demoPo && (
+            <LabelPreview
+              po={demoPo}
+              qrBaseUrl={`${typeof window !== 'undefined' ? window.location.origin : 'https://app-eta-sandy-75.vercel.app'}/sourcing/inbound`}
+            />
+          )}
         </Section>
 
         {/* STEP 3. 선별 */}

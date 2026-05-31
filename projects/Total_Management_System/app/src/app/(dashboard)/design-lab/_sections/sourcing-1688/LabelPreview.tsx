@@ -33,7 +33,7 @@ const MM_TO_PX = 3.78; // 96dpi 기준
 const SCREEN_SCALE = 2; // 화면 미리보기는 2배 키워서 보기
 const DEMO_BASE_URL = 'https://app-eta-sandy-75.vercel.app/purchasing/inbound';
 
-export function LabelPreview({ po }: { po: DemoPO }) {
+export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qrBaseUrl?: string }) {
   const items = useMemo(() => po.items.filter((it) => it.product_name), [po.items]);
   const [sizeId, setSizeId] = useState<string>('p40x20');
   const [customW, setCustomW] = useState(40);
@@ -209,7 +209,7 @@ export function LabelPreview({ po }: { po: DemoPO }) {
         [
           it.sticker_no,
           it.product_name,
-          `${DEMO_BASE_URL}/${it.id}`,
+          `${qrBaseUrl}/${it.id}`,
           it.unit_price,
           it.quantity,
           it.moq ?? '',
@@ -618,6 +618,7 @@ export function LabelPreview({ po }: { po: DemoPO }) {
               </div>
               <LabelCard
                 item={it}
+                qrBaseUrl={qrBaseUrl}
                 labelW={labelW}
                 labelH={labelH}
                 qrPx={qrPx}
@@ -639,6 +640,7 @@ export function LabelPreview({ po }: { po: DemoPO }) {
 
 function LabelCard({
   item,
+  qrBaseUrl,
   labelW,
   labelH,
   qrPx,
@@ -647,6 +649,7 @@ function LabelCard({
   nameFontPt,
 }: {
   item: DemoPOItem;
+  qrBaseUrl: string;
   labelW: number;
   labelH: number;
   qrPx: number;
@@ -654,7 +657,7 @@ function LabelCard({
   numFontPt: number;
   nameFontPt: number;
 }) {
-  const qrUrl = `${DEMO_BASE_URL}/${item.id}`;
+  const qrUrl = `${qrBaseUrl}/${item.id}`;
   const seq = item.sticker_no.split('-').pop() || '000';
   // pt → px (화면용): 1pt ≈ 1.333px × SCREEN_SCALE
   const ptToPx = (pt: number) => pt * 1.333 * SCREEN_SCALE;

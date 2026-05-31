@@ -163,6 +163,69 @@ export function useUpdateSourcingItem(poId: string) {
   });
 }
 
+// ── 모바일 입고매칭 (단건 품목) ──────────────────────────
+
+/** 단건 품목 조회 (QR 스캔 직진입) */
+export function useSourcingItem(itemId: string) {
+  return useQuery({
+    queryKey: ['sourcing-item', itemId],
+    queryFn: async () => {
+      const res = await fetch(`/api/sourcing/items/${itemId}`);
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ item: SourcingItem }>;
+    },
+    enabled: !!itemId,
+  });
+}
+
+/** 입고 품목 수정 (메모/매칭상태) — 품목 단건 캐시 무효화 */
+export function useInboundItemUpdate(itemId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (patch: { inbound_memo?: string; inspection_status?: SourcingInspectionStatus }) => {
+      const res = await fetch(`/api/sourcing/items/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ item: SourcingItem }>;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sourcing-item', itemId] }),
+    onError: (e) => toast.error('저장 실패: ' + String(e)),
+  });
+}
+
+/** 입고 사진 업로드 (카메라) */
+export function useUploadInboundPhoto(itemId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch(`/api/sourcing/items/${itemId}/photos`, { method: 'POST', body: fd });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ url: string; inbound_photos: string[] }>;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sourcing-item', itemId] }),
+    onError: (e) => toast.error('사진 업로드 실패: ' + String(e)),
+  });
+}
+
+/** 입고 사진 삭제 */
+export function useDeleteInboundPhoto(itemId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (url: string) => {
+      const res = await fetch(`/api/sourcing/items/${itemId}/photos?url=${encodeURIComponent(url)}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sourcing-item', itemId] }),
+    onError: (e) => toast.error('사진 삭제 실패: ' + String(e)),
+  });
+}
+
 /** 품목 삭제 */
 export function useDeleteSourcingItem(poId: string) {
   const qc = useQueryClient();

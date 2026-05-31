@@ -1,6 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
+/** GET /api/sourcing/items/[itemId] — 단건 품목 (입고매칭 페이지용) */
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ itemId: string }> },
+) {
+  try {
+    const { itemId } = await params;
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    const { data, error } = await db.from('sourcing_items').select('*').eq('id', itemId).single();
+    if (error) throw error;
+
+    return NextResponse.json({ item: data });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
 /**
  * PATCH /api/sourcing/items/[itemId] — 품목 수정
  * 입력/선별 모두 처리: product_name·unit_price·features_memo·vendor_url·moq,
