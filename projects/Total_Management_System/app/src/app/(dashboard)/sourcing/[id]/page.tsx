@@ -107,14 +107,26 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
           </Button>
         </div>
 
-        {/* 선택: 회차명 (배치 식별용) */}
-        <input
-          type="text"
-          defaultValue={po.memo ?? ''}
-          placeholder="소싱 회차명 (선택) — 예: 5월 가위 1차"
-          onBlur={(e) => e.target.value !== (po.memo ?? '') && updatePo.mutate({ id, memo: e.target.value })}
-          className="w-full px-3 py-2 text-sm rounded-lg border border-neutral-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-black/10 focus:border-neutral-400"
-        />
+        {/* 회차명 + 환율 (환율 → 라벨 한화 가격에 즉시 반영) */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <input
+            type="text"
+            defaultValue={po.memo ?? ''}
+            placeholder="소싱 회차명 (선택) — 예: 5월 가위 1차"
+            onBlur={(e) => e.target.value !== (po.memo ?? '') && updatePo.mutate({ id, memo: e.target.value })}
+            className="flex-1 min-w-[180px] px-3 py-2 text-sm rounded-lg border border-neutral-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-black/10 focus:border-neutral-400"
+          />
+          <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-neutral-200 bg-white" title="라벨 한화 가격에 적용되는 환율">
+            <span className="text-[11px] text-neutral-500 whitespace-nowrap">환율 1¥ =</span>
+            <input
+              type="number"
+              defaultValue={po.exchange_rate}
+              onBlur={(e) => { const v = Number(e.target.value) || 0; if (v !== po.exchange_rate) updatePo.mutate({ id, exchange_rate: v }); }}
+              className="w-16 text-sm text-right font-bold text-indigo-black focus:outline-none"
+            />
+            <span className="text-[11px] text-neutral-500">원</span>
+          </div>
+        </div>
 
         {/* STEP 1. 품목 */}
         <Section n={1} title="품목" sub="제품마다 1688 링크 + 품목명·단가·특징 (제품별로 다른 상점이어도 OK · 수량 없음)">
@@ -124,6 +136,7 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
                 key={it.id}
                 item={it}
                 idx={idx}
+                exchangeRate={po.exchange_rate}
                 onPatch={(patch) => updateItem.mutate({ itemId: it.id, ...patch })}
                 onDelete={() => deleteItem.mutate(it.id)}
               />
@@ -229,13 +242,15 @@ function Empty({ children }: { children: React.ReactNode }) {
   return <div className="text-center py-8 text-xs text-neutral-400">{children}</div>;
 }
 
-function ItemRow({ item, idx, onPatch, onDelete }: {
+function ItemRow({ item, idx, exchangeRate, onPatch, onDelete }: {
   item: SourcingItem;
   idx: number;
+  exchangeRate: number;
   onPatch: (patch: Partial<SourcingItem>) => void;
   onDelete: () => void;
 }) {
   const cls = 'w-full px-2.5 py-1.5 text-sm rounded-lg border border-neutral-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-black/10 focus:border-neutral-400';
+  const krw = Math.round((item.unit_price || 0) * (exchangeRate || 0));
   return (
     <div className="rounded-lg border border-neutral-200 bg-neutral-50/50 p-3">
       <div className="flex items-center justify-between mb-2">
@@ -258,8 +273,11 @@ function ItemRow({ item, idx, onPatch, onDelete }: {
             onBlur={(e) => e.target.value !== item.product_name && onPatch({ product_name: e.target.value })} className={cls} />
         </div>
         <div className="md:col-span-3">
-          <input type="number" defaultValue={item.unit_price || ''} placeholder="단가 ¥"
+          <input type="number" step="0.01" defaultValue={item.unit_price || ''} placeholder="단가 ¥"
             onBlur={(e) => { const v = Number(e.target.value) || 0; if (v !== item.unit_price) onPatch({ unit_price: v }); }} className={cls} />
+          {item.unit_price > 0 && (
+            <div className="mt-1 text-[11px] text-emerald-700 font-medium text-right">≈ ₩{krw.toLocaleString()}</div>
+          )}
         </div>
         <div className="md:col-span-3">
           <input type="number" defaultValue={item.moq ?? ''} placeholder="MOQ"
