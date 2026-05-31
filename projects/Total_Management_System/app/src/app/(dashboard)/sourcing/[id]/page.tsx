@@ -1,18 +1,20 @@
 'use client';
 
-import { use, useMemo } from 'react';
+import { use, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import {
   useSourcingDetail, useUpdateSourcingPo, useDeleteSourcingPo,
   useAddSourcingItem, useUpdateSourcingItem, useDeleteSourcingItem,
+  useUploadItemImage, useDeleteItemImage,
   type SourcingItem,
 } from '@/hooks/use-sourcing';
 import { LabelPreview } from '@/app/(dashboard)/design-lab/_sections/sourcing-1688/LabelPreview';
 import type { DemoPO } from '@/app/(dashboard)/design-lab/_sections/sourcing-1688/types';
 import {
-  ArrowLeft, Plus, Trash2, ExternalLink, Award, X, RotateCcw, Copy, Printer, PackageSearch,
+  ArrowLeft, Plus, Trash2, ExternalLink, Award, X, RotateCcw, Copy, PackageSearch,
+  ImagePlus, Loader2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -25,6 +27,8 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
   const addItem = useAddSourcingItem(id);
   const updateItem = useUpdateSourcingItem(id);
   const deleteItem = useDeleteSourcingItem(id);
+  const uploadImg = useUploadItemImage(id);
+  const delImg = useDeleteItemImage(id);
 
   const po = data?.po;
   const items = useMemo(() => data?.items ?? [], [data]);
@@ -147,7 +151,7 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
         </div>
 
         {/* STEP 1. 품목 */}
-        <Section n={1} title="품목" sub="제품마다 1688 링크 + 품목명·단가·특징 (제품별로 다른 상점이어도 OK · 수량 없음)">
+        <Section n={1} title="품목" sub="회사·제품이미지(1688 붙여넣기)·품목링크·단가·특징 입력 · 복제로 같은 업체 빠르게">
           <div className="space-y-3">
             {items.map((it, idx) => (
               <ItemRow
@@ -155,6 +159,8 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
                 item={it}
                 idx={idx}
                 exchangeRate={po.exchange_rate}
+                onAddImage={(file) => uploadImg.mutateAsync({ itemId: it.id, file })}
+                onRemoveImage={(url) => delImg.mutate({ itemId: it.id, url })}
                 onPatch={(patch) => updateItem.mutate({ itemId: it.id, ...patch })}
                 onDuplicate={() => addItem.mutate({
                   supplier_name: it.supplier_name,
@@ -189,7 +195,7 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
         </Section>
 
         {/* STEP 3. 선별 */}
-        <Section n={3} title="선별 (실테스트 후)" sub="실테스트 결과로 채택 / 탈락 결정 · 업체별 채택 현황으로 좋은 공장 선정">
+        <Section n={3} title="선별 (실테스트 후)" sub="제품 이미지 보고 채택 / 탈락 · 업체별 채택 현황으로 좋은 공장 선정 (도착품은 라벨로 매칭)">
           {items.length === 0 ? (
             <Empty>STEP 1에서 품목을 먼저 입력하세요.</Empty>
           ) : (
@@ -290,10 +296,12 @@ function Empty({ children }: { children: React.ReactNode }) {
   return <div className="text-center py-8 text-xs text-neutral-400">{children}</div>;
 }
 
-function ItemRow({ item, idx, exchangeRate, onPatch, onDuplicate, onDelete }: {
+function ItemRow({ item, idx, exchangeRate, onAddImage, onRemoveImage, onPatch, onDuplicate, onDelete }: {
   item: SourcingItem;
   idx: number;
   exchangeRate: number;
+  onAddImage: (file: File) => Promise<unknown>;
+  onRemoveImage: (url: string) => void;
   onPatch: (patch: Partial<SourcingItem>) => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -328,6 +336,9 @@ function ItemRow({ item, idx, exchangeRate, onPatch, onDuplicate, onDelete }: {
         </div>
       </div>
 
+      {/* 제품 이미지 — 주문 시 1688 이미지 붙여넣기/업로드 (서버 영구 저장) */}
+      <ImageZone images={item.inbound_photos ?? []} onAdd={onAddImage} onRemove={onRemoveImage} />
+
       {/* 품목 (품목링크 · 품목명 · 단가 · MOQ · 특징) */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
         <div className="md:col-span-12 relative">
@@ -357,6 +368,79 @@ function ItemRow({ item, idx, exchangeRate, onPatch, onDuplicate, onDelete }: {
             onBlur={(e) => e.target.value !== (item.features_memo ?? '') && onPatch({ features_memo: e.target.value })} className={cls} />
         </div>
       </div>
+    </div>
+  );
+}
+
+function ImageZone({ images, onAdd, onRemove }: {
+  images: string[];
+  onAdd: (file: File) => Promise<unknown>;
+  onRemove: (url: string) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  const upload = async (files: File[]) => {
+    const imgs = files.filter((f) => f.type.startsWith('image/'));
+    if (imgs.length === 0) return;
+    setBusy(true);
+    try {
+      for (const f of imgs) {
+        if (images.length >= 5) break;
+        await onAdd(f);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onPaste = (e: React.ClipboardEvent) => {
+    const imgs = Array.from(e.clipboardData.items)
+      .filter((i) => i.type.startsWith('image/'))
+      .map((i) => i.getAsFile())
+      .filter((f): f is File => !!f);
+    if (imgs.length) {
+      e.preventDefault();
+      upload(imgs);
+    }
+  };
+
+  return (
+    <div className="mb-2">
+      <div
+        tabIndex={0}
+        onPaste={onPaste}
+        className="rounded-lg border border-dashed border-neutral-300 p-2 outline-none focus:border-indigo-black focus:ring-2 focus:ring-indigo-black/10"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          {images.map((url, i) => (
+            <div key={i} className="relative w-16 h-16 rounded-md overflow-hidden border border-neutral-200 bg-cover bg-center" style={{ backgroundImage: `url(${url})` }}>
+              <button type="button" onClick={() => onRemove(url)} className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 text-white rounded-full flex items-center justify-center text-[10px] leading-none">×</button>
+            </div>
+          ))}
+          {images.length < 5 && (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={busy}
+              className="w-16 h-16 rounded-md border border-dashed border-neutral-300 flex flex-col items-center justify-center text-neutral-400 hover:bg-neutral-50 disabled:opacity-50"
+            >
+              {busy ? <Loader2 size={16} className="animate-spin" /> : <><ImagePlus size={16} /><span className="text-[8px] mt-0.5">추가</span></>}
+            </button>
+          )}
+          <span className="text-[10px] text-neutral-400 ml-1 leading-tight">
+            제품 이미지 — 여기 <strong>클릭 후 Ctrl+V</strong> (1688 이미지 붙여넣기) 또는 [+] 업로드
+          </span>
+        </div>
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => { upload(Array.from(e.target.files ?? [])); if (fileRef.current) fileRef.current.value = ''; }}
+      />
     </div>
   );
 }

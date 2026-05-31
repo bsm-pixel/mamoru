@@ -173,6 +173,37 @@ export function useUpdateSourcingItem(poId: string) {
   });
 }
 
+// ── 품목 이미지 (STEP 1 주문 시 붙여넣기/업로드 — 서버 영구 저장) ──
+/** 품목 이미지 업로드 (상세 페이지용 — 1688 이미지 붙여넣기/업로드) */
+export function useUploadItemImage(poId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ itemId, file }: { itemId: string; file: File }) => {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch(`/api/sourcing/items/${itemId}/photos`, { method: 'POST', body: fd });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ url: string; inbound_photos: string[] }>;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sourcing-detail', poId] }),
+    onError: (e) => toast.error('이미지 업로드 실패: ' + String(e)),
+  });
+}
+
+/** 품목 이미지 삭제 (상세 페이지용) */
+export function useDeleteItemImage(poId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ itemId, url }: { itemId: string; url: string }) => {
+      const res = await fetch(`/api/sourcing/items/${itemId}/photos?url=${encodeURIComponent(url)}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sourcing-detail', poId] }),
+    onError: (e) => toast.error('이미지 삭제 실패: ' + String(e)),
+  });
+}
+
 // ── 모바일 입고매칭 (단건 품목) ──────────────────────────
 
 /** 단건 품목 조회 (QR 스캔 직진입) */
