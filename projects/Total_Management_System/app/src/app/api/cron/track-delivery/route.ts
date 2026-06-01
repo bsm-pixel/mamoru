@@ -246,10 +246,43 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // [4] deliveries(B2B 납품) 추적 → delivered_at — 2026-06-01 추가
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //   진입 조건: 송장(tracking_number) 있음 + 배송 미완료(delivered_at NULL) + 미취소
+    //   ALPS 인수자등록(코드 45)/배달완료(41) 감지 시 delivered_at 세팅 (status 는 정산용이라 미변경)
+    const { data: deliveries, error: dlErr } = await (supabase as any)
+      .from('deliveries')
+      .select('id, dl_number, customer_name, tracking_number')
+      .not('tracking_number', 'is', null)
+      .is('delivered_at', null)
+      .is('cancelled_at', null)
+      .limit(50);
+
+    if (dlErr) throw dlErr;
+
+    let deliveriesDelivered = 0;
+    for (const dl of deliveries || []) {
+      try {
+        const result = await queryTrackingStatus(dl.tracking_number);
+        if (result.state === 'DELIVERED') {
+          await (supabase as any)
+            .from('deliveries')
+            .update({ delivered_at: new Date().toISOString() })
+            .eq('id', dl.id);
+          deliveriesDelivered++;
+          console.log(`[track-delivery/deliveries] ${dl.dl_number} (${dl.customer_name}) → 배송완료`);
+        }
+      } catch (e) {
+        console.error(`[track-delivery/deliveries] ${dl.dl_number} 추적 실패:`, e);
+      }
+    }
+
     return NextResponse.json({
       orders: { checked: orders?.length || 0, delivered: ordersDelivered },
       repairs: { checked: repairs?.length || 0, delivered: repairsDelivered },
       sales: { checked: sales?.length || 0, delivered: salesDelivered },
+      deliveries: { checked: deliveries?.length || 0, delivered: deliveriesDelivered },
       ...(debug && {
         debug: {
           env: (() => {

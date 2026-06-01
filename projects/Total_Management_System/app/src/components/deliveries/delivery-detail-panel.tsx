@@ -219,6 +219,18 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
               <p className="font-mono text-xs">{dl.tracking_number as string}</p>
             </div>
           )}
+          {/* 배송완료 (ALPS 인수자등록 자동 감지) — 날짜+시간 */}
+          {dl.delivered_at ? (
+            <div>
+              <span className="text-xs text-neutral-500">배송완료</span>
+              <p className="text-green-600 font-medium">{formatDate(dl.delivered_at as string, 'M월 d일 HH:mm')}</p>
+            </div>
+          ) : dl.tracking_number ? (
+            <div>
+              <span className="text-xs text-neutral-500">배송완료</span>
+              <p className="text-xs text-neutral-400">인수자등록 자동 감지 시 표시 (4시간마다 확인)</p>
+            </div>
+          ) : null}
           <div>
             <span className="text-xs text-neutral-500">증빙유형</span>
             <p>{RECEIPT_LABEL[(dl.receipt_type as string)] || '미적용'}</p>

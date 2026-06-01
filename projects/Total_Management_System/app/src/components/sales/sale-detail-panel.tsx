@@ -523,7 +523,7 @@ export function SaleDetailPanel({ saleId }: Props) {
                   {s.delivered_at ? (
                     <p className="text-xs text-neutral-500 flex items-center gap-1">
                       <CheckCircle size={12} className="text-neutral-400" />
-                      배송완료 {formatDate(s.delivered_at)}
+                      배송완료 {formatDate(s.delivered_at, 'M월 d일 HH:mm')}
                     </p>
                   ) : (
                     <div className="space-y-1 pt-1">
