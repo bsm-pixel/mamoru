@@ -48,8 +48,6 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
   const getCopies = (id: string) => Math.max(1, Math.min(99, copies[id] ?? 1));
   const setCopy = (id: string, n: number) =>
     setCopies((c) => ({ ...c, [id]: Math.max(1, Math.min(99, Math.round(n) || 1)) }));
-  // 단가(CNY) × 환율 → 한화(KRW). 환율은 상단에서 입력한 po.exchange_rate.
-  const krwOf = (cny: number) => Math.round((cny || 0) * (po.exchange_rate || 0));
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   const size = useMemo<LabelSize>(() => {
@@ -69,12 +67,10 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
       targetItems.map((it) => ({
         sticker_no: it.sticker_no,
         product_name: it.product_name,
-        unit_price: it.unit_price,
         qrValue: `${qrBaseUrl}/${it.id}`,
         copies: mode === 'test' ? 1 : getCopies(it.id),
       })),
-      { w: size.w, h: size.h },
-      po.exchange_rate
+      { w: size.w, h: size.h }
     );
     setPrintMode(mode);
     setTimeout(() => setPrintMode('idle'), 200);
@@ -229,14 +225,12 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
 
         const numPx = ptToDots(numFontPt);
         const namePx = ptToDots(nameFontPt);
-        const pricePx = ptToDots(priceFontPt);
         const gap = Math.max(1, Math.round(namePx * 0.25));
-        const priceText = `₩${krwOf(it.unit_price).toLocaleString()}`;
 
         ctx.font = `${namePx}px 'Noto Sans KR', sans-serif`;
         const nameLines = wrapTextChars(ctx, it.product_name, maxW, 2);
 
-        const totalH = numPx + gap + nameLines.length * (namePx + 2) + gap + pricePx;
+        const totalH = numPx + gap + nameLines.length * (namePx + 2);
         let y = Math.max(pad, Math.round((ll - totalH) / 2));
 
         ctx.font = `800 ${numPx}px 'Noto Sans KR', sans-serif`;
@@ -248,10 +242,6 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
           ctx.fillText(ln, tx, y);
           y += namePx + 2;
         }
-        y += gap;
-
-        ctx.font = `700 ${pricePx}px 'Noto Sans KR', sans-serif`;
-        ctx.fillText(priceText, tx, y);
 
         // 1비트 패킹 (1=흑=출력), MSB=좌측 픽셀
         const data = ctx.getImageData(0, 0, pw, ll).data;
@@ -329,10 +319,9 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
   const shortSide = Math.min(size.w, size.h);
   // 단가·수량·PO 제거 → 번호+품목명에 세로 공간 몰아주고 크게 (40×20 라벨 = 짧은변 20mm 기준 1.0)
   const fontScale = shortSide / 20;
-  // 번호 + 품목명 + 가격(한화) 3줄 — 세로 분배
-  const numFontPt = Math.max(10, Math.min(18, 11 * fontScale));
-  const nameFontPt = Math.max(9, Math.min(16, 10 * fontScale));
-  const priceFontPt = Math.max(8, Math.min(14, 9 * fontScale));
+  // 번호 + 품목명 2줄 (가격 미표시) — 세로 공간 크게
+  const numFontPt = Math.max(11, Math.min(20, 12 * fontScale));
+  const nameFontPt = Math.max(10, Math.min(18, 11 * fontScale));
 
   const totalLabels = items.reduce((s, it) => s + getCopies(it.id), 0);
 
@@ -524,14 +513,12 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
               <LabelCard
                 item={it}
                 qrBaseUrl={qrBaseUrl}
-                krw={krwOf(it.unit_price)}
                 labelW={labelW}
                 labelH={labelH}
                 qrPx={qrPx}
                 textColPx={textColPx}
                 numFontPt={numFontPt}
                 nameFontPt={nameFontPt}
-                priceFontPt={priceFontPt}
               />
               {/* 품목별 라벨 매수 (동일 라벨 N장) — 인쇄/ZPL/PNG 캡처 제외 */}
               <div
@@ -577,25 +564,21 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
 function LabelCard({
   item,
   qrBaseUrl,
-  krw,
   labelW,
   labelH,
   qrPx,
   textColPx,
   numFontPt,
   nameFontPt,
-  priceFontPt,
 }: {
   item: DemoPOItem;
   qrBaseUrl: string;
-  krw: number;
   labelW: number;
   labelH: number;
   qrPx: number;
   textColPx: number;
   numFontPt: number;
   nameFontPt: number;
-  priceFontPt: number;
 }) {
   const qrUrl = `${qrBaseUrl}/${item.id}`;
   const seq = item.sticker_no.split('-').pop() || '000';
@@ -648,17 +631,6 @@ function LabelCard({
           }}
         >
           {item.product_name}
-        </div>
-        <div
-          className="ln-price"
-          style={{
-            fontSize: ptToPx(priceFontPt),
-            fontWeight: 700,
-            marginTop: 2 * SCREEN_SCALE,
-            lineHeight: 1.1,
-          }}
-        >
-          ₩{krw.toLocaleString()}
         </div>
       </div>
     </div>

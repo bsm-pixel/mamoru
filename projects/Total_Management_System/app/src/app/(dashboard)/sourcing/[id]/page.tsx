@@ -13,10 +13,10 @@ import {
 import { RegisterLinkModal } from './_components/register-link-modals';
 import { LabelPreview } from '@/app/(dashboard)/design-lab/_sections/sourcing-1688/LabelPreview';
 import type { DemoPO } from '@/app/(dashboard)/design-lab/_sections/sourcing-1688/types';
-import { printSourcingLabels } from '@/lib/sourcing/label-print';
+import { printSourcingLabels, printSourcingPriceList } from '@/lib/sourcing/label-print';
 import {
   ArrowLeft, Plus, Trash2, ExternalLink, Award, X, RotateCcw, Copy, PackageSearch,
-  ImagePlus, Loader2, Printer,
+  ImagePlus, Loader2, Printer, ListOrdered,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -95,6 +95,21 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
     router.push('/sourcing');
   };
 
+  // A4 가격 리스트 (번호·품목명·업체·¥단가·₩가격) — 사장님 참고용 전체 출력
+  const printPriceList = () => {
+    if (items.length === 0) return;
+    printSourcingPriceList(
+      items.map((it) => ({
+        seq: it.sticker_no.split('-').pop() || '',
+        product_name: it.product_name,
+        unit_price: it.unit_price,
+        supplier_name: it.supplier_name,
+      })),
+      po.exchange_rate,
+      po.memo || po.po_number
+    );
+  };
+
   const copySelectionList = () => {
     if (selected.length === 0) return;
     const lines = selected.map((it) => {
@@ -128,6 +143,9 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
             <div className="font-mono text-base font-bold text-indigo-black">{po.po_number}</div>
             <div className="text-[11px] text-neutral-400">{po.order_date} · 소싱 회차</div>
           </div>
+          <Button variant="secondary" size="sm" onClick={printPriceList}>
+            <ListOrdered size={14} className="mr-1" /> 가격 리스트 (A4)
+          </Button>
           <Button variant="ghost" size="sm" onClick={handleDelete} className="text-rose-500">
             <Trash2 size={14} className="mr-1" /> 소싱 삭제
           </Button>
@@ -336,7 +354,7 @@ const PRINT_SIZES = [
 ];
 
 /** 품목별 즉시 라벨 인쇄 칩 (수량+사이즈 팝오버 → 그 품목 라벨만 인쇄) */
-function LabelPrintChip({ item, exchangeRate }: { item: SourcingItem; exchangeRate: number }) {
+function LabelPrintChip({ item }: { item: SourcingItem }) {
   const [open, setOpen] = useState(false);
   const [qty, setQty] = useState(1);
   const [sizeId, setSizeId] = useState('p40x20');
@@ -348,12 +366,10 @@ function LabelPrintChip({ item, exchangeRate }: { item: SourcingItem; exchangeRa
       [{
         sticker_no: item.sticker_no,
         product_name: item.product_name,
-        unit_price: item.unit_price,
         qrValue: `${base}/${item.id}`,
         copies: Math.max(1, qty),
       }],
-      { w: s.w, h: s.h },
-      exchangeRate
+      { w: s.w, h: s.h }
     );
     setOpen(false);
   };
@@ -414,7 +430,7 @@ function ItemRow({ item, idx, exchangeRate, onAddImage, onRemoveImage, onPatch, 
           <span className="font-mono text-[11px] text-neutral-500">{item.sticker_no}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <LabelPrintChip item={item} exchangeRate={exchangeRate} />
+          <LabelPrintChip item={item} />
           <button type="button" onClick={onDuplicate} title="복제 (회사 정보 유지 · 새 바코드)" className="text-neutral-400 hover:text-indigo-black p-0.5"><Copy size={14} /></button>
           <button type="button" onClick={onDelete} title="삭제" className="text-neutral-400 hover:text-rose-500 p-0.5"><Trash2 size={14} /></button>
         </div>
