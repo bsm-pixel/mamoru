@@ -55,7 +55,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden md:flex flex-col w-56 min-h-screen bg-indigo-black text-cream border-r border-white/8">
+    <aside className="hidden md:flex flex-col w-56 h-screen sticky top-0 self-start bg-indigo-black text-cream border-r border-white/8">
       {/* 로고 */}
       <div className="px-5 py-5">
         <h1 className="text-lg font-extrabold tracking-tight">MAMORU</h1>

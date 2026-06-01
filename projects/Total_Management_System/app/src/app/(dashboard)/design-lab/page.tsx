@@ -10,6 +10,7 @@
  */
 
 import { Topbar } from '@/components/layout/topbar';
+import { SidebarRedesignSection } from './_sections/sidebar-redesign';
 import { Sourcing1688Section } from './_sections/sourcing-1688';
 
 export default function DesignLabPage() {
@@ -28,6 +29,8 @@ export default function DesignLabPage() {
             <span className="opacity-60">운영 데이터 X · 사이드바 메뉴 미노출 · URL 직접 접근만</span>
           </p>
         </div>
+
+        <SidebarRedesignSection />
 
         <Sourcing1688Section />
 
