@@ -13,9 +13,10 @@ import {
 import { RegisterLinkModal } from './_components/register-link-modals';
 import { LabelPreview } from '@/app/(dashboard)/design-lab/_sections/sourcing-1688/LabelPreview';
 import type { DemoPO } from '@/app/(dashboard)/design-lab/_sections/sourcing-1688/types';
+import { printSourcingLabels } from '@/lib/sourcing/label-print';
 import {
   ArrowLeft, Plus, Trash2, ExternalLink, Award, X, RotateCcw, Copy, PackageSearch,
-  ImagePlus, Loader2,
+  ImagePlus, Loader2, Printer,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -328,6 +329,71 @@ function Empty({ children }: { children: React.ReactNode }) {
   return <div className="text-center py-8 text-xs text-neutral-400">{children}</div>;
 }
 
+const PRINT_SIZES = [
+  { id: 'p30x15', w: 30, h: 15, label: '30 × 15' },
+  { id: 'p40x20', w: 40, h: 20, label: '40 × 20' },
+  { id: 'p40x30', w: 40, h: 30, label: '40 × 30' },
+];
+
+/** 품목별 즉시 라벨 인쇄 칩 (수량+사이즈 팝오버 → 그 품목 라벨만 인쇄) */
+function LabelPrintChip({ item, exchangeRate }: { item: SourcingItem; exchangeRate: number }) {
+  const [open, setOpen] = useState(false);
+  const [qty, setQty] = useState(1);
+  const [sizeId, setSizeId] = useState('p40x20');
+
+  const doPrint = () => {
+    const s = PRINT_SIZES.find((x) => x.id === sizeId) || PRINT_SIZES[1];
+    const base = `${typeof window !== 'undefined' ? window.location.origin : 'https://app-eta-sandy-75.vercel.app'}/sourcing/inbound`;
+    printSourcingLabels(
+      [{
+        sticker_no: item.sticker_no,
+        product_name: item.product_name,
+        unit_price: item.unit_price,
+        qrValue: `${base}/${item.id}`,
+        copies: Math.max(1, qty),
+      }],
+      { w: s.w, h: s.h },
+      exchangeRate
+    );
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        title="이 품목 라벨 인쇄"
+        className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-indigo-black/5 text-indigo-black text-[10px] font-bold border border-neutral-200 hover:bg-indigo-black/10"
+      >
+        <Printer size={12} /> 라벨인쇄
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-lg border border-neutral-200 bg-white shadow-lg p-2.5 space-y-2">
+            <div className="text-[10px] text-neutral-500 font-mono truncate">{item.sticker_no}</div>
+            <label className="block">
+              <span className="text-[10px] text-neutral-500 block mb-0.5">사이즈 (mm)</span>
+              <select value={sizeId} onChange={(e) => setSizeId(e.target.value)} className="w-full px-2 py-1.5 rounded-lg border border-neutral-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-black/10">
+                {PRINT_SIZES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-[10px] text-neutral-500 block mb-0.5">수량 (매수)</span>
+              <input type="number" min={1} value={qty} onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))} className="w-full px-2 py-1.5 rounded-lg border border-neutral-200 bg-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-black/10" />
+            </label>
+            <div className="flex gap-1.5 pt-0.5">
+              <button type="button" onClick={() => setOpen(false)} className="flex-1 text-[11px] py-1.5 rounded-lg bg-neutral-100 text-neutral-600 hover:bg-neutral-200">취소</button>
+              <button type="button" onClick={doPrint} className="flex-1 text-[11px] py-1.5 rounded-lg bg-indigo-black text-white font-bold hover:opacity-90 inline-flex items-center justify-center gap-1"><Printer size={11} /> 인쇄</button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function ItemRow({ item, idx, exchangeRate, onAddImage, onRemoveImage, onPatch, onDuplicate, onDelete }: {
   item: SourcingItem;
   idx: number;
@@ -347,7 +413,8 @@ function ItemRow({ item, idx, exchangeRate, onAddImage, onRemoveImage, onPatch, 
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-black text-white text-[11px] font-bold">{String(idx + 1).padStart(2, '0')}</span>
           <span className="font-mono text-[11px] text-neutral-500">{item.sticker_no}</span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <LabelPrintChip item={item} exchangeRate={exchangeRate} />
           <button type="button" onClick={onDuplicate} title="복제 (회사 정보 유지 · 새 바코드)" className="text-neutral-400 hover:text-indigo-black p-0.5"><Copy size={14} /></button>
           <button type="button" onClick={onDelete} title="삭제" className="text-neutral-400 hover:text-rose-500 p-0.5"><Trash2 size={14} /></button>
         </div>

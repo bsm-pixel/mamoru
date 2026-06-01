@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from 'react';
 import QRCode from 'react-qr-code';
 import { Printer, FileImage, AlertCircle, FileDown, FileCode } from 'lucide-react';
+import { printSourcingLabels } from '@/lib/sourcing/label-print';
 import type { DemoPO, DemoPOItem } from './types';
 
 /**
@@ -61,143 +62,20 @@ export function LabelPreview({ po, qrBaseUrl = DEMO_BASE_URL }: { po: DemoPO; qr
   }, [sizeId, customW, customH]);
 
   const handlePrint = (mode: 'test' | 'all') => {
-    if (!printAreaRef.current) return;
-    const cardsInDom = Array.from(
-      printAreaRef.current.querySelectorAll('.label-card')
-    ) as HTMLElement[];
-    if (cardsInDom.length === 0) return;
-
     const targetItems = mode === 'test' ? items.slice(0, 1) : items;
-    const cards = mode === 'test' ? cardsInDom.slice(0, 1) : cardsInDom;
-
-    // 각 라벨의 QR SVG outerHTML 추출 (라이브 DOM 그대로 사용)
-    const labelHtml = targetItems
-      .map((it, i) => {
-        const card = cards[i];
-        const svgEl = card?.querySelector('svg');
-        const qrSvg = svgEl ? svgEl.outerHTML : '';
-        const seq = it.sticker_no.split('-').pop() || '000';
-        const single = `
-          <div class="label">
-            <div class="qr">${qrSvg}</div>
-            <div class="text">
-              <div class="num">#${escapeHtml(seq)}</div>
-              <div class="name">${escapeHtml(it.product_name)}</div>
-              <div class="price">₩${krwOf(it.unit_price).toLocaleString()}</div>
-            </div>
-          </div>
-        `;
-        // 매수만큼 동일 라벨 반복 (테스트는 1장)
-        const n = mode === 'test' ? 1 : getCopies(it.id);
-        return Array.from({ length: n }, () => single).join('');
-      })
-      .join('');
-
-    // 새 창에 인쇄 전용 HTML 주입 — 부모 페이지의 빈 영역이 페이지 수를 늘리지 않음
-    const win = window.open('', '_blank', 'width=720,height=560');
-    if (!win) {
-      alert('팝업 차단을 해제해 주세요.');
-      return;
-    }
-    win.document.open();
-    // 머리글·바닥글 제거: title 비우기 (브라우저 자동 머리글 = 페이지 title)
-    win.document.write(`<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="utf-8" />
-  <title></title>
-  <style>
-    @page {
-      size: ${size.w}mm ${size.h}mm;
-      margin: 0;
-    }
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #fff;
-      font-family: 'Noto Sans KR', -apple-system, sans-serif;
-      color: #000;
-    }
-    .label {
-      width: ${size.w}mm;
-      height: ${size.h}mm;
-      padding: 1mm;
-      display: grid;
-      grid-template-columns: ${qrMm}mm ${size.w - qrMm - 2}mm;
-      gap: 1mm;
-      align-items: center;
-      overflow: hidden;
-      page-break-after: always;
-      break-after: page;
-    }
-    .label:last-child {
-      page-break-after: auto;
-      break-after: auto;
-    }
-    .qr {
-      width: ${qrMm}mm;
-      height: ${qrMm}mm;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .qr svg {
-      width: ${qrMm}mm !important;
-      height: ${qrMm}mm !important;
-      display: block;
-    }
-    .text {
-      padding-left: 0.5mm;
-      line-height: 1.15;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      text-align: center;
-      align-items: center;
-    }
-    .num {
-      font-size: ${numFontPt}pt;
-      font-weight: 800;
-      letter-spacing: 0.3px;
-      line-height: 1.1;
-    }
-    .name {
-      font-size: ${nameFontPt}pt;
-      margin-top: 0.6mm;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      word-break: break-all;
-      line-height: 1.15;
-      text-align: center;
-    }
-    .price {
-      font-size: ${priceFontPt}pt;
-      font-weight: 700;
-      margin-top: 0.5mm;
-      line-height: 1.1;
-    }
-  </style>
-</head>
-<body>
-  ${labelHtml}
-  <script>
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        window.focus();
-        window.print();
-      }, 150);
-    });
-    window.addEventListener('afterprint', function() {
-      setTimeout(function() { window.close(); }, 100);
-    });
-  </script>
-</body>
-</html>`);
-    win.document.close();
+    if (targetItems.length === 0) return;
+    // 공용 인쇄 모듈 사용 (DOM 의존 없이 QR 문자열 렌더) — STEP1 칩과 동일 경로
+    printSourcingLabels(
+      targetItems.map((it) => ({
+        sticker_no: it.sticker_no,
+        product_name: it.product_name,
+        unit_price: it.unit_price,
+        qrValue: `${qrBaseUrl}/${it.id}`,
+        copies: mode === 'test' ? 1 : getCopies(it.id),
+      })),
+      { w: size.w, h: size.h },
+      po.exchange_rate
+    );
     setPrintMode(mode);
     setTimeout(() => setPrintMode('idle'), 200);
   };
@@ -813,11 +691,3 @@ function wrapTextChars(
   return kept;
 }
 
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
