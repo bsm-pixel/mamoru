@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
         stock_quantity: -1,  // 재고 미사용
         supply_status: 'sufficient',
         purchase_url: purchase_url?.trim() || null,
+        image_url: body.image_url || null,
         description: memo?.trim() || null,
         is_active: true,
         created_at: new Date().toISOString(),

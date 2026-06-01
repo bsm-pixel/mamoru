@@ -20,7 +20,22 @@ export async function GET(
     ]);
     if (poRes.error) throw poRes.error;
 
-    return NextResponse.json({ po: poRes.data, items: itemsRes.data || [] });
+    // 연결된 제품/부자재 머지 (뱃지용 — 임베드 대신 2-query로 FK 타이밍 무관 안전)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const items: any[] = itemsRes.data || [];
+    const linkedIds = [...new Set(items.map((it) => it.linked_product_id).filter(Boolean))];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const prodMap: Record<string, any> = {};
+    if (linkedIds.length > 0) {
+      const { data: prods } = await db.from('products').select('id, sku, name, category').in('id', linkedIds);
+      for (const p of prods || []) prodMap[p.id] = p;
+    }
+    const itemsWithLinked = items.map((it) => ({
+      ...it,
+      linked_product: it.linked_product_id ? prodMap[it.linked_product_id] ?? null : null,
+    }));
+
+    return NextResponse.json({ po: poRes.data, items: itemsWithLinked });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }

@@ -10,9 +10,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Modal } from '@/components/ui/modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { SupplierSelect } from '@/components/ui/supplier-select';
-import { useProduct, useUpdateProduct, useCreateProduct } from '@/hooks/use-product-detail';
+import { useProduct, useUpdateProduct, useCreateProduct, useSourcingByProduct } from '@/hooks/use-product-detail';
 import { formatKRW } from '@/lib/utils/format';
-import { Save, Package, Hash, X, Plus, Archive, Copy, Eye, EyeOff, Trash2, ArrowRightLeft, ArrowRight } from 'lucide-react';
+import { Save, Package, Hash, X, Plus, Archive, Copy, Eye, EyeOff, Trash2, ArrowRightLeft, ArrowRight, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { useSetting } from '@/hooks/use-settings';
@@ -34,6 +34,8 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const { data, isLoading } = useProduct(productId || '');
   const updateProduct = useUpdateProduct();
   const createProduct = useCreateProduct();
+  const { data: sourcingData } = useSourcingByProduct(productId || '');
+  const sourcing = sourcingData?.sourcing ?? null;
   const catLabels = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
   const categories = useSetting<string[]>('inventory.categories', Object.keys(DEFAULT_CAT_LABELS));
   const priceGroups = usePriceGroups();
@@ -532,6 +534,40 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               </div>
             )}
           </Card>
+
+          {/* 소싱 정보 (1688) — 연결된 소싱 품목 있을 때만 */}
+          {sourcing && (
+            <Card>
+              <h4 className="text-xs text-neutral-500 mb-2">🏭 소싱 정보 (1688)</h4>
+              <div className="space-y-2 text-sm">
+                {sourcing.supplier_name && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-neutral-500 w-14 flex-shrink-0">업체</span>
+                    <span className="text-neutral-800 truncate">{sourcing.supplier_name}</span>
+                    {sourcing.supplier_url && (
+                      <a href={sourcing.supplier_url} target="_blank" rel="noreferrer" className="text-blue-600 flex-shrink-0"><ExternalLink size={12} /></a>
+                    )}
+                  </div>
+                )}
+                {sourcing.vendor_url && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-neutral-500 w-14 flex-shrink-0">품목링크</span>
+                    <a href={sourcing.vendor_url} target="_blank" rel="noreferrer" className="text-blue-600 inline-flex items-center gap-0.5 text-xs truncate">1688 상품 <ExternalLink size={11} /></a>
+                  </div>
+                )}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-neutral-500 w-14 flex-shrink-0">소싱 단가</span>
+                  <span className="text-neutral-800">¥{sourcing.unit_price} <span className="text-neutral-400">≈ ₩{sourcing.krw_price.toLocaleString()}</span></span>
+                </div>
+                {sourcing.po_number && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-neutral-500 w-14 flex-shrink-0">소싱회차</span>
+                    <span className="font-mono text-xs text-neutral-500">{sourcing.po_number}</span>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
 
           {/* 퀵 액션 */}
           <Card>

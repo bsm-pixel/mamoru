@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Package, Plus, ExternalLink, X, Pencil, Trash2 } from 'lucide-react';
+import { useSourcingByProduct } from '@/hooks/use-product-detail';
 import toast from 'react-hot-toast';
 
 interface Supply {
@@ -238,6 +239,8 @@ function AddSupplyModal({ onClose }: { onClose: () => void }) {
 
 function EditSupplyModal({ supply, onClose }: { supply: Supply; onClose: () => void }) {
   const queryClient = useQueryClient();
+  const { data: sourcingData } = useSourcingByProduct(supply.id);
+  const sourcing = sourcingData?.sourcing ?? null;
   const [form, setForm] = useState({
     name: supply.name,
     purchase_url: supply.purchase_url || '',
@@ -296,6 +299,30 @@ function EditSupplyModal({ supply, onClose }: { supply: Supply; onClose: () => v
               placeholder="규격, 수량 단위 등"
               className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
           </div>
+
+          {/* 소싱 정보 (연결된 소싱 품목 있을 때만, 읽기전용) */}
+          {sourcing && (
+            <div className="rounded-lg border border-neutral-200 bg-warm-ivory p-3 space-y-1.5">
+              <div className="text-[11px] font-bold text-neutral-500">🏭 소싱 정보 (1688)</div>
+              {sourcing.supplier_name && (
+                <div className="flex items-center gap-1.5 text-sm">
+                  <span className="text-xs text-neutral-500 w-12 flex-shrink-0">업체</span>
+                  <span className="text-neutral-800 truncate">{sourcing.supplier_name}</span>
+                  {sourcing.supplier_url && <a href={sourcing.supplier_url} target="_blank" rel="noreferrer" className="text-blue-600 flex-shrink-0"><ExternalLink size={12} /></a>}
+                </div>
+              )}
+              {sourcing.vendor_url && (
+                <div className="flex items-center gap-1.5 text-sm">
+                  <span className="text-xs text-neutral-500 w-12 flex-shrink-0">품목</span>
+                  <a href={sourcing.vendor_url} target="_blank" rel="noreferrer" className="text-blue-600 inline-flex items-center gap-0.5 text-xs">1688 상품 <ExternalLink size={11} /></a>
+                </div>
+              )}
+              <div className="flex items-center gap-1.5 text-sm">
+                <span className="text-xs text-neutral-500 w-12 flex-shrink-0">단가</span>
+                <span className="text-neutral-800">¥{sourcing.unit_price} <span className="text-neutral-400">≈ ₩{sourcing.krw_price.toLocaleString()}</span></span>
+              </div>
+            </div>
+          )}
         </div>
         <div className="px-5 py-4 border-t border-neutral-100 flex gap-2">
           <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>

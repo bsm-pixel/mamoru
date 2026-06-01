@@ -17,6 +17,30 @@ export function useProduct(id: string) {
   });
 }
 
+/** 연결된 소싱 정보 역조회 (제품/부자재 상세에서 업체·링크·단가 표시) */
+export interface LinkedSourcingInfo {
+  sticker_no: string;
+  supplier_name: string | null;
+  supplier_url: string | null;
+  vendor_url: string | null;
+  unit_price: number;
+  features_memo: string | null;
+  krw_price: number;
+  exchange_rate: number;
+  po_number: string | null;
+}
+export function useSourcingByProduct(productId: string) {
+  return useQuery({
+    queryKey: ['sourcing-by-product', productId],
+    queryFn: async () => {
+      const res = await fetch(`/api/sourcing/by-product?product_id=${productId}`);
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ sourcing: LinkedSourcingInfo | null }>;
+    },
+    enabled: !!productId,
+  });
+}
+
 /** 제품 등록 */
 export function useCreateProduct() {
   const queryClient = useQueryClient();
@@ -37,6 +61,7 @@ export function useCreateProduct() {
       barcode?: string;
       image_url?: string;
       purchase_name?: string;
+      purchase_url?: string;
     }) => {
       const res = await fetch('/api/products', {
         method: 'POST',

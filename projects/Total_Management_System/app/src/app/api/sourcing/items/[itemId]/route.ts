@@ -43,7 +43,7 @@ export async function PATCH(
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     for (const k of [
       'supplier_name', 'supplier_url', 'product_name', 'unit_price', 'features_memo', 'vendor_url', 'moq',
-      'inbound_photos', 'inbound_memo', 'inspection_status',
+      'inbound_photos', 'inbound_memo', 'inspection_status', 'linked_product_id',
     ]) {
       if (k in body) patch[k] = body[k];
     }

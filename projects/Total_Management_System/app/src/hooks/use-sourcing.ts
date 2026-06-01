@@ -21,6 +21,8 @@ export interface SourcingItem {
   inspection_status: SourcingInspectionStatus;
   selected_at: string | null;
   sort_order: number;
+  linked_product_id: string | null;
+  linked_product?: { id: string; sku: string; name: string; category: string } | null;
 }
 
 export interface SourcingPo {
@@ -170,6 +172,24 @@ export function useUpdateSourcingItem(poId: string) {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['sourcing-detail', poId] }),
     onError: (e) => toast.error('품목 수정 실패: ' + String(e)),
+  });
+}
+
+/** 품목 ↔ 제품/부자재 연결 (linked_product_id set/null) */
+export function useLinkSourcingItem(poId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ itemId, linked_product_id }: { itemId: string; linked_product_id: string | null }) => {
+      const res = await fetch(`/api/sourcing/items/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ linked_product_id }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sourcing-detail', poId] }),
+    onError: (e) => toast.error('연결 실패: ' + String(e)),
   });
 }
 

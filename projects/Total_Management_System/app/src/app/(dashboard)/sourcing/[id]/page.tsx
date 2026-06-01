@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import {
   useSourcingDetail, useUpdateSourcingPo, useDeleteSourcingPo,
   useAddSourcingItem, useUpdateSourcingItem, useDeleteSourcingItem,
-  useUploadItemImage, useDeleteItemImage,
+  useUploadItemImage, useDeleteItemImage, useLinkSourcingItem,
   type SourcingItem,
 } from '@/hooks/use-sourcing';
+import { RegisterLinkModal } from './_components/register-link-modals';
 import { LabelPreview } from '@/app/(dashboard)/design-lab/_sections/sourcing-1688/LabelPreview';
 import type { DemoPO } from '@/app/(dashboard)/design-lab/_sections/sourcing-1688/types';
 import {
@@ -29,6 +30,8 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
   const deleteItem = useDeleteSourcingItem(id);
   const uploadImg = useUploadItemImage(id);
   const delImg = useDeleteItemImage(id);
+  const linkItem = useLinkSourcingItem(id);
+  const [regModal, setRegModal] = useState<{ mode: 'product' | 'supply' | 'link'; item: SourcingItem } | null>(null);
 
   const po = data?.po;
   const items = useMemo(() => data?.items ?? [], [data]);
@@ -264,13 +267,42 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
                       </a>
                     )}
                   </div>
-                  <span className="font-mono text-[10px] text-neutral-400">{it.sticker_no.split('-').pop()}</span>
+                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                    <span className="font-mono text-[10px] text-neutral-400">{it.sticker_no.split('-').pop()}</span>
+                    {it.linked_product_id ? (
+                      <>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
+                          ✅ {it.linked_product?.sku || (it.linked_product?.category === 'SUP' ? '부자재' : '등록됨')}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button type="button" onClick={() => router.push(it.linked_product?.category === 'SUP' ? '/supplies' : '/products')} className="text-[10px] text-blue-600 hover:underline">보기</button>
+                          <button type="button" onClick={() => { if (confirm('연결을 해제할까요? (등록된 제품은 그대로 남습니다)')) linkItem.mutate({ itemId: it.id, linked_product_id: null }); }} className="text-[10px] text-neutral-400 hover:text-rose-500">연결해제</button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-end gap-1">
+                        <button type="button" onClick={() => setRegModal({ mode: 'product', item: it })} className="text-[10px] px-2 py-1 rounded-md bg-indigo-black text-white font-bold hover:opacity-90">제품등록</button>
+                        <button type="button" onClick={() => setRegModal({ mode: 'supply', item: it })} className="text-[10px] px-2 py-1 rounded-md bg-neutral-100 text-neutral-700 border border-neutral-200 hover:bg-neutral-200">부자재등록</button>
+                        <button type="button" onClick={() => setRegModal({ mode: 'link', item: it })} className="text-[10px] text-blue-600 hover:underline">기존 연결</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </Section>
       </div>
+
+      {regModal && (
+        <RegisterLinkModal
+          mode={regModal.mode}
+          item={regModal.item}
+          poId={id}
+          exchangeRate={po.exchange_rate}
+          onClose={() => setRegModal(null)}
+        />
+      )}
     </div>
   );
 }
