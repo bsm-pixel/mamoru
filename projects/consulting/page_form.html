@@ -2629,24 +2629,13 @@ function getCachedSlots(dateStr) {
     // 로딩 중에는 시간 선택을 무시합니다.
 if (isLoadingDates) return;
 
-  // 이전 선택 해제 후 현재 시간 선택
+  // 이전 선택 해제 후 현재 시간(시작 시각)만 선택 표시
+  //   ※ 예전엔 다음 30분 슬롯도 함께 'selected' 칠해 1시간을 표시했으나,
+  //     선택한 시각(예 5:00)보다 다음 슬롯(5:30)이 선택된 것처럼 보여 혼란 → 제거.
+  //     1시간 단위는 하단 요약("오후 5시 (1시간)")으로 안내.
   document.querySelectorAll('#time-slots .time-slot').forEach(e => e.classList.remove('selected'));
   el.classList.add('selected');
   state.modal.selectedTime = time;
-
-  // 다음 슬롯도 함께 선택해 1시간 단위를 표시
-  const biz   = state.serverSettings.business || {};
-  const step  = 30;  // 고객 달력 30분 고정
-  const parts = time.split(':');
-  const baseM = Number(parts[0]) * 60 + Number(parts[1]);
-  const nextM = baseM + step;
-  const nextH = String(Math.floor(nextM / 60)).padStart(2, '0');
-  const nextS = String(nextM % 60).padStart(2, '0');
-  const nextTime = `${nextH}:${nextS}`;
-  const nextEl = document.querySelector(`#time-slots .time-slot[data-time="${nextTime}"]`);
-  if (nextEl && !nextEl.classList.contains('unavailable') && !nextEl.classList.contains('disabled')) {
-    nextEl.classList.add('selected');
-  }
 
   // "선택 완료" 버튼 활성화
   const confirmBtn = document.getElementById('btn-modal-confirm');
