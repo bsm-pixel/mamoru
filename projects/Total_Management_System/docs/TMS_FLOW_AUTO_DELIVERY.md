@@ -29,10 +29,11 @@
 └──────────────────┬──────────────────────────────────┘
                    ▼
 ┌─────────────────────────────────────────────────────┐
-│ 테이블별 분기 (현재 2종, 향후 확장)                  │
-│  ├ [1] orders  → queryStatus(invoice)              │
-│  ├ [2] repairs → queryTrackingStatus(invoice)      │
-│  └ [3] offline_sales → (다음 구축 예정)             │
+│ 테이블별 분기 (현재 4종)                            │
+│  ├ [1] orders        → queryStatus(invoice)        │
+│  ├ [2] repairs       → queryTrackingStatus(invoice)│
+│  ├ [3] offline_sales → queryTrackingStatus(invoice)│
+│  └ [4] deliveries(B2B)→ queryTrackingStatus(track#)│
 └──────────────────┬──────────────────────────────────┘
                    ▼
 ┌─────────────────────────────────────────────────────┐
@@ -63,14 +64,17 @@
 
 ---
 
-## 2. 현재 적용 상태 (2026-05-25)
+## 2. 현재 적용 상태 (2026-06-01 갱신)
 
-| 채널 | 테이블 | 송장 컬럼 | 상태 컬럼 | delivered_at | 추적 함수 | 자동 추적 |
+| 채널 | 테이블 | 송장 컬럼 | 상태 처리 | delivered_at | 추적 함수 | 자동 추적 |
 |------|--------|----------|----------|--------------|----------|----------|
 | 아임웹 주문 | `orders` | `invoice_number` | `status: shipping → delivered` | ✅ | `queryStatus` | ✅ 작동 |
 | 복원수리 | `repairs` | `invoice_number` | `status: shipped → delivered` | ✅ | `queryTrackingStatus` | ✅ 작동 |
 | 합포장 출고 (repairs) | `repairs` (invoice 복사된 건) | ✅ | ✅ | ✅ | (위와 동일) | ✅ 작동 (자연 포함) |
-| TMS 자체 판매 | `offline_sales` | `invoice_number` | ❌ **없음** | ❌ **없음** | (미적용) | ❌ **미구현** |
+| TMS 자체 판매(B2C) | `offline_sales` | `invoice_number` | status 미변경, `delivered_at`만 | ✅ (091) | `queryTrackingStatus` | ✅ 작동 (2026-05-25) |
+| **거래처 납품(B2B)** | **`deliveries`** | **`tracking_number`** | **status 미변경(정산용), `delivered_at`만** | **✅ (101)** | **`queryTrackingStatus`** | **✅ 작동 (2026-06-01)** |
+
+> ※ offline_sales·deliveries 는 status enum 에 'delivered' 가 없어 **status 는 안 바꾸고 `delivered_at` 만** 세팅(UI 표시는 delivered_at 기준). deliveries 는 송장 컬럼이 `invoice_number` 가 아니라 **`tracking_number`** 인 점만 다름.
 
 ---
 
@@ -222,10 +226,10 @@ curl -H "Authorization: Bearer $CRON_SECRET" \
 
 ## 8. 다음 작업 (사장님 비전 확장)
 
-### A. offline_sales 자동 추적 추가 (사장님 결정 후)
-- DB 마이그레이션: `offline_sales` 에 `delivered_at` 컬럼 추가 + status 컬럼 또는 동등 표현 검토
-- 매장 직접 수령 vs 택배 발송 구분 패턴 결정
-- 위 플레이북 그대로 적용
+### A. offline_sales(B2C) 자동 추적 — ✅ 완료 (2026-05-25, 마이그 091)
+### A-2. deliveries(B2B 거래처 납품) 자동 추적 — ✅ 완료 (2026-06-01, 마이그 101)
+- 송장 컬럼 = `tracking_number`(기존), `delivered_at`만 추가. status 미변경.
+- 고객/거래처 배송완료 표시 = 날짜 + **시간**(`M월 d일 HH:mm`).
 
 ### B. 향후 추가 가능 채널
 - contracts (전자 계약서) — 송장 발송 케이스 있다면
