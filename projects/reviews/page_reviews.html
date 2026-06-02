@@ -300,7 +300,7 @@ img { display: block; max-width: 100%; }
 
 /* ── 라이트박스 (사진 확대) ── */
 .mm-lb {
-  position: fixed; inset: 0; z-index: 10000;
+  position: absolute; left: 0; right: 0; top: 0; height: 100%; z-index: 10000;
   background: rgba(0,0,0,0.92);
   display: flex; align-items: center; justify-content: center;
   opacity: 0; visibility: hidden;
@@ -309,7 +309,7 @@ img { display: block; max-width: 100%; }
 }
 .mm-lb--open { opacity: 1; visibility: visible; }
 .mm-lb__img {
-  max-width: 90vw; max-height: 85vh;
+  max-width: 92%; max-height: 84%;
   object-fit: contain; border-radius: 4px;
   user-select: none; -webkit-user-drag: none;
 }
@@ -340,7 +340,10 @@ img { display: block; max-width: 100%; }
 /* 사진 1장이면 화살표/카운터 숨김 */
 .mm-lb__arrow.hidden, .mm-lb__counter.hidden { display: none; }
 @media (max-width: 767px) {
-  .mm-lb__arrow { display: none; }
+  /* 모바일에서도 넘김 화살표 노출 (작게) — '넘겨보는 표시' 확보 */
+  .mm-lb__arrow { width: 40px; height: 40px; font-size: 19px; }
+  .mm-lb__arrow--prev { left: 8px; }
+  .mm-lb__arrow--next { right: 8px; }
 }
 
 /* ── 5. 베스트 리뷰 섹션 ── */
@@ -514,7 +517,7 @@ img { display: block; max-width: 100%; }
 @media (min-width: 1024px) { .mm-rv-photos { padding: 0 48px; } .mm-rv-photos__grid { grid-template-columns: repeat(6, 1fr); } }
 
 /* ── 전체 사진 모아보기 오버레이 ── */
-.mm-rv-allgrid { position: fixed; inset: 0; z-index: 9999; background: var(--cream, #FAF9F7); opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; overflow-y: auto; }
+.mm-rv-allgrid { position: absolute; left: 0; right: 0; top: 0; height: 100%; z-index: 9999; background: var(--cream, #FAF9F7); opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .mm-rv-allgrid--open { opacity: 1; visibility: visible; }
 .mm-rv-allgrid__head { position: sticky; top: 0; background: var(--cream, #FAF9F7); display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--mm-border-l); z-index: 1; }
 .mm-rv-allgrid__back { border: none; background: none; font-size: 22px; cursor: pointer; color: var(--mm-void); line-height: 1; padding: 0; }
@@ -535,7 +538,7 @@ img { display: block; max-width: 100%; }
 .mm-lb__cap-chip { display: inline-block; font-size: 11px; padding: 2px 8px; border: 1px solid rgba(255,255,255,0.4); border-radius: 999px; margin-left: 6px; font-weight: 500; vertical-align: middle; }
 .mm-lb__cap-text { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.9); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .mm-lb__cap-date { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 8px; display: flex; gap: 10px; }
-.mm-lb--cap .mm-lb__img { max-height: 64vh; margin-top: 4vh; margin-bottom: auto; }
+.mm-lb--cap .mm-lb__img { max-height: 58%; }
 
 /* 아임웹 iframe 통신 */
 .mm-rv-page {
@@ -834,37 +837,39 @@ img { display: block; max-width: 100%; }
     btn.style.display = (visible.length < reviews.length) ? 'block' : 'none';
   }
 
-  /* ── 상세 모달 — iframe 뷰포트 센터링 ── */
+  /* ── 오버레이 iframe 뷰포트 배치 (모달/라이트박스/모아보기 공용) ── */
   var overlay = document.getElementById('rvOverlay');
   var modalBody = document.getElementById('rvModalBody');
-  var pendingReview = null; // 뷰포트 응답 대기 중인 리뷰
-
   var currentModalPhotos = [];
 
-  /* 부모에게 뷰포트 정보 요청 → 응답 받아서 모달 위치 설정 */
+  /* 부모 viewport 가시영역(visibleTop/Height)에 absolute 배치
+     → 높이동기 iframe 안에서도 '지금 보던 자리'에 오버레이가 뜨도록 (fixed inset:0 금지) */
+  var pendingViewportCb = null;
   window.addEventListener('message', function(e) {
-    if (e.data && e.data.type === 'MAMORU_VIEWPORT_INFO' && pendingReview) {
-      var vTop = e.data.visibleTop || 0;
-      var vH = e.data.visibleHeight || window.innerHeight;
-      overlay.style.top = vTop + 'px';
-      overlay.style.height = vH + 'px';
-      showModalContent(pendingReview);
-      pendingReview = null;
+    if (e.data && e.data.type === 'MAMORU_VIEWPORT_INFO' && pendingViewportCb) {
+      var cb = pendingViewportCb; pendingViewportCb = null;
+      cb(e.data.visibleTop || 0, e.data.visibleHeight || window.innerHeight);
     }
   });
+  function placeInViewport(el, done) {
+    pendingViewportCb = function(top, h) {
+      el.style.top = top + 'px';
+      el.style.height = h + 'px';
+      if (done) done();
+    };
+    window.parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*');
+    /* fallback: 200ms 내 응답 없으면 현재 기준 */
+    setTimeout(function() {
+      if (!pendingViewportCb) return;
+      pendingViewportCb = null;
+      el.style.top = window.scrollY + 'px';
+      el.style.height = window.innerHeight + 'px';
+      if (done) done();
+    }, 200);
+  }
 
   function openModal(r) {
-    pendingReview = r;
-    /* 부모에게 뷰포트 요청 */
-    window.parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*');
-    /* fallback: 200ms 내 응답 없으면 현재 스크롤 기준으로 표시 */
-    setTimeout(function() {
-      if (!pendingReview) return;
-      overlay.style.top = window.scrollY + 'px';
-      overlay.style.height = window.innerHeight + 'px';
-      showModalContent(pendingReview);
-      pendingReview = null;
-    }, 200);
+    placeInViewport(overlay, function() { showModalContent(r); });
   }
 
   function showModalContent(r) {
@@ -951,12 +956,15 @@ img { display: block; max-width: 100%; }
     document.getElementById('rvAllGridGrid').innerHTML = galleryPhotos.map(function(p, i) {
       return '<div class="mm-rv-allgrid__item" data-gal-idx="' + i + '"><img src="' + p.url + '" alt="사진 후기" loading="lazy"></div>';
     }).join('');
-    allGrid.classList.add('mm-rv-allgrid--open');
-    document.body.style.overflow = 'hidden';
+    allGrid.scrollTop = 0;
+    placeInViewport(allGrid, function() {
+      allGrid.classList.add('mm-rv-allgrid--open');
+      document.body.style.overflow = 'hidden';
+    });
   }
   function closeAllGrid() {
     allGrid.classList.remove('mm-rv-allgrid--open');
-    document.body.style.overflow = '';
+    if (!lb.classList.contains('mm-lb--open')) document.body.style.overflow = '';
   }
   document.getElementById('rvAllGridBack').addEventListener('click', closeAllGrid);
   document.getElementById('rvPhotosGrid').addEventListener('click', function(e) {
@@ -983,9 +991,13 @@ img { display: block; max-width: 100%; }
     lbList = list || [];
     lbIdx = idx || 0;
     updateLightbox();
-    lb.classList.add('mm-lb--open');
+    document.body.style.overflow = 'hidden';
+    placeInViewport(lb, function() { lb.classList.add('mm-lb--open'); });
   }
-  function closeLightbox() { lb.classList.remove('mm-lb--open'); }
+  function closeLightbox() {
+    lb.classList.remove('mm-lb--open');
+    if (!allGrid.classList.contains('mm-rv-allgrid--open')) document.body.style.overflow = '';
+  }
 
   function capDates(r) {
     var rec = (r.meta && r.meta.received_at) ? fmtDate(r.meta.received_at) : '';

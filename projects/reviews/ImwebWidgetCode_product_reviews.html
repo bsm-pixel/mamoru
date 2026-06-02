@@ -757,7 +757,10 @@ img { display: block; max-width: 100%; }
 }
 .mm-lb__arrow.hidden, .mm-lb__counter.hidden { display: none; }
 @media (max-width: 767px) {
-  .mm-lb__arrow { display: none; }
+  /* 모바일에서도 넘김 화살표 노출 (작게) — '넘겨보는 표시' 확보 */
+  .mm-lb__arrow { width: 40px; height: 40px; font-size: 19px; }
+  .mm-lb__arrow--prev { left: 8px; }
+  .mm-lb__arrow--next { right: 8px; }
 }
 /* ── 라이트박스 캡션 (사진의 부모 리뷰) — page_reviews 동기화 ── */
 .mm-lb__counter { top: 16px; bottom: auto; }
