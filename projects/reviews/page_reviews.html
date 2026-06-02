@@ -499,6 +499,44 @@ img { display: block; max-width: 100%; }
   }
 }
 
+/* ── 사진 후기 갤러리 (무신사식) ── */
+.mm-rv-photos { max-width: var(--mm-max-w); margin: 0 auto 8px; padding: 0 20px; }
+.mm-rv-photos__head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; padding-left: 2px; }
+.mm-rv-photos__title { font-size: 13px; font-weight: 600; color: var(--mm-text-d2); letter-spacing: 0.05em; text-transform: uppercase; }
+.mm-rv-photos__count { font-size: 12px; color: var(--mm-text-d3); }
+.mm-rv-photos__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.mm-rv-photos__item { position: relative; aspect-ratio: 1/1; overflow: hidden; border-radius: 4px; cursor: pointer; background: var(--shell); }
+.mm-rv-photos__item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform var(--mm-ease-fast); }
+.mm-rv-photos__more { position: absolute; inset: 0; background: rgba(26,26,26,0.55); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; gap: 1px; }
+.mm-rv-photos__more small { font-size: 11px; font-weight: 400; opacity: 0.85; }
+@media (hover: hover) { .mm-rv-photos__item:hover img { transform: scale(1.04); } }
+@media (min-width: 768px) { .mm-rv-photos { padding: 0 32px; } .mm-rv-photos__grid { grid-template-columns: repeat(4, 1fr); gap: 6px; } }
+@media (min-width: 1024px) { .mm-rv-photos { padding: 0 48px; } .mm-rv-photos__grid { grid-template-columns: repeat(6, 1fr); } }
+
+/* ── 전체 사진 모아보기 오버레이 ── */
+.mm-rv-allgrid { position: fixed; inset: 0; z-index: 9999; background: var(--cream, #FAF9F7); opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; overflow-y: auto; }
+.mm-rv-allgrid--open { opacity: 1; visibility: visible; }
+.mm-rv-allgrid__head { position: sticky; top: 0; background: var(--cream, #FAF9F7); display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--mm-border-l); z-index: 1; }
+.mm-rv-allgrid__back { border: none; background: none; font-size: 22px; cursor: pointer; color: var(--mm-void); line-height: 1; padding: 0; }
+.mm-rv-allgrid__title { font-size: 15px; font-weight: 700; color: var(--mm-void); }
+.mm-rv-allgrid__count { font-size: 13px; color: var(--mm-text-d3); margin-left: auto; }
+.mm-rv-allgrid__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 3px; }
+.mm-rv-allgrid__item { aspect-ratio: 1/1; overflow: hidden; cursor: pointer; background: var(--shell); }
+.mm-rv-allgrid__item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (min-width: 768px) { .mm-rv-allgrid__grid { grid-template-columns: repeat(5, 1fr); } }
+@media (min-width: 1024px) { .mm-rv-allgrid__grid { grid-template-columns: repeat(6, 1fr); max-width: var(--mm-max-w); margin: 0 auto; } }
+
+/* ── 라이트박스 캡션 (사진의 부모 리뷰) ── */
+.mm-lb__counter { top: 16px; bottom: auto; }
+.mm-lb__caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 20px 24px; background: linear-gradient(transparent, rgba(0,0,0,0.82) 36%); color: #fff; pointer-events: none; }
+.mm-lb__cap-inner { max-width: 680px; margin: 0 auto; }
+.mm-lb__cap-stars { font-size: 12px; letter-spacing: 2px; color: #fff; margin-bottom: 6px; }
+.mm-lb__cap-name { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.mm-lb__cap-chip { display: inline-block; font-size: 11px; padding: 2px 8px; border: 1px solid rgba(255,255,255,0.4); border-radius: 999px; margin-left: 6px; font-weight: 500; vertical-align: middle; }
+.mm-lb__cap-text { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.9); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.mm-lb__cap-date { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 8px; display: flex; gap: 10px; }
+.mm-lb--cap .mm-lb__img { max-height: 64vh; margin-top: 4vh; margin-bottom: auto; }
+
 /* 아임웹 iframe 통신 */
 .mm-rv-page {
   overflow: visible;
@@ -514,6 +552,15 @@ img { display: block; max-width: 100%; }
   <h1 class="mm-rv-header__title">고객 후기</h1>
   <p class="mm-rv-header__desc">마모루를 경험한 분들의 솔직한 이야기</p>
 </header>
+
+<!-- 사진 후기 갤러리 -->
+<section class="mm-rv-photos" id="rvPhotos" style="display:none">
+  <div class="mm-rv-photos__head">
+    <span class="mm-rv-photos__title">사진 후기</span>
+    <span class="mm-rv-photos__count" id="rvPhotosCount"></span>
+  </div>
+  <div class="mm-rv-photos__grid" id="rvPhotosGrid"></div>
+</section>
 
 <!-- 베스트 리뷰 -->
 <section class="mm-rv-best" id="rvBest" style="display:none">
@@ -546,6 +593,16 @@ img { display: block; max-width: 100%; }
   </div>
 </div>
 
+<!-- 전체 사진 모아보기 -->
+<div class="mm-rv-allgrid" id="rvAllGrid">
+  <div class="mm-rv-allgrid__head">
+    <button class="mm-rv-allgrid__back" id="rvAllGridBack" aria-label="닫기">‹</button>
+    <span class="mm-rv-allgrid__title">사진 후기 모아보기</span>
+    <span class="mm-rv-allgrid__count" id="rvAllGridCount"></span>
+  </div>
+  <div class="mm-rv-allgrid__grid" id="rvAllGridGrid"></div>
+</div>
+
 <!-- 사진 라이트박스 -->
 <div class="mm-lb" id="rvLightbox">
   <button class="mm-lb__close" id="lbClose">✕</button>
@@ -553,6 +610,7 @@ img { display: block; max-width: 100%; }
   <img class="mm-lb__img" id="lbImg" src="" alt="사진 확대">
   <button class="mm-lb__arrow mm-lb__arrow--next" id="lbNext">›</button>
   <div class="mm-lb__counter" id="lbCounter"></div>
+  <div class="mm-lb__caption" id="lbCaption" style="display:none"></div>
 </div>
 
 <script>
@@ -564,6 +622,9 @@ img { display: block; max-width: 100%; }
   var currentType = 'all';
   var currentPage = 1;
   var allReviews = []; // API에서 가져온 전체 리뷰
+  var galleryPhotos = []; // 전체 리뷰의 모든 사진 평면화 {url, review}
+  var GALLERY_PREVIEW = 6; // 상단 미리보기 노출 장수
+  var currentModalReview = null; // 모달에 표시 중인 리뷰 (라이트박스 캡션용)
 
   /* ── 이름 마스킹 (서버에서 이미 마스킹되어 올 수도 있지만 안전장치) ── */
   function maskName(name) {
@@ -613,7 +674,7 @@ img { display: block; max-width: 100%; }
       tags.map(function(t) { return '<span class="mm-rv-tag">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') +
     '</div>';
   }
-  var SUBTYPE_LABELS = { store_visit: '직접방문', field_request: '출장', talk_consult: '톡상담', restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거', parcel_pickup: '방문수거', self_ship: '직접발송', offline: '오프라인', online: '온라인', talk: '톡상담' };
+  var SUBTYPE_LABELS = { store_visit: '직접방문', field_request: '출장', talk_consult: '톡상담', restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거', parcel_pickup: '방문수거', self_ship: '직접발송', offline: '오프라인', online: '온라인', talk: '톡상담', visit_pickup: '방문수거', direct_send: '직접발송', same_day: '당일수리' };
 
   function getTypeLabel(r) { return TYPE_LABELS[r.type] || ''; }
   function getSubtypeLabel(r) {
@@ -807,6 +868,7 @@ img { display: block; max-width: 100%; }
   }
 
   function showModalContent(r) {
+    currentModalReview = r;
     currentModalPhotos = (r.photo_urls && r.photo_urls.length > 0) ? r.photo_urls : [];
     var photosHtml = '';
     if (currentModalPhotos.length > 0) {
@@ -842,46 +904,136 @@ img { display: block; max-width: 100%; }
     if (e.target === overlay) closeModal();
   });
 
-  /* ── 사진 라이트박스 ── */
+  /* ── 칩 라벨 한 줄 (renderChips 와 동일 규칙, 캡션용) ── */
+  function chipLabel(r) {
+    var t = getTypeLabel(r), s = getSubtypeLabel(r);
+    if (r.type === 'consult' && s) return t + '·' + s;
+    var rawSub = r.subtype || '';
+    if (s && rawSub !== 'restoration' && s !== t) return t + '·' + s;
+    return t;
+  }
+
+  /* ── 갤러리 (사진 후기 모아보기) — 전체 리뷰 사진 평면화, 최신순 ── */
+  function buildGallery() {
+    var sorted = allReviews.slice().sort(function(a, b) {
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+    galleryPhotos = [];
+    sorted.forEach(function(r) {
+      if (r.photo_urls && r.photo_urls.length) {
+        r.photo_urls.forEach(function(u) { galleryPhotos.push({ url: u, review: r }); });
+      }
+    });
+    renderGalleryPreview();
+  }
+
+  function renderGalleryPreview() {
+    var sec = document.getElementById('rvPhotos');
+    var grid = document.getElementById('rvPhotosGrid');
+    if (!galleryPhotos.length) { sec.style.display = 'none'; return; }
+    sec.style.display = '';
+    document.getElementById('rvPhotosCount').textContent = galleryPhotos.length + '개';
+    var max = GALLERY_PREVIEW;
+    var shown = galleryPhotos.slice(0, max);
+    var hasMore = galleryPhotos.length > max;
+    grid.innerHTML = shown.map(function(p, i) {
+      var isMoreCell = hasMore && i === max - 1;
+      var overlay = isMoreCell ? '<div class="mm-rv-photos__more">+' + (galleryPhotos.length - max + 1) + '<small>더보기</small></div>' : '';
+      var attr = isMoreCell ? ' data-gal-more="1"' : ' data-gal-idx="' + i + '"';
+      return '<div class="mm-rv-photos__item"' + attr + '><img src="' + p.url + '" alt="사진 후기" loading="lazy">' + overlay + '</div>';
+    }).join('');
+  }
+
+  /* 전체 사진 모아보기 오버레이 */
+  var allGrid = document.getElementById('rvAllGrid');
+  function openAllGrid() {
+    document.getElementById('rvAllGridCount').textContent = galleryPhotos.length + '개';
+    document.getElementById('rvAllGridGrid').innerHTML = galleryPhotos.map(function(p, i) {
+      return '<div class="mm-rv-allgrid__item" data-gal-idx="' + i + '"><img src="' + p.url + '" alt="사진 후기" loading="lazy"></div>';
+    }).join('');
+    allGrid.classList.add('mm-rv-allgrid--open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeAllGrid() {
+    allGrid.classList.remove('mm-rv-allgrid--open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('rvAllGridBack').addEventListener('click', closeAllGrid);
+  document.getElementById('rvPhotosGrid').addEventListener('click', function(e) {
+    if (e.target.closest('[data-gal-more]')) { openAllGrid(); return; }
+    var item = e.target.closest('[data-gal-idx]');
+    if (item) openLightbox(galleryPhotos, parseInt(item.dataset.galIdx));
+  });
+  document.getElementById('rvAllGridGrid').addEventListener('click', function(e) {
+    var item = e.target.closest('[data-gal-idx]');
+    if (item) openLightbox(galleryPhotos, parseInt(item.dataset.galIdx));
+  });
+
+  /* ── 사진 라이트박스 (lbList = [{url, review}], 캡션 = 부모 리뷰) ── */
   var lb = document.getElementById('rvLightbox');
   var lbImg = document.getElementById('lbImg');
   var lbCounter = document.getElementById('lbCounter');
   var lbPrev = document.getElementById('lbPrev');
   var lbNext = document.getElementById('lbNext');
+  var capEl = document.getElementById('lbCaption');
+  var lbList = [];
   var lbIdx = 0;
 
-  function openLightbox(idx) {
-    lbIdx = idx;
+  function openLightbox(list, idx) {
+    lbList = list || [];
+    lbIdx = idx || 0;
     updateLightbox();
     lb.classList.add('mm-lb--open');
   }
+  function closeLightbox() { lb.classList.remove('mm-lb--open'); }
 
-  function closeLightbox() {
-    lb.classList.remove('mm-lb--open');
+  function capDates(r) {
+    var rec = (r.meta && r.meta.received_at) ? fmtDate(r.meta.received_at) : '';
+    var cr = fmtDate(r.created_at);
+    var lab = DATE_LABELS[r.type] || '접수';
+    var parts = [];
+    if (rec) parts.push('<span>' + lab + ' ' + rec + '</span>');
+    if (cr) parts.push('<span>작성 ' + cr + '</span>');
+    return parts.length ? '<div class="mm-lb__cap-date">' + parts.join('') + '</div>' : '';
   }
 
   function updateLightbox() {
-    lbImg.src = currentModalPhotos[lbIdx];
-    var single = currentModalPhotos.length <= 1;
-    lbPrev.classList.toggle('hidden', single);
-    lbNext.classList.toggle('hidden', single);
-    lbCounter.classList.toggle('hidden', single);
-    if (!single) {
-      lbCounter.textContent = (lbIdx + 1) + ' / ' + currentModalPhotos.length;
+    var item = lbList[lbIdx];
+    if (!item) return;
+    lbImg.src = item.url;
+    var multi = lbList.length > 1;
+    lbPrev.classList.toggle('hidden', !multi);
+    lbNext.classList.toggle('hidden', !multi);
+    lbCounter.classList.toggle('hidden', !multi);
+    if (multi) lbCounter.textContent = (lbIdx + 1) + ' / ' + lbList.length;
+    var r = item.review;
+    if (r) {
+      lb.classList.add('mm-lb--cap');
+      capEl.style.display = '';
+      capEl.innerHTML = '<div class="mm-lb__cap-inner">' +
+        '<div class="mm-lb__cap-stars">' + renderStars(r.stars) + '</div>' +
+        '<div class="mm-lb__cap-name">' + maskName(r.name) + (r.name ? ' 님' : '') +
+          '<span class="mm-lb__cap-chip">' + chipLabel(r) + '</span>' +
+        '</div>' +
+        '<div class="mm-lb__cap-text">' + (r.content || '') + '</div>' +
+        capDates(r) +
+      '</div>';
+    } else {
+      lb.classList.remove('mm-lb--cap');
+      capEl.style.display = 'none';
+      capEl.innerHTML = '';
     }
   }
 
   document.getElementById('lbClose').addEventListener('click', closeLightbox);
-  lb.addEventListener('click', function(e) {
-    if (e.target === lb) closeLightbox();
-  });
+  lb.addEventListener('click', function(e) { if (e.target === lb) closeLightbox(); });
   lbPrev.addEventListener('click', function() {
-    lbIdx = (lbIdx - 1 + currentModalPhotos.length) % currentModalPhotos.length;
-    updateLightbox();
+    if (!lbList.length) return;
+    lbIdx = (lbIdx - 1 + lbList.length) % lbList.length; updateLightbox();
   });
   lbNext.addEventListener('click', function() {
-    lbIdx = (lbIdx + 1) % currentModalPhotos.length;
-    updateLightbox();
+    if (!lbList.length) return;
+    lbIdx = (lbIdx + 1) % lbList.length; updateLightbox();
   });
 
   // 키보드: ESC 닫기, 좌우 화살표
@@ -897,15 +1049,15 @@ img { display: block; max-width: 100%; }
   lb.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; }, { passive: true });
   lb.addEventListener('touchend', function(e) {
     var dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 50) {
-      if (dx > 0) lbPrev.click(); else lbNext.click();
-    }
+    if (Math.abs(dx) > 50) { if (dx > 0) lbPrev.click(); else lbNext.click(); }
   });
 
-  // 모달 내 사진 클릭 → 라이트박스
+  // 모달 내 사진 클릭 → 라이트박스 (그 리뷰 사진들 + 캡션)
   modalBody.addEventListener('click', function(e) {
     var img = e.target.closest('[data-lb-idx]');
-    if (img) openLightbox(parseInt(img.dataset.lbIdx));
+    if (!img) return;
+    var list = currentModalPhotos.map(function(u) { return { url: u, review: currentModalReview }; });
+    openLightbox(list, parseInt(img.dataset.lbIdx));
   });
 
   // 카드 클릭 → 모달
@@ -930,6 +1082,7 @@ img { display: block; max-width: 100%; }
           console.error('리뷰 로드 실패:', data);
         }
         renderBestReviews();
+        buildGallery();
         render();
       })
       .catch(function(err) {

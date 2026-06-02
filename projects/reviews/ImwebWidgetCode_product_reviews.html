@@ -759,6 +759,18 @@ img { display: block; max-width: 100%; }
 @media (max-width: 767px) {
   .mm-lb__arrow { display: none; }
 }
+/* ── 라이트박스 캡션 (사진의 부모 리뷰) — page_reviews 동기화 ── */
+.mm-lb__counter { top: 16px; bottom: auto; }
+.mm-lb__caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 20px 24px; background: linear-gradient(transparent, rgba(0,0,0,0.82) 36%); color: #fff; pointer-events: none; }
+.mm-lb__cap-inner { max-width: 680px; margin: 0 auto; }
+.mm-lb__cap-stars { font-size: 12px; letter-spacing: 2px; color: #fff; margin-bottom: 6px; }
+.mm-lb__cap-name { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.mm-lb__cap-chip { display: inline-block; font-size: 11px; padding: 2px 8px; border: 1px solid rgba(255,255,255,0.4); border-radius: 999px; margin-left: 6px; font-weight: 500; vertical-align: middle; }
+.mm-lb__cap-text { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.9); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.mm-lb__cap-date { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 8px; display: flex; gap: 10px; }
+.mm-lb--cap .mm-lb__img { max-height: 64vh; margin-top: 4vh; margin-bottom: auto; }
+/* ── 칩 (카드/모달 — 상담·직접방문 등) ── */
+.mm-prv__chip { display: inline-block; font-size: 11px; font-weight: 500; color: #4A4A4A; padding: 2px 8px; background: #F5F3F0; border: 1px solid #EDEBE8; border-radius: 999px; vertical-align: middle; margin-left: 6px; }
 </style>
 
 <!-- 자체 sticky 탭바 (모바일 전용) — JS가 상세정보 직전으로 DOM 이동 (Phase 2-C) -->
@@ -847,6 +859,7 @@ img { display: block; max-width: 100%; }
   <img class="mm-lb__img" id="lbImg" src="" alt="사진 확대">
   <button class="mm-lb__arrow mm-lb__arrow--next" id="lbNext">›</button>
   <div class="mm-lb__counter" id="lbCounter"></div>
+  <div class="mm-lb__caption" id="lbCaption" style="display:none"></div>
 </div>
 
 </div>
@@ -860,6 +873,9 @@ img { display: block; max-width: 100%; }
   var currentPage = 1;
   var allReviews = [];       // 원본 데이터 (불변)
   var filteredReviews = [];  // 필터/정렬 적용된 데이터
+  var galleryPhotos = [];    // 전체 리뷰 사진 평면화 {url, review} (page_reviews 동기화)
+  var currentModalReview = null;
+  var lbList = [];           // 라이트박스 순회 대상 [{url, review}]
   var currentFilter = 'all'; // all | photo | 5 | 4 | 3
   var currentSort = 'recent';
   var root = document.getElementById('mmPrvRoot');
@@ -923,9 +939,56 @@ img { display: block; max-width: 100%; }
     '</div>';
   }
 
+  /* 날짜 YYMMDD (page_reviews 동기화) */
   function fmtDate(d) {
     if (!d) return '';
-    return new Date(d).toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
+    var dt = new Date(d);
+    var yy = String(dt.getFullYear()).slice(2);
+    var mm = String(dt.getMonth() + 1).padStart(2, '0');
+    var dd = String(dt.getDate()).padStart(2, '0');
+    return yy + mm + dd;
+  }
+
+  /* ── 타입/서브타입/칩/날짜 (page_reviews 와 동일 — 3화면 SSOT) ── */
+  var TYPE_LABELS = { consult: '상담', repair: '복원수리', purchase: '제품구매' };
+  var SUBTYPE_LABELS = { store_visit: '직접방문', field_request: '출장', talk_consult: '톡상담', restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거', parcel_pickup: '방문수거', self_ship: '직접발송', offline: '오프라인', online: '온라인', talk: '톡상담', visit_pickup: '방문수거', direct_send: '직접발송', same_day: '당일수리' };
+  var DATE_LABELS = { consult: '상담', repair: '접수', purchase: '구매' };
+  function getTypeLabel(r) { return TYPE_LABELS[r.type] || ''; }
+  function getSubtypeLabel(r) {
+    var sub = r.subtype || (r.meta && r.meta.consultation_type) || '';
+    return SUBTYPE_LABELS[sub] || '';
+  }
+  function chipLabel(r) {
+    var t = getTypeLabel(r), s = getSubtypeLabel(r);
+    if (r.type === 'consult' && s) return t + '·' + s;
+    var rawSub = r.subtype || '';
+    if (s && rawSub !== 'restoration' && s !== t) return t + '·' + s;
+    return t;
+  }
+  function chipHtml(r) {
+    var lbl = chipLabel(r);
+    return lbl ? '<span class="mm-prv__chip">' + lbl + '</span>' : '';
+  }
+  function maskStore(s) {
+    if (!s) return '';
+    s = String(s).trim();
+    if (s.length <= 1) return s;
+    if (s.length === 2) return s[0] + '*';
+    if (s.length === 3) return s[0] + '**';
+    return s[0] + '**' + s.slice(3);
+  }
+  function storeHtml(r) {
+    if (!r.store_name) return '';
+    return ' <span style="font-size:11px;color:#8A8580;font-weight:500;">· ' + maskStore(r.store_name) + '</span>';
+  }
+  function renderDates(r, cls) {
+    var rec = (r.meta && r.meta.received_at) ? fmtDate(r.meta.received_at) : '';
+    var cr = fmtDate(r.created_at);
+    var lab = DATE_LABELS[r.type] || '접수';
+    var parts = [];
+    if (rec) parts.push(lab + ' ' + rec);
+    if (cr) parts.push('작성 ' + cr);
+    return '<div class="' + cls + '">' + parts.join(' · ') + '</div>';
   }
 
   function renderStars(n) {
@@ -954,13 +1017,13 @@ img { display: block; max-width: 100%; }
     return '<article class="mm-prv__card" data-idx="' + idx + '">' +
       imgHtml +
       '<div class="mm-prv__card-header">' +
-        '<span class="mm-prv__card-name">' + maskName(r.name) + '</span>' +
+        '<span class="mm-prv__card-name">' + maskName(r.name) + storeHtml(r) + chipHtml(r) + '</span>' +
         '<span class="mm-prv__card-stars">' + renderStars(r.stars) + '</span>' +
       '</div>' +
       productHtml +
       renderTagChips(r, 'mm-prv__tags') +
       '<div class="mm-prv__card-text">' + preview + '</div>' +
-      '<div class="mm-prv__card-date">' + fmtDate(r.created_at) + '</div>' +
+      renderDates(r, 'mm-prv__card-date') +
     '</article>';
   }
 
@@ -1022,56 +1085,40 @@ img { display: block; max-width: 100%; }
     });
   }
 
-  /* ── Phase 1: 포토 후기 갤러리 ── */
+  /* ── 포토 후기 갤러리 — 전 사진 평면화(리뷰당 모든 사진), 사진 단위 라이트박스 (page_reviews 동기화) ── */
   function renderGallery() {
-    var photos = [];
-    allReviews.forEach(function(r, idx) {
+    galleryPhotos = [];
+    allReviews.forEach(function(r) {
       if (r.photo_urls && r.photo_urls.length > 0) {
-        photos.push({ url: r.photo_urls[0], reviewIdx: idx, review: r });
+        r.photo_urls.forEach(function(u) { galleryPhotos.push({ url: u, review: r }); });
       }
     });
-    if (photos.length === 0) return;
+    if (galleryPhotos.length === 0) return;
 
     var wrap = document.getElementById('prvGalleryWrap');
     var galleryEl = document.getElementById('prvGallery');
     var countEl = document.getElementById('prvGalleryCount');
     wrap.style.display = 'block';
-    countEl.textContent = '· ' + photos.length + '장';
+    countEl.textContent = '· ' + galleryPhotos.length + '장';
 
-    // 최대 5장(모바일 3장 + 더보기) — 미디어 쿼리로 PC는 6장
     var maxShow = 6;
-    var displayed = photos.slice(0, maxShow);
-    var hasMore = photos.length > maxShow;
+    var displayed = galleryPhotos.slice(0, maxShow);
+    var hasMore = galleryPhotos.length > maxShow;
 
-    var html = displayed.map(function(p, i) {
-      // 마지막 칸에 "+N" 오버레이 (더 있을 때)
+    galleryEl.innerHTML = displayed.map(function(p, i) {
       if (hasMore && i === maxShow - 1) {
-        return '<div class="mm-prv__gallery-item more" data-gallery-more="1">+' + (photos.length - maxShow + 1) + '</div>';
+        return '<div class="mm-prv__gallery-item more" data-gallery-more="1">+' + (galleryPhotos.length - maxShow + 1) + '</div>';
       }
-      return '<div class="mm-prv__gallery-item" data-review-idx="' + p.reviewIdx + '">' +
+      return '<div class="mm-prv__gallery-item" data-gal-idx="' + i + '">' +
         '<img src="' + p.url + '" alt="포토 후기" loading="lazy">' +
       '</div>';
     }).join('');
-    galleryEl.innerHTML = html;
 
-    // 갤러리 클릭 → 포토 후기만 모은 리스트로 모달 (좌우 화살표 = 포토 후기 사이 순환)
+    // 사진 클릭 → 라이트박스(전 사진 순환, 캡션=부모 리뷰). "+N더보기" → 그 지점부터 순환
     galleryEl.addEventListener('click', function(e) {
-      var more = e.target.closest('[data-gallery-more]');
-      if (more) {
-        setFilter('photo');
-        return;
-      }
-      var item = e.target.closest('[data-review-idx]');
-      if (item) {
-        var clickedIdx = parseInt(item.dataset.reviewIdx);
-        // 포토 후기만 추출한 리스트
-        var photoList = allReviews.filter(function(r) { return r.photo_urls && r.photo_urls.length > 0; });
-        // clickedIdx 는 allReviews 기준 → photoList 안에서 위치 찾기
-        var posInPhotoList = photoList.indexOf(allReviews[clickedIdx]);
-        if (posInPhotoList >= 0) {
-          openModalAt(photoList, posInPhotoList, 'gallery');
-        }
-      }
+      if (e.target.closest('[data-gallery-more]')) { openLightbox(galleryPhotos, maxShow - 1); return; }
+      var item = e.target.closest('[data-gal-idx]');
+      if (item) openLightbox(galleryPhotos, parseInt(item.dataset.galIdx));
     });
   }
 
@@ -1149,6 +1196,7 @@ img { display: block; max-width: 100%; }
   var modalContext = { list: [], idx: -1, source: 'card' }; // list = 순회 대상, idx = 현재 인덱스
 
   function renderModalContent(r) {
+    currentModalReview = r;
     currentModalPhotos = (r.photo_urls && r.photo_urls.length > 0) ? r.photo_urls : [];
     var photosHtml = '';
     if (currentModalPhotos.length > 0) {
@@ -1161,12 +1209,12 @@ img { display: block; max-width: 100%; }
     var productHtml = r.product ? '<div class="mm-prv__modal-product">' + r.product + '</div>' : '';
     modalBody.innerHTML =
       '<div class="mm-prv__modal-stars">' + renderStars(r.stars) + '</div>' +
-      '<div class="mm-prv__modal-name">' + maskName(r.name) + '</div>' +
+      '<div class="mm-prv__modal-name">' + maskName(r.name) + storeHtml(r) + chipHtml(r) + '</div>' +
       productHtml +
       renderTagChips(r, 'mm-prv__tags') +
       '<div class="mm-prv__modal-text">' + r.content + '</div>' +
       photosHtml +
-      '<div class="mm-prv__modal-date">' + fmtDate(r.created_at) + '</div>';
+      renderDates(r, 'mm-prv__modal-date');
   }
 
   function updateModalNav() {
@@ -1232,32 +1280,68 @@ img { display: block; max-width: 100%; }
     if (Math.abs(dx) > 60) navigateModal(dx > 0 ? -1 : 1);
   });
 
-  /* ── 라이트박스 ── */
+  /* ── 라이트박스 (lbList = [{url, review}], 캡션 = 부모 리뷰 — page_reviews 동기화) ── */
   var lb = document.getElementById('prvLightbox');
   var lbImg = document.getElementById('lbImg');
   var lbCounter = document.getElementById('lbCounter');
   var lbPrev = document.getElementById('lbPrev');
   var lbNext = document.getElementById('lbNext');
+  var capEl = document.getElementById('lbCaption');
   var lbIdx = 0;
 
-  function openLightbox(idx) { lbIdx = idx; updateLightbox(); lb.classList.add('mm-lb--open'); }
+  function openLightbox(list, idx) {
+    lbList = list || [];
+    lbIdx = idx || 0;
+    updateLightbox();
+    lb.classList.add('mm-lb--open');
+  }
   function closeLightbox() { lb.classList.remove('mm-lb--open'); }
+
+  function capDates(r) {
+    var rec = (r.meta && r.meta.received_at) ? fmtDate(r.meta.received_at) : '';
+    var cr = fmtDate(r.created_at);
+    var lab = DATE_LABELS[r.type] || '접수';
+    var parts = [];
+    if (rec) parts.push('<span>' + lab + ' ' + rec + '</span>');
+    if (cr) parts.push('<span>작성 ' + cr + '</span>');
+    return parts.length ? '<div class="mm-lb__cap-date">' + parts.join('') + '</div>' : '';
+  }
+
   function updateLightbox() {
-    lbImg.src = currentModalPhotos[lbIdx];
-    var single = currentModalPhotos.length <= 1;
-    lbPrev.classList.toggle('hidden', single);
-    lbNext.classList.toggle('hidden', single);
-    lbCounter.classList.toggle('hidden', single);
-    if (!single) lbCounter.textContent = (lbIdx + 1) + ' / ' + currentModalPhotos.length;
+    var item = lbList[lbIdx];
+    if (!item) return;
+    lbImg.src = item.url;
+    var multi = lbList.length > 1;
+    lbPrev.classList.toggle('hidden', !multi);
+    lbNext.classList.toggle('hidden', !multi);
+    lbCounter.classList.toggle('hidden', !multi);
+    if (multi) lbCounter.textContent = (lbIdx + 1) + ' / ' + lbList.length;
+    var r = item.review;
+    if (r) {
+      lb.classList.add('mm-lb--cap');
+      capEl.style.display = '';
+      capEl.innerHTML = '<div class="mm-lb__cap-inner">' +
+        '<div class="mm-lb__cap-stars">' + renderStars(r.stars) + '</div>' +
+        '<div class="mm-lb__cap-name">' + maskName(r.name) + (r.name ? ' 님' : '') +
+          '<span class="mm-lb__cap-chip">' + chipLabel(r) + '</span>' +
+        '</div>' +
+        '<div class="mm-lb__cap-text">' + (r.content || '') + '</div>' +
+        capDates(r) +
+      '</div>';
+    } else {
+      lb.classList.remove('mm-lb--cap'); capEl.style.display = 'none'; capEl.innerHTML = '';
+    }
   }
 
   document.getElementById('lbClose').addEventListener('click', closeLightbox);
   lb.addEventListener('click', function(e) { if (e.target === lb) closeLightbox(); });
   lbPrev.addEventListener('click', function() {
-    lbIdx = (lbIdx - 1 + currentModalPhotos.length) % currentModalPhotos.length; updateLightbox();
+    if (!lbList.length) return;
+    lbIdx = (lbIdx - 1 + lbList.length) % lbList.length; updateLightbox();
   });
   lbNext.addEventListener('click', function() {
-    lbIdx = (lbIdx + 1) % currentModalPhotos.length; updateLightbox();
+    if (!lbList.length) return;
+    lbIdx = (lbIdx + 1) % lbList.length; updateLightbox();
   });
 
   document.addEventListener('keydown', function(e) {
@@ -1279,9 +1363,12 @@ img { display: block; max-width: 100%; }
     if (Math.abs(dx) > 50) { dx > 0 ? lbPrev.click() : lbNext.click(); }
   });
 
+  // 모달 내 사진 클릭 → 라이트박스 (그 리뷰 사진들 + 캡션)
   modalBody.addEventListener('click', function(e) {
     var img = e.target.closest('[data-lb-idx]');
-    if (img) openLightbox(parseInt(img.dataset.lbIdx));
+    if (!img) return;
+    var list = currentModalPhotos.map(function(u) { return { url: u, review: currentModalReview }; });
+    openLightbox(list, parseInt(img.dataset.lbIdx));
   });
 
   /* 더보기 */

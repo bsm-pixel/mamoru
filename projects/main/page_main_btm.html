@@ -840,9 +840,39 @@ button[class*="mm-"]:focus-visible {
     return name ? ' <span class="mm-hon">님</span>' : '';
   }
 
+  /* 날짜 YYMMDD (page_reviews 동기화) */
   function fmtDate(d) {
     if (!d) return '';
-    return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    var dt = new Date(d);
+    var yy = String(dt.getFullYear()).slice(2);
+    var mm = String(dt.getMonth() + 1).padStart(2, '0');
+    var dd = String(dt.getDate()).padStart(2, '0');
+    return yy + mm + dd;
+  }
+
+  /* ── 타입/서브타입/칩/날짜 (page_reviews 와 동일 — 3화면 SSOT) ── */
+  var TYPE_LABELS = { consult: '상담', repair: '복원수리', purchase: '제품구매' };
+  var DATE_LABELS = { consult: '상담', repair: '접수', purchase: '구매' };
+  function getTypeLabel(r) { return TYPE_LABELS[r.type] || ''; }
+  function getSubtypeLabel(r) {
+    var sub = r.subtype || (r.meta && r.meta.consultation_type) || '';
+    return SUBTYPE_LABELS[sub] || '';
+  }
+  function chipLabel(r) {
+    var t = getTypeLabel(r), s = getSubtypeLabel(r);
+    if (r.type === 'consult' && s) return t + '·' + s;
+    var rawSub = r.subtype || '';
+    if (s && rawSub !== 'restoration' && s !== t) return t + '·' + s;
+    return t;
+  }
+  function renderDates(r) {
+    var rec = (r.meta && r.meta.received_at) ? fmtDate(r.meta.received_at) : '';
+    var cr = fmtDate(r.created_at);
+    var lab = DATE_LABELS[r.type] || '접수';
+    var parts = [];
+    if (rec) parts.push(lab + ' ' + rec);
+    if (cr) parts.push('작성 ' + cr);
+    return '<div class="mm-review-card__date">' + parts.join('  ·  ') + '</div>';
   }
 
   var TAG_LABELS = {
@@ -861,11 +891,7 @@ button[class*="mm-"]:focus-visible {
      서브타입 칩 정의 및 렌더링
      ═══════════════════════════════════════════════════════════════ */
   /* 서브타입 라벨 매핑 — 카드 내 칩 표시용 */
-  var SUBTYPE_LABELS = {
-    store_visit: '직접방문', field_request: '출장상담', talk_consult: '톡상담',
-    visit_pickup: '방문수거', direct_send: '직접발송', same_day: '당일수리',
-    restoration: '복원수리'
-  };
+  var SUBTYPE_LABELS = { store_visit: '직접방문', field_request: '출장', talk_consult: '톡상담', restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거', parcel_pickup: '방문수거', self_ship: '직접발송', offline: '오프라인', online: '온라인', talk: '톡상담', visit_pickup: '방문수거', direct_send: '직접발송', same_day: '당일수리' };
 
 
   /* ═══════════════════════════════════════════════════════════════
@@ -887,14 +913,15 @@ button[class*="mm-"]:focus-visible {
       var tagsHtml = '';
       if (r.meta && r.meta.tags && r.meta.tags.length > 0) {
         tagsHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">' +
-          r.meta.tags.slice(0, 2).map(function(t) {
+          r.meta.tags.map(function(t) {
             return '<span style="font-size:11px;padding:2px 8px;border:1px solid var(--sand);border-radius:6px;color:var(--stone);">' + (TAG_LABELS[t] || t) + '</span>';
           }).join('') + '</div>';
       }
       /* 우측 상단 칩: 서브타입 + 네이버 출처 (page_reviews 화면과 동일 배치) */
       var chips = '';
-      if (r.subtype && SUBTYPE_LABELS[r.subtype]) {
-        chips += '<span class="mm-review-card__subtype">' + SUBTYPE_LABELS[r.subtype] + '</span>';
+      var clbl = chipLabel(r);
+      if (clbl) {
+        chips += '<span class="mm-review-card__subtype">' + clbl + '</span>';
       }
       if (r.source === 'naver') {
         chips += '<span class="mm-review-card__source-badge">네이버</span>';
@@ -910,7 +937,7 @@ button[class*="mm-"]:focus-visible {
         '<div class="mm-review-card__stars">' + stars + '</div>' +
         tagsHtml +
         '<div class="mm-review-card__text">' + preview + '</div>' +
-        '<div class="mm-review-card__date">' + fmtDate(r.created_at) + '</div>' +
+        renderDates(r) +
         '</div>';
     }).join('');
     el.querySelectorAll('.mm-anim').forEach(function(card) {
