@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { useDelivery, useUpdateDelivery } from '@/hooks/use-deliveries';
 import { useProducts } from '@/hooks/use-sales';
+import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
+import type { Product } from '@/lib/supabase/types';
 import { formatKRW, formatDate, calcVAT } from '@/lib/utils/format';
 import { useQueryClient } from '@tanstack/react-query';
 import { Package, Pencil, Save, X, Printer, Minus, Plus, Trash2 } from 'lucide-react';
@@ -43,6 +45,8 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const updateDL = useUpdateDelivery();
   const queryClient = useQueryClient();
   const { data: products = [] } = useProducts();
+  // 거래처별 납품명·가격 (생성 모달과 동일 — catalog 우선)
+  const { data: customerCatalogData } = useCustomerCatalog((data?.delivery?.customer_id as string | undefined) ?? undefined);
 
   const [editing, setEditing] = useState(false);
   const [editItems, setEditItems] = useState<Array<{
@@ -73,6 +77,21 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const dl: DL = data.delivery;
   const items: DLItem[] = data.items;
   const status = (dl.status as string) || 'draft';
+
+  // 거래처별 납품명·가격 결정 (생성 모달 create-delivery-modal 과 동일 규칙: catalog → 고객유형 → 기본)
+  const catalogEntryMap = new Map((customerCatalogData?.catalog || []).map((c) => [c.product_id, c]));
+  const dlCustomerType = dl.customer_type as string | undefined;
+  function getDeliveryPrice(p: Product): number {
+    const ce = catalogEntryMap.get(p.id);
+    if (ce?.unit_price && ce.unit_price > 0) return ce.unit_price;
+    if (dlCustomerType === 'dealer' && (p as Record<string, unknown>).price_dealer) return (p as Record<string, unknown>).price_dealer as number;
+    if (dlCustomerType === 'academy' && (p as Record<string, unknown>).price_academy) return (p as Record<string, unknown>).price_academy as number;
+    return p.price;
+  }
+  function getDeliveryName(p: Product): string {
+    const ce = catalogEntryMap.get(p.id);
+    return ce?.delivery_name?.trim() || p.name;
+  }
 
   // ALPS 송장 생성 (B2B 배송)
   const handleBookInvoice = async () => {
@@ -149,8 +168,11 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
         id: deliveryId,
         memo: editMemo,
         expected_date: editExpectedDate || undefined,
+        // 품목 저장은 draft 에서만 (확정 후엔 재고/미수금 정합성 위해 품목 변경 막음 — 메모/날짜만 수정)
+        ...(status === 'draft' ? { items: editItems } : {}),
       });
       queryClient.invalidateQueries({ queryKey: ['delivery', deliveryId] });
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
       setEditing(false);
       toast.success('납품서 수정 완료');
     } catch (err) {
@@ -307,11 +329,11 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
               {products.filter((p) => !editItems.find((ei) => ei.product_id === p.id)).map((p) => (
                 <button key={p.id} data-product-row data-product-name={p.name.toLowerCase()}
                   onClick={() => setEditItems((prev) => [...prev, {
-                    product_id: p.id, product_name: p.name, sku: p.sku || undefined, quantity: 1, unit_price: p.price,
+                    product_id: p.id, product_name: getDeliveryName(p), sku: p.sku || undefined, quantity: 1, unit_price: getDeliveryPrice(p),
                   }])}
                   className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-neutral-50 transition text-left">
-                  <span className="truncate font-medium">{p.name}</span>
-                  <span className="text-neutral-400 shrink-0 ml-2">{formatKRW(p.price)}</span>
+                  <span className="truncate font-medium">{getDeliveryName(p)}</span>
+                  <span className="text-neutral-400 shrink-0 ml-2">{formatKRW(getDeliveryPrice(p))}</span>
                 </button>
               ))}
             </div>

@@ -202,11 +202,64 @@ export async function PATCH(
       return NextResponse.json({ success: true });
     }
 
-    // ── 메모/기타 필드 수정 ──
+    // ── 메모/기타 필드 + 품목 편집 ──
     const updates: Record<string, unknown> = {};
     if (body.memo !== undefined) updates.memo = body.memo;
     if (body.expected_date !== undefined) updates.expected_date = body.expected_date;
     if (body.tracking_number !== undefined) updates.tracking_number = body.tracking_number;
+
+    // 품목 편집 — draft 에서만. 재고는 '확정' 시 현재 delivery_items 기준으로 차감하므로
+    //   draft 교체는 재고에 영향 없음(안전). 단 미수금(outstanding)은 생성 시 이미 반영됐으므로 총액 변동분 조정.
+    if (Array.isArray(body.items)) {
+      if (dl.status !== 'draft') {
+        return NextResponse.json({ error: '작성중(draft) 상태에서만 품목을 수정할 수 있습니다' }, { status: 400 });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const editItems = body.items as Array<any>;
+      if (editItems.length === 0) {
+        return NextResponse.json({ error: '품목이 비어 있습니다' }, { status: 400 });
+      }
+      // 기존 품목 교체
+      await db.from('delivery_items').delete().eq('delivery_id', id);
+      await db.from('delivery_items').insert(editItems.map((it) => ({
+        delivery_id: id,
+        product_id: it.product_id || null,
+        product_name: it.product_name,
+        sku: it.sku || null,
+        category: it.category || null,
+        quantity: it.quantity,
+        unit_price: it.unit_price,
+        total_price: it.quantity * it.unit_price,
+      })));
+
+      // 총액 재계산 (생성 POST 와 동일 공식)
+      const vatTypeVal = dl.vat_type || 'included';
+      const itemTotal = editItems.reduce((s: number, i: { quantity: number; unit_price: number }) => s + i.quantity * i.unit_price, 0);
+      const discountVal = dl.discount_amount || 0;
+      const baseAmount = itemTotal - discountVal;
+      let supplyAmount = 0, vatAmount = 0, totalAmount = 0;
+      if (vatTypeVal === 'separate') { supplyAmount = baseAmount; vatAmount = Math.round(baseAmount * 0.1); totalAmount = baseAmount + vatAmount; }
+      else if (vatTypeVal === 'none') { supplyAmount = baseAmount; vatAmount = 0; totalAmount = baseAmount; }
+      else { supplyAmount = Math.round(baseAmount / 1.1); vatAmount = baseAmount - supplyAmount; totalAmount = baseAmount; }
+      updates.total_amount = totalAmount;
+      updates.supply_amount = supplyAmount;
+      updates.vat_amount = vatAmount;
+
+      // 미수금 델타 조정 (미결제/부분결제 한정)
+      if (dl.customer_id && dl.payment_status !== 'paid') {
+        const paid = dl.paid_amount || 0;
+        const oldUnpaid = Math.max(0, (dl.total_amount || 0) - (dl.discount_amount || 0) - paid);
+        const newUnpaid = Math.max(0, totalAmount - discountVal - paid);
+        const delta = newUnpaid - oldUnpaid;
+        if (delta !== 0) {
+          const { data: cust } = await db.from('customers').select('outstanding_balance').eq('id', dl.customer_id).single();
+          if (cust) {
+            await db.from('customers').update({ outstanding_balance: Math.max(0, (cust.outstanding_balance || 0) + delta) }).eq('id', dl.customer_id);
+          }
+        }
+      }
+    }
+
     if (Object.keys(updates).length > 0) {
       updates.updated_at = new Date().toISOString();
       await db.from('deliveries').update(updates).eq('id', id);
