@@ -115,6 +115,7 @@ img { display: block; max-width: 100%; }
 }
 .mm-rv-col {
   flex: 1;
+  min-width: 0; /* flex 아이템이 내용보다 못 줄어 그리드가 우측 오버플로(잘림)되는 것 방지 */
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -151,6 +152,7 @@ img { display: block; max-width: 100%; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0; /* 헤더 flex 안에서 긴 이름이 줄어들며 …말줄임 (오버플로 방지) */
 }
 .mm-hon { font-size: 0.88em; font-weight: 500; color: var(--mm-text-d2); } /* 이름 뒤 '님' — 자연스럽게 */
 .mm-rv-card__source {
