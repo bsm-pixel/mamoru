@@ -1,0 +1,23 @@
+{
+  "_comment": "빌더가 로드할 카탈로그 자산 목록. 정적 환경(GitHub Pages)은 디렉토리 나열이 안 되므로 여기에 파일을 명시한다. 새 카드/카피풀 추가 시 이 목록에 경로 한 줄 추가.",
+  "catalog_base": "../catalog",
+  "cards": [
+    "cards/blade_edge.json",
+    "cards/blade_design.json",
+    "cards/handle_grip.json",
+    "cards/handle_camel.json",
+    "cards/grade.json",
+    "cards/thinning_teeth.json",
+    "cards/thinning_holes.json",
+    "cards/thinning_reduction.json",
+    "cards/dry_cutting_style.json"
+  ],
+  "copy_pool": [
+    "copy_pool/hero_subtitle_blunt.json",
+    "copy_pool/about_body_blunt.json",
+    "copy_pool/about_quote.json",
+    "copy_pool/for_you_match_blunt.json",
+    "copy_pool/for_you_miss_blunt.json",
+    "copy_pool/handle_description_pool.json"
+  ]
+}

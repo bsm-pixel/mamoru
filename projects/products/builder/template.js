@@ -1,0 +1,512 @@
+/* ──────────────────────────────────────────────────────────────
+   template.js — 출력 HTML 생성기 (SSOT)
+   renderDetailHTML(spec, catalog) → v10_trendy 레이아웃 inline-style HTML 문자열
+   · 미리보기 iframe 과 "HTML 복사" 가 모두 이 결과를 사용 → WYSIWYG 보장
+   · v10_trendy.html = 디자인 레퍼런스. 실제 생성은 이 파일이 담당.
+   · 아임웹 상품 상세 = inline style 전용 (style/script/iframe 금지) 룰 준수
+   ────────────────────────────────────────────────────────────── */
+
+const IMG_HOST = 'https://page.mamoru.kr';
+const TYPE_LABEL = { blunt: 'Blunt', thinning: 'Thinning', long: 'Long', dry: 'Dry' };
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function nl2br(s) { return esc(s).replace(/\n/g, '<br>'); }
+
+/* 카피 풀 placeholder({길이}/{날선}/{날등}) 치환 */
+function fillPlaceholders(text, spec, catalog) {
+  if (!text) return '';
+  const edge = catalog.cardOption('blade_edge', spec.selections?.blade_edge);
+  const design = catalog.cardOption('blade_design', spec.selections?.blade_design);
+  return text
+    .replace(/\{길이\}/g, spec.size_inch != null ? spec.size_inch : '')
+    .replace(/\{날선\}/g, edge ? edge.name_ko : '')
+    .replace(/\{날등\}/g, design ? design.name_ko : '');
+}
+
+/* spec + catalog 에서 카피 텍스트 해석 (custom 우선, 없으면 풀 id → text) */
+function resolveCopy(spec, catalog, copyType, opts = {}) {
+  const cf = spec.custom_fields || {};
+  const cs = spec.copy_selections || {};
+  // custom 직접입력 우선
+  const customKey = opts.customKey;
+  if (customKey && cf[customKey]) return fillPlaceholders(cf[customKey], spec, catalog);
+  const id = cs[copyType];
+  if (id == null) return '';
+  if (Array.isArray(id)) {
+    return id.map(i => fillPlaceholders(catalog.copyText(copyType, spec.type, i), spec, catalog));
+  }
+  return fillPlaceholders(catalog.copyText(copyType, spec.type, id), spec, catalog);
+}
+
+function imgURL(spec, file) {
+  if (!file) return '';
+  const host = spec.image_host || IMG_HOST;
+  const folder = spec.images_folder || spec.model || 'MODEL';
+  return `${host}/projects/products/product_detail/${folder}/images/${file}`;
+}
+
+/* ─── 섹션 라벨 (— NN / TITLE) ─── */
+function eyebrow(num, title, dark) {
+  const col = dark ? 'rgba(245,245,243,0.5)' : '#8A8580';
+  return `<div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:${col};letter-spacing:0.25em;margin-bottom:clamp(24px,3vw,40px);">— ${num} / ${esc(title)}</div>`;
+}
+
+/* ─── 카드 1장 (BLADE EDGE/DESIGN/text 변형) ───
+   variant: 'edge'(svg 100%) | 'design'(svg 65% center) | 'text'(svg 없음) */
+function optionCard(opt, selected, variant) {
+  const bg = selected ? 'background:#1A1A1A;color:#FAF9F7;' : 'background:#FFFFFF;border:1px solid #EDEBE8;';
+  const letterCol = selected ? '#FAF9F7' : '#8A8580';
+  const nameCol = selected ? '#FAF9F7' : '#8A8580';
+  const enCol = selected ? 'rgba(245,245,243,0.45)' : '#B8B4AF';
+  const divCol = selected ? 'rgba(245,245,243,0.15)' : '#EDEBE8';
+  const descCol = selected ? 'rgba(245,245,243,0.75)' : '#B8B4AF';
+  const check = selected ? `<span style="font-size:clamp(14px,2vw,20px);color:#FAF9F7;font-weight:700;line-height:1;flex-shrink:0;">✓</span>` : '';
+
+  let svg = '';
+  if (variant !== 'text' && opt.svg_inline) {
+    const op = selected ? '' : 'opacity:0.35;';
+    const w = variant === 'design' ? 'width:65%;margin:0 auto clamp(16px,2.5vw,28px);' : 'width:100%;margin-bottom:clamp(16px,2.5vw,28px);';
+    // svg_inline 에 인라인 스타일 주입 (currentColor 사용 전제)
+    svg = injectSvgStyle(opt.svg_inline, `${w}height:auto;display:block;${op}`);
+  }
+
+  const en = opt.name_en
+    ? `<span style="font-family:'Outfit',sans-serif;font-size:clamp(9px,1.2vw,12px);font-weight:700;color:${enCol};letter-spacing:0.15em;line-height:1;">${esc(opt.name_en)}</span>`
+    : '';
+
+  const head = selected
+    ? `<div style="display:flex;justify-content:space-between;align-items:center;gap:clamp(6px,1vw,10px);margin-bottom:clamp(10px,1.5vw,16px);">
+         <div style="display:flex;align-items:center;gap:clamp(10px,1.4vw,14px);min-width:0;">
+           <span style="font-family:'Outfit',sans-serif;font-size:clamp(28px,5.5vw,64px);font-weight:900;color:${letterCol};line-height:0.9;letter-spacing:-0.02em;flex-shrink:0;">${esc(opt.id)}</span>
+           <div style="display:flex;flex-direction:column;gap:clamp(2px,0.4vw,4px);min-width:0;">
+             <span style="font-size:clamp(13px,1.7vw,18px);font-weight:700;color:${nameCol};line-height:1.2;">${esc(opt.name_ko)}</span>${en}
+           </div>
+         </div>${check}
+       </div>`
+    : `<div style="display:flex;align-items:center;gap:clamp(10px,1.4vw,14px);margin-bottom:clamp(10px,1.5vw,16px);">
+         <span style="font-family:'Outfit',sans-serif;font-size:clamp(28px,5.5vw,64px);font-weight:900;color:${letterCol};line-height:0.9;letter-spacing:-0.02em;flex-shrink:0;">${esc(opt.id)}</span>
+         <div style="display:flex;flex-direction:column;gap:clamp(2px,0.4vw,4px);min-width:0;">
+           <span style="font-size:clamp(13px,1.7vw,18px);font-weight:700;color:${nameCol};line-height:1.2;">${esc(opt.name_ko)}</span>${en}
+         </div>
+       </div>`;
+
+  return `<div style="${bg}border-radius:clamp(8px,1.2vw,12px);padding:clamp(14px,2.5vw,28px);">
+    ${svg}${head}
+    <div style="height:1px;background:${divCol};margin-bottom:clamp(10px,1.5vw,16px);"></div>
+    <div style="font-size:clamp(10px,1.3vw,13px);color:${descCol};line-height:1.6;">${esc(opt.description_ko || '')}</div>
+  </div>`;
+}
+
+/* svg_inline 문자열 첫 <svg ...> 에 style 주입 */
+function injectSvgStyle(svgStr, style) {
+  return svgStr.replace(/<svg\b([^>]*?)>/i, (m, attrs) => {
+    if (/style=/.test(attrs)) {
+      return m.replace(/style="([^"]*)"/i, (mm, s) => `style="${s};${style}"`);
+    }
+    return `<svg${attrs} style="${style}">`;
+  });
+}
+
+/* 카드 그룹 (라벨 + 3열 그리드) */
+function cardGroup(card, selectedId, variant) {
+  if (!card) return '';
+  const cards = (card.options || [])
+    .map(o => optionCard(o, o.id === selectedId, variant)).join('');
+  const cols = (card.options || []).length === 2 ? 2 : 3;
+  return `<div style="margin-bottom:clamp(48px,6vw,72px);">
+    <div style="display:flex;align-items:baseline;gap:clamp(12px,1.5vw,16px);margin-bottom:clamp(24px,3vw,32px);flex-wrap:wrap;">
+      <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;">${esc(card.label_ko)}</span>
+      <span style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;letter-spacing:0.02em;">— ${esc(card.label_subtitle_ko || '')}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:clamp(6px,1vw,12px);">${cards}</div>
+  </div>`;
+}
+
+/* HANDLE — grip(3 카드 세로) + camel(2 카드 가로 컴팩트) */
+function handleGroup(spec, catalog) {
+  const grip = catalog.byCardType['handle_grip'];
+  const camel = catalog.byCardType['handle_camel'];
+  if (!grip && !camel) return '';
+  const selGrip = spec.selections?.handle_grip;
+  const selCamel = spec.selections?.handle_camel;
+
+  const gripCards = grip ? (grip.options || []).map(o => {
+    const sel = o.id === selGrip;
+    const bg = sel ? 'background:#1A1A1A;color:#FAF9F7;' : 'background:#FFFFFF;border:1px solid #EDEBE8;';
+    const svg = o.svg_inline ? injectSvgStyle(o.svg_inline, `width:100%;height:auto;display:block;margin-bottom:clamp(10px,1.3vw,14px);${sel ? '' : 'opacity:0.35;'}`) : '';
+    const nameCol = sel ? '#FAF9F7' : '#1A1A1A';
+    const descCol = sel ? 'rgba(245,245,243,0.65)' : '#8A8580';
+    const check = sel ? `<div style="position:absolute;top:clamp(8px,1.2vw,12px);right:clamp(10px,1.4vw,14px);font-size:clamp(11px,1.4vw,14px);color:#FAF9F7;font-weight:700;line-height:1;">✓</div>` : '';
+    return `<div style="${bg}border-radius:clamp(8px,1.2vw,12px);padding:clamp(12px,1.8vw,20px);position:relative;">${check}${svg}
+      <div style="font-size:clamp(11px,1.4vw,14px);font-weight:700;color:${nameCol};text-align:center;line-height:1.3;margin-bottom:clamp(4px,0.6vw,6px);">${esc(o.name_ko)}</div>
+      <div style="font-size:clamp(9px,1.1vw,11px);color:${descCol};text-align:center;line-height:1.4;">${esc(o.description_ko || '')}</div>
+    </div>`;
+  }).join('') : '';
+
+  const camelCards = camel ? (camel.options || []).map(o => {
+    const sel = o.id === selCamel;
+    const bg = sel ? 'background:#1A1A1A;color:#FAF9F7;' : 'background:#FFFFFF;border:1px solid #EDEBE8;';
+    const svg = o.svg_inline ? injectSvgStyle(o.svg_inline, `width:clamp(48px,7vw,72px);height:auto;flex-shrink:0;display:block;${sel ? '' : 'opacity:0.35;'}`) : '';
+    const nameCol = sel ? '#FAF9F7' : '#1A1A1A';
+    const descCol = sel ? 'rgba(245,245,243,0.6)' : '#8A8580';
+    const check = sel ? `<div style="position:absolute;top:clamp(5px,0.7vw,8px);right:clamp(8px,1vw,12px);font-size:clamp(9px,1.2vw,12px);color:#FAF9F7;font-weight:700;line-height:1;">✓</div>` : '';
+    return `<div style="${bg}border-radius:clamp(6px,1vw,10px);padding:clamp(10px,1.4vw,16px);display:flex;align-items:center;gap:clamp(8px,1.2vw,14px);position:relative;">${check}${svg}
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:clamp(11px,1.3vw,13px);font-weight:600;color:${nameCol};line-height:1.2;margin-bottom:2px;">${esc(o.name_ko)}</div>
+        <div style="font-size:clamp(9px,1.1vw,11px);color:${descCol};line-height:1.3;">${esc(o.description_ko || '')}</div>
+      </div>
+    </div>`;
+  }).join('') : '';
+
+  return `<div style="margin-bottom:clamp(48px,6vw,72px);">
+    <div style="display:flex;align-items:baseline;gap:clamp(12px,1.5vw,16px);margin-bottom:clamp(24px,3vw,32px);flex-wrap:wrap;">
+      <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;">HANDLE</span>
+      <span style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;letter-spacing:0.02em;">— 손에 맞추다</span>
+    </div>
+    ${grip ? `<div style="margin-bottom:clamp(16px,2vw,24px);">
+      <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);color:#8A8580;font-weight:700;letter-spacing:0.15em;margin-bottom:clamp(10px,1.3vw,14px);">Grip Style</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(6px,1vw,12px);">${gripCards}</div>
+    </div>` : ''}
+    ${camel ? `<div>
+      <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);color:#8A8580;font-weight:700;letter-spacing:0.15em;margin-bottom:clamp(8px,1vw,12px);">Camel & Plat</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(6px,1vw,12px);">${camelCards}</div>
+    </div>` : ''}
+  </div>`;
+}
+
+/* GRIP SIZE — 일러스트 + 측정값 + 핸들 설명 */
+function gripSizeBlock(spec, catalog) {
+  const cf = spec.custom_fields || {};
+  const thumb = cf.grip_thumb || '—';
+  const ring = cf.grip_ring || '—';
+  const desc = resolveCopy(spec, catalog, 'handle_description', { customKey: 'handle_description' }) || '';
+  const gripSvg = `${IMG_HOST}/projects/products/shared/scissors-grip.svg`;
+  return `<div style="margin-bottom:clamp(48px,6vw,72px);">
+    <div style="display:flex;align-items:baseline;gap:clamp(12px,1.5vw,16px);margin-bottom:clamp(24px,3vw,32px);flex-wrap:wrap;">
+      <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;">GRIP SIZE</span>
+      <span style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;letter-spacing:0.02em;">— 손가락 구멍 크기</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(20px,2.5vw,40px);align-items:start;">
+      <div style="background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.2vw,12px);aspect-ratio:5/4;display:flex;align-items:center;justify-content:center;color:#1A1A1A;padding:clamp(20px,3vw,32px);">
+        <img src="${gripSvg}" alt="가위 그립 일러스트" style="width:100%;height:auto;display:block;">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:clamp(20px,2.5vw,32px);">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:clamp(14px,1.8vw,18px) 0;border-bottom:1px solid #EDEBE8;">
+            <span style="font-size:clamp(13px,1.6vw,15px);color:#8A8580;font-weight:500;">엄지부</span>
+            <span style="font-family:'Outfit',sans-serif;font-size:clamp(15px,1.9vw,18px);color:#1A1A1A;font-weight:700;letter-spacing:0.02em;">${esc(thumb)}<span style="font-weight:500;color:#8A8580;font-size:0.7em;margin-left:4px;">mm</span></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:clamp(14px,1.8vw,18px) 0;">
+            <span style="font-size:clamp(13px,1.6vw,15px);color:#8A8580;font-weight:500;">약지부</span>
+            <span style="font-family:'Outfit',sans-serif;font-size:clamp(15px,1.9vw,18px);color:#1A1A1A;font-weight:700;letter-spacing:0.02em;">${esc(ring)}<span style="font-weight:500;color:#8A8580;font-size:0.7em;margin-left:4px;">mm</span></span>
+          </div>
+        </div>
+        <p style="font-size:clamp(13px,1.6vw,15px);color:#2D2D2D;line-height:1.75;margin:0;">${nl2br(desc)}</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* WEIGHT — 무게 막대 */
+function weightBlock(spec) {
+  const cf = spec.custom_fields || {};
+  const g = spec.weight_g != null ? spec.weight_g : (cf.weight_g || '—');
+  const band = cf.weight_band || '중간';
+  const pctMap = { '가벼움': 18, 'LIGHT': 18, '라이트': 18, '중간': 50, '무거움': 82, 'HEAVY': 82 };
+  const pct = cf.weight_percent != null ? cf.weight_percent : (pctMap[band] != null ? pctMap[band] : 50);
+  const desc = cf.weight_description || '';
+  return `<div>
+    <div style="display:flex;align-items:baseline;gap:clamp(12px,1.5vw,16px);margin-bottom:clamp(24px,3vw,32px);flex-wrap:wrap;">
+      <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;">WEIGHT</span>
+      <span style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;letter-spacing:0.02em;">— 무게감</span>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.5vw,12px);padding:clamp(28px,4vw,48px);">
+      <div style="display:flex;align-items:baseline;gap:clamp(8px,1.2vw,14px);margin-bottom:clamp(20px,3vw,32px);">
+        <span style="font-family:'Outfit',sans-serif;font-size:clamp(40px,6vw,72px);font-weight:900;color:#1A1A1A;line-height:1;">${esc(g)}</span>
+        <span style="font-size:clamp(14px,1.8vw,18px);font-weight:600;color:#8A8580;letter-spacing:0.05em;">g</span>
+      </div>
+      <div style="position:relative;margin-bottom:clamp(12px,1.5vw,16px);">
+        <div style="height:6px;background:#EDEBE8;border-radius:3px;width:100%;"></div>
+        <div style="position:absolute;top:-5px;left:${pct}%;transform:translateX(-50%);width:16px;height:16px;background:#1A1A1A;border-radius:50%;border:3px solid #FAF9F7;box-shadow:0 0 0 1px #1A1A1A;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-family:'Outfit',sans-serif;font-size:clamp(10px,1.3vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.15em;">
+        <span>LIGHT</span><span style="color:#1A1A1A;">${esc(band)}</span><span>HEAVY</span>
+      </div>
+      ${desc ? `<div style="height:1px;background:#EDEBE8;margin:clamp(20px,2.5vw,28px) 0 clamp(16px,2vw,20px);"></div>
+      <div style="font-size:clamp(12px,1.5vw,14px);color:#2D2D2D;line-height:1.6;">${nl2br(desc)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+/* FOR YOU 카드 (맞다 / 안 맞다) */
+function forYouCard(title, items, miss) {
+  const bg = miss ? 'background:#F5F3F0;' : 'background:#FFFFFF;border:1px solid #EDEBE8;';
+  const titleCol = miss ? '#8A8580' : '#1A1A1A';
+  const itemCol = miss ? '#8A8580' : '#2D2D2D';
+  const divCol = miss ? '#D4D0CB' : '#EDEBE8';
+  const rows = (items || []).map((t, i) => {
+    const border = i < items.length - 1 ? `border-bottom:1px solid ${divCol};` : '';
+    return `<div style="font-size:clamp(14px,1.8vw,16px);color:${itemCol};line-height:1.9;padding:clamp(8px,1vw,10px) 0;${border}">— ${esc(t)}</div>`;
+  }).join('');
+  return `<div style="${bg}border-radius:clamp(8px,1.5vw,12px);padding:clamp(28px,4vw,48px);margin-bottom:clamp(16px,2vw,24px);">
+    <div style="font-size:clamp(13px,1.7vw,15px);font-weight:700;color:${titleCol};letter-spacing:0.02em;margin-bottom:clamp(20px,2.5vw,28px);">${esc(title)}</div>
+    ${rows}
+  </div>`;
+}
+
+/* SPEC 메타 row */
+function specRow(label, value, last) {
+  if (!value) return '';
+  return `<div style="display:flex;justify-content:space-between;align-items:center;padding:clamp(14px,1.8vw,18px) 0;${last ? '' : 'border-bottom:1px solid #D4D0CB;'}font-size:clamp(12px,1.5vw,14px);">
+    <span style="color:#8A8580;font-weight:500;">${esc(label)}</span><span style="color:#1A1A1A;font-weight:700;">${esc(value)}</span>
+  </div>`;
+}
+
+/* GRADE 카드 (R/A/E/S, price_grade 강조) */
+function gradeCards(spec, catalog) {
+  const grade = catalog.byCardType['grade'];
+  if (!grade) return '';
+  return (grade.options || []).map(o => {
+    const sel = o.id === spec.price_grade;
+    if (sel) {
+      return `<div style="background:#1A1A1A;color:#FAF9F7;border-radius:clamp(8px,1.5vw,12px);padding:clamp(24px,3vw,32px);position:relative;">
+        <div style="position:absolute;top:clamp(14px,2vw,20px);right:clamp(16px,2.2vw,22px);font-size:clamp(13px,1.7vw,16px);color:#FAF9F7;font-weight:700;line-height:1;">✓</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:clamp(36px,5vw,52px);font-weight:900;color:#FAF9F7;line-height:1;margin-bottom:clamp(8px,1vw,12px);">${esc(o.id)}</div>
+        <div style="font-size:clamp(11px,1.4vw,13px);font-weight:700;color:rgba(245,245,243,0.55);letter-spacing:0.15em;margin-bottom:clamp(12px,1.5vw,16px);">${esc(o.name_en || '')}</div>
+        <p style="font-size:clamp(13px,1.6vw,15px);color:rgba(245,245,243,0.85);line-height:1.7;margin:0;">${esc(o.description_ko || '')}</p>
+      </div>`;
+    }
+    return `<div style="background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.5vw,12px);padding:clamp(24px,3vw,32px);">
+      <div style="font-family:'Outfit',sans-serif;font-size:clamp(36px,5vw,52px);font-weight:900;color:#1A1A1A;line-height:1;margin-bottom:clamp(8px,1vw,12px);">${esc(o.id)}</div>
+      <div style="font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.15em;margin-bottom:clamp(12px,1.5vw,16px);">${esc(o.name_en || '')}</div>
+      <p style="font-size:clamp(13px,1.6vw,15px);color:#2D2D2D;line-height:1.7;margin:0;">${esc(o.description_ko || '')}</p>
+    </div>`;
+  }).join('');
+}
+
+/* SAME HANDLE 라인업 */
+function lineupCards(spec) {
+  const items = spec.lineup || [];
+  const main = `<div>
+    <div style="width:100%;aspect-ratio:2/3;background:#1A1A1A;color:#FAF9F7;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;position:relative;">
+      <div style="position:absolute;top:8px;right:10px;font-size:clamp(11px,1.4vw,14px);color:#FAF9F7;font-weight:700;line-height:1;">✓</div>
+      <div style="color:rgba(245,245,243,0.5);">[ ${esc(spec.model)}<br>본 모델 ]</div>
+    </div>
+    <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">${esc(spec.model)}</div>
+    <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">${esc(spec.size_inch != null ? spec.size_inch + ' inch · 본 모델' : '본 모델')}</div>
+  </div>`;
+  const others = items.map(it => {
+    const model = typeof it === 'string' ? it : it.model;
+    const sub = typeof it === 'string' ? '' : (it.sub || '');
+    return `<div>
+      <div style="width:100%;aspect-ratio:2/3;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:10px;letter-spacing:0.05em;border-radius:4px;margin-bottom:clamp(8px,1vw,12px);text-align:center;padding:8px;">[ ${esc(model)}<br>날부 2:3 ]</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">${esc(model)}</div>
+      ${sub ? `<div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">${esc(sub)}</div>` : ''}
+    </div>`;
+  }).join('');
+  return main + others;
+}
+
+/* ─── 브랜드 고정 섹션 (모델 무관 — v10 verbatim) ─── */
+const STATIC_VOICES = `<div style="background:#EDEBE8;padding:clamp(80px,10vw,140px) clamp(24px,4vw,48px);">
+  ${eyebrow('08', 'VOICES')}
+  <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(20px,3vw,32px) 0;">고객 목소리</h2>
+  <p style="font-size:clamp(13px,1.6vw,15px);color:#8A8580;line-height:1.7;margin:0 0 clamp(48px,6vw,72px) 0;font-style:italic;">— 제품 후기가 아닌, 상담을 통해 느낀 점</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(16px,2vw,24px);align-items:start;">
+    ${[['상담받고 처음으로 "가위 안 사셔도 됩니다"란 말 들었어요. 신선한 충격이었습니다.', '김○○ 원장님', '서울 · 경력 12년'],
+       ['새 가위가 필요한 게 아니라 다른 형태가 답이라고 짚어주셨어요. 그동안 잘못 골라온 것 같았습니다.', '박○○ 디자이너', '부산 · 경력 8년'],
+       ['평생 무료 복원수리라서 정말 한 자루 쓰는 만큼 마음이 편해요. 처음 들어본 보장입니다.', '이○○ 원장님', '대구 · 경력 15년']]
+      .map(([q, n, m]) => `<div style="background:#FFFFFF;border-radius:clamp(8px,1.5vw,12px);padding:clamp(28px,4vw,40px);">
+        <div style="font-family:'Outfit',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:900;color:#1A1A1A;line-height:1;margin-bottom:clamp(12px,1.5vw,16px);">"</div>
+        <p style="font-size:clamp(15px,1.9vw,18px);color:#1A1A1A;line-height:1.65;margin:0 0 clamp(20px,2.5vw,28px) 0;font-weight:500;">${q}</p>
+        <div style="display:flex;align-items:center;gap:clamp(10px,1.5vw,14px);">
+          <div style="width:clamp(36px,5vw,44px);height:clamp(36px,5vw,44px);border-radius:50%;background:#D4D0CB;flex-shrink:0;"></div>
+          <div><div style="font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;">${n}</div>
+          <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">${m}</div></div>
+        </div></div>`).join('')}
+  </div>
+</div>`;
+
+const STATIC_VS = `<div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">
+  ${eyebrow('09', 'VS GENERAL')}
+  <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(48px,7vw,72px) 0;">MAMORU vs<br>일반 가위 브랜드</h2>
+  <div style="border-top:2px solid #1A1A1A;">
+    <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.05em;text-transform:uppercase;"><span></span><span style="color:#1A1A1A;">MAMORU</span><span>일반</span></div>
+    ${[['선택 방식', '손/스타일 진단 우선', '브랜드/가격 우선'],
+       ['가격 정책', '동일 — 할인 없음', '시즌·이벤트 할인'],
+       ['복원수리', '자체 기술 — 평생', '외주 또는 신품 권장'],
+       ['상담', '맞춤 진단 무료', '판매 중심 응대'],
+       ['"안 사셔도 됩니다"', '합니다', '못 합니다']]
+      .map(([a, b, c], i, arr) => `<div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;${i < arr.length - 1 ? 'border-bottom:1px solid #D4D0CB;' : ''}font-size:clamp(13px,1.7vw,15px);">
+        <span style="color:#8A8580;font-weight:500;">${a}</span><span style="color:#1A1A1A;font-weight:700;">${b}</span><span style="color:#8A8580;">${c}</span></div>`).join('')}
+  </div>
+</div>`;
+
+const STATIC_WHY = `<div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">
+  ${eyebrow('10', 'WHY MAMORU')}
+  <div style="font-family:'Outfit',sans-serif;font-size:clamp(48px,7vw,80px);font-weight:900;color:#1A1A1A;line-height:1;margin-bottom:clamp(20px,3vw,28px);">"</div>
+  <p style="font-size:clamp(20px,3.2vw,36px);color:#1A1A1A;line-height:1.4;font-weight:600;letter-spacing:-0.01em;margin:0 0 clamp(40px,5vw,56px) 0;max-width:680px;">대부분의 가위는 유행에 맞춰져 있지만,<br>이 가위는 당신의 손에 맞춥니다.</p>
+  <div style="display:flex;align-items:center;gap:clamp(14px,2vw,18px);margin-bottom:clamp(40px,5vw,56px);">
+    <div style="width:clamp(56px,7vw,72px);height:clamp(56px,7vw,72px);border-radius:50%;background:#D4D0CB;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:9px;letter-spacing:0.1em;">[얼굴]</div>
+    <div><div style="font-size:clamp(13px,1.7vw,15px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">백성민</div>
+    <div style="font-size:clamp(11px,1.4vw,13px);color:#8A8580;letter-spacing:0.05em;margin-top:3px;">MAMORU 대표 · 컨설팅 · 복원수리 전문</div></div>
+  </div>
+</div>
+<div style="width:100%;aspect-ratio:3/2;max-height:600px;background:#F5F3F0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:12px;letter-spacing:0.1em;">[ IMG_workshop — 공방 / 가위 점검 사진 ]</div>
+<div style="padding:clamp(40px,5vw,72px) clamp(20px,3vw,40px) clamp(80px,10vw,140px);">
+  <p style="font-size:clamp(14px,1.8vw,17px);color:#2D2D2D;line-height:1.85;max-width:620px;margin:0 0 clamp(16px,2vw,20px) 0;">아버지에게 복원 기술을 물려받고, 일본 공장에서 직접 견학하며 배웠습니다. 미용가위만 10년을 만져왔습니다.</p>
+  <p style="font-size:clamp(14px,1.8vw,17px);color:#2D2D2D;line-height:1.85;max-width:620px;margin:0;"><strong style="color:#1A1A1A;font-weight:700;">판매하지 않습니다. 안내할 뿐입니다.</strong> 모든 고객 동일 가격, 할인 없음, 평생 자체 복원수리.</p>
+</div>`;
+
+function staticCTA(spec) {
+  const link = (spec.custom_fields && spec.custom_fields.cta_link) || '#';
+  return `<div style="background:#1A1A1A;color:#FAF9F7;padding:clamp(80px,10vw,140px) clamp(24px,4vw,48px);text-align:left;">
+    ${eyebrow('13', 'NEXT STEP', true)}
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(28px,5.5vw,72px);font-weight:800;color:#FAF9F7;letter-spacing:-0.03em;line-height:1.05;margin:0 0 clamp(28px,4vw,40px) 0;">안 사셔도<br>괜찮습니다.</h2>
+    <p style="font-size:clamp(15px,1.9vw,18px);color:rgba(245,245,243,0.75);line-height:1.7;max-width:580px;margin:0 0 clamp(48px,6vw,72px) 0;">먼저 본인의 손과 스타일을 정확히 알고 싶다면, 무료 컨설팅을 통해 안내드립니다. 구매는 그 다음입니다.</p>
+    <div style="max-width:480px;"><a href="${esc(link)}" style="display:block;padding:clamp(18px,2.2vw,22px) clamp(20px,3vw,28px);background:#FAF9F7;color:#1A1A1A;text-decoration:none;font-size:clamp(14px,1.8vw,16px);font-weight:700;letter-spacing:0.02em;text-align:center;border-radius:8px;">맞춤 컨설팅 신청</a></div>
+    <div style="margin-top:clamp(56px,7vw,96px);padding-top:clamp(28px,4vw,40px);border-top:1px solid rgba(245,245,243,0.15);">
+      <p style="font-size:clamp(10px,1.3vw,11px);color:rgba(245,245,243,0.3);margin:0;">MAMORU · 마모루미용가위</p>
+    </div>
+  </div>`;
+}
+
+/* ════════════════ 메인 생성 함수 ════════════════ */
+function renderDetailHTML(spec, catalog) {
+  const type = spec.type || 'blunt';
+  const sm = spec.spec_meta || {};
+  const heroSub = resolveCopy(spec, catalog, 'hero_subtitle', { customKey: 'hero_subtitle_text' });
+  const aboutBody = resolveCopy(spec, catalog, 'about_body', { customKey: 'hero_quote_about' })
+                  || resolveCopy(spec, catalog, 'about_body', { customKey: 'about_body_text' });
+  const aboutQuote = resolveCopy(spec, catalog, 'about_quote', { customKey: 'about_brand_quote' })
+                  || resolveCopy(spec, catalog, 'about_quote', { customKey: 'about_quote_text' });
+  const matchItems = resolveCopy(spec, catalog, 'for_you_match') || [];
+  const missItems = resolveCopy(spec, catalog, 'for_you_miss') || [];
+
+  // PROFILE 카드 그룹 (종류 분기 — 적용되는 카드만)
+  const edge = catalog.byCardType['blade_edge'];
+  const design = catalog.byCardType['blade_design'];
+  let profileCards = '';
+  if (edge && (edge.applies_to || []).includes(type))
+    profileCards += cardGroup(edge, spec.selections?.blade_edge, 'edge');
+  if (design && (design.applies_to || []).includes(type))
+    profileCards += cardGroup(design, spec.selections?.blade_design, 'design');
+  // 틴닝/드라이 전용 텍스트 카드
+  for (const ct of ['thinning_teeth', 'thinning_holes', 'thinning_reduction', 'dry_cutting_style']) {
+    const c = catalog.byCardType[ct];
+    if (c && (c.applies_to || []).includes(type))
+      profileCards += cardGroup(c, spec.selections?.[ct], 'text');
+  }
+  profileCards += handleGroup(spec, catalog);
+  profileCards += gripSizeBlock(spec, catalog);
+  profileCards += weightBlock(spec);
+
+  // SPEC 메타 rows
+  const gradeOpt = catalog.cardOption('grade', spec.price_grade);
+  const gradeLabel = spec.price_grade ? `${spec.price_grade}${gradeOpt ? ' · ' + (gradeOpt.name_en || '') : ''}` : '';
+
+  return `<div class="mamoru-detail-master" style="max-width:840px;margin:40px auto;padding:0;font-family:'Plus Jakarta Sans','Noto Sans KR',sans-serif;color:#1A1A1A;line-height:1.6;-webkit-font-smoothing:antialiased;box-sizing:border-box;background:#FAF9F7;">
+
+  <!-- 01 Hero -->
+  <div style="padding:clamp(40px,5vw,72px) clamp(20px,3vw,40px) clamp(20px,3vw,32px);">
+    <div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.25em;">— ${esc(spec.category_label || '')}</div>
+  </div>
+  <img src="${imgURL(spec, (spec.images && spec.images.hero) || 'hero.png')}" alt="${esc(spec.model)} 메인" style="display:block;width:100%;aspect-ratio:4/5;max-height:1050px;object-fit:contain;background:#F5F3F0;">
+  <div style="padding:clamp(40px,6vw,80px) clamp(20px,3vw,40px) clamp(56px,7vw,96px);">
+    <h1 style="font-family:'Paperlogy','Outfit',sans-serif;font-size:clamp(40px,10vw,112px);font-weight:900;color:#1A1A1A;letter-spacing:-0.04em;line-height:1;margin:0 0 clamp(28px,4vw,48px) 0;white-space:nowrap;">${esc(spec.model)}</h1>
+    <p style="font-size:clamp(16px,2.4vw,22px);color:#4A4A4A;line-height:1.5;font-weight:300;max-width:520px;margin:0 0 clamp(24px,3vw,32px) 0;">${nl2br(heroSub)}</p>
+    <div style="display:flex;gap:clamp(20px,3vw,40px);font-size:clamp(12px,1.5vw,14px);color:#8A8580;letter-spacing:0.05em;font-weight:500;flex-wrap:wrap;">
+      <span>${esc(spec.size_inch)} inch</span><span style="color:#D4D0CB;">·</span>
+      <span>${esc(spec.weight_g)} g</span><span style="color:#D4D0CB;">·</span>
+      <span>${esc(TYPE_LABEL[type] || type)}</span>
+    </div>
+  </div>
+
+  <!-- 02 Detail -->
+  <div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px) clamp(40px,5vw,64px);">${eyebrow('01', 'DETAIL')}</div>
+  <img src="${imgURL(spec, (spec.images && spec.images.blade2) || 'blade2.png')}" alt="${esc(spec.model)} 날부" style="display:block;width:100%;aspect-ratio:3/2;max-height:600px;object-fit:contain;background:#F5F3F0;margin-bottom:clamp(8px,1.2vw,16px);">
+  <img src="${imgURL(spec, (spec.images && spec.images.handle) || 'handle.png')}" alt="${esc(spec.model)} 핸들부" style="display:block;width:100%;aspect-ratio:3/2;max-height:600px;object-fit:contain;background:#F5F3F0;margin-bottom:clamp(8px,1.2vw,16px);">
+  <img src="${imgURL(spec, (spec.images && spec.images.back) || 'back.png')}" alt="${esc(spec.model)} 뒷면" style="display:block;width:100%;aspect-ratio:3/2;max-height:600px;object-fit:contain;background:#F5F3F0;margin-bottom:clamp(40px,5vw,72px);">
+  <div style="padding:0 clamp(20px,3vw,40px);"><div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:600;color:#8A8580;letter-spacing:0.18em;margin-bottom:clamp(16px,2vw,24px);">— CLOSE-UP</div></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:clamp(8px,1.2vw,16px);padding:0 clamp(20px,3vw,40px) clamp(80px,10vw,140px);">
+    <img src="${imgURL(spec, (spec.images && spec.images.bolt) || 'bolt.png')}" alt="볼트부" style="display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#F5F3F0;">
+    <img src="${imgURL(spec, (spec.images && spec.images.model) || 'model.png')}" alt="모델명" style="display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#F5F3F0;">
+  </div>
+
+  <!-- 03 In Action -->
+  <div style="background:#1A1A1A;color:#FAF9F7;padding:clamp(80px,10vw,140px) 0;">
+    <div style="padding:0 clamp(20px,3vw,40px) clamp(40px,5vw,64px);">${eyebrow('02', 'IN ACTION', true)}
+      <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(28px,5.5vw,64px);font-weight:800;color:#FAF9F7;letter-spacing:-0.03em;line-height:1.1;margin:0;">한 컷,<br>한 손에 멈춥니다.</h2>
+    </div>
+    <img src="${imgURL(spec, (spec.images && spec.images.cut) || 'cut.gif')}" alt="컷 동작" style="display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#2D2D2D;">
+  </div>
+
+  <!-- 04 About -->
+  <div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px) clamp(40px,5vw,64px);">${eyebrow('03', 'ABOUT')}
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(40px,6vw,64px) 0;">${esc(spec.model)}의 특성</h2>
+  </div>
+  <img src="${imgURL(spec, (spec.images && spec.images.blade1) || 'blade1.png')}" alt="${esc(spec.model)} 날부" style="display:block;width:100%;aspect-ratio:3/2;max-height:600px;object-fit:contain;background:#F5F3F0;margin-bottom:clamp(40px,5vw,72px);">
+  <div style="padding:0 clamp(20px,3vw,40px) clamp(80px,10vw,140px);">
+    <p style="font-size:clamp(15px,1.9vw,18px);color:#2D2D2D;line-height:1.9;max-width:620px;margin:0 0 clamp(20px,2.5vw,28px) 0;">${nl2br(aboutBody)}</p>
+    ${aboutQuote ? `<p style="font-size:clamp(15px,1.9vw,18px);color:#1A1A1A;line-height:1.9;max-width:620px;margin:0;font-weight:500;">"${nl2br(aboutQuote)}"</p>` : ''}
+  </div>
+
+  <!-- 05 Profile -->
+  <div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">${eyebrow('04', 'PROFILE')}
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(20px,3vw,32px) 0;">이 가위의 특성</h2>
+    <p style="font-size:clamp(13px,1.6vw,15px);color:#8A8580;line-height:1.7;margin:0 0 clamp(40px,5vw,56px) 0;font-style:italic;">— 날 / 핸들 / 무게로 본인 작업 스타일에 맞는 타입 확인</p>
+    ${profileCards}
+  </div>
+
+  <!-- 06 For You -->
+  <div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">${eyebrow('05', 'FOR YOU?')}
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(40px,6vw,64px) 0;">솔직한 선택 가이드</h2>
+    ${forYouCard('이런 분에게 맞습니다', matchItems, false)}
+    ${forYouCard('맞지 않을 수 있습니다', missItems, true)}
+  </div>
+
+  <!-- 07 Spec -->
+  <div style="background:#F5F3F0;padding:clamp(80px,10vw,140px) clamp(24px,4vw,48px);">${eyebrow('06', 'SPEC')}
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(32px,5vw,56px) 0;">사양</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(8px,1.5vw,16px);border-top:1px solid #1A1A1A;border-bottom:1px solid #1A1A1A;padding:clamp(28px,4vw,48px) 0;margin-bottom:clamp(40px,5vw,56px);">
+      <div><div style="font-family:'Outfit',sans-serif;font-size:clamp(28px,4.5vw,52px);font-weight:900;color:#1A1A1A;line-height:0.95;letter-spacing:-0.02em;">${esc(spec.size_inch)}<span style="font-size:0.45em;color:#8A8580;font-weight:700;margin-left:0.1em;">inch</span></div>
+        <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.2em;text-transform:uppercase;margin-top:clamp(8px,1vw,12px);">길이</div></div>
+      <div style="border-left:1px solid #D4D0CB;padding-left:clamp(12px,2vw,20px);"><div style="font-family:'Outfit',sans-serif;font-size:clamp(28px,4.5vw,52px);font-weight:900;color:#1A1A1A;line-height:0.95;letter-spacing:-0.02em;">${esc(spec.weight_g)}<span style="font-size:0.45em;color:#8A8580;font-weight:700;margin-left:0.1em;">g</span></div>
+        <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.2em;text-transform:uppercase;margin-top:clamp(8px,1vw,12px);">무게</div></div>
+      <div style="border-left:1px solid #D4D0CB;padding-left:clamp(12px,2vw,20px);"><div style="font-family:'Outfit',sans-serif;font-size:clamp(20px,3vw,32px);font-weight:800;color:#1A1A1A;line-height:1;letter-spacing:-0.01em;">${esc(TYPE_LABEL[type] || type)}</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.2em;text-transform:uppercase;margin-top:clamp(8px,1vw,12px);">종류</div></div>
+    </div>
+    ${specRow('소재', sm.material)}
+    ${specRow('베어링', sm.bearing)}
+    ${specRow('등급', gradeLabel)}
+    ${specRow('핸들', sm.handle_label)}
+    ${specRow('날선 (Edge)', sm.edge_label)}
+    ${specRow('날등 (Blade)', sm.design_label, true)}
+  </div>
+
+  <!-- 08 Same Handle -->
+  <div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">${eyebrow('07', 'SAME HANDLE')}
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(20px,3vw,32px) 0;">${esc(spec.lineup_title || '동일 핸들')}<br>라인업</h2>
+    <p style="font-size:clamp(13px,1.6vw,15px);color:#8A8580;line-height:1.7;margin:0 0 clamp(48px,6vw,72px) 0;font-style:italic;">— 한 핸들로 가위 종류 통일. 본 모델 외 동일 라인업의 다른 가위들.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:clamp(8px,1.2vw,16px);">${lineupCards(spec)}</div>
+  </div>
+
+  ${STATIC_VOICES}
+  ${STATIC_VS}
+  ${STATIC_WHY}
+
+  <!-- 12 Grade -->
+  <div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">${eyebrow('12', 'GRADE')}
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(20px,3vw,32px) 0;">MAMORU LINE UP</h2>
+    <p style="font-size:clamp(13px,1.6vw,15px);color:#8A8580;line-height:1.7;margin:0 0 clamp(48px,6vw,72px) 0;font-style:italic;">— 경력에 따른 추천 가격 & 레벨</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:clamp(12px,1.5vw,20px);">${gradeCards(spec, catalog)}</div>
+  </div>
+
+  ${staticCTA(spec)}
+</div>`;
+}
+
+if (typeof module !== 'undefined') module.exports = { renderDetailHTML, esc };

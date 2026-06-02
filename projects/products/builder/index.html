@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAMORU 상세페이지 빌더 — 미용가위</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./builder.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">MAMORU</span>
+    <span class="sub">상세페이지 빌더 · 미용가위</span>
+  </div>
+  <div class="actions">
+    <div class="viewtoggle">
+      <button id="viewPC" class="vbtn on" type="button">PC</button>
+      <button id="viewMobile" class="vbtn" type="button">모바일</button>
+    </div>
+    <label class="btn ghost" for="fileSpec">spec 불러오기<input id="fileSpec" type="file" accept="application/json" hidden></label>
+    <button id="btnSpec" class="btn ghost" type="button">spec 다운로드</button>
+    <button id="btnHTML" class="btn solid" type="button">HTML 복사</button>
+  </div>
+</header>
+
+<main class="layout">
+  <aside id="panel" class="panel"><div class="loaderr">카탈로그 로딩 중…</div></aside>
+  <div id="previewFrame" class="previewframe">
+    <div class="frametop"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">상세페이지 미리보기 (실시간)</span></div>
+    <iframe id="preview" title="미리보기"></iframe>
+  </div>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script src="./catalog.js"></script>
+<script src="./template.js"></script>
+<script src="./builder.js"></script>
+</body>
+</html>
