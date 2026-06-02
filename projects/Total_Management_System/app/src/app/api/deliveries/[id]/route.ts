@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
+import { recalcOutstanding } from '@/lib/outstanding';
 
 /** GET /api/deliveries/[id] — 납품 상세 */
 export async function GET(
@@ -100,25 +101,14 @@ export async function PATCH(
     if (action === 'settle') {
       if (dl.status !== 'shipped') return NextResponse.json({ error: '출고완료 상태에서만 정산 가능합니다' }, { status: 400 });
 
-      // 미수금 차감 (잔액이 있으면)
-      if (dl.customer_id && dl.payment_status !== 'paid') {
-        const unpaid = dl.total_amount - (dl.discount_amount || 0) - (dl.paid_amount || 0);
-        if (unpaid > 0) {
-          const { data: cust } = await db.from('customers').select('outstanding_balance').eq('id', dl.customer_id).single();
-          if (cust) {
-            await db.from('customers').update({
-              outstanding_balance: Math.max(0, (cust.outstanding_balance || 0) - unpaid),
-            }).eq('id', dl.customer_id);
-          }
-        }
-      }
-
+      // 미수금: 아래 정산 반영 후 recalcOutstanding 로 재계산
       await db.from('deliveries').update({
         status: 'settled',
         payment_status: 'paid',
         paid_amount: dl.total_amount - (dl.discount_amount || 0),
         updated_at: new Date().toISOString(),
       }).eq('id', id);
+      await recalcOutstanding(db, dl.customer_id);
       return NextResponse.json({ success: true, status: 'settled' });
     }
 
@@ -152,24 +142,13 @@ export async function PATCH(
         }
       }
 
-      // 미수금 차감
-      if (dl.customer_id && dl.payment_status !== 'paid') {
-        const unpaid = dl.total_amount - (dl.discount_amount || 0) - (dl.paid_amount || 0);
-        if (unpaid > 0) {
-          const { data: cust } = await db.from('customers').select('outstanding_balance').eq('id', dl.customer_id).single();
-          if (cust) {
-            await db.from('customers').update({
-              outstanding_balance: Math.max(0, (cust.outstanding_balance || 0) - unpaid),
-            }).eq('id', dl.customer_id);
-          }
-        }
-      }
-
+      // 미수금: 아래 취소 반영 후 recalcOutstanding 로 재계산
       await db.from('deliveries').update({
         cancelled_at: new Date().toISOString(),
         cancelled_reason: reason,
         updated_at: new Date().toISOString(),
       }).eq('id', id);
+      await recalcOutstanding(db, dl.customer_id);
       return NextResponse.json({ success: true, action: 'cancelled' });
     }
 
@@ -178,10 +157,7 @@ export async function PATCH(
       const { payment_status: newStatus, paid_amount: newPaid } = body as {
         payment_status: string; paid_amount?: number;
       };
-      const oldUnpaid = dl.total_amount - (dl.discount_amount || 0) - (dl.paid_amount || 0);
       const newPaidVal = newStatus === 'paid' ? (dl.total_amount - (dl.discount_amount || 0)) : (newPaid || 0);
-      const newUnpaid = dl.total_amount - (dl.discount_amount || 0) - newPaidVal;
-      const diff = oldUnpaid - newUnpaid;
 
       await db.from('deliveries').update({
         payment_status: newStatus,
@@ -189,15 +165,8 @@ export async function PATCH(
         updated_at: new Date().toISOString(),
       }).eq('id', id);
 
-      // 미수금 조정
-      if (dl.customer_id && diff !== 0) {
-        const { data: cust } = await db.from('customers').select('outstanding_balance').eq('id', dl.customer_id).single();
-        if (cust) {
-          await db.from('customers').update({
-            outstanding_balance: Math.max(0, (cust.outstanding_balance || 0) - diff),
-          }).eq('id', dl.customer_id);
-        }
-      }
+      // 미수금: 멱등 재계산 (±diff 누적 X)
+      await recalcOutstanding(db, dl.customer_id);
 
       return NextResponse.json({ success: true });
     }
@@ -245,24 +214,17 @@ export async function PATCH(
       updates.supply_amount = supplyAmount;
       updates.vat_amount = vatAmount;
 
-      // 미수금 델타 조정 (미결제/부분결제 한정)
-      if (dl.customer_id && dl.payment_status !== 'paid') {
-        const paid = dl.paid_amount || 0;
-        const oldUnpaid = Math.max(0, (dl.total_amount || 0) - (dl.discount_amount || 0) - paid);
-        const newUnpaid = Math.max(0, totalAmount - discountVal - paid);
-        const delta = newUnpaid - oldUnpaid;
-        if (delta !== 0) {
-          const { data: cust } = await db.from('customers').select('outstanding_balance').eq('id', dl.customer_id).single();
-          if (cust) {
-            await db.from('customers').update({ outstanding_balance: Math.max(0, (cust.outstanding_balance || 0) + delta) }).eq('id', dl.customer_id);
-          }
-        }
-      }
+      // 미수금: 아래 deliveries 업데이트(총액 변동) 후 recalcOutstanding 로 재계산
     }
 
     if (Object.keys(updates).length > 0) {
       updates.updated_at = new Date().toISOString();
       await db.from('deliveries').update(updates).eq('id', id);
+    }
+
+    // 품목 편집으로 총액이 바뀌었으면 미수금 멱등 재계산
+    if (Array.isArray(body.items) && dl.customer_id) {
+      await recalcOutstanding(db, dl.customer_id);
     }
 
     return NextResponse.json({ success: true });

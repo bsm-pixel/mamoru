@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { recalcOutstanding } from '@/lib/outstanding';
 
 /** GET /api/deliveries — 납품 목록 */
 export async function GET(req: NextRequest) {
@@ -186,17 +187,9 @@ export async function POST(req: NextRequest) {
     const { error: itemsError } = await db.from('delivery_items').insert(dlItems);
     if (itemsError) throw itemsError;
 
-    // 미수금 반영 (미결제/부분결제 시)
-    if (customer_id && payStatus !== 'paid') {
-      const unpaid = totalAmount - paidVal;
-      if (unpaid > 0) {
-        const { data: cust } = await db.from('customers').select('outstanding_balance').eq('id', customer_id).single();
-        if (cust) {
-          await db.from('customers').update({
-            outstanding_balance: (cust.outstanding_balance || 0) + unpaid,
-          }).eq('id', customer_id);
-        }
-      }
+    // 미수금: 멱등 재계산 (±diff 누적 X — drift 방지)
+    if (customer_id) {
+      await recalcOutstanding(db, customer_id);
     }
 
     return NextResponse.json({ delivery, dlNumber });

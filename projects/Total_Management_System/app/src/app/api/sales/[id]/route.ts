@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { recalcOutstanding } from '@/lib/outstanding';
 
 /** PATCH /api/sales/[id] — 취소 / 결제상태 변경 / 메모 수정 */
 export async function PATCH(
@@ -109,26 +110,7 @@ export async function PATCH(
         }));
       }
 
-      // 4. 미수금 차감 (미결제/부분결제였던 경우) — 할인 반영
-      if (sale.customer_id && sale.payment_status !== 'paid') {
-        const effectiveTotal = sale.total_amount - (sale.discount_amount || 0);
-        const unpaidAmount = effectiveTotal - (sale.paid_amount || 0);
-        if (unpaidAmount > 0) {
-          const { data: cust } = await db
-            .from('customers')
-            .select('outstanding_balance')
-            .eq('id', sale.customer_id)
-            .single();
-          if (cust) {
-            await db
-              .from('customers')
-              .update({
-                outstanding_balance: Math.max(0, (cust.outstanding_balance || 0) - unpaidAmount),
-              })
-              .eq('id', sale.customer_id);
-          }
-        }
-      }
+      // 4. 미수금: 아래 취소 반영(cancelled_at) 후 recalcOutstanding 로 일괄 재계산
 
       // 5. 판매 상태 업데이트
       const { error: updateErr } = await db
@@ -160,6 +142,7 @@ export async function PATCH(
         }
       }
 
+      await recalcOutstanding(db, sale.customer_id);
       return NextResponse.json({ success: true, action: 'cancelled' });
     }
 
@@ -243,26 +226,7 @@ export async function PATCH(
         }));
       }
 
-      // 4. 미수금 차감
-      if (sale.customer_id && sale.payment_status !== 'paid') {
-        const effectiveTotal = sale.total_amount - (sale.discount_amount || 0);
-        const unpaidAmount = effectiveTotal - (sale.paid_amount || 0);
-        if (unpaidAmount > 0) {
-          const { data: cust } = await db
-            .from('customers')
-            .select('outstanding_balance')
-            .eq('id', sale.customer_id)
-            .single();
-          if (cust) {
-            await db
-              .from('customers')
-              .update({
-                outstanding_balance: Math.max(0, (cust.outstanding_balance || 0) - unpaidAmount),
-              })
-              .eq('id', sale.customer_id);
-          }
-        }
-      }
+      // 4. 미수금: 아래 반품 반영(returned_at) 후 recalcOutstanding 로 일괄 재계산
 
       // 5. 반품 상태 기록
       const { error: updateErr } = await db
@@ -293,6 +257,7 @@ export async function PATCH(
         }
       }
 
+      await recalcOutstanding(db, sale.customer_id);
       return NextResponse.json({ success: true, action: 'returned' });
     }
 
@@ -311,34 +276,11 @@ export async function PATCH(
         return NextResponse.json({ error: 'payment_status 필수' }, { status: 400 });
       }
 
-      // 미수금 조정
-      if (sale.customer_id) {
-        const oldUnpaid = sale.payment_status !== 'paid'
-          ? sale.total_amount - (sale.paid_amount || 0) : 0;
-        const newPaidAmount = paid_amount ?? (payment_status === 'paid' ? sale.total_amount : sale.paid_amount);
-        const newUnpaid = payment_status !== 'paid'
-          ? sale.total_amount - newPaidAmount : 0;
-        const diff = oldUnpaid - newUnpaid; // 양수면 미수금 감소
-
-        if (diff !== 0) {
-          const { data: cust } = await db
-            .from('customers')
-            .select('outstanding_balance')
-            .eq('id', sale.customer_id)
-            .single();
-          if (cust) {
-            await db
-              .from('customers')
-              .update({
-                outstanding_balance: Math.max(0, (cust.outstanding_balance || 0) - diff),
-              })
-              .eq('id', sale.customer_id);
-          }
-        }
-      }
-
+      // 미수금: 아래 결제상태 반영 후 recalcOutstanding 로 일괄 재계산 (±diff 누적 X)
       const updateData: Record<string, unknown> = { payment_status };
       if (paid_amount !== undefined) updateData.paid_amount = paid_amount;
+      // 완납 처리 시 paid_amount 미지정이면 총액으로 채워 데이터 정합 유지
+      else if (payment_status === 'paid') updateData.paid_amount = sale.total_amount;
 
       const { error: updateErr } = await db
         .from('offline_sales')
@@ -346,6 +288,7 @@ export async function PATCH(
         .eq('id', id);
 
       if (updateErr) throw updateErr;
+      await recalcOutstanding(db, sale.customer_id);
       return NextResponse.json({ success: true, action: 'payment_updated' });
     }
 
@@ -505,6 +448,7 @@ export async function PATCH(
         .eq('id', id);
 
       if (updateErr) throw updateErr;
+      await recalcOutstanding(db, sale.customer_id);
       return NextResponse.json({ success: true, action: 'sale_edited' });
     }
 
@@ -777,6 +721,7 @@ export async function PATCH(
         is_vat_included: cardAmount > 0,
       }).eq('id', id);
 
+      await recalcOutstanding(db, sale.customer_id);
       return NextResponse.json({ success: true, action: 'sale_rebuilt' });
     }
 

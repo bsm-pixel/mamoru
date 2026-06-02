@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
+import { recalcOutstanding } from '@/lib/outstanding';
 
 /** GET /api/sales — 오프라인 판매 목록 */
 export async function GET(req: NextRequest) {
@@ -332,24 +333,11 @@ export async function POST(req: NextRequest) {
       }
     }));
 
-    // 미수금 자동 반영: 미결제/부분결제 시 고객 outstanding_balance 업데이트
     const paymentStatus = sale.payment_status || 'paid';
-    if (sale.customer_id && paymentStatus !== 'paid') {
-      const effectiveTotal = sale.total_amount - (sale.discount_amount || 0);
-      const unpaidAmount = effectiveTotal - (sale.paid_amount || 0);
-      if (unpaidAmount > 0) {
-        const { data: cust } = await db
-          .from('customers')
-          .select('outstanding_balance')
-          .eq('id', sale.customer_id)
-          .single();
-        if (cust) {
-          await db
-            .from('customers')
-            .update({ outstanding_balance: (cust.outstanding_balance || 0) + unpaidAmount })
-            .eq('id', sale.customer_id);
-        }
-      }
+
+    // 미수금 자동 반영: 멱등 재계산 (±diff 누적 X — drift 방지)
+    if (sale.customer_id) {
+      await recalcOutstanding(db, sale.customer_id);
     }
 
     // 077: 회계 자동 연동 — 입금된 금액을 cash_transactions(income)에 자동 기록
