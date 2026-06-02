@@ -1,0 +1,35 @@
+{
+  "copy_type": "about_quote",
+  "applies_to": ["blunt", "thinning", "long", "dry"],
+  "label_ko": "ABOUT 브랜드 한 줄 (철학 인용구)",
+  "label_subtitle_ko": "본문 아래 강조되는 브랜드 보이스 한 문장. 전 종류 공용",
+  "select_mode": "single",
+  "allow_custom": true,
+  "options": [
+    {
+      "id": "style_first",
+      "text": "가위를 바꾸기 전에, 먼저 자신의 커트 스타일을 알아야 합니다.",
+      "tone": "본질·진정성"
+    },
+    {
+      "id": "tool_keeps_skill",
+      "text": "좋은 가위가 실력을 만들지 않습니다. 손에 맞는 가위가 실력을 지켜줄 뿐입니다.",
+      "tone": "겸손·신뢰"
+    },
+    {
+      "id": "honest_fit",
+      "text": "맞지 않으면, 맞지 않다고 말합니다.",
+      "tone": "솔직·신뢰"
+    },
+    {
+      "id": "real_over_fake",
+      "text": "화려한 스펙보다, 매일 손에 닿는 감각이 진짜입니다.",
+      "tone": "진정성"
+    },
+    {
+      "id": "hand_remembers",
+      "text": "손이 기억하는 가위는, 바꾸지 않게 됩니다.",
+      "tone": "신뢰·지속"
+    }
+  ]
+}
