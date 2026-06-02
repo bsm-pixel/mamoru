@@ -1100,6 +1100,15 @@ body.pc .time-slot {
   cursor: not-allowed;
 }
 
+/* 1시간 선택의 후반부 슬롯이 unavailable 이어도 어둡게+흰글씨 (selected 가 이김) */
+.time-slot.selected.unavailable {
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  border-color: var(--mm-void);
+  text-decoration: none;
+  cursor: default;
+}
+
 .time-slot.loading {
   grid-column: 1 / -1;
   color: var(--mm-warm-gray);
@@ -1560,6 +1569,12 @@ body.pc #date-picker-modal .day {
 #date-picker-modal .time-slot.unavailable {
   background: var(--mm-parchment);
   color: var(--mm-mist);
+}
+#date-picker-modal .time-slot.selected.unavailable {
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  border-color: var(--mm-void);
+  text-decoration: none;
 }
 #date-picker-modal .time-slot.loading {
   color: var(--mm-text-d2);
@@ -2629,13 +2644,20 @@ function getCachedSlots(dateStr) {
     // 로딩 중에는 시간 선택을 무시합니다.
 if (isLoadingDates) return;
 
-  // 이전 선택 해제 후 현재 시간(시작 시각)만 선택 표시
-  //   ※ 예전엔 다음 30분 슬롯도 함께 'selected' 칠해 1시간을 표시했으나,
-  //     선택한 시각(예 5:00)보다 다음 슬롯(5:30)이 선택된 것처럼 보여 혼란 → 제거.
-  //     1시간 단위는 하단 요약("오후 5시 (1시간)")으로 안내.
+  // 1시간 선택 = 시작 슬롯 + 다음 30분 슬롯을 "둘 다" 어둡게(selected) 표시.
+  //   ※ 다음 슬롯(5:30)이 'unavailable'(그 시각엔 1시간 시작 불가)로 그려져 있어도,
+  //     지금 선택한 1시간(5:00~6:00)의 후반부이므로 함께 어둡게 보여야 맞음.
+  //     → CSS에서 .selected.unavailable 이 어둡게+흰글씨로 이기도록 override 처리(아래).
   document.querySelectorAll('#time-slots .time-slot').forEach(e => e.classList.remove('selected'));
   el.classList.add('selected');
   state.modal.selectedTime = time;
+
+  // 다음 30분 슬롯도 함께 어둡게 (가용성 무관 — 1시간의 후반부)
+  const _p = time.split(':');
+  const _nextM = Number(_p[0]) * 60 + Number(_p[1]) + 30;
+  const _nextTime = `${String(Math.floor(_nextM / 60)).padStart(2, '0')}:${String(_nextM % 60).padStart(2, '0')}`;
+  const _nextEl = document.querySelector(`#time-slots .time-slot[data-time="${_nextTime}"]`);
+  if (_nextEl) _nextEl.classList.add('selected');
 
   // "선택 완료" 버튼 활성화
   const confirmBtn = document.getElementById('btn-modal-confirm');
