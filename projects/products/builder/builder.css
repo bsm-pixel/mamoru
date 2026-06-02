@@ -41,7 +41,17 @@ label.btn{display:inline-flex; align-items:center;}
 .panel section h3{
   font-family:'Outfit',sans-serif; font-size:12px; font-weight:800; letter-spacing:0.12em;
   text-transform:uppercase; color:var(--void); margin-bottom:14px;
+  display:flex; align-items:center;
 }
+.panel section h3 .sbadge{
+  font-family:'Outfit',sans-serif; font-size:10px; font-weight:800; letter-spacing:0.06em;
+  background:var(--void); color:var(--cream); border-radius:5px; padding:3px 7px; margin-right:9px;
+}
+.subhead{
+  font-size:11px; font-weight:700; color:var(--mute); letter-spacing:0.1em; text-transform:uppercase;
+  margin:16px 0 9px; padding-top:12px; border-top:1px dashed var(--line);
+}
+.subhead:first-child{ border-top:0; padding-top:0; margin-top:2px; }
 .fld{display:block; margin-bottom:12px;}
 .fld .lbl{display:block; font-size:12px; font-weight:600; color:var(--mute); margin-bottom:6px; letter-spacing:0.02em;}
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}

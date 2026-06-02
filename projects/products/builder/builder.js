@@ -33,72 +33,65 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   bindTopbar();
   renderPanel();
-  updatePreview();
+  initPreview();
 });
 
-/* ════════════ 입력 패널 ════════════ */
+/* ════════════ 입력 패널 ════════════
+   좌측 입력 순서 = 출력 페이지 섹션 순서와 1:1 (IA 일치)
+   배지 번호 = 페이지 eyebrow(— NN / TITLE) 와 매칭 */
 function renderPanel() {
   const p = document.getElementById('panel');
   p.innerHTML = '';
 
-  // 1. 종류
+  // 종류 (마스터 스위치)
   p.appendChild(section('종류', radioRow(TYPES.map(t => ({ id: t.id, label: t.label })),
-    spec.type, v => { switchType(v); })));
+    spec.type, v => { switchType(v); }), '·'));
 
-  // 2. 기본 정보
-  const basic = document.createElement('div');
-  basic.appendChild(textField('모델명', spec.model, 'A2-55FS', v => { spec.model = v; updatePreview(); }));
-  basic.appendChild(textField('카테고리 라벨 (Hero 상단)', spec.category_label, 'BLUNT 5.5 INCH', v => { spec.category_label = v; updatePreview(); }));
+  // 01 HERO — 기본 정보 + Hero 카피
+  const hero = document.createElement('div');
+  hero.appendChild(textField('모델명', spec.model, 'A2-55FS', v => { spec.model = v; updatePreview(); }));
+  hero.appendChild(textField('카테고리 라벨 (Hero 상단)', spec.category_label, 'BLUNT 5.5 INCH', v => { spec.category_label = v; updatePreview(); }));
   const grid2 = document.createElement('div'); grid2.className = 'grid2';
   grid2.appendChild(numberField('길이 (inch)', spec.size_inch, '5.5', v => { spec.size_inch = v; updatePreview(); }));
   grid2.appendChild(numberField('무게 (g)', spec.weight_g, '58', v => { spec.weight_g = v; updatePreview(); }));
-  basic.appendChild(grid2);
-  basic.appendChild(textField('이미지 폴더명', spec.images_folder, spec.model || '모델명과 동일', v => { spec.images_folder = v; updatePreview(); }));
-  p.appendChild(section('기본 정보', basic));
+  hero.appendChild(grid2);
+  hero.appendChild(textField('이미지 폴더명', spec.images_folder, spec.model || '모델명과 동일', v => { spec.images_folder = v; updatePreview(); }));
+  hero.appendChild(subhead('Hero 카피 (감성 한 줄)'));
+  hero.appendChild(copyChooserSingle('hero_subtitle', 'hero_subtitle_text'));
+  p.appendChild(section('HERO', hero, '01'));
 
-  // 3. Hero 카피
-  p.appendChild(section('Hero 카피 (감성 한 줄)',
-    copyChooserSingle('hero_subtitle', 'hero_subtitle_text')));
-
-  // 4. 선택 카드 (종류별 분기 — grade 제외)
-  const cards = Catalog.cardsForType(spec.type).filter(c => c.card_type !== 'grade');
-  if (cards.length) {
-    const box = document.createElement('div');
-    for (const card of cards) {
-      box.appendChild(cardSelector(card));
-    }
-    p.appendChild(section('가위 특성 선택', box));
-  }
-
-  // 5. GRIP SIZE
-  const grip = document.createElement('div');
-  const gg = document.createElement('div'); gg.className = 'grid2';
-  gg.appendChild(textField('엄지부 (가로 × 세로)', spec.custom_fields.grip_thumb || '', '15 × 21', v => { spec.custom_fields.grip_thumb = v; updatePreview(); }));
-  gg.appendChild(textField('약지부 (가로 × 세로)', spec.custom_fields.grip_ring || '', '15 × 18', v => { spec.custom_fields.grip_ring = v; updatePreview(); }));
-  grip.appendChild(gg);
-  grip.appendChild(copyChooserSingleInline('handle_description', 'handle_description', '핸들 특성 설명'));
-  p.appendChild(section('GRIP SIZE (손가락 구멍)', grip));
-
-  // 6. WEIGHT
-  const w = document.createElement('div');
-  w.appendChild(selectField('무게 밴드', spec.custom_fields.weight_band || '중간',
-    ['가벼움', '중간', '무거움'], v => { spec.custom_fields.weight_band = v; updatePreview(); }));
-  w.appendChild(textArea('무게 설명', spec.custom_fields.weight_description || '', '짧은 날 + 58g — 한 손 작업에 적정...', v => { spec.custom_fields.weight_description = v; updatePreview(); }));
-  p.appendChild(section('WEIGHT (무게감)', w));
-
-  // 7. ABOUT
+  // 03 ABOUT — 특성 본문
   const about = document.createElement('div');
   about.appendChild(copyChooserSingleInline('about_body', 'about_body_text', '본문 한 단락 (특성 설명)'));
   about.appendChild(copyChooserSingleInline('about_quote', 'about_quote_text', '브랜드 한 줄 (인용구)'));
-  p.appendChild(section('ABOUT (특성 본문)', about));
+  p.appendChild(section('ABOUT', about, '03'));
 
-  // 8. FOR YOU
+  // 04 PROFILE — 특성 카드 + GRIP SIZE + WEIGHT
+  const prof = document.createElement('div');
+  const cards = Catalog.cardsForType(spec.type).filter(c => c.card_type !== 'grade');
+  if (cards.length) {
+    prof.appendChild(subhead('가위 특성 카드'));
+    for (const card of cards) prof.appendChild(cardSelector(card));
+  }
+  prof.appendChild(subhead('Grip Size (손가락 구멍)'));
+  const gg = document.createElement('div'); gg.className = 'grid2';
+  gg.appendChild(textField('엄지부', spec.custom_fields.grip_thumb || '', '15 × 21', v => { spec.custom_fields.grip_thumb = v; updatePreview(); }));
+  gg.appendChild(textField('약지부', spec.custom_fields.grip_ring || '', '15 × 18', v => { spec.custom_fields.grip_ring = v; updatePreview(); }));
+  prof.appendChild(gg);
+  prof.appendChild(copyChooserSingleInline('handle_description', 'handle_description', '핸들 특성 설명'));
+  prof.appendChild(subhead('Weight (무게감)'));
+  prof.appendChild(selectField('무게 밴드', spec.custom_fields.weight_band || '중간',
+    ['가벼움', '중간', '무거움'], v => { spec.custom_fields.weight_band = v; updatePreview(); }));
+  prof.appendChild(textArea('무게 설명', spec.custom_fields.weight_description || '', '짧은 날 + 58g — 한 손 작업에 적정...', v => { spec.custom_fields.weight_description = v; updatePreview(); }));
+  p.appendChild(section('PROFILE', prof, '04'));
+
+  // 05 FOR YOU
   const fy = document.createElement('div');
   fy.appendChild(copyChooserMulti('for_you_match', '이런 분에게 맞습니다'));
   fy.appendChild(copyChooserMulti('for_you_miss', '맞지 않을 수 있습니다'));
-  p.appendChild(section('FOR YOU (선택 가이드)', fy));
+  p.appendChild(section('FOR YOU', fy, '05'));
 
-  // 9. SPEC 메타
+  // 06 SPEC
   const sm = document.createElement('div');
   sm.appendChild(radioRow(Catalog.byCardType['grade'] ? Catalog.byCardType['grade'].options.map(o => ({ id: o.id, label: `${o.id} ${o.name_en || ''}` })) : [],
     spec.price_grade, v => { spec.price_grade = v; autoFillMeta(); updatePreview(); }, '등급 (price_grade)'));
@@ -110,19 +103,19 @@ function renderPanel() {
   sm.appendChild(textField('핸들 라벨', spec.spec_meta.handle_label || '', '카멜 + 세미오프셋', v => { spec.spec_meta.handle_label = v; updatePreview(); }, 'meta_handle_label'));
   sm.appendChild(textField('날선 라벨', spec.spec_meta.edge_label || '', 'F · 포스 (직선형)', v => { spec.spec_meta.edge_label = v; updatePreview(); }, 'meta_edge_label'));
   sm.appendChild(textField('날등 라벨', spec.spec_meta.design_label || '', 'S · 스워드 (검형)', v => { spec.spec_meta.design_label = v; updatePreview(); }, 'meta_design_label'));
-  p.appendChild(section('SPEC (사양)', sm));
+  p.appendChild(section('SPEC', sm, '06'));
 
-  // 10. SAME HANDLE 라인업
+  // 07 SAME HANDLE
   const lu = document.createElement('div');
   lu.appendChild(textField('라인업 제목', spec.lineup_title || '', 'A2 시리즈', v => { spec.lineup_title = v; updatePreview(); }));
   lu.appendChild(textArea('라인업 모델 (한 줄에 하나)', (spec.lineup || []).map(x => typeof x === 'string' ? x : x.model).join('\n'),
     'A2-45FS\nA2-65FS\nA2-55FC', v => { spec.lineup = v.split('\n').map(s => s.trim()).filter(Boolean); updatePreview(); }));
-  p.appendChild(section('SAME HANDLE (라인업)', lu));
+  p.appendChild(section('SAME HANDLE', lu, '07'));
 
-  // 11. CTA 링크
+  // 13 CTA
   const cta = document.createElement('div');
   cta.appendChild(textField('맞춤 컨설팅 링크', spec.custom_fields.cta_link || '', 'https://...', v => { spec.custom_fields.cta_link = v; updatePreview(); }));
-  p.appendChild(section('CTA', cta));
+  p.appendChild(section('CTA', cta, '13'));
 }
 
 /* 종류 전환 — 기본 정보/카피는 유지, 카드 선택만 초기화 */
@@ -174,11 +167,17 @@ function setMeta(key, val, inputId) {
 }
 
 /* ════════════ 컨트롤 빌더 ════════════ */
-function section(title, body) {
+function section(title, body, badge) {
   const s = document.createElement('section');
-  const h = document.createElement('h3'); h.textContent = title;
+  const h = document.createElement('h3');
+  if (badge) { const b = document.createElement('span'); b.className = 'sbadge'; b.textContent = badge; h.appendChild(b); }
+  h.appendChild(document.createTextNode(title));
   s.appendChild(h); s.appendChild(body);
   return s;
+}
+function subhead(text) {
+  const d = document.createElement('div'); d.className = 'subhead'; d.textContent = text;
+  return d;
 }
 function field(label) {
   const f = document.createElement('label'); f.className = 'fld';
@@ -286,18 +285,33 @@ function copyChooserMulti(copyType, label) {
   f.appendChild(row); return f;
 }
 
-/* ════════════ 미리보기 ════════════ */
-let previewTimer = null;
-function updatePreview() {
-  clearTimeout(previewTimer);
-  previewTimer = setTimeout(() => {
-    const html = renderDetailHTML(spec, Catalog);
-    const doc = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+/* ════════════ 미리보기 ════════════
+   iframe 골격을 한 번만 깔고(initPreview), 이후엔 내부 #root.innerHTML 만 교체.
+   → srcdoc 재로딩 X → 스크롤 위치 유지 + 폰트 깜빡임 없음 */
+let previewReady = false, previewTimer = null;
+
+function initPreview() {
+  const f = document.getElementById('preview');
+  f.addEventListener('load', () => { previewReady = true; paintPreview(); }, { once: true });
+  f.srcdoc = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/subsets/Paperlogy-dynamic-subset.css" rel="stylesheet">
-<style>body{margin:0;background:#FAF9F7;}</style></head><body>${html}</body></html>`;
-    document.getElementById('preview').srcdoc = doc;
-  }, 120);
+<style>body{margin:0;background:#FAF9F7;}</style></head><body><div id="root"></div></body></html>`;
+}
+
+function paintPreview() {
+  const f = document.getElementById('preview');
+  const doc = f.contentDocument; if (!doc) return;
+  const win = f.contentWindow;
+  const y = win ? win.scrollY : 0, x = win ? win.scrollX : 0;   // 현재 스크롤 보존
+  const root = doc.getElementById('root') || doc.body;
+  root.innerHTML = renderDetailHTML(spec, Catalog);
+  if (win) win.scrollTo(x, y);                                   // 그 자리에 복원
+}
+
+function updatePreview() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(() => { if (previewReady) paintPreview(); }, 120);
 }
 
 /* ════════════ 상단바 (토글 / 내보내기 / 불러오기) ════════════ */
