@@ -67,6 +67,8 @@ iOS 스타일 ON/OFF 스위치 + "리뷰 약속" 라벨 + ON 시 약속 날짜 �
 - **B2B**: `/sales` 헤더 `[+ 거래처 매출]` OR `/deliveries` 헤더 → `/sales/new?mode=b2b` (CreateDeliveryModal 풀스크린)
 - `?initial=repair` param 지원 (복원수리 탭 시작)
 
+> **2026-06-01 fix**: B2B 납품서 **편집(DeliveryDetailPanel)** 제품 추가 시 **거래처별 납품명·가격 적용**(생성 모달과 동일: `useCustomerCatalog` → 고객유형 딜러/아카데미 → 기본가). 편집 품목 저장은 **draft 한정**(확정 후엔 재고/미수금 정합성 위해 품목 변경 막고 메모/날짜만). draft 품목 교체 시 총액·공급가·부가세 재계산 + 미수금 델타 조정. 재고는 '확정' 시 현재 품목 기준 차감이라 draft 교체 무영향.
+
 ### 시각 시스템 (안 A — 좌측 색 줄 + 우측 도트)
 
 | 색 줄 | 상태 |
