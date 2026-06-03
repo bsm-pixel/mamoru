@@ -1,0 +1,69 @@
+/* ──────────────────────────────────────────────────────────────
+   로컬 실시간 미리보기 서버 (의존성 0, 라이브리로드)
+   - 클로드가 projects/ 안 파일을 수정하면 → 열려있는 브라우저가 자동 새로고침
+   - push / GitHub Pages 빌드 대기 없이 즉시 확인 (배포는 다 정한 뒤 한 번에)
+   사용: 저장소 루트의 preview.bat 더블클릭 (또는 `node tools/preview-server.js`)
+   ────────────────────────────────────────────────────────────── */
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const { exec } = require('child_process');
+
+const ROOT = path.resolve(__dirname, '..');
+const PORT = 8123;
+const OPEN_PATH = '/projects/products/builder/workspace.html'; // 시작 시 자동으로 열 페이지
+
+const MIME = {
+  '.html': 'text/html;charset=utf-8', '.js': 'text/javascript', '.json': 'application/json',
+  '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.mp4': 'video/mp4',
+  '.woff2': 'font/woff2', '.woff': 'font/woff', '.ico': 'image/x-icon',
+};
+
+const clients = []; // SSE 연결 (열린 미리보기 탭들)
+const RELOAD_SNIPPET =
+  "<script>(function(){try{var s=new EventSource('/__reload');s.onmessage=function(){location.reload();};}catch(e){}})();</script>";
+
+const server = http.createServer((req, res) => {
+  const url = decodeURIComponent(req.url.split('?')[0]);
+
+  // 라이브리로드 채널 (SSE)
+  if (url === '/__reload') {
+    res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
+    res.write(': connected\n\n');
+    clients.push(res);
+    req.on('close', () => { const i = clients.indexOf(res); if (i >= 0) clients.splice(i, 1); });
+    return;
+  }
+
+  let f = path.join(ROOT, url);
+  if (url.endsWith('/') || !path.extname(f)) f = path.join(f, 'index.html');
+
+  fs.readFile(f, (e, data) => {
+    if (e) { res.writeHead(404, { 'Content-Type': 'text/plain;charset=utf-8' }); res.end('404: ' + url); return; }
+    const ext = path.extname(f).toLowerCase();
+    let body = data;
+    if (ext === '.html') body = Buffer.from(data.toString('utf8').replace('</body>', RELOAD_SNIPPET + '</body>'), 'utf8');
+    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+    res.end(body);
+  });
+});
+
+// projects/ 변경 감지 → 모든 미리보기 탭 새로고침 (디바운스)
+let timer = null;
+try {
+  fs.watch(path.join(ROOT, 'projects'), { recursive: true }, () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { clients.forEach(c => { try { c.write('data: reload\n\n'); } catch (e) {} }); }, 150);
+  });
+} catch (e) {
+  console.log('파일 감시 실패(수동 새로고침 필요):', e.message);
+}
+
+server.listen(PORT, () => {
+  const u = 'http://localhost:' + PORT + OPEN_PATH;
+  console.log('\n  ▶ 실시간 미리보기 실행 중');
+  console.log('    ' + u);
+  console.log('    (클로드가 파일 고치면 이 창의 브라우저가 자동 새로고침됩니다. 끄려면 이 검은 창 닫기)\n');
+  exec('start "" "' + u + '"'); // Windows 브라우저 자동 열기
+});
