@@ -279,10 +279,10 @@ function gradeCards(spec, catalog) {
         <p style="font-size:clamp(13px,1.6vw,15px);color:rgba(245,245,243,0.85);line-height:1.7;margin:0;">${esc(o.description_ko || '')}</p>
       </div>`;
     }
-    return `<div style="background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.5vw,12px);padding:clamp(24px,3vw,32px);">
-      <div style="font-family:'Outfit',sans-serif;font-size:clamp(36px,5vw,52px);font-weight:900;color:#1A1A1A;line-height:1;margin-bottom:clamp(8px,1vw,12px);">${esc(o.id)}</div>
-      <div style="font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.15em;margin-bottom:clamp(12px,1.5vw,16px);">${esc(o.name_en || '')}</div>
-      <p style="font-size:clamp(13px,1.6vw,15px);color:#2D2D2D;line-height:1.7;margin:0;">${esc(o.description_ko || '')}</p>
+    // 미선택 등급 = 컴팩트 (글자 + 영문 라벨만, 설명 생략) — 모델 등급만 강조, 여백 유지
+    return `<div style="background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.5vw,12px);padding:clamp(16px,2vw,20px) clamp(20px,2.5vw,24px);display:flex;align-items:center;gap:clamp(12px,1.6vw,16px);align-self:start;">
+      <span style="font-family:'Outfit',sans-serif;font-size:clamp(26px,3.4vw,38px);font-weight:900;color:#1A1A1A;line-height:1;flex-shrink:0;">${esc(o.id)}</span>
+      <span style="font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.15em;">${esc(o.name_en || '')}</span>
     </div>`;
   }).join('');
 }
