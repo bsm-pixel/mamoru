@@ -14,6 +14,7 @@
   .ws-top .logo{ font-family:'Outfit',sans-serif; font-weight:900; font-size:16px; letter-spacing:.04em; }
   .ws-top .sub{ font-size:12px; color:rgba(245,245,243,.55); margin-left:10px; }
   .ws-top .hint{ font-size:12px; color:rgba(245,245,243,.6); }
+  .ws-top .openlink{ font-size:12px; font-weight:700; color:var(--void); background:var(--cream); padding:7px 14px; border-radius:8px; text-decoration:none; }
 
   /* PC + 모바일 동시 미리보기 (PC 가변폭, 모바일 390px 고정 → vw 가 실제 폰 폭) */
   #frameWrap{ flex:1 1 auto; min-height:0; display:flex; background:#E8E6E2; }
@@ -29,7 +30,10 @@
 
 <header class="ws-top">
   <div><span class="logo">MAMORU</span><span class="sub">카탈로그 디자인 작업대</span></div>
-  <div class="hint">PC · 모바일 동시 미리보기 (스크롤 동기화)</div>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span class="hint">PC · 모바일 동시</span>
+    <a class="openlink" href="./editor.html" target="_blank" rel="noopener">✏️ 문구 편집기 열기 ↗</a>
+  </div>
 </header>
 
 <div id="frameWrap">

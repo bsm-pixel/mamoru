@@ -1,7 +1,7 @@
 {
   "card_type": "grade",
   "applies_to": ["blunt", "long", "thinning", "dry"],
-  "label_ko": "GRADE",
+  "label_ko": "MAMORU LINE UP",
   "label_subtitle_ko": "경력에 따른 추천 가격 & 레벨",
   "select_mode": "single",
   "_note": "S(시그니처)는 시그니처 제품 추가 시 복원 — 보류된 옵션은 아래 _parked 참고",

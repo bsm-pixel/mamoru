@@ -33,12 +33,20 @@
   .ed-fld textarea{ resize:vertical; line-height:1.6; }
   .ed-loading{ padding:50px 20px; text-align:center; color:var(--mute); font-size:13px; }
   .ed-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .ed-actions{ display:flex; align-items:center; gap:10px; }
+  .ed-unsaved{ font-size:11px; color:#ffd27a; font-weight:600; }
+  .ed-saveall{ border:0; background:var(--cream); color:var(--void); font-size:12px; font-weight:700; padding:7px 16px; border-radius:8px; cursor:pointer; font-family:inherit; }
+  .ed-banner{ padding:9px 18px; font-size:12px; font-weight:600; }
+  .ed-banner.warn{ background:#fff3cd; color:#8a6d00; border-bottom:1px solid #f0e0a0; }
+  .ed-banner.ok{ background:#e6f4ea; color:#256a35; border-bottom:1px solid #cfe8d6; }
 </style>
 </head>
 <body>
 <header class="ed-top">
-  <div><span class="logo">MAMORU</span><span class="sub">문구 편집기 — 저장 시 파일에 바로 반영</span></div>
+  <div style="display:flex;align-items:center;gap:12px;"><span class="logo">MAMORU</span><span class="sub">문구 편집기</span><a href="./workspace.html" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--void);background:var(--cream);padding:6px 12px;border-radius:8px;text-decoration:none;">작업대 ↗</a></div>
+  <div class="ed-actions"><span id="edUnsaved" class="ed-unsaved"></span><button id="edSaveAll" class="ed-saveall" type="button">전체 저장</button></div>
 </header>
+<div id="edBanner" class="ed-banner" style="display:none"></div>
 <main id="ed" class="ed-wrap"><div class="ed-loading">불러오는 중…</div></main>
 
 <script src="./catalog.js"></script>

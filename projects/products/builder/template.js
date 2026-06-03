@@ -145,9 +145,10 @@ function handleGroup(spec, catalog) {
     const nameCol = sel ? '#FAF9F7' : '#1A1A1A';
     const descCol = sel ? 'rgba(245,245,243,0.65)' : '#8A8580';
     const check = sel ? `<div style="position:absolute;top:clamp(8px,1.2vw,12px);right:clamp(10px,1.4vw,14px);font-size:clamp(11px,1.4vw,14px);color:#FAF9F7;font-weight:700;line-height:1;">✓</div>` : '';
-    return `<div style="flex:0 1 clamp(150px,47%,300px);${bg}border-radius:clamp(8px,1.2vw,12px);padding:clamp(12px,1.8vw,18px);position:relative;box-sizing:border-box;">${check}
+    return `<div style="min-width:0;${bg}border-radius:clamp(8px,1.2vw,12px);padding:clamp(12px,1.8vw,18px);position:relative;box-sizing:border-box;">${check}
       ${o.svg_inline ? handleBand(o.svg_inline, sel) : ''}
-      <div style="font-size:clamp(11px,1.4vw,14px);font-weight:700;color:${nameCol};text-align:center;line-height:1.3;margin-bottom:clamp(4px,0.6vw,6px);">${esc(o.name_ko)}</div>
+      <div style="font-size:clamp(11px,1.4vw,14px);font-weight:700;color:${nameCol};text-align:center;line-height:1.3;margin-bottom:${o.name_en ? '2px' : 'clamp(4px,0.6vw,6px)'};">${esc(o.name_ko)}</div>
+      ${o.name_en ? `<div style="font-family:'Outfit',sans-serif;font-size:clamp(8px,1vw,10px);font-weight:700;letter-spacing:0.12em;color:${sel ? 'rgba(245,245,243,0.45)' : '#B8B4AF'};text-align:center;line-height:1;margin-bottom:clamp(5px,0.8vw,8px);">${esc(o.name_en)}</div>` : ''}
       <div style="font-size:clamp(9px,1.1vw,11px);color:${descCol};text-align:center;line-height:1.4;">${esc(o.description_ko || '')}</div>
     </div>`;
   };
@@ -161,7 +162,8 @@ function handleGroup(spec, catalog) {
     const check = sel ? `<div style="position:absolute;top:clamp(5px,0.7vw,8px);right:clamp(8px,1vw,12px);font-size:clamp(9px,1.2vw,12px);color:#FAF9F7;font-weight:700;line-height:1;">✓</div>` : '';
     return `<div style="${bg}border-radius:clamp(8px,1.2vw,12px);padding:clamp(10px,1.4vw,16px);display:flex;align-items:center;gap:clamp(10px,1.4vw,14px);position:relative;">${check}${svg}
       <div style="flex:1;min-width:0;">
-        <div style="font-size:clamp(11px,1.3vw,13px);font-weight:700;color:${nameCol};line-height:1.2;margin-bottom:2px;">${esc(o.name_ko)}</div>
+        <div style="font-size:clamp(11px,1.3vw,13px);font-weight:700;color:${nameCol};line-height:1.2;">${esc(o.name_ko)}</div>
+        ${o.name_en ? `<div style="font-family:'Outfit',sans-serif;font-size:clamp(8px,1vw,10px);font-weight:700;letter-spacing:0.1em;color:${sel ? 'rgba(245,245,243,0.45)' : '#B8B4AF'};line-height:1;margin:1px 0 3px;">${esc(o.name_en)}</div>` : '<div style="height:3px"></div>'}
         <div style="font-size:clamp(9px,1.1vw,11px);color:${descCol};line-height:1.3;">${esc(o.description_ko || '')}</div>
       </div>
     </div>`;
@@ -175,11 +177,11 @@ function handleGroup(spec, catalog) {
       <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;">HANDLE</span>
     </div>
     ${grip ? `<div style="margin-bottom:clamp(16px,2vw,24px);">
-      <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);color:#8A8580;font-weight:700;letter-spacing:0.15em;margin-bottom:clamp(10px,1.3vw,14px);">GRIP TYPE <span style="font-family:'Plus Jakarta Sans','Noto Sans KR',sans-serif;font-weight:500;letter-spacing:0;color:#B8B4AF;">— 핸들의 형태</span></div>
-      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(8px,1.2vw,14px);">${gripCards}</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);color:#8A8580;font-weight:700;letter-spacing:0.15em;margin-bottom:clamp(10px,1.3vw,14px);">${esc(grip.label_ko || '')}${grip.label_subtitle_ko ? ` <span style="font-family:'Plus Jakarta Sans','Noto Sans KR',sans-serif;font-weight:500;letter-spacing:0;color:#B8B4AF;">— ${esc(grip.label_subtitle_ko)}</span>` : ''}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:clamp(8px,1.2vw,14px);">${gripCards}</div>
     </div>` : ''}
     ${camel ? `<div>
-      <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);color:#8A8580;font-weight:700;letter-spacing:0.15em;margin-bottom:clamp(8px,1vw,12px);">Camel & Flat</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);color:#8A8580;font-weight:700;letter-spacing:0.15em;margin-bottom:clamp(8px,1vw,12px);">${esc(camel.label_ko || '')}${camel.label_subtitle_ko ? ` <span style="font-family:'Plus Jakarta Sans','Noto Sans KR',sans-serif;font-weight:500;letter-spacing:0;color:#B8B4AF;">— ${esc(camel.label_subtitle_ko)}</span>` : ''}</div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(8px,1.2vw,14px);">${camelCards}</div>
     </div>` : ''}
   </div>`;
@@ -508,8 +510,8 @@ function renderDetailHTML(spec, catalog) {
 
   <!-- 12 Grade -->
   <div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">${eyebrow('12', 'GRADE')}
-    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(20px,3vw,32px) 0;">MAMORU LINE UP</h2>
-    <p style="font-size:clamp(13px,1.6vw,15px);color:#8A8580;line-height:1.7;margin:0 0 clamp(48px,6vw,72px) 0;font-style:italic;">— 경력에 따른 추천 가격 & 레벨</p>
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(20px,3vw,32px) 0;">${esc((catalog.byCardType['grade'] || {}).label_ko || 'MAMORU LINE UP')}</h2>
+    <p style="font-size:clamp(13px,1.6vw,15px);color:#8A8580;line-height:1.7;margin:0 0 clamp(48px,6vw,72px) 0;font-style:italic;">— ${esc((catalog.byCardType['grade'] || {}).label_subtitle_ko || '경력에 따른 추천 가격 & 레벨')}</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:clamp(12px,1.5vw,20px);">${gradeCards(spec, catalog)}</div>
   </div>
 

@@ -6,8 +6,8 @@
     "thinning",
     "dry"
   ],
-  "label_ko": "HANDLE GRIP",
-  "label_subtitle_ko": "그립 스타일",
+  "label_ko": "GRIP TYPE",
+  "label_subtitle_ko": "핸들의 형태",
   "select_mode": "single",
   "viewbox": "0 0 128 53.33",
   "svg_fill": "currentColor",

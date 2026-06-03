@@ -1,12 +1,17 @@
 /* ──────────────────────────────────────────────────────────────
    editor.js — 문구 편집기 (로컬 전용)
-   카탈로그 카드/카피풀의 '문구'(라벨·이름·설명·카피)만 입력칸으로 띄워
-   사장님이 직접 수정 → [저장] 누르면 preview.bat 서버가 해당 JSON 파일에 기록.
-   SVG(svg_inline) 등은 건드리지 않고 보존. 저장 후 작업대/빌더 자동 새로고침.
-   ⚠ preview.bat(로컬 서버)로 열었을 때만 저장 작동 (POST /__save).
+   카탈로그 카드/카피풀의 '문구'(라벨·이름·설명·카피)만 입력칸으로 띄워 직접 수정.
+   · 입력 즉시 localStorage 임시저장 → 새로고침/서버다운/파일수정과 무관하게 입력 보존(손실 방지).
+   · [저장] = 임시저장 내용을 실제 JSON 파일에 영구 기록(preview.bat 서버 필요).
+   · 작업대(workspace)와 BroadcastChannel 실시간 연동.
+   SVG 등은 보존(문구 칸만 노출).
    ────────────────────────────────────────────────────────────── */
 
-const FILES = {}; // _src -> 객체(원본 유지, 입력 시 갱신)
+const FILES = {};                       // _src -> 객체 (입력 시 갱신)
+const CH = (() => { try { return new BroadcastChannel('mamoru-catalog'); } catch (e) { return null; } })();
+const LS_KEY = 'mamoru-editor-edits-v1'; // 미저장 편집 임시저장
+let pending = {};                        // "src|path" -> value (아직 파일에 저장 안 된 편집)
+try { pending = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch (e) { pending = {}; }
 
 window.addEventListener('DOMContentLoaded', async () => {
   try {
@@ -17,12 +22,45 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   Catalog.cards.forEach(o => { FILES[o._src] = o; });
   Catalog.copy.forEach(o => { FILES[o._src] = o; });
+  applyPending();   // 임시저장된 편집 복원 (손실 방지)
   render();
+  bindActions();
+  updateUnsaved();
+  pingServer();     // 저장 서버 연결 확인 → 배너
 });
+
+function applyPending() {
+  Object.keys(pending).forEach(k => {
+    const i = k.indexOf('|'); const src = k.slice(0, i), path = k.slice(i + 1);
+    if (FILES[src]) { try { setByPath(FILES[src], path, pending[k]); } catch (e) {} }
+  });
+}
+function savePending() { try { localStorage.setItem(LS_KEY, JSON.stringify(pending)); } catch (e) {} }
+function updateUnsaved() {
+  const srcs = new Set(Object.keys(pending).map(k => k.split('|')[0]));
+  const el = document.getElementById('edUnsaved');
+  if (el) el.textContent = srcs.size ? ('● 미저장 ' + srcs.size + '개 (자동 임시저장됨)') : '';
+}
+function banner(msg, cls) {
+  const el = document.getElementById('edBanner');
+  if (!el) return;
+  el.textContent = msg; el.className = 'ed-banner ' + (cls || ''); el.style.display = msg ? '' : 'none';
+}
+
+/* 저장 서버(preview.bat 새 버전) 연결 확인 */
+async function pingServer() {
+  try {
+    const r = await fetch('/__save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"file":"__ping__","content":"{}"}' });
+    if (r.status === 403) banner('저장 준비됨 — [저장]/[전체 저장] 으로 파일에 기록됩니다.', 'ok');
+    else if (r.status === 404) banner('⚠ 저장 서버 미연결 — preview.bat(검은 창) 닫았다 다시 켜야 [저장]이 됩니다. (입력은 자동 임시저장 중이라 안 날아갑니다)', 'warn');
+    else banner('', '');
+  } catch (e) {
+    banner('⚠ 로컬 서버 미연결 — preview.bat 로 열어야 저장됩니다. (입력은 자동 임시저장 중)', 'warn');
+  }
+}
 
 function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
 
-/* 입력 필드 — data-src(파일) + data-path(필드 경로) */
 function fld(label, src, p, val, multiline) {
   const a = 'data-src="' + esc(src) + '" data-path="' + esc(p) + '"';
   const ctl = multiline
@@ -30,27 +68,20 @@ function fld(label, src, p, val, multiline) {
     : '<input type="text" ' + a + ' value="' + esc(val) + '">';
   return '<label class="ed-fld"><span>' + esc(label) + '</span>' + ctl + '</label>';
 }
-
 function fileBlock(src, name, bodyHtml) {
-  return '<div class="ed-file">'
-    + '<div class="ed-file__bar">'
+  return '<div class="ed-file"><div class="ed-file__bar">'
     + '<span class="ed-file__name">' + esc(name) + '</span>'
     + '<span class="ed-file__path">catalog/' + esc(src) + '</span>'
     + '<button class="ed-save" data-save="' + esc(src) + '">저장</button>'
     + '<span class="ed-status" data-status="' + esc(src) + '"></span>'
-    + '</div>'
-    + '<div class="ed-body">' + bodyHtml + '</div>'
-    + '</div>';
+    + '</div><div class="ed-body">' + bodyHtml + '</div></div>';
 }
-
 function cardForm(c) {
   const src = c._src;
   let b = fld('카드 라벨 (label_ko)', src, 'label_ko', c.label_ko || '');
-  if ('label_subtitle_ko' in c || c.label_subtitle_ko !== undefined)
-    b += fld('카드 부제 (label_subtitle_ko)', src, 'label_subtitle_ko', c.label_subtitle_ko || '');
+  if (c.label_subtitle_ko !== undefined) b += fld('카드 부제 (label_subtitle_ko)', src, 'label_subtitle_ko', c.label_subtitle_ko || '');
   (c.options || []).forEach((o, i) => {
-    b += '<div class="ed-opt"><span class="ed-opt__id">' + esc(o.id) + '</span>'
-      + '<div class="ed-grid2">'
+    b += '<div class="ed-opt"><span class="ed-opt__id">' + esc(o.id) + '</span><div class="ed-grid2">'
       + fld('이름 (name_ko)', src, 'options.' + i + '.name_ko', o.name_ko || '')
       + fld('영문 (name_en)', src, 'options.' + i + '.name_en', o.name_en || '')
       + '</div>'
@@ -59,38 +90,54 @@ function cardForm(c) {
   });
   return fileBlock(src, c.card_type, b);
 }
-
 function copyForm(c) {
   const src = c._src;
-  let b = fld('풀 라벨 (label_ko)', src, 'label_ko', c.label_ko || '');
+  let b = fld('풀 이름 (빌더 UI용 · 페이지 미표시)', src, 'label_ko', c.label_ko || '');
   (c.options || []).forEach((o, i) => {
     b += '<div class="ed-opt"><span class="ed-opt__id">' + esc(o.id) + '</span>'
-      + fld('카피 (text)', src, 'options.' + i + '.text', o.text || '', true)
-      + ('tone' in o ? fld('톤 (tone)', src, 'options.' + i + '.tone', o.tone || '') : '')
+      + fld('카피 (실제 표시 문구)', src, 'options.' + i + '.text', o.text || '', true)
+      + ('tone' in o ? fld('톤 (내부 힌트 · 페이지 미표시)', src, 'options.' + i + '.tone', o.tone || '') : '')
       + '</div>';
   });
   return fileBlock(src, c.copy_type, b);
 }
 
+const COMMON_CARDS = ['handle_grip', 'handle_camel', 'grade'];
+const TYPE_CARDS = ['blade_edge', 'blade_design', 'thinning_teeth', 'thinning_holes', 'thinning_reduction', 'dry_cutting_style'];
+
 function render() {
   const ed = document.getElementById('ed');
-  let h = '<div class="ed-h2">카드 (cards)</div>';
-  Catalog.cards.forEach(c => { h += cardForm(c); });
-  h += '<div class="ed-h2">문구 풀 (copy_pool)</div>';
+  const byType = ct => Catalog.byCardType[ct];
+  let h = '';
+  h += '<div class="ed-h2">① 공통 카드 (전 종류 공용)</div>';
+  COMMON_CARDS.forEach(ct => { const c = byType(ct); if (c) h += cardForm(c); });
+  h += '<div class="ed-h2">② 가위 종류별 특징 카드</div>';
+  TYPE_CARDS.forEach(ct => { const c = byType(ct); if (c) h += cardForm(c); });
+  const shown = new Set([...COMMON_CARDS, ...TYPE_CARDS]);
+  const rest = Catalog.cards.filter(c => !shown.has(c.card_type));
+  if (rest.length) { h += '<div class="ed-h2">기타 카드</div>'; rest.forEach(c => { h += cardForm(c); }); }
+  h += '<div class="ed-h2">③ 섹션 문구 풀</div>';
   Catalog.copy.forEach(c => { h += copyForm(c); });
   ed.innerHTML = h;
 
-  // 입력 → 메모리 객체 갱신
   ed.addEventListener('input', e => {
     const t = e.target;
     if (!t.dataset || !t.dataset.path) return;
     setByPath(FILES[t.dataset.src], t.dataset.path, t.value);
+    pending[t.dataset.src + '|' + t.dataset.path] = t.value; // 즉시 임시저장
+    savePending();
+    updateUnsaved();
+    if (CH) CH.postMessage({ src: t.dataset.src, path: t.dataset.path, value: t.value });
   });
-  // 저장
   ed.addEventListener('click', e => {
     const btn = e.target.closest('[data-save]');
     if (btn) saveFile(btn.dataset.save);
   });
+}
+
+function bindActions() {
+  const all = document.getElementById('edSaveAll');
+  if (all) all.addEventListener('click', saveAll);
 }
 
 function setByPath(obj, pathStr, val) {
@@ -99,7 +146,6 @@ function setByPath(obj, pathStr, val) {
   for (let i = 0; i < keys.length - 1; i++) cur = cur[keys[i]];
   cur[keys[keys.length - 1]] = val;
 }
-
 function status(src, msg, cls) {
   const el = document.querySelector('[data-status="' + CSS.escape(src) + '"]');
   if (el) { el.textContent = msg; el.className = 'ed-status ' + (cls || ''); }
@@ -108,7 +154,7 @@ function status(src, msg, cls) {
 async function saveFile(src) {
   const obj = FILES[src];
   const clean = JSON.parse(JSON.stringify(obj));
-  delete clean._src; // 로더가 붙인 필드 제거
+  delete clean._src;
   const content = JSON.stringify(clean, null, 2) + '\n';
   status(src, '저장 중…', '');
   try {
@@ -116,10 +162,26 @@ async function saveFile(src) {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ file: 'projects/products/catalog/' + src, content }),
     });
-    const d = await res.json();
-    if (res.ok && d.ok) status(src, '✓ 저장됨 (작업대 자동 새로고침)', 'ok');
+    let d = {}; try { d = await res.json(); } catch (_) {}
+    if (res.ok && d.ok) {
+      Object.keys(pending).forEach(k => { if (k.indexOf(src + '|') === 0) delete pending[k]; });
+      savePending(); updateUnsaved();
+      status(src, '✓ 저장됨', 'ok');
+      return true;
+    }
+    if (res.status === 404) status(src, 'preview.bat 재시작 필요 (임시저장은 유지됨)', 'err');
     else status(src, '실패: ' + (d.error || res.status), 'err');
   } catch (e) {
-    status(src, '서버 연결 실패 — preview.bat 로 열었는지 확인', 'err');
+    status(src, '서버 미연결 (임시저장은 유지됨)', 'err');
   }
+  return false;
+}
+
+async function saveAll() {
+  const srcs = [...new Set(Object.keys(pending).map(k => k.split('|')[0]))];
+  if (!srcs.length) { banner('저장할 변경이 없습니다.', 'ok'); return; }
+  let ok = 0;
+  for (const src of srcs) { if (await saveFile(src)) ok++; }
+  if (ok === srcs.length) banner('✓ 전체 저장 완료 (' + ok + '개 파일)', 'ok');
+  else banner('일부 저장 실패 — preview.bat 재시작 후 다시. (입력은 임시저장돼 안 날아감)', 'warn');
 }
