@@ -162,11 +162,11 @@ function handleGroup(spec, catalog) {
     </div>
     ${grip ? `<div style="margin-bottom:clamp(16px,2vw,24px);">
       <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);color:#8A8580;font-weight:700;letter-spacing:0.15em;margin-bottom:clamp(10px,1.3vw,14px);">Grip Style</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(6px,1vw,12px);">${gripCards}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(8px,1.2vw,14px);">${gripCards}</div>
     </div>` : ''}
     ${camel ? `<div>
       <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);color:#8A8580;font-weight:700;letter-spacing:0.15em;margin-bottom:clamp(8px,1vw,12px);">Camel & Plat</div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(6px,1vw,12px);">${camelCards}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:clamp(8px,1.2vw,14px);">${camelCards}</div>
     </div>` : ''}
   </div>`;
 }
