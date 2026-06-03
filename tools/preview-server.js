@@ -36,6 +36,26 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // 편집기 저장 (로컬 전용) — projects/products/catalog 안 파일만 허용 + JSON 유효성 검사
+  if (req.method === 'POST' && url === '/__save') {
+    let body = '';
+    req.on('data', c => { body += c; if (body.length > 5e6) req.destroy(); });
+    req.on('end', () => {
+      try {
+        const { file, content } = JSON.parse(body);
+        const full = path.normalize(path.join(ROOT, file));
+        const allowed = path.join(ROOT, 'projects', 'products', 'catalog');
+        if (!full.startsWith(allowed)) { res.writeHead(403); res.end('{"error":"허용 경로 아님"}'); return; }
+        JSON.parse(content); // 깨진 JSON 이면 throw → 저장 안 함
+        fs.writeFileSync(full, content);
+        res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('{"ok":true}');
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: String(e.message) }));
+      }
+    });
+    return;
+  }
+
   let f = path.join(ROOT, url);
   if (url.endsWith('/') || !path.extname(f)) f = path.join(f, 'index.html');
 

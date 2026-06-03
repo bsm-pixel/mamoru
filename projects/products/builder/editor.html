@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow"><!-- 내부 도구 -->
+<title>MAMORU 문구 편집기</title>
+<style>
+  :root{ --void:#1A1A1A; --mute:#8A8580; --line:#EDEBE8; --cream:#FAF9F7; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{ font-family:'Plus Jakarta Sans','Noto Sans KR',sans-serif; background:#F2F0EC; color:var(--void); -webkit-font-smoothing:antialiased; }
+  .ed-top{ position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; background:var(--void); color:var(--cream); padding:0 18px; height:50px; }
+  .ed-top .logo{ font-family:'Outfit',sans-serif; font-weight:900; font-size:15px; }
+  .ed-top .sub{ font-size:12px; color:rgba(245,245,243,.55); margin-left:8px; }
+  .ed-wrap{ max-width:720px; margin:0 auto; padding:20px 16px 120px; }
+  .ed-h2{ font-family:'Outfit',sans-serif; font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--void); margin:26px 2px 10px; padding-bottom:6px; border-bottom:2px solid var(--void); }
+  .ed-file{ background:#fff; border:1px solid var(--line); border-radius:12px; margin-bottom:16px; overflow:hidden; }
+  .ed-file__bar{ display:flex; align-items:center; gap:10px; padding:11px 14px; background:#fbfaf9; border-bottom:1px solid var(--line); }
+  .ed-file__name{ font-family:'Outfit',sans-serif; font-size:12px; font-weight:800; }
+  .ed-file__path{ font-size:10px; color:#a8a49e; }
+  .ed-save{ margin-left:auto; border:0; background:var(--void); color:var(--cream); font-size:12px; font-weight:700; padding:7px 16px; border-radius:8px; cursor:pointer; font-family:inherit; }
+  .ed-save:active{ transform:scale(.97); }
+  .ed-status{ font-size:11px; font-weight:600; }
+  .ed-status.ok{ color:#2e7d32; } .ed-status.err{ color:#c62828; }
+  .ed-body{ padding:12px 14px; }
+  .ed-opt{ border-top:1px dashed var(--line); padding:12px 0; }
+  .ed-opt:first-of-type{ border-top:0; padding-top:4px; }
+  .ed-opt__id{ display:inline-block; font-family:'Outfit',sans-serif; font-size:11px; font-weight:800; background:var(--void); color:var(--cream); border-radius:5px; padding:2px 8px; margin-bottom:8px; }
+  .ed-fld{ display:block; margin-bottom:9px; }
+  .ed-fld span{ display:block; font-size:11px; color:var(--mute); font-weight:600; margin-bottom:4px; }
+  .ed-fld input, .ed-fld textarea{ width:100%; font-family:inherit; font-size:13px; color:var(--void); background:#fff; border:1px solid var(--line); border-radius:8px; padding:8px 10px; outline:none; }
+  .ed-fld input:focus, .ed-fld textarea:focus{ border-color:var(--void); }
+  .ed-fld textarea{ resize:vertical; line-height:1.6; }
+  .ed-loading{ padding:50px 20px; text-align:center; color:var(--mute); font-size:13px; }
+  .ed-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+</style>
+</head>
+<body>
+<header class="ed-top">
+  <div><span class="logo">MAMORU</span><span class="sub">문구 편집기 — 저장 시 파일에 바로 반영</span></div>
+</header>
+<main id="ed" class="ed-wrap"><div class="ed-loading">불러오는 중…</div></main>
+
+<script src="./catalog.js"></script>
+<script src="./editor.js"></script>
+</body>
+</html>
