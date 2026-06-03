@@ -295,6 +295,12 @@ input[readonly] {
   background: #E8E6DC;  /* readonly 배경 */
   cursor: pointer;
 }
+/* 상세주소: 주소검색 전 비활성 (검색 후 활성) */
+#address2:disabled {
+  background: #E8E6DC;
+  color: #9A958C;
+  cursor: not-allowed;
+}
 
 textarea {
   height: auto;
@@ -1800,7 +1806,7 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
             <input id="address1" type="text" placeholder="주소" readonly>
             <button type="button" class="btn-search" id="btn-post">주소검색</button>
           </div>
-          <input id="address2" type="text" placeholder="상세주소" autocomplete="address-line2" style="margin-top:8px">
+          <input id="address2" type="text" placeholder="주소검색 후 입력 가능" autocomplete="address-line2" disabled style="margin-top:8px">
           <!-- 기존 로직과 호환을 위해 숨김 필드를 추가 -->
           <input type="hidden" id="addrPlaceId">
           <input type="hidden" id="addrLat">
@@ -2939,6 +2945,7 @@ if (isLoadingDates) return;
         $('postcode').value = d.zonecode || '';
         var roadAddr = d.roadAddress || d.jibunAddress || '';
         $('address1').value = roadAddr;
+        $('address2').disabled = false;  // 주소검색 완료 → 상세주소 입력 활성화
         $('address2').focus();
         // PlaceId 초기화
         var pIdEl = $('addrPlaceId');
@@ -3134,6 +3141,7 @@ if (isLoadingDates) return;
     $('postcode').value = '';
     $('address1').value = '';
     $('address2').value = '';
+    $('address2').disabled = true;  // 다시 주소검색부터 하도록 비활성
     state.prefDays = [];
     state.prefTimes = [];
     document.querySelectorAll('.day-chip.active, .time-pref-btn.active').forEach(el => el.classList.remove('active'));
