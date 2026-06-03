@@ -4,35 +4,38 @@
   "label_ko": "GRADE",
   "label_subtitle_ko": "경력에 따른 추천 가격 & 레벨",
   "select_mode": "single",
+  "_note": "S(시그니처)는 시그니처 제품 추가 시 복원 — 보류된 옵션은 아래 _parked 참고",
   "options": [
     {
       "id": "R",
       "name_ko": "리그(REGULAR)",
       "name_en": "REGULAR",
-      "description_ko": "가벼운 시작, 가벼운 주머니",
+      "description_ko": "부담 없는 시작, 가장 단단한 기본기",
       "tier_order": 1
     },
     {
       "id": "A",
       "name_ko": "에이스(ACE)",
       "name_en": "ACE",
-      "description_ko": "메인 가위로 정착 단계",
-      "subtext_ko": "메인 가위로 오래 사용 가능한 극강의 밸런스",
+      "description_ko": "단 하나의, 나만의 메인 가위",
       "tier_order": 2
     },
     {
       "id": "E",
       "name_ko": "엘리트(ELITE)",
       "name_en": "ELITE",
-      "description_ko": "전문가 / 고급 정밀",
+      "description_ko": "더 높은 가치를 증명하다",
       "tier_order": 3
-    },
+    }
+  ],
+  "_parked": [
     {
       "id": "S",
       "name_ko": "시그니처(SIGNATURE)",
       "name_en": "SIGNATURE",
       "description_ko": "마스터 / 특수 작업",
-      "tier_order": 4
+      "tier_order": 4,
+      "_reason": "시그니처 제품 추가 시 options 로 복원"
     }
   ]
 }
