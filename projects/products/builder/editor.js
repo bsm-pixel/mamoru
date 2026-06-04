@@ -103,7 +103,7 @@ function copyForm(c) {
 }
 
 const COMMON_CARDS = ['handle_grip', 'handle_camel', 'grade'];
-const TYPE_CARDS = ['blade_edge', 'blade_design', 'thinning_teeth', 'thinning_holes', 'thinning_reduction', 'dry_cutting_style'];
+const TYPE_CARDS = ['blade_edge', 'blade_edge_long', 'blade_edge_dry', 'blade_design', 'thinning_teeth', 'thinning_holes', 'thinning_reduction', 'dry_cutting_style'];
 
 function render() {
   const ed = document.getElementById('ed');

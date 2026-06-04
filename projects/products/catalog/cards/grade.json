@@ -1,6 +1,11 @@
 {
   "card_type": "grade",
-  "applies_to": ["blunt", "long", "thinning", "dry"],
+  "applies_to": [
+    "blunt",
+    "long",
+    "thinning",
+    "dry"
+  ],
   "label_ko": "MAMORU LINE UP",
   "label_subtitle_ko": "경력에 따른 추천 가격 & 레벨",
   "select_mode": "single",
@@ -10,7 +15,7 @@
       "id": "R",
       "name_ko": "리그(REGULAR)",
       "name_en": "REGULAR",
-      "description_ko": "부담 없는 시작, 가장 단단한 기본기",
+      "description_ko": "부담 없는 시작, 단단한 기본기",
       "tier_order": 1
     },
     {

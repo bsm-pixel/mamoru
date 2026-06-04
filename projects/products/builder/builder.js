@@ -147,7 +147,10 @@ function cardSelector(card) {
 
 /* 선택값 → spec_meta 라벨 자동 채움 (사용자가 직접 수정 안 했을 때만 덮어씀) */
 function autoFillMeta() {
-  const edge = Catalog.cardOption('blade_edge', spec.selections.blade_edge);
+  // 날 선 카드는 종류별(blade_edge / _long / _dry) — 이 모델 종류에 맞는 것에서 선택값 조회
+  const edgeCt = ['blade_edge', 'blade_edge_long', 'blade_edge_dry']
+    .find(ct => { const c = Catalog.byCardType[ct]; return c && (c.applies_to || []).includes(spec.type); });
+  const edge = edgeCt ? Catalog.cardOption(edgeCt, spec.selections[edgeCt]) : null;
   const design = Catalog.cardOption('blade_design', spec.selections.blade_design);
   const grip = Catalog.cardOption('handle_grip', spec.selections.handle_grip);
   const camel = Catalog.cardOption('handle_camel', spec.selections.handle_camel);

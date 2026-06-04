@@ -8,6 +8,8 @@
 
 const IMG_HOST = 'https://page.mamoru.kr';
 const TYPE_LABEL = { blunt: 'Blunt', thinning: 'Thinning', long: 'Long', dry: 'Dry' };
+// 작업대 '정보 보기(중립)' 모드: true 면 모든 옵션을 또렷하게(선택 강조/흐림 없이) 렌더. 실제 페이지/빌더는 false.
+var NEUTRAL = false;
 
 function esc(s) {
   return String(s == null ? '' : s)
@@ -57,17 +59,18 @@ function eyebrow(num, title, dark) {
 /* ─── 카드 1장 (BLADE EDGE/DESIGN/text 변형) ───
    variant: 'edge'(svg 100%) | 'design'(svg 65% center) | 'text'(svg 없음) */
 function optionCard(opt, selected, variant) {
-  const bg = selected ? 'background:#1A1A1A;color:#FAF9F7;' : 'background:#FFFFFF;border:1px solid #EDEBE8;';
-  const letterCol = selected ? '#FAF9F7' : '#8A8580';
-  const nameCol = selected ? '#FAF9F7' : '#8A8580';
-  const enCol = selected ? 'rgba(245,245,243,0.45)' : '#B8B4AF';
-  const divCol = selected ? 'rgba(245,245,243,0.15)' : '#EDEBE8';
-  const descCol = selected ? 'rgba(245,245,243,0.75)' : '#B8B4AF';
-  const check = selected ? `<span style="font-size:clamp(14px,2vw,20px);color:#FAF9F7;font-weight:700;line-height:1;flex-shrink:0;">✓</span>` : '';
+  const dark = selected && !NEUTRAL; // 다크 강조는 선택+비중립일 때만
+  const bg = dark ? 'background:#1A1A1A;color:#FAF9F7;' : 'background:#FFFFFF;border:1px solid #EDEBE8;';
+  const letterCol = dark ? '#FAF9F7' : (NEUTRAL ? '#1A1A1A' : '#8A8580');
+  const nameCol = dark ? '#FAF9F7' : (NEUTRAL ? '#1A1A1A' : '#8A8580');
+  const enCol = dark ? 'rgba(245,245,243,0.45)' : (NEUTRAL ? '#8A8580' : '#B8B4AF');
+  const divCol = dark ? 'rgba(245,245,243,0.15)' : '#EDEBE8';
+  const descCol = dark ? 'rgba(245,245,243,0.75)' : (NEUTRAL ? '#2D2D2D' : '#B8B4AF');
+  const check = dark ? `<span style="font-size:clamp(14px,2vw,20px);color:#FAF9F7;font-weight:700;line-height:1;flex-shrink:0;">✓</span>` : '';
 
   let svg = '';
   if (variant !== 'text' && opt.svg_inline) {
-    const op = selected ? '' : 'opacity:0.35;';
+    const op = (dark || NEUTRAL) ? '' : 'opacity:0.35;';
     const w = variant === 'design' ? 'width:65%;margin:0 auto clamp(16px,2.5vw,28px);' : 'width:100%;margin-bottom:clamp(16px,2.5vw,28px);';
     // svg_inline 에 인라인 스타일 주입 (currentColor 사용 전제)
     svg = injectSvgStyle(opt.svg_inline, `${w}height:auto;display:block;${op}`);
@@ -77,7 +80,7 @@ function optionCard(opt, selected, variant) {
     ? `<span style="font-family:'Outfit',sans-serif;font-size:clamp(9px,1.2vw,12px);font-weight:700;color:${enCol};letter-spacing:0.15em;line-height:1;">${esc(opt.name_en)}</span>`
     : '';
 
-  const head = selected
+  const head = dark
     ? `<div style="display:flex;justify-content:space-between;align-items:center;gap:clamp(6px,1vw,10px);margin-bottom:clamp(10px,1.5vw,16px);">
          <div style="display:flex;align-items:center;gap:clamp(10px,1.4vw,14px);min-width:0;">
            <span style="font-family:'Outfit',sans-serif;font-size:clamp(28px,5.5vw,64px);font-weight:900;color:${letterCol};line-height:0.9;letter-spacing:-0.02em;flex-shrink:0;">${esc(opt.id)}</span>
@@ -135,35 +138,40 @@ function handleGroup(spec, catalog) {
 
   // 가로 SVG 영역(핸들 이미지) — grip/camel 공통. 카드색(currentColor) 따라 핸들 라인색 자동
   const handleBand = (svgInline, sel) => {
-    const bandBg = sel ? 'rgba(245,245,243,0.07)' : '#F5F3F0';
-    const op = sel ? '' : 'opacity:0.4;';
+    const dark = sel && !NEUTRAL;
+    const bandBg = dark ? 'rgba(245,245,243,0.07)' : '#F5F3F0';
+    const op = (dark || NEUTRAL) ? '' : 'opacity:0.4;';
     return `<div style="background:${bandBg};border-radius:clamp(6px,1vw,10px);padding:clamp(8px,1.4vw,12px) clamp(10px,1.6vw,14px);margin-bottom:clamp(10px,1.4vw,14px);">${injectSvgStyle(svgInline, `width:100%;height:auto;display:block;${op}`)}</div>`;
   };
   // 그립 카드 = 가로 SVG 영역(밴드) + 이름 + 설명. flex 2열(+3번째 중앙) — flex-basis 47%
   const gripCard = (o, sel) => {
-    const bg = sel ? 'background:#1A1A1A;color:#FAF9F7;' : 'background:#FFFFFF;border:1px solid #EDEBE8;';
-    const nameCol = sel ? '#FAF9F7' : '#1A1A1A';
-    const descCol = sel ? 'rgba(245,245,243,0.65)' : '#8A8580';
-    const check = sel ? `<div style="position:absolute;top:clamp(8px,1.2vw,12px);right:clamp(10px,1.4vw,14px);font-size:clamp(11px,1.4vw,14px);color:#FAF9F7;font-weight:700;line-height:1;">✓</div>` : '';
+    const dark = sel && !NEUTRAL;
+    const bg = dark ? 'background:#1A1A1A;color:#FAF9F7;' : 'background:#FFFFFF;border:1px solid #EDEBE8;';
+    const nameCol = dark ? '#FAF9F7' : '#1A1A1A';
+    const descCol = dark ? 'rgba(245,245,243,0.65)' : (NEUTRAL ? '#2D2D2D' : '#8A8580');
+    const enCol = dark ? 'rgba(245,245,243,0.45)' : (NEUTRAL ? '#8A8580' : '#B8B4AF');
+    const check = dark ? `<div style="position:absolute;top:clamp(8px,1.2vw,12px);right:clamp(10px,1.4vw,14px);font-size:clamp(11px,1.4vw,14px);color:#FAF9F7;font-weight:700;line-height:1;">✓</div>` : '';
     return `<div style="min-width:0;${bg}border-radius:clamp(8px,1.2vw,12px);padding:clamp(12px,1.8vw,18px);position:relative;box-sizing:border-box;">${check}
       ${o.svg_inline ? handleBand(o.svg_inline, sel) : ''}
       <div style="font-size:clamp(11px,1.4vw,14px);font-weight:700;color:${nameCol};text-align:center;line-height:1.3;margin-bottom:${o.name_en ? '2px' : 'clamp(4px,0.6vw,6px)'};">${esc(o.name_ko)}</div>
-      ${o.name_en ? `<div style="font-family:'Outfit',sans-serif;font-size:clamp(8px,1vw,10px);font-weight:700;letter-spacing:0.12em;color:${sel ? 'rgba(245,245,243,0.45)' : '#B8B4AF'};text-align:center;line-height:1;margin-bottom:clamp(5px,0.8vw,8px);">${esc(o.name_en)}</div>` : ''}
+      ${o.name_en ? `<div style="font-family:'Outfit',sans-serif;font-size:clamp(8px,1vw,10px);font-weight:700;letter-spacing:0.12em;color:${enCol};text-align:center;line-height:1;margin-bottom:clamp(5px,0.8vw,8px);">${esc(o.name_en)}</div>` : ''}
       <div style="font-size:clamp(9px,1.1vw,11px);color:${descCol};text-align:center;line-height:1.4;">${esc(o.description_ko || '')}</div>
     </div>`;
   };
 
   // 카멜/플랫 = 아이콘 + 글씨 같은 행 (가로 컴팩트, 2차 정보 — 절제). 2열 고정
   const camelCard = (o, sel) => {
-    const bg = sel ? 'background:#1A1A1A;color:#FAF9F7;' : 'background:#FFFFFF;border:1px solid #EDEBE8;';
-    const nameCol = sel ? '#FAF9F7' : '#1A1A1A';
-    const descCol = sel ? 'rgba(245,245,243,0.6)' : '#8A8580';
-    const svg = o.svg_inline ? injectSvgStyle(o.svg_inline, `width:min(clamp(40px,9vw,116px),42%);height:auto;flex-shrink:0;display:block;${sel ? '' : 'opacity:0.4;'}`) : '';
-    const check = sel ? `<div style="position:absolute;top:clamp(5px,0.7vw,8px);right:clamp(8px,1vw,12px);font-size:clamp(9px,1.2vw,12px);color:#FAF9F7;font-weight:700;line-height:1;">✓</div>` : '';
+    const dark = sel && !NEUTRAL;
+    const bg = dark ? 'background:#1A1A1A;color:#FAF9F7;' : 'background:#FFFFFF;border:1px solid #EDEBE8;';
+    const nameCol = dark ? '#FAF9F7' : '#1A1A1A';
+    const descCol = dark ? 'rgba(245,245,243,0.6)' : (NEUTRAL ? '#2D2D2D' : '#8A8580');
+    const enCol = dark ? 'rgba(245,245,243,0.45)' : (NEUTRAL ? '#8A8580' : '#B8B4AF');
+    const svg = o.svg_inline ? injectSvgStyle(o.svg_inline, `width:min(clamp(40px,9vw,116px),42%);height:auto;flex-shrink:0;display:block;${(dark || NEUTRAL) ? '' : 'opacity:0.4;'}`) : '';
+    const check = dark ? `<div style="position:absolute;top:clamp(5px,0.7vw,8px);right:clamp(8px,1vw,12px);font-size:clamp(9px,1.2vw,12px);color:#FAF9F7;font-weight:700;line-height:1;">✓</div>` : '';
     return `<div style="${bg}border-radius:clamp(8px,1.2vw,12px);padding:clamp(10px,1.4vw,16px);display:flex;align-items:center;gap:clamp(10px,1.4vw,14px);position:relative;">${check}${svg}
       <div style="flex:1;min-width:0;">
         <div style="font-size:clamp(11px,1.3vw,13px);font-weight:700;color:${nameCol};line-height:1.2;">${esc(o.name_ko)}</div>
-        ${o.name_en ? `<div style="font-family:'Outfit',sans-serif;font-size:clamp(8px,1vw,10px);font-weight:700;letter-spacing:0.1em;color:${sel ? 'rgba(245,245,243,0.45)' : '#B8B4AF'};line-height:1;margin:1px 0 3px;">${esc(o.name_en)}</div>` : '<div style="height:3px"></div>'}
+        ${o.name_en ? `<div style="font-family:'Outfit',sans-serif;font-size:clamp(8px,1vw,10px);font-weight:700;letter-spacing:0.1em;color:${enCol};line-height:1;margin:1px 0 3px;">${esc(o.name_en)}</div>` : '<div style="height:3px"></div>'}
         <div style="font-size:clamp(9px,1.1vw,11px);color:${descCol};line-height:1.3;">${esc(o.description_ko || '')}</div>
       </div>
     </div>`;
@@ -280,13 +288,21 @@ function gradeCards(spec, catalog) {
   const grade = catalog.byCardType['grade'];
   if (!grade) return '';
   return (grade.options || []).map(o => {
-    const sel = o.id === spec.price_grade;
-    if (sel) {
+    const dark = (o.id === spec.price_grade) && !NEUTRAL;
+    if (dark) {
       return `<div style="background:#1A1A1A;color:#FAF9F7;border-radius:clamp(8px,1.5vw,12px);padding:clamp(24px,3vw,32px);position:relative;">
         <div style="position:absolute;top:clamp(14px,2vw,20px);right:clamp(16px,2.2vw,22px);font-size:clamp(13px,1.7vw,16px);color:#FAF9F7;font-weight:700;line-height:1;">✓</div>
         <div style="font-family:'Outfit',sans-serif;font-size:clamp(36px,5vw,52px);font-weight:900;color:#FAF9F7;line-height:1;margin-bottom:clamp(8px,1vw,12px);">${esc(o.id)}</div>
         <div style="font-size:clamp(11px,1.4vw,13px);font-weight:700;color:rgba(245,245,243,0.55);letter-spacing:0.15em;margin-bottom:clamp(12px,1.5vw,16px);">${esc(o.name_en || '')}</div>
         <p style="font-size:clamp(13px,1.6vw,15px);color:rgba(245,245,243,0.85);line-height:1.7;margin:0;">${esc(o.description_ko || '')}</p>
+      </div>`;
+    }
+    // 중립(정보) 보기 = 모든 등급 또렷 풀카드 (글자+영문+설명, ✓ 없음)
+    if (NEUTRAL) {
+      return `<div style="background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.5vw,12px);padding:clamp(24px,3vw,32px);">
+        <div style="font-family:'Outfit',sans-serif;font-size:clamp(36px,5vw,52px);font-weight:900;color:#1A1A1A;line-height:1;margin-bottom:clamp(8px,1vw,12px);">${esc(o.id)}</div>
+        <div style="font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.15em;margin-bottom:clamp(12px,1.5vw,16px);">${esc(o.name_en || '')}</div>
+        <p style="font-size:clamp(13px,1.6vw,15px);color:#2D2D2D;line-height:1.7;margin:0;">${esc(o.description_ko || '')}</p>
       </div>`;
     }
     // 미선택 등급 = 컴팩트 (글자 + 영문 라벨만, 설명 생략) — 모델 등급만 강조, 여백 유지
@@ -397,11 +413,14 @@ function renderDetailHTML(spec, catalog) {
   const missItems = resolveCopy(spec, catalog, 'for_you_miss') || [];
 
   // PROFILE 카드 그룹 (종류 분기 — 적용되는 카드만)
-  const edge = catalog.byCardType['blade_edge'];
   const design = catalog.byCardType['blade_design'];
   let profileCards = '';
-  if (edge && (edge.applies_to || []).includes(type))
-    profileCards += cardGroup(edge, spec.selections?.blade_edge, 'edge');
+  // 날 선(edge) — 종류별 카드(블런트/장가위/슬라이싱) 중 이 종류에 맞는 것만
+  for (const ct of ['blade_edge', 'blade_edge_long', 'blade_edge_dry']) {
+    const c = catalog.byCardType[ct];
+    if (c && (c.applies_to || []).includes(type))
+      profileCards += cardGroup(c, spec.selections?.[ct], 'edge');
+  }
   if (design && (design.applies_to || []).includes(type))
     profileCards += cardGroup(design, spec.selections?.blade_design, 'design');
   // 틴닝/드라이 전용 텍스트 카드

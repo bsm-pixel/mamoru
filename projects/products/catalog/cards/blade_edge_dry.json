@@ -1,0 +1,35 @@
+{
+  "card_type": "blade_edge_dry",
+  "applies_to": [
+    "dry"
+  ],
+  "label_ko": "BLADE EDGE",
+  "label_subtitle_ko": "DRY 분류 날 형태",
+  "select_mode": "single",
+  "viewbox": "0 0 21.65 10",
+  "svg_stroke_width": "0.75",
+  "_note": "슬라이싱(드라이)용 — 표기 ST/SD/SO. 설명·SVG 는 사장님이 편집기/파일로 채움",
+  "options": [
+    {
+      "id": "ST",
+      "name_ko": "스트록",
+      "name_en": "STROKE",
+      "svg_inline": "",
+      "description_ko": "정날 동날이 모두 살아있는 형태"
+    },
+    {
+      "id": "SD",
+      "name_ko": "정통",
+      "name_en": "SLIDE",
+      "svg_inline": "",
+      "description_ko": "동날 전면에 밀리는 가공 · 슬라이싱 전용 "
+    },
+    {
+      "id": "SO",
+      "name_ko": "멀티",
+      "name_en": "SHIFT ONE",
+      "svg_inline": "",
+      "description_ko": "슬라이싱 겸 날끝 을 예리하게 사용 가능. 포인트컷, 초핑컷등 멀티로 사용"
+    }
+  ]
+}

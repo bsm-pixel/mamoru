@@ -15,6 +15,9 @@
   .ws-top .sub{ font-size:12px; color:rgba(245,245,243,.55); margin-left:10px; }
   .ws-top .hint{ font-size:12px; color:rgba(245,245,243,.6); }
   .ws-top .openlink{ font-size:12px; font-weight:700; color:var(--void); background:var(--cream); padding:7px 14px; border-radius:8px; text-decoration:none; }
+  .ws-modetoggle{ display:flex; background:rgba(245,245,243,.12); border-radius:8px; padding:3px; }
+  .ws-mbtn{ border:0; background:transparent; color:rgba(245,245,243,.6); font-size:12px; font-weight:700; padding:6px 12px; border-radius:6px; cursor:pointer; }
+  .ws-mbtn.on{ background:var(--cream); color:var(--void); }
 
   /* PC + 모바일 동시 미리보기 (PC 가변폭, 모바일 390px 고정 → vw 가 실제 폰 폭) */
   #frameWrap{ flex:1 1 auto; min-height:0; display:flex; background:#E8E6E2; }
@@ -31,8 +34,11 @@
 <header class="ws-top">
   <div><span class="logo">MAMORU</span><span class="sub">카탈로그 디자인 작업대</span></div>
   <div style="display:flex;align-items:center;gap:14px;">
-    <span class="hint">PC · 모바일 동시</span>
-    <a class="openlink" href="./editor.html" target="_blank" rel="noopener">✏️ 문구 편집기 열기 ↗</a>
+    <div class="ws-modetoggle">
+      <button id="wsNeutral" class="ws-mbtn on" type="button">정보 보기</button>
+      <button id="wsSelected" class="ws-mbtn" type="button">선택 미리보기</button>
+    </div>
+    <a class="openlink" href="./editor.html" target="_blank" rel="noopener">✏️ 문구 편집기 ↗</a>
   </div>
 </header>
 

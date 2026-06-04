@@ -1,20 +1,21 @@
 {
-  "card_type": "blade_edge",
+  "card_type": "blade_edge_long",
   "applies_to": [
-    "blunt"
+    "long"
   ],
   "label_ko": "BLADE EDGE",
   "label_subtitle_ko": "날 선 형태",
   "select_mode": "single",
   "viewbox": "0 0 21.65 10",
   "svg_stroke_width": "0.75",
+  "_note": "장가위용 — F/A/G 모양·이름은 블런트와 동일, 설명(쓰임새)만 다름",
   "options": [
     {
       "id": "F",
       "name_ko": "직선",
       "name_en": "FORCE",
       "svg_inline": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 21.65 10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"0.75\" stroke-linejoin=\"round\"><polyline points=\"4.33 2.5 17.32 5 4.33 7.5\"/></svg>",
-      "description_ko": "힘있는 · 직진성 커트"
+      "description_ko": "힘있는 · 블런트 겸용"
     },
     {
       "id": "A",
@@ -28,7 +29,7 @@
       "name_ko": "둥근",
       "name_en": "GLIDE",
       "svg_inline": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 21.65 10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"0.75\" stroke-linejoin=\"round\"><path d=\"M4.33,2.5c3.82,2.1,8.23,2.73,12.99,2.5-4.81.08-9.28.7-12.99,2.5\"/></svg>",
-      "description_ko": "부드러운 · 뒤로 빼듯 커트"
+      "description_ko": "부드러운 · 싱글링 위주 용도"
     }
   ]
 }

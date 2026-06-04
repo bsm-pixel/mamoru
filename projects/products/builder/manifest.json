@@ -3,6 +3,8 @@
   "catalog_base": "../catalog",
   "cards": [
     "cards/blade_edge.json",
+    "cards/blade_edge_long.json",
+    "cards/blade_edge_dry.json",
     "cards/blade_design.json",
     "cards/handle_grip.json",
     "cards/handle_camel.json",

@@ -45,6 +45,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (f) f.srcdoc = '<div style="padding:40px;font-family:sans-serif;color:#8A8580">카탈로그 로드 실패: ' + e.message + ' (preview.bat 로 열어야 함)</div>';
     return;
   }
+  NEUTRAL = true;       // 작업대 기본 = 정보 보기(모든 옵션 또렷)
+  bindModeToggle();
   initFrames();
   listenChannel();
 });
@@ -59,6 +61,15 @@ function initFrames() {
   mo.srcdoc = SKELETON;
 }
 function maybeSync() { if (pcReady && moReady) wireScrollSync(document.getElementById('wsPC_frame'), document.getElementById('wsMo_frame')); }
+
+/* 정보 보기(중립) ↔ 선택 미리보기 토글 */
+function bindModeToggle() {
+  const n = document.getElementById('wsNeutral');
+  const s = document.getElementById('wsSelected');
+  if (!n || !s) return;
+  n.onclick = () => { NEUTRAL = true; n.classList.add('on'); s.classList.remove('on'); paintAll(); };
+  s.onclick = () => { NEUTRAL = false; s.classList.add('on'); n.classList.remove('on'); paintAll(); };
+}
 
 function paintInto(frame) {
   try {
@@ -118,7 +129,7 @@ function firstId(cardType) {
   return c && c.options && c.options[0] ? c.options[0].id : '';
 }
 function variantOf(cardType) {
-  if (cardType === 'blade_edge') return 'edge';
+  if (cardType === 'blade_edge' || cardType === 'blade_edge_long' || cardType === 'blade_edge_dry') return 'edge';
   if (cardType === 'blade_design') return 'design';
   return 'text';
 }
@@ -149,7 +160,7 @@ function copyPanel(pool) {
 }
 
 const COMMON_CARDS = ['handle_grip', 'handle_camel', 'grade'];
-const TYPE_CARDS = ['blade_edge', 'blade_design', 'thinning_teeth', 'thinning_holes', 'thinning_reduction', 'dry_cutting_style'];
+const TYPE_CARDS = ['blade_edge', 'blade_edge_long', 'blade_edge_dry', 'blade_design', 'thinning_teeth', 'thinning_holes', 'thinning_reduction', 'dry_cutting_style'];
 
 function buildContent() {
   let h = '<div class="ws-note">편집기에서 문구 수정 시 <b>여기 실시간 반영</b> · 좌=PC / 우=모바일(390px) · 스크롤 동기화</div>';
