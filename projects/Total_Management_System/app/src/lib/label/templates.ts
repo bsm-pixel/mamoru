@@ -49,7 +49,7 @@ export const TEMPLATE_PRODUCT: LabelTemplate = {
     { kind: 'text', xMm: 2.4, yMm: 1.8, text: 'MAMORU', fontFamily: 'Outfit', weight: 800, sizeMm: 2.4, letterSpacingPx: 1 },
     { kind: 'rule', xMm: 2.4, yMm: 5.0, lengthMm: 19, thicknessMm: 0.4 },
     { kind: 'text', xMm: 2.4, yMm: 6.0, text: '{product}', fontFamily: 'Outfit', weight: 800, sizeMm: 4.2 },
-    { kind: 'barcode', xMm: 2.4, yMm: 12.0, data: '{sku}', widthMm: 26, heightMm: 6, showText: true },
+    { kind: 'barcode', xMm: 2.4, yMm: 12.0, data: '{sku}', widthMm: 26, heightMm: 6.5, showText: false },
   ],
 };
 
