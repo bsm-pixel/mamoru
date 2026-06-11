@@ -12,7 +12,7 @@ import { ProductBulkEditTable } from '@/components/products/product-bulk-edit-ta
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useProducts } from '@/hooks/use-sales';
 import { formatKRW } from '@/lib/utils/format';
-import { Plus, Search, Package, AlertTriangle, EyeOff, Table as TableIcon } from 'lucide-react';
+import { Plus, Search, Package, AlertTriangle, EyeOff, Table as TableIcon, Tags } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 
 import { useSetting } from '@/hooks/use-settings';
@@ -134,6 +134,10 @@ export default function ProductsPage() {
               </div>
             )}
           </div>
+          <Button variant="secondary" size="sm" onClick={() => router.push('/labels')} className="shrink-0">
+            <Tags size={14} />
+            라벨 디자이너
+          </Button>
           {isLg && viewMode === 'grid' && (
             <Button variant="secondary" size="sm" onClick={() => setViewMode('bulk-edit')} className="shrink-0">
               <TableIcon size={14} />

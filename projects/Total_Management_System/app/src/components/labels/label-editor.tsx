@@ -1,25 +1,23 @@
 'use client';
 
 /**
- * 시각적 라벨 편집기 — 요소를 드래그로 배치 + 정밀(±0.5mm) 조정 + 실시간 미리보기 + 저장.
- * 저장본은 settings(label.templates)에 → 출력 시 그 값 사용. 사장님이 직접 레이아웃 디자인.
- * 탭(템플릿) 전환은 key 기반 remount로 상태 완전 초기화(미리보기·테두리 desync 방지).
+ * 시각적 라벨 디자이너 — 요소 드래그 배치 + 정밀조정 + 실시간 미리보기 + 저장.
+ * 크기별 템플릿 자유 생성(빗 등 다른 사이즈) + 변수({product}/{sku}/{serial}) 자동.
+ * 저장본 = settings(label.templates). 탭은 templateId key remount로 desync 방지.
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ensureLabelFonts, renderLabelPreview, FONT_OPTIONS } from '@/lib/label/render-label';
 import { LABEL_TEMPLATES, type LabelTemplate, type LabelElement, type LabelData } from '@/lib/label/templates';
-import { useLabelTemplate, useSaveLabelTemplate } from '@/hooks/use-label-templates';
+import { useLabelTemplate, useLabelTemplates, useSaveLabelTemplate } from '@/hooks/use-label-templates';
 import { Save, RotateCcw, Move, Plus, Trash2 } from 'lucide-react';
 
 const SCALE = 16; // px/mm 편집 배율
 const LOGO_ASPECT = 8.8;
+const VARS = ['{product}', '{sku}', '{serial}'];
 
-const SAMPLE: Record<string, LabelData> = {
-  product_40x20: { product: 'A2-58DRY-1', sku: 'IW-91' },
-  serial_40x20: { product: 'A2-58DRY-1', serial: 'MR2610816' },
-};
+const SAMPLE_BASE: LabelData = { product: 'A2-58DRY-1', sku: 'IW-91', serial: 'MR2610816' };
 
 function elemLabel(el: LabelElement): string {
   if (el.kind === 'image') return '로고';
@@ -54,9 +52,10 @@ function Field({ label, value, onChange, step = 0.5, suffix = 'mm' }: { label: s
 }
 
 /** 단일 템플릿 편집 영역 (templateId별 key remount) */
-function EditorInner({ templateId }: { templateId: string }) {
+function EditorInner({ templateId, onDeleted }: { templateId: string; onDeleted: () => void }) {
   const baseTpl = useLabelTemplate(templateId);
   const { save, reset, isPending } = useSaveLabelTemplate();
+  const isBuiltin = templateId in LABEL_TEMPLATES;
 
   const [tpl, setTpl] = useState<LabelTemplate>(baseTpl);
   const [dirty, setDirty] = useState(false);
@@ -66,27 +65,19 @@ function EditorInner({ templateId }: { templateId: string }) {
   const dimsRef = useRef({ w: baseTpl.widthMm, h: baseTpl.heightMm });
   dimsRef.current = { w: tpl.widthMm, h: tpl.heightMm };
 
-  // 저장본(비동기 settings)이 도착하면 편집 전 한정 반영.
-  // ⚠️ useSetting이 매 렌더 새 객체를 반환하므로 identity 의존 시 무한루프 → 직렬화(내용) 기준으로 비교.
   const baseJson = JSON.stringify(baseTpl);
   const appliedRef = useRef<string>(baseJson);
   useEffect(() => {
-    if (!dirty && baseJson !== appliedRef.current) {
-      appliedRef.current = baseJson;
-      setTpl(JSON.parse(baseJson) as LabelTemplate);
-    }
+    if (!dirty && baseJson !== appliedRef.current) { appliedRef.current = baseJson; setTpl(JSON.parse(baseJson) as LabelTemplate); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseJson, dirty]);
 
-  const sample = SAMPLE[templateId] || {};
-
-  // 미리보기 재렌더(디바운스) — tpl 따라감
   useEffect(() => {
     let alive = true;
     const t = setTimeout(async () => {
       await ensureLabelFonts();
       if (!alive) return;
-      try { setPreview(await renderLabelPreview(tpl, sample, 300)); } catch { /* ignore */ }
+      try { setPreview(await renderLabelPreview(tpl, SAMPLE_BASE, 300)); } catch { /* ignore */ }
     }, 90);
     return () => { alive = false; clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -98,6 +89,9 @@ function EditorInner({ templateId }: { templateId: string }) {
     setDirty(true);
     setTpl((t) => ({ ...t, elements: t.elements.map((e, j) => (j === i ? { ...e, ...patch } : e)) }));
   }
+  function patchTpl(patch: Partial<LabelTemplate>) { setDirty(true); setTpl((t) => ({ ...t, ...patch })); }
+  function addEl(el: LabelElement) { setDirty(true); setSel(tpl.elements.length); setTpl((t) => ({ ...t, elements: [...t.elements, el] })); }
+  function deleteEl(i: number) { setDirty(true); setSel(-1); setTpl((t) => ({ ...t, elements: t.elements.filter((_, j) => j !== i) })); }
 
   function startDrag(e: React.MouseEvent, i: number) {
     e.preventDefault();
@@ -119,9 +113,11 @@ function EditorInner({ templateId }: { templateId: string }) {
   }
 
   function handleSave() { save(tpl); setDirty(false); }
-  function handleReset() { reset(templateId); setTpl(LABEL_TEMPLATES[templateId]); setDirty(false); setSel(-1); }
-  function addEl(el: LabelElement) { setDirty(true); setSel(tpl.elements.length); setTpl((t) => ({ ...t, elements: [...t.elements, el] })); }
-  function deleteEl(i: number) { setDirty(true); setSel(-1); setTpl((t) => ({ ...t, elements: t.elements.filter((_, j) => j !== i) })); }
+  function handleResetOrDelete() {
+    reset(templateId);
+    if (isBuiltin) { setTpl(LABEL_TEMPLATES[templateId]); setDirty(false); setSel(-1); }
+    else { onDeleted(); }
+  }
 
   const selEl = sel >= 0 ? tpl.elements[sel] : null;
 
@@ -159,11 +155,25 @@ function EditorInner({ templateId }: { templateId: string }) {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-neutral-800">요소 조정</h3>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={handleReset}><RotateCcw size={13} />기본값</Button>
+            <Button variant="ghost" size="sm" onClick={handleResetOrDelete} className={isBuiltin ? '' : 'text-red-500'}>
+              {isBuiltin ? <><RotateCcw size={13} />기본값</> : <><Trash2 size={13} />템플릿 삭제</>}
+            </Button>
             <Button size="sm" onClick={handleSave} loading={isPending} disabled={!dirty && !isPending}><Save size={13} />저장</Button>
           </div>
         </div>
 
+        {/* 라벨 크기 */}
+        <div className="flex items-center gap-3 rounded-lg bg-neutral-50 border border-neutral-200 px-3 py-2 text-xs">
+          <span className="font-semibold text-neutral-500">라벨 크기</span>
+          <span>가로</span>
+          <input type="number" value={tpl.widthMm} onChange={(e) => patchTpl({ widthMm: Math.max(10, parseFloat(e.target.value) || 10) })} className="w-14 h-7 px-1.5 text-center border border-neutral-200 rounded" />
+          <span>×</span>
+          <span>세로</span>
+          <input type="number" value={tpl.heightMm} onChange={(e) => patchTpl({ heightMm: Math.max(8, parseFloat(e.target.value) || 8) })} className="w-14 h-7 px-1.5 text-center border border-neutral-200 rounded" />
+          <span className="text-neutral-400">mm</span>
+        </div>
+
+        {/* 요소 칩 */}
         <div className="flex flex-wrap gap-1">
           {tpl.elements.map((el, i) => (
             <button key={i} onClick={() => setSel(i)}
@@ -172,13 +182,16 @@ function EditorInner({ templateId }: { templateId: string }) {
             </button>
           ))}
         </div>
-        {/* 요소 추가 — 고정 글씨/구분선 직접 추가 */}
+
+        {/* 요소 추가 */}
         <div className="flex items-center gap-2 rounded-lg bg-neutral-50 border border-neutral-200 px-3 py-2">
           <span className="text-[11px] font-semibold text-neutral-500">요소 추가</span>
-          <button onClick={() => addEl({ kind: 'text', xMm: 4, yMm: 9, text: '새 텍스트', fontFamily: 'Inter', weight: 700, sizeMm: 2.5 })}
+          <button onClick={() => addEl({ kind: 'text', xMm: 3, yMm: tpl.heightMm * 0.45, text: '새 텍스트', fontFamily: 'Inter', weight: 700, sizeMm: 2.5 })}
             className="px-3 py-1 rounded-md text-xs font-medium bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-100 flex items-center gap-1"><Plus size={12} /> 텍스트</button>
-          <button onClick={() => addEl({ kind: 'rule', xMm: 2, yMm: 11, lengthMm: 15, thicknessMm: 0.4 })}
+          <button onClick={() => addEl({ kind: 'rule', xMm: 2, yMm: tpl.heightMm * 0.5, lengthMm: tpl.widthMm * 0.5, thicknessMm: 0.4 })}
             className="px-3 py-1 rounded-md text-xs font-medium bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-100 flex items-center gap-1"><Plus size={12} /> 구분선</button>
+          <button onClick={() => addEl({ kind: 'barcode', xMm: 2, yMm: tpl.heightMm * 0.55, data: '{sku}', widthMm: Math.min(26, tpl.widthMm * 0.7), heightMm: 6, showText: false })}
+            className="px-3 py-1 rounded-md text-xs font-medium bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-100 flex items-center gap-1"><Plus size={12} /> 바코드</button>
         </div>
 
         {selEl ? (
@@ -188,10 +201,26 @@ function EditorInner({ templateId }: { templateId: string }) {
               <button onClick={() => deleteEl(sel)} className="text-[11px] text-red-500 hover:text-red-700 flex items-center gap-0.5"><Trash2 size={11} />삭제</button>
             </div>
             {selEl.kind === 'text' && (
+              <>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-neutral-500 w-16">내용</span>
+                  <input type="text" value={selEl.text || ''} onChange={(e) => patchEl(sel, { text: e.target.value })}
+                    className="flex-1 h-7 px-2 text-xs border border-neutral-200 rounded" placeholder="고정 글씨 또는 변수" />
+                </div>
+                <div className="flex items-center gap-1 flex-wrap pl-16">
+                  <span className="text-[10px] text-neutral-400">변수 삽입:</span>
+                  {VARS.map((v) => (
+                    <button key={v} onClick={() => patchEl(sel, { text: (selEl.text || '') + v })}
+                      className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-50 text-blue-600 hover:bg-blue-100">{v}</button>
+                  ))}
+                </div>
+              </>
+            )}
+            {selEl.kind === 'barcode' && (
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-neutral-500 w-16">내용</span>
-                <input type="text" value={selEl.text || ''} onChange={(e) => patchEl(sel, { text: e.target.value })}
-                  className="flex-1 h-7 px-2 text-xs border border-neutral-200 rounded" placeholder="고정 글씨 또는 {product}/{serial}" />
+                <span className="text-xs text-neutral-500 w-16">바코드값</span>
+                <input type="text" value={selEl.data || ''} onChange={(e) => patchEl(sel, { data: e.target.value })}
+                  className="flex-1 h-7 px-2 text-xs border border-neutral-200 rounded font-mono" placeholder="{sku} 또는 {serial}" />
               </div>
             )}
             <Field label="가로(X)" value={selEl.xMm} onChange={(v) => patchEl(sel, { xMm: v })} />
@@ -242,18 +271,60 @@ function EditorInner({ templateId }: { templateId: string }) {
 }
 
 export function LabelEditor() {
-  const [templateId, setTemplateId] = useState('product_40x20');
+  const all = useLabelTemplates();
+  const { save } = useSaveLabelTemplate();
+  const ids = Object.keys(all);
+  const [templateId, setTemplateId] = useState(ids[0] || 'product_40x20');
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newW, setNewW] = useState(40);
+  const [newH, setNewH] = useState(30);
+
+  function createTemplate() {
+    const id = `custom_${Date.now()}`;
+    const tpl: LabelTemplate = {
+      id,
+      name: newName.trim() || `새 라벨 ${newW}×${newH}`,
+      widthMm: newW,
+      heightMm: newH,
+      elements: [
+        { kind: 'image', xMm: 2, yMm: 2, src: '/labels/mamoru-logo.png', widthMm: Math.min(13, newW * 0.5) },
+        { kind: 'text', xMm: 2, yMm: Math.round(newH * 0.4), text: '{product}', fontFamily: 'Inter', weight: 700, sizeMm: Math.max(2, Math.round(newH * 0.16)) },
+        { kind: 'barcode', xMm: 2, yMm: Math.round(newH * 0.65), data: '{sku}', widthMm: Math.min(26, newW * 0.7), heightMm: Math.max(4, Math.round(newH * 0.28)), showText: false },
+      ],
+    };
+    save(tpl);
+    setTemplateId(id);
+    setCreating(false);
+    setNewName('');
+  }
+
   return (
     <div className="space-y-3">
-      <div className="flex gap-1">
-        {Object.values(LABEL_TEMPLATES).map((t) => (
+      <div className="flex gap-1 flex-wrap items-center">
+        {Object.values(all).map((t) => (
           <button key={t.id} onClick={() => setTemplateId(t.id)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${templateId === t.id ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
             {t.name}
           </button>
         ))}
+        <button onClick={() => setCreating((v) => !v)}
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-dashed border-neutral-300 text-neutral-500 hover:bg-neutral-50 flex items-center gap-1"><Plus size={12} /> 새 템플릿</button>
       </div>
-      <EditorInner key={templateId} templateId={templateId} />
+
+      {creating && (
+        <div className="flex items-center gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-xs flex-wrap">
+          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="템플릿 이름 (예: 빗 라벨)" className="h-7 px-2 border border-neutral-200 rounded w-40" />
+          <span>가로</span><input type="number" value={newW} onChange={(e) => setNewW(Math.max(10, parseInt(e.target.value) || 10))} className="w-14 h-7 px-1.5 text-center border border-neutral-200 rounded" />
+          <span>×</span>
+          <span>세로</span><input type="number" value={newH} onChange={(e) => setNewH(Math.max(8, parseInt(e.target.value) || 8))} className="w-14 h-7 px-1.5 text-center border border-neutral-200 rounded" />
+          <span className="text-neutral-400">mm</span>
+          <Button size="sm" onClick={createTemplate}>만들기</Button>
+          <Button size="sm" variant="ghost" onClick={() => setCreating(false)}>취소</Button>
+        </div>
+      )}
+
+      <EditorInner key={templateId} templateId={templateId} onDeleted={() => setTemplateId('product_40x20')} />
     </div>
   );
 }

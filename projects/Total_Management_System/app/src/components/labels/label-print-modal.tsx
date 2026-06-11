@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import type { LabelTemplate, LabelData } from '@/lib/label/templates';
 import { ensureLabelFonts, renderLabelPreview, renderLabelZpl } from '@/lib/label/render-label';
 import { sendZplToPrinter, downloadZpl } from '@/lib/label/browser-print';
+import { useLabelTemplates } from '@/hooks/use-label-templates';
 
 interface Props {
   template: LabelTemplate;
@@ -18,6 +19,9 @@ interface Props {
 const DPI = 203; // ZT231
 
 export function LabelPrintModal({ template, data, title, onClose }: Props) {
+  const allTemplates = useLabelTemplates();
+  const [tplId, setTplId] = useState(template.id);
+  const eff = allTemplates[tplId] || template;
   const [copies, setCopies] = useState(1);
   const [preview, setPreview] = useState<string>('');
   const [busy, setBusy] = useState(false);
@@ -28,16 +32,16 @@ export function LabelPrintModal({ template, data, title, onClose }: Props) {
     (async () => {
       await ensureLabelFonts();
       if (!alive) return;
-      try { setPreview(await renderLabelPreview(template, data, 300)); } catch { /* ignore */ }
+      try { setPreview(await renderLabelPreview(eff, data, 300)); } catch { /* ignore */ }
     })();
     return () => { alive = false; };
-  }, [template, data]);
+  }, [eff, data]);
 
   async function handlePrint() {
     setBusy(true);
     try {
       await ensureLabelFonts();
-      const zpl = await renderLabelZpl(template, data, DPI, copies);
+      const zpl = await renderLabelZpl(eff, data, DPI, copies);
       const ok = await sendZplToPrinter(zpl);
       if (ok) {
         toast.success(`라벨 ${copies}장 출력 전송됨`);
@@ -54,8 +58,8 @@ export function LabelPrintModal({ template, data, title, onClose }: Props) {
 
   async function handleDownload() {
     await ensureLabelFonts();
-    const zpl = await renderLabelZpl(template, data, DPI, copies);
-    downloadZpl(zpl, `${template.id}-${(data.serial || data.sku || 'label')}.zpl`);
+    const zpl = await renderLabelZpl(eff, data, DPI, copies);
+    downloadZpl(zpl, `${eff.id}-${(data.serial || data.sku || 'label')}.zpl`);
     toast.success('ZPL 다운로드 — ZSU 등으로 프린터에 보내 테스트하세요');
   }
 
@@ -68,9 +72,18 @@ export function LabelPrintModal({ template, data, title, onClose }: Props) {
         </div>
 
         <div className="p-5 space-y-4">
-          {/* 미리보기 — 40×20 비율, 실제 출력과 동일(WYSIWYG) */}
+          {/* 템플릿 선택 (크기별 — 빗 등) */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-neutral-500">템플릿</label>
+            <select value={tplId} onChange={(e) => setTplId(e.target.value)}
+              className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm">
+              {Object.values(allTemplates).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+          </div>
+
+          {/* 미리보기 — 실제 출력과 동일(WYSIWYG) */}
           <div>
-            <p className="text-[10px] text-neutral-400 mb-1">미리보기 ({template.widthMm}×{template.heightMm}mm · 실제 출력과 동일)</p>
+            <p className="text-[10px] text-neutral-400 mb-1">미리보기 ({eff.widthMm}×{eff.heightMm}mm · 실제 출력과 동일)</p>
             <div className="rounded-lg border border-neutral-200 bg-neutral-100 p-3 flex items-center justify-center" style={{ minHeight: 120 }}>
               {preview ? (
                 // eslint-disable-next-line @next/next/no-img-element
