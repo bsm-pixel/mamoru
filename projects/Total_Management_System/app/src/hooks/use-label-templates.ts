@@ -5,6 +5,7 @@
  * 편집기에서 저장 → `label.templates` 키(JSON) → 출력 시 이 효과값 사용.
  */
 
+import { useMemo } from 'react';
 import { useSetting, useUpdateSettings } from './use-settings';
 import { LABEL_TEMPLATES, type LabelTemplate } from '@/lib/label/templates';
 
@@ -16,10 +17,12 @@ export function useLabelTemplates(): Record<string, LabelTemplate> {
   return { ...LABEL_TEMPLATES, ...(saved || {}) };
 }
 
-/** id의 효과 템플릿(저장본 우선, 없으면 코드 기본값) */
+/** id의 효과 템플릿(저장본 우선, 없으면 코드 기본값).
+ *  ⚠️ useSetting이 매 렌더 새 객체를 반환 → 내용(직렬화) 기준 메모이즈해 안정 identity 보장(무한루프/불필요 재렌더 차단). */
 export function useLabelTemplate(id: string): LabelTemplate {
-  const all = useLabelTemplates();
-  return all[id] || LABEL_TEMPLATES[id];
+  const saved = useSetting<Record<string, LabelTemplate>>(KEY, {});
+  const savedJson = JSON.stringify(saved?.[id] ?? null);
+  return useMemo(() => (saved?.[id] || LABEL_TEMPLATES[id]), [savedJson, id]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 /** 편집 저장/복원 */

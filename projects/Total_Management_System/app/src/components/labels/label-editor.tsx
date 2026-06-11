@@ -66,8 +66,17 @@ function EditorInner({ templateId }: { templateId: string }) {
   const dimsRef = useRef({ w: baseTpl.widthMm, h: baseTpl.heightMm });
   dimsRef.current = { w: tpl.widthMm, h: tpl.heightMm };
 
-  // 저장본(비동기 settings)이 도착하면 편집 전 한정 반영
-  useEffect(() => { if (!dirty) setTpl(baseTpl); }, [baseTpl, dirty]);
+  // 저장본(비동기 settings)이 도착하면 편집 전 한정 반영.
+  // ⚠️ useSetting이 매 렌더 새 객체를 반환하므로 identity 의존 시 무한루프 → 직렬화(내용) 기준으로 비교.
+  const baseJson = JSON.stringify(baseTpl);
+  const appliedRef = useRef<string>(baseJson);
+  useEffect(() => {
+    if (!dirty && baseJson !== appliedRef.current) {
+      appliedRef.current = baseJson;
+      setTpl(JSON.parse(baseJson) as LabelTemplate);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baseJson, dirty]);
 
   const sample = SAMPLE[templateId] || {};
 
