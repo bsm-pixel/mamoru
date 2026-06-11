@@ -19,6 +19,8 @@ import type { SaleChannel, OfflineSale, OfflineSaleItem, Product } from '@/lib/s
 import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
 import { usePriceGroups } from '@/hooks/use-price-groups';
 import { SerialPicker } from './serial-picker';
+import { LabelPrintModal } from '@/components/labels/label-print-modal';
+import { useLabelTemplate } from '@/hooks/use-label-templates';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
@@ -85,6 +87,8 @@ export function SaleDetailPanel({ saleId }: Props) {
   const [showShipConfirm, setShowShipConfirm] = useState(false);
   const [shipNotify, setShipNotify] = useState(true);
   const [showLinkConsultation, setShowLinkConsultation] = useState(false);
+  const serialLabelTpl = useLabelTemplate('serial_40x20');
+  const [labelSerial, setLabelSerial] = useState<{ product: string; serial: string } | null>(null);
 
   if (isLoading) {
     return (
@@ -269,9 +273,13 @@ export function SaleDetailPanel({ saleId }: Props) {
                   {itemSerials.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-1">
                       {itemSerials.map((sr) => (
-                        <span key={sr.id} className="inline-flex items-center gap-0.5 text-[10px] font-mono bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded">
+                        <button key={sr.id} type="button"
+                          onClick={() => setLabelSerial({ product: item.product_name, serial: sr.serial_number })}
+                          title="시리얼 라벨 출력"
+                          className="inline-flex items-center gap-0.5 text-[10px] font-mono bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded hover:bg-stone-900 hover:text-white transition">
                           <Hash size={8} />{sr.serial_number}
-                        </span>
+                          <Printer size={9} className="ml-0.5 opacity-60" />
+                        </button>
                       ))}
                     </div>
                   )}
@@ -678,6 +686,16 @@ export function SaleDetailPanel({ saleId }: Props) {
           saleId={saleId}
           onClose={() => setShowEditModal(false)}
           rebuildSale={rebuildSale}
+        />
+      )}
+
+      {/* 시리얼 라벨 출력 (판매 직후 — 각 시리얼 칩 클릭) */}
+      {labelSerial && (
+        <LabelPrintModal
+          template={serialLabelTpl}
+          data={{ product: labelSerial.product, serial: labelSerial.serial }}
+          title="시리얼 라벨"
+          onClose={() => setLabelSerial(null)}
         />
       )}
     </div>
