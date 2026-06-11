@@ -12,8 +12,10 @@ import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { useProduct, useUpdateProduct, useCreateProduct, useSourcingByProduct } from '@/hooks/use-product-detail';
 import { formatKRW } from '@/lib/utils/format';
-import { Save, Package, Hash, X, Plus, Archive, Copy, Eye, EyeOff, Trash2, ArrowRightLeft, ArrowRight, ExternalLink } from 'lucide-react';
+import { Save, Package, Hash, X, Plus, Archive, Copy, Eye, EyeOff, Trash2, ArrowRightLeft, ArrowRight, ExternalLink, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { LabelPrintModal } from '@/components/labels/label-print-modal';
+import { TEMPLATE_PRODUCT } from '@/lib/label/templates';
 
 import { useSetting } from '@/hooks/use-settings';
 import { usePriceGroups } from '@/hooks/use-price-groups';
@@ -43,6 +45,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const CATEGORY_OPTIONS = categories.map((c) => ({ value: c, label: catLabels[c] || c }));
   const [editing, setEditing] = useState(false);
   const [showSerialModal, setShowSerialModal] = useState(false);
+  const [showLabelModal, setShowLabelModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -577,6 +580,12 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
                 <ArrowRightLeft size={14} />
                 창고 이동
               </Button>
+              {p.category !== 'SUP' && (
+                <Button variant="secondary" size="sm" onClick={() => setShowLabelModal(true)} className="w-full">
+                  <Printer size={14} />
+                  바코드 라벨 출력
+                </Button>
+              )}
               <button
                 onClick={() => router.push(`/products/${productId}/serials`)}
                 className="w-full text-center text-xs text-neutral-400 hover:text-neutral-600 py-1 transition"
@@ -586,6 +595,16 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
             </div>
           </Card>
         </>
+      )}
+
+      {/* 품목 바코드 라벨 출력 */}
+      {showLabelModal && (
+        <LabelPrintModal
+          template={TEMPLATE_PRODUCT}
+          data={{ product: p.name, sku: p.barcode || p.sku }}
+          title="품목 바코드 라벨"
+          onClose={() => setShowLabelModal(false)}
+        />
       )}
 
       {/* 시리얼 빠른 등록 모달 */}
