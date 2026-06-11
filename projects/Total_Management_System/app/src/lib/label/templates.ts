@@ -46,9 +46,10 @@ export const TEMPLATE_PRODUCT: LabelTemplate = {
   widthMm: 40,
   heightMm: 20,
   elements: [
-    { kind: 'text', xMm: 2.4, yMm: 1.8, text: 'MAMORU', fontFamily: 'Outfit', weight: 800, sizeMm: 2.4, letterSpacingPx: 1 },
+    // MAMORU 로고 = Aggressive 폰트(Google Fonts에 없음) → 로고 이미지로 교체 예정. 임시 Outfit.
+    { kind: 'text', xMm: 2.4, yMm: 1.8, text: 'MAMORU', fontFamily: 'Outfit', weight: 900, sizeMm: 2.4, letterSpacingPx: 1 },
     { kind: 'rule', xMm: 2.4, yMm: 5.0, lengthMm: 19, thicknessMm: 0.4 },
-    { kind: 'text', xMm: 2.4, yMm: 6.0, text: '{product}', fontFamily: 'Outfit', weight: 800, sizeMm: 4.2 },
+    { kind: 'text', xMm: 2.4, yMm: 6.0, text: '{product}', fontFamily: 'Inter', weight: 700, sizeMm: 4.2 },
     { kind: 'barcode', xMm: 2.4, yMm: 12.0, data: '{sku}', widthMm: 26, heightMm: 6.5, showText: false },
   ],
 };
@@ -60,12 +61,13 @@ export const TEMPLATE_SERIAL: LabelTemplate = {
   widthMm: 40,
   heightMm: 20,
   elements: [
-    { kind: 'text', xMm: 2.2, yMm: 1.6, text: 'MAMORU', fontFamily: 'Outfit', weight: 800, sizeMm: 1.9, letterSpacingPx: 0.5 },
+    // MAMORU 로고 = Aggressive 폰트 → 로고 이미지로 교체 예정. 임시 Outfit.
+    { kind: 'text', xMm: 2.2, yMm: 1.6, text: 'MAMORU', fontFamily: 'Outfit', weight: 900, sizeMm: 1.9, letterSpacingPx: 0.5 },
     { kind: 'rule', xMm: 2.2, yMm: 4.0, lengthMm: 14, thicknessMm: 0.35 },
-    { kind: 'text', xMm: 2.2, yMm: 4.8, text: '{product}', fontFamily: 'Outfit', weight: 800, sizeMm: 2.8 },
-    { kind: 'text', xMm: 2.2, yMm: 8.4, text: 'S/N : {serial}', fontFamily: 'Plus Jakarta Sans', weight: 600, sizeMm: 1.5 },
-    { kind: 'text', xMm: 2.2, yMm: 13.2, text: 'HAND-CALIBRATED', fontFamily: 'Plus Jakarta Sans', weight: 500, sizeMm: 1.2 },
-    { kind: 'text', xMm: 2.2, yMm: 15.4, text: 'PASSED BY BSM', fontFamily: 'Plus Jakarta Sans', weight: 500, sizeMm: 1.2 },
+    { kind: 'text', xMm: 2.2, yMm: 4.8, text: '{product}', fontFamily: 'Inter', weight: 700, sizeMm: 2.8 },
+    { kind: 'text', xMm: 2.2, yMm: 8.4, text: 'S/N : {serial}', fontFamily: 'Inter', weight: 400, sizeMm: 1.5 },
+    { kind: 'text', xMm: 2.2, yMm: 13.2, text: 'HAND-CALIBRATED', fontFamily: 'Inter', weight: 500, sizeMm: 1.2 },
+    { kind: 'text', xMm: 2.2, yMm: 15.4, text: 'PASSED BY BSM', fontFamily: 'Inter', weight: 500, sizeMm: 1.2 },
     { kind: 'barcode', xMm: 22.5, yMm: 12.6, data: '{serial}', widthMm: 15, heightMm: 5.5, showText: false },
   ],
 };

@@ -18,13 +18,14 @@ export async function ensureLabelFonts(): Promise<void> {
     const link = document.createElement('link');
     link.id = FONT_LINK_ID;
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap';
     document.head.appendChild(link);
   }
   try {
     await Promise.all([
+      (document as Document).fonts.load("700 24px 'Inter'"),
+      (document as Document).fonts.load("400 24px 'Inter'"),
       (document as Document).fonts.load("800 24px 'Outfit'"),
-      (document as Document).fonts.load("600 24px 'Plus Jakarta Sans'"),
       (document as Document).fonts.load("500 24px 'Noto Sans KR'"),
     ]);
     await (document as Document).fonts.ready;
