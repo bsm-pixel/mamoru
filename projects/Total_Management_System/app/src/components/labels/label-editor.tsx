@@ -3,6 +3,7 @@
 /**
  * 시각적 라벨 편집기 — 요소를 드래그로 배치 + 정밀(±0.5mm) 조정 + 실시간 미리보기 + 저장.
  * 저장본은 settings(label.templates)에 → 출력 시 그 값 사용. 사장님이 직접 레이아웃 디자인.
+ * 탭(템플릿) 전환은 key 기반 remount로 상태 완전 초기화(미리보기·테두리 desync 방지).
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -32,12 +33,11 @@ function elemBox(el: LabelElement): { w: number; h: number } {
   if (el.kind === 'barcode') return { w: el.widthMm || 25, h: el.heightMm || 6 };
   if (el.kind === 'rule') return { w: el.lengthMm || 10, h: Math.max(el.thicknessMm || 0.4, 1.2) };
   const s = el.sizeMm || 2;
-  return { w: Math.max(4, (el.text || '').length * s * 0.62), h: s * 1.2 };
+  return { w: Math.max(4, (el.text || '').length * s * 0.62), h: s * 1.4 };
 }
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-// ± 스텝 숫자 필드 (모듈 레벨 — 내부 정의 시 리마운트로 포커스 튕김)
 function Field({ label, value, onChange, step = 0.5, suffix = 'mm' }: { label: string; value: number; onChange: (v: number) => void; step?: number; suffix?: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
@@ -53,8 +53,8 @@ function Field({ label, value, onChange, step = 0.5, suffix = 'mm' }: { label: s
   );
 }
 
-export function LabelEditor() {
-  const [templateId, setTemplateId] = useState('product_40x20');
+/** 단일 템플릿 편집 영역 (templateId별 key remount) */
+function EditorInner({ templateId }: { templateId: string }) {
   const baseTpl = useLabelTemplate(templateId);
   const { save, reset, isPending } = useSaveLabelTemplate();
 
@@ -63,17 +63,15 @@ export function LabelEditor() {
   const [sel, setSel] = useState(-1);
   const [preview, setPreview] = useState('');
   const canvasRef = useRef<HTMLDivElement>(null);
-  const dimsRef = useRef({ w: tpl.widthMm, h: tpl.heightMm });
+  const dimsRef = useRef({ w: baseTpl.widthMm, h: baseTpl.heightMm });
   dimsRef.current = { w: tpl.widthMm, h: tpl.heightMm };
 
-  // 템플릿 전환 → dirty 리셋
-  useEffect(() => { setDirty(false); setSel(-1); }, [templateId]);
-  // 저장본 로드(편집중 아니면 반영)
+  // 저장본(비동기 settings)이 도착하면 편집 전 한정 반영
   useEffect(() => { if (!dirty) setTpl(baseTpl); }, [baseTpl, dirty]);
 
   const sample = SAMPLE[templateId] || {};
 
-  // 미리보기 재렌더(디바운스)
+  // 미리보기 재렌더(디바운스) — tpl 따라감
   useEffect(() => {
     let alive = true;
     const t = setTimeout(async () => {
@@ -120,16 +118,6 @@ export function LabelEditor() {
     <div className="flex flex-col lg:flex-row gap-6">
       {/* 캔버스 */}
       <div className="space-y-3">
-        <div className="flex gap-1">
-          {Object.values(LABEL_TEMPLATES).map((t) => (
-            <button key={t.id} onClick={() => setTemplateId(t.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${templateId === t.id ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
-              {t.name}
-            </button>
-          ))}
-        </div>
-
-        {/* 편집 캔버스 — 배경=실제 미리보기, 위에 드래그 박스 */}
         <div className="inline-block rounded-lg border border-neutral-300 bg-white p-2 shadow-sm">
           <div ref={canvasRef} className="relative" style={{ width: W, height: H, background: '#fff', outline: '1px dashed #d4d4d4' }}>
             {preview && (
@@ -143,7 +131,7 @@ export function LabelEditor() {
                   className="absolute cursor-move"
                   style={{
                     left: el.xMm * SCALE, top: el.yMm * SCALE, width: b.w * SCALE, height: b.h * SCALE,
-                    border: sel === i ? '1.5px solid #2563eb' : '1px dashed rgba(120,120,120,0.5)',
+                    border: sel === i ? '1.5px solid #2563eb' : '1px dashed rgba(120,120,120,0.45)',
                     background: sel === i ? 'rgba(37,99,235,0.08)' : 'transparent',
                   }}
                   title={elemLabel(el)}
@@ -165,7 +153,6 @@ export function LabelEditor() {
           </div>
         </div>
 
-        {/* 요소 리스트 */}
         <div className="flex flex-wrap gap-1">
           {tpl.elements.map((el, i) => (
             <button key={i} onClick={() => setSel(i)}
@@ -214,6 +201,23 @@ export function LabelEditor() {
 
         {dirty && <p className="text-[11px] text-amber-600">● 변경됨 — 저장을 눌러야 출력에 반영됩니다</p>}
       </div>
+    </div>
+  );
+}
+
+export function LabelEditor() {
+  const [templateId, setTemplateId] = useState('product_40x20');
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-1">
+        {Object.values(LABEL_TEMPLATES).map((t) => (
+          <button key={t.id} onClick={() => setTemplateId(t.id)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${templateId === t.id ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
+            {t.name}
+          </button>
+        ))}
+      </div>
+      <EditorInner key={templateId} templateId={templateId} />
     </div>
   );
 }
