@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { parseSerial, formatSerial } from '@/lib/serial/format';
 
 /**
  * GET /api/serials/check-duplicate?serial={번호}&excludeSaleId={현재 판매 id}
@@ -29,11 +30,16 @@ export async function GET(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
+    // 하이픈 유무 무시 — 입력값 + M{YY}-{NNNN} 정식형 둘 다로 조회
+    const candidates = [serialNumber];
+    const p = parseSerial(serialNumber);
+    if (p) { const c = formatSerial(p.year2, p.seq); if (c !== serialNumber) candidates.push(c); }
+
     // 시리얼 번호 일치하는 모든 시리얼 조회 (sold + in_stock 모두 포함)
     const { data: serials } = await db
       .from('product_serials')
       .select('id, serial_number, status, offline_sale_id, sale_item_id, sold_to_name, sold_at, product_id')
-      .eq('serial_number', serialNumber)
+      .in('serial_number', candidates)
       .limit(5);
 
     if (!serials || serials.length === 0) {

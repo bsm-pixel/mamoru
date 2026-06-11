@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAvailableSerials } from '@/hooks/use-serials';
 import { Hash, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSerialConflictPrompt } from './serial-conflict-dialog';
+import { formatSerial, currentYear2, incrementSerial, normalizeSerial } from '@/lib/serial/format';
 
 interface Props {
   productId: string;
@@ -78,14 +79,14 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
     try {
       const res = await fetch('/api/serials/batch');
       const data = await res.json();
-      let next = data.next_start || 13790001;
-      // 이 품목 + 카트 내 다른 품목에 이미 배정된 번호를 모두 회피 (저장 전이라 DB next_start가 동일하게 나오는 문제 방지)
-      const existing = [...manualSerials, ...reservedSerials].map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
-      while (existing.includes(next)) next++;
+      let next: string = data.next_serial || formatSerial(currentYear2(), 1);
+      // 이 품목 + 카트 내 다른 품목에 이미 배정된 번호를 모두 회피 (저장 전이라 DB 다음번호가 동일하게 나오는 문제 방지)
+      const taken = new Set([...manualSerials, ...reservedSerials].map(normalizeSerial));
+      while (taken.has(normalizeSerial(next))) next = incrementSerial(next);
       // Phase A — 자동 생성된 번호도 DB 중복 가능성 (이전 등록·재고 시리얼 등) → 검증 (2026-05-18)
-      const ok = await confirmIfDuplicate(String(next));
+      const ok = await confirmIfDuplicate(next);
       if (!ok) return;
-      onManualSerialsChange?.([...manualSerials, String(next)]);
+      onManualSerialsChange?.([...manualSerials, next]);
     } catch { /* ignore */ }
     finally {
       setGenerating(false);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { randomBytes } from 'crypto';
+import { nextSerialNumber, nextSerialBatch } from '@/lib/serial/next-serial';
 
 /** verify_token 생성 — 12자리 hex */
 function generateVerifyToken(): string {
@@ -8,7 +9,7 @@ function generateVerifyToken(): string {
 }
 
 /**
- * GET /api/serials/batch — 다음 시리얼 시작번호 조회
+ * GET /api/serials/batch — 다음 시리얼 번호 조회 (M{YY}-{NNNN})
  */
 export async function GET() {
   try {
@@ -18,20 +19,8 @@ export async function GET() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
-
-    const { data } = await db
-      .from('product_serials')
-      .select('serial_number')
-      .order('serial_number', { ascending: false })
-      .limit(1);
-
-    let nextStart = 13790001;
-    if (data && data.length > 0) {
-      const maxNum = parseInt(data[0].serial_number, 10);
-      if (!isNaN(maxNum)) nextStart = maxNum + 1;
-    }
-
-    return NextResponse.json({ next_start: nextStart });
+    const next = await nextSerialNumber(db);
+    return NextResponse.json({ next_serial: next });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
@@ -51,19 +40,15 @@ export async function POST(req: NextRequest) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
-    const { product_id, count, start_number, lot_number, warehouse_zone } = await req.json() as {
+    const { product_id, count, lot_number, warehouse_zone } = await req.json() as {
       product_id: string;
       count: number;
-      start_number: number;
       lot_number?: string;
       warehouse_zone?: 'raw' | 'ready' | 'display';
     };
 
     if (!product_id || !count || count < 1 || count > 100) {
       return NextResponse.json({ error: '1~100개 범위로 입력해주세요' }, { status: 400 });
-    }
-    if (!start_number || start_number < 1) {
-      return NextResponse.json({ error: '시작 번호를 입력해주세요' }, { status: 400 });
     }
 
     // 제품 조회 — raw_stock 확인
@@ -84,10 +69,8 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // 시리얼 번호 목록 생성
-    const serialNumbers = Array.from({ length: count }, (_, i) =>
-      String(start_number + i).padStart(8, '0')
-    );
+    // 시리얼 번호 목록 생성 — M{YY}-{NNNN} 연속 (서버에서 다음 번호부터 자동)
+    const serialNumbers = await nextSerialBatch(db, count);
 
     // 중복 체크
     const { data: existing } = await db
@@ -135,13 +118,13 @@ export async function POST(req: NextRequest) {
     // 아임웹 재고 동기화 (stock_quantity는 변하지 않으므로 동기화 불필요하지만 안전을 위해)
     // stock_quantity = raw_stock + 시리얼 수이므로 총합은 동일
 
-    const startStr = String(start_number).padStart(8, '0');
-    const endStr = String(start_number + count - 1).padStart(8, '0');
+    const startStr = serialNumbers[0];
+    const endStr = serialNumbers[serialNumbers.length - 1];
 
     return NextResponse.json({
       created: count,
       range: `${startStr} ~ ${endStr}`,
-      start_number,
+      first_serial: startStr,
       raw_stock_remaining: rawStock - count,
     });
   } catch (err) {

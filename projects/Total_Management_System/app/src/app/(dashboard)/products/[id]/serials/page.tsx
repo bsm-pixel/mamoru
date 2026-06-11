@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -58,8 +58,14 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
   const [newSerial, setNewSerial] = useState('');
   const [newBarcode, setNewBarcode] = useState('');
   const [batchCount, setBatchCount] = useState(10);
-  const [batchStart, setBatchStart] = useState('');
+  const [nextSerial, setNextSerial] = useState<string>('');
   const [batchLot, setBatchLot] = useState('');
+
+  // 일괄생성 폼 열 때 다음 시리얼 번호 미리보기 (M{YY}-{NNNN})
+  useEffect(() => {
+    if (!showBatchForm) return;
+    fetch('/api/serials/batch').then((r) => r.json()).then((d) => { if (d.next_serial) setNextSerial(d.next_serial); }).catch(() => {});
+  }, [showBatchForm]);
 
   const { data: products = [] } = useProducts();
   const product = products.find((p) => p.id === productId);
@@ -104,16 +110,13 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
   }
 
   async function handleBatch() {
-    const startNum = parseInt(batchStart);
-    if (batchCount < 1 || !startNum || startNum < 1) return;
+    if (batchCount < 1) return;
     await createBatch.mutateAsync({
       product_id: productId,
       count: batchCount,
-      start_number: startNum,
       lot_number: batchLot.trim() || undefined,
     });
     setShowBatchForm(false);
-    setBatchStart('');
   }
 
   return (
@@ -178,13 +181,9 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
         {/* 일괄 생성 폼 */}
         {showBatchForm && (
           <Card>
-            <h4 className="text-sm font-semibold mb-2">일괄 생성 (순차 번호)</h4>
-            <p className="text-xs text-neutral-500 mb-3">이지캐드 각인 시작번호와 동일하게 입력하세요</p>
+            <h4 className="text-sm font-semibold mb-2">일괄 생성 (자동 번호)</h4>
+            <p className="text-xs text-neutral-500 mb-3">다음 번호부터 수량만큼 자동 생성됩니다 (보관재고에서 차감)</p>
             <div className="flex gap-2 items-end flex-wrap">
-              <div>
-                <label className="text-xs text-neutral-500">시작번호 *</label>
-                <input type="number" value={batchStart} onChange={(e) => setBatchStart(e.target.value)} placeholder="13790001" className="w-32 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm font-mono" />
-              </div>
               <div>
                 <label className="text-xs text-neutral-500">수량</label>
                 <input type="number" value={batchCount} onChange={(e) => setBatchCount(parseInt(e.target.value) || 0)} min={1} max={100} className="w-20 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm" />
@@ -193,17 +192,17 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
                 <label className="text-xs text-neutral-500">로트번호</label>
                 <input type="text" value={batchLot} onChange={(e) => setBatchLot(e.target.value)} placeholder="선택사항" className="w-28 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm" />
               </div>
-              <Button size="sm" onClick={handleBatch} disabled={!batchStart || batchCount < 1 || createBatch.isPending}>
+              <Button size="sm" onClick={handleBatch} disabled={batchCount < 1 || createBatch.isPending}>
                 {createBatch.isPending ? '생성 중...' : `${batchCount}개 생성`}
               </Button>
             </div>
-            {batchStart && batchCount > 0 && (
+            {nextSerial && batchCount > 0 && (
               <p className="text-xs text-neutral-500 mt-2">
-                생성 범위: <span className="font-mono font-semibold">{String(parseInt(batchStart) || 0).padStart(8, '0')}</span> ~ <span className="font-mono font-semibold">{String((parseInt(batchStart) || 0) + batchCount - 1).padStart(8, '0')}</span>
+                생성 번호: <span className="font-mono font-semibold">{nextSerial}</span> 부터 {batchCount}개
               </p>
             )}
             <p className="text-xs text-neutral-400 mt-2">
-              형식: MM-{product?.sku || 'SKU'}-{new Date().toISOString().slice(0, 10).replace(/-/g, '')}-001
+              형식: <span className="font-mono">M{new Date().getFullYear() % 100}-NNNN</span> (예: {nextSerial || `M${new Date().getFullYear() % 100}-0001`})
             </p>
           </Card>
         )}

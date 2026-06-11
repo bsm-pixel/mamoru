@@ -15,6 +15,7 @@ import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
 import { SerialPicker } from '@/components/sales/serial-picker';
 import { useSerialConflictPrompt } from '@/components/sales/serial-conflict-dialog';
+import { formatSerial, currentYear2, incrementSerial, normalizeSerial } from '@/lib/serial/format';
 import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
 import { usePriceGroups } from '@/hooks/use-price-groups';
 import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
@@ -812,13 +813,13 @@ function ManualSerialInput({ serials, onChange, onTransferConsent, reservedSeria
             try {
               const res = await fetch('/api/serials/batch');
               const data = await res.json();
-              let next = data.next_start || 13790001;
+              let next: string = data.next_serial || formatSerial(currentYear2(), 1);
               // 이 품목 + 카트 내 다른 품목 배정 번호 모두 회피 (품목 간 중복 방지) 2026-06-11
-              const existing = [...serials, ...reservedSerials].map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
-              while (existing.includes(next)) next++;
-              const ok = await confirmIfDuplicate(String(next));
+              const taken = new Set([...serials, ...reservedSerials].map(normalizeSerial));
+              while (taken.has(normalizeSerial(next))) next = incrementSerial(next);
+              const ok = await confirmIfDuplicate(next);
               if (!ok) return;
-              onChange([...serials, String(next)]);
+              onChange([...serials, next]);
             } catch { /* ignore */ }
           }} className="text-[10px] text-green-600 hover:text-green-800 font-medium">
             자동 번호 생성

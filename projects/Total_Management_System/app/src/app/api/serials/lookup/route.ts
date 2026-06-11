@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { parseSerial, formatSerial } from '@/lib/serial/format';
 
 /** GET /api/serials/lookup?q=시리얼번호 — 시리얼 풀 정보 조회 */
 export async function GET(req: NextRequest) {
@@ -29,6 +30,18 @@ export async function GET(req: NextRequest) {
         .eq('barcode', q)
         .single();
       serial = res.data;
+    }
+
+    // M{YY}-{NNNN} 하이픈 유무 무시 — 정식형(M26-0042)으로 재시도 (고객이 M260042로 입력해도 매칭)
+    if (!serial) {
+      const p = parseSerial(q);
+      if (p) {
+        const canonical = formatSerial(p.year2, p.seq);
+        if (canonical !== q) {
+          const res = await db.from('product_serials').select('*').eq('serial_number', canonical).single();
+          serial = res.data;
+        }
+      }
     }
 
     // 부분 매칭 (시리얼번호 포함)

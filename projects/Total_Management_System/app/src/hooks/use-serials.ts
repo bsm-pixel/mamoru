@@ -145,7 +145,6 @@ export function useCreateSerialBatch() {
     mutationFn: async (data: {
       product_id: string;
       count: number;
-      start_number: number;
       lot_number?: string;
     }) => {
       const res = await fetch('/api/serials/batch', {

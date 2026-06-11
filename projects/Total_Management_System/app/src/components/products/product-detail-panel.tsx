@@ -690,7 +690,7 @@ function SerialQuickModal({ open, onClose, productId, productSku, rawStock, onSu
   const [from, setFrom] = useState<Zone>('raw');
   const [to, setTo] = useState<Zone>('ready');
   const [count, setCount] = useState(1);
-  const [startNumber, setStartNumber] = useState('');
+  const [nextSerial, setNextSerial] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [loadingNext, setLoadingNext] = useState(false);
 
@@ -710,8 +710,8 @@ function SerialQuickModal({ open, onClose, productId, productSku, rawStock, onSu
       setLoadingNext(true);
       fetch('/api/serials/batch')
         .then((res) => res.json())
-        .then((data) => { if (data.next_start) setStartNumber(String(data.next_start)); })
-        .catch(() => setStartNumber(''))
+        .then((data) => { if (data.next_serial) setNextSerial(data.next_serial); })
+        .catch(() => setNextSerial(''))
         .finally(() => setLoadingNext(false));
     }
   }, [open]);
@@ -730,12 +730,11 @@ function SerialQuickModal({ open, onClose, productId, productSku, rawStock, onSu
     setSubmitting(true);
     try {
       if (needsSerial) {
-        // 보관 → 시리얼 창고: batch API 호출
-        if (!startNumber) { toast.error('시작번호를 입력해주세요'); setSubmitting(false); return; }
+        // 보관 → 시리얼 창고: batch API 호출 (서버에서 다음 M{YY}-{NNNN} 자동 채번)
         const res = await fetch('/api/serials/batch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ product_id: productId, start_number: parseInt(startNumber), count, warehouse_zone: to }),
+          body: JSON.stringify({ product_id: productId, count, warehouse_zone: to }),
         });
         if (!res.ok) {
           const errData = await res.json().catch(() => ({ error: '생성 실패' }));
@@ -828,26 +827,15 @@ function SerialQuickModal({ open, onClose, productId, productSku, rawStock, onSu
             className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
         </div>
 
-        {/* 시리얼 생성 UI — 보관→시리얼 창고 일 때만 */}
+        {/* 시리얼 생성 UI — 보관→시리얼 창고 일 때만 (M{YY}-{NNNN} 자동 채번) */}
         {needsSerial && (
-          <div className="border border-neutral-200 rounded-lg p-3 space-y-2">
+          <div className="border border-neutral-200 rounded-lg p-3 space-y-1">
             <label className="text-xs font-semibold text-neutral-600">시리얼 자동생성</label>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] text-neutral-400 mb-0.5 block">시작번호</label>
-                <input type="number" value={startNumber}
-                  onChange={(e) => setStartNumber(e.target.value)}
-                  placeholder={loadingNext ? '조회 중...' : '13790001'}
-                  disabled={loadingNext}
-                  className="w-full h-8 px-2 rounded border border-neutral-200 bg-stone-50 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-stone-400 disabled:opacity-50" />
-              </div>
-              <div>
-                <label className="text-[10px] text-neutral-400 mb-0.5 block">생성 범위</label>
-                <p className="h-8 flex items-center text-xs font-mono text-neutral-500">
-                  {startNumber ? `${String(parseInt(startNumber)).padStart(8, '0')} ~ ${String(parseInt(startNumber) + count - 1).padStart(8, '0')}` : '-'}
-                </p>
-              </div>
-            </div>
+            <p className="text-xs text-neutral-500">
+              {loadingNext ? '다음 번호 조회 중...' : (
+                <>다음 번호 <span className="font-mono font-semibold text-neutral-700">{nextSerial || '-'}</span> 부터 <span className="font-semibold">{count}</span>개 자동 생성</>
+              )}
+            </p>
           </div>
         )}
 
@@ -865,7 +853,7 @@ function SerialQuickModal({ open, onClose, productId, productSku, rawStock, onSu
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={onClose} className="flex-1">취소</Button>
           <Button size="sm" onClick={handleSubmit}
-            disabled={count < 1 || (needsSerial && (!startNumber || rawStock < count)) || submitting}
+            disabled={count < 1 || (needsSerial && rawStock < count) || submitting}
             loading={submitting} className="flex-1">
             {submitting ? '처리 중...' : `${count}개 이동`}
           </Button>
