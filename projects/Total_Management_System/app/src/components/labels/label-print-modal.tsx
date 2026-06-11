@@ -28,7 +28,7 @@ export function LabelPrintModal({ template, data, title, onClose }: Props) {
     (async () => {
       await ensureLabelFonts();
       if (!alive) return;
-      try { setPreview(renderLabelPreview(template, data, 300)); } catch { /* ignore */ }
+      try { setPreview(await renderLabelPreview(template, data, 300)); } catch { /* ignore */ }
     })();
     return () => { alive = false; };
   }, [template, data]);
@@ -37,7 +37,7 @@ export function LabelPrintModal({ template, data, title, onClose }: Props) {
     setBusy(true);
     try {
       await ensureLabelFonts();
-      const zpl = renderLabelZpl(template, data, DPI, copies);
+      const zpl = await renderLabelZpl(template, data, DPI, copies);
       const ok = await sendZplToPrinter(zpl);
       if (ok) {
         toast.success(`라벨 ${copies}장 출력 전송됨`);
@@ -54,7 +54,7 @@ export function LabelPrintModal({ template, data, title, onClose }: Props) {
 
   async function handleDownload() {
     await ensureLabelFonts();
-    const zpl = renderLabelZpl(template, data, DPI, copies);
+    const zpl = await renderLabelZpl(template, data, DPI, copies);
     downloadZpl(zpl, `${template.id}-${(data.serial || data.sku || 'label')}.zpl`);
     toast.success('ZPL 다운로드 — ZSU 등으로 프린터에 보내 테스트하세요');
   }

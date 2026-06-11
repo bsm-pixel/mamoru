@@ -41,8 +41,21 @@ function fontPx(sizeMm: number, dotsPerMm: number): number {
   return Math.max(6, Math.round((sizeMm / 0.7) * dotsPerMm));
 }
 
-/** 템플릿+데이터를 캔버스에 합성 (바코드 포함 — 전체 래스터) */
-export function composeLabelCanvas(tpl: LabelTemplate, data: LabelData, dpi: number): HTMLCanvasElement {
+// 이미지(로고) 캐시 로드 — 같은 origin(/labels/...)이라 canvas taint 없음
+const imgCache = new Map<string, HTMLImageElement>();
+function loadImg(src: string): Promise<HTMLImageElement> {
+  const cached = imgCache.get(src);
+  if (cached) return Promise.resolve(cached);
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onload = () => { imgCache.set(src, im); res(im); };
+    im.onerror = () => rej(new Error('image load fail: ' + src));
+    im.src = src;
+  });
+}
+
+/** 템플릿+데이터를 캔버스에 합성 (바코드·로고 포함 — 전체 래스터) */
+export async function composeLabelCanvas(tpl: LabelTemplate, data: LabelData, dpi: number): Promise<HTMLCanvasElement> {
   const dotsPerMm = dpi / 25.4;
   const W = mmToDots(tpl.widthMm, dpi);
   const H = mmToDots(tpl.heightMm, dpi);
@@ -75,6 +88,16 @@ export function composeLabelCanvas(tpl: LabelTemplate, data: LabelData, dpi: num
       const th = Math.max(1, Math.round((el.thicknessMm || 0.4) * dotsPerMm));
       ctx.fillStyle = '#000';
       ctx.fillRect(x, y, len, th);
+    } else if (el.kind === 'image') {
+      if (!el.src) continue;
+      try {
+        const im = await loadImg(el.src);
+        const w = Math.round((el.widthMm || 12) * dotsPerMm);
+        const h = el.heightMm ? Math.round(el.heightMm * dotsPerMm) : Math.round(w * (im.naturalHeight / im.naturalWidth));
+        ctx.imageSmoothingEnabled = true; // 로고는 부드럽게 축소
+        ctx.drawImage(im, x, y, w, h);
+        ctx.imageSmoothingEnabled = false;
+      } catch { /* 로고 파일 없음 — 건너뜀 */ }
     } else if (el.kind === 'barcode') {
       const bcData = resolveToken(el.data || '', data).trim();
       if (!bcData) continue;
@@ -131,12 +154,12 @@ function canvasToGfaField(canvas: HTMLCanvasElement): string {
 }
 
 /** 라벨 1종 ZPL (전체 래스터). copies = 매수 */
-export function renderLabelZpl(tpl: LabelTemplate, data: LabelData, dpi: number, copies = 1): string {
-  const canvas = composeLabelCanvas(tpl, data, dpi);
+export async function renderLabelZpl(tpl: LabelTemplate, data: LabelData, dpi: number, copies = 1): Promise<string> {
+  const canvas = await composeLabelCanvas(tpl, data, dpi);
   return buildLabel({ widthMm: tpl.widthMm, heightMm: tpl.heightMm, dpi }, [canvasToGfaField(canvas)], copies);
 }
 
 /** 미리보기 PNG dataURL */
-export function renderLabelPreview(tpl: LabelTemplate, data: LabelData, dpi: number): string {
-  return composeLabelCanvas(tpl, data, dpi).toDataURL('image/png');
+export async function renderLabelPreview(tpl: LabelTemplate, data: LabelData, dpi: number): Promise<string> {
+  return (await composeLabelCanvas(tpl, data, dpi)).toDataURL('image/png');
 }

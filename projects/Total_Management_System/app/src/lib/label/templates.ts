@@ -5,9 +5,11 @@
  */
 
 export interface LabelElement {
-  kind: 'text' | 'barcode' | 'rule';
+  kind: 'text' | 'barcode' | 'rule' | 'image';
   xMm: number;
   yMm: number;
+  // image
+  src?: string;             // 로고 등 고정 이미지 경로 (예: /labels/mamoru-logo.png)
   // text
   text?: string;            // 리터럴 또는 토큰 포함 (예: "S/N : {serial}")
   fontFamily?: string;      // 'Outfit' | 'Plus Jakarta Sans' | 'Noto Sans KR'
@@ -46,8 +48,8 @@ export const TEMPLATE_PRODUCT: LabelTemplate = {
   widthMm: 40,
   heightMm: 20,
   elements: [
-    // MAMORU 로고 = Aggressive 폰트(Google Fonts에 없음) → 로고 이미지로 교체 예정. 임시 Outfit.
-    { kind: 'text', xMm: 2.4, yMm: 1.8, text: 'MAMORU', fontFamily: 'Outfit', weight: 900, sizeMm: 2.4, letterSpacingPx: 1 },
+    // MAMORU 로고 = Aggressive 폰트 → 디자인 그대로 이미지 임베드
+    { kind: 'image', xMm: 2.4, yMm: 1.8, src: '/labels/mamoru-logo.png', widthMm: 13 },
     { kind: 'rule', xMm: 2.4, yMm: 5.0, lengthMm: 19, thicknessMm: 0.4 },
     { kind: 'text', xMm: 2.4, yMm: 6.0, text: '{product}', fontFamily: 'Inter', weight: 700, sizeMm: 4.2 },
     { kind: 'barcode', xMm: 2.4, yMm: 12.0, data: '{sku}', widthMm: 26, heightMm: 6.5, showText: false },
@@ -61,9 +63,9 @@ export const TEMPLATE_SERIAL: LabelTemplate = {
   widthMm: 40,
   heightMm: 20,
   elements: [
-    // MAMORU 로고 = Aggressive 폰트 → 로고 이미지로 교체 예정. 임시 Outfit.
-    { kind: 'text', xMm: 2.2, yMm: 1.6, text: 'MAMORU', fontFamily: 'Outfit', weight: 900, sizeMm: 1.9, letterSpacingPx: 0.5 },
-    { kind: 'rule', xMm: 2.2, yMm: 4.0, lengthMm: 14, thicknessMm: 0.35 },
+    // MAMORU 로고 = Aggressive 폰트 → 디자인 그대로 이미지 임베드
+    { kind: 'image', xMm: 2.2, yMm: 1.6, src: '/labels/mamoru-logo.png', widthMm: 11 },
+    { kind: 'rule', xMm: 2.2, yMm: 4.2, lengthMm: 14, thicknessMm: 0.35 },
     { kind: 'text', xMm: 2.2, yMm: 4.8, text: '{product}', fontFamily: 'Inter', weight: 700, sizeMm: 2.8 },
     { kind: 'text', xMm: 2.2, yMm: 8.4, text: 'S/N : {serial}', fontFamily: 'Inter', weight: 400, sizeMm: 1.5 },
     { kind: 'text', xMm: 2.2, yMm: 13.2, text: 'HAND-CALIBRATED', fontFamily: 'Inter', weight: 500, sizeMm: 1.2 },
