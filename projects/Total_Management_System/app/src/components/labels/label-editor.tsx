@@ -8,10 +8,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ensureLabelFonts, renderLabelPreview } from '@/lib/label/render-label';
+import { ensureLabelFonts, renderLabelPreview, FONT_OPTIONS } from '@/lib/label/render-label';
 import { LABEL_TEMPLATES, type LabelTemplate, type LabelElement, type LabelData } from '@/lib/label/templates';
 import { useLabelTemplate, useSaveLabelTemplate } from '@/hooks/use-label-templates';
-import { Save, RotateCcw, Move } from 'lucide-react';
+import { Save, RotateCcw, Move, Plus, Trash2 } from 'lucide-react';
 
 const SCALE = 16; // px/mm 편집 배율
 const LOGO_ASPECT = 8.8;
@@ -120,6 +120,8 @@ function EditorInner({ templateId }: { templateId: string }) {
 
   function handleSave() { save(tpl); setDirty(false); }
   function handleReset() { reset(templateId); setTpl(LABEL_TEMPLATES[templateId]); setDirty(false); setSel(-1); }
+  function addEl(el: LabelElement) { setDirty(true); setSel(tpl.elements.length); setTpl((t) => ({ ...t, elements: [...t.elements, el] })); }
+  function deleteEl(i: number) { setDirty(true); setSel(-1); setTpl((t) => ({ ...t, elements: t.elements.filter((_, j) => j !== i) })); }
 
   const selEl = sel >= 0 ? tpl.elements[sel] : null;
 
@@ -170,15 +172,38 @@ function EditorInner({ templateId }: { templateId: string }) {
             </button>
           ))}
         </div>
+        <div className="flex gap-1">
+          <button onClick={() => addEl({ kind: 'text', xMm: 4, yMm: 9, text: '새 텍스트', fontFamily: 'Inter', weight: 700, sizeMm: 2.5 })}
+            className="px-2.5 py-1 rounded-md text-xs border border-dashed border-neutral-300 text-neutral-500 hover:bg-neutral-50"><Plus size={11} className="inline" /> 텍스트</button>
+          <button onClick={() => addEl({ kind: 'rule', xMm: 2, yMm: 11, lengthMm: 15, thicknessMm: 0.4 })}
+            className="px-2.5 py-1 rounded-md text-xs border border-dashed border-neutral-300 text-neutral-500 hover:bg-neutral-50"><Plus size={11} className="inline" /> 구분선</button>
+        </div>
 
         {selEl ? (
           <div className="space-y-2.5 rounded-xl border border-neutral-200 p-4">
-            <p className="text-xs font-semibold text-neutral-700">{elemLabel(selEl)}</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-neutral-700">{elemLabel(selEl)}</p>
+              <button onClick={() => deleteEl(sel)} className="text-[11px] text-red-500 hover:text-red-700 flex items-center gap-0.5"><Trash2 size={11} />삭제</button>
+            </div>
+            {selEl.kind === 'text' && (
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs text-neutral-500 w-16">내용</span>
+                <input type="text" value={selEl.text || ''} onChange={(e) => patchEl(sel, { text: e.target.value })}
+                  className="flex-1 h-7 px-2 text-xs border border-neutral-200 rounded" placeholder="고정 글씨 또는 {product}/{serial}" />
+              </div>
+            )}
             <Field label="가로(X)" value={selEl.xMm} onChange={(v) => patchEl(sel, { xMm: v })} />
             <Field label="세로(Y)" value={selEl.yMm} onChange={(v) => patchEl(sel, { yMm: v })} />
             {selEl.kind === 'text' && (
               <>
                 <Field label="글자크기" value={selEl.sizeMm || 2} onChange={(v) => patchEl(sel, { sizeMm: Math.max(0.5, v) })} step={0.2} />
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-neutral-500 w-16">폰트</span>
+                  <select value={selEl.fontFamily || 'Inter'} onChange={(e) => patchEl(sel, { fontFamily: e.target.value })}
+                    className="h-7 px-2 text-xs border border-neutral-200 rounded flex-1">
+                    {FONT_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-xs text-neutral-500 w-16">굵기</span>
                   <select value={selEl.weight || 400} onChange={(e) => patchEl(sel, { weight: parseInt(e.target.value) })}

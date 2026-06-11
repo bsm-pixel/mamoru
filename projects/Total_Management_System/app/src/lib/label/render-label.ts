@@ -11,24 +11,33 @@ import type { LabelTemplate, LabelData } from './templates';
 
 const FONT_LINK_ID = 'mamoru-label-fonts';
 
-/** 라벨용 브랜드 폰트 로드 보장 (Outfit/Plus Jakarta/Noto Sans KR) */
+/** 편집기 폰트 선택지 (Google Fonts) */
+export const FONT_OPTIONS = [
+  'Inter', 'Outfit', 'Montserrat', 'Poppins', 'Archivo', 'Roboto Condensed', 'Oswald',
+  'Noto Sans KR', 'Black Han Sans', 'Nanum Gothic', 'Do Hyeon',
+];
+
+/** 라벨용 폰트 로드 보장 */
 export async function ensureLabelFonts(): Promise<void> {
   if (typeof document === 'undefined') return;
   if (!document.getElementById(FONT_LINK_ID)) {
     const link = document.createElement('link');
     link.id = FONT_LINK_ID;
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&family=Montserrat:wght@400;600;700;800&family=Poppins:wght@400;600;700;800&family=Archivo:wght@400;600;700;800&family=Roboto+Condensed:wght@400;700&family=Oswald:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700;900&family=Black+Han+Sans&family=Nanum+Gothic:wght@400;700;800&family=Do+Hyeon&display=swap';
     document.head.appendChild(link);
   }
   try {
+    const d = document as Document;
     await Promise.all([
-      (document as Document).fonts.load("700 24px 'Inter'"),
-      (document as Document).fonts.load("400 24px 'Inter'"),
-      (document as Document).fonts.load("800 24px 'Outfit'"),
-      (document as Document).fonts.load("500 24px 'Noto Sans KR'"),
+      d.fonts.load("700 24px 'Inter'"), d.fonts.load("400 24px 'Inter'"),
+      d.fonts.load("800 24px 'Outfit'"), d.fonts.load("700 24px 'Montserrat'"),
+      d.fonts.load("700 24px 'Poppins'"), d.fonts.load("700 24px 'Archivo'"),
+      d.fonts.load("700 24px 'Oswald'"), d.fonts.load("700 24px 'Roboto Condensed'"),
+      d.fonts.load("500 24px 'Noto Sans KR'"), d.fonts.load("400 24px 'Black Han Sans'"),
+      d.fonts.load("700 24px 'Nanum Gothic'"), d.fonts.load("400 24px 'Do Hyeon'"),
     ]);
-    await (document as Document).fonts.ready;
+    await d.fonts.ready;
   } catch { /* fallback to default fonts */ }
 }
 
