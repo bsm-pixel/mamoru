@@ -514,11 +514,13 @@ export function useRepairDashboardStats() {
           .select('*', { count: 'exact', head: true })
           .in('status', ['intake', 'cost_notified'])
           .lt('updated_at', threeDaysAgoISO),
-        // 미입금 건수 (cost_notified 이후 + paid_at IS NULL)
+        // 미입금 건수 (cost_notified 이후 + paid_at IS NULL + 받을 금액>0)
+        //   delivered/completed 포함 — 자동배송완료로 완료된 미입금 건이 누락되던 사각지대 fix (2026-06-11)
         supabase
           .from('repairs')
           .select('*', { count: 'exact', head: true })
-          .in('status', ['cost_notified', 'repairing', 'ready_to_ship', 'shipped'])
+          .in('status', ['cost_notified', 'repairing', 'ready_to_ship', 'shipped', 'delivered', 'completed'])
+          .gt('total_amount', 0)
           .is('paid_at', null),
         // R1: 신규접수 (intake + confirmed_at IS NULL)
         supabase

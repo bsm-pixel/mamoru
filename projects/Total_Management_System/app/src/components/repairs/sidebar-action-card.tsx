@@ -48,8 +48,9 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const canSendCostNotice = ['intake', 'pickup_scheduled', 'picked_up', 'inspecting', 'cost_notified'].includes(currentStatus);
   const isCostResend = currentStatus === 'cost_notified';
 
-  // 입금확인 독립 버튼 표시 조건
-  const canMarkPaid = !r.paid_at && ['cost_notified', 'repairing', 'ready_to_ship', 'shipped'].includes(currentStatus);
+  // 입금확인 독립 버튼 표시 조건 — 미입금이면 배송완료/완료 이후에도 가능
+  //   (ALPS 자동추적으로 shipped→delivered→completed 전이 후 입금확인 길이 막히던 버그 fix 2026-06-11)
+  const canMarkPaid = !r.paid_at && ['cost_notified', 'repairing', 'ready_to_ship', 'shipped', 'delivered', 'completed'].includes(currentStatus);
 
   // 출고완료 버튼 조건 (ready_to_ship 상태 + 송장 있음)
   const canMarkShipped = currentStatus === 'ready_to_ship' && !!r.invoice_number;

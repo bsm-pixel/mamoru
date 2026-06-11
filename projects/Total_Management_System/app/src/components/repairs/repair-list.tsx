@@ -296,6 +296,12 @@ function TabSpecificInfo({ repair: r, tab }: { repair: Repair; tab: RepairTabKey
           {r.status === 'delivered' && (
             <Badge className="bg-blue-100 text-blue-700 text-[10px]">배송완료</Badge>
           )}
+          {/* 출고/완료됐는데 미입금 — 사각지대 방지(2026-06-11): 입금확인 누락 표시 */}
+          {!r.paid_at && r.total_amount > 0 && (
+            <Badge className="bg-red-100 text-red-700 text-[10px]">
+              <CreditCard size={10} className="mr-0.5" />미입금
+            </Badge>
+          )}
         </div>
       );
 
