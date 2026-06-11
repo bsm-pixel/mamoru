@@ -1,8 +1,14 @@
 # 시리얼 관리 프로세스 흐름도
 
-> 최종 업데이트: 2026-05-18 — **Phase C audit log + Phase B 양방향 교환** 도입. 시리얼 무결성 다층 안전망 구축.
+> 최종 업데이트: 2026-06-11 — **시리얼 번호 형식 `MR{YY}{NNNNN}` 전역누적 개편(예 MR2610816)** + **관리·조회 IA 통합**.
 
 시리얼은 MAMORU 비즈니스의 **정품 진위 추적 + 평생 복원수리 보증 + 교환/반품 흐름**의 핵심 식별자. 사장님이 가장 민감한 데이터.
+
+## 2026-06-11 — 번호 형식 개편 + 관리/조회 통합
+
+- **형식**: `MR{YY}{NNNNN}` (MR=마모루, 연도2, 5자리 **전역 누적**, 연도 리셋 없음, 10816부터). 예 `MR2610816`. 공통 유틸 `lib/serial/format.ts`+`next-serial.ts`가 SSOT — 모든 생성경로(batch/판매 picker/product-panel)·조회(lookup·check-duplicate 하이픈무시)가 이걸 호출. 일괄생성 UI는 "시작번호 직접입력" 폐지 → "다음 번호부터 N개". 구 13790001대·M26- 보존.
+- **IA 통합**: nav "시리얼 조회" → **"시리얼 관리 & 조회"**. `/serials` 한 화면에 [시리얼 조회] 탭(검색→제품/판매/고객/이력/교환) + [제품별 관리] 탭(제품 선택→일괄생성·상태/zone 변경). 관리 로직은 `components/serials/serial-manage-panel.tsx`로 추출해 `/serials`·`/products/[id]/serials` 공유(DRY).
+- **무결성 가드(동반, 2026-06-11)**: 판매 저장 시 payload내 동일 시리얼 중복 배정 거부(`/api/sales` POST + rebuild_sale) + 자동생성 카트 회피(reservedSerials).
 
 ---
 

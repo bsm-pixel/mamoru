@@ -63,7 +63,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     group: 'CS',
     items: [
-      { label: '시리얼 조회', href: '/serials', icon: 'Search', matchPrefix: '/serials' },
+      { label: '시리얼 관리 & 조회', href: '/serials', icon: 'Search', matchPrefix: '/serials' },
       { label: '리뷰관리', href: '/reviews', icon: 'Star', matchPrefix: '/reviews' },
     ],
   },

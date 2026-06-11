@@ -6,9 +6,11 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSerialLookup, useSerialAudit, type SerialAuditLog } from '@/hooks/use-serial-lookup';
+import { useProducts } from '@/hooks/use-sales';
 import { formatPhone } from '@/lib/utils/format';
-import { Package, User, ShoppingBag, Wrench, Hash, Activity, ArrowRight, ArrowLeftRight } from 'lucide-react';
+import { Package, User, ShoppingBag, Wrench, Hash, Activity, ArrowRight, ArrowLeft, ArrowLeftRight, Search } from 'lucide-react';
 import { SerialSwapDialog } from '@/components/serials/serial-swap-dialog';
+import { SerialManagePanel } from '@/components/serials/serial-manage-panel';
 import Link from 'next/link';
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
@@ -99,8 +101,14 @@ function describeChange(log: SerialAuditLog): string[] {
 }
 
 export default function SerialsPage() {
+  const [tab, setTab] = useState<'lookup' | 'manage'>('lookup');
   const [query, setQuery] = useState('');
   const { data, isLoading, isFetched } = useSerialLookup(query);
+
+  // 제품별 관리 탭
+  const { data: products = [] } = useProducts();
+  const [prodSearch, setProdSearch] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   const serial = data?.serial;
   const product = data?.product;
@@ -116,9 +124,20 @@ export default function SerialsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <Topbar title="시리얼 조회" />
+      <Topbar title="시리얼 관리 & 조회" />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* 탭 — 조회 / 제품별 관리 */}
+        <div className="flex gap-1">
+          {([['lookup', '시리얼 조회'], ['manage', '제품별 관리']] as const).map(([v, label]) => (
+            <button key={v} onClick={() => setTab(v)}
+              className={`px-4 py-2 rounded-lg text-xs font-semibold transition ${tab === v ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'lookup' && (<>
         {/* 검색 바 */}
         <SearchInput
           placeholder="시리얼번호 또는 바코드 입력..."
@@ -331,6 +350,49 @@ export default function SerialsPage() {
             <p className="text-sm">시리얼번호 또는 바코드를 입력하세요</p>
             <p className="text-xs text-neutral-300 mt-1">제품 정보, 구매자, 판매경로를 즉시 확인합니다</p>
           </div>
+        )}
+        </>)}
+
+        {/* 제품별 관리 탭 — 제품 선택 → 시리얼 생성·상태/위치 관리 */}
+        {tab === 'manage' && (
+          selectedProductId ? (
+            <div className="space-y-3">
+              <button onClick={() => setSelectedProductId(null)} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                <ArrowLeft size={12} /> 다른 제품 선택
+              </button>
+              {(() => { const p = products.find((x) => x.id === selectedProductId); return p ? (
+                <div className="flex items-center gap-2">
+                  <Package size={16} className="text-stone-900" />
+                  <span className="text-sm font-bold">{p.name}</span>
+                  <span className="text-xs text-neutral-500">({p.sku})</span>
+                </div>
+              ) : null; })()}
+              <SerialManagePanel key={selectedProductId} productId={selectedProductId} />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                <input type="text" value={prodSearch} onChange={(e) => setProdSearch(e.target.value)} placeholder="제품명 또는 SKU 검색"
+                  className="w-full h-10 pl-9 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+              </div>
+              <div className="bg-white rounded-xl border border-neutral-200 divide-y divide-neutral-100 max-h-[60vh] overflow-y-auto">
+                {products.filter((p) => p.category !== 'SUP' && (!prodSearch || p.name.toLowerCase().includes(prodSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(prodSearch.toLowerCase()))).map((p) => (
+                  <button key={p.id} onClick={() => setSelectedProductId(p.id)} className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-neutral-50 transition">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Package size={15} className="text-neutral-400 shrink-0" />
+                      <span className="text-sm font-medium truncate">{p.name}</span>
+                      <span className="text-xs text-neutral-400 shrink-0">{p.sku}</span>
+                    </div>
+                    <ArrowRight size={14} className="text-neutral-300 shrink-0" />
+                  </button>
+                ))}
+                {products.filter((p) => p.category !== 'SUP').length === 0 && (
+                  <div className="px-4 py-8 text-center text-sm text-neutral-400">제품이 없습니다</div>
+                )}
+              </div>
+            </div>
+          )
         )}
       </div>
 
