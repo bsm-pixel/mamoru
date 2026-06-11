@@ -202,7 +202,7 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
               </p>
             )}
             <p className="text-xs text-neutral-400 mt-2">
-              형식: <span className="font-mono">M{new Date().getFullYear() % 100}-NNNN</span> (예: {nextSerial || `M${new Date().getFullYear() % 100}-0001`})
+              형식: <span className="font-mono">MR{new Date().getFullYear() % 100}NNNNN</span> (예: {nextSerial || `MR${new Date().getFullYear() % 100}10816`}) · 누적 번호(연도 리셋 없음)
             </p>
           </Card>
         )}
