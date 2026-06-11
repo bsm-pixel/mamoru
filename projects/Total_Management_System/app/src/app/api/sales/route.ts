@@ -78,11 +78,31 @@ export async function POST(req: NextRequest) {
         supply_amount?: number;
         vat_amount?: number;
         serial_ids?: string[];
+        manual_serials?: string[];
       }>;
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
+
+    // 무결성 가드 — 같은 판매 안에서 동일 시리얼이 두 품목에 중복 배정되면 거부
+    //   (한 물리 시리얼 = 한 품목. 자동생성/수동입력 중복 시 한쪽이 덮어써지는 손상 방지) 2026-06-11
+    {
+      const allManual: string[] = [];
+      const allSerialIds: string[] = [];
+      for (const it of items) {
+        for (const s of (it.manual_serials || [])) { const v = String(s).trim(); if (v) allManual.push(v); }
+        for (const sid of (it.serial_ids || [])) { if (sid) allSerialIds.push(sid); }
+      }
+      const dupManual = allManual.find((v, i) => allManual.indexOf(v) !== i);
+      const dupId = allSerialIds.find((v, i) => allSerialIds.indexOf(v) !== i);
+      if (dupManual || dupId) {
+        return NextResponse.json({
+          error: `같은 판매에 동일 시리얼이 중복 배정되었습니다${dupManual ? `: "${dupManual}"` : ''}. 품목마다 다른 시리얼을 지정해주세요.`,
+          code: 'SERIAL_DUPLICATE_IN_PAYLOAD',
+        }, { status: 400 });
+      }
+    }
 
     // 판매번호 생성: OS-YYYYMMDD-NNN
     const saleDate = sale.sale_date || new Date().toISOString().slice(0, 10);

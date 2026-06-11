@@ -486,6 +486,24 @@ export async function PATCH(
         return NextResponse.json({ error: '최소 1개 항목이 필요합니다' }, { status: 400 });
       }
 
+      // 무결성 가드 — 같은 판매 안에서 동일 시리얼 중복 배정 거부 (2026-06-11)
+      {
+        const allManual: string[] = [];
+        const allSerialIds: string[] = [];
+        for (const it of newItems) {
+          for (const s of (it.manual_serials || [])) { const v = String(s).trim(); if (v) allManual.push(v); }
+          for (const sid of (it.serial_ids || [])) { if (sid) allSerialIds.push(sid); }
+        }
+        const dupManual = allManual.find((v, i) => allManual.indexOf(v) !== i);
+        const dupId = allSerialIds.find((v, i) => allSerialIds.indexOf(v) !== i);
+        if (dupManual || dupId) {
+          return NextResponse.json({
+            error: `같은 판매에 동일 시리얼이 중복 배정되었습니다${dupManual ? `: "${dupManual}"` : ''}. 품목마다 다른 시리얼을 지정해주세요.`,
+            code: 'SERIAL_DUPLICATE_IN_PAYLOAD',
+          }, { status: 400 });
+        }
+      }
+
       // ── STEP 1: 기존 시리얼 보존 여부 판단 ──
       // serial_ids나 manual_serials가 명시적으로 있을 때만 시리얼 재할당
       // 없으면 기존 시리얼 유지 (금액/항목만 수정하는 경우)

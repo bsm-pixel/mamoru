@@ -169,6 +169,8 @@ function NewSaleContent() {
     return () => { cancelled = true; };
   }, [fromConsultationId]);
   const productTotal = cart.reduce((s, item) => s + item.unitPrice * item.quantity, 0);
+  // 카트 전체에 이미 배정된 수동/자동 시리얼 — 품목 간 자동생성 중복 방지용 (2026-06-11 fix)
+  const cartReservedSerials = cart.flatMap((it) => it.manualSerials || []);
   const REPAIR_SHIPPING_FEE = 3000;
   const repairTotal = rep.mamoruQty * rep.mamoruPrice + rep.otherQty * rep.otherPrice + (repShipping ? REPAIR_SHIPPING_FEE : 0);
   const hasRepair = rep.mamoruQty > 0 || rep.otherQty > 0;
@@ -696,12 +698,14 @@ function NewSaleContent() {
                         {item.product && customerType !== 'dealer' && customerType !== 'academy' ? (
                           <SerialPicker productId={item.product.id} quantity={item.quantity} selectedSerialIds={item.selectedSerialIds}
                             onSelect={(ids) => updateSerialIds(key, ids)} manualSerials={item.manualSerials || []} onManualSerialsChange={(s) => updateManualSerials(key, s)}
-                            onTransferConsent={() => setAllowSerialTransfer(true)} />
+                            onTransferConsent={() => setAllowSerialTransfer(true)}
+                            reservedSerials={cartReservedSerials.filter((sn) => !(item.manualSerials || []).includes(sn))} />
                         ) : item.product && (customerType === 'dealer' || customerType === 'academy') ? (
                           <p className="text-[10px] text-neutral-400 mt-1">보관창고에서 출고 (시리얼 미부여)</p>
                         ) : !item.product ? (
                           <ManualSerialInput serials={item.manualSerials || []} onChange={(s) => updateManualSerials(key, s)}
-                            onTransferConsent={() => setAllowSerialTransfer(true)} />
+                            onTransferConsent={() => setAllowSerialTransfer(true)}
+                            reservedSerials={cartReservedSerials.filter((sn) => !(item.manualSerials || []).includes(sn))} />
                         ) : null}
                       </div>
                     );
@@ -746,7 +750,7 @@ function NewSaleContent() {
 }
 
 /** 직접입력 품목용 시리얼 직접 입력 */
-function ManualSerialInput({ serials, onChange, onTransferConsent }: { serials: string[]; onChange: (s: string[]) => void; onTransferConsent?: () => void }) {
+function ManualSerialInput({ serials, onChange, onTransferConsent, reservedSerials = [] }: { serials: string[]; onChange: (s: string[]) => void; onTransferConsent?: () => void; reservedSerials?: string[] }) {
   const [input, setInput] = useState('');
   const [open, setOpen] = useState(false);
   const { prompt: promptConflict, dialog: conflictDialog } = useSerialConflictPrompt();
@@ -809,7 +813,8 @@ function ManualSerialInput({ serials, onChange, onTransferConsent }: { serials: 
               const res = await fetch('/api/serials/batch');
               const data = await res.json();
               let next = data.next_start || 13790001;
-              const existing = serials.map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
+              // 이 품목 + 카트 내 다른 품목 배정 번호 모두 회피 (품목 간 중복 방지) 2026-06-11
+              const existing = [...serials, ...reservedSerials].map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
               while (existing.includes(next)) next++;
               const ok = await confirmIfDuplicate(String(next));
               if (!ok) return;

@@ -18,9 +18,11 @@ interface Props {
   currentSaleId?: string;
   /** 사장님이 중복 시리얼 이전 동의 시 호출 — 부모에서 allow_serial_transfer 플래그 set */
   onTransferConsent?: () => void;
+  /** 같은 화면(카트)의 다른 품목에 이미 배정된 시리얼 — 자동생성 시 회피해 중복 방지 (2026-06-11 fix) */
+  reservedSerials?: string[];
 }
 
-export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect, manualSerials = [], onManualSerialsChange, currentSerials = [], currentSaleId, onTransferConsent }: Props) {
+export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect, manualSerials = [], onManualSerialsChange, currentSerials = [], currentSaleId, onTransferConsent, reservedSerials = [] }: Props) {
   // Phase A 모달 — Promise 기반 prompt + dialog 노드 (2026-05-18)
   const { prompt: promptConflict, dialog: conflictDialog } = useSerialConflictPrompt();
 
@@ -77,7 +79,8 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
       const res = await fetch('/api/serials/batch');
       const data = await res.json();
       let next = data.next_start || 13790001;
-      const existing = manualSerials.map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
+      // 이 품목 + 카트 내 다른 품목에 이미 배정된 번호를 모두 회피 (저장 전이라 DB next_start가 동일하게 나오는 문제 방지)
+      const existing = [...manualSerials, ...reservedSerials].map((s) => parseInt(s, 10)).filter((n) => !isNaN(n));
       while (existing.includes(next)) next++;
       // Phase A — 자동 생성된 번호도 DB 중복 가능성 (이전 등록·재고 시리얼 등) → 검증 (2026-05-18)
       const ok = await confirmIfDuplicate(String(next));

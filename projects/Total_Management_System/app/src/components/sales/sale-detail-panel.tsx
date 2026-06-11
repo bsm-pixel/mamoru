@@ -875,6 +875,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
                     currentSerials={initialSerials[idx] || []}
                     currentSaleId={saleId}
                     onTransferConsent={() => setAllowSerialTransfer(true)}
+                    reservedSerials={editItems.flatMap((e, i) => i === idx ? [] : (e.manualSerials || []))}
                   />
                 </div>
               ))}
