@@ -53,7 +53,8 @@ export function SerialManagePanel({ productId }: Props) {
   const [batchLot, setBatchLot] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const { data, isLoading } = useSerials(productId, { status, search, limit: 50 });
+  // 전체 표시 — 한 제품 시리얼 전부 보이게 (50 제한이 '총 N개'와 어긋나던 문제 fix 2026-06-11)
+  const { data, isLoading } = useSerials(productId, { status, search, limit: 1000 });
   const serials = data?.serials || [];
   const total = data?.total || 0;
 
