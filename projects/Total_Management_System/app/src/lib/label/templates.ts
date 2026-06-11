@@ -49,9 +49,9 @@ export const TEMPLATE_PRODUCT: LabelTemplate = {
   heightMm: 20,
   elements: [
     // MAMORU 로고 = Aggressive 폰트 → 디자인 그대로 이미지 임베드
-    { kind: 'image', xMm: 2.4, yMm: 1.8, src: '/labels/mamoru-logo.png', widthMm: 13 },
-    { kind: 'rule', xMm: 2.4, yMm: 5.0, lengthMm: 19, thicknessMm: 0.4 },
-    { kind: 'text', xMm: 2.4, yMm: 6.0, text: '{product}', fontFamily: 'Inter', weight: 700, sizeMm: 4.2 },
+    { kind: 'image', xMm: 2.4, yMm: 2.8, src: '/labels/mamoru-logo.png', widthMm: 13 },
+    { kind: 'rule', xMm: 2.4, yMm: 5.7, lengthMm: 19, thicknessMm: 0.4 },
+    { kind: 'text', xMm: 2.4, yMm: 6.4, text: '{product}', fontFamily: 'Inter', weight: 700, sizeMm: 4.2 },
     { kind: 'barcode', xMm: 2.4, yMm: 12.0, data: '{sku}', widthMm: 26, heightMm: 6.5, showText: false },
   ],
 };
