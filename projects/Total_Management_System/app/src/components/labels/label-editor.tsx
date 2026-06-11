@@ -172,11 +172,13 @@ function EditorInner({ templateId }: { templateId: string }) {
             </button>
           ))}
         </div>
-        <div className="flex gap-1">
+        {/* 요소 추가 — 고정 글씨/구분선 직접 추가 */}
+        <div className="flex items-center gap-2 rounded-lg bg-neutral-50 border border-neutral-200 px-3 py-2">
+          <span className="text-[11px] font-semibold text-neutral-500">요소 추가</span>
           <button onClick={() => addEl({ kind: 'text', xMm: 4, yMm: 9, text: '새 텍스트', fontFamily: 'Inter', weight: 700, sizeMm: 2.5 })}
-            className="px-2.5 py-1 rounded-md text-xs border border-dashed border-neutral-300 text-neutral-500 hover:bg-neutral-50"><Plus size={11} className="inline" /> 텍스트</button>
+            className="px-3 py-1 rounded-md text-xs font-medium bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-100 flex items-center gap-1"><Plus size={12} /> 텍스트</button>
           <button onClick={() => addEl({ kind: 'rule', xMm: 2, yMm: 11, lengthMm: 15, thicknessMm: 0.4 })}
-            className="px-2.5 py-1 rounded-md text-xs border border-dashed border-neutral-300 text-neutral-500 hover:bg-neutral-50"><Plus size={11} className="inline" /> 구분선</button>
+            className="px-3 py-1 rounded-md text-xs font-medium bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-100 flex items-center gap-1"><Plus size={12} /> 구분선</button>
         </div>
 
         {selEl ? (
