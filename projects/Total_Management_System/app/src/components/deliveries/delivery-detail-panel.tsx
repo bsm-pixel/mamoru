@@ -50,7 +50,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
 
   const [editing, setEditing] = useState(false);
   const [editItems, setEditItems] = useState<Array<{
-    product_id?: string; product_name: string; sku?: string; quantity: number; unit_price: number;
+    product_id?: string; product_name: string; sku?: string; category?: string; quantity: number; unit_price: number;
   }>>([]);
   const [editMemo, setEditMemo] = useState('');
   const [editExpectedDate, setEditExpectedDate] = useState('');
@@ -153,6 +153,8 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
       product_id: (i.product_id as string) || undefined,
       product_name: i.product_name as string,
       sku: (i.sku as string) || undefined,
+      // 복원수리(category='RS') 등 카테고리 보존 — 누락 시 RS가 제품으로 둔갑해 집계 오류
+      category: (i.category as string) || undefined,
       quantity: i.quantity as number,
       unit_price: i.unit_price as number,
     })));
@@ -329,7 +331,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
               {products.filter((p) => !editItems.find((ei) => ei.product_id === p.id)).map((p) => (
                 <button key={p.id} data-product-row data-product-name={p.name.toLowerCase()}
                   onClick={() => setEditItems((prev) => [...prev, {
-                    product_id: p.id, product_name: getDeliveryName(p), sku: p.sku || undefined, quantity: 1, unit_price: getDeliveryPrice(p),
+                    product_id: p.id, product_name: getDeliveryName(p), sku: p.sku || undefined, category: p.category || undefined, quantity: 1, unit_price: getDeliveryPrice(p),
                   }])}
                   className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-neutral-50 transition text-left">
                   <span className="truncate font-medium">{getDeliveryName(p)}</span>

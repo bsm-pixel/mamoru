@@ -89,8 +89,7 @@ function NewSaleContent() {
   // Phase A — 시리얼 다른 판매에서 이전 동의 플래그 (2026-05-18)
   const [allowSerialTransfer, setAllowSerialTransfer] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
-  // 3-A: 판매 모드 — 제품 판매 vs 복원수리(마모루/타사 자루 + 단가). deliveries "+B2B수리" 와 대칭.
-  const [saleMode, setSaleMode] = useState<'product' | 'repair'>('product');
+  // 복원수리 입력 (제품과 한 장바구니에 함께 — 2026-06-09 통합). deliveries 모달과 대칭.
   const [rep, setRep] = useState({ mamoruQty: 0, mamoruPrice: 10000, otherQty: 0, otherPrice: 20000 });
   const [repShipping, setRepShipping] = useState(false); // 복원수리 배송비 3,000원 포함 여부
 
@@ -172,7 +171,8 @@ function NewSaleContent() {
   const productTotal = cart.reduce((s, item) => s + item.unitPrice * item.quantity, 0);
   const REPAIR_SHIPPING_FEE = 3000;
   const repairTotal = rep.mamoruQty * rep.mamoruPrice + rep.otherQty * rep.otherPrice + (repShipping ? REPAIR_SHIPPING_FEE : 0);
-  const totalAmount = saleMode === 'repair' ? repairTotal : productTotal;
+  const hasRepair = rep.mamoruQty > 0 || rep.otherQty > 0;
+  const totalAmount = productTotal + repairTotal; // 제품 + 복원수리 통합
   const finalAmount = totalAmount - discount;
   const paidAmount = paymentStatus === 'paid' ? finalAmount
     : paymentStatus === 'unpaid' ? 0
@@ -256,19 +256,15 @@ function NewSaleContent() {
     const name = selectedCustomer?.name || customerName.trim();
     if (!name) return;
 
-    // 3-A: 복원수리 모드 — 마모루/타사 자루를 offline_sale_items category='RS' 로 저장.
+    // 복원수리(마모루/타사/배송비)를 offline_sale_items category='RS' 로 저장 — 제품과 한 장바구니에 함께.
     //   product_name 고정 패턴 "복원수리 (마모루)" / "복원수리 (타사)" → 기존 includes('타사') 분류 기준 그대로 작동.
-    const repairItems = saleMode === 'repair' ? [
+    const repairItems = [
       ...(rep.mamoruQty > 0 ? [{ product_name: '복원수리 (마모루)', category: 'RS', quantity: rep.mamoruQty, unit_price: rep.mamoruPrice, total_price: rep.mamoruQty * rep.mamoruPrice, serial_ids: [] as string[], manual_serials: [] as string[] }] : []),
       ...(rep.otherQty > 0 ? [{ product_name: '복원수리 (타사)', category: 'RS', quantity: rep.otherQty, unit_price: rep.otherPrice, total_price: rep.otherQty * rep.otherPrice, serial_ids: [] as string[], manual_serials: [] as string[] }] : []),
       ...(repShipping ? [{ product_name: '배송비', category: 'RS', quantity: 1, unit_price: REPAIR_SHIPPING_FEE, total_price: REPAIR_SHIPPING_FEE, serial_ids: [] as string[], manual_serials: [] as string[] }] : []),
-    ] : [];
+    ];
 
-    if (saleMode === 'repair') {
-      if (rep.mamoruQty <= 0 && rep.otherQty <= 0) { toast.error('마모루 또는 타사 수량을 입력해주세요'); return; }
-    } else {
-      if (cart.length === 0) return;
-    }
+    if (cart.length === 0 && !hasRepair) { toast.error('제품 또는 복원수리를 입력해주세요'); return; }
 
     await createSale.mutateAsync({
       sale: {
@@ -290,20 +286,23 @@ function NewSaleContent() {
         source_consultation_id: sourceConsultation?.id || undefined,
         memo: memo.trim() || undefined,
       },
-      items: saleMode === 'repair' ? repairItems : cart.map((item) => ({
-        product_id: item.product?.id || undefined,
-        // 073/074: catalog delivery_name 우선 사용 → 없으면 기존 fallback (price_groups display_name 또는 product.name)
-        product_name: item.product
-          ? ((catalogEntryMap.get(item.product.id)?.delivery_name?.trim()) || getProductDisplayName(item.product, customerType, priceGroups))
-          : (item.customName || '임시 제품'),
-        sku: item.product?.sku || undefined,
-        category: item.product?.category || undefined,
-        quantity: item.quantity,
-        unit_price: item.unitPrice,
-        total_price: item.unitPrice * item.quantity,
-        serial_ids: item.selectedSerialIds,
-        manual_serials: item.manualSerials || [],
-      })),
+      items: [
+        ...cart.map((item) => ({
+          product_id: item.product?.id || undefined,
+          // 073/074: catalog delivery_name 우선 사용 → 없으면 기존 fallback (price_groups display_name 또는 product.name)
+          product_name: item.product
+            ? ((catalogEntryMap.get(item.product.id)?.delivery_name?.trim()) || getProductDisplayName(item.product, customerType, priceGroups))
+            : (item.customName || '임시 제품'),
+          sku: item.product?.sku || undefined,
+          category: item.product?.category || undefined,
+          quantity: item.quantity,
+          unit_price: item.unitPrice,
+          total_price: item.unitPrice * item.quantity,
+          serial_ids: item.selectedSerialIds,
+          manual_serials: item.manualSerials || [],
+        })),
+        ...repairItems, // 복원수리(category='RS') 라인 결합
+      ],
       allow_serial_transfer: allowSerialTransfer, // Phase A — 사장님 명시 동의 시 서버 강탈 허용
     });
 
@@ -346,19 +345,8 @@ function NewSaleContent() {
           </div>
         )}
 
-        {/* 3-A: 판매 모드 전환 — 제품 판매 vs 복원수리 */}
-        <div className="flex gap-1 xl:w-[33.33%]">
-          {([['product', '제품 판매'], ['repair', '복원수리']] as const).map(([v, label]) => (
-            <button key={v} onClick={() => setSaleMode(v)}
-              className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${saleMode === v ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* 제목 + 검색 (제품 모드에서만 — 그리드 밖, 좌열 너비만큼만) */}
-        {saleMode === 'product' && (
-          <div className="xl:w-[33.33%]">
+        {/* 제목 + 검색 (그리드 밖, 좌열 너비만큼만) */}
+        <div className="xl:w-[33.33%]">
             <h3 className="text-sm font-semibold text-neutral-700 mb-2">제품 선택</h3>
             {/* 검색 + 카테고리 필터 */}
             <div className="flex items-center gap-2">
@@ -388,13 +376,11 @@ function NewSaleContent() {
               </div>
             </div>
           </div>
-        )}
 
         {/* 3열 그리드 — 검색바 아래 라인부터 동일 높이 시작 */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:items-start">
-          {/* 좌: 제품 목록(제품 모드) / 복원수리 입력(복원수리 모드) */}
+          {/* 좌: 제품 목록 + 복원수리 입력 (한 장바구니에 함께) */}
           <div className="space-y-3">
-            {saleMode === 'product' ? (
             <>
             {/* 제품 목록 테이블 */}
             {productsLoading ? (
@@ -487,11 +473,10 @@ function NewSaleContent() {
               </div>
             </Card>
             </>
-            ) : (
-            /* 3-A: 복원수리 입력 — 마모루/타사 자루 + 단가 (B2B 거래처 복원수리는 "납품 → 복원수리" 화면 사용) */
+            {/* 복원수리 입력 — 제품과 한 장바구니에 함께 (2026-06-09 통합) */}
             <Card>
-              <h3 className="text-sm font-semibold text-stone-900 mb-1">복원수리 입력</h3>
-              <p className="text-xs text-neutral-400 mb-3">마모루 / 타사 가위를 자루 수와 단가로 입력합니다.</p>
+              <h3 className="text-sm font-semibold text-stone-900 mb-1">복원수리 입력 (선택)</h3>
+              <p className="text-xs text-neutral-400 mb-3">마모루 / 타사 가위를 자루 수와 단가로 입력합니다. 제품과 함께 등록됩니다.</p>
               <div className="space-y-3">
                 {([
                   { key: 'mamoru' as const, label: '마모루 가위', qty: rep.mamoruQty, price: rep.mamoruPrice, basePrice: '10,000' },
@@ -528,7 +513,6 @@ function NewSaleContent() {
                 </div>
               </div>
             </Card>
-            )}
           </div>
 
           {/* 중: 고객 + 결제 */}
@@ -680,20 +664,10 @@ function NewSaleContent() {
             <Card>
               <h3 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
                 <ShoppingBag size={16} />
-                {saleMode === 'repair' ? '복원수리' : `장바구니 (${cart.length})`}
+                장바구니{cart.length > 0 ? ` (${cart.length})` : ''}{hasRepair || repShipping ? ' + 복원수리' : ''}
               </h3>
-              {saleMode === 'repair' ? (
-                (rep.mamoruQty > 0 || rep.otherQty > 0) ? (
-                  <div className="space-y-1.5">
-                    {rep.mamoruQty > 0 && <div className="flex justify-between text-sm"><span className="font-medium">복원수리 (마모루) × {rep.mamoruQty}자루</span><span className="text-neutral-600">{formatKRW(rep.mamoruQty * rep.mamoruPrice)}</span></div>}
-                    {rep.otherQty > 0 && <div className="flex justify-between text-sm"><span className="font-medium">복원수리 (타사) × {rep.otherQty}자루</span><span className="text-neutral-600">{formatKRW(rep.otherQty * rep.otherPrice)}</span></div>}
-                    {repShipping && <div className="flex justify-between text-sm"><span className="font-medium">배송비</span><span className="text-neutral-600">{formatKRW(REPAIR_SHIPPING_FEE)}</span></div>}
-                  </div>
-                ) : (
-                  <p className="text-xs text-neutral-400 text-center py-4">왼쪽에서 마모루 또는 타사 수량을 입력해주세요</p>
-                )
-              ) : cart.length === 0 ? (
-                <p className="text-xs text-neutral-400 text-center py-4">제품을 선택해주세요</p>
+              {cart.length === 0 && !hasRepair && !repShipping ? (
+                <p className="text-xs text-neutral-400 text-center py-4">제품 또는 복원수리를 입력해주세요</p>
               ) : (
                 <div className="space-y-2">
                   {cart.map((item) => {
@@ -732,9 +706,13 @@ function NewSaleContent() {
                       </div>
                     );
                   })}
+                  {/* 복원수리 라인 (왼쪽 복원수리 입력 반영) */}
+                  {rep.mamoruQty > 0 && <div className="flex items-center justify-between text-sm py-1"><span className="font-medium">복원수리 (마모루) × {rep.mamoruQty}자루</span><span className="text-neutral-600">{formatKRW(rep.mamoruQty * rep.mamoruPrice)}</span></div>}
+                  {rep.otherQty > 0 && <div className="flex items-center justify-between text-sm py-1"><span className="font-medium">복원수리 (타사) × {rep.otherQty}자루</span><span className="text-neutral-600">{formatKRW(rep.otherQty * rep.otherPrice)}</span></div>}
+                  {repShipping && <div className="flex items-center justify-between text-sm py-1"><span className="font-medium">배송비</span><span className="text-neutral-600">{formatKRW(REPAIR_SHIPPING_FEE)}</span></div>}
                 </div>
               )}
-              {((saleMode === 'product' && cart.length > 0) || (saleMode === 'repair' && repairTotal > 0)) && (
+              {(cart.length > 0 || repairTotal > 0) && (
                 <div className="mt-3 pt-3 border-t border-neutral-100 space-y-1">
                   <div className="flex justify-between text-sm"><span className="text-neutral-500">소계</span><span className="font-semibold">{formatKRW(totalAmount)}</span></div>
                   {discount > 0 && <div className="flex justify-between text-sm"><span className="text-neutral-500">할인</span><span className="text-red-600">-{formatKRW(discount)}</span></div>}
@@ -756,9 +734,9 @@ function NewSaleContent() {
             </Card>
 
             <Button className="w-full"
-              disabled={(!selectedCustomer && !customerName.trim()) || (saleMode === 'product' ? cart.length === 0 : (rep.mamoruQty <= 0 && rep.otherQty <= 0)) || createSale.isPending}
+              disabled={(!selectedCustomer && !customerName.trim()) || (cart.length === 0 && !hasRepair) || createSale.isPending}
               onClick={handleSubmit}>
-              {createSale.isPending ? '등록 중...' : `${saleMode === 'repair' ? '복원수리 등록' : '판매 등록'} (${formatKRW(paidAmount)})`}
+              {createSale.isPending ? '등록 중...' : `판매 등록 (${formatKRW(paidAmount)})`}
             </Button>
           </div>
         </div>

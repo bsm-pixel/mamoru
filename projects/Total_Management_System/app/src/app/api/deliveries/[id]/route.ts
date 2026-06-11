@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
 import { recalcOutstanding } from '@/lib/outstanding';
+import { computeDeliveryTotals } from '@/lib/deliveries/totals';
 
 /** GET /api/deliveries/[id] — 납품 상세 */
 export async function GET(
@@ -201,15 +202,10 @@ export async function PATCH(
         total_price: it.quantity * it.unit_price,
       })));
 
-      // 총액 재계산 (생성 POST 와 동일 공식)
-      const vatTypeVal = dl.vat_type || 'included';
-      const itemTotal = editItems.reduce((s: number, i: { quantity: number; unit_price: number }) => s + i.quantity * i.unit_price, 0);
+      // 총액 재계산 (생성 POST 와 동일 공식 — 복원수리 RS는 VAT 제외)
+      const vatTypeVal = (dl.vat_type || 'included') as 'included' | 'separate' | 'none';
       const discountVal = dl.discount_amount || 0;
-      const baseAmount = itemTotal - discountVal;
-      let supplyAmount = 0, vatAmount = 0, totalAmount = 0;
-      if (vatTypeVal === 'separate') { supplyAmount = baseAmount; vatAmount = Math.round(baseAmount * 0.1); totalAmount = baseAmount + vatAmount; }
-      else if (vatTypeVal === 'none') { supplyAmount = baseAmount; vatAmount = 0; totalAmount = baseAmount; }
-      else { supplyAmount = Math.round(baseAmount / 1.1); vatAmount = baseAmount - supplyAmount; totalAmount = baseAmount; }
+      const { supplyAmount, vatAmount, totalAmount } = computeDeliveryTotals(editItems, vatTypeVal, discountVal);
       updates.total_amount = totalAmount;
       updates.supply_amount = supplyAmount;
       updates.vat_amount = vatAmount;

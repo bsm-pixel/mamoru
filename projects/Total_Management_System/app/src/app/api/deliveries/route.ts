@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { recalcOutstanding } from '@/lib/outstanding';
+import { computeDeliveryTotals } from '@/lib/deliveries/totals';
 
 /** GET /api/deliveries — 납품 목록 */
 export async function GET(req: NextRequest) {
@@ -117,26 +118,10 @@ export async function POST(req: NextRequest) {
     const seq = String((count || 0) + 1).padStart(3, '0');
     const dlNumber = `DL-${dateStr}-${seq}`;
 
-    // 합계 계산
+    // 합계 계산 — 복원수리(category='RS') 항목은 VAT 제외 (혼합 납품 정합성)
     const vatTypeVal = vat_type || 'included';
-    const itemTotal = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
     const discountVal = discount_amount || 0;
-    const baseAmount = itemTotal - discountVal;
-    let supplyAmount = 0, vatAmount = 0, totalAmount = 0;
-
-    if (vatTypeVal === 'separate') {
-      supplyAmount = baseAmount;
-      vatAmount = Math.round(baseAmount * 0.1);
-      totalAmount = baseAmount + vatAmount;
-    } else if (vatTypeVal === 'none') {
-      supplyAmount = baseAmount;
-      vatAmount = 0;
-      totalAmount = baseAmount;
-    } else {
-      supplyAmount = Math.round(baseAmount / 1.1);
-      vatAmount = baseAmount - supplyAmount;
-      totalAmount = baseAmount;
-    }
+    const { supplyAmount, vatAmount, totalAmount } = computeDeliveryTotals(items, vatTypeVal, discountVal);
 
     const paidVal = paid_amount || 0;
     const payStatus = payment_status || 'unpaid';

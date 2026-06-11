@@ -3,12 +3,10 @@
 /**
  * 거래처 납품서 작성 모달
  * 2026-05-26 Phase C: deliveries/page.tsx 안에서 분리 — /sales/new?mode=b2b 에서도 재사용
- *
- * 모드 2종:
- *  - delivery: 제품 납품 (B2B 거래처 — 부가세/증빙/정산)
- *  - repair:   복원수리 (간편 입력 — 자루 × 단가, 거래처 default_repair_price 자동 적용)
- *
- * 분리 이유: 사장님 IA 결정 — /sales 헤더 "+ 거래처 매출" 버튼이 /sales/new?mode=b2b 진입 → 동일 모달 자동 표시
+ * 2026-06-09: 제품 납품 + 복원수리 혼합 입력 통합 (mode 양자택일 제거)
+ *   - 한 납품서에 제품 품목 + 복원수리(category='RS') 항목을 함께 담아 한 번에 저장
+ *   - 복원수리는 VAT 제외(computeDeliveryTotals), 거래처 default_repair_price 자동 적용
+ *   - 집계는 delivery_items.category='RS' 태그 기반으로 그대로 작동
  */
 
 import { useState, useRef } from 'react';
@@ -17,7 +15,8 @@ import { useCreateDelivery } from '@/hooks/use-deliveries';
 import { useProducts } from '@/hooks/use-sales';
 import { useCustomerSearch } from '@/hooks/use-customers';
 import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
-import { formatKRW, formatPhone, calcVAT, toLocalDateString } from '@/lib/utils/format';
+import { formatKRW, formatPhone, toLocalDateString } from '@/lib/utils/format';
+import { computeDeliveryTotals } from '@/lib/deliveries/totals';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { Product } from '@/lib/supabase/types';
@@ -26,18 +25,17 @@ const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '�
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
 
 interface Props {
+  /** @deprecated 2026-06-09 모드 통합 후 미사용 (호출부 호환 위해 유지) */
   initialMode?: 'delivery' | 'repair';
   onClose: () => void;
   onCreated: (id: string) => void;
 }
 
-export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreated }: Props) {
+export function CreateDeliveryModal({ onClose, onCreated }: Props) {
   const createDelivery = useCreateDelivery();
   const { data: products = [] } = useProducts();
-  // 모드: 제품납품 vs 복원수리
-  const [mode, setMode] = useState<'delivery' | 'repair'>(initialMode);
-  // 복원수리 전용
-  const [repairQty, setRepairQty] = useState(1);
+  // 복원수리 (선택 입력 — 자루 0 이면 미포함)
+  const [repairQty, setRepairQty] = useState(0);
   const [repairUnitPrice, setRepairUnitPrice] = useState(8000);
   const [repairExtras, setRepairExtras] = useState<Array<{ product_name: string; quantity: number; unit_price: number; category?: string }>>([]);
   const [repairExtraName, setRepairExtraName] = useState('');
@@ -118,44 +116,22 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
     }
   }
 
-  // 합계
-  const itemTotal = cart.reduce((s, c) => s + c.quantity * c.unit_price, 0);
-  const baseAmount = itemTotal - discount;
-  const { supply, vat, payment: totalAmount } = calcVAT(baseAmount, vatType);
+  // ── 통합 합계 (제품 + 복원수리 혼합, RS는 VAT 제외) ──
+  const repairItems = [
+    ...(repairQty > 0 ? [{ product_name: '복원수리', category: 'RS', quantity: repairQty, unit_price: repairUnitPrice }] : []),
+    ...repairExtras.map((e) => ({ ...e, category: 'RS' })),
+  ];
+  const allItems = [...cart, ...repairItems];
+  const productItemTotal = cart.reduce((s, c) => s + c.quantity * c.unit_price, 0);
+  const repairItemTotal = repairItems.reduce((s, c) => s + c.quantity * c.unit_price, 0);
+  // 제품이 없으면(복원수리 전용) VAT 미적용 — 기존 repair-only 동작과 동일
+  const effectiveVatType = cart.length === 0 ? 'none' : vatType;
+  const { supplyAmount: supply, vatAmount: vat, totalAmount } = computeDeliveryTotals(allItems, effectiveVatType, discount);
 
   async function handleSubmit() {
     const name = selectedCustomer?.company_name || selectedCustomer?.name || customerName.trim();
     if (!name) { toast.error('거래처를 입력해주세요'); return; }
-
-    // 복원수리 간편 모드
-    if (mode === 'repair') {
-      if (repairQty < 1) { toast.error('수량을 입력해주세요'); return; }
-      try {
-        const allItems = [
-          { product_name: '복원수리', category: 'RS', quantity: repairQty, unit_price: repairUnitPrice },
-          ...repairExtras,
-        ];
-        const repairTotal = allItems.reduce((s, i) => s + i.quantity * i.unit_price, 0);
-        const result = await createDelivery.mutateAsync({
-          customer_id: selectedCustomer?.id,
-          customer_name: name,
-          customer_phone: selectedCustomer?.phone || customerPhone.trim() || undefined,
-          customer_type: customerType,
-          delivery_date: deliveryDate,
-          memo: memo.trim() || undefined,
-          vat_type: 'none',
-          receipt_type: 'none',
-          payment_status: paymentStatus,
-          payment_method: paymentMethod,
-          paid_amount: paymentStatus === 'partial' ? paidAmount : paymentStatus === 'paid' ? repairTotal : 0,
-          items: allItems,
-        });
-        onCreated((result.delivery as Record<string, unknown>).id as string);
-      } catch { /* hook handles error */ }
-      return;
-    }
-
-    if (cart.length === 0) { toast.error('품목을 추가해주세요'); return; }
+    if (allItems.length === 0) { toast.error('제품 또는 복원수리를 입력해주세요'); return; }
 
     try {
       const result = await createDelivery.mutateAsync({
@@ -166,13 +142,13 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
         delivery_date: deliveryDate,
         expected_date: expectedDate || undefined,
         memo: memo.trim() || undefined,
-        vat_type: vatType,
-        receipt_type: receiptType,
+        vat_type: effectiveVatType,
+        receipt_type: cart.length === 0 ? 'none' : receiptType,
         payment_status: paymentStatus,
         payment_method: paymentMethod,
         paid_amount: paymentStatus === 'partial' ? paidAmount : paymentStatus === 'paid' ? totalAmount : 0,
         discount_amount: discount,
-        items: cart,
+        items: allItems,
       });
       onCreated((result.delivery as Record<string, unknown>).id as string);
     } catch {
@@ -197,18 +173,6 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
         <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800">거래처 매출 입력</h3>
           <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
-        </div>
-
-        {/* 모드 전환 — B2C 의 "제품판매/복원수리" 와 대칭 IA */}
-        <div className="flex border-b border-neutral-200">
-          <button onClick={() => setMode('delivery')}
-            className={`flex-1 py-2.5 text-xs font-semibold text-center transition ${mode === 'delivery' ? 'text-neutral-900 border-b-2 border-neutral-900' : 'text-neutral-400'}`}>
-            제품 납품
-          </button>
-          <button onClick={() => setMode('repair')}
-            className={`flex-1 py-2.5 text-xs font-semibold text-center transition ${mode === 'repair' ? 'text-neutral-900 border-b-2 border-neutral-900' : 'text-neutral-400'}`}>
-            복원수리
-          </button>
         </div>
 
         {/* 본문 */}
@@ -312,99 +276,6 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
             {customerType === 'academy' && <p className="text-xs text-purple-600 mt-1">아카데미가 적용</p>}
           </div>
 
-          {/* ═══ 복원수리 간편 모드 ═══ */}
-          {mode === 'repair' && (
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1 block">수량 (자루)</label>
-                <input type="number" min={1} value={repairQty}
-                  onChange={(e) => setRepairQty(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1 block">단가 (원)</label>
-                <input type="number" value={repairUnitPrice}
-                  onChange={(e) => setRepairUnitPrice(parseInt(e.target.value) || 0)}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
-                <p className="text-[10px] text-neutral-400 mt-1">
-                  {selectedCustomer?.default_repair_price && selectedCustomer.default_repair_price > 0
-                    ? '거래처 기본 단가 자동 적용 · 수정 가능'
-                    : '기본 8,000원 · 수정 가능 (거래처 정보에 기본 단가 등록 시 자동 적용)'}
-                </p>
-              </div>
-              {/* 추가 항목 */}
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1 block">추가 항목</label>
-                <div className="flex gap-2">
-                  <input type="text" value={repairExtraName} onChange={(e) => setRepairExtraName(e.target.value)}
-                    placeholder="항목명 (예: 급행료)" className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs placeholder:text-neutral-400" />
-                  <input type="number" value={repairExtraPrice} onChange={(e) => setRepairExtraPrice(e.target.value)}
-                    placeholder="금액" className="w-24 h-7 px-2 rounded border border-neutral-200 text-xs text-right placeholder:text-neutral-400" />
-                  <button onClick={() => {
-                    if (!repairExtraName.trim() || !parseInt(repairExtraPrice)) return;
-                    setRepairExtras((prev) => [...prev, { product_name: repairExtraName.trim(), quantity: 1, unit_price: parseInt(repairExtraPrice) || 0, category: 'RS' }]);
-                    setRepairExtraName(''); setRepairExtraPrice('');
-                  }} className="h-7 px-3 rounded bg-neutral-900 text-white text-[10px] font-semibold shrink-0">추가</button>
-                </div>
-                <button onClick={() => {
-                  if (repairExtras.some((e) => e.product_name === '배송비')) return;
-                  setRepairExtras((prev) => [...prev, { product_name: '배송비', quantity: 1, unit_price: 3000, category: 'RS' }]);
-                }} className="mt-1.5 h-7 px-3 rounded border border-neutral-200 text-[10px] font-medium text-neutral-500 hover:bg-neutral-50 transition">
-                  + 배송비 3,000원
-                </button>
-                {repairExtras.length > 0 && (
-                  <div className="mt-2 space-y-1">
-                    {repairExtras.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between py-1 border-b border-neutral-50 last:border-0">
-                        <span className="text-xs">{item.product_name}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-neutral-500">{formatKRW(item.unit_price)}</span>
-                          <button onClick={() => setRepairExtras((prev) => prev.filter((_, i) => i !== idx))}
-                            className="w-5 h-5 rounded bg-red-50 flex items-center justify-center text-red-500 text-[10px]">x</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-neutral-50 rounded-lg p-3">
-                <div className="flex justify-between text-sm font-bold">
-                  <span>합계</span>
-                  <span>{formatKRW(repairQty * repairUnitPrice + repairExtras.reduce((s, e) => s + e.quantity * e.unit_price, 0))}</span>
-                </div>
-              </div>
-              {/* 결제상태 */}
-              <div className="border border-neutral-200 rounded-lg p-2.5">
-                <label className="text-[10px] font-semibold text-neutral-400 mb-1.5 block">결제상태</label>
-                <div className="flex gap-1">
-                  {(['unpaid', 'partial', 'paid'] as const).map((ps) => (
-                    <button key={ps} onClick={() => { setPaymentStatus(ps); if (ps !== 'partial') setPaidAmount(0); }}
-                      className={`flex-1 py-1.5 rounded text-[10px] font-semibold transition ${
-                        paymentStatus === ps
-                          ? ps === 'paid' ? 'bg-green-600 text-white' : ps === 'partial' ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white'
-                          : 'bg-neutral-50 text-neutral-500 hover:bg-neutral-100'
-                      }`}>
-                      {PAYMENT_LABEL[ps]}
-                    </button>
-                  ))}
-                </div>
-                {paymentStatus === 'partial' && (
-                  <input type="number" value={paidAmount || ''} onChange={(e) => setPaidAmount(parseInt(e.target.value) || 0)}
-                    placeholder="선납금 입력"
-                    className="w-full h-7 px-2 mt-2 rounded border border-neutral-200 bg-stone-50 text-xs" />
-                )}
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1 block">메모</label>
-                <input type="text" value={memo} onChange={(e) => setMemo(e.target.value)}
-                  placeholder="메모 (선택)" className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs" />
-              </div>
-            </div>
-          )}
-
-          {/* ═══ 제품 납품 모드 ═══ */}
-          {mode === 'delivery' && <>
           {/* 날짜 */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -421,7 +292,7 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
 
           {/* 제품 선택 */}
           <div>
-            <label className="text-xs font-semibold text-neutral-500 mb-1 block">품목</label>
+            <label className="text-xs font-semibold text-neutral-500 mb-1 block">품목 (제품)</label>
             <div className="relative">
               <input
                 type="text"
@@ -507,6 +378,68 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
             )}
           </div>
 
+          {/* ═══ 복원수리 (선택) — 제품과 한 납품서에 함께 ═══ */}
+          <div className="border border-neutral-200 rounded-lg p-3 space-y-2.5 bg-stone-50/40">
+            <p className="text-xs font-bold text-neutral-700">복원수리 (선택)</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] text-neutral-500 block mb-0.5">자루 수</label>
+                <input type="number" min={0} value={repairQty || ''} placeholder="0"
+                  onChange={(e) => setRepairQty(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-full h-8 px-2 rounded border border-neutral-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+              </div>
+              <div>
+                <label className="text-[10px] text-neutral-500 block mb-0.5">단가 (원)</label>
+                <input type="number" value={repairUnitPrice}
+                  onChange={(e) => setRepairUnitPrice(parseInt(e.target.value) || 0)}
+                  className="w-full h-8 px-2 rounded border border-neutral-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+              </div>
+            </div>
+            <p className="text-[10px] text-neutral-400">
+              {selectedCustomer?.default_repair_price && selectedCustomer.default_repair_price > 0
+                ? '거래처 기본 단가 자동 적용 · 수정 가능'
+                : '기본 8,000원 · 수정 가능 (거래처 정보에 기본 단가 등록 시 자동 적용)'}
+            </p>
+            {/* 추가 항목 */}
+            <div className="flex gap-2">
+              <input type="text" value={repairExtraName} onChange={(e) => setRepairExtraName(e.target.value)}
+                placeholder="추가 항목 (예: 급행료)" className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs placeholder:text-neutral-400" />
+              <input type="number" value={repairExtraPrice} onChange={(e) => setRepairExtraPrice(e.target.value)}
+                placeholder="금액" className="w-24 h-7 px-2 rounded border border-neutral-200 text-xs text-right placeholder:text-neutral-400" />
+              <button onClick={() => {
+                if (!repairExtraName.trim() || !parseInt(repairExtraPrice)) return;
+                setRepairExtras((prev) => [...prev, { product_name: repairExtraName.trim(), quantity: 1, unit_price: parseInt(repairExtraPrice) || 0, category: 'RS' }]);
+                setRepairExtraName(''); setRepairExtraPrice('');
+              }} className="h-7 px-3 rounded bg-neutral-900 text-white text-[10px] font-semibold shrink-0">추가</button>
+            </div>
+            <button onClick={() => {
+              if (repairExtras.some((e) => e.product_name === '배송비')) return;
+              setRepairExtras((prev) => [...prev, { product_name: '배송비', quantity: 1, unit_price: 3000, category: 'RS' }]);
+            }} className="h-7 px-3 rounded border border-neutral-200 text-[10px] font-medium text-neutral-500 hover:bg-neutral-50 transition">
+              + 배송비 3,000원
+            </button>
+            {repairExtras.length > 0 && (
+              <div className="space-y-1">
+                {repairExtras.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between py-1 border-b border-neutral-100 last:border-0">
+                    <span className="text-xs">{item.product_name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-neutral-500">{formatKRW(item.unit_price)}</span>
+                      <button onClick={() => setRepairExtras((prev) => prev.filter((_, i) => i !== idx))}
+                        className="w-5 h-5 rounded bg-red-50 flex items-center justify-center text-red-500 text-[10px]">x</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {repairItemTotal > 0 && (
+              <div className="flex justify-between text-xs font-semibold pt-1 border-t border-neutral-100">
+                <span>복원수리 소계 ({repairQty}자루{repairExtras.length > 0 ? ' + 추가' : ''})</span>
+                <span>{formatKRW(repairItemTotal)}</span>
+              </div>
+            )}
+          </div>
+
           {/* VAT + 증빙 + 결제 — 그루핑 */}
           <div className="grid grid-cols-3 gap-3">
             <div className="border border-neutral-200 rounded-lg p-2.5">
@@ -575,7 +508,7 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
           {/* 할인 + 메모 */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-neutral-500 mb-1 block">할인금액</label>
+              <label className="text-xs font-semibold text-neutral-500 mb-1 block">할인금액 (제품)</label>
               <input type="number" value={discount || ''} onChange={(e) => setDiscount(parseInt(e.target.value) || 0)}
                 placeholder="0"
                 className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
@@ -589,11 +522,18 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
           </div>
 
           {/* 합계 */}
-          {cart.length > 0 && (
+          {allItems.length > 0 && (
             <div className="bg-neutral-50 rounded-lg p-3 space-y-1">
-              <div className="flex justify-between text-xs text-neutral-500">
-                <span>품목 합계</span><span>{formatKRW(itemTotal)}</span>
-              </div>
+              {cart.length > 0 && (
+                <div className="flex justify-between text-xs text-neutral-500">
+                  <span>제품 합계</span><span>{formatKRW(productItemTotal)}</span>
+                </div>
+              )}
+              {repairItemTotal > 0 && (
+                <div className="flex justify-between text-xs text-neutral-500">
+                  <span>복원수리 (부가세 제외)</span><span>{formatKRW(repairItemTotal)}</span>
+                </div>
+              )}
               {discount > 0 && (
                 <div className="flex justify-between text-xs text-red-500">
                   <span>할인</span><span>-{formatKRW(discount)}</span>
@@ -602,7 +542,7 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
               <div className="flex justify-between text-xs text-neutral-500">
                 <span>공급가액</span><span>{formatKRW(supply)}</span>
               </div>
-              {vatType !== 'none' && (
+              {effectiveVatType !== 'none' && (
                 <div className="flex justify-between text-xs text-neutral-500">
                   <span>부가세</span><span>{formatKRW(vat)}</span>
                 </div>
@@ -612,7 +552,6 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
               </div>
             </div>
           )}
-        </>}
         </div>
 
         {/* 푸터 */}
@@ -620,9 +559,9 @@ export function CreateDeliveryModal({ initialMode = 'delivery', onClose, onCreat
           <Button variant="ghost" onClick={onClose}>취소</Button>
           <Button
             onClick={handleSubmit}
-            disabled={(mode === 'delivery' ? (cart.length === 0) : (repairQty < 1)) || (!selectedCustomer && !customerName.trim()) || createDelivery.isPending}
+            disabled={allItems.length === 0 || (!selectedCustomer && !customerName.trim()) || createDelivery.isPending}
           >
-            {createDelivery.isPending ? '생성 중...' : mode === 'repair' ? '복원수리 등록' : '납품서 생성'}
+            {createDelivery.isPending ? '생성 중...' : '납품서 생성'}
           </Button>
         </div>
       </div>
