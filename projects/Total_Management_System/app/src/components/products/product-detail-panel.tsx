@@ -15,7 +15,7 @@ import { formatKRW } from '@/lib/utils/format';
 import { Save, Package, Hash, X, Plus, Archive, Copy, Eye, EyeOff, Trash2, ArrowRightLeft, ArrowRight, ExternalLink, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { LabelPrintModal } from '@/components/labels/label-print-modal';
-import { TEMPLATE_PRODUCT } from '@/lib/label/templates';
+import { useLabelTemplate } from '@/hooks/use-label-templates';
 
 import { useSetting } from '@/hooks/use-settings';
 import { usePriceGroups } from '@/hooks/use-price-groups';
@@ -43,6 +43,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const priceGroups = usePriceGroups();
   const CATEGORY_LABEL = catLabels;
   const CATEGORY_OPTIONS = categories.map((c) => ({ value: c, label: catLabels[c] || c }));
+  const productLabel = useLabelTemplate('product_40x20');
   const [editing, setEditing] = useState(false);
   const [showSerialModal, setShowSerialModal] = useState(false);
   const [showLabelModal, setShowLabelModal] = useState(false);
@@ -600,7 +601,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       {/* 품목 바코드 라벨 출력 */}
       {showLabelModal && (
         <LabelPrintModal
-          template={TEMPLATE_PRODUCT}
+          template={productLabel}
           data={{ product: p.name, sku: p.barcode || p.sku }}
           title="품목 바코드 라벨"
           onClose={() => setShowLabelModal(false)}

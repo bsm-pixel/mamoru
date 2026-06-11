@@ -14,7 +14,7 @@ import { useSerials, useCreateSerial, useCreateSerialBatch, useUpdateSerialStatu
 import { formatDateTime } from '@/lib/utils/format';
 import { Plus, Search, Barcode, Printer } from 'lucide-react';
 import { LabelPrintModal } from '@/components/labels/label-print-modal';
-import { TEMPLATE_SERIAL } from '@/lib/label/templates';
+import { useLabelTemplate } from '@/hooks/use-label-templates';
 
 const ZONE_COLOR: Record<string, string> = {
   raw: 'bg-neutral-100 text-neutral-500',
@@ -45,6 +45,7 @@ interface Props {
 }
 
 export function SerialManagePanel({ productId, productName }: Props) {
+  const serialLabel = useLabelTemplate('serial_40x20');
   const [labelSerial, setLabelSerial] = useState<string | null>(null);
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
@@ -237,7 +238,7 @@ export function SerialManagePanel({ productId, productName }: Props) {
       {/* 시리얼 라벨 출력 (바코드=시리얼) */}
       {labelSerial && (
         <LabelPrintModal
-          template={TEMPLATE_SERIAL}
+          template={serialLabel}
           data={{ product: productName || '', serial: labelSerial }}
           title="시리얼 라벨"
           onClose={() => setLabelSerial(null)}

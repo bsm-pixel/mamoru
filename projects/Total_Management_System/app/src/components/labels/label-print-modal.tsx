@@ -91,9 +91,12 @@ export function LabelPrintModal({ template, data, title, onClose }: Props) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 px-5 py-3 border-t border-neutral-200">
-          <Button variant="ghost" size="sm" onClick={handleDownload}><FileDown size={14} />ZPL 다운로드</Button>
-          <Button size="sm" onClick={handlePrint} loading={busy}><Printer size={14} />프린터 출력</Button>
+        <div className="flex items-center justify-between gap-2 px-5 py-3 border-t border-neutral-200">
+          <a href="/labels" className="text-[11px] text-neutral-400 hover:text-neutral-700 underline">레이아웃 편집</a>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={handleDownload}><FileDown size={14} />ZPL 다운로드</Button>
+            <Button size="sm" onClick={handlePrint} loading={busy}><Printer size={14} />프린터 출력</Button>
+          </div>
         </div>
       </div>
     </div>
