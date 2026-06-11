@@ -64,14 +64,14 @@ export const TEMPLATE_SERIAL: LabelTemplate = {
   widthMm: 40,
   heightMm: 20,
   elements: [
-    // MAMORU 로고 = Aggressive 폰트 → 디자인 그대로 이미지 임베드
-    { kind: 'image', xMm: 2.2, yMm: 1.6, src: '/labels/mamoru-logo.png', widthMm: 11 },
-    { kind: 'rule', xMm: 2.2, yMm: 4.2, lengthMm: 14, thicknessMm: 0.35 },
-    { kind: 'text', xMm: 2.2, yMm: 4.8, text: '{product}', fontFamily: 'Inter', weight: 700, sizeMm: 2.8 },
-    { kind: 'text', xMm: 2.2, yMm: 8.4, text: 'S/N : {serial}', fontFamily: 'Inter', weight: 400, sizeMm: 1.5 },
-    { kind: 'text', xMm: 2.2, yMm: 13.2, text: 'HAND-CALIBRATED', fontFamily: 'Inter', weight: 500, sizeMm: 1.2 },
-    { kind: 'text', xMm: 2.2, yMm: 15.4, text: 'PASSED BY BSM', fontFamily: 'Inter', weight: 500, sizeMm: 1.2 },
-    { kind: 'barcode', xMm: 22.5, yMm: 12.6, data: '{serial}', widthMm: 15, heightMm: 5.5, showText: false },
+    // MAMORU 로고 = Aggressive 폰트 → 디자인 그대로 이미지 임베드. 여백 2mm, 간격 여유
+    { kind: 'image', xMm: 2.0, yMm: 2.4, src: '/labels/mamoru-logo.png', widthMm: 11 },
+    { kind: 'rule', xMm: 2.0, yMm: 4.6, lengthMm: 13, thicknessMm: 0.35 },
+    { kind: 'text', xMm: 2.0, yMm: 5.6, text: '{product}', fontFamily: 'Inter', weight: 700, sizeMm: 2.6 },
+    { kind: 'text', xMm: 2.0, yMm: 9.8, text: 'S/N : {serial}', fontFamily: 'Inter', weight: 400, sizeMm: 1.5 },
+    { kind: 'text', xMm: 2.0, yMm: 14.0, text: 'HAND-CALIBRATED', fontFamily: 'Inter', weight: 500, sizeMm: 1.15 },
+    { kind: 'text', xMm: 2.0, yMm: 16.2, text: 'PASSED BY BSM', fontFamily: 'Inter', weight: 500, sizeMm: 1.15 },
+    { kind: 'barcode', xMm: 21.5, yMm: 7.0, data: '{serial}', widthMm: 16.5, heightMm: 6, showText: false },
   ],
 };
 
