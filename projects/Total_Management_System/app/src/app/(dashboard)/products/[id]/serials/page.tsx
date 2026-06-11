@@ -32,7 +32,7 @@ export default function SerialsPage({ params }: { params: Promise<{ id: string }
           )}
         </div>
 
-        <SerialManagePanel productId={productId} />
+        <SerialManagePanel productId={productId} productName={product?.name} />
       </div>
     </>
   );

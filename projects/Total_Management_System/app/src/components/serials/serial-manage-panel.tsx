@@ -12,7 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSerials, useCreateSerial, useCreateSerialBatch, useUpdateSerialStatus, useUpdateSerialZone } from '@/hooks/use-serials';
 import { formatDateTime } from '@/lib/utils/format';
-import { Plus, Search, Barcode } from 'lucide-react';
+import { Plus, Search, Barcode, Printer } from 'lucide-react';
+import { LabelPrintModal } from '@/components/labels/label-print-modal';
+import { TEMPLATE_SERIAL } from '@/lib/label/templates';
 
 const ZONE_COLOR: Record<string, string> = {
   raw: 'bg-neutral-100 text-neutral-500',
@@ -39,9 +41,11 @@ const STATUS_TABS = [
 
 interface Props {
   productId: string;
+  productName?: string;
 }
 
-export function SerialManagePanel({ productId }: Props) {
+export function SerialManagePanel({ productId, productName }: Props) {
+  const [labelSerial, setLabelSerial] = useState<string | null>(null);
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -220,11 +224,25 @@ export function SerialManagePanel({ productId }: Props) {
                     <option value="defective">불량</option>
                   </select>
                 )}
+                <button onClick={() => setLabelSerial(serial.serial_number)} title="시리얼 라벨 출력"
+                  className="shrink-0 p-1.5 rounded-md text-neutral-400 hover:text-stone-900 hover:bg-neutral-100 transition">
+                  <Printer size={15} />
+                </button>
               </div>
             ))}
           </div>
         )}
       </Card>
+
+      {/* 시리얼 라벨 출력 (바코드=시리얼) */}
+      {labelSerial && (
+        <LabelPrintModal
+          template={TEMPLATE_SERIAL}
+          data={{ product: productName || '', serial: labelSerial }}
+          title="시리얼 라벨"
+          onClose={() => setLabelSerial(null)}
+        />
+      )}
     </div>
   );
 }

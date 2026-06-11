@@ -367,7 +367,7 @@ export default function SerialsPage() {
                   <span className="text-xs text-neutral-500">({p.sku})</span>
                 </div>
               ) : null; })()}
-              <SerialManagePanel key={selectedProductId} productId={selectedProductId} />
+              <SerialManagePanel key={selectedProductId} productId={selectedProductId} productName={products.find((x) => x.id === selectedProductId)?.name} />
             </div>
           ) : (
             <div className="space-y-3">
