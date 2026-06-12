@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
@@ -31,17 +31,27 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onCreated: (customer: { id: string; name: string; phone: string; customer_type: string }) => void;
+  /** 복제 등록 — 매장명·주소 등 채워서 열기 (이름·연락처는 빈칸 권장) */
+  prefill?: Partial<CustomerCreateData>;
 }
 
-export function CustomerCreateModal({ open, onClose, onCreated }: Props) {
-  const [form, setForm] = useState<CustomerCreateData>({
-    name: '', phone: '', customer_type: 'retail',
-    postcode: '', address_road: '', address_detail: '',
-    company_name: '', memo: '', tags: [],
-  });
+const BLANK: CustomerCreateData = {
+  name: '', phone: '', customer_type: 'retail',
+  postcode: '', address_road: '', address_detail: '',
+  company_name: '', memo: '', tags: [],
+};
+
+export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props) {
+  const [form, setForm] = useState<CustomerCreateData>(BLANK);
   const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
   const availableTags = useSetting<string[]>('customer.tags', []);
+
+  // 모달 열릴 때 prefill 적용 (복제 시 매장명·주소 등). open 변화에만 반응(편집 중 덮어쓰기 방지)
+  useEffect(() => {
+    if (open) setForm({ ...BLANK, ...prefill });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   if (!open) return null;
 
@@ -75,7 +85,7 @@ export function CustomerCreateModal({ open, onClose, onCreated }: Props) {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       onCreated(data.customer || data);
       onClose();
-      setForm({ name: '', phone: '', customer_type: 'retail', postcode: '', address_road: '', address_detail: '', company_name: '', memo: '', tags: [] });
+      setForm(BLANK);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '등록 실패');
     } finally {
@@ -87,7 +97,7 @@ export function CustomerCreateModal({ open, onClose, onCreated }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-xl w-[95vw] max-w-[480px] max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200">
-          <h3 className="text-sm font-bold text-neutral-800">고객 등록</h3>
+          <h3 className="text-sm font-bold text-neutral-800">{prefill?.company_name ? '복제 등록 (같은 매장)' : '고객 등록'}</h3>
           <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
         </div>
 

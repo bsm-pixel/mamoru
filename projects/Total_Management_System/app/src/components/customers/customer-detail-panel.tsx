@@ -11,10 +11,11 @@ import { useCustomerManualInvoices } from '@/hooks/use-manual-invoices';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import {
   Save, ShoppingBag, FileSignature, MessageSquare, Wrench,
-  Clock, Pencil, X, Truck,
+  Clock, Pencil, X, Truck, Copy,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { TagBadges } from '@/components/shared/tag-selector';
+import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -55,6 +56,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
   const updateCustomer = useUpdateCustomer();
   const [tab, setTab] = useState<'profile' | 'timeline'>('profile');
   const [editing, setEditing] = useState(false);
+  const [showDuplicate, setShowDuplicate] = useState(false);
   const [editMemo, setEditMemo] = useState('');
 
   if (isLoading) {
@@ -157,10 +159,31 @@ export function CustomerDetailPanel({ customerId }: Props) {
             {c.company_name && ` · ${c.company_name}`}
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => router.push(`/customers/${customerId}`)}>
-          상세 페이지
-        </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button variant="secondary" size="sm" onClick={() => setShowDuplicate(true)} title="같은 매장 동료 등록 (매장명·주소 자동)">
+            <Copy size={13} />
+            복제
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => router.push(`/customers/${customerId}`)}>
+            상세 페이지
+          </Button>
+        </div>
       </div>
+
+      {/* 복제 등록 — 같은 매장(매장명·주소·유형·태그) 채워서 새 고객 등록 */}
+      <CustomerCreateModal
+        open={showDuplicate}
+        onClose={() => setShowDuplicate(false)}
+        onCreated={() => setShowDuplicate(false)}
+        prefill={{
+          customer_type: c.customer_type,
+          company_name: c.company_name || '',
+          postcode: c.postcode || '',
+          address_road: c.address_road || '',
+          address_detail: c.address_detail || '',
+          tags: (c as unknown as { tags?: string[] }).tags || [],
+        }}
+      />
 
       {/* 요약 카드 */}
       <div className="grid grid-cols-3 gap-2">
