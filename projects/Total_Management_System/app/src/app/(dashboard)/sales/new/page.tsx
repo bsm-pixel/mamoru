@@ -17,7 +17,7 @@ import { SerialPicker } from '@/components/sales/serial-picker';
 import { ScanInput } from '@/components/sales/scan-input';
 import { resolveScan } from '@/lib/sales/resolve-scan';
 import { useSerialConflictPrompt } from '@/components/sales/serial-conflict-dialog';
-import { formatSerial, currentYear2, incrementSerial, normalizeSerial } from '@/lib/serial/format';
+import { formatSerial, currentYear2, incrementSerial, normalizeSerial, isMSerial } from '@/lib/serial/format';
 import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
 import { usePriceGroups } from '@/hooks/use-price-groups';
 import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
@@ -394,7 +394,15 @@ function NewSaleContent() {
                 type="text"
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
-                placeholder="제품명 또는 SKU 검색"
+                onKeyDown={(e) => {
+                  // 검색창에 코드(시리얼 or 정확한 SKU)를 스캔하면 그것도 카트에 담음 (타이핑한 제품명은 무시)
+                  if (e.key !== 'Enter') return;
+                  const c = productSearch.trim();
+                  if (!c) return;
+                  const exactSku = products.find((p) => (p.sku || '').toLowerCase() === c.toLowerCase());
+                  if (isMSerial(c) || exactSku) { e.preventDefault(); handleScan(c); setProductSearch(''); }
+                }}
+                placeholder="제품명 또는 SKU 검색 (스캔도 가능)"
                 className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
               />
               <div className="flex gap-1 shrink-0">
