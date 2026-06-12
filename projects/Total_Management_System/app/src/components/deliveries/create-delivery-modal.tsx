@@ -19,6 +19,8 @@ import { formatKRW, formatPhone, toLocalDateString } from '@/lib/utils/format';
 import { computeDeliveryTotals } from '@/lib/deliveries/totals';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { ScanInput } from '@/components/sales/scan-input';
+import { resolveScan } from '@/lib/sales/resolve-scan';
 import type { Product } from '@/lib/supabase/types';
 
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
@@ -113,6 +115,21 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
         quantity: 1,
         unit_price: getPrice(p),
       }]);
+    }
+  }
+
+  // 바코드 스캔 → 제품 추가 (B2B는 시리얼 미부여 — 시리얼 스캔해도 제품만)
+  async function handleScan(code: string) {
+    const res = await resolveScan(code, products);
+    if (res.type === 'product') {
+      addProduct(res.product);
+      toast.success(`${getDeliveryName(res.product)} 추가`);
+    } else if (res.type === 'serial') {
+      if (!res.product) { toast.error('제품을 찾을 수 없습니다'); return; }
+      addProduct(res.product);
+      toast.success(`${getDeliveryName(res.product)} 추가 (B2B는 시리얼 미기록)`);
+    } else {
+      toast.error(`매칭 제품 없음: ${res.code}`);
     }
   }
 
@@ -293,6 +310,10 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
           {/* 제품 선택 */}
           <div>
             <label className="text-xs font-semibold text-neutral-500 mb-1 block">품목 (제품)</label>
+            {/* 바코드 스캔 — SKU/시리얼 스캔 시 제품 자동 추가 */}
+            <div className="mb-1.5">
+              <ScanInput onScan={handleScan} autoFocus={false} />
+            </div>
             <div className="relative">
               <input
                 type="text"

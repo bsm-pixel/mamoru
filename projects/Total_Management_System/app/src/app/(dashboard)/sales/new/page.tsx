@@ -14,6 +14,8 @@ import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
 import { SerialPicker } from '@/components/sales/serial-picker';
+import { ScanInput } from '@/components/sales/scan-input';
+import { resolveScan } from '@/lib/sales/resolve-scan';
 import { useSerialConflictPrompt } from '@/components/sales/serial-conflict-dialog';
 import { formatSerial, currentYear2, incrementSerial, normalizeSerial } from '@/lib/serial/format';
 import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
@@ -37,6 +39,10 @@ interface CartItem {
 function cartItemKey(item: CartItem): string {
   return item.product ? item.product.id : `custom-${item.customName}-${item.customPrice}`;
 }
+
+const SERIAL_STATUS_LABEL: Record<string, string> = {
+  in_stock: '재고', reserved: '예약', sold: '판매완료', returned: '반품', defective: '불량',
+};
 
 export default function NewSalePage() {
   return (
@@ -185,7 +191,7 @@ function NewSaleContent() {
   const [customProductName, setCustomProductName] = useState('');
   const [customProductPrice, setCustomProductPrice] = useState('');
 
-  function addToCart(product: Product) {
+  function addToCart(product: Product, serialId?: string) {
     // 074: catalog.unit_price 우선 사용 (해당 customer 등록된 맞춤가) → 없으면 group 단가 fallback
     const catalogEntry = catalogEntryMap.get(product.id);
     const customPrice = catalogEntry?.unit_price;
@@ -196,11 +202,38 @@ function NewSaleContent() {
       const existing = prev.find((item) => item.product?.id === product.id);
       if (existing) {
         return prev.map((item) =>
-          item.product?.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.product?.id === product.id
+            ? { ...item, quantity: item.quantity + 1, selectedSerialIds: serialId ? [...(item.selectedSerialIds || []), serialId] : item.selectedSerialIds }
+            : item
         );
       }
-      return [...prev, { product, quantity: 1, unitPrice: price, selectedSerialIds: [] }];
+      return [...prev, { product, quantity: 1, unitPrice: price, selectedSerialIds: serialId ? [serialId] : [] }];
     });
+  }
+
+  // 바코드 스캔 → SKU=품목 추가 / 시리얼=제품+시리얼 배정(이미 판매·예약이면 차단)
+  async function handleScan(code: string) {
+    const res = await resolveScan(code, products);
+    if (res.type === 'product') {
+      addToCart(res.product);
+      toast.success(`${res.product.name} 추가`);
+    } else if (res.type === 'serial') {
+      if (!res.product) { toast.error(`시리얼의 제품을 찾을 수 없습니다 (${res.serial.serial_number})`); return; }
+      if (res.serial.status !== 'in_stock') {
+        toast.error(`사용 불가 시리얼 — ${SERIAL_STATUS_LABEL[res.serial.status] || res.serial.status} 상태 (${res.serial.serial_number})`);
+        return;
+      }
+      if (cart.some((it) => (it.selectedSerialIds || []).includes(res.serial.id))) {
+        toast.error(`이미 담긴 시리얼입니다 (${res.serial.serial_number})`);
+        return;
+      }
+      addToCart(res.product, res.serial.id);
+      toast.success(`${res.product.name} · ${res.serial.serial_number} 추가`);
+    } else if (res.type === 'serial-notfound') {
+      toast.error(`해당 시리얼 없음: ${res.code}`);
+    } else {
+      toast.error(`바코드 매칭 제품 없음: ${res.code}`);
+    }
   }
 
   function addCustomProduct() {
@@ -351,6 +384,10 @@ function NewSaleContent() {
         {/* 제목 + 검색 (그리드 밖, 좌열 너비만큼만) */}
         <div className="xl:w-[33.33%]">
             <h3 className="text-sm font-semibold text-neutral-700 mb-2">제품 선택</h3>
+            {/* 바코드 스캔 — SKU=품목 / 시리얼=시리얼 배정 자동 추가 */}
+            <div className="mb-2">
+              <ScanInput onScan={handleScan} />
+            </div>
             {/* 검색 + 카테고리 필터 */}
             <div className="flex items-center gap-2">
               <input
