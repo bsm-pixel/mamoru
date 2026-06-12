@@ -38,17 +38,17 @@ const CHANNEL_LABEL: Record<string, string> = {
 const CUSTOMER_TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy: '아카데미' };
 
 /** 2026-05-26 Phase G-4: 안 A 상태 분류 — 좌측 색 줄 + 우측 도트 결정 */
-type RowState = 'paid_done' | 'paid_shipping' | 'paid_wait_ship' | 'unpaid' | 'partial' | 'shipped_b2b_unpaid' | 'cancelled';
+type RowState = 'paid_done' | 'paid_shipping' | 'paid_wait_ship' | 'paid_unhandled' | 'unpaid' | 'partial' | 'shipped_b2b_unpaid' | 'cancelled';
 
 function getRowStateSale(s: OfflineSale): RowState {
   if (s.cancelled_at) return 'cancelled';
   if (s.payment_status === 'partial') return 'partial';
   if (s.payment_status === 'unpaid') return 'unpaid';
-  // payment_status === 'paid'
-  if (s.delivered_at) return 'paid_done';            // 배송완료 자동 전환
-  if (!s.invoice_number) return 'paid_done';         // 매장 직접수령 (송장 없음)
-  if (s.shipped_at) return 'paid_shipping';          // 출고됨, 배송 중
-  return 'paid_wait_ship';                            // 송장 발급 대기
+  // payment_status === 'paid' — 초록 = 사장님이 더 할 일 없는 상태
+  if (s.delivered_at) return 'paid_done';            // 배송완료/고객수령 완료 = 끝
+  if (s.shipped_at) return 'paid_shipping';          // 출고완료(배송중) — 택배사가 배송, 내 할 일 끝
+  if (s.invoice_number) return 'paid_wait_ship';     // 송장 발급됨, 출고 전 — 출고해야 함
+  return 'paid_unhandled';                            // 송장X + 수령X — 출고/수령 처리 필요
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,10 +66,11 @@ function getRowStateDelivery(d: any): RowState {
 function stripColor(state: RowState): string {
   switch (state) {
     case 'paid_done': return 'bg-green-500';
+    case 'paid_shipping': return 'bg-green-500';  // 출고완료(배송중)도 초록 — 사장님 할 일 끝
     case 'unpaid': return 'bg-red-500';
     case 'partial': return 'bg-yellow-400';
     case 'cancelled': return 'bg-neutral-300';
-    default: return 'bg-transparent';
+    default: return 'bg-transparent';             // paid_wait_ship, paid_unhandled — 할 일 있음
   }
 }
 
@@ -77,6 +78,7 @@ function rightDot(state: RowState): { color: string; title: string } | null {
   switch (state) {
     case 'paid_shipping': return { color: 'bg-green-500', title: '배송중' };
     case 'paid_wait_ship': return { color: 'bg-amber-400', title: '출고 대기' };
+    case 'paid_unhandled': return { color: 'bg-amber-400', title: '처리 대기' };
     case 'shipped_b2b_unpaid': return { color: 'bg-amber-400', title: '출고완료 · 결제 대기' };
     default: return null;
   }
@@ -87,6 +89,7 @@ function statusLabel(state: RowState): string {
     case 'paid_done': return '판매완료';
     case 'paid_shipping': return '배송중';
     case 'paid_wait_ship': return '출고 대기';
+    case 'paid_unhandled': return '처리 대기';
     case 'unpaid': return '미결제';
     case 'partial': return '부분결제';
     case 'shipped_b2b_unpaid': return '출고완료 · 결제대기';
@@ -97,7 +100,7 @@ function statusLabel(state: RowState): string {
 function statusTextClass(state: RowState): string {
   if (state === 'unpaid') return 'text-red-600 font-medium';
   if (state === 'partial') return 'text-yellow-700 font-medium';
-  if (state === 'paid_done') return 'text-green-700 font-medium';
+  if (state === 'paid_done' || state === 'paid_shipping') return 'text-green-700 font-medium';
   return 'text-neutral-500';
 }
 
