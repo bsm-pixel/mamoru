@@ -71,18 +71,20 @@ export function useSales(filters?: {
       if (filters?.dateFrom) {
         query = query.gte('sale_date', filters.dateFrom);
       } else if (filters?.dateRange && filters.dateRange !== 'all') {
+        // ⚠️ 로컬(KST) 달력 기준 — toISOString()(UTC) 쓰면 날짜가 하루/한달 밀림(이번달이 5월까지 나오던 버그)
         const now = new Date();
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
         let df: string;
         if (filters.dateRange === 'today') {
-          df = now.toISOString().slice(0, 10);
+          df = ymd(now);                              // 오늘 (로컬)
         } else if (filters.dateRange === 'week') {
           const d = new Date(now);
-          d.setDate(d.getDate() - 7);
-          df = d.toISOString().slice(0, 10);
+          const dow = d.getDay();                     // 0=일
+          d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow)); // 이번주 월요일
+          df = ymd(d);
         } else {
-          const d = new Date(now);
-          d.setMonth(d.getMonth() - 1);
-          df = d.toISOString().slice(0, 10);
+          df = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`; // 이번달 1일
         }
         query = query.gte('sale_date', df);
       }
