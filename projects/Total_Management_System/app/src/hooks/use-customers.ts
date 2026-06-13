@@ -162,6 +162,8 @@ export function useUpdateCustomer() {
       address_detail?: string;
       customer_type?: string;
       company_name?: string;
+      activity_name?: string | null;
+      position?: string | null;
       memo?: string;
       outstanding_balance?: number;
       default_repair_price?: number | null;

@@ -56,6 +56,9 @@ export function CustomerDetailPanel({ customerId }: Props) {
   const updateCustomer = useUpdateCustomer();
   const [tab, setTab] = useState<'profile' | 'timeline'>('profile');
   const [editing, setEditing] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [editActivity, setEditActivity] = useState('');
+  const [editPosition, setEditPosition] = useState('');
   const [showDuplicate, setShowDuplicate] = useState(false);
   const [editMemo, setEditMemo] = useState('');
 
@@ -136,6 +139,16 @@ export function CustomerDetailPanel({ customerId }: Props) {
   async function saveMemo() {
     await updateCustomer.mutateAsync({ id: customerId, memo: editMemo });
     setEditing(false);
+  }
+
+  function startProfileEdit() {
+    setEditActivity(c.activity_name || '');
+    setEditPosition(c.position || '');
+    setEditingProfile(true);
+  }
+  async function saveProfile() {
+    await updateCustomer.mutateAsync({ id: customerId, activity_name: editActivity.trim() || null, position: editPosition.trim() || null });
+    setEditingProfile(false);
   }
 
   const tabs = [
@@ -227,6 +240,17 @@ export function CustomerDetailPanel({ customerId }: Props) {
         <div className="space-y-4">
           {/* 기본 정보 */}
           <Card>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-bold text-stone-900">기본 정보</h3>
+              {!editingProfile ? (
+                <button onClick={startProfileEdit} className="text-neutral-400 hover:text-neutral-600" title="활동명·직급 수정"><Pencil size={14} /></button>
+              ) : (
+                <div className="flex gap-1">
+                  <button onClick={() => setEditingProfile(false)} className="text-neutral-400 hover:text-neutral-600"><X size={14} /></button>
+                  <button onClick={saveProfile} disabled={updateCustomer.isPending} className="text-blue-600 hover:text-blue-700"><Save size={14} /></button>
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-xs text-neutral-500">연락처</span>
@@ -235,6 +259,20 @@ export function CustomerDetailPanel({ customerId }: Props) {
               <div>
                 <span className="text-xs text-neutral-500">유형</span>
                 <p>{TYPE_OPTIONS.find(t => t.value === c.customer_type)?.label || '일반'}</p>
+              </div>
+              <div>
+                <span className="text-xs text-neutral-500">활동명 (매장 사용 이름)</span>
+                {editingProfile ? (
+                  <input type="text" value={editActivity} onChange={(e) => setEditActivity(e.target.value)} placeholder="예) 하은"
+                    className="w-full h-8 px-2 mt-0.5 rounded border border-neutral-200 text-sm" autoFocus />
+                ) : <p>{c.activity_name || '-'}</p>}
+              </div>
+              <div>
+                <span className="text-xs text-neutral-500">직급</span>
+                {editingProfile ? (
+                  <input type="text" value={editPosition} onChange={(e) => setEditPosition(e.target.value)} placeholder="예) 원장"
+                    className="w-full h-8 px-2 mt-0.5 rounded border border-neutral-200 text-sm" />
+                ) : <p>{c.position || '-'}</p>}
               </div>
               <div>
                 <span className="text-xs text-neutral-500">등록일</span>
