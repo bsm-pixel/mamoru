@@ -2,6 +2,8 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { sendReviewRequestNotification } from '@/lib/notification/review-request';
+import { getServerSetting } from '@/hooks/use-settings';
 import { recalcOutstanding } from '@/lib/outstanding';
 
 /** PATCH /api/sales/[id] — 취소 / 결제상태 변경 / 메모 수정 */
@@ -394,6 +396,32 @@ export async function PATCH(
         .eq('id', id);
 
       if (updateErr) throw updateErr;
+
+      // 자동 후기요청 — 택배(ALPS cron)와 동일 기준을 픽업/수동배송완료에도 적용 (2026-06-12)
+      //   약속✓ + 토글ON + 미발송 + 연락처 있음 → 즉시 발송 (버튼 클릭=수령완료라 cron 불필요)
+      after(async () => {
+        try {
+          if (sale.review_requested_at || !sale.review_promised_at || !sale.customer_phone) return;
+          const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
+          if (!autoEnabled) return;
+          const reviewType = (sale.review_promised_type as 'purchase' | 'repair' | 'consult' | null) || 'purchase';
+          const subtype = reviewType === 'purchase' ? undefined : (sale.review_promised_subtype as string | null) || undefined;
+          const r = await sendReviewRequestNotification({
+            source: 'sale',
+            sourceId: sale.sale_number,
+            customerName: sale.customer_name || '고객',
+            customerPhone: sale.customer_phone,
+            reviewType,
+            subtype,
+          });
+          if (r.success) {
+            await db.from('offline_sales').update({ review_requested_at: new Date().toISOString() }).eq('id', id);
+            console.log(`[mark_delivered/${mode} auto-review] ${sale.sale_number} 발송 성공`);
+          }
+        } catch (e) {
+          console.error('[mark_delivered auto-review] 예외:', e);
+        }
+      });
 
       return NextResponse.json({
         success: true,
