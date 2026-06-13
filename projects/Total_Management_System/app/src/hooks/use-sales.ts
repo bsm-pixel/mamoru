@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { invalidateFinancialQueries } from '@/lib/query/invalidate-keys';
 
 /** 판매 탭 타입 */
-export type SalesTab = 'all' | 'today' | 'unpaid' | 'cancelled';
+export type SalesTab = 'all' | 'today' | 'unpaid' | 'processing' | 'cancelled';
 export type SalesChannel = 'all' | 'offline' | 'online' | 'talk' | 'b2b';
 export type SalesDateRange = 'all' | 'today' | 'week' | 'month';
 
@@ -48,6 +48,9 @@ export function useSales(filters?: {
         query = query.eq('sale_date', today).is('cancelled_at', null);
       } else if (tab === 'unpaid') {
         query = query.in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null);
+      } else if (tab === 'processing') {
+        // 처리 필요 = 결제완료인데 아직 출고·수령 처리 안 함 (사장님 손 필요)
+        query = query.eq('payment_status', 'paid').is('shipped_at', null).is('delivered_at', null).is('cancelled_at', null);
       } else if (tab === 'cancelled') {
         query = query.not('cancelled_at', 'is', null);
       } else {
@@ -113,10 +116,11 @@ export function useSalesTabCounts() {
       const db = supabase as any;
       const today = new Date().toISOString().slice(0, 10);
 
-      const [allRes, todayRes, unpaidRes, cancelledRes] = await Promise.all([
+      const [allRes, todayRes, unpaidRes, processingRes, cancelledRes] = await Promise.all([
         db.from('offline_sales').select('*', { count: 'exact', head: true }).is('cancelled_at', null),
         db.from('offline_sales').select('*', { count: 'exact', head: true }).eq('sale_date', today).is('cancelled_at', null),
         db.from('offline_sales').select('*', { count: 'exact', head: true }).in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null),
+        db.from('offline_sales').select('*', { count: 'exact', head: true }).eq('payment_status', 'paid').is('shipped_at', null).is('delivered_at', null).is('cancelled_at', null),
         db.from('offline_sales').select('*', { count: 'exact', head: true }).not('cancelled_at', 'is', null),
       ]);
 
@@ -124,6 +128,7 @@ export function useSalesTabCounts() {
         all: allRes.count || 0,
         today: todayRes.count || 0,
         unpaid: unpaidRes.count || 0,
+        processing: processingRes.count || 0,
         cancelled: cancelledRes.count || 0,
       };
     },

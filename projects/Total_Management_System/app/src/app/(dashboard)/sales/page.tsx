@@ -106,6 +106,7 @@ function statusTextClass(state: RowState): string {
 
 const TABS: { key: SalesTab; label: string }[] = [
   { key: 'all', label: '전체' },
+  { key: 'processing', label: '처리 필요' },
   { key: 'unpaid', label: '미수금' },
   { key: 'cancelled', label: '취소' },
 ];
@@ -188,6 +189,8 @@ export default function SalesPage() {
       for (const d of dls) {
         if (d.cancelled_at && tab !== 'cancelled') continue; // 영역 partner/all 에서도 취소 탭 외엔 cancelled 숨김
         if (tab === 'unpaid' && !['unpaid', 'partial'].includes(d.payment_status)) continue;
+        // 처리 필요 = 결제완료인데 출고 전(거래처)
+        if (tab === 'processing' && !(d.payment_status === 'paid' && !['shipped', 'settled'].includes(d.status))) continue;
         items.push({ sourceType: 'delivery', id: d.id, date: d.delivery_date || d.created_at || '', data: d });
       }
     }
@@ -316,8 +319,9 @@ export default function SalesPage() {
         />
       </div>
 
-      {/* 탭 바 */}
-      <div className="flex gap-1 border-b border-neutral-200">
+      {/* 탭 바 — 상태 필터 */}
+      <div className="flex items-end gap-1 border-b border-neutral-200">
+        <span className="text-[11px] font-semibold text-neutral-400 pb-2 pr-1 shrink-0">상태</span>
         {TABS.map((t) => {
           const count = tabCounts?.[t.key] ?? 0;
           const active = tab === t.key;
@@ -332,9 +336,11 @@ export default function SalesPage() {
               }`}
             >
               {t.label}
-              {count > 0 && t.key === 'unpaid' && (
+              {count > 0 && (t.key === 'unpaid' || t.key === 'processing') && (
                 <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
-                  active ? 'bg-neutral-900 text-white' : 'bg-neutral-200 text-neutral-500'
+                  t.key === 'processing'
+                    ? (active ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-700')
+                    : (active ? 'bg-neutral-900 text-white' : 'bg-neutral-200 text-neutral-500')
                 }`}>
                   {count}
                 </span>
@@ -346,8 +352,9 @@ export default function SalesPage() {
 
       {/* 영역 칩 + 기간 필터 (한 줄 통합) — 2026-05-26 Phase G-2: 채널 칩 폐기 */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* 영역 — 고객(B2C) / 거래처(B2B) / 전체. default 고객 */}
-        <div className="flex gap-1">
+        {/* 대상 — 고객(B2C) / 거래처(B2B) / 전체. default 고객 */}
+        <div className="flex items-center gap-1">
+          <span className="text-[11px] font-semibold text-neutral-400 pr-0.5">대상</span>
           {SECTIONS.map((s) => (
             <button
               key={s.key}
@@ -401,6 +408,15 @@ export default function SalesPage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* 색 범례 — 좌측 줄/도트 의미 */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-neutral-500 px-1">
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-green-500" />완료(출고·수령)</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" />처리 대기</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-500" />미결제</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-yellow-400" />부분결제</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-neutral-300" />취소</span>
       </div>
 
       {/* 판매 목록 (2026-05-26 Phase B: sale + delivery 통합) */}
