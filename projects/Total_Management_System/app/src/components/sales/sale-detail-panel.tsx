@@ -104,6 +104,8 @@ export function SaleDetailPanel({ saleId }: Props) {
   }
 
   const { sale, items, serials = [] } = data;
+  const customerInfo = (data as { customerInfo?: { company_name: string | null; activity_name: string | null; position: string | null } | null }).customerInfo ?? null;
+  const hasStoreInfo = !!(customerInfo && (customerInfo.company_name || customerInfo.activity_name || customerInfo.position));
   const s = sale as unknown as OfflineSale;
   const channel = CHANNEL_CHIP[(s.sale_channel || 'offline') as SaleChannel] || CHANNEL_CHIP.offline;
 
@@ -157,6 +159,23 @@ export function SaleDetailPanel({ saleId }: Props) {
               <span className="text-xs text-neutral-500">연락처</span>
               <p>{formatPhone(s.customer_phone) || '-'}</p>
             </div>
+            {/* 매장명 · 활동명 · 직급 — 고객 정보 함께 표시 (값 있을 때만) */}
+            {hasStoreInfo && (
+              <div className="col-span-2 flex flex-wrap gap-x-5 gap-y-1 rounded-lg bg-neutral-50 px-3 py-2">
+                <div>
+                  <span className="text-xs text-neutral-500">매장명</span>
+                  <p>{customerInfo!.company_name || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-500">활동명</span>
+                  <p>{customerInfo!.activity_name || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-500">직급</span>
+                  <p>{customerInfo!.position || '-'}</p>
+                </div>
+              </div>
+            )}
             <div>
               <span className="text-xs text-neutral-500">판매일</span>
               <p>{formatDate(s.sale_date, 'yyyy.MM.dd')}</p>

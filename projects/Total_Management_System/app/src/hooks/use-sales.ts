@@ -261,16 +261,24 @@ export function useSale(id: string) {
       if (saleRes.error) throw saleRes.error;
       const sale = saleRes.data as OfflineSale;
 
-      // customer_id가 있으면 최신 연락처 가져오기
+      // customer_id가 있으면 최신 연락처 + 매장명/활동명/직급 가져오기
+      let customerInfo: { company_name: string | null; activity_name: string | null; position: string | null } | null = null;
       if (sale.customer_id) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: cust } = await (supabase as any)
           .from('customers')
-          .select('phone')
+          .select('phone, company_name, activity_name, position')
           .eq('id', sale.customer_id)
           .single();
         if (cust?.phone) {
           (sale as Record<string, unknown>).customer_phone = cust.phone;
+        }
+        if (cust) {
+          customerInfo = {
+            company_name: cust.company_name ?? null,
+            activity_name: cust.activity_name ?? null,
+            position: cust.position ?? null,
+          };
         }
       }
 
@@ -293,6 +301,7 @@ export function useSale(id: string) {
         // sale_item_id 포함 — 상세 페이지에서 정확한 시리얼-상품 매칭에 사용 (2026-05-17 fix)
         serials: (serialsRes.data || []) as Array<{ id: string; serial_number: string; product_id: string | null; sale_item_id: string | null }>,
         linkedConsultation,
+        customerInfo,
       };
     },
     enabled: !!id,
