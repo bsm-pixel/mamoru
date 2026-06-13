@@ -1,11 +1,12 @@
 'use client';
 
-import { use, useRef, useState, useEffect } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   useSourcingItem, useInboundItemUpdate, useUploadInboundPhoto, useDeleteInboundPhoto,
 } from '@/hooks/use-sourcing';
 import { Camera, X, ExternalLink, Check, ArrowLeft, Loader2 } from 'lucide-react';
+import { CameraCapture } from '@/components/ui/camera-capture';
 
 const STATUS_LABEL: Record<string, string> = {
   pending: '대기', matched: '매칭완료', selected: '채택', rejected: '탈락',
@@ -25,9 +26,9 @@ export default function SourcingInboundPage({ params }: { params: Promise<{ item
   const update = useInboundItemUpdate(itemId);
   const upload = useUploadInboundPhoto(itemId);
   const removePhoto = useDeleteInboundPhoto(itemId);
-  const fileRef = useRef<HTMLInputElement>(null);
   const [memo, setMemo] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const item = data?.item;
   useEffect(() => { if (item) setMemo(item.inbound_memo ?? ''); }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -47,17 +48,13 @@ export default function SourcingInboundPage({ params }: { params: Promise<{ item
   const photos = item.inbound_photos ?? [];
   const seq = item.sticker_no.split('-').pop();
 
-  const handleFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+  const handleCaptureOne = async (file: File) => {
+    if (photos.length >= 5) return;
     setUploading(true);
     try {
-      for (const f of Array.from(files)) {
-        if (photos.length >= 5) break;
-        await upload.mutateAsync(f);
-      }
+      await upload.mutateAsync(file);
     } finally {
       setUploading(false);
-      if (fileRef.current) fileRef.current.value = '';
     }
   };
 
@@ -106,24 +103,16 @@ export default function SourcingInboundPage({ params }: { params: Promise<{ item
             <div className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">현장 사진</div>
             <span className="text-xs text-neutral-500">{photos.length}/5</span>
           </div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            multiple
-            className="hidden"
-            onChange={(e) => handleFiles(e.target.files)}
-          />
           <button
             type="button"
-            onClick={() => fileRef.current?.click()}
+            onClick={() => setCameraOpen(true)}
             disabled={photos.length >= 5 || uploading}
             className="w-full py-5 bg-neutral-900 active:bg-neutral-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40"
           >
             {uploading ? <Loader2 size={20} className="animate-spin" /> : <Camera size={20} />}
             {uploading ? '업로드 중…' : photos.length === 0 ? '사진 촬영' : '추가 촬영'}
           </button>
+          <CameraCapture open={cameraOpen} onClose={() => setCameraOpen(false)} onCapture={handleCaptureOne} />
 
           {photos.length > 0 && (
             <div className="mt-3 grid grid-cols-3 gap-2">

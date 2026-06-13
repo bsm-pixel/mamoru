@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import { resizeImage } from '@/lib/utils/resize-image';
 import { createClient } from '@/lib/supabase/client';
 import { InspectionMarkBoard } from './inspection-mark-board';
+import { CameraCapture } from '@/components/ui/camera-capture';
 import { type MarkV2 } from './inspection-marks';
 import { COMMENT_PRESETS_BY_TYPE } from '@/lib/repair/comment-presets';
 import { applyMarkMents, applyFlagMents, splitBlocks } from './ment-linkage';
@@ -89,6 +90,7 @@ export function InspectionForm({ repairId, existingInspections, onSaved }: Inspe
   });
   const [activeIdx, setActiveIdx] = useState(draft?.activeIdx ?? 0);
   const [uploading, setUploading] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const saveInspections = useSaveInspections();
   const landscapeMobile = useLandscapeMobile();
@@ -233,21 +235,26 @@ export function InspectionForm({ repairId, existingInspections, onSaved }: Inspe
                 <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center"><Loader2 size={24} className="text-white animate-spin" /></div>
               )}
               <button onClick={() => removePhoto(activeIdx)} className="absolute -top-2 -right-2 w-7 h-7 bg-error text-white rounded-full flex items-center justify-center shadow-md"><X size={14} /></button>
-              <label className="absolute bottom-1 right-1 w-7 h-7 bg-white/80 rounded-full flex items-center justify-center cursor-pointer shadow hover:bg-white transition">
+              <button type="button" onClick={() => setCameraOpen(true)}
+                className="absolute bottom-1 right-1 w-7 h-7 bg-white/80 rounded-full flex items-center justify-center cursor-pointer shadow hover:bg-white transition">
                 <Camera size={14} className="text-neutral-600" />
-                <input type="file" accept="image/*" capture="environment" className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(activeIdx, f); e.target.value = ''; }} />
-              </label>
+              </button>
             </div>
           ) : (
-            <label className="cursor-pointer flex flex-col items-center justify-center w-28 h-28 border-2 border-dashed border-neutral-300 rounded-lg hover:border-neutral-400 transition">
+            <button type="button" onClick={() => setCameraOpen(true)}
+              className="cursor-pointer flex flex-col items-center justify-center w-28 h-28 border-2 border-dashed border-neutral-300 rounded-lg hover:border-neutral-400 transition">
               {uploading ? <Loader2 size={24} className="text-neutral-500 mb-1 animate-spin" /> : <Camera size={24} className="text-neutral-400 mb-1" />}
               <span className="text-[11px] text-neutral-400">{uploading ? '업로드중...' : '촬영/업로드'}</span>
-              <input type="file" accept="image/*" capture="environment" className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(activeIdx, f); e.target.value = ''; }} />
-            </label>
+            </button>
           )}
         </div>
+
+        {/* 인페이지 카메라 — 앱 전환 없이 촬영(튕김 방지) */}
+        <CameraCapture
+          open={cameraOpen}
+          onClose={() => setCameraOpen(false)}
+          onCapture={(file) => handlePhotoSelect(activeIdx, file)}
+        />
 
         {/* 핀 마킹 (자동 멘트 연동) */}
         <div>

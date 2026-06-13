@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Camera, Trash2, Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { resizeImage } from '@/lib/utils/resize-image';
+import { CameraCapture } from '@/components/ui/camera-capture';
 
 interface Photo {
   id: string;
@@ -20,8 +21,8 @@ interface Photo {
 
 export function RepairPhotos({ repairId }: { repairId: string }) {
   const queryClient = useQueryClient();
-  const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['repair-photos', repairId],
@@ -64,12 +65,9 @@ export function RepairPhotos({ repairId }: { repairId: string }) {
 
   const photos = data || [];
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleCapture(file: File) {
     const resized = await resizeImage(file, 1200, 0.8);
     upload.mutate(resized);
-    e.target.value = '';
   }
 
   return (
@@ -82,21 +80,15 @@ export function RepairPhotos({ repairId }: { repairId: string }) {
         <Button
           size="sm"
           variant="secondary"
-          onClick={() => fileRef.current?.click()}
+          onClick={() => setCameraOpen(true)}
           disabled={upload.isPending}
         >
           <Plus size={14} />
           {upload.isPending ? '업로드 중...' : '사진 추가'}
         </Button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleFileChange}
-          className="hidden"
-        />
       </div>
+
+      <CameraCapture open={cameraOpen} onClose={() => setCameraOpen(false)} onCapture={handleCapture} />
 
       {isLoading ? (
         <div className="grid grid-cols-3 gap-2">
