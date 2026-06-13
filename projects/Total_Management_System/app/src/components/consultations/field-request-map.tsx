@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultations } from '@/hooks/use-consultations';
+import { activityDisplay } from '@/lib/customer/display';
 import { loadKakaoMapSDK, type KakaoMap, type KakaoMarker, type KakaoOverlay } from '@/lib/kakao/map-loader';
 import { formatPhone, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
 import type { Consultation } from '@/lib/supabase/types';
@@ -221,7 +222,7 @@ function buildOverlayHTML(c: Consultation): string {
 
   return `
     <div style="background:white;border-radius:12px;padding:12px 16px;box-shadow:0 2px 12px rgba(0,0,0,.15);min-width:200px;max-width:260px;font-family:inherit;">
-      <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${escapeHtml(c.name)}</div>
+      <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${escapeHtml(activityDisplay(c.activity_name, c.name))}</div>
       <div style="font-size:12px;color:#666;margin-bottom:2px;">${escapeHtml(formatPhone(c.phone))}</div>
       <div style="font-size:12px;color:#666;margin-bottom:2px;">${escapeHtml(c.address_road || '')}</div>
       <div style="font-size:11px;color:#999;margin-bottom:6px;">${CONSULTATION_STATUS_LABEL[c.status] || c.status}</div>

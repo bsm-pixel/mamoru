@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useConsultations } from '@/hooks/use-consultations';
+import { activityDisplay } from '@/lib/customer/display';
 import { useRepairSchedule, type RepairScheduleItem } from '@/hooks/use-repairs';
 import { formatPhone } from '@/lib/utils/format';
 import { ChevronLeft, ChevronRight, Calendar, Store, Truck, Wrench } from 'lucide-react';
@@ -260,7 +261,7 @@ export function ScheduleCalendar({ onSelect }: ScheduleCalendarProps = {}) {
                       <Truck size={14} className="text-purple-600 shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm font-semibold text-indigo-black">{c.name}</span>
+                      <span className="text-sm font-semibold text-indigo-black">{activityDisplay(c.activity_name, c.name)}</span>
                       <span className="text-xs text-neutral-400 ml-2">{c.visit_time || ''}</span>
                     </div>
                     <span className="text-xs text-neutral-500">{formatPhone(c.phone)}</span>

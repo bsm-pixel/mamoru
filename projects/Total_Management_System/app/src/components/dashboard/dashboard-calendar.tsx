@@ -17,6 +17,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useConsultations } from '@/hooks/use-consultations';
+import { activityDisplay } from '@/lib/customer/display';
 import { useRepairSchedule, type RepairScheduleItem } from '@/hooks/use-repairs';
 import { formatPhone } from '@/lib/utils/format';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -258,7 +259,7 @@ export function DashboardCalendarPanel() {
                       {isStore ? '매장' : '출장'}
                     </span>
                     <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                      <span className="text-xs font-medium text-stone-800 truncate">{c.name}</span>
+                      <span className="text-xs font-medium text-stone-800 truncate">{activityDisplay(c.activity_name, c.name)}</span>
                       <span className="text-[10px] text-stone-400 truncate">{formatPhone(c.phone || '')}</span>
                     </div>
                   </div>

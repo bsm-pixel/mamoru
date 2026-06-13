@@ -18,6 +18,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultations } from '@/hooks/use-consultations';
+import { activityDisplay } from '@/lib/customer/display';
 import {
   formatPhone,
   CONSULTATION_STATUS_LABEL,
@@ -108,7 +109,7 @@ export function AllConsultationsList({ onSelect }: { onSelect?: (id: string) => 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                       <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${cfg.bg} ${cfg.text}`}>{cfg.label}</span>
-                      <p className="text-sm font-semibold text-stone-800 truncate">{c.name}</p>
+                      <p className="text-sm font-semibold text-stone-800 truncate">{activityDisplay(c.activity_name, c.name)}</p>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${CONSULTATION_STATUS_COLOR[c.status] || 'bg-stone-100 text-stone-600'}`}>
                         {CONSULTATION_STATUS_LABEL[c.status] || c.status}
                       </span>

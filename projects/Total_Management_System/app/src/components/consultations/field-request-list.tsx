@@ -15,6 +15,7 @@ import {
 } from '@/lib/utils/format';
 import { MapPin, Search, ChevronLeft, ChevronRight, Navigation, CalendarCheck, LayoutGrid } from 'lucide-react';
 import { MobileFieldDayView } from './mobile-field-day-view';
+import { activityDisplay } from '@/lib/customer/display';
 import type { Consultation } from '@/lib/supabase/types';
 
 // 6탭: 오늘출장 | 신규접수 | 제안중 | 일정재요청 | 확정 | 지난내역
@@ -153,7 +154,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
           }}
         >
           <div className="flex items-center gap-2">
-            <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{c.name}</span>
+            <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{activityDisplay(c.activity_name, c.name)}</span>
             <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
               {CONSULTATION_STATUS_LABEL[c.status]}
             </Badge>

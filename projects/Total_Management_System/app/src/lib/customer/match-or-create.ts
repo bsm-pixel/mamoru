@@ -28,6 +28,8 @@ export interface MatchOrCreateInput {
     addressDetail?: string | null;
     postcode?: string | null;
     customerType?: string;
+    activityName?: string | null;   // 102: 활동명(매장 사용 이름)
+    position?: string | null;        // 102: 직급
   };
 }
 
@@ -57,8 +59,20 @@ export async function matchOrCreateCustomer(
     return { customerId: null, isNew: false };
   }
 
+  const activityName = input.extra?.activityName?.trim() || null;
+  const position = input.extra?.position?.trim() || null;
+
   if (existing && existing.length > 0) {
-    return { customerId: existing[0].id as string, isNew: false };
+    const id = existing[0].id as string;
+    // 활동명/직급은 비어있을 때만 채움 (수기 큐레이션 값 덮어쓰기 방지)
+    if (activityName || position) {
+      const { data: cur } = await db.from('customers').select('activity_name, position').eq('id', id).single();
+      const patch: Record<string, unknown> = {};
+      if (activityName && !cur?.activity_name) patch.activity_name = activityName;
+      if (position && !cur?.position) patch.position = position;
+      if (Object.keys(patch).length > 0) await db.from('customers').update(patch).eq('id', id);
+    }
+    return { customerId: id, isNew: false };
   }
 
   // 2) 신규 INSERT — phone_normalized는 DB trigger로 자동 채워짐
@@ -71,6 +85,8 @@ export async function matchOrCreateCustomer(
   if (input.extra?.addressRoad) insertData.address_road = input.extra.addressRoad;
   if (input.extra?.addressDetail) insertData.address_detail = input.extra.addressDetail;
   if (input.extra?.postcode) insertData.postcode = input.extra.postcode;
+  if (activityName) insertData.activity_name = activityName;
+  if (position) insertData.position = position;
 
   const { data: created, error: insertErr } = await db
     .from('customers')

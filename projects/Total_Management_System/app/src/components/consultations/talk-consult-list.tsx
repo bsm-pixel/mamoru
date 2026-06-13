@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultations } from '@/hooks/use-consultations';
+import { activityDisplay } from '@/lib/customer/display';
 import {
   formatRelative,
   formatPhone,
@@ -110,7 +111,7 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
                 <div className="cursor-pointer" onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}>
                   <div className="flex items-center gap-2">
                     <MessageCircle size={14} className={isCancelled ? 'text-neutral-400 shrink-0' : 'text-info shrink-0'} />
-                    <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{c.name}</span>
+                    <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{activityDisplay(c.activity_name, c.name)}</span>
                     <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
                       {tab === 'new_intake' ? formatRelative(c.received_at) : (CONSULTATION_STATUS_LABEL[c.status] || c.status)}
                     </Badge>

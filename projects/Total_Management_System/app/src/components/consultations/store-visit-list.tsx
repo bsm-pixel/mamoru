@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultations } from '@/hooks/use-consultations';
+import { activityDisplay } from '@/lib/customer/display';
 import {
   formatPhone,
   formatDday,
@@ -102,7 +103,7 @@ export function StoreVisitList({
           onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}
         >
           <div className="flex items-center gap-2">
-            <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{c.name}</span>
+            <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{activityDisplay(c.activity_name, c.name)}</span>
             {tab === 'past' && (
               <Badge className={CONSULTATION_STATUS_COLOR[c.status] || 'bg-neutral-100 text-neutral-600'}>
                 {CONSULTATION_STATUS_LABEL[c.status] || c.status}

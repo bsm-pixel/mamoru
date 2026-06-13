@@ -1793,8 +1793,16 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
         <div id="err-visit" class="err-msg">날짜와 시간을 선택해주세요</div>
       </div>
 
-      <!-- 출장 요청: 주소/요일/시간대 -->
+      <!-- 출장 요청: 활동명/직급/주소/요일/시간대 -->
       <div id="sec-field" class="hide">
+        <div class="form-group">
+          <label>매장 사용 이름 (활동명)</label>
+          <input id="activityName" type="text" placeholder="예) 하은 · 성함과 같다면 기재 X" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>직급</label>
+          <input id="position" type="text" placeholder="예) 원장 / 디자이너 / 실장" autocomplete="off">
+        </div>
         <div class="form-group">
           <div class="segment-label">주소지 입력</div>
           <input id="postcode" type="hidden">
@@ -3083,6 +3091,9 @@ if (isLoadingDates) return;
       data.addressZip = zip;
       data.addressRoad = road;
       data.addressDetail = detail;
+      // 활동명·직급 (출장 식별용)
+      data.activityName = $('activityName') ? $('activityName').value.trim() : '';
+      data.position = $('position') ? $('position').value.trim() : '';
       // 숨김 필드에서 Place ID 및 좌표 정보 가져오기
       data.addressPlaceId = $('addrPlaceId') ? $('addrPlaceId').value.trim() : '';
       data.addressLat = $('addrLat') ? $('addrLat').value.trim() : '';

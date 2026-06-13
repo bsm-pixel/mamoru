@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useConsultation, useUpdateConsultationStatus, useDeleteConsultation } from '@/hooks/use-consultations';
+import { activityDisplay, honorific } from '@/lib/customer/display';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -81,9 +82,9 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
   };
 
   const confirmStatusLabels: Record<string, { title: string; msg: string; variant?: 'danger' | 'default' }> = {
-    completed: { title: '상담 완료', msg: `${c.name}님의 상담을 완료 처리합니다.` },
-    in_progress: { title: '상담 시작', msg: `${c.name}님의 상담을 시작합니다.` },
-    cancelled: { title: '상담 취소', msg: `${c.name}님의 상담을 취소합니다. 이 작업은 되돌릴 수 없습니다.`, variant: 'danger' },
+    completed: { title: '상담 완료', msg: `${honorific(c.activity_name, c.name)}님의 상담을 완료 처리합니다.` },
+    in_progress: { title: '상담 시작', msg: `${honorific(c.activity_name, c.name)}님의 상담을 시작합니다.` },
+    cancelled: { title: '상담 취소', msg: `${honorific(c.activity_name, c.name)}님의 상담을 취소합니다. 이 작업은 되돌릴 수 없습니다.`, variant: 'danger' },
   };
 
   return (
@@ -91,7 +92,7 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
       {/* 헤더 */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <h3 className="text-base font-bold">{c.name}</h3>
+          <h3 className="text-base font-bold">{activityDisplay(c.activity_name, c.name)}</h3>
           <Badge className={statusColor}>{statusLabel}</Badge>
         </div>
         <div className="flex items-center gap-2 text-xs text-neutral-500">
@@ -324,7 +325,7 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
       >
         <div className="space-y-4">
           <div className="text-sm text-neutral-700">
-            <p className="mb-2">{c.name}님의 상담을 완료 처리합니다.</p>
+            <p className="mb-2">{honorific(c.activity_name, c.name)}님의 상담을 완료 처리합니다.</p>
             <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
               아직 연결된 판매가 없습니다.<br />판매를 먼저 등록하시겠습니까?
             </p>

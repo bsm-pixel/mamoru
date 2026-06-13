@@ -87,7 +87,10 @@ export interface Database {
           source: 'imweb' | 'consultation' | 'as' | 'manual';
           customer_type: 'retail' | 'online' | 'dealer' | 'academy' | 'supplier';
           company_name: string | null;
+          activity_name: string | null;          // 102: 활동명(매장 사용 이름, 예 하은)
+          position: string | null;               // 102: 직급(원장/디자이너 등)
           memo: string | null;
+          tags: string[] | null;                 // 060: 고객 태그
           outstanding_balance: number;
           default_repair_price: number | null;  // 079: 거래처별 복원수리 기본 단가(자루당, 원)
           total_orders: number;
@@ -96,7 +99,7 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['customers']['Row'], 'id' | 'created_at' | 'updated_at' | 'phone_normalized' | 'total_orders' | 'total_spent' | 'ecount_customer_code' | 'outstanding_balance' | 'default_repair_price'>;
+        Insert: Omit<Database['public']['Tables']['customers']['Row'], 'id' | 'created_at' | 'updated_at' | 'phone_normalized' | 'total_orders' | 'total_spent' | 'ecount_customer_code' | 'outstanding_balance' | 'default_repair_price' | 'activity_name' | 'position' | 'tags'>;
         Update: Partial<Database['public']['Tables']['customers']['Insert']>;
       };
       orders: {
@@ -230,6 +233,8 @@ export interface Database {
           phone: string;
           phone_normalized: string | null;
           consultation_type: ConsultationType;
+          activity_name: string | null;     // 102: 활동명(매장 사용 이름)
+          position: string | null;          // 102: 직급
           visit_date: string | null;
           visit_time: string | null;
           postcode: string | null;
@@ -263,6 +268,8 @@ export interface Database {
           name: string;
           phone: string;
           consultation_type?: ConsultationType;
+          activity_name?: string | null;
+          position?: string | null;
           visit_date?: string | null;
           visit_time?: string | null;
           postcode?: string | null;

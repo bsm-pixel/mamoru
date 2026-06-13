@@ -42,6 +42,8 @@ export async function POST(req: NextRequest) {
       addressDetail,
       postcode,
       memo,
+      activityName,
+      position,
       notify = true, // 기본 On
     } = body;
 
@@ -114,6 +116,8 @@ export async function POST(req: NextRequest) {
         addressRoad: addressRoad?.trim() || null,
         addressDetail: addressDetail?.trim() || null,
         postcode: postcode?.trim() || null,
+        activityName: activityName || null,
+        position: position || null,
       },
     });
 
@@ -126,6 +130,8 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         phone: phone.trim(),
         consultation_type: type,
+        activity_name: (activityName || '').trim() || null,
+        position: (position || '').trim() || null,
         visit_date: visitDate,
         visit_time: visitTime,
         address_road: addressRoad?.trim() || null,

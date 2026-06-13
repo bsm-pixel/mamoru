@@ -22,7 +22,7 @@ export function OPTIONS() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, phone, type, visitDate, visitTime, address, addressZip, addressRoad, addressDetail, addressLat, addressLng, days, timePrefs, memo } = body;
+    const { name, phone, type, visitDate, visitTime, address, addressZip, addressRoad, addressDetail, addressLat, addressLng, days, timePrefs, memo, activityName, position } = body;
 
     // 필수값 검증
     if (!name?.trim() || !phone?.trim() || !type?.trim()) {
@@ -98,6 +98,8 @@ export async function POST(req: NextRequest) {
         addressRoad: addressRoad || null,
         addressDetail: addressDetail || null,
         postcode: addressZip || null,
+        activityName: activityName || null,
+        position: position || null,
       },
     });
 
@@ -109,6 +111,8 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         phone: phone.trim(),
         consultation_type: consultationType,
+        activity_name: (activityName || '').trim() || null,
+        position: (position || '').trim() || null,
         visit_date: visitDate || null,
         visit_time: visitTime || null,
         address_road: addressRoad || null,

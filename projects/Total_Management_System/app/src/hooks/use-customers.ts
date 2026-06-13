@@ -16,6 +16,8 @@ export interface CustomerResult {
   source: string;
   memo: string | null;
   company_name: string | null;
+  activity_name: string | null;          // 102: 활동명(매장 사용 이름)
+  position: string | null;               // 102: 직급
   customer_type: string | null;
   default_repair_price: number | null;  // 079: 거래처별 복원수리 기본 단가(자루당)
 }

@@ -149,7 +149,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold text-stone-900">{c.name}</h2>
+            <h2 className="text-base font-bold text-stone-900">{c.activity_name ? `${c.activity_name} (${c.name})` : c.name}</h2>
             <Badge className={TYPE_COLOR[c.customer_type] || TYPE_COLOR.retail}>
               {TYPE_OPTIONS.find(t => t.value === c.customer_type)?.label || '일반'}
             </Badge>
@@ -157,6 +157,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
           <p className="text-xs text-neutral-500 mt-0.5">
             {formatPhone(c.phone) || '연락처 없음'}
             {c.company_name && ` · ${c.company_name}`}
+            {c.position && ` · ${c.position}`}
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -183,6 +184,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
           address_detail: c.address_detail || '',
           tags: (c as unknown as { tags?: string[] }).tags || [],
         }}
+        // 복제는 같은 매장 동료 — 활동명/직급은 사람마다 달라 비움(매장명·주소만 채움)
       />
 
       {/* 요약 카드 */}

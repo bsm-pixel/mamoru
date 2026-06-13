@@ -23,6 +23,8 @@ interface CustomerCreateData {
   address_road: string;
   address_detail: string;
   company_name: string;
+  activity_name: string;
+  position: string;
   memo: string;
   tags: string[];
 }
@@ -38,7 +40,7 @@ interface Props {
 const BLANK: CustomerCreateData = {
   name: '', phone: '', customer_type: 'retail',
   postcode: '', address_road: '', address_detail: '',
-  company_name: '', memo: '', tags: [],
+  company_name: '', activity_name: '', position: '', memo: '', tags: [],
 };
 
 export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props) {
@@ -72,6 +74,8 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
           address_road: form.address_road || undefined,
           address_detail: form.address_detail || undefined,
           company_name: form.company_name || undefined,
+          activity_name: form.activity_name || undefined,
+          position: form.position || undefined,
           memo: form.memo || undefined,
           tags: form.tags.length > 0 ? form.tags : undefined,
         }),
@@ -133,6 +137,20 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
               <label className="text-xs text-neutral-500 mb-1 block">매장/회사명</label>
               <input type="text" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })}
                 placeholder="선택 입력" className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+            </div>
+          </div>
+
+          {/* 활동명 + 직급 (매장 사용 이름) */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-neutral-500 mb-1 block">활동명 (매장 사용 이름)</label>
+              <input type="text" value={form.activity_name} onChange={(e) => setForm({ ...form, activity_name: e.target.value })}
+                placeholder="예) 하은 · 성함과 같다면 X" className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500 mb-1 block">직급</label>
+              <input type="text" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })}
+                placeholder="예) 원장 / 디자이너" className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
             </div>
           </div>
 
