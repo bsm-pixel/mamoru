@@ -256,7 +256,7 @@ export function SerialSwapDialog({ currentSerial, currentMeta, onClose }: Props)
   function Row({ label, value, mono }: { label: string; value: string | null; mono?: boolean }) {
     return (
       <div className="flex items-baseline gap-2">
-        <span className="text-neutral-400 w-9 shrink-0">{label}</span>
+        <span className="text-neutral-400 w-12 shrink-0 whitespace-nowrap">{label}</span>
         <span className={`text-neutral-800 font-medium truncate ${mono ? 'font-mono' : ''}`}>{value || '-'}</span>
       </div>
     );

@@ -233,22 +233,22 @@ export default function SerialsPage() {
                   )}
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-400">판매번호</span>
-                    <span className="font-mono">{sale.sale_number}</span>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-neutral-400 shrink-0 whitespace-nowrap">판매번호</span>
+                    <span className="font-mono truncate text-right">{sale.sale_number}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-400">판매일</span>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-neutral-400 shrink-0 whitespace-nowrap">판매일</span>
                     <span>{formatDate(sale.sale_date)}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-neutral-400">판매경로</span>
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-neutral-400 shrink-0 whitespace-nowrap">판매경로</span>
                     <Badge className="bg-neutral-100 text-neutral-600 text-xs">
                       {CHANNEL_LABEL[sale.sale_channel] || sale.sale_channel}
                     </Badge>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-400">결제금액</span>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-neutral-400 shrink-0 whitespace-nowrap">결제금액</span>
                     <span>{sale.total_amount.toLocaleString()}원</span>
                   </div>
                 </div>
@@ -263,13 +263,13 @@ export default function SerialsPage() {
                   <span className="text-xs font-semibold text-neutral-500">고객 정보</span>
                 </div>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-400">성함</span>
-                    <span className="font-medium">{serial.sold_to_name || sale?.customer_name}</span>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-neutral-400 shrink-0 whitespace-nowrap">성함</span>
+                    <span className="font-medium truncate text-right">{serial.sold_to_name || sale?.customer_name}</span>
                   </div>
                   {(serial.sold_to_phone || sale?.customer_phone) && (
-                    <div className="flex justify-between">
-                      <span className="text-neutral-400">연락처</span>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-neutral-400 shrink-0 whitespace-nowrap">연락처</span>
                       <span>{formatPhone(serial.sold_to_phone || sale?.customer_phone || null)}</span>
                     </div>
                   )}

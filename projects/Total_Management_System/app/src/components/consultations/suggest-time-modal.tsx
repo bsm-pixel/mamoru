@@ -82,12 +82,12 @@ export function SuggestTimeModal({ open, onClose, consultationId, prefDays, pref
         )}
 
         {slots.map((slot, idx) => (
-          <div key={idx} className="flex items-center gap-2">
+          <div key={idx} className="flex flex-wrap items-center gap-2">
             <input
               type="date"
               value={slot.date}
               onChange={(e) => updateSlot(idx, 'date', e.target.value)}
-              className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+              className="flex-1 min-w-[8rem] h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
             />
             <input
               type="time"

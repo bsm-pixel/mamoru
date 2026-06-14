@@ -184,8 +184,8 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
           {/* 편집 품목 목록 */}
           <div className="space-y-2 mb-3">
             {editItems.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-2 py-1 border-b border-neutral-50 last:border-0">
-                <div className="flex-1 min-w-0">
+              <div key={idx} className="flex flex-wrap items-center gap-2 py-1 border-b border-neutral-50 last:border-0">
+                <div className="w-full sm:flex-1 sm:w-auto min-w-0">
                   <p className="text-xs font-medium truncate">{item.product_name}</p>
                 </div>
                 <div className="flex items-center gap-1">
