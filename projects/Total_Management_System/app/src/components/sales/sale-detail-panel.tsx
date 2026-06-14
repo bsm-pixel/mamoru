@@ -145,7 +145,8 @@ export function SaleDetailPanel({ saleId }: Props) {
           <Badge className={channel.className}>{channel.label}</Badge>
         </div>
         {/* 2026-05-26: 헤더 정보 좌측 + 리뷰 관리 미니 우측 (사장님 시선 부담 ↓) */}
-        <div className="flex items-start gap-4">
+        {/* 모바일: 세로 스택(고객정보 폭 확보 → 라벨 세로글씨 방지) / PC: 좌우 */}
+        <div className="flex flex-col md:flex-row md:items-start gap-4">
           <div className="flex-1 grid grid-cols-2 gap-2 text-sm">
             <div>
               <span className="text-xs text-neutral-500">고객명</span>
