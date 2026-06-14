@@ -374,7 +374,7 @@ export default function SalesPage() {
         <div className="w-px h-4 bg-neutral-200" />
 
         {/* 기간 */}
-        <div className="flex gap-1 items-center">
+        <div className="flex flex-wrap gap-1 items-center">
           {DATE_RANGES.map((d) => (
             <button
               key={d.key}
@@ -389,19 +389,19 @@ export default function SalesPage() {
             </button>
           ))}
           {/* 직접 선택 */}
-          <div className="flex items-center gap-1 ml-1">
+          <div className="flex flex-wrap items-center gap-1 ml-1">
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => { setDateFrom(e.target.value); setDateRange('all'); setPage(1); }}
-              className="h-7 px-2 rounded-md border border-neutral-200 text-xs bg-white"
+              className="h-7 px-2 rounded-md border border-neutral-200 text-xs bg-white min-w-0 max-w-[42vw] sm:max-w-none"
             />
             <span className="text-xs text-neutral-400">~</span>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => { setDateTo(e.target.value); setDateRange('all'); setPage(1); }}
-              className="h-7 px-2 rounded-md border border-neutral-200 text-xs bg-white"
+              className="h-7 px-2 rounded-md border border-neutral-200 text-xs bg-white min-w-0 max-w-[42vw] sm:max-w-none"
             />
             {(dateFrom || dateTo) && (
               <button onClick={() => { setDateFrom(''); setDateTo(''); }} className="text-[10px] text-neutral-400 hover:text-neutral-600">초기화</button>
