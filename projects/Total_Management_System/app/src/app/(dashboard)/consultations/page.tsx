@@ -92,7 +92,7 @@ export default function ConsultationsPage() {
     <>
       <Topbar title="상담관리" />
 
-      <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-4">
+      <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-4 overflow-x-hidden">
         {/* 1행: 요약 3카드 (공통 StatCard) + 새로고침 */}
         <div className="grid grid-cols-12 gap-3">
           <div className="col-span-12 lg:col-span-9 grid grid-cols-3 gap-3">
@@ -122,13 +122,13 @@ export default function ConsultationsPage() {
         </div>
 
         {/* 2행: 최상위 4탭 (전체+매장+출장+톡) + 일정 수동 등록 */}
-        <div className="flex items-center justify-between border-b border-stone-200">
-          <div className="flex gap-1">
+        <div className="flex items-center justify-between gap-2 border-b border-stone-200">
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide min-w-0">
             {TABS.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => { setActiveTab(tab.key); setSelectedFieldId(null); setSelectedId(null); }}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 transition relative ${
+                className={`flex items-center gap-1.5 shrink-0 whitespace-nowrap px-3 md:px-4 py-2.5 text-sm font-semibold border-b-2 transition relative ${
                   activeTab === tab.key
                     ? 'border-stone-900 text-stone-900'
                     : 'border-transparent text-stone-500 hover:text-stone-700'

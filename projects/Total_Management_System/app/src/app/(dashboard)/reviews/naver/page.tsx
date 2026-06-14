@@ -440,9 +440,9 @@ export default function NaverReviewPage() {
                     <img src={url} alt="" className="w-full h-full object-cover" />
                     <button
                       onClick={() => removePhoto(i)}
-                      className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"
+                      className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 opacity-100 md:opacity-70 md:hover:opacity-100 transition flex items-center justify-center"
                     >
-                      <Trash2 size={16} className="text-white" />
+                      <Trash2 size={13} className="text-white" />
                     </button>
                   </div>
                 ))}
