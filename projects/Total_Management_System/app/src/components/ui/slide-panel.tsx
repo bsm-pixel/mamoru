@@ -86,7 +86,7 @@ export function SlidePanel({ open, onClose, children, title, className }: SlideP
         )}
 
         {/* 본문 */}
-        <div className={cn('overflow-y-auto px-4 py-4', title ? 'h-[calc(100%-3rem)]' : 'h-full')}>
+        <div className={cn('overflow-y-auto px-4 py-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]', title ? 'h-[calc(100%-3rem)]' : 'h-full')}>
           {children}
         </div>
       </div>

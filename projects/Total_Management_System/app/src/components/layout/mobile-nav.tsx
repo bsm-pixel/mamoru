@@ -90,7 +90,7 @@ export function MobileNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 min-w-[64px] py-1 transition',
+                  'flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-full transition',
                   active ? 'text-terracotta' : 'text-neutral-400'
                 )}
               >
@@ -103,7 +103,7 @@ export function MobileNav() {
           <button
             onClick={() => setShowMore(true)}
             className={cn(
-              'flex flex-col items-center gap-0.5 min-w-[64px] py-1 transition',
+              'flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-full transition',
               moreActive ? 'text-terracotta' : 'text-neutral-400'
             )}
           >

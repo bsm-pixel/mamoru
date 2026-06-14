@@ -367,7 +367,7 @@ export default function ReviewsPage() {
             <div className="text-center py-16 text-neutral-400 text-sm">약속 대기 중인 고객이 없습니다</div>
           ) : (
             <div className="bg-white rounded-xl border border-neutral-100 overflow-hidden">
-              <div className="grid grid-cols-[1fr_90px_90px_90px_120px] gap-3 px-4 py-2.5 bg-neutral-50 text-[11px] font-semibold text-neutral-500">
+              <div className="hidden md:grid grid-cols-[1fr_90px_90px_90px_120px] gap-3 px-4 py-2.5 bg-neutral-50 text-[11px] font-semibold text-neutral-500">
                 <div>고객 / 식별번호</div>
                 <div>종류</div>
                 <div>약속일</div>
@@ -380,7 +380,7 @@ export default function ReviewsPage() {
                 const sentDate = it.requestSentAt ? new Date(it.requestSentAt).toLocaleDateString('ko-KR') : null;
                 const related = relatedByItem[`${it.source}-${it.id}`] || [];
                 return (
-                  <div key={`${it.source}-${it.id}`} className="grid grid-cols-[1fr_90px_90px_90px_120px] gap-3 px-4 py-3 border-t border-neutral-100 items-center">
+                  <div key={`${it.source}-${it.id}`} className="flex flex-col gap-1.5 md:grid md:grid-cols-[1fr_90px_90px_90px_120px] md:gap-3 md:items-center px-4 py-3 border-t border-neutral-100">
                     <div>
                       <Link href={detailHref} className="hover:underline block">
                         <div className="text-sm font-semibold text-indigo-black">{it.customerName}</div>
