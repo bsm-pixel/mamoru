@@ -57,6 +57,9 @@ async function isNotificationEnabled(template: string): Promise<boolean> {
       as_shipped: 'notifications.repair_shipped',
       sales_shipped: 'notifications.sales_shipped',
       review_request: 'notifications.review_request',
+      event_received: 'notifications.event_received',
+      event_payment_notice: 'notifications.event_payment_notice',
+      event_payment_confirmed: 'notifications.event_payment_confirmed',
     };
     const settingKey = templateKeyMap[template];
     if (!settingKey) return true; // 매핑 안 된 템플릿은 항상 발송
@@ -102,7 +105,11 @@ export type NotifyTemplate =
   | 'as_review_request'   // 복원수리 만족도 → webhook_repair
   | 'review_request'      // 상담 리뷰 요청 → webhook_consultation
   | 'purchase_review_request' // 제품구매 리뷰 요청 → webhook_consultation
-  | 'sales_shipped';          // 판매 출고 안내 → webhook_consultation
+  | 'sales_shipped'           // 판매 출고 안내 → webhook_consultation
+  // EVENT(고객 접수) — webhook_consultation 시나리오 사용
+  | 'event_received'          // EVENT 접수 확인 (자동)
+  | 'event_payment_notice'    // EVENT 입금 안내 (총액+계좌, 사장님 재고확인 후)
+  | 'event_payment_confirmed'; // EVENT 입금 확인 (→ 판매 자동전환)
 
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
@@ -131,6 +138,10 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   review_request: 'REVIEW_REQUEST',          // 상담 리뷰 요청 → MAKE_WEBHOOK_URL
   purchase_review_request: 'PURCHASE_REVIEW_REQUEST', // 제품구매 리뷰 요청 → MAKE_WEBHOOK_URL
   sales_shipped: 'SALES_SHIPPED',            // 판매 출고 안내 → MAKE_WEBHOOK_URL
+  // EVENT
+  event_received: 'EVENT_RECEIVED',
+  event_payment_notice: 'EVENT_PAYMENT_NOTICE',
+  event_payment_confirmed: 'EVENT_PAYMENT_CONFIRMED',
 };
 
 interface NotifyPayload {

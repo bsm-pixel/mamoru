@@ -6,6 +6,7 @@
 export const DEFAULT_CAT_LABELS: Record<string, string> = {
   BL: '블런트', TH: '씨닝', LO: '롱', SL: '슬라이싱',
   CB: '빗', CS: '케이스', AC: '악세서리', RS: '복원수리',
+  EVENT: 'EVENT', // 재고 전환 이벤트 품목 (category='EVENT')
 };
 
 export const DEFAULT_PAYMENT_LABELS: Record<string, string> = {

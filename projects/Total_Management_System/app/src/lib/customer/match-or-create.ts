@@ -22,7 +22,7 @@
 export interface MatchOrCreateInput {
   phone: string;
   name: string;
-  source: 'consultation' | 'as' | 'manual';
+  source: 'consultation' | 'as' | 'manual' | 'event';
   extra?: {
     addressRoad?: string | null;
     addressDetail?: string | null;

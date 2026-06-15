@@ -24,6 +24,7 @@ import {
   FileSignature,
   Wallet,
   CalendarOff,
+  Zap,
   ChevronDown,
   type LucideIcon,
 } from 'lucide-react';
@@ -51,6 +52,7 @@ const iconMap: Record<string, LucideIcon> = {
   FileSignature,
   Wallet,
   CalendarOff,
+  Zap,
 };
 
 const COLLAPSE_KEY = 'tms-sidebar-collapsed';
