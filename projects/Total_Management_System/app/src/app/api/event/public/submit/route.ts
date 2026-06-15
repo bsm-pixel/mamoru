@@ -41,11 +41,11 @@ export async function POST(req: NextRequest) {
     const {
       name, phone, receive_method,
       postcode, address1, address2,
-      items, memo,
+      items, memo, campaign_id,
     } = body as {
       name?: string; phone?: string; receive_method?: string;
       postcode?: string; address1?: string; address2?: string;
-      items?: EventItem[]; memo?: string;
+      items?: EventItem[]; memo?: string; campaign_id?: string;
     };
 
     if (!name?.trim() || !phone?.trim()) {
@@ -77,6 +77,14 @@ export async function POST(req: NextRequest) {
     const phoneNorm = phone.replace(/\D/g, '');
     const eventNumber = await generateEventNumber(dbAny);
 
+    // 캠페인 연결 — 지정값 없으면 활성 기본 캠페인
+    let campaignId = campaign_id || null;
+    if (!campaignId) {
+      const { data: def } = await dbAny.from('event_campaigns')
+        .select('id').eq('is_default', true).eq('status', 'active').order('created_at').limit(1);
+      campaignId = def && def.length > 0 ? def[0].id : null;
+    }
+
     const { customerId } = await matchOrCreateCustomer(dbAny, {
       phone: phone.trim(),
       name: name.trim(),
@@ -90,6 +98,7 @@ export async function POST(req: NextRequest) {
 
     const insertData = {
       event_number: eventNumber,
+      campaign_id: campaignId,
       customer_id: customerId,
       customer_name: name.trim(),
       customer_phone: phone.trim(),

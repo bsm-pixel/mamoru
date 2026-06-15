@@ -4,11 +4,11 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { useEvents, useEventPatch } from '@/hooks/use-events';
-import { EVENT_STATUS_LABEL, type EventSubmission, type EventStatus } from '@/lib/event/types';
-import { Zap, Loader2, Package, Truck, Store } from 'lucide-react';
+import { useEvents, useEventPatch, useCampaigns, useCreateCampaign } from '@/hooks/use-events';
+import { EVENT_STATUS_LABEL, CAMPAIGN_TYPE_LABEL, type EventSubmission, type EventStatus } from '@/lib/event/types';
+import { Zap, Loader2, Package, Truck, Store, ArrowLeft, Plus } from 'lucide-react';
 
-const TABS: { key: EventStatus | 'all'; label: string }[] = [
+const TABS: { key: EventStatus; label: string }[] = [
   { key: 'received', label: '신규접수' },
   { key: 'payment_noticed', label: '입금대기' },
   { key: 'converted', label: '판매전환' },
@@ -20,47 +20,112 @@ const fmtPhone = (p: string | null) => (p || '').replace(/(\d{3})(\d{3,4})(\d{4}
 
 export default function EventsPage() {
   const router = useRouter();
+  const [campaignId, setCampaignId] = useState<string | null>(null); // null = 캠페인 카드 화면
   const [tab, setTab] = useState<EventStatus>('received');
   const [selId, setSelId] = useState<string | null>(null);
+  const [showNew, setShowNew] = useState(false);
+  const { data: campaigns, isLoading: campLoading } = useCampaigns();
   const { data: all, isLoading } = useEvents('all');
   const patch = useEventPatch();
+  const createCampaign = useCreateCampaign();
 
-  const counts = useMemo(() => {
-    const c: Record<string, number> = {};
-    (all || []).forEach((e) => { c[e.status] = (c[e.status] || 0) + 1; });
-    return c;
+  // 캠페인별 상태 카운트
+  const countsByCampaign = useMemo(() => {
+    const m: Record<string, Record<string, number>> = {};
+    (all || []).forEach((e) => {
+      const cid = e.campaign_id || '_none';
+      if (!m[cid]) m[cid] = {};
+      m[cid][e.status] = (m[cid][e.status] || 0) + 1;
+    });
+    return m;
   }, [all]);
 
-  const list = useMemo(() => (all || []).filter((e) => e.status === tab), [all, tab]);
+  const activeCampaign = useMemo(() => (campaigns || []).find((c) => c.id === campaignId) || null, [campaigns, campaignId]);
+  const list = useMemo(() => (all || []).filter((e) => e.campaign_id === campaignId && e.status === tab), [all, campaignId, tab]);
+  const tabCounts = countsByCampaign[campaignId || '_none'] || {};
   const sel = useMemo(() => (all || []).find((e) => e.id === selId) || null, [all, selId]);
 
+  // ── 캠페인 카드 화면 ──
+  if (!campaignId) {
+    return (
+      <>
+        <Topbar title="EVENT 접수" />
+        <div className="min-h-screen bg-neutral-50 px-4 md:px-6 py-4 space-y-4 overflow-x-hidden">
+          <div className="flex items-start gap-2 rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5 text-xs text-indigo-700">
+            <Zap size={14} className="shrink-0 mt-0.5" />
+            <p>진행 중인 이벤트(캠페인)별로 접수를 관리합니다. 매장 방문 즉시구매는 <button onClick={() => router.push('/sales/new')} className="underline font-semibold">판매입력</button>에서 EVENT 품목을 선택하세요.</p>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-neutral-900">캠페인</h2>
+            <button onClick={() => setShowNew(true)} className="flex items-center gap-1 text-xs font-semibold text-white bg-neutral-900 px-3 py-1.5 rounded-lg">
+              <Plus size={14} />새 캠페인
+            </button>
+          </div>
+
+          {campLoading ? (
+            <div className="py-16 text-center text-neutral-400"><Loader2 size={20} className="animate-spin inline" /></div>
+          ) : (campaigns || []).length === 0 ? (
+            <div className="py-16 text-center text-sm text-neutral-400">캠페인이 없습니다. ‘새 캠페인’으로 만들어 주세요.</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(campaigns || []).map((c) => {
+                const cc = countsByCampaign[c.id] || {};
+                return (
+                  <button key={c.id} onClick={() => { setCampaignId(c.id); setTab('received'); }}
+                    className="text-left bg-white rounded-2xl border border-neutral-200 p-4 hover:border-neutral-400 transition">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[11px] text-neutral-400">{CAMPAIGN_TYPE_LABEL[c.type] || c.type}</div>
+                        <div className="text-base font-bold text-neutral-900 truncate">{c.name}</div>
+                      </div>
+                      <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-400'}`}>
+                        {c.status === 'active' ? '진행중' : '종료'}
+                      </span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-4 gap-1 text-center">
+                      {TABS.map((t) => (
+                        <div key={t.key} className="rounded-lg bg-neutral-50 py-2">
+                          <div className="text-lg font-bold text-neutral-900">{cc[t.key] || 0}</div>
+                          <div className="text-[10px] text-neutral-400">{t.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {showNew && <NewCampaignModal onClose={() => setShowNew(false)} create={createCampaign} />}
+      </>
+    );
+  }
+
+  // ── 캠페인 상세(접수 목록) 화면 ──
   return (
     <>
       <Topbar title="EVENT 접수" />
       <div className="min-h-screen bg-neutral-50 px-4 md:px-6 py-4 space-y-4 overflow-x-hidden">
-        {/* 안내 */}
-        <div className="flex items-start gap-2 rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5 text-xs text-indigo-700">
-          <Zap size={14} className="shrink-0 mt-0.5" />
-          <p>온라인 사전접수 전용입니다. 매장 방문 즉시구매는 <button onClick={() => router.push('/sales/new')} className="underline font-semibold">판매입력</button>에서 EVENT 품목을 선택하세요.</p>
-        </div>
+        <button onClick={() => { setCampaignId(null); setSelId(null); }} className="flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900">
+          <ArrowLeft size={16} />캠페인 목록
+        </button>
+        <h2 className="text-lg font-bold text-neutral-900">{activeCampaign?.name || '캠페인'}</h2>
 
         {/* 탭 */}
         <div className="flex gap-1 overflow-x-auto scrollbar-hide border-b border-neutral-200">
           {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key as EventStatus)}
+            <button key={t.key} onClick={() => setTab(t.key)}
               className={`shrink-0 whitespace-nowrap px-3 py-2.5 text-sm font-semibold border-b-2 transition ${
                 tab === t.key ? 'border-neutral-900 text-neutral-900' : 'border-transparent text-neutral-400 hover:text-neutral-600'
-              }`}
-            >
+              }`}>
               {t.label}
-              {counts[t.key] > 0 && <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-neutral-200 text-neutral-600">{counts[t.key]}</span>}
+              {(tabCounts[t.key] || 0) > 0 && <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full bg-neutral-200 text-neutral-600">{tabCounts[t.key]}</span>}
             </button>
           ))}
         </div>
 
-        {/* 리스트 */}
         {isLoading ? (
           <div className="py-16 text-center text-sm text-neutral-400"><Loader2 size={20} className="animate-spin inline" /></div>
         ) : list.length === 0 ? (
@@ -68,11 +133,8 @@ export default function EventsPage() {
         ) : (
           <div className="space-y-2">
             {list.map((e) => (
-              <button
-                key={e.id}
-                onClick={() => setSelId(e.id)}
-                className="w-full text-left bg-white rounded-xl border border-neutral-200 px-4 py-3 hover:border-neutral-400 transition"
-              >
+              <button key={e.id} onClick={() => setSelId(e.id)}
+                className="w-full text-left bg-white rounded-xl border border-neutral-200 px-4 py-3 hover:border-neutral-400 transition">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <div className="text-[10px] font-mono text-neutral-400">{e.event_number}</div>
@@ -94,11 +156,37 @@ export default function EventsPage() {
         )}
       </div>
 
-      {/* 상세 패널 */}
       <SlidePanel open={!!sel} onClose={() => setSelId(null)} title="EVENT 접수 상세" className="sm:w-[440px]">
         {sel && <EventDetail ev={sel} patch={patch} onDone={() => setSelId(null)} goSales={() => router.push('/sales')} />}
       </SlidePanel>
     </>
+  );
+}
+
+function NewCampaignModal({ onClose, create }: { onClose: () => void; create: ReturnType<typeof useCreateCampaign> }) {
+  const [name, setName] = useState('');
+  const [type, setType] = useState('stock_clearance');
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-5" onClick={onClose}>
+      <div className="bg-white rounded-2xl p-5 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-base font-bold text-neutral-900 mb-4">새 캠페인</h3>
+        <label className="text-xs text-neutral-500">캠페인명</label>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="예: 여름 한정 판매"
+          className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm mb-3 mt-1" autoFocus />
+        <label className="text-xs text-neutral-500">유형</label>
+        <select value={type} onChange={(e) => setType(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm mb-4 mt-1">
+          {Object.entries(CAMPAIGN_TYPE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
+        <div className="flex gap-2">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm">취소</button>
+          <button disabled={!name.trim() || create.isPending}
+            onClick={() => create.mutate({ name: name.trim(), type }, { onSuccess: onClose })}
+            className="flex-1 py-2.5 rounded-lg bg-neutral-900 text-white text-sm font-bold disabled:opacity-50">
+            {create.isPending ? '생성 중...' : '생성'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

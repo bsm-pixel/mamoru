@@ -24,9 +24,30 @@ export interface EventItem {
   unit_price: number;      // 슬라이싱 가공비 미포함 단가
 }
 
+export type EventCampaignType = 'stock_clearance' | 'limited' | 'group_buy' | 'tester' | 'trade_in' | 'other';
+
+export interface EventCampaign {
+  id: string;
+  name: string;
+  type: EventCampaignType;
+  status: 'active' | 'ended';
+  is_default: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  memo: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const CAMPAIGN_TYPE_LABEL: Record<EventCampaignType, string> = {
+  stock_clearance: '재고 전환', limited: '한정 판매', group_buy: '공동 구매',
+  tester: '체험단', trade_in: '트레이드인', other: '기타',
+};
+
 export interface EventSubmission {
   id: string;
   event_number: string;
+  campaign_id: string | null;
   customer_id: string | null;
   customer_name: string;
   customer_phone: string | null;
