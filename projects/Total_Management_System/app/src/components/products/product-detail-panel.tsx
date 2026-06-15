@@ -19,6 +19,7 @@ import { useLabelTemplate } from '@/hooks/use-label-templates';
 
 import { useSetting } from '@/hooks/use-settings';
 import { usePriceGroups } from '@/hooks/use-price-groups';
+import { useProductCategoryOptions } from '@/hooks/use-product-categories';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 
 interface Props {
@@ -39,10 +40,9 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const { data: sourcingData } = useSourcingByProduct(productId || '');
   const sourcing = sourcingData?.sourcing ?? null;
   const catLabels = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
-  const categories = useSetting<string[]>('inventory.categories', Object.keys(DEFAULT_CAT_LABELS));
   const priceGroups = usePriceGroups();
   const CATEGORY_LABEL = catLabels;
-  const CATEGORY_OPTIONS = categories.map((c) => ({ value: c, label: catLabels[c] || c }));
+  const CATEGORY_OPTIONS = useProductCategoryOptions(); // 설정 SSOT + 시스템 고정(EVENT) 보장
   const productLabel = useLabelTemplate('product_40x20');
   const [editing, setEditing] = useState(false);
   const [showSerialModal, setShowSerialModal] = useState(false);

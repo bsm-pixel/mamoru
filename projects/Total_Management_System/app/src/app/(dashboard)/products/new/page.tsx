@@ -8,20 +8,14 @@ import { Button } from '@/components/ui/button';
 import { useCreateProduct } from '@/hooks/use-product-detail';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { usePriceGroups } from '@/hooks/use-price-groups';
+import { useProductCategoryOptions } from '@/hooks/use-product-categories';
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
-
-const CATEGORY_OPTIONS = [
-  { value: 'BL', label: '블런트' },
-  { value: 'TH', label: '틴닝' },
-  { value: 'LO', label: '장가위' },
-  { value: 'SL', label: '슬라이싱' },
-  { value: 'EVENT', label: 'EVENT (재고 전환 이벤트)' },
-];
 
 export default function NewProductPage() {
   const router = useRouter();
   const createProduct = useCreateProduct();
   const priceGroups = usePriceGroups();
+  const CATEGORY_OPTIONS = useProductCategoryOptions(); // 설정 SSOT + 시스템 고정(EVENT) 보장
   const [skuStatus, setSkuStatus] = useState<'idle' | 'checking' | 'available' | 'duplicate'>('idle');
 
   const [form, setForm] = useState({

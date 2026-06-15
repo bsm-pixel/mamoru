@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Plus, X } from 'lucide-react';
+import { Save, Plus, X, Lock } from 'lucide-react';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
+import { SYSTEM_CATEGORIES } from '@/lib/utils/setting-defaults';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -32,7 +33,12 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
   useEffect(() => {
     setLowStock(parse(settings['inventory.low_stock_threshold'], 3));
     setImwebSync(parse(settings['inventory.imweb_sync'], true));
-    setCategories(parse(settings['inventory.categories'], ['BL', 'TH', 'LO', 'SL', 'CB', 'CS', 'AC']));
+    {
+      const saved = parse<string[]>(settings['inventory.categories'], ['BL', 'TH', 'LO', 'SL', 'CB', 'CS', 'AC']);
+      // 시스템 고정 카테고리(EVENT 등) 항상 포함
+      SYSTEM_CATEGORIES.forEach((c) => { if (!saved.includes(c)) saved.push(c); });
+      setCategories(saved);
+    }
     setCatLabels(parse(settings['inventory.category_labels'], { BL: '블런트', TH: '씨닝', LO: '롱', SL: '슬라이싱', CB: '빗', CS: '케이스', AC: '악세서리' }));
     setCatTabVisible(parse(settings['inventory.category_tab_visible'], {}));
     setSafetyStock(parse(settings['inventory.safety_stock'], 5));
@@ -97,10 +103,14 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
                   className="rounded w-3.5 h-3.5" />
                 탭
               </label>
-              <button onClick={() => {
-                setCategories(categories.filter((_, j) => j !== i));
-                const next = { ...catLabels }; delete next[code]; setCatLabels(next);
-              }} className="text-neutral-400 hover:text-red-500"><X size={14} /></button>
+              {SYSTEM_CATEGORIES.includes(code) ? (
+                <span className="shrink-0 flex items-center gap-1 text-[10px] text-neutral-400 px-1" title="시스템 고정 — 코드 연동(삭제 불가)"><Lock size={12} />고정</span>
+              ) : (
+                <button onClick={() => {
+                  setCategories(categories.filter((_, j) => j !== i));
+                  const next = { ...catLabels }; delete next[code]; setCatLabels(next);
+                }} className="text-neutral-400 hover:text-red-500"><X size={14} /></button>
+              )}
             </div>
           ))}
         </div>

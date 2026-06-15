@@ -9,6 +9,12 @@ export const DEFAULT_CAT_LABELS: Record<string, string> = {
   EVENT: 'EVENT', // 재고 전환 이벤트 품목 (category='EVENT')
 };
 
+/**
+ * 시스템 고정 카테고리 — 코드가 직접 연동(예: EVENT 허브가 category='EVENT'로 필터).
+ * 설정 목록에서 삭제돼도 항상 보장되고, 설정 UI에서 삭제 불가.
+ */
+export const SYSTEM_CATEGORIES = ['EVENT'];
+
 export const DEFAULT_PAYMENT_LABELS: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
 };
