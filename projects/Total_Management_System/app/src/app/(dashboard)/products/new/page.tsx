@@ -15,6 +15,7 @@ const CATEGORY_OPTIONS = [
   { value: 'TH', label: '틴닝' },
   { value: 'LO', label: '장가위' },
   { value: 'SL', label: '슬라이싱' },
+  { value: 'EVENT', label: 'EVENT (재고 전환 이벤트)' },
 ];
 
 export default function NewProductPage() {
@@ -34,6 +35,9 @@ export default function NewProductPage() {
     imweb_product_no: '',
     barcode: '',
     supplier_id: '',
+    // EVENT 전용 (category='EVENT'일 때만 tags로 저장 — 고객 접수폼 그룹핑용)
+    event_type: 'blunt',  // blunt | thinning | long | dry
+    spec: '',             // 인치(6.0) / 감모(21to29) / DRY서브(stroke)
   });
 
   async function handleSubmit() {
@@ -60,6 +64,9 @@ export default function NewProductPage() {
       imweb_product_no: form.imweb_product_no.trim() || undefined,
       barcode: form.barcode.trim() || undefined,
       supplier_id: form.supplier_id || undefined,
+      ...(form.category === 'EVENT'
+        ? { tags: { event_type: form.event_type, spec: form.spec.trim() } }
+        : {}),
     });
 
     router.push('/products');
@@ -135,6 +142,38 @@ export default function NewProductPage() {
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
               />
             </div>
+
+            {/* EVENT 전용 — 고객 접수폼 그룹핑용 (종류·옵션) */}
+            {form.category === 'EVENT' && (
+              <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3 space-y-3">
+                <p className="text-[11px] text-indigo-700">고객 접수폼에서 이 값으로 그룹핑됩니다. (재고는 아래 가격/재고 입력, 마감임박은 재고 ≤3일 때 자동 표시)</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-neutral-500">종류</label>
+                    <select
+                      value={form.event_type}
+                      onChange={(e) => setForm({ ...form, event_type: e.target.value })}
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
+                    >
+                      <option value="blunt">블런트</option>
+                      <option value="thinning">틴닝</option>
+                      <option value="long">장가위</option>
+                      <option value="dry">DRY</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-neutral-500">옵션(spec)</label>
+                    <input
+                      type="text"
+                      value={form.spec}
+                      onChange={(e) => setForm({ ...form, spec: e.target.value })}
+                      placeholder={form.event_type === 'thinning' ? 'under20 / 21to29 / over30' : form.event_type === 'dry' ? 'stroke / slicing / curve' : '6.0 (인치)'}
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 

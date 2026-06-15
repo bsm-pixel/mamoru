@@ -62,6 +62,7 @@ export function useCreateProduct() {
       image_url?: string;
       purchase_name?: string;
       purchase_url?: string;
+      tags?: Record<string, unknown>;
     }) => {
       const res = await fetch('/api/products', {
         method: 'POST',
