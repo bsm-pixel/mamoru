@@ -6,7 +6,7 @@ import { Topbar } from '@/components/layout/topbar';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useEvents, useEventPatch, useCampaigns, useCreateCampaign } from '@/hooks/use-events';
 import { EVENT_STATUS_LABEL, CAMPAIGN_TYPE_LABEL, type EventSubmission, type EventStatus } from '@/lib/event/types';
-import { Zap, Loader2, Package, Truck, Store, ArrowLeft, Plus } from 'lucide-react';
+import { Zap, Loader2, Package, Truck, Store, ArrowLeft, Plus, ExternalLink } from 'lucide-react';
 
 const TABS: { key: EventStatus; label: string }[] = [
   { key: 'received', label: '신규접수' },
@@ -49,7 +49,7 @@ export default function EventsPage() {
   if (!campaignId) {
     return (
       <>
-        <Topbar title="EVENT 접수" />
+        <Topbar title="EVENT" />
         <div className="min-h-screen bg-neutral-50 px-4 md:px-6 py-4 space-y-4 overflow-x-hidden">
           <div className="flex items-start gap-2 rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5 text-xs text-indigo-700">
             <Zap size={14} className="shrink-0 mt-0.5" />
@@ -71,9 +71,10 @@ export default function EventsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {(campaigns || []).map((c) => {
                 const cc = countsByCampaign[c.id] || {};
+                const formUrl = `https://page.mamoru.kr/projects/event/page_form.html?campaign=${c.id}`;
                 return (
-                  <button key={c.id} onClick={() => { setCampaignId(c.id); setTab('received'); }}
-                    className="text-left bg-white rounded-2xl border border-neutral-200 p-4 hover:border-neutral-400 transition">
+                  <div key={c.id} onClick={() => { setCampaignId(c.id); setTab('received'); }}
+                    className="cursor-pointer text-left bg-white rounded-2xl border border-neutral-200 p-4 hover:border-neutral-400 transition">
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-[11px] text-neutral-400">{CAMPAIGN_TYPE_LABEL[c.type] || c.type}</div>
@@ -91,7 +92,14 @@ export default function EventsPage() {
                         </div>
                       ))}
                     </div>
-                  </button>
+                    {/* 접수페이지 바로가기 — 고객이 보는 폼을 새 탭으로 열어 빠르게 점검 */}
+                    <div className="mt-3 flex justify-end">
+                      <a href={formUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-full transition">
+                        <ExternalLink size={11} />접수 페이지 열기
+                      </a>
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -106,12 +114,20 @@ export default function EventsPage() {
   // ── 캠페인 상세(접수 목록) 화면 ──
   return (
     <>
-      <Topbar title="EVENT 접수" />
+      <Topbar title="EVENT" />
       <div className="min-h-screen bg-neutral-50 px-4 md:px-6 py-4 space-y-4 overflow-x-hidden">
         <button onClick={() => { setCampaignId(null); setSelId(null); }} className="flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900">
           <ArrowLeft size={16} />캠페인 목록
         </button>
-        <h2 className="text-lg font-bold text-neutral-900">{activeCampaign?.name || '캠페인'}</h2>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <h2 className="text-lg font-bold text-neutral-900">{activeCampaign?.name || '캠페인'}</h2>
+          {campaignId && (
+            <a href={`https://page.mamoru.kr/projects/event/page_form.html?campaign=${campaignId}`} target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-full transition">
+              <ExternalLink size={11} />접수 페이지 열기
+            </a>
+          )}
+        </div>
 
         {/* 탭 */}
         <div className="flex gap-1 overflow-x-auto scrollbar-hide border-b border-neutral-200">
