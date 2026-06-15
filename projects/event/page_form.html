@@ -146,12 +146,41 @@
   var products = [], curType = '', curOpt = '', recv = 'delivery';
   var cart = []; // {key, product_id, product_name, category_type, spec, slicing, qty, unit_price}
   var CAMPAIGN_ID = (new URLSearchParams(location.search).get('campaign')) || ''; // 캠페인별 접수 구분
+  var CAMPAIGN_BASE = 'https://app-eta-sandy-75.vercel.app/api/campaigns';
+  var DISCOUNT_RULES = []; // [{unit_price,min_qty,bundle_price}] 같은 단가 묶음할인
 
-  // 로드
+  // 로드 — 캠페인 할인규칙
+  fetch(CAMPAIGN_BASE).then(function(r){return r.json();}).then(function(j){
+    var list = j.campaigns||[];
+    var c = CAMPAIGN_ID ? list.filter(function(x){return x.id===CAMPAIGN_ID;})[0]
+                        : list.filter(function(x){return x.is_default && x.status==='active';})[0];
+    if(c){ DISCOUNT_RULES = c.discount_rules||[]; if(!CAMPAIGN_ID) CAMPAIGN_ID=c.id; }
+    renderCart();
+  }).catch(function(){});
+
+  // 로드 — 품목
   fetch(API+'/products').then(function(r){return r.json();}).then(function(j){
     products = (j.items||[]).filter(function(p){return !p.soldout || true;}); // 품절도 표시(비활성)
     renderTypes();
   }).catch(function(){ renderTypes(); });
+
+  // 가격 계산 (서버 lib/event/pricing.ts 와 동일 로직 — 함께 수정)
+  function priceCart(){
+    var byPrice={}, slicing=0, listTotal=0;
+    cart.forEach(function(it){
+      var q=Math.max(1,it.qty||1), p=it.unit_price||0;
+      byPrice[p]=(byPrice[p]||0)+q; listTotal+=p*q;
+      if(it.slicing) slicing+=SLICE*q;
+    });
+    var base=0;
+    Object.keys(byPrice).forEach(function(ps){
+      var p=Number(ps), q=byPrice[ps];
+      var rule=(DISCOUNT_RULES||[]).filter(function(r){return Number(r.unit_price)===p && r.min_qty>0 && r.bundle_price>0 && q>=r.min_qty;})[0];
+      if(rule){ var b=Math.floor(q/rule.min_qty), rem=q%rule.min_qty; base+=b*rule.bundle_price+rem*p; }
+      else base+=q*p;
+    });
+    return { base:base, slicing:slicing, total:base+slicing, listTotal:listTotal, discount:listTotal-base };
+  }
 
   function renderTypes(){
     var c = $('typeChips'); c.innerHTML='';
@@ -247,15 +276,20 @@
   function renderCart(){
     var sec=$('cartSec'), items=$('cartItems'); items.innerHTML='';
     if(!cart.length){ sec.classList.add('mm-hide'); showTail(false); updateSubmit(); return; }
-    var total=0;
     cart.forEach(function(it){
-      var line = it.unit_price*it.qty + (it.slicing?SLICE*it.qty:0); total+=line;
+      var line = it.unit_price*it.qty + (it.slicing?SLICE*it.qty:0);
       var row=document.createElement('div'); row.className='mm-cart__item';
       row.innerHTML='<span>'+esc(it.product_name)+(it.slicing?' (슬라이싱)':'')+' ×'+it.qty+'</span><span>'+won(line)+' <button>삭제</button></span>';
       row.querySelector('button').onclick=function(){ cart=cart.filter(function(x){return x.key!==it.key;}); renderCart(); };
       items.appendChild(row);
     });
-    $('cartTotal').textContent=won(total);
+    var pr = priceCart();
+    if(pr.discount>0){
+      var d=document.createElement('div'); d.className='mm-cart__item'; d.style.color='#B45309';
+      d.innerHTML='<span>묶음 할인</span><span>-'+won(pr.discount)+'</span>';
+      items.appendChild(d);
+    }
+    $('cartTotal').textContent=won(pr.total);
     sec.classList.remove('mm-hide'); showTail(true); updateSubmit();
   }
 

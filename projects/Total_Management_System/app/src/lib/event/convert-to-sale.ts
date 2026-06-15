@@ -38,6 +38,12 @@ export async function convertEventToSale(db: any, ev: EventRow): Promise<string>
   const saleNumber = await generateSaleNumber(db);
   const today = new Date().toISOString().slice(0, 10);
 
+  // 정가 합계(품목 라인 합 = 단가×수량 + 슬라이싱) → 묶음 할인 = 정가합 − 최종금액
+  const slicingQtyAll = ev.items.reduce((s, it) => s + (it.slicing ? Math.max(1, it.qty || 1) : 0), 0);
+  const lineSum = ev.items.reduce((s, it) => s + (it.unit_price || 0) * Math.max(1, it.qty || 1), 0)
+    + SLICING_ADDON * slicingQtyAll;
+  const discountAmount = Math.max(0, lineSum - ev.total_amount);
+
   const { data: sale, error: saleErr } = await db
     .from('offline_sales')
     .insert({
@@ -47,11 +53,12 @@ export async function convertEventToSale(db: any, ev: EventRow): Promise<string>
       customer_phone: ev.customer_phone,
       sale_date: today,
       total_amount: ev.total_amount,
+      discount_amount: discountAmount,
       paid_amount: ev.total_amount,
       payment_method: 'transfer',
       payment_status: 'paid',
       sale_channel: 'offline',
-      memo: `EVENT 전환 (${ev.event_number})`,
+      memo: `EVENT 전환 (${ev.event_number})${discountAmount > 0 ? ` · 묶음할인 -${discountAmount.toLocaleString()}` : ''}`,
     })
     .select('id')
     .single();

@@ -26,6 +26,13 @@ export interface EventItem {
 
 export type EventCampaignType = 'stock_clearance' | 'limited' | 'group_buy' | 'tester' | 'trade_in' | 'other';
 
+/** 수량 묶음 할인 규칙 — 같은 단가끼리, min_qty 도달 시 묶음 반복 + 나머지 정가 */
+export interface DiscountRule {
+  unit_price: number;   // 적용 단가 (이 단가 품목끼리 묶음)
+  min_qty: number;      // 묶음 최소 수량
+  bundle_price: number; // 묶음가 (min_qty 자루 묶음 가격)
+}
+
 export interface EventCampaign {
   id: string;
   name: string;
@@ -35,6 +42,7 @@ export interface EventCampaign {
   starts_at: string | null;
   ends_at: string | null;
   memo: string | null;
+  discount_rules: DiscountRule[];
   created_at: string;
   updated_at: string;
 }

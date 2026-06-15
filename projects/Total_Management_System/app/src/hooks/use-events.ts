@@ -16,12 +16,28 @@ export function useCampaigns() {
   });
 }
 
+import type { DiscountRule } from '@/lib/event/types';
+
 export function useCreateCampaign() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: { name: string; type?: string; starts_at?: string; ends_at?: string; memo?: string }) => {
+    mutationFn: async (body: { name: string; type?: string; discount_rules?: DiscountRule[] }) => {
       const res = await fetch('/api/campaigns', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['campaigns'] }),
+  });
+}
+
+export function useUpdateCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: { id: string; name?: string; type?: string; status?: string; discount_rules?: DiscountRule[] }) => {
+      const res = await fetch(`/api/campaigns/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(await res.text());
       return res.json();

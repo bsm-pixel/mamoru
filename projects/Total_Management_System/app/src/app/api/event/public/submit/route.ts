@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { sendAdminEmail } from '@/lib/notification/email';
 import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
-import { SLICING_ADDON } from '@/lib/event/options';
+import { computeEventPricing } from '@/lib/event/pricing';
 import type { EventItem } from '@/lib/event/types';
 
 const CORS_HEADERS = {
@@ -59,17 +59,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: '택배 발송은 배송지가 필요합니다' }, { status: 400, headers: CORS_HEADERS });
     }
 
-    // 금액 계산 (서버 신뢰 — 단가는 클라이언트 값, 슬라이싱은 서버 가산)
-    let baseTotal = 0;
-    let slicingAddon = 0;
-    for (const it of items) {
-      const qty = Math.max(1, parseInt(String(it.qty)) || 1);
-      const unit = Math.max(0, parseInt(String(it.unit_price)) || 0);
-      baseTotal += unit * qty;
-      if (it.slicing) slicingAddon += SLICING_ADDON * qty;
-    }
-    const totalAmount = baseTotal + slicingAddon;
-
     const db = createServiceClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dbAny = db as any;
@@ -77,13 +66,24 @@ export async function POST(req: NextRequest) {
     const phoneNorm = phone.replace(/\D/g, '');
     const eventNumber = await generateEventNumber(dbAny);
 
-    // 캠페인 연결 — 지정값 없으면 활성 기본 캠페인
+    // 캠페인 연결 — 지정값 없으면 활성 기본 캠페인 (할인 규칙도 함께 조회)
     let campaignId = campaign_id || null;
+    let discountRules = [];
+    if (campaignId) {
+      const { data: c } = await dbAny.from('event_campaigns').select('id, discount_rules').eq('id', campaignId).single();
+      if (c) discountRules = c.discount_rules || [];
+      else campaignId = null;
+    }
     if (!campaignId) {
       const { data: def } = await dbAny.from('event_campaigns')
-        .select('id').eq('is_default', true).eq('status', 'active').order('created_at').limit(1);
-      campaignId = def && def.length > 0 ? def[0].id : null;
+        .select('id, discount_rules').eq('is_default', true).eq('status', 'active').order('created_at').limit(1);
+      if (def && def.length > 0) { campaignId = def[0].id; discountRules = def[0].discount_rules || []; }
     }
+
+    // 금액 계산 (서버 권위 — 캠페인 묶음 할인 적용)
+    const pricing = computeEventPricing(items, discountRules);
+    const slicingAddon = pricing.slicing;
+    const totalAmount = pricing.total;
 
     const { customerId } = await matchOrCreateCustomer(dbAny, {
       phone: phone.trim(),

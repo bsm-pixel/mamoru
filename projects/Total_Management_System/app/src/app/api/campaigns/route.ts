@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
         starts_at: body.starts_at || null,
         ends_at: body.ends_at || null,
         memo: body.memo || null,
+        discount_rules: Array.isArray(body.discount_rules) ? body.discount_rules : [],
       })
       .select()
       .single();

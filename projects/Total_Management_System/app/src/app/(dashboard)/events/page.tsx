@@ -4,9 +4,9 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { useEvents, useEventPatch, useCampaigns, useCreateCampaign } from '@/hooks/use-events';
-import { EVENT_STATUS_LABEL, CAMPAIGN_TYPE_LABEL, type EventSubmission, type EventStatus } from '@/lib/event/types';
-import { Zap, Loader2, Package, Truck, Store, ArrowLeft, Plus, ExternalLink } from 'lucide-react';
+import { useEvents, useEventPatch, useCampaigns, useCreateCampaign, useUpdateCampaign } from '@/hooks/use-events';
+import { EVENT_STATUS_LABEL, CAMPAIGN_TYPE_LABEL, type EventSubmission, type EventStatus, type EventCampaign, type DiscountRule } from '@/lib/event/types';
+import { Zap, Loader2, Package, Truck, Store, ArrowLeft, Plus, ExternalLink, Settings, X } from 'lucide-react';
 
 const TABS: { key: EventStatus; label: string }[] = [
   { key: 'received', label: '신규접수' },
@@ -24,10 +24,12 @@ export default function EventsPage() {
   const [tab, setTab] = useState<EventStatus>('received');
   const [selId, setSelId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
+  const [editCampaign, setEditCampaign] = useState<EventCampaign | null>(null);
   const { data: campaigns, isLoading: campLoading } = useCampaigns();
   const { data: all, isLoading } = useEvents('all');
   const patch = useEventPatch();
   const createCampaign = useCreateCampaign();
+  const updateCampaign = useUpdateCampaign();
 
   // 캠페인별 상태 카운트
   const countsByCampaign = useMemo(() => {
@@ -80,10 +82,17 @@ export default function EventsPage() {
                         <div className="text-[11px] text-neutral-400">{CAMPAIGN_TYPE_LABEL[c.type] || c.type}</div>
                         <div className="text-base font-bold text-neutral-900 truncate">{c.name}</div>
                       </div>
-                      <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-400'}`}>
-                        {c.status === 'active' ? '진행중' : '종료'}
-                      </span>
+                      <div className="shrink-0 flex items-center gap-1.5">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-400'}`}>
+                          {c.status === 'active' ? '진행중' : '종료'}
+                        </span>
+                        <button onClick={(e) => { e.stopPropagation(); setEditCampaign(c); }} title="할인·설정"
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100"><Settings size={15} /></button>
+                      </div>
                     </div>
+                    {(c.discount_rules || []).length > 0 && (
+                      <div className="mt-2 text-[11px] text-indigo-600">묶음 할인 {c.discount_rules.length}건 설정됨</div>
+                    )}
                     <div className="mt-3 grid grid-cols-4 gap-1 text-center">
                       {TABS.map((t) => (
                         <div key={t.key} className="rounded-lg bg-neutral-50 py-2">
@@ -106,7 +115,8 @@ export default function EventsPage() {
           )}
         </div>
 
-        {showNew && <NewCampaignModal onClose={() => setShowNew(false)} create={createCampaign} />}
+        {showNew && <CampaignFormModal onClose={() => setShowNew(false)} create={createCampaign} update={updateCampaign} />}
+        {editCampaign && <CampaignFormModal campaign={editCampaign} onClose={() => setEditCampaign(null)} create={createCampaign} update={updateCampaign} />}
       </>
     );
   }
@@ -121,12 +131,20 @@ export default function EventsPage() {
         </button>
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <h2 className="text-lg font-bold text-neutral-900">{activeCampaign?.name || '캠페인'}</h2>
-          {campaignId && (
-            <a href={`https://page.mamoru.kr/projects/event/page_form.html?campaign=${campaignId}`} target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-full transition">
-              <ExternalLink size={11} />접수 페이지 열기
-            </a>
-          )}
+          <div className="flex items-center gap-2">
+            {activeCampaign && (
+              <button onClick={() => setEditCampaign(activeCampaign)}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-neutral-600 bg-neutral-100 hover:bg-neutral-200 px-2.5 py-1 rounded-full transition">
+                <Settings size={11} />할인·설정
+              </button>
+            )}
+            {campaignId && (
+              <a href={`https://page.mamoru.kr/projects/event/page_form.html?campaign=${campaignId}`} target="_blank" rel="noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-full transition">
+                <ExternalLink size={11} />접수 페이지 열기
+              </a>
+            )}
+          </div>
         </div>
 
         {/* 탭 */}
@@ -175,30 +193,89 @@ export default function EventsPage() {
       <SlidePanel open={!!sel} onClose={() => setSelId(null)} title="EVENT 접수 상세" className="sm:w-[440px]">
         {sel && <EventDetail ev={sel} patch={patch} onDone={() => setSelId(null)} goSales={() => router.push('/sales')} />}
       </SlidePanel>
+
+      {editCampaign && <CampaignFormModal campaign={editCampaign} onClose={() => setEditCampaign(null)} create={createCampaign} update={updateCampaign} />}
     </>
   );
 }
 
-function NewCampaignModal({ onClose, create }: { onClose: () => void; create: ReturnType<typeof useCreateCampaign> }) {
-  const [name, setName] = useState('');
-  const [type, setType] = useState('stock_clearance');
+function CampaignFormModal({ campaign, onClose, create, update }: {
+  campaign?: EventCampaign;
+  onClose: () => void;
+  create: ReturnType<typeof useCreateCampaign>;
+  update: ReturnType<typeof useUpdateCampaign>;
+}) {
+  const isEdit = !!campaign;
+  const [name, setName] = useState(campaign?.name || '');
+  const [type, setType] = useState(campaign?.type || 'stock_clearance');
+  const [status, setStatus] = useState(campaign?.status || 'active');
+  const [rules, setRules] = useState<DiscountRule[]>(campaign?.discount_rules || []);
+  const pending = create.isPending || update.isPending;
+
+  const setRule = (i: number, k: keyof DiscountRule, v: number) =>
+    setRules(rules.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
+
+  const save = () => {
+    const cleanRules = rules.filter((r) => r.unit_price > 0 && r.min_qty > 0 && r.bundle_price > 0);
+    if (isEdit) update.mutate({ id: campaign!.id, name: name.trim(), type, status, discount_rules: cleanRules }, { onSuccess: onClose });
+    else create.mutate({ name: name.trim(), type, discount_rules: cleanRules }, { onSuccess: onClose });
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-5" onClick={onClose}>
-      <div className="bg-white rounded-2xl p-5 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-base font-bold text-neutral-900 mb-4">새 캠페인</h3>
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl p-5 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-base font-bold text-neutral-900 mb-4">{isEdit ? '캠페인 설정' : '새 캠페인'}</h3>
+
         <label className="text-xs text-neutral-500">캠페인명</label>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="예: 여름 한정 판매"
           className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm mb-3 mt-1" autoFocus />
-        <label className="text-xs text-neutral-500">유형</label>
-        <select value={type} onChange={(e) => setType(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm mb-4 mt-1">
-          {Object.entries(CAMPAIGN_TYPE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
+
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <div>
+            <label className="text-xs text-neutral-500">유형</label>
+            <select value={type} onChange={(e) => setType(e.target.value as EventCampaign['type'])} className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm mt-1">
+              {Object.entries(CAMPAIGN_TYPE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+          </div>
+          {isEdit && (
+            <div>
+              <label className="text-xs text-neutral-500">상태</label>
+              <select value={status} onChange={(e) => setStatus(e.target.value as EventCampaign['status'])} className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm mt-1">
+                <option value="active">진행중</option>
+                <option value="ended">종료</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* 묶음 할인 규칙 */}
+        <div className="rounded-xl border border-neutral-200 p-3 mb-4">
+          <div className="text-xs font-bold text-neutral-700 mb-1">묶음 할인 (같은 단가끼리)</div>
+          <p className="text-[11px] text-neutral-400 mb-2">예: 단가 50000 · 3자루 · 묶음가 130000 → 3자루=13만, 4자루=18만, 6자루=26만</p>
+          <div className="space-y-2">
+            {rules.map((r, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                <input type="number" value={r.unit_price || ''} onChange={(e) => setRule(i, 'unit_price', parseInt(e.target.value) || 0)}
+                  placeholder="단가" className="w-24 h-9 px-2 rounded-lg border border-neutral-200 text-sm text-right" />
+                <span className="text-[11px] text-neutral-400">원</span>
+                <input type="number" value={r.min_qty || ''} onChange={(e) => setRule(i, 'min_qty', parseInt(e.target.value) || 0)}
+                  placeholder="수량" className="w-14 h-9 px-2 rounded-lg border border-neutral-200 text-sm text-right" />
+                <span className="text-[11px] text-neutral-400">자루↑</span>
+                <input type="number" value={r.bundle_price || ''} onChange={(e) => setRule(i, 'bundle_price', parseInt(e.target.value) || 0)}
+                  placeholder="묶음가" className="flex-1 min-w-0 h-9 px-2 rounded-lg border border-neutral-200 text-sm text-right" />
+                <button onClick={() => setRules(rules.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500 shrink-0"><X size={14} /></button>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => setRules([...rules, { unit_price: 0, min_qty: 3, bundle_price: 0 }])}
+            className="mt-2 flex items-center gap-1 text-xs font-semibold text-indigo-600"><Plus size={13} />할인 규칙 추가</button>
+        </div>
+
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm">취소</button>
-          <button disabled={!name.trim() || create.isPending}
-            onClick={() => create.mutate({ name: name.trim(), type }, { onSuccess: onClose })}
+          <button disabled={!name.trim() || pending} onClick={save}
             className="flex-1 py-2.5 rounded-lg bg-neutral-900 text-white text-sm font-bold disabled:opacity-50">
-            {create.isPending ? '생성 중...' : '생성'}
+            {pending ? '저장 중...' : isEdit ? '저장' : '생성'}
           </button>
         </div>
       </div>
