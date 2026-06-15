@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>MAMORU · EVENT 접수</title>
+<style>
+  :root{ --void:#1A1A1A; --ink:#2A2A2A; --gray:#8A8A8A; --line:#E7E5E2; --shell:#F4F2EF; --cream:#FAF9F7; --ok:#2563EB; --warn:#B45309; }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html{ overflow-x:hidden; }
+  body{ font-family:'Pretendard Variable',Pretendard,'Noto Sans KR',-apple-system,system-ui,sans-serif; color:var(--ink); background:var(--cream); line-height:1.55; }
+  .mm-wrap{ max-width:560px; margin:0 auto; padding:24px 18px 120px; }
+  .mm-head{ text-align:center; padding:8px 0 18px; }
+  .mm-head__kicker{ font-size:11px; letter-spacing:.18em; color:var(--gray); text-transform:uppercase; }
+  .mm-head__title{ font-size:24px; font-weight:800; color:var(--void); margin-top:6px; letter-spacing:-.02em; }
+  .mm-head__sub{ font-size:13px; color:var(--gray); margin-top:8px; }
+  .mm-sec{ margin-top:22px; }
+  .mm-sec__label{ font-size:12px; font-weight:700; color:var(--void); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+  .mm-sec__label small{ font-weight:500; color:var(--gray); }
+  .mm-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .mm-chip{ flex:1 1 auto; min-width:72px; text-align:center; padding:11px 10px; border:1px solid var(--line); border-radius:12px; background:#fff; font-size:13px; font-weight:600; color:var(--ink); cursor:pointer; transition:.15s; }
+  .mm-chip[aria-pressed="true"]{ background:var(--void); color:#fff; border-color:var(--void); }
+  .mm-card{ border:1px solid var(--line); border-radius:14px; background:#fff; padding:14px; margin-bottom:10px; }
+  .mm-card__row{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .mm-card__name{ font-size:14px; font-weight:700; color:var(--void); }
+  .mm-card__meta{ font-size:12px; color:var(--gray); margin-top:2px; }
+  .mm-card__price{ font-size:15px; font-weight:800; color:var(--void); white-space:nowrap; }
+  .mm-stock{ display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; margin-top:6px; }
+  .mm-stock--low{ background:#FEF3C7; color:var(--warn); }
+  .mm-stock--ok{ background:#EEF2FF; color:var(--ok); }
+  .mm-stock--soldout{ background:#F3F4F6; color:#9CA3AF; }
+  .mm-card__ctrl{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px; }
+  .mm-qty{ display:flex; align-items:center; gap:8px; }
+  .mm-qty button{ width:34px; height:34px; border:1px solid var(--line); border-radius:9px; background:#fff; font-size:18px; cursor:pointer; }
+  .mm-qty span{ min-width:24px; text-align:center; font-weight:700; }
+  .mm-add{ flex:1; min-width:90px; height:38px; border-radius:10px; background:var(--void); color:#fff; font-size:13px; font-weight:700; border:0; cursor:pointer; }
+  .mm-add:disabled{ background:#CFCBC6; cursor:not-allowed; }
+  .mm-slice{ display:flex; align-items:flex-start; gap:8px; margin-top:10px; padding:9px 10px; background:var(--shell); border-radius:10px; font-size:12px; color:var(--ink); }
+  .mm-slice input{ margin-top:2px; width:16px; height:16px; }
+  .mm-slice b{ color:var(--void); }
+  .mm-cart{ border:1px solid var(--void); border-radius:14px; background:#fff; padding:14px; }
+  .mm-cart__item{ display:flex; justify-content:space-between; gap:8px; font-size:13px; padding:6px 0; border-bottom:1px solid var(--line); }
+  .mm-cart__item button{ color:#C0392B; background:none; border:0; font-size:11px; cursor:pointer; }
+  .mm-cart__total{ display:flex; justify-content:space-between; font-size:15px; font-weight:800; color:var(--void); padding-top:10px; }
+  .mm-field{ margin-top:12px; }
+  .mm-field label{ display:block; font-size:12px; font-weight:600; color:var(--ink); margin-bottom:6px; }
+  .mm-field input, .mm-field textarea{ width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:11px; font-size:14px; background:#fff; font-family:inherit; }
+  .mm-field textarea{ resize:none; min-height:64px; }
+  .mm-consent{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--gray); margin-top:14px; }
+  .mm-submit{ position:fixed; left:0; right:0; bottom:0; padding:14px 18px calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(180deg,rgba(250,249,247,0),var(--cream) 30%); }
+  .mm-submit__inner{ max-width:560px; margin:0 auto; }
+  .mm-submit button{ width:100%; height:52px; border-radius:14px; background:var(--void); color:#fff; font-size:15px; font-weight:800; border:0; cursor:pointer; }
+  .mm-submit button:disabled{ background:#CFCBC6; }
+  .mm-empty{ font-size:13px; color:var(--gray); text-align:center; padding:18px 0; }
+  .mm-modal{ position:fixed; inset:0; background:rgba(26,26,26,.45); display:none; align-items:center; justify-content:center; padding:24px; z-index:50; }
+  .mm-modal.on{ display:flex; }
+  .mm-modal__box{ background:#fff; border-radius:18px; padding:26px 22px; max-width:340px; text-align:center; }
+  .mm-modal__box h3{ font-size:18px; font-weight:800; color:var(--void); }
+  .mm-modal__box p{ font-size:13px; color:var(--gray); margin-top:8px; }
+  .mm-modal__box button{ margin-top:18px; width:100%; height:46px; border-radius:12px; background:var(--void); color:#fff; font-weight:700; border:0; }
+  .mm-hide{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="mm-wrap">
+  <div class="mm-head">
+    <div class="mm-head__kicker">MAMORU EVENT</div>
+    <div class="mm-head__title">재고 전환 EVENT 접수</div>
+    <div class="mm-head__sub">원하시는 가위를 선택해 접수해 주세요.<br/>재고 확인 후 입금 안내를 보내드립니다.</div>
+  </div>
+
+  <!-- 종류 -->
+  <div class="mm-sec">
+    <div class="mm-sec__label">1. 가위 종류</div>
+    <div class="mm-chips" id="typeChips"></div>
+  </div>
+
+  <!-- 옵션 -->
+  <div class="mm-sec mm-hide" id="optionSec">
+    <div class="mm-sec__label">2. 옵션 <small id="optionHint"></small></div>
+    <div class="mm-chips" id="optionChips"></div>
+  </div>
+
+  <!-- 품목 -->
+  <div class="mm-sec mm-hide" id="productSec">
+    <div class="mm-sec__label">3. 품목 선택</div>
+    <div id="productList"></div>
+  </div>
+
+  <!-- 장바구니 -->
+  <div class="mm-sec mm-hide" id="cartSec">
+    <div class="mm-sec__label">선택한 품목</div>
+    <div class="mm-cart">
+      <div id="cartItems"></div>
+      <div class="mm-cart__total"><span>합계</span><span id="cartTotal">0원</span></div>
+    </div>
+  </div>
+
+  <!-- 수령방법 -->
+  <div class="mm-sec mm-hide" id="receiveSec">
+    <div class="mm-sec__label">수령 방법</div>
+    <div class="mm-chips">
+      <button class="mm-chip" data-recv="delivery" aria-pressed="true">택배 발송</button>
+      <button class="mm-chip" data-recv="visit" aria-pressed="false">매장 방문</button>
+    </div>
+    <div id="addrFields">
+      <div class="mm-field"><label>우편번호</label><input id="postcode" inputmode="numeric" placeholder="우편번호" /></div>
+      <div class="mm-field"><label>주소</label><input id="address1" placeholder="도로명 주소" /></div>
+      <div class="mm-field"><label>상세주소</label><input id="address2" placeholder="상세 주소" /></div>
+    </div>
+  </div>
+
+  <!-- 연락처 -->
+  <div class="mm-sec mm-hide" id="contactSec">
+    <div class="mm-sec__label">접수자 정보</div>
+    <div class="mm-field"><label>성함</label><input id="name" placeholder="성함" /></div>
+    <div class="mm-field"><label>연락처</label><input id="phone" inputmode="numeric" placeholder="010-0000-0000" /></div>
+    <div class="mm-field"><label>메모 (선택)</label><textarea id="memo" placeholder="요청사항이 있으면 적어주세요"></textarea></div>
+    <label class="mm-consent"><input type="checkbox" id="consent" /> 개인정보 수집·이용에 동의합니다 (접수·배송 목적)</label>
+  </div>
+</div>
+
+<div class="mm-submit">
+  <div class="mm-submit__inner">
+    <button id="submitBtn" disabled>품목을 선택해 주세요</button>
+  </div>
+</div>
+
+<div class="mm-modal" id="doneModal">
+  <div class="mm-modal__box">
+    <h3>접수 완료</h3>
+    <p>접수가 완료되었습니다.<br/>재고 확인 후 입금 안내 알림톡을 보내드립니다.</p>
+    <button onclick="location.reload()">확인</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var API = 'https://app-eta-sandy-75.vercel.app/api/event/public';
+  var SLICE = 20000;
+  var TYPES = [{k:'blunt',l:'블런트'},{k:'thinning',l:'틴닝'},{k:'long',l:'장가위'},{k:'dry',l:'DRY'}];
+  var REDUCTION = {under20:'20% 미만','21to29':'21~29%',over30:'30% 이상'};
+  var $ = function(id){ return document.getElementById(id); };
+  var won = function(n){ return (n||0).toLocaleString()+'원'; };
+
+  var products = [], curType = '', curOpt = '', recv = 'delivery';
+  var cart = []; // {key, product_id, product_name, category_type, spec, slicing, qty, unit_price}
+
+  // 로드
+  fetch(API+'/products').then(function(r){return r.json();}).then(function(j){
+    products = (j.items||[]).filter(function(p){return !p.soldout || true;}); // 품절도 표시(비활성)
+    renderTypes();
+  }).catch(function(){ renderTypes(); });
+
+  function renderTypes(){
+    var c = $('typeChips'); c.innerHTML='';
+    TYPES.forEach(function(t){
+      var has = products.some(function(p){return (p.event_type||'')===t.k;}) || products.length===0;
+      var b = document.createElement('button');
+      b.className='mm-chip'; b.textContent=t.l; b.setAttribute('aria-pressed','false');
+      b.onclick=function(){ curType=t.k; curOpt=''; setPressed(c,b); renderOptions(); };
+      c.appendChild(b);
+    });
+  }
+
+  function setPressed(container, btn){
+    [].forEach.call(container.children, function(x){ x.setAttribute('aria-pressed','false'); });
+    btn.setAttribute('aria-pressed','true');
+  }
+
+  function renderOptions(){
+    var sec=$('optionSec'), c=$('optionChips'), hint=$('optionHint');
+    var pool = products.filter(function(p){return (p.event_type||'')===curType;});
+    var opts = [];
+    if(curType==='blunt'||curType==='long'){
+      hint.textContent='(인치)';
+      opts = uniq(pool.map(function(p){return p.spec;}).filter(Boolean));
+      if(!opts.length) opts=['5.0','5.5','6.0','6.5','7.0'];
+      opts = opts.map(function(s){return {v:s,l:s+'인치'};});
+    } else if(curType==='thinning'){
+      hint.textContent='(감모량)';
+      opts = [{v:'under20',l:'20% 미만'},{v:'21to29',l:'21~29% (메인틴닝)'},{v:'over30',l:'30% 이상'}];
+    } else {
+      hint.textContent='(가공 형태)';
+      opts = [{v:'stroke',l:'스트록'},{v:'slicing',l:'슬라이싱'},{v:'curve',l:'커브'}];
+    }
+    c.innerHTML='';
+    opts.forEach(function(o){
+      var b=document.createElement('button'); b.className='mm-chip'; b.textContent=o.l; b.setAttribute('aria-pressed','false');
+      b.onclick=function(){ curOpt=o.v; setPressed(c,b); renderProducts(); };
+      c.appendChild(b);
+    });
+    sec.classList.remove('mm-hide');
+    $('productSec').classList.add('mm-hide');
+  }
+
+  function renderProducts(){
+    var sec=$('productSec'), list=$('productList'); list.innerHTML='';
+    var matched = products.filter(function(p){
+      if((p.event_type||'')!==curType) return false;
+      if(curType==='dry'){ return !p.dry_subtype || p.dry_subtype===curOpt || curOpt==='slicing'; }
+      return !p.spec || p.spec===curOpt;
+    });
+    if(products.length===0) matched=[];
+    if(!matched.length){ list.innerHTML='<div class="mm-empty">해당 옵션의 품목이 없습니다. 다른 옵션을 선택해 주세요.</div>'; sec.classList.remove('mm-hide'); return; }
+    matched.forEach(function(p){ list.appendChild(productCard(p)); });
+    sec.classList.remove('mm-hide');
+  }
+
+  function productCard(p){
+    var card=document.createElement('div'); card.className='mm-card';
+    var isDryStroke = curType==='dry' && (p.dry_subtype!=='slicing');
+    var sliceWanted = curType==='dry' && curOpt==='slicing';
+    var qty=1, slicing = sliceWanted;
+    var tone = p.stock_tone||'ok';
+    card.innerHTML =
+      '<div class="mm-card__row"><div><div class="mm-card__name">'+esc(p.name)+'</div>'+
+      (p.spec?'<div class="mm-card__meta">'+esc(p.spec)+'</div>':'')+
+      '<span class="mm-stock mm-stock--'+tone+'">'+esc(p.stock_text||'')+'</span></div>'+
+      '<div class="mm-card__price">'+won(p.price)+'</div></div>';
+    var ctrl=document.createElement('div'); ctrl.className='mm-card__ctrl';
+    var q=document.createElement('div'); q.className='mm-qty';
+    q.innerHTML='<button type="button">−</button><span>1</span><button type="button">+</button>';
+    q.children[0].onclick=function(){ qty=Math.max(1,qty-1); q.children[1].textContent=qty; };
+    q.children[2].onclick=function(){ qty=qty+1; q.children[1].textContent=qty; };
+    var add=document.createElement('button'); add.className='mm-add'; add.textContent='담기';
+    if(p.soldout){ add.disabled=true; add.textContent='품절'; }
+    add.onclick=function(){ addToCart(p, qty, slicing); };
+    ctrl.appendChild(q); ctrl.appendChild(add); card.appendChild(ctrl);
+    if(isDryStroke){
+      var sl=document.createElement('label'); sl.className='mm-slice';
+      sl.innerHTML='<input type="checkbox"'+(slicing?' checked':'')+'/><span><b>슬라이싱 가공 +'+won(SLICE)+'</b><br/>스트록=양날이 살아 잘리는 느낌 / 슬라이싱 가공=모발이 밀리는 형태(마모루 직접 가공)</span>';
+      sl.children[0].onchange=function(e){ slicing=e.target.checked; };
+      card.appendChild(sl);
+    }
+    return card;
+  }
+
+  function addToCart(p, qty, slicing){
+    cart.push({ key:Date.now()+'-'+Math.random().toString(36).slice(2,6),
+      product_id:p.id, product_name:p.name, category_type:curType, spec:(p.spec||curOpt||''),
+      slicing:!!slicing, qty:qty, unit_price:p.price });
+    renderCart();
+  }
+
+  function renderCart(){
+    var sec=$('cartSec'), items=$('cartItems'); items.innerHTML='';
+    if(!cart.length){ sec.classList.add('mm-hide'); showTail(false); updateSubmit(); return; }
+    var total=0;
+    cart.forEach(function(it){
+      var line = it.unit_price*it.qty + (it.slicing?SLICE*it.qty:0); total+=line;
+      var row=document.createElement('div'); row.className='mm-cart__item';
+      row.innerHTML='<span>'+esc(it.product_name)+(it.slicing?' (슬라이싱)':'')+' ×'+it.qty+'</span><span>'+won(line)+' <button>삭제</button></span>';
+      row.querySelector('button').onclick=function(){ cart=cart.filter(function(x){return x.key!==it.key;}); renderCart(); };
+      items.appendChild(row);
+    });
+    $('cartTotal').textContent=won(total);
+    sec.classList.remove('mm-hide'); showTail(true); updateSubmit();
+  }
+
+  function showTail(on){
+    $('receiveSec').classList.toggle('mm-hide', !on);
+    $('contactSec').classList.toggle('mm-hide', !on);
+  }
+
+  // 수령방법
+  [].forEach.call(document.querySelectorAll('[data-recv]'), function(b){
+    b.onclick=function(){
+      recv=b.getAttribute('data-recv');
+      document.querySelectorAll('[data-recv]').forEach(function(x){x.setAttribute('aria-pressed','false');});
+      b.setAttribute('aria-pressed','true');
+      $('addrFields').classList.toggle('mm-hide', recv==='visit');
+    };
+  });
+
+  function updateSubmit(){
+    var btn=$('submitBtn');
+    if(!cart.length){ btn.disabled=true; btn.textContent='품목을 선택해 주세요'; return; }
+    btn.disabled=false; btn.textContent='접수하기';
+  }
+
+  $('submitBtn').onclick=function(){
+    if(!cart.length) return;
+    var name=$('name').value.trim(), phone=$('phone').value.replace(/\D/g,'');
+    if(!name){ alert('성함을 입력해 주세요'); return; }
+    if(phone.length<10){ alert('연락처를 정확히 입력해 주세요'); return; }
+    if(recv==='delivery' && !$('address1').value.trim()){ alert('택배 발송은 주소가 필요합니다'); return; }
+    if(!$('consent').checked){ alert('개인정보 수집·이용에 동의해 주세요'); return; }
+
+    var payload={ name:name, phone:phone, receive_method:recv,
+      postcode:recv==='delivery'?$('postcode').value.trim():'',
+      address1:recv==='delivery'?$('address1').value.trim():'',
+      address2:recv==='delivery'?$('address2').value.trim():'',
+      memo:$('memo').value.trim(),
+      items:cart.map(function(it){return {product_id:it.product_id,product_name:it.product_name,category_type:it.category_type,spec:it.spec,slicing:it.slicing,qty:it.qty,unit_price:it.unit_price};}) };
+
+    $('doneModal').classList.add('on'); // fire & forget
+    fetch(API+'/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .catch(function(e){ console.error('submit error',e); });
+  };
+
+  function uniq(a){ var s={},o=[]; a.forEach(function(x){if(!s[x]){s[x]=1;o.push(x);}}); return o; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+})();
+</script>
+</body>
+</html>
