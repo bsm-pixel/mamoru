@@ -54,6 +54,7 @@ export default function InventoryPage() {
   const [search, setSearch] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [hideUnused, setHideUnused] = useState(true); // 미사용 기본 숨김
+  const [mismatchOnly, setMismatchOnly] = useState(false); // 무결성 어긋난 것만
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortAsc, setSortAsc] = useState(true);
   const [showAdjust, setShowAdjust] = useState(false);
@@ -99,8 +100,18 @@ export default function InventoryPage() {
       list = list.filter((item) => item.stock_quantity !== -1);
     }
 
+    // 무결성 어긋남만 (현재고 ≠ 보관+준비+디스)
+    if (mismatchOnly) {
+      list = list.filter((item) => item.stock_quantity !== -1
+        && item.stock_quantity !== (item.zone_raw + item.zone_ready + item.zone_display));
+    }
+
     return list;
-  }, [allItems, categoryGroup, hideUnused]);
+  }, [allItems, categoryGroup, hideUnused, mismatchOnly]);
+
+  // 무결성 불일치 건수 (전체 기준)
+  const mismatchCount = useMemo(() => allItems.filter((item) => item.stock_quantity !== -1
+    && item.stock_quantity !== (item.zone_raw + item.zone_ready + item.zone_display)).length, [allItems]);
 
   // 카테고리별 요약 (선택된 카테고리 기준)
   const summary = useMemo(() => {
@@ -222,6 +233,17 @@ export default function InventoryPage() {
           >
             {hideUnused ? <Eye size={11} /> : <EyeOff size={11} />}
             미사용
+          </button>
+          {/* 무결성 점검 — 현재고 ≠ 보관+준비+디스 인 품목 */}
+          <button
+            onClick={() => setMismatchOnly(!mismatchOnly)}
+            title="현재고 ≠ 보관+준비+디스플레이 (수량 불일치)"
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1 ${
+              mismatchOnly ? 'bg-rose-500 text-white' : mismatchCount > 0 ? 'bg-rose-100 text-rose-600 hover:bg-rose-200' : 'bg-neutral-100 text-neutral-400 hover:bg-neutral-200'
+            }`}
+          >
+            <AlertTriangle size={11} />
+            무결성{mismatchCount > 0 ? ` ${mismatchCount}` : ''}
           </button>
         </div>
 
@@ -388,6 +410,7 @@ function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSe
   const isLow = !isNoStock && item.stock_quantity >= 0 && item.stock_quantity <= lowThreshold;
   const totalValue = isNoStock ? 0 : item.stock_quantity * (item.price_purchase || 0);
   const total = item.zone_raw + item.zone_ready + item.zone_display;
+  const mismatch = !isNoStock && item.stock_quantity !== total; // 현재고 ≠ 보관+준비+디스
 
   return (
     <div
@@ -402,11 +425,12 @@ function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSe
           <span className="text-sm font-semibold text-indigo-black truncate">{item.name}</span>
           {isNoStock && <Badge className="bg-neutral-100 text-neutral-500 text-[9px]">미사용</Badge>}
           {isLow && <Badge className="bg-amber-100 text-amber-700 text-[9px]">저재고</Badge>}
+          {mismatch && <Badge className="bg-rose-100 text-rose-600 text-[9px]">⚠ 합 {total}</Badge>}
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
           {!item.sku.startsWith('IW-') && <span>{item.sku}</span>}
           {!isNoStock && (
-            <span>재고 <strong className={isLow ? 'text-amber-600' : 'text-indigo-black'}>{item.stock_quantity}</strong></span>
+            <span>재고 <strong className={mismatch ? 'text-rose-600' : isLow ? 'text-amber-600' : 'text-indigo-black'}>{item.stock_quantity}</strong>{mismatch && <span className="text-rose-500"> ≠ {total}</span>}</span>
           )}
         </div>
         {!isNoStock && total > 0 && (
@@ -435,8 +459,8 @@ function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSe
           {isNoStock ? (
             <span className="text-sm text-neutral-300">-</span>
           ) : (
-            <span className={`text-sm font-bold ${isLow ? 'text-amber-600' : 'text-indigo-black'}`}>
-              {item.stock_quantity}개
+            <span className={`text-sm font-bold ${mismatch ? 'text-rose-600' : isLow ? 'text-amber-600' : 'text-indigo-black'}`}>
+              {item.stock_quantity}개{mismatch && <span className="ml-1 text-[10px] font-semibold text-rose-500">≠합 {total}</span>}
             </span>
           )}
         </div>
