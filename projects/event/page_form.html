@@ -257,7 +257,7 @@
     qd.children[2].onclick=function(){ qty=qty+1; qd.children[1].textContent=qty; };
     card.appendChild(qd);
     var add=document.createElement('button'); add.className='mm-pcard__add'; add.textContent='담기';
-    if(p.soldout){ add.disabled=true; add.textContent='품절'; }
+    if(p.soldout){ add.disabled=true; add.textContent='소진 완료'; }
     add.onclick=function(){ addToCart(p, qty, slicing); };
     card.appendChild(add);
     return card;

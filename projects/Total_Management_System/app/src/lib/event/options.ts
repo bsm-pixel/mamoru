@@ -5,7 +5,7 @@
 import type { EventCategoryType } from './types';
 
 export const SLICING_ADDON = 20000; // DRY 슬라이싱 가공 추가비
-export const LOW_STOCK_THRESHOLD = 3; // 이하면 '마감임박 N자루' 노출 (그 외 수량 숨김)
+export const LOW_STOCK_THRESHOLD = 5; // 이하면 '마감임박 N자루' 노출 (그 외 수량 숨김)
 
 export interface EventCategoryDef {
   key: EventCategoryType;
@@ -55,7 +55,7 @@ export const CATEGORY_LABEL: Record<EventCategoryType, string> = {
 export function stockLabel(stock: number, threshold = LOW_STOCK_THRESHOLD): {
   text: string; tone: 'soldout' | 'low' | 'ok';
 } {
-  if (stock <= 0) return { text: '품절', tone: 'soldout' };
+  if (stock <= 0) return { text: '재고 소진 완료', tone: 'soldout' };
   if (stock <= threshold) return { text: `마감임박 · ${stock}자루`, tone: 'low' };
-  return { text: '구매가능', tone: 'ok' };
+  return { text: '획득 가능', tone: 'ok' };
 }

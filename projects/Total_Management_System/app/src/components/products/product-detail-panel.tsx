@@ -197,7 +197,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   // EVENT 전용 입력 (캠페인/손/종류/옵션) — category='EVENT'일 때만. 등록·수정 폼 공통
   const eventInputsBlock = (
     <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3 space-y-3">
-      <p className="text-[11px] text-indigo-700">고객 접수폼 분류값 — 이 캠페인 접수폼에만 노출됩니다. (재고 ≤3이면 마감임박 자동)</p>
+      <p className="text-[11px] text-indigo-700">고객 접수폼 분류값 — 이 캠페인 접수폼에만 노출됩니다. (재고 ≤5면 마감임박 자동)</p>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-xs text-neutral-500">캠페인 *</label>
