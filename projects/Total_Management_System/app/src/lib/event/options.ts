@@ -56,6 +56,6 @@ export function stockLabel(stock: number, threshold = LOW_STOCK_THRESHOLD): {
   text: string; tone: 'soldout' | 'low' | 'ok';
 } {
   if (stock <= 0) return { text: '재고 소진 완료', tone: 'soldout' };
-  if (stock <= threshold) return { text: `마감임박 · ${stock}자루`, tone: 'low' };
+  if (stock <= threshold) return { text: `소진 임박 · ${stock}자루`, tone: 'low' };
   return { text: '획득 가능', tone: 'ok' };
 }

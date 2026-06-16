@@ -144,7 +144,7 @@ export default function NewProductPage() {
             {/* EVENT 전용 — 고객 접수폼 그룹핑용 (종류·옵션) */}
             {form.category === 'EVENT' && (
               <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3 space-y-3">
-                <p className="text-[11px] text-indigo-700">고객 접수폼에서 이 값으로 분류됩니다. (재고 ≤5면 마감임박 자동 표시)</p>
+                <p className="text-[11px] text-indigo-700">고객 접수폼에서 이 값으로 분류됩니다. (재고 ≤5면 소진 임박 자동 표시)</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs text-neutral-500">캠페인 *</label>
