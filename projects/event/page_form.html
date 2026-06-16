@@ -152,7 +152,12 @@
   var TYPES = [{k:'blunt',l:'블런트'},{k:'thinning',l:'틴닝'},{k:'long',l:'장가위'},{k:'dry',l:'DRY'}];
   var REDUCTION = {under20:'20% 미만','21to29':'21~29%',over30:'30% 이상'};
   var $ = function(id){ return document.getElementById(id); };
-  var won = function(n){ return (n||0).toLocaleString()+'원'; };
+  // 이벤트 가벼운 느낌 — 만원 단위 표기 (50000→5만, 130000→13만, 135000→13.5만)
+  var won = function(n){
+    n = n||0;
+    if(n>=10000){ var m=n/10000; return ((m%1===0)?String(m):String(Math.round(m*10)/10))+'만'; }
+    return n.toLocaleString()+'원';
+  };
 
   var CAT_ORDER = [{k:'blunt',l:'블런트'},{k:'long',l:'장가위'},{k:'thinning',l:'틴닝'},{k:'dry',l:'DRY'}];
   var products = [], curHand = '', recv = 'delivery';
