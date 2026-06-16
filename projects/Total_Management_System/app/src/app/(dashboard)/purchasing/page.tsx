@@ -19,11 +19,12 @@ import type { PurchaseOrder } from '@/lib/supabase/types';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
-  received: '입고완료', balance_paid: '잔금완료', cancelled: '취소',
+  partial: '부분입고', received: '입고완료', balance_paid: '잔금완료', cancelled: '취소',
 };
 const STATUS_COLOR: Record<string, string> = {
   draft: 'bg-neutral-100 text-neutral-600', ordered: 'bg-blue-100 text-blue-700',
-  deposit_paid: 'bg-yellow-100 text-yellow-700', received: 'bg-green-100 text-green-700',
+  deposit_paid: 'bg-yellow-100 text-yellow-700', partial: 'bg-orange-100 text-orange-700',
+  received: 'bg-green-100 text-green-700',
   balance_paid: 'bg-emerald-100 text-emerald-700', cancelled: 'bg-red-100 text-red-700',
 };
 const STATUS_TABS = [
@@ -31,6 +32,7 @@ const STATUS_TABS = [
   { value: 'draft', label: '작성중' },
   { value: 'ordered', label: '발주완료' },
   { value: 'deposit_paid', label: '선납완료' },
+  { value: 'partial', label: '부분입고' },
   { value: 'received', label: '입고완료' },
   { value: 'balance_paid', label: '잔금완료' },
 ];

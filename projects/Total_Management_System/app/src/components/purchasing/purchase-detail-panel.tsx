@@ -16,11 +16,12 @@ import { POPrintModal } from './po-print-modal';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
-  received: '입고완료', balance_paid: '잔금완료', cancelled: '취소',
+  partial: '부분입고', received: '입고완료', balance_paid: '잔금완료', cancelled: '취소',
 };
 const STATUS_COLOR: Record<string, string> = {
   draft: 'bg-neutral-100 text-neutral-600', ordered: 'bg-blue-100 text-blue-700',
-  deposit_paid: 'bg-yellow-100 text-yellow-700', received: 'bg-green-100 text-green-700',
+  deposit_paid: 'bg-yellow-100 text-yellow-700', partial: 'bg-orange-100 text-orange-700',
+  received: 'bg-green-100 text-green-700',
   balance_paid: 'bg-emerald-100 text-emerald-700', cancelled: 'bg-red-100 text-red-700',
 };
 
@@ -42,7 +43,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
   const [saving, setSaving] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
   // 입고검수 모달 — 품목별 실수령 수량
-  const [receiveItems, setReceiveItems] = useState<Array<{ id: string; name: string; ordered: number; received: number; unit_price: number }>>([]);
+  const [receiveItems, setReceiveItems] = useState<Array<{ id: string; name: string; ordered: number; already: number; received: number; unit_price: number }>>([]);
   const [showReceive, setShowReceive] = useState(false);
   const [receiving, setReceiving] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
@@ -349,16 +350,19 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
                 </Button>
               </div>
             )}
-            {(po.status === 'ordered' || po.status === 'deposit_paid') && (
+            {(po.status === 'ordered' || po.status === 'deposit_paid' || po.status === 'partial') && (
               <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => {
-                setReceiveItems(items.map((i) => ({ id: i.id, name: i.product_name, ordered: i.quantity, received: i.quantity, unit_price: i.unit_price })));
+                setReceiveItems(items.map((i) => {
+                  const already = i.received_quantity ?? 0;
+                  return { id: i.id, name: i.product_name, ordered: i.quantity, already, received: Math.max(0, i.quantity - already), unit_price: i.unit_price };
+                }));
                 setShowReceive(true);
               }} disabled={updatePO.isPending}>
-                입고 확인 (재고 증가)
+                {po.status === 'partial' ? '추가 입고' : '입고 확인 (재고 증가)'}
               </Button>
             )}
             {/* 입고 전 잔금 지불 기록 — 업체가 발송 시작했고 잔금만 먼저 보낸 경우 */}
-            {(po.status === 'ordered' || po.status === 'deposit_paid') && po.balance_amount > 0 && !po.balance_paid_at && (
+            {(po.status === 'ordered' || po.status === 'deposit_paid' || po.status === 'partial') && po.balance_amount > 0 && !po.balance_paid_at && (
               <Button className="w-full" variant="secondary" onClick={() => setPendingAction({
                 status: 'balance_paid', label: '잔금 지불 처리',
                 msg: `잔금 ${formatKRW(po.balance_amount)} 을 지불완료로 기록합니다.\n(입고 상태는 그대로 — 물건 도착 후 "입고 확인"을 누르면 자동으로 잔금완료가 됩니다)`,
@@ -416,43 +420,60 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 border-b border-neutral-100">
               <h3 className="text-sm font-bold text-stone-900">입고 검수</h3>
-              <p className="text-xs text-neutral-400 mt-0.5">실제로 받은 수량을 확인하세요. 주문과 다른 품목만 고치면 됩니다.</p>
+              <p className="text-xs text-neutral-400 mt-0.5">이번에 받은 수량을 입력하세요. (기입고 = 이전에 받은 누적)</p>
             </div>
             <div className="p-4 overflow-y-auto flex-1 space-y-2">
-              {receiveItems.map((r, idx) => (
-                <div key={r.id} className="flex items-center gap-2">
-                  <span className="flex-1 text-sm truncate">{r.name}</span>
-                  <span className="text-xs text-neutral-400 shrink-0">주문 {r.ordered}</span>
-                  <input type="number" min={0} value={r.received}
-                    onChange={(e) => { const v = Math.max(0, parseInt(e.target.value) || 0); setReceiveItems((prev) => prev.map((it, i) => i === idx ? { ...it, received: v } : it)); }}
-                    className={`w-16 h-8 px-2 rounded border text-sm text-right focus:outline-none focus:ring-1 focus:ring-neutral-300 ${r.received !== r.ordered ? 'border-orange-400 bg-orange-50' : 'border-neutral-200'}`} />
-                  <span className="text-[10px] text-neutral-400 w-6 shrink-0">자루</span>
-                </div>
-              ))}
+              {receiveItems.map((r, idx) => {
+                const cum = r.already + r.received;
+                return (
+                  <div key={r.id} className="flex items-center gap-2">
+                    <span className="flex-1 text-sm truncate">{r.name}</span>
+                    <span className="text-[11px] text-neutral-400 shrink-0">주문 {r.ordered}{r.already > 0 ? ` · 기입고 ${r.already}` : ''}</span>
+                    <input type="number" min={0} value={r.received}
+                      onChange={(e) => { const v = Math.max(0, parseInt(e.target.value) || 0); setReceiveItems((prev) => prev.map((it, i) => i === idx ? { ...it, received: v } : it)); }}
+                      className={`w-16 h-8 px-2 rounded border text-sm text-right focus:outline-none focus:ring-1 focus:ring-neutral-300 ${cum !== r.ordered ? 'border-orange-400 bg-orange-50' : 'border-neutral-200'}`} />
+                    <span className="text-[10px] text-neutral-400 w-6 shrink-0">자루</span>
+                  </div>
+                );
+              })}
             </div>
             {(() => {
-              const newForeign = receiveItems.reduce((s, r) => s + r.received * r.unit_price, 0);
-              const newKrw = Math.round(newForeign * poRate);
-              const newTotal = poVatType === 'separate' ? newKrw + Math.round(newKrw * 0.1) : newKrw;
-              const changed = receiveItems.some((r) => r.received !== r.ordered);
-              const newBalance = po.balance_paid_at ? 0 : Math.max(0, newTotal - po.deposit_amount);
-              const overpaid = !po.balance_paid_at && po.deposit_amount > newTotal ? po.deposit_amount - newTotal : 0;
+              // 이번 배치 합계 + 누적(완료 시 종료 기준) 총액
+              const batchForeign = receiveItems.reduce((s, r) => s + r.received * r.unit_price, 0);
+              const cumForeign = receiveItems.reduce((s, r) => s + (r.already + r.received) * r.unit_price, 0);
+              const batchKrw = Math.round(batchForeign * poRate);
+              const cumKrw = Math.round(cumForeign * poRate);
+              const cumTotal = poVatType === 'separate' ? cumKrw + Math.round(cumKrw * 0.1) : cumKrw;
+              const fullyReceived = receiveItems.every((r) => r.already + r.received >= r.ordered);
+              const newBalance = po.balance_paid_at ? 0 : Math.max(0, cumTotal - po.deposit_amount);
+              const overpaid = !po.balance_paid_at && po.deposit_amount > cumTotal ? po.deposit_amount - cumTotal : 0;
               return (
                 <div className="px-4 py-3 border-t border-neutral-100 text-xs space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">{changed ? '입고 기준 총액 (재계산)' : '총액'}</span>
-                    <span className="font-semibold">{formatKRW(newTotal)}{changed && newTotal !== po.total_amount && <span className="text-orange-600 ml-1">({newTotal < po.total_amount ? '−' : '+'}{formatKRW(Math.abs(newTotal - po.total_amount))})</span>}</span>
-                  </div>
+                  <div className="flex justify-between"><span className="text-neutral-500">이번 입고분</span><span className="font-semibold">{formatKRW(poVatType === 'separate' ? batchKrw + Math.round(batchKrw * 0.1) : batchKrw)}</span></div>
+                  <div className="flex justify-between"><span className="text-neutral-500">완료 시 총액 (받은 수량 기준)</span><span className="font-semibold">{formatKRW(cumTotal)}{cumTotal !== po.total_amount && <span className="text-orange-600 ml-1">({cumTotal < po.total_amount ? '−' : '+'}{formatKRW(Math.abs(cumTotal - po.total_amount))})</span>}</span></div>
                   <div className="flex justify-between"><span className="text-neutral-500">선납</span><span className="text-blue-600">{formatKRW(po.deposit_amount)}</span></div>
-                  <div className="flex justify-between"><span className="text-neutral-500">잔금</span><span className={po.balance_paid_at ? 'text-green-600' : newBalance > 0 ? 'text-red-500' : 'text-green-600'}>{po.balance_paid_at ? '지불완료 ✓' : formatKRW(newBalance)}</span></div>
-                  {overpaid > 0 && <p className="text-[11px] text-amber-600">⚠ 선납이 입고 기준 총액보다 {formatKRW(overpaid)} 많습니다 — 환불 또는 다음 발주 이월 검토</p>}
-                  <p className="text-[10px] text-neutral-400 pt-1">확인 시 재고가 입고 수량만큼 늘어나고(아임웹 동기화 포함){po.balance_paid_at ? ', 잔금 이미 지불 → 잔금완료로' : ''} 입고완료 처리됩니다. 주문 수량 기록은 그대로 보존됩니다.</p>
+                  {overpaid > 0 && <p className="text-[11px] text-amber-600">⚠ 완료 시 선납이 {formatKRW(overpaid)} 많아집니다 — 환불 또는 다음 발주 이월 검토</p>}
+                  <p className="text-[10px] text-neutral-400 pt-1">
+                    <b>분할 입고</b> = 이번 받은 만큼만 재고↑, 발주는 열어둠(나머지 추후 추가 입고).{' '}
+                    <b>입고 완료</b> = 이번 받은 만큼 재고↑ + 발주 종료(나머지는 미입고로 받은 수량 기준 정산).
+                    {fullyReceived ? ' (전량 입고 → 분할 눌러도 자동 완료)' : ''}
+                  </p>
+                  <p className="text-[10px] text-neutral-400">선납 {formatKRW(po.deposit_amount)} · 완료 시 잔금 {po.balance_paid_at ? '지불완료 ✓' : formatKRW(newBalance)}</p>
                 </div>
               );
             })()}
             <div className="p-4 border-t border-neutral-100 flex gap-2">
               <button onClick={() => { if (!receiving) setShowReceive(false); }} disabled={receiving}
-                className="flex-1 py-2 rounded-lg bg-neutral-100 text-neutral-600 text-sm font-semibold hover:bg-neutral-200 disabled:opacity-50">취소</button>
+                className="px-3 py-2 rounded-lg bg-neutral-100 text-neutral-600 text-sm font-semibold hover:bg-neutral-200 disabled:opacity-50">취소</button>
+              <button disabled={receiving || receiveItems.every((r) => r.received <= 0)} onClick={async () => {
+                setReceiving(true);
+                try {
+                  await updatePO.mutateAsync({ id: purchaseId, status: 'partial', received_items: receiveItems.map((r) => ({ id: r.id, received_quantity: r.received })) });
+                  queryClient.invalidateQueries({ queryKey: ['purchase-order', purchaseId] });
+                  setShowReceive(false);
+                } catch (err) { toast.error(String(err)); }
+                finally { setReceiving(false); }
+              }} className="flex-1 py-2 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 disabled:opacity-50">{receiving ? '처리 중...' : '분할 입고'}</button>
               <button disabled={receiving} onClick={async () => {
                 setReceiving(true);
                 try {
@@ -461,7 +482,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
                   setShowReceive(false);
                 } catch (err) { toast.error(String(err)); }
                 finally { setReceiving(false); }
-              }} className="flex-1 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-50">{receiving ? '처리 중...' : '입고 확인'}</button>
+              }} className="flex-1 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-50">{receiving ? '처리 중...' : '입고 완료'}</button>
             </div>
           </div>
         </div>

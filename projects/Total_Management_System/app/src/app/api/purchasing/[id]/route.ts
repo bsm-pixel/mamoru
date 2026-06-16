@@ -87,90 +87,96 @@ export async function PATCH(
         updates.deposit_amount = body.deposit_amount || current.deposit_amount;
         updates.deposit_paid_at = now;
         updates.balance_amount = current.total_amount - (body.deposit_amount || current.deposit_amount || 0);
-      } else if (newStatus === 'received') {
-        // 멱등성 가드: 이미 received 이상이면 재고 중복 증가 방지
+      } else if (newStatus === 'received' || newStatus === 'partial') {
+        // 입고 처리 — newStatus='partial'(분할: 발주 열어둠) / 'received'(완료: 나머지 안 옴, 받은 수량 기준 종료)
+        // received_items = 이번에 받은 수량(배치) [{ id, received_quantity }]. received_quantity 컬럼은 누적값으로 저장.
         if (current.status === 'received' || current.status === 'balance_paid') {
-          return NextResponse.json({ error: '이미 입고 처리된 발주입니다' }, { status: 409 });
+          return NextResponse.json({ error: '이미 입고 완료된 발주입니다' }, { status: 409 });
         }
-        // 유효 전이: ordered 또는 deposit_paid에서만 입고 가능
-        if (current.status !== 'ordered' && current.status !== 'deposit_paid') {
+        // 유효 전이: ordered / deposit_paid / partial 에서만 입고 가능
+        if (current.status !== 'ordered' && current.status !== 'deposit_paid' && current.status !== 'partial') {
           return NextResponse.json({ error: `${current.status} 상태에서는 입고 처리할 수 없습니다` }, { status: 400 });
         }
 
-        // 잔금을 이미 냈으면(balance_paid_at 기록됨 또는 잔금 0) 입고와 동시에 잔금완료(terminal) 로 — 결제/입고 독립 흐름
-        const balanceAlreadyPaid = !!current.balance_paid_at || (current.balance_amount ?? 0) <= 0;
-        updates.status = balanceAlreadyPaid ? 'balance_paid' : 'received';
-        updates.received_date = body.received_date || now.slice(0, 10);
-
-        // 입고검수: body.received_items = [{ id, received_quantity }] (없는 품목은 주문 수량 그대로)
-        const receivedMap: Record<string, number> = {};
+        // 이번 배치 수량 맵
+        const batchMap: Record<string, number> = {};
         if (Array.isArray(body.received_items)) {
           for (const ri of body.received_items) {
-            if (ri && ri.id != null) receivedMap[String(ri.id)] = Math.max(0, Math.floor(Number(ri.received_quantity) || 0));
+            if (ri && ri.id != null) batchMap[String(ri.id)] = Math.max(0, Math.floor(Number(ri.received_quantity) || 0));
           }
         }
 
-        // 입고 시 재고 증가 (실수령 수량 기준) + 품목별 received_quantity 기록
         const { data: poItems } = await db
           .from('purchase_order_items')
-          .select('id, product_id, quantity, unit_price')
+          .select('id, product_id, quantity, unit_price, received_quantity')
           .eq('po_id', id);
 
-        let anyAdjusted = false;
-        let foreignTotal = 0; // 실수령 기준 외화(또는 KRW) 합계
+        let foreignTotalCum = 0; // 누적 입고 기준 합계
+        let allFull = true;      // 모든 품목이 주문 수량까지 입고됐는가
+        let anyAdjusted = false; // 최종 누적이 주문과 다른가
         if (poItems) {
           for (const item of poItems) {
-            const recvQty = Object.prototype.hasOwnProperty.call(receivedMap, item.id) ? receivedMap[item.id] : item.quantity;
-            foreignTotal += recvQty * (item.unit_price || 0);
-            if (recvQty !== item.quantity) anyAdjusted = true;
-            // received_quantity 확정 기록 (조정 여부 무관 — 입고 시점 실수령값)
-            await db.from('purchase_order_items').update({ received_quantity: recvQty }).eq('id', item.id);
+            const prev = item.received_quantity || 0;
+            // 명시값 있으면 그 배치, 없으면 완료(received)는 남은 전량, 분할(partial)은 0
+            let batch: number;
+            if (Object.prototype.hasOwnProperty.call(batchMap, item.id)) batch = batchMap[item.id];
+            else batch = newStatus === 'received' ? Math.max(0, item.quantity - prev) : 0;
+            const cum = prev + batch;
+            foreignTotalCum += cum * (item.unit_price || 0);
+            if (cum < item.quantity) allFull = false;
+            if (cum !== item.quantity) anyAdjusted = true;
 
-            if (item.product_id && recvQty > 0) {
+            // 누적 received_quantity 기록
+            await db.from('purchase_order_items').update({ received_quantity: cum }).eq('id', item.id);
+
+            // 재고는 이번 배치만큼만 증가 (중복 방지)
+            if (item.product_id && batch > 0) {
               const { data: prod } = await db
                 .from('products')
                 .select('stock_quantity, raw_stock, imweb_product_no')
                 .eq('id', item.product_id)
                 .single();
               if (prod) {
-                const newQty = (prod.stock_quantity || 0) + recvQty;
-                const newRaw = (prod.raw_stock || 0) + recvQty; // 보관창고에 입고
-                await db
-                  .from('products')
-                  .update({ stock_quantity: newQty, raw_stock: newRaw })
+                await db.from('products')
+                  .update({ stock_quantity: (prod.stock_quantity || 0) + batch, raw_stock: (prod.raw_stock || 0) + batch })
                   .eq('id', item.product_id);
-
-                // 아임웹 재고 동기화 — 입고 시 증가(+)
-                if (prod.imweb_product_no && newQty >= 0) {
-                  try {
-                    await updateImwebStock(Number(prod.imweb_product_no), +recvQty);
-                  } catch (e) {
-                    console.error('[imweb] 재고 동기화 실패:', prod.imweb_product_no, e);
-                  }
+                if (prod.imweb_product_no) {
+                  try { await updateImwebStock(Number(prod.imweb_product_no), +batch); }
+                  catch (e) { console.error('[imweb] 재고 동기화 실패:', prod.imweb_product_no, e); }
                 }
               }
             }
           }
         }
 
-        // 실수령이 주문과 다르면 total_amount / balance 재계산 (환율·부가세 유형 적용 — 작성 로직과 동일 규칙)
-        if (anyAdjusted) {
-          const rate = current.exchange_rate || 1;
-          const vatType = current.vat_type || (current.is_vat_included ? 'included' : 'none');
-          const krwTotal = Math.round(foreignTotal * rate);
-          let newTotal = krwTotal;
-          if (vatType === 'separate') {
-            const vatAmt = Math.round(krwTotal * 0.1);
-            updates.supply_amount = krwTotal; updates.vat_amount = vatAmt; newTotal = krwTotal + vatAmt;
-          } else if (vatType === 'none') {
-            updates.supply_amount = krwTotal; updates.vat_amount = 0; newTotal = krwTotal;
-          } else { // included
-            const supplyAmt = Math.round(krwTotal / 1.1);
-            updates.supply_amount = supplyAmt; updates.vat_amount = krwTotal - supplyAmt; newTotal = krwTotal;
+        // 분할인데 결과적으로 전량 입고되면 자동 완료
+        const finalize = newStatus === 'received' || allFull;
+        if (finalize) {
+          const balanceAlreadyPaid = !!current.balance_paid_at || (current.balance_amount ?? 0) <= 0;
+          updates.status = balanceAlreadyPaid ? 'balance_paid' : 'received';
+          updates.received_date = current.received_date || body.received_date || now.slice(0, 10);
+          // 누적이 주문과 다르면 total/balance 재계산 (받은 수량 기준)
+          if (anyAdjusted) {
+            const rate = current.exchange_rate || 1;
+            const vatType = current.vat_type || (current.is_vat_included ? 'included' : 'none');
+            const krwTotal = Math.round(foreignTotalCum * rate);
+            let newTotal = krwTotal;
+            if (vatType === 'separate') {
+              const vatAmt = Math.round(krwTotal * 0.1);
+              updates.supply_amount = krwTotal; updates.vat_amount = vatAmt; newTotal = krwTotal + vatAmt;
+            } else if (vatType === 'none') {
+              updates.supply_amount = krwTotal; updates.vat_amount = 0; newTotal = krwTotal;
+            } else {
+              const supplyAmt = Math.round(krwTotal / 1.1);
+              updates.supply_amount = supplyAmt; updates.vat_amount = krwTotal - supplyAmt; newTotal = krwTotal;
+            }
+            updates.total_amount = newTotal;
+            updates.balance_amount = current.balance_paid_at ? 0 : Math.max(0, newTotal - (current.deposit_amount || 0));
           }
-          updates.total_amount = newTotal;
-          // 잔금 재계산: 이미 잔금 냈으면 0, 아니면 max(0, 새 total − 선납). 선납 > 새 total 이면 과지급(차액은 화면에서 안내).
-          updates.balance_amount = current.balance_paid_at ? 0 : Math.max(0, newTotal - (current.deposit_amount || 0));
+        } else {
+          // 분할 입고 — 발주 열어둠. 금액/잔금은 확정하지 않음(완료 시 확정).
+          updates.status = 'partial';
+          if (!current.received_date) updates.received_date = body.received_date || now.slice(0, 10);
         }
       } else if (newStatus === 'balance_paid') {
         // 잔금 지불 기록 — 입고 전(ordered/deposit_paid)이어도 허용. 결제와 입고를 독립 처리.
