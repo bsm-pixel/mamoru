@@ -21,6 +21,12 @@ export const EVENT_CATEGORIES: EventCategoryDef[] = [
   { key: 'dry', label: 'DRY', optionKind: 'dry' },
 ];
 
+/** 손잡이 방향 (오른손/왼손) — 접수폼 1차 분류 */
+export const HAND_OPTIONS = [
+  { value: 'right', label: '오른손' },
+  { value: 'left', label: '왼손' },
+];
+
 /** 블런트·장가위 인치 옵션 (필요 시 확장) */
 export const INCH_OPTIONS = ['5.0', '5.5', '6.0', '6.5', '7.0'];
 

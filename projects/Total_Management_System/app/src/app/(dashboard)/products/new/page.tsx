@@ -9,6 +9,7 @@ import { useCreateProduct } from '@/hooks/use-product-detail';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { usePriceGroups } from '@/hooks/use-price-groups';
 import { useProductCategoryOptions } from '@/hooks/use-product-categories';
+import { useCampaigns } from '@/hooks/use-events';
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 
 export default function NewProductPage() {
@@ -16,6 +17,7 @@ export default function NewProductPage() {
   const createProduct = useCreateProduct();
   const priceGroups = usePriceGroups();
   const CATEGORY_OPTIONS = useProductCategoryOptions(); // 설정 SSOT + 시스템 고정(EVENT) 보장
+  const { data: campaigns } = useCampaigns();
   const [skuStatus, setSkuStatus] = useState<'idle' | 'checking' | 'available' | 'duplicate'>('idle');
 
   const [form, setForm] = useState({
@@ -29,7 +31,9 @@ export default function NewProductPage() {
     imweb_product_no: '',
     barcode: '',
     supplier_id: '',
-    // EVENT 전용 (category='EVENT'일 때만 tags로 저장 — 고객 접수폼 그룹핑용)
+    // EVENT 전용 (category='EVENT'일 때만 tags로 저장 — 고객 접수폼 분류용)
+    campaign_id: '',      // 어느 캠페인 품목인지 (필수)
+    hand: 'right',        // right | left
     event_type: 'blunt',  // blunt | thinning | long | dry
     spec: '',             // 인치(6.0) / 감모(21to29) / DRY서브(stroke)
   });
@@ -59,7 +63,7 @@ export default function NewProductPage() {
       barcode: form.barcode.trim() || undefined,
       supplier_id: form.supplier_id || undefined,
       ...(form.category === 'EVENT'
-        ? { tags: { event_type: form.event_type, spec: form.spec.trim() } }
+        ? { tags: { campaign_id: form.campaign_id || null, hand: form.hand, event_type: form.event_type, spec: form.spec.trim() } }
         : {}),
     });
 
@@ -140,8 +144,30 @@ export default function NewProductPage() {
             {/* EVENT 전용 — 고객 접수폼 그룹핑용 (종류·옵션) */}
             {form.category === 'EVENT' && (
               <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3 space-y-3">
-                <p className="text-[11px] text-indigo-700">고객 접수폼에서 이 값으로 그룹핑됩니다. (재고는 아래 가격/재고 입력, 마감임박은 재고 ≤3일 때 자동 표시)</p>
+                <p className="text-[11px] text-indigo-700">고객 접수폼에서 이 값으로 분류됩니다. (재고 ≤3이면 마감임박 자동 표시)</p>
                 <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-neutral-500">캠페인 *</label>
+                    <select
+                      value={form.campaign_id}
+                      onChange={(e) => setForm({ ...form, campaign_id: e.target.value })}
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
+                    >
+                      <option value="">캠페인 선택…</option>
+                      {(campaigns || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-neutral-500">손</label>
+                    <select
+                      value={form.hand}
+                      onChange={(e) => setForm({ ...form, hand: e.target.value })}
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
+                    >
+                      <option value="right">오른손</option>
+                      <option value="left">왼손</option>
+                    </select>
+                  </div>
                   <div>
                     <label className="text-xs text-neutral-500">종류</label>
                     <select

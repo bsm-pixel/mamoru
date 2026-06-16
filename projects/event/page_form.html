@@ -59,32 +59,43 @@
   .mm-modal__box p{ font-size:13px; color:var(--gray); margin-top:8px; }
   .mm-modal__box button{ margin-top:18px; width:100%; height:46px; border-radius:12px; background:var(--void); color:#fff; font-weight:700; border:0; }
   .mm-hide{ display:none !important; }
+  /* 카탈로그 — 종류별 섹션 + 카드(spec 상단 / 가격칩 하단) */
+  .mm-catgroup{ margin-top:20px; }
+  .mm-catgroup__h{ font-size:14px; font-weight:800; color:var(--void); margin-bottom:10px; padding-bottom:7px; border-bottom:1.5px solid var(--void); }
+  .mm-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  @media(min-width:460px){ .mm-grid{ grid-template-columns:repeat(3,1fr); } }
+  .mm-pcard{ border:1px solid var(--line); border-radius:16px; background:#fff; padding:14px 10px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .mm-pcard__spec{ font-size:15px; font-weight:800; color:var(--void); line-height:1.2; }
+  .mm-pcard__price{ font-size:13px; font-weight:800; color:#fff; background:var(--void); border-radius:999px; padding:5px 14px; }
+  .mm-pcard .mm-stock{ margin:0; }
+  .mm-pcard__add{ width:100%; height:34px; border-radius:10px; background:var(--void); color:#fff; font-size:12px; font-weight:700; border:0; cursor:pointer; }
+  .mm-pcard__add:disabled{ background:#CFCBC6; }
+  .mm-pcard__qty{ display:flex; align-items:center; justify-content:center; gap:10px; }
+  .mm-pcard__qty button{ width:28px; height:28px; border:1px solid var(--line); border-radius:8px; background:#fff; font-size:15px; cursor:pointer; }
+  .mm-pcard__slice{ display:flex; align-items:flex-start; gap:6px; font-size:10px; color:var(--ink); text-align:left; background:var(--shell); border-radius:8px; padding:6px 7px; }
+  .mm-pcard__slice input{ margin-top:1px; }
 </style>
 </head>
 <body>
 <div class="mm-wrap">
   <div class="mm-head">
     <div class="mm-head__kicker">MAMORU EVENT</div>
-    <div class="mm-head__title">재고 전환 EVENT 접수</div>
+    <div class="mm-head__title" id="catTitle">EVENT 접수</div>
     <div class="mm-head__sub">원하시는 가위를 선택해 접수해 주세요.<br/>재고 확인 후 입금 안내를 보내드립니다.</div>
   </div>
 
-  <!-- 종류 -->
+  <!-- 손 -->
   <div class="mm-sec">
-    <div class="mm-sec__label">1. 가위 종류</div>
-    <div class="mm-chips" id="typeChips"></div>
+    <div class="mm-sec__label">1. 가위 종류 (손)</div>
+    <div class="mm-chips" id="handChips">
+      <button class="mm-chip" data-hand="right" aria-pressed="false">오른손</button>
+      <button class="mm-chip" data-hand="left" aria-pressed="false">왼손</button>
+    </div>
   </div>
 
-  <!-- 옵션 -->
-  <div class="mm-sec mm-hide" id="optionSec">
-    <div class="mm-sec__label">2. 옵션 <small id="optionHint"></small></div>
-    <div class="mm-chips" id="optionChips"></div>
-  </div>
-
-  <!-- 품목 -->
-  <div class="mm-sec mm-hide" id="productSec">
-    <div class="mm-sec__label">3. 품목 선택</div>
-    <div id="productList"></div>
+  <!-- 카탈로그 (종류별 섹션 + 카드) -->
+  <div class="mm-sec mm-hide" id="catalogSec">
+    <div id="catalog"></div>
   </div>
 
   <!-- 장바구니 -->
@@ -143,26 +154,39 @@
   var $ = function(id){ return document.getElementById(id); };
   var won = function(n){ return (n||0).toLocaleString()+'원'; };
 
-  var products = [], curType = '', curOpt = '', recv = 'delivery';
+  var CAT_ORDER = [{k:'blunt',l:'블런트'},{k:'long',l:'장가위'},{k:'thinning',l:'틴닝'},{k:'dry',l:'DRY'}];
+  var products = [], curHand = '', recv = 'delivery';
   var cart = []; // {key, product_id, product_name, category_type, spec, slicing, qty, unit_price}
   var CAMPAIGN_ID = (new URLSearchParams(location.search).get('campaign')) || ''; // 캠페인별 접수 구분
   var CAMPAIGN_BASE = 'https://app-eta-sandy-75.vercel.app/api/campaigns';
   var DISCOUNT_RULES = []; // [{unit_price,min_qty,bundle_price}] 같은 단가 묶음할인
 
-  // 로드 — 캠페인 할인규칙
+  // 로드 — 캠페인(할인규칙·기본) 먼저 → 그 캠페인 품목만 로드
   fetch(CAMPAIGN_BASE).then(function(r){return r.json();}).then(function(j){
     var list = j.campaigns||[];
     var c = CAMPAIGN_ID ? list.filter(function(x){return x.id===CAMPAIGN_ID;})[0]
                         : list.filter(function(x){return x.is_default && x.status==='active';})[0];
-    if(c){ DISCOUNT_RULES = c.discount_rules||[]; if(!CAMPAIGN_ID) CAMPAIGN_ID=c.id; }
-    renderCart();
-  }).catch(function(){});
+    if(c){ DISCOUNT_RULES = c.discount_rules||[]; CAMPAIGN_ID=c.id; var t=$('catTitle'); if(t) t.textContent=c.name; }
+    loadProducts();
+  }).catch(function(){ loadProducts(); });
 
-  // 로드 — 품목
-  fetch(API+'/products').then(function(r){return r.json();}).then(function(j){
-    products = (j.items||[]).filter(function(p){return !p.soldout || true;}); // 품절도 표시(비활성)
-    renderTypes();
-  }).catch(function(){ renderTypes(); });
+  function loadProducts(){
+    var url = API+'/products'+(CAMPAIGN_ID?('?campaign='+encodeURIComponent(CAMPAIGN_ID)):'');
+    fetch(url).then(function(r){return r.json();}).then(function(j){
+      products = (j.items||[]);
+      if(curHand) renderCatalog();
+    }).catch(function(){});
+  }
+
+  // 손 선택 → 카탈로그
+  [].forEach.call(document.querySelectorAll('#handChips [data-hand]'), function(b){
+    b.onclick=function(){
+      curHand=b.getAttribute('data-hand');
+      [].forEach.call($('handChips').children, function(x){ x.setAttribute('aria-pressed', x.getAttribute('data-hand')===curHand?'true':'false'); });
+      $('catalogSec').classList.remove('mm-hide');
+      renderCatalog();
+    };
+  });
 
   // 가격 계산 (서버 lib/event/pricing.ts 와 동일 로직 — 함께 수정)
   function priceCart(){
@@ -182,93 +206,51 @@
     return { base:base, slicing:slicing, total:base+slicing, listTotal:listTotal, discount:listTotal-base };
   }
 
-  function renderTypes(){
-    var c = $('typeChips'); c.innerHTML='';
-    TYPES.forEach(function(t){
-      var has = products.some(function(p){return (p.event_type||'')===t.k;}) || products.length===0;
-      var b = document.createElement('button');
-      b.className='mm-chip'; b.textContent=t.l; b.setAttribute('aria-pressed','false');
-      b.onclick=function(){ curType=t.k; curOpt=''; setPressed(c,b); renderOptions(); };
-      c.appendChild(b);
+  function renderCatalog(){
+    var box=$('catalog'); box.innerHTML='';
+    var any=false;
+    CAT_ORDER.forEach(function(cat){
+      var inCat = products.filter(function(p){ return (p.hand||'right')===curHand && (p.event_type||'')===cat.k; });
+      if(!inCat.length) return;
+      any=true;
+      var g=document.createElement('div'); g.className='mm-catgroup';
+      var h=document.createElement('div'); h.className='mm-catgroup__h'; h.textContent=cat.l; g.appendChild(h);
+      var grid=document.createElement('div'); grid.className='mm-grid';
+      inCat.forEach(function(p){ grid.appendChild(productCard(p)); });
+      g.appendChild(grid); box.appendChild(g);
     });
-  }
-
-  function setPressed(container, btn){
-    [].forEach.call(container.children, function(x){ x.setAttribute('aria-pressed','false'); });
-    btn.setAttribute('aria-pressed','true');
-  }
-
-  function renderOptions(){
-    var sec=$('optionSec'), c=$('optionChips'), hint=$('optionHint');
-    var pool = products.filter(function(p){return (p.event_type||'')===curType;});
-    var opts = [];
-    if(curType==='blunt'||curType==='long'){
-      hint.textContent='(인치)';
-      opts = uniq(pool.map(function(p){return p.spec;}).filter(Boolean));
-      if(!opts.length) opts=['5.0','5.5','6.0','6.5','7.0'];
-      opts = opts.map(function(s){return {v:s,l:s+'인치'};});
-    } else if(curType==='thinning'){
-      hint.textContent='(감모량)';
-      opts = [{v:'under20',l:'20% 미만'},{v:'21to29',l:'21~29% (메인틴닝)'},{v:'over30',l:'30% 이상'}];
-    } else {
-      hint.textContent='(가공 형태)';
-      opts = [{v:'stroke',l:'스트록'},{v:'slicing',l:'슬라이싱'},{v:'curve',l:'커브'}];
-    }
-    c.innerHTML='';
-    opts.forEach(function(o){
-      var b=document.createElement('button'); b.className='mm-chip'; b.textContent=o.l; b.setAttribute('aria-pressed','false');
-      b.onclick=function(){ curOpt=o.v; setPressed(c,b); renderProducts(); };
-      c.appendChild(b);
-    });
-    sec.classList.remove('mm-hide');
-    $('productSec').classList.add('mm-hide');
-  }
-
-  function renderProducts(){
-    var sec=$('productSec'), list=$('productList'); list.innerHTML='';
-    var matched = products.filter(function(p){
-      if((p.event_type||'')!==curType) return false;
-      if(curType==='dry'){ return !p.dry_subtype || p.dry_subtype===curOpt || curOpt==='slicing'; }
-      return !p.spec || p.spec===curOpt;
-    });
-    if(products.length===0) matched=[];
-    if(!matched.length){ list.innerHTML='<div class="mm-empty">해당 옵션의 품목이 없습니다. 다른 옵션을 선택해 주세요.</div>'; sec.classList.remove('mm-hide'); return; }
-    matched.forEach(function(p){ list.appendChild(productCard(p)); });
-    sec.classList.remove('mm-hide');
+    if(!any){ box.innerHTML='<div class="mm-empty">해당 손의 품목이 없습니다.</div>'; }
   }
 
   function productCard(p){
-    var card=document.createElement('div'); card.className='mm-card';
-    var isDryStroke = curType==='dry' && (p.dry_subtype!=='slicing');
-    var sliceWanted = curType==='dry' && curOpt==='slicing';
-    var qty=1, slicing = sliceWanted;
-    var tone = p.stock_tone||'ok';
-    card.innerHTML =
-      '<div class="mm-card__row"><div><div class="mm-card__name">'+esc(p.name)+'</div>'+
-      (p.spec?'<div class="mm-card__meta">'+esc(p.spec)+'</div>':'')+
-      '<span class="mm-stock mm-stock--'+tone+'">'+esc(p.stock_text||'')+'</span></div>'+
-      '<div class="mm-card__price">'+won(p.price)+'</div></div>';
-    var ctrl=document.createElement('div'); ctrl.className='mm-card__ctrl';
-    var q=document.createElement('div'); q.className='mm-qty';
-    q.innerHTML='<button type="button">−</button><span>1</span><button type="button">+</button>';
-    q.children[0].onclick=function(){ qty=Math.max(1,qty-1); q.children[1].textContent=qty; };
-    q.children[2].onclick=function(){ qty=qty+1; q.children[1].textContent=qty; };
-    var add=document.createElement('button'); add.className='mm-add'; add.textContent='담기';
-    if(p.soldout){ add.disabled=true; add.textContent='품절'; }
-    add.onclick=function(){ addToCart(p, qty, slicing); };
-    ctrl.appendChild(q); ctrl.appendChild(add); card.appendChild(ctrl);
+    var card=document.createElement('div'); card.className='mm-pcard';
+    var isDryStroke = (p.event_type==='dry') && (p.dry_subtype!=='slicing');
+    var qty=1, slicing=false;
+    var spec=document.createElement('div'); spec.className='mm-pcard__spec'; spec.textContent=(p.spec||p.name||'');
+    var price=document.createElement('div'); price.className='mm-pcard__price'; price.textContent=won(p.price);
+    var stock=document.createElement('span'); stock.className='mm-stock mm-stock--'+(p.stock_tone||'ok'); stock.textContent=p.stock_text||'';
+    card.appendChild(spec); card.appendChild(price); card.appendChild(stock);
     if(isDryStroke){
-      var sl=document.createElement('label'); sl.className='mm-slice';
-      sl.innerHTML='<input type="checkbox"'+(slicing?' checked':'')+'/><span><b>슬라이싱 가공 +'+won(SLICE)+'</b><br/>스트록=양날이 살아 잘리는 느낌 / 슬라이싱 가공=모발이 밀리는 형태(마모루 직접 가공)</span>';
+      var sl=document.createElement('label'); sl.className='mm-pcard__slice';
+      sl.innerHTML='<input type="checkbox"/><span>슬라이싱 가공 +'+won(SLICE)+' (모발 밀림형, 직접 가공)</span>';
       sl.children[0].onchange=function(e){ slicing=e.target.checked; };
       card.appendChild(sl);
     }
+    var qd=document.createElement('div'); qd.className='mm-pcard__qty';
+    qd.innerHTML='<button type="button">−</button><span>1</span><button type="button">+</button>';
+    qd.children[0].onclick=function(){ qty=Math.max(1,qty-1); qd.children[1].textContent=qty; };
+    qd.children[2].onclick=function(){ qty=qty+1; qd.children[1].textContent=qty; };
+    card.appendChild(qd);
+    var add=document.createElement('button'); add.className='mm-pcard__add'; add.textContent='담기';
+    if(p.soldout){ add.disabled=true; add.textContent='품절'; }
+    add.onclick=function(){ addToCart(p, qty, slicing); };
+    card.appendChild(add);
     return card;
   }
 
   function addToCart(p, qty, slicing){
     cart.push({ key:Date.now()+'-'+Math.random().toString(36).slice(2,6),
-      product_id:p.id, product_name:p.name, category_type:curType, spec:(p.spec||curOpt||''),
+      product_id:p.id, product_name:p.name, category_type:(p.event_type||''), spec:(p.spec||''),
       slicing:!!slicing, qty:qty, unit_price:p.price });
     renderCart();
   }

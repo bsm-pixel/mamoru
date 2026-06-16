@@ -20,6 +20,7 @@ import { useLabelTemplate } from '@/hooks/use-label-templates';
 import { useSetting } from '@/hooks/use-settings';
 import { usePriceGroups } from '@/hooks/use-price-groups';
 import { useProductCategoryOptions } from '@/hooks/use-product-categories';
+import { useCampaigns } from '@/hooks/use-events';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 
 interface Props {
@@ -57,6 +58,9 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
     description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '',
     purchase_name: '',
   });
+  // EVENT 전용 tags (category='EVENT'일 때만 저장) — 폼 setForm 충돌 피하려 별도 state
+  const [eventTags, setEventTags] = useState({ campaign_id: '', hand: 'right', event_type: 'blunt', spec: '' });
+  const { data: eventCampaigns } = useCampaigns();
 
   // SKU 자동 채번
   async function fetchNextSku(cat: string) {
@@ -117,6 +121,8 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
         barcode: p.barcode || '', supplier_id: p.supplier_id || '', product_group: p.product_group || '',
         purchase_name: (p as Record<string, unknown>).purchase_name as string || '',
       });
+      const t = (p.tags || {}) as Record<string, string>;
+      setEventTags({ campaign_id: t.campaign_id || '', hand: t.hand || 'right', event_type: t.event_type || 'blunt', spec: t.spec || '' });
     }
   }, [data, editing, mode]);
 
@@ -157,6 +163,9 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       barcode: form.barcode || null, supplier_id: form.supplier_id || null,
       product_group: form.product_group || null,
       purchase_name: form.purchase_name || null,
+      ...(form.category === 'EVENT'
+        ? { tags: { campaign_id: eventTags.campaign_id || null, hand: eventTags.hand, event_type: eventTags.event_type, spec: eventTags.spec.trim() } }
+        : {}),
     });
     setEditing(false);
   }
@@ -178,9 +187,53 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       imweb_product_no: form.imweb_product_no.trim() || undefined, barcode: form.barcode.trim() || undefined,
       supplier_id: form.supplier_id || undefined,
       purchase_name: form.purchase_name.trim() || undefined,
+      ...(form.category === 'EVENT'
+        ? { tags: { campaign_id: eventTags.campaign_id || null, hand: eventTags.hand, event_type: eventTags.event_type, spec: eventTags.spec.trim() } }
+        : {}),
     });
     if (result?.product?.id && onCreated) onCreated(result.product.id);
   }
+
+  // EVENT 전용 입력 (캠페인/손/종류/옵션) — category='EVENT'일 때만. 등록·수정 폼 공통
+  const eventInputsBlock = (
+    <div className="rounded-lg border border-indigo-100 bg-indigo-50/50 p-3 space-y-3">
+      <p className="text-[11px] text-indigo-700">고객 접수폼 분류값 — 이 캠페인 접수폼에만 노출됩니다. (재고 ≤3이면 마감임박 자동)</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs text-neutral-500">캠페인 *</label>
+          <select value={eventTags.campaign_id} onChange={(e) => setEventTags({ ...eventTags, campaign_id: e.target.value })}
+            className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+            <option value="">캠페인 선택…</option>
+            {(eventCampaigns || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-neutral-500">손</label>
+          <select value={eventTags.hand} onChange={(e) => setEventTags({ ...eventTags, hand: e.target.value })}
+            className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+            <option value="right">오른손</option>
+            <option value="left">왼손</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-neutral-500">종류</label>
+          <select value={eventTags.event_type} onChange={(e) => setEventTags({ ...eventTags, event_type: e.target.value })}
+            className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+            <option value="blunt">블런트</option>
+            <option value="thinning">틴닝</option>
+            <option value="long">장가위</option>
+            <option value="dry">DRY</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-neutral-500">옵션(spec)</label>
+          <input type="text" value={eventTags.spec} onChange={(e) => setEventTags({ ...eventTags, spec: e.target.value })}
+            placeholder={eventTags.event_type === 'thinning' ? '예: 20-30%' : eventTags.event_type === 'dry' ? 'stroke/slicing/curve' : '예: 5.5인치'}
+            className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+        </div>
+      </div>
+    </div>
+  );
 
   // create/duplicate 모드 — 등록 폼 렌더링
   if (isCreateMode) {
@@ -206,6 +259,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
                 </select>
               </div>
             </div>
+            {form.category === 'EVENT' && eventInputsBlock}
             <div>
               <label className="text-xs text-neutral-500">제품명 *</label>
               <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -385,6 +439,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
                 </select>
               </div>
             </div>
+            {form.category === 'EVENT' && eventInputsBlock}
             {/* 재고 관리 토글 */}
             <div className="flex items-center justify-between py-1">
               <div>

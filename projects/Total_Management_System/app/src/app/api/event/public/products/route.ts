@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { stockLabel } from '@/lib/event/options';
 
@@ -12,18 +12,21 @@ export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-/** GET /api/event/public/products — EVENT 카탈로그 (비인증, CORS)
- *  category='EVENT' && is_active 품목 + 가격 + 재고라벨(적을 때만 수량) + tags(event_type/spec/dry_subtype) */
-export async function GET() {
+/** GET /api/event/public/products?campaign=<id> — EVENT 카탈로그 (비인증, CORS)
+ *  해당 캠페인 품목만(tags.campaign_id) + 가격 + 재고라벨 + 손/종류/옵션 tags */
+export async function GET(req: NextRequest) {
   try {
+    const campaign = req.nextUrl.searchParams.get('campaign');
     const db = createServiceClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (db as any)
+    let q = (db as any)
       .from('products')
       .select('id, sku, name, category, price, stock_quantity, tags, is_active')
       .eq('category', 'EVENT')
-      .eq('is_active', true)
-      .order('price', { ascending: true });
+      .eq('is_active', true);
+    // 캠페인 스코프 — 그 캠페인 품목만 (앰버서더/할인 등 다른 캠페인 품목 섞임 방지)
+    if (campaign) q = q.eq('tags->>campaign_id', campaign);
+    const { data, error } = await q.order('price', { ascending: true });
 
     if (error) throw error;
 
@@ -42,8 +45,9 @@ export async function GET() {
         soldout: stock <= 0,
         stock_text: label.text,
         stock_tone: label.tone,
-        event_type: (tags.event_type as string) || '',  // blunt|thinning|long|dry
-        spec: (tags.spec as string) || '',                // 인치/감모/DRY서브
+        hand: (tags.hand as string) || 'right',           // right|left
+        event_type: (tags.event_type as string) || '',    // blunt|thinning|long|dry
+        spec: (tags.spec as string) || '',                 // 인치/감모/DRY서브
         dry_subtype: (tags.dry_subtype as string) || '',
       };
     });

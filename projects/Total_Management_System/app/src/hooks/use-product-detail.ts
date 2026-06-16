@@ -107,6 +107,7 @@ export function useUpdateProduct() {
       is_active?: boolean;
       product_group?: string | null;
       purchase_name?: string | null;
+      tags?: Record<string, unknown> | null;
     }) => {
       const res = await fetch(`/api/products/${id}`, {
         method: 'PATCH',
