@@ -3,6 +3,7 @@
  * 전환 후 발송/배송완료/후기는 기존 판매 인프라가 처리(여기서는 매출·재고만 확정).
  */
 import { SLICING_ADDON } from './options';
+import { updateImwebStock } from '@/lib/imweb/client';
 import type { EventItem } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -105,17 +106,23 @@ export async function convertEventToSale(db: any, ev: EventRow): Promise<string>
   const { error: itemsErr } = await db.from('offline_sale_items').insert(lines);
   if (itemsErr) throw itemsErr;
 
-  // 재고 차감 (product_id 있는 라인만, stock_quantity)
+  // 재고 차감 — EVENT 품목은 시리얼 없는 판매이므로 stock_quantity + raw_stock(보관) 둘 다 차감
+  // (판매 route의 시리얼 없는 판매와 동일 규칙. 보관 미차감 시 현재고<보관 불일치 발생 — 2026-06-16 버그 수정)
   const qtyMap: Record<string, number> = {};
   ev.items.forEach((it) => {
     if (it.product_id) qtyMap[it.product_id] = (qtyMap[it.product_id] || 0) + Math.max(1, it.qty || 1);
   });
   await Promise.all(Object.entries(qtyMap).map(async ([pid, qty]) => {
-    const { data: prod } = await db.from('products').select('stock_quantity').eq('id', pid).single();
+    const { data: prod } = await db.from('products').select('stock_quantity, raw_stock, imweb_product_no').eq('id', pid).single();
     if (prod) {
       await db.from('products').update({
         stock_quantity: Math.max(0, (prod.stock_quantity || 0) - qty),
+        raw_stock: Math.max(0, (prod.raw_stock || 0) - qty),
       }).eq('id', pid);
+      if (prod.imweb_product_no) {
+        try { await updateImwebStock(Number(prod.imweb_product_no), -qty); }
+        catch (e) { console.error('[event/convert] 아임웹 재고 동기화 실패:', prod.imweb_product_no, e); }
+      }
     }
   }));
 
