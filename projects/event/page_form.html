@@ -66,7 +66,14 @@
   @media(min-width:460px){ .mm-grid{ grid-template-columns:repeat(3,1fr); } }
   .mm-pcard{ border:1px solid var(--line); border-radius:16px; background:#fff; padding:14px 10px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:8px; }
   .mm-pcard__spec{ font-size:15px; font-weight:800; color:var(--void); line-height:1.2; }
-  .mm-pcard__price{ font-size:13px; font-weight:800; color:#fff; background:var(--void); border-radius:999px; padding:5px 14px; }
+  .mm-pcard__price{ font-size:13px; font-weight:800; color:var(--void); background:#fff; border:1.5px solid var(--void); border-radius:999px; padding:5px 14px; }
+  /* 가격대별 은은한 톤 (저→고: 세이지→블루→라벤더, 부정색 X) */
+  .mm-pcard--t1{ background:#F2F6F3; border-color:#DCE8E0; }
+  .mm-pcard--t1 .mm-pcard__price{ color:#3F7A5A; border-color:#BFD9C8; }
+  .mm-pcard--t2{ background:#EEF1FB; border-color:#DBE3F5; }
+  .mm-pcard--t2 .mm-pcard__price{ color:#3A5BB0; border-color:#C5D2F0; }
+  .mm-pcard--t3{ background:#F4EFFB; border-color:#E5DBF2; }
+  .mm-pcard--t3 .mm-pcard__price{ color:#6B4BA8; border-color:#D8C8EE; }
   .mm-pcard .mm-stock{ margin:0; }
   .mm-pcard__add{ width:100%; height:34px; border-radius:10px; background:var(--void); color:#fff; font-size:12px; font-weight:700; border:0; cursor:pointer; }
   .mm-pcard__add:disabled{ background:#CFCBC6; }
@@ -216,6 +223,7 @@
     var any=false;
     CAT_ORDER.forEach(function(cat){
       var inCat = products.filter(function(p){ return (p.hand||'right')===curHand && (p.event_type||'')===cat.k; });
+      inCat.sort(function(a,b){ return (a.price||0)-(b.price||0); }); // 5만→10만→20만 순
       if(!inCat.length) return;
       any=true;
       var g=document.createElement('div'); g.className='mm-catgroup';
@@ -227,8 +235,10 @@
     if(!any){ box.innerHTML='<div class="mm-empty">해당 손의 품목이 없습니다.</div>'; }
   }
 
+  function priceTier(n){ return n<70000 ? 't1' : (n<150000 ? 't2' : 't3'); } // 5만/10만/20만급
+
   function productCard(p){
-    var card=document.createElement('div'); card.className='mm-pcard';
+    var card=document.createElement('div'); card.className='mm-pcard mm-pcard--'+priceTier(p.price||0);
     var isDryStroke = (p.event_type==='dry') && (p.dry_subtype!=='slicing');
     var qty=1, slicing=false;
     var spec=document.createElement('div'); spec.className='mm-pcard__spec'; spec.textContent=(p.spec||p.name||'');
