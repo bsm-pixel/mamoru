@@ -60,6 +60,15 @@ function calculateCosts(qtyMamoru: number, qtyOther: number, proceedType: string
   return { serviceCost, shippingFee, totalAmount: serviceCost + shippingFee };
 }
 
+/** 'YYYY-MM-DD' → 'YYYY년 MM월 DD일 (요일)'. 서버(UTC) 타임존 무관 — Date.UTC+getUTCDay로 KST 날짜 그대로 표기
+ *  (이전: `new Date(date+'T00:00:00+09:00').getDay()` → UTC 서버에서 하루 전 요일/날짜로 밀리는 버그) */
+function formatKoreanDate(dateStr: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return '';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dow = ['일', '월', '화', '수', '목', '금', '토'][new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  return `${y}년 ${String(m).padStart(2, '0')}월 ${String(d).padStart(2, '0')}일 (${dow}요일)`;
+}
+
 /** POST /api/repair/public/submit — 복원수리 접수 (비인증, CORS) */
 export async function POST(req: NextRequest) {
   try {
@@ -218,31 +227,10 @@ export async function POST(req: NextRequest) {
       after(() => fireAndForgetRepairSync(repair.id));
     }
 
-    // pickup_date 표시 포맷: YYYY년 MM월 DD일 (요일) — 방문수거 알림톡 가독성
-    let pickupDateDisplay = '';
-    if (pickup_date) {
-      const dt = new Date(pickup_date + 'T00:00:00+09:00');
-      if (!isNaN(dt.getTime())) {
-        const y = dt.getFullYear();
-        const m = String(dt.getMonth() + 1).padStart(2, '0');
-        const d = String(dt.getDate()).padStart(2, '0');
-        const dow = ['일', '월', '화', '수', '목', '금', '토'][dt.getDay()];
-        pickupDateDisplay = `${y}년 ${m}월 ${d}일 (${dow}요일)`;
-      }
-    }
-
-    // 방문일 표시 포맷 (직접방문 알림톡 가독성)
-    let visitDateDisplay = '';
-    if (isVisit && visit_date) {
-      const dt = new Date(visit_date + 'T00:00:00+09:00');
-      if (!isNaN(dt.getTime())) {
-        const y = dt.getFullYear();
-        const m = String(dt.getMonth() + 1).padStart(2, '0');
-        const d = String(dt.getDate()).padStart(2, '0');
-        const dow = ['일', '월', '화', '수', '목', '금', '토'][dt.getDay()];
-        visitDateDisplay = `${y}년 ${m}월 ${d}일 (${dow}요일)`;
-      }
-    }
+    // pickup_date 표시 포맷 (방문수거 알림톡) — 타임존 무관
+    const pickupDateDisplay = pickup_date ? formatKoreanDate(pickup_date) : '';
+    // 방문일 표시 포맷 (직접방문 알림톡)
+    const visitDateDisplay = (isVisit && visit_date) ? formatKoreanDate(visit_date) : '';
 
     // 알림톡 발송 (접수 안내)
     // 직접방문은 별도 템플릿 'as_visit_booked' Phase 4 검수 후 활성화 — 현재는 as_received 임시 사용
