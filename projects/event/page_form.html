@@ -59,6 +59,19 @@
   .mm-modal__box p{ font-size:13px; color:var(--gray); margin-top:8px; }
   .mm-modal__box button{ margin-top:18px; width:100%; height:46px; border-radius:12px; background:var(--void); color:#fff; font-weight:700; border:0; }
   .mm-hide{ display:none !important; }
+  /* SVG 아이콘 공간 (사장님 업로드 전 임시 X) */
+  .mm-chip--ico{ display:flex; flex-direction:column; align-items:center; gap:5px; padding-top:10px; padding-bottom:10px; }
+  .mm-chip__ico{ width:30px; height:30px; object-fit:contain; }
+  .mm-ico-x{ width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:1.5px dashed var(--line); border-radius:8px; color:#C9C5C0; font-size:14px; }
+  .mm-chip[aria-pressed="true"] .mm-ico-x{ border-color:rgba(255,255,255,.4); color:rgba(255,255,255,.7); }
+  .mm-catgroup__h{ display:flex; align-items:center; gap:8px; }
+  .mm-cat-ico{ width:22px; height:22px; object-fit:contain; }
+  .mm-cat-ico-x{ width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:1.5px dashed var(--line); border-radius:6px; color:#C9C5C0; font-size:11px; }
+  /* 가격 칩 (아이콘 위 + 금액) */
+  .mm-pricechip{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .mm-pricechip__ico{ width:26px; height:26px; object-fit:contain; }
+  .mm-pricechip__ico-x{ width:26px; height:26px; display:flex; align-items:center; justify-content:center; border:1.5px dashed var(--line); border-radius:7px; color:#C9C5C0; font-size:12px; }
+  .mm-chip[aria-pressed="true"] .mm-pricechip__ico-x{ border-color:rgba(255,255,255,.4); color:rgba(255,255,255,.7); }
   /* 카탈로그 — 종류별 섹션 + 카드(spec 상단 / 가격칩 하단) */
   .mm-catgroup{ margin-top:20px; }
   .mm-catgroup__h{ font-size:14px; font-weight:800; color:var(--void); margin-bottom:10px; padding-bottom:7px; border-bottom:1.5px solid var(--void); }
@@ -95,9 +108,21 @@
   <div class="mm-sec">
     <div class="mm-sec__label">1. 가위 종류 (손)</div>
     <div class="mm-chips" id="handChips">
-      <button class="mm-chip" data-hand="right" aria-pressed="false">오른손</button>
-      <button class="mm-chip" data-hand="left" aria-pressed="false">왼손</button>
+      <button class="mm-chip mm-chip--ico" data-hand="right" aria-pressed="false">
+        <img class="mm-chip__ico" src="icons/hand-right.svg" alt="" onerror="this.outerHTML='<span class=&quot;mm-ico-x&quot;>✕</span>'"/>
+        <span>오른손</span>
+      </button>
+      <button class="mm-chip mm-chip--ico" data-hand="left" aria-pressed="false">
+        <img class="mm-chip__ico" src="icons/hand-left.svg" alt="" onerror="this.outerHTML='<span class=&quot;mm-ico-x&quot;>✕</span>'"/>
+        <span>왼손</span>
+      </button>
     </div>
+  </div>
+
+  <!-- 가격 필터 -->
+  <div class="mm-sec mm-hide" id="priceSec">
+    <div class="mm-sec__label">2. 가격</div>
+    <div class="mm-chips" id="priceChips"></div>
   </div>
 
   <!-- 카탈로그 (종류별 섹션 + 카드) -->
@@ -167,7 +192,7 @@
   };
 
   var CAT_ORDER = [{k:'blunt',l:'블런트'},{k:'long',l:'장가위'},{k:'thinning',l:'틴닝'},{k:'dry',l:'DRY'}];
-  var products = [], curHand = '', recv = 'delivery';
+  var products = [], curHand = '', curPrice = null, recv = 'delivery';
   var cart = []; // {key, product_id, product_name, category_type, spec, slicing, qty, unit_price}
   var CAMPAIGN_ID = (new URLSearchParams(location.search).get('campaign')) || ''; // 캠페인별 접수 구분
   var CAMPAIGN_BASE = 'https://app-eta-sandy-75.vercel.app/api/campaigns';
@@ -190,15 +215,41 @@
     }).catch(function(){});
   }
 
-  // 손 선택 → 카탈로그
+  // 손 선택 → 가격칩 + 카탈로그
   [].forEach.call(document.querySelectorAll('#handChips [data-hand]'), function(b){
     b.onclick=function(){
       curHand=b.getAttribute('data-hand');
+      curPrice=null; // 손 바꾸면 가격필터 초기화
       [].forEach.call($('handChips').children, function(x){ x.setAttribute('aria-pressed', x.getAttribute('data-hand')===curHand?'true':'false'); });
+      renderPriceChips();
       $('catalogSec').classList.remove('mm-hide');
       renderCatalog();
     };
   });
+
+  // 가격 필터 칩 (현재 손의 품목 중 distinct 가격, 오름차순) — 5만/10만/20만
+  function renderPriceChips(){
+    var c=$('priceChips'); c.innerHTML='';
+    var prices=[];
+    products.filter(function(p){return (p.hand||'right')===curHand;}).forEach(function(p){ if(prices.indexOf(p.price)<0) prices.push(p.price); });
+    prices.sort(function(a,b){return a-b;});
+    var all=document.createElement('button'); all.className='mm-chip'; all.textContent='전체';
+    all.setAttribute('aria-pressed', curPrice===null?'true':'false');
+    all.onclick=function(){ curPrice=null; renderPriceChips(); renderCatalog(); };
+    c.appendChild(all);
+    prices.forEach(function(pr){
+      var b=document.createElement('button'); b.className='mm-chip mm-chip--ico';
+      b.setAttribute('aria-pressed', curPrice===pr?'true':'false');
+      var wrap=document.createElement('span'); wrap.className='mm-pricechip';
+      var img=document.createElement('img'); img.className='mm-pricechip__ico'; img.src='icons/price-'+pr+'.svg'; img.alt='';
+      img.onerror=function(){ var x=document.createElement('span'); x.className='mm-pricechip__ico-x'; x.textContent='✕'; img.replaceWith(x); };
+      var lbl=document.createElement('span'); lbl.textContent=won(pr);
+      wrap.appendChild(img); wrap.appendChild(lbl); b.appendChild(wrap);
+      b.onclick=function(){ curPrice=pr; renderPriceChips(); renderCatalog(); };
+      c.appendChild(b);
+    });
+    $('priceSec').classList.remove('mm-hide');
+  }
 
   // 가격 계산 (서버 lib/event/pricing.ts 와 동일 로직 — 함께 수정)
   function priceCart(){
@@ -222,17 +273,24 @@
     var box=$('catalog'); box.innerHTML='';
     var any=false;
     CAT_ORDER.forEach(function(cat){
-      var inCat = products.filter(function(p){ return (p.hand||'right')===curHand && (p.event_type||'')===cat.k; });
+      var inCat = products.filter(function(p){
+        return (p.hand||'right')===curHand && (p.event_type||'')===cat.k
+          && (curPrice===null || p.price===curPrice);
+      });
       inCat.sort(function(a,b){ return (a.price||0)-(b.price||0); }); // 5만→10만→20만 순
       if(!inCat.length) return;
       any=true;
       var g=document.createElement('div'); g.className='mm-catgroup';
-      var h=document.createElement('div'); h.className='mm-catgroup__h'; h.textContent=cat.l; g.appendChild(h);
+      var h=document.createElement('div'); h.className='mm-catgroup__h';
+      var ico=document.createElement('img'); ico.className='mm-cat-ico'; ico.src='icons/cat-'+cat.k+'.svg'; ico.alt='';
+      ico.onerror=function(){ var x=document.createElement('span'); x.className='mm-cat-ico-x'; x.textContent='✕'; ico.replaceWith(x); };
+      var hl=document.createElement('span'); hl.textContent=cat.l;
+      h.appendChild(ico); h.appendChild(hl); g.appendChild(h);
       var grid=document.createElement('div'); grid.className='mm-grid';
       inCat.forEach(function(p){ grid.appendChild(productCard(p)); });
       g.appendChild(grid); box.appendChild(g);
     });
-    if(!any){ box.innerHTML='<div class="mm-empty">해당 손의 품목이 없습니다.</div>'; }
+    if(!any){ box.innerHTML='<div class="mm-empty">해당 조건의 품목이 없습니다.</div>'; }
   }
 
   function priceTier(n){ return n<70000 ? 't1' : (n<150000 ? 't2' : 't3'); } // 5만/10만/20만급
@@ -255,10 +313,12 @@
       sl.children[0].onchange=function(e){ slicing=e.target.checked; };
       card.appendChild(sl);
     }
+    // 재고 상한 — 재고 수만큼만 담기 가능 (초과 방지)
+    var maxQty = (typeof p.stock==='number' && p.stock>0) ? p.stock : 1;
     var qd=document.createElement('div'); qd.className='mm-pcard__qty';
     qd.innerHTML='<button type="button">−</button><span>1</span><button type="button">+</button>';
     qd.children[0].onclick=function(){ qty=Math.max(1,qty-1); qd.children[1].textContent=qty; };
-    qd.children[2].onclick=function(){ qty=qty+1; qd.children[1].textContent=qty; };
+    qd.children[2].onclick=function(){ if(qty<maxQty){ qty=qty+1; qd.children[1].textContent=qty; } };
     card.appendChild(qd);
     var add=document.createElement('button'); add.className='mm-pcard__add'; add.textContent='담기';
     if(p.soldout){ add.disabled=true; add.textContent='소진 완료'; }

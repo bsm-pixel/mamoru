@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
         sku: p.sku,
         name: p.name,
         price: p.price,
+        stock,                 // 실제 재고 수 (수량 담기 상한용 — 표시는 stock_text로 분기)
         soldout: stock <= 0,
         stock_text: label.text,
         stock_tone: label.tone,
