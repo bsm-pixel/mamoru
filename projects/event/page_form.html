@@ -59,6 +59,19 @@
   .mm-modal__box p{ font-size:13px; color:var(--gray); margin-top:8px; }
   .mm-modal__box button{ margin-top:18px; width:100%; height:46px; border-radius:12px; background:var(--void); color:#fff; font-weight:700; border:0; }
   .mm-hide{ display:none !important; }
+  /* 주소 검색 행 + 비활성 입력 */
+  .mm-addr-search{ display:flex; gap:8px; }
+  .mm-addr-search input{ flex:1; min-width:0; }
+  .mm-addr-btn{ flex-shrink:0; padding:0 14px; border-radius:11px; background:var(--void); color:#fff; font-size:13px; font-weight:700; border:0; white-space:nowrap; cursor:pointer; }
+  .mm-field input[readonly]{ background:var(--shell); }
+  .mm-field input:disabled{ background:#F0EEEB; color:#B8B4AF; cursor:not-allowed; }
+  /* 다음 우편번호 레이어 (하단 시트) */
+  .mm-pc-layer{ position:fixed; inset:0; background:rgba(26,26,26,.5); z-index:70; display:none; align-items:flex-end; }
+  .mm-pc-layer.on{ display:flex; }
+  .mm-pc-box{ background:#fff; width:100%; max-height:82vh; border-radius:18px 18px 0 0; overflow:hidden; display:flex; flex-direction:column; }
+  .mm-pc-head{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line); font-weight:700; font-size:14px; }
+  .mm-pc-head button{ width:30px; height:30px; border:0; background:var(--shell); border-radius:8px; font-size:15px; cursor:pointer; }
+  .mm-pc-inner{ flex:1; min-height:400px; }
   /* 상단 안내 배너 (PNG) — 가로 100%, 비율 유지. 파일 없으면 자동 숨김 */
   .mm-top-banner{ display:block; width:100%; height:auto; border-radius:16px; margin-bottom:4px; }
   /* SVG 아이콘 공간 (사장님 업로드 전 임시 X) */
@@ -148,20 +161,41 @@
       <button class="mm-chip" data-recv="delivery" aria-pressed="true">택배 발송</button>
       <button class="mm-chip" data-recv="visit" aria-pressed="false">매장 방문</button>
     </div>
-    <div id="addrFields">
-      <div class="mm-field"><label>우편번호</label><input id="postcode" inputmode="numeric" placeholder="우편번호" /></div>
-      <div class="mm-field"><label>주소</label><input id="address1" placeholder="도로명 주소" /></div>
-      <div class="mm-field"><label>상세주소</label><input id="address2" placeholder="상세 주소" /></div>
-    </div>
   </div>
 
-  <!-- 연락처 -->
+  <!-- 접수자 정보 (성함·연락처 필수) -->
   <div class="mm-sec mm-hide" id="contactSec">
     <div class="mm-sec__label">접수자 정보</div>
-    <div class="mm-field"><label>성함</label><input id="name" placeholder="성함" /></div>
-    <div class="mm-field"><label>연락처</label><input id="phone" inputmode="numeric" placeholder="010-0000-0000" /></div>
+    <div class="mm-field"><label>성함 *</label><input id="name" placeholder="성함" /></div>
+    <div class="mm-field"><label>연락처 *</label><input id="phone" inputmode="numeric" placeholder="010-0000-0000" /></div>
+  </div>
+
+  <!-- 배송지 (택배 발송 시) -->
+  <div class="mm-sec mm-hide" id="addrSec">
+    <div class="mm-sec__label">배송지</div>
+    <div class="mm-field">
+      <label>주소</label>
+      <div class="mm-addr-search">
+        <input id="postcode" readonly placeholder="우편번호" />
+        <button type="button" id="addrSearchBtn" class="mm-addr-btn">주소 검색</button>
+      </div>
+    </div>
+    <div class="mm-field"><input id="address1" readonly placeholder="도로명 주소 (검색)" /></div>
+    <div class="mm-field"><input id="address2" disabled placeholder="상세 주소 (주소 검색 후 입력)" /></div>
+  </div>
+
+  <!-- 메모 + 동의 -->
+  <div class="mm-sec mm-hide" id="extraSec">
     <div class="mm-field"><label>메모 (선택)</label><textarea id="memo" placeholder="요청사항이 있으면 적어주세요"></textarea></div>
     <label class="mm-consent"><input type="checkbox" id="consent" /> 개인정보 수집·이용에 동의합니다 (접수·배송 목적)</label>
+  </div>
+</div>
+
+<!-- 다음 우편번호 검색 레이어 -->
+<div class="mm-pc-layer" id="pcLayer">
+  <div class="mm-pc-box">
+    <div class="mm-pc-head"><span>주소 검색</span><button type="button" id="pcClose">✕</button></div>
+    <div class="mm-pc-inner" id="pcInner"></div>
   </div>
 </div>
 
@@ -355,6 +389,9 @@
   function showTail(on){
     $('receiveSec').classList.toggle('mm-hide', !on);
     $('contactSec').classList.toggle('mm-hide', !on);
+    $('extraSec').classList.toggle('mm-hide', !on);
+    // 배송지는 택배일 때만
+    $('addrSec').classList.toggle('mm-hide', !on || recv==='visit');
   }
 
   // 수령방법
@@ -363,9 +400,37 @@
       recv=b.getAttribute('data-recv');
       document.querySelectorAll('[data-recv]').forEach(function(x){x.setAttribute('aria-pressed','false');});
       b.setAttribute('aria-pressed','true');
-      $('addrFields').classList.toggle('mm-hide', recv==='visit');
+      $('addrSec').classList.toggle('mm-hide', recv==='visit');
     };
   });
+
+  // 다음(Daum) 우편번호 검색 — 임베드 레이어 (인앱 안전)
+  function loadDaum(cb){
+    if(window.daum && window.daum.Postcode){ cb(); return; }
+    var s=document.createElement('script');
+    s.src='https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+    s.onload=cb; s.onerror=function(){ alert('주소검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'); };
+    document.head.appendChild(s);
+  }
+  function openPostcode(){
+    loadDaum(function(){
+      $('pcInner').innerHTML='';
+      new daum.Postcode({
+        oncomplete:function(d){
+          $('postcode').value = d.zonecode || '';
+          $('address1').value = d.roadAddress || d.jibunAddress || '';
+          var a2=$('address2'); a2.disabled=false; a2.placeholder='상세 주소 (동·호수 등)';
+          $('pcLayer').classList.remove('on');
+          a2.focus();
+        },
+        width:'100%', height:'100%'
+      }).embed($('pcInner'));
+      $('pcLayer').classList.add('on');
+    });
+  }
+  $('addrSearchBtn').onclick=openPostcode;
+  $('pcClose').onclick=function(){ $('pcLayer').classList.remove('on'); };
+  $('pcLayer').onclick=function(e){ if(e.target===$('pcLayer')) $('pcLayer').classList.remove('on'); };
 
   function updateSubmit(){
     var btn=$('submitBtn');
