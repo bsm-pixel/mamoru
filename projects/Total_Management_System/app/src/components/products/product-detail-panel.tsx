@@ -59,7 +59,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
     purchase_name: '',
   });
   // EVENT 전용 tags (category='EVENT'일 때만 저장) — 폼 setForm 충돌 피하려 별도 state
-  const [eventTags, setEventTags] = useState({ campaign_id: '', hand: 'right', event_type: 'blunt', spec: '' });
+  const [eventTags, setEventTags] = useState({ campaign_id: '', hand: 'right', event_type: 'blunt', spec: '', dry_subtype: 'stroke' });
   const { data: eventCampaigns } = useCampaigns();
 
   // SKU 자동 채번
@@ -122,7 +122,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
         purchase_name: (p as Record<string, unknown>).purchase_name as string || '',
       });
       const t = (p.tags || {}) as Record<string, string>;
-      setEventTags({ campaign_id: t.campaign_id || '', hand: t.hand || 'right', event_type: t.event_type || 'blunt', spec: t.spec || '' });
+      setEventTags({ campaign_id: t.campaign_id || '', hand: t.hand || 'right', event_type: t.event_type || 'blunt', spec: t.spec || '', dry_subtype: t.dry_subtype || 'stroke' });
     }
   }, [data, editing, mode]);
 
@@ -164,7 +164,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       product_group: form.product_group || null,
       purchase_name: form.purchase_name || null,
       ...(form.category === 'EVENT'
-        ? { tags: { campaign_id: eventTags.campaign_id || null, hand: eventTags.hand, event_type: eventTags.event_type, spec: eventTags.spec.trim() } }
+        ? { tags: { campaign_id: eventTags.campaign_id || null, hand: eventTags.hand, event_type: eventTags.event_type, spec: eventTags.event_type === 'dry' ? '' : eventTags.spec.trim(), dry_subtype: eventTags.event_type === 'dry' ? eventTags.dry_subtype : '' } }
         : {}),
     });
     setEditing(false);
@@ -188,7 +188,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       supplier_id: form.supplier_id || undefined,
       purchase_name: form.purchase_name.trim() || undefined,
       ...(form.category === 'EVENT'
-        ? { tags: { campaign_id: eventTags.campaign_id || null, hand: eventTags.hand, event_type: eventTags.event_type, spec: eventTags.spec.trim() } }
+        ? { tags: { campaign_id: eventTags.campaign_id || null, hand: eventTags.hand, event_type: eventTags.event_type, spec: eventTags.event_type === 'dry' ? '' : eventTags.spec.trim(), dry_subtype: eventTags.event_type === 'dry' ? eventTags.dry_subtype : '' } }
         : {}),
     });
     if (result?.product?.id && onCreated) onCreated(result.product.id);
@@ -226,10 +226,19 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
           </select>
         </div>
         <div>
-          <label className="text-xs text-neutral-500">옵션(spec)</label>
-          <input type="text" value={eventTags.spec} onChange={(e) => setEventTags({ ...eventTags, spec: e.target.value })}
-            placeholder={eventTags.event_type === 'thinning' ? '예: 20-30%' : eventTags.event_type === 'dry' ? 'stroke/slicing/curve' : '예: 5.5인치'}
-            className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+          <label className="text-xs text-neutral-500">{eventTags.event_type === 'dry' ? 'DRY 형태' : '옵션(spec)'}</label>
+          {eventTags.event_type === 'dry' ? (
+            <select value={eventTags.dry_subtype} onChange={(e) => setEventTags({ ...eventTags, dry_subtype: e.target.value })}
+              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+              <option value="stroke">스트록 (슬라이싱 가공 추가 가능)</option>
+              <option value="slicing">슬라이싱 (가공 완료)</option>
+              <option value="curve">커브</option>
+            </select>
+          ) : (
+            <input type="text" value={eventTags.spec} onChange={(e) => setEventTags({ ...eventTags, spec: e.target.value })}
+              placeholder={eventTags.event_type === 'thinning' ? '예: 20-30%' : '예: 5.5인치'}
+              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+          )}
         </div>
       </div>
     </div>

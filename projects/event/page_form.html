@@ -237,11 +237,15 @@
 
   function priceTier(n){ return n<70000 ? 't1' : (n<150000 ? 't2' : 't3'); } // 5만/10만/20만급
 
+  var DRY_LABEL = { stroke:'스트록', slicing:'슬라이싱', curve:'커브' };
+
   function productCard(p){
     var card=document.createElement('div'); card.className='mm-pcard mm-pcard--'+priceTier(p.price||0);
-    var isDryStroke = (p.event_type==='dry') && (p.dry_subtype!=='slicing');
+    // 슬라이싱 가공 추가 체크란은 'DRY 스트록'에만 (슬라이싱·커브는 미표시)
+    var isDryStroke = (p.event_type==='dry') && (p.dry_subtype==='stroke');
     var qty=1, slicing=false;
-    var spec=document.createElement('div'); spec.className='mm-pcard__spec'; spec.textContent=(p.spec||p.name||'');
+    var specTxt = (p.event_type==='dry') ? (DRY_LABEL[p.dry_subtype]||'DRY') : (p.spec||p.name||'');
+    var spec=document.createElement('div'); spec.className='mm-pcard__spec'; spec.textContent=specTxt;
     var price=document.createElement('div'); price.className='mm-pcard__price'; price.textContent=won(p.price);
     var stock=document.createElement('span'); stock.className='mm-stock mm-stock--'+(p.stock_tone||'ok'); stock.textContent=p.stock_text||'';
     card.appendChild(spec); card.appendChild(price); card.appendChild(stock);

@@ -35,7 +35,8 @@ export default function NewProductPage() {
     campaign_id: '',      // 어느 캠페인 품목인지 (필수)
     hand: 'right',        // right | left
     event_type: 'blunt',  // blunt | thinning | long | dry
-    spec: '',             // 인치(6.0) / 감모(21to29) / DRY서브(stroke)
+    spec: '',             // 인치(6.0) / 감모(21to29) — DRY는 dry_subtype 사용
+    dry_subtype: 'stroke', // DRY 형태: stroke | slicing | curve
   });
 
   async function handleSubmit() {
@@ -63,7 +64,7 @@ export default function NewProductPage() {
       barcode: form.barcode.trim() || undefined,
       supplier_id: form.supplier_id || undefined,
       ...(form.category === 'EVENT'
-        ? { tags: { campaign_id: form.campaign_id || null, hand: form.hand, event_type: form.event_type, spec: form.spec.trim() } }
+        ? { tags: { campaign_id: form.campaign_id || null, hand: form.hand, event_type: form.event_type, spec: form.event_type === 'dry' ? '' : form.spec.trim(), dry_subtype: form.event_type === 'dry' ? form.dry_subtype : '' } }
         : {}),
     });
 
@@ -182,14 +183,26 @@ export default function NewProductPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-neutral-500">옵션(spec)</label>
-                    <input
-                      type="text"
-                      value={form.spec}
-                      onChange={(e) => setForm({ ...form, spec: e.target.value })}
-                      placeholder={form.event_type === 'thinning' ? 'under20 / 21to29 / over30' : form.event_type === 'dry' ? 'stroke / slicing / curve' : '6.0 (인치)'}
-                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
-                    />
+                    <label className="text-xs text-neutral-500">{form.event_type === 'dry' ? 'DRY 형태' : '옵션(spec)'}</label>
+                    {form.event_type === 'dry' ? (
+                      <select
+                        value={form.dry_subtype}
+                        onChange={(e) => setForm({ ...form, dry_subtype: e.target.value })}
+                        className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
+                      >
+                        <option value="stroke">스트록 (슬라이싱 가공 추가 가능)</option>
+                        <option value="slicing">슬라이싱 (가공 완료)</option>
+                        <option value="curve">커브</option>
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={form.spec}
+                        onChange={(e) => setForm({ ...form, spec: e.target.value })}
+                        placeholder={form.event_type === 'thinning' ? '예: 20-30%' : '예: 6.0인치'}
+                        className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
