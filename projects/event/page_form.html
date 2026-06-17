@@ -64,6 +64,9 @@
   .mm-chip__ico{ width:30px; height:30px; object-fit:contain; }
   .mm-ico-x{ width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:1.5px dashed var(--line); border-radius:8px; color:#C9C5C0; font-size:14px; }
   .mm-chip[aria-pressed="true"] .mm-ico-x{ border-color:rgba(255,255,255,.4); color:rgba(255,255,255,.7); }
+  /* 선택(검정 배경) 시 아이콘도 흰색으로 반전 — 손/가격 칩 공통 */
+  .mm-chip[aria-pressed="true"] .mm-chip__ico,
+  .mm-chip[aria-pressed="true"] .mm-pricechip__ico{ filter: brightness(0) invert(1); }
   .mm-catgroup__h{ display:flex; align-items:center; gap:8px; }
   .mm-cat-ico{ width:22px; height:22px; object-fit:contain; }
   .mm-cat-ico-x{ width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:1.5px dashed var(--line); border-radius:6px; color:#C9C5C0; font-size:11px; }
