@@ -55,6 +55,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     phone: '',
     email: '',
     customer_type: 'retail',
+    activity_name: '',
+    position: '',
     company_name: '',
     postcode: '',
     address_road: '',
@@ -73,6 +75,8 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
       phone: c.phone || '',
       email: c.email || '',
       customer_type: c.customer_type || 'retail',
+      activity_name: c.activity_name || '',
+      position: c.position || '',
       company_name: c.company_name || '',
       postcode: (c as Record<string, unknown>).postcode as string || '',
       address_road: c.address_road || '',
@@ -86,7 +90,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
   }
 
   async function handleSave() {
-    await updateCustomer.mutateAsync({ id, ...form });
+    await updateCustomer.mutateAsync({
+      id,
+      ...form,
+      activity_name: form.activity_name.trim() || null,
+      position: form.position.trim() || null,
+    });
     setEditing(false);
   }
 
@@ -206,6 +215,26 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="text-xs text-neutral-500">활동명 (매장 사용 이름)</label>
+                  <input
+                    type="text"
+                    value={form.activity_name}
+                    onChange={(e) => setForm({ ...form, activity_name: e.target.value })}
+                    placeholder="예) 하은"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-neutral-500">직급</label>
+                  <input
+                    type="text"
+                    value={form.position}
+                    onChange={(e) => setForm({ ...form, position: e.target.value })}
+                    placeholder="예) 디자이너"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
+                  />
+                </div>
               </div>
               <div>
                 <label className="text-xs text-neutral-500">매장명 (근무지)</label>
@@ -293,6 +322,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                       {TYPE_OPTIONS.find((t) => t.value === c.customer_type)?.label || '일반'}
                     </Badge>
                   </p>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-500">활동명 (매장 사용 이름)</span>
+                  <p>{c.activity_name || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-500">직급</span>
+                  <p>{c.position || '-'}</p>
                 </div>
                 <div>
                   <span className="text-xs text-neutral-500">등록일</span>
