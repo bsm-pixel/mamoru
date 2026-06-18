@@ -72,8 +72,15 @@
   .mm-pc-head{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line); font-weight:700; font-size:14px; }
   .mm-pc-head button{ width:30px; height:30px; border:0; background:var(--shell); border-radius:8px; font-size:15px; cursor:pointer; }
   .mm-pc-inner{ flex:1; min-height:400px; }
-  /* 상단 안내 배너 (PNG) — 가로 100%, 비율 유지. 파일 없으면 자동 숨김 */
-  .mm-top-banner{ display:block; width:100%; height:auto; border-radius:16px; margin-bottom:4px; }
+  /* 상단 안내장 캐러셀 (가로 스와이프, 1000×1500=2:3, 자동재생 X) */
+  .mm-car-wrap{ margin-bottom:14px; }
+  .mm-car{ display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .mm-car::-webkit-scrollbar{ display:none; }
+  .mm-slide{ flex:0 0 100%; scroll-snap-align:center; }
+  .mm-slide img{ display:block; width:100%; aspect-ratio:1000/1500; object-fit:cover; border-radius:16px; }
+  .mm-car-dots{ display:flex; justify-content:center; gap:6px; margin-top:9px; }
+  .mm-dot{ width:6px; height:6px; border-radius:50%; background:var(--line); transition:width .2s, background .2s; }
+  .mm-dot.on{ background:var(--void); width:18px; border-radius:3px; }
   /* SVG 아이콘 공간 (사장님 업로드 전 임시 X) */
   .mm-chip--ico{ display:flex; flex-direction:column; align-items:center; gap:5px; padding-top:10px; padding-bottom:10px; }
   .mm-chip__ico{ width:30px; height:30px; object-fit:contain; }
@@ -110,8 +117,11 @@
 </head>
 <body>
 <div class="mm-wrap">
-  <!-- 상단 안내 배너 (PNG) — icons/event-top.png 올리면 표시, 없으면 자동 숨김 -->
-  <img class="mm-top-banner" src="icons/event-top.png" alt="EVENT 안내" onerror="this.style.display='none'" />
+  <!-- 상단 안내장 캐러셀 — icons/event-slide-1~3.png (있는 만큼 자동 표시, 없으면 영역 숨김) -->
+  <div class="mm-car-wrap" id="mmCarWrap" style="display:none;">
+    <div class="mm-car" id="mmCar"></div>
+    <div class="mm-car-dots" id="mmCarDots"></div>
+  </div>
 
   <div class="mm-head">
     <div class="mm-head__kicker">MAMORU EVENT</div>
@@ -214,6 +224,36 @@
 </div>
 
 <script>
+/* 상단 안내장 캐러셀 — 존재하는 슬라이드만 순서대로 표시 + 도트 동기화 (자동재생 X) */
+(function(){
+  var track = document.getElementById('mmCar'), dots = document.getElementById('mmCarDots'), wrap = document.getElementById('mmCarWrap');
+  if (!track) return;
+  var srcs = ['icons/event-slide-1.png','icons/event-slide-2.png','icons/event-slide-3.png'];
+  var exists = new Array(srcs.length).fill(false), done = 0;
+  srcs.forEach(function(src, i){
+    var im = new Image();
+    im.onload = function(){ exists[i] = true; tick(); };
+    im.onerror = function(){ exists[i] = false; tick(); };
+    im.src = src;
+  });
+  function tick(){ if (++done < srcs.length) return; build(); }
+  function build(){
+    var ok = srcs.filter(function(_, i){ return exists[i]; });
+    if (ok.length === 0) { wrap.style.display = 'none'; return; }
+    ok.forEach(function(src, i){
+      var s = document.createElement('div'); s.className = 'mm-slide';
+      var im = document.createElement('img'); im.src = src; im.alt = 'EVENT 안내 ' + (i+1); s.appendChild(im);
+      track.appendChild(s);
+      var d = document.createElement('span'); d.className = 'mm-dot' + (i === 0 ? ' on' : ''); dots.appendChild(d);
+    });
+    wrap.style.display = 'block';
+    if (ok.length < 2) dots.style.display = 'none';
+    track.addEventListener('scroll', function(){
+      var idx = Math.round(track.scrollLeft / (track.clientWidth + 10));
+      for (var i = 0; i < dots.children.length; i++) dots.children[i].classList.toggle('on', i === idx);
+    }, { passive: true });
+  }
+})();
 (function(){
   var API = 'https://app-eta-sandy-75.vercel.app/api/event/public';
   var SLICE = 20000;
