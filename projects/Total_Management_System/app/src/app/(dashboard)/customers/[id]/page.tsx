@@ -12,6 +12,7 @@ import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { ArrowLeft, Save, ShoppingBag, FileSignature, MessageSquare, Wrench, Clock } from 'lucide-react';
 import { TagBadges, TagSelector } from '@/components/shared/tag-selector';
 import { useSetting } from '@/hooks/use-settings';
+import { activitySuffix } from '@/lib/customer/display';
 import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 
 const TYPE_OPTIONS = [
@@ -147,7 +148,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         {/* 고객 정보 카드 */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-stone-900">{c.name}</h3>
+            <h3 className="text-sm font-bold text-stone-900">
+              {c.name}
+              {activitySuffix(c.activity_name, c.position) && (
+                <span className="ml-1.5 text-xs font-normal text-neutral-400">{activitySuffix(c.activity_name, c.position)}</span>
+              )}
+            </h3>
             {!editing ? (
               <Button variant="ghost" size="sm" onClick={startEdit}>수정</Button>
             ) : (

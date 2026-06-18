@@ -26,3 +26,8 @@ export function activityWithPosition(activityName?: string | null, name?: string
   const p = clean(position);
   return p ? `${base} ${p}` : base;
 }
+
+/** 실명 옆 보조표기 — "박봄 디자이너" (활동명·직급). 없으면 ''. 고객 화면에서 실명 뒤 작게/흐리게 표시용 */
+export function activitySuffix(activityName?: string | null, position?: string | null): string {
+  return [clean(activityName), clean(position)].filter(Boolean).join(' ');
+}

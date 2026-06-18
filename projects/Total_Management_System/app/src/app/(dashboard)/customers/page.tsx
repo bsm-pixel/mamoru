@@ -14,6 +14,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { CustomerDetailPanel } from '@/components/customers/customer-detail-panel';
+import { activitySuffix } from '@/lib/customer/display';
 import { Users, Plus, X } from 'lucide-react';
 import type { Customer } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
@@ -226,6 +227,9 @@ function CustomerRow({ customer, isSelected, onClick }: { customer: Customer; is
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-stone-900 truncate">{c.name}</span>
+          {activitySuffix(c.activity_name, c.position) && (
+            <span className="text-xs text-neutral-400 truncate shrink-0">{activitySuffix(c.activity_name, c.position)}</span>
+          )}
           <Badge className={TYPE_COLOR[c.customer_type] || TYPE_COLOR.retail}>
             {TYPE_LABEL[c.customer_type] || '일반'}
           </Badge>
