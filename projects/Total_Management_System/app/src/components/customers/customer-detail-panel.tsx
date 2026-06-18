@@ -12,10 +12,11 @@ import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { activitySuffix } from '@/lib/customer/display';
 import {
   Save, ShoppingBag, FileSignature, MessageSquare, Wrench,
-  Clock, Pencil, X, Truck, Copy,
+  Clock, Pencil, X, Truck, Copy, Merge,
 } from 'lucide-react';
 import { TagBadges, TagSelector } from '@/components/shared/tag-selector';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
+import { CustomerMergeModal } from '@/components/customers/customer-merge-modal';
 import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 import { useSetting } from '@/hooks/use-settings';
 
@@ -72,6 +73,7 @@ export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
   const [editingInfo, setEditingInfo] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [showDuplicate, setShowDuplicate] = useState(false);
+  const [showMerge, setShowMerge] = useState(false);
   const [editMemo, setEditMemo] = useState('');
 
   if (isLoading) {
@@ -221,6 +223,10 @@ export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
             <Copy size={13} />
             복제
           </Button>
+          <Button variant="secondary" size="sm" onClick={() => setShowMerge(true)} title="중복 고객을 이 고객으로 병합">
+            <Merge size={13} />
+            병합
+          </Button>
           {!hideDetailLink && (
             <Button variant="ghost" size="sm" onClick={() => router.push(`/customers/${customerId}`)}>
               상세 페이지
@@ -243,6 +249,13 @@ export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
           tags: (c as unknown as { tags?: string[] }).tags || [],
         }}
         // 복제는 같은 매장 동료 — 활동명/직급은 사람마다 달라 비움(매장명·주소만 채움)
+      />
+
+      {/* 병합 — 중복 고객을 이 고객으로 흡수 */}
+      <CustomerMergeModal
+        open={showMerge}
+        onClose={() => setShowMerge(false)}
+        primary={{ id: customerId, name: c.name, phone: c.phone }}
       />
 
       {/* 요약 카드 */}

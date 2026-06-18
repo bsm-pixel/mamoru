@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
     let query = db
       .from('customers')
       .select('*', { count: 'exact' })
+      .is('merged_into_id', null) // 병합으로 흡수된 고객 숨김
       .order('created_at', { ascending: false })
       .range(from, to);
 

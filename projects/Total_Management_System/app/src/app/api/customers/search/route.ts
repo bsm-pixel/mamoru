@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
       .select('id, name, phone, email, address_road, address_detail, postcode, ecount_customer_code, source, customer_type, company_name, memo, default_repair_price')
       .or(orFilter)
       .neq('customer_type', 'supplier') // 판매 자동완성에서 매입처 제외
+      .is('merged_into_id', null) // 병합으로 흡수된 고객 숨김
       .order('name')
       .limit(10);
 

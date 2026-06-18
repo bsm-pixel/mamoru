@@ -147,6 +147,32 @@ export function useCreateCustomer() {
   });
 }
 
+/** 고객 병합 — 흡수 대상들을 주 고객으로 통합 (거래·미수금 이관) */
+export function useMergeCustomers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ primaryId, victimIds }: { primaryId: string; victimIds: string[] }) => {
+      const res = await fetch('/api/customers/merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ primaryId, victimIds }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || '병합 실패');
+      return json as { ok: true; result: { primary: string; victims: number } };
+    },
+    onSuccess: () => {
+      // 고객·거래·집계 전반 갱신
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['customer'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-search'] });
+      queryClient.invalidateQueries({ queryKey: ['sales-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['delivery-stats'] });
+    },
+  });
+}
+
 /** 고객 정보 수정 */
 export function useUpdateCustomer() {
   const queryClient = useQueryClient();

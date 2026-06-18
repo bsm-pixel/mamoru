@@ -1,8 +1,21 @@
 # 고객 관리 프로세스 흐름도
 
-> 최종 수정: 2026-04-30 (심야 +2) — **B2B 카테고리 동적화 + 거래처별 단가 (074)** + 073 catalog + phone 매칭
+> 최종 수정: 2026-06-18 — **고객 병합(merge) 기능 추가** / 2026-04-30 B2B 카테고리 동적화 + 거래처별 단가(074) + 073 catalog + phone 매칭
 
 ---
+
+## 2026-06-18 — 고객 병합(merge) + 중복 방지 정리
+
+**배경**: 접수 자동매칭은 `phone_normalized`(숫자만, GENERATED 컬럼) 기준이라 하이픈 유무는 동일 고객으로 연동되지만, **다른/오타 전화나 전화 없이 수기 등록** 시 같은 사람이 중복 레코드로 생김(이름은 매칭에 안 씀).
+
+- **병합 동작**: 고객 상세 패널 `[병합]` → 중복 고객 검색·다중선택 → 미리보기(판매·수리·미수) → 확인 → 실행.
+- **이관 대상**: `merge_customers(p_primary, p_victims[])` RPC(단일 트랜잭션, 마이그 **106**)가 흡수 대상의 거래를 주 고객으로 이관.
+  - 매출/청구 문서(offline_sales·deliveries·contracts·manual_invoices): `customer_id` + denormalized `customer_name/phone`를 **주 고객으로 통일**(매출·송장 한 이름).
+  - 접수/주문(repairs·consultations·orders): `customer_id`만 이관(접수자 본명 기록 보존).
+- **흡수 고객**: 삭제 X → `merged_into_id`/`merged_at` soft 보존, 목록·검색·자동완성에서 숨김(`.is('merged_into_id', null)`).
+- **미수금**: RPC 후 `recalcOutstanding(primary)`(단일 출처) 재계산, 흡수본 0.
+- 파일: API `app/api/customers/merge/route.ts`, 훅 `useMergeCustomers`, 모달 `components/customers/customer-merge-modal.tsx`, 버튼 `customer-detail-panel.tsx`.
+- ⚠️ **마이그 106 SQL 먼저 실행 후 배포** (목록/검색이 `merged_into_id` 컬럼을 참조하므로).
 
 ## 2026-04-30 (심야 +3) — B2B 거래처 페이지에서 카테고리 직접 변경 가능
 
