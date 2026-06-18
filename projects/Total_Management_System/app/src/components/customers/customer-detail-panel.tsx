@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomer, useUpdateCustomer } from '@/hooks/use-customers';
 import { useCustomerManualInvoices } from '@/hooks/use-manual-invoices';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
+import { activitySuffix } from '@/lib/customer/display';
 import {
   Save, ShoppingBag, FileSignature, MessageSquare, Wrench,
   Clock, Pencil, X, Truck, Copy,
@@ -162,7 +163,12 @@ export function CustomerDetailPanel({ customerId }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold text-stone-900">{c.activity_name ? `${c.activity_name} (${c.name})` : c.name}</h2>
+            <h2 className="text-base font-bold text-stone-900">
+              {c.name}
+              {activitySuffix(c.activity_name, c.position) && (
+                <span className="ml-1.5 text-xs font-normal text-neutral-400">{activitySuffix(c.activity_name, c.position)}</span>
+              )}
+            </h2>
             <Badge className={TYPE_COLOR[c.customer_type] || TYPE_COLOR.retail}>
               {TYPE_OPTIONS.find(t => t.value === c.customer_type)?.label || '일반'}
             </Badge>
@@ -170,7 +176,6 @@ export function CustomerDetailPanel({ customerId }: Props) {
           <p className="text-xs text-neutral-500 mt-0.5">
             {formatPhone(c.phone) || '연락처 없음'}
             {c.company_name && ` · ${c.company_name}`}
-            {c.position && ` · ${c.position}`}
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
