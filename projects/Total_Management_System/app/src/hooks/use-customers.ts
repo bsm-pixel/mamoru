@@ -133,7 +133,12 @@ export function useCreateCustomer() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const j = await res.json().catch(() => null);
+        // 409: 같은 전화 중복 — 기존 고객명 안내
+        if (res.status === 409 && j?.existing) throw new Error(`이미 등록된 번호입니다 (${j.existing.name})`);
+        throw new Error(j?.error ? String(j.error) : '등록 실패');
+      }
       return res.json() as Promise<{ customer: CustomerResult }>;
     },
     onSuccess: () => {

@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { name, phone, email, postcode, address_road, address_detail, customer_type, company_name, activity_name, position, memo, tags } = body as {
+    const { name, phone, email, postcode, address_road, address_detail, customer_type, company_name, activity_name, position, memo, tags, force } = body as {
       name: string;
       phone?: string;
       email?: string;
@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
       position?: string;
       memo?: string;
       tags?: string[];
+      force?: boolean; // 같은 전화 중복 경고 무시하고 강제 등록
     };
 
     if (!name?.trim()) {
@@ -79,6 +80,23 @@ export async function POST(req: NextRequest) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
+
+    // 같은 전화번호 중복 방지 — 수기 등록도 phone_normalized 기준으로 기존 고객 검사 (접수 자동매칭과 정합)
+    const phoneNorm = (phone || '').replace(/\D/g, '');
+    if (phoneNorm && !force) {
+      const { data: dup } = await db
+        .from('customers')
+        .select('id, name, phone, customer_type, company_name, source')
+        .eq('phone_normalized', phoneNorm)
+        .is('merged_into_id', null)
+        .limit(1);
+      if (dup && dup.length > 0) {
+        return NextResponse.json(
+          { error: '이미 등록된 전화번호입니다', existing: dup[0] },
+          { status: 409 }
+        );
+      }
+    }
 
     const { data: customer, error } = await db
       .from('customers')

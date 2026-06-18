@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatPhone } from '@/lib/utils/format';
 import { useSetting } from '@/hooks/use-settings';
 import { TagSelector } from '@/components/shared/tag-selector';
 import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
@@ -43,21 +44,24 @@ const BLANK: CustomerCreateData = {
   company_name: '', activity_name: '', position: '', memo: '', tags: [],
 };
 
+interface DupCustomer { id: string; name: string; phone: string | null; customer_type: string; company_name?: string | null; source?: string | null }
+
 export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props) {
   const [form, setForm] = useState<CustomerCreateData>(BLANK);
   const [saving, setSaving] = useState(false);
+  const [dup, setDup] = useState<DupCustomer | null>(null); // 같은 전화 중복 경고
   const queryClient = useQueryClient();
   const availableTags = useSetting<string[]>('customer.tags', []);
 
   // 모달 열릴 때 prefill 적용 (복제 시 매장명·주소 등). open 변화에만 반응(편집 중 덮어쓰기 방지)
   useEffect(() => {
-    if (open) setForm({ ...BLANK, ...prefill });
+    if (open) { setForm({ ...BLANK, ...prefill }); setDup(null); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   if (!open) return null;
 
-  async function handleSave() {
+  async function handleSave(force = false) {
     if (!form.name.trim()) return toast.error('이름을 입력해주세요');
     if (!form.phone.trim()) return toast.error('연락처를 입력해주세요');
 
@@ -78,8 +82,14 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
           position: form.position || undefined,
           memo: form.memo || undefined,
           tags: form.tags.length > 0 ? form.tags : undefined,
+          force,
         }),
       });
+      // 같은 전화 중복 → 경고 표시 (기존 고객 사용 / 강제 등록 선택)
+      if (res.status === 409) {
+        const body = await res.json().catch(() => ({}));
+        if (body.existing) { setDup(body.existing as DupCustomer); return; }
+      }
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));
         throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error));
@@ -90,11 +100,21 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
       onCreated(data.customer || data);
       onClose();
       setForm(BLANK);
+      setDup(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '등록 실패');
     } finally {
       setSaving(false);
     }
+  }
+
+  /** 중복 경고에서 "기존 고객 사용" → 그 고객 선택하고 닫기 */
+  function useExisting() {
+    if (!dup) return;
+    onCreated({ id: dup.id, name: dup.name, phone: dup.phone || '', customer_type: dup.customer_type });
+    onClose();
+    setForm(BLANK);
+    setDup(null);
   }
 
   return (
@@ -106,6 +126,29 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+          {/* 같은 전화 중복 경고 */}
+          {dup && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 space-y-2">
+              <div className="flex items-center gap-1.5 text-amber-700">
+                <AlertTriangle size={15} />
+                <p className="text-sm font-bold">이미 등록된 전화번호입니다</p>
+              </div>
+              <p className="text-xs text-neutral-600">
+                <b className="text-stone-800">{dup.name}</b>
+                <span className="text-neutral-400 ml-1">{formatPhone(dup.phone || '')}</span>
+                {dup.company_name && <span className="text-neutral-400 ml-1">· {dup.company_name}</span>}
+                <span className="block mt-0.5">중복 등록 대신 기존 고객을 사용하세요. 정말 별개 고객이면 그대로 등록할 수 있습니다.</span>
+              </p>
+              <div className="flex gap-2 pt-0.5">
+                <Button size="sm" className="flex-1" onClick={useExisting}>기존 고객 사용</Button>
+                <button onClick={() => handleSave(true)} disabled={saving}
+                  className="flex-1 py-1.5 rounded-lg border border-amber-300 text-xs text-amber-700 hover:bg-amber-100">
+                  {saving ? '등록 중...' : '그래도 새로 등록'}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* 이름 + 전화 */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -191,7 +234,7 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
 
         <div className="px-5 py-3 border-t border-neutral-200 flex gap-2">
           <button onClick={onClose} className="flex-1 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600">취소</button>
-          <Button className="flex-1" onClick={handleSave} disabled={saving}>
+          <Button className="flex-1" onClick={() => handleSave()} disabled={saving}>
             {saving ? '등록 중...' : '고객 등록'}
           </Button>
         </div>

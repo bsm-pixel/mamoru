@@ -16,6 +16,8 @@
 - **미수금**: RPC 후 `recalcOutstanding(primary)`(단일 출처) 재계산, 흡수본 0.
 - 파일: API `app/api/customers/merge/route.ts`, 훅 `useMergeCustomers`, 모달 `components/customers/customer-merge-modal.tsx`, 버튼 `customer-detail-panel.tsx`.
 - ⚠️ **마이그 106 SQL 먼저 실행 후 배포** (목록/검색이 `merged_into_id` 컬럼을 참조하므로).
+- **중복 방지 (2026-06-18 보강)**: 수기 등록(`POST /api/customers`)도 `phone_normalized` 검사 → 같은 번호 기존 고객 있으면 **409 + existing 반환**. CustomerCreateModal이 경고 표시("이미 등록된 번호 — [기존고객]")하고 **[기존 고객 사용]/[그래도 새로 등록(force)]** 선택. (이전엔 수기 등록이 전화 매칭을 안 거쳐 같은 번호 중복 생성 — 곽경진 3중복 원인)
+- **체인 평탄화 (마이그 107)**: A→B 병합 후 B→C 병합 시 A가 B(병합된 고객)를 가리키는 체인 방지 — 흡수 시 victim 을 가리키던 고객도 primary 로 재지정(A→C). ⚠️ 마이그 107 SQL 실행 필요.
 
 ## 2026-04-30 (심야 +3) — B2B 거래처 페이지에서 카테고리 직접 변경 가능
 
