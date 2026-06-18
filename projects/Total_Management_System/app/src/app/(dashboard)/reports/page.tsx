@@ -287,10 +287,26 @@ export default function ReportsPage() {
               </Card>
             </div>
 
-            {/* 일별 추이 (간단 바 차트) */}
+            {/* 일별 추이 (간단 바 차트) — 탭별 분리: 전체=제품+복원수리 / 제품=제품만 / 복원수리=복원수리만(납품 포함) */}
             <Card>
-              <h3 className="text-sm font-bold text-indigo-black mb-3">일별 매출/매입 추이</h3>
-              <DailyChart sales={data.daily.sales} purchases={data.daily.purchases} />
+              <h3 className="text-sm font-bold text-indigo-black mb-3">
+                일별 {revenueTab === 'repair' ? '복원수리' : revenueTab === 'product' ? '제품 매출' : '매출/매입'} 추이
+              </h3>
+              {(() => {
+                const dProduct = data.daily.product ?? data.daily.sales;
+                const dRepair = data.daily.repairs ?? {};
+                const merge = (a: Record<string, number>, b: Record<string, number>) => {
+                  const out: Record<string, number> = { ...a };
+                  for (const k in b) out[k] = (out[k] || 0) + b[k];
+                  return out;
+                };
+                const chartSales = revenueTab === 'repair' ? dRepair
+                  : revenueTab === 'product' ? dProduct
+                  : merge(dProduct, dRepair);
+                // 매입은 제품 원가성이라 복원수리 탭에선 숨김
+                const chartPurchases = revenueTab === 'repair' ? {} : data.daily.purchases;
+                return <DailyChart sales={chartSales} purchases={chartPurchases} />;
+              })()}
             </Card>
 
             {/* 엑셀 다운로드 + 거래내역서 */}

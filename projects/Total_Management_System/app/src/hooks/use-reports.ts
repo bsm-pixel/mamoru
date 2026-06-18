@@ -130,6 +130,7 @@ export interface ReportData {
     sales: Record<string, number>;
     purchases: Record<string, number>;
     repairs?: Record<string, number>;
+    product?: Record<string, number>; // 제품 일별(판매−RS + 납품제품) — 탭별 차트용
   };
   details: {
     sales: SaleDetail[];

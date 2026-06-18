@@ -131,10 +131,22 @@ export async function GET(req: NextRequest) {
       deposit: purchases.reduce((s: number, r: { deposit_amount: number }) => s + (r.deposit_amount || 0), 0),
     };
 
-    // ─── 4) 일별 매출/매입 추이 (차트용 — 오프라인 판매 sale_date / 매입 order_date) ───
+    // ─── 4) 일별 매출/매입 추이 (차트용) ───
+    // dailySales(호환): offline_sales total / dailyProduct: 제품(판매−RS + 납품제품) — 탭별 차트용 / 매입: order_date
     const dailySales: Record<string, number> = {};
+    const dailyProduct: Record<string, number> = {};
     const dailyPurchases: Record<string, number> = {};
-    for (const s of sales) dailySales[s.sale_date] = (dailySales[s.sale_date] || 0) + (s.total_amount || 0);
+    for (const s of sales) {
+      dailySales[s.sale_date] = (dailySales[s.sale_date] || 0) + (s.total_amount || 0);
+      const rs = offlineRsBySale[s.id]?.amount || 0;
+      const prod = (s.total_amount || 0) - (s.discount_amount || 0) - rs;
+      if (prod !== 0) dailyProduct[s.sale_date] = (dailyProduct[s.sale_date] || 0) + prod;
+    }
+    for (const d of deliveries) {
+      const rs = dlRsByDelivery[d.id]?.amount || 0;
+      const prod = (d.total_amount || 0) - (d.discount_amount || 0) - rs;
+      if (prod !== 0) dailyProduct[d.delivery_date] = (dailyProduct[d.delivery_date] || 0) + prod;
+    }
     for (const p of purchases) {
       const d = (p as { order_date: string }).order_date;
       dailyPurchases[d] = (dailyPurchases[d] || 0) + (p as { total_amount: number }).total_amount;
@@ -341,7 +353,7 @@ export async function GET(req: NextRequest) {
       by_supplier: supplierRanking,
       payables: { items: payables, total: totalPayables },
       receivables: { items: receivables, total: totalReceivables, aging: agingSummary },
-      daily: { sales: dailySales, purchases: dailyPurchases, repairs: dailyRepairs },
+      daily: { sales: dailySales, purchases: dailyPurchases, repairs: dailyRepairs, product: dailyProduct },
       profit_loss: profitLoss,
       details: { sales, purchases, repairs: repairSales, deliveries },
     });
