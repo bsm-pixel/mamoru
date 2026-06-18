@@ -62,6 +62,12 @@ iOS 스타일 ON/OFF 스위치 + "리뷰 약속" 라벨 + ON 시 약속 날짜 �
 - 매출 카드 상단 (고객 B2C + 거래처 B2B 동등 50:50 어두운 카드)
 - 통합 목록 (날짜 desc 정렬, 좌측 색 줄로 1초 상태 인지)
 
+### 매출 카드 정의 — 제품/복원수리 분리표기 (2026-06-18)
+- **헤드라인 = 제품 매출**(RS 제외) — 대시보드 `salesB2C`/`salesB2B`(RPC 088)와 동일 의미. 보조표기 `+ 복원수리 N원`(작고 흐린 줄).
+- 분해 기준: 제품 = `리스트 이번달 합 − RS items 합`, 복원수리 = `offline_sale_items(category='RS') + delivery_items(category='RS')` (해당 화면 입력분 = B/C채널). **제품 + 복원수리 = 리스트 합** 보존.
+- 접수시스템(A채널, repairs 테이블)은 판매관리 리스트에 없으므로 카드 보조표기에도 미포함 → 접수 복원수리 전체는 복원수리 메뉴/대시보드에서.
+- 매출 쿼리에 `returned_at IS NULL` 추가(반품 제외, 대시보드와 동일). `use-deliveries` 이번주 시작일 KST 로컬 산출(UTC 하루밀림 fix).
+
 ### 입력 진입점 통합
 - **B2C**: `/sales` 헤더 `[+ 판매 입력]` → `/sales/new`
 - **B2B**: `/sales` 헤더 `[+ 거래처 매출]` OR `/deliveries` 헤더 → `/sales/new?mode=b2b` (CreateDeliveryModal 풀스크린)

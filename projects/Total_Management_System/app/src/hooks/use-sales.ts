@@ -163,13 +163,14 @@ export function useSalesStats() {
       const monthStart = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-01`;
 
       // 2026-05-26 IA 통합: customer_type 도 select — 화면에서 고객(B2C) / 거래처(B2B) 영역별 분리 집계
-      // 주간 매출
+      // 주간 매출 (returned_at 제외 — 반품 매출은 회계 매출에서 빠짐, 대시보드 salesB2C/B2B와 동일 기준)
       const { data: weekSales } = await db
         .from('offline_sales')
         .select('total_amount, paid_amount, discount_amount, customer_type')
         .gte('sale_date', weekStart)
         .lte('sale_date', today)
-        .is('cancelled_at', null);
+        .is('cancelled_at', null)
+        .is('returned_at', null);
 
       // 월간 매출
       const { data: monthSales } = await db
@@ -177,7 +178,20 @@ export function useSalesStats() {
         .select('total_amount, paid_amount, discount_amount, customer_type')
         .gte('sale_date', monthStart)
         .lte('sale_date', today)
-        .is('cancelled_at', null);
+        .is('cancelled_at', null)
+        .is('returned_at', null);
+
+      // 이번달 복원수리(RS) 항목 — 카드 '제품/복원수리' 분리표기용. offline_sales 와 동일 필터(월·취소·반품)로 조인.
+      // category='RS' 인 offline_sale_items 합을 customer_type 으로 B2C/B2B 분리 → 제품 = 리스트 합 − RS, 복원수리 = RS.
+      const { data: monthRsItems } = await db
+        .from('offline_sale_items')
+        .select('total_price, offline_sales!inner(customer_type)')
+        .eq('category', 'RS')
+        .gt('total_price', 0)
+        .gte('offline_sales.sale_date', monthStart)
+        .lte('offline_sales.sale_date', today)
+        .is('offline_sales.cancelled_at', null)
+        .is('offline_sales.returned_at', null);
 
       // 미수금 총액
       const { data: unpaidSales } = await db
@@ -217,6 +231,16 @@ export function useSalesStats() {
 
       const unpaidTotal = sumOutstanding(unpaidSales);
 
+      // 이번달 RS 합을 B2C/B2B 로 분리
+      type RsRow = { total_price: number; offline_sales?: { customer_type?: string } | null };
+      let customerMonthRepair = 0;
+      let partnerMonthRepair = 0;
+      for (const r of (monthRsItems || []) as RsRow[]) {
+        const amt = r.total_price || 0;
+        if (isPartner(r.offline_sales?.customer_type)) partnerMonthRepair += amt;
+        else customerMonthRepair += amt;
+      }
+
       // B2B 거래처별 이번달 매출
       const { data: b2bSales } = await db
         .from('offline_sales')
@@ -224,7 +248,8 @@ export function useSalesStats() {
         .in('customer_type', ['dealer', 'academy'])
         .gte('sale_date', monthStart)
         .lte('sale_date', today)
-        .is('cancelled_at', null);
+        .is('cancelled_at', null)
+        .is('returned_at', null);
 
       const b2bMap: Record<string, { name: string; type: string; amount: number; count: number }> = {};
       for (const s of (b2bSales || [])) {
@@ -248,6 +273,9 @@ export function useSalesStats() {
         partnerWeek: sum(weekParts.partner),
         partnerMonth: sum(monthParts.partner),
         partnerOutstanding: sumOutstanding(unpaidParts.partner),
+        // 2026-06-18 제품/복원수리 분리표기 — 이번달 RS 합(offline_sales 기준). 제품 = customerMonth.amount − customerMonthRepair
+        customerMonthRepair,
+        partnerMonthRepair,
       };
     },
   });

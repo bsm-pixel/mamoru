@@ -44,6 +44,8 @@ export interface RevenueDarkCardProps {
   amount: string;         // 이미 포맷된 ₩ 문자열
   /** amount 아래 부가 텍스트 (예: "이번달 · 5건") */
   amountSub?: string;
+  /** amountSub 아래 한 줄 보조표기 (예: "+ 복원수리 299,000") — 작고 흐린 톤 */
+  subNote?: string;
   /** 우측 상단 보조 값 (예: "32자루") */
   rightValue?: string;
   rightValueSub?: string; // 예: "자루"
@@ -59,7 +61,7 @@ const HIGHLIGHT_TEXT = {
 } as const;
 
 export function RevenueDarkCard({
-  icon: Icon, label, amount, amountSub, rightValue, rightValueSub = '자루',
+  icon: Icon, label, amount, amountSub, subNote, rightValue, rightValueSub = '자루',
   splits, bottomGrid,
 }: RevenueDarkCardProps) {
   return (
@@ -71,6 +73,7 @@ export function RevenueDarkCard({
           <p className="text-[11px] uppercase tracking-wider opacity-60 font-semibold">{label}</p>
           <p className="text-2xl font-bold">{amount}</p>
           {amountSub && <p className="text-xs opacity-70 mt-0.5">{amountSub}</p>}
+          {subNote && <p className="text-[11px] opacity-45 mt-0.5">{subNote}</p>}
         </div>
         {rightValue && (
           <p className="ml-auto text-xl font-bold">

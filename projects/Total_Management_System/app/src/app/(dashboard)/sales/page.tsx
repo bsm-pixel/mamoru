@@ -228,6 +228,12 @@ export default function SalesPage() {
   const partnerMonthCount = (stats?.partnerMonth?.count || 0) + (deliveryStats?.monthCount || 0);
   const partnerOutstanding = (stats?.partnerOutstanding || 0) + (deliveryStats?.outstanding || 0);
 
+  /** 2026-06-18 제품/복원수리 분리표기 — 헤드라인=제품(RS 제외, 대시보드 정의와 일치), 보조표기=복원수리. 제품+복원수리 = 리스트 합 */
+  const customerMonthRepair = stats?.customerMonthRepair || 0;
+  const customerMonthProduct = (stats?.customerMonth?.amount || 0) - customerMonthRepair;
+  const partnerMonthRepair = (stats?.partnerMonthRepair || 0) + (deliveryStats?.monthRepair || 0);
+  const partnerMonthProduct = partnerMonth - partnerMonthRepair;
+
   /* --- 목록 영역 (좌측/모바일) --- */
   const listContent = (
     <>
@@ -235,18 +241,20 @@ export default function SalesPage() {
       {stats && (
         <div className="grid grid-cols-2 gap-3">
           <RevenueDarkCard
-            label="고객 (B2C)"
-            amount={formatKRW(stats.customerMonth?.amount || 0)}
+            label="고객 (B2C) 제품"
+            amount={formatKRW(customerMonthProduct)}
             amountSub={`이번달 · ${stats.customerMonth?.count || 0}건`}
+            subNote={customerMonthRepair > 0 ? `+ 복원수리 ${formatKRW(customerMonthRepair)}` : undefined}
             bottomGrid={[
               { label: '이번주', value: formatKRW(stats.customerWeek?.amount || 0) },
               { label: '미수금', value: formatKRW(stats.customerOutstanding || 0), highlight: 'amber' },
             ]}
           />
           <RevenueDarkCard
-            label="거래처 (B2B)"
-            amount={formatKRW(partnerMonth)}
+            label="거래처 (B2B) 제품"
+            amount={formatKRW(partnerMonthProduct)}
             amountSub={`이번달 · ${partnerMonthCount}건`}
+            subNote={partnerMonthRepair > 0 ? `+ 복원수리 ${formatKRW(partnerMonthRepair)}` : undefined}
             bottomGrid={[
               { label: '이번주', value: formatKRW(partnerWeek) },
               { label: '미수금', value: formatKRW(partnerOutstanding), highlight: 'amber' },

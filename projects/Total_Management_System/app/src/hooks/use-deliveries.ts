@@ -133,12 +133,15 @@ export function useDeliveryStats() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
       const now = new Date();
-      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-      const weekStart = new Date(now);
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); // Monday
-      const weekStartStr = weekStart.toISOString().slice(0, 10);
+      // KST 로컬 기준 — toISOString(UTC)는 오전 9시 이전 '이번주'를 하루 밀리게 함 (use-sales.ts 와 동일 패턴)
+      const pad2 = (n: number) => String(n).padStart(2, '0');
+      const monthStart = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-01`;
+      const weekStartDate = new Date(now);
+      const dow = now.getDay();
+      weekStartDate.setDate(now.getDate() + (dow === 0 ? -6 : 1 - dow)); // Monday
+      const weekStartStr = `${weekStartDate.getFullYear()}-${pad2(weekStartDate.getMonth() + 1)}-${pad2(weekStartDate.getDate())}`;
 
-      const [allRes, draftRes, confirmedRes, shippedRes, settledRes, weekRes, monthRes, unpaidRes] = await Promise.all([
+      const [allRes, draftRes, confirmedRes, shippedRes, settledRes, weekRes, monthRes, unpaidRes, monthRsRes] = await Promise.all([
         db.from('deliveries').select('*', { count: 'exact', head: true }).is('cancelled_at', null),
         db.from('deliveries').select('*', { count: 'exact', head: true }).eq('status', 'draft').is('cancelled_at', null),
         db.from('deliveries').select('*', { count: 'exact', head: true }).eq('status', 'confirmed').is('cancelled_at', null),
@@ -147,10 +150,15 @@ export function useDeliveryStats() {
         db.from('deliveries').select('total_amount, discount_amount').gte('delivery_date', weekStartStr).is('cancelled_at', null),
         db.from('deliveries').select('total_amount, discount_amount').gte('delivery_date', monthStart).is('cancelled_at', null),
         db.from('deliveries').select('total_amount, discount_amount, paid_amount').in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null),
+        // 이번달 복원수리(RS) 납품 항목 — 카드 '제품/복원수리' 분리표기용. monthRes 와 동일 필터로 조인.
+        db.from('delivery_items').select('total_price, deliveries!inner(delivery_date, cancelled_at)').eq('category', 'RS').gt('total_price', 0).gte('deliveries.delivery_date', monthStart).is('deliveries.cancelled_at', null),
       ]);
 
       const sumAmount = (rows: Array<{ total_amount: number; discount_amount?: number }>) =>
         rows.reduce((s, r) => s + (r.total_amount || 0) - (r.discount_amount || 0), 0);
+
+      const monthRepair = ((monthRsRes.data || []) as Array<{ total_price: number }>)
+        .reduce((s, r) => s + (r.total_price || 0), 0);
 
       const unpaidAmount = (unpaidRes.data || []).reduce(
         (s: number, r: { total_amount: number; discount_amount?: number; paid_amount?: number }) =>
@@ -167,6 +175,7 @@ export function useDeliveryStats() {
         weekCount: (weekRes.data || []).length,
         monthAmount: sumAmount(monthRes.data || []),
         monthCount: (monthRes.data || []).length,
+        monthRepair, // 이번달 납품 중 복원수리(RS) 합 — 제품 = monthAmount − monthRepair
         outstanding: unpaidAmount,
       };
     },
