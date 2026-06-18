@@ -73,7 +73,9 @@
   .mm-pc-head button{ width:30px; height:30px; border:0; background:var(--shell); border-radius:8px; font-size:15px; cursor:pointer; }
   .mm-pc-inner{ flex:1; min-height:400px; }
   /* 상단 안내장 캐러셀 (가로 스와이프, 1000×1500=2:3, 자동재생 X) — full-bleed: 폭 끝·상단까지 꽉 */
-  .mm-car-wrap{ margin:-24px -18px 18px; }
+  .mm-car-wrap{ position:relative; margin:-24px -18px 18px; }
+  /* 슬라이드 페이지 카운터 (1/N) — 여러 장·넘기기 신호 */
+  .mm-car-count{ position:absolute; top:14px; right:14px; display:none; background:rgba(26,26,26,.55); color:#fff; font-size:11px; font-weight:700; letter-spacing:.3px; padding:4px 10px; border-radius:999px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); z-index:2; }
   .mm-car{ display:flex; gap:0; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
   .mm-car::-webkit-scrollbar{ display:none; }
   .mm-slide{ flex:0 0 100%; scroll-snap-align:start; }
@@ -119,6 +121,7 @@
 <div class="mm-wrap">
   <!-- 상단 안내장 캐러셀 — icons/event-slide-1~3.png (있는 만큼 자동 표시, 없으면 영역 숨김) -->
   <div class="mm-car-wrap" id="mmCarWrap" style="display:none;">
+    <div class="mm-car-count" id="mmCarCount"></div>
     <div class="mm-car" id="mmCar"></div>
     <div class="mm-car-dots" id="mmCarDots"></div>
   </div>
@@ -226,7 +229,7 @@
 <script>
 /* 상단 안내장 캐러셀 — 존재하는 슬라이드만 순서대로 표시 + 도트 동기화 (자동재생 X) */
 (function(){
-  var track = document.getElementById('mmCar'), dots = document.getElementById('mmCarDots'), wrap = document.getElementById('mmCarWrap');
+  var track = document.getElementById('mmCar'), dots = document.getElementById('mmCarDots'), wrap = document.getElementById('mmCarWrap'), count = document.getElementById('mmCarCount');
   if (!track) return;
   var srcs = ['icons/event-slide-1.png','icons/event-slide-2.png','icons/event-slide-3.png'];
   var exists = new Array(srcs.length).fill(false), done = 0;
@@ -247,10 +250,12 @@
       var d = document.createElement('span'); d.className = 'mm-dot' + (i === 0 ? ' on' : ''); dots.appendChild(d);
     });
     wrap.style.display = 'block';
-    if (ok.length < 2) dots.style.display = 'none';
+    if (ok.length < 2) { dots.style.display = 'none'; }
+    else { count.style.display = 'block'; count.textContent = '1 / ' + ok.length; }
     track.addEventListener('scroll', function(){
-      var idx = Math.round(track.scrollLeft / track.clientWidth);
+      var idx = Math.max(0, Math.min(ok.length - 1, Math.round(track.scrollLeft / track.clientWidth)));
       for (var i = 0; i < dots.children.length; i++) dots.children[i].classList.toggle('on', i === idx);
+      if (ok.length >= 2) count.textContent = (idx + 1) + ' / ' + ok.length;
     }, { passive: true });
   }
 })();
