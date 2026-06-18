@@ -14,9 +14,10 @@ import {
   Save, ShoppingBag, FileSignature, MessageSquare, Wrench,
   Clock, Pencil, X, Truck, Copy,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { TagBadges } from '@/components/shared/tag-selector';
+import { TagBadges, TagSelector } from '@/components/shared/tag-selector';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
+import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
+import { useSetting } from '@/hooks/use-settings';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -48,18 +49,28 @@ const REPAIR_STATUS_LABEL: Record<string, string> = {
 
 interface Props {
   customerId: string;
+  /** 풀페이지(/customers/[id])에서 래퍼로 쓸 때 '상세 페이지' 자기링크 버튼 숨김 */
+  hideDetailLink?: boolean;
 }
 
-export function CustomerDetailPanel({ customerId }: Props) {
+const EMPTY_FORM = {
+  name: '', phone: '', email: '', customer_type: 'retail',
+  activity_name: '', position: '', company_name: '',
+  postcode: '', address_road: '', address_detail: '',
+  outstanding_balance: 0, default_repair_price: 0,
+  tags: [] as string[],
+};
+
+export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
   const router = useRouter();
   const { data, isLoading } = useCustomer(customerId);
   const { data: manualInvoicesData } = useCustomerManualInvoices(customerId);
   const updateCustomer = useUpdateCustomer();
+  const availableTags = useSetting<string[]>('customer.tags', []);
   const [tab, setTab] = useState<'profile' | 'timeline'>('profile');
-  const [editing, setEditing] = useState(false);
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [editActivity, setEditActivity] = useState('');
-  const [editPosition, setEditPosition] = useState('');
+  const [editingMemo, setEditingMemo] = useState(false);
+  const [editingInfo, setEditingInfo] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
   const [showDuplicate, setShowDuplicate] = useState(false);
   const [editMemo, setEditMemo] = useState('');
 
@@ -134,23 +145,48 @@ export function CustomerDetailPanel({ customerId }: Props) {
 
   function startMemoEdit() {
     setEditMemo(c.memo || '');
-    setEditing(true);
+    setEditingMemo(true);
   }
 
   async function saveMemo() {
     await updateCustomer.mutateAsync({ id: customerId, memo: editMemo });
-    setEditing(false);
+    setEditingMemo(false);
   }
 
-  function startProfileEdit() {
-    setEditActivity(c.activity_name || '');
-    setEditPosition(c.position || '');
-    setEditingProfile(true);
+  function startInfoEdit() {
+    setForm({
+      name: c.name,
+      phone: c.phone || '',
+      email: c.email || '',
+      customer_type: c.customer_type || 'retail',
+      activity_name: c.activity_name || '',
+      position: c.position || '',
+      company_name: c.company_name || '',
+      postcode: c.postcode || '',
+      address_road: c.address_road || '',
+      address_detail: c.address_detail || '',
+      outstanding_balance: c.outstanding_balance || 0,
+      default_repair_price: (c as Record<string, unknown>).default_repair_price as number || 0,
+      tags: (c as unknown as { tags?: string[] }).tags || [],
+    });
+    setEditingInfo(true);
   }
-  async function saveProfile() {
-    await updateCustomer.mutateAsync({ id: customerId, activity_name: editActivity.trim() || null, position: editPosition.trim() || null });
-    setEditingProfile(false);
+  async function saveInfo() {
+    await updateCustomer.mutateAsync({
+      id: customerId,
+      ...form,
+      activity_name: form.activity_name.trim() || null,
+      position: form.position.trim() || null,
+    });
+    setEditingInfo(false);
   }
+
+  // RFM 분류 (풀페이지에서 흡수)
+  const lastSaleDate = (summary as Record<string, unknown>).lastSaleDate as string | null;
+  const daysSinceLastSale = lastSaleDate ? Math.floor((Date.now() - new Date(lastSaleDate).getTime()) / (1000 * 60 * 60 * 24)) : 999;
+  const rfmLabel = summary.totalSales >= 3 || summary.totalSalesAmount >= 500000 ? 'VIP'
+    : daysSinceLastSale > 180 ? '휴면' : '일반';
+  const rfmColor = rfmLabel === 'VIP' ? 'bg-amber-100 text-amber-700' : rfmLabel === '휴면' ? 'bg-neutral-200 text-neutral-500' : 'bg-blue-100 text-blue-700';
 
   const tabs = [
     { key: 'profile' as const, label: '프로필' },
@@ -172,10 +208,12 @@ export function CustomerDetailPanel({ customerId }: Props) {
             <Badge className={TYPE_COLOR[c.customer_type] || TYPE_COLOR.retail}>
               {TYPE_OPTIONS.find(t => t.value === c.customer_type)?.label || '일반'}
             </Badge>
+            <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${rfmColor}`}>{rfmLabel}</span>
           </div>
           <p className="text-xs text-neutral-500 mt-0.5">
             {formatPhone(c.phone) || '연락처 없음'}
             {c.company_name && ` · ${c.company_name}`}
+            {daysSinceLastSale < 999 && <span className="text-neutral-400"> · 마지막 거래 {daysSinceLastSale}일 전</span>}
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -183,9 +221,11 @@ export function CustomerDetailPanel({ customerId }: Props) {
             <Copy size={13} />
             복제
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => router.push(`/customers/${customerId}`)}>
-            상세 페이지
-          </Button>
+          {!hideDetailLink && (
+            <Button variant="ghost" size="sm" onClick={() => router.push(`/customers/${customerId}`)}>
+              상세 페이지
+            </Button>
+          )}
         </div>
       </div>
 
@@ -247,76 +287,155 @@ export function CustomerDetailPanel({ customerId }: Props) {
           <Card>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xs font-bold text-stone-900">기본 정보</h3>
-              {!editingProfile ? (
-                <button onClick={startProfileEdit} className="text-neutral-400 hover:text-neutral-600" title="활동명·직급 수정"><Pencil size={14} /></button>
+              {!editingInfo ? (
+                <button onClick={startInfoEdit} className="text-neutral-400 hover:text-neutral-600" title="고객 정보 수정"><Pencil size={14} /></button>
               ) : (
                 <div className="flex gap-1">
-                  <button onClick={() => setEditingProfile(false)} className="text-neutral-400 hover:text-neutral-600"><X size={14} /></button>
-                  <button onClick={saveProfile} disabled={updateCustomer.isPending} className="text-blue-600 hover:text-blue-700"><Save size={14} /></button>
+                  <button onClick={() => setEditingInfo(false)} className="text-neutral-400 hover:text-neutral-600"><X size={14} /></button>
+                  <button onClick={saveInfo} disabled={updateCustomer.isPending} className="text-blue-600 hover:text-blue-700"><Save size={14} /></button>
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-xs text-neutral-500">연락처</span>
-                <p>{formatPhone(c.phone) || '-'}</p>
-              </div>
-              <div>
-                <span className="text-xs text-neutral-500">유형</span>
-                <p>{TYPE_OPTIONS.find(t => t.value === c.customer_type)?.label || '일반'}</p>
-              </div>
-              <div>
-                <span className="text-xs text-neutral-500">활동명 (매장 사용 이름)</span>
-                {editingProfile ? (
-                  <input type="text" value={editActivity} onChange={(e) => setEditActivity(e.target.value)} placeholder="예) 하은"
-                    className="w-full h-8 px-2 mt-0.5 rounded border border-neutral-200 text-sm" autoFocus />
-                ) : <p>{c.activity_name || '-'}</p>}
-              </div>
-              <div>
-                <span className="text-xs text-neutral-500">직급</span>
-                {editingProfile ? (
-                  <input type="text" value={editPosition} onChange={(e) => setEditPosition(e.target.value)} placeholder="예) 원장"
-                    className="w-full h-8 px-2 mt-0.5 rounded border border-neutral-200 text-sm" />
-                ) : <p>{c.position || '-'}</p>}
-              </div>
-              <div>
-                <span className="text-xs text-neutral-500">등록일</span>
-                <p>{formatDate(c.created_at)}</p>
-              </div>
-              <div>
-                <span className="text-xs text-neutral-500">매장명 (근무지)</span>
-                <p>{c.company_name || '-'}</p>
-              </div>
-              <div className="col-span-2">
-                <span className="text-xs text-neutral-500">주소</span>
-                <p>{[c.postcode, c.address_road, c.address_detail].filter(Boolean).join(' ') || '-'}</p>
-              </div>
-              {(c as unknown as { tags?: string[] }).tags && (c as unknown as { tags?: string[] }).tags!.length > 0 && (
-                <div className="col-span-2">
-                  <span className="text-xs text-neutral-500 mb-1 block">태그</span>
-                  <TagBadges tags={(c as unknown as { tags?: string[] }).tags} />
+
+            {editingInfo ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-neutral-500">고객명</label>
+                    <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-neutral-500">연락처</label>
+                    <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-neutral-500">이메일</label>
+                    <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-neutral-500">고객 유형</label>
+                    <select value={form.customer_type} onChange={(e) => setForm({ ...form, customer_type: e.target.value })}
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                      {TYPE_OPTIONS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-neutral-500">활동명 (매장 사용 이름)</label>
+                    <input type="text" value={form.activity_name} onChange={(e) => setForm({ ...form, activity_name: e.target.value })} placeholder="예) 하은"
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-neutral-500">직급</label>
+                    <input type="text" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} placeholder="예) 디자이너"
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                  </div>
                 </div>
-              )}
-              {c.email && (
-                <div className="col-span-2">
-                  <span className="text-xs text-neutral-400">이메일</span>
-                  <p className="text-neutral-500 text-xs">{c.email}</p>
+                <div>
+                  <label className="text-xs text-neutral-500">매장명 (근무지)</label>
+                  <input type="text" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} placeholder="매장 또는 근무지명"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
-              )}
-            </div>
+                <div>
+                  <label className="text-xs text-neutral-500">주소</label>
+                  <div className="flex gap-2 mb-2">
+                    <input type="text" value={form.postcode} readOnly placeholder="우편번호"
+                      className="w-24 h-9 px-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm text-neutral-600" />
+                    <DaumPostcodeButton onSelected={(d) => setForm((prev) => ({ ...prev, postcode: d.zonecode, address_road: d.roadAddress }))}>
+                      주소검색
+                    </DaumPostcodeButton>
+                  </div>
+                  <input type="text" value={form.address_road} readOnly placeholder="도로명 주소"
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-neutral-50 text-sm text-neutral-600" />
+                  <input type="text" value={form.address_detail} onChange={(e) => setForm({ ...form, address_detail: e.target.value })} placeholder="상세 주소 (동/호수)"
+                    className="w-full h-9 px-3 mt-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                </div>
+                {availableTags.length > 0 && (
+                  <div>
+                    <label className="text-xs text-neutral-500 mb-1 block">태그</label>
+                    <TagSelector availableTags={availableTags} selectedTags={form.tags} onChange={(tags) => setForm({ ...form, tags })} />
+                  </div>
+                )}
+                <div>
+                  <label className="text-xs text-neutral-500">미수금</label>
+                  <input type="number" value={form.outstanding_balance || ''} onChange={(e) => setForm({ ...form, outstanding_balance: parseInt(e.target.value) || 0 })}
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                </div>
+                {(form.customer_type === 'dealer' || form.customer_type === 'academy') && (
+                  <div>
+                    <label className="text-xs text-neutral-500">복원수리 기본 단가 (자루당)</label>
+                    <input type="number" value={form.default_repair_price || ''} onChange={(e) => setForm({ ...form, default_repair_price: parseInt(e.target.value) || 0 })}
+                      placeholder="예: 8000 — 납품 복원수리 입력 시 자동 적용"
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                    <p className="text-[10px] text-neutral-400 mt-1">납품 → 복원수리 입력 시 이 단가가 자동으로 채워집니다 (비워두면 기본 8,000원)</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-xs text-neutral-500">연락처</span>
+                  <p>{formatPhone(c.phone) || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-500">유형</span>
+                  <p>{TYPE_OPTIONS.find(t => t.value === c.customer_type)?.label || '일반'}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-500">활동명 (매장 사용 이름)</span>
+                  <p>{c.activity_name || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-500">직급</span>
+                  <p>{c.position || '-'}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-500">등록일</span>
+                  <p>{formatDate(c.created_at)}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-500">매장명 (근무지)</span>
+                  <p>{c.company_name || '-'}</p>
+                </div>
+                {(c.customer_type === 'dealer' || c.customer_type === 'academy') && (
+                  <div>
+                    <span className="text-xs text-neutral-500">복원수리 기본 단가</span>
+                    <p>{(c as Record<string, unknown>).default_repair_price ? `${formatKRW((c as Record<string, unknown>).default_repair_price as number)} / 자루` : <span className="text-neutral-400">미설정 (기본 8,000원)</span>}</p>
+                  </div>
+                )}
+                <div className="col-span-2">
+                  <span className="text-xs text-neutral-500">주소</span>
+                  <p>{[c.postcode, c.address_road, c.address_detail].filter(Boolean).join(' ') || '-'}</p>
+                </div>
+                {(c as unknown as { tags?: string[] }).tags && (c as unknown as { tags?: string[] }).tags!.length > 0 && (
+                  <div className="col-span-2">
+                    <span className="text-xs text-neutral-500 mb-1 block">태그</span>
+                    <TagBadges tags={(c as unknown as { tags?: string[] }).tags} />
+                  </div>
+                )}
+                {c.email && (
+                  <div className="col-span-2">
+                    <span className="text-xs text-neutral-400">이메일</span>
+                    <p className="text-neutral-500 text-xs">{c.email}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </Card>
 
           {/* 메모 */}
           <Card>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xs font-bold text-stone-900">메모</h3>
-              {!editing ? (
+              {!editingMemo ? (
                 <button onClick={startMemoEdit} className="text-neutral-400 hover:text-neutral-600">
                   <Pencil size={14} />
                 </button>
               ) : (
                 <div className="flex gap-1">
-                  <button onClick={() => setEditing(false)} className="text-neutral-400 hover:text-neutral-600">
+                  <button onClick={() => setEditingMemo(false)} className="text-neutral-400 hover:text-neutral-600">
                     <X size={14} />
                   </button>
                   <button onClick={saveMemo} disabled={updateCustomer.isPending}
@@ -326,7 +445,7 @@ export function CustomerDetailPanel({ customerId }: Props) {
                 </div>
               )}
             </div>
-            {editing ? (
+            {editingMemo ? (
               <textarea
                 value={editMemo}
                 onChange={(e) => setEditMemo(e.target.value)}
