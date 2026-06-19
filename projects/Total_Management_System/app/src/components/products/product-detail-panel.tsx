@@ -164,7 +164,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       product_group: form.product_group || null,
       purchase_name: form.purchase_name || null,
       ...(form.category === 'EVENT'
-        ? { tags: { campaign_id: eventTags.campaign_id || null, hand: eventTags.hand, event_type: eventTags.event_type, spec: eventTags.event_type === 'dry' ? '' : eventTags.spec.trim(), dry_subtype: eventTags.event_type === 'dry' ? eventTags.dry_subtype : '' } }
+        ? { tags: { campaign_id: eventTags.campaign_id || null, hand: eventTags.hand, event_type: eventTags.event_type, spec: eventTags.spec.trim(), dry_subtype: eventTags.event_type === 'dry' ? eventTags.dry_subtype : '' } }
         : {}),
     });
     setEditing(false);
@@ -188,7 +188,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       supplier_id: form.supplier_id || undefined,
       purchase_name: form.purchase_name.trim() || undefined,
       ...(form.category === 'EVENT'
-        ? { tags: { campaign_id: eventTags.campaign_id || null, hand: eventTags.hand, event_type: eventTags.event_type, spec: eventTags.event_type === 'dry' ? '' : eventTags.spec.trim(), dry_subtype: eventTags.event_type === 'dry' ? eventTags.dry_subtype : '' } }
+        ? { tags: { campaign_id: eventTags.campaign_id || null, hand: eventTags.hand, event_type: eventTags.event_type, spec: eventTags.spec.trim(), dry_subtype: eventTags.event_type === 'dry' ? eventTags.dry_subtype : '' } }
         : {}),
     });
     if (result?.product?.id && onCreated) onCreated(result.product.id);
@@ -226,20 +226,22 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
           </select>
         </div>
         <div>
-          <label className="text-xs text-neutral-500">{eventTags.event_type === 'dry' ? 'DRY 형태' : '옵션(spec)'}</label>
-          {eventTags.event_type === 'dry' ? (
+          <label className="text-xs text-neutral-500">옵션(spec)</label>
+          <input type="text" value={eventTags.spec} onChange={(e) => setEventTags({ ...eventTags, spec: e.target.value })}
+            placeholder={eventTags.event_type === 'thinning' ? '예: 20-30%' : eventTags.event_type === 'dry' ? '예: 5.5인치 (비우면 형태명 표시)' : '예: 5.5인치'}
+            className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+        </div>
+        {eventTags.event_type === 'dry' && (
+          <div>
+            <label className="text-xs text-neutral-500">DRY 형태</label>
             <select value={eventTags.dry_subtype} onChange={(e) => setEventTags({ ...eventTags, dry_subtype: e.target.value })}
               className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
               <option value="stroke">스트록 (슬라이싱 가공 추가 가능)</option>
               <option value="slicing">슬라이싱 (가공 완료)</option>
               <option value="curve">커브</option>
             </select>
-          ) : (
-            <input type="text" value={eventTags.spec} onChange={(e) => setEventTags({ ...eventTags, spec: e.target.value })}
-              placeholder={eventTags.event_type === 'thinning' ? '예: 20-30%' : '예: 5.5인치'}
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -379,7 +379,7 @@
     // 슬라이싱 가공 추가 체크란은 'DRY 스트록'에만 (슬라이싱·커브는 미표시)
     var isDryStroke = (p.event_type==='dry') && (p.dry_subtype==='stroke');
     var qty=1, slicing=false;
-    var specTxt = (p.event_type==='dry') ? (DRY_LABEL[p.dry_subtype]||'DRY') : (p.spec||p.name||'');
+    var specTxt = (p.event_type==='dry') ? (p.spec || DRY_LABEL[p.dry_subtype] || 'DRY') : (p.spec||p.name||'');
     var spec=document.createElement('div'); spec.className='mm-pcard__spec'; spec.textContent=specTxt;
     var price=document.createElement('div'); price.className='mm-pcard__price'; price.textContent=won(p.price);
     var stock=document.createElement('span'); stock.className='mm-stock mm-stock--'+(p.stock_tone||'ok'); stock.textContent=p.stock_text||'';
