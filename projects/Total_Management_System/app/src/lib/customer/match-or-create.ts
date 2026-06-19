@@ -46,17 +46,35 @@ export async function matchOrCreateCustomer(
   const phoneNorm = (input.phone || '').replace(/\D/g, '');
   if (!phoneNorm) return { customerId: null, isNew: false };
 
-  // 1) 기존 매칭 시도 — 가장 오래된 customer (deterministic)
-  const { data: existing, error: searchErr } = await db
+  // 1) 기존 매칭 시도 — 활성(비병합) 고객 우선, 가장 오래된 것 (deterministic)
+  //    병합으로 숨긴 고객을 잡으면 새 접수가 숨긴 레코드에 붙어버리므로 merged_into_id IS NULL 만 매칭
+  let existing: Array<{ id: string }> | null = null;
+  const { data: active, error: searchErr } = await db
     .from('customers')
     .select('id')
     .eq('phone_normalized', phoneNorm)
+    .is('merged_into_id', null)
     .order('created_at', { ascending: true })
     .limit(1);
 
   if (searchErr) {
     console.error('[matchOrCreateCustomer] 검색 실패:', searchErr);
     return { customerId: null, isNew: false };
+  }
+  existing = active;
+
+  // 활성 고객이 없고 병합된 레코드만 있으면 → 그 주 고객(merged_into_id)으로 연결
+  if (!existing || existing.length === 0) {
+    const { data: merged } = await db
+      .from('customers')
+      .select('merged_into_id')
+      .eq('phone_normalized', phoneNorm)
+      .not('merged_into_id', 'is', null)
+      .order('created_at', { ascending: true })
+      .limit(1);
+    if (merged && merged.length > 0 && merged[0].merged_into_id) {
+      existing = [{ id: merged[0].merged_into_id as string }];
+    }
   }
 
   const activityName = input.extra?.activityName?.trim() || null;
