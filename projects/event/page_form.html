@@ -90,9 +90,12 @@
   .mm-chip[aria-pressed="true"] .mm-ico-x{ border-color:rgba(255,255,255,.4); color:rgba(255,255,255,.7); }
   /* 선택(검정 배경) 시 손 아이콘 흰색 반전 */
   .mm-chip[aria-pressed="true"] .mm-chip__ico{ filter: brightness(0) invert(1); }
-  .mm-catgroup__h{ display:flex; align-items:center; gap:8px; }
-  .mm-cat-ico{ width:22px; height:22px; object-fit:contain; }
-  .mm-cat-ico-x{ width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:1.5px dashed var(--line); border-radius:6px; color:#C9C5C0; font-size:11px; }
+  .mm-catgroup__h{ display:flex; align-items:center; gap:9px; }
+  .mm-cat-ico{ width:28px; height:28px; object-fit:contain; }
+  .mm-cat-ico-x{ width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1.5px dashed var(--line); border-radius:6px; color:#C9C5C0; font-size:11px; }
+  /* 분류명 2배 확대 + 우측 단위 표기(인치/감모량) — 카드별 단위 반복 제거 */
+  .mm-catgroup__name{ font-size:28px; line-height:1.1; }
+  .mm-catgroup__unit{ margin-left:auto; font-size:12px; font-weight:600; color:#9A948C; white-space:nowrap; }
   /* 카탈로그 — 종류별 섹션 + 카드(spec 상단 / 가격칩 하단) */
   .mm-catgroup{ margin-top:20px; }
   .mm-catgroup__h{ font-size:14px; font-weight:800; color:var(--void); margin-bottom:10px; padding-bottom:7px; border-bottom:1.5px solid var(--void); }
@@ -361,8 +364,10 @@
       var h=document.createElement('div'); h.className='mm-catgroup__h';
       var ico=document.createElement('img'); ico.className='mm-cat-ico'; ico.src='icons/cat-'+cat.k+'.svg'; ico.alt='';
       ico.onerror=function(){ var x=document.createElement('span'); x.className='mm-cat-ico-x'; x.textContent='✕'; ico.replaceWith(x); };
-      var hl=document.createElement('span'); hl.textContent=cat.l;
-      h.appendChild(ico); h.appendChild(hl); g.appendChild(h);
+      var hl=document.createElement('span'); hl.className='mm-catgroup__name'; hl.textContent=cat.l;
+      var unit=document.createElement('span'); unit.className='mm-catgroup__unit';
+      unit.textContent=(cat.k==='thinning')?'감모량으로 표기':'인치로 표기';
+      h.appendChild(ico); h.appendChild(hl); h.appendChild(unit); g.appendChild(h);
       var grid=document.createElement('div'); grid.className='mm-grid';
       inCat.forEach(function(p){ grid.appendChild(productCard(p)); });
       g.appendChild(grid); box.appendChild(g);
