@@ -600,7 +600,7 @@ const SaleRow = memo(function SaleRow({ sale, selected, onClick, prepMode, check
         <div className="flex items-center gap-2 shrink-0">
           {dot && <span className={`w-2 h-2 rounded-full ${dot.color}`} title={dot.title} />}
           <span className={`text-sm font-bold ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>
-            {formatKRW(sale.total_amount)}
+            {formatKRW((sale.total_amount || 0) - (sale.discount_amount || 0))}
           </span>
         </div>
       </div>
