@@ -380,7 +380,9 @@
     var isDryStroke = (p.event_type==='dry') && (p.dry_subtype==='stroke');
     var qty=1, slicing=false;
     var specTxt = (p.event_type==='dry') ? (p.spec || DRY_LABEL[p.dry_subtype] || 'DRY') : (p.spec||p.name||'');
-    var spec=document.createElement('div'); spec.className='mm-pcard__spec'; spec.textContent=specTxt;
+    // 옵션값에 '|' 또는 줄바꿈 넣으면 카드에서 줄바꿈 표시 (예: "슬라이싱|5.8 - 6.0 인치")
+    var spec=document.createElement('div'); spec.className='mm-pcard__spec';
+    spec.innerHTML=specTxt.split(/[|\n]/).map(function(s){return esc(s.trim());}).filter(Boolean).join('<br>');
     var price=document.createElement('div'); price.className='mm-pcard__price'; price.textContent=won(p.price);
     var stock=document.createElement('span'); stock.className='mm-stock mm-stock--'+(p.stock_tone||'ok'); stock.textContent=p.stock_text||'';
     card.appendChild(spec); card.appendChild(price); card.appendChild(stock);
