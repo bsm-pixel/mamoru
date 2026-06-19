@@ -475,18 +475,21 @@
   }
   function openPostcode(){
     loadDaum(function(){
+      // 레이어 먼저 표시(컨테이너 크기 확보) → display:none 상태에서 embed하면 iframe이 0높이로 빈 채 렌더됨
       $('pcInner').innerHTML='';
-      new daum.Postcode({
-        oncomplete:function(d){
-          $('postcode').value = d.zonecode || '';
-          $('address1').value = d.roadAddress || d.jibunAddress || '';
-          var a2=$('address2'); a2.disabled=false; a2.placeholder='상세 주소 (동·호수 등)';
-          $('pcLayer').classList.remove('on');
-          a2.focus();
-        },
-        width:'100%', height:'100%'
-      }).embed($('pcInner'));
       $('pcLayer').classList.add('on');
+      requestAnimationFrame(function(){
+        new daum.Postcode({
+          oncomplete:function(d){
+            $('postcode').value = d.zonecode || '';
+            $('address1').value = d.roadAddress || d.jibunAddress || '';
+            var a2=$('address2'); a2.disabled=false; a2.placeholder='상세 주소 (동·호수 등)';
+            $('pcLayer').classList.remove('on');
+            a2.focus();
+          },
+          width:'100%', height:'100%'
+        }).embed($('pcInner'));
+      });
     });
   }
   $('addrSearchBtn').onclick=openPostcode;
