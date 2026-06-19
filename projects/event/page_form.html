@@ -12,11 +12,12 @@
   .mm-wrap{ max-width:560px; margin:0 auto; padding:24px 18px 120px; }
   .mm-head{ text-align:center; padding:8px 0 18px; }
   .mm-head__kicker{ font-size:11px; letter-spacing:.18em; color:var(--gray); text-transform:uppercase; }
-  .mm-head__title{ font-size:24px; font-weight:800; color:var(--void); margin-top:6px; letter-spacing:-.02em; }
+  .mm-head__title{ font-size:27px; font-weight:800; color:var(--void); margin-top:6px; letter-spacing:-.02em; }
   .mm-head__sub{ font-size:13px; color:var(--gray); margin-top:8px; }
-  .mm-sec{ margin-top:22px; }
-  .mm-sec__label{ font-size:12px; font-weight:700; color:var(--void); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
-  .mm-sec__label small{ font-weight:500; color:var(--gray); }
+  .mm-sec{ margin-top:28px; }
+  .mm-sec__label{ font-size:15px; font-weight:800; color:var(--void); margin-bottom:12px; display:flex; align-items:center; gap:8px; letter-spacing:-.01em; }
+  .mm-sec__label::before{ content:''; width:3px; height:15px; border-radius:2px; background:var(--void); flex:0 0 auto; }
+  .mm-sec__label small{ font-weight:500; color:var(--gray); font-size:12px; }
   .mm-chips{ display:flex; flex-wrap:wrap; gap:8px; }
   .mm-chip{ flex:1 1 auto; min-width:72px; text-align:center; padding:11px 10px; border:1px solid var(--line); border-radius:12px; background:#fff; font-size:13px; font-weight:600; color:var(--ink); cursor:pointer; transition:.15s; }
   .mm-chip[aria-pressed="true"]{ background:var(--void); color:#fff; border-color:var(--void); }
@@ -91,18 +92,18 @@
   /* 선택(검정 배경) 시 손 아이콘 흰색 반전 */
   .mm-chip[aria-pressed="true"] .mm-chip__ico{ filter: brightness(0) invert(1); }
   .mm-catgroup__h{ display:flex; align-items:center; gap:9px; }
-  .mm-cat-ico{ width:28px; height:28px; object-fit:contain; }
-  .mm-cat-ico-x{ width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1.5px dashed var(--line); border-radius:6px; color:#C9C5C0; font-size:11px; }
-  /* 분류명 2배 확대 + 우측 단위 표기(인치/감모량) — 카드별 단위 반복 제거 */
-  .mm-catgroup__name{ font-size:28px; line-height:1.1; }
+  .mm-cat-ico{ width:24px; height:24px; object-fit:contain; }
+  .mm-cat-ico-x{ width:24px; height:24px; display:flex; align-items:center; justify-content:center; border:1.5px dashed var(--line); border-radius:6px; color:#C9C5C0; font-size:11px; }
+  /* 분류명 — 단위(인치/감모량)는 우측, 카드별 단위 반복 제거. 페이지 제목보다 작게(위계) */
+  .mm-catgroup__name{ font-size:19px; font-weight:800; line-height:1.1; }
   .mm-catgroup__unit{ margin-left:auto; font-size:12px; font-weight:600; color:#9A948C; white-space:nowrap; }
   /* 카탈로그 — 종류별 섹션 + 카드(spec 상단 / 가격칩 하단) */
-  .mm-catgroup{ margin-top:20px; }
-  .mm-catgroup__h{ font-size:14px; font-weight:800; color:var(--void); margin-bottom:10px; padding-bottom:7px; border-bottom:1.5px solid var(--void); }
+  .mm-catgroup{ margin-top:22px; }
+  .mm-catgroup__h{ color:var(--void); margin-bottom:12px; padding-bottom:8px; border-bottom:1.5px solid var(--void); }
   .mm-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
   @media(min-width:460px){ .mm-grid{ grid-template-columns:repeat(3,1fr); } }
   .mm-pcard{ border:1px solid var(--line); border-radius:16px; background:#fff; padding:14px 10px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:8px; }
-  .mm-pcard__spec{ font-size:15px; font-weight:800; color:var(--void); line-height:1.2; }
+  .mm-pcard__spec{ font-size:16px; font-weight:800; color:var(--void); line-height:1.25; min-height:40px; display:flex; align-items:center; justify-content:center; text-align:center; }
   .mm-pcard__price{ font-size:13px; font-weight:800; color:var(--void); background:#fff; border:1.5px solid var(--void); border-radius:999px; padding:5px 14px; }
   /* 가격대별 은은한 톤 (저→고: 세이지→블루→라벤더, 부정색 X) */
   .mm-pcard--t1{ background:#F2F6F3; border-color:#DCE8E0; }
@@ -158,6 +159,7 @@
 
   <!-- 카탈로그 (종류별 섹션 + 카드) -->
   <div class="mm-sec mm-hide" id="catalogSec">
+    <div class="mm-sec__label">3. 품목 선택 <small>원하는 가위를 담아주세요</small></div>
     <div id="catalog"></div>
   </div>
 
