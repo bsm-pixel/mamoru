@@ -14,7 +14,7 @@
 | `전후영상1.mp4` | page_guide.html | **Before & After**(결과 영상) 1번 | `[VIDEO] 전후영상 1` |
 | `전후영상2.mp4` | page_guide.html | **Before & After**(결과 영상) 2번 | `[VIDEO] 전후영상 2` |
 | `전후영상3.mp4` | page_guide.html | **Before & After**(결과 영상) 3번 | `[VIDEO] 전후영상 3` |
-| `전후영상6.mp4` | page_guide.html | **Before & After**(결과 영상, "복원수리 후 모발테스트") | `[VIDEO] 전후영상 6` |
+| `전후영상6.mp4` | page_guide.html | **PREVIEW** 작업영상1 슬롯("복원수리 후 모발테스트") | `[VIDEO] 작업영상 1` |
 | (없음) 전후영상4 | page_guide.html | Before & After 4번 = **"영상 준비중" placeholder** | `[VIDEO] 전후영상 4` |
 | (없음) 전후영상5 | page_guide.html | Before & After 5번 = **"영상 준비중" placeholder** | `[VIDEO] 전후영상 5` |
 | (없음) 작업영상1~3 | page_guide.html | **PREVIEW**(작업 과정 클립) = **"영상 준비중" placeholder** | `[VIDEO] 작업영상 1~3` |
