@@ -1887,27 +1887,57 @@ img[src=""], video[src=""] {
 
     <div class="intro-divider"></div>
 
-    <!-- ⑤ 전후 영상 — 결과 증거 -->
+    <!-- ⑤ PREVIEW — 작업 과정 클립 (작업중인 영상 부분부분, 결과 아닌 과정 티저) -->
+    <!-- 영상 채우기: videos/작업영상N.mp4 넣고 아래 "영상 준비중" div를
+         <video autoplay muted loop playsinline src="videos/작업영상N.mp4"></video> 로 교체 -->
     <div class="as-before-after">
       <h3 class="as-before-after-title">PREVIEW</h3>
       <div class="as-slider-container">
+        <div class="as-slider">
+          <!-- [VIDEO] 작업영상 1 -->
+          <div class="as-slide-item">
+            <div style="width:100%;aspect-ratio:4/3;background:var(--graphite);display:flex;align-items:center;justify-content:center;color:var(--mist);font-size:12px;">영상 준비중</div>
+            <p class="as-slide-label">작업 과정 1</p>
+          </div>
+          <!-- [VIDEO] 작업영상 2 -->
+          <div class="as-slide-item">
+            <div style="width:100%;aspect-ratio:4/3;background:var(--graphite);display:flex;align-items:center;justify-content:center;color:var(--mist);font-size:12px;">영상 준비중</div>
+            <p class="as-slide-label">작업 과정 2</p>
+          </div>
+          <!-- [VIDEO] 작업영상 3 -->
+          <div class="as-slide-item">
+            <div style="width:100%;aspect-ratio:4/3;background:var(--graphite);display:flex;align-items:center;justify-content:center;color:var(--mist);font-size:12px;">영상 준비중</div>
+            <p class="as-slide-label">작업 과정 3</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="intro-divider"></div>
+
+    <!-- ⑥ Before & After — 결과 증거(영상 + 사진) 통합 -->
+    <div class="intro-before-after">
+      <p class="intro-before-after-title">Before &amp; After</p>
+
+      <!-- 결과 영상 (전후영상) — PREVIEW에서 이동, 사진 비포/애프터 위 -->
+      <div class="as-slider-container" style="margin-bottom:20px;">
         <div class="as-slider">
           <!-- [VIDEO] 전후영상 1 -->
           <div class="as-slide-item">
             <video autoplay muted loop playsinline src="videos/전후영상1.mp4"></video>
             <p class="as-slide-label">틴닝 날각 복원</p>
           </div>
-          <!-- [VIDEO] 전후영상 2 — MP4 추가 후 src 교체 -->
+          <!-- [VIDEO] 전후영상 2 -->
           <div class="as-slide-item">
             <video autoplay muted loop playsinline src="videos/전후영상2.mp4"></video>
             <p class="as-slide-label">블런트 날각 복원</p>
           </div>
-          <!-- [VIDEO] 전후영상 6 — MP4 추가 후 src 교체 -->
+          <!-- [VIDEO] 전후영상 6 -->
           <div class="as-slide-item">
             <video autoplay muted loop playsinline src="videos/전후영상6.mp4"></video>
             <p class="as-slide-label">복원수리 후 모발테스트</p>
           </div>
-          <!-- [VIDEO] 전후영상 3 — MP4 추가 후 src 교체 -->
+          <!-- [VIDEO] 전후영상 3 -->
           <div class="as-slide-item">
             <video autoplay muted loop playsinline src="videos/전후영상3.mp4"></video>
             <p class="as-slide-label">날각 복원</p>
@@ -1924,13 +1954,7 @@ img[src=""], video[src=""] {
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="intro-divider"></div>
-
-    <!-- ⑥ Before & After -->
-    <div class="intro-before-after">
-      <p class="intro-before-after-title">Before &amp; After</p>
       <div class="intro-ba-wrapper">
         <div class="intro-ba-nav">
           <button class="intro-ba-nav-btn intro-ba-nav-prev" id="baPrev" aria-label="이전" disabled>&#8249;</button>

@@ -11,13 +11,16 @@
 | 파일 | 쓰이는 페이지 | 위치(섹션) | 코드 마커 |
 |------|--------------|-----------|-----------|
 | `복원수리안내히어로영상.mp4` | page_guide.html | 최상단 히어로(자동재생 루프) | `[VIDEO] 히어로 영상` |
-| `전후영상1.mp4` | page_guide.html | ⑤ 전후 영상 그리드 1번 | `[VIDEO] 전후영상 1` |
-| `전후영상2.mp4` | page_guide.html | ⑤ 전후 영상 그리드 2번 | `[VIDEO] 전후영상 2` |
-| `전후영상3.mp4` | page_guide.html | ⑤ 전후 영상 그리드 3번 | `[VIDEO] 전후영상 3` |
-| `전후영상6.mp4` | page_guide.html | ⑤ 전후 영상 그리드 (2·3번 사이, "복원수리 후 모발테스트") | `[VIDEO] 전후영상 6` |
-| (없음) 전후영상4 | page_guide.html | ⑤ 전후 4번 = **"영상 준비중" placeholder** | `[VIDEO] 전후영상 4` |
-| (없음) 전후영상5 | page_guide.html | ⑤ 전후 5번 = **"영상 준비중" placeholder** | `[VIDEO] 전후영상 5` |
+| `전후영상1.mp4` | page_guide.html | **Before & After**(결과 영상) 1번 | `[VIDEO] 전후영상 1` |
+| `전후영상2.mp4` | page_guide.html | **Before & After**(결과 영상) 2번 | `[VIDEO] 전후영상 2` |
+| `전후영상3.mp4` | page_guide.html | **Before & After**(결과 영상) 3번 | `[VIDEO] 전후영상 3` |
+| `전후영상6.mp4` | page_guide.html | **Before & After**(결과 영상, "복원수리 후 모발테스트") | `[VIDEO] 전후영상 6` |
+| (없음) 전후영상4 | page_guide.html | Before & After 4번 = **"영상 준비중" placeholder** | `[VIDEO] 전후영상 4` |
+| (없음) 전후영상5 | page_guide.html | Before & After 5번 = **"영상 준비중" placeholder** | `[VIDEO] 전후영상 5` |
+| (없음) 작업영상1~3 | page_guide.html | **PREVIEW**(작업 과정 클립) = **"영상 준비중" placeholder** | `[VIDEO] 작업영상 1~3` |
 | `고무줄.mp4` | page_guide.html · page_as_guide.html | 포장 안내 Step 1(고무줄 고정, 강조) | `[VIDEO] 포장 Step 1 고무줄` |
+
+> **구조(2026-06-20 개편)**: **PREVIEW = 작업 과정 클립**(과정 티저, `작업영상N.mp4`) / **Before & After = 결과 증거**(전후 영상 + 전후 사진 통합).
 
 > page_guide.html(아임웹 삽입용 메인)과 page_as_guide.html(별도 안내)이 **같은 videos/ 폴더 공유**.
 
