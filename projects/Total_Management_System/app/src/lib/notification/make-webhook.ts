@@ -187,12 +187,9 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     urlSource = 'webhook_consultation';
   }
 
-  if (!webhookUrl) {
-    console.warn(`[make-webhook] SKIP template=${payload.template} — ${urlSource} 미설정 (DB·환경변수 모두 비어있음)`);
-    return { success: false, error: `${urlSource} 미설정` };
-  }
-
   // 관리자 푸시 알림 — 웹훅과 무관하게 독립 발송
+  // ⚠️ 반드시 webhookUrl early-return '위'에 둔다 — 고객 알림톡 웹훅이 미설정이어도
+  //    사장님 앱 푸시(복원수리 접수 등)는 무조건 울려야 하므로 (2026-06-20 fix)
   const PUSH_CONFIG: Record<string, { title: string; body: string; url: string; settingKey: string }> = {
     confirmed: { title: '새 상담 접수', body: `${payload.name}님 상담 접수`, url: '/consultations', settingKey: 'push.consultation_received' },
     as_received: { title: '새 복원수리 접수', body: `${payload.name}님 복원수리 접수`, url: '/repairs', settingKey: 'push.repair_received' },
@@ -218,6 +215,12 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
         settingKey: cfg.settingKey,
       }).catch(() => {});
     }).catch(() => {});
+  }
+
+  // 고객 알림톡 웹훅 미설정이면 여기서 종료 (위 관리자 푸시는 이미 발송됨)
+  if (!webhookUrl) {
+    console.warn(`[make-webhook] SKIP 알림톡 template=${payload.template} — ${urlSource} 미설정 (관리자 푸시는 발송됨)`);
+    return { success: false, error: `${urlSource} 미설정` };
   }
 
   const event = TEMPLATE_EVENT_MAP[payload.template] || payload.template.toUpperCase();
