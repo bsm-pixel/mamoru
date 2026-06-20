@@ -18,7 +18,8 @@
 | (없음) 전후영상4 | page_guide.html | Before & After 4번 = **"영상 준비중" placeholder** | `[VIDEO] 전후영상 4` |
 | (없음) 전후영상5 | page_guide.html | Before & After 5번 = **"영상 준비중" placeholder** | `[VIDEO] 전후영상 5` |
 | `날등교정.mp4` | page_guide.html | **PREVIEW** 작업영상2("왼손가위 날등교정") | `[VIDEO] 작업영상 2` |
-| (없음) 작업영상3·4 | page_guide.html | **PREVIEW**(작업 과정 클립) = **"영상 준비중" placeholder** | `[VIDEO] 작업영상 3·4` |
+| `작업과정3.mp4` | page_guide.html | **PREVIEW** 작업영상3("복원수리 후 모발테스트_틴닝") | `[VIDEO] 작업영상 3` |
+| (없음) 작업영상4·5 | page_guide.html | **PREVIEW**(작업 과정 클립) = **"영상 준비중" placeholder** | `[VIDEO] 작업영상 4·5` |
 | `고무줄.mp4` | page_guide.html · page_as_guide.html | 포장 안내 Step 1(고무줄 고정, 강조) | `[VIDEO] 포장 Step 1 고무줄` |
 
 > **구조(2026-06-20 개편)**: **PREVIEW = 작업 과정 클립**(과정 티저, `작업영상N.mp4`) / **Before & After = 결과 증거**(전후 영상 + 전후 사진 통합).
