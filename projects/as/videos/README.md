@@ -14,6 +14,7 @@
 | `전후영상1.mp4` | page_guide.html | ⑤ 전후 영상 그리드 1번 | `[VIDEO] 전후영상 1` |
 | `전후영상2.mp4` | page_guide.html | ⑤ 전후 영상 그리드 2번 | `[VIDEO] 전후영상 2` |
 | `전후영상3.mp4` | page_guide.html | ⑤ 전후 영상 그리드 3번 | `[VIDEO] 전후영상 3` |
+| `전후영상6.mp4` | page_guide.html | ⑤ 전후 영상 그리드 (2·3번 사이, "복원수리 후 모발테스트") | `[VIDEO] 전후영상 6` |
 | (없음) 전후영상4 | page_guide.html | ⑤ 전후 4번 = **"영상 준비중" placeholder** | `[VIDEO] 전후영상 4` |
 | (없음) 전후영상5 | page_guide.html | ⑤ 전후 5번 = **"영상 준비중" placeholder** | `[VIDEO] 전후영상 5` |
 | `고무줄.mp4` | page_guide.html · page_as_guide.html | 포장 안내 Step 1(고무줄 고정, 강조) | `[VIDEO] 포장 Step 1 고무줄` |
