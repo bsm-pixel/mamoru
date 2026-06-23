@@ -667,9 +667,22 @@ img[src=""], video[src=""] {
 
 /* 고집과 신념 — 수냉식 어필 블록 */
 .intro-belief {
+  position: relative;        /* 배경 이미지 레이어 기준 */
+  overflow: hidden;
   text-align: center;
-  padding: 0 24px;
+  padding: 56px 24px;        /* 배경 들어가므로 상하 여백 부여 */
+  border-radius: 16px;
 }
+/* 배경 사진 레이어 — 밝기는 filter: brightness() 값만 조절 (0=검정 ~ 1=원본) */
+.intro-belief__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.45);  /* ← 여기 숫자로 밝기 조절 (낮을수록 어둡고 글씨 잘보임) */
+  z-index: 0;
+}
+.intro-belief__inner { position: relative; z-index: 1; }
 .intro-belief-title {
   font-size: 18px;
   font-weight: 700;
@@ -677,6 +690,7 @@ img[src=""], video[src=""] {
   letter-spacing: -0.02em;
   margin-bottom: 16px;
   line-height: 1.45;
+  text-shadow: 0 1px 10px rgba(0,0,0,.78);   /* 배경 위에서도 글씨 보이게 */
 }
 .intro-belief-desc {
   font-size: 13px;
@@ -684,12 +698,14 @@ img[src=""], video[src=""] {
   line-height: 1.8;
   max-width: 340px;
   margin: 0 auto 20px;
+  text-shadow: 0 1px 8px rgba(0,0,0,.72);
 }
 .intro-belief-closing {
   font-size: 15px;
   font-weight: 600;
   color: var(--cream);
   letter-spacing: -0.01em;
+  text-shadow: 0 1px 10px rgba(0,0,0,.78);
 }
 
 /* 대표 서명 + 사진 */
@@ -2037,9 +2053,14 @@ img[src=""], video[src=""] {
 
     <!-- ⑦ 고집과 신념 — 수냉식 기법 어필 -->
     <div class="intro-belief">
-      <h3 class="intro-belief-title">수냉식 복원수리 <br>: 고집과 신념</h3>
-      <p class="intro-belief-desc">가위에 치명적인 고열발생 및 날 변형을 완벽 차단합니다.<br>거칠지않은 굉장히 고운 가공면을 사용하며, 정밀한 기술력은 가위의 내구성까지 극대화합니다. 단순 수리가 아닌,<br>실제 제작단계의 마무리를 구현합니다</p>
-      <p class="intro-belief-closing">잠깐의 불편해결에 복원이란 말은 어울리지 않습니다<br>오래 쓰실 가위를 위한 복원입니다</p>
+      <!-- 배경 사진: projects/as/images/ 에 수냉식.jpg 드롭하면 자동 표시 (또는 url 안을 CDN 주소로 교체)
+           밝기 조절: 위 CSS .intro-belief__bg { filter: brightness(0.45) } 숫자만 변경 (0=검정~1=원본) -->
+      <div class="intro-belief__bg" style="background-image:url('images/수냉식.jpg');"></div>
+      <div class="intro-belief__inner">
+        <h3 class="intro-belief-title">수냉식 복원수리 <br>: 고집과 신념</h3>
+        <p class="intro-belief-desc">가위에 치명적인 고열발생 및 날 변형을 완벽 차단합니다.<br>거칠지않은 굉장히 고운 가공면을 사용하며, 정밀한 기술력은 가위의 내구성까지 극대화합니다. 단순 수리가 아닌,<br>실제 제작단계의 마무리를 구현합니다</p>
+        <p class="intro-belief-closing">잠깐의 불편해결에 복원이란 말은 어울리지 않습니다<br>오래 쓰실 가위를 위한 복원입니다</p>
+      </div>
     </div>
 
     <!-- 대표 서명 + 사진 -->
