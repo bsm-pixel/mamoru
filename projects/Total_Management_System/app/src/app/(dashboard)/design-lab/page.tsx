@@ -4,12 +4,13 @@
  * /design-lab — TMS 디자인 모니터 (사장님 + 클로드 협업 도구)
  *
  * 운영 룰: 진행 중인 작업만 표시 → 완료 후 § 자동 삭제 (회전 도구)
- * 진행 중: 2026-05-30 § 1688 중국 사입 (PO 작성 → 라벨 → QR 매칭 → 정식 SKU)
+ * 진행 중: 2026-06-20 § 복원수리 안내 페이지 개선 틀 (IA 와이어프레임)
  *
  * 운영 데이터 호출 X · 사이드바 메뉴 미노출 · URL 직접 접근만
  */
 
 import { Topbar } from '@/components/layout/topbar';
+import { AsGuideFrameSection } from './_sections/as-guide-frame';
 import { Sourcing1688Section } from './_sections/sourcing-1688';
 
 export default function DesignLabPage() {
@@ -28,6 +29,8 @@ export default function DesignLabPage() {
             <span className="opacity-60">운영 데이터 X · 사이드바 메뉴 미노출 · URL 직접 접근만</span>
           </p>
         </div>
+
+        <AsGuideFrameSection />
 
         <Sourcing1688Section />
 
