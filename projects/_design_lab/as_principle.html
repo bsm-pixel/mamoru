@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>복원수리 — 원칙 (트렌디 · 작업실)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root{ --void:#161616; --cream:#FAF9F7; --ash:#C9C5C0; --mist:#8C8782; --dim:#5f5b57; --line:rgba(255,255,255,.10); }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'Pretendard',-apple-system,system-ui,sans-serif; background:#E9E7E4; color:#2A2A2A; padding:24px 16px 60px; -webkit-font-smoothing:antialiased; }
+  .lab-head{ max-width:1180px; margin:0 auto 22px; }
+  .lab-head h1{ font-size:18px; font-weight:800; }
+  .lab-head p{ font-size:13px; color:#777; margin-top:5px; line-height:1.6; }
+  .lab-head code{ background:#fff; padding:1px 6px; border-radius:5px; font-size:12px; }
+  .lab-grid{ max-width:1180px; margin:0 auto; display:flex; gap:40px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+  .lab-label{ font-size:12px; font-weight:700; color:#666; margin-bottom:12px; text-align:center; }
+
+  /* 📱 폰 프레임. screen = 컨테이너 → 내부 cqw가 '폰 너비(388px)' 기준으로 계산 = 진짜 모바일 */
+  .phone{ width:402px; background:#0c0c0c; border-radius:40px; padding:7px; box-shadow:0 30px 60px -20px rgba(0,0,0,.4); }
+  .screen{ position:relative; width:388px; height:812px; background:var(--void); border-radius:33px; overflow:hidden; container-type:inline-size; }
+  .pc-panel{ flex:1; min-width:340px; max-width:600px; height:812px; background:var(--void); border-radius:24px; overflow:hidden; container-type:inline-size; }
+  .scroller{ position:absolute; inset:0; overflow-y:auto; }
+  .pc-panel .scroller{ position:static; height:812px; }
+  .scroller::-webkit-scrollbar{ display:none; } .scroller{ scrollbar-width:none; }
+
+  /* ===== 트렌디 섹션 (cqw = 컨테이너 폭 기준) ===== */
+  .principle{ color:var(--cream); padding:clamp(44px,9cqw,80px) clamp(18px,5cqw,56px) clamp(60px,12cqw,100px); }
+  .hero{ margin-bottom:clamp(52px,12cqw,100px); }
+  .hero__kicker{ font-family:'Outfit',sans-serif; font-size:11px; font-weight:600; letter-spacing:.34em; color:var(--mist); text-transform:uppercase; }
+  .hero__title{ font-size:clamp(30px,9cqw,52px); font-weight:800; line-height:1.08; letter-spacing:-.03em; margin-top:18px; text-wrap:balance; }
+  .hero__rule{ width:38px; height:2px; background:var(--cream); margin-top:24px; opacity:.85; }
+  .scene{ position:relative; padding-top:clamp(38px,9cqw,68px); }
+  .scene + .scene{ border-top:1px solid var(--line); }
+  .scene__idx{ font-family:'Outfit',sans-serif; font-size:clamp(13px,3.5cqw,15px); font-weight:700; letter-spacing:.2em; color:var(--dim); margin-bottom:20px; }
+  .scene__idx b{ color:var(--cream); font-weight:800; }
+  .scene__plabel{ display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700; color:var(--mist); margin-bottom:12px; }
+  .scene__plabel::before{ content:""; width:14px; height:1px; background:var(--mist); }
+  .scene__problem{ font-size:clamp(14px,3.7cqw,15px); line-height:1.85; color:var(--dim); }
+  .scene__cue{ height:clamp(24px,6cqw,40px); width:1px; background:linear-gradient(var(--line),var(--cream)); margin:18px 0 16px; }
+  .scene__alabel{ font-size:11px; font-weight:800; letter-spacing:.14em; color:var(--cream); margin-bottom:10px; }
+  .scene__atitle{ font-size:clamp(22px,6cqw,30px); font-weight:800; letter-spacing:-.03em; line-height:1.2; margin-bottom:14px; text-wrap:balance; }
+  .scene__answer{ font-size:clamp(14px,3.8cqw,16px); line-height:1.8; color:var(--ash); }
+
+  /* 스크롤 리빌 (순수 CSS, 미지원 시 정적) */
+  @keyframes rise{ from{opacity:0;transform:translateY(26px)} to{opacity:1;transform:none} }
+  @keyframes wipe{ from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+  @supports (animation-timeline: view()){
+    .hero__title,.hero__rule{ animation:rise .9s both; animation-timeline:view(); animation-range:entry 0% cover 22%; }
+    .scene > *{ animation:wipe linear both; animation-timeline:view(); animation-range:entry 2% cover 26%; }
+  }
+</style>
+</head>
+<body>
+  <div class="lab-head">
+    <h1>🎨 복원수리 — '원칙' 카피 (트렌디 · cqw 정확 프리뷰)</h1>
+    <p>컨테이너 쿼리 단위(<code>cqw</code>) — 폰/PC 각 폭 기준으로 글자·여백 계산 = 실제대로. 문구는 맨 끝 <code>PAIRS</code> 수정 후 새로고침. <b>스크롤</b>해서 리빌 확인.</p>
+  </div>
+
+  <div class="lab-grid">
+    <div style="flex:0 0 auto;">
+      <div class="lab-label">📱 모바일 (388px · 실제 폭)</div>
+      <div class="phone"><div class="screen"><div class="scroller"><div class="principle" data-mount></div></div></div></div>
+    </div>
+    <div class="pc-panel-wrap" style="flex:1; min-width:340px; max-width:600px;">
+      <div class="lab-label">🖥 PC (폭 늘면 자동 확대)</div>
+      <div class="pc-panel"><div class="scroller"><div class="principle" data-mount></div></div></div>
+    </div>
+  </div>
+
+<script>
+  /* ✏️ 여기만 수정 — 줄바꿈 \n. 저장 후 새로고침 */
+  const SECTION_TITLE = '왜, 마모루인가';   // 대안: '가위 수리, 왜 늘 아쉬웠을까'
+  const PAIRS = [
+    {
+      problem: '맡기고, 기다릴 뿐.\n딜러가 수거해 외부 업체로 보냅니다.\n정작 가위를 만지는 사람과는 한마디도 나누지 못합니다.',
+      answerTitle: '본질에 집중',
+      answer: '2대를 잇는 대표가\n직접 진단하고, 직접 수리하고, 직접 책임집니다.',
+    },
+    {
+      problem: '쓰임새를 모르는 수리.\n커트 습관도, 진짜 원인도 보지 않은 채\n당장의 불편만 덮습니다.',
+      answerTitle: '근본을 진단',
+      answer: '가위 상태는 물론,\n디자이너의 커트 습관과 가위의 ‘호흡’까지 분석합니다.',
+    },
+    {
+      problem: '꼭, 필요했을까.\n안 해도 될 수리까지 권하는 곳도 있습니다.\n무엇이 정말 필요한지 말해주는 곳은 드뭅니다.',
+      answerTitle: '투명함을 증명',
+      answer: '보내는 순간부터 실시간 알림톡으로,\n완료 시 수리내역서로 모두 공개합니다.',
+    },
+  ];
+
+  const nl = (s) => s.replace(/</g,'&lt;').replace(/\n/g,'<br>');
+  const html = `
+    <div class="hero">
+      <p class="hero__kicker">MAMORU RESTORATION</p>
+      <h2 class="hero__title">${nl(SECTION_TITLE)}</h2>
+      <div class="hero__rule"></div>
+    </div>
+    ${PAIRS.map((p,i)=>`
+      <article class="scene">
+        <div class="scene__idx"><b>0${i+1}</b> &nbsp;/&nbsp; 0${PAIRS.length}</div>
+        <p class="scene__plabel">기존 가위 수리</p>
+        <p class="scene__problem">${nl(p.problem)}</p>
+        <div class="scene__cue"></div>
+        <p class="scene__alabel">마모루는</p>
+        <h3 class="scene__atitle">${p.answerTitle}</h3>
+        <p class="scene__answer">${nl(p.answer)}</p>
+      </article>`).join('')}
+  `;
+  document.querySelectorAll('[data-mount]').forEach(el => el.innerHTML = html);
+</script>
+</body>
+</html>

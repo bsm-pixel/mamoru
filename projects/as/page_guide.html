@@ -1837,6 +1837,67 @@ img[src=""], video[src=""] {
   }
 
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ✨ MAMORU 트렌디 레이어 — Phase 1 (intro 탭)
+   Brand Guide B-02 플루이드 clamp / B-06 스크롤 모션 / B-07 위계
+   CSS만 · JS/구조/iframe 무손상 · 되돌리려면 이 블록만 삭제
+   ═══════════════════════════════════════════════════════════════ */
+/* ─ 플루이드 타입 (모바일~PC 한 코드, #tab-intro 한정) ─ */
+#tab-intro .intro-appeal h2{ font-size:clamp(24px,7vw,40px); line-height:1.18; letter-spacing:-.03em; max-width:none; text-wrap:balance; }
+#tab-intro .intro-appeal p{ font-size:clamp(14px,3.6vw,16px); line-height:1.8; }
+#tab-intro .intro-approach-block h4{ font-size:clamp(18px,5.2vw,26px); line-height:1.25; letter-spacing:-.02em; text-wrap:balance; }
+#tab-intro .intro-approach-block p{ font-size:clamp(14px,3.6vw,16px); line-height:1.85; max-width:520px; }
+#tab-intro .intro-belief-title{ font-size:clamp(22px,6.5vw,34px); line-height:1.2; letter-spacing:-.03em; }
+#tab-intro .intro-belief-desc{ font-size:clamp(14px,3.6vw,16px); line-height:1.85; }
+#tab-intro .intro-belief-closing{ font-size:clamp(16px,4.5vw,22px); line-height:1.4; }
+#tab-intro .intro-process-story-title{ font-size:clamp(20px,5.5vw,28px); letter-spacing:-.02em; }
+#tab-intro .intro-process-story-sub{ font-size:clamp(13px,3.4vw,15px); }
+#tab-intro .intro-timeline-name{ font-size:clamp(13px,3.4vw,15px); }
+#tab-intro .intro-timeline-desc{ font-size:clamp(11px,3vw,13px); }
+/* 라벨/키커는 trendy 트래킹만 살짝 */
+#tab-intro .intro-approach-title,
+#tab-intro .as-before-after-title,
+#tab-intro .intro-before-after-title{ letter-spacing:.06em; }
+
+/* ─ 스크롤 리빌 "Rise" (텍스트 섹션만 — 슬라이더 컨테이너 제외하여 간섭 0) ─ */
+@keyframes mmRise{ from{ opacity:0; transform:translateY(26px); } to{ opacity:1; transform:none; } }
+@supports (animation-timeline: view()){
+  #tab-intro .intro-appeal,
+  #tab-intro .intro-approach,
+  #tab-intro .intro-belief-wrap,
+  #tab-intro .intro-process-story{
+    animation:mmRise linear both; animation-timeline:view(); animation-range:entry 3% cover 26%;
+  }
+}
+
+/* ─ Phase 2: 나머지 탭(진행방법·소요시간·비용·포장·QnA) — 라이트 배경, 모션 제외(탭 토글+view() 충돌 방지) ─ */
+.as-section-title{ font-size:clamp(22px,5.6vw,30px); letter-spacing:-.03em; line-height:1.2; text-wrap:balance; }
+.as-step-title{ font-size:clamp(15px,4vw,18px); line-height:1.45; }
+.as-step-flow > .as-step-item:first-child > .as-step-title{ font-size:clamp(17px,4.6vw,22px); }
+.as-step-desc{ font-size:clamp(13px,3.4vw,15px); line-height:1.7; }
+.as-dur-heading{ font-size:clamp(19px,5.4vw,30px); line-height:1.25; letter-spacing:-.02em; max-width:560px; text-wrap:balance; }
+.as-dur-list{ font-size:clamp(13px,3.4vw,15px); }
+.as-shipping-header h3{ font-size:clamp(17px,4.5vw,22px); letter-spacing:-.02em; }
+.as-shipping-header p{ font-size:clamp(13px,3.3vw,15px); }
+.as-packing-title{ font-size:clamp(15px,4vw,18px); letter-spacing:-.02em; }
+.as-faq-question{ font-size:clamp(14px,3.8vw,17px); }
+.as-faq-answer p{ font-size:clamp(13px,3.4vw,15px); }
+.as-faq-item.open .as-faq-answer{ max-height:800px; } /* 글자 커짐 대비 — 긴 답변 클리핑 방지 */
+/* 이미지·아이콘 반응형 사이즈 (Brand Guide B-05: 모바일↔PC) */
+.as-step-icon{ width:clamp(84px,22vw,120px); }
+.as-icon-circle{ width:clamp(72px,18vw,88px); height:clamp(72px,18vw,88px); }
+.as-dur-cal-img{ width:min(calc(100% - 32px), 360px); } /* 모바일서 과도 inset(160px) 완화 */
+
+/* ─ Phase 3: 자동 클린 줄바꿈 — 제목 balance(균형) / 본문 pretty(orphan 방지). 미지원 브라우저는 일반 줄바꿈 ─ */
+.as-section-title, .as-dur-heading, .as-shipping-header h3, .as-packing-title,
+#tab-intro .intro-appeal h2, #tab-intro .intro-approach-block h4,
+#tab-intro .intro-belief-title, #tab-intro .intro-belief-closing,
+#tab-intro .intro-process-story-title{ text-wrap:balance; }
+.as-step-title, .as-step-desc, .as-dur-list, .as-shipping-header p, .as-shipping-note,
+.as-faq-question, .as-faq-answer p,
+#tab-intro .intro-appeal p, #tab-intro .intro-approach-block p,
+#tab-intro .intro-belief-desc, #tab-intro .intro-process-story-sub{ text-wrap:pretty; }
 </style>
 </head>
 <body>
