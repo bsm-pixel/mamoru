@@ -4,14 +4,15 @@
  * /design-lab — TMS 디자인 모니터 (사장님 + 클로드 협업 도구)
  *
  * 운영 룰: 진행 중인 작업만 표시 → 완료 후 § 자동 삭제 (회전 도구)
- * 진행 중: 2026-06-20 § 복원수리 안내 페이지 개선 틀 (IA 와이어프레임)
  *
+ * ⛳ 용도 구분:
+ *   - 고객 HTML 페이지(마케팅·프로덕트·리뷰·복원수리 안내) 검토 = `projects/_design_lab/` (브라우저로 바로 열기)
+ *   - TMS(관리자 앱, React) 화면 검토 = 여기 `/design-lab`
  * 운영 데이터 호출 X · 사이드바 메뉴 미노출 · URL 직접 접근만
  */
 
 import { Topbar } from '@/components/layout/topbar';
-import { AsGuideFrameSection } from './_sections/as-guide-frame';
-import { Sourcing1688Section } from './_sections/sourcing-1688';
+import { Sourcing1688Section } from './_sections/sourcing-1688'; // 운영 sourcing/[id]가 의존 — 별도 정리 대상
 
 export default function DesignLabPage() {
   return (
@@ -29,8 +30,6 @@ export default function DesignLabPage() {
             <span className="opacity-60">운영 데이터 X · 사이드바 메뉴 미노출 · URL 직접 접근만</span>
           </p>
         </div>
-
-        <AsGuideFrameSection />
 
         <Sourcing1688Section />
 
