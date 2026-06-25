@@ -1528,6 +1528,12 @@ html, body {
 .process-step-content{ padding:0; }
 .process-arrow{ display:none; } /* 행 사이 hairline이 흐름 — 화살표 군더더기 제거 */
 .method-notes-card{ background:rgba(26,26,26,0.025); }
+
+/* ── 탭 바 — 다크 통일 (히어로~문제답이 한 흐름, 흰 섬 제거) ── */
+.consult-tabs-container{ background:var(--mm-bg-dark); border-bottom:1px solid rgba(255,255,255,.08); }
+.consult-tab{ border-color:rgba(255,255,255,.18); color:var(--mmt-mist); }
+.consult-tab.active{ background:var(--mmt-cream); border-color:var(--mmt-cream); color:var(--mm-bg-dark); }
+.consult-tabs-container .mmt-tab-label{ color:rgba(255,255,255,.42) !important; }
 </style>
 </head>
 <body>
@@ -1569,7 +1575,7 @@ html, body {
       <button class="consult-tab active" data-tab="about">마모루 컨설팅</button>
       <button class="consult-tab" data-tab="qna">Q&A</button>
     </div>
-    <p style="font-size: 11px; color: var(--mm-text-d3); font-weight: 500; margin: 2px 0 4px; text-align: center;">상담 진행방식</p>
+    <p class="mmt-tab-label" style="font-size: 11px; color: var(--mm-text-d3); font-weight: 500; margin: 2px 0 4px; text-align: center;">상담 진행방식</p>
     <div class="consult-tabs">
       <button class="consult-tab" data-tab="visit">직접방문</button>
       <button class="consult-tab" data-tab="dispatch">출장요청</button>
