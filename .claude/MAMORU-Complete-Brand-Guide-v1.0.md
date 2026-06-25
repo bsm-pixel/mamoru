@@ -184,6 +184,16 @@ MAMORU는 판매하지 않습니다. 안내할 뿐입니다.
 
 ---
 
+## B-00 — Page Kit (전 페이지 공통 표준 · 2026-06-25) 🚨
+
+아임웹 모든 고객 페이지는 **단일 표준(Page Kit)**을 따른다. 복사 원본 = `projects/_design_lab/_page_kit.html`(KIT 블록), 메모리 = `reference_mamoru_page_kit.md`.
+
+- **레이아웃**: 풀블리드 배경 `.mm-band`(+`--dark`/`--parchment`) > 중앙 콘텐츠 `.mm-inner`(`--content-w:760` / `--content-w-wide:1100`). 음수마진·`100vw` 해킹 폐기 → 배경 전폭이라 폭 달라도 계단현상 불가.
+- **변수**: `--void/--cream` 등 모노크롬 9색 + `--font-display/--font-body`로 통일(구 `--mm-*`·`--ink` 마이그레이션).
+- **히어로**: 라이트 기본. 다크(Void)는 문제→답 등 **몰입 띠만**(B-01).
+- **타입/모션/CTA**: 아래 B-02 clamp 스케일을 유틸(`.mm-display/.mm-h2/.mm-h3/.mm-body/.mm-sub/.mm-label`)로, 모션은 B-06 `.mm-reveal`.
+- iframe cross-origin이라 공유 CSS 불가 → 각 페이지 인라인 박제. 토큰 갱신 시 전 페이지 동기화.
+
 ## B-02 — 타이포그래피
 
 ### 서체 역할

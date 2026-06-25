@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MAMORU Page Kit — 전 페이지 공통 표준 (복사용 SSOT)</title>
+<!--
+═══════════════════════════════════════════════════════════════════
+  📦 MAMORU PAGE KIT  —  아임웹 전 고객 페이지 공통 디자인 표준 (SSOT)
+  📍 용도   : 새 페이지/리디자인 시 아래 <style> 의 "KIT" 블록을 그대로 복붙
+  🎯 원칙   : 풀블리드 배경(.mm-band) + 중앙 콘텐츠(.mm-inner) → 계단현상 구조적 불가
+  🎨 토큰   : Brand Guide v1.0 모노크롬 9색 + Outfit/Pretendant·Noto + clamp 타입
+  ⚠️ 제약   : iframe cross-origin → 공유 CSS 불가. 각 page 인라인 <style>에 박제.
+            기능(탭/폼/iframe높이/id·class) 보존. 폴더명·URL 불변.
+  📚 근거   : Brand Guide B-01~B-08, ADDENDUM_IMWEB §5, reference_iframe_codewidget_pattern
+═══════════════════════════════════════════════════════════════════
+-->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+/* ═══════════════ KIT START — 여기부터 복붙 ═══════════════ */
+
+/* A. 토큰 (Brand Guide v1.0 SSOT) */
+:root{
+  --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A;
+  --warm-gray:#8A8580; --mist:#B8B4AF; --sand:#D4D0CB;
+  --parchment:#EDEBE8; --shell:#F5F3F0; --cream:#FAF9F7; --white:#FFFFFF;
+  --font-display:'Outfit','Plus Jakarta Sans','Pretendard','Noto Sans KR',sans-serif;
+  --font-body:'Pretendard','Plus Jakarta Sans','Noto Sans KR',-apple-system,system-ui,sans-serif;
+  --radius-sm:8px; --radius-md:12px; --radius-lg:16px;
+  --content-w:760px;        /* 안내/읽기 중앙 컬럼 */
+  --content-w-wide:1100px;  /* 그리드/메인 */
+  --hairline-d:rgba(255,255,255,.10); --hairline-l:rgba(26,26,26,.10);
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+
+/* B. 레이아웃 프리미티브 — 풀블리드 배경 + 중앙 콘텐츠 (음수마진·100vw 해킹 폐기) */
+*{ -webkit-tap-highlight-color:transparent; box-sizing:border-box; }
+.mm-shell{ overflow-x:hidden; background:var(--cream); color:var(--void); font-family:var(--font-body); -webkit-font-smoothing:antialiased; line-height:1.6; }
+.mm-band{ width:100%; }                       /* 배경 입히는 섹션 = 자연 전폭 */
+.mm-band--dark{ background:var(--void); color:var(--cream); }
+.mm-band--parchment{ background:var(--parchment); }
+.mm-band--shell{ background:var(--shell); }
+.mm-inner{ max-width:var(--content-w); margin:0 auto; padding:clamp(48px,9vw,84px) 20px; }
+@media(min-width:768px){ .mm-inner{ padding-left:32px; padding-right:32px; } }
+.mm-inner--wide{ max-width:var(--content-w-wide); }
+.mm-inner--tight{ padding-top:clamp(28px,6vw,44px); padding-bottom:clamp(28px,6vw,44px); }
+
+/* C. 플루이드 타입 (B-02) */
+.mm-display{ font-family:var(--font-display); font-size:clamp(30px,9vw,52px); font-weight:800; line-height:1.08; letter-spacing:-.03em; text-wrap:balance; }
+.mm-h2{ font-family:var(--font-display); font-size:clamp(22px,6vw,30px); font-weight:800; line-height:1.2; letter-spacing:-.03em; text-wrap:balance; }
+.mm-h3{ font-size:clamp(18px,4.5vw,22px); font-weight:700; line-height:1.3; letter-spacing:-.02em; text-wrap:balance; }
+.mm-body{ font-size:clamp(14px,3.8vw,16px); line-height:1.8; text-wrap:pretty; }
+.mm-sub{ font-size:clamp(13px,3.5vw,15px); line-height:1.7; color:var(--warm-gray); text-wrap:pretty; }
+.mm-label{ font-family:var(--font-display); font-size:11px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--warm-gray); }
+.mm-band--dark .mm-sub{ color:var(--sand); }
+.mm-band--dark .mm-label{ color:var(--mist); }
+/* 시그니처 룰 (제목 하단 짧은 막대) */
+.mm-rule{ width:38px; height:2px; background:var(--void); opacity:.85; margin:22px 0 0; }
+.mm-band--dark .mm-rule{ background:var(--cream); }
+
+/* D. 모션 (B-06) — IntersectionObserver + 2.5s 폴백 (JS는 mm-reveal observe) */
+@keyframes mmRise{ from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
+.mm-reveal{ opacity:0; transform:translateY(24px); transition:opacity .6s var(--ease),transform .6s var(--ease); }
+.mm-reveal.mm-visible{ opacity:1; transform:none; }
+@media(prefers-reduced-motion:reduce){ .mm-reveal{ opacity:1; transform:none; transition:none; } }
+
+/* E. 공통 CTA */
+.mm-cta{ display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:14px 28px; border-radius:999px; font-family:var(--font-body); font-size:clamp(14px,3.8vw,16px); font-weight:600; cursor:pointer; border:1px solid transparent; transition:all .2s var(--ease); -webkit-tap-highlight-color:transparent; }
+.mm-cta--primary{ background:var(--void); color:var(--cream); }
+.mm-cta--ghost{ background:transparent; color:var(--void); border-color:var(--sand); }
+.mm-band--dark .mm-cta--primary{ background:var(--cream); color:var(--void); }
+.mm-band--dark .mm-cta--ghost{ color:var(--cream); border-color:rgba(255,255,255,.28); }
+
+/* ═══════════════ KIT END — 여기까지 복붙 ═══════════════ */
+
+
+/* ───────── (아래는 데모 전용 — 복붙 대상 아님) ───────── */
+.demo-note{ max-width:760px; margin:0 auto; padding:24px 20px; font-family:var(--font-body); font-size:13px; color:var(--warm-gray); }
+.demo-note code{ background:var(--white); padding:1px 6px; border-radius:5px; }
+.cwhy__item + .cwhy__item{ margin-top:clamp(36px,9vw,58px); padding-top:clamp(36px,9vw,58px); border-top:1px solid var(--hairline-d); }
+.cwhy__idx{ font-family:var(--font-display); font-size:clamp(13px,3.5vw,15px); font-weight:700; letter-spacing:.2em; color:#6f6b66; margin-bottom:16px; }
+.cwhy__idx b{ color:var(--cream); }
+.cwhy__cue{ width:1px; height:32px; background:linear-gradient(var(--hairline-d),var(--cream)); margin:16px 0; }
+</style>
+</head>
+<body>
+<div class="mm-shell">
+
+  <div class="demo-note">
+    🎨 <b>MAMORU Page Kit 데모</b> — 위 <code>&lt;style&gt;</code>의 <b>KIT START~END</b> 블록을 새 페이지에 그대로 복붙.
+    구조 = <code>.mm-band</code>(배경 전폭) &gt; <code>.mm-inner</code>(중앙 콘텐츠). 아래는 라이트 히어로 → 다크 문제→답 → 파치먼트 예시.
+  </div>
+
+  <!-- 히어로 (라이트 기본) -->
+  <div class="mm-band">
+    <div class="mm-inner mm-reveal" style="text-align:center;">
+      <p class="mm-label">MAMORU</p>
+      <h1 class="mm-display" style="margin-top:14px;">표준 히어로<br>라이트 기본</h1>
+      <p class="mm-body" style="margin-top:16px;color:var(--stone);">안내 페이지는 라이트가 기본입니다.</p>
+      <div style="margin-top:24px;"><button class="mm-cta mm-cta--primary">접수하기</button></div>
+    </div>
+  </div>
+
+  <!-- 문제→답 (다크 몰입 띠) -->
+  <div class="mm-band mm-band--dark">
+    <div class="mm-inner mm-reveal">
+      <p class="mm-label">WHY MAMORU</p>
+      <h2 class="mm-h2" style="margin-top:14px;">왜, 마모루인가</h2>
+      <div class="mm-rule"></div>
+      <div class="cwhy__item" style="margin-top:36px;">
+        <div class="cwhy__idx"><b>01</b> / 02</div>
+        <p class="mm-sub" style="color:#807b75;">흔한 방식의 문제를 담담히.</p>
+        <div class="cwhy__cue"></div>
+        <h3 class="mm-h3" style="color:var(--cream);">마모루의 답</h3>
+        <p class="mm-body" style="color:var(--sand);margin-top:8px;">선명하게 대비되는 답.</p>
+      </div>
+      <div class="cwhy__item">
+        <div class="cwhy__idx"><b>02</b> / 02</div>
+        <p class="mm-sub" style="color:#807b75;">두 번째 문제.</p>
+        <div class="cwhy__cue"></div>
+        <h3 class="mm-h3" style="color:var(--cream);">두 번째 답</h3>
+        <p class="mm-body" style="color:var(--sand);margin-top:8px;">색·크기·굵기 세 축 대비.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 파치먼트 (구분 띠) -->
+  <div class="mm-band mm-band--parchment">
+    <div class="mm-inner mm-reveal">
+      <h2 class="mm-h2">파치먼트 구분 띠</h2>
+      <p class="mm-body" style="margin-top:12px;color:var(--stone);">배경은 전폭, 콘텐츠는 760 중앙 → 어느 폭이든 계단현상 없음.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* 모션 — IntersectionObserver + 2.5s 폴백 (iframe 안전). 실제 페이지엔 iframe 높이통신도 추가. */
+(function(){
+  var els=document.querySelectorAll('.mm-reveal');
+  var reveal=function(){ els.forEach(function(el){ el.classList.add('mm-visible'); }); };
+  if(!('IntersectionObserver' in window)){ reveal(); return; }
+  var ob=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('mm-visible'); ob.unobserve(e.target); } }); },{threshold:.12, rootMargin:'0px 0px -30px 0px'});
+  els.forEach(function(el){ ob.observe(el); });
+  setTimeout(reveal, 2500);
+})();
+</script>
+</body>
+</html>
