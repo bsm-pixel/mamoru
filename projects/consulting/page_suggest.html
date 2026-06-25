@@ -11,6 +11,10 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
+      /* 캐논 토큰 (Brand Guide SSOT) */
+      --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580;
+      --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; --shell:#F5F3F0;
+      --cream:#FAF9F7; --white:#FFFFFF;
       --ink: #1A1A1A; --muted: #8A8580; --line: rgba(26,26,26,0.08);
       --primary: #1A1A1A; --accent: #1A1A1A;
       --accent-bg: rgba(26,26,26,0.05); --accent-light: rgba(26,26,26,0.03);
@@ -115,7 +119,7 @@
 
     /* ── Confirm Button ── */
     .btn-confirm {
-      width: 100%; padding: 16px; border: none; border-radius: var(--radius);
+      width: 100%; padding: 16px; border: none; border-radius: 999px; /* Primary CTA 알약 */
       font-size: 16px; font-weight: 700; cursor: pointer;
       background: var(--primary); color: #fff;
       transition: opacity 0.15s;

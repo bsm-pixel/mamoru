@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>후기 작성 | MAMORU</title>
   <style>
+    /* 캐논 토큰 (Brand Guide SSOT) */
+    :root {
+      --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580;
+      --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; --shell:#F5F3F0;
+      --cream:#FAF9F7; --white:#FFFFFF;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Outfit', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif; /* Brand Guide v1.0 */
@@ -129,7 +135,7 @@
       width: 100%; padding: 14px; border: none; border-radius: 12px;
       font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
     }
-    .btn-primary { background: #1A1A1A; color: #FAF9F7; } /* Void / Cream */
+    .btn-primary { background: #1A1A1A; color: #FAF9F7; border-radius: 999px; } /* Void / Cream — Primary CTA 알약 */
     .btn-primary:hover { background: #2D2D2D; } /* Graphite */
     .btn-primary:disabled { background: #D4D0CB; color: #8A8580; cursor: not-allowed; } /* Sand / Warm Gray */
     .btn-close { background: #EDEBE8; color: #4A4A4A; margin-top: 8px; } /* Parchment / Stone */

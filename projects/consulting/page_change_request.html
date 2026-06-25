@@ -8,6 +8,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* 캐논 토큰 (Brand Guide SSOT) */
+    :root {
+      --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580;
+      --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; --shell:#F5F3F0;
+      --cream:#FAF9F7; --white:#FFFFFF;
+    }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -54,7 +60,7 @@
       width: 100%; padding: 14px; border: none; border-radius: 10px;
       font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s;
     }
-    .btn-primary { background: #1A1A1A; color: #fff; }
+    .btn-primary { background: #1A1A1A; color: #fff; border-radius: 999px; } /* Primary CTA 알약 */
     .btn-primary:hover { background: #2C2C2C; }
     .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; }
     .btn-close { background: rgba(26,26,26,0.08); color: #374151; margin-top: 12px; }
