@@ -1448,6 +1448,41 @@ html, body {
     font-size: 14px;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   ✨ MAMORU 트렌디 레이어 — 복원수리(as/page_guide)와 동일 시스템
+   append-override. 되돌리기 = 이 블록 전체 삭제.
+   변수는 --mmt-* 로 격리하여 기존 --mm-* / 기능 0 영향.
+   ════════════════════════════════════════════════════════════════ */
+.mamoru-consult-page{
+  --mmt-cream:#FAF9F7; --mmt-mist:#B8B4AF; --mmt-sand:#D4D0CB;
+  --mmt-dim:#807b75; --mmt-display:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;
+}
+@keyframes mmRise{ from{ opacity:0; transform:translateY(26px); } to{ opacity:1; transform:none; } }
+
+/* ── 히어로 — 플루이드 업스케일 ("Chosen, Not Sold" 위계 강화) ── */
+.consult-hero-title{ font-size:clamp(32px,9vw,52px); line-height:1.08; letter-spacing:-.04em; text-wrap:balance; }
+.consult-hero-desc{ font-size:clamp(14px,3.8vw,17px); line-height:1.7; text-wrap:balance; }
+.consult-hero-label{ letter-spacing:.22em; }
+
+/* ── ⓪ 왜, 마모루 상담인가 — 문제→답 (복원수리 intro-why 패턴 이식) ── */
+.consult-why-wrap{ background:var(--mm-bg-dark); margin:0 -20px; padding:clamp(48px,11vw,84px) 0 clamp(56px,13vw,96px); }
+.consult-why{ max-width:600px; margin:0 auto; padding:0 clamp(20px,5.5vw,40px); }
+.cwhy__kicker{ font-family:var(--mmt-display); font-size:11px; font-weight:700; letter-spacing:.32em; color:var(--mmt-mist); text-transform:uppercase; }
+.cwhy__title{ font-family:var(--mmt-display); font-size:clamp(26px,8vw,44px); font-weight:800; line-height:1.1; letter-spacing:-.03em; color:var(--mmt-cream); margin-top:14px; text-wrap:balance; }
+.cwhy__rule{ width:38px; height:2px; background:var(--mmt-cream); opacity:.85; margin-top:22px; }
+/* 범례 — 옅음=흔한 영업 / 흰색=마모루 (같은 두께, 색만 차이). 항목엔 라벨 반복 X */
+.cwhy__legend{ font-size:clamp(15px,4.2vw,19px); font-weight:600; letter-spacing:-.015em; line-height:1.55; margin-top:16px; text-wrap:balance; }
+.cwhy__legend .cwhy__dim{ color:var(--mmt-dim); }
+.cwhy__legend .cwhy__on{ color:var(--mmt-cream); }
+.cwhy__item{ margin-top:clamp(36px,9vw,58px); padding-top:clamp(36px,9vw,58px); border-top:1px solid rgba(255,255,255,.10); }
+.cwhy__item:first-of-type{ border-top:0; padding-top:clamp(26px,7vw,40px); }
+.cwhy__idx{ font-family:var(--mmt-display); font-size:clamp(13px,3.5vw,15px); font-weight:700; letter-spacing:.2em; color:#6f6b66; margin-bottom:18px; }
+.cwhy__idx b{ color:var(--mmt-cream); font-weight:800; }
+.cwhy__problem{ font-size:clamp(14px,3.7vw,15px); line-height:1.85; color:var(--mmt-dim); text-wrap:pretty; }
+.cwhy__cue{ width:1px; height:clamp(24px,6vw,38px); background:linear-gradient(rgba(255,255,255,.10),var(--mmt-cream)); margin:18px 0 16px; }
+.cwhy__atitle{ font-family:var(--mmt-display); font-size:clamp(22px,6vw,30px); font-weight:800; letter-spacing:-.03em; line-height:1.2; color:var(--mmt-cream); margin-bottom:14px; text-wrap:balance; }
+.cwhy__answer{ font-size:clamp(14px,3.8vw,16px); line-height:1.8; color:var(--mmt-sand); text-wrap:pretty; }
 </style>
 </head>
 <body>
@@ -1507,6 +1542,41 @@ html, body {
        ========================================================= -->
   <div class="consult-tab-content active" id="tab-about">
     <div class="about-block">
+      <!-- ⓪ 왜, 마모루 상담인가 — 흔한 영업 vs 마모루 상담 (문제→답) -->
+      <!-- [TEXT] 문제/답 문구 수정은 각 cwhy__problem / cwhy__atitle / cwhy__answer -->
+      <div class="consult-why-wrap">
+        <div class="consult-why">
+          <p class="cwhy__kicker">MAMORU CONSULTING</p>
+          <h3 class="cwhy__title">왜, 마모루 상담인가</h3>
+          <p class="cwhy__legend"><span class="cwhy__dim">흔한 가위 영업,</span> <span class="cwhy__on">그리고 마모루의 상담.</span></p>
+          <div class="cwhy__rule"></div>
+
+          <article class="cwhy__item fade-in">
+            <div class="cwhy__idx"><b>01</b> / 03</div>
+            <p class="cwhy__problem">방문 딜러가 좋다고 권하는 가위.<br>왜 좋은지, 내 손에 맞는지는 묻지 않습니다.<br>추천이 곧 영업이 되는 자리입니다</p>
+            <div class="cwhy__cue"></div>
+            <h4 class="cwhy__atitle">권하기 전에, 먼저 묻습니다</h4>
+            <p class="cwhy__answer">제품을 안내하기 전 질문이 먼저입니다<br>커트 스타일과 손의 습관, 원하는 느낌을<br>이해한 뒤에야 가위를 안내합니다</p>
+          </article>
+
+          <article class="cwhy__item fade-in">
+            <div class="cwhy__idx"><b>02</b> / 03</div>
+            <p class="cwhy__problem">써보지도 않고 결정한 가위.<br>손에 쥐어보지 못한 채 구매하면<br>맞지 않아 서랍에서 잠듭니다</p>
+            <div class="cwhy__cue"></div>
+            <h4 class="cwhy__atitle">직접 잡아보고, 고객이 선택</h4>
+            <p class="cwhy__answer">여러 가위를 직접 테스트합니다<br>설득이 아니라 고객이 이해하고<br>스스로 고르도록 돕습니다</p>
+          </article>
+
+          <article class="cwhy__item fade-in">
+            <div class="cwhy__idx"><b>03</b> / 03</div>
+            <p class="cwhy__problem">사고 나면 끝.<br>그 뒤엔 부담스러운 지속 방문과<br>또 다른 권유만 이어집니다</p>
+            <div class="cwhy__cue"></div>
+            <h4 class="cwhy__atitle">필요할 때만, 오래 책임</h4>
+            <p class="cwhy__answer">팔고 끝이 아닙니다<br>가위를 아는 법까지 책임지고<br>AS와 상담이 필요한 순간에만 함께합니다</p>
+          </article>
+        </div>
+      </div>
+
       <!-- ② 당연한 얘기지만… 3가지 약속 — 배경 구분 -->
       <div style="background: #EDEBE8; margin: 0 -20px; padding: 40px 20px;" class="fade-in">
         <div style="max-width: 600px; margin: 0 auto; text-align: center;">
