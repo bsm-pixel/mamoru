@@ -1904,6 +1904,10 @@ img[src=""], video[src=""] {
 .intro-why__kicker{ font-family:var(--font-display); font-size:11px; font-weight:700; letter-spacing:.32em; color:var(--mist); text-transform:uppercase; }
 .intro-why__title{ font-size:clamp(26px,8vw,44px); font-weight:800; line-height:1.1; letter-spacing:-.03em; color:var(--cream); margin-top:14px; text-wrap:balance; }
 .intro-why__rule{ width:38px; height:2px; background:var(--cream); opacity:.85; margin-top:22px; }
+/* 범례 — 옅음=일반 수리 / 흰색=마모루 (같은 두께, 색만). 항목엔 라벨 반복 X, 색으로만 구분 */
+.intro-why__legend{ font-size:clamp(15px,4.2vw,19px); font-weight:600; letter-spacing:-.015em; line-height:1.55; margin-top:16px; text-wrap:balance; }
+.intro-why__legend .intro-why__dim{ color:#807b75; }
+.intro-why__legend .intro-why__on{ color:var(--cream); }
 .intro-why__item{ margin-top:clamp(36px,9vw,58px); padding-top:clamp(36px,9vw,58px); border-top:1px solid rgba(255,255,255,.10); }
 .intro-why__item:first-of-type{ border-top:0; padding-top:clamp(26px,7vw,40px); }
 .intro-why__idx{ font-family:var(--font-display); font-size:clamp(13px,3.5vw,15px); font-weight:700; letter-spacing:.2em; color:#6f6b66; margin-bottom:18px; }
@@ -2087,34 +2091,29 @@ img[src=""], video[src=""] {
     <div class="intro-why">
       <p class="intro-why__kicker">MAMORU RESTORATION</p>
       <h3 class="intro-why__title">왜, 마모루인가</h3>
+      <p class="intro-why__legend"><span class="intro-why__dim">일반적인 가위 수리,</span> <span class="intro-why__on">그리고 마모루.</span></p>
       <div class="intro-why__rule"></div>
 
       <article class="intro-why__item">
         <div class="intro-why__idx"><b>01</b> / 03</div>
-        <p class="intro-why__plabel">기존 가위 수리</p>
         <p class="intro-why__problem">맡기고, 기다릴 뿐.<br>딜러가 수거해 외부 업체로 보냅니다.<br>정작 가위를 만지는 사람과는 한마디도 나누지 못합니다.</p>
         <div class="intro-why__cue"></div>
-        <p class="intro-why__alabel">마모루는</p>
         <h4 class="intro-why__atitle">본질에 집중</h4>
-        <p class="intro-why__answer">2대를 잇는 대표가<br>직접 진단하고, 직접 수리하고, 직접 책임집니다.</p>
+        <p class="intro-why__answer">대표 책임자가 사용자와 소통하며<br>직접 진단하고, 직접 수리하고, 직접 책임집니다.</p>
       </article>
 
       <article class="intro-why__item">
         <div class="intro-why__idx"><b>02</b> / 03</div>
-        <p class="intro-why__plabel">기존 가위 수리</p>
         <p class="intro-why__problem">쓰임새를 모르는 수리.<br>커트 습관도, 진짜 원인도 보지 않은 채<br>당장의 불편만 덮습니다.</p>
         <div class="intro-why__cue"></div>
-        <p class="intro-why__alabel">마모루는</p>
         <h4 class="intro-why__atitle">근본을 진단</h4>
         <p class="intro-why__answer">가위 상태는 물론,<br>디자이너의 커트 습관과 가위의 ‘호흡’까지 분석합니다.</p>
       </article>
 
       <article class="intro-why__item">
         <div class="intro-why__idx"><b>03</b> / 03</div>
-        <p class="intro-why__plabel">기존 가위 수리</p>
         <p class="intro-why__problem">꼭, 필요했을까.<br>안 해도 될 수리까지 권하는 곳도 있습니다.<br>무엇이 정말 필요한지 말해주는 곳은 드뭅니다.</p>
         <div class="intro-why__cue"></div>
-        <p class="intro-why__alabel">마모루는</p>
         <h4 class="intro-why__atitle">투명함을 증명</h4>
         <p class="intro-why__answer">보내는 순간부터 실시간 알림톡으로,<br>완료 시 <b>수리내역서</b>로 모두 공개합니다.</p>
       </article>
