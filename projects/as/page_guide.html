@@ -1898,6 +1898,27 @@ img[src=""], video[src=""] {
 .as-faq-question, .as-faq-answer p,
 #tab-intro .intro-appeal p, #tab-intro .intro-approach-block p,
 #tab-intro .intro-belief-desc, #tab-intro .intro-process-story-sub{ text-wrap:pretty; }
+
+/* ─ ③ '왜, 마모루인가' (문제→답) — 디자인모니터 시안 이식. 다크 intro 탭, 좌측 에디토리얼 ─ */
+.intro-why{ padding:6px clamp(20px,5.5vw,40px) 0; }
+.intro-why__kicker{ font-family:var(--font-display); font-size:11px; font-weight:700; letter-spacing:.32em; color:var(--mist); text-transform:uppercase; }
+.intro-why__title{ font-size:clamp(26px,8vw,44px); font-weight:800; line-height:1.1; letter-spacing:-.03em; color:var(--cream); margin-top:14px; text-wrap:balance; }
+.intro-why__rule{ width:38px; height:2px; background:var(--cream); opacity:.85; margin-top:22px; }
+.intro-why__item{ margin-top:clamp(36px,9vw,58px); padding-top:clamp(36px,9vw,58px); border-top:1px solid rgba(255,255,255,.10); }
+.intro-why__item:first-of-type{ border-top:0; padding-top:clamp(26px,7vw,40px); }
+.intro-why__idx{ font-family:var(--font-display); font-size:clamp(13px,3.5vw,15px); font-weight:700; letter-spacing:.2em; color:#6f6b66; margin-bottom:18px; }
+.intro-why__idx b{ color:var(--cream); font-weight:800; }
+.intro-why__plabel{ display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700; letter-spacing:.04em; color:var(--mist); margin-bottom:12px; }
+.intro-why__plabel::before{ content:""; width:14px; height:1px; background:var(--mist); }
+.intro-why__problem{ font-size:clamp(14px,3.7vw,15px); line-height:1.85; color:#807b75; text-wrap:pretty; }
+.intro-why__cue{ width:1px; height:clamp(24px,6vw,38px); background:linear-gradient(rgba(255,255,255,.10),var(--cream)); margin:18px 0 16px; }
+.intro-why__alabel{ font-size:11px; font-weight:800; letter-spacing:.14em; color:var(--cream); margin-bottom:10px; }
+.intro-why__atitle{ font-size:clamp(22px,6vw,30px); font-weight:800; letter-spacing:-.03em; line-height:1.2; color:var(--cream); margin-bottom:14px; text-wrap:balance; }
+.intro-why__answer{ font-size:clamp(14px,3.8vw,16px); line-height:1.8; color:var(--sand); text-wrap:pretty; }
+@supports (animation-timeline: view()){
+  #tab-intro .intro-why__title, #tab-intro .intro-why__rule{ animation:mmRise .9s both; animation-timeline:view(); animation-range:entry 0% cover 18%; }
+  #tab-intro .intro-why__item{ animation:mmRise linear both; animation-timeline:view(); animation-range:entry 2% cover 24%; }
+}
 </style>
 </head>
 <body>
@@ -2061,23 +2082,42 @@ img[src=""], video[src=""] {
 
     <div class="intro-divider"></div>
 
-    <!-- ③ 마모루의 원칙 — 선언문 바로 뒤 배치 (설득→증거 흐름) -->
-    <div class="intro-approach">
-      <div class="intro-approach-bg">
-        <p class="intro-approach-title">마모루의 원칙</p>
-        <div class="intro-approach-block">
-          <h4>본질에 집중하다 <br>: 2대를 잇는 대표의 책임 수리</h4>
-          <p>간단한 작업으로  취급하지 않습니다. 2대를 거쳐 축적된 마모루만의 복원 기술력을 바탕으로, 대표가 직접 진단하고 진행하며 책임을 다합니다</p>
-        </div>
-        <div class="intro-approach-block">
-          <h4>근본을 진단하다 <br>: 가위와 디자이너 사이의 '호흡'까지</h4>
-          <p>모든 불편증상은 단순한 상처 때문이 아닐 수 있습니다. 가위의 상태는 물론, 디자이너의 커트 습관과 가위 사이의 상관관계를 분석하여 맞춤형 복원을 진행합니다</p>
-        </div>
-        <div class="intro-approach-block">
-          <h4>투명함을 증명하다 <br>: 실시간 알림, 수리내역서까지</h4>
-          <p>소중한 도구인만큼 생길 수 있는 불안함을 확신으로 바꿔드립니다. 가위를 보내는 시점부터 받는 순간까지 실시간 알림톡으로 공유하며, 완료 시에는 <b>수리내역서</b>를 함께 제공하여 투명한 공정을 데이터로 증명합니다</p>
-        </div>
-      </div>
+    <!-- ③ 왜, 마모루인가 — 기존 수리의 문제 → 마모루의 답 (구 '마모루의 원칙' 대체 / 디자인모니터 시안) -->
+    <!-- [TEXT] 문제/답 문구 수정은 각 intro-why__problem / __atitle / __answer -->
+    <div class="intro-why">
+      <p class="intro-why__kicker">MAMORU RESTORATION</p>
+      <h3 class="intro-why__title">왜, 마모루인가</h3>
+      <div class="intro-why__rule"></div>
+
+      <article class="intro-why__item">
+        <div class="intro-why__idx"><b>01</b> / 03</div>
+        <p class="intro-why__plabel">기존 가위 수리</p>
+        <p class="intro-why__problem">맡기고, 기다릴 뿐.<br>딜러가 수거해 외부 업체로 보냅니다.<br>정작 가위를 만지는 사람과는 한마디도 나누지 못합니다.</p>
+        <div class="intro-why__cue"></div>
+        <p class="intro-why__alabel">마모루는</p>
+        <h4 class="intro-why__atitle">본질에 집중</h4>
+        <p class="intro-why__answer">2대를 잇는 대표가<br>직접 진단하고, 직접 수리하고, 직접 책임집니다.</p>
+      </article>
+
+      <article class="intro-why__item">
+        <div class="intro-why__idx"><b>02</b> / 03</div>
+        <p class="intro-why__plabel">기존 가위 수리</p>
+        <p class="intro-why__problem">쓰임새를 모르는 수리.<br>커트 습관도, 진짜 원인도 보지 않은 채<br>당장의 불편만 덮습니다.</p>
+        <div class="intro-why__cue"></div>
+        <p class="intro-why__alabel">마모루는</p>
+        <h4 class="intro-why__atitle">근본을 진단</h4>
+        <p class="intro-why__answer">가위 상태는 물론,<br>디자이너의 커트 습관과 가위의 ‘호흡’까지 분석합니다.</p>
+      </article>
+
+      <article class="intro-why__item">
+        <div class="intro-why__idx"><b>03</b> / 03</div>
+        <p class="intro-why__plabel">기존 가위 수리</p>
+        <p class="intro-why__problem">꼭, 필요했을까.<br>안 해도 될 수리까지 권하는 곳도 있습니다.<br>무엇이 정말 필요한지 말해주는 곳은 드뭅니다.</p>
+        <div class="intro-why__cue"></div>
+        <p class="intro-why__alabel">마모루는</p>
+        <h4 class="intro-why__atitle">투명함을 증명</h4>
+        <p class="intro-why__answer">보내는 순간부터 실시간 알림톡으로,<br>완료 시 <b>수리내역서</b>로 모두 공개합니다.</p>
+      </article>
     </div>
 
     <div class="intro-divider"></div>
