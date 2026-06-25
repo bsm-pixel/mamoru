@@ -1515,6 +1515,19 @@ html, body {
 .qna-question-text{ font-size:clamp(14px,3.8vw,17px); line-height:1.4; text-wrap:pretty; }
 .qna-answer-text{ font-size:clamp(13px,3.5vw,15px); line-height:1.7; text-wrap:pretty; }
 .qna-answer-sub{ font-size:clamp(13px,3.3vw,14px); line-height:1.6; text-wrap:pretty; }
+
+/* ── 혜택 3카드 — PC 3열 (지속방문X 삭제 후) ── */
+@media screen and (min-width:768px){ .about-benefits-grid{ grid-template-columns:repeat(3,1fr); } }
+
+/* ── 진행방식 탭 PROCESS — 카드 → 에디토리얼 행 구조 리디자인 ── */
+.process-grid{ gap:0; max-width:520px; }
+.process-step{ background:transparent; border:0; border-bottom:1px solid var(--mm-border-l); border-radius:0; overflow:visible; align-items:center; gap:clamp(14px,4vw,20px); padding:clamp(16px,4.5vw,22px) 2px; }
+.process-step:last-child{ border-bottom:0; }
+.process-step-image{ width:clamp(52px,15vw,68px); height:clamp(52px,15vw,68px); background:rgba(26,26,26,0.035); border-radius:50%; }
+.process-step-number{ top:5px; left:5px; width:21px; height:21px; font-size:11px; }
+.process-step-content{ padding:0; }
+.process-arrow{ display:none; } /* 행 사이 hairline이 흐름 — 화살표 군더더기 제거 */
+.method-notes-card{ background:rgba(26,26,26,0.025); }
 </style>
 </head>
 <body>
@@ -1609,33 +1622,6 @@ html, body {
         </div>
       </div>
 
-      <!-- ② 당연한 얘기지만… 3가지 약속 — 배경 구분 -->
-      <div style="background: #EDEBE8; margin: 0 -20px; padding: 40px 20px;" class="fade-in">
-        <div style="max-width: 600px; margin: 0 auto; text-align: center;">
-          <p style="font-style: italic; color: var(--mm-text-d3); font-size: 14px; margin-bottom: 24px;">너무나도 당연한 얘기지만…</p>
-          <div class="about-promise">
-            <div class="about-promise-card fade-in">
-              <span class="about-promise-num">01</span>
-              <div class="about-promise-content">
-                <h4>고객이 이해해야 합니다</h4>
-              </div>
-            </div>
-            <div class="about-promise-card fade-in delay-1">
-              <span class="about-promise-num">02</span>
-              <div class="about-promise-content">
-                <h4>고객이 선택해야 합니다</h4>
-              </div>
-            </div>
-            <div class="about-promise-card fade-in delay-2">
-              <span class="about-promise-num">03</span>
-              <div class="about-promise-content">
-                <h4>고객이 오랫동안 만족해야 합니다</h4>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- ③ 이미지 영역 -->
       <div class="about-image fade-in" style="margin-top: 32px;">
         <!-- ✏️ 수정가능: 상담 현장 이미지 (src URL만 교체) -->
@@ -1647,23 +1633,7 @@ html, body {
       <div style="background: #EDEBE8; margin: 32px -20px 0; padding: 48px 20px;" class="fade-in">
         <div class="about-principles" style="padding-bottom: 0;">
           <p class="about-principles-title">상담철칙</p>
-          <div class="about-principle-item fade-in" style="background: #fff; border-radius: 8px; margin-bottom: 12px; border-bottom: none; padding: 28px 20px;">
-            <p class="about-principle-num">01</p>
-            <p class="about-principle-title">필요한 구매인지, 불필요한 구매인지</p>
-            <p class="about-principle-desc">올바른 지출 방향을 잡아드립니다<br>알아야 할 것을 몰랐기 떄문에 생기는<br>불필요한 지출을 막아드립니다</p>
-          </div>
-          <div class="about-principle-item fade-in" style="background: #fff; border-radius: 8px; margin-bottom: 12px; border-bottom: none; padding: 28px 20px;">
-            <p class="about-principle-num">02</p>
-            <p class="about-principle-title">제품을 안내하기 전, 질문이 우선</p>
-            <p class="about-principle-desc" style="margin-bottom: 12px;">
-              고객의 니즈와 원하는 느낌, <br>스타일과 여러가지 요건을 이해해야 합니다.
-            </p>
-            <p class="about-principle-desc">
-              먼저 제품을 권유한다면 설득일 뿐이며, 먼저 고객을 안다면 좋은 가위를 안내할 수 있습니다.
-            </p>
-          </div>
-           <div class="about-principle-item fade-in delay-1" style="background: #fff; border-radius: 8px; border-bottom: none; padding: 28px 20px;">
-            <p class="about-principle-num">03</p>
+          <div class="about-principle-item fade-in" style="background: #fff; border-radius: 8px; border-bottom: none; padding: 28px 20px;">
             <p class="about-principle-title">고객님께 맞는 제품이 없다면</p>
             <p class="about-principle-desc" style="margin-bottom: 12px;">
               솔직하게 말씀드립니다.<br>지금 필요하지 않거나, 더 맞는 선택이 있다면
@@ -1678,22 +1648,8 @@ html, body {
       <!-- ⑤ 큰 메시지 — 다크 배경으로 강한 대비 (상담철칙 → 결심 유도) -->
       <div style="background: var(--mm-bg-dark); margin: 0 -20px; padding: 56px 20px;" class="fade-in">
         <div style="max-width: 600px; margin: 0 auto; text-align: center;">
-          <p style="font-size: clamp(20px,5.8vw,30px); font-weight: 700; color: var(--mm-text-w); line-height: 1.4; letter-spacing: -0.03em; margin-bottom: 16px; text-wrap: balance;">
-            저희는 판매 후에<br>주기적인 방문을 드리지 않습니다
-          </p>
-          <p style="font-size: 14px; color: var(--mm-text-w2); line-height: 1.7; margin-bottom: 48px;">
-            미용사가 가위를 알고 이해하면<br>
-            불필요한 구매 및 방문딜러에게 의존에서 <strong style="color: var(--mm-text-w);">해방</strong>됩니다.
-          </p>
-
-          <p style="font-size: clamp(20px,5.8vw,30px); font-weight: 700; color: var(--mm-text-w); line-height: 1.4; letter-spacing: -0.03em; margin-bottom: 16px; text-wrap: balance;">
-            가위를 아는것,<br>저희가 책임지겠습니다
-          </p>
-          <p style="font-size: 14px; color: var(--mm-text-w2); line-height: 1.7;">
-            딱 필요할 때.<br>
-            <span style="display: inline-block; padding: 3px 10px; background: rgba(250,249,247,0.1); border-radius: 4px; color: var(--mm-text-w); font-weight: 600;">AS</span>와
-            <span style="display: inline-block; padding: 3px 10px; background: rgba(250,249,247,0.1); border-radius: 4px; color: var(--mm-text-w); font-weight: 600;">가위상담</span><br>
-            이 두 상황이 아니면 판매자의 부담스러운 지속방문은 불필요합니다.
+          <p style="font-size: clamp(22px,6.2vw,34px); font-weight: 700; color: var(--mm-text-w); line-height: 1.35; letter-spacing: -0.03em; text-wrap: balance;">
+            가위를 아는 것,<br>저희가 책임지겠습니다
           </p>
         </div>
       </div>
@@ -1722,11 +1678,6 @@ html, body {
           </div>
           <div class="about-benefit-card fade-in delay-2">
             <div class="about-benefit-icon">03</div>
-            <h4 class="about-benefit-title">부담스러운<br>지속방문 X</h4>
-            <p class="about-benefit-desc">필요할 땐 빠르고 편리하게 AS/컨설팅 접수시스템 제공</p>
-          </div>
-          <div class="about-benefit-card fade-in delay-3">
-            <div class="about-benefit-icon">04</div>
             <h4 class="about-benefit-title">모든 미용사에게<br>득이되는 정보 제공</h4>
             <p class="about-benefit-desc">틴닝의 불편해결부터 이해가 쉽도록 도움정보를 제공합니다.</p>
           </div>
@@ -1810,10 +1761,6 @@ html, body {
             네이버 지도로 보기 →
           </a>
         </div>
-      </div>
-
-      <div class="method-emotion">
-        <p class="method-emotion-text">"고객님과의 인상깊은 하루,<br>뜻깊은 시간을 기다리고 있겠습니다"</p>
       </div>
 
     </section>
@@ -1915,10 +1862,6 @@ html, body {
         </div>
       </div>
 
-      <div class="method-emotion">
-        <p class="method-emotion-text">"고객님의 매장으로 찾아뵙겠습니다"</p>
-      </div>
-
     </section>
   </div>
 
@@ -2003,10 +1946,6 @@ html, body {
             <p class="method-tip-text">간편진단을 먼저 진행하시면<br>상담사가 고객님의 스타일을 미리 파악하여 더 정확한 안내가 가능합니다</p>
           </div>
         </div>
-      </div>
-
-      <div class="method-emotion">
-        <p class="method-emotion-text">"시간과 장소에 구애받지 않고<br>편하게 상담받으세요"</p>
       </div>
 
     </section>
