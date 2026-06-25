@@ -1534,6 +1534,25 @@ html, body {
 .consult-tab{ border-color:rgba(255,255,255,.18); color:var(--mmt-mist); }
 .consult-tab.active{ background:var(--mmt-cream); border-color:var(--mmt-cream); color:var(--mm-bg-dark); }
 .consult-tabs-container .mmt-tab-label{ color:rgba(255,255,255,.42) !important; }
+
+/* ── PC: 폭 통일 — 색 블록 전폭 풀블리드 + 내부만 중앙 (계단현상 제거) ── */
+.mamoru-consult-page{ overflow-x:hidden; } /* 100vw 풀블리드 가로 스크롤 방지 */
+@media screen and (min-width:768px){
+  /* 탭 바: 960 제약 해제 → 히어로처럼 전폭 다크 (탭은 내부 중앙 정렬 유지) */
+  .consult-tabs-container{ max-width:none; padding:16px; }
+  /* 색 블록(문제답·철칙·선언·혜택): 컨테이너(760)를 뚫고 전폭 */
+  .consult-why-wrap, .mmt-bleed{
+    margin-left:calc(50% - 50vw) !important;
+    margin-right:calc(50% - 50vw) !important;
+    width:100vw;
+  }
+  /* 풀블리드 내부 콘텐츠는 중앙 제약(답답하지 않게 720) — 철칙·선언은 자체 inner(600)로 OK, 혜택만 지정 */
+  .mmt-bleed > .about-benefits-title,
+  .mmt-bleed > .about-benefits-grid{ max-width:760px; margin-left:auto; margin-right:auto; }
+  .consult-why{ max-width:680px; }
+  /* 여백 — PC에서 답답하지 않도록 섹션 패딩↑ */
+  .consult-section{ padding:80px 40px; }
+}
 </style>
 </head>
 <body>
@@ -1636,7 +1655,7 @@ html, body {
       </div>
 
       <!-- ④ 상담철칙 — parchment 배경 (실무 원칙 먼저) -->
-      <div style="background: #EDEBE8; margin: 32px -20px 0; padding: 48px 20px;" class="fade-in">
+      <div style="background: #EDEBE8; margin: 32px -20px 0; padding: 48px 20px;" class="fade-in mmt-bleed">
         <div class="about-principles" style="padding-bottom: 0;">
           <p class="about-principles-title">상담철칙</p>
           <div class="about-principle-item fade-in" style="background: #fff; border-radius: 8px; border-bottom: none; padding: 28px 20px;">
@@ -1652,7 +1671,7 @@ html, body {
       </div>
 
       <!-- ⑤ 큰 메시지 — 다크 배경으로 강한 대비 (상담철칙 → 결심 유도) -->
-      <div style="background: var(--mm-bg-dark); margin: 0 -20px; padding: 56px 20px;" class="fade-in">
+      <div style="background: var(--mm-bg-dark); margin: 0 -20px; padding: 56px 20px;" class="fade-in mmt-bleed">
         <div style="max-width: 600px; margin: 0 auto; text-align: center;">
           <p style="font-size: clamp(22px,6.2vw,34px); font-weight: 700; color: var(--mm-text-w); line-height: 1.35; letter-spacing: -0.03em; text-wrap: balance;">
             가위를 아는 것,<br>저희가 책임지겠습니다
@@ -1667,8 +1686,8 @@ html, body {
         <div class="about-image-placeholder">복원수리 / 상담 이미지 삽입</div>
       </div>
 
-      <!-- ⑧ 마모루에서 구매하시면 — 배경 구분 + 4카드 -->
-      <div style="background: #EDEBE8; margin: 32px -20px 0; padding: 48px 20px 40px;" class="fade-in">
+      <!-- ⑧ 마모루에서 구매하시면 — 배경 구분 + 3카드 -->
+      <div style="background: #EDEBE8; margin: 32px -20px 0; padding: 48px 20px 40px;" class="fade-in mmt-bleed">
         <h3 class="about-benefits-title">마모루에서 구매하시면</h3>
         <div class="about-benefits-grid">
           <div class="about-benefit-card fade-in">
