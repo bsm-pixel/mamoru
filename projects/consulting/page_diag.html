@@ -834,6 +834,34 @@ body {
   }
 }
 
+/* 진단 데이터 — 절제된 키:값 정리 (안내문구 대신 한눈에) */
+.diag-summary {
+  margin-top: 20px;
+  text-align: left;
+}
+.diag-summary__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 12px 2px;
+  border-bottom: 1px solid rgba(26,26,26,0.08);
+}
+.diag-summary__row:first-child { border-top: 1px solid rgba(26,26,26,0.08); }
+.diag-summary__k {
+  font-size: 13px;
+  color: #8A8580;
+  flex: 0 0 auto;
+  letter-spacing: -0.01em;
+}
+.diag-summary__v {
+  font-size: 14px;
+  color: #1A1A1A;
+  font-weight: 600;
+  text-align: right;
+  line-height: 1.5;
+}
+
 /* 가위 종류별 그룹 블록 */
 .diag-result-group {
   margin-top: 16px;
@@ -1710,41 +1738,44 @@ function diagGoBack() {
   }
 }
 
+/* 진단 데이터 요약 — 질문 라벨 : 선택 옵션 라벨 (전체, 한눈에) */
+function buildDiagSummaryRows(answers) {
+  return questionsData
+    .filter(function(q){ var v = answers[q.id]; return v != null && (!Array.isArray(v) || v.length > 0); })
+    .map(function(q){
+      var v = answers[q.id];
+      var labels = Array.isArray(v)
+        ? v.map(function(x){ return labelMap[x]; }).filter(Boolean)
+        : (labelMap[v] ? [labelMap[v]] : []);
+      return { label: q.label, value: labels.join(', ') };
+    })
+    .filter(function(r){ return r.value; });
+}
+/* 상담접수/TMS/캘린더로 넘길 한 줄 정리 텍스트 */
+function buildDiagSummaryText(answers) {
+  return buildDiagSummaryRows(answers).map(function(r){ return r.label + ': ' + r.value; }).join(' | ');
+}
+
 function diagShowResult() {
   document.getElementById('questionContent').style.display = 'none';
   document.getElementById('diagFooter').style.display = 'none';
-  
+
   const resultEl = document.getElementById('resultContent');
   resultEl.classList.add('show');
-  
-  /* 개인화 메시지 생성 */
-  let resultMsg = buildPersonalizedMessage(diagAnswers);
 
-  const tags = [];
-  const tagKeys = new Set(['Q_STAGE', 'Q_TYPE', 'Q_GENDER', 'Q_FING']); /* 핵심 태그만 표시 */
-  Object.keys(diagAnswers).forEach(key => {
-    if (!tagKeys.has(key)) return;
-    const val = diagAnswers[key];
-    if (Array.isArray(val)) {
-      val.forEach(v => {
-        if (labelMap[v]) tags.push(labelMap[v]);
-      });
-    } else {
-      if (labelMap[val]) tags.push(labelMap[val]);
-    }
-  });
-
-  const tagsHtml = tags.map(t => `<span class="diag-result-tag">${t}</span>`).join('');
+  /* 진단 데이터 — 절제된 키:값 정리 (따뜻한 안내문구 제거) */
+  const summaryHtml = buildDiagSummaryRows(diagAnswers).map(function(r){
+    return '<div class="diag-summary__row"><span class="diag-summary__k">' + r.label + '</span><span class="diag-summary__v">' + r.value + '</span></div>';
+  }).join('');
 
   /* 복원수리 안내 섹션 (조건부) */
   const restoreHtml = buildRestorationSection(diagAnswers);
 
   resultEl.innerHTML = `
     <div class="diag-result-card">
-      <span class="diag-result-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;display:inline"><path d="M12 2l2 6.5L20 12l-6 3.5L12 22l-2-6.5L4 12l6-3.5z" fill="#4A4A4A" stroke="#4A4A4A"/><circle cx="20" cy="4" r="1" fill="#4A4A4A" stroke="none"/><circle cx="4" cy="20" r="0.75" fill="#4A4A4A" stroke="none"/></svg> 진단 완료</span>
-      <h2 class="diag-result-title">맞춤 가위 상담 준비 완료!</h2>
-      <div class="diag-result-desc">${resultMsg}</div>
-      <div class="diag-result-tags">${tagsHtml}</div>
+      <span class="diag-result-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;display:inline"><path d="M4 12.5l5.5 5.5L20 6"/></svg> 진단 완료</span>
+      <h2 class="diag-result-title">진단이 정리되었습니다</h2>
+      <div class="diag-summary">${summaryHtml}</div>
     </div>
 
     ${restoreHtml}
@@ -1769,7 +1800,9 @@ function diagShowResult() {
 function diagGoToConsult() {
   // ★ URL 파라미터로 진단 데이터 전달 (도메인 간 localStorage 공유 불가)
   const diagData = encodeURIComponent(JSON.stringify(diagAnswers));
-  const url = CONSULT_PAGE_URL + '?diagnosis=' + diagData;
+  // ★ 정리된 요약 텍스트도 함께 전달 (상담접수/TMS/캘린더에서 깔끔히 표시용)
+  const diagSummary = encodeURIComponent(buildDiagSummaryText(diagAnswers));
+  const url = CONSULT_PAGE_URL + '?diagnosis=' + diagData + '&diag_summary=' + diagSummary;
 
   // ★ postMessage 방식으로 아임웹 부모 페이지 이동 (cross-origin 해결)
   window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: url }, '*');

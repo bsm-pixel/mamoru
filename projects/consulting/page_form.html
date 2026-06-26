@@ -1286,8 +1286,8 @@ body.pc #bootFallback {
    ★ 진단 결과 배너
    ───────────────────────────────────────────────────────────── */
 .diagnosis-banner {
-  background: rgba(130,158,134,0.08);  /* Dried Sage 틴트 */
-  border: 1px solid rgba(130,158,134,0.20);
+  background: rgba(26,26,26,0.03);  /* 모노크롬 뉴트럴 (구 Dried Sage 폐기) */
+  border: 1px solid var(--mm-border-l);
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 24px;
@@ -1330,7 +1330,7 @@ body.pc .diagnosis-tag {
 }
 
 .diagnosis-banner-badge {
-  background: #829E86;  /* Dried Sage */
+  background: #1A1A1A;  /* Void (모노크롬) */
   color: var(--mm-text-cream);
   font-size: 11px;
   font-weight: 700;
@@ -1340,17 +1340,27 @@ body.pc .diagnosis-tag {
 }
 
 .diagnosis-banner-title {
-  color: #6E8E73;  /* Dried Sage 진한 톤 */
+  color: #4A4A4A;  /* Stone (모노크롬) */
   font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .diagnosis-banner-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  display: block;  /* 라벨:값 행 정리 */
 }
+/* 진단 데이터 행 — 절제된 키:값 (모노크롬) */
+.diag-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 11px 2px;
+  border-bottom: 1px solid rgba(26,26,26,0.08);
+}
+.diag-row:first-child { border-top: 1px solid rgba(26,26,26,0.08); }
+.diag-row__k { font-size: 13px; color: #8A8580; flex: 0 0 auto; letter-spacing: -0.01em; }
+.diag-row__v { font-size: 14px; color: #1A1A1A; font-weight: 600; text-align: right; line-height: 1.5; }
 
 .diagnosis-tag {
   background: rgba(130,158,134,0.10);
@@ -1365,9 +1375,9 @@ body.pc .diagnosis-tag {
 .diagnosis-banner-hint {
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid rgba(130,158,134,0.15);
+  border-top: 1px solid var(--mm-border-l);
   font-size: 13px;
-  color: rgba(130,158,134,0.8);
+  color: var(--mm-text-d2);
   line-height: 1.5;
 }
 
@@ -2018,6 +2028,21 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
     return tags;
   }
 
+  // 진단 데이터 → 라벨:값 행 (정리된 형태)
+  function getDiagnosisRows(diagData) {
+    if (!diagData) return [];
+    var rows = [];
+    Object.keys(diagData).forEach(function(key) {
+      var val = diagData[key];
+      var qLabel = questionLabels[key] || key;
+      var v = Array.isArray(val)
+        ? val.map(function(x){ return labelMap[x] || x; }).filter(Boolean).join(', ')
+        : (val ? (labelMap[val] || val) : '');
+      if (v) rows.push({ label: qLabel, value: v });
+    });
+    return rows;
+  }
+
   function showDiagnosisBanner(diagData) {
     var banner = document.getElementById('diagnosis-banner');
     var tagsContainer = document.getElementById('diagnosis-tags');
@@ -2025,10 +2050,10 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
       console.log('[MAMORU] 배너 요소를 찾을 수 없음');
       return;
     }
-    var tags = getDiagnosisTags(diagData);
-    if (tags.length === 0) return;
-    tagsContainer.innerHTML = tags.map(function(t) {
-      return '<span class="diagnosis-tag">' + t + '</span>';
+    var rows = getDiagnosisRows(diagData);
+    if (rows.length === 0) return;
+    tagsContainer.innerHTML = rows.map(function(r) {
+      return '<div class="diag-row"><span class="diag-row__k">' + r.label + '</span><span class="diag-row__v">' + r.value + '</span></div>';
     }).join('');
     banner.classList.remove('hide');
     // 모바일 렌더링 문제 해결: 인라인 스타일로 강제 표시
