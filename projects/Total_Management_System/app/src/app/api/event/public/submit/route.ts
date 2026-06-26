@@ -135,6 +135,7 @@ export async function POST(req: NextRequest) {
           items: itemSummary,
           total_amount: String(totalAmount),
           receive_method: isVisit ? '매장방문' : '택배발송',
+          address: isVisit ? '매장 방문 수령' : [address1, address2].filter(Boolean).join(' '),
         },
       });
     } catch (notifyErr) {
