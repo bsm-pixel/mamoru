@@ -331,14 +331,27 @@ function EventDetail({ ev, patch, onDone, goSales }: {
       {/* 액션 */}
       <div className="space-y-2 pt-2">
         {ev.status === 'received' && (
-          <button
-            disabled={patch.isPending}
-            onClick={() => patch.mutate({ id: ev.id, action: 'payment_notice' }, { onSuccess: onDone })}
-            className="w-full py-2.5 rounded-lg bg-neutral-900 text-white text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {patch.isPending ? <Loader2 size={16} className="animate-spin" /> : <Package size={16} />}
-            입금안내 발송 (재고 확인 후)
-          </button>
+          <>
+            {/* 2메시지 흐름: 접수완료 알림톡에 계좌 포함 → 신규접수에서 바로 입금확인 */}
+            <button
+              disabled={patch.isPending}
+              onClick={() => {
+                if (!window.confirm(`${ev.customer_name}님 입금을 확인하고 판매로 전환합니다. (재고가 차감됩니다)`)) return;
+                patch.mutate({ id: ev.id, action: 'confirm_payment' }, { onSuccess: onDone });
+              }}
+              className="w-full py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {patch.isPending ? <Loader2 size={16} className="animate-spin" /> : '입금확인 → 판매 전환'}
+            </button>
+            {/* (선택) 별도 입금안내 알림톡이 필요한 경우 */}
+            <button
+              disabled={patch.isPending}
+              onClick={() => patch.mutate({ id: ev.id, action: 'payment_notice' }, { onSuccess: onDone })}
+              className="w-full py-2 rounded-lg border border-neutral-300 text-neutral-600 text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <Package size={14} /> 입금안내 별도 발송 (선택)
+            </button>
+          </>
         )}
         {ev.status === 'payment_noticed' && (
           <button
