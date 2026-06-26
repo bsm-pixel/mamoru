@@ -307,6 +307,31 @@ img[src=""], video[src=""] {
   display: block;
 }
 
+/* [GIF] 히어로 영상에 이어 페이드인 (videos/커트.gif) — 영상과 같은 틀 */
+.intro-hero-gif {
+  aspect-ratio: 16/9;
+  background: rgba(255,255,255,0.03);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 16px 24px 0;          /* 영상 바로 아래 이어지듯 */
+  width: calc(100% - 48px);
+  opacity: 0;
+  animation: introGifFade 1.2s ease 0.35s forwards;
+}
+.intro-hero-gif img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+@keyframes introGifFade {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-hero-gif { opacity: 1; animation: none; }
+}
+
 /* 섹션 구분 — 선 제거, 여백으로 호흡 확보 */
 .intro-divider {
   width: 0;
@@ -1956,6 +1981,11 @@ img[src=""], video[src=""] {
     <!-- [VIDEO] 히어로 영상 (videos/복원수리안내히어로영상.mp4) — 작업 장면 클로즈업 -->
     <div class="intro-hero-video">
       <video autoplay muted loop playsinline src="videos/복원수리안내히어로영상.mp4"></video>
+    </div>
+
+    <!-- [GIF] 커트 동작 — 영상에 이어 페이드인 (videos/커트.gif, 파일 없으면 자동 숨김) -->
+    <div class="intro-hero-gif">
+      <img src="videos/커트.gif" alt="커트 동작" onerror="this.parentElement.style.display='none';">
     </div>
 
     <!-- 영상 → 카피 전환 구간 -->
