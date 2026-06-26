@@ -1682,8 +1682,8 @@ html, body {
       <!-- [IMG] 사진 넣기: projects/consulting/images/상담현장.jpg 에 파일 저장 (가로:세로 3:2, 권장 1200×800px) -->
       <div class="about-image fade-in" style="margin-top: 32px;">
         <img src="images/상담현장.jpg" alt="마모루 상담 현장"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        <div class="about-image-placeholder" style="display:none;">상담 현장 이미지<br>images/상담현장.jpg</div>
+             onerror="if(!this.dataset.png){this.dataset.png=1;this.src='images/상담현장.png';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}">
+        <div class="about-image-placeholder" style="display:none;">상담 현장 이미지<br>images/상담현장.jpg 또는 .png</div>
       </div>
 
       <!-- ④ 상담철칙 — parchment 배경 (실무 원칙 먼저) -->
@@ -1715,8 +1715,8 @@ html, body {
       <!-- [IMG] 사진 넣기: projects/consulting/images/복원수리.jpg 에 파일 저장 (가로:세로 3:2, 권장 1200×800px) -->
       <div class="about-image fade-in" style="margin-top: 32px;">
         <img src="images/복원수리.jpg" alt="마모루 복원수리 / 상담"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        <div class="about-image-placeholder" style="display:none;">복원수리 / 상담 이미지<br>images/복원수리.jpg</div>
+             onerror="if(!this.dataset.png){this.dataset.png=1;this.src='images/복원수리.png';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}">
+        <div class="about-image-placeholder" style="display:none;">복원수리 / 상담 이미지<br>images/복원수리.jpg 또는 .png</div>
       </div>
 
       <!-- ⑧ 마모루에서 구매하시면 — 배경 구분 + 3카드 -->
