@@ -484,6 +484,22 @@ img[src=""], video[src=""] {
   text-align: center;
   margin-bottom: 20px;
 }
+/* B&A 하위 구분 라벨 — 영상 / 사진 섹션을 나눠 전환을 자연스럽게 */
+.ba-sublabel {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mist);
+  text-align: center;
+  margin: 4px 0 18px;
+}
+.ba-sublabel--photo {
+  margin-top: clamp(40px, 9vw, 64px);        /* 영상부 ↔ 사진부 여백 */
+  padding-top: clamp(26px, 6vw, 38px);
+  border-top: 1px solid rgba(255,255,255,0.08); /* 은은한 구분선 */
+}
 /* 모바일 스와이프 힌트 */
 .intro-ba-hint {
   text-align: center;
@@ -2006,7 +2022,8 @@ img[src=""], video[src=""] {
       <p class="intro-before-after-title">Before &amp; After</p>
 
       <!-- 결과 영상 (전후영상) — PREVIEW에서 이동, 사진 비포/애프터 위 -->
-      <div class="as-slider-container" style="margin-bottom:20px;">
+      <p class="ba-sublabel">복원 과정 영상</p>
+      <div class="as-slider-container" style="margin-bottom:0;">
         <div class="as-slider">
           <!-- [VIDEO] 전후영상 1 -->
           <div class="as-slide-item">
@@ -2036,6 +2053,7 @@ img[src=""], video[src=""] {
         </div>
       </div>
 
+      <p class="ba-sublabel ba-sublabel--photo">전후 비교 사진</p>
       <div class="intro-ba-wrapper">
         <div class="intro-ba-nav">
           <button class="intro-ba-nav-btn intro-ba-nav-prev" id="baPrev" aria-label="이전" disabled>&#8249;</button>
@@ -2176,8 +2194,8 @@ img[src=""], video[src=""] {
           </div>
           <!-- [VIDEO] 작업영상 2 (날등교정.mp4) -->
           <div class="as-slide-item">
-            <video autoplay muted loop playsinline src="videos/날등교정.mp4"></video>
-            <p class="as-slide-label">왼손가위 날등교정</p>
+            <video autoplay muted loop playsinline src="videos/슬라이드가공.mp4"></video>
+            <p class="as-slide-label">슬라이드 가공</p>
           </div>
           <!-- [VIDEO] 작업영상 3  -->
           <div class="as-slide-item">
