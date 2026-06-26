@@ -1161,23 +1161,27 @@ html, body {
   overflow: hidden;
   margin-bottom: 24px;
   position: relative;
+  aspect-ratio: 3 / 2;   /* 고정 틀 — 가로:세로 3:2 (어떤 사진이든 이 비율로) */
 }
 
 .about-image img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;     /* 비율 달라도 틀에 맞춰 가운데 자동 크롭 */
   display: block;
 }
 
 .about-image-placeholder {
   width: 100%;
-  height: 200px;
+  height: 100%;
   background: var(--mm-ink-soft);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--mm-text-d3);
   font-size: 13px;
+  text-align: center;
+  padding: 0 16px;
 }
 
 .about-image-caption {
@@ -1668,17 +1672,18 @@ html, body {
 커트스타일, 환경, 습관에 적당한가?<br>
 내 경력에도 안전한 구매인가?<br>
 가격 부담이 없는가?<br>
-이 모든것을 책임지며,<br>
-마모루상담의 가치는 언제나 가격을 뛰어넘겠습니다</p>
+이 모든것을 책임지겠습니다<br>
+마모루상담의 가치를 경험하세요</p>
           </article>
         </div>
       </div>
 
       <!-- ③ 이미지 영역 -->
+      <!-- [IMG] 사진 넣기: projects/consulting/images/상담현장.jpg 에 파일 저장 (가로:세로 3:2, 권장 1200×800px) -->
       <div class="about-image fade-in" style="margin-top: 32px;">
-        <!-- ✏️ 수정가능: 상담 현장 이미지 (src URL만 교체) -->
-        <!-- 📐 추천: 800x500px JPG/WebP (가로형) -->
-        <div class="about-image-placeholder">상담 현장 이미지 삽입</div>
+        <img src="images/상담현장.jpg" alt="마모루 상담 현장"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="about-image-placeholder" style="display:none;">상담 현장 이미지<br>images/상담현장.jpg</div>
       </div>
 
       <!-- ④ 상담철칙 — parchment 배경 (실무 원칙 먼저) -->
@@ -1707,10 +1712,11 @@ html, body {
       </div>
 
       <!-- ⑦ 이미지 영역 -->
+      <!-- [IMG] 사진 넣기: projects/consulting/images/복원수리.jpg 에 파일 저장 (가로:세로 3:2, 권장 1200×800px) -->
       <div class="about-image fade-in" style="margin-top: 32px;">
-        <!-- ✏️ 수정가능: 복원수리/상담 이미지 (src URL만 교체) -->
-        <!-- 📐 추천: 800x500px JPG/WebP (가로형) -->
-        <div class="about-image-placeholder">복원수리 / 상담 이미지 삽입</div>
+        <img src="images/복원수리.jpg" alt="마모루 복원수리 / 상담"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="about-image-placeholder" style="display:none;">복원수리 / 상담 이미지<br>images/복원수리.jpg</div>
       </div>
 
       <!-- ⑧ 마모루에서 구매하시면 — 배경 구분 + 3카드 -->
