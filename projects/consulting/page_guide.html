@@ -1028,6 +1028,10 @@ html, body {
 }
 
 @media screen and (max-width: 767px) {
+  /* 모바일: 페이지끝 CTA 숨김 — 외부 아임웹 플로팅(#mamoruConsultFloatingCta)과 중복 제거.
+     (외부 플로팅은 모바일 전용 → PC에선 이 페이지끝 CTA가 하단 CTA로 노출) */
+  .consult-cta-fixed { display: none; }
+
   .consult-hero-title {
     font-size: 28px;
   }
