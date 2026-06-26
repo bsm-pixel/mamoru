@@ -318,7 +318,8 @@ img[src=""], video[src=""] {
   opacity: 0;
   animation: introGifFade 1.2s ease 0.35s forwards;
 }
-.intro-hero-gif img {
+.intro-hero-gif img,
+.intro-hero-gif video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1983,9 +1984,9 @@ img[src=""], video[src=""] {
       <video autoplay muted loop playsinline src="videos/복원수리안내히어로영상.mp4"></video>
     </div>
 
-    <!-- [GIF] 커트 동작 — 영상에 이어 페이드인 (videos/커트.gif, 파일 없으면 자동 숨김) -->
+    <!-- [VIDEO] 커트 동작 — 영상에 이어 페이드인 (videos/커트1.mp4, 파일 없으면 자동 숨김) -->
     <div class="intro-hero-gif">
-      <img src="videos/커트.gif" alt="커트 동작" onerror="this.parentElement.style.display='none';">
+      <video src="videos/커트1.mp4" autoplay muted loop playsinline onerror="this.parentElement.style.display='none';"></video>
     </div>
 
     <!-- 영상 → 카피 전환 구간 -->
