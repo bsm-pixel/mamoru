@@ -1974,6 +1974,12 @@ img[src=""], video[src=""] {
 .intro-why__alabel{ font-size:11px; font-weight:800; letter-spacing:.14em; color:var(--cream); margin-bottom:10px; }
 .intro-why__atitle{ font-size:clamp(22px,6vw,30px); font-weight:800; letter-spacing:-.03em; line-height:1.2; color:var(--cream); margin-bottom:14px; text-wrap:balance; }
 .intro-why__answer{ font-size:clamp(14px,3.8vw,16px); line-height:1.8; color:var(--sand); text-wrap:pretty; }
+/* '왜,마모루인가' 배경 — 수리한 가위들 사진 은은하게 (글씨 가독성 유지) */
+.intro-why{ position:relative; overflow:hidden; }
+.intro-why__photo{ position:absolute; inset:0; background-size:cover; background-position:center; filter:brightness(0.30); z-index:0; } /* ← brightness 숫자로 밝기 조절(낮을수록 글씨 잘보임) */
+.intro-why__photo::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(26,26,26,.55), rgba(26,26,26,.32) 45%, var(--void)); }
+.intro-why > :not(.intro-why__photo){ position:relative; z-index:1; }
+.intro-why .intro-why__title, .intro-why .intro-why__atitle{ text-shadow:0 1px 12px rgba(0,0,0,.6); }
 </style>
 </head>
 <body>
@@ -2159,6 +2165,8 @@ img[src=""], video[src=""] {
     <!-- ③ 왜, 마모루인가 — 기존 수리의 문제 → 마모루의 답 (구 '마모루의 원칙' 대체 / 디자인모니터 시안) -->
     <!-- [TEXT] 문제/답 문구 수정은 각 intro-why__problem / __atitle / __answer -->
     <div class="intro-why">
+      <!-- [IMG] 배경: 수리한 가위들 사진 → projects/as/images/수리가위들.jpg 넣고 push. 밝기는 CSS .intro-why__photo filter:brightness 로 조절 -->
+      <div class="intro-why__photo" style="background-image:url('images/수리가위들.jpg');"></div>
       <p class="intro-why__kicker">MAMORU RESTORATION</p>
       <h3 class="intro-why__title">왜, 마모루인가</h3>
       <p class="intro-why__legend"><span class="intro-why__dim">일반적인 가위 수리,</span> <span class="intro-why__on">그리고 마모루</span></p>
@@ -2282,7 +2290,7 @@ img[src=""], video[src=""] {
       <div class="intro-process-timeline">
         <!-- [IMG] 각 단계 이미지: projects/as/images/ 에 타임라인01~09.jpg(또는 .png) 넣고 push → 자동 표시. 없으면 다크 박스 유지 -->
         <div class="intro-timeline-item">
-          <div class="intro-timeline-img"><img src="images/타임라인01.jpg" alt="사전검수" onerror="if(!this.dataset.p){this.dataset.p=1;this.src='images/타임라인01.png';}else{this.style.display='none';}"></div>
+          <div class="intro-timeline-img"><img src="images/검수.jpg" alt="사전검수" onerror="if(!this.dataset.p){this.dataset.p=1;this.src='images/타임라인01.png';}else{this.style.display='none';}"></div>
           <p class="intro-timeline-step">01</p>
           <p class="intro-timeline-name">사전검수</p>
           <p class="intro-timeline-desc">수량 및 상태 체크</p>
@@ -2300,10 +2308,10 @@ img[src=""], video[src=""] {
           <p class="intro-timeline-desc">형태 복원 및 개선</p>
         </div>
         <div class="intro-timeline-item">
-          <div class="intro-timeline-img"><img src="images/초음파.jpg" alt="초음파세척" onerror="if(!this.dataset.p){this.dataset.p=1;this.src='images/타임라인04.png';}else{this.style.display='none';}"></div>
+          <div class="intro-timeline-img"><img src="images/바닥.jpg" alt="초음파세척" onerror="if(!this.dataset.p){this.dataset.p=1;this.src='images/타임라인04.png';}else{this.style.display='none';}"></div>
           <p class="intro-timeline-step">04</p>
-          <p class="intro-timeline-name">초음파세척</p>
-          <p class="intro-timeline-desc">미세 이물질 제거</p>
+          <p class="intro-timeline-name">숫돌띠 교정·복원</p>
+          <p class="intro-timeline-desc">개폐 및 균형 개선</p>
         </div>
         <div class="intro-timeline-item">
           <div class="intro-timeline-img"><img src="images/녹제거.jpg" alt="녹제거" onerror="if(!this.dataset.p){this.dataset.p=1;this.src='images/타임라인05.png';}else{this.style.display='none';}"></div>
@@ -2327,10 +2335,10 @@ img[src=""], video[src=""] {
           <div class="intro-timeline-img"><img src="images/타임라인08.jpg" alt="부품교체" onerror="if(!this.dataset.p){this.dataset.p=1;this.src='images/타임라인08.png';}else{this.style.display='none';}"></div>
           <p class="intro-timeline-step">08</p>
           <p class="intro-timeline-name">노후부품 교체</p>
-          <p class="intro-timeline-desc">범퍼 · 다이얼 등</p>
+          <p class="intro-timeline-desc">와셔 · 스토퍼 등</p>
         </div>
         <div class="intro-timeline-item">
-          <div class="intro-timeline-img"><img src="images/타임라인09.jpg" alt="스토퍼 장착" onerror="if(!this.dataset.p){this.dataset.p=1;this.src='images/타임라인09.png';}else{this.style.display='none';}"></div>
+          <div class="intro-timeline-img"><img src="images/내역서.jpg" alt="스토퍼 장착" onerror="if(!this.dataset.p){this.dataset.p=1;this.src='images/타임라인09.png';}else{this.style.display='none';}"></div>
           <p class="intro-timeline-step">09</p>
           <p class="intro-timeline-name">수리내역서 작성</p>
           <p class="intro-timeline-desc">상처 및 작업내용 안내</p>
