@@ -1902,15 +1902,28 @@ img[src=""], video[src=""] {
 #tab-intro .as-before-after-title,
 #tab-intro .intro-before-after-title{ letter-spacing:.06em; }
 
-/* ─ 스크롤 리빌 "Rise" (텍스트 섹션만 — 슬라이더 컨테이너 제외하여 간섭 0) ─ */
-@keyframes mmRise{ from{ opacity:0; transform:translateY(26px); } to{ opacity:1; transform:none; } }
-@supports (animation-timeline: view()){
+/* ─ 스크롤 리빌 — JS IntersectionObserver (전 브라우저·탭 호환, 스크롤 시 하나씩 등장) ─ */
+@media (prefers-reduced-motion: no-preference){
+  #tab-intro .intro-hero-video,
+  #tab-intro .intro-hero-gif,
   #tab-intro .intro-appeal,
-  #tab-intro .intro-approach,
+  #tab-intro .intro-why__item,
   #tab-intro .intro-belief-wrap,
-  #tab-intro .intro-process-story{
-    animation:mmRise linear both; animation-timeline:view(); animation-range:entry 3% cover 26%;
+  #tab-intro .ba-sublabel,
+  #tab-intro .as-slider-container,
+  #tab-intro .intro-ba-wrapper,
+  #tab-intro .intro-timeline-item,
+  .as-section-head,
+  .as-step-item,
+  .as-dur-section,
+  .as-shipping-card,
+  .as-packing-item,
+  .as-faq-item {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity .55s ease, transform .55s ease;
   }
+  .mamoru-as-page .as-in { opacity: 1 !important; transform: none !important; }
 }
 
 /* ─ Phase 2: 나머지 탭(진행방법·소요시간·비용·포장·QnA) — 라이트 배경, 모션 제외(탭 토글+view() 충돌 방지) ─ */
@@ -1961,10 +1974,6 @@ img[src=""], video[src=""] {
 .intro-why__alabel{ font-size:11px; font-weight:800; letter-spacing:.14em; color:var(--cream); margin-bottom:10px; }
 .intro-why__atitle{ font-size:clamp(22px,6vw,30px); font-weight:800; letter-spacing:-.03em; line-height:1.2; color:var(--cream); margin-bottom:14px; text-wrap:balance; }
 .intro-why__answer{ font-size:clamp(14px,3.8vw,16px); line-height:1.8; color:var(--sand); text-wrap:pretty; }
-@supports (animation-timeline: view()){
-  #tab-intro .intro-why__title, #tab-intro .intro-why__rule{ animation:mmRise .9s both; animation-timeline:view(); animation-range:entry 0% cover 18%; }
-  #tab-intro .intro-why__item{ animation:mmRise linear both; animation-timeline:view(); animation-range:entry 2% cover 24%; }
-}
 </style>
 </head>
 <body>
@@ -2822,6 +2831,23 @@ function goToASForm() {
     // 폴백: 항상 표시
     floating.classList.add('visible');
   }
+})();
+
+// 스크롤 리빌 — 섹션/아이템이 화면에 들어오면 하나씩 등장 (전 브라우저·탭 호환, 상담페이지와 동일 방식)
+(function() {
+  var SEL = '#tab-intro .intro-hero-video, #tab-intro .intro-hero-gif, #tab-intro .intro-appeal, #tab-intro .intro-why__item, #tab-intro .intro-belief-wrap, #tab-intro .ba-sublabel, #tab-intro .as-slider-container, #tab-intro .intro-ba-wrapper, #tab-intro .intro-timeline-item, .as-section-head, .as-step-item, .as-dur-section, .as-shipping-card, .as-packing-item, .as-faq-item';
+  var els = document.querySelectorAll(SEL);
+  if (!els.length) return;
+  if (!('IntersectionObserver' in window)) {
+    els.forEach(function(el) { el.classList.add('as-in'); }); // 폴백: 모두 표시
+    return;
+  }
+  var ob = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('as-in'); ob.unobserve(e.target); }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+  els.forEach(function(el) { ob.observe(el); });
 })();
 
 // 맨 위로 스크롤 (iframe 내부 → 부모 페이지에 postMessage로 요청)
