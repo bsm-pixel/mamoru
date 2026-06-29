@@ -47,6 +47,8 @@ body { font-family: var(--font-body); }
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>/* ⭐ 조기 높이 부트스트랩 — 파싱 중부터 높이 전송 → iframe 짤림 차단 */
+(function(){var ID='label-first',last=0;function gh(){var b=document.body;if(!b)return 0;var d=document.documentElement;return Math.max(b.scrollHeight||0,(d&&d.scrollHeight)||0,b.offsetHeight||0);}function s(){var h=Math.ceil(gh());if(h>last+1){last=h;try{window.parent.postMessage({type:'MAMORU_IFRAME_SIZE',id:ID,height:h},'*');}catch(_){}}}var t=setInterval(s,200);setTimeout(function(){clearInterval(t);},16000);document.addEventListener('DOMContentLoaded',s);})();</script>
 </head>
 <body>
 
