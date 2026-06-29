@@ -135,6 +135,7 @@ button[class*="mm-"]:focus-visible {
 .mm-hero__visual video {
   width: 100%;
   height: auto;
+  aspect-ratio: 750 / 560;   /* ⭐ 모바일 공간 예약 — 로드 전에도 높이 확보 → 짤림 0 (이미지 비율 바꾸면 이 값도 함께 수정) */
   object-fit: cover;
   animation: mm-ken-burns 12s var(--ease) both;
 }

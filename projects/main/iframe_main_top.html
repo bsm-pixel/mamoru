@@ -12,10 +12,6 @@
   border: none;
   display: block;
 }
-/* 짤림은 모바일에서만 발생 → 모바일에만 바닥값. PC는 원래 정상이라 손대지 않음(빈공간 위험 0) */
-@media (max-width: 767px) {
-  #mamoruMainTopFrame { min-height: 2400px; }   /* ⭐ 모바일 바닥값 — 하단 빈공간 보이면 이 숫자만 줄이세요 */
-}
 </style>
 
 <div id="mamoruMainTopWrap">
@@ -31,17 +27,7 @@
 <script>
 (function(){
   var iframe = document.getElementById('mamoruMainTopFrame');
-  iframe.style.height = '0px';
-  /* ⭐ 모바일 짤림 방지 — JS로 직접 min-height 바닥값(아임웹이 <style>/@media를 무시/제거해도 안전).
-     스크립트가 늦게 돌아도 iframe이 이 높이 밑으론 안 줄어 trust 항상 노출. PC(768px↑)는 미적용 */
-  function applyFloor() {
-    try {
-      var isMobile = !window.matchMedia || window.matchMedia('(max-width: 767px)').matches;
-      iframe.style.minHeight = isMobile ? '2400px' : '0px';
-    } catch (_) { iframe.style.minHeight = '2400px'; }
-  }
-  applyFloor();
-  window.addEventListener('resize', applyFloor);
+  iframe.style.height = '0px';   /* fallback 0 — 큰 fallback+monotonic = 빈여백 영구잠금이라 금지 */
   var currentHeight = 0;
 
   window.addEventListener('message', function(e) {
