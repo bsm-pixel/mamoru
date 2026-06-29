@@ -1,0 +1,23 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 정적 누적 카운터
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 스크롤 시 0→목표 숫자로 카운트업 (신뢰·규모감)
+  🚫 fetch·iframe·외부라이브러리 0 (※실시간 DB 아님 — 패널에 숫자 입력)
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name title @type outlined-textfield @default "" @label "제목(선택)" --}}
+{{!-- @name stats @type item @label "수치 항목" --}}
+<div class="mm-stat">
+  <p class="mm-stat__title">{{title}}</p>
+  <div class="mm-stat__grid">
+  {{#each stats}}
+    {{!-- @name value @type outlined-textfield @default "0" @label "숫자(예: 1240)" --}}
+    {{!-- @name prefix @type outlined-textfield @default "" @label "앞 기호(선택)" --}}
+    {{!-- @name suffix @type outlined-textfield @default "" @label "단위(건/% 등)" --}}
+    {{!-- @name label @type outlined-textfield @default "항목" @label "라벨" --}}
+    <div class="mm-stat__item">
+      <span class="mm-stat__num" data-target="{{value}}" data-prefix="{{prefix}}" data-suffix="{{suffix}}">0</span>
+      <span class="mm-stat__label">{{label}}</span>
+    </div>
+  {{/each}}
+  </div>
+</div>

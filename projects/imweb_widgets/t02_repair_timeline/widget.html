@@ -1,0 +1,26 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 복원 인터랙티브 타임라인
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 수거→검수→수리→출고 단계를 번호·선으로. 스크롤 시 순차 등장(과정 투명성=신뢰)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name title @type outlined-textfield @default "복원 과정" @label "제목(선택)" --}}
+{{!-- @name steps @type item @label "단계" --}}
+<div class="mm-tl">
+  <p class="mm-tl__title">{{title}}</p>
+  <ol class="mm-tl__list">
+  {{#each steps}}
+    {{!-- @name stepName @type outlined-textfield @default "단계명" @label "단계명" --}}
+    {{!-- @name stepDesc @type text-editor @default "<p>설명</p>" @label "설명" --}}
+    {{!-- @name stepImage @type image @label "이미지(선택)" --}}
+    <li class="mm-tl__step">
+      <span class="mm-tl__idx" aria-hidden="true"></span>
+      <div class="mm-tl__body">
+        <h3 class="mm-tl__name">{{stepName}}</h3>
+        <div class="mm-tl__desc">{{stepDesc}}</div>
+        <img class="mm-tl__img" src="{{stepImage}}" alt="" onerror="this.style.display='none'">
+      </div>
+    </li>
+  {{/each}}
+  </ol>
+</div>
