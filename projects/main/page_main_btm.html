@@ -7,7 +7,7 @@
 <!-- Fonts: Brand Guide v1.0 — Outfit(Display) + Plus Jakarta Sans + Noto Sans KR(Body) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════════════════════════════
    MAMORU Main Page (Bottom Half)
@@ -1082,7 +1082,7 @@ button[class*="mm-"]:focus-visible {
 
     function multiSend() {
       send();
-      [200, 600, 1500, 3000, 5000].forEach(function(ms) { setTimeout(send, ms); });
+      [50, 150, 400, 800, 1500, 3000, 5000, 8000].forEach(function(ms) { setTimeout(send, ms); });
     }
     if (document.readyState === 'complete') {
       multiSend();
@@ -1100,6 +1100,20 @@ button[class*="mm-"]:focus-visible {
     window.addEventListener('message', function(e) {
       if (e.data && e.data.type === 'REQUEST_HEIGHT') send();
     });
+
+    /* DOM 추가(후기 API 렌더 등) 감지 → 즉시 재측정 */
+    if (window.MutationObserver) {
+      try { new MutationObserver(send).observe(document.body, { childList: true, subtree: true }); } catch(_) {}
+    }
+    /* ⭐ 로드 윈도우 연속 재전송 안전망 — 첫 15초 매 280ms 재측정(monotonic이라 성장분만 반영), 이후 정지.
+       슬로우 데이터에서 이벤트 누락돼도 높이가 콘텐츠를 계속 따라가 짤림 방지 */
+    var __mmTick = setInterval(send, 280);
+    setTimeout(function() { clearInterval(__mmTick); }, 15000);
+    /* 인앱/BFCache 복귀 보강 */
+    window.addEventListener('pageshow', function(e) { if (e.persisted) multiSend(); else send(); });
+    document.addEventListener('visibilitychange', function() { if (!document.hidden) send(); });
+    window.addEventListener('focus', send);
+    window.addEventListener('orientationchange', function() { setTimeout(send, 300); });
 
     /* 아임웹 parent에서 페이지 이동 위임 */
     document.addEventListener('click', function(e) {

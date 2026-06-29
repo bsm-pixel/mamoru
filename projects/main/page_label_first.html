@@ -46,7 +46,7 @@ body { font-family: var(--font-body); }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -91,7 +91,7 @@ body { font-family: var(--font-body); }
 
   function multiSend() {
     send();
-    [50, 150, 400, 800, 1500, 3000].forEach(function(ms) { setTimeout(send, ms); });
+    [50, 150, 400, 800, 1500, 3000, 5000, 8000].forEach(function(ms) { setTimeout(send, ms); });
   }
 
   if (window.ResizeObserver) {
@@ -111,6 +111,11 @@ body { font-family: var(--font-body); }
   window.addEventListener('message', function(e) {
     if (e.data && e.data.type === 'REQUEST_HEIGHT') send();
   });
+  /* ⭐ 로드 윈도우 연속 재전송 안전망 — 첫 15초 매 280ms 재측정(성장분만), 이후 정지 */
+  var __mmTick = setInterval(send, 280);
+  setTimeout(function() { clearInterval(__mmTick); }, 15000);
+  window.addEventListener('focus', send);
+  window.addEventListener('orientationchange', function() { setTimeout(send, 300); });
 
   document.addEventListener('click', function(e) {
     var a = e.target.closest('a[href]');
