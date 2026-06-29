@@ -14,7 +14,7 @@
 }
 /* 짤림은 모바일에서만 발생 → 모바일에만 바닥값. PC는 원래 정상이라 손대지 않음(빈공간 위험 0) */
 @media (max-width: 767px) {
-  #mamoruMainTopFrame { min-height: 1200px; }   /* ⭐ 모바일 바닥값 — 하단 빈공간 보이면 이 숫자만 줄이세요 */
+  #mamoruMainTopFrame { min-height: 2400px; }   /* ⭐ 모바일 바닥값 — 하단 빈공간 보이면 이 숫자만 줄이세요 */
 }
 </style>
 
@@ -37,8 +37,8 @@
   function applyFloor() {
     try {
       var isMobile = !window.matchMedia || window.matchMedia('(max-width: 767px)').matches;
-      iframe.style.minHeight = isMobile ? '1200px' : '0px';
-    } catch (_) { iframe.style.minHeight = '1200px'; }
+      iframe.style.minHeight = isMobile ? '2400px' : '0px';
+    } catch (_) { iframe.style.minHeight = '2400px'; }
   }
   applyFloor();
   window.addEventListener('resize', applyFloor);
