@@ -1055,15 +1055,15 @@ button[class*="mm-"]:focus-visible {
       return Math.max(bodyScroll, docScroll, bodyOffset, lastBottom);
     }
 
-    function send() {
+    function send(force) {
       var h = Math.ceil(getHeight());
-      /* monotonic increasing — 한 번 도달한 큰 값에서 줄어들지 않음.
-         측정 노이즈(이미지 lazy load 직전, 폰트 폴백, 인앱 BFCache 일시 짧음 등)로
-         h 가 잠깐 작아져도 무시 → 콘텐츠 잘림 0% 보장 (2026-05-18 fix) */
-      if (h > lastSent + 1) {
-        lastSent = h;
+      /* monotonic increasing — 평소엔 커질 때만 전송(측정 노이즈 차단).
+         단 force=true(REQUEST_HEIGHT 응답)면 무조건 현재 높이 회신 →
+         부모가 초기 푸시를 놓쳐도 재요청으로 항상 복구(부모 monotonic이 작은값 방어). 2026-06-29 race fix */
+      if (force === true || h > lastSent + 1) {
+        if (h > lastSent) lastSent = h;
         window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', id: 'top', height: h }, '*');
-        if (debug) console.log('[mm-iframe top] send:', h);
+        if (debug) console.log('[mm-iframe top] send:', h, force ? '(forced)' : '');
       }
     }
 
@@ -1105,7 +1105,7 @@ button[class*="mm-"]:focus-visible {
 
     /* 6) 부모가 명시적으로 높이 요청 시 즉시 응답 */
     window.addEventListener('message', function(e) {
-      if (e.data && e.data.type === 'REQUEST_HEIGHT') send();
+      if (e.data && e.data.type === 'REQUEST_HEIGHT') send(true);
     });
 
     /* 7) 네이버/카카오 인앱 보강 — BFCache 복원, 앱 포그라운드 복귀, 포커스 복귀 시 재송신 */

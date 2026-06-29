@@ -79,10 +79,11 @@ body { font-family: var(--font-body); }
     return Math.max(bodyScroll, docScroll, bodyOffset, lastBottom);
   }
 
-  function send() {
+  function send(force) {
     var h = Math.ceil(getHeight());
-    if (h > lastSent + 1) {
-      lastSent = h;
+    /* force=true(REQUEST_HEIGHT)면 무조건 회신 → 부모가 초기 푸시 놓쳐도 재요청으로 복구. 2026-06-29 race fix */
+    if (force === true || h > lastSent + 1) {
+      if (h > lastSent) lastSent = h;
       window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', id: 'label-lineup', height: h }, '*');
     }
   }
@@ -107,7 +108,7 @@ body { font-family: var(--font-body); }
   window.addEventListener('pageshow', function(e) { if (e.persisted) multiSend(); else send(); });
   document.addEventListener('visibilitychange', function() { if (!document.hidden) send(); });
   window.addEventListener('message', function(e) {
-    if (e.data && e.data.type === 'REQUEST_HEIGHT') send();
+    if (e.data && e.data.type === 'REQUEST_HEIGHT') send(true);
   });
   /* ⭐ 로드 윈도우 연속 재전송 안전망 — 첫 15초 매 280ms 재측정(성장분만), 이후 정지 */
   var __mmTick = setInterval(send, 280);
