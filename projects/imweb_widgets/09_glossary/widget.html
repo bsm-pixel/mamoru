@@ -1,0 +1,22 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 미용가위 용어사전(검색)
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 용어 검색/필터 → 뜻 표시 (교육·SEO·전문성)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name placeholder @type outlined-textfield @default "용어 검색 (예: 텐션)" @label "검색창 안내문구" --}}
+{{!-- @name terms @type item @label "용어" --}}
+<div class="mm-gl">
+  <input type="search" class="mm-gl__search" placeholder="{{placeholder}}" aria-label="용어 검색">
+  <ul class="mm-gl__list">
+  {{#each terms}}
+    {{!-- @name term @type outlined-textfield @default "용어" @label "용어" --}}
+    {{!-- @name def @type text-editor @default "<p>뜻</p>" @label "뜻/설명" --}}
+    <li class="mm-gl__item" data-term="{{term}}">
+      <dt class="mm-gl__term">{{term}}</dt>
+      <dd class="mm-gl__def">{{def}}</dd>
+    </li>
+  {{/each}}
+  </ul>
+  <p class="mm-gl__empty" hidden>검색 결과가 없어요</p>
+</div>

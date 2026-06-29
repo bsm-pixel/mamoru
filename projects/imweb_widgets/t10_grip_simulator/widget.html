@@ -1,0 +1,28 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 그립/손크기 시뮬레이터
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 손 크기 선택 → 추천 가위 크기(인치)·이유·모델 (전환)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name question @type outlined-textfield @default "손 크기를 선택하세요" @label "질문" --}}
+{{!-- @name l1 @type outlined-textfield @default "작은 손" @label "옵션1 라벨" --}}
+{{!-- @name l2 @type outlined-textfield @default "보통" @label "옵션2 라벨" --}}
+{{!-- @name l3 @type outlined-textfield @default "큰 손" @label "옵션3 라벨" --}}
+{{!-- @name ctaText @type outlined-textfield @default "추천 모델 보기" @label "버튼 문구" --}}
+{{!-- @name results @type item @label "추천(옵션1·2·3 순서로 3개)" --}}
+<div class="mm-grip" data-l1="{{l1}}" data-l2="{{l2}}" data-l3="{{l3}}" data-cta="{{ctaText}}">
+  <p class="mm-grip__q">{{question}}</p>
+  <div class="mm-grip__seg"></div>
+  <div class="mm-grip__results">
+  {{#each results}}
+    {{!-- @name size @type outlined-textfield @default "5.5인치" @label "추천 크기" --}}
+    {{!-- @name desc @type text-editor @default "<p>추천 이유</p>" @label "설명" --}}
+    {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
+    <div class="mm-grip__result" hidden>
+      <span class="mm-grip__size">{{size}}</span>
+      <div class="mm-grip__desc">{{desc}}</div>
+      <a class="mm-grip__cta" href="{{link}}"></a>
+    </div>
+  {{/each}}
+  </div>
+</div>

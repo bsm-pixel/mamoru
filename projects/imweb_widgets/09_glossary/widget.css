@@ -1,0 +1,10 @@
+.mm-gl{max-width:640px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-gl__search{width:100%;box-sizing:border-box;padding:14px 18px;border:1px solid #D4D0CB;border-radius:10px;background:#FFFFFF;font-family:inherit;font-size:15px;color:#1A1A1A;margin-bottom:8px;-webkit-appearance:none;}
+.mm-gl__search:focus{outline:none;border-color:#1A1A1A;}
+.mm-gl__list{list-style:none;margin:0;padding:0;}
+.mm-gl__item{padding:18px 4px;border-bottom:1px solid #EDEBE8;}
+.mm-gl__item.is-hide{display:none;}
+.mm-gl__term{margin:0 0 6px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(16px,4vw,18px);font-weight:800;letter-spacing:-.01em;}
+.mm-gl__def{margin:0;font-size:clamp(14px,3.8vw,15px);line-height:1.65;color:#4A4A4A;}
+.mm-gl__def p{margin:0;}
+.mm-gl__empty{text-align:center;color:#8A8580;font-size:14px;padding:24px 0;}

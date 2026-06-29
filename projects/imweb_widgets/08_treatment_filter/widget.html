@@ -1,0 +1,24 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 시술별 가위 선택 가이드(필터)
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 시술(태그) 선택 → 적합 모델만 필터링 (진입장벽↓)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name allLabel @type outlined-textfield @default "전체" @label "'전체' 버튼 문구" --}}
+{{!-- @name models @type item @label "모델" --}}
+<div class="mm-flt" data-all="{{allLabel}}">
+  <div class="mm-flt__chips"></div>
+  <div class="mm-flt__grid">
+  {{#each models}}
+    {{!-- @name name @type outlined-textfield @default "모델명" @label "모델명" --}}
+    {{!-- @name image @type image @label "이미지(선택)" --}}
+    {{!-- @name tags @type outlined-textfield @default "" @label "시술 태그(쉼표로: 커트,틴닝)" --}}
+    {{!-- @name link @type outlined-textfield @default "" @label "상품 링크(선택)" --}}
+    <a class="mm-flt__card" data-tags="{{tags}}" href="{{link}}">
+      <img class="mm-flt__img" src="{{image}}" alt="" onerror="this.style.display='none'">
+      <h3 class="mm-flt__name">{{name}}</h3>
+      <p class="mm-flt__tags">{{tags}}</p>
+    </a>
+  {{/each}}
+  </div>
+</div>

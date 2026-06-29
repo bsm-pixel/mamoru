@@ -1,0 +1,23 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 가위 관리법 가이드(아코디언)
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 소독·보관·텐션 등 단계별 아코디언 (전문성·체류↑)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name title @type outlined-textfield @default "" @label "제목(선택)" --}}
+{{!-- @name items @type item @label "항목" --}}
+<div class="mm-acc">
+  <p class="mm-acc__title">{{title}}</p>
+  {{#each items}}
+    {{!-- @name q @type outlined-textfield @default "항목 제목" @label "제목" --}}
+    {{!-- @name a @type text-editor @default "<p>내용</p>" @label "내용" --}}
+    {{!-- @name img @type image @label "이미지(선택)" --}}
+    <div class="mm-acc__item">
+      <button type="button" class="mm-acc__head"><span>{{q}}</span><i class="mm-acc__chev" aria-hidden="true"></i></button>
+      <div class="mm-acc__panel"><div class="mm-acc__inner">
+        <img class="mm-acc__img" src="{{img}}" alt="" onerror="this.style.display='none'">
+        <div class="mm-acc__a">{{a}}</div>
+      </div></div>
+    </div>
+  {{/each}}
+</div>
