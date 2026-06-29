@@ -1,0 +1,23 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 복원 Before/After 슬라이더
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 가위 복원 전/후를 손잡이 드래그로 비교
+  🚫 fetch·iframe·외부라이브러리 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name beforeImage @type image @label "복원 전 사진" --}}
+{{!-- @name afterImage  @type image @label "복원 후 사진" --}}
+{{!-- @name ratio @type segmented-control @default 4/3 @values 4/3,1/1,3/4,16/9 @valueNames 가로,정사각,세로,와이드 @label "사진 비율" --}}
+{{!-- @name beforeLabel @type outlined-textfield @default "BEFORE" @label "왼쪽 라벨" --}}
+{{!-- @name afterLabel  @type outlined-textfield @default "AFTER"  @label "오른쪽 라벨" --}}
+{{!-- @name caption     @type outlined-textfield @default "" @label "하단 설명(선택)" --}}
+{{!-- @name startPos    @type outlined-textfield @default "50" @label "시작 위치 %" --}}
+<div class="mm-ba" data-start="{{startPos}}">
+  <div class="mm-ba__stage" style="aspect-ratio:{{ratio}};">
+    <img class="mm-ba__img mm-ba__img--after"  src="{{afterImage}}"  alt="{{afterLabel}}"  draggable="false">
+    <img class="mm-ba__img mm-ba__img--before" src="{{beforeImage}}" alt="{{beforeLabel}}" draggable="false">
+    <span class="mm-ba__tag mm-ba__tag--before">{{beforeLabel}}</span>
+    <span class="mm-ba__tag mm-ba__tag--after">{{afterLabel}}</span>
+    <div class="mm-ba__handle" aria-hidden="true"><span class="mm-ba__grip"></span></div>
+  </div>
+  <p class="mm-ba__caption">{{caption}}</p>
+</div>

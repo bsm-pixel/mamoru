@@ -1,0 +1,27 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 한정세일 카운트다운
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 종료 일시까지 실시간 카운트다운. 0이 되면 종료 문구로 전환.
+  🚫 fetch·iframe·외부라이브러리·localStorage 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name title @type outlined-textfield @default "한정 혜택 종료까지" @label "제목" --}}
+{{!-- @name endDate @type date-picker @label "종료 날짜" --}}
+{{!-- @name endTime @type time-picker @label "종료 시간" --}}
+{{!-- @name theme @type segmented-control @default 라이트 @values 라이트,다크 @valueNames 라이트,다크 @label "테마" --}}
+{{!-- @name btnText @type outlined-textfield @default "지금 보러가기" @label "버튼 문구(비우면 숨김)" --}}
+{{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
+{{!-- @name endedText @type outlined-textfield @default "이번 혜택은 마감되었습니다" @label "종료 후 문구" --}}
+<div class="mm-cd" data-theme="{{theme}}" data-date="{{endDate}}" data-time="{{endTime}}">
+  <p class="mm-cd__title">{{title}}</p>
+  <div class="mm-cd__timer" aria-live="off">
+    <div class="mm-cd__unit"><span class="mm-cd__num" data-cd="d">00</span><span class="mm-cd__lbl">일</span></div>
+    <span class="mm-cd__sep">:</span>
+    <div class="mm-cd__unit"><span class="mm-cd__num" data-cd="h">00</span><span class="mm-cd__lbl">시</span></div>
+    <span class="mm-cd__sep">:</span>
+    <div class="mm-cd__unit"><span class="mm-cd__num" data-cd="m">00</span><span class="mm-cd__lbl">분</span></div>
+    <span class="mm-cd__sep">:</span>
+    <div class="mm-cd__unit"><span class="mm-cd__num" data-cd="s">00</span><span class="mm-cd__lbl">초</span></div>
+  </div>
+  <a class="mm-cd__btn" href="{{btnLink}}">{{btnText}}</a>
+  <p class="mm-cd__ended" data-ended="{{endedText}}"></p>
+</div>
