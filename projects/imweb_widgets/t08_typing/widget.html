@@ -1,0 +1,23 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 타이핑 헤드라인
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 고정 문구 + 바뀌는 단어가 타이핑되며 순환 (슬로건 임팩트)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name prefix @type outlined-textfield @default "마모루는" @label "앞 고정 문구" --}}
+{{!-- @name suffix @type outlined-textfield @default "입니다" @label "뒤 고정 문구(선택)" --}}
+{{!-- @name align @type segmented-control @default 가운데 @values 가운데,왼쪽 @valueNames 가운데,왼쪽 @label "정렬" --}}
+{{!-- @name phrases @type item @label "바뀌는 단어" --}}
+<div class="mm-tw" data-align="{{align}}">
+  <h2 class="mm-tw__line">
+    <span class="mm-tw__prefix">{{prefix}}</span>
+    <span class="mm-tw__word"></span><span class="mm-tw__cursor" aria-hidden="true"></span>
+    <span class="mm-tw__suffix">{{suffix}}</span>
+  </h2>
+  <div class="mm-tw__data" hidden>
+  {{#each phrases}}
+    {{!-- @name phrase @type outlined-textfield @default "정직" @label "단어" --}}
+    <span data-w="{{phrase}}"></span>
+  {{/each}}
+  </div>
+</div>

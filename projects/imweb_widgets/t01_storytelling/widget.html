@@ -1,0 +1,22 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 스크롤 스토리텔링(스티키)
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 이미지 고정 + 스크롤에 따라 장면(문구/이미지) 전환 (브랜드 몰입)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name scenes @type item @label "장면" --}}
+<div class="mm-st">
+  <div class="mm-st__media"><img class="mm-st__mediaimg" src="" alt=""></div>
+  <div class="mm-st__scenes">
+  {{#each scenes}}
+    {{!-- @name image @type image @label "이미지" --}}
+    {{!-- @name heading @type outlined-textfield @default "장면 제목" @label "제목" --}}
+    {{!-- @name text @type text-editor @default "<p>내용</p>" @label "내용" --}}
+    <section class="mm-st__scene" data-img="{{image}}">
+      <img class="mm-st__inline" src="{{image}}" alt="" onerror="this.style.display='none'">
+      <h3 class="mm-st__heading">{{heading}}</h3>
+      <div class="mm-st__text">{{text}}</div>
+    </section>
+  {{/each}}
+  </div>
+</div>

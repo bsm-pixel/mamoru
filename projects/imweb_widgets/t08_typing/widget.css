@@ -1,0 +1,7 @@
+.mm-tw{max-width:880px;margin:0 auto;padding:clamp(20px,4vw,32px) 16px;text-align:center;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-tw[data-align="왼쪽"]{text-align:left;}
+.mm-tw__line{margin:0;font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(24px,7vw,46px);font-weight:900;letter-spacing:-.02em;line-height:1.25;color:#1A1A1A;}
+.mm-tw__word{color:#1A1A1A;}
+.mm-tw__cursor{display:inline-block;width:3px;height:1em;background:#1A1A1A;margin-left:2px;vertical-align:text-bottom;animation:mm-tw-blink 1s step-end infinite;}
+@keyframes mm-tw-blink{0%,100%{opacity:1}50%{opacity:0}}
+.mm-tw__suffix:empty{display:none;}

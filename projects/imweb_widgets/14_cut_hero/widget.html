@@ -1,0 +1,23 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 스크롤 절단 히어로
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 진입 시 hairline이 가로질러 '컷' → 헤드라인 등장 (브랜드 첫인상)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name bg @type image @label "배경 이미지(선택)" --}}
+{{!-- @name theme @type segmented-control @default 다크 @values 다크,라이트 @valueNames 다크,라이트 @label "테마" --}}
+{{!-- @name kicker @type outlined-textfield @default "CUT THE FAKE, KEEP THE REAL" @label "키커(영문)" --}}
+{{!-- @name headline @type outlined-textfield @default "좋은 미용가위, 그 기준을 정의하다" @label "헤드라인" --}}
+{{!-- @name sub @type outlined-textfield @default "" @label "서브 문구(선택)" --}}
+{{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
+{{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
+<div class="mm-cut" data-theme="{{theme}}">
+  <img class="mm-cut__bg" src="{{bg}}" alt="" onerror="this.style.display='none'">
+  <div class="mm-cut__inner">
+    <span class="mm-cut__kicker">{{kicker}}</span>
+    <span class="mm-cut__blade" aria-hidden="true"></span>
+    <h2 class="mm-cut__headline">{{headline}}</h2>
+    <p class="mm-cut__sub">{{sub}}</p>
+    <a class="mm-cut__btn" href="{{btnLink}}">{{btnText}}</a>
+  </div>
+</div>

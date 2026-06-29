@@ -1,0 +1,17 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 무한 마퀴 띠
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 핵심 키워드가 끊임없이 흐르는 띠 (트렌디·브랜드 키워드)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name words @type item @label "키워드" --}}
+{{!-- @name theme @type segmented-control @default 다크 @values 다크,라이트 @valueNames 다크,라이트 @label "테마" --}}
+{{!-- @name speed @type outlined-textfield @default "30" @label "속도(초, 작을수록 빠름)" --}}
+<div class="mm-mq" data-theme="{{theme}}" data-speed="{{speed}}">
+  <div class="mm-mq__track">
+  {{#each words}}
+    {{!-- @name word @type outlined-textfield @default "키워드" @label "키워드" --}}
+    <span class="mm-mq__item">{{word}}</span><span class="mm-mq__dot" aria-hidden="true">✦</span>
+  {{/each}}
+  </div>
+</div>
