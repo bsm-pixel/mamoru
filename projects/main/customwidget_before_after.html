@@ -6,14 +6,15 @@
 ═══════════════════════════════════════════════════════════════ -->
 
 <!-- ========================= [ HTML 탭 ] ========================= -->
-{{!-- @name beforeImage @type image-uploader @label "복원 전 사진" --}}
-{{!-- @name afterImage  @type image-uploader @label "복원 후 사진" --}}
+{{!-- @name beforeImage @type image @label "복원 전 사진" --}}
+{{!-- @name afterImage  @type image @label "복원 후 사진" --}}
+{{!-- @name ratio @type segmented-control @default 4/3 @values 4/3,1/1,3/4,16/9 @valueNames 가로,정사각,세로,와이드 @label "사진 비율" --}}
 {{!-- @name beforeLabel @type outlined-textfield @default "BEFORE" @label "왼쪽 라벨" --}}
 {{!-- @name afterLabel  @type outlined-textfield @default "AFTER"  @label "오른쪽 라벨" --}}
 {{!-- @name caption     @type outlined-textfield @default "" @label "하단 설명(선택)" --}}
 {{!-- @name startPos    @type outlined-textfield @default "50" @label "시작 위치 %" --}}
 <div class="mm-ba" data-start="{{startPos}}">
-  <div class="mm-ba__stage">
+  <div class="mm-ba__stage" style="aspect-ratio:{{ratio}};">
     <img class="mm-ba__img mm-ba__img--after"  src="{{afterImage}}"  alt="{{afterLabel}}"  draggable="false">
     <img class="mm-ba__img mm-ba__img--before" src="{{beforeImage}}" alt="{{beforeLabel}}" draggable="false">
     <span class="mm-ba__tag mm-ba__tag--before">{{beforeLabel}}</span>
@@ -26,10 +27,10 @@
 <!-- ========================= [ CSS 탭 ] ========================= -->
 <style>
 .mm-ba{max-width:760px;margin:0 auto;font-family:-apple-system,'Noto Sans KR',sans-serif;}
-.mm-ba__stage{position:relative;width:100%;min-height:80px;overflow:hidden;border-radius:12px;background:#F5F3F0;touch-action:none;cursor:ew-resize;user-select:none;line-height:0;}
-.mm-ba__img{display:block;width:100%;height:auto;pointer-events:none;}
-.mm-ba__img--after{position:relative;z-index:1;}
-.mm-ba__img--before{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;-webkit-clip-path:inset(0 50% 0 0);clip-path:inset(0 50% 0 0);}
+.mm-ba__stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:12px;background:#F5F3F0;touch-action:none;cursor:ew-resize;user-select:none;}
+.mm-ba__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
+.mm-ba__img--after{z-index:1;}
+.mm-ba__img--before{z-index:2;-webkit-clip-path:inset(0 50% 0 0);clip-path:inset(0 50% 0 0);}
 .mm-ba__tag{position:absolute;top:12px;z-index:3;font-size:11px;font-weight:700;letter-spacing:.08em;padding:4px 10px;border-radius:999px;line-height:1.4;}
 .mm-ba__tag--before{left:12px;background:rgba(26,26,26,.78);color:#FAF9F7;}
 .mm-ba__tag--after{right:12px;background:#FAF9F7;color:#1A1A1A;border:1px solid #D4D0CB;}
