@@ -11,6 +11,10 @@
   width: 100%;
   border: none;
   display: block;
+  min-height: 1200px;   /* ⭐ 바닥값 — 스크립트가 늦게 돌아도 이 높이 밑으론 안 줄어듦 → 느린 데이터에서도 짤림 구조적 차단(trust 항상 노출). 하단에 빈공간 보이면 이 숫자만 줄이세요 */
+}
+@media (min-width: 768px) {
+  #mamoruMainTopFrame { min-height: 900px; }   /* PC는 세로가 짧음 */
 }
 </style>
 
