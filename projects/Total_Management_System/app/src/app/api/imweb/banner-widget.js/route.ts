@@ -286,6 +286,55 @@ const WIDGET_JS = `(function(){
     init();
   }
 })();
+
+/* ===== MAMORU iframe 자동 높이조절 (전역) =====
+   아임웹은 코드위젯 안의 <script>를 제거/미실행(특히 느린 회선)하므로,
+   iframe 높이조절을 코드위젯에 의존하면 간헐적으로 콘텐츠가 잘린다.
+   이 전역 스크립트(헤더 설치, 항상 실행)가 page.mamoru.kr 자식 iframe들을
+   source 매칭으로 직접 사이징 → 코드위젯 <script> 실행 여부와 무관하게 안정.
+   자식은 REQUEST_HEIGHT에 무조건 회신(force)하므로 초기 푸시를 놓쳐도 복구됨. (2026-06-29) */
+(function(){
+  if (window.__MAMORU_RESIZER_LOADED) return;
+  window.__MAMORU_RESIZER_LOADED = true;
+  var ORIGIN = 'https://page.mamoru.kr';
+  function frames(){
+    return [].slice.call(document.querySelectorAll('iframe')).filter(function(f){
+      return (f.src || '').indexOf(ORIGIN) === 0;
+    });
+  }
+  window.addEventListener('message', function(e){
+    if (e.origin !== ORIGIN) return;            // origin 가드
+    var d = e.data; if (!d) return;
+    if (d.type === 'MAMORU_IFRAME_SIZE' && typeof d.height === 'number'){
+      var list = frames();
+      for (var i = 0; i < list.length; i++){
+        if (list[i].contentWindow === e.source){  // source 매칭 = 보낸 iframe 정확히 지목
+          var h = Math.ceil(d.height);
+          var cur = parseInt(list[i].getAttribute('data-mm-h') || '0', 10);
+          if (h > cur){                           // monotonic — 줄어들지 않음
+            list[i].setAttribute('data-mm-h', String(h));
+            list[i].style.height = h + 'px';
+            list[i].style.minHeight = '0px';      // 혹시 남은 CSS 바닥값 해제(빈여백 방지)
+          }
+          return;
+        }
+      }
+    } else if (d.type === 'MAMORU_NAVIGATE' && d.url){
+      window.location.href = d.url;               // 자식 내부 링크 → 부모 네비게이션
+    }
+  });
+  function requestAll(){
+    frames().forEach(function(f){
+      try { if (f.contentWindow) f.contentWindow.postMessage({ type: 'REQUEST_HEIGHT' }, ORIGIN); } catch (_){}
+    });
+  }
+  // 로드~15초 넉넉히 재요청(자식 force 응답) + 늦게 주입되는 iframe 대비 20초간 주기 폴
+  [300,800,1500,2500,4000,6000,9000,12000,15000].forEach(function(ms){ setTimeout(requestAll, ms); });
+  var __mmReqTick = setInterval(requestAll, 1500);
+  setTimeout(function(){ clearInterval(__mmReqTick); }, 20000);
+  window.addEventListener('load', requestAll);
+  if (document.readyState !== 'loading') requestAll();
+})();
 `;
 
 export async function GET() {
