@@ -1,0 +1,24 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 라이트박스 사례 갤러리
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 썸네일 그리드 → 클릭 시 확대 모달(순수 DOM, iframe 아님). 복원 사례 몰입.
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name photos @type item @label "사진" --}}
+<div class="mm-gal">
+  <div class="mm-gal__grid">
+  {{#each photos}}
+    {{!-- @name image @type image @label "사진" --}}
+    {{!-- @name caption @type outlined-textfield @default "" @label "캡션(선택)" --}}
+    <button type="button" class="mm-gal__thumb" data-img="{{image}}" data-cap="{{caption}}">
+      <img src="{{image}}" alt="" loading="lazy">
+    </button>
+  {{/each}}
+  </div>
+  <div class="mm-gal__lb" hidden aria-modal="true" role="dialog">
+    <button type="button" class="mm-gal__close" aria-label="닫기">×</button>
+    <button type="button" class="mm-gal__nav mm-gal__prev" aria-label="이전">‹</button>
+    <figure class="mm-gal__figure"><img class="mm-gal__lbimg" src="" alt=""><figcaption class="mm-gal__cap"></figcaption></figure>
+    <button type="button" class="mm-gal__nav mm-gal__next" aria-label="다음">›</button>
+  </div>
+</div>

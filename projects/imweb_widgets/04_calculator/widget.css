@@ -1,0 +1,13 @@
+.mm-calc{max-width:460px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-calc__title{margin:0 0 20px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(18px,4.5vw,22px);font-weight:800;letter-spacing:-.02em;text-align:center;}
+.mm-calc__field{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.mm-calc__field>span{flex:0 0 48px;font-size:13px;font-weight:600;color:#8A8580;}
+.mm-calc__model,.mm-calc__qty{flex:1;padding:12px 14px;border:1px solid #D4D0CB;border-radius:8px;background:#FFFFFF;font-family:inherit;font-size:15px;color:#1A1A1A;-webkit-appearance:none;appearance:none;}
+.mm-calc__grades{flex:1;display:flex;gap:6px;}
+.mm-calc__gbtn{flex:1;padding:11px 4px;border:1px solid #D4D0CB;border-radius:8px;background:#FFFFFF;font-family:inherit;font-size:13px;font-weight:600;color:#1A1A1A;cursor:pointer;transition:all .2s;}
+.mm-calc__gbtn.is-on{background:#1A1A1A;color:#FAF9F7;border-color:#1A1A1A;}
+.mm-calc__out{display:flex;align-items:baseline;justify-content:space-between;margin-top:20px;padding-top:18px;border-top:1px solid #D4D0CB;}
+.mm-calc__out>span{font-size:14px;font-weight:600;color:#8A8580;}
+.mm-calc__total{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,7vw,34px);font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+.mm-calc__note{margin:14px 0 0;font-size:12px;color:#B8B4AF;text-align:center;}
+.mm-calc__note:empty{display:none;}

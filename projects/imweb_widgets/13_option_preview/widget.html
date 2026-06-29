@@ -1,0 +1,20 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 마감/컬러 옵션 미리보기
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 옵션 클릭 → 제품 이미지 즉시 교체 (구매 확신)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name title @type outlined-textfield @default "" @label "제목(선택)" --}}
+{{!-- @name ratio @type segmented-control @default 4/3 @values 4/3,1/1,16/9 @valueNames 가로,정사각,와이드 @label "이미지 비율" --}}
+{{!-- @name options @type item @label "옵션" --}}
+<div class="mm-opt">
+  <p class="mm-opt__title">{{title}}</p>
+  <div class="mm-opt__stage" style="aspect-ratio:{{ratio}};"><img class="mm-opt__main" src="" alt=""></div>
+  <div class="mm-opt__btns">
+  {{#each options}}
+    {{!-- @name optName @type outlined-textfield @default "옵션" @label "옵션명" --}}
+    {{!-- @name optImage @type image @label "옵션 이미지" --}}
+    <button type="button" class="mm-opt__btn" data-img="{{optImage}}">{{optName}}</button>
+  {{/each}}
+  </div>
+</div>

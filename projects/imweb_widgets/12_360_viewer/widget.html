@@ -1,0 +1,17 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 360° 회전 뷰어
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 각도별 사진들을 드래그로 빙글 회전 (제품 디테일 신뢰)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name ratio @type segmented-control @default 4/3 @values 4/3,1/1,16/9 @valueNames 가로,정사각,와이드 @label "이미지 비율" --}}
+{{!-- @name frames @type item @label "회전 프레임(각도별 사진)" --}}
+<div class="mm-360">
+  <div class="mm-360__stage" style="aspect-ratio:{{ratio}};">
+  {{#each frames}}
+    {{!-- @name frame @type image @label "프레임 이미지" --}}
+    <img class="mm-360__f" src="{{frame}}" alt="" draggable="false">
+  {{/each}}
+    <span class="mm-360__hint" aria-hidden="true">↔ 드래그하여 회전</span>
+  </div>
+</div>

@@ -1,0 +1,31 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 가위 스펙 비교표
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 모델 2~3개 나란히 스펙 비교(모바일 가로스크롤). 구매 결정 가속.
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name models @type item @label "모델" --}}
+<div class="mm-cmp">
+  <div class="mm-cmp__row">
+  {{#each models}}
+    {{!-- @name name @type outlined-textfield @default "모델명" @label "모델명" --}}
+    {{!-- @name image @type image @label "이미지(선택)" --}}
+    {{!-- @name weight @type outlined-textfield @default "" @label "무게" --}}
+    {{!-- @name length @type outlined-textfield @default "" @label "길이" --}}
+    {{!-- @name steel @type outlined-textfield @default "" @label "강재" --}}
+    {{!-- @name use @type outlined-textfield @default "" @label "용도" --}}
+    {{!-- @name link @type outlined-textfield @default "" @label "상품 링크(선택)" --}}
+    <article class="mm-cmp__card">
+      <img class="mm-cmp__img" src="{{image}}" alt="" onerror="this.style.display='none'">
+      <h3 class="mm-cmp__name">{{name}}</h3>
+      <dl class="mm-cmp__specs">
+        <div class="mm-cmp__spec"><dt>무게</dt><dd>{{weight}}</dd></div>
+        <div class="mm-cmp__spec"><dt>길이</dt><dd>{{length}}</dd></div>
+        <div class="mm-cmp__spec"><dt>강재</dt><dd>{{steel}}</dd></div>
+        <div class="mm-cmp__spec"><dt>용도</dt><dd>{{use}}</dd></div>
+      </dl>
+      <a class="mm-cmp__link" href="{{link}}">자세히 보기</a>
+    </article>
+  {{/each}}
+  </div>
+</div>

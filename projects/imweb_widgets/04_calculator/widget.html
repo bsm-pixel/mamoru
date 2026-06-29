@@ -1,0 +1,30 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 등급별 견적 계산기
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 모델·수량·등급 선택 → 예상금액 즉시 (B2B 리드 질↑)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name title @type outlined-textfield @default "예상 견적 계산" @label "제목" --}}
+{{!-- @name g1n @type outlined-textfield @default "소비자" @label "등급1 이름" --}}
+{{!-- @name g1d @type outlined-textfield @default "0" @label "등급1 할인%" --}}
+{{!-- @name g2n @type outlined-textfield @default "딜러" @label "등급2 이름" --}}
+{{!-- @name g2d @type outlined-textfield @default "15" @label "등급2 할인%" --}}
+{{!-- @name g3n @type outlined-textfield @default "아카데미" @label "등급3 이름" --}}
+{{!-- @name g3d @type outlined-textfield @default "20" @label "등급3 할인%" --}}
+{{!-- @name note @type outlined-textfield @default "실제 가격은 상담 시 확정됩니다" @label "하단 안내(선택)" --}}
+{{!-- @name models @type item @label "모델·단가" --}}
+<div class="mm-calc" data-g1n="{{g1n}}" data-g1d="{{g1d}}" data-g2n="{{g2n}}" data-g2d="{{g2d}}" data-g3n="{{g3n}}" data-g3d="{{g3d}}">
+  <p class="mm-calc__title">{{title}}</p>
+  <div class="mm-calc__data" hidden>
+  {{#each models}}
+    {{!-- @name mName @type outlined-textfield @default "모델명" @label "모델명" --}}
+    {{!-- @name mPrice @type outlined-textfield @default "0" @label "단가(숫자만)" --}}
+    <span data-name="{{mName}}" data-price="{{mPrice}}"></span>
+  {{/each}}
+  </div>
+  <label class="mm-calc__field"><span>모델</span><select class="mm-calc__model"></select></label>
+  <label class="mm-calc__field"><span>수량</span><input type="number" class="mm-calc__qty" value="1" min="1" inputmode="numeric"></label>
+  <div class="mm-calc__field"><span>등급</span><div class="mm-calc__grades"></div></div>
+  <div class="mm-calc__out"><span>예상 금액</span><strong class="mm-calc__total">—</strong></div>
+  <p class="mm-calc__note">{{note}}</p>
+</div>

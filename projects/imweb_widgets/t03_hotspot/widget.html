@@ -1,0 +1,24 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 가위 해부도 핫스팟
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 가위 사진 위 점을 클릭 → 부위 설명 툴팁 (전문성·교육)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name baseImage @type image @label "가위 사진(배경)" --}}
+{{!-- @name ratio @type segmented-control @default 16/9 @values 16/9,4/3,1/1 @valueNames 와이드,가로,정사각 @label "비율" --}}
+{{!-- @name spots @type item @label "핫스팟" --}}
+<div class="mm-hs">
+  <div class="mm-hs__stage" style="aspect-ratio:{{ratio}};">
+    <img class="mm-hs__base" src="{{baseImage}}" alt="" draggable="false">
+    {{#each spots}}
+      {{!-- @name x @type outlined-textfield @default "50" @label "가로 위치 %(0~100)" --}}
+      {{!-- @name y @type outlined-textfield @default "50" @label "세로 위치 %(0~100)" --}}
+      {{!-- @name spotTitle @type outlined-textfield @default "부위" @label "부위명" --}}
+      {{!-- @name spotDesc @type text-editor @default "<p>설명</p>" @label "설명" --}}
+      <div class="mm-hs__spot" style="left:{{x}}%;top:{{y}}%">
+        <button type="button" class="mm-hs__dot" aria-label="{{spotTitle}}"></button>
+        <div class="mm-hs__tip"><strong>{{spotTitle}}</strong><div class="mm-hs__tipdesc">{{spotDesc}}</div></div>
+      </div>
+    {{/each}}
+  </div>
+</div>
