@@ -31,7 +31,17 @@
 <script>
 (function(){
   var iframe = document.getElementById('mamoruMainTopFrame');
-  iframe.style.height = '0px';   // page 첫 송신(~50ms)이 정확값 설정. fallback 잠금 위험 0
+  iframe.style.height = '0px';
+  /* ⭐ 모바일 짤림 방지 — JS로 직접 min-height 바닥값(아임웹이 <style>/@media를 무시/제거해도 안전).
+     스크립트가 늦게 돌아도 iframe이 이 높이 밑으론 안 줄어 trust 항상 노출. PC(768px↑)는 미적용 */
+  function applyFloor() {
+    try {
+      var isMobile = !window.matchMedia || window.matchMedia('(max-width: 767px)').matches;
+      iframe.style.minHeight = isMobile ? '1200px' : '0px';
+    } catch (_) { iframe.style.minHeight = '1200px'; }
+  }
+  applyFloor();
+  window.addEventListener('resize', applyFloor);
   var currentHeight = 0;
 
   window.addEventListener('message', function(e) {
