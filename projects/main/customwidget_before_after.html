@@ -1,0 +1,84 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 복원수리 Before/After 슬라이더
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML/CSS/JS 3탭에 아래 섹션을 각각 붙여넣기
+  📝 가위 복원 전/후를 손잡이 드래그로 비교. 패널(이미지업로드)로 사례 교체.
+  🚫 fetch/iframe/외부라이브러리/localStorage 없음 → 아임웹 규격 통과
+═══════════════════════════════════════════════════════════════ -->
+
+<!-- ========================= [ HTML 탭 ] ========================= -->
+{{!-- @name beforeImage @type image-uploader @label "복원 전 사진" --}}
+{{!-- @name afterImage  @type image-uploader @label "복원 후 사진" --}}
+{{!-- @name beforeLabel @type outlined-textfield @default "BEFORE" @label "왼쪽 라벨" --}}
+{{!-- @name afterLabel  @type outlined-textfield @default "AFTER"  @label "오른쪽 라벨" --}}
+{{!-- @name caption     @type outlined-textfield @default "" @label "하단 설명(선택)" --}}
+{{!-- @name startPos    @type outlined-textfield @default "50" @label "시작 위치 %" --}}
+<div class="mm-ba" data-start="{{startPos}}">
+  <div class="mm-ba__stage">
+    <img class="mm-ba__img mm-ba__img--after"  src="{{afterImage}}"  alt="{{afterLabel}}"  draggable="false">
+    <img class="mm-ba__img mm-ba__img--before" src="{{beforeImage}}" alt="{{beforeLabel}}" draggable="false">
+    <span class="mm-ba__tag mm-ba__tag--before">{{beforeLabel}}</span>
+    <span class="mm-ba__tag mm-ba__tag--after">{{afterLabel}}</span>
+    <div class="mm-ba__handle" aria-hidden="true"><span class="mm-ba__grip"></span></div>
+  </div>
+  <p class="mm-ba__caption">{{caption}}</p>
+</div>
+
+<!-- ========================= [ CSS 탭 ] ========================= -->
+<style>
+.mm-ba{max-width:760px;margin:0 auto;font-family:-apple-system,'Noto Sans KR',sans-serif;}
+.mm-ba__stage{position:relative;width:100%;min-height:80px;overflow:hidden;border-radius:12px;background:#F5F3F0;touch-action:none;cursor:ew-resize;user-select:none;line-height:0;}
+.mm-ba__img{display:block;width:100%;height:auto;pointer-events:none;}
+.mm-ba__img--after{position:relative;z-index:1;}
+.mm-ba__img--before{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;-webkit-clip-path:inset(0 50% 0 0);clip-path:inset(0 50% 0 0);}
+.mm-ba__tag{position:absolute;top:12px;z-index:3;font-size:11px;font-weight:700;letter-spacing:.08em;padding:4px 10px;border-radius:999px;line-height:1.4;}
+.mm-ba__tag--before{left:12px;background:rgba(26,26,26,.78);color:#FAF9F7;}
+.mm-ba__tag--after{right:12px;background:#FAF9F7;color:#1A1A1A;border:1px solid #D4D0CB;}
+.mm-ba__handle{position:absolute;top:0;bottom:0;left:50%;width:2px;background:#FAF9F7;transform:translateX(-1px);z-index:4;box-shadow:0 0 0 1px rgba(0,0,0,.15);pointer-events:none;}
+.mm-ba__grip{position:absolute;top:50%;left:50%;width:40px;height:40px;transform:translate(-50%,-50%);background:#FAF9F7;border-radius:50%;box-shadow:0 2px 10px rgba(0,0,0,.25);}
+.mm-ba__grip::before,.mm-ba__grip::after{content:'';position:absolute;top:50%;width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;transform:translateY(-50%);}
+.mm-ba__grip::before{left:10px;border-right:6px solid #1A1A1A;}
+.mm-ba__grip::after{right:10px;border-left:6px solid #1A1A1A;}
+.mm-ba__caption{text-align:center;font-size:13px;color:#8A8580;margin:12px 0 0;line-height:1.5;}
+.mm-ba__caption:empty{display:none;}
+</style>
+
+<!-- ========================= [ JavaScript 탭 ] ========================= -->
+<script>
+(function(){
+  function initOne(root){
+    var stage  = root.querySelector('.mm-ba__stage');
+    var before = root.querySelector('.mm-ba__img--before');
+    var handle = root.querySelector('.mm-ba__handle');
+    if(!stage || !before || !handle) return;
+    var start = parseFloat(root.getAttribute('data-start')); if(isNaN(start)) start = 50;
+    var pos = Math.min(100, Math.max(0, start)), dragging = false;
+    function apply(p){
+      pos = Math.min(100, Math.max(0, p));
+      var v = 'inset(0 ' + (100 - pos) + '% 0 0)';
+      before.style.webkitClipPath = v; before.style.clipPath = v;
+      handle.style.left = pos + '%';
+    }
+    function fromEvent(e){
+      var rect = stage.getBoundingClientRect();
+      var cx = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+      apply((cx - rect.left) / rect.width * 100);
+    }
+    stage.addEventListener('pointerdown', function(e){ dragging = true; try{ stage.setPointerCapture(e.pointerId); }catch(_){} fromEvent(e); });
+    stage.addEventListener('pointermove', function(e){ if(dragging) fromEvent(e); });
+    window.addEventListener('pointerup', function(){ dragging = false; });
+    root.setAttribute('tabindex','0');
+    root.addEventListener('keydown', function(e){
+      if(e.key === 'ArrowLeft'){ apply(pos - 2); e.preventDefault(); }
+      else if(e.key === 'ArrowRight'){ apply(pos + 2); e.preventDefault(); }
+    });
+    apply(pos);
+  }
+  function init(){
+    var list = document.querySelectorAll('.mm-ba');
+    if(!list.length){ return setTimeout(init, 50); }
+    for(var i=0;i<list.length;i++) initOne(list[i]);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
