@@ -45,6 +45,8 @@
 | 옵션버튼(탭) | ⚠️`segmented-control`=텍스트로 떨어짐(실측). 프롬프트코어는 **`segment`**가 정답이라 함 → **테스트 후 채택**. 현재는 **텍스트칸+"입력: 값" 라벨**로 우회 중 | 실측+코어 |
 | 반복 | `item` | FAQ |
 
+**🔑 패널 "유형"은 UI에서 바꾸는 게 가장 확실(2026-06-30 실측)**: 코드 붙이면 아임웹이 변수마다 패널 항목을 만들되 **유형을 "입력창"으로 기본 설정**(annotation `@type`은 image/color-picker/outlined-textfield 등 일부만 자동반영, **`segment` 등은 입력창으로 떨어짐**). → **버튼/토글/드롭다운이 필요하면 그 항목 클릭 → "항목 속성 → 유형" 드롭다운에서 옵션버튼·스위치·드롭다운 선택 → 값 입력 → 적용.** 코드 토큰 싸움 불필요. **우리 JS는 `data-*` 값을 어떤 유형이 와도(텍스트/스위치 `"true"`/옵션버튼 값) 받게 작성**한다.
+
 **색상 @default = `#RRGGBBAA` 8자리 hex 필수** (예: 검정50% = `#1A1A1A80`). `rgba()`·3/6자리는 파싱 실패 시 `#000000FF`(불투명 검정)로 fallback → 🔧우리 color 기본값 8-hex로 교체.
 
 **annotation 지원 7태그만**: `@name @type @default @label @placeholder @values @valueNames`. (정적 안내문·구분선·`@description` **없음** → 설명은 "안내용 textfield"로 우회 중.)

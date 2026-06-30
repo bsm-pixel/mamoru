@@ -11,7 +11,9 @@
     if(hex.length===8){ var v=parseInt(hex.substring(6,8),16); if(!isNaN(v)) return v/255; }
     return null;
   }
-  function isLeft(al){al=String(al||'').trim();var low=al.toLowerCase();return al.indexOf('왼')>=0||al.indexOf('좌')>=0||low.indexOf('left')>=0||low.indexOf('start')>=0;}
+  function isLeft(al){al=String(al||'').trim();var low=al.toLowerCase();
+    /* 어떤 유형이 와도 인식: 텍스트(왼쪽/좌/left) · 스위치(true) · 옵션버튼(왼쪽) */
+    return al==='true'||al.indexOf('왼')>=0||al.indexOf('좌')>=0||low.indexOf('left')>=0||low.indexOf('start')>=0;}
   function focusPos(f){
     f=String(f||'').trim();var low=f.toLowerCase();
     if(f.indexOf('좌')>=0||f.indexOf('왼')>=0||low.indexOf('left')>=0)return 'left center';
