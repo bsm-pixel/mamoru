@@ -8,12 +8,13 @@
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name bg @type image @label "배경 이미지(선택)" --}}
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
+{{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 440px 또는 60vh (비우면 자동)" --}}
 {{!-- @name kicker @type outlined-textfield @default "CUT THE FAKE, KEEP THE REAL" @label "키커(영문)" --}}
 {{!-- @name headline @type outlined-textfield @default "좋은 미용가위, 그 기준을 정의하다" @label "헤드라인" --}}
 {{!-- @name sub @type outlined-textfield @default "" @label "서브 문구(선택)" --}}
 {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-<div class="mm-cut" data-theme="{{theme}}">
+<div class="mm-cut" data-theme="{{theme}}" data-height="{{height}}">
   <img class="mm-cut__bg" src="{{bg}}" alt="">
   <div class="mm-cut__inner">
     <span class="mm-cut__kicker">{{kicker}}</span>

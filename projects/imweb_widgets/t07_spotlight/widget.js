@@ -1,5 +1,7 @@
 (function(){
   function initOne(root){
+    var h=root.getAttribute('data-height');
+    if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
     root.addEventListener('pointermove',function(e){
       if(e.pointerType==='touch')return;
       var r=root.getBoundingClientRect();

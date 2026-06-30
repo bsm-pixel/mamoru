@@ -7,9 +7,10 @@
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name bg @type image @label "배경 이미지" --}}
+{{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 460px 또는 60vh (비우면 자동)" --}}
 {{!-- @name headline @type outlined-textfield @default "진짜는 가까이서 드러납니다" @label "헤드라인" --}}
 {{!-- @name sub @type outlined-textfield @default "" @label "서브 문구(선택)" --}}
-<div class="mm-sp">
+<div class="mm-sp" data-height="{{height}}">
   <img class="mm-sp__bg" src="{{bg}}" alt="">
   <div class="mm-sp__veil" aria-hidden="true"></div>
   <div class="mm-sp__inner">
