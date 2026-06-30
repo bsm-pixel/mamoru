@@ -1,5 +1,7 @@
 (function(){
+  function isLeft(al){al=String(al||'').trim();var low=al.toLowerCase();return al==='true'||al.indexOf('왼')>=0||al.indexOf('좌')>=0||low.indexOf('left')>=0||low.indexOf('start')>=0;}
   function initOne(root){
+    root.setAttribute('data-align', isLeft(root.getAttribute('data-align'))?'왼쪽':'가운데');
     var wordEl=root.querySelector('.mm-tw__word');
     var data=root.querySelectorAll('.mm-tw__data span');
     var words=[];for(var i=0;i<data.length;i++){var w=data[i].getAttribute('data-w');if(w)words.push(w);}
