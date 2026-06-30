@@ -1,0 +1,24 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 듀얼 선택 배너
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 두 갈래 길(제품/복원수리 등)을 큰 이미지 타일 2개로 (디자인+내비)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name tiles @type item @label "타일(2개 권장)" --}}
+<div class="mm-dual">
+{{#each tiles}}
+  {{!-- @name image @type image @label "타일 이미지" --}}
+  {{!-- @name label @type outlined-textfield @default "선택" @label "큰 라벨" --}}
+  {{!-- @name desc @type outlined-textfield @default "" @label "작은 설명(선택)" --}}
+  {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
+  <a class="mm-dual__tile" href="{{link}}">
+    <img class="mm-dual__img" src="{{image}}" alt="" onerror="this.style.display='none'">
+    <span class="mm-dual__veil" aria-hidden="true"></span>
+    <span class="mm-dual__cap">
+      <span class="mm-dual__label">{{label}}</span>
+      <span class="mm-dual__desc">{{desc}}</span>
+      <span class="mm-dual__arrow" aria-hidden="true">→</span>
+    </span>
+  </a>
+{{/each}}
+</div>

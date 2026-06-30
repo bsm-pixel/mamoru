@@ -1,0 +1,20 @@
+.mm-cine{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-cine[data-align="가운데"]{justify-content:center;text-align:center;}
+.mm-cine[data-align="왼쪽"]{justify-content:flex-start;text-align:left;}
+.mm-cine__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;animation:mm-cine-zoom 16s ease-out both;}
+@keyframes mm-cine-zoom{from{transform:scale(1.0)}to{transform:scale(1.09)}}
+.mm-cine__veil{position:absolute;inset:0;z-index:1;}
+.mm-cine[data-overlay="약"] .mm-cine__veil{background:linear-gradient(rgba(26,26,26,.15),rgba(26,26,26,.35));}
+.mm-cine[data-overlay="중"] .mm-cine__veil{background:linear-gradient(rgba(26,26,26,.30),rgba(26,26,26,.55));}
+.mm-cine[data-overlay="강"] .mm-cine__veil{background:linear-gradient(rgba(26,26,26,.45),rgba(26,26,26,.72));}
+.mm-cine__inner{position:relative;z-index:2;padding:clamp(28px,6vw,56px);max-width:720px;}
+.mm-cine__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(10px,2.6vw,12px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#D4D0CB;margin-bottom:12px;}
+.mm-cine__kicker:empty{display:none;}
+.mm-cine__headline{margin:0;font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(24px,6vw,44px);font-weight:900;line-height:1.2;letter-spacing:-.02em;color:#FAF9F7;text-shadow:0 2px 24px rgba(0,0,0,.35);}
+.mm-cine__sub{margin:14px 0 0;font-size:clamp(14px,3.8vw,17px);line-height:1.6;color:#EDEBE8;}
+.mm-cine__sub:empty{display:none;}
+.mm-cine__btn{display:inline-flex;margin-top:24px;padding:14px 34px;border-radius:8px;background:#FAF9F7;color:#1A1A1A;font-weight:700;font-size:15px;text-decoration:none;transition:opacity .2s,transform .2s;}
+.mm-cine__btn:empty{display:none;}
+.mm-cine__btn:active{transform:scale(.97);}
+@media (hover:hover){.mm-cine__btn:hover{opacity:.9;}}
+@media (prefers-reduced-motion:reduce){.mm-cine__bg{animation:none;}}

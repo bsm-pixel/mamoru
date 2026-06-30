@@ -1,0 +1,23 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 스플릿 프로모 배너
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 좌우 반반 — 이미지 + 카피·CTA (신제품·이벤트 정석 배너)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name image @type image @label "이미지" --}}
+{{!-- @name imgPos @type segmented-control @default 왼쪽 @values 왼쪽,오른쪽 @valueNames 왼쪽,오른쪽 @label "이미지 위치" --}}
+{{!-- @name theme @type segmented-control @default 라이트 @values 라이트,다크 @valueNames 라이트,다크 @label "테마" --}}
+{{!-- @name tag @type outlined-textfield @default "" @label "태그칩(선택)" --}}
+{{!-- @name title @type outlined-textfield @default "제목을 입력하세요" @label "제목" --}}
+{{!-- @name desc @type text-editor @default "<p>설명</p>" @label "설명" --}}
+{{!-- @name btnText @type outlined-textfield @default "자세히 보기" @label "버튼 문구(비우면 숨김)" --}}
+{{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
+<div class="mm-split" data-img="{{imgPos}}" data-theme="{{theme}}">
+  <div class="mm-split__media"><img src="{{image}}" alt="" onerror="this.style.display='none'"></div>
+  <div class="mm-split__body">
+    <span class="mm-split__tag">{{tag}}</span>
+    <h2 class="mm-split__title">{{title}}</h2>
+    <div class="mm-split__desc">{{desc}}</div>
+    <a class="mm-split__btn" href="{{btnLink}}">{{btnText}}</a>
+  </div>
+</div>

@@ -1,0 +1,19 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 슬림 공지 띠
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 얇은 안내 띠(배송공지·이벤트). 흐름(마퀴) 옵션
+  🚫 fetch·iframe 0 (※'닫기 기억'은 localStorage 금지라 상시 노출형)
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name icon @type outlined-textfield @default "✦" @label "아이콘(이모지/심볼, 선택)" --}}
+{{!-- @name text @type outlined-textfield @default "안내 문구를 입력하세요" @label "문구" --}}
+{{!-- @name linkText @type outlined-textfield @default "" @label "링크 문구(선택)" --}}
+{{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
+{{!-- @name theme @type segmented-control @default 다크 @values 다크,라이트 @valueNames 다크,라이트 @label "테마" --}}
+{{!-- @name flow @type switch @default false @label "문구 흐르기(마퀴)" --}}
+<div class="mm-notice" data-theme="{{theme}}" data-flow="{{flow}}">
+  <div class="mm-notice__in">
+    <span class="mm-notice__icon">{{icon}}</span>
+    <span class="mm-notice__text">{{text}}</span>
+    <a class="mm-notice__link" href="{{link}}">{{linkText}}</a>
+  </div>
+</div>

@@ -1,0 +1,24 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 시네마틱 이미지 배너 (Ken Burns)
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 풀폭 이미지 느린 줌 + 카피·CTA 오버레이 (범용 고급 배너)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name image @type image @label "배경 이미지" --}}
+{{!-- @name overlay @type segmented-control @default 중 @values 약,중,강 @valueNames 약,중,강 @label "어둡게(가독성)" --}}
+{{!-- @name align @type segmented-control @default 가운데 @values 가운데,왼쪽 @valueNames 가운데,왼쪽 @label "정렬" --}}
+{{!-- @name kicker @type outlined-textfield @default "" @label "키커(영문, 선택)" --}}
+{{!-- @name headline @type outlined-textfield @default "헤드라인을 입력하세요" @label "헤드라인" --}}
+{{!-- @name sub @type outlined-textfield @default "" @label "서브 문구(선택)" --}}
+{{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
+{{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
+<div class="mm-cine" data-align="{{align}}" data-overlay="{{overlay}}">
+  <img class="mm-cine__bg" src="{{image}}" alt="" onerror="this.style.display='none'">
+  <div class="mm-cine__veil" aria-hidden="true"></div>
+  <div class="mm-cine__inner">
+    <span class="mm-cine__kicker">{{kicker}}</span>
+    <h2 class="mm-cine__headline">{{headline}}</h2>
+    <p class="mm-cine__sub">{{sub}}</p>
+    <a class="mm-cine__btn" href="{{btnLink}}">{{btnText}}</a>
+  </div>
+</div>
