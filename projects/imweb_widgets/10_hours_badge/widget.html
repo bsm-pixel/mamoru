@@ -1,0 +1,25 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 영업시간 배지 + 카톡 버튼
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 현재 시각 기준 영업 중/외 자동 판별 + 카톡 상담 버튼
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name openLabel @type outlined-textfield @default "지금 영업 중" @label "영업중 문구" --}}
+{{!-- @name closeLabel @type outlined-textfield @default "영업 종료" @label "영업외 문구" --}}
+{{!-- @name btnText @type outlined-textfield @default "카카오톡 상담" @label "버튼 문구" --}}
+{{!-- @name btnLink @type outlined-textfield @default "" @label "카톡 채널 링크" --}}
+{{!-- @name hours @type item @label "요일별 영업시간" --}}
+<div class="mm-hr">
+  <div class="mm-hr__badge"><span class="mm-hr__dot"></span><span class="mm-hr__state">—</span></div>
+  <p class="mm-hr__detail"></p>
+  <a class="mm-hr__btn" href="{{btnLink}}">{{btnText}}</a>
+  <div class="mm-hr__data" hidden data-open="{{openLabel}}" data-close="{{closeLabel}}">
+  {{#each hours}}
+    {{!-- @name day @type outlined-textfield @default "월" @label "요일(월·화·수·목·금·토·일 중)" --}}
+    {{!-- @name open @type time-picker @label "오픈 시간" --}}
+    {{!-- @name close @type time-picker @label "마감 시간" --}}
+    {{!-- @name off @type switch @default false @label "휴무" --}}
+    <span data-day="{{day}}" data-o="{{open}}" data-c="{{close}}" data-off="{{off}}"></span>
+  {{/each}}
+  </div>
+</div>

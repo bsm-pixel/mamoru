@@ -1,0 +1,22 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 딜러/아카데미 게이트
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 코드 입력 → 전용 안내/가격 노출 (B2B 정보 분리)
+  🚫 fetch·iframe 0 / ⚠️ 클라이언트 코드라 강한 보안용 아님
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name prompt @type outlined-textfield @default "전용 코드를 입력하세요" @label "안내 문구" --}}
+{{!-- @name code @type outlined-textfield @default "MAMORU" @label "통과 코드" --}}
+{{!-- @name btnText @type outlined-textfield @default "확인" @label "버튼 문구" --}}
+{{!-- @name wrongText @type outlined-textfield @default "코드가 올바르지 않습니다" @label "오류 문구" --}}
+{{!-- @name content @type text-editor @default "<p>딜러/아카데미 전용 안내입니다.</p>" @label "통과 후 내용" --}}
+<div class="mm-gate" data-code="{{code}}">
+  <div class="mm-gate__lock">
+    <p class="mm-gate__prompt">{{prompt}}</p>
+    <div class="mm-gate__row">
+      <input type="text" class="mm-gate__input" aria-label="전용 코드" autocomplete="off">
+      <button type="button" class="mm-gate__btn">{{btnText}}</button>
+    </div>
+    <p class="mm-gate__err" data-msg="{{wrongText}}" hidden></p>
+  </div>
+  <div class="mm-gate__content" hidden>{{content}}</div>
+</div>

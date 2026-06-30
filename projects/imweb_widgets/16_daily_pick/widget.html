@@ -1,0 +1,28 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 오늘의 추천 모델
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 날짜 기준으로 매일 다른 추천 모델 1개 노출 (재방문 유도)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name kicker @type outlined-textfield @default "오늘의 추천" @label "키커" --}}
+{{!-- @name ctaText @type outlined-textfield @default "자세히 보기" @label "버튼 문구" --}}
+{{!-- @name models @type item @label "추천 풀(모델들)" --}}
+<div class="mm-daily" data-cta="{{ctaText}}">
+  <span class="mm-daily__kicker">{{kicker}}</span>
+  <div class="mm-daily__cards">
+  {{#each models}}
+    {{!-- @name name @type outlined-textfield @default "모델명" @label "모델명" --}}
+    {{!-- @name image @type image @label "이미지" --}}
+    {{!-- @name desc @type text-editor @default "<p>설명</p>" @label "설명" --}}
+    {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
+    <article class="mm-daily__card" hidden>
+      <img class="mm-daily__img" src="{{image}}" alt="" onerror="this.style.display='none'">
+      <div class="mm-daily__body">
+        <h3 class="mm-daily__name">{{name}}</h3>
+        <div class="mm-daily__desc">{{desc}}</div>
+        <a class="mm-daily__cta" href="{{link}}"></a>
+      </div>
+    </article>
+  {{/each}}
+  </div>
+</div>
