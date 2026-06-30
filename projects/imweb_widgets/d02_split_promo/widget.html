@@ -9,12 +9,13 @@
 {{!-- @name image @type image @label "이미지" --}}
 {{!-- @name imgPos @type outlined-textfield @default "왼쪽" @label "이미지 위치 — 입력: 왼쪽 · 오른쪽" --}}
 {{!-- @name theme @type outlined-textfield @default "라이트" @label "테마 — 입력: 라이트 · 다크" --}}
+{{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 360px (비우면 자동)" --}}
 {{!-- @name tag @type outlined-textfield @default "" @label "태그칩(선택)" --}}
 {{!-- @name title @type outlined-textfield @default "제목을 입력하세요" @label "제목" --}}
 {{!-- @name desc @type text-editor @default "<p>설명</p>" @label "설명" --}}
 {{!-- @name btnText @type outlined-textfield @default "자세히 보기" @label "버튼 문구(비우면 숨김)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-<div class="mm-split" data-img="{{imgPos}}" data-theme="{{theme}}">
+<div class="mm-split" data-img="{{imgPos}}" data-theme="{{theme}}" data-height="{{height}}">
   <div class="mm-split__media"><img src="{{image}}" alt=""></div>
   <div class="mm-split__body">
     <span class="mm-split__tag">{{tag}}</span>

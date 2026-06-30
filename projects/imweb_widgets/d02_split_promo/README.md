@@ -14,8 +14,9 @@
 | 항목 | @type | 기본값 | 설명 |
 |---|---|---|---|
 | 이미지 | image | — | |
-| 이미지 위치 | segmented-control | 왼쪽 | 왼쪽/오른쪽 |
-| 테마 | segmented-control | 라이트 | 라이트/다크 |
+| 이미지 위치 | outlined-textfield | 왼쪽 | **왼쪽** 또는 **오른쪽** (글·사진 좌우 바꿈) |
+| 테마 | outlined-textfield | 라이트 | **라이트** 또는 **다크** |
+| 높이 | outlined-textfield | (빈값) | `360px` 등, 비우면 자동(내용 높이) |
 | 태그칩 | outlined-textfield | (빈값) | 비우면 숨김 |
 | 제목 | outlined-textfield | 제목… | |
 | 설명 | text-editor | 설명 | |
