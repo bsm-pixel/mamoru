@@ -15,7 +15,7 @@
 |---|---|---|---|
 | 배경 이미지 | image | — | |
 | 어둡게 | color-picker | 검정 50% | **검정의 투명도 슬라이더를 드래그**해 어둡기 조절(가독성). 투명도↑=더 어둡게 |
-| 정렬 | segmented-control | 가운데 | 가운데/왼쪽 |
+| 정렬 | outlined-textfield | 가운데 | **가운데** 또는 **왼쪽** 입력(중앙·center·좌측·left도 인식) |
 | 키커/헤드라인/서브 | outlined-textfield | — | 키커·서브 비우면 숨김 |
 | 버튼 문구/링크 | outlined-textfield | (빈값) | 비우면 버튼 숨김 |
 
