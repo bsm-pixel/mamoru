@@ -1,10 +1,15 @@
-/* 시네마틱 배너 — Ken Burns는 CSS. JS는 '어둡게' 색상 적용 + 정렬값 관대하게 인식. */
+/* 시네마틱 배너 — Ken Burns는 CSS. JS: '어둡게'는 색 무시·보이드 검정 고정 + 투명도만 반영(브랜드 일관). 정렬 관대 인식. */
 (function(){
+  function applyVeil(veil,ov){
+    var a=null,m;
+    m=String(ov).match(/rgba\([^)]*,\s*([\d.]+)\s*\)/); if(m)a=parseFloat(m[1]);              // rgba(...,0.27)
+    else { m=String(ov).match(/^#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})$/); if(m)a=parseInt(m[1],16)/255; } // #RRGGBBAA
+    if(a!=null){ a=Math.max(0,Math.min(1,a)); veil.style.background='rgba(26,26,26,'+a+')'; } // 투명도만 → 검정 고정
+    else veil.style.background=ov;                                                            // 형식 모르면 picked 값 그대로(안전)
+  }
   function initOne(root){
-    // 어둡게: color-picker(검정+투명도) 값을 오버레이로
     var ov=root.getAttribute('data-overlay'),veil=root.querySelector('.mm-cine__veil');
-    if(veil&&ov){veil.style.background=ov;}
-    // 정렬: 가운데/왼쪽 외 유사어(중앙·center·좌측·left)도 인식
+    if(veil&&ov)applyVeil(veil,ov);
     var al=(root.getAttribute('data-align')||'').trim();
     root.setAttribute('data-align', /왼|좌|left|start/i.test(al) ? '왼쪽' : '가운데');
   }
