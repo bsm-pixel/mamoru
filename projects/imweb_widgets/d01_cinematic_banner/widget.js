@@ -1,17 +1,25 @@
-/* 시네마틱 배너 — Ken Burns는 CSS. JS: '어둡게'는 색 무시·보이드 검정 고정 + 투명도만 반영(브랜드 일관). 정렬 관대 인식. */
+/* 시네마틱 배너 — Ken Burns는 CSS. '어둡게'=검정 고정+투명도만, 정렬 관대 인식. (정규식 미사용) */
 (function(){
-  function applyVeil(veil,ov){
-    var a=null,m;
-    m=String(ov).match(/rgba\([^)]*,\s*([\d.]+)\s*\)/); if(m)a=parseFloat(m[1]);              // rgba(...,0.27)
-    else { m=String(ov).match(/^#?[0-9a-fA-F]{6}([0-9a-fA-F]{2})$/); if(m)a=parseInt(m[1],16)/255; } // #RRGGBBAA
-    if(a!=null){ a=Math.max(0,Math.min(1,a)); veil.style.background='rgba(26,26,26,'+a+')'; } // 투명도만 → 검정 고정
-    else veil.style.background=ov;                                                            // 형식 모르면 picked 값 그대로(안전)
+  function alphaOf(ov){
+    ov=String(ov||'').trim();
+    if(ov.indexOf('rgba')===0){
+      var inner=ov.substring(ov.indexOf('(')+1, ov.lastIndexOf(')'));
+      var p=inner.split(',');
+      if(p.length>=4){ var a=parseFloat(p[3]); if(!isNaN(a)) return a; }
+      return null;
+    }
+    var hex=ov.charAt(0)==='#'?ov.substring(1):ov;
+    if(hex.length===8){ var v=parseInt(hex.substring(6,8),16); if(!isNaN(v)) return v/255; }
+    return null;
+  }
+  function isLeft(al){
+    al=String(al||'').trim(); var low=al.toLowerCase();
+    return al.indexOf('왼')>=0 || al.indexOf('좌')>=0 || low.indexOf('left')>=0 || low.indexOf('start')>=0;
   }
   function initOne(root){
     var ov=root.getAttribute('data-overlay'),veil=root.querySelector('.mm-cine__veil');
-    if(veil&&ov)applyVeil(veil,ov);
-    var al=(root.getAttribute('data-align')||'').trim();
-    root.setAttribute('data-align', /왼|좌|left|start/i.test(al) ? '왼쪽' : '가운데');
+    if(veil&&ov){ var a=alphaOf(ov); if(a!==null){ a=Math.max(0,Math.min(1,a)); veil.style.background='rgba(26,26,26,'+a+')'; } else { veil.style.background=ov; } }
+    root.setAttribute('data-align', isLeft(root.getAttribute('data-align')) ? '왼쪽' : '가운데');
   }
   function init(){var l=document.querySelectorAll('.mm-cine');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
