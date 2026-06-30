@@ -1,0 +1,18 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 에디토리얼 섹션 헤더
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 거대 인덱스 + 키커 + 제목 + hairline (B-08 에디토리얼 섹션 구분)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name index @type outlined-textfield @default "01" @label "인덱스(예: 01)" --}}
+{{!-- @name kicker @type outlined-textfield @default "SECTION" @label "키커(영문)" --}}
+{{!-- @name title @type outlined-textfield @default "섹션 제목" @label "제목" --}}
+{{!-- @name align @type segmented-control @default 왼쪽 @values 왼쪽,가운데 @valueNames 왼쪽,가운데 @label "정렬" --}}
+<div class="mm-sh" data-align="{{align}}">
+  <span class="mm-sh__index">{{index}}</span>
+  <div class="mm-sh__text">
+    <span class="mm-sh__kicker">{{kicker}}</span>
+    <h2 class="mm-sh__title">{{title}}</h2>
+  </div>
+  <span class="mm-sh__line" aria-hidden="true"></span>
+</div>

@@ -1,0 +1,9 @@
+.mm-stock{max-width:440px;margin:0 auto;padding:clamp(18px,4vw,24px);border:1px solid #D4D0CB;border-radius:14px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-stock__top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
+.mm-stock__title{font-size:14px;font-weight:700;}
+.mm-stock__count{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(15px,4vw,18px);font-weight:800;letter-spacing:-.01em;}
+.mm-stock__count b{font-size:1.25em;}
+.mm-stock__track{height:12px;background:#EDEBE8;border-radius:999px;overflow:hidden;}
+.mm-stock__bar{height:100%;width:0;background:#1A1A1A;border-radius:999px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+.mm-stock.is-low .mm-stock__bar{background:#2D2D2D;}
+.mm-stock.is-low .mm-stock__count{color:#1A1A1A;}

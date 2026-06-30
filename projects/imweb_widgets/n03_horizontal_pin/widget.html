@@ -1,0 +1,21 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 가로 스크롤 핀 갤러리
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 세로 스크롤 시 화면이 고정된 채 콘텐츠가 가로로 흐름 (트렌디 쇼케이스)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name slides @type item @label "슬라이드" --}}
+<div class="mm-hpin">
+  <div class="mm-hpin__sticky">
+    <div class="mm-hpin__track">
+    {{#each slides}}
+      {{!-- @name image @type image @label "이미지" --}}
+      {{!-- @name caption @type outlined-textfield @default "" @label "캡션(선택)" --}}
+      <div class="mm-hpin__panel">
+        <img class="mm-hpin__img" src="{{image}}" alt="" onerror="this.style.display='none'">
+        <p class="mm-hpin__cap">{{caption}}</p>
+      </div>
+    {{/each}}
+    </div>
+  </div>
+</div>

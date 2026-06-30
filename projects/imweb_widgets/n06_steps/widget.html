@@ -1,0 +1,22 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 이용 안내 가로 스텝
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 상담→진단→맞춤→배송 등 절차를 번호·연결선 가로 스텝으로 (명확성)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name title @type outlined-textfield @default "" @label "제목(선택)" --}}
+{{!-- @name steps @type item @label "단계" --}}
+<div class="mm-step">
+  <p class="mm-step__title">{{title}}</p>
+  <ol class="mm-step__list">
+  {{#each steps}}
+    {{!-- @name name @type outlined-textfield @default "단계" @label "단계명" --}}
+    {{!-- @name desc @type outlined-textfield @default "" @label "설명(선택)" --}}
+    <li class="mm-step__item">
+      <span class="mm-step__num" aria-hidden="true"></span>
+      <span class="mm-step__name">{{name}}</span>
+      <span class="mm-step__desc">{{desc}}</span>
+    </li>
+  {{/each}}
+  </ol>
+</div>

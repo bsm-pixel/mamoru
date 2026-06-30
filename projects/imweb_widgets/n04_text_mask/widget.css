@@ -1,0 +1,11 @@
+.mm-mask{max-width:900px;margin:0 auto;padding:clamp(24px,5vw,40px) 16px;text-align:center;font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;}
+.mm-mask[data-align="왼쪽"]{text-align:left;}
+.mm-mask__h{margin:0;font-size:clamp(48px,18vw,140px);font-weight:900;letter-spacing:-.03em;line-height:.95;
+  background-size:cover;background-position:center;background-repeat:no-repeat;
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  word-break:break-word;}
+@supports not ((-webkit-background-clip:text) or (background-clip:text)){
+  .mm-mask__h{color:#1A1A1A;-webkit-text-fill-color:#1A1A1A;background:none;}
+}
+.mm-mask__sub{margin:clamp(10px,2vw,18px) 4px 0;font-family:'Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(14px,3.8vw,17px);font-weight:600;color:#8A8580;letter-spacing:.01em;}
+.mm-mask__sub:empty{display:none;}

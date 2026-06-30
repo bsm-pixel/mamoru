@@ -1,0 +1,13 @@
+.mm-hpin{position:relative;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-hpin__sticky{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;align-items:center;}
+.mm-hpin__track{display:flex;gap:clamp(16px,3vw,32px);padding:0 clamp(16px,4vw,48px);will-change:transform;}
+.mm-hpin__panel{flex:0 0 auto;width:min(78vw,560px);}
+.mm-hpin__img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:16px;background:#F5F3F0;display:block;}
+.mm-hpin__cap{margin:14px 2px 0;font-size:clamp(14px,3.6vw,16px);font-weight:600;color:#4A4A4A;}
+.mm-hpin__cap:empty{display:none;}
+/* 핀 불가/모바일·축소모션: 네이티브 가로 스크롤로 폴백 */
+.mm-hpin.is-native .mm-hpin__sticky{position:static;height:auto;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+.mm-hpin.is-native .mm-hpin__track{transform:none!important;}
+.mm-hpin.is-native .mm-hpin__panel{scroll-snap-align:center;}
+.mm-hpin.is-native .mm-hpin__sticky::-webkit-scrollbar{display:none;}
+@media (prefers-reduced-motion:reduce){.mm-hpin__sticky{position:static;height:auto;overflow-x:auto;}.mm-hpin__track{transform:none!important;}}

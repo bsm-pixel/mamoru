@@ -1,0 +1,26 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 마모루 vs 일반 비교표
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 항목별 마모루 / 일반 판매처 비교 (자체복원 등 차별점 강조)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name leftLabel @type outlined-textfield @default "MAMORU" @label "왼쪽(자사) 라벨" --}}
+{{!-- @name rightLabel @type outlined-textfield @default "일반 판매처" @label "오른쪽 라벨" --}}
+{{!-- @name rows @type item @label "비교 항목" --}}
+<div class="mm-vs">
+  <div class="mm-vs__head">
+    <span class="mm-vs__h mm-vs__h--label"></span>
+    <span class="mm-vs__h mm-vs__h--us">{{leftLabel}}</span>
+    <span class="mm-vs__h mm-vs__h--them">{{rightLabel}}</span>
+  </div>
+  {{#each rows}}
+    {{!-- @name label @type outlined-textfield @default "항목" @label "항목명" --}}
+    {{!-- @name us @type outlined-textfield @default "O" @label "자사(O/X 또는 텍스트)" --}}
+    {{!-- @name them @type outlined-textfield @default "X" @label "일반(O/X 또는 텍스트)" --}}
+    <div class="mm-vs__row">
+      <span class="mm-vs__label">{{label}}</span>
+      <span class="mm-vs__cell mm-vs__cell--us" data-v="{{us}}"></span>
+      <span class="mm-vs__cell mm-vs__cell--them" data-v="{{them}}"></span>
+    </div>
+  {{/each}}
+</div>

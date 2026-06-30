@@ -1,0 +1,14 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 한정 수량 게이지
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 남은 수량을 게이지 바로 (희소성·긴박감, 전환↑)
+  🚫 fetch·iframe 0 (※실시간 재고 아님 — 패널 입력값)
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name title @type outlined-textfield @default "한정 수량" @label "제목" --}}
+{{!-- @name total @type outlined-textfield @default "100" @label "전체 수량" --}}
+{{!-- @name remaining @type outlined-textfield @default "23" @label "남은 수량" --}}
+{{!-- @name unit @type outlined-textfield @default "개" @label "단위" --}}
+<div class="mm-stock" data-total="{{total}}" data-remaining="{{remaining}}" data-unit="{{unit}}">
+  <div class="mm-stock__top"><span class="mm-stock__title">{{title}}</span><span class="mm-stock__count">—</span></div>
+  <div class="mm-stock__track"><div class="mm-stock__bar"></div></div>
+</div>
