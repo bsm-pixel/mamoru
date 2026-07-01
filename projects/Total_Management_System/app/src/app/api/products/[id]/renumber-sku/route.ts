@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { computeNextSku } from '@/lib/product/next-sku';
 
 /**
  * POST /api/products/[id]/renumber-sku
@@ -61,19 +62,8 @@ export async function POST(
       return NextResponse.json({ ok: false, needConfirm: true, linked });
     }
 
-    // 새 카테고리의 다음 SKU 계산 (next-sku 규칙과 동일)
-    const { data: existing } = await db
-      .from('products')
-      .select('sku')
-      .like('sku', `${prefix}%`)
-      .order('sku', { ascending: false })
-      .limit(1);
-    let nextNum = 1;
-    if (existing && existing.length > 0) {
-      const parsed = parseInt(String(existing[0].sku).slice(prefix.length), 10);
-      if (!isNaN(parsed)) nextNum = parsed + 1;
-    }
-    const nextSku = `${prefix}${String(nextNum).padStart(3, '0')}`;
+    // 새 카테고리의 다음 SKU 계산 (공통 헬퍼 — 유사접두어 오염·번호충돌 방지)
+    const nextSku = await computeNextSku(db, prefix);
 
     const oldSku = product.sku;
     const { error: updErr } = await db.from('products').update({ sku: nextSku }).eq('id', id);
