@@ -12,7 +12,7 @@ import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { SupplierSelect } from '@/components/ui/supplier-select';
 import { useProduct, useUpdateProduct, useCreateProduct, useSourcingByProduct } from '@/hooks/use-product-detail';
 import { formatKRW } from '@/lib/utils/format';
-import { Save, Package, Hash, X, Plus, Archive, Copy, Eye, EyeOff, Trash2, ArrowRightLeft, ArrowRight, ExternalLink, Printer } from 'lucide-react';
+import { Save, Package, Hash, X, Plus, Archive, Copy, Eye, EyeOff, Trash2, ArrowRightLeft, ArrowRight, ExternalLink, Printer, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { LabelPrintModal } from '@/components/labels/label-print-modal';
 import { useLabelTemplate } from '@/hooks/use-label-templates';
@@ -51,6 +51,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [renumbering, setRenumbering] = useState(false);
   const [form, setForm] = useState({
     sku: '', name: '', category: 'BL', price: 0, price_purchase: 0,
     price_group_values: {} as Record<string, { price: number; display_name: string }>,
@@ -168,6 +169,38 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
         : {}),
     });
     setEditing(false);
+  }
+
+  // SKU 재채번 — 카테고리 코드와 SKU 접두어가 다를 때 현재 카테고리로 교정
+  async function handleRenumberSku(confirmHistory = false) {
+    if (!productId) return;
+    setRenumbering(true);
+    try {
+      const res = await fetch(`/api/products/${productId}/renumber-sku`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: confirmHistory }),
+      });
+      const d = await res.json();
+      if (!res.ok) { toast.error(d.error || '재채번 실패'); return; }
+      if (d.needConfirm) {
+        const ok = window.confirm(
+          `이 제품은 ${(d.linked || []).join(', ')} 이력이 있습니다.\n` +
+          `SKU를 바꾸면 이미 출력한 라벨·연동을 재확인해야 합니다. 계속할까요?`
+        );
+        if (ok) await handleRenumberSku(true);
+        return;
+      }
+      if (d.unchanged) { toast('이미 카테고리와 일치하는 SKU입니다'); return; }
+      toast.success(`SKU 재채번: ${d.oldSku} → ${d.sku}`);
+      queryClient.invalidateQueries({ queryKey: ['product', productId] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    } catch (e) {
+      toast.error(String(e));
+    } finally {
+      setRenumbering(false);
+    }
   }
 
   async function handleCreate() {
@@ -432,6 +465,24 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
           </button>
         </div>
       </div>
+
+      {/* SKU 접두어 ≠ 카테고리 코드 → 재채번 안내 (카테고리 오지정 교정) */}
+      {!editing && p.sku && p.category && !p.sku.startsWith(p.category) && (
+        <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-[11px] text-amber-800">
+          <span className="min-w-0 truncate">
+            SKU <b>{p.sku}</b> · 카테고리 <b>{CATEGORY_LABEL[p.category] || p.category}</b> 접두어 불일치
+          </span>
+          <button
+            onClick={() => handleRenumberSku(false)}
+            disabled={renumbering}
+            className="shrink-0 inline-flex items-center gap-1 px-2 h-6 rounded-md border border-amber-300 bg-white text-amber-700 font-semibold hover:bg-amber-100 disabled:opacity-50"
+            title={`카테고리(${CATEGORY_LABEL[p.category] || p.category})에 맞게 SKU 재채번`}
+          >
+            <RefreshCw size={11} className={renumbering ? 'animate-spin' : ''} />
+            SKU 재채번
+          </button>
+        </div>
+      )}
 
       {editing ? (
         <Card>
