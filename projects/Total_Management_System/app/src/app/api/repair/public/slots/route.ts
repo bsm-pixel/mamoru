@@ -113,13 +113,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 3. 같은 날 충돌 데이터 3종 + 시간대 차단(096) 병렬 조회
-    const [consultsRes, repairsRes, blockedRes] = await Promise.all([
-      // 컨설팅 매장방문 + 출장 (visit_date 기준, 확정/배정 상태만)
+    // 3. 같은 날 충돌 데이터 + 시간대 차단(096) 병렬 조회
+    const [consultsRes, suggestedRes, repairsRes, blockedRes] = await Promise.all([
+      // 컨설팅 매장방문 + 출장 (visit_date 기준) — 확정/배정/접수대기까지 점유로 간주
+      //   (consultation/public/slots 와 status 기준 통일 — pending_admin 누락 시 미확정 예약 슬롯이 직접방문에 열려버림)
       dbAny.from('consultations')
         .select('consultation_type, visit_time, status')
         .eq('visit_date', date)
-        .in('status', ['confirmed', 'assigned']),
+        .in('status', ['confirmed', 'assigned', 'pending_admin']),
+      // 제안(suggested) 건: visit_date가 null일 수 있어 suggestions JSONB 안의 날짜로 매칭
+      dbAny.from('consultations')
+        .select('consultation_type, suggestions, status')
+        .eq('status', 'suggested')
+        .not('suggestions', 'is', null),
       // 복원수리 직접방문 (visit_date 기준, 취소 제외)
       dbAny.from('repairs')
         .select('visit_time, visit_duration_min, status')
@@ -150,6 +156,23 @@ export async function GET(req: NextRequest) {
       } else {
         // 매장방문: 상담 시간만
         busy.push([t, t + consultDurMin]);
+      }
+    }
+
+    // 제안(suggested) 상담: suggestions JSONB 안에서 이 날짜(date)에 해당하는 제안 시간만 차단
+    //   consultation/public/slots 와 동일 로직 — 확정 전이라도 제안한 슬롯은 점유로 간주
+    for (const c of (suggestedRes.data || [])) {
+      const raw = c.suggestions as { dates?: Array<{ date?: string; time?: string }> } | Array<{ date?: string; time?: string }> | null;
+      if (!raw) continue;
+      const sug = Array.isArray(raw) ? raw : (raw.dates || []);
+      for (const s of sug) {
+        if (s.date !== date || !s.time) continue;
+        const t = toMinutes(s.time);
+        if (c.consultation_type === 'field_request') {
+          busy.push([t - fieldBufferBefore, t + consultDurMin + fieldBufferAfter]);
+        } else {
+          busy.push([t, t + consultDurMin]);
+        }
       }
     }
 
