@@ -26,6 +26,8 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        {/* http:// 이미지(1688 소싱 등)를 https로 자동 승격 → 혼합콘텐츠('주의 요함') 제거 */}
+        <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" />
         <link
           rel="stylesheet"
           as="style"
