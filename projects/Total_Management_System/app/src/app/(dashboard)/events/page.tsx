@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { useEvents, useEventPatch, useCampaigns, useCreateCampaign, useUpdateCampaign } from '@/hooks/use-events';
+import { useEvents, useEventPatch, useEventDelete, useCampaigns, useCreateCampaign, useUpdateCampaign } from '@/hooks/use-events';
 import { EVENT_STATUS_LABEL, CAMPAIGN_TYPE_LABEL, type EventSubmission, type EventStatus, type EventCampaign, type DiscountRule } from '@/lib/event/types';
 import { Zap, Loader2, Package, Truck, Store, ArrowLeft, Plus, ExternalLink, Settings, X } from 'lucide-react';
 
@@ -28,6 +28,7 @@ export default function EventsPage() {
   const { data: campaigns, isLoading: campLoading } = useCampaigns();
   const { data: all, isLoading } = useEvents('all');
   const patch = useEventPatch();
+  const del = useEventDelete();
   const createCampaign = useCreateCampaign();
   const updateCampaign = useUpdateCampaign();
 
@@ -191,7 +192,7 @@ export default function EventsPage() {
       </div>
 
       <SlidePanel open={!!sel} onClose={() => setSelId(null)} title="EVENT 접수 상세" className="sm:w-[440px]">
-        {sel && <EventDetail ev={sel} patch={patch} onDone={() => setSelId(null)} goSales={() => router.push('/sales')} />}
+        {sel && <EventDetail ev={sel} patch={patch} del={del} onDone={() => setSelId(null)} goSales={() => router.push('/sales')} />}
       </SlidePanel>
 
       {editCampaign && <CampaignFormModal campaign={editCampaign} onClose={() => setEditCampaign(null)} create={createCampaign} update={updateCampaign} />}
@@ -283,9 +284,10 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
   );
 }
 
-function EventDetail({ ev, patch, onDone, goSales }: {
+function EventDetail({ ev, patch, del, onDone, goSales }: {
   ev: EventSubmission;
   patch: ReturnType<typeof useEventPatch>;
+  del: ReturnType<typeof useEventDelete>;
   onDone: () => void;
   goSales: () => void;
 }) {
@@ -370,16 +372,36 @@ function EventDetail({ ev, patch, onDone, goSales }: {
             판매로 전환됨 — 판매관리에서 발송/수령 처리 →
           </button>
         )}
-        {ev.status !== 'cancelled' && ev.status !== 'converted' && (
+
+        {/* 접수 취소 (soft) — 취소 상태가 아니면 노출. converted는 판매 별도 안내 */}
+        {ev.status !== 'cancelled' && (
           <button
             disabled={patch.isPending}
             onClick={() => {
-              if (!window.confirm('이 접수를 취소합니다.')) return;
+              const msg = ev.status === 'converted'
+                ? '이 접수를 취소 처리합니다.\n※ 판매 건은 판매관리에서 별도로 취소하세요 — 여기선 접수 기록만 취소됩니다.'
+                : '이 접수를 취소합니다.';
+              if (!window.confirm(msg)) return;
               patch.mutate({ id: ev.id, action: 'cancel' }, { onSuccess: onDone });
             }}
             className="w-full py-2 rounded-lg text-xs text-neutral-400 hover:text-red-500"
           >
             접수 취소
+          </button>
+        )}
+
+        {/* 완전 삭제 (hard) — 취소/전환 건 정리용(오등록·테스트). 판매는 판매관리에서 별도 */}
+        {(ev.status === 'cancelled' || ev.status === 'converted') && (
+          <button
+            disabled={del.isPending}
+            onClick={() => {
+              if (!window.confirm('이 접수 기록을 완전히 삭제합니다. 되돌릴 수 없습니다.\n※ 연결된 판매 건은 판매관리에서 별도 관리됩니다.')) return;
+              del.mutate({ id: ev.id }, { onSuccess: onDone });
+            }}
+            className="w-full py-2 rounded-lg text-xs font-semibold text-red-500 border border-red-200 hover:bg-red-50 disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            {del.isPending ? <Loader2 size={13} className="animate-spin" /> : <X size={13} />}
+            접수 기록 삭제
           </button>
         )}
       </div>

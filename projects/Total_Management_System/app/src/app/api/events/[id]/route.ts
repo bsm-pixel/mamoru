@@ -90,3 +90,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
   }
 }
+
+/**
+ * DELETE /api/events/[id] — 접수 기록 완전 삭제 (event_history 포함).
+ *  ⚠️ 연결된 판매(sale_id)는 건드리지 않는다 — 판매는 판매관리에서 별도 취소/관리(재고 정합성은 그쪽 소관).
+ *     오등록·테스트 접수 정리용.
+ */
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const db = createServiceClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dbAny = db as any;
+    await dbAny.from('event_history').delete().eq('event_id', id);
+    const { error } = await dbAny.from('event_submissions').delete().eq('id', id);
+    if (error) throw error;
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('[events DELETE] 실패:', err);
+    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+  }
+}

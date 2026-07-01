@@ -86,3 +86,16 @@ export function useEventPatch() {
     },
   });
 }
+
+/** 접수 기록 완전 삭제 (오등록·테스트 정리용). 판매 건은 별도(판매관리). */
+export function useEventDelete() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id }: { id: string }) => {
+      const res = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['events'] }),
+  });
+}
