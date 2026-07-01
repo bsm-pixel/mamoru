@@ -124,7 +124,8 @@ export async function POST(req: NextRequest) {
 
     // 접수확인 알림톡 (자동)
     try {
-      const itemSummary = items.map((it) => `${it.product_name}${it.slicing ? '(슬라이싱)' : ''} ${it.qty}개`).join(', ');
+      // 품목을 줄바꿈(\n)으로 — 알림톡 #{items} 변수 안에서 한 줄에 하나씩 표시 (카카오가 변수 내 \n 렌더)
+      const itemSummary = items.map((it) => `${it.product_name}${it.slicing ? '(슬라이싱)' : ''} ${it.qty}개`).join('\n');
       await sendNotification({
         template: 'event_received',
         phone: phoneNorm,
