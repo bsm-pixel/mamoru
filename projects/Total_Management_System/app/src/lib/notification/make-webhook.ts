@@ -161,10 +161,44 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
   success: boolean;
   error?: string;
 }> {
-  // 설정 기반 on/off 체크
+  // ── 1) 관리자 앱 푸시 — 고객 행동이면 무조건 발송 ──
+  //  ⚠️ 알림톡 설정(on/off)·웹훅 설정과 완전 독립. 반드시 함수 최상단에서 먼저 쏜다.
+  //     (알림톡이 꺼져 있어도 사장님 푸시는 항상 울려야 함 — 2026-07-01)
+  //  🔔 새 고객 접수/행동 템플릿을 만들면 여기 한 줄만 추가하면 자동으로 울림.
+  //     (사장님 자신의 행동=견적발송·출고·입금확인 등은 스팸 방지로 넣지 않음)
+  const PUSH_CONFIG: Record<string, { title: string; body: string; url: string; settingKey: string }> = {
+    confirmed: { title: '새 상담 접수', body: `${payload.name}님 상담 접수`, url: '/consultations', settingKey: 'push.consultation_received' },
+    as_received: { title: '새 복원수리 접수', body: `${payload.name}님 복원수리 접수`, url: '/repairs', settingKey: 'push.repair_received' },
+    // 출장 신규: submit/route.ts 는 template='request' 로 호출 (솔라피 템플릿명과 일치)
+    request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },
+    field_request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },
+    talk_received: { title: '새 톡상담 접수', body: `${payload.name}님 톡상담 접수`, url: '/consultations', settingKey: 'push.talk_received' },
+    // 취소: 고객이 page_change_request 에서 취소 → public/cancel/route.ts
+    field_cancelled: { title: '⚠️ 출장 예약 취소', body: `${payload.name}님 출장 예약 취소`, url: '/consultations', settingKey: 'push.field_cancelled' },
+    cancelled: { title: '⚠️ 상담 예약 취소', body: `${payload.name}님 상담 예약 취소`, url: '/consultations', settingKey: 'push.consultation_cancelled' },
+    // 이벤트 접수(고객) — 2026-07-01 추가
+    event_received: { title: '새 이벤트 접수', body: `${payload.name}님 이벤트 접수`, url: '/events', settingKey: 'push.event_received' },
+  };
+  const pushCfg = PUSH_CONFIG[payload.template];
+  if (pushCfg) {
+    // tag에 건별 고유 ID 포함 — 레코드 삭제 시 SW에서 해당 알림만 정확히 회수 가능
+    const uniqId = payload.data?.as_id || payload.data?.id || '';
+    const pushTag = uniqId ? `mamoru-${payload.template}-${uniqId}` : `mamoru-${payload.template}`;
+    import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
+      sendPushToAll({
+        title: pushCfg.title,
+        body: pushCfg.body,
+        url: pushCfg.url,
+        tag: pushTag,
+        settingKey: pushCfg.settingKey,
+      }).catch(() => {});
+    }).catch(() => {});
+  }
+
+  // ── 2) 고객 알림톡 on/off (푸시엔 영향 없음 — 위에서 이미 발송) ──
   const enabled = await isNotificationEnabled(payload.template);
   if (!enabled) {
-    console.log(`[make-webhook] SKIP template=${payload.template} — 설정에서 비활성`);
+    console.log(`[make-webhook] SKIP 알림톡 template=${payload.template} — 설정에서 비활성 (관리자 푸시는 발송됨)`);
     return { success: true }; // 성공으로 처리 (에러 아님)
   }
 
@@ -187,37 +221,7 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     urlSource = 'webhook_consultation';
   }
 
-  // 관리자 푸시 알림 — 웹훅과 무관하게 독립 발송
-  // ⚠️ 반드시 webhookUrl early-return '위'에 둔다 — 고객 알림톡 웹훅이 미설정이어도
-  //    사장님 앱 푸시(복원수리 접수 등)는 무조건 울려야 하므로 (2026-06-20 fix)
-  const PUSH_CONFIG: Record<string, { title: string; body: string; url: string; settingKey: string }> = {
-    confirmed: { title: '새 상담 접수', body: `${payload.name}님 상담 접수`, url: '/consultations', settingKey: 'push.consultation_received' },
-    as_received: { title: '새 복원수리 접수', body: `${payload.name}님 복원수리 접수`, url: '/repairs', settingKey: 'push.repair_received' },
-    // 출장 신규: submit/route.ts 는 template='request' 로 호출 (솔라피 템플릿명과 일치) — 푸시 매핑 동기화 (2026-05-23 fix)
-    request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },
-    field_request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },
-    talk_received: { title: '새 톡상담 접수', body: `${payload.name}님 톡상담 접수`, url: '/consultations', settingKey: 'push.talk_received' },
-    // 취소: 고객이 page_change_request 에서 취소 누름 → public/cancel/route.ts → 사장님 푸시 (2026-05-23 fix)
-    field_cancelled: { title: '⚠️ 출장 예약 취소', body: `${payload.name}님 출장 예약 취소`, url: '/consultations', settingKey: 'push.field_cancelled' },
-    cancelled: { title: '⚠️ 상담 예약 취소', body: `${payload.name}님 상담 예약 취소`, url: '/consultations', settingKey: 'push.consultation_cancelled' },
-  };
-  const cfg = PUSH_CONFIG[payload.template];
-  if (cfg) {
-    // tag에 건별 고유 ID 포함 — 레코드 삭제 시 SW에서 해당 알림만 정확히 회수 가능
-    const uniqId = payload.data?.as_id || payload.data?.id || '';
-    const pushTag = uniqId ? `mamoru-${payload.template}-${uniqId}` : `mamoru-${payload.template}`;
-    import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
-      sendPushToAll({
-        title: cfg.title,
-        body: cfg.body,
-        url: cfg.url,
-        tag: pushTag,
-        settingKey: cfg.settingKey,
-      }).catch(() => {});
-    }).catch(() => {});
-  }
-
-  // 고객 알림톡 웹훅 미설정이면 여기서 종료 (위 관리자 푸시는 이미 발송됨)
+  // 고객 알림톡 웹훅 미설정이면 여기서 종료 (관리자 푸시는 함수 시작부에서 이미 발송됨)
   if (!webhookUrl) {
     console.warn(`[make-webhook] SKIP 알림톡 template=${payload.template} — ${urlSource} 미설정 (관리자 푸시는 발송됨)`);
     return { success: false, error: `${urlSource} 미설정` };

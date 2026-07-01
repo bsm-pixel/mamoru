@@ -44,6 +44,7 @@ const PUSH_DEFAULTS: Record<string, boolean> = {
   'push.repair_received': true,
   'push.review_submitted': true,
   'push.order_received': true,
+  'push.event_received': true,          // 이벤트 접수 (2026-07-01 추가)
 };
 
 async function isPushEnabled(settingKey?: string): Promise<boolean> {
