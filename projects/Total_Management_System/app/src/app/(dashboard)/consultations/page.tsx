@@ -13,7 +13,7 @@ import { AllConsultationsList } from '@/components/consultations/all-consultatio
 import { ScheduleCalendar } from '@/components/consultations/schedule-calendar';
 import { ConsultationDetailPanel } from '@/components/consultations/consultation-detail-panel';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { RefreshCw, Store, Truck, MessageCircle, Inbox, Loader, CheckCircle, MapPin, CalendarPlus, LayoutGrid } from 'lucide-react';
+import { RefreshCw, Store, Truck, MessageCircle, Inbox, Loader, CheckCircle, CalendarCheck, MapPin, CalendarPlus, LayoutGrid } from 'lucide-react';
 import { CreateConsultationModal } from '@/components/consultations/create-consultation-modal';
 import { StatCard } from '@/components/ui/stat-card';
 
@@ -93,16 +93,20 @@ export default function ConsultationsPage() {
       <Topbar title="상담관리" />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-4 overflow-x-hidden">
-        {/* 1행: 요약 3카드 (공통 StatCard) + 새로고침 */}
+        {/* 1행: 요약 4카드 (상태 기반: 신규/조율중/확정/완료) + 새로고침 */}
         <div className="grid grid-cols-12 gap-3">
-          <div className="col-span-12 lg:col-span-9 grid grid-cols-3 gap-3">
+          <div className="col-span-12 lg:col-span-9 grid grid-cols-2 lg:grid-cols-4 gap-3">
             <StatCard label="신규" icon={Inbox} accent="blue"
               value={stats?.newIntake || 0} primarySub="확인 필요"
               onClick={() => setActiveTab('field_request')}
             />
-            <StatCard label="진행" icon={Loader} accent="amber"
-              value={stats?.inProgress || 0} primarySub="일정 조율 중"
+            <StatCard label="조율중" icon={Loader} accent="amber"
+              value={stats?.inCoordination || 0} primarySub="일정 조율 필요"
               onClick={() => setActiveTab('field_request')}
+            />
+            <StatCard label="확정" icon={CalendarCheck} accent="violet"
+              value={stats?.confirmed || 0} primarySub="방문 예정"
+              onClick={() => setActiveTab('all')}
             />
             <StatCard label="완료" icon={CheckCircle} accent="emerald"
               value={stats?.completedMonth || 0} primarySub="이번달"

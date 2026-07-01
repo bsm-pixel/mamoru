@@ -411,30 +411,34 @@ export function useConsultationDashboardStats() {
     queryFn: async () => {
       const now = new Date();
       const todayStr = toLocalDateString(now);
-      // R2: 6시간 기준
-      const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
       // 1달 전
       const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
+      // 상태 기반 4버킷 — 각 카드가 겹치지 않도록 상태로 명확히 분리 (2026-07-01, 6시간 휴리스틱 폐기)
       const [
         newIntake,
-        inProgress,
+        inCoordination,
+        confirmed,
         completedMonth,
         todaySchedule,
       ] = await Promise.all([
-        // R2: 신규접수 (6시간 이내 + 미처리)
+        // 신규 = 미확인 접수 (관리자 최초 대응 필요)
         supabase
           .from('consultations')
           .select('*', { count: 'exact', head: true })
-          .gte('received_at', sixHoursAgo)
-          .in('status', ['pending_admin', 'confirmed']),
-        // R2: 진행중 (6시간 이후 + 미완료/미취소)
+          .eq('status', 'pending_admin'),
+        // 조율중 = 활성 상태 중 신규(pending_admin)·확정(confirmed)·완료·취소 제외
+        //   → suggested / assigned / reschedule_requested / change_requested / in_progress / on_hold
         supabase
           .from('consultations')
           .select('*', { count: 'exact', head: true })
-          .lt('received_at', sixHoursAgo)
-          .not('status', 'in', '("completed","cancelled")'),
-        // R2: 상담완료 (1달 이내)
+          .not('status', 'in', '("pending_admin","confirmed","completed","cancelled")'),
+        // 확정 = 잡힌 일정 (조율 끝, 방문 예정)
+        supabase
+          .from('consultations')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'confirmed'),
+        // 완료 (최근 1달)
         supabase
           .from('consultations')
           .select('*', { count: 'exact', head: true })
@@ -452,7 +456,8 @@ export function useConsultationDashboardStats() {
 
       return {
         newIntake: newIntake.count || 0,
-        inProgress: inProgress.count || 0,
+        inCoordination: inCoordination.count || 0,
+        confirmed: confirmed.count || 0,
         completedMonth: completedMonth.count || 0,
         todaySchedule: (todaySchedule.data || []) as Consultation[],
       };
