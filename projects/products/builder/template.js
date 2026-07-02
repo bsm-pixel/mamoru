@@ -137,6 +137,39 @@ function cardGroup(card, selectedId, variant) {
   </div>`;
 }
 
+/* 틴닝 전용 — 발 · 홈 · 감모를 한 행에 나란히 + 하단 총정리(2행) */
+function thinningRow(spec, catalog) {
+  const cts = ['thinning_teeth', 'thinning_holes', 'thinning_reduction'];
+  const cells = [];
+  const summary = [];
+  for (const ct of cts) {
+    const c = catalog.byCardType[ct];
+    if (!c || !(c.applies_to || []).includes(spec.type)) continue;
+    const selId = spec.selections && spec.selections[ct];
+    const opt = (c.options || []).find(o => o.id === selId) || (c.options || [])[0];
+    if (!opt) continue;
+    cells.push({ c, opt });
+    summary.push(esc(opt.name_ko || opt.id));
+  }
+  if (!cells.length) return '';
+  const _n = NEUTRAL; NEUTRAL = true;   // 요약 = 라이트 카드(선명한 다크 텍스트/SVG)
+  const cardsHtml = cells.map(({ c, opt }) => `<div style="min-width:0;">
+      <div style="font-family:'Outfit',sans-serif;font-size:clamp(9px,1.2vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:clamp(8px,1vw,12px);">${esc(c.label_subtitle_ko || c.label_ko || '')}</div>
+      ${optionCard(opt, false, 'text')}
+    </div>`).join('');
+  NEUTRAL = _n;
+  return `<div style="margin-bottom:clamp(48px,6vw,72px);">
+    <div style="display:flex;align-items:baseline;gap:clamp(12px,1.5vw,16px);margin-bottom:clamp(20px,2.5vw,28px);flex-wrap:wrap;">
+      <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;">THINNING SPEC</span>
+      <span style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;">— 발 · 홈 · 감모</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(${cells.length},1fr);gap:clamp(6px,1vw,12px);">${cardsHtml}</div>
+    <div style="margin-top:clamp(12px,1.6vw,18px);padding:clamp(16px,2.2vw,24px);background:#1A1A1A;border-radius:clamp(8px,1.2vw,12px);text-align:center;">
+      <span style="font-family:'Outfit',sans-serif;font-size:clamp(18px,3.4vw,32px);font-weight:800;color:#FAF9F7;letter-spacing:0.02em;">${summary.join('  ·  ')}</span>
+    </div>
+  </div>`;
+}
+
 /* HANDLE — grip(3 카드 세로) + camel(2 카드 가로 컴팩트) */
 function handleGroup(spec, catalog) {
   const grip = catalog.byCardType['handle_grip'];
@@ -443,8 +476,10 @@ function renderDetailHTML(spec, catalog) {
   }
   if (design && (design.applies_to || []).includes(type))
     profileCards += cardGroup(design, spec.selections?.blade_design, 'design');
-  // 틴닝/드라이 전용 텍스트 카드
+  // 틴닝: 발·홈·감모를 한 행에 나란히 + 하단 총정리 / 드라이 등은 개별 카드
+  if (type === 'thinning') profileCards += thinningRow(spec, catalog);
   for (const ct of ['thinning_teeth', 'thinning_holes', 'thinning_reduction', 'dry_cutting_style']) {
+    if (type === 'thinning' && ct.indexOf('thinning_') === 0) continue; // 위 thinningRow가 처리
     const c = catalog.byCardType[ct];
     if (c && (c.applies_to || []).includes(type))
       profileCards += cardGroup(c, spec.selections?.[ct], 'text');
