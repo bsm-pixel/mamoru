@@ -53,7 +53,7 @@ function imgURL(spec, file) {
 /* ─── 섹션 라벨 (— NN / TITLE) ─── */
 function eyebrow(num, title, dark) {
   const col = dark ? 'rgba(245,245,243,0.5)' : '#8A8580';
-  return `<div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:${col};letter-spacing:0.25em;margin-bottom:clamp(24px,3vw,40px);">— ${num} / ${esc(title)}</div>`;
+  return `<div id="sec-${num}" style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:${col};letter-spacing:0.25em;margin-bottom:clamp(24px,3vw,40px);scroll-margin-top:20px;">— ${num} / ${esc(title)}</div>`;
 }
 
 /* ─── 카드 1장 (BLADE EDGE/DESIGN/text 변형) ───

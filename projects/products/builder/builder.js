@@ -14,6 +14,13 @@ const TYPES = [
 /* 작업 중인 모델 spec (단일 상태) */
 let spec = defaultSpec('blunt');
 
+/* 미리보기 이미지 소스: 로컬(Live Server) ⇄ 라이브(page.mamoru.kr).
+   ⚠️ 내보내기 HTML([HTML 복사])·spec 저장은 항상 라이브(page.mamoru.kr) — 미리보기에만 적용.
+   로컬(127.0.0.1/localhost)에서 열면 기본 '로컬' → push 없이 방금 넣은 사진 바로 보임. */
+const IS_LOCALHOST = /^(127\.0\.0\.1|localhost|\[::1\])$/i.test(location.hostname);
+let localImages = IS_LOCALHOST;
+const LOCAL_IMG_HOST = location.origin;   // 예: http://127.0.0.1:5500 → /projects/products/product_detail/{폴더}/images/{파일}
+
 function defaultSpec(type) {
   return {
     model: '', type, category_label: '', size_inch: '', weight_g: '', price_grade: 'A',
@@ -175,6 +182,12 @@ function section(title, body, badge) {
   const h = document.createElement('h3');
   if (badge) { const b = document.createElement('span'); b.className = 'sbadge'; b.textContent = badge; h.appendChild(b); }
   h.appendChild(document.createTextNode(title));
+  // 숫자 배지 섹션은 클릭 시 미리보기 해당 섹션으로 점프 (IA 매칭)
+  if (badge && /^\d+$/.test(badge)) {
+    h.style.cursor = 'pointer';
+    h.title = '미리보기에서 이 섹션으로 이동';
+    h.addEventListener('click', () => scrollPreviewToSection(badge));
+  }
   s.appendChild(h); s.appendChild(body);
   return s;
 }
@@ -308,8 +321,19 @@ function paintPreview() {
   const win = f.contentWindow;
   const y = win ? win.scrollY : 0, x = win ? win.scrollX : 0;   // 현재 스크롤 보존
   const root = doc.getElementById('root') || doc.body;
+  const savedHost = spec.image_host;
+  if (localImages) spec.image_host = LOCAL_IMG_HOST;             // 미리보기만 로컬 사진 (push 불필요)
   root.innerHTML = renderDetailHTML(spec, Catalog);
+  spec.image_host = savedHost;                                   // 즉시 복원 → 내보내기·저장엔 영향 0
   if (win) win.scrollTo(x, y);                                   // 그 자리에 복원
+}
+
+/* 패널 섹션 헤더 클릭 → 미리보기의 해당 섹션으로 스크롤 (IA 1:1 탐색) */
+function scrollPreviewToSection(num) {
+  const f = document.getElementById('preview');
+  const doc = f && f.contentDocument; if (!doc) return;
+  const el = doc.getElementById('sec-' + num);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function updatePreview() {
@@ -324,6 +348,16 @@ function bindTopbar() {
   document.getElementById('btnHTML').addEventListener('click', copyHTML);
   document.getElementById('btnSpec').addEventListener('click', downloadSpec);
   document.getElementById('fileSpec').addEventListener('change', importSpec);
+  // 이미지 소스 토글 (미리보기 전용)
+  const setImgSrc = (local) => {
+    localImages = local;
+    document.getElementById('imgLocal').classList.toggle('on', local);
+    document.getElementById('imgLive').classList.toggle('on', !local);
+    if (previewReady) paintPreview();
+  };
+  document.getElementById('imgLocal').addEventListener('click', () => setImgSrc(true));
+  document.getElementById('imgLive').addEventListener('click', () => setImgSrc(false));
+  setImgSrc(localImages);  // 초기 상태(로컬에서 열면 로컬) 버튼에 반영
 }
 function setView(mode) {
   const frame = document.getElementById('previewFrame');
