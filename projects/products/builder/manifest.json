@@ -16,6 +16,7 @@
   ],
   "copy_pool": [
     "copy_pool/hero_subtitle_blunt.json",
+    "copy_pool/honest_reco_blunt.json",
     "copy_pool/about_body_blunt.json",
     "copy_pool/about_quote.json",
     "copy_pool/for_you_match_blunt.json",

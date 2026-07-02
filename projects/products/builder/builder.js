@@ -65,6 +65,8 @@ function renderPanel() {
   hero.appendChild(textField('이미지 폴더명', spec.images_folder, spec.model || '모델명과 동일', v => { spec.images_folder = v; updatePreview(); }));
   hero.appendChild(subhead('Hero 카피 (감성 한 줄)'));
   hero.appendChild(copyChooserSingle('hero_subtitle', 'hero_subtitle_text'));
+  hero.appendChild(subhead('마모루의 솔직 추천 (스펙 바로 아래 노출)'));
+  hero.appendChild(copyChooserSingle('honest_reco', 'honest_reco_text'));
   p.appendChild(section('HERO', hero, '01'));
 
   // 03 ABOUT — 특성 본문

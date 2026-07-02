@@ -361,10 +361,10 @@ const STATIC_VS = `<div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40p
   <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(48px,7vw,72px) 0;">MAMORU vs<br>일반 가위 브랜드</h2>
   <div style="border-top:2px solid #1A1A1A;">
     <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;border-bottom:1px solid #D4D0CB;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.05em;text-transform:uppercase;"><span></span><span style="color:#1A1A1A;">MAMORU</span><span>일반</span></div>
-    ${[['선택 방식', '손/스타일 진단 우선', '브랜드/가격 우선'],
-       ['가격 정책', '동일 — 할인 없음', '시즌·이벤트 할인'],
-       ['복원수리', '자체 기술 — 평생', '외주 또는 신품 권장'],
-       ['상담', '맞춤 진단 무료', '판매 중심 응대'],
+    ${[['선택 방식', '손·스타일 진단 우선', '브랜드·가격 우선'],
+       ['가격 정책', '즐길 수 있는 가격<br>ON·OFF 정찰제', '높은 판매가 → 할인·사은품<br>으로 구매 유도'],
+       ['복원수리', '자체 기술 · 평생 무상', '외주 또는 신품 권장'],
+       ['상담', '맞춤 진단 · 무료', '판매 중심 응대'],
        ['"안 사셔도 됩니다"', '합니다', '못 합니다']]
       .map(([a, b, c], i, arr) => `<div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:clamp(12px,1.5vw,20px);padding:clamp(16px,2.2vw,24px) 0;${i < arr.length - 1 ? 'border-bottom:1px solid #D4D0CB;' : ''}font-size:clamp(13px,1.7vw,15px);">
         <span style="color:#8A8580;font-weight:500;">${a}</span><span style="color:#1A1A1A;font-weight:700;">${b}</span><span style="color:#8A8580;">${c}</span></div>`).join('')}
@@ -405,6 +405,7 @@ function renderDetailHTML(spec, catalog) {
   const type = spec.type || 'blunt';
   const sm = spec.spec_meta || {};
   const heroSub = resolveCopy(spec, catalog, 'hero_subtitle', { customKey: 'hero_subtitle_text' });
+  const honestReco = resolveCopy(spec, catalog, 'honest_reco', { customKey: 'honest_reco_text' });
   const aboutBody = resolveCopy(spec, catalog, 'about_body', { customKey: 'hero_quote_about' })
                   || resolveCopy(spec, catalog, 'about_body', { customKey: 'about_body_text' });
   const aboutQuote = resolveCopy(spec, catalog, 'about_quote', { customKey: 'about_brand_quote' })
@@ -443,7 +444,7 @@ function renderDetailHTML(spec, catalog) {
   <div style="padding:clamp(40px,5vw,72px) clamp(20px,3vw,40px) clamp(20px,3vw,32px);">
     <div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.25em;">— ${esc(spec.category_label || '')}</div>
   </div>
-  <img src="${imgURL(spec, (spec.images && spec.images.hero) || 'hero.png')}" alt="${esc(spec.model)} 메인" style="display:block;width:100%;aspect-ratio:4/5;max-height:1050px;object-fit:contain;background:#F5F3F0;">
+  <img src="${imgURL(spec, (spec.images && spec.images.hero) || 'hero.png')}" alt="${esc(spec.model)} 메인" style="display:block;width:100%;height:auto;background:#F5F3F0;">
   <div style="padding:clamp(40px,6vw,80px) clamp(20px,3vw,40px) clamp(56px,7vw,96px);">
     <h1 style="font-family:'Paperlogy','Outfit',sans-serif;font-size:clamp(40px,10vw,112px);font-weight:900;color:#1A1A1A;letter-spacing:-0.04em;line-height:1;margin:0 0 clamp(28px,4vw,48px) 0;white-space:nowrap;">${esc(spec.model)}</h1>
     <p style="font-size:clamp(16px,2.4vw,22px);color:#4A4A4A;line-height:1.5;font-weight:300;max-width:520px;margin:0 0 clamp(24px,3vw,32px) 0;">${nl2br(heroSub)}</p>
@@ -452,17 +453,21 @@ function renderDetailHTML(spec, catalog) {
       <span>${esc(spec.weight_g)} g</span><span style="color:#D4D0CB;">·</span>
       <span>${esc(TYPE_LABEL[type] || type)}</span>
     </div>
+    ${honestReco ? `<div style="margin-top:clamp(28px,4vw,40px);padding:clamp(20px,3vw,28px);background:#F5F3F0;border-radius:clamp(10px,1.5vw,14px);border-left:3px solid #1A1A1A;max-width:560px;">
+      <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.3vw,12px);font-weight:800;letter-spacing:0.18em;color:#8A8580;text-transform:uppercase;margin-bottom:clamp(8px,1vw,12px);">MAMORU의 솔직 추천</div>
+      <p style="font-size:clamp(14px,1.9vw,17px);color:#2D2D2D;line-height:1.75;margin:0;">${nl2br(honestReco)}</p>
+    </div>` : ''}
   </div>
 
   <!-- 02 Detail -->
   <div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px) clamp(40px,5vw,64px);">${eyebrow('01', 'DETAIL')}</div>
-  <img src="${imgURL(spec, (spec.images && spec.images.blade2) || 'blade2.png')}" alt="${esc(spec.model)} 날부" style="display:block;width:100%;aspect-ratio:3/2;max-height:600px;object-fit:contain;background:#F5F3F0;margin-bottom:clamp(8px,1.2vw,16px);">
-  <img src="${imgURL(spec, (spec.images && spec.images.handle) || 'handle.png')}" alt="${esc(spec.model)} 핸들부" style="display:block;width:100%;aspect-ratio:3/2;max-height:600px;object-fit:contain;background:#F5F3F0;margin-bottom:clamp(8px,1.2vw,16px);">
-  <img src="${imgURL(spec, (spec.images && spec.images.back) || 'back.png')}" alt="${esc(spec.model)} 뒷면" style="display:block;width:100%;aspect-ratio:3/2;max-height:600px;object-fit:contain;background:#F5F3F0;margin-bottom:clamp(40px,5vw,72px);">
+  <img src="${imgURL(spec, (spec.images && spec.images.blade2) || 'blade2.png')}" alt="${esc(spec.model)} 날부" style="display:block;width:100%;height:auto;background:#F5F3F0;margin-bottom:clamp(8px,1.2vw,16px);">
+  <img src="${imgURL(spec, (spec.images && spec.images.handle) || 'handle.png')}" alt="${esc(spec.model)} 핸들부" style="display:block;width:100%;height:auto;background:#F5F3F0;margin-bottom:clamp(8px,1.2vw,16px);">
+  <img src="${imgURL(spec, (spec.images && spec.images.back) || 'back.png')}" alt="${esc(spec.model)} 뒷면" style="display:block;width:100%;height:auto;background:#F5F3F0;margin-bottom:clamp(40px,5vw,72px);">
   <div style="padding:0 clamp(20px,3vw,40px);"><div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:600;color:#8A8580;letter-spacing:0.18em;margin-bottom:clamp(16px,2vw,24px);">— CLOSE-UP</div></div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:clamp(8px,1.2vw,16px);padding:0 clamp(20px,3vw,40px) clamp(80px,10vw,140px);">
-    <img src="${imgURL(spec, (spec.images && spec.images.bolt) || 'bolt.png')}" alt="볼트부" style="display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#F5F3F0;">
-    <img src="${imgURL(spec, (spec.images && spec.images.model) || 'model.png')}" alt="모델명" style="display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#F5F3F0;">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:clamp(8px,1.2vw,16px);align-items:start;padding:0 clamp(20px,3vw,40px) clamp(80px,10vw,140px);">
+    <img src="${imgURL(spec, (spec.images && spec.images.bolt) || 'bolt.png')}" alt="볼트부" style="display:block;width:100%;height:auto;background:#F5F3F0;">
+    <img src="${imgURL(spec, (spec.images && spec.images.model) || 'model.png')}" alt="모델명" style="display:block;width:100%;height:auto;background:#F5F3F0;">
   </div>
 
   <!-- 03 In Action -->
@@ -470,14 +475,14 @@ function renderDetailHTML(spec, catalog) {
     <div style="padding:0 clamp(20px,3vw,40px) clamp(40px,5vw,64px);">${eyebrow('02', 'IN ACTION', true)}
       <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(28px,5.5vw,64px);font-weight:800;color:#FAF9F7;letter-spacing:-0.03em;line-height:1.1;margin:0;">한 컷,<br>한 손에 멈춥니다.</h2>
     </div>
-    <img src="${imgURL(spec, (spec.images && spec.images.cut) || 'cut.gif')}" alt="컷 동작" style="display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#2D2D2D;">
+    <img src="${imgURL(spec, (spec.images && spec.images.cut) || 'cut.gif')}" alt="컷 동작" style="display:block;width:100%;height:auto;background:#2D2D2D;">
   </div>
 
   <!-- 04 About -->
   <div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px) clamp(40px,5vw,64px);">${eyebrow('03', 'ABOUT')}
     <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(40px,6vw,64px) 0;">${esc(spec.model)}의 특성</h2>
   </div>
-  <img src="${imgURL(spec, (spec.images && spec.images.blade1) || 'blade1.png')}" alt="${esc(spec.model)} 날부" style="display:block;width:100%;aspect-ratio:3/2;max-height:600px;object-fit:contain;background:#F5F3F0;margin-bottom:clamp(40px,5vw,72px);">
+  <img src="${imgURL(spec, (spec.images && spec.images.blade1) || 'blade1.png')}" alt="${esc(spec.model)} 날부" style="display:block;width:100%;height:auto;background:#F5F3F0;margin-bottom:clamp(40px,5vw,72px);">
   <div style="padding:0 clamp(20px,3vw,40px) clamp(80px,10vw,140px);">
     <p style="font-size:clamp(15px,1.9vw,18px);color:#2D2D2D;line-height:1.9;max-width:620px;margin:0 0 clamp(20px,2.5vw,28px) 0;">${nl2br(aboutBody)}</p>
     ${aboutQuote ? `<p style="font-size:clamp(15px,1.9vw,18px);color:#1A1A1A;line-height:1.9;max-width:620px;margin:0;font-weight:500;">"${nl2br(aboutQuote)}"</p>` : ''}
