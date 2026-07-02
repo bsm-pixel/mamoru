@@ -159,16 +159,40 @@ export async function GET(req: NextRequest) {
       net_vat: saleSummary.vat - purchaseSummary.vat,
     };
 
-    // ─── 6) COGS / 마진 / 제품 랭킹 — 제품 항목만 (RS 제외), 오프라인 + 납품 제품 합산 ───
+    // ─── 5-2) 아임웹 온라인 주문 항목 (품목별 매출/랭킹 포함용) — 취소/환불 제외, 배송비·0원 제외 ───
+    const { data: ordRaw } = await db
+      .from('orders')
+      .select('id, ordered_at, status')
+      .gte('ordered_at', `${fromDate}T00:00:00`)
+      .lte('ordered_at', `${toDate}T23:59:59`)
+      .not('status', 'in', '("cancelled","refunded")');
+    const orderIds = (ordRaw || []).map((o: { id: string }) => o.id);
+    let productOrderItems: Array<{ product_id: string | null; product_name: string; sku: string | null; quantity: number; unit_price: number; total_price: number }> = [];
+    if (orderIds.length > 0) {
+      const { data: oiRaw } = await db
+        .from('order_items')
+        .select('order_id, product_id, product_name, quantity, unit_price, total_price')
+        .in('order_id', orderIds);
+      productOrderItems = (oiRaw || [])
+        .filter((it: { product_name: string; total_price: number; unit_price: number; quantity: number }) =>
+          it.product_name !== '배송비' && ((it.total_price || (it.unit_price || 0) * (it.quantity || 0)) > 0))
+        .map((it: { product_id: string | null; product_name: string; quantity: number; unit_price: number; total_price: number }) =>
+          ({ product_id: it.product_id, product_name: it.product_name, sku: null, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price }));
+    }
+
+    // ─── 6) COGS / 마진 / 제품 랭킹 — 제품 항목만 (RS 제외), 오프라인 + 납품 + 온라인 합산 ───
     const allProductItems: Array<{ product_id: string | null; product_name: string; sku: string | null; quantity: number; unit_price: number; total_price: number }> = [
       ...productSaleItems.map((it) => ({ product_id: it.product_id, product_name: it.product_name, sku: it.sku, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price })),
       ...productDlItems.map((it) => ({ product_id: it.product_id, product_name: it.product_name, sku: it.sku, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price })),
+      ...productOrderItems,
     ];
     const productIds = [...new Set(allProductItems.map((i) => i.product_id).filter(Boolean))] as string[];
     const purchasePriceMap: Record<string, number> = {};
+    const skuMap: Record<string, string> = {};
+    const categoryMap: Record<string, string> = {};
     if (productIds.length > 0) {
-      const { data: products } = await db.from('products').select('id, price_purchase').in('id', productIds);
-      for (const p of (products || [])) purchasePriceMap[p.id] = p.price_purchase || 0;
+      const { data: products } = await db.from('products').select('id, price_purchase, sku, category').in('id', productIds);
+      for (const p of (products || [])) { purchasePriceMap[p.id] = p.price_purchase || 0; if (p.sku) skuMap[p.id] = p.sku; if (p.category) categoryMap[p.id] = p.category; }
     }
     const productAgg: Record<string, { product_name: string; sku: string; qty: number; revenue: number; cogs: number }> = {};
     let totalCogs = 0;
@@ -192,7 +216,8 @@ export async function GET(req: NextRequest) {
       .map(([pid, v]) => ({
         product_id: pid,
         product_name: v.product_name,
-        sku: v.sku,
+        sku: skuMap[pid] || v.sku,
+        category: categoryMap[pid] || null,
         qty: v.qty,
         revenue: v.revenue,
         cogs: v.cogs,

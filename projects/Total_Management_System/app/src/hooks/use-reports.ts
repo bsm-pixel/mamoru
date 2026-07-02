@@ -62,6 +62,7 @@ export interface ProductMargin {
   product_id: string;
   product_name: string;
   sku: string;
+  category?: string | null;
   qty: number;
   revenue: number;
   cogs: number;

@@ -349,7 +349,10 @@ export default function ReportsPage() {
             {/* 제품별 매출 랭킹 */}
             {data.by_product.length > 0 && (
               <Card>
-                <h3 className="text-sm font-bold text-indigo-black mb-3">제품별 매출 랭킹</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-indigo-black">제품별 매출 랭킹</h3>
+                  <Link href="/reports/products" className="text-xs font-semibold text-neutral-500 hover:text-neutral-900">전체 보기 →</Link>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>

@@ -72,6 +72,7 @@ export const NAV_GROUPS: NavGroup[] = [
     group: '회계',
     items: [
       { label: '회계', href: '/reports', icon: 'BarChart3', matchPrefix: '/reports' },
+      { label: '품목별 매출', href: '/reports/products', icon: 'Package', matchPrefix: '/reports/products' },
       { label: '경비', href: '/expenses', icon: 'Wallet', matchPrefix: '/expenses' },
       { label: '입출금', href: '/cashflow', icon: 'Building2', matchPrefix: '/cashflow' },
       { label: '세금계산서', href: '/tax-invoices', icon: 'FileSignature', matchPrefix: '/tax-invoices' },
