@@ -90,6 +90,7 @@ function cardForm(c) {
       + fld('영문 (name_en)', src, 'options.' + i + '.name_en', o.name_en || '')
       + '</div>'
       + fld('설명 (description_ko)', src, 'options.' + i + '.description_ko', o.description_ko || '', true)
+      + fld('SVG 아이콘 (선택 · <svg …>…</svg> 코드 붙여넣기 · 색은 currentColor 권장)', src, 'options.' + i + '.svg_inline', o.svg_inline || '', true)
       + '</div>';
   });
   b += '<button class="ed-add" data-add-src="' + esc(src) + '">＋ 옵션 추가</button>';

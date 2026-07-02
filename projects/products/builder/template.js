@@ -69,9 +69,12 @@ function optionCard(opt, selected, variant) {
   const check = dark ? `<span style="font-size:clamp(14px,2vw,20px);color:#FAF9F7;font-weight:700;line-height:1;flex-shrink:0;">✓</span>` : '';
 
   let svg = '';
-  if (variant !== 'text' && opt.svg_inline) {
+  if (opt.svg_inline) {
     const op = (dark || NEUTRAL) ? '' : 'opacity:0.35;';
-    const w = variant === 'design' ? 'width:65%;margin:0 auto clamp(16px,2.5vw,28px);' : 'width:100%;margin-bottom:clamp(16px,2.5vw,28px);';
+    // design=중앙 65% / edge=100% / text(틴닝 등)=아이콘 크기(홈형태 등 표현)
+    const w = variant === 'design' ? 'width:65%;margin:0 auto clamp(16px,2.5vw,28px);'
+            : variant === 'edge' ? 'width:100%;margin-bottom:clamp(16px,2.5vw,28px);'
+            : 'width:clamp(44px,11vw,80px);margin-bottom:clamp(12px,1.8vw,20px);';
     // svg_inline 에 인라인 스타일 주입 (currentColor 사용 전제)
     svg = injectSvgStyle(opt.svg_inline, `${w}height:auto;display:block;${op}`);
   }
