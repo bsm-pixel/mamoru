@@ -152,6 +152,7 @@ function thinningRow(spec, catalog) {
     summary.push(esc(opt.name_ko || opt.id));
   }
   if (!cells.length) return '';
+  const note = (spec.custom_fields && spec.custom_fields.thinning_note) || '';
   const _n = NEUTRAL; NEUTRAL = true;   // 요약 = 라이트 카드(선명한 다크 텍스트/SVG)
   const cardsHtml = cells.map(({ c, opt }) => `<div style="min-width:0;">
       <div style="font-family:'Outfit',sans-serif;font-size:clamp(9px,1.2vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:clamp(8px,1vw,12px);">${esc(c.label_subtitle_ko || c.label_ko || '')}</div>
@@ -164,8 +165,9 @@ function thinningRow(spec, catalog) {
       <span style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;">— 발 · 홈 · 감모</span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(${cells.length},1fr);gap:clamp(6px,1vw,12px);">${cardsHtml}</div>
-    <div style="margin-top:clamp(12px,1.6vw,18px);padding:clamp(16px,2.2vw,24px);background:#1A1A1A;border-radius:clamp(8px,1.2vw,12px);text-align:center;">
+    <div style="margin-top:clamp(12px,1.6vw,18px);padding:clamp(20px,2.8vw,32px) clamp(16px,2.2vw,24px);background:#1A1A1A;border-radius:clamp(8px,1.2vw,12px);text-align:center;">
       <span style="font-family:'Outfit',sans-serif;font-size:clamp(18px,3.4vw,32px);font-weight:800;color:#FAF9F7;letter-spacing:0.02em;">${summary.join('  ·  ')}</span>
+      ${note ? `<p style="margin:clamp(14px,1.8vw,20px) auto 0;max-width:560px;font-size:clamp(13px,1.7vw,15px);color:rgba(245,245,243,0.72);line-height:1.75;">${nl2br(esc(note))}</p>` : ''}
     </div>
   </div>`;
 }
