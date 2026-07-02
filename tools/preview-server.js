@@ -11,7 +11,7 @@ const { exec } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const PORT = 8123;
-const OPEN_PATH = '/projects/products/builder/workspace.html'; // 시작 시 자동으로 열 페이지
+const OPEN_PATH = '/projects/products/builder/index.html'; // 시작 시 자동으로 열 페이지 (빌더 = 홈)
 
 const MIME = {
   '.html': 'text/html;charset=utf-8', '.js': 'text/javascript', '.json': 'application/json',
