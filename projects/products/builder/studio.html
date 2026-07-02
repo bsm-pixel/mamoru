@@ -54,6 +54,8 @@
   .ed-fld textarea{ resize:vertical; line-height:1.6; }
   .ed-loading{ padding:50px 20px; text-align:center; color:var(--mute); font-size:13px; }
   .ed-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  /* 미리보기 클릭 시 왼쪽 해당 블록 강조 */
+  .ed-file.focus-flash{ outline:2px solid var(--void); outline-offset:2px; box-shadow:0 0 0 5px rgba(26,26,26,.08); }
 </style>
 </head>
 <body>
@@ -62,7 +64,6 @@
     <span class="logo">MAMORU</span><span class="sub">문구+디자인 스튜디오</span>
     <span class="nav">
       <a href="./index.html" target="_blank" rel="noopener">🏗 빌더</a>
-      <a href="./workspace.html" target="_blank" rel="noopener">🎨 작업대</a>
     </span>
   </div>
   <div class="ed-actions"><span id="edUnsaved" class="ed-unsaved"></span><button id="edSaveAll" class="ed-saveall" type="button">전체 저장</button></div>
@@ -78,5 +79,19 @@
 
 <script src="./catalog.js"></script>
 <script src="./editor.js"></script>
+<script>
+  /* 오른쪽 미리보기(작업대 iframe)에서 패널 클릭 → 왼쪽 편집기 해당 블록으로 스크롤+강조 */
+  window.addEventListener('message', (e) => {
+    const d = e.data || {};
+    if (d.type !== 'focus-src' || !d.src) return;
+    const sel = '[data-save="' + (window.CSS && CSS.escape ? CSS.escape(d.src) : d.src) + '"]';
+    const btn = document.querySelector(sel);
+    const block = btn && btn.closest('.ed-file');
+    if (!block) return;
+    block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    block.classList.add('focus-flash');
+    setTimeout(() => block.classList.remove('focus-flash'), 1600);
+  });
+</script>
 </body>
 </html>

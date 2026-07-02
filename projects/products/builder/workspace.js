@@ -26,6 +26,8 @@ const WS_CSS = `
   .ws-copy__opt{ font-size:12.5px; color:#2D2D2D; line-height:1.6; padding:6px 0; border-top:1px dashed var(--line); white-space:pre-line; }
   .ws-copy__opt:first-of-type{ border-top:0; }
   .ws-copy__id{ font-family:'Outfit',sans-serif; font-size:9.5px; color:#a8a49e; margin-right:2px; }
+  .ws-card[data-src],.ws-copy[data-src]{ cursor:pointer; }
+  .ws-card[data-src]:hover,.ws-copy[data-src]:hover{ border-color:var(--void); box-shadow:0 0 0 3px rgba(26,26,26,.06); }
 `;
 
 const FONT_LINKS =
@@ -55,10 +57,25 @@ window.addEventListener('DOMContentLoaded', async () => {
 function initFrames() {
   const pc = document.getElementById('wsPC_frame');
   const mo = document.getElementById('wsMo_frame');
-  pc.addEventListener('load', () => { pcReady = true; paintInto(pc); maybeSync(); }, { once: true });
-  mo.addEventListener('load', () => { moReady = true; paintInto(mo); maybeSync(); }, { once: true });
+  pc.addEventListener('load', () => { pcReady = true; attachClick(pc); paintInto(pc); maybeSync(); }, { once: true });
+  mo.addEventListener('load', () => { moReady = true; attachClick(mo); paintInto(mo); maybeSync(); }, { once: true });
   pc.srcdoc = SKELETON;
   mo.srcdoc = SKELETON;
+}
+
+/* 미리보기 패널 클릭 → 최상위(스튜디오)로 신호 → 왼쪽 편집기가 해당 항목으로 스크롤.
+   스튜디오 iframe 안일 때만 동작(window.top !== window). 단독 작업대에선 무해. */
+function attachClick(frame) {
+  try {
+    const doc = frame.contentDocument;
+    if (!doc || window.top === window) return;
+    doc.addEventListener('click', (e) => {
+      const el = e.target.closest && e.target.closest('[data-src]');
+      if (!el) return;
+      const src = el.getAttribute('data-src');
+      if (src) { try { window.top.postMessage({ type: 'focus-src', src }, '*'); } catch (_) {} }
+    });
+  } catch (e) {}
 }
 function maybeSync() { if (pcReady && moReady) wireScrollSync(document.getElementById('wsPC_frame'), document.getElementById('wsMo_frame')); }
 
@@ -135,8 +152,8 @@ function variantOf(cardType) {
 }
 function esc2(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
 
-function panel(idText, labelText, appliesArr, innerHtml) {
-  return '<div class="ws-card"><div class="ws-card__bar">'
+function panel(idText, labelText, appliesArr, innerHtml, src) {
+  return '<div class="ws-card"' + (src ? ' data-src="' + esc2(src) + '"' : '') + '><div class="ws-card__bar">'
     + '<span class="ws-card__id">' + esc2(idText) + '</span>'
     + '<span class="ws-card__label">' + esc2(labelText) + '</span>'
     + '<span class="ws-card__applies">' + (appliesArr || []).join(' · ') + '</span>'
@@ -146,13 +163,13 @@ function cardPanel(cardType) {
   const card = Catalog.byCardType[cardType];
   if (!card) return '';
   const label = (card.label_ko || '') + (card.label_subtitle_ko ? ' · ' + card.label_subtitle_ko : '');
-  return panel(cardType, label, card.applies_to, cardGroup(card, firstId(cardType), variantOf(cardType)));
+  return panel(cardType, label, card.applies_to, cardGroup(card, firstId(cardType), variantOf(cardType)), card._src);
 }
 function copyPanel(pool) {
   const opts = (pool.options || []).map(o =>
     '<div class="ws-copy__opt"><span class="ws-copy__id">' + esc2(o.id) + '</span>' + esc2(o.text || '') + '</div>'
   ).join('');
-  return '<div class="ws-copy"><div class="ws-copy__bar">'
+  return '<div class="ws-copy" data-src="' + esc2(pool._src) + '"><div class="ws-copy__bar">'
     + '<span class="ws-card__id">' + esc2(pool.copy_type) + '</span>'
     + '<span class="ws-card__label">' + esc2(pool.label_ko || '') + '</span>'
     + '<span class="ws-card__applies">' + (pool.applies_to || []).join(' · ') + '</span>'
@@ -168,11 +185,11 @@ function buildContent() {
 
   h += '<div class="ws-h2">① 공통 카드</div>';
   if (Catalog.byCardType['handle_grip'] || Catalog.byCardType['handle_camel']) {
-    h += panel('handle', '핸들 (Grip + Camel)', ['blunt', 'thinning', 'long', 'dry'], handleGroup(sampleSpec, Catalog));
+    h += panel('handle', '핸들 (Grip + Camel)', ['blunt', 'thinning', 'long', 'dry'], handleGroup(sampleSpec, Catalog), (Catalog.byCardType['handle_grip'] || {})._src);
   }
   if (Catalog.byCardType['grade']) {
     const gradeInner = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:clamp(10px,1.5vw,16px)">' + gradeCards(sampleSpec, Catalog) + '</div>';
-    h += panel('grade', Catalog.byCardType['grade'].label_ko || 'GRADE', Catalog.byCardType['grade'].applies_to, gradeInner);
+    h += panel('grade', Catalog.byCardType['grade'].label_ko || 'GRADE', Catalog.byCardType['grade'].applies_to, gradeInner, Catalog.byCardType['grade']._src);
   }
 
   h += '<div class="ws-h2">② 가위 종류별 특징 카드</div>';
