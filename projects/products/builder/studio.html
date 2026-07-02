@@ -4,15 +4,36 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow"><!-- 내부 도구 -->
-<title>MAMORU 문구 편집기</title>
+<title>MAMORU 문구+디자인 스튜디오</title>
 <style>
   :root{ --void:#1A1A1A; --mute:#8A8580; --line:#EDEBE8; --cream:#FAF9F7; }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{ font-family:'Plus Jakarta Sans','Noto Sans KR',sans-serif; background:#F2F0EC; color:var(--void); -webkit-font-smoothing:antialiased; }
-  .ed-top{ position:sticky; top:0; z-index:5; display:flex; align-items:center; justify-content:space-between; background:var(--void); color:var(--cream); padding:0 18px; height:50px; }
+  html,body{height:100%;}
+  body{ font-family:'Plus Jakarta Sans','Noto Sans KR',sans-serif; background:#F2F0EC; color:var(--void); -webkit-font-smoothing:antialiased; display:flex; flex-direction:column; height:100%; }
+  .ed-top{ flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; background:var(--void); color:var(--cream); padding:0 18px; height:50px; }
   .ed-top .logo{ font-family:'Outfit',sans-serif; font-weight:900; font-size:15px; }
   .ed-top .sub{ font-size:12px; color:rgba(245,245,243,.55); margin-left:8px; }
-  .ed-wrap{ max-width:720px; margin:0 auto; padding:20px 16px 120px; }
+  .ed-top .nav{ display:flex; align-items:center; gap:8px; margin-left:14px; }
+  .ed-top .nav a{ font-size:12px; font-weight:700; color:var(--void); background:var(--cream); padding:6px 12px; border-radius:8px; text-decoration:none; }
+  .ed-actions{ display:flex; align-items:center; gap:10px; }
+  .ed-unsaved{ font-size:11px; color:#ffd27a; font-weight:600; }
+  .ed-saveall{ border:0; background:var(--cream); color:var(--void); font-size:12px; font-weight:700; padding:7px 16px; border-radius:8px; cursor:pointer; font-family:inherit; }
+  .ed-banner{ flex:0 0 auto; padding:9px 18px; font-size:12px; font-weight:600; }
+  .ed-banner.warn{ background:#fff3cd; color:#8a6d00; border-bottom:1px solid #f0e0a0; }
+  .ed-banner.ok{ background:#e6f4ea; color:#256a35; border-bottom:1px solid #cfe8d6; }
+
+  /* 분할: 좌 문구편집 / 우 작업대 미리보기 */
+  .studio{ flex:1 1 auto; min-height:0; display:flex; }
+  #ed{ flex:0 0 48%; max-width:640px; height:100%; overflow-y:auto; padding:20px 16px 120px; }
+  .studio-preview{ flex:1 1 auto; min-width:0; height:100%; border-left:1px solid #d8d5cf; background:#E8E6E2; }
+  .studio-preview iframe{ width:100%; height:100%; border:0; }
+  @media (max-width:900px){
+    .studio{ flex-direction:column; }
+    #ed{ flex:0 0 auto; max-width:none; height:auto; }
+    .studio-preview{ height:70vh; border-left:0; border-top:1px solid #d8d5cf; }
+  }
+
+  /* editor.js 가 그리는 폼 스타일 (editor.html 과 동일) */
   .ed-h2{ font-family:'Outfit',sans-serif; font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--void); margin:26px 2px 10px; padding-bottom:6px; border-bottom:2px solid var(--void); }
   .ed-file{ background:#fff; border:1px solid var(--line); border-radius:12px; margin-bottom:16px; overflow:hidden; }
   .ed-file__bar{ display:flex; align-items:center; gap:10px; padding:11px 14px; background:#fbfaf9; border-bottom:1px solid var(--line); }
@@ -33,21 +54,27 @@
   .ed-fld textarea{ resize:vertical; line-height:1.6; }
   .ed-loading{ padding:50px 20px; text-align:center; color:var(--mute); font-size:13px; }
   .ed-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
-  .ed-actions{ display:flex; align-items:center; gap:10px; }
-  .ed-unsaved{ font-size:11px; color:#ffd27a; font-weight:600; }
-  .ed-saveall{ border:0; background:var(--cream); color:var(--void); font-size:12px; font-weight:700; padding:7px 16px; border-radius:8px; cursor:pointer; font-family:inherit; }
-  .ed-banner{ padding:9px 18px; font-size:12px; font-weight:600; }
-  .ed-banner.warn{ background:#fff3cd; color:#8a6d00; border-bottom:1px solid #f0e0a0; }
-  .ed-banner.ok{ background:#e6f4ea; color:#256a35; border-bottom:1px solid #cfe8d6; }
 </style>
 </head>
 <body>
 <header class="ed-top">
-  <div style="display:flex;align-items:center;gap:12px;"><span class="logo">MAMORU</span><span class="sub">문구 편집기</span><a href="./studio.html" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--void);background:var(--cream);padding:6px 12px;border-radius:8px;text-decoration:none;">🎛 스튜디오 ↗</a><a href="./index.html" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--void);background:var(--cream);padding:6px 12px;border-radius:8px;text-decoration:none;">🏗 빌더 ↗</a><a href="./workspace.html" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--void);background:var(--cream);padding:6px 12px;border-radius:8px;text-decoration:none;">🎨 작업대 ↗</a></div>
+  <div style="display:flex;align-items:center;min-width:0;">
+    <span class="logo">MAMORU</span><span class="sub">문구+디자인 스튜디오</span>
+    <span class="nav">
+      <a href="./index.html" target="_blank" rel="noopener">🏗 빌더</a>
+      <a href="./workspace.html" target="_blank" rel="noopener">🎨 작업대</a>
+    </span>
+  </div>
   <div class="ed-actions"><span id="edUnsaved" class="ed-unsaved"></span><button id="edSaveAll" class="ed-saveall" type="button">전체 저장</button></div>
 </header>
 <div id="edBanner" class="ed-banner" style="display:none"></div>
-<main id="ed" class="ed-wrap"><div class="ed-loading">불러오는 중…</div></main>
+
+<div class="studio">
+  <main id="ed" class="ed-wrap"><div class="ed-loading">불러오는 중…</div></main>
+  <div class="studio-preview">
+    <iframe src="./workspace.html" title="디자인 실시간 미리보기"></iframe>
+  </div>
+</div>
 
 <script src="./catalog.js"></script>
 <script src="./editor.js"></script>
