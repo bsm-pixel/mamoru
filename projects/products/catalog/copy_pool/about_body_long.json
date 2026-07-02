@@ -1,0 +1,18 @@
+{
+  "copy_type": "about_body",
+  "applies_to": ["long"],
+  "label_ko": "About 본문 (장가위)",
+  "select_mode": "single",
+  "options": [
+    {
+      "id": "long_line",
+      "text": "긴 날로 한 번에 긴 라인을 그립니다.\n미끄러지듯 이어지는 커트감으로, 레이어·긴 기장 작업에서 진가를 발휘하는 장가위입니다.",
+      "tone": "긴 라인"
+    },
+    {
+      "id": "long_flow",
+      "text": "슬라이드·페더링 등 흐르는 기법에 맞췄습니다.\n손목을 크게 쓰지 않아도 긴 궤적을 안정적으로 컨트롤할 수 있습니다.",
+      "tone": "흐름·컨트롤"
+    }
+  ]
+}

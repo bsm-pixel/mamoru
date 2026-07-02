@@ -1,0 +1,14 @@
+{
+  "copy_type": "for_you_miss",
+  "applies_to": ["thinning"],
+  "label_ko": "FOR YOU — 맞지 않을 수 있습니다",
+  "label_subtitle_ko": "솔직한 선택 가이드 · 안 맞는 경우 (다중 선택, 3개 권장)",
+  "select_mode": "multi",
+  "recommend_count": 3,
+  "options": [
+    { "id": "th_beginner", "category": "경력", "text": "틴닝 감을 아직 익히는 입문 단계", "tone": "경험" },
+    { "id": "th_blunt_main", "category": "커트스타일", "text": "블런트 · 라인 커트 위주 (숱 작업 적음)", "tone": "용도 불일치" },
+    { "id": "th_heavy_remove", "category": "커트습관", "text": "한 번에 많은 숱을 빼는 습관", "tone": "과도 제거" },
+    { "id": "th_thin_hair", "category": "커트환경", "text": "가는 모발 · 적은 숱 고객 위주", "tone": "모질" }
+  ]
+}

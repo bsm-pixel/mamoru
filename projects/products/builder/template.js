@@ -337,24 +337,34 @@ function lineupCards(spec) {
 }
 
 /* ─── 브랜드 고정 섹션 (모델 무관 — v10 verbatim) ─── */
-const STATIC_VOICES = `<div style="background:#EDEBE8;padding:clamp(80px,10vw,140px) clamp(24px,4vw,48px);">
+/* 고객 목소리 — 제품별 실제 후기(spec.custom_fields.reviews) 큐레이션. 없으면 브랜드 상담후기 폴백 */
+const VOICES_FALLBACK = [
+  ['상담받고 처음으로 "가위 안 사셔도 됩니다"란 말 들었어요. 신선한 충격이었습니다.', '김○○ 원장님', '서울 · 경력 12년'],
+  ['새 가위가 필요한 게 아니라 다른 형태가 답이라고 짚어주셨어요. 그동안 잘못 골라온 것 같았습니다.', '박○○ 디자이너', '부산 · 경력 8년'],
+  ['평생 무료 복원수리라서 정말 한 자루 쓰는 만큼 마음이 편해요. 처음 들어본 보장입니다.', '이○○ 원장님', '대구 · 경력 15년']
+];
+function voicesSection(spec) {
+  const cf = spec.custom_fields || {};
+  const curated = Array.isArray(cf.reviews) ? cf.reviews.filter(r => r && (r.quote || '').trim()) : [];
+  const useCurated = curated.length > 0;
+  const items = useCurated ? curated.map(r => [r.quote, r.name || '', r.meta || '']) : VOICES_FALLBACK;
+  const sub = useCurated ? '— 실제 고객 후기' : '— 제품 후기가 아닌, 상담을 통해 느낀 점';
+  return `<div style="background:#EDEBE8;padding:clamp(80px,10vw,140px) clamp(24px,4vw,48px);">
   ${eyebrow('08', 'VOICES')}
   <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(20px,3vw,32px) 0;">고객 목소리</h2>
-  <p style="font-size:clamp(13px,1.6vw,15px);color:#8A8580;line-height:1.7;margin:0 0 clamp(48px,6vw,72px) 0;font-style:italic;">— 제품 후기가 아닌, 상담을 통해 느낀 점</p>
+  <p style="font-size:clamp(13px,1.6vw,15px);color:#8A8580;line-height:1.7;margin:0 0 clamp(48px,6vw,72px) 0;font-style:italic;">${sub}</p>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(16px,2vw,24px);align-items:start;">
-    ${[['상담받고 처음으로 "가위 안 사셔도 됩니다"란 말 들었어요. 신선한 충격이었습니다.', '김○○ 원장님', '서울 · 경력 12년'],
-       ['새 가위가 필요한 게 아니라 다른 형태가 답이라고 짚어주셨어요. 그동안 잘못 골라온 것 같았습니다.', '박○○ 디자이너', '부산 · 경력 8년'],
-       ['평생 무료 복원수리라서 정말 한 자루 쓰는 만큼 마음이 편해요. 처음 들어본 보장입니다.', '이○○ 원장님', '대구 · 경력 15년']]
-      .map(([q, n, m]) => `<div style="background:#FFFFFF;border-radius:clamp(8px,1.5vw,12px);padding:clamp(28px,4vw,40px);">
+    ${items.map(([q, n, m]) => `<div style="background:#FFFFFF;border-radius:clamp(8px,1.5vw,12px);padding:clamp(28px,4vw,40px);">
         <div style="font-family:'Outfit',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:900;color:#1A1A1A;line-height:1;margin-bottom:clamp(12px,1.5vw,16px);">"</div>
-        <p style="font-size:clamp(15px,1.9vw,18px);color:#1A1A1A;line-height:1.65;margin:0 0 clamp(20px,2.5vw,28px) 0;font-weight:500;">${q}</p>
+        <p style="font-size:clamp(15px,1.9vw,18px);color:#1A1A1A;line-height:1.65;margin:0 0 clamp(20px,2.5vw,28px) 0;font-weight:500;">${nl2br(esc(q))}</p>
         <div style="display:flex;align-items:center;gap:clamp(10px,1.5vw,14px);">
           <div style="width:clamp(36px,5vw,44px);height:clamp(36px,5vw,44px);border-radius:50%;background:#D4D0CB;flex-shrink:0;"></div>
-          <div><div style="font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;">${n}</div>
-          <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">${m}</div></div>
+          <div><div style="font-size:clamp(12px,1.5vw,14px);font-weight:700;color:#1A1A1A;">${esc(n)}</div>
+          <div style="font-size:clamp(10px,1.3vw,12px);color:#8A8580;margin-top:2px;">${esc(m)}</div></div>
         </div></div>`).join('')}
   </div>
 </div>`;
+}
 
 const STATIC_VS = `<div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">
   ${eyebrow('09', 'VS GENERAL')}
@@ -374,7 +384,7 @@ const STATIC_VS = `<div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40p
 const STATIC_WHY = `<div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">
   ${eyebrow('10', 'WHY MAMORU')}
   <div style="font-family:'Outfit',sans-serif;font-size:clamp(48px,7vw,80px);font-weight:900;color:#1A1A1A;line-height:1;margin-bottom:clamp(20px,3vw,28px);">"</div>
-  <p style="font-size:clamp(20px,3.2vw,36px);color:#1A1A1A;line-height:1.4;font-weight:600;letter-spacing:-0.01em;margin:0 0 clamp(40px,5vw,56px) 0;max-width:680px;">대부분의 가위는 유행에 맞춰져 있지만,<br>이 가위는 당신의 손에 맞춥니다.</p>
+  <p style="font-size:clamp(20px,3.2vw,36px);color:#1A1A1A;line-height:1.4;font-weight:600;letter-spacing:-0.01em;margin:0 0 clamp(40px,5vw,56px) 0;max-width:680px;">대부분의 가위는 '유행'에 맞춰져 있습니다.<br>마모루는 '당신의 손'에 맞춥니다.</p>
   <div style="display:flex;align-items:center;gap:clamp(14px,2vw,18px);margin-bottom:clamp(40px,5vw,56px);">
     <div style="width:clamp(56px,7vw,72px);height:clamp(56px,7vw,72px);border-radius:50%;background:#D4D0CB;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:9px;letter-spacing:0.1em;">[얼굴]</div>
     <div><div style="font-size:clamp(13px,1.7vw,15px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">백성민</div>
@@ -528,7 +538,7 @@ function renderDetailHTML(spec, catalog) {
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:clamp(8px,1.2vw,16px);">${lineupCards(spec)}</div>
   </div>
 
-  ${STATIC_VOICES}
+  ${voicesSection(spec)}
   ${STATIC_VS}
   ${STATIC_WHY}
 

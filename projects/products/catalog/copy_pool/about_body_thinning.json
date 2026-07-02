@@ -1,0 +1,18 @@
+{
+  "copy_type": "about_body",
+  "applies_to": ["thinning"],
+  "label_ko": "About 본문 (틴닝)",
+  "select_mode": "single",
+  "options": [
+    {
+      "id": "thinning_natural",
+      "text": "숱을 치되 '티 안 나게'.\n커트 라인을 살리면서 자연스러운 숱 조절에 초점을 둔 틴닝입니다. 발수·홈 구조로 한 번에 걷어내는 양을 일정하게 유지합니다.",
+      "tone": "자연스러움"
+    },
+    {
+      "id": "thinning_volume",
+      "text": "질감과 볼륨을 동시에 잡습니다.\n과하게 빠지지 않아, 시술 후 며칠이 지나도 스타일이 무너지지 않는 틴닝입니다.",
+      "tone": "볼륨·지속"
+    }
+  ]
+}

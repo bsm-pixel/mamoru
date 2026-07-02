@@ -6,53 +6,13 @@
   "select_mode": "multi",
   "recommend_count": 3,
   "options": [
-    {
-      "id": "slide_50pct",
-      "text": "슬라이드 커트 비중 50% 이상",
-      "tone": "기법 불일치",
-      "matches": ["슬라이드", "G"]
-    },
-    {
-      "id": "big_hand",
-      "text": "손이 큰 편 (긴 날 가위가 편한 경우)",
-      "tone": "손 크기",
-      "matches": ["4.5", "5.0", "5.5"]
-    },
-    {
-      "id": "beginner",
-      "text": "입문자 (먼저 본인 스타일 파악이 우선)",
-      "tone": "경험",
-      "matches": ["blunt"]
-    },
-    {
-      "id": "thinning_main",
-      "text": "틴닝 · 숱치기 위주 작업",
-      "tone": "용도 불일치",
-      "matches": ["blunt"]
-    },
-    {
-      "id": "long_blade_pref",
-      "text": "6.5인치 이상 긴 날을 선호",
-      "tone": "길이",
-      "matches": ["4.5", "5.0", "5.5"]
-    },
-    {
-      "id": "dry_cut_main",
-      "text": "드라이 커트 비중이 높음",
-      "tone": "기법 불일치",
-      "matches": ["blunt", "S"]
-    },
-    {
-      "id": "heavy_pref",
-      "text": "묵직한 무게감으로 눌러 자르는 느낌 선호",
-      "tone": "무게 취향",
-      "matches": ["라이트", "경량"]
-    },
-    {
-      "id": "wide_grip_pref",
-      "text": "넉넉한 그립 (손가락 구멍 큰 핸들) 선호",
-      "tone": "그립 취향",
-      "matches": ["스탠다드", "컴팩트"]
-    }
+    { "id": "beginner", "category": "경력", "text": "입문자 (먼저 본인 스타일 파악이 우선)", "tone": "경험", "matches": ["blunt"] },
+    { "id": "slide_50pct", "category": "커트스타일", "text": "슬라이드 커트 비중 50% 이상", "tone": "기법 불일치", "matches": ["슬라이드", "G"] },
+    { "id": "thinning_main", "category": "커트스타일", "text": "틴닝 · 숱치기 위주 작업", "tone": "용도 불일치", "matches": ["blunt"] },
+    { "id": "dry_cut_main", "category": "커트스타일", "text": "드라이 커트 비중이 높음", "tone": "기법 불일치", "matches": ["blunt", "S"] },
+    { "id": "heavy_pref", "category": "커트습관", "text": "묵직한 무게감으로 눌러 자르는 느낌 선호", "tone": "무게 취향", "matches": ["라이트", "경량"] },
+    { "id": "big_hand", "category": "커트환경", "text": "손이 큰 편 (긴 날 가위가 편한 경우)", "tone": "손 크기", "matches": ["4.5", "5.0", "5.5"] },
+    { "id": "long_blade_pref", "category": "커트환경", "text": "6.5인치 이상 긴 날을 선호", "tone": "길이", "matches": ["4.5", "5.0", "5.5"] },
+    { "id": "wide_grip_pref", "category": "커트환경", "text": "넉넉한 그립 (손가락 구멍 큰 핸들) 선호", "tone": "그립 취향", "matches": ["스탠다드", "컴팩트"] }
   ]
 }

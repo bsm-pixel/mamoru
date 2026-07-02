@@ -1,0 +1,14 @@
+{
+  "copy_type": "for_you_match",
+  "applies_to": ["dry"],
+  "label_ko": "FOR YOU — 이런 분에게 맞습니다",
+  "label_subtitle_ko": "솔직한 선택 가이드 · 맞는 경우 (다중 선택, 3개 권장)",
+  "select_mode": "multi",
+  "recommend_count": 3,
+  "options": [
+    { "id": "dr_skilled", "category": "경력", "text": "드라이 기법에 익숙한 경력자", "tone": "숙련" },
+    { "id": "dr_main", "category": "커트스타일", "text": "드라이 커트 비중이 높음", "tone": "주력" },
+    { "id": "dr_stroke", "category": "커트스타일", "text": "스트록 · 슬라이싱 질감 작업 위주", "tone": "질감" },
+    { "id": "dr_realline", "category": "커트습관", "text": "마른 모발 위 실제 라인을 보며 마무리", "tone": "실제 라인" }
+  ]
+}

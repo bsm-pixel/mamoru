@@ -1,0 +1,15 @@
+{
+  "copy_type": "for_you_match",
+  "applies_to": ["thinning"],
+  "label_ko": "FOR YOU — 이런 분에게 맞습니다",
+  "label_subtitle_ko": "솔직한 선택 가이드 · 맞는 경우 (다중 선택, 3개 권장)",
+  "select_mode": "multi",
+  "recommend_count": 3,
+  "options": [
+    { "id": "th_main_tool", "category": "경력", "text": "틴닝을 주 도구로 쓰는 경력자", "tone": "숙련" },
+    { "id": "th_texture", "category": "커트스타일", "text": "숱 조절 · 질감 커트 비중이 높음", "tone": "질감" },
+    { "id": "th_movement", "category": "커트스타일", "text": "볼륨 · 움직임을 살리는 스타일 위주", "tone": "볼륨" },
+    { "id": "th_gradual", "category": "커트습관", "text": "한 번에 많이 빼기보다 여러 번 나눠 조절", "tone": "미세 조절" },
+    { "id": "th_thick_hair", "category": "커트환경", "text": "두껍고 숱 많은 모질 고객이 많음", "tone": "모질" }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "copy_type": "about_body",
+  "applies_to": ["dry"],
+  "label_ko": "About 본문 (드라이)",
+  "select_mode": "single",
+  "options": [
+    {
+      "id": "dry_realline",
+      "text": "마른 모발 위에서 질감을 다듬는 드라이 커트 전용입니다.\n젖은 상태와 다른 '실제 떨어지는 라인'을 그대로 보며 마무리할 수 있습니다.",
+      "tone": "실제 라인"
+    },
+    {
+      "id": "dry_texture",
+      "text": "스트록·슬라이싱 등 드라이 기법에 맞춘 날 구조입니다.\n모발을 밀지 않고 얹어 자르는 느낌으로, 표면 질감을 섬세하게 조절합니다.",
+      "tone": "질감 컨트롤"
+    }
+  ]
+}

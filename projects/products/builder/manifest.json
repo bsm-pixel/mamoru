@@ -18,9 +18,18 @@
     "copy_pool/hero_subtitle_blunt.json",
     "copy_pool/honest_reco_blunt.json",
     "copy_pool/about_body_blunt.json",
+    "copy_pool/about_body_thinning.json",
+    "copy_pool/about_body_long.json",
+    "copy_pool/about_body_dry.json",
     "copy_pool/about_quote.json",
     "copy_pool/for_you_match_blunt.json",
     "copy_pool/for_you_miss_blunt.json",
+    "copy_pool/for_you_match_thinning.json",
+    "copy_pool/for_you_miss_thinning.json",
+    "copy_pool/for_you_match_long.json",
+    "copy_pool/for_you_miss_long.json",
+    "copy_pool/for_you_match_dry.json",
+    "copy_pool/for_you_miss_dry.json",
     "copy_pool/handle_description_pool.json"
   ]
 }

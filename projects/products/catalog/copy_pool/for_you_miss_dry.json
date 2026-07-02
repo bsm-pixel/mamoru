@@ -1,0 +1,14 @@
+{
+  "copy_type": "for_you_miss",
+  "applies_to": ["dry"],
+  "label_ko": "FOR YOU — 맞지 않을 수 있습니다",
+  "label_subtitle_ko": "솔직한 선택 가이드 · 안 맞는 경우 (다중 선택, 3개 권장)",
+  "select_mode": "multi",
+  "recommend_count": 3,
+  "options": [
+    { "id": "dr_beginner", "category": "경력", "text": "드라이 커트 경험이 적음", "tone": "경험" },
+    { "id": "dr_wet_main", "category": "커트스타일", "text": "젖은 상태 블런트 커트 위주", "tone": "용도 불일치" },
+    { "id": "dr_push_habit", "category": "커트습관", "text": "모발을 밀어 자르는 습관", "tone": "기법 불일치" },
+    { "id": "dr_no_demand", "category": "커트환경", "text": "드라이 커트 수요가 거의 없는 환경", "tone": "수요" }
+  ]
+}

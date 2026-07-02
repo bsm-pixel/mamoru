@@ -121,10 +121,51 @@ function renderPanel() {
     'A2-45FS\nA2-65FS\nA2-55FC', v => { spec.lineup = v.split('\n').map(s => s.trim()).filter(Boolean); updatePreview(); }));
   p.appendChild(section('SAME HANDLE', lu, '07'));
 
+  // 08 VOICES — 제품별 실제 후기 큐레이션
+  const vo = document.createElement('div');
+  vo.appendChild(reviewsEditor());
+  p.appendChild(section('VOICES', vo, '08'));
+
   // 13 CTA
   const cta = document.createElement('div');
   cta.appendChild(textField('맞춤 컨설팅 링크', spec.custom_fields.cta_link || '', 'https://...', v => { spec.custom_fields.cta_link = v; updatePreview(); }));
   p.appendChild(section('CTA', cta, '13'));
+}
+
+/* 제품별 실제 후기 입력 (반복) — spec.custom_fields.reviews = [{quote,name,meta}] */
+function reviewsEditor() {
+  const wrap = document.createElement('div');
+  const hint = document.createElement('div'); hint.className = 'hint';
+  hint.textContent = '실제 후기 2~3개 큐레이션 (비우면 브랜드 상담후기가 자동 노출). 입력한 문구가 고객에게 그대로 보입니다.';
+  wrap.appendChild(hint);
+  spec.custom_fields.reviews = spec.custom_fields.reviews || [];
+  const list = document.createElement('div');
+  wrap.appendChild(list);
+  function draw() {
+    list.innerHTML = '';
+    spec.custom_fields.reviews.forEach((r, i) => {
+      const box = document.createElement('div'); box.className = 'fld';
+      box.style.borderTop = '1px dashed #e5e2dd'; box.style.paddingTop = '10px'; box.style.marginTop = '8px';
+      const ta = document.createElement('textarea'); ta.rows = 2; ta.placeholder = `후기 ${i + 1} 내용`; ta.value = r.quote || '';
+      ta.addEventListener('input', () => { r.quote = ta.value; updatePreview(); });
+      box.appendChild(ta);
+      const g = document.createElement('div'); g.className = 'grid2'; g.style.marginTop = '6px';
+      const n = document.createElement('input'); n.type = 'text'; n.placeholder = '작성자 (예: 김○○ 원장님)'; n.value = r.name || '';
+      n.addEventListener('input', () => { r.name = n.value; updatePreview(); });
+      const m = document.createElement('input'); m.type = 'text'; m.placeholder = '메타 (예: 서울 · 경력 8년)'; m.value = r.meta || '';
+      m.addEventListener('input', () => { r.meta = m.value; updatePreview(); });
+      g.appendChild(n); g.appendChild(m); box.appendChild(g);
+      const del = document.createElement('button'); del.type = 'button'; del.className = 'chip'; del.textContent = '이 후기 삭제'; del.style.marginTop = '6px';
+      del.addEventListener('click', () => { spec.custom_fields.reviews.splice(i, 1); draw(); updatePreview(); });
+      box.appendChild(del);
+      list.appendChild(box);
+    });
+  }
+  draw();
+  const add = document.createElement('button'); add.type = 'button'; add.className = 'chip'; add.textContent = '＋ 후기 추가'; add.style.marginTop = '10px';
+  add.addEventListener('click', () => { spec.custom_fields.reviews.push({ quote: '', name: '', meta: '' }); draw(); updatePreview(); });
+  wrap.appendChild(add);
+  return wrap;
 }
 
 /* 종류 전환 — 기본 정보/카피는 유지, 카드 선택만 초기화 */
@@ -279,17 +320,20 @@ function copyChooserSingleInline(copyType, customKey, label) {
   return f;
 }
 
-/* 카피 풀 다중 선택 (체크 칩) */
+/* 선택가이드 분류 순서 (빌더에서만 보임 — 고객 페이지엔 문구만 노출) */
+const FORYOU_CATS = ['경력', '커트스타일', '커트습관', '커트환경'];
+
+/* 카피 풀 다중 선택 (체크 칩) — category 있으면 분류별로 묶어 표시 */
 function copyChooserMulti(copyType, label) {
   const pool = Catalog.copyPool(copyType, spec.type);
   const f = document.createElement('div'); f.className = 'fld';
   const l = document.createElement('span'); l.className = 'lbl';
   l.textContent = label + (pool && pool.recommend_count ? `  (권장 ${pool.recommend_count}개)` : '');
   f.appendChild(l);
-  if (!pool) { const e = document.createElement('div'); e.className = 'hint'; e.textContent = `(${copyType} 풀 없음)`; f.appendChild(e); return f; }
+  if (!pool) { const e = document.createElement('div'); e.className = 'hint'; e.textContent = `(${copyType} 풀 없음 — ${spec.type} 종류 카피 미등록)`; f.appendChild(e); return f; }
   const chosen = new Set(spec.copy_selections[copyType] || []);
-  const row = document.createElement('div'); row.className = 'chips col';
-  for (const o of pool.options) {
+  const opts = pool.options || [];
+  const makeChip = (o) => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'chip' + (chosen.has(o.id) ? ' on' : '');
     b.textContent = o.text;
     b.addEventListener('click', () => {
@@ -298,9 +342,27 @@ function copyChooserMulti(copyType, label) {
       spec.copy_selections[copyType] = [...chosen];
       updatePreview();
     });
-    row.appendChild(b);
+    return b;
+  };
+  const catOf = (o) => (o.category && FORYOU_CATS.includes(o.category)) ? o.category : '기타';
+  const hasCats = opts.some(o => o.category);
+  if (!hasCats) {
+    const row = document.createElement('div'); row.className = 'chips col';
+    opts.forEach(o => row.appendChild(makeChip(o)));
+    f.appendChild(row);
+  } else {
+    const order = [...FORYOU_CATS, '기타'];
+    for (const cat of order) {
+      const catOpts = opts.filter(o => catOf(o) === cat);
+      if (!catOpts.length) continue;
+      const sh = document.createElement('div'); sh.className = 'subhead'; sh.textContent = cat; sh.style.marginTop = '10px';
+      f.appendChild(sh);
+      const row = document.createElement('div'); row.className = 'chips col';
+      catOpts.forEach(o => row.appendChild(makeChip(o)));
+      f.appendChild(row);
+    }
   }
-  f.appendChild(row); return f;
+  return f;
 }
 
 /* ════════════ 미리보기 ════════════
