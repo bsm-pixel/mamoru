@@ -60,6 +60,13 @@
   #doneModal.on .mm-modal__box{ animation: mmPopIn .3s cubic-bezier(.16,1,.3,1) both; }
   @keyframes mmFadeIn{ from{ opacity:0 } to{ opacity:1 } }
   @keyframes mmPopIn{ from{ opacity:0; transform:translateY(16px) scale(.92) } to{ opacity:1; transform:none } }
+  /* 완료 = 풀스크린 화면 전환 (인스타 등 자동닫힘 불가 대비 — 깔끔한 완료 상태로 머무름) */
+  #doneModal{ background:#FAF9F7; padding:24px; }
+  #doneModal .mm-modal__box{ background:transparent; max-width:420px; width:100%; padding:24px; }
+  .mm-done-check{ width:82px; height:82px; margin:0 auto 22px; display:block; }
+  .mm-done-check circle{ stroke:var(--void); stroke-width:2.5; fill:none; stroke-dasharray:172; stroke-dashoffset:172; animation:mmDraw .5s ease .15s forwards; }
+  .mm-done-check path{ stroke:var(--void); stroke-width:3.2; fill:none; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:44; stroke-dashoffset:44; animation:mmDraw .35s ease .55s forwards; }
+  @keyframes mmDraw{ to{ stroke-dashoffset:0 } }
   .mm-modal__box{ background:#fff; border-radius:18px; padding:26px 22px; max-width:340px; text-align:center; }
   .mm-modal__box h3{ font-size:18px; font-weight:800; color:var(--void); }
   .mm-modal__box p{ font-size:13px; color:var(--gray); margin-top:8px; }
@@ -237,10 +244,17 @@
 
 <div class="mm-modal" id="doneModal">
   <div class="mm-modal__box">
+    <svg class="mm-done-check" viewBox="0 0 60 60" aria-hidden="true">
+      <circle cx="30" cy="30" r="27"/>
+      <path d="M18 31 l8 8 l16 -18"/>
+    </svg>
     <h3>신청이 완료되었습니다</h3>
-    <p>곧 알림톡을 통하여 안내드리겠습니다.</p>
+    <p>곧 <b>알림톡</b>으로 접수·입금 안내를 보내드립니다.<br/>휴대폰 알림을 확인해 주세요.</p>
     <button onclick="closeInapp()">확인</button>
-    <p id="doneHint" style="display:none; font-size:12px; color:var(--gray); margin-top:12px; line-height:1.5;">창이 자동으로 닫히지 않으면<br/>좌측 상단 ✕ 또는 뒤로가기로 닫아주세요.</p>
+    <div id="doneHint" style="display:none; margin-top:16px;">
+      <p style="font-size:12.5px; color:var(--gray); line-height:1.6;">접수는 안전하게 저장되었어요.<br/>이 창은 그냥 닫으셔도 됩니다.</p>
+      <a href="https://mamoru.kr" style="display:inline-block; margin-top:14px; font-size:13px; font-weight:800; color:var(--void); text-decoration:none; border-bottom:2px solid var(--void); padding-bottom:2px;">MAMORU 둘러보기 →</a>
+    </div>
   </div>
 </div>
 
@@ -251,15 +265,17 @@ function closeInapp(){
   var isKakao=/KAKAOTALK/i.test(ua);
   var isIOS=/iPhone|iPad|iPod/i.test(ua);
   if(isKakao){
+    // 카톡 인앱 — scheme으로 브라우저 닫힘
     location.href = isIOS ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
     setTimeout(function(){ if(history.length>1) history.back(); }, 600);
     setTimeout(function(){ try{ window.close(); }catch(e){} }, 1200);
+    // 그래도 안 닫히면 보조 안내
+    setTimeout(function(){ var h=document.getElementById('doneHint'); if(h) h.style.display='block'; }, 1400);
   } else {
+    // 인스타/일반 인앱 — 자동 닫힘 불가. history.back(완료화면 이탈) 대신 완료 화면 유지 + 친절 안내
     try{ window.close(); }catch(e){}
-    if(history.length>1) history.back();
+    var h=document.getElementById('doneHint'); if(h) h.style.display='block';
   }
-  // 닫기 실패 대비 — 보조 안내 노출
-  setTimeout(function(){ var h=document.getElementById('doneHint'); if(h) h.style.display='block'; }, 1300);
 }
 
 /* 상단 안내장 캐러셀 — 존재하는 슬라이드만 순서대로 표시 + 도트 동기화 (자동재생 X) */
