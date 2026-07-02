@@ -82,8 +82,9 @@ function cardForm(c) {
   let b = fld('카드 라벨 (label_ko)', src, 'label_ko', c.label_ko || '');
   if (c.label_subtitle_ko !== undefined) b += fld('카드 부제 (label_subtitle_ko)', src, 'label_subtitle_ko', c.label_subtitle_ko || '');
   (c.options || []).forEach((o, i) => {
-    b += '<div class="ed-opt"><span class="ed-opt__id">' + esc(o.id) + '</span>'
+    b += '<div class="ed-opt">'
       + '<button class="ed-del" data-del-src="' + esc(src) + '" data-del-idx="' + i + '">🗑 삭제</button>'
+      + fld('표시값 (크게 표시 · 내부 식별자 겸용, 짧게)', src, 'options.' + i + '.id', o.id || '')
       + '<div class="ed-grid2">'
       + fld('이름 (name_ko)', src, 'options.' + i + '.name_ko', o.name_ko || '')
       + fld('영문 (name_en)', src, 'options.' + i + '.name_en', o.name_en || '')
