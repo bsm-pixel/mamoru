@@ -245,6 +245,7 @@ export interface Database {
           address_region: string | null;
           status: ConsultationStatus;
           memo: string | null;
+          admin_note: string | null;        // 108: 상담자(관리자) 전용 메모 — 고객 비노출
           unique_id: string;
           dealer_id: string | null;
           suggestions: Record<string, unknown> | null;
@@ -304,6 +305,7 @@ export interface Database {
           address_region?: string | null;
           status?: ConsultationStatus;
           memo?: string | null;
+          admin_note?: string | null;       // 108: 상담자(관리자) 전용 메모
           dealer_id?: string | null;
           suggestions?: Record<string, unknown> | null;
           gas_raw?: Record<string, unknown> | null;

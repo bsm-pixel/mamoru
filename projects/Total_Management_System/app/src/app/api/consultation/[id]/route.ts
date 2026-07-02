@@ -89,7 +89,7 @@ export async function PATCH(
     // 현재 상담 조회 (캘린더 동기화 판단용 visit_date/visit_time 포함)
     const { data: current, error: fetchErr } = await db
       .from('consultations')
-      .select('status, consultation_type, visit_date, visit_time')
+      .select('status, consultation_type, visit_date, visit_time, admin_note')
       .eq('id', id)
       .single();
 
@@ -135,6 +135,8 @@ export async function PATCH(
     const dateChanged = 'visit_date' in updateData && updateData.visit_date !== current.visit_date;
     const timeChanged = 'visit_time' in updateData && updateData.visit_time !== current.visit_time;
     const scheduleChanged = dateChanged || timeChanged;
+    // 상담자 메모 변경 시에도 캘린더 설명 갱신 (108)
+    const adminNoteChanged = 'admin_note' in updateData && updateData.admin_note !== current.admin_note;
 
     // 상태 변경 시 이력 기록
     if (statusChanged) {
@@ -148,7 +150,8 @@ export async function PATCH(
     }
 
     // 후속 작업: after()로 응답 반환 후 백그라운드 실행 — UI 빠른 응답
-    if (statusChanged || scheduleChanged) {
+    //   adminNoteChanged 만인 경우: 캘린더 설명만 갱신되고 알림톡 template은 null 유지(고객 발송 없음)
+    if (statusChanged || scheduleChanged || adminNoteChanged) {
       after(async () => {
         const sideEffects: Promise<unknown>[] = [];
 

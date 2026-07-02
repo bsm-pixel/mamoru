@@ -160,6 +160,27 @@ export function useUpdateConsultationStatus() {
   });
 }
 
+/** 상담자 메모(관리자 전용) 저장 — 저장 시 서버가 구글캘린더 설명도 갱신(adminNoteChanged 트리거). 고객 알림톡 없음 */
+export function useUpdateConsultationAdminNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, adminNote }: { id: string; adminNote: string }) => {
+      const res = await fetch(`/api/consultation/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_note: adminNote }),
+      });
+      if (!res.ok) throw new Error(await parseApiError(res, '메모 저장 실패'));
+      return res.json();
+    },
+    onError: (err) => { toast.error('메모 저장 실패: ' + errMsg(err)); },
+    onSettled: (_d, _e, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['consultations'] });
+      queryClient.invalidateQueries({ queryKey: ['consultation', id] });
+    },
+  });
+}
+
 /** 상담 동기화 — 캐시 새로고침 (GAS 자동 Push가 이미 Supabase에 저장함) */
 export function useConsultationSync() {
   const queryClient = useQueryClient();

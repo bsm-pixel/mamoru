@@ -17,6 +17,7 @@ export interface ConsultationForCalendar {
   address_detail?: string | null;
   address_sigungu?: string | null;
   memo?: string | null;
+  adminNote?: string | null;   // 108: 상담자(관리자) 전용 메모 — 캘린더 설명란 반영
   unique_id?: string | null;
   created_at?: string | null;
   completed_at?: string | null;
@@ -138,6 +139,7 @@ export function formatConsultationToEvent(
   if (isField && fullAddress) lines.push(`📍 방문 주소: ${fullAddress}`);
   if (!isField && settings.store_name) lines.push(`🏪 방문지: ${settings.store_name}`);
   if (c.memo) lines.push(`💬 고객 메모: ${c.memo}`);
+  if (c.adminNote) lines.push(`📝 상담자 메모: ${c.adminNote}`);
   if (isField) {
     const before = settings.field_buffer_before ?? 90;
     const after = settings.field_buffer_after ?? 90;

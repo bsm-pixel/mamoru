@@ -91,6 +91,7 @@ export async function syncConsultationToCalendar(consultationId: string): Promis
       address_detail: c.address_detail,
       address_sigungu: c.address_sigungu,
       memo: c.memo,
+      adminNote: c.admin_note,
       unique_id: c.unique_id,
       created_at: c.created_at,
       // consultations 테이블에 completed_at 컬럼이 없으므로 completed 상태일 때 updated_at으로 대체

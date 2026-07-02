@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { useConsultation, useUpdateConsultationStatus, useDeleteConsultation } from '@/hooks/use-consultations';
+import { useConsultation, useUpdateConsultationStatus, useUpdateConsultationAdminNote, useDeleteConsultation } from '@/hooks/use-consultations';
 import { activityDisplay, honorific } from '@/lib/customer/display';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,7 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
   const router = useRouter();
   const { data, isLoading, refetch } = useConsultation(consultationId);
   const updateStatus = useUpdateConsultationStatus();
+  const updateAdminNote = useUpdateConsultationAdminNote();
   const deleteConsultation = useDeleteConsultation();
   const [suggestModalOpen, setSuggestModalOpen] = useState(false);
   const [manualConfirmOpen, setManualConfirmOpen] = useState(false);
@@ -50,6 +51,10 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   // 077: 상담완료 시 판매전환 분기 모달 (linkedSales 없을 때만)
   const [saleConvertOpen, setSaleConvertOpen] = useState(false);
+  // 108: 상담자 메모 로컬 편집 상태 — 선택 상담이 바뀔 때만 서버값으로 초기화(재조회로 타이핑 중 값 안 날아가게 id 기준)
+  const [adminNote, setAdminNote] = useState('');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setAdminNote(data?.consultation?.admin_note ?? ''); }, [data?.consultation?.id]);
 
   if (isLoading) {
     return <div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /><Skeleton className="h-20" /></div>;
@@ -64,6 +69,7 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
   const statusLabel = CONSULTATION_STATUS_LABEL[c.status] || c.status;
   const statusColor = STATUS_COLOR[c.status] || 'bg-neutral-100';
   const hasLinkedSales = !!(data?.linkedSales && data.linkedSales.length > 0);
+  const adminNoteDirty = adminNote !== (c.admin_note ?? '');
 
   const handleStatus = (newStatus: string) => {
     // 077: 상담완료 + 판매미연결 + 톡상담 아닌 경우 → 판매전환 분기 모달
@@ -182,6 +188,33 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
           </div>
         );
       })()}
+
+      {/* 상담자 메모 (관리자 전용) — 고객 비노출 · 구글캘린더 설명란 반영 (108) */}
+      <div className="bg-white border border-neutral-200 rounded-lg p-3">
+        <div className="flex items-center justify-between mb-1.5">
+          <p className="text-xs font-medium text-neutral-700">📝 상담자 메모 <span className="font-normal text-neutral-400">(관리자 전용)</span></p>
+          <button
+            onClick={() => updateAdminNote.mutate(
+              { id: c.id, adminNote },
+              { onSuccess: () => { toast.success('메모 저장됨'); refetch(); } },
+            )}
+            disabled={!adminNoteDirty || updateAdminNote.isPending}
+            className="text-xs font-semibold text-stone-900 disabled:text-neutral-300"
+          >
+            {updateAdminNote.isPending ? '저장 중...' : '저장'}
+          </button>
+        </div>
+        <textarea
+          value={adminNote}
+          onChange={(e) => setAdminNote(e.target.value)}
+          rows={3}
+          placeholder="유선·DM·톡 요청, 참고사항 등 — 고객에게 안 보이며 구글캘린더 일정에 표기됩니다"
+          className="w-full px-2.5 py-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-400 placeholder:text-neutral-400"
+        />
+        {c.consultation_type === 'talk_consult' && (
+          <p className="mt-1 text-[10px] text-neutral-400">※ 톡상담은 캘린더 일정이 없어 이 메모는 TMS에만 표시됩니다.</p>
+        )}
+      </div>
 
       {/* 액션 버튼 — #3: 모든 액션을 패널 내부에 집중 */}
       {!['completed', 'cancelled'].includes(c.status) && (
