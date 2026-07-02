@@ -116,9 +116,15 @@ function injectSvgStyle(svgStr, style) {
 /* 카드 그룹 (라벨 + 3열 그리드) */
 function cardGroup(card, selectedId, variant) {
   if (!card) return '';
-  const cards = (card.options || [])
-    .map(o => optionCard(o, o.id === selectedId, variant)).join('');
-  const cols = (card.options || []).length === 2 ? 2 : 3;
+  let opts = card.options || [];
+  // single_display 카드(예: 틴닝 발수/홈수/감모 — 옵션이 많음)는 상세페이지에서 '선택한 것만' 표시.
+  // (NEUTRAL=작업대 정보보기 모드에서는 전체 표시)
+  if (card.single_display && !NEUTRAL) {
+    const chosen = opts.find(o => o.id === selectedId) || opts[0];
+    opts = chosen ? [chosen] : [];
+  }
+  const cards = opts.map(o => optionCard(o, o.id === selectedId, variant)).join('');
+  const cols = opts.length === 1 ? 1 : (opts.length === 2 ? 2 : 3);
   return `<div style="margin-bottom:clamp(48px,6vw,72px);">
     <div style="display:flex;align-items:baseline;gap:clamp(12px,1.5vw,16px);margin-bottom:clamp(24px,3vw,32px);flex-wrap:wrap;">
       <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;">${esc(card.label_ko)}</span>

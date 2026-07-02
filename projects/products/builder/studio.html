@@ -56,6 +56,9 @@
   .ed-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
   /* 미리보기 클릭 시 왼쪽 해당 블록 강조 */
   .ed-file.focus-flash{ outline:2px solid var(--void); outline-offset:2px; box-shadow:0 0 0 5px rgba(26,26,26,.08); }
+  .ed-del{ border:1px solid #e3ddd7; background:#fff; color:#c62828; font-size:11px; font-weight:600; padding:3px 9px; border-radius:6px; cursor:pointer; float:right; }
+  .ed-add{ border:1px dashed #b8b4af; background:#fbfaf9; color:var(--void); font-size:12px; font-weight:700; padding:7px 14px; border-radius:8px; cursor:pointer; margin-top:8px; width:100%; }
+  .ed-add:active,.ed-del:active{ transform:scale(.98); }
 </style>
 </head>
 <body>

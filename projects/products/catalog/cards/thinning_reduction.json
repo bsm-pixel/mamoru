@@ -4,6 +4,7 @@
   "label_ko": "REDUCTION",
   "label_subtitle_ko": "감모량 (%)",
   "select_mode": "single",
+  "single_display": true,
   "_note": "옵션값은 임시 (15/20/25/30/40 %). 사장님 실제 라인업에 맞게 조정 필요",
   "options": [
     { "id": "R15", "name_ko": "15%", "value": 15, "description_ko": "미세 정리" },

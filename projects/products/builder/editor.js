@@ -24,6 +24,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   Catalog.copy.forEach(o => { FILES[o._src] = o; });
   applyPending();   // 임시저장된 편집 복원 (손실 방지)
   render();
+  bindEditorEvents();
   bindActions();
   updateUnsaved();
   pingServer();     // 저장 서버 연결 확인 → 배너
@@ -81,13 +82,16 @@ function cardForm(c) {
   let b = fld('카드 라벨 (label_ko)', src, 'label_ko', c.label_ko || '');
   if (c.label_subtitle_ko !== undefined) b += fld('카드 부제 (label_subtitle_ko)', src, 'label_subtitle_ko', c.label_subtitle_ko || '');
   (c.options || []).forEach((o, i) => {
-    b += '<div class="ed-opt"><span class="ed-opt__id">' + esc(o.id) + '</span><div class="ed-grid2">'
+    b += '<div class="ed-opt"><span class="ed-opt__id">' + esc(o.id) + '</span>'
+      + '<button class="ed-del" data-del-src="' + esc(src) + '" data-del-idx="' + i + '">🗑 삭제</button>'
+      + '<div class="ed-grid2">'
       + fld('이름 (name_ko)', src, 'options.' + i + '.name_ko', o.name_ko || '')
       + fld('영문 (name_en)', src, 'options.' + i + '.name_en', o.name_en || '')
       + '</div>'
       + fld('설명 (description_ko)', src, 'options.' + i + '.description_ko', o.description_ko || '', true)
       + '</div>';
   });
+  b += '<button class="ed-add" data-add-src="' + esc(src) + '">＋ 옵션 추가</button>';
   return fileBlock(src, c.card_type, b);
 }
 function copyForm(c) {
@@ -95,10 +99,12 @@ function copyForm(c) {
   let b = fld('풀 이름 (빌더 UI용 · 페이지 미표시)', src, 'label_ko', c.label_ko || '');
   (c.options || []).forEach((o, i) => {
     b += '<div class="ed-opt"><span class="ed-opt__id">' + esc(o.id) + '</span>'
+      + '<button class="ed-del" data-del-src="' + esc(src) + '" data-del-idx="' + i + '">🗑 삭제</button>'
       + fld('카피 (실제 표시 문구)', src, 'options.' + i + '.text', o.text || '', true)
       + ('tone' in o ? fld('톤 (내부 힌트 · 페이지 미표시)', src, 'options.' + i + '.tone', o.tone || '') : '')
       + '</div>';
   });
+  b += '<button class="ed-add" data-add-src="' + esc(src) + '">＋ 옵션 추가</button>';
   return fileBlock(src, c.copy_type, b);
 }
 
@@ -119,7 +125,13 @@ function render() {
   h += '<div class="ed-h2">③ 섹션 문구 풀</div>';
   Catalog.copy.forEach(c => { h += copyForm(c); });
   ed.innerHTML = h;
+}
 
+/* 이벤트 위임 — #ed 에 1회만 바인딩 (재렌더에도 유지, 중복 방지) */
+let editorBound = false;
+function bindEditorEvents() {
+  if (editorBound) return; editorBound = true;
+  const ed = document.getElementById('ed');
   ed.addEventListener('input', e => {
     const t = e.target;
     if (!t.dataset || !t.dataset.path) return;
@@ -130,9 +142,35 @@ function render() {
     if (CH) CH.postMessage({ src: t.dataset.src, path: t.dataset.path, value: t.value });
   });
   ed.addEventListener('click', e => {
-    const btn = e.target.closest('[data-save]');
-    if (btn) saveFile(btn.dataset.save);
+    const save = e.target.closest('[data-save]'); if (save) { saveFile(save.dataset.save); return; }
+    const add = e.target.closest('[data-add-src]'); if (add) { addOption(add.dataset.addSrc); return; }
+    const del = e.target.closest('[data-del-src]'); if (del) { delOption(del.dataset.delSrc, +del.dataset.delIdx); return; }
   });
+}
+
+/* 옵션 추가 — 새 옵션 id 입력받아 추가 후 즉시 파일 저장(구조 변경) */
+function addOption(src) {
+  const obj = FILES[src]; if (!obj) return;
+  const isCard = !!obj.card_type;
+  let id = window.prompt(isCard ? '새 옵션 ID (예: T36 · 화면에 크게 표시됨)' : '새 옵션 ID (내부용 · 영문/숫자)', '');
+  if (id === null) return;               // 취소
+  id = String(id).trim();
+  if (!id) { alert('ID를 입력하세요.'); return; }
+  obj.options = obj.options || [];
+  if (obj.options.some(o => o.id === id)) { alert('이미 있는 ID입니다: ' + id); return; }
+  obj.options.push(isCard ? { id: id, name_ko: '', name_en: '', description_ko: '' } : { id: id, text: '', tone: '' });
+  render();
+  saveFile(src);                          // 구조 변경 → 즉시 파일 기록 (preview.bat 서버 필요)
+}
+/* 옵션 삭제 — 최소 1개는 유지 */
+function delOption(src, idx) {
+  const obj = FILES[src]; if (!obj || !obj.options) return;
+  if (obj.options.length <= 1) { alert('최소 1개 옵션은 남겨야 합니다.'); return; }
+  const o = obj.options[idx]; if (!o) return;
+  if (!window.confirm("옵션 '" + o.id + "' 을(를) 삭제할까요? (되돌릴 수 없음)")) return;
+  obj.options.splice(idx, 1);
+  render();
+  saveFile(src);
 }
 
 function bindActions() {
