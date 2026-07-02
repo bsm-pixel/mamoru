@@ -1,16 +1,43 @@
 {
   "card_type": "thinning_reduction",
-  "applies_to": ["thinning"],
+  "applies_to": [
+    "thinning"
+  ],
   "label_ko": "REDUCTION",
   "label_subtitle_ko": "감모량 (%)",
   "select_mode": "single",
   "single_display": true,
   "_note": "옵션값은 임시 (15/20/25/30/40 %). 사장님 실제 라인업에 맞게 조정 필요",
   "options": [
-    { "id": "R15", "name_ko": "15%", "value": 15, "description_ko": "미세 정리" },
-    { "id": "R20", "name_ko": "20%", "value": 20, "description_ko": "가벼운 정리" },
-    { "id": "R25", "name_ko": "25%", "value": 25, "description_ko": "표준 감모" },
-    { "id": "R30", "name_ko": "30%", "value": 30, "description_ko": "중간 감모" },
-    { "id": "R40", "name_ko": "40%", "value": 40, "description_ko": "확실한 감모" }
+    {
+      "id": "15%",
+      "name_ko": "15%",
+      "value": 15,
+      "description_ko": "보통 질감 전용 틴닝으로 쓰이며 \n\n가위자국이 없는 특징을 가지고있다"
+    },
+    {
+      "id": "R20",
+      "name_ko": "20%",
+      "value": 20,
+      "description_ko": "가벼운 정리"
+    },
+    {
+      "id": "R25",
+      "name_ko": "25%",
+      "value": 25,
+      "description_ko": "표준 감모"
+    },
+    {
+      "id": "R30",
+      "name_ko": "30%",
+      "value": 30,
+      "description_ko": "중간 감모"
+    },
+    {
+      "id": "R40",
+      "name_ko": "40%",
+      "value": 40,
+      "description_ko": "확실한 감모"
+    }
   ]
 }
