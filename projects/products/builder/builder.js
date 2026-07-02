@@ -82,6 +82,11 @@ function renderPanel() {
     prof.appendChild(subhead('가위 특성 카드'));
     for (const card of cards) prof.appendChild(cardSelector(card));
   }
+  // 틴닝: 발·홈·감모 총정리 박스 안에 들어갈 상세 설명 (카드 바로 아래에 배치 — 찾기 쉽게)
+  if (spec.type === 'thinning') {
+    prof.appendChild(subhead('📝 틴닝 총정리 박스 상세 설명 (선택)'));
+    prof.appendChild(textArea('발·홈·감모 요약 박스 하단에 표시될 문구', spec.custom_fields.thinning_note || '', '예: 26발 · 4홈 조합은 자연스러운 숱 조절에 적합합니다...', v => { spec.custom_fields.thinning_note = v; updatePreview(); }));
+  }
   prof.appendChild(subhead('Grip Size (손가락 구멍)'));
   const gg = document.createElement('div'); gg.className = 'grid2';
   gg.appendChild(textField('엄지부', spec.custom_fields.grip_thumb || '', '15 × 21', v => { spec.custom_fields.grip_thumb = v; updatePreview(); }));
@@ -92,10 +97,6 @@ function renderPanel() {
   prof.appendChild(selectField('무게 밴드', spec.custom_fields.weight_band || '중간',
     ['가벼움', '중간', '무거움'], v => { spec.custom_fields.weight_band = v; updatePreview(); }));
   prof.appendChild(textArea('무게 설명', spec.custom_fields.weight_description || '', '짧은 날 + 58g — 한 손 작업에 적정...', v => { spec.custom_fields.weight_description = v; updatePreview(); }));
-  if (spec.type === 'thinning') {
-    prof.appendChild(subhead('틴닝 총정리 아래 설명 (선택)'));
-    prof.appendChild(textArea('발·홈·감모 총정리 박스 하단에 표시', spec.custom_fields.thinning_note || '', '예: 26발 · 3홈 조합은 자연스러운 숱 조절에 적합합니다...', v => { spec.custom_fields.thinning_note = v; updatePreview(); }));
-  }
   p.appendChild(section('PROFILE', prof, '04'));
 
   // 05 FOR YOU
