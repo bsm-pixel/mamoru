@@ -68,6 +68,12 @@ export interface ProductMargin {
   cogs: number;
   profit: number;
   margin_rate: number;
+  b2c_qty?: number;
+  b2c_revenue?: number;
+  b2c_cogs?: number;
+  b2b_qty?: number;
+  b2b_revenue?: number;
+  b2b_cogs?: number;
 }
 
 export interface SupplierSpend {

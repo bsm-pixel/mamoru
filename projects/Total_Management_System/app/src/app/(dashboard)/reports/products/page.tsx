@@ -6,7 +6,7 @@ import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatCard } from '@/components/ui/stat-card';
-import { useReportSummary } from '@/hooks/use-reports';
+import { useReportSummary, type ProductMargin } from '@/hooks/use-reports';
 import { formatKRW, toLocalDateString } from '@/lib/utils/format';
 import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
@@ -38,6 +38,20 @@ const SORTS = [
   { key: 'profit', label: '이익순' },
   { key: 'margin', label: '이익률순' },
 ];
+const CHANNELS = [
+  { key: 'all', label: '전체' },
+  { key: 'b2c', label: 'B2C 소매·온라인' },
+  { key: 'b2b', label: 'B2B 딜러·납품' },
+];
+// 선택 채널 기준 수치 (전체/B2C/B2B)
+function viewOf(p: ProductMargin, ch: string) {
+  const qty = ch === 'b2c' ? (p.b2c_qty || 0) : ch === 'b2b' ? (p.b2b_qty || 0) : p.qty;
+  const revenue = ch === 'b2c' ? (p.b2c_revenue || 0) : ch === 'b2b' ? (p.b2b_revenue || 0) : p.revenue;
+  const cogs = ch === 'b2c' ? (p.b2c_cogs || 0) : ch === 'b2b' ? (p.b2b_cogs || 0) : p.cogs;
+  const profit = revenue - cogs;
+  const margin_rate = revenue > 0 ? Math.round((profit / revenue) * 1000) / 10 : 0;
+  return { qty, revenue, cogs, profit, margin_rate };
+}
 
 export default function ProductSalesPage() {
   const [preset, setPreset] = useState('this_month');
@@ -46,6 +60,7 @@ export default function ProductSalesPage() {
   const [q, setQ] = useState('');
   const [sort, setSort] = useState('qty');
   const [cat, setCat] = useState('all');
+  const [channel, setChannel] = useState('all');
 
   const catLabels = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
   const period = customFrom && customTo ? { from: customFrom, to: customTo } : getPreset(preset);
@@ -53,13 +68,16 @@ export default function ProductSalesPage() {
 
   const totals = useMemo(() => {
     const bp = data?.by_product || [];
-    return {
-      count: bp.length,
-      qty: bp.reduce((s, p) => s + (p.qty || 0), 0),
-      revenue: bp.reduce((s, p) => s + (p.revenue || 0), 0),
-      top: [...bp].sort((a, b) => b.qty - a.qty)[0],
-    };
-  }, [data]);
+    let qty = 0, revenue = 0, count = 0, topQ = -1;
+    let top: { product_name: string; qty: number; revenue: number } | null = null;
+    for (const p of bp) {
+      const v = viewOf(p, channel);
+      if (v.qty > 0 || v.revenue > 0) count++;
+      qty += v.qty; revenue += v.revenue;
+      if (v.qty > topQ) { topQ = v.qty; top = { product_name: p.product_name, qty: v.qty, revenue: v.revenue }; }
+    }
+    return { count, qty, revenue, top };
+  }, [data, channel]);
 
   const cats = useMemo(() => {
     const set = new Set<string>();
@@ -72,13 +90,16 @@ export default function ProductSalesPage() {
     if (cat !== 'all') list = list.filter((p) => (p.category || '') === cat);
     const s = q.trim().toLowerCase();
     if (s) list = list.filter((p) => (p.product_name || '').toLowerCase().includes(s) || (p.sku || '').toLowerCase().includes(s));
-    list.sort((a, b) =>
-      sort === 'revenue' ? b.revenue - a.revenue
-      : sort === 'profit' ? b.profit - a.profit
-      : sort === 'margin' ? b.margin_rate - a.margin_rate
-      : b.qty - a.qty);
+    if (channel !== 'all') list = list.filter((p) => { const v = viewOf(p, channel); return v.qty > 0 || v.revenue > 0; });
+    list.sort((a, b) => {
+      const va = viewOf(a, channel), vb = viewOf(b, channel);
+      return sort === 'revenue' ? vb.revenue - va.revenue
+        : sort === 'profit' ? vb.profit - va.profit
+        : sort === 'margin' ? vb.margin_rate - va.margin_rate
+        : vb.qty - va.qty;
+    });
     return list;
-  }, [data, cat, q, sort]);
+  }, [data, cat, q, sort, channel]);
 
   return (
     <>
@@ -142,6 +163,15 @@ export default function ProductSalesPage() {
                     </button>
                   ))}
                 </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] text-neutral-400 mr-1">채널</span>
+                  {CHANNELS.map((c) => (
+                    <button key={c.key} onClick={() => setChannel(c.key)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-semibold transition ${channel === c.key ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
                 {cats.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-[11px] text-neutral-400 mr-1">분류</span>
@@ -181,20 +211,30 @@ export default function ProductSalesPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-50">
-                      {rows.map((p, i) => (
+                      {rows.map((p, i) => {
+                        const v = viewOf(p, channel);
+                        return (
                         <tr key={p.product_id + String(i)} className="hover:bg-stone-50">
                           <td className="py-2 pr-2 text-neutral-400 font-mono">{i + 1}</td>
                           <td className="py-2 pr-2">
                             <p className="font-medium text-stone-900 truncate max-w-[220px]">{p.product_name}</p>
                             <p className="text-[10px] text-neutral-400">{p.sku}{p.category ? ` · ${catLabels[p.category] || p.category}` : ''}</p>
+                            {channel === 'all' && ((p.b2c_qty || 0) > 0 || (p.b2b_qty || 0) > 0) && (
+                              <p className="text-[10px] mt-0.5">
+                                <span className="text-blue-500">B2C {p.b2c_qty || 0}개·{formatKRW(p.b2c_revenue || 0)}</span>
+                                <span className="text-neutral-300"> / </span>
+                                <span className="text-violet-500">B2B {p.b2b_qty || 0}개·{formatKRW(p.b2b_revenue || 0)}</span>
+                              </p>
+                            )}
                           </td>
-                          <td className="text-right py-2 px-2 font-semibold">{p.qty}</td>
-                          <td className="text-right py-2 px-2 font-semibold">{formatKRW(p.revenue)}</td>
-                          <td className="text-right py-2 px-2 text-neutral-500">{formatKRW(p.cogs)}</td>
-                          <td className={`text-right py-2 px-2 font-semibold ${p.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{formatKRW(p.profit)}</td>
-                          <td className={`text-right py-2 pl-2 ${p.margin_rate >= 30 ? 'text-emerald-600' : p.margin_rate >= 0 ? 'text-amber-600' : 'text-red-500'}`}>{p.margin_rate}%</td>
+                          <td className="text-right py-2 px-2 font-semibold">{v.qty}</td>
+                          <td className="text-right py-2 px-2 font-semibold">{formatKRW(v.revenue)}</td>
+                          <td className="text-right py-2 px-2 text-neutral-500">{formatKRW(v.cogs)}</td>
+                          <td className={`text-right py-2 px-2 font-semibold ${v.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{formatKRW(v.profit)}</td>
+                          <td className={`text-right py-2 pl-2 ${v.margin_rate >= 30 ? 'text-emerald-600' : v.margin_rate >= 0 ? 'text-amber-600' : 'text-red-500'}`}>{v.margin_rate}%</td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

@@ -180,11 +180,16 @@ export async function GET(req: NextRequest) {
           ({ product_id: it.product_id, product_name: it.product_name, sku: null, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price }));
     }
 
+    // 오프라인 판매 B2B 여부 (customer_type dealer/academy) — 품목 B2C/B2B 분리용
+    const saleB2BMap: Record<string, boolean> = {};
+    for (const s of sales) saleB2BMap[s.id] = isB2BCt(s.customer_type);
+
     // ─── 6) COGS / 마진 / 제품 랭킹 — 제품 항목만 (RS 제외), 오프라인 + 납품 + 온라인 합산 ───
-    const allProductItems: Array<{ product_id: string | null; product_name: string; sku: string | null; quantity: number; unit_price: number; total_price: number }> = [
-      ...productSaleItems.map((it) => ({ product_id: it.product_id, product_name: it.product_name, sku: it.sku, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price })),
-      ...productDlItems.map((it) => ({ product_id: it.product_id, product_name: it.product_name, sku: it.sku, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price })),
-      ...productOrderItems,
+    //   channel: 오프라인=고객유형 / 납품=b2b / 온라인=b2c
+    const allProductItems: Array<{ product_id: string | null; product_name: string; sku: string | null; quantity: number; unit_price: number; total_price: number; channel: 'b2c' | 'b2b' }> = [
+      ...productSaleItems.map((it) => ({ product_id: it.product_id, product_name: it.product_name, sku: it.sku, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price, channel: (saleB2BMap[it.sale_id] ? 'b2b' : 'b2c') as 'b2c' | 'b2b' })),
+      ...productDlItems.map((it) => ({ product_id: it.product_id, product_name: it.product_name, sku: it.sku, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price, channel: 'b2b' as const })),
+      ...productOrderItems.map((it) => ({ ...it, channel: 'b2c' as const })),
     ];
     const productIds = [...new Set(allProductItems.map((i) => i.product_id).filter(Boolean))] as string[];
     const purchasePriceMap: Record<string, number> = {};
@@ -194,17 +199,19 @@ export async function GET(req: NextRequest) {
       const { data: products } = await db.from('products').select('id, price_purchase, sku, category').in('id', productIds);
       for (const p of (products || [])) { purchasePriceMap[p.id] = p.price_purchase || 0; if (p.sku) skuMap[p.id] = p.sku; if (p.category) categoryMap[p.id] = p.category; }
     }
-    const productAgg: Record<string, { product_name: string; sku: string; qty: number; revenue: number; cogs: number }> = {};
+    const productAgg: Record<string, { product_name: string; sku: string; qty: number; revenue: number; cogs: number; b2cQty: number; b2cRev: number; b2cCogs: number; b2bQty: number; b2bRev: number; b2bCogs: number }> = {};
     let totalCogs = 0;
     for (const item of allProductItems) {
       const purchasePrice = item.product_id ? (purchasePriceMap[item.product_id] || 0) : 0;
       const itemCogs = purchasePrice * (item.quantity || 0);
       totalCogs += itemCogs;
+      const rev = item.total_price || ((item.unit_price || 0) * (item.quantity || 0));
       const key = item.product_id || item.product_name;
-      if (!productAgg[key]) productAgg[key] = { product_name: item.product_name, sku: item.sku || '', qty: 0, revenue: 0, cogs: 0 };
-      productAgg[key].qty += item.quantity || 0;
-      productAgg[key].revenue += item.total_price || ((item.unit_price || 0) * (item.quantity || 0));
-      productAgg[key].cogs += itemCogs;
+      if (!productAgg[key]) productAgg[key] = { product_name: item.product_name, sku: item.sku || '', qty: 0, revenue: 0, cogs: 0, b2cQty: 0, b2cRev: 0, b2cCogs: 0, b2bQty: 0, b2bRev: 0, b2bCogs: 0 };
+      const a = productAgg[key];
+      a.qty += item.quantity || 0; a.revenue += rev; a.cogs += itemCogs;
+      if (item.channel === 'b2b') { a.b2bQty += item.quantity || 0; a.b2bRev += rev; a.b2bCogs += itemCogs; }
+      else { a.b2cQty += item.quantity || 0; a.b2cRev += rev; a.b2cCogs += itemCogs; }
     }
     const productGrossProfit = productTotal - totalCogs;
     const margin = {
@@ -223,6 +230,8 @@ export async function GET(req: NextRequest) {
         cogs: v.cogs,
         profit: v.revenue - v.cogs,
         margin_rate: v.revenue > 0 ? Math.round(((v.revenue - v.cogs) / v.revenue) * 1000) / 10 : 0,
+        b2c_qty: v.b2cQty, b2c_revenue: v.b2cRev, b2c_cogs: v.b2cCogs,
+        b2b_qty: v.b2bQty, b2b_revenue: v.b2bRev, b2b_cogs: v.b2bCogs,
       }))
       .sort((a, b) => b.revenue - a.revenue);
 
