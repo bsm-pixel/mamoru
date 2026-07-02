@@ -55,6 +55,11 @@
   .mm-empty{ font-size:13px; color:var(--gray); text-align:center; padding:18px 0; }
   .mm-modal{ position:fixed; inset:0; background:rgba(26,26,26,.45); display:none; align-items:center; justify-content:center; padding:24px; z-index:50; }
   .mm-modal.on{ display:flex; }
+  /* 완료 모달 등장 — 배경 페이드 + 박스 쉭 팝인 */
+  #doneModal.on{ animation: mmFadeIn .18s ease both; }
+  #doneModal.on .mm-modal__box{ animation: mmPopIn .3s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes mmFadeIn{ from{ opacity:0 } to{ opacity:1 } }
+  @keyframes mmPopIn{ from{ opacity:0; transform:translateY(16px) scale(.92) } to{ opacity:1; transform:none } }
   .mm-modal__box{ background:#fff; border-radius:18px; padding:26px 22px; max-width:340px; text-align:center; }
   .mm-modal__box h3{ font-size:18px; font-weight:800; color:var(--void); }
   .mm-modal__box p{ font-size:13px; color:var(--gray); margin-top:8px; }
