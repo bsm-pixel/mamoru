@@ -156,6 +156,47 @@ async function getOpenApiToken(): Promise<string> {
 }
 
 /**
+ * 아임웹 OpenAPI 토큰 강제 갱신 (keep-alive 크론용).
+ * 만료 여부와 무관하게 refresh_token으로 새 access/refresh 토큰을 발급받아 rotation 체인을 살려둔다.
+ * → 판매가 뜸한 기간에도 토큰이 방치로 죽지 않게 한다.
+ */
+export async function forceRefreshOpenApiToken(): Promise<{ ok: boolean; error?: string; updatedAt?: string }> {
+  const { createServiceClient } = await import('@/lib/supabase/server');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dbAny = createServiceClient() as any;
+  const { data: settings } = await dbAny
+    .from('system_settings')
+    .select('key, value')
+    .in('key', ['imweb_openapi.refresh_token']);
+  const refreshToken = (settings || []).find((s: { key: string }) => s.key === 'imweb_openapi.refresh_token')?.value;
+  if (!refreshToken) return { ok: false, error: 'refresh_token 없음 — 재연결 필요' };
+
+  const res = await fetch(`https://openapi.imweb.me/oauth2/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      clientId: process.env.IMWEB_OPENAPI_KEY || '',
+      clientSecret: process.env.IMWEB_OPENAPI_SECRET || '',
+      grantType: 'refresh_token',
+      refreshToken,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok || data.statusCode !== 200) {
+    return { ok: false, error: `토큰 갱신 실패: ${res.status} ${JSON.stringify(data)}` };
+  }
+
+  const newAccess = data.data.accessToken;
+  const newRefresh = data.data.refreshToken;
+  const now = new Date().toISOString();
+  await dbAny.from('system_settings').upsert({ key: 'imweb_openapi.access_token', value: newAccess, updated_at: now }, { onConflict: 'key' });
+  await dbAny.from('system_settings').upsert({ key: 'imweb_openapi.refresh_token', value: newRefresh, updated_at: now }, { onConflict: 'key' });
+  await dbAny.from('system_settings').upsert({ key: 'imweb_openapi.token_updated_at', value: now, updated_at: now }, { onConflict: 'key' });
+  cachedOpenApiToken = { token: newAccess, expiresAt: Date.now() + 60 * 60 * 1000 };
+  return { ok: true, updatedAt: now };
+}
+
+/**
  * 아임웹 OpenAPI 연결 상태 진단 (설정 화면용).
  * 재고 push가 의존하는 getOpenApiToken()을 실제로 호출해 유효성을 검증한다.
  *  - connected=false + error → 재인증(authorize) 필요 (refresh_token 만료 등)
