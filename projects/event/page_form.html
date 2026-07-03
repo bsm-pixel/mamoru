@@ -94,6 +94,10 @@
   .mm-car::-webkit-scrollbar{ display:none; }
   .mm-slide{ flex:0 0 100%; }
   .mm-slide img{ display:block; width:100%; aspect-ratio:1000/1500; object-fit:cover; }
+  /* 좌우 화살표 (PC·모바일 공통, 1장씩) */
+  .mm-car-nav{ position:absolute; top:50%; transform:translateY(-50%); z-index:3; width:34px; height:34px; padding:0; border:0; border-radius:999px; background:rgba(26,26,26,.5); color:#fff; font-size:20px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+  .mm-car-prev{ left:10px; } .mm-car-next{ right:10px; }
+  .mm-car-nav[disabled]{ opacity:0; pointer-events:none; }
   .mm-car-dots{ display:flex; justify-content:center; gap:6px; margin-top:11px; }
   .mm-dot{ width:6px; height:6px; border-radius:50%; background:var(--line); transition:width .2s, background .2s; }
   .mm-dot.on{ background:var(--void); width:18px; border-radius:3px; }
@@ -147,6 +151,8 @@
   <div class="mm-car-wrap" id="mmCarWrap" style="display:none;">
     <div class="mm-car-count" id="mmCarCount"></div>
     <div class="mm-car" id="mmCar"></div>
+    <button class="mm-car-nav mm-car-prev" id="mmCarPrev" type="button" aria-label="이전">‹</button>
+    <button class="mm-car-nav mm-car-next" id="mmCarNext" type="button" aria-label="다음">›</button>
     <div class="mm-car-dots" id="mmCarDots"></div>
   </div>
 
@@ -192,12 +198,13 @@
     </div>
   </div>
 
-  <!-- 수령방법 -->
+  <!-- 수령방법 (택배 발송 고정) -->
   <div class="mm-sec mm-hide" id="receiveSec">
     <div class="mm-sec__label">수령 방법</div>
-    <div class="mm-chips">
-      <button class="mm-chip" data-recv="delivery" aria-pressed="true">택배 발송</button>
-      <button class="mm-chip" data-recv="visit" aria-pressed="false">매장 방문</button>
+    <div style="background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.75;color:var(--ink);">
+      <b style="color:var(--void);font-weight:800;">택배 발송</b><br/>
+      입금 완료일 기준 <b>2~3일 내</b> 받아보실 수 있습니다.<br/>
+      제품 출고 시 <b>송장번호와 함께 알림톡</b>으로 안내드립니다.
     </div>
   </div>
 
@@ -306,26 +313,42 @@ function closeInapp(){
     else { count.style.display = 'block'; count.textContent = '1 / ' + ok.length; }
 
     var cur = 0;
+    var prevBtn = document.getElementById('mmCarPrev'), nextBtn = document.getElementById('mmCarNext');
     function render(){
       track.style.transform = 'translateX(' + (-cur * 100) + '%)';
       for (var i = 0; i < dots.children.length; i++) dots.children[i].classList.toggle('on', i === cur);
       if (ok.length >= 2) count.textContent = (cur + 1) + ' / ' + ok.length;
+      if (prevBtn) prevBtn.disabled = (cur === 0);
+      if (nextBtn) nextBtn.disabled = (cur === ok.length - 1);
     }
     function goTo(i){ cur = Math.max(0, Math.min(ok.length - 1, i)); render(); }
+
+    // 좌우 화살표 (PC·모바일 공통) — 1장씩
+    if (ok.length < 2) { if (prevBtn) prevBtn.style.display = 'none'; if (nextBtn) nextBtn.style.display = 'none'; }
+    else {
+      if (prevBtn) prevBtn.onclick = function(){ goTo(cur - 1); };
+      if (nextBtn) nextBtn.onclick = function(){ goTo(cur + 1); };
+    }
 
     // 도트 클릭으로도 이동
     for (var di = 0; di < dots.children.length; di++) {
       (function(idx){ dots.children[idx].style.cursor = 'pointer'; dots.children[idx].addEventListener('click', function(){ goTo(idx); }); })(di);
     }
 
-    // 스와이프 — 한 번에 딱 1장만 (방향만 감지, 관성 없음)
-    var sx = 0, sy = 0, swiping = false;
-    track.addEventListener('touchstart', function(e){ var t = e.touches[0]; sx = t.clientX; sy = t.clientY; swiping = true; }, { passive: true });
+    // 스와이프(모바일) / 마우스 드래그(PC) — 한 번에 딱 1장
+    var sx = 0, sy = 0, dragging = false;
+    track.addEventListener('touchstart', function(e){ var t = e.touches[0]; sx = t.clientX; sy = t.clientY; dragging = true; }, { passive: true });
     track.addEventListener('touchend', function(e){
-      if (!swiping) return; swiping = false;
+      if (!dragging) return; dragging = false;
       var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
       if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy)) goTo(cur + (dx < 0 ? 1 : -1));
     }, { passive: true });
+    track.addEventListener('mousedown', function(e){ sx = e.clientX; sy = e.clientY; dragging = true; e.preventDefault(); });
+    window.addEventListener('mouseup', function(e){
+      if (!dragging) return; dragging = false;
+      var dx = e.clientX - sx, dy = e.clientY - sy;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) goTo(cur + (dx < 0 ? 1 : -1));
+    });
 
     render();
   }
