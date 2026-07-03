@@ -86,11 +86,11 @@
   .mm-pc-head button{ width:30px; height:30px; border:0; background:var(--shell); border-radius:8px; font-size:15px; cursor:pointer; }
   .mm-pc-inner{ min-height:160px; } /* 높이는 Daum onresize가 내용에 맞춰 동적 설정 (빈 흰 공간 방지) */
   /* 상단 안내장 캐러셀 (가로 스와이프, 1000×1500=2:3, 자동재생 X) — full-bleed: 폭 끝·상단까지 꽉 */
-  .mm-car-wrap{ position:relative; margin:-24px -18px 18px; }
+  .mm-car-wrap{ position:relative; margin:-24px -18px 18px; overflow:hidden; }
   /* 슬라이드 페이지 카운터 (1/N) — 여러 장·넘기기 신호 */
   .mm-car-count{ position:absolute; top:14px; right:14px; display:none; background:rgba(26,26,26,.55); color:#fff; font-size:11px; font-weight:700; letter-spacing:.3px; padding:4px 10px; border-radius:999px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); z-index:2; }
   /* transform 기반 — 스와이프 1회 = 1장 (네이티브 스크롤 관성 제거) */
-  .mm-car{ display:flex; gap:0; overflow:hidden; transition:transform .32s cubic-bezier(.22,.61,.36,1); will-change:transform; touch-action:pan-y; }
+  .mm-car{ display:flex; gap:0; transition:transform .32s cubic-bezier(.22,.61,.36,1); will-change:transform; touch-action:pan-y; }
   .mm-car::-webkit-scrollbar{ display:none; }
   .mm-slide{ flex:0 0 100%; }
   .mm-slide img{ display:block; width:100%; aspect-ratio:1000/1500; object-fit:cover; }
