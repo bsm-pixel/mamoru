@@ -89,9 +89,10 @@
   .mm-car-wrap{ position:relative; margin:-24px -18px 18px; }
   /* 슬라이드 페이지 카운터 (1/N) — 여러 장·넘기기 신호 */
   .mm-car-count{ position:absolute; top:14px; right:14px; display:none; background:rgba(26,26,26,.55); color:#fff; font-size:11px; font-weight:700; letter-spacing:.3px; padding:4px 10px; border-radius:999px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); z-index:2; }
-  .mm-car{ display:flex; gap:0; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  /* transform 기반 — 스와이프 1회 = 1장 (네이티브 스크롤 관성 제거) */
+  .mm-car{ display:flex; gap:0; overflow:hidden; transition:transform .32s cubic-bezier(.22,.61,.36,1); will-change:transform; touch-action:pan-y; }
   .mm-car::-webkit-scrollbar{ display:none; }
-  .mm-slide{ flex:0 0 100%; scroll-snap-align:start; }
+  .mm-slide{ flex:0 0 100%; }
   .mm-slide img{ display:block; width:100%; aspect-ratio:1000/1500; object-fit:cover; }
   .mm-car-dots{ display:flex; justify-content:center; gap:6px; margin-top:11px; }
   .mm-dot{ width:6px; height:6px; border-radius:50%; background:var(--line); transition:width .2s, background .2s; }
@@ -303,11 +304,30 @@ function closeInapp(){
     wrap.style.display = 'block';
     if (ok.length < 2) { dots.style.display = 'none'; }
     else { count.style.display = 'block'; count.textContent = '1 / ' + ok.length; }
-    track.addEventListener('scroll', function(){
-      var idx = Math.max(0, Math.min(ok.length - 1, Math.round(track.scrollLeft / track.clientWidth)));
-      for (var i = 0; i < dots.children.length; i++) dots.children[i].classList.toggle('on', i === idx);
-      if (ok.length >= 2) count.textContent = (idx + 1) + ' / ' + ok.length;
+
+    var cur = 0;
+    function render(){
+      track.style.transform = 'translateX(' + (-cur * 100) + '%)';
+      for (var i = 0; i < dots.children.length; i++) dots.children[i].classList.toggle('on', i === cur);
+      if (ok.length >= 2) count.textContent = (cur + 1) + ' / ' + ok.length;
+    }
+    function goTo(i){ cur = Math.max(0, Math.min(ok.length - 1, i)); render(); }
+
+    // 도트 클릭으로도 이동
+    for (var di = 0; di < dots.children.length; di++) {
+      (function(idx){ dots.children[idx].style.cursor = 'pointer'; dots.children[idx].addEventListener('click', function(){ goTo(idx); }); })(di);
+    }
+
+    // 스와이프 — 한 번에 딱 1장만 (방향만 감지, 관성 없음)
+    var sx = 0, sy = 0, swiping = false;
+    track.addEventListener('touchstart', function(e){ var t = e.touches[0]; sx = t.clientX; sy = t.clientY; swiping = true; }, { passive: true });
+    track.addEventListener('touchend', function(e){
+      if (!swiping) return; swiping = false;
+      var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy)) goTo(cur + (dx < 0 ? 1 : -1));
     }, { passive: true });
+
+    render();
   }
 })();
 (function(){
