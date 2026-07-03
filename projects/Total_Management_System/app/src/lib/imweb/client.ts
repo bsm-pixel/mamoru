@@ -156,6 +156,45 @@ async function getOpenApiToken(): Promise<string> {
 }
 
 /**
+ * 아임웹 OpenAPI 연결 상태 진단 (설정 화면용).
+ * 재고 push가 의존하는 getOpenApiToken()을 실제로 호출해 유효성을 검증한다.
+ *  - connected=false + error → 재인증(authorize) 필요 (refresh_token 만료 등)
+ */
+export async function getOpenApiConnectionStatus(): Promise<{
+  connected: boolean;
+  hasRefreshToken: boolean;
+  updatedAt: string | null;
+  ageMinutes: number | null;
+  scope: string | null;
+  error: string | null;
+}> {
+  const { createServiceClient } = await import('@/lib/supabase/server');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dbAny = createServiceClient() as any;
+  const { data: settings } = await dbAny
+    .from('system_settings')
+    .select('key, value')
+    .in('key', [
+      'imweb_openapi.access_token',
+      'imweb_openapi.refresh_token',
+      'imweb_openapi.token_updated_at',
+      'imweb_openapi.scope',
+    ]);
+  const map: Record<string, string> = {};
+  for (const s of (settings || [])) map[s.key] = s.value;
+  const updatedAt = map['imweb_openapi.token_updated_at'] || null;
+  const scope = map['imweb_openapi.scope'] || null;
+  const hasRefreshToken = !!map['imweb_openapi.refresh_token'];
+  const ageMinutes = updatedAt ? Math.round((Date.now() - new Date(updatedAt).getTime()) / 60000) : null;
+  try {
+    await getOpenApiToken(); // 만료 시 refresh 시도 — 실패하면 여기서 throw
+    return { connected: true, hasRefreshToken, updatedAt, ageMinutes, scope, error: null };
+  } catch (e) {
+    return { connected: false, hasRefreshToken, updatedAt, ageMinutes, scope, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/**
  * 아임웹 재고 증감 — 새 OpenAPI 사용
  * @param delta 양수면 증가, 음수면 감소 (절대값 아님!)
  */

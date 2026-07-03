@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Plus, X, Lock } from 'lucide-react';
+import { Save, Plus, X, Lock, RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
 import { SYSTEM_CATEGORIES } from '@/lib/utils/setting-defaults';
 
@@ -29,6 +29,23 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
   const [barcodeFormat, setBarcodeFormat] = useState('Code128');
   const [defaultSort, setDefaultSort] = useState('name');
   const [leadTimes, setLeadTimes] = useState<Record<string, number>>({});
+  // 아임웹 OpenAPI 연결 상태 (재고 push 가능 여부 진단)
+  const [imwebStatus, setImwebStatus] = useState<null | { connected: boolean; error: string | null; updatedAt: string | null; ageMinutes: number | null; scope: string | null; hasRefreshToken?: boolean }>(null);
+  const [imwebChecking, setImwebChecking] = useState(false);
+
+  const checkImwebStatus = async () => {
+    setImwebChecking(true);
+    try {
+      const res = await fetch('/api/imweb/oauth/status');
+      setImwebStatus(await res.json());
+    } catch {
+      setImwebStatus({ connected: false, error: '상태 확인 요청 실패', updatedAt: null, ageMinutes: null, scope: null });
+    } finally {
+      setImwebChecking(false);
+    }
+  };
+
+  useEffect(() => { checkImwebStatus(); }, []);
 
   useEffect(() => {
     setLowStock(parse(settings['inventory.low_stock_threshold'], 3));
@@ -83,6 +100,38 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
 
       <Field label="아임웹 재고 자동 동기화" desc="판매/취소 시 아임웹 재고도 연동합니다.">
         <Toggle checked={imwebSync} onChange={setImwebSync} />
+      </Field>
+
+      <Field label="아임웹 OpenAPI 연결 상태" desc="판매·재고조정 시 아임웹으로 재고를 밀어넣는 연결입니다. 이 연결이 끊기면 TMS 재고만 바뀌고 아임웹 재고는 반영되지 않습니다(조용히 실패). refreshToken 만료 시 재연결이 필요합니다.">
+        <div className={`rounded-xl border p-3.5 ${imwebStatus == null ? 'border-neutral-200 bg-neutral-50' : imwebStatus.connected ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'}`}>
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            {imwebStatus == null ? (
+              <span className="text-neutral-500">{imwebChecking ? '연결 확인 중…' : '상태 미확인'}</span>
+            ) : imwebStatus.connected ? (
+              <><CheckCircle2 size={16} className="text-emerald-600" /><span className="text-emerald-700">정상 연결됨 — 재고 push 가능</span></>
+            ) : (
+              <><AlertTriangle size={16} className="text-red-600" /><span className="text-red-700">연결 끊김 — 재고가 아임웹에 반영되지 않습니다</span></>
+            )}
+          </div>
+          {imwebStatus && (
+            <div className="mt-1.5 text-xs text-neutral-500 space-y-0.5">
+              {imwebStatus.updatedAt && <div>토큰 갱신: {new Date(imwebStatus.updatedAt).toLocaleString('ko-KR')} ({imwebStatus.ageMinutes != null ? `${imwebStatus.ageMinutes}분 전` : '-'})</div>}
+              {imwebStatus.scope && <div>권한(scope): <span className="font-mono">{imwebStatus.scope}</span></div>}
+              {!imwebStatus.connected && imwebStatus.error && <div className="text-red-600">사유: {imwebStatus.error}</div>}
+              {!imwebStatus.connected && <div className="text-red-600 font-medium">→ 아래 &lsquo;아임웹 재연결&rsquo;을 눌러 토큰·권한을 재발급하세요. (product:write 권한 필수)</div>}
+            </div>
+          )}
+          <div className="flex gap-2 mt-3">
+            <button type="button" onClick={checkImwebStatus} disabled={imwebChecking}
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-neutral-300 bg-white text-xs font-semibold hover:bg-neutral-50 disabled:opacity-50">
+              <RefreshCw size={13} className={imwebChecking ? 'animate-spin' : ''} />상태 확인
+            </button>
+            <a href="/api/imweb/oauth/authorize"
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-neutral-900 text-white text-xs font-semibold hover:bg-neutral-800">
+              아임웹 재연결
+            </a>
+          </div>
+        </div>
       </Field>
 
       <Field label="상품 카테고리 목록" desc="코드는 수정 불가 (SKU 채번에 사용). 표시명만 변경 가능.">
