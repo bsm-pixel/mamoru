@@ -104,7 +104,7 @@ function optionCard(opt, selected, variant) {
   return `<div style="${bg}border-radius:clamp(8px,1.2vw,12px);padding:clamp(14px,2.5vw,28px);">
     ${svg}${head}
     <div style="height:1px;background:${divCol};margin-bottom:clamp(10px,1.5vw,16px);"></div>
-    <div style="font-size:clamp(10px,1.3vw,13px);color:${descCol};line-height:1.6;">${esc(opt.description_ko || '')}</div>
+    <div style="font-size:clamp(10px,1.3vw,13px);color:${descCol};line-height:1.6;">${nl2br(opt.description_ko || '')}</div>
   </div>`;
 }
 
@@ -218,7 +218,7 @@ function handleGroup(spec, catalog) {
       ${o.svg_inline ? handleBand(o.svg_inline, sel) : ''}
       <div style="font-size:clamp(11px,1.4vw,14px);font-weight:700;color:${nameCol};text-align:center;line-height:1.3;margin-bottom:${o.name_en ? '2px' : 'clamp(4px,0.6vw,6px)'};">${esc(o.name_ko)}</div>
       ${o.name_en ? `<div style="font-family:'Outfit',sans-serif;font-size:clamp(8px,1vw,10px);font-weight:700;letter-spacing:0.12em;color:${enCol};text-align:center;line-height:1;margin-bottom:clamp(5px,0.8vw,8px);">${esc(o.name_en)}</div>` : ''}
-      <div style="font-size:clamp(9px,1.1vw,11px);color:${descCol};text-align:center;line-height:1.4;">${esc(o.description_ko || '')}</div>
+      <div style="font-size:clamp(9px,1.1vw,11px);color:${descCol};text-align:center;line-height:1.4;">${nl2br(o.description_ko || '')}</div>
     </div>`;
   };
 
@@ -235,7 +235,7 @@ function handleGroup(spec, catalog) {
       <div style="flex:1;min-width:0;">
         <div style="font-size:clamp(11px,1.3vw,13px);font-weight:700;color:${nameCol};line-height:1.2;">${esc(o.name_ko)}</div>
         ${o.name_en ? `<div style="font-family:'Outfit',sans-serif;font-size:clamp(8px,1vw,10px);font-weight:700;letter-spacing:0.1em;color:${enCol};line-height:1;margin:1px 0 3px;">${esc(o.name_en)}</div>` : '<div style="height:3px"></div>'}
-        <div style="font-size:clamp(9px,1.1vw,11px);color:${descCol};line-height:1.3;">${esc(o.description_ko || '')}</div>
+        <div style="font-size:clamp(9px,1.1vw,11px);color:${descCol};line-height:1.3;">${nl2br(o.description_ko || '')}</div>
       </div>
     </div>`;
   };
@@ -357,7 +357,7 @@ function gradeCards(spec, catalog) {
         <div style="position:absolute;top:clamp(14px,2vw,20px);right:clamp(16px,2.2vw,22px);font-size:clamp(13px,1.7vw,16px);color:#FAF9F7;font-weight:700;line-height:1;">✓</div>
         <div style="font-family:'Outfit',sans-serif;font-size:clamp(36px,5vw,52px);font-weight:900;color:#FAF9F7;line-height:1;margin-bottom:clamp(8px,1vw,12px);">${esc(o.id)}</div>
         <div style="font-size:clamp(11px,1.4vw,13px);font-weight:700;color:rgba(245,245,243,0.55);letter-spacing:0.15em;margin-bottom:clamp(12px,1.5vw,16px);">${esc(o.name_en || '')}</div>
-        <p style="font-size:clamp(13px,1.6vw,15px);color:rgba(245,245,243,0.85);line-height:1.7;margin:0;">${esc(o.description_ko || '')}</p>
+        <p style="font-size:clamp(13px,1.6vw,15px);color:rgba(245,245,243,0.85);line-height:1.7;margin:0;">${nl2br(o.description_ko || '')}</p>
       </div>`;
     }
     // 중립(정보) 보기 = 모든 등급 또렷 풀카드 (글자+영문+설명, ✓ 없음)
@@ -365,7 +365,7 @@ function gradeCards(spec, catalog) {
       return `<div style="background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.5vw,12px);padding:clamp(24px,3vw,32px);">
         <div style="font-family:'Outfit',sans-serif;font-size:clamp(36px,5vw,52px);font-weight:900;color:#1A1A1A;line-height:1;margin-bottom:clamp(8px,1vw,12px);">${esc(o.id)}</div>
         <div style="font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#8A8580;letter-spacing:0.15em;margin-bottom:clamp(12px,1.5vw,16px);">${esc(o.name_en || '')}</div>
-        <p style="font-size:clamp(13px,1.6vw,15px);color:#2D2D2D;line-height:1.7;margin:0;">${esc(o.description_ko || '')}</p>
+        <p style="font-size:clamp(13px,1.6vw,15px);color:#2D2D2D;line-height:1.7;margin:0;">${nl2br(o.description_ko || '')}</p>
       </div>`;
     }
     // 미선택 등급 = 컴팩트 (글자 + 영문 라벨만, 설명 생략) — 모델 등급만 강조, 여백 유지
