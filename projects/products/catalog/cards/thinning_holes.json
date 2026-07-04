@@ -7,12 +7,12 @@
   "label_subtitle_ko": "홈 수",
   "select_mode": "single",
   "single_display": true,
-  "_note": "표시값(id)=숫자만(크게), 이름(name_ko)=단위 '홈'(작게). 총정리는 '3홈'.",
+  "_note": "표시값(id)에 '3홈'처럼 단위까지 그대로 쓰면 숫자는 크게·단위(홈)는 자동 2/3로 렌더됨. 이름은 비워둠.",
   "options": [
-    { "id": "1", "name_ko": "홈", "value": 1 },
-    { "id": "2", "name_ko": "홈", "value": 2 },
-    { "id": "3", "name_ko": "홈", "value": 3 },
-    { "id": "4", "name_ko": "홈", "value": 4 },
-    { "id": "5", "name_ko": "홈", "value": 5 }
+    { "id": "1홈", "name_ko": "", "value": 1 },
+    { "id": "2홈", "name_ko": "", "value": 2 },
+    { "id": "3홈", "name_ko": "", "value": 3 },
+    { "id": "4홈", "name_ko": "", "value": 4 },
+    { "id": "5홈", "name_ko": "", "value": 5 }
   ]
 }

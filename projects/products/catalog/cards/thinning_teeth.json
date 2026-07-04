@@ -7,13 +7,13 @@
   "label_subtitle_ko": "빗살 수",
   "select_mode": "single",
   "single_display": true,
-  "_note": "표시값(id)=숫자만(크게), 이름(name_ko)=단위 '발'(작게). 총정리는 표시값+이름 합쳐 '24발'.",
+  "_note": "표시값(id)에 '26발'처럼 단위까지 그대로 쓰면 숫자는 크게·단위(발)는 자동 2/3로 렌더됨. 이름(name_ko)은 비워둠.",
   "options": [
-    { "id": "24", "name_ko": "발", "value": 24 },
-    { "id": "26", "name_ko": "발", "value": 26 },
-    { "id": "28", "name_ko": "발", "value": 28 },
-    { "id": "30", "name_ko": "발", "value": 30 },
-    { "id": "32", "name_ko": "발", "value": 32 },
-    { "id": "40", "name_ko": "발", "value": 40 }
+    { "id": "24발", "name_ko": "", "value": 24 },
+    { "id": "26발", "name_ko": "", "value": 26 },
+    { "id": "28발", "name_ko": "", "value": 28 },
+    { "id": "30발", "name_ko": "", "value": 30 },
+    { "id": "32발", "name_ko": "", "value": 32 },
+    { "id": "40발", "name_ko": "", "value": 40 }
   ]
 }
