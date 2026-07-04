@@ -7,41 +7,13 @@
   "label_subtitle_ko": "빗살 수",
   "select_mode": "single",
   "single_display": true,
-  "_note": "옵션값은 임시 (24/26/28/30/32/40). 사장님 실제 라인업에 맞게 조정 필요",
+  "_note": "표시값(id)=숫자만(크게), 이름(name_ko)=단위 '발'(작게). 총정리는 표시값+이름 합쳐 '24발'.",
   "options": [
-    {
-      "id": "24",
-      "name_ko": "24발",
-      "value": 24,
-      "name_en": "",
-      "description_ko": "",
-      "svg_inline": ""
-    },
-    {
-      "id": "26",
-      "name_ko": "26발",
-      "value": 26,
-      "svg_inline": ""
-    },
-    {
-      "id": "28",
-      "name_ko": "28발",
-      "value": 28
-    },
-    {
-      "id": "30",
-      "name_ko": "30발",
-      "value": 30
-    },
-    {
-      "id": "32",
-      "name_ko": "32발",
-      "value": 32
-    },
-    {
-      "id": "40",
-      "name_ko": "40발",
-      "value": 40
-    }
+    { "id": "24", "name_ko": "발", "value": 24 },
+    { "id": "26", "name_ko": "발", "value": 26 },
+    { "id": "28", "name_ko": "발", "value": 28 },
+    { "id": "30", "name_ko": "발", "value": 30 },
+    { "id": "32", "name_ko": "발", "value": 32 },
+    { "id": "40", "name_ko": "발", "value": 40 }
   ]
 }

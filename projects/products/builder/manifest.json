@@ -12,6 +12,7 @@
     "cards/thinning_teeth.json",
     "cards/thinning_holes.json",
     "cards/thinning_reduction.json",
+    "cards/thinning_shape.json",
     "cards/dry_cutting_style.json"
   ],
   "copy_pool": [

@@ -7,35 +7,12 @@
   "label_subtitle_ko": "홈 수",
   "select_mode": "single",
   "single_display": true,
-  "_note": "옵션값은 임시 (1홈/2홈/3홈/4홈). 사장님 실제 라인업에 맞게 조정 필요",
+  "_note": "표시값(id)=숫자만(크게), 이름(name_ko)=단위 '홈'(작게). 총정리는 '3홈'.",
   "options": [
-    {
-      "id": "1",
-      "name_ko": "1홈",
-      "value": 1,
-      "svg_inline": ""
-    },
-    {
-      "id": "2",
-      "name_ko": "2홈",
-      "value": 2,
-      "description_ko": "ㅁㅇㄴㅁㄴㅇ"
-    },
-    {
-      "id": "3",
-      "name_ko": "3홈",
-      "value": 3
-    },
-    {
-      "id": "4",
-      "name_ko": "4홈",
-      "value": 4
-    },
-    {
-      "id": "5",
-      "name_ko": "5홈",
-      "name_en": "",
-      "description_ko": ""
-    }
+    { "id": "1", "name_ko": "홈", "value": 1 },
+    { "id": "2", "name_ko": "홈", "value": 2 },
+    { "id": "3", "name_ko": "홈", "value": 3 },
+    { "id": "4", "name_ko": "홈", "value": 4 },
+    { "id": "5", "name_ko": "홈", "value": 5 }
   ]
 }

@@ -1,0 +1,14 @@
+{
+  "card_type": "thinning_shape",
+  "applies_to": [
+    "thinning"
+  ],
+  "label_ko": "THINNING SHAPE",
+  "label_subtitle_ko": "홈 형태",
+  "select_mode": "single",
+  "_note": "홈(빗살) 형태 일러스트. 배경 없는 SVG를 옵션의 svg_inline에 넣으면 상세페이지 THINNING SPEC 위에 표시됨. 형태별로 옵션 추가/편집(문구+디자인 스튜디오 편집기). SVG는 사장님이 직접 제작.",
+  "options": [
+    { "id": "shape-a", "name_ko": "형태 A", "svg_inline": "" },
+    { "id": "shape-b", "name_ko": "형태 B", "svg_inline": "" }
+  ]
+}

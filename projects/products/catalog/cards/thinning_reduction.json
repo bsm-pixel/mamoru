@@ -7,37 +7,12 @@
   "label_subtitle_ko": "감모량 (%)",
   "select_mode": "single",
   "single_display": true,
-  "_note": "옵션값은 임시 (15/20/25/30/40 %). 사장님 실제 라인업에 맞게 조정 필요",
+  "_note": "표시값(id)=퍼센트값(예 '20%', 크게), 이름(name_ko)=비움. 총정리는 표시값만 '20%'.",
   "options": [
-    {
-      "id": "15%",
-      "name_ko": "15%",
-      "value": 15,
-      "description_ko": "보통 질감 전용 틴닝으로 쓰이며 \n\n가위자국이 없는 특징을 가지고있다"
-    },
-    {
-      "id": "R20",
-      "name_ko": "20%",
-      "value": 20,
-      "description_ko": "가벼운 정리"
-    },
-    {
-      "id": "R25",
-      "name_ko": "25%",
-      "value": 25,
-      "description_ko": "표준 감모"
-    },
-    {
-      "id": "R30",
-      "name_ko": "30%",
-      "value": 30,
-      "description_ko": "중간 감모"
-    },
-    {
-      "id": "R40",
-      "name_ko": "40%",
-      "value": 40,
-      "description_ko": "확실한 감모"
-    }
+    { "id": "15%", "name_ko": "", "value": 15, "description_ko": "보통 질감 전용 틴닝으로 쓰이며 \n\n가위자국이 없는 특징을 가지고있다" },
+    { "id": "20%", "name_ko": "", "value": 20, "description_ko": "가벼운 정리" },
+    { "id": "25%", "name_ko": "", "value": 25, "description_ko": "표준 감모" },
+    { "id": "30%", "name_ko": "", "value": 30, "description_ko": "중간 감모" },
+    { "id": "40%", "name_ko": "", "value": 40, "description_ko": "확실한 감모" }
   ]
 }

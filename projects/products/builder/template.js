@@ -149,10 +149,26 @@ function thinningRow(spec, catalog) {
     const opt = (c.options || []).find(o => o.id === selId) || (c.options || [])[0];
     if (!opt) continue;
     cells.push({ c, opt });
-    summary.push(esc(opt.name_ko || opt.id));
+    // 총정리 = 표시값(id) + 이름(name_ko) 합산 → "24발" · "3홈" · "20%"
+    summary.push(esc((opt.id || '') + (opt.name_ko || '')));
   }
   if (!cells.length) return '';
   const note = (spec.custom_fields && spec.custom_fields.thinning_note) || '';
+  // 홈 형태 SVG — 선택 카드(thinning_shape)에서 고른 배경 없는 SVG를 스펙 위에 표시
+  let shapeHtml = '';
+  const shapeCard = catalog.byCardType['thinning_shape'];
+  if (shapeCard) {
+    const sSel = spec.selections && spec.selections['thinning_shape'];
+    const sOpt = (shapeCard.options || []).find(o => o.id === sSel) || (shapeCard.options || [])[0];
+    if (sOpt && sOpt.svg_inline) {
+      shapeHtml = `<div style="margin-bottom:clamp(28px,3.5vw,44px);">
+        <div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;margin-bottom:clamp(16px,2vw,22px);">홈 형태 <span style="color:#8A8580;font-weight:700;">— SHAPE</span></div>
+        <div style="background:#F5F3F0;border-radius:clamp(10px,1.4vw,16px);padding:clamp(28px,4vw,52px) clamp(20px,3vw,40px);color:#1A1A1A;text-align:center;">
+          ${injectSvgStyle(sOpt.svg_inline, 'width:min(clamp(180px,42vw,420px),100%);height:auto;display:block;margin:0 auto;')}
+        </div>
+      </div>`;
+    }
+  }
   const _n = NEUTRAL; NEUTRAL = true;   // 요약 = 라이트 카드(선명한 다크 텍스트/SVG)
   const cardsHtml = cells.map(({ c, opt }) => `<div style="min-width:0;">
       <div style="font-family:'Outfit',sans-serif;font-size:clamp(9px,1.2vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:clamp(8px,1vw,12px);">${esc(c.label_subtitle_ko || c.label_ko || '')}</div>
@@ -160,6 +176,7 @@ function thinningRow(spec, catalog) {
     </div>`).join('');
   NEUTRAL = _n;
   return `<div style="margin-bottom:clamp(48px,6vw,72px);">
+    ${shapeHtml}
     <div style="display:flex;align-items:baseline;gap:clamp(12px,1.5vw,16px);margin-bottom:clamp(20px,2.5vw,28px);flex-wrap:wrap;">
       <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;">THINNING SPEC</span>
       <span style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;">— 발 · 홈 · 감모</span>
