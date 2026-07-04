@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex"/>
+<title>MAMORU 페이지 허브</title>
+<link rel="preconnect" href="https://fastly.jsdelivr.net"/>
+<link rel="stylesheet" href="https://fastly.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"/>
+<style>
+  :root{ --void:#1A1A1A; --ink:#2A2A2A; --gray:#8A8A8A; --line:#E7E5E2; --shell:#F4F2EF; --cream:#FAF9F7; --card:#FFFFFF; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:'Pretendard Variable',Pretendard,-apple-system,system-ui,'Noto Sans KR',sans-serif; color:var(--ink); background:var(--cream); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:1120px; margin:0 auto; padding:40px 22px 80px; }
+
+  /* 헤더 */
+  .hdr{ margin-bottom:26px; }
+  .hdr__kicker{ font-size:11px; letter-spacing:.2em; color:var(--gray); text-transform:uppercase; }
+  .hdr__title{ font-size:30px; font-weight:800; color:var(--void); letter-spacing:-.02em; margin-top:6px; }
+  .hdr__sub{ font-size:13px; color:var(--gray); margin-top:8px; }
+
+  /* 검색 + 범례 */
+  .bar{ position:sticky; top:0; z-index:5; background:var(--cream); padding:14px 0 12px; margin-bottom:6px; border-bottom:1px solid var(--line); }
+  .search{ width:100%; height:44px; padding:0 16px; border:1px solid var(--line); border-radius:12px; background:var(--card); font-size:14px; color:var(--void); }
+  .search:focus{ outline:none; border-color:var(--void); }
+  .legend{ display:flex; flex-wrap:wrap; gap:12px; margin-top:12px; font-size:11.5px; color:var(--gray); }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .dot{ width:8px; height:8px; border-radius:50%; }
+
+  /* 그룹 */
+  .group{ margin-top:34px; }
+  .group__h{ display:flex; align-items:baseline; gap:10px; margin-bottom:14px; }
+  .group__h b{ font-size:16px; font-weight:800; color:var(--void); letter-spacing:-.01em; }
+  .group__h small{ font-size:12px; color:var(--gray); }
+  .group__h::before{ content:''; width:3px; height:16px; border-radius:2px; background:var(--void); }
+
+  /* 카드 그리드 */
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+  .card{ display:block; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:15px 16px; text-decoration:none; color:inherit; transition:border-color .15s, transform .15s, box-shadow .15s; }
+  .card:hover{ border-color:var(--void); transform:translateY(-2px); box-shadow:0 6px 20px rgba(26,26,26,.06); }
+  .card__top{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .card__name{ font-size:14px; font-weight:700; color:var(--void); letter-spacing:-.01em; }
+  .card__arrow{ font-size:13px; color:var(--gray); }
+  .card:hover .card__arrow{ color:var(--void); }
+  .card__desc{ font-size:12px; color:var(--gray); margin-top:5px; line-height:1.5; }
+  .card__path{ font-size:10.5px; color:#B8B4AE; margin-top:8px; font-family:ui-monospace,Menlo,monospace; word-break:break-all; }
+  .tags{ display:flex; flex-wrap:wrap; gap:5px; margin-top:9px; }
+  .tag{ font-size:10px; font-weight:700; padding:3px 7px; border-radius:6px; letter-spacing:.02em; }
+  .t-solo{ background:#EAF1EA; color:#2F6B36; }
+  .t-imweb{ background:#E8EFF6; color:#2C5A85; }
+  .t-param{ background:#F6EFE2; color:#8A6A22; }
+  .t-tool{ background:#EDEBFF; color:#4B41A8; }
+
+  /* TMS 컴팩트 리스트 */
+  .tms{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:8px; }
+  .tms a{ display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:11px 13px; text-decoration:none; color:var(--void); font-size:13px; font-weight:600; transition:border-color .15s; }
+  .tms a:hover{ border-color:var(--void); }
+  .tms a span{ color:var(--gray); font-size:11px; }
+  .tms-note{ font-size:11.5px; color:var(--gray); margin-top:10px; }
+
+  .empty{ display:none; text-align:center; color:var(--gray); font-size:13px; padding:40px 0; }
+  .foot{ margin-top:50px; padding-top:18px; border-top:1px solid var(--line); text-align:center; font-size:11px; color:#B8B4AE; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <div class="hdr__kicker">MAMORU · Internal</div>
+    <div class="hdr__title">페이지 허브</div>
+    <div class="hdr__sub">모든 고객 페이지 · 관리자 화면을 한눈에. 카드를 누르면 라이브로 열립니다. · 최종 정리 2026-07-04</div>
+  </div>
+
+  <div class="bar">
+    <input class="search" id="q" type="text" placeholder="페이지 검색 (예: 접수, 복원수리, 이벤트, 상담...)" autocomplete="off"/>
+    <div class="legend">
+      <span><i class="dot" style="background:#2F6B36"></i> 단독 페이지 (바로 열림)</span>
+      <span><i class="dot" style="background:#2C5A85"></i> 아임웹 삽입용 (단독은 레이아웃 참고)</span>
+      <span><i class="dot" style="background:#8A6A22"></i> 파라미터 필요 (빈 상태로 열림)</span>
+      <span><i class="dot" style="background:#4B41A8"></i> 제작 도구</span>
+    </div>
+  </div>
+
+  <div id="board">
+
+    <!-- 메인 · 브랜드 -->
+    <section class="group" data-g>
+      <div class="group__h"><b>메인 · 브랜드</b><small>아임웹 홈 / 브랜드 랜딩</small></div>
+      <div class="grid">
+        <a class="card" target="_blank" data-s="메인 홈 main 아임웹" href="https://page.mamoru.kr/projects/main/page_main.html">
+          <div class="card__top"><span class="card__name">메인 홈</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">아임웹 메인 페이지 (PC+모바일, Lottie)</div>
+          <div class="tags"><span class="tag t-imweb">아임웹</span></div>
+          <div class="card__path">main/page_main.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="메인 상단 위젯 top" href="https://page.mamoru.kr/projects/main/page_main_top.html">
+          <div class="card__top"><span class="card__name">메인 상단 위젯</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">메인 상단 삽입 위젯</div>
+          <div class="tags"><span class="tag t-imweb">아임웹</span></div>
+          <div class="card__path">main/page_main_top.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="메인 하단 위젯 btm 리뷰" href="https://page.mamoru.kr/projects/main/page_main_btm.html">
+          <div class="card__top"><span class="card__name">메인 하단 위젯</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">메인 하단 삽입 위젯 (리뷰 표시 포함)</div>
+          <div class="tags"><span class="tag t-imweb">아임웹</span></div>
+          <div class="card__path">main/page_main_btm.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="브랜드 소개 intro 랜딩" href="https://page.mamoru.kr/projects/brand/page_intro.html">
+          <div class="card__top"><span class="card__name">브랜드 소개</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">브랜드 히어로 랜딩</div>
+          <div class="tags"><span class="tag t-solo">단독</span></div>
+          <div class="card__path">brand/page_intro.html</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- 상담 -->
+    <section class="group" data-g>
+      <div class="group__h"><b>상담</b><small>안내 · 진단 · 접수 · 일정</small></div>
+      <div class="grid">
+        <a class="card" target="_blank" data-s="상담 안내 guide 매장 출장 톡" href="https://page.mamoru.kr/projects/consulting/page_guide.html">
+          <div class="card__top"><span class="card__name">상담 안내</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">매장방문 · 출장 · 톡상담 안내</div>
+          <div class="tags"><span class="tag t-imweb">아임웹</span></div>
+          <div class="card__path">consulting/page_guide.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="간편 진단 diag 질문" href="https://page.mamoru.kr/projects/consulting/page_diag.html">
+          <div class="card__top"><span class="card__name">간편 진단</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">13문항 조건부 분기 진단</div>
+          <div class="tags"><span class="tag t-imweb">아임웹</span></div>
+          <div class="card__path">consulting/page_diag.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="상담 접수 form 매장 출장" href="https://page.mamoru.kr/projects/consulting/page_form.html">
+          <div class="card__top"><span class="card__name">상담 접수</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">상담 접수 폼 (매장/출장)</div>
+          <div class="tags"><span class="tag t-imweb">아임웹</span></div>
+          <div class="card__path">consulting/page_form.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="맞춤 추천 recommend 결과" href="https://page.mamoru.kr/projects/consulting/page_recommend.html">
+          <div class="card__top"><span class="card__name">맞춤 추천</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">진단 결과 → 맞춤 가위 추천</div>
+          <div class="tags"><span class="tag t-imweb">아임웹</span></div>
+          <div class="card__path">consulting/page_recommend.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="출장 일정 제안 suggest 슬롯 캘린더" href="https://page.mamoru.kr/projects/consulting/page_suggest.html">
+          <div class="card__top"><span class="card__name">출장 일정 제안</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">출장 시간 제안 — 고객이 슬롯 선택/재요청</div>
+          <div class="tags"><span class="tag t-solo">단독</span><span class="tag t-param">?t=토큰</span></div>
+          <div class="card__path">consulting/page_suggest.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="예약 변경 취소 change_request" href="https://page.mamoru.kr/projects/consulting/page_change_request.html">
+          <div class="card__top"><span class="card__name">예약 변경/취소</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">확정 예약 셀프 변경/취소</div>
+          <div class="tags"><span class="tag t-solo">단독</span><span class="tag t-param">?uid=</span></div>
+          <div class="card__path">consulting/page_change_request.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="알림 결과 result" href="https://page.mamoru.kr/projects/consulting/page_result.html">
+          <div class="card__top"><span class="card__name">알림 결과</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">알림톡 버튼 → 결과 메시지 (동적)</div>
+          <div class="tags"><span class="tag t-solo">단독</span><span class="tag t-param">?title=&msg=</span></div>
+          <div class="card__path">consulting/page_result.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="리스케줄 리다이렉트 reschedule 레거시" href="https://page.mamoru.kr/projects/consulting/page_reschedule.html">
+          <div class="card__top"><span class="card__name">리스케줄 리다이렉트</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">레거시 링크 호환 → 일정 제안으로 자동 이동</div>
+          <div class="tags"><span class="tag t-solo">단독</span></div>
+          <div class="card__path">consulting/page_reschedule.html</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- 복원수리 -->
+    <section class="group" data-g>
+      <div class="group__h"><b>복원수리 (AS)</b><small>안내 · 접수 · 현황 조회</small></div>
+      <div class="grid">
+        <a class="card" target="_blank" data-s="복원수리 안내 풀 guide 60" href="https://page.mamoru.kr/projects/as/page_guide.html">
+          <div class="card__top"><span class="card__name">복원수리 안내 (풀)</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">복원수리 서비스 안내 (아임웹 /60, 풀페이지)</div>
+          <div class="tags"><span class="tag t-imweb">아임웹</span></div>
+          <div class="card__path">as/page_guide.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="복원수리 안내 모달 as_guide" href="https://page.mamoru.kr/projects/as/page_as_guide.html">
+          <div class="card__top"><span class="card__name">복원수리 안내 (모달)</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">단독 안내 (모달형)</div>
+          <div class="tags"><span class="tag t-solo">단독</span></div>
+          <div class="card__path">as/page_as_guide.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="복원수리 접수 form 통합" href="https://page.mamoru.kr/projects/as/page_form.html">
+          <div class="card__top"><span class="card__name">복원수리 접수</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">통합 접수 폼 (마모루+타사)</div>
+          <div class="tags"><span class="tag t-solo">단독</span></div>
+          <div class="card__path">as/page_form.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="수리내역 조회 report 현황" href="https://page.mamoru.kr/projects/as/page_as_report.html">
+          <div class="card__top"><span class="card__name">수리내역 조회</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">고객 수리 현황 조회 (TMS API 연동)</div>
+          <div class="tags"><span class="tag t-solo">단독</span><span class="tag t-param">?uid=as_id</span></div>
+          <div class="card__path">as/page_as_report.html</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- 리뷰 -->
+    <section class="group" data-g>
+      <div class="group__h"><b>리뷰</b><small>후기 목록 · 작성</small></div>
+      <div class="grid">
+        <a class="card" target="_blank" data-s="고객 후기 목록 reviews" href="https://page.mamoru.kr/projects/reviews/page_reviews.html">
+          <div class="card__top"><span class="card__name">고객 후기 목록</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">리뷰 목록 표시</div>
+          <div class="tags"><span class="tag t-imweb">아임웹</span></div>
+          <div class="card__path">reviews/page_reviews.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="후기 작성 review 폼" href="https://page.mamoru.kr/projects/reviews/page_review.html">
+          <div class="card__top"><span class="card__name">후기 작성</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">리뷰 작성 폼 (복원수리/상담)</div>
+          <div class="tags"><span class="tag t-solo">단독</span><span class="tag t-param">?uid=&type=</span></div>
+          <div class="card__path">reviews/page_review.html</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- 이벤트 -->
+    <section class="group" data-g>
+      <div class="group__h"><b>이벤트</b><small>릴스 → 접수</small></div>
+      <div class="grid">
+        <a class="card" target="_blank" data-s="이벤트 접수 event form 릴스" href="https://page.mamoru.kr/projects/event/page_form.html">
+          <div class="card__top"><span class="card__name">이벤트 접수</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">이벤트 품목 접수 폼 (캐러셀 + 카탈로그)</div>
+          <div class="tags"><span class="tag t-solo">단독</span></div>
+          <div class="card__path">event/page_form.html</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- 제품 상세 -->
+    <section class="group" data-g>
+      <div class="group__h"><b>제품 상세</b><small>상세페이지 제작 도구</small></div>
+      <div class="grid">
+        <a class="card" target="_blank" data-s="제품 상세 빌더 builder 제작" href="https://page.mamoru.kr/projects/products/builder/index.html">
+          <div class="card__top"><span class="card__name">제품 상세 빌더</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">클릭·입력으로 제품 상세페이지 제작</div>
+          <div class="tags"><span class="tag t-tool">도구</span></div>
+          <div class="card__path">products/builder/index.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="문구 디자인 스튜디오 studio" href="https://page.mamoru.kr/projects/products/builder/studio.html">
+          <div class="card__top"><span class="card__name">문구+디자인 스튜디오</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">문구 편집 + 실시간 미리보기 통합</div>
+          <div class="tags"><span class="tag t-tool">도구</span></div>
+          <div class="card__path">products/builder/studio.html</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- 디자인 작업실 -->
+    <section class="group" data-g>
+      <div class="group__h"><b>디자인 작업실</b><small>시안 · 표준 (브라우저로 열기)</small></div>
+      <div class="grid">
+        <a class="card" target="_blank" data-s="페이지 키트 표준 page_kit" href="https://page.mamoru.kr/projects/_design_lab/_page_kit.html">
+          <div class="card__top"><span class="card__name">Page Kit (통합 표준)</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">아임웹 전 페이지 통합 표준 — 복사 원본</div>
+          <div class="tags"><span class="tag t-tool">도구</span></div>
+          <div class="card__path">_design_lab/_page_kit.html</div>
+        </a>
+        <a class="card" target="_blank" data-s="복원수리 원칙 시안 as_principle" href="https://page.mamoru.kr/projects/_design_lab/as_principle.html">
+          <div class="card__top"><span class="card__name">복원수리 원칙 시안</span><span class="card__arrow">↗</span></div>
+          <div class="card__desc">진행 중 시안 (문제→답 구조)</div>
+          <div class="tags"><span class="tag t-tool">시안</span></div>
+          <div class="card__path">_design_lab/as_principle.html</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- TMS 관리자 -->
+    <section class="group" data-g>
+      <div class="group__h"><b>관리자 (TMS)</b><small>app-eta-sandy-75.vercel.app</small></div>
+      <div class="tms" data-s="TMS 관리자 대시보드 주문 상담 복원수리 판매 이벤트 고객 제품 재고 회계 품목별 설정 디자인">
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/dashboard">대시보드 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/orders/dashboard">주문관리 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/consultations">상담관리 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/consultations/calendar">달력 관리 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/repairs">복원수리 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/sales">판매 관리 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/events">EVENT <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/customers">고객 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/products">제품 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/inventory">창고·재고 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/sourcing">샘플 소싱 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/reports">회계 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/reports/products">품목별 매출 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/serials">시리얼 관리 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/settings">설정 <span>↗</span></a>
+        <a target="_blank" href="https://app-eta-sandy-75.vercel.app/design-lab">디자인 모니터 <span>↗</span></a>
+      </div>
+      <div class="tms-note">※ 관리자 앱은 로그인 필요. 디자인 모니터(/design-lab)는 진행 중 React 화면 검토용(사이드바 미노출).</div>
+    </section>
+
+    <div class="empty" id="empty">검색 결과가 없습니다.</div>
+  </div>
+
+  <div class="foot">🎨 MAMORU 페이지 허브 · 고객 페이지 = page.mamoru.kr · 관리자 = TMS(Vercel) · 사장님 + 클로드 협업 도구</div>
+</div>
+
+<script>
+  (function(){
+    var q = document.getElementById('q');
+    var groups = [].slice.call(document.querySelectorAll('[data-g]'));
+    var empty = document.getElementById('empty');
+    q.addEventListener('input', function(){
+      var kw = q.value.trim().toLowerCase();
+      var anyShown = false;
+      groups.forEach(function(g){
+        var items = [].slice.call(g.querySelectorAll('[data-s]'));
+        var gShown = false;
+        items.forEach(function(it){
+          var hit = !kw || (it.getAttribute('data-s') + ' ' + it.textContent).toLowerCase().indexOf(kw) > -1;
+          // TMS 리스트는 컨테이너 단위(data-s)라 개별 토글 대신 컨테이너로 처리
+          if (it.classList.contains('tms')) { it.style.display = hit ? '' : 'none'; if(hit) gShown = true; }
+          else { it.style.display = hit ? '' : 'none'; if(hit) gShown = true; }
+        });
+        g.style.display = gShown ? '' : 'none';
+        if (gShown) anyShown = true;
+      });
+      empty.style.display = anyShown ? 'none' : 'block';
+    });
+  })();
+</script>
+</body>
+</html>
