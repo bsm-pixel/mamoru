@@ -9,6 +9,7 @@
 {{!-- @name image @type image @label "배경 이미지" --}}
 {{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 480px 또는 60vh (비우면 자동)" --}}
 {{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "최대 가로폭(PC) — 예: 1000px (비우면 꽉 채움) · 모바일은 자동 꽉 채움" --}}
 {{!-- @name focus @type outlined-textfield @default "중앙" @label "사진 초점 — 입력: 중앙·좌·우·상·하" --}}
 {{!-- @name overlay @type color-picker @default "#1A1A1A80" @label "어둡게 (검정의 투명도 슬라이더를 드래그 · 맨뒤 2자리=어둡기)" --}}
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 (가운데/왼쪽 · 유형을 옵션버튼/스위치로 바꿔도 됨)" --}}
@@ -17,7 +18,7 @@
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
 {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-<div class="mm-cine" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-radius="{{radius}}">
+<div class="mm-cine" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-radius="{{radius}}" data-maxw="{{maxw}}">
   <img class="mm-cine__bg" src="{{image}}" alt="">
   <div class="mm-cine__veil" aria-hidden="true"></div>
   <div class="mm-cine__inner">
