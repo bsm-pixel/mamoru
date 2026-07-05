@@ -12,8 +12,8 @@
 {{!-- @name overlay @type color-picker @default "#1A1A1A80" @label "어둡게 (검정의 투명도 슬라이더를 드래그)" --}}
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 (가운데/왼쪽 · 유형을 옵션버튼/스위치로 바꿔도 됨)" --}}
 {{!-- @name kicker @type outlined-textfield @default "" @label "키커(영문, 선택)" --}}
-{{!-- @name headline @type outlined-textfield @default "헤드라인을 입력하세요" @label "헤드라인" --}}
-{{!-- @name sub @type outlined-textfield @default "" @label "서브 문구(선택)" --}}
+{{!-- @name headline @type text-editor @default "<p>헤드라인을 입력하세요</p>" @label "헤드라인" --}}
+{{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
 {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
 <div class="mm-cine" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}">
@@ -21,8 +21,8 @@
   <div class="mm-cine__veil" aria-hidden="true"></div>
   <div class="mm-cine__inner">
     <span class="mm-cine__kicker">{{kicker}}</span>
-    <h2 class="mm-cine__headline">{{headline}}</h2>
-    <p class="mm-cine__sub">{{sub}}</p>
+    <div class="mm-cine__headline" role="heading" aria-level="2">{{{headline}}}</div>
+    <div class="mm-cine__sub">{{{sub}}}</div>
     <a class="mm-cine__btn" href="{{btnLink}}">{{btnText}}</a>
   </div>
 </div>

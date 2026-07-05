@@ -10,4 +10,4 @@
 .mm-acc__inner{padding:0 4px 20px;}
 .mm-acc__img{width:100%;max-width:360px;aspect-ratio:16/10;object-fit:cover;border-radius:10px;background:#F5F3F0;margin-bottom:12px;display:block;}
 .mm-acc__a{font-size:clamp(14px,3.8vw,15px);line-height:1.7;color:#4A4A4A;}
-.mm-acc__a p{margin:0 0 8px;}
+.mm-acc__a p{margin:0 0 .15em;}

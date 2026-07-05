@@ -9,7 +9,7 @@
 .mm-tl__idx::before{content:counter(tl,decimal-leading-zero);}
 .mm-tl__name{margin:0 0 8px;font-size:clamp(16px,4.2vw,20px);font-weight:800;letter-spacing:-.01em;}
 .mm-tl__desc{font-size:clamp(14px,3.8vw,15px);line-height:1.65;color:#4A4A4A;}
-.mm-tl__desc p{margin:0 0 6px;}
+.mm-tl__desc p{margin:0 0 .15em;}
 .mm-tl__img{width:100%;max-width:360px;aspect-ratio:16/10;object-fit:cover;border-radius:10px;background:#F5F3F0;margin-top:14px;display:block;}
 @media (prefers-reduced-motion:no-preference){
   .mm-tl__step{opacity:0;transform:translateY(22px);transition:opacity .55s cubic-bezier(.4,0,.2,1),transform .55s cubic-bezier(.4,0,.2,1);}

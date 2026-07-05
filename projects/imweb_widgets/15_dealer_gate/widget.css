@@ -7,5 +7,5 @@
 .mm-gate__btn{padding:13px 22px;border:none;border-radius:8px;background:#1A1A1A;color:#FAF9F7;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;}
 .mm-gate__err{margin:12px 0 0;font-size:13px;color:#8A8580;}
 .mm-gate__content{animation:mmgate .4s cubic-bezier(.4,0,.2,1) both;font-size:clamp(14px,3.8vw,16px);line-height:1.7;color:#2D2D2D;}
+.mm-gate__content p{margin:0 0 .15em;}
 @keyframes mmgate{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-.mm-gate__content p{margin:0 0 8px;}

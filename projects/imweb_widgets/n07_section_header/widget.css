@@ -12,3 +12,6 @@
   .mm-sh.is-in .mm-sh__text{transition-delay:.08s;}
   .mm-sh.is-in .mm-sh__line{transition-delay:.16s;}
 }
+
+/* 여러 줄(text-editor) 입력 시 문단 줄간격 통일 */
+.mm-sh__title p{margin:0 0 .15em;}

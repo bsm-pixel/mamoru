@@ -6,5 +6,5 @@
 .mm-gl__item.is-hide{display:none;}
 .mm-gl__term{margin:0 0 6px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(16px,4vw,18px);font-weight:800;letter-spacing:-.01em;}
 .mm-gl__def{margin:0;font-size:clamp(14px,3.8vw,15px);line-height:1.65;color:#4A4A4A;}
-.mm-gl__def p{margin:0;}
+.mm-gl__def p{margin:0 0 .15em;}
 .mm-gl__empty{text-align:center;color:#8A8580;font-size:14px;padding:24px 0;}

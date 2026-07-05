@@ -5,8 +5,9 @@
 .mm-quote__mark{display:block;font-family:'Outfit',Georgia,serif;font-size:clamp(60px,16vw,120px);line-height:.6;font-weight:900;color:#D4D0CB;margin-bottom:clamp(4px,1vw,8px);}
 .mm-quote[data-theme="다크"] .mm-quote__mark{color:#4A4A4A;}
 .mm-quote[data-align="가운데"] .mm-quote__mark{text-align:center;}
-.mm-quote__text{margin:0;font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(22px,5.5vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.35;}
-.mm-quote__author{display:block;margin-top:clamp(16px,3vw,26px);font-size:clamp(12px,3vw,14px);font-weight:600;font-style:normal;letter-spacing:.04em;color:#8A8580;}
+.mm-quote__text{margin:0;font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(22px,5.5vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
+.mm-quote__text p{margin:0 0 .15em;}
+.mm-quote__author{display:block;margin-top:clamp(16px,3vw,26px);font-size:clamp(12px,3vw,14px);font-weight:600;font-style:normal;letter-spacing:.04em;color:#8A8580;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-quote__author:empty{display:none;}
 .mm-quote__author::before{content:'— ';}
 .mm-quote__author:empty::before{content:'';}

@@ -12,4 +12,4 @@
 .mm-hs__spot.is-open .mm-hs__dot::after{display:none;}
 .mm-hs__tip strong{display:block;font-size:14px;font-weight:800;margin-bottom:4px;}
 .mm-hs__tipdesc{font-size:13px;line-height:1.55;color:#D4D0CB;}
-.mm-hs__tipdesc p{margin:0;}
+.mm-hs__tipdesc p{margin:0 0 .15em;}

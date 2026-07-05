@@ -10,7 +10,7 @@
 .mm-dx__img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:10px;background:#F5F3F0;margin-bottom:16px;display:block;}
 .mm-dx__name{margin:0 0 10px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(18px,4.5vw,22px);font-weight:800;letter-spacing:-.02em;}
 .mm-dx__desc{font-size:clamp(14px,3.8vw,16px);line-height:1.6;color:#4A4A4A;}
-.mm-dx__desc p{margin:0 0 6px;}
+.mm-dx__desc p{margin:0 0 .15em;}
 .mm-dx__cta{display:inline-flex;align-items:center;justify-content:center;margin-top:18px;padding:13px 30px;border-radius:8px;background:#1A1A1A;color:#FAF9F7;font-weight:700;font-size:15px;text-decoration:none;transition:opacity .2s;}
 .mm-dx__cta:empty{display:none;}
 @media (hover:hover){.mm-dx__cta:hover{opacity:.88;}}

@@ -7,10 +7,10 @@
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name image @type image @label "글자 속 이미지" --}}
-{{!-- @name headline @type outlined-textfield @default "MAMORU" @label "헤드라인(짧고 굵게)" --}}
-{{!-- @name sub @type outlined-textfield @default "" @label "아래 문구(선택)" --}}
+{{!-- @name headline @type text-editor @default "<p>MAMORU</p>" @label "헤드라인(짧고 굵게)" --}}
+{{!-- @name sub @type text-editor @default "<p></p>" @label "아래 문구(선택)" --}}
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 — 입력: 가운데 · 왼쪽" --}}
 <div class="mm-mask" data-align="{{align}}">
-  <h2 class="mm-mask__h" style="background-image:url('{{image}}')">{{headline}}</h2>
-  <p class="mm-mask__sub">{{sub}}</p>
+  <div class="mm-mask__h" style="background-image:url('{{image}}')">{{{headline}}}</div>
+  <div class="mm-mask__sub">{{{sub}}}</div>
 </div>
