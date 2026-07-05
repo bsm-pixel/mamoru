@@ -2,6 +2,9 @@
 (function(){
   function alphaOf(ov){
     ov=String(ov||'').trim();
+    /* 단어 설정: 안어둡게/살짝/중간/진하게/완전검정 → 투명도. (hex·rgba 입력도 그대로 호환) */
+    var key=ov.replace(/\s/g,''),M={'안어둡게':0,'없음':0,'투명':0,'살짝':0.15,'약간':0.15,'중간':0.5,'진하게':0.7,'진함':0.7,'완전검정':1,'검정':1};
+    if(M.hasOwnProperty(key)) return M[key];
     if(ov.indexOf('rgba')===0){
       var inner=ov.substring(ov.indexOf('(')+1, ov.lastIndexOf(')')),p=inner.split(',');
       if(p.length>=4){ var a=parseFloat(p[3]); if(!isNaN(a)) return a; }
