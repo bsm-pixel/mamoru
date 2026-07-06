@@ -33,7 +33,7 @@
     if(bgm && String(bgm.getAttribute('src')||'').trim()) root.setAttribute('data-hasm','1');
     var h=root.getAttribute('data-height');
     if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
-    /* 모서리(radius)는 HTML 인라인 style로 처리 → 로드 시 깜빡임 없음(JS 미사용) */
+    var rd=root.getAttribute('data-radius'); if(rd!==null){ var rv=rd.trim(); if(rv){ if(String(parseFloat(rv))===rv) rv+='px'; root.style.borderRadius=rv; } }
     /* PC 최대 가로폭 지정 + 중앙정렬. 모바일은 화면이 더 좁아 자동 꽉 채움 */
     var mw=root.getAttribute('data-maxw');
     if(mw!==null){ var mv=mw.trim(); if(mv){ if(String(parseFloat(mv))===mv) mv+='px'; root.style.maxWidth=mv; root.style.marginLeft='auto'; root.style.marginRight='auto'; } }
