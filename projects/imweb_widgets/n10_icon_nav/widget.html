@@ -10,11 +10,13 @@
 {{!-- @name chips @type item @label "칩" --}}
 <div class="mm-nav" data-theme="{{theme}}">
 {{#each chips}}
-  {{!-- @name icon @type outlined-textfield @default "가위" @label "아이콘 키워드 (가위·빗·가위집·복원·상담·후기)" --}}
+  {{!-- @name icon @type outlined-textfield @default "가위" @label "아이콘 키워드 (가위·빗·가위집·복원·상담·후기) · 아래 커스텀 SVG 있으면 무시됨" --}}
+  {{!-- @name svg @type outlined-textfield @default "" @label "커스텀 SVG (선택 · <svg …>…</svg> 코드 한 줄로 붙여넣기 · 비우면 키워드 아이콘)" --}}
   {{!-- @name label @type outlined-textfield @default "메뉴" @label "라벨" --}}
   {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
   <a class="mm-nav__chip" href="{{link}}" data-icon="{{icon}}">
     <span class="mm-nav__ico" aria-hidden="true"></span>
+    <span class="mm-nav__svgsrc" style="display:none">{{svg}}</span>
     <span class="mm-nav__label">{{label}}</span>
   </a>
 {{/each}}

@@ -25,8 +25,12 @@
     var chips=root.querySelectorAll('.mm-nav__chip');
     for(var i=0;i<chips.length;i++){
       var ico=chips[i].querySelector('.mm-nav__ico');
+      if(!ico)continue;
+      /* 커스텀 SVG 우선. textContent라 아임웹이 escape해도 원본 SVG 문자열이 잡혀 innerHTML로 정상 렌더 */
+      var srcEl=chips[i].querySelector('.mm-nav__svgsrc'),custom=srcEl?String(srcEl.textContent||'').trim():'';
+      if(custom){ ico.innerHTML=custom; continue; }
       var name=pick(chips[i].getAttribute('data-icon'));
-      if(ico&&name)ico.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+SVG[name]+'</svg>';
+      if(name)ico.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+SVG[name]+'</svg>';
     }
   }
   function init(){var l=document.querySelectorAll('.mm-nav');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}

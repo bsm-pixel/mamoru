@@ -1,5 +1,7 @@
-.mm-nav{max-width:760px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:8px 12px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
-.mm-nav__chip{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;text-decoration:none;font-size:clamp(13px,3.6vw,15px);font-weight:700;letter-spacing:-.01em;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;}
+/* 가로 1행 고정 + 가로 스크롤(줄바꿈 X). 칩이 많아지면 우측에서 스윽 나오는 형태 */
+.mm-nav{max-width:760px;margin:0 auto;display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding:8px 12px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-nav::-webkit-scrollbar{display:none;}
+.mm-nav__chip{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;text-decoration:none;font-size:clamp(13px,3.6vw,15px);font-weight:700;letter-spacing:-.01em;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;}
 .mm-nav[data-theme="다크"] .mm-nav__chip{background:#1A1A1A;color:#FAF9F7;}
 .mm-nav[data-theme="라이트"] .mm-nav__chip{background:#FFFFFF;color:#1A1A1A;border:1px solid #D4D0CB;}
 .mm-nav__chip:active{transform:scale(.97);}
