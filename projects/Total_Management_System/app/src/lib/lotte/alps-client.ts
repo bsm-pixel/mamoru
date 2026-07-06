@@ -83,6 +83,46 @@ export async function getNextInvoice(): Promise<{ invoiceNumber: string; base11:
   return { invoiceNumber: toInvoiceNumber(current), base11: current };
 }
 
+/* ── 실패 시 친절 안내 + 사장님 앱 즉시 알림 (재발 조용히 실패 방지) ── */
+function friendlyAlpsError(msg: string): string {
+  const s = String(msg || '');
+  // 롯데 계약/거래처 관련 거절이면 행동 안내를 덧붙임 (거래처계약정보 조회 오류 등)
+  if (/계약|거래처/.test(s)) {
+    return `${s} — 롯데 거래처 계약 문제일 수 있습니다. 롯데글로벌로지스에 계약 상태를 확인하세요.`;
+  }
+  return s;
+}
+
+// 실패 기록 + 30분 스로틀 앱 푸시. 비차단(송장 응답을 막지 않음).
+async function reportAlpsFailure(friendlyErr: string, invNo?: string): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = createServiceClient() as any;
+    const now = new Date().toISOString();
+    await db.from('system_settings').upsert(
+      { key: 'lotte.last_invoice_error', value: JSON.stringify({ at: now, error: friendlyErr, inv: invNo || null }), updated_at: now },
+      { onConflict: 'key' },
+    );
+    // 30분 내 중복 알림 방지
+    const { data } = await db.from('system_settings').select('value').eq('key', 'lotte.last_alert_at').maybeSingle();
+    const lastAt = data?.value ? new Date(data.value).getTime() : 0;
+    if (Date.now() - lastAt < 30 * 60 * 1000) return;
+    await db.from('system_settings').upsert(
+      { key: 'lotte.last_alert_at', value: now, updated_at: now },
+      { onConflict: 'key' },
+    );
+    const { sendPushToAll } = await import('@/lib/firebase/send-push');
+    await sendPushToAll({
+      title: '⚠️ 롯데 송장 생성 실패',
+      body: (invNo ? `송장 ${invNo} · ` : '') + friendlyErr,
+      url: '/sales',
+      tag: 'lotte-invoice-fail',
+    });
+  } catch (e) {
+    console.error('[ALPS] 실패 알림 처리 오류:', e);
+  }
+}
+
 /* ── 송장 발급 (GAS lotteBuildSnd_ + lotteSend_ 100% 동일) ── */
 export async function bookShipment(order: {
   invoiceNumber: string;
@@ -138,7 +178,9 @@ export async function bookShipment(order: {
   try {
     const r = await httpPost(LOTTE_API_URL, alpsHeaders(), payload, 3);
     if (!r.ok) {
-      return { success: false, invoiceNumber: order.invoiceNumber, error: `ALPS HTTP ${r.code}` };
+      const fe = friendlyAlpsError(`ALPS HTTP ${r.code}`);
+      reportAlpsFailure(fe, order.invoiceNumber).catch(() => {});
+      return { success: false, invoiceNumber: order.invoiceNumber, error: fe };
     }
 
     // ALPS 응답 로그 (디버깅용)
@@ -155,9 +197,13 @@ export async function bookShipment(order: {
       return { success: true, invoiceNumber: order.invoiceNumber };
     }
 
-    return { success: false, invoiceNumber: order.invoiceNumber, error: String(first.rtnMsg || rtnCd) };
+    const fe = friendlyAlpsError(String(first.rtnMsg || rtnCd));
+    reportAlpsFailure(fe, order.invoiceNumber).catch(() => {});
+    return { success: false, invoiceNumber: order.invoiceNumber, error: fe };
   } catch (err) {
-    return { success: false, invoiceNumber: order.invoiceNumber, error: err instanceof Error ? err.message : String(err) };
+    const fe = friendlyAlpsError(err instanceof Error ? err.message : String(err));
+    reportAlpsFailure(fe, order.invoiceNumber).catch(() => {});
+    return { success: false, invoiceNumber: order.invoiceNumber, error: fe };
   }
 }
 
