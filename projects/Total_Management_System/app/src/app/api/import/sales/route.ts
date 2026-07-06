@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { insertOfflineSale } from '@/lib/sales/insert-offline-sale';
 
 /**
  * POST /api/import/sales — 이카운트 판매내역 CSV 업로드
@@ -56,36 +57,21 @@ export async function POST(req: NextRequest) {
         const supplyAmount = items.reduce((s, r) => s + (parseInt(r['공급가액'] || '0') || 0), 0);
         const vatAmount = items.reduce((s, r) => s + (parseInt(r['부가세'] || '0') || 0), 0);
 
-        // sale_number 자동 채번
-        const dateStr = saleDate.replace(/-/g, '').slice(0, 8);
-        const { count } = await db
-          .from('offline_sales')
-          .select('*', { count: 'exact', head: true })
-          .like('sale_number', `OS-${dateStr}%`);
-        const saleNumber = `OS-${dateStr}-${String((count || 0) + 1).padStart(3, '0')}`;
-
-        // 판매 레코드 생성
-        const { data: sale, error: saleErr } = await db
-          .from('offline_sales')
-          .insert({
-            sale_number: saleNumber,
-            customer_id: customerId,
-            customer_name: customerName,
-            sale_date: saleDate,
-            total_amount: totalAmount,
-            supply_amount: supplyAmount,
-            vat_amount: vatAmount,
-            paid_amount: totalAmount,
-            payment_method: vatAmount > 0 ? 'card' : 'cash',
-            payment_status: 'paid',
-            is_vat_included: vatAmount > 0,
-            memo: '이카운트 이관',
-            created_by: user.id,
-          })
-          .select()
-          .single();
-
-        if (saleErr) throw saleErr;
+        // 판매 레코드 생성 — 판매번호 채번+중복재시도는 공용 insertOfflineSale (SSOT)
+        const sale = await insertOfflineSale(db, saleDate, {
+          customer_id: customerId,
+          customer_name: customerName,
+          sale_date: saleDate,
+          total_amount: totalAmount,
+          supply_amount: supplyAmount,
+          vat_amount: vatAmount,
+          paid_amount: totalAmount,
+          payment_method: vatAmount > 0 ? 'card' : 'cash',
+          payment_status: 'paid',
+          is_vat_included: vatAmount > 0,
+          memo: '이카운트 이관',
+          created_by: user.id,
+        });
 
         // 판매 항목 생성
         const saleItems = items.map((r) => ({

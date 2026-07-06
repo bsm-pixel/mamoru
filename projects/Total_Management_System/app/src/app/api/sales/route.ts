@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
 import { recalcOutstanding } from '@/lib/outstanding';
+import { insertOfflineSale } from '@/lib/sales/insert-offline-sale';
 
 /** GET /api/sales — 오프라인 판매 목록 */
 export async function GET(req: NextRequest) {
@@ -104,23 +105,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 판매번호 생성: OS-YYYYMMDD-NNN — 접두어(OS-오늘-) 중 최대 seq +1.
-    // (기존 '당일 판매 count+1' 방식 폐기: 날짜 소급편집/취소로 count가 되감기면 기존 번호와 충돌했음 → 23505)
     const saleDate = sale.sale_date || new Date().toISOString().slice(0, 10);
-    const today = saleDate.replace(/-/g, '');
-    const nextSaleSeq = async (): Promise<number> => {
-      const { data: rows } = await db
-        .from('offline_sales')
-        .select('sale_number')
-        .like('sale_number', `OS-${today}-%`);
-      let max = 0;
-      for (const r of (rows || [])) {
-        const m = /-(\d+)$/.exec(String(r?.sale_number ?? ''));
-        if (m) { const n = parseInt(m[1], 10); if (!isNaN(n) && n > max) max = n; }
-      }
-      return max + 1;
-    };
-    let saleSeq = await nextSaleSeq();
 
     // VAT 자동 계산 — 카드 금액 기준
     let supplyAmount = sale.supply_amount || 0;
@@ -134,7 +119,7 @@ export async function POST(req: NextRequest) {
       vatAmount = cardAmount - supplyAmount;
     }
 
-    // 판매 레코드 생성 — sale_number 중복(23505) 시 다음 번호로 자동 재시도(동시등록·gap 방어)
+    // 판매 레코드 생성 — 판매번호 채번+중복재시도는 공용 insertOfflineSale (SSOT)
     const salePayload = {
       customer_id: sale.customer_id || null,
       customer_name: sale.customer_name,
@@ -156,19 +141,7 @@ export async function POST(req: NextRequest) {
       source_consultation_id: sale.source_consultation_id || null,
       created_by: user.id,
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let created: any = null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let saleError: any = null;
-    for (let attempt = 0; attempt < 10; attempt++) {
-      const saleNumber = `OS-${today}-${String(saleSeq).padStart(3, '0')}`;
-      const res = await db.from('offline_sales').insert({ sale_number: saleNumber, ...salePayload }).select().single();
-      if (!res.error) { created = res.data; saleError = null; break; }
-      saleError = res.error;
-      if (res.error.code === '23505') { saleSeq += 1; continue; } // 번호 중복 → 다음 번호로 재시도
-      break; // 그 외 오류는 즉시 중단
-    }
-    if (saleError || !created) throw saleError || new Error('판매 등록 실패');
+    const created = await insertOfflineSale(db, saleDate, salePayload);
 
     // 항목별 id 매핑 (시리얼 → sale_item 연결용)
     const itemIdMap: Record<number, string> = {};

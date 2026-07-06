@@ -5,23 +5,7 @@
 import { SLICING_ADDON } from './options';
 import { updateImwebStock } from '@/lib/imweb/client';
 import type { EventItem } from './types';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function generateSaleNumber(db: any): Promise<string> {
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const prefix = `OS-${today}-`;
-  const { data } = await db
-    .from('offline_sales')
-    .select('sale_number')
-    .like('sale_number', `${prefix}%`)
-    .order('sale_number', { ascending: false })
-    .limit(1);
-  let seq = 1;
-  if (data && data.length > 0) {
-    seq = parseInt((data[0].sale_number as string).split('-').pop() || '0', 10) + 1;
-  }
-  return `${prefix}${String(seq).padStart(3, '0')}`;
-}
+import { insertOfflineSale } from '@/lib/sales/insert-offline-sale';
 
 interface EventRow {
   id: string;
@@ -36,7 +20,6 @@ interface EventRow {
 /** offline_sales + offline_sale_items 생성, 재고 차감, sale_id 반환 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function convertEventToSale(db: any, ev: EventRow): Promise<string> {
-  const saleNumber = await generateSaleNumber(db);
   const today = new Date().toISOString().slice(0, 10);
 
   // 정가 합계(품목 라인 합 = 단가×수량 + 슬라이싱) → 묶음 할인 = 정가합 − 최종금액
@@ -45,25 +28,20 @@ export async function convertEventToSale(db: any, ev: EventRow): Promise<string>
     + SLICING_ADDON * slicingQtyAll;
   const discountAmount = Math.max(0, lineSum - ev.total_amount);
 
-  const { data: sale, error: saleErr } = await db
-    .from('offline_sales')
-    .insert({
-      sale_number: saleNumber,
-      customer_id: ev.customer_id,
-      customer_name: ev.customer_name,
-      customer_phone: ev.customer_phone,
-      sale_date: today,
-      total_amount: ev.total_amount,
-      discount_amount: discountAmount,
-      paid_amount: ev.total_amount,
-      payment_method: 'transfer',
-      payment_status: 'paid',
-      sale_channel: 'offline',
-      memo: `EVENT 전환 (${ev.event_number})${discountAmount > 0 ? ` · 묶음할인 -${discountAmount.toLocaleString()}` : ''}`,
-    })
-    .select('id')
-    .single();
-  if (saleErr || !sale) throw saleErr || new Error('판매 생성 실패');
+  // 판매번호 채번+중복재시도는 공용 insertOfflineSale (SSOT)
+  const sale = await insertOfflineSale(db, today, {
+    customer_id: ev.customer_id,
+    customer_name: ev.customer_name,
+    customer_phone: ev.customer_phone,
+    sale_date: today,
+    total_amount: ev.total_amount,
+    discount_amount: discountAmount,
+    paid_amount: ev.total_amount,
+    payment_method: 'transfer',
+    payment_status: 'paid',
+    sale_channel: 'offline',
+    memo: `EVENT 전환 (${ev.event_number})${discountAmount > 0 ? ` · 묶음할인 -${discountAmount.toLocaleString()}` : ''}`,
+  });
 
   // 품목 라인 (제품 sku 조회)
   const productIds = ev.items.map((it) => it.product_id).filter(Boolean) as string[];
