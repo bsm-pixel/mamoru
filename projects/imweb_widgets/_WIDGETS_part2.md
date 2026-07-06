@@ -1,8 +1,6 @@
 # 🧩 MAMORU 아임웹 위젯 — Part 2/5 (11_recommender ~ d04_quote_banner)
 
-> 각 위젯 = **HTML / CSS / JS 3개 탭**. 아임웹 디자인모드 → 커스텀 위젯 생성 → 각 탭에 붙여넣기 → 위젯 업데이트.
-> 🚫 삼중괄호 `{{{ }}}` 금지(아임웹 미지원). 인라인 `on*=` 핸들러 금지. `<script>/<style>/<iframe>/<form>` HTML탭 직접 금지.
-> 이 파일: 10종. (전체 43종 = Part 1~5)
+> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} 금지·인라인 on*= 금지. 이 파일 10종.
 
 ## 📑 이 파일의 위젯
 - 11. 가위 추천 진단 (가이드형) — `11_recommender`
@@ -469,7 +467,7 @@
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
 {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-<div class="mm-cine" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-radius="{{radius}}" data-maxw="{{maxw}}">
+<div class="mm-cine" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-maxw="{{maxw}}">
   <img class="mm-cine__bg" src="{{image}}" alt="">
   <div class="mm-cine__veil" aria-hidden="true"></div>
   <div class="mm-cine__inner">
@@ -482,7 +480,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-cine{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-cine{position:relative;overflow:hidden;border-radius:{{radius}};min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
 .mm-cine[data-align="가운데"]{justify-content:center;text-align:center;}
 .mm-cine[data-align="왼쪽"]{justify-content:flex-start;text-align:left;}
 .mm-cine__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;animation:mm-cine-zoom 16s ease-out both;}
@@ -535,8 +533,7 @@
     if(bg) bg.style.objectPosition=focusPos(root.getAttribute('data-focus'));
     var h=root.getAttribute('data-height');
     if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
-    var r=root.getAttribute('data-radius');
-    if(r!==null){ var rv=r.trim(); if(rv){ if(String(parseFloat(rv))===rv) rv+='px'; root.style.borderRadius=rv; } }
+    /* 모서리(radius)는 CSS에서 {{radius}}로 직접 그림 → 로드 시 라운드→각짐 깜빡임 없음 */
     /* PC 최대 가로폭 지정 + 중앙정렬. 모바일은 화면이 더 좁아 자동 꽉 채움 */
     var mw=root.getAttribute('data-maxw');
     if(mw!==null){ var mv=mw.trim(); if(mv){ if(String(parseFloat(mv))===mv) mv+='px'; root.style.maxWidth=mv; root.style.marginLeft='auto'; root.style.marginRight='auto'; } }

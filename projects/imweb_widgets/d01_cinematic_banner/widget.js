@@ -29,8 +29,7 @@
     if(bg) bg.style.objectPosition=focusPos(root.getAttribute('data-focus'));
     var h=root.getAttribute('data-height');
     if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
-    var r=root.getAttribute('data-radius');
-    if(r!==null){ var rv=r.trim(); if(rv){ if(String(parseFloat(rv))===rv) rv+='px'; root.style.borderRadius=rv; } }
+    /* 모서리(radius)는 CSS에서 {{radius}}로 직접 그림 → 로드 시 라운드→각짐 깜빡임 없음 */
     /* PC 최대 가로폭 지정 + 중앙정렬. 모바일은 화면이 더 좁아 자동 꽉 채움 */
     var mw=root.getAttribute('data-maxw');
     if(mw!==null){ var mv=mw.trim(); if(mv){ if(String(parseFloat(mv))===mv) mv+='px'; root.style.maxWidth=mv; root.style.marginLeft='auto'; root.style.marginRight='auto'; } }

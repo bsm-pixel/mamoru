@@ -1,4 +1,4 @@
-.mm-cine{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-cine{position:relative;overflow:hidden;border-radius:{{radius}};min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
 .mm-cine[data-align="가운데"]{justify-content:center;text-align:center;}
 .mm-cine[data-align="왼쪽"]{justify-content:flex-start;text-align:left;}
 .mm-cine__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;animation:mm-cine-zoom 16s ease-out both;}

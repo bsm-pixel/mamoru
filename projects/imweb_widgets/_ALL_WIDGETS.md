@@ -1,55 +1,7 @@
 # 🧩 MAMORU 아임웹 커스텀 위젯 전체 모음 (집 작업용)
 
-> 각 위젯은 **HTML / CSS / JS 3개 탭**입니다. 아임웹 디자인모드 → 커스텀 위젯 생성 → 각 탭에 해당 코드 붙여넣기 → 위젯 업데이트.
-> 🚫 **삼중괄호 `{{{ }}}` 금지**(아임웹 미지원=유효하지않은코드). 인라인 `on*=` 핸들러 금지. `<script>/<style>/<iframe>/<form>` HTML탭 직접 금지.
-> 총 43종. 최종 갱신 2026-07-05.
+> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} 금지·인라인 on*= 금지. 총 43종. 갱신 2026-07-06.
 
-## 📑 목차
-- 01. 복원 Before/After 슬라이더 ⭐ — `01_before_after`
-- 02. 한정세일 카운트다운 — `02_countdown`
-- 03. 가위 스펙 비교표 — `03_compare`
-- 04. 등급별 견적 계산기 — `04_calculator`
-- 05. 정적 누적 카운터 — `05_counter`
-- 06. 후기 캐러셀 (수동입력) — `06_review_carousel`
-- 07. 가위 관리법 가이드 (아코디언) — `07_care_guide`
-- 08. 시술별 가위 선택 가이드 (필터) — `08_treatment_filter`
-- 09. 미용가위 용어사전 (검색) — `09_glossary`
-- 10. 영업시간 배지 + 카톡 버튼 — `10_hours_badge`
-- 11. 가위 추천 진단 (가이드형) — `11_recommender`
-- 12. 360° 회전 뷰어 — `12_360_viewer`
-- 13. 마감/컬러 옵션 미리보기 — `13_option_preview`
-- 14. 스크롤 절단 히어로 — `14_cut_hero`
-- 15. 딜러/아카데미 게이트 — `15_dealer_gate`
-- 16. 오늘의 추천 모델 — `16_daily_pick`
-- D1. 시네마틱 이미지 배너 (Ken Burns) — `d01_cinematic_banner`
-- D2. 스플릿 프로모 배너 — `d02_split_promo`
-- D3. 슬림 공지 띠 — `d03_notice_bar`
-- D4. 대형 브랜드 인용 배너 — `d04_quote_banner`
-- D5. 듀얼 선택 배너 — `d05_dual_choice`
-- N1. 가위 길이 시뮬레이터 — `n01_size_ruler`
-- N2. 마모루 vs 일반 비교표 — `n02_versus_table`
-- N3. 가로 스크롤 핀 갤러리 — `n03_horizontal_pin`
-- N4. 텍스트 마스크 헤드라인 — `n04_text_mask`
-- N5. 한정 수량 게이지 — `n05_stock_gauge`
-- N6. 이용 안내 가로 스텝 — `n06_steps`
-- N7. 에디토리얼 섹션 헤더 — `n07_section_header`
-- N8. 마그네틱 CTA 버튼 — `n08_magnetic_cta`
-- N9. 신념·수치 그리드 — `n09_stat_grid`
-- N10. 아이콘 칩 내비 — `n10_icon_nav`
-- N11. 유튜브 썸네일 배너 — `n11_youtube_banner`
-- N12. 카테고리 이미지 그리드 (트렌디) — `n12_category_grid`
-- T1. 스크롤 스토리텔링 (스티키) — `t01_storytelling`
-- T2. 복원 인터랙티브 타임라인 — `t02_repair_timeline`
-- T3. 가위 해부도 핫스팟 — `t03_hotspot`
-- T4. 3D 틸트 제품 카드 — `t04_tilt_cards`
-- T5. 무한 마퀴 띠 — `t05_marquee`
-- T6. 라이트박스 사례 갤러리 — `t06_lightbox_gallery`
-- T7. 마우스 스포트라이트 히어로 — `t07_spotlight`
-- T8. 타이핑 헤드라인 — `t08_typing`
-- T9. 읽기 진행바 + 맨위로 — `t09_progress`
-- T10. 그립/손크기 시뮬레이터 — `t10_grip_simulator`
-
----
 
 ## 01. 복원 Before/After 슬라이더 ⭐
 `폴더: 01_before_after`
@@ -1294,6 +1246,7 @@
 {{!-- @name image @type image @label "배경 이미지" --}}
 {{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 480px 또는 60vh (비우면 자동)" --}}
 {{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "최대 가로폭(PC) — 예: 1000px (비우면 꽉 채움) · 모바일은 자동 꽉 채움" --}}
 {{!-- @name focus @type outlined-textfield @default "중앙" @label "사진 초점 — 입력: 중앙·좌·우·상·하" --}}
 {{!-- @name overlay @type color-picker @default "#1A1A1A80" @label "어둡게 (검정의 투명도 슬라이더를 드래그 · 맨뒤 2자리=어둡기)" --}}
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 (가운데/왼쪽 · 유형을 옵션버튼/스위치로 바꿔도 됨)" --}}
@@ -1302,7 +1255,7 @@
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
 {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-<div class="mm-cine" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-radius="{{radius}}">
+<div class="mm-cine" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-maxw="{{maxw}}">
   <img class="mm-cine__bg" src="{{image}}" alt="">
   <div class="mm-cine__veil" aria-hidden="true"></div>
   <div class="mm-cine__inner">
@@ -1315,7 +1268,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-cine{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-cine{position:relative;overflow:hidden;border-radius:{{radius}};min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
 .mm-cine[data-align="가운데"]{justify-content:center;text-align:center;}
 .mm-cine[data-align="왼쪽"]{justify-content:flex-start;text-align:left;}
 .mm-cine__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;animation:mm-cine-zoom 16s ease-out both;}
@@ -1368,8 +1321,10 @@
     if(bg) bg.style.objectPosition=focusPos(root.getAttribute('data-focus'));
     var h=root.getAttribute('data-height');
     if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
-    var r=root.getAttribute('data-radius');
-    if(r!==null){ var rv=r.trim(); if(rv){ if(String(parseFloat(rv))===rv) rv+='px'; root.style.borderRadius=rv; } }
+    /* 모서리(radius)는 CSS에서 {{radius}}로 직접 그림 → 로드 시 라운드→각짐 깜빡임 없음 */
+    /* PC 최대 가로폭 지정 + 중앙정렬. 모바일은 화면이 더 좁아 자동 꽉 채움 */
+    var mw=root.getAttribute('data-maxw');
+    if(mw!==null){ var mv=mw.trim(); if(mv){ if(String(parseFloat(mv))===mv) mv+='px'; root.style.maxWidth=mv; root.style.marginLeft='auto'; root.style.marginRight='auto'; } }
   }
   function init(){var l=document.querySelectorAll('.mm-cine');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();

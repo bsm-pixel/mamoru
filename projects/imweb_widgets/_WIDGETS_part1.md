@@ -1,8 +1,6 @@
 # 🧩 MAMORU 아임웹 위젯 — Part 1/5 (01_before_after ~ 10_hours_badge)
 
-> 각 위젯 = **HTML / CSS / JS 3개 탭**. 아임웹 디자인모드 → 커스텀 위젯 생성 → 각 탭에 붙여넣기 → 위젯 업데이트.
-> 🚫 삼중괄호 `{{{ }}}` 금지(아임웹 미지원). 인라인 `on*=` 핸들러 금지. `<script>/<style>/<iframe>/<form>` HTML탭 직접 금지.
-> 이 파일: 10종. (전체 43종 = Part 1~5)
+> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} 금지·인라인 on*= 금지. 이 파일 10종.
 
 ## 📑 이 파일의 위젯
 - 01. 복원 Before/After 슬라이더 ⭐ — `01_before_after`
