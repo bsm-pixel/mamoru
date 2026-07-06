@@ -11,7 +11,7 @@
 {{!-- @name max @type outlined-textfield @default "7.0" @label "최대 인치" --}}
 {{!-- @name def @type outlined-textfield @default "5.5" @label "기본 인치" --}}
 {{!-- @name note @type outlined-textfield @default "* 화면 비례 참고용이며 실제 길이와 다를 수 있어요" @label "안내(선택)" --}}
-<div class="mm-rul" data-min="{{min}}" data-max="{{max}}" data-def="{{def}}">
+<div class="mm-rul" style="border-radius:{{radius}}" data-min="{{min}}" data-max="{{max}}" data-def="{{def}}">
   <div class="mm-rul__readout"><strong class="mm-rul__inch">—</strong><span class="mm-rul__cm">—</span></div>
   <div class="mm-rul__track"><div class="mm-rul__bar"></div></div>
   <input type="range" class="mm-rul__range" aria-label="가위 길이(인치)">

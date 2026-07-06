@@ -1,4 +1,4 @@
-.mm-rul{max-width:520px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;text-align:center;}
+.mm-rul{max-width:520px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;text-align:center;}
 .mm-rul__readout{display:flex;align-items:baseline;justify-content:center;gap:10px;margin-bottom:18px;}
 .mm-rul__inch{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(34px,10vw,52px);font-weight:900;letter-spacing:-.03em;line-height:1;}
 .mm-rul__cm{font-size:clamp(14px,4vw,17px);font-weight:600;color:#8A8580;}

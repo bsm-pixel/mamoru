@@ -1,4 +1,4 @@
-.mm-split{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;border-radius:{{radius}};overflow:hidden;border:1px solid #D4D0CB;background:#FFFFFF;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-split{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;border-radius:16px;overflow:hidden;border:1px solid #D4D0CB;background:#FFFFFF;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-split[data-theme="다크"]{background:#1A1A1A;border-color:#2D2D2D;color:#FAF9F7;}
 .mm-split[data-img="오른쪽"] .mm-split__media{order:2;}
 .mm-split__media{min-height:240px;background:#F5F3F0;}

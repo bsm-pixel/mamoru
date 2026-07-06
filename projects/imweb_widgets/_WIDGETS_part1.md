@@ -1,6 +1,6 @@
 # 🧩 MAMORU 아임웹 위젯 — Part 1/5 (01_before_after ~ 10_hours_badge)
 
-> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} 금지·인라인 on*= 금지. 이 파일 10종.
+> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호·CSS탭 {{변수}}·인라인 on*= 금지. 이 파일 10종.
 
 ## 📑 이 파일의 위젯
 - 01. 복원 Before/After 슬라이더 ⭐ — `01_before_after`
@@ -38,7 +38,7 @@
 {{!-- @name caption     @type outlined-textfield @default "" @label "하단 설명(선택)" --}}
 {{!-- @name startPos    @type outlined-textfield @default "50" @label "시작 위치 %" --}}
 <div class="mm-ba" data-start="{{startPos}}">
-  <div class="mm-ba__stage" style="aspect-ratio:{{ratio}};">
+  <div class="mm-ba__stage" style="aspect-ratio:{{ratio}};border-radius:{{radius}}">
     <img class="mm-ba__img mm-ba__img--after"  src="{{afterImage}}"  alt="{{afterLabel}}"  draggable="false">
     <img class="mm-ba__img mm-ba__img--before" src="{{beforeImage}}" alt="{{beforeLabel}}" draggable="false">
     <span class="mm-ba__tag mm-ba__tag--before">{{beforeLabel}}</span>
@@ -51,7 +51,7 @@
 ### CSS 탭
 ```css
 .mm-ba{max-width:760px;margin:0 auto;font-family:-apple-system,'Noto Sans KR',sans-serif;}
-.mm-ba__stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:{{radius}};background:#F5F3F0;touch-action:none;cursor:ew-resize;user-select:none;}
+.mm-ba__stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:12px;background:#F5F3F0;touch-action:none;cursor:ew-resize;user-select:none;}
 .mm-ba__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
 .mm-ba__img--after{z-index:1;}
 .mm-ba__img--before{z-index:2;-webkit-clip-path:inset(0 50% 0 0);clip-path:inset(0 50% 0 0);}
@@ -111,7 +111,7 @@
 {{!-- @name btnText @type outlined-textfield @default "지금 보러가기" @label "버튼 문구(비우면 숨김)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
 {{!-- @name endedText @type outlined-textfield @default "이번 혜택은 마감되었습니다" @label "종료 후 문구" --}}
-<div class="mm-cd" data-theme="{{theme}}" data-date="{{endDate}}" data-time="{{endTime}}">
+<div class="mm-cd" style="border-radius:{{radius}}" data-theme="{{theme}}" data-date="{{endDate}}" data-time="{{endTime}}">
   <p class="mm-cd__title">{{title}}</p>
   <div class="mm-cd__timer" aria-live="off">
     <div class="mm-cd__unit"><span class="mm-cd__num" data-cd="d">00</span><span class="mm-cd__lbl">일</span></div>
@@ -128,7 +128,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-cd{max-width:520px;margin:0 auto;padding:clamp(24px,5vw,36px) clamp(20px,4vw,32px);border-radius:{{radius}};text-align:center;
+.mm-cd{max-width:520px;margin:0 auto;padding:clamp(24px,5vw,36px) clamp(20px,4vw,32px);border-radius:16px;text-align:center;
   font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;
   background:#FAF9F7;border:1px solid #D4D0CB;color:#1A1A1A;}
 .mm-cd[data-theme="다크"]{background:#1A1A1A;border-color:#2D2D2D;color:#FAF9F7;}
@@ -293,7 +293,7 @@
 {{!-- @name g3d @type outlined-textfield @default "20" @label "등급3 할인%" --}}
 {{!-- @name note @type outlined-textfield @default "실제 가격은 상담 시 확정됩니다" @label "하단 안내(선택)" --}}
 {{!-- @name models @type item @label "모델·단가" --}}
-<div class="mm-calc" data-g1n="{{g1n}}" data-g1d="{{g1d}}" data-g2n="{{g2n}}" data-g2d="{{g2d}}" data-g3n="{{g3n}}" data-g3d="{{g3d}}">
+<div class="mm-calc" style="border-radius:{{radius}}" data-g1n="{{g1n}}" data-g1d="{{g1d}}" data-g2n="{{g2n}}" data-g2d="{{g2d}}" data-g3n="{{g3n}}" data-g3d="{{g3d}}">
   <p class="mm-calc__title">{{title}}</p>
   <div class="mm-calc__data" hidden>
   {{#each models}}
@@ -311,7 +311,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-calc{max-width:460px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-calc{max-width:460px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-calc__title{margin:0 0 20px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(18px,4.5vw,22px);font-weight:800;letter-spacing:-.02em;text-align:center;}
 .mm-calc__field{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
 .mm-calc__field>span{flex:0 0 48px;font-size:13px;font-weight:600;color:#8A8580;}
@@ -756,7 +756,7 @@
 {{!-- @name btnLink @type outlined-textfield @default "" @label "카톡 채널 링크" --}}
 {{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name hours @type item @label "요일별 영업시간" --}}
-<div class="mm-hr">
+<div class="mm-hr" style="border-radius:{{radius}}">
   <div class="mm-hr__badge"><span class="mm-hr__dot"></span><span class="mm-hr__state">—</span></div>
   <p class="mm-hr__detail"></p>
   <a class="mm-hr__btn" href="{{btnLink}}">{{btnText}}</a>
@@ -773,7 +773,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-hr{max-width:380px;margin:0 auto;padding:clamp(20px,4vw,28px);text-align:center;border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-hr{max-width:380px;margin:0 auto;padding:clamp(20px,4vw,28px);text-align:center;border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-hr__badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;background:#F5F3F0;font-size:14px;font-weight:700;}
 .mm-hr__dot{width:8px;height:8px;border-radius:50%;background:#B8B4AF;}
 .mm-hr.is-open .mm-hr__dot{background:#1A1A1A;box-shadow:0 0 0 4px rgba(26,26,26,.12);}

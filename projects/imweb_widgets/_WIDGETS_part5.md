@@ -1,6 +1,6 @@
 # 🧩 MAMORU 아임웹 위젯 — Part 5/5 (t08_typing ~ t10_grip_simulator)
 
-> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} 금지·인라인 on*= 금지. 이 파일 3종.
+> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호·CSS탭 {{변수}}·인라인 on*= 금지. 이 파일 3종.
 
 ## 📑 이 파일의 위젯
 - T8. 타이핑 헤드라인 — `t08_typing`

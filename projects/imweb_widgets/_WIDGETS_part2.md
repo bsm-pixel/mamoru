@@ -1,6 +1,6 @@
 # 🧩 MAMORU 아임웹 위젯 — Part 2/5 (11_recommender ~ d04_quote_banner)
 
-> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} 금지·인라인 on*= 금지. 이 파일 10종.
+> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호·CSS탭 {{변수}}·인라인 on*= 금지. 이 파일 10종.
 
 ## 📑 이 파일의 위젯
 - 11. 가위 추천 진단 (가이드형) — `11_recommender`
@@ -246,7 +246,7 @@
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
 {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-<div class="mm-cut" data-theme="{{theme}}" data-height="{{height}}">
+<div class="mm-cut" style="border-radius:{{radius}}" data-theme="{{theme}}" data-height="{{height}}">
   <img class="mm-cut__bg" src="{{bg}}" alt="">
   <img class="mm-cut__bgm" src="{{bgMobile}}" alt="">
   <div class="mm-cut__inner">
@@ -260,7 +260,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-cut{position:relative;overflow:hidden;border-radius:{{radius}};min-height:clamp(280px,50vw,440px);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;}
+.mm-cut{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(280px,50vw,440px);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;}
 .mm-cut[data-theme="라이트"]{background:#FAF9F7;}
 .mm-cut__bg,.mm-cut__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;z-index:0;}
 .mm-cut__bgm{display:none;}
@@ -475,7 +475,7 @@
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
 {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-<div class="mm-cine" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-maxw="{{maxw}}">
+<div class="mm-cine" style="border-radius:{{radius}}" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-maxw="{{maxw}}">
   <img class="mm-cine__bg" src="{{image}}" alt="">
   <img class="mm-cine__bgm" src="{{imageMobile}}" alt="">
   <div class="mm-cine__veil" aria-hidden="true"></div>
@@ -489,7 +489,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-cine{position:relative;overflow:hidden;border-radius:{{radius}};min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-cine{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
 .mm-cine[data-align="가운데"]{justify-content:center;text-align:center;}
 .mm-cine[data-align="왼쪽"]{justify-content:flex-start;text-align:left;}
 .mm-cine__bg,.mm-cine__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;animation:mm-cine-zoom 16s ease-out both;}
@@ -588,7 +588,7 @@
 {{!-- @name desc @type text-editor @default "<p>설명</p>" @label "설명" --}}
 {{!-- @name btnText @type outlined-textfield @default "자세히 보기" @label "버튼 문구(비우면 숨김)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-<div class="mm-split" data-img="{{imgPos}}" data-theme="{{theme}}" data-height="{{height}}">
+<div class="mm-split" style="border-radius:{{radius}}" data-img="{{imgPos}}" data-theme="{{theme}}" data-height="{{height}}">
   <div class="mm-split__media"><img class="mm-split__img" src="{{image}}" alt=""><img class="mm-split__imgm" src="{{imageMobile}}" alt=""></div>
   <div class="mm-split__body">
     <span class="mm-split__tag">{{tag}}</span>
@@ -600,7 +600,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-split{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;border-radius:{{radius}};overflow:hidden;border:1px solid #D4D0CB;background:#FFFFFF;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-split{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;border-radius:16px;overflow:hidden;border:1px solid #D4D0CB;background:#FFFFFF;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-split[data-theme="다크"]{background:#1A1A1A;border-color:#2D2D2D;color:#FAF9F7;}
 .mm-split[data-img="오른쪽"] .mm-split__media{order:2;}
 .mm-split__media{min-height:240px;background:#F5F3F0;}
@@ -658,7 +658,7 @@
 {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
 {{!-- @name flow @type switch @default false @label "문구 흐르기(마퀴)" --}}
-<div class="mm-notice" data-theme="{{theme}}" data-flow="{{flow}}">
+<div class="mm-notice" style="border-radius:{{radius}}" data-theme="{{theme}}" data-flow="{{flow}}">
   <div class="mm-notice__in">
     <span class="mm-notice__icon">{{icon}}</span>
     <span class="mm-notice__text">{{text}}</span>
@@ -668,7 +668,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-notice{width:100%;border-radius:{{radius}};background:#1A1A1A;color:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;overflow:hidden;}
+.mm-notice{width:100%;border-radius:10px;background:#1A1A1A;color:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;overflow:hidden;}
 .mm-notice[data-theme="라이트"]{background:#F5F3F0;color:#1A1A1A;border:1px solid #D4D0CB;}
 .mm-notice__in{display:flex;align-items:center;justify-content:center;gap:10px;padding:11px 16px;font-size:clamp(13px,3.4vw,14px);font-weight:600;}
 .mm-notice__icon{flex:0 0 auto;}
@@ -718,7 +718,7 @@
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 — 입력: 가운데 · 왼쪽" --}}
 {{!-- @name quote @type text-editor @default "<p>좋은 가위는 권하지 않습니다</p>" @label "인용문" --}}
 {{!-- @name author @type outlined-textfield @default "" @label "출처/서명(선택)" --}}
-<div class="mm-quote" data-theme="{{theme}}" data-align="{{align}}">
+<div class="mm-quote" style="border-radius:{{radius}}" data-theme="{{theme}}" data-align="{{align}}">
   <span class="mm-quote__mark" aria-hidden="true">“</span>
   <blockquote class="mm-quote__text">{{quote}}</blockquote>
   <cite class="mm-quote__author">{{author}}</cite>
@@ -726,7 +726,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-quote{position:relative;max-width:860px;margin:0 auto;padding:clamp(36px,7vw,72px) clamp(20px,5vw,48px);border-radius:{{radius}};background:#FAF9F7;color:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-quote{position:relative;max-width:860px;margin:0 auto;padding:clamp(36px,7vw,72px) clamp(20px,5vw,48px);border-radius:16px;background:#FAF9F7;color:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
 .mm-quote[data-theme="다크"]{background:#1A1A1A;color:#FAF9F7;}
 .mm-quote[data-align="가운데"]{text-align:center;}
 .mm-quote[data-align="왼쪽"]{text-align:left;}

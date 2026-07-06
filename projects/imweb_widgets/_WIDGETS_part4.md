@@ -1,6 +1,6 @@
 # 🧩 MAMORU 아임웹 위젯 — Part 4/5 (n10_icon_nav ~ t07_spotlight)
 
-> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} 금지·인라인 on*= 금지. 이 파일 10종.
+> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호·CSS탭 {{변수}}·인라인 on*= 금지. 이 파일 10종.
 
 ## 📑 이 파일의 위젯
 - N10. 아이콘 칩 내비 — `n10_icon_nav`
@@ -541,7 +541,7 @@
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
 {{!-- @name speed @type outlined-textfield @default "30" @label "속도(초, 작을수록 빠름)" --}}
 {{!-- @name radius @type outlined-textfield @default "12px" @label "모서리 둥글기 — 예: 12px · 0px이면 각지게" --}}
-<div class="mm-mq" data-theme="{{theme}}" data-speed="{{speed}}">
+<div class="mm-mq" style="border-radius:{{radius}}" data-theme="{{theme}}" data-speed="{{speed}}">
   <div class="mm-mq__track">
   {{#each words}}
     {{!-- @name word @type outlined-textfield @default "키워드" @label "키워드" --}}
@@ -552,7 +552,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-mq{overflow:hidden;width:100%;padding:clamp(14px,3vw,22px) 0;background:#1A1A1A;border-radius:{{radius}};}
+.mm-mq{overflow:hidden;width:100%;padding:clamp(14px,3vw,22px) 0;background:#1A1A1A;border-radius:12px;}
 .mm-mq[data-theme="라이트"]{background:#FAF9F7;border:1px solid #D4D0CB;}
 .mm-mq__track{display:flex;width:max-content;will-change:transform;animation:mm-mq-scroll var(--mq-dur,30s) linear infinite;}
 @keyframes mm-mq-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -673,7 +673,7 @@
 {{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name headline @type text-editor @default "<p>진짜는 가까이서 드러납니다</p>" @label "헤드라인" --}}
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
-<div class="mm-sp" data-height="{{height}}">
+<div class="mm-sp" style="border-radius:{{radius}}" data-height="{{height}}">
   <img class="mm-sp__bg" src="{{bg}}" alt="">
   <img class="mm-sp__bgm" src="{{bgMobile}}" alt="">
   <div class="mm-sp__veil" aria-hidden="true"></div>
@@ -685,7 +685,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-sp{position:relative;overflow:hidden;border-radius:{{radius}};min-height:clamp(300px,52vw,460px);display:flex;align-items:center;justify-content:center;text-align:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;--mx:50%;--my:50%;}
+.mm-sp{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(300px,52vw,460px);display:flex;align-items:center;justify-content:center;text-align:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;--mx:50%;--my:50%;}
 .mm-sp__bg,.mm-sp__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
 .mm-sp__bgm{display:none;}
 @media (max-width:768px){.mm-sp[data-hasm="1"] .mm-sp__bg{display:none;}.mm-sp[data-hasm="1"] .mm-sp__bgm{display:block;}}

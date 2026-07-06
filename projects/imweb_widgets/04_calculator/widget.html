@@ -16,7 +16,7 @@
 {{!-- @name g3d @type outlined-textfield @default "20" @label "등급3 할인%" --}}
 {{!-- @name note @type outlined-textfield @default "실제 가격은 상담 시 확정됩니다" @label "하단 안내(선택)" --}}
 {{!-- @name models @type item @label "모델·단가" --}}
-<div class="mm-calc" data-g1n="{{g1n}}" data-g1d="{{g1d}}" data-g2n="{{g2n}}" data-g2d="{{g2d}}" data-g3n="{{g3n}}" data-g3d="{{g3d}}">
+<div class="mm-calc" style="border-radius:{{radius}}" data-g1n="{{g1n}}" data-g1d="{{g1d}}" data-g2n="{{g2n}}" data-g2d="{{g2d}}" data-g3n="{{g3n}}" data-g3d="{{g3d}}">
   <p class="mm-calc__title">{{title}}</p>
   <div class="mm-calc__data" hidden>
   {{#each models}}

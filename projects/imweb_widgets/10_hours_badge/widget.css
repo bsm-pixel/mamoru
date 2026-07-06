@@ -1,4 +1,4 @@
-.mm-hr{max-width:380px;margin:0 auto;padding:clamp(20px,4vw,28px);text-align:center;border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-hr{max-width:380px;margin:0 auto;padding:clamp(20px,4vw,28px);text-align:center;border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-hr__badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;background:#F5F3F0;font-size:14px;font-weight:700;}
 .mm-hr__dot{width:8px;height:8px;border-radius:50%;background:#B8B4AF;}
 .mm-hr.is-open .mm-hr__dot{background:#1A1A1A;box-shadow:0 0 0 4px rgba(26,26,26,.12);}

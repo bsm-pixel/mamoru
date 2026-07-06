@@ -14,7 +14,7 @@
 {{!-- @name btnText @type outlined-textfield @default "지금 보러가기" @label "버튼 문구(비우면 숨김)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
 {{!-- @name endedText @type outlined-textfield @default "이번 혜택은 마감되었습니다" @label "종료 후 문구" --}}
-<div class="mm-cd" data-theme="{{theme}}" data-date="{{endDate}}" data-time="{{endTime}}">
+<div class="mm-cd" style="border-radius:{{radius}}" data-theme="{{theme}}" data-date="{{endDate}}" data-time="{{endTime}}">
   <p class="mm-cd__title">{{title}}</p>
   <div class="mm-cd__timer" aria-live="off">
     <div class="mm-cd__unit"><span class="mm-cd__num" data-cd="d">00</span><span class="mm-cd__lbl">일</span></div>

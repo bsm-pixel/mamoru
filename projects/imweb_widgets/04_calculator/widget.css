@@ -1,4 +1,4 @@
-.mm-calc{max-width:460px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-calc{max-width:460px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-calc__title{margin:0 0 20px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(18px,4.5vw,22px);font-weight:800;letter-spacing:-.02em;text-align:center;}
 .mm-calc__field{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
 .mm-calc__field>span{flex:0 0 48px;font-size:13px;font-weight:600;color:#8A8580;}
