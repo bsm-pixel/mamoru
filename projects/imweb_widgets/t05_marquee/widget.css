@@ -1,4 +1,4 @@
-.mm-mq{overflow:hidden;width:100%;padding:clamp(14px,3vw,22px) 0;background:#1A1A1A;border-radius:12px;}
+.mm-mq{overflow:hidden;width:100%;padding:clamp(14px,3vw,22px) 0;background:#1A1A1A;border-radius:{{radius}};}
 .mm-mq[data-theme="라이트"]{background:#FAF9F7;border:1px solid #D4D0CB;}
 .mm-mq__track{display:flex;width:max-content;will-change:transform;animation:mm-mq-scroll var(--mq-dur,30s) linear infinite;}
 @keyframes mm-mq-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}

@@ -29,9 +29,10 @@
   📝 가위 복원 전/후를 손잡이 드래그로 비교
   🚫 fetch·iframe·외부라이브러리 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name beforeImage @type image @label "복원 전 사진" --}}
-{{!-- @name afterImage  @type image @label "복원 후 사진" --}}
+{{!-- @name beforeImage @type image @label "복원 전 사진 — 권장 1200×900px (후 사진과 동일 크기)" --}}
+{{!-- @name afterImage  @type image @label "복원 후 사진 — 권장 1200×900px (전 사진과 동일 크기)" --}}
 {{!-- @name ratio @type outlined-textfield @default "4/3" @label "사진 비율 — 입력: 4/3 · 1/1 · 3/4 · 16/9" --}}
+{{!-- @name radius @type outlined-textfield @default "12px" @label "모서리 둥글기 — 예: 12px · 0px이면 각지게" --}}
 {{!-- @name beforeLabel @type outlined-textfield @default "BEFORE" @label "왼쪽 라벨" --}}
 {{!-- @name afterLabel  @type outlined-textfield @default "AFTER"  @label "오른쪽 라벨" --}}
 {{!-- @name caption     @type outlined-textfield @default "" @label "하단 설명(선택)" --}}
@@ -50,7 +51,7 @@
 ### CSS 탭
 ```css
 .mm-ba{max-width:760px;margin:0 auto;font-family:-apple-system,'Noto Sans KR',sans-serif;}
-.mm-ba__stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:12px;background:#F5F3F0;touch-action:none;cursor:ew-resize;user-select:none;}
+.mm-ba__stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:{{radius}};background:#F5F3F0;touch-action:none;cursor:ew-resize;user-select:none;}
 .mm-ba__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
 .mm-ba__img--after{z-index:1;}
 .mm-ba__img--before{z-index:2;-webkit-clip-path:inset(0 50% 0 0);clip-path:inset(0 50% 0 0);}
@@ -106,6 +107,7 @@
 {{!-- @name endDate @type date-picker @label "종료 날짜" --}}
 {{!-- @name endTime @type time-picker @label "종료 시간" --}}
 {{!-- @name theme @type outlined-textfield @default "라이트" @label "테마 — 입력: 라이트 · 다크" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name btnText @type outlined-textfield @default "지금 보러가기" @label "버튼 문구(비우면 숨김)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
 {{!-- @name endedText @type outlined-textfield @default "이번 혜택은 마감되었습니다" @label "종료 후 문구" --}}
@@ -126,7 +128,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-cd{max-width:520px;margin:0 auto;padding:clamp(24px,5vw,36px) clamp(20px,4vw,32px);border-radius:16px;text-align:center;
+.mm-cd{max-width:520px;margin:0 auto;padding:clamp(24px,5vw,36px) clamp(20px,4vw,32px);border-radius:{{radius}};text-align:center;
   font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;
   background:#FAF9F7;border:1px solid #D4D0CB;color:#1A1A1A;}
 .mm-cd[data-theme="다크"]{background:#1A1A1A;border-color:#2D2D2D;color:#FAF9F7;}
@@ -213,7 +215,7 @@
   <div class="mm-cmp__row">
   {{#each models}}
     {{!-- @name name @type outlined-textfield @default "모델명" @label "모델명" --}}
-    {{!-- @name image @type image @label "이미지(선택)" --}}
+    {{!-- @name image @type image @label "이미지(선택) (권장 800×800px)" --}}
     {{!-- @name weight @type outlined-textfield @default "" @label "무게" --}}
     {{!-- @name length @type outlined-textfield @default "" @label "길이" --}}
     {{!-- @name steel @type outlined-textfield @default "" @label "강재" --}}
@@ -282,6 +284,7 @@
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name title @type outlined-textfield @default "예상 견적 계산" @label "제목" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name g1n @type outlined-textfield @default "소비자" @label "등급1 이름" --}}
 {{!-- @name g1d @type outlined-textfield @default "0" @label "등급1 할인%" --}}
 {{!-- @name g2n @type outlined-textfield @default "딜러" @label "등급2 이름" --}}
@@ -308,7 +311,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-calc{max-width:460px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-calc{max-width:460px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-calc__title{margin:0 0 20px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(18px,4.5vw,22px);font-weight:800;letter-spacing:-.02em;text-align:center;}
 .mm-calc__field{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
 .mm-calc__field>span{flex:0 0 48px;font-size:13px;font-weight:600;color:#8A8580;}
@@ -456,7 +459,7 @@
   <div class="mm-rev__viewport">
     <div class="mm-rev__track">
     {{#each reviews}}
-      {{!-- @name photo @type image @label "사진(선택)" --}}
+      {{!-- @name photo @type image @label "사진(선택) (권장 800×800px)" --}}
       {{!-- @name rating @type outlined-textfield @default "5" @label "별점 — 입력: 5 · 4 · 3 · 2 · 1" --}}
       {{!-- @name text @type text-editor @default "<p>후기 내용을 입력하세요</p>" @label "후기 내용" --}}
       {{!-- @name name @type outlined-textfield @default "" @label "이름/매장(선택)" --}}
@@ -544,7 +547,7 @@
   {{#each items}}
     {{!-- @name q @type outlined-textfield @default "항목 제목" @label "제목" --}}
     {{!-- @name a @type text-editor @default "<p>내용</p>" @label "내용" --}}
-    {{!-- @name img @type image @label "이미지(선택)" --}}
+    {{!-- @name img @type image @label "이미지(선택) (권장 800×800px)" --}}
     <div class="mm-acc__item">
       <button type="button" class="mm-acc__head"><span>{{q}}</span><i class="mm-acc__chev" aria-hidden="true"></i></button>
       <div class="mm-acc__panel"><div class="mm-acc__inner">
@@ -613,7 +616,7 @@
   <div class="mm-flt__grid">
   {{#each models}}
     {{!-- @name name @type outlined-textfield @default "모델명" @label "모델명" --}}
-    {{!-- @name image @type image @label "이미지(선택)" --}}
+    {{!-- @name image @type image @label "이미지(선택) (권장 800×800px)" --}}
     {{!-- @name tags @type outlined-textfield @default "" @label "시술 태그(쉼표로: 커트,틴닝)" --}}
     {{!-- @name link @type outlined-textfield @default "" @label "상품 링크(선택)" --}}
     <a class="mm-flt__card" data-tags="{{tags}}" href="{{link}}">
@@ -751,6 +754,7 @@
 {{!-- @name closeLabel @type outlined-textfield @default "영업 종료" @label "영업외 문구" --}}
 {{!-- @name btnText @type outlined-textfield @default "카카오톡 상담" @label "버튼 문구" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "카톡 채널 링크" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name hours @type item @label "요일별 영업시간" --}}
 <div class="mm-hr">
   <div class="mm-hr__badge"><span class="mm-hr__dot"></span><span class="mm-hr__state">—</span></div>
@@ -769,7 +773,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-hr{max-width:380px;margin:0 auto;padding:clamp(20px,4vw,28px);text-align:center;border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-hr{max-width:380px;margin:0 auto;padding:clamp(20px,4vw,28px);text-align:center;border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-hr__badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;background:#F5F3F0;font-size:14px;font-weight:700;}
 .mm-hr__dot{width:8px;height:8px;border-radius:50%;background:#B8B4AF;}
 .mm-hr.is-open .mm-hr__dot{background:#1A1A1A;box-shadow:0 0 0 4px rgba(26,26,26,.12);}

@@ -1,4 +1,4 @@
-.mm-vs{max-width:600px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;border:1px solid #D4D0CB;border-radius:16px;overflow:hidden;}
+.mm-vs{max-width:600px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;border:1px solid #D4D0CB;border-radius:{{radius}};overflow:hidden;}
 .mm-vs__head,.mm-vs__row{display:grid;grid-template-columns:1.4fr 1fr 1fr;align-items:center;}
 .mm-vs__head{background:#1A1A1A;color:#FAF9F7;}
 .mm-vs__h{padding:14px 10px;font-size:clamp(12px,3.2vw,14px);font-weight:700;text-align:center;}

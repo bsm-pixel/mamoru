@@ -2,6 +2,8 @@
   function initOne(root){
     var h=root.getAttribute('data-height');
     if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
+    var m=root.querySelector('.mm-sp__bgm');
+    if(m && String(m.getAttribute('src')||'').trim()) root.setAttribute('data-hasm','1');
     root.addEventListener('pointermove',function(e){
       if(e.pointerType==='touch')return;
       var r=root.getBoundingClientRect();

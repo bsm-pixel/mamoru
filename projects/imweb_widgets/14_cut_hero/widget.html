@@ -6,9 +6,11 @@
   📝 진입 시 hairline이 가로질러 '컷' → 헤드라인 등장 (브랜드 첫인상)
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name bg @type image @label "배경 이미지(선택)" --}}
+{{!-- @name bg @type image @label "PC 배경 이미지(선택) — 권장 1600×900px" --}}
+{{!-- @name bgMobile @type image @label "모바일 배경 이미지(선택) — 권장 1080×1350px · 비우면 PC 이미지 사용" --}}
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
 {{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 440px 또는 60vh (비우면 자동)" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name kicker @type outlined-textfield @default "CUT THE FAKE, KEEP THE REAL" @label "키커(영문)" --}}
 {{!-- @name headline @type text-editor @default "<p>좋은 미용가위, 그 기준을 정의하다</p>" @label "헤드라인" --}}
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
@@ -16,6 +18,7 @@
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
 <div class="mm-cut" data-theme="{{theme}}" data-height="{{height}}">
   <img class="mm-cut__bg" src="{{bg}}" alt="">
+  <img class="mm-cut__bgm" src="{{bgMobile}}" alt="">
   <div class="mm-cut__inner">
     <span class="mm-cut__kicker">{{kicker}}</span>
     <span class="mm-cut__blade" aria-hidden="true"></span>

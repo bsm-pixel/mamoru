@@ -32,7 +32,7 @@
 {{!-- @name tiles @type item @label "타일(2개 권장)" --}}
 <div class="mm-dual">
 {{#each tiles}}
-  {{!-- @name image @type image @label "타일 이미지" --}}
+  {{!-- @name image @type image @label "타일 이미지 (권장 800×1000px)" --}}
   {{!-- @name label @type outlined-textfield @default "선택" @label "큰 라벨" --}}
   {{!-- @name desc @type outlined-textfield @default "" @label "작은 설명(선택)" --}}
   {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
@@ -87,6 +87,7 @@
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name min @type outlined-textfield @default "4.5" @label "최소 인치" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name max @type outlined-textfield @default "7.0" @label "최대 인치" --}}
 {{!-- @name def @type outlined-textfield @default "5.5" @label "기본 인치" --}}
 {{!-- @name note @type outlined-textfield @default "* 화면 비례 참고용이며 실제 길이와 다를 수 있어요" @label "안내(선택)" --}}
@@ -99,7 +100,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-rul{max-width:520px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;text-align:center;}
+.mm-rul{max-width:520px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;text-align:center;}
 .mm-rul__readout{display:flex;align-items:baseline;justify-content:center;gap:10px;margin-bottom:18px;}
 .mm-rul__inch{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(34px,10vw,52px);font-weight:900;letter-spacing:-.03em;line-height:1;}
 .mm-rul__cm{font-size:clamp(14px,4vw,17px);font-weight:600;color:#8A8580;}
@@ -154,6 +155,7 @@
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name leftLabel @type outlined-textfield @default "MAMORU" @label "왼쪽(자사) 라벨" --}}
 {{!-- @name rightLabel @type outlined-textfield @default "일반 판매처" @label "오른쪽 라벨" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name rows @type item @label "비교 항목" --}}
 <div class="mm-vs">
   <div class="mm-vs__head">
@@ -175,7 +177,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-vs{max-width:600px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;border:1px solid #D4D0CB;border-radius:16px;overflow:hidden;}
+.mm-vs{max-width:600px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;border:1px solid #D4D0CB;border-radius:{{radius}};overflow:hidden;}
 .mm-vs__head,.mm-vs__row{display:grid;grid-template-columns:1.4fr 1fr 1fr;align-items:center;}
 .mm-vs__head{background:#1A1A1A;color:#FAF9F7;}
 .mm-vs__h{padding:14px 10px;font-size:clamp(12px,3.2vw,14px);font-weight:700;text-align:center;}
@@ -226,7 +228,7 @@
   <div class="mm-hpin__sticky">
     <div class="mm-hpin__track">
     {{#each slides}}
-      {{!-- @name image @type image @label "이미지" --}}
+      {{!-- @name image @type image @label "이미지 (권장 1600×900px)" --}}
       {{!-- @name caption @type outlined-textfield @default "" @label "캡션(선택)" --}}
       <div class="mm-hpin__panel">
         <img class="mm-hpin__img" src="{{image}}" alt="">
@@ -302,7 +304,7 @@
   📝 큰 글자 안으로 이미지가 비쳐 보이는 타이포 헤드라인 (프리미엄)
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name image @type image @label "글자 속 이미지" --}}
+{{!-- @name image @type image @label "글자 속 이미지 — 권장 1200×600px (대비 강한 이미지)" --}}
 {{!-- @name headline @type text-editor @default "<p>MAMORU</p>" @label "헤드라인(짧고 굵게)" --}}
 {{!-- @name sub @type text-editor @default "<p></p>" @label "아래 문구(선택)" --}}
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 — 입력: 가운데 · 왼쪽" --}}
@@ -364,6 +366,7 @@
 {{!-- @name total @type outlined-textfield @default "100" @label "전체 수량" --}}
 {{!-- @name remaining @type outlined-textfield @default "23" @label "남은 수량" --}}
 {{!-- @name unit @type outlined-textfield @default "개" @label "단위" --}}
+{{!-- @name radius @type outlined-textfield @default "14px" @label "모서리 둥글기 — 예: 14px · 0px이면 각지게" --}}
 <div class="mm-stock" data-total="{{total}}" data-remaining="{{remaining}}" data-unit="{{unit}}">
   <div class="mm-stock__top"><span class="mm-stock__title">{{title}}</span><span class="mm-stock__count">—</span></div>
   <div class="mm-stock__track"><div class="mm-stock__bar"></div></div>
@@ -371,7 +374,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-stock{max-width:440px;margin:0 auto;padding:clamp(18px,4vw,24px);border:1px solid #D4D0CB;border-radius:14px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-stock{max-width:440px;margin:0 auto;padding:clamp(18px,4vw,24px);border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-stock__top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
 .mm-stock__title{font-size:14px;font-weight:700;}
 .mm-stock__count{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(15px,4vw,18px);font-weight:800;letter-spacing:-.01em;}
@@ -612,6 +615,7 @@
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name items @type item @label "항목" --}}
 <div class="mm-belief" data-theme="{{theme}}">
 {{#each items}}
@@ -627,7 +631,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-belief{max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;border-radius:16px;
+.mm-belief{max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;border-radius:{{radius}};
   font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;color:#FAF9F7;}
 .mm-belief[data-theme="라이트"]{background:#FAF9F7;color:#1A1A1A;}
 .mm-belief__item{display:flex;flex-direction:column;align-items:center;gap:8px;}

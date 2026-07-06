@@ -33,11 +33,13 @@
 {{!-- @name chips @type item @label "칩" --}}
 <div class="mm-nav" data-theme="{{theme}}">
 {{#each chips}}
-  {{!-- @name icon @type outlined-textfield @default "가위" @label "아이콘 키워드 (가위·빗·가위집·복원·상담·후기)" --}}
+  {{!-- @name icon @type outlined-textfield @default "가위" @label "아이콘 키워드 (가위·빗·가위집·복원·상담·후기) · 아래 커스텀 SVG 있으면 무시됨" --}}
+  {{!-- @name svg @type outlined-textfield @default "" @label "커스텀 SVG (선택 · <svg …>…</svg> 코드 한 줄로 붙여넣기 · 비우면 키워드 아이콘)" --}}
   {{!-- @name label @type outlined-textfield @default "메뉴" @label "라벨" --}}
   {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
   <a class="mm-nav__chip" href="{{link}}" data-icon="{{icon}}">
     <span class="mm-nav__ico" aria-hidden="true"></span>
+    <span class="mm-nav__svgsrc" style="display:none">{{svg}}</span>
     <span class="mm-nav__label">{{label}}</span>
   </a>
 {{/each}}
@@ -45,8 +47,10 @@
 ```
 ### CSS 탭
 ```css
-.mm-nav{max-width:760px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:8px 12px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
-.mm-nav__chip{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;text-decoration:none;font-size:clamp(13px,3.6vw,15px);font-weight:700;letter-spacing:-.01em;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;}
+/* 가로 1행 고정 + 가로 스크롤(줄바꿈 X). 칩이 많아지면 우측에서 스윽 나오는 형태 */
+.mm-nav{max-width:760px;margin:0 auto;display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding:8px 12px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-nav::-webkit-scrollbar{display:none;}
+.mm-nav__chip{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;text-decoration:none;font-size:clamp(13px,3.6vw,15px);font-weight:700;letter-spacing:-.01em;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;}
 .mm-nav[data-theme="다크"] .mm-nav__chip{background:#1A1A1A;color:#FAF9F7;}
 .mm-nav[data-theme="라이트"] .mm-nav__chip{background:#FFFFFF;color:#1A1A1A;border:1px solid #D4D0CB;}
 .mm-nav__chip:active{transform:scale(.97);}
@@ -87,8 +91,12 @@
     var chips=root.querySelectorAll('.mm-nav__chip');
     for(var i=0;i<chips.length;i++){
       var ico=chips[i].querySelector('.mm-nav__ico');
+      if(!ico)continue;
+      /* 커스텀 SVG 우선. textContent라 아임웹이 escape해도 원본 SVG 문자열이 잡혀 innerHTML로 정상 렌더 */
+      var srcEl=chips[i].querySelector('.mm-nav__svgsrc'),custom=srcEl?String(srcEl.textContent||'').trim():'';
+      if(custom){ ico.innerHTML=custom; continue; }
       var name=pick(chips[i].getAttribute('data-icon'));
-      if(ico&&name)ico.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+SVG[name]+'</svg>';
+      if(name)ico.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+SVG[name]+'</svg>';
     }
   }
   function init(){var l=document.querySelectorAll('.mm-nav');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
@@ -119,7 +127,7 @@
   {{#each videos}}
     {{!-- @name url @type outlined-textfield @default "" @label "유튜브 URL 또는 영상ID" --}}
     {{!-- @name caption @type outlined-textfield @default "" @label "영상 제목(선택)" --}}
-    {{!-- @name thumb @type image @label "썸네일 직접 지정(선택)" --}}
+    {{!-- @name thumb @type image @label "썸네일 직접 지정(선택) (권장 1600×900px)" --}}
     <a class="mm-yt__card" href="https://www.youtube.com" target="_blank" rel="noopener" data-url="{{url}}" data-thumb="{{thumb}}">
       <span class="mm-yt__thumb">
         <img class="mm-yt__img" src="" alt="" loading="lazy">
@@ -191,7 +199,7 @@
 {{!-- @name tiles @type item @label "카테고리 타일" --}}
 <div class="mm-cat" style="--mm-ratio:{{ratio}};">
 {{#each tiles}}
-  {{!-- @name image @type image @label "이미지" --}}
+  {{!-- @name image @type image @label "이미지 (권장 800×1000px)" --}}
   {{!-- @name label @type outlined-textfield @default "카테고리" @label "큰 라벨" --}}
   {{!-- @name sublabel @type outlined-textfield @default "" @label "작은 설명(선택)" --}}
   {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
@@ -258,7 +266,7 @@
   <div class="mm-st__media"><img class="mm-st__mediaimg" src="" alt=""></div>
   <div class="mm-st__scenes">
   {{#each scenes}}
-    {{!-- @name image @type image @label "이미지" --}}
+    {{!-- @name image @type image @label "이미지 — 권장 1200×800px" --}}
     {{!-- @name heading @type outlined-textfield @default "장면 제목" @label "제목" --}}
     {{!-- @name text @type text-editor @default "<p>내용</p>" @label "내용" --}}
     <section class="mm-st__scene" data-img="{{image}}">
@@ -333,7 +341,7 @@
   {{#each steps}}
     {{!-- @name stepName @type outlined-textfield @default "단계명" @label "단계명" --}}
     {{!-- @name stepDesc @type text-editor @default "<p>설명</p>" @label "설명" --}}
-    {{!-- @name stepImage @type image @label "이미지(선택)" --}}
+    {{!-- @name stepImage @type image @label "이미지(선택) — 권장 800×800px" --}}
     <li class="mm-tl__step">
       <span class="mm-tl__idx" aria-hidden="true"></span>
       <div class="mm-tl__body">
@@ -396,7 +404,7 @@
   📝 가위 사진 위 점을 클릭 → 부위 설명 툴팁 (전문성·교육)
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name baseImage @type image @label "가위 사진(배경)" --}}
+{{!-- @name baseImage @type image @label "가위 사진(배경) (권장 1600×900px)" --}}
 {{!-- @name ratio @type outlined-textfield @default "16/9" @label "비율 — 입력: 16/9 · 4/3 · 1/1" --}}
 {{!-- @name spots @type item @label "핫스팟" --}}
 <div class="mm-hs">
@@ -468,7 +476,7 @@
 {{!-- @name cards @type item @label "카드" --}}
 <div class="mm-tilt">
 {{#each cards}}
-  {{!-- @name image @type image @label "이미지" --}}
+  {{!-- @name image @type image @label "이미지 — 권장 800×1000px (세로 카드)" --}}
   {{!-- @name title @type outlined-textfield @default "제목" @label "제목" --}}
   {{!-- @name desc @type outlined-textfield @default "" @label "설명(선택)" --}}
   {{!-- @name link @type outlined-textfield @default "" @label "링크(선택)" --}}
@@ -532,6 +540,7 @@
 {{!-- @name words @type item @label "키워드" --}}
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
 {{!-- @name speed @type outlined-textfield @default "30" @label "속도(초, 작을수록 빠름)" --}}
+{{!-- @name radius @type outlined-textfield @default "12px" @label "모서리 둥글기 — 예: 12px · 0px이면 각지게" --}}
 <div class="mm-mq" data-theme="{{theme}}" data-speed="{{speed}}">
   <div class="mm-mq__track">
   {{#each words}}
@@ -543,7 +552,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-mq{overflow:hidden;width:100%;padding:clamp(14px,3vw,22px) 0;background:#1A1A1A;border-radius:12px;}
+.mm-mq{overflow:hidden;width:100%;padding:clamp(14px,3vw,22px) 0;background:#1A1A1A;border-radius:{{radius}};}
 .mm-mq[data-theme="라이트"]{background:#FAF9F7;border:1px solid #D4D0CB;}
 .mm-mq__track{display:flex;width:max-content;will-change:transform;animation:mm-mq-scroll var(--mq-dur,30s) linear infinite;}
 @keyframes mm-mq-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -588,7 +597,7 @@
 <div class="mm-gal">
   <div class="mm-gal__grid">
   {{#each photos}}
-    {{!-- @name image @type image @label "사진" --}}
+    {{!-- @name image @type image @label "사진 — 권장 800×800px" --}}
     {{!-- @name caption @type outlined-textfield @default "" @label "캡션(선택)" --}}
     <button type="button" class="mm-gal__thumb" data-img="{{image}}" data-cap="{{caption}}">
       <img src="{{image}}" alt="" loading="lazy">
@@ -658,12 +667,15 @@
   📝 어두운 배경에서 커서 주변만 밝아지며 제품이 드러남 (임팩트)
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name bg @type image @label "배경 이미지" --}}
+{{!-- @name bg @type image @label "PC 배경 이미지 — 권장 1600×900px" --}}
+{{!-- @name bgMobile @type image @label "모바일 배경 이미지(선택) — 권장 1080×1350px · 비우면 PC 이미지 사용" --}}
 {{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 460px 또는 60vh (비우면 자동)" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name headline @type text-editor @default "<p>진짜는 가까이서 드러납니다</p>" @label "헤드라인" --}}
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
 <div class="mm-sp" data-height="{{height}}">
   <img class="mm-sp__bg" src="{{bg}}" alt="">
+  <img class="mm-sp__bgm" src="{{bgMobile}}" alt="">
   <div class="mm-sp__veil" aria-hidden="true"></div>
   <div class="mm-sp__inner">
     <div class="mm-sp__headline" role="heading" aria-level="2">{{headline}}</div>
@@ -673,8 +685,10 @@
 ```
 ### CSS 탭
 ```css
-.mm-sp{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(300px,52vw,460px);display:flex;align-items:center;justify-content:center;text-align:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;--mx:50%;--my:50%;}
-.mm-sp__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+.mm-sp{position:relative;overflow:hidden;border-radius:{{radius}};min-height:clamp(300px,52vw,460px);display:flex;align-items:center;justify-content:center;text-align:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;--mx:50%;--my:50%;}
+.mm-sp__bg,.mm-sp__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+.mm-sp__bgm{display:none;}
+@media (max-width:768px){.mm-sp[data-hasm="1"] .mm-sp__bg{display:none;}.mm-sp[data-hasm="1"] .mm-sp__bgm{display:block;}}
 .mm-sp__veil{position:absolute;inset:0;z-index:1;background:radial-gradient(circle clamp(120px,22vw,220px) at var(--mx) var(--my),rgba(26,26,26,0) 0%,rgba(26,26,26,.55) 45%,rgba(26,26,26,.94) 80%);transition:background .08s linear;}
 .mm-sp__inner{position:relative;z-index:2;padding:clamp(28px,6vw,56px);max-width:680px;pointer-events:none;}
 .mm-sp__headline{margin:0;font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(22px,6vw,40px);font-weight:900;line-height:1.25;letter-spacing:-.02em;color:#FAF9F7;text-shadow:0 2px 20px rgba(0,0,0,.4);white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
@@ -691,6 +705,8 @@
   function initOne(root){
     var h=root.getAttribute('data-height');
     if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
+    var m=root.querySelector('.mm-sp__bgm');
+    if(m && String(m.getAttribute('src')||'').trim()) root.setAttribute('data-hasm','1');
     root.addEventListener('pointermove',function(e){
       if(e.pointerType==='touch')return;
       var r=root.getBoundingClientRect();

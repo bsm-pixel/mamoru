@@ -1,6 +1,6 @@
 # 🧩 MAMORU 아임웹 커스텀 위젯 전체 모음 (집 작업용)
 
-> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} 금지·인라인 on*= 금지. 총 43종. 갱신 2026-07-06.
+> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} 금지·인라인 on*= 금지. 총 43종. 갱신 2026-07-06(라운드토글·PC/모바일이미지·치수라벨 반영).
 
 
 ## 01. 복원 Before/After 슬라이더 ⭐
@@ -16,9 +16,10 @@
   📝 가위 복원 전/후를 손잡이 드래그로 비교
   🚫 fetch·iframe·외부라이브러리 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name beforeImage @type image @label "복원 전 사진" --}}
-{{!-- @name afterImage  @type image @label "복원 후 사진" --}}
+{{!-- @name beforeImage @type image @label "복원 전 사진 — 권장 1200×900px (후 사진과 동일 크기)" --}}
+{{!-- @name afterImage  @type image @label "복원 후 사진 — 권장 1200×900px (전 사진과 동일 크기)" --}}
 {{!-- @name ratio @type outlined-textfield @default "4/3" @label "사진 비율 — 입력: 4/3 · 1/1 · 3/4 · 16/9" --}}
+{{!-- @name radius @type outlined-textfield @default "12px" @label "모서리 둥글기 — 예: 12px · 0px이면 각지게" --}}
 {{!-- @name beforeLabel @type outlined-textfield @default "BEFORE" @label "왼쪽 라벨" --}}
 {{!-- @name afterLabel  @type outlined-textfield @default "AFTER"  @label "오른쪽 라벨" --}}
 {{!-- @name caption     @type outlined-textfield @default "" @label "하단 설명(선택)" --}}
@@ -37,7 +38,7 @@
 ### CSS 탭
 ```css
 .mm-ba{max-width:760px;margin:0 auto;font-family:-apple-system,'Noto Sans KR',sans-serif;}
-.mm-ba__stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:12px;background:#F5F3F0;touch-action:none;cursor:ew-resize;user-select:none;}
+.mm-ba__stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:{{radius}};background:#F5F3F0;touch-action:none;cursor:ew-resize;user-select:none;}
 .mm-ba__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
 .mm-ba__img--after{z-index:1;}
 .mm-ba__img--before{z-index:2;-webkit-clip-path:inset(0 50% 0 0);clip-path:inset(0 50% 0 0);}
@@ -93,6 +94,7 @@
 {{!-- @name endDate @type date-picker @label "종료 날짜" --}}
 {{!-- @name endTime @type time-picker @label "종료 시간" --}}
 {{!-- @name theme @type outlined-textfield @default "라이트" @label "테마 — 입력: 라이트 · 다크" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name btnText @type outlined-textfield @default "지금 보러가기" @label "버튼 문구(비우면 숨김)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
 {{!-- @name endedText @type outlined-textfield @default "이번 혜택은 마감되었습니다" @label "종료 후 문구" --}}
@@ -113,7 +115,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-cd{max-width:520px;margin:0 auto;padding:clamp(24px,5vw,36px) clamp(20px,4vw,32px);border-radius:16px;text-align:center;
+.mm-cd{max-width:520px;margin:0 auto;padding:clamp(24px,5vw,36px) clamp(20px,4vw,32px);border-radius:{{radius}};text-align:center;
   font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;
   background:#FAF9F7;border:1px solid #D4D0CB;color:#1A1A1A;}
 .mm-cd[data-theme="다크"]{background:#1A1A1A;border-color:#2D2D2D;color:#FAF9F7;}
@@ -200,7 +202,7 @@
   <div class="mm-cmp__row">
   {{#each models}}
     {{!-- @name name @type outlined-textfield @default "모델명" @label "모델명" --}}
-    {{!-- @name image @type image @label "이미지(선택)" --}}
+    {{!-- @name image @type image @label "이미지(선택) (권장 800×800px)" --}}
     {{!-- @name weight @type outlined-textfield @default "" @label "무게" --}}
     {{!-- @name length @type outlined-textfield @default "" @label "길이" --}}
     {{!-- @name steel @type outlined-textfield @default "" @label "강재" --}}
@@ -269,6 +271,7 @@
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name title @type outlined-textfield @default "예상 견적 계산" @label "제목" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name g1n @type outlined-textfield @default "소비자" @label "등급1 이름" --}}
 {{!-- @name g1d @type outlined-textfield @default "0" @label "등급1 할인%" --}}
 {{!-- @name g2n @type outlined-textfield @default "딜러" @label "등급2 이름" --}}
@@ -295,7 +298,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-calc{max-width:460px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-calc{max-width:460px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-calc__title{margin:0 0 20px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(18px,4.5vw,22px);font-weight:800;letter-spacing:-.02em;text-align:center;}
 .mm-calc__field{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
 .mm-calc__field>span{flex:0 0 48px;font-size:13px;font-weight:600;color:#8A8580;}
@@ -443,7 +446,7 @@
   <div class="mm-rev__viewport">
     <div class="mm-rev__track">
     {{#each reviews}}
-      {{!-- @name photo @type image @label "사진(선택)" --}}
+      {{!-- @name photo @type image @label "사진(선택) (권장 800×800px)" --}}
       {{!-- @name rating @type outlined-textfield @default "5" @label "별점 — 입력: 5 · 4 · 3 · 2 · 1" --}}
       {{!-- @name text @type text-editor @default "<p>후기 내용을 입력하세요</p>" @label "후기 내용" --}}
       {{!-- @name name @type outlined-textfield @default "" @label "이름/매장(선택)" --}}
@@ -531,7 +534,7 @@
   {{#each items}}
     {{!-- @name q @type outlined-textfield @default "항목 제목" @label "제목" --}}
     {{!-- @name a @type text-editor @default "<p>내용</p>" @label "내용" --}}
-    {{!-- @name img @type image @label "이미지(선택)" --}}
+    {{!-- @name img @type image @label "이미지(선택) (권장 800×800px)" --}}
     <div class="mm-acc__item">
       <button type="button" class="mm-acc__head"><span>{{q}}</span><i class="mm-acc__chev" aria-hidden="true"></i></button>
       <div class="mm-acc__panel"><div class="mm-acc__inner">
@@ -600,7 +603,7 @@
   <div class="mm-flt__grid">
   {{#each models}}
     {{!-- @name name @type outlined-textfield @default "모델명" @label "모델명" --}}
-    {{!-- @name image @type image @label "이미지(선택)" --}}
+    {{!-- @name image @type image @label "이미지(선택) (권장 800×800px)" --}}
     {{!-- @name tags @type outlined-textfield @default "" @label "시술 태그(쉼표로: 커트,틴닝)" --}}
     {{!-- @name link @type outlined-textfield @default "" @label "상품 링크(선택)" --}}
     <a class="mm-flt__card" data-tags="{{tags}}" href="{{link}}">
@@ -738,6 +741,7 @@
 {{!-- @name closeLabel @type outlined-textfield @default "영업 종료" @label "영업외 문구" --}}
 {{!-- @name btnText @type outlined-textfield @default "카카오톡 상담" @label "버튼 문구" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "카톡 채널 링크" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name hours @type item @label "요일별 영업시간" --}}
 <div class="mm-hr">
   <div class="mm-hr__badge"><span class="mm-hr__dot"></span><span class="mm-hr__state">—</span></div>
@@ -756,7 +760,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-hr{max-width:380px;margin:0 auto;padding:clamp(20px,4vw,28px);text-align:center;border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-hr{max-width:380px;margin:0 auto;padding:clamp(20px,4vw,28px);text-align:center;border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-hr__badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;background:#F5F3F0;font-size:14px;font-weight:700;}
 .mm-hr__dot{width:8px;height:8px;border-radius:50%;background:#B8B4AF;}
 .mm-hr.is-open .mm-hr__dot{background:#1A1A1A;box-shadow:0 0 0 4px rgba(26,26,26,.12);}
@@ -827,7 +831,7 @@
     {{!-- @name optLabel @type outlined-textfield @default "선택지" @label "선택지 버튼" --}}
     {{!-- @name recName @type outlined-textfield @default "추천 모델" @label "추천 모델명" --}}
     {{!-- @name recDesc @type text-editor @default "<p>추천 이유</p>" @label "추천 설명" --}}
-    {{!-- @name recImage @type image @label "추천 이미지(선택)" --}}
+    {{!-- @name recImage @type image @label "추천 이미지(선택) (권장 1600×900px)" --}}
     {{!-- @name recLink @type outlined-textfield @default "" @label "추천 링크" --}}
     <button type="button" class="mm-dx__opt">{{optLabel}}</button>
   {{/each}}
@@ -907,7 +911,7 @@
 <div class="mm-360">
   <div class="mm-360__stage" style="aspect-ratio:{{ratio}};">
   {{#each frames}}
-    {{!-- @name frame @type image @label "프레임 이미지" --}}
+    {{!-- @name frame @type image @label "프레임 이미지 (권장 800×800px)" --}}
     <img class="mm-360__f" src="{{frame}}" alt="" draggable="false">
   {{/each}}
     <span class="mm-360__hint" aria-hidden="true">↔ 드래그하여 회전</span>
@@ -968,7 +972,7 @@
   <div class="mm-opt__btns">
   {{#each options}}
     {{!-- @name optName @type outlined-textfield @default "옵션" @label "옵션명" --}}
-    {{!-- @name optImage @type image @label "옵션 이미지" --}}
+    {{!-- @name optImage @type image @label "옵션 이미지 (권장 800×800px)" --}}
     <button type="button" class="mm-opt__btn" data-img="{{optImage}}">{{optName}}</button>
   {{/each}}
   </div>
@@ -1024,9 +1028,11 @@
   📝 진입 시 hairline이 가로질러 '컷' → 헤드라인 등장 (브랜드 첫인상)
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name bg @type image @label "배경 이미지(선택)" --}}
+{{!-- @name bg @type image @label "PC 배경 이미지(선택) — 권장 1600×900px" --}}
+{{!-- @name bgMobile @type image @label "모바일 배경 이미지(선택) — 권장 1080×1350px · 비우면 PC 이미지 사용" --}}
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
 {{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 440px 또는 60vh (비우면 자동)" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name kicker @type outlined-textfield @default "CUT THE FAKE, KEEP THE REAL" @label "키커(영문)" --}}
 {{!-- @name headline @type text-editor @default "<p>좋은 미용가위, 그 기준을 정의하다</p>" @label "헤드라인" --}}
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
@@ -1034,6 +1040,7 @@
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
 <div class="mm-cut" data-theme="{{theme}}" data-height="{{height}}">
   <img class="mm-cut__bg" src="{{bg}}" alt="">
+  <img class="mm-cut__bgm" src="{{bgMobile}}" alt="">
   <div class="mm-cut__inner">
     <span class="mm-cut__kicker">{{kicker}}</span>
     <span class="mm-cut__blade" aria-hidden="true"></span>
@@ -1045,10 +1052,12 @@
 ```
 ### CSS 탭
 ```css
-.mm-cut{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(280px,50vw,440px);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;}
+.mm-cut{position:relative;overflow:hidden;border-radius:{{radius}};min-height:clamp(280px,50vw,440px);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;}
 .mm-cut[data-theme="라이트"]{background:#FAF9F7;}
-.mm-cut__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;z-index:0;}
-.mm-cut[data-theme="라이트"] .mm-cut__bg{opacity:.85;}
+.mm-cut__bg,.mm-cut__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;z-index:0;}
+.mm-cut__bgm{display:none;}
+@media (max-width:768px){.mm-cut[data-hasm="1"] .mm-cut__bg{display:none;}.mm-cut[data-hasm="1"] .mm-cut__bgm{display:block;}}
+.mm-cut[data-theme="라이트"] .mm-cut__bg,.mm-cut[data-theme="라이트"] .mm-cut__bgm{opacity:.85;}
 .mm-cut__inner{position:relative;z-index:1;padding:clamp(28px,6vw,56px);max-width:760px;}
 .mm-cut__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(10px,2.6vw,12px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#B8B4AF;opacity:0;transition:opacity .6s ease .1s;}
 .mm-cut[data-theme="라이트"] .mm-cut__kicker{color:#8A8580;}
@@ -1075,6 +1084,8 @@
   function initOne(root){
     var h=root.getAttribute('data-height');
     if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
+    var m=root.querySelector('.mm-cut__bgm');
+    if(m && String(m.getAttribute('src')||'').trim()) root.setAttribute('data-hasm','1');
     if('IntersectionObserver' in window){
       var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-in');io.unobserve(e.target);}});},{threshold:.3});
       io.observe(root);
@@ -1180,7 +1191,7 @@
   <div class="mm-daily__cards">
   {{#each models}}
     {{!-- @name name @type outlined-textfield @default "모델명" @label "모델명" --}}
-    {{!-- @name image @type image @label "이미지" --}}
+    {{!-- @name image @type image @label "이미지 (권장 1600×900px)" --}}
     {{!-- @name desc @type text-editor @default "<p>설명</p>" @label "설명" --}}
     {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
     <article class="mm-daily__card" hidden>
@@ -1243,7 +1254,8 @@
   📝 풀폭 이미지 느린 줌 + 카피·CTA 오버레이 (범용 고급 배너)
   🚫 fetch·iframe·인라인핸들러 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name image @type image @label "배경 이미지" --}}
+{{!-- @name image @type image @label "PC 배경 이미지 — 권장 1600×900px (가로형)" --}}
+{{!-- @name imageMobile @type image @label "모바일 배경 이미지 (선택) — 권장 1080×1350px (세로형) · 비우면 PC 이미지 사용" --}}
 {{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 480px 또는 60vh (비우면 자동)" --}}
 {{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name maxw @type outlined-textfield @default "" @label "최대 가로폭(PC) — 예: 1000px (비우면 꽉 채움) · 모바일은 자동 꽉 채움" --}}
@@ -1257,6 +1269,7 @@
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
 <div class="mm-cine" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-maxw="{{maxw}}">
   <img class="mm-cine__bg" src="{{image}}" alt="">
+  <img class="mm-cine__bgm" src="{{imageMobile}}" alt="">
   <div class="mm-cine__veil" aria-hidden="true"></div>
   <div class="mm-cine__inner">
     <span class="mm-cine__kicker">{{kicker}}</span>
@@ -1271,7 +1284,13 @@
 .mm-cine{position:relative;overflow:hidden;border-radius:{{radius}};min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
 .mm-cine[data-align="가운데"]{justify-content:center;text-align:center;}
 .mm-cine[data-align="왼쪽"]{justify-content:flex-start;text-align:left;}
-.mm-cine__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;animation:mm-cine-zoom 16s ease-out both;}
+.mm-cine__bg,.mm-cine__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;animation:mm-cine-zoom 16s ease-out both;}
+.mm-cine__bgm{display:none;}
+/* 모바일 전용 이미지가 있을 때(data-hasm=1)만 모바일에서 스왑 */
+@media (max-width:768px){
+  .mm-cine[data-hasm="1"] .mm-cine__bg{display:none;}
+  .mm-cine[data-hasm="1"] .mm-cine__bgm{display:block;}
+}
 @keyframes mm-cine-zoom{from{transform:scale(1.0)}to{transform:scale(1.09)}}
 .mm-cine__veil{position:absolute;inset:0;z-index:1;background:rgba(26,26,26,.45);}
 .mm-cine__inner{position:relative;z-index:2;padding:clamp(28px,6vw,56px);max-width:720px;}
@@ -1318,7 +1337,11 @@
     var ov=root.getAttribute('data-overlay'),veil=root.querySelector('.mm-cine__veil'),bg=root.querySelector('.mm-cine__bg');
     if(veil&&ov){ var a=alphaOf(ov); if(a!==null){ a=Math.max(0,Math.min(1,a)); veil.style.background='rgba(26,26,26,'+a+')'; } else { veil.style.background=ov; } }
     root.setAttribute('data-align', isLeft(root.getAttribute('data-align')) ? '왼쪽' : '가운데');
-    if(bg) bg.style.objectPosition=focusPos(root.getAttribute('data-focus'));
+    var bgm=root.querySelector('.mm-cine__bgm'),fp=focusPos(root.getAttribute('data-focus'));
+    if(bg) bg.style.objectPosition=fp;
+    if(bgm) bgm.style.objectPosition=fp;
+    /* 모바일 이미지가 실제 있으면 data-hasm=1 → 모바일에서 스왑. 없으면 PC 이미지 공용 */
+    if(bgm && String(bgm.getAttribute('src')||'').trim()) root.setAttribute('data-hasm','1');
     var h=root.getAttribute('data-height');
     if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
     /* 모서리(radius)는 CSS에서 {{radius}}로 직접 그림 → 로드 시 라운드→각짐 깜빡임 없음 */
@@ -1346,17 +1369,19 @@
   📝 좌우 반반 — 이미지 + 카피·CTA (신제품·이벤트 정석 배너)
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name image @type image @label "이미지" --}}
+{{!-- @name image @type image @label "PC 이미지 — 권장 900×800px" --}}
+{{!-- @name imageMobile @type image @label "모바일 이미지 (선택) — 권장 1080×1080px · 비우면 PC 이미지 사용" --}}
 {{!-- @name imgPos @type outlined-textfield @default "왼쪽" @label "이미지 위치 — 입력: 왼쪽 · 오른쪽" --}}
 {{!-- @name theme @type outlined-textfield @default "라이트" @label "테마 — 입력: 라이트 · 다크" --}}
 {{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 360px (비우면 자동)" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name tag @type outlined-textfield @default "" @label "태그칩(선택)" --}}
 {{!-- @name title @type outlined-textfield @default "제목을 입력하세요" @label "제목" --}}
 {{!-- @name desc @type text-editor @default "<p>설명</p>" @label "설명" --}}
 {{!-- @name btnText @type outlined-textfield @default "자세히 보기" @label "버튼 문구(비우면 숨김)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
 <div class="mm-split" data-img="{{imgPos}}" data-theme="{{theme}}" data-height="{{height}}">
-  <div class="mm-split__media"><img src="{{image}}" alt=""></div>
+  <div class="mm-split__media"><img class="mm-split__img" src="{{image}}" alt=""><img class="mm-split__imgm" src="{{imageMobile}}" alt=""></div>
   <div class="mm-split__body">
     <span class="mm-split__tag">{{tag}}</span>
     <h2 class="mm-split__title">{{title}}</h2>
@@ -1367,11 +1392,12 @@
 ```
 ### CSS 탭
 ```css
-.mm-split{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;border-radius:16px;overflow:hidden;border:1px solid #D4D0CB;background:#FFFFFF;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-split{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;border-radius:{{radius}};overflow:hidden;border:1px solid #D4D0CB;background:#FFFFFF;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-split[data-theme="다크"]{background:#1A1A1A;border-color:#2D2D2D;color:#FAF9F7;}
 .mm-split[data-img="오른쪽"] .mm-split__media{order:2;}
 .mm-split__media{min-height:240px;background:#F5F3F0;}
 .mm-split__media img{width:100%;height:100%;object-fit:cover;display:block;}
+.mm-split__imgm{display:none;}
 .mm-split__body{padding:clamp(24px,4vw,44px);display:flex;flex-direction:column;justify-content:center;}
 .mm-split__tag{display:inline-block;align-self:flex-start;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:4px;background:#1A1A1A;color:#FAF9F7;margin-bottom:14px;}
 .mm-split[data-theme="다크"] .mm-split__tag{background:#FAF9F7;color:#1A1A1A;}
@@ -1384,7 +1410,7 @@
 .mm-split[data-theme="다크"] .mm-split__btn{background:#FAF9F7;color:#1A1A1A;}
 .mm-split__btn:empty{display:none;}
 @media (hover:hover){.mm-split__btn:hover{opacity:.88;}}
-@media (max-width:640px){.mm-split{grid-template-columns:1fr;}.mm-split[data-img="오른쪽"] .mm-split__media{order:0;}}
+@media (max-width:640px){.mm-split{grid-template-columns:1fr;}.mm-split[data-img="오른쪽"] .mm-split__media{order:0;}.mm-split[data-hasm="1"] .mm-split__img{display:none;}.mm-split[data-hasm="1"] .mm-split__imgm{display:block;}}
 ```
 ### JS 탭
 ```js
@@ -1393,6 +1419,9 @@
   function initOne(root){
     var h=root.getAttribute('data-height');
     if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
+    /* 모바일 이미지가 있으면 data-hasm=1 → 모바일에서 스왑 */
+    var m=root.querySelector('.mm-split__imgm');
+    if(m && String(m.getAttribute('src')||'').trim()) root.setAttribute('data-hasm','1');
   }
   function init(){var l=document.querySelectorAll('.mm-split');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
@@ -1415,6 +1444,7 @@
   🚫 fetch·iframe 0 (※'닫기 기억'은 localStorage 금지라 상시 노출형)
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name icon @type outlined-textfield @default "✦" @label "아이콘(이모지/심볼, 선택)" --}}
+{{!-- @name radius @type outlined-textfield @default "10px" @label "모서리 둥글기 — 예: 10px · 0px이면 각지게" --}}
 {{!-- @name text @type outlined-textfield @default "안내 문구를 입력하세요" @label "문구" --}}
 {{!-- @name linkText @type outlined-textfield @default "" @label "링크 문구(선택)" --}}
 {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
@@ -1430,7 +1460,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-notice{width:100%;border-radius:10px;background:#1A1A1A;color:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;overflow:hidden;}
+.mm-notice{width:100%;border-radius:{{radius}};background:#1A1A1A;color:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;overflow:hidden;}
 .mm-notice[data-theme="라이트"]{background:#F5F3F0;color:#1A1A1A;border:1px solid #D4D0CB;}
 .mm-notice__in{display:flex;align-items:center;justify-content:center;gap:10px;padding:11px 16px;font-size:clamp(13px,3.4vw,14px);font-weight:600;}
 .mm-notice__icon{flex:0 0 auto;}
@@ -1476,6 +1506,7 @@
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name theme @type outlined-textfield @default "라이트" @label "테마 — 입력: 라이트 · 다크" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 — 입력: 가운데 · 왼쪽" --}}
 {{!-- @name quote @type text-editor @default "<p>좋은 가위는 권하지 않습니다</p>" @label "인용문" --}}
 {{!-- @name author @type outlined-textfield @default "" @label "출처/서명(선택)" --}}
@@ -1487,7 +1518,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-quote{position:relative;max-width:860px;margin:0 auto;padding:clamp(36px,7vw,72px) clamp(20px,5vw,48px);border-radius:16px;background:#FAF9F7;color:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-quote{position:relative;max-width:860px;margin:0 auto;padding:clamp(36px,7vw,72px) clamp(20px,5vw,48px);border-radius:{{radius}};background:#FAF9F7;color:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
 .mm-quote[data-theme="다크"]{background:#1A1A1A;color:#FAF9F7;}
 .mm-quote[data-align="가운데"]{text-align:center;}
 .mm-quote[data-align="왼쪽"]{text-align:left;}
@@ -1536,7 +1567,7 @@
 {{!-- @name tiles @type item @label "타일(2개 권장)" --}}
 <div class="mm-dual">
 {{#each tiles}}
-  {{!-- @name image @type image @label "타일 이미지" --}}
+  {{!-- @name image @type image @label "타일 이미지 (권장 800×1000px)" --}}
   {{!-- @name label @type outlined-textfield @default "선택" @label "큰 라벨" --}}
   {{!-- @name desc @type outlined-textfield @default "" @label "작은 설명(선택)" --}}
   {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
@@ -1591,6 +1622,7 @@
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name min @type outlined-textfield @default "4.5" @label "최소 인치" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name max @type outlined-textfield @default "7.0" @label "최대 인치" --}}
 {{!-- @name def @type outlined-textfield @default "5.5" @label "기본 인치" --}}
 {{!-- @name note @type outlined-textfield @default "* 화면 비례 참고용이며 실제 길이와 다를 수 있어요" @label "안내(선택)" --}}
@@ -1603,7 +1635,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-rul{max-width:520px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;text-align:center;}
+.mm-rul{max-width:520px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;text-align:center;}
 .mm-rul__readout{display:flex;align-items:baseline;justify-content:center;gap:10px;margin-bottom:18px;}
 .mm-rul__inch{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(34px,10vw,52px);font-weight:900;letter-spacing:-.03em;line-height:1;}
 .mm-rul__cm{font-size:clamp(14px,4vw,17px);font-weight:600;color:#8A8580;}
@@ -1658,6 +1690,7 @@
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name leftLabel @type outlined-textfield @default "MAMORU" @label "왼쪽(자사) 라벨" --}}
 {{!-- @name rightLabel @type outlined-textfield @default "일반 판매처" @label "오른쪽 라벨" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name rows @type item @label "비교 항목" --}}
 <div class="mm-vs">
   <div class="mm-vs__head">
@@ -1679,7 +1712,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-vs{max-width:600px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;border:1px solid #D4D0CB;border-radius:16px;overflow:hidden;}
+.mm-vs{max-width:600px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;border:1px solid #D4D0CB;border-radius:{{radius}};overflow:hidden;}
 .mm-vs__head,.mm-vs__row{display:grid;grid-template-columns:1.4fr 1fr 1fr;align-items:center;}
 .mm-vs__head{background:#1A1A1A;color:#FAF9F7;}
 .mm-vs__h{padding:14px 10px;font-size:clamp(12px,3.2vw,14px);font-weight:700;text-align:center;}
@@ -1730,7 +1763,7 @@
   <div class="mm-hpin__sticky">
     <div class="mm-hpin__track">
     {{#each slides}}
-      {{!-- @name image @type image @label "이미지" --}}
+      {{!-- @name image @type image @label "이미지 (권장 1600×900px)" --}}
       {{!-- @name caption @type outlined-textfield @default "" @label "캡션(선택)" --}}
       <div class="mm-hpin__panel">
         <img class="mm-hpin__img" src="{{image}}" alt="">
@@ -1806,7 +1839,7 @@
   📝 큰 글자 안으로 이미지가 비쳐 보이는 타이포 헤드라인 (프리미엄)
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name image @type image @label "글자 속 이미지" --}}
+{{!-- @name image @type image @label "글자 속 이미지 — 권장 1200×600px (대비 강한 이미지)" --}}
 {{!-- @name headline @type text-editor @default "<p>MAMORU</p>" @label "헤드라인(짧고 굵게)" --}}
 {{!-- @name sub @type text-editor @default "<p></p>" @label "아래 문구(선택)" --}}
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 — 입력: 가운데 · 왼쪽" --}}
@@ -1868,6 +1901,7 @@
 {{!-- @name total @type outlined-textfield @default "100" @label "전체 수량" --}}
 {{!-- @name remaining @type outlined-textfield @default "23" @label "남은 수량" --}}
 {{!-- @name unit @type outlined-textfield @default "개" @label "단위" --}}
+{{!-- @name radius @type outlined-textfield @default "14px" @label "모서리 둥글기 — 예: 14px · 0px이면 각지게" --}}
 <div class="mm-stock" data-total="{{total}}" data-remaining="{{remaining}}" data-unit="{{unit}}">
   <div class="mm-stock__top"><span class="mm-stock__title">{{title}}</span><span class="mm-stock__count">—</span></div>
   <div class="mm-stock__track"><div class="mm-stock__bar"></div></div>
@@ -1875,7 +1909,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-stock{max-width:440px;margin:0 auto;padding:clamp(18px,4vw,24px);border:1px solid #D4D0CB;border-radius:14px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-stock{max-width:440px;margin:0 auto;padding:clamp(18px,4vw,24px);border:1px solid #D4D0CB;border-radius:{{radius}};background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-stock__top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
 .mm-stock__title{font-size:14px;font-weight:700;}
 .mm-stock__count{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(15px,4vw,18px);font-weight:800;letter-spacing:-.01em;}
@@ -2116,6 +2150,7 @@
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name items @type item @label "항목" --}}
 <div class="mm-belief" data-theme="{{theme}}">
 {{#each items}}
@@ -2131,7 +2166,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-belief{max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;border-radius:16px;
+.mm-belief{max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;border-radius:{{radius}};
   font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;color:#FAF9F7;}
 .mm-belief[data-theme="라이트"]{background:#FAF9F7;color:#1A1A1A;}
 .mm-belief__item{display:flex;flex-direction:column;align-items:center;gap:8px;}
@@ -2193,11 +2228,13 @@
 {{!-- @name chips @type item @label "칩" --}}
 <div class="mm-nav" data-theme="{{theme}}">
 {{#each chips}}
-  {{!-- @name icon @type outlined-textfield @default "가위" @label "아이콘 키워드 (가위·빗·가위집·복원·상담·후기)" --}}
+  {{!-- @name icon @type outlined-textfield @default "가위" @label "아이콘 키워드 (가위·빗·가위집·복원·상담·후기) · 아래 커스텀 SVG 있으면 무시됨" --}}
+  {{!-- @name svg @type outlined-textfield @default "" @label "커스텀 SVG (선택 · <svg …>…</svg> 코드 한 줄로 붙여넣기 · 비우면 키워드 아이콘)" --}}
   {{!-- @name label @type outlined-textfield @default "메뉴" @label "라벨" --}}
   {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
   <a class="mm-nav__chip" href="{{link}}" data-icon="{{icon}}">
     <span class="mm-nav__ico" aria-hidden="true"></span>
+    <span class="mm-nav__svgsrc" style="display:none">{{svg}}</span>
     <span class="mm-nav__label">{{label}}</span>
   </a>
 {{/each}}
@@ -2205,8 +2242,10 @@
 ```
 ### CSS 탭
 ```css
-.mm-nav{max-width:760px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:8px 12px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
-.mm-nav__chip{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;text-decoration:none;font-size:clamp(13px,3.6vw,15px);font-weight:700;letter-spacing:-.01em;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;}
+/* 가로 1행 고정 + 가로 스크롤(줄바꿈 X). 칩이 많아지면 우측에서 스윽 나오는 형태 */
+.mm-nav{max-width:760px;margin:0 auto;display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding:8px 12px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-nav::-webkit-scrollbar{display:none;}
+.mm-nav__chip{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;text-decoration:none;font-size:clamp(13px,3.6vw,15px);font-weight:700;letter-spacing:-.01em;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;}
 .mm-nav[data-theme="다크"] .mm-nav__chip{background:#1A1A1A;color:#FAF9F7;}
 .mm-nav[data-theme="라이트"] .mm-nav__chip{background:#FFFFFF;color:#1A1A1A;border:1px solid #D4D0CB;}
 .mm-nav__chip:active{transform:scale(.97);}
@@ -2247,8 +2286,12 @@
     var chips=root.querySelectorAll('.mm-nav__chip');
     for(var i=0;i<chips.length;i++){
       var ico=chips[i].querySelector('.mm-nav__ico');
+      if(!ico)continue;
+      /* 커스텀 SVG 우선. textContent라 아임웹이 escape해도 원본 SVG 문자열이 잡혀 innerHTML로 정상 렌더 */
+      var srcEl=chips[i].querySelector('.mm-nav__svgsrc'),custom=srcEl?String(srcEl.textContent||'').trim():'';
+      if(custom){ ico.innerHTML=custom; continue; }
       var name=pick(chips[i].getAttribute('data-icon'));
-      if(ico&&name)ico.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+SVG[name]+'</svg>';
+      if(name)ico.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+SVG[name]+'</svg>';
     }
   }
   function init(){var l=document.querySelectorAll('.mm-nav');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
@@ -2279,7 +2322,7 @@
   {{#each videos}}
     {{!-- @name url @type outlined-textfield @default "" @label "유튜브 URL 또는 영상ID" --}}
     {{!-- @name caption @type outlined-textfield @default "" @label "영상 제목(선택)" --}}
-    {{!-- @name thumb @type image @label "썸네일 직접 지정(선택)" --}}
+    {{!-- @name thumb @type image @label "썸네일 직접 지정(선택) (권장 1600×900px)" --}}
     <a class="mm-yt__card" href="https://www.youtube.com" target="_blank" rel="noopener" data-url="{{url}}" data-thumb="{{thumb}}">
       <span class="mm-yt__thumb">
         <img class="mm-yt__img" src="" alt="" loading="lazy">
@@ -2351,7 +2394,7 @@
 {{!-- @name tiles @type item @label "카테고리 타일" --}}
 <div class="mm-cat" style="--mm-ratio:{{ratio}};">
 {{#each tiles}}
-  {{!-- @name image @type image @label "이미지" --}}
+  {{!-- @name image @type image @label "이미지 (권장 800×1000px)" --}}
   {{!-- @name label @type outlined-textfield @default "카테고리" @label "큰 라벨" --}}
   {{!-- @name sublabel @type outlined-textfield @default "" @label "작은 설명(선택)" --}}
   {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
@@ -2418,7 +2461,7 @@
   <div class="mm-st__media"><img class="mm-st__mediaimg" src="" alt=""></div>
   <div class="mm-st__scenes">
   {{#each scenes}}
-    {{!-- @name image @type image @label "이미지" --}}
+    {{!-- @name image @type image @label "이미지 — 권장 1200×800px" --}}
     {{!-- @name heading @type outlined-textfield @default "장면 제목" @label "제목" --}}
     {{!-- @name text @type text-editor @default "<p>내용</p>" @label "내용" --}}
     <section class="mm-st__scene" data-img="{{image}}">
@@ -2493,7 +2536,7 @@
   {{#each steps}}
     {{!-- @name stepName @type outlined-textfield @default "단계명" @label "단계명" --}}
     {{!-- @name stepDesc @type text-editor @default "<p>설명</p>" @label "설명" --}}
-    {{!-- @name stepImage @type image @label "이미지(선택)" --}}
+    {{!-- @name stepImage @type image @label "이미지(선택) — 권장 800×800px" --}}
     <li class="mm-tl__step">
       <span class="mm-tl__idx" aria-hidden="true"></span>
       <div class="mm-tl__body">
@@ -2556,7 +2599,7 @@
   📝 가위 사진 위 점을 클릭 → 부위 설명 툴팁 (전문성·교육)
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name baseImage @type image @label "가위 사진(배경)" --}}
+{{!-- @name baseImage @type image @label "가위 사진(배경) (권장 1600×900px)" --}}
 {{!-- @name ratio @type outlined-textfield @default "16/9" @label "비율 — 입력: 16/9 · 4/3 · 1/1" --}}
 {{!-- @name spots @type item @label "핫스팟" --}}
 <div class="mm-hs">
@@ -2628,7 +2671,7 @@
 {{!-- @name cards @type item @label "카드" --}}
 <div class="mm-tilt">
 {{#each cards}}
-  {{!-- @name image @type image @label "이미지" --}}
+  {{!-- @name image @type image @label "이미지 — 권장 800×1000px (세로 카드)" --}}
   {{!-- @name title @type outlined-textfield @default "제목" @label "제목" --}}
   {{!-- @name desc @type outlined-textfield @default "" @label "설명(선택)" --}}
   {{!-- @name link @type outlined-textfield @default "" @label "링크(선택)" --}}
@@ -2692,6 +2735,7 @@
 {{!-- @name words @type item @label "키워드" --}}
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
 {{!-- @name speed @type outlined-textfield @default "30" @label "속도(초, 작을수록 빠름)" --}}
+{{!-- @name radius @type outlined-textfield @default "12px" @label "모서리 둥글기 — 예: 12px · 0px이면 각지게" --}}
 <div class="mm-mq" data-theme="{{theme}}" data-speed="{{speed}}">
   <div class="mm-mq__track">
   {{#each words}}
@@ -2703,7 +2747,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-mq{overflow:hidden;width:100%;padding:clamp(14px,3vw,22px) 0;background:#1A1A1A;border-radius:12px;}
+.mm-mq{overflow:hidden;width:100%;padding:clamp(14px,3vw,22px) 0;background:#1A1A1A;border-radius:{{radius}};}
 .mm-mq[data-theme="라이트"]{background:#FAF9F7;border:1px solid #D4D0CB;}
 .mm-mq__track{display:flex;width:max-content;will-change:transform;animation:mm-mq-scroll var(--mq-dur,30s) linear infinite;}
 @keyframes mm-mq-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -2748,7 +2792,7 @@
 <div class="mm-gal">
   <div class="mm-gal__grid">
   {{#each photos}}
-    {{!-- @name image @type image @label "사진" --}}
+    {{!-- @name image @type image @label "사진 — 권장 800×800px" --}}
     {{!-- @name caption @type outlined-textfield @default "" @label "캡션(선택)" --}}
     <button type="button" class="mm-gal__thumb" data-img="{{image}}" data-cap="{{caption}}">
       <img src="{{image}}" alt="" loading="lazy">
@@ -2818,12 +2862,15 @@
   📝 어두운 배경에서 커서 주변만 밝아지며 제품이 드러남 (임팩트)
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name bg @type image @label "배경 이미지" --}}
+{{!-- @name bg @type image @label "PC 배경 이미지 — 권장 1600×900px" --}}
+{{!-- @name bgMobile @type image @label "모바일 배경 이미지(선택) — 권장 1080×1350px · 비우면 PC 이미지 사용" --}}
 {{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 460px 또는 60vh (비우면 자동)" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name headline @type text-editor @default "<p>진짜는 가까이서 드러납니다</p>" @label "헤드라인" --}}
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
 <div class="mm-sp" data-height="{{height}}">
   <img class="mm-sp__bg" src="{{bg}}" alt="">
+  <img class="mm-sp__bgm" src="{{bgMobile}}" alt="">
   <div class="mm-sp__veil" aria-hidden="true"></div>
   <div class="mm-sp__inner">
     <div class="mm-sp__headline" role="heading" aria-level="2">{{headline}}</div>
@@ -2833,8 +2880,10 @@
 ```
 ### CSS 탭
 ```css
-.mm-sp{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(300px,52vw,460px);display:flex;align-items:center;justify-content:center;text-align:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;--mx:50%;--my:50%;}
-.mm-sp__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+.mm-sp{position:relative;overflow:hidden;border-radius:{{radius}};min-height:clamp(300px,52vw,460px);display:flex;align-items:center;justify-content:center;text-align:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;--mx:50%;--my:50%;}
+.mm-sp__bg,.mm-sp__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+.mm-sp__bgm{display:none;}
+@media (max-width:768px){.mm-sp[data-hasm="1"] .mm-sp__bg{display:none;}.mm-sp[data-hasm="1"] .mm-sp__bgm{display:block;}}
 .mm-sp__veil{position:absolute;inset:0;z-index:1;background:radial-gradient(circle clamp(120px,22vw,220px) at var(--mx) var(--my),rgba(26,26,26,0) 0%,rgba(26,26,26,.55) 45%,rgba(26,26,26,.94) 80%);transition:background .08s linear;}
 .mm-sp__inner{position:relative;z-index:2;padding:clamp(28px,6vw,56px);max-width:680px;pointer-events:none;}
 .mm-sp__headline{margin:0;font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(22px,6vw,40px);font-weight:900;line-height:1.25;letter-spacing:-.02em;color:#FAF9F7;text-shadow:0 2px 20px rgba(0,0,0,.4);white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
@@ -2851,6 +2900,8 @@
   function initOne(root){
     var h=root.getAttribute('data-height');
     if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
+    var m=root.querySelector('.mm-sp__bgm');
+    if(m && String(m.getAttribute('src')||'').trim()) root.setAttribute('data-hasm','1');
     root.addEventListener('pointermove',function(e){
       if(e.pointerType==='touch')return;
       var r=root.getBoundingClientRect();
