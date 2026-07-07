@@ -1,11 +1,12 @@
-# 🧩 MAMORU 아임웹 위젯 — Part 5/5 (t08_typing ~ t10_grip_simulator)
+# 🧩 MAMORU 아임웹 위젯 — Part 5/5 (t08_typing ~ t11_logo_marquee)
 
-> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} · CSS탭 {{변수}} · 인라인 style="…{{}}…"(동적값은 data-*+JS) · 인라인 on*= 금지. 이 파일 3종.
+> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} · CSS탭 {{변수}} · 인라인 style="…{{}}…"(동적값은 data-*+JS) · 인라인 on*= 금지. 이 파일 4종.
 
 ## 📑 이 파일의 위젯
 - T8. 타이핑 헤드라인 — `t08_typing`
 - T9. 읽기 진행바 + 맨위로 — `t09_progress`
 - T10. 그립/손크기 시뮬레이터 — `t10_grip_simulator`
+- T11. 롤링 로고 띠 (Marquee) — `t11_logo_marquee`
 
 ---
 
@@ -211,6 +212,115 @@
     if(btns.length){select(btns[0].idx);}
   }
   function init(){var l=document.querySelectorAll('.mm-grip');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+```
+
+---
+
+## T11. 롤링 로고 띠 (Marquee)
+`폴더: t11_logo_marquee`
+
+### HTML 탭
+```html
+{{!-- @name widgetInfo @type outlined-textfield @default "로고 이미지가 가로로 끊김없이 흐르는 띠(마퀴). 아임웹 기본 '롤링 로고' 대체 + 가로 최대폭 지정 가능." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 롤링 로고 띠 (Marquee)
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 로고 이미지들이 가로로 끊김없이 흐르는 띠. 가로영역 확장해도 설정 폭에서 멈춤
+  🚫 fetch·iframe·인라인핸들러 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력: 예 1280 (비우거나 full=꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
+{{!-- @name bg @type color-picker @default "#5F5F5FFF" @label "배경 컬러" --}}
+{{!-- @name size @type outlined-textfield @default "20" @label "로고 크기(px) — 로고 높이" --}}
+{{!-- @name gap @type outlined-textfield @default "48" @label "로고 간 간격(px)" --}}
+{{!-- @name padY @type outlined-textfield @default "10" @label "내부 상하 여백(px)" --}}
+{{!-- @name speed @type outlined-textfield @default "30" @label "전환 속도(초) — 한 바퀴 도는 시간. 클수록 느림" --}}
+{{!-- @name dir @type outlined-textfield @default "좌" @label "방향 — 입력: 좌 · 우" --}}
+{{!-- @name gray @type switch @default false @label "흑백 이미지" --}}
+{{!-- @name pause @type switch @default false @label "마우스 오버 시 정지" --}}
+{{!-- @name logos @type item @label "롤링 로고" --}}
+<div class="mm-lb" data-maxw="{{maxw}}" data-bg="{{bg}}" data-size="{{size}}" data-gap="{{gap}}" data-pady="{{padY}}" data-speed="{{speed}}" data-dir="{{dir}}" data-gray="{{gray}}" data-pause="{{pause}}">
+  <div class="mm-lb__track">
+    <div class="mm-lb__set">
+      {{#each logos}}
+        {{!-- @name logo @type image @label "로고 이미지 — 배경 투명 PNG 권장(높이 40px↑)" --}}
+        <img class="mm-lb__logo" src="{{logo}}" alt="">
+      {{/each}}
+    </div>
+  </div>
+</div>
+```
+### CSS 탭
+```css
+.mm-lb{--lb-size:20px;--lb-gap:48px;--lb-pady:10px;--lb-speed:30s;--lb-bg:#5F5F5F;
+  box-sizing:border-box;margin-left:auto;margin-right:auto;position:relative;overflow:hidden;background:var(--lb-bg);padding:var(--lb-pady) 0;}
+.mm-lb__track{display:flex;width:max-content;will-change:transform;animation:mm-lb-scroll var(--lb-speed) linear infinite;}
+/* 세트 하나 = 로고 묶음. JS가 세트를 화면폭 이상으로 채운 뒤 1회 복제 → translateX(-50%)로 끊김없는 루프 */
+.mm-lb__set{display:flex;align-items:center;gap:var(--lb-gap);padding-right:var(--lb-gap);flex:0 0 auto;}
+.mm-lb__logo{height:var(--lb-size);width:auto;flex:0 0 auto;display:block;object-fit:contain;}
+/* 방향: 우(→)면 역방향 */
+.mm-lb[data-dir="우"] .mm-lb__track,.mm-lb[data-dir="right"] .mm-lb__track,.mm-lb[data-dir="→"] .mm-lb__track{animation-direction:reverse;}
+/* 흑백 토글(switch → data-gray="true") */
+.mm-lb[data-gray="true"] .mm-lb__logo{filter:grayscale(1);}
+/* 마우스 오버 시 정지(switch → data-pause="true") */
+.mm-lb[data-pause="true"]:hover .mm-lb__track{animation-play-state:paused;}
+@keyframes mm-lb-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.mm-lb__track{animation:none;}}
+```
+### JS 탭
+```js
+(function(){
+  function px(v){v=String(v==null?'':v).trim(); if(!v)return null; if(String(parseFloat(v))===v)v+='px'; return v;}
+  function sec(v){v=String(v==null?'':v).trim(); if(!v)return null; if(String(parseFloat(v))===v)v+='s'; return v;}
+  /* 가로 최대폭: 자유 숫자값(1280 등) 적용. 비움 → 꽉 채움, full → 꽉 채움 */
+  function applyMaxw(root){
+    var mw=root.getAttribute('data-maxw'); mw=(mw==null?'':mw).trim(); var low=mw.toLowerCase();
+    if(!mw){ root.style.maxWidth=''; }
+    else if(low==='full'||low==='none'){ root.style.maxWidth='none'; }
+    else { if(String(parseFloat(mw))===mw) mw+='px'; root.style.maxWidth=mw; }
+  }
+  /* 숫자·컬러 설정은 CSS 변수로 주입(색/크기/간격/여백/속도). 방향·흑백·정지는 CSS 속성선택자가 담당 */
+  function applySettings(root){
+    var s=px(root.getAttribute('data-size')); if(s)root.style.setProperty('--lb-size',s);
+    var g=px(root.getAttribute('data-gap')); if(g!=null)root.style.setProperty('--lb-gap',g);
+    var p=px(root.getAttribute('data-pady')); if(p!=null)root.style.setProperty('--lb-pady',p);
+    var sp=sec(root.getAttribute('data-speed')); if(sp)root.style.setProperty('--lb-speed',sp);
+    var bg=String(root.getAttribute('data-bg')||'').trim(); if(bg)root.style.setProperty('--lb-bg',bg);
+    applyMaxw(root);
+  }
+  /* 이미지 로드 완료(또는 1.6s) 후 콜백 → 정확한 폭 측정 */
+  function whenReady(root,cb){
+    var imgs=root.querySelectorAll('.mm-lb__logo'),n=imgs.length,done=0,fired=false;
+    function fire(){ if(!fired){ fired=true; cb(); } }
+    if(!n){ return fire(); }
+    function chk(){ if(done>=n) fire(); }
+    for(var i=0;i<n;i++){ var im=imgs[i];
+      if(im.complete&&im.naturalWidth){ done++; }
+      else { im.addEventListener('load',function(){done++;chk();}); im.addEventListener('error',function(){done++;chk();}); }
+    }
+    chk(); setTimeout(fire,1600);
+  }
+  /* 세트를 화면폭 이상으로 채운 뒤 1회 복제 → 끊김없는 마퀴(translateX -50%) */
+  function buildTrack(root){
+    var track=root.querySelector('.mm-lb__track'), set=track&&track.querySelector('.mm-lb__set');
+    if(!track||!set||track.getAttribute('data-built')==='1')return;
+    var base=set.innerHTML, guard=0;
+    if(!base.replace(/\s/g,'')){ track.setAttribute('data-built','1'); return; } // 로고 없음
+    while(set.getBoundingClientRect().width < root.getBoundingClientRect().width && guard<40){ set.insertAdjacentHTML('beforeend', base); guard++; }
+    track.appendChild(set.cloneNode(true));
+    track.setAttribute('data-built','1');
+  }
+  function initOne(root){
+    applySettings(root);
+    /* 패널값(크기·간격·여백·속도·컬러·최대폭) 바뀌면 즉시 재적용 → 편집기 실시간 반영 */
+    if('MutationObserver' in window){
+      new MutationObserver(function(){applySettings(root);}).observe(root,{attributes:true,attributeFilter:['data-maxw','data-bg','data-size','data-gap','data-pady','data-speed']});
+    }
+    whenReady(root,function(){ buildTrack(root); });
+  }
+  function init(){var l=document.querySelectorAll('.mm-lb');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 ```

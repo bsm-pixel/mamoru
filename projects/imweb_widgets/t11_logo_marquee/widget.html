@@ -1,0 +1,28 @@
+{{!-- @name widgetInfo @type outlined-textfield @default "로고 이미지가 가로로 끊김없이 흐르는 띠(마퀴). 아임웹 기본 '롤링 로고' 대체 + 가로 최대폭 지정 가능." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 롤링 로고 띠 (Marquee)
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 로고 이미지들이 가로로 끊김없이 흐르는 띠. 가로영역 확장해도 설정 폭에서 멈춤
+  🚫 fetch·iframe·인라인핸들러 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력: 예 1280 (비우거나 full=꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
+{{!-- @name bg @type color-picker @default "#5F5F5FFF" @label "배경 컬러" --}}
+{{!-- @name size @type outlined-textfield @default "20" @label "로고 크기(px) — 로고 높이" --}}
+{{!-- @name gap @type outlined-textfield @default "48" @label "로고 간 간격(px)" --}}
+{{!-- @name padY @type outlined-textfield @default "10" @label "내부 상하 여백(px)" --}}
+{{!-- @name speed @type outlined-textfield @default "30" @label "전환 속도(초) — 한 바퀴 도는 시간. 클수록 느림" --}}
+{{!-- @name dir @type outlined-textfield @default "좌" @label "방향 — 입력: 좌 · 우" --}}
+{{!-- @name gray @type switch @default false @label "흑백 이미지" --}}
+{{!-- @name pause @type switch @default false @label "마우스 오버 시 정지" --}}
+{{!-- @name logos @type item @label "롤링 로고" --}}
+<div class="mm-lb" data-maxw="{{maxw}}" data-bg="{{bg}}" data-size="{{size}}" data-gap="{{gap}}" data-pady="{{padY}}" data-speed="{{speed}}" data-dir="{{dir}}" data-gray="{{gray}}" data-pause="{{pause}}">
+  <div class="mm-lb__track">
+    <div class="mm-lb__set">
+      {{#each logos}}
+        {{!-- @name logo @type image @label "로고 이미지 — 배경 투명 PNG 권장(높이 40px↑)" --}}
+        <img class="mm-lb__logo" src="{{logo}}" alt="">
+      {{/each}}
+    </div>
+  </div>
+</div>
