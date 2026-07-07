@@ -2387,8 +2387,10 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   🚫 fetch·iframe 0 (썸네일은 이미지 로드, 인라인 재생 아님)
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name title @type outlined-textfield @default "" @label "제목(선택)" --}}
+{{!-- @name colsPC @type outlined-textfield @default "3" @label "PC 한 줄 개수 — 예: 2 · 3 · 4" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력(예 1280 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
 {{!-- @name videos @type item @label "영상" --}}
-<div class="mm-yt">
+<div class="mm-yt" data-cols="{{colsPC}}" data-maxw="{{maxw}}">
   <p class="mm-yt__heading">{{title}}</p>
   <div class="mm-yt__row">
   {{#each videos}}
@@ -2408,10 +2410,17 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ```
 ### CSS 탭
 ```css
-.mm-yt{max-width:920px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-yt{--yt-cols:3;box-sizing:border-box;max-width:920px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-yt__heading{margin:0 0 16px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(20px,5vw,28px);font-weight:800;letter-spacing:-.02em;}
 .mm-yt__heading:empty{display:none;}
-.mm-yt__row{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+/* PC: 한 줄 N개(--yt-cols) 그리드 */
+.mm-yt__row{display:grid;grid-template-columns:repeat(var(--yt-cols),minmax(0,1fr));gap:16px;}
+/* 모바일: 1행 가로 스크롤 + 우측 카드 살짝 보임(peek) */
+@media (max-width:768px){
+  .mm-yt__row{display:flex;flex-wrap:nowrap;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding-bottom:4px;}
+  .mm-yt__row::-webkit-scrollbar{display:none;}
+  .mm-yt__card{flex:0 0 78%;scroll-snap-align:start;}
+}
 .mm-yt__card{display:block;text-decoration:none;color:inherit;}
 .mm-yt__thumb{position:relative;display:block;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#F5F3F0;}
 .mm-yt__img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s cubic-bezier(.4,0,.2,1);}
@@ -2430,7 +2439,22 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     var m=u.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([\w-]{11})/);
     return m?m[1]:'';
   }
+  /* 가로 최대폭: 자유 숫자값(1280 등). 비움/full → 꽉 채움 */
+  function applyMaxw(root){
+    var mw=root.getAttribute('data-maxw'); mw=(mw==null?'':mw).trim(); var low=mw.toLowerCase();
+    if(!mw){ root.style.maxWidth=''; }
+    else if(low==='full'||low==='none'){ root.style.maxWidth='none'; }
+    else { if(String(parseFloat(mw))===mw) mw+='px'; root.style.maxWidth=mw; }
+  }
+  function applySettings(root){
+    var c=String(root.getAttribute('data-cols')||'').trim();
+    if(/^[1-9]\d*$/.test(c)) root.style.setProperty('--yt-cols',c);
+    applyMaxw(root);
+  }
   function initOne(root){
+    applySettings(root);
+    /* PC 열수·최대폭 바뀌면 즉시 반영(편집기 실시간) */
+    if('MutationObserver' in window){ new MutationObserver(function(){applySettings(root);}).observe(root,{attributes:true,attributeFilter:['data-cols','data-maxw']}); }
     var cards=root.querySelectorAll('.mm-yt__card');
     for(var i=0;i<cards.length;i++){
       var id=vid(cards[i].getAttribute('data-url'));

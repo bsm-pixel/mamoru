@@ -7,8 +7,10 @@
   🚫 fetch·iframe 0 (썸네일은 이미지 로드, 인라인 재생 아님)
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name title @type outlined-textfield @default "" @label "제목(선택)" --}}
+{{!-- @name colsPC @type outlined-textfield @default "3" @label "PC 한 줄 개수 — 예: 2 · 3 · 4" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력(예 1280 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
 {{!-- @name videos @type item @label "영상" --}}
-<div class="mm-yt">
+<div class="mm-yt" data-cols="{{colsPC}}" data-maxw="{{maxw}}">
   <p class="mm-yt__heading">{{title}}</p>
   <div class="mm-yt__row">
   {{#each videos}}
