@@ -2308,36 +2308,47 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 
 ### HTML 탭
 ```html
-{{!-- @name widgetInfo @type outlined-textfield @default "아이콘+라벨+링크 칩 내비. 아이콘은 키워드로(가위·빗·가위집·복원·상담·후기)." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+{{!-- @name widgetInfo @type outlined-textfield @default "아이콘+라벨+링크 칩 내비. 기본 중앙정렬, 넘치면 가로 스크롤(모바일). 아이콘은 키워드로(가위·빗·가위집·복원·상담·후기)." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
 <span style="display:none">{{widgetInfo}}</span>
 <!-- ═══════════════════════════════════════════════════════════════
   📦 MAMORU 커스텀 위젯 — 아이콘 칩 내비
   📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
-  📝 아이콘+라벨 알약 버튼들(미용가위·빗·가위집·복원수리·컨설팅·고객후기 등)
+  📝 아이콘+라벨 알약 버튼들. 기본 중앙, 넘치면 우측 peek 가로 스크롤
   🚫 fetch·iframe 0 (아이콘은 내장 SVG, 외부 라이브러리 아님)
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
+{{!-- @name align @type outlined-textfield @default "가운데" @label "기본 정렬 — 입력: 가운데 · 왼쪽 (칩이 넘치면 자동 가로 스크롤)" --}}
+{{!-- @name fontPC @type outlined-textfield @default "11" @label "PC 글씨 크기(pt)" --}}
+{{!-- @name fontMobile @type outlined-textfield @default "10" @label "모바일 글씨 크기(pt)" --}}
+{{!-- @name padY @type outlined-textfield @default "12" @label "칩 상하 여백(px) — 칩 높이 조절" --}}
 {{!-- @name chips @type item @label "칩" --}}
-<div class="mm-nav" data-theme="{{theme}}">
-{{#each chips}}
-  {{!-- @name icon @type outlined-textfield @default "가위" @label "아이콘 키워드 (가위·빗·가위집·복원·상담·후기) · 아래 커스텀 SVG 있으면 무시됨" --}}
-  {{!-- @name svg @type outlined-textfield @default "" @label "커스텀 SVG (선택 · <svg …>…</svg> 코드 한 줄로 붙여넣기 · 비우면 키워드 아이콘)" --}}
-  {{!-- @name label @type outlined-textfield @default "메뉴" @label "라벨" --}}
-  {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
-  <a class="mm-nav__chip" href="{{link}}" data-icon="{{icon}}">
-    <span class="mm-nav__ico" aria-hidden="true"></span>
-    <span class="mm-nav__svgsrc" style="display:none">{{svg}}</span>
-    <span class="mm-nav__label">{{label}}</span>
-  </a>
-{{/each}}
+<div class="mm-nav" data-theme="{{theme}}" data-align="{{align}}" data-fpc="{{fontPC}}" data-fm="{{fontMobile}}" data-pady="{{padY}}">
+  <div class="mm-nav__track">
+  {{#each chips}}
+    {{!-- @name icon @type outlined-textfield @default "가위" @label "아이콘 키워드 (가위·빗·가위집·복원·상담·후기) · 아래 커스텀 SVG 있으면 무시됨" --}}
+    {{!-- @name svg @type outlined-textfield @default "" @label "커스텀 SVG (선택 · <svg …>…</svg> 코드 한 줄로 붙여넣기 · 비우면 키워드 아이콘)" --}}
+    {{!-- @name label @type outlined-textfield @default "메뉴" @label "라벨" --}}
+    {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
+    <a class="mm-nav__chip" href="{{link}}" data-icon="{{icon}}">
+      <span class="mm-nav__ico" aria-hidden="true"></span>
+      <span class="mm-nav__svgsrc" style="display:none">{{svg}}</span>
+      <span class="mm-nav__label">{{label}}</span>
+    </a>
+  {{/each}}
+  </div>
 </div>
 ```
 ### CSS 탭
 ```css
-/* 가로 1행 고정 + 가로 스크롤(줄바꿈 X). 칩이 많아지면 우측에서 스윽 나오는 형태 */
-.mm-nav{max-width:760px;margin:0 auto;display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding:8px 12px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-nav{--nav-fpc:11pt;--nav-fm:10pt;--nav-pady:12px;
+  box-sizing:border-box;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding:8px 12px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
 .mm-nav::-webkit-scrollbar{display:none;}
-.mm-nav__chip{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;text-decoration:none;font-size:clamp(13px,3.6vw,15px);font-weight:700;letter-spacing:-.01em;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;}
+/* 트랙: 다 들어오면 margin auto로 중앙, 넘치면 좌측부터 스크롤 + 우측 칩 살짝 보임(peek). justify-content:center의 좌측 잘림 없음 */
+.mm-nav__track{display:flex;flex-wrap:nowrap;gap:10px;width:max-content;margin:0 auto;}
+.mm-nav[data-align="왼쪽"] .mm-nav__track{margin:0;}
+/* 칩 상하 여백=--nav-pady, 폰트=PC/모바일 각각(pt), 아이콘은 폰트에 비례(em) */
+.mm-nav__chip{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;gap:8px;padding:var(--nav-pady) 20px;border-radius:999px;text-decoration:none;font-size:var(--nav-fpc);line-height:1;font-weight:700;letter-spacing:-.01em;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;}
+@media (max-width:768px){.mm-nav__chip{font-size:var(--nav-fm);}}
 .mm-nav[data-theme="다크"] .mm-nav__chip{background:#1A1A1A;color:#FAF9F7;}
 .mm-nav[data-theme="라이트"] .mm-nav__chip{background:#FFFFFF;color:#1A1A1A;border:1px solid #D4D0CB;}
 .mm-nav__chip:active{transform:scale(.97);}
@@ -2346,7 +2357,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   .mm-nav[data-theme="라이트"] .mm-nav__chip:hover{border-color:#1A1A1A;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.06);}
 }
 .mm-nav__ico{flex:0 0 auto;display:inline-flex;}
-.mm-nav__ico svg{width:18px;height:18px;display:block;}
+.mm-nav__ico svg{width:1.25em;height:1.25em;display:block;}
 .mm-nav__ico:empty{display:none;}
 ```
 ### JS 탭
@@ -2374,7 +2385,17 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     if(/전화|연락|phone|call/.test(k))return 'phone';
     return null;
   }
+  /* 숫자값 → 단위 부여(폰트 pt / 여백 px). 값 있으면 CSS 변수 주입 */
+  function unit(v,u){v=String(v==null?'':v).trim(); if(!v)return null; if(String(parseFloat(v))===v)v+=u; return v;}
+  function applySettings(root){
+    var fpc=unit(root.getAttribute('data-fpc'),'pt'); if(fpc)root.style.setProperty('--nav-fpc',fpc);
+    var fm=unit(root.getAttribute('data-fm'),'pt'); if(fm)root.style.setProperty('--nav-fm',fm);
+    var py=unit(root.getAttribute('data-pady'),'px'); if(py)root.style.setProperty('--nav-pady',py);
+  }
   function initOne(root){
+    applySettings(root);
+    /* 폰트·여백 값 바뀌면 즉시 반영(편집기 실시간). 정렬(가운데/왼쪽)은 CSS 속성선택자가 담당 */
+    if('MutationObserver' in window){ new MutationObserver(function(){applySettings(root);}).observe(root,{attributes:true,attributeFilter:['data-fpc','data-fm','data-pady']}); }
     var chips=root.querySelectorAll('.mm-nav__chip');
     for(var i=0;i<chips.length;i++){
       var ico=chips[i].querySelector('.mm-nav__ico');

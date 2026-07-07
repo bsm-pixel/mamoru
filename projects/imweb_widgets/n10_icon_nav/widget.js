@@ -21,7 +21,17 @@
     if(/전화|연락|phone|call/.test(k))return 'phone';
     return null;
   }
+  /* 숫자값 → 단위 부여(폰트 pt / 여백 px). 값 있으면 CSS 변수 주입 */
+  function unit(v,u){v=String(v==null?'':v).trim(); if(!v)return null; if(String(parseFloat(v))===v)v+=u; return v;}
+  function applySettings(root){
+    var fpc=unit(root.getAttribute('data-fpc'),'pt'); if(fpc)root.style.setProperty('--nav-fpc',fpc);
+    var fm=unit(root.getAttribute('data-fm'),'pt'); if(fm)root.style.setProperty('--nav-fm',fm);
+    var py=unit(root.getAttribute('data-pady'),'px'); if(py)root.style.setProperty('--nav-pady',py);
+  }
   function initOne(root){
+    applySettings(root);
+    /* 폰트·여백 값 바뀌면 즉시 반영(편집기 실시간). 정렬(가운데/왼쪽)은 CSS 속성선택자가 담당 */
+    if('MutationObserver' in window){ new MutationObserver(function(){applySettings(root);}).observe(root,{attributes:true,attributeFilter:['data-fpc','data-fm','data-pady']}); }
     var chips=root.querySelectorAll('.mm-nav__chip');
     for(var i=0;i<chips.length;i++){
       var ico=chips[i].querySelector('.mm-nav__ico');

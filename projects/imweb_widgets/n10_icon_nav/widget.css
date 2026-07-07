@@ -1,7 +1,12 @@
-/* 가로 1행 고정 + 가로 스크롤(줄바꿈 X). 칩이 많아지면 우측에서 스윽 나오는 형태 */
-.mm-nav{max-width:760px;margin:0 auto;display:flex;flex-wrap:nowrap;gap:10px;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding:8px 12px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-nav{--nav-fpc:11pt;--nav-fm:10pt;--nav-pady:12px;
+  box-sizing:border-box;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding:8px 12px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
 .mm-nav::-webkit-scrollbar{display:none;}
-.mm-nav__chip{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:999px;text-decoration:none;font-size:clamp(13px,3.6vw,15px);font-weight:700;letter-spacing:-.01em;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;}
+/* 트랙: 다 들어오면 margin auto로 중앙, 넘치면 좌측부터 스크롤 + 우측 칩 살짝 보임(peek). justify-content:center의 좌측 잘림 없음 */
+.mm-nav__track{display:flex;flex-wrap:nowrap;gap:10px;width:max-content;margin:0 auto;}
+.mm-nav[data-align="왼쪽"] .mm-nav__track{margin:0;}
+/* 칩 상하 여백=--nav-pady, 폰트=PC/모바일 각각(pt), 아이콘은 폰트에 비례(em) */
+.mm-nav__chip{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;gap:8px;padding:var(--nav-pady) 20px;border-radius:999px;text-decoration:none;font-size:var(--nav-fpc);line-height:1;font-weight:700;letter-spacing:-.01em;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;}
+@media (max-width:768px){.mm-nav__chip{font-size:var(--nav-fm);}}
 .mm-nav[data-theme="다크"] .mm-nav__chip{background:#1A1A1A;color:#FAF9F7;}
 .mm-nav[data-theme="라이트"] .mm-nav__chip{background:#FFFFFF;color:#1A1A1A;border:1px solid #D4D0CB;}
 .mm-nav__chip:active{transform:scale(.97);}
@@ -10,5 +15,5 @@
   .mm-nav[data-theme="라이트"] .mm-nav__chip:hover{border-color:#1A1A1A;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.06);}
 }
 .mm-nav__ico{flex:0 0 auto;display:inline-flex;}
-.mm-nav__ico svg{width:18px;height:18px;display:block;}
+.mm-nav__ico svg{width:1.25em;height:1.25em;display:block;}
 .mm-nav__ico:empty{display:none;}
