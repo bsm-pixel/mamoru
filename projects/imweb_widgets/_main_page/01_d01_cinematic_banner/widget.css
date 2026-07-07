@@ -1,11 +1,5 @@
+/* 가로 최대폭은 자유 숫자값(예 1280) → JS가 max-width 적용(margin auto로 중앙). 영역 확장해도 이 값에서 멈춤 */
 .mm-cine{box-sizing:border-box;margin-left:auto;margin-right:auto;position:relative;overflow:hidden;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
-/* 가로 최대폭 프리셋(CSS 속성선택자 → 편집기 즉시반영). 비우면 꽉 채움 */
-.mm-cine[data-maxw="900"]{max-width:900px;}
-.mm-cine[data-maxw="1000"]{max-width:1000px;}
-.mm-cine[data-maxw="1100"]{max-width:1100px;}
-.mm-cine[data-maxw="1200"]{max-width:1200px;}
-.mm-cine[data-maxw="1400"]{max-width:1400px;}
-.mm-cine[data-maxw="full"]{max-width:none;}
 /* 기본=이미지 비율 자동: 이미지가 흐름에 들어가 컨테이너 높이=이미지 비율(PC=PC이미지 / 모바일=모바일이미지). 높이 미입력 시 이 모드 */
 .mm-cine__bg,.mm-cine__bgm{display:block;width:100%;height:auto;animation:mm-cine-zoom 16s ease-out both;}
 .mm-cine__bgm{display:none;}

@@ -483,7 +483,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 {{!-- @name imageMobile @type image @label "모바일 배경 이미지 (선택) — 권장 1080×1350px (세로형) · 비우면 PC 이미지 사용" --}}
 {{!-- @name height @type outlined-textfield @default "" @label "높이 — 비우면 이미지 비율에 맞춰 자동(권장). 값 넣으면 고정+크롭: 예 480px · 60vh" --}}
 {{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
-{{!-- @name maxw @type outlined-textfield @default "" @label "최대 가로폭(PC) — 입력: 900 · 1000 · 1100 · 1200 · 1400 · full (비우면 꽉 채움). 모바일 자동 꽉 채움" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "최대 가로폭(PC) — 숫자 자유 입력: 예 1280 (비우거나 full=꽉 채움). 영역 확장해도 이 값에서 멈춤 · 모바일 자동 꽉 채움" --}}
 {{!-- @name focus @type outlined-textfield @default "중앙" @label "사진 초점 — 입력: 중앙·좌·우·상·하" --}}
 {{!-- @name overlay @type color-picker @default "#1A1A1A80" @label "어둡게 (검정의 투명도 슬라이더를 드래그 · 맨뒤 2자리=어둡기)" --}}
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 (가운데/왼쪽 · 유형을 옵션버튼/스위치로 바꿔도 됨)" --}}
@@ -506,14 +506,8 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ```
 ### CSS 탭
 ```css
+/* 가로 최대폭은 자유 숫자값(예 1280) → JS가 max-width 적용(margin auto로 중앙). 영역 확장해도 이 값에서 멈춤 */
 .mm-cine{box-sizing:border-box;margin-left:auto;margin-right:auto;position:relative;overflow:hidden;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
-/* 가로 최대폭 프리셋(CSS 속성선택자 → 편집기 즉시반영). 비우면 꽉 채움 */
-.mm-cine[data-maxw="900"]{max-width:900px;}
-.mm-cine[data-maxw="1000"]{max-width:1000px;}
-.mm-cine[data-maxw="1100"]{max-width:1100px;}
-.mm-cine[data-maxw="1200"]{max-width:1200px;}
-.mm-cine[data-maxw="1400"]{max-width:1400px;}
-.mm-cine[data-maxw="full"]{max-width:none;}
 /* 기본=이미지 비율 자동: 이미지가 흐름에 들어가 컨테이너 높이=이미지 비율(PC=PC이미지 / 모바일=모바일이미지). 높이 미입력 시 이 모드 */
 .mm-cine__bg,.mm-cine__bgm{display:block;width:100%;height:auto;animation:mm-cine-zoom 16s ease-out both;}
 .mm-cine__bgm{display:none;}
@@ -562,6 +556,13 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   function isLeft(al){al=String(al||'').trim();var low=al.toLowerCase();
     /* 어떤 유형이 와도 인식: 텍스트(왼쪽/좌/left) · 스위치(true) · 옵션버튼(왼쪽) */
     return al==='true'||al.indexOf('왼')>=0||al.indexOf('좌')>=0||low.indexOf('left')>=0||low.indexOf('start')>=0;}
+  /* 가로 최대폭: 자유 숫자값(1280 등) 적용. 비움/full → 꽉 채움 */
+  function applyMaxw(root){
+    var mw=root.getAttribute('data-maxw'); mw=(mw==null?'':mw).trim(); var low=mw.toLowerCase();
+    if(!mw){ root.style.maxWidth=''; }
+    else if(low==='full'||low==='none'){ root.style.maxWidth='none'; }
+    else { if(String(parseFloat(mw))===mw) mw+='px'; root.style.maxWidth=mw; }
+  }
   function focusPos(f){
     f=String(f||'').trim();var low=f.toLowerCase();
     if(f.indexOf('좌')>=0||f.indexOf('왼')>=0||low.indexOf('left')>=0)return 'left center';
@@ -584,7 +585,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     if(h && h.trim()){ var hv=h.trim(); if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; root.setAttribute('data-fixed','1'); }
     else { root.removeAttribute('data-fixed'); root.style.minHeight=''; }
     var rd=root.getAttribute('data-radius'); if(rd!==null){ var rv=rd.trim(); if(rv){ if(String(parseFloat(rv))===rv) rv+='px'; root.style.borderRadius=rv; } }
-    /* 가로 최대폭은 CSS 프리셋([data-maxw="1200"])이 담당 → 편집기 즉시반영. JS 미개입 */
+    /* 가로 최대폭 적용 + 패널값 바뀌면(data-maxw 속성변경) 즉시 재적용 → 편집기 실시간 반영 */
+    applyMaxw(root);
+    if('MutationObserver' in window){ new MutationObserver(function(){applyMaxw(root);}).observe(root,{attributes:true,attributeFilter:['data-maxw']}); }
   }
   function init(){var l=document.querySelectorAll('.mm-cine');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();

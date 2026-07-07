@@ -631,7 +631,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
-{{!-- @name maxWidth @type outlined-textfield @default "760" @label "가로 최대폭 — 입력: 760 · 900 · 1000 · 1100 · 1200 · full(꽉차게). 넓혀도 항목은 중앙 1행, 검은 영역만 넓어짐" --}}
+{{!-- @name maxWidth @type outlined-textfield @default "760" @label "가로 최대폭 — 숫자 자유 입력: 예 1280 (비우면 760, full=꽉차게). 넓혀도 항목은 중앙 1행, 검은 영역만 넓어짐" --}}
 {{!-- @name items @type item @label "항목" --}}
 <div class="mm-belief" data-maxw="{{maxWidth}}" data-theme="{{theme}}">
 {{#each items}}
@@ -650,12 +650,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-belief{box-sizing:border-box;max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;
   font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;color:#FAF9F7;}
 .mm-belief[data-theme="라이트"]{background:#FAF9F7;color:#1A1A1A;}
-/* 가로 최대폭 프리셋(CSS 속성선택자 → 편집기에서 값 바꾸면 즉시 반영, JS 미개입). 검은 영역이 이 폭까지 넓어지고 항목은 중앙에 모임 */
-.mm-belief[data-maxw="900"]{max-width:900px;}
-.mm-belief[data-maxw="1000"]{max-width:1000px;}
-.mm-belief[data-maxw="1100"]{max-width:1100px;}
-.mm-belief[data-maxw="1200"]{max-width:1200px;}
-.mm-belief[data-maxw="full"]{max-width:none;}
+/* 가로 최대폭은 자유 숫자값(예 1280) → JS가 max-width 적용(margin auto로 중앙). 검은 영역이 이 폭까지 넓어지고 항목은 중앙에 모임 */
 .mm-belief__item{display:flex;flex-direction:column;align-items:center;gap:8px;}
 .mm-belief__big{font-family:'Outfit','Plus Jakarta Sans','Pretendard','Noto Sans KR',sans-serif;font-size:clamp(30px,9vw,52px);font-weight:900;line-height:1;letter-spacing:-.03em;color:#FAF9F7;font-variant-numeric:tabular-nums;}
 .mm-belief[data-theme="라이트"] .mm-belief__big{color:#1A1A1A;}
@@ -676,6 +671,13 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ```js
 (function(){
   function fmt(n){return n.toLocaleString('en-US');}
+  /* 가로 최대폭: 자유 숫자값(1280 등) 적용. 비움 → 기본(760), full → 꽉 채움 */
+  function applyMaxw(root){
+    var mw=root.getAttribute('data-maxw'); mw=(mw==null?'':mw).trim(); var low=mw.toLowerCase();
+    if(!mw){ root.style.maxWidth=''; }
+    else if(low==='full'||low==='none'){ root.style.maxWidth='none'; }
+    else { if(String(parseFloat(mw))===mw) mw+='px'; root.style.maxWidth=mw; }
+  }
   function run(root){
     var bigs=root.querySelectorAll('.mm-belief__big');
     for(var i=0;i<bigs.length;i++)(function(el){
@@ -691,6 +693,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     })(bigs[i]);
   }
   function initOne(root){
+    /* 가로 최대폭 적용 + 패널값 바뀌면 즉시 재적용 → 편집기 실시간 반영 */
+    applyMaxw(root);
+    if('MutationObserver' in window){ new MutationObserver(function(){applyMaxw(root);}).observe(root,{attributes:true,attributeFilter:['data-maxw']}); }
     if('IntersectionObserver' in window){
       var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){root.classList.add('is-in');run(root);io.disconnect();}});},{threshold:.3});
       io.observe(root);

@@ -14,6 +14,13 @@
   function isLeft(al){al=String(al||'').trim();var low=al.toLowerCase();
     /* 어떤 유형이 와도 인식: 텍스트(왼쪽/좌/left) · 스위치(true) · 옵션버튼(왼쪽) */
     return al==='true'||al.indexOf('왼')>=0||al.indexOf('좌')>=0||low.indexOf('left')>=0||low.indexOf('start')>=0;}
+  /* 가로 최대폭: 자유 숫자값(1280 등) 적용. 비움/full → 꽉 채움 */
+  function applyMaxw(root){
+    var mw=root.getAttribute('data-maxw'); mw=(mw==null?'':mw).trim(); var low=mw.toLowerCase();
+    if(!mw){ root.style.maxWidth=''; }
+    else if(low==='full'||low==='none'){ root.style.maxWidth='none'; }
+    else { if(String(parseFloat(mw))===mw) mw+='px'; root.style.maxWidth=mw; }
+  }
   function focusPos(f){
     f=String(f||'').trim();var low=f.toLowerCase();
     if(f.indexOf('좌')>=0||f.indexOf('왼')>=0||low.indexOf('left')>=0)return 'left center';
@@ -36,7 +43,9 @@
     if(h && h.trim()){ var hv=h.trim(); if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; root.setAttribute('data-fixed','1'); }
     else { root.removeAttribute('data-fixed'); root.style.minHeight=''; }
     var rd=root.getAttribute('data-radius'); if(rd!==null){ var rv=rd.trim(); if(rv){ if(String(parseFloat(rv))===rv) rv+='px'; root.style.borderRadius=rv; } }
-    /* 가로 최대폭은 CSS 프리셋([data-maxw="1200"])이 담당 → 편집기 즉시반영. JS 미개입 */
+    /* 가로 최대폭 적용 + 패널값 바뀌면(data-maxw 속성변경) 즉시 재적용 → 편집기 실시간 반영 */
+    applyMaxw(root);
+    if('MutationObserver' in window){ new MutationObserver(function(){applyMaxw(root);}).observe(root,{attributes:true,attributeFilter:['data-maxw']}); }
   }
   function init(){var l=document.querySelectorAll('.mm-cine');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();

@@ -1,5 +1,12 @@
 (function(){
   function fmt(n){return n.toLocaleString('en-US');}
+  /* 가로 최대폭: 자유 숫자값(1280 등) 적용. 비움 → 기본(760), full → 꽉 채움 */
+  function applyMaxw(root){
+    var mw=root.getAttribute('data-maxw'); mw=(mw==null?'':mw).trim(); var low=mw.toLowerCase();
+    if(!mw){ root.style.maxWidth=''; }
+    else if(low==='full'||low==='none'){ root.style.maxWidth='none'; }
+    else { if(String(parseFloat(mw))===mw) mw+='px'; root.style.maxWidth=mw; }
+  }
   function run(root){
     var bigs=root.querySelectorAll('.mm-belief__big');
     for(var i=0;i<bigs.length;i++)(function(el){
@@ -15,6 +22,9 @@
     })(bigs[i]);
   }
   function initOne(root){
+    /* 가로 최대폭 적용 + 패널값 바뀌면 즉시 재적용 → 편집기 실시간 반영 */
+    applyMaxw(root);
+    if('MutationObserver' in window){ new MutationObserver(function(){applyMaxw(root);}).observe(root,{attributes:true,attributeFilter:['data-maxw']}); }
     if('IntersectionObserver' in window){
       var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){root.classList.add('is-in');run(root);io.disconnect();}});},{threshold:.3});
       io.observe(root);
