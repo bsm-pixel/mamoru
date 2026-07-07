@@ -2242,8 +2242,10 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-belief[data-maxw="1200"]{max-width:1200px;}
 .mm-belief[data-maxw="full"]{max-width:none;}
 .mm-belief__item{display:flex;flex-direction:column;align-items:center;gap:8px;}
-.mm-belief__big{font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(30px,9vw,52px);font-weight:900;line-height:1;letter-spacing:-.03em;color:#FAF9F7;font-variant-numeric:tabular-nums;}
+.mm-belief__big{font-family:'Outfit','Plus Jakarta Sans','Pretendard','Noto Sans KR',sans-serif;font-size:clamp(30px,9vw,52px);font-weight:900;line-height:1;letter-spacing:-.03em;color:#FAF9F7;font-variant-numeric:tabular-nums;}
 .mm-belief[data-theme="라이트"] .mm-belief__big{color:#1A1A1A;}
+/* 한글은 같은 900이어도 영문(Outfit)보다 얇게 보임 → 한글 포함 항목(.is-ko, JS가 부여)만 획을 덧대 두께 보정. 영문·숫자는 그대로 */
+.mm-belief__big.is-ko{-webkit-text-stroke:.02em currentColor;}
 .mm-belief__label{font-size:clamp(12px,3.2vw,14px);font-weight:600;color:#8A8580;letter-spacing:.01em;}
 /* PC: 4개 한 줄. 항목 열폭은 최대 180px로 고정+중앙정렬 → 가로폭을 넓혀도 벌어지지 않고 좌우 여백만 늘어남 */
 @media (min-width:720px){.mm-belief{grid-template-columns:repeat(4,minmax(140px,180px));justify-content:center;}}
@@ -2264,6 +2266,8 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     for(var i=0;i<bigs.length;i++)(function(el){
       var raw=(el.textContent||'').trim();
       var suf=el.getAttribute('data-suffix')||'';
+      if(/[가-힣]/.test(raw)) el.classList.add('is-ko'); // 한글 포함 → 두께 보정 클래스
+      else el.classList.remove('is-ko');
       if(/^[\d,]+$/.test(raw)){ // 숫자 → 카운트업
         var target=parseInt(raw.replace(/,/g,''),10)||0,t0=null,dur=1300;
         function step(ts){if(!t0)t0=ts;var p=Math.min((ts-t0)/dur,1),e=1-Math.pow(1-p,3);el.textContent=fmt(Math.round(target*e))+suf;if(p<1)requestAnimationFrame(step);}

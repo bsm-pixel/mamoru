@@ -5,6 +5,8 @@
     for(var i=0;i<bigs.length;i++)(function(el){
       var raw=(el.textContent||'').trim();
       var suf=el.getAttribute('data-suffix')||'';
+      if(/[가-힣]/.test(raw)) el.classList.add('is-ko'); // 한글 포함 → 두께 보정 클래스
+      else el.classList.remove('is-ko');
       if(/^[\d,]+$/.test(raw)){ // 숫자 → 카운트업
         var target=parseInt(raw.replace(/,/g,''),10)||0,t0=null,dur=1300;
         function step(ts){if(!t0)t0=ts;var p=Math.min((ts-t0)/dur,1),e=1-Math.pow(1-p,3);el.textContent=fmt(Math.round(target*e))+suf;if(p<1)requestAnimationFrame(step);}
