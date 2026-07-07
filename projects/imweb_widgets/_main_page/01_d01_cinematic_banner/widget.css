@@ -1,26 +1,31 @@
-.mm-cine{box-sizing:border-box;margin-left:auto;margin-right:auto;position:relative;overflow:hidden;min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
-/* 가로 최대폭 프리셋(CSS 속성선택자 → 편집기 즉시반영, JS 미개입). 비우면 꽉 채움 */
+.mm-cine{box-sizing:border-box;margin-left:auto;margin-right:auto;position:relative;overflow:hidden;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+/* 가로 최대폭 프리셋(CSS 속성선택자 → 편집기 즉시반영). 비우면 꽉 채움 */
 .mm-cine[data-maxw="900"]{max-width:900px;}
 .mm-cine[data-maxw="1000"]{max-width:1000px;}
 .mm-cine[data-maxw="1100"]{max-width:1100px;}
 .mm-cine[data-maxw="1200"]{max-width:1200px;}
 .mm-cine[data-maxw="1400"]{max-width:1400px;}
 .mm-cine[data-maxw="full"]{max-width:none;}
-.mm-cine[data-align="가운데"]{justify-content:center;text-align:center;}
-.mm-cine[data-align="왼쪽"]{justify-content:flex-start;text-align:left;}
-.mm-cine__bg,.mm-cine__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;animation:mm-cine-zoom 16s ease-out both;}
+/* 기본=이미지 비율 자동: 이미지가 흐름에 들어가 컨테이너 높이=이미지 비율(PC=PC이미지 / 모바일=모바일이미지). 높이 미입력 시 이 모드 */
+.mm-cine__bg,.mm-cine__bgm{display:block;width:100%;height:auto;animation:mm-cine-zoom 16s ease-out both;}
 .mm-cine__bgm{display:none;}
-/* 모바일 전용 이미지가 있을 때(data-hasm=1)만 모바일에서 스왑 */
+/* 모바일 전용 이미지가 있을 때(data-hasm=1)만 모바일에서 스왑 → 모바일 높이=모바일 이미지 비율 */
 @media (max-width:768px){
   .mm-cine[data-hasm="1"] .mm-cine__bg{display:none;}
   .mm-cine[data-hasm="1"] .mm-cine__bgm{display:block;}
 }
+/* 고정 높이 모드(높이값 입력 시 JS가 data-fixed=1): 이미지 절대배치 cover-크롭, 높이는 min-height가 결정 */
+.mm-cine[data-fixed="1"] .mm-cine__bg,.mm-cine[data-fixed="1"] .mm-cine__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 @keyframes mm-cine-zoom{from{transform:scale(1.0)}to{transform:scale(1.09)}}
 .mm-cine__veil{position:absolute;inset:0;z-index:1;background:rgba(26,26,26,.45);}
-.mm-cine__inner{position:relative;z-index:2;padding:clamp(28px,6vw,56px);max-width:720px;}
+/* 카피는 이미지 위 오버레이(절대배치) → 이미지가 높이를 결정하고 텍스트는 그 위에 얹힘 */
+.mm-cine__inner{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;justify-content:center;padding:clamp(28px,6vw,56px);}
+.mm-cine__inner>*{max-width:720px;}
+.mm-cine[data-align="가운데"] .mm-cine__inner{align-items:center;text-align:center;}
+.mm-cine[data-align="왼쪽"] .mm-cine__inner{align-items:flex-start;text-align:left;}
 .mm-cine__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(10px,2.6vw,12px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#D4D0CB;margin-bottom:12px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-cine__kicker:empty{display:none;}
-.mm-cine__headline{margin:0;font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(24px,6vw,44px);font-weight:900;line-height:1.12;letter-spacing:-.02em;color:#FAF9F7;text-shadow:0 2px 24px rgba(0,0,0,.35);white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
+.mm-cine__headline{margin:0;font-family:'Outfit','Plus Jakarta Sans','Pretendard','Noto Sans KR',sans-serif;font-size:clamp(24px,6vw,44px);font-weight:900;line-height:1.12;letter-spacing:-.02em;color:#FAF9F7;text-shadow:0 2px 24px rgba(0,0,0,.35);white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-cine__headline p{margin:0 0 .15em;}
 .mm-cine__sub{margin:14px 0 0;font-size:clamp(14px,3.8vw,17px);line-height:1.45;color:#EDEBE8;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-cine__sub p{margin:0 0 .15em;}
@@ -29,4 +34,4 @@
 .mm-cine__btn:empty{display:none;}
 .mm-cine__btn:active{transform:scale(.97);}
 @media (hover:hover){.mm-cine__btn:hover{opacity:.9;}}
-@media (prefers-reduced-motion:reduce){.mm-cine__bg{animation:none;}}
+@media (prefers-reduced-motion:reduce){.mm-cine__bg,.mm-cine__bgm{animation:none;}}

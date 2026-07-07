@@ -481,7 +481,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name image @type image @label "PC 배경 이미지 — 권장 1600×900px (가로형)" --}}
 {{!-- @name imageMobile @type image @label "모바일 배경 이미지 (선택) — 권장 1080×1350px (세로형) · 비우면 PC 이미지 사용" --}}
-{{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 480px 또는 60vh (비우면 자동)" --}}
+{{!-- @name height @type outlined-textfield @default "" @label "높이 — 비우면 이미지 비율에 맞춰 자동(권장). 값 넣으면 고정+크롭: 예 480px · 60vh" --}}
 {{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name maxw @type outlined-textfield @default "" @label "최대 가로폭(PC) — 입력: 900 · 1000 · 1100 · 1200 · 1400 · full (비우면 꽉 채움). 모바일 자동 꽉 채움" --}}
 {{!-- @name focus @type outlined-textfield @default "중앙" @label "사진 초점 — 입력: 중앙·좌·우·상·하" --}}
@@ -506,29 +506,34 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ```
 ### CSS 탭
 ```css
-.mm-cine{box-sizing:border-box;margin-left:auto;margin-right:auto;position:relative;overflow:hidden;min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
-/* 가로 최대폭 프리셋(CSS 속성선택자 → 편집기 즉시반영, JS 미개입). 비우면 꽉 채움 */
+.mm-cine{box-sizing:border-box;margin-left:auto;margin-right:auto;position:relative;overflow:hidden;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+/* 가로 최대폭 프리셋(CSS 속성선택자 → 편집기 즉시반영). 비우면 꽉 채움 */
 .mm-cine[data-maxw="900"]{max-width:900px;}
 .mm-cine[data-maxw="1000"]{max-width:1000px;}
 .mm-cine[data-maxw="1100"]{max-width:1100px;}
 .mm-cine[data-maxw="1200"]{max-width:1200px;}
 .mm-cine[data-maxw="1400"]{max-width:1400px;}
 .mm-cine[data-maxw="full"]{max-width:none;}
-.mm-cine[data-align="가운데"]{justify-content:center;text-align:center;}
-.mm-cine[data-align="왼쪽"]{justify-content:flex-start;text-align:left;}
-.mm-cine__bg,.mm-cine__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;animation:mm-cine-zoom 16s ease-out both;}
+/* 기본=이미지 비율 자동: 이미지가 흐름에 들어가 컨테이너 높이=이미지 비율(PC=PC이미지 / 모바일=모바일이미지). 높이 미입력 시 이 모드 */
+.mm-cine__bg,.mm-cine__bgm{display:block;width:100%;height:auto;animation:mm-cine-zoom 16s ease-out both;}
 .mm-cine__bgm{display:none;}
-/* 모바일 전용 이미지가 있을 때(data-hasm=1)만 모바일에서 스왑 */
+/* 모바일 전용 이미지가 있을 때(data-hasm=1)만 모바일에서 스왑 → 모바일 높이=모바일 이미지 비율 */
 @media (max-width:768px){
   .mm-cine[data-hasm="1"] .mm-cine__bg{display:none;}
   .mm-cine[data-hasm="1"] .mm-cine__bgm{display:block;}
 }
+/* 고정 높이 모드(높이값 입력 시 JS가 data-fixed=1): 이미지 절대배치 cover-크롭, 높이는 min-height가 결정 */
+.mm-cine[data-fixed="1"] .mm-cine__bg,.mm-cine[data-fixed="1"] .mm-cine__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 @keyframes mm-cine-zoom{from{transform:scale(1.0)}to{transform:scale(1.09)}}
 .mm-cine__veil{position:absolute;inset:0;z-index:1;background:rgba(26,26,26,.45);}
-.mm-cine__inner{position:relative;z-index:2;padding:clamp(28px,6vw,56px);max-width:720px;}
+/* 카피는 이미지 위 오버레이(절대배치) → 이미지가 높이를 결정하고 텍스트는 그 위에 얹힘 */
+.mm-cine__inner{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;justify-content:center;padding:clamp(28px,6vw,56px);}
+.mm-cine__inner>*{max-width:720px;}
+.mm-cine[data-align="가운데"] .mm-cine__inner{align-items:center;text-align:center;}
+.mm-cine[data-align="왼쪽"] .mm-cine__inner{align-items:flex-start;text-align:left;}
 .mm-cine__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(10px,2.6vw,12px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#D4D0CB;margin-bottom:12px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-cine__kicker:empty{display:none;}
-.mm-cine__headline{margin:0;font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(24px,6vw,44px);font-weight:900;line-height:1.12;letter-spacing:-.02em;color:#FAF9F7;text-shadow:0 2px 24px rgba(0,0,0,.35);white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
+.mm-cine__headline{margin:0;font-family:'Outfit','Plus Jakarta Sans','Pretendard','Noto Sans KR',sans-serif;font-size:clamp(24px,6vw,44px);font-weight:900;line-height:1.12;letter-spacing:-.02em;color:#FAF9F7;text-shadow:0 2px 24px rgba(0,0,0,.35);white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-cine__headline p{margin:0 0 .15em;}
 .mm-cine__sub{margin:14px 0 0;font-size:clamp(14px,3.8vw,17px);line-height:1.45;color:#EDEBE8;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-cine__sub p{margin:0 0 .15em;}
@@ -537,7 +542,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-cine__btn:empty{display:none;}
 .mm-cine__btn:active{transform:scale(.97);}
 @media (hover:hover){.mm-cine__btn:hover{opacity:.9;}}
-@media (prefers-reduced-motion:reduce){.mm-cine__bg{animation:none;}}
+@media (prefers-reduced-motion:reduce){.mm-cine__bg,.mm-cine__bgm{animation:none;}}
 ```
 ### JS 탭
 ```js
@@ -574,8 +579,10 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     if(bgm) bgm.style.objectPosition=fp;
     /* 모바일 이미지가 실제 있으면 data-hasm=1 → 모바일에서 스왑. 없으면 PC 이미지 공용 */
     if(bgm && String(bgm.getAttribute('src')||'').trim()) root.setAttribute('data-hasm','1');
+    /* 높이: 비우면 이미지 비율 자동(CSS가 담당). 값 입력 시 고정 높이+크롭 모드(data-fixed) */
     var h=root.getAttribute('data-height');
-    if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
+    if(h && h.trim()){ var hv=h.trim(); if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; root.setAttribute('data-fixed','1'); }
+    else { root.removeAttribute('data-fixed'); root.style.minHeight=''; }
     var rd=root.getAttribute('data-radius'); if(rd!==null){ var rv=rd.trim(); if(rv){ if(String(parseFloat(rv))===rv) rv+='px'; root.style.borderRadius=rv; } }
     /* 가로 최대폭은 CSS 프리셋([data-maxw="1200"])이 담당 → 편집기 즉시반영. JS 미개입 */
   }

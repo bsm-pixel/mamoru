@@ -31,8 +31,10 @@
     if(bgm) bgm.style.objectPosition=fp;
     /* 모바일 이미지가 실제 있으면 data-hasm=1 → 모바일에서 스왑. 없으면 PC 이미지 공용 */
     if(bgm && String(bgm.getAttribute('src')||'').trim()) root.setAttribute('data-hasm','1');
+    /* 높이: 비우면 이미지 비율 자동(CSS가 담당). 값 입력 시 고정 높이+크롭 모드(data-fixed) */
     var h=root.getAttribute('data-height');
-    if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
+    if(h && h.trim()){ var hv=h.trim(); if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; root.setAttribute('data-fixed','1'); }
+    else { root.removeAttribute('data-fixed'); root.style.minHeight=''; }
     var rd=root.getAttribute('data-radius'); if(rd!==null){ var rv=rd.trim(); if(rv){ if(String(parseFloat(rv))===rv) rv+='px'; root.style.borderRadius=rv; } }
     /* 가로 최대폭은 CSS 프리셋([data-maxw="1200"])이 담당 → 편집기 즉시반영. JS 미개입 */
   }
