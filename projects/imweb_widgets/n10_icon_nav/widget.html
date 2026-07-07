@@ -15,11 +15,11 @@
 <div class="mm-nav" data-theme="{{theme}}" data-align="{{align}}" data-fpc="{{fontPC}}" data-fm="{{fontMobile}}" data-pady="{{padY}}">
   <div class="mm-nav__track">
   {{#each chips}}
-    {{!-- @name icon @type image @label "아이콘 이미지 — SVG/PNG 업로드(투명 배경 단색 아이콘 권장). 테마색 자동 적용 · 비우면 라벨만" --}}
+    {{!-- @name iconImage @type image @label "아이콘 이미지 — SVG/PNG 업로드(투명 배경 단색 아이콘 권장). 테마색 자동 적용 · 비우면 라벨만" --}}
     {{!-- @name label @type outlined-textfield @default "메뉴" @label "라벨" --}}
     {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
     <a class="mm-nav__chip" href="{{link}}">
-      <span class="mm-nav__ico" data-src="{{icon}}" aria-hidden="true"></span>
+      <span class="mm-nav__ico" data-src="{{iconImage}}" aria-hidden="true"></span>
       <span class="mm-nav__label">{{label}}</span>
     </a>
   {{/each}}
