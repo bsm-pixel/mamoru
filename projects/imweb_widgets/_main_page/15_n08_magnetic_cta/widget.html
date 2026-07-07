@@ -1,0 +1,16 @@
+{{!-- @name widgetInfo @type outlined-textfield @default "마우스 따라 끌려오는 CTA 버튼(PC)." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 마그네틱 CTA 버튼
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 마우스를 따라 미세하게 끌려오는 프리미엄 CTA (주목·전환)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name text @type outlined-textfield @default "간편 진단 시작하기" @label "버튼 문구" --}}
+{{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
+{{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
+{{!-- @name hint @type outlined-textfield @default "" @label "버튼 아래 작은 문구(선택)" --}}
+<div class="mm-mag" data-theme="{{theme}}">
+  <a class="mm-mag__btn" href="{{link}}"><span class="mm-mag__label">{{text}}</span><span class="mm-mag__arrow" aria-hidden="true">→</span></a>
+  <p class="mm-mag__hint">{{hint}}</p>
+</div>

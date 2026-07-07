@@ -1,0 +1,20 @@
+{{!-- @name widgetInfo @type outlined-textfield @default "거대 인덱스+키커+제목 섹션 구분자." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 에디토리얼 섹션 헤더
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 거대 인덱스 + 키커 + 제목 + hairline (B-08 에디토리얼 섹션 구분)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name index @type outlined-textfield @default "01" @label "인덱스(예: 01)" --}}
+{{!-- @name kicker @type outlined-textfield @default "SECTION" @label "키커(영문)" --}}
+{{!-- @name title @type text-editor @default "<p>섹션 제목</p>" @label "제목" --}}
+{{!-- @name align @type outlined-textfield @default "왼쪽" @label "정렬 — 입력: 왼쪽 · 가운데" --}}
+<div class="mm-sh" data-align="{{align}}">
+  <span class="mm-sh__index">{{index}}</span>
+  <div class="mm-sh__text">
+    <span class="mm-sh__kicker">{{kicker}}</span>
+    <div class="mm-sh__title" role="heading" aria-level="2">{{title}}</div>
+  </div>
+  <span class="mm-sh__line" aria-hidden="true"></span>
+</div>

@@ -1,0 +1,27 @@
+{{!-- @name widgetInfo @type outlined-textfield @default "사진+라벨 카테고리 타일 그리드(호버 줌). 제품/서비스 진열 내비." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 카테고리 이미지 그리드
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 사진 카테고리 타일 + 라벨 오버레이 + 호버 줌 (트렌디 진열 내비)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name ratio @type outlined-textfield @default "3/4" @label "타일 비율 — 입력: 3/4 · 1/1 · 4/3 · 16/9" --}}
+{{!-- @name tiles @type item @label "카테고리 타일" --}}
+<div class="mm-cat" data-ar="{{ratio}}">
+{{#each tiles}}
+  {{!-- @name image @type image @label "이미지 (권장 800×1000px)" --}}
+  {{!-- @name label @type outlined-textfield @default "카테고리" @label "큰 라벨" --}}
+  {{!-- @name sublabel @type outlined-textfield @default "" @label "작은 설명(선택)" --}}
+  {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
+  <a class="mm-cat__tile" href="{{link}}">
+    <img class="mm-cat__img" src="{{image}}" alt="">
+    <span class="mm-cat__veil" aria-hidden="true"></span>
+    <span class="mm-cat__cap">
+      <span class="mm-cat__label">{{label}}</span>
+      <span class="mm-cat__sub">{{sublabel}}</span>
+      <span class="mm-cat__arrow" aria-hidden="true">→</span>
+    </span>
+  </a>
+{{/each}}
+</div>

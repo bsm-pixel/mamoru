@@ -1,0 +1,5 @@
+.mm-prog__bar{position:fixed;left:0;top:0;width:0;height:4px;background:#1A1A1A;z-index:99998;transition:width .1s linear;pointer-events:none;}
+.mm-prog[data-pos="하단"] .mm-prog__bar{top:auto;bottom:0;}
+.mm-prog__top{position:fixed;right:18px;bottom:18px;width:46px;height:46px;border:none;border-radius:50%;background:#1A1A1A;color:#FAF9F7;font-size:20px;line-height:1;cursor:pointer;z-index:99998;box-shadow:0 6px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(10px);transition:opacity .3s,transform .3s;font-family:-apple-system,sans-serif;}
+.mm-prog__top.is-show{opacity:1;transform:none;}
+@media (hover:hover){.mm-prog__top:hover{background:#2D2D2D;}}

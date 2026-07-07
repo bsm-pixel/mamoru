@@ -1,0 +1,8 @@
+.mm-mag{text-align:center;padding:clamp(20px,4vw,32px) 12px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-mag__btn{display:inline-flex;align-items:center;gap:10px;padding:18px 38px;border-radius:999px;background:#1A1A1A;color:#FAF9F7;font-size:clamp(15px,4vw,17px);font-weight:700;text-decoration:none;will-change:transform;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s,background .2s;box-shadow:0 6px 24px rgba(26,26,26,.18);}
+.mm-mag[data-theme="라이트"] .mm-mag__btn{background:#FAF9F7;color:#1A1A1A;border:1px solid #1A1A1A;box-shadow:0 6px 24px rgba(26,26,26,.1);}
+.mm-mag__arrow{display:inline-block;transition:transform .25s cubic-bezier(.2,.8,.2,1);}
+.mm-mag__btn:hover .mm-mag__arrow{transform:translateX(4px);}
+.mm-mag__hint{margin:14px 0 0;font-size:12px;color:#8A8580;}
+.mm-mag__hint:empty{display:none;}
+@media (prefers-reduced-motion:reduce){.mm-mag__btn{transition:none;}}

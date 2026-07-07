@@ -1,0 +1,18 @@
+{{!-- @name widgetInfo @type outlined-textfield @default "브랜드 한 문장 대형 인용 배너." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 대형 브랜드 인용 배너
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 브랜드 한 문장을 거대한 따옴표로 (선언형 배너, 여백·타이포 압도)
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name theme @type outlined-textfield @default "라이트" @label "테마 — 입력: 라이트 · 다크" --}}
+{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
+{{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 — 입력: 가운데 · 왼쪽" --}}
+{{!-- @name quote @type text-editor @default "<p>좋은 가위는 권하지 않습니다</p>" @label "인용문" --}}
+{{!-- @name author @type outlined-textfield @default "" @label "출처/서명(선택)" --}}
+<div class="mm-quote" data-radius="{{radius}}" data-theme="{{theme}}" data-align="{{align}}">
+  <span class="mm-quote__mark" aria-hidden="true">“</span>
+  <blockquote class="mm-quote__text">{{quote}}</blockquote>
+  <cite class="mm-quote__author">{{author}}</cite>
+</div>

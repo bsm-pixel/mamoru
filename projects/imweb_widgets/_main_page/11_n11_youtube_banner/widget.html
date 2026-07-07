@@ -1,0 +1,27 @@
+{{!-- @name widgetInfo @type outlined-textfield @default "유튜브 영상 썸네일+재생버튼. 클릭하면 유튜브로 열림(인라인 재생은 iframe금지라 불가)." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 유튜브 썸네일 배너
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 영상 URL만 넣으면 썸네일 자동 + 재생버튼 → 클릭 시 유튜브로 이동
+  🚫 fetch·iframe 0 (썸네일은 이미지 로드, 인라인 재생 아님)
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name title @type outlined-textfield @default "" @label "제목(선택)" --}}
+{{!-- @name videos @type item @label "영상" --}}
+<div class="mm-yt">
+  <p class="mm-yt__heading">{{title}}</p>
+  <div class="mm-yt__row">
+  {{#each videos}}
+    {{!-- @name url @type outlined-textfield @default "" @label "유튜브 URL 또는 영상ID" --}}
+    {{!-- @name caption @type outlined-textfield @default "" @label "영상 제목(선택)" --}}
+    {{!-- @name thumb @type image @label "썸네일 직접 지정(선택) (권장 1600×900px)" --}}
+    <a class="mm-yt__card" href="https://www.youtube.com" target="_blank" rel="noopener" data-url="{{url}}" data-thumb="{{thumb}}">
+      <span class="mm-yt__thumb">
+        <img class="mm-yt__img" src="" alt="" loading="lazy">
+        <span class="mm-yt__play" aria-hidden="true"></span>
+      </span>
+      <span class="mm-yt__cap">{{caption}}</span>
+    </a>
+  {{/each}}
+  </div>
+</div>

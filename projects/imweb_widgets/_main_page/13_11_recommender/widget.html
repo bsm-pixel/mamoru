@@ -1,0 +1,34 @@
+{{!-- @name widgetInfo @type outlined-textfield @default "선택지 클릭 시 맞춤 모델 추천 카드 노출(링크 연결)." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 가위 추천 진단(가이드형)
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 질문 → 선택지 클릭 → 맞춤 모델 추천 카드 + CTA (전환 도구)
+  🚫 fetch·iframe 0 (폼 제출 불가 → 추천은 링크로 연결)
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name question @type outlined-textfield @default "어떤 가위를 찾으세요?" @label "질문" --}}
+{{!-- @name ctaText @type outlined-textfield @default "자세히 보기" @label "추천 버튼 문구" --}}
+{{!-- @name options @type item @label "선택지 & 추천" --}}
+<div class="mm-dx" data-cta="{{ctaText}}">
+  <p class="mm-dx__q">{{question}}</p>
+  <div class="mm-dx__opts">
+  {{#each options}}
+    {{!-- @name optLabel @type outlined-textfield @default "선택지" @label "선택지 버튼" --}}
+    {{!-- @name recName @type outlined-textfield @default "추천 모델" @label "추천 모델명" --}}
+    {{!-- @name recDesc @type text-editor @default "<p>추천 이유</p>" @label "추천 설명" --}}
+    {{!-- @name recImage @type image @label "추천 이미지(선택) (권장 1600×900px)" --}}
+    {{!-- @name recLink @type outlined-textfield @default "" @label "추천 링크" --}}
+    <button type="button" class="mm-dx__opt">{{optLabel}}</button>
+  {{/each}}
+  </div>
+  <div class="mm-dx__results">
+  {{#each options}}
+    <div class="mm-dx__result" hidden>
+      <img class="mm-dx__img" src="{{recImage}}" alt="">
+      <h3 class="mm-dx__name">{{recName}}</h3>
+      <div class="mm-dx__desc">{{recDesc}}</div>
+      <a class="mm-dx__cta" href="{{recLink}}"></a>
+    </div>
+  {{/each}}
+  </div>
+</div>

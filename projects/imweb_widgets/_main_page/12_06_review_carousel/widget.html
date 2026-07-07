@@ -1,0 +1,29 @@
+{{!-- @name widgetInfo @type outlined-textfield @default "사진·별점·후기 카드 자동 슬라이드(후기 직접 입력)." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 후기 캐러셀 (수동입력)
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 사진+별점+한줄 후기 카드 자동 슬라이드 (사회적 증거)
+  🚫 fetch·iframe 0 (※TMS 자동연동 아님 — 패널에 후기 직접 입력)
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name speed @type outlined-textfield @default "4" @label "자동전환 간격(초)" --}}
+{{!-- @name reviews @type item @label "후기" --}}
+<div class="mm-rev" data-speed="{{speed}}">
+  <div class="mm-rev__viewport">
+    <div class="mm-rev__track">
+    {{#each reviews}}
+      {{!-- @name photo @type image @label "사진(선택) (권장 800×800px)" --}}
+      {{!-- @name rating @type outlined-textfield @default "5" @label "별점 — 입력: 5 · 4 · 3 · 2 · 1" --}}
+      {{!-- @name text @type text-editor @default "<p>후기 내용을 입력하세요</p>" @label "후기 내용" --}}
+      {{!-- @name name @type outlined-textfield @default "" @label "이름/매장(선택)" --}}
+      <article class="mm-rev__card">
+        <img class="mm-rev__photo" src="{{photo}}" alt="">
+        <div class="mm-rev__stars" data-rating="{{rating}}" aria-hidden="true"></div>
+        <div class="mm-rev__text">{{text}}</div>
+        <p class="mm-rev__name">{{name}}</p>
+      </article>
+    {{/each}}
+    </div>
+  </div>
+  <div class="mm-rev__dots" aria-hidden="true"></div>
+</div>

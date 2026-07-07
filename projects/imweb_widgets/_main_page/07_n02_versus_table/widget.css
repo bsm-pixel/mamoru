@@ -1,0 +1,14 @@
+.mm-vs{max-width:600px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;border:1px solid #D4D0CB;overflow:hidden;}
+.mm-vs__head,.mm-vs__row{display:grid;grid-template-columns:1.4fr 1fr 1fr;align-items:center;}
+.mm-vs__head{background:#1A1A1A;color:#FAF9F7;}
+.mm-vs__h{padding:14px 10px;font-size:clamp(12px,3.2vw,14px);font-weight:700;text-align:center;}
+.mm-vs__h--us{font-family:'Outfit','Plus Jakarta Sans',sans-serif;letter-spacing:.04em;}
+.mm-vs__h--them{color:#B8B4AF;font-weight:600;}
+.mm-vs__row{border-top:1px solid #EDEBE8;}
+.mm-vs__row:nth-child(even){background:#FAF9F7;}
+.mm-vs__label{padding:14px 14px;font-size:clamp(13px,3.6vw,15px);font-weight:600;}
+.mm-vs__cell{padding:14px 10px;text-align:center;font-size:clamp(13px,3.6vw,15px);font-weight:700;}
+.mm-vs__cell--us{color:#1A1A1A;}
+.mm-vs__cell--them{color:#B8B4AF;}
+.mm-vs__cell.is-o::after{content:'✓';font-size:18px;}
+.mm-vs__cell.is-x::after{content:'✕';font-size:16px;}
