@@ -21,3 +21,6 @@
   function init(){var l=document.querySelectorAll('.mm-belief');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 가로 최대폭: 인라인 style {{}}는 아임웹 저장거부 → data-maxw 속성값을 JS로 적용(중앙정렬은 margin auto+CSS) */
+(function(){function apW(){var es=document.querySelectorAll('.mm-belief[data-maxw]');for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute('data-maxw')||'').trim();if(v){if(String(parseFloat(v))===v)v+='px';es[i].style.maxWidth=v;}}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apW);else apW();})();

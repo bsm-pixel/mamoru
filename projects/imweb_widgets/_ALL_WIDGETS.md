@@ -2211,8 +2211,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
+{{!-- @name maxWidth @type outlined-textfield @default "760px" @label "가로 최대폭 — 예: 760px · 1000px (넓혀도 항목은 한 줄 중앙에 모임, 좌우 여백만 늘어남)" --}}
 {{!-- @name items @type item @label "항목" --}}
-<div class="mm-belief" data-theme="{{theme}}">
+<div class="mm-belief" data-maxw="{{maxWidth}}" data-theme="{{theme}}">
 {{#each items}}
   {{!-- @name big @type outlined-textfield @default "신념" @label "큰 글자/숫자 (예: 신념, 100, ZERO)" --}}
   {{!-- @name suffix @type outlined-textfield @default "" @label "단위(선택, 예: %)" --}}
@@ -2233,7 +2234,8 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-belief__big{font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(30px,9vw,52px);font-weight:900;line-height:1;letter-spacing:-.03em;color:#FAF9F7;font-variant-numeric:tabular-nums;}
 .mm-belief[data-theme="라이트"] .mm-belief__big{color:#1A1A1A;}
 .mm-belief__label{font-size:clamp(12px,3.2vw,14px);font-weight:600;color:#8A8580;letter-spacing:.01em;}
-@media (min-width:720px){.mm-belief{grid-template-columns:repeat(4,1fr);}}
+/* PC: 4개 한 줄. 항목 열폭은 최대 180px로 고정+중앙정렬 → 가로폭을 넓혀도 벌어지지 않고 좌우 여백만 늘어남 */
+@media (min-width:720px){.mm-belief{grid-template-columns:repeat(4,minmax(140px,180px));justify-content:center;}}
 @media (prefers-reduced-motion:no-preference){
   .mm-belief__item{opacity:0;transform:translateY(18px);transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1);}
   .mm-belief.is-in .mm-belief__item{opacity:1;transform:none;}
@@ -2267,6 +2269,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   function init(){var l=document.querySelectorAll('.mm-belief');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 가로 최대폭: 인라인 style {{}}는 아임웹 저장거부 → data-maxw 속성값을 JS로 적용(중앙정렬은 margin auto+CSS) */
+(function(){function apW(){var es=document.querySelectorAll('.mm-belief[data-maxw]');for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute('data-maxw')||'').trim();if(v){if(String(parseFloat(v))===v)v+='px';es[i].style.maxWidth=v;}}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apW);else apW();})();
 ```
 
 ---
