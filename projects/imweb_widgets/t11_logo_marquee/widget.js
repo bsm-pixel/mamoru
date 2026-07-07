@@ -29,23 +29,36 @@
     }
     chk(); setTimeout(fire,1600);
   }
-  /* 세트를 화면폭 이상으로 채운 뒤 1회 복제 → 끊김없는 마퀴(translateX -50%) */
+  /* 끊김없는 마퀴: 반복 단위(half)를 '화면폭 이상'으로 타일링한 뒤 2벌 → translateX(-50%)면 빈틈 없이 순환 */
   function buildTrack(root){
-    var track=root.querySelector('.mm-lb__track'), set=track&&track.querySelector('.mm-lb__set');
-    if(!track||!set||track.getAttribute('data-built')==='1')return;
-    var base=set.innerHTML, guard=0;
-    if(!base.replace(/\s/g,'')){ track.setAttribute('data-built','1'); return; } // 로고 없음
-    while(set.getBoundingClientRect().width < root.getBoundingClientRect().width && guard<40){ set.insertAdjacentHTML('beforeend', base); guard++; }
-    track.appendChild(set.cloneNode(true));
-    track.setAttribute('data-built','1');
+    var track=root.querySelector('.mm-lb__track'); if(!track)return;
+    /* 원본 로고 HTML 1회 저장(이후 재구성에 재사용) */
+    if(root._lbLogos==null){ var s0=track.querySelector('.mm-lb__set'); root._lbLogos=s0?s0.innerHTML:''; }
+    var logos=root._lbLogos||'';
+    if(!logos.replace(/\s/g,'')) return; // 로고 없음
+    /* 1) 단일 세트로 폭 측정 */
+    track.innerHTML='<div class="mm-lb__set">'+logos+'</div>';
+    var set=track.querySelector('.mm-lb__set');
+    var setW=set.getBoundingClientRect().width, contW=root.getBoundingClientRect().width||setW;
+    if(setW<2){ return setTimeout(function(){buildTrack(root);},150); } // 이미지 로딩 전 등 측정 실패 → 재시도
+    /* 2) 반복 단위가 화면폭 이상이 되도록 세트 반복수 계산(+1 여유) */
+    var copies=Math.max(1, Math.ceil(contW/setW)+1);
+    var one=''; for(var c=0;c<copies;c++) one+='<div class="mm-lb__set">'+logos+'</div>';
+    /* 3) half 2벌 → -50% 순환. 세트 trailing gap 덕에 이음새 간격도 동일 */
+    track.innerHTML='<div class="mm-lb__half">'+one+'</div><div class="mm-lb__half">'+one+'</div>';
   }
   function initOne(root){
     applySettings(root);
-    /* 패널값(크기·간격·여백·속도·컬러·최대폭) 바뀌면 즉시 재적용 → 편집기 실시간 반영 */
+    /* 패널값 바뀌면 즉시 재적용. 폭에 영향 주는 값(크기·간격·최대폭)은 트랙 재구성 */
     if('MutationObserver' in window){
-      new MutationObserver(function(){applySettings(root);}).observe(root,{attributes:true,attributeFilter:['data-maxw','data-bg','data-size','data-gap','data-pady','data-speed']});
+      new MutationObserver(function(muts){
+        applySettings(root);
+        for(var i=0;i<muts.length;i++){ var a=muts[i].attributeName; if(a==='data-size'||a==='data-gap'||a==='data-maxw'){ buildTrack(root); break; } }
+      }).observe(root,{attributes:true,attributeFilter:['data-maxw','data-bg','data-size','data-gap','data-pady','data-speed']});
     }
     whenReady(root,function(){ buildTrack(root); });
+    /* 창 크기 변경 시 반복수 재계산(반응형) */
+    if(window.addEventListener){ var t; window.addEventListener('resize',function(){ clearTimeout(t); t=setTimeout(function(){buildTrack(root);},200); }); }
   }
   function init(){var l=document.querySelectorAll('.mm-lb');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
