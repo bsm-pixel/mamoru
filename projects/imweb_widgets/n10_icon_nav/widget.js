@@ -6,17 +6,8 @@
     var fm=unit(root.getAttribute('data-fm'),'pt'); if(fm)root.style.setProperty('--nav-fm',fm);
     var py=unit(root.getAttribute('data-pady'),'px'); if(py)root.style.setProperty('--nav-pady',py);
   }
-  /* 업로드한 아이콘 이미지(SVG/PNG)를 mask로 적용 → background(currentColor)가 테마색으로 자동 채색 */
-  function applyIcons(root){
-    var icos=root.querySelectorAll('.mm-nav__ico');
-    for(var i=0;i<icos.length;i++){
-      var src=String(icos[i].getAttribute('data-src')||'').trim();
-      if(src){ var u="url('"+src+"')"; icos[i].style.webkitMaskImage=u; icos[i].style.maskImage=u; }
-    }
-  }
   function initOne(root){
     applySettings(root);
-    applyIcons(root);
     /* 폰트·여백 값 바뀌면 즉시 반영(편집기 실시간). 정렬(가운데/왼쪽)은 CSS 속성선택자가 담당 */
     if('MutationObserver' in window){ new MutationObserver(function(){applySettings(root);}).observe(root,{attributes:true,attributeFilter:['data-fpc','data-fm','data-pady']}); }
   }

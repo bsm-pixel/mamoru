@@ -1,9 +1,9 @@
-{{!-- @name widgetInfo @type outlined-textfield @default "아이콘(SVG/PNG 업로드)+라벨+링크 칩 내비. 기본 중앙, 넘치면 가로 스크롤(모바일). 아이콘은 테마색 자동 적용." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+{{!-- @name widgetInfo @type outlined-textfield @default "라벨+링크 칩 내비. 기본 중앙, 넘치면 가로 스크롤(모바일). PC/모바일 글씨·칩 높이 조절." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
 <span style="display:none">{{widgetInfo}}</span>
 <!-- ═══════════════════════════════════════════════════════════════
-  📦 MAMORU 커스텀 위젯 — 아이콘 칩 내비
+  📦 MAMORU 커스텀 위젯 — 칩 내비
   📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
-  📝 아이콘 이미지(업로드)+라벨 알약 버튼들. 중앙정렬·모바일 가로스크롤·테마 자동채색
+  📝 라벨 알약 버튼들. 중앙정렬·모바일 가로스크롤(우측 peek)
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
@@ -15,13 +15,9 @@
 <div class="mm-nav" data-theme="{{theme}}" data-align="{{align}}" data-fpc="{{fontPC}}" data-fm="{{fontMobile}}" data-pady="{{padY}}">
   <div class="mm-nav__track">
   {{#each chips}}
-    {{!-- @name iconImage @type image @label "아이콘 이미지 — SVG/PNG 업로드(투명 배경 단색 아이콘 권장). 테마색 자동 적용 · 비우면 라벨만" --}}
     {{!-- @name label @type outlined-textfield @default "메뉴" @label "라벨" --}}
     {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
-    <a class="mm-nav__chip" href="{{link}}">
-      <span class="mm-nav__ico" data-src="{{iconImage}}" aria-hidden="true"></span>
-      <span class="mm-nav__label">{{label}}</span>
-    </a>
+    <a class="mm-nav__chip" href="{{link}}"><span class="mm-nav__label">{{label}}</span></a>
   {{/each}}
   </div>
 </div>

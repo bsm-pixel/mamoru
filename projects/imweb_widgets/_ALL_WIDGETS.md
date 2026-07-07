@@ -2308,12 +2308,12 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 
 ### HTML 탭
 ```html
-{{!-- @name widgetInfo @type outlined-textfield @default "아이콘(SVG/PNG 업로드)+라벨+링크 칩 내비. 기본 중앙, 넘치면 가로 스크롤(모바일). 아이콘은 테마색 자동 적용." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+{{!-- @name widgetInfo @type outlined-textfield @default "라벨+링크 칩 내비. 기본 중앙, 넘치면 가로 스크롤(모바일). PC/모바일 글씨·칩 높이 조절." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
 <span style="display:none">{{widgetInfo}}</span>
 <!-- ═══════════════════════════════════════════════════════════════
-  📦 MAMORU 커스텀 위젯 — 아이콘 칩 내비
+  📦 MAMORU 커스텀 위젯 — 칩 내비
   📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
-  📝 아이콘 이미지(업로드)+라벨 알약 버튼들. 중앙정렬·모바일 가로스크롤·테마 자동채색
+  📝 라벨 알약 버튼들. 중앙정렬·모바일 가로스크롤(우측 peek)
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
@@ -2325,13 +2325,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 <div class="mm-nav" data-theme="{{theme}}" data-align="{{align}}" data-fpc="{{fontPC}}" data-fm="{{fontMobile}}" data-pady="{{padY}}">
   <div class="mm-nav__track">
   {{#each chips}}
-    {{!-- @name iconImage @type image @label "아이콘 이미지 — SVG/PNG 업로드(투명 배경 단색 아이콘 권장). 테마색 자동 적용 · 비우면 라벨만" --}}
     {{!-- @name label @type outlined-textfield @default "메뉴" @label "라벨" --}}
     {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
-    <a class="mm-nav__chip" href="{{link}}">
-      <span class="mm-nav__ico" data-src="{{iconImage}}" aria-hidden="true"></span>
-      <span class="mm-nav__label">{{label}}</span>
-    </a>
+    <a class="mm-nav__chip" href="{{link}}"><span class="mm-nav__label">{{label}}</span></a>
   {{/each}}
   </div>
 </div>
@@ -2345,7 +2341,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-nav__track{display:flex;flex-wrap:nowrap;gap:10px;width:max-content;margin:0 auto;}
 .mm-nav[data-align="왼쪽"] .mm-nav__track{margin:0;}
 /* 칩 상하 여백=--nav-pady, 폰트=PC/모바일 각각(pt), 아이콘은 폰트에 비례(em) */
-.mm-nav__chip{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;gap:8px;padding:var(--nav-pady) 20px;border-radius:999px;text-decoration:none;font-size:var(--nav-fpc);line-height:1;font-weight:700;letter-spacing:-.01em;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;}
+.mm-nav__chip{flex:0 0 auto;scroll-snap-align:start;display:inline-flex;align-items:center;padding:var(--nav-pady) 20px;border-radius:999px;text-decoration:none;font-size:var(--nav-fpc);line-height:1;font-weight:700;letter-spacing:-.01em;transition:transform .2s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;}
 @media (max-width:768px){.mm-nav__chip{font-size:var(--nav-fm);}}
 .mm-nav[data-theme="다크"] .mm-nav__chip{background:#1A1A1A;color:#FAF9F7;}
 .mm-nav[data-theme="라이트"] .mm-nav__chip{background:#FFFFFF;color:#1A1A1A;border:1px solid #D4D0CB;}
@@ -2354,9 +2350,6 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   .mm-nav[data-theme="다크"] .mm-nav__chip:hover{opacity:.88;transform:translateY(-1px);}
   .mm-nav[data-theme="라이트"] .mm-nav__chip:hover{border-color:#1A1A1A;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.06);}
 }
-/* 업로드 아이콘 = mask로 채색: background(currentColor)가 테마색으로 자동 적용(다크=흰/라이트=검). URL은 JS가 style로 주입 */
-.mm-nav__ico{flex:0 0 auto;width:1.25em;height:1.25em;background-color:currentColor;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;}
-.mm-nav__ico[data-src=""]{display:none;}
 ```
 ### JS 탭
 ```js
@@ -2368,17 +2361,8 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     var fm=unit(root.getAttribute('data-fm'),'pt'); if(fm)root.style.setProperty('--nav-fm',fm);
     var py=unit(root.getAttribute('data-pady'),'px'); if(py)root.style.setProperty('--nav-pady',py);
   }
-  /* 업로드한 아이콘 이미지(SVG/PNG)를 mask로 적용 → background(currentColor)가 테마색으로 자동 채색 */
-  function applyIcons(root){
-    var icos=root.querySelectorAll('.mm-nav__ico');
-    for(var i=0;i<icos.length;i++){
-      var src=String(icos[i].getAttribute('data-src')||'').trim();
-      if(src){ var u="url('"+src+"')"; icos[i].style.webkitMaskImage=u; icos[i].style.maskImage=u; }
-    }
-  }
   function initOne(root){
     applySettings(root);
-    applyIcons(root);
     /* 폰트·여백 값 바뀌면 즉시 반영(편집기 실시간). 정렬(가운데/왼쪽)은 CSS 속성선택자가 담당 */
     if('MutationObserver' in window){ new MutationObserver(function(){applySettings(root);}).observe(root,{attributes:true,attributeFilter:['data-fpc','data-fm','data-pady']}); }
   }
