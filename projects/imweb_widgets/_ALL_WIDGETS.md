@@ -2211,9 +2211,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
-{{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
+{{!-- @name square @type switch @default false @label "모서리 각지게 (끄면 둥근 모서리)" --}}
 {{!-- @name items @type item @label "항목" --}}
-<div class="mm-belief" data-radius="{{radius}}" data-theme="{{theme}}">
+<div class="mm-belief" data-square="{{square}}" data-theme="{{theme}}">
 {{#each items}}
   {{!-- @name big @type outlined-textfield @default "신념" @label "큰 글자/숫자 (예: 신념, 100, ZERO)" --}}
   {{!-- @name suffix @type outlined-textfield @default "" @label "단위(선택, 예: %)" --}}
@@ -2228,8 +2228,10 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ### CSS 탭
 ```css
 .mm-belief{max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;
-  font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;color:#FAF9F7;}
+  font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;color:#FAF9F7;border-radius:16px;}
 .mm-belief[data-theme="라이트"]{background:#FAF9F7;color:#1A1A1A;}
+/* 각지게 토글: 스위치 ON(data-square="true") → CSS가 첫 페인트에 각짐 결정 → JS 미개입=깜빡임 0 */
+.mm-belief[data-square="true"]{border-radius:0;}
 .mm-belief__item{display:flex;flex-direction:column;align-items:center;gap:8px;}
 .mm-belief__big{font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(30px,9vw,52px);font-weight:900;line-height:1;letter-spacing:-.03em;color:#FAF9F7;font-variant-numeric:tabular-nums;}
 .mm-belief[data-theme="라이트"] .mm-belief__big{color:#1A1A1A;}
@@ -2268,9 +2270,6 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   function init(){var l=document.querySelectorAll('.mm-belief');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
-
-/* 모서리(radius): 인라인 style {{}}는 아임웹 저장거부 → data-radius 속성값을 JS로 적용(깜빡임 없음, CSS 기본은 각지게) */
-(function(){function apR(){var es=document.querySelectorAll("[data-radius]");for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute("data-radius")||"").trim();if(v){if(String(parseFloat(v))===v)v+="px";es[i].style.borderRadius=v;}}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",apR);else apR();})();
 ```
 
 ---
