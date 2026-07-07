@@ -9,7 +9,7 @@
 {{!-- @name ratio @type outlined-textfield @default "4/3" @label "이미지 비율 — 입력: 4/3 · 1/1 · 16/9" --}}
 {{!-- @name frames @type item @label "회전 프레임(각도별 사진)" --}}
 <div class="mm-360">
-  <div class="mm-360__stage" style="aspect-ratio:{{ratio}};">
+  <div class="mm-360__stage" data-ar="{{ratio}}">
   {{#each frames}}
     {{!-- @name frame @type image @label "프레임 이미지 (권장 800×800px)" --}}
     <img class="mm-360__f" src="{{frame}}" alt="" draggable="false">

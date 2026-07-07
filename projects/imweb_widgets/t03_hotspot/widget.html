@@ -10,14 +10,14 @@
 {{!-- @name ratio @type outlined-textfield @default "16/9" @label "비율 — 입력: 16/9 · 4/3 · 1/1" --}}
 {{!-- @name spots @type item @label "핫스팟" --}}
 <div class="mm-hs">
-  <div class="mm-hs__stage" style="aspect-ratio:{{ratio}};">
+  <div class="mm-hs__stage" data-ar="{{ratio}}">
     <img class="mm-hs__base" src="{{baseImage}}" alt="" draggable="false">
     {{#each spots}}
       {{!-- @name x @type outlined-textfield @default "50" @label "가로 위치 %(0~100)" --}}
       {{!-- @name y @type outlined-textfield @default "50" @label "세로 위치 %(0~100)" --}}
       {{!-- @name spotTitle @type outlined-textfield @default "부위" @label "부위명" --}}
       {{!-- @name spotDesc @type text-editor @default "<p>설명</p>" @label "설명" --}}
-      <div class="mm-hs__spot" style="left:{{x}}%;top:{{y}}%">
+      <div class="mm-hs__spot" data-x="{{x}}" data-y="{{y}}">
         <button type="button" class="mm-hs__dot" aria-label="{{spotTitle}}"></button>
         <div class="mm-hs__tip"><strong>{{spotTitle}}</strong><div class="mm-hs__tipdesc">{{spotDesc}}</div></div>
       </div>

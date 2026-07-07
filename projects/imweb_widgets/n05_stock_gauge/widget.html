@@ -11,7 +11,7 @@
 {{!-- @name remaining @type outlined-textfield @default "23" @label "남은 수량" --}}
 {{!-- @name unit @type outlined-textfield @default "개" @label "단위" --}}
 {{!-- @name radius @type outlined-textfield @default "14px" @label "모서리 둥글기 — 예: 14px · 0px이면 각지게" --}}
-<div class="mm-stock" style="border-radius:{{radius}}" data-total="{{total}}" data-remaining="{{remaining}}" data-unit="{{unit}}">
+<div class="mm-stock" data-radius="{{radius}}" data-total="{{total}}" data-remaining="{{remaining}}" data-unit="{{unit}}">
   <div class="mm-stock__top"><span class="mm-stock__title">{{title}}</span><span class="mm-stock__count">—</span></div>
   <div class="mm-stock__track"><div class="mm-stock__bar"></div></div>
 </div>

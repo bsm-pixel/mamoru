@@ -1,4 +1,4 @@
-.mm-cd{max-width:520px;margin:0 auto;padding:clamp(24px,5vw,36px) clamp(20px,4vw,32px);border-radius:16px;text-align:center;
+.mm-cd{max-width:520px;margin:0 auto;padding:clamp(24px,5vw,36px) clamp(20px,4vw,32px);text-align:center;
   font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;
   background:#FAF9F7;border:1px solid #D4D0CB;color:#1A1A1A;}
 .mm-cd[data-theme="다크"]{background:#1A1A1A;border-color:#2D2D2D;color:#FAF9F7;}

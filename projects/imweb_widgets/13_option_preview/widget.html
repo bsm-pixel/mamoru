@@ -11,7 +11,7 @@
 {{!-- @name options @type item @label "옵션" --}}
 <div class="mm-opt">
   <p class="mm-opt__title">{{title}}</p>
-  <div class="mm-opt__stage" style="aspect-ratio:{{ratio}};"><img class="mm-opt__main" src="" alt=""></div>
+  <div class="mm-opt__stage" data-ar="{{ratio}}"><img class="mm-opt__main" src="" alt=""></div>
   <div class="mm-opt__btns">
   {{#each options}}
     {{!-- @name optName @type outlined-textfield @default "옵션" @label "옵션명" --}}

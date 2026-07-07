@@ -1,6 +1,6 @@
 # 🧩 MAMORU 아임웹 위젯 — Part 2/5 (11_recommender ~ d04_quote_banner)
 
-> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호·CSS탭 {{변수}}·인라인 on*= 금지. 이 파일 10종.
+> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} · CSS탭 {{변수}} · 인라인 style="…{{}}…"(동적값은 data-*+JS) · 인라인 on*= 금지. 이 파일 10종.
 
 ## 📑 이 파일의 위젯
 - 11. 가위 추천 진단 (가이드형) — `11_recommender`
@@ -117,7 +117,7 @@
 {{!-- @name ratio @type outlined-textfield @default "4/3" @label "이미지 비율 — 입력: 4/3 · 1/1 · 16/9" --}}
 {{!-- @name frames @type item @label "회전 프레임(각도별 사진)" --}}
 <div class="mm-360">
-  <div class="mm-360__stage" style="aspect-ratio:{{ratio}};">
+  <div class="mm-360__stage" data-ar="{{ratio}}">
   {{#each frames}}
     {{!-- @name frame @type image @label "프레임 이미지 (권장 800×800px)" --}}
     <img class="mm-360__f" src="{{frame}}" alt="" draggable="false">
@@ -154,6 +154,13 @@
   function init(){var l=document.querySelectorAll('.mm-360');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 동적 스타일(비율/배경/좌표): 인라인 style {{}}는 아임웹 저장거부 → data-* 속성을 JS로 적용 */
+(function(){function ap(){
+var A=document.querySelectorAll("[data-ar]");for(var i=0;i<A.length;i++){var v=(A[i].getAttribute("data-ar")||"").trim();if(v){if(A[i].classList.contains("mm-cat"))A[i].style.setProperty("--mm-ratio",v);else A[i].style.aspectRatio=v;}}
+var B=document.querySelectorAll("[data-bg]");for(var i=0;i<B.length;i++){var v=(B[i].getAttribute("data-bg")||"").trim();if(v)B[i].style.backgroundImage="url('"+v+"')";}
+var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C[i].getAttribute("data-x")||"").trim(),y=(C[i].getAttribute("data-y")||"").trim();if(x)C[i].style.left=x+"%";if(y)C[i].style.top=y+"%";}
+}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",ap);else ap();})();
 ```
 
 ---
@@ -176,7 +183,7 @@
 {{!-- @name options @type item @label "옵션" --}}
 <div class="mm-opt">
   <p class="mm-opt__title">{{title}}</p>
-  <div class="mm-opt__stage" style="aspect-ratio:{{ratio}};"><img class="mm-opt__main" src="" alt=""></div>
+  <div class="mm-opt__stage" data-ar="{{ratio}}"><img class="mm-opt__main" src="" alt=""></div>
   <div class="mm-opt__btns">
   {{#each options}}
     {{!-- @name optName @type outlined-textfield @default "옵션" @label "옵션명" --}}
@@ -219,6 +226,13 @@
   function init(){var l=document.querySelectorAll('.mm-opt');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 동적 스타일(비율/배경/좌표): 인라인 style {{}}는 아임웹 저장거부 → data-* 속성을 JS로 적용 */
+(function(){function ap(){
+var A=document.querySelectorAll("[data-ar]");for(var i=0;i<A.length;i++){var v=(A[i].getAttribute("data-ar")||"").trim();if(v){if(A[i].classList.contains("mm-cat"))A[i].style.setProperty("--mm-ratio",v);else A[i].style.aspectRatio=v;}}
+var B=document.querySelectorAll("[data-bg]");for(var i=0;i<B.length;i++){var v=(B[i].getAttribute("data-bg")||"").trim();if(v)B[i].style.backgroundImage="url('"+v+"')";}
+var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C[i].getAttribute("data-x")||"").trim(),y=(C[i].getAttribute("data-y")||"").trim();if(x)C[i].style.left=x+"%";if(y)C[i].style.top=y+"%";}
+}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",ap);else ap();})();
 ```
 
 ---
@@ -246,7 +260,7 @@
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
 {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-<div class="mm-cut" style="border-radius:{{radius}}" data-theme="{{theme}}" data-height="{{height}}">
+<div class="mm-cut" data-radius="{{radius}}" data-theme="{{theme}}" data-height="{{height}}">
   <img class="mm-cut__bg" src="{{bg}}" alt="">
   <img class="mm-cut__bgm" src="{{bgMobile}}" alt="">
   <div class="mm-cut__inner">
@@ -260,7 +274,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-cut{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(280px,50vw,440px);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;}
+.mm-cut{position:relative;overflow:hidden;min-height:clamp(280px,50vw,440px);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;}
 .mm-cut[data-theme="라이트"]{background:#FAF9F7;}
 .mm-cut__bg,.mm-cut__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;z-index:0;}
 .mm-cut__bgm{display:none;}
@@ -302,6 +316,9 @@
   function init(){var l=document.querySelectorAll('.mm-cut');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 모서리(radius): 인라인 style {{}}는 아임웹 저장거부 → data-radius 속성값을 JS로 적용(깜빡임 없음, CSS 기본은 각지게) */
+(function(){function apR(){var es=document.querySelectorAll("[data-radius]");for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute("data-radius")||"").trim();if(v){if(String(parseFloat(v))===v)v+="px";es[i].style.borderRadius=v;}}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",apR);else apR();})();
 ```
 
 ---
@@ -475,7 +492,7 @@
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
 {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-<div class="mm-cine" style="border-radius:{{radius}}" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-maxw="{{maxw}}">
+<div class="mm-cine" data-radius="{{radius}}" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-maxw="{{maxw}}">
   <img class="mm-cine__bg" src="{{image}}" alt="">
   <img class="mm-cine__bgm" src="{{imageMobile}}" alt="">
   <div class="mm-cine__veil" aria-hidden="true"></div>
@@ -489,7 +506,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-cine{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-cine{position:relative;overflow:hidden;min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
 .mm-cine[data-align="가운데"]{justify-content:center;text-align:center;}
 .mm-cine[data-align="왼쪽"]{justify-content:flex-start;text-align:left;}
 .mm-cine__bg,.mm-cine__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;animation:mm-cine-zoom 16s ease-out both;}
@@ -552,7 +569,7 @@
     if(bgm && String(bgm.getAttribute('src')||'').trim()) root.setAttribute('data-hasm','1');
     var h=root.getAttribute('data-height');
     if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
-    /* 모서리(radius)는 HTML 인라인 style로 처리 → 로드 시 깜빡임 없음(JS 미사용) */
+    var rd=root.getAttribute('data-radius'); if(rd!==null){ var rv=rd.trim(); if(rv){ if(String(parseFloat(rv))===rv) rv+='px'; root.style.borderRadius=rv; } }
     /* PC 최대 가로폭 지정 + 중앙정렬. 모바일은 화면이 더 좁아 자동 꽉 채움 */
     var mw=root.getAttribute('data-maxw');
     if(mw!==null){ var mv=mw.trim(); if(mv){ if(String(parseFloat(mv))===mv) mv+='px'; root.style.maxWidth=mv; root.style.marginLeft='auto'; root.style.marginRight='auto'; } }
@@ -588,7 +605,7 @@
 {{!-- @name desc @type text-editor @default "<p>설명</p>" @label "설명" --}}
 {{!-- @name btnText @type outlined-textfield @default "자세히 보기" @label "버튼 문구(비우면 숨김)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-<div class="mm-split" style="border-radius:{{radius}}" data-img="{{imgPos}}" data-theme="{{theme}}" data-height="{{height}}">
+<div class="mm-split" data-radius="{{radius}}" data-img="{{imgPos}}" data-theme="{{theme}}" data-height="{{height}}">
   <div class="mm-split__media"><img class="mm-split__img" src="{{image}}" alt=""><img class="mm-split__imgm" src="{{imageMobile}}" alt=""></div>
   <div class="mm-split__body">
     <span class="mm-split__tag">{{tag}}</span>
@@ -600,7 +617,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-split{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;border-radius:16px;overflow:hidden;border:1px solid #D4D0CB;background:#FFFFFF;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-split{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;overflow:hidden;border:1px solid #D4D0CB;background:#FFFFFF;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-split[data-theme="다크"]{background:#1A1A1A;border-color:#2D2D2D;color:#FAF9F7;}
 .mm-split[data-img="오른쪽"] .mm-split__media{order:2;}
 .mm-split__media{min-height:240px;background:#F5F3F0;}
@@ -634,6 +651,9 @@
   function init(){var l=document.querySelectorAll('.mm-split');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 모서리(radius): 인라인 style {{}}는 아임웹 저장거부 → data-radius 속성값을 JS로 적용(깜빡임 없음, CSS 기본은 각지게) */
+(function(){function apR(){var es=document.querySelectorAll("[data-radius]");for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute("data-radius")||"").trim();if(v){if(String(parseFloat(v))===v)v+="px";es[i].style.borderRadius=v;}}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",apR);else apR();})();
 ```
 
 ---
@@ -658,7 +678,7 @@
 {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
 {{!-- @name flow @type switch @default false @label "문구 흐르기(마퀴)" --}}
-<div class="mm-notice" style="border-radius:{{radius}}" data-theme="{{theme}}" data-flow="{{flow}}">
+<div class="mm-notice" data-radius="{{radius}}" data-theme="{{theme}}" data-flow="{{flow}}">
   <div class="mm-notice__in">
     <span class="mm-notice__icon">{{icon}}</span>
     <span class="mm-notice__text">{{text}}</span>
@@ -668,7 +688,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-notice{width:100%;border-radius:10px;background:#1A1A1A;color:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;overflow:hidden;}
+.mm-notice{width:100%;background:#1A1A1A;color:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;overflow:hidden;}
 .mm-notice[data-theme="라이트"]{background:#F5F3F0;color:#1A1A1A;border:1px solid #D4D0CB;}
 .mm-notice__in{display:flex;align-items:center;justify-content:center;gap:10px;padding:11px 16px;font-size:clamp(13px,3.4vw,14px);font-weight:600;}
 .mm-notice__icon{flex:0 0 auto;}
@@ -696,6 +716,9 @@
   function init(){var l=document.querySelectorAll('.mm-notice');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 모서리(radius): 인라인 style {{}}는 아임웹 저장거부 → data-radius 속성값을 JS로 적용(깜빡임 없음, CSS 기본은 각지게) */
+(function(){function apR(){var es=document.querySelectorAll("[data-radius]");for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute("data-radius")||"").trim();if(v){if(String(parseFloat(v))===v)v+="px";es[i].style.borderRadius=v;}}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",apR);else apR();})();
 ```
 
 ---
@@ -718,7 +741,7 @@
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 — 입력: 가운데 · 왼쪽" --}}
 {{!-- @name quote @type text-editor @default "<p>좋은 가위는 권하지 않습니다</p>" @label "인용문" --}}
 {{!-- @name author @type outlined-textfield @default "" @label "출처/서명(선택)" --}}
-<div class="mm-quote" style="border-radius:{{radius}}" data-theme="{{theme}}" data-align="{{align}}">
+<div class="mm-quote" data-radius="{{radius}}" data-theme="{{theme}}" data-align="{{align}}">
   <span class="mm-quote__mark" aria-hidden="true">“</span>
   <blockquote class="mm-quote__text">{{quote}}</blockquote>
   <cite class="mm-quote__author">{{author}}</cite>
@@ -726,7 +749,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-quote{position:relative;max-width:860px;margin:0 auto;padding:clamp(36px,7vw,72px) clamp(20px,5vw,48px);border-radius:16px;background:#FAF9F7;color:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-quote{position:relative;max-width:860px;margin:0 auto;padding:clamp(36px,7vw,72px) clamp(20px,5vw,48px);background:#FAF9F7;color:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
 .mm-quote[data-theme="다크"]{background:#1A1A1A;color:#FAF9F7;}
 .mm-quote[data-align="가운데"]{text-align:center;}
 .mm-quote[data-align="왼쪽"]{text-align:left;}
@@ -755,6 +778,9 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 모서리(radius): 인라인 style {{}}는 아임웹 저장거부 → data-radius 속성값을 JS로 적용(깜빡임 없음, CSS 기본은 각지게) */
+(function(){function apR(){var es=document.querySelectorAll("[data-radius]");for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute("data-radius")||"").trim();if(v){if(String(parseFloat(v))===v)v+="px";es[i].style.borderRadius=v;}}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",apR);else apR();})();
 ```
 
 ---

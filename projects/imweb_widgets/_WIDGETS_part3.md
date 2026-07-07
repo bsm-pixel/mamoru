@@ -1,6 +1,6 @@
 # 🧩 MAMORU 아임웹 위젯 — Part 3/5 (d05_dual_choice ~ n09_stat_grid)
 
-> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호·CSS탭 {{변수}}·인라인 on*= 금지. 이 파일 10종.
+> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} · CSS탭 {{변수}} · 인라인 style="…{{}}…"(동적값은 data-*+JS) · 인라인 on*= 금지. 이 파일 10종.
 
 ## 📑 이 파일의 위젯
 - D5. 듀얼 선택 배너 — `d05_dual_choice`
@@ -91,7 +91,7 @@
 {{!-- @name max @type outlined-textfield @default "7.0" @label "최대 인치" --}}
 {{!-- @name def @type outlined-textfield @default "5.5" @label "기본 인치" --}}
 {{!-- @name note @type outlined-textfield @default "* 화면 비례 참고용이며 실제 길이와 다를 수 있어요" @label "안내(선택)" --}}
-<div class="mm-rul" style="border-radius:{{radius}}" data-min="{{min}}" data-max="{{max}}" data-def="{{def}}">
+<div class="mm-rul" data-radius="{{radius}}" data-min="{{min}}" data-max="{{max}}" data-def="{{def}}">
   <div class="mm-rul__readout"><strong class="mm-rul__inch">—</strong><span class="mm-rul__cm">—</span></div>
   <div class="mm-rul__track"><div class="mm-rul__bar"></div></div>
   <input type="range" class="mm-rul__range" aria-label="가위 길이(인치)">
@@ -100,7 +100,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-rul{max-width:520px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;text-align:center;}
+.mm-rul{max-width:520px;margin:0 auto;padding:clamp(22px,5vw,32px);border:1px solid #D4D0CB;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;text-align:center;}
 .mm-rul__readout{display:flex;align-items:baseline;justify-content:center;gap:10px;margin-bottom:18px;}
 .mm-rul__inch{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(34px,10vw,52px);font-weight:900;letter-spacing:-.03em;line-height:1;}
 .mm-rul__cm{font-size:clamp(14px,4vw,17px);font-weight:600;color:#8A8580;}
@@ -136,6 +136,9 @@
   function init(){var l=document.querySelectorAll('.mm-rul');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 모서리(radius): 인라인 style {{}}는 아임웹 저장거부 → data-radius 속성값을 JS로 적용(깜빡임 없음, CSS 기본은 각지게) */
+(function(){function apR(){var es=document.querySelectorAll("[data-radius]");for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute("data-radius")||"").trim();if(v){if(String(parseFloat(v))===v)v+="px";es[i].style.borderRadius=v;}}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",apR);else apR();})();
 ```
 
 ---
@@ -157,7 +160,7 @@
 {{!-- @name rightLabel @type outlined-textfield @default "일반 판매처" @label "오른쪽 라벨" --}}
 {{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name rows @type item @label "비교 항목" --}}
-<div class="mm-vs" style="border-radius:{{radius}}">
+<div class="mm-vs" data-radius="{{radius}}">
   <div class="mm-vs__head">
     <span class="mm-vs__h mm-vs__h--label"></span>
     <span class="mm-vs__h mm-vs__h--us">{{leftLabel}}</span>
@@ -177,7 +180,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-vs{max-width:600px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;border:1px solid #D4D0CB;border-radius:16px;overflow:hidden;}
+.mm-vs{max-width:600px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;border:1px solid #D4D0CB;overflow:hidden;}
 .mm-vs__head,.mm-vs__row{display:grid;grid-template-columns:1.4fr 1fr 1fr;align-items:center;}
 .mm-vs__head{background:#1A1A1A;color:#FAF9F7;}
 .mm-vs__h{padding:14px 10px;font-size:clamp(12px,3.2vw,14px);font-weight:700;text-align:center;}
@@ -206,6 +209,9 @@
   function init(){var l=document.querySelectorAll('.mm-vs');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 모서리(radius): 인라인 style {{}}는 아임웹 저장거부 → data-radius 속성값을 JS로 적용(깜빡임 없음, CSS 기본은 각지게) */
+(function(){function apR(){var es=document.querySelectorAll("[data-radius]");for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute("data-radius")||"").trim();if(v){if(String(parseFloat(v))===v)v+="px";es[i].style.borderRadius=v;}}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",apR);else apR();})();
 ```
 
 ---
@@ -309,7 +315,7 @@
 {{!-- @name sub @type text-editor @default "<p></p>" @label "아래 문구(선택)" --}}
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 — 입력: 가운데 · 왼쪽" --}}
 <div class="mm-mask" data-align="{{align}}">
-  <div class="mm-mask__h" style="background-image:url('{{image}}')">{{headline}}</div>
+  <div class="mm-mask__h" data-bg="{{image}}">{{headline}}</div>
   <div class="mm-mask__sub">{{sub}}</div>
 </div>
 ```
@@ -345,6 +351,13 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 동적 스타일(비율/배경/좌표): 인라인 style {{}}는 아임웹 저장거부 → data-* 속성을 JS로 적용 */
+(function(){function ap(){
+var A=document.querySelectorAll("[data-ar]");for(var i=0;i<A.length;i++){var v=(A[i].getAttribute("data-ar")||"").trim();if(v){if(A[i].classList.contains("mm-cat"))A[i].style.setProperty("--mm-ratio",v);else A[i].style.aspectRatio=v;}}
+var B=document.querySelectorAll("[data-bg]");for(var i=0;i<B.length;i++){var v=(B[i].getAttribute("data-bg")||"").trim();if(v)B[i].style.backgroundImage="url('"+v+"')";}
+var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C[i].getAttribute("data-x")||"").trim(),y=(C[i].getAttribute("data-y")||"").trim();if(x)C[i].style.left=x+"%";if(y)C[i].style.top=y+"%";}
+}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",ap);else ap();})();
 ```
 
 ---
@@ -367,14 +380,14 @@
 {{!-- @name remaining @type outlined-textfield @default "23" @label "남은 수량" --}}
 {{!-- @name unit @type outlined-textfield @default "개" @label "단위" --}}
 {{!-- @name radius @type outlined-textfield @default "14px" @label "모서리 둥글기 — 예: 14px · 0px이면 각지게" --}}
-<div class="mm-stock" style="border-radius:{{radius}}" data-total="{{total}}" data-remaining="{{remaining}}" data-unit="{{unit}}">
+<div class="mm-stock" data-radius="{{radius}}" data-total="{{total}}" data-remaining="{{remaining}}" data-unit="{{unit}}">
   <div class="mm-stock__top"><span class="mm-stock__title">{{title}}</span><span class="mm-stock__count">—</span></div>
   <div class="mm-stock__track"><div class="mm-stock__bar"></div></div>
 </div>
 ```
 ### CSS 탭
 ```css
-.mm-stock{max-width:440px;margin:0 auto;padding:clamp(18px,4vw,24px);border:1px solid #D4D0CB;border-radius:14px;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-stock{max-width:440px;margin:0 auto;padding:clamp(18px,4vw,24px);border:1px solid #D4D0CB;background:#FAF9F7;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-stock__top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
 .mm-stock__title{font-size:14px;font-weight:700;}
 .mm-stock__count{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(15px,4vw,18px);font-weight:800;letter-spacing:-.01em;}
@@ -404,6 +417,9 @@
   function init(){var l=document.querySelectorAll('.mm-stock');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 모서리(radius): 인라인 style {{}}는 아임웹 저장거부 → data-radius 속성값을 JS로 적용(깜빡임 없음, CSS 기본은 각지게) */
+(function(){function apR(){var es=document.querySelectorAll("[data-radius]");for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute("data-radius")||"").trim();if(v){if(String(parseFloat(v))===v)v+="px";es[i].style.borderRadius=v;}}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",apR);else apR();})();
 ```
 
 ---
@@ -617,7 +633,7 @@
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
 {{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name items @type item @label "항목" --}}
-<div class="mm-belief" style="border-radius:{{radius}}" data-theme="{{theme}}">
+<div class="mm-belief" data-radius="{{radius}}" data-theme="{{theme}}">
 {{#each items}}
   {{!-- @name big @type outlined-textfield @default "신념" @label "큰 글자/숫자 (예: 신념, 100, ZERO)" --}}
   {{!-- @name suffix @type outlined-textfield @default "" @label "단위(선택, 예: %)" --}}
@@ -631,7 +647,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-belief{max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;border-radius:16px;
+.mm-belief{max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;
   font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;color:#FAF9F7;}
 .mm-belief[data-theme="라이트"]{background:#FAF9F7;color:#1A1A1A;}
 .mm-belief__item{display:flex;flex-direction:column;align-items:center;gap:8px;}
@@ -672,6 +688,9 @@
   function init(){var l=document.querySelectorAll('.mm-belief');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 모서리(radius): 인라인 style {{}}는 아임웹 저장거부 → data-radius 속성값을 JS로 적용(깜빡임 없음, CSS 기본은 각지게) */
+(function(){function apR(){var es=document.querySelectorAll("[data-radius]");for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute("data-radius")||"").trim();if(v){if(String(parseFloat(v))===v)v+="px";es[i].style.borderRadius=v;}}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",apR);else apR();})();
 ```
 
 ---

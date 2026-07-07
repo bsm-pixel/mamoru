@@ -1,4 +1,4 @@
-.mm-cut{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(280px,50vw,440px);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;}
+.mm-cut{position:relative;overflow:hidden;min-height:clamp(280px,50vw,440px);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;}
 .mm-cut[data-theme="라이트"]{background:#FAF9F7;}
 .mm-cut__bg,.mm-cut__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;z-index:0;}
 .mm-cut__bgm{display:none;}

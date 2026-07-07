@@ -1,6 +1,6 @@
 # 🧩 MAMORU 아임웹 위젯 — Part 4/5 (n10_icon_nav ~ t07_spotlight)
 
-> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호·CSS탭 {{변수}}·인라인 on*= 금지. 이 파일 10종.
+> 각 위젯=HTML/CSS/JS 3탭. 🚫 삼중괄호 {{{ }}} · CSS탭 {{변수}} · 인라인 style="…{{}}…"(동적값은 data-*+JS) · 인라인 on*= 금지. 이 파일 10종.
 
 ## 📑 이 파일의 위젯
 - N10. 아이콘 칩 내비 — `n10_icon_nav`
@@ -197,7 +197,7 @@
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name ratio @type outlined-textfield @default "3/4" @label "타일 비율 — 입력: 3/4 · 1/1 · 4/3 · 16/9" --}}
 {{!-- @name tiles @type item @label "카테고리 타일" --}}
-<div class="mm-cat" style="--mm-ratio:{{ratio}};">
+<div class="mm-cat" data-ar="{{ratio}}">
 {{#each tiles}}
   {{!-- @name image @type image @label "이미지 (권장 800×1000px)" --}}
   {{!-- @name label @type outlined-textfield @default "카테고리" @label "큰 라벨" --}}
@@ -244,6 +244,13 @@
   function init(){var l=document.querySelectorAll('.mm-cat');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 동적 스타일(비율/배경/좌표): 인라인 style {{}}는 아임웹 저장거부 → data-* 속성을 JS로 적용 */
+(function(){function ap(){
+var A=document.querySelectorAll("[data-ar]");for(var i=0;i<A.length;i++){var v=(A[i].getAttribute("data-ar")||"").trim();if(v){if(A[i].classList.contains("mm-cat"))A[i].style.setProperty("--mm-ratio",v);else A[i].style.aspectRatio=v;}}
+var B=document.querySelectorAll("[data-bg]");for(var i=0;i<B.length;i++){var v=(B[i].getAttribute("data-bg")||"").trim();if(v)B[i].style.backgroundImage="url('"+v+"')";}
+var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C[i].getAttribute("data-x")||"").trim(),y=(C[i].getAttribute("data-y")||"").trim();if(x)C[i].style.left=x+"%";if(y)C[i].style.top=y+"%";}
+}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",ap);else ap();})();
 ```
 
 ---
@@ -408,14 +415,14 @@
 {{!-- @name ratio @type outlined-textfield @default "16/9" @label "비율 — 입력: 16/9 · 4/3 · 1/1" --}}
 {{!-- @name spots @type item @label "핫스팟" --}}
 <div class="mm-hs">
-  <div class="mm-hs__stage" style="aspect-ratio:{{ratio}};">
+  <div class="mm-hs__stage" data-ar="{{ratio}}">
     <img class="mm-hs__base" src="{{baseImage}}" alt="" draggable="false">
     {{#each spots}}
       {{!-- @name x @type outlined-textfield @default "50" @label "가로 위치 %(0~100)" --}}
       {{!-- @name y @type outlined-textfield @default "50" @label "세로 위치 %(0~100)" --}}
       {{!-- @name spotTitle @type outlined-textfield @default "부위" @label "부위명" --}}
       {{!-- @name spotDesc @type text-editor @default "<p>설명</p>" @label "설명" --}}
-      <div class="mm-hs__spot" style="left:{{x}}%;top:{{y}}%">
+      <div class="mm-hs__spot" data-x="{{x}}" data-y="{{y}}">
         <button type="button" class="mm-hs__dot" aria-label="{{spotTitle}}"></button>
         <div class="mm-hs__tip"><strong>{{spotTitle}}</strong><div class="mm-hs__tipdesc">{{spotDesc}}</div></div>
       </div>
@@ -456,6 +463,13 @@
   function init(){var l=document.querySelectorAll('.mm-hs');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 동적 스타일(비율/배경/좌표): 인라인 style {{}}는 아임웹 저장거부 → data-* 속성을 JS로 적용 */
+(function(){function ap(){
+var A=document.querySelectorAll("[data-ar]");for(var i=0;i<A.length;i++){var v=(A[i].getAttribute("data-ar")||"").trim();if(v){if(A[i].classList.contains("mm-cat"))A[i].style.setProperty("--mm-ratio",v);else A[i].style.aspectRatio=v;}}
+var B=document.querySelectorAll("[data-bg]");for(var i=0;i<B.length;i++){var v=(B[i].getAttribute("data-bg")||"").trim();if(v)B[i].style.backgroundImage="url('"+v+"')";}
+var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C[i].getAttribute("data-x")||"").trim(),y=(C[i].getAttribute("data-y")||"").trim();if(x)C[i].style.left=x+"%";if(y)C[i].style.top=y+"%";}
+}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",ap);else ap();})();
 ```
 
 ---
@@ -541,7 +555,7 @@
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
 {{!-- @name speed @type outlined-textfield @default "30" @label "속도(초, 작을수록 빠름)" --}}
 {{!-- @name radius @type outlined-textfield @default "12px" @label "모서리 둥글기 — 예: 12px · 0px이면 각지게" --}}
-<div class="mm-mq" style="border-radius:{{radius}}" data-theme="{{theme}}" data-speed="{{speed}}">
+<div class="mm-mq" data-radius="{{radius}}" data-theme="{{theme}}" data-speed="{{speed}}">
   <div class="mm-mq__track">
   {{#each words}}
     {{!-- @name word @type outlined-textfield @default "키워드" @label "키워드" --}}
@@ -552,7 +566,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-mq{overflow:hidden;width:100%;padding:clamp(14px,3vw,22px) 0;background:#1A1A1A;border-radius:12px;}
+.mm-mq{overflow:hidden;width:100%;padding:clamp(14px,3vw,22px) 0;background:#1A1A1A;}
 .mm-mq[data-theme="라이트"]{background:#FAF9F7;border:1px solid #D4D0CB;}
 .mm-mq__track{display:flex;width:max-content;will-change:transform;animation:mm-mq-scroll var(--mq-dur,30s) linear infinite;}
 @keyframes mm-mq-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -576,6 +590,9 @@
   function init(){var l=document.querySelectorAll('.mm-mq');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 모서리(radius): 인라인 style {{}}는 아임웹 저장거부 → data-radius 속성값을 JS로 적용(깜빡임 없음, CSS 기본은 각지게) */
+(function(){function apR(){var es=document.querySelectorAll("[data-radius]");for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute("data-radius")||"").trim();if(v){if(String(parseFloat(v))===v)v+="px";es[i].style.borderRadius=v;}}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",apR);else apR();})();
 ```
 
 ---
@@ -673,7 +690,7 @@
 {{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name headline @type text-editor @default "<p>진짜는 가까이서 드러납니다</p>" @label "헤드라인" --}}
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
-<div class="mm-sp" style="border-radius:{{radius}}" data-height="{{height}}">
+<div class="mm-sp" data-radius="{{radius}}" data-height="{{height}}">
   <img class="mm-sp__bg" src="{{bg}}" alt="">
   <img class="mm-sp__bgm" src="{{bgMobile}}" alt="">
   <div class="mm-sp__veil" aria-hidden="true"></div>
@@ -685,7 +702,7 @@
 ```
 ### CSS 탭
 ```css
-.mm-sp{position:relative;overflow:hidden;border-radius:16px;min-height:clamp(300px,52vw,460px);display:flex;align-items:center;justify-content:center;text-align:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;--mx:50%;--my:50%;}
+.mm-sp{position:relative;overflow:hidden;min-height:clamp(300px,52vw,460px);display:flex;align-items:center;justify-content:center;text-align:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;--mx:50%;--my:50%;}
 .mm-sp__bg,.mm-sp__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
 .mm-sp__bgm{display:none;}
 @media (max-width:768px){.mm-sp[data-hasm="1"] .mm-sp__bg{display:none;}.mm-sp[data-hasm="1"] .mm-sp__bgm{display:block;}}
@@ -717,6 +734,9 @@
   function init(){var l=document.querySelectorAll('.mm-sp');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
+
+/* 모서리(radius): 인라인 style {{}}는 아임웹 저장거부 → data-radius 속성값을 JS로 적용(깜빡임 없음, CSS 기본은 각지게) */
+(function(){function apR(){var es=document.querySelectorAll("[data-radius]");for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute("data-radius")||"").trim();if(v){if(String(parseFloat(v))===v)v+="px";es[i].style.borderRadius=v;}}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",apR);else apR();})();
 ```
 
 ---

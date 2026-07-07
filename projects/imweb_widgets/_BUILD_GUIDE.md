@@ -54,8 +54,8 @@
 ---
 
 ## 4. 📐 Handlebars / item 규칙
-- ✅ `{{변수}}` 치환은 **HTML 탭**에서 됨(요소 내용·속성값·**인라인 `style="..."` 안**도 OK — 예: n04 `style="background-image:url('{{image}}')"`). JS 탭은 됨(단 패널값 바뀌어도 재실행 안 됨 → 값은 **HTML `data-*`에 심고 JS에서 읽기**).
-- 🚫🚨 **CSS 탭에 `{{변수}}`를 CSS 값으로 쓰면 "유효하지 않은 코드"로 저장거부(2026-07-06 실측)**. 예: `border-radius:{{radius}}` = 거부(CSS 검증기가 `{{radius}}`를 잘못된 값으로 판단). **동적 CSS 값은 CSS 탭이 아니라 HTML 인라인 `style="border-radius:{{radius}}"`로 넣을 것**(첫 페인트 적용 → 깜빡임도 없음). CSS 탭엔 정적 기본값만.
+- ✅ `{{변수}}` 치환은 **HTML 탭**에서 됨(요소 내용·**비-style 속성값** OK — 예: `href="{{link}}"` `src="{{img}}"` `data-x="{{x}}"`). JS 탭은 됨(단 패널값 바뀌어도 재실행 안 됨 → 값은 **HTML `data-*`에 심고 JS에서 읽기**).
+- 🚫🚨 **CSS 값이 되는 자리의 `{{변수}}`는 전부 저장거부** — ①CSS 탭 `border-radius:{{radius}}` ②**인라인 `style="...{{}}..."`**(예: `style="border-radius:{{radius}}"` `style="aspect-ratio:{{ratio}}"` `style="background-image:url('{{image}}')"`)까지 **모두 "유효하지 않은 코드"로 거부**(2026-07-06~07 실측, d01·radius 14종·01/12/13/n04/n12/t03 사건). 아임웹 CSS 검증기가 `{{ }}`를 잘못된 CSS 토큰으로 판단하기 때문. → **동적 스타일값은 반드시 `data-*` 속성에 심고 JS에서 적용**(`data-radius`→`el.style.borderRadius`, `data-ar`→`aspectRatio`, `data-bg`→`backgroundImage`, `data-x/-y`→`left/top`). **CSS 탭엔 정적 기본값만**(각지게 기본 → 라운드 0px 깜빡임도 사라짐). 우리 표준 = 각 위젯 JS 말미에 `[data-*]` applier IIFE.
 - 🚫🚨 **삼중괄호 `{{{변수}}}` 금지 = "유효하지 않은 코드"로 저장거부(2026-07-05 실측)**. 표준 Handlebars의 raw 출력 문법이지만 **아임웹은 미지원**. → 항상 `{{변수}}` 이중괄호만.
 - ✅ **`text-editor` 필드는 `{{변수}}` 이중괄호로도 서식 HTML(문단·줄바꿈 `<p>`)이 그대로 렌더됨**(아임웹이 리치텍스트를 escape 안 함). 즉 raw 출력하려고 삼중괄호 쓸 필요 **없음**. 문단 줄간격은 CSS `.클래스 p{margin:0 0 .15em}`로 통일.
 - ✅ `{{#if}}`/`{{#unless}}` = HTML class 토글 용도 OK. (CSS 탭 분기는 1회 컴파일이라 ❌)

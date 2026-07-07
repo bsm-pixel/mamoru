@@ -11,7 +11,7 @@
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 — 입력: 가운데 · 왼쪽" --}}
 {{!-- @name quote @type text-editor @default "<p>좋은 가위는 권하지 않습니다</p>" @label "인용문" --}}
 {{!-- @name author @type outlined-textfield @default "" @label "출처/서명(선택)" --}}
-<div class="mm-quote" style="border-radius:{{radius}}" data-theme="{{theme}}" data-align="{{align}}">
+<div class="mm-quote" data-radius="{{radius}}" data-theme="{{theme}}" data-align="{{align}}">
   <span class="mm-quote__mark" aria-hidden="true">“</span>
   <blockquote class="mm-quote__text">{{quote}}</blockquote>
   <cite class="mm-quote__author">{{author}}</cite>
