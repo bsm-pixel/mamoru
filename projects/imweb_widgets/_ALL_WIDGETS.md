@@ -2211,7 +2211,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
-{{!-- @name maxWidth @type outlined-textfield @default "760px" @label "가로 최대폭 — 예: 760px · 1000px (넓혀도 항목은 한 줄 중앙에 모임, 좌우 여백만 늘어남)" --}}
+{{!-- @name maxWidth @type outlined-textfield @default "760" @label "가로 최대폭 — 입력: 760 · 900 · 1000 · 1100 · 1200 · full(꽉차게). 넓혀도 항목은 중앙 1행, 검은 영역만 넓어짐" --}}
 {{!-- @name items @type item @label "항목" --}}
 <div class="mm-belief" data-maxw="{{maxWidth}}" data-theme="{{theme}}">
 {{#each items}}
@@ -2230,6 +2230,12 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-belief{max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;
   font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;color:#FAF9F7;}
 .mm-belief[data-theme="라이트"]{background:#FAF9F7;color:#1A1A1A;}
+/* 가로 최대폭 프리셋(CSS 속성선택자 → 편집기에서 값 바꾸면 즉시 반영, JS 미개입). 검은 영역이 이 폭까지 넓어지고 항목은 중앙에 모임 */
+.mm-belief[data-maxw="900"]{max-width:900px;}
+.mm-belief[data-maxw="1000"]{max-width:1000px;}
+.mm-belief[data-maxw="1100"]{max-width:1100px;}
+.mm-belief[data-maxw="1200"]{max-width:1200px;}
+.mm-belief[data-maxw="full"]{max-width:none;}
 .mm-belief__item{display:flex;flex-direction:column;align-items:center;gap:8px;}
 .mm-belief__big{font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(30px,9vw,52px);font-weight:900;line-height:1;letter-spacing:-.03em;color:#FAF9F7;font-variant-numeric:tabular-nums;}
 .mm-belief[data-theme="라이트"] .mm-belief__big{color:#1A1A1A;}
@@ -2269,9 +2275,6 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   function init(){var l=document.querySelectorAll('.mm-belief');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
-
-/* 가로 최대폭: 인라인 style {{}}는 아임웹 저장거부 → data-maxw 속성값을 JS로 적용(중앙정렬은 margin auto+CSS) */
-(function(){function apW(){var es=document.querySelectorAll('.mm-belief[data-maxw]');for(var i=0;i<es.length;i++){var v=String(es[i].getAttribute('data-maxw')||'').trim();if(v){if(String(parseFloat(v))===v)v+='px';es[i].style.maxWidth=v;}}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apW);else apW();})();
 ```
 
 ---
