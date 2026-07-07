@@ -1294,7 +1294,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 {{!-- @name imageMobile @type image @label "모바일 배경 이미지 (선택) — 권장 1080×1350px (세로형) · 비우면 PC 이미지 사용" --}}
 {{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 480px 또는 60vh (비우면 자동)" --}}
 {{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
-{{!-- @name maxw @type outlined-textfield @default "" @label "최대 가로폭(PC) — 예: 1000px (비우면 꽉 채움) · 모바일은 자동 꽉 채움" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "최대 가로폭(PC) — 입력: 900 · 1000 · 1100 · 1200 · 1400 · full (비우면 꽉 채움). 모바일 자동 꽉 채움" --}}
 {{!-- @name focus @type outlined-textfield @default "중앙" @label "사진 초점 — 입력: 중앙·좌·우·상·하" --}}
 {{!-- @name overlay @type color-picker @default "#1A1A1A80" @label "어둡게 (검정의 투명도 슬라이더를 드래그 · 맨뒤 2자리=어둡기)" --}}
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 (가운데/왼쪽 · 유형을 옵션버튼/스위치로 바꿔도 됨)" --}}
@@ -1317,7 +1317,14 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ```
 ### CSS 탭
 ```css
-.mm-cine{position:relative;overflow:hidden;min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-cine{box-sizing:border-box;margin-left:auto;margin-right:auto;position:relative;overflow:hidden;min-height:clamp(280px,46vw,460px);display:flex;align-items:center;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+/* 가로 최대폭 프리셋(CSS 속성선택자 → 편집기 즉시반영, JS 미개입). 비우면 꽉 채움 */
+.mm-cine[data-maxw="900"]{max-width:900px;}
+.mm-cine[data-maxw="1000"]{max-width:1000px;}
+.mm-cine[data-maxw="1100"]{max-width:1100px;}
+.mm-cine[data-maxw="1200"]{max-width:1200px;}
+.mm-cine[data-maxw="1400"]{max-width:1400px;}
+.mm-cine[data-maxw="full"]{max-width:none;}
 .mm-cine[data-align="가운데"]{justify-content:center;text-align:center;}
 .mm-cine[data-align="왼쪽"]{justify-content:flex-start;text-align:left;}
 .mm-cine__bg,.mm-cine__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;animation:mm-cine-zoom 16s ease-out both;}
@@ -1381,9 +1388,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     var h=root.getAttribute('data-height');
     if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
     var rd=root.getAttribute('data-radius'); if(rd!==null){ var rv=rd.trim(); if(rv){ if(String(parseFloat(rv))===rv) rv+='px'; root.style.borderRadius=rv; } }
-    /* PC 최대 가로폭 지정 + 중앙정렬. 모바일은 화면이 더 좁아 자동 꽉 채움 */
-    var mw=root.getAttribute('data-maxw');
-    if(mw!==null){ var mv=mw.trim(); if(mv){ if(String(parseFloat(mv))===mv) mv+='px'; root.style.maxWidth=mv; root.style.marginLeft='auto'; root.style.marginRight='auto'; } }
+    /* 가로 최대폭은 CSS 프리셋([data-maxw="1200"])이 담당 → 편집기 즉시반영. JS 미개입 */
   }
   function init(){var l=document.querySelectorAll('.mm-cine');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
@@ -2227,7 +2232,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ```
 ### CSS 탭
 ```css
-.mm-belief{max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;
+.mm-belief{box-sizing:border-box;max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;
   font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;color:#FAF9F7;}
 .mm-belief[data-theme="라이트"]{background:#FAF9F7;color:#1A1A1A;}
 /* 가로 최대폭 프리셋(CSS 속성선택자 → 편집기에서 값 바꾸면 즉시 반영, JS 미개입). 검은 영역이 이 폭까지 넓어지고 항목은 중앙에 모임 */

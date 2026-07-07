@@ -647,7 +647,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ```
 ### CSS 탭
 ```css
-.mm-belief{max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;
+.mm-belief{box-sizing:border-box;max-width:760px;margin:0 auto;padding:clamp(28px,6vw,48px) clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(24px,5vw,40px) clamp(16px,4vw,32px);text-align:center;
   font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;color:#FAF9F7;}
 .mm-belief[data-theme="라이트"]{background:#FAF9F7;color:#1A1A1A;}
 /* 가로 최대폭 프리셋(CSS 속성선택자 → 편집기에서 값 바꾸면 즉시 반영, JS 미개입). 검은 영역이 이 폭까지 넓어지고 항목은 중앙에 모임 */
