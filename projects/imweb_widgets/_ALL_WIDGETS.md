@@ -2454,70 +2454,100 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 
 ### HTML 탭
 ```html
-{{!-- @name widgetInfo @type outlined-textfield @default "사진+라벨 카테고리 타일 그리드(호버 줌). 제품/서비스 진열 내비." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+{{!-- @name widgetInfo @type outlined-textfield @default "카테고리 이미지 타일 1행 가로 진열. PC 중앙, 모바일 가로 스크롤(우측 타일 peek). PC/모바일 이미지·높이 각각." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
 <span style="display:none">{{widgetInfo}}</span>
 <!-- ═══════════════════════════════════════════════════════════════
-  📦 MAMORU 커스텀 위젯 — 카테고리 이미지 그리드
+  📦 MAMORU 커스텀 위젯 — 카테고리 이미지 1행 진열
   📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
-  📝 사진 카테고리 타일 + 라벨 오버레이 + 호버 줌 (트렌디 진열 내비)
+  📝 사진 타일 1행 가로. PC 중앙정렬, 모바일 가로스크롤(우측 peek). PC/모바일 사진·높이 각각
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name ratio @type outlined-textfield @default "3/4" @label "타일 비율 — 입력: 3/4 · 1/1 · 4/3 · 16/9" --}}
+{{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 — 입력: 가운데 · 왼쪽 (넘치면 자동 가로 스크롤)" --}}
+{{!-- @name heightPC @type outlined-textfield @default "300" @label "PC 타일 높이(px)" --}}
+{{!-- @name heightMobile @type outlined-textfield @default "220" @label "모바일 타일 높이(px)" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력(예 1280 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
 {{!-- @name tiles @type item @label "카테고리 타일" --}}
-<div class="mm-cat" data-ar="{{ratio}}">
-{{#each tiles}}
-  {{!-- @name image @type image @label "이미지 (권장 800×1000px)" --}}
-  {{!-- @name label @type outlined-textfield @default "카테고리" @label "큰 라벨" --}}
-  {{!-- @name sublabel @type outlined-textfield @default "" @label "작은 설명(선택)" --}}
-  {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
-  <a class="mm-cat__tile" href="{{link}}">
-    <img class="mm-cat__img" src="{{image}}" alt="">
-    <span class="mm-cat__veil" aria-hidden="true"></span>
-    <span class="mm-cat__cap">
-      <span class="mm-cat__label">{{label}}</span>
-      <span class="mm-cat__sub">{{sublabel}}</span>
+<div class="mm-cat" data-align="{{align}}" data-hpc="{{heightPC}}" data-hm="{{heightMobile}}" data-maxw="{{maxw}}">
+  <div class="mm-cat__track">
+  {{#each tiles}}
+    {{!-- @name image @type image @label "PC 이미지 — 가로형 권장(높이에 맞춰 표시)" --}}
+    {{!-- @name imageMobile @type image @label "모바일 이미지 (선택) — 세로형 가능 · 비우면 PC 이미지 사용" --}}
+    {{!-- @name label @type outlined-textfield @default "카테고리" @label "큰 라벨" --}}
+    {{!-- @name sublabel @type outlined-textfield @default "" @label "작은 설명(선택)" --}}
+    {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
+    <a class="mm-cat__tile" href="{{link}}">
+      <img class="mm-cat__img" src="{{image}}" alt="">
+      <img class="mm-cat__imgm" src="{{imageMobile}}" alt="">
+      <span class="mm-cat__veil" aria-hidden="true"></span>
+      <span class="mm-cat__cap">
+        <span class="mm-cat__label">{{label}}</span>
+        <span class="mm-cat__sub">{{sublabel}}</span>
+      </span>
       <span class="mm-cat__arrow" aria-hidden="true">→</span>
-    </span>
-  </a>
-{{/each}}
+    </a>
+  {{/each}}
+  </div>
 </div>
 ```
 ### CSS 탭
 ```css
-.mm-cat{max-width:960px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
-.mm-cat__tile{position:relative;display:block;overflow:hidden;border-radius:16px;background:#1A1A1A;aspect-ratio:var(--mm-ratio,3/4);text-decoration:none;}
-.mm-cat__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .55s cubic-bezier(.4,0,.2,1);}
+.mm-cat{--cat-h:300px;--cat-hm:220px;box-sizing:border-box;margin-left:auto;margin-right:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding:4px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-cat::-webkit-scrollbar{display:none;}
+/* 트랙: 다 들어오면 margin auto로 중앙(PC), 넘치면 좌측부터 스크롤+우측 타일 살짝 보임(peek, 모바일) */
+.mm-cat__track{display:flex;flex-wrap:nowrap;gap:12px;width:max-content;margin:0 auto;}
+.mm-cat[data-align="왼쪽"] .mm-cat__track{margin:0;}
+/* 타일: 높이 고정(PC=--cat-h / 모바일=--cat-hm), 너비=이미지 비율 자동. flex 아이템이라 이미지 폭으로 shrink-wrap */
+.mm-cat__tile{flex:0 0 auto;scroll-snap-align:start;position:relative;height:var(--cat-h);overflow:hidden;border-radius:16px;background:#1A1A1A;text-decoration:none;}
+@media (max-width:768px){.mm-cat__tile{height:var(--cat-hm);}}
+.mm-cat__img,.mm-cat__imgm{height:100%;width:auto;max-width:none;display:block;transition:transform .55s cubic-bezier(.4,0,.2,1);}
+.mm-cat__imgm{display:none;}
+/* 모바일 전용 이미지가 있으면(data-hasm=1) 모바일에서 스왑 */
+@media (max-width:768px){
+  .mm-cat__tile[data-hasm="1"] .mm-cat__img{display:none;}
+  .mm-cat__tile[data-hasm="1"] .mm-cat__imgm{display:block;}
+}
 .mm-cat__veil{position:absolute;inset:0;background:linear-gradient(rgba(26,26,26,0) 38%,rgba(26,26,26,.8));}
-.mm-cat__cap{position:absolute;left:0;right:0;bottom:0;padding:clamp(16px,2.5vw,24px);color:#FAF9F7;display:flex;flex-direction:column;gap:3px;}
-.mm-cat__label{font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(17px,2.6vw,22px);font-weight:800;letter-spacing:-.02em;}
+.mm-cat__cap{position:absolute;left:0;right:0;bottom:0;padding:clamp(14px,2.5vw,22px);color:#FAF9F7;display:flex;flex-direction:column;gap:3px;}
+.mm-cat__label{font-family:'Outfit','Plus Jakarta Sans','Pretendard','Noto Sans KR',sans-serif;font-size:clamp(16px,2.6vw,21px);font-weight:800;letter-spacing:-.02em;}
 .mm-cat__sub{font-size:clamp(12px,1.8vw,13px);color:#D4D0CB;font-weight:600;}
 .mm-cat__sub:empty{display:none;}
-.mm-cat__arrow{position:absolute;top:clamp(14px,2.5vw,20px);right:clamp(14px,2.5vw,20px);width:34px;height:34px;border-radius:50%;background:rgba(250,249,247,.16);display:flex;align-items:center;justify-content:center;font-size:16px;color:#FAF9F7;transition:background .3s,transform .3s;}
+.mm-cat__arrow{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:rgba(250,249,247,.16);display:flex;align-items:center;justify-content:center;font-size:16px;color:#FAF9F7;transition:background .3s,transform .3s;}
 @media (hover:hover){
-  .mm-cat__tile:hover .mm-cat__img{transform:scale(1.07);}
+  .mm-cat__tile:hover .mm-cat__img,.mm-cat__tile:hover .mm-cat__imgm{transform:scale(1.07);}
   .mm-cat__tile:hover .mm-cat__arrow{background:#FAF9F7;color:#1A1A1A;transform:translateX(2px);}
 }
 ```
 ### JS 탭
 ```js
-/* 카테고리 이미지 그리드 — 순수 HTML/CSS 동작. 진입 reveal(선택). */
 (function(){
+  function unit(v,u){v=String(v==null?'':v).trim(); if(!v)return null; if(String(parseFloat(v))===v)v+=u; return v;}
+  /* 가로 최대폭: 자유 숫자값(1280 등). 비움/full → 꽉 채움 */
+  function applyMaxw(root){
+    var mw=root.getAttribute('data-maxw'); mw=(mw==null?'':mw).trim(); var low=mw.toLowerCase();
+    if(!mw){ root.style.maxWidth=''; }
+    else if(low==='full'||low==='none'){ root.style.maxWidth='none'; }
+    else { if(String(parseFloat(mw))===mw) mw+='px'; root.style.maxWidth=mw; }
+  }
+  /* PC/모바일 타일 높이 → CSS 변수 주입 */
+  function applySettings(root){
+    var hpc=unit(root.getAttribute('data-hpc'),'px'); if(hpc)root.style.setProperty('--cat-h',hpc);
+    var hm=unit(root.getAttribute('data-hm'),'px'); if(hm)root.style.setProperty('--cat-hm',hm);
+    applyMaxw(root);
+  }
   function initOne(root){
-    if(!('IntersectionObserver' in window))return;
+    applySettings(root);
+    /* 타일별 모바일 이미지가 실제 있으면 data-hasm=1 → 모바일에서 스왑 */
     var tiles=root.querySelectorAll('.mm-cat__tile');
-    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='none';io.unobserve(e.target);}});},{threshold:.12});
-    for(var i=0;i<tiles.length;i++){tiles[i].style.transition='opacity .5s cubic-bezier(.4,0,.2,1) '+(i*0.05)+'s, transform .5s cubic-bezier(.4,0,.2,1) '+(i*0.05)+'s';tiles[i].style.opacity='0';tiles[i].style.transform='translateY(16px)';io.observe(tiles[i]);}
+    for(var i=0;i<tiles.length;i++){
+      var m=tiles[i].querySelector('.mm-cat__imgm');
+      if(m && String(m.getAttribute('src')||'').trim()) tiles[i].setAttribute('data-hasm','1');
+    }
+    /* 높이·최대폭 값 바뀌면 즉시 반영(편집기 실시간). 정렬은 CSS 속성선택자가 담당 */
+    if('MutationObserver' in window){ new MutationObserver(function(){applySettings(root);}).observe(root,{attributes:true,attributeFilter:['data-hpc','data-hm','data-maxw']}); }
   }
   function init(){var l=document.querySelectorAll('.mm-cat');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
-
-/* 동적 스타일(비율/배경/좌표): 인라인 style {{}}는 아임웹 저장거부 → data-* 속성을 JS로 적용 */
-(function(){function ap(){
-var A=document.querySelectorAll("[data-ar]");for(var i=0;i<A.length;i++){var v=(A[i].getAttribute("data-ar")||"").trim();if(v){if(A[i].classList.contains("mm-cat"))A[i].style.setProperty("--mm-ratio",v);else A[i].style.aspectRatio=v;}}
-var B=document.querySelectorAll("[data-bg]");for(var i=0;i<B.length;i++){var v=(B[i].getAttribute("data-bg")||"").trim();if(v)B[i].style.backgroundImage="url('"+v+"')";}
-var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C[i].getAttribute("data-x")||"").trim(),y=(C[i].getAttribute("data-y")||"").trim();if(x)C[i].style.left=x+"%";if(y)C[i].style.top=y+"%";}
-}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",ap);else ap();})();
 ```
 
 ---

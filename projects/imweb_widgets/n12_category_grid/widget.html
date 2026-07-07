@@ -1,27 +1,34 @@
-{{!-- @name widgetInfo @type outlined-textfield @default "사진+라벨 카테고리 타일 그리드(호버 줌). 제품/서비스 진열 내비." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+{{!-- @name widgetInfo @type outlined-textfield @default "카테고리 이미지 타일 1행 가로 진열. PC 중앙, 모바일 가로 스크롤(우측 타일 peek). PC/모바일 이미지·높이 각각." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
 <span style="display:none">{{widgetInfo}}</span>
 <!-- ═══════════════════════════════════════════════════════════════
-  📦 MAMORU 커스텀 위젯 — 카테고리 이미지 그리드
+  📦 MAMORU 커스텀 위젯 — 카테고리 이미지 1행 진열
   📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
-  📝 사진 카테고리 타일 + 라벨 오버레이 + 호버 줌 (트렌디 진열 내비)
+  📝 사진 타일 1행 가로. PC 중앙정렬, 모바일 가로스크롤(우측 peek). PC/모바일 사진·높이 각각
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name ratio @type outlined-textfield @default "3/4" @label "타일 비율 — 입력: 3/4 · 1/1 · 4/3 · 16/9" --}}
+{{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 — 입력: 가운데 · 왼쪽 (넘치면 자동 가로 스크롤)" --}}
+{{!-- @name heightPC @type outlined-textfield @default "300" @label "PC 타일 높이(px)" --}}
+{{!-- @name heightMobile @type outlined-textfield @default "220" @label "모바일 타일 높이(px)" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력(예 1280 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
 {{!-- @name tiles @type item @label "카테고리 타일" --}}
-<div class="mm-cat" data-ar="{{ratio}}">
-{{#each tiles}}
-  {{!-- @name image @type image @label "이미지 (권장 800×1000px)" --}}
-  {{!-- @name label @type outlined-textfield @default "카테고리" @label "큰 라벨" --}}
-  {{!-- @name sublabel @type outlined-textfield @default "" @label "작은 설명(선택)" --}}
-  {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
-  <a class="mm-cat__tile" href="{{link}}">
-    <img class="mm-cat__img" src="{{image}}" alt="">
-    <span class="mm-cat__veil" aria-hidden="true"></span>
-    <span class="mm-cat__cap">
-      <span class="mm-cat__label">{{label}}</span>
-      <span class="mm-cat__sub">{{sublabel}}</span>
+<div class="mm-cat" data-align="{{align}}" data-hpc="{{heightPC}}" data-hm="{{heightMobile}}" data-maxw="{{maxw}}">
+  <div class="mm-cat__track">
+  {{#each tiles}}
+    {{!-- @name image @type image @label "PC 이미지 — 가로형 권장(높이에 맞춰 표시)" --}}
+    {{!-- @name imageMobile @type image @label "모바일 이미지 (선택) — 세로형 가능 · 비우면 PC 이미지 사용" --}}
+    {{!-- @name label @type outlined-textfield @default "카테고리" @label "큰 라벨" --}}
+    {{!-- @name sublabel @type outlined-textfield @default "" @label "작은 설명(선택)" --}}
+    {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
+    <a class="mm-cat__tile" href="{{link}}">
+      <img class="mm-cat__img" src="{{image}}" alt="">
+      <img class="mm-cat__imgm" src="{{imageMobile}}" alt="">
+      <span class="mm-cat__veil" aria-hidden="true"></span>
+      <span class="mm-cat__cap">
+        <span class="mm-cat__label">{{label}}</span>
+        <span class="mm-cat__sub">{{sublabel}}</span>
+      </span>
       <span class="mm-cat__arrow" aria-hidden="true">→</span>
-    </span>
-  </a>
-{{/each}}
+    </a>
+  {{/each}}
+  </div>
 </div>
