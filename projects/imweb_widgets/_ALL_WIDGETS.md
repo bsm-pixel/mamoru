@@ -2308,13 +2308,13 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 
 ### HTML 탭
 ```html
-{{!-- @name widgetInfo @type outlined-textfield @default "아이콘+라벨+링크 칩 내비. 기본 중앙정렬, 넘치면 가로 스크롤(모바일). 아이콘은 키워드로(가위·빗·가위집·복원·상담·후기)." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+{{!-- @name widgetInfo @type outlined-textfield @default "아이콘(SVG/PNG 업로드)+라벨+링크 칩 내비. 기본 중앙, 넘치면 가로 스크롤(모바일). 아이콘은 테마색 자동 적용." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
 <span style="display:none">{{widgetInfo}}</span>
 <!-- ═══════════════════════════════════════════════════════════════
   📦 MAMORU 커스텀 위젯 — 아이콘 칩 내비
   📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
-  📝 아이콘+라벨 알약 버튼들. 기본 중앙, 넘치면 우측 peek 가로 스크롤
-  🚫 fetch·iframe 0 (아이콘은 내장 SVG, 외부 라이브러리 아님)
+  📝 아이콘 이미지(업로드)+라벨 알약 버튼들. 중앙정렬·모바일 가로스크롤·테마 자동채색
+  🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
 {{!-- @name align @type outlined-textfield @default "가운데" @label "기본 정렬 — 입력: 가운데 · 왼쪽 (칩이 넘치면 자동 가로 스크롤)" --}}
@@ -2325,13 +2325,11 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 <div class="mm-nav" data-theme="{{theme}}" data-align="{{align}}" data-fpc="{{fontPC}}" data-fm="{{fontMobile}}" data-pady="{{padY}}">
   <div class="mm-nav__track">
   {{#each chips}}
-    {{!-- @name icon @type outlined-textfield @default "가위" @label "아이콘 키워드 (가위·빗·가위집·복원·상담·후기) · 아래 커스텀 SVG 있으면 무시됨" --}}
-    {{!-- @name svg @type outlined-textfield @default "" @label "커스텀 SVG (선택 · <svg …>…</svg> 코드 한 줄로 붙여넣기 · 비우면 키워드 아이콘)" --}}
+    {{!-- @name icon @type image @label "아이콘 이미지 — SVG/PNG 업로드(투명 배경 단색 아이콘 권장). 테마색 자동 적용 · 비우면 라벨만" --}}
     {{!-- @name label @type outlined-textfield @default "메뉴" @label "라벨" --}}
     {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
-    <a class="mm-nav__chip" href="{{link}}" data-icon="{{icon}}">
-      <span class="mm-nav__ico" aria-hidden="true"></span>
-      <span class="mm-nav__svgsrc" style="display:none">{{svg}}</span>
+    <a class="mm-nav__chip" href="{{link}}">
+      <span class="mm-nav__ico" data-src="{{icon}}" aria-hidden="true"></span>
       <span class="mm-nav__label">{{label}}</span>
     </a>
   {{/each}}
@@ -2356,56 +2354,33 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   .mm-nav[data-theme="다크"] .mm-nav__chip:hover{opacity:.88;transform:translateY(-1px);}
   .mm-nav[data-theme="라이트"] .mm-nav__chip:hover{border-color:#1A1A1A;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.06);}
 }
-.mm-nav__ico{flex:0 0 auto;display:inline-flex;}
-.mm-nav__ico svg{width:1.25em;height:1.25em;display:block;}
-.mm-nav__ico:empty{display:none;}
+/* 업로드 아이콘 = mask로 채색: background(currentColor)가 테마색으로 자동 적용(다크=흰/라이트=검). URL은 JS가 style로 주입 */
+.mm-nav__ico{flex:0 0 auto;width:1.25em;height:1.25em;background-color:currentColor;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;}
+.mm-nav__ico[data-src=""]{display:none;}
 ```
 ### JS 탭
 ```js
 (function(){
-  var SVG={
-    scissors:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>',
-    brush:'<rect x="3" y="4" width="18" height="4" rx="1"/><line x1="7" y1="8" x2="7" y2="14"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="15" y1="8" x2="15" y2="14"/><line x1="19" y1="8" x2="19" y2="14"/>',
-    box:'<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
-    wrench:'<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94L6.7 20.2a2.1 2.1 0 01-3-3l6.73-6.73a6 6 0 017.94-7.94L14.7 6.3z"/>',
-    chat:'<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>',
-    star:'<polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2"/>',
-    home:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
-    phone:'<path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/>'
-  };
-  function pick(k){
-    k=(k||'').toLowerCase();
-    if(/가위집|케이스|case|box|package|pouch/.test(k))return 'box';
-    if(/가위|scissor|미용|cut/.test(k))return 'scissors';
-    if(/빗|브러시|brush|comb/.test(k))return 'brush';
-    if(/복원|수리|repair|wrench|tool|as/.test(k))return 'wrench';
-    if(/상담|컨설|consult|chat|message|talk|문의/.test(k))return 'chat';
-    if(/후기|리뷰|review|star|별|평점/.test(k))return 'star';
-    if(/홈|home|메인/.test(k))return 'home';
-    if(/전화|연락|phone|call/.test(k))return 'phone';
-    return null;
-  }
-  /* 숫자값 → 단위 부여(폰트 pt / 여백 px). 값 있으면 CSS 변수 주입 */
+  /* 숫자값 → 단위 부여(폰트 pt / 여백 px) 후 CSS 변수 주입 */
   function unit(v,u){v=String(v==null?'':v).trim(); if(!v)return null; if(String(parseFloat(v))===v)v+=u; return v;}
   function applySettings(root){
     var fpc=unit(root.getAttribute('data-fpc'),'pt'); if(fpc)root.style.setProperty('--nav-fpc',fpc);
     var fm=unit(root.getAttribute('data-fm'),'pt'); if(fm)root.style.setProperty('--nav-fm',fm);
     var py=unit(root.getAttribute('data-pady'),'px'); if(py)root.style.setProperty('--nav-pady',py);
   }
+  /* 업로드한 아이콘 이미지(SVG/PNG)를 mask로 적용 → background(currentColor)가 테마색으로 자동 채색 */
+  function applyIcons(root){
+    var icos=root.querySelectorAll('.mm-nav__ico');
+    for(var i=0;i<icos.length;i++){
+      var src=String(icos[i].getAttribute('data-src')||'').trim();
+      if(src){ var u="url('"+src+"')"; icos[i].style.webkitMaskImage=u; icos[i].style.maskImage=u; }
+    }
+  }
   function initOne(root){
     applySettings(root);
+    applyIcons(root);
     /* 폰트·여백 값 바뀌면 즉시 반영(편집기 실시간). 정렬(가운데/왼쪽)은 CSS 속성선택자가 담당 */
     if('MutationObserver' in window){ new MutationObserver(function(){applySettings(root);}).observe(root,{attributes:true,attributeFilter:['data-fpc','data-fm','data-pady']}); }
-    var chips=root.querySelectorAll('.mm-nav__chip');
-    for(var i=0;i<chips.length;i++){
-      var ico=chips[i].querySelector('.mm-nav__ico');
-      if(!ico)continue;
-      /* 커스텀 SVG 우선. textContent라 아임웹이 escape해도 원본 SVG 문자열이 잡혀 innerHTML로 정상 렌더 */
-      var srcEl=chips[i].querySelector('.mm-nav__svgsrc'),custom=srcEl?String(srcEl.textContent||'').trim():'';
-      if(custom){ ico.innerHTML=custom; continue; }
-      var name=pick(chips[i].getAttribute('data-icon'));
-      if(name)ico.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+SVG[name]+'</svg>';
-    }
   }
   function init(){var l=document.querySelectorAll('.mm-nav');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
