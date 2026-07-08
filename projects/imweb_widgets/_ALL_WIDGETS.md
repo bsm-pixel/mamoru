@@ -2769,67 +2769,88 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 
 ### HTML 탭
 ```html
-{{!-- @name widgetInfo @type outlined-textfield @default "복원 단계 번호·선 타임라인, 스크롤 순차 등장." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+{{!-- @name widgetInfo @type outlined-textfield @default "단계 카드 가로 진열. 단계명=주제 + 장면 설명. PC 한 줄, 모바일 가로 스크롤(우측 peek)로 세로 공간 절약." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
 <span style="display:none">{{widgetInfo}}</span>
 <!-- ═══════════════════════════════════════════════════════════════
-  📦 MAMORU 커스텀 위젯 — 복원 인터랙티브 타임라인
+  📦 MAMORU 커스텀 위젯 — 단계 타임라인 (가로형)
   📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
-  📝 수거→검수→수리→출고 단계를 번호·선으로. 스크롤 시 순차 등장(과정 투명성=신뢰)
+  📝 수거→검수→수리→출고. 단계명=주제 + 장면 설명. PC 한 줄 / 모바일 가로 스크롤
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name title @type outlined-textfield @default "복원 과정" @label "제목(선택)" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력(예 1280 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
 {{!-- @name steps @type item @label "단계" --}}
-<div class="mm-tl">
+<div class="mm-tl" data-maxw="{{maxw}}">
   <p class="mm-tl__title">{{title}}</p>
-  <ol class="mm-tl__list">
-  {{#each steps}}
-    {{!-- @name stepName @type outlined-textfield @default "단계명" @label "단계명" --}}
-    {{!-- @name stepDesc @type text-editor @default "<p>설명</p>" @label "설명" --}}
-    {{!-- @name stepImage @type image @label "이미지(선택) — 권장 800×800px" --}}
-    <li class="mm-tl__step">
-      <span class="mm-tl__idx" aria-hidden="true"></span>
-      <div class="mm-tl__body">
+  <div class="mm-tl__scroll">
+    <ol class="mm-tl__list">
+    {{#each steps}}
+      {{!-- @name stepName @type outlined-textfield @default "단계명" @label "단계명(주제)" --}}
+      {{!-- @name stepImage @type image @label "장면 이미지(선택) — 권장 800×600px" --}}
+      {{!-- @name stepDesc @type text-editor @default "<p>장면 설명</p>" @label "설명(장면)" --}}
+      <li class="mm-tl__step">
+        <span class="mm-tl__idx" aria-hidden="true"></span>
         <h3 class="mm-tl__name">{{stepName}}</h3>
-        <div class="mm-tl__desc">{{stepDesc}}</div>
         <img class="mm-tl__img" src="{{stepImage}}" alt="">
-      </div>
-    </li>
-  {{/each}}
-  </ol>
+        <div class="mm-tl__desc">{{stepDesc}}</div>
+      </li>
+    {{/each}}
+    </ol>
+  </div>
 </div>
 ```
 ### CSS 탭
 ```css
-.mm-tl{max-width:680px;margin:0 auto;padding:clamp(20px,4vw,32px) 20px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
-.mm-tl__title{margin:0 0 clamp(20px,4vw,32px);font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(20px,5vw,28px);font-weight:800;letter-spacing:-.02em;}
+.mm-tl{box-sizing:border-box;--tl-gap:clamp(16px,3vw,28px);max-width:960px;margin:0 auto;padding:clamp(20px,4vw,32px) 0;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-tl__title{margin:0 0 clamp(16px,3vw,26px);padding:0 20px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(20px,5vw,28px);font-weight:800;letter-spacing:-.02em;}
 .mm-tl__title:empty{display:none;}
-.mm-tl__list{counter-reset:tl;list-style:none;margin:0;padding:0;}
-.mm-tl__step{position:relative;display:grid;grid-template-columns:clamp(48px,12vw,72px) 1fr;gap:clamp(14px,3vw,22px);counter-increment:tl;padding-bottom:clamp(28px,6vw,44px);}
-.mm-tl__step::before{content:'';position:absolute;left:clamp(23px,5.6vw,35px);top:clamp(36px,9vw,52px);bottom:0;width:1px;background:#D4D0CB;}
-.mm-tl__step:last-child::before{display:none;}
-.mm-tl__idx{display:flex;align-items:flex-start;justify-content:center;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,6.5vw,38px);font-weight:900;line-height:1;letter-spacing:-.04em;color:#1A1A1A;}
+/* 가로 스크롤 컨테이너: PC 다 들어오면 균등, 모바일 넘치면 좌측부터 스크롤 + 우측 카드 peek */
+.mm-tl__scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding:2px 20px;}
+.mm-tl__scroll::-webkit-scrollbar{display:none;}
+.mm-tl__list{counter-reset:tl;list-style:none;margin:0;padding:0;display:flex;flex-wrap:nowrap;gap:var(--tl-gap);}
+/* 단계 카드: PC=균등(flex:1), 모바일=고정폭+가로스크롤 */
+.mm-tl__step{position:relative;counter-increment:tl;flex:1 1 0;min-width:190px;scroll-snap-align:start;}
+/* 인덱스 우측 커넥터 라인(다음 단계로 이어짐) */
+.mm-tl__step:not(:last-child)::after{content:'';position:absolute;top:clamp(15px,3.4vw,20px);left:calc(clamp(30px,7vw,44px) + 14px);right:calc(-1 * var(--tl-gap) + 4px);height:1px;background:#D4D0CB;}
+.mm-tl__idx{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(30px,7vw,44px);font-weight:900;line-height:1;letter-spacing:-.04em;color:#1A1A1A;}
 .mm-tl__idx::before{content:counter(tl,decimal-leading-zero);}
-.mm-tl__name{margin:0 0 8px;font-size:clamp(16px,4.2vw,20px);font-weight:800;letter-spacing:-.01em;}
-.mm-tl__desc{font-size:clamp(14px,3.8vw,15px);line-height:1.65;color:#4A4A4A;}
+.mm-tl__name{margin:clamp(10px,2.2vw,16px) 0 8px;font-size:clamp(15px,2.4vw,19px);font-weight:800;letter-spacing:-.01em;}
+.mm-tl__img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;background:#F5F3F0;margin:0 0 10px;display:block;}
+.mm-tl__img[src=""],.mm-tl__img:not([src]){display:none;}
+.mm-tl__desc{font-size:clamp(13px,1.9vw,15px);line-height:1.6;color:#4A4A4A;}
 .mm-tl__desc p{margin:0 0 .15em;}
-.mm-tl__img{width:100%;max-width:360px;aspect-ratio:16/10;object-fit:cover;border-radius:10px;background:#F5F3F0;margin-top:14px;display:block;}
+/* 모바일: 카드 고정폭 → 가로 스크롤 + 우측 카드 살짝 보임(peek). 세로 공간 절약 */
+@media (max-width:768px){
+  .mm-tl__step{flex:0 0 76%;min-width:0;}
+  .mm-tl__step:not(:last-child)::after{display:none;}
+}
+/* 등장(위젯이 화면에 들어오면 카드 순차 페이드) */
 @media (prefers-reduced-motion:no-preference){
-  .mm-tl__step{opacity:0;transform:translateY(22px);transition:opacity .55s cubic-bezier(.4,0,.2,1),transform .55s cubic-bezier(.4,0,.2,1);}
+  .mm-tl__step{opacity:0;transform:translateY(16px);transition:opacity .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1);}
   .mm-tl__step.is-in{opacity:1;transform:none;}
 }
-
-/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
-@media (max-width:768px){.mm-tl{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
 (function(){
+  /* 가로 최대폭: 자유 숫자값(1280 등). 비움/full → 꽉 채움 */
+  function applyMaxw(root){
+    var mw=root.getAttribute('data-maxw'); mw=(mw==null?'':mw).trim(); var low=mw.toLowerCase();
+    if(!mw){ root.style.maxWidth=''; }
+    else if(low==='full'||low==='none'){ root.style.maxWidth='none'; }
+    else { if(String(parseFloat(mw))===mw) mw+='px'; root.style.maxWidth=mw; }
+  }
   function initOne(root){
+    applyMaxw(root);
+    /* 최대폭 바뀌면 즉시 반영(편집기 실시간) */
+    if('MutationObserver' in window){ new MutationObserver(function(){applyMaxw(root);}).observe(root,{attributes:true,attributeFilter:['data-maxw']}); }
+    /* 위젯이 화면에 들어오면 카드 순차 페이드(가로형이라 컨테이너 기준) */
     var steps=root.querySelectorAll('.mm-tl__step');
+    function reveal(){ for(var k=0;k<steps.length;k++){ steps[k].style.transitionDelay=(k*0.08)+'s'; steps[k].classList.add('is-in'); } }
     if('IntersectionObserver' in window){
-      var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-in');io.unobserve(e.target);}});},{threshold:.2,rootMargin:'0px 0px -10% 0px'});
-      for(var i=0;i<steps.length;i++)io.observe(steps[i]);
-    }else{for(var j=0;j<steps.length;j++)steps[j].classList.add('is-in');}
+      var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){reveal();io.disconnect();}});},{threshold:.15});
+      io.observe(root);
+    }else{ reveal(); }
   }
   function init(){var l=document.querySelectorAll('.mm-tl');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
