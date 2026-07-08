@@ -1103,7 +1103,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 {{!-- @name bg @type image @label "PC 배경 이미지(선택) — 권장 1600×900px" --}}
 {{!-- @name bgMobile @type image @label "모바일 배경 이미지(선택) — 권장 1080×1350px · 비우면 PC 이미지 사용" --}}
 {{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크 · 라이트" --}}
-{{!-- @name height @type outlined-textfield @default "" @label "높이 — 예: 440px 또는 60vh (비우면 자동)" --}}
+{{!-- @name height @type outlined-textfield @default "" @label "높이 — 비우면 이미지 비율에 맞춰 자동(PC/모바일 각 이미지 기준). 값 넣으면 고정+크롭: 예 440px · 60vh" --}}
 {{!-- @name radius @type outlined-textfield @default "16px" @label "모서리 둥글기 — 예: 16px · 0px이면 각지게" --}}
 {{!-- @name kicker @type outlined-textfield @default "CUT THE FAKE, KEEP THE REAL" @label "키커(영문)" --}}
 {{!-- @name headline @type text-editor @default "<p>좋은 미용가위, 그 기준을 정의하다</p>" @label "헤드라인" --}}
@@ -1124,13 +1124,18 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ```
 ### CSS 탭
 ```css
-.mm-cut{position:relative;overflow:hidden;min-height:clamp(280px,50vw,440px);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;}
+.mm-cut{box-sizing:border-box;position:relative;overflow:hidden;min-height:clamp(220px,42vw,440px);font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;}
 .mm-cut[data-theme="라이트"]{background:#FAF9F7;}
-.mm-cut__bg,.mm-cut__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;z-index:0;}
+/* 기본=이미지 비율 자동: 흐름배치 → 컨테이너 높이=이미지 비율(PC=PC이미지 / 모바일=모바일이미지). 이미지 없으면 min-height 바닥 */
+.mm-cut__bg,.mm-cut__bgm{display:block;width:100%;height:auto;opacity:.5;}
 .mm-cut__bgm{display:none;}
 @media (max-width:768px){.mm-cut[data-hasm="1"] .mm-cut__bg{display:none;}.mm-cut[data-hasm="1"] .mm-cut__bgm{display:block;}}
 .mm-cut[data-theme="라이트"] .mm-cut__bg,.mm-cut[data-theme="라이트"] .mm-cut__bgm{opacity:.85;}
-.mm-cut__inner{position:relative;z-index:1;padding:clamp(28px,6vw,56px);max-width:760px;}
+/* 고정 높이 모드(높이값 입력 시 JS가 data-fixed=1): 이미지 절대배치 cover-크롭, 높이는 min-height가 결정(텍스트가 안 밀어서 정확) */
+.mm-cut[data-fixed="1"] .mm-cut__bg,.mm-cut[data-fixed="1"] .mm-cut__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+/* 카피는 이미지 위 오버레이(절대배치) → 이미지가 높이를 결정, 텍스트는 그 위 중앙 */
+.mm-cut__inner{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(28px,6vw,56px);}
+.mm-cut__inner>*{max-width:760px;}
 .mm-cut__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(10px,2.6vw,12px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#B8B4AF;opacity:0;transition:opacity .6s ease .1s;}
 .mm-cut[data-theme="라이트"] .mm-cut__kicker{color:#8A8580;}
 .mm-cut__blade{display:block;width:0;height:1px;margin:18px auto;background:#FAF9F7;transition:width .7s cubic-bezier(.4,0,.2,1) .15s;}
@@ -1146,21 +1151,19 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-cut__btn:active{transform:scale(.97);}
 .mm-cut.is-in .mm-cut__kicker,.mm-cut.is-in .mm-cut__headline,.mm-cut.is-in .mm-cut__sub,.mm-cut.is-in .mm-cut__btn{opacity:1;transform:none;}
 .mm-cut.is-in .mm-cut__blade{width:clamp(40px,12vw,90px);}
-
 /* 여러 줄(text-editor) 입력 시 문단 줄간격 통일 */
 .mm-cut__headline p,.mm-cut__sub p{margin:0 0 .15em;}
-
-/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
-@media (max-width:768px){.mm-cut{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
 (function(){
   function initOne(root){
-    var h=root.getAttribute('data-height');
-    if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
     var m=root.querySelector('.mm-cut__bgm');
     if(m && String(m.getAttribute('src')||'').trim()) root.setAttribute('data-hasm','1');
+    /* 높이: 비우면 이미지 비율 자동(CSS). 값 입력 시 고정 높이+크롭(data-fixed) → 텍스트가 안 밀어 정확 */
+    var h=root.getAttribute('data-height');
+    if(h && h.trim()){ var hv=h.trim(); if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; root.setAttribute('data-fixed','1'); }
+    else { root.removeAttribute('data-fixed'); root.style.minHeight=''; }
     if('IntersectionObserver' in window){
       var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-in');io.unobserve(e.target);}});},{threshold:.3});
       io.observe(root);
@@ -2520,8 +2523,8 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-yt__cap:empty{display:none;}
 @media (hover:hover){.mm-yt__card:hover .mm-yt__img{transform:scale(1.05);}.mm-yt__card:hover .mm-yt__play{background:#1A1A1A;transform:translate(-50%,-50%) scale(1.06);}}
 
-/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
-@media (max-width:768px){.mm-yt{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
+/* 모바일 좌측 여백만(가로 스크롤이라 우측은 카드 peek 유지) */
+@media (max-width:768px){.mm-yt{box-sizing:border-box;padding-left:16px;}}
 ```
 ### JS 탭
 ```js

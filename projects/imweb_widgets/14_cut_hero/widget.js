@@ -1,9 +1,11 @@
 (function(){
   function initOne(root){
-    var h=root.getAttribute('data-height');
-    if(h){ var hv=h.trim(); if(hv){ if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; } }
     var m=root.querySelector('.mm-cut__bgm');
     if(m && String(m.getAttribute('src')||'').trim()) root.setAttribute('data-hasm','1');
+    /* 높이: 비우면 이미지 비율 자동(CSS). 값 입력 시 고정 높이+크롭(data-fixed) → 텍스트가 안 밀어 정확 */
+    var h=root.getAttribute('data-height');
+    if(h && h.trim()){ var hv=h.trim(); if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; root.setAttribute('data-fixed','1'); }
+    else { root.removeAttribute('data-fixed'); root.style.minHeight=''; }
     if('IntersectionObserver' in window){
       var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-in');io.unobserve(e.target);}});},{threshold:.3});
       io.observe(root);
