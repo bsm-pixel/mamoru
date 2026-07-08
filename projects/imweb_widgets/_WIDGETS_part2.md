@@ -283,7 +283,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ```
 ### CSS 탭
 ```css
-.mm-cut{box-sizing:border-box;position:relative;overflow:hidden;min-height:clamp(220px,42vw,440px);font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;--cut-s:clamp(.45,calc(var(--cut-h,320)/440),1);}
+.mm-cut{box-sizing:border-box;position:relative;overflow:hidden;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;--cut-s:clamp(.45,calc(var(--cut-h,320)/440),1);}
 .mm-cut[data-theme="라이트"]{background:#FAF9F7;}
 /* 기본=이미지 비율 자동: 흐름배치 → 컨테이너 높이=이미지 비율(PC=PC이미지 / 모바일=모바일이미지). 이미지 없으면 min-height 바닥 */
 .mm-cut__bg,.mm-cut__bgm{display:block;width:100%;height:auto;opacity:.5;}
@@ -322,7 +322,13 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     /* 높이: 비우면 이미지 비율 자동(CSS). 값 입력 시 고정 높이+크롭(data-fixed) → 텍스트가 안 밀어 정확 */
     var h=root.getAttribute('data-height');
     if(h && h.trim()){ var hv=h.trim(); if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; root.setAttribute('data-fixed','1'); }
-    else { root.removeAttribute('data-fixed'); root.style.minHeight=''; }
+    else {
+      root.removeAttribute('data-fixed');
+      /* 이미지 있으면 바닥값 없이 이미지 비율 그대로(짧으면 짧게). 이미지 없을 때만 바닥 높이 */
+      var bg=root.querySelector('.mm-cut__bg');
+      var hasImg=(bg&&String(bg.getAttribute('src')||'').trim())||(m&&String(m.getAttribute('src')||'').trim());
+      root.style.minHeight = hasImg ? '' : 'clamp(220px,42vw,440px)';
+    }
     /* 배너 실제 높이 → --cut-h 주입 → CSS가 폰트·간격을 높이 비례로 스케일(낮은 배너서 안 눌림). 이미지로드·리사이즈·높이변경 자동 반영 */
     function applyScale(){ var hh=Math.round(root.getBoundingClientRect().height); if(hh>0) root.style.setProperty('--cut-h', hh); }
     applyScale();

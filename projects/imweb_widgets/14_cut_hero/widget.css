@@ -1,4 +1,4 @@
-.mm-cut{box-sizing:border-box;position:relative;overflow:hidden;min-height:clamp(220px,42vw,440px);font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;--cut-s:clamp(.45,calc(var(--cut-h,320)/440),1);}
+.mm-cut{box-sizing:border-box;position:relative;overflow:hidden;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;--cut-s:clamp(.45,calc(var(--cut-h,320)/440),1);}
 .mm-cut[data-theme="라이트"]{background:#FAF9F7;}
 /* 기본=이미지 비율 자동: 흐름배치 → 컨테이너 높이=이미지 비율(PC=PC이미지 / 모바일=모바일이미지). 이미지 없으면 min-height 바닥 */
 .mm-cut__bg,.mm-cut__bgm{display:block;width:100%;height:auto;opacity:.5;}
