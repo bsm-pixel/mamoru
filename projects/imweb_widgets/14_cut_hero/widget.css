@@ -1,4 +1,4 @@
-.mm-cut{box-sizing:border-box;position:relative;overflow:hidden;min-height:clamp(220px,42vw,440px);font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;}
+.mm-cut{box-sizing:border-box;position:relative;overflow:hidden;min-height:clamp(220px,42vw,440px);font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;background:#1A1A1A;--cut-s:clamp(.45,calc(var(--cut-h,320)/440),1);}
 .mm-cut[data-theme="라이트"]{background:#FAF9F7;}
 /* 기본=이미지 비율 자동: 흐름배치 → 컨테이너 높이=이미지 비율(PC=PC이미지 / 모바일=모바일이미지). 이미지 없으면 min-height 바닥 */
 .mm-cut__bg,.mm-cut__bgm{display:block;width:100%;height:auto;opacity:.5;}
@@ -7,23 +7,23 @@
 .mm-cut[data-theme="라이트"] .mm-cut__bg,.mm-cut[data-theme="라이트"] .mm-cut__bgm{opacity:.85;}
 /* 고정 높이 모드(높이값 입력 시 JS가 data-fixed=1): 이미지 절대배치 cover-크롭, 높이는 min-height가 결정(텍스트가 안 밀어서 정확) */
 .mm-cut[data-fixed="1"] .mm-cut__bg,.mm-cut[data-fixed="1"] .mm-cut__bgm{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-/* 카피는 이미지 위 오버레이(절대배치) → 이미지가 높이를 결정, 텍스트는 그 위 중앙 */
-.mm-cut__inner{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(28px,6vw,56px);}
+/* 카피는 이미지 위 오버레이(절대배치) → 이미지가 높이를 결정, 텍스트는 그 위 중앙. 폰트·간격은 배너 높이 비례(--cut-s)로 스케일 → 낮은 배너서 눌리지 않음 */
+.mm-cut__inner{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:calc(clamp(20px,5vw,52px) * var(--cut-s));}
 .mm-cut__inner>*{max-width:760px;}
-.mm-cut__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(10px,2.6vw,12px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#B8B4AF;opacity:0;transition:opacity .6s ease .1s;}
+.mm-cut__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:calc(clamp(10px,2.6vw,12px) * var(--cut-s));font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#B8B4AF;opacity:0;transition:opacity .6s ease .1s;}
 .mm-cut[data-theme="라이트"] .mm-cut__kicker{color:#8A8580;}
-.mm-cut__blade{display:block;width:0;height:1px;margin:18px auto;background:#FAF9F7;transition:width .7s cubic-bezier(.4,0,.2,1) .15s;}
+.mm-cut__blade{display:block;width:0;height:1px;margin:calc(16px * var(--cut-s)) auto;background:#FAF9F7;transition:width .7s cubic-bezier(.4,0,.2,1) .15s;}
 .mm-cut[data-theme="라이트"] .mm-cut__blade{background:#1A1A1A;}
-.mm-cut__headline{margin:0;font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:clamp(24px,6.5vw,44px);font-weight:900;line-height:1.2;letter-spacing:-.02em;color:#FAF9F7;opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.4,0,.2,1) .35s,transform .7s cubic-bezier(.4,0,.2,1) .35s;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
+.mm-cut__headline{margin:0;font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:calc(clamp(24px,6.5vw,44px) * var(--cut-s));font-weight:900;line-height:1.2;letter-spacing:-.02em;color:#FAF9F7;opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.4,0,.2,1) .35s,transform .7s cubic-bezier(.4,0,.2,1) .35s;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-cut[data-theme="라이트"] .mm-cut__headline{color:#1A1A1A;}
-.mm-cut__sub{margin:16px 0 0;font-size:clamp(14px,3.8vw,17px);line-height:1.6;color:#D4D0CB;opacity:0;transition:opacity .7s ease .55s;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
+.mm-cut__sub{margin:calc(14px * var(--cut-s)) 0 0;font-size:calc(clamp(14px,3.8vw,17px) * var(--cut-s));line-height:1.5;color:#D4D0CB;opacity:0;transition:opacity .7s ease .55s;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-cut[data-theme="라이트"] .mm-cut__sub{color:#4A4A4A;}
 .mm-cut__sub:empty{display:none;}
-.mm-cut__btn{display:inline-flex;margin-top:26px;padding:14px 34px;border-radius:8px;background:#FAF9F7;color:#1A1A1A;font-weight:700;font-size:15px;text-decoration:none;opacity:0;transition:opacity .7s ease .7s,transform .2s;}
+.mm-cut__btn{display:inline-flex;margin-top:calc(22px * var(--cut-s));padding:calc(13px * var(--cut-s)) calc(32px * var(--cut-s));border-radius:8px;background:#FAF9F7;color:#1A1A1A;font-weight:700;font-size:calc(15px * var(--cut-s));text-decoration:none;opacity:0;transition:opacity .7s ease .7s,transform .2s;}
 .mm-cut[data-theme="라이트"] .mm-cut__btn{background:#1A1A1A;color:#FAF9F7;}
 .mm-cut__btn:empty{display:none;}
 .mm-cut__btn:active{transform:scale(.97);}
 .mm-cut.is-in .mm-cut__kicker,.mm-cut.is-in .mm-cut__headline,.mm-cut.is-in .mm-cut__sub,.mm-cut.is-in .mm-cut__btn{opacity:1;transform:none;}
-.mm-cut.is-in .mm-cut__blade{width:clamp(40px,12vw,90px);}
+.mm-cut.is-in .mm-cut__blade{width:calc(clamp(40px,12vw,90px) * var(--cut-s));}
 /* 여러 줄(text-editor) 입력 시 문단 줄간격 통일 */
 .mm-cut__headline p,.mm-cut__sub p{margin:0 0 .15em;}

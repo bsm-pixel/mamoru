@@ -6,6 +6,11 @@
     var h=root.getAttribute('data-height');
     if(h && h.trim()){ var hv=h.trim(); if(String(parseFloat(hv))===hv) hv+='px'; root.style.minHeight=hv; root.setAttribute('data-fixed','1'); }
     else { root.removeAttribute('data-fixed'); root.style.minHeight=''; }
+    /* 배너 실제 높이 → --cut-h 주입 → CSS가 폰트·간격을 높이 비례로 스케일(낮은 배너서 안 눌림). 이미지로드·리사이즈·높이변경 자동 반영 */
+    function applyScale(){ var hh=Math.round(root.getBoundingClientRect().height); if(hh>0) root.style.setProperty('--cut-h', hh); }
+    applyScale();
+    if('ResizeObserver' in window){ new ResizeObserver(applyScale).observe(root); }
+    else { window.addEventListener('resize', applyScale); }
     if('IntersectionObserver' in window){
       var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-in');io.unobserve(e.target);}});},{threshold:.3});
       io.observe(root);
