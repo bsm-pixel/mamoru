@@ -535,7 +535,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 {{!-- @name index @type outlined-textfield @default "01" @label "인덱스(예: 01)" --}}
 {{!-- @name kicker @type outlined-textfield @default "SECTION" @label "키커(영문)" --}}
 {{!-- @name title @type text-editor @default "<p>섹션 제목</p>" @label "제목" --}}
-{{!-- @name align @type outlined-textfield @default "왼쪽" @label "정렬 — 입력: 왼쪽 · 가운데" --}}
+{{!-- @name align @type outlined-textfield @default "왼쪽" @label "정렬 — 입력: 왼쪽 · 중앙 · 오른쪽" --}}
 {{!-- @name textColor @type outlined-textfield @default "블랙" @label "글씨 색 — 입력: 블랙(밝은 배경용) · 화이트(어두운 배경/크림 반전)" --}}
 <div class="mm-sh" data-align="{{align}}" data-text="{{textColor}}">
   <span class="mm-sh__index">{{index}}</span>
@@ -551,7 +551,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-sh{max-width:900px;margin:0 auto;padding:clamp(20px,4vw,32px) 8px;display:flex;align-items:baseline;gap:clamp(14px,3vw,28px);font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
 /* 글씨 색: 밝은 배경=블랙(기본) / 어두운 배경=화이트(크림 반전). 인덱스·제목은 currentColor 상속, 키커·라인만 톤별 */
 .mm-sh[data-text="화이트"]{color:#FAF9F7;}
-.mm-sh[data-align="가운데"]{flex-direction:column;align-items:center;text-align:center;gap:8px;}
+/* 정렬 3종: 왼쪽(기본) · 중앙 · 오른쪽. 순수 CSS 속성선택자(편집기 즉시반영). 변형 입력도 커버 */
+.mm-sh[data-align="중앙"],.mm-sh[data-align="가운데"]{flex-direction:column;align-items:center;text-align:center;gap:8px;}
+.mm-sh[data-align="오른쪽"],.mm-sh[data-align="우측"]{flex-direction:row-reverse;text-align:right;}
 .mm-sh__index{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(40px,11vw,76px);font-weight:900;letter-spacing:-.05em;line-height:.9;color:inherit;flex:0 0 auto;}
 .mm-sh__text{flex:0 1 auto;}
 .mm-sh__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(10px,2.6vw,12px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#8A8580;margin-bottom:6px;}
@@ -559,7 +561,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-sh__title{margin:0;font-size:clamp(20px,5.5vw,32px);font-weight:800;letter-spacing:-.02em;line-height:1.2;}
 .mm-sh__line{flex:1;height:1px;background:#D4D0CB;align-self:center;}
 .mm-sh[data-text="화이트"] .mm-sh__line{background:rgba(255,255,255,.22);}
-.mm-sh[data-align="가운데"] .mm-sh__line{width:48px;flex:0 0 auto;margin-top:6px;}
+.mm-sh[data-align="중앙"] .mm-sh__line,.mm-sh[data-align="가운데"] .mm-sh__line{width:48px;flex:0 0 auto;margin-top:6px;}
 @media (prefers-reduced-motion:no-preference){
   .mm-sh>*{opacity:0;transform:translateY(16px);transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1);}
   .mm-sh.is-in>*{opacity:1;transform:none;}
@@ -576,11 +578,10 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ### JS 탭
 ```js
 (function(){
-  function isLeft(al){al=String(al||'').trim();var low=al.toLowerCase();return al==='true'||al.indexOf('왼')>=0||al.indexOf('좌')>=0||low.indexOf('left')>=0||low.indexOf('start')>=0;}
+  /* 정렬(왼쪽/중앙/오른쪽)은 CSS 속성선택자가 담당(편집기 즉시반영). JS는 등장 애니만 */
   function init(){
     var l=document.querySelectorAll('.mm-sh');
     if(!l.length){return setTimeout(init,50);}
-    for(var k=0;k<l.length;k++) l[k].setAttribute('data-align', isLeft(l[k].getAttribute('data-align'))?'왼쪽':'가운데');
     if(!('IntersectionObserver' in window)){for(var j=0;j<l.length;j++)l[j].classList.add('is-in');return;}
     var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-in');io.unobserve(e.target);}});},{threshold:.3});
     for(var i=0;i<l.length;i++)io.observe(l[i]);
