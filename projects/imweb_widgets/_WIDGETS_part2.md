@@ -297,6 +297,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-cut__inner>*{max-width:760px;}
 .mm-cut__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:calc(clamp(10px,2.6vw,12px) * var(--cut-s));font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#B8B4AF;opacity:0;transition:opacity .6s ease .1s;}
 .mm-cut[data-theme="라이트"] .mm-cut__kicker{color:#8A8580;}
+/* 키커 비면 키커·가로선 숨김(이미지/GIF만 넣을 때 가로선 안 걸리게) */
+.mm-cut__kicker:empty{display:none;}
+.mm-cut__kicker:empty + .mm-cut__blade{display:none;}
 .mm-cut__blade{display:block;width:0;height:1px;margin:calc(16px * var(--cut-s)) auto;background:#FAF9F7;transition:width .7s cubic-bezier(.4,0,.2,1) .15s;}
 .mm-cut[data-theme="라이트"] .mm-cut__blade{background:#1A1A1A;}
 .mm-cut__headline{margin:0;font-family:'Outfit','Plus Jakarta Sans','Noto Sans KR',sans-serif;font-size:calc(clamp(24px,6.5vw,44px) * var(--cut-s));font-weight:900;line-height:1.2;letter-spacing:-.02em;color:#FAF9F7;opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.4,0,.2,1) .35s,transform .7s cubic-bezier(.4,0,.2,1) .35s;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
