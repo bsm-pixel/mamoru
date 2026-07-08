@@ -82,14 +82,20 @@ export async function matchOrCreateCustomer(
 
   if (existing && existing.length > 0) {
     const id = existing[0].id as string;
+    const patch: Record<string, unknown> = {};
     // 활동명/직급은 비어있을 때만 채움 (수기 큐레이션 값 덮어쓰기 방지)
     if (activityName || position) {
       const { data: cur } = await db.from('customers').select('activity_name, position').eq('id', id).single();
-      const patch: Record<string, unknown> = {};
       if (activityName && !cur?.activity_name) patch.activity_name = activityName;
       if (position && !cur?.position) patch.position = position;
-      if (Object.keys(patch).length > 0) await db.from('customers').update(patch).eq('id', id);
     }
+    // 주소: 접수(택배)에 도로명 주소가 있으면 전체를 접수값으로 최신화 (정책 B — 최신 배송지 반영)
+    if (input.extra?.addressRoad) {
+      patch.address_road = input.extra.addressRoad;
+      patch.address_detail = input.extra.addressDetail || null;
+      patch.postcode = input.extra.postcode || null;
+    }
+    if (Object.keys(patch).length > 0) await db.from('customers').update(patch).eq('id', id);
     return { customerId: id, isNew: false };
   }
 
