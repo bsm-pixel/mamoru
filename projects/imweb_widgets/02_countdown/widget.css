@@ -20,3 +20,6 @@
 .mm-cd__ended{display:none;margin:0;font-size:clamp(16px,4.5vw,20px);font-weight:700;letter-spacing:-.01em;}
 .mm-cd.is-ended .mm-cd__timer,.mm-cd.is-ended .mm-cd__btn,.mm-cd.is-ended .mm-cd__title{display:none;}
 .mm-cd.is-ended .mm-cd__ended{display:block;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-cd{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

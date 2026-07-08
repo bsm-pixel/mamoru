@@ -11,3 +11,6 @@
 .mm-calc__total{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,7vw,34px);font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
 .mm-calc__note{margin:14px 0 0;font-size:12px;color:#B8B4AF;text-align:center;}
 .mm-calc__note:empty{display:none;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-calc{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

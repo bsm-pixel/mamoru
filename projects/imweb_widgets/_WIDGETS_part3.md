@@ -61,6 +61,9 @@
 .mm-dual__arrow{margin-top:8px;font-size:18px;transition:transform .3s cubic-bezier(.4,0,.2,1);}
 @media (hover:hover){.mm-dual__tile:hover .mm-dual__img{transform:scale(1.06);}.mm-dual__tile:hover .mm-dual__arrow{transform:translateX(5px);}}
 @media (max-width:520px){.mm-dual{grid-template-columns:1fr;}.mm-dual__tile{aspect-ratio:16/10;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-dual{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -111,6 +114,9 @@
 .mm-rul__range::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#1A1A1A;cursor:pointer;border:3px solid #FAF9F7;}
 .mm-rul__note{margin:14px 0 0;font-size:12px;color:#B8B4AF;}
 .mm-rul__note:empty{display:none;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-rul{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -194,6 +200,9 @@
 .mm-vs__cell--them{color:#B8B4AF;}
 .mm-vs__cell.is-o::after{content:'✓';font-size:18px;}
 .mm-vs__cell.is-x::after{content:'✕';font-size:16px;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-vs{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -260,6 +269,9 @@
 .mm-hpin.is-native .mm-hpin__panel{scroll-snap-align:center;}
 .mm-hpin.is-native .mm-hpin__sticky::-webkit-scrollbar{display:none;}
 @media (prefers-reduced-motion:reduce){.mm-hpin__sticky{position:static;height:auto;overflow-x:auto;}.mm-hpin__track{transform:none!important;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-hpin{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -335,6 +347,9 @@
 
 /* 여러 줄(text-editor) 입력 시 문단 줄간격 통일 */
 .mm-mask__h p,.mm-mask__sub p{margin:0 0 .15em;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-mask{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -396,6 +411,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-stock__bar{height:100%;width:0;background:#1A1A1A;border-radius:999px;transition:width 1s cubic-bezier(.4,0,.2,1);}
 .mm-stock.is-low .mm-stock__bar{background:#2D2D2D;}
 .mm-stock.is-low .mm-stock__count{color:#1A1A1A;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-stock{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -477,6 +495,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   .mm-step__item{display:grid;grid-template-columns:44px 1fr;row-gap:2px;}
   .mm-step__name{grid-column:2;}.mm-step__desc{grid-column:2;}
 }
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-step{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -543,6 +564,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 
 /* 여러 줄(text-editor) 입력 시 문단 줄간격 통일 */
 .mm-sh__title p{margin:0 0 .15em;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-sh{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -594,6 +618,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-mag__hint{margin:14px 0 0;font-size:12px;color:#8A8580;}
 .mm-mag__hint:empty{display:none;}
 @media (prefers-reduced-motion:reduce){.mm-mag__btn{transition:none;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-mag{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -666,6 +693,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   .mm-belief.is-in .mm-belief__item:nth-child(3){transition-delay:.14s;}
   .mm-belief.is-in .mm-belief__item:nth-child(4){transition-delay:.21s;}
 }
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-belief{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js

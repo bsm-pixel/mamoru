@@ -65,6 +65,9 @@
 .mm-ba__grip::after{right:10px;border-left:6px solid #1A1A1A;}
 .mm-ba__caption{text-align:center;font-size:13px;color:#8A8580;margin:12px 0 0;line-height:1.5;}
 .mm-ba__caption:empty{display:none;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-ba{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -160,6 +163,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-cd__ended{display:none;margin:0;font-size:clamp(16px,4.5vw,20px);font-weight:700;letter-spacing:-.01em;}
 .mm-cd.is-ended .mm-cd__timer,.mm-cd.is-ended .mm-cd__btn,.mm-cd.is-ended .mm-cd__title{display:none;}
 .mm-cd.is-ended .mm-cd__ended{display:block;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-cd{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -265,6 +271,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-cmp__link{margin-top:16px;text-align:center;padding:11px;border-radius:8px;background:#1A1A1A;color:#FAF9F7;font-size:14px;font-weight:700;text-decoration:none;transition:opacity .2s;}
 .mm-cmp__link[href=""],.mm-cmp__link:not([href]){display:none;}
 @media (hover:hover){.mm-cmp__link:hover{opacity:.88;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-cmp{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -337,6 +346,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-calc__total{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,7vw,34px);font-weight:900;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
 .mm-calc__note{margin:14px 0 0;font-size:12px;color:#B8B4AF;text-align:center;}
 .mm-calc__note:empty{display:none;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-calc{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -426,6 +438,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   .mm-stat.is-in .mm-stat__item:nth-child(3){transition-delay:.16s;}
   .mm-stat.is-in .mm-stat__item:nth-child(4){transition-delay:.24s;}
 }
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-stat{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -506,6 +521,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-rev__dots{display:flex;gap:7px;justify-content:center;margin-top:16px;}
 .mm-rev__dot{width:7px;height:7px;border-radius:50%;border:none;padding:0;background:#D4D0CB;cursor:pointer;transition:all .25s;}
 .mm-rev__dot.is-on{background:#1A1A1A;width:22px;border-radius:4px;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-rev{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -589,6 +607,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-acc__img{width:100%;max-width:360px;aspect-ratio:16/10;object-fit:cover;border-radius:10px;background:#F5F3F0;margin-bottom:12px;display:block;}
 .mm-acc__a{font-size:clamp(14px,3.8vw,15px);line-height:1.7;color:#4A4A4A;}
 .mm-acc__a p{margin:0 0 .15em;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-acc{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -658,6 +679,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-flt__img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;background:#F5F3F0;margin-bottom:12px;display:block;}
 .mm-flt__name{margin:0 0 6px;font-size:clamp(15px,4vw,17px);font-weight:800;letter-spacing:-.01em;}
 .mm-flt__tags{margin:0;font-size:12px;color:#8A8580;font-weight:600;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-flt{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -730,6 +754,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-gl__def{margin:0;font-size:clamp(14px,3.8vw,15px);line-height:1.65;color:#4A4A4A;}
 .mm-gl__def p{margin:0 0 .15em;}
 .mm-gl__empty{text-align:center;color:#8A8580;font-size:14px;padding:24px 0;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-gl{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -798,6 +825,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-hr__btn{display:inline-flex;align-items:center;justify-content:center;margin-top:16px;padding:13px 28px;border-radius:8px;background:#1A1A1A;color:#FAF9F7;font-weight:700;font-size:15px;text-decoration:none;transition:opacity .2s;}
 .mm-hr__btn:empty,.mm-hr__btn[href=""]{display:none;}
 @media (hover:hover){.mm-hr__btn:hover{opacity:.88;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-hr{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js

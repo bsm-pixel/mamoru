@@ -12,3 +12,6 @@
 .mm-notice[data-flow="true"]:hover .mm-notice__in{animation-play-state:paused;}
 @keyframes mm-notice-flow{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.mm-notice[data-flow="true"] .mm-notice__in{animation:none;width:auto;justify-content:center;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-notice{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

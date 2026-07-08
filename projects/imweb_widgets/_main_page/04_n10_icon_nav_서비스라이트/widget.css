@@ -14,3 +14,6 @@
   .mm-nav[data-theme="다크"] .mm-nav__chip:hover{opacity:.88;transform:translateY(-1px);}
   .mm-nav[data-theme="라이트"] .mm-nav__chip:hover{border-color:#1A1A1A;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.06);}
 }
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-nav{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

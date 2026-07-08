@@ -7,3 +7,6 @@
 .mm-hr__btn{display:inline-flex;align-items:center;justify-content:center;margin-top:16px;padding:13px 28px;border-radius:8px;background:#1A1A1A;color:#FAF9F7;font-weight:700;font-size:15px;text-decoration:none;transition:opacity .2s;}
 .mm-hr__btn:empty,.mm-hr__btn[href=""]{display:none;}
 @media (hover:hover){.mm-hr__btn:hover{opacity:.88;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-hr{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

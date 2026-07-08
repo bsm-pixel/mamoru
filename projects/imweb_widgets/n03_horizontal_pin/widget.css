@@ -11,3 +11,6 @@
 .mm-hpin.is-native .mm-hpin__panel{scroll-snap-align:center;}
 .mm-hpin.is-native .mm-hpin__sticky::-webkit-scrollbar{display:none;}
 @media (prefers-reduced-motion:reduce){.mm-hpin__sticky{position:static;height:auto;overflow-x:auto;}.mm-hpin__track{transform:none!important;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-hpin{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

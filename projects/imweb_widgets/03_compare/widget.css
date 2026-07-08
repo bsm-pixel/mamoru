@@ -12,3 +12,6 @@
 .mm-cmp__link{margin-top:16px;text-align:center;padding:11px;border-radius:8px;background:#1A1A1A;color:#FAF9F7;font-size:14px;font-weight:700;text-decoration:none;transition:opacity .2s;}
 .mm-cmp__link[href=""],.mm-cmp__link:not([href]){display:none;}
 @media (hover:hover){.mm-cmp__link:hover{opacity:.88;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-cmp{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

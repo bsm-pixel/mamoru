@@ -6,3 +6,6 @@
 .mm-mag__hint{margin:14px 0 0;font-size:12px;color:#8A8580;}
 .mm-mag__hint:empty{display:none;}
 @media (prefers-reduced-motion:reduce){.mm-mag__btn{transition:none;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-mag{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

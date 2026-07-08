@@ -23,3 +23,6 @@
   .mm-cat__tile:hover .mm-cat__img,.mm-cat__tile:hover .mm-cat__imgm{transform:scale(1.07);}
   .mm-cat__tile:hover .mm-cat__arrow{background:#FAF9F7;color:#1A1A1A;transform:translateX(2px);}
 }
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-cat{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

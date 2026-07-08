@@ -11,3 +11,6 @@
 .mm-quote__author:empty{display:none;}
 .mm-quote__author::before{content:'— ';}
 .mm-quote__author:empty::before{content:'';}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-quote{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

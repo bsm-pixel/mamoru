@@ -10,3 +10,6 @@
 .mm-daily__cta{display:inline-flex;margin-top:16px;padding:12px 26px;border-radius:8px;background:#1A1A1A;color:#FAF9F7;font-weight:700;font-size:14px;text-decoration:none;transition:opacity .2s;}
 .mm-daily__cta:empty{display:none;}
 @media (hover:hover){.mm-daily__cta:hover{opacity:.88;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-daily{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

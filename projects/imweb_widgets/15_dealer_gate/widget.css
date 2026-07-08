@@ -9,3 +9,6 @@
 .mm-gate__content{animation:mmgate .4s cubic-bezier(.4,0,.2,1) both;font-size:clamp(14px,3.8vw,16px);line-height:1.7;color:#2D2D2D;}
 .mm-gate__content p{margin:0 0 .15em;}
 @keyframes mmgate{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-gate{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

@@ -11,3 +11,6 @@
 
 /* 여러 줄(text-editor) 입력 시 문단 줄간격 통일 */
 .mm-sp__headline p,.mm-sp__sub p{margin:0 0 .15em;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-sp{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

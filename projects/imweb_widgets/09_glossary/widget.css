@@ -8,3 +8,6 @@
 .mm-gl__def{margin:0;font-size:clamp(14px,3.8vw,15px);line-height:1.65;color:#4A4A4A;}
 .mm-gl__def p{margin:0 0 .15em;}
 .mm-gl__empty{text-align:center;color:#8A8580;font-size:14px;padding:24px 0;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-gl{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

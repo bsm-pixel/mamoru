@@ -13,3 +13,6 @@
 .mm-gal__nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border:none;border-radius:50%;background:rgba(255,255,255,.12);color:#FAF9F7;font-size:26px;line-height:1;cursor:pointer;}
 .mm-gal__prev{left:16px;}.mm-gal__next{right:16px;}
 @media (hover:hover){.mm-gal__close:hover,.mm-gal__nav:hover{background:rgba(255,255,255,.24);}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-gal{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

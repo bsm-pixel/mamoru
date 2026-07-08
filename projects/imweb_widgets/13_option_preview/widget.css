@@ -8,3 +8,6 @@
 .mm-opt__btn:active{transform:scale(.97);}
 .mm-opt__btn.is-on{background:#1A1A1A;color:#FAF9F7;border-color:#1A1A1A;}
 @media (hover:hover){.mm-opt__btn:hover{border-color:#1A1A1A;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-opt{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

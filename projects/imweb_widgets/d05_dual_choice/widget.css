@@ -9,3 +9,6 @@
 .mm-dual__arrow{margin-top:8px;font-size:18px;transition:transform .3s cubic-bezier(.4,0,.2,1);}
 @media (hover:hover){.mm-dual__tile:hover .mm-dual__img{transform:scale(1.06);}.mm-dual__tile:hover .mm-dual__arrow{transform:translateX(5px);}}
 @media (max-width:520px){.mm-dual{grid-template-columns:1fr;}.mm-dual__tile{aspect-ratio:16/10;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-dual{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

@@ -7,3 +7,6 @@
 .mm-mq[data-theme="라이트"] .mm-mq__item{color:#1A1A1A;}
 .mm-mq__dot{color:#8A8580;font-size:clamp(10px,2.4vw,14px);align-self:center;}
 @media (prefers-reduced-motion:reduce){.mm-mq__track{animation:none;justify-content:center;flex-wrap:wrap;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-mq{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

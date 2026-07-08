@@ -11,3 +11,6 @@
 .mm-rev__dots{display:flex;gap:7px;justify-content:center;margin-top:16px;}
 .mm-rev__dot{width:7px;height:7px;border-radius:50%;border:none;padding:0;background:#D4D0CB;cursor:pointer;transition:all .25s;}
 .mm-rev__dot.is-on{background:#1A1A1A;width:22px;border-radius:4px;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-rev{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

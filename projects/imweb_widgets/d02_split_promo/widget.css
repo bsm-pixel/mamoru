@@ -17,3 +17,6 @@
 .mm-split__btn:empty{display:none;}
 @media (hover:hover){.mm-split__btn:hover{opacity:.88;}}
 @media (max-width:640px){.mm-split{grid-template-columns:1fr;}.mm-split[data-img="오른쪽"] .mm-split__media{order:0;}.mm-split[data-hasm="1"] .mm-split__img{display:none;}.mm-split[data-hasm="1"] .mm-split__imgm{display:block;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-split{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

@@ -17,3 +17,6 @@
 .mm-yt__cap{display:block;margin-top:10px;font-size:clamp(13px,3.6vw,15px);font-weight:600;line-height:1.45;color:#2D2D2D;}
 .mm-yt__cap:empty{display:none;}
 @media (hover:hover){.mm-yt__card:hover .mm-yt__img{transform:scale(1.05);}.mm-yt__card:hover .mm-yt__play{background:#1A1A1A;transform:translate(-50%,-50%) scale(1.06);}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-yt{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

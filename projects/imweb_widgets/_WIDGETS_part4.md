@@ -63,6 +63,9 @@
   .mm-nav[data-theme="다크"] .mm-nav__chip:hover{opacity:.88;transform:translateY(-1px);}
   .mm-nav[data-theme="라이트"] .mm-nav__chip:hover{border-color:#1A1A1A;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.06);}
 }
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-nav{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -142,6 +145,9 @@
 .mm-yt__cap{display:block;margin-top:10px;font-size:clamp(13px,3.6vw,15px);font-weight:600;line-height:1.45;color:#2D2D2D;}
 .mm-yt__cap:empty{display:none;}
 @media (hover:hover){.mm-yt__card:hover .mm-yt__img{transform:scale(1.05);}.mm-yt__card:hover .mm-yt__play{background:#1A1A1A;transform:translate(-50%,-50%) scale(1.06);}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-yt{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -253,6 +259,9 @@
   .mm-cat__tile:hover .mm-cat__img,.mm-cat__tile:hover .mm-cat__imgm{transform:scale(1.07);}
   .mm-cat__tile:hover .mm-cat__arrow{background:#FAF9F7;color:#1A1A1A;transform:translateX(2px);}
 }
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-cat{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -337,6 +346,9 @@
   .mm-st__scene{opacity:.35;transition:opacity .4s;}
   .mm-st__scene.is-active{opacity:1;}
 }
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-st{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -414,6 +426,9 @@
   .mm-tl__step{opacity:0;transform:translateY(22px);transition:opacity .55s cubic-bezier(.4,0,.2,1),transform .55s cubic-bezier(.4,0,.2,1);}
   .mm-tl__step.is-in{opacity:1;transform:none;}
 }
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-tl{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -481,6 +496,9 @@
 .mm-hs__tip strong{display:block;font-size:14px;font-weight:800;margin-bottom:4px;}
 .mm-hs__tipdesc{font-size:13px;line-height:1.55;color:#D4D0CB;}
 .mm-hs__tipdesc p{margin:0 0 .15em;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-hs{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -548,6 +566,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-tilt__title{margin:0 0 4px;font-size:clamp(15px,4vw,18px);font-weight:800;letter-spacing:-.01em;transform:translateZ(18px);}
 .mm-tilt__desc{margin:0;font-size:13px;color:#8A8580;line-height:1.5;transform:translateZ(12px);}
 .mm-tilt__desc:empty{display:none;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-tilt{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -609,6 +630,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-mq[data-theme="라이트"] .mm-mq__item{color:#1A1A1A;}
 .mm-mq__dot{color:#8A8580;font-size:clamp(10px,2.4vw,14px);align-self:center;}
 @media (prefers-reduced-motion:reduce){.mm-mq__track{animation:none;justify-content:center;flex-wrap:wrap;}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-mq{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -680,6 +704,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-gal__nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border:none;border-radius:50%;background:rgba(255,255,255,.12);color:#FAF9F7;font-size:26px;line-height:1;cursor:pointer;}
 .mm-gal__prev{left:16px;}.mm-gal__next{right:16px;}
 @media (hover:hover){.mm-gal__close:hover,.mm-gal__nav:hover{background:rgba(255,255,255,.24);}}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-gal{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js
@@ -749,6 +776,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 
 /* 여러 줄(text-editor) 입력 시 문단 줄간격 통일 */
 .mm-sp__headline p,.mm-sp__sub p{margin:0 0 .15em;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-sp{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
 ```
 ### JS 탭
 ```js

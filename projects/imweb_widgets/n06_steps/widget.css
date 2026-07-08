@@ -19,3 +19,6 @@
   .mm-step__item{display:grid;grid-template-columns:44px 1fr;row-gap:2px;}
   .mm-step__name{grid-column:2;}.mm-step__desc{grid-column:2;}
 }
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-step{box-sizing:border-box;padding-left:16px;padding-right:16px;}}

@@ -4,3 +4,6 @@
 .mm-360__f.is-on{display:block;}
 .mm-360__hint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:2;font-size:11px;font-weight:600;letter-spacing:.04em;color:#8A8580;background:rgba(250,249,247,.85);padding:5px 12px;border-radius:999px;pointer-events:none;transition:opacity .3s;}
 .mm-360.is-active .mm-360__hint{opacity:0;}
+
+/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
+@media (max-width:768px){.mm-360{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
