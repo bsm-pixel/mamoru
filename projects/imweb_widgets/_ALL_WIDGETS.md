@@ -2815,7 +2815,8 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-tl__idx{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(30px,7vw,44px);font-weight:900;line-height:1;letter-spacing:-.04em;color:#1A1A1A;}
 .mm-tl__idx::before{content:counter(tl,decimal-leading-zero);}
 .mm-tl__name{margin:clamp(10px,2.2vw,16px) 0 8px;font-size:clamp(15px,2.4vw,19px);font-weight:800;letter-spacing:-.01em;}
-.mm-tl__img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;background:#F5F3F0;margin:0 0 10px;display:block;}
+/* 이미지 원본 비율 그대로(크롭X) — 높이는 이미지 비율에 맞춰 자동. 같은 비율 이미지 넣으면 카드 높이 정렬됨 */
+.mm-tl__img{width:100%;height:auto;border-radius:10px;background:#F5F3F0;margin:0 0 10px;display:block;}
 .mm-tl__img[src=""],.mm-tl__img:not([src]){display:none;}
 .mm-tl__desc{font-size:clamp(13px,1.9vw,15px);line-height:1.6;color:#4A4A4A;}
 .mm-tl__desc p{margin:0 0 .15em;}
