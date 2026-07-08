@@ -1,0 +1,37 @@
+{{!-- @name widgetInfo @type outlined-textfield @default "이벤트 썸네일 카드 목록. 상태(진행중/종료) 뱃지, 클릭 시 링크 이동. PC 그리드 / 모바일 1열." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 이벤트 목록 카드
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭 (이벤트 목록 페이지에 삽입)
+  📝 이벤트 썸네일+제목+상태+기간 카드. 클릭 → 이벤트 게시글/페이지로 이동
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name title @type outlined-textfield @default "" @label "섹션 제목(선택) — 예: 진행중 이벤트" --}}
+{{!-- @name theme @type outlined-textfield @default "라이트" @label "테마 — 입력: 라이트 · 다크(어두운 배경)" --}}
+{{!-- @name cols @type outlined-textfield @default "3" @label "PC 한 줄 개수 — 예: 2 · 3 · 4" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력(예 1280 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
+{{!-- @name events @type item @label "이벤트" --}}
+<div class="mm-ev" data-theme="{{theme}}" data-cols="{{cols}}" data-maxw="{{maxw}}">
+  <p class="mm-ev__title">{{title}}</p>
+  <div class="mm-ev__grid">
+  {{#each events}}
+    {{!-- @name image @type image @label "썸네일 — 권장 1200×750px (16:10)" --}}
+    {{!-- @name name @type outlined-textfield @default "이벤트 제목" @label "제목" --}}
+    {{!-- @name status @type outlined-textfield @default "진행중" @label "상태 — 입력: 진행중 · 종료 · 예정" --}}
+    {{!-- @name period @type outlined-textfield @default "" @label "기간(선택) — 예: 6.1 – 6.30" --}}
+    {{!-- @name desc @type outlined-textfield @default "" @label "한 줄 설명(선택)" --}}
+    {{!-- @name link @type outlined-textfield @default "" @label "링크 — 이벤트 게시글/페이지 URL" --}}
+    <a class="mm-ev__card" href="{{link}}" data-status="{{status}}">
+      <span class="mm-ev__thumb">
+        <img class="mm-ev__img" src="{{image}}" alt="">
+        <span class="mm-ev__badge">{{status}}</span>
+      </span>
+      <span class="mm-ev__body">
+        <span class="mm-ev__name">{{name}}</span>
+        <span class="mm-ev__period">{{period}}</span>
+        <span class="mm-ev__desc">{{desc}}</span>
+      </span>
+    </a>
+  {{/each}}
+  </div>
+</div>

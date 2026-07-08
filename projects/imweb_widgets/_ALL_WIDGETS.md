@@ -3570,3 +3570,116 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ```
 
 ---
+
+## N13. 이벤트 목록 카드
+`폴더: n13_event_cards`
+
+### HTML 탭
+```html
+{{!-- @name widgetInfo @type outlined-textfield @default "이벤트 썸네일 카드 목록. 상태(진행중/종료) 뱃지, 클릭 시 링크 이동. PC 그리드 / 모바일 1열." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 이벤트 목록 카드
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭 (이벤트 목록 페이지에 삽입)
+  📝 이벤트 썸네일+제목+상태+기간 카드. 클릭 → 이벤트 게시글/페이지로 이동
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name title @type outlined-textfield @default "" @label "섹션 제목(선택) — 예: 진행중 이벤트" --}}
+{{!-- @name theme @type outlined-textfield @default "라이트" @label "테마 — 입력: 라이트 · 다크(어두운 배경)" --}}
+{{!-- @name cols @type outlined-textfield @default "3" @label "PC 한 줄 개수 — 예: 2 · 3 · 4" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력(예 1280 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
+{{!-- @name events @type item @label "이벤트" --}}
+<div class="mm-ev" data-theme="{{theme}}" data-cols="{{cols}}" data-maxw="{{maxw}}">
+  <p class="mm-ev__title">{{title}}</p>
+  <div class="mm-ev__grid">
+  {{#each events}}
+    {{!-- @name image @type image @label "썸네일 — 권장 1200×750px (16:10)" --}}
+    {{!-- @name name @type outlined-textfield @default "이벤트 제목" @label "제목" --}}
+    {{!-- @name status @type outlined-textfield @default "진행중" @label "상태 — 입력: 진행중 · 종료 · 예정" --}}
+    {{!-- @name period @type outlined-textfield @default "" @label "기간(선택) — 예: 6.1 – 6.30" --}}
+    {{!-- @name desc @type outlined-textfield @default "" @label "한 줄 설명(선택)" --}}
+    {{!-- @name link @type outlined-textfield @default "" @label "링크 — 이벤트 게시글/페이지 URL" --}}
+    <a class="mm-ev__card" href="{{link}}" data-status="{{status}}">
+      <span class="mm-ev__thumb">
+        <img class="mm-ev__img" src="{{image}}" alt="">
+        <span class="mm-ev__badge">{{status}}</span>
+      </span>
+      <span class="mm-ev__body">
+        <span class="mm-ev__name">{{name}}</span>
+        <span class="mm-ev__period">{{period}}</span>
+        <span class="mm-ev__desc">{{desc}}</span>
+      </span>
+    </a>
+  {{/each}}
+  </div>
+</div>
+```
+### CSS 탭
+```css
+.mm-ev{--ev-cols:3;box-sizing:border-box;max-width:1080px;margin:0 auto;padding:clamp(8px,2vw,16px) 0;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-ev[data-theme="다크"]{color:#FAF9F7;}
+.mm-ev__title{margin:0 0 clamp(14px,3vw,22px);padding:0 4px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(18px,4vw,26px);font-weight:800;letter-spacing:-.02em;color:inherit;}
+.mm-ev__title:empty{display:none;}
+/* PC: 한 줄 N개(--ev-cols) 그리드. 모바일: 1열 */
+.mm-ev__grid{display:grid;grid-template-columns:repeat(var(--ev-cols),minmax(0,1fr));gap:clamp(14px,2.5vw,22px);}
+.mm-ev__card{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:#FFFFFF;border:1px solid #EDEBE8;border-radius:14px;overflow:hidden;transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .3s;}
+.mm-ev[data-theme="다크"] .mm-ev__card{background:#2D2D2D;border-color:#3A3A3A;}
+@media (hover:hover){.mm-ev__card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.10);}.mm-ev__card:hover .mm-ev__img{transform:scale(1.05);}}
+.mm-ev__thumb{position:relative;display:block;aspect-ratio:16/10;overflow:hidden;background:#F5F3F0;}
+.mm-ev__img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s cubic-bezier(.4,0,.2,1);}
+/* 상태 뱃지(모노크롬): 진행중=Void채움 / 종료=Sand흐림 / 예정=아웃라인 */
+.mm-ev__badge{position:absolute;top:10px;left:10px;padding:4px 11px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.02em;background:#1A1A1A;color:#FAF9F7;}
+.mm-ev__card[data-status="종료"] .mm-ev__badge{background:#D4D0CB;color:#4A4A4A;}
+.mm-ev__card[data-status="예정"] .mm-ev__badge{background:#FAF9F7;color:#1A1A1A;box-shadow:inset 0 0 0 1px #1A1A1A;}
+/* 종료 이벤트=썸네일 흑백으로 지난 느낌 */
+.mm-ev__card[data-status="종료"] .mm-ev__img{filter:grayscale(1);opacity:.85;}
+.mm-ev__body{display:flex;flex-direction:column;gap:4px;padding:clamp(12px,2vw,16px);}
+.mm-ev__name{font-size:clamp(15px,2.4vw,17px);font-weight:800;letter-spacing:-.01em;line-height:1.35;color:inherit;}
+.mm-ev__period{font-size:12px;font-weight:600;color:#8A8580;}
+.mm-ev__period:empty{display:none;}
+.mm-ev__desc{font-size:13px;line-height:1.5;color:#4A4A4A;}
+.mm-ev[data-theme="다크"] .mm-ev__desc{color:#D4D0CB;}
+.mm-ev__desc:empty{display:none;}
+@media (max-width:768px){
+  .mm-ev{padding-left:16px;padding-right:16px;}
+  .mm-ev__grid{grid-template-columns:1fr;gap:14px;}
+}
+/* 등장(카드 순차 페이드) */
+@media (prefers-reduced-motion:no-preference){
+  .mm-ev__card{opacity:0;transform:translateY(16px);transition:opacity .5s cubic-bezier(.4,0,.2,1),transform .5s cubic-bezier(.4,0,.2,1),box-shadow .3s;}
+  .mm-ev__card.is-in{opacity:1;transform:none;}
+}
+```
+### JS 탭
+```js
+(function(){
+  /* 가로 최대폭: 자유 숫자값(1280 등). 비움/full → 꽉 채움 */
+  function applyMaxw(root){
+    var mw=root.getAttribute('data-maxw'); mw=(mw==null?'':mw).trim(); var low=mw.toLowerCase();
+    if(!mw){ root.style.maxWidth=''; }
+    else if(low==='full'||low==='none'){ root.style.maxWidth='none'; }
+    else { if(String(parseFloat(mw))===mw) mw+='px'; root.style.maxWidth=mw; }
+  }
+  function applySettings(root){
+    var c=String(root.getAttribute('data-cols')||'').trim();
+    if(/^[1-9]\d*$/.test(c)) root.style.setProperty('--ev-cols',c);
+    applyMaxw(root);
+  }
+  function initOne(root){
+    applySettings(root);
+    /* PC 열수·최대폭 바뀌면 즉시 반영(편집기 실시간) */
+    if('MutationObserver' in window){ new MutationObserver(function(){applySettings(root);}).observe(root,{attributes:true,attributeFilter:['data-cols','data-maxw']}); }
+    /* 카드 순차 등장 */
+    var cards=root.querySelectorAll('.mm-ev__card');
+    function reveal(){ for(var k=0;k<cards.length;k++){ cards[k].style.transitionDelay=((k%12)*0.06)+'s'; cards[k].classList.add('is-in'); } }
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){reveal();io.disconnect();}});},{threshold:.1});
+      io.observe(root);
+    }else{ reveal(); }
+  }
+  function init(){var l=document.querySelectorAll('.mm-ev');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+```
+
+---
