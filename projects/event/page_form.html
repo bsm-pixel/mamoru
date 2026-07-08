@@ -147,7 +147,7 @@
 </head>
 <body>
 <div class="mm-wrap">
-  <!-- 상단 안내장 캐러셀 — icons/event-slide-1~3.png (있는 만큼 자동 표시, 없으면 영역 숨김) -->
+  <!-- 상단 안내장 캐러셀 — icons/1~7.png (있는 만큼 자동 표시, 없으면 영역 숨김) -->
   <div class="mm-car-wrap" id="mmCarWrap" style="display:none;">
     <div class="mm-car-count" id="mmCarCount"></div>
     <div class="mm-car" id="mmCar"></div>
@@ -290,7 +290,7 @@ function closeInapp(){
 (function(){
   var track = document.getElementById('mmCar'), dots = document.getElementById('mmCarDots'), wrap = document.getElementById('mmCarWrap'), count = document.getElementById('mmCarCount');
   if (!track) return;
-  var srcs = ['icons/event-slide-1.png','icons/event-slide-2.png','icons/event-slide-3.png','icons/event-slide-4.png'];
+  var srcs = ['icons/1.png','icons/2.png','icons/3.png','icons/4.png','icons/5.png','icons/6.png','icons/7.png'];
   var exists = new Array(srcs.length).fill(false), done = 0;
   srcs.forEach(function(src, i){
     var im = new Image();
