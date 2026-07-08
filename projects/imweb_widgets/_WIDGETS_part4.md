@@ -388,8 +388,9 @@
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name title @type outlined-textfield @default "복원 과정" @label "제목(선택)" --}}
 {{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력(예 1280 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
+{{!-- @name textColor @type outlined-textfield @default "블랙" @label "글씨 색 — 입력: 블랙(밝은 배경용) · 화이트(어두운 배경용)" --}}
 {{!-- @name steps @type item @label "단계" --}}
-<div class="mm-tl" data-maxw="{{maxw}}">
+<div class="mm-tl" data-maxw="{{maxw}}" data-text="{{textColor}}">
   <p class="mm-tl__title">{{title}}</p>
   <div class="mm-tl__scroll">
     <ol class="mm-tl__list">
@@ -411,6 +412,8 @@
 ### CSS 탭
 ```css
 .mm-tl{box-sizing:border-box;--tl-gap:clamp(16px,3vw,28px);max-width:960px;margin:0 auto;padding:clamp(20px,4vw,32px) 0;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+/* 글씨 색: 밝은 배경=블랙(기본) / 어두운 배경=화이트. 제목·단계명·인덱스는 currentColor 상속, 설명만 톤별 흐림 */
+.mm-tl[data-text="화이트"]{color:#FAF9F7;}
 .mm-tl__title{margin:0 0 clamp(16px,3vw,26px);padding:0 20px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(20px,5vw,28px);font-weight:800;letter-spacing:-.02em;}
 .mm-tl__title:empty{display:none;}
 /* 가로 스크롤 컨테이너: PC 다 들어오면 균등, 모바일 넘치면 좌측부터 스크롤 + 우측 카드 peek */
@@ -421,13 +424,14 @@
 .mm-tl__step{position:relative;counter-increment:tl;flex:1 1 0;min-width:190px;scroll-snap-align:start;}
 /* 인덱스 우측 커넥터 라인(다음 단계로 이어짐) */
 .mm-tl__step:not(:last-child)::after{content:'';position:absolute;top:clamp(15px,3.4vw,20px);left:calc(clamp(30px,7vw,44px) + 14px);right:calc(-1 * var(--tl-gap) + 4px);height:1px;background:#D4D0CB;}
-.mm-tl__idx{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(30px,7vw,44px);font-weight:900;line-height:1;letter-spacing:-.04em;color:#1A1A1A;}
+.mm-tl__idx{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(30px,7vw,44px);font-weight:900;line-height:1;letter-spacing:-.04em;color:inherit;}
 .mm-tl__idx::before{content:counter(tl,decimal-leading-zero);}
 .mm-tl__name{margin:clamp(10px,2.2vw,16px) 0 8px;font-size:clamp(15px,2.4vw,19px);font-weight:800;letter-spacing:-.01em;}
 /* 이미지 원본 비율 그대로(크롭X) — 높이는 이미지 비율에 맞춰 자동. 같은 비율 이미지 넣으면 카드 높이 정렬됨 */
 .mm-tl__img{width:100%;height:auto;border-radius:10px;background:#F5F3F0;margin:0 0 10px;display:block;}
 .mm-tl__img[src=""],.mm-tl__img:not([src]){display:none;}
 .mm-tl__desc{font-size:clamp(13px,1.9vw,15px);line-height:1.6;color:#4A4A4A;}
+.mm-tl[data-text="화이트"] .mm-tl__desc{color:#D4D0CB;}
 .mm-tl__desc p{margin:0 0 .15em;}
 /* 모바일: 카드 고정폭 → 가로 스크롤 + 우측 카드 살짝 보임(peek). 세로 공간 절약 */
 @media (max-width:768px){

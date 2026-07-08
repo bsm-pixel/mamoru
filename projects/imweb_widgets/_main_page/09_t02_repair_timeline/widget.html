@@ -8,8 +8,9 @@
 ═══════════════════════════════════════════════════════════════ -->
 {{!-- @name title @type outlined-textfield @default "복원 과정" @label "제목(선택)" --}}
 {{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력(예 1280 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
+{{!-- @name textColor @type outlined-textfield @default "블랙" @label "글씨 색 — 입력: 블랙(밝은 배경용) · 화이트(어두운 배경용)" --}}
 {{!-- @name steps @type item @label "단계" --}}
-<div class="mm-tl" data-maxw="{{maxw}}">
+<div class="mm-tl" data-maxw="{{maxw}}" data-text="{{textColor}}">
   <p class="mm-tl__title">{{title}}</p>
   <div class="mm-tl__scroll">
     <ol class="mm-tl__list">
