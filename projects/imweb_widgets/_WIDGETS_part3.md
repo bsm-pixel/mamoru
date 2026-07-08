@@ -536,7 +536,8 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 {{!-- @name kicker @type outlined-textfield @default "SECTION" @label "키커(영문)" --}}
 {{!-- @name title @type text-editor @default "<p>섹션 제목</p>" @label "제목" --}}
 {{!-- @name align @type outlined-textfield @default "왼쪽" @label "정렬 — 입력: 왼쪽 · 가운데" --}}
-<div class="mm-sh" data-align="{{align}}">
+{{!-- @name textColor @type outlined-textfield @default "블랙" @label "글씨 색 — 입력: 블랙(밝은 배경용) · 화이트(어두운 배경/크림 반전)" --}}
+<div class="mm-sh" data-align="{{align}}" data-text="{{textColor}}">
   <span class="mm-sh__index">{{index}}</span>
   <div class="mm-sh__text">
     <span class="mm-sh__kicker">{{kicker}}</span>
@@ -548,12 +549,16 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ### CSS 탭
 ```css
 .mm-sh{max-width:900px;margin:0 auto;padding:clamp(20px,4vw,32px) 8px;display:flex;align-items:baseline;gap:clamp(14px,3vw,28px);font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+/* 글씨 색: 밝은 배경=블랙(기본) / 어두운 배경=화이트(크림 반전). 인덱스·제목은 currentColor 상속, 키커·라인만 톤별 */
+.mm-sh[data-text="화이트"]{color:#FAF9F7;}
 .mm-sh[data-align="가운데"]{flex-direction:column;align-items:center;text-align:center;gap:8px;}
-.mm-sh__index{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(40px,11vw,76px);font-weight:900;letter-spacing:-.05em;line-height:.9;color:#1A1A1A;flex:0 0 auto;}
+.mm-sh__index{font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(40px,11vw,76px);font-weight:900;letter-spacing:-.05em;line-height:.9;color:inherit;flex:0 0 auto;}
 .mm-sh__text{flex:0 1 auto;}
 .mm-sh__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(10px,2.6vw,12px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#8A8580;margin-bottom:6px;}
+.mm-sh[data-text="화이트"] .mm-sh__kicker{color:#B8B4AF;}
 .mm-sh__title{margin:0;font-size:clamp(20px,5.5vw,32px);font-weight:800;letter-spacing:-.02em;line-height:1.2;}
 .mm-sh__line{flex:1;height:1px;background:#D4D0CB;align-self:center;}
+.mm-sh[data-text="화이트"] .mm-sh__line{background:rgba(255,255,255,.22);}
 .mm-sh[data-align="가운데"] .mm-sh__line{width:48px;flex:0 0 auto;margin-top:6px;}
 @media (prefers-reduced-motion:no-preference){
   .mm-sh>*{opacity:0;transform:translateY(16px);transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1);}
