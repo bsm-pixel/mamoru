@@ -19,10 +19,12 @@
 .mm-cat__sub{font-size:clamp(12px,1.8vw,13px);color:#D4D0CB;font-weight:600;}
 .mm-cat__sub:empty{display:none;}
 .mm-cat__arrow{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:rgba(250,249,247,.16);display:flex;align-items:center;justify-content:center;font-size:16px;color:#FAF9F7;transition:background .3s,transform .3s;}
+/* 화살표 표시 토글(switch=false → 숨김) */
+.mm-cat[data-arrow="false"] .mm-cat__arrow{display:none;}
 @media (hover:hover){
   .mm-cat__tile:hover .mm-cat__img,.mm-cat__tile:hover .mm-cat__imgm{transform:scale(1.07);}
   .mm-cat__tile:hover .mm-cat__arrow{background:#FAF9F7;color:#1A1A1A;transform:translateX(2px);}
 }
 
-/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
-@media (max-width:768px){.mm-cat{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
+/* 모바일 좌측 여백만(가로 스크롤이라 우측은 타일 peek 유지) */
+@media (max-width:768px){.mm-cat{box-sizing:border-box;padding-left:16px;}}

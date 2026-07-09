@@ -24,6 +24,9 @@
 @media (max-width:768px){
   .mm-tl__step{flex:0 0 76%;min-width:0;}
   .mm-tl__step:not(:last-child)::after{display:none;}
+  /* 좌측 여백 명시(섹션 100% 확장해도 콘텐츠가 화면 왼쪽 끝에 안 붙게). 우측은 스크롤 peek */
+  .mm-tl__title{padding-left:16px;}
+  .mm-tl__scroll{padding-left:16px;padding-right:0;}
 }
 /* 등장(위젯이 화면에 들어오면 카드 순차 페이드) */
 @media (prefers-reduced-motion:no-preference){

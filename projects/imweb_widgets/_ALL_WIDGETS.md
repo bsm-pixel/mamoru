@@ -2613,8 +2613,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 {{!-- @name heightPC @type outlined-textfield @default "300" @label "PC 타일 높이(px)" --}}
 {{!-- @name heightMobile @type outlined-textfield @default "220" @label "모바일 타일 높이(px)" --}}
 {{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력(예 1280 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
+{{!-- @name showArrow @type switch @default true @label "우측 상단 화살표(→) 표시" --}}
 {{!-- @name tiles @type item @label "카테고리 타일" --}}
-<div class="mm-cat" data-align="{{align}}" data-hpc="{{heightPC}}" data-hm="{{heightMobile}}" data-maxw="{{maxw}}">
+<div class="mm-cat" data-align="{{align}}" data-hpc="{{heightPC}}" data-hm="{{heightMobile}}" data-maxw="{{maxw}}" data-arrow="{{showArrow}}">
   <div class="mm-cat__track">
   {{#each tiles}}
     {{!-- @name image @type image @label "PC 이미지 — 가로형 권장(높이에 맞춰 표시)" --}}
@@ -2659,13 +2660,15 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-cat__sub{font-size:clamp(12px,1.8vw,13px);color:#D4D0CB;font-weight:600;}
 .mm-cat__sub:empty{display:none;}
 .mm-cat__arrow{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:rgba(250,249,247,.16);display:flex;align-items:center;justify-content:center;font-size:16px;color:#FAF9F7;transition:background .3s,transform .3s;}
+/* 화살표 표시 토글(switch=false → 숨김) */
+.mm-cat[data-arrow="false"] .mm-cat__arrow{display:none;}
 @media (hover:hover){
   .mm-cat__tile:hover .mm-cat__img,.mm-cat__tile:hover .mm-cat__imgm{transform:scale(1.07);}
   .mm-cat__tile:hover .mm-cat__arrow{background:#FAF9F7;color:#1A1A1A;transform:translateX(2px);}
 }
 
-/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
-@media (max-width:768px){.mm-cat{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
+/* 모바일 좌측 여백만(가로 스크롤이라 우측은 타일 peek 유지) */
+@media (max-width:768px){.mm-cat{box-sizing:border-box;padding-left:16px;}}
 ```
 ### JS 탭
 ```js
@@ -2841,6 +2844,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 @media (max-width:768px){
   .mm-tl__step{flex:0 0 76%;min-width:0;}
   .mm-tl__step:not(:last-child)::after{display:none;}
+  /* 좌측 여백 명시(섹션 100% 확장해도 콘텐츠가 화면 왼쪽 끝에 안 붙게). 우측은 스크롤 peek */
+  .mm-tl__title{padding-left:16px;}
+  .mm-tl__scroll{padding-left:16px;padding-right:0;}
 }
 /* 등장(위젯이 화면에 들어오면 카드 순차 페이드) */
 @media (prefers-reduced-motion:no-preference){
