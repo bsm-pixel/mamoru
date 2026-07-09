@@ -20,8 +20,8 @@
 .mm-fr__desc:empty{display:none;}
 .mm-fr__desc p{margin:0 0 .5em;}
 .mm-fr__desc p:last-child{margin-bottom:0;}
-/* 리치에디터가 넣은 빈 줄(<p></p>·<p><br></p>) 제거 → 제목↔설명 유령 간격 방지(JS 없이도 동작) */
-.mm-fr__desc p:empty,.mm-fr__desc p:has(> br:only-child){display:none;}
+/* 빈 문단(<p></p>) 제거. <p><br></p> 등 나머지 빈 줄은 JS(trimEmpty)가 처리 */
+.mm-fr__title p:empty,.mm-fr__desc p:empty{display:none;}
 .mm-fr__btn{display:inline-flex;align-items:center;padding:14px 28px;border-radius:10px;background:#FAF9F7;color:#1A1A1A;font-weight:700;font-size:15px;text-decoration:none;transition:transform .2s,opacity .2s;}
 .mm-fr__btn::after{content:'→';margin-left:10px;}
 .mm-fr[data-theme="라이트"] .mm-fr__btn{background:#1A1A1A;color:#FAF9F7;}

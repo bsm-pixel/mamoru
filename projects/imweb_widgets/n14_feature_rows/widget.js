@@ -6,16 +6,17 @@
     else if(low==='full'||low==='none'){ target.style.maxWidth='none'; }
     else { if(String(parseFloat(mw))===mw) mw+='px'; target.style.maxWidth=mw; }
   }
-  /* 리치에디터가 넣은 앞뒤 빈 문단(<p></p>·<p><br></p>) 제거 → 제목↔설명 유령 간격 방지. 문단 사이 의도한 빈 줄은 유지 */
-  function trimEmpty(el){
-    if(!el) return; var k;
-    while((k=el.firstElementChild) && k.tagName==='P' && !k.textContent.trim() && !k.querySelector('img')) el.removeChild(k);
-    while((k=el.lastElementChild) && k.tagName==='P' && !k.textContent.trim() && !k.querySelector('img')) el.removeChild(k);
+  /* 에디터가 설명/제목 앞뒤에 자동 삽입하는 빈 문단(<p></p>·<p><br></p>·공백만) 제거 → 유령 간격 제거.
+     ⚠ 로드 시 1회만 실행(감시자 없음) → 편집 중 줄바꿈을 절대 건드리지 않음. 실제 글자 있는 문단은 손 안 댐 */
+  function trimEmpty(root){
+    var ps=root.querySelectorAll('.mm-fr__title p, .mm-fr__desc p'), i, p;
+    for(i=ps.length-1;i>=0;i--){ p=ps[i];
+      if(!(p.textContent||'').trim() && !p.querySelector('img') && p.parentNode) p.parentNode.removeChild(p); }
   }
   function initOne(root){
     var inner=root.querySelector('.mm-fr__inner')||root;
-    var tx=root.querySelectorAll('.mm-fr__title,.mm-fr__desc');
-    for(var t=0;t<tx.length;t++) trimEmpty(tx[t]);
+    trimEmpty(root);
+    setTimeout(function(){ trimEmpty(root); }, 400);  /* 지연 렌더 1회 보정(감시자 아님) */
     applyMaxw(root, inner);
     /* 최대폭 바뀌면 즉시 반영(편집기 실시간) */
     if('MutationObserver' in window){ new MutationObserver(function(){applyMaxw(root, inner);}).observe(root,{attributes:true,attributeFilter:['data-maxw']}); }
