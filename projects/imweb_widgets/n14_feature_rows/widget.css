@@ -13,12 +13,15 @@
 .mm-fr__body{flex:1 1 0;min-width:0;}
 .mm-fr__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8A8580;margin-bottom:14px;}
 .mm-fr__kicker:empty{display:none;}
-.mm-fr__title{margin:0 0 10px;font-family:'Outfit','Plus Jakarta Sans','Pretendard','Noto Sans KR',sans-serif;font-size:clamp(22px,3.4vw,34px);font-weight:900;line-height:1.25;letter-spacing:-.02em;color:inherit;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
+.mm-fr__title{margin:0 0 8px;font-family:'Outfit','Plus Jakarta Sans','Pretendard','Noto Sans KR',sans-serif;font-size:clamp(22px,3.4vw,34px);font-weight:900;line-height:1.25;letter-spacing:-.02em;color:inherit;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-fr__title p{margin:0 0 .12em;}
 .mm-fr__desc{font-size:clamp(15px,1.9vw,17px);line-height:1.7;color:#B8B4AF;margin-bottom:28px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-fr[data-theme="라이트"] .mm-fr__desc{color:#4A4A4A;}
 .mm-fr__desc:empty{display:none;}
-.mm-fr__desc p{margin:0 0 .3em;}
+.mm-fr__desc p{margin:0 0 .5em;}
+.mm-fr__desc p:last-child{margin-bottom:0;}
+/* 리치에디터가 넣은 빈 줄(<p></p>·<p><br></p>) 제거 → 제목↔설명 유령 간격 방지(JS 없이도 동작) */
+.mm-fr__desc p:empty,.mm-fr__desc p:has(> br:only-child){display:none;}
 .mm-fr__btn{display:inline-flex;align-items:center;padding:14px 28px;border-radius:10px;background:#FAF9F7;color:#1A1A1A;font-weight:700;font-size:15px;text-decoration:none;transition:transform .2s,opacity .2s;}
 .mm-fr__btn::after{content:'→';margin-left:10px;}
 .mm-fr[data-theme="라이트"] .mm-fr__btn{background:#1A1A1A;color:#FAF9F7;}
@@ -29,10 +32,10 @@
 @media (max-width:768px){
   .mm-fr{padding:clamp(24px,6vw,40px) 0;}
   .mm-fr__inner{padding-left:16px;padding-right:16px;gap:clamp(38px,9vw,50px);}  /* 블록(행) 사이는 넉넉히 → 버튼↔다음 이미지 숨쉬게 */
-  .mm-fr__row,.mm-fr__row:nth-child(even){flex-direction:column;gap:14px;}
+  .mm-fr__row,.mm-fr__row:nth-child(even){flex-direction:column;gap:20px;}  /* 이미지↔텍스트덩어리 = 제목↔설명보다 넓게(별개 요소) */
   .mm-fr__media,.mm-fr__body{flex:1 1 auto;width:100%;}
-  .mm-fr__kicker{margin-bottom:8px;}
-  .mm-fr__title{margin-bottom:8px;font-size:clamp(19px,5.4vw,24px);}  /* 제목↔설명 붙여서 이어지는 느낌 */
-  .mm-fr__desc{margin-bottom:18px;font-size:15px;line-height:1.65;}
+  .mm-fr__kicker{margin-bottom:7px;}
+  .mm-fr__title{margin-bottom:6px;font-size:clamp(19px,5.4vw,24px);}  /* 제목↔설명 = 가장 타이트(한 덩어리) */
+  .mm-fr__desc{margin-bottom:16px;font-size:15px;line-height:1.65;}  /* 설명↔버튼 = 제목↔설명보다 넓게(버튼은 액션) */
   .mm-fr__btn{padding:11px 22px;font-size:13.5px;}
 }
