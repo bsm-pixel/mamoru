@@ -1383,7 +1383,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ### CSS 탭
 ```css
 /* 가로 최대폭은 자유 숫자값(예 1280) → JS가 max-width 적용(margin auto로 중앙). 영역 확장해도 이 값에서 멈춤 */
-.mm-cine{box-sizing:border-box;margin-left:auto;margin-right:auto;position:relative;overflow:hidden;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+/* 폭 잡히기 전(풀폭) 깜빡임 방지: 기본 투명 → JS가 폭 적용 후 is-ready로 페이드인(근본 해결) */
+.mm-cine{box-sizing:border-box;margin-left:auto;margin-right:auto;position:relative;overflow:hidden;background:#1A1A1A;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;opacity:0;transition:opacity .35s ease;}
+.mm-cine.is-ready{opacity:1;}
 /* 기본=이미지 비율 자동: 이미지가 흐름에 들어가 컨테이너 높이=이미지 비율(PC=PC이미지 / 모바일=모바일이미지). 높이 미입력 시 이 모드 */
 .mm-cine__bg,.mm-cine__bgm{display:block;width:100%;height:auto;animation:mm-cine-zoom 16s ease-out both;}
 .mm-cine__bgm{display:none;}
@@ -1464,6 +1466,9 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     /* 가로 최대폭 적용 + 패널값 바뀌면(data-maxw 속성변경) 즉시 재적용 → 편집기 실시간 반영 */
     applyMaxw(root);
     if('MutationObserver' in window){ new MutationObserver(function(){applyMaxw(root);}).observe(root,{attributes:true,attributeFilter:['data-maxw']}); }
+    /* 폭 적용된 "뒤에" 페이드인 → 풀폭→축소 깜빡임 제거. 안전망: 혹시 몰라 900ms 후에도 강제 표시 */
+    root.classList.add('is-ready');
+    setTimeout(function(){ root.classList.add('is-ready'); }, 900);
   }
   function init(){var l=document.querySelectorAll('.mm-cine');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
