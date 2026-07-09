@@ -9,8 +9,9 @@
 {{!-- @name title @type outlined-textfield @default "복원 과정" @label "제목(선택)" --}}
 {{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력(예 1280 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
 {{!-- @name textColor @type outlined-textfield @default "블랙" @label "글씨 색 — 입력: 블랙(밝은 배경용) · 화이트(어두운 배경용)" --}}
+{{!-- @name marker @type outlined-textfield @default "숫자" @label "카드 표시 — 입력: 숫자(01·02 순서용) · 점(동그란 점, 순서 아닌 내용) · 없음. 점·없음은 연결선도 사라짐" --}}
 {{!-- @name steps @type item @label "단계" --}}
-<div class="mm-tl" data-maxw="{{maxw}}" data-text="{{textColor}}">
+<div class="mm-tl" data-maxw="{{maxw}}" data-text="{{textColor}}" data-marker="{{marker}}">
   <p class="mm-tl__title">{{title}}</p>
   <div class="mm-tl__scroll">
     <ol class="mm-tl__list">
