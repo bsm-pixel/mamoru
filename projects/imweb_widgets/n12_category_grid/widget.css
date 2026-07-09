@@ -26,5 +26,9 @@
   .mm-cat__tile:hover .mm-cat__arrow{background:#FAF9F7;color:#1A1A1A;transform:translateX(2px);}
 }
 
-/* 모바일 좌측 여백만(가로 스크롤이라 우측은 타일 peek 유지) */
-@media (max-width:768px){.mm-cat{box-sizing:border-box;padding-left:16px;}}
+/* 모바일: 양쪽 여백(가로영역 100% 확장해도 배너가 좌우 벽에 안 붙게).
+   여백을 트랙(스크롤 콘텐츠)에 줘야 스크롤 양끝 모두 확실히 벌어짐(컨테이너 padding-right가 먹히는 브라우저 버그 회피) */
+@media (max-width:768px){
+  .mm-cat{padding-left:0;padding-right:0;}
+  .mm-cat__track{padding-left:20px;padding-right:20px;}
+}

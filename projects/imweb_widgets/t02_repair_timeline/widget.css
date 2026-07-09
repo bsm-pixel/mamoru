@@ -34,9 +34,11 @@
 @media (max-width:768px){
   .mm-tl__step{flex:0 0 76%;min-width:0;}
   .mm-tl__step:not(:last-child)::after{display:none;}
-  /* 좌측 여백 명시(섹션 100% 확장해도 콘텐츠가 화면 왼쪽 끝에 안 붙게). 우측은 스크롤 peek */
+  /* 좌우 여백(섹션 100% 확장해도 카드가 좌우 벽에 안 붙게).
+     카드 여백은 트랙(list)에 줘서 스크롤 양끝 모두 확실히 벌어짐(컨테이너 padding-right 먹힘 버그 회피) */
   .mm-tl__title{padding-left:20px;}
-  .mm-tl__scroll{padding-left:20px;padding-right:0;}
+  .mm-tl__scroll{padding-left:0;padding-right:0;}
+  .mm-tl__list{padding-left:20px;padding-right:20px;}
 }
 /* 등장(위젯이 화면에 들어오면 카드 순차 페이드) */
 @media (prefers-reduced-motion:no-preference){
