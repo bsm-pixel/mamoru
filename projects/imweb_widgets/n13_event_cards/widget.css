@@ -23,7 +23,7 @@
 .mm-ev[data-theme="다크"] .mm-ev__desc{color:#D4D0CB;}
 .mm-ev__desc:empty{display:none;}
 @media (max-width:768px){
-  .mm-ev{padding-left:16px;padding-right:16px;}
+  .mm-ev{padding-left:20px;padding-right:20px;}  /* 가로영역 100% 확장해도 좌우 벽에 안 붙게(표준 20px, n12·t02와 통일) */
   .mm-ev__grid{grid-template-columns:1fr;gap:14px;}
 }
 /* 등장(카드 순차 페이드) */
