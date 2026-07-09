@@ -3703,48 +3703,52 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 
 ### HTML 탭
 ```html
-{{!-- @name widgetInfo @type outlined-textfield @default "이미지+텍스트 행을 지그재그로 교차 진열. PC 좌우 배치(홀수=사진오른쪽/짝수=사진왼쪽), 모바일 상하 스택." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+{{!-- @name widgetInfo @type outlined-textfield @default "이미지+텍스트 행 지그재그. 배경 테마(다크/라이트) 토글, 글씨색 자동. PC 좌우, 모바일 상하 스택." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
 <span style="display:none">{{widgetInfo}}</span>
 <!-- ═══════════════════════════════════════════════════════════════
   📦 MAMORU 커스텀 위젯 — 이미지+텍스트 교차 진열 (Feature Rows)
   📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
-  📝 서비스/특징 소개 행. PC 좌우 지그재그, 모바일 상하 스택. 소제목+제목+설명+버튼
+  📝 서비스/특징 행. 배경 풀블리드 + 콘텐츠 중앙(maxw). PC 지그재그, 모바일 상하 스택
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
-{{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크(어두운 배경) · 라이트(밝은 배경)" --}}
-{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭(PC) — 숫자 자유 입력(예 1100 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
+{{!-- @name theme @type outlined-textfield @default "다크" @label "배경 테마 — 입력: 다크(검정 배경) · 라이트(밝은 배경). 글씨색 자동 맞춤" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "콘텐츠 가로 최대폭(PC) — 숫자 자유 입력(예 1100 · 비우면 꽉 채움). 배경은 영역 전체" --}}
 {{!-- @name items @type item @label "행 (이미지+텍스트)" --}}
 <div class="mm-fr" data-theme="{{theme}}" data-maxw="{{maxw}}">
-{{#each items}}
-  {{!-- @name image @type image @label "이미지 — 권장 1000×800px" --}}
-  {{!-- @name kicker @type outlined-textfield @default "" @label "소제목(영문, 선택) — 예: HYDRO REPAIR" --}}
-  {{!-- @name title @type text-editor @default "<p>제목을 입력하세요</p>" @label "제목" --}}
-  {{!-- @name desc @type text-editor @default "<p></p>" @label "설명(선택)" --}}
-  {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
-  {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-  <div class="mm-fr__row">
-    <div class="mm-fr__media"><img class="mm-fr__img" src="{{image}}" alt=""></div>
-    <div class="mm-fr__body">
-      <span class="mm-fr__kicker">{{kicker}}</span>
-      <div class="mm-fr__title" role="heading" aria-level="2">{{title}}</div>
-      <div class="mm-fr__desc">{{desc}}</div>
-      <a class="mm-fr__btn" href="{{btnLink}}">{{btnText}}</a>
+  <div class="mm-fr__inner">
+  {{#each items}}
+    {{!-- @name image @type image @label "이미지 — 권장 1000×800px" --}}
+    {{!-- @name kicker @type outlined-textfield @default "" @label "소제목(영문, 선택) — 예: HYDRO REPAIR" --}}
+    {{!-- @name title @type text-editor @default "<p>제목을 입력하세요</p>" @label "제목" --}}
+    {{!-- @name desc @type text-editor @default "<p></p>" @label "설명(선택)" --}}
+    {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
+    {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
+    <div class="mm-fr__row">
+      <div class="mm-fr__media"><img class="mm-fr__img" src="{{image}}" alt=""></div>
+      <div class="mm-fr__body">
+        <span class="mm-fr__kicker">{{kicker}}</span>
+        <div class="mm-fr__title" role="heading" aria-level="2">{{title}}</div>
+        <div class="mm-fr__desc">{{desc}}</div>
+        <a class="mm-fr__btn" href="{{btnLink}}">{{btnText}}</a>
+      </div>
     </div>
+  {{/each}}
   </div>
-{{/each}}
 </div>
 ```
 ### CSS 탭
 ```css
-/* 폭 잡히기 전(풀폭) 깜빡임 방지: 기본 투명 → JS가 폭 적용 후 is-ready로 페이드인 */
-.mm-fr{--fr-gap:clamp(28px,5vw,64px);box-sizing:border-box;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(44px,7vw,88px);padding:clamp(20px,3vw,32px) 0;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#FAF9F7;opacity:0;transition:opacity .35s ease;}
+/* 배경=풀블리드(영역 전체), 콘텐츠=maxw 중앙. 폭 깜빡임 방지: 기본 투명 → JS가 폭 적용 후 is-ready 페이드인 */
+.mm-fr{box-sizing:border-box;background:#1A1A1A;color:#FAF9F7;padding:clamp(32px,5vw,64px) 0;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;opacity:0;transition:opacity .35s ease;}
 .mm-fr.is-ready{opacity:1;}
-.mm-fr[data-theme="라이트"]{color:#1A1A1A;}
+.mm-fr[data-theme="라이트"]{background:#FAF9F7;color:#1A1A1A;}
+.mm-fr__inner{--fr-gap:clamp(28px,5vw,64px);max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(44px,7vw,88px);padding:0 clamp(20px,3vw,40px);}
 /* 행: 1행=사진 오른쪽(글씨 왼쪽), 2행=사진 왼쪽(글씨 오른쪽) → 지그재그(nth-child) */
 .mm-fr__row{display:flex;align-items:center;gap:var(--fr-gap);flex-direction:row-reverse;}
 .mm-fr__row:nth-child(even){flex-direction:row;}
 .mm-fr__media{flex:1 1 0;min-width:0;}
 .mm-fr__img{width:100%;height:auto;display:block;border-radius:18px;background:#2D2D2D;}
+.mm-fr[data-theme="라이트"] .mm-fr__img{background:#F5F3F0;}
 .mm-fr__img[src=""]{display:none;}
 .mm-fr__body{flex:1 1 0;min-width:0;}
 .mm-fr__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8A8580;margin-bottom:14px;}
@@ -3763,7 +3767,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 @media (hover:hover){.mm-fr__btn:hover{opacity:.9;}}
 /* 모바일: 상하 스택(이미지 위·텍스트 아래) + 좌우 여백(안정감) */
 @media (max-width:768px){
-  .mm-fr{padding-left:16px;padding-right:16px;gap:clamp(36px,10vw,56px);}
+  .mm-fr__inner{padding-left:16px;padding-right:16px;gap:clamp(36px,10vw,56px);}
   .mm-fr__row,.mm-fr__row:nth-child(even){flex-direction:column;gap:clamp(16px,4vw,24px);}
   .mm-fr__media,.mm-fr__body{flex:1 1 auto;width:100%;}
 }
@@ -3771,17 +3775,18 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 ### JS 탭
 ```js
 (function(){
-  /* 가로 최대폭: 자유 숫자값(1100 등). 비움/full → 꽉 채움 */
-  function applyMaxw(root){
+  /* 가로 최대폭: 자유 숫자값(1100 등)을 콘텐츠(target)에 적용. 비움/full → 꽉 채움. 값은 root의 data-maxw에서 읽음 */
+  function applyMaxw(root, target){
     var mw=root.getAttribute('data-maxw'); mw=(mw==null?'':mw).trim(); var low=mw.toLowerCase();
-    if(!mw){ root.style.maxWidth=''; }
-    else if(low==='full'||low==='none'){ root.style.maxWidth='none'; }
-    else { if(String(parseFloat(mw))===mw) mw+='px'; root.style.maxWidth=mw; }
+    if(!mw){ target.style.maxWidth=''; }
+    else if(low==='full'||low==='none'){ target.style.maxWidth='none'; }
+    else { if(String(parseFloat(mw))===mw) mw+='px'; target.style.maxWidth=mw; }
   }
   function initOne(root){
-    applyMaxw(root);
+    var inner=root.querySelector('.mm-fr__inner')||root;
+    applyMaxw(root, inner);
     /* 최대폭 바뀌면 즉시 반영(편집기 실시간) */
-    if('MutationObserver' in window){ new MutationObserver(function(){applyMaxw(root);}).observe(root,{attributes:true,attributeFilter:['data-maxw']}); }
+    if('MutationObserver' in window){ new MutationObserver(function(){applyMaxw(root, inner);}).observe(root,{attributes:true,attributeFilter:['data-maxw']}); }
     /* 폭 적용된 "뒤에" 페이드인 → 풀폭→축소 깜빡임 제거. 안전망 900ms */
     root.classList.add('is-ready');
     setTimeout(function(){ root.classList.add('is-ready'); }, 900);

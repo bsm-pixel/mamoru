@@ -1,12 +1,14 @@
-/* 폭 잡히기 전(풀폭) 깜빡임 방지: 기본 투명 → JS가 폭 적용 후 is-ready로 페이드인 */
-.mm-fr{--fr-gap:clamp(28px,5vw,64px);box-sizing:border-box;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(44px,7vw,88px);padding:clamp(20px,3vw,32px) 0;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#FAF9F7;opacity:0;transition:opacity .35s ease;}
+/* 배경=풀블리드(영역 전체), 콘텐츠=maxw 중앙. 폭 깜빡임 방지: 기본 투명 → JS가 폭 적용 후 is-ready 페이드인 */
+.mm-fr{box-sizing:border-box;background:#1A1A1A;color:#FAF9F7;padding:clamp(32px,5vw,64px) 0;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;opacity:0;transition:opacity .35s ease;}
 .mm-fr.is-ready{opacity:1;}
-.mm-fr[data-theme="라이트"]{color:#1A1A1A;}
+.mm-fr[data-theme="라이트"]{background:#FAF9F7;color:#1A1A1A;}
+.mm-fr__inner{--fr-gap:clamp(28px,5vw,64px);max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(44px,7vw,88px);padding:0 clamp(20px,3vw,40px);}
 /* 행: 1행=사진 오른쪽(글씨 왼쪽), 2행=사진 왼쪽(글씨 오른쪽) → 지그재그(nth-child) */
 .mm-fr__row{display:flex;align-items:center;gap:var(--fr-gap);flex-direction:row-reverse;}
 .mm-fr__row:nth-child(even){flex-direction:row;}
 .mm-fr__media{flex:1 1 0;min-width:0;}
 .mm-fr__img{width:100%;height:auto;display:block;border-radius:18px;background:#2D2D2D;}
+.mm-fr[data-theme="라이트"] .mm-fr__img{background:#F5F3F0;}
 .mm-fr__img[src=""]{display:none;}
 .mm-fr__body{flex:1 1 0;min-width:0;}
 .mm-fr__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8A8580;margin-bottom:14px;}
@@ -25,7 +27,7 @@
 @media (hover:hover){.mm-fr__btn:hover{opacity:.9;}}
 /* 모바일: 상하 스택(이미지 위·텍스트 아래) + 좌우 여백(안정감) */
 @media (max-width:768px){
-  .mm-fr{padding-left:16px;padding-right:16px;gap:clamp(36px,10vw,56px);}
+  .mm-fr__inner{padding-left:16px;padding-right:16px;gap:clamp(36px,10vw,56px);}
   .mm-fr__row,.mm-fr__row:nth-child(even){flex-direction:column;gap:clamp(16px,4vw,24px);}
   .mm-fr__media,.mm-fr__body{flex:1 1 auto;width:100%;}
 }
