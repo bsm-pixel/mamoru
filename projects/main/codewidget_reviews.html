@@ -1,0 +1,14 @@
+<!-- MAMORU 고객 후기 (독립 코드위젯 / iframe 임베드) -->
+<!-- ★ btm에서 분리한 라이브 후기 섹션. 위치는 아임웹 에디터에서 드래그로 이동 가능 ★ -->
+<!-- 실체 = projects/main/iframe_main_reviews.html (라이브 API fetch → 커스텀 위젯 불가, iframe으로 유지) -->
+<!-- 높이 = 전역 banner-widget.js 리사이저가 src=page.mamoru.kr iframe을 source매칭 자동 사이징 (공통코드 무수정) -->
+<!-- ✏️ 이 <iframe> 태그를 아임웹 코드위젯(HTML)에 그대로 붙여넣기 -->
+<iframe
+  src="https://page.mamoru.kr/projects/main/iframe_main_reviews.html"
+  title="MAMORU 고객 후기"
+  loading="lazy"
+  scrolling="no"
+  style="width:100%;border:0;display:block;"
+></iframe>
+<!-- ⚠ min-height 바닥값 넣지 말 것 — 리사이저가 height 직접 세팅. 바닥값은 빈 여백 유발 -->
+

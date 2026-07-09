@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>고객 후기 — MAMORU</title>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 FILE : projects/main/iframe_main_reviews.html
+  📍 용도 : 메인페이지 "고객 후기" 섹션 — btm에서 분리한 자기완결 iframe 페이지
+  🔗 임베드: 아임웹 코드위젯에 아래 한 줄
+      <iframe src="https://page.mamoru.kr/projects/main/iframe_main_reviews.html"
+              style="width:100%;border:0;display:block" scrolling="no"></iframe>
+  ⚙️ 높이 : 전역 banner-widget.js 리사이저가 src=page.mamoru.kr iframe을 source매칭 자동 사이징
+  📝 데이터: 라이브 API(reviews/public) — 커스텀 위젯 불가(fetch 금지)라 iframe 페이지로 유지
+  🚫 후기 표시 규칙: 데이터는 API가 SSOT. 표시 로직은 page_reviews.html·page_main_btm.html과 동일 유지
+═══════════════════════════════════════════════════════════════ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>/* ⭐ 조기 높이 부트스트랩 — 파싱 중부터 높이 전송 → iframe 짤림 차단 */
+(function(){var ID='reviews',last=0;function gh(){var b=document.body;if(!b)return 0;var d=document.documentElement;return Math.max(b.scrollHeight||0,(d&&d.scrollHeight)||0,b.offsetHeight||0);}function s(){var h=Math.ceil(gh());if(h>last+1){last=h;try{window.parent.postMessage({type:'MAMORU_IFRAME_SIZE',id:ID,height:h},'*');}catch(_){}}}var t=setInterval(s,200);setTimeout(function(){clearInterval(t);},16000);document.addEventListener('DOMContentLoaded',s);})();</script>
+<style>
+/* ── 변수 & 리셋 ── */
+:root {
+  --void: #1A1A1A;
+  --graphite: #2D2D2D;
+  --stone: #4A4A4A;
+  --warm-gray: #8A8580;
+  --mist: #B8B4AF;
+  --sand: #D4D0CB;
+  --parchment: #EDEBE8;
+  --shell: #F5F3F0;
+  --cream: #FAF9F7;
+  --white: #FFFFFF;
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --mm-max-w: 1200px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 0.15s;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scrollbar-width: none; -ms-overflow-style: none; overflow-x: hidden; }
+html::-webkit-scrollbar { display: none; }
+body {
+  overflow-x: hidden; overflow-y: visible; height: auto !important; min-height: auto !important;
+  font-family: var(--font-body); background: var(--cream); color: var(--void);
+  line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+a { text-decoration: none; color: inherit; }
+img { display: block; max-width: 100%; }
+
+.mm-inner { max-width: var(--mm-max-w); margin: 0 auto; padding-left: 20px; padding-right: 20px; }
+@media (min-width: 768px)  { .mm-inner { padding-left: 32px; padding-right: 32px; } }
+@media (min-width: 1440px) { .mm-inner { padding-left: 64px; padding-right: 64px; } }
+
+/* ── 스크롤 애니메이션 ── */
+.mm-anim { opacity: 0; transform: translateY(28px); transition: opacity 0.65s var(--ease), transform 0.65s var(--ease); }
+.mm-anim.mm-visible { opacity: 1; transform: translateY(0); }
+.mm-anim-stagger.mm-visible:nth-child(1) { transition-delay: 0s; }
+.mm-anim-stagger.mm-visible:nth-child(2) { transition-delay: 0.07s; }
+.mm-anim-stagger.mm-visible:nth-child(3) { transition-delay: 0.14s; }
+.mm-anim-stagger.mm-visible:nth-child(4) { transition-delay: 0.21s; }
+.mm-anim-stagger.mm-visible:nth-child(5) { transition-delay: 0.28s; }
+.mm-anim-stagger.mm-visible:nth-child(6) { transition-delay: 0.35s; }
+
+.mm-section-kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--warm-gray); margin-bottom: 8px; }
+
+/* ══════════════════════════════════════════════════════════════
+   고객 후기 — Cream, 탭 + 서브타입 칩 + 카드
+   ══════════════════════════════════════════════════════════════ */
+.mm-reviews { background: var(--cream); padding: 80px 0 64px; color: var(--void); }
+.mm-reviews__head { margin-bottom: 28px; }
+.mm-reviews__title { font-size: 18px; font-weight: 700; color: var(--void); margin-bottom: 4px; }
+.mm-reviews__desc { font-size: 13px; color: var(--stone); }
+.mm-reviews__tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.mm-reviews__tab {
+  padding: 8px 16px; border: 1px solid var(--sand); border-radius: var(--radius-sm);
+  background: transparent; font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  color: var(--stone); cursor: pointer; transition: all var(--duration-fast);
+}
+.mm-reviews__tab--active { background: var(--void); border-color: var(--void); color: var(--cream); }
+
+/* 카드 내 서브타입 칩 */
+.mm-review-card__subtype {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 7px;
+  border: 1px solid var(--sand); border-radius: 4px; color: var(--warm-gray); white-space: nowrap;
+}
+/* 출처 배지 — 모노크롬 */
+.mm-review-card__source-badge {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+  white-space: nowrap; background: var(--sand); color: var(--stone);
+}
+.mm-reviews__scroll {
+  display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  padding-bottom: 8px;
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
+  mask-image: linear-gradient(to right, black 85%, transparent);
+  transition: opacity 0.3s var(--ease);
+}
+.mm-reviews__scroll::-webkit-scrollbar { display: none; }
+.mm-review-card {
+  flex: 0 0 280px; scroll-snap-align: start; background: var(--white);
+  border: 1px solid var(--sand); border-radius: var(--radius-lg); padding: 24px;
+}
+.mm-review-card__img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 14px; }
+.mm-review-card__header { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
+.mm-review-card__name { font-size: 14px; font-weight: 700; color: var(--void); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mm-hon { font-size: 0.88em; font-weight: 500; color: var(--stone); }
+.mm-review-card__chips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; }
+.mm-review-card__source { font-size: 11px; font-weight: 500; color: var(--warm-gray); }
+.mm-review-card__stars { font-size: 13px; color: var(--void); letter-spacing: 2px; margin-bottom: 10px; }
+.mm-review-card__text { font-size: 13px; line-height: 1.65; color: var(--stone); }
+.mm-review-card__date { margin-top: 12px; font-size: 11px; color: var(--warm-gray); }
+.mm-reviews__more { display: block; text-align: center; margin-top: 24px; font-size: 14px; font-weight: 600; color: var(--stone); transition: color var(--duration-fast); }
+
+@media (min-width: 1024px) {
+  .mm-reviews { padding: 120px 0 80px; }
+  .mm-reviews__title { font-size: 22px; }
+  .mm-reviews__scroll { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; overflow: visible; -webkit-mask-image: none; mask-image: none; }
+  .mm-review-card { flex: none; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+}
+@media (hover: hover) { .mm-reviews__more:hover { color: var(--void); } }
+</style>
+</head>
+<body>
+<!-- ══════════════════════════════════════════════════════════════
+     고객 후기 — 탭 (상담/복원/구매) + 서브타입 칩
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-reviews">
+  <div class="mm-inner">
+    <div class="mm-reviews__head mm-anim">
+      <p class="mm-section-kicker">Reviews</p>
+      <h2 class="mm-reviews__title">고객 후기</h2>
+      <p class="mm-reviews__desc">마모루를 경험한 분들의 이야기</p>
+    </div>
+
+    <div class="mm-reviews__tabs" id="mmReviewTabs">
+      <button class="mm-reviews__tab mm-reviews__tab--active" data-type="consult">컨설팅상담</button>
+      <button class="mm-reviews__tab" data-type="repair">복원수리</button>
+      <button class="mm-reviews__tab" data-type="purchase">제품구매</button>
+    </div>
+
+    <div class="mm-reviews__scroll" id="mmReviews">
+      <!-- JS 렌더링 -->
+    </div>
+
+    <!-- ✏️ 수정가능: 후기 더보기 링크 URL -->
+    <a href="/62" class="mm-reviews__more">후기 더보기 →</a>
+  </div>
+</section>
+
+<script>
+(function(){
+  var REVIEW_API = 'https://app-eta-sandy-75.vercel.app/api/reviews/public';
+  var allReviews = [];
+
+  /* ── 마스킹/표시 헬퍼 (page_reviews·page_main_btm 와 동일 — 3화면 SSOT) ── */
+  function maskName(name) {
+    if (!name) return '';
+    if (name.length <= 1) return name;
+    if (name.length === 2) return name[0] + '*';
+    return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+  }
+  function maskStore(s) {
+    if (!s) return '';
+    s = String(s).trim();
+    if (s.length <= 1) return s;
+    if (s.length === 2) return s[0] + '*';
+    if (s.length === 3) return s[0] + '**';
+    return s[0] + '**' + s.slice(3);
+  }
+  function storeHtml(r, fs) {
+    if (!r.store_name) return '';
+    return ' <span style="font-size:' + fs + 'px;color:#8A8580;font-weight:500;">· ' + maskStore(r.store_name) + '</span>';
+  }
+  function honHtml(name) { return name ? ' <span class="mm-hon">님</span>' : ''; }
+  function fmtDate(d) {
+    if (!d) return '';
+    var dt = new Date(d);
+    var yy = String(dt.getFullYear()).slice(2);
+    var mm = String(dt.getMonth() + 1).padStart(2, '0');
+    var dd = String(dt.getDate()).padStart(2, '0');
+    return yy + mm + dd;
+  }
+
+  var TYPE_LABELS = { consult: '상담', repair: '복원수리', purchase: '제품구매' };
+  var DATE_LABELS = { consult: '상담', repair: '접수', purchase: '구매' };
+  var SUBTYPE_LABELS = { store_visit: '직접방문', field_request: '출장', talk_consult: '톡상담', restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거', parcel_pickup: '방문수거', self_ship: '직접발송', offline: '오프라인', online: '온라인', talk: '톡상담', visit_pickup: '방문수거', direct_send: '직접발송', same_day: '당일수리' };
+  var TAG_LABELS = {
+    comfortable:'강요없이 편안해요', detailed_guide:'설명이 자세해요', professional:'전문적이에요',
+    personalized:'맞춤 안내', worth_time:'시간이 아깝지 않아요',
+    reasonable_price:'합리적이에요', fair_price:'적당해요', kind:'친절해요',
+    like_new:'새 가위처럼', better_cut:'커트감 개선', above_expect:'기대 이상',
+    precise_edge:'날 조절 정확', thorough_info:'안내 꼼꼼', fast_service:'진행 빠름', good_value:'가격 대비 만족',
+    kind_response:'응대 친절', worth_money:'돈 안 아까워요', will_return:'또 이용할게요',
+    good_quality:'품질이 좋아요', fast_delivery:'배송이 빨라요', neat_packaging:'포장이 꼼꼼해요',
+    would_recommend:'추천하고 싶어요'
+  };
+  function getTypeLabel(r) { return TYPE_LABELS[r.type] || ''; }
+  function getSubtypeLabel(r) {
+    var sub = r.subtype || (r.meta && r.meta.consultation_type) || '';
+    return SUBTYPE_LABELS[sub] || '';
+  }
+  function chipLabel(r) {
+    var t = getTypeLabel(r), s = getSubtypeLabel(r);
+    if (r.type === 'consult' && s) return t + '·' + s;
+    var rawSub = r.subtype || '';
+    if (s && rawSub !== 'restoration' && s !== t) return t + '·' + s;
+    return t;
+  }
+  function renderDates(r) {
+    var rec = (r.meta && r.meta.received_at) ? fmtDate(r.meta.received_at) : '';
+    var cr = fmtDate(r.created_at);
+    var lab = DATE_LABELS[r.type] || '접수';
+    var parts = [];
+    if (rec) parts.push(lab + ' ' + rec);
+    if (cr) parts.push('작성 ' + cr);
+    return '<div class="mm-review-card__date">' + parts.join('  ·  ') + '</div>';
+  }
+
+  /* ── 후기 렌더링 (서브타입 필터 지원) ── */
+  function renderReviews(type) {
+    var el = document.getElementById('mmReviews');
+    if (!el) return;
+    var items = allReviews.filter(function(r) { return r.type === type; });
+    if (items.length === 0) {
+      el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--warm-gray);font-size:14px;">아직 등록된 후기가 없습니다</div>';
+      return;
+    }
+    el.innerHTML = items.slice(0, 8).map(function(r) {
+      var stars = '';
+      for (var i = 0; i < 5; i++) stars += i < r.stars ? '★' : '☆';
+      var imgUrl = (r.photo_urls && r.photo_urls.length > 0) ? r.photo_urls[0] : (r.product_image_url || '');
+      var imgHtml = imgUrl ? '<img class="mm-review-card__img" src="' + imgUrl + '" alt="후기 이미지" loading="lazy">' : '';
+      var tagsHtml = '';
+      if (r.meta && r.meta.tags && r.meta.tags.length > 0) {
+        tagsHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">' +
+          r.meta.tags.map(function(t) {
+            return '<span style="font-size:11px;padding:2px 8px;border:1px solid var(--sand);border-radius:6px;color:var(--stone);">' + (TAG_LABELS[t] || t) + '</span>';
+          }).join('') + '</div>';
+      }
+      var chips = '';
+      var clbl = chipLabel(r);
+      if (clbl) { chips += '<span class="mm-review-card__subtype">' + clbl + '</span>'; }
+      if (r.source === 'naver') { chips += '<span class="mm-review-card__source-badge">네이버</span>'; }
+      var chipsHtml = chips ? '<div class="mm-review-card__chips">' + chips + '</div>' : '';
+      var preview = r.content.length > 60 ? r.content.substring(0, 60) + '…' : r.content;
+      return '<div class="mm-review-card mm-anim mm-anim-stagger">' +
+        imgHtml +
+        '<div class="mm-review-card__header">' +
+          '<span class="mm-review-card__name">' + maskName(r.name) + honHtml(r.name) + storeHtml(r, 11) + '</span>' +
+          chipsHtml +
+        '</div>' +
+        '<div class="mm-review-card__stars">' + stars + '</div>' +
+        tagsHtml +
+        '<div class="mm-review-card__text">' + preview + '</div>' +
+        renderDates(r) +
+        '</div>';
+    }).join('');
+    el.querySelectorAll('.mm-anim').forEach(function(card) { card.classList.add('mm-visible'); });
+  }
+
+  function loadReviews() {
+    fetch(REVIEW_API + '?type=all')
+      .then(function(res) { return res.json(); })
+      .then(function(data) { allReviews = Array.isArray(data) ? data : []; renderReviews('consult'); })
+      .catch(function() { allReviews = []; renderReviews('consult'); });
+  }
+
+  function initReviewTabs() {
+    var tabWrap = document.getElementById('mmReviewTabs');
+    if (!tabWrap) return;
+    tabWrap.addEventListener('click', function(e) {
+      var btn = e.target.closest('.mm-reviews__tab');
+      if (!btn || btn.classList.contains('mm-reviews__tab--active')) return;
+      tabWrap.querySelectorAll('.mm-reviews__tab').forEach(function(t) { t.classList.remove('mm-reviews__tab--active'); });
+      btn.classList.add('mm-reviews__tab--active');
+      renderReviews(btn.getAttribute('data-type'));
+    });
+  }
+
+  /* ── 스크롤 등장 애니메이션 (헤드) ── */
+  function initAnimations() {
+    var revealAll = function() { document.querySelectorAll('.mm-anim').forEach(function(el) { el.classList.add('mm-visible'); }); };
+    if (!('IntersectionObserver' in window)) { revealAll(); return; }
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) { if (entry.isIntersecting) { entry.target.classList.add('mm-visible'); observer.unobserve(entry.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+    document.querySelectorAll('.mm-anim').forEach(function(el) { observer.observe(el); });
+    setTimeout(revealAll, 2500); // 안전망
+  }
+
+  /* ── iframe 높이 자동 전송 (아임웹 parent 통신) ── */
+  function initIframeComm() {
+    var lastSent = 0;
+    function getHeight() {
+      var bodyScroll = document.body.scrollHeight || 0;
+      var docScroll  = document.documentElement.scrollHeight || 0;
+      var bodyOffset = document.body.offsetHeight || 0;
+      var lastBottom = 0;
+      var lastEl = document.body.lastElementChild;
+      while (lastEl && (lastEl.tagName === 'SCRIPT' || lastEl.tagName === 'STYLE')) { lastEl = lastEl.previousElementSibling; }
+      if (lastEl) {
+        var rect = lastEl.getBoundingClientRect();
+        lastBottom = (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.bottom;
+      }
+      return Math.max(bodyScroll, docScroll, bodyOffset, lastBottom);
+    }
+    function send(force) {
+      var h = Math.ceil(getHeight());
+      if (force === true || h > lastSent + 1) {
+        if (h > lastSent) lastSent = h;
+        window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', id: 'reviews', height: h }, '*');
+      }
+    }
+    if (window.ResizeObserver) { try { new ResizeObserver(send).observe(document.body); } catch(_) {} }
+    document.querySelectorAll('img').forEach(function(img) {
+      if (img.complete) return;
+      img.addEventListener('load', send, { once: true });
+      img.addEventListener('error', send, { once: true });
+    });
+    if (document.fonts && document.fonts.ready) { document.fonts.ready.then(send).catch(function(){}); }
+    function multiSend() { send(); [50, 150, 400, 800, 1500, 3000, 5000, 8000].forEach(function(ms) { setTimeout(send, ms); }); }
+    if (document.readyState === 'complete') { multiSend(); } else { window.addEventListener('load', multiSend); send(); }
+    var resizeT;
+    window.addEventListener('resize', function() { clearTimeout(resizeT); resizeT = setTimeout(send, 200); });
+    window.addEventListener('message', function(e) { if (e.data && e.data.type === 'REQUEST_HEIGHT') send(true); });
+    if (window.MutationObserver) { try { new MutationObserver(send).observe(document.body, { childList: true, subtree: true }); } catch(_) {} }
+    var __mmTick = setInterval(send, 280);
+    setTimeout(function() { clearInterval(__mmTick); }, 15000);
+    window.addEventListener('pageshow', function(e) { if (e.persisted) multiSend(); else send(); });
+    document.addEventListener('visibilitychange', function() { if (!document.hidden) send(); });
+    window.addEventListener('focus', send);
+    window.addEventListener('orientationchange', function() { setTimeout(send, 300); });
+
+    /* 아임웹 parent에서 페이지 이동 위임 (후기 더보기 /62 등) */
+    document.addEventListener('click', function(e) {
+      var a = e.target.closest('a[href]');
+      if (!a) return;
+      var href = a.getAttribute('href');
+      if (!href || href.startsWith('http') || href.startsWith('mailto:')) return;
+      e.preventDefault();
+      window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: href }, '*');
+    });
+  }
+
+  function init() { loadReviews(); initReviewTabs(); initAnimations(); initIframeComm(); }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>
