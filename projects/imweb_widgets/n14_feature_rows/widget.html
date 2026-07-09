@@ -1,0 +1,30 @@
+{{!-- @name widgetInfo @type outlined-textfield @default "이미지+텍스트 행을 지그재그로 교차 진열. PC 좌우 배치(홀수=사진오른쪽/짝수=사진왼쪽), 모바일 상하 스택." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 이미지+텍스트 교차 진열 (Feature Rows)
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 서비스/특징 소개 행. PC 좌우 지그재그, 모바일 상하 스택. 소제목+제목+설명+버튼
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name theme @type outlined-textfield @default "다크" @label "테마 — 입력: 다크(어두운 배경) · 라이트(밝은 배경)" --}}
+{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭(PC) — 숫자 자유 입력(예 1100 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
+{{!-- @name items @type item @label "행 (이미지+텍스트)" --}}
+<div class="mm-fr" data-theme="{{theme}}" data-maxw="{{maxw}}">
+{{#each items}}
+  {{!-- @name image @type image @label "이미지 — 권장 1000×800px" --}}
+  {{!-- @name kicker @type outlined-textfield @default "" @label "소제목(영문, 선택) — 예: HYDRO REPAIR" --}}
+  {{!-- @name title @type text-editor @default "<p>제목을 입력하세요</p>" @label "제목" --}}
+  {{!-- @name desc @type text-editor @default "<p></p>" @label "설명(선택)" --}}
+  {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
+  {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
+  <div class="mm-fr__row">
+    <div class="mm-fr__media"><img class="mm-fr__img" src="{{image}}" alt=""></div>
+    <div class="mm-fr__body">
+      <span class="mm-fr__kicker">{{kicker}}</span>
+      <div class="mm-fr__title" role="heading" aria-level="2">{{title}}</div>
+      <div class="mm-fr__desc">{{desc}}</div>
+      <a class="mm-fr__btn" href="{{btnLink}}">{{btnText}}</a>
+    </div>
+  </div>
+{{/each}}
+</div>
