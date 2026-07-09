@@ -536,11 +536,16 @@
 .mm-fr__btn:empty{display:none;}
 .mm-fr__btn:active{transform:scale(.97);}
 @media (hover:hover){.mm-fr__btn:hover{opacity:.9;}}
-/* 모바일: 상하 스택(이미지 위·텍스트 아래) + 좌우 여백(안정감) */
+/* 모바일: 상하 스택(이미지 위·텍스트 아래) + 좌우 여백. 간격·버튼 타이트하게 */
 @media (max-width:768px){
-  .mm-fr__inner{padding-left:16px;padding-right:16px;gap:clamp(36px,10vw,56px);}
-  .mm-fr__row,.mm-fr__row:nth-child(even){flex-direction:column;gap:clamp(16px,4vw,24px);}
+  .mm-fr{padding:clamp(24px,6vw,40px) 0;}
+  .mm-fr__inner{padding-left:16px;padding-right:16px;gap:clamp(28px,7vw,40px);}
+  .mm-fr__row,.mm-fr__row:nth-child(even){flex-direction:column;gap:14px;}
   .mm-fr__media,.mm-fr__body{flex:1 1 auto;width:100%;}
+  .mm-fr__kicker{margin-bottom:8px;}
+  .mm-fr__title{margin-bottom:10px;font-size:clamp(19px,5.4vw,24px);}
+  .mm-fr__desc{margin-bottom:16px;font-size:14px;line-height:1.6;}
+  .mm-fr__btn{padding:11px 22px;font-size:13.5px;}
 }
 ```
 ### JS 탭
