@@ -2449,10 +2449,10 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 <div class="mm-nav" data-theme="{{theme}}" data-align="{{align}}" data-fpc="{{fontPC}}" data-fm="{{fontMobile}}" data-pady="{{padY}}">
   <div class="mm-nav__track">
   {{#each chips}}
-    {{!-- @name label @type outlined-textfield @default "메뉴" @label "라벨" --}}
+    {{!-- @name label @type outlined-textfield @default "" @label "칩에 표시될 글자 — 예: 블런트 (⚠️ 좌측 목록의 '아이템 N' 이름은 칩에 반영되지 않습니다. 반드시 여기에 입력)" --}}
     {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
     {{!-- @name current @type switch @default false @label "현재 페이지 — 지금 보고 있는 카테고리에만 켜기(검게 강조됨)" --}}
-    <a class="mm-nav__chip" href="{{link}}" data-current="{{current}}"><span class="mm-nav__label">{{label}}</span></a>
+    <a class="mm-nav__chip" href="{{link}}" data-current="{{current}}">{{label}}</a>
   {{/each}}
   </div>
 </div>
@@ -2471,6 +2471,8 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-nav[data-theme="다크"] .mm-nav__chip{background:#1A1A1A;color:#FAF9F7;}
 .mm-nav[data-theme="라이트"] .mm-nav__chip{background:#FFFFFF;color:#1A1A1A;border:1px solid #D4D0CB;}
 .mm-nav__chip:active{transform:scale(.97);}
+/* 글자 안 채운 칩은 숨김 — 항목 추가만 하고 라벨 비워둔 '유령 칩' 방지 */
+.mm-nav__chip:empty{display:none;}
 /* 현재 페이지(카테고리) 강조 — 스위치 ON인 칩만 Void 채움. 나머지는 아웃라인 */
 .mm-nav[data-theme="라이트"] .mm-nav__chip[data-current="true"]{background:#1A1A1A;color:#FAF9F7;border-color:#1A1A1A;font-weight:800;}
 .mm-nav[data-theme="다크"] .mm-nav__chip[data-current="true"]{background:#FAF9F7;color:#1A1A1A;font-weight:800;}
