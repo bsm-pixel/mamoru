@@ -19,6 +19,11 @@
 .mm-cine__inner>*{max-width:720px;}
 .mm-cine[data-align="가운데"] .mm-cine__inner{align-items:center;text-align:center;}
 .mm-cine[data-align="왼쪽"] .mm-cine__inner{align-items:flex-start;text-align:left;}
+/* 세로 위치: 기본 가운데(빈 값 포함 → 기존 동작 유지). '아래'=카테고리 배너식 좌하단 */
+.mm-cine[data-vpos="아래"] .mm-cine__inner{justify-content:flex-end;}
+.mm-cine[data-vpos="위"] .mm-cine__inner{justify-content:flex-start;}
+/* 배경 느린 줌 끄기(스위치 false일 때만. 빈 값=켬 → 기존 동작 유지) */
+.mm-cine[data-zoom="false"] .mm-cine__bg,.mm-cine[data-zoom="false"] .mm-cine__bgm{animation:none;}
 .mm-cine__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(10px,2.6vw,12px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#D4D0CB;margin-bottom:12px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-cine__kicker:empty{display:none;}
 .mm-cine__headline{margin:0;font-family:'Outfit','Plus Jakarta Sans','Pretendard','Noto Sans KR',sans-serif;font-size:clamp(24px,6vw,44px);font-weight:900;line-height:1.12;letter-spacing:-.02em;color:#FAF9F7;text-shadow:0 2px 24px rgba(0,0,0,.35);white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}

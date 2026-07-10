@@ -1363,12 +1363,14 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 {{!-- @name focus @type outlined-textfield @default "중앙" @label "사진 초점 — 입력: 중앙·좌·우·상·하" --}}
 {{!-- @name overlay @type color-picker @default "#1A1A1A80" @label "어둡게 (검정의 투명도 슬라이더를 드래그 · 맨뒤 2자리=어둡기)" --}}
 {{!-- @name align @type outlined-textfield @default "가운데" @label "정렬 (가운데/왼쪽 · 유형을 옵션버튼/스위치로 바꿔도 됨)" --}}
+{{!-- @name vpos @type outlined-textfield @default "가운데" @label "세로 위치 — 입력: 가운데 · 아래(카테고리 배너처럼 좌하단에 얹기) · 위" --}}
+{{!-- @name zoom @type switch @default true @label "배경 느린 줌 효과 — 카테고리 배너처럼 정적으로 두려면 끄기" --}}
 {{!-- @name kicker @type outlined-textfield @default "" @label "키커(영문, 선택)" --}}
 {{!-- @name headline @type text-editor @default "<p>헤드라인을 입력하세요</p>" @label "헤드라인" --}}
 {{!-- @name sub @type text-editor @default "<p></p>" @label "서브 문구(선택)" --}}
 {{!-- @name btnText @type outlined-textfield @default "" @label "버튼 문구(선택)" --}}
 {{!-- @name btnLink @type outlined-textfield @default "" @label "버튼 링크" --}}
-<div class="mm-cine" data-radius="{{radius}}" data-align="{{align}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-maxw="{{maxw}}">
+<div class="mm-cine" data-radius="{{radius}}" data-align="{{align}}" data-vpos="{{vpos}}" data-zoom="{{zoom}}" data-overlay="{{overlay}}" data-focus="{{focus}}" data-height="{{height}}" data-maxw="{{maxw}}">
   <img class="mm-cine__bg" src="{{image}}" alt="">
   <img class="mm-cine__bgm" src="{{imageMobile}}" alt="">
   <div class="mm-cine__veil" aria-hidden="true"></div>
@@ -1403,6 +1405,11 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-cine__inner>*{max-width:720px;}
 .mm-cine[data-align="가운데"] .mm-cine__inner{align-items:center;text-align:center;}
 .mm-cine[data-align="왼쪽"] .mm-cine__inner{align-items:flex-start;text-align:left;}
+/* 세로 위치: 기본 가운데(빈 값 포함 → 기존 동작 유지). '아래'=카테고리 배너식 좌하단 */
+.mm-cine[data-vpos="아래"] .mm-cine__inner{justify-content:flex-end;}
+.mm-cine[data-vpos="위"] .mm-cine__inner{justify-content:flex-start;}
+/* 배경 느린 줌 끄기(스위치 false일 때만. 빈 값=켬 → 기존 동작 유지) */
+.mm-cine[data-zoom="false"] .mm-cine__bg,.mm-cine[data-zoom="false"] .mm-cine__bgm{animation:none;}
 .mm-cine__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(10px,2.6vw,12px);font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#D4D0CB;margin-bottom:12px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-cine__kicker:empty{display:none;}
 .mm-cine__headline{margin:0;font-family:'Outfit','Plus Jakarta Sans','Pretendard','Noto Sans KR',sans-serif;font-size:clamp(24px,6vw,44px);font-weight:900;line-height:1.12;letter-spacing:-.02em;color:#FAF9F7;text-shadow:0 2px 24px rgba(0,0,0,.35);white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
