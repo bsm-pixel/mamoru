@@ -37,7 +37,8 @@
   /* 좌우 여백(섹션 100% 확장해도 카드가 좌우 벽에 안 붙게).
      카드 여백은 트랙(list)에 줘서 스크롤 양끝 모두 확실히 벌어짐(컨테이너 padding-right 먹힘 버그 회피) */
   .mm-tl__title{padding-left:20px;}
-  .mm-tl__scroll{padding-left:0;padding-right:0;}
+  /* scroll-padding-left 필수: 없으면 scroll-snap이 첫 카드를 컨테이너 왼쪽(0px)에 붙여 트랙 여백을 먹어버림 */
+  .mm-tl__scroll{padding-left:0;padding-right:0;scroll-padding-left:20px;}
   .mm-tl__list{padding-left:20px;padding-right:20px;}
 }
 /* 등장(위젯이 화면에 들어오면 카드 순차 페이드) */

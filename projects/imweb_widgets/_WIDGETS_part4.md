@@ -73,7 +73,8 @@
 /* 모바일: 여백을 트랙(스크롤 콘텐츠)에 줘서 가로영역 100% 확장해도 좌우 벽에 안 붙고,
    스크롤 양끝 모두 확실히 벌어짐(컨테이너 padding-right 먹힘 버그 회피) — n12·t02·n13·n15 표준 20px */
 @media (max-width:768px){
-  .mm-nav{padding-left:0;padding-right:0;}
+  /* scroll-padding-left 필수: 없으면 scroll-snap이 첫 칩을 컨테이너 왼쪽(0px)에 붙여 트랙 여백을 먹어버림 */
+  .mm-nav{padding-left:0;padding-right:0;scroll-padding-left:20px;}
   .mm-nav__track{padding-left:20px;padding-right:20px;}
 }
 ```
@@ -276,7 +277,8 @@
 /* 모바일: 양쪽 여백(가로영역 100% 확장해도 배너가 좌우 벽에 안 붙게).
    여백을 트랙(스크롤 콘텐츠)에 줘야 스크롤 양끝 모두 확실히 벌어짐(컨테이너 padding-right가 먹히는 브라우저 버그 회피) */
 @media (max-width:768px){
-  .mm-cat{padding-left:0;padding-right:0;}
+  /* scroll-padding-left 필수: 없으면 scroll-snap이 첫 타일을 컨테이너 왼쪽(0px)에 붙여 트랙 여백을 먹어버림 */
+  .mm-cat{padding-left:0;padding-right:0;scroll-padding-left:20px;}
   .mm-cat__track{padding-left:20px;padding-right:20px;}
 }
 ```
@@ -468,7 +470,8 @@
   /* 좌우 여백(섹션 100% 확장해도 카드가 좌우 벽에 안 붙게).
      카드 여백은 트랙(list)에 줘서 스크롤 양끝 모두 확실히 벌어짐(컨테이너 padding-right 먹힘 버그 회피) */
   .mm-tl__title{padding-left:20px;}
-  .mm-tl__scroll{padding-left:0;padding-right:0;}
+  /* scroll-padding-left 필수: 없으면 scroll-snap이 첫 카드를 컨테이너 왼쪽(0px)에 붙여 트랙 여백을 먹어버림 */
+  .mm-tl__scroll{padding-left:0;padding-right:0;scroll-padding-left:20px;}
   .mm-tl__list{padding-left:20px;padding-right:20px;}
 }
 /* 등장(위젯이 화면에 들어오면 카드 순차 페이드) */

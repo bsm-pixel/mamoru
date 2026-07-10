@@ -23,6 +23,7 @@
 /* 모바일: 여백을 트랙(스크롤 콘텐츠)에 줘서 가로영역 100% 확장해도 좌우 벽에 안 붙고,
    스크롤 양끝 모두 확실히 벌어짐(컨테이너 padding-right 먹힘 버그 회피) — n12·t02·n13·n15 표준 20px */
 @media (max-width:768px){
-  .mm-nav{padding-left:0;padding-right:0;}
+  /* scroll-padding-left 필수: 없으면 scroll-snap이 첫 칩을 컨테이너 왼쪽(0px)에 붙여 트랙 여백을 먹어버림 */
+  .mm-nav{padding-left:0;padding-right:0;scroll-padding-left:20px;}
   .mm-nav__track{padding-left:20px;padding-right:20px;}
 }
