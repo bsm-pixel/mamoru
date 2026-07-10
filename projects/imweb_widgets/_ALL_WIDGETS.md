@@ -3837,28 +3837,33 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 
 ### HTML 탭
 ```html
-{{!-- @name widgetInfo @type outlined-textfield @default "카테고리 탭. 클릭 시 해당 아임웹 상품진열 위젯만 보이고 나머지는 숨김. 페이지 이동 없이 제자리 전환." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+{{!-- @name widgetInfo @type outlined-textfield @default "카테고리 탭. 위젯전환(상품진열 위젯 여러 개 중 하나만 표시) 또는 상품필터(상품진열 위젯 1개 안에서 카테고리로 상품 걸러내기). 페이지 이동 없이 제자리 전환." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
 <span style="display:none">{{widgetInfo}}</span>
 <!-- ═══════════════════════════════════════════════════════════════
-  📦 MAMORU 커스텀 위젯 — 상품 카테고리 탭 (상품진열 전환)
+  📦 MAMORU 커스텀 위젯 — 상품 카테고리 탭 (상품진열 전환/필터)
   📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
-  📝 탭 클릭 → 해당 상품진열 위젯(#WID)만 표시. 같은 페이지에 상품진열 위젯을 카테고리 수만큼 배치해 두고 사용
-  🔧 각 탭에 "상품진열 위젯 ID"(예 w20250908c6ee5f1272760) 입력 — 환경설정 Header Code의 IDS 배열에서 확인 가능
-  🛡️ 하나도 못 찾으면 아무것도 숨기지 않음(상품진열 전부 그대로 노출) → 페이지 안 깨짐
+  📝 모드 2종
+     · 위젯전환 : 카테고리 수만큼 상품진열 위젯 배치 → 탭의 #WID 만 표시
+     · 상품필터 : 상품진열 위젯 1개(전체 상품) → 탭이 상품 카드의 카테고리 라벨(.cate-label)로 걸러냄
+  🔧 위젯 ID(w2025…)는 환경설정 Header Code의 IDS 배열에서 확인 (그 파일은 읽기만 — 다른 페이지와 공유)
+  🛡️ 대상을 못 찾으면 아무것도 숨기지 않음(상품 전부 그대로 노출) → 페이지 안 깨짐
   🚫 fetch·iframe 0
 ═══════════════════════════════════════════════════════════════ -->
+{{!-- @name mode @type outlined-textfield @default "위젯전환" @label "동작 방식 — 입력: 위젯전환(상품진열 위젯 여러 개) · 상품필터(상품진열 위젯 1개 안에서 걸러내기)" --}}
+{{!-- @name gridWid @type outlined-textfield @default "" @label "[상품필터 모드 전용] 상품진열 위젯 ID — 예: w20250908c6ee5f1272760" --}}
 {{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭(PC) — 숫자 자유 입력(예 1080 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
 {{!-- @name align @type outlined-textfield @default "중앙" @label "탭 정렬(PC) — 입력: 중앙 · 왼쪽" --}}
 {{!-- @name textColor @type outlined-textfield @default "블랙" @label "글씨 색 — 입력: 블랙(밝은 배경용) · 화이트(어두운 배경용)" --}}
-{{!-- @name debug @type switch @default false @label "진단 표시 — 켜면 상품진열을 몇 개 찾았는지 아래에 표시(설치 확인용, 평소엔 끄기)" --}}
+{{!-- @name debug @type switch @default false @label "진단 표시 — 켜면 몇 개를 찾았는지 아래에 표시(설치 확인용, 평소엔 끄기)" --}}
 {{!-- @name tabs @type item @label "카테고리 탭" --}}
-<div class="mm-pt" data-maxw="{{maxw}}" data-align="{{align}}" data-text="{{textColor}}" data-debug="{{debug}}">
+<div class="mm-pt" data-mode="{{mode}}" data-gridwid="{{gridWid}}" data-maxw="{{maxw}}" data-align="{{align}}" data-text="{{textColor}}" data-debug="{{debug}}">
   <div class="mm-pt__scroll">
     <div class="mm-pt__tabs" role="tablist">
     {{#each tabs}}
       {{!-- @name label @type outlined-textfield @default "카테고리" @label "탭 이름 — 예: 틴닝 · 장가위 · 블런트" --}}
-      {{!-- @name wid @type outlined-textfield @default "" @label "상품진열 위젯 ID — 예: w20250908c6ee5f1272760" --}}
-      <button type="button" class="mm-pt__tab" role="tab" data-wid="{{wid}}">{{label}}</button>
+      {{!-- @name wid @type outlined-textfield @default "" @label "[위젯전환 모드] 이 탭이 보여줄 상품진열 위젯 ID — 예: w20250908c6ee5f1272760" --}}
+      {{!-- @name cat @type outlined-textfield @default "" @label "[상품필터 모드] 매칭할 카테고리 이름(상품 카드 라벨과 동일). 비우면 '전체'" --}}
+      <button type="button" class="mm-pt__tab" role="tab" data-wid="{{wid}}" data-cat="{{cat}}">{{label}}</button>
     {{/each}}
     </div>
   </div>
@@ -3906,15 +3911,39 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     else if(low==='full'||low==='none'){ root.style.maxWidth='none'; }
     else { if(String(parseFloat(mw))===mw) mw+='px'; root.style.maxWidth=mw; }
   }
-  /* WID로 네이티브 상품진열 위젯 찾기.
-     아임웹이 PC/모바일 DOM 트리를 복제 렌더하는 경우가 있어 getElementById 대신 전부 수집 */
-  function targets(wid){
-    wid=(wid==null?'':wid).trim();
-    if(!wid) return [];
-    try{ return [].slice.call(document.querySelectorAll('[id="'+wid.replace(/"/g,'')+'"]')); }catch(e){ return []; }
+  function clean(v){ return (v==null?'':String(v)).trim(); }
+  /* id로 요소 찾기. 아임웹이 PC/모바일 DOM을 복제 렌더하는 경우가 있어 getElementById 대신 전부 수집 */
+  function byId(id){
+    id=clean(id).replace(/"/g,'');
+    if(!id) return [];
+    try{ return [].slice.call(document.querySelectorAll('[id="'+id+'"]')); }catch(e){ return []; }
   }
   /* 외부 DOM은 display만 토글 — 내용은 절대 건드리지 않음 */
   function show(els,on){ for(var i=0;i<els.length;i++){ els[i].style.display = on ? '' : 'none'; } }
+
+  /* 상품진열 그리드(#container_<WID>) 안의 상품 카드들 */
+  function productCards(gridWid){
+    var out=[], conts=byId('container_'+clean(gridWid));
+    for(var c=0;c<conts.length;c++){
+      var kids=conts[c].children;
+      for(var i=0;i<kids.length;i++){
+        var k=kids[i];
+        if(k.classList && (k.classList.contains('shop-item')||k.classList.contains('_shop_item'))) out.push(k);
+      }
+    }
+    return out;
+  }
+  /* 카드의 카테고리 라벨(.cate-label) 텍스트 */
+  function cardCat(card){
+    var el=card.querySelector('.cate-label');
+    return el ? clean(el.textContent) : '';
+  }
+  /* 캐러셀(쇼핑기획전)이면 카드 숨김이 레이아웃을 깨므로 경고용 판별 */
+  function isCarousel(gridWid){
+    var conts=byId('container_'+clean(gridWid));
+    for(var i=0;i<conts.length;i++){ if(conts[i].closest && conts[i].closest('.owl-carousel')) return true; }
+    return false;
+  }
 
   function initOne(root){
     applyMaxw(root);
@@ -3924,37 +3953,78 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     var tabs=[].slice.call(root.querySelectorAll('.mm-pt__tab'));
     if(!tabs.length) return;
     var dbg=root.querySelector('.mm-pt__debug');
+    var filterMode=(clean(root.getAttribute('data-mode'))==='상품필터');
+    var gridWid=clean(root.getAttribute('data-gridwid'));
 
-    function activate(idx){
+    function paintTabs(idx){
       for(var i=0;i<tabs.length;i++){
         var on=(i===idx);
         if(on) tabs[i].classList.add('is-on'); else tabs[i].classList.remove('is-on');
         tabs[i].setAttribute('aria-selected', on?'true':'false');
-        show(targets(tabs[i].getAttribute('data-wid')), on);
       }
     }
-    for(var i=0;i<tabs.length;i++){
-      (function(k){ tabs[k].addEventListener('click', function(){ activate(k); }); })(i);
+    /* [모드 A] 위젯전환 — 탭의 #WID 만 표시 */
+    function activateSwitch(idx){
+      paintTabs(idx);
+      for(var i=0;i<tabs.length;i++) show(byId(tabs[i].getAttribute('data-wid')), i===idx);
+    }
+    /* [모드 B] 상품필터 — 상품진열 1개 안에서 카테고리 라벨로 카드 걸러내기 */
+    function activateFilter(idx){
+      paintTabs(idx);
+      var want=clean(tabs[idx].getAttribute('data-cat'));   /* 비우면 '전체' */
+      var cards=productCards(gridWid);
+      for(var i=0;i<cards.length;i++){
+        show([cards[i]], !want || cardCat(cards[i])===want);
+      }
     }
 
-    /* 상품진열 위젯은 늦게 렌더될 수 있어 찾을 때까지 유한 폴링(최대 약 10초).
-       감시자(MutationObserver on body) 미사용 — 아임웹 렌더와 경합 방지 */
+    for(var i=0;i<tabs.length;i++){
+      (function(k){ tabs[k].addEventListener('click', function(){ filterMode?activateFilter(k):activateSwitch(k); }); })(i);
+    }
+
+    /* 상품진열은 늦게 렌더될 수 있어 찾을 때까지 유한 폴링(최대 약 10초).
+       body 감시자 미사용 — 아임웹 렌더와 경합 방지 */
     var tries=0;
     function resolve(){
-      var found=0, missing=[];
-      for(var i=0;i<tabs.length;i++){
-        var w=(tabs[i].getAttribute('data-wid')||'').trim();
-        if(w && targets(w).length) found++; else missing.push(w||'(ID 비어있음)');
+      if(filterMode){
+        var cards=productCards(gridWid);
+        if(cards.length){
+          /* 실제로 존재하는 카테고리 라벨을 모아 진단에 노출 → 탭에 그대로 복사해 넣으면 됨 */
+          var seen={}, order=[], noLabel=0;
+          for(var i=0;i<cards.length;i++){
+            var c=cardCat(cards[i]);
+            if(!c){ noLabel++; continue; }
+            if(!(c in seen)){ seen[c]=0; order.push(c); }
+            seen[c]++;
+          }
+          if(dbg){
+            var parts=order.map(function(c){ return c+'('+seen[c]+')'; });
+            dbg.textContent='진단: 상품 '+cards.length+'개 · 카테고리 라벨 '+(order.length?parts.join(' · '):'없음')
+              + (noLabel?' · 라벨없는 상품 '+noLabel+'개':'')
+              + (isCarousel(gridWid)?' · ⚠ 쇼핑기획전(캐러셀)이라 필터 시 레이아웃 깨짐 — 상품진열 위젯을 쓰세요':'');
+          }
+          if(order.length){ activateFilter(0); return; }   /* 라벨 있음 → 첫 탭 필터 적용 */
+          /* 🛡️ 라벨이 하나도 없음 → 아무것도 숨기지 않음 */
+          paintTabs(0); return;
+        }
+        if(dbg) dbg.textContent='진단: 상품진열('+ (gridWid||'ID 비어있음') +')을 찾지 못했습니다';
+      } else {
+        var found=0, missing=[];
+        for(var j=0;j<tabs.length;j++){
+          var w=clean(tabs[j].getAttribute('data-wid'));
+          if(w && byId(w).length) found++; else missing.push(w||'(ID 비어있음)');
+        }
+        if(dbg){
+          dbg.textContent = found===tabs.length
+            ? '진단: 상품진열 '+found+'/'+tabs.length+' 모두 찾음 — 정상 동작'
+            : '진단: 상품진열 '+found+'/'+tabs.length+' 찾음 · 못 찾음: '+missing.join(', ');
+        }
+        if(found===tabs.length){ activateSwitch(0); return; }
+        if(tries>=49 && found>0){ activateSwitch(0); return; }   /* 일부만 찾아도 동작 */
       }
-      if(dbg){
-        dbg.textContent = found===tabs.length
-          ? '진단: 상품진열 ' + found + '/' + tabs.length + ' 모두 찾음 — 정상 동작'
-          : '진단: 상품진열 ' + found + '/' + tabs.length + ' 찾음 · 못 찾음: ' + missing.join(', ');
-      }
-      if(found===tabs.length){ activate(0); return; }   /* 전부 찾음 → 첫 탭 활성 */
       if(++tries<50){ setTimeout(resolve,200); return; }
-      if(found>0){ activate(0); return; }               /* 일부만 찾아도 동작 */
-      /* 🛡️ 하나도 못 찾음 → 아무것도 숨기지 않음(상품진열 전부 그대로 노출) */
+      /* 🛡️ 끝까지 못 찾음 → 아무것도 숨기지 않음(상품 전부 그대로 노출) */
+      paintTabs(0);
     }
     resolve();
   }
