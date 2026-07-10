@@ -353,7 +353,8 @@ body {
   .tech-content { grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; margin-top: 64px; }
 }
 .tech-image {
-  aspect-ratio: 4/3; background: var(--shell); border: 1px solid var(--sand);
+  /* 4:5 세로 — 아래 .story-image와 동일 리듬. 세로 작업사진을 4:3에 넣으면 42% 잘림 */
+  aspect-ratio: 4/5; background: var(--shell); border: 1px solid var(--sand);
   border-radius: 24px; display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
 .tech-image img { width: 100%; height: 100%; object-fit: cover; }
@@ -784,10 +785,10 @@ body {
     <p class="section-desc fade-in">잠깐의 불편해결이 아닌 첫느낌, 밸런스까지 복원합니다<br></p>
 
     <div class="tech-content">
-      <!-- ✏️ 수정가능: 기술력 메인 이미지 (src URL만 교체) -->
-      <!-- 📐 추천: 800x600px JPG/WebP (4:3 가로형) 또는 GIF / 최소 600x450px -->
+      <!-- ✏️ 수정가능: 기술력 메인 이미지 (./img/ 에 넣고 src 교체) -->
+      <!-- 📐 추천: 800x1000px JPG (4:5 세로형) — .story-image와 동일 비율 -->
       <div class="tech-image fade-in">
-        <img src="" alt="복원수리 작업 사진">
+        <img src="./img/repair_work_800.jpg" alt="수냉식 연마 휠에 가위날을 맞추는 복원수리 작업" width="800" height="1000" loading="lazy">
       </div>
       <div class="tech-features">
         <div class="tech-feature fade-in delay-1">
