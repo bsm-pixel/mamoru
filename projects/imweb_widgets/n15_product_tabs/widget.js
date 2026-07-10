@@ -62,13 +62,18 @@
     var dbg=root.querySelector('.mm-pt__debug');
     var mode=clean(root.getAttribute('data-mode'));
     var gridWid=clean(root.getAttribute('data-gridwid'));
-    /* 🔑 모드 자동 판정: 상품진열 ID가 채워져 있으면 '상품필터'로 간주(모드 설정 누락으로 실패하는 일 방지).
-       명시적으로 '위젯전환'이라고 적었을 때만 위젯전환. */
-    var filterMode = (mode==='상품필터') || (!!gridWid && mode!=='위젯전환');
+    /* 🔑 모드 판정: [상품진열 위젯 ID]를 채웠으면 = 상품필터 의도. 모드 기본값(위젯전환)에 발목잡히지 않게 함.
+       ID를 안 넣고 모드만 '상품필터'로 둔 경우엔 페이지의 상품진열을 자동 탐색(딱 1개일 때). */
+    var filterMode = !!gridWid || (mode==='상품필터');
+    var autoWid='';
+    if(filterMode && !gridWid){
+      var g0=foundGrids();
+      if(g0.length===1){ gridWid=g0[0]; autoWid=' (자동탐색)'; }
+    }
 
     function say(msg){ if(dbg) dbg.textContent='진단: '+msg; }
     /* 켜자마자 위젯이 실제로 받은 값을 보여줌 (JS가 도는지·값이 들어왔는지 즉시 확인) */
-    say('모드='+(filterMode?'상품필터':'위젯전환')+(mode?'':'(자동)')+' · 상품진열ID='+(gridWid||'없음')+' · 탭 '+tabs.length+'개 · 확인 중…');
+    say('모드='+(filterMode?'상품필터':'위젯전환')+' · 상품진열ID='+(gridWid||'없음')+autoWid+' · 탭 '+tabs.length+'개 · 확인 중…');
 
     function paintTabs(idx){
       for(var i=0;i<tabs.length;i++){
@@ -98,6 +103,11 @@
     var tries=0, LAST=49;
     function resolve(){
       if(filterMode){
+        /* 상품진열이 늦게 렌더되면 init 시점 자동탐색이 빈손일 수 있어 폴링 중에도 재시도 */
+        if(!gridWid){
+          var gN=foundGrids();
+          if(gN.length===1){ gridWid=gN[0]; autoWid=' (자동탐색)'; }
+        }
         var cards=productCards(gridWid);
         if(cards.length){
           var seen={}, order=[], noLabel=0;
