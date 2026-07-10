@@ -1,4 +1,4 @@
-{{!-- @name widgetInfo @type outlined-textfield @default "라벨+링크 칩 내비. 기본 중앙, 넘치면 가로 스크롤(모바일). PC/모바일 글씨·칩 높이 조절." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+{{!-- @name widgetInfo @type outlined-textfield @default "라벨+링크 칩 내비. 카테고리 칩으로도 사용(칩마다 '현재 페이지' 스위치로 강조). 기본 중앙, 넘치면 가로 스크롤." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
 <span style="display:none">{{widgetInfo}}</span>
 <!-- ═══════════════════════════════════════════════════════════════
   📦 MAMORU 커스텀 위젯 — 칩 내비
@@ -17,7 +17,8 @@
   {{#each chips}}
     {{!-- @name label @type outlined-textfield @default "메뉴" @label "라벨" --}}
     {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
-    <a class="mm-nav__chip" href="{{link}}"><span class="mm-nav__label">{{label}}</span></a>
+    {{!-- @name current @type switch @default false @label "현재 페이지 — 지금 보고 있는 카테고리에만 켜기(검게 강조됨)" --}}
+    <a class="mm-nav__chip" href="{{link}}" data-current="{{current}}"><span class="mm-nav__label">{{label}}</span></a>
   {{/each}}
   </div>
 </div>

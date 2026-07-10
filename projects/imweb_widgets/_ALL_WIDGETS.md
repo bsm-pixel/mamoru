@@ -2425,7 +2425,7 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 
 ### HTML 탭
 ```html
-{{!-- @name widgetInfo @type outlined-textfield @default "라벨+링크 칩 내비. 기본 중앙, 넘치면 가로 스크롤(모바일). PC/모바일 글씨·칩 높이 조절." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+{{!-- @name widgetInfo @type outlined-textfield @default "라벨+링크 칩 내비. 카테고리 칩으로도 사용(칩마다 '현재 페이지' 스위치로 강조). 기본 중앙, 넘치면 가로 스크롤." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
 <span style="display:none">{{widgetInfo}}</span>
 <!-- ═══════════════════════════════════════════════════════════════
   📦 MAMORU 커스텀 위젯 — 칩 내비
@@ -2444,7 +2444,8 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
   {{#each chips}}
     {{!-- @name label @type outlined-textfield @default "메뉴" @label "라벨" --}}
     {{!-- @name link @type outlined-textfield @default "" @label "링크" --}}
-    <a class="mm-nav__chip" href="{{link}}"><span class="mm-nav__label">{{label}}</span></a>
+    {{!-- @name current @type switch @default false @label "현재 페이지 — 지금 보고 있는 카테고리에만 켜기(검게 강조됨)" --}}
+    <a class="mm-nav__chip" href="{{link}}" data-current="{{current}}"><span class="mm-nav__label">{{label}}</span></a>
   {{/each}}
   </div>
 </div>
@@ -2463,13 +2464,20 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
 .mm-nav[data-theme="다크"] .mm-nav__chip{background:#1A1A1A;color:#FAF9F7;}
 .mm-nav[data-theme="라이트"] .mm-nav__chip{background:#FFFFFF;color:#1A1A1A;border:1px solid #D4D0CB;}
 .mm-nav__chip:active{transform:scale(.97);}
+/* 현재 페이지(카테고리) 강조 — 스위치 ON인 칩만 Void 채움. 나머지는 아웃라인 */
+.mm-nav[data-theme="라이트"] .mm-nav__chip[data-current="true"]{background:#1A1A1A;color:#FAF9F7;border-color:#1A1A1A;font-weight:800;}
+.mm-nav[data-theme="다크"] .mm-nav__chip[data-current="true"]{background:#FAF9F7;color:#1A1A1A;font-weight:800;}
 @media (hover:hover){
-  .mm-nav[data-theme="다크"] .mm-nav__chip:hover{opacity:.88;transform:translateY(-1px);}
-  .mm-nav[data-theme="라이트"] .mm-nav__chip:hover{border-color:#1A1A1A;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.06);}
+  .mm-nav[data-theme="다크"] .mm-nav__chip:not([data-current="true"]):hover{opacity:.88;transform:translateY(-1px);}
+  .mm-nav[data-theme="라이트"] .mm-nav__chip:not([data-current="true"]):hover{border-color:#1A1A1A;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.06);}
 }
 
-/* 모바일 좌우 여백(섹션 100% 확장 시 콘텐츠가 화면 끝에 붙지 않게 · 배경은 border-box라 그대로 블리드) */
-@media (max-width:768px){.mm-nav{box-sizing:border-box;padding-left:16px;padding-right:16px;}}
+/* 모바일: 여백을 트랙(스크롤 콘텐츠)에 줘서 가로영역 100% 확장해도 좌우 벽에 안 붙고,
+   스크롤 양끝 모두 확실히 벌어짐(컨테이너 padding-right 먹힘 버그 회피) — n12·t02·n13·n15 표준 20px */
+@media (max-width:768px){
+  .mm-nav{padding-left:0;padding-right:0;}
+  .mm-nav__track{padding-left:20px;padding-right:20px;}
+}
 ```
 ### JS 탭
 ```js
