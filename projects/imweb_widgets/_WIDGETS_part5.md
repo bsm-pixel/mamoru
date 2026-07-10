@@ -687,7 +687,6 @@
     }
     return out;
   }
-  /* 카드의 카테고리 라벨(.cate-label) 텍스트 */
   function cardCat(card){
     var el=card.querySelector('.cate-label');
     return el ? clean(el.textContent) : '';
@@ -696,24 +695,39 @@
      상품진열(쇼핑) = #WID + #container_WID(그리드)  /  쇼핑기획전 = #WID 안에 .owl-carousel, container 없음 */
   function diagnoseId(gridWid){
     var id=clean(gridWid);
-    if(!id) return 'ID 비어있음';
-    if(byId('container_'+id).length) return 'ok';           /* 상품진열 맞음 */
+    if(!id) return '상품진열 위젯 ID가 비어 있습니다';
+    if(byId('container_'+id).length) return 'ok';
     var outer=byId(id);
-    if(!outer.length) return '해당 ID의 위젯을 페이지에서 찾지 못함';
-    if(outer[0].querySelector && outer[0].querySelector('.owl-carousel')) return '이건 쇼핑기획전(캐러셀) ID입니다 — 쇼핑(상품진열) 위젯 ID를 넣으세요';
-    return '이 ID엔 상품 그리드(#container_)가 없습니다 — 쇼핑(상품진열) 위젯인지 확인하세요';
+    if(!outer.length) return '"'+id+'" 위젯을 이 페이지에서 찾지 못했습니다 (ID 오타이거나, 같은 페이지에 없음)';
+    if(outer[0].querySelector && outer[0].querySelector('.owl-carousel')) return '"'+id+'"는 쇼핑기획전(캐러셀)입니다 — 쇼핑(상품진열) 위젯 ID를 넣으세요';
+    return '"'+id+'"에 상품 그리드(#container_)가 없습니다 — 쇼핑(상품진열) 위젯인지 확인하세요';
+  }
+  /* 페이지에 실제로 존재하는 상품진열 후보 ID들 — 오타/혼동 시 바로 알려주기 위함 */
+  function foundGrids(){
+    var out=[];
+    try{
+      var all=document.querySelectorAll('[id^="container_"]');
+      for(var i=0;i<all.length;i++){ out.push(all[i].id.replace(/^container_/,'')); }
+    }catch(e){}
+    return out;
   }
 
   function initOne(root){
     applyMaxw(root);
-    /* 최대폭 바뀌면 즉시 반영(편집기 실시간) */
     if('MutationObserver' in window){ new MutationObserver(function(){applyMaxw(root);}).observe(root,{attributes:true,attributeFilter:['data-maxw']}); }
 
     var tabs=[].slice.call(root.querySelectorAll('.mm-pt__tab'));
     if(!tabs.length) return;
     var dbg=root.querySelector('.mm-pt__debug');
-    var filterMode=(clean(root.getAttribute('data-mode'))==='상품필터');
+    var mode=clean(root.getAttribute('data-mode'));
     var gridWid=clean(root.getAttribute('data-gridwid'));
+    /* 🔑 모드 자동 판정: 상품진열 ID가 채워져 있으면 '상품필터'로 간주(모드 설정 누락으로 실패하는 일 방지).
+       명시적으로 '위젯전환'이라고 적었을 때만 위젯전환. */
+    var filterMode = (mode==='상품필터') || (!!gridWid && mode!=='위젯전환');
+
+    function say(msg){ if(dbg) dbg.textContent='진단: '+msg; }
+    /* 켜자마자 위젯이 실제로 받은 값을 보여줌 (JS가 도는지·값이 들어왔는지 즉시 확인) */
+    say('모드='+(filterMode?'상품필터':'위젯전환')+(mode?'':'(자동)')+' · 상품진열ID='+(gridWid||'없음')+' · 탭 '+tabs.length+'개 · 확인 중…');
 
     function paintTabs(idx){
       for(var i=0;i<tabs.length;i++){
@@ -732,23 +746,19 @@
       paintTabs(idx);
       var want=clean(tabs[idx].getAttribute('data-cat'));   /* 비우면 '전체' */
       var cards=productCards(gridWid);
-      for(var i=0;i<cards.length;i++){
-        show([cards[i]], !want || cardCat(cards[i])===want);
-      }
+      for(var i=0;i<cards.length;i++) show([cards[i]], !want || cardCat(cards[i])===want);
     }
 
     for(var i=0;i<tabs.length;i++){
       (function(k){ tabs[k].addEventListener('click', function(){ filterMode?activateFilter(k):activateSwitch(k); }); })(i);
     }
 
-    /* 상품진열은 늦게 렌더될 수 있어 찾을 때까지 유한 폴링(최대 약 10초).
-       body 감시자 미사용 — 아임웹 렌더와 경합 방지 */
-    var tries=0;
+    /* 상품진열은 늦게 렌더될 수 있어 유한 폴링(최대 약 10초). body 감시자 미사용(아임웹 렌더와 경합 방지) */
+    var tries=0, LAST=49;
     function resolve(){
       if(filterMode){
         var cards=productCards(gridWid);
         if(cards.length){
-          /* 실제로 존재하는 카테고리 라벨을 모아 진단에 노출 → 탭에 그대로 복사해 넣으면 됨 */
           var seen={}, order=[], noLabel=0;
           for(var i=0;i<cards.length;i++){
             var c=cardCat(cards[i]);
@@ -756,34 +766,35 @@
             if(!(c in seen)){ seen[c]=0; order.push(c); }
             seen[c]++;
           }
-          if(dbg){
-            var parts=order.map(function(c){ return c+'('+seen[c]+')'; });
-            dbg.textContent='진단: 상품 '+cards.length+'개 · 카테고리 라벨 '+(order.length?parts.join(' · '):'없음 — 위젯 옵션에서 카테고리 라벨 표시를 켜세요')
-              + (noLabel?' · 라벨없는 상품 '+noLabel+'개':'');
+          if(order.length){
+            say('상품 '+cards.length+'개 · 카테고리 라벨 '+order.map(function(c){return c+'('+seen[c]+')';}).join(' · ')
+                + (noLabel?' · 라벨없는 상품 '+noLabel+'개':'') + ' → 이 이름을 탭에 그대로 넣으세요');
+            activateFilter(0); return;
           }
-          if(order.length){ activateFilter(0); return; }   /* 라벨 있음 → 첫 탭 필터 적용 */
           /* 🛡️ 라벨이 하나도 없음 → 아무것도 숨기지 않음 */
+          say('상품 '+cards.length+'개를 찾았지만 카테고리 라벨(.cate-label)이 없습니다 — 상품진열 위젯 옵션에서 카테고리 라벨 표시를 켜세요');
           paintTabs(0); return;
         }
-        /* 카드 0개 → 왜 그런지(기획전 ID 오입력 등) 구체적으로 알려줌. 마지막 시도에서만 확정 출력 */
-        if(dbg && tries>=49) dbg.textContent='진단: '+diagnoseId(gridWid);
+        if(tries>=LAST){
+          var g=foundGrids();
+          say(diagnoseId(gridWid) + (g.length?' · 이 페이지의 상품진열 ID: '+g.join(', '):' · 이 페이지엔 상품진열이 하나도 없습니다'));
+          paintTabs(0); return;
+        }
       } else {
         var found=0, missing=[];
         for(var j=0;j<tabs.length;j++){
           var w=clean(tabs[j].getAttribute('data-wid'));
           if(w && byId(w).length) found++; else missing.push(w||'(ID 비어있음)');
         }
-        if(dbg){
-          dbg.textContent = found===tabs.length
-            ? '진단: 상품진열 '+found+'/'+tabs.length+' 모두 찾음 — 정상 동작'
-            : '진단: 상품진열 '+found+'/'+tabs.length+' 찾음 · 못 찾음: '+missing.join(', ');
+        if(found===tabs.length){ say('상품진열 '+found+'/'+tabs.length+' 모두 찾음 — 정상 동작'); activateSwitch(0); return; }
+        if(tries>=LAST){
+          say('상품진열 '+found+'/'+tabs.length+' 찾음 · 못 찾음: '+missing.join(', ')
+              + (gridWid?'':' · 상품진열 위젯이 1개뿐이면 [상품진열 위젯 ID]를 채우고 동작 방식을 상품필터로 바꾸세요'));
+          if(found>0){ activateSwitch(0); return; }
+          paintTabs(0); return;
         }
-        if(found===tabs.length){ activateSwitch(0); return; }
-        if(tries>=49 && found>0){ activateSwitch(0); return; }   /* 일부만 찾아도 동작 */
       }
-      if(++tries<50){ setTimeout(resolve,200); return; }
-      /* 🛡️ 끝까지 못 찾음 → 아무것도 숨기지 않음(상품 전부 그대로 노출) */
-      paintTabs(0);
+      tries++; setTimeout(resolve,200);
     }
     resolve();
   }
