@@ -263,8 +263,12 @@
   .mm-cat__tile:hover .mm-cat__arrow{background:#FAF9F7;color:#1A1A1A;transform:translateX(2px);}
 }
 
-/* 모바일 좌측 여백만(가로 스크롤이라 우측은 타일 peek 유지) */
-@media (max-width:768px){.mm-cat{box-sizing:border-box;padding-left:16px;}}
+/* 모바일: 양쪽 여백(가로영역 100% 확장해도 배너가 좌우 벽에 안 붙게).
+   여백을 트랙(스크롤 콘텐츠)에 줘야 스크롤 양끝 모두 확실히 벌어짐(컨테이너 padding-right가 먹히는 브라우저 버그 회피) */
+@media (max-width:768px){
+  .mm-cat{padding-left:0;padding-right:0;}
+  .mm-cat__track{padding-left:20px;padding-right:20px;}
+}
 ```
 ### JS 탭
 ```js
@@ -392,8 +396,9 @@
 {{!-- @name title @type outlined-textfield @default "복원 과정" @label "제목(선택)" --}}
 {{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭 — 숫자 자유 입력(예 1280 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
 {{!-- @name textColor @type outlined-textfield @default "블랙" @label "글씨 색 — 입력: 블랙(밝은 배경용) · 화이트(어두운 배경용)" --}}
+{{!-- @name marker @type outlined-textfield @default "숫자" @label "카드 표시 — 입력: 숫자(01·02 순서용) · 점(동그란 점, 순서 아닌 내용) · 없음. 점·없음은 연결선도 사라짐" --}}
 {{!-- @name steps @type item @label "단계" --}}
-<div class="mm-tl" data-maxw="{{maxw}}" data-text="{{textColor}}">
+<div class="mm-tl" data-maxw="{{maxw}}" data-text="{{textColor}}" data-marker="{{marker}}">
   <p class="mm-tl__title">{{title}}</p>
   <div class="mm-tl__scroll">
     <ol class="mm-tl__list">
@@ -429,6 +434,16 @@
 .mm-tl__step:not(:last-child)::after{content:'';position:absolute;top:clamp(15px,3.4vw,20px);left:calc(clamp(30px,7vw,44px) + 14px);right:calc(-1 * var(--tl-gap) + 4px);height:1px;background:#D4D0CB;}
 .mm-tl__idx{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(30px,7vw,44px);font-weight:900;line-height:1;letter-spacing:-.04em;color:inherit;}
 .mm-tl__idx::before{content:counter(tl,decimal-leading-zero);}
+/* 마커=점: 순서 아닌 내용용. 큰 숫자 대신 동그란 점 + 연결선 제거 */
+.mm-tl[data-marker="점"] .mm-tl__idx{font-size:0;}
+.mm-tl[data-marker="점"] .mm-tl__idx::before{content:'';display:block;width:14px;height:14px;border-radius:50%;background:currentColor;}
+.mm-tl[data-marker="점"] .mm-tl__name{margin-top:14px;}
+/* 마커=없음: 마커 자체 숨김 + 연결선 제거 */
+.mm-tl[data-marker="없음"] .mm-tl__idx{display:none;}
+.mm-tl[data-marker="없음"] .mm-tl__name{margin-top:0;}
+/* 점·없음은 "다음으로 이어짐"이 아니므로 카드 연결선 제거 */
+.mm-tl[data-marker="점"] .mm-tl__step::after,
+.mm-tl[data-marker="없음"] .mm-tl__step::after{display:none!important;}
 .mm-tl__name{margin:clamp(10px,2.2vw,16px) 0 8px;font-size:clamp(15px,2.4vw,19px);font-weight:800;letter-spacing:-.01em;}
 /* 이미지 원본 비율 그대로(크롭X) — 높이는 이미지 비율에 맞춰 자동. 같은 비율 이미지 넣으면 카드 높이 정렬됨 */
 .mm-tl__img{width:100%;height:auto;border-radius:10px;background:#F5F3F0;margin:0 0 10px;display:block;}
@@ -440,9 +455,11 @@
 @media (max-width:768px){
   .mm-tl__step{flex:0 0 76%;min-width:0;}
   .mm-tl__step:not(:last-child)::after{display:none;}
-  /* 좌측 여백 명시(섹션 100% 확장해도 콘텐츠가 화면 왼쪽 끝에 안 붙게). 우측은 스크롤 peek */
-  .mm-tl__title{padding-left:16px;}
-  .mm-tl__scroll{padding-left:16px;padding-right:0;}
+  /* 좌우 여백(섹션 100% 확장해도 카드가 좌우 벽에 안 붙게).
+     카드 여백은 트랙(list)에 줘서 스크롤 양끝 모두 확실히 벌어짐(컨테이너 padding-right 먹힘 버그 회피) */
+  .mm-tl__title{padding-left:20px;}
+  .mm-tl__scroll{padding-left:0;padding-right:0;}
+  .mm-tl__list{padding-left:20px;padding-right:20px;}
 }
 /* 등장(위젯이 화면에 들어오면 카드 순차 페이드) */
 @media (prefers-reduced-motion:no-preference){

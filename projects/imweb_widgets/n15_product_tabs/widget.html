@@ -1,0 +1,27 @@
+{{!-- @name widgetInfo @type outlined-textfield @default "카테고리 탭. 클릭 시 해당 아임웹 상품진열 위젯만 보이고 나머지는 숨김. 페이지 이동 없이 제자리 전환." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 상품 카테고리 탭 (상품진열 전환)
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 탭 클릭 → 해당 상품진열 위젯(#WID)만 표시. 같은 페이지에 상품진열 위젯을 카테고리 수만큼 배치해 두고 사용
+  🔧 각 탭에 "상품진열 위젯 ID"(예 w20250908c6ee5f1272760) 입력 — 환경설정 Header Code의 IDS 배열에서 확인 가능
+  🛡️ 하나도 못 찾으면 아무것도 숨기지 않음(상품진열 전부 그대로 노출) → 페이지 안 깨짐
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭(PC) — 숫자 자유 입력(예 1080 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
+{{!-- @name align @type outlined-textfield @default "중앙" @label "탭 정렬(PC) — 입력: 중앙 · 왼쪽" --}}
+{{!-- @name textColor @type outlined-textfield @default "블랙" @label "글씨 색 — 입력: 블랙(밝은 배경용) · 화이트(어두운 배경용)" --}}
+{{!-- @name debug @type switch @default false @label "진단 표시 — 켜면 상품진열을 몇 개 찾았는지 아래에 표시(설치 확인용, 평소엔 끄기)" --}}
+{{!-- @name tabs @type item @label "카테고리 탭" --}}
+<div class="mm-pt" data-maxw="{{maxw}}" data-align="{{align}}" data-text="{{textColor}}" data-debug="{{debug}}">
+  <div class="mm-pt__scroll">
+    <div class="mm-pt__tabs" role="tablist">
+    {{#each tabs}}
+      {{!-- @name label @type outlined-textfield @default "카테고리" @label "탭 이름 — 예: 틴닝 · 장가위 · 블런트" --}}
+      {{!-- @name wid @type outlined-textfield @default "" @label "상품진열 위젯 ID — 예: w20250908c6ee5f1272760" --}}
+      <button type="button" class="mm-pt__tab" role="tab" data-wid="{{wid}}">{{label}}</button>
+    {{/each}}
+    </div>
+  </div>
+  <div class="mm-pt__debug"></div>
+</div>

@@ -1,0 +1,28 @@
+.mm-pt{box-sizing:border-box;max-width:1080px;margin:0 auto;padding:clamp(8px,2vw,16px) 0;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+/* 글씨 색: 밝은 배경=블랙(기본) / 어두운 배경=화이트 */
+.mm-pt[data-text="화이트"]{color:#FAF9F7;}
+/* 탭이 많아 넘치면 가로 스크롤(스크롤바 숨김) */
+.mm-pt__scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.mm-pt__scroll::-webkit-scrollbar{display:none;}
+/* 트랙: PC 다 들어오면 margin auto로 중앙, 넘치면 좌측부터 스크롤 */
+.mm-pt__tabs{display:flex;flex-wrap:nowrap;gap:8px;width:max-content;margin:0 auto;padding:2px 4px;}
+.mm-pt[data-align="왼쪽"] .mm-pt__tabs{margin:0;}
+/* 탭: 비활성=아웃라인 / 활성=Void 채움 (모노크롬) */
+.mm-pt__tab{flex:0 0 auto;padding:9px 18px;border:1px solid #D4D0CB;border-radius:8px;background:transparent;font-family:inherit;font-size:14px;font-weight:600;color:#4A4A4A;cursor:pointer;white-space:nowrap;transition:background .2s,color .2s,border-color .2s,transform .15s;}
+.mm-pt__tab.is-on{background:#1A1A1A;border-color:#1A1A1A;color:#FAF9F7;}
+.mm-pt[data-text="화이트"] .mm-pt__tab{border-color:#4A4A4A;color:#B8B4AF;}
+.mm-pt[data-text="화이트"] .mm-pt__tab.is-on{background:#FAF9F7;border-color:#FAF9F7;color:#1A1A1A;}
+.mm-pt__tab:active{transform:scale(.98);}
+@media (hover:hover){.mm-pt__tab:not(.is-on):hover{border-color:#8A8580;color:#1A1A1A;}
+  .mm-pt[data-text="화이트"] .mm-pt__tab:not(.is-on):hover{border-color:#B8B4AF;color:#FAF9F7;}}
+/* 진단 표시(설치 확인용) — switch 켤 때만 노출 */
+.mm-pt__debug{display:none;margin-top:10px;padding:8px 12px;border:1px dashed #8A8580;border-radius:6px;font-size:12px;line-height:1.5;color:#8A8580;text-align:center;}
+.mm-pt[data-debug="true"] .mm-pt__debug{display:block;}
+/* 모바일: 여백을 트랙(스크롤 콘텐츠)에 줘서 가로영역 100% 확장해도 좌우 벽에 안 붙고,
+   스크롤 양끝 모두 확실히 벌어짐(컨테이너 padding-right 먹힘 버그 회피) — n12·t02·n13 표준 20px */
+@media (max-width:768px){
+  .mm-pt{padding-left:0;padding-right:0;}
+  .mm-pt__tabs{margin:0;padding-left:20px;padding-right:20px;}
+  .mm-pt__tab{padding:9px 16px;font-size:13.5px;}
+  .mm-pt__debug{margin-left:20px;margin-right:20px;}
+}

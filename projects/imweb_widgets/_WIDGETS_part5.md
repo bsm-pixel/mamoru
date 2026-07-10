@@ -426,7 +426,7 @@
 .mm-ev[data-theme="다크"] .mm-ev__desc{color:#D4D0CB;}
 .mm-ev__desc:empty{display:none;}
 @media (max-width:768px){
-  .mm-ev{padding-left:16px;padding-right:16px;}
+  .mm-ev{padding-left:20px;padding-right:20px;}  /* 가로영역 100% 확장해도 좌우 벽에 안 붙게(표준 20px, n12·t02와 통일) */
   .mm-ev__grid{grid-template-columns:1fr;gap:14px;}
 }
 /* 등장(카드 순차 페이드) */
@@ -524,12 +524,15 @@
 .mm-fr__body{flex:1 1 0;min-width:0;}
 .mm-fr__kicker{display:block;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8A8580;margin-bottom:14px;}
 .mm-fr__kicker:empty{display:none;}
-.mm-fr__title{margin:0 0 16px;font-family:'Outfit','Plus Jakarta Sans','Pretendard','Noto Sans KR',sans-serif;font-size:clamp(22px,3.4vw,34px);font-weight:900;line-height:1.25;letter-spacing:-.02em;color:inherit;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
+.mm-fr__title{margin:0 0 8px;font-family:'Outfit','Plus Jakarta Sans','Pretendard','Noto Sans KR',sans-serif;font-size:clamp(22px,3.4vw,34px);font-weight:900;line-height:1.25;letter-spacing:-.02em;color:inherit;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-fr__title p{margin:0 0 .12em;}
-.mm-fr__desc{font-size:clamp(14px,1.8vw,16px);line-height:1.65;color:#B8B4AF;margin-bottom:26px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
+.mm-fr__desc{font-size:clamp(15px,1.9vw,17px);line-height:1.7;color:#B8B4AF;margin-bottom:28px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
 .mm-fr[data-theme="라이트"] .mm-fr__desc{color:#4A4A4A;}
 .mm-fr__desc:empty{display:none;}
-.mm-fr__desc p{margin:0 0 .3em;}
+.mm-fr__desc p{margin:0 0 .5em;}
+.mm-fr__desc p:last-child{margin-bottom:0;}
+/* 빈 문단(<p></p>) 제거. <p><br></p> 등 나머지 빈 줄은 JS(trimEmpty)가 처리 */
+.mm-fr__title p:empty,.mm-fr__desc p:empty{display:none;}
 .mm-fr__btn{display:inline-flex;align-items:center;padding:14px 28px;border-radius:10px;background:#FAF9F7;color:#1A1A1A;font-weight:700;font-size:15px;text-decoration:none;transition:transform .2s,opacity .2s;}
 .mm-fr__btn::after{content:'→';margin-left:10px;}
 .mm-fr[data-theme="라이트"] .mm-fr__btn{background:#1A1A1A;color:#FAF9F7;}
@@ -539,12 +542,12 @@
 /* 모바일: 상하 스택(이미지 위·텍스트 아래) + 좌우 여백. 간격·버튼 타이트하게 */
 @media (max-width:768px){
   .mm-fr{padding:clamp(24px,6vw,40px) 0;}
-  .mm-fr__inner{padding-left:16px;padding-right:16px;gap:clamp(28px,7vw,40px);}
-  .mm-fr__row,.mm-fr__row:nth-child(even){flex-direction:column;gap:14px;}
+  .mm-fr__inner{padding-left:16px;padding-right:16px;gap:clamp(38px,9vw,50px);}  /* 블록(행) 사이는 넉넉히 → 버튼↔다음 이미지 숨쉬게 */
+  .mm-fr__row,.mm-fr__row:nth-child(even){flex-direction:column;gap:20px;}  /* 이미지↔텍스트덩어리 = 제목↔설명보다 넓게(별개 요소) */
   .mm-fr__media,.mm-fr__body{flex:1 1 auto;width:100%;}
-  .mm-fr__kicker{margin-bottom:8px;}
-  .mm-fr__title{margin-bottom:10px;font-size:clamp(19px,5.4vw,24px);}
-  .mm-fr__desc{margin-bottom:16px;font-size:14px;line-height:1.6;}
+  .mm-fr__kicker{margin-bottom:7px;}
+  .mm-fr__title{margin-bottom:6px;font-size:clamp(19px,5.4vw,24px);}  /* 제목↔설명 = 가장 타이트(한 덩어리) */
+  .mm-fr__desc{margin-bottom:16px;font-size:15px;line-height:1.65;}  /* 설명↔버튼 = 제목↔설명보다 넓게(버튼은 액션) */
   .mm-fr__btn{padding:11px 22px;font-size:13.5px;}
 }
 ```
@@ -558,8 +561,17 @@
     else if(low==='full'||low==='none'){ target.style.maxWidth='none'; }
     else { if(String(parseFloat(mw))===mw) mw+='px'; target.style.maxWidth=mw; }
   }
+  /* 에디터가 설명/제목 앞뒤에 자동 삽입하는 빈 문단(<p></p>·<p><br></p>·공백만) 제거 → 유령 간격 제거.
+     ⚠ 로드 시 1회만 실행(감시자 없음) → 편집 중 줄바꿈을 절대 건드리지 않음. 실제 글자 있는 문단은 손 안 댐 */
+  function trimEmpty(root){
+    var ps=root.querySelectorAll('.mm-fr__title p, .mm-fr__desc p'), i, p;
+    for(i=ps.length-1;i>=0;i--){ p=ps[i];
+      if(!(p.textContent||'').trim() && !p.querySelector('img') && p.parentNode) p.parentNode.removeChild(p); }
+  }
   function initOne(root){
     var inner=root.querySelector('.mm-fr__inner')||root;
+    trimEmpty(root);
+    setTimeout(function(){ trimEmpty(root); }, 400);  /* 지연 렌더 1회 보정(감시자 아님) */
     applyMaxw(root, inner);
     /* 최대폭 바뀌면 즉시 반영(편집기 실시간) */
     if('MutationObserver' in window){ new MutationObserver(function(){applyMaxw(root, inner);}).observe(root,{attributes:true,attributeFilter:['data-maxw']}); }
@@ -568,6 +580,139 @@
     setTimeout(function(){ root.classList.add('is-ready'); }, 900);
   }
   function init(){var l=document.querySelectorAll('.mm-fr');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+```
+
+---
+
+## N15. 상품 카테고리 탭
+`폴더: n15_product_tabs`
+
+### HTML 탭
+```html
+{{!-- @name widgetInfo @type outlined-textfield @default "카테고리 탭. 클릭 시 해당 아임웹 상품진열 위젯만 보이고 나머지는 숨김. 페이지 이동 없이 제자리 전환." @label "ℹ️ 위젯 설명(참고용·수정 불필요)" --}}
+<span style="display:none">{{widgetInfo}}</span>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 MAMORU 커스텀 위젯 — 상품 카테고리 탭 (상품진열 전환)
+  📍 아임웹 디자인모드 → 커스텀 위젯 → HTML 탭
+  📝 탭 클릭 → 해당 상품진열 위젯(#WID)만 표시. 같은 페이지에 상품진열 위젯을 카테고리 수만큼 배치해 두고 사용
+  🔧 각 탭에 "상품진열 위젯 ID"(예 w20250908c6ee5f1272760) 입력 — 환경설정 Header Code의 IDS 배열에서 확인 가능
+  🛡️ 하나도 못 찾으면 아무것도 숨기지 않음(상품진열 전부 그대로 노출) → 페이지 안 깨짐
+  🚫 fetch·iframe 0
+═══════════════════════════════════════════════════════════════ -->
+{{!-- @name maxw @type outlined-textfield @default "" @label "가로 최대폭(PC) — 숫자 자유 입력(예 1080 · 비우면 꽉 채움). 영역 확장해도 이 값에서 멈춤" --}}
+{{!-- @name align @type outlined-textfield @default "중앙" @label "탭 정렬(PC) — 입력: 중앙 · 왼쪽" --}}
+{{!-- @name textColor @type outlined-textfield @default "블랙" @label "글씨 색 — 입력: 블랙(밝은 배경용) · 화이트(어두운 배경용)" --}}
+{{!-- @name debug @type switch @default false @label "진단 표시 — 켜면 상품진열을 몇 개 찾았는지 아래에 표시(설치 확인용, 평소엔 끄기)" --}}
+{{!-- @name tabs @type item @label "카테고리 탭" --}}
+<div class="mm-pt" data-maxw="{{maxw}}" data-align="{{align}}" data-text="{{textColor}}" data-debug="{{debug}}">
+  <div class="mm-pt__scroll">
+    <div class="mm-pt__tabs" role="tablist">
+    {{#each tabs}}
+      {{!-- @name label @type outlined-textfield @default "카테고리" @label "탭 이름 — 예: 틴닝 · 장가위 · 블런트" --}}
+      {{!-- @name wid @type outlined-textfield @default "" @label "상품진열 위젯 ID — 예: w20250908c6ee5f1272760" --}}
+      <button type="button" class="mm-pt__tab" role="tab" data-wid="{{wid}}">{{label}}</button>
+    {{/each}}
+    </div>
+  </div>
+  <div class="mm-pt__debug"></div>
+</div>
+```
+### CSS 탭
+```css
+.mm-pt{box-sizing:border-box;max-width:1080px;margin:0 auto;padding:clamp(8px,2vw,16px) 0;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+/* 글씨 색: 밝은 배경=블랙(기본) / 어두운 배경=화이트 */
+.mm-pt[data-text="화이트"]{color:#FAF9F7;}
+/* 탭이 많아 넘치면 가로 스크롤(스크롤바 숨김) */
+.mm-pt__scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.mm-pt__scroll::-webkit-scrollbar{display:none;}
+/* 트랙: PC 다 들어오면 margin auto로 중앙, 넘치면 좌측부터 스크롤 */
+.mm-pt__tabs{display:flex;flex-wrap:nowrap;gap:8px;width:max-content;margin:0 auto;padding:2px 4px;}
+.mm-pt[data-align="왼쪽"] .mm-pt__tabs{margin:0;}
+/* 탭: 비활성=아웃라인 / 활성=Void 채움 (모노크롬) */
+.mm-pt__tab{flex:0 0 auto;padding:9px 18px;border:1px solid #D4D0CB;border-radius:8px;background:transparent;font-family:inherit;font-size:14px;font-weight:600;color:#4A4A4A;cursor:pointer;white-space:nowrap;transition:background .2s,color .2s,border-color .2s,transform .15s;}
+.mm-pt__tab.is-on{background:#1A1A1A;border-color:#1A1A1A;color:#FAF9F7;}
+.mm-pt[data-text="화이트"] .mm-pt__tab{border-color:#4A4A4A;color:#B8B4AF;}
+.mm-pt[data-text="화이트"] .mm-pt__tab.is-on{background:#FAF9F7;border-color:#FAF9F7;color:#1A1A1A;}
+.mm-pt__tab:active{transform:scale(.98);}
+@media (hover:hover){.mm-pt__tab:not(.is-on):hover{border-color:#8A8580;color:#1A1A1A;}
+  .mm-pt[data-text="화이트"] .mm-pt__tab:not(.is-on):hover{border-color:#B8B4AF;color:#FAF9F7;}}
+/* 진단 표시(설치 확인용) — switch 켤 때만 노출 */
+.mm-pt__debug{display:none;margin-top:10px;padding:8px 12px;border:1px dashed #8A8580;border-radius:6px;font-size:12px;line-height:1.5;color:#8A8580;text-align:center;}
+.mm-pt[data-debug="true"] .mm-pt__debug{display:block;}
+/* 모바일: 여백을 트랙(스크롤 콘텐츠)에 줘서 가로영역 100% 확장해도 좌우 벽에 안 붙고,
+   스크롤 양끝 모두 확실히 벌어짐(컨테이너 padding-right 먹힘 버그 회피) — n12·t02·n13 표준 20px */
+@media (max-width:768px){
+  .mm-pt{padding-left:0;padding-right:0;}
+  .mm-pt__tabs{margin:0;padding-left:20px;padding-right:20px;}
+  .mm-pt__tab{padding:9px 16px;font-size:13.5px;}
+  .mm-pt__debug{margin-left:20px;margin-right:20px;}
+}
+```
+### JS 탭
+```js
+(function(){
+  /* 가로 최대폭: 자유 숫자값(1080 등). 비움/full → 꽉 채움 */
+  function applyMaxw(root){
+    var mw=root.getAttribute('data-maxw'); mw=(mw==null?'':mw).trim(); var low=mw.toLowerCase();
+    if(!mw){ root.style.maxWidth=''; }
+    else if(low==='full'||low==='none'){ root.style.maxWidth='none'; }
+    else { if(String(parseFloat(mw))===mw) mw+='px'; root.style.maxWidth=mw; }
+  }
+  /* WID로 네이티브 상품진열 위젯 찾기.
+     아임웹이 PC/모바일 DOM 트리를 복제 렌더하는 경우가 있어 getElementById 대신 전부 수집 */
+  function targets(wid){
+    wid=(wid==null?'':wid).trim();
+    if(!wid) return [];
+    try{ return [].slice.call(document.querySelectorAll('[id="'+wid.replace(/"/g,'')+'"]')); }catch(e){ return []; }
+  }
+  /* 외부 DOM은 display만 토글 — 내용은 절대 건드리지 않음 */
+  function show(els,on){ for(var i=0;i<els.length;i++){ els[i].style.display = on ? '' : 'none'; } }
+
+  function initOne(root){
+    applyMaxw(root);
+    /* 최대폭 바뀌면 즉시 반영(편집기 실시간) */
+    if('MutationObserver' in window){ new MutationObserver(function(){applyMaxw(root);}).observe(root,{attributes:true,attributeFilter:['data-maxw']}); }
+
+    var tabs=[].slice.call(root.querySelectorAll('.mm-pt__tab'));
+    if(!tabs.length) return;
+    var dbg=root.querySelector('.mm-pt__debug');
+
+    function activate(idx){
+      for(var i=0;i<tabs.length;i++){
+        var on=(i===idx);
+        if(on) tabs[i].classList.add('is-on'); else tabs[i].classList.remove('is-on');
+        tabs[i].setAttribute('aria-selected', on?'true':'false');
+        show(targets(tabs[i].getAttribute('data-wid')), on);
+      }
+    }
+    for(var i=0;i<tabs.length;i++){
+      (function(k){ tabs[k].addEventListener('click', function(){ activate(k); }); })(i);
+    }
+
+    /* 상품진열 위젯은 늦게 렌더될 수 있어 찾을 때까지 유한 폴링(최대 약 10초).
+       감시자(MutationObserver on body) 미사용 — 아임웹 렌더와 경합 방지 */
+    var tries=0;
+    function resolve(){
+      var found=0, missing=[];
+      for(var i=0;i<tabs.length;i++){
+        var w=(tabs[i].getAttribute('data-wid')||'').trim();
+        if(w && targets(w).length) found++; else missing.push(w||'(ID 비어있음)');
+      }
+      if(dbg){
+        dbg.textContent = found===tabs.length
+          ? '진단: 상품진열 ' + found + '/' + tabs.length + ' 모두 찾음 — 정상 동작'
+          : '진단: 상품진열 ' + found + '/' + tabs.length + ' 찾음 · 못 찾음: ' + missing.join(', ');
+      }
+      if(found===tabs.length){ activate(0); return; }   /* 전부 찾음 → 첫 탭 활성 */
+      if(++tries<50){ setTimeout(resolve,200); return; }
+      if(found>0){ activate(0); return; }               /* 일부만 찾아도 동작 */
+      /* 🛡️ 하나도 못 찾음 → 아무것도 숨기지 않음(상품진열 전부 그대로 노출) */
+    }
+    resolve();
+  }
+  function init(){var l=document.querySelectorAll('.mm-pt');if(!l.length){return setTimeout(init,50);}for(var i=0;i<l.length;i++)initOne(l[i]);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 ```
