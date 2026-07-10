@@ -3938,11 +3938,16 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
     var el=card.querySelector('.cate-label');
     return el ? clean(el.textContent) : '';
   }
-  /* 캐러셀(쇼핑기획전)이면 카드 숨김이 레이아웃을 깨므로 경고용 판별 */
-  function isCarousel(gridWid){
-    var conts=byId('container_'+clean(gridWid));
-    for(var i=0;i<conts.length;i++){ if(conts[i].closest && conts[i].closest('.owl-carousel')) return true; }
-    return false;
+  /* 입력한 ID가 무엇인지 판별.
+     상품진열(쇼핑) = #WID + #container_WID(그리드)  /  쇼핑기획전 = #WID 안에 .owl-carousel, container 없음 */
+  function diagnoseId(gridWid){
+    var id=clean(gridWid);
+    if(!id) return 'ID 비어있음';
+    if(byId('container_'+id).length) return 'ok';           /* 상품진열 맞음 */
+    var outer=byId(id);
+    if(!outer.length) return '해당 ID의 위젯을 페이지에서 찾지 못함';
+    if(outer[0].querySelector && outer[0].querySelector('.owl-carousel')) return '이건 쇼핑기획전(캐러셀) ID입니다 — 쇼핑(상품진열) 위젯 ID를 넣으세요';
+    return '이 ID엔 상품 그리드(#container_)가 없습니다 — 쇼핑(상품진열) 위젯인지 확인하세요';
   }
 
   function initOne(root){
@@ -3999,15 +4004,15 @@ var C=document.querySelectorAll("[data-x]");for(var i=0;i<C.length;i++){var x=(C
           }
           if(dbg){
             var parts=order.map(function(c){ return c+'('+seen[c]+')'; });
-            dbg.textContent='진단: 상품 '+cards.length+'개 · 카테고리 라벨 '+(order.length?parts.join(' · '):'없음')
-              + (noLabel?' · 라벨없는 상품 '+noLabel+'개':'')
-              + (isCarousel(gridWid)?' · ⚠ 쇼핑기획전(캐러셀)이라 필터 시 레이아웃 깨짐 — 상품진열 위젯을 쓰세요':'');
+            dbg.textContent='진단: 상품 '+cards.length+'개 · 카테고리 라벨 '+(order.length?parts.join(' · '):'없음 — 위젯 옵션에서 카테고리 라벨 표시를 켜세요')
+              + (noLabel?' · 라벨없는 상품 '+noLabel+'개':'');
           }
           if(order.length){ activateFilter(0); return; }   /* 라벨 있음 → 첫 탭 필터 적용 */
           /* 🛡️ 라벨이 하나도 없음 → 아무것도 숨기지 않음 */
           paintTabs(0); return;
         }
-        if(dbg) dbg.textContent='진단: 상품진열('+ (gridWid||'ID 비어있음') +')을 찾지 못했습니다';
+        /* 카드 0개 → 왜 그런지(기획전 ID 오입력 등) 구체적으로 알려줌. 마지막 시도에서만 확정 출력 */
+        if(dbg && tries>=49) dbg.textContent='진단: '+diagnoseId(gridWid);
       } else {
         var found=0, missing=[];
         for(var j=0;j<tabs.length;j++){
