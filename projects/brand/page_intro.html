@@ -131,16 +131,17 @@ body {
 
 /* 섹션 챕터 인덱스 — 스크롤 중 '지금 몇 장'인지 알려주는 랜드마크(은은한 대형 숫자 + 영문).
    inline-flex라 부모의 text-align을 따라감(가운데 정렬 섹션이면 자동 가운데) */
-.chapter { display: inline-flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.chapter { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+/* 챕터 번호 = '표지 마커'(내비 랜드마크) → 카드 콘텐츠 숫자(value-number 40/52px)보다 확실히 작게 = 위계 유지 */
 .chapter-num {
-  font-family: var(--font-display); font-size: 34px; font-weight: 900;
-  line-height: 1; letter-spacing: -0.03em; color: var(--sand);
+  font-family: var(--font-display); font-size: 22px; font-weight: 800;
+  line-height: 1; letter-spacing: -0.02em; color: var(--sand);
 }
 .chapter .section-label { margin-bottom: 0; }
 .dark-section .chapter-num { color: var(--stone); }
 @media screen and (min-width: 769px) {
-  .chapter { gap: 18px; margin-bottom: 28px; }
-  .chapter-num { font-size: 48px; }
+  .chapter { gap: 14px; margin-bottom: 28px; }
+  .chapter-num { font-size: 30px; }
 }
 
 .section-title {
@@ -818,7 +819,7 @@ body {
           <div class="tech-feature-icon"><img src="./icons/blunt.svg" alt="수리비 아이콘"></div>
           <div class="tech-feature-content">
             <h4>어디에서도 간편한 접수</h4>
-            <p>누구한테 샀더라..?<br>더이상 고민하지마세요<br>고민하는 시간도 소중하니까요</p>
+            <p>누구한테 샀더라..?<br>더이상 고민하지마세요<br>간편접수와 빠른 처리로 고민 NO!</p>
           </div>
         </div>
         <div class="tech-feature fade-in delay-3">
