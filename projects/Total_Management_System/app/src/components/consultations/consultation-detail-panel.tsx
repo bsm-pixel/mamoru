@@ -164,10 +164,38 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
       {/* 메모 — 접수메모 / 재요청메모 분리 */}
       {c.memo && (() => {
         const lines = c.memo.split('\n');
-        const reRequestLines = lines.filter(l => l.includes('[고객 재요청'));
+        const reRequestRaw = lines.filter(l => l.includes('[고객 재요청'));
         const originalLines = lines.filter(l => !l.includes('[고객 재요청'));
         const originalMemo = originalLines.join('\n').trim();
-        const reRequestMemo = reRequestLines.map(l => l.replace(/^\d+\s*/, '').trim()).filter(Boolean);
+
+        // [고객 재요청 <시각>] <사유> → {time, msg}로 분리(시각은 초 제거·간결화: "2026. 7. 11. 오전 8:11:30" → "7/11 오전 8:11")
+        const shortTs = (ts: string) => {
+          const m = ts.match(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})\.\s*(오전|오후)?\s*(\d{1,2}):(\d{2})/);
+          return m ? `${m[2]}/${m[3]}${m[4] ? ' ' + m[4] : ''} ${m[5]}:${m[6]}` : ts.replace(/(\d{1,2}:\d{2}):\d{2}/, '$1').trim();
+        };
+        const reRequests = reRequestRaw
+          .map(l => {
+            const clean = l.replace(/^\d+\s*/, '');
+            const m = clean.match(/^\[고객 재요청\s*([^\]]+)\]\s*([\s\S]*)$/);
+            return m ? { time: shortTs(m[1].trim()), msg: m[2].trim() } : { time: '', msg: clean.trim() };
+          })
+          .filter(r => r.msg || r.time);
+
+        // 고객이 반응한 "내가 제안/확정했던 일정" — visit_date(확정) 우선, 없으면 suggestions(제안중). 재요청 시점에도 지워지지 않고 남아있음
+        let proposedLabel = '';
+        let proposedText = '';
+        if (c.visit_date) {
+          proposedLabel = '확정했던 일정';
+          proposedText = `${formatDate(c.visit_date)} ${c.visit_time || ''}`.trim();
+        } else {
+          const rawSug = c.suggestions as { dates?: Array<{ date?: string; time?: string }> } | Array<{ date?: string; time?: string }> | null;
+          const dates = Array.isArray(rawSug) ? rawSug : (rawSug?.dates ?? []);
+          const valid = dates.filter(d => d && d.date);
+          if (valid.length > 0) {
+            proposedLabel = '내가 제안했던 일정';
+            proposedText = valid.map(d => `${formatDate(d.date as string)}${d.time ? ' ' + d.time : ''}`).join(' / ');
+          }
+        }
 
         return (
           <div className="space-y-2">
@@ -177,12 +205,24 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
                 <p className="text-sm whitespace-pre-wrap">{originalMemo}</p>
               </div>
             )}
-            {reRequestMemo.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <p className="text-xs text-amber-600 font-medium mb-1">재요청 메모</p>
-                {reRequestMemo.map((line, i) => (
-                  <p key={i} className="text-sm text-amber-800">{line}</p>
-                ))}
+            {reRequests.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
+                <p className="text-xs text-amber-600 font-medium">재요청 메모</p>
+                {/* 고객이 반응한 나의 제안/확정 일정 — "내가 몇일 몇시로 제안했더라?" 즉시 파악 */}
+                {proposedText && (
+                  <div className="flex items-baseline gap-1.5 text-xs bg-amber-100/60 rounded-md px-2 py-1.5">
+                    <span className="text-amber-700 shrink-0">{proposedLabel}</span>
+                    <span className="text-amber-900 font-semibold">{proposedText}</span>
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  {reRequests.map((r, i) => (
+                    <div key={i}>
+                      <p className="text-sm text-amber-800">{r.msg}</p>
+                      {r.time && <p className="text-[11px] text-amber-500 mt-0.5">재요청 접수 · {r.time}</p>}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
