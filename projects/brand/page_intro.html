@@ -129,6 +129,20 @@ body {
   .section-label::before { width: 32px; }
 }
 
+/* 섹션 챕터 인덱스 — 스크롤 중 '지금 몇 장'인지 알려주는 랜드마크(은은한 대형 숫자 + 영문).
+   inline-flex라 부모의 text-align을 따라감(가운데 정렬 섹션이면 자동 가운데) */
+.chapter { display: inline-flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.chapter-num {
+  font-family: var(--font-display); font-size: 34px; font-weight: 900;
+  line-height: 1; letter-spacing: -0.03em; color: var(--sand);
+}
+.chapter .section-label { margin-bottom: 0; }
+.dark-section .chapter-num { color: var(--stone); }
+@media screen and (min-width: 769px) {
+  .chapter { gap: 18px; margin-bottom: 28px; }
+  .chapter-num { font-size: 48px; }
+}
+
 .section-title {
   font-family: var(--font-display);
   font-size: 28px;
@@ -719,7 +733,7 @@ body {
 <!-- ══ 섹션 2: 문제 제기 (Cream) ══ -->
 <section class="section" id="problem">
   <div class="container">
-    <span class="section-label fade-in">Why MAMORU</span>
+    <div class="chapter fade-in"><span class="chapter-num">01</span><span class="section-label">Why MAMORU</span></div>
     <h2 class="section-title fade-in">가위시장,<br>이대로 괜찮을까요?</h2>
     <p class="section-desc fade-in">영업 병아리 시절부터 <br>12년이 지난 지금까지도 지속되는 ... </p>
 
@@ -732,13 +746,13 @@ body {
       </div>
       <div class="problem-card fade-in delay-2">
         <!-- 아이콘: 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
-        <div class="problem-icon"><img src="./icons/door.svg" alt="방문판매"></div>
+        <div class="problem-icon"><img src="./icons/door1.svg" alt="방문판매"></div>
         <h3 class="problem-title">주기적인 관리? 불필요한 방문 </h3>
         <p class="problem-desc">가위지식을 알 수 없는 시장구조에서<br>미용사는 방문딜러를 의지 할 뿐입니다<span style="display:block;margin-top:0.8em;"></span>고객을 찾아다니는 브랜드와 고객이 찾는 브랜드 <br><b>고객이 가위를 알기 전, 후로 나뉠것 입니다</b></p>
       </div>
       <div class="problem-card fade-in delay-3">
         <!-- 아이콘: 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
-        <div class="problem-icon"><img src="./icons/face.svg" alt="맞지 않는 가위"></div>
+        <div class="problem-icon"><img src="./icons/sangsul.svg" alt="맞지 않는 가위"></div>
         <h3 class="problem-title">넘처나는 상술</h3>
         <p class="problem-desc">"가위를 바꿀 때 되었다"<br>딜러가 하는 이 말에 반박할 수 있는 이유를 찾기 어렵습니다<span style="display:block;margin-top:0.8em;"></span>상술을 공유하고 불필요한 지출을 막겠습니다</b></p>
       </div>
@@ -749,7 +763,7 @@ body {
 <!-- ══ 섹션 3: 3 Core Values — MAMORU의 답 (Parchment) ══ -->
 <section class="section values-section" id="values">
   <div class="container">
-    <span class="section-label fade-in">Our Answer</span>
+    <div class="chapter fade-in"><span class="chapter-num">02</span><span class="section-label">Our Answer</span></div>
     <h2 class="section-title fade-in" style="text-align:center;">MAMORU의 약속</h2>
 
     <div class="values-grid">
@@ -780,7 +794,7 @@ body {
 <!-- ══ 섹션 4: 핵심 기술력 (Cream) ══ -->
 <section class="section" id="tech">
   <div class="container">
-    <span class="section-label fade-in">기술력</span>
+    <div class="chapter fade-in"><span class="chapter-num">03</span><span class="section-label">기술력</span></div>
     <h2 class="section-title fade-in">일반 수리가 아닌<br><b>수냉식 복원수리</b></h2>
     <p class="section-desc fade-in">잠깐의 불편해결이 아닌 첫느낌, 밸런스까지 복원합니다<br></p>
 
@@ -823,7 +837,7 @@ body {
 <!-- ══ 섹션 5: 맞춤 컨설팅 (Parchment) ══ -->
 <section class="section consult" id="consult">
   <div class="container">
-    <span class="section-label fade-in">맞춤 컨설팅</span>
+    <div class="chapter fade-in"><span class="chapter-num">04</span><span class="section-label">맞춤 컨설팅</span></div>
     <h2 class="section-title fade-in">맞춤 상담으로 찾는<br>나만의 가위</h2>
     <p class="section-desc fade-in">어떤 가위가 맞는지, 분석하고 안내합니다</p>
 
@@ -884,7 +898,7 @@ body {
 <!-- ══ 섹션 7: Our Story (Cream) ══ -->
 <section class="section" id="story">
   <div class="container">
-    <span class="section-label fade-in">Our Story</span>
+    <div class="chapter fade-in"><span class="chapter-num">05</span><span class="section-label">Our Story</span></div>
 
     <div class="story-content">
       <!-- 📐 추천 사이즈: 800x1000px (4:5 세로형) -->
@@ -962,7 +976,7 @@ body {
 <!-- ══ 섹션 10: 오시는 길 (Cream) ══ -->
 <section class="section location" id="location">
   <div class="container">
-    <span class="section-label fade-in">Location</span>
+    <div class="chapter fade-in"><span class="chapter-num">06</span><span class="section-label">Location</span></div>
     <h2 class="section-title fade-in">오시는 길</h2>
 
     <div class="location-content">
