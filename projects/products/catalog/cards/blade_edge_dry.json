@@ -22,7 +22,7 @@
     },
     {
       "id": "SD",
-      "name_ko": "정통",
+      "name_ko": "정통슬라이싱",
       "name_en": "SLIDE",
       "svg_inline": "",
       "price_addon_krw": 10000,
@@ -30,7 +30,7 @@
     },
     {
       "id": "SO",
-      "name_ko": "멀티",
+      "name_ko": "멀티슬라이싱",
       "name_en": "SHIFT ONE",
       "svg_inline": "",
       "price_addon_krw": 20000,

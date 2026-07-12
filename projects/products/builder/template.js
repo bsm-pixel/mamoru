@@ -187,7 +187,9 @@ function thinningRow(spec, catalog) {
     if (!opt) continue;
     cells.push({ c, opt });
     // 총정리 = 표시값(id) + 이름(name_ko), 단위는 자동 2/3 → "24발 · 3홈 · 20%"
-    summary.push(bigValue((opt.id || '') + (opt.name_ko || '')));
+    // ⚠️ number_only/설명분리 카드는 이름을 붙이지 않는다. 안 그러면 "24빗살의 24개" 처럼 이름이 총정리에 섞인다.
+    const withName = !c.number_only && c.card_type !== 'thinning_reduction';
+    summary.push(bigValue((opt.id || '') + (withName ? (opt.name_ko || '') : '')));
   }
   if (!cells.length) return '';
   const note = (spec.custom_fields && spec.custom_fields.thinning_note) || '';
