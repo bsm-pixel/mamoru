@@ -143,7 +143,29 @@
   .mm-pcard__qty button{ width:28px; height:28px; border:1px solid var(--line); border-radius:8px; background:#fff; font-size:15px; cursor:pointer; }
   .mm-pcard__slice{ display:flex; align-items:flex-start; gap:6px; font-size:10px; color:var(--ink); text-align:left; background:var(--shell); border-radius:8px; padding:6px 7px; }
   .mm-pcard__slice input{ margin-top:1px; }
+
+  /* ══ 아임웹 iframe 임베드 모드 (html.mm-embed) ═══════════════════════════════
+     iframe 안의 position:fixed 는 '부모 화면'이 아니라 'iframe 박스' 기준이라
+     하단 고정 CTA·전체화면 레이어가 엉뚱한 곳에 박힌다(2026-06-19 iframe 보류 사유).
+     임베드일 때만: 고정 CTA → 문서 흐름 안 / 레이어 2종 → 트리거 위치에 absolute 앵커.
+     단독 페이지(인스타 DM 링크)에는 이 블록이 적용되지 않아 기존 동작 그대로. */
+  .mm-embed .mm-wrap{ padding-bottom:8px; }
+  .mm-embed .mm-submit{ position:static; padding:18px 0 0; background:none; }
+  .mm-embed .mm-submit__inner{ padding:0 18px 24px; }
+  .mm-embed .mm-modal, .mm-embed .mm-pc-layer{ position:absolute; left:0; right:0; bottom:auto; top:0; }
+  .mm-embed .mm-pc-layer{ background:none; padding:0 18px; }
+  .mm-embed .mm-pc-layer.on{ display:block; }
+  .mm-embed .mm-pc-box{ max-width:560px; margin:0 auto; max-height:none; border:1px solid var(--line); border-radius:14px; box-shadow:0 18px 50px rgba(26,26,26,.18); }
+  .mm-embed #doneModal{ min-height:440px; padding:36px 18px; }
 </style>
+<script>
+/* 임베드 판별 — 렌더 전에 클래스를 심어야 고정 CTA가 한 프레임도 잘못 그려지지 않는다 */
+(function(){
+  var embed = false;
+  try { embed = (window.parent !== window); } catch (e) { embed = true; }
+  if (embed || /[?&]embed=1/.test(location.search)) document.documentElement.className += ' mm-embed';
+})();
+</script>
 </head>
 <body>
 <div class="mm-wrap">
@@ -267,8 +289,22 @@
 </div>
 
 <script>
+/* 아임웹 코드위젯 iframe 안인지 (head에서 심은 클래스) */
+var IS_EMBED = document.documentElement.classList.contains('mm-embed');
+
+/* 임베드 전용 — 전체화면 레이어를 '사용자가 방금 누른 버튼' 위치에 absolute로 앵커.
+   iframe은 부모가 콘텐츠 전체 높이만큼 늘려놔서 스크롤이 없다 → fixed/inset:0 는 화면 밖에 걸린다.
+   방금 탭한 요소는 반드시 보이는 위치이므로, 그 좌표에 얹으면 항상 눈앞에 뜬다. */
+function anchorOverlay(el, anchorEl, offset){
+  if (!IS_EMBED || !el || !anchorEl) return;
+  var top = anchorEl.getBoundingClientRect().top + (window.scrollY || window.pageYOffset || 0) - (offset || 0);
+  el.style.top = Math.max(0, Math.round(top)) + 'px';
+}
+
 /* 접수 완료 후 인앱 브라우저 닫기 — 카톡 인앱은 scheme로 닫힘, 그 외는 뒤로가기/close 시도 후 안내 */
 function closeInapp(){
+  /* 임베드(아임웹 페이지 안)에서는 브라우저를 닫으면 안 된다 → 폼만 초기화 */
+  if (IS_EMBED) { location.reload(); return; }
   var ua=navigator.userAgent||'';
   var isKakao=/KAKAOTALK/i.test(ua);
   var isIOS=/iPhone|iPad|iPod/i.test(ua);
@@ -560,6 +596,7 @@ function closeInapp(){
       // 레이어 먼저 표시(컨테이너 크기 확보) → display:none 상태에서 embed하면 iframe이 0높이로 빈 채 렌더됨
       $('pcInner').innerHTML='';
       $('pcLayer').classList.add('on');
+      anchorOverlay($('pcLayer'), $('addrSec'), 0);   // 임베드: 주소 섹션 위에 겹쳐 띄움
       requestAnimationFrame(function(){
         new daum.Postcode({
           oncomplete:function(d){
@@ -570,9 +607,11 @@ function closeInapp(){
             a2.focus();
           },
           // 내용 높이에 맞춰 시트 크기 조절 — 결과 적을 때 아래 빈 흰 공간 방지(최대 72vh, 넘으면 내부 스크롤)
+          // ⚠️ 임베드에서는 innerHeight = iframe 전체 콘텐츠 높이(수천 px)라 72vh 계산이 무의미 → 고정 상한
           onresize:function(size){
             var inner=$('pcInner');
-            if(inner) inner.style.height = Math.min(size.height||400, Math.round(window.innerHeight*0.72)) + 'px';
+            var cap = IS_EMBED ? 460 : Math.round(window.innerHeight*0.72);
+            if(inner) inner.style.height = Math.min(size.height||400, cap) + 'px';
           },
           width:'100%'
         }).embed($('pcInner'));
@@ -604,6 +643,7 @@ function closeInapp(){
       memo:$('memo').value.trim(),
       items:cart.map(function(it){return {product_id:it.product_id,product_name:it.product_name,category_type:it.category_type,spec:it.spec,slicing:it.slicing,qty:it.qty,unit_price:it.unit_price};}) };
 
+    anchorOverlay($('doneModal'), $('submitBtn'), 24);   // 임베드: 방금 누른 접수 버튼 위치에 완료 화면
     $('doneModal').classList.add('on'); // fire & forget
     fetch(API+'/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
       .catch(function(e){ console.error('submit error',e); });
@@ -611,6 +651,36 @@ function closeInapp(){
 
   function uniq(a){ var s={},o=[]; a.forEach(function(x){if(!s[x]){s[x]=1;o.push(x);}}); return o; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+})();
+
+/* ══ 부모(아임웹)에 높이 통지 — 표준 패턴 [reference_iframe_codewidget_pattern] ══════════
+   아임웹은 코드위젯 안의 <script>를 제거/미실행하므로, 실제 수신자는 전역 헤더의
+   banner-widget.js 리사이저(source 매칭·monotonic·REQUEST_HEIGHT 재요청)다.
+   그래서 여기서 REQUEST_HEIGHT엔 높이 변화가 없어도 무조건 회신(force)해야 한다. */
+(function(){
+  if (window.parent === window) return;
+  var lastSent = 0;
+  function getHeight(){
+    var b = document.body, d = document.documentElement;
+    return Math.max(b.scrollHeight||0, d.scrollHeight||0, b.offsetHeight||0);
+  }
+  function send(force){
+    var h = Math.ceil(getHeight());
+    if (!force && h <= lastSent + 1) return;   // monotonic — 측정 노이즈로 줄어드는 것 차단
+    lastSent = h;
+    window.parent.postMessage({ type:'MAMORU_IFRAME_SIZE', id:'event-form', height:h }, '*');
+  }
+  if (window.ResizeObserver) { try { new ResizeObserver(function(){ send(); }).observe(document.body); } catch(_){} }
+  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(function(){ send(); }).catch(function(){}); }
+  // 손/가격 칩·담기로 카탈로그가 늘어난 직후 재측정 (ResizeObserver 누락 대비)
+  document.addEventListener('click', function(){ setTimeout(function(){ send(); }, 80); });
+  function multi(){ send(); [50,150,400,800,1500,3000,5000].forEach(function(ms){ setTimeout(function(){ send(); }, ms); }); }
+  if (document.readyState === 'complete') multi();
+  else { window.addEventListener('load', multi); send(); }
+  var t;
+  window.addEventListener('resize', function(){ clearTimeout(t); t = setTimeout(function(){ send(); }, 200); });
+  window.addEventListener('pageshow', function(e){ if (e.persisted) multi(); });
+  window.addEventListener('message', function(e){ if (e.data && e.data.type === 'REQUEST_HEIGHT') send(true); });
 })();
 </script>
 </body>
