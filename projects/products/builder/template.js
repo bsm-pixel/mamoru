@@ -206,19 +206,46 @@ function thinningRow(spec, catalog) {
       </div>`;
     }
   }
-  const _n = NEUTRAL; NEUTRAL = true;   // 요약 = 라이트 카드(선명한 다크 텍스트/SVG)
-  const cardsHtml = cells.map(({ c, opt }) => `<div style="min-width:0;">
-      <div style="font-family:'Outfit',sans-serif;font-size:clamp(9px,1.2vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:clamp(8px,1vw,12px);">${esc(c.label_subtitle_ko || c.label_ko || '')}</div>
-      ${optionCard(opt, false, 'text', c)}
+  /* 스펙 셀 = 값 하나만 (이름·설명은 카드에서 빼고 오른쪽 '특성' 카드로 분리 — 사장님 확정 2026-07-12).
+     발·홈은 숫자만(number_only), 감모는 단위까지("25%") — 숫자만 남기면 무슨 값인지 알 수 없기 때문. */
+  const cellLabel = (t) => `<div style="font-family:'Outfit',sans-serif;font-size:clamp(9px,1.2vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:clamp(8px,1vw,12px);">${esc(t)}</div>`;
+  const valueCard = (c, opt) => {
+    const raw = String(opt.id == null ? '' : opt.id);
+    const shown = c.number_only
+      ? esc(String(opt.value != null ? opt.value : (raw.match(/[\d.]+/) || [raw])[0]))
+      : bigValue(raw);   // 감모 → "25%" (숫자 Paperlogy + % 작게)
+    return `<div style="background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.2vw,12px);padding:clamp(20px,3vw,34px) clamp(8px,1.5vw,16px);text-align:center;">
+      <span style="font-family:${FONT_EN};font-size:clamp(30px,6vw,68px);font-weight:900;color:#1A1A1A;line-height:1;letter-spacing:-0.02em;">${shown}</span>
+    </div>`;
+  };
+  // PC = 값 3장 + 특성 1장이 한 줄(4열) / 모바일 = 값 2장씩 접히고 특성은 한 줄 전체
+  const FLEX_VAL = 'flex:1 1 min(45%,180px);min-width:0;';
+  const FLEX_DESC = 'flex:1 1 min(100%,200px);min-width:0;';
+  const valuesHtml = cells.map(({ c, opt }) => `<div style="${FLEX_VAL}">
+      ${cellLabel(c.label_subtitle_ko || c.label_ko || '')}${valueCard(c, opt)}
     </div>`).join('');
-  NEUTRAL = _n;
+
+  // 특성 카드 = 감모량 옵션의 이름·설명 (없으면 카드 자체를 안 만든다 → PC 3열로 자연 복귀)
+  const red = cells.find(({ c }) => c.card_type === 'thinning_reduction');
+  const redName = red && red.opt.name_ko;
+  const redDesc = red && red.opt.description_ko;
+  // ⚠️ 카드 높이는 height:calc(100% - ...) 로 잡으면 라벨 높이만큼 넘쳐서 아래 요소를 뚫는다.
+  //    셀을 flex 컬럼으로 두고 카드에 flex:1 → 형제 카드(값 카드)와 정확히 같은 높이.
+  const descHtml = (redName || redDesc) ? `<div style="${FLEX_DESC}display:flex;flex-direction:column;">
+      ${cellLabel('특성')}
+      <div style="flex:1;background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.2vw,12px);padding:clamp(16px,2.2vw,24px);display:flex;flex-direction:column;justify-content:center;">
+        ${redName ? `<div style="font-size:clamp(14px,1.7vw,16px);font-weight:700;color:#1A1A1A;line-height:1.4;margin-bottom:clamp(6px,0.9vw,10px);">${esc(redName)}</div>` : ''}
+        ${redDesc ? `<div style="font-size:clamp(11.5px,1.4vw,13px);color:#2D2D2D;line-height:1.7;">${nl2br(redDesc)}</div>` : ''}
+      </div>
+    </div>` : '';
+
   return `<div style="margin-bottom:clamp(48px,6vw,72px);">
     ${shapeHtml}
     <div style="display:flex;align-items:baseline;gap:clamp(12px,1.5vw,16px);margin-bottom:clamp(20px,2.5vw,28px);flex-wrap:wrap;">
       <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;">THINNING SPEC</span>
       <span style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;">— 발 · 홈 · 감모</span>
     </div>
-    <div style="display:grid;grid-template-columns:${cells.length > 2 ? GRID_PC3_MO2 : `repeat(${cells.length},1fr)`};gap:clamp(6px,1vw,12px);">${cardsHtml}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:clamp(6px,1vw,12px);align-items:stretch;">${valuesHtml}${descHtml}</div>
     <div style="margin-top:clamp(12px,1.6vw,18px);padding:clamp(20px,2.8vw,32px) clamp(16px,2.2vw,24px);background:#1A1A1A;border-radius:clamp(8px,1.2vw,12px);text-align:center;">
       <span style="font-family:'Outfit',sans-serif;font-size:clamp(18px,3.4vw,32px);font-weight:800;color:#FAF9F7;letter-spacing:0.02em;">${summary.join('  ·  ')}</span>
       ${note ? `<p style="margin:clamp(14px,1.8vw,20px) auto 0;max-width:560px;font-size:clamp(13px,1.7vw,15px);color:rgba(245,245,243,0.72);line-height:1.75;">${nl2br(esc(note))}</p>` : ''}
