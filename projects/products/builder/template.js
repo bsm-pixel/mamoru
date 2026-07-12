@@ -24,12 +24,15 @@ const FONT_EN = "'Paperlogy','Outfit',sans-serif";
 const FONT_KO = "'Pretendard','Noto Sans KR',sans-serif";
 const HANGUL = /[가-힣ㄱ-ㅎㅏ-ㅣ]/;
 
-/* PC 3열 / 모바일 2열 그리드 (아임웹 상품 본문은 inline 전용 = 미디어쿼리 불가 → auto-fit + clamp 로 구현).
-   최소폭 clamp(130px,30vw,260px):
-   · 모바일 360(콘텐츠 324) → 최소 130px → 2열 (3열은 444px 필요해서 안 들어감)
-   · PC 본문 840          → 최소 260px → 3열 (4열은 1040px 필요)
+/* PC 3열 / 모바일 2열 — 브레이크포인트 방식 (아임웹 상품 본문은 inline 전용 = @media 불가).
+   minmax(min(240px, 45%), 1fr) = "컨테이너 744px 미만이면 2열, 이상이면 3열" 한 줄 규칙.
+   · 45% : 좁을 때는 최소폭이 컨테이너의 45% → 3장(135%)은 물리적으로 못 들어가 항상 2열
+   · 240px: 넓어지면 최소폭이 240px 로 고정 → 240×3 + gap 24 = 744px 부터 3열
+   · 4열은 984px 부터 → PC 본문(840)에서는 나오지 않음
+   기기 해상도(390·320…)를 맞추는 게 아니라 '컨테이너 폭' 하나로 끊는다.
+   실측(puppeteer): 320~768=2열 / 840=3열 / 가로넘침 0.
    ⚠️ 고정 repeat(3)이면 모바일에서 3열로 찌그러진다 [feedback_visual_qa_mobile_first] */
-const GRID_PC3_MO2 = 'repeat(auto-fit,minmax(clamp(130px,30vw,260px),1fr))';
+const GRID_PC3_MO2 = 'repeat(auto-fit,minmax(min(240px,45%),1fr))';
 
 /* 큰 표시값에서 뒤 단위(발/홈/% 등)를 자동으로 2/3 크기로 — "26발" → 26 크게 + 발 작게.
    숫자는 Paperlogy, 한글 단위는 Pretendard로 분리 렌더 */
