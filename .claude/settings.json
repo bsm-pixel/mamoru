@@ -1,19 +1,6 @@
 {
   "permissions": {
-    "allow": [
-      "Bash",
-      "PowerShell",
-      "Edit",
-      "Write",
-      "Read",
-      "Glob",
-      "Grep",
-      "NotebookEdit",
-      "WebFetch",
-      "WebSearch",
-      "Task",
-      "TodoWrite"
-    ],
+    "defaultMode": "bypassPermissions",
     "deny": [
       "Bash(rm -rf:*)",
       "Bash(sudo rm:*)",

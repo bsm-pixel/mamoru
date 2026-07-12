@@ -40,15 +40,13 @@ process.stdin.on('end', () => {
   ];
 
   if (DANGER.some(re => re.test(bare))) {
-    process.stdout.write(JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: 'PreToolUse',
-        permissionDecision: 'deny',
-        permissionDecisionReason:
-          '되돌릴 수 없는 명령이라 자동 차단했습니다 (rm -rf · force push · reset --hard · git clean -f · DB drop/truncate 등). ' +
-          '정말 필요하면 사장님이 직접 실행하시거나, 저에게 이유를 알려주세요. ' +
-          '규칙 위치: .claude/guard.js',
-      },
-    }));
+    // exit code 2 = PreToolUse 하드 차단. permissionDecision 방식과 달리
+    // 권한 모드(bypassPermissions 포함)와 무관하게 항상 막힌다 → 안전망이 절대 뚫리지 않음.
+    process.stderr.write(
+      '🛑 되돌릴 수 없는 명령이라 자동 차단했습니다 (rm -rf · force push · reset --hard · git clean -f · DB drop/truncate · mkfs · dd 등).\n' +
+      '정말 필요하면 사장님이 직접 실행하시거나, 저에게 이유를 설명하고 허락을 받으세요.\n' +
+      '규칙 위치: .claude/guard.js\n'
+    );
+    process.exit(2);
   }
 });
