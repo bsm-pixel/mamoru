@@ -973,9 +973,12 @@ img[src=""] { display: none; }
       <p class="cta-desc">상담부터 AS까지, 편하게 안내드립니다</p>
 
       <div class="cta-buttons">
-        <a href="javascript:void(0)" onclick="mm.navigateTo('/52')" class="btn-primary">편하게 문의하기 <span><img src="./icons/arrow.svg" alt=""></span></a>
-        <a href="javascript:void(0)" onclick="mm.navigateTo('/58')" class="btn-secondary">간편 진단 해보기</a>
-        <a href="javascript:void(0)" onclick="mm.navigateTo('/products')" class="btn-secondary">제품들 보러가기</a>
+        <!-- 카카오는 외부 링크 → 새 창. 아임웹 내부 페이지(/58·/44)는 iframe이 아니라 '부모'가 이동해야 하므로
+             mm.navigateTo(postMessage) + return false 로 iframe 자체 이동을 막는다.
+             ⚠️ href와 onclick을 둘 다 살려두면 부모·iframe이 동시에 이동해 iframe 쪽이 404가 난다 -->
+        <a href="https://pf.kakao.com/_KHWNb" target="_blank" rel="noopener" class="btn-primary">편하게 문의하기 <span><img src="./icons/arrow.svg" alt=""></span></a>
+        <a href="/58" onclick="mm.navigateTo('/58'); return false;" class="btn-secondary">간편 진단 해보기</a>
+        <a href="/44" onclick="mm.navigateTo('/44'); return false;" class="btn-secondary">제품들 보러가기</a>
       </div>
 
       <div class="cta-links">
