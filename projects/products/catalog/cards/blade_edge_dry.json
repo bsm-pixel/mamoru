@@ -16,6 +16,8 @@
       "name_ko": "스트록",
       "name_en": "STROKE",
       "svg_inline": "",
+      "price_addon_krw": 0,
+      "is_default": true,
       "description_ko": "정날 동날이 모두 살아있는 형태"
     },
     {
@@ -23,6 +25,7 @@
       "name_ko": "정통",
       "name_en": "SLIDE",
       "svg_inline": "",
+      "price_addon_krw": 10000,
       "description_ko": "동날 전면에 밀리는 가공 · 슬라이싱 전용 "
     },
     {
@@ -30,6 +33,7 @@
       "name_ko": "멀티",
       "name_en": "SHIFT ONE",
       "svg_inline": "",
+      "price_addon_krw": 20000,
       "description_ko": "슬라이싱 겸 날끝 을 예리하게 사용 가능. 포인트컷, 초핑컷등 멀티로 사용"
     }
   ]

@@ -10,11 +10,36 @@
   "number_only": true,
   "_note": "number_only=true → 카드에는 숫자만 정중앙(단위는 카드 위 라벨 '빗살 수'가 대신함). id의 단위(발)는 하단 총정리 줄에서만 쓰임.",
   "options": [
-    { "id": "24발", "name_ko": "", "value": 24 },
-    { "id": "26발", "name_ko": "", "value": 26 },
-    { "id": "28발", "name_ko": "", "value": 28 },
-    { "id": "30발", "name_ko": "", "value": 30 },
-    { "id": "32발", "name_ko": "", "value": 32 },
-    { "id": "40발", "name_ko": "", "value": 40 }
-  ]
+    {
+      "id": "24발",
+      "name_ko": "",
+      "value": 24
+    },
+    {
+      "id": "26발",
+      "name_ko": "",
+      "value": 26
+    },
+    {
+      "id": "28발",
+      "name_ko": "",
+      "value": 28
+    },
+    {
+      "id": "30발",
+      "name_ko": "",
+      "value": 30
+    },
+    {
+      "id": "32발",
+      "name_ko": "",
+      "value": 32
+    },
+    {
+      "id": "40발",
+      "name_ko": "",
+      "value": 40
+    }
+  ],
+  "responsive_grid": true
 }

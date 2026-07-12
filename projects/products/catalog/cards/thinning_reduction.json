@@ -9,10 +9,36 @@
   "single_display": true,
   "_note": "표시값(id)=퍼센트값(예 '20%', 크게), 이름(name_ko)=비움. 총정리는 표시값만 '20%'.",
   "options": [
-    { "id": "15%", "name_ko": "", "value": 15, "description_ko": "보통 질감 전용 틴닝으로 쓰이며 \n\n가위자국이 없는 특징을 가지고있다" },
-    { "id": "20%", "name_ko": "", "value": 20, "description_ko": "가벼운 정리" },
-    { "id": "25%", "name_ko": "", "value": 25, "description_ko": "표준 감모" },
-    { "id": "30%", "name_ko": "", "value": 30, "description_ko": "중간 감모" },
-    { "id": "40%", "name_ko": "", "value": 40, "description_ko": "확실한 감모" }
-  ]
+    {
+      "id": "15%",
+      "name_ko": "",
+      "value": 15,
+      "description_ko": "보통 질감 전용 틴닝으로 쓰이며 \n\n가위자국이 없는 특징을 가지고있다"
+    },
+    {
+      "id": "20%",
+      "name_ko": "",
+      "value": 20,
+      "description_ko": "가벼운 정리"
+    },
+    {
+      "id": "25%",
+      "name_ko": "",
+      "value": 25,
+      "description_ko": "표준 감모"
+    },
+    {
+      "id": "30%",
+      "name_ko": "",
+      "value": 30,
+      "description_ko": "중간 감모"
+    },
+    {
+      "id": "40%",
+      "name_ko": "",
+      "value": 40,
+      "description_ko": "확실한 감모"
+    }
+  ],
+  "responsive_grid": true
 }

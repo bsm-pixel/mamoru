@@ -24,6 +24,13 @@ const FONT_EN = "'Paperlogy','Outfit',sans-serif";
 const FONT_KO = "'Pretendard','Noto Sans KR',sans-serif";
 const HANGUL = /[가-힣ㄱ-ㅎㅏ-ㅣ]/;
 
+/* PC 3열 / 모바일 2열 그리드 (아임웹 상품 본문은 inline 전용 = 미디어쿼리 불가 → auto-fit + clamp 로 구현).
+   최소폭 clamp(130px,30vw,260px):
+   · 모바일 360(콘텐츠 324) → 최소 130px → 2열 (3열은 444px 필요해서 안 들어감)
+   · PC 본문 840          → 최소 260px → 3열 (4열은 1040px 필요)
+   ⚠️ 고정 repeat(3)이면 모바일에서 3열로 찌그러진다 [feedback_visual_qa_mobile_first] */
+const GRID_PC3_MO2 = 'repeat(auto-fit,minmax(clamp(130px,30vw,260px),1fr))';
+
 /* 큰 표시값에서 뒤 단위(발/홈/% 등)를 자동으로 2/3 크기로 — "26발" → 26 크게 + 발 작게.
    숫자는 Paperlogy, 한글 단위는 Pretendard로 분리 렌더 */
 function bigValue(str) {
@@ -153,12 +160,14 @@ function cardGroup(card, selectedId, variant) {
   }
   const cards = opts.map(o => optionCard(o, o.id === selectedId, variant, card)).join('');
   const cols = opts.length === 1 ? 1 : (opts.length === 2 ? 2 : 3);
+  // 3열 이상이면서 responsive_grid 카드(틴닝 발·홈·감모) = PC 3열 / 모바일 2열
+  const grid = (card.responsive_grid && opts.length > 2) ? GRID_PC3_MO2 : `repeat(${cols},1fr)`;
   return `<div style="margin-bottom:clamp(48px,6vw,72px);">
     <div style="display:flex;align-items:baseline;gap:clamp(12px,1.5vw,16px);margin-bottom:clamp(24px,3vw,32px);flex-wrap:wrap;">
       <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;">${esc(card.label_ko)}</span>
       <span style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;letter-spacing:0.02em;">— ${esc(card.label_subtitle_ko || '')}</span>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:clamp(6px,1vw,12px);">${cards}</div>
+    <div style="display:grid;grid-template-columns:${grid};gap:clamp(6px,1vw,12px);">${cards}</div>
   </div>`;
 }
 
@@ -206,7 +215,7 @@ function thinningRow(spec, catalog) {
       <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;">THINNING SPEC</span>
       <span style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;">— 발 · 홈 · 감모</span>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(${cells.length},1fr);gap:clamp(6px,1vw,12px);">${cardsHtml}</div>
+    <div style="display:grid;grid-template-columns:${cells.length > 2 ? GRID_PC3_MO2 : `repeat(${cells.length},1fr)`};gap:clamp(6px,1vw,12px);">${cardsHtml}</div>
     <div style="margin-top:clamp(12px,1.6vw,18px);padding:clamp(20px,2.8vw,32px) clamp(16px,2.2vw,24px);background:#1A1A1A;border-radius:clamp(8px,1.2vw,12px);text-align:center;">
       <span style="font-family:'Outfit',sans-serif;font-size:clamp(18px,3.4vw,32px);font-weight:800;color:#FAF9F7;letter-spacing:0.02em;">${summary.join('  ·  ')}</span>
       ${note ? `<p style="margin:clamp(14px,1.8vw,20px) auto 0;max-width:560px;font-size:clamp(13px,1.7vw,15px);color:rgba(245,245,243,0.72);line-height:1.75;">${nl2br(esc(note))}</p>` : ''}

@@ -10,10 +10,31 @@
   "number_only": true,
   "_note": "number_only=true → 카드에는 숫자만 정중앙(단위는 카드 위 라벨 '홈 수'가 대신함). id의 단위(홈)는 하단 총정리 줄에서만 쓰임.",
   "options": [
-    { "id": "1홈", "name_ko": "", "value": 1 },
-    { "id": "2홈", "name_ko": "", "value": 2 },
-    { "id": "3홈", "name_ko": "", "value": 3 },
-    { "id": "4홈", "name_ko": "", "value": 4 },
-    { "id": "5홈", "name_ko": "", "value": 5 }
-  ]
+    {
+      "id": "1홈",
+      "name_ko": "",
+      "value": 1
+    },
+    {
+      "id": "2홈",
+      "name_ko": "",
+      "value": 2
+    },
+    {
+      "id": "3홈",
+      "name_ko": "",
+      "value": 3
+    },
+    {
+      "id": "4홈",
+      "name_ko": "",
+      "value": 4
+    },
+    {
+      "id": "5홈",
+      "name_ko": "",
+      "value": 5
+    }
+  ],
+  "responsive_grid": true
 }
