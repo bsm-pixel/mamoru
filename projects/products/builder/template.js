@@ -17,12 +17,24 @@ function esc(s) {
 }
 function nl2br(s) { return esc(s).replace(/\n/g, '<br>'); }
 
-/* 큰 표시값에서 뒤 단위(발/홈/% 등)를 자동으로 2/3 크기로 — "26발" → 26 크게 + 발 작게 */
+/* 서체 규칙 (사장님 확정 2026-07-12): 영문·숫자 = Paperlogy / 한글 = Pretendard.
+   ⚠️ Paperlogy에는 한글도 들어 있어서 스택 앞에 두면 한글까지 Paperlogy로 나온다.
+      → 글자 종류별로 span을 갈라 각각 지정해야 한다(스택만으로는 분리 불가). */
+const FONT_EN = "'Paperlogy','Outfit',sans-serif";
+const FONT_KO = "'Pretendard','Noto Sans KR',sans-serif";
+const HANGUL = /[가-힣ㄱ-ㅎㅏ-ㅣ]/;
+
+/* 큰 표시값에서 뒤 단위(발/홈/% 등)를 자동으로 2/3 크기로 — "26발" → 26 크게 + 발 작게.
+   숫자는 Paperlogy, 한글 단위는 Pretendard로 분리 렌더 */
 function bigValue(str) {
   const s = String(str == null ? '' : str);
   const m = s.match(/^([\d.]+)(.+)$/);   // 앞 숫자 + 뒤 단위
-  if (!m) return esc(s);
-  return `${esc(m[1])}<span style="font-size:0.62em;">${esc(m[2])}</span>`;
+  if (!m) {
+    // 숫자로 시작하지 않는 값(F·A·G 같은 영문 코드, 순한글 등)
+    return HANGUL.test(s) ? `<span style="font-family:${FONT_KO};">${esc(s)}</span>` : esc(s);
+  }
+  const unitFont = HANGUL.test(m[2]) ? FONT_KO : FONT_EN;   // '홈'·'발'=한글 / '%'·'mm'=영문
+  return `${esc(m[1])}<span style="font-size:0.62em;font-family:${unitFont};">${esc(m[2])}</span>`;
 }
 
 /* 카피 풀 placeholder({길이}/{날선}/{날등}) 치환 */
@@ -91,7 +103,7 @@ function optionCard(opt, selected, variant) {
     ? `<span style="font-family:'Outfit',sans-serif;font-size:clamp(9px,1.2vw,12px);font-weight:700;color:${enCol};letter-spacing:0.15em;line-height:1;">${esc(opt.name_en)}</span>`
     : '';
   // 표시값(id) = 숫자 크게 + 단위 자동 2/3. 이름·영문 없으면 옆 칸 자체를 숨겨 여백 방지.
-  const bigVal = `<span style="font-family:'Outfit',sans-serif;font-size:clamp(28px,5.5vw,64px);font-weight:900;color:${letterCol};line-height:0.9;letter-spacing:-0.02em;flex-shrink:0;">${bigValue(opt.id)}</span>`;
+  const bigVal = `<span style="font-family:${FONT_EN};font-size:clamp(28px,5.5vw,64px);font-weight:900;color:${letterCol};line-height:0.9;letter-spacing:-0.02em;flex-shrink:0;">${bigValue(opt.id)}</span>`;
   const nameSpan = opt.name_ko ? `<span style="font-size:clamp(13px,1.7vw,18px);font-weight:700;color:${nameCol};line-height:1.2;">${esc(opt.name_ko)}</span>` : '';
   const nameBlock = (opt.name_ko || opt.name_en) ? `<div style="display:flex;flex-direction:column;gap:clamp(2px,0.4vw,4px);min-width:0;">${nameSpan}${en}</div>` : '';
 

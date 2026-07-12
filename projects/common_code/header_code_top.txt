@@ -16,6 +16,12 @@
 <!-- MAMORU: Brand Guide v1.0 폰트 — 아임웹 전역 적용 -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+<!-- MAMORU: 상품 상세 표시값 서체 — 영문·숫자=Paperlogy / 한글=Pretendard (2026-07-12)
+     ⚠️ 상품 상세 본문은 inline 전용이라 <link>를 못 넣는다 → 폰트는 반드시 여기(전역 헤더)서 로드해야 한다.
+     이게 없으면 모델명·카드 숫자가 조용히 Outfit/시스템폰트로 폴백된다(글씨 안 깨지고 '어색'하기만 해서 놓치기 쉬움). -->
+<link href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/subsets/Paperlogy-dynamic-subset.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css" rel="stylesheet">
+
 <!-- MAMORU: 아임웹 전역 서체 오버라이드 -->
 <style>
 body, .shop-title, .item-detail, .pay, .cate-label,
