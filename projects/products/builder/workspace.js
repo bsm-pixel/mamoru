@@ -178,7 +178,7 @@ function copyPanel(pool) {
 }
 
 const COMMON_CARDS = ['handle_grip', 'handle_camel', 'grade'];
-const TYPE_CARDS = ['blade_edge', 'blade_edge_long', 'blade_edge_dry', 'blade_design', 'thinning_teeth', 'thinning_holes', 'thinning_reduction', 'dry_cutting_style'];
+const TYPE_CARDS = ['blade_edge', 'blade_edge_long', 'blade_edge_dry', 'blade_design', 'thinning_teeth', 'thinning_holes', 'thinning_reduction'];
 
 function buildContent() {
   let h = '<div class="ws-note">편집기에서 문구 수정 시 <b>여기 실시간 반영</b> · 좌=PC / 우=모바일(390px) · 스크롤 동기화</div>';

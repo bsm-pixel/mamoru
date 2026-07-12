@@ -4,11 +4,12 @@
     "dry"
   ],
   "label_ko": "BLADE EDGE",
-  "label_subtitle_ko": "DRY 분류 날 형태",
+  "label_subtitle_ko": "DRY 분류 날 형태 (주문 옵션 · 고객 선택)",
   "select_mode": "single",
+  "is_order_option": true,
   "viewbox": "0 0 21.65 10",
   "svg_stroke_width": "0.75",
-  "_note": "슬라이싱(드라이)용 — 표기 ST/SD/SO. 설명·SVG 는 사장님이 편집기/파일로 채움",
+  "_note": "슬라이싱(드라이)용 — 표기 ST/SD/SO. 설명·SVG 는 사장님이 편집기/파일로 채움. 2026-07-12: 내용이 겹치던 dry_cutting_style 카드를 폐기하고 이 카드로 일원화(주문 옵션·고객 선택 = 여기).",
   "options": [
     {
       "id": "ST",

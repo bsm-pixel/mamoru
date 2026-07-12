@@ -522,7 +522,8 @@ function renderDetailHTML(spec, catalog) {
     profileCards += cardGroup(design, spec.selections?.blade_design, 'design');
   // 틴닝: 발·홈·감모를 한 행에 나란히 + 하단 총정리 / 드라이 등은 개별 카드
   if (type === 'thinning') profileCards += thinningRow(spec, catalog);
-  for (const ct of ['thinning_teeth', 'thinning_holes', 'thinning_reduction', 'dry_cutting_style']) {
+  // dry_cutting_style 폐기(2026-07-12) — blade_edge_dry 와 내용이 겹쳐 일원화. DRY 주문 옵션은 blade_edge_dry 가 담당
+  for (const ct of ['thinning_teeth', 'thinning_holes', 'thinning_reduction']) {
     if (type === 'thinning' && ct.indexOf('thinning_') === 0) continue; // 위 thinningRow가 처리
     const c = catalog.byCardType[ct];
     if (c && (c.applies_to || []).includes(type))
