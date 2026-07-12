@@ -10,10 +10,6 @@
   html{ overflow-x:hidden; }
   body{ font-family:'Pretendard Variable',Pretendard,'Noto Sans KR',-apple-system,system-ui,sans-serif; color:var(--ink); background:var(--cream); line-height:1.55; }
   .mm-wrap{ max-width:560px; margin:0 auto; padding:24px 18px 120px; }
-  .mm-head{ text-align:center; padding:8px 0 18px; }
-  .mm-head__kicker{ font-size:11px; letter-spacing:.18em; color:var(--gray); text-transform:uppercase; }
-  .mm-head__title{ font-size:27px; font-weight:800; color:var(--void); margin-top:6px; letter-spacing:-.02em; }
-  .mm-head__sub{ font-size:13px; color:var(--gray); margin-top:8px; }
   .mm-sec{ margin-top:28px; }
   .mm-sec__label{ font-size:15px; font-weight:800; color:var(--void); margin-bottom:12px; display:flex; align-items:center; gap:8px; letter-spacing:-.01em; }
   .mm-sec__label::before{ content:''; width:3px; height:15px; border-radius:2px; background:var(--void); flex:0 0 auto; }
@@ -100,9 +96,9 @@
   .mm-car-note.done .mm-car-note__hint{ display:none; }
   @media (prefers-reduced-motion: reduce){ .mm-car-note__arrow{ animation:none; } }
 
-  /* 안내장 캐러셀 (가로 스와이프, 1000×1500=2:3, 자동재생 X) — 좌우 full-bleed.
-     ⚠️ 위에 제목 블록이 오므로 상단 마이너스 마진(-24px) 금지 — 제목을 덮는다 */
-  .mm-car-wrap{ position:relative; margin:4px -18px 18px; overflow:hidden; }
+  /* 안내장 캐러셀 (가로 스와이프, 1000×1500=2:3, 자동재생 X)
+     = 페이지 첫 요소 → 상·좌·우 full-bleed (mm-wrap 의 padding 24/18 을 마이너스 마진으로 상쇄) */
+  .mm-car-wrap{ position:relative; margin:-24px -18px 12px; overflow:hidden; }
   /* 슬라이드 페이지 카운터 (1/N) — 여러 장·넘기기 신호 */
   .mm-car-count{ position:absolute; top:14px; right:14px; display:none; background:rgba(26,26,26,.55); color:#fff; font-size:11px; font-weight:700; letter-spacing:.3px; padding:4px 10px; border-radius:999px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); z-index:2; }
   /* transform 기반 — 스와이프 1회 = 1장 (네이티브 스크롤 관성 제거) */
@@ -185,27 +181,20 @@
 </head>
 <body>
 <div class="mm-wrap">
-  <!-- 제목 블록 = 첫 화면 — 무슨 이벤트인지 먼저 읽히고, 그다음 안내장 이미지 -->
-  <div class="mm-head">
-    <div class="mm-head__kicker">MAMORU EVENT</div>
-    <div class="mm-head__title" id="catTitle">EVENT 접수</div>
-    <div class="mm-head__sub">원하시는 가위를 선택해 접수해 주세요.<br/>※<br>실시간 재고 반영이므로<br>담기가 가능하면 주문이 가능합니다</div>
-  
-  </div>
-
-  <!-- 안내장을 끝까지 넘겨 읽게 하는 지시 바 (슬라이드가 있을 때만 표시) -->
-  <div class="mm-car-note" id="mmCarNote" style="display:none;">
-    <span class="mm-car-note__txt" id="mmCarNoteTxt">주문 전 <b>안내장을 끝까지</b> 확인해 주세요</span>
-    <span class="mm-car-note__hint">옆으로 넘기기<span class="mm-car-note__arrow">›</span></span>
-  </div>
-
-  <!-- 안내장 캐러셀 — icons/1~7.png (있는 만큼 자동 표시, 없으면 영역 숨김) -->
+  <!-- 안내장 캐러셀 = 첫 화면. 제목·설명은 안내장 이미지가 대신한다(2026-07-12 헤더 블록 삭제).
+       ⚠️ 캠페인명을 넣던 #catTitle 도 함께 사라짐 — 세팅 코드는 `if(t)` 가드라 안전 -->
   <div class="mm-car-wrap" id="mmCarWrap" style="display:none;">
     <div class="mm-car-count" id="mmCarCount"></div>
     <div class="mm-car" id="mmCar"></div>
     <button class="mm-car-nav mm-car-prev" id="mmCarPrev" type="button" aria-label="이전">‹</button>
     <button class="mm-car-nav mm-car-next" id="mmCarNext" type="button" aria-label="다음">›</button>
     <div class="mm-car-dots" id="mmCarDots"></div>
+  </div>
+
+  <!-- 안내장을 끝까지 넘겨 읽게 하는 지시 바 — 슬라이드 아래(넘기고 나서 눈이 닿는 자리) -->
+  <div class="mm-car-note" id="mmCarNote" style="display:none;">
+    <span class="mm-car-note__txt" id="mmCarNoteTxt">주문 전 <b>안내장을 끝까지</b> 확인해 주세요</span>
+    <span class="mm-car-note__hint">옆으로 넘기기<span class="mm-car-note__arrow">›</span></span>
   </div>
 
   <!-- 손 -->
