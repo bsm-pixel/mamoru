@@ -1,8 +1,44 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -n \"address_sido\\\\|address_sigungu\" /c/Users/user/Desktop/mamoru/projects/Total_Management_System/app/src/app/\\\\\\(dashboard\\\\\\)/consultations/[id]/page.tsx)",
-      "Bash(git add:*)"
+      "Bash",
+      "PowerShell",
+      "Edit",
+      "Write",
+      "Read",
+      "Glob",
+      "Grep",
+      "NotebookEdit",
+      "WebFetch",
+      "WebSearch",
+      "Task",
+      "TodoWrite"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(sudo rm:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -f:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(mkfs:*)",
+      "Bash(dd if=:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "statusMessage": "안전 검사",
+            "timeout": 10,
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/guard.js\""
+          }
+        ]
+      }
     ]
   }
 }
