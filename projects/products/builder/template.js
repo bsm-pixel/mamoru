@@ -77,8 +77,9 @@ function eyebrow(num, title, dark) {
 }
 
 /* ─── 카드 1장 (BLADE EDGE/DESIGN/text 변형) ───
-   variant: 'edge'(svg 100%) | 'design'(svg 65% center) | 'text'(svg 없음) */
-function optionCard(opt, selected, variant) {
+   variant: 'edge'(svg 100%) | 'design'(svg 65% center) | 'text'(svg 없음)
+   card: 카드 정의(number_only 판별용 — 없으면 기존 동작) */
+function optionCard(opt, selected, variant, card) {
   const dark = selected && !NEUTRAL; // 다크 강조는 선택+비중립일 때만
   const bg = dark ? 'background:#1A1A1A;color:#FAF9F7;' : 'background:#FFFFFF;border:1px solid #EDEBE8;';
   const letterCol = dark ? '#FAF9F7' : (NEUTRAL ? '#1A1A1A' : '#8A8580');
@@ -87,6 +88,16 @@ function optionCard(opt, selected, variant) {
   const divCol = dark ? 'rgba(245,245,243,0.15)' : '#EDEBE8';
   const descCol = dark ? 'rgba(245,245,243,0.75)' : (NEUTRAL ? '#2D2D2D' : '#B8B4AF');
   const check = dark ? `<span style="font-size:clamp(14px,2vw,20px);color:#FAF9F7;font-weight:700;line-height:1;flex-shrink:0;">✓</span>` : '';
+
+  /* number_only 카드(빗살 수·홈 수) = 숫자만 카드 정중앙.
+     단위(발·홈)는 카드 위 라벨이 이미 말해주므로 카드마다 반복하면 중복 + 시선만 분산된다.
+     구분선·설명도 없앤다(내용이 없어 빈 줄만 남던 자리). */
+  if (card && card.number_only) {
+    const num = opt.value != null ? opt.value : (String(opt.id).match(/[\d.]+/) || [opt.id])[0];
+    return `<div style="${bg}border-radius:clamp(8px,1.2vw,12px);padding:clamp(20px,3vw,34px) clamp(8px,1.5vw,16px);text-align:center;">
+      <span style="font-family:${FONT_EN};font-size:clamp(30px,6vw,68px);font-weight:900;color:${letterCol};line-height:1;letter-spacing:-0.02em;">${esc(String(num))}</span>
+    </div>`;
+  }
 
   let svg = '';
   if (opt.svg_inline) {
@@ -140,7 +151,7 @@ function cardGroup(card, selectedId, variant) {
     const chosen = opts.find(o => o.id === selectedId) || opts[0];
     opts = chosen ? [chosen] : [];
   }
-  const cards = opts.map(o => optionCard(o, o.id === selectedId, variant)).join('');
+  const cards = opts.map(o => optionCard(o, o.id === selectedId, variant, card)).join('');
   const cols = opts.length === 1 ? 1 : (opts.length === 2 ? 2 : 3);
   return `<div style="margin-bottom:clamp(48px,6vw,72px);">
     <div style="display:flex;align-items:baseline;gap:clamp(12px,1.5vw,16px);margin-bottom:clamp(24px,3vw,32px);flex-wrap:wrap;">
@@ -186,7 +197,7 @@ function thinningRow(spec, catalog) {
   const _n = NEUTRAL; NEUTRAL = true;   // 요약 = 라이트 카드(선명한 다크 텍스트/SVG)
   const cardsHtml = cells.map(({ c, opt }) => `<div style="min-width:0;">
       <div style="font-family:'Outfit',sans-serif;font-size:clamp(9px,1.2vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:clamp(8px,1vw,12px);">${esc(c.label_subtitle_ko || c.label_ko || '')}</div>
-      ${optionCard(opt, false, 'text')}
+      ${optionCard(opt, false, 'text', c)}
     </div>`).join('');
   NEUTRAL = _n;
   return `<div style="margin-bottom:clamp(48px,6vw,72px);">

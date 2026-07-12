@@ -7,7 +7,8 @@
   "label_subtitle_ko": "홈 수",
   "select_mode": "single",
   "single_display": true,
-  "_note": "표시값(id)에 '3홈'처럼 단위까지 그대로 쓰면 숫자는 크게·단위(홈)는 자동 2/3로 렌더됨. 이름은 비워둠.",
+  "number_only": true,
+  "_note": "number_only=true → 카드에는 숫자만 정중앙(단위는 카드 위 라벨 '홈 수'가 대신함). id의 단위(홈)는 하단 총정리 줄에서만 쓰임.",
   "options": [
     { "id": "1홈", "name_ko": "", "value": 1 },
     { "id": "2홈", "name_ko": "", "value": 2 },
