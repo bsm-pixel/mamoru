@@ -85,8 +85,9 @@
   .mm-pc-head{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line); font-weight:700; font-size:14px; }
   .mm-pc-head button{ width:30px; height:30px; border:0; background:var(--shell); border-radius:8px; font-size:15px; cursor:pointer; }
   .mm-pc-inner{ min-height:160px; } /* 높이는 Daum onresize가 내용에 맞춰 동적 설정 (빈 흰 공간 방지) */
-  /* 상단 안내장 캐러셀 (가로 스와이프, 1000×1500=2:3, 자동재생 X) — full-bleed: 폭 끝·상단까지 꽉 */
-  .mm-car-wrap{ position:relative; margin:-24px -18px 18px; overflow:hidden; }
+  /* 안내장 캐러셀 (가로 스와이프, 1000×1500=2:3, 자동재생 X) — 좌우 full-bleed.
+     ⚠️ 위에 제목 블록이 오므로 상단 마이너스 마진(-24px) 금지 — 제목을 덮는다 */
+  .mm-car-wrap{ position:relative; margin:4px -18px 18px; overflow:hidden; }
   /* 슬라이드 페이지 카운터 (1/N) — 여러 장·넘기기 신호 */
   .mm-car-count{ position:absolute; top:14px; right:14px; display:none; background:rgba(26,26,26,.55); color:#fff; font-size:11px; font-weight:700; letter-spacing:.3px; padding:4px 10px; border-radius:999px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); z-index:2; }
   /* transform 기반 — 스와이프 1회 = 1장 (네이티브 스크롤 관성 제거) */
@@ -169,19 +170,20 @@
 </head>
 <body>
 <div class="mm-wrap">
-  <!-- 상단 안내장 캐러셀 — icons/1~7.png (있는 만큼 자동 표시, 없으면 영역 숨김) -->
+  <!-- 제목 블록 = 첫 화면 — 무슨 이벤트인지 먼저 읽히고, 그다음 안내장 이미지 -->
+  <div class="mm-head">
+    <div class="mm-head__kicker">MAMORU EVENT</div>
+    <div class="mm-head__title" id="catTitle">EVENT 접수</div>
+    <div class="mm-head__sub">원하시는 가위를 선택해 접수해 주세요.<br/>※<br>실시간 재고 반영이므로<br>담기가 가능하면 주문이 가능합니다</div>
+  </div>
+
+  <!-- 안내장 캐러셀 — icons/1~7.png (있는 만큼 자동 표시, 없으면 영역 숨김) -->
   <div class="mm-car-wrap" id="mmCarWrap" style="display:none;">
     <div class="mm-car-count" id="mmCarCount"></div>
     <div class="mm-car" id="mmCar"></div>
     <button class="mm-car-nav mm-car-prev" id="mmCarPrev" type="button" aria-label="이전">‹</button>
     <button class="mm-car-nav mm-car-next" id="mmCarNext" type="button" aria-label="다음">›</button>
     <div class="mm-car-dots" id="mmCarDots"></div>
-  </div>
-
-  <div class="mm-head">
-    <div class="mm-head__kicker">MAMORU EVENT</div>
-    <div class="mm-head__title" id="catTitle">EVENT 접수</div>
-    <div class="mm-head__sub">원하시는 가위를 선택해 접수해 주세요.<br/>※<br>실시간 재고 반영이므로<br>담기가 가능하면 주문이 가능합니다</div>
   </div>
 
   <!-- 손 -->
