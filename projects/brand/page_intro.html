@@ -338,8 +338,9 @@ body {
 .values-section { background: var(--parchment); text-align: center; }
 
 .values-grid { display: grid; gap: 20px; margin-top: 48px; }
+/* 카드 4장 → PC는 2×2. repeat(3)이면 4번째가 혼자 남아 위계가 깨진다 */
 @media screen and (min-width: 769px) {
-  .values-grid { grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 64px; }
+  .values-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; margin-top: 64px; max-width: 900px; margin-left: auto; margin-right: auto; }
 }
 .value-card {
   background: var(--white); border: 1px solid var(--sand);
@@ -744,26 +745,26 @@ img[src=""] { display: none; }
   <div class="container">
     <div class="chapter fade-in"><span class="chapter-num">01</span><span class="section-label">Why MAMORU</span></div>
     <h2 class="section-title fade-in">가위시장,<br>이대로 괜찮을까요?</h2>
-    <p class="section-desc fade-in">영업 병아리 시절부터 <br>12년이 지난 지금까지도 지속되는 ... </p>
+    <p class="section-desc fade-in">영업 병아리 시절부터<br>12년이 지난 지금까지도 지속되는…</p>
 
     <div class="problem-grid">
       <div class="problem-card fade-in delay-1">
         <!-- 아이콘: ./icons/ 폴더의 SVG 참조 (page_diag와 동일 패턴) — 추후 svg 파일 교체 시 src만 수정 -->
         <div class="problem-icon"><img src="./icons/up.svg" alt="높은 가격"></div>
-        <h3 class="problem-title">좋은가위의 기준? '오직 가격뿐'</h3>
-        <p class="problem-desc">"100만원 넘게 주고 샀어"<br>"오 좋은가위쓰네. 오래쓰려고 샀구나"<br>"난 잠깐 쓸꺼 20만원주고 샀는데"<span style="display:block;margin-top:0.8em;"><b>이런 기준이 과연 올바른 기준일까요?</b></span></p>
+        <h3 class="problem-title">좋은 가위의 기준? '오직 가격뿐'</h3>
+        <p class="problem-desc">"100만 원 넘게 주고 샀어"<br>"오, 좋은 가위 쓰네. 오래 쓰려고 샀구나"<br>"난 잠깐 쓸 거 20만 원 주고 샀는데"<span style="display:block;margin-top:0.8em;"><b>이런 기준이 과연 올바른 기준일까요?</b></span></p>
       </div>
       <div class="problem-card fade-in delay-2">
         <!-- 아이콘: 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
         <div class="problem-icon"><img src="./icons/door1.svg" alt="방문판매"></div>
-        <h3 class="problem-title">주기적인 관리? 불필요한 방문 </h3>
-        <p class="problem-desc">가위지식을 알 수 없는 시장구조에서<br>미용사는 방문딜러를 의지 할 뿐입니다<span style="display:block;margin-top:0.8em;"></span>고객을 찾아다니는 브랜드와 고객이 찾는 브랜드 <br><b>고객이 가위를 알기 전, 후로 나뉠것 입니다</b></p>
+        <h3 class="problem-title">주기적인 관리? 불필요한 방문</h3>
+        <p class="problem-desc">가위 지식을 알 수 없는 시장 구조에서<br>미용사는 방문 딜러에게 의지할 뿐입니다<span style="display:block;margin-top:0.8em;"></span>고객을 찾아다니는 브랜드와 고객이 찾는 브랜드<br><b>고객이 가위를 알기 전, 후로 나뉠 것입니다</b></p>
       </div>
       <div class="problem-card fade-in delay-3">
         <!-- 아이콘: 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
         <div class="problem-icon"><img src="./icons/sangsul.svg" alt="맞지 않는 가위"></div>
-        <h3 class="problem-title">넘처나는 상술</h3>
-        <p class="problem-desc">"가위를 바꿀 때 되었다"<br>딜러가 하는 이 말에 반박할 수 있는 이유를 찾기 어렵습니다<span style="display:block;margin-top:0.8em;"></span>상술을 공유하고 불필요한 지출을 막겠습니다</b></p>
+        <h3 class="problem-title">넘쳐나는 상술</h3>
+        <p class="problem-desc">"가위를 바꿀 때가 되었다"<br>딜러가 하는 이 말에 반박할 수 있는 이유를 찾기 어렵습니다<span style="display:block;margin-top:0.8em;"></span><b>상술을 공유하고 불필요한 지출을 막겠습니다</b></p>
       </div>
     </div>
   </div>
@@ -779,22 +780,22 @@ img[src=""] { display: none; }
       <div class="value-card fade-in delay-1">
         <div class="value-number">01</div>
         <h4 class="value-title">양심을 챙겨 진솔합니다</h4>
-        <p class="value-desc">고객의 상담요청엔 분명 이유가 있습니다<br>그 이유를 분석하고 파악합니다<span style="display:block;margin-top:0.8em;"></span>불필요한 구매는 권하지 않으며<br>필요에의한 구매를 돕겠습니다</p>
+        <p class="value-desc">고객의 상담 요청엔 분명 이유가 있습니다<br>그 이유를 분석하고 파악합니다<span style="display:block;margin-top:0.8em;"></span>불필요한 구매는 권하지 않으며<br>필요에 의한 구매를 돕겠습니다</p>
       </div>
       <div class="value-card fade-in delay-2">
         <div class="value-number">02</div>
-        <h4 class="value-title">좋은가위의 기준 : 고객</h4>
-        <p class="value-desc">모든 가위는 완벽할 수 없습니다<br>올바른 기준으로 맞추어야 합니다<span style="display:block;margin-top:0.8em;"></span>마모루는 '얼마짜리를 살지'가 아닌,<br> <b>'나와 얼마나 잘 맞는지'</b> 고민하게 해드립니다</p>
+        <h4 class="value-title">좋은 가위의 기준 : 고객</h4>
+        <p class="value-desc">모든 가위는 완벽할 수 없습니다<br>올바른 기준으로 맞추어야 합니다<span style="display:block;margin-top:0.8em;"></span>마모루는 '얼마짜리를 살지'가 아닌,<br><b>'나와 얼마나 잘 맞는지'</b> 고민하게 해드립니다</p>
       </div>
       <div class="value-card fade-in delay-3">
         <div class="value-number">03</div>
         <h4 class="value-title">진짜 사용설명서</h4>
-        <p class="value-desc">더이상 판매자를 찾거나 의존하지 않도록<br>간편한 불편해결법 을 안내하겠습니다<span style="display:block;margin-top:0.8em;"></span>혹시..틴닝가위는 한번구매로<br>평생 사용가능하다는것,<br><b>알고 계셨나요?</b></p>
+        <p class="value-desc">더 이상 판매자를 찾거나 의존하지 않도록<br>간편한 불편 해결법을 안내하겠습니다<span style="display:block;margin-top:0.8em;"></span>혹시, 틴닝가위는 한 번 구매로<br>평생 사용 가능하다는 것,<br><b>알고 계셨나요?</b></p>
       </div>
-      <div class="value-card fade-in delay-3">
+      <div class="value-card fade-in delay-4">
         <div class="value-number">04</div>
-        <h4 class="value-title">부담없이 즐기도록</h4>
-        <p class="value-desc">인턴의 <u>첫 블런트 한자루에 40만원?</u><br>그가격이면 블런트, 틴닝, 장가위,<br>가위집까지 사세요<span style="display:block;margin-top:0.8em;"></span>제품의 판매가격은<br><b>미용사를 생각하는 브랜드의 마음입니다</b></p>
+        <h4 class="value-title">부담 없이 즐기도록</h4>
+        <p class="value-desc">인턴의 <u>첫 블런트 한 자루에 40만 원?</u><br>그 가격이면 블런트, 틴닝, 장가위,<br>가위집까지 사세요<span style="display:block;margin-top:0.8em;"></span>제품의 판매가격은<br><b>미용사를 생각하는 브랜드의 마음입니다</b></p>
       </div>
     </div>
   </div>
@@ -805,7 +806,7 @@ img[src=""] { display: none; }
   <div class="container">
     <div class="chapter fade-in"><span class="chapter-num">03</span><span class="section-label">기술력</span></div>
     <h2 class="section-title fade-in">일반 수리가 아닌<br><b>수냉식 복원수리</b></h2>
-    <p class="section-desc fade-in">잠깐의 불편해결이 아닌 첫느낌, 밸런스까지 복원합니다<br></p>
+    <p class="section-desc fade-in">잠깐의 불편 해결이 아닌 첫 느낌, 밸런스까지 복원합니다</p>
 
     <div class="tech-content">
       <!-- ✏️ 수정가능: 기술력 메인 이미지 (./img/ 에 넣고 src 교체) -->
@@ -827,7 +828,7 @@ img[src=""] { display: none; }
           <div class="tech-feature-icon"><img src="./icons/phone.svg" alt="수리비 아이콘"></div>
           <div class="tech-feature-content">
             <h4>어디에서도 간편한 접수</h4>
-            <p>누구한테 샀더라..?<br>더이상 고민하지마세요<br>간편접수와 빠른 처리로 고민 NO!</p>
+            <p>누구한테 샀더라..?<br>더 이상 고민하지 마세요<br>간편 접수와 빠른 처리로 고민 NO!</p>
           </div>
         </div>
         <div class="tech-feature fade-in delay-3">
@@ -835,7 +836,7 @@ img[src=""] { display: none; }
           <div class="tech-feature-icon"><img src="./icons/gogo.svg" alt="계승 아이콘"></div>
           <div class="tech-feature-content">
             <h4>2대를 잇는 기술력과 진심</h4>
-            <p>50년 경력 아버지의 기술을 잇습니다<br>일본 공장 견학으로 노하우를 접목했습니다<br>일반수리가 아닌, '복원수리'입니다 </p>
+            <p>50년 경력 아버지의 기술을 잇습니다<br>일본 공장 견학으로 노하우를 접목했습니다<br>일반 수리가 아닌, '복원수리'입니다</p>
           </div>
         </div>
       </div>
@@ -855,26 +856,25 @@ img[src=""] { display: none; }
         <!-- 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
         <div class="consult-step-icon"><img src="./icons/best.svg" alt="손 분석"></div>
         <h4>단계별 맞춤</h4>
-        <p>오래 사용할 가위를 목적으로합니다<br>첫 가위라면 오래 사용해도 불편걱정없는 가위로, <br>경력자라면 분석하고 맞추는 상담을</p>
+        <p>오래 사용할 가위를 목적으로 합니다<br>첫 가위라면 오래 써도 불편 걱정 없는 가위로,<br>경력자라면 분석하고 맞추는 상담을</p>
       </div>
       <div class="consult-step fade-in delay-2">
         <!-- 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
         <div class="consult-step-icon"><img src="./icons/best1.svg" alt="스타일 추천"></div>
         <h4>Style 맞춤</h4>
-        <p>커트스타일, 커트습관, 환경, <br>시술하는 손님의 주 고객층까지 분석하여 맞춤가위를 안내하고 설명합니다
-        </p>
+        <p>커트 스타일, 커트 습관, 환경,<br>시술하는 손님의 주 고객층까지 분석하여 맞춤 가위를 안내하고 설명합니다</p>
       </div>
       <div class="consult-step fade-in delay-3">
         <!-- 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
         <div class="consult-step-icon"><img src="./icons/cost.svg" alt="가격 제안"></div>
-        <h4>누구나 부담없이</h4>
-        <p>즐길 수 있는 가격으로<br>가위를 즐기세요<br>제품의 가격은 가치를 뛰어넘어선 안됩니다</p>
+        <h4>누구나 부담 없이</h4>
+        <p>즐길 수 있는 가격으로<br>가위를 즐기세요<br>제품의 가격은 가치를 뛰어넘어선 안 됩니다</p>
       </div>
       <div class="consult-step fade-in delay-4">
         <!-- 임시 blunt.svg (추후 교체) — src만 수정하면 됨 -->
         <div class="consult-step-icon"><img src="./icons/AS.svg" alt="AS 안내"></div>
         <h4>사후관리</h4>
-        <p>마모루 고객은 <br>어디에서나 간편하고 빠른 <br>복원수리를 제공합니다</p>
+        <p>마모루 고객은<br>어디에서나 간편하고 빠른<br>복원수리를 제공받습니다</p>
       </div>
     </div>
   </div>
@@ -923,19 +923,19 @@ img[src=""] { display: none; }
         </p>
 
         <p class="story-paragraph fade-in delay-2">
-          자연스레 가위에 대한 지식과 경험이 쌓였고, 가위시장에 대한 의문이 생겼습니다.<br>
-          미용사는 딜러의 방문을 부담스러워 하면서도 판매자에게 의지를 하는 이유.<br>가위를 <strong>선택하는 기준이 가격뿐이 없다는것.</strong><br>가위가 불편하지만 불편한 이유를 사용자가 알 수 없는 구조.<br><strong>이런 구조가 과연 올바른 구조일까요?</strong>
+          자연스레 가위에 대한 지식과 경험이 쌓였고, 가위 시장에 대한 의문이 생겼습니다.<br>
+          미용사는 딜러의 방문을 부담스러워하면서도 판매자에게 의지하는 이유.<br>가위를 <strong>선택하는 기준이 가격밖에 없다는 것.</strong><br>가위가 불편하지만 그 이유를 사용자가 알 수 없는 구조.<br><strong>이런 구조가 과연 올바른 구조일까요?</strong>
         </p>
-        <p class="story-paragraph fade-in delay-1">
-          저희는 이런 구조를 바꾸고 싶습니다. <br>가위 불편함의 원인을 알게하고, 올바른 선택법을 안내하며, 불필요한 지출을 막아 고객님의 오랜 사용에도 만족감을 느낄 수 있는것.<br>이것이 마모루의 방향입니다</b>
+        <p class="story-paragraph fade-in delay-2">
+          저희는 이런 구조를 바꾸고 싶습니다.<br>가위 불편함의 원인을 알게 하고, 올바른 선택법을 안내하며, 불필요한 지출을 막아 고객님이 오래 쓰실수록 만족을 느끼실 수 있는 것.<br>이것이 마모루의 방향입니다.
         </p>
 
-        <p class="story-paragraph fade-in delay-1">
-          영업 병아리시절부터 고객이 불편한 이유와 그럴 수 밖에 없는 이유를 알기 전까지는 고객과의 상담이 무서웠습니다<br>하지만 지금은 즐겁습니다.<br>어떠한 고객이든 고객을 파악하고 불편을 해결할 수 있다는 자신감과 확신이 있기 때문입니다
+        <p class="story-paragraph fade-in delay-2">
+          영업 병아리 시절, 고객이 불편한 이유와 그럴 수밖에 없는 이유를 알기 전까지는 고객과의 상담이 무서웠습니다.<br>하지만 지금은 즐겁습니다.<br>어떠한 고객이든 파악하고 불편을 해결할 수 있다는 자신감과 확신이 있기 때문입니다.
         </p>
 
         <p class="story-paragraph fade-in delay-3">
-          마모루는 약속합니다<br><b>언제나 가격을 뛰어넘는 가치를 제공하겠습니다.</b> 
+          마모루는 약속합니다.<br><b>언제나 가격을 뛰어넘는 가치를 제공하겠습니다.</b>
         </p>
 
         <div class="story-highlight fade-in">
@@ -979,9 +979,9 @@ img[src=""] { display: none; }
       </div>
 
       <div class="cta-links">
-        <a href="https://pf.kakao.com/_xnAxfxaG" target="_blank" class="cta-link" title="카카오톡"><img src="./icons/kakao.svg" alt="카카오톡"></a>
-        <a href="https://www.instagram.com/mamoru_scissors" target="_blank" class="cta-link" title="인스타그램"><img src="./icons/instagram.svg" alt="인스타그램"></a>
-        <a href="tel:010-0000-0000" class="cta-link" title="전화"><img src="./icons/phone.svg" alt="전화"></a>
+        <a href="https://pf.kakao.com/_KHWNb" target="_blank" rel="noopener" class="cta-link" title="카카오톡 채널"><img src="./icons/kakao.svg" alt="카카오톡"></a>
+        <a href="https://www.instagram.com/mamoru_co" target="_blank" rel="noopener" class="cta-link" title="인스타그램"><img src="./icons/instagram.svg" alt="인스타그램"></a>
+        <a href="tel:02-6326-0426" class="cta-link" title="전화 02-6326-0426"><img src="./icons/phone.svg" alt="전화"></a>
       </div>
     </div>
   </div>
@@ -1031,6 +1031,28 @@ img[src=""] { display: none; }
     else map.addEventListener('load', showMap, { once: true });
   }
 })();
+// 퀵네비 칩 — iframe 안에서는 `href="#id"` 앵커 점프가 죽는다(부모가 높이만큼 늘려줘서 iframe 자체엔 스크롤이 없음).
+// scrollIntoView는 상위 프레임까지 스크롤을 전파하므로 이걸로 이동시킨다. 부모가 직접 스크롤할 수 있도록 좌표도 함께 보낸다.
+(function() {
+  document.querySelectorAll('.intro-quicknav-chip').forEach(function(chip) {
+    chip.addEventListener('click', function(e) {
+      var id = (chip.getAttribute('href') || '').replace('#', '');
+      var el = id && document.getElementById(id);
+      if (!el) return;
+      e.preventDefault();
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (window.parent && window.parent !== window) {
+        var rect = el.getBoundingClientRect();
+        window.parent.postMessage({
+          type: 'MAMORU_SCROLL_TO_OFFSET',
+          sectionId: id,
+          iframeOffsetY: rect.top + (window.scrollY || window.pageYOffset || 0)
+        }, '*');
+      }
+    });
+  });
+})();
+
 (function() {
   var fadeEls = document.querySelectorAll('.fade-in');
   if ('IntersectionObserver' in window) {
@@ -1048,18 +1070,20 @@ img[src=""] { display: none; }
 (function() {
   var lastSentHeight = 0;
   function getFullHeight() {
+    // getBoundingClientRect()는 뷰포트 기준 → 문서 기준으로 쓰려면 scrollY를 더해야 한다
+    var sy = window.scrollY || window.pageYOffset || 0;
     var locationEl = document.getElementById('location');
     if (locationEl) {
       var rect = locationEl.getBoundingClientRect();
-      return Math.ceil(rect.top + rect.height + 50);
+      return Math.ceil(rect.top + sy + rect.height + 50);
     }
     var maxBottom = 0;
     var children = document.body.children;
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
       if (child.tagName !== 'SCRIPT' && child.tagName !== 'STYLE') {
-        var rect = child.getBoundingClientRect();
-        maxBottom = Math.max(maxBottom, rect.top + rect.height);
+        var r = child.getBoundingClientRect();
+        maxBottom = Math.max(maxBottom, r.top + sy + r.height);
       }
     }
     return Math.ceil(maxBottom + 50);
@@ -1069,9 +1093,12 @@ img[src=""] { display: none; }
   }
   window.mm = window.mm || {};
   window.mm.navigateTo = navigateTo;
-  function notifyHeight() {
+  // force=true면 높이가 같아도 무조건 회신한다.
+  // 부모(공통 헤더 리사이저)가 REQUEST_HEIGHT로 다시 물을 땐 부모가 높이를 잃은 상태 →
+  // 여기서 '변화 없음'으로 침묵하면 iframe이 fallback 높이에 잠겨 내용이 잘린다.
+  function notifyHeight(force) {
     var height = getFullHeight();
-    if (window.parent && window.parent !== window && height > 0 && Math.abs(height - lastSentHeight) > 5) {
+    if (window.parent && window.parent !== window && height > 0 && (force || Math.abs(height - lastSentHeight) > 5)) {
       lastSentHeight = height;
       window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: height }, '*');
     }
@@ -1079,7 +1106,7 @@ img[src=""] { display: none; }
   window.addEventListener('message', function(e) {
     if (!e.data || typeof e.data !== 'object') return;
     if (e.data.type === 'REQUEST_HEIGHT') {
-      notifyHeight();
+      notifyHeight(true);
       return;
     }
     // 부모 sticky 퀵네비 클릭 → 섹션의 iframe 내부 좌표를 부모에 응답
