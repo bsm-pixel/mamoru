@@ -145,11 +145,13 @@ function render(anchorSrc) {
   Catalog.copy.forEach(c => { h += copyForm(c); });
   ed.innerHTML = h;
 
-  // 스크롤 복원 — 앵커 블록이 있으면 그 블록 기준(옵션이 지워져 높이가 줄어도 시선 고정),
-  // 없으면 이전 스크롤값 그대로.
+  // 스크롤 복원 — 앵커 블록이 '화면에서 보이던 그 자리'로 돌아오게 현재 스크롤을 상대 보정.
+  // ⚠️ 여기서 prev(교체 전 값)를 더하면 안 된다. 스튜디오는 #ed 자체가 스크롤 박스라
+  //    innerHTML 교체 순간 scrollTop 이 0으로 리셋되고, 단독 편집기는 문서 스크롤이 유지된다.
+  //    두 경우 모두 맞추려면 '지금 값' 기준으로 (새 위치 - 옛 위치)만큼만 밀어야 한다.
   if (beforeTop !== null) {
     const after = ed.querySelector('[data-file="' + CSS.escape(anchorSrc) + '"]');
-    if (after) { sc.scrollTop = prev + (after.getBoundingClientRect().top - beforeTop); return; }
+    if (after) { sc.scrollTop += after.getBoundingClientRect().top - beforeTop; return; }
   }
   sc.scrollTop = prev;
 }
