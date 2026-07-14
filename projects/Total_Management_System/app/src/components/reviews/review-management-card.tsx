@@ -176,7 +176,7 @@ export function ReviewManagementCard({
 
   // 2026-05-26: 자동 발송 예정 판정 (사장님 우려 → 시각 신호)
   //   조건 5중: 토글 ON + 약속 ✓ + 미발송 + 송장 있음 + 배송중(shipped + !delivered)
-  //   ALPS cron 4시간마다 자동 추적 → '41'/'45' 코드 감지 시 자동 발송 예정
+  //   ALPS cron 1시간마다 자동 추적 → '41'/'45' 코드 감지 시 자동 발송 예정
   const autoEnabled = useSetting<boolean>('review.auto_request_on_completion', false);
   const autoSendPending =
     autoEnabled &&
@@ -442,7 +442,7 @@ export function ReviewManagementCard({
             disabled={togglingPromise}
             title={
               autoSendPending
-                ? '배송완료 자동 감지 시 자동 발송 예정 (ALPS cron 4시간마다)'
+                ? '배송완료 자동 감지 시 자동 발송 예정 (ALPS cron 1시간마다)'
                 : requestSentAt ? `최근 발송: ${formatDate(requestSentAt)}` : '후기 요청 알림톡 발송'
             }
             className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition ${

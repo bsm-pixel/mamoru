@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped, useMarkSaleDelivered } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
+import { isB2BCustomerType } from '@/lib/sales/customer-type';
 import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2 } from 'lucide-react';
 import { PrepSheetModal } from './prep-sheet-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -543,10 +544,22 @@ export function SaleDetailPanel({ saleId }: Props) {
               </div>
               {s.shipped_at ? (
                 <>
-                  <p className="text-xs text-green-600 flex items-center gap-1">
+                  <p className="text-xs text-green-600 flex items-center gap-1 flex-wrap">
                     <CheckCircle size={12} />
                     출고완료 {formatDate(s.shipped_at)}
+                    {/* 109: 롯데 기사님 수거 스캔으로 자동 처리된 건 */}
+                    {s.shipped_source === 'alps_pickup' && (
+                      <span className="text-[10px] text-neutral-400">· 기사님 수거 자동감지</span>
+                    )}
                   </p>
+                  {/* 109: 출고 알림톡 발송 여부 — 사장님이 가장 궁금해할 정보 */}
+                  {s.shipped_notified_at ? (
+                    <p className="text-[11px] text-neutral-400">
+                      출고 알림톡 발송됨 {formatDate(s.shipped_notified_at, 'M월 d일 HH:mm')}
+                    </p>
+                  ) : isB2BCustomerType(s.customer_type) ? (
+                    <p className="text-[11px] text-neutral-400">거래처(B2B) — 출고 알림톡 미발송</p>
+                  ) : null}
                   {/* 배송완료 표시 (자동 cron OR 수동 fallback) */}
                   {s.delivered_at ? (
                     <p className="text-xs text-neutral-500 flex items-center gap-1">
@@ -556,7 +569,7 @@ export function SaleDetailPanel({ saleId }: Props) {
                   ) : (
                     <div className="space-y-1 pt-1">
                       <p className="text-xs text-neutral-400 leading-relaxed">
-                        ALPS 인수자등록 자동 감지 시 배송완료 전환됩니다 (4시간마다 자동 확인)
+                        ALPS 인수자등록 자동 감지 시 배송완료 전환됩니다 (1시간마다 자동 확인)
                       </p>
                       <button
                         onClick={() => markDelivered.mutate({ id: saleId, mode: 'delivery' })}
@@ -570,6 +583,11 @@ export function SaleDetailPanel({ saleId }: Props) {
                 </>
               ) : (
                 <>
+                  {/* 109: 자동 감지 안내 — "왜 버튼 안 눌렀는데 됐지?" 를 막는 문구 */}
+                  <p className="text-[11px] text-neutral-400 leading-relaxed">
+                    롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인)
+                    {!isB2BCustomerType(s.customer_type) && ' · 출고 알림톡도 자동 발송'}
+                  </p>
                   <Button
                     size="sm"
                     onClick={() => { setShipNotify(true); setShowShipConfirm(true); }}

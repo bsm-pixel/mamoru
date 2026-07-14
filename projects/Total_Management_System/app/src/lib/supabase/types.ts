@@ -347,6 +347,7 @@ export interface Database {
           invoice_number: string | null;
           courier_name: string | null;
           shipped_at: string | null;
+          shipped_source: 'manual' | 'alps_pickup' | null;  // 109: 출고 기록 주체 (집하 자동감지 구분)
           paid_at: string | null;
           delivered_at: string | null;
           confirmed_at: string | null;  // R1: 접수확인 시점
@@ -390,6 +391,7 @@ export interface Database {
           invoice_number?: string | null;
           courier_name?: string | null;
           shipped_at?: string | null;
+          shipped_source?: 'manual' | 'alps_pickup' | null;  // 109
           paid_at?: string | null;
           delivered_at?: string | null;
           confirmed_at?: string | null;
@@ -426,6 +428,7 @@ export interface Database {
           invoice_number?: string | null;
           courier_name?: string | null;
           shipped_at?: string | null;
+          shipped_source?: 'manual' | 'alps_pickup' | null;  // 109
           paid_at?: string | null;
           delivered_at?: string | null;
           confirmed_at?: string | null;
@@ -580,12 +583,17 @@ export interface Database {
           review_promised_subtype: string | null; // 095: 약속 세부 유형 (direct_visit/pickup/store_visit/field_request/talk_consult)
           review_submitted_at: string | null;       // 067: 리뷰 작성 완료 시점
           source_consultation_id: string | null;    // 070: 출장/매장상담 → 판매 link (mirror 모드 트리거)
+          // 038: 고객 유형 스냅샷 (B2C/B2B 판정 — dealer/academy = B2B)
+          customer_type: string | null;
           // 048: 택배 발송 (송장 / 출고시각 / 택배사)
           invoice_number: string | null;
           shipped_at: string | null;
           courier_name: string | null;
           // 091: 배송완료/고객수령 시각 (cron ALPS 자동 OR "고객 수령 완료" 수동)
           delivered_at: string | null;
+          // 109: 집하 자동감지 (출고 기록 주체 / 출고 알림톡 발송 시각)
+          shipped_source: 'manual' | 'alps_pickup' | null;
+          shipped_notified_at: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -633,12 +641,16 @@ export interface Database {
           review_promised_subtype?: string | null;
           review_submitted_at?: string | null;
           source_consultation_id?: string | null;
+          customer_type?: string | null;
           // 048: 택배 발송
           invoice_number?: string | null;
           shipped_at?: string | null;
           courier_name?: string | null;
           // 091: 배송완료/수령완료
           delivered_at?: string | null;
+          // 109: 집하 자동감지
+          shipped_source?: 'manual' | 'alps_pickup' | null;
+          shipped_notified_at?: string | null;
         };
       };
       offline_sale_items: {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
-import { sendNotification } from '@/lib/notification/make-webhook';
+import { sendSalesShippedNotification } from '@/lib/notification/sales-shipped';
 import { sendReviewRequestNotification } from '@/lib/notification/review-request';
 import { getServerSetting } from '@/hooks/use-settings';
 import { recalcOutstanding } from '@/lib/outstanding';
@@ -320,41 +320,40 @@ export async function PATCH(
 
       const { send_notification } = body as { send_notification?: boolean };
 
-      const { error: updateErr } = await db
+      // 109: 조건부 CAS — 크론(집하 자동감지)이 먼저 처리했으면 여기서 덮어쓰지 않는다
+      const { data: claimed, error: updateErr } = await db
         .from('offline_sales')
-        .update({ shipped_at: new Date().toISOString() })
-        .eq('id', id);
+        .update({ shipped_at: new Date().toISOString(), shipped_source: 'manual' })
+        .eq('id', id)
+        .is('shipped_at', null)
+        .select('id');
 
       if (updateErr) throw updateErr;
+      if (!claimed || claimed.length === 0) {
+        return NextResponse.json({ error: '이미 출고완료 처리되었습니다 (기사님 수거 자동 감지)' }, { status: 400 });
+      }
 
-      // 선택적 알림톡 발송 (백그라운드)
-      if (send_notification && sale.customer_phone) {
+      // 선택적 알림톡 발송 (백그라운드) — 109: 자동 경로와 같은 공유 함수 사용
+      if (send_notification) {
         after(async () => {
           try {
-            // 품명 조회
-            const { data: saleItems } = await db
-              .from('offline_sale_items')
-              .select('product_name, quantity')
-              .eq('sale_id', id);
-            const goodsName = saleItems && saleItems.length > 0
-              ? saleItems.map((i: { product_name: string; quantity: number }) =>
-                  i.quantity > 1 ? `${i.product_name} ×${i.quantity}` : i.product_name
-                ).join(', ')
-              : '마모루 제품';
-
-            const result = await sendNotification({
-              template: 'sales_shipped',
-              phone: sale.customer_phone,
-              name: sale.customer_name,
-              data: {
-                id: sale.sale_number || id,
-                tracking: sale.invoice_number || '',
-                courier: sale.courier_name || '롯데택배',
-                goods_name: goodsName,
-              },
+            const sent = await sendSalesShippedNotification(db, {
+              id,
+              saleNumber: sale.sale_number,
+              invoiceNumber: sale.invoice_number,
+              customerName: sale.customer_name,
+              customerPhone: sale.customer_phone,
+              customerType: sale.customer_type,
+              courierName: sale.courier_name,
             });
-            if (!result.success) console.error('[sales mark_shipped notify] 실패:', result.error);
-            else console.log('[sales mark_shipped notify] 출고 알림톡 발송 성공');
+            if (sent.sent) {
+              await db.from('offline_sales')
+                .update({ shipped_notified_at: new Date().toISOString() })
+                .eq('id', id);
+              console.log('[sales mark_shipped notify] 출고 알림톡 발송 성공');
+            } else {
+              console.log(`[sales mark_shipped notify] 미발송 — ${sent.reason} ${sent.error || ''}`);
+            }
           } catch (e) {
             console.error('[sales mark_shipped notify] 예외:', e);
           }

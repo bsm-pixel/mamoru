@@ -261,7 +261,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
               {currentStatus === 'shipped' && (
                 <div className="pt-1 space-y-1">
                   <p className="text-xs text-neutral-400 leading-relaxed">
-                    ALPS 인수자등록 자동 감지 시 배송완료 전환됩니다 (4시간마다 자동 확인)
+                    ALPS 인수자등록 자동 감지 시 배송완료 전환됩니다 (1시간마다 자동 확인)
                   </p>
                   <button
                     onClick={() =>

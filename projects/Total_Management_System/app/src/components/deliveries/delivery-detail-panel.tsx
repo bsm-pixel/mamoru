@@ -252,7 +252,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
           ) : dl.tracking_number ? (
             <div>
               <span className="text-xs text-neutral-500">배송완료</span>
-              <p className="text-xs text-neutral-400">인수자등록 자동 감지 시 표시 (4시간마다 확인)</p>
+              <p className="text-xs text-neutral-400">인수자등록 자동 감지 시 표시 (1시간마다 확인)</p>
             </div>
           ) : null}
           <div>

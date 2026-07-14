@@ -37,6 +37,8 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
   const [pushOrderReceived, setPushOrderReceived] = useState(true);
   // 067: 후기 요청 자동 발송 정책 토글
   const [reviewAutoRequest, setReviewAutoRequest] = useState(false);
+  // 109: 판매 출고 알림톡 (집하 자동감지 시 B2C 고객에게 발송) — 코드엔 있었으나 화면에 토글이 없었음
+  const [salesShipped, setSalesShipped] = useState(true);
 
   useEffect(() => {
     setMasterEnabled(parse(settings['notifications.master_enabled'], true));
@@ -46,6 +48,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     setRepairPayment(parse(settings['notifications.repair_payment_confirmed'], true));
     setRepairShipped(parse(settings['notifications.repair_shipped'], true));
     setReviewRequest(parse(settings['notifications.review_request'], true));
+    setSalesShipped(parse(settings['notifications.sales_shipped'], true));
     setWebhookConsultation(parse(settings['notifications.webhook_consultation'], ''));
     setWebhookAsReceived(parse(settings['notifications.webhook_as_received'], ''));
     setWebhookRepair(parse(settings['notifications.webhook_repair'], ''));
@@ -69,6 +72,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
       { key: 'notifications.repair_payment_confirmed', value: repairPayment },
       { key: 'notifications.repair_shipped', value: repairShipped },
       { key: 'notifications.review_request', value: reviewRequest },
+      { key: 'notifications.sales_shipped', value: salesShipped },
       { key: 'notifications.webhook_consultation', value: webhookConsultation },
       { key: 'notifications.webhook_as_received', value: webhookAsReceived },
       { key: 'notifications.webhook_repair', value: webhookRepair },
@@ -100,7 +104,8 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     { key: 'repair_received', label: '복원수리 접수 확인', state: repairReceived, setter: setRepairReceived },
     { key: 'repair_cost_notice', label: '비용안내', state: repairCostNotice, setter: setRepairCostNotice },
     { key: 'repair_payment', label: '입금확인', state: repairPayment, setter: setRepairPayment },
-    { key: 'repair_shipped', label: '출고', state: repairShipped, setter: setRepairShipped },
+    { key: 'repair_shipped', label: '복원수리 출고', state: repairShipped, setter: setRepairShipped },
+    { key: 'sales_shipped', label: '판매 출고 안내 (기사님 수거 시 자동)', state: salesShipped, setter: setSalesShipped },
     { key: 'review_request', label: '리뷰 요청', state: reviewRequest, setter: setReviewRequest },
   ];
 

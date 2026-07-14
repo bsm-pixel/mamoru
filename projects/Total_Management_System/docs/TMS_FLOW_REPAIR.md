@@ -70,14 +70,27 @@ B·C는 두 화면 완전 동일. **A채널만 화면 목적에 따라 기준이
 
 ---
 
-## 리뷰 요청 분기 (2026-04-29 추가)
+## 리뷰 요청 분기 (2026-04-29 추가 / 2026-07-12 버그 수정)
 
-배송완료(`delivered`) 진입 시 후기 알림톡 발송 정책. `system_settings.review.auto_request_on_completion` 토글로 두 모드 양립.
+배송완료(`delivered`) 진입 시 후기 알림톡 발송 정책. `system_settings.review.auto_request_on_completion` 토글 + **약속(`review_promised_at`) 받은 고객만** 자동 발송 (판매와 동일 정책).
 
-- **Mode A (default OFF)**: 자동 발송 X, 사장님 수동만
-- **Mode B (ON)**: 약속 X 고객만 자동, 약속 ✓ 고객은 항상 수동
+🔴 **2026-07-12 (109) 버그 수정 — 자동 배송완료 건은 리뷰 알림톡이 아예 안 나가고 있었다.**
+크론(`track-delivery`)이 `repairs` 를 **DB 직접 update** 해서, 발송 코드가 있는 `PATCH /api/repair/[id]` 를 우회했기 때문.
+→ 사장님이 **수동으로** 상태를 바꿀 때만 발송됐고, **ALPS 자동 감지로 배송완료된 건은 발송 0건**.
+→ 크론 repairs 블록에 판매와 동일한 4중 가드(토글 → 약속 → 미발송 → 전화번호)를 복제해 해결.
+
+발송 경로 2개 (둘 다 같은 가드):
+| 경로 | 트리거 |
+|---|---|
+| `PATCH /api/repair/[id]` | 사장님이 화면에서 상태를 delivered 로 변경 |
+| `cron/track-delivery` [2] | ALPS 41/45 자동 감지 ← **109 에서 추가** |
 
 3 timestamp: `review_promised_at` / `review_request_sent_at` / `review_submitted_at`. reviews/submit가 `repairs.as_id` 매칭으로 review_submitted_at 자동 기록. 상세 패널의 "리뷰 관리" 카드와 `/reviews` "약속 대기" 탭에서 추적.
+
+## 출고 = 집하 자동 감지 (109, 2026-07-12)
+
+송장 발급 시 `status='ready_to_ship'`. **롯데 기사님이 수거 스캔(ALPS `10`)하면 크론이 자동으로 `shipped` 전환 + `as_shipped` 알림톡 발송.**
+`shipped_source='alps_pickup'` 으로 자동/수동 구분. 상세는 [TMS_FLOW_AUTO_DELIVERY.md](TMS_FLOW_AUTO_DELIVERY.md) 참조.
 
 ---
 

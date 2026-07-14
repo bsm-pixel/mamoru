@@ -235,10 +235,46 @@ export async function cancelShipment(invoiceNumber: string): Promise<{ success: 
   }
 }
 
-/* ── 배송 상태 조회 ── */
+/* ── 집하(수거) 판정 (109, 2026-07-12) ──
+   롯데 기사님이 방문 수거하며 스캔하면 godsStatCd '10'(집하)이 찍힌다.
+
+   ALPS 코드표: 02 출력 · 10 집하 · 12 운송장등록 · 20/21 구간이동 · 40 배달전 · 41 배달완료 · 45 인수자등록 · 09 반품취소
+
+   ⚠️ '10' 만 정확히 매칭하면 안 된다 — 크론이 집하~간선 사이 구간을 놓치고 조회하면 영영 출고 처리가 안 된다.
+      그래서 "집하 이후 단계(20 이상)"도 수거된 것으로 본다.
+   🚨 그렇다고 ">= 10" 으로 잡으면 **12(운송장등록)가 걸린다.** 12 는 우리가 송장을 발급하는 순간 찍히는 코드라,
+      송장만 만들고 아직 기사님이 오지도 않은 건이 전부 출고 처리 + 알림톡 발송되는 사고가 난다. (테스트로 발견) */
+function isPickedUpCode(code: string): boolean {
+  if (code === '09') return false;              // 반품취소
+  const n = Number(code);
+  if (!Number.isFinite(n)) return false;
+  return n === 10 || n >= 20;                   // 10=집하 / 20↑=간선·배달 (02 출력, 12 운송장등록은 제외)
+}
+
+/* 스캔 시각 추출 — ALPS tracking 레코드의 날짜 필드명이 문서상 불확실해 후보 키를 순차 탐색.
+   찾지 못하면 undefined 를 돌려주고 호출부가 '감지 시각(now)'으로 대체한다(기능 영향 없음). */
+const SCAN_DATE_KEYS = ['scanDtm', 'scnDttm', 'workDtm', 'regDtm', 'procDtm', 'scanDt', 'workDt', 'godsStatDtm'];
+function extractScanAt(rec: Record<string, unknown>): string | undefined {
+  for (const k of SCAN_DATE_KEYS) {
+    const raw = rec[k];
+    if (!raw) continue;
+    const s = String(raw).replace(/\D/g, '');          // 'yyyyMMddHHmmss' / 'yyyy-MM-dd HH:mm:ss' 모두 흡수
+    if (s.length < 8) continue;
+    const iso = `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}T${s.slice(8, 10) || '00'}:${s.slice(10, 12) || '00'}:${s.slice(12, 14) || '00'}+09:00`; // ALPS = KST
+    const d = new Date(iso);
+    if (!isNaN(d.getTime())) return d.toISOString();
+  }
+  return undefined;
+}
+
+/* ── 배송 상태 조회 ──
+   ⚠️ state/detail 은 기존 그대로 (호출부 3곳 무영향). pickedUp/pickedUpAt 은 109 신규 추가 필드. */
 export async function queryTrackingStatus(invoiceNumber: string): Promise<{
   state: 'ACTIVE' | 'CANCELLED' | 'DELIVERED' | 'NOT_FOUND';
   detail?: string;
+  pickedUp?: boolean;        // 109: 기사 수거 스캔 이후로 진행됨
+  pickedUpAt?: string;       // 109: 집하 스캔 시각 (파싱 실패 시 undefined)
+  trackingKeys?: string[];   // 109: ?debug=1 진단용 — 실제 필드명 확인 후 제거 가능
 }> {
   if (!LOTTE_TRACK_API_URL || !LOTTE_CLIENT_KEY || !LOTTE_JOBCUSTCD) {
     return { state: 'NOT_FOUND', detail: 'LOTTE 환경변수 미설정' };
@@ -257,17 +293,25 @@ export async function queryTrackingStatus(invoiceNumber: string): Promise<{
     if (code !== 'S') return { state: 'NOT_FOUND', detail: `code=${code || 'empty'} msg=${String(json.message || '').slice(0, 100)}` };
 
     const tracking = Array.isArray(json.tracking) ? json.tracking : [];
-    if (tracking.some((x: Record<string, unknown>) => String(x.godsStatCd || '') === '09')) return { state: 'CANCELLED' };
+    if (tracking.some((x: Record<string, unknown>) => String(x.godsStatCd || '') === '09')) return { state: 'CANCELLED', pickedUp: false };
+
+    // 109: 집하(수거) 판정 — 상태 분기와 독립적으로 계산해 모든 return 에 실어 보낸다
+    const pickupRec = tracking.find((x: Record<string, unknown>) => String(x.godsStatCd || '') === '10')
+      || tracking.find((x: Record<string, unknown>) => isPickedUpCode(String(x.godsStatCd || '')));
+    const pickedUp = !!pickupRec;
+    const pickedUpAt = pickupRec ? extractScanAt(pickupRec as Record<string, unknown>) : undefined;
+    const trackingKeys = tracking.length > 0 ? Object.keys(tracking[0] as Record<string, unknown>) : [];
+
     // 배달완료 감지 (2026-05-24 버그 수정): '91' → '41'(배달완료) 또는 '45'(인수자등록)
     // 실제 ALPS API 응답: 41 = 기사 배달완료, 45 = 고객 인수확인. 옛 코드 '91' 은 영원히 매칭 안 됐음.
     if (tracking.some((x: Record<string, unknown>) => {
       const code = String(x.godsStatCd || '');
       return code === '41' || code === '45';
-    })) return { state: 'DELIVERED' };
+    })) return { state: 'DELIVERED', pickedUp: true, pickedUpAt, trackingKeys };  // 배달완료면 집하는 당연히 지났음
 
     const result = Array.isArray(json.result) ? json.result : [];
-    if (tracking.length === 0 && result.length === 0) return { state: 'NOT_FOUND', detail: 'tracking empty' };
-    return { state: 'ACTIVE' };
+    if (tracking.length === 0 && result.length === 0) return { state: 'NOT_FOUND', detail: 'tracking empty', pickedUp: false };
+    return { state: 'ACTIVE', pickedUp, pickedUpAt, trackingKeys };
   } catch (e) {
     return { state: 'NOT_FOUND', detail: `exception: ${String(e).slice(0, 150)}` };
   }

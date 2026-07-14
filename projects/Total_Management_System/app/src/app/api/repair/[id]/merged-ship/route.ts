@@ -84,6 +84,7 @@ export async function POST(
         invoice_number: cleanInvoice,
         courier_name: cleanCourier,
         shipped_at: now,
+        shipped_source: 'manual',   // 109: 합포장 출고 = 사장님 수동 (집하 자동감지와 구분)
       })
       .eq('id', id)
       .select()

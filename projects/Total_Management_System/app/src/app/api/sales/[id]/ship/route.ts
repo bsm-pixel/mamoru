@@ -113,10 +113,12 @@ export async function DELETE(
       warning = `ALPS 취소 실패: ${cancelResult.error}`;
     }
 
-    // DB 업데이트
+    // DB 업데이트 (109: 집하 자동감지 흔적도 함께 초기화 — 재출고 시 상태 오염 방지)
     await db.from('offline_sales').update({
       invoice_number: null,
       shipped_at: null,
+      shipped_source: null,
+      shipped_notified_at: null,
       delivery_method: 'pickup',
     }).eq('id', id);
 

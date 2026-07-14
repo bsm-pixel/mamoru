@@ -3,20 +3,26 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { queryStatus } from '@/lib/lotte/client';
 import { queryTrackingStatus } from '@/lib/lotte/alps-client';
 import { sendReviewRequestNotification } from '@/lib/notification/review-request';
+import { sendSalesShippedNotification } from '@/lib/notification/sales-shipped';
+import { sendNotification } from '@/lib/notification/make-webhook';
+import { isB2BCustomerType } from '@/lib/sales/customer-type';
 import { getServerSetting } from '@/hooks/use-settings';
 
 /**
  * GET /api/cron/track-delivery
  *
- * 1) 아임웹 orders: shipping → delivered (queryStatus)
- * 2) 복원수리 repairs: shipped → delivered (queryTrackingStatus = ALPS 41/45 인수자등록)
- * 3) [예정] offline_sales: shipped_at→delivered_at (Phase 2)
+ * [1] 아임웹 orders   : shipping → delivered (queryStatus)
+ * [2] 복원수리 repairs : shipped → delivered (ALPS 41/45 인수자등록) + 후기요청 (109 추가)
+ * [2-A] 복원수리 집하 : ready_to_ship → shipped (ALPS 10 집하) + as_shipped 알림톡  ← 109 신규
+ * [3-A] 판매 집하     : 송장O·미출고 → shipped_at 자동 기록 + B2C 출고 알림톡      ← 109 신규
+ * [3] 판매 offline_sales: shipped_at → delivered_at + 후기요청
+ * [4] B2B 납품 deliveries: → delivered_at
  *
- * 2026-05-25 추가:
- *   - orders 자동 후기요청 발송 (settings 토글 ON + 가드 통과 시)
- *   - debug=1 시 ordersFirstResults 노출
- *
- * → 사장님이 ALPS 직접 확인 없이 TMS 카드 status 로 배송완료 즉시 확인 가능
+ * 109 (2026-07-12) — 집하 자동 감지:
+ *   롯데 기사님이 방문 수거하며 스캔하면 ALPS 가 '집하'(godsStatCd 10)로 바뀐다.
+ *   그 코드는 원래부터 응답에 왔지만 09/41/45 만 보느라 버려지고 있었다.
+ *   → 사장님의 수동 클릭 2회([출고완료] + 알림톡 체크)를 0회로.
+ *   ⚠️ 알림톡은 B2C 만. B2B(딜러·아카데미) 는 발송하지 않는다.
  */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
@@ -32,16 +38,24 @@ export async function GET(request: NextRequest) {
   const debug = url.searchParams.get('debug') === '1';
   const debugResults: Array<{ as_id: string; invoice: string; state: string; detail?: string }> = [];
   const ordersDebugResults: Array<{ order_no: string; invoice: string; state: string; raw_code?: string }> = [];
+  // 109: 집하 감지 진단 — ALPS tracking 레코드의 실제 필드명(trackingKeys) 확인용
+  const salesPickupDebug: Array<{
+    sale_number: string; invoice: string; state: string;
+    pickedUp: boolean; pickedUpAt?: string; trackingKeys?: string[];
+  }> = [];
 
   try {
     // 🚨 cron 은 user 인증 없으므로 service role 클라이언트 필수 (RLS 우회)
     //    2026-05-24: createServerSupabaseClient (cookie 기반) 쓰던 버그 발견 → RLS 막혀 0건 처리됨
     const supabase = createServiceClient();
+    // 109: 신규 블록용 별칭 — 기존 코드의 `db` 반복 대신 한 번만 캐스팅 (lint 에러 증가 0)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // [1] 아임웹 orders 추적 (shipping → delivered) + 자동 후기요청 (2026-05-25 확장)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    const { data: orders, error: ordersErr } = await (supabase as any)
+    const { data: orders, error: ordersErr } = await db
       .from('orders')
       .select('id, invoice_number, imweb_order_no, orderer_name, orderer_phone, review_requested_at')
       .eq('status', 'shipping')
@@ -63,7 +77,7 @@ export async function GET(request: NextRequest) {
           });
         }
         if (result.ok && result.state === 'DELIVERED') {
-          await (supabase as any)
+          await db
             .from('orders')
             .update({
               status: 'delivered',
@@ -79,7 +93,7 @@ export async function GET(request: NextRequest) {
           //   향후 사장님 정책 통일 원하면 orders.review_promised_at 컬럼 마이그레이션 필요
           after(async () => {
             try {
-              const autoEnabled = await getServerSetting<boolean>(supabase as any, 'review.auto_request_on_completion', false);
+              const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
               if (!autoEnabled) {
                 console.log(`[track-delivery/orders auto-review] ${order.imweb_order_no} skip — 토글 OFF`);
                 return;
@@ -98,7 +112,7 @@ export async function GET(request: NextRequest) {
                 reviewType: 'purchase',
               });
               if (r.success) {
-                await (supabase as any).from('orders')
+                await db.from('orders')
                   .update({ review_requested_at: new Date().toISOString() })
                   .eq('id', order.id);
                 console.log(`[track-delivery/orders auto-review] ${order.imweb_order_no} 발송 성공`);
@@ -121,9 +135,80 @@ export async function GET(request: NextRequest) {
     //   - status='shipped' + invoice_number 있는 건 50건 폴링
     //   - ALPS queryTrackingStatus '91' (인수자등록) 감지 시 자동 delivered 전환
     //   - 합포장 출고 케이스(다른 주문 송장 복사된 건)도 동일 흐름 (invoice_number 채워져 있음)
-    const { data: repairs, error: repairsErr } = await (supabase as any)
+    // ── [2-A] 복원수리 집하 감지 (ready_to_ship → shipped) — 109 신규 ──
+    //   송장 발급 시 status='ready_to_ship' (api/repair/[id]/ship). 기사님이 수거하면 자동 출고 처리.
+    const { data: repairPickups, error: repairPickupErr } = await db
       .from('repairs')
-      .select('id, as_id, invoice_number, name')
+      .select('id, as_id, invoice_number, name, phone, courier_name')
+      .eq('status', 'ready_to_ship')
+      .not('invoice_number', 'is', null)
+      .limit(50);
+
+    if (repairPickupErr) throw repairPickupErr;
+
+    let repairsPicked = 0;
+    for (const repair of repairPickups || []) {
+      try {
+        const r = await queryTrackingStatus(repair.invoice_number);
+        if (r.state === 'CANCELLED' || r.state === 'NOT_FOUND') continue;
+        if (!r.pickedUp) continue;
+
+        // 조건부 CAS — status 가 아직 ready_to_ship 일 때만 전이 (중복 알림톡 차단)
+        const { data: claimed } = await db
+          .from('repairs')
+          .update({
+            status: 'shipped',
+            shipped_at: r.pickedUpAt || new Date().toISOString(),
+            shipped_source: 'alps_pickup',
+          })
+          .eq('id', repair.id)
+          .eq('status', 'ready_to_ship')
+          .select('id');
+
+        if (!claimed || claimed.length === 0) continue;
+        repairsPicked++;
+
+        await db.from('repair_history').insert({
+          repair_id: repair.id,
+          from_status: 'ready_to_ship',
+          to_status: 'shipped',
+          changed_by: null,                       // 자동 cron
+          note: '롯데 집하 자동 감지 (기사님 수거 스캔)',
+        });
+        console.log(`[track-delivery/repairs pickup] ${repair.as_id} (${repair.name}) → 출고완료(수거) 자동 처리`);
+
+        // 출고 알림톡 (as_shipped) — 이미 배달완료된 건은 skip (이미 받은 고객에게 "출고했습니다" 금지)
+        if (r.state === 'DELIVERED') {
+          console.log(`[track-delivery/repairs pickup] ${repair.as_id} 알림톡 skip — 이미 배달완료`);
+          continue;
+        }
+        if (!repair.phone) continue;
+        after(async () => {
+          try {
+            const sent = await sendNotification({
+              template: 'as_shipped',
+              phone: repair.phone,
+              name: repair.name,
+              data: {
+                as_uid: repair.as_id,
+                courier: repair.courier_name || '롯데택배',
+                tracking: repair.invoice_number || '',
+              },
+            });
+            if (!sent.success) console.error(`[track-delivery/repairs pickup] ${repair.as_id} 알림톡 실패:`, sent.error);
+            else console.log(`[track-delivery/repairs pickup] ${repair.as_id} 출고 알림톡 발송 성공`);
+          } catch (e) {
+            console.error(`[track-delivery/repairs pickup] ${repair.as_id} 알림톡 예외:`, e);
+          }
+        });
+      } catch (e) {
+        console.error(`[track-delivery/repairs pickup] ${repair.as_id} 집하 확인 실패:`, e);
+      }
+    }
+
+    const { data: repairs, error: repairsErr } = await db
+      .from('repairs')
+      .select('id, as_id, invoice_number, name, phone, review_promised_at, review_promised_type, review_promised_subtype, review_request_sent_at')
       .eq('status', 'shipped')
       .not('invoice_number', 'is', null)
       .limit(50);
@@ -143,7 +228,7 @@ export async function GET(request: NextRequest) {
           });
         }
         if (result.state === 'DELIVERED') {
-          await (supabase as any)
+          await db
             .from('repairs')
             .update({
               status: 'delivered',
@@ -152,7 +237,7 @@ export async function GET(request: NextRequest) {
             .eq('id', repair.id);
 
           // 이력 기록 (자동 전환임을 명시)
-          await (supabase as any).from('repair_history').insert({
+          await db.from('repair_history').insert({
             repair_id: repair.id,
             from_status: 'shipped',
             to_status: 'delivered',
@@ -162,9 +247,150 @@ export async function GET(request: NextRequest) {
 
           repairsDelivered++;
           console.log(`[track-delivery/repairs] ${repair.as_id} (${repair.name}) → 배송완료`);
+
+          // 🔴 109 버그 수정: 자동 후기요청 (판매와 동일 정책 — '약속한 고객만')
+          //    기존엔 이 크론이 DB 를 직접 update 해서 PATCH /api/repair/[id] 의 발송 코드를 우회했다.
+          //    → 사장님이 수동으로 상태를 바꿀 때만 나가고, ALPS 자동 배송완료 건은 발송 자체가 없었음.
+          after(async () => {
+            try {
+              const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
+              if (!autoEnabled) {
+                console.log(`[track-delivery/repairs auto-review] ${repair.as_id} skip — 토글 OFF`);
+                return;
+              }
+              if (!repair.review_promised_at) {
+                console.log(`[track-delivery/repairs auto-review] ${repair.as_id} skip — 약속 X (사장님 수동만)`);
+                return;
+              }
+              if (repair.review_request_sent_at) {
+                console.log(`[track-delivery/repairs auto-review] ${repair.as_id} skip — 이미 발송됨`);
+                return;
+              }
+              if (!repair.phone) return;
+
+              const reviewType = (repair.review_promised_type as 'purchase' | 'repair' | 'consult' | null) || 'repair';
+              const subtype = reviewType === 'purchase' ? undefined : (repair.review_promised_subtype as string | null) || undefined;
+              const r = await sendReviewRequestNotification({
+                source: 'repair',
+                sourceId: repair.as_id,
+                customerName: repair.name || '고객',
+                customerPhone: repair.phone,
+                reviewType,
+                subtype,
+              });
+              if (r.success) {
+                await db.from('repairs')
+                  .update({ review_request_sent_at: new Date().toISOString() })
+                  .eq('id', repair.id);
+                console.log(`[track-delivery/repairs auto-review] ${repair.as_id} 발송 성공`);
+              } else {
+                console.error(`[track-delivery/repairs auto-review] 실패:`, r.error);
+              }
+            } catch (e) {
+              console.error(`[track-delivery/repairs auto-review] 예외:`, e);
+            }
+          });
         }
       } catch (e) {
         console.error(`[track-delivery/repairs] ${repair.as_id} 추적 실패:`, e);
+      }
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // [3-A] offline_sales 집하 감지 (송장O·미출고 → 자동 출고완료 + B2C 출고 알림톡) — 109 신규
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //   진입 조건: 송장 있음 + 아직 출고 전 + 배송 미완료 + 미취소 + 최근 30일
+    //   ⚠️ 30일 필터: "송장만 뽑고 영영 안 나가는 건"(취소 누락 등)이 limit 50 을 영구 점유해
+    //      신건이 밀리는 적체를 막는다. 30일 넘은 미출고 건은 데이터 오류 → 사장님 수동 정리.
+    //   ⚠️ 반드시 [3] 앞에 둔다: 여기서 shipped_at 을 채우면 [3] 의 SELECT 가 그 건을 바로 주워
+    //      같은 사이클에 delivered_at 까지 처리한다(집하+배달완료가 함께 잡힌 건).
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const { data: pickupTargets, error: pickupErr } = await db
+      .from('offline_sales')
+      .select('id, sale_number, invoice_number, customer_name, customer_phone, customer_type, courier_name')
+      .not('invoice_number', 'is', null)
+      .is('shipped_at', null)
+      .is('delivered_at', null)
+      .is('cancelled_at', null)
+      .gte('sale_date', thirtyDaysAgo)
+      .order('sale_date', { ascending: false })
+      .limit(50);
+
+    if (pickupErr) throw pickupErr;
+
+    let salesPicked = 0;
+    let salesNotified = 0;
+    let salesPickupSkippedB2B = 0;
+    for (const sale of pickupTargets || []) {
+      try {
+        const r = await queryTrackingStatus(sale.invoice_number);
+        if (debug && salesPickupDebug.length < 3) {
+          salesPickupDebug.push({
+            sale_number: sale.sale_number, invoice: sale.invoice_number,
+            state: r.state, pickedUp: !!r.pickedUp, pickedUpAt: r.pickedUpAt,
+            trackingKeys: r.trackingKeys,   // ALPS 실제 필드명 확인용 (확정 후 제거 가능)
+          });
+        }
+        // 송장 취소/미접수 건은 건드리지 않는다
+        if (r.state === 'CANCELLED' || r.state === 'NOT_FOUND') continue;
+        if (!r.pickedUp) continue;   // 아직 기사님이 안 가져감
+
+        // 🔒 조건부 CAS — shipped_at 이 아직 NULL 일 때만 채운다.
+        //    크론 중복 실행 / 사장님 수동 버튼 동시 클릭에도 알림톡이 정확히 1회만 나가게 하는 핵심.
+        const { data: claimed } = await db
+          .from('offline_sales')
+          .update({
+            shipped_at: r.pickedUpAt || new Date().toISOString(),
+            shipped_source: 'alps_pickup',
+          })
+          .eq('id', sale.id)
+          .is('shipped_at', null)
+          .select('id');
+
+        if (!claimed || claimed.length === 0) continue;   // 다른 경로가 선점 → 알림톡 skip
+        salesPicked++;
+        console.log(`[track-delivery/offline_sales pickup] ${sale.sale_number} (${sale.customer_name}) → 출고완료(수거) 자동 처리`);
+
+        // 🔴 이미 배달완료된 건은 출고 알림톡을 보내지 않는다.
+        //    집하 시점을 통째로 놓친 케이스(장애·배포 공백·과거 미출고 건).
+        //    이미 물건을 받은 고객에게 "출고했습니다"가 가면 혼란만 준다.
+        if (r.state === 'DELIVERED') {
+          console.log(`[track-delivery/offline_sales pickup] ${sale.sale_number} 알림톡 skip — 이미 배달완료`);
+          continue;
+        }
+        // B2B(딜러·아카데미)는 출고 알림톡 대상 아님
+        if (isB2BCustomerType(sale.customer_type)) {
+          salesPickupSkippedB2B++;
+          console.log(`[track-delivery/offline_sales pickup] ${sale.sale_number} 알림톡 skip — B2B(${sale.customer_type})`);
+          continue;
+        }
+
+        after(async () => {
+          try {
+            const sent = await sendSalesShippedNotification(db, {
+              id: sale.id,
+              saleNumber: sale.sale_number,
+              invoiceNumber: sale.invoice_number,
+              customerName: sale.customer_name || '고객',
+              customerPhone: sale.customer_phone,
+              customerType: sale.customer_type,
+              courierName: sale.courier_name,
+            });
+            if (sent.sent) {
+              await db.from('offline_sales')
+                .update({ shipped_notified_at: new Date().toISOString() })
+                .eq('id', sale.id);
+              console.log(`[track-delivery/offline_sales pickup] ${sale.sale_number} 출고 알림톡 발송 성공`);
+            } else {
+              console.log(`[track-delivery/offline_sales pickup] ${sale.sale_number} 알림톡 미발송 — ${sent.reason} ${sent.error || ''}`);
+            }
+          } catch (e) {
+            console.error(`[track-delivery/offline_sales pickup] ${sale.sale_number} 알림톡 예외:`, e);
+          }
+        });
+        salesNotified++;
+      } catch (e) {
+        console.error(`[track-delivery/offline_sales pickup] ${sale.sale_number} 집하 확인 실패:`, e);
       }
     }
 
@@ -173,7 +399,7 @@ export async function GET(request: NextRequest) {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     //   진입 조건: 송장 발급됨(invoice_number) + 출고완료(shipped_at) + 배송 미완료(delivered_at NULL) + 미취소
     //   매장 직접 수령은 invoice_number NULL → 자연 제외
-    const { data: sales, error: salesErr } = await (supabase as any)
+    const { data: sales, error: salesErr } = await db
       .from('offline_sales')
       .select('id, sale_number, invoice_number, customer_name, customer_phone, review_requested_at, review_promised_at, review_promised_type, review_promised_subtype')
       .not('shipped_at', 'is', null)
@@ -189,7 +415,7 @@ export async function GET(request: NextRequest) {
       try {
         const result = await queryTrackingStatus(sale.invoice_number);
         if (result.state === 'DELIVERED') {
-          await (supabase as any)
+          await db
             .from('offline_sales')
             .update({ delivered_at: new Date().toISOString() })
             .eq('id', sale.id);
@@ -201,7 +427,7 @@ export async function GET(request: NextRequest) {
           //   약속 X 고객은 사장님 수동 발송만 (compact UI 의 후기 요청 버튼 사용)
           after(async () => {
             try {
-              const autoEnabled = await getServerSetting<boolean>(supabase as any, 'review.auto_request_on_completion', false);
+              const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
               if (!autoEnabled) {
                 console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} skip — 토글 OFF`);
                 return;
@@ -229,7 +455,7 @@ export async function GET(request: NextRequest) {
                 subtype,
               });
               if (r.success) {
-                await (supabase as any).from('offline_sales')
+                await db.from('offline_sales')
                   .update({ review_requested_at: new Date().toISOString() })
                   .eq('id', sale.id);
                 console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} 발송 성공`);
@@ -251,7 +477,7 @@ export async function GET(request: NextRequest) {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     //   진입 조건: 송장(tracking_number) 있음 + 배송 미완료(delivered_at NULL) + 미취소
     //   ALPS 인수자등록(코드 45)/배달완료(41) 감지 시 delivered_at 세팅 (status 는 정산용이라 미변경)
-    const { data: deliveries, error: dlErr } = await (supabase as any)
+    const { data: deliveries, error: dlErr } = await db
       .from('deliveries')
       .select('id, dl_number, customer_name, tracking_number')
       .not('tracking_number', 'is', null)
@@ -266,7 +492,7 @@ export async function GET(request: NextRequest) {
       try {
         const result = await queryTrackingStatus(dl.tracking_number);
         if (result.state === 'DELIVERED') {
-          await (supabase as any)
+          await db
             .from('deliveries')
             .update({ delivered_at: new Date().toISOString() })
             .eq('id', dl.id);
@@ -280,6 +506,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       orders: { checked: orders?.length || 0, delivered: ordersDelivered },
+      // 109: 집하 자동 감지 (기사님 수거 스캔 → 출고완료)
+      repairsPickup: { checked: repairPickups?.length || 0, picked: repairsPicked },
+      salesPickup: {
+        checked: pickupTargets?.length || 0,
+        picked: salesPicked,
+        notified: salesNotified,
+        skippedB2B: salesPickupSkippedB2B,
+      },
       repairs: { checked: repairs?.length || 0, delivered: repairsDelivered },
       sales: { checked: sales?.length || 0, delivered: salesDelivered },
       deliveries: { checked: deliveries?.length || 0, delivered: deliveriesDelivered },
@@ -299,6 +533,8 @@ export async function GET(request: NextRequest) {
           // 첫 3건만 상세 노출 (보안 + payload 크기)
           firstResults: debugResults.slice(0, 3),
           ordersFirstResults: ordersDebugResults.slice(0, 3),  // 2026-05-25 추가
+          // 109: 집하 감지 진단 — trackingKeys 로 ALPS 실제 날짜 필드명 확인 (확정 후 제거 가능)
+          salesPickupFirstResults: salesPickupDebug.slice(0, 3),
         },
       }),
     });

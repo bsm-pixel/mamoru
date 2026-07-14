@@ -17,6 +17,22 @@
 
 상세 패널 헤더 우측 미니 UI 의 후기 요청 버튼이 5중 조건 충족 시 자동 변형:
 
+## 출고 = 집하 자동 감지 (109, 2026-07-12)
+
+**롯데 기사님이 수거 스캔(ALPS `10` 집하)하면 크론(1시간마다)이 자동으로 출고 처리한다.**
+
+```
+송장 생성 → (기사님 방문 대기) → 수거 스캔 → shipped_at 자동 기록 + shipped_source='alps_pickup'
+                                              └→ B2C 고객만 sales_shipped 알림톡 → shipped_notified_at
+```
+- **B2B(dealer/academy)는 알림톡 발송 X** (출고 표시만)
+- 이미 배달완료된 건은 알림톡 skip (이미 받은 고객에게 "출고했습니다" 금지)
+- 수동 [출고완료] 버튼은 유지 (스캔 누락 시 백업). 조건부 CAS 로 중복 발송 차단
+- 토글: `notifications.sales_shipped` (설정 화면에서 켜고 끄기)
+- 판정 규칙·함정은 [TMS_FLOW_AUTO_DELIVERY.md](TMS_FLOW_AUTO_DELIVERY.md) 참조 (🚨 `12` 운송장등록을 집하로 오판하면 안 됨)
+
+---
+
 | 조건 | 정상 동작 |
 |---|---|
 | 글로벌 토글 ON | 1번 필수 |
