@@ -26,6 +26,22 @@
 
 ---
 
+## 🔵 관찰중 — 집하 자동감지 (2026-07-12 배포, 마이그 109)
+
+배포 완료 (`87f209ac` + `4200c171`). 크론 1시간마다 집하 감지 → 자동 출고완료. **출고 알림톡은 OFF로 시드됨**.
+
+- **🔲 1~2일 뒤 감지 타이밍 검증** — 아래 SQL로 뜨는 건들의 `shipped_at`이 실제 기사님 수거 시각과 맞는지 ALPS 화면과 대조
+  ```sql
+  SELECT sale_number, customer_name, customer_type, shipped_at, shipped_source
+  FROM offline_sales WHERE shipped_source='alps_pickup' ORDER BY shipped_at DESC LIMIT 20;
+  ```
+- **🔲 검증되면 알림톡 ON** — 설정 → 알림 → [판매 출고 안내] 토글. 그때부터 B2C 고객에게 출고 알림톡 자동 발송
+- **🔲 ALPS 집하 시각 필드명 확정** — 문서에 없어 후보 키 순차 탐색 중(못 찾으면 감지 시각으로 대체, 기능 영향 X).
+  `curl -H "Authorization: Bearer $CRON_SECRET" ".../api/cron/track-delivery?debug=1"` → `salesPickupFirstResults[].trackingKeys` 확인 후 `alps-client.ts SCAN_DATE_KEYS` 확정 + 진단 필드 제거
+- **🔲 크론 실행시간 관찰** — 블록 6개 × 50건 순차 fetch. 타임아웃 나면 신규 블록만 병렬화
+
+---
+
 ## 🟡 대기 — 2026-07-12 작업의 남은 것
 
 **EVENT 접수폼 (타사가위 팡팡)**
