@@ -8,26 +8,6 @@
   "select_mode": "single",
   "options": [
     {
-      "id": "blunt_consistency_55",
-      "text": "한 손에 머무는 무게,\n일관된 끝매김.",
-      "tone": "안정·일관성",
-      "matches": [
-        "5.5",
-        "F+S",
-        "라이트"
-      ]
-    },
-    {
-      "id": "blunt_precision_short",
-      "text": "짧은 날,\n정확한 끝매김.",
-      "tone": "정밀·컨트롤",
-      "matches": [
-        "4.5",
-        "5.0",
-        "F"
-      ]
-    },
-    {
       "id": "blunt_balance_60",
       "text": "한 호흡으로 닿는 길이,\n끝까지 평평한 결.",
       "tone": "안정·균형",
