@@ -11,6 +11,36 @@
       "text": "",
       "tone": "",
       "matches": []
+    },
+    {
+      "id": "R_THINNING_15%",
+      "text": "가위자국? \n그게 뭔지 모릅니다",
+      "tone": "R_THINNING_15%"
+    },
+    {
+      "id": "R_THINNING_20%",
+      "text": "",
+      "tone": ""
+    },
+    {
+      "id": "R_THINNING_25%",
+      "text": "",
+      "tone": ""
+    },
+    {
+      "id": "R_THINNING_30%",
+      "text": "",
+      "tone": ""
+    },
+    {
+      "id": "R_THINNING_33%",
+      "text": "",
+      "tone": ""
+    },
+    {
+      "id": "R_THINNING_40%",
+      "text": "",
+      "tone": ""
     }
   ]
 }

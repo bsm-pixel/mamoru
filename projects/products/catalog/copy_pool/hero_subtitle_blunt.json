@@ -3,23 +3,34 @@
   "applies_to": [
     "blunt"
   ],
-  "label_ko": "Hero subtitle (감성 카피)",
+  "label_ko": "Hero subtitle (감성 카피)_블런트",
   "label_subtitle_ko": "모델 이름 아래 두 줄짜리 짧은 감성 문구",
   "select_mode": "single",
   "options": [
     {
-      "id": "blunt_force_signature",
-      "text": "결을 받아내는 손맛.",
-      "tone": "감각·시그니처",
-      "matches": [
-        "F",
-        "S"
-      ]
-    },
-    {
       "id": "short",
       "text": "",
       "tone": ""
+    },
+    {
+      "id": "R_blunt",
+      "text": "기본에 충실함\n시작의 완벽함",
+      "tone": "R_ 블런트_F"
+    },
+    {
+      "id": "A_BLUNT",
+      "text": "강력한 절삭력\n밀림없는 오랜 편안함",
+      "tone": "ACE_ 블런트_F"
+    },
+    {
+      "id": "A_BLUNT_A",
+      "text": "부드러움과 힘\n모두 공존하다",
+      "tone": "ACE_ 블런트_A"
+    },
+    {
+      "id": "A_BLUNT_G",
+      "text": "부드러운 커트느낌\n그 경험의 시작",
+      "tone": "ACE_ 블런트_G"
     }
   ]
 }

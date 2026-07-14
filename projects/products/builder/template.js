@@ -349,7 +349,7 @@ function gripSizeBlock(spec, catalog) {
             <span style="font-family:'Outfit',sans-serif;font-size:clamp(15px,1.9vw,18px);color:#1A1A1A;font-weight:700;letter-spacing:0.02em;">${esc(ring)}<span style="font-weight:500;color:#8A8580;font-size:0.7em;margin-left:4px;">mm</span></span>
           </div>
         </div>
-        <p style="font-size:clamp(13px,1.6vw,15px);color:#2D2D2D;line-height:1.75;margin:0;">${nl2br(desc)}</p>
+        ${copyBlock('handle_description', desc)}
       </div>
     </div>
   </div>`;
@@ -400,6 +400,48 @@ function forYouCard(title, items, miss) {
     <div style="font-size:clamp(13px,1.7vw,15px);font-weight:700;color:${titleCol};letter-spacing:0.02em;margin-bottom:clamp(20px,2.5vw,28px);">${esc(title)}</div>
     ${rows}
   </div>`;
+}
+
+/* ─── 문구 렌더러 (출력 SSOT) ───
+   상세 페이지의 각 문구 섹션 마크업을 여기 한 곳에 모은다.
+   renderDetailHTML 과 작업대(workspace)가 같은 함수를 써야 "작업대에서 본 모양 = 실제 페이지 모양"이 성립. */
+const COPY_STAGE_BG = {           // 작업대에서 문구를 얹을 배경 (실제 페이지의 그 섹션 배경)
+  hero_subtitle: '#FAF9F7',
+  honest_reco: '#FAF9F7',
+  about_body: '#FAF9F7',
+  about_quote: '#FAF9F7',
+  for_you_match: '#FAF9F7',
+  for_you_miss: '#FAF9F7',
+  handle_description: '#FAF9F7',
+};
+/* ⚠️ 빈 문구 처리는 기존 상세페이지 동작을 그대로 따른다:
+   honest_reco·about_quote 는 비면 블록 자체를 생략(원래 조건부였음),
+   나머지는 비어도 빈 문단을 그대로 둔다(원래 무조건 렌더였음) — 출력 1바이트도 안 바뀌게. */
+function copyBlock(copyType, text) {
+  const t = text == null ? '' : String(text);
+  const OPTIONAL = ['honest_reco', 'about_quote', 'for_you_match', 'for_you_miss'];
+  if (!t.trim() && OPTIONAL.indexOf(copyType) >= 0) return '';
+  switch (copyType) {
+    case 'hero_subtitle':
+      return `<p style="font-size:clamp(16px,2.4vw,22px);color:#4A4A4A;line-height:1.5;font-weight:300;max-width:520px;margin:0 0 clamp(24px,3vw,32px) 0;">${nl2br(t)}</p>`;
+    case 'honest_reco':
+      return `<div style="margin-top:clamp(28px,4vw,40px);padding:clamp(20px,3vw,28px);background:#F5F3F0;border-radius:clamp(10px,1.5vw,14px);border-left:3px solid #1A1A1A;max-width:560px;">
+      <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.3vw,12px);font-weight:800;letter-spacing:0.18em;color:#8A8580;text-transform:uppercase;margin-bottom:clamp(8px,1vw,12px);">MAMORU의 솔직 추천</div>
+      <p style="font-size:clamp(14px,1.9vw,17px);color:#2D2D2D;line-height:1.75;margin:0;">${nl2br(t)}</p>
+    </div>`;
+    case 'about_body':
+      return `<p style="font-size:clamp(15px,1.9vw,18px);color:#2D2D2D;line-height:1.9;max-width:620px;margin:0 0 clamp(20px,2.5vw,28px) 0;">${nl2br(t)}</p>`;
+    case 'about_quote':
+      return `<p style="font-size:clamp(15px,1.9vw,18px);color:#1A1A1A;line-height:1.9;max-width:620px;margin:0;font-weight:500;">"${nl2br(t)}"</p>`;
+    case 'handle_description':
+      return `<p style="font-size:clamp(13px,1.6vw,15px);color:#2D2D2D;line-height:1.75;margin:0;">${nl2br(t)}</p>`;
+    case 'for_you_match':
+      return forYouCard('이런 분에게 맞습니다', [t], false);
+    case 'for_you_miss':
+      return forYouCard('맞지 않을 수 있습니다', [t], true);
+    default:
+      return `<p style="font-size:clamp(14px,1.8vw,16px);color:#2D2D2D;line-height:1.8;margin:0;">${nl2br(t)}</p>`;
+  }
 }
 
 /* SPEC 메타 row */
@@ -587,16 +629,13 @@ function renderDetailHTML(spec, catalog) {
   <img src="${imgURL(spec, (spec.images && spec.images.hero) || 'hero.png')}" alt="${esc(spec.model)} 메인" style="display:block;width:100%;height:auto;background:#F5F3F0;">
   <div style="padding:clamp(40px,6vw,80px) clamp(20px,3vw,40px) clamp(56px,7vw,96px);">
     <h1 style="font-family:'Paperlogy','Outfit',sans-serif;font-size:clamp(40px,10vw,112px);font-weight:900;color:#1A1A1A;letter-spacing:-0.04em;line-height:1;margin:0 0 clamp(28px,4vw,48px) 0;white-space:nowrap;">${esc(spec.model)}</h1>
-    <p style="font-size:clamp(16px,2.4vw,22px);color:#4A4A4A;line-height:1.5;font-weight:300;max-width:520px;margin:0 0 clamp(24px,3vw,32px) 0;">${nl2br(heroSub)}</p>
+    ${copyBlock('hero_subtitle', heroSub)}
     <div style="display:flex;gap:clamp(20px,3vw,40px);font-size:clamp(12px,1.5vw,14px);color:#8A8580;letter-spacing:0.05em;font-weight:500;flex-wrap:wrap;">
       <span>${esc(spec.size_inch)} inch</span><span style="color:#D4D0CB;">·</span>
       <span>${esc(spec.weight_g)} g</span><span style="color:#D4D0CB;">·</span>
       <span>${esc(TYPE_LABEL[type] || type)}</span>
     </div>
-    ${honestReco ? `<div style="margin-top:clamp(28px,4vw,40px);padding:clamp(20px,3vw,28px);background:#F5F3F0;border-radius:clamp(10px,1.5vw,14px);border-left:3px solid #1A1A1A;max-width:560px;">
-      <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.3vw,12px);font-weight:800;letter-spacing:0.18em;color:#8A8580;text-transform:uppercase;margin-bottom:clamp(8px,1vw,12px);">MAMORU의 솔직 추천</div>
-      <p style="font-size:clamp(14px,1.9vw,17px);color:#2D2D2D;line-height:1.75;margin:0;">${nl2br(honestReco)}</p>
-    </div>` : ''}
+    ${copyBlock('honest_reco', honestReco)}
   </div>
 
   <!-- 02 Detail -->
@@ -624,8 +663,8 @@ function renderDetailHTML(spec, catalog) {
   </div>
   <img src="${imgURL(spec, (spec.images && spec.images.blade1) || 'blade1.png')}" alt="${esc(spec.model)} 날부" style="display:block;width:100%;height:auto;background:#F5F3F0;margin-bottom:clamp(40px,5vw,72px);">
   <div style="padding:0 clamp(20px,3vw,40px) clamp(80px,10vw,140px);">
-    <p style="font-size:clamp(15px,1.9vw,18px);color:#2D2D2D;line-height:1.9;max-width:620px;margin:0 0 clamp(20px,2.5vw,28px) 0;">${nl2br(aboutBody)}</p>
-    ${aboutQuote ? `<p style="font-size:clamp(15px,1.9vw,18px);color:#1A1A1A;line-height:1.9;max-width:620px;margin:0;font-weight:500;">"${nl2br(aboutQuote)}"</p>` : ''}
+    ${copyBlock('about_body', aboutBody)}
+    ${copyBlock('about_quote', aboutQuote)}
   </div>
 
   <!-- 05 Profile -->

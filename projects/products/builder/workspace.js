@@ -23,9 +23,12 @@ const WS_CSS = `
   .ws-stage{ background:var(--cream); padding:clamp(16px,3vw,26px); }
   .ws-copy{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:12px; }
   .ws-copy__bar{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-  .ws-copy__opt{ font-size:12.5px; color:#2D2D2D; line-height:1.6; padding:6px 0; border-top:1px dashed var(--line); white-space:pre-line; }
-  .ws-copy__opt:first-of-type{ border-top:0; }
-  .ws-copy__id{ font-family:'Outfit',sans-serif; font-size:9.5px; color:#a8a49e; margin-right:2px; }
+  /* 문구 = 실제 페이지 모양 그대로 렌더 (id 는 좌측 옅은 라벨로만) */
+  .ws-copy__stage{ display:flex; flex-direction:column; gap:14px; }
+  .ws-copy__row{ padding:10px 0; border-top:1px dashed var(--line); }
+  .ws-copy__row:first-child{ border-top:0; padding-top:0; }
+  .ws-copy__id{ font-family:'Outfit',sans-serif; font-size:9.5px; font-weight:700; color:#b8b4af; letter-spacing:.04em; margin-bottom:6px; }
+  .ws-copy__empty{ font-size:12px; color:#b8b4af; font-style:italic; }
   .ws-card[data-src],.ws-copy[data-src]{ cursor:pointer; }
   .ws-card[data-src]:hover,.ws-copy[data-src]:hover{ border-color:var(--void); box-shadow:0 0 0 3px rgba(26,26,26,.06); }
 `;
@@ -166,15 +169,21 @@ function cardPanel(cardType) {
   const label = (card.label_ko || '') + (card.label_subtitle_ko ? ' · ' + card.label_subtitle_ko : '');
   return panel(cardType, label, card.applies_to, cardGroup(card, firstId(cardType), variantOf(cardType)), card._src);
 }
+/* 문구 풀 = 실제 상세페이지에 나갈 '그 모양 그대로' 미리보기.
+   template.js 의 copyBlock() 을 그대로 쓴다(출력 SSOT) → 여기서 본 모양 = 고객이 볼 모양. */
 function copyPanel(pool) {
-  const opts = (pool.options || []).map(o =>
-    '<div class="ws-copy__opt"><span class="ws-copy__id">' + esc2(o.id) + '</span>' + esc2(o.text || '') + '</div>'
-  ).join('');
-  return '<div class="ws-copy" data-src="' + esc2(pool._src) + '"><div class="ws-copy__bar">'
-    + '<span class="ws-card__id">' + esc2(pool.copy_type) + '</span>'
-    + '<span class="ws-card__label">' + esc2(pool.label_ko || '') + '</span>'
-    + '<span class="ws-card__applies">' + (pool.applies_to || []).join(' · ') + '</span>'
-    + '</div>' + opts + '</div>';
+  const opts = (pool.options || []).map(o => {
+    const text = (o.text || '').trim();
+    const rendered = text
+      ? copyBlock(pool.copy_type, o.text)
+      : '<div class="ws-copy__empty">(빈 문구 — 편집기에서 채우면 여기 바로 보입니다)</div>';
+    return '<div class="ws-copy__row">'
+      + '<div class="ws-copy__id">' + esc2(o.id) + '</div>'
+      + '<div class="ws-copy__render">' + rendered + '</div>'
+      + '</div>';
+  }).join('');
+  const inner = '<div class="ws-copy__stage">' + (opts || '<div class="ws-copy__empty">문구 없음</div>') + '</div>';
+  return panel(pool.copy_type, pool.label_ko || '', pool.applies_to, inner, pool._src);
 }
 
 const COMMON_CARDS = ['handle_grip', 'handle_camel', 'grade'];
