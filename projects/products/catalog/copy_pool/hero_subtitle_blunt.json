@@ -8,25 +8,6 @@
   "select_mode": "single",
   "options": [
     {
-      "id": "blunt_balance_60",
-      "text": "한 호흡으로 닿는 길이,\n끝까지 평평한 결.",
-      "tone": "안정·균형",
-      "matches": [
-        "6.0",
-        "A+S"
-      ]
-    },
-    {
-      "id": "blunt_long_smooth",
-      "text": "긴 호흡, 부드러운 결.",
-      "tone": "유려·길이",
-      "matches": [
-        "6.5",
-        "7.0",
-        "G"
-      ]
-    },
-    {
       "id": "blunt_force_signature",
       "text": "결을 받아내는 손맛.",
       "tone": "감각·시그니처",

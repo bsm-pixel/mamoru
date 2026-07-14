@@ -1,0 +1,15 @@
+{
+  "copy_type": "honest_reco",
+  "applies_to": [
+    "long"
+  ],
+  "label_ko": "마모루의 솔직 추천 · long",
+  "_note": "id = 내부 식별자(화면 미표시). 파일 안에서 고유·불변. 권장: long_a_65",
+  "options": [
+    {
+      "id": "long_a_65",
+      "text": "",
+      "tone": ""
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "copy_type": "hero_subtitle",
+  "applies_to": [
+    "long"
+  ],
+  "label_ko": "Hero subtitle (감성 카피) · 장가위",
+  "_note": "id = 내부 식별자(화면 미표시). 같은 파일 안에서 고유해야 하고, 모델에 한 번 쓴 뒤엔 바꾸지 말 것. 권장: long_a_65",
+  "options": [
+    {
+      "id": "long_a_65",
+      "text": "",
+      "tone": "",
+      "matches": []
+    }
+  ]
+}

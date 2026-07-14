@@ -16,7 +16,13 @@
   ],
   "copy_pool": [
     "copy_pool/hero_subtitle_blunt.json",
+    "copy_pool/hero_subtitle_thinning.json",
+    "copy_pool/hero_subtitle_long.json",
+    "copy_pool/hero_subtitle_dry.json",
     "copy_pool/honest_reco_blunt.json",
+    "copy_pool/honest_reco_thinning.json",
+    "copy_pool/honest_reco_long.json",
+    "copy_pool/honest_reco_dry.json",
     "copy_pool/about_body_blunt.json",
     "copy_pool/about_body_thinning.json",
     "copy_pool/about_body_long.json",
