@@ -26,6 +26,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   render();
   bindEditorEvents();
   bindActions();
+  bindScrollMemory();   // 새로고침돼도 보던 자리 유지
   updateUnsaved();
   pingServer();     // 저장 서버 연결 확인 → 배너
 });
@@ -154,6 +155,20 @@ function render(anchorSrc) {
     if (after) { sc.scrollTop += after.getBoundingClientRect().top - beforeTop; return; }
   }
   sc.scrollTop = prev;
+}
+
+/* 새로고침(라이브리로드 포함)돼도 보던 자리 유지 — 스크롤 위치를 세션에 기억 */
+const SS_SCROLL = 'mamoru-editor-scroll-v1';
+function bindScrollMemory() {
+  const ed = document.getElementById('ed');
+  const sc = scroller(ed);
+  const saved = parseInt(sessionStorage.getItem(SS_SCROLL) || '0', 10);
+  if (saved > 0) requestAnimationFrame(() => { sc.scrollTop = saved; });
+  let t;
+  (sc === document.scrollingElement ? window : sc).addEventListener('scroll', () => {
+    clearTimeout(t);
+    t = setTimeout(() => { try { sessionStorage.setItem(SS_SCROLL, String(sc.scrollTop)); } catch (e) {} }, 120);
+  }, { passive: true });
 }
 
 /* 이벤트 위임 — #ed 에 1회만 바인딩 (재렌더에도 유지, 중복 방지) */

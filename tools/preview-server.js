@@ -10,6 +10,7 @@ const path = require('path');
 const { exec } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
+let selfWriteUntil = 0;   // 편집기 [저장]이 방금 쓴 파일 → 이 시각까지는 라이브리로드 억제
 const PORT = 8123;
 const OPEN_PATH = '/projects/products/builder/index.html'; // 시작 시 자동으로 열 페이지 (빌더 = 홈)
 
@@ -47,6 +48,10 @@ const server = http.createServer((req, res) => {
         const allowed = path.join(ROOT, 'projects', 'products', 'catalog');
         if (!full.startsWith(allowed)) { res.writeHead(403); res.end('{"error":"허용 경로 아님"}'); return; }
         JSON.parse(content); // 깨진 JSON 이면 throw → 저장 안 함
+        // ⚠️ 우리가 방금 쓴 파일이 fs.watch 에 걸려 '전체 새로고침'이 나가면
+        //    편집기 스크롤이 맨 위로 튄다(삭제할 때마다 위로 올라가던 진짜 원인).
+        //    → 자기 저장은 리로드 대상에서 제외 (편집기는 BroadcastChannel 로 작업대에 실시간 반영 중)
+        selfWriteUntil = Date.now() + 1500;
         fs.writeFileSync(full, content);
         res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('{"ok":true}');
       } catch (e) {
@@ -70,9 +75,12 @@ const server = http.createServer((req, res) => {
 });
 
 // projects/ 변경 감지 → 모든 미리보기 탭 새로고침 (디바운스)
+// 단, 편집기 [저장]이 방금 쓴 파일은 제외(selfWriteUntil) — 안 그러면 저장할 때마다 페이지가 리로드돼
+// 편집 중이던 스크롤 위치가 날아간다.
 let timer = null;
 try {
   fs.watch(path.join(ROOT, 'projects'), { recursive: true }, () => {
+    if (Date.now() < selfWriteUntil) return;   // 편집기 자기 저장 → 리로드 안 함
     clearTimeout(timer);
     timer = setTimeout(() => { clients.forEach(c => { try { c.write('data: reload\n\n'); } catch (e) {} }); }, 150);
   });
