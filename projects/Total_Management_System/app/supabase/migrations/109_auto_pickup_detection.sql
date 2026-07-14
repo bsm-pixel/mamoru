@@ -42,6 +42,15 @@ CREATE INDEX IF NOT EXISTS idx_repairs_awaiting_pickup
   WHERE status = 'ready_to_ship'
     AND invoice_number IS NOT NULL;
 
+-- ⚠️ 안전한 롤아웃 — 출고 알림톡을 처음엔 OFF 로 시작 (사장님 결정 2026-07-12)
+--   make-webhook 의 isNotificationEnabled 는 키가 없으면 '발송'으로 판단(fail-open)한다.
+--   그래서 키를 명시적으로 'false' 로 넣어야 알림톡이 안 나간다.
+--   → 1~2일 '출고 표시'만 자동으로 돌려보고, 감지 타이밍이 실제 수거와 맞으면
+--      설정 화면에서 [판매 출고 안내] 를 켠다.
+INSERT INTO system_settings (key, value, updated_at)
+VALUES ('notifications.sales_shipped', 'false', now())
+ON CONFLICT (key) DO UPDATE SET value = 'false', updated_at = now();
+
 -- 검증 SQL (사장님이 Supabase SQL Editor 에서 직접 확인)
 -- SELECT column_name, data_type, is_nullable FROM information_schema.columns
 -- WHERE (table_name='offline_sales' AND column_name IN ('shipped_source','shipped_notified_at'))

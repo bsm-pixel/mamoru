@@ -38,7 +38,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
   // 067: 후기 요청 자동 발송 정책 토글
   const [reviewAutoRequest, setReviewAutoRequest] = useState(false);
   // 109: 판매 출고 알림톡 (집하 자동감지 시 B2C 고객에게 발송) — 코드엔 있었으나 화면에 토글이 없었음
-  const [salesShipped, setSalesShipped] = useState(true);
+  const [salesShipped, setSalesShipped] = useState(false);
 
   useEffect(() => {
     setMasterEnabled(parse(settings['notifications.master_enabled'], true));
@@ -48,7 +48,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     setRepairPayment(parse(settings['notifications.repair_payment_confirmed'], true));
     setRepairShipped(parse(settings['notifications.repair_shipped'], true));
     setReviewRequest(parse(settings['notifications.review_request'], true));
-    setSalesShipped(parse(settings['notifications.sales_shipped'], true));
+    setSalesShipped(parse(settings['notifications.sales_shipped'], false));
     setWebhookConsultation(parse(settings['notifications.webhook_consultation'], ''));
     setWebhookAsReceived(parse(settings['notifications.webhook_as_received'], ''));
     setWebhookRepair(parse(settings['notifications.webhook_repair'], ''));
