@@ -70,7 +70,8 @@ function fld(label, src, p, val, multiline) {
   return '<label class="ed-fld"><span>' + esc(label) + '</span>' + ctl + '</label>';
 }
 function fileBlock(src, name, bodyHtml) {
-  return '<div class="ed-file"><div class="ed-file__bar">'
+  // data-file = 재렌더 후 같은 카드를 다시 찾기 위한 앵커 (스크롤 위치 유지용)
+  return '<div class="ed-file" data-file="' + esc(src) + '"><div class="ed-file__bar">'
     + '<span class="ed-file__name">' + esc(name) + '</span>'
     + '<span class="ed-file__path">catalog/' + esc(src) + '</span>'
     + '<button class="ed-save" data-save="' + esc(src) + '">저장</button>'
@@ -113,8 +114,24 @@ function copyForm(c) {
 const COMMON_CARDS = ['handle_grip', 'handle_camel', 'grade'];
 const TYPE_CARDS = ['blade_edge', 'blade_edge_long', 'blade_edge_dry', 'blade_design', 'thinning_teeth', 'thinning_holes', 'thinning_reduction'];
 
-function render() {
+/* 실제로 스크롤되는 조상(없으면 문서) — 편집기는 단독/스튜디오 iframe 양쪽에서 열린다 */
+function scroller(el) {
+  for (let p = el; p && p !== document.body; p = p.parentElement) {
+    const ov = getComputedStyle(p).overflowY;
+    if ((ov === 'auto' || ov === 'scroll') && p.scrollHeight > p.clientHeight) return p;
+  }
+  return document.scrollingElement || document.documentElement;
+}
+
+/* anchorSrc: 방금 건드린 파일 블록. 재렌더 후 그 블록이 '화면 같은 자리'에 오도록 스크롤 보정.
+   (innerHTML 통째 교체라 아무것도 안 하면 맨 위로 튄다 — 옵션 지울 때마다 위로 올라가던 원인) */
+function render(anchorSrc) {
   const ed = document.getElementById('ed');
+  const sc = scroller(ed);
+  const before = anchorSrc ? ed.querySelector('[data-file="' + CSS.escape(anchorSrc) + '"]') : null;
+  const beforeTop = before ? before.getBoundingClientRect().top : null;
+  const prev = sc.scrollTop;
+
   const byType = ct => Catalog.byCardType[ct];
   let h = '';
   h += '<div class="ed-h2">① 공통 카드 (전 종류 공용)</div>';
@@ -127,6 +144,14 @@ function render() {
   h += '<div class="ed-h2">③ 섹션 문구 풀</div>';
   Catalog.copy.forEach(c => { h += copyForm(c); });
   ed.innerHTML = h;
+
+  // 스크롤 복원 — 앵커 블록이 있으면 그 블록 기준(옵션이 지워져 높이가 줄어도 시선 고정),
+  // 없으면 이전 스크롤값 그대로.
+  if (beforeTop !== null) {
+    const after = ed.querySelector('[data-file="' + CSS.escape(anchorSrc) + '"]');
+    if (after) { sc.scrollTop = prev + (after.getBoundingClientRect().top - beforeTop); return; }
+  }
+  sc.scrollTop = prev;
 }
 
 /* 이벤트 위임 — #ed 에 1회만 바인딩 (재렌더에도 유지, 중복 방지) */
@@ -161,7 +186,7 @@ function addOption(src) {
   obj.options = obj.options || [];
   if (obj.options.some(o => o.id === id)) { alert('이미 있는 ID입니다: ' + id); return; }
   obj.options.push(isCard ? { id: id, name_ko: '', name_en: '', description_ko: '' } : { id: id, text: '', tone: '' });
-  render();
+  render(src);
   saveFile(src);                          // 구조 변경 → 즉시 파일 기록 (preview.bat 서버 필요)
 }
 /* 옵션 삭제 — 최소 1개는 유지 */
@@ -171,7 +196,7 @@ function delOption(src, idx) {
   const o = obj.options[idx]; if (!o) return;
   if (!window.confirm("옵션 '" + o.id + "' 을(를) 삭제할까요? (되돌릴 수 없음)")) return;
   obj.options.splice(idx, 1);
-  render();
+  render(src);
   saveFile(src);
 }
 
