@@ -31,11 +31,17 @@ window.addEventListener('DOMContentLoaded', async () => {
   pingServer();     // 저장 서버 연결 확인 → 배너
 });
 
+/* 임시저장(pending) 복원 + 🧹 유령 키 청소
+   ⚠️ pending 은 localStorage 라 세션을 넘어 남는다. 카탈로그 파일이 지워지거나 이름이 바뀌면
+      '지금은 없는 파일' 키가 남고, 그 하나 때문에 [전체 저장]이 통째로 죽었다(saveFile 이 예외). */
 function applyPending() {
+  let purged = 0;
   Object.keys(pending).forEach(k => {
     const i = k.indexOf('|'); const src = k.slice(0, i), path = k.slice(i + 1);
-    if (FILES[src]) { try { setByPath(FILES[src], path, pending[k]); } catch (e) {} }
+    if (!FILES[src]) { delete pending[k]; purged++; return; }   // 유령 키 제거
+    try { setByPath(FILES[src], path, pending[k]); } catch (e) {}
   });
+  if (purged) { savePending(); console.warn('[editor] 없는 파일의 임시저장 ' + purged + '건 정리됨'); }
 }
 function savePending() { try { localStorage.setItem(LS_KEY, JSON.stringify(pending)); } catch (e) {} }
 function updateUnsaved() {
@@ -235,9 +241,22 @@ function status(src, msg, cls) {
 
 async function saveFile(src) {
   const obj = FILES[src];
-  const clean = JSON.parse(JSON.stringify(obj));
-  delete clean._src;
-  const content = JSON.stringify(clean, null, 2) + '\n';
+  // 🛡️ 없는 파일이면 조용히 죽지 말고 그 키만 버린다 (전체 저장이 통째로 멈추던 원인)
+  if (!obj) {
+    Object.keys(pending).forEach(k => { if (k.indexOf(src + '|') === 0) delete pending[k]; });
+    savePending(); updateUnsaved();
+    console.warn('[editor] 없는 파일이라 건너뜀:', src);
+    return true;   // 저장할 게 없으니 실패로 치지 않는다
+  }
+  let content;
+  try {
+    const clean = JSON.parse(JSON.stringify(obj));
+    delete clean._src;
+    content = JSON.stringify(clean, null, 2) + '\n';
+  } catch (e) {
+    status(src, '내용이 깨져 저장 불가: ' + e.message, 'err');
+    return false;
+  }
   status(src, '저장 중…', '');
   try {
     const res = await fetch('/__save', {
@@ -263,7 +282,11 @@ async function saveAll() {
   const srcs = [...new Set(Object.keys(pending).map(k => k.split('|')[0]))];
   if (!srcs.length) { banner('저장할 변경이 없습니다.', 'ok'); return; }
   let ok = 0;
-  for (const src of srcs) { if (await saveFile(src)) ok++; }
+  // 🛡️ 파일 하나가 터져도 나머지는 저장한다 (예전엔 하나 터지면 전체가 조용히 멈췄다)
+  for (const src of srcs) {
+    try { if (await saveFile(src)) ok++; }
+    catch (e) { console.error('[editor] 저장 실패:', src, e); status(src, '실패: ' + e.message, 'err'); }
+  }
   if (ok === srcs.length) banner('✓ 전체 저장 완료 (' + ok + '개 파일)', 'ok');
-  else banner('일부 저장 실패 — preview.bat 재시작 후 다시. (입력은 임시저장돼 안 날아감)', 'warn');
+  else banner('일부 저장 실패 (' + ok + '/' + srcs.length + ') — preview.bat 재시작 후 다시. 입력은 임시저장돼 안 날아갑니다.', 'warn');
 }
