@@ -473,6 +473,51 @@ export async function GET(request: NextRequest) {
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // [4-A] deliveries(B2B 납품) 집하 감지 (출고대기 → 출고완료) — 110 신규 (2026-07-12)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //   전엔 api/lotte/book 이 송장 발급과 동시에 status='shipped' 를 강제했다.
+    //   → 기사님이 오지도 않았는데 화면에 "출고완료"가 떴다(사장님 지적). 그 강제를 제거하고 여기서 올린다.
+    //   B2B 는 출고 알림톡을 보내지 않는다 (사장님 결정) — 상태만 정확히.
+    const { data: dlPickups, error: dlPickupErr } = await db
+      .from('deliveries')
+      .select('id, dl_number, customer_name, tracking_number')
+      .eq('status', 'confirmed')
+      .not('tracking_number', 'is', null)
+      .is('cancelled_at', null)
+      .limit(50);
+
+    if (dlPickupErr) throw dlPickupErr;
+
+    let deliveriesPicked = 0;
+    for (const dl of dlPickups || []) {
+      try {
+        const r = await queryTrackingStatus(dl.tracking_number);
+        if (r.state === 'CANCELLED' || r.state === 'NOT_FOUND') continue;
+        if (!r.pickedUp) continue;   // 아직 기사님이 안 가져감
+
+        // 조건부 CAS — 수동 [출고 완료] 버튼과 동시 실행돼도 한 번만
+        const { data: claimed } = await db
+          .from('deliveries')
+          .update({
+            status: 'shipped',
+            // shipped_date 는 date 형(YYYY-MM-DD). 집하 시각을 알면 그 날짜, 모르면 오늘.
+            shipped_date: (r.pickedUpAt || new Date().toISOString()).slice(0, 10),
+            shipped_source: 'alps_pickup',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', dl.id)
+          .eq('status', 'confirmed')
+          .select('id');
+
+        if (!claimed || claimed.length === 0) continue;
+        deliveriesPicked++;
+        console.log(`[track-delivery/deliveries pickup] ${dl.dl_number} (${dl.customer_name}) → 출고완료(수거) 자동 처리`);
+      } catch (e) {
+        console.error(`[track-delivery/deliveries pickup] ${dl.dl_number} 집하 확인 실패:`, e);
+      }
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // [4] deliveries(B2B 납품) 추적 → delivered_at — 2026-06-01 추가
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     //   진입 조건: 송장(tracking_number) 있음 + 배송 미완료(delivered_at NULL) + 미취소
@@ -514,6 +559,7 @@ export async function GET(request: NextRequest) {
         notified: salesNotified,
         skippedB2B: salesPickupSkippedB2B,
       },
+      deliveriesPickup: { checked: dlPickups?.length || 0, picked: deliveriesPicked },   // 110
       repairs: { checked: repairs?.length || 0, delivered: repairsDelivered },
       sales: { checked: sales?.length || 0, delivered: salesDelivered },
       deliveries: { checked: deliveries?.length || 0, delivered: deliveriesDelivered },

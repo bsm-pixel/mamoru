@@ -66,13 +66,16 @@ export async function POST(request: NextRequest) {
         .eq('id', body.orderId);
     }
 
-    // 납품(B2B)에 송장 정보 저장 + 출고 처리
+    // 납품(B2B)에 송장 정보 저장
+    // 🔴 110 (2026-07-12): 여기서 status='shipped' 를 강제하던 것을 제거.
+    //    송장 발급 ≠ 출고다. 기사님이 아직 안 왔는데 화면에 "출고완료"가 뜨고 있었다(사장님 지적).
+    //    → status 는 'confirmed'(출고대기) 로 두고, 크론 [4-A] 집하 감지가 'shipped' 로 올린다.
+    //    B2C 판매(api/sales/[id]/ship)와 같은 정의로 통일 — 그쪽도 송장번호만 넣고 출고는 집하가 채운다.
     if (body.deliveryId) {
       await db
         .from('deliveries')
         .update({
           tracking_number: invoiceNumber,
-          status: 'shipped',
           updated_at: new Date().toISOString(),
         })
         .eq('id', body.deliveryId);

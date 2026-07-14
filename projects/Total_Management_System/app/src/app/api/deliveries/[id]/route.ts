@@ -85,14 +85,18 @@ export async function PATCH(
       return NextResponse.json({ success: true, status: 'confirmed' });
     }
 
-    // ── 출고 완료 (confirmed → shipped) ──
+    // ── 출고 완료 (confirmed → shipped) ── 수동 처리 (집하 자동감지 실패 시 백업)
     if (action === 'ship') {
       if (dl.status !== 'confirmed') return NextResponse.json({ error: '납품확정 상태에서만 출고 가능합니다' }, { status: 400 });
-      const trackingNumber = body.tracking_number || null;
+      // 🐛 110 버그 수정: 기존엔 `body.tracking_number || null` 이라, 송장이 이미 발급된 건에
+      //    수동 [출고 완료] 를 누르면 **송장번호가 null 로 지워졌다.**
+      //    (전엔 송장 생성 즉시 shipped 라 이 버튼을 누를 일이 없어 안 드러났던 버그)
+      const trackingNumber = body.tracking_number || dl.tracking_number || null;
       await db.from('deliveries').update({
         status: 'shipped',
         shipped_date: new Date().toISOString().slice(0, 10),
         tracking_number: trackingNumber,
+        shipped_source: 'manual',   // 110: 집하 자동감지와 구분
         updated_at: new Date().toISOString(),
       }).eq('id', id);
       return NextResponse.json({ success: true, status: 'shipped' });

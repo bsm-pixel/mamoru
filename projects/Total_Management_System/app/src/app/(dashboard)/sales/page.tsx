@@ -38,7 +38,7 @@ const CHANNEL_LABEL: Record<string, string> = {
 const CUSTOMER_TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy: '아카데미' };
 
 /** 2026-05-26 Phase G-4: 안 A 상태 분류 — 좌측 색 줄 + 우측 도트 결정 */
-type RowState = 'paid_done' | 'paid_shipping' | 'paid_wait_ship' | 'paid_unhandled' | 'unpaid' | 'partial' | 'shipped_b2b_unpaid' | 'cancelled';
+type RowState = 'paid_done' | 'paid_shipping' | 'paid_wait_ship' | 'paid_unhandled' | 'unpaid' | 'partial' | 'shipped_b2b_unpaid' | 'wait_pickup_unpaid' | 'cancelled';
 
 function getRowStateSale(s: OfflineSale): RowState {
   if (s.cancelled_at) return 'cancelled';
@@ -55,12 +55,17 @@ function getRowStateSale(s: OfflineSale): RowState {
 function getRowStateDelivery(d: any): RowState {
   if (d.cancelled_at) return 'cancelled';
   if (d.payment_status === 'partial') return 'partial';
+  // 110: '출고' = 기사님이 실제로 수거해 감 (집하). 송장만 발급된 건은 아직 출고 전이다.
+  //      (전엔 송장 발급 즉시 status='shipped' 라 여기서 '출고완료' 로 잘못 떴다)
   const isShipped = d.status === 'shipped' || d.status === 'settled';
   if (d.payment_status === 'unpaid' && isShipped) return 'shipped_b2b_unpaid'; // 출고됐는데 결제 대기
+  // 110: 송장은 발급됐지만 아직 기사님이 안 가져간 건 — '미결제'로만 뭉개면 출고대기 정보가 사라진다
+  if (d.payment_status === 'unpaid' && d.tracking_number) return 'wait_pickup_unpaid';
   if (d.payment_status === 'unpaid') return 'unpaid';
   // payment_status === 'paid'
+  if (d.delivered_at) return 'paid_done';             // 110: 배송완료 = 끝 (B2C 와 동일 기준)
   if (isShipped) return 'paid_done';                  // 출고완료 + 결제완료 = 판매완료
-  return 'paid_wait_ship';                            // 결제완료 + 출고 전
+  return 'paid_wait_ship';                            // 결제완료 + 출고 전 (송장 발급됐으면 '출고 대기')
 }
 
 function stripColor(state: RowState): string {
@@ -80,6 +85,7 @@ function rightDot(state: RowState): { color: string; title: string } | null {
     case 'paid_wait_ship': return { color: 'bg-amber-400', title: '출고 대기' };
     case 'paid_unhandled': return { color: 'bg-amber-400', title: '처리 대기' };
     case 'shipped_b2b_unpaid': return { color: 'bg-amber-400', title: '출고완료 · 결제 대기' };
+    case 'wait_pickup_unpaid': return { color: 'bg-amber-400', title: '출고대기 · 결제 대기' };
     default: return null;
   }
 }
@@ -93,6 +99,7 @@ function statusLabel(state: RowState): string {
     case 'unpaid': return '미결제';
     case 'partial': return '부분결제';
     case 'shipped_b2b_unpaid': return '출고완료 · 결제대기';
+    case 'wait_pickup_unpaid': return '출고대기 · 결제대기';
     case 'cancelled': return '취소';
   }
 }

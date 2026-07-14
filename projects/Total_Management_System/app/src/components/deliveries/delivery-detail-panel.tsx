@@ -15,6 +15,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Package, Pencil, Save, X, Printer, Minus, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DLPrintModal } from './dl-print-modal';
+import { getDeliveryStatusChip, isAwaitingPickup } from '@/lib/deliveries/status';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', confirmed: '납품확정', shipped: '출고완료', settled: '정산완료',
@@ -203,7 +204,11 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
               <Pencil size={14} />편집
             </Button>
           )}
-          <Badge className={STATUS_COLOR[status === 'settled' ? 'shipped' : status] || ''}>{status === 'settled' ? '출고완료' : (STATUS_LABEL[status] || status)}</Badge>
+          {/* 110: 뱃지를 4단계로 (납품확정 → 출고대기 → 출고완료 → 배송완료). 규칙은 lib/deliveries/status.ts 단일출처 */}
+          {(() => {
+            const chip = getDeliveryStatusChip(dl);
+            return <Badge className={chip.className}>{chip.label}</Badge>;
+          })()}
         </div>
       </div>
 
@@ -231,12 +236,23 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
               <p>{formatDate(dl.expected_date as string)}</p>
             </div>
           )}
-          {dl.shipped_date && (
+          {/* 110: 출고일 — 집하 자동감지 건은 그 사실을 함께 표기 */}
+          {dl.shipped_date ? (
             <div>
               <span className="text-xs text-neutral-500">출고일</span>
-              <p>{formatDate(dl.shipped_date as string)}</p>
+              <p>
+                {formatDate(dl.shipped_date as string)}
+                {dl.shipped_source === 'alps_pickup' && (
+                  <span className="ml-1 text-[10px] text-neutral-400">· 기사님 수거 자동감지</span>
+                )}
+              </p>
             </div>
-          )}
+          ) : isAwaitingPickup(dl) ? (
+            <div>
+              <span className="text-xs text-neutral-500">출고</span>
+              <p className="text-xs text-amber-600">출고대기 — 기사님 수거 시 자동 처리</p>
+            </div>
+          ) : null}
           {dl.tracking_number && (
             <div>
               <span className="text-xs text-neutral-500">송장번호</span>
@@ -426,9 +442,16 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
             {/* 출고 완료 (confirmed -> shipped) */}
             {status === 'confirmed' && (
               <div className="space-y-1.5">
+                {/* 110: 송장 발급됨 = 출고대기. 기사님 수거 시 자동으로 출고완료 처리된다 */}
+                {isAwaitingPickup(dl) && (
+                  <p className="text-[11px] text-amber-600 leading-relaxed bg-amber-50 rounded-lg px-2.5 py-2">
+                    송장 발급됨 · <b>출고대기</b><br />
+                    롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인)
+                  </p>
+                )}
                 {/* ALPS 송장 자동 생성 */}
                 <Button className="w-full" onClick={handleBookInvoice} disabled={bookingInvoice || updateDL.isPending}>
-                  {bookingInvoice ? '송장 생성 중...' : '🚚 송장 생성 (롯데택배)'}
+                  {bookingInvoice ? '송장 생성 중...' : dl.tracking_number ? '🚚 송장 재발급 (롯데택배)' : '🚚 송장 생성 (롯데택배)'}
                 </Button>
                 {/* 또는 수동 입력 */}
                 <div className="flex items-center gap-1.5">

@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
+import { getDeliveryStatusChip } from '@/lib/deliveries/status';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-panel';
 import { useDeliveries, useDeliveryStats } from '@/hooks/use-deliveries';
@@ -250,9 +251,11 @@ const DeliveryRow = memo(function DeliveryRow({ dl, isSelected, onClick }: {
           <span className="text-sm font-semibold text-stone-900 truncate">
             {dl.customer_name as string}
           </span>
-          <Badge className={STATUS_COLOR[status === 'settled' ? 'shipped' : status] || STATUS_COLOR.draft}>
-            {status === 'settled' ? '출고완료' : (STATUS_LABEL[status] || status)}
-          </Badge>
+          {/* 110: 상세와 같은 규칙 (납품확정 → 출고대기 → 출고완료 → 배송완료) */}
+          {(() => {
+            const chip = getDeliveryStatusChip(dl);
+            return <Badge className={chip.className}>{chip.label}</Badge>;
+          })()}
           <Badge className={PAYMENT_COLOR[paymentStatus] || PAYMENT_COLOR.unpaid}>
             {PAYMENT_LABEL[paymentStatus] || paymentStatus}
           </Badge>

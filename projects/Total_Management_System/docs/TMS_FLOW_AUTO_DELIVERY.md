@@ -53,6 +53,39 @@ return n === 10 || n >= 20;              // 10=집하 / 20↑=간선·배달
 
 ---
 
+## 🆕 B2B 납품도 같은 정의로 통일 (110, 2026-07-14)
+
+**사장님 지적**: 납품은 송장만 만들었는데 화면에 "출고완료"가 떴다. 기사님은 오지도 않았는데.
+
+**원인**: [`api/lotte/book/route.ts`](projects/Total_Management_System/app/src/app/api/lotte/book/route.ts) 가 송장 발급과 동시에 `deliveries.status='shipped'` 를 강제했다.
+B2C 판매는 송장번호만 넣고 출고는 집하가 채우는데, **B2B만 "송장 발급 = 출고"로 다르게 구현**돼 있었다.
+
+```
+납품확정 → (송장 발급) 출고대기 → (기사님 수거=집하) 출고완료 → (인수자등록) 배송완료
+           status=confirmed        status=shipped              delivered_at
+           tracking_number          shipped_source='alps_pickup'
+```
+
+- **크론 [4-A]**: `status='confirmed' AND tracking_number NOT NULL` → 집하 감지 → `shipped` + `shipped_date` + `shipped_source`
+- **B2B는 출고 알림톡을 보내지 않는다** (상태만 정확히)
+- **뱃지 규칙 단일출처**: [`lib/deliveries/status.ts getDeliveryStatusChip()`](projects/Total_Management_System/app/src/lib/deliveries/status.ts) — 상세·목록·판매 통합목록이 전부 이걸 쓴다
+
+### 🚨 status 를 늦춰도 안전한 이유 (전수 확인)
+
+| 소비처 | 조건 | 영향 |
+|---|---|---|
+| 매출 집계 (hub_stats RPC 077/078/080/088, reports/summary) | `status IN ('confirmed','shipped','settled')` | **0** — confirmed 이미 포함 |
+| 미수금 (`lib/outstanding.ts`) | `payment_status != 'paid'` (status 무관) | 0 |
+| [결제완료 처리] (`update_payment`) | status 가드 없음 | 0 — 출고 전에도 결제 가능 |
+| `settle` 액션 | UI에서 이미 제거된 죽은 경로 | 0 |
+
+⚠️ `deliveries.status` 에는 **CHECK 제약도 enum 도 없다**(062) → 코드가 유일한 규약. 값 추가/변경 시 위 표를 반드시 다시 확인할 것.
+
+### 🐛 함께 고친 버그
+수동 [출고 완료] 액션이 `tracking_number: body.tracking_number || null` 이라, **송장이 이미 있는 건에 이 버튼을 누르면 송장번호가 지워졌다.** 전엔 "송장 생성 = 즉시 shipped" 라 누를 일이 없어 안 드러났던 버그 → `|| dl.tracking_number` 로 수정.
+
+---
+
 ## 핵심 원칙 (사장님 박제)
 
 1. **송장 있는 운영 흐름 = 자동 추적 대상**
