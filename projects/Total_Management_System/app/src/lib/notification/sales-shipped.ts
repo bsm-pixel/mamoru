@@ -67,6 +67,8 @@ export async function sendSalesShippedNotification(
     },
   });
 
+  // 🔴 토글 OFF 로 건너뛴 건 '발송'이 아니다 — shipped_notified_at 을 찍으면 '발송됨'으로 잘못 뜬다
+  if (result.skipped) return { sent: false, reason: 'toggle_off' };
   if (!result.success) return { sent: false, reason: 'send_failed', error: result.error };
   return { sent: true };
 }

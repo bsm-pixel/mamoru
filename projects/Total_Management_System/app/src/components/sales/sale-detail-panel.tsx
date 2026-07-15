@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped, useMarkSaleDelivered } from '@/hooks/use-sales';
+import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped, useMarkSaleDelivered, useResendShipNotify } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
@@ -72,6 +72,7 @@ export function SaleDetailPanel({ saleId }: Props) {
   const cancelShipment = useCancelSaleShipment();
   const markShipped = useMarkSaleShipped();
   const markDelivered = useMarkSaleDelivered();
+  const resendShipNotify = useResendShipNotify();
   const [showPickupConfirm, setShowPickupConfirm] = useState(false);
   const [cancelMode, setCancelMode] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -565,13 +566,24 @@ export function SaleDetailPanel({ saleId }: Props) {
                       <span className="text-[10px] text-neutral-400">· 기사님 수거 자동감지</span>
                     )}
                   </p>
-                  {/* 109: 출고 알림톡 발송 여부 — 사장님이 가장 궁금해할 정보 */}
+                  {/* 109: 출고 알림톡 발송 여부 + 110/버그수정: 미발송 시 수동 발송 버튼 */}
                   {s.shipped_notified_at ? (
                     <p className="text-[11px] text-neutral-400">
                       출고 알림톡 발송됨 {formatDate(s.shipped_notified_at, 'M월 d일 HH:mm')}
                     </p>
                   ) : isB2BCustomerType(s.customer_type) ? (
                     <p className="text-[11px] text-neutral-400">거래처(B2B) — 출고 알림톡 미발송</p>
+                  ) : s.customer_phone ? (
+                    <div className="flex items-center gap-2 pt-0.5">
+                      <span className="text-[11px] text-amber-600">출고 알림톡 미발송</span>
+                      <button
+                        onClick={() => resendShipNotify.mutate({ id: saleId })}
+                        disabled={resendShipNotify.isPending}
+                        className="text-[11px] font-medium text-neutral-700 underline hover:text-neutral-900 disabled:opacity-50"
+                      >
+                        {resendShipNotify.isPending ? '발송 중…' : '출고 알림톡 보내기'}
+                      </button>
+                    </div>
                   ) : null}
                   {/* 배송완료 표시 (자동 cron OR 수동 fallback) */}
                   {s.delivered_at ? (

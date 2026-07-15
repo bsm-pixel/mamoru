@@ -363,6 +363,35 @@ export async function PATCH(
       return NextResponse.json({ success: true, action: 'marked_shipped' });
     }
 
+    // --- D-1) 출고 알림톡 수동 재발송 (2026-07-15) ---
+    //   이미 출고됐는데 알림톡이 안 나간 건(토글 OFF 시절 자동 출고 등) 사장님이 직접 보낼 때.
+    if (action === 'resend_ship_notify') {
+      if (sale.cancelled_at) return NextResponse.json({ error: '취소된 판매입니다' }, { status: 400 });
+      if (!sale.shipped_at) return NextResponse.json({ error: '아직 출고되지 않았습니다' }, { status: 400 });
+      if (sale.shipped_notified_at) return NextResponse.json({ error: '이미 출고 알림톡이 발송되었습니다' }, { status: 400 });
+
+      const sent = await sendSalesShippedNotification(db, {
+        id,
+        saleNumber: sale.sale_number,
+        invoiceNumber: sale.invoice_number,
+        customerName: sale.customer_name,
+        customerPhone: sale.customer_phone,
+        customerType: sale.customer_type,
+        courierName: sale.courier_name,
+      });
+      if (!sent.sent) {
+        // 실패 사유를 그대로 전달 (toggle_off → 설정 안내 / no_phone / b2b / send_failed)
+        const msg = sent.reason === 'toggle_off'
+          ? '알림톡 설정(판매 출고 안내)이 꺼져 있습니다. 설정에서 켠 뒤 다시 시도하세요.'
+          : sent.reason === 'no_phone' ? '고객 전화번호가 없습니다.'
+          : sent.reason === 'b2b' ? '거래처(B2B)는 출고 알림톡 대상이 아닙니다.'
+          : (sent.error || '발송에 실패했습니다.');
+        return NextResponse.json({ error: msg }, { status: 400 });
+      }
+      await db.from('offline_sales').update({ shipped_notified_at: new Date().toISOString() }).eq('id', id);
+      return NextResponse.json({ success: true, action: 'ship_notify_sent' });
+    }
+
     // --- D-2) 배송완료/고객수령 처리 (2026-05-25 Phase 2) ---
     //   mode='delivery': 송장 있는 택배 발송 — ALPS 추적 실패 fallback (수동 배송완료)
     //   mode='pickup':   송장 없는 매장 직접 수령 — "고객 수령 완료"
@@ -413,7 +442,7 @@ export async function PATCH(
             reviewType,
             subtype,
           });
-          if (r.success) {
+          if (r.success && !r.skipped) {
             await db.from('offline_sales').update({ review_requested_at: new Date().toISOString() }).eq('id', id);
             console.log(`[mark_delivered/${mode} auto-review] ${sale.sale_number} 발송 성공`);
           }

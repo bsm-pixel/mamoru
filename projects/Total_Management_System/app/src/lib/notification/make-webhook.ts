@@ -160,6 +160,10 @@ function uuid(): string {
 export async function sendNotification(payload: NotifyPayload): Promise<{
   success: boolean;
   error?: string;
+  /** 🔴 실제 발송이 아니라 설정 토글 OFF 로 '건너뜀'. success=true 지만 고객에겐 안 나감.
+   *   발송 시각(shipped_notified_at / review_requested_at)을 찍는 호출부는 이 값을 반드시 확인할 것.
+   *   (2026-07-15: 토글 OFF인데 '발송됨'으로 잘못 기록되던 버그 수정) */
+  skipped?: boolean;
 }> {
   // ── 1) 관리자 앱 푸시 — 고객 행동이면 무조건 발송 ──
   //  ⚠️ 알림톡 설정(on/off)·웹훅 설정과 완전 독립. 반드시 함수 최상단에서 먼저 쏜다.
@@ -199,7 +203,7 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
   const enabled = await isNotificationEnabled(payload.template);
   if (!enabled) {
     console.log(`[make-webhook] SKIP 알림톡 template=${payload.template} — 설정에서 비활성 (관리자 푸시는 발송됨)`);
-    return { success: true }; // 성공으로 처리 (에러 아님)
+    return { success: true, skipped: true }; // 에러는 아니지만 '실제 발송 X' → skipped 로 명시 (발송시각 오기록 방지)
   }
 
   // 템플릿에 따라 3분기 웹훅 URL (DB 우선 → 환경변수 fallback)

@@ -728,6 +728,30 @@ export function useMarkSaleShipped() {
   });
 }
 
+/** 출고 알림톡 수동 재발송 (2026-07-15) — 이미 출고됐는데 알림톡이 안 나간 B2C 건 */
+export function useResendShipNotify() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id }: { id: string }) => {
+      const res = await fetch(`/api/sales/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'resend_ship_notify' }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : '알림톡 발송 실패');
+      }
+      return res.json();
+    },
+    onSuccess: (_d, { id }) => {
+      toast.success('출고 알림톡을 발송했습니다');
+      queryClient.invalidateQueries({ queryKey: ['sale', id] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+  });
+}
+
 /**
  * 판매 배송완료 처리 — 두 경로 통합 (2026-05-25)
  *   1. mode='delivery': 송장 있는 택배 발송 케이스 — ALPS 추적 실패 fallback (수동 배송완료)

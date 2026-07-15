@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
                 customerPhone: order.orderer_phone,
                 reviewType: 'purchase',
               });
-              if (r.success) {
+              if (r.success && !r.skipped) {
                 await db.from('orders')
                   .update({ review_requested_at: new Date().toISOString() })
                   .eq('id', order.id);
@@ -278,7 +278,7 @@ export async function GET(request: NextRequest) {
                 reviewType,
                 subtype,
               });
-              if (r.success) {
+              if (r.success && !r.skipped) {
                 await db.from('repairs')
                   .update({ review_request_sent_at: new Date().toISOString() })
                   .eq('id', repair.id);
@@ -454,7 +454,7 @@ export async function GET(request: NextRequest) {
                 reviewType,
                 subtype,
               });
-              if (r.success) {
+              if (r.success && !r.skipped) {
                 await db.from('offline_sales')
                   .update({ review_requested_at: new Date().toISOString() })
                   .eq('id', sale.id);
