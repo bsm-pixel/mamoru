@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TMS 판매관리 · PC-Native 시안</title>
+<style>
+  :root{
+    --void:#1A1A1A; --ink:#2A2A2A; --gray:#8A8A8A; --mute:#B8B4AF;
+    --line:#EAE8E4; --line2:#F1EFEC; --shell:#F6F4F1; --cream:#FAF9F7; --white:#fff;
+    --amber:#C77D30; --amber-bg:#FBF3E8; --green:#3F7A5A; --green-bg:#EEF5F0;
+    --red:#C0392B; --red-bg:#FBEEEC; --blue:#3A5BB0; --blue-bg:#EEF1FB;
+    --nav:#171716;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Pretendard Variable',Pretendard,-apple-system,'Noto Sans KR',sans-serif;
+    background:var(--shell);color:var(--ink);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .app{display:grid;grid-template-columns:220px 1fr;height:100vh;}
+
+  /* ── GNB (기존 그대로) ── */
+  .gnb{background:var(--nav);color:#cfcdc8;padding:18px 14px;overflow:auto;}
+  .gnb__logo{color:#fff;font-weight:800;font-size:16px;letter-spacing:-.02em;padding:0 6px 2px;}
+  .gnb__ver{color:#6f6d68;font-size:10px;padding:0 6px 18px;}
+  .gnb__grp{color:#6f6d68;font-size:10px;font-weight:700;letter-spacing:.08em;padding:16px 8px 6px;}
+  .gnb__i{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;color:#c9c7c2;cursor:pointer;font-size:12.5px;}
+  .gnb__i.on{background:#2a2926;color:#fff;font-weight:600;}
+  .gnb__i:hover:not(.on){background:#222120;}
+  .gnb__i b{width:15px;text-align:center;opacity:.85;font-weight:400;}
+
+  /* ── 콘텐츠 4존: 필터레일 | 그리드 | 상세 ── */
+  .main{display:grid;grid-template-columns:200px 1fr 400px;min-width:0;background:var(--cream);}
+
+  /* 상단 헤더바 (전 폭) */
+  .head{grid-column:1/4;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 22px;border-bottom:1px solid var(--line);background:var(--white);}
+  .head__t{font-size:17px;font-weight:800;color:var(--void);letter-spacing:-.02em;}
+  .head__r{display:flex;gap:8px;}
+  .btn{height:34px;padding:0 14px;border-radius:9px;border:1px solid var(--line);background:var(--white);
+    font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+  .btn--dark{background:var(--void);color:#fff;border-color:var(--void);}
+  .btn:hover{border-color:var(--void);}
+
+  /* ── 필터 레일 (상시 노출) ── */
+  .rail{border-right:1px solid var(--line);background:var(--white);padding:16px 14px;overflow:auto;}
+  .rail__kpi{background:var(--nav);border-radius:12px;padding:13px 14px;color:#fff;margin-bottom:8px;}
+  .rail__kpi small{color:#9a978f;font-size:10.5px;font-weight:600;}
+  .rail__kpi .v{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-top:2px;}
+  .rail__kpi .sub{font-size:10.5px;color:#c9a86a;margin-top:3px;}
+  .rail__kpi--b{background:#232220;}
+  .rail__task{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border-radius:9px;cursor:pointer;margin-bottom:3px;}
+  .rail__task:hover{background:var(--shell);}
+  .rail__task.on{background:var(--amber-bg);}
+  .rail__task .lb{font-weight:600;font-size:12.5px;}
+  .rail__task .ct{min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--amber);color:#fff;
+    font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+  .rail__task.mute .ct{background:var(--mute);}
+  .rail__h{font-size:10.5px;font-weight:700;color:var(--gray);letter-spacing:.06em;padding:16px 4px 8px;}
+  .seg{display:flex;background:var(--shell);border-radius:9px;padding:3px;gap:2px;}
+  .seg button{flex:1;height:28px;border:0;background:transparent;border-radius:7px;font-size:11.5px;font-weight:600;color:var(--gray);cursor:pointer;}
+  .seg button.on{background:var(--white);color:var(--void);box-shadow:0 1px 3px rgba(0,0,0,.07);}
+  .rail__chip{display:block;width:100%;text-align:left;padding:8px 11px;border-radius:8px;border:0;background:transparent;
+    font-size:12.5px;color:var(--ink);cursor:pointer;margin-bottom:1px;}
+  .rail__chip.on{background:var(--void);color:#fff;font-weight:600;}
+  .rail__chip:hover:not(.on){background:var(--shell);}
+
+  /* ── 데이터 그리드 ── */
+  .grid{display:flex;flex-direction:column;min-width:0;}
+  .grid__bar{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--line2);}
+  .grid__search{flex:1;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--shell);
+    padding:0 12px;font-size:12.5px;display:flex;align-items:center;gap:8px;color:var(--gray);}
+  .grid__count{font-size:11.5px;color:var(--gray);}
+  table{width:100%;border-collapse:collapse;}
+  thead th{position:sticky;top:0;background:var(--cream);z-index:1;text-align:left;
+    font-size:10.5px;font-weight:700;color:var(--gray);letter-spacing:.04em;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  thead th.r{text-align:right;} thead th.c{text-align:center;}
+  thead th .sort{opacity:.4;font-size:9px;}
+  tbody td{padding:11px 12px;border-bottom:1px solid var(--line2);vertical-align:middle;}
+  tbody tr{cursor:pointer;}
+  tbody tr:hover{background:var(--shell);}
+  tbody tr.sel{background:#F4F0EA;box-shadow:inset 3px 0 0 var(--void);}
+  .g-no{font-family:'Outfit',monospace;font-size:11px;color:var(--gray);}
+  .g-name{font-weight:700;color:var(--void);}
+  .g-shop{font-size:11px;color:var(--gray);}
+  .g-amt{text-align:right;font-weight:800;color:var(--void);font-variant-numeric:tabular-nums;}
+  .g-date{color:var(--ink);font-variant-numeric:tabular-nums;}
+  .g-mut{color:var(--gray);font-size:11.5px;}
+  .dot{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:11.5px;white-space:nowrap;}
+  .dot i{width:7px;height:7px;border-radius:99px;display:inline-block;}
+  .st-amber{color:var(--amber);} .st-amber i{background:var(--amber);}
+  .st-green{color:var(--green);} .st-green i{background:var(--green);}
+  .st-red{color:var(--red);} .st-red i{background:var(--red);}
+  .st-mut{color:var(--mute);} .st-mut i{background:var(--mute);}
+  .pay{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:700;}
+  .pay--paid{background:var(--green-bg);color:var(--green);}
+  .pay--unpaid{background:var(--red-bg);color:var(--red);}
+  .pay--wait{background:var(--amber-bg);color:var(--amber);}
+  .g-act{opacity:0;display:flex;gap:5px;justify-content:flex-end;}
+  tbody tr:hover .g-act{opacity:1;}
+  .g-act button{height:26px;padding:0 9px;border:1px solid var(--line);background:var(--white);border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;color:var(--ink);}
+  .g-act button:hover{border-color:var(--void);}
+  .g-act .k{background:var(--void);color:#fff;border-color:var(--void);}
+  .ch{width:14px;height:14px;border:1.5px solid var(--mute);border-radius:4px;display:inline-block;}
+
+  /* ── 상세 패널 ── */
+  .det{border-left:1px solid var(--line);background:var(--white);overflow:auto;padding:18px;}
+  .det__no{font-family:'Outfit',monospace;font-weight:800;font-size:16px;color:var(--void);}
+  .det__row{display:flex;align-items:center;gap:8px;margin:3px 0 14px;flex-wrap:wrap;}
+  .tag{padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:700;background:var(--shell);color:var(--ink);}
+  .tag--on{background:var(--void);color:#fff;}
+  .det__card{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;}
+  .det__k{font-size:10.5px;color:var(--gray);font-weight:600;}
+  .det__v{font-weight:700;color:var(--void);margin-top:1px;}
+  .det__grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .item{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line2);}
+  .item:last-child{border:0;}
+  .item small{color:var(--gray);font-size:11px;}
+  .tot{display:flex;justify-content:space-between;padding-top:11px;font-weight:800;font-size:15px;color:var(--void);}
+  .prog{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;}
+  .prog .c{font-size:10.5px;color:var(--gray);} .prog .n{font-weight:800;font-size:15px;margin-top:3px;}
+  .det__ship{background:var(--nav);border-radius:12px;padding:14px;color:#fff;margin-bottom:12px;}
+  .det__ship .tk{font-family:'Outfit',monospace;font-weight:700;}
+  .det__ship .hint{font-size:10.5px;color:#c9a86a;margin-top:6px;line-height:1.6;}
+  .det__cta{width:100%;height:46px;border:0;border-radius:11px;background:var(--void);color:#fff;font-weight:800;font-size:14px;cursor:pointer;margin-top:4px;}
+  .det__min{display:flex;gap:8px;margin-top:10px;}
+  .det__min button{flex:1;height:38px;border:1px solid var(--line);background:var(--white);border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);}
+
+  .note{position:fixed;bottom:12px;left:230px;background:var(--nav);color:#eee;font-size:11px;padding:8px 14px;border-radius:99px;opacity:.92;}
+  .note b{color:#c9a86a;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- GNB (기존 유지) -->
+  <nav class="gnb">
+    <div class="gnb__logo">MAMORU</div>
+    <div class="gnb__ver">TMS v1.0 · PC</div>
+    <div class="gnb__grp">주문 · 배송</div>
+    <div class="gnb__i"><b>▦</b> 주문관리</div>
+    <div class="gnb__grp">상담</div>
+    <div class="gnb__i"><b>◇</b> 상담관리</div>
+    <div class="gnb__i"><b>▤</b> 달력 관리</div>
+    <div class="gnb__i"><b>✂</b> 복원수리</div>
+    <div class="gnb__grp">판매</div>
+    <div class="gnb__i on"><b>▧</b> 판매 관리</div>
+    <div class="gnb__i"><b>⚡</b> EVENT</div>
+    <div class="gnb__i"><b>🚚</b> 빠른 송장</div>
+    <div class="gnb__i"><b>✎</b> 계약서</div>
+    <div class="gnb__grp">고객</div>
+    <div class="gnb__i"><b>◉</b> 고객</div>
+    <div class="gnb__i"><b>▥</b> B2B 거래처</div>
+    <div class="gnb__grp">상품 · 재고</div>
+    <div class="gnb__i"><b>□</b> 제품</div>
+    <div class="gnb__i"><b>▦</b> 창고·재고</div>
+    <div class="gnb__i"><b>▤</b> 매입관리</div>
+  </nav>
+
+  <!-- 콘텐츠 3존 -->
+  <div class="main">
+    <div class="head">
+      <div class="head__t">판매 관리</div>
+      <div class="head__r">
+        <button class="btn">↻</button>
+        <button class="btn">＋ 거래처 매출</button>
+        <button class="btn btn--dark">＋ 판매 입력</button>
+      </div>
+    </div>
+
+    <!-- 필터 레일 -->
+    <aside class="rail">
+      <div class="rail__kpi">
+        <small>고객 B2C · 이번달</small>
+        <div class="v">3,700,000</div>
+        <div class="sub">18건 · +복원수리 280,000</div>
+      </div>
+      <div class="rail__kpi rail__kpi--b">
+        <small>거래처 B2B · 이번달</small>
+        <div class="v">787,400</div>
+        <div class="sub">9건 · +복원수리 491,000</div>
+      </div>
+
+      <div class="rail__h">할 일</div>
+      <div class="rail__task on"><span class="lb">처리 필요</span><span class="ct">3</span></div>
+      <div class="rail__task"><span class="lb">미수금</span><span class="ct">2</span></div>
+      <div class="rail__task mute"><span class="lb">취소</span><span class="ct">1</span></div>
+
+      <div class="rail__h">대상</div>
+      <div class="seg">
+        <button class="on">고객</button><button>거래처</button><button>전체</button>
+      </div>
+
+      <div class="rail__h">기간</div>
+      <button class="rail__chip">오늘</button>
+      <button class="rail__chip on">이번주</button>
+      <button class="rail__chip">이번달</button>
+      <button class="rail__chip">전체 기간</button>
+      <button class="rail__chip" style="color:var(--gray)">＋ 직접 지정</button>
+    </aside>
+
+    <!-- 데이터 그리드 -->
+    <section class="grid">
+      <div class="grid__bar">
+        <div class="grid__search">🔍 판매번호, 고객명, 전화번호</div>
+        <button class="btn">⇅ 준비표 뽑기</button>
+        <span class="grid__count">총 <b>5</b>건</span>
+      </div>
+      <div style="flex:1;overflow:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:34px"><span class="ch"></span></th>
+            <th>판매번호</th>
+            <th>고객 <span class="sort">▾</span></th>
+            <th>날짜 <span class="sort">▾</span></th>
+            <th>채널</th>
+            <th>품목</th>
+            <th>출고상태</th>
+            <th>결제</th>
+            <th class="r">금액 <span class="sort">▾</span></th>
+            <th class="r" style="width:150px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="sel">
+            <td><span class="ch"></span></td>
+            <td class="g-no">OS-…005</td>
+            <td><div class="g-name">장민희</div><div class="g-shop">휴이엠헤어 상동점</div></td>
+            <td class="g-date">7/14</td>
+            <td class="g-mut">오프라인</td>
+            <td class="g-mut">바리깡빛 외 1</td>
+            <td><span class="dot st-amber"><i></i>출고 대기</span></td>
+            <td><span class="pay pay--paid">결제완료</span></td>
+            <td class="g-amt">250,000</td>
+            <td><div class="g-act"><button class="k">출고</button><button>명세서</button></div></td>
+          </tr>
+          <tr>
+            <td><span class="ch"></span></td>
+            <td class="g-no">OS-…004</td>
+            <td><div class="g-name">남유빈</div><div class="g-shop">—</div></td>
+            <td class="g-date">7/14</td>
+            <td class="g-mut">오프라인</td>
+            <td class="g-mut">CL9-220</td>
+            <td><span class="dot st-amber"><i></i>출고 대기</span></td>
+            <td><span class="pay pay--paid">결제완료</span></td>
+            <td class="g-amt">180,000</td>
+            <td><div class="g-act"><button class="k">출고</button><button>명세서</button></div></td>
+          </tr>
+          <tr>
+            <td><span class="ch"></span></td>
+            <td class="g-no">OS-…003</td>
+            <td><div class="g-name">윤순미</div><div class="g-shop">—</div></td>
+            <td class="g-date">7/14</td>
+            <td class="g-mut">오프라인</td>
+            <td class="g-mut">소모품 3</td>
+            <td><span class="dot st-amber"><i></i>출고 대기</span></td>
+            <td><span class="pay pay--paid">결제완료</span></td>
+            <td class="g-amt">40,000</td>
+            <td><div class="g-act"><button class="k">출고</button><button>명세서</button></div></td>
+          </tr>
+          <tr>
+            <td><span class="ch"></span></td>
+            <td class="g-no">OS-…002</td>
+            <td><div class="g-name">최성진</div><div class="g-shop">—</div></td>
+            <td class="g-date">7/14</td>
+            <td class="g-mut">오프라인</td>
+            <td class="g-mut">A2-55FS 외 2</td>
+            <td><span class="dot st-green"><i></i>판매완료</span></td>
+            <td><span class="pay pay--paid">결제완료</span></td>
+            <td class="g-amt">510,000</td>
+            <td><div class="g-act"><button>명세서</button></div></td>
+          </tr>
+          <tr>
+            <td><span class="ch"></span></td>
+            <td class="g-no">OS-…001</td>
+            <td><div class="g-name">윤재복</div><div class="g-shop">—</div></td>
+            <td class="g-date">7/14</td>
+            <td class="g-mut">현금 · 오프라인</td>
+            <td class="g-mut">틴닝 T28</td>
+            <td><span class="dot st-green"><i></i>판매완료</span></td>
+            <td><span class="pay pay--paid">결제완료</span></td>
+            <td class="g-amt">100,000</td>
+            <td><div class="g-act"><button>명세서</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <!-- 상세 패널 -->
+    <aside class="det">
+      <div class="det__no">OS-20260714-005</div>
+      <div class="det__row">
+        <span class="tag" style="background:var(--green-bg);color:var(--green)">결제완료</span>
+        <span class="tag">오프라인</span>
+        <span style="flex:1"></span>
+        <span class="tag">🔔 리뷰 약속</span>
+      </div>
+
+      <div class="det__card">
+        <div class="det__grid">
+          <div><div class="det__k">고객명</div><div class="det__v">장민희</div></div>
+          <div><div class="det__k">연락처</div><div class="det__v">010-9112-6542</div></div>
+          <div><div class="det__k">매장</div><div class="det__v">휴이엠헤어 상동점</div></div>
+          <div><div class="det__k">활동명 · 직급</div><div class="det__v">민 · —</div></div>
+        </div>
+        <div style="border-top:1px solid var(--line2);margin-top:12px;padding-top:11px;">
+          <div class="det__k">주소지</div>
+          <div class="det__v" style="font-weight:600;line-height:1.55;">경기 부천시 상동로 123, 휴이엠헤어 상동점 2층<br><span style="color:var(--gray);font-size:11.5px;">(14547)</span></div>
+        </div>
+      </div>
+
+      <div class="det__card">
+        <div class="det__k" style="margin-bottom:8px">판매 항목</div>
+        <div class="item"><div><b>CL5-250</b><br><small># 13791009 · 100,000 × 1</small></div><b>100,000</b></div>
+        <div class="item"><div><b>CL13-68</b><br><small># 13791185 · 150,000 × 1</small></div><b>150,000</b></div>
+        <div class="tot"><span>결제 금액</span><span>250,000</span></div>
+      </div>
+
+      <div class="det__card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="det__k">결제 현황</div>
+          <span class="tag" style="background:var(--blue-bg);color:var(--blue)">계좌이체</span>
+        </div>
+        <div class="prog">
+          <div><div class="c">총액</div><div class="n">250,000</div></div>
+          <div><div class="c">결제</div><div class="n" style="color:var(--green)">250,000</div></div>
+          <div><div class="c">미수금</div><div class="n" style="color:var(--gray)">0</div></div>
+        </div>
+      </div>
+
+      <div class="det__ship">
+        <div class="det__k" style="color:#9a978f">송장 · 롯데택배</div>
+        <div class="tk">317653776635</div>
+        <div class="hint">🚚 롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인) · 출고 알림톡도 자동 발송</div>
+      </div>
+
+      <button class="det__cta">출고완료 (수거 처리)</button>
+      <div class="det__min">
+        <button>거래명세서</button><button>준비표</button><button>수정</button>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="note">PC-Native 시안 · <b>4존</b> GNB → 필터레일 → 데이터그리드 → 상세 · hover 시 행 액션</div>
+</body>
+</html>

@@ -105,8 +105,11 @@ export function SaleDetailPanel({ saleId }: Props) {
   }
 
   const { sale, items, serials = [] } = data;
-  const customerInfo = (data as { customerInfo?: { company_name: string | null; activity_name: string | null; position: string | null } | null }).customerInfo ?? null;
+  const customerInfo = (data as { customerInfo?: { company_name: string | null; activity_name: string | null; position: string | null; postcode: string | null; address_road: string | null; address_detail: string | null } | null }).customerInfo ?? null;
   const hasStoreInfo = !!(customerInfo && (customerInfo.company_name || customerInfo.activity_name || customerInfo.position));
+  const addressText = customerInfo
+    ? [customerInfo.address_road, customerInfo.address_detail].filter(Boolean).join(' ').trim()
+    : '';
   const s = sale as unknown as OfflineSale;
   const channel = CHANNEL_CHIP[(s.sale_channel || 'offline') as SaleChannel] || CHANNEL_CHIP.offline;
 
@@ -182,6 +185,16 @@ export function SaleDetailPanel({ saleId }: Props) {
               <span className="text-xs text-neutral-500">판매일</span>
               <p>{formatDate(s.sale_date, 'yyyy.MM.dd')}</p>
             </div>
+            {/* 주소지 (고객 등록 주소) — 2026-07-14 */}
+            {addressText && (
+              <div>
+                <span className="text-xs text-neutral-500">주소지</span>
+                <p className="leading-snug">
+                  {addressText}
+                  {customerInfo?.postcode && <span className="text-neutral-400 text-xs"> ({customerInfo.postcode})</span>}
+                </p>
+              </div>
+            )}
             <div>
               <span className="text-xs text-neutral-500">결제방법</span>
               <p>{PAYMENT_METHOD_LABEL[s.payment_method] || s.payment_method}</p>

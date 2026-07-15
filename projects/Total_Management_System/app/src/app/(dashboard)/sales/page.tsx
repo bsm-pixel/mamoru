@@ -17,7 +17,7 @@ import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
-import { Plus, FileSignature, Receipt, ClipboardList } from 'lucide-react';
+import { Plus, FileSignature, Receipt, ClipboardList, LayoutGrid } from 'lucide-react';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 import { RevenueDarkCard } from '@/components/ui/revenue-dark-card';
 import type { OfflineSale } from '@/lib/supabase/types';
@@ -154,6 +154,9 @@ export default function SalesPage() {
   const [selected, setSelected] = useState<{ id: string; sourceType: 'sale' | 'delivery' } | null>(null);
   const [isLg, setIsLg] = useState(false);
   const [prepMode, setPrepMode] = useState(false);
+  // 2026-07-14 PC 그리드(베타) — 기본 OFF. isLg 에서만 토글 노출. localStorage 로 선호 기억
+  const [gridMode, setGridMode] = useState(false);
+  const toggleGrid = () => setGridMode((v) => { const n = !v; try { localStorage.setItem('sales-pc-grid', n ? '1' : '0'); } catch { /* noop */ } return n; });
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [checkedDeliveryIds, setCheckedDeliveryIds] = useState<Set<string>>(new Set()); // 2026-05-26 Phase D: 거래처 납품 준비표 통합
   const [showPrepSheet, setShowPrepSheet] = useState(false);
@@ -161,6 +164,8 @@ export default function SalesPage() {
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
     setIsLg(mq.matches);
+    // 2026-07-14: PC 그리드 선호 복원 (SSR 안전하게 mount 후 읽음 — 기존 isLg effect 에 합침)
+    try { setGridMode(localStorage.getItem('sales-pc-grid') === '1'); } catch { /* noop */ }
     const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
@@ -434,7 +439,7 @@ export default function SalesPage() {
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-neutral-300" />취소</span>
       </div>
 
-      {/* 판매 목록 (2026-05-26 Phase B: sale + delivery 통합) */}
+      {/* 판매 목록 (2026-05-26 Phase B: sale + delivery 통합) — gridMode 면 밀집 표, 아니면 카드 */}
       <Card padding={false}>
         {listLoading ? (
           <div className="p-4 space-y-3">
@@ -444,6 +449,19 @@ export default function SalesPage() {
           </div>
         ) : unifiedItems.length === 0 ? (
           <EmptyState icon={Receipt} message="판매/거래 기록이 없습니다" />
+        ) : gridMode && isLg ? (
+          <div className="overflow-x-auto">
+            <SalesGridTable
+              items={unifiedItems}
+              selectedId={selected?.id}
+              onSelect={(id, type) => setSelected({ id, sourceType: type })}
+              prepMode={prepMode}
+              checkedSale={checkedIds}
+              checkedDelivery={checkedDeliveryIds}
+              onCheckSale={toggleCheck}
+              onCheckDelivery={toggleCheckDelivery}
+            />
+          </div>
         ) : (
           <div className="divide-y divide-neutral-100">
             {unifiedItems.map((item) => {
@@ -492,6 +510,13 @@ export default function SalesPage() {
         title="판매 관리"
         action={
           <div className="flex gap-2">
+            {/* 2026-07-14 PC 그리드(베타) 토글 — PC 에서만 */}
+            {isLg && (
+              <Button onClick={toggleGrid} size="sm" variant="secondary" title="목록을 밀집 표로 보기">
+                <LayoutGrid size={14} />
+                {gridMode ? '카드 보기' : 'PC 그리드'}
+              </Button>
+            )}
             <Button onClick={() => router.push('/sales/new')} size="sm">
               <Plus size={14} />
               판매 입력
@@ -506,14 +531,14 @@ export default function SalesPage() {
       />
 
       {isLg ? (
-        /* PC: 마스터-디테일 2컬럼 */
+        /* PC: 마스터-디테일 2컬럼. gridMode 면 목록(표)을 넓게, 상세를 고정폭으로 뒤집는다 */
         <div className="flex gap-4 px-4 md:px-6 py-4 h-full min-h-0">
           {/* 좌측: 목록 */}
-          <div className="w-2/5 shrink-0 overflow-y-auto space-y-3 pr-1">
+          <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-2/5 shrink-0'} overflow-y-auto space-y-3 pr-1`}>
             {listContent}
           </div>
           {/* 우측: 상세 패널 — 2026-05-26 Phase B: sourceType 분기 */}
-          <div className="flex-1 min-w-0 overflow-y-auto bg-white rounded-xl border border-neutral-200">
+          <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto bg-white rounded-xl border border-neutral-200`}>
             {selected ? (
               selected.sourceType === 'sale' ? (
                 <SaleDetailPanel saleId={selected.id} />
@@ -522,7 +547,7 @@ export default function SalesPage() {
               )
             ) : (
               <div className="flex items-center justify-center h-full text-sm text-neutral-400">
-                좌측 목록에서 판매/거래 건을 선택하세요
+                {gridMode ? '표에서 건을 선택하세요' : '좌측 목록에서 판매/거래 건을 선택하세요'}
               </div>
             )}
           </div>
@@ -560,6 +585,102 @@ export default function SalesPage() {
 }
 
 /* 목록 행 — 2026-05-26 Phase G-4: 안 A (좌측 색 줄 + 우측 도트 + 판매완료 라벨 통일) */
+/* ─────────────────────────────────────────────────────────────
+   2026-07-14 PC-Native 밀집 그리드 (베타) — 카드 대신 표.
+   ⚠️ 데이터·상태·핸들러는 카드 뷰와 100% 동일한 것을 재사용한다(기능 드리프트 0).
+      행 상태 헬퍼(getRowStateSale/Delivery·statusLabel·rightDot)·라벨 상수 그대로.
+   ───────────────────────────────────────────────────────────── */
+type UnifiedItem =
+  | { sourceType: 'sale'; id: string; date: string; data: OfflineSale }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | { sourceType: 'delivery'; id: string; date: string; data: any };
+
+const PAY_BADGE: Record<string, { t: string; c: string }> = {
+  paid: { t: '결제완료', c: 'bg-green-100 text-green-700' },
+  unpaid: { t: '미결제', c: 'bg-red-100 text-red-600' },
+  partial: { t: '부분결제', c: 'bg-yellow-100 text-yellow-700' },
+};
+
+const SalesGridTable = memo(function SalesGridTable({
+  items, selectedId, onSelect, prepMode, checkedSale, checkedDelivery, onCheckSale, onCheckDelivery,
+}: {
+  items: UnifiedItem[];
+  selectedId?: string;
+  onSelect: (id: string, type: 'sale' | 'delivery') => void;
+  prepMode: boolean;
+  checkedSale: Set<string>;
+  checkedDelivery: Set<string>;
+  onCheckSale: (id: string) => void;
+  onCheckDelivery: (id: string) => void;
+}) {
+  return (
+    <table className="w-full text-sm border-collapse">
+      <thead>
+        <tr className="sticky top-0 bg-stone-50 z-[1] text-left text-[11px] font-semibold text-neutral-500">
+          {prepMode && <th className="px-2 py-2.5 w-9"></th>}
+          <th className="px-3 py-2.5 whitespace-nowrap">번호</th>
+          <th className="px-3 py-2.5">고객</th>
+          <th className="px-3 py-2.5 whitespace-nowrap">날짜</th>
+          <th className="px-3 py-2.5 whitespace-nowrap">채널</th>
+          <th className="px-3 py-2.5 whitespace-nowrap">상태</th>
+          <th className="px-3 py-2.5 whitespace-nowrap">결제</th>
+          <th className="px-3 py-2.5 text-right whitespace-nowrap">금액</th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((item) => {
+          const isSale = item.sourceType === 'sale';
+          const d = item.data;
+          const state = isSale ? getRowStateSale(d) : getRowStateDelivery(d);
+          const dot = rightDot(state);
+          const cancelled = state === 'cancelled';
+          const sel = selectedId === item.id;
+          const checked = isSale ? checkedSale.has(item.id) : checkedDelivery.has(item.id);
+          const onCheck = () => (isSale ? onCheckSale(item.id) : onCheckDelivery(item.id));
+          const no = isSale ? (d.sale_number || '') : (d.dl_number || '');
+          const ct = d.customer_type as string | null;
+          const channel = isSale
+            ? (CHANNEL_LABEL[d.sale_channel || 'offline'] || '오프라인')
+            : (ct === 'academy' ? '아카데미' : ct === 'dealer' ? '딜러' : '거래처');
+          const pay = PAY_BADGE[d.payment_status] || PAY_BADGE.unpaid;
+          const amt = (d.total_amount || 0) - (d.discount_amount || 0);
+          return (
+            <tr
+              key={`${item.sourceType}-${item.id}`}
+              onClick={prepMode ? onCheck : () => onSelect(item.id, item.sourceType)}
+              className={`border-b border-neutral-100 cursor-pointer transition ${
+                sel ? 'bg-[#F4F0EA] shadow-[inset_3px_0_0_#1A1A1A]' : 'hover:bg-warm-ivory/50'
+              } ${checked ? 'bg-blue-50' : ''} ${cancelled ? 'opacity-50' : ''}`}
+            >
+              {prepMode && (
+                <td className="px-2 py-2.5">
+                  <input type="checkbox" checked={checked} onChange={onCheck} onClick={(e) => e.stopPropagation()}
+                    className="w-4 h-4 rounded border-neutral-300" />
+                </td>
+              )}
+              <td className="px-3 py-2.5 font-mono text-[11px] text-neutral-500 whitespace-nowrap">{no.length > 10 ? '…' + no.slice(-6) : no}</td>
+              <td className="px-3 py-2.5">
+                <div className={`font-semibold text-indigo-black ${cancelled ? 'line-through' : ''}`}>{d.customer_name || '—'}</div>
+                {isSale && d.company_name && <div className="text-[11px] text-neutral-400">{d.company_name}</div>}
+              </td>
+              <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap tabular-nums">{formatDate(item.date)}</td>
+              <td className="px-3 py-2.5 text-neutral-500 whitespace-nowrap">{channel}</td>
+              <td className="px-3 py-2.5 whitespace-nowrap">
+                <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${statusTextClass(state)}`}>
+                  {dot && <span className={`w-1.5 h-1.5 rounded-full ${dot.color}`} />}
+                  {statusLabel(state)}
+                </span>
+              </td>
+              <td className="px-3 py-2.5"><span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${pay.c}`}>{pay.t}</span></td>
+              <td className={`px-3 py-2.5 text-right font-bold tabular-nums ${cancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{formatKRW(amt)}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+});
+
 const SaleRow = memo(function SaleRow({ sale, selected, onClick, prepMode, checked, onCheck }: {
   sale: OfflineSale; selected?: boolean; onClick: () => void;
   prepMode?: boolean; checked?: boolean; onCheck?: () => void;

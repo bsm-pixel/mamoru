@@ -297,12 +297,12 @@ export function useSale(id: string) {
       const sale = saleRes.data as OfflineSale;
 
       // customer_id가 있으면 최신 연락처 + 매장명/활동명/직급 가져오기
-      let customerInfo: { company_name: string | null; activity_name: string | null; position: string | null } | null = null;
+      let customerInfo: { company_name: string | null; activity_name: string | null; position: string | null; postcode: string | null; address_road: string | null; address_detail: string | null } | null = null;
       if (sale.customer_id) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: cust } = await (supabase as any)
           .from('customers')
-          .select('phone, company_name, activity_name, position')
+          .select('phone, company_name, activity_name, position, postcode, address_road, address_detail')
           .eq('id', sale.customer_id)
           .single();
         if (cust?.phone) {
@@ -313,6 +313,9 @@ export function useSale(id: string) {
             company_name: cust.company_name ?? null,
             activity_name: cust.activity_name ?? null,
             position: cust.position ?? null,
+            postcode: cust.postcode ?? null,          // 주소지 표시용 (2026-07-14)
+            address_road: cust.address_road ?? null,
+            address_detail: cust.address_detail ?? null,
           };
         }
       }
