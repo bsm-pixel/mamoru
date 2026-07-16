@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -8,11 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePurchaseOrders } from '@/hooks/use-purchasing';
+import { useGridMode } from '@/hooks/use-grid-mode';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
+import { DataGrid, GridToggleButton, type GridColumn } from '@/components/ui/data-grid';
 import { PurchaseDetailPanel } from '@/components/purchasing/purchase-detail-panel';
 import { Plus, Truck } from 'lucide-react';
 import type { PurchaseOrder } from '@/lib/supabase/types';
@@ -37,6 +39,23 @@ const STATUS_TABS = [
   { value: 'balance_paid', label: '잔금완료' },
 ];
 
+/** 상태 표기 — 입고 전이지만 잔금까지 다 냈으면 '결제완료'(선납완료 오해 방지). PORow·그리드 공용(드리프트 0) */
+function poStatusView(po: PurchaseOrder): { label: string; color: string } {
+  const paidEarly = !!po.balance_paid_at && (po.status === 'ordered' || po.status === 'deposit_paid');
+  return paidEarly
+    ? { label: '결제완료', color: 'bg-emerald-100 text-emerald-700' }
+    : { label: STATUS_LABEL[po.status] || po.status, color: STATUS_COLOR[po.status] || STATUS_COLOR.draft };
+}
+
+/** PC 그리드 컬럼: 발주일·공급처·상태·입고예정·금액 */
+const PO_COLUMNS: GridColumn<PurchaseOrder>[] = [
+  { key: 'date', label: '발주일', render: (po) => <span className="text-neutral-600 tabular-nums">{formatDate(po.order_date)}</span> },
+  { key: 'supplier', label: '공급처', render: (po) => <span className="font-semibold text-indigo-black">{po.supplier_name}</span> },
+  { key: 'status', label: '상태', render: (po) => { const v = poStatusView(po); return <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${v.color}`}>{v.label}</span>; } },
+  { key: 'expected', label: '입고예정', render: (po) => <span className="text-neutral-500 tabular-nums">{po.expected_date ? formatDate(po.expected_date) : '—'}</span> },
+  { key: 'amount', label: '금액', align: 'right', render: (po) => <span className="font-bold tabular-nums text-indigo-black">{formatKRW(po.total_amount)}</span> },
+];
+
 export default function PurchasingPage() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState('');
@@ -46,14 +65,7 @@ export default function PurchasingPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const limit = 20;
 
-  const [isLg, setIsLg] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)');
-    setIsLg(mql.matches);
-    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
+  const { isLg, gridMode, toggleGrid } = useGridMode('purchasing-pc-grid');
 
   const { data, isLoading } = usePurchaseOrders({
     status: statusFilter || undefined,
@@ -107,6 +119,9 @@ export default function PurchasingPage() {
             <option value="week">이번주</option>
             <option value="month">이번달</option>
           </select>
+          <div className="ml-auto">
+            <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
+          </div>
         </div>
 
         <div className="flex gap-1.5 overflow-x-auto pb-1">
@@ -125,16 +140,30 @@ export default function PurchasingPage() {
           ))}
         </div>
 
-        {/* PC: 2열 마스터-디테일 */}
+        {/* PC: 2열 마스터-디테일 (그리드모드 시 목록 넓게/상세 420px 반전) */}
         {isLg && (
           <div className="flex gap-4 h-[calc(100vh-240px)]">
-            <div className="w-[40%] shrink-0 overflow-y-auto">
-              <Card padding={false}>{listContent}</Card>
+            <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-[40%] shrink-0'} overflow-y-auto`}>
+              <Card padding={false}>
+                {gridMode && !isLoading ? (
+                  <DataGrid
+                    columns={PO_COLUMNS}
+                    rows={orders}
+                    getRowKey={(po) => po.id}
+                    selectedKey={selectedId ?? undefined}
+                    onSelect={(po) => setSelectedId(po.id)}
+                    rowClassName={(po) => (po.status === 'cancelled' ? 'opacity-50' : '')}
+                    emptyMessage="발주 내역이 없습니다"
+                  />
+                ) : (
+                  listContent
+                )}
+              </Card>
               <div className="mt-2">
                 <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
               </div>
             </div>
-            <div className="flex-1 min-w-0 overflow-y-auto">
+            <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto`}>
               {selectedId ? (
                 <PurchaseDetailPanel purchaseId={selectedId} />
               ) : (
@@ -167,16 +196,12 @@ export default function PurchasingPage() {
 }
 
 function PORow({ po, isSelected, onClick }: { po: PurchaseOrder; isSelected: boolean; onClick: () => void }) {
-  // 입고 전이지만 잔금까지 다 냈으면 '선납완료' 대신 '결제완료' 로 (선납완료 뱃지가 잔금 남은 것처럼 보이는 오해 방지)
-  const paidEarly = !!po.balance_paid_at && (po.status === 'ordered' || po.status === 'deposit_paid');
   return (
     <div onClick={onClick} className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-stone-50/60 transition ${isSelected ? 'bg-stone-100 border-l-2 border-l-stone-900' : ''}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-stone-900 truncate">{po.supplier_name}</span>
-          <Badge className={paidEarly ? 'bg-emerald-100 text-emerald-700' : (STATUS_COLOR[po.status] || STATUS_COLOR.draft)}>
-            {paidEarly ? '결제완료' : (STATUS_LABEL[po.status] || po.status)}
-          </Badge>
+          <Badge className={poStatusView(po).color}>{poStatusView(po).label}</Badge>
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
           <span>{formatDate(po.order_date)}</span>

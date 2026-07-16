@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RepairStatusBadge } from './repair-status-badge';
+import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { useRepairTabData } from '@/hooks/use-repair-tabs';
 import { useUpdateRepairStatus, useUpdateRepairFields, useShipRepair } from '@/hooks/use-repairs';
 import { formatKRW, formatPhone, formatDate, formatDateTime } from '@/lib/utils/format';
@@ -24,6 +25,8 @@ interface RepairListProps {
   unpaidOnly?: boolean;
   staleOnly?: boolean;
   onClearFilter?: () => void;
+  /** PC 그리드(밀집 표) 모드 — 카드 대신 표로 렌더 (PC에서만 전달) */
+  gridMode?: boolean;
 }
 
 /** 경과일 계산 */
@@ -42,7 +45,7 @@ function matchSearch(r: Repair, q: string): boolean {
   );
 }
 
-export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, staleOnly, onClearFilter }: RepairListProps = {}) {
+export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, staleOnly, onClearFilter, gridMode }: RepairListProps = {}) {
   const [activeTab, setActiveTab] = useState<RepairTabKey>(initialTab || 'intake');
   const [search, setSearch] = useState('');
   const { tabs, tabData, isLoading } = useRepairTabData();
@@ -63,6 +66,38 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
     }
     return list;
   }, [tabData, activeTab, search, unpaidOnly, staleOnly]);
+
+  // PC 그리드 컬럼 — 접수일·상태·고객·수량·금액·경과·액션 (카드와 동일 헬퍼 재사용, 액션 컬럼으로 원클릭 유지)
+  const gridColumns = useMemo<GridColumn<Repair>[]>(() => [
+    { key: 'received', label: '접수일', render: (r) => <span className="text-neutral-500 whitespace-nowrap tabular-nums">{formatDate(r.received_at, 'M/d HH:mm')}</span> },
+    { key: 'status', label: '상태', render: (r) => <RepairStatusBadge status={r.status} proceedType={r.proceed_type} /> },
+    { key: 'customer', label: '고객', render: (r) => (
+      <div className="min-w-0">
+        <div className={`font-semibold truncate ${r.status === 'cancelled' ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{r.name}</div>
+        <div className="text-[11px] text-neutral-400">{formatPhone(r.phone)}</div>
+      </div>
+    ) },
+    { key: 'qty', label: '수량', render: (r) => (
+      <span className="text-xs text-neutral-600 whitespace-nowrap">
+        {r.qty_mamoru > 0 && <span>마모루 {r.qty_mamoru}</span>}
+        {r.qty_mamoru > 0 && r.qty_other > 0 && <span className="text-neutral-300"> · </span>}
+        {r.qty_other > 0 && <span>타사 {r.qty_other}</span>}
+        {r.qty_mamoru === 0 && r.qty_other === 0 && <span className="text-neutral-300">—</span>}
+      </span>
+    ) },
+    { key: 'amount', label: '금액', align: 'right', render: (r) => (
+      <div className="text-right whitespace-nowrap">
+        <span className="font-bold tabular-nums text-indigo-black">{r.total_amount > 0 ? formatKRW(r.total_amount) : '—'}</span>
+        {!r.paid_at && r.total_amount > 0 && <div className="text-[10px] text-red-500 font-semibold">미입금</div>}
+      </div>
+    ) },
+    { key: 'elapsed', label: '경과', align: 'right', render: (r) => {
+      const days = getDaysElapsed(r.received_at);
+      if (r.status === 'completed' || r.status === 'cancelled' || days <= 0) return <span className="text-neutral-300">—</span>;
+      return <span className={`text-[11px] whitespace-nowrap ${days >= 7 ? 'text-error font-medium' : days >= 3 ? 'text-orange-500' : 'text-neutral-400'}`}>{days}일</span>;
+    } },
+    { key: 'action', label: '', align: 'right', render: (r) => <InlineAction repair={r} tab={activeTab} /> },
+  ], [activeTab]);
 
   return (
     <div className="space-y-3">
@@ -132,6 +167,17 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
           <Scissors size={28} className="mb-2 opacity-40" />
           <p className="text-sm">{search ? '검색 결과가 없습니다' : '해당 건이 없습니다'}</p>
         </div>
+      ) : gridMode ? (
+        <Card padding={false}>
+          <DataGrid
+            columns={gridColumns}
+            rows={filteredRepairs}
+            getRowKey={(r) => r.id}
+            selectedKey={selectedId ?? undefined}
+            onSelect={(r) => onSelect?.(r.id)}
+            rowClassName={(r) => (r.status === 'cancelled' ? 'opacity-60' : '')}
+          />
+        </Card>
       ) : (
         <div className="space-y-2">
           {filteredRepairs.map((r) => (

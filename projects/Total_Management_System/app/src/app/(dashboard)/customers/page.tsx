@@ -1,23 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomers } from '@/hooks/use-customers';
+import { useGridMode } from '@/hooks/use-grid-mode';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
+import { DataGrid, GridToggleButton, type GridColumn } from '@/components/ui/data-grid';
 import { CustomerDetailPanel } from '@/components/customers/customer-detail-panel';
 import { activitySuffix } from '@/lib/customer/display';
-import { Users, Plus, X } from 'lucide-react';
+import { Users, Plus } from 'lucide-react';
 import type { Customer } from '@/lib/supabase/types';
-import toast from 'react-hot-toast';
 import { TagBadges } from '@/components/shared/tag-selector';
 import { useSetting } from '@/hooks/use-settings';
 
@@ -50,6 +51,27 @@ const FILTER_TYPES = [
   { value: 'academy', label: '아카데미' },
 ];
 
+/** PC 그리드 컬럼: 고객·유형·연락처·업체·유입·총구매·미수금 (CustomerRow와 동일 필드) */
+const CUSTOMER_COLUMNS: GridColumn<Customer>[] = [
+  {
+    key: 'name', label: '고객',
+    render: (c) => (
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="font-semibold text-indigo-black truncate">{c.name}</span>
+        {activitySuffix(c.activity_name, c.position) && (
+          <span className="text-[11px] text-neutral-400 truncate">{activitySuffix(c.activity_name, c.position)}</span>
+        )}
+      </div>
+    ),
+  },
+  { key: 'type', label: '유형', render: (c) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${TYPE_COLOR[c.customer_type] || TYPE_COLOR.retail}`}>{TYPE_LABEL[c.customer_type] || '일반'}</span> },
+  { key: 'phone', label: '연락처', render: (c) => <span className="text-neutral-600 tabular-nums">{c.phone ? formatPhone(c.phone) : '—'}</span> },
+  { key: 'company', label: '업체/매장', render: (c) => <span className="text-neutral-500 truncate">{c.company_name || '—'}</span> },
+  { key: 'source', label: '유입', render: (c) => <span className="text-neutral-400 text-xs">{SOURCE_LABEL[c.source] || c.source || '—'}</span> },
+  { key: 'spent', label: '총구매', align: 'right', render: (c) => <span className="font-semibold tabular-nums text-indigo-black">{c.total_spent > 0 ? formatKRW(c.total_spent) : '—'}</span> },
+  { key: 'outstanding', label: '미수금', align: 'right', render: (c) => (c.outstanding_balance > 0 ? <span className="font-bold tabular-nums text-red-500">{formatKRW(c.outstanding_balance)}</span> : <span className="text-neutral-300">—</span>) },
+];
+
 export default function CustomersPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -60,15 +82,7 @@ export default function CustomersPage() {
   const limit = 20;
   const availableTags = useSetting<string[]>('customer.tags', []);
 
-  // PC 여부 감지
-  const [isLg, setIsLg] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)');
-    setIsLg(mql.matches);
-    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
+  const { isLg, gridMode, toggleGrid } = useGridMode('customers-pc-grid');
 
   const { data, isLoading } = useCustomers({
     search,
@@ -108,10 +122,13 @@ export default function CustomersPage() {
   return (
     <>
       <Topbar title="고객 관리" action={
-        <Button size="sm" onClick={() => setShowAdd(true)}>
-          <Plus size={14} />
-          고객 추가
-        </Button>
+        <div className="flex gap-2">
+          <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
+          <Button size="sm" onClick={() => setShowAdd(true)}>
+            <Plus size={14} />
+            고객 추가
+          </Button>
+        </div>
       } />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
@@ -160,19 +177,32 @@ export default function CustomersPage() {
           </div>
         )}
 
-        {/* PC: 2열 레이아웃 */}
+        {/* PC: 2열 레이아웃 (그리드모드 시 목록 넓게/상세 420px 반전) */}
         {isLg && (
           <div className="flex gap-4 h-[calc(100vh-240px)]">
             {/* 좌측: 고객 목록 */}
-            <div className="w-[40%] shrink-0 overflow-y-auto">
-              <Card padding={false}>{listContent}</Card>
+            <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-[40%] shrink-0'} overflow-y-auto`}>
+              <Card padding={false}>
+                {gridMode && !isLoading ? (
+                  <DataGrid
+                    columns={CUSTOMER_COLUMNS}
+                    rows={customers}
+                    getRowKey={(c) => c.id}
+                    selectedKey={selectedId ?? undefined}
+                    onSelect={(c) => setSelectedId(c.id)}
+                    emptyMessage="고객이 없습니다"
+                  />
+                ) : (
+                  listContent
+                )}
+              </Card>
               <div className="mt-2">
                 <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} unit="명" />
               </div>
             </div>
 
             {/* 우측: 고객 상세 모니터 */}
-            <div className="flex-1 min-w-0 overflow-y-auto">
+            <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto`}>
               {selectedId ? (
                 <CustomerDetailPanel customerId={selectedId} />
               ) : (

@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { RepairList } from '@/components/repairs/repair-list';
 import { RepairDetailPanel } from '@/components/repairs/repair-detail-panel';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { StatCard } from '@/components/ui/stat-card';
 import { RevenueDarkCard } from '@/components/ui/revenue-dark-card';
+import { GridToggleButton } from '@/components/ui/data-grid';
+import { useGridMode } from '@/hooks/use-grid-mode';
 import { useRepairSync } from '@/hooks/use-repairs';
 import { useRepairDashboardStats } from '@/hooks/use-dashboard-stats';
 import { RefreshCw, Scissors, Inbox, Loader, CreditCard, AlertTriangle, TrendingUp } from 'lucide-react';
@@ -18,19 +20,13 @@ export default function RepairsPage() {
   const { data: stats } = useRepairDashboardStats();
   const [badgeFilter, setBadgeFilter] = useState<{ tab?: 'intake' | 'in_progress'; unpaidOnly?: boolean; staleOnly?: boolean } | null>(null);
 
-  // PC 여부 감지 (lg:1024px+) — isLg conditional rendering
-  const [isLg, setIsLg] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)');
-    setIsLg(mql.matches);
-    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
+  const { isLg, gridMode, toggleGrid } = useGridMode('repairs-pc-grid');
 
   return (
     <>
-      <Topbar title="복원수리" />
+      <Topbar title="복원수리" action={
+        <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
+      } />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-4">
         {/* 1행: 이번달 매출(공통 RevenueDarkCard) + 오늘 작업 + 이번주 누적 */}
@@ -111,11 +107,11 @@ export default function RepairsPage() {
           </div>
         </div>
 
-        {/* PC: 좌측 목록 + 우측 상세 모니터 */}
+        {/* PC: 좌측 목록 + 우측 상세 모니터 (그리드모드 시 목록 넓게/상세 420px 반전) */}
         {isLg && (
           <div className="flex gap-4 h-[calc(100vh-220px)]">
-            {/* 좌측: 목록 (2/5) */}
-            <div className="w-[40%] shrink-0 overflow-y-auto">
+            {/* 좌측: 목록 */}
+            <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-[40%] shrink-0'} overflow-y-auto`}>
               <RepairList
                 onSelect={setSelectedId}
                 selectedId={selectedId}
@@ -123,11 +119,12 @@ export default function RepairsPage() {
                 unpaidOnly={badgeFilter?.unpaidOnly}
                 staleOnly={badgeFilter?.staleOnly}
                 onClearFilter={() => setBadgeFilter(null)}
+                gridMode={gridMode}
               />
             </div>
 
-            {/* 우측: 상세 모니터 (3/5) */}
-            <div className="flex-1 min-w-0 overflow-y-auto">
+            {/* 우측: 상세 모니터 */}
+            <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto`}>
               {selectedId ? (
                 <RepairDetailPanel repairId={selectedId} />
               ) : (
