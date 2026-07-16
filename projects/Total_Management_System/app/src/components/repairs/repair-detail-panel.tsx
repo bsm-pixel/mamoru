@@ -71,41 +71,25 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
         <RepairStatusBadge status={r.status} proceedType={proceedType} />
       </div>
 
-      {/* 모바일: 내역작성 버튼 상단 배치 (스크롤 없이 즉시 접근) */}
-      <div className="@xl:hidden">
-        <Button
-          variant={inspections.length > 0 ? 'secondary' : 'primary'}
-          size="sm"
-          onClick={() => setShowInspection(true)}
-          className="w-full"
-        >
-          {inspections.length > 0 ? (
-            <><ClipboardCheck size={14} className="text-green-600" /> 내역작성완료 ({inspections.length}건)</>
-          ) : (
-            <><ClipboardList size={14} /> 내역작성하기</>
-          )}
-        </Button>
-      </div>
+      {/* 내역작성 버튼 — 상단 1개만 (중복 제거, 2026-07-16) */}
+      <Button
+        variant={inspections.length > 0 ? 'secondary' : 'primary'}
+        size="sm"
+        onClick={() => setShowInspection(true)}
+        className="w-full"
+      >
+        {inspections.length > 0 ? (
+          <><ClipboardCheck size={14} className="text-green-600" /> 내역작성완료 ({inspections.length}건)</>
+        ) : (
+          <><ClipboardList size={14} /> 내역작성하기</>
+        )}
+      </Button>
 
       {/* 2컬럼 내부 레이아웃 */}
       <div className="flex flex-col @xl:flex-row gap-4">
         {/* 메인 정보 */}
         <div className="flex-1 space-y-4 min-w-0">
           <RepairDetailCard repair={r} onUpdate={handleUpdate} />
-
-          {/* PC: 검수 — 모달 트리거 버튼 */}
-          <Button
-            variant={inspections.length > 0 ? 'secondary' : 'primary'}
-            size="sm"
-            onClick={() => setShowInspection(true)}
-            className="w-full hidden @xl:flex"
-          >
-            {inspections.length > 0 ? (
-              <><ClipboardCheck size={14} className="text-green-600" /> 내역작성완료 ({inspections.length}건)</>
-            ) : (
-              <><ClipboardList size={14} /> 내역작성하기</>
-            )}
-          </Button>
 
           {/* 검수 요약 (저장된 게 있을 때만) */}
           {inspections.length > 0 && <InspectionSummary inspections={inspections} />}

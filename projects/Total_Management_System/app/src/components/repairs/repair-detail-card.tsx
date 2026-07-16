@@ -102,12 +102,19 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
 
   return (
     <div className="space-y-4">
-      {/* 고객 정보 */}
+      {/* 고객 정보 (+ 주소지 통합 — 표기만 한묶음, 저장/송장/연동 로직 무관여) */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            <User size={16} className="inline mr-1.5" />
-            고객 정보
+          <CardTitle className="flex items-center justify-between">
+            <span>
+              <User size={16} className="inline mr-1.5" />
+              고객 정보
+            </span>
+            {onUpdate && !editAddr && (
+              <button onClick={() => setEditAddr(true)} className="text-neutral-400 hover:text-neutral-600" title="주소 수정">
+                <Pencil size={14} />
+              </button>
+            )}
           </CardTitle>
         </CardHeader>
         <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
@@ -129,69 +136,54 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
           </dd>
           <dt className="text-neutral-500">전달방법</dt>
           <dd>{r.delivery_method || '-'}</dd>
-        </dl>
-      </Card>
-
-      {/* 주소 */}
-      {(r.address || r.postcode || editAddr) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>
-                <MapPin size={16} className="inline mr-1.5" />
-                주소
-              </span>
-              {onUpdate && !editAddr && (
-                <button onClick={() => setEditAddr(true)} className="text-neutral-400 hover:text-neutral-600">
-                  <Pencil size={14} />
-                </button>
-              )}
-            </CardTitle>
-          </CardHeader>
-          {editAddr ? (
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={postcode}
-                  onChange={(e) => setPostcode(e.target.value)}
-                  placeholder="우편번호"
-                  className="w-28 h-8 px-2 rounded border border-neutral-200 text-sm"
-                />
-              </div>
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="주소"
-                className="w-full h-8 px-2 rounded border border-neutral-200 text-sm"
-              />
-              <input
-                type="text"
-                value={addressDetail}
-                onChange={(e) => setAddressDetail(e.target.value)}
-                placeholder="상세주소"
-                className="w-full h-8 px-2 rounded border border-neutral-200 text-sm"
-              />
-              <div className="flex gap-2 pt-1">
-                <Button variant="primary" size="sm" onClick={handleSaveAddr} loading={savingAddr}>
-                  <Check size={12} /> 저장
-                </Button>
-                <Button variant="ghost" size="sm" onClick={cancelAddr}>
-                  <X size={12} /> 취소
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
+          {!editAddr && (
+            <>
               <dt className="text-neutral-500">우편번호</dt>
               <dd>{r.postcode || '-'}</dd>
-              <dt className="text-neutral-500">주소</dt>
-              <dd>{r.address || '-'} {r.address_detail || ''}</dd>
-            </dl>
+              <dt className="text-neutral-500">주소지</dt>
+              <dd>{r.address ? `${r.address}${r.address_detail ? ' ' + r.address_detail : ''}` : '-'}</dd>
+            </>
           )}
-        </Card>
-      )}
+        </dl>
+
+        {/* 주소 수정 (표기 통합 후에도 편집 기능 동일 유지) */}
+        {editAddr && (
+          <div className="space-y-2 mt-3 pt-3 border-t border-neutral-100">
+            <p className="text-xs text-neutral-500 flex items-center gap-1">
+              <MapPin size={12} /> 주소 수정
+            </p>
+            <input
+              type="text"
+              value={postcode}
+              onChange={(e) => setPostcode(e.target.value)}
+              placeholder="우편번호"
+              className="w-28 h-8 px-2 rounded border border-neutral-200 text-sm"
+            />
+            <input
+              type="text"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="주소"
+              className="w-full h-8 px-2 rounded border border-neutral-200 text-sm"
+            />
+            <input
+              type="text"
+              value={addressDetail}
+              onChange={(e) => setAddressDetail(e.target.value)}
+              placeholder="상세주소"
+              className="w-full h-8 px-2 rounded border border-neutral-200 text-sm"
+            />
+            <div className="flex gap-2 pt-1">
+              <Button variant="primary" size="sm" onClick={handleSaveAddr} loading={savingAddr}>
+                <Check size={12} /> 저장
+              </Button>
+              <Button variant="ghost" size="sm" onClick={cancelAddr}>
+                <X size={12} /> 취소
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
 
       {/* 접수 정보 — 수량 수정 가능 */}
       <Card>
