@@ -52,6 +52,8 @@ export interface StatCardProps {
   dimWhenZero?: boolean;
   /** 활성/필터 선택 상태 (ring 표시) */
   active?: boolean;
+  /** 컴팩트 모드 — 밀집 배치용(작은 패딩·숫자, 화살표 생략). 예: /repairs 좌측 통계 */
+  compact?: boolean;
   /** 클릭 시 라우팅 (href 우선) */
   href?: string;
   onClick?: () => void;
@@ -59,28 +61,28 @@ export interface StatCardProps {
 
 export function StatCard({
   label, value, icon: Icon, primarySub, secondarySub,
-  accent = 'stone', dimWhenZero = false, active = false,
+  accent = 'stone', dimWhenZero = false, active = false, compact = false,
   href, onClick,
 }: StatCardProps) {
   const isZero = typeof value === 'number' && value === 0;
   const accentClass = (dimWhenZero && isZero) ? 'text-stone-300' : ACCENT_TEXT[accent];
 
-  const className = `bg-white rounded-2xl border p-4 hover:border-stone-300 transition group text-left w-full h-full flex flex-col ${
-    active ? 'border-stone-900 ring-1 ring-stone-900' : 'border-stone-200'
-  }`;
+  const className = `bg-white rounded-2xl border hover:border-stone-300 transition group text-left w-full h-full flex flex-col ${
+    compact ? 'p-2.5' : 'p-4'
+  } ${active ? 'border-stone-900 ring-1 ring-stone-900' : 'border-stone-200'}`;
 
   const content = (
     <>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
-          <Icon size={13} className="text-stone-400" />
-          <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold">{label}</p>
+      <div className={`flex items-center justify-between ${compact ? 'mb-1' : 'mb-2'}`}>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Icon size={compact ? 12 : 13} className="text-stone-400 shrink-0" />
+          <p className={`${compact ? 'text-[10px]' : 'text-[11px]'} text-stone-500 uppercase tracking-wider font-semibold truncate`}>{label}</p>
         </div>
-        <ArrowRight size={12} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition" />
+        {!compact && <ArrowRight size={12} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition" />}
       </div>
       <div className="flex-1 flex flex-col justify-center">
-        <p className={`text-3xl font-bold leading-none ${accentClass}`}>{value}</p>
-        {primarySub && <p className="text-[10px] text-stone-500 mt-1">{primarySub}</p>}
+        <p className={`${compact ? 'text-xl' : 'text-3xl'} font-bold leading-none ${accentClass}`}>{value}</p>
+        {primarySub && <p className={`text-[10px] text-stone-500 ${compact ? 'mt-0.5' : 'mt-1'}`}>{primarySub}</p>}
       </div>
       {secondarySub && (
         <p className="text-[10px] text-stone-400 mt-2 pt-2 border-t border-stone-100 truncate">{secondarySub}</p>
