@@ -7,6 +7,9 @@ import toast from 'react-hot-toast';
 // 075: cross-domain invalidation 일원화 — mutation 후 대시보드/통계가 즉각 갱신되도록
 import { invalidateFinancialQueries } from '@/lib/query/invalidate-keys';
 
+/** 목록행 + PC 그리드 '상담유형' 컬럼용 원본 상담유형(배치 주입, 없으면 null) */
+export type SaleListRow = OfflineSale & { consultation_type?: string | null };
+
 /** 판매 탭 타입 */
 export type SalesTab = 'all' | 'today' | 'unpaid' | 'processing' | 'cancelled';
 export type SalesChannel = 'all' | 'offline' | 'online' | 'talk' | 'b2b';
@@ -101,7 +104,29 @@ export function useSales(filters?: {
 
       const { data, count, error } = await query;
       if (error) throw error;
-      return { sales: (data || []) as OfflineSale[], total: count || 0 };
+
+      const sales = (data || []) as SaleListRow[];
+
+      // 2026-07-16: PC 그리드 '상담유형' 컬럼 — 목록엔 source_consultation_id만 있어 배치 조회로 유형 주입.
+      // (FK 임베드 조인은 FK 제약 존재를 확인할 수 없어 회피 — 실패 시 목록 전체가 깨짐)
+      const cids = Array.from(
+        new Set(sales.map((s) => s.source_consultation_id).filter(Boolean)),
+      ) as string[];
+      if (cids.length) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: cons } = await (supabase as any)
+          .from('consultations')
+          .select('id, consultation_type')
+          .in('id', cids);
+        const typeById = new Map<string, string>(
+          (cons || []).map((c: { id: string; consultation_type: string }) => [c.id, c.consultation_type]),
+        );
+        for (const s of sales) {
+          if (s.source_consultation_id) s.consultation_type = typeById.get(s.source_consultation_id) ?? null;
+        }
+      }
+
+      return { sales, total: count || 0 };
     },
   });
 }

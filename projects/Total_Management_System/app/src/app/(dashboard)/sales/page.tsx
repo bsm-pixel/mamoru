@@ -13,7 +13,8 @@ import { useSales, useSalesTabCounts, useSalesStats } from '@/hooks/use-sales';
 import type { SalesTab, SalesChannel, SalesDateRange } from '@/hooks/use-sales';
 import { useDeliveryStats, useDeliveries } from '@/hooks/use-deliveries';
 import { useContracts } from '@/hooks/use-contracts';
-import { formatKRW, formatDate } from '@/lib/utils/format';
+import { formatKRW, formatDate, CONSULTATION_TYPE_LABEL } from '@/lib/utils/format';
+import { getSaleShipStatus, getDeliveryShipStatus, type ShipStatus } from '@/lib/sales/ship-status';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -595,10 +596,11 @@ type UnifiedItem =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | { sourceType: 'delivery'; id: string; date: string; data: any };
 
-const PAY_BADGE: Record<string, { t: string; c: string }> = {
-  paid: { t: '결제완료', c: 'bg-green-100 text-green-700' },
-  unpaid: { t: '미결제', c: 'bg-red-100 text-red-600' },
-  partial: { t: '부분결제', c: 'bg-yellow-100 text-yellow-700' },
+/** 배송상태 tone → 텍스트 색 */
+const SHIP_TONE: Record<ShipStatus['tone'], string> = {
+  amber: 'text-amber-600',
+  green: 'text-emerald-600',
+  mute: 'text-neutral-300',
 };
 
 const SalesGridTable = memo(function SalesGridTable({
@@ -618,12 +620,11 @@ const SalesGridTable = memo(function SalesGridTable({
       <thead>
         <tr className="sticky top-0 bg-stone-50 z-[1] text-left text-[11px] font-semibold text-neutral-500">
           {prepMode && <th className="px-2 py-2.5 w-9"></th>}
-          <th className="px-3 py-2.5 whitespace-nowrap">번호</th>
-          <th className="px-3 py-2.5">고객</th>
           <th className="px-3 py-2.5 whitespace-nowrap">날짜</th>
-          <th className="px-3 py-2.5 whitespace-nowrap">채널</th>
+          <th className="px-3 py-2.5">고객</th>
           <th className="px-3 py-2.5 whitespace-nowrap">상태</th>
-          <th className="px-3 py-2.5 whitespace-nowrap">결제</th>
+          <th className="px-3 py-2.5 whitespace-nowrap">상담유형</th>
+          <th className="px-3 py-2.5 whitespace-nowrap">배송상태</th>
           <th className="px-3 py-2.5 text-right whitespace-nowrap">금액</th>
         </tr>
       </thead>
@@ -637,13 +638,11 @@ const SalesGridTable = memo(function SalesGridTable({
           const sel = selectedId === item.id;
           const checked = isSale ? checkedSale.has(item.id) : checkedDelivery.has(item.id);
           const onCheck = () => (isSale ? onCheckSale(item.id) : onCheckDelivery(item.id));
-          const no = isSale ? (d.sale_number || '') : (d.dl_number || '');
-          const ct = d.customer_type as string | null;
-          const channel = isSale
-            ? (CHANNEL_LABEL[d.sale_channel || 'offline'] || '오프라인')
-            : (ct === 'academy' ? '아카데미' : ct === 'dealer' ? '딜러' : '거래처');
-          const pay = PAY_BADGE[d.payment_status] || PAY_BADGE.unpaid;
           const amt = (d.total_amount || 0) - (d.discount_amount || 0);
+          // 상담유형: 판매만(원본 상담 연결 시) — 없거나 B2B납품이면 '—'
+          const consultType = isSale && d.consultation_type ? (CONSULTATION_TYPE_LABEL[d.consultation_type] || '—') : '—';
+          // 배송상태: 목록 데이터만으로 파생(추가 쿼리 0)
+          const ship: ShipStatus = isSale ? getSaleShipStatus(d) : getDeliveryShipStatus(d);
           return (
             <tr
               key={`${item.sourceType}-${item.id}`}
@@ -658,20 +657,22 @@ const SalesGridTable = memo(function SalesGridTable({
                     className="w-4 h-4 rounded border-neutral-300" />
                 </td>
               )}
-              <td className="px-3 py-2.5 font-mono text-[11px] text-neutral-500 whitespace-nowrap">{no.length > 10 ? '…' + no.slice(-6) : no}</td>
+              <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap tabular-nums">{formatDate(item.date)}</td>
               <td className="px-3 py-2.5">
                 <div className={`font-semibold text-indigo-black ${cancelled ? 'line-through' : ''}`}>{d.customer_name || '—'}</div>
                 {isSale && d.company_name && <div className="text-[11px] text-neutral-400">{d.company_name}</div>}
               </td>
-              <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap tabular-nums">{formatDate(item.date)}</td>
-              <td className="px-3 py-2.5 text-neutral-500 whitespace-nowrap">{channel}</td>
               <td className="px-3 py-2.5 whitespace-nowrap">
                 <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${statusTextClass(state)}`}>
                   {dot && <span className={`w-1.5 h-1.5 rounded-full ${dot.color}`} />}
                   {statusLabel(state)}
                 </span>
               </td>
-              <td className="px-3 py-2.5"><span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${pay.c}`}>{pay.t}</span></td>
+              <td className="px-3 py-2.5 whitespace-nowrap text-xs text-neutral-500">{consultType}</td>
+              <td className="px-3 py-2.5 whitespace-nowrap">
+                <span className={`text-xs font-medium ${SHIP_TONE[ship.tone]}`}>{ship.label}</span>
+                {ship.autoPicked && <span className="ml-1 text-[10px] text-neutral-400">· 수거</span>}
+              </td>
               <td className={`px-3 py-2.5 text-right font-bold tabular-nums ${cancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{formatKRW(amt)}</td>
             </tr>
           );

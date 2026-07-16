@@ -367,7 +367,7 @@ export function ReviewManagementCard({
   if (compact) {
     return (
       <>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
           {/* 약속 토글 스위치 (시안 3) */}
           <button
             type="button"

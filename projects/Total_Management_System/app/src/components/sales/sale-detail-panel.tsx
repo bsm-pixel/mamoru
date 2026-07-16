@@ -135,8 +135,8 @@ export function SaleDetailPanel({ saleId }: Props) {
 
   return (
     <div className="p-4 space-y-4">
-      {/* 헤더 */}
-      <div>
+      {/* 헤더 — @container: 좌우배치를 '뷰포트' 아닌 '패널 폭' 기준으로 (그리드모드 420px 패널에서 리뷰카드 세로깨짐 방지) */}
+      <div className="@container">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           <span className="text-sm font-bold text-stone-900">{s.sale_number}</span>
           <Badge className={PAYMENT_STATUS_COLOR[s.payment_status] || ''}>
@@ -150,8 +150,8 @@ export function SaleDetailPanel({ saleId }: Props) {
           <Badge className={channel.className}>{channel.label}</Badge>
         </div>
         {/* 2026-05-26: 헤더 정보 좌측 + 리뷰 관리 미니 우측 (사장님 시선 부담 ↓) */}
-        {/* 모바일: 세로 스택(고객정보 폭 확보 → 라벨 세로글씨 방지) / PC: 좌우 */}
-        <div className="flex flex-col md:flex-row md:items-start gap-4">
+        {/* 좁은 패널(그리드모드 420px·모바일): 세로 스택 → 고객정보 폭 확보 / 넓은 패널: 좌우 (@md=28rem 기준) */}
+        <div className="flex flex-col @md:flex-row @md:items-start gap-4">
           <div className="flex-1 grid grid-cols-2 gap-2 text-sm">
             <div>
               <span className="text-xs text-neutral-500">고객명</span>
@@ -217,7 +217,7 @@ export function SaleDetailPanel({ saleId }: Props) {
 
           {/* 리뷰 관리 미니 — 취소건엔 표시 X */}
           {!s.cancelled_at && (
-            <div className="shrink-0 pt-1">
+            <div className="w-full @md:w-auto @md:shrink-0 pt-1">
               <ReviewManagementCard
                 source="sale"
                 id={s.id}
