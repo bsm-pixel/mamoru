@@ -8,13 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePurchaseOrders } from '@/hooks/use-purchasing';
-import { useGridMode } from '@/hooks/use-grid-mode';
+import { useIsLg } from '@/hooks/use-grid-mode';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { DataGrid, GridToggleButton, type GridColumn } from '@/components/ui/data-grid';
+import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { PurchaseDetailPanel } from '@/components/purchasing/purchase-detail-panel';
 import { Plus, Truck } from 'lucide-react';
 import type { PurchaseOrder } from '@/lib/supabase/types';
@@ -65,7 +65,7 @@ export default function PurchasingPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const limit = 20;
 
-  const { isLg, gridMode, toggleGrid } = useGridMode('purchasing-pc-grid');
+  const isLg = useIsLg();
 
   const { data, isLoading } = usePurchaseOrders({
     status: statusFilter || undefined,
@@ -119,9 +119,6 @@ export default function PurchasingPage() {
             <option value="week">이번주</option>
             <option value="month">이번달</option>
           </select>
-          <div className="ml-auto">
-            <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
-          </div>
         </div>
 
         <div className="flex gap-1.5 overflow-x-auto pb-1">
@@ -140,12 +137,14 @@ export default function PurchasingPage() {
           ))}
         </div>
 
-        {/* PC: 2열 마스터-디테일 (그리드모드 시 목록 넓게/상세 420px 반전) */}
+        {/* PC: 밀집 그리드 + 우측 상세 (카드보기·토글 폐지 — 항상 그리드) */}
         {isLg && (
           <div className="flex gap-4 h-[calc(100vh-240px)]">
-            <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-[40%] shrink-0'} overflow-y-auto`}>
+            <div className="flex-1 min-w-0 overflow-auto">
               <Card padding={false}>
-                {gridMode && !isLoading ? (
+                {isLoading ? (
+                  <div className="p-4 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
+                ) : (
                   <DataGrid
                     columns={PO_COLUMNS}
                     rows={orders}
@@ -155,15 +154,13 @@ export default function PurchasingPage() {
                     rowClassName={(po) => (po.status === 'cancelled' ? 'opacity-50' : '')}
                     emptyMessage="발주 내역이 없습니다"
                   />
-                ) : (
-                  listContent
                 )}
               </Card>
               <div className="mt-2">
                 <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
               </div>
             </div>
-            <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto`}>
+            <div className="w-[440px] shrink-0 overflow-y-auto">
               {selectedId ? (
                 <PurchaseDetailPanel purchaseId={selectedId} />
               ) : (

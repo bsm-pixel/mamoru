@@ -7,14 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomers } from '@/hooks/use-customers';
-import { useGridMode } from '@/hooks/use-grid-mode';
+import { useIsLg } from '@/hooks/use-grid-mode';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { DataGrid, GridToggleButton, type GridColumn } from '@/components/ui/data-grid';
+import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { CustomerDetailPanel } from '@/components/customers/customer-detail-panel';
 import { activitySuffix } from '@/lib/customer/display';
 import { Users, Plus } from 'lucide-react';
@@ -82,7 +82,7 @@ export default function CustomersPage() {
   const limit = 20;
   const availableTags = useSetting<string[]>('customer.tags', []);
 
-  const { isLg, gridMode, toggleGrid } = useGridMode('customers-pc-grid');
+  const isLg = useIsLg();
 
   const { data, isLoading } = useCustomers({
     search,
@@ -122,13 +122,10 @@ export default function CustomersPage() {
   return (
     <>
       <Topbar title="고객 관리" action={
-        <div className="flex gap-2">
-          <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
-          <Button size="sm" onClick={() => setShowAdd(true)}>
-            <Plus size={14} />
-            고객 추가
-          </Button>
-        </div>
+        <Button size="sm" onClick={() => setShowAdd(true)}>
+          <Plus size={14} />
+          고객 추가
+        </Button>
       } />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
@@ -177,13 +174,15 @@ export default function CustomersPage() {
           </div>
         )}
 
-        {/* PC: 2열 레이아웃 (그리드모드 시 목록 넓게/상세 420px 반전) */}
+        {/* PC: 밀집 그리드 + 우측 상세 (카드보기·토글 폐지 — 항상 그리드) */}
         {isLg && (
           <div className="flex gap-4 h-[calc(100vh-240px)]">
-            {/* 좌측: 고객 목록 */}
-            <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-[40%] shrink-0'} overflow-y-auto`}>
+            {/* 좌측: 밀집 그리드 목록 */}
+            <div className="flex-1 min-w-0 overflow-auto">
               <Card padding={false}>
-                {gridMode && !isLoading ? (
+                {isLoading ? (
+                  <div className="p-4 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
+                ) : (
                   <DataGrid
                     columns={CUSTOMER_COLUMNS}
                     rows={customers}
@@ -192,8 +191,6 @@ export default function CustomersPage() {
                     onSelect={(c) => setSelectedId(c.id)}
                     emptyMessage="고객이 없습니다"
                   />
-                ) : (
-                  listContent
                 )}
               </Card>
               <div className="mt-2">
@@ -201,8 +198,8 @@ export default function CustomersPage() {
               </div>
             </div>
 
-            {/* 우측: 고객 상세 모니터 */}
-            <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto`}>
+            {/* 우측: 고객 상세 모니터 (고정폭) */}
+            <div className="w-[440px] shrink-0 overflow-y-auto">
               {selectedId ? (
                 <CustomerDetailPanel customerId={selectedId} />
               ) : (

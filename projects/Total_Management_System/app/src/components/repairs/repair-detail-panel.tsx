@@ -58,7 +58,8 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+    // @container: 내부 2단 배치를 '뷰포트' 아닌 '패널 폭' 기준으로 (좁은 상세패널에서 값 사라지던 깨짐 방지)
+    <div className="@container flex-1 overflow-y-auto space-y-4 pr-1">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div>
@@ -71,7 +72,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
       </div>
 
       {/* 모바일: 내역작성 버튼 상단 배치 (스크롤 없이 즉시 접근) */}
-      <div className="xl:hidden">
+      <div className="@xl:hidden">
         <Button
           variant={inspections.length > 0 ? 'secondary' : 'primary'}
           size="sm"
@@ -87,7 +88,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
       </div>
 
       {/* 2컬럼 내부 레이아웃 */}
-      <div className="flex flex-col xl:flex-row gap-4">
+      <div className="flex flex-col @xl:flex-row gap-4">
         {/* 메인 정보 */}
         <div className="flex-1 space-y-4 min-w-0">
           <RepairDetailCard repair={r} onUpdate={handleUpdate} />
@@ -97,7 +98,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
             variant={inspections.length > 0 ? 'secondary' : 'primary'}
             size="sm"
             onClick={() => setShowInspection(true)}
-            className="w-full hidden xl:flex"
+            className="w-full hidden @xl:flex"
           >
             {inspections.length > 0 ? (
               <><ClipboardCheck size={14} className="text-green-600" /> 내역작성완료 ({inspections.length}건)</>
@@ -128,7 +129,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
         </div>
 
         {/* 사이드바 — 비용+액션+출고 통합 */}
-        <div className="w-full xl:w-72 shrink-0 space-y-4">
+        <div className="w-full @xl:w-72 shrink-0 space-y-4">
           <SidebarActionCard repair={r} />
           {/* 067: 리뷰 관리 카드 — 취소 외 상태에서 표시 */}
           {r.status !== 'cancelled' && (

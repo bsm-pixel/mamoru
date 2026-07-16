@@ -7,13 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOrders, useOrderSync, useOrderCounts } from '@/hooks/use-orders';
-import { useGridMode } from '@/hooks/use-grid-mode';
+import { useIsLg } from '@/hooks/use-grid-mode';
 import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { DataGrid, GridToggleButton, type GridColumn } from '@/components/ui/data-grid';
+import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { OrderDetailPanel } from '@/components/orders/order-detail-panel';
 import { RefreshCw, Truck, ShoppingBag } from 'lucide-react';
 import { useEscapeKey } from '@/hooks/use-media-query';
@@ -40,7 +40,7 @@ export default function OrdersPage() {
   const sync = useOrderSync();
   const { data: counts } = useOrderCounts();
 
-  const { isLg, gridMode, toggleGrid } = useGridMode('orders-pc-grid');
+  const isLg = useIsLg();
 
   useEscapeKey(() => setSelectedId(null), !!selectedId);
   const { data, isLoading } = useOrders({ status, search, dateRange, page, limit: 20 });
@@ -83,9 +83,7 @@ export default function OrdersPage() {
 
   return (
     <>
-      <Topbar title="주문관리" action={
-        <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
-      } />
+      <Topbar title="주문관리" />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
         {/* 상단: 동기화 + 검색 */}
@@ -142,13 +140,15 @@ export default function OrdersPage() {
           ))}
         </div>
 
-        {/* PC: 2열 레이아웃 (그리드모드 시 목록 넓게/상세 420px 반전) */}
+        {/* PC: 밀집 그리드 + 우측 상세 (카드보기·토글 폐지 — 항상 그리드) */}
         {isLg && (
           <div className="flex gap-4 h-[calc(100vh-240px)]">
-            {/* 좌측: 주문 목록 */}
-            <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-[40%] shrink-0'} overflow-y-auto`}>
+            {/* 좌측: 밀집 그리드 목록 */}
+            <div className="flex-1 min-w-0 overflow-auto">
               <Card padding={false}>
-                {gridMode && !isLoading ? (
+                {isLoading ? (
+                  <div className="p-4 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
+                ) : (
                   <DataGrid
                     columns={orderColumns}
                     rows={orders}
@@ -158,8 +158,6 @@ export default function OrdersPage() {
                     rowClassName={(o) => (o.status === 'cancelled' ? 'opacity-50' : '')}
                     emptyMessage="주문이 없습니다"
                   />
-                ) : (
-                  listContent
                 )}
               </Card>
               <div className="mt-2">
@@ -167,8 +165,8 @@ export default function OrdersPage() {
               </div>
             </div>
 
-            {/* 우측: 주문 상세 모니터 */}
-            <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto`}>
+            {/* 우측: 주문 상세 모니터 (고정폭) */}
+            <div className="w-[440px] shrink-0 overflow-y-auto">
               {selectedId ? (
                 <OrderDetailPanel orderId={selectedId} />
               ) : (

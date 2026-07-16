@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { DataGrid, GridToggleButton, type GridColumn } from '@/components/ui/data-grid';
-import { useGridMode } from '@/hooks/use-grid-mode';
+import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
+import { useIsLg } from '@/hooks/use-grid-mode';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCustomers, useCreateCustomer } from '@/hooks/use-customers';
 import { formatKRW, formatPhone } from '@/lib/utils/format';
@@ -81,7 +81,7 @@ export default function B2BPartnersPage() {
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { isLg, gridMode, toggleGrid } = useGridMode('suppliers-pc-grid');
+  const isLg = useIsLg();
 
   // 074: B2B 카테고리 동적 (사장님이 설정에서 추가/수정 가능)
   const b2bCategories = useSetting<B2BCategory[]>('b2b.categories', DEFAULT_B2B_CATEGORIES);
@@ -158,7 +158,7 @@ export default function B2BPartnersPage() {
           <div className="p-4 space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
         ) : partners.length === 0 ? (
           <EmptyState icon={tabConfig.icon} message={`등록된 ${tabConfig.label}가 없습니다`} />
-        ) : gridMode && isLg ? (
+        ) : isLg ? (
           <DataGrid
             columns={partnerColumns}
             rows={partners}
@@ -184,17 +184,14 @@ export default function B2BPartnersPage() {
   return (
     <>
       <Topbar title="B2B 거래처" action={
-        <div className="flex gap-2">
-          <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
-          <Button size="sm" onClick={() => setShowAdd(true)}><Plus size={14} />거래처 추가</Button>
-        </div>
+        <Button size="sm" onClick={() => setShowAdd(true)}><Plus size={14} />거래처 추가</Button>
       } />
 
       <div className="px-4 md:px-6 py-4">
         {isLg ? (
           <div className="flex gap-4">
-            <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-[480px] shrink-0'}`}>{listContent}</div>
-            <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'}`}>
+            <div className="flex-1 min-w-0 overflow-auto">{listContent}</div>
+            <div className="w-[440px] shrink-0">
               {selectedPartner ? (
                 <PartnerDetailPanel partner={selectedPartner} tabConfig={tabConfig} badgeStyle={BADGE_STYLE} badgeLabel={BADGE_LABEL} allTabs={B2B_TABS} />
               ) : (

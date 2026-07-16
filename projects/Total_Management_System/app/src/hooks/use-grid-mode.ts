@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+// (useGridMode 유지: 향후 토글 필요 화면용 / useIsLg: 그리드 전용 화면용)
 
 /**
  * PC 그리드(밀집 표) 토글 + isLg(≥1024px) 감지 공용 훅 (2026-07-16)
@@ -40,4 +41,20 @@ export function useGridMode(storageKey: string) {
   }, [storageKey]);
 
   return { isLg, gridMode, toggleGrid };
+}
+
+/**
+ * isLg(≥1024px) 감지만 — 그리드 전용 화면(토글 없음)에서 PC/모바일 레이아웃 분기용.
+ * (2026-07-16 카드보기·토글 폐지 후 마스터-디테일 페이지들이 사용)
+ */
+export function useIsLg() {
+  const [isLg, setIsLg] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    setIsLg(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return isLg;
 }

@@ -9,13 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useContracts, useContractTabCounts } from '@/hooks/use-contracts';
 import type { ContractTab } from '@/hooks/use-contracts';
-import { useGridMode } from '@/hooks/use-grid-mode';
+import { useIsLg } from '@/hooks/use-grid-mode';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { DataGrid, GridToggleButton, type GridColumn } from '@/components/ui/data-grid';
+import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { ContractDetailPanel } from '@/components/contracts/contract-detail-panel';
 import { Plus, FileText } from 'lucide-react';
 import type { Contract } from '@/lib/supabase/types';
@@ -64,7 +64,7 @@ export default function ContractsPage() {
   const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { isLg, gridMode, toggleGrid } = useGridMode('contracts-pc-grid');
+  const isLg = useIsLg();
 
   const { data, isLoading } = useContracts({ tab, search, dateRange, page, limit: 20 });
   const { data: tabCounts } = useContractTabCounts();
@@ -76,9 +76,7 @@ export default function ContractsPage() {
 
   return (
     <>
-      <Topbar title="전자 계약서" action={
-        <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
-      } />
+      <Topbar title="전자 계약서" />
 
       <div className="px-4 md:px-6 py-4 space-y-4">
         <div className="flex items-center gap-3">
@@ -132,11 +130,11 @@ export default function ContractsPage() {
           })}
         </div>
 
-        {/* PC: 2열 마스터-디테일 (그리드모드 시 목록 넓게/상세 420px 반전) */}
+        {/* PC: 밀집 그리드 + 우측 상세 (카드보기·토글 폐지 — 항상 그리드) */}
         {isLg && (
           <div className="flex gap-4 h-[calc(100vh-240px)]">
-            {/* 좌측: 목록 */}
-            <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-[50%] shrink-0'} overflow-y-auto`}>
+            {/* 좌측: 밀집 그리드 목록 */}
+            <div className="flex-1 min-w-0 overflow-auto">
               <Card padding={false}>
                 {isLoading ? (
                   <div className="p-4 space-y-3">
@@ -144,9 +142,7 @@ export default function ContractsPage() {
                       <Skeleton key={i} className="h-16 w-full" />
                     ))}
                   </div>
-                ) : contracts.length === 0 ? (
-                  <EmptyState icon={FileText} message="계약서가 없습니다" />
-                ) : gridMode ? (
+                ) : (
                   <DataGrid
                     columns={CONTRACT_COLUMNS}
                     rows={contracts}
@@ -156,12 +152,6 @@ export default function ContractsPage() {
                     rowClassName={(c) => (c.status === 'cancelled' ? 'opacity-50' : '')}
                     emptyMessage="계약서가 없습니다"
                   />
-                ) : (
-                  <div className="divide-y divide-neutral-100">
-                    {contracts.map((c) => (
-                      <ContractRow key={c.id} contract={c} isSelected={selectedId === c.id} onClick={() => setSelectedId(c.id)} />
-                    ))}
-                  </div>
                 )}
               </Card>
               <div className="mt-2">
@@ -169,8 +159,8 @@ export default function ContractsPage() {
               </div>
             </div>
 
-            {/* 우측: 상세 패널 */}
-            <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto`}>
+            {/* 우측: 상세 패널 (고정폭) */}
+            <div className="w-[440px] shrink-0 overflow-y-auto">
               {selectedId ? (
                 <ContractDetailPanel contractId={selectedId} onDeleted={() => setSelectedId(null)} />
               ) : (

@@ -13,10 +13,10 @@ import { Pagination } from '@/components/ui/pagination';
 import { getDeliveryStatusChip, type DeliveryStatusInput } from '@/lib/deliveries/status';
 import { getDeliveryShipStatus } from '@/lib/sales/ship-status';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { DataGrid, GridToggleButton, type GridColumn } from '@/components/ui/data-grid';
+import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-panel';
 import { useDeliveries, useDeliveryStats } from '@/hooks/use-deliveries';
-import { useGridMode } from '@/hooks/use-grid-mode';
+import { useIsLg } from '@/hooks/use-grid-mode';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { Package, Plus, AlertCircle, Calendar, TrendingUp } from 'lucide-react';
 
@@ -84,7 +84,7 @@ export default function DeliveriesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const limit = 20;
 
-  const { isLg, gridMode, toggleGrid } = useGridMode('deliveries-pc-grid');
+  const isLg = useIsLg();
 
   const { data, isLoading } = useDeliveries({
     status: statusFilter || undefined,
@@ -197,7 +197,7 @@ export default function DeliveriesPage() {
           </div>
         ) : deliveries.length === 0 ? (
           <EmptyState icon={Package} message="납품 내역이 없습니다" />
-        ) : gridMode && isLg ? (
+        ) : isLg ? (
           <DataGrid
             columns={DELIVERY_COLUMNS}
             rows={deliveries as unknown as DeliveryLike[]}
@@ -227,17 +227,15 @@ export default function DeliveriesPage() {
 
   return (
     <>
-      <Topbar title="B2B거래" action={
-        <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
-      } />
+      <Topbar title="B2B거래" />
 
       {isLg ? (
-        /* PC: 마스터-디테일 2컬럼 (그리드모드 시 목록 넓게/상세 420px 반전) */
+        /* PC: 밀집 그리드 + 우측 상세 (카드보기·토글 폐지 — 항상 그리드) */
         <div className="flex gap-4 px-4 md:px-6 py-4 h-full min-h-0 bg-stone-50">
-          <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-2/5 shrink-0'} overflow-y-auto space-y-3 pr-1`}>
+          <div className="flex-1 min-w-0 overflow-auto space-y-3 pr-1">
             {listContent}
           </div>
-          <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto bg-white rounded-2xl border border-stone-200`}>
+          <div className="w-[440px] shrink-0 overflow-y-auto bg-white rounded-2xl border border-stone-200">
             {selectedId ? (
               <DeliveryDetailPanel deliveryId={selectedId} />
             ) : (
