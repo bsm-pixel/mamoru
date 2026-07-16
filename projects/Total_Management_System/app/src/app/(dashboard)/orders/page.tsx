@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, memo } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOrders, useOrderSync, useOrderCounts } from '@/hooks/use-orders';
+import { useGridMode } from '@/hooks/use-grid-mode';
 import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
+import { DataGrid, GridToggleButton, type GridColumn } from '@/components/ui/data-grid';
 import { OrderDetailPanel } from '@/components/orders/order-detail-panel';
 import { RefreshCw, Truck, ShoppingBag } from 'lucide-react';
 import { useEscapeKey } from '@/hooks/use-media-query';
@@ -38,15 +40,7 @@ export default function OrdersPage() {
   const sync = useOrderSync();
   const { data: counts } = useOrderCounts();
 
-  // PC 여부 감지
-  const [isLg, setIsLg] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)');
-    setIsLg(mql.matches);
-    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
+  const { isLg, gridMode, toggleGrid } = useGridMode('orders-pc-grid');
 
   useEscapeKey(() => setSelectedId(null), !!selectedId);
   const { data, isLoading } = useOrders({ status, search, dateRange, page, limit: 20 });
@@ -54,9 +48,44 @@ export default function OrdersPage() {
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
 
+  // PC 그리드 컬럼 — 주문일·주문번호·주문자·상태·결제·금액·송장(액션)
+  const orderColumns: GridColumn<Order>[] = [
+    { key: 'ordered', label: '주문일', render: (o) => <span className="text-neutral-500 whitespace-nowrap tabular-nums text-xs">{formatDateTime(o.ordered_at)}</span> },
+    { key: 'no', label: '주문번호', render: (o) => <span className="font-mono text-[11px] text-neutral-500">{o.imweb_order_no}</span> },
+    { key: 'name', label: '주문자', render: (o) => <span className="font-semibold text-indigo-black truncate">{o.orderer_name}</span> },
+    { key: 'status', label: '상태', render: (o) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${ORDER_STATUS_COLOR[o.status] || 'bg-stone-100 text-stone-500'}`}>{ORDER_STATUS_LABEL[o.status] || o.status}</span> },
+    { key: 'pay', label: '결제', render: (o) => o.paid_at
+      ? <span className="text-emerald-600 text-xs font-medium">결제완료</span>
+      : o.paid_amount > 0 ? <span className="text-rose-600 text-xs font-medium">미납</span> : <span className="text-neutral-300">—</span> },
+    { key: 'amount', label: '금액', align: 'right', render: (o) => <span className="font-bold tabular-nums text-indigo-black">{formatKRW(o.paid_amount)}</span> },
+    { key: 'invoice', label: '송장', align: 'right', render: (o) => o.invoice_number
+      ? <span className="text-[11px] text-neutral-600 font-medium whitespace-nowrap">{o.invoice_number}</span>
+      : o.status === 'pay_done'
+        ? <button onClick={(e) => { e.stopPropagation(); setInvoiceOrder(o); }} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-stone-900 text-white text-[11px] font-semibold hover:bg-stone-800 transition"><Truck size={11} />송장생성</button>
+        : <span className="text-neutral-300">—</span> },
+  ];
+
+  // 목록 콘텐츠 — 카드/그리드 공용 (PC·모바일 재사용)
+  const listContent = isLoading ? (
+    <div className="p-4 space-y-3">
+      {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+    </div>
+  ) : orders.length === 0 ? (
+    <EmptyState icon={ShoppingBag} message="주문이 없습니다" />
+  ) : (
+    <div className="divide-y divide-neutral-100">
+      {orders.map((order) => (
+        <OrderRow key={order.id} order={order} isSelected={selectedId === order.id}
+          onClick={() => setSelectedId(order.id)} onInvoice={() => setInvoiceOrder(order)} />
+      ))}
+    </div>
+  );
+
   return (
     <>
-      <Topbar title="주문관리" />
+      <Topbar title="주문관리" action={
+        <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
+      } />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
         {/* 상단: 동기화 + 검색 */}
@@ -113,32 +142,24 @@ export default function OrdersPage() {
           ))}
         </div>
 
-        {/* PC: 2열 레이아웃 */}
+        {/* PC: 2열 레이아웃 (그리드모드 시 목록 넓게/상세 420px 반전) */}
         {isLg && (
           <div className="flex gap-4 h-[calc(100vh-240px)]">
             {/* 좌측: 주문 목록 */}
-            <div className="w-[40%] shrink-0 overflow-y-auto">
+            <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-[40%] shrink-0'} overflow-y-auto`}>
               <Card padding={false}>
-                {isLoading ? (
-                  <div className="p-4 space-y-3">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Skeleton key={i} className="h-16 w-full" />
-                    ))}
-                  </div>
-                ) : orders.length === 0 ? (
-                  <EmptyState icon={ShoppingBag} message="주문이 없습니다" />
+                {gridMode && !isLoading ? (
+                  <DataGrid
+                    columns={orderColumns}
+                    rows={orders}
+                    getRowKey={(o) => o.id}
+                    selectedKey={selectedId ?? undefined}
+                    onSelect={(o) => setSelectedId(o.id)}
+                    rowClassName={(o) => (o.status === 'cancelled' ? 'opacity-50' : '')}
+                    emptyMessage="주문이 없습니다"
+                  />
                 ) : (
-                  <div className="divide-y divide-neutral-100">
-                    {orders.map((order) => (
-                      <OrderRow
-                        key={order.id}
-                        order={order}
-                        isSelected={selectedId === order.id}
-                        onClick={() => setSelectedId(order.id)}
-                        onInvoice={() => setInvoiceOrder(order)}
-                      />
-                    ))}
-                  </div>
+                  listContent
                 )}
               </Card>
               <div className="mt-2">
@@ -147,7 +168,7 @@ export default function OrdersPage() {
             </div>
 
             {/* 우측: 주문 상세 모니터 */}
-            <div className="flex-1 min-w-0 overflow-y-auto">
+            <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto`}>
               {selectedId ? (
                 <OrderDetailPanel orderId={selectedId} />
               ) : (
@@ -163,29 +184,7 @@ export default function OrdersPage() {
         {/* 모바일: 목록만 */}
         {!isLg && (
           <>
-            <Card padding={false}>
-              {isLoading ? (
-                <div className="p-4 space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-16 w-full" />
-                  ))}
-                </div>
-              ) : orders.length === 0 ? (
-                <EmptyState icon={ShoppingBag} message="주문이 없습니다" />
-              ) : (
-                <div className="divide-y divide-neutral-100">
-                  {orders.map((order) => (
-                    <OrderRow
-                      key={order.id}
-                      order={order}
-                      isSelected={false}
-                      onClick={() => setSelectedId(order.id)}
-                      onInvoice={() => setInvoiceOrder(order)}
-                    />
-                  ))}
-                </div>
-              )}
-            </Card>
+            <Card padding={false}>{listContent}</Card>
             <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
           </>
         )}

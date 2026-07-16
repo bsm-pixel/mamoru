@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlidePanel } from '@/components/ui/slide-panel';
+import { DataGrid, GridToggleButton, type GridColumn } from '@/components/ui/data-grid';
+import { useGridMode } from '@/hooks/use-grid-mode';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCustomers, useCreateCustomer } from '@/hooks/use-customers';
 import { formatKRW, formatPhone } from '@/lib/utils/format';
@@ -79,7 +81,7 @@ export default function B2BPartnersPage() {
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [isLg, setIsLg] = useState(false);
+  const { isLg, gridMode, toggleGrid } = useGridMode('suppliers-pc-grid');
 
   // 074: B2B 카테고리 동적 (사장님이 설정에서 추가/수정 가능)
   const b2bCategories = useSetting<B2BCategory[]>('b2b.categories', DEFAULT_B2B_CATEGORIES);
@@ -116,19 +118,21 @@ export default function B2BPartnersPage() {
     return m;
   }, [B2B_TABS]);
 
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)');
-    setIsLg(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
   const { data, isLoading } = useCustomers({ type: activeTab, search, limit: 100 });
   const partners = data?.customers || [];
   const selectedPartner = partners.find((p) => p.id === selectedId) || null;
 
   const tabConfig = B2B_TABS.find((t) => t.value === activeTab) || B2B_TABS[0];
+
+  // PC 그리드 컬럼 — 거래처·유형·담당자·연락처·총거래·미수금 (동적 badge 의존 → useMemo)
+  const partnerColumns = useMemo<GridColumn<Customer>[]>(() => [
+    { key: 'company', label: '거래처', render: (p) => <span className="font-semibold text-indigo-black truncate">{p.company_name || p.name}</span> },
+    { key: 'type', label: '유형', render: (p) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${BADGE_STYLE[p.customer_type] || 'bg-neutral-100 text-neutral-600'}`}>{BADGE_LABEL[p.customer_type] || p.customer_type}</span> },
+    { key: 'name', label: '담당자', render: (p) => <span className="text-neutral-600 truncate">{p.company_name ? p.name : '—'}</span> },
+    { key: 'phone', label: '연락처', render: (p) => <span className="text-neutral-500 tabular-nums">{p.phone ? formatPhone(p.phone) : '—'}</span> },
+    { key: 'spent', label: '총거래', align: 'right', render: (p) => <span className="font-semibold tabular-nums text-indigo-black">{p.total_spent > 0 ? formatKRW(p.total_spent) : '—'}</span> },
+    { key: 'outstanding', label: '미수금', align: 'right', render: (p) => (p.outstanding_balance > 0 ? <span className="font-bold tabular-nums text-red-500">{formatKRW(p.outstanding_balance)}</span> : <span className="text-neutral-300">—</span>) },
+  ], [BADGE_STYLE, BADGE_LABEL]);
 
   const listContent = (
     <div className="space-y-3">
@@ -154,6 +158,15 @@ export default function B2BPartnersPage() {
           <div className="p-4 space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
         ) : partners.length === 0 ? (
           <EmptyState icon={tabConfig.icon} message={`등록된 ${tabConfig.label}가 없습니다`} />
+        ) : gridMode && isLg ? (
+          <DataGrid
+            columns={partnerColumns}
+            rows={partners}
+            getRowKey={(p) => p.id}
+            selectedKey={selectedId ?? undefined}
+            onSelect={(p) => setSelectedId(p.id)}
+            emptyMessage={`등록된 ${tabConfig.label}가 없습니다`}
+          />
         ) : (
           <div className="divide-y divide-neutral-100">
             {partners.map((p) => (
@@ -171,14 +184,17 @@ export default function B2BPartnersPage() {
   return (
     <>
       <Topbar title="B2B 거래처" action={
-        <Button size="sm" onClick={() => setShowAdd(true)}><Plus size={14} />거래처 추가</Button>
+        <div className="flex gap-2">
+          <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
+          <Button size="sm" onClick={() => setShowAdd(true)}><Plus size={14} />거래처 추가</Button>
+        </div>
       } />
 
       <div className="px-4 md:px-6 py-4">
         {isLg ? (
           <div className="flex gap-4">
-            <div className="w-[480px] shrink-0">{listContent}</div>
-            <div className="flex-1 min-w-0">
+            <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-[480px] shrink-0'}`}>{listContent}</div>
+            <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'}`}>
               {selectedPartner ? (
                 <PartnerDetailPanel partner={selectedPartner} tabConfig={tabConfig} badgeStyle={BADGE_STYLE} badgeLabel={BADGE_LABEL} allTabs={B2B_TABS} />
               ) : (

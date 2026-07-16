@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useContracts, useContractTabCounts } from '@/hooks/use-contracts';
 import type { ContractTab } from '@/hooks/use-contracts';
+import { useGridMode } from '@/hooks/use-grid-mode';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
+import { DataGrid, GridToggleButton, type GridColumn } from '@/components/ui/data-grid';
 import { ContractDetailPanel } from '@/components/contracts/contract-detail-panel';
 import { Plus, FileText } from 'lucide-react';
 import type { Contract } from '@/lib/supabase/types';
@@ -41,6 +43,20 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled: '취소',
 };
 
+const PAYMENT_LABEL: Record<string, string> = {
+  card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합', cms: 'CMS',
+};
+
+/** PC 그리드 컬럼: 계약번호·작성일·고객·상태·결제·금액 */
+const CONTRACT_COLUMNS: GridColumn<Contract>[] = [
+  { key: 'no', label: '계약번호', render: (c) => <span className={`font-mono text-[11px] text-neutral-500 ${c.status === 'cancelled' ? 'line-through' : ''}`}>{c.contract_number}</span> },
+  { key: 'created', label: '작성일', render: (c) => <span className="text-neutral-600 whitespace-nowrap tabular-nums">{formatDate(c.created_at)}</span> },
+  { key: 'customer', label: '고객', render: (c) => <span className={`font-semibold text-indigo-black truncate ${c.status === 'cancelled' ? 'line-through' : ''}`}>{c.customer_name}</span> },
+  { key: 'status', label: '상태', render: (c) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${STATUS_COLOR[c.status] || 'bg-neutral-100 text-neutral-500'}`}>{STATUS_LABEL[c.status] || c.status}</span> },
+  { key: 'pay', label: '결제', render: (c) => <span className="text-neutral-500 text-xs">{PAYMENT_LABEL[c.payment_method] || c.payment_method || '—'}</span> },
+  { key: 'amount', label: '금액', align: 'right', render: (c) => <span className={`font-bold tabular-nums ${c.status === 'cancelled' ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{formatKRW(c.final_amount)}</span> },
+];
+
 export default function ContractsPage() {
   const router = useRouter();
   const [tab, setTab] = useState<ContractTab>('all');
@@ -48,15 +64,7 @@ export default function ContractsPage() {
   const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [isLg, setIsLg] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)');
-    setIsLg(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
+  const { isLg, gridMode, toggleGrid } = useGridMode('contracts-pc-grid');
 
   const { data, isLoading } = useContracts({ tab, search, dateRange, page, limit: 20 });
   const { data: tabCounts } = useContractTabCounts();
@@ -68,7 +76,9 @@ export default function ContractsPage() {
 
   return (
     <>
-      <Topbar title="전자 계약서" />
+      <Topbar title="전자 계약서" action={
+        <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
+      } />
 
       <div className="px-4 md:px-6 py-4 space-y-4">
         <div className="flex items-center gap-3">
@@ -122,11 +132,11 @@ export default function ContractsPage() {
           })}
         </div>
 
-        {/* PC: 2열 마스터-디테일 */}
+        {/* PC: 2열 마스터-디테일 (그리드모드 시 목록 넓게/상세 420px 반전) */}
         {isLg && (
           <div className="flex gap-4 h-[calc(100vh-240px)]">
-            {/* 좌측: 테이블 */}
-            <div className="w-[50%] shrink-0 overflow-y-auto">
+            {/* 좌측: 목록 */}
+            <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-[50%] shrink-0'} overflow-y-auto`}>
               <Card padding={false}>
                 {isLoading ? (
                   <div className="p-4 space-y-3">
@@ -136,6 +146,16 @@ export default function ContractsPage() {
                   </div>
                 ) : contracts.length === 0 ? (
                   <EmptyState icon={FileText} message="계약서가 없습니다" />
+                ) : gridMode ? (
+                  <DataGrid
+                    columns={CONTRACT_COLUMNS}
+                    rows={contracts}
+                    getRowKey={(c) => c.id}
+                    selectedKey={selectedId ?? undefined}
+                    onSelect={(c) => setSelectedId(c.id)}
+                    rowClassName={(c) => (c.status === 'cancelled' ? 'opacity-50' : '')}
+                    emptyMessage="계약서가 없습니다"
+                  />
                 ) : (
                   <div className="divide-y divide-neutral-100">
                     {contracts.map((c) => (
@@ -150,7 +170,7 @@ export default function ContractsPage() {
             </div>
 
             {/* 우측: 상세 패널 */}
-            <div className="flex-1 min-w-0 overflow-y-auto">
+            <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto`}>
               {selectedId ? (
                 <ContractDetailPanel contractId={selectedId} onDeleted={() => setSelectedId(null)} />
               ) : (
@@ -197,10 +217,6 @@ export default function ContractsPage() {
     </>
   );
 }
-
-const PAYMENT_LABEL: Record<string, string> = {
-  card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합', cms: 'CMS',
-};
 
 /* PC 테이블 행 */
 const ContractTableRow = memo(function ContractTableRow({ contract, onClick }: { contract: Contract; onClick: () => void }) {

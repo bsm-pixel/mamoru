@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -10,10 +10,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
-import { getDeliveryStatusChip } from '@/lib/deliveries/status';
+import { getDeliveryStatusChip, type DeliveryStatusInput } from '@/lib/deliveries/status';
+import { getDeliveryShipStatus } from '@/lib/sales/ship-status';
 import { SlidePanel } from '@/components/ui/slide-panel';
+import { DataGrid, GridToggleButton, type GridColumn } from '@/components/ui/data-grid';
 import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-panel';
 import { useDeliveries, useDeliveryStats } from '@/hooks/use-deliveries';
+import { useGridMode } from '@/hooks/use-grid-mode';
 import { formatKRW, formatDate } from '@/lib/utils/format';
 import { Package, Plus, AlertCircle, Calendar, TrendingUp } from 'lucide-react';
 
@@ -30,6 +33,33 @@ const STATUS_COLOR: Record<string, string> = {
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
 const PAYMENT_COLOR: Record<string, string> = { unpaid: 'bg-red-100 text-red-600', partial: 'bg-yellow-100 text-yellow-700', paid: 'bg-green-100 text-green-700' };
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
+const TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy: '아카데미' };
+const TYPE_COLOR: Record<string, string> = { dealer: 'bg-blue-100 text-blue-700', academy: 'bg-purple-100 text-purple-700' };
+/** 배송상태 tone → 텍스트 색 (sales SHIP_TONE 과 동일) */
+const SHIP_TONE = { amber: 'text-amber-600', green: 'text-emerald-600', mute: 'text-neutral-300' } as const;
+
+/** 그리드 행 타입 — deliveries 는 훅에서 Record<string,unknown> 로 오므로 표시용 필드만 명시 */
+interface DeliveryLike extends DeliveryStatusInput {
+  id: string;
+  customer_name?: string | null;
+  company_name?: string | null;
+  customer_type?: string | null;
+  delivery_date?: string | null;
+  payment_status?: string | null;
+  total_amount?: number | null;
+  discount_amount?: number | null;
+}
+
+/** PC 그리드 컬럼: 납품일·거래처·유형·상태·배송·결제·금액 */
+const DELIVERY_COLUMNS: GridColumn<DeliveryLike>[] = [
+  { key: 'date', label: '납품일', render: (d) => <span className="text-neutral-600 whitespace-nowrap tabular-nums">{d.delivery_date ? formatDate(d.delivery_date) : '—'}</span> },
+  { key: 'customer', label: '거래처', render: (d) => <span className="font-semibold text-indigo-black truncate">{d.company_name || d.customer_name || '미지정'}</span> },
+  { key: 'type', label: '유형', render: (d) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${TYPE_COLOR[d.customer_type || ''] || 'bg-neutral-100 text-neutral-500'}`}>{TYPE_LABEL[d.customer_type || ''] || '거래처'}</span> },
+  { key: 'status', label: '상태', render: (d) => { const c = getDeliveryStatusChip(d); return <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${c.className}`}>{c.label}</span>; } },
+  { key: 'ship', label: '배송', render: (d) => { const s = getDeliveryShipStatus(d); return <span className={`text-xs font-medium ${SHIP_TONE[s.tone]}`}>{s.label}</span>; } },
+  { key: 'pay', label: '결제', render: (d) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${PAYMENT_COLOR[d.payment_status || ''] || PAYMENT_COLOR.unpaid}`}>{PAYMENT_LABEL[d.payment_status || ''] || '미결제'}</span> },
+  { key: 'amount', label: '금액', align: 'right', render: (d) => <span className="font-bold tabular-nums text-indigo-black">{formatKRW((d.total_amount || 0) - (d.discount_amount || 0))}</span> },
+];
 
 const STATUS_TABS = [
   { value: '', label: '전체' },
@@ -54,14 +84,7 @@ export default function DeliveriesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const limit = 20;
 
-  const [isLg, setIsLg] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)');
-    setIsLg(mql.matches);
-    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
+  const { isLg, gridMode, toggleGrid } = useGridMode('deliveries-pc-grid');
 
   const { data, isLoading } = useDeliveries({
     status: statusFilter || undefined,
@@ -174,6 +197,16 @@ export default function DeliveriesPage() {
           </div>
         ) : deliveries.length === 0 ? (
           <EmptyState icon={Package} message="납품 내역이 없습니다" />
+        ) : gridMode && isLg ? (
+          <DataGrid
+            columns={DELIVERY_COLUMNS}
+            rows={deliveries as unknown as DeliveryLike[]}
+            getRowKey={(d) => d.id}
+            selectedKey={selectedId ?? undefined}
+            onSelect={(d) => setSelectedId(d.id)}
+            rowClassName={(d) => (d.cancelled_at ? 'opacity-50' : '')}
+            emptyMessage="납품 내역이 없습니다"
+          />
         ) : (
           <div className="divide-y divide-neutral-100">
             {deliveries.map((dl) => (
@@ -194,15 +227,17 @@ export default function DeliveriesPage() {
 
   return (
     <>
-      <Topbar title="B2B거래" />
+      <Topbar title="B2B거래" action={
+        <GridToggleButton isLg={isLg} gridMode={gridMode} onToggle={toggleGrid} />
+      } />
 
       {isLg ? (
-        /* PC: 마스터-디테일 2컬럼 */
+        /* PC: 마스터-디테일 2컬럼 (그리드모드 시 목록 넓게/상세 420px 반전) */
         <div className="flex gap-4 px-4 md:px-6 py-4 h-full min-h-0 bg-stone-50">
-          <div className="w-2/5 shrink-0 overflow-y-auto space-y-3 pr-1">
+          <div className={`${gridMode ? 'flex-1 min-w-0' : 'w-2/5 shrink-0'} overflow-y-auto space-y-3 pr-1`}>
             {listContent}
           </div>
-          <div className="flex-1 min-w-0 overflow-y-auto bg-white rounded-2xl border border-stone-200">
+          <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto bg-white rounded-2xl border border-stone-200`}>
             {selectedId ? (
               <DeliveryDetailPanel deliveryId={selectedId} />
             ) : (
