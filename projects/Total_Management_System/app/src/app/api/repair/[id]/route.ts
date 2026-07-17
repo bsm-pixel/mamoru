@@ -166,6 +166,7 @@ export async function PATCH(
           name: data.name,
           data: {
             id: data.as_id,
+            as_uid: data.as_id, // 수리내역 조회 버튼 #{as_uid} — Make 매핑 무관하게 채워지도록 둘 다 전달
             as_amount: String(data.service_cost || 0),
             shipping_amount: String(data.shipping_fee || 0),
             total_amount: String(data.total_amount || 0),

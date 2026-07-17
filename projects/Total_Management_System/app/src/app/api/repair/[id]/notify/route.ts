@@ -41,6 +41,7 @@ export async function POST(
       name: repair.name,
       data: {
         id: repair.as_id,
+        as_uid: repair.as_id, // 수리내역 조회 버튼 #{as_uid} — Make 매핑 무관하게 채워지도록 둘 다 전달
         as_amount: String(repair.service_cost || 0),
         shipping_amount: String(repair.shipping_fee || 0),
         total_amount: String(repair.total_amount || 0),

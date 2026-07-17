@@ -190,6 +190,8 @@ export async function GET(request: NextRequest) {
               phone: repair.phone,
               name: repair.name,
               data: {
+                // 🔴 id + as_uid 둘 다 필수 — Make 매핑이 어느 키를 읽든 #{as_uid}(수리내역 조회 버튼)가 채워지도록
+                id: repair.as_id,
                 as_uid: repair.as_id,
                 courier: repair.courier_name || '롯데택배',
                 tracking: repair.invoice_number || '',

@@ -34,7 +34,9 @@ export async function GET(req: NextRequest) {
       .single();
 
     if (repairErr || !repair) {
-      return NextResponse.json({ error: '복원수리 건을 찾을 수 없습니다' }, { status: 404 });
+      // 🔴 CORS 헤더 필수 — 없으면 GitHub Pages(page.mamoru.kr)의 fetch 가 응답을 차단해
+      //    고객이 "수리 내역을 찾을 수 없습니다"(정상 안내) 대신 "서버에 연결할 수 없습니다"를 봄
+      return NextResponse.json({ error: '복원수리 건을 찾을 수 없습니다' }, { status: 404, headers: CORS_HEADERS });
     }
 
     // 검수 데이터 조회
