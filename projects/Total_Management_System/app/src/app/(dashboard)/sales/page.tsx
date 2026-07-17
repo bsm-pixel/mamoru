@@ -618,8 +618,8 @@ const SalesGridTable = memo(function SalesGridTable({
           {prepMode && <th className="px-2 py-2.5 w-9"></th>}
           <th className="px-3 py-2.5 whitespace-nowrap">날짜</th>
           <th className="px-3 py-2.5">고객</th>
+          <th className="px-3 py-2.5 whitespace-nowrap">상담유형</th>
           <th className="px-3 py-2.5 whitespace-nowrap">상태</th>
-          <th className="px-3 py-2.5 whitespace-nowrap">채널</th>
           <th className="px-3 py-2.5 whitespace-nowrap">배송상태</th>
           <th className="px-3 py-2.5 text-right whitespace-nowrap">금액</th>
         </tr>
@@ -653,18 +653,18 @@ const SalesGridTable = memo(function SalesGridTable({
                     className="w-4 h-4 rounded border-neutral-300" />
                 </td>
               )}
-              <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap tabular-nums">{formatDate(item.date)}</td>
+              <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap tabular-nums">{formatDate(item.date, 'yy.MM.dd')}</td>
               <td className="px-3 py-2.5">
                 <div className={`font-semibold text-indigo-black ${cancelled ? 'line-through' : ''}`}>{d.customer_name || '—'}</div>
                 {isSale && d.company_name && <div className="text-[11px] text-neutral-400">{d.company_name}</div>}
               </td>
+              <td className="px-3 py-2.5 whitespace-nowrap text-xs text-neutral-500">{channelLabel}</td>
               <td className="px-3 py-2.5 whitespace-nowrap">
                 <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${statusTextClass(state)}`}>
                   {dot && <span className={`w-1.5 h-1.5 rounded-full ${dot.color}`} />}
                   {statusLabel(state)}
                 </span>
               </td>
-              <td className="px-3 py-2.5 whitespace-nowrap text-xs text-neutral-500">{channelLabel}</td>
               <td className="px-3 py-2.5 whitespace-nowrap">
                 <span className={`text-xs font-medium ${SHIP_TONE[ship.tone]}`}>{ship.label}</span>
                 {ship.autoPicked && <span className="ml-1 text-[10px] text-neutral-400">· 수거</span>}
