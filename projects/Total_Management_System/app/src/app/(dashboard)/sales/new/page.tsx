@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CreateDeliveryModal } from '@/components/deliveries/create-delivery-modal';
 import { useProducts, useCreateSale } from '@/hooks/use-sales';
-import { formatKRW, calcVAT, toLocalDateString } from '@/lib/utils/format';
+import { formatKRW, calcVAT, toLocalDateString, channelFromConsultationType } from '@/lib/utils/format';
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
@@ -110,7 +110,7 @@ function NewSaleContent() {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid' | 'partial'>('paid');
   const [depositAmount, setDepositAmount] = useState(0);
-  const [saleChannel, setSaleChannel] = useState('offline');
+  const [saleChannel, setSaleChannel] = useState('store'); // 기본 매장 (레거시 'offline'은 신규 입력에서 폐지)
   const [discount, setDiscount] = useState(0);
   const [memo, setMemo] = useState('');
 
@@ -137,6 +137,9 @@ function NewSaleContent() {
         setSourceConsultation({ id: consultation.id, unique_id: consultation.unique_id });
         setCustomerName(consultation.name || '');
         setCustomerPhone(consultation.phone || '');
+        // 상담 유형 → 판매 채널 자동설정 (매장방문→매장 / 출장요청→출장 / 톡상담→톡)
+        const autoCh = channelFromConsultationType(consultation.consultation_type);
+        if (autoCh) setSaleChannel(autoCh);
         if (consultation.customer_id) {
           // 077: 실제 customer 레코드 fetch — phone_normalized로 자동 매칭된 기존 고객의 정확한 이름 사용
           let customerName: string = consultation.name;
@@ -640,7 +643,12 @@ function NewSaleContent() {
                 <div>
                   <label className="text-xs text-neutral-500 mb-1 block">판매 채널</label>
                   <div className="flex gap-1">
-                    {([{ value: 'offline', label: '오프라인', color: 'bg-neutral-800 text-white' }, { value: 'talk', label: '온라인상담', color: 'bg-yellow-500 text-white' }] as const).map((ch) => (
+                    {([
+                      { value: 'store', label: '매장', color: 'bg-neutral-800 text-white' },
+                      { value: 'field', label: '출장', color: 'bg-emerald-600 text-white' },
+                      { value: 'talk', label: '톡', color: 'bg-yellow-500 text-white' },
+                      { value: 'online', label: '온라인(아임웹)', color: 'bg-blue-600 text-white' },
+                    ] as const).map((ch) => (
                       <button key={ch.value} onClick={() => setSaleChannel(ch.value)}
                         className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${saleChannel === ch.value ? ch.color : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>{ch.label}</button>
                     ))}

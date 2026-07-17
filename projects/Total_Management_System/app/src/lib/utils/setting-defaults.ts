@@ -20,7 +20,7 @@ export const DEFAULT_PAYMENT_LABELS: Record<string, string> = {
 };
 
 export const DEFAULT_CHANNEL_LABELS: Record<string, string> = {
-  offline: '오프라인', talk: '온라인상담',
+  store: '매장', field: '출장', talk: '톡', online: '온라인(아임웹)', offline: '오프라인',
 };
 
 export const DEFAULT_RFM = {

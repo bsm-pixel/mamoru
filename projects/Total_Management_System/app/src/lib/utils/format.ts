@@ -155,6 +155,27 @@ export const CONSULTATION_TYPE_LABEL: Record<string, string> = {
   talk_consult: '온라인상담',    // Phase 2-2
 };
 
+/**
+ * 판매 채널(offline_sales.sale_channel) 한글 매핑 (2026-07-17)
+ * 신규 입력: store(매장)/field(출장)/talk(톡)/online(온라인·아임웹).
+ * 레거시: offline(오프라인)은 소급 구분 불가라 그대로 표시.
+ */
+export const SALE_CHANNEL_LABEL: Record<string, string> = {
+  store: '매장',
+  field: '출장',
+  talk: '톡',
+  online: '온라인(아임웹)',
+  offline: '오프라인', // 레거시 (구 데이터)
+};
+
+/** 상담 유형 → 판매 채널 자동 매핑 (상담 연결 판매 채널 자동설정용). 없으면 '' */
+export function channelFromConsultationType(t?: string | null): string {
+  if (t === 'store_visit') return 'store';
+  if (t === 'field_request') return 'field';
+  if (t === 'talk_consult') return 'talk';
+  return '';
+}
+
 // ============================================
 // Phase 7: 복원수리 상태 라벨/색상
 // ============================================

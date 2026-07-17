@@ -24,10 +24,13 @@ const PAYMENT_STATUS_LABEL: Record<string, string> = {
   paid: '결제완료', unpaid: '미결제', partial: '부분결제',
 };
 
+// 채널 칩 — 2026-07-17 4분류(매장/출장/톡/온라인) + 레거시 오프라인
 const CHANNEL_CHIP: Record<string, { label: string; className: string }> = {
-  offline: { label: '오프라인', className: 'bg-neutral-100 text-neutral-600' },
-  online:  { label: '온라인',  className: 'bg-blue-100 text-blue-700' },
-  talk:    { label: '온라인상담',  className: 'bg-yellow-100 text-yellow-700' },
+  store:   { label: '매장', className: 'bg-neutral-100 text-neutral-700' },
+  field:   { label: '출장', className: 'bg-emerald-100 text-emerald-700' },
+  talk:    { label: '톡',   className: 'bg-yellow-100 text-yellow-700' },
+  online:  { label: '온라인(아임웹)', className: 'bg-blue-100 text-blue-700' },
+  offline: { label: '오프라인', className: 'bg-neutral-100 text-neutral-500' }, // 레거시
 };
 
 interface Props {

@@ -42,7 +42,7 @@ const SUBTYPE_LABELS: Record<string, string> = {
   store_visit: '직접방문', field_request: '출장', talk_consult: '톡상담',
   restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거',
   parcel_pickup: '방문수거', self_ship: '직접발송',
-  offline: '오프라인', online: '온라인', talk: '톡상담', // 기존 데이터 호환 (sale_channel 값)
+  store: '매장', field: '출장', offline: '오프라인', online: '온라인', talk: '톡상담', // sale_channel 값(2026-07-17 4분류) + 레거시 호환
 };
 
 function getChipLabel(review: Review): string {

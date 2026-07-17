@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSerialLookup, useSerialAudit, type SerialAuditLog } from '@/hooks/use-serial-lookup';
 import { useProducts } from '@/hooks/use-sales';
-import { formatPhone } from '@/lib/utils/format';
+import { formatPhone, SALE_CHANNEL_LABEL } from '@/lib/utils/format';
 import { Package, User, ShoppingBag, Wrench, Hash, Activity, ArrowRight, ArrowLeft, ArrowLeftRight, Search } from 'lucide-react';
 import { SerialSwapDialog } from '@/components/serials/serial-swap-dialog';
 import { SerialManagePanel } from '@/components/serials/serial-manage-panel';
@@ -27,11 +27,6 @@ const ZONE_LABEL: Record<string, { label: string; color: string }> = {
   display: { label: '디스플레이', color: 'bg-blue-50 text-blue-700' },
 };
 
-const CHANNEL_LABEL: Record<string, string> = {
-  offline: '오프라인',
-  online: '온라인',
-  talk: '온라인상담',
-};
 
 function formatDate(d: string | null) {
   if (!d) return '-';
@@ -244,7 +239,7 @@ export default function SerialsPage() {
                   <div className="flex justify-between items-center gap-2">
                     <span className="text-neutral-400 shrink-0 whitespace-nowrap">판매경로</span>
                     <Badge className="bg-neutral-100 text-neutral-600 text-xs">
-                      {CHANNEL_LABEL[sale.sale_channel] || sale.sale_channel}
+                      {SALE_CHANNEL_LABEL[sale.sale_channel] || sale.sale_channel}
                     </Badge>
                   </div>
                   <div className="flex justify-between gap-2">

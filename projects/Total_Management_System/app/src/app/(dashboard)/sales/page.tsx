@@ -13,7 +13,7 @@ import { useSales, useSalesTabCounts, useSalesStats } from '@/hooks/use-sales';
 import type { SalesTab, SalesChannel, SalesDateRange } from '@/hooks/use-sales';
 import { useDeliveryStats, useDeliveries } from '@/hooks/use-deliveries';
 import { useContracts } from '@/hooks/use-contracts';
-import { formatKRW, formatDate, CONSULTATION_TYPE_LABEL } from '@/lib/utils/format';
+import { formatKRW, formatDate, SALE_CHANNEL_LABEL } from '@/lib/utils/format';
 import { getSaleShipStatus, getDeliveryShipStatus, type ShipStatus } from '@/lib/sales/ship-status';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
@@ -30,11 +30,7 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
   mixed: '복합',
 };
 
-const CHANNEL_LABEL: Record<string, string> = {
-  offline: '오프라인',
-  online: '온라인',  // 레거시 데이터 호환
-  talk: '온라인상담',
-};
+// 채널 라벨은 공용 SALE_CHANNEL_LABEL(format.ts) 사용 — 전 화면 통일
 
 const CUSTOMER_TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy: '아카데미' };
 
@@ -623,7 +619,7 @@ const SalesGridTable = memo(function SalesGridTable({
           <th className="px-3 py-2.5 whitespace-nowrap">날짜</th>
           <th className="px-3 py-2.5">고객</th>
           <th className="px-3 py-2.5 whitespace-nowrap">상태</th>
-          <th className="px-3 py-2.5 whitespace-nowrap">상담유형</th>
+          <th className="px-3 py-2.5 whitespace-nowrap">채널</th>
           <th className="px-3 py-2.5 whitespace-nowrap">배송상태</th>
           <th className="px-3 py-2.5 text-right whitespace-nowrap">금액</th>
         </tr>
@@ -639,8 +635,8 @@ const SalesGridTable = memo(function SalesGridTable({
           const checked = isSale ? checkedSale.has(item.id) : checkedDelivery.has(item.id);
           const onCheck = () => (isSale ? onCheckSale(item.id) : onCheckDelivery(item.id));
           const amt = (d.total_amount || 0) - (d.discount_amount || 0);
-          // 상담유형: 판매만(원본 상담 연결 시) — 없거나 B2B납품이면 '—'
-          const consultType = isSale && d.consultation_type ? (CONSULTATION_TYPE_LABEL[d.consultation_type] || '—') : '—';
+          // 채널: 판매는 sale_channel 직접(매장/출장/톡/온라인·레거시오프라인), B2B납품은 '거래처'
+          const channelLabel = isSale ? (SALE_CHANNEL_LABEL[d.sale_channel as string] || d.sale_channel || '—') : '거래처';
           // 배송상태: 목록 데이터만으로 파생(추가 쿼리 0)
           const ship: ShipStatus = isSale ? getSaleShipStatus(d) : getDeliveryShipStatus(d);
           return (
@@ -668,7 +664,7 @@ const SalesGridTable = memo(function SalesGridTable({
                   {statusLabel(state)}
                 </span>
               </td>
-              <td className="px-3 py-2.5 whitespace-nowrap text-xs text-neutral-500">{consultType}</td>
+              <td className="px-3 py-2.5 whitespace-nowrap text-xs text-neutral-500">{channelLabel}</td>
               <td className="px-3 py-2.5 whitespace-nowrap">
                 <span className={`text-xs font-medium ${SHIP_TONE[ship.tone]}`}>{ship.label}</span>
                 {ship.autoPicked && <span className="ml-1 text-[10px] text-neutral-400">· 수거</span>}
@@ -689,7 +685,7 @@ const SaleRow = memo(function SaleRow({ sale, selected, onClick, prepMode, check
   const state = getRowStateSale(sale);
   const isCancelled = state === 'cancelled';
   const dot = rightDot(state);
-  const channelLabel = CHANNEL_LABEL[sale.sale_channel || 'offline'] || '오프라인';
+  const channelLabel = SALE_CHANNEL_LABEL[sale.sale_channel || 'offline'] || '오프라인';
 
   return (
     <div
