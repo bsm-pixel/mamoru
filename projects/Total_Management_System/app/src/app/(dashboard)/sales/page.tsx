@@ -101,6 +101,13 @@ function statusLabel(state: RowState): string {
   }
 }
 
+/** 그리드 '상태' 컬럼 전용 — '출고대기'는 별도 '배송상태' 컬럼이 담당하므로 상태엔 '준비중'으로 표기 */
+function gridStatusLabel(state: RowState): string {
+  if (state === 'paid_wait_ship') return '준비중';
+  if (state === 'wait_pickup_unpaid') return '준비중 · 결제대기';
+  return statusLabel(state);
+}
+
 function statusTextClass(state: RowState): string {
   if (state === 'unpaid') return 'text-red-600 font-medium';
   if (state === 'partial') return 'text-yellow-700 font-medium';
@@ -662,7 +669,7 @@ const SalesGridTable = memo(function SalesGridTable({
               <td className="px-3 py-2.5 whitespace-nowrap">
                 <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${statusTextClass(state)}`}>
                   {dot && <span className={`w-1.5 h-1.5 rounded-full ${dot.color}`} />}
-                  {statusLabel(state)}
+                  {gridStatusLabel(state)}
                 </span>
               </td>
               <td className="px-3 py-2.5 whitespace-nowrap">
