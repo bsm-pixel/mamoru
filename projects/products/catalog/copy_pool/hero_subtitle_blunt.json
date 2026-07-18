@@ -8,11 +8,6 @@
   "select_mode": "single",
   "options": [
     {
-      "id": "short",
-      "text": "",
-      "tone": ""
-    },
-    {
       "id": "R_blunt",
       "text": "기본에 충실함\n시작의 완벽함",
       "tone": "R_ 블런트_F"
@@ -24,13 +19,18 @@
     },
     {
       "id": "A_BLUNT_A",
-      "text": "부드러움과 힘\n모두 공존하다",
+      "text": "힘과 부드러움\n두 특징을 모두 담다",
       "tone": "ACE_ 블런트_A"
     },
     {
       "id": "A_BLUNT_G",
       "text": "부드러운 커트느낌\n그 경험의 시작",
       "tone": "ACE_ 블런트_G"
+    },
+    {
+      "id": "shot",
+      "text": "강력한 힘으로\n정교함을 컨트롤하다",
+      "tone": "숏가위 F"
     }
   ]
 }
