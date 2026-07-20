@@ -594,6 +594,8 @@ export interface Database {
           // 109: 집하 자동감지 (출고 기록 주체 / 출고 알림톡 발송 시각)
           shipped_source: 'manual' | 'alps_pickup' | null;
           shipped_notified_at: string | null;
+          // 111: 포장완료(준비완료) 시점 — 송장 무관, 내부 표시 전용 (2026-07-18)
+          packed_at: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -651,6 +653,8 @@ export interface Database {
           // 109: 집하 자동감지
           shipped_source?: 'manual' | 'alps_pickup' | null;
           shipped_notified_at?: string | null;
+          // 111: 포장완료(준비완료) 시점
+          packed_at?: string | null;
         };
       };
       offline_sale_items: {

@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { SaleDetailPanel } from '@/components/sales/sale-detail-panel';
 import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-panel';
-import { useSales, useSalesTabCounts, useSalesStats } from '@/hooks/use-sales';
+import { useSales, useSalesTabCounts, useSalesStats, useMarkSalePacked } from '@/hooks/use-sales';
 import type { SalesTab, SalesChannel, SalesDateRange } from '@/hooks/use-sales';
 import { useDeliveryStats, useDeliveries } from '@/hooks/use-deliveries';
 import { useContracts } from '@/hooks/use-contracts';
@@ -18,7 +18,7 @@ import { getSaleShipStatus, getDeliveryShipStatus, type ShipStatus } from '@/lib
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
-import { Plus, FileSignature, Receipt, ClipboardList, LayoutGrid } from 'lucide-react';
+import { Plus, FileSignature, Receipt, ClipboardList, LayoutGrid, Package } from 'lucide-react';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 import { RevenueDarkCard } from '@/components/ui/revenue-dark-card';
 import type { OfflineSale } from '@/lib/supabase/types';
@@ -35,7 +35,7 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
 const CUSTOMER_TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy: '아카데미' };
 
 /** 2026-05-26 Phase G-4: 안 A 상태 분류 — 좌측 색 줄 + 우측 도트 결정 */
-type RowState = 'paid_done' | 'paid_shipping' | 'paid_wait_ship' | 'paid_unhandled' | 'unpaid' | 'partial' | 'shipped_b2b_unpaid' | 'wait_pickup_unpaid' | 'cancelled';
+type RowState = 'paid_done' | 'paid_shipping' | 'paid_packed' | 'paid_wait_ship' | 'paid_unhandled' | 'unpaid' | 'partial' | 'shipped_b2b_unpaid' | 'wait_pickup_unpaid' | 'cancelled';
 
 function getRowStateSale(s: OfflineSale): RowState {
   if (s.cancelled_at) return 'cancelled';
@@ -44,7 +44,9 @@ function getRowStateSale(s: OfflineSale): RowState {
   // payment_status === 'paid' — 초록 = 사장님이 더 할 일 없는 상태
   if (s.delivered_at) return 'paid_done';            // 배송완료/고객수령 완료 = 끝
   if (s.shipped_at) return 'paid_shipping';          // 출고완료(배송중) — 택배사가 배송, 내 할 일 끝
-  if (s.invoice_number) return 'paid_wait_ship';     // 송장 발급됨, 출고 전 — 출고해야 함
+  // 2026-07-18: 포장까지 끝낸 건 = '준비완료'. 송장 유무와 무관(포장은 송장 전에도 함) — 사장님 확정
+  if (s.packed_at) return 'paid_packed';             // 포장 완료 — 내 할 일 끝, 기사님만 오면 됨
+  if (s.invoice_number) return 'paid_wait_ship';     // 송장 발급됨, 포장 전 — 준비 필요
   return 'paid_unhandled';                            // 송장X + 수령X — 출고/수령 처리 필요
 }
 
@@ -69,6 +71,7 @@ function stripColor(state: RowState): string {
   switch (state) {
     case 'paid_done': return 'bg-green-500';
     case 'paid_shipping': return 'bg-green-500';  // 출고완료(배송중)도 초록 — 사장님 할 일 끝
+    case 'paid_packed': return 'bg-emerald-400';  // 준비완료 — 포장 끝, 기사님만 오면 됨
     case 'unpaid': return 'bg-red-500';
     case 'partial': return 'bg-yellow-400';
     case 'cancelled': return 'bg-neutral-300';
@@ -79,6 +82,7 @@ function stripColor(state: RowState): string {
 function rightDot(state: RowState): { color: string; title: string } | null {
   switch (state) {
     case 'paid_shipping': return { color: 'bg-green-500', title: '배송중' };
+    case 'paid_packed': return { color: 'bg-emerald-500', title: '준비완료 — 포장 끝, 기사님 대기' };
     case 'paid_wait_ship': return { color: 'bg-amber-400', title: '출고 대기' };
     case 'paid_unhandled': return { color: 'bg-amber-400', title: '처리 대기' };
     case 'shipped_b2b_unpaid': return { color: 'bg-amber-400', title: '출고완료 · 결제 대기' };
@@ -91,6 +95,7 @@ function statusLabel(state: RowState): string {
   switch (state) {
     case 'paid_done': return '판매완료';
     case 'paid_shipping': return '배송중';
+    case 'paid_packed': return '준비완료';
     case 'paid_wait_ship': return '출고 대기';
     case 'paid_unhandled': return '처리 대기';
     case 'unpaid': return '미결제';
@@ -112,6 +117,7 @@ function statusTextClass(state: RowState): string {
   if (state === 'unpaid') return 'text-red-600 font-medium';
   if (state === 'partial') return 'text-yellow-700 font-medium';
   if (state === 'paid_done' || state === 'paid_shipping') return 'text-green-700 font-medium';
+  if (state === 'paid_packed') return 'text-emerald-600 font-medium';   // 준비완료 = 내 할 일 끝
   return 'text-neutral-500';
 }
 
@@ -158,6 +164,7 @@ export default function SalesPage() {
   const [selected, setSelected] = useState<{ id: string; sourceType: 'sale' | 'delivery' } | null>(null);
   const [isLg, setIsLg] = useState(false);
   const [prepMode, setPrepMode] = useState(false);
+  const markPacked = useMarkSalePacked();   // 일괄 포장완료(준비완료) — 2026-07-18
   // 2026-07-14 PC 그리드(베타) — 기본 OFF. isLg 에서만 토글 노출. localStorage 로 선호 기억
   const [gridMode, setGridMode] = useState(false);
   const toggleGrid = () => setGridMode((v) => { const n = !v; try { localStorage.setItem('sales-pc-grid', n ? '1' : '0'); } catch { /* noop */ } return n; });
@@ -334,6 +341,17 @@ export default function SalesPage() {
           >
             <Receipt size={14} />
             준비표 인쇄 ({totalChecked}건)
+          </button>
+        )}
+        {/* 일괄 포장완료 — 2026-07-18. 판매 건만 대상(B2B 납품은 별도 흐름) */}
+        {prepMode && checkedIds.size > 0 && (
+          <button
+            onClick={() => { markPacked.mutate({ ids: [...checkedIds], packed: true }); setCheckedIds(new Set()); }}
+            disabled={markPacked.isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 transition shrink-0 disabled:opacity-50"
+          >
+            <Package size={14} />
+            {markPacked.isPending ? '처리 중…' : `포장완료 (${checkedIds.size}건)`}
           </button>
         )}
         <SearchInput

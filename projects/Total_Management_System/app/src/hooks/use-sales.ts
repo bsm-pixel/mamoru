@@ -729,6 +729,46 @@ export function useMarkSaleShipped() {
   });
 }
 
+/** 포장완료(준비완료) 토글 — 2026-07-18
+ *  packed_at 만 기록/해제하는 내부 표시용. 알림톡·외부연동 없음.
+ *  ids 배열을 받아 단건([id])·일괄(여러 건) 모두 같은 훅으로 처리. */
+export function useMarkSalePacked() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ids, packed }: { ids: string[]; packed: boolean }) => {
+      const action = packed ? 'mark_packed' : 'unmark_packed';
+      const results = await Promise.all(
+        ids.map(async (id) => {
+          const res = await fetch(`/api/sales/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action }),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: res.statusText }));
+            return { id, ok: false, error: typeof err.error === 'string' ? err.error : '처리 실패' };
+          }
+          return { id, ok: true };
+        }),
+      );
+      return results;
+    },
+    onSuccess: (results, { ids, packed }) => {
+      const okCount = results.filter((r) => r.ok).length;
+      const failed = results.filter((r) => !r.ok);
+      if (failed.length === 0) {
+        toast.success(packed ? `준비완료 처리 (${okCount}건)` : '준비완료를 해제했습니다');
+      } else {
+        // 일부 실패해도 성공분은 반영됨 — 조용히 넘기지 않고 이유를 보여준다
+        toast.error(`${okCount}/${ids.length}건 처리 · 실패: ${failed[0].error}`);
+      }
+      ids.forEach((id) => queryClient.invalidateQueries({ queryKey: ['sale', id] }));
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+  });
+}
+
 /** 출고 알림톡 수동 재발송 (2026-07-15) — 이미 출고됐는데 알림톡이 안 나간 B2C 건 */
 export function useResendShipNotify() {
   const queryClient = useQueryClient();

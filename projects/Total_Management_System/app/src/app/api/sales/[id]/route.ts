@@ -306,6 +306,26 @@ export async function PATCH(
       return NextResponse.json({ success: true, action: 'memo_updated' });
     }
 
+    // --- C-2) 포장완료(준비완료) 토글 — 2026-07-18
+    //  '내가 물리적으로 포장까지 끝냈다'는 표시. 송장 유무와 무관(포장은 송장 전에도 함).
+    //  복원수리(repairs.packed_at)와 동일한 개념 · 동일 컬럼명으로 통일. 알림톡/외부연동 없음(내부 표시 전용).
+    if (action === 'mark_packed' || action === 'unmark_packed') {
+      if (sale.cancelled_at) {
+        return NextResponse.json({ error: '취소된 판매입니다' }, { status: 400 });
+      }
+      if (sale.shipped_at) {
+        return NextResponse.json({ error: '이미 출고된 건은 변경할 수 없습니다' }, { status: 400 });
+      }
+      const packedAt = action === 'mark_packed' ? new Date().toISOString() : null;
+      const { error: packErr } = await db
+        .from('offline_sales')
+        .update({ packed_at: packedAt })
+        .eq('id', id);
+
+      if (packErr) throw packErr;
+      return NextResponse.json({ success: true, action: action, packed_at: packedAt });
+    }
+
     // --- D) 출고완료 처리 ---
     if (action === 'mark_shipped') {
       if (sale.cancelled_at) {

@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped, useMarkSaleDelivered, useResendShipNotify } from '@/hooks/use-sales';
+import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped, useMarkSaleDelivered, useResendShipNotify, useMarkSalePacked } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
@@ -76,6 +76,7 @@ export function SaleDetailPanel({ saleId }: Props) {
   const markShipped = useMarkSaleShipped();
   const markDelivered = useMarkSaleDelivered();
   const resendShipNotify = useResendShipNotify();
+  const markPacked = useMarkSalePacked();   // 포장완료(준비완료) 토글 — 2026-07-18
   const [showPickupConfirm, setShowPickupConfirm] = useState(false);
   const [cancelMode, setCancelMode] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -552,6 +553,35 @@ export function SaleDetailPanel({ saleId }: Props) {
       {/* 택배 발송 / 매장 수령 */}
       {!s.cancelled_at && (
         <div className="pt-2 border-t border-neutral-100">
+          {/* 포장(준비) 완료 — 2026-07-18. 송장 유무와 무관하게 표시. 출고/수령되면 숨김(이미 끝난 단계) */}
+          {!s.shipped_at && !s.delivered_at && (
+            <div className="mb-3">
+              {s.packed_at ? (
+                <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200">
+                  <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
+                    <CheckCircle size={13} />
+                    준비완료 · 포장 끝 {formatDate(s.packed_at, 'M월 d일 HH:mm')}
+                  </span>
+                  <button
+                    onClick={() => markPacked.mutate({ ids: [saleId], packed: false })}
+                    disabled={markPacked.isPending}
+                    className="text-[11px] text-neutral-400 hover:text-neutral-600 underline shrink-0 disabled:opacity-50"
+                  >
+                    해제
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => markPacked.mutate({ ids: [saleId], packed: true })}
+                  disabled={markPacked.isPending}
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition disabled:opacity-50"
+                >
+                  <Package size={14} />
+                  {markPacked.isPending ? '처리 중...' : '포장완료 (준비완료로 표시)'}
+                </button>
+              )}
+            </div>
+          )}
           {s.invoice_number ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
