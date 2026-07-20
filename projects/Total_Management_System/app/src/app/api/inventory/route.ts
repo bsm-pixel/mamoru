@@ -16,8 +16,9 @@ export async function GET(req: NextRequest) {
   // 1) 제품 목록 + stock_quantity
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabase as any)
+    // 112: location_id + 로케이션 코드/라벨 조인 (표시 전용 — 재고 수량 계산에는 일절 관여 안 함)
     .from('products')
-    .select('id, name, sku, category, price, price_dealer, price_purchase, price_groups, stock_quantity, raw_stock, is_active, barcode')
+    .select('id, name, sku, category, price, price_dealer, price_purchase, price_groups, stock_quantity, raw_stock, is_active, barcode, location_id, warehouse_locations(code, label)')
     .eq('is_active', true)
     .order('name');
 
@@ -86,6 +87,10 @@ export async function GET(req: NextRequest) {
     zone_raw: p.raw_stock || 0,  // 보관 = raw_stock (비시리얼 수량)
     zone_ready: zoneMap[p.id]?.ready || 0,
     zone_display: zoneMap[p.id]?.display || 0,
+    // 112: 정위치 (표시 전용). 미지정이면 null
+    location_id: p.location_id || null,
+    location_code: p.warehouse_locations?.code || null,
+    location_label: p.warehouse_locations?.label || null,
   }));
 
   // 저재고 필터

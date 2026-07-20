@@ -17,7 +17,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import {
   AlertTriangle, Package, Boxes, TrendingDown,
-  ArrowUpDown, Wrench, Eye, EyeOff, Printer,
+  ArrowUpDown, Wrench, Eye, EyeOff, Printer, MapPin,
 } from 'lucide-react';
 import { InventoryPrintModal } from '@/components/inventory/inventory-print-modal';
 
@@ -146,6 +146,11 @@ export default function InventoryPage() {
     <>
       <Topbar title="창고·재고 관리" action={
         <div className="flex items-center gap-1">
+          {/* 112: 창고 배치도 — 제품이 어느 렉·칸에 있는지 그림으로 */}
+          <Button size="sm" variant="secondary" onClick={() => router.push('/inventory/map')}>
+            <MapPin size={14} />
+            창고 배치도
+          </Button>
           <Button size="sm" variant="ghost" onClick={() => setShowPrint(true)}>
             <Printer size={14} />
             재고조사 인쇄
@@ -427,8 +432,12 @@ function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSe
           {isLow && <Badge className="bg-amber-100 text-amber-700 text-[9px]">저재고</Badge>}
           {mismatch && <Badge className="bg-rose-100 text-rose-600 text-[9px]">⚠ 합 {total}</Badge>}
         </div>
-        <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
+        <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500 flex-wrap">
           {!item.sku.startsWith('IW-') && <span>{item.sku}</span>}
+          {/* 112: 정위치 */}
+          {item.location_code && (
+            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-neutral-900 text-white">{item.location_code}</span>
+          )}
           {!isNoStock && (
             <span>재고 <strong className={mismatch ? 'text-rose-600' : isLow ? 'text-amber-600' : 'text-indigo-black'}>{item.stock_quantity}</strong>{mismatch && <span className="text-rose-500"> ≠ {total}</span>}</span>
           )}
@@ -453,7 +462,16 @@ function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSe
             {isNoStock && <Badge className="bg-neutral-100 text-neutral-500 text-[9px]">미사용</Badge>}
             {isLow && <Badge className="bg-amber-100 text-amber-700 text-[9px]">저재고</Badge>}
           </div>
-          {!item.sku.startsWith('IW-') && <p className="text-[11px] text-neutral-400 font-mono">{item.sku}</p>}
+          <div className="flex items-center gap-1.5">
+            {!item.sku.startsWith('IW-') && <p className="text-[11px] text-neutral-400 font-mono">{item.sku}</p>}
+            {/* 112: 정위치 — 어디 있는지 한눈에 */}
+            {item.location_code && (
+              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-neutral-900 text-white shrink-0"
+                title={item.location_label || item.location_code}>
+                {item.location_code}
+              </span>
+            )}
+          </div>
         </div>
         <div className="col-span-2">
           {isNoStock ? (

@@ -59,6 +59,10 @@ export type ContractStatus = 'draft' | 'signed' | 'sent' | 'completed' | 'cancel
 export type SerialStatus = 'in_stock' | 'reserved' | 'sold' | 'returned' | 'defective';
 export type WarehouseZone = 'raw' | 'ready' | 'display';
 
+/** 112: 로케이션의 용도 구역. WarehouseZone(시리얼의 존)과 개념은 같으나
+ *  raw 존의 물리적 자리를 다루므로 'storage' 라는 이름을 쓴다. */
+export type WarehouseZoneType = 'storage' | 'ready' | 'display';
+
 export interface Database {
   public: {
     Tables: {
@@ -176,11 +180,35 @@ export interface Database {
           purchase_name: string | null;
           price_groups: Record<string, { price?: number | null; display_name?: string | null }> | null;
           is_active: boolean;
+          // 112: 정위치(보관 자리). NULL=미지정. 재고 수량과 무관한 위치 참조 (2026-07-18)
+          location_id: string | null;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['products']['Row'], 'id' | 'created_at' | 'updated_at' | 'stock_quantity' | 'is_active' | 'price_dealer' | 'price_academy' | 'price_purchase' | 'price_groups'>;
+        // location_id 는 Omit 후 선택 필드로 다시 붙인다 — 기존 제품 생성 코드가 안 깨지도록(위치는 나중에 배정)
+        Insert: Omit<Database['public']['Tables']['products']['Row'], 'id' | 'created_at' | 'updated_at' | 'stock_quantity' | 'is_active' | 'price_dealer' | 'price_academy' | 'price_purchase' | 'price_groups' | 'location_id'>
+          & { location_id?: string | null };
         Update: Partial<Database['public']['Tables']['products']['Insert']> & { price_dealer?: number; price_academy?: number; price_purchase?: number; price_groups?: Record<string, { price?: number | null; display_name?: string | null }> };
+      };
+      /** 112: 창고 로케이션(정위치) — 렉·단·칸 물리적 자리 (2026-07-18) */
+      warehouse_locations: {
+        Row: {
+          id: string;
+          code: string;              // 'R01-2-A'
+          label: string | null;      // '1번렉 중단 A칸'
+          rack_no: number;
+          level_no: number;          // 1 = 상단 (위→아래)
+          bin_no: number | null;     // 칸 미분할이면 null
+          zone_type: WarehouseZoneType;
+          sort_order: number;
+          is_active: boolean;
+          memo: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['warehouse_locations']['Row'], 'id' | 'created_at' | 'updated_at' | 'sort_order' | 'is_active' | 'zone_type'>
+          & { sort_order?: number; is_active?: boolean; zone_type?: WarehouseZoneType };
+        Update: Partial<Database['public']['Tables']['warehouse_locations']['Insert']>;
       };
       sync_log: {
         Row: {
@@ -1023,6 +1051,8 @@ export type Customer = Database['public']['Tables']['customers']['Row'];
 export type Order = Database['public']['Tables']['orders']['Row'];
 export type OrderItem = Database['public']['Tables']['order_items']['Row'];
 export type Product = Database['public']['Tables']['products']['Row'];
+/** 112: 창고 로케이션(정위치) */
+export type WarehouseLocation = Database['public']['Tables']['warehouse_locations']['Row'];
 export type SyncLog = Database['public']['Tables']['sync_log']['Row'];
 
 // Phase 2-1: 편의 타입

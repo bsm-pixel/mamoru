@@ -18,6 +18,10 @@ export interface InventoryItem {
   zone_raw: number;
   zone_ready: number;
   zone_display: number;
+  /** 112: 정위치 (표시 전용, 미지정이면 null) */
+  location_id: string | null;
+  location_code: string | null;
+  location_label: string | null;
 }
 
 export interface InventorySummary {
