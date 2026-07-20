@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { generateRackLocations, makeLocationCode, makeLocationLabel, locationSortOrder } from '@/lib/warehouse/location-code';
+import { generateRackLocations, makeLocationCode, makeLocationLabel, locationSortOrder, type LevelSpec } from '@/lib/warehouse/location-code';
 
 /**
  * 창고 로케이션(정위치) API — 112 / 113(단별 칸 수), 2026-07-18
@@ -16,6 +16,8 @@ interface ProductLite {
   id: string; name: string; sku: string; category: string;
   stock_quantity: number; location_id: string | null;
 }
+/** 한 단의 셀 (행×열) */
+interface Cell { id: string; bin_no: number | null; bin_row: number | null }
 
 /** GET */
 export async function GET() {
@@ -67,24 +69,39 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const action = body.action as string;
 
-    /* ── 렉 생성 — 단별 칸 수를 배열로 받는다 ── */
+    /* ── 렉 생성 — 단별 {열, 행} 구조를 배열로 받는다 (행>1 이면 수납함) ── */
     if (action === 'create_rack') {
       const rackNo = Number(body.rack_no);
       const label = (body.label as string) || null;
-      const levelBins: number[] = Array.isArray(body.level_bins) ? body.level_bins.map((n: unknown) => Number(n) || 0) : [];
+      const levels: LevelSpec[] = Array.isArray(body.levels)
+        ? body.levels.map((l: { cols?: unknown; rows?: unknown }) => ({
+            cols: Number(l?.cols) || 0,
+            rows: Math.max(1, Number(l?.rows) || 1),
+          }))
+        : [];
       const zoneType = (body.zone_type as string) || 'storage';
 
       if (!Number.isInteger(rackNo) || rackNo < 1 || rackNo > 99) {
         return NextResponse.json({ error: '렉 번호는 1~99 사이여야 합니다' }, { status: 400 });
       }
-      if (levelBins.length < 1 || levelBins.length > 20) {
+      if (levels.length < 1 || levels.length > 20) {
         return NextResponse.json({ error: '단은 1~20개까지 만들 수 있습니다' }, { status: 400 });
       }
-      if (levelBins.some((b) => b < 0 || b > 26)) {
-        return NextResponse.json({ error: '한 단의 칸 수는 0~26개까지입니다 (0=칸 없이 선반)' }, { status: 400 });
+      if (levels.some((l) => l.cols < 0 || l.cols > 26)) {
+        return NextResponse.json({ error: '한 단의 열은 0~26개까지입니다 (0=칸 없이 선반)' }, { status: 400 });
       }
-      // 렉 열 수 = 가장 칸이 많은 단 기준 (그리드 기준선)
-      const columns = Math.max(1, ...levelBins);
+      if (levels.some((l) => (l.rows ?? 1) < 1 || (l.rows ?? 1) > 20)) {
+        return NextResponse.json({ error: '한 단의 행은 1~20개까지입니다' }, { status: 400 });
+      }
+      const totalCells = levels.reduce((s, l) => s + (l.cols > 0 ? l.cols * (l.rows ?? 1) : 1), 0);
+      if (totalCells > 600) {
+        return NextResponse.json({ error: `자리가 너무 많습니다 (${totalCells}개). 600개 이하로 만들어주세요` }, { status: 400 });
+      }
+
+      // 렉 그리드 기준선 = 수납함이 아닌 단들 중 가장 열이 많은 값
+      // (수납함은 단 전체를 차지하는 별도 블록으로 그려서 기준선에 영향을 주지 않는다)
+      const simpleCols = levels.filter((l) => (l.rows ?? 1) === 1 && l.cols > 0).map((l) => l.cols);
+      const columns = Math.max(1, ...(simpleCols.length ? simpleCols : [1]));
 
       const { error: rackErr } = await supabase
         .from('warehouse_racks')
@@ -96,9 +113,9 @@ export async function POST(req: NextRequest) {
         throw rackErr;
       }
 
-      const rows = generateRackLocations(rackNo, levelBins).map((g) => ({
+      const rows = generateRackLocations(rackNo, levels).map((g) => ({
         code: g.code, label: g.label, rack_no: g.rack_no, level_no: g.level_no,
-        bin_no: g.bin_no, sort_order: g.sort_order, zone_type: zoneType,
+        bin_no: g.bin_no, bin_row: g.bin_row, sort_order: g.sort_order, zone_type: zoneType,
       }));
       const { data, error } = await supabase.from('warehouse_locations').insert(rows).select('id');
       if (error) {
@@ -112,14 +129,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, created: data?.length || 0, columns });
     }
 
-    /* ── 특정 단에 칸 1개 추가 ── */
-    if (action === 'add_bin') {
+    /* ── 특정 단에 열 또는 행 1개 추가 ──
+       add_col : 모든 행에 열 하나씩 (단순 칸막이면 칸 1개 추가와 같음)
+       add_row : 모든 열에 행 하나씩 (한 줄짜리 단을 수납함으로 만들 때) */
+    if (action === 'add_col' || action === 'add_row') {
       const rackNo = Number(body.rack_no);
       const levelNo = Number(body.level_no);
 
       const { data: existing, error: exErr } = await supabase
         .from('warehouse_locations')
-        .select('id, bin_no')
+        .select('id, bin_no, bin_row')
         .eq('rack_no', rackNo)
         .eq('level_no', levelNo);
       if (exErr) throw exErr;
@@ -127,13 +146,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: '해당 단을 찾을 수 없습니다' }, { status: 404 });
       }
 
-      // 이 단이 '선반 통째'(bin_no NULL)면 칸으로 나누기 전에 제품을 비워야 한다
-      const shelfRow = existing.find((r: { bin_no: number | null }) => r.bin_no == null);
+      // '선반 통째'였다면 칸으로 나누기 전에 제품을 비워야 한다
+      const shelfRow = existing.find((r: Cell) => r.bin_no == null);
       if (shelfRow) {
         const { count } = await supabase
-          .from('products')
-          .select('id', { count: 'exact', head: true })
-          .eq('location_id', shelfRow.id);
+          .from('products').select('id', { count: 'exact', head: true }).eq('location_id', shelfRow.id);
         if ((count || 0) > 0) {
           return NextResponse.json(
             { error: '이 단은 선반으로 쓰는 중이고 제품이 있습니다. 먼저 제품을 빼주세요.' },
@@ -143,28 +160,56 @@ export async function POST(req: NextRequest) {
         await supabase.from('warehouse_locations').delete().eq('id', shelfRow.id);
       }
 
-      const maxBin = existing.reduce((m: number, r: { bin_no: number | null }) => Math.max(m, r.bin_no || 0), 0);
-      const nextBin = maxBin + 1;
-      if (nextBin > 26) return NextResponse.json({ error: '한 단에 26칸까지입니다' }, { status: 400 });
+      const cells = (existing as Cell[]).filter((r) => r.bin_no != null);
+      const curCols = cells.reduce((m, r) => Math.max(m, r.bin_no || 0), 0);
+      const curRows = cells.reduce((m, r) => Math.max(m, r.bin_row || 1), 0);
+
+      const nextCols = action === 'add_col' ? curCols + 1 : curCols || 1;
+      const nextRows = action === 'add_row' ? Math.max(curRows, 1) + 1 : curRows || 1;
+      if (nextCols > 26) return NextResponse.json({ error: '한 단에 26열까지입니다' }, { status: 400 });
+      if (nextRows > 20) return NextResponse.json({ error: '한 단에 20행까지입니다' }, { status: 400 });
 
       const totalLevels = await countLevels(supabase, rackNo);
-      const { error } = await supabase.from('warehouse_locations').insert({
-        code: makeLocationCode(rackNo, levelNo, nextBin),
-        label: makeLocationLabel(rackNo, levelNo, nextBin, totalLevels),
-        rack_no: rackNo, level_no: levelNo, bin_no: nextBin,
-        sort_order: locationSortOrder(rackNo, levelNo, nextBin),
-      });
-      if (error) throw error;
 
-      // 렉 열 수가 부족하면 넓힌다 (그리드 기준선 유지)
-      await widenRackIfNeeded(supabase, rackNo, nextBin);
-      return NextResponse.json({ success: true, bin_no: nextBin });
+      // 새로 생기는 셀만 추가
+      const toInsert: Record<string, unknown>[] = [];
+      const has = new Set(cells.map((r) => `${r.bin_row || 1}:${r.bin_no}`));
+      for (let r = 1; r <= nextRows; r++) {
+        for (let c = 1; c <= nextCols; c++) {
+          if (has.has(`${r}:${c}`)) continue;
+          toInsert.push({
+            code: makeLocationCode(rackNo, levelNo, c, r, nextRows),
+            label: makeLocationLabel(rackNo, levelNo, c, r, totalLevels, nextRows),
+            rack_no: rackNo, level_no: levelNo, bin_no: c, bin_row: r,
+            sort_order: locationSortOrder(rackNo, levelNo, c, r),
+          });
+        }
+      }
+
+      // 행이 1 → 2 이상으로 늘면 기존 칸 코드에 행 번호가 붙어야 한다 (R01-2-A → R01-2-A1)
+      if (nextRows > 1 && curRows <= 1) {
+        for (const cell of cells) {
+          await supabase.from('warehouse_locations').update({
+            code: makeLocationCode(rackNo, levelNo, cell.bin_no, 1, nextRows),
+            label: makeLocationLabel(rackNo, levelNo, cell.bin_no, 1, totalLevels, nextRows),
+            bin_row: 1,
+          }).eq('id', cell.id);
+        }
+      }
+
+      if (toInsert.length) {
+        const { error } = await supabase.from('warehouse_locations').insert(toInsert);
+        if (error) throw error;
+      }
+      if (nextRows === 1) await widenRackIfNeeded(supabase, rackNo, nextCols);
+      return NextResponse.json({ success: true, cols: nextCols, rows: nextRows, created: toInsert.length });
     }
 
     /* ── 렉에 단 1개 추가 (기본은 칸 없이 선반) ── */
     if (action === 'add_level') {
       const rackNo = Number(body.rack_no);
-      const bins = Math.max(0, Math.min(26, Number(body.bins) || 0));
+      const cols = Math.max(0, Math.min(26, Number(body.cols) || 0));
+      const rowsCount = Math.max(1, Math.min(20, Number(body.rows) || 1));
 
       const { data: rows, error: exErr } = await supabase
         .from('warehouse_locations').select('level_no').eq('rack_no', rackNo);
@@ -173,16 +218,17 @@ export async function POST(req: NextRequest) {
       const nextLevel = maxLevel + 1;
       if (nextLevel > 20) return NextResponse.json({ error: '한 렉에 20단까지입니다' }, { status: 400 });
 
-      const gen = generateRackLocations(rackNo, [bins]).map((g) => ({
-        code: makeLocationCode(rackNo, nextLevel, g.bin_no),
-        label: makeLocationLabel(rackNo, nextLevel, g.bin_no, nextLevel),
-        rack_no: rackNo, level_no: nextLevel, bin_no: g.bin_no,
-        sort_order: locationSortOrder(rackNo, nextLevel, g.bin_no),
+      const totalLevels = nextLevel;
+      const gen = generateRackLocations(rackNo, [{ cols, rows: rowsCount }]).map((g) => ({
+        code: makeLocationCode(rackNo, nextLevel, g.bin_no, g.bin_row, rowsCount),
+        label: makeLocationLabel(rackNo, nextLevel, g.bin_no, g.bin_row, totalLevels, rowsCount),
+        rack_no: rackNo, level_no: nextLevel, bin_no: g.bin_no, bin_row: g.bin_row,
+        sort_order: locationSortOrder(rackNo, nextLevel, g.bin_no, g.bin_row),
       }));
       const { error } = await supabase.from('warehouse_locations').insert(gen);
       if (error) throw error;
 
-      if (bins > 0) await widenRackIfNeeded(supabase, rackNo, bins);
+      if (cols > 0 && rowsCount === 1) await widenRackIfNeeded(supabase, rackNo, cols);
       return NextResponse.json({ success: true, level_no: nextLevel, created: gen.length });
     }
 

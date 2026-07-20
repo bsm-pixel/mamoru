@@ -214,7 +214,8 @@ export interface Database {
           label: string | null;      // '1번렉 중단 A칸'
           rack_no: number;
           level_no: number;          // 1 = 상단 (위→아래)
-          bin_no: number | null;     // 칸 미분할이면 null
+          bin_no: number | null;     // 열 (null = 칸 없이 선반 통째)
+          bin_row: number | null;    // 114: 행 (수납함이면 2 이상, null = 선반)
           zone_type: WarehouseZoneType;
           sort_order: number;
           is_active: boolean;

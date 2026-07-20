@@ -1,19 +1,21 @@
 /**
- * 창고 로케이션 코드 규칙 — 단일 출처 (112, 2026-07-18)
+ * 창고 로케이션 코드 규칙 — 단일 출처 (112 / 113 / 114, 2026-07-18)
  *
- * 자리 주소 형식:  R{렉2자리}-{단}-{칸알파벳}
- *   R01-2-A  = 1번렉 2단(중단) A칸
- *   R03-1    = 3번렉 1단(상단), 칸 미분할
+ * 한 단(선반)은 세 가지 형태 중 하나다:
+ *   1) 선반 통째      칸막이 없음                     → R01-4
+ *   2) 단순 칸막이     1행 N열 (세로 칸막이만)          → R01-2-A  … R01-2-F
+ *   3) 수납함(서랍)    M행 N열 격자 (가위 보관함 등)     → R01-2-A1 … R01-2-J6
  *
- * 규칙 3가지 (업계 로케이션 코드 표준):
- *  · 자릿수 고정(R01) — 문자열 정렬이 숫자 순서와 일치 (R10 이 R2 앞에 오는 사고 방지)
+ * 코드 규칙:
+ *  · 열 = 알파벳(A,B,C…), 행 = 숫자(1,2,3…)  ← 엑셀 셀 주소와 같은 감각
+ *  · **행이 1개뿐이면 행 번호를 붙이지 않는다** (기존 코드 R01-2-A 를 그대로 유지 = 하위호환)
+ *  · 렉 번호는 자릿수 고정(R01) — 문자열 정렬이 숫자 순서와 일치 (R10 이 R2 앞에 오는 사고 방지)
  *  · 단은 위→아래 번호 (1=상단) — 사람이 눈으로 보는 순서와 일치
- *  · 칸은 알파벳 — 숫자끼리 헷갈리지 않게 축을 분리
  */
 
-/** 칸 번호(1-based) → 알파벳. 1→A … 26→Z, 27→AA */
-export function binLetter(binNo: number): string {
-  let n = Math.max(1, Math.floor(binNo));
+/** 열 번호(1-based) → 알파벳. 1→A … 26→Z, 27→AA */
+export function binLetter(colNo: number): string {
+  let n = Math.max(1, Math.floor(colNo));
   let out = '';
   while (n > 0) {
     const rem = (n - 1) % 26;
@@ -23,25 +25,40 @@ export function binLetter(binNo: number): string {
   return out;
 }
 
-/** 자리 주소 코드 생성. bin 이 없으면 렉-단 까지만 */
-export function makeLocationCode(rackNo: number, levelNo: number, binNo?: number | null): string {
+/**
+ * 자리 주소 코드.
+ * @param col  열 (null = 선반 통째)
+ * @param row  행 (null 또는 총 행이 1개면 코드에 안 붙음)
+ * @param totalRows 그 단의 총 행 수 (1이면 행 번호 생략)
+ */
+export function makeLocationCode(
+  rackNo: number, levelNo: number,
+  col?: number | null, row?: number | null, totalRows = 1,
+): string {
   const rack = `R${String(rackNo).padStart(2, '0')}`;
-  return binNo == null ? `${rack}-${levelNo}` : `${rack}-${levelNo}-${binLetter(binNo)}`;
+  if (col == null) return `${rack}-${levelNo}`;              // 선반
+  const rowPart = totalRows > 1 && row != null ? String(row) : '';
+  return `${rack}-${levelNo}-${binLetter(col)}${rowPart}`;
 }
 
-/** 사람이 읽는 이름. 3단 기준으로 상/중/하 표기, 그 외는 'N단' */
-export function makeLocationLabel(rackNo: number, levelNo: number, binNo?: number | null, totalLevels?: number): string {
+/** 사람이 읽는 이름 */
+export function makeLocationLabel(
+  rackNo: number, levelNo: number,
+  col?: number | null, row?: number | null,
+  totalLevels = 1, totalRows = 1,
+): string {
   const rack = `${rackNo}번렉`;
-  const level =
-    totalLevels === 3
-      ? (['상단', '중단', '하단'][levelNo - 1] ?? `${levelNo}단`)
-      : `${levelNo}단`;
-  return binNo == null ? `${rack} ${level}` : `${rack} ${level} ${binLetter(binNo)}칸`;
+  const level = totalLevels === 3
+    ? (['상단', '중단', '하단'][levelNo - 1] ?? `${levelNo}단`)
+    : `${levelNo}단`;
+  if (col == null) return `${rack} ${level} 선반`;
+  if (totalRows > 1 && row != null) return `${rack} ${level} 수납함 ${binLetter(col)}열 ${row}행`;
+  return `${rack} ${level} ${binLetter(col)}칸`;
 }
 
-/** 정렬 키 — 렉 → 단 → 칸 순. DB sort_order 에 넣어두면 목록/배치도 정렬이 항상 일치 */
-export function locationSortOrder(rackNo: number, levelNo: number, binNo?: number | null): number {
-  return rackNo * 10000 + levelNo * 100 + (binNo ?? 0);
+/** 정렬 키 — 렉 → 단 → 행 → 열. 수납함도 위에서 아래, 왼쪽에서 오른쪽으로 정렬된다 */
+export function locationSortOrder(rackNo: number, levelNo: number, col?: number | null, row?: number | null): number {
+  return rackNo * 1_000_000 + levelNo * 10_000 + (row ?? 0) * 100 + (col ?? 0);
 }
 
 export interface GeneratedLocation {
@@ -49,37 +66,50 @@ export interface GeneratedLocation {
   label: string;
   rack_no: number;
   level_no: number;
-  bin_no: number | null;
+  bin_no: number | null;   // 열 (null = 선반)
+  bin_row: number | null;  // 행 (null = 선반)
   sort_order: number;
 }
 
+/** 한 단의 구조 — cols(열) × rows(행). cols=0 이면 칸 없이 선반 */
+export interface LevelSpec {
+  cols: number;
+  rows?: number;
+}
+
 /**
- * 렉 하나를 단/칸으로 펼쳐 로케이션 목록 생성.
+ * 렉 하나를 단·행·열로 펼쳐 로케이션 목록 생성.
  *
- * levelBins = 단별 칸 수 배열. 실제 렉은 단마다 칸 수가 다르다.
- *   [2, 6, 6, 0, 0]  →  1단 2칸 / 2단 6칸 / 3단 6칸 / 4·5단은 칸 없이 '선반 통째'
- *   칸 수 0 = 그 단은 나누지 않음 → bin_no NULL 한 칸(전 열을 가로지름)
+ *   [{cols:2}, {cols:6}, {cols:10, rows:6}, {cols:0}]
+ *   → 1단 2칸 / 2단 6칸 / 3단 수납함 6행10열(60칸) / 4단 선반
  */
-export function generateRackLocations(rackNo: number, levelBins: number[]): GeneratedLocation[] {
+export function generateRackLocations(rackNo: number, levels: LevelSpec[]): GeneratedLocation[] {
   const out: GeneratedLocation[] = [];
-  const totalLevels = levelBins.length;
-  levelBins.forEach((binsRaw, idx) => {
+  const totalLevels = levels.length;
+
+  levels.forEach((spec, idx) => {
     const lv = idx + 1;
-    const bins = Number.isFinite(binsRaw) && binsRaw > 0 ? Math.floor(binsRaw) : 0;
-    if (bins === 0) {
+    const cols = Number.isFinite(spec.cols) && spec.cols > 0 ? Math.floor(spec.cols) : 0;
+    const rows = cols === 0 ? 0 : Math.max(1, Math.floor(spec.rows ?? 1));
+
+    if (cols === 0) {
+      // 선반 통째
       out.push({
         code: makeLocationCode(rackNo, lv, null),
-        label: makeLocationLabel(rackNo, lv, null, totalLevels),
-        rack_no: rackNo, level_no: lv, bin_no: null,
-        sort_order: locationSortOrder(rackNo, lv, null),
+        label: makeLocationLabel(rackNo, lv, null, null, totalLevels),
+        rack_no: rackNo, level_no: lv, bin_no: null, bin_row: null,
+        sort_order: locationSortOrder(rackNo, lv, null, null),
       });
-    } else {
-      for (let b = 1; b <= bins; b++) {
+      return;
+    }
+
+    for (let r = 1; r <= rows; r++) {
+      for (let c = 1; c <= cols; c++) {
         out.push({
-          code: makeLocationCode(rackNo, lv, b),
-          label: makeLocationLabel(rackNo, lv, b, totalLevels),
-          rack_no: rackNo, level_no: lv, bin_no: b,
-          sort_order: locationSortOrder(rackNo, lv, b),
+          code: makeLocationCode(rackNo, lv, c, r, rows),
+          label: makeLocationLabel(rackNo, lv, c, r, totalLevels, rows),
+          rack_no: rackNo, level_no: lv, bin_no: c, bin_row: r,
+          sort_order: locationSortOrder(rackNo, lv, c, r),
         });
       }
     }

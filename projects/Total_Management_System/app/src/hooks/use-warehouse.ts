@@ -20,7 +20,8 @@ export interface LocationWithProducts {
   label: string | null;
   rack_no: number;
   level_no: number;
-  bin_no: number | null;
+  bin_no: number | null;   // 열
+  bin_row: number | null;  // 114: 행 (수납함이면 2 이상)
   zone_type: string;
   sort_order: number;
   is_active: boolean;
@@ -86,26 +87,35 @@ function useWarehouseAction(successMsg: (d: Record<string, unknown>) => string) 
   });
 }
 
-/** 렉 생성 — 단별 칸 수 배열 (예: [2,6,6,0,0]) */
+/** 한 단의 구조 — 열 × 행. cols=0 이면 칸 없이 선반, rows>1 이면 수납함 */
+export interface LevelSpecInput { cols: number; rows?: number }
+
+/** 렉 생성 — 단별 {열, 행} (예: [{cols:2},{cols:6},{cols:10,rows:6},{cols:0}]) */
 export function useCreateRack() {
-  const m = useWarehouseAction((d) => `렉 생성 완료 — ${d.created}칸`);
+  const m = useWarehouseAction((d) => `렉 생성 완료 — ${d.created}자리`);
   return {
     ...m,
-    mutate: (v: { rack_no: number; label?: string | null; level_bins: number[]; zone_type?: string }, opts?: Parameters<typeof m.mutate>[1]) =>
+    mutate: (v: { rack_no: number; label?: string | null; levels: LevelSpecInput[]; zone_type?: string }, opts?: Parameters<typeof m.mutate>[1]) =>
       m.mutate({ action: 'create_rack', ...v }, opts),
   };
 }
 
-/** 특정 단에 칸 1개 추가 */
-export function useAddBin() {
-  const m = useWarehouseAction(() => '칸을 추가했습니다');
-  return { ...m, mutate: (v: { rack_no: number; level_no: number }) => m.mutate({ action: 'add_bin', ...v }) };
+/** 특정 단에 열 1개 추가 (모든 행에) */
+export function useAddCol() {
+  const m = useWarehouseAction(() => '열을 추가했습니다');
+  return { ...m, mutate: (v: { rack_no: number; level_no: number }) => m.mutate({ action: 'add_col', ...v }) };
+}
+
+/** 특정 단에 행 1개 추가 (한 줄짜리 단을 수납함으로 만들 때) */
+export function useAddRow() {
+  const m = useWarehouseAction(() => '행을 추가했습니다');
+  return { ...m, mutate: (v: { rack_no: number; level_no: number }) => m.mutate({ action: 'add_row', ...v }) };
 }
 
 /** 렉에 단 1개 추가 (기본은 칸 없이 선반) */
 export function useAddLevel() {
   const m = useWarehouseAction((d) => `${d.level_no}단을 추가했습니다`);
-  return { ...m, mutate: (v: { rack_no: number; bins?: number }) => m.mutate({ action: 'add_level', ...v }) };
+  return { ...m, mutate: (v: { rack_no: number; cols?: number; rows?: number }) => m.mutate({ action: 'add_level', ...v }) };
 }
 
 /** 렉/칸 삭제 — 배정돼 있던 제품은 '미지정'으로 풀린다 */
