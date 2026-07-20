@@ -1,4 +1,5 @@
 import type { LocationWithProducts } from '@/hooks/use-warehouse';
+import { cellGridPos } from '@/lib/warehouse/location-code';
 
 /**
  * 렉 배치도 인쇄 HTML — A4 한 장에 렉 하나 (2026-07-20)
@@ -71,19 +72,30 @@ export function buildRackPrintHtml(racks: PrintRack[], opt: PrintOptions): strin
     const codePt = Math.max(5.5, Math.min(11, cellH));
     const namePt = Math.max(5, Math.min(9, cellH * 0.62));
     const roomy = cellH >= 9;   // 제품명까지 넣을 여유가 있는가
+    // 칸 높이에서 코드줄·재고줄·안쪽여백을 빼고 제품명을 몇 줄까지 넣을 수 있는지 (pt→mm = ×0.3528)
+    const lineMm = (pt: number) => pt * 1.2 * 0.3528;
+    const maxNameLines = Math.max(1, Math.floor((cellH - lineMm(codePt) - lineMm(namePt) - 1.4) / lineMm(namePt)));
 
     // 수납함은 칸이 좁고 렉·단이 이미 위에 적혀 있어 뒷자리(A1)만 쓴다 — 화면 배치도와 같은 규칙
     const cell = (loc: LocationWithProducts, span: boolean, short: boolean) => {
       const empty = loc.product_count === 0;
-      const extra = loc.product_count > 1 ? ` 외 ${loc.product_count - 1}` : '';
       const shown = short ? (loc.code.split('-').pop() || loc.code) : loc.code;
+      // 중간 칸을 삭제해도 밀리지 않게 열·행 명시 배치 (화면 배치도와 동일 규칙)
+      const pos = cellGridPos(loc.bin_no, loc.bin_row);
+      const place = span ? 'grid-column:1/-1' : `grid-column:${pos.col};grid-row:${pos.row}`;
+
+      // 한 칸에 여러 품목을 몰아 넣는 경우 — 칸 높이가 허락하는 만큼 이름을 더 적는다
+      const names = loc.products.slice(0, maxNameLines)
+        .map((p) => `<div class="nm">${esc(p.name)}</div>`).join('');
+      const rest = loc.product_count - Math.min(loc.product_count, maxNameLines);
+      const foot = `<div class="st">${rest > 0 ? `외 ${rest}종 · ` : ''}재고 ${loc.stock_total}</div>`;
       const body = !showProduct || !roomy
         ? ''
-        : empty
-          ? '<div class="nm empty">비어 있음</div>'
-          : `<div class="nm">${esc(loc.products[0]?.name || '')}${extra}</div><div class="st">재고 ${loc.stock_total}</div>`;
-      return `<div class="cell${empty ? ' e' : ''}"${span ? ' style="grid-column:1/-1"' : ''}>`
-        + `<div class="cd">${esc(shown)}</div>${body}</div>`;
+        : empty ? '<div class="nm empty">비어 있음</div>' : names + foot;
+
+      const badge = loc.product_count > 1 ? `<span class="bg">${loc.product_count}종</span>` : '';
+      return `<div class="cell${empty ? ' e' : ''}" style="${place}">`
+        + `<div class="cd"><span class="ct">${esc(shown)}</span>${badge}</div>${body}</div>`;
     };
 
     const levels = rack.levels.map((lvl) => {
@@ -139,8 +151,11 @@ export function buildRackPrintHtml(racks: PrintRack[], opt: PrintOptions): strin
   .cell { height:var(--ch); border:0.25mm solid #333; border-radius:0.8mm; padding:0.6mm 1mm;
           overflow:hidden; display:flex; flex-direction:column; justify-content:center; }
   .cell.e { border-style:dashed; border-color:#bbb; }
-  .cd { font-family:'Courier New',monospace; font-weight:700; font-size:var(--code); line-height:1.05;
-        white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cd { display:flex; align-items:center; gap:1mm; font-family:'Courier New',monospace; font-weight:700;
+        font-size:var(--code); line-height:1.05; }
+  .ct { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bg { margin-left:auto; flex:none; background:#000; color:#fff; border-radius:0.5mm; padding:0 0.7mm;
+        font-family:inherit; font-size:calc(var(--name) * 0.85); font-weight:700; }
   .cell.e .cd { color:#999; font-weight:500; }
   .nm { font-size:var(--name); font-weight:700; line-height:1.15; margin-top:0.4mm;
         white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }

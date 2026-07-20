@@ -14,6 +14,7 @@ import { useIsLg } from '@/hooks/use-grid-mode';
 import { useLocations, useCreateRack, useDeleteLocation, useAssignLocation, type LocationWithProducts, type LocationProduct } from '@/hooks/use-warehouse';
 import { RackEditModal } from '@/components/inventory/rack-edit-modal';
 import { RackMapPrint } from '@/components/inventory/rack-map-print';
+import { cellGridPos } from '@/lib/warehouse/location-code';
 import { Modal } from '@/components/ui/modal';
 import { Boxes, MapPin, Plus, ArrowLeft, Trash2, PackageX, Printer, Settings2 } from 'lucide-react';
 
@@ -133,11 +134,11 @@ export default function WarehouseLayoutPage() {
         </div>
       )}
 
-      {/* 이 칸에 제품 담기 — 위치 미지정 제품에서 고른다 */}
+      {/* 이 칸에 제품 담기 — 한 칸에 여러 품목을 몰아 넣는 경우가 많아 여러 개를 한 번에 고른다 */}
       <AddProductToLocation
-        locationId={selected.id}
+        key={selected.id}
         candidates={data?.unassigned || []}
-        onAssign={(productId) => assignLocation.mutate({ product_ids: [productId], location_id: selected.id })}
+        onAssign={(productIds) => assignLocation.mutate({ product_ids: productIds, location_id: selected.id })}
         pending={assignLocation.isPending}
       />
 
@@ -221,14 +222,20 @@ export default function WarehouseLayoutPage() {
                     const hit = matchedLocIds.has(loc.id);
                     const sel = selectedId === loc.id;
                     const empty = loc.product_count === 0;
+                    const many = loc.product_count > 1;
+                    const pos = cellGridPos(loc.bin_no, loc.bin_row);
                     return (
                       <button
                         key={loc.id}
                         onClick={() => setSelectedId(loc.id)}
-                        title={`${loc.label || loc.code} · 제품 ${loc.product_count}종 / 재고 ${loc.stock_total}개`}
-                        style={isShelf ? { gridColumn: '1 / -1' } : undefined}
+                        title={
+                          empty ? `${loc.label || loc.code} · 비어 있음`
+                            : `${loc.label || loc.code}\n${loc.products.map((p) => `· ${p.name} ${p.stock_quantity}개`).join('\n')}`
+                        }
+                        // 중간 칸을 삭제해도 나머지가 밀리지 않도록 열·행을 명시 배치
+                        style={isShelf ? { gridColumn: '1 / -1' } : { gridColumn: pos.col, gridRow: pos.row }}
                         className={`rounded-md border text-left transition min-w-0 ${
-                          compact ? 'h-[38px] px-1.5 py-1' : 'h-[62px] px-2 py-1.5'
+                          compact ? 'h-[38px] px-1.5 py-1' : 'h-[70px] px-2 py-1.5'
                         } ${
                           sel ? 'border-neutral-900 ring-2 ring-neutral-900 bg-[#F4F0EA]'
                           : hit ? 'border-amber-500 ring-2 ring-amber-400 bg-amber-50'
@@ -236,22 +243,36 @@ export default function WarehouseLayoutPage() {
                           : 'border-neutral-200 bg-white hover:border-neutral-400'
                         }`}
                       >
-                        <div className="text-[9px] font-mono text-neutral-400 truncate leading-tight">
-                          {compact ? loc.code.split('-').pop() : loc.code}
-                          {isShelf && <span className="ml-1 text-neutral-300">선반</span>}
+                        <div className="flex items-center gap-1 leading-tight">
+                          <span className="text-[9px] font-mono text-neutral-400 truncate">
+                            {compact ? loc.code.split('-').pop() : loc.code}
+                            {isShelf && <span className="ml-1 text-neutral-300">선반</span>}
+                          </span>
+                          {/* 한 칸에 여러 품목을 몰아 넣는 경우가 많다 — 몇 종인지 먼저 보이게 */}
+                          {many && (
+                            <span className="ml-auto shrink-0 px-1 rounded bg-neutral-800 text-white text-[8px] font-bold tabular-nums">
+                              {loc.product_count}종
+                            </span>
+                          )}
                         </div>
                         {empty ? (
                           !compact && <div className="text-[11px] text-neutral-300 mt-1">비어 있음</div>
                         ) : compact ? (
                           <div className="text-[9px] font-semibold text-indigo-black truncate leading-tight">
-                            {loc.products[0]?.name}
+                            {many ? `${loc.products[0]?.name} 외` : loc.products[0]?.name}
                           </div>
                         ) : (
                           <>
-                            <div className="text-[11px] font-semibold text-indigo-black truncate mt-0.5">
-                              {loc.products[0]?.name}{loc.product_count > 1 ? ` 외 ${loc.product_count - 1}` : ''}
+                            {/* 여러 종이면 두 개까지 이름을 보여주고 나머지는 개수로 */}
+                            {loc.products.slice(0, many ? 2 : 1).map((p) => (
+                              <div key={p.id} className="text-[11px] font-semibold text-indigo-black truncate leading-snug">
+                                {p.name}
+                              </div>
+                            ))}
+                            <div className="text-[10px] text-neutral-500 tabular-nums leading-tight">
+                              {loc.product_count > 2 && <span className="text-neutral-400">외 {loc.product_count - 2}종 · </span>}
+                              재고 {loc.stock_total}
                             </div>
-                            <div className="text-[10px] text-neutral-500 tabular-nums">재고 {loc.stock_total}</div>
                           </>
                         )}
                       </button>
@@ -359,23 +380,29 @@ export default function WarehouseLayoutPage() {
   );
 }
 
-/** 이 칸에 제품 담기 — 위치 미지정 제품 중에서 검색해 고른다 */
+/** 이 칸에 제품 담기 — 위치 미지정 제품에서 검색해 여러 개를 골라 한 번에 담는다 */
 function AddProductToLocation({ candidates, onAssign, pending }: {
-  locationId: string;
   candidates: LocationProduct[];
-  onAssign: (productId: string) => void;
+  onAssign: (productIds: string[]) => void;
   pending: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
+  const [picked, setPicked] = useState<Set<string>>(new Set());
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     const base = s
       ? candidates.filter((p) => p.name.toLowerCase().includes(s) || (p.sku || '').toLowerCase().includes(s))
       : candidates;
-    return base.slice(0, 20);
+    return base.slice(0, 30);
   }, [q, candidates]);
+
+  const toggle = (id: string) => setPicked((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   if (!open) {
     return (
@@ -392,8 +419,9 @@ function AddProductToLocation({ candidates, onAssign, pending }: {
   return (
     <div className="rounded-lg border border-neutral-200 p-2.5 space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-neutral-700">제품 담기</span>
-        <button onClick={() => { setOpen(false); setQ(''); }} className="text-[11px] text-neutral-400 hover:text-neutral-600">닫기</button>
+        <span className="text-xs font-semibold text-neutral-700">제품 담기 <span className="font-normal text-neutral-400">여러 개 선택 가능</span></span>
+        <button onClick={() => { setOpen(false); setQ(''); setPicked(new Set()); }}
+          className="text-[11px] text-neutral-400 hover:text-neutral-600">닫기</button>
       </div>
       <input
         autoFocus
@@ -408,22 +436,35 @@ function AddProductToLocation({ candidates, onAssign, pending }: {
         ) : filtered.length === 0 ? (
           <p className="text-[11px] text-neutral-400 text-center py-4">검색 결과 없음</p>
         ) : (
-          filtered.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => { onAssign(p.id); setQ(''); }}
-              disabled={pending}
-              className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded hover:bg-neutral-50 text-left transition disabled:opacity-50"
-            >
-              <span className="min-w-0">
-                <span className="text-xs font-medium text-indigo-black block truncate">{p.name}</span>
-                <span className="text-[10px] text-neutral-400 font-mono">{p.sku}</span>
-              </span>
-              <span className="text-[11px] text-neutral-500 tabular-nums shrink-0">{p.stock_quantity}개</span>
-            </button>
-          ))
+          filtered.map((p) => {
+            const on = picked.has(p.id);
+            return (
+              <button
+                key={p.id}
+                onClick={() => toggle(p.id)}
+                disabled={pending}
+                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition disabled:opacity-50 ${
+                  on ? 'bg-[#F4F0EA] shadow-[inset_3px_0_0_#1A1A1A]' : 'hover:bg-neutral-50'
+                }`}
+              >
+                <input type="checkbox" checked={on} readOnly tabIndex={-1} className="w-3.5 h-3.5 shrink-0 pointer-events-none" />
+                <span className="min-w-0 flex-1">
+                  <span className="text-xs font-medium text-indigo-black block truncate">{p.name}</span>
+                  <span className="text-[10px] text-neutral-400 font-mono">{p.sku}</span>
+                </span>
+                <span className="text-[11px] text-neutral-500 tabular-nums shrink-0">{p.stock_quantity}개</span>
+              </button>
+            );
+          })
         )}
       </div>
+      <button
+        onClick={() => { onAssign([...picked]); setPicked(new Set()); setQ(''); setOpen(false); }}
+        disabled={pending || picked.size === 0}
+        className="w-full py-2 rounded-lg bg-neutral-900 text-white text-xs font-semibold transition disabled:opacity-30"
+      >
+        {pending ? '담는 중...' : picked.size === 0 ? '제품을 선택하세요' : `${picked.size}개 이 칸에 담기`}
+      </button>
     </div>
   );
 }

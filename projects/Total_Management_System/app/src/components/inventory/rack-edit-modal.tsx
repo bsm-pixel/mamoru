@@ -3,6 +3,7 @@
 import { Modal } from '@/components/ui/modal';
 import { Trash2, Plus, AlertTriangle } from 'lucide-react';
 import { useAddCol, useAddRow, useAddLevel, useDeleteLocation, type LocationWithProducts } from '@/hooks/use-warehouse';
+import { cellGridPos } from '@/lib/warehouse/location-code';
 
 /**
  * 렉 구조 수정 모달 — 115, 2026-07-18
@@ -93,29 +94,37 @@ export function RackEditModal({ rackNo, rackLabel, levels, onClose, onDeleteRack
                   </div>
                 </div>
 
-                {/* 칸 목록 — 개별 삭제 */}
+                {/* 칸 목록 — 실제 배치 그대로(열×행). 클릭하면 그 칸만 삭제 */}
                 {!lvl.isShelf && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {lvl.cells.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => {
-                          if (c.product_count > 0) {
-                            if (!window.confirm(`'${c.code}' 에 제품 ${c.product_count}종이 있습니다.\n삭제하면 그 제품들은 '위치 미지정'이 됩니다. 계속할까요?`)) return;
-                          }
-                          deleteLocation.mutate({ id: c.id });
-                        }}
-                        disabled={busy}
-                        title={`${c.label} 삭제`}
-                        className={`text-[10px] font-mono px-1.5 py-1 rounded border transition disabled:opacity-50 ${
-                          c.product_count > 0
-                            ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:border-red-400 hover:bg-red-50 hover:text-red-600'
-                            : 'border-neutral-200 text-neutral-400 hover:border-red-400 hover:text-red-600'
-                        }`}
-                      >
-                        {c.code.split('-').slice(2).join('-') || c.code}
-                      </button>
-                    ))}
+                  <div
+                    className="grid gap-1 mt-2 overflow-x-auto pb-1"  /* 열이 아주 많은 수납함은 가로 스크롤 */
+                    style={{ gridTemplateColumns: `repeat(${Math.max(1, lvl.cols)}, 26px)`, justifyContent: 'start' }}
+                  >
+                    {lvl.cells.map((c) => {
+                      // 중간 칸을 지워도 나머지가 밀리지 않게 열·행 명시 배치 (배치도·인쇄와 동일 규칙)
+                      const pos = cellGridPos(c.bin_no, c.bin_row);
+                      return (
+                        <button
+                          key={c.id}
+                          onClick={() => {
+                            if (c.product_count > 0) {
+                              if (!window.confirm(`'${c.code}' 에 제품 ${c.product_count}종이 있습니다.\n삭제하면 그 제품들은 '위치 미지정'이 됩니다. 계속할까요?`)) return;
+                            }
+                            deleteLocation.mutate({ id: c.id });
+                          }}
+                          disabled={busy}
+                          style={{ gridColumn: pos.col, gridRow: pos.row }}
+                          title={`${c.label}${c.product_count > 0 ? ` · 제품 ${c.product_count}종` : ''} — 클릭하면 이 칸 삭제`}
+                          className={`w-[26px] h-[26px] flex items-center justify-center text-[9px] font-mono rounded border transition disabled:opacity-50 ${
+                            c.product_count > 0
+                              ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:border-red-400 hover:bg-red-50 hover:text-red-600'
+                              : 'border-neutral-200 text-neutral-400 hover:border-red-400 hover:text-red-600'
+                          }`}
+                        >
+                          {c.code.split('-').slice(2).join('-') || c.code}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
                 {lvl.isShelf && (

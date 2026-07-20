@@ -65,6 +65,17 @@ export function locationSortOrder(rackNo: number, levelNo: number, col?: number 
   return rackNo * 1_000_000 + levelNo * 10_000 + (row ?? 0) * 100 + (col ?? 0);
 }
 
+/**
+ * 격자에서 이 칸이 놓일 자리 (1-based). 2026-07-20
+ *
+ * 칸을 배열 순서대로 흘려보내면 **중간 칸을 하나 삭제했을 때 뒤의 칸이 전부 밀려서**
+ * 배치도가 실제 렉과 어긋난다. 지도가 실물과 다르면 지도가 아니므로,
+ * 배치도·수정화면·인쇄 세 곳 모두 이 함수로 열/행을 명시 배치한다.
+ */
+export function cellGridPos(binNo: number | null, binRow: number | null): { col: number; row: number } {
+  return { col: Math.max(1, binNo ?? 1), row: Math.max(1, binRow ?? 1) };
+}
+
 export interface GeneratedLocation {
   code: string;
   label: string;
