@@ -169,7 +169,6 @@ export async function POST(req: NextRequest) {
       if (nextCols > 26) return NextResponse.json({ error: '한 단에 26열까지입니다' }, { status: 400 });
       if (nextRows > 20) return NextResponse.json({ error: '한 단에 20행까지입니다' }, { status: 400 });
 
-      const totalLevels = await countLevels(supabase, rackNo);
 
       // 새로 생기는 셀만 추가
       const toInsert: Record<string, unknown>[] = [];
@@ -179,7 +178,7 @@ export async function POST(req: NextRequest) {
           if (has.has(`${r}:${c}`)) continue;
           toInsert.push({
             code: makeLocationCode(rackNo, levelNo, c, r, nextRows),
-            label: makeLocationLabel(rackNo, levelNo, c, r, totalLevels, nextRows),
+            label: makeLocationLabel(rackNo, levelNo, c, r, nextRows),
             rack_no: rackNo, level_no: levelNo, bin_no: c, bin_row: r,
             sort_order: locationSortOrder(rackNo, levelNo, c, r),
           });
@@ -191,7 +190,7 @@ export async function POST(req: NextRequest) {
         for (const cell of cells) {
           await supabase.from('warehouse_locations').update({
             code: makeLocationCode(rackNo, levelNo, cell.bin_no, 1, nextRows),
-            label: makeLocationLabel(rackNo, levelNo, cell.bin_no, 1, totalLevels, nextRows),
+            label: makeLocationLabel(rackNo, levelNo, cell.bin_no, 1, nextRows),
             bin_row: 1,
           }).eq('id', cell.id);
         }
@@ -218,10 +217,9 @@ export async function POST(req: NextRequest) {
       const nextLevel = maxLevel + 1;
       if (nextLevel > 20) return NextResponse.json({ error: '한 렉에 20단까지입니다' }, { status: 400 });
 
-      const totalLevels = nextLevel;
       const gen = generateRackLocations(rackNo, [{ cols, rows: rowsCount }]).map((g) => ({
         code: makeLocationCode(rackNo, nextLevel, g.bin_no, g.bin_row, rowsCount),
-        label: makeLocationLabel(rackNo, nextLevel, g.bin_no, g.bin_row, totalLevels, rowsCount),
+        label: makeLocationLabel(rackNo, nextLevel, g.bin_no, g.bin_row, rowsCount),
         rack_no: rackNo, level_no: nextLevel, bin_no: g.bin_no, bin_row: g.bin_row,
         sort_order: locationSortOrder(rackNo, nextLevel, g.bin_no, g.bin_row),
       }));
@@ -236,14 +234,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
-}
-
-/** 렉의 단 수 (라벨 상/중/하 판단용) */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function countLevels(supabase: any, rackNo: number): Promise<number> {
-  const { data } = await supabase.from('warehouse_locations').select('level_no').eq('rack_no', rackNo);
-  const set = new Set<number>((data || []).map((r: { level_no: number }) => r.level_no));
-  return set.size || 1;
 }
 
 /** 칸이 늘어 렉 열 수를 넘으면 열 수를 넓힌다 */

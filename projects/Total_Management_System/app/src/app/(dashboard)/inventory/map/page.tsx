@@ -68,7 +68,8 @@ export default function WarehouseLayoutPage() {
           label: info?.label || null,
           // 열 수 = 렉 정보 우선, 없으면 가장 칸 많은 단 기준 (최소 1)
           columns: Math.max(1, info?.columns ?? maxBins, maxBins),
-          levels: [...new Set(list.map((l) => l.level_no))].sort((a, b) => a - b)
+          // 115: 1단 = 맨 아래 → 화면은 큰 번호가 위로 오게 내림차순으로 그린다
+          levels: [...new Set(list.map((l) => l.level_no))].sort((a, b) => b - a)
             .map((lv) => {
               const cells = list.filter((l) => l.level_no === lv)
                 .sort((a, b) => ((a.bin_row ?? 0) - (b.bin_row ?? 0)) || ((a.bin_no ?? 0) - (b.bin_no ?? 0)));
@@ -197,7 +198,8 @@ export default function WarehouseLayoutPage() {
                   onClick={() => addLevel.mutate({ rack_no: rack.rackNo, cols: 0 })}
                   disabled={addLevel.isPending}
                   className="text-[11px] text-neutral-500 hover:text-indigo-black underline disabled:opacity-50"
-                >＋ 단 추가</button>
+                  title="맨 위에 단을 하나 더 만듭니다"
+                >＋ 단 추가 (위에)</button>
               </div>
 
               {/* 렉 = N열 그리드. 각 단은 앞에서부터 쓰는 칸만 차지하고 나머지는 빈 공간 */}
@@ -283,7 +285,7 @@ export default function WarehouseLayoutPage() {
                   );
                 })}
               </div>
-              <div className="text-[10px] text-neutral-400 mt-1">위 → 아래 (1단=상단) · 칸 없는 단은 선반으로 표시</div>
+              <div className="text-[10px] text-neutral-400 mt-1">1단 = 맨 아래 (건물 층수와 동일) · 칸 없는 단은 선반 · 행이 여러 개면 수납함</div>
             </div>
           ))}
         </div>
@@ -454,7 +456,7 @@ function AddRackModal({ onClose, onSubmit, pending, existingRacks }: {
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs text-neutral-500">단별 구조 (위 → 아래)</label>
+              <label className="text-xs text-neutral-500">단별 구조 <span className="text-neutral-400">(1단 = 맨 아래)</span></label>
               <div className="flex gap-1.5">
                 <button onClick={() => setLevels((p) => (p.length < 20 ? [...p, { cols: 0, rows: 1 }] : p))}
                   className="text-[11px] text-neutral-500 hover:text-indigo-black underline">＋단</button>
@@ -462,14 +464,21 @@ function AddRackModal({ onClose, onSubmit, pending, existingRacks }: {
                   className="text-[11px] text-neutral-400 hover:text-red-500 underline">－단</button>
               </div>
             </div>
-            <div className="grid grid-cols-[2.5rem_4.5rem_4.5rem_1fr] gap-x-2 gap-y-1.5 items-center">
+            <div className="grid grid-cols-[3.5rem_4.5rem_4.5rem_1fr] gap-x-2 gap-y-1.5 items-center">
               <span className="text-[10px] text-neutral-400"></span>
               <span className="text-[10px] text-neutral-400">열(칸)</span>
               <span className="text-[10px] text-neutral-400">행</span>
               <span className="text-[10px] text-neutral-400">미리보기</span>
-              {levels.map((l, i) => (
+              {/* 115: 화면은 큰 번호(위)부터 — 실제 렉을 보는 순서와 맞춘다 */}
+              {levels.map((_, revIdx) => levels.length - 1 - revIdx).map((i) => {
+                const l = levels[i];
+                return (
                 <Fragment key={i}>
-                  <span className="text-xs text-neutral-500">{i + 1}단</span>
+                  <span className="text-xs text-neutral-500">
+                    {i + 1}단
+                    {i === levels.length - 1 && <span className="block text-[9px] text-neutral-400 leading-none">맨 위</span>}
+                    {i === 0 && <span className="block text-[9px] text-neutral-400 leading-none">맨 아래</span>}
+                  </span>
                   <input type="number" min={0} max={26} value={l.cols}
                     onChange={(e) => setAt(i, { cols: parseInt(e.target.value) || 0 })}
                     className="h-8 px-2 rounded border border-neutral-200 text-sm" />
@@ -503,7 +512,8 @@ function AddRackModal({ onClose, onSubmit, pending, existingRacks }: {
                       : `${l.cols}칸 (한 줄)`}
                   </span>
                 </Fragment>
-              ))}
+                );
+              })}
             </div>
           </div>
 

@@ -10,7 +10,9 @@
  *  · 열 = 알파벳(A,B,C…), 행 = 숫자(1,2,3…)  ← 엑셀 셀 주소와 같은 감각
  *  · **행이 1개뿐이면 행 번호를 붙이지 않는다** (기존 코드 R01-2-A 를 그대로 유지 = 하위호환)
  *  · 렉 번호는 자릿수 고정(R01) — 문자열 정렬이 숫자 순서와 일치 (R10 이 R2 앞에 오는 사고 방지)
- *  · 단은 위→아래 번호 (1=상단) — 사람이 눈으로 보는 순서와 일치
+ *  · **단은 아래에서 위로 번호 (1단 = 맨 아래)** — 건물 층수와 같은 감각 (115, 2026-07-18 사장님 지적)
+ *    화면은 위가 큰 번호가 되도록 역순으로 그린다.
+ *    상/중/하 표기는 쓰지 않는다 — 단 수가 3이 아닐 때 규칙이 깨지고 헷갈리기만 함
  */
 
 /** 열 번호(1-based) → 알파벳. 1→A … 26→Z, 27→AA */
@@ -41,16 +43,18 @@ export function makeLocationCode(
   return `${rack}-${levelNo}-${binLetter(col)}${rowPart}`;
 }
 
-/** 사람이 읽는 이름 */
+/**
+ * 사람이 읽는 이름.
+ * 단은 항상 'N단' (1단 = 맨 아래). 상/중/하 표기는 쓰지 않는다 —
+ * 단 수가 3이 아닐 때 규칙이 깨지고, 1단의 의미도 헷갈리게 만들었다.
+ */
 export function makeLocationLabel(
   rackNo: number, levelNo: number,
   col?: number | null, row?: number | null,
-  totalLevels = 1, totalRows = 1,
+  totalRows = 1,
 ): string {
   const rack = `${rackNo}번렉`;
-  const level = totalLevels === 3
-    ? (['상단', '중단', '하단'][levelNo - 1] ?? `${levelNo}단`)
-    : `${levelNo}단`;
+  const level = `${levelNo}단`;
   if (col == null) return `${rack} ${level} 선반`;
   if (totalRows > 1 && row != null) return `${rack} ${level} 수납함 ${binLetter(col)}열 ${row}행`;
   return `${rack} ${level} ${binLetter(col)}칸`;
@@ -85,7 +89,6 @@ export interface LevelSpec {
  */
 export function generateRackLocations(rackNo: number, levels: LevelSpec[]): GeneratedLocation[] {
   const out: GeneratedLocation[] = [];
-  const totalLevels = levels.length;
 
   levels.forEach((spec, idx) => {
     const lv = idx + 1;
@@ -96,7 +99,7 @@ export function generateRackLocations(rackNo: number, levels: LevelSpec[]): Gene
       // 선반 통째
       out.push({
         code: makeLocationCode(rackNo, lv, null),
-        label: makeLocationLabel(rackNo, lv, null, null, totalLevels),
+        label: makeLocationLabel(rackNo, lv, null, null),
         rack_no: rackNo, level_no: lv, bin_no: null, bin_row: null,
         sort_order: locationSortOrder(rackNo, lv, null, null),
       });
@@ -107,7 +110,7 @@ export function generateRackLocations(rackNo: number, levels: LevelSpec[]): Gene
       for (let c = 1; c <= cols; c++) {
         out.push({
           code: makeLocationCode(rackNo, lv, c, r, rows),
-          label: makeLocationLabel(rackNo, lv, c, r, totalLevels, rows),
+          label: makeLocationLabel(rackNo, lv, c, r, rows),
           rack_no: rackNo, level_no: lv, bin_no: c, bin_row: r,
           sort_order: locationSortOrder(rackNo, lv, c, r),
         });
