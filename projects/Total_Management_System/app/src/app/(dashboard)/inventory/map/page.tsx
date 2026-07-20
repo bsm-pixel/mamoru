@@ -13,7 +13,7 @@ import { SlidePanel } from '@/components/ui/slide-panel';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useLocations, useCreateRack, useDeleteLocation, useAssignLocation, type LocationWithProducts, type LocationProduct } from '@/hooks/use-warehouse';
 import { RackEditModal } from '@/components/inventory/rack-edit-modal';
-import { RackLabelPrint } from '@/components/inventory/rack-label-print';
+import { RackMapPrint } from '@/components/inventory/rack-map-print';
 import { Modal } from '@/components/ui/modal';
 import { Boxes, MapPin, Plus, ArrowLeft, Trash2, PackageX, Printer, Settings2 } from 'lucide-react';
 
@@ -203,7 +203,7 @@ export default function WarehouseLayoutPage() {
                   <button
                     onClick={() => setPrintRack(rack.rackNo)}
                     className="flex items-center gap-1 text-[11px] font-medium text-neutral-500 hover:text-indigo-black px-2 py-1 rounded hover:bg-neutral-100 transition"
-                    title="이 렉의 위치라벨 인쇄"
+                    title="이 렉 배치도 인쇄 (A4 한 장)"
                   ><Printer size={12} /> 인쇄</button>
                   <button
                     onClick={() => setEditRack(rack.rackNo)}
@@ -347,21 +347,14 @@ export default function WarehouseLayoutPage() {
         );
       })()}
 
-      {/* 115: 렉별 위치라벨 인쇄 — 배치도에서 바로 */}
-      {printRack !== null && (() => {
-        const r = racks.find((x) => x.rackNo === printRack);
-        if (!r) return null;
-        // 인쇄는 실제로 붙이는 순서(아래→위)가 편하므로 단 오름차순으로 정렬해 넘긴다
-        const ordered = [...r.levels].sort((a, b) => a.levelNo - b.levelNo).flatMap((l) => l.cells);
-        return (
-          <RackLabelPrint
-            rackNo={r.rackNo}
-            rackLabel={r.label}
-            locations={ordered}
-            onClose={() => setPrintRack(null)}
-          />
-        );
-      })()}
+      {/* 렉 배치도 인쇄 — A4 한 장에 렉 하나. 화면과 같은 구조(위가 큰 단)를 그대로 넘긴다 */}
+      {printRack !== null && racks.some((x) => x.rackNo === printRack) && (
+        <RackMapPrint
+          racks={racks}
+          targetRackNo={printRack}
+          onClose={() => setPrintRack(null)}
+        />
+      )}
     </>
   );
 }
