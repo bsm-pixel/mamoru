@@ -54,30 +54,35 @@ export interface GeneratedLocation {
 }
 
 /**
- * 렉 하나를 단/칸으로 펼쳐 로케이션 목록 생성 (자동 그리드).
- * bins 가 0 이하/미지정이면 칸을 나누지 않고 단까지만 만든다.
+ * 렉 하나를 단/칸으로 펼쳐 로케이션 목록 생성.
+ *
+ * levelBins = 단별 칸 수 배열. 실제 렉은 단마다 칸 수가 다르다.
+ *   [2, 6, 6, 0, 0]  →  1단 2칸 / 2단 6칸 / 3단 6칸 / 4·5단은 칸 없이 '선반 통째'
+ *   칸 수 0 = 그 단은 나누지 않음 → bin_no NULL 한 칸(전 열을 가로지름)
  */
-export function generateRackLocations(rackNo: number, levels: number, bins?: number | null): GeneratedLocation[] {
+export function generateRackLocations(rackNo: number, levelBins: number[]): GeneratedLocation[] {
   const out: GeneratedLocation[] = [];
-  const binCount = bins && bins > 0 ? bins : 0;
-  for (let lv = 1; lv <= levels; lv++) {
-    if (binCount === 0) {
+  const totalLevels = levelBins.length;
+  levelBins.forEach((binsRaw, idx) => {
+    const lv = idx + 1;
+    const bins = Number.isFinite(binsRaw) && binsRaw > 0 ? Math.floor(binsRaw) : 0;
+    if (bins === 0) {
       out.push({
         code: makeLocationCode(rackNo, lv, null),
-        label: makeLocationLabel(rackNo, lv, null, levels),
+        label: makeLocationLabel(rackNo, lv, null, totalLevels),
         rack_no: rackNo, level_no: lv, bin_no: null,
         sort_order: locationSortOrder(rackNo, lv, null),
       });
     } else {
-      for (let b = 1; b <= binCount; b++) {
+      for (let b = 1; b <= bins; b++) {
         out.push({
           code: makeLocationCode(rackNo, lv, b),
-          label: makeLocationLabel(rackNo, lv, b, levels),
+          label: makeLocationLabel(rackNo, lv, b, totalLevels),
           rack_no: rackNo, level_no: lv, bin_no: b,
           sort_order: locationSortOrder(rackNo, lv, b),
         });
       }
     }
-  }
+  });
   return out;
 }

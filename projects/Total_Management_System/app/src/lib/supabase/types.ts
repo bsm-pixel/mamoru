@@ -190,6 +190,22 @@ export interface Database {
           & { location_id?: string | null };
         Update: Partial<Database['public']['Tables']['products']['Insert']> & { price_dealer?: number; price_academy?: number; price_purchase?: number; price_groups?: Record<string, { price?: number | null; display_name?: string | null }> };
       };
+      /** 113: 렉 정보 — 렉을 N열 그리드로 보고 단마다 쓰는 칸 수를 다르게 (2026-07-18) */
+      warehouse_racks: {
+        Row: {
+          id: string;
+          rack_no: number;
+          label: string | null;
+          columns: number;          // 렉 전체 열 수
+          sort_order: number;
+          memo: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['warehouse_racks']['Row'], 'id' | 'created_at' | 'updated_at' | 'sort_order' | 'columns'>
+          & { sort_order?: number; columns?: number };
+        Update: Partial<Database['public']['Tables']['warehouse_racks']['Insert']>;
+      };
       /** 112: 창고 로케이션(정위치) — 렉·단·칸 물리적 자리 (2026-07-18) */
       warehouse_locations: {
         Row: {
@@ -1053,6 +1069,8 @@ export type OrderItem = Database['public']['Tables']['order_items']['Row'];
 export type Product = Database['public']['Tables']['products']['Row'];
 /** 112: 창고 로케이션(정위치) */
 export type WarehouseLocation = Database['public']['Tables']['warehouse_locations']['Row'];
+/** 113: 렉 정보 */
+export type WarehouseRack = Database['public']['Tables']['warehouse_racks']['Row'];
 export type SyncLog = Database['public']['Tables']['sync_log']['Row'];
 
 // Phase 2-1: 편의 타입

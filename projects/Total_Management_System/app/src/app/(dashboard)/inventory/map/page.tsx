@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { StatCard } from '@/components/ui/stat-card';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useIsLg } from '@/hooks/use-grid-mode';
-import { useLocations, useCreateRack, useDeleteLocation, useAssignLocation, type LocationWithProducts, type LocationProduct } from '@/hooks/use-warehouse';
+import { useLocations, useCreateRack, useDeleteLocation, useAssignLocation, useAddBin, useAddLevel, type LocationWithProducts, type LocationProduct } from '@/hooks/use-warehouse';
 import { Boxes, MapPin, Plus, ArrowLeft, Trash2, PackageX } from 'lucide-react';
 
 /**
@@ -26,6 +26,8 @@ export default function WarehouseLayoutPage() {
   const createRack = useCreateRack();
   const deleteLocation = useDeleteLocation();
   const assignLocation = useAssignLocation();
+  const addBin = useAddBin();       // 113: 특정 단에 칸 추가
+  const addLevel = useAddLevel();   // 113: 렉에 단 추가
 
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -46,8 +48,9 @@ export default function WarehouseLayoutPage() {
     return s;
   }, [search, locations]);
 
-  // 렉 번호별로 묶고, 각 렉 안에서는 단(위→아래) 순
+  // 렉 번호별로 묶고, 각 렉 안에서는 단(위→아래) 순. 열 수는 렉 정보(113)에서
   const racks = useMemo(() => {
+    const rackInfo = new Map((data?.racks || []).map((r) => [r.rack_no, r]));
     const map = new Map<number, LocationWithProducts[]>();
     for (const l of locations) {
       const arr = map.get(l.rack_no) || [];
@@ -56,12 +59,22 @@ export default function WarehouseLayoutPage() {
     }
     return [...map.entries()]
       .sort((a, b) => a[0] - b[0])
-      .map(([rackNo, list]) => ({
-        rackNo,
-        levels: [...new Set(list.map((l) => l.level_no))].sort((a, b) => a - b)
-          .map((lv) => ({ levelNo: lv, bins: list.filter((l) => l.level_no === lv).sort((a, b) => (a.bin_no ?? 0) - (b.bin_no ?? 0)) })),
-      }));
-  }, [locations]);
+      .map(([rackNo, list]) => {
+        const info = rackInfo.get(rackNo);
+        const maxBins = list.reduce((m, l) => Math.max(m, l.bin_no ?? 0), 0);
+        return {
+          rackNo,
+          label: info?.label || null,
+          // 열 수 = 렉 정보 우선, 없으면 가장 칸 많은 단 기준 (최소 1)
+          columns: Math.max(1, info?.columns ?? maxBins, maxBins),
+          levels: [...new Set(list.map((l) => l.level_no))].sort((a, b) => a - b)
+            .map((lv) => ({
+              levelNo: lv,
+              bins: list.filter((l) => l.level_no === lv).sort((a, b) => (a.bin_no ?? 0) - (b.bin_no ?? 0)),
+            })),
+        };
+      });
+  }, [locations, data]);
 
   const selected = locations.find((l) => l.id === selectedId) || null;
   const totalStock = locations.reduce((s, l) => s + l.stock_total, 0);
@@ -164,51 +177,78 @@ export default function WarehouseLayoutPage() {
       {racks.length === 0 ? (
         <EmptyState icon={Boxes} message="등록된 렉이 없습니다 — [렉 추가]로 시작하세요" />
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-2">
+        <div className="space-y-5">
           {racks.map((rack) => (
-            <div key={rack.rackNo} className="shrink-0">
-              <div className="text-center mb-1.5">
-                <span className="text-xs font-bold text-neutral-700">{rack.rackNo}번 렉</span>
+            <div key={rack.rackNo}>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold text-neutral-700">
+                  {rack.rackNo}번 렉{rack.label ? ` · ${rack.label}` : ''}
+                  <span className="ml-1.5 font-normal text-neutral-400">{rack.columns}열 · {rack.levels.length}단</span>
+                </span>
+                <button
+                  onClick={() => addLevel.mutate({ rack_no: rack.rackNo, bins: 0 })}
+                  disabled={addLevel.isPending}
+                  className="text-[11px] text-neutral-500 hover:text-indigo-black underline disabled:opacity-50"
+                >＋ 단 추가</button>
               </div>
-              <div className="border-2 border-neutral-300 rounded-lg p-1.5 bg-neutral-50 space-y-1.5">
-                {rack.levels.map(({ levelNo, bins }) => (
-                  <div key={levelNo} className="flex gap-1.5">
-                    {bins.map((loc) => {
-                      const hit = matchedLocIds.has(loc.id);
-                      const sel = selectedId === loc.id;
-                      const empty = loc.product_count === 0;
-                      return (
-                        <button
-                          key={loc.id}
-                          onClick={() => setSelectedId(loc.id)}
-                          title={`${loc.label || loc.code} · 제품 ${loc.product_count}종 / 재고 ${loc.stock_total}개`}
-                          className={`w-[92px] h-[62px] rounded-md border text-left px-2 py-1.5 transition ${
-                            sel ? 'border-neutral-900 ring-2 ring-neutral-900 bg-[#F4F0EA]'
-                            : hit ? 'border-amber-500 ring-2 ring-amber-400 bg-amber-50'
-                            : empty ? 'border-dashed border-neutral-300 bg-white hover:border-neutral-400'
-                            : 'border-neutral-200 bg-white hover:border-neutral-400'
-                          }`}
-                        >
-                          <div className="text-[10px] font-mono text-neutral-400 truncate">{loc.code}</div>
-                          {empty ? (
-                            <div className="text-[11px] text-neutral-300 mt-1">비어 있음</div>
-                          ) : (
-                            <>
-                              <div className="text-[11px] font-semibold text-indigo-black truncate mt-0.5">
-                                {loc.products[0]?.name}{loc.product_count > 1 ? ` 외 ${loc.product_count - 1}` : ''}
+
+              {/* 렉 = N열 그리드. 각 단은 앞에서부터 쓰는 칸만 차지하고 나머지는 빈 공간 */}
+              <div className="border-2 border-neutral-300 rounded-lg p-2 bg-neutral-50 space-y-2 overflow-x-auto">
+                {rack.levels.map(({ levelNo, bins }) => {
+                  const isShelf = bins.length === 1 && bins[0].bin_no == null;
+                  return (
+                    <div key={levelNo} className="flex items-stretch gap-2">
+                      <div
+                        className="grid gap-2 flex-1 min-w-0"
+                        style={{ gridTemplateColumns: `repeat(${rack.columns}, minmax(88px, 1fr))` }}
+                      >
+                        {bins.map((loc) => {
+                          const hit = matchedLocIds.has(loc.id);
+                          const sel = selectedId === loc.id;
+                          const empty = loc.product_count === 0;
+                          return (
+                            <button
+                              key={loc.id}
+                              onClick={() => setSelectedId(loc.id)}
+                              title={`${loc.label || loc.code} · 제품 ${loc.product_count}종 / 재고 ${loc.stock_total}개`}
+                              // 칸 없는 단(선반)은 전 열을 가로지른다
+                              style={isShelf ? { gridColumn: `1 / -1` } : undefined}
+                              className={`h-[62px] rounded-md border text-left px-2 py-1.5 transition min-w-0 ${
+                                sel ? 'border-neutral-900 ring-2 ring-neutral-900 bg-[#F4F0EA]'
+                                : hit ? 'border-amber-500 ring-2 ring-amber-400 bg-amber-50'
+                                : empty ? 'border-dashed border-neutral-300 bg-white hover:border-neutral-400'
+                                : 'border-neutral-200 bg-white hover:border-neutral-400'
+                              }`}
+                            >
+                              <div className="text-[10px] font-mono text-neutral-400 truncate">
+                                {loc.code}{isShelf && <span className="ml-1 text-neutral-300">선반</span>}
                               </div>
-                              <div className="text-[10px] text-neutral-500 tabular-nums">재고 {loc.stock_total}</div>
-                            </>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))}
+                              {empty ? (
+                                <div className="text-[11px] text-neutral-300 mt-1">비어 있음</div>
+                              ) : (
+                                <>
+                                  <div className="text-[11px] font-semibold text-indigo-black truncate mt-0.5">
+                                    {loc.products[0]?.name}{loc.product_count > 1 ? ` 외 ${loc.product_count - 1}` : ''}
+                                  </div>
+                                  <div className="text-[10px] text-neutral-500 tabular-nums">재고 {loc.stock_total}</div>
+                                </>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {/* 이 단에 칸 추가 */}
+                      <button
+                        onClick={() => addBin.mutate({ rack_no: rack.rackNo, level_no: levelNo })}
+                        disabled={addBin.isPending}
+                        title={`${levelNo}단에 칸 추가`}
+                        className="w-8 shrink-0 rounded-md border border-dashed border-neutral-300 text-neutral-400 hover:text-indigo-black hover:border-neutral-500 transition text-sm disabled:opacity-50"
+                      >＋</button>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="text-center mt-1">
-                <span className="text-[10px] text-neutral-400">위 → 아래 (1단=상단)</span>
-              </div>
+              <div className="text-[10px] text-neutral-400 mt-1">위 → 아래 (1단=상단) · 칸 없는 단은 선반으로 표시</div>
             </div>
           ))}
         </div>
@@ -327,60 +367,92 @@ function AddProductToLocation({ candidates, onAssign, pending }: {
   );
 }
 
-/** 렉 추가 — 단/칸 수를 넣으면 칸이 자동 생성된다 */
+/** 렉 추가 — 단마다 칸 수를 다르게 지정 (실제 렉은 단별로 칸이 다르다) */
 function AddRackModal({ onClose, onSubmit, pending, existingRacks }: {
   onClose: () => void;
-  onSubmit: (v: { rack_no: number; levels: number; bins?: number }) => void;
+  onSubmit: (v: { rack_no: number; label?: string | null; level_bins: number[] }) => void;
   pending: boolean;
   existingRacks: number[];
 }) {
   const nextRack = existingRacks.length ? Math.max(...existingRacks) + 1 : 1;
   const [rackNo, setRackNo] = useState(nextRack);
-  const [levels, setLevels] = useState(3);
-  const [bins, setBins] = useState(0);
+  const [label, setLabel] = useState('');
+  const [levelBins, setLevelBins] = useState<number[]>([2, 6, 6, 0, 0]); // 사장님 렉 예시 기본값
   const dup = existingRacks.includes(rackNo);
-  const preview = levels * (bins > 0 ? bins : 1);
+  const columns = Math.max(1, ...levelBins);
+  const totalCells = levelBins.reduce((s, b) => s + (b > 0 ? b : 1), 0);
+
+  const setBinAt = (i: number, v: number) =>
+    setLevelBins((prev) => prev.map((b, idx) => (idx === i ? Math.max(0, Math.min(26, v)) : b)));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-white rounded-xl w-full max-w-sm mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="px-5 py-4 border-b border-neutral-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="px-5 py-4 border-b border-neutral-100 sticky top-0 bg-white rounded-t-xl">
           <h2 className="text-sm font-bold text-indigo-black">렉 추가</h2>
-          <p className="text-[11px] text-neutral-500 mt-0.5">단·칸 수를 넣으면 자리가 자동으로 만들어집니다</p>
+          <p className="text-[11px] text-neutral-500 mt-0.5">단마다 칸 수를 다르게 넣으세요 · 0 = 칸 없이 선반으로 사용</p>
         </div>
+
         <div className="px-5 py-4 space-y-3">
+          <div className="grid grid-cols-[100px_1fr] gap-3">
+            <div>
+              <label className="text-xs text-neutral-500 mb-1 block">렉 번호</label>
+              <input type="number" min={1} max={99} value={rackNo}
+                onChange={(e) => setRackNo(parseInt(e.target.value) || 1)}
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-neutral-500 mb-1 block">이름 (선택)</label>
+              <input type="text" value={label} onChange={(e) => setLabel(e.target.value)}
+                placeholder="예: 전면 렉"
+                className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+            </div>
+          </div>
+          {dup && <p className="text-[11px] text-red-500">이미 있는 렉 번호입니다</p>}
+
           <div>
-            <label className="text-xs text-neutral-500 mb-1 block">렉 번호</label>
-            <input type="number" min={1} max={99} value={rackNo}
-              onChange={(e) => setRackNo(parseInt(e.target.value) || 1)}
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
-            {dup && <p className="text-[11px] text-red-500 mt-1">이미 있는 렉 번호입니다</p>}
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-neutral-500 mb-1 block">단 수</label>
-              <input type="number" min={1} max={20} value={levels}
-                onChange={(e) => setLevels(parseInt(e.target.value) || 1)}
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
-              <p className="text-[10px] text-neutral-400 mt-0.5">3단이면 상·중·하</p>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs text-neutral-500">단별 칸 수 (위 → 아래)</label>
+              <div className="flex gap-1.5">
+                <button onClick={() => setLevelBins((p) => (p.length < 20 ? [...p, 0] : p))}
+                  className="text-[11px] text-neutral-500 hover:text-indigo-black underline">＋단</button>
+                <button onClick={() => setLevelBins((p) => (p.length > 1 ? p.slice(0, -1) : p))}
+                  className="text-[11px] text-neutral-400 hover:text-red-500 underline">－단</button>
+              </div>
             </div>
-            <div>
-              <label className="text-xs text-neutral-500 mb-1 block">칸 수 (선택)</label>
-              <input type="number" min={0} max={26} value={bins}
-                onChange={(e) => setBins(parseInt(e.target.value) || 0)}
-                className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
-              <p className="text-[10px] text-neutral-400 mt-0.5">0 = 칸 안 나눔</p>
+            <div className="space-y-1.5">
+              {levelBins.map((b, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="w-10 text-xs text-neutral-500 shrink-0">{i + 1}단</span>
+                  <input type="number" min={0} max={26} value={b}
+                    onChange={(e) => setBinAt(i, parseInt(e.target.value) || 0)}
+                    className="w-20 h-8 px-2 rounded border border-neutral-200 text-sm" />
+                  <span className="text-[11px] text-neutral-400">
+                    {b > 0 ? `${b}칸` : '칸 없음 (선반)'}
+                  </span>
+                  {/* 그 단이 그리드에서 어떻게 보이는지 미리보기 */}
+                  <div className="flex-1 flex gap-0.5 min-w-0">
+                    {Array.from({ length: columns }).map((_, c) => (
+                      <div key={c} className={`h-4 flex-1 rounded-sm ${
+                        b === 0 ? 'bg-neutral-300' : c < b ? 'bg-neutral-800' : 'bg-neutral-100'
+                      }`} />
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+
           <div className="p-2.5 rounded-lg bg-neutral-50 text-xs text-neutral-600">
-            총 <strong className="text-indigo-black">{preview}개</strong> 자리가 생성됩니다
-            <span className="text-neutral-400"> · 예: {`R${String(rackNo).padStart(2, '0')}-1${bins > 0 ? '-A' : ''}`}</span>
+            <strong className="text-indigo-black">{columns}열</strong> 그리드 · 총 <strong className="text-indigo-black">{totalCells}자리</strong> 생성
+            <span className="text-neutral-400 block mt-0.5">예: R{String(rackNo).padStart(2, '0')}-1-A · 회색 = 선반(전체 사용)</span>
           </div>
         </div>
-        <div className="px-5 py-4 border-t border-neutral-100 flex gap-2">
+
+        <div className="px-5 py-4 border-t border-neutral-100 flex gap-2 sticky bottom-0 bg-white rounded-b-xl">
           <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>
           <Button className="flex-1" disabled={dup || pending}
-            onClick={() => onSubmit({ rack_no: rackNo, levels, bins })}>
+            onClick={() => onSubmit({ rack_no: rackNo, label: label.trim() || null, level_bins: levelBins })}>
             {pending ? '생성 중...' : '생성'}
           </Button>
         </div>

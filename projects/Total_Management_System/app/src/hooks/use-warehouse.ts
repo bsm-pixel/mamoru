@@ -32,12 +32,30 @@ export interface LocationWithProducts {
   products: LocationProduct[];
 }
 
+/** 113: 렉 정보 (렉 전체 열 수) */
+export interface RackInfo {
+  id: string;
+  rack_no: number;
+  label: string | null;
+  columns: number;
+  sort_order: number;
+  memo: string | null;
+}
+
+interface LocationsResponse {
+  racks: RackInfo[];
+  locations: LocationWithProducts[];
+  unassigned: LocationProduct[];
+  unassigned_count: number;
+  total_locations: number;
+}
+
 /** 로케이션 목록 + 칸별 배정 제품 */
 export function useLocations() {
   return useQuery({
     queryKey: ['warehouse-locations'],
     staleTime: 30_000,
-    queryFn: async (): Promise<{ locations: LocationWithProducts[]; unassigned: LocationProduct[]; unassigned_count: number; total_locations: number }> => {
+    queryFn: async (): Promise<LocationsResponse> => {
       const res = await fetch('/api/warehouse/locations');
       if (!res.ok) throw new Error('로케이션 조회 실패');
       return res.json();
@@ -45,27 +63,49 @@ export function useLocations() {
   });
 }
 
-/** 렉 자동생성 — 단/칸을 펼쳐 일괄 등록 */
-export function useCreateRack() {
+/** 공용 — POST action 호출 + 캐시 갱신 */
+function useWarehouseAction(successMsg: (d: Record<string, unknown>) => string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ rack_no, levels, bins, zone_type }: { rack_no: number; levels: number; bins?: number; zone_type?: string }) => {
+    mutationFn: async (payload: Record<string, unknown>) => {
       const res = await fetch('/api/warehouse/locations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rack_no, levels, bins, zone_type }),
+        body: JSON.stringify(payload),
       });
       const d = await res.json().catch(() => ({ error: res.statusText }));
-      if (!res.ok) throw new Error(d.error || '렉 생성 실패');
+      if (!res.ok) throw new Error(d.error || '처리 실패');
       return d;
     },
     onSuccess: (d) => {
-      toast.success(`렉 생성 완료 — ${d.created}칸`);
+      toast.success(successMsg(d));
       queryClient.invalidateQueries({ queryKey: ['warehouse-locations'] });
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
   });
+}
+
+/** 렉 생성 — 단별 칸 수 배열 (예: [2,6,6,0,0]) */
+export function useCreateRack() {
+  const m = useWarehouseAction((d) => `렉 생성 완료 — ${d.created}칸`);
+  return {
+    ...m,
+    mutate: (v: { rack_no: number; label?: string | null; level_bins: number[]; zone_type?: string }, opts?: Parameters<typeof m.mutate>[1]) =>
+      m.mutate({ action: 'create_rack', ...v }, opts),
+  };
+}
+
+/** 특정 단에 칸 1개 추가 */
+export function useAddBin() {
+  const m = useWarehouseAction(() => '칸을 추가했습니다');
+  return { ...m, mutate: (v: { rack_no: number; level_no: number }) => m.mutate({ action: 'add_bin', ...v }) };
+}
+
+/** 렉에 단 1개 추가 (기본은 칸 없이 선반) */
+export function useAddLevel() {
+  const m = useWarehouseAction((d) => `${d.level_no}단을 추가했습니다`);
+  return { ...m, mutate: (v: { rack_no: number; bins?: number }) => m.mutate({ action: 'add_level', ...v }) };
 }
 
 /** 렉/칸 삭제 — 배정돼 있던 제품은 '미지정'으로 풀린다 */
