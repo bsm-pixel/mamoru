@@ -11,8 +11,11 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { StatCard } from '@/components/ui/stat-card';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useIsLg } from '@/hooks/use-grid-mode';
-import { useLocations, useCreateRack, useDeleteLocation, useAssignLocation, useAddCol, useAddRow, useAddLevel, type LocationWithProducts, type LocationProduct } from '@/hooks/use-warehouse';
-import { Boxes, MapPin, Plus, ArrowLeft, Trash2, PackageX } from 'lucide-react';
+import { useLocations, useCreateRack, useDeleteLocation, useAssignLocation, type LocationWithProducts, type LocationProduct } from '@/hooks/use-warehouse';
+import { RackEditModal } from '@/components/inventory/rack-edit-modal';
+import { RackLabelPrint } from '@/components/inventory/rack-label-print';
+import { Modal } from '@/components/ui/modal';
+import { Boxes, MapPin, Plus, ArrowLeft, Trash2, PackageX, Printer, Settings2 } from 'lucide-react';
 
 /**
  * 창고 배치도 (정위치 관리) — 112, 2026-07-18
@@ -26,13 +29,13 @@ export default function WarehouseLayoutPage() {
   const createRack = useCreateRack();
   const deleteLocation = useDeleteLocation();
   const assignLocation = useAssignLocation();
-  const addCol = useAddCol();       // 114: 단에 열 추가
-  const addRow = useAddRow();       // 114: 단에 행 추가 (수납함으로)
-  const addLevel = useAddLevel();   // 113: 렉에 단 추가
 
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showAddRack, setShowAddRack] = useState(false);
+  // 115: 편집·인쇄는 렉별 모달로 분리 (진입 화면은 '보기'에 집중)
+  const [editRack, setEditRack] = useState<number | null>(null);
+  const [printRack, setPrintRack] = useState<number | null>(null);
 
   const locations = useMemo(() => data?.locations || [], [data]);
 
@@ -66,6 +69,7 @@ export default function WarehouseLayoutPage() {
         return {
           rackNo,
           label: info?.label || null,
+          cellCount: list.length,
           // 열 수 = 렉 정보 우선, 없으면 가장 칸 많은 단 기준 (최소 1)
           columns: Math.max(1, info?.columns ?? maxBins, maxBins),
           // 115: 1단 = 맨 아래 → 화면은 큰 번호가 위로 오게 내림차순으로 그린다
@@ -192,14 +196,21 @@ export default function WarehouseLayoutPage() {
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs font-bold text-neutral-700">
                   {rack.rackNo}번 렉{rack.label ? ` · ${rack.label}` : ''}
-                  <span className="ml-1.5 font-normal text-neutral-400">{rack.columns}열 · {rack.levels.length}단</span>
+                  <span className="ml-1.5 font-normal text-neutral-400">{rack.levels.length}단 · 자리 {rack.cellCount}개</span>
                 </span>
-                <button
-                  onClick={() => addLevel.mutate({ rack_no: rack.rackNo, cols: 0 })}
-                  disabled={addLevel.isPending}
-                  className="text-[11px] text-neutral-500 hover:text-indigo-black underline disabled:opacity-50"
-                  title="맨 위에 단을 하나 더 만듭니다"
-                >＋ 단 추가 (위에)</button>
+                {/* 진입 화면은 '보기'에 집중 — 편집은 모달로, 인쇄는 여기서 바로 */}
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setPrintRack(rack.rackNo)}
+                    className="flex items-center gap-1 text-[11px] font-medium text-neutral-500 hover:text-indigo-black px-2 py-1 rounded hover:bg-neutral-100 transition"
+                    title="이 렉의 위치라벨 인쇄"
+                  ><Printer size={12} /> 인쇄</button>
+                  <button
+                    onClick={() => setEditRack(rack.rackNo)}
+                    className="flex items-center gap-1 text-[11px] font-medium text-neutral-500 hover:text-indigo-black px-2 py-1 rounded hover:bg-neutral-100 transition"
+                    title="단·열·행 수정 / 렉 삭제"
+                  ><Settings2 size={12} /> 수정</button>
+                </div>
               </div>
 
               {/* 렉 = N열 그리드. 각 단은 앞에서부터 쓰는 칸만 차지하고 나머지는 빈 공간 */}
@@ -266,21 +277,6 @@ export default function WarehouseLayoutPage() {
                         </div>
                       )}
 
-                      {/* 이 단 구조 바꾸기 — 열/행 추가 */}
-                      <div className="flex flex-col gap-1 shrink-0">
-                        <button
-                          onClick={() => addCol.mutate({ rack_no: rack.rackNo, level_no: levelNo })}
-                          disabled={addCol.isPending}
-                          title={`${levelNo}단에 열 추가`}
-                          className="w-8 flex-1 rounded-md border border-dashed border-neutral-300 text-[10px] text-neutral-400 hover:text-indigo-black hover:border-neutral-500 transition disabled:opacity-50"
-                        >＋열</button>
-                        <button
-                          onClick={() => addRow.mutate({ rack_no: rack.rackNo, level_no: levelNo })}
-                          disabled={addRow.isPending}
-                          title={`${levelNo}단에 행 추가 (수납함으로)`}
-                          className="w-8 flex-1 rounded-md border border-dashed border-neutral-300 text-[10px] text-neutral-400 hover:text-indigo-black hover:border-neutral-500 transition disabled:opacity-50"
-                        >＋행</button>
-                      </div>
                     </div>
                   );
                 })}
@@ -331,6 +327,41 @@ export default function WarehouseLayoutPage() {
           existingRacks={racks.map((r) => r.rackNo)}
         />
       )}
+
+      {/* 115: 렉별 구조 수정 (＋열/＋행/단추가/칸삭제/렉삭제) */}
+      {editRack !== null && (() => {
+        const r = racks.find((x) => x.rackNo === editRack);
+        if (!r) return null;
+        return (
+          <RackEditModal
+            rackNo={r.rackNo}
+            rackLabel={r.label}
+            levels={r.levels}
+            onClose={() => setEditRack(null)}
+            onDeleteRack={() => {
+              deleteLocation.mutate({ rack_no: r.rackNo });
+              setEditRack(null);
+              setSelectedId(null);
+            }}
+          />
+        );
+      })()}
+
+      {/* 115: 렉별 위치라벨 인쇄 — 배치도에서 바로 */}
+      {printRack !== null && (() => {
+        const r = racks.find((x) => x.rackNo === printRack);
+        if (!r) return null;
+        // 인쇄는 실제로 붙이는 순서(아래→위)가 편하므로 단 오름차순으로 정렬해 넘긴다
+        const ordered = [...r.levels].sort((a, b) => a.levelNo - b.levelNo).flatMap((l) => l.cells);
+        return (
+          <RackLabelPrint
+            rackNo={r.rackNo}
+            rackLabel={r.label}
+            locations={ordered}
+            onClose={() => setPrintRack(null)}
+          />
+        );
+      })()}
     </>
   );
 }
@@ -430,14 +461,12 @@ function AddRackModal({ onClose, onSubmit, pending, existingRacks }: {
     } : l));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="bg-white rounded-xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="px-5 py-4 border-b border-neutral-100 sticky top-0 bg-white rounded-t-xl">
-          <h2 className="text-sm font-bold text-indigo-black">렉 추가</h2>
-          <p className="text-[11px] text-neutral-500 mt-0.5">단마다 칸 수를 다르게 넣으세요 · 0 = 칸 없이 선반으로 사용</p>
-        </div>
+    // 공용 Modal — 네이티브 dialog 라 배경 클릭/드래그로 안 닫히고, preventAutoClose 로 Escape 도 막는다
+    <Modal open onClose={onClose} title="렉 추가" className="max-w-md" preventAutoClose>
+      <div>
+        <p className="text-[11px] text-neutral-500 mb-3">단마다 열·행을 다르게 넣으세요 · 열 0 = 칸 없이 선반 · 행 2 이상 = 수납함</p>
 
-        <div className="px-5 py-4 space-y-3">
+        <div className="space-y-3">
           <div className="grid grid-cols-[100px_1fr] gap-3">
             <div>
               <label className="text-xs text-neutral-500 mb-1 block">렉 번호</label>
@@ -525,7 +554,7 @@ function AddRackModal({ onClose, onSubmit, pending, existingRacks }: {
           </div>
         </div>
 
-        <div className="px-5 py-4 border-t border-neutral-100 flex gap-2 sticky bottom-0 bg-white rounded-b-xl">
+        <div className="flex gap-2 pt-4 mt-3 border-t border-neutral-100">
           <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>
           <Button className="flex-1" disabled={dup || pending}
             onClick={() => onSubmit({ rack_no: rackNo, label: label.trim() || null, levels })}>
@@ -533,6 +562,6 @@ function AddRackModal({ onClose, onSubmit, pending, existingRacks }: {
           </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
