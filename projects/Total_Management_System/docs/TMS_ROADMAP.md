@@ -1,7 +1,22 @@
 # TMS (Total Management System) 전체 작업 로드맵
 
 > 최종 목적: 마모루 운영의 주문·배송·수리·재고·알림을 하나의 시스템에서 관리
-> 최종 수정: 2026-07-20 — 창고 로케이션(정위치) 관리 신규 완료. 마이그 112~115 실행 완료, 배포 승인 대기
+> 최종 수정: 2026-07-21 — 재고판매(LS) 시스템 단계0~5 배포 완료. 마이그 117 실행 완료. 가동 전 사장님 작업(제품등록·솔라피·Make·아임웹 임베드) 남음
+
+---
+
+## ✅ 완료 (07-21): 재고판매(LS) 시스템 — 마이그 `117`
+
+사무실 재고를 아임웹 커스텀 카탈로그로 판매. **EVENT 접수 허브를 재활용**(백엔드 80~90%)해 신규 코드 최소화.
+접수 → 입금안내 알림톡 → 입금확인 시 자동 판매전환 → 송장·발송 → 제품구매 후기. 매뉴얼: `docs/STOCK_SALE_MANUAL.md`.
+- [x] 단계0 LS 카테고리(시스템 고정) — 제품등록/재고/SKU(LS001)/정위치/아임웹동기화 자동 상속
+- [x] 단계1 공개 카탈로그 API(`/api/stock-sale/public/products`) + 고객 폼(`projects/stock_sale/page_form.html`, 사진 있는 범용 카탈로그)
+- [x] 단계2 접수 API(`/submit`) — 서버 가격 재조회(위변조 방지)·고객 자동병합(전화)·event_submissions(kind='stock_sale')·`stock_received` 알림톡
+- [x] 단계3 전용 '재고판매' 메뉴(`/stock-sale`) — 입금확인 → `convertEventToSale(category=LS)` 자동 판매전환. `event_submissions.kind`(117)로 EVENT/재고판매 분리
+- [x] 단계4 송장·발송 — **코드 무변경**, 전환된 offline_sales 가 기존 롯데ALPS·집하크론·출고알림톡 사용
+- [x] 단계5 제품구매 후기 — `reviews/info`·`submit` purchase 분기에 offline_sales(OS-) fallback + 품목→`products.imweb_product_no` 매핑 + 역방향매칭
+- [ ] 단계6(사장님 외부): 솔라피 4종 등록·검수 + Make 분기 + 아임웹 폼 임베드 + 제품등록. **가동 전 필수** — 매뉴얼 참조
+- 재고 로직 변경 0건(정합성 안전). EVENT 화면 무영향(kind 필터).
 
 ---
 
