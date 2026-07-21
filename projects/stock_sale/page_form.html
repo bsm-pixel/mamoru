@@ -63,9 +63,10 @@
   .mm-pd__gal{ position:relative; background:#fff; }
   .mm-pd__track{ display:flex; transition:transform .3s cubic-bezier(.22,.61,.36,1); touch-action:pan-y; }
   .mm-pd__slide{ flex:0 0 100%; }
-  /* 이미지 높이 캡 — 정사각이 세로를 다 먹어 설명이 안 보이던 문제. 설명 시작점이 화면에 들어오게 */
-  .mm-pd__slide img{ display:block; width:100%; height:min(42vh,360px); object-fit:cover; }
-  .mm-pd__noimg{ width:100%; height:min(42vh,360px); background:var(--shell); display:flex; align-items:center; justify-content:center; color:#C9C5C0; font-size:14px; font-weight:600; letter-spacing:.08em; }
+  /* 이미지 = 1:1 정사각(썸네일과 동일). 폭 기준이라 임베드(iframe)에서도 안전.
+     설명은 아래 "상세 설명 ▾" 라벨 + 스크롤 유도로 노출 (레이아웃 스크롤 버그는 flex 로 해결됨) */
+  .mm-pd__slide img{ display:block; width:100%; aspect-ratio:1/1; object-fit:cover; }
+  .mm-pd__noimg{ width:100%; aspect-ratio:1/1; background:var(--shell); display:flex; align-items:center; justify-content:center; color:#C9C5C0; font-size:14px; font-weight:600; letter-spacing:.08em; }
   .mm-pd__nav{ position:absolute; top:50%; transform:translateY(-50%); z-index:2; width:32px; height:32px; border:0; border-radius:999px; background:rgba(255,255,255,.85); color:var(--void); font-size:18px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.1); }
   .mm-pd__nav[disabled]{ opacity:0; pointer-events:none; }
   .mm-pd__prev{ left:10px; } .mm-pd__next{ right:10px; }
