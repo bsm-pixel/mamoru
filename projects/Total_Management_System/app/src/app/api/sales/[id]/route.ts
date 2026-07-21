@@ -87,18 +87,17 @@ export async function PATCH(
             .single();
           if (!prod) return;
 
-          // 이 상품에 시리얼이 연결되어 있었는지 확인 (B2B는 시리얼 없이 raw_stock 차감)
-          const { count: serialCount } = await db
-            .from('product_serials')
-            .select('id', { count: 'exact', head: true })
-            .eq('offline_sale_id', id)
-            .eq('product_id', productId);
+          // 판매 시 raw_stock 는 '시리얼 없는 수량'만큼만 차감됐다 → 취소 시 딱 그만큼만 복원.
+          // ⚠️ 시리얼 수는 위 복원 루프가 offline_sale_id 를 null 로 지우기 '전'에 가져온 serials 에서 센다.
+          //    (지운 뒤 offline_sale_id 로 세면 항상 0 → 시리얼 판매인데 raw 과다복원 → 무결성 -1 버그. 2026-07-21 fix)
+          const serialQty = (serials || []).filter((s: { product_id: string }) => s.product_id === productId).length;
+          const rawRestore = Math.max(0, qty - serialQty);
 
           const newStock = (prod.stock_quantity || 0) + qty;
           const updateData: Record<string, unknown> = { stock_quantity: newStock };
-          // B2B 판매(시리얼 없음)였으면 raw_stock도 복원
-          if (!serialCount || serialCount === 0) {
-            updateData.raw_stock = (prod.raw_stock || 0) + qty;
+          // 시리얼 없이 팔린 수량(rawRestore)만큼만 raw_stock 복원 (시리얼분은 위에서 in_stock 로 되살림)
+          if (rawRestore > 0) {
+            updateData.raw_stock = (prod.raw_stock || 0) + rawRestore;
           }
           await db.from('products').update(updateData).eq('id', productId);
 
@@ -205,16 +204,15 @@ export async function PATCH(
             .single();
           if (!prod) return;
 
-          const { count: serialCount } = await db
-            .from('product_serials')
-            .select('id', { count: 'exact', head: true })
-            .eq('offline_sale_id', id)
-            .eq('product_id', productId);
+          // (취소와 동일 fix) 시리얼 판매분은 raw_stock 을 안 건드렸으므로, 시리얼 없는 수량만큼만 복원.
+          // serials 는 offline_sale_id 를 null 로 지우기 전 값 → 여기서 상품별 시리얼 수를 센다.
+          const serialQty = (serials || []).filter((s: { product_id: string }) => s.product_id === productId).length;
+          const rawRestore = Math.max(0, qty - serialQty);
 
           const newStock = (prod.stock_quantity || 0) + qty;
           const updateData: Record<string, unknown> = { stock_quantity: newStock };
-          if (!serialCount || serialCount === 0) {
-            updateData.raw_stock = (prod.raw_stock || 0) + qty;
+          if (rawRestore > 0) {
+            updateData.raw_stock = (prod.raw_stock || 0) + rawRestore;
           }
           await db.from('products').update(updateData).eq('id', productId);
 
