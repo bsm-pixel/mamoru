@@ -32,6 +32,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const phoneNorm = (ev.customer_phone || '').replace(/\D/g, '');
 
+    // 117: 재고판매(stock_sale)는 EVENT 와 알림톡 템플릿·판매전환 라벨을 달리 쓴다
+    const isStock = ev.kind === 'stock_sale';
+    const T = isStock
+      ? { notice: 'stock_payment_notice' as const, confirmed: 'stock_payment_confirmed' as const }
+      : { notice: 'event_payment_notice' as const, confirmed: 'event_payment_confirmed' as const };
+    const convertOpts = isStock ? { category: 'LS', memoLabel: '재고판매 전환' } : undefined;
+    const numKey = isStock ? 'order_number' : 'event_number';
+
     if (action === 'payment_notice') {
       // 사장님 재고확인 후 입금안내 (총액 확정 — 금액 조정 가능)
       const total = typeof body.total_amount === 'number' ? body.total_amount : ev.total_amount;
@@ -42,8 +50,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (phoneNorm && body.send_notification !== false) {
         after(async () => {
           await sendNotification({
-            template: 'event_payment_notice', phone: phoneNorm, name: ev.customer_name,
-            data: { id: ev.event_number, event_number: ev.event_number, total_amount: String(total) },
+            template: T.notice, phone: phoneNorm, name: ev.customer_name,
+            data: { id: ev.event_number, [numKey]: ev.event_number, total_amount: String(total) },
           });
         });
       }
@@ -51,8 +59,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     if (action === 'confirm_payment') {
-      // 입금확인 → 판매 자동 전환
-      const saleId = await convertEventToSale(dbAny, ev);
+      // 입금확인 → 판매 자동 전환 (EVENT/재고판매 공통 파이프라인, 라벨만 분기)
+      const saleId = await convertEventToSale(dbAny, ev, convertOpts);
       await dbAny.from('event_submissions').update({
         status: 'converted', paid_at: new Date().toISOString(), sale_id: saleId,
       }).eq('id', id);
@@ -60,8 +68,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (phoneNorm && body.send_notification !== false) {
         after(async () => {
           await sendNotification({
-            template: 'event_payment_confirmed', phone: phoneNorm, name: ev.customer_name,
-            data: { id: ev.event_number, event_number: ev.event_number, total_amount: String(ev.total_amount) },
+            template: T.confirmed, phone: phoneNorm, name: ev.customer_name,
+            data: { id: ev.event_number, [numKey]: ev.event_number, total_amount: String(ev.total_amount) },
           });
         });
       }

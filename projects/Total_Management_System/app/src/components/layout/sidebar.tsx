@@ -25,6 +25,7 @@ import {
   Wallet,
   CalendarOff,
   Zap,
+  Tag,
   ChevronDown,
   type LucideIcon,
 } from 'lucide-react';
@@ -53,6 +54,7 @@ const iconMap: Record<string, LucideIcon> = {
   Wallet,
   CalendarOff,
   Zap,
+  Tag,
 };
 
 const COLLAPSE_KEY = 'tms-sidebar-collapsed';

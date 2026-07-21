@@ -170,47 +170,76 @@ export async function POST(req: NextRequest) {
           { status: 400, headers: CORS_HEADERS }
         );
       }
+      // (1) 아임웹 온라인 주문 (id=uid)
       const { data: order } = await dbAny
         .from('orders')
         .select('orderer_name, orderer_phone, ordered_at')
         .eq('id', uid)
         .single();
 
-      if (!order) {
-        return NextResponse.json(
-          { error: '주문 정보를 찾을 수 없습니다' },
-          { status: 404, headers: CORS_HEADERS }
-        );
-      }
-
-      const { data: item } = await dbAny
-        .from('order_items')
-        .select('product_name, imweb_product_no')
-        .eq('order_id', uid)
-        .eq('imweb_product_no', productNo)
-        .limit(1)
-        .single();
-
-      name = order.orderer_name;
-      phone = order.orderer_phone || '';
-      subtype = '';
-      meta = {
-        order_id: uid,
-        imweb_product_no: productNo,
-        product_name: item?.product_name || '',
-        received_at: order.ordered_at || '',
-      };
-
-      // product_group 자동 resolve
-      if (productNo) {
-        const { data: prod } = await dbAny
-          .from('products')
-          .select('product_group')
+      if (order) {
+        const { data: item } = await dbAny
+          .from('order_items')
+          .select('product_name, imweb_product_no')
+          .eq('order_id', uid)
           .eq('imweb_product_no', productNo)
+          .limit(1)
           .single();
-        if (prod?.product_group) {
-          meta.product_group = prod.product_group;
+
+        name = order.orderer_name;
+        phone = order.orderer_phone || '';
+        subtype = '';
+        meta = {
+          order_id: uid,
+          imweb_product_no: productNo,
+          product_name: item?.product_name || '',
+          received_at: order.ordered_at || '',
+        };
+        if (productNo) {
+          const { data: prod } = await dbAny
+            .from('products').select('product_group').eq('imweb_product_no', productNo).single();
+          if (prod?.product_group) meta.product_group = prod.product_group;
         }
+      } else {
+        // (2) 오프라인 판매(OS-) fallback — 재고판매·매장 등 offline_sales 기반 제품구매 후기
+        const { data: sale } = await dbAny
+          .from('offline_sales')
+          .select('id, customer_name, customer_phone, sale_date, created_at')
+          .eq('sale_number', uid)
+          .single();
+        if (!sale) {
+          return NextResponse.json({ error: '주문 정보를 찾을 수 없습니다' }, { status: 404, headers: CORS_HEADERS });
+        }
+        // productNo(키) 가 imweb_product_no 이거나 product_id 일 수 있다 → 판매 품목에서 매칭
+        const { data: sitems } = await dbAny
+          .from('offline_sale_items').select('product_id, product_name').eq('sale_id', sale.id);
+        const pids = [...new Set((sitems || []).map((s: { product_id: string | null }) => s.product_id).filter(Boolean))] as string[];
+        const prodMap = new Map<string, { imweb_product_no: string | null; product_group: string | null }>();
+        if (pids.length > 0) {
+          const { data: prods } = await dbAny.from('products').select('id, imweb_product_no, product_group').in('id', pids);
+          (prods || []).forEach((p: { id: string; imweb_product_no: string | null; product_group: string | null }) =>
+            prodMap.set(p.id, { imweb_product_no: p.imweb_product_no ? String(p.imweb_product_no) : null, product_group: p.product_group }));
+        }
+        // 키가 일치하는 품목 찾기 (imweb 번호 우선, 없으면 product_id)
+        const matched = (sitems || []).find((s: { product_id: string | null }) => {
+          const pm = s.product_id ? prodMap.get(s.product_id) : undefined;
+          const key = (pm?.imweb_product_no) || s.product_id || '';
+          return key === String(productNo);
+        }) as { product_id: string | null; product_name: string } | undefined;
+        if (!matched) {
+          return NextResponse.json({ error: '제품을 찾을 수 없습니다' }, { status: 404, headers: CORS_HEADERS });
+        }
+        const pm = matched.product_id ? prodMap.get(matched.product_id) : undefined;
+        name = sale.customer_name;
+        phone = sale.customer_phone || '';
+        subtype = '';
+        meta = {
+          sale_number: uid,
+          imweb_product_no: pm?.imweb_product_no || '',   // 실제 아임웹 번호일 때만 (이미지 연동용)
+          product_name: matched.product_name || '',
+          received_at: sale.created_at || sale.sale_date || '',
+        };
+        if (pm?.product_group) meta.product_group = pm.product_group;
       }
     } else {
       return NextResponse.json(
@@ -280,8 +309,14 @@ export async function POST(req: NextRequest) {
             .update({ review_submitted_at: submittedAt })
             .eq('sale_number', sourceId)
             .is('review_submitted_at', null);
+        } else if (type === 'purchase') {
+          // 제품구매 후기는 제품별(source_id=`uid:key`)이라 uid 는 sourceId 가 아닌 원본 uid 를 써야 한다.
+          // 오프라인 판매(OS-)면 offline_sales 에 표시 (아임웹 orders 는 review_submitted_at 컬럼 없음 — 무시).
+          await dbAny.from('offline_sales')
+            .update({ review_submitted_at: submittedAt })
+            .eq('sale_number', uid)
+            .is('review_submitted_at', null);
         }
-        // type === 'purchase'는 orders 매칭 — orders.review_submitted_at 컬럼 추가 후 별도 처리
       } catch (e) {
         console.error('[reviews/submit reverse-match] 실패:', e);
       }

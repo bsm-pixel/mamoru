@@ -60,6 +60,9 @@ async function isNotificationEnabled(template: string): Promise<boolean> {
       event_received: 'notifications.event_received',
       event_payment_notice: 'notifications.event_payment_notice',
       event_payment_confirmed: 'notifications.event_payment_confirmed',
+      stock_received: 'notifications.stock_received',
+      stock_payment_notice: 'notifications.stock_payment_notice',
+      stock_payment_confirmed: 'notifications.stock_payment_confirmed',
     };
     const settingKey = templateKeyMap[template];
     if (!settingKey) return true; // 매핑 안 된 템플릿은 항상 발송
@@ -109,7 +112,11 @@ export type NotifyTemplate =
   // EVENT(고객 접수) — webhook_consultation 시나리오 사용
   | 'event_received'          // EVENT 접수 확인 (자동)
   | 'event_payment_notice'    // EVENT 입금 안내 (총액+계좌, 사장님 재고확인 후)
-  | 'event_payment_confirmed'; // EVENT 입금 확인 (→ 판매 자동전환)
+  | 'event_payment_confirmed' // EVENT 입금 확인 (→ 판매 자동전환)
+  // 재고판매(LS) — webhook_consultation 시나리오 사용
+  | 'stock_received'          // 재고판매 접수 확인 + 입금 안내(계좌+금액) (자동)
+  | 'stock_payment_notice'    // 재고판매 입금 안내 재발송 (어드민)
+  | 'stock_payment_confirmed'; // 재고판매 입금 확인 (→ 판매 자동전환)
 
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
@@ -142,6 +149,10 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   event_received: 'EVENT_RECEIVED',
   event_payment_notice: 'EVENT_PAYMENT_NOTICE',
   event_payment_confirmed: 'EVENT_PAYMENT_CONFIRMED',
+  // 재고판매(LS)
+  stock_received: 'STOCK_RECEIVED',
+  stock_payment_notice: 'STOCK_PAYMENT_NOTICE',
+  stock_payment_confirmed: 'STOCK_PAYMENT_CONFIRMED',
 };
 
 interface NotifyPayload {
@@ -182,6 +193,8 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     cancelled: { title: '⚠️ 상담 예약 취소', body: `${payload.name}님 상담 예약 취소`, url: '/consultations', settingKey: 'push.consultation_cancelled' },
     // 이벤트 접수(고객) — 2026-07-01 추가
     event_received: { title: '새 이벤트 접수', body: `${payload.name}님 이벤트 접수`, url: '/events', settingKey: 'push.event_received' },
+    // 재고판매 접수(고객) — 2026-07-21 추가
+    stock_received: { title: '새 재고판매 접수', body: `${payload.name}님 재고판매 주문`, url: '/stock-sale', settingKey: 'push.stock_received' },
   };
   const pushCfg = PUSH_CONFIG[payload.template];
   if (pushCfg) {

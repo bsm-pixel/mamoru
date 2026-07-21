@@ -17,9 +17,19 @@ interface EventRow {
   total_amount: number;
 }
 
+/** 접수 → 판매 전환 옵션 (재고판매 등 EVENT 외 종류가 재사용) */
+export interface ConvertOptions {
+  /** offline_sale_items.category 값 (기본 'EVENT') */
+  category?: string;
+  /** memo 접두 라벨 (기본 'EVENT 전환') */
+  memoLabel?: string;
+}
+
 /** offline_sales + offline_sale_items 생성, 재고 차감, sale_id 반환 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function convertEventToSale(db: any, ev: EventRow): Promise<string> {
+export async function convertEventToSale(db: any, ev: EventRow, opts?: ConvertOptions): Promise<string> {
+  const category = opts?.category ?? 'EVENT';
+  const memoLabel = opts?.memoLabel ?? 'EVENT 전환';
   const today = new Date().toISOString().slice(0, 10);
 
   // 정가 합계(품목 라인 합 = 단가×수량 + 슬라이싱) → 묶음 할인 = 정가합 − 최종금액
@@ -40,7 +50,7 @@ export async function convertEventToSale(db: any, ev: EventRow): Promise<string>
     payment_method: 'transfer',
     payment_status: 'paid',
     sale_channel: 'offline',
-    memo: `EVENT 전환 (${ev.event_number})${discountAmount > 0 ? ` · 묶음할인 -${discountAmount.toLocaleString()}` : ''}`,
+    memo: `${memoLabel} (${ev.event_number})${discountAmount > 0 ? ` · 묶음할인 -${discountAmount.toLocaleString()}` : ''}`,
   });
 
   // 품목 라인 (제품 sku 조회)
@@ -62,7 +72,7 @@ export async function convertEventToSale(db: any, ev: EventRow): Promise<string>
       quantity: qty,
       unit_price: unit,
       total_price: unit * qty,
-      category: 'EVENT',
+      category,
     };
   });
 

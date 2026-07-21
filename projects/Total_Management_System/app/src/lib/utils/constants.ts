@@ -37,6 +37,7 @@ export const NAV_GROUPS: NavGroup[] = [
     group: '판매',
     items: [
       { label: '판매 관리', href: '/sales', icon: 'Store', matchPrefix: '/sales' },
+      { label: '재고판매', href: '/stock-sale', icon: 'Tag', matchPrefix: '/stock-sale' },
       { label: 'EVENT', href: '/events', icon: 'Zap', matchPrefix: '/events' },
       { label: '빠른 송장', href: '/manual-invoices', icon: 'Truck', matchPrefix: '/manual-invoices' },
       // 2026-05-26 Phase G-1: B2B거래 메뉴 삭제 — IA 통합 완료 (/sales/new?mode=b2b 진입)

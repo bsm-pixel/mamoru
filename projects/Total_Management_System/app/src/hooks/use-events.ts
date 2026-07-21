@@ -46,11 +46,12 @@ export function useUpdateCampaign() {
   });
 }
 
-export function useEvents(status: string = 'all') {
+/** kind: 'event'(기본) | 'stock_sale'(재고판매) — 화면 분리 (117) */
+export function useEvents(status: string = 'all', kind: string = 'event') {
   return useQuery({
-    queryKey: ['events', status],
+    queryKey: ['events', kind, status],
     queryFn: async () => {
-      const res = await fetch(`/api/events?status=${status}`);
+      const res = await fetch(`/api/events?status=${status}&kind=${kind}`);
       if (!res.ok) throw new Error(await res.text());
       const json = await res.json();
       return (json.events || []) as EventSubmission[];
