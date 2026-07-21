@@ -91,6 +91,22 @@ export async function convertEventToSale(db: any, ev: EventRow, opts?: ConvertOp
     });
   }
 
+  // 상품 외 가산액 (재고판매 배송비 등) — total 이 품목합보다 크면 그 차액을 별도 라인으로.
+  // 이렇게 해야 판매 합계 = offline_sale_items 합계 가 맞다. (EVENT 는 total<=품목합 이라 미발생)
+  const extra = ev.total_amount - lineSum;
+  if (extra > 0) {
+    lines.push({
+      sale_id: sale.id,
+      product_id: null,
+      product_name: category === 'LS' ? '배송비' : '추가금',
+      sku: null,
+      quantity: 1,
+      unit_price: extra,
+      total_price: extra,
+      category,
+    });
+  }
+
   const { error: itemsErr } = await db.from('offline_sale_items').insert(lines);
   if (itemsErr) throw itemsErr;
 

@@ -27,6 +27,10 @@ export function OPTIONS() {
 
 interface InItem { product_id?: string; qty?: number }
 
+/** 배송비 정책 — 상품금액 5만원 미만이면 3,000원, 이상이면 무료 */
+const SHIP_FEE = 3000;
+const FREE_SHIP_THRESHOLD = 50000;
+
 /** SS-YYYYMMDD-NNN 자동 채번 (EVENT 의 EV- 와 시퀀스 분리) */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function generateStockNumber(db: any): Promise<string> {
@@ -96,7 +100,10 @@ export async function POST(req: NextRequest) {
     if (built.length === 0) {
       return NextResponse.json({ ok: false, error: '선택하신 품목이 품절되었거나 판매 종료되었습니다' }, { status: 409, headers: CORS_HEADERS });
     }
-    const totalAmount = built.reduce((s, b) => s + b.unit_price * b.qty, 0);
+    const productSum = built.reduce((s, b) => s + b.unit_price * b.qty, 0);
+    // 배송비: 상품금액 5만원 미만 3,000원, 이상 무료 (고객 폼과 동일 규칙)
+    const shipping = productSum >= FREE_SHIP_THRESHOLD ? 0 : SHIP_FEE;
+    const totalAmount = productSum + shipping;
 
     const phoneNorm = phone.replace(/\D/g, '');
     const orderNumber = await generateStockNumber(dbAny);
@@ -148,6 +155,8 @@ export async function POST(req: NextRequest) {
           id: orderNumber,
           order_number: orderNumber,
           items: itemSummary,
+          product_amount: String(productSum),
+          shipping_fee: shipping === 0 ? '무료' : String(shipping),
           total_amount: String(totalAmount),
           address: [address1, address2].filter(Boolean).join(' '),
         },
@@ -164,6 +173,8 @@ export async function POST(req: NextRequest) {
         `고객명: ${name.trim()}`,
         `연락처: ${phone}`,
         `품목: ${built.map((b) => `${b.product_name} ${b.qty}개`).join(', ')}`,
+        `상품금액: ${productSum.toLocaleString()}원`,
+        `배송비: ${shipping === 0 ? '무료' : shipping.toLocaleString() + '원'}`,
         `합계: ${totalAmount.toLocaleString()}원`,
         `주소: ${[address1, address2].filter(Boolean).join(' ')}`,
       ];

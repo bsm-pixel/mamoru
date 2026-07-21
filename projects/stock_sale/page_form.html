@@ -116,7 +116,10 @@
   .mm-cart{ border:1px solid var(--void); border-radius:14px; background:#fff; padding:14px; }
   .mm-cart__item{ display:flex; justify-content:space-between; gap:8px; font-size:13px; padding:6px 0; border-bottom:1px solid var(--line); }
   .mm-cart__item button{ color:#C0392B; background:none; border:0; font-size:11px; cursor:pointer; }
-  .mm-cart__total{ display:flex; justify-content:space-between; font-size:15px; font-weight:800; color:var(--void); padding-top:10px; }
+  .mm-cart__sub{ padding-top:8px; }
+  .mm-cart__subrow{ display:flex; justify-content:space-between; font-size:13px; color:var(--ink); padding:3px 0; }
+  .mm-cart__subrow .mm-free{ color:var(--ok); font-weight:800; }
+  .mm-cart__total{ display:flex; justify-content:space-between; font-size:15px; font-weight:800; color:var(--void); padding-top:10px; margin-top:4px; border-top:1px solid var(--line); }
   /* 필드 */
   .mm-field{ margin-top:12px; }
   .mm-field label{ display:block; font-size:12px; font-weight:600; color:var(--ink); margin-bottom:6px; }
@@ -184,7 +187,7 @@
   <div class="mm-hero">
     <div class="mm-hero__eyebrow">MAMORU STOCK</div>
     <h1 class="mm-hero__title">재고 특가 판매</h1>
-    <p class="mm-hero__desc">보유 중인 정품 재고를 특별가로 정리합니다. 원하는 품목을 담아 접수해 주세요.</p>
+    <p class="mm-hero__desc">보유 중인 재고를 대표 마음껏 특별가로 제공합니다.<br> 원하는 품목을 담아 접수주문해 주세요.</p>
     <div class="mm-ship">🚚 <b>5만원 이상</b> 무료배송</div>
   </div>
 
@@ -201,6 +204,7 @@
     <div class="mm-sec__label">선택한 품목</div>
     <div class="mm-cart">
       <div id="cartItems"></div>
+      <div class="mm-cart__sub" id="cartSub"></div>
       <div class="mm-cart__total"><span>합계</span><span id="cartTotal">0원</span></div>
       <div class="mm-shipbar" id="shipBar"></div>
     </div>
@@ -495,12 +499,18 @@ function closeInapp(){
       row.querySelector('button').onclick=function(){ cart=cart.filter(function(x){return x.key!==it.key;}); renderCart(); };
       items.appendChild(row);
     });
-    $('cartTotal').textContent=won(total);
+    // 배송비: 상품금액 5만원 미만이면 3,000원, 이상이면 무료
+    var shipping=(total>=FREE_SHIP)?0:SHIP_FEE;
+    var grand=total+shipping;
+    $('cartSub').innerHTML=
+      '<div class="mm-cart__subrow"><span>상품 금액</span><span>'+esc(won(total))+'</span></div>'
+      +'<div class="mm-cart__subrow"><span>배송비</span><span>'+(shipping===0?'<b class="mm-free">무료</b>':esc(won(shipping)))+'</span></div>';
+    $('cartTotal').textContent=won(grand);
     renderShipBar(total);
     sec.classList.remove('mm-hide'); showTail(true); updateSubmit();
   }
 
-  var FREE_SHIP=50000;
+  var FREE_SHIP=50000, SHIP_FEE=3000;
   function renderShipBar(total){
     var el=$('shipBar'); if(!el) return;
     var pct=Math.min(100, Math.round(total/FREE_SHIP*100));

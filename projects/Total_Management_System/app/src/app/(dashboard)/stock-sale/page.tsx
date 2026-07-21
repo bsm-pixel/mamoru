@@ -25,6 +25,15 @@ const FORM_URL = 'https://page.mamoru.kr/projects/stock_sale/page_form.html';
 const won = (n: number) => `${(n || 0).toLocaleString()}원`;
 const fmtPhone = (p: string | null) => (p || '').replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
 
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex justify-between gap-2 py-1.5 border-b border-neutral-50 text-sm">
+      <span className="text-neutral-400 shrink-0 whitespace-nowrap">{label}</span>
+      <span className="text-right text-neutral-800 min-w-0">{value}</span>
+    </div>
+  );
+}
+
 export default function StockSalePage() {
   const router = useRouter();
   const [tab, setTab] = useState<EventStatus>('received');
@@ -116,17 +125,13 @@ function StockDetail({ ev, patch, del, onDone, goSales }: {
   onDone: () => void;
   goSales: () => void;
 }) {
-  const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
-    <div className="flex justify-between gap-2 py-1.5 border-b border-neutral-50 text-sm">
-      <span className="text-neutral-400 shrink-0 whitespace-nowrap">{label}</span>
-      <span className="text-right text-neutral-800 min-w-0">{value}</span>
-    </div>
-  );
-
   const confirmPay = () => {
     if (!window.confirm(`${ev.customer_name}님 입금을 확인하고 판매로 전환합니다. (재고가 차감됩니다)`)) return;
     patch.mutate({ id: ev.id, action: 'confirm_payment' }, { onSuccess: onDone });
   };
+
+  const itemsSum = (ev.items || []).reduce((s, it) => s + it.unit_price * it.qty, 0);
+  const shipFee = ev.total_amount - itemsSum;   // 배송비(상품 외 가산액)
 
   return (
     <div className="space-y-4">
@@ -144,6 +149,11 @@ function StockDetail({ ev, patch, del, onDone, goSales }: {
             <span className="shrink-0 text-neutral-900">{won(it.unit_price * it.qty)}</span>
           </div>
         ))}
+        {shipFee > 0 && (
+          <div className="flex justify-between text-sm text-neutral-500">
+            <span>배송비</span><span>{won(shipFee)}</span>
+          </div>
+        )}
         <div className="flex justify-between pt-1 mt-1 border-t border-neutral-200 text-sm font-bold">
           <span>합계</span><span>{won(ev.total_amount)}</span>
         </div>
