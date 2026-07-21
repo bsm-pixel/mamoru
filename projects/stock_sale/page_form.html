@@ -62,11 +62,11 @@
   /* 갤러리 */
   .mm-pd__gal{ position:relative; background:#fff; }
   .mm-pd__track{ display:flex; transition:transform .3s cubic-bezier(.22,.61,.36,1); touch-action:pan-y; }
-  .mm-pd__slide{ flex:0 0 100%; }
-  /* 이미지 = 1:1 정사각(썸네일과 동일). 폭 기준이라 임베드(iframe)에서도 안전.
-     설명은 아래 "상세 설명 ▾" 라벨 + 스크롤 유도로 노출 (레이아웃 스크롤 버그는 flex 로 해결됨) */
-  .mm-pd__slide img{ display:block; width:100%; aspect-ratio:1/1; object-fit:cover; }
-  .mm-pd__noimg{ width:100%; aspect-ratio:1/1; background:var(--shell); display:flex; align-items:center; justify-content:center; color:#C9C5C0; font-size:14px; font-weight:600; letter-spacing:.08em; }
+  .mm-pd__slide{ flex:0 0 100%; display:flex; justify-content:center; align-items:center; }
+  /* 이미지 = 1:1 정사각(크롭 없음). 한 변 = min(폭, 48vh) → 짧은 폰에선 조금 작아져(좌우 여백)
+     이름·가격 아래 "상세 설명"이 화면 안에 들어온다. 정사각이라 임베드(iframe)에서도 안전. */
+  .mm-pd__slide img{ display:block; width:min(100%,48vh); aspect-ratio:1/1; object-fit:cover; }
+  .mm-pd__noimg{ width:min(100%,48vh); aspect-ratio:1/1; background:var(--shell); display:flex; align-items:center; justify-content:center; color:#C9C5C0; font-size:14px; font-weight:600; letter-spacing:.08em; }
   .mm-pd__nav{ position:absolute; top:50%; transform:translateY(-50%); z-index:2; width:32px; height:32px; border:0; border-radius:999px; background:rgba(255,255,255,.85); color:var(--void); font-size:18px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.1); }
   .mm-pd__nav[disabled]{ opacity:0; pointer-events:none; }
   .mm-pd__prev{ left:10px; } .mm-pd__next{ right:10px; }
@@ -75,10 +75,12 @@
   .mm-pd__dot.on{ background:#fff; width:16px; border-radius:3px; }
   .mm-pd__count{ position:absolute; top:12px; left:12px; background:rgba(26,26,26,.5); color:#fff; font-size:11px; font-weight:600; padding:3px 9px; border-radius:999px; }
   /* 본문 */
-  .mm-pd__info{ padding:20px 20px 8px; }
-  .mm-pd__name{ font-size:20px; font-weight:800; color:var(--void); line-height:1.3; letter-spacing:-.01em; }
-  .mm-pd__price{ font-size:22px; font-weight:800; color:var(--void); margin-top:8px; }
-  .mm-pd__stock{ display:inline-block; font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; margin-top:10px; }
+  .mm-pd__info{ padding:18px 20px 8px; }
+  /* 제목 + 재고칩 한 행 (칩=제목 우측 상단) — 한 줄 절약해 설명이 더 일찍 보이게 */
+  .mm-pd__head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .mm-pd__name{ flex:1; min-width:0; font-size:19px; font-weight:800; color:var(--void); line-height:1.3; letter-spacing:-.01em; }
+  .mm-pd__price{ font-size:22px; font-weight:800; color:var(--void); margin-top:6px; }
+  .mm-pd__stock{ flex-shrink:0; margin-top:3px; display:inline-block; font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; white-space:nowrap; }
   /* 설명 시작점을 명확히 알리는 구분 라벨 (스크롤 유도) */
   .mm-pd__desclabel{ display:flex; align-items:center; gap:6px; font-size:12px; font-weight:800; letter-spacing:.02em; color:var(--void); margin-top:18px; padding-top:16px; border-top:1px solid var(--line); }
   .mm-pd__desclabel .mm-pd__chev{ color:var(--gray); font-size:13px; animation:mmNudgeY 1.2s ease-in-out infinite; }
@@ -234,9 +236,11 @@
         <div class="mm-pd__dots" id="pdDots"></div>
       </div>
       <div class="mm-pd__info">
-        <div class="mm-pd__name" id="pdName"></div>
+        <div class="mm-pd__head">
+          <div class="mm-pd__name" id="pdName"></div>
+          <span class="mm-pd__stock" id="pdStock"></span>
+        </div>
         <div class="mm-pd__price" id="pdPrice"></div>
-        <span class="mm-pd__stock" id="pdStock"></span>
         <div class="mm-pd__desclabel" id="pdDescLabel">상세 설명 <span class="mm-pd__chev">▾</span></div>
         <div class="mm-pd__desc" id="pdDesc"></div>
       </div>
