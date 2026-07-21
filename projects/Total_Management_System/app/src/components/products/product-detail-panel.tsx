@@ -32,6 +32,14 @@ interface Props {
   onCreated?: (id: string) => void;
 }
 
+/** LS 제품 tags 갱신 — 분류(group)만 바꾸고 기존 값(images 등)은 보존 */
+function mergeLsTags(current: Record<string, unknown>, group: string): Record<string, unknown> {
+  const next = { ...current };
+  const g = group.trim();
+  if (g) next.group = g; else delete next.group;
+  return next;
+}
+
 export function ProductDetailPanel({ productId, mode = 'view', duplicateData, onClose, onCreated }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -63,6 +71,13 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   // EVENT 전용 tags (category='EVENT'일 때만 저장) — 폼 setForm 충돌 피하려 별도 state
   const [eventTags, setEventTags] = useState({ campaign_id: '', hand: 'right', event_type: 'blunt', spec: '', dry_subtype: 'stroke' });
   const { data: eventCampaigns } = useCampaigns();
+  // 재고판매(LS) 분류 — tags.group. 이미지(tags.images)와 충돌 없이 저장하려 별도 state + 저장 시 merge
+  const [stockGroup, setStockGroup] = useState('');
+  const [lsGroupOptions, setLsGroupOptions] = useState<string[]>([]);
+  useEffect(() => {
+    if (form.category !== 'LS') return;
+    fetch('/api/stock-sale/categories').then((r) => r.json()).then((d) => setLsGroupOptions(d.categories || [])).catch(() => {});
+  }, [form.category, editing, mode]);
 
   // SKU 자동 채번
   async function fetchNextSku(cat: string) {
@@ -80,6 +95,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
 
   // create/duplicate 모드 초기화
   useEffect(() => {
+    setStockGroup('');
     if (mode === 'create') {
       setForm({ sku: '', name: '', category: 'BL', price: 0, price_purchase: 0, price_group_values: {}, use_stock: true, description: '', imweb_product_no: '', barcode: '', supplier_id: '', product_group: '', purchase_name: '' });
       fetchNextSku('BL');
@@ -125,6 +141,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       });
       const t = (p.tags || {}) as Record<string, string>;
       setEventTags({ campaign_id: t.campaign_id || '', hand: t.hand || 'right', event_type: t.event_type || 'blunt', spec: t.spec || '', dry_subtype: t.dry_subtype || 'stroke' });
+      setStockGroup(t.group || '');
     }
   }, [data, editing, mode]);
 
@@ -167,6 +184,10 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       purchase_name: form.purchase_name || null,
       ...(form.category === 'EVENT'
         ? { tags: { campaign_id: eventTags.campaign_id || null, hand: eventTags.hand, event_type: eventTags.event_type, spec: eventTags.spec.trim(), dry_subtype: eventTags.event_type === 'dry' ? eventTags.dry_subtype : '' } }
+        : {}),
+      // 재고판매(LS): 분류(group)만 갱신, 기존 tags(images 등)는 보존 (merge)
+      ...(form.category === 'LS'
+        ? { tags: mergeLsTags((data?.product?.tags as Record<string, unknown>) || {}, stockGroup) }
         : {}),
     });
     setEditing(false);
@@ -224,9 +245,27 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       ...(form.category === 'EVENT'
         ? { tags: { campaign_id: eventTags.campaign_id || null, hand: eventTags.hand, event_type: eventTags.event_type, spec: eventTags.spec.trim(), dry_subtype: eventTags.event_type === 'dry' ? eventTags.dry_subtype : '' } }
         : {}),
+      // 재고판매(LS): 분류(group). 등록 시엔 이미지가 없으니 group 만
+      ...(form.category === 'LS' && stockGroup.trim() ? { tags: { group: stockGroup.trim() } } : {}),
     });
     if (result?.product?.id && onCreated) onCreated(result.product.id);
   }
+
+  // 재고판매(LS) 분류 입력 — 등록·수정 폼 공통. 고객 카탈로그 필터 칩이 됨
+  const stockGroupBlock = (
+    <div>
+      <label className="text-xs text-neutral-500">분류 <span className="text-neutral-400">(고객 화면 필터 칩 · 예: 가위, 빗, 가발, 핀셋)</span></label>
+      <input
+        type="text" list="ls-group-options" value={stockGroup}
+        onChange={(e) => setStockGroup(e.target.value)}
+        placeholder="분류명 입력 (없으면 미분류)"
+        className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
+      />
+      <datalist id="ls-group-options">
+        {lsGroupOptions.map((g) => <option key={g} value={g} />)}
+      </datalist>
+    </div>
+  );
 
   // EVENT 전용 입력 (캠페인/손/종류/옵션) — category='EVENT'일 때만. 등록·수정 폼 공통
   const eventInputsBlock = (
@@ -305,6 +344,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               </div>
             </div>
             {form.category === 'EVENT' && eventInputsBlock}
+            {form.category === 'LS' && stockGroupBlock}
             <div>
               <label className="text-xs text-neutral-500">제품명 *</label>
               <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -503,6 +543,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               </div>
             </div>
             {form.category === 'EVENT' && eventInputsBlock}
+            {form.category === 'LS' && stockGroupBlock}
             {/* 재고 관리 토글 */}
             <div className="flex items-center justify-between py-1">
               <div>

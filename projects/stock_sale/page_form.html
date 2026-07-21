@@ -19,6 +19,20 @@
   .mm-hero__eyebrow{ font-size:12px; font-weight:700; letter-spacing:.14em; color:var(--gray); text-transform:uppercase; }
   .mm-hero__title{ font-size:26px; font-weight:800; color:var(--void); line-height:1.15; margin-top:6px; letter-spacing:-.02em; }
   .mm-hero__desc{ font-size:13px; color:var(--gray); margin-top:8px; line-height:1.6; }
+  .mm-ship{ display:inline-flex; align-items:center; gap:6px; margin-top:14px; font-size:12.5px; font-weight:600; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:999px; padding:7px 14px; }
+  .mm-ship b{ color:var(--void); font-weight:800; }
+  /* 분류 필터 칩 (품목 선택 바로 위) */
+  .mm-ls-filter{ display:flex; gap:7px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; scrollbar-width:none; scroll-padding-left:18px; }
+  .mm-ls-filter::-webkit-scrollbar{ display:none; }
+  .mm-fchip{ flex:0 0 auto; padding:8px 14px; border:1px solid var(--line); border-radius:999px; background:#fff; font-size:13px; font-weight:600; color:var(--ink); cursor:pointer; white-space:nowrap; transition:.15s; }
+  .mm-fchip[aria-pressed="true"]{ background:var(--void); color:#fff; border-color:var(--void); }
+  /* 장바구니 무료배송 진행 */
+  .mm-shipbar{ margin-top:12px; font-size:12px; font-weight:600; color:var(--ink); }
+  .mm-shipbar b{ color:var(--void); font-weight:800; }
+  .mm-shipbar__track{ height:6px; border-radius:999px; background:var(--line); overflow:hidden; margin-top:7px; }
+  .mm-shipbar__fill{ height:100%; background:var(--void); border-radius:999px; transition:width .3s; }
+  .mm-shipbar--done{ color:var(--ok); }
+  .mm-shipbar--done .mm-shipbar__fill{ background:var(--ok); }
   /* 카탈로그 그룹 + 카드 */
   .mm-catgroup{ margin-top:22px; }
   .mm-catgroup__h{ display:flex; align-items:center; color:var(--void); margin-bottom:12px; padding-bottom:8px; border-bottom:1.5px solid var(--void); }
@@ -171,10 +185,13 @@
     <div class="mm-hero__eyebrow">MAMORU STOCK</div>
     <h1 class="mm-hero__title">재고 특가 판매</h1>
     <p class="mm-hero__desc">보유 중인 정품 재고를 특별가로 정리합니다. 원하는 품목을 담아 접수해 주세요.</p>
+    <div class="mm-ship">🚚 <b>5만원 이상</b> 무료배송</div>
   </div>
 
   <!-- 카탈로그 -->
   <div class="mm-sec" id="catalogSec">
+    <!-- 분류 필터 칩 (품목 선택 바로 위) -->
+    <div class="mm-ls-filter" id="lsFilter" style="display:none;"></div>
     <div class="mm-sec__label">품목 선택 <small>담은 뒤 아래에서 접수합니다</small></div>
     <div id="catalog"><div class="mm-empty">불러오는 중…</div></div>
   </div>
@@ -185,6 +202,7 @@
     <div class="mm-cart">
       <div id="cartItems"></div>
       <div class="mm-cart__total"><span>합계</span><span id="cartTotal">0원</span></div>
+      <div class="mm-shipbar" id="shipBar"></div>
     </div>
   </div>
 
@@ -328,34 +346,34 @@ function closeInapp(){
     renderCatalog();
   }).catch(function(){ $('catalog').innerHTML='<div class="mm-empty">목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>'; });
 
+  var curFilter='all';
+  function renderFilter(){
+    var bar=$('lsFilter'); bar.innerHTML='';
+    // 제품에 지정된 분류(중복 제거, 첫 등장 순서 = 이름순)
+    var groups=[], seen={};
+    products.forEach(function(p){ var g=(p.group||'').trim(); if(g && !seen[g]){ seen[g]=1; groups.push(g); } });
+    if(groups.length===0){ bar.style.display='none'; return; }  // 분류 없으면 칩 숨김
+    bar.style.display='';
+    var mk=function(key,label){
+      var b=document.createElement('button'); b.className='mm-fchip'; b.type='button'; b.textContent=label;
+      b.setAttribute('aria-pressed', curFilter===key?'true':'false');
+      b.onclick=function(){ curFilter=key; renderFilter(); renderCatalog(); };
+      bar.appendChild(b);
+    };
+    mk('all','전체');
+    groups.forEach(function(g){ mk(g,g); });
+  }
   function renderCatalog(){
+    renderFilter();
     var box=$('catalog'); box.innerHTML='';
     if(!products.length){ box.innerHTML='<div class="mm-empty">현재 판매 중인 재고 상품이 없습니다.</div>'; return; }
-    // group 태그가 있으면 섹션 분리, 없으면 한 덩어리
-    var groups = {}; var order = [];
-    products.forEach(function(p){
-      var g = (p.group||'').trim() || '__all';
-      if(!groups[g]){ groups[g]=[]; order.push(g); }
-      groups[g].push(p);
-    });
-    order.forEach(function(g){
-      if(g !== '__all'){
-        var h=document.createElement('div'); h.className='mm-catgroup__h';
-        var hl=document.createElement('span'); hl.className='mm-catgroup__name'; hl.textContent=g;
-        h.appendChild(hl); box.appendChild(wrapGroup(h, groups[g]));
-      } else {
-        var grid=document.createElement('div'); grid.className='mm-grid';
-        groups[g].forEach(function(p){ grid.appendChild(productCard(p)); });
-        box.appendChild(grid);
-      }
-    });
-  }
-  function wrapGroup(headerEl, list){
-    var g=document.createElement('div'); g.className='mm-catgroup';
-    g.appendChild(headerEl);
+    var list=products.filter(function(p){ return curFilter==='all' || (p.group||'').trim()===curFilter; });
+    // 품절은 뒤로 (질서)
+    list.sort(function(a,b){ return (a.soldout?1:0)-(b.soldout?1:0); });
+    if(!list.length){ box.innerHTML='<div class="mm-empty">해당 분류에 상품이 없습니다.</div>'; return; }
     var grid=document.createElement('div'); grid.className='mm-grid';
     list.forEach(function(p){ grid.appendChild(productCard(p)); });
-    g.appendChild(grid); return g;
+    box.appendChild(grid);
   }
 
   function productCard(p){
@@ -478,7 +496,22 @@ function closeInapp(){
       items.appendChild(row);
     });
     $('cartTotal').textContent=won(total);
+    renderShipBar(total);
     sec.classList.remove('mm-hide'); showTail(true); updateSubmit();
+  }
+
+  var FREE_SHIP=50000;
+  function renderShipBar(total){
+    var el=$('shipBar'); if(!el) return;
+    var pct=Math.min(100, Math.round(total/FREE_SHIP*100));
+    if(total>=FREE_SHIP){
+      el.className='mm-shipbar mm-shipbar--done';
+      el.innerHTML='🚚 <b>무료배송 적용</b> — 배송비 없이 보내드려요';
+    } else {
+      el.className='mm-shipbar';
+      el.innerHTML='🚚 <b>'+won(FREE_SHIP-total)+'</b> 더 담으면 무료배송'
+        +'<div class="mm-shipbar__track"><div class="mm-shipbar__fill" style="width:'+pct+'%"></div></div>';
+    }
   }
 
   function showTail(on){
