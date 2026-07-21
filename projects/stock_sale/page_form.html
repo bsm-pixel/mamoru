@@ -46,7 +46,10 @@
   /* 카드 전체를 눌러 상세 모달 열기 */
   .mm-pcard{ cursor:pointer; transition:border-color .15s, transform .12s; }
   .mm-pcard:active{ transform:scale(.985); }
-  .mm-pcard--soldout{ opacity:.6; }
+  .mm-pcard--soldout{ opacity:.72; cursor:default; }
+  .mm-pcard--soldout:active{ transform:none; }
+  /* 품절 오버레이 — 썸네일 위에 흐리게 "품절" */
+  .mm-pcard__soldout{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(250,249,247,.58); color:var(--void); font-size:14px; font-weight:800; letter-spacing:.08em; -webkit-backdrop-filter:grayscale(.4); backdrop-filter:grayscale(.4); }
   .mm-pcard__more{ margin-top:auto; font-size:11px; font-weight:600; color:var(--gray); display:flex; align-items:center; gap:3px; }
   .mm-pcard__badge{ position:absolute; top:8px; left:8px; background:rgba(26,26,26,.62); color:#fff; font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
   .mm-pcard__thumbwrap{ position:relative; }
@@ -320,7 +323,7 @@ function closeInapp(){
   var products = [], cart = []; // cart: {key, product_id, product_name, qty, unit_price}
 
   // 카탈로그 로드
-  fetch(API+'/products').then(function(r){return r.json();}).then(function(j){
+  fetch(API+'/products?include_soldout=1').then(function(r){return r.json();}).then(function(j){
     products = (j.items||[]);
     renderCatalog();
   }).catch(function(){ $('catalog').innerHTML='<div class="mm-empty">목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>'; });
@@ -367,7 +370,9 @@ function closeInapp(){
       var d=document.createElement('div'); d.className='mm-pcard__noimg'; d.textContent='MAMORU'; tw.appendChild(d);
     }
     var imgN=(p.images&&p.images.length)||0;
-    if(imgN>1){ var bd=document.createElement('span'); bd.className='mm-pcard__badge'; bd.textContent='📷 '+imgN; tw.appendChild(bd); }
+    if(imgN>1 && !p.soldout){ var bd=document.createElement('span'); bd.className='mm-pcard__badge'; bd.textContent='📷 '+imgN; tw.appendChild(bd); }
+    // 품절 = 썸네일 위에 흐린 "품절" 오버레이
+    if(p.soldout){ var so=document.createElement('div'); so.className='mm-pcard__soldout'; so.textContent='품절'; tw.appendChild(so); }
     card.appendChild(tw);
 
     var body=document.createElement('div'); body.className='mm-pcard__body';
@@ -375,12 +380,12 @@ function closeInapp(){
     var pr=document.createElement('div'); pr.className='mm-pcard__price'; pr.innerHTML=esc(won(p.price));
     var st=document.createElement('span'); st.className='mm-stock mm-stock--'+(p.stock_tone||'ok'); st.textContent=p.stock_text||'';
     body.appendChild(nm); body.appendChild(pr); if(p.stock_text) body.appendChild(st);
-    var more=document.createElement('div'); more.className='mm-pcard__more'; more.textContent=(p.soldout?'소진 완료':'자세히 보기 ›');
+    var more=document.createElement('div'); more.className='mm-pcard__more'; more.textContent=(p.soldout?'품절 · 판매 종료':'자세히 보기 ›');
     body.appendChild(more);
     card.appendChild(body);
 
-    // 카드 전체 클릭 → 상세 모달
-    card.onclick=function(){ openDetail(p); };
+    // 카드 클릭 → 상세 모달 (품절은 모달 안 열림)
+    card.onclick=function(){ if(p.soldout) return; openDetail(p); };
     return card;
   }
 
