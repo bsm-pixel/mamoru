@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { stockLabel } from '@/lib/event/options';
+
+/** 재고판매 재고 라벨 — 범용 문구('개'). EVENT의 stockLabel(자루·획득가능)은 가위 전용이라 별도 */
+function lsStockLabel(stock: number): { text: string; tone: 'soldout' | 'low' | 'ok' } {
+  if (stock <= 0) return { text: '품절', tone: 'soldout' };
+  if (stock <= 5) return { text: `${stock}개 남음`, tone: 'low' };
+  return { text: '재고 있음', tone: 'ok' };
+}
 
 /**
  * 재고판매(LS) 공개 카탈로그 API — 비인증 + CORS (2026-07-21)
@@ -46,7 +52,7 @@ export async function GET(req: Request) {
         tags: Record<string, unknown> | null;
       }) => {
         const stock = p.stock_quantity ?? 0;
-        const label = stockLabel(stock);
+        const label = lsStockLabel(stock);
         const tags = p.tags || {};
         // 상세 이미지 여러 장 (tags.images) → 없으면 대표 썸네일 1장으로 대체
         const gallery = Array.isArray(tags.images) ? (tags.images as string[]).filter(Boolean) : [];
