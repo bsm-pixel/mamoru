@@ -18,6 +18,8 @@ interface ProductLite {
 }
 /** 한 단의 셀 (행×열) */
 interface Cell { id: string; bin_no: number | null; bin_row: number | null }
+/** col_span·좌표까지 포함한 셀 (add_cell·merge_cells 검증용) */
+interface CellFull { id: string; rack_no: number; level_no: number; bin_no: number | null; bin_row: number | null; col_span: number | null }
 
 /** GET */
 export async function GET() {
@@ -228,6 +230,112 @@ export async function POST(req: NextRequest) {
 
       if (cols > 0 && rowsCount === 1) await widenRackIfNeeded(supabase, rackNo, cols);
       return NextResponse.json({ success: true, level_no: nextLevel, created: gen.length });
+    }
+
+    /* ── 빈자리에 칸 1개 생성 (편집화면에서 점선 빈칸 클릭 → 재생성) ── */
+    if (action === 'add_cell') {
+      const rackNo = Number(body.rack_no);
+      const levelNo = Number(body.level_no);
+      const col = Number(body.bin_no);
+      const row = Math.max(1, Number(body.bin_row) || 1);
+      if (!Number.isInteger(col) || col < 1 || col > 26) {
+        return NextResponse.json({ error: '열은 1~26 사이여야 합니다' }, { status: 400 });
+      }
+
+      const { data: existing, error: exErr } = await supabase
+        .from('warehouse_locations')
+        .select('id, bin_no, bin_row, col_span')
+        .eq('rack_no', rackNo)
+        .eq('level_no', levelNo);
+      if (exErr) throw exErr;
+
+      // 선반 통째인 단은 칸으로 나눈 적이 없으므로 add_cell 대상이 아니다 (＋열로 먼저 나눠야 함)
+      if ((existing || []).some((c: CellFull) => c.bin_no == null)) {
+        return NextResponse.json({ error: '이 단은 선반입니다. ＋열로 먼저 칸을 나눠주세요.' }, { status: 409 });
+      }
+      // 이미 있거나, 왼쪽 넓은 칸(col_span)에 덮인 자리면 거절
+      for (const c of (existing || []) as CellFull[]) {
+        if ((c.bin_row ?? 1) !== row) continue;
+        const start = c.bin_no ?? 0;
+        const end = start + Math.max(1, c.col_span ?? 1) - 1;
+        if (col >= start && col <= end) {
+          return NextResponse.json({ error: '이미 칸이 있거나 병합된 칸에 덮인 자리입니다' }, { status: 409 });
+        }
+      }
+      const rows = (existing || []).reduce((m: number, c: CellFull) => Math.max(m, c.bin_row ?? 1), 1);
+
+      const { error } = await supabase.from('warehouse_locations').insert({
+        code: makeLocationCode(rackNo, levelNo, col, row, rows),
+        label: makeLocationLabel(rackNo, levelNo, col, row, rows),
+        rack_no: rackNo, level_no: levelNo, bin_no: col, bin_row: row,
+        sort_order: locationSortOrder(rackNo, levelNo, col, row),
+      });
+      if (error) {
+        if (String(error.code) === '23505') {
+          return NextResponse.json({ error: '이미 있는 칸입니다' }, { status: 409 });
+        }
+        throw error;
+      }
+      if (rows === 1) await widenRackIfNeeded(supabase, rackNo, col);
+      return NextResponse.json({ success: true });
+    }
+
+    /* ── 가로 병합 — 같은 행의 인접한 칸들을 왼쪽 칸 하나로 합친다 ──
+       흡수되는 칸의 제품은 왼쪽(남는) 칸으로 옮기고, 흡수 칸은 삭제. (수량 로직 무관 — location_id 만 이동) */
+    if (action === 'merge_cells') {
+      const ids: string[] = Array.isArray(body.ids) ? body.ids.map(String) : [];
+      if (ids.length < 2) return NextResponse.json({ error: '병합하려면 칸을 2개 이상 골라주세요' }, { status: 400 });
+
+      const { data: cells, error: cErr } = await supabase
+        .from('warehouse_locations')
+        .select('id, rack_no, level_no, bin_no, bin_row, col_span')
+        .in('id', ids);
+      if (cErr) throw cErr;
+      if (!cells || cells.length !== ids.length) {
+        return NextResponse.json({ error: '칸을 찾을 수 없습니다' }, { status: 404 });
+      }
+      const list = cells as CellFull[];
+      // 같은 렉·단·행이어야 하고, 칸이어야(선반 X) 한다
+      const r0 = list[0];
+      if (list.some((c) => c.rack_no !== r0.rack_no || c.level_no !== r0.level_no || (c.bin_row ?? 1) !== (r0.bin_row ?? 1) || c.bin_no == null)) {
+        return NextResponse.json({ error: '같은 단·같은 행의 칸끼리만 가로로 합칠 수 있습니다' }, { status: 400 });
+      }
+      // 열 순서대로 정렬 후 각 칸의 폭까지 고려해 '빈틈 없이 붙어 있는지' 검증
+      list.sort((a, b) => (a.bin_no ?? 0) - (b.bin_no ?? 0));
+      let cursor = (list[0].bin_no ?? 0);
+      for (const c of list) {
+        if ((c.bin_no ?? 0) !== cursor) {
+          return NextResponse.json({ error: '서로 붙어 있는 칸만 합칠 수 있습니다 (사이에 빈칸이 있으면 안 됩니다)' }, { status: 400 });
+        }
+        cursor += Math.max(1, c.col_span ?? 1);
+      }
+      const leftmost = list[0];
+      const totalSpan = cursor - (leftmost.bin_no ?? 0);
+      const absorbed = list.slice(1);
+
+      // 흡수 칸의 제품을 왼쪽 칸으로 이동 (location_id 만 변경)
+      const absorbedIds = absorbed.map((c) => c.id);
+      const { error: mvErr } = await supabase
+        .from('products').update({ location_id: leftmost.id }).in('location_id', absorbedIds);
+      if (mvErr) throw mvErr;
+
+      const { error: delErr } = await supabase.from('warehouse_locations').delete().in('id', absorbedIds);
+      if (delErr) throw delErr;
+
+      const { error: upErr } = await supabase
+        .from('warehouse_locations').update({ col_span: totalSpan }).eq('id', leftmost.id);
+      if (upErr) throw upErr;
+
+      return NextResponse.json({ success: true, col_span: totalSpan });
+    }
+
+    /* ── 병합 해제 — col_span 을 1로 되돌린다. 비워진 열은 편집화면 점선 빈칸으로 재생성 가능 ── */
+    if (action === 'split_cell') {
+      const id = String(body.id || '');
+      if (!id) return NextResponse.json({ error: 'id 가 필요합니다' }, { status: 400 });
+      const { error } = await supabase.from('warehouse_locations').update({ col_span: 1 }).eq('id', id);
+      if (error) throw error;
+      return NextResponse.json({ success: true });
     }
 
     return NextResponse.json({ error: '알 수 없는 action 입니다' }, { status: 400 });

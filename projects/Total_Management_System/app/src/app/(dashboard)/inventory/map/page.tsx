@@ -14,7 +14,7 @@ import { useIsLg } from '@/hooks/use-grid-mode';
 import { useLocations, useCreateRack, useDeleteLocation, useAssignLocation, type LocationWithProducts, type LocationProduct } from '@/hooks/use-warehouse';
 import { RackEditModal } from '@/components/inventory/rack-edit-modal';
 import { RackMapPrint } from '@/components/inventory/rack-map-print';
-import { cellGridPos } from '@/lib/warehouse/location-code';
+import { cellGridPos, cellSpan, levelColumnCount } from '@/lib/warehouse/location-code';
 import { Modal } from '@/components/ui/modal';
 import { Boxes, MapPin, Plus, ArrowLeft, Trash2, PackageX, Printer, Settings2 } from 'lucide-react';
 
@@ -66,7 +66,8 @@ export default function WarehouseLayoutPage() {
       .sort((a, b) => a[0] - b[0])
       .map(([rackNo, list]) => {
         const info = rackInfo.get(rackNo);
-        const maxBins = list.reduce((m, l) => Math.max(m, l.bin_no ?? 0), 0);
+        // 116: 병합 칸의 폭(col_span)까지 포함해야 오른쪽이 잘리지 않는다
+        const maxBins = levelColumnCount(list);
         return {
           rackNo,
           label: info?.label || null,
@@ -79,7 +80,7 @@ export default function WarehouseLayoutPage() {
               const cells = list.filter((l) => l.level_no === lv)
                 .sort((a, b) => ((a.bin_row ?? 0) - (b.bin_row ?? 0)) || ((a.bin_no ?? 0) - (b.bin_no ?? 0)));
               const rows = cells.reduce((m, c) => Math.max(m, c.bin_row ?? 0), 0);
-              const cols = cells.reduce((m, c) => Math.max(m, c.bin_no ?? 0), 0);
+              const cols = levelColumnCount(cells);
               const isShelf = cells.length === 1 && cells[0].bin_no == null;
               return {
                 levelNo: lv, cells, rows, cols, isShelf,
@@ -224,6 +225,7 @@ export default function WarehouseLayoutPage() {
                     const empty = loc.product_count === 0;
                     const many = loc.product_count > 1;
                     const pos = cellGridPos(loc.bin_no, loc.bin_row);
+                    const span = cellSpan(loc.col_span);   // 116: 가로로 병합된 넓은 칸
                     return (
                       <button
                         key={loc.id}
@@ -232,44 +234,43 @@ export default function WarehouseLayoutPage() {
                           empty ? `${loc.label || loc.code} · 비어 있음`
                             : `${loc.label || loc.code}\n${loc.products.map((p) => `· ${p.name} ${p.stock_quantity}개`).join('\n')}`
                         }
-                        // 중간 칸을 삭제해도 나머지가 밀리지 않도록 열·행을 명시 배치
-                        style={isShelf ? { gridColumn: '1 / -1' } : { gridColumn: pos.col, gridRow: pos.row }}
-                        className={`rounded-md border text-left transition min-w-0 ${
-                          compact ? 'h-[38px] px-1.5 py-1' : 'h-[70px] px-2 py-1.5'
+                        // 중간 칸을 삭제해도 나머지가 밀리지 않도록 열·행 명시 + 병합 폭(span) 반영
+                        style={isShelf ? { gridColumn: '1 / -1' } : { gridColumn: `${pos.col} / span ${span}`, gridRow: pos.row }}
+                        className={`rounded-md border text-left transition min-w-0 flex flex-col justify-center ${
+                          compact ? 'h-[38px] px-1.5 py-1' : 'h-[70px] px-2.5 py-1.5'
                         } ${
                           sel ? 'border-neutral-900 ring-2 ring-neutral-900 bg-[#F4F0EA]'
                           : hit ? 'border-amber-500 ring-2 ring-amber-400 bg-amber-50'
-                          : empty ? 'border-dashed border-neutral-300 bg-white hover:border-neutral-400'
+                          // 빈칸 = 점선 테두리만 (요청 ③: 제품 없으면 점선 형태만)
+                          : empty ? 'border-dashed border-neutral-200 bg-transparent hover:border-neutral-400 hover:bg-white'
                           : 'border-neutral-200 bg-white hover:border-neutral-400'
                         }`}
                       >
-                        <div className="flex items-center gap-1 leading-tight">
-                          <span className="text-[9px] font-mono text-neutral-400 truncate">
-                            {compact ? loc.code.split('-').pop() : loc.code}
-                            {isShelf && <span className="ml-1 text-neutral-300">선반</span>}
-                          </span>
-                          {/* 한 칸에 여러 품목을 몰아 넣는 경우가 많다 — 몇 종인지 먼저 보이게 */}
-                          {many && (
-                            <span className="ml-auto shrink-0 px-1 rounded bg-neutral-800 text-white text-[8px] font-bold tabular-nums">
-                              {loc.product_count}종
+                        {/* 요청 ③: 메인 배치도는 코드(A1) 숨기고 모델명만 크게. 빈칸은 아무 글자도 안 보임 */}
+                        {empty ? null : compact ? (
+                          <div className="flex items-center gap-1 min-w-0">
+                            <span className="text-[10px] font-bold text-indigo-black truncate leading-tight">
+                              {many ? `${loc.products[0]?.name} 외` : loc.products[0]?.name}
                             </span>
-                          )}
-                        </div>
-                        {empty ? (
-                          !compact && <div className="text-[11px] text-neutral-300 mt-1">비어 있음</div>
-                        ) : compact ? (
-                          <div className="text-[9px] font-semibold text-indigo-black truncate leading-tight">
-                            {many ? `${loc.products[0]?.name} 외` : loc.products[0]?.name}
+                            {many && (
+                              <span className="ml-auto shrink-0 px-1 rounded bg-neutral-800 text-white text-[8px] font-bold tabular-nums">{loc.product_count}</span>
+                            )}
                           </div>
                         ) : (
                           <>
-                            {/* 여러 종이면 두 개까지 이름을 보여주고 나머지는 개수로 */}
-                            {loc.products.slice(0, many ? 2 : 1).map((p) => (
-                              <div key={p.id} className="text-[11px] font-semibold text-indigo-black truncate leading-snug">
-                                {p.name}
+                            <div className="flex items-start gap-1">
+                              <div className="min-w-0 flex-1">
+                                {loc.products.slice(0, many ? 2 : 1).map((p) => (
+                                  <div key={p.id} className="text-[13px] font-bold text-indigo-black truncate leading-tight">
+                                    {p.name}
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                            <div className="text-[10px] text-neutral-500 tabular-nums leading-tight">
+                              {many && (
+                                <span className="shrink-0 px-1 rounded bg-neutral-800 text-white text-[9px] font-bold tabular-nums">{loc.product_count}종</span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-neutral-500 tabular-nums leading-tight mt-0.5">
                               {loc.product_count > 2 && <span className="text-neutral-400">외 {loc.product_count - 2}종 · </span>}
                               재고 {loc.stock_total}
                             </div>

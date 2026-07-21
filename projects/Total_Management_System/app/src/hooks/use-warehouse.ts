@@ -22,6 +22,7 @@ export interface LocationWithProducts {
   level_no: number;
   bin_no: number | null;   // 열
   bin_row: number | null;  // 114: 행 (수납함이면 2 이상)
+  col_span: number | null; // 116: 가로로 차지하는 열 수 (병합된 넓은 칸이면 2 이상)
   zone_type: string;
   sort_order: number;
   is_active: boolean;
@@ -116,6 +117,24 @@ export function useAddRow() {
 export function useAddLevel() {
   const m = useWarehouseAction((d) => `${d.level_no}단을 추가했습니다`);
   return { ...m, mutate: (v: { rack_no: number; cols?: number; rows?: number }) => m.mutate({ action: 'add_level', ...v }) };
+}
+
+/** 빈자리에 칸 1개 생성 (편집화면 점선 빈칸 클릭 → 재생성) */
+export function useAddCell() {
+  const m = useWarehouseAction(() => '칸을 만들었습니다');
+  return { ...m, mutate: (v: { rack_no: number; level_no: number; bin_no: number; bin_row: number }) => m.mutate({ action: 'add_cell', ...v }) };
+}
+
+/** 가로 병합 — 같은 행 인접 칸들을 왼쪽 하나로 합침 (116) */
+export function useMergeCells() {
+  const m = useWarehouseAction((d) => `가로로 합쳤습니다 (${d.col_span}칸 폭)`);
+  return { ...m, mutate: (v: { ids: string[] }) => m.mutate({ action: 'merge_cells', ...v }) };
+}
+
+/** 병합 해제 — col_span 을 1로 (116) */
+export function useSplitCell() {
+  const m = useWarehouseAction(() => '병합을 해제했습니다');
+  return { ...m, mutate: (v: { id: string }) => m.mutate({ action: 'split_cell', ...v }) };
 }
 
 /** 렉/칸 삭제 — 배정돼 있던 제품은 '미지정'으로 풀린다 */

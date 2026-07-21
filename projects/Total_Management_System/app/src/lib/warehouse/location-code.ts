@@ -76,6 +76,21 @@ export function cellGridPos(binNo: number | null, binRow: number | null): { col:
   return { col: Math.max(1, binNo ?? 1), row: Math.max(1, binRow ?? 1) };
 }
 
+/** 이 칸이 가로로 차지하는 열 수 (116: 병합된 넓은 칸이면 2 이상, 없으면 1) */
+export function cellSpan(colSpan: number | null | undefined): number {
+  return Math.max(1, Math.floor(colSpan ?? 1));
+}
+
+/**
+ * 한 단(level)의 실제 열 수 — 병합 칸의 폭까지 포함해야 오른쪽이 잘리지 않는다.
+ * cells: { bin_no, col_span } 목록
+ */
+export function levelColumnCount(
+  cells: Array<{ bin_no: number | null; col_span?: number | null }>,
+): number {
+  return cells.reduce((m, c) => Math.max(m, (c.bin_no ?? 0) + cellSpan(c.col_span) - 1), 0);
+}
+
 export interface GeneratedLocation {
   code: string;
   label: string;

@@ -1,5 +1,5 @@
 import type { LocationWithProducts } from '@/hooks/use-warehouse';
-import { cellGridPos } from '@/lib/warehouse/location-code';
+import { cellGridPos, cellSpan } from '@/lib/warehouse/location-code';
 
 /**
  * 렉 배치도 인쇄 HTML — A4 한 장에 렉 하나 (2026-07-20)
@@ -80,9 +80,10 @@ export function buildRackPrintHtml(racks: PrintRack[], opt: PrintOptions): strin
     const cell = (loc: LocationWithProducts, span: boolean, short: boolean) => {
       const empty = loc.product_count === 0;
       const shown = short ? (loc.code.split('-').pop() || loc.code) : loc.code;
-      // 중간 칸을 삭제해도 밀리지 않게 열·행 명시 배치 (화면 배치도와 동일 규칙)
+      // 중간 칸을 삭제해도 밀리지 않게 열·행 명시 + 병합 폭(col_span) 반영 (화면 배치도와 동일 규칙)
       const pos = cellGridPos(loc.bin_no, loc.bin_row);
-      const place = span ? 'grid-column:1/-1' : `grid-column:${pos.col};grid-row:${pos.row}`;
+      const colSpan = cellSpan(loc.col_span);
+      const place = span ? 'grid-column:1/-1' : `grid-column:${pos.col} / span ${colSpan};grid-row:${pos.row}`;
 
       // 한 칸에 여러 품목을 몰아 넣는 경우 — 칸 높이가 허락하는 만큼 이름을 더 적는다
       const names = loc.products.slice(0, maxNameLines)
