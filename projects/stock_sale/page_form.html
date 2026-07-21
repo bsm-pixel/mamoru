@@ -43,6 +43,50 @@
   .mm-pcard__qty span{ min-width:22px; text-align:center; font-weight:700; font-size:14px; }
   .mm-pcard__add{ width:100%; height:36px; border-radius:10px; background:var(--void); color:#fff; font-size:12.5px; font-weight:700; border:0; cursor:pointer; }
   .mm-pcard__add:disabled{ background:#CFCBC6; cursor:not-allowed; }
+  /* 카드 전체를 눌러 상세 모달 열기 */
+  .mm-pcard{ cursor:pointer; transition:border-color .15s, transform .12s; }
+  .mm-pcard:active{ transform:scale(.985); }
+  .mm-pcard--soldout{ opacity:.6; }
+  .mm-pcard__more{ margin-top:auto; font-size:11px; font-weight:600; color:var(--gray); display:flex; align-items:center; gap:3px; }
+  .mm-pcard__badge{ position:absolute; top:8px; left:8px; background:rgba(26,26,26,.62); color:#fff; font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
+  .mm-pcard__thumbwrap{ position:relative; }
+
+  /* ── 제품 상세 모달 (에디토리얼) ─────────────────────────── */
+  .mm-pd{ position:fixed; inset:0; z-index:80; background:rgba(26,26,26,.5); display:none; align-items:flex-end; justify-content:center; }
+  .mm-pd.on{ display:flex; }
+  .mm-pd__box{ background:var(--cream); width:100%; max-width:560px; max-height:94vh; border-radius:20px 20px 0 0; overflow:hidden; display:flex; flex-direction:column; animation:mmPdUp .28s cubic-bezier(.16,1,.3,1) both; }
+  @media(min-width:600px){ .mm-pd{ align-items:center; } .mm-pd__box{ border-radius:20px; max-height:90vh; } }
+  @keyframes mmPdUp{ from{ transform:translateY(24px); opacity:.4 } to{ transform:none; opacity:1 } }
+  .mm-pd__scroll{ overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .mm-pd__close{ position:absolute; top:12px; right:12px; z-index:3; width:34px; height:34px; border:0; border-radius:999px; background:rgba(255,255,255,.9); color:var(--void); font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.12); }
+  /* 갤러리 */
+  .mm-pd__gal{ position:relative; background:#fff; }
+  .mm-pd__track{ display:flex; transition:transform .3s cubic-bezier(.22,.61,.36,1); touch-action:pan-y; }
+  .mm-pd__slide{ flex:0 0 100%; }
+  .mm-pd__slide img{ display:block; width:100%; aspect-ratio:1/1; object-fit:cover; }
+  .mm-pd__noimg{ width:100%; aspect-ratio:1/1; background:var(--shell); display:flex; align-items:center; justify-content:center; color:#C9C5C0; font-size:14px; font-weight:600; letter-spacing:.08em; }
+  .mm-pd__nav{ position:absolute; top:50%; transform:translateY(-50%); z-index:2; width:32px; height:32px; border:0; border-radius:999px; background:rgba(255,255,255,.85); color:var(--void); font-size:18px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+  .mm-pd__nav[disabled]{ opacity:0; pointer-events:none; }
+  .mm-pd__prev{ left:10px; } .mm-pd__next{ right:10px; }
+  .mm-pd__dots{ position:absolute; bottom:10px; left:0; right:0; display:flex; justify-content:center; gap:5px; }
+  .mm-pd__dot{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.55); transition:.2s; }
+  .mm-pd__dot.on{ background:#fff; width:16px; border-radius:3px; }
+  .mm-pd__count{ position:absolute; top:12px; left:12px; background:rgba(26,26,26,.5); color:#fff; font-size:11px; font-weight:600; padding:3px 9px; border-radius:999px; }
+  /* 본문 */
+  .mm-pd__info{ padding:20px 20px 8px; }
+  .mm-pd__name{ font-size:20px; font-weight:800; color:var(--void); line-height:1.3; letter-spacing:-.01em; }
+  .mm-pd__price{ font-size:22px; font-weight:800; color:var(--void); margin-top:8px; }
+  .mm-pd__stock{ display:inline-block; font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; margin-top:10px; }
+  .mm-pd__desc{ font-size:14px; line-height:1.85; color:var(--ink); white-space:pre-wrap; margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
+  .mm-pd__desc:empty{ display:none; }
+  /* 구매 바 (하단 고정) */
+  .mm-pd__buy{ padding:14px 20px calc(16px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); background:var(--cream); display:flex; align-items:center; gap:12px; }
+  .mm-pd__qty{ display:flex; align-items:center; gap:12px; }
+  .mm-pd__qty button{ width:36px; height:36px; border:1px solid var(--line); border-radius:10px; background:#fff; font-size:18px; cursor:pointer; }
+  .mm-pd__qty span{ min-width:22px; text-align:center; font-weight:800; font-size:16px; }
+  .mm-pd__add{ flex:1; height:52px; border-radius:999px; background:var(--void); color:#fff; font-size:15px; font-weight:800; border:0; cursor:pointer; }
+  .mm-pd__add:disabled{ background:#CFCBC6; cursor:not-allowed; }
+  .mm-embed .mm-pd{ position:absolute; align-items:flex-start; }
   /* 장바구니 */
   .mm-cart{ border:1px solid var(--void); border-radius:14px; background:#fff; padding:14px; }
   .mm-cart__item{ display:flex; justify-content:space-between; gap:8px; font-size:13px; padding:6px 0; border-bottom:1px solid var(--line); }
@@ -171,6 +215,36 @@
   </div>
 </div>
 
+<!-- 제품 상세 모달 -->
+<div class="mm-pd" id="pdModal">
+  <div class="mm-pd__box">
+    <div class="mm-pd__scroll">
+      <div class="mm-pd__gal" id="pdGal">
+        <button class="mm-pd__close" type="button" id="pdClose" aria-label="닫기">✕</button>
+        <div class="mm-pd__count" id="pdCount"></div>
+        <div class="mm-pd__track" id="pdTrack"></div>
+        <button class="mm-pd__nav mm-pd__prev" type="button" id="pdPrev" aria-label="이전">‹</button>
+        <button class="mm-pd__nav mm-pd__next" type="button" id="pdNext" aria-label="다음">›</button>
+        <div class="mm-pd__dots" id="pdDots"></div>
+      </div>
+      <div class="mm-pd__info">
+        <div class="mm-pd__name" id="pdName"></div>
+        <div class="mm-pd__price" id="pdPrice"></div>
+        <span class="mm-pd__stock" id="pdStock"></span>
+        <div class="mm-pd__desc" id="pdDesc"></div>
+      </div>
+    </div>
+    <div class="mm-pd__buy">
+      <div class="mm-pd__qty">
+        <button type="button" id="pdMinus" aria-label="빼기">−</button>
+        <span id="pdQty">1</span>
+        <button type="button" id="pdPlus" aria-label="더하기">＋</button>
+      </div>
+      <button class="mm-pd__add" type="button" id="pdAdd">담기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 다음 우편번호 검색 레이어 -->
 <div class="mm-pc-layer" id="pcLayer">
   <div class="mm-pc-box">
@@ -271,38 +345,98 @@ function closeInapp(){
   }
 
   function productCard(p){
-    var card=document.createElement('div'); card.className='mm-pcard';
-    // 이미지 (없으면 플레이스홀더)
+    var card=document.createElement('div'); card.className='mm-pcard'+(p.soldout?' mm-pcard--soldout':'');
+    // 썸네일 (없으면 플레이스홀더) + "여러 장" 배지
+    var tw=document.createElement('div'); tw.className='mm-pcard__thumbwrap';
     if(p.image_url){
       var im=document.createElement('img'); im.className='mm-pcard__thumb'; im.src=p.image_url; im.alt=p.name; im.loading='lazy';
       im.onerror=function(){ var d=document.createElement('div'); d.className='mm-pcard__noimg'; d.textContent='MAMORU'; im.replaceWith(d); };
-      card.appendChild(im);
+      tw.appendChild(im);
     } else {
-      var d=document.createElement('div'); d.className='mm-pcard__noimg'; d.textContent='MAMORU'; card.appendChild(d);
+      var d=document.createElement('div'); d.className='mm-pcard__noimg'; d.textContent='MAMORU'; tw.appendChild(d);
     }
+    var imgN=(p.images&&p.images.length)||0;
+    if(imgN>1){ var bd=document.createElement('span'); bd.className='mm-pcard__badge'; bd.textContent='📷 '+imgN; tw.appendChild(bd); }
+    card.appendChild(tw);
+
     var body=document.createElement('div'); body.className='mm-pcard__body';
     var nm=document.createElement('div'); nm.className='mm-pcard__name'; nm.textContent=p.name;
     var pr=document.createElement('div'); pr.className='mm-pcard__price'; pr.innerHTML=esc(won(p.price));
     var st=document.createElement('span'); st.className='mm-stock mm-stock--'+(p.stock_tone||'ok'); st.textContent=p.stock_text||'';
     body.appendChild(nm); body.appendChild(pr); if(p.stock_text) body.appendChild(st);
+    var more=document.createElement('div'); more.className='mm-pcard__more'; more.textContent=(p.soldout?'소진 완료':'자세히 보기 ›');
+    body.appendChild(more);
+    card.appendChild(body);
 
-    var ctrl=document.createElement('div'); ctrl.className='mm-pcard__ctrl';
-    var qty=1;
-    var maxQty=(typeof p.stock==='number' && p.stock>0)?p.stock:1;
-    if(!p.soldout){
-      var qd=document.createElement('div'); qd.className='mm-pcard__qty';
-      qd.innerHTML='<button type="button" aria-label="빼기">−</button><span>1</span><button type="button" aria-label="더하기">+</button>';
-      qd.children[0].onclick=function(){ qty=Math.max(1,qty-1); qd.children[1].textContent=qty; };
-      qd.children[2].onclick=function(){ if(qty<maxQty){ qty++; qd.children[1].textContent=qty; } };
-      ctrl.appendChild(qd);
-    }
-    var add=document.createElement('button'); add.className='mm-pcard__add'; add.textContent='담기';
-    if(p.soldout){ add.disabled=true; add.textContent='소진 완료'; }
-    add.onclick=function(){ addToCart(p, qty); };
-    ctrl.appendChild(add);
-    body.appendChild(ctrl); card.appendChild(body);
+    // 카드 전체 클릭 → 상세 모달
+    card.onclick=function(){ openDetail(p); };
     return card;
   }
+
+  // ── 제품 상세 모달 ──
+  var pdState={ p:null, idx:0, qty:1, imgs:[] };
+  function openDetail(p){
+    pdState.p=p; pdState.idx=0; pdState.qty=1;
+    pdState.imgs=(p.images&&p.images.length)?p.images:(p.image_url?[p.image_url]:[]);
+    $('pdName').textContent=p.name;
+    $('pdPrice').textContent=won(p.price);
+    var st=$('pdStock'); st.className='mm-pd__stock mm-stock--'+(p.stock_tone||'ok'); st.textContent=p.stock_text||''; st.style.display=p.stock_text?'':'none';
+    $('pdDesc').textContent=p.description||'';
+    $('pdQty').textContent='1';
+    var add=$('pdAdd');
+    if(p.soldout){ add.disabled=true; add.textContent='소진 완료'; }
+    else{ add.disabled=false; add.textContent='담기'; }
+    renderGallery();
+    $('pdModal').classList.add('on');
+    anchorOverlay($('pdModal'), null, 0); // 임베드: 최상단 기준(아래 앵커 보정)
+    if(IS_EMBED){ $('pdModal').style.top=(window.scrollY||window.pageYOffset||0)+'px'; }
+    document.body.style.overflow='hidden';
+  }
+  function closeDetail(){ $('pdModal').classList.remove('on'); document.body.style.overflow=''; }
+  function renderGallery(){
+    var track=$('pdTrack'), dots=$('pdDots'), gal=$('pdGal'); track.innerHTML=''; dots.innerHTML='';
+    var imgs=pdState.imgs;
+    if(imgs.length===0){
+      var s=document.createElement('div'); s.className='mm-pd__slide';
+      var n=document.createElement('div'); n.className='mm-pd__noimg'; n.textContent='MAMORU'; s.appendChild(n); track.appendChild(s);
+    } else {
+      imgs.forEach(function(url,i){
+        var s=document.createElement('div'); s.className='mm-pd__slide';
+        var im=document.createElement('img'); im.src=url; im.alt='상세 '+(i+1); im.loading='lazy';
+        im.onerror=function(){ var d=document.createElement('div'); d.className='mm-pd__noimg'; d.textContent='MAMORU'; im.replaceWith(d); };
+        s.appendChild(im); track.appendChild(s);
+        var dt=document.createElement('span'); dt.className='mm-pd__dot'+(i===0?' on':''); dots.appendChild(dt);
+      });
+    }
+    var multi=imgs.length>1;
+    $('pdPrev').style.display=multi?'':'none'; $('pdNext').style.display=multi?'':'none';
+    dots.style.display=multi?'':'none';
+    $('pdCount').style.display=multi?'':'none';
+    gal.scrollTop=0;
+    pdRender();
+  }
+  function pdRender(){
+    var n=Math.max(1,pdState.imgs.length);
+    $('pdTrack').style.transform='translateX('+(-pdState.idx*100)+'%)';
+    var dots=$('pdDots').children; for(var i=0;i<dots.length;i++) dots[i].classList.toggle('on', i===pdState.idx);
+    $('pdCount').textContent=(pdState.idx+1)+' / '+n;
+    $('pdPrev').disabled=(pdState.idx===0);
+    $('pdNext').disabled=(pdState.idx>=n-1);
+  }
+  function pdGo(i){ pdState.idx=Math.max(0,Math.min(pdState.imgs.length-1,i)); pdRender(); }
+  $('pdPrev').onclick=function(){ pdGo(pdState.idx-1); };
+  $('pdNext').onclick=function(){ pdGo(pdState.idx+1); };
+  $('pdClose').onclick=closeDetail;
+  $('pdModal').onclick=function(e){ if(e.target===$('pdModal')) closeDetail(); };
+  $('pdMinus').onclick=function(){ pdState.qty=Math.max(1,pdState.qty-1); $('pdQty').textContent=pdState.qty; };
+  $('pdPlus').onclick=function(){ var mx=(typeof pdState.p.stock==='number'&&pdState.p.stock>0)?pdState.p.stock:1; if(pdState.qty<mx){ pdState.qty++; $('pdQty').textContent=pdState.qty; } };
+  $('pdAdd').onclick=function(){ if(pdState.p && !pdState.p.soldout){ addToCart(pdState.p, pdState.qty); closeDetail(); } };
+  // 갤러리 스와이프
+  (function(){
+    var sx=0,sy=0,drag=false, t=$('pdTrack');
+    t.addEventListener('touchstart',function(e){ var x=e.touches[0]; sx=x.clientX; sy=x.clientY; drag=true; },{passive:true});
+    t.addEventListener('touchend',function(e){ if(!drag)return; drag=false; var x=e.changedTouches[0], dx=x.clientX-sx, dy=x.clientY-sy; if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)) pdGo(pdState.idx+(dx<0?1:-1)); },{passive:true});
+  })();
 
   function addToCart(p, qty){
     // 같은 제품 이미 담겼으면 수량 합산 (재고 상한 내)

@@ -48,6 +48,9 @@ export async function GET(req: Request) {
         const stock = p.stock_quantity ?? 0;
         const label = stockLabel(stock);
         const tags = p.tags || {};
+        // 상세 이미지 여러 장 (tags.images) → 없으면 대표 썸네일 1장으로 대체
+        const gallery = Array.isArray(tags.images) ? (tags.images as string[]).filter(Boolean) : [];
+        const images = gallery.length > 0 ? gallery : (p.image_url ? [p.image_url] : []);
         return {
           id: p.id,
           sku: p.sku,
@@ -57,7 +60,8 @@ export async function GET(req: Request) {
           soldout: stock <= 0,
           stock_text: label.text,
           stock_tone: label.tone,
-          image_url: p.image_url || '',
+          image_url: images[0] || '',
+          images,                       // 상세 모달용 갤러리
           description: p.description || '',
           // 카탈로그 그룹핑용(선택) — 등록 시 tags.group 넣으면 폼에서 섹션 분리 가능
           group: (tags.group as string) || '',

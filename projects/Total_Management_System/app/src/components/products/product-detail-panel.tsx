@@ -15,6 +15,7 @@ import { formatKRW } from '@/lib/utils/format';
 import { Save, Package, Hash, X, Plus, Archive, Copy, Eye, EyeOff, Trash2, ArrowRightLeft, ArrowRight, ExternalLink, Printer, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { LabelPrintModal } from '@/components/labels/label-print-modal';
+import { StockImageManager } from '@/components/products/stock-image-manager';
 import { useLabelTemplate } from '@/hooks/use-label-templates';
 
 import { useSetting } from '@/hooks/use-settings';
@@ -576,6 +577,14 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
             <div className="rounded-lg overflow-hidden bg-neutral-50">
               <img src={p.image_url} alt={p.name} className="w-full h-40 object-contain" />
             </div>
+          )}
+
+          {/* 재고판매 상세 이미지 매니저 — 고객 상세 모달에 쓰일 여러 장 */}
+          {p.category === 'LS' && (
+            <StockImageManager
+              productId={p.id}
+              images={Array.isArray((p.tags as Record<string, unknown> | null)?.images) ? ((p.tags as Record<string, string[]>).images) : []}
+            />
           )}
 
           {/* 기본 정보 */}
