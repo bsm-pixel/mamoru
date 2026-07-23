@@ -191,7 +191,7 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], preloaded, onClose }
         </div>
         <div class="sec items">${itemsHtml}</div>
         ${memo ? `<div class="sec memo"><span class="lbl">메모</span> ${esc(memo)}</div>` : ''}
-        <div class="chk">☐ 포장 완료&nbsp;&nbsp;&nbsp;☐ 발송 완료</div>
+        <div class="chk">☐ 포장 완료</div>
         <div class="ft">MAMORU</div>
       </div>`;
     };

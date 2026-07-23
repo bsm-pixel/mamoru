@@ -12,9 +12,10 @@ import { useUpdateRepairStatus, useUpdateRepairFields, useShipRepair } from '@/h
 import { formatKRW, formatPhone, formatDate, formatDateTime } from '@/lib/utils/format';
 import {
   Search, Scissors, Package, MapPin, CheckCircle,
-  CreditCard, Truck, ClipboardCheck,
+  CreditCard, Truck, ClipboardCheck, ClipboardList, Printer,
 } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
 import type { Repair } from '@/lib/supabase/types';
 import type { RepairTabKey } from './repair-tab-bar';
 
@@ -49,6 +50,14 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
   const [activeTab, setActiveTab] = useState<RepairTabKey>(initialTab || 'intake');
   const [search, setSearch] = useState('');
   const { tabs, tabData, isLoading } = useRepairTabData();
+  // 준비표(트레이형) 다중선택
+  const [prepMode, setPrepMode] = useState(false);
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [showPrep, setShowPrep] = useState(false);
+  const toggleCheck = (id: string) => setCheckedIds((prev) => {
+    const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next;
+  });
+  const rowClick = (id: string) => { if (prepMode) toggleCheck(id); else onSelect?.(id); };
 
   // initialTab 변경 시 탭 전환
   useEffect(() => {
@@ -152,8 +161,29 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
         })}
       </div>
 
-      {/* 건수 */}
-      <p className="text-xs text-neutral-500">{filteredRepairs.length}건</p>
+      {/* 건수 + 준비표(트레이형) 뽑기 */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <p className="text-xs text-neutral-500">{filteredRepairs.length}건</p>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => { setPrepMode(!prepMode); setCheckedIds(new Set()); }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+              prepMode ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+            }`}
+          >
+            <ClipboardList size={14} /> {prepMode ? '선택 취소' : '준비표 뽑기'}
+          </button>
+          {prepMode && checkedIds.size > 0 && (
+            <button
+              onClick={() => setShowPrep(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition"
+            >
+              <Printer size={14} /> 준비표 인쇄 ({checkedIds.size}건)
+            </button>
+          )}
+        </div>
+      </div>
+      {prepMode && <p className="text-[11px] text-neutral-400 -mt-1">체크한 건이 A4 1장에 2개씩 (가운데 절취) 나옵니다. 행을 눌러 선택하세요.</p>}
 
       {/* 목록 */}
       {isLoading ? (
@@ -170,12 +200,16 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
       ) : gridMode ? (
         <Card padding={false}>
           <DataGrid
-            columns={gridColumns}
+            columns={prepMode ? [{
+              key: '_chk', label: '', render: (r: Repair) => (
+                <input type="checkbox" readOnly checked={checkedIds.has(r.id)} className="w-4 h-4 pointer-events-none" />
+              ),
+            } as GridColumn<Repair>, ...gridColumns] : gridColumns}
             rows={filteredRepairs}
             getRowKey={(r) => r.id}
-            selectedKey={selectedId ?? undefined}
-            onSelect={(r) => onSelect?.(r.id)}
-            rowClassName={(r) => (r.status === 'cancelled' ? 'opacity-60' : '')}
+            selectedKey={prepMode ? undefined : (selectedId ?? undefined)}
+            onSelect={(r) => rowClick(r.id)}
+            rowClassName={(r) => `${r.status === 'cancelled' ? 'opacity-60' : ''} ${prepMode && checkedIds.has(r.id) ? 'bg-blue-50' : ''}`}
           />
         </Card>
       ) : (
@@ -185,12 +219,16 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
               key={r.id}
               repair={r}
               tab={activeTab}
-              isSelected={selectedId === r.id}
-              onSelect={onSelect}
+              isSelected={prepMode ? checkedIds.has(r.id) : selectedId === r.id}
+              prepMode={prepMode}
+              checked={checkedIds.has(r.id)}
+              onSelect={rowClick}
             />
           ))}
         </div>
       )}
+
+      {showPrep && <RepairPrepSheetModal repairIds={[...checkedIds]} onClose={() => setShowPrep(false)} />}
     </div>
   );
 }
@@ -202,9 +240,11 @@ interface RepairCardProps {
   tab: RepairTabKey;
   isSelected: boolean;
   onSelect?: (id: string) => void;
+  prepMode?: boolean;
+  checked?: boolean;
 }
 
-function RepairCard({ repair: r, tab, isSelected, onSelect }: RepairCardProps) {
+function RepairCard({ repair: r, tab, isSelected, onSelect, prepMode = false, checked = false }: RepairCardProps) {
   const days = getDaysElapsed(r.received_at);
   const isCancelled = r.status === 'cancelled';
   const isCompleted = r.status === 'completed';
@@ -226,8 +266,11 @@ function RepairCard({ repair: r, tab, isSelected, onSelect }: RepairCardProps) {
       onClick={() => onSelect?.(r.id)}
       className="cursor-pointer"
     >
-      <Card className={`hover:bg-neutral-50 transition ${isSelected ? 'ring-2 ring-terracotta bg-terracotta/5' : ''} ${borderClass} ${isCancelled ? 'opacity-60' : ''}`}>
+      <Card className={`hover:bg-neutral-50 transition ${isSelected ? (prepMode ? 'ring-2 ring-blue-500 bg-blue-50' : 'ring-2 ring-terracotta bg-terracotta/5') : ''} ${borderClass} ${isCancelled ? 'opacity-60' : ''}`}>
         <div className="flex items-start justify-between gap-2">
+          {prepMode && (
+            <input type="checkbox" readOnly checked={checked} className="w-4 h-4 mt-1 shrink-0 pointer-events-none" />
+          )}
           <div className="flex-1 min-w-0">
             {/* 상단: 접수일 + 상태 + 진행방식 */}
             <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -268,7 +311,7 @@ function RepairCard({ repair: r, tab, isSelected, onSelect }: RepairCardProps) {
                 {days}일 경과
               </p>
             )}
-            <InlineAction repair={r} tab={tab} />
+            {!prepMode && <InlineAction repair={r} tab={tab} />}
           </div>
         </div>
       </Card>

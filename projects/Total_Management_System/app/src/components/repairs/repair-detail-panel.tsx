@@ -8,10 +8,11 @@ import { InspectionForm } from './inspection-form';
 import { InspectionSummary } from './inspection-summary';
 import { SidebarActionCard } from './sidebar-action-card';
 import { RepairTimeline } from './repair-timeline';
+import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
 import { ReviewManagementCard } from '@/components/reviews/review-management-card';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
-import { ClipboardCheck, ClipboardList } from 'lucide-react';
+import { ClipboardCheck, ClipboardList, Printer } from 'lucide-react';
 import {
   useRepair,
   useUpdateRepairFields,
@@ -29,6 +30,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
   const { data, isLoading, refetch } = useRepair(repairId);
   const updateFields = useUpdateRepairFields();
   const [showInspection, setShowInspection] = useState(false);
+  const [showPrep, setShowPrep] = useState(false);
 
   if (isLoading) {
     return (
@@ -68,8 +70,18 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
             {r.as_id} &middot; {formatDateTime(r.received_at)}
           </p>
         </div>
-        <RepairStatusBadge status={r.status} proceedType={proceedType} />
+        <div className="flex flex-col items-end gap-1.5 shrink-0">
+          <RepairStatusBadge status={r.status} proceedType={proceedType} />
+          <button
+            onClick={() => setShowPrep(true)}
+            className="flex items-center gap-1 text-[11px] font-semibold text-neutral-600 border border-neutral-200 rounded-md px-2 py-1 hover:bg-neutral-50 transition"
+          >
+            <Printer size={11} /> 준비표
+          </button>
+        </div>
       </div>
+
+      {showPrep && <RepairPrepSheetModal repairIds={[r.id]} onClose={() => setShowPrep(false)} />}
 
       {/* 내역작성 버튼 — 상단 1개만 (중복 제거, 2026-07-16) */}
       <Button
