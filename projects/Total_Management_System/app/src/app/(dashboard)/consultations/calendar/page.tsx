@@ -15,7 +15,7 @@ import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
-import { CalendarOff, Store, Truck, Info, AlertTriangle, Clock, Ban, Trash2 } from 'lucide-react';
+import { CalendarOff, Store, Truck, Info, AlertTriangle, Clock, Ban } from 'lucide-react';
 import {
   useBlackouts,
   useCreateBlackout,
@@ -24,23 +24,192 @@ import {
   useUpdateDisabledWeekdays,
   useUpdateBusinessHours,
   useBlockedSlots,
-  useCreateBlockedSlot,
-  useDeleteBlockedSlot,
+  useReplaceBlockedSlots,
   type BlackoutConsultation,
   type BlockedSlot,
 } from '@/hooks/use-blackouts';
 import { formatPhone } from '@/lib/utils/format';
 
-/** 30분 단위 시간 옵션 생성 (영업시간 범위) */
-function genTimeOptions(startHour: number, endHour: number): string[] {
-  const out: string[] = [];
-  for (let m = startHour * 60; m <= endHour * 60; m += 30) {
-    out.push(`${pad2(Math.floor(m / 60))}:${pad2(m % 60)}`);
+const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+
+// ── 118: 시간 격자(30분) 유틸 — 칠한 칸 ↔ 구간 상호 변환 ─────────────────
+const SLOT = 30;
+const toMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+const toHHMM = (m: number) => `${pad2(Math.floor(m / 60))}:${pad2(m % 60)}`;
+
+/** 영업시간 범위의 30분 칸 시작분 목록 */
+function gridCells(startHour: number, endHour: number): number[] {
+  const out: number[] = [];
+  for (let m = startHour * 60; m + SLOT <= endHour * 60; m += SLOT) out.push(m);
+  return out;
+}
+/** 차단 구간들 → 칠해진 칸 Set */
+function rangesToCells(ranges: { start_time: string; end_time: string }[]): Set<number> {
+  const s = new Set<number>();
+  for (const r of ranges) {
+    for (let m = toMin(r.start_time); m < toMin(r.end_time); m += SLOT) s.add(m);
+  }
+  return s;
+}
+/** 칠해진 칸 Set → 연속 구간으로 병합 (저장용) */
+function cellsToRanges(cells: Set<number>): { start_time: string; end_time: string }[] {
+  const sorted = [...cells].sort((a, b) => a - b);
+  const out: { start_time: string; end_time: string }[] = [];
+  let i = 0;
+  while (i < sorted.length) {
+    const start = sorted[i];
+    let end = start + SLOT;
+    while (i + 1 < sorted.length && sorted[i + 1] === end) { end += SLOT; i++; }
+    out.push({ start_time: toHHMM(start), end_time: toHHMM(end) });
+    i++;
   }
   return out;
 }
+/** 차단 구간 요약 문자열 — 달력 셀/목록용 (예: "12:00~16:00 +1") */
+function summarizeRanges(ranges: { start_time: string; end_time: string }[]): string {
+  if (ranges.length === 0) return '';
+  const sorted = [...ranges].sort((a, b) => a.start_time.localeCompare(b.start_time));
+  const first = `${sorted[0].start_time}~${sorted[0].end_time}`;
+  return sorted.length > 1 ? `${first} +${sorted.length - 1}` : first;
+}
 
-const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+/** 118: 매주 반복 시간차단 카드 — 요일 탭 + 시간 격자 */
+function WeeklyBlockCard({ startHour, endHour, weeklyMap, disabledWeekdays }: {
+  startHour: number; endHour: number;
+  weeklyMap: Map<number, BlockedSlot[]>;
+  disabledWeekdays: number[];
+}) {
+  const [wd, setWd] = useState(1); // 기본 월요일
+  const replace = useReplaceBlockedSlots();
+  const saved = useMemo(() => weeklyMap.get(wd) || [], [weeklyMap, wd]);
+  const [cells, setCells] = useState<Set<number>>(new Set());
+  useEffect(() => { setCells(rangesToCells(saved)); }, [saved]);
+
+  const savedCells = useMemo(() => rangesToCells(saved), [saved]);
+  const dirty = cells.size !== savedCells.size || [...cells].some((c) => !savedCells.has(c));
+  const dayOff = disabledWeekdays.includes(wd);
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-bold text-neutral-800">매주 반복 시간차단</h3>
+        <span className="text-[11px] text-neutral-400">요일별 · 매주 자동 적용</span>
+      </div>
+      <p className="text-xs text-neutral-500 mb-3">
+        “매주 화요일 오후는 항상 막기” 같은 반복 차단. 날짜마다 따로 넣을 필요 없습니다.
+      </p>
+
+      {/* 요일 탭 */}
+      <div className="flex gap-2 flex-wrap mb-3">
+        {DAY_NAMES.map((d, i) => {
+          const has = (weeklyMap.get(i) || []).length > 0;
+          return (
+            <button
+              key={i} type="button" onClick={() => setWd(i)}
+              className={`relative w-10 h-10 rounded-lg text-sm font-medium transition ${
+                wd === i ? 'bg-neutral-900 text-white border border-neutral-900'
+                         : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-400'
+              }`}
+            >
+              {d}
+              {has && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-orange-500" />}
+            </button>
+          );
+        })}
+      </div>
+
+      {dayOff ? (
+        <p className="text-xs text-neutral-400 py-3">
+          {DAY_NAMES[wd]}요일은 <b className="text-red-500">정기 휴무</b>라 종일 차단됩니다. (시간 차단 불필요)
+        </p>
+      ) : (
+        <>
+          <TimeGrid
+            startHour={startHour} endHour={endHour}
+            blocked={cells} onChange={setCells}
+            disabled={replace.isPending}
+          />
+          <div className="flex items-center gap-2 mt-3">
+            <Button
+              size="sm"
+              disabled={!dirty || replace.isPending}
+              onClick={() => replace.mutate({ weekday: wd, ranges: cellsToRanges(cells) })}
+            >
+              {replace.isPending ? '저장 중...' : `매주 ${DAY_NAMES[wd]}요일 저장`}
+            </Button>
+            {dirty && <button onClick={() => setCells(rangesToCells(saved))} className="text-xs text-neutral-400 hover:text-neutral-600">되돌리기</button>}
+            {saved.length > 0 && !dirty && (
+              <span className="text-[11px] text-orange-600">현재: {summarizeRanges(saved)}</span>
+            )}
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
+
+/**
+ * 30분 격자 — 칸을 눌러(드래그) 막기/열기. 구글 캘린더 근무시간·캘린들리 스타일.
+ * blocked 에 있는 칸 = 막힘(주황). 나머지 = 열림.
+ */
+function TimeGrid({ startHour, endHour, blocked, onChange, busyCells, disabled }: {
+  startHour: number; endHour: number;
+  blocked: Set<number>;
+  onChange: (next: Set<number>) => void;
+  /** 예약이 이미 있는 칸 (표시만 — 막기 실수 방지) */
+  busyCells?: Set<number>;
+  disabled?: boolean;
+}) {
+  const cells = gridCells(startHour, endHour);
+  const am = cells.filter((m) => m < 12 * 60);
+  const pm = cells.filter((m) => m >= 12 * 60);
+  // 드래그 칠하기
+  const [drag, setDrag] = useState<null | boolean>(null); // true=막는중, false=여는중
+
+  const apply = (m: number, mode: boolean) => {
+    const next = new Set(blocked);
+    if (mode) next.add(m); else next.delete(m);
+    onChange(next);
+  };
+  const startDrag = (m: number) => { if (disabled) return; const mode = !blocked.has(m); setDrag(mode); apply(m, mode); };
+  const overDrag = (m: number) => { if (disabled || drag === null) return; apply(m, drag); };
+
+  const row = (label: string, list: number[]) => list.length === 0 ? null : (
+    <div className="mb-2.5">
+      <p className="text-[11px] font-semibold text-neutral-400 mb-1">{label}</p>
+      <div className="grid grid-cols-6 sm:grid-cols-8 gap-1">
+        {list.map((m) => {
+          const on = blocked.has(m);
+          const busy = busyCells?.has(m);
+          return (
+            <button
+              key={m} type="button" disabled={disabled}
+              onMouseDown={() => startDrag(m)}
+              onMouseEnter={() => overDrag(m)}
+              onTouchStart={() => startDrag(m)}
+              title={busy ? '이 시간에 예약이 있습니다' : undefined}
+              className={`h-9 rounded-lg text-[11px] font-semibold border transition select-none disabled:opacity-50 ${
+                on ? 'bg-orange-500 border-orange-500 text-white'
+                   : busy ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                   : 'bg-white border-neutral-200 text-neutral-500 hover:border-neutral-400'
+              }`}
+            >{toHHMM(m)}</button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  return (
+    <div onMouseUp={() => setDrag(null)} onMouseLeave={() => setDrag(null)} onTouchEnd={() => setDrag(null)}>
+      {row('오전', am)}
+      {row('오후', pm)}
+      <p className="text-[11px] text-neutral-400 mt-1">
+        칸을 누르거나 드래그해서 <b className="text-orange-600">막기</b>/열기 · <span className="text-emerald-600">초록</span>=예약 있음
+      </p>
+    </div>
+  );
+}
 
 function pad2(n: number) {
   return String(n).padStart(2, '0');
@@ -129,13 +298,26 @@ export default function CalendarManagePage() {
     return m;
   }, [data]);
 
-  // 096: 날짜별 시간대 차단 Map
+  // 096: 날짜별 시간대 차단 Map (date 행만)
   const blockedSlotMap = useMemo(() => {
     const m = new Map<string, BlockedSlot[]>();
     for (const b of blockedData?.blockedSlots || []) {
+      if (!b.date) continue;
       if (!m.has(b.date)) m.set(b.date, []);
       m.get(b.date)!.push(b);
     }
+    return m;
+  }, [blockedData]);
+
+  // 118: 매주 반복 시간차단 Map (weekday 행만)
+  const weeklyBlockedMap = useMemo(() => {
+    const m = new Map<number, BlockedSlot[]>();
+    for (const b of blockedData?.blockedSlots || []) {
+      if (b.weekday == null) continue;
+      if (!m.has(b.weekday)) m.set(b.weekday, []);
+      m.get(b.weekday)!.push(b);
+    }
+    for (const list of m.values()) list.sort((a, b) => a.start_time.localeCompare(b.start_time));
     return m;
   }, [blockedData]);
 
@@ -228,6 +410,14 @@ export default function CalendarManagePage() {
           </div>
         </Card>
 
+        {/* 118: 매주 반복 시간차단 — 요일 골라 시간 격자로 막기 */}
+        <WeeklyBlockCard
+          startHour={cs?.start_hour ?? 10}
+          endHour={cs?.end_hour ?? 20}
+          weeklyMap={weeklyBlockedMap}
+          disabledWeekdays={disabledWeekdays}
+        />
+
         {/* 4개월 달력 grid (PC 2x2 / 모바일 1열) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {months.map(({ year, month }, i) => (
@@ -241,6 +431,7 @@ export default function CalendarManagePage() {
               disabledWeekdays={disabledWeekdays}
               consultMap={consultMap}
               blockedSlotMap={blockedSlotMap}
+              weeklyBlockedMap={weeklyBlockedMap}
               onSelect={setSelectedDate}
             />
           ))}
@@ -260,6 +451,7 @@ export default function CalendarManagePage() {
           existingReason={blackoutReasonMap.get(selectedDate) || ''}
           consultations={consultMap.get(selectedDate) || []}
           blockedSlots={blockedSlotMap.get(selectedDate) || []}
+          weeklyForThisDay={weeklyBlockedMap.get(new Date(selectedDate + 'T00:00:00').getDay()) || []}
           bizStart={cs?.start_hour ?? 10}
           bizEnd={cs?.end_hour ?? 20}
           isWeekdayOff={disabledWeekdays.includes(new Date(
@@ -283,11 +475,12 @@ interface MonthCalendarProps {
   disabledWeekdays: number[];
   consultMap: Map<string, BlackoutConsultation[]>;
   blockedSlotMap: Map<string, BlockedSlot[]>;
+  weeklyBlockedMap: Map<number, BlockedSlot[]>;
   onSelect: (date: string) => void;
 }
 
 function MonthCalendar({
-  year, month, isFirstMonth, todayStr, blackoutSet, disabledWeekdays, consultMap, blockedSlotMap, onSelect,
+  year, month, isFirstMonth, todayStr, blackoutSet, disabledWeekdays, consultMap, blockedSlotMap, weeklyBlockedMap, onSelect,
 }: MonthCalendarProps) {
   const days = getCalendarDays(year, month);
 
@@ -332,7 +525,10 @@ function MonthCalendar({
           const consults = consultMap.get(date) || [];
           const storeCount = consults.filter((c) => c.consultation_type === 'store_visit').length;
           const fieldCount = consults.filter((c) => c.consultation_type === 'field_request').length;
-          const blockedCount = (blockedSlotMap.get(date) || []).length;
+          // 118: 그 날짜 차단 = 날짜형 + 그 요일의 매주 반복. 실제 시각을 셀에 보여준다
+          const dayBlocks = [...(blockedSlotMap.get(date) || []), ...(weeklyBlockedMap.get(dow) || [])];
+          const blockedCount = dayBlocks.length;
+          const blockedLabel = summarizeRanges(dayBlocks);
 
           return (
             <button
@@ -372,9 +568,18 @@ function MonthCalendar({
                 <span className="text-[9px] text-red-500 font-semibold mt-0.5">휴무</span>
               ) : isWeekdayOff ? (
                 <span className="text-[9px] text-neutral-400 font-medium mt-0.5">정기휴무</span>
-              ) : blockedCount > 0 ? (
-                <span className="text-[9px] text-orange-500 font-semibold mt-0.5">시간차단</span>
               ) : null}
+              {/* 118: 시간차단은 몇시~몇시인지 항상 보이게 (휴무일이어도 가리지 않음) */}
+              {blockedCount > 0 && (
+                <span
+                  className={`text-[9px] font-semibold mt-0.5 leading-tight px-0.5 ${
+                    isBlackout || isWeekdayOff ? 'text-orange-400/80' : 'text-orange-600'
+                  }`}
+                  title={dayBlocks.map((b) => `${b.start_time}~${b.end_time}`).join(', ')}
+                >
+                  {blockedLabel}
+                </span>
+              )}
               {/* 예약 dot + 시간차단 dot */}
               {!isBlackout && !isWeekdayOff && (storeCount > 0 || fieldCount > 0 || blockedCount > 0) && (
                 <div className="flex gap-0.5 mt-auto mb-1">
@@ -431,6 +636,8 @@ interface BlackoutDetailModalProps {
   existingReason: string;
   consultations: BlackoutConsultation[];
   blockedSlots: BlockedSlot[];
+  /** 118: 이 날짜 요일의 매주 반복 차단 (표시용) */
+  weeklyForThisDay: BlockedSlot[];
   bizStart: number;
   bizEnd: number;
   isWeekdayOff: boolean;
@@ -438,27 +645,29 @@ interface BlackoutDetailModalProps {
 }
 
 function BlackoutDetailModal({
-  date, isBlackout, existingReason, consultations, blockedSlots, bizStart, bizEnd, isWeekdayOff, onClose,
+  date, isBlackout, existingReason, consultations, blockedSlots, weeklyForThisDay, bizStart, bizEnd, isWeekdayOff, onClose,
 }: BlackoutDetailModalProps) {
   const [reason, setReason] = useState(existingReason);
   const create = useCreateBlackout();
   const remove = useDeleteBlackout();
 
-  // 096: 시간대 차단
-  const createSlot = useCreateBlockedSlot();
-  const deleteSlot = useDeleteBlockedSlot();
-  const timeOptions = useMemo(() => genTimeOptions(bizStart, bizEnd), [bizStart, bizEnd]);
-  const [slotStart, setSlotStart] = useState('');
-  const [slotEnd, setSlotEnd] = useState('');
-  const [slotReason, setSlotReason] = useState('');
+  // 118: 시간 격자 (096 날짜 차단을 칸으로 편집)
+  const replaceSlots = useReplaceBlockedSlots();
+  const savedCells = useMemo(() => rangesToCells(blockedSlots), [blockedSlots]);
+  const [gridCellsState, setGridCellsState] = useState<Set<number>>(savedCells);
+  useEffect(() => { setGridCellsState(rangesToCells(blockedSlots)); }, [blockedSlots]);
+  const gridDirty = gridCellsState.size !== savedCells.size || [...gridCellsState].some((c) => !savedCells.has(c));
 
-  const handleAddSlot = () => {
-    if (!slotStart || !slotEnd || slotStart >= slotEnd) return;
-    createSlot.mutate(
-      { date, start_time: slotStart, end_time: slotEnd, reason: slotReason.trim() || undefined },
-      { onSuccess: () => { setSlotStart(''); setSlotEnd(''); setSlotReason(''); } },
-    );
-  };
+  // 이 날짜에 이미 잡힌 예약 시각 → 격자에 초록 표시 (막기 실수 방지)
+  const busyCells = useMemo(() => {
+    const s = new Set<number>();
+    for (const c of consultations) {
+      if (!c.visit_time) continue;
+      const m = toMin(String(c.visit_time).slice(0, 5));
+      s.add(Math.floor(m / SLOT) * SLOT);
+    }
+    return s;
+  }, [consultations]);
 
   // 날짜 표시 — 한국어 포맷
   const dateLabel = (() => {
@@ -479,7 +688,7 @@ function BlackoutDetailModal({
   };
 
   return (
-    <Modal open={true} onClose={onClose} title={dateLabel}>
+    <Modal open={true} onClose={onClose} title={dateLabel} className="max-w-2xl">
       <div className="space-y-4">
         {/* 정기 휴무 요일 안내 (해당하면) */}
         {isWeekdayOff && !isBlackout && (
@@ -487,7 +696,7 @@ function BlackoutDetailModal({
             <Info size={14} className="shrink-0 mt-0.5" />
             <span>
               이 날짜는 <span className="font-bold">정기 휴무 요일</span>입니다 (매주 반복).
-              위 "정기 휴무 요일" 토글에서 해제하면 매주 영향. 이 날짜만 임시로 막으려면 아래 "이 날짜 막기" 버튼 사용 (사유: 임시 추가 휴무).
+              위 “정기 휴무 요일” 토글에서 해제하면 매주 영향. 이 날짜만 임시로 막으려면 아래 “이 날짜 막기” 버튼 사용 (사유: 임시 추가 휴무).
             </span>
           </div>
         )}
@@ -548,62 +757,52 @@ function BlackoutDetailModal({
           </div>
         )}
 
-        {/* 096: 시간대 차단 (전일 휴무 아닐 때만 — 전일 휴무면 어차피 종일 막힘) */}
-        {!isBlackout && (
-          <div className="border-t border-neutral-100 pt-3 space-y-2">
-            <div className="flex items-center gap-1.5">
-              <Ban size={13} className="text-orange-500" />
-              <span className="text-xs font-bold text-neutral-700">시간대 차단 (개인 일정 등)</span>
-            </div>
-            <p className="text-[11px] text-neutral-400">막은 시간은 모든 셀프예약(매장/출장/톡 + 복원수리 직접방문)에서 비활성. 사장님 직접 등록은 가능.</p>
-            <p className="text-[11px] text-orange-500">‘예약 재개’ 시각부터 다시 예약이 열립니다. (예: 12:00~16:00 차단 → 16:00부터 예약 가능)</p>
-
-            {/* 기존 차단 시간대 목록 */}
-            {blockedSlots.length > 0 && (
-              <div className="space-y-1">
-                {blockedSlots.map((bs) => (
-                  <div key={bs.id} className="flex items-center gap-2 p-2 rounded-lg bg-orange-50 text-xs">
-                    <Clock size={12} className="text-orange-500 shrink-0" />
-                    <span className="font-semibold text-orange-700">{bs.start_time} ~ {bs.end_time}</span>
-                    {bs.reason && <span className="text-orange-600">· {bs.reason}</span>}
-                    <button
-                      type="button"
-                      onClick={() => deleteSlot.mutate(bs.id)}
-                      disabled={deleteSlot.isPending}
-                      className="ml-auto text-neutral-400 hover:text-red-500 transition"
-                      title="삭제"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* 새 차단 추가 */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <select value={slotStart} onChange={(e) => setSlotStart(e.target.value)}
-                className="h-8 px-2 rounded-lg border border-stone-200 text-xs focus:outline-none focus:border-stone-400">
-                <option value="">시작</option>
-                {timeOptions.slice(0, -1).map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-              <span className="text-xs text-neutral-500">~</span>
-              <select value={slotEnd} onChange={(e) => setSlotEnd(e.target.value)}
-                className="h-8 px-2 rounded-lg border border-stone-200 text-xs focus:outline-none focus:border-stone-400">
-                <option value="">예약 재개</option>
-                {timeOptions.filter((t) => !slotStart || t > slotStart).map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-              <input
-                type="text" value={slotReason} onChange={(e) => setSlotReason(e.target.value)}
-                placeholder="사유(선택)"
-                className="flex-1 min-w-[80px] h-8 px-2 rounded-lg border border-stone-200 text-xs focus:outline-none focus:border-stone-400"
-              />
-              <Button size="sm" onClick={handleAddSlot} disabled={!slotStart || !slotEnd || slotStart >= slotEnd || createSlot.isPending}>
-                {createSlot.isPending ? '추가 중' : '추가'}
-              </Button>
-            </div>
+        {/* 118: 시간 격자 — 칸을 칠해서 막기/열기. 전일 휴무여도 조회·수정 가능(기존엔 숨겨져 손도 못 댔음) */}
+        <div className="border-t border-neutral-100 pt-3 space-y-2">
+          <div className="flex items-center gap-1.5">
+            <Ban size={13} className="text-orange-500" />
+            <span className="text-xs font-bold text-neutral-700">이 날짜 시간 열기/막기</span>
+            {gridDirty && <span className="ml-auto text-[11px] text-orange-600 font-semibold">저장 안 됨</span>}
           </div>
-        )}
+          <p className="text-[11px] text-neutral-400">
+            막은 시간은 모든 셀프예약(매장/출장/톡 + 복원수리 직접방문)에서 비활성. 사장님 직접 등록은 항상 가능.
+          </p>
+          {isBlackout && (
+            <p className="text-[11px] text-red-500">이 날짜는 <b>종일 휴무</b>라 어차피 전부 막힙니다. (휴무 해제 시 아래 설정이 적용됩니다)</p>
+          )}
+          {weeklyForThisDay.length > 0 && (
+            <p className="text-[11px] text-neutral-500">
+              매주 {DAY_NAMES[new Date(date + 'T00:00:00').getDay()]}요일 반복 차단({summarizeRanges(weeklyForThisDay)})이 이 날짜에도 적용됩니다.
+              <span className="text-neutral-400"> 반복은 위 “매주 반복 시간차단”에서 수정</span>
+            </p>
+          )}
+
+          <TimeGrid
+            startHour={bizStart} endHour={bizEnd}
+            blocked={gridCellsState} onChange={setGridCellsState}
+            busyCells={busyCells}
+            disabled={replaceSlots.isPending}
+          />
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              disabled={!gridDirty || replaceSlots.isPending}
+              onClick={() => replaceSlots.mutate({ date, ranges: cellsToRanges(gridCellsState) })}
+            >
+              {replaceSlots.isPending ? '저장 중...' : '시간 설정 저장'}
+            </Button>
+            {gridDirty && (
+              <button onClick={() => setGridCellsState(rangesToCells(blockedSlots))} className="text-xs text-neutral-400 hover:text-neutral-600">되돌리기</button>
+            )}
+            {gridCellsState.size > 0 && !gridDirty && (
+              <span className="text-[11px] text-orange-600">차단: {summarizeRanges(cellsToRanges(gridCellsState))}</span>
+            )}
+            {gridCellsState.size === 0 && !gridDirty && (
+              <span className="text-[11px] text-neutral-400">이 날짜는 종일 예약 가능</span>
+            )}
+          </div>
+        </div>
 
         {/* 액션 */}
         <div className="flex justify-end gap-2 pt-2">

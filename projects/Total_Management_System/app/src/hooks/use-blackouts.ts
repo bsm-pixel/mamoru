@@ -164,7 +164,10 @@ export function useUpdateBusinessHours() {
 
 export interface BlockedSlot {
   id: string;
-  date: string;        // YYYY-MM-DD
+  /** 날짜형 차단. 매주 반복행이면 null (118) */
+  date: string | null;    // YYYY-MM-DD
+  /** 매주 반복 요일 0=일…6=토. 날짜형이면 null (118) */
+  weekday: number | null;
   start_time: string;  // HH:MM
   end_time: string;    // HH:MM
   reason: string | null;
@@ -204,6 +207,33 @@ export function useCreateBlockedSlot() {
       queryClient.invalidateQueries({ queryKey: ['blocked-slots'] });
     },
     onError: (err: Error) => toast.error('등록 실패: ' + err.message),
+  });
+}
+
+/**
+ * 118: 한 날짜(또는 한 요일)의 시간차단을 통째로 교체 — 시간 격자 저장용.
+ * 격자에서 칠한 칸을 구간으로 병합해 ranges 로 보내면 서버가 기존 것을 지우고 새로 심는다.
+ */
+export function useReplaceBlockedSlots() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { date?: string; weekday?: number; ranges: { start_time: string; end_time: string }[] }) => {
+      const res = await fetch('/api/consultation/blocked-slots', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || '시간차단 저장 실패');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('시간 설정이 저장되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['blocked-slots'] });
+    },
+    onError: (err: Error) => toast.error('저장 실패: ' + err.message),
   });
 }
 

@@ -93,6 +93,12 @@ export async function GET(req: NextRequest) {
       .select('date, start_time, end_time')
       .in('date', dates);
 
+    // 2-3. 매주 반복 시간차단 (118) — weekday(0=일~6=토) 행. 해당 요일의 모든 날짜에 적용
+    const { data: weeklyBlockedData } = await dbAny
+      .from('blocked_time_slots')
+      .select('weekday, start_time, end_time')
+      .not('weekday', 'is', null);
+
     // 3. 해당 날짜 범위의 확정/제안 상담 조회 (슬롯 차단용)
     const minDate = dates.reduce((a, b) => a < b ? a : b);
     const maxDate = dates.reduce((a, b) => a > b ? a : b);
@@ -128,15 +134,30 @@ export async function GET(req: NextRequest) {
     // 4. 날짜별 차단 슬롯 계산
     const blockedMap = new Map<string, Set<number>>();
 
-    // 4-0. 시간대 차단 (096) — 사장님이 달력관리에서 막은 30분 단위 구간
+    // 4-0. 시간대 차단 (096 날짜 + 118 매주반복) — 구간(interval) 으로 보관해 슬롯과 '겹침' 판정.
+    //   ⚠️ 예전에는 stepMin 간격으로 Set 에 분(minute)을 넣고 정확히 일치할 때만 막았는데,
+    //      차단 시작(예 12:30)과 슬롯 격자(startHour 기점 stepMin)의 위상이 어긋나면
+    //      (예: step_min=20/60) 차단이 조용히 무효화됐다. 구간겹침이면 격자와 무관하게 항상 막힌다.
+    //      (복원수리 슬롯 API 가 쓰던 방식으로 통일 — 2026-07-24)
+    const blockedIntervalMap = new Map<string, Array<[number, number]>>();
+    const addBlockedInterval = (dateStr: string, st: string, et: string) => {
+      const s = toMinutes(st), e = toMinutes(et);
+      if (!(e > s)) return;
+      if (!blockedIntervalMap.has(dateStr)) blockedIntervalMap.set(dateStr, []);
+      blockedIntervalMap.get(dateStr)!.push([s, e]);
+    };
     for (const bs of (blockedSlotsData || [])) {
       if (!bs.date || !bs.start_time || !bs.end_time) continue;
-      const dateStr = bs.date as string;
-      if (!blockedMap.has(dateStr)) blockedMap.set(dateStr, new Set());
-      const blocked = blockedMap.get(dateStr)!;
-      const s = toMinutes(bs.start_time as string);
-      const e = toMinutes(bs.end_time as string);
-      for (let m = s; m < e; m += stepMin) blocked.add(m);
+      addBlockedInterval(bs.date as string, bs.start_time as string, bs.end_time as string);
+    }
+    // 매주 반복(118): 각 조회 날짜의 요일과 일치하는 반복 차단을 그 날짜에 전개
+    for (const wb of (weeklyBlockedData || [])) {
+      if (wb.weekday == null || !wb.start_time || !wb.end_time) continue;
+      for (const d of dates) {
+        const [yy, mm, dd] = d.split('-').map(Number);
+        if (new Date(yy, mm - 1, dd).getDay() !== Number(wb.weekday)) continue;
+        addBlockedInterval(d, wb.start_time as string, wb.end_time as string);
+      }
     }
 
     // 4-A. 복원수리 직접방문 차단 (먼저 처리, 단순 시간 + duration 차단)
@@ -233,13 +254,17 @@ export async function GET(req: NextRequest) {
       }
 
       const blocked = blockedMap.get(dateStr) || new Set();
+      const blockedIntervals = blockedIntervalMap.get(dateStr) || [];
 
       result[dateStr] = allSlots.filter(slot => {
         const slotMin = toMinutes(slot);
+        const slotEnd = slotMin + durMin;
         // 오늘이면 현재 시각 이전 슬롯 제외
         if (dateStr === today && slotMin <= nowMin) return false;
-        // 차단된 슬롯인지 확인 (슬롯의 시작~종료 범위가 차단 범위와 겹치는지)
-        for (let m = slotMin; m < slotMin + durMin; m += stepMin) {
+        // 시간차단(날짜·매주반복) — 구간겹침. 격자 정렬과 무관하게 항상 정확히 막힌다
+        if (blockedIntervals.some(([s, e]) => overlaps(slotMin, slotEnd, s, e))) return false;
+        // 그 외 차단(예약·직접방문 등)은 기존 분(minute) Set 방식 유지
+        for (let m = slotMin; m < slotEnd; m += stepMin) {
           if (blocked.has(m)) return false;
         }
         return true;

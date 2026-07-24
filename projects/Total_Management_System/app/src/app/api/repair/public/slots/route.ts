@@ -113,8 +113,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 3. 같은 날 충돌 데이터 + 시간대 차단(096) 병렬 조회
-    const [consultsRes, suggestedRes, repairsRes, blockedRes] = await Promise.all([
+    // 3. 같은 날 충돌 데이터 + 시간대 차단(096 날짜 / 118 매주반복) 병렬 조회
+    const [consultsRes, suggestedRes, repairsRes, blockedRes, weeklyBlockedRes] = await Promise.all([
       // 컨설팅 매장방문 + 출장 (visit_date 기준) — 확정/배정/접수대기까지 점유로 간주
       //   (consultation/public/slots 와 status 기준 통일 — pending_admin 누락 시 미확정 예약 슬롯이 직접방문에 열려버림)
       dbAny.from('consultations')
@@ -132,17 +132,21 @@ export async function GET(req: NextRequest) {
         .eq('visit_date', date)
         .eq('proceed_type', '직접방문')
         .neq('status', 'cancelled'),
-      // 096: 사장님 개인 일정 등 시간대 차단
+      // 096: 사장님 개인 일정 등 시간대 차단 (그 날짜)
       dbAny.from('blocked_time_slots')
         .select('start_time, end_time')
         .eq('date', date),
+      // 118: 매주 반복 시간차단 — 이 날짜의 요일과 같은 것만 적용
+      dbAny.from('blocked_time_slots')
+        .select('weekday, start_time, end_time')
+        .eq('weekday', new Date(`${date}T00:00:00`).getDay()),
     ]);
 
     // 4. 차단 범위 수집 [start_min, end_min)
     const busy: Array<[number, number]> = [];
 
-    // 096: 시간대 차단 (달력관리에서 막은 구간)
-    for (const bs of (blockedRes.data || [])) {
+    // 096: 시간대 차단 (달력관리에서 막은 구간) + 118: 매주 반복 차단(같은 요일)
+    for (const bs of [...(blockedRes.data || []), ...(weeklyBlockedRes.data || [])]) {
       if (!bs.start_time || !bs.end_time) continue;
       busy.push([toMinutes(bs.start_time), toMinutes(bs.end_time)]);
     }
