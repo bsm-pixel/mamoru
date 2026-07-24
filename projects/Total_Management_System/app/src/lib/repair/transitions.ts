@@ -12,12 +12,13 @@ const REPAIR_TRANSITIONS: TransitionMap = {
   intake:             ['pickup_scheduled', 'cost_notified', 'cancelled'],
   pickup_scheduled:   ['cost_notified', 'cancelled'],
   cost_notified:      ['repairing', 'cancelled'],   // payment_confirmed 제거
-  repairing:          ['ready_to_ship', 'cancelled'],  // R1: ready_to_ship 활성 승격
+  // 119: 'delivered' 추가 = 택배 없이 매장에서 직접 수령(직접수령) 단축 완료
+  repairing:          ['ready_to_ship', 'delivered', 'cancelled'],  // R1: ready_to_ship 활성 승격
   shipped:            ['delivered'],
   delivered:          ['completed'],
   completed:          [],
   cancelled:          [],
-  ready_to_ship:      ['shipped'],  // R1: 활성 상태로 승격
+  ready_to_ship:      ['shipped', 'delivered'],  // R1: 활성 상태로 승격 (+직접수령)
   // 레거시 호환 (기존 데이터)
   picked_up:          ['cost_notified', 'cancelled'],
   inspecting:         ['cost_notified', 'cancelled'],

@@ -98,6 +98,11 @@ export async function PATCH(
     const updateData = { ...rest };
     if (newStatus) updateData.status = newStatus;
 
+    // 119: 입고일 — '입고 & 비용안내'(cost_notified) 첫 전이 시점을 기록 (재발송해도 최초값 유지)
+    if (newStatus === 'cost_notified' && !current.inbound_at) {
+      updateData.inbound_at = new Date().toISOString();
+    }
+
     const { data, error } = await db
       .from('repairs')
       .update(updateData)

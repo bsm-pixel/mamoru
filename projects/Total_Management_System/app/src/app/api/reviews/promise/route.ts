@@ -44,12 +44,12 @@ export async function POST(req: NextRequest) {
     if (on && !['purchase', 'repair', 'consult'].includes(type!)) {
       return NextResponse.json({ error: "type은 'purchase' | 'repair' | 'consult' 중 하나" }, { status: 400 });
     }
-    // subtype 유효성: type=repair → direct_visit|pickup, type=consult → store_visit|field_request|talk_consult, type=purchase → null 권장
+    // subtype 유효성: type=repair → direct_visit|pickup|delivery(119, 직접발송=택배 수리), type=consult → store_visit|field_request|talk_consult, type=purchase → null 권장
     if (on && subtype !== null) {
-      const repairSub = ['direct_visit', 'pickup'];
+      const repairSub = ['direct_visit', 'pickup', 'delivery'];
       const consultSub = ['store_visit', 'field_request', 'talk_consult'];
       if (type === 'repair' && !repairSub.includes(subtype)) {
-        return NextResponse.json({ error: "repair subtype은 'direct_visit' | 'pickup'" }, { status: 400 });
+        return NextResponse.json({ error: "repair subtype은 'direct_visit' | 'pickup' | 'delivery'" }, { status: 400 });
       }
       if (type === 'consult' && !consultSub.includes(subtype)) {
         return NextResponse.json({ error: "consult subtype은 'store_visit' | 'field_request' | 'talk_consult'" }, { status: 400 });

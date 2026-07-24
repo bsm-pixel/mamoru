@@ -33,7 +33,8 @@ interface RelatedActivity {
 }
 
 type PromiseType = 'purchase' | 'repair' | 'consult';
-type RepairSubtype = 'direct_visit' | 'pickup';
+// 119: 직접발송(택배 수리) subtype 추가 — proceed_type 3종과 1:1 (직접발송이 direct_visit 로 뭉개지던 버그 fix)
+type RepairSubtype = 'direct_visit' | 'pickup' | 'delivery';
 type ConsultSubtype = 'store_visit' | 'field_request' | 'talk_consult';
 type PromiseSubtype = RepairSubtype | ConsultSubtype;
 
@@ -75,10 +76,11 @@ function defaultPromiseType(source: ReviewSource, hasRepairItem: boolean): Promi
 function defaultPromiseSubtype(type: PromiseType, sourceType: string | null): PromiseSubtype | null {
   if (type === 'purchase') return null;
   if (type === 'repair') {
-    // sourceType이 repair proceed_type(직접방문/방문수거)이면 매핑, 아니면 direct_visit
+    // proceed_type 3종을 1:1 매핑 (119): 직접발송 → delivery(택배 수리)
     if (sourceType === '직접방문' || sourceType === 'direct_visit') return 'direct_visit';
     if (sourceType === '방문수거' || sourceType === 'pickup') return 'pickup';
-    return 'direct_visit';
+    if (sourceType === '직접발송' || sourceType === 'delivery') return 'delivery';
+    return 'delivery'; // 미지정은 가장 흔한 택배 수리로 (기존엔 direct_visit 로 잘못 뭉갬)
   }
   // type === 'consult'
   if (sourceType === 'store_visit' || sourceType === 'field_request' || sourceType === 'talk_consult') {
@@ -96,12 +98,13 @@ const TYPE_LABEL: Record<PromiseType, string> = {
 const SUBTYPE_LABEL: Record<PromiseSubtype, string> = {
   direct_visit: '직접방문',
   pickup: '방문수거',
+  delivery: '택배 수리',
   store_visit: '직접방문',
   field_request: '출장',
   talk_consult: '톡상담',
 };
 
-const REPAIR_SUBTYPES: RepairSubtype[] = ['direct_visit', 'pickup'];
+const REPAIR_SUBTYPES: RepairSubtype[] = ['direct_visit', 'pickup', 'delivery'];
 const CONSULT_SUBTYPES: ConsultSubtype[] = ['store_visit', 'field_request', 'talk_consult'];
 
 function formatDate(iso: string | null): string {

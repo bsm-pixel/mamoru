@@ -35,6 +35,50 @@ function getDaysElapsed(dateStr: string) {
   return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
 }
 
+/** 날짜 2행 표기 — 위 M/d, 아래 HH:mm (칸 활용). 값 없으면 — */
+function TwoLineDate({ iso }: { iso: string | null | undefined }) {
+  if (!iso) return <span className="text-neutral-300">—</span>;
+  return (
+    <div className="leading-tight tabular-nums whitespace-nowrap">
+      <div className="text-[13px] text-neutral-700">{formatDate(iso, 'M/d')}</div>
+      <div className="text-[10px] text-neutral-400">{formatDate(iso, 'HH:mm')}</div>
+    </div>
+  );
+}
+
+/** 진행방법 배지 */
+function ProceedBadge({ type }: { type: string | null }) {
+  const t = type || '직접발송';
+  const cls = t === '방문수거' ? 'bg-purple-50 text-purple-700'
+    : t === '직접방문' ? 'bg-emerald-50 text-emerald-700'
+    : 'bg-neutral-100 text-neutral-600'; // 직접발송
+  const label = t === '직접방문' ? '직접방문' : t;
+  return <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${cls}`}>{label}</span>;
+}
+
+/** 날짜(시간없음) + 아래 라벨/시간 — DATE 필드용 (수거요청일/방문예약일) */
+function DateLine({ dateStr, sub }: { dateStr: string; sub?: string }) {
+  return (
+    <div className="leading-tight tabular-nums whitespace-nowrap">
+      <div className="text-[13px] text-neutral-700">{formatDate(dateStr, 'M/d')}</div>
+      {sub && <div className="text-[10px] text-neutral-400">{sub}</div>}
+    </div>
+  );
+}
+
+/** 수거요청일 칸 — 방문수거=수거요청일 / 직접방문=방문예약(날짜+시간) / 직접발송=라벨 */
+function IntakeCell({ repair: r }: { repair: Repair }) {
+  if (r.proceed_type === '방문수거') {
+    return r.pickup_date ? <DateLine dateStr={r.pickup_date} sub="수거" /> : <span className="text-neutral-300">—</span>;
+  }
+  if (r.proceed_type === '직접방문') {
+    const vd = (r as { visit_date?: string | null; visit_time?: string | null }).visit_date;
+    const vt = (r as { visit_time?: string | null }).visit_time;
+    return vd ? <DateLine dateStr={vd} sub={vt ? String(vt).slice(0, 5) : '방문'} /> : <span className="text-[11px] text-emerald-600">매장방문</span>;
+  }
+  return <span className="text-[11px] text-neutral-500">직접발송</span>;
+}
+
 /** 검색 필터 (이름/전화/접수번호) */
 function matchSearch(r: Repair, q: string): boolean {
   if (!q) return true;
@@ -76,16 +120,18 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
     return list;
   }, [tabData, activeTab, search, unpaidOnly, staleOnly]);
 
-  // PC 그리드 컬럼 — 접수일·상태·고객·수량·금액·경과·액션 (카드와 동일 헬퍼 재사용, 액션 컬럼으로 원클릭 유지)
+  // PC 그리드 컬럼 — 고객(맨앞)·진행방법·접수일·수거요청일·입고일·수량·금액·상태·액션. 날짜는 2행(M/d · HH:mm)
   const gridColumns = useMemo<GridColumn<Repair>[]>(() => [
-    { key: 'received', label: '접수일', render: (r) => <span className="text-neutral-500 whitespace-nowrap tabular-nums">{formatDate(r.received_at, 'M/d HH:mm')}</span> },
-    { key: 'status', label: '상태', render: (r) => <RepairStatusBadge status={r.status} proceedType={r.proceed_type} /> },
     { key: 'customer', label: '고객', render: (r) => (
       <div className="min-w-0">
-        <div className={`font-semibold truncate ${r.status === 'cancelled' ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{r.name}</div>
+        <div className={`font-bold text-sm truncate ${r.status === 'cancelled' ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{r.name}</div>
         <div className="text-[11px] text-neutral-400">{formatPhone(r.phone)}</div>
       </div>
     ) },
+    { key: 'proceed', label: '진행방법', render: (r) => <ProceedBadge type={r.proceed_type} /> },
+    { key: 'received', label: '접수일', render: (r) => <TwoLineDate iso={r.received_at} /> },
+    { key: 'pickup', label: '수거요청일', render: (r) => <IntakeCell repair={r} /> },
+    { key: 'inbound', label: '입고일', render: (r) => <TwoLineDate iso={(r as { inbound_at?: string | null }).inbound_at ?? null} /> },
     { key: 'qty', label: '수량', render: (r) => (
       <span className="text-xs text-neutral-600 whitespace-nowrap">
         {r.qty_mamoru > 0 && <span>마모루 {r.qty_mamoru}</span>}
@@ -100,11 +146,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
         {!r.paid_at && r.total_amount > 0 && <div className="text-[10px] text-red-500 font-semibold">미입금</div>}
       </div>
     ) },
-    { key: 'elapsed', label: '경과', align: 'right', render: (r) => {
-      const days = getDaysElapsed(r.received_at);
-      if (r.status === 'completed' || r.status === 'cancelled' || days <= 0) return <span className="text-neutral-300">—</span>;
-      return <span className={`text-[11px] whitespace-nowrap ${days >= 7 ? 'text-error font-medium' : days >= 3 ? 'text-orange-500' : 'text-neutral-400'}`}>{days}일</span>;
-    } },
+    { key: 'status', label: '상태', render: (r) => <RepairStatusBadge status={r.status} proceedType={r.proceed_type} /> },
     { key: 'action', label: '', align: 'right', render: (r) => <InlineAction repair={r} tab={activeTab} /> },
   ], [activeTab]);
 

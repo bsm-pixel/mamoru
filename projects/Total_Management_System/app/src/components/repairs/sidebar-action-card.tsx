@@ -313,6 +313,25 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                   판매건 합포장 출고
                 </Button>
               )}
+              {/* 119: 택배 없이 매장에서 직접 전달(직접수령) → 바로 완료 처리. 작업중/출고대기에서만 */}
+              {['repairing', 'ready_to_ship'].includes(currentStatus) && (
+                <button
+                  onClick={() => {
+                    if (!window.confirm(`${r.name}님께 매장에서 직접 전달(택배 없이) 완료로 처리합니다.\n계속할까요?`)) return;
+                    updateStatus.mutate({
+                      id: r.id,
+                      status: 'delivered',
+                      delivered_at: new Date().toISOString(),
+                      delivery_method: 'pickup',
+                      note: '직접 수령 (매장 전달)',
+                    });
+                  }}
+                  disabled={updateStatus.isPending}
+                  className="w-full text-xs font-semibold text-neutral-600 border border-neutral-200 rounded-lg py-2 hover:bg-neutral-50 transition disabled:opacity-50"
+                >
+                  🏪 직접 수령 (매장 전달) — 택배 없이 완료
+                </button>
+              )}
             </div>
           )}
         </Card>
