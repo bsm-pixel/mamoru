@@ -65,7 +65,7 @@ function renderPanel() {
   hero.appendChild(textField('이미지 폴더명', spec.images_folder, spec.model || '모델명과 동일', v => { spec.images_folder = v; updatePreview(); }));
   hero.appendChild(subhead('Hero 카피 (감성 한 줄)'));
   hero.appendChild(copyChooserSingle('hero_subtitle', 'hero_subtitle_text'));
-  hero.appendChild(subhead('마모루의 솔직 추천 (스펙 바로 아래 노출)'));
+  hero.appendChild(subhead('대표는 이렇게 말합니다 (스펙 아래 노출 · 대표가 고객에게 건네는 솔직한 한 문단 — 단점 먼저 인정 → 진실 → 누구에게. 직접 입력 권장)'));
   hero.appendChild(copyChooserSingle('honest_reco', 'honest_reco_text'));
   p.appendChild(section('HERO', hero, '01'));
 
@@ -326,7 +326,7 @@ function copyChooserSingleInline(copyType, customKey, label) {
 }
 
 /* 선택가이드 분류 순서 (빌더에서만 보임 — 고객 페이지엔 문구만 노출) */
-const FORYOU_CATS = ['경력', '커트스타일', '커트습관', '커트환경'];
+const FORYOU_CATS = ['경력', '커트스타일', '주용도', '커트습관', '커트환경', '사용느낌'];
 
 /* 카피 풀 다중 선택 (체크 칩) — category 있으면 분류별로 묶어 표시 */
 function copyChooserMulti(copyType, label) {

@@ -8,6 +8,17 @@
 
 const IMG_HOST = 'https://page.mamoru.kr';
 const TYPE_LABEL = { blunt: 'Blunt', thinning: 'Thinning', long: 'Long', dry: 'Dry' };
+const TYPE_LABEL_KO = { blunt: '블런트', thinning: '틴닝', long: '장가위', dry: '드라이' };
+/* B방식: 종류는 blunt 하나지만 5.0인치 이하는 '숏가위'로 자동 표기 (인치 자동 라벨 · 2026-07-27) */
+function typeKo(spec) {
+  const t = spec.type || 'blunt';
+  if (t === 'blunt') {
+    const inch = parseFloat(spec.size_inch);
+    if (!isNaN(inch) && inch <= 5.0) return '숏가위';
+    return '블런트';
+  }
+  return TYPE_LABEL_KO[t] || t;
+}
 // 작업대 '정보 보기(중립)' 모드: true 면 모든 옵션을 또렷하게(선택 강조/흐림 없이) 렌더. 실제 페이지/빌더는 false.
 var NEUTRAL = false;
 
@@ -402,6 +413,48 @@ function forYouCard(title, items, miss) {
   </div>`;
 }
 
+/* ─── FOR YOU 카테고리형 적합 가이드 (2026-07-27) ───
+   선택된 for_you 항목을 {category, text} 로 복원 → 카테고리별로 묶어 렌더.
+   해당 항목 있는 카테고리만 노출(동적 숨김) + 하단 '신중히 볼 경우'(miss) 각주. */
+function resolveForYouItems(spec, catalog, copyType) {
+  const ids = (spec.copy_selections || {})[copyType];
+  if (!Array.isArray(ids) || !ids.length) return [];
+  const pool = catalog.copyPool(copyType, spec.type);
+  const opts = (pool && pool.options) || [];
+  return ids.map(id => {
+    const o = opts.find(x => x.id === id);
+    if (!o) return null;
+    return { category: o.category || '기타', text: fillPlaceholders(o.text, spec, catalog) };
+  }).filter(Boolean);
+}
+const FORYOU_CAT_ORDER = ['경력', '커트스타일', '주용도', '커트습관', '커트환경', '사용느낌'];
+const FORYOU_CAT_LABEL = { 경력: '경력', 커트스타일: '커트 스타일', 주용도: '주 용도', 커트습관: '커트 습관', 커트환경: '커트 환경', 사용느낌: '사용 느낌', 기타: '기타' };
+function forYouGuide(matchItems, missItems) {
+  const byCat = {};
+  (matchItems || []).forEach(it => { (byCat[it.category] = byCat[it.category] || []).push(it.text); });
+  const cats = [...FORYOU_CAT_ORDER, '기타'].filter(c => byCat[c] && byCat[c].length);
+  const hasMiss = missItems && missItems.length;
+  if (!cats.length && !hasMiss) return '';
+  const rows = cats.map((c, i) => {
+    const border = i < cats.length - 1 ? 'border-bottom:1px solid #EDEBE8;' : '';
+    const vals = byCat[c].map(t => esc(t)).join('<span style="color:#D4D0CB;"> · </span>');
+    return `<div style="display:grid;grid-template-columns:clamp(70px,13vw,120px) 1fr;gap:clamp(12px,2vw,24px);align-items:baseline;padding:clamp(14px,2vw,20px) 0;${border}">
+      <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;letter-spacing:0.04em;color:#8A8580;white-space:nowrap;">${esc(FORYOU_CAT_LABEL[c] || c)}</span>
+      <span style="font-size:clamp(14px,1.9vw,17px);color:#1A1A1A;font-weight:600;line-height:1.65;">${vals}</span>
+    </div>`;
+  }).join('');
+  const body = rows
+    ? `<div style="background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.5vw,12px);padding:clamp(6px,1.2vw,16px) clamp(20px,3vw,32px);">${rows}</div>`
+    : '';
+  const miss = hasMiss
+    ? `<div style="margin-top:clamp(20px,2.5vw,28px);padding-left:clamp(4px,1vw,8px);">
+      <div style="font-size:clamp(11px,1.4vw,13px);font-weight:700;color:#B8B4AF;letter-spacing:0.03em;margin-bottom:clamp(8px,1vw,12px);">신중히 볼 경우</div>
+      ${missItems.map(t => `<div style="font-size:clamp(12px,1.6vw,14px);color:#A8A49E;line-height:1.85;">· ${esc(t)}</div>`).join('')}
+    </div>`
+    : '';
+  return body + miss;
+}
+
 /* ─── 문구 렌더러 (출력 SSOT) ───
    상세 페이지의 각 문구 섹션 마크업을 여기 한 곳에 모은다.
    renderDetailHTML 과 작업대(workspace)가 같은 함수를 써야 "작업대에서 본 모양 = 실제 페이지 모양"이 성립. */
@@ -425,8 +478,8 @@ function copyBlock(copyType, text) {
     case 'hero_subtitle':
       return `<p style="font-size:clamp(16px,2.4vw,22px);color:#4A4A4A;line-height:1.5;font-weight:300;max-width:520px;margin:0 0 clamp(24px,3vw,32px) 0;">${nl2br(t)}</p>`;
     case 'honest_reco':
-      return `<div style="margin-top:clamp(28px,4vw,40px);padding:clamp(20px,3vw,28px);background:#F5F3F0;border-radius:clamp(10px,1.5vw,14px);border-left:3px solid #1A1A1A;max-width:560px;">
-      <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.3vw,12px);font-weight:800;letter-spacing:0.18em;color:#8A8580;text-transform:uppercase;margin-bottom:clamp(8px,1vw,12px);">MAMORU의 솔직 추천</div>
+      return `<div style="margin-top:clamp(28px,4vw,40px);padding:clamp(20px,3vw,28px);background:#F5F3F0;border-radius:clamp(10px,1.5vw,14px);border-left:2px solid #C9C4BC;max-width:560px;">
+      <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.3vw,12px);font-weight:800;letter-spacing:0.18em;color:#8A8580;text-transform:uppercase;margin-bottom:clamp(8px,1vw,12px);">대표는 이렇게 말합니다</div>
       <p style="font-size:clamp(14px,1.9vw,17px);color:#2D2D2D;line-height:1.75;margin:0;">${nl2br(t)}</p>
     </div>`;
     case 'about_body':
@@ -553,7 +606,7 @@ const STATIC_VS = `<div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40p
 const STATIC_WHY = `<div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">
   ${eyebrow('10', 'WHY MAMORU')}
   <div style="font-family:'Outfit',sans-serif;font-size:clamp(48px,7vw,80px);font-weight:900;color:#1A1A1A;line-height:1;margin-bottom:clamp(20px,3vw,28px);">"</div>
-  <p style="font-size:clamp(20px,3.2vw,36px);color:#1A1A1A;line-height:1.4;font-weight:600;letter-spacing:-0.01em;margin:0 0 clamp(40px,5vw,56px) 0;max-width:680px;">대부분의 가위는 '유행'에 맞춰져 있습니다.<br>마모루는 '당신의 손'에 맞춥니다.</p>
+  <p style="font-size:clamp(20px,3.2vw,36px);color:#1A1A1A;line-height:1.4;font-weight:600;letter-spacing:-0.01em;margin:0 0 clamp(40px,5vw,56px) 0;max-width:680px;">대부분의 가위 선택은 유행과 주변에 좌우됩니다.<br>마모루는 당신이 기준이 되어 고르게 합니다.</p>
   <div style="display:flex;align-items:center;gap:clamp(14px,2vw,18px);margin-bottom:clamp(40px,5vw,56px);">
     <div style="width:clamp(56px,7vw,72px);height:clamp(56px,7vw,72px);border-radius:50%;background:#D4D0CB;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#8A8580;font-size:9px;letter-spacing:0.1em;">[얼굴]</div>
     <div><div style="font-size:clamp(13px,1.7vw,15px);font-weight:700;color:#1A1A1A;letter-spacing:0.02em;">백성민</div>
@@ -589,8 +642,8 @@ function renderDetailHTML(spec, catalog) {
                   || resolveCopy(spec, catalog, 'about_body', { customKey: 'about_body_text' });
   const aboutQuote = resolveCopy(spec, catalog, 'about_quote', { customKey: 'about_brand_quote' })
                   || resolveCopy(spec, catalog, 'about_quote', { customKey: 'about_quote_text' });
-  const matchItems = resolveCopy(spec, catalog, 'for_you_match') || [];
-  const missItems = resolveCopy(spec, catalog, 'for_you_miss') || [];
+  const matchGroups = resolveForYouItems(spec, catalog, 'for_you_match');
+  const missItemsTxt = resolveForYouItems(spec, catalog, 'for_you_miss').map(x => x.text);
 
   // PROFILE 카드 그룹 (종류 분기 — 적용되는 카드만)
   const design = catalog.byCardType['blade_design'];
@@ -633,7 +686,7 @@ function renderDetailHTML(spec, catalog) {
     <div style="display:flex;gap:clamp(20px,3vw,40px);font-size:clamp(12px,1.5vw,14px);color:#8A8580;letter-spacing:0.05em;font-weight:500;flex-wrap:wrap;">
       <span>${esc(spec.size_inch)} inch</span><span style="color:#D4D0CB;">·</span>
       <span>${esc(spec.weight_g)} g</span><span style="color:#D4D0CB;">·</span>
-      <span>${esc(TYPE_LABEL[type] || type)}</span>
+      <span>${esc(typeKo(spec))}</span>
     </div>
     ${copyBlock('honest_reco', honestReco)}
   </div>
@@ -674,11 +727,12 @@ function renderDetailHTML(spec, catalog) {
     ${profileCards}
   </div>
 
-  <!-- 06 For You -->
+  <!-- 06 For You — 카테고리형 적합 가이드 -->
   <div style="padding:clamp(80px,10vw,140px) clamp(20px,3vw,40px);">${eyebrow('05', 'FOR YOU?')}
-    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(40px,6vw,64px) 0;">솔직한 선택 가이드</h2>
-    ${forYouCard('이런 분에게 맞습니다', matchItems, false)}
-    ${forYouCard('맞지 않을 수 있습니다', missItems, true)}
+    <h2 style="font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(24px,4.5vw,52px);font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.15;margin:0 0 clamp(8px,1.5vw,14px) 0;">올바른 선택 가이드</h2>
+    <p style="font-size:clamp(16px,2.4vw,24px);font-weight:600;color:#1A1A1A;letter-spacing:-0.01em;margin:0 0 clamp(6px,1vw,10px) 0;">나와 잘 맞을까?</p>
+    <p style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;margin:0 0 clamp(32px,4.5vw,52px) 0;">해당되면 구매 후 만족도가 높을 확률이 ↑</p>
+    ${forYouGuide(matchGroups, missItemsTxt)}
   </div>
 
   <!-- 07 Spec -->
@@ -689,7 +743,7 @@ function renderDetailHTML(spec, catalog) {
         <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.2em;text-transform:uppercase;margin-top:clamp(8px,1vw,12px);">길이</div></div>
       <div style="border-left:1px solid #D4D0CB;padding-left:clamp(12px,2vw,20px);"><div style="font-family:'Outfit',sans-serif;font-size:clamp(28px,4.5vw,52px);font-weight:900;color:#1A1A1A;line-height:0.95;letter-spacing:-0.02em;">${esc(spec.weight_g)}<span style="font-size:0.45em;color:#8A8580;font-weight:700;margin-left:0.1em;">g</span></div>
         <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.2em;text-transform:uppercase;margin-top:clamp(8px,1vw,12px);">무게</div></div>
-      <div style="border-left:1px solid #D4D0CB;padding-left:clamp(12px,2vw,20px);"><div style="font-family:'Outfit',sans-serif;font-size:clamp(20px,3vw,32px);font-weight:800;color:#1A1A1A;line-height:1;letter-spacing:-0.01em;">${esc(TYPE_LABEL[type] || type)}</div>
+      <div style="border-left:1px solid #D4D0CB;padding-left:clamp(12px,2vw,20px);"><div style="font-family:'Outfit',sans-serif;font-size:clamp(20px,3vw,32px);font-weight:800;color:#1A1A1A;line-height:1;letter-spacing:-0.01em;">${esc(typeKo(spec))}</div>
         <div style="font-family:'Outfit',sans-serif;font-size:clamp(10px,1.2vw,12px);font-weight:700;color:#8A8580;letter-spacing:0.2em;text-transform:uppercase;margin-top:clamp(8px,1vw,12px);">종류</div></div>
     </div>
     ${specRow('소재', sm.material)}

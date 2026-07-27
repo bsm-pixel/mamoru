@@ -53,6 +53,8 @@ function banner(msg, cls) {
   const el = document.getElementById('edBanner');
   if (!el) return;
   el.textContent = msg; el.className = 'ed-banner ' + (cls || ''); el.style.display = msg ? '' : 'none';
+  // 같은 문구가 다시 떠도 '눌린 게 반응했다'는 걸 보이게 짧게 번쩍(재시작 트릭: reflow 강제)
+  if (msg) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
 }
 
 /* 저장 서버(preview.bat 새 버전) 연결 확인 */
@@ -185,7 +187,11 @@ function bindEditorEvents() {
   ed.addEventListener('input', e => {
     const t = e.target;
     if (!t.dataset || !t.dataset.path) return;
-    setByPath(FILES[t.dataset.src], t.dataset.path, t.value);
+    // 🛡️ setByPath 가 터져도 '임시저장'은 반드시 남긴다.
+    //    (예전엔 여기서 예외가 나면 아래 pending 기록이 통째로 안 돌아 → 입력이 조용히 사라지고
+    //     [전체 저장]은 "저장할 변경이 없습니다" 로 떴다)
+    try { setByPath(FILES[t.dataset.src], t.dataset.path, t.value); }
+    catch (err) { console.warn('[editor] 값 반영 실패(임시저장은 유지):', t.dataset.src, t.dataset.path, err); }
     pending[t.dataset.src + '|' + t.dataset.path] = t.value; // 즉시 임시저장
     savePending();
     updateUnsaved();
@@ -280,7 +286,8 @@ async function saveFile(src) {
 
 async function saveAll() {
   const srcs = [...new Set(Object.keys(pending).map(k => k.split('|')[0]))];
-  if (!srcs.length) { banner('저장할 변경이 없습니다.', 'ok'); return; }
+  // 저장할 게 없는 건 '고장'이 아니라 '이미 다 저장된 상태' — 헷갈리지 않게 명확히 알린다
+  if (!srcs.length) { banner('✓ 이미 모두 저장돼 있습니다 — 새로 바뀐 내용이 없습니다.', 'ok'); return; }
   let ok = 0;
   // 🛡️ 파일 하나가 터져도 나머지는 저장한다 (예전엔 하나 터지면 전체가 조용히 멈췄다)
   for (const src of srcs) {

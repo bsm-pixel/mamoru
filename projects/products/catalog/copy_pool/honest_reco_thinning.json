@@ -3,13 +3,14 @@
   "applies_to": [
     "thinning"
   ],
-  "label_ko": "마모루의 솔직 추천 · thinning",
-  "_note": "id = 내부 식별자(화면 미표시). 파일 안에서 고유·불변. 권장: thinning_a_28",
+  "label_ko": "대표는 이렇게 말합니다 · thinning",
+  "_note": "직접 입력이 기본. 아래 1개는 톤 길잡이 예시 — 단점 먼저 인정 → 진실 → 누구에게. 제품마다 직접 수정.",
+  "select_mode": "single",
   "options": [
     {
-      "id": "thinning_a_28",
-      "text": "",
-      "tone": ""
+      "id": "thinning_example",
+      "text": "솔직히 커트감이 아주 부드러운 틴닝은 아닙니다.\n대신 감모량이 과하지 않아 자국 부담이 덜하고, 기본 틴닝으로서 할 몫은 충분히 합니다.\n메인 틴닝 한 자루를 두려는 분께 무난하게 맞는 형태입니다.",
+      "tone": "예시 · 직접 수정"
     }
   ]
 }

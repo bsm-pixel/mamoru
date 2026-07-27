@@ -21,6 +21,9 @@
   .ed-banner{ flex:0 0 auto; padding:9px 18px; font-size:12px; font-weight:600; }
   .ed-banner.warn{ background:#fff3cd; color:#8a6d00; border-bottom:1px solid #f0e0a0; }
   .ed-banner.ok{ background:#e6f4ea; color:#256a35; border-bottom:1px solid #cfe8d6; }
+  /* 같은 문구가 다시 떠도 '반응했다'가 보이도록 짧게 번쩍 */
+  .ed-banner.flash{ animation: edBannerFlash .55s ease; }
+  @keyframes edBannerFlash{ 0%{ filter:brightness(.84); } 40%{ filter:brightness(1.06); } 100%{ filter:none; } }
 
   /* 분할: 좌 문구편집 / 우 작업대 미리보기 */
   .studio{ flex:1 1 auto; min-height:0; display:flex; }

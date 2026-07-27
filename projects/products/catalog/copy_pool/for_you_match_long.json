@@ -1,15 +1,19 @@
 {
   "copy_type": "for_you_match",
   "applies_to": ["long"],
-  "label_ko": "FOR YOU — 이런 분에게 맞습니다",
-  "label_subtitle_ko": "솔직한 선택 가이드 · 맞는 경우 (다중 선택, 3개 권장)",
+  "label_ko": "FOR YOU — 나와 잘 맞을까? (경력·스타일·습관·주용도 체크)",
+  "label_subtitle_ko": "올바른 선택 가이드 · 해당 항목 선택 (카테고리별로 페이지에 그룹 표시)",
   "select_mode": "multi",
   "recommend_count": 3,
   "options": [
-    { "id": "lg_skilled", "category": "경력", "text": "장가위 활용에 익숙한 경력자", "tone": "숙련" },
+    { "id": "career_cert", "category": "경력", "text": "자격증 준비", "tone": "경력" },
+    { "id": "career_intern", "category": "경력", "text": "인턴 · 스탭", "tone": "경력" },
+    { "id": "career_junior", "category": "경력", "text": "초급 디자이너", "tone": "경력" },
+    { "id": "career_senior", "category": "경력", "text": "디자이너 이상", "tone": "경력" },
     { "id": "lg_flow", "category": "커트스타일", "text": "슬라이드 · 페더링 등 흐르는 기법 위주", "tone": "흐름" },
     { "id": "lg_layer", "category": "커트스타일", "text": "긴 기장 · 레이어 작업 비중 높음", "tone": "레이어" },
     { "id": "lg_oneline", "category": "커트습관", "text": "긴 라인을 한 번에 이어 그리는 편", "tone": "롱 스트로크" },
-    { "id": "lg_fast", "category": "커트환경", "text": "빠른 시술 · 회전율이 중요한 환경", "tone": "속도" }
+    { "id": "use_blunt_combo", "category": "주용도", "text": "블런트 겸용", "tone": "겸용" },
+    { "id": "use_singling", "category": "주용도", "text": "싱글링 (면다듬기)용", "tone": "싱글링" }
   ]
 }

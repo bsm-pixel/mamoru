@@ -19,7 +19,14 @@ const WS_CSS = `
   .ws-card__bar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:10px 14px; border-bottom:1px solid var(--line); background:#fbfaf9; }
   .ws-card__id{ font-family:'Outfit',sans-serif; font-size:11.5px; font-weight:800; color:var(--void); }
   .ws-card__label{ font-size:11.5px; color:var(--mute); }
-  .ws-card__applies{ margin-left:auto; font-size:9.5px; font-weight:700; letter-spacing:.05em; color:#fff; background:#B8B4AF; border-radius:999px; padding:3px 9px; }
+  .ws-card__applies{ margin-left:auto; font-family:'Outfit',sans-serif; font-size:15px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; color:var(--cream); background:var(--void); border-radius:8px; padding:6px 16px; }
+  /* for_you 계열: 옵션 각각 카드로 그리면 혼잡 → 한 그룹에 카테고리별 한 줄씩 */
+  .ws-fy{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:6px 16px 14px; }
+  .ws-fy__cat{ font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--mute); margin:16px 0 6px; padding-bottom:5px; border-bottom:1px solid var(--line); }
+  .ws-fy__row{ display:flex; align-items:baseline; gap:10px; padding:6px 0; }
+  .ws-fy__id{ flex:0 0 auto; font-family:'Outfit',sans-serif; font-size:9px; font-weight:700; color:#c4c0ba; letter-spacing:.03em; min-width:76px; }
+  .ws-fy__txt{ flex:1 1 auto; font-size:14px; color:#2D2D2D; line-height:1.5; }
+  .ws-fy__txt.empty{ color:#c4c0ba; font-style:italic; }
   .ws-stage{ background:var(--cream); padding:clamp(16px,3vw,26px); }
   .ws-copy{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:12px; }
   .ws-copy__bar{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
@@ -171,7 +178,31 @@ function cardPanel(cardType) {
 }
 /* 문구 풀 = 실제 상세페이지에 나갈 '그 모양 그대로' 미리보기.
    template.js 의 copyBlock() 을 그대로 쓴다(출력 SSOT) → 여기서 본 모양 = 고객이 볼 모양. */
+/* for_you_match / for_you_miss = 옵션이 많아 각각 forYouCard 로 그리면 "이런 분에게 맞습니다"가
+   반복되며 혼잡 → 한 그룹에 카테고리별 한 줄씩(길면 자동 2줄) 컴팩트 리스트로. */
+function forYouListPreview(pool) {
+  const opts = pool.options || [];
+  const order = [], byCat = {};
+  opts.forEach(o => {
+    const cat = o.category || '기타';
+    if (!byCat[cat]) { byCat[cat] = []; order.push(cat); }
+    byCat[cat].push(o);
+  });
+  let rows = '';
+  order.forEach(cat => {
+    rows += '<div class="ws-fy__cat">' + esc2(cat) + '</div>';
+    byCat[cat].forEach(o => {
+      const t = (o.text || '').trim();
+      rows += '<div class="ws-fy__row"><span class="ws-fy__id">' + esc2(o.id) + '</span>'
+        + '<span class="ws-fy__txt' + (t ? '' : ' empty') + '">' + (t ? esc2(t) : '(빈 문구)') + '</span></div>';
+    });
+  });
+  return '<div class="ws-fy">' + (rows || '<div class="ws-copy__empty">문구 없음</div>') + '</div>';
+}
 function copyPanel(pool) {
+  if (pool.copy_type === 'for_you_match' || pool.copy_type === 'for_you_miss') {
+    return panel(pool.copy_type, pool.label_ko || '', pool.applies_to, forYouListPreview(pool), pool._src);
+  }
   const opts = (pool.options || []).map(o => {
     const text = (o.text || '').trim();
     const rendered = text
