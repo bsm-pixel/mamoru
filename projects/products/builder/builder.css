@@ -56,6 +56,16 @@ label.btn{display:inline-flex; align-items:center;}
 .fld .lbl{display:block; font-size:12px; font-weight:600; color:var(--mute); margin-bottom:6px; letter-spacing:0.02em;}
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
 .hint{font-size:11px; color:var(--mute); margin:6px 0 8px; line-height:1.5;}
+/* 감각 스펙트럼 에디터 */
+.spec-ax{ border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px; background:#fff; }
+.spec-ax.off{ opacity:.5; }
+.spec-ax__head{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.spec-ax__use{ display:flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:var(--mute); white-space:nowrap; cursor:pointer; }
+.spec-ax__label{ flex:1 1 auto; min-width:0; font-family:inherit; font-size:13px; font-weight:700; color:var(--void); border:1px solid var(--line); border-radius:7px; padding:6px 9px; outline:none; }
+.spec-ax__label:focus{ border-color:var(--void); }
+.spec-ax__del{ flex:0 0 auto; border:1px solid var(--line); background:#fff; color:#c62828; font-size:12px; font-weight:700; width:26px; height:26px; border-radius:7px; cursor:pointer; }
+.spec-ax__add{ width:100%; border:1px dashed var(--soft, #b8b4af); background:#fbfaf9; color:var(--void); font-size:12px; font-weight:700; padding:8px; border-radius:8px; cursor:pointer; margin-top:2px; }
+.spec-ax__add:active,.spec-ax__del:active{ transform:scale(.98); }
 
 input[type=text], textarea, select{
   width:100%; font-family:inherit; font-size:13px; color:var(--void);

@@ -21,6 +21,62 @@ const IS_LOCALHOST = /^(127\.0\.0\.1|localhost|\[::1\])$/i.test(location.hostnam
 let localImages = IS_LOCALHOST;
 const LOCAL_IMG_HOST = location.origin;   // 예: http://127.0.0.1:5500 → /projects/products/product_detail/{폴더}/images/{파일}
 
+/* 감각 스펙트럼 종류별 기본 축 (커트감 위 order10 / 무게 아래 order90 · 중간 50)
+   블런트=숏가위 공용. 라벨은 기본값 — 제품마다 편집기에서 수정/추가. */
+const SPECTRUM_DEFAULTS = {
+  blunt:    [ { key: 'feel', label: '커트감', left: '힘', right: '부드러움', level: 3, order: 10 },
+              { key: 'weight', label: '무게', left: '가벼움', right: '묵직', level: 3, order: 90 } ],
+  thinning: [ { key: 'feel', label: '커트감', left: '강함', right: '부드러움', level: 3, order: 10 },
+              { key: 'reduction', label: '감모량', left: '적음', right: '많음', level: 3, order: 50 },
+              { key: 'weight', label: '무게', left: '가벼움', right: '묵직', level: 3, order: 90 } ],
+  long:     [ { key: 'feel', label: '커트감', left: '힘', right: '부드러움', level: 3, order: 10 },
+              { key: 'weight', label: '무게', left: '가벼움', right: '묵직', level: 3, order: 90 } ],
+  dry:      [ { key: 'feel', label: '커트감', left: '힘', right: '부드러움', level: 3, order: 10 },
+              { key: 'weight', label: '무게', left: '가벼움', right: '묵직', level: 3, order: 90 } ]
+};
+
+/* 스펙트럼 에디터 — 사용 토글 + 라벨/양끝 수정 + 5단계(3=중립) + 축 추가/삭제. 표시는 order 고정순. */
+function spectrumEditor() {
+  if (!Array.isArray(spec.spectrums)) {
+    spec.spectrums = (SPECTRUM_DEFAULTS[spec.type] || SPECTRUM_DEFAULTS.blunt).map(a => ({ ...a, on: true }));
+  }
+  const wrap = document.createElement('div');
+  const draw = () => {
+    wrap.innerHTML = '';
+    wrap.appendChild(subhead('감각 스펙트럼 (5단계·3=중립 · 커트감 맨위/무게 맨아래 고정 · 라벨수정·축추가 가능)'));
+    spec.spectrums.slice().sort((a, b) => (a.order || 50) - (b.order || 50)).forEach((ax) => {
+      const box = document.createElement('div'); box.className = 'spec-ax' + (ax.on === false ? ' off' : '');
+      const head = document.createElement('div'); head.className = 'spec-ax__head';
+      const use = document.createElement('label'); use.className = 'spec-ax__use';
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = ax.on !== false;
+      cb.addEventListener('change', () => { ax.on = cb.checked; box.classList.toggle('off', !cb.checked); updatePreview(); });
+      use.appendChild(cb); use.appendChild(document.createTextNode('사용'));
+      const lbl = document.createElement('input'); lbl.type = 'text'; lbl.className = 'spec-ax__label'; lbl.value = ax.label || ''; lbl.placeholder = '축 이름 (예: 커트감)';
+      lbl.addEventListener('input', () => { ax.label = lbl.value; updatePreview(); });
+      const del = document.createElement('button'); del.type = 'button'; del.className = 'spec-ax__del'; del.textContent = '✕'; del.title = '이 축 삭제';
+      del.addEventListener('click', () => { spec.spectrums.splice(spec.spectrums.indexOf(ax), 1); draw(); updatePreview(); });
+      head.appendChild(use); head.appendChild(lbl); head.appendChild(del); box.appendChild(head);
+      const ends = document.createElement('div'); ends.className = 'grid2';
+      ends.appendChild(textField('왼쪽 끝', ax.left, '힘', v => { ax.left = v; updatePreview(); }));
+      ends.appendChild(textField('오른쪽 끝', ax.right, '부드러움', v => { ax.right = v; updatePreview(); }));
+      box.appendChild(ends);
+      box.appendChild(radioRow(
+        [1, 2, 3, 4, 5].map(n => ({ id: String(n), label: n === 3 ? '3·중립' : String(n) })),
+        String(ax.level || 3), v => { ax.level = +v; updatePreview(); }, '위치 (1=왼끝 · 5=오른끝)'
+      ));
+      wrap.appendChild(box);
+    });
+    const add = document.createElement('button'); add.type = 'button'; add.className = 'spec-ax__add'; add.textContent = '＋ 축 추가 (중간에 배치)';
+    add.addEventListener('click', () => {
+      spec.spectrums.push({ key: 'custom_' + spec.spectrums.length, label: '', left: '', right: '', level: 3, order: 50, on: true });
+      draw(); updatePreview();
+    });
+    wrap.appendChild(add);
+  };
+  draw();
+  return wrap;
+}
+
 function defaultSpec(type) {
   return {
     model: '', type, category_label: '', size_inch: '', weight_g: '', price_grade: 'A',
@@ -93,10 +149,7 @@ function renderPanel() {
   gg.appendChild(textField('약지부', spec.custom_fields.grip_ring || '', '15 × 18', v => { spec.custom_fields.grip_ring = v; updatePreview(); }));
   prof.appendChild(gg);
   prof.appendChild(copyChooserSingleInline('handle_description', 'handle_description', '핸들 특성 설명'));
-  prof.appendChild(subhead('Weight (무게감)'));
-  prof.appendChild(selectField('무게 밴드', spec.custom_fields.weight_band || '중간',
-    ['가벼움', '중간', '무거움'], v => { spec.custom_fields.weight_band = v; updatePreview(); }));
-  prof.appendChild(textArea('무게 설명', spec.custom_fields.weight_description || '', '짧은 날 + 58g — 한 손 작업에 적정...', v => { spec.custom_fields.weight_description = v; updatePreview(); }));
+  prof.appendChild(spectrumEditor());
   p.appendChild(section('PROFILE', prof, '04'));
 
   // 05 FOR YOU
@@ -177,6 +230,7 @@ function reviewsEditor() {
 function switchType(type) {
   spec.type = type;
   spec.selections = {};
+  spec.spectrums = null;   // 종류별 기본 축이 다르므로 재시드 (spectrumEditor가 다시 채움)
   // 종류 전용 카피는 풀이 다르므로 single 선택 초기화 (공용은 유지)
   delete spec.copy_selections.hero_subtitle;
   delete spec.copy_selections.about_body;

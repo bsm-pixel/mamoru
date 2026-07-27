@@ -367,6 +367,41 @@ function gripSizeBlock(spec, catalog) {
 }
 
 /* WEIGHT — 무게 막대 */
+/* 감각 스펙트럼 — 5단계(3=중립) 다축 마커. spec.spectrums = [{label,left,right,level,order,on}]
+   고정 순서(order): 커트감 10 / 중간 50 / 무게 90. weightBlock 을 대체. (2026-07-27) */
+function spectrumBlock(spec) {
+  const axes = (spec.spectrums || []).filter(a => a && a.label && a.on !== false)
+    .slice().sort((a, b) => (a.order || 50) - (b.order || 50));
+  if (!axes.length) return '';
+  const rows = axes.map((a, ri) => {
+    const lvl = Math.min(5, Math.max(1, parseInt(a.level, 10) || 3));
+    const ticks = [0, 1, 2, 3, 4].map(i => {
+      const tp = i / 4 * 100;
+      const on = i === (lvl - 1);
+      return `<div style="position:absolute;top:50%;left:${tp}%;transform:translate(-50%,-50%);width:${on ? '15px' : '7px'};height:${on ? '15px' : '7px'};border-radius:50%;background:${on ? '#1A1A1A' : '#D4D0CB'};${on ? 'border:3px solid #FAF9F7;box-shadow:0 0 0 1px #1A1A1A;' : ''}"></div>`;
+    }).join('');
+    const border = ri < axes.length - 1 ? 'border-bottom:1px solid #EDEBE8;' : '';
+    return `<div style="padding:clamp(20px,2.6vw,28px) 0;${border}">
+      <div style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;letter-spacing:0.06em;color:#1A1A1A;margin-bottom:clamp(16px,2vw,20px);">${esc(a.label)}</div>
+      <div style="position:relative;height:15px;margin:0 clamp(6px,1.2vw,10px);">
+        <div style="position:absolute;top:50%;left:0;right:0;height:2px;transform:translateY(-50%);background:#EDEBE8;"></div>
+        ${ticks}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:clamp(11px,1.4vw,13px);color:#8A8580;margin-top:clamp(10px,1.2vw,12px);">
+        <span>${esc(a.left || '')}</span><span>${esc(a.right || '')}</span>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div>
+    <div style="display:flex;align-items:baseline;gap:clamp(12px,1.5vw,16px);margin-bottom:clamp(10px,1.5vw,16px);flex-wrap:wrap;">
+      <span style="font-family:'Outfit',sans-serif;font-size:clamp(11px,1.4vw,13px);font-weight:800;color:#1A1A1A;letter-spacing:0.15em;">FEEL</span>
+      <span style="font-size:clamp(12px,1.5vw,14px);color:#8A8580;letter-spacing:0.02em;">— 감각 스펙트럼</span>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #EDEBE8;border-radius:clamp(8px,1.5vw,12px);padding:clamp(4px,1.2vw,12px) clamp(24px,3.5vw,44px) clamp(8px,1.5vw,20px);">
+      ${rows}
+    </div>
+  </div>`;
+}
 function weightBlock(spec) {
   const cf = spec.custom_fields || {};
   const g = spec.weight_g != null ? spec.weight_g : (cf.weight_g || '—');
@@ -667,7 +702,7 @@ function renderDetailHTML(spec, catalog) {
   }
   profileCards += handleGroup(spec, catalog);
   profileCards += gripSizeBlock(spec, catalog);
-  profileCards += weightBlock(spec);
+  profileCards += spectrumBlock(spec);
 
   // SPEC 메타 rows
   const gradeOpt = catalog.cardOption('grade', spec.price_grade);
