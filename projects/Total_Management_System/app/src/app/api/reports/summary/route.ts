@@ -301,7 +301,7 @@ export async function GET(req: NextRequest) {
     // ─── 10) 복원수리 매출 = A(접수 repairs, paid_at 기준 실제 금액) + B(offline RS) + C(delivery RS) ───
     const { data: repairSalesRaw } = await db
       .from('repairs')
-      .select('id, as_id, name, phone, service_cost, shipping_fee, total_amount, paid_at, created_at')
+      .select('id, as_id, name, phone, service_cost, shipping_fee, total_amount, paid_at, payment_method, created_at')
       .not('paid_at', 'is', null)
       .gte('paid_at', `${fromDate}T00:00:00`)
       .lte('paid_at', `${toDate}T23:59:59`)
@@ -323,6 +323,11 @@ export async function GET(req: NextRequest) {
       service_cost_total: repairServiceCost,    // (A 기준)
       shipping_fee_total: repairShippingFee,    // (A 기준)
       count: repairSales.length + offlineRsCount + deliveryRsCount, // 호환: 전체 건수
+      // 120: 결제수단별 집계 (A채널 = 접수 repairs, payment_method 기록된 입금건). 카드 복원수리 회계 반영
+      by_method: groupBy(
+        repairSales.filter((r: { payment_method?: string | null; total_amount?: number }) => r.payment_method && (r.total_amount || 0) > 0) as unknown as Record<string, unknown>[],
+        'payment_method', 'total_amount'
+      ),
     };
 
     // 복원수리 일별 (A: paid_at / B: sale_date / C: delivery_date)

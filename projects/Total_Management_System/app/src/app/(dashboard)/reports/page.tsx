@@ -207,6 +207,20 @@ export default function ReportsPage() {
                     </div>
                   </div>
                 )}
+                {/* 결제방식별 — 복원수리 탭 (접수건 A채널, 120) */}
+                {revenueTab === 'repair' && data.repair_sales?.by_method && Object.keys(data.repair_sales.by_method).length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-neutral-100">
+                    <p className="text-[10px] text-neutral-400 mb-1">결제방식별 <span className="text-neutral-300">(복원수리 접수건)</span></p>
+                    <div className="space-y-0.5">
+                      {Object.entries(data.repair_sales.by_method).map(([k, v]) => (
+                        <div key={k} className="flex justify-between text-xs">
+                          <span className="text-neutral-500">{METHOD_LABEL[k] || k}</span>
+                          <span className="font-medium">{formatKRW(v)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </Card>
 
               {/* 매입 */}

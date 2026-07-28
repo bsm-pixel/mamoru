@@ -107,6 +107,7 @@ export interface RepairSalesSummary {
   service_cost_total: number; // (A 기준)
   shipping_fee_total: number; // (A 기준)
   count: number;            // 전체 건수 (호환)
+  by_method?: Record<string, number>; // 120: 결제수단별 (A채널 접수건, 카드/이체/현금)
 }
 
 /** 제품 매출 = B2C(소매/온라인) + B2B(딜러/아카데미 + 납품) — RS 제외 */

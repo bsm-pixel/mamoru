@@ -24,7 +24,13 @@ interface SidebarActionCardProps {
   repair: Repair;
 }
 
-type ConfirmAction = 'cost_notice' | 'mark_paid' | 'mark_shipped' | 'cancel_shipment' | 'cancel_repair' | 'delete_repair' | null;
+type ConfirmAction = 'cost_notice' | 'mark_paid' | 'mark_shipped' | 'cancel_shipment' | 'cancel_repair' | 'delete_repair' | 'visit_checkout' | null;
+type PayMethod = 'transfer' | 'card' | 'cash';
+const PAY_METHODS: { id: PayMethod; label: string }[] = [
+  { id: 'transfer', label: '이체' },
+  { id: 'card', label: '카드' },
+  { id: 'cash', label: '현금' },
+];
 
 export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const queryClient = useQueryClient();
@@ -37,6 +43,9 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [mergedShipOpen, setMergedShipOpen] = useState(false);
   const [paidNotify, setPaidNotify] = useState(true); // 입금확인 알림톡 발송 여부
+  const [payMethod, setPayMethod] = useState<PayMethod>('transfer'); // 120: 결제수단
+  const [visitPaid, setVisitPaid] = useState(true); // 직접방문 현장결제 시 입금완료 처리 여부
+  const isDirectVisit = r.proceed_type === '직접방문';
 
   const currentStatus = r.status as RepairStatus;
   const proceedType = r.proceed_type;
@@ -96,13 +105,35 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
     });
   };
 
-  // 입금확인 처리 (paid_at 설정 — 상태 변경 없음)
+  // 입금확인 처리 (paid_at 설정 — 상태 변경 없음) + 결제수단 기록
   const handleMarkPaid = () => {
     updateFields.mutate({
       id: r.id,
       paid_at: new Date().toISOString(),
+      payment_method: payMethod, // 120
       skip_notify: !paidNotify, // 체크 해제 시 알림톡 스킵
     });
+  };
+
+  // 직접방문 현장결제: 비용확정→작업시작(알림톡 없음) + 결제수단 + 입금(옵션) 한 번에
+  const handleVisitCheckout = async () => {
+    if (currentStatus === 'intake') {
+      await updateStatus.mutateAsync({
+        id: r.id,
+        status: 'cost_notified',
+        service_cost: r.service_cost,
+        shipping_fee: r.shipping_fee,
+        total_amount: r.total_amount,
+        note: `방문 현장 비용확정: ${formatKRW(r.total_amount)}`,
+      });
+    }
+    await updateStatus.mutateAsync({ id: r.id, status: 'repairing', note: '방문 현장 작업시작' });
+    await updateFields.mutateAsync({
+      id: r.id,
+      payment_method: payMethod,
+      ...(visitPaid && !r.paid_at ? { paid_at: new Date().toISOString(), skip_notify: true } : {}),
+    });
+    setConfirmAction(null);
   };
 
   // 출고완료 처리 (ready_to_ship → shipped + shipped_at 설정)
@@ -170,19 +201,31 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
           </div>
         ) : null}
 
-        {/* 입고 & 비용안내 발송 */}
+        {/* 입고 & 비용안내 발송 (택배·방문수거) / 방문 현장결제 (직접방문 — 알림톡 없음) */}
         {canSendCostNotice && (
           <div className="mt-3 pt-3 border-t border-neutral-100">
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setConfirmAction('cost_notice')}
-              loading={updateStatus.isPending || sendNotify.isPending}
-              className="w-full"
-            >
-              <Send size={14} />
-              {isCostResend ? '비용 안내 재발송' : '입고 & 비용안내'}
-            </Button>
+            {isDirectVisit ? (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setConfirmAction('visit_checkout')}
+                loading={updateStatus.isPending || updateFields.isPending}
+                className="w-full"
+              >
+                🏪 방문 확정 · 현장결제
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setConfirmAction('cost_notice')}
+                loading={updateStatus.isPending || sendNotify.isPending}
+                className="w-full"
+              >
+                <Send size={14} />
+                {isCostResend ? '비용 안내 재발송' : '입고 & 비용안내'}
+              </Button>
+            )}
           </div>
         )}
 
@@ -346,6 +389,48 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
         message={<>고객에게 <strong>비용 안내 알림톡</strong>이 발송됩니다.<br />금액: {formatKRW(r.total_amount)}{r.total_amount === 0 ? ' (무상 처리)' : ''}</>}
         confirmLabel="발송"
       />
+      {/* 직접방문 현장결제 — 비용확정 + 결제수단 + 입금완료 한 번에 (알림톡 없음) */}
+      <ConfirmModal
+        open={confirmAction === 'visit_checkout'}
+        onClose={() => { setConfirmAction(null); setVisitPaid(true); }}
+        onConfirm={handleVisitCheckout}
+        title="방문 확정 · 현장결제"
+        message={
+          <div className="space-y-3">
+            <div className="text-sm text-neutral-600 bg-neutral-50 rounded-lg p-2.5 leading-relaxed">
+              <div>수량: 마모루 {r.qty_mamoru}자루{r.qty_other > 0 ? ` · 타사 ${r.qty_other}자루` : ''}</div>
+              <div className="font-semibold text-neutral-900 mt-0.5">금액: {formatKRW(r.total_amount)}{r.total_amount === 0 ? ' (무상)' : ''}</div>
+              <div className="text-xs text-neutral-400 mt-1">※ 수량이 실제와 다르면 접수정보에서 먼저 조정하세요</div>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500 mb-1.5">결제수단</p>
+              <div className="flex gap-2">
+                {PAY_METHODS.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setPayMethod(m.id)}
+                    className={`flex-1 py-1.5 rounded-lg text-sm font-semibold border transition ${payMethod === m.id ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'}`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={visitPaid}
+                onChange={(e) => setVisitPaid(e.target.checked)}
+                className="w-4 h-4 rounded border-neutral-300 text-terracotta focus:ring-terracotta"
+              />
+              <span className="text-sm text-neutral-600">입금 완료로 처리 (현장 결제)</span>
+            </label>
+            <p className="text-xs text-neutral-400">알림톡은 발송하지 않습니다 (고객 현장 방문).</p>
+          </div>
+        }
+        confirmLabel="현장 처리 완료"
+      />
       <ConfirmModal
         open={confirmAction === 'mark_paid'}
         onClose={() => { setConfirmAction(null); setPaidNotify(true); }}
@@ -354,6 +439,21 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
         message={
           <div className="space-y-3">
             <p>{r.name}님의 입금을 확인 처리합니다.<br />금액: {formatKRW(r.total_amount)}</p>
+            <div>
+              <p className="text-xs text-neutral-500 mb-1.5">결제수단</p>
+              <div className="flex gap-2">
+                {PAY_METHODS.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setPayMethod(m.id)}
+                    className={`flex-1 py-1.5 rounded-lg text-sm font-semibold border transition ${payMethod === m.id ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'}`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
