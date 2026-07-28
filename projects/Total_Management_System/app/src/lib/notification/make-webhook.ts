@@ -81,6 +81,11 @@ const REPAIR_STATUS_TEMPLATES = new Set<NotifyTemplate>([
   'as_shipped',
   'as_cancelled',
   'as_review_request',  // 복원수리 리뷰 요청
+  // Phase 4: 직접방문 (booked 는 as_received URL 로 별도 라우팅)
+  'as_visit_remind_24h',
+  'as_visit_remind_2h',
+  'as_visit_rescheduled',
+  'as_visit_cancelled',
 ]);
 
 export type NotifyTemplate =
@@ -106,6 +111,12 @@ export type NotifyTemplate =
   | 'as_shipped'          // 출고 안내 → webhook_repair
   | 'as_cancelled'        // 복원수리 취소 안내 → webhook_repair
   | 'as_review_request'   // 복원수리 만족도 → webhook_repair
+  // Phase 4: 직접방문(당일수리) — booked=as_received URL, 나머지=repair_status URL
+  | 'as_visit_booked'     // 직접방문 접수완료 → webhook_as_received
+  | 'as_visit_remind_24h' // 직접방문 D-1 리마인드 → webhook_repair
+  | 'as_visit_remind_2h'  // 직접방문 당일 2h 리마인드 → webhook_repair
+  | 'as_visit_rescheduled' // 직접방문 예약 변경 안내 → webhook_repair
+  | 'as_visit_cancelled'  // 직접방문 예약 취소 완료 → webhook_repair
   | 'review_request'      // 상담 리뷰 요청 → webhook_consultation
   | 'purchase_review_request' // 제품구매 리뷰 요청 → webhook_consultation
   | 'sales_shipped'           // 판매 출고 안내 → webhook_consultation
@@ -142,6 +153,12 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   as_shipped: 'AS_SHIPPED',
   as_cancelled: 'AS_CANCELLED',
   as_review_request: 'AS_REVIEW_REQUEST',   // 복원수리 리뷰 요청 → MAKE_REPAIR_WEBHOOK_URL
+  // Phase 4: 직접방문(당일수리)
+  as_visit_booked: 'AS_VISIT_BOOKED',
+  as_visit_remind_24h: 'AS_VISIT_REMIND_24H',
+  as_visit_remind_2h: 'AS_VISIT_REMIND_2H',
+  as_visit_rescheduled: 'AS_VISIT_RESCHEDULED',
+  as_visit_cancelled: 'AS_VISIT_CANCELLED',
   review_request: 'REVIEW_REQUEST',          // 상담 리뷰 요청 → MAKE_WEBHOOK_URL
   purchase_review_request: 'PURCHASE_REVIEW_REQUEST', // 제품구매 리뷰 요청 → MAKE_WEBHOOK_URL
   sales_shipped: 'SALES_SHIPPED',            // 판매 출고 안내 → MAKE_WEBHOOK_URL
@@ -224,8 +241,8 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
   let webhookUrl: string;
   let urlSource: string;
 
-  if (payload.template === 'as_received') {
-    // 복원수리 접수 → 별도 Make 시나리오
+  if (payload.template === 'as_received' || payload.template === 'as_visit_booked') {
+    // 복원수리 접수(택배·방문) → 별도 Make 시나리오 (접수 알림)
     webhookUrl = urls.as_received;
     urlSource = 'webhook_as_received';
   } else if (REPAIR_STATUS_TEMPLATES.has(payload.template)) {

@@ -8,6 +8,7 @@ import { formatPhone, formatKRW, formatDate } from '@/lib/utils/format';
 import { calcTotalCost } from '@/lib/repair/cost-calculator';
 import type { Repair } from '@/lib/supabase/types';
 import { User, MapPin, Scissors, Pencil, Check, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface RepairDetailCardProps {
   repair: Repair;
@@ -266,6 +267,19 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
             <dt className="text-neutral-500">접수일시</dt>
             <dd>{r.received_at ? formatDate(r.received_at, 'yyyy.MM.dd HH:mm') : '-'}</dd>
           </dl>
+        )}
+        {/* 121: 직접방문 고객 셀프 일정변경/취소 링크 (알림톡 버튼과 동일 URL) */}
+        {r.proceed_type === '직접방문' && (r as { manage_token?: string | null }).manage_token && (
+          <button
+            onClick={() => {
+              const link = `https://page.mamoru.kr/projects/as/page_change_request.html?uid=${(r as { manage_token?: string | null }).manage_token}`;
+              navigator.clipboard?.writeText(link);
+              toast.success('고객 관리 링크 복사됨');
+            }}
+            className="mt-3 w-full text-xs font-semibold text-neutral-600 border border-neutral-200 rounded-lg py-2 hover:bg-neutral-50 transition"
+          >
+            🔗 고객 일정변경/취소 링크 복사
+          </button>
         )}
       </Card>
 

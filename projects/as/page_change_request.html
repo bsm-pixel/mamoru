@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>예약 확인 · 변경 | MAMORU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css" rel="stylesheet">
+<style>
+  :root{
+    --void:#1A1A1A; --ink:#2D2D2D; --mute:#8A8580; --line:#EDEBE8;
+    --soft:#D4D0CB; --shell:#F5F3F0; --cream:#FAF9F7;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--shell); color:var(--void);
+    font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.6;}
+  .wrap{max-width:460px; margin:0 auto; padding:24px 18px 60px; min-height:100vh;}
+  .brand{font-family:'Outfit',sans-serif; font-weight:900; letter-spacing:.14em; font-size:13px; color:var(--void); text-align:center; margin-bottom:22px;}
+  .card{background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px 20px; margin-bottom:14px;}
+  .card h1{font-size:18px; font-weight:800; letter-spacing:-.01em; margin-bottom:16px;}
+  .row{display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:14px;}
+  .row:last-child{border-bottom:0;}
+  .row .k{color:var(--mute); flex:0 0 auto;}
+  .row .v{color:var(--ink); font-weight:600; text-align:right;}
+  .btns{display:flex; flex-direction:column; gap:10px; margin-top:20px;}
+  .btn{display:block; width:100%; text-align:center; padding:15px; border-radius:12px; font-size:15px; font-weight:700; border:1px solid var(--void); cursor:pointer; transition:.15s; background:#fff; color:var(--void); font-family:inherit;}
+  .btn.primary{background:var(--void); color:var(--cream);}
+  .btn.ghost{border-color:var(--line); color:var(--mute);}
+  .btn:active{transform:scale(.985);}
+  .btn:disabled{opacity:.4; cursor:default;}
+  .hint{font-size:12.5px; color:var(--mute); text-align:center; margin-top:14px; line-height:1.7;}
+  .hidden{display:none !important;}
+  .center{text-align:center;}
+  .done{background:var(--shell); border:1px solid var(--soft); text-align:center; padding:40px 22px;}
+  .done .em{font-size:30px; margin-bottom:12px;}
+  .done h2{font-size:19px; font-weight:800; margin-bottom:10px;}
+  .done p{font-size:14px; color:var(--ink); line-height:1.7;}
+  /* 모달 */
+  .overlay{position:fixed; inset:0; background:rgba(26,26,26,.5); display:flex; align-items:flex-end; justify-content:center; z-index:50; padding:0;}
+  .sheet{background:var(--cream); width:100%; max-width:460px; border-radius:20px 20px 0 0; padding:24px 20px calc(24px + env(safe-area-inset-bottom)); max-height:88vh; overflow-y:auto;}
+  .sheet h2{font-size:17px; font-weight:800; margin-bottom:4px;}
+  .sheet .sub{font-size:13px; color:var(--mute); margin-bottom:18px;}
+  label.fld{display:block; font-size:12.5px; color:var(--mute); font-weight:600; margin:14px 0 7px;}
+  input[type=date]{width:100%; font-family:inherit; font-size:15px; padding:12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--void);}
+  .slots{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:4px;}
+  .slot{padding:11px 6px; border:1px solid var(--line); border-radius:10px; background:#fff; font-size:14px; font-weight:600; color:var(--void); cursor:pointer; text-align:center; font-family:inherit;}
+  .slot:disabled{opacity:.32; text-decoration:line-through; cursor:default;}
+  .slot.on{background:var(--void); color:var(--cream); border-color:var(--void);}
+  .slot-empty{grid-column:1/-1; text-align:center; color:var(--mute); font-size:13px; padding:18px 0;}
+  .warn{font-size:12.5px; color:#b45309; background:#fef3c7; border-radius:8px; padding:9px 12px; margin-top:12px; line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">MAMORU</div>
+
+  <!-- 로딩 -->
+  <div id="loading" class="card center"><p style="color:var(--mute);font-size:14px;padding:20px 0;">예약 정보를 불러오는 중…</p></div>
+
+  <!-- 오류 -->
+  <div id="error" class="card done hidden"><div class="em">🔒</div><h2>확인할 수 없어요</h2><p id="error-msg">잘못된 접근이거나 만료된 링크입니다.</p></div>
+
+  <!-- 이미 취소/완료/불가 -->
+  <div id="closed" class="card done hidden"><div class="em">ℹ️</div><h2 id="closed-title">변경할 수 없어요</h2><p id="closed-msg"></p>
+    <div class="btns"><button class="btn ghost" onclick="closeInapp()">닫기</button></div></div>
+
+  <!-- 예약 정보 + 액션 -->
+  <div id="main" class="hidden">
+    <div class="card">
+      <h1>매장 방문 수리 예약</h1>
+      <div class="row"><span class="k">예약자</span><span class="v" id="f-name">-</span></div>
+      <div class="row"><span class="k">방문 일시</span><span class="v" id="f-when">-</span></div>
+      <div class="row"><span class="k">수리 수량</span><span class="v" id="f-qty">-</span></div>
+      <div class="row"><span class="k">접수번호</span><span class="v" id="f-asid">-</span></div>
+      <div class="btns">
+        <button class="btn primary" id="btn-change" onclick="openResched()">일정 변경하기</button>
+        <button class="btn" id="btn-cancel" onclick="openCancel()">예약 취소하기</button>
+      </div>
+      <p class="hint">방문 전까지 언제든 변경·취소하실 수 있어요<br>변경 시 알림톡으로 안내드립니다</p>
+    </div>
+  </div>
+
+  <!-- 완료 화면 -->
+  <div id="done-resched" class="card done hidden"><div class="em">✅</div><h2>일정이 변경되었어요</h2><p id="done-resched-msg"></p>
+    <div class="btns"><button class="btn primary" onclick="closeInapp()">확인 완료</button></div></div>
+  <div id="done-cancel" class="card done hidden"><div class="em">✅</div><h2>예약이 취소되었어요</h2>
+    <p>다음에 더 좋은 상태로 뵙기를 바랄게요<br>수리가 다시 필요하시면 언제든 신청해 주세요</p>
+    <div class="btns"><button class="btn primary" onclick="closeInapp()">확인 완료</button></div></div>
+</div>
+
+<!-- 일정변경 모달 -->
+<div id="m-resched" class="overlay hidden">
+  <div class="sheet">
+    <h2>일정 변경</h2>
+    <p class="sub">원하시는 날짜와 시간을 선택해 주세요</p>
+    <label class="fld">방문 날짜</label>
+    <input type="date" id="r-date">
+    <label class="fld">방문 시간</label>
+    <div class="slots" id="r-slots"><div class="slot-empty">날짜를 먼저 선택해 주세요</div></div>
+    <div id="r-warn" class="warn hidden"></div>
+    <div class="btns">
+      <button class="btn primary" id="r-confirm" disabled onclick="submitResched()">이 시간으로 변경</button>
+      <button class="btn ghost" onclick="closeSheet('m-resched')">뒤로</button>
+    </div>
+  </div>
+</div>
+
+<!-- 취소 재확인 모달 -->
+<div id="m-cancel" class="overlay hidden">
+  <div class="sheet">
+    <h2>예약을 취소할까요?</h2>
+    <p class="sub">취소하시면 방문 예약이 사라지며, 다시 예약하셔야 해요</p>
+    <div class="btns">
+      <button class="btn" onclick="closeSheet('m-cancel')">일정 유지하기</button>
+      <button class="btn primary" id="c-confirm" onclick="submitCancel()">취소 확정하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var API_BASE = 'https://app-eta-sandy-75.vercel.app/api/repair/public';
+  var params = new URLSearchParams(location.search);
+  var uid = params.get('uid') || '';
+  var RES = null;          // 예약 정보
+  var pickedTime = '';     // 선택된 슬롯
+
+  function $(id){ return document.getElementById(id); }
+  function show(id){ $(id).classList.remove('hidden'); }
+  function hide(id){ $(id).classList.add('hidden'); }
+
+  // ── 카카오 인앱 닫기 (검증된 패턴) ──
+  function closeInapp(){
+    var ua = navigator.userAgent || '';
+    var isKakao = /KAKAOTALK/i.test(ua);
+    var isIOS = /iPhone|iPad|iPod/i.test(ua);
+    if (isKakao){
+      location.href = isIOS ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
+      setTimeout(function(){ if (history.length > 1) history.back(); }, 600);
+      setTimeout(function(){ window.close(); }, 1200);
+      return;
+    }
+    if (history.length > 1){ history.back(); return; }
+    window.close();
+  }
+
+  // ── 예약 정보 로드 ──
+  function load(){
+    if (!uid){ hide('loading'); showErr('링크가 올바르지 않습니다. URL을 확인해 주세요.'); return; }
+    fetch(API_BASE + '/reservation?uid=' + encodeURIComponent(uid))
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        hide('loading');
+        if (!res.ok){ showErr(res.error || '예약 정보를 찾을 수 없습니다.'); return; }
+        RES = res.data;
+        if (RES.status === 'cancelled'){ showClosed('이미 취소된 예약이에요', '이 예약은 취소 처리되었습니다.'); return; }
+        if (!res.canRequestChange){
+          showClosed('변경할 수 없는 예약이에요', '수리가 시작되었거나 완료된 예약은 변경·취소가 어려워요. 매장으로 문의해 주세요.');
+          return;
+        }
+        renderMain();
+      })
+      .catch(function(){ hide('loading'); showErr('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'); });
+  }
+  function showErr(msg){ $('error-msg').textContent = msg; show('error'); }
+  function showClosed(title, msg){ $('closed-title').textContent = title; $('closed-msg').textContent = msg; show('closed'); }
+
+  function fmtWhen(date, time){
+    if (!date) return '미정';
+    var d = new Date(date + 'T00:00:00+09:00');
+    var days = ['일','월','화','수','목','금','토'];
+    var s = (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ')';
+    return time ? s + ' ' + time : s;
+  }
+  function renderMain(){
+    $('f-name').textContent = RES.name || '-';
+    $('f-when').textContent = fmtWhen(RES.date, RES.time);
+    $('f-qty').textContent = (RES.qty || 0) + '자루';
+    $('f-asid').textContent = RES.asId || '-';
+    show('main');
+  }
+
+  // ── 일정 변경 ──
+  function openResched(){
+    pickedTime = '';
+    $('r-confirm').disabled = true;
+    hide('r-warn');
+    var di = $('r-date');
+    var today = new Date(); today.setHours(0,0,0,0);
+    di.min = toYmd(today);
+    di.value = RES.date || toYmd(today);
+    show('m-resched');
+    loadSlots(di.value);
+    di.onchange = function(){ pickedTime=''; $('r-confirm').disabled=true; loadSlots(di.value); };
+  }
+  function toYmd(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+
+  function loadSlots(date){
+    var box = $('r-slots');
+    box.innerHTML = '<div class="slot-empty">시간을 불러오는 중…</div>';
+    fetch(API_BASE + '/slots?date=' + encodeURIComponent(date) + '&qty=' + (RES.qty || 1))
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if (!res.ok || !res.slots || !res.slots.length){ box.innerHTML = '<div class="slot-empty">이 날짜에 가능한 시간이 없어요</div>'; return; }
+        box.innerHTML = '';
+        res.slots.forEach(function(s){
+          var b = document.createElement('button');
+          b.className = 'slot'; b.textContent = s.time; b.type = 'button';
+          // 기존 예약 시간은 선택 가능하게(같은 건이므로), 그 외 unavailable은 비활성
+          if (!s.available && !(date === RES.date && s.time === RES.time)) { b.disabled = true; }
+          b.onclick = function(){
+            box.querySelectorAll('.slot').forEach(function(x){ x.classList.remove('on'); });
+            b.classList.add('on'); pickedTime = s.time; $('r-confirm').disabled = false;
+          };
+          box.appendChild(b);
+        });
+      })
+      .catch(function(){ box.innerHTML = '<div class="slot-empty">시간을 불러오지 못했어요</div>'; });
+  }
+
+  function submitResched(){
+    var date = $('r-date').value;
+    if (!date || !pickedTime) return;
+    var btn = $('r-confirm'); btn.disabled = true; btn.textContent = '변경 중…';
+    fetch(API_BASE + '/resched', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ uid: uid, visit_date: date, visit_time: pickedTime })
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if (!res.ok){
+        $('r-warn').textContent = res.error || '변경에 실패했어요. 다시 시도해 주세요.'; show('r-warn');
+        btn.disabled = false; btn.textContent = '이 시간으로 변경'; return;
+      }
+      closeSheet('m-resched'); hide('main');
+      $('done-resched-msg').innerHTML = '변경된 방문 일정<br><b>' + fmtWhen(date, pickedTime) + '</b>';
+      show('done-resched');
+    }).catch(function(){
+      $('r-warn').textContent = '일시적 오류입니다. 다시 시도해 주세요.'; show('r-warn');
+      btn.disabled = false; btn.textContent = '이 시간으로 변경';
+    });
+  }
+
+  // ── 취소 ──
+  function openCancel(){ show('m-cancel'); }
+  function submitCancel(){
+    var btn = $('c-confirm'); btn.disabled = true; btn.textContent = '취소 처리 중…';
+    fetch(API_BASE + '/cancel', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ uid: uid })
+    }).then(function(r){ return r.json(); }).then(function(res){
+      closeSheet('m-cancel');
+      if (!res.ok){ btn.disabled=false; btn.textContent='취소 확정하기'; alert(res.error || '취소에 실패했어요. 매장으로 문의해 주세요.'); return; }
+      hide('main'); show('done-cancel');
+    }).catch(function(){ btn.disabled=false; btn.textContent='취소 확정하기'; alert('일시적 오류입니다. 다시 시도해 주세요.'); });
+  }
+
+  function closeSheet(id){ hide(id); }
+
+  load();
+</script>
+</body>
+</html>

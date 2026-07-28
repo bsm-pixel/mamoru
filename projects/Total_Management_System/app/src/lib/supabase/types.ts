@@ -399,6 +399,7 @@ export interface Database {
           packed_at: string | null;     // R1: 포장완료 시점
           inbound_at: string | null;    // 119: 입고 & 비용안내(cost_notified) 첫 전이 시점 = 목록 '입고일'
           payment_method: string | null; // 120: 결제수단 transfer/card/cash (직접방문 현장결제·입금확인 기록)
+          manage_token: string | null;  // 121: 고객 셀프 관리(일정확인/변경/취소) 링크 토큰
           admin_note: string | null;
           gas_raw: Record<string, unknown> | null;
           review_promised_at: string | null;     // 067: 리뷰 약속 시점
