@@ -12,7 +12,7 @@ export function OPTIONS() {
 }
 
 /** GET /api/repair/public/reservation?uid=<manage_token> — 직접방문 예약 정보 조회 (비인증, 토큰 기반)
- *  projects/as/page_change_request.html 에서 사용 */
+ *  projects/as/page_change_request.html 에서 사용 (121, 2026-07-28) */
 export async function GET(req: NextRequest) {
   try {
     const uid = req.nextUrl.searchParams.get('uid');
