@@ -66,15 +66,16 @@ function DateLine({ dateStr, sub }: { dateStr: string; sub?: string }) {
   );
 }
 
-/** 수거요청일 칸 — 방문수거=수거요청일 / 직접방문=방문예약(날짜+시간) / 직접발송=라벨 */
+/** 수거·방문일 칸 — 방문수거=수거요청일('수거') / 직접방문=방문예약('방문'+시간) / 직접발송=라벨.
+    한 컬럼이 진행방법별로 다른 날짜를 담으므로 각 행이 무슨 날짜인지 스스로 태그(수거/방문). */
 function IntakeCell({ repair: r }: { repair: Repair }) {
   if (r.proceed_type === '방문수거') {
     return r.pickup_date ? <DateLine dateStr={r.pickup_date} sub="수거" /> : <span className="text-neutral-300">—</span>;
   }
   if (r.proceed_type === '직접방문') {
-    const vd = (r as { visit_date?: string | null; visit_time?: string | null }).visit_date;
-    const vt = (r as { visit_time?: string | null }).visit_time;
-    return vd ? <DateLine dateStr={vd} sub={vt ? String(vt).slice(0, 5) : '방문'} /> : <span className="text-[11px] text-emerald-600">매장방문</span>;
+    return r.visit_date
+      ? <DateLine dateStr={r.visit_date} sub={r.visit_time ? `방문 ${String(r.visit_time).slice(0, 5)}` : '방문'} />
+      : <span className="text-[11px] text-emerald-600">매장방문</span>;
   }
   return <span className="text-[11px] text-neutral-500">직접발송</span>;
 }
@@ -130,8 +131,8 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
     ) },
     { key: 'proceed', label: '진행방법', render: (r) => <ProceedBadge type={r.proceed_type} /> },
     { key: 'received', label: '접수일', render: (r) => <TwoLineDate iso={r.received_at} /> },
-    { key: 'pickup', label: '수거요청일', render: (r) => <IntakeCell repair={r} /> },
-    { key: 'inbound', label: '입고일', render: (r) => <TwoLineDate iso={(r as { inbound_at?: string | null }).inbound_at ?? null} /> },
+    { key: 'pickup', label: '수거·방문일', render: (r) => <IntakeCell repair={r} /> },
+    { key: 'inbound', label: '입고일', render: (r) => <TwoLineDate iso={r.inbound_at ?? null} /> },
     { key: 'qty', label: '수량', render: (r) => (
       <span className="text-xs text-neutral-600 whitespace-nowrap">
         {r.qty_mamoru > 0 && <span>마모루 {r.qty_mamoru}</span>}
@@ -365,6 +366,21 @@ function RepairCard({ repair: r, tab, isSelected, onSelect, prepMode = false, ch
 
 function TabSpecificInfo({ repair: r, tab }: { repair: Repair; tab: RepairTabKey }) {
   switch (tab) {
+    case 'intake':
+    case 'inbound_waiting':
+      // 신규접수·입고대기: 진행방법별 예정일 (직접방문=방문일시 / 방문수거=수거요청일)
+      if (r.proceed_type === '직접방문' && r.visit_date) {
+        return (
+          <div className="mt-1.5 text-xs text-emerald-600">
+            방문 {formatDate(r.visit_date, 'M/d')}{r.visit_time ? ` ${String(r.visit_time).slice(0, 5)}` : ''}
+          </div>
+        );
+      }
+      if (r.proceed_type === '방문수거' && r.pickup_date) {
+        return <div className="mt-1.5 text-xs text-neutral-500">수거요청 {formatDate(r.pickup_date, 'M/d')}</div>;
+      }
+      return null;
+
     case 'pickup_needed':
       // 주소 표시
       return r.address ? (

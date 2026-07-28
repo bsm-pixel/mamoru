@@ -248,8 +248,21 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
             <dd className="font-medium">{r.qty_mamoru}자루</dd>
             <dt className="text-neutral-500">타사</dt>
             <dd className="font-medium">{r.qty_other}자루</dd>
-            <dt className="text-neutral-500">수거요청일</dt>
-            <dd>{r.pickup_date ? formatDate(r.pickup_date, 'yyyy.MM.dd') : '-'}</dd>
+            {r.proceed_type === '직접방문' ? (
+              <>
+                <dt className="text-neutral-500">방문 예정</dt>
+                <dd className="font-medium text-emerald-700">
+                  {r.visit_date
+                    ? `${formatDate(r.visit_date, 'yyyy.MM.dd')}${r.visit_time ? ` ${String(r.visit_time).slice(0, 5)}` : ''}`
+                    : '매장방문 (일시 미정)'}
+                </dd>
+              </>
+            ) : (
+              <>
+                <dt className="text-neutral-500">수거요청일</dt>
+                <dd>{r.pickup_date ? formatDate(r.pickup_date, 'yyyy.MM.dd') : '-'}</dd>
+              </>
+            )}
             <dt className="text-neutral-500">접수일시</dt>
             <dd>{r.received_at ? formatDate(r.received_at, 'yyyy.MM.dd HH:mm') : '-'}</dd>
           </dl>
