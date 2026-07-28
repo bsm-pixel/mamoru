@@ -100,6 +100,7 @@ export const REPAIR_ACTION_LABEL: Record<string, string> = {
 /** 진행방식별 분기 라벨 (방문수거 intake → "수거접수 필요") */
 export function getRepairDisplayLabel(status: RepairStatus, proceedType?: string | null): string {
   if (status === 'intake' && proceedType === '방문수거') return '수거접수 필요';
+  if (status === 'intake' && proceedType === '직접방문') return '방문예정';
   return REPAIR_STATUS_LABEL[status] || status;
 }
 

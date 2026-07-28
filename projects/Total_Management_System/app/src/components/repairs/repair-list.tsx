@@ -367,8 +367,9 @@ function RepairCard({ repair: r, tab, isSelected, onSelect, prepMode = false, ch
 function TabSpecificInfo({ repair: r, tab }: { repair: Repair; tab: RepairTabKey }) {
   switch (tab) {
     case 'intake':
+    case 'visit_scheduled':
     case 'inbound_waiting':
-      // 신규접수·입고대기: 진행방법별 예정일 (직접방문=방문일시 / 방문수거=수거요청일)
+      // 신규접수·방문예정·입고대기: 진행방법별 예정일 (직접방문=방문일시 / 방문수거=수거요청일)
       if (r.proceed_type === '직접방문' && r.visit_date) {
         return (
           <div className="mt-1.5 text-xs text-emerald-600">

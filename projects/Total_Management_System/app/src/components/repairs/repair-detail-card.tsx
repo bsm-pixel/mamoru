@@ -126,14 +126,6 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
           </dd>
           <dt className="text-neutral-500">전화</dt>
           <dd>{formatPhone(r.phone)}</dd>
-          <dt className="text-neutral-500">진행방식</dt>
-          <dd>
-            {r.proceed_type ? (
-              <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-info-soft text-info">
-                {r.proceed_type}
-              </span>
-            ) : '-'}
-          </dd>
           <dt className="text-neutral-500">전달방법</dt>
           <dd>{r.delivery_method || '-'}</dd>
           {!editAddr && (
@@ -244,6 +236,14 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
           </div>
         ) : (
           <dl className="grid grid-cols-[6rem_1fr] gap-y-2 text-sm">
+            <dt className="text-neutral-500">진행방식</dt>
+            <dd>
+              {r.proceed_type ? (
+                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-info-soft text-info">
+                  {r.proceed_type}
+                </span>
+              ) : '-'}
+            </dd>
             <dt className="text-neutral-500">마모루</dt>
             <dd className="font-medium">{r.qty_mamoru}자루</dd>
             <dt className="text-neutral-500">타사</dt>

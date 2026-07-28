@@ -3,6 +3,7 @@
 export type RepairTabKey =
   | 'intake'
   | 'pickup_needed'
+  | 'visit_scheduled'
   | 'inbound_waiting'
   | 'in_progress'
   | 'ready_to_ship'

@@ -8,6 +8,7 @@ import type { RepairTabKey, RepairTabDef } from '@/components/repairs/repair-tab
 interface RepairTabData {
   intake: Repair[];
   pickup_needed: Repair[];
+  visit_scheduled: Repair[];
   inbound_waiting: Repair[];
   in_progress: Repair[];
   ready_to_ship: Repair[];
@@ -30,6 +31,7 @@ export function useRepairTabData() {
       const [
         intakeRes,
         pickupNeededRes,
+        visitScheduledRes,
         inboundWaitingDirectRes,
         inboundWaitingPickupRes,
         inProgressRes,
@@ -58,12 +60,24 @@ export function useRepairTabData() {
           .order('received_at', { ascending: false })
           .limit(50),
 
-        // 3a) 입고대기 — 직접발송 확인완료: intake + 방문수거 아닌 것 + confirmed_at IS NOT NULL
+        // 2b) 방문예정: intake + 직접방문 + confirmed_at IS NOT NULL
+        //     = 접수확인 완료 후 고객 매장방문 대기 (2026-07-28: 이전엔 입고대기 3a로 뭉쳐 있었음)
+        supabase
+          .from('repairs')
+          .select('*')
+          .eq('status', 'intake')
+          .eq('proceed_type', '직접방문')
+          .not('confirmed_at', 'is', null)
+          .order('visit_date', { ascending: true, nullsFirst: false })
+          .limit(50),
+
+        // 3a) 입고대기 — 직접발송 확인완료: intake + 방문수거·직접방문 아닌 것 + confirmed_at IS NOT NULL
         supabase
           .from('repairs')
           .select('*')
           .eq('status', 'intake')
           .not('proceed_type', 'eq', '방문수거')
+          .not('proceed_type', 'eq', '직접방문')
           .not('confirmed_at', 'is', null)
           .order('received_at', { ascending: false })
           .limit(50),
@@ -110,6 +124,7 @@ export function useRepairTabData() {
 
       const intake = (intakeRes.data || []) as Repair[];
       const pickupNeeded = (pickupNeededRes.data || []) as Repair[];
+      const visitScheduled = (visitScheduledRes.data || []) as Repair[];
       const inboundDirect = (inboundWaitingDirectRes.data || []) as Repair[];
       const inboundPickup = (inboundWaitingPickupRes.data || []) as Repair[];
       const inboundWaiting = [...inboundDirect, ...inboundPickup].sort(
@@ -123,6 +138,7 @@ export function useRepairTabData() {
         tabData: {
           intake,
           pickup_needed: pickupNeeded,
+          visit_scheduled: visitScheduled,
           inbound_waiting: inboundWaiting,
           in_progress: inProgress,
           ready_to_ship: readyToShip,
@@ -136,6 +152,7 @@ export function useRepairTabData() {
   const tabData = query.data?.tabData || {
     intake: [],
     pickup_needed: [],
+    visit_scheduled: [],
     inbound_waiting: [],
     in_progress: [],
     ready_to_ship: [],
@@ -145,6 +162,7 @@ export function useRepairTabData() {
   const tabs: RepairTabDef[] = [
     { key: 'intake', label: '신규접수', count: tabData.intake.length },
     { key: 'pickup_needed', label: '수거접수필요', count: tabData.pickup_needed.length },
+    { key: 'visit_scheduled', label: '방문예정', count: tabData.visit_scheduled.length },
     { key: 'inbound_waiting', label: '입고대기', count: tabData.inbound_waiting.length },
     { key: 'in_progress', label: '진행중', count: tabData.in_progress.length },
     { key: 'ready_to_ship', label: '출고대기', count: tabData.ready_to_ship.length },
