@@ -17,6 +17,14 @@ function getAutoNotifyTemplate(newStatus: string): NotifyTemplate | null {
   return map[newStatus] || null;
 }
 
+/** 'YYYY-MM-DD' → '7월 30일 (수)' (직접방문 알림톡 방문일 표기용) */
+function fmtVisitDate(dateStr?: string | null): string {
+  if (!dateStr) return '';
+  const d = new Date(`${dateStr}T00:00:00+09:00`);
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+}
+
 /** GET /api/repair/[id] — 단건 + 검수 + 이력 */
 export async function GET(
   _req: NextRequest,
@@ -127,7 +135,12 @@ export async function PATCH(
 
       after(async () => {
         if (skip_notify) return;  // 합포장 출고 등 알림톡 우회 케이스
-        const template = getAutoNotifyTemplate(newStatus);
+        let template = getAutoNotifyTemplate(newStatus);
+        // 직접방문 취소 → 매장방문 전용 템플릿으로 분기 (기존 as_cancelled 와 분리, 중복 없음)
+        // ⏳ as_visit_cancelled 는 검수 전이면 Make 분기 없어 미발송(잘못된 as_cancelled 는 안 나감)
+        if (newStatus === 'cancelled' && data.proceed_type === '직접방문') {
+          template = 'as_visit_cancelled';
+        }
         if (!template || !data.phone) return;
 
         // 067: 후기 요청 자동 발송 가드
@@ -177,6 +190,9 @@ export async function PATCH(
             total_amount: String(data.total_amount || 0),
             tracking: data.invoice_number || '',
             courier: '롯데택배',
+            // 직접방문 전용(as_visit_cancelled) 방문일정 변수 — 그 외 템플릿엔 무해
+            visit_date: fmtVisitDate(data.visit_date as string | null),
+            visit_time: (data.visit_time as string) || '',
           },
         });
         if (!result.success) {
