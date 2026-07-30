@@ -97,10 +97,10 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
 
       {showPrep && <RepairPrepSheetModal repairIds={[r.id]} onClose={() => setShowPrep(false)} />}
 
-      {/* 2컬럼 내부 레이아웃 — 좁은 패널: 액션 먼저(스크롤 없이 처리) / 넓은 패널: 정보 좌·액션 우 */}
+      {/* 2컬럼 내부 레이아웃 — 기본 정보 먼저(상단/좌), 액션은 바로 아래/우 (정보가 밀집돼 스크롤 부담 없음) */}
       <div className="flex flex-col @xl:flex-row gap-4">
-        {/* 메인 정보 — 좁을 땐 아래(order-2), 넓을 땐 왼쪽 */}
-        <div className="flex-1 space-y-4 min-w-0 order-2 @xl:order-1">
+        {/* 메인 정보 — 상단(좁을 때)/왼쪽(넓을 때) */}
+        <div className="flex-1 space-y-4 min-w-0">
           <RepairDetailCard repair={r} onUpdate={handleUpdate} />
 
           {/* 검수 요약 (저장된 게 있을 때만) */}
@@ -124,10 +124,10 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
 
         </div>
 
-        {/* 사이드바(액션) — 좁을 땐 맨 위(order-1, 스크롤 없이 다음 단계 처리), 넓을 땐 오른쪽 */}
-        <div className="w-full @xl:w-72 shrink-0 space-y-4 order-1 @xl:order-2">
+        {/* 사이드바(액션) — 정보 아래(좁을 때)/오른쪽(넓을 때) */}
+        <div className="w-full @xl:w-72 shrink-0 space-y-4">
           <SidebarActionCard repair={r} />
-          {/* 067: 리뷰 관리 카드 — 취소 외 상태에서 표시 */}
+          {/* 067: 리뷰 관리 카드 — 취소 외 상태에서 표시 (compact = 판매 패널과 동일 미니) */}
           {r.status !== 'cancelled' && (
             <ReviewManagementCard
               source="repair"
@@ -140,6 +140,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
               requestSentAt={(r as { review_request_sent_at?: string | null }).review_request_sent_at ?? null}
               submittedAt={(r as { review_submitted_at?: string | null }).review_submitted_at ?? null}
               sourceType={(r as { proceed_type?: string | null }).proceed_type ?? null}
+              compact={true}
               onChanged={() => refetch()}
             />
           )}

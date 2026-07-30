@@ -192,8 +192,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
               variant="primary"
               size="sm"
               onClick={() => setConfirmAction('mark_paid')}
-              loading={updateFields.isPending}
-              className="w-full"
+              loading={updateFields.isPending}
             >
               <CreditCard size={14} />
               입금확인
@@ -209,8 +208,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 variant="primary"
                 size="sm"
                 onClick={() => setConfirmAction('visit_checkout')}
-                loading={updateStatus.isPending || updateFields.isPending}
-                className="w-full"
+                loading={updateStatus.isPending || updateFields.isPending}
               >
                 🏪 방문 확정 · 현장결제
               </Button>
@@ -219,8 +217,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 variant="primary"
                 size="sm"
                 onClick={() => setConfirmAction('cost_notice')}
-                loading={updateStatus.isPending || sendNotify.isPending}
-                className="w-full"
+                loading={updateStatus.isPending || sendNotify.isPending}
               >
                 <Send size={14} />
                 {isCostResend ? '비용 안내 재발송' : '입고 & 비용안내'}
@@ -241,8 +238,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                   size="sm"
                   disabled={busy}
                   loading={updateStatus.variables?.status === nextStatus && busy}
-                  onClick={() => updateStatus.mutate({ id: r.id, status: nextStatus })}
-                  className="w-full"
+                  onClick={() => updateStatus.mutate({ id: r.id, status: nextStatus })}
                 >
                   {REPAIR_ACTION_LABEL[nextStatus]}
                 </Button>
@@ -293,8 +289,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                   variant="primary"
                   size="sm"
                   onClick={() => setConfirmAction('mark_shipped')}
-                  loading={updateStatus.isPending}
-                  className="w-full"
+                  loading={updateStatus.isPending}
                 >
                   <Truck size={14} />
                   출고완료
@@ -339,8 +334,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 variant="primary"
                 size="sm"
                 onClick={() => shipRepair.mutate({ id: r.id })}
-                loading={shipRepair.isPending}
-                className="w-full"
+                loading={shipRepair.isPending}
               >
                 <Truck size={14} />
                 송장 생성
@@ -349,8 +343,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => setMergedShipOpen(true)}
-                  className="w-full"
+                  onClick={() => setMergedShipOpen(true)}
                 >
                   <Package size={14} />
                   판매건 합포장 출고
