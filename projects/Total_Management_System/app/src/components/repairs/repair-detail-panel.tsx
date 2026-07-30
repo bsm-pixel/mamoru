@@ -97,10 +97,10 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
         )}
       </Button>
 
-      {/* 2컬럼 내부 레이아웃 */}
+      {/* 2컬럼 내부 레이아웃 — 좁은 패널: 액션 먼저(스크롤 없이 처리) / 넓은 패널: 정보 좌·액션 우 */}
       <div className="flex flex-col @xl:flex-row gap-4">
-        {/* 메인 정보 */}
-        <div className="flex-1 space-y-4 min-w-0">
+        {/* 메인 정보 — 좁을 땐 아래(order-2), 넓을 땐 왼쪽 */}
+        <div className="flex-1 space-y-4 min-w-0 order-2 @xl:order-1">
           <RepairDetailCard repair={r} onUpdate={handleUpdate} />
 
           {/* 검수 요약 (저장된 게 있을 때만) */}
@@ -124,8 +124,8 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
 
         </div>
 
-        {/* 사이드바 — 비용+액션+출고 통합 */}
-        <div className="w-full @xl:w-72 shrink-0 space-y-4">
+        {/* 사이드바(액션) — 좁을 땐 맨 위(order-1, 스크롤 없이 다음 단계 처리), 넓을 땐 오른쪽 */}
+        <div className="w-full @xl:w-72 shrink-0 space-y-4 order-1 @xl:order-2">
           <SidebarActionCard repair={r} />
           {/* 067: 리뷰 관리 카드 — 취소 외 상태에서 표시 */}
           {r.status !== 'cancelled' && (
@@ -143,9 +143,11 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
               onChanged={() => refetch()}
             />
           )}
-          <RepairTimeline history={history} />
         </div>
       </div>
+
+      {/* 이력 타임라인 — 참고용이라 항상 맨 아래 */}
+      <RepairTimeline history={history} />
     </div>
   );
 }
