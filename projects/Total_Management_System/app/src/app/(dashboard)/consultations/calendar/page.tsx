@@ -15,7 +15,7 @@ import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
-import { CalendarOff, Store, Truck, Info, AlertTriangle, Clock, Ban } from 'lucide-react';
+import { CalendarOff, Store, Truck, Info, AlertTriangle, Clock } from 'lucide-react';
 import {
   useBlackouts,
   useCreateBlackout,
@@ -152,12 +152,14 @@ function WeeklyBlockCard({ startHour, endHour, weeklyMap, disabledWeekdays }: {
  * 30분 격자 — 칸을 눌러(드래그) 막기/열기. 구글 캘린더 근무시간·캘린들리 스타일.
  * blocked 에 있는 칸 = 막힘(주황). 나머지 = 열림.
  */
-function TimeGrid({ startHour, endHour, blocked, onChange, busyCells, disabled }: {
+function TimeGrid({ startHour, endHour, blocked, onChange, busyCells, lockedCells, disabled }: {
   startHour: number; endHour: number;
   blocked: Set<number>;
   onChange: (next: Set<number>) => void;
   /** 예약이 이미 있는 칸 (표시만 — 막기 실수 방지) */
   busyCells?: Set<number>;
+  /** 매주 반복 차단으로 이미 막힌 칸 (읽기전용 — 여기선 수정 불가, 위 반복설정에서) */
+  lockedCells?: Set<number>;
   disabled?: boolean;
 }) {
   const cells = gridCells(startHour, endHour);
@@ -171,27 +173,29 @@ function TimeGrid({ startHour, endHour, blocked, onChange, busyCells, disabled }
     if (mode) next.add(m); else next.delete(m);
     onChange(next);
   };
-  const startDrag = (m: number) => { if (disabled) return; const mode = !blocked.has(m); setDrag(mode); apply(m, mode); };
-  const overDrag = (m: number) => { if (disabled || drag === null) return; apply(m, drag); };
+  const startDrag = (m: number) => { if (disabled || lockedCells?.has(m)) return; const mode = !blocked.has(m); setDrag(mode); apply(m, mode); };
+  const overDrag = (m: number) => { if (disabled || drag === null || lockedCells?.has(m)) return; apply(m, drag); };
 
   const row = (label: string, list: number[]) => list.length === 0 ? null : (
     <div className="mb-2.5">
       <p className="text-[11px] font-semibold text-neutral-400 mb-1">{label}</p>
       <div className="grid grid-cols-6 sm:grid-cols-8 gap-1">
         {list.map((m) => {
-          const on = blocked.has(m);
+          const locked = lockedCells?.has(m);   // 반복 차단(고정)
+          const on = blocked.has(m);            // 이 날짜 차단(편집 가능)
           const busy = busyCells?.has(m);
           return (
             <button
-              key={m} type="button" disabled={disabled}
+              key={m} type="button" disabled={disabled || locked}
               onMouseDown={() => startDrag(m)}
               onMouseEnter={() => overDrag(m)}
               onTouchStart={() => startDrag(m)}
-              title={busy ? '이 시간에 예약이 있습니다' : undefined}
-              className={`h-9 rounded-lg text-[11px] font-semibold border transition select-none disabled:opacity-50 ${
-                on ? 'bg-orange-500 border-orange-500 text-white'
+              title={locked ? '매주 반복 차단 — 위 “매주 반복 시간차단”에서 수정' : busy ? '이 시간에 예약이 있습니다' : undefined}
+              className={`h-9 rounded-lg text-[11px] font-semibold border transition select-none ${
+                locked ? 'bg-orange-100 border-orange-300 text-orange-500 cursor-not-allowed [background-image:repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(249,115,22,0.15)_4px,rgba(249,115,22,0.15)_8px)]'
+                   : on ? 'bg-orange-500 border-orange-500 text-white'
                    : busy ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                   : 'bg-white border-neutral-200 text-neutral-500 hover:border-neutral-400'
+                   : 'bg-white border-neutral-200 text-neutral-500 hover:border-neutral-400 disabled:opacity-50'
               }`}
             >{toHHMM(m)}</button>
           );
@@ -204,8 +208,9 @@ function TimeGrid({ startHour, endHour, blocked, onChange, busyCells, disabled }
     <div onMouseUp={() => setDrag(null)} onMouseLeave={() => setDrag(null)} onTouchEnd={() => setDrag(null)}>
       {row('오전', am)}
       {row('오후', pm)}
-      <p className="text-[11px] text-neutral-400 mt-1">
-        칸을 누르거나 드래그해서 <b className="text-orange-600">막기</b>/열기 · <span className="text-emerald-600">초록</span>=예약 있음
+      <p className="text-[11px] text-neutral-400 mt-1 leading-relaxed">
+        칸 눌러(드래그) <b className="text-orange-600">막기</b>/열기 · <span className="text-emerald-600">초록</span>=예약 있음
+        {lockedCells && lockedCells.size > 0 && <> · <span className="text-orange-400">빗금 주황</span>=매주 반복 차단(고정)</>}
       </p>
     </div>
   );
@@ -657,6 +662,8 @@ function BlackoutDetailModal({
   const [gridCellsState, setGridCellsState] = useState<Set<number>>(savedCells);
   useEffect(() => { setGridCellsState(rangesToCells(blockedSlots)); }, [blockedSlots]);
   const gridDirty = gridCellsState.size !== savedCells.size || [...gridCellsState].some((c) => !savedCells.has(c));
+  // 매주 반복 차단 칸 (읽기전용 표시 — grid에 빗금 주황으로 노출)
+  const weeklyCells = useMemo(() => rangesToCells(weeklyForThisDay), [weeklyForThisDay]);
 
   // 이 날짜에 이미 잡힌 예약 시각 → 격자에 초록 표시 (막기 실수 방지)
   const busyCells = useMemo(() => {
@@ -734,21 +741,6 @@ function BlackoutDetailModal({
           </div>
         )}
 
-        {/* 휴무 사유 입력 (휴무 등록 모드일 때만) */}
-        {!isBlackout && (
-          <div>
-            <label className="text-xs text-neutral-500 mb-1 block">휴무 사유 (선택)</label>
-            <input
-              type="text"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="예: 여름휴가, 공휴일, 외부 일정"
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm"
-              autoFocus
-            />
-          </div>
-        )}
-
         {/* 기존 휴무 사유 표시 */}
         {isBlackout && existingReason && (
           <div className="p-2 rounded-lg bg-red-50 text-xs">
@@ -757,11 +749,11 @@ function BlackoutDetailModal({
           </div>
         )}
 
-        {/* 118: 시간 격자 — 칸을 칠해서 막기/열기. 전일 휴무여도 조회·수정 가능(기존엔 숨겨져 손도 못 댔음) */}
+        {/* 118: 시간 격자 — 일부 시간만 막기 (부분). 전일 휴무여도 조회·수정 가능 */}
         <div className="border-t border-neutral-100 pt-3 space-y-2">
           <div className="flex items-center gap-1.5">
-            <Ban size={13} className="text-orange-500" />
-            <span className="text-xs font-bold text-neutral-700">이 날짜 시간 열기/막기</span>
+            <Clock size={13} className="text-orange-500" />
+            <span className="text-xs font-bold text-neutral-700">① 일부 시간만 막기</span>
             {gridDirty && <span className="ml-auto text-[11px] text-orange-600 font-semibold">저장 안 됨</span>}
           </div>
           <p className="text-[11px] text-neutral-400">
@@ -781,6 +773,7 @@ function BlackoutDetailModal({
             startHour={bizStart} endHour={bizEnd}
             blocked={gridCellsState} onChange={setGridCellsState}
             busyCells={busyCells}
+            lockedCells={weeklyCells}
             disabled={replaceSlots.isPending}
           />
 
@@ -804,27 +797,45 @@ function BlackoutDetailModal({
           </div>
         </div>
 
-        {/* 액션 */}
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" size="sm" onClick={onClose}>닫기</Button>
+        {/* ② 종일(통째) 막기 — ①시간 부분막기와 명확히 분리 (드래그 후 오클릭 방지) */}
+        <div className="border-t border-neutral-100 pt-3">
           {isBlackout ? (
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={handleUnblackout}
-              disabled={remove.isPending}
-            >
-              {remove.isPending ? '해제 중...' : '휴무 해제'}
-            </Button>
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3 flex items-center justify-between gap-3">
+              <span className="flex items-center gap-1.5 text-xs font-bold text-red-700">
+                <CalendarOff size={14} /> 이 날짜는 종일 휴무 중
+              </span>
+              <Button size="sm" variant="secondary" onClick={handleUnblackout} disabled={remove.isPending}>
+                {remove.isPending ? '해제 중...' : '휴무 해제'}
+              </Button>
+            </div>
           ) : (
-            <Button
-              size="sm"
-              onClick={handleBlackout}
-              disabled={create.isPending}
-            >
-              {create.isPending ? '등록 중...' : '이 날짜 막기'}
-            </Button>
+            <div className="rounded-lg border border-red-200 bg-red-50/60 p-3 space-y-2">
+              <span className="flex items-center gap-1.5 text-xs font-bold text-red-700">
+                <CalendarOff size={14} /> ② 이 날짜 통째로 막기 (종일 휴무)
+              </span>
+              <p className="text-[11px] text-red-500">위 시간 선택과 <b>무관하게 하루 전체</b>를 휴무 처리합니다.</p>
+              <input
+                type="text"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="휴무 사유 (선택) — 예: 여름휴가, 공휴일"
+                className="w-full h-9 px-3 rounded-lg border border-red-200 bg-white text-sm"
+              />
+              <button
+                type="button"
+                onClick={handleBlackout}
+                disabled={create.isPending}
+                className="w-full h-9 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {create.isPending ? '등록 중...' : '이 날짜 종일 막기'}
+              </button>
+            </div>
           )}
+        </div>
+
+        {/* 닫기 */}
+        <div className="flex justify-end pt-1">
+          <Button variant="ghost" size="sm" onClick={onClose}>닫기</Button>
         </div>
       </div>
     </Modal>
