@@ -62,40 +62,40 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
   return (
     // @container: 내부 2단 배치를 '뷰포트' 아닌 '패널 폭' 기준으로 (좁은 상세패널에서 값 사라지던 깨짐 방지)
     <div className="@container flex-1 overflow-y-auto space-y-4 pr-1">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold">{r.name}</h2>
+      {/* 헤더 — 이름·접수번호·상태 + 툴바(내역작성·준비표) 를 한 줄 정렬 (PC 툴바형) */}
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-lg font-bold truncate">{r.name}</h2>
+            <RepairStatusBadge status={r.status} proceedType={proceedType} />
+          </div>
           <p className="text-xs text-neutral-500 mt-0.5">
             {r.as_id} &middot; {formatDateTime(r.received_at)}
           </p>
         </div>
-        <div className="flex flex-col items-end gap-1.5 shrink-0">
-          <RepairStatusBadge status={r.status} proceedType={proceedType} />
+        {/* 툴바 — 컴팩트 버튼(풀폭 X) */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant={inspections.length > 0 ? 'secondary' : 'primary'}
+            size="sm"
+            onClick={() => setShowInspection(true)}
+          >
+            {inspections.length > 0 ? (
+              <><ClipboardCheck size={14} className="text-green-600" /> 내역 {inspections.length}건</>
+            ) : (
+              <><ClipboardList size={14} /> 내역작성</>
+            )}
+          </Button>
           <button
             onClick={() => setShowPrep(true)}
-            className="flex items-center gap-1 text-[11px] font-semibold text-neutral-600 border border-neutral-200 rounded-md px-2 py-1 hover:bg-neutral-50 transition"
+            className="flex items-center gap-1 text-xs font-semibold text-neutral-600 border border-neutral-200 rounded-md px-2.5 py-1.5 hover:bg-neutral-50 transition"
           >
-            <Printer size={11} /> 준비표
+            <Printer size={12} /> 준비표
           </button>
         </div>
       </div>
 
       {showPrep && <RepairPrepSheetModal repairIds={[r.id]} onClose={() => setShowPrep(false)} />}
-
-      {/* 내역작성 버튼 — 상단 1개만 (중복 제거, 2026-07-16) */}
-      <Button
-        variant={inspections.length > 0 ? 'secondary' : 'primary'}
-        size="sm"
-        onClick={() => setShowInspection(true)}
-        className="w-full"
-      >
-        {inspections.length > 0 ? (
-          <><ClipboardCheck size={14} className="text-green-600" /> 내역작성완료 ({inspections.length}건)</>
-        ) : (
-          <><ClipboardList size={14} /> 내역작성하기</>
-        )}
-      </Button>
 
       {/* 2컬럼 내부 레이아웃 — 좁은 패널: 액션 먼저(스크롤 없이 처리) / 넓은 패널: 정보 좌·액션 우 */}
       <div className="flex flex-col @xl:flex-row gap-4">
