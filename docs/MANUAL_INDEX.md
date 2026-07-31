@@ -11,13 +11,13 @@
 |---|---|---|
 | **전체 카탈로그(SSOT)** | `memory/reference_solapi_templates.md` | 운영 26 + 직접방문 5 = **31종** 트리거·변수·웹훅·코드위치. **알림톡 작업 전 무조건 먼저 read** |
 | **복원수리 매장방문(직접방문)** | [docs/AS_VISIT_ALIMTALK_TEMPLATES.md](AS_VISIT_ALIMTALK_TEMPLATES.md) | 접수완료·리마인드24·리마인드2·변경·취소 **5종** 양식+Make 필터+버튼+변수. 셀프 변경/취소 페이지 연동 |
-| **이벤트(EVENT)** | [docs/EVENT_ALIMTALK_SETUP.md](EVENT_ALIMTALK_SETUP.md) | 접수완료·입금완료(+선택 입금안내) 양식+Make+웹훅 생성법+발송(sales_shipped) |
+| **이벤트(EVENT)** | [docs/EVENT_ALIMTALK_SETUP.md](EVENT_ALIMTALK_SETUP.md) | **EVENT 전용 시나리오** 접수확인·입금확인·**출고완료(event_shipped 신규)** 양식+Make+웹훅 생성법+전환순서 |
 | **주문/판매(orders)** | `projects/Total_Management_System/docs/SOLAPI_TEMPLATES_ORDERS.md` | 주문/판매 계열 알림톡 |
 | **상담·출장·톡 + 변경/취소** | `projects/consulting/FLOW_change_request.md` | 상담(매장/출장/톡) 전체 흐름 + 각 템플릿(field_confirmed/remind/cancelled/suggest 등) + 고객 셀프 변경/취소 페이지 |
 
 **공통 규칙**
 - 알림톡 변수 = TMS→Make payload **영문 키와 일치**. 미발송 진단은 [feedback_alimtalk_diagnosis_first]: ①솔라피 검수 ②Make 분기 ③토글.
-- Make **웹훅 3개**: consultation(`MAKE_WEBHOOK_URL`, 상담+이벤트+판매출고+재고판매) / as_received(`MAKE_AS_RECEIVED_WEBHOOK_URL`, 복원수리 접수) / repair(`MAKE_REPAIR_WEBHOOK_URL`, 복원수리 상태변경).
+- Make **웹훅 4개**: consultation(`MAKE_WEBHOOK_URL`, 상담+판매출고+재고판매) / as_received(`MAKE_AS_RECEIVED_WEBHOOK_URL`, 복원수리 접수) / repair(`MAKE_REPAIR_WEBHOOK_URL`, 복원수리 상태변경) / **event(`MAKE_EVENT_WEBHOOK_URL`, EVENT 접수확인·입금확인·출고완료 — 2026-07-31 분리, 미설정 시 consultation 폴백)**.
 
 ---
 

@@ -8,35 +8,41 @@
 const ENV_WEBHOOK_CONSULTATION = process.env.MAKE_WEBHOOK_URL || '';
 const ENV_WEBHOOK_AS_RECEIVED = process.env.MAKE_AS_RECEIVED_WEBHOOK_URL || '';
 const ENV_WEBHOOK_REPAIR_STATUS = process.env.MAKE_REPAIR_WEBHOOK_URL || '';
+const ENV_WEBHOOK_EVENT = process.env.MAKE_EVENT_WEBHOOK_URL || '';
 const VERSION = 'tms-2.3';
 
 /**
  * DB 우선 → 환경변수 fallback으로 웹훅 URL 조회
  *
- * 3개 Make 시나리오:
- * 1. consultation  — 상담 접수/확정/취소/리마인더/리뷰
+ * 4개 Make 시나리오:
+ * 1. consultation  — 상담 접수/확정/취소/리마인더/리뷰 (+재고판매)
  * 2. as_received   — 복원수리 접수 안내 (별도 시나리오)
  * 3. repair_status — 복원수리 상태변경 (입고확인/입금/출고/취소/만족도)
+ * 4. event         — EVENT 접수확인/입금확인/출고완료 (전용 시나리오, 2026-07-31 분리)
+ *                    미설정 시 consultation 로 폴백 → 전환기(웹훅 세팅 전)에도 메시지 유실 방지
  */
-async function getWebhookUrls(): Promise<{ consultation: string; as_received: string; repair_status: string }> {
+async function getWebhookUrls(): Promise<{ consultation: string; as_received: string; repair_status: string; event: string }> {
   try {
     const { createServiceClient } = require('@/lib/supabase/server');
     const db = createServiceClient();
     const { data: rows } = await db
       .from('system_settings')
       .select('key, value')
-      .in('key', ['notifications.webhook_consultation', 'notifications.webhook_as_received', 'notifications.webhook_repair']);
+      .in('key', ['notifications.webhook_consultation', 'notifications.webhook_as_received', 'notifications.webhook_repair', 'notifications.webhook_event']);
 
     const map: Record<string, string> = {};
     (rows || []).forEach((r: { key: string; value: string }) => { if (r.value) map[r.key] = String(r.value).replace(/^"|"$/g, ''); });
 
+    const consultation = map['notifications.webhook_consultation'] || ENV_WEBHOOK_CONSULTATION;
     return {
-      consultation: map['notifications.webhook_consultation'] || ENV_WEBHOOK_CONSULTATION,
+      consultation,
       as_received: map['notifications.webhook_as_received'] || ENV_WEBHOOK_AS_RECEIVED,
       repair_status: map['notifications.webhook_repair'] || ENV_WEBHOOK_REPAIR_STATUS,
+      // EVENT 전용 미설정 시 consultation 폴백(전환기 안전) — 웹훅 세팅 후엔 완전 분리
+      event: map['notifications.webhook_event'] || ENV_WEBHOOK_EVENT || consultation,
     };
   } catch {
-    return { consultation: ENV_WEBHOOK_CONSULTATION, as_received: ENV_WEBHOOK_AS_RECEIVED, repair_status: ENV_WEBHOOK_REPAIR_STATUS };
+    return { consultation: ENV_WEBHOOK_CONSULTATION, as_received: ENV_WEBHOOK_AS_RECEIVED, repair_status: ENV_WEBHOOK_REPAIR_STATUS, event: ENV_WEBHOOK_EVENT || ENV_WEBHOOK_CONSULTATION };
   }
 }
 
@@ -60,6 +66,7 @@ async function isNotificationEnabled(template: string): Promise<boolean> {
       event_received: 'notifications.event_received',
       event_payment_notice: 'notifications.event_payment_notice',
       event_payment_confirmed: 'notifications.event_payment_confirmed',
+      event_shipped: 'notifications.event_shipped',
       stock_received: 'notifications.stock_received',
       stock_payment_notice: 'notifications.stock_payment_notice',
       stock_payment_confirmed: 'notifications.stock_payment_confirmed',
@@ -86,6 +93,14 @@ const REPAIR_STATUS_TEMPLATES = new Set<NotifyTemplate>([
   'as_visit_remind_2h',
   'as_visit_rescheduled',
   'as_visit_cancelled',
+]);
+
+/** EVENT 전용 템플릿 (전용 Make 시나리오 → webhook_event) — 2026-07-31 consultation 에서 분리 */
+const EVENT_TEMPLATES = new Set<NotifyTemplate>([
+  'event_received',
+  'event_payment_notice',
+  'event_payment_confirmed',
+  'event_shipped',
 ]);
 
 export type NotifyTemplate =
@@ -120,10 +135,11 @@ export type NotifyTemplate =
   | 'review_request'      // 상담 리뷰 요청 → webhook_consultation
   | 'purchase_review_request' // 제품구매 리뷰 요청 → webhook_consultation
   | 'sales_shipped'           // 판매 출고 안내 → webhook_consultation
-  // EVENT(고객 접수) — webhook_consultation 시나리오 사용
-  | 'event_received'          // EVENT 접수 확인 (자동)
+  // EVENT(고객 접수) — webhook_event 전용 시나리오 (2026-07-31 분리)
+  | 'event_received'          // EVENT 접수 확인 + 비용안내 (자동)
   | 'event_payment_notice'    // EVENT 입금 안내 (총액+계좌, 사장님 재고확인 후)
   | 'event_payment_confirmed' // EVENT 입금 확인 (→ 판매 자동전환)
+  | 'event_shipped'           // EVENT 출고완료 (판매전환분 출고 시 자동, sales_shipped 대체)
   // 재고판매(LS) — webhook_consultation 시나리오 사용
   | 'stock_received'          // 재고판매 접수 확인 + 입금 안내(계좌+금액) (자동)
   | 'stock_payment_notice'    // 재고판매 입금 안내 재발송 (어드민)
@@ -166,6 +182,7 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   event_received: 'EVENT_RECEIVED',
   event_payment_notice: 'EVENT_PAYMENT_NOTICE',
   event_payment_confirmed: 'EVENT_PAYMENT_CONFIRMED',
+  event_shipped: 'EVENT_SHIPPED',
   // 재고판매(LS)
   stock_received: 'STOCK_RECEIVED',
   stock_payment_notice: 'STOCK_PAYMENT_NOTICE',
@@ -249,6 +266,10 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     // 복원수리 상태변경 (입고확인/입금/출고/취소/만족도)
     webhookUrl = urls.repair_status;
     urlSource = 'webhook_repair';
+  } else if (EVENT_TEMPLATES.has(payload.template)) {
+    // EVENT 접수확인/입금확인/출고완료 → 전용 시나리오 (미설정 시 consultation 폴백)
+    webhookUrl = urls.event;
+    urlSource = 'webhook_event';
   } else {
     // 상담 알림톡 (접수/확정/취소/리마인더/리뷰 등)
     webhookUrl = urls.consultation;

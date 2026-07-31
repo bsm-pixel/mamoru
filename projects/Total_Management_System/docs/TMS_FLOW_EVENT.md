@@ -17,7 +17,7 @@ received(접수)
         └─[입금확인]→ converted(판매전환)    ← 입금확인 알림톡 + offline_sales 자동생성·재고차감
   └─[취소]→ cancelled
 ```
-전환 후(=offline_sales): 송장생성→발송 알림톡 / ALPS cron→배송완료 자동 / 약속✓→후기요청 자동. (EVENT 신규 로직 없음, 판매 인프라 재사용)
+전환 후(=offline_sales): 송장생성→**출고완료 알림톡(event_shipped, EVENT 전용)** / ALPS cron→배송완료 자동 / 약속✓→후기요청 자동. (출고 판별 = 판매 memo `EVENT 전환` 접두어 → sales-shipped.ts 에서 event_shipped 분기, 나머지 인프라 재사용)
 
 ## 가격 (lib/event/pricing.ts = 서버 권위 / page_form.html JS 동일 복제)
 - 품목 단가×수량 + 슬라이싱 가공(+20,000/자루).
@@ -25,10 +25,11 @@ received(접수)
   - 예 50000/3/130000 → 3자루=13만, 4자루=18만, 6자루=26만.
 - 판매 전환 시 묶음할인 = `offline_sales.discount_amount`.
 
-## 알림톡 (make-webhook.ts, webhook_consultation)
-- 신규 3: `event_received`(접수확인·자동) / `event_payment_notice`(입금안내·사장님 버튼) / `event_payment_confirmed`(입금확인·자동).
-- 발송/배송완료/후기 = 기존 판매 알림톡 재사용.
-- ※ 솔라피 콘솔 3종 등록+검수 + Make 분기 필요. 미발송 시 [솔라피/Make/콘솔] 점검.
+## 알림톡 (make-webhook.ts, **webhook_event 전용 시나리오** — 2026-07-31 분리)
+- `event_received`(접수확인+비용안내·자동) / `event_payment_confirmed`(입금확인·자동) / **`event_shipped`(출고완료·자동, EVENT 전용 신규)** (+선택 `event_payment_notice`).
+- 4개 웹훅 = consultation/as_received/repair/**event(`MAKE_EVENT_WEBHOOK_URL`, 설정 `notifications.webhook_event`, 미설정 시 consultation 폴백)**.
+- 출고완료는 `sales_shipped` 대신 `event_shipped` — sales-shipped.ts 가 memo `EVENT 전환` 접두어면 자동 분기(집하 cron·수동 [출고완료] 공통).
+- 셋업·전환순서 = `docs/EVENT_ALIMTALK_SETUP.md`. ※ 솔라피 콘솔 3종 검수 + Make 분기 필요.
 
 ## 화면/코드
 - 고객폼: `projects/event/page_form.html` (page.mamoru.kr, `?campaign=<id>`). 공개 API `app/api/event/public/{products,submit}`.

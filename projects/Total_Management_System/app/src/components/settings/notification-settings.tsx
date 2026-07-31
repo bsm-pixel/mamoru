@@ -26,6 +26,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
   const [webhookConsultation, setWebhookConsultation] = useState('');
   const [webhookAsReceived, setWebhookAsReceived] = useState('');
   const [webhookRepair, setWebhookRepair] = useState('');
+  const [webhookEvent, setWebhookEvent] = useState('');
   // 내 푸시 알림 (사장님이 받는 것)
   const [pushConsultation, setPushConsultation] = useState(true);
   const [pushFieldRequest, setPushFieldRequest] = useState(true);
@@ -52,6 +53,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     setWebhookConsultation(parse(settings['notifications.webhook_consultation'], ''));
     setWebhookAsReceived(parse(settings['notifications.webhook_as_received'], ''));
     setWebhookRepair(parse(settings['notifications.webhook_repair'], ''));
+    setWebhookEvent(parse(settings['notifications.webhook_event'], ''));
     setPushConsultation(parse(settings['push.consultation_received'], true));
     setPushFieldRequest(parse(settings['push.field_request'], true));
     setPushTalkReceived(parse(settings['push.talk_received'], true));
@@ -76,6 +78,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
       { key: 'notifications.webhook_consultation', value: webhookConsultation },
       { key: 'notifications.webhook_as_received', value: webhookAsReceived },
       { key: 'notifications.webhook_repair', value: webhookRepair },
+      { key: 'notifications.webhook_event', value: webhookEvent },
       { key: 'push.consultation_received', value: pushConsultation },
       { key: 'push.field_request', value: pushFieldRequest },
       { key: 'push.talk_received', value: pushTalkReceived },
@@ -180,7 +183,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
         </div>
       </Field>
 
-      {/* Make 웹훅 URL — 3개 시나리오 */}
+      {/* Make 웹훅 URL — 4개 시나리오 */}
       <Field label="Make 웹훅 URL (상담)" desc="상담 접수/확정/취소/리마인더/리뷰 등">
         <input value={webhookConsultation} onChange={(e) => setWebhookConsultation(e.target.value)}
           className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
@@ -193,6 +196,11 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
 
       <Field label="Make 웹훅 URL (AS상태변경)" desc="입고확인/입금안내/출고&송장/취소/만족도">
         <input value={webhookRepair} onChange={(e) => setWebhookRepair(e.target.value)}
+          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+      </Field>
+
+      <Field label="Make 웹훅 URL (이벤트)" desc="EVENT 접수확인/입금확인/출고완료 — 비우면 상담 웹훅으로 폴백">
+        <input value={webhookEvent} onChange={(e) => setWebhookEvent(e.target.value)}
           className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
       </Field>
 

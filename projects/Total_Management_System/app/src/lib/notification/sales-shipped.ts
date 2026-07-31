@@ -41,6 +41,16 @@ async function buildGoodsName(db: Db, saleId: string): Promise<string> {
 }
 
 /**
+ * EVENT 접수페이지 → 판매전환 건 판별.
+ * convertEventToSale 이 memo 를 'EVENT 전환 (…)' 로만 남긴다(LS='재고판매 전환', 수동=사용자입력).
+ * ∴ 품목 category='EVENT' 가 아니라 memo 접두어로 봐야 EVENT 카탈로그 제품의 '수동 판매' 오발송을 막는다.
+ */
+async function isEventOriginSale(db: Db, saleId: string): Promise<boolean> {
+  const { data } = await db.from('offline_sales').select('memo').eq('id', saleId).single();
+  return typeof data?.memo === 'string' && data.memo.startsWith('EVENT 전환');
+}
+
+/**
  * 출고 알림톡 발송.
  * 발송 조건(전화번호·B2B)을 스스로 검사하므로 호출부는 결과만 보면 된다.
  * 반환: { sent: true } 면 실제로 발송 성공 → 호출부가 shipped_notified_at 기록.
@@ -53,10 +63,13 @@ export async function sendSalesShippedNotification(
   if (isB2BCustomerType(sale.customerType)) return { sent: false, reason: 'b2b' };  // 2차 가드
 
   const goodsName = await buildGoodsName(db, sale.id);
+  // EVENT 접수페이지 유입 건은 전용 출고완료(event_shipped)로 발송 → EVENT 시나리오로 분리
+  const isEvent = await isEventOriginSale(db, sale.id);
+  const template = isEvent ? 'event_shipped' : 'sales_shipped';
 
-  // 토글(notifications.sales_shipped) 체크는 sendNotification 내부에서 수행 → 여기서 중복 확인 불필요
+  // 토글(notifications.sales_shipped / event_shipped) 체크는 sendNotification 내부에서 수행 → 여기서 중복 확인 불필요
   const result = await sendNotification({
-    template: 'sales_shipped',
+    template,
     phone: sale.customerPhone,
     name: sale.customerName,
     data: {
