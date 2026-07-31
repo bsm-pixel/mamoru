@@ -37,7 +37,7 @@
 #{name}님, 안녕하세요
 주문이 정상 접수되었습니다
 
-• 주문 내역
+✅ 주문 내역
 #{items}
 
 • 결제 금액 : #{total_amount}원
@@ -167,5 +167,26 @@
 - `make-webhook.ts` — `webhook_event`(설정/env `MAKE_EVENT_WEBHOOK_URL`, 미설정 시 consultation 폴백) + `EVENT_TEMPLATES` 라우팅 + `event_shipped` 템플릿/EVENT맵/토글키
 - `sales-shipped.ts` — 출고 발송 직전 판매 memo `EVENT 전환` 접두어면 `event_shipped`, 아니면 `sales_shipped`. 집하 자동(cron)·수동 [출고완료] **두 경로 공통**(단일 함수)
 - `notification-settings.tsx` — 설정에 **Make 웹훅 URL (이벤트)** 입력칸 추가
+
+---
+
+## 8. 취소 처리 스탠스 (2026-07-31 확정)
+
+EVENT는 **선입금 주문**이라 취소는 입금 전/후로 성격이 완전히 다르다. 하나의 자동 플로우로 묶지 않는다.
+
+| 단계 | 상태 | 스탠스 | 알림톡 |
+|---|---|---|---|
+| **입금 전** (미입금 접수) | 대부분·무비용(재고 미차감) | 방치하거나 어드민 [취소]로 조용히 마킹 | **안 보냄** (고객이 이미 안 살 마음 → 노이즈) |
+| **입금 후 ~ 전환 전** | 환불 발생 | **수동 응대** — 환불 + event [취소] | (선택) 개별 안내 |
+| **판매전환 후**(converted) | 재고 차감·판매 생성됨 | **event에서 취소 금지 → 판매관리에서 판매 취소**(재고 복원·환불) | 개별 응대 |
+| 출고 후 | 반품 영역 | 일반 판매 반품 프로세스 | — |
+
+**원칙**
+- **취소 전용 알림톡·셀프취소 페이지는 만들지 않는다.** (직접방문은 시간약속이라 셀프 취소가 필요했지만 EVENT는 선입금이라 취소 대부분이 "입금 안 함"으로 자연 종결)
+- 취소 건수가 유의미하게 쌓이면 그때 `event_cancelled`(환불 안내) 1종만 추가 검토.
+- ⚠️ **converted(판매전환) 건은 event 취소로 끝내면 안 된다** — event=cancelled인데 연결 판매(sale_id)는 살아 있어 재고·미수금 불일치로 보인다. 코드도 `api/events/[id]/route.ts` 에서 **"연결된 판매는 안 건드린다"**고 명시(재고 정합성=판매관리 소관). ∴ 전환 후 취소는 반드시 **판매관리에서 판매를 취소**.
+- (후속 보완 후보) 어드민에서 converted 건 [취소] 버튼 비활성 + "판매관리에서 취소하세요" 가드 → 실수 원천 차단.
+
+---
 
 관련: [reference_solapi_templates] · [project_event_system] · `docs/TMS_FLOW_EVENT.md` · `projects/Total_Management_System/docs/MANUAL_EVENT.md`
