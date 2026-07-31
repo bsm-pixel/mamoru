@@ -78,7 +78,9 @@
 #{name}님, 안녕하세요
 주문하신 상품이 발송되었습니다
 
-• 상품 : #{goods_name}
+✅ 상품
+#{goods_name}
+
 • 택배사 : #{courier}
 • 송장번호 : #{tracking}
 • 주문번호 : #{id}
@@ -91,6 +93,7 @@
 - 부가정보: `고객센터 · 평일 09:00 ~ 17:00`
 
 > ⚠️ `#{id}` = 판매번호(OS-…) 또는 판매 UUID(폴백). `#{tracking}` = 롯데 송장번호. `#{courier}` 기본 "롯데택배".
+> 🆕 `#{goods_name}`도 **품목마다 줄바꿈(\n) + `N개`**(접수완료 `#{items}`와 동일 톤). 다중상품이면 `✅ 상품` 아래 한 줄에 하나씩. 이 포맷은 **일반 판매 출고(sales_shipped)에도 공통 적용**(sales-shipped.ts buildGoodsName).
 
 ### (선택) event_payment_notice — 입금안내 별도 발송
 > 3메시지 흐름에선 미사용. 특정 건만 계좌를 다시 안내할 때만 등록. 변수 `#{name}` `#{event_number}` `#{total_amount}`.

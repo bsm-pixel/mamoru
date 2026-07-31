@@ -33,11 +33,12 @@ async function buildGoodsName(db: Db, saleId: string): Promise<string> {
     .eq('sale_id', saleId);
 
   if (!items || items.length === 0) return '마모루 제품';
+  // 품목마다 줄바꿈(\n) — 접수완료(#{items})와 톤 통일, 다중상품도 한 줄에 하나씩. 카카오가 변수 내 \n 렌더
   return items
     .map((i: { product_name: string; quantity: number }) =>
-      i.quantity > 1 ? `${i.product_name} ×${i.quantity}` : i.product_name,
+      i.quantity > 1 ? `${i.product_name} ${i.quantity}개` : i.product_name,
     )
-    .join(', ');
+    .join('\n');
 }
 
 /**
