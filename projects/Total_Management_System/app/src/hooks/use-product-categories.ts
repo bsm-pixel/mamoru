@@ -5,7 +5,7 @@
  * 제품 등록/수정 드롭다운이 모두 이 훅을 사용 (이원화 제거, 2026-06-15 근본정리).
  */
 import { useSetting } from '@/hooks/use-settings';
-import { DEFAULT_CAT_LABELS, SYSTEM_CATEGORIES } from '@/lib/utils/setting-defaults';
+import { DEFAULT_CAT_LABELS, SYSTEM_CATEGORIES, HIDDEN_CATEGORIES } from '@/lib/utils/setting-defaults';
 
 export interface CategoryOption {
   value: string;
@@ -21,7 +21,10 @@ export function useProductCategoryOptions(): CategoryOption[] {
   // 시스템 고정 카테고리(EVENT 등) — 설정에 없어도 항상 보장
   SYSTEM_CATEGORIES.forEach((c) => { if (!merged.includes(c)) merged.push(c); });
 
-  return merged.map((c) => ({
+  // 숨김 카테고리(LS 등) 제외 — 저장된 설정에 남아있어도 화면엔 안 뜨게
+  const visible = merged.filter((c) => !HIDDEN_CATEGORIES.includes(c));
+
+  return visible.map((c) => ({
     value: c,
     label: catLabels[c] || (c === 'EVENT' ? 'EVENT (재고 전환 이벤트)' : c),
     system: SYSTEM_CATEGORIES.includes(c),
