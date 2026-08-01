@@ -9,6 +9,7 @@ import type { OrderStatus } from '@/lib/supabase/types';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { subDays } from 'date-fns';
+import { after } from 'next/server';
 
 /** 재고 차감이 필요한 상태 (결제 완료 이상) */
 const STOCK_DEDUCT_STATUSES: OrderStatus[] = ['pay_done', 'preparing', 'shipping', 'delivered', 'confirmed'];
@@ -206,20 +207,21 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
   // 신규 주문이면 관리자 푸시 (기존 주문 업데이트는 푸시 안 함)
   const isNewOrder = !existing;
   if (isNewOrder && imwebStatus !== 'cancelled') {
-    import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
-      const firstItem = prodOrders[0]?.items?.[0];
-      const itemCount = prodOrders.reduce((s, po) => s + po.items.length, 0);
-      const body = firstItem
-        ? `${imwebOrder.orderer?.name || '고객'}님 — ${firstItem.prod_name}${itemCount > 1 ? ` 외 ${itemCount - 1}건` : ''}`
-        : `${imwebOrder.orderer?.name || '고객'}님 주문`;
-      sendPushToAll({
-        title: '새 아임웹 주문 📦',
-        body,
-        url: '/orders',
-        tag: `mamoru-order-${imwebOrder.order_no}`,
-        settingKey: 'push.order_received',
-      }).catch(() => {});
-    }).catch(() => {});
+    const firstItem = prodOrders[0]?.items?.[0];
+    const itemCount = prodOrders.reduce((s, po) => s + po.items.length, 0);
+    const body = firstItem
+      ? `${imwebOrder.orderer?.name || '고객'}님 — ${firstItem.prod_name}${itemCount > 1 ? ` 외 ${itemCount - 1}건` : ''}`
+      : `${imwebOrder.orderer?.name || '고객'}님 주문`;
+    // 🔴 완주 보장 — after()로 넘겨야 응답 후에도 푸시가 끝까지 발송된다 (fire-and-forget 누락 방지, 2026-08-01)
+    const deliverPush = async () => {
+      const { sendPushToAll } = await import('@/lib/firebase/send-push');
+      await sendPushToAll({ title: '새 아임웹 주문 📦', body, url: '/orders', tag: `mamoru-order-${imwebOrder.order_no}` });
+    };
+    try {
+      after(deliverPush);
+    } catch {
+      await deliverPush().catch(() => {});
+    }
   }
 
   // 품목 동기화 — upsert로 트랜잭션 보호 (delete→insert 사이 에러 시 데이터 유실 방지)

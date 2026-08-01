@@ -27,15 +27,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
   const [webhookAsReceived, setWebhookAsReceived] = useState('');
   const [webhookRepair, setWebhookRepair] = useState('');
   const [webhookEvent, setWebhookEvent] = useState('');
-  // 내 푸시 알림 (사장님이 받는 것)
-  const [pushConsultation, setPushConsultation] = useState(true);
-  const [pushFieldRequest, setPushFieldRequest] = useState(true);
-  const [pushTalkReceived, setPushTalkReceived] = useState(true);
-  const [pushFieldConfirmed, setPushFieldConfirmed] = useState(true);
-  const [pushFieldReschedule, setPushFieldReschedule] = useState(true);
-  const [pushRepairReceived, setPushRepairReceived] = useState(true);
-  const [pushReviewSubmitted, setPushReviewSubmitted] = useState(true);
-  const [pushOrderReceived, setPushOrderReceived] = useState(true);
+  // 🔴 앱 푸시 on/off 토글 제거(2026-08-01) — 고객 행동 푸시는 항상 발송(무조건). 놓치면 안 되므로 게이팅 없음.
   // 067: 후기 요청 자동 발송 정책 토글
   const [reviewAutoRequest, setReviewAutoRequest] = useState(false);
   // 109: 판매 출고 알림톡 (집하 자동감지 시 B2C 고객에게 발송) — 코드엔 있었으나 화면에 토글이 없었음
@@ -54,14 +46,6 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     setWebhookAsReceived(parse(settings['notifications.webhook_as_received'], ''));
     setWebhookRepair(parse(settings['notifications.webhook_repair'], ''));
     setWebhookEvent(parse(settings['notifications.webhook_event'], ''));
-    setPushConsultation(parse(settings['push.consultation_received'], true));
-    setPushFieldRequest(parse(settings['push.field_request'], true));
-    setPushTalkReceived(parse(settings['push.talk_received'], true));
-    setPushFieldConfirmed(parse(settings['push.field_confirmed'], true));
-    setPushFieldReschedule(parse(settings['push.field_reschedule'], true));
-    setPushRepairReceived(parse(settings['push.repair_received'], true));
-    setPushReviewSubmitted(parse(settings['push.review_submitted'], true));
-    setPushOrderReceived(parse(settings['push.order_received'], true));
     setReviewAutoRequest(parse(settings['review.auto_request_on_completion'], false));
   }, [settings]);
 
@@ -79,28 +63,9 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
       { key: 'notifications.webhook_as_received', value: webhookAsReceived },
       { key: 'notifications.webhook_repair', value: webhookRepair },
       { key: 'notifications.webhook_event', value: webhookEvent },
-      { key: 'push.consultation_received', value: pushConsultation },
-      { key: 'push.field_request', value: pushFieldRequest },
-      { key: 'push.talk_received', value: pushTalkReceived },
-      { key: 'push.field_confirmed', value: pushFieldConfirmed },
-      { key: 'push.field_reschedule', value: pushFieldReschedule },
-      { key: 'push.repair_received', value: pushRepairReceived },
-      { key: 'push.review_submitted', value: pushReviewSubmitted },
-      { key: 'push.order_received', value: pushOrderReceived },
       { key: 'review.auto_request_on_completion', value: reviewAutoRequest },
     ]);
   };
-
-  const PUSH_ITEMS = [
-    { key: 'push_consultation', label: '상담 접수 (매장방문)', state: pushConsultation, setter: setPushConsultation },
-    { key: 'push_field', label: '상담 접수 (출장)', state: pushFieldRequest, setter: setPushFieldRequest },
-    { key: 'push_talk', label: '상담 접수 (톡상담)', state: pushTalkReceived, setter: setPushTalkReceived },
-    { key: 'push_field_confirmed', label: '출장 일정 확정 ✅ (고객 선택)', state: pushFieldConfirmed, setter: setPushFieldConfirmed },
-    { key: 'push_field_resched', label: '출장 일정 재요청 🔄 (고객 재요청)', state: pushFieldReschedule, setter: setPushFieldReschedule },
-    { key: 'push_repair', label: '복원수리 접수', state: pushRepairReceived, setter: setPushRepairReceived },
-    { key: 'push_review', label: '고객 리뷰 작성 ⭐', state: pushReviewSubmitted, setter: setPushReviewSubmitted },
-    { key: 'push_order', label: '아임웹 주문 접수 📦', state: pushOrderReceived, setter: setPushOrderReceived },
-  ];
 
   const NOTIF_ITEMS = [
     { key: 'consultation_received', label: '상담 접수 확인', state: consultationReceived, setter: setConsultationReceived },
@@ -126,15 +91,12 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
       <div className="rounded-lg border border-neutral-200 bg-stone-50 p-4 space-y-3">
         <div>
           <h3 className="text-sm font-bold text-stone-900">📱 내 푸시 알림</h3>
-          <p className="text-xs text-neutral-500 mt-0.5">고객 행동이 발생하면 사장님 디바이스로 푸시 알림을 보냅니다. (크롬/모바일 앱)</p>
-        </div>
-        <div className="space-y-2">
-          {PUSH_ITEMS.map((item) => (
-            <div key={item.key} className="flex items-center justify-between py-1">
-              <span className="text-sm">{item.label}</span>
-              <Toggle checked={item.state} onChange={item.setter} />
-            </div>
-          ))}
+          <p className="text-xs text-neutral-500 mt-0.5">
+            고객 접수·행동이 발생하면 사장님 디바이스로 <b>항상</b> 푸시 알림을 보냅니다. (크롬/모바일 앱)
+          </p>
+          <p className="text-[11px] text-neutral-400 mt-1">
+            ※ 놓치면 안 되는 알림이라 on/off 설정 없이 무조건 발송됩니다. 안 오면 아래 <b>테스트</b>로 기기 연결을 확인하세요.
+          </p>
         </div>
 
         {/* 테스트 발송 패널 */}
@@ -259,7 +221,7 @@ function PushTestPanel() {
       }
       const { sent, failed } = json.data;
       if (sent === 0 && failed === 0) {
-        toast(`${label} 테스트 — 디바이스 등록 없음 또는 설정 Off`, { icon: '⚠️' });
+        toast(`${label} 테스트 — 등록된 디바이스 없음 (알림 권한 허용 후 새로고침)`, { icon: '⚠️' });
       } else if (sent > 0) {
         toast.success(`${label} 테스트 발송 (${sent}건 성공${failed > 0 ? `, ${failed}건 실패` : ''})`);
       } else {
@@ -298,8 +260,7 @@ function PushTestPanel() {
         ))}
       </div>
       <p className="text-[10px] text-neutral-400 leading-relaxed">
-        💡 기본 테스트는 토글 설정 무시하고 무조건 발송 (기기 연결 확인용).
-        나머지는 해당 토글이 On일 때만 발송됩니다.
+        💡 모든 테스트가 실제 등록된 기기로 무조건 발송됩니다 (기기 연결 확인용).
       </p>
     </div>
   );

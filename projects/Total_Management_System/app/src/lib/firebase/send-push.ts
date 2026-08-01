@@ -28,64 +28,27 @@ interface PushPayload {
   body: string;
   url?: string;
   tag?: string;
-  /** 설정 키 (system_settings의 push.* 키). 설정 OFF면 발송 안 함 */
+  /** @deprecated 설정 게이팅 제거됨(2026-08-01) — 고객 행동 푸시는 항상 발송. 값은 무시된다. */
   settingKey?: string;
 }
 
-/** 푸시 이벤트 설정 키 → 기본값 매핑 (설정값이 없으면 이 값 사용) */
-const PUSH_DEFAULTS: Record<string, boolean> = {
-  'push.consultation_received': true,
-  'push.field_request': true,
-  'push.talk_received': true,
-  'push.field_confirmed': true,
-  'push.field_reschedule': true,
-  'push.field_cancelled': true,         // 출장 예약 취소 (2026-05-23 추가)
-  'push.consultation_cancelled': true,  // 매장방문·톡상담 예약 취소 (2026-05-23 추가)
-  'push.repair_received': true,
-  'push.review_submitted': true,
-  'push.order_received': true,
-  'push.event_received': true,          // 이벤트 접수 (2026-07-01 추가)
-};
-
-async function isPushEnabled(settingKey?: string): Promise<boolean> {
-  if (!settingKey) return true;
-  try {
-    const { createServiceClient } = await import('@/lib/supabase/server');
-    const db = createServiceClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (db as any).from('system_settings').select('value').eq('key', settingKey).single();
-    if (!data) return PUSH_DEFAULTS[settingKey] ?? true;
-    const v = data.value;
-    if (v === 'false' || v === false) return false;
-    return true;
-  } catch {
-    return true; // DB 오류 시 발송 (안전)
-  }
-}
-
-/** 등록된 모든 디바이스에 FCM 푸시 발송 */
+/**
+ * 등록된 모든 디바이스에 FCM 푸시 발송 (무조건 발송 — on/off 게이팅 없음).
+ * 🔴 고객 접수/행동 알림은 사장님이 놓치면 안 되므로 어떤 설정으로도 차단하지 않는다.
+ *    (2026-08-01: isPushEnabled 게이팅 제거 — 접수 알림 오락가락 근본원인 정리)
+ * 발송은 sendEach 배치 1회로 처리 → 순차 send 루프의 지연/부분누락 제거.
+ */
 export async function sendPushToAll(payload: PushPayload): Promise<{ sent: number; failed: number }> {
-  // 설정 기반 on/off 체크
-  const enabled = await isPushEnabled(payload.settingKey);
-  if (!enabled) {
-    console.log(`[FCM] SKIP ${payload.settingKey} — 설정에서 비활성`);
-    return { sent: 0, failed: 0 };
-  }
-
   const app = getApp();
   if (!app) return { sent: 0, failed: 0 };
 
-  // DB에서 구독 토큰 조회
   const { createServiceClient } = await import('@/lib/supabase/server');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createServiceClient() as any;
-  const { data: subs } = await db.from('push_subscriptions').select('token');
 
-  if (!subs || subs.length === 0) {
-    console.log('[FCM] 구독 토큰 없음');
-
-    // Realtime fallback: push_notifications에도 저장
-    await db.from('push_notifications').insert({
+  // Realtime 폴백 저장 (TMS 탭 열려있으면 소리) — 토큰 유무와 무관하게 항상
+  const saveRealtime = () =>
+    db.from('push_notifications').insert({
       title: payload.title,
       body: payload.body,
       url: payload.url || '/dashboard',
@@ -93,58 +56,57 @@ export async function sendPushToAll(payload: PushPayload): Promise<{ sent: numbe
       read: false,
     });
 
+  const { data: subs } = await db.from('push_subscriptions').select('token');
+  if (!subs || subs.length === 0) {
+    console.log('[FCM] 구독 토큰 없음');
+    await saveRealtime();
     return { sent: 0, failed: 0 };
   }
 
   const messaging = admin.messaging(app);
+  const tokens: string[] = subs.map((s: { token: string }) => s.token);
+  const messages = tokens.map((token) => ({
+    token,
+    notification: { title: payload.title, body: payload.body },
+    webpush: {
+      notification: {
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: payload.tag || 'mamoru',
+        requireInteraction: true,
+      },
+      fcmOptions: { link: payload.url || '/dashboard' },
+    },
+    data: {
+      url: payload.url || '/dashboard',
+      tag: payload.tag || 'mamoru', // SW/Realtime 중복 dedup 용
+    },
+  }));
+
   let sent = 0;
   let failed = 0;
-
-  for (const sub of subs) {
-    try {
-      await messaging.send({
-        token: sub.token,
-        notification: {
-          title: payload.title,
-          body: payload.body,
-        },
-        webpush: {
-          notification: {
-            icon: '/icon-192.png',
-            badge: '/icon-192.png',
-            tag: payload.tag || 'mamoru',
-            requireInteraction: true,
-          },
-          fcmOptions: {
-            link: payload.url || '/dashboard',
-          },
-        },
-        data: {
-          url: payload.url || '/dashboard',
-          tag: payload.tag || 'mamoru',  // SW/Realtime 중복 dedup 용
-        },
-      });
-      sent++;
-    } catch (err: unknown) {
-      failed++;
-      const errMsg = err instanceof Error ? err.message : String(err);
-      console.error('[FCM] 발송 실패:', errMsg);
-      // 토큰 만료 시 삭제
-      if (errMsg.includes('not-registered') || errMsg.includes('invalid-registration')) {
-        await db.from('push_subscriptions').delete().eq('token', sub.token);
+  try {
+    const resp = await messaging.sendEach(messages);
+    sent = resp.successCount;
+    failed = resp.failureCount;
+    // 만료/무효 토큰만 정리
+    const stale: string[] = [];
+    resp.responses.forEach((r, i) => {
+      if (!r.success) {
+        const code = r.error?.code || '';
+        console.error('[FCM] 발송 실패:', code, r.error?.message);
+        if (code.includes('not-registered') || code.includes('invalid-registration') || code.includes('invalid-argument')) {
+          stale.push(tokens[i]);
+        }
       }
-    }
+    });
+    if (stale.length) await db.from('push_subscriptions').delete().in('token', stale);
+  } catch (err) {
+    failed = messages.length;
+    console.error('[FCM] sendEach 오류:', err instanceof Error ? err.message : String(err));
   }
 
-  // Realtime에도 저장 (TMS 탭 열어둔 경우 알림음)
-  await db.from('push_notifications').insert({
-    title: payload.title,
-    body: payload.body,
-    url: payload.url || '/dashboard',
-    tag: payload.tag || 'mamoru',
-    read: false,
-  });
-
+  await saveRealtime();
   console.log(`[FCM] 발송: ${sent}건 성공, ${failed}건 실패`);
   return { sent, failed };
 }

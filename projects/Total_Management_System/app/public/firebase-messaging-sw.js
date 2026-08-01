@@ -1,11 +1,9 @@
 /* eslint-disable no-undef */
 // Firebase Messaging Service Worker — 백그라운드 푸시 알림 수신
-
-importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
-
-// Firebase config는 env에서 가져올 수 없으므로 fetch로 로드
-// 또는 빌드 시 삽입 — 여기서는 self.__FIREBASE_CONFIG 사용
+//
+// ⚠️ 외부 스크립트(gstatic firebase compat) 로드하지 않는다 — push 핸들러가
+//    event.data.json() 파싱 + showNotification 만 쓰므로 firebase 라이브러리 불필요.
+//    (느린/끊긴 회선서 importScripts 실패 → SW 설치 실패 → 알림 미수신 이던 문제 제거, 2026-08-01)
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 

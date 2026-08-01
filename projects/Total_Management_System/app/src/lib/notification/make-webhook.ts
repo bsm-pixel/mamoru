@@ -4,6 +4,7 @@
  *
  * Make 시나리오에서 _meta.func (event) + template 으로 분기 → 솔라피 알림톡
  */
+import { after } from 'next/server';
 
 const ENV_WEBHOOK_CONSULTATION = process.env.MAKE_WEBHOOK_URL || '';
 const ENV_WEBHOOK_AS_RECEIVED = process.env.MAKE_AS_RECEIVED_WEBHOOK_URL || '';
@@ -235,15 +236,17 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     // tag에 건별 고유 ID 포함 — 레코드 삭제 시 SW에서 해당 알림만 정확히 회수 가능
     const uniqId = payload.data?.as_id || payload.data?.id || '';
     const pushTag = uniqId ? `mamoru-${payload.template}-${uniqId}` : `mamoru-${payload.template}`;
-    import('@/lib/firebase/send-push').then(({ sendPushToAll }) => {
-      sendPushToAll({
-        title: pushCfg.title,
-        body: pushCfg.body,
-        url: pushCfg.url,
-        tag: pushTag,
-        settingKey: pushCfg.settingKey,
-      }).catch(() => {});
-    }).catch(() => {});
+    // 🔴 완주 보장 — after()로 넘겨야 Vercel이 응답 후 함수를 종료시켜도 푸시가 끝까지 발송된다.
+    //    (기존 fire-and-forget `import().then()` 은 접수 3종 모바일 알림이 오락가락하던 근본원인 — 2026-08-01)
+    const deliverPush = async () => {
+      const { sendPushToAll } = await import('@/lib/firebase/send-push');
+      await sendPushToAll({ title: pushCfg.title, body: pushCfg.body, url: pushCfg.url, tag: pushTag });
+    };
+    try {
+      after(deliverPush);                    // 요청 컨텍스트: 응답 후 플랫폼이 함수를 살려 완주
+    } catch {
+      await deliverPush().catch(() => {});   // 요청 밖(크론 등): 인라인으로 완주
+    }
   }
 
   // ── 2) 고객 알림톡 on/off (푸시엔 영향 없음 — 위에서 이미 발송) ──

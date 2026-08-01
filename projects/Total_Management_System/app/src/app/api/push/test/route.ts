@@ -8,7 +8,7 @@
  * 동작:
  *   - 실제 sendPushToAll을 호출 → 관리자 기기로 진짜 푸시 전송
  *   - 제목에 "[테스트]" 접두어 붙여 구분
- *   - settingKey 는 실제 운영과 동일 적용 (토글 Off면 발송 안됨)
+ *   - 운영과 동일하게 무조건 발송(2026-08-01 게이팅 제거) — settingKey 는 무시됨
  */
 
 import { NextRequest, NextResponse } from 'next/server';
