@@ -37,7 +37,9 @@ export const NAV_GROUPS: NavGroup[] = [
     group: '판매',
     items: [
       { label: '판매 관리', href: '/sales', icon: 'Store', matchPrefix: '/sales' },
-      { label: '재고판매', href: '/stock-sale', icon: 'Tag', matchPrefix: '/stock-sale' },
+      // 재고판매(LS) 메뉴 숨김 — 커스텀 판매 중단, 온라인은 아임웹 아울렛으로 이관(2026-08-01).
+      // 코드·라우트(/stock-sale)는 휴면 유지(A 방치) → 되살리려면 이 줄 주석 해제.
+      // { label: '재고판매', href: '/stock-sale', icon: 'Tag', matchPrefix: '/stock-sale' },
       { label: 'EVENT', href: '/events', icon: 'Zap', matchPrefix: '/events' },
       { label: '빠른 송장', href: '/manual-invoices', icon: 'Truck', matchPrefix: '/manual-invoices' },
       // 2026-05-26 Phase G-1: B2B거래 메뉴 삭제 — IA 통합 완료 (/sales/new?mode=b2b 진입)

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, Plus, X, Lock, RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
-import { SYSTEM_CATEGORIES, HIDDEN_CATEGORIES } from '@/lib/utils/setting-defaults';
+import { SYSTEM_CATEGORIES } from '@/lib/utils/setting-defaults';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -54,8 +54,7 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
       const saved = parse<string[]>(settings['inventory.categories'], ['BL', 'TH', 'LO', 'SL', 'CB', 'CS', 'AC']);
       // 시스템 고정 카테고리(EVENT 등) 항상 포함
       SYSTEM_CATEGORIES.forEach((c) => { if (!saved.includes(c)) saved.push(c); });
-      // 숨김 카테고리(LS 등) 제외 — 화면·저장 목록에서 안 보이게
-      setCategories(saved.filter((c) => !HIDDEN_CATEGORIES.includes(c)));
+      setCategories(saved);
     }
     setCatLabels(parse(settings['inventory.category_labels'], { BL: '블런트', TH: '씨닝', LO: '롱', SL: '슬라이싱', CB: '빗', CS: '케이스', AC: '악세서리' }));
     setCatTabVisible(parse(settings['inventory.category_tab_visible'], {}));

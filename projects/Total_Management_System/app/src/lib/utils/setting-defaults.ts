@@ -11,16 +11,10 @@ export const DEFAULT_CAT_LABELS: Record<string, string> = {
 };
 
 /**
- * 시스템 고정 카테고리 — 코드가 직접 연동(EVENT 허브가 category='EVENT'로 필터).
+ * 시스템 고정 카테고리 — 코드가 직접 연동(예: EVENT 허브가 category='EVENT'로, 재고판매가 'LS'로 필터).
  * 설정 목록에서 삭제돼도 항상 보장되고, 설정 UI에서 삭제 불가.
  */
-export const SYSTEM_CATEGORIES = ['EVENT'];
-
-/**
- * TMS 화면에서 숨기는 카테고리 — 코드/데이터는 남겨두되(휴면) 드롭다운·필터·설정 목록에 노출하지 않는다.
- * LS(재고판매): 커스텀 판매 중단, 온라인 판매는 아임웹 아울렛으로 이관(2026-08-01). 라벨 매핑은 유지(잔존 데이터 표시용).
- */
-export const HIDDEN_CATEGORIES = ['LS'];
+export const SYSTEM_CATEGORIES = ['EVENT', 'LS'];
 
 export const DEFAULT_PAYMENT_LABELS: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
