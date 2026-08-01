@@ -22,8 +22,7 @@ export default function ShippingSettings({ settings, onSave, saving }: TabProps)
   const [unshippedDays, setUnshippedDays] = useState(2);
   const [reviewDelay, setReviewDelay] = useState(0);
   const [autoPush, setAutoPush] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(false);
-  const [soundTargets, setSoundTargets] = useState({ orders: true, consultations: true, repairs: true });
+  // 신규 접수 알림음 토글은 [알림 설정] 탭으로 이동(2026-08-01)
 
   useEffect(() => {
     const s = parse(settings['shipping.sender'], { name: '마모루', tel: '', zip: '', addr: '' });
@@ -38,8 +37,6 @@ export default function ShippingSettings({ settings, onSave, saving }: TabProps)
     setUnshippedDays(parse(settings['shipping.unshipped_warning_days'], 2));
     setReviewDelay(parse(settings['shipping.review_delay_days'], 0));
     setAutoPush(parse(settings['shipping.auto_push_invoice'], false));
-    setSoundEnabled(parse(settings['notifications.sound_enabled'], false));
-    setSoundTargets(parse(settings['notifications.sound_targets'], { orders: true, consultations: true, repairs: true }));
   }, [settings]);
 
   const handleSave = () => {
@@ -50,8 +47,6 @@ export default function ShippingSettings({ settings, onSave, saving }: TabProps)
       { key: 'shipping.unshipped_warning_days', value: unshippedDays },
       { key: 'shipping.review_delay_days', value: reviewDelay },
       { key: 'shipping.auto_push_invoice', value: autoPush },
-      { key: 'notifications.sound_enabled', value: soundEnabled },
-      { key: 'notifications.sound_targets', value: soundTargets },
     ]);
   };
 
@@ -160,22 +155,7 @@ export default function ShippingSettings({ settings, onSave, saving }: TabProps)
         <Toggle checked={autoPush} onChange={setAutoPush} />
       </Field>
 
-      {/* 17. 신규 접수 알림음 */}
-      <Field label="신규 접수 알림음" desc="새 주문/상담/수리 접수 시 브라우저 알림음을 재생합니다.">
-        <Toggle checked={soundEnabled} onChange={setSoundEnabled} />
-        {soundEnabled && (
-          <div className="mt-2 flex gap-3">
-            {(['orders', 'consultations', 'repairs'] as const).map((k) => (
-              <label key={k} className="flex items-center gap-1.5 text-xs">
-                <input type="checkbox" checked={soundTargets[k]}
-                  onChange={(e) => setSoundTargets({ ...soundTargets, [k]: e.target.checked })}
-                  className="rounded" />
-                {k === 'orders' ? '주문' : k === 'consultations' ? '상담' : '복원수리'}
-              </label>
-            ))}
-          </div>
-        )}
-      </Field>
+      {/* 17. 신규 접수 알림음 → [알림 설정] 탭으로 이동(2026-08-01) */}
 
       {/* 19. 반품 — Phase 3에서 구현, 여기선 안내 */}
       <Field label="반품 처리 규칙" desc="">

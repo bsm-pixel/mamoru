@@ -10,7 +10,7 @@ import { useSetting } from './use-settings';
 import { createClient } from '@/lib/supabase/client';
 
 export function usePushNotifications() {
-  const soundEnabled = useSetting<boolean>('notifications.sound_enabled', false);
+  const soundEnabled = useSetting<boolean>('notifications.sound_enabled', true);
   const subscribed = useRef(false);
   const fcmRegistered = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);

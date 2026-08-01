@@ -111,7 +111,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await sendPushToAll(preset);
+    // 🔊 tag를 매 발송 유니크하게 — 같은 tag면 안드로이드가 기존 알림을 '무음 교체'해서
+    //    두 번째부터 소리가 안 남(requireInteraction 로 알림이 안 사라져 계속 겹침). 테스트는 매번 새 알림 = 매번 소리.
+    const result = await sendPushToAll({ ...preset, tag: `${preset.tag}-${Date.now()}` });
 
     return NextResponse.json({
       ok: true,

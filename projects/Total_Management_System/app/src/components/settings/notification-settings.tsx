@@ -32,6 +32,8 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
   const [reviewAutoRequest, setReviewAutoRequest] = useState(false);
   // 109: 판매 출고 알림톡 (집하 자동감지 시 B2C 고객에게 발송) — 코드엔 있었으나 화면에 토글이 없었음
   const [salesShipped, setSalesShipped] = useState(false);
+  // 앱 화면 열려 있을 때 in-app 알림음(notification.wav) — 배송설정 탭에서 여기로 이동(2026-08-01), 기본 ON
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   useEffect(() => {
     setMasterEnabled(parse(settings['notifications.master_enabled'], true));
@@ -46,6 +48,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     setWebhookAsReceived(parse(settings['notifications.webhook_as_received'], ''));
     setWebhookRepair(parse(settings['notifications.webhook_repair'], ''));
     setWebhookEvent(parse(settings['notifications.webhook_event'], ''));
+    setSoundEnabled(parse(settings['notifications.sound_enabled'], true));
     setReviewAutoRequest(parse(settings['review.auto_request_on_completion'], false));
   }, [settings]);
 
@@ -63,6 +66,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
       { key: 'notifications.webhook_as_received', value: webhookAsReceived },
       { key: 'notifications.webhook_repair', value: webhookRepair },
       { key: 'notifications.webhook_event', value: webhookEvent },
+      { key: 'notifications.sound_enabled', value: soundEnabled },
       { key: 'review.auto_request_on_completion', value: reviewAutoRequest },
     ]);
   };
@@ -97,6 +101,17 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
           <p className="text-[11px] text-neutral-400 mt-1">
             ※ 놓치면 안 되는 알림이라 on/off 설정 없이 무조건 발송됩니다. 안 오면 아래 <b>테스트</b>로 기기 연결을 확인하세요.
           </p>
+        </div>
+
+        {/* 앱 열려 있을 때 알림음 */}
+        <div className="flex items-center justify-between py-1 border-t border-neutral-200 pt-3">
+          <div>
+            <span className="text-sm font-medium">앱 화면 열어둘 때 알림음 🔊</span>
+            <p className="text-[11px] text-neutral-400 mt-0.5">
+              TMS를 보고 있을 때 접수가 들어오면 &ldquo;띵&rdquo; 소리. (백그라운드/잠금 상태 소리는 휴대폰 알림 소리 설정을 따름)
+            </p>
+          </div>
+          <Toggle checked={soundEnabled} onChange={setSoundEnabled} />
         </div>
 
         {/* 테스트 발송 패널 */}
