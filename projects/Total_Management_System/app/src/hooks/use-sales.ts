@@ -41,21 +41,23 @@ export function useSales(filters?: {
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      // 탭 필터 — 전체/오늘/미수금은 취소 건 제외, 취소 탭만 취소 건 표시
+      // 탭 필터 — 전체/오늘/처리필요/미수금은 '종결(취소·반품)' 건 제외, '취소·반품' 탭만 표시
+      //   (2026-08-02) 반품(returned_at)도 취소와 동일한 종결 상태로 취급 — 처리필요/미수금에 안 뜨게.
       const tab = filters?.tab || 'all';
       if (tab === 'today') {
         const today = new Date().toISOString().slice(0, 10);
-        query = query.eq('sale_date', today).is('cancelled_at', null);
+        query = query.eq('sale_date', today).is('cancelled_at', null).is('returned_at', null);
       } else if (tab === 'unpaid') {
-        query = query.in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null);
+        query = query.in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null).is('returned_at', null);
       } else if (tab === 'processing') {
-        // 처리 필요 = 결제완료인데 아직 출고·수령 처리 안 함 (사장님 손 필요)
-        query = query.eq('payment_status', 'paid').is('shipped_at', null).is('delivered_at', null).is('cancelled_at', null);
+        // 처리 필요 = 결제완료인데 아직 출고·수령 처리 안 함 (사장님 손 필요) — 취소·반품 제외
+        query = query.eq('payment_status', 'paid').is('shipped_at', null).is('delivered_at', null).is('cancelled_at', null).is('returned_at', null);
       } else if (tab === 'cancelled') {
-        query = query.not('cancelled_at', 'is', null);
+        // '취소·반품' 탭 — 취소 또는 반품 건
+        query = query.or('cancelled_at.not.is.null,returned_at.not.is.null');
       } else {
-        // all: 취소 건 제외
-        query = query.is('cancelled_at', null);
+        // all: 취소·반품 건 제외 (활성 판매만)
+        query = query.is('cancelled_at', null).is('returned_at', null);
       }
 
       // 채널 필터
@@ -120,11 +122,11 @@ export function useSalesTabCounts() {
       const today = new Date().toISOString().slice(0, 10);
 
       const [allRes, todayRes, unpaidRes, processingRes, cancelledRes] = await Promise.all([
-        db.from('offline_sales').select('*', { count: 'exact', head: true }).is('cancelled_at', null),
-        db.from('offline_sales').select('*', { count: 'exact', head: true }).eq('sale_date', today).is('cancelled_at', null),
-        db.from('offline_sales').select('*', { count: 'exact', head: true }).in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null),
-        db.from('offline_sales').select('*', { count: 'exact', head: true }).eq('payment_status', 'paid').is('shipped_at', null).is('delivered_at', null).is('cancelled_at', null),
-        db.from('offline_sales').select('*', { count: 'exact', head: true }).not('cancelled_at', 'is', null),
+        db.from('offline_sales').select('*', { count: 'exact', head: true }).is('cancelled_at', null).is('returned_at', null),
+        db.from('offline_sales').select('*', { count: 'exact', head: true }).eq('sale_date', today).is('cancelled_at', null).is('returned_at', null),
+        db.from('offline_sales').select('*', { count: 'exact', head: true }).in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null).is('returned_at', null),
+        db.from('offline_sales').select('*', { count: 'exact', head: true }).eq('payment_status', 'paid').is('shipped_at', null).is('delivered_at', null).is('cancelled_at', null).is('returned_at', null),
+        db.from('offline_sales').select('*', { count: 'exact', head: true }).or('cancelled_at.not.is.null,returned_at.not.is.null'),
       ]);
 
       return {
@@ -207,12 +209,13 @@ export function useSalesStats() {
         .gte('offline_sales.returned_at', moFrom).lte('offline_sales.returned_at', toEnd)
         .is('offline_sales.cancelled_at', null);
 
-      // 미수금 총액
+      // 미수금 총액 (취소·반품 제외 — 반품건은 더 이상 받을 돈 아님)
       const { data: unpaidSales } = await db
         .from('offline_sales')
         .select('total_amount, paid_amount, discount_amount, customer_type')
         .in('payment_status', ['unpaid', 'partial'])
-        .is('cancelled_at', null);
+        .is('cancelled_at', null)
+        .is('returned_at', null);
 
       // 발생주의: 매출 = total_amount - discount_amount (미수금 포함)
       type SalesRow = { total_amount: number; paid_amount: number; discount_amount: number; customer_type?: string };

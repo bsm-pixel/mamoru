@@ -53,6 +53,7 @@ const CHANNEL_CHIP: Record<string, { label: string; className: string }> = {
  */
 function getSaleOperationChip(sale: OfflineSale): { label: string; className: string } | null {
   if (sale.cancelled_at) return { label: '취소', className: 'bg-red-100 text-red-700' };
+  if (sale.returned_at) return { label: '반품', className: 'bg-violet-100 text-violet-700' };  // 종결 — 취소 다음 우선
   if (sale.delivered_at) return { label: '판매완료', className: 'bg-neutral-100 text-neutral-600' };
   if (sale.shipped_at)   return { label: '배송중', className: 'bg-green-100 text-green-700' };
   return null;

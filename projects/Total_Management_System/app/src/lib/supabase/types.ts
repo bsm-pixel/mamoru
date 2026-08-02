@@ -623,6 +623,8 @@ export interface Database {
           cancelled_at: string | null;
           cancelled_reason: string | null;
           cancelled_by: string | null;
+          returned_at: string | null;                // 반품 시점 (DB엔 있었으나 타입 누락 — 2026-08-02 보정)
+          return_reason: string | null;              // 반품 사유
           sale_channel: SaleChannel;
           contract_id: string | null;
           review_requested_at: string | null;       // semantic alias of review_request_sent_at (legacy)
@@ -683,6 +685,8 @@ export interface Database {
           cancelled_at?: string | null;
           cancelled_reason?: string | null;
           cancelled_by?: string | null;
+          returned_at?: string | null;
+          return_reason?: string | null;
           sale_channel?: SaleChannel;
           contract_id?: string | null;
           review_requested_at?: string | null;

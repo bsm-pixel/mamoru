@@ -35,10 +35,11 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
 const CUSTOMER_TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy: '아카데미' };
 
 /** 2026-05-26 Phase G-4: 안 A 상태 분류 — 좌측 색 줄 + 우측 도트 결정 */
-type RowState = 'paid_done' | 'paid_shipping' | 'paid_packed' | 'paid_wait_ship' | 'paid_unhandled' | 'unpaid' | 'partial' | 'shipped_b2b_unpaid' | 'wait_pickup_unpaid' | 'cancelled';
+type RowState = 'paid_done' | 'paid_shipping' | 'paid_packed' | 'paid_wait_ship' | 'paid_unhandled' | 'unpaid' | 'partial' | 'shipped_b2b_unpaid' | 'wait_pickup_unpaid' | 'cancelled' | 'returned';
 
 function getRowStateSale(s: OfflineSale): RowState {
   if (s.cancelled_at) return 'cancelled';
+  if (s.returned_at) return 'returned';   // 반품 = 종결 상태(결제·배송 상태보다 우선) — '처리 대기'로 안 떨어지게
   if (s.payment_status === 'partial') return 'partial';
   if (s.payment_status === 'unpaid') return 'unpaid';
   // payment_status === 'paid' — 초록 = 사장님이 더 할 일 없는 상태
@@ -75,6 +76,7 @@ function stripColor(state: RowState): string {
     case 'unpaid': return 'bg-red-500';
     case 'partial': return 'bg-yellow-400';
     case 'cancelled': return 'bg-neutral-300';
+    case 'returned': return 'bg-violet-300';      // 반품 = 종결(취소와 구분: 보라)
     default: return 'bg-transparent';             // paid_wait_ship, paid_unhandled — 할 일 있음
   }
 }
@@ -103,6 +105,7 @@ function statusLabel(state: RowState): string {
     case 'shipped_b2b_unpaid': return '출고완료 · 결제대기';
     case 'wait_pickup_unpaid': return '출고대기 · 결제대기';
     case 'cancelled': return '취소';
+    case 'returned': return '반품';
   }
 }
 
@@ -118,6 +121,7 @@ function statusTextClass(state: RowState): string {
   if (state === 'partial') return 'text-yellow-700 font-medium';
   if (state === 'paid_done' || state === 'paid_shipping') return 'text-green-700 font-medium';
   if (state === 'paid_packed') return 'text-emerald-600 font-medium';   // 준비완료 = 내 할 일 끝
+  if (state === 'returned') return 'text-violet-600 font-medium';       // 반품
   return 'text-neutral-500';
 }
 
@@ -125,7 +129,7 @@ const TABS: { key: SalesTab; label: string }[] = [
   { key: 'all', label: '전체' },
   { key: 'processing', label: '처리 필요' },
   { key: 'unpaid', label: '미수금' },
-  { key: 'cancelled', label: '취소' },
+  { key: 'cancelled', label: '취소·반품' },
 ];
 
 /** 2026-05-26 IA 통합: 영역 칩 — 고객(B2C) / 거래처(B2B) / 전체. default 고객 */
@@ -459,6 +463,7 @@ export default function SalesPage() {
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-500" />미결제</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-yellow-400" />부분결제</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-neutral-300" />취소</span>
+        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-violet-300" />반품</span>
       </div>
 
       {/* 판매 목록 (2026-05-26 Phase B: sale + delivery 통합) — gridMode 면 밀집 표, 아니면 카드 */}
