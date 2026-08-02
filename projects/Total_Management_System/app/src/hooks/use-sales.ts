@@ -164,14 +164,13 @@ export function useSalesStats() {
       const monthStart = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-01`;
 
       // 2026-05-26 IA 통합: customer_type 도 select — 화면에서 고객(B2C) / 거래처(B2B) 영역별 분리 집계
-      // 주간 매출 (returned_at 제외 — 반품 매출은 회계 매출에서 빠짐, 대시보드 salesB2C/B2B와 동일 기준)
+      // D(2026-08-01 반품시점 반영): 판매는 sale_date(판매월)에 인식(returned 포함), 반품은 아래 *Returns(returned_at) 로 −차감.
       const { data: weekSales } = await db
         .from('offline_sales')
         .select('total_amount, paid_amount, discount_amount, customer_type')
         .gte('sale_date', weekStart)
         .lte('sale_date', today)
-        .is('cancelled_at', null)
-        .is('returned_at', null);
+        .is('cancelled_at', null);
 
       // 월간 매출
       const { data: monthSales } = await db
@@ -179,11 +178,9 @@ export function useSalesStats() {
         .select('total_amount, paid_amount, discount_amount, customer_type')
         .gte('sale_date', monthStart)
         .lte('sale_date', today)
-        .is('cancelled_at', null)
-        .is('returned_at', null);
+        .is('cancelled_at', null);
 
-      // 이번달 복원수리(RS) 항목 — 카드 '제품/복원수리' 분리표기용. offline_sales 와 동일 필터(월·취소·반품)로 조인.
-      // category='RS' 인 offline_sale_items 합을 customer_type 으로 B2C/B2B 분리 → 제품 = 리스트 합 − RS, 복원수리 = RS.
+      // 이번달 복원수리(RS) 항목 — 카드 '제품/복원수리' 분리표기용. offline_sales 와 동일 필터(월·취소)로 조인.
       const { data: monthRsItems } = await db
         .from('offline_sale_items')
         .select('total_price, offline_sales!inner(customer_type)')
@@ -191,8 +188,24 @@ export function useSalesStats() {
         .gt('total_price', 0)
         .gte('offline_sales.sale_date', monthStart)
         .lte('offline_sales.sale_date', today)
-        .is('offline_sales.cancelled_at', null)
-        .is('offline_sales.returned_at', null);
+        .is('offline_sales.cancelled_at', null);
+
+      // ─── D 반품(−): returned_at 이 이 주/이번달인 판매·RS (반품시점 반영) ───
+      const wkFrom = `${weekStart}T00:00:00`, moFrom = `${monthStart}T00:00:00`, toEnd = `${today}T23:59:59`;
+      const { data: weekReturns } = await db
+        .from('offline_sales')
+        .select('total_amount, paid_amount, discount_amount, customer_type')
+        .gte('returned_at', wkFrom).lte('returned_at', toEnd).is('cancelled_at', null);
+      const { data: monthReturns } = await db
+        .from('offline_sales')
+        .select('total_amount, paid_amount, discount_amount, customer_type')
+        .gte('returned_at', moFrom).lte('returned_at', toEnd).is('cancelled_at', null);
+      const { data: monthRsReturns } = await db
+        .from('offline_sale_items')
+        .select('total_price, offline_sales!inner(customer_type)')
+        .eq('category', 'RS').gt('total_price', 0)
+        .gte('offline_sales.returned_at', moFrom).lte('offline_sales.returned_at', toEnd)
+        .is('offline_sales.cancelled_at', null);
 
       // 미수금 총액
       const { data: unpaidSales } = await db
@@ -229,10 +242,15 @@ export function useSalesStats() {
       const weekParts = partition(weekSales);
       const monthParts = partition(monthSales);
       const unpaidParts = partition(unpaidSales);
+      // D: 반품(returned_at) partition — amount 만 −차감 (count 는 판매월 기준 유지)
+      const weekRetParts = partition(weekReturns);
+      const monthRetParts = partition(monthReturns);
+      const net = (salesArr: SalesRow[] | null, retArr: SalesRow[] | null) =>
+        ({ amount: sum(salesArr).amount - sum(retArr).amount, count: (salesArr || []).length });
 
       const unpaidTotal = sumOutstanding(unpaidSales);
 
-      // 이번달 RS 합을 B2C/B2B 로 분리
+      // 이번달 RS 합을 B2C/B2B 로 분리 (판매월 + / 반품월 −)
       type RsRow = { total_price: number; offline_sales?: { customer_type?: string } | null };
       let customerMonthRepair = 0;
       let partnerMonthRepair = 0;
@@ -241,16 +259,26 @@ export function useSalesStats() {
         if (isPartner(r.offline_sales?.customer_type)) partnerMonthRepair += amt;
         else customerMonthRepair += amt;
       }
+      for (const r of (monthRsReturns || []) as RsRow[]) {  // D: 반품 RS −차감
+        const amt = r.total_price || 0;
+        if (isPartner(r.offline_sales?.customer_type)) partnerMonthRepair -= amt;
+        else customerMonthRepair -= amt;
+      }
 
-      // B2B 거래처별 이번달 매출
+      // B2B 거래처별 이번달 매출 (판매월 +) — 반품은 아래 b2bReturns 로 −차감
       const { data: b2bSales } = await db
         .from('offline_sales')
         .select('customer_name, customer_type, total_amount, discount_amount')
         .in('customer_type', ['dealer', 'academy'])
         .gte('sale_date', monthStart)
         .lte('sale_date', today)
-        .is('cancelled_at', null)
-        .is('returned_at', null);
+        .is('cancelled_at', null);
+      const { data: b2bReturns } = await db
+        .from('offline_sales')
+        .select('customer_name, customer_type, total_amount, discount_amount')
+        .in('customer_type', ['dealer', 'academy'])
+        .gte('returned_at', moFrom).lte('returned_at', toEnd)
+        .is('cancelled_at', null);
 
       const b2bMap: Record<string, { name: string; type: string; amount: number; count: number }> = {};
       for (const s of (b2bSales || [])) {
@@ -259,20 +287,25 @@ export function useSalesStats() {
         b2bMap[key].amount += (s.total_amount || 0) - (s.discount_amount || 0);
         b2bMap[key].count++;
       }
+      for (const s of (b2bReturns || [])) {  // D: 반품 −차감 (건수는 판매월 기준 유지)
+        const key = s.customer_name || '미지정';
+        if (!b2bMap[key]) b2bMap[key] = { name: key, type: s.customer_type || '', amount: 0, count: 0 };
+        b2bMap[key].amount -= (s.total_amount || 0) - (s.discount_amount || 0);
+      }
       const b2bRanking = Object.values(b2bMap).sort((a, b) => b.amount - a.amount);
 
       return {
-        // 기존 필드 — 전체 합계 (B2C+B2B 합산, 기존 사용처 무영향)
-        week: sum(weekSales),
-        month: sum(monthSales),
+        // 기존 필드 — 전체 합계 (B2C+B2B 합산). D: 반품시점 −차감(net)
+        week: net(weekSales, weekReturns),
+        month: net(monthSales, monthReturns),
         outstanding: unpaidTotal,
         b2b: b2bRanking,
-        // 2026-05-26 신규 — 영역별 분리 (offline_sales 기준만, deliveries 합산은 화면에서)
-        customerWeek: sum(weekParts.customer),
-        customerMonth: sum(monthParts.customer),
+        // 2026-05-26 신규 — 영역별 분리 (offline_sales 기준만, deliveries 합산은 화면에서). D: net
+        customerWeek: net(weekParts.customer, weekRetParts.customer),
+        customerMonth: net(monthParts.customer, monthRetParts.customer),
         customerOutstanding: sumOutstanding(unpaidParts.customer),
-        partnerWeek: sum(weekParts.partner),
-        partnerMonth: sum(monthParts.partner),
+        partnerWeek: net(weekParts.partner, weekRetParts.partner),
+        partnerMonth: net(monthParts.partner, monthRetParts.partner),
         partnerOutstanding: sumOutstanding(unpaidParts.partner),
         // 2026-06-18 제품/복원수리 분리표기 — 이번달 RS 합(offline_sales 기준). 제품 = customerMonth.amount − customerMonthRepair
         customerMonthRepair,

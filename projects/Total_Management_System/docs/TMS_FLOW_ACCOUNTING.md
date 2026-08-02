@@ -10,7 +10,8 @@
 ## 2026-08-01 (2차) — D 반품시점 반영(reports/summary) + E 세금계산서 경고
 - **D 정책 전환**: 반품 매출 = **소급 제거 → 반품시점 −반영**. 판매는 `sale_date`(판매월)에 인식, 반품은 `returned_at`(반품월)에 −차감. 판매·반품 동월이면 net 0.
   - **reports/summary(품목별 매출) 적용 완료**: sales 쿼리에서 `returned_at IS NULL` 제거(판매월 인식) + `retSales`(returned_at 기준) 별도 −차감. by_product/마진은 반품 제품항목을 음수로 넣어 자동 net. saleSummary.total·dailyProduct·dailyRepairs·offlineRs 모두 −반영. 딜리버리/온라인주문은 반품개념 없어 무변경.
-  - ⚠️ **아직 소급 유지(일관성 후속 필요)**: `useSalesStats`(판매카드 주/월 매출), `use-dashboard-stats`(대시보드), **RPC 088**(대시보드 메인). 이들은 2026-08-01(1차 C)에서 `returned_at IS NULL`(소급)로 통일해둔 상태 → **cross-month 반품일 때만 reports와 불일치**(동월 반품은 동일). 후속으로 동일 −차감 패턴 + RPC 마이그 예정. (반품은 드물어 실무 영향 작음)
+  - **useSalesStats(판매 요약 카드) 적용 완료(2차)**: week/month·customer/partner·RS·b2b 랭킹 전부 판매월 +/반품월 − (returned 필터 제거 + *Returns 쿼리 −차감). count 는 판매월 기준 유지. 반품 검증(reports/summary) 통과 후 동일 패턴 이식.
+  - ⚠️ **대시보드는 아직 소급**: `use-dashboard-stats` + **RPC 088**(get_hub_stats, 265줄 Postgres 함수, 대시보드 메인 경로)은 1차 C 의 `returned_at IS NULL`(소급) 유지. RPC 손수 재작성은 DB 검증 불가라 위험 → **보류**. 영향: 대시보드 '이번달 매출' glance 가 **cross-month 반품일 때만** reports/카드와 다름(동월 반품·취소는 동일). 반품 드물어 실무 영향 작음. 원하면 RPC 마이그를 별도 작성(사장님 Supabase 실행+검증).
   - **검증**: 앱 계층 tsc/build 통과. ⚠️ DB 숫자는 미검증 — 실제 반품 1건으로 "판매월 +, 반품월 −, 전체기간 net 0" 눈으로 확인 필요.
 - **E 세금계산서 경고(자동취소 X)**: `tax-invoices` GET 이 연결 판매(sale_id) 취소/반품 시 `linked_sale_voided` 플래그 → 목록에 "⚠️ 수정세금계산서 필요" 배지. **원본 자동삭제 안 함**(세법상 반품/취소는 수정세금계산서 별도 발행 = 수기 절차).
 
