@@ -37,7 +37,7 @@ export default function TaxInvoicesPage() {
       const res = await fetch(`/api/tax-invoices?${params}`);
       if (!res.ok) throw new Error(await res.text());
       return res.json() as Promise<{
-        invoices: Array<{ id: string; invoice_type: string; issue_date: string; counterparty_name: string; counterparty_biz_no: string | null; supply_amount: number; tax_amount: number; total_amount: number; memo: string | null }>;
+        invoices: Array<{ id: string; invoice_type: string; issue_date: string; counterparty_name: string; counterparty_biz_no: string | null; supply_amount: number; tax_amount: number; total_amount: number; memo: string | null; linked_sale_voided?: 'cancelled' | 'returned' | null }>;
         summary: { salesTotal: number; purchaseTotal: number; salesTax: number; purchaseTax: number; netTax: number; count: number };
       }>;
     },
@@ -199,7 +199,17 @@ export default function TaxInvoicesPage() {
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-neutral-600">{formatDate(inv.issue_date)}</td>
-                    <td className="px-4 py-2.5 font-medium">{inv.counterparty_name}</td>
+                    <td className="px-4 py-2.5 font-medium">
+                      {inv.counterparty_name}
+                      {inv.linked_sale_voided && (
+                        <span
+                          title="연결된 판매가 취소/반품되었습니다. 세법상 수정세금계산서를 별도 발행하세요 (원본은 임의 삭제 금지)."
+                          className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-100 text-red-700 align-middle"
+                        >
+                          ⚠️ {inv.linked_sale_voided === 'cancelled' ? '판매취소' : '판매반품'} · 수정세금계산서 필요
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-2.5 text-right text-neutral-600">{formatKRW(inv.supply_amount)}</td>
                     <td className="px-4 py-2.5 text-right text-neutral-600">{formatKRW(inv.tax_amount)}</td>
                     <td className="px-4 py-2.5 text-right font-bold">{formatKRW(inv.total_amount)}</td>

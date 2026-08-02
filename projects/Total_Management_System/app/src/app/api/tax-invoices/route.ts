@@ -24,6 +24,25 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     const items = data || [];
+
+    // E(2026-08-01): 연결 판매(sale_id)가 취소/반품됐는데 세금계산서가 남아있으면 '수정세금계산서 필요' 경고 플래그.
+    //   ⚠️ 자동 삭제/취소하지 않음 — 세법상 반품/취소는 '수정세금계산서'를 별도 발행하는 수기 절차라, 원본을 임의로 지우면 안 됨.
+    const saleIds = items.map((i: { sale_id: string | null }) => i.sale_id).filter(Boolean);
+    if (saleIds.length > 0) {
+      const { data: linkedSales } = await db
+        .from('offline_sales')
+        .select('id, cancelled_at, returned_at')
+        .in('id', saleIds);
+      const voidMap: Record<string, 'cancelled' | 'returned'> = {};
+      for (const s of (linkedSales || [])) {
+        if (s.cancelled_at) voidMap[s.id] = 'cancelled';
+        else if (s.returned_at) voidMap[s.id] = 'returned';
+      }
+      for (const inv of items) {
+        (inv as { linked_sale_voided?: 'cancelled' | 'returned' | null }).linked_sale_voided =
+          inv.sale_id ? (voidMap[inv.sale_id] || null) : null;
+      }
+    }
     const salesTotal = items.filter((i: { invoice_type: string }) => i.invoice_type === 'sales').reduce((s: number, i: { total_amount: number }) => s + i.total_amount, 0);
     const purchaseTotal = items.filter((i: { invoice_type: string }) => i.invoice_type === 'purchase').reduce((s: number, i: { total_amount: number }) => s + i.total_amount, 0);
     const salesTax = items.filter((i: { invoice_type: string }) => i.invoice_type === 'sales').reduce((s: number, i: { tax_amount: number }) => s + i.tax_amount, 0);

@@ -7,7 +7,12 @@
 - **B(버그) fix**: 엑셀 내보내기 `api/reports/export/route.ts` 매출·마진 2곳이 취소·반품 **무필터**였음 → `cancelled_at/returned_at IS NULL` 추가.
 - **C(보강)**: `use-dashboard-stats.ts` 대시보드 fallback·RPC077 경로·복원수리 RS(월/주) 6곳이 `returned_at` 필터 누락 → 추가(취소는 이미 있었음). RPC088 메인합은 원래 정상.
 - **A(재발방지)**: EVENT/재고판매 접수 취소(`api/events/[id]` action='cancel') 시, 연결 판매(sale_id)가 **아직 활성이면 409로 차단**하고 "판매관리에서 판매 먼저 취소/반품" 안내. → 접수만 취소해 판매가 유령으로 남아 매출에 잡히던 문제 예방. (판매가 이미 취소/반품됐으면 접수 정리는 허용)
-- ⚠️ 미처리(별도 과제): 세금계산서(`tax_invoices`)는 판매 취소/반품에 자동 대응 없음(E). 반품 매출 소급→반품시점 전환(D).
+## 2026-08-01 (2차) — D 반품시점 반영(reports/summary) + E 세금계산서 경고
+- **D 정책 전환**: 반품 매출 = **소급 제거 → 반품시점 −반영**. 판매는 `sale_date`(판매월)에 인식, 반품은 `returned_at`(반품월)에 −차감. 판매·반품 동월이면 net 0.
+  - **reports/summary(품목별 매출) 적용 완료**: sales 쿼리에서 `returned_at IS NULL` 제거(판매월 인식) + `retSales`(returned_at 기준) 별도 −차감. by_product/마진은 반품 제품항목을 음수로 넣어 자동 net. saleSummary.total·dailyProduct·dailyRepairs·offlineRs 모두 −반영. 딜리버리/온라인주문은 반품개념 없어 무변경.
+  - ⚠️ **아직 소급 유지(일관성 후속 필요)**: `useSalesStats`(판매카드 주/월 매출), `use-dashboard-stats`(대시보드), **RPC 088**(대시보드 메인). 이들은 2026-08-01(1차 C)에서 `returned_at IS NULL`(소급)로 통일해둔 상태 → **cross-month 반품일 때만 reports와 불일치**(동월 반품은 동일). 후속으로 동일 −차감 패턴 + RPC 마이그 예정. (반품은 드물어 실무 영향 작음)
+  - **검증**: 앱 계층 tsc/build 통과. ⚠️ DB 숫자는 미검증 — 실제 반품 1건으로 "판매월 +, 반품월 −, 전체기간 net 0" 눈으로 확인 필요.
+- **E 세금계산서 경고(자동취소 X)**: `tax-invoices` GET 이 연결 판매(sale_id) 취소/반품 시 `linked_sale_voided` 플래그 → 목록에 "⚠️ 수정세금계산서 필요" 배지. **원본 자동삭제 안 함**(세법상 반품/취소는 수정세금계산서 별도 발행 = 수기 절차).
 
 ## 2026-06-18 — 일별 추이 차트 탭별 분리
 - 기존: 일별 차트가 탭 무관하게 `daily.sales`(offline_sales 제품 일별, **납품 미포함·RS 혼입**)만 그림 → 복원수리 탭에서도 제품 일별만 보여 B2B 복원수리(납품)가 차트에 안 나옴.

@@ -22,14 +22,14 @@ export async function GET(req: NextRequest) {
     const db = supabase as any;
     const isB2BCt = (ct: string | null | undefined) => ct === 'dealer' || ct === 'academy';
 
-    // ─── 1) 오프라인 판매 (offline_sales + items) — 취소/반품 제외 ───
+    // ─── 1) 오프라인 판매 (offline_sales + items) — 취소 제외 / 반품은 '판매월'에 인식(반품시점 반영, 2026-08-01) ───
+    //   반품(returned)은 여기서 제외하지 않는다 → 판매월 매출로 잡히고, 반품월엔 아래 retSales 로 −차감.
     const { data: salesRaw } = await db
       .from('offline_sales')
       .select('id, sale_date, total_amount, supply_amount, vat_amount, payment_method, payment_status, customer_name, customer_id, customer_type, discount_amount, paid_amount')
       .gte('sale_date', fromDate)
       .lte('sale_date', toDate)
       .is('cancelled_at', null)
-      .is('returned_at', null)
       .order('sale_date', { ascending: false });
     const sales: Array<{ id: string; sale_date: string; total_amount: number; supply_amount: number; vat_amount: number; payment_method: string; payment_status: string; customer_name: string; customer_id: string | null; customer_type: string | null; discount_amount: number; paid_amount: number }> = salesRaw || [];
     const saleIds = sales.map((s) => s.id);
@@ -52,17 +52,67 @@ export async function GET(req: NextRequest) {
       }
     }
     const productSaleItems = saleItems.filter((it) => it.category !== 'RS'); // 제품 항목만 (COGS·랭킹용)
-    const offlineRsTotal = Object.values(offlineRsBySale).reduce((s, v) => s + v.amount, 0);
-    const offlineRsQty = Object.values(offlineRsBySale).reduce((s, v) => s + v.qty, 0);
-    const offlineRsCount = Object.keys(offlineRsBySale).length;
 
-    // 제품 매출 B2C/B2B 분리 (각 판매: total − discount − 그 판매 RS_total)
+    // ─── 반품(반품시점 반영) — returned_at 이 이 기간인 판매를 −차감 ───
+    //   판매 자체는 위 sales(판매월)에 이미 인식됨. 여기선 반품월에 음수로 빼서 "반품 시점 반영".
+    //   판매·반품이 같은 기간이면 +와 −가 상쇄(net 0). 다른 기간이면 각 월에 정확히 귀속.
+    const { data: retRaw } = await db
+      .from('offline_sales')
+      .select('id, returned_at, total_amount, discount_amount, customer_type')
+      .gte('returned_at', `${fromDate}T00:00:00`)
+      .lte('returned_at', `${toDate}T23:59:59`)
+      .is('cancelled_at', null);
+    const retSales: Array<{ id: string; returned_at: string; total_amount: number; discount_amount: number; customer_type: string | null }> = retRaw || [];
+    let retItems: typeof saleItems = [];
+    if (retSales.length > 0) {
+      const { data } = await db
+        .from('offline_sale_items')
+        .select('sale_id, product_id, product_name, sku, quantity, unit_price, total_price, category')
+        .in('sale_id', retSales.map((s) => s.id));
+      retItems = data || [];
+    }
+    const retRsBySale: Record<string, { amount: number; qty: number }> = {};
+    for (const it of retItems) {
+      if (it.category === 'RS' && (it.total_price || 0) > 0) {
+        if (!retRsBySale[it.sale_id]) retRsBySale[it.sale_id] = { amount: 0, qty: 0 };
+        retRsBySale[it.sale_id].amount += it.total_price || 0;
+        if (it.product_name !== '배송비') retRsBySale[it.sale_id].qty += it.quantity || 0;
+      }
+    }
+    const retProductItems = retItems.filter((it) => it.category !== 'RS'); // 반품 제품 항목(−) — allProductItems 에 음수로
+    const retSaleB2BMap: Record<string, boolean> = {};
+    for (const s of retSales) retSaleB2BMap[s.id] = isB2BCt(s.customer_type);
+
+    // 반품 집계 (반품월 −)
+    let retProductB2C = 0, retProductB2BOffline = 0, retSaleTotal = 0;
+    const retDailyProduct: Record<string, number> = {};
+    const retDailyRepairs: Record<string, number> = {};
+    for (const s of retSales) {
+      const rs = retRsBySale[s.id]?.amount || 0;
+      const prod = (s.total_amount || 0) - (s.discount_amount || 0) - rs;
+      if (isB2BCt(s.customer_type)) retProductB2BOffline += prod; else retProductB2C += prod;
+      retSaleTotal += s.total_amount || 0;
+      const d = (s.returned_at || '').slice(0, 10);
+      if (prod !== 0) retDailyProduct[d] = (retDailyProduct[d] || 0) + prod;
+      if (rs > 0) retDailyRepairs[d] = (retDailyRepairs[d] || 0) + rs;
+    }
+    const retRsTotal = Object.values(retRsBySale).reduce((s, v) => s + v.amount, 0);
+    const retRsQty = Object.values(retRsBySale).reduce((s, v) => s + v.qty, 0);
+
+    // 순(net) — 판매월 − 반품월
+    const offlineRsTotal = Object.values(offlineRsBySale).reduce((s, v) => s + v.amount, 0) - retRsTotal;
+    const offlineRsQty = Object.values(offlineRsBySale).reduce((s, v) => s + v.qty, 0) - retRsQty;
+    const offlineRsCount = Object.keys(offlineRsBySale).length; // 건수는 판매월 기준(호환용)
+
+    // 제품 매출 B2C/B2B 분리 (판매월 +) 이후 (반품월 −) 차감
     let productB2C = 0, productB2BOffline = 0;
     for (const s of sales) {
       const rs = offlineRsBySale[s.id]?.amount || 0;
       const prod = (s.total_amount || 0) - (s.discount_amount || 0) - rs;
       if (isB2BCt(s.customer_type)) productB2BOffline += prod; else productB2C += prod;
     }
+    productB2C -= retProductB2C;
+    productB2BOffline -= retProductB2BOffline;
 
     // ─── 2) 납품 (deliveries + items) — 전부 B2B 거래처 취급 ───
     const { data: dlRaw } = await db
@@ -106,7 +156,7 @@ export async function GET(req: NextRequest) {
     // 오프라인 판매 전체 요약 (RS 포함 — 호환용 "오프라인 판매 총액")
     const saleSummary = {
       count: sales.length,
-      total: sales.reduce((s, r) => s + (r.total_amount || 0), 0),
+      total: sales.reduce((s, r) => s + (r.total_amount || 0), 0) - retSaleTotal,  // 반품 −반영(net)
       supply: sales.reduce((s, r) => s + (r.supply_amount || 0), 0),
       vat: sales.reduce((s, r) => s + (r.vat_amount || 0), 0),
       discount: sales.reduce((s, r) => s + (r.discount_amount || 0), 0),
@@ -147,6 +197,8 @@ export async function GET(req: NextRequest) {
       const prod = (d.total_amount || 0) - (d.discount_amount || 0) - rs;
       if (prod !== 0) dailyProduct[d.delivery_date] = (dailyProduct[d.delivery_date] || 0) + prod;
     }
+    // 반품 제품 매출(−) 을 반품월(returned_at)에 차감 (반품시점 반영)
+    for (const d of Object.keys(retDailyProduct)) dailyProduct[d] = (dailyProduct[d] || 0) - retDailyProduct[d];
     for (const p of purchases) {
       const d = (p as { order_date: string }).order_date;
       dailyPurchases[d] = (dailyPurchases[d] || 0) + (p as { total_amount: number }).total_amount;
@@ -188,6 +240,8 @@ export async function GET(req: NextRequest) {
     //   channel: 오프라인=고객유형 / 납품=b2b / 온라인=b2c
     const allProductItems: Array<{ product_id: string | null; product_name: string; sku: string | null; quantity: number; unit_price: number; total_price: number; channel: 'b2c' | 'b2b' }> = [
       ...productSaleItems.map((it) => ({ product_id: it.product_id, product_name: it.product_name, sku: it.sku, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price, channel: (saleB2BMap[it.sale_id] ? 'b2b' : 'b2c') as 'b2c' | 'b2b' })),
+      // 반품 제품 항목(−) — 수량·매출·원가를 음수로 넣어 by_product/마진이 자동으로 net 됨(반품시점 반영)
+      ...retProductItems.map((it) => ({ product_id: it.product_id, product_name: it.product_name, sku: it.sku, quantity: -(it.quantity || 0), unit_price: it.unit_price, total_price: -(it.total_price || 0), channel: (retSaleB2BMap[it.sale_id] ? 'b2b' : 'b2c') as 'b2c' | 'b2b' })),
       ...productDlItems.map((it) => ({ product_id: it.product_id, product_name: it.product_name, sku: it.sku, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price, channel: 'b2b' as const })),
       ...productOrderItems.map((it) => ({ ...it, channel: 'b2c' as const })),
     ];
@@ -344,6 +398,8 @@ export async function GET(req: NextRequest) {
       const rs = dlRsByDelivery[d.id]?.amount || 0;
       if (rs > 0) dailyRepairs[d.delivery_date] = (dailyRepairs[d.delivery_date] || 0) + rs;
     }
+    // 반품 RS(−) 을 반품월에 차감
+    for (const d of Object.keys(retDailyRepairs)) dailyRepairs[d] = (dailyRepairs[d] || 0) - retDailyRepairs[d];
 
     // ─── 11) 제품 매출 객체 (RS 제외, 납품 포함, B2C/B2B) ───
     const productSalesSummary = {
