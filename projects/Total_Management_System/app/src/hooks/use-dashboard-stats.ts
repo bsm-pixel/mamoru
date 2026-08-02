@@ -88,9 +88,9 @@ export function useHubStats() {
             dlDb.from('deliveries').select('total_amount, discount_amount')
               .gte('delivery_date', msd).in('status', ['confirmed', 'shipped', 'settled']).is('cancelled_at', null),
             dlDb.from('offline_sales').select('total_amount, discount_amount, customer_type')
-              .gte('sale_date', msd).is('cancelled_at', null),
+              .gte('sale_date', msd).is('cancelled_at', null).is('returned_at', null),
             dlDb.from('offline_sale_items').select('total_price, offline_sales!inner(sale_date, cancelled_at, customer_type)')
-              .eq('category', 'RS').gt('total_price', 0).gte('offline_sales.sale_date', msd).is('offline_sales.cancelled_at', null),
+              .eq('category', 'RS').gt('total_price', 0).gte('offline_sales.sale_date', msd).is('offline_sales.cancelled_at', null).is('offline_sales.returned_at', null),
             (async () => {
               const { data: dlIds } = await dlDb.from('deliveries').select('id')
                 .gte('delivery_date', msd).in('status', ['confirmed', 'shipped', 'settled']).is('cancelled_at', null);
@@ -205,7 +205,8 @@ export function useHubStats() {
           .gte('shipped_at', monISO),
         db.from('offline_sales').select('total_amount, discount_amount, customer_type')
           .gte('sale_date', monthStartDate)
-          .is('cancelled_at', null),
+          .is('cancelled_at', null)
+          .is('returned_at', null),
         // 075: 복원수리 매출 A — 옵션 A "발생 기준" 적용 (paid_at 조건 제거 → 미입금도 매출 발생으로 카운트)
         db.from('repairs').select('total_amount, qty_mamoru, qty_other')
           .gte('created_at', monthISO)
@@ -215,7 +216,8 @@ export function useHubStats() {
           .eq('category', 'RS')
           .gt('total_price', 0)
           .gte('offline_sales.sale_date', monthStartDate)
-          .is('offline_sales.cancelled_at', null),
+          .is('offline_sales.cancelled_at', null)
+          .is('offline_sales.returned_at', null),
         // 납품 매출 + 항목 (이번달, 확정 이상, 취소 제외)
         db.from('deliveries').select('total_amount, discount_amount')
           .gte('delivery_date', monthStartDate)
@@ -546,7 +548,8 @@ export function useRepairDashboardStats() {
           .select('total_price, quantity, product_name, category, offline_sales!inner(sale_date, cancelled_at, customer_type)')
           .eq('category', 'RS')
           .gte('offline_sales.sale_date', monthStart)
-          .is('offline_sales.cancelled_at', null),
+          .is('offline_sales.cancelled_at', null)
+          .is('offline_sales.returned_at', null),
         // 오늘 작업 완료 (shipped/delivered/completed 상태로 변경된 건)
         (supabase as any)
           .from('repair_history')
@@ -566,7 +569,8 @@ export function useRepairDashboardStats() {
           .eq('category', 'RS')
           .gte('offline_sales.sale_date', weekStartDate)
           .lte('offline_sales.sale_date', todayDate)
-          .is('offline_sales.cancelled_at', null),
+          .is('offline_sales.cancelled_at', null)
+          .is('offline_sales.returned_at', null),
         // 납품 복원수리 B2B 수량 (delivery_items category=RS)
         (async () => {
           const { data: dlIds } = await (supabase as any).from('deliveries').select('id')

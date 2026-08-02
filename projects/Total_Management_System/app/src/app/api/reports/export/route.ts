@@ -24,7 +24,9 @@ export async function GET(req: NextRequest) {
         .from('offline_sales')
         .select('id')
         .gte('sale_date', fromDate)
-        .lte('sale_date', toDate);
+        .lte('sale_date', toDate)
+        .is('cancelled_at', null)   // 취소 제외 (회계 반영 안 함)
+        .is('returned_at', null);   // 반품 제외 (매출 리포트는 순매출)
 
       const saleIds = (sales || []).map((s: { id: string }) => s.id);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -116,6 +118,8 @@ export async function GET(req: NextRequest) {
         .select('sale_number, customer_name, sale_date, total_amount, supply_amount, vat_amount, discount_amount, paid_amount, payment_method, payment_status')
         .gte('sale_date', fromDate)
         .lte('sale_date', toDate)
+        .is('cancelled_at', null)   // 취소 제외 (회계 반영 안 함)
+        .is('returned_at', null)    // 반품 제외 (매출 리포트는 순매출)
         .order('sale_date', { ascending: false });
 
       const METHOD_LABEL: Record<string, string> = {

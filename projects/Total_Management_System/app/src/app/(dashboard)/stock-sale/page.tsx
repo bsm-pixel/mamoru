@@ -198,10 +198,13 @@ function StockDetail({ ev, patch, del, onDone, goSales }: {
             disabled={patch.isPending}
             onClick={() => {
               const msg = ev.status === 'converted'
-                ? '이 접수를 취소 처리합니다.\n※ 판매 건은 판매관리에서 별도로 취소하세요 — 여기선 접수 기록만 취소됩니다.'
+                ? '이 접수는 판매로 전환되었습니다.\n판매가 아직 살아있으면 취소가 막힙니다 — 판매관리에서 판매를 먼저 취소/반품하세요.\n계속하시겠습니까?'
                 : '이 접수를 취소합니다.';
               if (!window.confirm(msg)) return;
-              patch.mutate({ id: ev.id, action: 'cancel' }, { onSuccess: onDone });
+              patch.mutate({ id: ev.id, action: 'cancel' }, {
+                onSuccess: onDone,
+                onError: (e) => window.alert(e instanceof Error ? e.message : '취소 실패'),
+              });
             }}
             className="w-full py-2 rounded-lg text-xs text-neutral-400 hover:text-red-500"
           >

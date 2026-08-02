@@ -77,6 +77,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     if (action === 'cancel') {
+      // 🔴 이미 판매전환된 건은, 연결 판매가 아직 '살아있으면' 접수만 취소하면 판매가 유령으로 남아
+      //    회계(매출)에 계속 잡힌다. → 판매관리에서 판매를 먼저 취소/반품해야 재고·환불·회계가 함께 정리됨.
+      //    (판매가 이미 취소/반품됐거나 sale_id 없으면 접수 기록 정리는 그대로 허용)
+      if (ev.sale_id) {
+        const { data: sale } = await dbAny
+          .from('offline_sales')
+          .select('cancelled_at, returned_at, sale_number')
+          .eq('id', ev.sale_id)
+          .single();
+        if (sale && !sale.cancelled_at && !sale.returned_at) {
+          return NextResponse.json({
+            ok: false,
+            code: 'active_sale',
+            sale_id: ev.sale_id,
+            error: `이미 판매(${sale.sale_number || ''})로 전환된 접수입니다.\n판매관리에서 판매를 먼저 취소/반품해 주세요 — 그래야 재고·환불·회계가 함께 정리됩니다.`,
+          }, { status: 409 });
+        }
+      }
       await dbAny.from('event_submissions').update({
         status: 'cancelled', cancelled_at: new Date().toISOString(),
       }).eq('id', id);

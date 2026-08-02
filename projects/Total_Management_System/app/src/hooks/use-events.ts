@@ -78,8 +78,9 @@ export function useEventPatch() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error(await res.text());
-      return res.json();
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || '요청 실패');  // 서버의 한국어 안내(예: 활성 판매 차단)를 그대로 노출
+      return json;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['events'] });
