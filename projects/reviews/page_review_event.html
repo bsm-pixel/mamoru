@@ -196,8 +196,8 @@
         <span class="re-imgph">이달의 1등 상품<br>이미지</span>
       </div>
 
-      <!-- ✏️ 수정가능: 마감일 → data-deadline="YYYY-MM-DDTHH:MM:SS" -->
-      <div class="re-count" id="reCount" data-deadline="2026-08-31T23:59:59">
+      <!-- ✏️ 수정가능: 마감일 → data-deadline. 말일 24시 = 다음 달 1일 00:00 (예: 8월 마감 → 2026-09-01T00:00:00) -->
+      <div class="re-count" id="reCount" data-deadline="2026-09-01T00:00:00">
         <div class="re-count__box"><div class="re-count__n" data-c="d">--</div><div class="re-count__l">Days</div></div>
         <div class="re-count__sep">:</div>
         <div class="re-count__box"><div class="re-count__n" data-c="h">--</div><div class="re-count__l">Hours</div></div>
@@ -206,7 +206,7 @@
         <div class="re-count__sep">:</div>
         <div class="re-count__box"><div class="re-count__n" data-c="s">--</div><div class="re-count__l">Sec</div></div>
       </div>
-      <p class="re-deadline">이달의 후기 마감 · <b style="color:var(--sand);">2026년 8월 31일</b>까지</p>
+      <p class="re-deadline">이달의 후기 마감 · <b style="color:var(--sand);">2026년 8월 31일 24시</b>까지</p>
 
       <p class="re-hero__note">제품과 함께 받으신 <b>카카오 알림톡의 '후기 남기기'</b>로 참여하세요.</p>
     </div>
@@ -387,7 +387,8 @@
       <ul class="re-notes" style="margin-top:14px;">
         <!-- ✏️ 수정가능: 유의사항 (추첨일·추첨기준·당첨자 안내 포함) -->
         <li>후기는 매월 1일~말일 작성분이 해당 월 이벤트에 별도 신청 없이 자동 응모됩니다.</li>
-        <li>추첨·발표는 매월 말일, 후기의 진정성을 기준으로 베스트를 선정합니다.</li>
+        <li>응모 마감은 매월 말일 24시, 당첨 발표는 다음 달 1일 오후 8시입니다.</li>
+        <li>당첨자는 후기의 진정성을 기준으로 베스트를 선정합니다.</li>
         <li>부적절하거나 허위로 판단되는 후기는 선정에서 제외됩니다.</li>
         <li>당첨 시 등록된 연락처로 알림톡을 보내드리며, 7일간 회신이 없으면 상품은 다음 달로 이월됩니다.</li>
         <li>당첨은 1인 1회로 제한될 수 있으며, 경품은 사정에 따라 동급 상품으로 변경될 수 있습니다.</li>
@@ -525,7 +526,9 @@
     if(cur.deadline){
       var rc=document.getElementById('reCount'); if(rc) rc.setAttribute('data-deadline', cur.deadline); // UTC ISO — 카운트다운이 매 틱 재읽기
       var d=new Date(cur.deadline), k=new Date(d.getTime()+9*3600*1000);
-      var txt=k.getUTCFullYear()+'년 '+(k.getUTCMonth()+1)+'월 '+k.getUTCDate()+'일';
+      var midnight=(k.getUTCHours()===0 && k.getUTCMinutes()===0);        // 말일 24시(=익월1일 00:00)면 말일 날짜+24시로 표기
+      var end=midnight ? new Date(d.getTime()-1000) : d, ke=new Date(end.getTime()+9*3600*1000);
+      var txt=ke.getUTCFullYear()+'년 '+(ke.getUTCMonth()+1)+'월 '+ke.getUTCDate()+'일'+(midnight?' 24시':'');
       var dl=document.querySelector('.re-deadline'); if(dl) dl.innerHTML='이달의 후기 마감 · <b style="color:var(--sand);">'+txt+'</b>까지';
     }
   }
