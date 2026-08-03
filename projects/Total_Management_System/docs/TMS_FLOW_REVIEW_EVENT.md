@@ -47,6 +47,11 @@
 - 이미지 업로드: 기존 `/api/reviews/upload-bulk` (`review-photos` 버킷) 재사용
 - 고객 페이지: `projects/reviews/page_review_event.html` (fetch 렌더 + 정적 폴백), 임베드 스니펫 `projects/reviews/iframe_review_event.html`
 
+## RLS 주의 (2026-08-03 버그·수정)
+- `review_event_config` 는 **RLS 켜짐 + 정책 없음** → anon/**authenticated 롤 쓰기 42501 차단**(SELECT는 0행 반환).
+- ∴ 관리 API(`api/reviews/event`)는 **인증 확인(createServerSupabaseClient.getUser) 후 `createServiceClient()`(service role)로 DB 작업**. 공개 API도 service role. RLS는 켠 채 유지(=service role만 접근, 더 안전).
+- 증상이었던 것: 게시 눌러도 반영 안 됨 → 원인은 authenticated 롤 upsert가 RLS에 막혀 저장 실패(사장님이 실패 메시지 놓침). service role 전환으로 해결.
+
 ## 월 경계 주의
 - 응모자 집계는 `created_at`(timestamptz)을 **KST 월**로 묶음(`kstMonthRange`, UTC밀림 회피). `toISOString().slice(0,7)` 금지.
 

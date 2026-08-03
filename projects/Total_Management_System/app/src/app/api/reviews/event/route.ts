@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
 
 /**
  * 리뷰 이벤트 관리 (인증 필요, TMS 관리자용).
@@ -21,11 +21,12 @@ function kstMonthRange(month: string): { startISO: string; endISO: string } | nu
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const auth = await createServerSupabaseClient();
+    const { data: { user } } = await auth.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // 인증 확인 후 service role 로 DB 작업(review_event_config 는 RLS 켜짐 — authenticated 롤은 차단됨)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
+    const db = createServiceClient() as any;
 
     const month = req.nextUrl.searchParams.get('month') || '';
     const range = kstMonthRange(month);
@@ -59,11 +60,12 @@ interface WinnerInput { id: string; rank: number; display_name?: string | null; 
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const auth = await createServerSupabaseClient();
+    const { data: { user } } = await auth.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // 인증 확인 후 service role 로 DB 작업(RLS 우회 — 관리자 엔드포인트)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
+    const db = createServiceClient() as any;
 
     const body = await req.json();
     const month: string = body.month;

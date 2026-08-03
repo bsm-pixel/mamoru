@@ -168,7 +168,7 @@ export default function ReviewEventPage() {
         {loading && <Loader2 size={16} className="animate-spin text-stone-400" />}
       </div>
 
-      {msg && <div className="mb-4 px-4 py-2 rounded-lg bg-stone-100 text-stone-700 text-sm">{msg}</div>}
+      {msg && <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${msg.includes('실패') ? 'bg-rose-100 text-rose-700 font-medium' : 'bg-stone-100 text-stone-700'}`}>{msg}</div>}
 
       <div className="grid lg:grid-cols-2 gap-5">
         {/* ── 이벤트 설정 ── */}
