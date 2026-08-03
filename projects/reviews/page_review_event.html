@@ -546,6 +546,8 @@
     if(!list.length) return;
     var host=document.getElementById('rePrizes'); if(!host) return;
     host.innerHTML=list.map(function(p,i){ return prizeCard(p, i===0); }).join('');
+    var hint=host.parentElement.querySelector('.re-hint');   // 상품 1개면 '탭하면 크게' 힌트 숨김(탭 대상 없음)
+    if(hint) hint.style.display = list.length>1 ? '' : 'none';
   }
 
   function winnerCard(w){
@@ -588,7 +590,7 @@
     if(first && window.__mmComputeMore) window.__mmComputeMore(first);
   }
 
-  fetch(API).then(function(r){ return r.json(); }).then(function(data){
+  fetch(API + (API.indexOf('?')<0?'?':'&') + 't=' + Math.floor(Date.now()/30000)).then(function(r){ return r.json(); }).then(function(data){  // 30초 버킷 캐시버스터 — 편집이 최대 30초 내 반영(5분 CDN 캐시 우회) + 버킷 내 트래픽은 CDN 흡수
     if(!data) return;
     try{ renderHero(data.current); }catch(e){}
     try{ renderPrizes(data.current); }catch(e){}
