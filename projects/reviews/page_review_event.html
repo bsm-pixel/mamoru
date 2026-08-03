@@ -295,7 +295,7 @@
       <p class="mm-label">THIS MONTH</p>
       <h2 class="mm-h2" style="margin-top:12px;">이달의 상품</h2>
       <div class="mm-rule"></div>
-      <p class="re-hint">상품을 탭하면 크게 볼 수 있어요.</p>
+      <p class="re-hint">어떤 즐거움으로 보답할지 고민하고 고민했습니다</p>
 
       <!-- ✏️ 수정가능: 각 상품 = 이미지·등수·이름·설명·인원. 1등만이면 2·3등 삭제 / 늘리려면 .re-prize 복사.
            첫 상품에 class="... is-feature" = 기본으로 크게 보임 -->
@@ -546,8 +546,6 @@
     if(!list.length) return;
     var host=document.getElementById('rePrizes'); if(!host) return;
     host.innerHTML=list.map(function(p,i){ return prizeCard(p, i===0); }).join('');
-    var hint=host.parentElement.querySelector('.re-hint');   // 상품 1개면 '탭하면 크게' 힌트 숨김(탭 대상 없음)
-    if(hint) hint.style.display = list.length>1 ? '' : 'none';
   }
 
   function winnerCard(w){
