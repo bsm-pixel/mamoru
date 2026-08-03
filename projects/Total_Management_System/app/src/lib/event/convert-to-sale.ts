@@ -6,6 +6,7 @@ import { SLICING_ADDON } from './options';
 import { updateImwebStock } from '@/lib/imweb/client';
 import type { EventItem } from './types';
 import { insertOfflineSale } from '@/lib/sales/insert-offline-sale';
+import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
 
 interface EventRow {
   id: string;
@@ -13,6 +14,10 @@ interface EventRow {
   customer_id: string | null;
   customer_name: string;
   customer_phone: string | null;
+  receive_method?: string | null;   // visit | delivery — 주소 세팅 판단용
+  postcode?: string | null;
+  address1?: string | null;
+  address2?: string | null;
   items: EventItem[];
   total_amount: number;
 }
@@ -38,9 +43,27 @@ export async function convertEventToSale(db: any, ev: EventRow, opts?: ConvertOp
     + SLICING_ADDON * slicingQtyAll;
   const discountAmount = Math.max(0, lineSum - ev.total_amount);
 
+  // 🔗 고객 연결 보장 — 접수 시 customer_id 가 비어있으면(전화 없이 접수됐거나 매칭 실패) 여기서 전화/이름으로 매칭·생성.
+  //    안 하면 판매가 '게스트'로 저장돼 송장 생성(customer_id 필수)·미수금 집계 등이 막힌다. (2026-08-02)
+  let customerId = ev.customer_id;
+  if (!customerId && ev.customer_phone) {
+    const isVisit = ev.receive_method === 'visit';
+    const { customerId: matched } = await matchOrCreateCustomer(db, {
+      phone: ev.customer_phone,
+      name: ev.customer_name,
+      source: category === 'LS' ? 'stock_sale' : 'event',
+      extra: {
+        addressRoad: isVisit ? null : (ev.address1 || null),
+        addressDetail: isVisit ? null : (ev.address2 || null),
+        postcode: isVisit ? null : (ev.postcode || null),
+      },
+    });
+    customerId = matched;
+  }
+
   // 판매번호 채번+중복재시도는 공용 insertOfflineSale (SSOT)
   const sale = await insertOfflineSale(db, today, {
-    customer_id: ev.customer_id,
+    customer_id: customerId,
     customer_name: ev.customer_name,
     customer_phone: ev.customer_phone,
     sale_date: today,
