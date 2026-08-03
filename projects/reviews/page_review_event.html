@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MAMORU — 이달의 리뷰 이벤트 (REAL REVIEW)</title>
+<!--
+  📄 리뷰 이벤트 페이지 (자사몰 리뷰 기반) — 시안 v2
+  🎯 제품 동봉 종이 QR / 후기 알림톡이 도착하는 페이지. "진짜 후기"에 이달의 상품으로 감사.
+  ✏️ 사장님 매달 수정(마커): ① 상품 이미지(정사각) ② 상품구성(1~3등) ③ 마감일(data-deadline) ④ 발표일 ⑤ 지난달 당첨자
+  🔁 유지관리 = 이 페이지 URL 고정, 매달 마커만 교체 (복붙 아님)
+  🎨 Brand Guide v1.0 / Page Kit 표준
+-->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+/* ═══ KIT (Page Kit v1.0) ═══ */
+:root{
+  --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A;
+  --warm-gray:#8A8580; --mist:#B8B4AF; --sand:#D4D0CB;
+  --parchment:#EDEBE8; --shell:#F5F3F0; --cream:#FAF9F7; --white:#FFFFFF;
+  --font-display:'Outfit','Pretendard','Noto Sans KR',sans-serif;
+  --font-body:'Pretendard','Noto Sans KR',-apple-system,system-ui,sans-serif;
+  --radius-md:12px; --radius-lg:16px;
+  --content-w:760px; --content-w-wide:1100px;
+  --hairline-d:rgba(255,255,255,.10); --hairline-l:rgba(26,26,26,.10);
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*{ -webkit-tap-highlight-color:transparent; box-sizing:border-box; }
+.mm-shell{ overflow-x:hidden; background:var(--cream); color:var(--void); font-family:var(--font-body); -webkit-font-smoothing:antialiased; line-height:1.6; }
+.mm-band{ width:100%; }
+.mm-band--dark{ background:var(--void); color:var(--cream); }
+.mm-band--parchment{ background:var(--parchment); }
+.mm-band--shell{ background:var(--shell); }
+.mm-inner{ max-width:var(--content-w); margin:0 auto; padding:clamp(48px,9vw,84px) 20px; }
+@media(min-width:768px){ .mm-inner{ padding-left:32px; padding-right:32px; } }
+.mm-inner--wide{ max-width:var(--content-w-wide); }
+.mm-inner--tight{ padding-top:clamp(28px,6vw,44px); padding-bottom:clamp(28px,6vw,44px); }
+.mm-display{ font-family:var(--font-display); font-size:clamp(30px,9vw,52px); font-weight:800; line-height:1.08; letter-spacing:-.03em; text-wrap:balance; }
+.mm-h2{ font-family:var(--font-display); font-size:clamp(22px,6vw,30px); font-weight:800; line-height:1.2; letter-spacing:-.03em; text-wrap:balance; }
+.mm-h3{ font-size:clamp(18px,4.5vw,22px); font-weight:700; line-height:1.3; letter-spacing:-.02em; text-wrap:balance; }
+.mm-body{ font-size:clamp(14px,3.8vw,16px); line-height:1.8; text-wrap:pretty; }
+.mm-sub{ font-size:clamp(13px,3.5vw,15px); line-height:1.7; color:var(--warm-gray); text-wrap:pretty; }
+.mm-label{ font-family:var(--font-display); font-size:11px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--warm-gray); }
+.mm-band--dark .mm-sub{ color:var(--sand); }
+.mm-band--dark .mm-label{ color:var(--mist); }
+.mm-rule{ width:38px; height:2px; background:var(--void); opacity:.85; margin:22px 0 0; }
+.mm-band--dark .mm-rule{ background:var(--cream); }
+.mm-reveal{ opacity:0; transform:translateY(24px); transition:opacity .6s var(--ease),transform .6s var(--ease); }
+.mm-reveal.mm-visible{ opacity:1; transform:none; }
+@media(prefers-reduced-motion:reduce){ .mm-reveal{ opacity:1; transform:none; transition:none; } }
+/* ═══ KIT END ═══ */
+
+/* ── 페이지 전용 ── */
+.re-center{ text-align:center; }
+
+/* 히어로 상품 이미지 */
+.re-hero__img{ margin:28px auto 0; max-width:420px; aspect-ratio:4/3; border-radius:var(--radius-lg); overflow:hidden;
+  background:linear-gradient(135deg,#232323,#161616); border:1px solid var(--hairline-d);
+  display:flex; align-items:center; justify-content:center; }
+.re-hero__img img{ width:100%; height:100%; object-fit:cover; display:block; }
+.re-imgph{ font-family:var(--font-display); font-size:11px; letter-spacing:.16em; color:#6f6b66; text-transform:uppercase; text-align:center; line-height:1.9; }
+
+/* 카운트다운 */
+.re-count{ display:flex; gap:10px; justify-content:center; margin-top:26px; }
+.re-count__box{ min-width:62px; padding:12px 8px; border-radius:var(--radius-md); background:rgba(255,255,255,.06); border:1px solid var(--hairline-d); text-align:center; }
+.re-count__n{ font-family:var(--font-display); font-size:clamp(22px,7vw,30px); font-weight:800; line-height:1; color:var(--cream); font-variant-numeric:tabular-nums; }
+.re-count__l{ font-size:10px; letter-spacing:.1em; color:var(--mist); margin-top:7px; text-transform:uppercase; }
+.re-count__sep{ align-self:center; color:#4a4a4a; font-weight:700; }
+.re-deadline{ margin-top:14px; font-size:12px; letter-spacing:.02em; color:var(--mist); }
+.re-hero__note{ margin-top:20px; font-size:13px; color:var(--sand); line-height:1.7; }
+.re-hero__note b{ color:var(--cream); }
+
+/* 이달의 상품 — 선택형 갤러리: 선택된 1개는 크게(피처), 나머지는 콤팩트. 탭으로 전환 */
+.re-hint{ margin-top:14px; font-size:13px; color:var(--warm-gray); }
+.re-prizes{ margin-top:16px; display:flex; flex-direction:column; gap:12px; }
+
+/* 기본 = 콤팩트 (미선택) */
+.re-prize{ position:relative; display:flex; align-items:center; gap:14px; padding:12px 14px; background:var(--white); border:1px solid var(--sand); border-radius:var(--radius-md);
+  cursor:pointer; transition:border-color .2s var(--ease), box-shadow .2s var(--ease); }
+.re-prize:hover{ border-color:var(--warm-gray); }
+.re-prize__media{ flex:0 0 auto; width:76px; height:76px; border-radius:10px; overflow:hidden; background:var(--shell); position:relative;
+  display:flex; align-items:center; justify-content:center; border:1px solid var(--sand); }
+.re-prize__media img{ width:100%; height:100%; object-fit:cover; display:block; }
+.re-prize__mediaph{ font-family:var(--font-display); font-size:9px; letter-spacing:.1em; color:var(--mist); text-transform:uppercase; text-align:center; line-height:1.6; }
+.re-prize__info{ flex:1 1 auto; min-width:0; }
+.re-prize__rank{ display:inline-block; font-family:var(--font-display); font-weight:800; font-size:11px; color:var(--stone); background:var(--shell); border:1px solid var(--sand); border-radius:999px; padding:2px 10px; }
+.re-prize__name{ font-weight:700; font-size:clamp(14px,3.8vw,16px); color:var(--void); margin-top:7px; line-height:1.3; }
+.re-prize__desc{ display:none; }              /* 콤팩트에선 설명 숨김 */
+/* 추첨 인원 — 콤팩트: 우측 중앙 크게 */
+.re-prize__pick{ flex:0 0 auto; align-self:center; text-align:center; padding-left:8px; min-width:52px; }
+.re-prize__pick .n{ font-family:var(--font-display); font-weight:800; font-size:clamp(20px,6vw,26px); color:var(--void); line-height:1; }
+.re-prize__pick .u{ font-size:13px; font-weight:700; color:var(--void); margin-left:1px; }
+.re-prize__pick .lab{ display:block; font-size:11px; color:var(--warm-gray); margin-top:4px; letter-spacing:.02em; }
+
+/* 선택됨(피처) = 큰 이미지 위 + 정보(설명 포함) 아래 */
+.re-prize.is-feature{ flex-direction:column; align-items:stretch; gap:0; padding:0; overflow:hidden; cursor:default; border:1.5px solid var(--void); border-radius:var(--radius-lg); }
+.re-prize.is-feature .re-prize__media{ width:100%; height:auto; aspect-ratio:16/10; border-radius:0; border:0; border-bottom:1px solid var(--sand); }
+@media(min-width:560px){ .re-prize.is-feature .re-prize__media{ aspect-ratio:2/1; } }
+.re-prize.is-feature .re-prize__mediaph{ font-size:11px; }
+.re-prize.is-feature .re-prize__info{ padding:16px 18px 18px; }
+.re-prize.is-feature .re-prize__rank{ color:var(--cream); background:var(--void); border-color:var(--void); font-size:12px; padding:4px 12px; }
+.re-prize.is-feature .re-prize__name{ font-size:clamp(18px,5vw,22px); font-weight:800; margin-top:10px; letter-spacing:-.01em; }
+.re-prize.is-feature .re-prize__desc{ display:block; font-size:clamp(13px,3.5vw,15px); color:var(--stone); line-height:1.7; margin-top:9px; }
+/* 피처: 추첨 인원 = 이미지 우상단 다크 배지 */
+.re-prize.is-feature .re-prize__pick{ position:absolute; top:12px; right:12px; padding:8px 15px; min-width:0; background:var(--void); border-radius:999px; }
+.re-prize.is-feature .re-prize__pick .n{ font-size:17px; color:var(--cream); }
+.re-prize.is-feature .re-prize__pick .u{ color:var(--cream); }
+.re-prize.is-feature .re-prize__pick .lab{ display:inline; margin:0 0 0 4px; color:var(--sand); font-size:11px; }
+
+/* 이벤트 추첨 안내 (참여방법 3번 하단) — 분류형(라벨+내용), 불릿 없이 깔끔 */
+.re-drawnote{ margin-top:22px; padding:16px 18px; background:var(--shell); border-radius:var(--radius-md); border:1px solid var(--sand); }
+.re-dn__item + .re-dn__item{ margin-top:14px; padding-top:14px; border-top:1px solid var(--sand); }
+.re-dn__label{ font-family:var(--font-display); font-size:12px; font-weight:800; letter-spacing:.02em; color:var(--void); }
+.re-dn__body{ margin-top:5px; font-size:12.5px; color:var(--stone); line-height:1.8; }
+
+/* 참여 방법 */
+.re-step + .re-step{ margin-top:clamp(28px,7vw,44px); padding-top:clamp(28px,7vw,44px); border-top:1px solid var(--hairline-l); }
+.re-step__idx{ font-family:var(--font-display); font-size:15px; font-weight:800; letter-spacing:.04em; color:var(--void); }
+.re-step__t{ margin-top:10px; }
+.re-step__d{ margin-top:8px; color:var(--stone); }
+.re-step__hint{ margin-top:8px; font-size:13px; color:var(--warm-gray); }
+/* 알림톡 스크린샷 자리 (세로형) */
+.re-step__shot{ margin-top:16px; max-width:250px; }
+.re-step__shot img{ width:100%; border-radius:var(--radius-md); border:1px solid var(--sand); display:block; }
+.re-step__shotph{ aspect-ratio:3/4; border-radius:var(--radius-md); border:1px dashed var(--sand); background:var(--white);
+  display:flex; align-items:center; justify-content:center; }
+
+/* 지난달 당첨자 — 등수별: [상품 이미지 고정] + [후기 카드 좌우 스크롤](모든 당첨자) */
+.re-win{ margin-top:clamp(24px,6vw,36px); display:flex; flex-direction:column; gap:16px; }
+.re-rank__label{ display:flex; align-items:center; gap:8px; margin-bottom:9px; }
+.re-rank__badge{ font-family:var(--font-display); font-weight:800; font-size:12px; color:var(--void); background:var(--shell); border:1px solid var(--sand); border-radius:999px; padding:3px 11px; }
+.re-rank--1 .re-rank__badge{ background:var(--void); color:var(--cream); border-color:var(--void); }
+.re-rank__cnt{ font-size:13px; font-weight:600; color:var(--stone); }
+.re-rank__swipe{ margin-left:auto; font-size:11px; color:var(--mist); }
+.re-rank__body{ display:flex; gap:12px; }
+.re-rank__prod{ position:relative; flex:0 0 auto; width:100px; align-self:flex-start; aspect-ratio:1/1; border-radius:var(--radius-md); overflow:hidden; background:var(--shell); border:1px solid var(--sand); display:flex; align-items:center; justify-content:center; }
+.re-rank--1 .re-rank__prod{ width:124px; border-color:var(--void); }
+.re-rank__prod img{ width:100%; height:100%; object-fit:cover; display:block; }
+.re-rank__prodph{ font-family:var(--font-display); font-size:9px; letter-spacing:.08em; color:var(--mist); text-transform:uppercase; text-align:center; line-height:1.6; }
+.re-rank__scroll{ flex:1 1 auto; min-width:0; display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.re-rank__scroll::-webkit-scrollbar{ display:none; }
+.re-rc{ flex:0 0 100%; min-width:0; scroll-snap-align:start; background:var(--white); border:1px solid var(--sand); border-radius:var(--radius-md); padding:13px 15px; }
+/* 2명 이상 당첨 행만 카드를 살짝 좁혀 다음 후기가 우측으로 넘겨보이게(peek) → '더 있음' 인지 */
+.re-rank__scroll:has(.re-rc + .re-rc) .re-rc{ flex-basis:86%; }
+/* 모바일: 캐러셀만 우측 화면 끝까지 확장(mm-inner 20px 패딩 상쇄) → peek 이 화면 가장자리에서 튀어나옴. 좌측은 콘텐츠 정렬 유지 */
+@media(max-width:767px){ .re-rank__scroll:has(.re-rc + .re-rc){ margin-right:-20px; scroll-padding-right:20px; } }
+.re-rc__hd{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.re-rc__who{ font-weight:700; font-size:14px; color:var(--void); }
+.re-rc__phone{ font-size:12px; color:var(--mist); font-variant-numeric:tabular-nums; letter-spacing:.03em; }
+.re-rc__route{ margin-top:4px; font-size:12px; color:var(--warm-gray); }
+.re-rc__review{ margin-top:8px; font-size:13px; color:var(--stone); line-height:1.6;
+  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+.re-rc__photos{ margin-top:9px; display:flex; gap:6px; flex-wrap:wrap; }
+.re-rc__photo{ width:50px; height:50px; border-radius:7px; object-fit:cover; border:1px solid var(--sand); cursor:pointer; display:block; }
+.re-rc__photoph{ width:50px; height:50px; border-radius:7px; border:1px dashed var(--sand); background:var(--shell); display:flex; align-items:center; justify-content:center; font-size:8px; color:var(--mist); text-align:center; line-height:1.3; }
+.re-rc__more{ margin-top:9px; font-family:var(--font-body); font-size:12.5px; font-weight:600; color:var(--void); background:none; border:0; border-bottom:1px solid var(--void); padding:0 0 2px; cursor:pointer; }
+.re-rc__more[hidden]{ display:none; }
+
+/* 후기 모달 */
+.re-modal[hidden]{ display:none; }
+.re-modal{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; }
+.re-modal__bg{ position:absolute; inset:0; background:rgba(26,26,26,.55); }
+.re-modal__box{ position:relative; width:100%; max-width:440px; max-height:85vh; overflow-y:auto; background:var(--cream); border-radius:var(--radius-lg); padding:24px 22px 26px; }
+.re-modal__close{ position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%; border:1px solid var(--sand); background:var(--white); font-size:14px; color:var(--stone); cursor:pointer; line-height:1; }
+.re-modal__rank{ font-family:var(--font-display); font-weight:800; font-size:12px; color:var(--cream); background:var(--void); border-radius:999px; padding:4px 12px; display:inline-block; }
+.re-modal__hd{ margin-top:12px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.re-modal__who{ font-weight:700; font-size:16px; color:var(--void); }
+.re-modal__phone{ font-size:12px; color:var(--mist); }
+.re-modal__route{ margin-top:4px; font-size:12.5px; color:var(--warm-gray); }
+.re-modal__review{ margin-top:14px; font-size:14px; color:var(--stone); line-height:1.8; white-space:pre-wrap; }
+.re-modal__photos{ margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+.re-modal__photos img{ width:100%; border-radius:var(--radius-md); display:block; border:1px solid var(--sand); }
+
+/* 유의사항 */
+.re-notes{ margin-top:14px; padding:18px 20px; background:var(--white); border-radius:var(--radius-md); }
+.re-notes li{ font-size:13px; color:var(--stone); line-height:1.9; list-style:none; padding-left:16px; position:relative; }
+.re-notes li::before{ content:''; position:absolute; left:2px; top:11px; width:4px; height:4px; border-radius:50%; background:var(--warm-gray); }
+</style>
+</head>
+<body>
+<div class="mm-shell">
+
+  <!-- ═══════════ 히어로 (다크 · 상품 스포트라이트) ═══════════ -->
+  <div class="mm-band mm-band--dark">
+    <div class="mm-inner mm-reveal re-center">
+      <p class="mm-label">REAL REVIEW</p>
+      <h1 class="mm-display" style="margin-top:14px;">이달의 진짜 후기</h1>
+      <p class="mm-sub" style="max-width:520px;margin:14px auto 0;">
+        가짜 후기 말고, 진짜 후기.<br>남겨주신 진심에 <b style="color:var(--cream);">이달의 상품</b>으로 감사드립니다.
+      </p>
+
+      <!-- ✏️ 수정가능: 이달의 1등 상품 이미지 (아래 <img> 주석 풀고 src="" 에 이미지 URL) -->
+      <div class="re-hero__img">
+        <!-- <img src="이미지-URL" alt="이달의 상품"> -->
+        <span class="re-imgph">이달의 1등 상품<br>이미지</span>
+      </div>
+
+      <!-- ✏️ 수정가능: 마감일 → data-deadline="YYYY-MM-DDTHH:MM:SS" -->
+      <div class="re-count" id="reCount" data-deadline="2026-08-31T23:59:59">
+        <div class="re-count__box"><div class="re-count__n" data-c="d">--</div><div class="re-count__l">Days</div></div>
+        <div class="re-count__sep">:</div>
+        <div class="re-count__box"><div class="re-count__n" data-c="h">--</div><div class="re-count__l">Hours</div></div>
+        <div class="re-count__sep">:</div>
+        <div class="re-count__box"><div class="re-count__n" data-c="m">--</div><div class="re-count__l">Min</div></div>
+        <div class="re-count__sep">:</div>
+        <div class="re-count__box"><div class="re-count__n" data-c="s">--</div><div class="re-count__l">Sec</div></div>
+      </div>
+      <p class="re-deadline">이달의 후기 마감 · <b style="color:var(--sand);">2026년 8월 31일</b>까지</p>
+
+      <p class="re-hero__note">제품과 함께 받으신 <b>카카오 알림톡의 '후기 남기기'</b>로 참여하세요.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ 지난달 당첨자 (신뢰 · 진짜 준다 · 상단 배치) ═══════════ -->
+  <div class="mm-band mm-band--shell">
+    <div class="mm-inner mm-reveal">
+      <p class="mm-label">LAST MONTH</p>
+      <h2 class="mm-h2" style="margin-top:12px;">지난달 당첨자</h2>
+      <div class="mm-rule"></div>
+      <p class="mm-sub" style="margin-top:16px;">지난달 리뷰 이벤트 당첨자입니다. 진짜 후기에, 진짜 상품으로.</p>
+
+      <!-- ✏️ 수정가능: 등수별 = [상품 이미지 1개 고정] + [당첨자 후기 카드 좌우 스크롤].
+           당첨자 늘리려면 .re-rc 블록을 .re-rank__scroll 안에 복사. re-rank__cnt 는 실제 인원.
+           .re-rc__review = 후기 전체(4줄 넘으면 '후기 전체 보기' 자동 노출→모달), .re-rc__photo = 후기 사진 -->
+      <div class="re-win">
+
+        <!-- 1등 -->
+        <div class="re-rank re-rank--1">
+          <div class="re-rank__label"><span class="re-rank__badge">1등</span><span class="re-rank__cnt">1명 당첨</span></div>
+          <div class="re-rank__body">
+            <div class="re-rank__prod"><!-- <img src="1등상품-URL"> --><span class="re-rank__prodph">1등<br>상품<br>이미지</span></div>
+            <div class="re-rank__scroll">
+              <div class="re-rc" data-rank="1등" data-who="홍**님" data-phone="010-****-32**" data-route="매장 구매 · 블런트 5.5인치">
+                <div class="re-rc__hd"><span class="re-rc__who">홍**님</span><span class="re-rc__phone">010-****-32**</span></div>
+                <div class="re-rc__route">매장 구매 · 블런트 5.5인치</div>
+                <p class="re-rc__review">첫 커트부터 손에 감기는 느낌이 확실히 달랐어요. 그동안 여러 가위를 써봤지만 이렇게 오래 쓰고 싶은 가위는 처음입니다. 상담받을 때 제 커트 스타일에 맞는 형태를 정확히 안내해주셔서 믿음이 갔고, 실제로 써보니 더 만족스러워요. 감사합니다.</p>
+                <div class="re-rc__photos"><!-- <img class="re-rc__photo" src="사진-URL"> --><div class="re-rc__photoph">후기<br>사진</div><div class="re-rc__photoph">후기<br>사진</div></div>
+                <button class="re-rc__more" type="button" hidden>후기 전체 보기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2등 -->
+        <div class="re-rank">
+          <div class="re-rank__label"><span class="re-rank__badge">2등</span><span class="re-rank__cnt">3명 당첨</span><span class="re-rank__swipe">← 옆으로 밀어보기</span></div>
+          <div class="re-rank__body">
+            <div class="re-rank__prod"><span class="re-rank__prodph">2등<br>상품<br>이미지</span></div>
+            <div class="re-rank__scroll">
+              <!-- ① 사진 첨부 고객 -->
+              <div class="re-rc" data-rank="2등" data-who="김**님" data-phone="010-****-58**" data-route="출장 상담 후 구매 · 틴닝">
+                <div class="re-rc__hd"><span class="re-rc__who">김**님</span><span class="re-rc__phone">010-****-58**</span></div>
+                <div class="re-rc__route">출장 상담 후 구매 · 틴닝</div>
+                <p class="re-rc__review">출장 상담부터 꼼꼼하게 봐주셔서 신뢰가 갔습니다. 틴닝 결도 훨씬 부드러워졌어요.</p>
+                <div class="re-rc__photos"><!-- <img class="re-rc__photo" src="사진-URL"> --><div class="re-rc__photoph">후기<br>사진</div><div class="re-rc__photoph">후기<br>사진</div></div>
+                <button class="re-rc__more" type="button" hidden>후기 전체 보기</button>
+              </div>
+              <!-- ② 사진 미첨부 고객 -->
+              <div class="re-rc" data-rank="2등" data-who="이**님" data-phone="010-****-11**" data-route="매장 구매 · 곡가위">
+                <div class="re-rc__hd"><span class="re-rc__who">이**님</span><span class="re-rc__phone">010-****-11**</span></div>
+                <div class="re-rc__route">매장 구매 · 곡가위</div>
+                <p class="re-rc__review">추천 없이 제 상황에 맞는 걸 알려주셔서 좋았어요. 곡가위 처음인데 만족합니다.</p>
+                <button class="re-rc__more" type="button" hidden>후기 전체 보기</button>
+              </div>
+              <!-- ③ 글만 있고 긴 글(더보기 자동 노출) -->
+              <div class="re-rc" data-rank="2등" data-who="박**님" data-phone="010-****-90**" data-route="톡상담 · 세트">
+                <div class="re-rc__hd"><span class="re-rc__who">박**님</span><span class="re-rc__phone">010-****-90**</span></div>
+                <div class="re-rc__route">톡상담 · 세트</div>
+                <p class="re-rc__review">처음엔 가위 하나 바꾼다고 뭐가 달라질까 반신반의했는데, 실제로 써보니 손목에 오는 피로가 확실히 줄었어요. 하루 열 명 넘게 커트하는 날엔 저녁쯤 손이 뻐근했는데 이 세트로 바꾸고 나서는 그 느낌이 많이 사라졌습니다. 틴닝도 결이 부드럽게 빠져서 마무리가 깔끔하고, 무엇보다 상담할 때 억지로 비싼 걸 권하지 않고 제 시술 스타일에 맞는 걸 골라주신 게 인상 깊었어요. 오래 잘 쓰겠습니다. 감사합니다.</p>
+                <button class="re-rc__more" type="button" hidden>후기 전체 보기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3등 -->
+        <div class="re-rank">
+          <div class="re-rank__label"><span class="re-rank__badge">3등</span><span class="re-rank__cnt">2명 당첨</span><span class="re-rank__swipe">← 옆으로 밀어보기</span></div>
+          <div class="re-rank__body">
+            <div class="re-rank__prod"><span class="re-rank__prodph">3등<br>상품<br>이미지</span></div>
+            <div class="re-rank__scroll">
+              <div class="re-rc" data-rank="3등" data-who="최**님" data-phone="010-****-24**" data-route="톡상담 · 곡가위">
+                <div class="re-rc__hd"><span class="re-rc__who">최**님</span><span class="re-rc__phone">010-****-24**</span></div>
+                <div class="re-rc__route">톡상담 · 곡가위</div>
+                <p class="re-rc__review">가볍게 톡으로 물어봤는데 친절하게 안내받았어요. 잘 쓰겠습니다.</p>
+                <button class="re-rc__more" type="button" hidden>후기 전체 보기</button>
+              </div>
+              <div class="re-rc" data-rank="3등" data-who="정**님" data-phone="010-****-77**" data-route="매장 구매 · 틴닝">
+                <div class="re-rc__hd"><span class="re-rc__who">정**님</span><span class="re-rc__phone">010-****-77**</span></div>
+                <div class="re-rc__route">매장 구매 · 틴닝</div>
+                <p class="re-rc__review">관리 키트도 알뜰하게 챙겨주셔서 감사합니다.</p>
+                <button class="re-rc__more" type="button" hidden>후기 전체 보기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 이달의 상품 ═══════════ -->
+  <div class="mm-band mm-band--parchment">
+    <div class="mm-inner mm-reveal">
+      <p class="mm-label">THIS MONTH</p>
+      <h2 class="mm-h2" style="margin-top:12px;">이달의 상품</h2>
+      <div class="mm-rule"></div>
+      <p class="re-hint">상품을 탭하면 크게 볼 수 있어요.</p>
+
+      <!-- ✏️ 수정가능: 각 상품 = 이미지·등수·이름·설명·인원. 1등만이면 2·3등 삭제 / 늘리려면 .re-prize 복사.
+           첫 상품에 class="... is-feature" = 기본으로 크게 보임 -->
+      <div class="re-prizes" id="rePrizes">
+        <!-- 1등 (기본 선택 = is-feature) -->
+        <div class="re-prize is-feature">
+          <div class="re-prize__media">
+            <!-- <img src="1등-이미지-URL" alt="1등 상품"> -->
+            <span class="re-prize__mediaph">1등 상품 이미지</span>
+          </div>
+          <div class="re-prize__info">
+            <span class="re-prize__rank">1등</span>
+            <div class="re-prize__name">프리미엄 가위 1자루</div>
+            <div class="re-prize__desc">MAMORU 시그니처 가위. 첫 커트의 감을 오래 지켜주는 프리미엄 라인입니다.</div>
+          </div>
+          <div class="re-prize__pick"><span class="n">1</span><span class="u">명</span><span class="lab">추첨</span></div>
+        </div>
+        <!-- 2등 -->
+        <div class="re-prize">
+          <div class="re-prize__media">
+            <!-- <img src="2등-이미지-URL" alt="2등 상품"> -->
+            <span class="re-prize__mediaph">2등<br>이미지</span>
+          </div>
+          <div class="re-prize__info">
+            <span class="re-prize__rank">2등</span>
+            <div class="re-prize__name">핀셋 세트</div>
+            <div class="re-prize__desc">정밀 작업을 위한 스테인리스 핀셋 세트.</div>
+          </div>
+          <div class="re-prize__pick"><span class="n">3</span><span class="u">명</span><span class="lab">추첨</span></div>
+        </div>
+        <!-- 3등 -->
+        <div class="re-prize">
+          <div class="re-prize__media">
+            <!-- <img src="3등-이미지-URL" alt="3등 상품"> -->
+            <span class="re-prize__mediaph">3등<br>이미지</span>
+          </div>
+          <div class="re-prize__info">
+            <span class="re-prize__rank">3등</span>
+            <div class="re-prize__name">가위 케어 키트</div>
+            <div class="re-prize__desc">가위를 오래 쓰는 전용 관리 오일·클리너 키트.</div>
+          </div>
+          <div class="re-prize__pick"><span class="n">5</span><span class="u">명</span><span class="lab">추첨</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 참여 방법 ═══════════ -->
+  <div class="mm-band">
+    <div class="mm-inner mm-reveal">
+      <p class="mm-label">HOW TO JOIN</p>
+      <h2 class="mm-h2" style="margin-top:12px;">참여 방법</h2>
+      <div class="mm-rule"></div>
+
+      <div style="margin-top:clamp(28px,7vw,40px);">
+        <!-- 01 알림톡 확인 -->
+        <div class="re-step">
+          <div class="re-step__idx">01</div>
+          <h3 class="mm-h3 re-step__t">알림톡 확인</h3>
+          <p class="mm-body re-step__d">제품 도착 시점에 받는 알림톡에서 <b>'후기 남기기'</b> 버튼을 눌러주세요.</p>
+          <p class="re-step__hint">알림톡은 제품 도착 후 2시간 이내 발송됩니다.</p>
+          <!-- ✏️ 수정가능: 알림톡 스크린샷 (아래 <img> 주석 풀고 src="" 에 이미지 URL) -->
+          <div class="re-step__shot">
+            <!-- <img src="알림톡-스크린샷-URL" alt="후기 알림톡 예시"> -->
+            <div class="re-step__shotph"><span class="re-imgph">알림톡<br>화면 이미지</span></div>
+          </div>
+        </div>
+        <!-- 02 후기 작성 -->
+        <div class="re-step">
+          <div class="re-step__idx">02</div>
+          <h3 class="mm-h3 re-step__t">후기 작성</h3>
+          <p class="mm-body re-step__d">솔직한 후기를 작성해 주세요.<br>사진과 함께라면 더 좋습니다.</p>
+        </div>
+        <!-- 03 자동 응모 -->
+        <div class="re-step">
+          <div class="re-step__idx">03</div>
+          <h3 class="mm-h3 re-step__t">자동으로 응모 완료</h3>
+          <p class="mm-body re-step__d">남겨주신 후기는 <b>별도 신청 없이 이달의 이벤트에 자동 참여</b>됩니다. 마감 후 베스트 후기를 선정해 상품을 보내드립니다.</p>
+        </div>
+
+        <!-- ✏️ 수정가능: 이벤트 추첨 안내 (분류형) -->
+        <div class="re-drawnote">
+          <div class="re-dn__item">
+            <p class="re-dn__label">추첨일</p>
+            <p class="re-dn__body">매월 말일에 추첨하여 발표합니다.</p>
+          </div>
+          <div class="re-dn__item">
+            <p class="re-dn__label">추첨 기준</p>
+            <p class="re-dn__body">상담·구매 경험을 솔직하게 담아 주세요. 마모루를 쓰며 느낀 마음을 전해주시면 됩니다. 더 나아질 개선점을 말씀해 주셔도 좋습니다.</p>
+          </div>
+          <div class="re-dn__item">
+            <p class="re-dn__label">당첨자 안내</p>
+            <p class="re-dn__body">주문 접수 시 등록된 연락처로 당첨 안내 알림톡을 보내드립니다. 받으실 주소·정보를 입력해 주셔야 하며, 7일간 회신이 없으면 상품은 다음 달로 이월됩니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 유의사항 ═══════════ -->
+  <div class="mm-band mm-band--parchment">
+    <div class="mm-inner mm-inner--tight mm-reveal">
+      <p class="mm-label">NOTICE</p>
+      <ul class="re-notes" style="margin-top:14px;">
+        <!-- ✏️ 수정가능: 유의사항 -->
+        <li>후기는 매월 1일~말일 작성분이 해당 월 이벤트 대상입니다.</li>
+        <li>당첨자는 후기의 진정성을 기준으로 선정합니다.</li>
+        <li>부적절하거나 허위로 판단되는 후기는 선정에서 제외됩니다.</li>
+        <li>당첨은 1인 1회로 제한될 수 있습니다.</li>
+        <li>경품은 사정에 따라 동급 상품으로 변경될 수 있습니다.</li>
+        <li>본 이벤트는 마모루 사정에 따라 조기 종료되거나 내용이 변경될 수 있습니다.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- 후기 전체 보기 모달 -->
+<div class="re-modal" id="reModal" hidden>
+  <div class="re-modal__bg" data-close></div>
+  <div class="re-modal__box">
+    <button class="re-modal__close" data-close type="button" aria-label="닫기">✕</button>
+    <span class="re-modal__rank" id="rmRank"></span>
+    <div class="re-modal__hd"><span class="re-modal__who" id="rmWho"></span><span class="re-modal__phone" id="rmPhone"></span></div>
+    <div class="re-modal__route" id="rmRoute"></div>
+    <p class="re-modal__review" id="rmReview"></p>
+    <div class="re-modal__photos" id="rmPhotos"></div>
+  </div>
+</div>
+
+<script>
+/* 모션 (IntersectionObserver + 2.5s 폴백) */
+(function(){
+  var els=document.querySelectorAll('.mm-reveal');
+  var reveal=function(){ els.forEach(function(el){ el.classList.add('mm-visible'); }); };
+  if(!('IntersectionObserver' in window)){ reveal(); return; }
+  var ob=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('mm-visible'); ob.unobserve(e.target); } }); },{threshold:.12, rootMargin:'0px 0px -30px 0px'});
+  els.forEach(function(el){ ob.observe(el); });
+  setTimeout(reveal, 2500);
+})();
+
+/* 카운트다운 (외부 라이브러리 0) */
+(function(){
+  var root=document.getElementById('reCount'); if(!root) return;
+  var target=new Date(root.getAttribute('data-deadline')||'').getTime();
+  var box={ d:root.querySelector('[data-c=d]'), h:root.querySelector('[data-c=h]'), m:root.querySelector('[data-c=m]'), s:root.querySelector('[data-c=s]') };
+  function p2(n){ return (n<10?'0':'')+n; }
+  function tick(){
+    var diff=target-Date.now();
+    if(isNaN(target)||diff<=0){ box.d.textContent='00'; box.h.textContent='00'; box.m.textContent='00'; box.s.textContent='00'; return; }
+    var s=Math.floor(diff/1000);
+    box.d.textContent=Math.floor(s/86400);
+    box.h.textContent=p2(Math.floor(s%86400/3600));
+    box.m.textContent=p2(Math.floor(s%3600/60));
+    box.s.textContent=p2(s%60);
+  }
+  tick(); setInterval(tick,1000);
+})();
+
+/* 지난달 당첨자 후기 — 4줄 넘으면 '전체 보기' 노출 → 모달. 사진 클릭도 모달.
+   모달 열릴 때 body 를 position:fixed 로 완전 고정 → 배경이 스크롤/잘림 없이 전체 어둡게(어설픈 오류 방지) */
+(function(){
+  var modal=document.getElementById('reModal'); if(!modal) return;
+  var $=function(id){ return modal.querySelector('#'+id); };
+  var savedY=0;
+  function openFrom(card){
+    $('rmRank').textContent = card.getAttribute('data-rank')||'';
+    $('rmWho').textContent = card.getAttribute('data-who')||'';
+    $('rmPhone').textContent = card.getAttribute('data-phone')||'';
+    $('rmRoute').textContent = card.getAttribute('data-route')||'';
+    var rev=card.querySelector('.re-rc__review'); $('rmReview').textContent = rev?rev.textContent:'';
+    var ph=$('rmPhotos'); ph.innerHTML='';
+    card.querySelectorAll('.re-rc__photo').forEach(function(img){ var c=document.createElement('img'); c.src=img.getAttribute('src'); ph.appendChild(c); });
+    savedY = window.scrollY || window.pageYOffset || 0;
+    document.body.style.position='fixed'; document.body.style.top=(-savedY)+'px';
+    document.body.style.left='0'; document.body.style.right='0'; document.body.style.width='100%';
+    modal.hidden=false;
+  }
+  function close(){
+    modal.hidden=true;
+    document.body.style.position=''; document.body.style.top=''; document.body.style.left=''; document.body.style.right=''; document.body.style.width='';
+    window.scrollTo(0, savedY);
+  }
+  document.querySelectorAll('.re-rc').forEach(function(card){
+    var more=card.querySelector('.re-rc__more'), rev=card.querySelector('.re-rc__review');
+    if(rev && more && rev.scrollHeight > rev.clientHeight + 2) more.hidden=false;   // 넘칠 때만 버튼
+    if(more) more.addEventListener('click', function(){ openFrom(card); });
+    card.querySelectorAll('.re-rc__photo').forEach(function(img){ img.addEventListener('click', function(){ openFrom(card); }); });
+  });
+  modal.querySelectorAll('[data-close]').forEach(function(el){ el.addEventListener('click', close); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !modal.hidden) close(); });
+})();
+
+/* 이달의 상품 — 탭하면 그 상품이 크게(피처), 나머지는 작게. 등수 순서는 유지 */
+(function(){
+  var wrap=document.getElementById('rePrizes'); if(!wrap) return;
+  wrap.addEventListener('click', function(e){
+    var item=e.target.closest('.re-prize'); if(!item || item.classList.contains('is-feature')) return;
+    var cur=wrap.querySelectorAll('.re-prize.is-feature');
+    for(var i=0;i<cur.length;i++) cur[i].classList.remove('is-feature');
+    item.classList.add('is-feature');
+  });
+})();
+
+/* iframe 높이 통신 (아임웹 임베드 대비 — 전역 banner-widget.js 가 수신) */
+(function(){
+  if(window.parent===window) return;
+  var ID='review_event';
+  function send(){ try{ window.parent.postMessage({type:'MAMORU_IFRAME_SIZE', id:ID, height:document.documentElement.scrollHeight}, '*'); }catch(e){} }
+  window.addEventListener('load',send); window.addEventListener('resize',send);
+  if('ResizeObserver' in window){ new ResizeObserver(send).observe(document.body); }
+  window.addEventListener('message',function(e){ if(e.data&&e.data.type==='REQUEST_HEIGHT') send(); });
+  setInterval(send,1500);
+})();
+</script>
+</body>
+</html>
