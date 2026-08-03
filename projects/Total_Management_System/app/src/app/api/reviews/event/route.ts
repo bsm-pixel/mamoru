@@ -19,6 +19,13 @@ function kstMonthRange(month: string): { startISO: string; endISO: string } | nu
   return { startISO: new Date(start).toISOString(), endISO: new Date(end).toISOString() };
 }
 
+/** 'YYYY-MM-DD'(KST 날짜) → 그 날 00:00 KST 의 UTC ISO. 유효하지 않으면 null */
+function kstDateStartISO(dateStr: string | null): string | null {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
+  const [Y, M, D] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(Y, M - 1, D) - 9 * 3600 * 1000).toISOString();
+}
+
 export async function GET(req: NextRequest) {
   try {
     const auth = await createServerSupabaseClient();
@@ -39,11 +46,16 @@ export async function GET(req: NextRequest) {
       .eq('month', month)
       .maybeSingle();
 
-    // 그 달 후기(숨김 제외) — 당첨마킹은 event_month=this month 인 것만 유효로 노출
+    // 응모 하한: ?start= 미리보기 우선 → 저장된 entry_start → 그 달 1일
+    const startISO = kstDateStartISO(req.nextUrl.searchParams.get('start'))
+      || config?.entry_start
+      || range.startISO;
+
+    // 응모 후기(숨김 제외) [응모 시작일 ~ 그 달 말일] — 당첨마킹은 event_month=this month 인 것만 유효로 노출
     const { data: reviews, error } = await db
       .from('reviews')
       .select('id, review_id, type, subtype, name, phone, stars, content, photo_urls, product, created_at, status, event_month, event_rank, event_display_name, event_route')
-      .gte('created_at', range.startISO)
+      .gte('created_at', startISO)
       .lt('created_at', range.endISO)
       .neq('status', 'hidden')
       .order('created_at', { ascending: false });
@@ -80,6 +92,7 @@ export async function POST(req: NextRequest) {
         month,
         deadline: config.deadline || null,
         announce_at: config.announce_at || null,
+        entry_start: config.entry_start || null,
         hero_image_url: config.hero_image_url || null,
         prizes: Array.isArray(config.prizes) ? config.prizes : [],
         status: config.status || 'draft',

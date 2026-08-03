@@ -52,8 +52,14 @@
 - ∴ 관리 API(`api/reviews/event`)는 **인증 확인(createServerSupabaseClient.getUser) 후 `createServiceClient()`(service role)로 DB 작업**. 공개 API도 service role. RLS는 켠 채 유지(=service role만 접근, 더 안전).
 - 증상이었던 것: 게시 눌러도 반영 안 됨 → 원인은 authenticated 롤 upsert가 RLS에 막혀 저장 실패(사장님이 실패 메시지 놓침). service role 전환으로 해결.
 
+## 응모 시작일(선택, 마이그 124)
+- `review_event_config.entry_start`(timestamptz, nullable). 응모자 집계 **하한**. 비우면 그 달 1일부터.
+- 용도: 첫 회차 등 **과거 후기까지 포함**해 선정. 예 8월 이벤트에 시작일 4/1 → 4~8월 후기 풀에서 선정(당첨자는 event_month='2508'). 끝은 항상 그 달 말일.
+- 관리 GET: 하한 우선순위 = `?start=YYYY-MM-DD`(미리보기) → `config.entry_start` → 그 달 1일. UI에서 날짜 바꾸면 `reloadPool`로 풀만 즉시 갱신(설정 유지, 만지던 마킹 보존).
+- 다음 달부턴 비우면 평소대로. 중복 수상 위험 없음(다음 달 풀은 그 달만).
+
 ## 월 경계 주의
-- 응모자 집계는 `created_at`(timestamptz)을 **KST 월**로 묶음(`kstMonthRange`, UTC밀림 회피). `toISOString().slice(0,7)` 금지.
+- 응모자 집계는 `created_at`(timestamptz)을 **KST 월**로 묶음(`kstMonthRange`, UTC밀림 회피). `toISOString().slice(0,7)` 금지. 날짜 하한 변환 `kstDateStartISO`.
 
 ## 미구현/후속
 - 당첨 알림톡(발표 시 당첨자에게) — 미연결. 필요 시 솔라피 템플릿 추가.

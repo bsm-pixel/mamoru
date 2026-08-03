@@ -11,6 +11,7 @@ interface Prize { rank: number; name: string; desc: string; image_url: string; c
 interface EventConfig {
   deadline: string | null;
   announce_at: string | null;
+  entry_start: string | null;   // 응모 시작일(선택). null=그 달 1일부터
   hero_image_url: string | null;
   prizes: Prize[];
   status: 'draft' | 'live' | 'announced';
@@ -54,6 +55,18 @@ function fromLocal(v: string): string | null {
   const utcMs = Date.UTC(Y, Mo - 1, D, H, Mi) - 9 * 3600 * 1000;
   return new Date(utcMs).toISOString();
 }
+/** UTC ISO → 'YYYY-MM-DD'(KST 날짜) — <input type="date"> 값 */
+function isoToKstDate(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return new Date(d.getTime() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+}
+/** 'YYYY-MM-DD'(KST 날짜) → 그 날 00:00 KST 의 UTC ISO */
+function kstDateToISO(dateStr: string): string | null {
+  if (!dateStr) return null;
+  const [Y, M, D] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(Y, M - 1, D) - 9 * 3600 * 1000).toISOString();
+}
 
 const EMPTY_PRIZES: Prize[] = [
   { rank: 1, name: '', desc: '', image_url: '', count: 1 },
@@ -63,7 +76,7 @@ const EMPTY_PRIZES: Prize[] = [
 
 export default function ReviewEventPage() {
   const [month, setMonth] = useState<string>(nowYYMM());
-  const [config, setConfig] = useState<EventConfig>({ deadline: null, announce_at: null, hero_image_url: null, prizes: EMPTY_PRIZES, status: 'draft' });
+  const [config, setConfig] = useState<EventConfig>({ deadline: null, announce_at: null, entry_start: null, hero_image_url: null, prizes: EMPTY_PRIZES, status: 'draft' });
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [marks, setMarks] = useState<Record<string, WinnerMark>>({});
   const [loading, setLoading] = useState(false);
@@ -80,10 +93,11 @@ export default function ReviewEventPage() {
       setConfig(cfg ? {
         deadline: cfg.deadline ?? null,
         announce_at: cfg.announce_at ?? null,
+        entry_start: cfg.entry_start ?? null,
         hero_image_url: cfg.hero_image_url ?? null,
         prizes: (Array.isArray(cfg.prizes) && cfg.prizes.length ? cfg.prizes : EMPTY_PRIZES).map((p: Prize, i: number) => ({ rank: p.rank ?? i + 1, name: p.name ?? '', desc: p.desc ?? '', image_url: p.image_url ?? '', count: p.count ?? 0 })),
         status: cfg.status ?? 'draft',
-      } : { deadline: null, announce_at: null, hero_image_url: null, prizes: EMPTY_PRIZES, status: 'draft' });
+      } : { deadline: null, announce_at: null, entry_start: null, hero_image_url: null, prizes: EMPTY_PRIZES, status: 'draft' });
       const rv: ReviewRow[] = data.reviews || [];
       setReviews(rv);
       const mk: Record<string, WinnerMark> = {};
@@ -99,6 +113,29 @@ export default function ReviewEventPage() {
   }, []);
 
   useEffect(() => { load(month); }, [month, load]);
+
+  // 응모 시작일 변경 시 응모자 풀만 다시 불러옴(설정은 유지). 사용자가 만지던 마킹은 풀에 남은 것만 보존
+  const reloadPool = useCallback(async (m: string, startDate: string) => {
+    setLoading(true);
+    try {
+      const q = startDate ? `&start=${startDate}` : '';
+      const res = await fetch(`/api/reviews/event?month=${m}${q}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '조회 실패');
+      const rv: ReviewRow[] = data.reviews || [];
+      setReviews(rv);
+      setMarks((prev) => {
+        const next: Record<string, WinnerMark> = {};
+        rv.forEach((r) => {
+          if (prev[r.id]) next[r.id] = prev[r.id];                                   // 사용자가 만지던 마킹 보존
+          else if (r.event_month === m && r.event_rank) next[r.id] = { rank: r.event_rank, display_name: r.event_display_name || '', route: r.event_route || '' };
+        });
+        return next;
+      });
+    } catch (e) {
+      setMsg('불러오기 실패: ' + String(e));
+    } finally { setLoading(false); }
+  }, []);
 
   const counts = useMemo(() => {
     const c = { 1: 0, 2: 0, 3: 0 } as Record<number, number>;
@@ -174,6 +211,13 @@ export default function ReviewEventPage() {
         {/* ── 이벤트 설정 ── */}
         <section className="border border-stone-200 rounded-xl p-4 bg-white">
           <h2 className="font-semibold text-stone-800 mb-3 flex items-center gap-1.5"><Calendar size={16} />이벤트 설정</h2>
+
+          <label className="block text-xs text-stone-500 mb-1">응모 시작일 (선택 · 응모자 집계 하한)</label>
+          <div className="flex items-center gap-2 mb-1">
+            <input type="date" value={isoToKstDate(config.entry_start)} onChange={(e) => { const iso = kstDateToISO(e.target.value); setConfig((c) => ({ ...c, entry_start: iso })); reloadPool(month, e.target.value); }} className="flex-1 px-3 py-2 rounded-lg border border-stone-200 text-sm" />
+            {config.entry_start && <button type="button" onClick={() => { setConfig((c) => ({ ...c, entry_start: null })); reloadPool(month, ''); }} className="px-2.5 py-2 rounded-lg border border-stone-200 text-xs text-stone-500 hover:bg-stone-50">지우기</button>}
+          </div>
+          <p className="text-[11px] text-stone-400 mb-3">비우면 <b>{monthTitle(month)} 1일</b>부터 집계. 첫 회차처럼 과거 후기까지 포함하려면 시작일을 앞당겨 지정하세요. (끝은 항상 그 달 말일)</p>
 
           <label className="block text-xs text-stone-500 mb-1">응모 마감일 (히어로 카운트다운)</label>
           <input type="datetime-local" value={toLocalInput(config.deadline)} onChange={(e) => setConfig((c) => ({ ...c, deadline: fromLocal(e.target.value) }))} className="w-full mb-3 px-3 py-2 rounded-lg border border-stone-200 text-sm" />
