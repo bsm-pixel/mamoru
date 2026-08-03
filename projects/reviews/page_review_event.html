@@ -213,83 +213,64 @@
   </div>
 
   <!-- ═══════════ 지난달 당첨자 (신뢰 · 진짜 준다 · 상단 배치) ═══════════ -->
-  <div class="mm-band mm-band--shell">
+  <!-- ✏️✏️ 8월(첫 회차)은 '지난달 당첨자'가 없어 이 밴드를 숨겨둡니다(style="display:none").
+       ▶ 9월부터 노출: 아래 <div class="mm-band ..."> 의 style="display:none" 만 삭제하면 나타납니다.
+       ▶ 노출 시 각 등수 카드에 실제 당첨자/후기/상품 이미지를 채우세요.
+         · 당첨자 여러 명이면 .re-rc 카드를 .re-rank__scroll 안에 복사 + 라벨에 <span class="re-rank__swipe">← 옆으로 밀어보기</span> 추가.
+         · re-rank__cnt = 실제 인원. re-rc__review 가 4줄 넘으면 '후기 전체 보기'가 자동 노출(모달).
+         · 후기 사진 없으면 .re-rc__photos 줄 통째 삭제. -->
+  <div class="mm-band mm-band--shell" style="display:none">
     <div class="mm-inner mm-reveal">
       <p class="mm-label">LAST MONTH</p>
       <h2 class="mm-h2" style="margin-top:12px;">지난달 당첨자</h2>
       <div class="mm-rule"></div>
       <p class="mm-sub" style="margin-top:16px;">지난달 리뷰 이벤트 당첨자입니다. 진짜 후기에, 진짜 상품으로.</p>
 
-      <!-- ✏️ 수정가능: 등수별 = [상품 이미지 1개 고정] + [당첨자 후기 카드 좌우 스크롤].
-           당첨자 늘리려면 .re-rc 블록을 .re-rank__scroll 안에 복사. re-rank__cnt 는 실제 인원.
-           .re-rc__review = 후기 전체(4줄 넘으면 '후기 전체 보기' 자동 노출→모달), .re-rc__photo = 후기 사진 -->
       <div class="re-win">
 
-        <!-- 1등 -->
+        <!-- 1등 (템플릿 — 9월부터 실제 당첨자로 교체) -->
         <div class="re-rank re-rank--1">
           <div class="re-rank__label"><span class="re-rank__badge">1등</span><span class="re-rank__cnt">1명 당첨</span></div>
           <div class="re-rank__body">
             <div class="re-rank__prod"><!-- <img src="1등상품-URL"> --><span class="re-rank__prodph">1등<br>상품<br>이미지</span></div>
             <div class="re-rank__scroll">
-              <div class="re-rc" data-rank="1등" data-who="홍**님" data-phone="010-****-32**" data-route="매장 구매 · 블런트 5.5인치">
-                <div class="re-rc__hd"><span class="re-rc__who">홍**님</span><span class="re-rc__phone">010-****-32**</span></div>
-                <div class="re-rc__route">매장 구매 · 블런트 5.5인치</div>
-                <p class="re-rc__review">첫 커트부터 손에 감기는 느낌이 확실히 달랐어요. 그동안 여러 가위를 써봤지만 이렇게 오래 쓰고 싶은 가위는 처음입니다. 상담받을 때 제 커트 스타일에 맞는 형태를 정확히 안내해주셔서 믿음이 갔고, 실제로 써보니 더 만족스러워요. 감사합니다.</p>
-                <div class="re-rc__photos"><!-- <img class="re-rc__photo" src="사진-URL"> --><div class="re-rc__photoph">후기<br>사진</div><div class="re-rc__photoph">후기<br>사진</div></div>
+              <div class="re-rc" data-rank="1등" data-who="고객명" data-phone="010-****-**" data-route="구매/상담 경로">
+                <div class="re-rc__hd"><span class="re-rc__who">고객명</span><span class="re-rc__phone">010-****-**</span></div>
+                <div class="re-rc__route">구매/상담 경로</div>
+                <p class="re-rc__review">당첨자 후기 내용을 입력하세요.</p>
+                <div class="re-rc__photos"><!-- 사진 있으면 <img class="re-rc__photo" src="사진-URL">, 없으면 이 줄 통째 삭제 --><div class="re-rc__photoph">후기<br>사진</div></div>
                 <button class="re-rc__more" type="button" hidden>후기 전체 보기</button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 2등 -->
+        <!-- 2등 (템플릿 — 여러 명이면 .re-rc 복사 + 라벨에 옆으로 밀어보기 추가) -->
         <div class="re-rank">
-          <div class="re-rank__label"><span class="re-rank__badge">2등</span><span class="re-rank__cnt">3명 당첨</span><span class="re-rank__swipe">← 옆으로 밀어보기</span></div>
+          <div class="re-rank__label"><span class="re-rank__badge">2등</span><span class="re-rank__cnt">0명 당첨</span></div>
           <div class="re-rank__body">
             <div class="re-rank__prod"><span class="re-rank__prodph">2등<br>상품<br>이미지</span></div>
             <div class="re-rank__scroll">
-              <!-- ① 사진 첨부 고객 -->
-              <div class="re-rc" data-rank="2등" data-who="김**님" data-phone="010-****-58**" data-route="출장 상담 후 구매 · 틴닝">
-                <div class="re-rc__hd"><span class="re-rc__who">김**님</span><span class="re-rc__phone">010-****-58**</span></div>
-                <div class="re-rc__route">출장 상담 후 구매 · 틴닝</div>
-                <p class="re-rc__review">출장 상담부터 꼼꼼하게 봐주셔서 신뢰가 갔습니다. 틴닝 결도 훨씬 부드러워졌어요.</p>
-                <div class="re-rc__photos"><!-- <img class="re-rc__photo" src="사진-URL"> --><div class="re-rc__photoph">후기<br>사진</div><div class="re-rc__photoph">후기<br>사진</div></div>
-                <button class="re-rc__more" type="button" hidden>후기 전체 보기</button>
-              </div>
-              <!-- ② 사진 미첨부 고객 -->
-              <div class="re-rc" data-rank="2등" data-who="이**님" data-phone="010-****-11**" data-route="매장 구매 · 곡가위">
-                <div class="re-rc__hd"><span class="re-rc__who">이**님</span><span class="re-rc__phone">010-****-11**</span></div>
-                <div class="re-rc__route">매장 구매 · 곡가위</div>
-                <p class="re-rc__review">추천 없이 제 상황에 맞는 걸 알려주셔서 좋았어요. 곡가위 처음인데 만족합니다.</p>
-                <button class="re-rc__more" type="button" hidden>후기 전체 보기</button>
-              </div>
-              <!-- ③ 글만 있고 긴 글(더보기 자동 노출) -->
-              <div class="re-rc" data-rank="2등" data-who="박**님" data-phone="010-****-90**" data-route="톡상담 · 세트">
-                <div class="re-rc__hd"><span class="re-rc__who">박**님</span><span class="re-rc__phone">010-****-90**</span></div>
-                <div class="re-rc__route">톡상담 · 세트</div>
-                <p class="re-rc__review">처음엔 가위 하나 바꾼다고 뭐가 달라질까 반신반의했는데, 실제로 써보니 손목에 오는 피로가 확실히 줄었어요. 하루 열 명 넘게 커트하는 날엔 저녁쯤 손이 뻐근했는데 이 세트로 바꾸고 나서는 그 느낌이 많이 사라졌습니다. 틴닝도 결이 부드럽게 빠져서 마무리가 깔끔하고, 무엇보다 상담할 때 억지로 비싼 걸 권하지 않고 제 시술 스타일에 맞는 걸 골라주신 게 인상 깊었어요. 오래 잘 쓰겠습니다. 감사합니다.</p>
+              <div class="re-rc" data-rank="2등" data-who="고객명" data-phone="010-****-**" data-route="구매/상담 경로">
+                <div class="re-rc__hd"><span class="re-rc__who">고객명</span><span class="re-rc__phone">010-****-**</span></div>
+                <div class="re-rc__route">구매/상담 경로</div>
+                <p class="re-rc__review">당첨자 후기 내용을 입력하세요.</p>
                 <button class="re-rc__more" type="button" hidden>후기 전체 보기</button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 3등 -->
+        <!-- 3등 (템플릿) -->
         <div class="re-rank">
-          <div class="re-rank__label"><span class="re-rank__badge">3등</span><span class="re-rank__cnt">2명 당첨</span><span class="re-rank__swipe">← 옆으로 밀어보기</span></div>
+          <div class="re-rank__label"><span class="re-rank__badge">3등</span><span class="re-rank__cnt">0명 당첨</span></div>
           <div class="re-rank__body">
             <div class="re-rank__prod"><span class="re-rank__prodph">3등<br>상품<br>이미지</span></div>
             <div class="re-rank__scroll">
-              <div class="re-rc" data-rank="3등" data-who="최**님" data-phone="010-****-24**" data-route="톡상담 · 곡가위">
-                <div class="re-rc__hd"><span class="re-rc__who">최**님</span><span class="re-rc__phone">010-****-24**</span></div>
-                <div class="re-rc__route">톡상담 · 곡가위</div>
-                <p class="re-rc__review">가볍게 톡으로 물어봤는데 친절하게 안내받았어요. 잘 쓰겠습니다.</p>
-                <button class="re-rc__more" type="button" hidden>후기 전체 보기</button>
-              </div>
-              <div class="re-rc" data-rank="3등" data-who="정**님" data-phone="010-****-77**" data-route="매장 구매 · 틴닝">
-                <div class="re-rc__hd"><span class="re-rc__who">정**님</span><span class="re-rc__phone">010-****-77**</span></div>
-                <div class="re-rc__route">매장 구매 · 틴닝</div>
-                <p class="re-rc__review">관리 키트도 알뜰하게 챙겨주셔서 감사합니다.</p>
+              <div class="re-rc" data-rank="3등" data-who="고객명" data-phone="010-****-**" data-route="구매/상담 경로">
+                <div class="re-rc__hd"><span class="re-rc__who">고객명</span><span class="re-rc__phone">010-****-**</span></div>
+                <div class="re-rc__route">구매/상담 경로</div>
+                <p class="re-rc__review">당첨자 후기 내용을 입력하세요.</p>
                 <button class="re-rc__more" type="button" hidden>후기 전체 보기</button>
               </div>
             </div>
