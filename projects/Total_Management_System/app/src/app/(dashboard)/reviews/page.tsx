@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Topbar } from '@/components/layout/topbar';
-import { Star, Eye, EyeOff, RefreshCw, Image as ImageIcon, Award, Plus, Pencil, X, Trash2 } from 'lucide-react';
+import { Star, Eye, EyeOff, RefreshCw, Image as ImageIcon, Award, Plus, Pencil, X, Trash2, Trophy } from 'lucide-react';
 import Link from 'next/link';
 
 interface Review {
@@ -341,6 +341,13 @@ export default function ReviewsPage() {
                 즉시 노출 {autoApprove ? 'ON' : 'OFF'}
               </button>
             )}
+            <Link
+              href="/reviews/event"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-50 text-amber-700 hover:bg-amber-100 transition"
+            >
+              <Trophy size={12} />
+              리뷰 이벤트 관리
+            </Link>
             <Link
               href="/reviews/naver"
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-700 hover:bg-green-100 transition"

@@ -219,15 +219,12 @@
   </div>
 
   <!-- ═══════════ 지난 당첨자 (역대 · 월 탭 아카이브 · 신뢰 · 상단 배치) ═══════════ -->
-  <!-- ✏️✏️ [지난 당첨자 = 월 탭 아카이브]
-       ● 8월(첫 회차)은 지난 당첨자가 없어 이 밴드를 숨겨둡니다(style="display:none").
-       ● 9월부터 노출: 아래 <div class="mm-band ..."> 의 style="display:none" 만 삭제.
-       ● 매달 지난달 당첨자 추가 (2단계):
-          ① 탭 추가:  .re-tabs 안에 <button class="re-tab" data-target="YYMM">N월</button> 복사 (예 25년 9월 → 2509)
-          ② 후기 블록 추가:  <div class="re-win" data-month="YYMM"> ... </div> 통째 복사해 그 달 당첨자로 채움
-          ▷ 가장 최근 달 탭에만 aria-selected="true" + 그 달 .re-win 만 노출, 나머지 .re-win 엔 hidden. 지난 달 탭/블록은 그대로 쌓여 아카이브가 됨.
-       ● 카드 채우기:  당첨자 여러 명이면 .re-rc 복사 + 라벨에 <span class="re-rank__swipe">← 옆으로 밀어보기</span> 추가.
-          re-rank__cnt=실제 인원. 후기 4줄 넘으면 '후기 전체 보기' 자동(모달). 사진 없으면 .re-rc__photos 줄 삭제. -->
+  <!-- 🔄 [지난 당첨자 = 월 탭 아카이브] — TMS 「리뷰 이벤트 관리」에서 발표하면 자동 반영됩니다(fetch).
+       · 아래 정적 마크업은 fetch 실패/미설정 시 폴백용 스켈레톤(그때는 밴드 숨김 유지).
+       · 발표된 지난 달이 있으면 JS가 이 밴드를 노출하고 탭/당첨자를 그려 넣습니다.
+       · 수동 편집 불필요 — 사장님은 TMS에서 상품·당첨자만 관리. -->
+  <!-- (참고) 자동 렌더 대상 컨테이너: 탭=#reTabs, 당첨자블록=#reWins -->
+  <!-- (구버전 수동편집을 원하면 #reWins 안에 <div class="re-win" data-month="YYMM">…</div> 를 채우고 이 밴드의 style="display:none" 삭제) -->
   <div class="mm-band mm-band--shell" style="display:none">
     <div class="mm-inner mm-reveal">
       <p class="mm-label">PAST WINNERS</p>
@@ -241,6 +238,7 @@
         <!-- 다음 달부터: <button class="re-tab" type="button" data-target="2509">9월</button> 추가 -->
       </div>
 
+      <div id="reWins">
       <div class="re-win" data-month="2508">
 
         <!-- 1등 (템플릿 — 9월부터 실제 당첨자로 교체) -->
@@ -293,11 +291,7 @@
         </div>
 
       </div><!-- /.re-win[data-month=2508] -->
-
-      <!-- ▼ 다음 달부터 지난 당첨자 블록을 여기에 복사해 추가 (최근 달만 hidden 없이, 지난 달은 hidden):
-      <div class="re-win" data-month="2509" hidden>
-        …위 .re-win 내부 구조(1·2·3등) 그대로 복사해서 9월 당첨자로 채움…
-      </div> -->
+      </div><!-- /#reWins (TMS fetch 로 자동 교체) -->
     </div>
   </div>
 
@@ -452,10 +446,10 @@
 /* 카운트다운 (외부 라이브러리 0) */
 (function(){
   var root=document.getElementById('reCount'); if(!root) return;
-  var target=new Date(root.getAttribute('data-deadline')||'').getTime();
   var box={ d:root.querySelector('[data-c=d]'), h:root.querySelector('[data-c=h]'), m:root.querySelector('[data-c=m]'), s:root.querySelector('[data-c=s]') };
   function p2(n){ return (n<10?'0':'')+n; }
   function tick(){
+    var target=new Date(root.getAttribute('data-deadline')||'').getTime();  // fetch 로 마감일 바뀌면 즉시 반영
     var diff=target-Date.now();
     if(isNaN(target)||diff<=0){ box.d.textContent='00'; box.h.textContent='00'; box.m.textContent='00'; box.s.textContent='00'; return; }
     var s=Math.floor(diff/1000);
@@ -491,12 +485,19 @@
     document.body.style.position=''; document.body.style.top=''; document.body.style.left=''; document.body.style.right=''; document.body.style.width='';
     window.scrollTo(0, savedY);
   }
-  document.querySelectorAll('.re-rc').forEach(function(card){
-    var more=card.querySelector('.re-rc__more'), rev=card.querySelector('.re-rc__review');
-    if(rev && more && rev.scrollHeight > rev.clientHeight + 2) more.hidden=false;   // 넘칠 때만 버튼
-    if(more) more.addEventListener('click', function(){ openFrom(card); });
-    card.querySelectorAll('.re-rc__photo').forEach(function(img){ img.addEventListener('click', function(){ openFrom(card); }); });
+  // 델리게이션 — 정적 카드 + fetch 로 나중에 렌더된 카드 모두 동작
+  document.addEventListener('click', function(e){
+    var more=e.target.closest('.re-rc__more'); if(more){ var c=more.closest('.re-rc'); if(c) openFrom(c); return; }
+    var photo=e.target.closest('.re-rc__photo'); if(photo){ var c2=photo.closest('.re-rc'); if(c2) openFrom(c2); }
   });
+  // '후기 전체 보기' 노출 재계산(넘칠 때만) — 렌더/탭전환 후 호출용으로 전역 노출
+  window.__mmComputeMore=function(root){
+    (root||document).querySelectorAll('.re-rc').forEach(function(card){
+      var more=card.querySelector('.re-rc__more'), rev=card.querySelector('.re-rc__review');
+      if(more&&rev) more.hidden = !(rev.scrollHeight > rev.clientHeight + 2);
+    });
+  };
+  window.__mmComputeMore(document);
   modal.querySelectorAll('[data-close]').forEach(function(el){ el.addEventListener('click', close); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !modal.hidden) close(); });
 })();
@@ -528,6 +529,89 @@
     if(active) recomputeMore(active);
   }
   tabs.addEventListener('click', function(e){ var b=e.target.closest('.re-tab'); if(b) show(b.getAttribute('data-target')); });
+})();
+
+/* ═══ TMS 자동 연동 — 「리뷰 이벤트 관리」 발표 데이터를 fetch 해서 Hero·이달의 상품·지난 당첨자 렌더.
+      실패/빈 값이면 위 정적 마크업(폴백)을 그대로 둔다(페이지 안 무너짐). ═══ */
+(function(){
+  var API='https://app-eta-sandy-75.vercel.app/api/reviews/event-public';
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  function prizeImg(prizes, rank){ var p=(prizes||[]).find(function(x){return x.rank===rank;}); return p&&p.image_url?p.image_url:''; }
+
+  function renderHero(cur){
+    if(!cur) return;
+    var img = cur.hero_image_url || prizeImg(cur.prizes,1);
+    if(img){ var host=document.querySelector('.re-hero__img'); if(host) host.innerHTML='<img src="'+esc(img)+'" alt="이달의 상품">'; }
+    if(cur.deadline){
+      var rc=document.getElementById('reCount'); if(rc) rc.setAttribute('data-deadline', cur.deadline); // UTC ISO — 카운트다운이 매 틱 재읽기
+      var d=new Date(cur.deadline), k=new Date(d.getTime()+9*3600*1000);
+      var txt=k.getUTCFullYear()+'년 '+(k.getUTCMonth()+1)+'월 '+k.getUTCDate()+'일';
+      var dl=document.querySelector('.re-deadline'); if(dl) dl.innerHTML='이달의 후기 마감 · <b style="color:var(--sand);">'+txt+'</b>까지';
+    }
+  }
+
+  function prizeCard(p, feature){
+    var media = p.image_url ? '<img src="'+esc(p.image_url)+'" alt="'+esc(p.name||'')+'">' : '<span class="re-prize__mediaph">'+p.rank+'등 상품 이미지</span>';
+    var pick = (p.count>0) ? '<div class="re-prize__pick"><span class="n">'+p.count+'</span><span class="u">명</span><span class="lab">추첨</span></div>' : '';
+    return '<div class="re-prize'+(feature?' is-feature':'')+'"><div class="re-prize__media">'+media+'</div>'
+      +'<div class="re-prize__info"><span class="re-prize__rank">'+p.rank+'등</span>'
+      +'<div class="re-prize__name">'+esc(p.name||'')+'</div><div class="re-prize__desc">'+esc(p.desc||'')+'</div></div>'+pick+'</div>';
+  }
+  function renderPrizes(cur){
+    if(!cur||!cur.prizes) return;
+    var list=cur.prizes.filter(function(p){return p&&(p.name||p.image_url);}).sort(function(a,b){return a.rank-b.rank;});
+    if(!list.length) return;
+    var host=document.getElementById('rePrizes'); if(!host) return;
+    host.innerHTML=list.map(function(p,i){ return prizeCard(p, i===0); }).join('');
+  }
+
+  function winnerCard(w){
+    var photos = (w.photos&&w.photos.length) ? '<div class="re-rc__photos">'+w.photos.map(function(u){return '<img class="re-rc__photo" src="'+esc(u)+'">';}).join('')+'</div>' : '';
+    return '<div class="re-rc" data-rank="'+esc(w.rank)+'등" data-who="'+esc(w.name)+'" data-phone="'+esc(w.phone)+'" data-route="'+esc(w.route)+'">'
+      +'<div class="re-rc__hd"><span class="re-rc__who">'+esc(w.name)+'</span>'+(w.phone?'<span class="re-rc__phone">'+esc(w.phone)+'</span>':'')+'</div>'
+      +(w.route?'<div class="re-rc__route">'+esc(w.route)+'</div>':'')
+      +'<p class="re-rc__review">'+esc(w.review)+'</p>'+photos
+      +'<button class="re-rc__more" type="button" hidden>후기 전체 보기</button></div>';
+  }
+  function winMonth(m){
+    var byRank={1:[],2:[],3:[]}; (m.winners||[]).forEach(function(w){ if(byRank[w.rank]) byRank[w.rank].push(w); });
+    var pz={}; (m.prizes||[]).forEach(function(p){ pz[p.rank]=p; });
+    var html='';
+    [1,2,3].forEach(function(rank){
+      var ws=byRank[rank]; if(!ws.length) return;
+      var p=pz[rank]||{};
+      var prod = p.image_url ? '<img src="'+esc(p.image_url)+'" alt="">' : '<span class="re-rank__prodph">'+rank+'등<br>상품<br>이미지</span>';
+      var swipe = ws.length>1 ? '<span class="re-rank__swipe">← 옆으로 밀어보기</span>' : '';
+      html+='<div class="re-rank'+(rank===1?' re-rank--1':'')+'">'
+        +'<div class="re-rank__label"><span class="re-rank__badge">'+rank+'등</span><span class="re-rank__cnt">'+ws.length+'명 당첨</span>'+swipe+'</div>'
+        +'<div class="re-rank__body"><div class="re-rank__prod">'+prod+'</div>'
+        +'<div class="re-rank__scroll">'+ws.map(winnerCard).join('')+'</div></div></div>';
+    });
+    return html;
+  }
+  function renderArchive(past){
+    if(!past||!past.length) return;                 // 발표된 지난 달 없으면 밴드 숨김 유지
+    var tabs=document.getElementById('reTabs'), wins=document.getElementById('reWins');
+    if(!tabs||!wins) return;
+    var band=tabs.closest('.mm-band'); if(band) band.style.display='';   // 밴드 노출
+    var tabHtml='', winHtml='';
+    past.forEach(function(m,i){
+      var active=(i===0);                           // past[0]=최근(내림차순) → 기본 선택
+      tabHtml+='<button class="re-tab" type="button" data-target="'+esc(m.month)+'"'+(active?' aria-selected="true"':'')+'>'+esc(m.label)+'</button>';
+      winHtml+='<div class="re-win" data-month="'+esc(m.month)+'"'+(active?'':' hidden')+'>'+winMonth(m)+'</div>';
+    });
+    tabs.innerHTML=tabHtml; wins.innerHTML=winHtml;
+    var first=wins.querySelector('.re-win:not([hidden])');
+    if(first && window.__mmComputeMore) window.__mmComputeMore(first);
+  }
+
+  fetch(API).then(function(r){ return r.json(); }).then(function(data){
+    if(!data) return;
+    try{ renderHero(data.current); }catch(e){}
+    try{ renderPrizes(data.current); }catch(e){}
+    try{ renderArchive(data.past); }catch(e){}
+  }).catch(function(){ /* 정적 폴백 유지 */ });
 })();
 
 /* iframe 높이 통신 (아임웹 임베드 대비 — 전역 banner-widget.js 가 수신) */
