@@ -1,0 +1,62 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 FILE   : projects/reviews/iframe_review_event.html
+  📍 PASTE  : 아임웹 어드민 → 디자인 모드 → (이벤트 하위 '리뷰 이벤트' 페이지) → 코드위젯
+  📝 기능   : 「리뷰 이벤트」 고객 페이지(page_review_event.html)를 iframe 으로 삽입
+  🔧 최종   : iframe 임베드 (2026-08-03)
+  ⚠️ 함께   : 없음 — 높이 조절은 전역 헤더 banner-widget.js 가 담당
+
+  ▸ 이 페이지는 URL 고정(월별 페이지 새로 안 만듦). 매달 page_review_event.html 안의 ✏️ 마커만 교체.
+  ▸ N13 이벤트 목록 위젯의 '리뷰 이벤트' 카드 링크 = 이 코드위젯이 들어간 아임웹 페이지 주소.
+  ▸ 아임웹 위젯 속성: '그리드 사용 안 함(전체 너비)' 권장.
+    페이지가 자체적으로 mm-inner 중앙 정렬(760/1100)이라 그리드를 또 걸면 여백이 이중이 된다.
+═══════════════════════════════════════════════════════════════ -->
+
+<style>
+#mamoruReviewEventWrap { position: relative; width: 100%; }
+#mamoruReviewEventFrame { width: 100%; border: none; display: block; }
+</style>
+
+<div id="mamoruReviewEventWrap">
+  <iframe
+    id="mamoruReviewEventFrame"
+    src="https://page.mamoru.kr/projects/reviews/page_review_event.html"
+    scrolling="no"
+    frameborder="0"
+    allowtransparency="true"
+    title="MAMORU 리뷰 이벤트">
+  </iframe>
+</div>
+
+<!-- ⚠️ 아임웹은 코드위젯 안의 <script>를 제거·미실행하는 경우가 있다(느린 회선).
+     그래서 iframe 높이 조절의 '진짜 담당'은 전역 헤더의 banner-widget.js 리사이저다.
+     아래 스크립트는 그게 어떤 이유로 안 돌 때를 대비한 보조 안전망일 뿐이며,
+     둘 다 monotonic 이라 동시에 돌아도 충돌하지 않는다.
+     [reference_imweb_strips_codewidget_script] / [reference_iframe_codewidget_pattern] -->
+<script>
+(function(){
+  var iframe = document.getElementById('mamoruReviewEventFrame');
+  if (!iframe) return;
+  iframe.style.height = '0px';        // ⭐ fallback 0 — 큰 바닥값은 빈 여백 영구 잠금
+  var currentHeight = 0;
+
+  window.addEventListener('message', function(e) {
+    if (e.source !== iframe.contentWindow) return;              // ① source 가드
+    if (e.origin !== 'https://page.mamoru.kr') return;          // ② origin 가드
+    var d = e.data;
+    if (!d || d.type !== 'MAMORU_IFRAME_SIZE') return;
+    if (d.id !== 'review_event' || typeof d.height !== 'number') return;  // ③ id 가드(자식 page_review_event.html 송신 id)
+    var h = Math.ceil(d.height);
+    if (h > currentHeight) {                                    // ④ monotonic
+      currentHeight = h;
+      iframe.style.height = h + 'px';
+    }
+  });
+
+  // 자식이 초기 푸시를 놓쳐도 회복 — 자식은 REQUEST_HEIGHT 에 무조건 회신(force)
+  function requestHeight() {
+    try { iframe.contentWindow.postMessage({ type: 'REQUEST_HEIGHT' }, 'https://page.mamoru.kr'); } catch (_) {}
+  }
+  iframe.addEventListener('load', function(){ [50, 200, 500, 1000, 2000].forEach(function(ms){ setTimeout(requestHeight, ms); }); });
+  window.addEventListener('pageshow', function(e){ if (e.persisted) requestHeight(); });
+})();
+</script>
