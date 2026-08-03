@@ -126,8 +126,14 @@
 .re-step__shotph{ aspect-ratio:3/4; border-radius:var(--radius-md); border:1px dashed var(--sand); background:var(--white);
   display:flex; align-items:center; justify-content:center; }
 
-/* 지난달 당첨자 — 등수별: [상품 이미지 고정] + [후기 카드 좌우 스크롤](모든 당첨자) */
-.re-win{ margin-top:clamp(24px,6vw,36px); display:flex; flex-direction:column; gap:16px; }
+/* 지난 당첨자 — 월 탭(아카이브) + 등수별 [상품 이미지 고정] + [후기 카드 좌우 스크롤](모든 당첨자) */
+.re-tabs{ display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; margin-top:clamp(20px,5vw,28px); padding-bottom:2px; }
+.re-tabs::-webkit-scrollbar{ display:none; }
+.re-tab{ flex:0 0 auto; font-family:var(--font-body); font-size:13px; font-weight:600; padding:8px 16px; border-radius:999px; border:1px solid var(--sand); background:var(--white); color:var(--warm-gray); cursor:pointer; white-space:nowrap; transition:background .18s,color .18s,border-color .18s; }
+.re-tab:hover{ border-color:var(--stone); color:var(--stone); }
+.re-tab[aria-selected="true"]{ background:var(--void); color:var(--cream); border-color:var(--void); }
+.re-win{ margin-top:clamp(20px,5vw,30px); display:flex; flex-direction:column; gap:16px; }
+.re-win[hidden]{ display:none; }
 .re-rank__label{ display:flex; align-items:center; gap:8px; margin-bottom:9px; }
 .re-rank__badge{ font-family:var(--font-display); font-weight:800; font-size:12px; color:var(--void); background:var(--shell); border:1px solid var(--sand); border-radius:999px; padding:3px 11px; }
 .re-rank--1 .re-rank__badge{ background:var(--void); color:var(--cream); border-color:var(--void); }
@@ -212,21 +218,30 @@
     </div>
   </div>
 
-  <!-- ═══════════ 지난달 당첨자 (신뢰 · 진짜 준다 · 상단 배치) ═══════════ -->
-  <!-- ✏️✏️ 8월(첫 회차)은 '지난달 당첨자'가 없어 이 밴드를 숨겨둡니다(style="display:none").
-       ▶ 9월부터 노출: 아래 <div class="mm-band ..."> 의 style="display:none" 만 삭제하면 나타납니다.
-       ▶ 노출 시 각 등수 카드에 실제 당첨자/후기/상품 이미지를 채우세요.
-         · 당첨자 여러 명이면 .re-rc 카드를 .re-rank__scroll 안에 복사 + 라벨에 <span class="re-rank__swipe">← 옆으로 밀어보기</span> 추가.
-         · re-rank__cnt = 실제 인원. re-rc__review 가 4줄 넘으면 '후기 전체 보기'가 자동 노출(모달).
-         · 후기 사진 없으면 .re-rc__photos 줄 통째 삭제. -->
+  <!-- ═══════════ 지난 당첨자 (역대 · 월 탭 아카이브 · 신뢰 · 상단 배치) ═══════════ -->
+  <!-- ✏️✏️ [지난 당첨자 = 월 탭 아카이브]
+       ● 8월(첫 회차)은 지난 당첨자가 없어 이 밴드를 숨겨둡니다(style="display:none").
+       ● 9월부터 노출: 아래 <div class="mm-band ..."> 의 style="display:none" 만 삭제.
+       ● 매달 지난달 당첨자 추가 (2단계):
+          ① 탭 추가:  .re-tabs 안에 <button class="re-tab" data-target="YYMM">N월</button> 복사 (예 25년 9월 → 2509)
+          ② 후기 블록 추가:  <div class="re-win" data-month="YYMM"> ... </div> 통째 복사해 그 달 당첨자로 채움
+          ▷ 가장 최근 달 탭에만 aria-selected="true" + 그 달 .re-win 만 노출, 나머지 .re-win 엔 hidden. 지난 달 탭/블록은 그대로 쌓여 아카이브가 됨.
+       ● 카드 채우기:  당첨자 여러 명이면 .re-rc 복사 + 라벨에 <span class="re-rank__swipe">← 옆으로 밀어보기</span> 추가.
+          re-rank__cnt=실제 인원. 후기 4줄 넘으면 '후기 전체 보기' 자동(모달). 사진 없으면 .re-rc__photos 줄 삭제. -->
   <div class="mm-band mm-band--shell" style="display:none">
     <div class="mm-inner mm-reveal">
-      <p class="mm-label">LAST MONTH</p>
-      <h2 class="mm-h2" style="margin-top:12px;">지난달 당첨자</h2>
+      <p class="mm-label">PAST WINNERS</p>
+      <h2 class="mm-h2" style="margin-top:12px;">지난 당첨자</h2>
       <div class="mm-rule"></div>
-      <p class="mm-sub" style="margin-top:16px;">지난달 리뷰 이벤트 당첨자입니다. 진짜 후기에, 진짜 상품으로.</p>
+      <p class="mm-sub" style="margin-top:16px;">리뷰 이벤트 당첨자입니다. 진짜 후기에, 진짜 상품으로.</p>
 
-      <div class="re-win">
+      <!-- 월 탭: 최근 달이 오른쪽. 기본 선택 = 가장 최근 달(aria-selected="true") -->
+      <div class="re-tabs" id="reTabs">
+        <button class="re-tab" type="button" data-target="2508" aria-selected="true">8월</button>
+        <!-- 다음 달부터: <button class="re-tab" type="button" data-target="2509">9월</button> 추가 -->
+      </div>
+
+      <div class="re-win" data-month="2508">
 
         <!-- 1등 (템플릿 — 9월부터 실제 당첨자로 교체) -->
         <div class="re-rank re-rank--1">
@@ -277,7 +292,12 @@
           </div>
         </div>
 
-      </div>
+      </div><!-- /.re-win[data-month=2508] -->
+
+      <!-- ▼ 다음 달부터 지난 당첨자 블록을 여기에 복사해 추가 (최근 달만 hidden 없이, 지난 달은 hidden):
+      <div class="re-win" data-month="2509" hidden>
+        …위 .re-win 내부 구조(1·2·3등) 그대로 복사해서 9월 당첨자로 채움…
+      </div> -->
     </div>
   </div>
 
@@ -490,6 +510,24 @@
     for(var i=0;i<cur.length;i++) cur[i].classList.remove('is-feature');
     item.classList.add('is-feature');
   });
+})();
+
+/* 지난 당첨자 — 월 탭 전환(아카이브). 최근 달 기본, 클릭 시 해당 달만 노출 */
+(function(){
+  var tabs=document.getElementById('reTabs'); if(!tabs) return;
+  function recomputeMore(win){   // 숨겨져 있던 달은 높이 0이라 '후기 전체 보기' 판정을 다시
+    win.querySelectorAll('.re-rc').forEach(function(card){
+      var more=card.querySelector('.re-rc__more'), rev=card.querySelector('.re-rc__review');
+      if(more&&rev) more.hidden = !(rev.scrollHeight > rev.clientHeight + 2);
+    });
+  }
+  function show(month){
+    document.querySelectorAll('.re-win').forEach(function(w){ w.hidden = (w.getAttribute('data-month')!==month); });
+    tabs.querySelectorAll('.re-tab').forEach(function(t){ t.setAttribute('aria-selected', String(t.getAttribute('data-target')===month)); });
+    var active=document.querySelector('.re-win[data-month="'+month+'"]');
+    if(active) recomputeMore(active);
+  }
+  tabs.addEventListener('click', function(e){ var b=e.target.closest('.re-tab'); if(b) show(b.getAttribute('data-target')); });
 })();
 
 /* iframe 높이 통신 (아임웹 임베드 대비 — 전역 banner-widget.js 가 수신) */
