@@ -234,32 +234,47 @@ export async function POST(req: NextRequest) {
     const visitDateDisplay = (isVisit && visit_date) ? formatKoreanDate(visit_date) : '';
 
     // 알림톡 발송 (접수 안내)
-    // 직접방문은 별도 템플릿 'as_visit_booked' Phase 4 검수 후 활성화 — 현재는 as_received 임시 사용
+    //  · 직접방문 = as_visit_booked (검수 통과 2026-08-04) + 일정변경 링크
+    //  · 택배/방문수거 = as_received (기존)
     try {
-      await sendNotification({
-        template: 'as_received',
-        phone: phoneNorm,
-        name: name.trim(),
-        data: {
-          id: asId,
-          as_id: asId,
-          qty: String(qtyM + qtyO),
-          service_cost: String(serviceCost),
-          shipping_fee: String(shippingFee),
-          total_amount: String(totalAmount),
-          proceed_type: proceed_type || '직접발송',
-          delivery_method: delivery_method || '',
-          pickup_date: pickupDateDisplay,
-          postcode: postcode || '',
-          address: address || '',
-          address_detail: address_detail || '',
-          pickup_address_text: [address, address_detail].filter(Boolean).join(' '),
-          // 직접방문 신규 변수 (Phase 4 템플릿 신청 시 활용)
-          visit_date: visitDateDisplay,
-          visit_time: isVisit ? (visit_time || '') : '',
-          visit_duration_min: visitDuration ? String(visitDuration) : '',
-        },
-      });
+      if (isVisit) {
+        await sendNotification({
+          template: 'as_visit_booked',
+          phone: phoneNorm,
+          name: name.trim(),
+          data: {
+            id: asId,
+            as_id: asId,
+            visit_date: visitDateDisplay,
+            visit_time: visit_time || '',
+            qty: String(qtyM + qtyO),
+            visit_duration_min: visitDuration ? String(visitDuration) : '',
+            // 일정 확인·변경 버튼 URL (Make 시나리오가 https:// 붙임). manage_token = DB DEFAULT 자동생성
+            change_request_link: `page.mamoru.kr/projects/as/page_change_request.html?uid=${repair.manage_token}`,
+          },
+        });
+      } else {
+        await sendNotification({
+          template: 'as_received',
+          phone: phoneNorm,
+          name: name.trim(),
+          data: {
+            id: asId,
+            as_id: asId,
+            qty: String(qtyM + qtyO),
+            service_cost: String(serviceCost),
+            shipping_fee: String(shippingFee),
+            total_amount: String(totalAmount),
+            proceed_type: proceed_type || '직접발송',
+            delivery_method: delivery_method || '',
+            pickup_date: pickupDateDisplay,
+            postcode: postcode || '',
+            address: address || '',
+            address_detail: address_detail || '',
+            pickup_address_text: [address, address_detail].filter(Boolean).join(' '),
+          },
+        });
+      }
     } catch (notifyErr) {
       console.error('[repair/submit] 알림톡 발송 실패 (접수는 완료):', notifyErr);
     }

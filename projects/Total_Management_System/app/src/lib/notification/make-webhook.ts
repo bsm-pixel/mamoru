@@ -219,6 +219,8 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
   const PUSH_CONFIG: Record<string, { title: string; body: string; url: string; settingKey: string }> = {
     confirmed: { title: '새 상담 접수', body: `${payload.name}님 상담 접수`, url: '/consultations', settingKey: 'push.consultation_received' },
     as_received: { title: '새 복원수리 접수', body: `${payload.name}님 복원수리 접수`, url: '/repairs', settingKey: 'push.repair_received' },
+    // 직접방문(매장방문) 접수 — as_received 와 같은 접수 푸시 토글(push.repair_received) 공유
+    as_visit_booked: { title: '새 매장방문 수리 접수', body: `${payload.name}님 매장방문 수리 접수`, url: '/repairs', settingKey: 'push.repair_received' },
     // 출장 신규: submit/route.ts 는 template='request' 로 호출 (솔라피 템플릿명과 일치)
     request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },
     field_request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },

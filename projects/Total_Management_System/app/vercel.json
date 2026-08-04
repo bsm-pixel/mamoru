@@ -20,6 +20,10 @@
     {
       "path": "/api/cron/repair-calendar-backfill",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/repair-visit-remind",
+      "schedule": "*/10 * * * *"
     }
   ]
 }

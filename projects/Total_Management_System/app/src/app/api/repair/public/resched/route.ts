@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     }
 
     const qty = (r.qty_mamoru || 0) + (r.qty_other || 0);
-    const durationMin = qty >= 6 ? 60 : 30;
+    const durationMin = 10 + (Math.max(qty, 1) - 1) * 5; // submit·slots 와 동일 공식(수량별 소요시간)
 
     const { error: updErr } = await dbAny
       .from('repairs')
@@ -68,6 +68,9 @@ export async function POST(req: NextRequest) {
         visit_date,
         visit_time,
         visit_duration_min: durationMin,
+        // 일정 변경 → 리마인드 재발송되도록 발송 플래그 리셋(옛 일정 리마인드 방지)
+        visit_remind_24h_sent_at: null,
+        visit_remind_2h_sent_at: null,
         admin_note: `[고객 셀프 일정변경] ${visit_date} ${visit_time}`,
         updated_at: new Date().toISOString(),
       })

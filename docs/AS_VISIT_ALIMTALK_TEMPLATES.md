@@ -196,11 +196,13 @@ TMS `sendNotification` 이 Make 웹훅으로 보내는 JSON:
 
 | # | 코드 | 발송 위치 | 상태 |
 |---|---|---|---|
-| ① | as_visit_booked | submit 라우트 `as_received`→분기 교체 + `change_request_link` 추가 | 검수 후 |
-| ② | as_visit_remind_24h | 신규 크론 `api/cron/repair-visit-remind` (D-1) | 검수 후 |
-| ③ | as_visit_remind_2h | 크론 (당일) + 중복방지 컬럼 | 검수 후 |
-| ④ | as_visit_rescheduled | `api/repair/public/resched` | **배선 완료** |
+| ① | as_visit_booked | submit 라우트 직접방문 분기 → `as_visit_booked` + `change_request_link` (+ PUSH_CONFIG 접수푸시 유지) | **배선 완료 2026-08-04** |
+| ② | as_visit_remind_24h | 신규 크론 `api/cron/repair-visit-remind` (10분간격) + 마이그 125 컬럼 | **배선 완료 2026-08-04** |
+| ③ | as_visit_remind_2h | 동 크론 (0.5~2h 전) + 중복방지 컬럼 `visit_remind_2h_sent_at` | **배선 완료 2026-08-04** |
+| ④ | as_visit_rescheduled | `api/repair/public/resched` (+ 리마인드 플래그 리셋·소요시간 공식 정렬) | **배선 완료** |
 | ⑤ | as_visit_cancelled | `api/repair/public/cancel` | **배선 완료** |
+
+> ✅ 2026-08-04: 전 5종 TMS 배선 완료. **마이그 125**(`visit_remind_24h_sent_at`/`visit_remind_2h_sent_at`) 실행 필요. 크론 `repair-visit-remind` `*/10 * * * *` 등록.
 
 - Make 작업: **접수 알림 시나리오**에 `as_visit_booked` 분기 1개 / **복원수리 상태변경 시나리오**에 4종 분기(remind_24h/remind_2h/rescheduled/cancelled).
 - 각 분기 = Router 필터(`template` equal to 코드) → 솔라피 모듈(해당 템플릿ID + 변수 매핑 + 버튼).
