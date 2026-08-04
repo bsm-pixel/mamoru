@@ -16,6 +16,10 @@
     {
       "path": "/api/cron/imweb-token-refresh",
       "schedule": "0 */12 * * *"
+    },
+    {
+      "path": "/api/cron/repair-calendar-backfill",
+      "schedule": "0 * * * *"
     }
   ]
 }
