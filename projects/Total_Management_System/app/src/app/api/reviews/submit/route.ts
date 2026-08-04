@@ -204,7 +204,7 @@ export async function POST(req: NextRequest) {
         // (2) 오프라인 판매(OS-) fallback — 재고판매·매장 등 offline_sales 기반 제품구매 후기
         const { data: sale } = await dbAny
           .from('offline_sales')
-          .select('id, customer_name, customer_phone, sale_date, created_at')
+          .select('id, customer_name, customer_phone, sale_date, created_at, memo')
           .eq('sale_number', uid)
           .single();
         if (!sale) {
@@ -232,7 +232,8 @@ export async function POST(req: NextRequest) {
         const pm = matched.product_id ? prodMap.get(matched.product_id) : undefined;
         name = sale.customer_name;
         phone = sale.customer_phone || '';
-        subtype = '';
+        // EVENT 전환 판매(memo 'EVENT 전환'…)에서 온 구매 후기 → subtype='event' (리뷰관리/후기벽 '이벤트' 칩)
+        subtype = (typeof sale.memo === 'string' && sale.memo.startsWith('EVENT 전환')) ? 'event' : '';
         meta = {
           sale_number: uid,
           imweb_product_no: pm?.imweb_product_no || '',   // 실제 아임웹 번호일 때만 (이미지 연동용)
