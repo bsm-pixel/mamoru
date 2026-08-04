@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { sendAdminEmail } from '@/lib/notification/email';
 import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
-import { fireAndForgetRepairSync } from '@/lib/google/repair-calendar-sync';
+import { syncRepairToCalendar } from '@/lib/google/repair-calendar-sync';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -222,9 +222,10 @@ export async function POST(req: NextRequest) {
       note: '고객 접수',
     });
 
-    // 2026-05-25 Phase 3-B: 직접방문 → Google Calendar 자동 동기화 (fire-and-forget)
+    // 직접방문 → Google Calendar 자동 동기화. after 가 Promise 를 await 하도록 실제 async 함수를 넘김
+    //   (fire-and-forget 로 넘기면 서버리스 함수 종료 시 요청이 잘려 미기록됨 — 2026-08-04 EPIPE 근본수정)
     if (isVisit) {
-      after(() => fireAndForgetRepairSync(repair.id));
+      after(() => syncRepairToCalendar(repair.id));
     }
 
     // pickup_date 표시 포맷 (방문수거 알림톡) — 타임존 무관

@@ -136,12 +136,8 @@ export async function syncRepairToCalendar(repairId: string): Promise<void> {
   }
 }
 
-/** 비동기 호출용 헬퍼 — Promise 무시, 예외 모두 삼킴 */
-export function fireAndForgetRepairSync(repairId: string): void {
-  syncRepairToCalendar(repairId).catch(() => {
-    /* 이미 내부 캐치 */
-  });
-}
+// (제거) fireAndForgetRepairSync — void 반환이라 after()/서버리스에서 요청이 잘려 미기록되던 footgun.
+//   호출부는 `after(() => syncRepairToCalendar(id))` 로 Promise 를 await 하게 통일(2026-08-04).
 
 async function loadFormatSettings(): Promise<EventFormatSettings> {
   const db = createServiceClient();

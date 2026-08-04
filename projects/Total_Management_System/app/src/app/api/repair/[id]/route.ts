@@ -5,7 +5,7 @@ import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-w
 import { sendReviewRequestNotification } from '@/lib/notification/review-request';
 import { getServerSetting } from '@/hooks/use-settings';
 import type { RepairStatus } from '@/lib/supabase/types';
-import { fireAndForgetRepairSync } from '@/lib/google/repair-calendar-sync';
+import { syncRepairToCalendar } from '@/lib/google/repair-calendar-sync';
 
 /** 상태→자동 알림톡 매핑 (payment_confirmed는 paid_at 플래그로 분리됨) */
 function getAutoNotifyTemplate(newStatus: string): NotifyTemplate | null {
@@ -226,12 +226,11 @@ export async function PATCH(
       });
     }
 
-    // 2026-05-25 Phase 3-B: 직접방문 건 → Google Calendar 자동 동기화 (fire-and-forget)
-    //   - status / visit_date / visit_time 등 변경 시 자동 반영
-    //   - cancelled 시 이벤트 자동 삭제 (sync 내부 로직)
+    // 직접방문 건 → Google Calendar 자동 동기화. after 가 Promise 를 await (fire-and-forget 금지)
+    //   - status / visit_date / visit_time 등 변경 시 자동 반영, cancelled 시 이벤트 자동 삭제(sync 내부)
     //   - 비직접방문 건은 sync 내부에서 자연 skip (proceed_type 가드)
     if (data.proceed_type === '직접방문') {
-      after(() => fireAndForgetRepairSync(data.id));
+      after(() => syncRepairToCalendar(data.id));
     }
 
     return NextResponse.json(data);
