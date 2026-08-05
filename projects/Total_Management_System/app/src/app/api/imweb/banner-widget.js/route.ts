@@ -321,6 +321,17 @@ const WIDGET_JS = `(function(){
       }
     } else if (d.type === 'MAMORU_NAVIGATE' && d.url){
       window.location.href = d.url;               // 자식 내부 링크 → 부모 네비게이션
+    } else if (d.type === 'MAMORU_IFRAME_SCROLL' && typeof d.y === 'number'){
+      // 자식이 '이 y 위치로 스크롤' 요청(임베드는 부모가 스크롤 주체) — 보낸 iframe의 문서top + y 로 이동
+      var sl = frames();
+      for (var s = 0; s < sl.length; s++){
+        if (sl[s].contentWindow === e.source){
+          var top = sl[s].getBoundingClientRect().top + (window.pageYOffset || 0);
+          try { window.scrollTo({ top: Math.max(0, top + d.y - 16), behavior: 'smooth' }); }
+          catch (_){ window.scrollTo(0, Math.max(0, top + d.y - 16)); }
+          return;
+        }
+      }
     }
   });
   function requestAll(){
