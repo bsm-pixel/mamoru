@@ -321,6 +321,19 @@ const WIDGET_JS = `(function(){
       }
     } else if (d.type === 'MAMORU_NAVIGATE' && d.url){
       window.location.href = d.url;               // 자식 내부 링크 → 부모 네비게이션
+    } else if (d.type === 'MAMORU_REQUEST_VIEWPORT'){
+      // 자식 모달을 '현재 보이는 영역 중앙'에 띄우게 — 보낸 iframe의 가시 구간(visibleTop/Height, iframe 좌표) 회신
+      var vl = frames();
+      for (var v = 0; v < vl.length; v++){
+        if (vl[v].contentWindow === e.source){
+          var rect = vl[v].getBoundingClientRect();
+          var vpH = window.innerHeight;
+          var visTop = Math.max(0, -rect.top);
+          var visH = Math.max(0, Math.min(rect.bottom, vpH) - Math.max(rect.top, 0));
+          try { e.source.postMessage({ type: 'MAMORU_VIEWPORT_INFO', visibleTop: visTop, visibleHeight: visH }, ORIGIN); } catch (_){}
+          return;
+        }
+      }
     } else if (d.type === 'MAMORU_IFRAME_SCROLL' && typeof d.y === 'number'){
       // 자식이 '이 y 위치로 스크롤' 요청(임베드는 부모가 스크롤 주체) — 보낸 iframe의 문서top + y 로 이동
       var sl = frames();

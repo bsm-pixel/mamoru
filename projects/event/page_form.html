@@ -594,7 +594,21 @@ function closeInapp(){
   function openAddModal(name, qty){
     $('addMsg').textContent = name + ' ' + qty + '개 담았습니다';
     $('addModal').classList.add('on');
+    centerEmbedModal();   // 임베드면 현재 보이는 영역 중앙으로
   }
+  // 임베드(아임웹 iframe)에선 position:fixed 가 iframe 전체 기준이라 모달이 맨 위에 뜸 →
+  //   부모에 현재 가시영역을 물어(MAMORU_REQUEST_VIEWPORT) 그 구간에 모달을 배치(응답 MAMORU_VIEWPORT_INFO)
+  function centerEmbedModal(){
+    if(!IS_EMBED) return;
+    try{ window.parent.postMessage({ type:'MAMORU_REQUEST_VIEWPORT' }, '*'); }catch(e){}
+  }
+  window.addEventListener('message', function(e){
+    if(!e.data || e.data.type!=='MAMORU_VIEWPORT_INFO') return;
+    var vt=e.data.visibleTop, vh=e.data.visibleHeight; if(!vh) return;
+    [].forEach.call(document.querySelectorAll('.mm-modal.on'), function(m){
+      m.style.top = vt+'px'; m.style.height = vh+'px'; m.style.bottom='auto';   // flex-center → 가시구간 중앙
+    });
+  });
   function scrollToCart(){
     var el=$('cartSec'); if(!el) return;
     var y = el.getBoundingClientRect().top + (window.pageYOffset||0);   // iframe 문서 내 절대 top
