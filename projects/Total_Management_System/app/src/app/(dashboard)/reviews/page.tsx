@@ -43,7 +43,7 @@ const SUBTYPE_LABELS: Record<string, string> = {
   restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거',
   parcel_pickup: '방문수거', self_ship: '직접발송',
   store: '매장', field: '출장', offline: '오프라인', online: '온라인', talk: '톡상담', // sale_channel 값(2026-07-17 4분류) + 레거시 호환
-  event: '이벤트', // EVENT(타사가위 팡팡) 전환 판매에서 온 구매 후기
+  event: '이벤트참여', // EVENT(타사가위 팡팡) 전환 판매에서 온 구매 후기
 };
 
 function getChipLabel(review: Review): string {
@@ -54,7 +54,7 @@ function getChipLabel(review: Review): string {
 }
 
 function getSubChip(review: Review): string | null {
-  if (review.type === 'purchase' && review.subtype === 'event') return '이벤트'; // EVENT 전환 구매 후기
+  if (review.type === 'purchase' && review.subtype === 'event') return '이벤트참여'; // EVENT 전환 구매 후기
   if (review.type !== 'repair') return null;
   if (!review.subtype || review.subtype === 'restoration') return null; // 기본값은 type과 중복이므로 생략
   return SUBTYPE_LABELS[review.subtype] || review.subtype;
