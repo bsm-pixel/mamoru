@@ -53,15 +53,19 @@ export async function POST(
     }
 
     // 알림톡 발송
+    const reviewUrl = `https://page.mamoru.kr/projects/reviews/page_review.html?type=purchase&uid=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`;
     const result = await sendNotification({
       template: 'purchase_review_request',
       phone,
       name,
       data: {
         order_uid: id,
+        uid: id,                    // 오프라인 경로(sendReviewRequestNotification)와 필드 통일
+        id,
         product_names: productNames,
         review_type: 'purchase',
         name,
+        review_url: reviewUrl,      // 버튼이 review_url 을 쓰는 경우까지 대비(양쪽 동일 변수)
       },
     });
 

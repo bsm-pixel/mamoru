@@ -58,6 +58,7 @@ export async function sendReviewRequestNotification(subject: ReviewSubject) {
       uid: subject.sourceId,
       consult_uid: subject.sourceId, // 솔라피 #{consult_uid} 치환용
       as_uid: subject.sourceId,      // 솔라피 #{as_uid} 치환용
+      order_uid: subject.sourceId,   // 솔라피 #{order_uid} 치환용 (아임웹 주문 버튼과 동일 변수 — 오프라인도 버튼 작동)
       review_type: subject.reviewType,
       type_label: typeLabel,
       subtype: subject.subtype || '',
