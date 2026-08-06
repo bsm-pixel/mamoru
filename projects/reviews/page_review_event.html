@@ -68,6 +68,7 @@
 .re-count__l{ font-size:10px; letter-spacing:.1em; color:var(--mist); margin-top:7px; text-transform:uppercase; }
 .re-count__sep{ align-self:center; color:#4a4a4a; font-weight:700; }
 .re-deadline{ margin-top:14px; font-size:12px; letter-spacing:.02em; color:var(--mist); }
+.re-draw{ margin-top:7px; font-size:12px; letter-spacing:.02em; color:var(--mist); }
 .re-hero__note{ margin-top:20px; font-size:13px; color:var(--sand); line-height:1.7; }
 .re-hero__note b{ color:var(--cream); }
 
@@ -207,6 +208,8 @@
         <div class="re-count__box"><div class="re-count__n" data-c="s">--</div><div class="re-count__l">Sec</div></div>
       </div>
       <p class="re-deadline">이달의 후기 마감 · <b style="color:var(--sand);">2026년 8월 31일 24시</b>까지</p>
+      <!-- 추첨일 = 다음 달 첫째 금요일 오후 8시 (마감일 기준 자동 계산, JS) -->
+      <p class="re-draw" id="reDraw"></p>
 
       <p class="re-hero__note">제품과 함께 받으신 <b>카카오 알림톡의 '후기 남기기'</b>로 참여하세요.</p>
     </div>
@@ -387,7 +390,7 @@
       <ul class="re-notes" style="margin-top:14px;">
         <!-- ✏️ 수정가능: 유의사항 (추첨일·추첨기준·당첨자 안내 포함) -->
         <li>후기는 매월 1일~말일 작성분이 해당 월 이벤트에 별도 신청 없이 자동 응모됩니다.</li>
-        <li>응모 마감은 매월 말일 24시, 당첨 발표는 다음 달 1일 오후 8시입니다.</li>
+        <li>응모 마감은 매월 말일 24시, 당첨 발표는 다음 달 첫째 금요일 오후 8시입니다.</li>
         <li>당첨자는 후기의 진정성을 기준으로 베스트를 선정합니다.</li>
         <li>부적절하거나 허위로 판단되는 후기는 선정에서 제외됩니다.</li>
         <li>당첨 시 등록된 연락처로 알림톡을 보내드리며, 7일간 회신이 없으면 상품은 다음 달로 이월됩니다.</li>
@@ -423,10 +426,22 @@
   setTimeout(reveal, 2500);
 })();
 
+/* 추첨(당첨 발표)일 = 마감월의 첫째 금요일 오후 8시 자동계산.
+   마감=말일 24시(=익월 1일 00:00)라 그 달이 곧 '다음 달'=발표월 → 그 달 첫째 금요일. */
+function drawDateText(iso){
+  var t=new Date(iso||'').getTime(); if(isNaN(t)) return '';
+  var k=new Date(t+9*3600*1000);                          // KST
+  var y=k.getUTCFullYear(), mo=k.getUTCMonth();
+  var firstDow=new Date(Date.UTC(y,mo,1)).getUTCDay();    // 그 달 1일 요일(5=금)
+  var day=1+((5-firstDow+7)%7);                           // 첫째 금요일 날짜
+  return '당첨 발표 · <b style="color:var(--sand);">'+(mo+1)+'월 '+day+'일 (금) 오후 8시</b>';
+}
+
 /* 카운트다운 (외부 라이브러리 0) */
 (function(){
   var root=document.getElementById('reCount'); if(!root) return;
   var box={ d:root.querySelector('[data-c=d]'), h:root.querySelector('[data-c=h]'), m:root.querySelector('[data-c=m]'), s:root.querySelector('[data-c=s]') };
+  var rd=document.getElementById('reDraw'); if(rd) rd.innerHTML=drawDateText(root.getAttribute('data-deadline'));  // 추첨일 표기(정적/초기)
   function p2(n){ return (n<10?'0':'')+n; }
   function tick(){
     var target=new Date(root.getAttribute('data-deadline')||'').getTime();  // fetch 로 마감일 바뀌면 즉시 반영
@@ -530,6 +545,7 @@
       var end=midnight ? new Date(d.getTime()-1000) : d, ke=new Date(end.getTime()+9*3600*1000);
       var txt=ke.getUTCFullYear()+'년 '+(ke.getUTCMonth()+1)+'월 '+ke.getUTCDate()+'일'+(midnight?' 24시':'');
       var dl=document.querySelector('.re-deadline'); if(dl) dl.innerHTML='이달의 후기 마감 · <b style="color:var(--sand);">'+txt+'</b>까지';
+      var rd=document.getElementById('reDraw'); if(rd) rd.innerHTML=drawDateText(cur.deadline);   // 추첨일 재계산(fetch)
     }
   }
 
