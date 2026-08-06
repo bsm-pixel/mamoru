@@ -846,6 +846,10 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
   // Phase A — 시리얼 다른 판매에서 이전 동의 플래그 (2026-05-18)
   const [allowSerialTransfer, setAllowSerialTransfer] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>(sale.payment_method);
+  // 복합 결제 분리 금액 — 기존 payment_detail 로 초기화(재수정 시 값 유지)
+  const [mixedCard, setMixedCard] = useState(sale.payment_detail?.card || 0);
+  const [mixedCash, setMixedCash] = useState(sale.payment_detail?.cash || 0);
+  const [mixedTransfer, setMixedTransfer] = useState(sale.payment_detail?.transfer || 0);
   const [paymentStatus, setPaymentStatus] = useState<string>(sale.payment_status || 'paid');
   const [paidAmount, setPaidAmount] = useState(sale.paid_amount || 0);
   const [saleChannel, setSaleChannel] = useState<string>((sale as Record<string, unknown>).sale_channel as string || 'offline');
@@ -923,6 +927,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
         total_amount: totalAmount,
         discount_amount: discountAmount,
         payment_method: paymentMethod,
+        payment_detail: paymentMethod === 'mixed' ? { card: mixedCard, cash: mixedCash, transfer: mixedTransfer } : undefined,
         payment_status: paymentStatus,
         paid_amount: paymentStatus === 'paid' ? finalAmount : paymentStatus === 'unpaid' ? 0 : paidAmount,
         sale_date: saleDate,
@@ -1083,6 +1088,27 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
                 >{m.label}</button>
               ))}
             </div>
+            {/* 복합 결제 분리 입력 — 등록 폼과 동일(카드/현금/이체 + 합계검증) */}
+            {paymentMethod === 'mixed' && (
+              <div className="mt-2 p-2 rounded-lg bg-neutral-50 border border-neutral-200 space-y-1.5">
+                {(['카드', '현금', '이체'] as const).map((label, i) => {
+                  const val = [mixedCard, mixedCash, mixedTransfer][i];
+                  const setter = [setMixedCard, setMixedCash, setMixedTransfer][i];
+                  return (
+                    <div key={label} className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-neutral-500 w-8">{label}</span>
+                      <input type="number" min={0} value={val || ''} onChange={(e) => setter(parseInt(e.target.value) || 0)}
+                        className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs text-right bg-white focus:outline-none focus:ring-1 focus:ring-stone-400" placeholder="0" />
+                    </div>
+                  );
+                })}
+                {(() => { const t = mixedCard + mixedCash + mixedTransfer; const ok = t === finalAmount; return (
+                  <div className={`flex justify-between text-[10px] font-semibold pt-1 border-t border-neutral-200 ${ok ? 'text-green-600' : 'text-red-500'}`}>
+                    <span>합계</span><span>{formatKRW(t)}{ok ? ' ✓' : ` (${formatKRW(Math.abs(finalAmount - t))} ${t > finalAmount ? '초과' : '부족'})`}</span>
+                  </div>
+                ); })()}
+              </div>
+            )}
           </div>
 
           {/* 결제상태 */}

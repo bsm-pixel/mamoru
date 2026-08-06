@@ -615,6 +615,7 @@ export interface Database {
           paid_amount: number;
           payment_method: PaymentMethod;
           payment_status: PaymentStatus;
+          payment_detail: Record<string, number> | null; // 복합결제 분리 금액 {card,cash,transfer} (DB엔 있었으나 타입 누락 — 2026-08-06 보정)
           memo: string | null;
           supply_amount: number;
           vat_amount: number;
