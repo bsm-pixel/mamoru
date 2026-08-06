@@ -186,9 +186,16 @@ function NewSaleContent() {
   const hasRepair = rep.mamoruQty > 0 || rep.otherQty > 0;
   const totalAmount = productTotal + repairTotal; // 제품 + 복원수리 통합
   const finalAmount = totalAmount - discount;
-  const paidAmount = paymentStatus === 'paid' ? finalAmount
+  // 복합결제 = 받은 돈을 수단별로 쪼갠 것 → 합계가 곧 수납액. 결제상태/미수 자동 판정(회계 정합)
+  const mixedTotal = mixedCard + mixedCash + mixedTransfer;
+  const isMixedPay = paymentMethod === 'mixed';
+  const paidAmount = isMixedPay ? Math.min(mixedTotal, finalAmount)
+    : paymentStatus === 'paid' ? finalAmount
     : paymentStatus === 'unpaid' ? 0
     : Math.min(depositAmount, finalAmount);
+  const effPaymentStatus = isMixedPay
+    ? (mixedTotal >= finalAmount ? 'paid' : mixedTotal <= 0 ? 'unpaid' : 'partial')
+    : paymentStatus;
 
   // 임시 제품 입력 상태
   const [customProductName, setCustomProductName] = useState('');
@@ -314,7 +321,7 @@ function NewSaleContent() {
         discount_amount: discount,
         paid_amount: paidAmount,
         payment_method: paymentMethod,
-        payment_status: paymentStatus,
+        payment_status: effPaymentStatus,
         payment_detail: paymentMethod === 'mixed'
           ? { card: mixedCard, cash: mixedCash, transfer: mixedTransfer }
           : { [paymentMethod]: paidAmount },
@@ -677,14 +684,16 @@ function NewSaleContent() {
                           </div>
                         );
                       })}
-                      {(() => { const t = mixedCard + mixedCash + mixedTransfer; const ok = t === finalAmount; return (
-                        <div className={`flex justify-between text-[10px] font-semibold pt-1 border-t border-neutral-200 ${ok ? 'text-green-600' : 'text-red-500'}`}>
-                          <span>합계</span><span>{formatKRW(t)}{ok ? ' ✓' : ` (${formatKRW(Math.abs(finalAmount - t))} ${t > finalAmount ? '초과' : '부족'})`}</span>
+                      {(() => { const t = mixedCard + mixedCash + mixedTransfer; const short = finalAmount - t; return (
+                        <div className={`flex justify-between text-[10px] font-semibold pt-1 border-t border-neutral-200 ${short === 0 ? 'text-green-600' : short > 0 ? 'text-red-500' : 'text-orange-500'}`}>
+                          <span>합계 (= 받은 금액)</span><span>{formatKRW(t)}{short === 0 ? ' ✓ 완납' : short > 0 ? ` · 미수 ${formatKRW(short)}` : ` · 초과 ${formatKRW(-short)}`}</span>
                         </div>
                       ); })()}
                     </div>
                   )}
                 </div>
+                {/* 복합결제는 합계가 결제상태를 자동 결정하므로 수동 결제상태 UI 숨김 */}
+                {!isMixedPay && (
                 <div>
                   <label className="text-xs text-neutral-500 mb-1 block">결제 상태</label>
                   <div className="flex gap-1">
@@ -701,6 +710,7 @@ function NewSaleContent() {
                   )}
                   {paymentStatus !== 'paid' && finalAmount > 0 && <p className="text-[10px] text-red-500 mt-1 font-medium">미수금: {formatKRW(finalAmount - paidAmount)}</p>}
                 </div>
+                )}
                 <div>
                   <label className="text-xs text-neutral-500">할인 금액</label>
                   <input type="number" value={discount || ''} onChange={(e) => setDiscount(parseInt(e.target.value) || 0)} placeholder="0"

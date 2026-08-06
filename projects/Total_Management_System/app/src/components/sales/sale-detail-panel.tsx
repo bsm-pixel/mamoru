@@ -916,6 +916,11 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
     : [];
 
   const handleSave = async () => {
+    // 복합결제 = 받은 돈을 수단별로 쪼갠 것 → 합계가 곧 수납액. 결제상태/미수 자동 판정(회계 정합)
+    const mixedTotal = mixedCard + mixedCash + mixedTransfer;
+    const isMixedPay = paymentMethod === 'mixed';
+    const effStatus = isMixedPay ? (mixedTotal >= finalAmount ? 'paid' : mixedTotal <= 0 ? 'unpaid' : 'partial') : paymentStatus;
+    const effPaid = isMixedPay ? Math.min(mixedTotal, finalAmount) : (paymentStatus === 'paid' ? finalAmount : paymentStatus === 'unpaid' ? 0 : paidAmount);
     await rebuildSale.mutateAsync({
       id: saleId,
       items: editItems.map((it) => ({
@@ -928,8 +933,8 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
         discount_amount: discountAmount,
         payment_method: paymentMethod,
         payment_detail: paymentMethod === 'mixed' ? { card: mixedCard, cash: mixedCash, transfer: mixedTransfer } : undefined,
-        payment_status: paymentStatus,
-        paid_amount: paymentStatus === 'paid' ? finalAmount : paymentStatus === 'unpaid' ? 0 : paidAmount,
+        payment_status: effStatus,
+        paid_amount: effPaid,
         sale_date: saleDate,
         memo: editMemo.trim() || undefined,
         sale_channel: saleChannel,
@@ -1102,16 +1107,17 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
                     </div>
                   );
                 })}
-                {(() => { const t = mixedCard + mixedCash + mixedTransfer; const ok = t === finalAmount; return (
-                  <div className={`flex justify-between text-[10px] font-semibold pt-1 border-t border-neutral-200 ${ok ? 'text-green-600' : 'text-red-500'}`}>
-                    <span>합계</span><span>{formatKRW(t)}{ok ? ' ✓' : ` (${formatKRW(Math.abs(finalAmount - t))} ${t > finalAmount ? '초과' : '부족'})`}</span>
+                {(() => { const t = mixedCard + mixedCash + mixedTransfer; const short = finalAmount - t; return (
+                  <div className={`flex justify-between text-[10px] font-semibold pt-1 border-t border-neutral-200 ${short === 0 ? 'text-green-600' : short > 0 ? 'text-red-500' : 'text-orange-500'}`}>
+                    <span>합계 (= 받은 금액)</span><span>{formatKRW(t)}{short === 0 ? ' ✓ 완납' : short > 0 ? ` · 미수 ${formatKRW(short)}` : ` · 초과 ${formatKRW(-short)}`}</span>
                   </div>
                 ); })()}
               </div>
             )}
           </div>
 
-          {/* 결제상태 */}
+          {/* 결제상태 — 복합결제는 합계가 자동 결정하므로 숨김 */}
+          {paymentMethod !== 'mixed' && (
           <div>
             <label className="text-xs text-neutral-500 mb-1 block">결제상태</label>
             <div className="flex gap-2">
@@ -1126,6 +1132,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
                 placeholder="입금액" className="w-full h-9 px-3 mt-2 rounded-lg border border-neutral-200 text-sm" />
             )}
           </div>
+          )}
 
           {/* 판매채널 */}
           <div>

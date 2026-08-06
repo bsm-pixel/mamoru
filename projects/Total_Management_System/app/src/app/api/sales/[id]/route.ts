@@ -792,6 +792,16 @@ export async function PATCH(
       }
 
       // ── STEP 6: 판매 레코드 업데이트 ──
+      // 복합결제 서버 안전망: payment_detail 합계 = 실제 수납액 → paid_amount/status 강제(회계 정합)
+      let effRebuildPaid = sale_info.paid_amount ?? sale_info.total_amount;
+      let effRebuildStatus = sale_info.payment_status || sale.payment_status;
+      if (sale_info.payment_method === 'mixed' && sale_info.payment_detail) {
+        const pd = sale_info.payment_detail;
+        const detailSum = (pd.card || 0) + (pd.cash || 0) + (pd.transfer || 0);
+        const net = sale_info.total_amount - (sale_info.discount_amount || 0);
+        effRebuildPaid = Math.min(detailSum, net);
+        effRebuildStatus = detailSum >= net ? 'paid' : detailSum <= 0 ? 'unpaid' : 'partial';
+      }
       const cardAmount = sale_info.payment_method === 'card' ? sale_info.total_amount
         : sale_info.payment_method === 'mixed' && sale_info.payment_detail?.card ? sale_info.payment_detail.card
         : 0;
@@ -802,8 +812,8 @@ export async function PATCH(
         total_amount: sale_info.total_amount,
         discount_amount: sale_info.discount_amount || 0,
         payment_method: sale_info.payment_method,
-        payment_status: sale_info.payment_status || sale.payment_status,
-        paid_amount: sale_info.paid_amount ?? sale_info.total_amount,
+        payment_status: effRebuildStatus,
+        paid_amount: effRebuildPaid,
         payment_detail: sale_info.payment_detail || null,
         sale_date: sale_info.sale_date || sale.sale_date,
         sale_channel: (sale_info as Record<string, unknown>).sale_channel || sale.sale_channel,

@@ -107,6 +107,17 @@ export async function POST(req: NextRequest) {
 
     const saleDate = sale.sale_date || new Date().toISOString().slice(0, 10);
 
+    // 복합결제 서버 안전망: payment_detail 합계 = 실제 수납액 → paid_amount/status 강제(클라 값 무시, 회계 정합)
+    let effPaidAmount = sale.paid_amount;
+    let effPaymentStatus = sale.payment_status || 'paid';
+    if (sale.payment_method === 'mixed' && sale.payment_detail) {
+      const pd = sale.payment_detail;
+      const detailSum = (pd.card || 0) + (pd.cash || 0) + (pd.transfer || 0);
+      const net = sale.total_amount - (sale.discount_amount || 0);
+      effPaidAmount = Math.min(detailSum, net);
+      effPaymentStatus = detailSum >= net ? 'paid' : detailSum <= 0 ? 'unpaid' : 'partial';
+    }
+
     // VAT 자동 계산 — 카드 금액 기준
     let supplyAmount = sale.supply_amount || 0;
     let vatAmount = sale.vat_amount || 0;
@@ -127,9 +138,9 @@ export async function POST(req: NextRequest) {
       sale_date: saleDate,
       total_amount: sale.total_amount,
       discount_amount: sale.discount_amount || 0,
-      paid_amount: sale.paid_amount,
+      paid_amount: effPaidAmount,
       payment_method: sale.payment_method,
-      payment_status: sale.payment_status || 'paid',
+      payment_status: effPaymentStatus,
       payment_detail: sale.payment_detail || null,
       memo: sale.memo || null,
       supply_amount: supplyAmount,
@@ -340,7 +351,7 @@ export async function POST(req: NextRequest) {
       }
     }));
 
-    const paymentStatus = sale.payment_status || 'paid';
+    const paymentStatus = effPaymentStatus;
 
     // 미수금 자동 반영: 멱등 재계산 (±diff 누적 X — drift 방지)
     if (sale.customer_id) {
@@ -349,13 +360,13 @@ export async function POST(req: NextRequest) {
 
     // 077: 회계 자동 연동 — 입금된 금액을 cash_transactions(income)에 자동 기록
     // (paid 또는 partial이고 paid_amount > 0인 경우만 — unpaid는 입금 발생 X)
-    if (sale.paid_amount > 0 && paymentStatus !== 'unpaid') {
+    if (effPaidAmount > 0 && paymentStatus !== 'unpaid') {
       try {
         await db.from('cash_transactions').insert({
           transaction_date: saleDate,
           type: 'income',
           category: '매출입금',
-          amount: sale.paid_amount,
+          amount: effPaidAmount,
           memo: `${created.sale_number} ${sale.customer_name}`,
           source_type: 'offline_sale',
           source_id: created.id,
