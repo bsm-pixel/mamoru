@@ -26,12 +26,12 @@ export async function GET(req: NextRequest) {
     //   반품(returned)은 여기서 제외하지 않는다 → 판매월 매출로 잡히고, 반품월엔 아래 retSales 로 −차감.
     const { data: salesRaw } = await db
       .from('offline_sales')
-      .select('id, sale_date, total_amount, supply_amount, vat_amount, payment_method, payment_status, customer_name, customer_id, customer_type, discount_amount, paid_amount')
+      .select('id, sale_date, total_amount, supply_amount, vat_amount, payment_method, payment_status, customer_name, customer_id, customer_type, discount_amount, paid_amount, payment_detail')
       .gte('sale_date', fromDate)
       .lte('sale_date', toDate)
       .is('cancelled_at', null)
       .order('sale_date', { ascending: false });
-    const sales: Array<{ id: string; sale_date: string; total_amount: number; supply_amount: number; vat_amount: number; payment_method: string; payment_status: string; customer_name: string; customer_id: string | null; customer_type: string | null; discount_amount: number; paid_amount: number }> = salesRaw || [];
+    const sales: Array<{ id: string; sale_date: string; total_amount: number; supply_amount: number; vat_amount: number; payment_method: string; payment_status: string; customer_name: string; customer_id: string | null; customer_type: string | null; discount_amount: number; paid_amount: number; payment_detail: Record<string, number> | null }> = salesRaw || [];
     const saleIds = sales.map((s) => s.id);
 
     let saleItems: Array<{ sale_id: string; product_id: string | null; product_name: string; sku: string | null; quantity: number; unit_price: number; total_price: number; category: string | null }> = [];
@@ -161,7 +161,7 @@ export async function GET(req: NextRequest) {
       vat: sales.reduce((s, r) => s + (r.vat_amount || 0), 0),
       discount: sales.reduce((s, r) => s + (r.discount_amount || 0), 0),
       paid: sales.reduce((s, r) => s + (r.paid_amount || 0), 0),
-      by_method: groupBy(sales as unknown as Record<string, unknown>[], 'payment_method', 'total_amount'),
+      by_method: buildByMethod(sales),
     };
 
     // ─── 3) 매입 집계 (purchase_orders) ───
@@ -462,6 +462,26 @@ function groupBy(arr: Record<string, unknown>[], key: string, sumKey: string): R
   for (const item of arr) {
     const k = (item[key] as string) || 'unknown';
     result[k] = (result[k] || 0) + ((item[sumKey] as number) || 0);
+  }
+  return result;
+}
+
+// 결제수단별 매출(현금주의) — 복합결제는 payment_detail(실수납)로 카드/현금/이체 분해, 비복합은 total_amount 유지
+// → 카드사 정산·부가세 카드매출과 정합. (2026-08-06)
+function buildByMethod(
+  sales: Array<{ payment_method: string; total_amount: number; payment_detail: Record<string, number> | null }>,
+): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const r of sales) {
+    if (r.payment_method === 'mixed' && r.payment_detail) {
+      for (const m of ['card', 'cash', 'transfer'] as const) {
+        const amt = r.payment_detail[m] || 0;
+        if (amt) result[m] = (result[m] || 0) + amt;
+      }
+    } else {
+      const k = r.payment_method || 'unknown';
+      result[k] = (result[k] || 0) + (r.total_amount || 0);
+    }
   }
   return result;
 }
