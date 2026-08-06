@@ -11,6 +11,14 @@ export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
+/** 복원수리 진행방식(proceed_type) → 리뷰 subtype (후기 칩 방문수거/직접발송/직접방문 구분) */
+function proceedToSubtype(pt: string | null | undefined): string {
+  if (pt === '방문수거') return 'parcel_pickup';
+  if (pt === '직접발송') return 'self_ship';
+  if (pt === '직접방문') return 'direct_visit';
+  return 'restoration';
+}
+
 /** 리뷰 ID 자동 채번: RV-YYYYMMDD-NNN */
 async function generateReviewId(db: ReturnType<typeof createServiceClient>): Promise<string> {
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -134,7 +142,8 @@ export async function POST(req: NextRequest) {
       if (repair) {
         name = repair.name;
         phone = repair.phone || '';
-        subtype = bodySubtype || 'restoration';
+        // proceed_type → subtype 파생(방문수거/직접발송/직접방문 구분). bodySubtype(약속/URL) 우선
+        subtype = bodySubtype || proceedToSubtype(repair.proceed_type);
         meta = {
           proceed_type: repair.proceed_type || '',
           received_at: repair.created_at || '',
