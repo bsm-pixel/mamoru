@@ -51,25 +51,37 @@ img{display:block; max-width:100%}
 .label-sm{font-size:12px; letter-spacing:.24em; color:var(--gold); font-family:var(--serif-en); text-transform:uppercase; margin-bottom:14px}
 .title{font-family:var(--serif-ko); font-size:23px; font-weight:700; letter-spacing:.02em}
 
-/* ── 1. 메인: 세로 이미지 풀스크린 ── */
-.hero{position:relative; height:100vh; height:100svh; min-height:520px; background:#efe9df; overflow:hidden}
-.hero img, .hero__media{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
-.hero.is-empty::after{content:'메인 이미지/영상 (세로)'; position:absolute; inset:0; display:grid; place-items:center;
-  color:var(--muted); font-family:var(--serif-en); letter-spacing:.22em; font-size:13px}
-.hero__scroll{position:absolute; z-index:2; left:0; right:0; bottom:calc(24px + env(safe-area-inset-bottom));
-  text-align:center; color:#fff; font-family:var(--serif-en); font-size:11px; letter-spacing:.34em;
-  text-shadow:0 1px 8px rgba(0,0,0,.35); animation:bob 2.2s ease-in-out infinite; pointer-events:none}
-.hero__scroll svg{display:block; width:20px; height:20px; margin:7px auto 0}
-@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
-@media (prefers-reduced-motion:reduce){ .hero__scroll{animation:none} }
+/* ── 1. 메인: 세로 영상/이미지 (9:16, 1080×1920) — 피크: 92%로 다음 섹션 살짝 노출 ── */
+.hero{position:relative; height:92vh; height:92svh; min-height:500px; background:#efe9df; overflow:hidden}
+.hero img, .hero__media{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:opacity 1.3s ease}
+.hero.names-in .hero__media{opacity:0}                       /* 영상 끝 → 미디어 페이드아웃 */
+.hero.is-empty::after{content:'세로 영상/이미지 9:16 (1080×1920)'; position:absolute; inset:0; display:grid; place-items:center;
+  color:var(--muted); font-family:var(--serif-en); letter-spacing:.2em; font-size:13px}
 
-/* ── 1b. 이름 등장(커버) ── */
-.cover{background:var(--ivory); text-align:center}
+/* 이름 오버레이: 영상이 끝나면 이 영역으로 페이드인 */
+.hero__names{position:absolute; inset:0; z-index:3; background:var(--ivory); text-align:center;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px;
+  opacity:0; pointer-events:none; transition:opacity 1.3s ease}
+.hero.names-in .hero__names{opacity:1}
+.hero__names > *{opacity:0; transform:translateY(18px); transition:opacity 1s ease, transform 1s cubic-bezier(.22,.61,.36,1)}
+.hero.names-in .hero__names > *{opacity:1; transform:none}
+.hero.names-in .hero__names > *:nth-child(1){transition-delay:.20s}
+.hero.names-in .hero__names > *:nth-child(2){transition-delay:.42s}
+.hero.names-in .hero__names > *:nth-child(3){transition-delay:.64s}
 .cover__eng{font-family:var(--serif-en); letter-spacing:.32em; font-size:13px; color:var(--gold); text-transform:uppercase}
 .cover__names{margin:34px 0 30px; font-family:var(--serif-ko); color:var(--ink)}
 .cover__names span{display:block; font-size:clamp(34px,10vw,44px); font-weight:700; line-height:1.28}
 .cover__names em{display:block; font-style:normal; font-family:var(--serif-en); font-size:20px; color:var(--gold); margin:12px 0; letter-spacing:.1em}
 .cover__date{font-family:var(--serif-en); letter-spacing:.26em; font-size:15px; color:var(--muted)}
+
+/* 스크롤 힌트: 이름이 뜬 뒤(아이보리 위)에만 골드로 표시 */
+.hero__scroll{position:absolute; z-index:4; left:0; right:0; bottom:calc(22px + env(safe-area-inset-bottom));
+  text-align:center; color:var(--gold); font-family:var(--serif-en); font-size:11px; letter-spacing:.34em;
+  opacity:0; transition:opacity .8s ease .4s; animation:bob 2.2s ease-in-out infinite; pointer-events:none}
+.hero.names-in .hero__scroll{opacity:.85}
+.hero__scroll svg{display:block; width:20px; height:20px; margin:7px auto 0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+@media (prefers-reduced-motion:reduce){ .hero__scroll{animation:none} }
 
 /* ── 2. 편지 ── */
 .letter{background:var(--paper); text-align:center}
@@ -210,20 +222,19 @@ img{display:block; max-width:100%}
 <body>
 <div class="frame">
 
-  <!-- ═══════════ 1. 메인: 세로 이미지 풀스크린 ═══════════ -->
+  <!-- ═══════════ 1. 메인: 세로 영상/이미지(9:16) → 끝나면 이름 페이드인 ═══════════ -->
   <section class="hero" id="hero">
-    <!-- ✏️ 메인: assets/main.mp4 넣으면 영상 자동재생, 없으면 main.jpg(세로 1080×1620) -->
+    <!-- ✏️ 메인: assets/main.mp4(세로 9:16, 1080×1920) 넣으면 영상 자동재생, 없으면 main.jpg -->
     <img id="mainImg" class="hero__media" src="assets/main.jpg" alt="" onerror="document.getElementById('hero').classList.add('is-empty'); this.remove()">
+    <!-- 영상이 끝나면(또는 이미지 잠시 후) 이 이름 영역으로 페이드인 -->
+    <div class="hero__names">
+      <div class="cover__eng">We Are Getting Married</div>
+      <div class="cover__names"><span>백성민</span><em>그리고</em><span>김혜정</span></div>
+      <div class="cover__date">2026 · 10 · 31</div>
+    </div>
     <div class="hero__scroll">SCROLL
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v13M6 12l6 6 6-6"/></svg>
     </div>
-  </section>
-
-  <!-- ═══════════ 1b. 이름 등장(스크롤 시 스윽) ═══════════ -->
-  <section class="cover section stagger">
-    <div class="cover__eng">We Are Getting Married</div>
-    <div class="cover__names"><span>백성민</span><em>그리고</em><span>김혜정</span></div>
-    <div class="cover__date">2026 · 10 · 31</div>
   </section>
 
   <!-- ═══════════ 2. 편지 ═══════════ -->
@@ -603,20 +614,23 @@ function armReveal(){
   els.forEach(el=>io.observe(el));
 }
 
-// 히어로: assets/main.mp4 있으면 영상으로 자동 교체(무음·인라인·루프 자동재생)
+// 히어로: assets/main.mp4 있으면 영상(무음·인라인, 한 번 재생) → 끝나면 이름 페이드인
 (function heroMedia(){
   const hero = document.getElementById('hero'); if(!hero) return;
+  let shown = false;
+  const revealNames = ()=>{ if(shown) return; shown = true; hero.classList.add('names-in'); };
   const v = document.createElement('video');
-  v.muted = true; v.defaultMuted = true; v.loop = true; v.autoplay = true; v.preload = 'auto';
+  v.muted = true; v.defaultMuted = true; v.autoplay = true; v.preload = 'auto'; v.playsInline = true;
   v.setAttribute('muted',''); v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
-  v.className = 'hero__media';
-  v.addEventListener('loadeddata', ()=>{               // mp4 존재 → 영상 사용
+  v.className = 'hero__media'; v.poster = 'assets/main.jpg';
+  v.addEventListener('loadeddata', ()=>{                 // mp4 존재 → 영상 사용
     const img = document.getElementById('mainImg'); if(img) img.remove();
     hero.classList.remove('is-empty');
     hero.insertBefore(v, hero.firstChild);
-    v.play().catch(()=>{});
+    v.play().catch(()=>{ revealNames(); });              // 자동재생 막히면 바로 이름
   }, {once:true});
-  v.addEventListener('error', ()=>{}, {once:true});    // mp4 없음 → 이미지 유지
+  v.addEventListener('ended', revealNames, {once:true}); // 영상 끝 → 이름 페이드인
+  v.addEventListener('error', ()=>{ setTimeout(revealNames, 2600); }, {once:true}); // mp4 없음 → 이미지 잠시 뒤 이름
   v.src = 'assets/main.mp4'; v.load();
 })();
 
