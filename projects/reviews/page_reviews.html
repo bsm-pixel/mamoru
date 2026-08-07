@@ -303,6 +303,17 @@ img { display: block; max-width: 100%; }
   display: flex; gap: 12px;
   padding-top: 12px; border-top: 1px solid var(--mm-border-l);
 }
+/* 하단 닫기 버튼 (우측·오른손 편의) */
+.mm-rv-modal__foot {
+  margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mm-border-l);
+  display: flex; justify-content: flex-end;
+}
+.mm-rv-modal__closebtn {
+  padding: 11px 30px; font-size: 14px; font-weight: 600;
+  border: 1px solid var(--mm-void); border-radius: 10px;
+  background: var(--mm-void); color: #fff; cursor: pointer; transition: opacity .15s;
+}
+.mm-rv-modal__closebtn:hover { opacity: .88; }
 
 /* ── 라이트박스 (사진 확대) ── */
 .mm-lb {
@@ -599,6 +610,9 @@ img { display: block; max-width: 100%; }
   <div class="mm-rv-modal" id="rvModal">
     <button class="mm-rv-modal__close" id="rvModalClose">✕</button>
     <div id="rvModalBody"></div>
+    <div class="mm-rv-modal__foot">
+      <button class="mm-rv-modal__closebtn" id="rvModalCloseBtn">닫기</button>
+    </div>
   </div>
 </div>
 
@@ -903,14 +917,18 @@ img { display: block; max-width: 100%; }
       renderDates(r, 'mm-rv-modal__date');
     overlay.classList.add('mm-rv-overlay--open');
     document.body.style.overflow = 'hidden';
+    try { history.pushState({ mmRvModal: 1 }, ''); } catch(_) {} // 폰 뒤로가기 → 모달만 닫힘(홈 이탈 방지)
   }
 
-  function closeModal() {
+  function doCloseModal() {
     overlay.classList.remove('mm-rv-overlay--open');
     document.body.style.overflow = '';
   }
+  function closeModal() { if (history.state && history.state.mmRvModal) history.back(); else doCloseModal(); }
+  window.addEventListener('popstate', function(){ if (overlay.classList.contains('mm-rv-overlay--open')) doCloseModal(); });
 
   document.getElementById('rvModalClose').addEventListener('click', closeModal);
+  document.getElementById('rvModalCloseBtn').addEventListener('click', closeModal);
   overlay.addEventListener('click', function(e) {
     if (e.target === overlay) closeModal();
   });

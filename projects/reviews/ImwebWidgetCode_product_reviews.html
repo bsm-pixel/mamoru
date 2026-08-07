@@ -570,6 +570,10 @@ img { display: block; max-width: 100%; }
   padding: 28px 24px;
   position: relative;
 }
+/* 하단 닫기 버튼 (우측·오른손 편의) */
+.mm-prv__modal-foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mm-border); display: flex; justify-content: flex-end; }
+.mm-prv__modal-closebtn { padding: 11px 30px; font-size: 14px; font-weight: 600; border: 1px solid var(--mm-void); border-radius: 10px; background: var(--mm-void); color: #fff; cursor: pointer; transition: opacity .15s; }
+.mm-prv__modal-closebtn:hover { opacity: .88; }
 .mm-prv__modal-close {
   position: absolute; top: 14px; right: 14px;
   width: 32px; height: 32px; border: none; background: var(--mm-shell);
@@ -852,6 +856,7 @@ img { display: block; max-width: 100%; }
     <button class="mm-prv__modal-close" id="prvModalClose" type="button" aria-label="닫기">✕</button>
     <div class="mm-prv__modal-counter" id="prvModalCounter"></div>
     <div id="prvModalBody"></div>
+    <div class="mm-prv__modal-foot"><button class="mm-prv__modal-closebtn" id="prvModalCloseBtn">닫기</button></div>
   </div>
 </div>
 
@@ -1258,7 +1263,7 @@ img { display: block; max-width: 100%; }
     };
     // 최초 열기만 뷰포트 배치(순회 중엔 이미 배치돼 있어 재요청 불필요)
     if (overlay.classList.contains('mm-prv__overlay--open')) doRender();
-    else placeInViewport(overlay, doRender);
+    else placeInViewport(overlay, function(){ doRender(); try { history.pushState({ mmPrvModal: 1 }, ''); } catch(_) {} }); // 폰 뒤로가기 → 모달만 닫힘
   }
 
   function navigateModal(dir) {
@@ -1267,12 +1272,15 @@ img { display: block; max-width: 100%; }
     openModalAt(modalContext.list, newIdx, modalContext.source);
   }
 
-  function closeModal() {
+  function doCloseModal() {
     overlay.classList.remove('mm-prv__overlay--open');
     document.body.style.overflow = '';
   }
+  function closeModal() { if (history.state && history.state.mmPrvModal) history.back(); else doCloseModal(); }
+  window.addEventListener('popstate', function(){ if (overlay.classList.contains('mm-prv__overlay--open')) doCloseModal(); });
 
   document.getElementById('prvModalClose').addEventListener('click', closeModal);
+  document.getElementById('prvModalCloseBtn').addEventListener('click', closeModal);
   modalPrev.addEventListener('click', function(e) { e.stopPropagation(); navigateModal(-1); });
   modalNext.addEventListener('click', function(e) { e.stopPropagation(); navigateModal(1); });
   overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
