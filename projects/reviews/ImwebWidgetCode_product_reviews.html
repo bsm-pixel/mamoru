@@ -570,10 +570,15 @@ img { display: block; max-width: 100%; }
   padding: 28px 24px;
   position: relative;
 }
-/* 하단 닫기 버튼 (우측·오른손 편의) */
-.mm-prv__modal-foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mm-border); display: flex; justify-content: flex-end; }
-.mm-prv__modal-closebtn { padding: 11px 30px; font-size: 14px; font-weight: 600; border: 1px solid var(--mm-void); border-radius: 10px; background: var(--mm-void); color: #fff; cursor: pointer; transition: opacity .15s; }
-.mm-prv__modal-closebtn:hover { opacity: .88; }
+/* 하단 순회/닫기 버튼 (이전·다음·닫기, 닫기는 우측·작게 — 3화면 통일) */
+.mm-prv__modal-foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mm-border); display: flex; gap: 8px; }
+.mm-prv__modal-footbtn { flex: 1; padding: 11px; font-size: 13px; font-weight: 600; border: 1px solid var(--mm-border); border-radius: 10px; background: #fff; color: var(--mm-stone); cursor: pointer; transition: all .15s; }
+.mm-prv__modal-footbtn:disabled { opacity: .35; cursor: default; }
+.mm-prv__modal-footbtn--close { flex: .55; background: var(--mm-void); color: #fff; border-color: var(--mm-void); }
+.mm-prv__modal-footbtn:not(:disabled):hover { border-color: var(--mm-void); color: var(--mm-void); }
+.mm-prv__modal-footbtn--close:hover { opacity: .88; color: #fff; }
+/* 좌우 화살표·카운터 → 하단 버튼으로 통일(숨김) */
+.mm-prv__modal-nav, .mm-prv__modal-counter { display: none !important; }
 .mm-prv__modal-close {
   position: absolute; top: 14px; right: 14px;
   width: 32px; height: 32px; border: none; background: var(--mm-shell);
@@ -856,7 +861,11 @@ img { display: block; max-width: 100%; }
     <button class="mm-prv__modal-close" id="prvModalClose" type="button" aria-label="닫기">✕</button>
     <div class="mm-prv__modal-counter" id="prvModalCounter"></div>
     <div id="prvModalBody"></div>
-    <div class="mm-prv__modal-foot"><button class="mm-prv__modal-closebtn" id="prvModalCloseBtn">닫기</button></div>
+    <div class="mm-prv__modal-foot">
+      <button class="mm-prv__modal-footbtn" id="prvModalFootPrev">← 이전</button>
+      <button class="mm-prv__modal-footbtn" id="prvModalFootNext">다음 →</button>
+      <button class="mm-prv__modal-footbtn mm-prv__modal-footbtn--close" id="prvModalCloseBtn">닫기</button>
+    </div>
   </div>
 </div>
 
@@ -1227,25 +1236,23 @@ img { display: block; max-width: 100%; }
         }).join('') + '</div>';
     }
     var productHtml = r.product ? '<div class="mm-prv__modal-product">' + r.product + '</div>' : '';
+    // 시안 순서: 사진(상단) → 이름 → 별점 → product → 태그 → 내용 → 날짜
     modalBody.innerHTML =
-      '<div class="mm-prv__modal-stars">' + renderStars(r.stars) + '</div>' +
+      photosHtml +
       '<div class="mm-prv__modal-name">' + maskName(r.name) + storeHtml(r) + chipHtml(r) + '</div>' +
+      '<div class="mm-prv__modal-stars">' + renderStars(r.stars) + '</div>' +
       productHtml +
       renderTagChips(r, 'mm-prv__tags') +
       '<div class="mm-prv__modal-text">' + r.content + '</div>' +
-      photosHtml +
       renderDates(r, 'mm-prv__modal-date');
   }
 
   function updateModalNav() {
     var total = modalContext.list.length;
-    var showNav = total > 1;
-    modalPrev.classList.toggle('hidden', !showNav);
-    modalNext.classList.toggle('hidden', !showNav);
-    modalCounter.classList.toggle('hidden', !showNav);
-    if (showNav) {
-      modalCounter.textContent = (modalContext.idx + 1) + ' / ' + total;
-    }
+    // 하단 이전/다음 버튼 disabled (page_reviews 와 통일)
+    var fp = document.getElementById('prvModalFootPrev'), fn = document.getElementById('prvModalFootNext');
+    if (fp) fp.disabled = modalContext.idx <= 0;
+    if (fn) fn.disabled = modalContext.idx >= total - 1;
   }
 
   function openModalAt(list, idx, source) {
@@ -1283,6 +1290,8 @@ img { display: block; max-width: 100%; }
   document.getElementById('prvModalCloseBtn').addEventListener('click', closeModal);
   modalPrev.addEventListener('click', function(e) { e.stopPropagation(); navigateModal(-1); });
   modalNext.addEventListener('click', function(e) { e.stopPropagation(); navigateModal(1); });
+  document.getElementById('prvModalFootPrev').addEventListener('click', function(){ navigateModal(-1); });
+  document.getElementById('prvModalFootNext').addEventListener('click', function(){ navigateModal(1); });
   overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
 
   document.getElementById('prvGrid').addEventListener('click', function(e) {
