@@ -303,17 +303,20 @@ img { display: block; max-width: 100%; }
   display: flex; gap: 12px;
   padding-top: 12px; border-top: 1px solid var(--mm-border-l);
 }
-/* 하단 닫기 버튼 (우측·오른손 편의) */
+/* 하단 순회/닫기 버튼 (이전·다음·닫기, 닫기는 우측·작게·오른손 편의) */
 .mm-rv-modal__foot {
   margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mm-border-l);
-  display: flex; justify-content: flex-end;
+  display: flex; gap: 8px;
 }
-.mm-rv-modal__closebtn {
-  padding: 11px 30px; font-size: 14px; font-weight: 600;
-  border: 1px solid var(--mm-void); border-radius: 10px;
-  background: var(--mm-void); color: #fff; cursor: pointer; transition: opacity .15s;
+.mm-rv-modal__navbtn {
+  flex: 1; padding: 11px; font-size: 13px; font-weight: 600;
+  border: 1px solid var(--mm-border-l); border-radius: 10px;
+  background: #fff; color: var(--mm-text-d); cursor: pointer; transition: all .15s;
 }
-.mm-rv-modal__closebtn:hover { opacity: .88; }
+.mm-rv-modal__navbtn:disabled { opacity: .35; cursor: default; }
+.mm-rv-modal__navbtn--close { flex: .55; background: var(--mm-void); color: #fff; border-color: var(--mm-void); }
+.mm-rv-modal__navbtn:not(:disabled):hover { border-color: var(--mm-void); color: var(--mm-void); }
+.mm-rv-modal__navbtn--close:hover { opacity: .88; color: #fff; }
 
 /* ── 라이트박스 (사진 확대) ── */
 .mm-lb {
@@ -611,7 +614,9 @@ img { display: block; max-width: 100%; }
     <button class="mm-rv-modal__close" id="rvModalClose">✕</button>
     <div id="rvModalBody"></div>
     <div class="mm-rv-modal__foot">
-      <button class="mm-rv-modal__closebtn" id="rvModalCloseBtn">닫기</button>
+      <button class="mm-rv-modal__navbtn" id="rvModalPrev">← 이전</button>
+      <button class="mm-rv-modal__navbtn" id="rvModalNext">다음 →</button>
+      <button class="mm-rv-modal__navbtn mm-rv-modal__navbtn--close" id="rvModalCloseBtn">닫기</button>
     </div>
   </div>
 </div>
@@ -648,6 +653,7 @@ img { display: block; max-width: 100%; }
   var galleryPhotos = []; // 전체 리뷰의 모든 사진 평면화 {url, review}
   var GALLERY_PREVIEW = 6; // 상단 미리보기 노출 장수
   var currentModalReview = null; // 모달에 표시 중인 리뷰 (라이트박스 캡션용)
+  var modalCtx = { list: [], idx: -1 }; // 모달 순회 컨텍스트
 
   /* ── 이름 마스킹 (서버에서 이미 마스킹되어 올 수도 있지만 안전장치) ── */
   function maskName(name) {
@@ -816,7 +822,7 @@ img { display: block; max-width: 100%; }
       var card = e.target.closest('.mm-rv-best__card');
       if (!card) return;
       var idx = parseInt(card.dataset.bestIdx);
-      if (bestReviews[idx]) openModal(bestReviews[idx]);
+      if (bestReviews[idx]) openModalAt(bestReviews, idx);
     };
   }
 
@@ -888,8 +894,28 @@ img { display: block; max-width: 100%; }
     }, 200);
   }
 
-  function openModal(r) {
-    placeInViewport(overlay, function() { showModalContent(r); });
+  function openModalAt(list, idx) {
+    if (!list || !list.length) return;
+    var safe = ((idx % list.length) + list.length) % list.length;
+    modalCtx = { list: list, idx: safe };
+    if (overlay.classList.contains('mm-rv-overlay--open')) {
+      showModalContent(list[safe]); // 순회 중 — 이미 배치됨
+    } else {
+      placeInViewport(overlay, function() {
+        showModalContent(list[safe]);
+        overlay.classList.add('mm-rv-overlay--open');
+        document.body.style.overflow = 'hidden';
+        try { history.pushState({ mmRvModal: 1 }, ''); } catch(_) {} // 폰 뒤로가기 → 모달만 닫힘(홈 이탈 방지)
+      });
+    }
+  }
+  function openModal(r) { openModalAt([r], 0); } // 단일 호환
+  function navigateModal(dir) { if (modalCtx.list.length) openModalAt(modalCtx.list, modalCtx.idx + dir); }
+  function updateModalNav() {
+    var total = modalCtx.list.length;
+    var p = document.getElementById('rvModalPrev'), n = document.getElementById('rvModalNext');
+    if (p) p.disabled = modalCtx.idx <= 0;
+    if (n) n.disabled = modalCtx.idx >= total - 1;
   }
 
   function showModalContent(r) {
@@ -904,20 +930,21 @@ img { display: block; max-width: 100%; }
         }).join('') + '</div>';
     }
     var productHtml = r.product ? '<div style="font-size:14px;color:var(--mm-text-d2);margin-bottom:12px">' + r.product + '</div>' : '';
+    // 시안 순서: 사진(상단) → 칩 → 이름 → 별점 → 태그 → 내용 → 날짜
     modalBody.innerHTML =
-      '<div class="mm-rv-modal__stars">' + renderStars(r.stars) + '</div>' +
-      '<div class="mm-rv-modal__name">' + maskName(r.name) + honHtml(r.name) + storeHtml(r, 13) + '</div>' +
+      photosHtml +
       '<div class="mm-rv-modal__chips">' + renderChips(r, 'mm-rv-chip') +
         (r.source === 'naver' ? '<span class="mm-rv-chip mm-rv-chip--naver">네이버</span>' : '') +
       '</div>' +
+      '<div class="mm-rv-modal__name">' + maskName(r.name) + honHtml(r.name) + storeHtml(r, 13) + '</div>' +
+      '<div class="mm-rv-modal__stars">' + renderStars(r.stars) + '</div>' +
       renderTagChips(r, 'mm-rv-modal__tags') +
       productHtml +
       '<div class="mm-rv-modal__text">' + r.content + '</div>' +
-      photosHtml +
       renderDates(r, 'mm-rv-modal__date');
-    overlay.classList.add('mm-rv-overlay--open');
-    document.body.style.overflow = 'hidden';
-    try { history.pushState({ mmRvModal: 1 }, ''); } catch(_) {} // 폰 뒤로가기 → 모달만 닫힘(홈 이탈 방지)
+    updateModalNav();
+    var modalEl = document.getElementById('rvModal');
+    if (modalEl) modalEl.scrollTop = 0;
   }
 
   function doCloseModal() {
@@ -929,6 +956,8 @@ img { display: block; max-width: 100%; }
 
   document.getElementById('rvModalClose').addEventListener('click', closeModal);
   document.getElementById('rvModalCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('rvModalPrev').addEventListener('click', function(){ navigateModal(-1); });
+  document.getElementById('rvModalNext').addEventListener('click', function(){ navigateModal(1); });
   overlay.addEventListener('click', function(e) {
     if (e.target === overlay) closeModal();
   });
@@ -1103,7 +1132,7 @@ img { display: block; max-width: 100%; }
     var idx = parseInt(card.dataset.idx);
     var reviews = getFilteredReviews();
     var visible = reviews.slice(0, currentPage * PER_PAGE);
-    if (visible[idx]) openModal(visible[idx]);
+    if (visible[idx]) openModalAt(visible, idx);
   });
 
   /* ── API에서 리뷰 로드 ── */
