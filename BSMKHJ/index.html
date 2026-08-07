@@ -73,18 +73,18 @@ img{display:block; max-width:100%}
 .contacts{background:var(--ivory)}
 /* minmax(0,1fr) = 좁은 폭에서도 칸이 min-content 이하로 축소돼 우측 넘침·잘림 방지 */
 .contact-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; margin-top:26px}
-.contact-col{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:22px 10px; box-shadow:var(--shadow); min-width:0}
+.contact-col{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:22px 12px 22px 16px; box-shadow:var(--shadow); min-width:0}
 .contact-col h4{font-family:var(--serif-en); font-size:12px; letter-spacing:.2em; color:var(--gold); text-align:center; margin-bottom:16px}
 .person{display:flex; align-items:center; justify-content:space-between; gap:5px; padding:11px 0; border-top:1px solid var(--line)}
 .person:first-of-type{border-top:0}
 .person__name{min-width:0}
 .person__role{font-size:11px; color:var(--muted); letter-spacing:.05em}
 .person__nm{font-family:var(--serif-ko); font-size:15.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.person__acts{display:flex; gap:5px; flex-shrink:0}
-.icon-btn{width:32px; height:32px; border-radius:50%; display:grid; place-items:center; flex-shrink:0;
+.person__acts{display:flex; gap:4px; flex-shrink:0}
+.icon-btn{width:30px; height:30px; border-radius:50%; display:grid; place-items:center; flex-shrink:0;
   border:1px solid var(--line); background:#fff; color:var(--gold); transition:.2s}
 .icon-btn:active{transform:scale(.92); background:var(--gold); color:#fff; border-color:var(--gold)}
-.icon-btn svg{width:15px; height:15px}
+.icon-btn svg{width:14px; height:14px}
 
 /* ── 4. 갤러리 ── */
 .gallery{background:var(--paper)}
@@ -156,13 +156,15 @@ img{display:block; max-width:100%}
   backdrop-filter:blur(12px) saturate(1.08); border-top:1px solid var(--gold-soft);
   display:grid; grid-template-columns:repeat(3,1fr);
   padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -6px 22px rgba(62,58,53,.06)}
-.footer-bar button{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
-  padding:12px 4px 13px; background:none; position:relative; color:var(--ink); transition:transform .18s ease}
-.footer-bar button .fi{width:21px; height:21px; color:var(--gold); transition:transform .18s ease}
-.footer-bar button .ft{font-size:11.5px; font-weight:600; letter-spacing:.01em; color:var(--muted); transition:color .18s ease}
-.footer-bar button+button::before{content:''; position:absolute; left:0; top:26%; height:48%; width:1px; background:var(--gold-soft); opacity:.55}
+.footer-bar button{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  padding:14px 4px 15px; background:none; color:var(--ink); transition:transform .18s ease}
+.footer-bar .fic{width:38px; height:38px; border-radius:50%; border:1px solid var(--gold-soft);
+  display:grid; place-items:center; color:var(--gold); background:#fff;
+  box-shadow:0 2px 8px rgba(180,154,106,.12); transition:.2s}
+.footer-bar .fi{width:18px; height:18px}
+.footer-bar .ft{font-size:11px; font-weight:600; letter-spacing:.04em; color:var(--muted); transition:color .2s ease}
 .footer-bar button:active{transform:translateY(1px)}
-.footer-bar button:active .fi{transform:scale(.88)}
+.footer-bar button:active .fic{background:var(--gold); color:#fff; border-color:var(--gold); transform:scale(.93)}
 .footer-bar button:active .ft{color:var(--gold)}
 .credit{text-align:center; padding:26px; font-family:var(--serif-en); font-size:11px;
   letter-spacing:.2em; color:var(--muted); background:var(--ivory)}
@@ -260,15 +262,15 @@ img{display:block; max-width:100%}
   <!-- ═══════════ 7. 하단 띠 ═══════════ -->
   <nav class="footer-bar">
     <button onclick="addCalendar()">
-      <svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>
+      <span class="fic"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span>
       <span class="ft">달력에 등록</span>
     </button>
     <button onclick="copyLink()">
-      <svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 13.5a4 4 0 0 0 5.7.3l3-3a4 4 0 1 0-5.66-5.66L11 6.4"/><path d="M14.5 10.5a4 4 0 0 0-5.7-.3l-3 3a4 4 0 1 0 5.66 5.66L12 18.1"/></svg>
+      <span class="fic"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 13.5a4 4 0 0 0 5.7.3l3-3a4 4 0 1 0-5.66-5.66L11 6.4"/><path d="M14.5 10.5a4 4 0 0 0-5.7-.3l-3 3a4 4 0 1 0 5.66 5.66L12 18.1"/></svg></span>
       <span class="ft">링크 복사</span>
     </button>
     <button onclick="shareKakao()">
-      <svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5C7.3 4.5 3.5 7.5 3.5 11.2c0 2.4 1.6 4.5 4 5.7-.2.7-.7 2.3-.8 2.6-.1.3.1.5.4.3.3-.2 2.4-1.6 3.3-2.2.5.1 1.1.1 1.6.1 4.7 0 8.5-3 8.5-6.6S16.7 4.5 12 4.5z"/></svg>
+      <span class="fic"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5C7.3 4.5 3.5 7.5 3.5 11.2c0 2.4 1.6 4.5 4 5.7-.2.7-.7 2.3-.8 2.6-.1.3.1.5.4.3.3-.2 2.4-1.6 3.3-2.2.5.1 1.1.1 1.6.1 4.7 0 8.5-3 8.5-6.6S16.7 4.5 12 4.5z"/></svg></span>
       <span class="ft">카톡 공유</span>
     </button>
   </nav>
