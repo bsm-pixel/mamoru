@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>리뷰 리뉴얼 시안 — MAMORU</title>
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 시안: 리뷰 페이지 풀 리뉴얼 (C) — 바텀시트 + 라이트박스 + 요약헤더 + 필터/정렬
+  📍 용도: _design_lab 브라우저 확인용. 데이터는 목업(실제 적용 시 라이브 API 연동)
+  🎨 브랜드: 모노크롬(void~cream), Outfit + Plus Jakarta + Noto, 여백/hairline
+  ✅ 확인 포인트: ①카드 탭 → 하단 시트가 "지금 자리"에서 올라옴(배경 완전히 덮음)
+                 ②사진 탭 → 라이트박스 ③요약 헤더(별점분포·인기태그) ④필터(전체/포토)·정렬
+═══════════════════════════════════════════════════════════════ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580; --mist:#B8B4AF;
+  --sand:#D4D0CB; --parchment:#EDEBE8; --shell:#F5F3F0; --cream:#FAF9F7; --white:#FFFFFF;
+  --font-display:'Outfit',sans-serif;
+  --font-body:'Plus Jakarta Sans','Noto Sans KR',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --radius-sm:8px; --radius-md:12px; --radius-lg:16px; --radius-xl:22px;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+  --sheet-ease:cubic-bezier(0.32,0.72,0,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{overflow-x:hidden;scrollbar-width:none;}
+html::-webkit-scrollbar{display:none;}
+body{font-family:var(--font-body);background:var(--cream);color:var(--void);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+img{display:block;max-width:100%;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+.wrap{max-width:1100px;margin:0 auto;padding:40px 20px 80px;}
+@media(min-width:768px){.wrap{padding:64px 32px 100px;}}
+
+/* 데모 안내 배너 */
+.demo-note{max-width:1100px;margin:0 auto 4px;padding:10px 20px;font-size:12px;color:var(--warm-gray);
+  background:var(--shell);border-bottom:1px solid var(--sand);text-align:center;}
+
+.kicker{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--warm-gray);margin-bottom:8px;}
+.head-title{font-size:clamp(22px,6vw,30px);font-weight:800;font-family:var(--font-display);letter-spacing:-.01em;margin-bottom:4px;}
+.head-desc{font-size:14px;color:var(--stone);margin-bottom:28px;}
+
+/* ── 요약 헤더 ── */
+.summary{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;
+  padding:22px 24px;background:var(--white);border:1px solid var(--sand);border-radius:var(--radius-lg);margin-bottom:16px;}
+.summary__score{text-align:center;padding-right:22px;border-right:1px solid var(--parchment);}
+.summary__num{font-family:var(--font-display);font-size:44px;font-weight:800;line-height:1;letter-spacing:-.02em;}
+.summary__stars{font-size:14px;letter-spacing:2px;color:var(--void);margin-top:6px;}
+.summary__count{font-size:12px;color:var(--warm-gray);margin-top:4px;}
+.summary__bars{display:flex;flex-direction:column;gap:5px;min-width:0;}
+.bar-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--warm-gray);}
+.bar-row__label{width:26px;flex-shrink:0;text-align:right;}
+.bar-row__track{flex:1;height:6px;background:var(--parchment);border-radius:99px;overflow:hidden;}
+.bar-row__fill{height:100%;background:var(--void);border-radius:99px;}
+.bar-row__pct{width:34px;flex-shrink:0;text-align:right;}
+@media(max-width:520px){
+  .summary{grid-template-columns:1fr;gap:18px;}
+  .summary__score{border-right:none;border-bottom:1px solid var(--parchment);padding-right:0;padding-bottom:16px;display:flex;align-items:center;justify-content:center;gap:14px;}
+  .summary__num{font-size:38px;}
+}
+
+/* 인기 태그 */
+.poptags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:22px;}
+.poptags__lead{font-size:12px;color:var(--warm-gray);align-self:center;margin-right:2px;}
+.poptag{font-size:12px;font-weight:600;padding:6px 12px;border:1px solid var(--sand);border-radius:99px;color:var(--stone);background:var(--white);}
+.poptag b{font-weight:700;color:var(--void);margin-left:5px;}
+
+/* ── 필터/정렬 바 ── */
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px;position:sticky;top:0;z-index:20;
+  padding:10px 0;background:linear-gradient(var(--cream) 78%,transparent);}
+.seg{display:flex;gap:6px;}
+.seg__btn{padding:8px 15px;font-size:13px;font-weight:600;border:1px solid var(--sand);border-radius:99px;color:var(--stone);background:var(--white);transition:all .15s var(--ease);}
+.seg__btn--on{background:var(--void);color:var(--cream);border-color:var(--void);}
+.sort{display:flex;gap:6px;}
+.sort__btn{padding:8px 13px;font-size:12px;font-weight:600;color:var(--warm-gray);border-radius:99px;transition:color .15s;}
+.sort__btn--on{color:var(--void);text-decoration:underline;text-underline-offset:4px;}
+
+/* 타입 탭 */
+.tabs{display:flex;gap:8px;margin-bottom:18px;}
+.tab{padding:8px 16px;font-size:13px;font-weight:600;border:1px solid var(--sand);border-radius:var(--radius-sm);color:var(--stone);background:transparent;transition:all .15s;}
+.tab--on{background:var(--void);color:var(--cream);border-color:var(--void);}
+
+/* ── 카드 그리드 ── */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+@media(min-width:768px){.grid{grid-template-columns:repeat(3,1fr);gap:16px;}}
+@media(min-width:1024px){.grid{grid-template-columns:repeat(4,1fr);}}
+.card{background:var(--white);border:1px solid var(--sand);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;
+  transition:transform .2s var(--ease),box-shadow .2s var(--ease);display:flex;flex-direction:column;}
+@media(hover:hover){.card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(26,26,26,.08);}}
+.card:active{transform:scale(.985);}
+.card__imgwrap{position:relative;aspect-ratio:1/1;background:var(--parchment);overflow:hidden;}
+.card__img{width:100%;height:100%;object-fit:cover;}
+.card__photobadge{position:absolute;left:8px;top:8px;display:flex;align-items:center;gap:3px;
+  font-size:10px;font-weight:600;color:var(--white);background:rgba(26,26,26,.55);backdrop-filter:blur(4px);padding:3px 7px;border-radius:99px;}
+.card__body{padding:14px;display:flex;flex-direction:column;gap:7px;flex:1;}
+.card__body--noimg{padding-top:16px;}
+.card__stars{font-size:12px;letter-spacing:1.5px;color:var(--void);}
+.card__text{font-size:12.5px;line-height:1.6;color:var(--stone);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.card--noimg .card__text{-webkit-line-clamp:5;}
+.card__meta{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:6px;padding-top:4px;}
+.card__name{font-size:12px;font-weight:700;color:var(--void);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card__hon{font-size:.85em;font-weight:500;color:var(--warm-gray);}
+.card__chip{font-size:10px;font-weight:600;padding:2px 7px;border:1px solid var(--sand);border-radius:4px;color:var(--warm-gray);white-space:nowrap;flex-shrink:0;}
+
+.empty{text-align:center;padding:60px 20px;color:var(--warm-gray);font-size:14px;}
+
+/* ══ 바텀시트 모달 ══ */
+.sheet-backdrop{position:fixed;inset:0;z-index:900;background:rgba(26,26,26,.55);backdrop-filter:blur(2px);
+  opacity:0;pointer-events:none;transition:opacity .3s var(--ease);}
+.sheet-backdrop.on{opacity:1;pointer-events:auto;}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:901;background:var(--cream);
+  border-radius:var(--radius-xl) var(--radius-xl) 0 0;max-height:92vh;display:flex;flex-direction:column;
+  transform:translateY(100%);transition:transform .38s var(--sheet-ease);box-shadow:0 -8px 40px rgba(26,26,26,.18);
+  padding-bottom:env(safe-area-inset-bottom);}
+.sheet.on{transform:translateY(0);}
+@media(min-width:768px){
+  .sheet{left:50%;right:auto;bottom:auto;top:50%;width:min(560px,94vw);max-height:88vh;
+    border-radius:var(--radius-xl);transform:translate(-50%,-46%) scale(.98);opacity:0;transition:transform .3s var(--ease),opacity .3s var(--ease);}
+  .sheet.on{transform:translate(-50%,-50%) scale(1);opacity:1;}
+  .sheet__grip{display:none;}
+}
+.sheet__grip{padding:10px 0 4px;display:flex;justify-content:center;flex-shrink:0;touch-action:none;cursor:grab;}
+.sheet__grip::before{content:"";width:40px;height:4px;border-radius:99px;background:var(--sand);}
+.sheet__close{position:absolute;right:12px;top:10px;z-index:2;width:32px;height:32px;border-radius:99px;
+  display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--stone);background:rgba(255,255,255,.7);}
+.sheet__scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 0 24px;}
+
+/* 시트 사진 캐러셀 */
+.sheet__gallery{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px 20px 0;}
+.sheet__gallery::-webkit-scrollbar{display:none;}
+.sheet__gallery img{flex:0 0 auto;width:82%;max-width:420px;aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius-md);
+  scroll-snap-align:center;cursor:zoom-in;background:var(--parchment);}
+.sheet__gallery--single img{width:100%;}
+.sheet__pad{padding:18px 20px 0;}
+.sheet__topline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.sheet__chip{font-size:11px;font-weight:600;padding:3px 9px;border:1px solid var(--sand);border-radius:99px;color:var(--stone);}
+.sheet__chip--src{background:var(--sand);color:var(--stone);border-color:var(--sand);}
+.sheet__name{font-size:17px;font-weight:800;font-family:var(--font-display);}
+.sheet__hon{font-size:.8em;font-weight:500;color:var(--warm-gray);}
+.sheet__stars{font-size:16px;letter-spacing:2px;color:var(--void);margin:2px 0 12px;}
+.sheet__tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.sheet__tag{font-size:12px;font-weight:600;padding:5px 11px;border-radius:99px;background:var(--shell);border:1px solid var(--parchment);color:var(--stone);}
+.sheet__body{font-size:15px;line-height:1.75;color:var(--graphite);white-space:pre-wrap;}
+.sheet__date{margin-top:18px;padding-top:14px;border-top:1px solid var(--parchment);font-size:12px;color:var(--warm-gray);}
+.sheet__nav{display:flex;gap:8px;padding:16px 20px 4px;flex-shrink:0;border-top:1px solid var(--parchment);background:var(--cream);}
+.sheet__navbtn{flex:1;padding:11px;font-size:13px;font-weight:600;border:1px solid var(--sand);border-radius:var(--radius-md);color:var(--stone);background:var(--white);transition:all .15s;}
+.sheet__navbtn:disabled{opacity:.35;}
+@media(hover:hover){.sheet__navbtn:not(:disabled):hover{border-color:var(--void);color:var(--void);}}
+
+/* 라이트박스 */
+.lightbox{position:fixed;inset:0;z-index:950;background:rgba(26,26,26,.92);display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s;padding:20px;}
+.lightbox.on{opacity:1;pointer-events:auto;}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px;}
+.lightbox__x{position:absolute;right:16px;top:16px;width:40px;height:40px;border-radius:99px;font-size:22px;color:var(--white);background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;}
+</style>
+</head>
+<body>
+<div class="demo-note">시안(목업 데이터) — 실제 적용 시 라이브 후기 API 연동 · 모바일 폭에서 카드를 탭해 하단 시트를 확인하세요</div>
+
+<div class="wrap">
+  <p class="kicker">Reviews</p>
+  <h1 class="head-title">고객 후기</h1>
+  <p class="head-desc">마모루를 경험한 분들의 이야기</p>
+
+  <!-- 요약 헤더 -->
+  <div class="summary">
+    <div class="summary__score">
+      <div><div class="summary__num" id="avgNum">—</div>
+      <div class="summary__stars" id="avgStars">☆☆☆☆☆</div>
+      <div class="summary__count" id="avgCount">후기 0</div></div>
+    </div>
+    <div class="summary__bars" id="distBars"></div>
+  </div>
+  <div class="poptags" id="popTags"><span class="poptags__lead">많이 언급된</span></div>
+
+  <!-- 타입 탭 -->
+  <div class="tabs" id="tabs">
+    <button class="tab tab--on" data-type="consult">컨설팅상담</button>
+    <button class="tab" data-type="repair">복원수리</button>
+    <button class="tab" data-type="purchase">제품구매</button>
+  </div>
+
+  <!-- 필터/정렬 -->
+  <div class="toolbar">
+    <div class="seg" id="filterSeg">
+      <button class="seg__btn seg__btn--on" data-filter="all">전체</button>
+      <button class="seg__btn" data-filter="photo">📷 포토</button>
+    </div>
+    <div class="sort" id="sortSeg">
+      <button class="sort__btn sort__btn--on" data-sort="recent">최신순</button>
+      <button class="sort__btn" data-sort="stars">별점순</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- 바텀시트 -->
+<div class="sheet-backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="sheet__grip" id="grip"></div>
+  <button class="sheet__close" id="sheetClose" aria-label="닫기">×</button>
+  <div class="sheet__scroll" id="sheetScroll"></div>
+  <div class="sheet__nav">
+    <button class="sheet__navbtn" id="prevBtn">← 이전 후기</button>
+    <button class="sheet__navbtn" id="nextBtn">다음 후기 →</button>
+  </div>
+</div>
+
+<!-- 라이트박스 -->
+<div class="lightbox" id="lightbox"><button class="lightbox__x" aria-label="닫기">×</button><img id="lightboxImg" src="" alt=""></div>
+
+<script>
+/* ── 목업 데이터 (실제 적용 시 /api/reviews/public 로 교체) ── */
+var P = function(seed){ return 'https://picsum.photos/seed/'+seed+'/600/450'; };
+var MOCK = {
+  consult:[
+    {name:'김서연',store:'라온헤어',stars:5,tags:['강요없이 편안해요','설명이 자세해요','전문적이에요'],photos:[P('mm1')],sub:'직접방문',date:'접수 260712 · 작성 260715',
+     content:'가위 추천받으러 갔는데 판매 위주가 아니라 제 시술 스타일이랑 손 크기까지 보고 골라주셔서 놀랐어요. 억지로 비싼 거 권하지 않고 지금 쓰는 게 왜 안 맞는지 하나하나 짚어주셔서 신뢰가 갔습니다. 다음에 동료도 데려올게요.'},
+    {name:'박준호',store:'분당컷',stars:5,tags:['맞춤 안내','시간이 아깝지 않아요'],photos:[],sub:'톡상담',date:'상담 260710 · 작성 260710',
+     content:'톡으로 문의했는데 응답도 빠르고 사진 보고 날 상태까지 봐주셨어요. 직접 안 가도 이 정도 상담이 되는 게 신기했습니다.'},
+    {name:'이지은',store:'미소살롱',stars:4,tags:['친절해요','합리적이에요'],photos:[P('mm3')],sub:'출장',date:'접수 260705 · 작성 260708',
+     content:'매장으로 직접 와주셔서 편했어요. 바쁜 시간 쪼개서 가위 볼 필요 없이 현장에서 다 해결. 가격도 생각보다 부담 없었습니다.'},
+  ],
+  repair:[
+    {name:'최민수',store:'헤어스토리',stars:5,tags:['새 가위처럼','커트감 개선','날 조절 정확'],photos:[P('mm4'),P('mm5'),P('mm6')],sub:'방문수거',date:'접수 260701 · 작성 260709',
+     content:'5년 쓴 가위라 거의 포기했는데 복원받고 완전 새 가위가 됐어요. 커트할 때 걸리던 느낌이 사라졌고 날 맞물림이 정확해졌습니다. 사진 첨부해요. 진짜 강력 추천.'},
+    {name:'정하늘',store:'',stars:5,tags:['안내 꼼꼼','진행 빠름'],photos:[P('mm7')],sub:'직접방문',date:'접수 260628 · 작성 260630',
+     content:'매장 근처라 직접 들고 갔는데 30분 만에 당일 수리해주셨어요. 어디가 문제였는지 설명도 자세히 해주시고.'},
+    {name:'강도현',store:'컷앤컬',stars:4,tags:['가격 대비 만족'],photos:[],sub:'직접발송',date:'접수 260620 · 작성 260626',
+     content:'택배로 보냈는데 안전하게 잘 받았고 결과도 만족스러워요.'},
+  ],
+  purchase:[
+    {name:'윤채원',store:'살롱드윤',stars:5,tags:['품질이 좋아요','배송이 빨라요','포장이 꼼꼼해요'],photos:[P('mm8'),P('mm9')],sub:'온라인',date:'구매 260711 · 작성 260714',
+     content:'블런트 가위 구매했는데 손에 착 감기고 커트감이 정말 좋아요. 포장도 고급스럽게 와서 선물받은 기분이었습니다. 배송도 빨랐어요.'},
+    {name:'임서준',store:'모던헤어',stars:5,tags:['추천하고 싶어요','돈 안 아까워요'],photos:[P('mm10')],sub:'오프라인',date:'구매 260702 · 작성 260705',
+     content:'매장에서 직접 잡아보고 샀어요. 여러 개 비교해보고 골랐는데 확실히 다릅니다. 동료들한테 추천 중.'},
+    {name:'한예린',store:'',stars:4,tags:['품질이 좋아요'],photos:[],sub:'온라인',date:'구매 260625 · 작성 260701',
+     content:'전반적으로 만족합니다. 무게감이 딱 좋아요.'},
+  ]
+};
+
+var state={type:'consult',filter:'all',sort:'recent',list:[],idx:0};
+var $=function(s){return document.querySelector(s);};
+
+function starStr(n){var s='';for(var i=0;i<5;i++)s+=i<n?'★':'☆';return s;}
+function honHtml(name){return name?'<span class="card__hon">님</span>':'';}
+function sheetHon(name){return name?'<span class="sheet__hon">님</span>':'';}
+function storeSmall(s){return s?' <span style="color:var(--warm-gray);font-weight:500;">· '+s+'</span>':'';}
+
+/* 요약 헤더 렌더 */
+function renderSummary(){
+  var all=MOCK[state.type];
+  var n=all.length;
+  var avg=n?all.reduce(function(a,r){return a+r.stars;},0)/n:0;
+  $('#avgNum').textContent=avg?avg.toFixed(1):'—';
+  $('#avgStars').textContent=starStr(Math.round(avg));
+  $('#avgCount').textContent='후기 '+n;
+  var dist=[5,4,3,2,1].map(function(s){return all.filter(function(r){return r.stars===s;}).length;});
+  $('#distBars').innerHTML=[5,4,3,2,1].map(function(s,i){
+    var pct=n?Math.round(dist[i]/n*100):0;
+    return '<div class="bar-row"><span class="bar-row__label">'+s+'점</span>'+
+      '<span class="bar-row__track"><span class="bar-row__fill" style="width:'+pct+'%"></span></span>'+
+      '<span class="bar-row__pct">'+pct+'%</span></div>';
+  }).join('');
+  // 인기 태그 집계
+  var freq={};
+  all.forEach(function(r){(r.tags||[]).forEach(function(t){freq[t]=(freq[t]||0)+1;});});
+  var top=Object.keys(freq).sort(function(a,b){return freq[b]-freq[a];}).slice(0,4);
+  $('#popTags').innerHTML='<span class="poptags__lead">많이 언급된</span>'+top.map(function(t){
+    return '<span class="poptag">'+t+'<b>'+freq[t]+'</b></span>';
+  }).join('');
+}
+
+/* 카드 그리드 렌더 */
+function renderGrid(){
+  var items=MOCK[state.type].slice();
+  if(state.filter==='photo')items=items.filter(function(r){return r.photos&&r.photos.length;});
+  if(state.sort==='stars')items.sort(function(a,b){return b.stars-a.stars;});
+  state.list=items;
+  var el=$('#grid');
+  if(!items.length){el.innerHTML='<div class="empty" style="grid-column:1/-1;">조건에 맞는 후기가 없습니다</div>';return;}
+  el.innerHTML=items.map(function(r,i){
+    var hasImg=r.photos&&r.photos.length;
+    var img=hasImg?'<div class="card__imgwrap"><img class="card__img" src="'+r.photos[0]+'" alt="" loading="lazy">'+
+      (r.photos.length>1?'<span class="card__photobadge">📷 '+r.photos.length+'</span>':'')+'</div>':'';
+    return '<div class="card'+(hasImg?'':' card--noimg')+'" data-idx="'+i+'">'+img+
+      '<div class="card__body'+(hasImg?'':' card__body--noimg')+'">'+
+        '<div class="card__stars">'+starStr(r.stars)+'</div>'+
+        '<div class="card__text">'+r.content+'</div>'+
+        '<div class="card__meta"><span class="card__name">'+r.name+honHtml(r.name)+storeSmall(r.store)+'</span>'+
+          '<span class="card__chip">'+r.sub+'</span></div>'+
+      '</div></div>';
+  }).join('');
+}
+
+/* ── 바텀시트 ── */
+function openSheet(idx){
+  state.idx=idx;
+  renderSheet();
+  document.body.style.overflow='hidden';
+  $('#backdrop').classList.add('on');
+  $('#sheet').classList.add('on');
+}
+function closeSheet(){
+  $('#backdrop').classList.remove('on');
+  $('#sheet').classList.remove('on');
+  document.body.style.overflow='';
+}
+function renderSheet(){
+  var r=state.list[state.idx];if(!r)return;
+  var gallery=r.photos&&r.photos.length?
+    '<div class="sheet__gallery'+(r.photos.length===1?' sheet__gallery--single':'')+'">'+
+      r.photos.map(function(p){return '<img src="'+p+'" alt="" data-full="'+p+'">';}).join('')+'</div>':'';
+  var tags=(r.tags&&r.tags.length)?'<div class="sheet__tags">'+r.tags.map(function(t){return '<span class="sheet__tag">'+t+'</span>';}).join('')+'</div>':'';
+  $('#sheetScroll').innerHTML=gallery+
+    '<div class="sheet__pad">'+
+      '<div class="sheet__topline"><span class="sheet__chip">'+r.sub+'</span></div>'+
+      '<div class="sheet__name">'+r.name+sheetHon(r.name)+storeSmall(r.store)+'</div>'+
+      '<div class="sheet__stars">'+starStr(r.stars)+'</div>'+
+      tags+
+      '<div class="sheet__body">'+r.content+'</div>'+
+      '<div class="sheet__date">'+r.date+'</div>'+
+    '</div>';
+  $('#sheetScroll').scrollTop=0;
+  $('#prevBtn').disabled=state.idx<=0;
+  $('#nextBtn').disabled=state.idx>=state.list.length-1;
+  // 사진 라이트박스 바인딩
+  $('#sheetScroll').querySelectorAll('.sheet__gallery img').forEach(function(im){
+    im.onclick=function(){openLightbox(im.getAttribute('data-full'));};
+  });
+}
+function navSheet(d){var ni=state.idx+d;if(ni<0||ni>=state.list.length)return;state.idx=ni;renderSheet();}
+
+/* 라이트박스 */
+function openLightbox(src){$('#lightboxImg').src=src;$('#lightbox').classList.add('on');}
+function closeLightbox(){$('#lightbox').classList.remove('on');}
+
+/* ── 이벤트 바인딩 ── */
+$('#grid').addEventListener('click',function(e){var c=e.target.closest('.card');if(!c)return;openSheet(+c.getAttribute('data-idx'));});
+$('#backdrop').addEventListener('click',closeSheet);
+$('#sheetClose').addEventListener('click',closeSheet);
+$('#prevBtn').addEventListener('click',function(){navSheet(-1);});
+$('#nextBtn').addEventListener('click',function(){navSheet(1);});
+$('#lightbox').addEventListener('click',closeLightbox);
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){if($('#lightbox').classList.contains('on'))closeLightbox();else if($('#sheet').classList.contains('on'))closeSheet();}
+  if($('#sheet').classList.contains('on')&&!$('#lightbox').classList.contains('on')){
+    if(e.key==='ArrowLeft')navSheet(-1);if(e.key==='ArrowRight')navSheet(1);
+  }
+});
+
+/* 탭 */
+$('#tabs').addEventListener('click',function(e){
+  var b=e.target.closest('.tab');if(!b||b.classList.contains('tab--on'))return;
+  $('#tabs').querySelectorAll('.tab').forEach(function(t){t.classList.remove('tab--on');});
+  b.classList.add('tab--on');state.type=b.getAttribute('data-type');
+  renderSummary();renderGrid();
+});
+/* 필터 */
+$('#filterSeg').addEventListener('click',function(e){
+  var b=e.target.closest('.seg__btn');if(!b)return;
+  $('#filterSeg').querySelectorAll('.seg__btn').forEach(function(t){t.classList.remove('seg__btn--on');});
+  b.classList.add('seg__btn--on');state.filter=b.getAttribute('data-filter');renderGrid();
+});
+/* 정렬 */
+$('#sortSeg').addEventListener('click',function(e){
+  var b=e.target.closest('.sort__btn');if(!b)return;
+  $('#sortSeg').querySelectorAll('.sort__btn').forEach(function(t){t.classList.remove('sort__btn--on');});
+  b.classList.add('sort__btn--on');state.sort=b.getAttribute('data-sort');renderGrid();
+});
+
+/* ── 모바일 스와이프-다운 닫기 (그립 드래그) ── */
+(function(){
+  var sheet=$('#sheet'),grip=$('#grip'),startY=0,curY=0,dragging=false;
+  function start(y){startY=y;curY=y;dragging=true;sheet.style.transition='none';}
+  function move(y){if(!dragging)return;curY=y;var d=Math.max(0,y-startY);sheet.style.transform='translateY('+d+'px)';}
+  function end(){if(!dragging)return;dragging=false;sheet.style.transition='';var d=curY-startY;
+    if(d>110){closeSheet();}sheet.style.transform='';}
+  grip.addEventListener('touchstart',function(e){start(e.touches[0].clientY);},{passive:true});
+  grip.addEventListener('touchmove',function(e){move(e.touches[0].clientY);},{passive:true});
+  grip.addEventListener('touchend',end);
+})();
+
+renderSummary();renderGrid();
+</script>
+</body>
+</html>
