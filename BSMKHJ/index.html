@@ -53,10 +53,10 @@ img{display:block; max-width:100%}
 
 /* ── 1. 메인: 세로 이미지 풀스크린 ── */
 .hero{position:relative; height:100vh; height:100svh; min-height:520px; background:#efe9df; overflow:hidden}
-.hero img{width:100%; height:100%; object-fit:cover}
-.hero.is-empty::after{content:'메인 이미지 1080×1620'; position:absolute; inset:0; display:grid; place-items:center;
+.hero img, .hero__media{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.hero.is-empty::after{content:'메인 이미지/영상 (세로)'; position:absolute; inset:0; display:grid; place-items:center;
   color:var(--muted); font-family:var(--serif-en); letter-spacing:.22em; font-size:13px}
-.hero__scroll{position:absolute; left:0; right:0; bottom:calc(24px + env(safe-area-inset-bottom));
+.hero__scroll{position:absolute; z-index:2; left:0; right:0; bottom:calc(24px + env(safe-area-inset-bottom));
   text-align:center; color:#fff; font-family:var(--serif-en); font-size:11px; letter-spacing:.34em;
   text-shadow:0 1px 8px rgba(0,0,0,.35); animation:bob 2.2s ease-in-out infinite; pointer-events:none}
 .hero__scroll svg{display:block; width:20px; height:20px; margin:7px auto 0}
@@ -212,8 +212,8 @@ img{display:block; max-width:100%}
 
   <!-- ═══════════ 1. 메인: 세로 이미지 풀스크린 ═══════════ -->
   <section class="hero" id="hero">
-    <!-- ✏️ 메인 이미지(세로컷, 권장 1080×1620). 화면 꽉 채움 -->
-    <img id="mainImg" src="assets/main.jpg" alt="" onerror="document.getElementById('hero').classList.add('is-empty'); this.remove()">
+    <!-- ✏️ 메인: assets/main.mp4 넣으면 영상 자동재생, 없으면 main.jpg(세로 1080×1620) -->
+    <img id="mainImg" class="hero__media" src="assets/main.jpg" alt="" onerror="document.getElementById('hero').classList.add('is-empty'); this.remove()">
     <div class="hero__scroll">SCROLL
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v13M6 12l6 6 6-6"/></svg>
     </div>
@@ -602,6 +602,23 @@ function armReveal(){
   }, { threshold:.12, rootMargin:'0px 0px -8% 0px' });
   els.forEach(el=>io.observe(el));
 }
+
+// 히어로: assets/main.mp4 있으면 영상으로 자동 교체(무음·인라인·루프 자동재생)
+(function heroMedia(){
+  const hero = document.getElementById('hero'); if(!hero) return;
+  const v = document.createElement('video');
+  v.muted = true; v.defaultMuted = true; v.loop = true; v.autoplay = true; v.preload = 'auto';
+  v.setAttribute('muted',''); v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+  v.className = 'hero__media';
+  v.addEventListener('loadeddata', ()=>{               // mp4 존재 → 영상 사용
+    const img = document.getElementById('mainImg'); if(img) img.remove();
+    hero.classList.remove('is-empty');
+    hero.insertBefore(v, hero.firstChild);
+    v.play().catch(()=>{});
+  }, {once:true});
+  v.addEventListener('error', ()=>{}, {once:true});    // mp4 없음 → 이미지 유지
+  v.src = 'assets/main.mp4'; v.load();
+})();
 
 // 초기화
 renderContacts();
