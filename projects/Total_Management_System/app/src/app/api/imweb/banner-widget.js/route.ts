@@ -302,7 +302,10 @@ const WIDGET_JS = `(function(){
       return (f.src || '').indexOf(ORIGIN) === 0;
     });
   }
-  /* 아임웹 상단 고정 헤더(로고바) 아래 지점 — 모달을 그 아래에 배치해 가림 방지 */
+  /* 아임웹 상단 고정 헤더(로고바) 아래 지점 — 모달을 그 아래에 배치해 가림 방지.
+     ⚠️ 아임웹 모바일 헤더는 fixed 컨테이너 안 relative 요소라 position 조건으론 못 잡음.
+     → 화면 최상단(top<=4)에 걸치고 높이가 헤더급(bottom<=40%)인 요소의 bottom 으로 감지.
+     스크롤로 헤더가 사라지면 화면 상단엔 헤더가 없어 자동으로 0 반환. */
   function topFixedBottom(){
     try {
       if (!document.elementsFromPoint) return 0;
@@ -310,12 +313,11 @@ const WIDGET_JS = `(function(){
       var b = 0, lim = window.innerHeight * 0.4;
       for (var i = 0; i < pts.length; i++){
         var el = pts[i];
-        if (!el || el.tagName === 'IFRAME') continue;
-        var cs = window.getComputedStyle(el);
-        if (cs && (cs.position === 'fixed' || cs.position === 'sticky')){
-          var rb = el.getBoundingClientRect().bottom;
-          if (rb > b && rb <= lim) b = rb;   // 화면 상단 40% 내 고정요소만 헤더로 간주
-        }
+        if (!el) continue;
+        var t = el.tagName;
+        if (t === 'IFRAME' || t === 'HTML' || t === 'BODY') continue;
+        var r = el.getBoundingClientRect();
+        if (r.top <= 4 && r.bottom > b && r.bottom <= lim) b = r.bottom;
       }
       return b;
     } catch (_) { return 0; }
