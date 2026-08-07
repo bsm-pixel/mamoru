@@ -302,6 +302,39 @@ const WIDGET_JS = `(function(){
       return (f.src || '').indexOf(ORIGIN) === 0;
     });
   }
+  /* 아임웹 상단 고정 헤더(로고바) 아래 지점 — 모달을 그 아래에 배치해 가림 방지 */
+  function topFixedBottom(){
+    try {
+      if (!document.elementsFromPoint) return 0;
+      var pts = document.elementsFromPoint(Math.round(window.innerWidth / 2), 3);
+      var b = 0, lim = window.innerHeight * 0.4;
+      for (var i = 0; i < pts.length; i++){
+        var el = pts[i];
+        if (!el || el.tagName === 'IFRAME') continue;
+        var cs = window.getComputedStyle(el);
+        if (cs && (cs.position === 'fixed' || cs.position === 'sticky')){
+          var rb = el.getBoundingClientRect().bottom;
+          if (rb > b && rb <= lim) b = rb;   // 화면 상단 40% 내 고정요소만 헤더로 간주
+        }
+      }
+      return b;
+    } catch (_) { return 0; }
+  }
+  /* 모달 열림 동안 부모(아임웹) 페이지 스크롤 잠금 — 배경이 안 밀림 */
+  var __mmLockY = null;
+  function lockScroll(){
+    if (__mmLockY !== null) return;
+    __mmLockY = window.pageYOffset || document.documentElement.scrollTop || 0;
+    var b = document.body;
+    b.style.position = 'fixed'; b.style.top = (-__mmLockY) + 'px';
+    b.style.left = '0'; b.style.right = '0'; b.style.width = '100%';
+  }
+  function unlockScroll(){
+    if (__mmLockY === null) return;
+    var b = document.body, y = __mmLockY; __mmLockY = null;
+    b.style.position = ''; b.style.top = ''; b.style.left = ''; b.style.right = ''; b.style.width = '';
+    window.scrollTo(0, y);
+  }
   window.addEventListener('message', function(e){
     if (e.origin !== ORIGIN) return;            // origin 가드
     var d = e.data; if (!d) return;
@@ -328,8 +361,10 @@ const WIDGET_JS = `(function(){
         if (vl[v].contentWindow === e.source){
           var rect = vl[v].getBoundingClientRect();
           var vpH = window.innerHeight;
-          var visTop = Math.max(0, -rect.top);
-          var visH = Math.max(0, Math.min(rect.bottom, vpH) - Math.max(rect.top, 0));
+          var hdr = topFixedBottom();              // 상단 고정헤더(로고바) 아래
+          var topEdge = Math.max(rect.top, hdr);   // 가시영역 상단 = 헤더 아래부터
+          var visTop = Math.max(0, topEdge - rect.top);
+          var visH = Math.max(0, Math.min(rect.bottom, vpH) - topEdge);
           try { e.source.postMessage({ type: 'MAMORU_VIEWPORT_INFO', visibleTop: visTop, visibleHeight: visH }, ORIGIN); } catch (_){}
           return;
         }
@@ -345,6 +380,10 @@ const WIDGET_JS = `(function(){
           return;
         }
       }
+    } else if (d.type === 'MAMORU_LOCK_SCROLL'){
+      lockScroll();     // 모달 열림 — 배경 스크롤 잠금
+    } else if (d.type === 'MAMORU_UNLOCK_SCROLL'){
+      unlockScroll();   // 모달 닫힘 — 잠금 해제
     }
   });
   function requestAll(){

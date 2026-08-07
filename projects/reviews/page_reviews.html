@@ -972,6 +972,7 @@ img { display: block; max-width: 100%; }
         overlay.classList.add('mm-rv-overlay--open');
         document.body.style.overflow = 'hidden';
         try { history.pushState({ mmRvModal: 1 }, ''); } catch(_) {} // 폰 뒤로가기 → 모달만 닫힘(홈 이탈 방지)
+        try { window.parent.postMessage({ type: 'MAMORU_LOCK_SCROLL' }, '*'); } catch(_) {} // 배경 스크롤 잠금
       });
     }
   }
@@ -1016,6 +1017,7 @@ img { display: block; max-width: 100%; }
   function doCloseModal() {
     overlay.classList.remove('mm-rv-overlay--open');
     document.body.style.overflow = '';
+    try { window.parent.postMessage({ type: 'MAMORU_UNLOCK_SCROLL' }, '*'); } catch(_) {}
   }
   function closeModal() { if (history.state && history.state.mmRvModal) history.back(); else doCloseModal(); }
   window.addEventListener('popstate', function(){ if (overlay.classList.contains('mm-rv-overlay--open')) doCloseModal(); });

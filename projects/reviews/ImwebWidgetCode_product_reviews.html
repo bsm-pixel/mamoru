@@ -1273,7 +1273,7 @@ img { display: block; max-width: 100%; }
     };
     // 최초 열기만 뷰포트 배치(순회 중엔 이미 배치돼 있어 재요청 불필요)
     if (overlay.classList.contains('mm-prv__overlay--open')) doRender();
-    else placeInViewport(overlay, function(){ doRender(); try { history.pushState({ mmPrvModal: 1 }, ''); } catch(_) {} }); // 폰 뒤로가기 → 모달만 닫힘
+    else placeInViewport(overlay, function(){ doRender(); try { history.pushState({ mmPrvModal: 1 }, ''); } catch(_) {} try { window.parent.postMessage({ type: 'MAMORU_LOCK_SCROLL' }, '*'); } catch(_) {} }); // 폰 뒤로가기 → 모달만 닫힘 + 배경 스크롤 잠금
   }
 
   function navigateModal(dir) {
@@ -1285,6 +1285,7 @@ img { display: block; max-width: 100%; }
   function doCloseModal() {
     overlay.classList.remove('mm-prv__overlay--open');
     document.body.style.overflow = '';
+    try { window.parent.postMessage({ type: 'MAMORU_UNLOCK_SCROLL' }, '*'); } catch(_) {}
   }
   function closeModal() { if (history.state && history.state.mmPrvModal) history.back(); else doCloseModal(); }
   window.addEventListener('popstate', function(){ if (overlay.classList.contains('mm-prv__overlay--open')) doCloseModal(); });

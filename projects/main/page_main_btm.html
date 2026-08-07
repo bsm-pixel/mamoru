@@ -1198,9 +1198,10 @@ button[class*="mm-"]:focus-visible {
       _rvBackdrop.classList.add('mm-rv-backdrop--open');
       document.body.style.overflow = 'hidden';
       try { history.pushState({ mmRvSheet: 1 }, ''); } catch(_) {} // 폰 뒤로가기 → 모달만 닫힘
+      try { window.parent.postMessage({ type: 'MAMORU_LOCK_SCROLL' }, '*'); } catch(_) {} // 배경 스크롤 잠금
     });
   }
-  function doCloseSheet(){ _rvBackdrop.classList.remove('mm-rv-backdrop--open'); document.body.style.overflow = ''; }
+  function doCloseSheet(){ _rvBackdrop.classList.remove('mm-rv-backdrop--open'); document.body.style.overflow = ''; try { window.parent.postMessage({ type: 'MAMORU_UNLOCK_SCROLL' }, '*'); } catch(_) {} }
   function closeSheet(){ if (history.state && history.state.mmRvSheet) history.back(); else doCloseSheet(); }
   window.addEventListener('popstate', function(){ if (_rvBackdrop && _rvBackdrop.classList.contains('mm-rv-backdrop--open')) doCloseSheet(); });
   function renderSheet(){
