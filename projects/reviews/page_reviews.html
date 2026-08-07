@@ -74,6 +74,28 @@ img { display: block; max-width: 100%; }
   font-weight: 400;
   color: var(--mm-text-d2);
 }
+/* ── 별점 요약 (평균·분포·인기태그) ── */
+.mm-rv-summary { max-width: var(--mm-max-w); margin: 8px auto 0; padding: 0 20px; }
+.mm-rv-summary__box { display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center; padding: 20px 24px; background: var(--white); border: 1px solid var(--sand); border-radius: 16px; }
+.mm-rv-summary__score { text-align: center; padding-right: 22px; border-right: 1px solid var(--parchment); }
+.mm-rv-summary__num { font-family: 'Outfit', sans-serif; font-size: 42px; font-weight: 800; line-height: 1; letter-spacing: -.02em; color: var(--void); }
+.mm-rv-summary__stars { font-size: 14px; letter-spacing: 2px; color: var(--void); margin-top: 6px; }
+.mm-rv-summary__count { font-size: 12px; color: var(--warm-gray); margin-top: 4px; }
+.mm-rv-summary__bars { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.mm-rv-bar { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--warm-gray); }
+.mm-rv-bar__label { width: 26px; flex-shrink: 0; text-align: right; }
+.mm-rv-bar__track { flex: 1; height: 6px; background: var(--parchment); border-radius: 99px; overflow: hidden; }
+.mm-rv-bar__fill { height: 100%; background: var(--void); border-radius: 99px; }
+.mm-rv-bar__pct { width: 34px; flex-shrink: 0; text-align: right; }
+.mm-rv-poptags { display: flex; flex-wrap: wrap; gap: 7px; max-width: var(--mm-max-w); margin: 10px auto 0; padding: 0 24px; }
+.mm-rv-poptags__lead { font-size: 12px; color: var(--warm-gray); align-self: center; }
+.mm-rv-poptag { font-size: 12px; font-weight: 600; padding: 6px 12px; border: 1px solid var(--sand); border-radius: 99px; color: var(--stone); background: var(--white); }
+.mm-rv-poptag b { font-weight: 700; color: var(--void); margin-left: 5px; }
+@media (max-width: 520px) {
+  .mm-rv-summary__box { grid-template-columns: 1fr; gap: 16px; }
+  .mm-rv-summary__score { border-right: none; border-bottom: 1px solid var(--parchment); padding-right: 0; padding-bottom: 14px; display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .mm-rv-summary__num { font-size: 34px; }
+}
 
 /* ── 2. 탭 필터 ── */
 .mm-rv-tabs {
@@ -243,10 +265,13 @@ img { display: block; max-width: 100%; }
 .mm-rv-modal {
   background: #fff; border-radius: 14px;
   max-width: 520px; width: 100%;
-  max-height: 80vh; overflow-y: auto;
+  max-height: calc(100% - 24px); overflow: hidden;
   padding: 28px 24px;
   position: relative;
+  display: flex; flex-direction: column;
 }
+/* 내용(사진+글씨) 영역만 스크롤 — 상단 잘림 방지, 화면 크기에 맞춤 */
+#rvModalBody { flex: 1; min-height: 0; overflow-y: auto; }
 .mm-rv-modal__close {
   position: absolute; top: 14px; right: 14px;
   width: 32px; height: 32px; border: none; background: rgba(26,26,26,0.06);
@@ -306,7 +331,7 @@ img { display: block; max-width: 100%; }
 /* 하단 순회/닫기 버튼 (이전·다음·닫기, 닫기는 우측·작게·오른손 편의) */
 .mm-rv-modal__foot {
   margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mm-border-l);
-  display: flex; gap: 8px;
+  display: flex; gap: 8px; flex-shrink: 0;
 }
 .mm-rv-modal__navbtn {
   flex: 1; padding: 11px; font-size: 13px; font-weight: 600;
@@ -576,6 +601,19 @@ img { display: block; max-width: 100%; }
   <p class="mm-rv-header__desc">마모루를 경험한 분들의 솔직한 이야기</p>
 </header>
 
+<!-- 별점 요약 (평균·분포·인기태그) -->
+<section class="mm-rv-summary" id="rvSummary" style="display:none">
+  <div class="mm-rv-summary__box">
+    <div class="mm-rv-summary__score">
+      <div class="mm-rv-summary__num" id="rvSumAvg">—</div>
+      <div class="mm-rv-summary__stars" id="rvSumStars"></div>
+      <div class="mm-rv-summary__count" id="rvSumCount"></div>
+    </div>
+    <div class="mm-rv-summary__bars" id="rvSumBars"></div>
+  </div>
+</section>
+<div class="mm-rv-poptags" id="rvSumTags" style="display:none"></div>
+
 <!-- 사진 후기 갤러리 -->
 <section class="mm-rv-photos" id="rvPhotos" style="display:none">
   <div class="mm-rv-photos__head">
@@ -788,6 +826,34 @@ img { display: block; max-width: 100%; }
   }
 
   /* ── 베스트 리뷰 렌더링 ── */
+  /* ── 별점 요약 (평균·분포·인기태그) ── */
+  function renderReviewSummary() {
+    if (!allReviews.length) return;
+    var n = allReviews.length;
+    var avg = allReviews.reduce(function(a, r) { return a + (r.stars || 0); }, 0) / n;
+    document.getElementById('rvSumAvg').textContent = avg.toFixed(1);
+    document.getElementById('rvSumStars').textContent = renderStars(Math.round(avg));
+    document.getElementById('rvSumCount').textContent = '후기 ' + n + '건';
+    var dist = [5, 4, 3, 2, 1].map(function(s) { return allReviews.filter(function(r) { return r.stars === s; }).length; });
+    document.getElementById('rvSumBars').innerHTML = [5, 4, 3, 2, 1].map(function(s, i) {
+      var pct = n ? Math.round(dist[i] / n * 100) : 0;
+      return '<div class="mm-rv-bar"><span class="mm-rv-bar__label">' + s + '점</span>' +
+        '<span class="mm-rv-bar__track"><span class="mm-rv-bar__fill" style="width:' + pct + '%"></span></span>' +
+        '<span class="mm-rv-bar__pct">' + pct + '%</span></div>';
+    }).join('');
+    document.getElementById('rvSummary').style.display = '';
+    // 인기 태그 집계
+    var freq = {};
+    allReviews.forEach(function(r) { var t = r.meta && r.meta.tags; if (t) t.forEach(function(x) { freq[x] = (freq[x] || 0) + 1; }); });
+    var top = Object.keys(freq).sort(function(a, b) { return freq[b] - freq[a]; }).slice(0, 4);
+    var tagsEl = document.getElementById('rvSumTags');
+    if (top.length) {
+      tagsEl.style.display = 'flex';
+      tagsEl.innerHTML = '<span class="mm-rv-poptags__lead">많이 언급된</span>' +
+        top.map(function(t) { return '<span class="mm-rv-poptag">' + (TAG_LABELS[t] || t) + '<b>' + freq[t] + '</b></span>'; }).join('');
+    }
+  }
+
   function renderBestReviews() {
     var bestReviews = allReviews.filter(function(r) { return r.is_best; });
     var bestSection = document.getElementById('rvBest');
@@ -1146,6 +1212,7 @@ img { display: block; max-width: 100%; }
           allReviews = [];
           console.error('리뷰 로드 실패:', data);
         }
+        renderReviewSummary();
         renderBestReviews();
         buildGallery();
         render();
