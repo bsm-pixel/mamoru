@@ -292,7 +292,7 @@ img { display: block; max-width: 100%; }
       return;
     }
     var shown = items.slice(0, 8);
-    reviewState.list = shown;
+    reviewState.list = items; // 모달 순회는 전체(미리보기 8개 넘어도 계속 조회)
     el.innerHTML = shown.map(function(r, idx) {
       var stars = '';
       for (var i = 0; i < 5; i++) stars += i < r.stars ? '★' : '☆';

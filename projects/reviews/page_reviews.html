@@ -256,11 +256,12 @@ img { display: block; max-width: 100%; }
   position: absolute; z-index: 9999;
   left: 0; right: 0;
   background: rgba(0,0,0,0.5);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: flex-end; justify-content: center;  /* 하단 기준 — 버튼 위치 고정(다음 연타) */
   padding: 20px;
   opacity: 0; visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
 }
+@media (min-width: 768px) { .mm-rv-overlay { align-items: center; } }  /* PC는 중앙 */
 .mm-rv-overlay--open { opacity: 1; visibility: visible; }
 .mm-rv-modal {
   background: #fff; border-radius: 14px;
@@ -1199,8 +1200,8 @@ img { display: block; max-width: 100%; }
     if (!card) return;
     var idx = parseInt(card.dataset.idx);
     var reviews = getFilteredReviews();
-    var visible = reviews.slice(0, currentPage * PER_PAGE);
-    if (visible[idx]) openModalAt(visible, idx);
+    // 모달 순회는 전체 리뷰 기준(더보기 로드 여부와 무관하게 끝까지 넘김)
+    if (reviews[idx]) openModalAt(reviews, idx);
   });
 
   /* ── API에서 리뷰 로드 ── */
