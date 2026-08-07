@@ -7,7 +7,7 @@ import { resizeImage } from '@/lib/utils/resize-image';
 
 const LIVE_PAGE = 'https://page.mamoru.kr/projects/reviews/page_review_event.html';
 
-interface Prize { rank: number; name: string; desc: string; image_url: string; count: number }
+interface Prize { rank: number; name: string; desc: string; image_url: string; count: number; image_urls?: string[] }
 interface EventConfig {
   deadline: string | null;
   announce_at: string | null;
@@ -69,10 +69,12 @@ function kstDateToISO(dateStr: string): string | null {
 }
 
 const EMPTY_PRIZES: Prize[] = [
-  { rank: 1, name: '', desc: '', image_url: '', count: 1 },
-  { rank: 2, name: '', desc: '', image_url: '', count: 0 },
-  { rank: 3, name: '', desc: '', image_url: '', count: 0 },
+  { rank: 1, name: '', desc: '', image_url: '', count: 1, image_urls: [] },
+  { rank: 2, name: '', desc: '', image_url: '', count: 0, image_urls: [] },
+  { rank: 3, name: '', desc: '', image_url: '', count: 0, image_urls: [] },
 ];
+// 상품 이미지 배열 — image_urls(신) 우선, 없으면 image_url(구) 폴백(하위호환)
+function prizeImgList(p: Prize): string[] { return (Array.isArray(p.image_urls) && p.image_urls.length) ? p.image_urls.filter(Boolean) : (p.image_url ? [p.image_url] : []); }
 
 export default function ReviewEventPage() {
   const [month, setMonth] = useState<string>(nowYYMM());
@@ -95,7 +97,7 @@ export default function ReviewEventPage() {
         announce_at: cfg.announce_at ?? null,
         entry_start: cfg.entry_start ?? null,
         hero_image_url: cfg.hero_image_url ?? null,
-        prizes: (Array.isArray(cfg.prizes) && cfg.prizes.length ? cfg.prizes : EMPTY_PRIZES).map((p: Prize, i: number) => ({ rank: p.rank ?? i + 1, name: p.name ?? '', desc: p.desc ?? '', image_url: p.image_url ?? '', count: p.count ?? 0 })),
+        prizes: (Array.isArray(cfg.prizes) && cfg.prizes.length ? cfg.prizes : EMPTY_PRIZES).map((p: Prize, i: number) => { const imgs = prizeImgList(p); return { rank: p.rank ?? i + 1, name: p.name ?? '', desc: p.desc ?? '', image_url: imgs[0] ?? '', count: p.count ?? 0, image_urls: imgs }; }),
         status: cfg.status ?? 'draft',
       } : { deadline: null, announce_at: null, entry_start: null, hero_image_url: null, prizes: EMPTY_PRIZES, status: 'draft' });
       const rv: ReviewRow[] = data.reviews || [];
@@ -157,17 +159,21 @@ export default function ReviewEventPage() {
   function setPrize(idx: number, field: keyof Prize, value: string | number) {
     setConfig((c) => ({ ...c, prizes: c.prizes.map((p, i) => i === idx ? { ...p, [field]: value } : p) }));
   }
+  function setPrizeImages(idx: number, urls: string[]) {
+    setConfig((c) => ({ ...c, prizes: c.prizes.map((p, i) => i === idx ? { ...p, image_urls: urls, image_url: urls[0] || '' } : p) }));
+  }
+  function removePrizeImage(idx: number, imgIdx: number) {
+    setConfig((c) => ({ ...c, prizes: c.prizes.map((p, i) => { if (i !== idx) return p; const arr = prizeImgList(p).slice(); arr.splice(imgIdx, 1); return { ...p, image_urls: arr, image_url: arr[0] || '' }; }) }));
+  }
 
-  async function uploadImage(file: File): Promise<string | null> {
+  async function uploadImages(files: File[]): Promise<string[]> {
     try {
-      const resized = await resizeImage(file, 1200, 0.85);
       const fd = new FormData();
-      fd.append('files', resized);
+      for (const f of files) { const r = await resizeImage(f, 1200, 0.85); fd.append('files', r); }
       const res = await fetch('/api/reviews/upload-bulk', { method: 'POST', body: fd });
       const data = await res.json();
-      const url = data?.results?.[0]?.url;
-      return url || null;
-    } catch { return null; }
+      return (Array.isArray(data?.results) ? data.results : []).map((x: { url?: string }) => x.url).filter(Boolean) as string[];
+    } catch { return []; }
   }
 
   async function save(nextStatus?: EventConfig['status']) {
@@ -236,15 +242,21 @@ export default function ReviewEventPage() {
                 </div>
                 <input placeholder="상품명 (예: 프리미엄 가위 1자루)" value={p.name} onChange={(e) => setPrize(idx, 'name', e.target.value)} className="w-full mb-2 px-2.5 py-1.5 rounded border border-stone-200 text-sm" />
                 <input placeholder="한 줄 설명 (선택)" value={p.desc} onChange={(e) => setPrize(idx, 'desc', e.target.value)} className="w-full mb-2 px-2.5 py-1.5 rounded border border-stone-200 text-sm" />
-                <div className="flex items-center gap-2">
-                  {p.image_url
-                    ? <img src={p.image_url} alt="" className="w-12 h-12 rounded object-cover border border-stone-200" />
-                    : <div className="w-12 h-12 rounded border border-dashed border-stone-300 flex items-center justify-center text-stone-300"><ImagePlus size={16} /></div>}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {prizeImgList(p).map((u, ui) => (
+                    <div key={ui} className="relative">
+                      <img src={u} alt="" className="w-12 h-12 rounded object-cover border border-stone-200" />
+                      <button type="button" onClick={() => removePrizeImage(idx, ui)} aria-label="삭제"
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-stone-800 text-white text-[10px] leading-none flex items-center justify-center">×</button>
+                    </div>
+                  ))}
+                  {prizeImgList(p).length === 0 && <div className="w-12 h-12 rounded border border-dashed border-stone-300 flex items-center justify-center text-stone-300"><ImagePlus size={16} /></div>}
                   <label className="text-xs text-stone-600 border border-stone-200 rounded px-2.5 py-1.5 cursor-pointer hover:bg-white">
-                    이미지 업로드
-                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (f) { const url = await uploadImage(f); if (url) setPrize(idx, 'image_url', url); } }} />
+                    이미지 추가
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={async (e) => { const fs = Array.from(e.target.files || []); if (fs.length) { const urls = await uploadImages(fs); if (urls.length) setPrizeImages(idx, prizeImgList(p).concat(urls)); } }} />
                   </label>
                 </div>
+                {prizeImgList(p).length > 1 && <p className="text-[11px] text-stone-400 mt-1">여러 장이면 고객 화면에서 좌우로 넘겨봅니다 · 첫 장이 대표 이미지</p>}
               </div>
             ))}
           </div>

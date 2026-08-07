@@ -96,8 +96,15 @@
 
 /* 선택됨(피처) = 큰 이미지 위 + 정보(설명 포함) 아래 */
 .re-prize.is-feature{ flex-direction:column; align-items:stretch; gap:0; padding:0; overflow:hidden; cursor:default; border:1.5px solid var(--void); border-radius:var(--radius-lg); }
-.re-prize.is-feature .re-prize__media{ width:100%; height:auto; aspect-ratio:16/10; border-radius:0; border:0; border-bottom:1px solid var(--sand); }
-@media(min-width:560px){ .re-prize.is-feature .re-prize__media{ aspect-ratio:2/1; } }
+.re-prize.is-feature .re-prize__media{ width:100%; height:auto; aspect-ratio:1/1; border-radius:0; border:0; border-bottom:1px solid var(--sand); position:relative; }
+/* 멀티컷 캐러셀 (선택된 상품 여러 장 — 좌우 스와이프 + 점 인디케이터) */
+.re-prize__gallery{ display:flex; width:100%; height:100%; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.re-prize__gallery::-webkit-scrollbar{ display:none; }
+.re-prize__gallery img{ flex:0 0 100%; width:100%; height:100%; object-fit:cover; scroll-snap-align:center; display:block; }
+.re-prize__dots{ position:absolute; bottom:10px; left:0; right:0; display:flex; justify-content:center; gap:6px; pointer-events:none; }
+.re-prize__dots span{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.55); transition:background .2s; box-shadow:0 0 2px rgba(0,0,0,.3); }
+.re-prize__dots span.on{ background:#fff; }
+.re-prize:not(.is-feature) .re-prize__dots{ display:none; }  /* 작은 썸네일 상태에선 점 숨김 */
 .re-prize.is-feature .re-prize__mediaph{ font-size:11px; }
 .re-prize.is-feature .re-prize__info{ padding:16px 18px 18px; }
 .re-prize.is-feature .re-prize__rank{ color:var(--cream); background:var(--void); border-color:var(--void); font-size:12px; padding:4px 12px; }
@@ -531,7 +538,9 @@ function drawDateText(iso){
   var API='https://app-eta-sandy-75.vercel.app/api/reviews/event-public';
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 
-  function prizeImg(prizes, rank){ var p=(prizes||[]).find(function(x){return x.rank===rank;}); return p&&p.image_url?p.image_url:''; }
+  /* 상품 이미지 배열 — image_urls(신) 우선, 없으면 image_url(구) 폴백(하위호환) */
+  function prizeImgs(p){ if(!p) return []; if(p.image_urls&&p.image_urls.length) return p.image_urls.filter(Boolean); return p.image_url?[p.image_url]:[]; }
+  function prizeImg(prizes, rank){ var p=(prizes||[]).find(function(x){return x.rank===rank;}); var im=prizeImgs(p); return im.length?im[0]:''; }
 
   function renderHero(cur){
     if(!cur) return;
@@ -549,18 +558,40 @@ function drawDateText(iso){
   }
 
   function prizeCard(p, feature){
-    var media = p.image_url ? '<img src="'+esc(p.image_url)+'" alt="'+esc(p.name||'')+'">' : '<span class="re-prize__mediaph">'+p.rank+'등 상품 이미지</span>';
+    var imgs = prizeImgs(p);
+    var media;
+    if(!imgs.length){
+      media = '<span class="re-prize__mediaph">'+p.rank+'등 상품 이미지</span>';
+    } else if(imgs.length>1){
+      // 여러 장 → 좌우 스와이프 캐러셀 + 점(점은 크게 볼 때만 CSS로 표시)
+      media = '<div class="re-prize__gallery">'+imgs.map(function(u){return '<img src="'+esc(u)+'" alt="'+esc(p.name||'')+'">';}).join('')+'</div>'
+        + '<div class="re-prize__dots">'+imgs.map(function(_,i){return '<span'+(i===0?' class="on"':'')+'></span>';}).join('')+'</div>';
+    } else {
+      media = '<img src="'+esc(imgs[0])+'" alt="'+esc(p.name||'')+'">';
+    }
     var pick = (p.count>0) ? '<div class="re-prize__pick"><span class="n">'+p.count+'</span><span class="u">명</span><span class="lab">추첨</span></div>' : '';
     return '<div class="re-prize'+(feature?' is-feature':'')+'"><div class="re-prize__media">'+media+'</div>'
       +'<div class="re-prize__info"><span class="re-prize__rank">'+p.rank+'등</span>'
       +'<div class="re-prize__name">'+esc(p.name||'')+'</div><div class="re-prize__desc">'+esc(p.desc||'')+'</div></div>'+pick+'</div>';
   }
+  function bindPrizeGalleries(){
+    var gs=document.querySelectorAll('#rePrizes .re-prize__gallery');
+    for(var k=0;k<gs.length;k++){ (function(g){
+      var dots=g.parentNode.querySelector('.re-prize__dots'); if(!dots) return;
+      var spans=dots.querySelectorAll('span');
+      g.addEventListener('scroll', function(){
+        var i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth));
+        for(var j=0;j<spans.length;j++) spans[j].classList.toggle('on', j===i);
+      }, {passive:true});
+    })(gs[k]); }
+  }
   function renderPrizes(cur){
     if(!cur||!cur.prizes) return;
-    var list=cur.prizes.filter(function(p){return p&&(p.name||p.image_url);}).sort(function(a,b){return a.rank-b.rank;});
+    var list=cur.prizes.filter(function(p){return p&&(p.name||prizeImgs(p).length);}).sort(function(a,b){return a.rank-b.rank;});
     if(!list.length) return;
     var host=document.getElementById('rePrizes'); if(!host) return;
     host.innerHTML=list.map(function(p,i){ return prizeCard(p, i===0); }).join('');
+    bindPrizeGalleries();
   }
 
   function winnerCard(w){
