@@ -183,15 +183,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     <button class="tab" data-type="purchase">제품구매</button>
   </div>
 
-  <!-- 필터/정렬 -->
+  <!-- 필터 (정렬 제거 — 승인제 큐레이션, 기본 최신순 고정) -->
   <div class="toolbar">
     <div class="seg" id="filterSeg">
       <button class="seg__btn seg__btn--on" data-filter="all">전체</button>
       <button class="seg__btn" data-filter="photo">📷 포토</button>
-    </div>
-    <div class="sort" id="sortSeg">
-      <button class="sort__btn sort__btn--on" data-sort="recent">최신순</button>
-      <button class="sort__btn" data-sort="stars">별점순</button>
     </div>
   </div>
 
@@ -243,7 +239,7 @@ var MOCK = {
   ]
 };
 
-var state={type:'consult',filter:'all',sort:'recent',list:[],idx:0};
+var state={type:'consult',filter:'all',list:[],idx:0};
 var $=function(s){return document.querySelector(s);};
 
 function starStr(n){var s='';for(var i=0;i<5;i++)s+=i<n?'★':'☆';return s;}
@@ -277,9 +273,8 @@ function renderSummary(){
 
 /* 카드 그리드 렌더 */
 function renderGrid(){
-  var items=MOCK[state.type].slice();
+  var items=MOCK[state.type].slice(); // 기본 최신순(원 배열 순서) 고정
   if(state.filter==='photo')items=items.filter(function(r){return r.photos&&r.photos.length;});
-  if(state.sort==='stars')items.sort(function(a,b){return b.stars-a.stars;});
   state.list=items;
   var el=$('#grid');
   if(!items.length){el.innerHTML='<div class="empty" style="grid-column:1/-1;">조건에 맞는 후기가 없습니다</div>';return;}
@@ -366,13 +361,6 @@ $('#filterSeg').addEventListener('click',function(e){
   $('#filterSeg').querySelectorAll('.seg__btn').forEach(function(t){t.classList.remove('seg__btn--on');});
   b.classList.add('seg__btn--on');state.filter=b.getAttribute('data-filter');renderGrid();
 });
-/* 정렬 */
-$('#sortSeg').addEventListener('click',function(e){
-  var b=e.target.closest('.sort__btn');if(!b)return;
-  $('#sortSeg').querySelectorAll('.sort__btn').forEach(function(t){t.classList.remove('sort__btn--on');});
-  b.classList.add('sort__btn--on');state.sort=b.getAttribute('data-sort');renderGrid();
-});
-
 /* ── 모바일 스와이프-다운 닫기 (그립 드래그) ── */
 (function(){
   var sheet=$('#sheet'),grip=$('#grip'),startY=0,curY=0,dragging=false;
