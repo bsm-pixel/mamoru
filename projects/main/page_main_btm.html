@@ -575,6 +575,49 @@ button[class*="mm-"]:focus-visible {
   .mm-reviews__more:hover { color: var(--void); }
 }
 
+/* ══ 리뷰 상세 바텀시트 (뷰포트 앵커 — 높이동기 iframe에서도 '지금 자리'에 배치) ══ */
+.mm-review-card { cursor: pointer; transition: transform .2s var(--ease), box-shadow .2s var(--ease); }
+@media (hover:hover){ .mm-review-card:hover{ transform: translateY(-3px); box-shadow:0 8px 24px rgba(26,26,26,.08); } }
+.mm-review-card:active{ transform: scale(.99); }
+.mm-rv-backdrop{ position:absolute; left:0; right:0; z-index:900; background:rgba(26,26,26,.55);
+  display:flex; align-items:flex-end; justify-content:center; opacity:0; visibility:hidden; transition:opacity .3s var(--ease),visibility .3s; }
+.mm-rv-backdrop--open{ opacity:1; visibility:visible; }
+.mm-rv-sheet{ position:relative; background:var(--cream); border-radius:22px 22px 0 0; width:100%; max-height:100%;
+  display:flex; flex-direction:column; transform:translateY(100%); transition:transform .38s cubic-bezier(.32,.72,0,1); box-shadow:0 -8px 40px rgba(26,26,26,.18); }
+.mm-rv-backdrop--open .mm-rv-sheet{ transform:translateY(0); }
+.mm-rv-sheet__grip{ padding:10px 0 4px; display:flex; justify-content:center; flex-shrink:0; touch-action:none; cursor:grab; }
+.mm-rv-sheet__grip::before{ content:""; width:40px; height:4px; border-radius:99px; background:var(--sand); }
+.mm-rv-sheet__close{ position:absolute; right:12px; top:10px; z-index:2; width:32px; height:32px; border:none; border-radius:99px; display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--stone); background:rgba(255,255,255,.72); cursor:pointer; }
+.mm-rv-sheet__scroll{ overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 0 22px; }
+.mm-rv-gallery{ display:flex; gap:8px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; padding:4px 20px 0; }
+.mm-rv-gallery::-webkit-scrollbar{ display:none; }
+.mm-rv-gallery img{ flex:0 0 auto; width:82%; max-width:420px; aspect-ratio:4/3; object-fit:cover; border-radius:12px; scroll-snap-align:center; cursor:zoom-in; background:var(--parchment); }
+.mm-rv-gallery--single img{ width:100%; }
+.mm-rv-sheet__pad{ padding:18px 20px 0; }
+.mm-rv-sheet__topline{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.mm-rv-sheet__chip{ font-size:11px; font-weight:600; padding:3px 9px; border:1px solid var(--sand); border-radius:99px; color:var(--stone); }
+.mm-rv-sheet__chip--src{ background:var(--sand); color:var(--stone); }
+.mm-rv-sheet__name{ font-size:17px; font-weight:800; color:var(--void); }
+.mm-rv-sheet__stars{ font-size:16px; letter-spacing:2px; color:var(--void); margin:2px 0 12px; }
+.mm-rv-sheet__tags{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+.mm-rv-sheet__tag{ font-size:12px; font-weight:600; padding:5px 11px; border-radius:99px; background:var(--shell); border:1px solid var(--parchment); color:var(--stone); }
+.mm-rv-sheet__body{ font-size:15px; line-height:1.75; color:var(--graphite); white-space:pre-wrap; }
+.mm-rv-sheet__date{ margin-top:18px; padding-top:14px; border-top:1px solid var(--parchment); font-size:12px; color:var(--warm-gray); }
+.mm-rv-sheet__nav{ display:flex; gap:8px; padding:14px 20px; flex-shrink:0; border-top:1px solid var(--parchment); background:var(--cream); }
+.mm-rv-sheet__navbtn{ flex:1; padding:11px; font-size:13px; font-weight:600; border:1px solid var(--sand); border-radius:12px; color:var(--stone); background:var(--white); cursor:pointer; transition:all .15s; }
+.mm-rv-sheet__navbtn:disabled{ opacity:.35; cursor:default; }
+@media(hover:hover){ .mm-rv-sheet__navbtn:not(:disabled):hover{ border-color:var(--void); color:var(--void); } }
+.mm-rv-lb{ position:absolute; left:0; right:0; top:0; height:100%; z-index:950; background:rgba(26,26,26,.92); display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; visibility:hidden; transition:opacity .25s,visibility .25s; }
+.mm-rv-lb--open{ opacity:1; visibility:visible; }
+.mm-rv-lb img{ max-width:100%; max-height:100%; object-fit:contain; border-radius:6px; }
+.mm-rv-lb__x{ position:absolute; right:16px; top:16px; width:40px; height:40px; border:none; border-radius:99px; font-size:22px; color:#fff; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+@media(min-width:768px){
+  .mm-rv-backdrop{ align-items:center; }
+  .mm-rv-sheet{ width:min(560px,94vw); max-height:88%; border-radius:22px; transform:translateY(24px) scale(.98); opacity:0; transition:transform .3s var(--ease),opacity .3s; }
+  .mm-rv-backdrop--open .mm-rv-sheet{ transform:translateY(0) scale(1); opacity:1; }
+  .mm-rv-sheet__grip{ display:none; }
+}
+
 
 /* ══════════════════════════════════════════════════════════════
    [7]. 브랜드 한마디 — Void + blur reveal
@@ -815,6 +858,8 @@ button[class*="mm-"]:focus-visible {
      ═══════════════════════════════════════════════════════════════ */
   var REVIEW_API = 'https://app-eta-sandy-75.vercel.app/api/reviews/public';
   var allReviews = [];
+  var reviewState = { list: [], idx: 0 };
+  var _rvBackdrop, _rvScroll, _rvLb, _rvLbImg, _pendingVpCb = null;
 
   function maskName(name) {
     if (!name) return '';
@@ -907,7 +952,9 @@ button[class*="mm-"]:focus-visible {
       el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--warm-gray);font-size:14px;">아직 등록된 후기가 없습니다</div>';
       return;
     }
-    el.innerHTML = items.slice(0, 8).map(function(r) {
+    var shown = items.slice(0, 8);
+    reviewState.list = shown;
+    el.innerHTML = shown.map(function(r, idx) {
       var stars = '';
       for (var i = 0; i < 5; i++) stars += i < r.stars ? '\u2605' : '\u2606';
       var imgUrl = (r.photo_urls && r.photo_urls.length > 0) ? r.photo_urls[0] : (r.product_image_url || '');
@@ -930,7 +977,7 @@ button[class*="mm-"]:focus-visible {
       }
       var chipsHtml = chips ? '<div class="mm-review-card__chips">' + chips + '</div>' : '';
       var preview = r.content.length > 60 ? r.content.substring(0, 60) + '\u2026' : r.content;
-      return '<div class="mm-review-card mm-anim mm-anim-stagger">' +
+      return '<div class="mm-review-card mm-anim mm-anim-stagger" data-idx="' + idx + '">' +
         imgHtml +
         '<div class="mm-review-card__header">' +
           '<span class="mm-review-card__name">' + maskName(r.name) + honHtml(r.name) + storeHtml(r, 11) + '</span>' +
@@ -1132,12 +1179,86 @@ button[class*="mm-"]:focus-visible {
   /* ═══════════════════════════════════════════════════════════════
      초기화
      ═══════════════════════════════════════════════════════════════ */
+  /* ── 리뷰 상세 바텀시트 (뷰포트 앵커 — 배경 잘림 방지) ── */
+  window.addEventListener('message', function(e){
+    if (e.data && e.data.type === 'MAMORU_VIEWPORT_INFO' && _pendingVpCb) {
+      var cb = _pendingVpCb; _pendingVpCb = null; cb(e.data.visibleTop || 0, e.data.visibleHeight || window.innerHeight);
+    }
+  });
+  function placeInViewport(el, done){
+    _pendingVpCb = function(top, h){ el.style.top = top + 'px'; el.style.height = h + 'px'; if (done) done(); };
+    try { window.parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*'); } catch(_) {}
+    setTimeout(function(){ if (!_pendingVpCb) return; _pendingVpCb = null; el.style.top = (window.scrollY||0) + 'px'; el.style.height = window.innerHeight + 'px'; if (done) done(); }, 200);
+  }
+  function openSheet(idx){
+    reviewState.idx = idx;
+    placeInViewport(_rvBackdrop, function(){
+      renderSheet();
+      _rvBackdrop.classList.add('mm-rv-backdrop--open');
+      document.body.style.overflow = 'hidden';
+    });
+  }
+  function closeSheet(){ _rvBackdrop.classList.remove('mm-rv-backdrop--open'); document.body.style.overflow = ''; }
+  function renderSheet(){
+    var r = reviewState.list[reviewState.idx]; if (!r) return;
+    var photos = (r.photo_urls && r.photo_urls.length) ? r.photo_urls : (r.product_image_url ? [r.product_image_url] : []);
+    var stars = ''; for (var i = 0; i < 5; i++) stars += i < r.stars ? '★' : '☆';
+    var gallery = photos.length ? '<div class="mm-rv-gallery' + (photos.length === 1 ? ' mm-rv-gallery--single' : '') + '">' +
+      photos.map(function(p){ return '<img src="' + p + '" alt="후기 사진" data-full="' + p + '">'; }).join('') + '</div>' : '';
+    var tags = '';
+    if (r.meta && r.meta.tags && r.meta.tags.length) {
+      tags = '<div class="mm-rv-sheet__tags">' + r.meta.tags.map(function(t){ return '<span class="mm-rv-sheet__tag">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') + '</div>';
+    }
+    var clbl = chipLabel(r);
+    var chip = clbl ? '<span class="mm-rv-sheet__chip">' + clbl + '</span>' : '';
+    if (r.source === 'naver') chip += '<span class="mm-rv-sheet__chip mm-rv-sheet__chip--src">네이버</span>';
+    _rvScroll.innerHTML = gallery +
+      '<div class="mm-rv-sheet__pad">' +
+        (chip ? '<div class="mm-rv-sheet__topline">' + chip + '</div>' : '') +
+        '<div class="mm-rv-sheet__name">' + maskName(r.name) + honHtml(r.name) + storeHtml(r, 12) + '</div>' +
+        '<div class="mm-rv-sheet__stars">' + stars + '</div>' +
+        tags +
+        '<div class="mm-rv-sheet__body">' + r.content + '</div>' +
+        renderDates(r).replace('mm-review-card__date', 'mm-rv-sheet__date') +
+      '</div>';
+    _rvScroll.scrollTop = 0;
+    document.getElementById('rvPrev').disabled = reviewState.idx <= 0;
+    document.getElementById('rvNext').disabled = reviewState.idx >= reviewState.list.length - 1;
+    _rvScroll.querySelectorAll('.mm-rv-gallery img').forEach(function(im){ im.onclick = function(){ openLb(im.getAttribute('data-full')); }; });
+  }
+  function navSheet(d){ var ni = reviewState.idx + d; if (ni < 0 || ni >= reviewState.list.length) return; reviewState.idx = ni; renderSheet(); }
+  function openLb(src){ _rvLbImg.src = src; _rvLb.classList.add('mm-rv-lb--open'); }
+  function closeLb(){ _rvLb.classList.remove('mm-rv-lb--open'); }
+  function initSheet(){
+    _rvBackdrop = document.getElementById('rvBackdrop'); _rvScroll = document.getElementById('rvSheetScroll');
+    _rvLb = document.getElementById('rvLb'); _rvLbImg = document.getElementById('rvLbImg');
+    document.getElementById('mmReviews').addEventListener('click', function(e){
+      var c = e.target.closest('.mm-review-card'); if (!c) return; var i = +c.getAttribute('data-idx'); if (isNaN(i)) return; openSheet(i);
+    });
+    _rvBackdrop.addEventListener('click', function(e){ if (e.target === _rvBackdrop) closeSheet(); });
+    document.getElementById('rvSheetClose').addEventListener('click', closeSheet);
+    document.getElementById('rvPrev').addEventListener('click', function(){ navSheet(-1); });
+    document.getElementById('rvNext').addEventListener('click', function(){ navSheet(1); });
+    _rvLb.addEventListener('click', closeLb);
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') { if (_rvLb.classList.contains('mm-rv-lb--open')) closeLb(); else if (_rvBackdrop.classList.contains('mm-rv-backdrop--open')) closeSheet(); }
+      else if (_rvBackdrop.classList.contains('mm-rv-backdrop--open') && !_rvLb.classList.contains('mm-rv-lb--open')) {
+        if (e.key === 'ArrowLeft') navSheet(-1); if (e.key === 'ArrowRight') navSheet(1);
+      }
+    });
+    var grip = document.getElementById('rvGrip'), sheet = document.getElementById('rvSheet'), sY = 0, cY = 0, drag = false;
+    grip.addEventListener('touchstart', function(e){ sY = cY = e.touches[0].clientY; drag = true; sheet.style.transition = 'none'; }, { passive: true });
+    grip.addEventListener('touchmove', function(e){ if (!drag) return; cY = e.touches[0].clientY; var d = Math.max(0, cY - sY); sheet.style.transform = 'translateY(' + d + 'px)'; }, { passive: true });
+    grip.addEventListener('touchend', function(){ if (!drag) return; drag = false; sheet.style.transition = ''; if (cY - sY > 110) closeSheet(); sheet.style.transform = ''; });
+  }
+
   function init() {
     loadReviews();
     initReviewTabs();
     initVideoPlayer();
     initAnimations();
     initIframeComm();
+    initSheet();
   }
 
   if (document.readyState === 'loading') {
@@ -1148,6 +1269,20 @@ button[class*="mm-"]:focus-visible {
 
 })();
 </script>
+
+<!-- 리뷰 상세 바텀시트 (뷰포트 앵커) -->
+<div class="mm-rv-backdrop" id="rvBackdrop">
+  <div class="mm-rv-sheet" id="rvSheet" role="dialog" aria-modal="true">
+    <div class="mm-rv-sheet__grip" id="rvGrip"></div>
+    <button class="mm-rv-sheet__close" id="rvSheetClose" aria-label="닫기">×</button>
+    <div class="mm-rv-sheet__scroll" id="rvSheetScroll"></div>
+    <div class="mm-rv-sheet__nav">
+      <button class="mm-rv-sheet__navbtn" id="rvPrev">← 이전 후기</button>
+      <button class="mm-rv-sheet__navbtn" id="rvNext">다음 후기 →</button>
+    </div>
+  </div>
+  <div class="mm-rv-lb" id="rvLb"><button class="mm-rv-lb__x" aria-label="닫기">×</button><img id="rvLbImg" src="" alt=""></div>
+</div>
 
 </body>
 </html>

@@ -555,7 +555,7 @@ img { display: block; max-width: 100%; }
 
 /* ── 모달 ── */
 .mm-prv__overlay {
-  position: fixed; inset: 0; z-index: 9999;
+  position: absolute; left: 0; right: 0; z-index: 9999;
   background: rgba(0,0,0,0.5);
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
@@ -720,7 +720,7 @@ img { display: block; max-width: 100%; }
 
 /* ── 라이트박스 ── */
 .mm-lb {
-  position: fixed; inset: 0; z-index: 10000;
+  position: absolute; left: 0; right: 0; z-index: 10000;
   background: rgba(0,0,0,0.92);
   display: flex; align-items: center; justify-content: center;
   opacity: 0; visibility: hidden;
@@ -1191,6 +1191,18 @@ img { display: block; max-width: 100%; }
 
   /* ── 상세 모달 — 좌우 화살표로 다음/이전 후기 순환 (Phase 2-C) ── */
   var overlay = document.getElementById('prvOverlay');
+  /* 뷰포트 앵커 — 높이동기 iframe 안에서 fixed 오버레이가 잘리는 문제 해결(page_reviews 패턴) */
+  var _pendingVpCb = null;
+  window.addEventListener('message', function(e){
+    if (e.data && e.data.type === 'MAMORU_VIEWPORT_INFO' && _pendingVpCb) {
+      var cb = _pendingVpCb; _pendingVpCb = null; cb(e.data.visibleTop || 0, e.data.visibleHeight || window.innerHeight);
+    }
+  });
+  function placeInViewport(el, done){
+    _pendingVpCb = function(top, h){ el.style.top = top + 'px'; el.style.height = h + 'px'; if (done) done(); };
+    try { window.parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*'); } catch(_) {}
+    setTimeout(function(){ if (!_pendingVpCb) return; _pendingVpCb = null; el.style.top = (window.scrollY||0) + 'px'; el.style.height = window.innerHeight + 'px'; if (done) done(); }, 200);
+  }
   var modalBody = document.getElementById('prvModalBody');
   var modalPrev = document.getElementById('prvModalPrev');
   var modalNext = document.getElementById('prvModalNext');
@@ -1235,13 +1247,18 @@ img { display: block; max-width: 100%; }
     if (!list || list.length === 0) return;
     var safeIdx = ((idx % list.length) + list.length) % list.length; // 음수 보정 + 순환
     modalContext = { list: list, idx: safeIdx, source: source || 'card' };
-    renderModalContent(list[safeIdx]);
-    updateModalNav();
-    overlay.classList.add('mm-prv__overlay--open');
-    document.body.style.overflow = 'hidden';
-    // 모달 내용 위로 스크롤 (긴 후기 후 다음 후기 진입 시 상단부터 보이도록)
-    var modalEl = document.querySelector('.mm-prv__modal');
-    if (modalEl) modalEl.scrollTop = 0;
+    var doRender = function(){
+      renderModalContent(list[safeIdx]);
+      updateModalNav();
+      overlay.classList.add('mm-prv__overlay--open');
+      document.body.style.overflow = 'hidden';
+      // 모달 내용 위로 스크롤 (긴 후기 후 다음 후기 진입 시 상단부터 보이도록)
+      var modalEl = document.querySelector('.mm-prv__modal');
+      if (modalEl) modalEl.scrollTop = 0;
+    };
+    // 최초 열기만 뷰포트 배치(순회 중엔 이미 배치돼 있어 재요청 불필요)
+    if (overlay.classList.contains('mm-prv__overlay--open')) doRender();
+    else placeInViewport(overlay, doRender);
   }
 
   function navigateModal(dir) {
@@ -1296,6 +1313,9 @@ img { display: block; max-width: 100%; }
     lbList = list || [];
     lbIdx = idx || 0;
     updateLightbox();
+    // 라이트박스도 오버레이와 동일 뷰포트 좌표로(잘림 방지)
+    lb.style.top = overlay.style.top || '0px';
+    lb.style.height = overlay.style.height || window.innerHeight + 'px';
     lb.classList.add('mm-lb--open');
   }
   function closeLightbox() { lb.classList.remove('mm-lb--open'); }
