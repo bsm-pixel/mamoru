@@ -690,14 +690,8 @@ async function submitRsvp(e){
 
 // 7. 하단 띠
 function addCalendar(){
-  const e=CONFIG.event;
-  const fmt = s => s.replace(/[-:]/g,'').replace('T','T')+'00';
-  const url = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
-    + `&text=${enc(e.title)}`
-    + `&dates=${fmt(e.start)}/${fmt(e.end)}`
-    + `&location=${enc(e.place)}`
-    + `&ctz=Asia/Seoul`;
-  window.open(url,'_blank');
+  // iOS(애플 캘린더)·안드로이드(구글/기본 캘린더) 모두 기본 달력 '일정 추가'가 뜨는 표준 .ics 파일
+  location.href = 'wedding.ics';
 }
 function copyLink(){ doCopy(location.href, '링크가 복사되었습니다'); }
 function shareKakao(){
