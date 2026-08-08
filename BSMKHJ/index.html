@@ -199,6 +199,17 @@ textarea.rsvp-input{resize:none; line-height:1.6}
 .rsvp-seg input:checked+span{border-color:var(--gold); color:var(--gold); background:#fdfbf7; font-weight:600}
 .modal__submit{width:100%; margin-top:16px; padding:14px; border-radius:12px; background:var(--gold); color:#fff; font-weight:600; font-size:14px}
 .modal__submit:disabled{opacity:.55}
+/* 참석 인원 스테퍼 (− 숫자 +) */
+.rsvp-stepper{display:flex; align-items:center; justify-content:space-between; gap:10px;
+  width:100%; margin-top:10px; padding:7px 8px 7px 14px; border:1px solid var(--line); border-radius:10px; background:#fff}
+.rsvp-stepper__label{font-size:14px; color:#9a9086}
+.stepper{display:flex; align-items:center; gap:4px; flex-shrink:0}
+.stepper__btn{width:36px; height:36px; border-radius:8px; font-size:22px; line-height:1; color:var(--gold);
+  border:1px solid var(--line); background:#fff; display:grid; place-items:center; user-select:none; transition:.12s}
+.stepper__btn:active{background:var(--gold); color:#fff; border-color:var(--gold); transform:scale(.94)}
+.stepper__btn:disabled{opacity:.3; color:var(--muted)}
+.stepper__num{min-width:44px; text-align:center; font-family:var(--sans); font-size:18px; font-weight:700;
+  color:var(--ink); font-variant-numeric:tabular-nums}
 
 /* ── 7. 하단 띠 ── */
 /* 하단 띠: 고정(sticky) 아님 — 페이지 맨 끝에 자연스럽게 위치 */
@@ -389,7 +400,15 @@ textarea.rsvp-input{resize:none; line-height:1.6}
       </div>
       <input class="rsvp-input" name="name" placeholder="성함 *" required maxlength="40" autocomplete="name">
       <input class="rsvp-input" name="phone" placeholder="연락처 (선택)" inputmode="tel" maxlength="20" autocomplete="tel">
-      <input class="rsvp-input" name="headcount" type="number" placeholder="참석 인원 (본인 포함, 선택)" min="1" max="20" inputmode="numeric">
+      <div class="rsvp-stepper">
+        <span class="rsvp-stepper__label">참석 인원 (본인 포함)</span>
+        <div class="stepper">
+          <button type="button" class="stepper__btn" id="headMinus" onclick="stepHead(-1)" aria-label="인원 감소">−</button>
+          <span class="stepper__num" id="headNum">1</span>
+          <button type="button" class="stepper__btn" id="headPlus" onclick="stepHead(1)" aria-label="인원 증가">+</button>
+        </div>
+        <input type="hidden" name="headcount" id="headInput" value="1">
+      </div>
       <div class="rsvp-seg">
         <label><input type="radio" name="meal" value="예정" checked><span>식사 예정</span></label>
         <label><input type="radio" name="meal" value="안함"><span>식사 안 함</span></label>
@@ -626,6 +645,14 @@ function closeAcct(){ $('#acctModal').classList.remove('on'); document.body.styl
 function copyAcct(no){ doCopy(no.replace(/-/g,''), '계좌번호가 복사되었습니다'); }
 
 // 6b. 참석여부(RSVP) 모달 → Supabase 저장
+function setHead(v){
+  v = Math.min(20, Math.max(1, v|0));
+  $('#headNum').textContent = v;
+  $('#headInput').value = v;
+  $('#headMinus').disabled = v <= 1;
+  $('#headPlus').disabled  = v >= 20;
+}
+function stepHead(d){ setHead((parseInt($('#headInput').value,10)||1) + d); }
 function openRsvp(){ $('#rsvpModal').classList.add('on'); document.body.style.overflow='hidden'; }
 function closeRsvp(){ $('#rsvpModal').classList.remove('on'); document.body.style.overflow=''; }
 async function submitRsvp(e){
@@ -650,7 +677,7 @@ async function submitRsvp(e){
       body: JSON.stringify(data),
     });
     if(!res.ok) throw new Error(res.status + ' ' + await res.text());
-    closeRsvp(); f.reset();
+    closeRsvp(); f.reset(); setHead(1);
     toast('참석 여부가 전달되었습니다. 감사합니다');
   }catch(err){
     btn.disabled = false; btn.textContent = '보내기';
@@ -770,6 +797,7 @@ renderContacts();
 renderGallery();
 fillVenue();
 initCountdown();
+setHead(1);
 armReveal();
 try{ if(CONFIG.kakaoKey && CONFIG.kakaoKey!=='YOUR_KAKAO_JS_KEY') Kakao.init(CONFIG.kakaoKey); }catch(e){}
 </script>
