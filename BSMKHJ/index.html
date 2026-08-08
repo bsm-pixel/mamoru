@@ -710,6 +710,7 @@ function shareKakao(){
           title,
           description: e.dateText || `${e.start.slice(0,10)} · ${e.place}`,
           imageUrl:'https://page.mamoru.kr/BSMKHJ/assets/og.jpg',
+          imageWidth:1200, imageHeight:600,   // 2:1 가로형(와이드)으로 노출
           link:{ mobileWebUrl:url, webUrl:url },
         },
         buttons:[{ title:'청첩장 보기', link:{ mobileWebUrl:url, webUrl:url } }],
