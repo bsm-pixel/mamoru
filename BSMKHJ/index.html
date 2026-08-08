@@ -19,8 +19,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 
-<!-- 카카오 SDK (공유 카드 + 카카오네비) -->
-<script src="https://t1.kakao.com/kakao_js_sdk/2.7.2/kakao.min.js" crossorigin="anonymous"></script>
+<!-- 카카오 SDK (공유 카드 + 카카오네비) — 호스트는 t1.kakaocdn.net 이어야 함 -->
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" crossorigin="anonymous"></script>
 
 <style>
 :root{
@@ -174,6 +174,8 @@ img{display:block; max-width:100%}
   padding:26px 22px calc(26px + env(safe-area-inset-bottom)); animation:up .3s ease}
 @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal__title{text-align:center; font-family:var(--serif-ko); font-size:18px; font-weight:700; margin-bottom:20px}
+#rsvpModal .modal__title{margin-bottom:8px}
+.modal__sub{text-align:center; font-family:var(--serif-ko); color:var(--muted); font-size:13px; line-height:1.75; margin-bottom:20px}
 .acct{background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:12px}
 .acct__top{display:flex; justify-content:space-between; align-items:center; gap:10px}
 .acct__bank{font-size:13.5px; color:var(--ink); font-weight:600}
@@ -393,6 +395,7 @@ textarea.rsvp-input{resize:none; line-height:1.6}
 <div class="modal" id="rsvpModal" onclick="if(event.target===this)closeRsvp()">
   <div class="modal__card">
     <div class="modal__title">참석 여부 전하기</div>
+    <p class="modal__sub">이곳 웨딩홀이 음식이 맛있기로 소문났대요.<br>부디 든든하게 드시고, 좋은 하루 되시길 바라요.</p>
     <form id="rsvpForm" onsubmit="submitRsvp(event)">
       <div class="rsvp-seg">
         <label><input type="radio" name="attending" value="참석" checked><span>참석</span></label>
@@ -698,23 +701,24 @@ function addCalendar(){
 }
 function copyLink(){ doCopy(location.href, '링크가 복사되었습니다'); }
 function shareKakao(){
-  const e=CONFIG.event;
-  if(window.Kakao && Kakao.isInitialized()){
-    Kakao.Share.sendDefault({
-      objectType:'feed',
-      content:{
-        title:'백성민 ♥ 혜정 결혼합니다',
-        description:`${e.start.slice(0,10)} · ${e.place}`,
-        imageUrl:'https://page.mamoru.kr/BSMKHJ/assets/og.jpg',
-        link:{ mobileWebUrl:location.href, webUrl:location.href },
-      },
-      buttons:[{ title:'청첩장 보기', link:{ mobileWebUrl:location.href, webUrl:location.href } }],
-    });
-  }else if(navigator.share){
-    navigator.share({ title:'백성민 ♥ 혜정 결혼합니다', url:location.href });
-  }else{
-    copyLink();
-  }
+  const e=CONFIG.event, url=location.href, title='백성민 ♥ 김혜정 결혼합니다';
+  try{
+    if(window.Kakao && Kakao.isInitialized()){
+      Kakao.Share.sendDefault({
+        objectType:'feed',
+        content:{
+          title,
+          description: e.dateText || `${e.start.slice(0,10)} · ${e.place}`,
+          imageUrl:'https://page.mamoru.kr/BSMKHJ/assets/og.jpg',
+          link:{ mobileWebUrl:url, webUrl:url },
+        },
+        buttons:[{ title:'청첩장 보기', link:{ mobileWebUrl:url, webUrl:url } }],
+      });
+      return;
+    }
+  }catch(err){ /* 카카오 실패 시 아래로 폴백 */ }
+  if(navigator.share){ navigator.share({ title, url }).catch(()=>{}); return; }
+  copyLink();
 }
 
 // 공용: 복사 + 토스트
