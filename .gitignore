@@ -1,3 +1,7 @@
 .claude/settings.local.json
 .vercel
 notion-config.json
+
+# 청첩장 RSVP 응답(하객 개인정보) — 로컬 전용, 절대 배포/커밋 금지
+BSMKHJ/_rsvp_responses.html
+BSMKHJ/_rsvp_responses.csv
