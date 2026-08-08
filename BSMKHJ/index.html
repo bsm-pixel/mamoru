@@ -31,17 +31,15 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 button{border:0; background:none; font:inherit; color:inherit; cursor:pointer}  /* 기본 3D 테두리 제거 */
-html,body{background:#EDE7DD; height:100%}
+html,body{background:#EDE7DD}
 body{
   font-family:var(--sans); color:var(--ink); line-height:1.75;
-  -webkit-font-smoothing:antialiased; overflow:hidden;   /* 문서 자체 스크롤 제거 → 인앱 상/하단 툴바 토글(깜빡임) 차단 */
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
 }
-/* 스크롤은 문서가 아니라 이 프레임 안에서만 발생 → 브라우저 툴바가 숨었다 보였다 하지 않음 */
+/* 모바일 폭 고정 프레임(PC에서도 청첩장은 세로 카드로) */
 .frame{
   max-width:460px; margin:0 auto; background:var(--ivory);
-  height:100%; position:relative;
-  overflow-y:auto; overflow-x:hidden;
-  -webkit-overflow-scrolling:touch; overscroll-behavior:y contain;
+  min-height:100vh; position:relative; overflow:hidden;
 }
 /* 그림자는 PC(카드형)에서만 — 모바일 풀폭에선 하단 어두운 테두리로 보여 제거 */
 @media (min-width:481px){ .frame{ box-shadow:0 0 60px rgba(0,0,0,.12) } }
@@ -182,11 +180,11 @@ img{display:block; max-width:100%}
 .modal__close{width:100%; margin-top:8px; padding:14px; border-radius:12px; background:var(--ink); color:#fff; font-weight:600; font-size:14px}
 
 /* ── 7. 하단 띠 ── */
-/* 인앱 웹뷰 스크롤 잼 방지: backdrop-filter 미사용(불투명 배경) */
-.footer-bar{position:sticky; bottom:0; z-index:40; background:var(--ivory);
+/* 하단 띠: 고정(sticky) 아님 — 페이지 맨 끝에 자연스럽게 위치 */
+.footer-bar{background:var(--ivory);
   border-top:1px solid var(--gold-soft);
   display:grid; grid-template-columns:repeat(3,1fr);
-  padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -3px 12px rgba(62,58,53,.05)}
+  padding-bottom:env(safe-area-inset-bottom)}
 .footer-bar button{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
   padding:14px 4px 15px; background:none; border:0; color:var(--ink); cursor:pointer; transition:transform .18s ease}
 .footer-bar .fic{width:38px; height:38px; border-radius:50%; border:1px solid var(--gold-soft);
@@ -460,7 +458,7 @@ function openLb(i){
     `<div class="lb__slide"><img src="assets/${src}" alt=""></div>`
   ).join('');
   $('#lb').classList.add('on');
-  (document.querySelector('.frame')||document.body).style.overflow='hidden';
+  document.body.style.overflow='hidden';
   goSlide(i,false);
   history.pushState({lb:1},'');    // 폰 뒤로가기 = 라이트박스만 닫힘
 }
@@ -474,7 +472,7 @@ function goSlide(i,anim=true){
 function closeLb(){
   if($('#lb').classList.contains('on')){
     $('#lb').classList.remove('on');
-    (document.querySelector('.frame')||document.body).style.overflow='';
+    document.body.style.overflow='';
     if(history.state && history.state.lb) history.back();
   }
 }
@@ -497,7 +495,7 @@ function closeLb(){
     else goSlide(lbIndex);
   },{passive:true});
 })();
-window.addEventListener('popstate',()=>{ if($('#lb').classList.contains('on')){ $('#lb').classList.remove('on'); (document.querySelector('.frame')||document.body).style.overflow=''; } });
+window.addEventListener('popstate',()=>{ if($('#lb').classList.contains('on')){ $('#lb').classList.remove('on'); document.body.style.overflow=''; } });
 
 // 5. 오시는 길
 function fillVenue(){
@@ -552,9 +550,9 @@ function openAcct(side){
       </div>
       <div class="acct__no">${a.no}</div>
     </div>`).join('');
-  $('#acctModal').classList.add('on'); (document.querySelector('.frame')||document.body).style.overflow='hidden';
+  $('#acctModal').classList.add('on'); document.body.style.overflow='hidden';
 }
-function closeAcct(){ $('#acctModal').classList.remove('on'); (document.querySelector('.frame')||document.body).style.overflow=''; }
+function closeAcct(){ $('#acctModal').classList.remove('on'); document.body.style.overflow=''; }
 function copyAcct(no){ doCopy(no.replace(/-/g,''), '계좌번호가 복사되었습니다'); }
 
 // 7. 하단 띠
