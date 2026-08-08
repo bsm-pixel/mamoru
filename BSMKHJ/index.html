@@ -87,12 +87,6 @@ img{display:block; max-width:100%}
 /* ── 2. 편지 ── */
 .letter{background:var(--paper); text-align:center}
 .letter img{width:100%; border-radius:2px}
-/* 편지 상단 1:1 정사각 사진 */
-.letter-photo{width:100%; aspect-ratio:1/1; border-radius:6px; overflow:hidden; position:relative;
-  box-shadow:var(--shadow); background:linear-gradient(135deg,#efe9df,#e3dccf)}
-.letter-photo img{width:100%; height:100%; object-fit:cover}
-.letter-photo.is-empty::after{content:'1:1 사진'; position:absolute; inset:0; display:grid; place-items:center;
-  color:var(--muted); font-family:var(--serif-en); letter-spacing:.22em; font-size:13px}
 
 /* ── 2b. 카운트다운(D-day) ── */
 .countdown{background:var(--paper)}
@@ -250,11 +244,7 @@ img{display:block; max-width:100%}
 
   <!-- ═══════════ 2. 편지 ═══════════ -->
   <section class="letter section reveal">
-    <!-- ✏️ 상단 1:1 정사각 사진 (권장 1080×1080). assets/invite.jpg 넣으면 자동 표시 -->
-    <div class="letter-photo" id="letterPhoto">
-      <img src="assets/invite.jpg" alt="" onerror="document.getElementById('letterPhoto').classList.add('is-empty'); this.remove()">
-    </div>
-    <div class="label-sm" style="margin-top:36px">Invitation</div>
+    <div class="label-sm">Invitation</div>
     <!-- ✏️ 편지 이미지(권장 1080×1440). 이미지 대신 글로 쓰고싶으면 아래 img 지우고 텍스트 -->
     <img src="assets/letter.jpg" alt="초대의 글" onerror="this.outerHTML='&lt;p class=ko-serif style=\'font-size:16px;line-height:2.1;color:var(--ink)\'&gt;두 사람이 사랑으로 만나<br>하나의 이름으로 새 길을 열려 합니다.<br>귀한 걸음으로 축복해 주시면<br>더없는 기쁨으로 간직하겠습니다.&lt;/p&gt;'">
   </section>
