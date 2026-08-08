@@ -690,8 +690,24 @@ async function submitRsvp(e){
 
 // 7. 하단 띠
 function addCalendar(){
-  // iOS(애플 캘린더)·안드로이드(구글/기본 캘린더) 모두 기본 달력 '일정 추가'가 뜨는 표준 .ics 파일
-  location.href = 'wedding.ics';
+  const e = CONFIG.event;
+  const begin = new Date(e.start + ':00+09:00').getTime();   // KST → epoch millis
+  const end   = new Date(e.end   + ':00+09:00').getTime();
+  if(/android/i.test(navigator.userAgent || '')){
+    // 안드로이드: 기본 캘린더 앱 '일정 추가' 화면 바로 열기(다운로드/로그인 없음)
+    const gcal = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+      + '&text=' + enc(e.title)
+      + '&dates=' + e.start.replace(/[-:]/g,'') + '00/' + e.end.replace(/[-:]/g,'') + '00'
+      + '&location=' + enc(e.place) + '&ctz=Asia/Seoul';
+    location.href = 'intent:#Intent;action=android.intent.action.INSERT;type=vnd.android.cursor.item/event;'
+      + 'S.title=' + enc(e.title) + ';'
+      + 'S.eventLocation=' + enc(e.place) + ';'
+      + 'l.beginTime=' + begin + ';l.endTime=' + end + ';'
+      + 'S.browser_fallback_url=' + enc(gcal) + ';end';
+  }else{
+    // iOS 등: 표준 .ics (애플 캘린더 추가 화면)
+    location.href = 'wedding.ics';
+  }
 }
 function copyLink(){ doCopy(location.href, '링크가 복사되었습니다'); }
 function shareKakao(){
