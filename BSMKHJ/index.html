@@ -183,6 +183,23 @@ img{display:block; max-width:100%}
 .copy-btn:active{background:var(--gold); color:#fff}
 .modal__close{width:100%; margin-top:8px; padding:14px; border-radius:12px; background:var(--ink); color:#fff; font-weight:600; font-size:14px}
 
+/* ── 5b. 참석여부(RSVP) ── */
+.rsvp{background:var(--ivory)}
+.rsvp-desc{margin-top:14px; font-family:var(--serif-ko); color:var(--muted); font-size:14px; line-height:1.9; letter-spacing:.02em}
+.rsvp-input{width:100%; margin-top:10px; padding:13px 14px; border:1px solid var(--line); border-radius:10px;
+  background:#fff; font:inherit; font-size:14px; color:var(--ink); -webkit-appearance:none; appearance:none}
+.rsvp-input::placeholder{color:#b6ada2}
+.rsvp-input:focus{outline:none; border-color:var(--gold-soft)}
+textarea.rsvp-input{resize:none; line-height:1.6}
+.rsvp-seg{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px}
+.rsvp-seg label{position:relative; display:block}
+.rsvp-seg input{position:absolute; opacity:0; inset:0; margin:0; cursor:pointer}
+.rsvp-seg span{display:block; text-align:center; padding:12px; border:1px solid var(--line); border-radius:10px;
+  font-size:14px; color:var(--muted); background:#fff; transition:.15s}
+.rsvp-seg input:checked+span{border-color:var(--gold); color:var(--gold); background:#fdfbf7; font-weight:600}
+.modal__submit{width:100%; margin-top:16px; padding:14px; border-radius:12px; background:var(--gold); color:#fff; font-weight:600; font-size:14px}
+.modal__submit:disabled{opacity:.55}
+
 /* ── 7. 하단 띠 ── */
 /* 하단 띠: 고정(sticky) 아님 — 페이지 맨 끝에 자연스럽게 위치 */
 .footer-bar{background:var(--ivory);
@@ -299,6 +316,15 @@ img{display:block; max-width:100%}
     </div>
   </section>
 
+  <!-- ═══════════ 5b. 참석여부(RSVP) ═══════════ -->
+  <section class="rsvp section center reveal">
+    <div class="divider"></div>
+    <div class="label-sm" style="margin-top:24px">R.S.V.P</div>
+    <h3 class="title">참석 여부 전하기</h3>
+    <p class="rsvp-desc">참석 여부를 미리 알려주시면<br>더욱 정성껏 준비하겠습니다.</p>
+    <button class="btn btn--fill btn--full" style="max-width:280px;margin:24px auto 0" onclick="openRsvp()">참석 의사 전달하기</button>
+  </section>
+
   <!-- ═══════════ 6. 마음 전하기 ═══════════ -->
   <section class="gift section center reveal">
     <div class="divider"></div>
@@ -349,6 +375,29 @@ img{display:block; max-width:100%}
     <div class="modal__title" id="acctTitle"></div>
     <div id="acctList"></div>
     <button class="modal__close" onclick="closeAcct()">닫기</button>
+  </div>
+</div>
+
+<!-- 참석여부(RSVP) 모달 -->
+<div class="modal" id="rsvpModal" onclick="if(event.target===this)closeRsvp()">
+  <div class="modal__card">
+    <div class="modal__title">참석 여부 전하기</div>
+    <form id="rsvpForm" onsubmit="submitRsvp(event)">
+      <div class="rsvp-seg">
+        <label><input type="radio" name="attending" value="참석" checked><span>참석</span></label>
+        <label><input type="radio" name="attending" value="미참석"><span>미참석</span></label>
+      </div>
+      <input class="rsvp-input" name="name" placeholder="성함 *" required maxlength="40" autocomplete="name">
+      <input class="rsvp-input" name="phone" placeholder="연락처 (선택)" inputmode="tel" maxlength="20" autocomplete="tel">
+      <input class="rsvp-input" name="headcount" type="number" placeholder="참석 인원 (본인 포함, 선택)" min="1" max="20" inputmode="numeric">
+      <div class="rsvp-seg">
+        <label><input type="radio" name="meal" value="예정" checked><span>식사 예정</span></label>
+        <label><input type="radio" name="meal" value="안함"><span>식사 안 함</span></label>
+      </div>
+      <textarea class="rsvp-input" name="message" placeholder="전하고 싶은 말 (선택)" rows="2" maxlength="500"></textarea>
+      <button type="submit" class="modal__submit" id="rsvpSubmit">보내기</button>
+    </form>
+    <button class="modal__close" onclick="closeRsvp()">닫기</button>
   </div>
 </div>
 
@@ -423,6 +472,13 @@ const CONFIG = {
   // ── 카카오 (공유카드 + 카카오네비) ──
   // ✏️ 카카오 개발자센터에서 JavaScript 키 발급 후 붙여넣기 (도메인 page.mamoru.kr 등록 필수)
   kakaoKey: 'e3fdd4fc34cf61fb7132ec62607f1c4d',
+
+  // ── 참석여부(RSVP) 저장 = Supabase (공개 anon 키, RLS로 보호) ──
+  supabase: {
+    url: 'https://zuqabeeurtwpzmkdsynx.supabase.co',
+    key: 'sb_publishable_RRKP1RNgzHt0IqG64st7RQ_IdT0cQrR',
+    table: 'wedding_rsvp',
+  },
 };
 
 /* ═══════════════════ 이하 로직 (수정 불필요) ═══════════════════ */
@@ -568,6 +624,39 @@ function openAcct(side){
 }
 function closeAcct(){ $('#acctModal').classList.remove('on'); document.body.style.overflow=''; }
 function copyAcct(no){ doCopy(no.replace(/-/g,''), '계좌번호가 복사되었습니다'); }
+
+// 6b. 참석여부(RSVP) 모달 → Supabase 저장
+function openRsvp(){ $('#rsvpModal').classList.add('on'); document.body.style.overflow='hidden'; }
+function closeRsvp(){ $('#rsvpModal').classList.remove('on'); document.body.style.overflow=''; }
+async function submitRsvp(e){
+  e.preventDefault();
+  const f = e.target, btn = $('#rsvpSubmit');
+  const name = f.name.value.trim();
+  if(!name){ toast('성함을 입력해 주세요'); return; }
+  const data = {
+    attending: f.attending.value,
+    name,
+    phone: f.phone.value.trim() || null,
+    headcount: f.headcount.value ? parseInt(f.headcount.value, 10) : null,
+    meal: f.meal.value || null,
+    message: f.message.value.trim() || null,
+  };
+  const sb = CONFIG.supabase;
+  btn.disabled = true; btn.textContent = '보내는 중…';
+  try{
+    const res = await fetch(`${sb.url}/rest/v1/${sb.table}`, {
+      method:'POST',
+      headers:{ apikey:sb.key, Authorization:'Bearer '+sb.key, 'Content-Type':'application/json', Prefer:'return=minimal' },
+      body: JSON.stringify(data),
+    });
+    if(!res.ok) throw new Error(res.status + ' ' + await res.text());
+    closeRsvp(); f.reset();
+    toast('참석 여부가 전달되었습니다. 감사합니다');
+  }catch(err){
+    btn.disabled = false; btn.textContent = '보내기';
+    toast('전송에 실패했어요. 잠시 후 다시 시도해 주세요');
+  }
+}
 
 // 7. 하단 띠
 function addCalendar(){
