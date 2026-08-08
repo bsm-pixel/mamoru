@@ -94,6 +94,16 @@ img{display:block; max-width:100%}
 .letter-photo.is-empty::after{content:'1:1 사진'; position:absolute; inset:0; display:grid; place-items:center;
   color:var(--muted); font-family:var(--serif-en); letter-spacing:.22em; font-size:13px}
 
+/* ── 2b. 카운트다운(D-day) ── */
+.countdown{background:var(--paper)}
+.cd-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin:28px auto 0; max-width:330px}
+.cd-box{background:var(--ivory); border:1px solid var(--line); border-radius:12px; padding:16px 4px; box-shadow:var(--shadow)}
+.cd-num{display:block; font-family:var(--serif-en); font-size:clamp(24px,7vw,30px); font-weight:500; color:var(--ink);
+  font-variant-numeric:tabular-nums; letter-spacing:.02em; line-height:1}
+.cd-unit{display:block; font-size:11px; color:var(--muted); letter-spacing:.08em; margin-top:8px}
+.cd-note{margin-top:24px; font-family:var(--serif-ko); font-size:14px; color:var(--muted); line-height:1.9; letter-spacing:.02em}
+.cd-dday{color:var(--gold); font-weight:700}
+
 /* ── 3. 연락처 ── */
 .contacts{background:var(--ivory)}
 /* minmax(0,1fr) = 좁은 폭에서도 칸이 min-content 이하로 축소돼 우측 넘침·잘림 방지 */
@@ -249,6 +259,19 @@ img{display:block; max-width:100%}
     <img src="assets/letter.jpg" alt="초대의 글" onerror="this.outerHTML='&lt;p class=ko-serif style=\'font-size:16px;line-height:2.1;color:var(--ink)\'&gt;두 사람이 사랑으로 만나<br>하나의 이름으로 새 길을 열려 합니다.<br>귀한 걸음으로 축복해 주시면<br>더없는 기쁨으로 간직하겠습니다.&lt;/p&gt;'">
   </section>
 
+  <!-- ═══════════ 2b. 카운트다운(D-day) ═══════════ -->
+  <section class="countdown section center reveal">
+    <div class="label-sm">Countdown</div>
+    <h3 class="title" id="cdTitle">결혼식까지</h3>
+    <div class="cd-grid">
+      <div class="cd-box"><span class="cd-num" id="cdD">–</span><span class="cd-unit">일</span></div>
+      <div class="cd-box"><span class="cd-num" id="cdH">–</span><span class="cd-unit">시간</span></div>
+      <div class="cd-box"><span class="cd-num" id="cdM">–</span><span class="cd-unit">분</span></div>
+      <div class="cd-box"><span class="cd-num" id="cdS">–</span><span class="cd-unit">초</span></div>
+    </div>
+    <p class="cd-note" id="cdNote"></p>
+  </section>
+
   <!-- ═══════════ 3. 연락처 ═══════════ -->
   <section class="contacts section center reveal">
     <div class="divider"></div>
@@ -349,11 +372,12 @@ img{display:block; max-width:100%}
 const CONFIG = {
   // ── 예식 정보 (달력등록·공유카드에 사용) ──
   event: {
-    title: '백성민 ♥ 혜정 결혼식',
+    title: '백성민 ♥ 김혜정 결혼식',
     // 시작/종료 (KST). 형식: 'YYYY-MM-DDTHH:MM'
-    start: '2026-01-01T11:00',
-    end:   '2026-01-01T13:00',
+    start: '2026-10-31T12:30',
+    end:   '2026-10-31T14:30',
     place: 'CN웨딩홀 주안 샤방샤방홀',
+    dateText: '2026년 10월 31일 토요일 오후 12시 30분',  // 카운트다운·표시용
   },
 
   // ── 연락처 (전화 아이콘=다이얼만 뜸, 문자 아이콘=수신번호 자동입력) ──
@@ -635,10 +659,38 @@ function armReveal(){
   v.src = 'assets/main.mp4'; v.load();
 })();
 
+// D-day 카운트다운 (KST 기준, 초 단위 실시간)
+function initCountdown(){
+  const elD=$('#cdD'), elH=$('#cdH'), elM=$('#cdM'), elS=$('#cdS'), note=$('#cdNote'), title=$('#cdTitle');
+  if(!elD) return;
+  const target = new Date(CONFIG.event.start + ':00+09:00');   // 예: 2026-10-31T12:30:00+09:00
+  const dateText = CONFIG.event.dateText || CONFIG.event.start.slice(0,10);
+  const pad = n => String(n).padStart(2,'0');
+  let timer = null;
+  function tick(){
+    let diff = Math.floor((target.getTime() - Date.now())/1000);
+    if(diff <= 0){                                   // 당일/이후
+      elD.textContent='0'; elH.textContent='00'; elM.textContent='00'; elS.textContent='00';
+      title.textContent='오늘은 저희의 결혼식입니다';
+      note.innerHTML = dateText;
+      if(timer) clearInterval(timer);
+      return;
+    }
+    const d=Math.floor(diff/86400); diff-=d*86400;
+    const h=Math.floor(diff/3600);  diff-=h*3600;
+    const m=Math.floor(diff/60);    const s=diff-m*60;
+    elD.textContent=d; elH.textContent=pad(h); elM.textContent=pad(m); elS.textContent=pad(s);
+    note.innerHTML = `${dateText}<br>백성민 ♥ 김혜정의 결혼식이 <span class="cd-dday">D-${d}</span> 남았습니다`;
+  }
+  tick();
+  timer = setInterval(tick, 1000);
+}
+
 // 초기화
 renderContacts();
 renderGallery();
 fillVenue();
+initCountdown();
 armReveal();
 try{ if(CONFIG.kakaoKey && CONFIG.kakaoKey!=='YOUR_KAKAO_JS_KEY') Kakao.init(CONFIG.kakaoKey); }catch(e){}
 </script>
