@@ -33,17 +33,21 @@ export function useConsultations(filters?: {
     queryKey: ['consultations', filters],
     staleTime: 30_000,
     queryFn: async () => {
-      // 정렬 설정
-      const orderCol = filters?.orderBy === 'visit_date_asc' ? 'visit_date'
-        : filters?.orderBy === 'updated_at_desc' ? 'updated_at'
-        : 'received_at';
-      const ascending = filters?.orderBy === 'visit_date_asc';
-
       let query = supabase
         .from('consultations')
-        .select('*', { count: 'exact' })
-        .order(orderCol, { ascending })
-        .range(from, to);
+        .select('*', { count: 'exact' });
+
+      // 정렬 — visit_date_asc는 같은 날 안에서 visit_time까지 오름차순(시간 뒤섞임 방지)
+      if (filters?.orderBy === 'visit_date_asc') {
+        query = query
+          .order('visit_date', { ascending: true })
+          .order('visit_time', { ascending: true, nullsFirst: false });
+      } else if (filters?.orderBy === 'updated_at_desc') {
+        query = query.order('updated_at', { ascending: false });
+      } else {
+        query = query.order('received_at', { ascending: false });
+      }
+      query = query.range(from, to);
 
       // 단일 상태 필터
       if (filters?.status && filters.status !== 'all') {

@@ -41,6 +41,17 @@ const TYPE_CONFIG = {
   talk_consult: { label: '톡상담', icon: MessageCircle,color: 'blue',    bar: 'bg-blue-500',    bg: 'bg-blue-50',    text: 'text-blue-700',    iconColor: 'text-blue-600' },
 } as const;
 
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+/** 'YYYY-MM-DD' → 'M월 D일 (요일)' — 로컬 Date로 파싱해 UTC 밀림 방지 */
+function formatDateHeader(dateStr: string): string {
+  if (!dateStr || dateStr === '__none__') return '일정 미정';
+  const [y, m, d] = dateStr.split('-').map(Number);
+  if (!y || !m || !d) return dateStr;
+  const wd = WEEKDAYS[new Date(y, m - 1, d).getDay()];
+  return `${m}월 ${d}일 (${wd})`;
+}
+
 export function AllConsultationsList({ onSelect }: { onSelect?: (id: string) => void } = {}) {
   const router = useRouter();
   const [search, setSearch] = useState('');
@@ -87,54 +98,73 @@ export function AllConsultationsList({ onSelect }: { onSelect?: (id: string) => 
           </div>
         </Card>
       ) : (
-        <div className="space-y-2">
-          {consultations.map((c) => {
-            const type = c.consultation_type as keyof typeof TYPE_CONFIG;
-            const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.talk_consult;
-            const Icon = cfg.icon;
-            return (
-              <div
-                key={c.id}
-                onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}
-                className="bg-white rounded-2xl border border-stone-200 overflow-hidden hover:border-stone-300 transition flex items-stretch group cursor-pointer"
-              >
-                {/* 좌측 색 줄 (타입별) */}
-                <div className={`w-1 ${cfg.bar}`} />
-                <div className="flex-1 p-3 flex items-center gap-3 min-w-0">
-                  {/* 좌측 아이콘 박스 */}
-                  <div className={`w-10 h-10 rounded-lg ${cfg.bg} flex items-center justify-center shrink-0`}>
-                    <Icon size={16} className={cfg.iconColor} />
-                  </div>
-                  {/* 본문 */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${cfg.bg} ${cfg.text}`}>{cfg.label}</span>
-                      <p className="text-sm font-semibold text-stone-800 truncate">{activityDisplay(c.activity_name, c.name)}</p>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${CONSULTATION_STATUS_COLOR[c.status] || 'bg-stone-100 text-stone-600'}`}>
-                        {CONSULTATION_STATUS_LABEL[c.status] || c.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[11px] text-stone-500 flex-wrap">
-                      {c.visit_date && (
-                        <span className="font-semibold text-stone-700">
-                          {c.visit_date}{c.visit_time ? ` ${c.visit_time}` : ''}
-                        </span>
-                      )}
-                      {c.visit_date && c.phone && <span className="text-stone-300">·</span>}
-                      {c.phone && <span>{formatPhone(c.phone)}</span>}
-                      {c.address_road && (
-                        <>
-                          <span className="text-stone-300">·</span>
-                          <span className="flex items-center gap-0.5"><MapPin size={10} />{c.address_road}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <ArrowRight size={14} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition shrink-0" />
+        <div className="space-y-4">
+          {(() => {
+            // 날짜별 그룹 (consultations는 서버에서 visit_date→visit_time 오름차순 정렬됨)
+            const groups: { key: string; items: typeof consultations }[] = [];
+            const byDate: Record<string, typeof consultations> = {};
+            for (const c of consultations) {
+              const key = c.visit_date || '__none__';
+              if (!byDate[key]) { byDate[key] = []; groups.push({ key, items: byDate[key] }); }
+              byDate[key].push(c);
+            }
+            return groups.map((g) => (
+              <div key={g.key} className="space-y-2">
+                {/* 날짜 구분 헤더 */}
+                <div className="flex items-center gap-2.5 px-0.5 pt-1">
+                  <span className="text-xs font-bold text-stone-700 shrink-0">{formatDateHeader(g.key)}</span>
+                  <span className="text-[11px] font-medium text-stone-400 shrink-0">{g.items.length}건</span>
+                  <div className="flex-1 h-px bg-stone-200" />
                 </div>
+                {g.items.map((c) => {
+                  const type = c.consultation_type as keyof typeof TYPE_CONFIG;
+                  const cfg = TYPE_CONFIG[type] || TYPE_CONFIG.talk_consult;
+                  const Icon = cfg.icon;
+                  return (
+                    <div
+                      key={c.id}
+                      onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}
+                      className="bg-white rounded-2xl border border-stone-200 overflow-hidden hover:border-stone-300 transition flex items-stretch group cursor-pointer"
+                    >
+                      {/* 좌측 색 줄 (타입별) */}
+                      <div className={`w-1 ${cfg.bar}`} />
+                      <div className="flex-1 p-3 flex items-center gap-3 min-w-0">
+                        {/* 좌측 아이콘 박스 */}
+                        <div className={`w-10 h-10 rounded-lg ${cfg.bg} flex items-center justify-center shrink-0`}>
+                          <Icon size={16} className={cfg.iconColor} />
+                        </div>
+                        {/* 본문 */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${cfg.bg} ${cfg.text}`}>{cfg.label}</span>
+                            <p className="text-sm font-semibold text-stone-800 truncate">{activityDisplay(c.activity_name, c.name)}</p>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${CONSULTATION_STATUS_COLOR[c.status] || 'bg-stone-100 text-stone-600'}`}>
+                              {CONSULTATION_STATUS_LABEL[c.status] || c.status}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[11px] text-stone-500 flex-wrap">
+                            {/* 날짜는 상단 헤더에 있으므로 행에는 시간만 */}
+                            {c.visit_time
+                              ? <span className="font-semibold text-stone-700">{c.visit_time}</span>
+                              : <span className="text-stone-400">시간 미정</span>}
+                            {c.phone && <span className="text-stone-300">·</span>}
+                            {c.phone && <span>{formatPhone(c.phone)}</span>}
+                            {c.address_road && (
+                              <>
+                                <span className="text-stone-300">·</span>
+                                <span className="flex items-center gap-0.5"><MapPin size={10} />{c.address_road}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <ArrowRight size={14} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition shrink-0" />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            ));
+          })()}
         </div>
       )}
 
