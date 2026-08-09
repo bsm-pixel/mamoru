@@ -84,6 +84,7 @@ export default function ReviewEventPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string>('');
+  const [dirty, setDirty] = useState(false);   // 저장 안 된 변경사항 여부
 
   const load = useCallback(async (m: string) => {
     setLoading(true); setMsg('');
@@ -109,12 +110,21 @@ export default function ReviewEventPage() {
         }
       });
       setMarks(mk);
+      setDirty(false);   // 새로 불러오면 깨끗한 상태
     } catch (e) {
       setMsg('불러오기 실패: ' + String(e));
     } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(month); }, [month, load]);
+
+  // 저장 안 한 채 새로고침/닫기 시 경고
+  useEffect(() => {
+    if (!dirty) return;
+    const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', h);
+    return () => window.removeEventListener('beforeunload', h);
+  }, [dirty]);
 
   // 응모 시작일 변경 시 응모자 풀만 다시 불러옴(설정은 유지). 사용자가 만지던 마킹은 풀에 남은 것만 보존
   const reloadPool = useCallback(async (m: string, startDate: string) => {
@@ -146,6 +156,7 @@ export default function ReviewEventPage() {
   }, [marks]);
 
   function setRank(id: string, rank: number | null) {
+    setDirty(true);
     setMarks((prev) => {
       const next = { ...prev };
       if (rank === null) delete next[id];
@@ -154,16 +165,28 @@ export default function ReviewEventPage() {
     });
   }
   function setMarkField(id: string, field: 'display_name' | 'route', value: string) {
+    setDirty(true);
     setMarks((prev) => prev[id] ? { ...prev, [id]: { ...prev[id], [field]: value } } : prev);
   }
   function setPrize(idx: number, field: keyof Prize, value: string | number) {
+    setDirty(true);
     setConfig((c) => ({ ...c, prizes: c.prizes.map((p, i) => i === idx ? { ...p, [field]: value } : p) }));
   }
   function setPrizeImages(idx: number, urls: string[]) {
+    setDirty(true);
     setConfig((c) => ({ ...c, prizes: c.prizes.map((p, i) => i === idx ? { ...p, image_urls: urls, image_url: urls[0] || '' } : p) }));
   }
   function removePrizeImage(idx: number, imgIdx: number) {
+    setDirty(true);
     setConfig((c) => ({ ...c, prizes: c.prizes.map((p, i) => { if (i !== idx) return p; const arr = prizeImgList(p).slice(); arr.splice(imgIdx, 1); return { ...p, image_urls: arr, image_url: arr[0] || '' }; }) }));
+  }
+  // 게시 상태 변경(+저장) — 공개/발표는 확인
+  function changeStatus(s: EventConfig['status']) {
+    if (s === config.status) { save(s); return; }
+    if (s === 'announced' && !window.confirm('당첨자를 고객 페이지에 공개할까요?')) return;
+    if (s === 'live' && !window.confirm('이달의 이벤트를 고객에게 공개(진행중)할까요?')) return;
+    if (s === 'draft' && config.status !== 'draft' && !window.confirm('고객 페이지에서 내리고 비공개로 전환할까요?')) return;
+    save(s);
   }
 
   async function uploadImages(files: File[]): Promise<string[]> {
@@ -188,6 +211,7 @@ export default function ReviewEventPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '저장 실패');
       setConfig((c) => ({ ...c, status }));
+      setDirty(false);
       setMsg(`저장 완료 (${status === 'announced' ? '발표됨 — 고객 페이지 지난 당첨자에 노출' : status === 'live' ? '진행중 — 고객 페이지 이달의 상품에 노출' : '임시저장(비공개)'})`);
     } catch (e) {
       setMsg('저장 실패: ' + String(e));
@@ -220,16 +244,16 @@ export default function ReviewEventPage() {
 
           <label className="block text-xs text-stone-500 mb-1">응모 시작일 (선택 · 응모자 집계 하한)</label>
           <div className="flex items-center gap-2 mb-1">
-            <input type="date" value={isoToKstDate(config.entry_start)} onChange={(e) => { const iso = kstDateToISO(e.target.value); setConfig((c) => ({ ...c, entry_start: iso })); reloadPool(month, e.target.value); }} className="flex-1 px-3 py-2 rounded-lg border border-stone-200 text-sm" />
-            {config.entry_start && <button type="button" onClick={() => { setConfig((c) => ({ ...c, entry_start: null })); reloadPool(month, ''); }} className="px-2.5 py-2 rounded-lg border border-stone-200 text-xs text-stone-500 hover:bg-stone-50">지우기</button>}
+            <input type="date" value={isoToKstDate(config.entry_start)} onChange={(e) => { const iso = kstDateToISO(e.target.value); setDirty(true); setConfig((c) => ({ ...c, entry_start: iso })); reloadPool(month, e.target.value); }} className="flex-1 px-3 py-2 rounded-lg border border-stone-200 text-sm" />
+            {config.entry_start && <button type="button" onClick={() => { setDirty(true); setConfig((c) => ({ ...c, entry_start: null })); reloadPool(month, ''); }} className="px-2.5 py-2 rounded-lg border border-stone-200 text-xs text-stone-500 hover:bg-stone-50">지우기</button>}
           </div>
           <p className="text-[11px] text-stone-400 mb-3">비우면 <b>{monthTitle(month)} 1일</b>부터 집계. 첫 회차처럼 과거 후기까지 포함하려면 시작일을 앞당겨 지정하세요. (끝은 항상 그 달 말일)</p>
 
           <label className="block text-xs text-stone-500 mb-1">응모 마감일 (히어로 카운트다운)</label>
-          <input type="datetime-local" value={toLocalInput(config.deadline)} onChange={(e) => setConfig((c) => ({ ...c, deadline: fromLocal(e.target.value) }))} className="w-full mb-3 px-3 py-2 rounded-lg border border-stone-200 text-sm" />
+          <input type="datetime-local" value={toLocalInput(config.deadline)} onChange={(e) => { setDirty(true); setConfig((c) => ({ ...c, deadline: fromLocal(e.target.value) })); }} className="w-full mb-3 px-3 py-2 rounded-lg border border-stone-200 text-sm" />
 
           <label className="block text-xs text-stone-500 mb-1">발표 예정일 (안내용, 선택)</label>
-          <input type="datetime-local" value={toLocalInput(config.announce_at)} onChange={(e) => setConfig((c) => ({ ...c, announce_at: fromLocal(e.target.value) }))} className="w-full mb-3 px-3 py-2 rounded-lg border border-stone-200 text-sm" />
+          <input type="datetime-local" value={toLocalInput(config.announce_at)} onChange={(e) => { setDirty(true); setConfig((c) => ({ ...c, announce_at: fromLocal(e.target.value) })); }} className="w-full mb-3 px-3 py-2 rounded-lg border border-stone-200 text-sm" />
 
           {/* 상품 1/2/3등 */}
           <div className="space-y-3 mt-2">
@@ -308,21 +332,38 @@ export default function ReviewEventPage() {
       </div>
 
       {/* 저장 / 상태 */}
-      <div className="mt-5 flex items-center gap-2 flex-wrap sticky bottom-0 bg-white/90 backdrop-blur py-3 border-t border-stone-100">
-        <span className="text-xs text-stone-500 mr-1">현재 상태:
-          <span className={`ml-1 font-semibold ${config.status === 'announced' ? 'text-emerald-600' : config.status === 'live' ? 'text-blue-600' : 'text-stone-400'}`}>
-            {config.status === 'announced' ? '발표됨(공개)' : config.status === 'live' ? '진행중(공개)' : '임시저장(비공개)'}
-          </span>
-        </span>
-        <div className="ml-auto flex items-center gap-2">
-          <button disabled={saving} onClick={() => save('draft')} className="px-3 py-2 rounded-lg border border-stone-200 text-sm hover:bg-stone-50 disabled:opacity-50">임시저장</button>
-          <button disabled={saving} onClick={() => save('live')} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"><Save size={14} />진행중으로 게시</button>
-          <button disabled={saving} onClick={() => save('announced')} className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1">{saving ? <Loader2 size={14} className="animate-spin" /> : <Trophy size={14} />}당첨 발표</button>
+      <div className="mt-5 flex items-center gap-3 flex-wrap sticky bottom-0 bg-white/90 backdrop-blur py-3 border-t border-stone-100">
+        {/* 저장 상태 표시 */}
+        {dirty
+          ? <span className="text-xs font-semibold text-amber-600 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />저장 안 됨</span>
+          : <span className="text-xs text-stone-400 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />저장됨</span>}
+
+        {/* 게시 상태 세그먼트 (클릭 시 상태 전환 + 저장) */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-stone-500">게시</span>
+          <div className="inline-flex rounded-lg border border-stone-200 overflow-hidden">
+            {([['draft', '비공개'], ['live', '진행중'], ['announced', '발표됨']] as const).map(([s, label], i) => {
+              const active = config.status === s;
+              const activeCls = s === 'draft' ? 'bg-stone-700 text-white' : s === 'live' ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white';
+              return (
+                <button key={s} disabled={saving} onClick={() => changeStatus(s)}
+                  className={`px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${i > 0 ? 'border-l border-stone-200' : ''} ${active ? activeCls : 'bg-white text-stone-500 hover:bg-stone-50'}`}>
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {/* 저장 (현재 상태 유지) — 평소엔 이것만 */}
+        <button disabled={saving} onClick={() => save()}
+          className="ml-auto px-4 py-2 rounded-lg bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 disabled:opacity-50 flex items-center gap-1.5">
+          {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}저장
+        </button>
       </div>
       <p className="text-[11px] text-stone-400 mt-2 leading-relaxed">
-        · <b>진행중으로 게시</b> = 이달의 상품·마감일이 고객 페이지 Hero/이달의 상품에 노출됩니다.<br />
-        · <b>당첨 발표</b> = 선정한 당첨자가 고객 페이지 &apos;지난 당첨자&apos; 아카이브(해당 월 탭)에 마스킹되어 노출됩니다.<br />
+        · <b>저장</b> = 편집한 내용을 <b>현재 게시 상태 그대로</b> 저장합니다. (이미지·상품·당첨자 변경은 저장해야 반영돼요)<br />
+        · <b>게시</b> 전환 — <b>비공개</b>(고객에 안 보임) → <b>진행중</b>(이달의 상품·마감일 공개, 응모 시작) → <b>발표됨</b>(당첨자 공개).<br />
         · 표시명을 비우면 이름이 자동 마스킹(홍**님), 전화 뒷자리도 자동 마스킹(010-****-32**)됩니다.
       </p>
     </div>
