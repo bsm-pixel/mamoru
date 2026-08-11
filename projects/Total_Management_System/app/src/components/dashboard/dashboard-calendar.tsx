@@ -16,6 +16,8 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { createClient } from '@/lib/supabase/client';
 import { useConsultations } from '@/hooks/use-consultations';
 import { activityDisplay } from '@/lib/customer/display';
 import { useRepairSchedule, type RepairScheduleItem } from '@/hooks/use-repairs';
@@ -28,6 +30,51 @@ type CalendarEvent =
   | { kind: 'repair';  data: RepairScheduleItem };
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+const CTYPE_LABEL: Record<string, string> = { store_visit: '매장', field_request: '출장', talk_consult: '톡상담' };
+
+interface ConsultContext {
+  company: string | null;
+  pastConsults: { id: string; consultation_type: string; visit_date: string | null; visit_time: string | null; status: string }[];
+  sales: { id: string; sale_number: string; sale_date: string; total_amount: number }[];
+}
+
+/** 모달용 컨텍스트: 매장명(고객) + 이전 상담 + 구매 이력 (customer_id 우선, 없으면 전화번호) */
+async function fetchConsultContext(c: Consultation): Promise<ConsultContext> {
+  const sb = createClient();
+  const cid = c.customer_id;
+  const pn = c.phone_normalized;
+
+  let company: string | null = null;
+  if (cid) {
+    const { data } = await sb.from('customers').select('company_name').eq('id', cid).single();
+    company = (data as { company_name: string | null } | null)?.company_name ?? null;
+  }
+
+  let pastConsults: ConsultContext['pastConsults'] = [];
+  if (cid || pn) {
+    let q = sb.from('consultations')
+      .select('id, consultation_type, visit_date, visit_time, status')
+      .neq('id', c.id)
+      .order('visit_date', { ascending: false, nullsFirst: false })
+      .limit(5);
+    q = cid ? q.eq('customer_id', cid) : q.eq('phone_normalized', pn as string);
+    const { data } = await q;
+    pastConsults = data ?? [];
+  }
+
+  let sales: ConsultContext['sales'] = [];
+  if (cid) {
+    const { data } = await sb.from('offline_sales')
+      .select('id, sale_number, sale_date, total_amount')
+      .eq('customer_id', cid)
+      .is('cancelled_at', null)
+      .order('sale_date', { ascending: false })
+      .limit(5);
+    sales = data ?? [];
+  }
+
+  return { company, pastConsults, sales };
+}
 
 function getCalendarDays(year: number, month: number) {
   const firstDay = new Date(year, month, 1);
@@ -55,6 +102,12 @@ export function DashboardCalendarPanel() {
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   // 일정 클릭 시 상세 모달 (상세페이지 이동 대신)
   const [detail, setDetail] = useState<Consultation | null>(null);
+  const { data: ctx, isLoading: ctxLoading } = useQuery({
+    queryKey: ['consult-context', detail?.id],
+    enabled: !!detail,
+    staleTime: 60_000,
+    queryFn: () => fetchConsultContext(detail as Consultation),
+  });
 
   const monthStart = formatYYYYMMDD(year, month, 1);
   const monthEnd = formatYYYYMMDD(year, month, new Date(year, month + 1, 0).getDate());
@@ -287,7 +340,9 @@ export function DashboardCalendarPanel() {
                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${CONSULTATION_STATUS_COLOR[detail.status] || 'bg-stone-100 text-stone-600'}`}>{CONSULTATION_STATUS_LABEL[detail.status] || detail.status}</span>
                   </div>
                   <h3 className="text-base font-bold text-stone-900 truncate">{activityDisplay(detail.activity_name, detail.name)}</h3>
-                  {detail.position && <p className="text-xs text-stone-500 mt-0.5">{detail.position}</p>}
+                  {(ctx?.company || detail.position) && (
+                    <p className="text-xs text-stone-500 mt-0.5 truncate">{[ctx?.company, detail.position].filter(Boolean).join(' · ')}</p>
+                  )}
                 </div>
                 <button onClick={() => setDetail(null)} className="text-stone-400 hover:text-stone-700 shrink-0" aria-label="닫기"><X size={18} /></button>
               </div>
@@ -332,6 +387,42 @@ export function DashboardCalendarPanel() {
                   <p className="text-xs text-stone-400 pt-1">작성된 메모가 없습니다.</p>
                 )}
               </div>
+
+              {/* 이력 (구매 · 이전 상담) — 누르면 상세로 이동 */}
+              {(ctx && (ctx.sales.length > 0 || ctx.pastConsults.length > 0)) ? (
+                <div className="px-4 pb-4 space-y-3 border-t border-stone-100 pt-3">
+                  {ctx.sales.length > 0 && (
+                    <div>
+                      <p className="text-[11px] font-semibold text-stone-500 mb-1.5">구매 이력 {ctx.sales.length}건</p>
+                      <div className="space-y-1">
+                        {ctx.sales.map((s) => (
+                          <button key={s.id} onClick={() => router.push(`/sales/${s.id}`)}
+                            className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-stone-100 hover:bg-stone-50 hover:border-stone-200 text-left transition">
+                            <span className="text-xs text-stone-600 truncate">{s.sale_date} · {s.sale_number}</span>
+                            <span className="text-xs font-semibold text-stone-800 shrink-0">₩{(s.total_amount || 0).toLocaleString()}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {ctx.pastConsults.length > 0 && (
+                    <div>
+                      <p className="text-[11px] font-semibold text-stone-500 mb-1.5">이전 상담 {ctx.pastConsults.length}건</p>
+                      <div className="space-y-1">
+                        {ctx.pastConsults.map((pc) => (
+                          <button key={pc.id} onClick={() => router.push(`/consultations/${pc.id}`)}
+                            className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-stone-100 hover:bg-stone-50 hover:border-stone-200 text-left transition">
+                            <span className="text-xs text-stone-600 truncate">{pc.visit_date || '-'}{pc.visit_time ? ` ${pc.visit_time}` : ''} · {CTYPE_LABEL[pc.consultation_type] || pc.consultation_type}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${CONSULTATION_STATUS_COLOR[pc.status] || 'bg-stone-100 text-stone-600'}`}>{CONSULTATION_STATUS_LABEL[pc.status] || pc.status}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : ctxLoading ? (
+                <div className="px-4 pb-4 text-xs text-stone-400 border-t border-stone-100 pt-3">이력 불러오는 중…</div>
+              ) : null}
 
               {/* 푸터 */}
               <div className="p-3 border-t border-stone-100 flex items-center gap-2 sticky bottom-0 bg-white">
