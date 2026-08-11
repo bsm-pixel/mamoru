@@ -8,7 +8,7 @@
  */
 
 import { useState } from 'react';
-import { useCustomerNotes, useAddCustomerNote, useDeleteCustomerNote, type LatestNote } from '@/hooks/use-customer-notes';
+import { useCustomerNotes, useAddCustomerNote, useDeleteCustomerNote, type LatestNote, type CustomerNote } from '@/hooks/use-customer-notes';
 import { StickyNote, X, Plus } from 'lucide-react';
 
 /** 목록 행용 최종 메모 한 줄 미리보기 (없으면 아무것도 렌더 안 함) */
@@ -37,12 +37,13 @@ function fmt(iso: string): string {
   return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-export function CustomerNotes({ customerId, compact }: { customerId?: string | null; compact?: boolean }) {
+export function CustomerNotes({ customerId, compact, collapsed }: { customerId?: string | null; compact?: boolean; collapsed?: boolean }) {
   const { data: notes = [], isLoading } = useCustomerNotes(customerId);
   const add = useAddCustomerNote();
   const del = useDeleteCustomerNote();
   const [body, setBody] = useState('');
   const [cat, setCat] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);   // collapsed: 이전 메모 전체 모달
 
   if (!customerId) {
     return <p className="text-xs text-stone-400">고객을 연결하면 메모를 남길 수 있습니다.</p>;
@@ -86,26 +87,55 @@ export function CustomerNotes({ customerId, compact }: { customerId?: string | n
         </div>
       </div>
 
-      {/* 타임라인 */}
+      {/* 타임라인 (collapsed면 최종만 + '이전 메모' 버튼 → 모달) */}
       {isLoading ? (
         <p className="text-xs text-stone-400">불러오는 중…</p>
       ) : notes.length === 0 ? (
         <p className="text-xs text-stone-400">아직 메모가 없습니다.</p>
+      ) : collapsed ? (
+        notes.length > 1 ? (
+          <button type="button" onClick={() => setShowAll(true)}
+            className="w-full text-xs font-medium text-stone-500 border border-stone-200 rounded-lg py-2 hover:bg-stone-50 transition">
+            이전 메모 {notes.length - 1}건 보기
+          </button>
+        ) : null
       ) : (
-        <div className={`space-y-1.5 ${compact ? 'max-h-52 overflow-y-auto pr-1' : ''}`}>
-          {notes.map((n) => (
-            <div key={n.id} className="group flex items-start gap-2 rounded-lg border border-stone-100 px-2.5 py-2">
-              {n.category && <span className={`text-[10px] px-1.5 py-0.5 rounded-full border shrink-0 ${CAT_COLOR[n.category] || CAT_COLOR['기타']}`}>{n.category}</span>}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-stone-700 whitespace-pre-wrap break-words">{n.body}</p>
-                <p className="text-[10px] text-stone-400 mt-0.5">{fmt(n.created_at)}{n.created_by ? ` · ${n.created_by}` : ''}</p>
-              </div>
-              <button onClick={() => del.mutate({ id: n.id, customerId })}
-                className="text-stone-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition shrink-0" aria-label="삭제"><X size={13} /></button>
+        <NoteTimeline notes={notes} compact={compact} onDelete={(id) => del.mutate({ id, customerId })} />
+      )}
+
+      {/* 이전 메모 전체 모달 (collapsed 전용) */}
+      {collapsed && showAll && (
+        <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4" onClick={() => setShowAll(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b border-stone-100 flex items-center justify-between shrink-0">
+              <h3 className="text-sm font-bold text-stone-900">상담 메모 전체 ({notes.length}건)</h3>
+              <button onClick={() => setShowAll(false)} className="text-stone-400 hover:text-stone-700" aria-label="닫기"><X size={18} /></button>
             </div>
-          ))}
+            <div className="p-4 overflow-y-auto">
+              <NoteTimeline notes={notes} onDelete={(id) => del.mutate({ id, customerId })} />
+            </div>
+          </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** 메모 타임라인 렌더 (인라인/모달 공용) */
+function NoteTimeline({ notes, compact, onDelete }: { notes: CustomerNote[]; compact?: boolean; onDelete: (id: string) => void }) {
+  return (
+    <div className={`space-y-1.5 ${compact ? 'max-h-52 overflow-y-auto pr-1' : ''}`}>
+      {notes.map((n) => (
+        <div key={n.id} className="group flex items-start gap-2 rounded-lg border border-stone-100 px-2.5 py-2">
+          {n.category && <span className={`text-[10px] px-1.5 py-0.5 rounded-full border shrink-0 ${CAT_COLOR[n.category] || CAT_COLOR['기타']}`}>{n.category}</span>}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-stone-700 whitespace-pre-wrap break-words">{n.body}</p>
+            <p className="text-[10px] text-stone-400 mt-0.5">{fmt(n.created_at)}{n.created_by ? ` · ${n.created_by}` : ''}</p>
+          </div>
+          <button onClick={() => onDelete(n.id)}
+            className="text-stone-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition shrink-0" aria-label="삭제"><X size={13} /></button>
+        </div>
+      ))}
     </div>
   );
 }

@@ -275,7 +275,7 @@ export function SaleDetailPanel({ saleId }: Props) {
       {s.customer_id && (
         <div className="border-t border-neutral-100 pt-3">
           <h3 className="text-xs font-bold text-stone-900 mb-2">고객 상담 메모</h3>
-          <CustomerNotes customerId={s.customer_id} compact />
+          <CustomerNotes customerId={s.customer_id} collapsed />
         </div>
       )}
 

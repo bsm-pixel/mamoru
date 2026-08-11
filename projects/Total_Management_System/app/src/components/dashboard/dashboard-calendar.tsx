@@ -393,7 +393,7 @@ export function DashboardCalendarPanel() {
               {detail.customer_id && (
                 <div className="px-4 pb-4 border-t border-stone-100 pt-3">
                   <p className="text-[11px] font-semibold text-stone-500 mb-2">고객 상담 메모</p>
-                  <CustomerNotes customerId={detail.customer_id} compact />
+                  <CustomerNotes customerId={detail.customer_id} collapsed />
                 </div>
               )}
 
