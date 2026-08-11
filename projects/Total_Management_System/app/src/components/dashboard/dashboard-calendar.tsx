@@ -19,8 +19,8 @@ import { useRouter } from 'next/navigation';
 import { useConsultations } from '@/hooks/use-consultations';
 import { activityDisplay } from '@/lib/customer/display';
 import { useRepairSchedule, type RepairScheduleItem } from '@/hooks/use-repairs';
-import { formatPhone } from '@/lib/utils/format';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatPhone, CONSULTATION_STATUS_LABEL, CONSULTATION_STATUS_COLOR } from '@/lib/utils/format';
+import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Phone, MapPin, ArrowRight, StickyNote } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
 type CalendarEvent =
@@ -53,6 +53,8 @@ export function DashboardCalendarPanel() {
   const todayStr = formatYYYYMMDD(today.getFullYear(), today.getMonth(), today.getDate());
   // 기본값 = 오늘
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  // 일정 클릭 시 상세 모달 (상세페이지 이동 대신)
+  const [detail, setDetail] = useState<Consultation | null>(null);
 
   const monthStart = formatYYYYMMDD(year, month, 1);
   const monthEnd = formatYYYYMMDD(year, month, new Date(year, month + 1, 0).getDate());
@@ -251,7 +253,7 @@ export function DashboardCalendarPanel() {
                   <div
                     key={`consult-${c.id}`}
                     className="relative flex items-center gap-2.5 group cursor-pointer"
-                    onClick={() => router.push(`/consultations/${c.id}`)}
+                    onClick={() => setDetail(c)}
                   >
                     <div className={`absolute -left-[15px] w-2.5 h-2.5 rounded-full ring-2 ring-white ${isStore ? 'bg-emerald-500' : 'bg-violet-500'}`} />
                     <span className="text-xs font-semibold text-stone-500 w-10 shrink-0">{c.visit_time || '-'}</span>
@@ -269,6 +271,77 @@ export function DashboardCalendarPanel() {
           </div>
         )}
       </div>
+
+      {/* ── 일정 상세 모달 ── */}
+      {detail && (() => {
+        const isStore = detail.consultation_type === 'store_visit';
+        const addr = [detail.address_road, detail.address_detail].filter(Boolean).join(' ');
+        return (
+          <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setDetail(null)}>
+            <div className="bg-white rounded-2xl w-full max-w-md max-h-[85vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
+              {/* 헤더 */}
+              <div className="p-4 border-b border-stone-100 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${isStore ? 'bg-emerald-50 text-emerald-700' : 'bg-violet-50 text-violet-700'}`}>{isStore ? '매장방문' : '출장'}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${CONSULTATION_STATUS_COLOR[detail.status] || 'bg-stone-100 text-stone-600'}`}>{CONSULTATION_STATUS_LABEL[detail.status] || detail.status}</span>
+                  </div>
+                  <h3 className="text-base font-bold text-stone-900 truncate">{activityDisplay(detail.activity_name, detail.name)}</h3>
+                  {detail.position && <p className="text-xs text-stone-500 mt-0.5">{detail.position}</p>}
+                </div>
+                <button onClick={() => setDetail(null)} className="text-stone-400 hover:text-stone-700 shrink-0" aria-label="닫기"><X size={18} /></button>
+              </div>
+
+              {/* 기본 정보 */}
+              <div className="p-4 space-y-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <CalendarIcon size={15} className="text-stone-400 shrink-0" />
+                  <span className="text-stone-500 w-12 shrink-0 text-xs">일시</span>
+                  <span className="font-medium text-stone-800">{detail.visit_date || '-'}{detail.visit_time ? ` ${detail.visit_time}` : ''}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone size={15} className="text-stone-400 shrink-0" />
+                  <span className="text-stone-500 w-12 shrink-0 text-xs">연락처</span>
+                  {detail.phone
+                    ? <a href={`tel:${detail.phone}`} className="font-medium text-blue-600 hover:underline">{formatPhone(detail.phone)}</a>
+                    : <span className="text-stone-400">-</span>}
+                </div>
+                {addr && (
+                  <div className="flex items-start gap-2 text-sm">
+                    <MapPin size={15} className="text-stone-400 shrink-0 mt-0.5" />
+                    <span className="text-stone-500 w-12 shrink-0 text-xs mt-0.5">주소</span>
+                    <span className="font-medium text-stone-800">{addr}</span>
+                  </div>
+                )}
+
+                {/* 고객 메모 */}
+                {detail.memo && (
+                  <div className="pt-1">
+                    <p className="text-[11px] font-semibold text-stone-500 mb-1 flex items-center gap-1"><StickyNote size={12} />고객 메모</p>
+                    <p className="text-sm text-stone-700 whitespace-pre-wrap bg-stone-50 rounded-lg p-3 leading-relaxed">{detail.memo}</p>
+                  </div>
+                )}
+                {/* 관리자(내) 메모 */}
+                {detail.admin_note && (
+                  <div className="pt-1">
+                    <p className="text-[11px] font-semibold text-amber-600 mb-1 flex items-center gap-1"><StickyNote size={12} />내 메모 (관리자 전용)</p>
+                    <p className="text-sm text-stone-700 whitespace-pre-wrap bg-amber-50 rounded-lg p-3 leading-relaxed">{detail.admin_note}</p>
+                  </div>
+                )}
+                {!detail.memo && !detail.admin_note && (
+                  <p className="text-xs text-stone-400 pt-1">작성된 메모가 없습니다.</p>
+                )}
+              </div>
+
+              {/* 푸터 */}
+              <div className="p-3 border-t border-stone-100 flex items-center gap-2 sticky bottom-0 bg-white">
+                <button onClick={() => setDetail(null)} className="flex-1 px-3 py-2 rounded-lg border border-stone-200 text-sm text-stone-600 hover:bg-stone-50">닫기</button>
+                <button onClick={() => router.push(`/consultations/${detail.id}`)} className="flex-1 px-3 py-2 rounded-lg bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 flex items-center justify-center gap-1">상세 페이지 <ArrowRight size={14} /></button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
