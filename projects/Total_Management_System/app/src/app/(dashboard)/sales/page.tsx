@@ -22,6 +22,8 @@ import { Plus, FileSignature, Receipt, ClipboardList, LayoutGrid, Package } from
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 import { RevenueDarkCard } from '@/components/ui/revenue-dark-card';
 import type { OfflineSale } from '@/lib/supabase/types';
+import { NotePreview } from '@/components/shared/customer-notes';
+import { useLatestCustomerNotes, type LatestNote } from '@/hooks/use-customer-notes';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드',
@@ -223,6 +225,9 @@ export default function SalesPage() {
     }
     return items.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   }, [sales, deliveryData, section, tab]);
+  const { data: noteMap } = useLatestCustomerNotes(
+    unifiedItems.map((i) => (i.sourceType === 'sale' ? i.data.customer_id : null))
+  );
   const listLoading = (section === 'customer' && isLoading)
     || (section === 'partner' && isDeliveriesLoading)
     || (section === 'all' && (isLoading || isDeliveriesLoading));
@@ -497,6 +502,7 @@ export default function SalesPage() {
                   <SaleRow
                     key={`sale-${item.id}`}
                     sale={item.data}
+                    note={item.data.customer_id ? noteMap?.[item.data.customer_id] : undefined}
                     selected={selected?.sourceType === 'sale' && selected.id === item.id}
                     onClick={() => setSelected({ id: item.id, sourceType: 'sale' })}
                     prepMode={prepMode}
@@ -708,8 +714,8 @@ const SalesGridTable = memo(function SalesGridTable({
   );
 });
 
-const SaleRow = memo(function SaleRow({ sale, selected, onClick, prepMode, checked, onCheck }: {
-  sale: OfflineSale; selected?: boolean; onClick: () => void;
+const SaleRow = memo(function SaleRow({ sale, note, selected, onClick, prepMode, checked, onCheck }: {
+  sale: OfflineSale; note?: LatestNote; selected?: boolean; onClick: () => void;
   prepMode?: boolean; checked?: boolean; onCheck?: () => void;
 }) {
   const state = getRowStateSale(sale);
@@ -749,6 +755,7 @@ const SaleRow = memo(function SaleRow({ sale, selected, onClick, prepMode, check
             <span className="text-neutral-300">·</span>
             <span className={statusTextClass(state)}>{statusLabel(state)}</span>
           </div>
+          <NotePreview note={note} className="mt-0.5" />
         </div>
 
         {/* 우측: 도트 + 금액 */}

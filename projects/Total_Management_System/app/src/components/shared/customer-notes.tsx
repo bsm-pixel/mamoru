@@ -8,8 +8,20 @@
  */
 
 import { useState } from 'react';
-import { useCustomerNotes, useAddCustomerNote, useDeleteCustomerNote } from '@/hooks/use-customer-notes';
+import { useCustomerNotes, useAddCustomerNote, useDeleteCustomerNote, type LatestNote } from '@/hooks/use-customer-notes';
 import { StickyNote, X, Plus } from 'lucide-react';
+
+/** 목록 행용 최종 메모 한 줄 미리보기 (없으면 아무것도 렌더 안 함) */
+export function NotePreview({ note, className = '' }: { note?: LatestNote; className?: string }) {
+  if (!note) return null;
+  return (
+    <div className={`flex items-center gap-1 text-[11px] text-stone-500 min-w-0 ${className}`}>
+      <StickyNote size={11} className="shrink-0 text-stone-400" />
+      {note.category && <span className="shrink-0 text-stone-400">[{note.category}]</span>}
+      <span className="truncate">{note.body}</span>
+    </div>
+  );
+}
 
 const CATEGORIES = ['특징', '불편', '요구', '기타'] as const;
 const CAT_COLOR: Record<string, string> = {

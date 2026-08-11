@@ -18,6 +18,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultations } from '@/hooks/use-consultations';
+import { useLatestCustomerNotes } from '@/hooks/use-customer-notes';
+import { NotePreview } from '@/components/shared/customer-notes';
 import { activityDisplay } from '@/lib/customer/display';
 import {
   formatPhone,
@@ -66,6 +68,7 @@ export function AllConsultationsList({ onSelect }: { onSelect?: (id: string) => 
   });
 
   const consultations = data?.consultations || [];
+  const { data: noteMap } = useLatestCustomerNotes(consultations.map((c) => c.customer_id));
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 30);
 
@@ -156,6 +159,7 @@ export function AllConsultationsList({ onSelect }: { onSelect?: (id: string) => 
                               </>
                             )}
                           </div>
+                          {c.customer_id && <NotePreview note={noteMap?.[c.customer_id]} className="mt-0.5" />}
                         </div>
                         <ArrowRight size={14} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition shrink-0" />
                       </div>

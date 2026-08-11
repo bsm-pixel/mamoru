@@ -20,6 +20,8 @@ import { activitySuffix } from '@/lib/customer/display';
 import { Users, Plus } from 'lucide-react';
 import type { Customer } from '@/lib/supabase/types';
 import { TagBadges } from '@/components/shared/tag-selector';
+import { NotePreview } from '@/components/shared/customer-notes';
+import { useLatestCustomerNotes, type LatestNote } from '@/hooks/use-customer-notes';
 import { useSetting } from '@/hooks/use-settings';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -97,6 +99,7 @@ export default function CustomersPage() {
     : rawCustomers;
   const total = tagFilter ? customers.length : (data?.total || 0);
   const totalPages = Math.ceil((data?.total || 0) / limit);
+  const { data: noteMap } = useLatestCustomerNotes(customers.map((c: Customer) => c.id));
 
   const listContent = isLoading ? (
     <div className="p-4 space-y-3">
@@ -112,6 +115,7 @@ export default function CustomersPage() {
         <CustomerRow
           key={c.id}
           customer={c}
+          note={noteMap?.[c.id]}
           isSelected={selectedId === c.id}
           onClick={() => setSelectedId(c.id)}
         />
@@ -244,7 +248,7 @@ export default function CustomersPage() {
 
 /* 기존 AddCustomerModal → CustomerCreateModal 공통 컴포넌트로 교체 (customer-create-modal.tsx) */
 
-function CustomerRow({ customer, isSelected, onClick }: { customer: Customer; isSelected: boolean; onClick: () => void }) {
+function CustomerRow({ customer, note, isSelected, onClick }: { customer: Customer; note?: LatestNote; isSelected: boolean; onClick: () => void }) {
   const c = customer;
   return (
     <div
@@ -268,6 +272,7 @@ function CustomerRow({ customer, isSelected, onClick }: { customer: Customer; is
           <span>{formatDate(c.created_at)}</span>
         </div>
         <TagBadges tags={(c as Record<string, unknown>).tags as string[] | undefined} />
+        <NotePreview note={note} className="mt-1" />
       </div>
       <div className="text-right shrink-0">
         {c.total_spent > 0 && (
