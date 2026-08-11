@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { TagBadges, TagSelector } from '@/components/shared/tag-selector';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
+import { CustomerNotes } from '@/components/shared/customer-notes';
 import { CustomerMergeModal } from '@/components/customers/customer-merge-modal';
 import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 import { useSetting } from '@/hooks/use-settings';
@@ -472,6 +473,12 @@ export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
                 {c.memo || '메모 없음'}
               </p>
             )}
+          </Card>
+
+          {/* 상담 메모 타임라인 (특징·불편·요구 등 날짜별 기록) */}
+          <Card>
+            <h3 className="text-xs font-bold text-stone-900 mb-2">상담 메모</h3>
+            <CustomerNotes customerId={customerId} />
           </Card>
         </div>
       ) : (

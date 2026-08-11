@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped, useMarkSaleDelivered, useResendShipNotify, useMarkSalePacked } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
+import { CustomerNotes } from '@/components/shared/customer-notes';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
 import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2 } from 'lucide-react';
@@ -269,6 +270,14 @@ export function SaleDetailPanel({ saleId }: Props) {
           )}
         </div>
       </div>
+
+      {/* 고객 상담 메모 (특징·불편·요구 등 — 고객 연결된 판매만) */}
+      {s.customer_id && (
+        <div className="border-t border-neutral-100 pt-3">
+          <h3 className="text-xs font-bold text-stone-900 mb-2">고객 상담 메모</h3>
+          <CustomerNotes customerId={s.customer_id} compact />
+        </div>
+      )}
 
       {/* 판매 항목 */}
       <div className="border-t border-neutral-100 pt-3">

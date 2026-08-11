@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { useConsultations } from '@/hooks/use-consultations';
+import { CustomerNotes } from '@/components/shared/customer-notes';
 import { activityDisplay } from '@/lib/customer/display';
 import { useRepairSchedule, type RepairScheduleItem } from '@/hooks/use-repairs';
 import { formatPhone, CONSULTATION_STATUS_LABEL, CONSULTATION_STATUS_COLOR } from '@/lib/utils/format';
@@ -387,6 +388,14 @@ export function DashboardCalendarPanel() {
                   <p className="text-xs text-stone-400 pt-1">작성된 메모가 없습니다.</p>
                 )}
               </div>
+
+              {/* 고객 상담 메모 (특징·불편·요구 등 — 빠른 입력) */}
+              {detail.customer_id && (
+                <div className="px-4 pb-4 border-t border-stone-100 pt-3">
+                  <p className="text-[11px] font-semibold text-stone-500 mb-2">고객 상담 메모</p>
+                  <CustomerNotes customerId={detail.customer_id} compact />
+                </div>
+              )}
 
               {/* 이력 (구매 · 이전 상담) — 누르면 상세로 이동 */}
               {(ctx && (ctx.sales.length > 0 || ctx.pastConsults.length > 0)) ? (
