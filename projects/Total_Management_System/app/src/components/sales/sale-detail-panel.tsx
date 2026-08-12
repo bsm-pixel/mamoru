@@ -130,7 +130,8 @@ export function SaleDetailPanel({ saleId }: Props) {
     updatePayment.mutate({
       id: saleId,
       payment_status: 'paid',
-      paid_amount: s.total_amount,
+      // 실수납 = 소계 - 할인 (완납 시 할인 반영. total 그대로 넣으면 회계 과대계상)
+      paid_amount: Math.max(0, s.total_amount - s.discount_amount),
     });
   };
 
@@ -358,7 +359,8 @@ export function SaleDetailPanel({ saleId }: Props) {
         {s.payment_status !== 'paid' && (
           <div className="flex justify-between text-sm font-semibold text-red-500">
             <span>미수금</span>
-            <span>{formatKRW(s.total_amount - s.paid_amount)}</span>
+            {/* 미수금 = 소계 - 할인 - 결제 (할인 반영. 리스트/통계/outstanding.ts와 동일 공식) */}
+            <span>{formatKRW(Math.max(0, s.total_amount - s.discount_amount - s.paid_amount))}</span>
           </div>
         )}
         {s.supply_amount > 0 && (
@@ -504,9 +506,9 @@ export function SaleDetailPanel({ saleId }: Props) {
       <ConfirmModal
         open={showPaidConfirm}
         onClose={() => setShowPaidConfirm(false)}
-        onConfirm={() => updatePayment.mutateAsync({ id: saleId, payment_status: 'paid', paid_amount: s.total_amount })}
+        onConfirm={() => updatePayment.mutateAsync({ id: saleId, payment_status: 'paid', paid_amount: Math.max(0, s.total_amount - s.discount_amount) })}
         title="결제완료 처리"
-        message={<>{s.customer_name}님의 결제를 완료 처리합니다.<br />금액: {formatKRW(s.total_amount)}</>}
+        message={<>{s.customer_name}님의 결제를 완료 처리합니다.<br />금액: {formatKRW(Math.max(0, s.total_amount - s.discount_amount))}</>}
         confirmLabel="결제완료"
       />
 

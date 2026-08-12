@@ -68,7 +68,8 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const handleMarkPaid = () => {
-    updatePayment.mutate({ id, payment_status: 'paid', paid_amount: sale.total_amount });
+    // 실수납 = 소계 - 할인 (완납 시 할인 반영)
+    updatePayment.mutate({ id, payment_status: 'paid', paid_amount: Math.max(0, sale.total_amount - (sale.discount_amount || 0)) });
   };
 
   return (

@@ -279,8 +279,8 @@ export async function PATCH(
       // 미수금: 아래 결제상태 반영 후 recalcOutstanding 로 일괄 재계산 (±diff 누적 X)
       const updateData: Record<string, unknown> = { payment_status };
       if (paid_amount !== undefined) updateData.paid_amount = paid_amount;
-      // 완납 처리 시 paid_amount 미지정이면 총액으로 채워 데이터 정합 유지
-      else if (payment_status === 'paid') updateData.paid_amount = sale.total_amount;
+      // 완납 처리 시 paid_amount 미지정이면 실수납(소계-할인)으로 채움 — total 그대로면 회계 과대계상
+      else if (payment_status === 'paid') updateData.paid_amount = Math.max(0, (sale.total_amount || 0) - (sale.discount_amount || 0));
 
       const { error: updateErr } = await db
         .from('offline_sales')

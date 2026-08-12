@@ -60,7 +60,8 @@ export function SaleDetailModal({ saleId, open, onClose }: Props) {
     updatePayment.mutate({
       id: saleId,
       payment_status: 'paid',
-      paid_amount: data.sale.total_amount,
+      // 실수납 = 소계 - 할인 (완납 시 할인 반영)
+      paid_amount: Math.max(0, data.sale.total_amount - (data.sale.discount_amount || 0)),
     });
   };
 
