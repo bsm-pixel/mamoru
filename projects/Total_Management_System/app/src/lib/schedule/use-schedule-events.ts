@@ -15,6 +15,8 @@ import {
   type RepairScheduleItem,
   type RepairPickupItem,
 } from '@/hooks/use-repairs';
+import { activityDisplay } from '@/lib/customer/display';
+import type { ScheduleCategory } from './colors';
 import type { Consultation } from '@/lib/supabase/types';
 
 export type ScheduleEvent =
@@ -77,4 +79,46 @@ export function useScheduleEvents(monthStart: string, monthEnd: string) {
   }, [storeData, fieldData, repairData, pickupData, monthStart, monthEnd]);
 
   return { dateMap };
+}
+
+// ── 이벤트 필드 접근 공용 헬퍼 (요약·다가오는 일정 등에서 재사용) ──
+
+export function eventCategory(ev: ScheduleEvent): ScheduleCategory {
+  if (ev.kind === 'consult') return ev.data.consultation_type === 'store_visit' ? 'store' : 'field';
+  if (ev.kind === 'repair') return 'repair_visit';
+  return 'repair_pickup';
+}
+
+export function eventName(ev: ScheduleEvent): string {
+  if (ev.kind === 'consult') return activityDisplay(ev.data.activity_name, ev.data.name);
+  return ev.data.name || '고객';
+}
+
+export function eventPhone(ev: ScheduleEvent): string {
+  return ev.data.phone || '';
+}
+
+export function eventTimeStr(ev: ScheduleEvent): string | null {
+  return eventTime(ev) || null;
+}
+
+export function eventHref(ev: ScheduleEvent): string {
+  return ev.kind === 'consult' ? `/consultations/${ev.data.id}` : `/repairs/${ev.data.id}`;
+}
+
+/** 출장 상담만 방문 주소 반환 (길찾기용). 나머지는 null */
+export function eventAddress(ev: ScheduleEvent): string | null {
+  if (ev.kind === 'consult' && ev.data.consultation_type === 'field_request') {
+    return [ev.data.address_road, ev.data.address_detail].filter(Boolean).join(' ') || null;
+  }
+  return null;
+}
+
+/** dateMap → 날짜(오름차순, 같은 날은 시간순) 평탄 배열 */
+export function flattenEvents(dateMap: Map<string, ScheduleEvent[]>): { date: string; ev: ScheduleEvent }[] {
+  const out: { date: string; ev: ScheduleEvent }[] = [];
+  for (const [date, evs] of dateMap) for (const ev of evs) out.push({ date, ev });
+  // 날짜 오름차순 (같은 날짜는 hook이 이미 시간순 → stable sort로 유지)
+  out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  return out;
 }

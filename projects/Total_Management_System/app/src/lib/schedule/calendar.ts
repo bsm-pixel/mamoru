@@ -21,3 +21,12 @@ export function getCalendarDays(year: number, month: number): (number | null)[] 
 export function ymd(year: number, month: number, day: number): string {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
+
+const DOW_KR = ['일', '월', '화', '수', '목', '금', '토'];
+
+/** 'YYYY-MM-DD' → { m, d, dow } (표시용, 로컬 파싱) */
+export function parseYmd(dateStr: string): { y: number; m: number; d: number; dow: string } {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  return { y, m, d, dow: DOW_KR[dt.getDay()] };
+}
