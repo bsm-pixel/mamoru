@@ -73,7 +73,7 @@ async function fetchConsultContext(c: Consultation): Promise<ConsultContext> {
   return { company, pastConsults, sales };
 }
 
-export function DashboardCalendarPanel() {
+export function DashboardCalendarPanel({ includePast = false }: { includePast?: boolean } = {}) {
   const router = useRouter();
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
@@ -93,10 +93,11 @@ export function DashboardCalendarPanel() {
   const monthStart = ymd(year, month, 1);
   const monthEnd = ymd(year, month, new Date(year, month + 1, 0).getDate());
 
-  const { dateMap } = useScheduleEvents(monthStart, monthEnd);
+  const { dateMap } = useScheduleEvents(monthStart, monthEnd, { includeCompleted: includePast });
 
   const calendarDays = getCalendarDays(year, month);
   const selectedEvents = dateMap.get(selectedDate) || [];
+  const selectedPast = includePast && selectedDate < todayStr; // 지난 날짜 타임라인 회색(일정 페이지 전용)
 
   const goMonth = (delta: number) => {
     const d = new Date(year, month + delta, 1);
@@ -171,6 +172,8 @@ export function DashboardCalendarPanel() {
             const pickupCount = events.filter((e) => e.kind === 'pickup').length;
             const isToday = dateStr === todayStr;
             const isSelected = dateStr === selectedDate;
+            const isPast = includePast && dateStr < todayStr; // 지난 날짜 회색(일정 페이지 전용, 대시보드 무변경)
+            const pastGray = 'bg-stone-300';
             return (
               <button
                 key={dateStr}
@@ -178,16 +181,17 @@ export function DashboardCalendarPanel() {
                 className={`h-10 rounded-lg p-1 text-[11px] transition flex flex-col items-center justify-start ${
                   isSelected ? 'bg-stone-900 text-white' :
                   isToday ? 'bg-amber-50 text-amber-900 border border-amber-300' :
+                  isPast ? 'bg-white hover:bg-stone-50 text-stone-400' :
                   'bg-white hover:bg-stone-50 text-stone-700'
                 }`}
               >
                 <span className="font-semibold leading-none mt-0.5">{day}</span>
                 {events.length > 0 && (
                   <div className="flex items-center gap-0.5 mt-1">
-                    {storeCount > 0 && <span className={`w-1 h-1 rounded-full ${isSelected ? SCHEDULE_COLORS.store.dotSelected : SCHEDULE_COLORS.store.dot}`} />}
-                    {fieldCount > 0 && <span className={`w-1 h-1 rounded-full ${isSelected ? SCHEDULE_COLORS.field.dotSelected : SCHEDULE_COLORS.field.dot}`} />}
-                    {repairCount > 0 && <span className={`w-1 h-1 rounded-full ${isSelected ? SCHEDULE_COLORS.repair_visit.dotSelected : SCHEDULE_COLORS.repair_visit.dot}`} />}
-                    {pickupCount > 0 && <span className={`w-1 h-1 rounded-full ${isSelected ? SCHEDULE_COLORS.repair_pickup.dotSelected : SCHEDULE_COLORS.repair_pickup.dot}`} />}
+                    {storeCount > 0 && <span className={`w-1 h-1 rounded-full ${isPast ? pastGray : isSelected ? SCHEDULE_COLORS.store.dotSelected : SCHEDULE_COLORS.store.dot}`} />}
+                    {fieldCount > 0 && <span className={`w-1 h-1 rounded-full ${isPast ? pastGray : isSelected ? SCHEDULE_COLORS.field.dotSelected : SCHEDULE_COLORS.field.dot}`} />}
+                    {repairCount > 0 && <span className={`w-1 h-1 rounded-full ${isPast ? pastGray : isSelected ? SCHEDULE_COLORS.repair_visit.dotSelected : SCHEDULE_COLORS.repair_visit.dot}`} />}
+                    {pickupCount > 0 && <span className={`w-1 h-1 rounded-full ${isPast ? pastGray : isSelected ? SCHEDULE_COLORS.repair_pickup.dotSelected : SCHEDULE_COLORS.repair_pickup.dot}`} />}
                   </div>
                 )}
               </button>
@@ -229,11 +233,11 @@ export function DashboardCalendarPanel() {
                       className="relative flex items-center gap-2.5 group cursor-pointer"
                       onClick={() => router.push(`/repairs/${r.id}`)}
                     >
-                      <div className={`absolute -left-[15px] w-2.5 h-2.5 rounded-full ring-2 ring-white ${SCHEDULE_COLORS.repair_visit.dot}`} />
+                      <div className={`absolute -left-[15px] w-2.5 h-2.5 rounded-full ring-2 ring-white ${selectedPast ? 'bg-stone-300' : SCHEDULE_COLORS.repair_visit.dot}`} />
                       <span className="text-xs font-semibold text-stone-500 w-10 shrink-0">{r.visit_time || '-'}</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${SCHEDULE_COLORS.repair_visit.badge}`}>수리</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${selectedPast ? 'bg-stone-100 text-stone-400' : SCHEDULE_COLORS.repair_visit.badge}`}>수리</span>
                       <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                        <span className="text-xs font-medium text-stone-800 truncate">{r.name}</span>
+                        <span className={`text-xs font-medium truncate ${selectedPast ? 'text-stone-400' : 'text-stone-800'}`}>{r.name}</span>
                         <span className="text-[10px] text-stone-400 truncate">
                           {qty > 0 ? `${qty}자루` : formatPhone(r.phone)}
                         </span>
@@ -250,11 +254,11 @@ export function DashboardCalendarPanel() {
                       className="relative flex items-center gap-2.5 group cursor-pointer"
                       onClick={() => router.push(`/repairs/${p.id}`)}
                     >
-                      <div className={`absolute -left-[15px] w-2.5 h-2.5 rounded-full ring-2 ring-white ${SCHEDULE_COLORS.repair_pickup.dot}`} />
+                      <div className={`absolute -left-[15px] w-2.5 h-2.5 rounded-full ring-2 ring-white ${selectedPast ? 'bg-stone-300' : SCHEDULE_COLORS.repair_pickup.dot}`} />
                       <span className="text-xs font-semibold text-stone-500 w-10 shrink-0">-</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${SCHEDULE_COLORS.repair_pickup.badge}`}>수거</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${selectedPast ? 'bg-stone-100 text-stone-400' : SCHEDULE_COLORS.repair_pickup.badge}`}>수거</span>
                       <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                        <span className="text-xs font-medium text-stone-800 truncate">{p.name}</span>
+                        <span className={`text-xs font-medium truncate ${selectedPast ? 'text-stone-400' : 'text-stone-800'}`}>{p.name}</span>
                         <span className="text-[10px] text-stone-400 truncate">
                           {qty > 0 ? `${qty}자루` : formatPhone(p.phone)}
                         </span>
@@ -270,13 +274,13 @@ export function DashboardCalendarPanel() {
                     className="relative flex items-center gap-2.5 group cursor-pointer"
                     onClick={() => setDetail(c)}
                   >
-                    <div className={`absolute -left-[15px] w-2.5 h-2.5 rounded-full ring-2 ring-white ${isStore ? SCHEDULE_COLORS.store.dot : SCHEDULE_COLORS.field.dot}`} />
+                    <div className={`absolute -left-[15px] w-2.5 h-2.5 rounded-full ring-2 ring-white ${selectedPast ? 'bg-stone-300' : isStore ? SCHEDULE_COLORS.store.dot : SCHEDULE_COLORS.field.dot}`} />
                     <span className="text-xs font-semibold text-stone-500 w-10 shrink-0">{c.visit_time || '-'}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${isStore ? SCHEDULE_COLORS.store.badge : SCHEDULE_COLORS.field.badge}`}>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${selectedPast ? 'bg-stone-100 text-stone-400' : isStore ? SCHEDULE_COLORS.store.badge : SCHEDULE_COLORS.field.badge}`}>
                       {isStore ? '매장' : '출장'}
                     </span>
                     <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                      <span className="text-xs font-medium text-stone-800 truncate">{activityDisplay(c.activity_name, c.name)}</span>
+                      <span className={`text-xs font-medium truncate ${selectedPast ? 'text-stone-400' : 'text-stone-800'}`}>{activityDisplay(c.activity_name, c.name)}</span>
                       <span className="text-[10px] text-stone-400 truncate">{formatPhone(c.phone || '')}</span>
                     </div>
                   </div>

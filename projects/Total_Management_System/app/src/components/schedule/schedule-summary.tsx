@@ -28,7 +28,8 @@ export function ScheduleSummary() {
   const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 45);
   const endStr = ymd(end.getFullYear(), end.getMonth(), end.getDate());
 
-  const { dateMap } = useScheduleEvents(weekStart, endStr);
+  // 일정 페이지는 완료된 상담까지 포함(이번주 이력·오늘 완료건 보존)
+  const { dateMap } = useScheduleEvents(weekStart, endStr, { includeCompleted: true });
   const flat = flattenEvents(dateMap);
 
   const todayItems = flat.filter((x) => x.date === todayStr);

@@ -21,7 +21,7 @@ export default function SchedulePage() {
       <Topbar title="일정" />
       <div className="px-4 md:px-6 py-4 space-y-3">
         <ScheduleSummary />
-        <DashboardCalendarPanel />
+        <DashboardCalendarPanel includePast />
         <UpcomingList />
       </div>
     </>

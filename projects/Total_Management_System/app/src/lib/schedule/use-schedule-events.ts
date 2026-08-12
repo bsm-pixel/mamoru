@@ -31,22 +31,31 @@ function eventTime(ev: ScheduleEvent): string {
   return ''; // pickup
 }
 
-export function useScheduleEvents(monthStart: string, monthEnd: string) {
-  // 매장방문(확정/진행)
+export function useScheduleEvents(
+  monthStart: string,
+  monthEnd: string,
+  opts?: { includeCompleted?: boolean },
+) {
+  // includeCompleted=true(일정 페이지 전용): 완료된 상담도 포함해 지난 일정 이력 보존.
+  //   이때 정렬은 updated_at_desc(최근 200건) — 완료건이 많아도 오래된 것이 upcoming을 밀어내지 않게.
+  //   false(대시보드 글랜스): 기존대로 확정/진행만, 방문일 오름차순.
+  const inclDone = opts?.includeCompleted ?? false;
+  const order = inclDone ? 'updated_at_desc' : 'visit_date_asc';
+  // 매장방문
   const { data: storeData } = useConsultations({
-    statuses: ['confirmed', 'in_progress'],
+    statuses: inclDone ? ['confirmed', 'in_progress', 'completed'] : ['confirmed', 'in_progress'],
     type: 'store_visit',
     limit: 200,
     dateFilter: 'all',
-    orderBy: 'visit_date_asc',
+    orderBy: order,
   });
-  // 출장(확정/제안/진행)
+  // 출장
   const { data: fieldData } = useConsultations({
-    statuses: ['confirmed', 'suggested', 'in_progress'],
+    statuses: inclDone ? ['confirmed', 'suggested', 'in_progress', 'completed'] : ['confirmed', 'suggested', 'in_progress'],
     type: 'field_request',
     limit: 200,
     dateFilter: 'all',
-    orderBy: 'visit_date_asc',
+    orderBy: order,
   });
   // 복원수리 직접방문 / 방문수거 (훅 자체가 월 범위로 필터)
   const { data: repairData } = useRepairSchedule(monthStart, monthEnd);
