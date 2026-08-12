@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { toLocalDateString } from '@/lib/utils/format';
+import { deliveryNet } from '@/lib/sales/amounts';
 import type { Consultation } from '@/lib/supabase/types';
 
 // ============================================
@@ -100,7 +101,7 @@ export function useHubStats() {
             })(),
           ]);
           const dlRows = (dlRes.data || []) as { total_amount: number; discount_amount?: number }[];
-          const dlAmount = dlRows.reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
+          const dlAmount = dlRows.reduce((s, r) => s + deliveryNet(r), 0); // 납품 total은 이미 net(할인 재차감 금지)
           let osB2C = 0, osB2B = 0;
           for (const r of (osRes.data || []) as { total_amount: number; discount_amount?: number; customer_type: string | null }[]) {
             const net = (r.total_amount || 0) - (r.discount_amount || 0);
@@ -255,7 +256,7 @@ export function useHubStats() {
 
       // 납품 매출
       const deliveryRows = (monthDeliveries.data || []) as { total_amount: number; discount_amount: number }[];
-      const deliveryMonthAmount = deliveryRows.reduce((s, r) => s + ((r.total_amount || 0) - (r.discount_amount || 0)), 0);
+      const deliveryMonthAmount = deliveryRows.reduce((s, r) => s + deliveryNet(r), 0); // 납품 total은 이미 net
 
       // 납품 복원수리 B2B 수량 (배송비 항목은 자루 수에서 제외 — 금액엔 포함)
       const deliveryRepairRows = (monthDeliveryRepairItems.data || []) as { quantity: number; total_price: number; product_name?: string }[];

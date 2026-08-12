@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { createClient } from '@/lib/supabase/client';
+import { deliveryNet, deliveryOutstanding } from '@/lib/sales/amounts';
 
 /** 납품 목록 */
 export function useDeliveries(filters?: {
@@ -154,15 +155,15 @@ export function useDeliveryStats() {
         db.from('delivery_items').select('total_price, deliveries!inner(delivery_date, cancelled_at)').eq('category', 'RS').gt('total_price', 0).gte('deliveries.delivery_date', monthStart).is('deliveries.cancelled_at', null),
       ]);
 
-      const sumAmount = (rows: Array<{ total_amount: number; discount_amount?: number }>) =>
-        rows.reduce((s, r) => s + (r.total_amount || 0) - (r.discount_amount || 0), 0);
+      // 납품 total_amount는 이미 net(할인 반영) → deliveryNet/deliveryOutstanding 사용(할인 재차감 금지, SSOT)
+      const sumAmount = (rows: Array<{ total_amount: number }>) =>
+        rows.reduce((s, r) => s + deliveryNet(r), 0);
 
       const monthRepair = ((monthRsRes.data || []) as Array<{ total_price: number }>)
         .reduce((s, r) => s + (r.total_price || 0), 0);
 
       const unpaidAmount = (unpaidRes.data || []).reduce(
-        (s: number, r: { total_amount: number; discount_amount?: number; paid_amount?: number }) =>
-          s + (r.total_amount || 0) - (r.discount_amount || 0) - (r.paid_amount || 0), 0
+        (s: number, r: { total_amount: number; paid_amount?: number }) => s + deliveryOutstanding(r), 0
       );
 
       return {

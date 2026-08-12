@@ -12,6 +12,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { getDeliveryStatusChip, type DeliveryStatusInput } from '@/lib/deliveries/status';
 import { getDeliveryShipStatus } from '@/lib/sales/ship-status';
+import { deliveryNet } from '@/lib/sales/amounts';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-panel';
@@ -58,7 +59,7 @@ const DELIVERY_COLUMNS: GridColumn<DeliveryLike>[] = [
   { key: 'status', label: '상태', render: (d) => { const c = getDeliveryStatusChip(d); return <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${c.className}`}>{c.label}</span>; } },
   { key: 'ship', label: '배송', render: (d) => { const s = getDeliveryShipStatus(d); return <span className={`text-xs font-medium ${SHIP_TONE[s.tone]}`}>{s.label}</span>; } },
   { key: 'pay', label: '결제', render: (d) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${PAYMENT_COLOR[d.payment_status || ''] || PAYMENT_COLOR.unpaid}`}>{PAYMENT_LABEL[d.payment_status || ''] || '미결제'}</span> },
-  { key: 'amount', label: '금액', align: 'right', render: (d) => <span className="font-bold tabular-nums text-indigo-black">{formatKRW((d.total_amount || 0) - (d.discount_amount || 0))}</span> },
+  { key: 'amount', label: '금액', align: 'right', render: (d) => <span className="font-bold tabular-nums text-indigo-black">{formatKRW(deliveryNet(d))}</span> },
 ];
 
 const STATUS_TABS = [

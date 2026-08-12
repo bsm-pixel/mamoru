@@ -67,7 +67,9 @@ export async function convertEventToSale(db: any, ev: EventRow, opts?: ConvertOp
     customer_name: ev.customer_name,
     customer_phone: ev.customer_phone,
     sale_date: today,
-    total_amount: ev.total_amount,
+    // offline_sales 컨벤션: total_amount=GROSS(정가합) → net=total-discount. ev.total_amount는 net이라 discount를 더해 gross로.
+    // (EVENT: lineSum, LS: discount 0이라 ev.total_amount 그대로 — 두 경우 모두 정합)
+    total_amount: ev.total_amount + discountAmount,
     discount_amount: discountAmount,
     paid_amount: ev.total_amount,
     payment_method: 'transfer',

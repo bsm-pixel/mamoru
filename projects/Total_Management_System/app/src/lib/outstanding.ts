@@ -12,6 +12,7 @@
    - deliveries(B2B): 취소·완납 제외, (total - paid) 합
    ────────────────────────────────────────────────────────────── */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { saleOutstanding, deliveryOutstanding } from '@/lib/sales/amounts';
 
 export async function recalcOutstanding(db: any, customerId: string | null | undefined): Promise<void> {
   if (!customerId) return;
@@ -30,14 +31,9 @@ export async function recalcOutstanding(db: any, customerId: string | null | und
       .is('cancelled_at', null),
   ]);
 
-  const salesUnpaid = (salesRes.data || []).reduce(
-    (a: number, r: any) => a + Math.max(0, (r.total_amount || 0) - (r.discount_amount || 0) - (r.paid_amount || 0)),
-    0
-  );
-  const dlUnpaid = (dlRes.data || []).reduce(
-    (a: number, r: any) => a + Math.max(0, (r.total_amount || 0) - (r.paid_amount || 0)),
-    0
-  );
+  // SSOT: offline_sales=saleOutstanding(total-discount-paid) / deliveries=deliveryOutstanding(total-paid, total은 이미 net)
+  const salesUnpaid = (salesRes.data || []).reduce((a: number, r: any) => a + saleOutstanding(r), 0);
+  const dlUnpaid = (dlRes.data || []).reduce((a: number, r: any) => a + deliveryOutstanding(r), 0);
 
   const outstanding = Math.max(0, salesUnpaid + dlUnpaid);
   await db.from('customers').update({ outstanding_balance: outstanding }).eq('id', customerId);

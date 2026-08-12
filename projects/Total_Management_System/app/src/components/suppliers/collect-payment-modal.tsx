@@ -78,7 +78,8 @@ export function CollectPaymentModal({ open, customerId, customerName, onClose, o
           totalAmount: total,
           discountAmount: discount,
           paidAmount: paid,
-          unpaidAmount: total - discount - paid,
+          // 납품 total은 이미 net(할인 반영) → 할인 재차감 금지. 미수 = total - paid
+          unpaidAmount: Math.max(0, total - paid),
           paymentStatus: d.payment_status as string,
         });
       }

@@ -821,7 +821,8 @@ const DeliveryRow = memo(function DeliveryRow({ delivery, selected, onClick, pre
         <div className="flex items-center gap-2 shrink-0">
           {dot && <span className={`w-2 h-2 rounded-full ${dot.color}`} title={dot.title} />}
           <span className={`text-sm font-bold ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>
-            {formatKRW(((delivery.total_amount as number) || 0) - ((delivery.discount_amount as number) || 0))}
+            {/* 납품 total_amount는 이미 net(할인 반영) → 할인 재차감 금지 */}
+            {formatKRW((delivery.total_amount as number) || 0)}
           </span>
         </div>
       </div>

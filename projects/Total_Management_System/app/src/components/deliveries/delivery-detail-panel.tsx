@@ -412,8 +412,9 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
           </div>
           <div>
             <p className="text-xs text-neutral-400">미수금</p>
-            <p className={`text-sm font-bold ${totalAmount - discountAmount - ((dl.paid_amount as number) || 0) > 0 ? 'text-red-500' : 'text-green-600'}`}>
-              {formatKRW(Math.max(0, totalAmount - discountAmount - ((dl.paid_amount as number) || 0)))}
+            {/* 납품 total_amount는 이미 net(할인 반영) → 할인 재차감 금지. 미수 = total - paid */}
+            <p className={`text-sm font-bold ${totalAmount - ((dl.paid_amount as number) || 0) > 0 ? 'text-red-500' : 'text-green-600'}`}>
+              {formatKRW(Math.max(0, totalAmount - ((dl.paid_amount as number) || 0)))}
             </p>
           </div>
         </div>
@@ -482,7 +483,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
             {paymentStatus !== 'paid' && (
               <Button variant="secondary" className="w-full" onClick={() => setPendingAction({
                 action: 'update_payment', label: '결제완료 처리',
-                msg: `결제상태를 결제완료로 변경합니다.\n총액: ${formatKRW(totalAmount - discountAmount)}`,
+                msg: `결제상태를 결제완료로 변경합니다.\n총액: ${formatKRW(totalAmount)}`,
                 extra: { payment_status: 'paid' },
               })} disabled={updateDL.isPending}>
                 결제완료 처리

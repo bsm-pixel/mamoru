@@ -110,7 +110,8 @@ export async function PATCH(
       await db.from('deliveries').update({
         status: 'settled',
         payment_status: 'paid',
-        paid_amount: dl.total_amount - (dl.discount_amount || 0),
+        // 납품 total_amount는 이미 net(할인 반영) → 완납액 = total (할인 재차감 시 과소수납)
+        paid_amount: (dl.total_amount || 0),
         updated_at: new Date().toISOString(),
       }).eq('id', id);
       await recalcOutstanding(db, dl.customer_id);
@@ -162,7 +163,8 @@ export async function PATCH(
       const { payment_status: newStatus, paid_amount: newPaid } = body as {
         payment_status: string; paid_amount?: number;
       };
-      const newPaidVal = newStatus === 'paid' ? (dl.total_amount - (dl.discount_amount || 0)) : (newPaid || 0);
+      // 납품 total_amount는 이미 net → 완납액 = total
+      const newPaidVal = newStatus === 'paid' ? (dl.total_amount || 0) : (newPaid || 0);
 
       await db.from('deliveries').update({
         payment_status: newStatus,

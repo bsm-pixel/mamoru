@@ -148,7 +148,7 @@ export async function GET(req: NextRequest) {
     let productB2BDelivery = 0;
     for (const d of deliveries) {
       const rs = dlRsByDelivery[d.id]?.amount || 0;
-      productB2BDelivery += (d.total_amount || 0) - (d.discount_amount || 0) - rs;
+      productB2BDelivery += (d.total_amount || 0) - rs; // 납품 total은 이미 net(할인 재차감 금지)
     }
     const productB2B = productB2BOffline + productB2BDelivery;
     const productTotal = productB2C + productB2B;
@@ -194,7 +194,7 @@ export async function GET(req: NextRequest) {
     }
     for (const d of deliveries) {
       const rs = dlRsByDelivery[d.id]?.amount || 0;
-      const prod = (d.total_amount || 0) - (d.discount_amount || 0) - rs;
+      const prod = (d.total_amount || 0) - rs; // 납품 total은 이미 net
       if (prod !== 0) dailyProduct[d.delivery_date] = (dailyProduct[d.delivery_date] || 0) + prod;
     }
     // 반품 제품 매출(−) 을 반품월(returned_at)에 차감 (반품시점 반영)
