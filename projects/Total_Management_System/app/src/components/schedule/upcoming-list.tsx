@@ -17,11 +17,15 @@ export function UpcomingList() {
   const router = useRouter();
   const now = new Date();
   const todayStr = ymd(now.getFullYear(), now.getMonth(), now.getDate());
+  const dow = now.getDay();
+  const ws = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow);
+  const weekStart = ymd(ws.getFullYear(), ws.getMonth(), ws.getDate());
   const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 45);
   const endStr = ymd(end.getFullYear(), end.getMonth(), end.getDate());
   const nowHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-  const { dateMap } = useScheduleEvents(todayStr, endStr);
+  // 요약(ScheduleSummary)과 동일 범위(weekStart~)로 조회 → React Query 캐시 공유. 출력은 아래 필터로 오늘 이후만.
+  const { dateMap } = useScheduleEvents(weekStart, endStr);
   const flat = flattenEvents(dateMap);
   const upcoming = flat
     .filter((x) => x.date > todayStr || (x.date === todayStr && (eventTimeStr(x.ev) ?? '99:99') >= nowHHMM))

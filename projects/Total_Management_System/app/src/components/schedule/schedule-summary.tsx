@@ -26,7 +26,8 @@ export function ScheduleSummary() {
   const weekEnd = ymd(we.getFullYear(), we.getMonth(), we.getDate());
   const nowHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-  const { dateMap } = useScheduleEvents(todayStr, endStr);
+  // 조회 시작은 이번주 시작일(weekStart)로 — 오늘 이전의 이번주 방문/수거도 카운트에 포함 (버그 fix 2026-08-12)
+  const { dateMap } = useScheduleEvents(weekStart, endStr);
   const flat = flattenEvents(dateMap);
 
   const todayCount = flat.filter((x) => x.date === todayStr).length;
