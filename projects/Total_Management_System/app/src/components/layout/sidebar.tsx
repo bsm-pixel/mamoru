@@ -24,6 +24,7 @@ import {
   FileSignature,
   Wallet,
   CalendarOff,
+  CalendarDays,
   Zap,
   Tag,
   ChevronDown,
@@ -53,6 +54,7 @@ const iconMap: Record<string, LucideIcon> = {
   FileSignature,
   Wallet,
   CalendarOff,
+  CalendarDays,
   Zap,
   Tag,
 };
