@@ -12,6 +12,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Topbar } from '@/components/layout/topbar';
+import { getCalendarDays, ymd } from '@/lib/schedule/calendar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
@@ -220,21 +221,7 @@ function pad2(n: number) {
   return String(n).padStart(2, '0');
 }
 
-function ymd(year: number, month: number, day: number): string {
-  return `${year}-${pad2(month + 1)}-${pad2(day)}`;
-}
-
-function getCalendarDays(year: number, month: number) {
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const startOffset = firstDay.getDay();
-  const totalDays = lastDay.getDate();
-  const days: (number | null)[] = [];
-  for (let i = 0; i < startOffset; i++) days.push(null);
-  for (let d = 1; d <= totalDays; d++) days.push(d);
-  while (days.length % 7 !== 0) days.push(null);
-  return days;
-}
+// getCalendarDays/ymd → 공용 lib/schedule/calendar 로 이동(DRY, 2026-08-12). pad2는 toHHMM에서 사용해 유지.
 
 export default function CalendarManagePage() {
   const today = new Date();

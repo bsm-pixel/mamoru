@@ -421,3 +421,40 @@ export function useRepairSchedule(fromDate?: string, toDate?: string) {
     },
   });
 }
+
+/**
+ * 복원수리 방문수거 '수거예정' 조회 — 달력 표시용 (2026-08-12)
+ *   useRepairSchedule(직접방문)의 pickup_date 버전. 방문수거는 시간대 없이 날짜만.
+ * 조건: proceed_type='방문수거' + pickup_date NOT NULL + status != 'cancelled'
+ */
+export interface RepairPickupItem {
+  id: string;
+  as_id: string;
+  name: string;
+  phone: string;
+  pickup_date: string;
+  status: string;
+  qty_mamoru: number;
+  qty_other: number;
+}
+
+export function useRepairPickupSchedule(fromDate?: string, toDate?: string) {
+  const supabase = createClient();
+  return useQuery({
+    queryKey: ['repair-pickup-schedule', fromDate, toDate],
+    staleTime: 30_000,
+    queryFn: async () => {
+      let query = supabase
+        .from('repairs')
+        .select('id, as_id, name, phone, pickup_date, status, qty_mamoru, qty_other')
+        .eq('proceed_type', '방문수거')
+        .not('pickup_date', 'is', null)
+        .neq('status', 'cancelled');
+      if (fromDate) query = query.gte('pickup_date', fromDate);
+      if (toDate) query = query.lte('pickup_date', toDate);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data || []) as RepairPickupItem[];
+    },
+  });
+}

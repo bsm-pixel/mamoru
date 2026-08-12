@@ -4,6 +4,7 @@
  */
 
 import type { calendar_v3 } from 'googleapis';
+import { SCHEDULE_COLORS } from '@/lib/schedule/colors';
 
 export interface ConsultationForCalendar {
   id: string;
@@ -49,13 +50,12 @@ function getStatusPrefix(status: string): string {
 }
 
 function getColorId(type: string, status: string): string {
-  // Google Calendar colorId — 인앱 일정 달력(dashboard-calendar.tsx)과 색 매칭
-  //   매장=초록(emerald) / 출장=보라(violet) / 수리=주황(amber)
-  // https://developers.google.com/calendar/api/v3/reference/colors
+  // 색상 SSOT(lib/schedule/colors.ts) 참조 — 인앱 일정 달력과 동일 색
+  //   매장=초록(emerald→Sage) / 출장=보라(violet→Grape) / 수리=주황(amber→Tangerine)
   if (status === 'reschedule_requested' || status === 'change_requested') return '5'; // Banana (노랑) — 고객 변경요청
   if (status === 'completed') return '8'; // Graphite (회색)
-  if (type === 'field_request') return '3'; // Grape (보라) — 인앱 출장 violet 매칭
-  return '2'; // Sage (녹색) — 인앱 매장 emerald 매칭 (store_visit 기본)
+  if (type === 'field_request') return SCHEDULE_COLORS.field.googleColorId ?? '3';
+  return SCHEDULE_COLORS.store.googleColorId ?? '2'; // store_visit 기본
 }
 
 function toKSTIso(date: string, time: string): string {
@@ -238,10 +238,10 @@ export interface RepairForCalendar {
 }
 
 function getRepairColorId(status: string): string {
-  // 복원수리 직접방문 색상 — 컨설팅(파랑/녹색) 과 구분되는 색
+  // 복원수리 직접방문 색상 — 색상 SSOT 참조 (인앱 수리=amber→Tangerine)
   if (status === 'cancelled') return '8';      // Graphite (회색)
   if (status === 'completed') return '8';      // Graphite (회색) — 완료
-  return '6';                                  // Tangerine (주황) — TMS 달력의 amber 와 매칭
+  return SCHEDULE_COLORS.repair_visit.googleColorId ?? '6'; // Tangerine (주황)
 }
 
 /**
