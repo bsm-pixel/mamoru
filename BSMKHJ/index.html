@@ -29,6 +29,9 @@
   --serif-ko:'Gowun Batang', serif; --serif-en:'Cormorant Garamond', serif;
   --sans:'Pretendard Variable','Pretendard',system-ui,sans-serif;
 }
+/* 확대(핀치 줌·더블탭 줌) 차단 — 세로 스크롤·갤러리 좌우 스와이프는 유지 */
+html,body{ touch-action: pan-x pan-y; }
+img{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 button{border:0; background:none; font:inherit; color:inherit; cursor:pointer}  /* 기본 3D 테두리 제거 */
 html,body{background:#EDE7DD}
@@ -489,7 +492,7 @@ const CONFIG = {
   },
 
   // ── 갤러리 (assets/g1.jpg ~ g9.jpg, 3×3) ──
-  gallery: ['g1.jpg','g2.jpg','g3.jpg','g4.jpg','g5.jpg','g6.jpg','g7.jpg','g8.jpg','g9.jpg'],
+  gallery: ['g1.jpg','g2.jpg','g3.jpg','g4.jpg','g5.jpg','g6.jpg','g7.jpg','g8.jpg','g9.jpg','g10.jpg','g11.jpg','g12.jpg','g13.jpg','g14.jpg','g15.jpg','g16.jpg','g17.jpg'],
 
   // ── 카카오 (공유카드 + 카카오네비) ──
   // ✏️ 카카오 개발자센터에서 JavaScript 키 발급 후 붙여넣기 (도메인 page.mamoru.kr 등록 필수)
@@ -815,6 +818,12 @@ initCountdown();
 setHead(1);
 armReveal();
 try{ if(CONFIG.kakaoKey && CONFIG.kakaoKey!=='YOUR_KAKAO_JS_KEY') Kakao.init(CONFIG.kakaoKey); }catch(e){}
+
+// 핀치 줌 차단 (iOS 사파리는 user-scalable=no 를 무시 → 제스처·멀티터치를 직접 차단)
+['gesturestart','gesturechange','gestureend'].forEach(function(ev){
+  document.addEventListener(ev, function(e){ e.preventDefault(); }, {passive:false});
+});
+document.addEventListener('touchmove', function(e){ if(e.touches.length > 1) e.preventDefault(); }, {passive:false});
 </script>
 </body>
 </html>
