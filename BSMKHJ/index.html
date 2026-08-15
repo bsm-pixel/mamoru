@@ -611,7 +611,13 @@ function closeLb(){
     else goSlide(lbIndex);
   },{passive:true});
 })();
-window.addEventListener('popstate',()=>{ if($('#lb').classList.contains('on')){ $('#lb').classList.remove('on'); document.body.style.overflow=''; } });
+window.addEventListener('popstate',()=>{
+  // 폰 뒤로가기: 열려있는 오버레이(라이트박스·계좌·참석여부)만 닫고 페이지는 유지
+  const lb=$('#lb'), am=$('#acctModal'), rm=$('#rsvpModal');
+  if(lb.classList.contains('on')){ lb.classList.remove('on'); document.body.style.overflow=''; }
+  else if(am.classList.contains('on')){ am.classList.remove('on'); document.body.style.overflow=''; }
+  else if(rm.classList.contains('on')){ rm.classList.remove('on'); document.body.style.overflow=''; }
+});
 
 // 5. 오시는 길
 function fillVenue(){
@@ -667,8 +673,13 @@ function openAcct(side){
       <div class="acct__no">${a.no}</div>
     </div>`).join('');
   $('#acctModal').classList.add('on'); document.body.style.overflow='hidden';
+  history.pushState({ov:'acct'},'');   // 폰 뒤로가기 = 모달만 닫힘
 }
-function closeAcct(){ $('#acctModal').classList.remove('on'); document.body.style.overflow=''; }
+function closeAcct(){
+  if(!$('#acctModal').classList.contains('on')) return;
+  $('#acctModal').classList.remove('on'); document.body.style.overflow='';
+  if(history.state && history.state.ov==='acct') history.back();  // push한 상태 소비
+}
 function copyAcct(no){ doCopy(no.replace(/-/g,''), '계좌번호가 복사되었습니다'); }
 
 // 6b. 참석여부(RSVP) 모달 → Supabase 저장
@@ -680,8 +691,12 @@ function setHead(v){
   $('#headPlus').disabled  = v >= 20;
 }
 function stepHead(d){ setHead((parseInt($('#headInput').value,10)||1) + d); }
-function openRsvp(){ $('#rsvpModal').classList.add('on'); document.body.style.overflow='hidden'; }
-function closeRsvp(){ $('#rsvpModal').classList.remove('on'); document.body.style.overflow=''; }
+function openRsvp(){ $('#rsvpModal').classList.add('on'); document.body.style.overflow='hidden'; history.pushState({ov:'rsvp'},''); }
+function closeRsvp(){
+  if(!$('#rsvpModal').classList.contains('on')) return;
+  $('#rsvpModal').classList.remove('on'); document.body.style.overflow='';
+  if(history.state && history.state.ov==='rsvp') history.back();
+}
 async function submitRsvp(e){
   e.preventDefault();
   const f = e.target, btn = $('#rsvpSubmit');
