@@ -563,7 +563,7 @@ function renderGallery(){
   const g = $('#grid3');
   // 그리드는 앞 9장(3×3)만 노출. 나머지는 탭 후 라이트박스에서 우측으로 넘기면 등장.
   g.innerHTML = CONFIG.gallery.slice(0,9).map((src,i)=>
-    `<div class="cell reveal" onclick="openLb(${i})"><img src="assets/${src}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.style.background='#e6ded2'"></div>`
+    `<div class="cell reveal" onclick="openLb(${i})"><img src="assets/${src}?v=2" alt="" loading="lazy" decoding="async" onerror="this.parentNode.style.background='#e6ded2'"></div>`
   ).join('');
 }
 let lbIndex = 0;
@@ -571,7 +571,7 @@ function openLb(i){
   lbIndex = i;
   const track = $('#lbTrack');
   track.innerHTML = CONFIG.gallery.map(src=>
-    `<div class="lb__slide"><img src="assets/${src}" alt=""></div>`
+    `<div class="lb__slide"><img src="assets/${src}?v=2" alt="" decoding="async"></div>`
   ).join('');
   $('#lb').classList.add('on');
   document.body.style.overflow='hidden';
