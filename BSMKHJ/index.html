@@ -32,6 +32,17 @@
 /* 확대(핀치 줌·더블탭 줌) 차단 — 세로 스크롤·갤러리 좌우 스와이프는 유지 */
 html,body{ touch-action: pan-x pan-y; }
 img{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+/* 배경음 토글 버튼 (우상단, 살짝 흐린 원형 · 음소거 시 대각선) */
+.bgm-btn{position:fixed; top:14px; right:14px; z-index:50; width:40px; height:40px; border-radius:50%;
+  background:rgba(20,17,14,.72);
+  border:1px solid rgba(255,255,255,.55); color:#fff; opacity:1; padding:0;
+  box-shadow:0 2px 10px rgba(0,0,0,.2);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; transition:opacity .2s, transform .1s}
+.bgm-btn:active{opacity:.9; transform:scale(.93)}
+.bgm-btn svg{width:19px; height:19px; display:block}
+.bgm-btn .slash{display:none}
+.bgm-btn.is-muted .wave{display:none}
+.bgm-btn.is-muted .slash{display:block}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 button{border:0; background:none; font:inherit; color:inherit; cursor:pointer}  /* 기본 3D 테두리 제거 */
 html,body{background:#EDE7DD}
@@ -258,6 +269,15 @@ textarea.rsvp-input{resize:none; line-height:1.6}
 </style>
 </head>
 <body>
+<!-- 배경음: 첫 터치/스크롤에 반복 재생, 우상단 원형 버튼으로 음소거 (assets/MP3_The_Wedding.mp3) -->
+<audio id="bgm" src="assets/MP3_The_Wedding.mp3" loop preload="auto" playsinline></audio>
+<button id="bgmBtn" class="bgm-btn" type="button" aria-label="배경음 켜기/끄기">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 9.5v5h3.5L12 18V6L7.5 9.5H4z" fill="currentColor" stroke="none"/>
+    <path class="wave" d="M15.5 9a4 4 0 0 1 0 6"/>
+    <line class="slash" x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke-width="2"/>
+  </svg>
+</button>
 <div class="frame">
 
   <!-- ═══════════ 1. 메인: 세로 영상/이미지(9:16) → 끝나면 이름 페이드인 ═══════════ -->
@@ -541,7 +561,8 @@ function renderContacts(){
 // 4. 갤러리 렌더 + 라이트박스
 function renderGallery(){
   const g = $('#grid3');
-  g.innerHTML = CONFIG.gallery.map((src,i)=>
+  // 그리드는 앞 9장(3×3)만 노출. 나머지는 탭 후 라이트박스에서 우측으로 넘기면 등장.
+  g.innerHTML = CONFIG.gallery.slice(0,9).map((src,i)=>
     `<div class="cell reveal" onclick="openLb(${i})"><img src="assets/${src}" alt="" loading="lazy" onerror="this.parentNode.style.background='#e6ded2'"></div>`
   ).join('');
 }
@@ -824,6 +845,21 @@ try{ if(CONFIG.kakaoKey && CONFIG.kakaoKey!=='YOUR_KAKAO_JS_KEY') Kakao.init(CON
   document.addEventListener(ev, function(e){ e.preventDefault(); }, {passive:false});
 });
 document.addEventListener('touchmove', function(e){ if(e.touches.length > 1) e.preventDefault(); }, {passive:false});
+
+// 배경음: 첫 사용자 인터랙션(터치/스크롤/클릭)에 반복 재생, 우상단 버튼으로 음소거
+(function(){
+  var bgm = document.getElementById('bgm'), btn = document.getElementById('bgmBtn');
+  if(!bgm || !btn) return;
+  bgm.volume = 0.6; var muted = false, unlocked = false;
+  function tryPlay(){ if(!muted){ var p = bgm.play(); if(p && p.catch) p.catch(function(){}); } }
+  function unlock(){ if(unlocked) return; unlocked = true; tryPlay();
+    ['touchstart','click','scroll','keydown'].forEach(function(ev){ window.removeEventListener(ev, unlock); }); }
+  ['touchstart','click','scroll','keydown'].forEach(function(ev){ window.addEventListener(ev, unlock, {passive:true}); });
+  btn.addEventListener('click', function(e){ e.stopPropagation();
+    muted = !muted; unlocked = true; btn.classList.toggle('is-muted', muted);
+    if(muted){ bgm.pause(); } else { tryPlay(); }
+  });
+})();
 </script>
 </body>
 </html>
