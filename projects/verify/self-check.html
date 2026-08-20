@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAMORU 가위 상태 자가진단</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580;
+      --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; --shell:#F5F3F0;
+      --cream:#FAF9F7; --white:#FFFFFF;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html{overflow-x:hidden;}
+    body{
+      font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--void);
+      min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden;
+    }
+    .en{font-family:'Outfit',sans-serif;}
+
+    /* 헤더 */
+    .header{width:100%;padding:24px 0 16px;text-align:center;border-bottom:1px solid var(--sand);background:var(--white);}
+    .header h1{font-family:'Outfit',sans-serif;font-weight:800;font-size:20px;letter-spacing:4px;}
+    .header p{font-size:11px;color:var(--warm-gray);margin-top:4px;letter-spacing:1px;}
+
+    .wrap{max-width:460px;margin:0 auto;padding:clamp(24px,6vw,40px) 20px 40px;}
+
+    /* 인트로 — 정직 프레이밍 */
+    .intro{margin-bottom:clamp(28px,6vw,40px);}
+    .intro .eyebrow{font-family:'Outfit',sans-serif;font-weight:700;font-size:11px;letter-spacing:.22em;color:var(--warm-gray);margin-bottom:12px;}
+    .intro h2{font-size:clamp(22px,6vw,28px);font-weight:800;line-height:1.35;letter-spacing:-.01em;margin-bottom:14px;}
+    .intro p{font-size:clamp(14px,3.6vw,15px);color:var(--stone);}
+    .intro .quiet{color:var(--warm-gray);font-size:clamp(13px,3.4vw,14px);margin-top:10px;}
+
+    /* 증상 체크 */
+    .q-label{font-family:'Outfit',sans-serif;font-weight:700;font-size:11px;letter-spacing:.18em;color:var(--warm-gray);margin-bottom:14px;}
+    .checks{display:flex;flex-direction:column;gap:10px;margin-bottom:clamp(24px,5vw,32px);}
+    .check{
+      display:flex;align-items:flex-start;gap:14px;padding:16px;border:1px solid var(--parchment);
+      border-radius:14px;background:var(--white);cursor:pointer;transition:.15s;user-select:none;
+    }
+    .check:hover{border-color:var(--sand);}
+    .check.on{border-color:var(--void);background:#fff;}
+    .box{
+      width:22px;height:22px;border-radius:7px;border:2px solid var(--sand);flex-shrink:0;margin-top:1px;
+      display:flex;align-items:center;justify-content:center;transition:.15s;color:transparent;font-size:13px;font-weight:800;
+    }
+    .check.on .box{background:var(--void);border-color:var(--void);color:var(--white);}
+    .check .t{font-size:clamp(14px,3.7vw,15px);font-weight:500;color:var(--graphite);}
+    .check .t .sub{display:block;font-size:clamp(12px,3.2vw,13px);color:var(--warm-gray);font-weight:400;margin-top:2px;}
+
+    /* 결과 버튼 */
+    .cta{
+      width:100%;padding:17px;border:none;border-radius:14px;background:var(--void);color:var(--cream);
+      font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;
+    }
+    .cta:active{transform:scale(.99);}
+    .cta.ghost{background:var(--white);color:var(--void);border:1px solid var(--sand);}
+
+    /* 결과 카드 */
+    #result{display:none;margin-top:clamp(28px,6vw,40px);}
+    .result-card{border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);background:var(--white);}
+    .result-top{padding:clamp(24px,6vw,32px) 24px;text-align:center;}
+    .result-top.ok{background:var(--void);color:var(--cream);}
+    .result-top.mid{background:var(--shell);color:var(--void);}
+    .result-top.care{background:var(--void);color:var(--cream);}
+    .result-top .badge{font-family:'Outfit',sans-serif;font-weight:700;font-size:11px;letter-spacing:.2em;opacity:.6;margin-bottom:12px;}
+    .result-top h3{font-size:clamp(20px,5.5vw,24px);font-weight:800;line-height:1.35;}
+    .result-top .sub{font-size:clamp(13px,3.4vw,14px);opacity:.72;margin-top:10px;}
+    .result-body{padding:clamp(20px,5vw,26px) 24px;}
+    .result-body p{font-size:clamp(13.5px,3.6vw,15px);color:var(--stone);}
+    .result-actions{display:flex;flex-direction:column;gap:10px;margin-top:20px;}
+
+    .hairline{height:1px;background:var(--parchment);margin:clamp(28px,6vw,40px) 0;}
+
+    /* 정품 고객 안내 (사실 고지 — 판매 아님) */
+    .benefit{background:var(--shell);border-radius:16px;padding:clamp(20px,5vw,26px);}
+    .benefit .h{font-family:'Outfit',sans-serif;font-weight:700;font-size:11px;letter-spacing:.16em;color:var(--warm-gray);margin-bottom:12px;}
+    .benefit ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
+    .benefit li{font-size:clamp(13.5px,3.6vw,14.5px);color:var(--graphite);line-height:1.55;}
+    .benefit li b{font-weight:700;color:var(--void);}
+    .benefit .note{font-size:clamp(12px,3.2vw,12.5px);color:var(--warm-gray);margin-top:14px;line-height:1.7;}
+
+    .foot{text-align:center;margin-top:clamp(28px,6vw,40px);}
+    .foot .slogan{font-family:'Outfit',sans-serif;font-weight:700;font-size:12px;letter-spacing:.18em;color:var(--warm-gray);}
+    .foot a{color:var(--stone);text-decoration:none;font-weight:600;font-size:12px;}
+    .foot .row{margin-top:10px;}
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>MAMORU</h1>
+    <p>SCISSORS SELF-CHECK</p>
+  </div>
+
+  <div class="wrap">
+
+    <div class="intro">
+      <div class="eyebrow">가위 상태 자가진단</div>
+      <h2>지금 맡길 때인지,<br>스스로 확인해보세요.</h2>
+      <p>해당하는 증상만 체크하세요. 정답은 사장님이 아니라 당신의 손끝에 있습니다.</p>
+      <p class="quiet">마모루는 굳이 맡기라 하지 않습니다. 괜찮으면 괜찮다고 말합니다.</p>
+    </div>
+
+    <div class="q-label">— 이런 증상이 있나요?</div>
+    <div class="checks" id="checks">
+      <label class="check"><span class="box">✓</span><span class="t">머리카락이 미끄러지거나 접힌다<span class="sub">잘리지 않고 밀리는 느낌</span></span></label>
+      <label class="check"><span class="box">✓</span><span class="t">커트할 때 걸리는 느낌·소리가 난다<span class="sub">"끼익" 또는 턱턱 걸림</span></span></label>
+      <label class="check"><span class="box">✓</span><span class="t">슬라이드·틴닝에서 당기거나 뜯긴다</span></label>
+      <label class="check"><span class="box">✓</span><span class="t">날 끝에 눌림·찍힘 자국이 보인다<span class="sub">육안으로 확인되는 손상</span></span></label>
+      <label class="check" data-severe="1"><span class="box">✓</span><span class="t">떨어뜨리거나 세게 부딪힌 적이 있다<span class="sub">날 맞물림이 틀어졌을 수 있음</span></span></label>
+      <label class="check"><span class="box">✓</span><span class="t">개폐가 뻑뻑하거나 반대로 헐겁다<span class="sub">텐션(나사) 상태</span></span></label>
+    </div>
+
+    <button class="cta" id="run">결과 보기</button>
+
+    <div id="result"></div>
+
+    <div class="hairline"></div>
+
+    <div class="benefit">
+      <div class="h">정품 등록 고객</div>
+      <ul>
+        <li>· <b>복원수리 50%</b> — 정품 고객은 언제 맡겨도 반값</li>
+        <li>· <b>수리 이력 조회</b> — 내 가위가 언제 어떤 관리를 받았는지</li>
+      </ul>
+      <p class="note">필요할 때만 오시면 됩니다. 맡길 이유가 없으면 맡기지 않는 것이 가장 좋은 관리입니다.</p>
+    </div>
+
+    <div class="foot">
+      <div class="slogan">CUT THE FAKE, KEEP THE REAL</div>
+      <div class="row"><a href="/verify/">정품 확인 →</a></div>
+    </div>
+
+  </div>
+
+  <script>
+    // ✏️ 복원수리 접수 링크 (사장님 확인 후 실제 URL로 교체)
+    var REPAIR_URL = 'https://mamoru.kr';
+
+    var checks = Array.prototype.slice.call(document.querySelectorAll('#checks .check'));
+    checks.forEach(function(c){
+      c.addEventListener('click', function(e){ e.preventDefault(); c.classList.toggle('on'); });
+    });
+
+    document.getElementById('run').addEventListener('click', function(){
+      var on = checks.filter(function(c){ return c.classList.contains('on'); });
+      var count = on.length;
+      var severe = on.some(function(c){ return c.getAttribute('data-severe'); });
+
+      var top, badge, title, sub, body, actions;
+
+      if (count === 0){
+        top='ok'; badge='결과'; title='지금은 손댈 필요 없습니다.';
+        sub='좋은 습관으로 잘 쓰고 계십니다';
+        body='체크된 증상이 없습니다. 억지로 맡길 이유가 없어요. 이렇게 곱게 쓰시는 게 가위 수명을 가장 길게 합니다.';
+        actions='<a class="cta ghost" href="/verify/">정품 확인하러 가기</a>';
+      } else if (severe || count >= 3){
+        top='care'; badge='결과'; title='한 번 맡기면 좋은 상태입니다.';
+        sub='복원수리로 되살릴 수 있습니다';
+        body='체크하신 증상은 날이나 맞물림이 지쳤을 때 나타나는 신호입니다. 무리해서 쓰기보다, 복원수리로 날을 다시 세우면 새것 같은 컷감으로 돌아옵니다.';
+        actions='<a class="cta" href="'+REPAIR_URL+'">복원수리 접수하기</a>';
+      } else {
+        top='mid'; badge='결과'; title='급하진 않지만, 살펴볼 만합니다.';
+        sub='증상 '+count+'개 — 지켜보다 불편하면 맡기세요';
+        body='가벼운 신호가 보입니다. 당장 문제는 아니지만, 커트감이 거슬리기 시작하면 그때 맡기시면 됩니다. 마모루는 재촉하지 않습니다.';
+        actions='<a class="cta ghost" href="'+REPAIR_URL+'">복원수리 알아보기</a>';
+      }
+
+      document.getElementById('result').innerHTML =
+        '<div class="result-card">'+
+          '<div class="result-top '+top+'"><div class="badge">'+badge+'</div><h3>'+title+'</h3><p class="sub">'+sub+'</p></div>'+
+          '<div class="result-body"><p>'+body+'</p><div class="result-actions">'+actions+'</div></div>'+
+        '</div>';
+      var r = document.getElementById('result');
+      r.style.display='block';
+      r.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  </script>
+</body>
+</html>
