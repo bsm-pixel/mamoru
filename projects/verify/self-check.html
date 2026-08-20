@@ -139,8 +139,9 @@
   </div>
 
   <script>
-    // ✏️ 복원수리 접수 링크 (사장님 확인 후 실제 URL로 교체)
-    var REPAIR_URL = 'https://mamoru.kr';
+    // 복원수리: 즉시 접수(53) / 안내 페이지(60)
+    var REPAIR_INTAKE = 'https://mamoru.kr/53'; // 바로 접수
+    var REPAIR_GUIDE  = 'https://mamoru.kr/60'; // 안내 + 접수경로
 
     var checks = Array.prototype.slice.call(document.querySelectorAll('#checks .check'));
     checks.forEach(function(c){
@@ -163,12 +164,12 @@
         top='care'; badge='결과'; title='한 번 맡기면 좋은 상태입니다.';
         sub='복원수리로 되살릴 수 있습니다';
         body='체크하신 증상은 날이나 맞물림이 지쳤을 때 나타나는 신호입니다. 무리해서 쓰기보다, 복원수리로 날을 다시 세우면 새것 같은 컷감으로 돌아옵니다.';
-        actions='<a class="cta" href="'+REPAIR_URL+'">복원수리 접수하기</a>';
+        actions='<a class="cta" href="'+REPAIR_INTAKE+'">복원수리 접수하기</a>';
       } else {
         top='mid'; badge='결과'; title='급하진 않지만, 살펴볼 만합니다.';
         sub='증상 '+count+'개 — 지켜보다 불편하면 맡기세요';
         body='가벼운 신호가 보입니다. 당장 문제는 아니지만, 커트감이 거슬리기 시작하면 그때 맡기시면 됩니다. 마모루는 재촉하지 않습니다.';
-        actions='<a class="cta ghost" href="'+REPAIR_URL+'">복원수리 알아보기</a>';
+        actions='<a class="cta ghost" href="'+REPAIR_GUIDE+'">복원수리 알아보기</a>';
       }
 
       document.getElementById('result').innerHTML =
