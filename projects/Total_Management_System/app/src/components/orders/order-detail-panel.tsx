@@ -174,6 +174,16 @@ export function OrderDetailPanel({ orderId }: Props) {
       {/* 상태별 액션 */}
       <OrderActionBar order={o} items={items} />
 
+      {/* 아임웹 주문관리 바로가기 — 취소/수령 등 아임웹 쪽 수동 처리용 */}
+      <a
+        href="https://mamoruscissors63682.imweb.me/admin/shopping/order-v1"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block text-center text-xs text-blue-500 hover:text-blue-700 py-1"
+      >
+        아임웹 주문관리에서 열기 ↗
+      </a>
+
       {/* 상세 페이지 링크 */}
       <Link
         href={`/orders/${o.id}`}

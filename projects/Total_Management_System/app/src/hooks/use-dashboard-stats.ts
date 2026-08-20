@@ -44,9 +44,29 @@ interface HubStatsResult {
   sales: {
     monthCount: number;
     monthAmount: number;       // 오프라인판매(RS 포함) + 납품(RS 포함) 전체 — 호환 유지 (오프라인 판매 카드용)
-    salesB2C: number;          // B2C 제품 매출 = offline_sales(소매/온라인) total−discount − 그 주문 RS_total
+    salesB2C: number;          // B2C 제품 매출 = offline_sales(소매) total−discount − 그 주문 RS_total
     salesB2B: number;          // B2B 제품 매출 = offline_sales(딜러/아카데미) total−discount − RS_total + 납품 total−discount − 납품 RS_total
+    salesOnline: number;       // 126: 아임웹 온라인 주문 제품매출 (B2C에 합산됨. 리포트 summary와 동일 기준)
   };
+}
+
+/** 이번달 아임웹 온라인 주문 제품매출 (order_items total, 배송비 제외, 결제완료 이상 = 취소/환불/무통장미입금 제외).
+ *  리포트(/api/reports/summary)와 동일 기준. 대시보드에서 B2C 제품매출에 합산된다. */
+async function getMonthOnlineRevenue(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: any, monthStartISO: string,
+): Promise<number> {
+  const { data: ords } = await db.from('orders').select('id')
+    .gte('ordered_at', monthStartISO)
+    .not('status', 'in', '("cancelled","refunded","pay_wait")');
+  const ids = (ords || []).map((o: { id: string }) => o.id);
+  if (ids.length === 0) return 0;
+  const { data: items } = await db.from('order_items')
+    .select('product_name, total_price, unit_price, quantity').in('order_id', ids);
+  return (items || [])
+    .filter((it: { product_name: string }) => it.product_name !== '배송비')
+    .reduce((s: number, it: { total_price: number; unit_price: number; quantity: number }) =>
+      s + (it.total_price || (it.unit_price || 0) * (it.quantity || 0)), 0);
 }
 
 /** R3+P12: 허브 대시보드 — RPC 1회 호출로 통합 (fallback: 기존 14개 쿼리) */
@@ -57,6 +77,10 @@ export function useHubStats() {
     queryKey: ['hub-stats'],
     staleTime: 30_000, // 30초 — RPC 1회면 충분
     queryFn: async (): Promise<HubStatsResult> => {
+      // 이번달 아임웹 온라인 주문 제품매출 — RPC/fallback 어느 경로든 B2C 매출에 합산 (2026-08-20)
+      const monthStartISO = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+      const monthOnline = await getMonthOnlineRevenue(supabase, monthStartISO);
+
       // RPC 호출 시도 (018_hub_stats_rpc.sql 배포 후 동작)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: rpcData, error: rpcError } = await (supabase as any).rpc('get_hub_stats');
@@ -153,6 +177,7 @@ export function useHubStats() {
             monthAmount: salesMonthAmount,
             salesB2C,
             salesB2B,
+            salesOnline: monthOnline,
           },
         };
       }
@@ -356,6 +381,7 @@ export function useHubStats() {
           monthAmount: salesMonthAmount + deliveryMonthAmount,
           salesB2C,
           salesB2B,
+          salesOnline: monthOnline,
         },
       };
     },

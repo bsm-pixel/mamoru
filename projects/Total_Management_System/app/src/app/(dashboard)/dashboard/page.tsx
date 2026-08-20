@@ -382,7 +382,8 @@ export default function DashboardPage() {
 
   // 매출 3분할 (회계 합산 로직 기존 그대로 유지)
   // B2C 제품 + B2B 제품(딜러/아카데미+납품) + 복원수리 전체(A 접수+B 판매RS+C 납품RS)
-  const b2c = stats?.sales.salesB2C || 0;
+  const online = stats?.sales.salesOnline || 0;         // 아임웹 온라인 주문 = B2C 제품매출에 합산
+  const b2c = (stats?.sales.salesB2C || 0) + online;
   const b2b = stats?.sales.salesB2B || 0;
   const repair = stats?.repairs?.monthRepairAmount || 0;
   const current = b2c + b2b + repair;

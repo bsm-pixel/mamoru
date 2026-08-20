@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { normalizeImwebPayMethod } from '@/lib/sales/imweb-pay-method';
 
 /**
  * GET /api/reports/summary — 매출/매입/VAT 기간별 집계
@@ -151,7 +152,7 @@ export async function GET(req: NextRequest) {
       productB2BDelivery += (d.total_amount || 0) - rs; // 납품 total은 이미 net(할인 재차감 금지)
     }
     const productB2B = productB2BOffline + productB2BDelivery;
-    const productTotal = productB2C + productB2B;
+    // productTotal 은 아임웹 온라인 주문(아래 5-2)까지 합산한 뒤 확정 (§5-2 하단).
 
     // 오프라인 판매 전체 요약 (RS 포함 — 호환용 "오프라인 판매 총액")
     const saleSummary = {
@@ -214,11 +215,12 @@ export async function GET(req: NextRequest) {
     // ─── 5-2) 아임웹 온라인 주문 항목 (품목별 매출/랭킹 포함용) — 취소/환불 제외, 배송비·0원 제외 ───
     const { data: ordRaw } = await db
       .from('orders')
-      .select('id, ordered_at, status')
+      .select('id, ordered_at, status, payment_method, paid_amount')
       .gte('ordered_at', `${fromDate}T00:00:00`)
       .lte('ordered_at', `${toDate}T23:59:59`)
-      .not('status', 'in', '("cancelled","refunded")');
-    const orderIds = (ordRaw || []).map((o: { id: string }) => o.id);
+      .not('status', 'in', '("cancelled","refunded","pay_wait")'); // 취소/환불/무통장미입금 제외
+    const orders: Array<{ id: string; payment_method: string | null; paid_amount: number }> = ordRaw || [];
+    const orderIds = orders.map((o) => o.id);
     let productOrderItems: Array<{ product_id: string | null; product_name: string; sku: string | null; quantity: number; unit_price: number; total_price: number }> = [];
     if (orderIds.length > 0) {
       const { data: oiRaw } = await db
@@ -230,6 +232,19 @@ export async function GET(req: NextRequest) {
           it.product_name !== '배송비' && ((it.total_price || (it.unit_price || 0) * (it.quantity || 0)) > 0))
         .map((it: { product_id: string | null; product_name: string; quantity: number; unit_price: number; total_price: number }) =>
           ({ product_id: it.product_id, product_name: it.product_name, sku: null, quantity: it.quantity, unit_price: it.unit_price, total_price: it.total_price }));
+    }
+
+    // 아임웹 온라인 주문 = B2C 제품매출에 합산 (품목 단위, 배송비 제외).
+    // COGS·랭킹엔 이미 반영되므로(§6 allProductItems) 매출도 맞춰야 손익이 정합한다.
+    const productOrderTotal = productOrderItems.reduce((s, it) => s + (it.total_price || (it.unit_price || 0) * (it.quantity || 0)), 0);
+    productB2C += productOrderTotal;
+    const productTotal = productB2C + productB2B;
+
+    // 결제수단별(현금주의)에 아임웹 주문 실입금 합산 — 정규화(카드/무통장→transfer 등)로 카드·무통장 구분
+    for (const o of orders) {
+      if ((o.paid_amount || 0) <= 0) continue;
+      const m = normalizeImwebPayMethod(o.payment_method);
+      saleSummary.by_method[m] = (saleSummary.by_method[m] || 0) + (o.paid_amount || 0);
     }
 
     // 오프라인 판매 B2B 여부 (customer_type dealer/academy) — 품목 B2C/B2B 분리용
@@ -404,12 +419,14 @@ export async function GET(req: NextRequest) {
     // ─── 11) 제품 매출 객체 (RS 제외, 납품 포함, B2C/B2B) ───
     const productSalesSummary = {
       total: productTotal,
-      b2c: productB2C,
+      b2c: productB2C,                 // 오프라인 B2C + 아임웹 온라인
+      online: productOrderTotal,       // 그중 아임웹 온라인 주문 매출
       b2b: productB2B,
       b2b_offline: productB2BOffline,
       b2b_delivery: productB2BDelivery,
       offline_count: sales.length,
       delivery_count: deliveries.length,
+      order_count: orderIds.length,
     };
 
     const totalRevenue = productTotal + repairTotal;
