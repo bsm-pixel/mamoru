@@ -281,29 +281,56 @@ export function useBookInvoice() {
   });
 }
 
-/** 주문 직접 취소 (송장 없는 주문: pay_done → cancelled) */
+/** 주문 직접 취소 (송장 없는 주문: pay_done → cancelled) — 재고·배정 시리얼 즉시 복구 */
 export function useCancelOrder() {
-  const supabase = createClient();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (orderId: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const db = supabase as any;
-      const { error } = await db
-        .from('orders')
-        .update({ status: 'cancelled' })
-        .eq('id', orderId);
-      if (error) throw error;
+      const res = await fetch(`/api/orders/${orderId}/cancel`, { method: 'POST' });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ ok: boolean; imwebManual?: boolean; already?: boolean }>;
     },
-    onSuccess: (_d, orderId) => {
-      toast.success('주문이 취소되었습니다');
+    onSuccess: (data, orderId) => {
+      toast.success('주문이 취소되었습니다 (재고·시리얼 복구)');
+      if (data?.imwebManual) {
+        toast('아임웹에서도 주문취소 처리해주세요', { icon: '⚠️', duration: 6000 });
+      }
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['order-counts'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['serials'] });
+      queryClient.invalidateQueries({ queryKey: ['serials-available'] });
+    },
+    onError: (err) => {
+      toast.error('취소 실패: ' + String(err));
+    },
+  });
+}
+
+/** 직접수령(대면 픽업) 완료 — 송장 없이 delivered 로 마감 */
+export function useCompletePickup() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      const res = await fetch(`/api/orders/${orderId}/pickup-complete`, { method: 'POST' });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ ok: boolean; imwebManual?: boolean }>;
+    },
+    onSuccess: (data, orderId) => {
+      toast.success('직접수령 완료 처리되었습니다');
+      if (data?.imwebManual) {
+        toast('아임웹에서도 배송완료/수령 처리해주세요', { icon: '⚠️', duration: 6000 });
+      }
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
       queryClient.invalidateQueries({ queryKey: ['order-counts'] });
     },
     onError: (err) => {
-      toast.error('취소 실패: ' + String(err));
+      toast.error('처리 실패: ' + String(err));
     },
   });
 }

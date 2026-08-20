@@ -420,3 +420,10 @@ async function adjustOrderStock(supabase: any, orderId: string, action: 'deduct'
     console.log(`[sync] 재고 ${action}: ${item.imweb_product_no} stock=${newQty} raw=${newRaw}`);
   }
 }
+
+/** TMS에서 주문 취소 시 재고·시리얼 즉시 복구 (adjustOrderStock restore 재사용 — 시리얼 in_stock 복원 + raw 보정 포함). */
+export async function restoreOrderStock(orderId: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase: any = createServiceClient();
+  await adjustOrderStock(supabase, orderId, 'restore');
+}

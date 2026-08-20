@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useBookInvoice, useCancelInvoice, useCancelOrder } from '@/hooks/use-orders';
+import { useBookInvoice, useCancelInvoice, useCancelOrder, useCompletePickup } from '@/hooks/use-orders';
 import { InvoiceModal } from './invoice-modal';
-import { AlertTriangle, Truck, ExternalLink } from 'lucide-react';
+import { AlertTriangle, Truck, ExternalLink, Store } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import type { Order, OrderItem } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
@@ -19,12 +19,14 @@ export function OrderActionBar({ order, items }: Props) {
   const [showCancelOrder, setShowCancelOrder] = useState(false);
   const [showCancelInvoice, setShowCancelInvoice] = useState(false);
   const [showPushImweb, setShowPushImweb] = useState(false);
+  const [showPickup, setShowPickup] = useState(false);
   const [checkingAlps, setCheckingAlps] = useState(false);
   const bookInvoice = useBookInvoice();
   const cancelInvoice = useCancelInvoice();
   const cancelOrder = useCancelOrder();
+  const completePickup = useCompletePickup();
 
-  const busy = bookInvoice.isPending || cancelInvoice.isPending || cancelOrder.isPending || checkingAlps;
+  const busy = bookInvoice.isPending || cancelInvoice.isPending || cancelOrder.isPending || completePickup.isPending || checkingAlps;
 
   async function handleCheckAlpsCancel() {
     if (!order.invoice_number) return;
@@ -97,6 +99,10 @@ export function OrderActionBar({ order, items }: Props) {
               <Truck size={14} />
               송장 생성
             </Button>
+            <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPickup(true)} disabled={busy}>
+              <Store size={14} />
+              직접수령 완료
+            </Button>
             <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelOrder(true)} disabled={busy}>
               주문 취소
             </Button>
@@ -131,7 +137,7 @@ export function OrderActionBar({ order, items }: Props) {
       <ConfirmModal
         open={showCancelOrder}
         onClose={() => setShowCancelOrder(false)}
-        onConfirm={() => cancelOrder.mutateAsync(order.id)}
+        onConfirm={async () => { await cancelOrder.mutateAsync(order.id); }}
         title="주문 취소"
         message="이 주문을 취소합니다. 되돌릴 수 없습니다."
         confirmLabel="주문 취소"
@@ -147,6 +153,16 @@ export function OrderActionBar({ order, items }: Props) {
         message={<>송장 <strong>{order.invoice_number}</strong>을 취소합니다.<br />ALPS 집하 전에만 가능합니다.</>}
         confirmLabel="송장 취소"
         variant="danger"
+      />
+
+      {/* 직접수령 완료 확인 */}
+      <ConfirmModal
+        open={showPickup}
+        onClose={() => setShowPickup(false)}
+        onConfirm={async () => { await completePickup.mutateAsync(order.id); }}
+        title="직접수령 완료"
+        message={<>이 주문을 <strong>직접수령(대면 픽업)</strong>으로 완료합니다.<br />송장 없이 배송완료로 마감됩니다. 아임웹에서도 수령 처리해주세요.</>}
+        confirmLabel="직접수령 완료"
       />
 
       {/* 아임웹 송장 연동 확인 */}
