@@ -3,7 +3,7 @@
  * 증분 동기화: 마지막 synced_at 이후 변경분만 가져옴
  */
 
-import { getOrders, getProdOrders, updateImwebStock } from './client';
+import { getOrders, getOrder, getProdOrders, updateImwebStock } from './client';
 import type { ImwebOrder, ImwebProdOrder } from './types';
 import type { OrderStatus } from '@/lib/supabase/types';
 import { createServiceClient } from '@/lib/supabase/server';
@@ -135,6 +135,32 @@ export async function syncOrders(): Promise<{
         .eq('id', logEntry.id);
     }
     throw err;
+  }
+}
+
+/**
+ * 웹훅용 단건 동기화 — 주문번호 1건만 아임웹에서 재조회하여 TMS에 반영.
+ * 기존 upsertOrder 재사용 → imweb_order_no 유니크로 크론과 겹쳐도 멱등(중복 없음).
+ * 웹훅 페이로드를 신뢰하지 않고 아임웹 API로 재조회하므로 위조 페이로드 방어도 겸함.
+ */
+export async function syncSingleOrder(
+  orderNo: string
+): Promise<{ success: boolean; order_no: string; error?: string }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase: any = createServiceClient();
+  try {
+    const orderRes = await getOrder(orderNo);
+    const order = orderRes.data;
+    if (!order) {
+      return { success: false, order_no: orderNo, error: 'order not found in imweb' };
+    }
+    const prodRes = await getProdOrders(orderNo);
+    const prodOrders = prodRes.data || [];
+    await upsertOrder(supabase, order, prodOrders);
+    return { success: true, order_no: orderNo };
+  } catch (err) {
+    console.error(`[webhook] 단건 동기화 실패 ${orderNo}:`, err);
+    return { success: false, order_no: orderNo, error: String(err) };
   }
 }
 
