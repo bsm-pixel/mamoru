@@ -22,6 +22,7 @@ import type { Order } from '@/lib/supabase/types';
 
 const STATUS_TABS = [
   { value: 'all', label: '전체' },
+  { value: 'pay_wait', label: '입금대기' },   // 무통장 미입금 (아임웹 BEFORE_DEPOSIT) 가시화
   { value: 'pay_done', label: '결제완료' },
   { value: 'preparing', label: '준비중' },
   { value: 'shipping', label: '배송중' },

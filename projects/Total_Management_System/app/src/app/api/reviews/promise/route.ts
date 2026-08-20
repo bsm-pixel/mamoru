@@ -84,9 +84,14 @@ export async function POST(req: NextRequest) {
       if (!row.review_promised_at) {
         update.review_promised_at = new Date().toISOString();
       }
-      await db.from(table).update(update).eq('id', id);
+      // 🚨 update 에러를 반드시 확인 (전엔 삼켜서 CHECK 위반이 "가짜 성공"이 되던 버그 — 127)
+      const { error: updErr } = await db.from(table).update(update).eq('id', id);
+      if (updErr) {
+        console.error('[reviews/promise] 저장 실패:', updErr);
+        return NextResponse.json({ error: `저장 실패: ${updErr.message || updErr}` }, { status: 500 });
+      }
     } else {
-      await db
+      const { error: updErr } = await db
         .from(table)
         .update({
           review_promised_at: null,
@@ -94,6 +99,10 @@ export async function POST(req: NextRequest) {
           review_promised_subtype: null,
         })
         .eq('id', id);
+      if (updErr) {
+        console.error('[reviews/promise] 해제 실패:', updErr);
+        return NextResponse.json({ error: `해제 실패: ${updErr.message || updErr}` }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ ok: true });

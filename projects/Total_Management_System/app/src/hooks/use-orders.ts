@@ -70,7 +70,7 @@ export function useOrderCounts() {
       }
 
       // Fallback: RPC 미배포 시 개별 쿼리
-      const statuses = ['pay_done', 'preparing', 'shipping', 'delivered', 'cancel_pending', 'cancelled'];
+      const statuses = ['pay_wait', 'pay_done', 'preparing', 'shipping', 'delivered', 'cancel_pending', 'cancelled'];
       const counts: Record<string, number> = {};
       const results = await Promise.all(
         statuses.map(async (s) => {
