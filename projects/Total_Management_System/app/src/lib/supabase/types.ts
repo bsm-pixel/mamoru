@@ -133,6 +133,7 @@ export interface Database {
           shipped_at: string | null;
           delivered_at: string | null;
           review_requested_at: string | null; // 011: 리뷰 요청 발송 시각
+          is_pickup?: boolean | null;          // 126: 직접수령(대면 픽업) 마커
           status: OrderStatus;
           imweb_raw: Record<string, unknown> | null;
           synced_at: string;
