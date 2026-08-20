@@ -252,7 +252,7 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
 
   // 품목 동기화 — upsert로 트랜잭션 보호 (delete→insert 사이 에러 시 데이터 유실 방지)
   if (order && prodOrders.length > 0) {
-    const items = prodOrders.flatMap((po) =>
+    const rawItems = prodOrders.flatMap((po) =>
       po.items.map((item) => ({
         order_id: order.id,
         imweb_product_no: String(item.prod_no),
@@ -263,6 +263,19 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
         total_price: item.payment.price * item.payment.count,
       }))
     );
+    // imweb_product_no → products.id 매핑을 채운다 (시리얼 배정·재고 매칭이 product_id 기준이므로 필수)
+    const prodNos = [...new Set(rawItems.map((i) => i.imweb_product_no))];
+    const prodIdMap: Record<string, string> = {};
+    if (prodNos.length > 0) {
+      const { data: prods } = await supabase
+        .from('products')
+        .select('id, imweb_product_no')
+        .in('imweb_product_no', prodNos);
+      (prods || []).forEach((p: { id: string; imweb_product_no: string | null }) => {
+        if (p.imweb_product_no) prodIdMap[String(p.imweb_product_no)] = p.id;
+      });
+    }
+    const items = rawItems.map((i) => ({ ...i, product_id: prodIdMap[i.imweb_product_no] || null }));
 
     if (items.length > 0) {
       // upsert: order_id + imweb_product_no 기준 (중복 시 업데이트)
@@ -360,18 +373,46 @@ async function adjustOrderStock(supabase: any, orderId: string, action: 'deduct'
 
     if (!product) continue;
 
-    const delta = action === 'deduct' ? -item.quantity : item.quantity;
-    const newQty = Math.max(0, (product.stock_quantity || 0) + delta);
-    const newRaw = Math.max(0, (product.raw_stock || 0) + delta); // 보관창고 동시 차감/복원
+    const qty = item.quantity;
+    const stockDelta = action === 'deduct' ? -qty : qty;
+    let rawDelta = action === 'deduct' ? -qty : qty; // 기본: stock과 동일(loose 가정)
+
+    // 복구(취소/환불) 시: 이 주문·제품에 배정된 시리얼이 있으면 in_stock 복원 + raw 복구량 보정.
+    // 배정 API가 raw_stock 을 +시리얼수 해뒀으므로, 복구도 그만큼 덜 되돌려야 불변식(stock=raw+시리얼) 유지.
+    //   rawDelta = qty − 배정시리얼수  (시리얼 없으면 = qty, 기존 동작과 동일)
+    if (action === 'restore') {
+      const { data: soldSerials } = await supabase
+        .from('product_serials')
+        .select('id, previous_zone, warehouse_zone')
+        .eq('order_id', orderId)
+        .eq('product_id', product.id)
+        .eq('status', 'sold');
+      const serials = (soldSerials || []) as Array<{ id: string; previous_zone: string | null; warehouse_zone: string | null }>;
+      for (const s of serials) {
+        await supabase
+          .from('product_serials')
+          .update({
+            status: 'in_stock',
+            warehouse_zone: s.previous_zone || s.warehouse_zone || 'ready',
+            sold_via: null, order_id: null, sold_at: null, sold_to_name: null, sold_to_phone: null,
+          })
+          .eq('id', s.id)
+          .eq('order_id', orderId);
+      }
+      rawDelta = qty - serials.length;
+    }
+
+    const newQty = Math.max(0, (product.stock_quantity || 0) + stockDelta);
+    const newRaw = Math.max(0, (product.raw_stock || 0) + rawDelta);
 
     await supabase
       .from('products')
       .update({ stock_quantity: newQty, raw_stock: newRaw, updated_at: new Date().toISOString() })
       .eq('id', product.id);
 
-    // 아임웹 재고 동기화 — delta(증감값) 전달
+    // 아임웹 재고 동기화 — stockDelta(±qty, 시리얼과 무관: 아임웹은 우리 시리얼을 모름)
     try {
-      await updateImwebStock(Number(item.imweb_product_no), delta);
+      await updateImwebStock(Number(item.imweb_product_no), stockDelta);
     } catch (e) {
       console.error(`[sync] 아임웹 재고 동기화 실패: ${item.imweb_product_no}`, e);
     }

@@ -90,22 +90,53 @@ export function useOrderCounts() {
   });
 }
 
-/** 주문 단건 조회 (품목 포함) */
+/** 주문에 귀속된 시리얼 (표시·배정용 경량 타입) */
+export interface OrderSerial {
+  id: string;
+  product_id: string | null;
+  serial_number: string;
+  status: string;
+  sold_at: string | null;
+}
+
+/** 주문 단건 조회 (품목 + 귀속 시리얼 포함) */
 export function useOrder(id: string) {
   const supabase = createClient();
 
   return useQuery({
     queryKey: ['order', id],
     queryFn: async () => {
-      const [orderRes, itemsRes] = await Promise.all([
+      const [orderRes, itemsRes, serialsRes] = await Promise.all([
         supabase.from('orders').select('*').eq('id', id).single(),
         supabase.from('order_items').select('*').eq('order_id', id),
+        // product_serials 는 생성 타입 미포함 테이블 → any 캐스팅 (프로젝트 컨벤션)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase as any)
+          .from('product_serials')
+          .select('id, product_id, serial_number, status, sold_at')
+          .eq('order_id', id),
       ]);
 
       if (orderRes.error) throw orderRes.error;
+
+      let items = (itemsRes.data || []) as OrderItem[];
+      // 구(舊) 동기화 품목은 product_id 가 비어있을 수 있음 → imweb_product_no 로 보완 (시리얼 UI가 product_id 필요)
+      const missingNos = [
+        ...new Set(items.filter((i) => !i.product_id && i.imweb_product_no).map((i) => i.imweb_product_no as string)),
+      ];
+      if (missingNos.length > 0) {
+        const { data: prods } = await supabase.from('products').select('id, imweb_product_no').in('imweb_product_no', missingNos);
+        const map: Record<string, string> = {};
+        (prods || []).forEach((p: { id: string; imweb_product_no: string | null }) => {
+          if (p.imweb_product_no) map[String(p.imweb_product_no)] = p.id;
+        });
+        items = items.map((i) => (i.product_id || !i.imweb_product_no ? i : { ...i, product_id: map[String(i.imweb_product_no)] || null }));
+      }
+
       return {
         order: orderRes.data as Order,
-        items: (itemsRes.data || []) as OrderItem[],
+        items,
+        serials: (serialsRes.data || []) as OrderSerial[],
       };
     },
     enabled: !!id,

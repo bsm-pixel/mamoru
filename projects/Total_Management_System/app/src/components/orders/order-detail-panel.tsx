@@ -1,12 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { useOrder } from '@/hooks/use-orders';
+import { OrderSerialModal } from './order-serial-modal';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeliveryTracker } from './delivery-tracker';
 import { OrderActionBar } from './order-action-bar';
 import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
-import { User, Phone, MapPin, Package, CreditCard } from 'lucide-react';
+import { User, Phone, MapPin, Package, CreditCard, Hash } from 'lucide-react';
 import Link from 'next/link';
 
 interface Props {
@@ -15,6 +17,7 @@ interface Props {
 
 export function OrderDetailPanel({ orderId }: Props) {
   const { data, isLoading } = useOrder(orderId);
+  const [showSerials, setShowSerials] = useState(false);
 
   if (isLoading) {
     return <div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /><Skeleton className="h-20" /></div>;
@@ -24,7 +27,7 @@ export function OrderDetailPanel({ orderId }: Props) {
     return <p className="text-sm text-neutral-400 text-center py-8">주문 정보를 찾을 수 없습니다</p>;
   }
 
-  const { order: o, items } = data;
+  const { order: o, items, serials } = data;
   const statusColor = ORDER_STATUS_COLOR[o.status] || 'bg-neutral-100 text-neutral-500';
 
   return (
@@ -98,6 +101,35 @@ export function OrderDetailPanel({ orderId }: Props) {
         </div>
       )}
 
+      {/* 배정 시리얼 (시리얼 대상 품목이 있고, 취소 아님) */}
+      {items.some((i) => i.product_id) && o.status !== 'cancelled' && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-neutral-500 flex items-center gap-1">
+              <Hash size={12} /> 배정 시리얼
+              {serials.length > 0 && <span className="text-neutral-400">({serials.length})</span>}
+            </p>
+            <button
+              onClick={() => setShowSerials(true)}
+              className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+            >
+              {serials.length > 0 ? '수정' : '배정'}
+            </button>
+          </div>
+          {serials.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {serials.map((s) => (
+                <span key={s.id} className="font-mono text-[11px] bg-neutral-100 text-neutral-700 rounded px-1.5 py-0.5">
+                  {s.serial_number}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-neutral-400">배정된 시리얼 없음</p>
+          )}
+        </div>
+      )}
+
       {/* 결제 정보 */}
       <div className="bg-neutral-50 rounded-lg p-3">
         <p className="text-xs font-semibold text-neutral-500 mb-2 flex items-center gap-1">
@@ -146,6 +178,10 @@ export function OrderDetailPanel({ orderId }: Props) {
       >
         상세 페이지에서 보기 →
       </Link>
+
+      {showSerials && (
+        <OrderSerialModal orderId={o.id} items={items} serials={serials} onClose={() => setShowSerials(false)} />
+      )}
     </div>
   );
 }
