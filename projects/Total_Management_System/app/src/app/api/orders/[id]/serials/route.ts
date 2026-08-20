@@ -22,9 +22,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { data: { user } } = await auth.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  let body: { serialIds?: unknown };
+  let body: { serialIds?: unknown; manualByProduct?: unknown };
   try { body = await request.json(); } catch { body = {}; }
   const target = Array.isArray(body.serialIds) ? body.serialIds.filter((x): x is string => typeof x === 'string') : [];
+  // 수동/자동생성 시리얼 번호 (product_id → 번호[])
+  const manualByProduct: Record<string, string[]> = {};
+  if (body.manualByProduct && typeof body.manualByProduct === 'object') {
+    for (const [pid, arr] of Object.entries(body.manualByProduct as Record<string, unknown>)) {
+      if (Array.isArray(arr)) {
+        const nums = arr.filter((x): x is string => typeof x === 'string' && x.trim() !== '').map((x) => x.trim());
+        if (nums.length) manualByProduct[pid] = nums;
+      }
+    }
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db: any = createServiceClient();
@@ -81,6 +91,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   current.forEach((s) => countProduct(s.product_id, 1));
   toRemove.forEach((s) => countProduct(s.product_id, -1));
   toAdd.forEach((s) => countProduct(s.product_id, 1));
+  Object.entries(manualByProduct).forEach(([pid, nums]) => countProduct(pid, nums.length));
   for (const [pid, cnt] of Object.entries(finalCountByProduct)) {
     const cap = orderQtyByProduct[pid] ?? 0;
     if (cnt > cap) {
@@ -134,6 +145,48 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     addRaw(s.product_id, -1);
   }
 
+  // 2.5) 수동/자동생성 시리얼: 재고에 없어 새 번호를 만드는 경우.
+  //   · 신규 생성 = sold 라벨만. raw 변화 없음 (주문이 이미 loose로 raw −1 했고, 이 라벨이 그 loose 단위를 가리킴).
+  //   · 기존 in_stock 번호를 입력한 것이면 = 재고 배정과 동일 (raw +1).
+  //   · 타 판매/주문/계약 소속이면 차단(이전 동의 미지원 MVP).
+  let manualAdded = 0;
+  for (const [pid, numbers] of Object.entries(manualByProduct)) {
+    for (const num of numbers) {
+      const { data: existRows } = await db
+        .from('product_serials')
+        .select('id, status, order_id, warehouse_zone')
+        .eq('serial_number', num)
+        .limit(1);
+      const ex = existRows && existRows[0];
+      if (ex) {
+        if (ex.status === 'sold' && ex.order_id === orderId) continue; // 이미 이 주문에 배정됨
+        if (ex.status === 'in_stock') {
+          const { count } = await db
+            .from('product_serials')
+            .update({
+              previous_zone: ex.warehouse_zone, status: 'sold', sold_via: 'online', order_id: orderId,
+              offline_sale_id: null, sale_item_id: null, sold_at: now,
+              sold_to_name: order.orderer_name || null, sold_to_phone: order.orderer_phone || null,
+            })
+            .eq('id', ex.id).eq('status', 'in_stock')
+            .select('id', { count: 'exact', head: true });
+          if (count === 0) return NextResponse.json({ error: `시리얼 "${num}" 배정 충돌 — 새로고침 후 재시도` }, { status: 409 });
+          addRaw(pid, +1);
+          manualAdded++;
+        } else {
+          return NextResponse.json({ error: `시리얼 "${num}" 은(는) 이미 다른 판매/주문에 등록되어 있습니다` }, { status: 409 });
+        }
+      } else {
+        await db.from('product_serials').insert({
+          serial_number: num, product_id: pid, status: 'sold', warehouse_zone: 'ready', previous_zone: 'ready',
+          sold_via: 'online', order_id: orderId, sold_at: now,
+          sold_to_name: order.orderer_name || null, sold_to_phone: order.orderer_phone || null,
+        });
+        manualAdded++;
+      }
+    }
+  }
+
   // 3) raw_stock 치환 반영 (stock_quantity·아임웹 재고는 손대지 않음)
   await Promise.all(Object.entries(rawDeltaByProduct).map(async ([pid, delta]) => {
     if (delta === 0) return;
@@ -149,5 +202,5 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .select('id, product_id, serial_number, status, sold_at')
     .eq('order_id', orderId);
 
-  return NextResponse.json({ ok: true, serials: after || [], added: toAdd.length, removed: toRemove.length });
+  return NextResponse.json({ ok: true, serials: after || [], added: toAdd.length + manualAdded, removed: toRemove.length });
 }

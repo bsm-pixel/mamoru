@@ -34,16 +34,27 @@ export function OrderSerialModal({ orderId, items, serials, onClose }: Props) {
     }
     return m;
   });
+  // 품목별 수동/자동생성 시리얼 번호 (재고에 없어 새로 만드는 것)
+  const [manualSel, setManualSel] = useState<Record<string, string[]>>({});
 
   async function save() {
     if (saving) return;
     setSaving(true);
     try {
       const serialIds = Array.from(new Set(Object.values(sel).flat()));
+      // 수동/자동생성 시리얼 번호 → product_id 별로 묶기
+      const manualByProduct: Record<string, string[]> = {};
+      for (const it of serialItems) {
+        const arr = (manualSel[it.id] || []).map((s) => s.trim()).filter(Boolean);
+        if (arr.length) {
+          const pid = it.product_id as string;
+          manualByProduct[pid] = [...(manualByProduct[pid] || []), ...arr];
+        }
+      }
       const res = await fetch(`/api/orders/${orderId}/serials`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ serialIds }),
+        body: JSON.stringify({ serialIds, manualByProduct }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -94,6 +105,8 @@ export function OrderSerialModal({ orderId, items, serials, onClose }: Props) {
                     selectedSerialIds={sel[it.id] || []}
                     onSelect={(ids) => setSel((prev) => ({ ...prev, [it.id]: ids }))}
                     currentSerials={current}
+                    manualSerials={manualSel[it.id] || []}
+                    onManualSerialsChange={(arr) => setManualSel((prev) => ({ ...prev, [it.id]: arr }))}
                   />
                 </div>
               );
