@@ -38,7 +38,7 @@ export async function GET(
     // verify_token으로 시리얼 + 제품 조회
     const { data: serial, error } = await db
       .from('product_serials')
-      .select('id, status, sold_via, sold_to_name, sold_at, manufactured_at, created_at, product_id, offline_sale_id, order_id')
+      .select('id, status, sold_via, sold_to_name, sold_at, manufactured_at, created_at, product_id, sale_item_id, offline_sale_id, order_id')
       .eq('verify_token', token)
       .single();
 
@@ -49,11 +49,24 @@ export async function GET(
       });
     }
 
-    // 제품 정보 별도 조회 (임베드 조인이 배열/누락으로 name 이 비던 문제 = '알 수 없는 제품' fix)
+    // 제품 정보 — product_id 있으면 그걸로. 없으면(백필 시리얼) 판매 항목에서 제품명 추정 (lookup API와 동일 폴백).
     let product: { name?: string; sku?: string; category?: string; description?: string; image_url?: string } | null = null;
     if (serial.product_id) {
       const { data: prod } = await db.from('products').select('name, sku, category, description, image_url').eq('id', serial.product_id).single();
       product = prod;
+    }
+    if (!product && serial.offline_sale_id) {
+      // 1순위: sale_item_id 정확 매칭 / 2순위: 그 판매의 비(非)복원수리 항목
+      let item: { product_name?: string; sku?: string } | null = null;
+      if (serial.sale_item_id) {
+        const { data } = await db.from('offline_sale_items').select('product_name, sku').eq('id', serial.sale_item_id).single();
+        item = data;
+      }
+      if (!item) {
+        const { data: items } = await db.from('offline_sale_items').select('product_name, sku').eq('sale_id', serial.offline_sale_id);
+        item = (items || []).find((si: { product_name?: string }) => si.product_name && !si.product_name.includes('복원수리')) || null;
+      }
+      if (item?.product_name) product = { name: item.product_name, sku: item.sku || undefined };
     }
 
     // 실제 구매일 — serial.sold_at 은 백필/배정 시각일 수 있어, 판매/주문 원본 날짜를 우선.
