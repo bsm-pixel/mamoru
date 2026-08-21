@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 
 // 공개 정품확인 — page.mamoru.kr(다른 도메인)에서 fetch 하므로 CORS 허용 필수.
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' } as const;
@@ -30,9 +30,10 @@ export async function GET(
       return jr({ valid: false, error: '유효하지 않은 토큰' }, 400);
     }
 
-    const supabase = await createServerSupabaseClient();
+    // 공개 조회 — 비로그인 고객이 스캔하므로 서비스 클라이언트(RLS 우회) 사용.
+    //   반환값은 제품명·판매채널·일자뿐(시리얼번호·연락처 미반환) → 공개 안전.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
+    const db: any = createServiceClient();
 
     // verify_token으로 시리얼 + 제품 조회
     const { data: serial, error } = await db
