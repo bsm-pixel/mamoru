@@ -8,9 +8,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSerialLookup, useSerialAudit, type SerialAuditLog } from '@/hooks/use-serial-lookup';
 import { useProducts } from '@/hooks/use-sales';
 import { formatPhone, SALE_CHANNEL_LABEL } from '@/lib/utils/format';
-import { Package, User, ShoppingBag, Wrench, Hash, Activity, ArrowRight, ArrowLeft, ArrowLeftRight, Search } from 'lucide-react';
+import { Package, User, ShoppingBag, Wrench, Hash, Activity, ArrowRight, ArrowLeft, ArrowLeftRight, Search, QrCode } from 'lucide-react';
 import { SerialSwapDialog } from '@/components/serials/serial-swap-dialog';
 import { SerialManagePanel } from '@/components/serials/serial-manage-panel';
+import { sendZplToPrinter, downloadZpl } from '@/lib/label/browser-print';
+import { buildVerifyQrZpl } from '@/lib/label/verify-qr-label';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
@@ -117,6 +120,26 @@ export default function SerialsPage() {
   // 시리얼 교환 모달 (Phase B)
   const [swapOpen, setSwapOpen] = useState(false);
 
+  // 정품 QR 라벨(20×20) 출력 — verify_token 보장 후 ZPL 전송
+  const [qrLoading, setQrLoading] = useState(false);
+  async function printVerifyQr() {
+    if (!serial) return;
+    setQrLoading(true);
+    try {
+      const res = await fetch(`/api/serials/${serial.id}/verify-label`, { method: 'POST' });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || '오류'); }
+      const { verifyUrl, model } = await res.json();
+      const zpl = buildVerifyQrZpl(verifyUrl, model || product?.sku || product?.name || '');
+      const ok = await sendZplToPrinter(zpl);
+      if (ok) toast.success('정품 QR 라벨 출력');
+      else { downloadZpl(zpl, `verify-${serial.serial_number}.zpl`); toast('프린터 미연결 — ZPL 파일로 저장됨', { icon: 'ℹ️' }); }
+    } catch (e) {
+      toast.error('QR 라벨 실패: ' + String(e instanceof Error ? e.message : e));
+    } finally {
+      setQrLoading(false);
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       <Topbar title="시리얼 관리 & 조회" />
@@ -164,6 +187,12 @@ export default function SerialsPage() {
               <div className="flex items-center gap-2 mb-3">
                 <Hash size={16} className="text-neutral-400" />
                 <span className="font-mono font-bold text-sm">{serial.serial_number}</span>
+                <button type="button" onClick={printVerifyQr} disabled={qrLoading}
+                  title="정품 QR 라벨 출력 (20×20, 상단 QR·하단 모델명)"
+                  className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-neutral-900 text-white hover:bg-neutral-800 transition disabled:opacity-50">
+                  <QrCode size={12} className={qrLoading ? 'animate-pulse' : ''} />
+                  정품 QR 라벨
+                </button>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Badge className={STATUS_LABEL[serial.status]?.color || 'bg-neutral-100'}>
