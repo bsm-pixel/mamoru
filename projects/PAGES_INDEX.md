@@ -1,69 +1,82 @@
-# 단독 페이지 인덱스 (GitHub Pages)
-> 최종 업데이트: 2026-05-14 — 자체 도메인 전환 (`page.mamoru.kr`)
-> 베이스 URL: `https://page.mamoru.kr/` (옛 `bsm-pixel.github.io/mamoru/` 는 GitHub Pages 자동 redirect 로 호환 유지)
+# 📄 고객 페이지 편집·배포 가이드 (page.mamoru.kr)
+
+> 최종 업데이트: 2026-08-21
+> 베이스 URL: `https://page.mamoru.kr/` · 모든 고객 페이지는 `projects/` 아래에 있습니다.
 
 ---
 
-## 고객 대면 — 단독 페이지 (알림톡/링크 직접 접근)
+## ✅ 편집 → 배포 (이게 전부)
 
-| 페이지 | 경로 | 용도 | 파라미터 |
-|--------|------|------|----------|
-| 출장 일정 제안 | `projects/consulting/page_suggest.html` | 출장 시간 제안 캘린더 — 고객이 슬롯 선택/재요청 | `?t={token}` |
-| 예약 변경/취소 | `projects/consulting/page_change_request.html` | 확정된 예약 셀프서비스 변경/취소 | `?uid={unique_id}` |
-| 알림 결과 | `projects/consulting/page_result.html` | 알림톡 버튼 → 결과 메시지 표시 (동적) | `?title=&msg=` |
-| 딜러 일정 확정 | `projects/consulting/page_dealer_confirm.html` | 출장 딜러 대면 확정 | — |
-| 리스케줄 리다이렉트 | `projects/consulting/page_reschedule.html` | 레거시 링크 호환 → page_suggest.html 자동 이동 | `?t={token}` |
-| 복원수리 접수 | `projects/as/page_form.html` | 통합 접수 폼 (마모루+타사) | — |
-| 복원수리 안내 | `projects/as/page_as_guide.html` | 복원수리 서비스 안내 (모달형) | — |
-| 수리내역 조회 | `projects/as/page_as_report.html` | 고객 수리 현황 조회 (TMS API 연동) | `?uid={as_id}` |
-| 후기 작성 | `projects/reviews/page_review.html` | 리뷰 작성 폼 (복원수리/상담 등) | `?uid={id}&type={as\|consult}` |
-| 브랜드 소개 | `projects/brand/page_intro.html` | 브랜드 히어로 랜딩 | — |
+1. **로컬에서 파일을 연다** (아래 표의 "파일" 경로 — `projects/...html`)
+2. **화면에 보이는 문구를 그대로 고친다** (텍스트만 바꾸면 됨)
+3. 저장 후 **`git push`** → **GitHub Pages가 1~2분 안에 자동 반영** (별도 빌드·비용 없음)
+
+> 🚫 **폴더·파일 이름은 바꾸지 말 것** — 라이브 URL이 **알림톡·QR 라벨·아임웹 코드위젯에 박제**돼 있어서, 이름을 바꾸면 그 링크들이 전부 깨집니다. **내용(문구)만** 고치세요.
+>
+> ✏️ 파일 안에 `✏️` 표시가 있으면 거기가 "고쳐도 되는 곳"입니다.
 
 ---
 
-## 아임웹 iframe 삽입 페이지 (코드위젯)
+## 🛡️ 정품인증 (신규, 2026-08)
 
-| 페이지 | 경로 | 아임웹 경로 | 용도 |
-|--------|------|-------------|------|
-| 메인 홈 | `projects/main/page_main.html` | `/` | 메인 페이지 (PC+모바일, Lottie) |
-| 상담 안내 | `projects/consulting/page_guide.html` | `/61` | 매장방문/출장/톡상담 안내 |
-| 간편 진단 | `projects/consulting/page_diag.html` | 코드위젯 | 13개 질문 조건부 분기 |
-| 상담 접수 | `projects/consulting/page_form.html` | 코드위젯 | 상담 접수 폼 (매장/출장) |
-| 맞춤 추천 | `projects/consulting/page_recommend.html` | 코드위젯 | 진단 결과 → 맞춤 추천 |
-| 복원수리 안내 | `projects/as/page_guide.html` | `/60` | 복원수리 서비스 안내 (풀페이지) |
-| 고객 후기 | `projects/reviews/page_reviews.html` | 코드위젯 | 리뷰 목록 표시 |
+| 페이지 | 파일 | 라이브 URL | 문구 고치는 곳 |
+|--------|------|-----------|---------------|
+| 정품 확인 | `projects/verify/index.html` | `/projects/verify/?t={token}` | `renderValid()` 안의 "정품 확인 / 이 제품은…", 혜택(복원수리 50%) 문구 |
+| 가위 자가진단 | `projects/verify/self-check.html` | `/projects/verify/self-check.html` | 증상 6개(`<div class="checks">`), 결과 3단계 문구(`run` 클릭 스크립트의 `body=`), 접수 링크(`REPAIR_INTAKE`/`REPAIR_GUIDE`) |
+
+> QR 라벨은 TMS 시리얼 관리에서 출력(고객 페이지 아님). QR = 위 정품확인 URL.
+
+## 💬 상담 (매장방문 / 출장 / 톡상담)
+
+| 페이지 | 파일 | 라이브 URL | 용도 |
+|--------|------|-----------|------|
+| 상담 안내 | `projects/consulting/page_guide.html` | 아임웹 `/61` | 매장방문/출장/톡상담 안내 |
+| 상담 접수 | `projects/consulting/page_form.html` | 코드위젯 | 접수 폼 |
+| 간편 진단 | `projects/consulting/page_diag.html` | 코드위젯 | 어떤 가위가 맞나 진단 |
+| 맞춤 추천 | `projects/consulting/page_recommend.html` | 코드위젯 | 진단 결과 → 추천 |
+| 출장 일정 제안 | `projects/consulting/page_suggest.html` | `/projects/consulting/page_suggest.html?t={token}` | 고객이 출장 슬롯 선택 |
+| 예약 변경/취소 | `projects/consulting/page_change_request.html` | `...?uid={unique_id}` | 셀프 변경/취소 |
+| 알림 결과 | `projects/consulting/page_result.html` | `...?title=&msg=` | 알림톡 버튼 결과 표시 |
+
+## 🔧 복원수리
+
+| 페이지 | 파일 | 라이브 URL | 용도 |
+|--------|------|-----------|------|
+| 복원수리 안내 | `projects/as/page_guide.html` | 아임웹 `/60` | 서비스 안내(풀페이지) |
+| 복원수리 접수 | `projects/as/page_form.html` | 아임웹 `/53` | 통합 접수 폼 |
+| 수리내역 조회 | `projects/as/page_as_report.html` | `...?uid={as_id}` | 고객 수리현황(TMS API) |
+
+## ⭐ 후기 / 🏠 메인
+
+| 페이지 | 파일 | 라이브 URL | 용도 |
+|--------|------|-----------|------|
+| 후기 작성 | `projects/reviews/page_review.html` | `...?uid={id}&type={type}` | 리뷰 작성 폼 |
+| 고객 후기 목록 | `projects/reviews/page_reviews.html` | 코드위젯 | 리뷰 표시 |
+| 메인 홈 | `projects/main/page_main.html` | 아임웹 `/` | 메인 페이지 |
+| 리뷰 이벤트 | `projects/reviews/page_review_event.html` | 코드위젯 | 매월 후기 이벤트 |
 
 ---
 
-## 전체 URL 목록 (빠른 복사)
+## 🔗 URL 빠른 복사
 
 ```
-# 고객 대면 (단독)
+# 정품인증
+https://page.mamoru.kr/projects/verify/?t={token}
+https://page.mamoru.kr/projects/verify/self-check.html
+# 상담
 https://page.mamoru.kr/projects/consulting/page_suggest.html?t={token}
 https://page.mamoru.kr/projects/consulting/page_change_request.html?uid={unique_id}
-https://page.mamoru.kr/projects/consulting/page_result.html?title={제목}&msg={메시지}
-https://page.mamoru.kr/projects/consulting/page_dealer_confirm.html
+# 복원수리
 https://page.mamoru.kr/projects/as/page_form.html
-https://page.mamoru.kr/projects/as/page_as_guide.html
 https://page.mamoru.kr/projects/as/page_as_report.html?uid={as_id}
+# 후기
 https://page.mamoru.kr/projects/reviews/page_review.html?uid={id}&type={type}
-https://page.mamoru.kr/projects/brand/page_intro.html
-
-# 아임웹 iframe (직접 접근은 비정상)
-https://page.mamoru.kr/projects/main/page_main.html
-https://page.mamoru.kr/projects/consulting/page_guide.html
-https://page.mamoru.kr/projects/consulting/page_diag.html
-https://page.mamoru.kr/projects/consulting/page_form.html
-https://page.mamoru.kr/projects/consulting/page_recommend.html
-https://page.mamoru.kr/projects/as/page_guide.html
-https://page.mamoru.kr/projects/reviews/page_reviews.html
 ```
 
 ---
 
-## 참고
+## ⚠️ 주의
 
-- **GitHub Pages 배포**: `git push` → 자동 반영 (별도 빌드 없음)
-- **아임웹 iframe**: `initIframeComm()` — ResizeObserver 우선, setInterval fallback
-- **알림톡 링크**: GAS `GITHUB_PAGES_CONSULT` 변수에 프로토콜 미포함 (`page.mamoru.kr/projects/consulting`)
-  → 솔라피 템플릿 WL 버튼에서 `https://#{change_request_link}` 형태로 사용
+- **아임웹 iframe 삽입 페이지**(안내/진단/추천/후기목록/메인)는 아임웹 안에서 열려야 정상. 단독 URL 직접 접근은 레이아웃이 다를 수 있음.
+- **공통코드**(`common_code/header_code.txt` 등)는 여러 페이지가 공유하므로 **손대지 말 것**.
+- 문구가 아니라 **기능·레이아웃**을 바꾸려면 Claude에게 요청 (깨질 위험 있음).
