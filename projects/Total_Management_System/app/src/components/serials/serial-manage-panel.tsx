@@ -12,9 +12,12 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSerials, useCreateSerial, useCreateSerialBatch, useUpdateSerialStatus, useUpdateSerialZone } from '@/hooks/use-serials';
 import { formatDateTime } from '@/lib/utils/format';
-import { Plus, Search, Barcode, Printer } from 'lucide-react';
+import { Plus, Search, Barcode, Printer, QrCode } from 'lucide-react';
 import { LabelPrintModal } from '@/components/labels/label-print-modal';
 import { useLabelTemplate } from '@/hooks/use-label-templates';
+import { sendZplToPrinter, downloadZpl } from '@/lib/label/browser-print';
+import { buildVerifyQrZpl } from '@/lib/label/verify-qr-label';
+import toast from 'react-hot-toast';
 
 const ZONE_COLOR: Record<string, string> = {
   raw: 'bg-neutral-100 text-neutral-500',
@@ -47,6 +50,25 @@ interface Props {
 export function SerialManagePanel({ productId, productName }: Props) {
   const serialLabel = useLabelTemplate('serial_40x20');
   const [labelSerial, setLabelSerial] = useState<string | null>(null);
+  const [qrLoading, setQrLoading] = useState<string | null>(null);
+
+  /** 정품 QR 라벨(20×20, 상단 QR + 하단 모델명) 출력 — verify_token 보장 후 ZPL 전송 */
+  async function printVerifyQr(serialId: string) {
+    setQrLoading(serialId);
+    try {
+      const res = await fetch(`/api/serials/${serialId}/verify-label`, { method: 'POST' });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || '오류'); }
+      const { verifyUrl, model } = await res.json();
+      const zpl = buildVerifyQrZpl(verifyUrl, model || productName || '');
+      const ok = await sendZplToPrinter(zpl);
+      if (ok) toast.success('정품 QR 라벨 출력');
+      else { downloadZpl(zpl, `verify-${serialId}.zpl`); toast('프린터 미연결 — ZPL 파일로 저장됨', { icon: 'ℹ️' }); }
+    } catch (e) {
+      toast.error('QR 라벨 실패: ' + String(e instanceof Error ? e.message : e));
+    } finally {
+      setQrLoading(null);
+    }
+  }
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -225,6 +247,10 @@ export function SerialManagePanel({ productId, productName }: Props) {
                     <option value="defective">불량</option>
                   </select>
                 )}
+                <button onClick={() => printVerifyQr(serial.id)} disabled={qrLoading === serial.id} title="정품 QR 라벨 출력 (20×20, 상단 QR·하단 모델명)"
+                  className="shrink-0 p-1.5 rounded-md text-neutral-400 hover:text-stone-900 hover:bg-neutral-100 transition disabled:opacity-50">
+                  <QrCode size={15} className={qrLoading === serial.id ? 'animate-pulse' : ''} />
+                </button>
                 <button onClick={() => setLabelSerial(serial.serial_number)} title="시리얼 라벨 출력"
                   className="shrink-0 p-1.5 rounded-md text-neutral-400 hover:text-stone-900 hover:bg-neutral-100 transition">
                   <Printer size={15} />
