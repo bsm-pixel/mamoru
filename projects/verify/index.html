@@ -271,20 +271,12 @@
 
       let infoHtml = '';
 
-      if (d.status) {
-        infoHtml += `<div class="info-item"><div class="info-label">판매 상태</div><div class="info-value">${d.status}</div></div>`;
+      // 고객 관점 — 구매일/구매처만. (판매상태·내부 등록일은 노출 안 함)
+      if (d.sold_at) {
+        infoHtml += `<div class="info-item"><div class="info-label">구매일</div><div class="info-value">${new Date(d.sold_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}</div></div>`;
       }
       if (d.sold_via) {
-        infoHtml += `<div class="info-item"><div class="info-label">판매처</div><div class="info-value">${d.sold_via}</div></div>`;
-      }
-      if (d.sold_at) {
-        infoHtml += `<div class="info-item"><div class="info-label">판매일</div><div class="info-value">${new Date(d.sold_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}</div></div>`;
-      }
-      if (d.registered_at) {
-        infoHtml += `<div class="info-item"><div class="info-label">등록일</div><div class="info-value">${new Date(d.registered_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}</div></div>`;
-      }
-      if (p.category) {
-        infoHtml += `<div class="info-item"><div class="info-label">카테고리</div><div class="info-value">${p.category}</div></div>`;
+        infoHtml += `<div class="info-item"><div class="info-label">구매처</div><div class="info-value">${d.sold_via}</div></div>`;
       }
       if (p.description) {
         infoHtml += `<div class="info-item full"><div class="info-label">제품 설명</div><div class="info-value">${p.description}</div></div>`;

@@ -38,23 +38,7 @@ export async function GET(
     // verify_token으로 시리얼 + 제품 조회
     const { data: serial, error } = await db
       .from('product_serials')
-      .select(`
-        id,
-        status,
-        sold_via,
-        sold_to_name,
-        sold_at,
-        manufactured_at,
-        created_at,
-        product_id,
-        products:product_id (
-          name,
-          sku,
-          category,
-          description,
-          image_url
-        )
-      `)
+      .select('id, status, sold_via, sold_to_name, sold_at, manufactured_at, created_at, product_id')
       .eq('verify_token', token)
       .single();
 
@@ -65,7 +49,12 @@ export async function GET(
       });
     }
 
-    const product = serial.products;
+    // 제품 정보 별도 조회 (임베드 조인이 배열/누락으로 name 이 비던 문제 = '알 수 없는 제품' fix)
+    let product: { name?: string; sku?: string; category?: string; description?: string; image_url?: string } | null = null;
+    if (serial.product_id) {
+      const { data: prod } = await db.from('products').select('name, sku, category, description, image_url').eq('id', serial.product_id).single();
+      product = prod;
+    }
 
     // 판매 채널 한글화
     const channelLabel: Record<string, string> = {
