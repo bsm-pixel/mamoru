@@ -38,7 +38,7 @@ export async function GET(
     // verify_token으로 시리얼 + 제품 조회
     const { data: serial, error } = await db
       .from('product_serials')
-      .select('id, status, sold_via, sold_to_name, sold_at, manufactured_at, created_at, product_id')
+      .select('id, status, sold_via, sold_to_name, sold_at, manufactured_at, created_at, product_id, offline_sale_id, order_id')
       .eq('verify_token', token)
       .single();
 
@@ -54,6 +54,16 @@ export async function GET(
     if (serial.product_id) {
       const { data: prod } = await db.from('products').select('name, sku, category, description, image_url').eq('id', serial.product_id).single();
       product = prod;
+    }
+
+    // 실제 구매일 — serial.sold_at 은 백필/배정 시각일 수 있어, 판매/주문 원본 날짜를 우선.
+    let purchasedAt: string | null = serial.sold_at || null;
+    if (serial.offline_sale_id) {
+      const { data: s } = await db.from('offline_sales').select('sale_date').eq('id', serial.offline_sale_id).single();
+      if (s?.sale_date) purchasedAt = s.sale_date;
+    } else if (serial.order_id) {
+      const { data: o } = await db.from('orders').select('ordered_at').eq('id', serial.order_id).single();
+      if (o?.ordered_at) purchasedAt = o.ordered_at;
     }
 
     // 판매 채널 한글화
@@ -92,7 +102,7 @@ export async function GET(
       details: {
         status: serial.status === 'sold' ? '판매완료' : '미판매',
         sold_via: soldViaLabel,
-        sold_at: serial.sold_at || null,
+        sold_at: purchasedAt,
         manufactured_at: serial.manufactured_at || null,
         registered_at: serial.created_at,
       },
