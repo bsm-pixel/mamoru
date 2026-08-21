@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
+// 공개 정품확인 — page.mamoru.kr(다른 도메인)에서 fetch 하므로 CORS 허용 필수.
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' } as const;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function jr(body: any, status = 200) {
+  return NextResponse.json(body, { status, headers: CORS });
+}
+
+/** CORS preflight (단순 GET엔 불필요하나 안전망) */
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: { ...CORS, 'Access-Control-Allow-Methods': 'GET,OPTIONS' } });
+}
+
 /**
  * GET /api/verify/[token] — 정품확인 공개 API (인증 불필요)
  *
@@ -15,7 +27,7 @@ export async function GET(
     const { token } = await params;
 
     if (!token || token.length < 8) {
-      return NextResponse.json({ valid: false, error: '유효하지 않은 토큰' }, { status: 400 });
+      return jr({ valid: false, error: '유효하지 않은 토큰' }, 400);
     }
 
     const supabase = await createServerSupabaseClient();
@@ -46,7 +58,7 @@ export async function GET(
       .single();
 
     if (error || !serial) {
-      return NextResponse.json({
+      return jr({
         valid: false,
         message: '등록되지 않은 제품입니다. MAMORU 정품이 아닐 수 있습니다.',
       });
@@ -77,7 +89,7 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({
+    return jr({
       valid: true,
       message: 'MAMORU 정품 인증 확인',
       product: {
@@ -96,6 +108,6 @@ export async function GET(
       },
     });
   } catch (err) {
-    return NextResponse.json({ valid: false, error: String(err) }, { status: 500 });
+    return jr({ valid: false, error: String(err) }, 500);
   }
 }
