@@ -186,6 +186,13 @@ img{display:block; max-width:100%}
 .nav-row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px}
 .nav-row .btn{padding:12px 4px; font-size:12.5px; border-color:var(--line); color:var(--ink)}
 
+/* ── 5c. 신부측 피로연 안내 ── */
+.reception{background:var(--paper)}
+.reception-msg{margin-top:20px; font-family:var(--serif-ko); font-size:14.5px; color:var(--ink); line-height:2; letter-spacing:.01em}
+.reception-info{margin-top:26px; padding-top:22px; border-top:1px solid var(--line)}
+.reception-info .ri-date{font-family:var(--serif-en); letter-spacing:.05em; font-size:14px; color:var(--gold); font-weight:500; margin-bottom:12px}
+.reception .btn--full,.reception .nav-row{max-width:280px; margin-left:auto; margin-right:auto}
+
 /* ── 6. 마음 전하기 ── */
 .gift{background:var(--paper)}
 .gift-btns{display:flex; flex-direction:column; gap:12px; max-width:280px; margin:26px auto 0}
@@ -364,6 +371,31 @@ textarea.rsvp-input{resize:none; line-height:1.6}
     </div>
   </section>
 
+  <!-- ═══════════ 5c. 신부측 피로연 안내 ═══════════ -->
+  <section class="reception section center reveal">
+    <div class="divider"></div>
+    <div class="label-sm" style="margin-top:24px">Reception</div>
+    <h3 class="title">신부측 피로연 안내</h3>
+    <!-- ✏️ 안내 인사말 -->
+    <p class="reception-msg">
+      거리가 멀어 본식에 참석이 어려우신 분들을 위해<br>
+      혼례에 앞서 별도의 피로연 자리를 마련하였습니다.<br>
+      귀한 발걸음으로 두 사람의 행복한 앞날을<br>
+      축복해주시면 더 큰 기쁨과 격려가 되겠습니다.
+    </p>
+    <div class="reception-info">
+      <div class="ri-date" id="recDate">2026. 10. 17. (토) · 오후 5시 – 8시</div>
+      <div class="venue-name" id="recName">사랑한식부페</div>
+      <div class="venue-addr" id="recAddr">충남 보령시 원동1길 30-8</div>
+    </div>
+    <button class="btn btn--fill btn--full" onclick="openRecMap()">지도 보기</button>
+    <div class="nav-row">
+      <button class="btn" onclick="recTmap()">티맵</button>
+      <button class="btn" onclick="recKakao()">카카오맵</button>
+      <button class="btn" onclick="recNaver()">네이버지도</button>
+    </div>
+  </section>
+
   <!-- ═══════════ 5b. 참석여부(RSVP) ═══════════ -->
   <section class="rsvp section center reveal">
     <div class="divider"></div>
@@ -502,6 +534,13 @@ const CONFIG = {
     address: '인천 미추홀구 길파로 6',
     lat: 37.4699021,  // 길파로 6 실측좌표(지오코딩)
     lng: 126.6802678, // 길파로 6 실측좌표(지오코딩)
+  },
+
+  // ── 신부측 피로연 (좌표 대신 도로명주소로 지도앱 검색 → 앱이 정확히 지오코딩) ──
+  reception: {
+    dateText: '2026. 10. 17. (토) · 오후 5시 – 8시',  // ✏️
+    name: '사랑한식부페',                                // ✏️ 상호
+    address: '충남 보령시 원동1길 30-8',                  // ✏️ 도로명주소
   },
 
   // ── 계좌 (복사하기 버튼 자동생성) ──
@@ -667,6 +706,43 @@ function navNaver(){
   const v=CONFIG.venue;
   location.href = `nmap://route/car?dlat=${v.lat}&dlng=${v.lng}&dname=${enc(v.name)}&appname=page.mamoru.kr`;
   setTimeout(()=>{ if(!document.hidden) openNaverMap(); },1200);
+}
+
+// 5c. 피로연 — 좌표 미검증 → 상호+도로명주소로 지도앱 '검색'(앱이 정확히 지오코딩·핀). 앱에서 한 번 탭으로 길찾기.
+function fillReception(){
+  const r=CONFIG.reception;
+  $('#recDate').textContent = r.dateText;
+  $('#recName').textContent = r.name;
+  $('#recAddr').textContent = r.address;
+}
+function recQuery(){ const r=CONFIG.reception; return enc(r.name+' '+r.address); }
+function openRecMap(){
+  location.href = `https://map.naver.com/p/search/${recQuery()}`;
+}
+function recNaver(){
+  const q=recQuery();
+  location.href = `nmap://search?query=${q}&appname=page.mamoru.kr`;
+  setTimeout(()=>{ if(!document.hidden) location.href=`https://map.naver.com/p/search/${q}`; },1200);
+}
+function recKakao(){
+  const q=recQuery();
+  location.href = `kakaomap://search?q=${q}`;
+  setTimeout(()=>{ if(!document.hidden) location.href=`https://map.kakao.com/?q=${q}`; },1200);
+}
+function recTmap(){
+  const q=recQuery();
+  const ua=navigator.userAgent||'';
+  if(/android/i.test(ua)){
+    // 안드로이드(카톡 인앱 포함): intent로 앱 직접 실행, 미설치 시 네이버지도 웹 검색으로 폴백
+    location.href = `intent://search?name=${q}#Intent;scheme=tmap;package=com.skt.tmap.ku;S.browser_fallback_url=${enc('https://map.naver.com/p/search/')+q};end`;
+  }else{
+    // iOS: 스킴 시도 → 앱 안 열리면 네이버지도 웹 검색
+    let t=setTimeout(()=>{ location.href=`https://map.naver.com/p/search/${q}`; },1400);
+    const cancel=()=>clearTimeout(t);
+    document.addEventListener('visibilitychange',cancel,{once:true});
+    window.addEventListener('pagehide',cancel,{once:true});
+    location.href = `tmap://search?name=${q}`;
+  }
 }
 
 // 6. 계좌 모달
@@ -872,6 +948,7 @@ function initCountdown(){
 renderContacts();
 renderGallery();
 fillVenue();
+fillReception();
 initCountdown();
 setHead(1);
 armReveal();
