@@ -20,7 +20,7 @@
 <!-- ✏️ 카톡·문자로 링크 보낼 때 뜨는 미리보기. 이미지는 실제 https 경로여야 함 -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="백성민 ♥ 김혜정 결혼합니다">
-<meta property="og:description" content="2026년 10월 31일 토요일 · CN웨딩홀 주안 샤방샤방홀">
+<meta property="og:description" content="2026년 10월 31일 토요일 낮 12시 20분 · CN천년부페웨딩홀 주안점">
 <meta property="og:image" content="https://page.mamoru.kr/BSMKHJ/assets/og.jpg">
 <meta property="og:url" content="https://page.mamoru.kr/BSMKHJ/">
 
@@ -193,6 +193,18 @@ img{display:block; max-width:100%}
 .reception-info .ri-date{font-family:var(--serif-en); letter-spacing:.05em; font-size:14px; color:var(--gold); font-weight:500; margin-bottom:12px}
 .reception .btn--full,.reception .nav-row{max-width:280px; margin-left:auto; margin-right:auto}
 
+/* ── 미니 달력 (예식·피로연 공용) ── */
+.cal{max-width:290px; margin-left:auto; margin-right:auto}
+.cal-cap{font-family:var(--serif-en); letter-spacing:.18em; font-size:12px; text-transform:uppercase; color:var(--gold); text-align:center; margin-bottom:16px}
+.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); row-gap:6px; place-items:center}
+.cal .dow{font-family:var(--sans); font-size:11px; font-weight:600; color:var(--muted); letter-spacing:.02em; padding-bottom:6px}
+.cal .dow.sun{color:#C58B7B}
+.cal .d{font-size:13px; color:var(--ink); font-variant-numeric:tabular-nums; line-height:1}
+.cal .d.sun{color:#C58B7B}
+.cal .d span{display:inline-flex; width:30px; height:30px; align-items:center; justify-content:center; border-radius:50%}
+.cal .d.on span{background:var(--gold); color:#fff; font-weight:700; box-shadow:0 3px 10px rgba(180,154,106,.35)}
+.cal .d.empty{visibility:hidden}
+
 /* ── 6. 마음 전하기 ── */
 .gift{background:var(--paper)}
 .gift-btns{display:flex; flex-direction:column; gap:12px; max-width:280px; margin:26px auto 0}
@@ -250,15 +262,15 @@ textarea.rsvp-input{resize:none; line-height:1.6}
 /* 하단 띠: 고정(sticky) 아님 — 페이지 맨 끝에 자연스럽게 위치 */
 .footer-bar{background:var(--ivory);
   border-top:1px solid var(--gold-soft);
-  display:grid; grid-template-columns:repeat(3,1fr);
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr));   /* minmax(0,·)=초협폭에서도 4열 유지(오버플로 방지) */
   padding-bottom:env(safe-area-inset-bottom)}
-.footer-bar button{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
-  padding:14px 4px 15px; background:none; border:0; color:var(--ink); cursor:pointer; transition:transform .18s ease}
+.footer-bar button{display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:8px;
+  padding:14px 2px 15px; background:none; border:0; color:var(--ink); cursor:pointer; transition:transform .18s ease}
 .footer-bar .fic{width:38px; height:38px; border-radius:50%; border:1px solid var(--gold-soft);
   display:grid; place-items:center; color:var(--gold); background:#fff;
   box-shadow:0 2px 8px rgba(180,154,106,.12); transition:.2s}
 .footer-bar .fi{width:18px; height:18px}
-.footer-bar .ft{font-size:11px; font-weight:600; letter-spacing:.04em; color:var(--muted); transition:color .2s ease}
+.footer-bar .ft{font-size:11px; font-weight:600; letter-spacing:.02em; color:var(--muted); line-height:1.35; text-align:center; transition:color .2s ease}
 .footer-bar button:active{transform:translateY(1px)}
 .footer-bar button:active .fic{background:var(--gold); color:#fff; border-color:var(--gold); transform:scale(.93)}
 .footer-bar button:active .ft{color:var(--gold)}
@@ -331,7 +343,8 @@ textarea.rsvp-input{resize:none; line-height:1.6}
       <div class="cd-box"><span class="cd-num" id="cdM">–</span><span class="cd-unit">분</span></div>
       <div class="cd-box"><span class="cd-num" id="cdS">–</span><span class="cd-unit">초</span></div>
     </div>
-    <p class="cd-note" id="cdNote"></p>
+    <div class="cal" id="calWed" style="margin-top:38px"></div>
+    <p class="cd-note" id="cdNote" style="margin-top:30px"></p>
   </section>
 
   <!-- ═══════════ 3. 연락처 ═══════════ -->
@@ -384,6 +397,7 @@ textarea.rsvp-input{resize:none; line-height:1.6}
       축복해주시면 더 큰 기쁨과 격려가 되겠습니다.
     </p>
     <div class="reception-info">
+      <div class="cal" id="calRec" style="margin-bottom:26px"></div>
       <div class="ri-date" id="recDate">2026. 10. 17. (토) · 오후 5시 – 8시</div>
       <div class="venue-name" id="recName">사랑한식부페</div>
       <div class="venue-addr" id="recAddr">충남 보령시 원동1길 30-8</div>
@@ -422,17 +436,21 @@ textarea.rsvp-input{resize:none; line-height:1.6}
 
   <!-- ═══════════ 7. 하단 띠 ═══════════ -->
   <nav class="footer-bar">
-    <button onclick="addCalendar()">
+    <button onclick="addCalendar('reception')">
       <span class="fic"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span>
-      <span class="ft">달력에 등록</span>
+      <span class="ft">피로연<br>일정등록</span>
+    </button>
+    <button onclick="addCalendar('event')">
+      <span class="fic"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M9.5 14.5l1.8 1.8 3.4-3.6"/></svg></span>
+      <span class="ft">결혼식<br>일정등록</span>
     </button>
     <button onclick="copyLink()">
       <span class="fic"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 13.5a4 4 0 0 0 5.7.3l3-3a4 4 0 1 0-5.66-5.66L11 6.4"/><path d="M14.5 10.5a4 4 0 0 0-5.7-.3l-3 3a4 4 0 1 0 5.66 5.66L12 18.1"/></svg></span>
-      <span class="ft">링크 복사</span>
+      <span class="ft">링크<br>복사</span>
     </button>
     <button onclick="shareKakao()">
       <span class="fic"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5C7.3 4.5 3.5 7.5 3.5 11.2c0 2.4 1.6 4.5 4 5.7-.2.7-.7 2.3-.8 2.6-.1.3.1.5.4.3.3-.2 2.4-1.6 3.3-2.2.5.1 1.1.1 1.6.1 4.7 0 8.5-3 8.5-6.6S16.7 4.5 12 4.5z"/></svg></span>
-      <span class="ft">카톡 공유</span>
+      <span class="ft">카톡<br>공유</span>
     </button>
   </nav>
   <div class="credit">B ♥ H · 2026</div>
@@ -504,7 +522,7 @@ const CONFIG = {
     // 시작/종료 (KST). 형식: 'YYYY-MM-DDTHH:MM'
     start: '2026-10-31T12:20',
     end:   '2026-10-31T14:20',
-    place: 'CN웨딩홀 주안 샤방샤방홀',
+    place: 'CN천년부페웨딩홀 주안점 F6 오펠리스홀 (인천 미추홀구 길파로 6)',
     dateText: '2026년 10월 31일 토요일 오후 12시 20분',  // 카운트다운·표시용
   },
 
@@ -541,6 +559,11 @@ const CONFIG = {
     dateText: '2026. 10. 17. (토) · 오후 5시 – 8시',  // ✏️
     name: '사랑한식부페',                                // ✏️ 상호
     address: '충남 보령시 원동1길 30-8',                  // ✏️ 도로명주소
+    // 일정등록(캘린더)용 — KST 'YYYY-MM-DDTHH:MM'
+    title: '백성민 ♥ 김혜정 피로연 (신부측)',
+    start: '2026-10-17T17:00',
+    end:   '2026-10-17T20:00',
+    place: '사랑한식부페 (충남 보령시 원동1길 30-8)',
   },
 
   // ── 계좌 (복사하기 버튼 자동생성) ──
@@ -715,6 +738,27 @@ function fillReception(){
   $('#recName').textContent = r.name;
   $('#recAddr').textContent = r.address;
 }
+// 미니 달력 — 해당 월 그리드 + 예식/피로연 당일 골드 하이라이트
+function buildCalendar(elId, year, month, hi){   // month:1-12
+  const el = document.getElementById(elId); if(!el) return;
+  const first = new Date(year, month-1, 1).getDay();   // 0=일
+  const days  = new Date(year, month, 0).getDate();
+  const mEn = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'][month-1];
+  const dow = ['일','월','화','수','목','금','토'];
+  let cells = dow.map((d,i)=>`<div class="dow${i===0?' sun':''}">${d}</div>`).join('');
+  for(let i=0;i<first;i++) cells += `<div class="d empty"></div>`;
+  for(let d=1; d<=days; d++){
+    const wd=(first+d-1)%7;
+    cells += `<div class="d${wd===0?' sun':''}${d===hi?' on':''}"><span>${d}</span></div>`;
+  }
+  el.innerHTML = `<div class="cal-cap">${mEn} ${year}</div><div class="cal-grid">${cells}</div>`;
+}
+function buildCalendars(){
+  const w=CONFIG.event.start, r=CONFIG.reception.start;      // 'YYYY-MM-DDT..'
+  const pw=w.slice(0,10).split('-').map(Number), pr=r.slice(0,10).split('-').map(Number);
+  buildCalendar('calWed', pw[0], pw[1], pw[2]);
+  buildCalendar('calRec', pr[0], pr[1], pr[2]);
+}
 function recQuery(){ return enc(CONFIG.reception.address); }  // 상호는 검색이 안 잡혀 도로명주소만으로 검색(정확히 핀)
 function openRecMap(){
   location.href = `https://map.naver.com/p/search/${recQuery()}`;
@@ -816,8 +860,8 @@ async function submitRsvp(e){
 }
 
 // 7. 하단 띠
-function addCalendar(){
-  const e = CONFIG.event;
+function addCalendar(which){
+  const e = which==='reception' ? CONFIG.reception : CONFIG.event;   // 피로연/예식 공용
   const begin = new Date(e.start + ':00+09:00').getTime();   // KST → epoch millis
   const end   = new Date(e.end   + ':00+09:00').getTime();
   if(/android/i.test(navigator.userAgent || '')){
@@ -833,7 +877,7 @@ function addCalendar(){
       + 'S.browser_fallback_url=' + enc(gcal) + ';end';
   }else{
     // iOS 등: 표준 .ics (애플 캘린더 추가 화면)
-    location.href = 'wedding.ics';
+    location.href = which==='reception' ? 'reception.ics' : 'wedding.ics';
   }
 }
 function copyLink(){ doCopy(location.href, '링크가 복사되었습니다'); }
@@ -949,6 +993,7 @@ renderContacts();
 renderGallery();
 fillVenue();
 fillReception();
+buildCalendars();
 initCountdown();
 setHead(1);
 armReveal();
