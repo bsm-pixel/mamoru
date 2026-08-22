@@ -715,7 +715,7 @@ function fillReception(){
   $('#recName').textContent = r.name;
   $('#recAddr').textContent = r.address;
 }
-function recQuery(){ const r=CONFIG.reception; return enc(r.name+' '+r.address); }
+function recQuery(){ return enc(CONFIG.reception.address); }  // 상호는 검색이 안 잡혀 도로명주소만으로 검색(정확히 핀)
 function openRecMap(){
   location.href = `https://map.naver.com/p/search/${recQuery()}`;
 }
