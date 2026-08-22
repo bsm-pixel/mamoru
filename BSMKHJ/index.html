@@ -743,7 +743,7 @@ function buildCalendar(elId, year, month, hi){   // month:1-12
   const el = document.getElementById(elId); if(!el) return;
   const first = new Date(year, month-1, 1).getDay();   // 0=일
   const days  = new Date(year, month, 0).getDate();
-  const mEn = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'][month-1];
+  const cap = year + '.' + String(month).padStart(2,'0');   // 어르신도 이해쉬운 2026.10
   const dow = ['일','월','화','수','목','금','토'];
   let cells = dow.map((d,i)=>`<div class="dow${i===0?' sun':''}">${d}</div>`).join('');
   for(let i=0;i<first;i++) cells += `<div class="d empty"></div>`;
@@ -751,7 +751,7 @@ function buildCalendar(elId, year, month, hi){   // month:1-12
     const wd=(first+d-1)%7;
     cells += `<div class="d${wd===0?' sun':''}${d===hi?' on':''}"><span>${d}</span></div>`;
   }
-  el.innerHTML = `<div class="cal-cap">${mEn} ${year}</div><div class="cal-grid">${cells}</div>`;
+  el.innerHTML = `<div class="cal-cap">${cap}</div><div class="cal-grid">${cells}</div>`;
 }
 function buildCalendars(){
   const w=CONFIG.event.start, r=CONFIG.reception.start;      // 'YYYY-MM-DDT..'
