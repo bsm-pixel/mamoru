@@ -385,7 +385,31 @@ textarea.rsvp-input{resize:none; line-height:1.6}
     </div>
   </section>
 
-  <!-- ═══════════ 5c. 신부측 피로연 안내 ═══════════ -->
+  <!-- ═══════════ 5b. 참석여부(RSVP) ═══════════ -->
+  <section class="rsvp section center reveal">
+    <div class="divider"></div>
+    <div class="label-sm" style="margin-top:24px">R.S.V.P</div>
+    <h3 class="title">참석 여부 전하기</h3>
+    <p class="rsvp-desc">참석 여부를 미리 알려주시면<br>더욱 정성껏 준비하겠습니다.</p>
+    <button class="btn btn--fill btn--full" style="max-width:280px;margin:24px auto 0" onclick="openRsvp()">참석 의사 전달하기</button>
+  </section>
+
+  <!-- ═══════════ 6. 마음 전하기 ═══════════ -->
+  <section class="gift section center reveal">
+    <div class="divider"></div>
+    <div class="label-sm" style="margin-top:24px">With Heart</div>
+    <h3 class="title">축하 마음 전하기</h3>
+    <div class="gift-btns">
+      <button class="btn btn--fill" onclick="openAcct('groom')">신랑 측 계좌번호</button>
+      <button class="btn btn--fill" onclick="openAcct('bride')">신부 측 계좌번호</button>
+    </div>
+    <p class="gift-note">
+      화환은 혜정이 얼굴로 대체됩니다<br>
+      마음으로만 충분히 받겠습니다
+    </p>
+  </section>
+
+  <!-- ═══════════ 6b. 신부측 피로연 안내 (맨 하단) ═══════════ -->
   <section class="reception section center reveal">
     <div class="divider"></div>
     <div class="label-sm" style="margin-top:24px">Reception</div>
@@ -409,30 +433,6 @@ textarea.rsvp-input{resize:none; line-height:1.6}
       <button class="btn" onclick="recKakao()">카카오맵</button>
       <button class="btn" onclick="recNaver()">네이버지도</button>
     </div>
-  </section>
-
-  <!-- ═══════════ 5b. 참석여부(RSVP) ═══════════ -->
-  <section class="rsvp section center reveal">
-    <div class="divider"></div>
-    <div class="label-sm" style="margin-top:24px">R.S.V.P</div>
-    <h3 class="title">참석 여부 전하기</h3>
-    <p class="rsvp-desc">참석 여부를 미리 알려주시면<br>더욱 정성껏 준비하겠습니다.</p>
-    <button class="btn btn--fill btn--full" style="max-width:280px;margin:24px auto 0" onclick="openRsvp()">참석 의사 전달하기</button>
-  </section>
-
-  <!-- ═══════════ 6. 마음 전하기 ═══════════ -->
-  <section class="gift section center reveal">
-    <div class="divider"></div>
-    <div class="label-sm" style="margin-top:24px">With Heart</div>
-    <h3 class="title">축하 마음 전하기</h3>
-    <div class="gift-btns">
-      <button class="btn btn--fill" onclick="openAcct('groom')">신랑 측 계좌번호</button>
-      <button class="btn btn--fill" onclick="openAcct('bride')">신부 측 계좌번호</button>
-    </div>
-    <p class="gift-note">
-      화환은 혜정이 얼굴로 대체됩니다<br>
-      마음으로만 충분히 받겠습니다
-    </p>
   </section>
 
   <!-- ═══════════ 7. 하단 띠 ═══════════ -->
