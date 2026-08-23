@@ -32,6 +32,14 @@ const TAB_FILTERS = [
   { label: '약속 대기', value: 'promised' },
 ] as const;
 
+// 유형 필터 (상담/복원수리/제품) — 상태 탭과 별개 축
+const TYPE_FILTERS = [
+  { label: '전체', value: 'all' },
+  { label: '상담', value: 'consult' },
+  { label: '복원수리', value: 'repair' },
+  { label: '제품', value: 'purchase' },
+] as const;
+
 const TYPE_LABELS: Record<string, string> = {
   consult: '상담',
   repair: '복원수리',
@@ -109,6 +117,7 @@ export default function ReviewsPage() {
   const [relatedByItem, setRelatedByItem] = useState<Record<string, RelatedActivity[]>>({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');  // 상담/복원수리/제품 필터
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [editReview, setEditReview] = useState<Review | null>(null);
   const [editForm, setEditForm] = useState<Partial<Review>>({});
@@ -308,6 +317,9 @@ export default function ReviewsPage() {
     }
   };
 
+  // 유형 필터 적용 (상태 탭으로 받아온 목록에서 상담/복원수리/제품만 추림)
+  const visibleReviews = reviews.filter(r => typeFilter === 'all' || r.type === typeFilter);
+
   return (
     <>
       <Topbar title="리뷰관리" />
@@ -367,6 +379,28 @@ export default function ReviewsPage() {
             </button>
           </div>
         </div>
+
+        {/* 유형 필터 (상담/복원수리/제품) — 약속 대기 탭 제외 */}
+        {activeTab !== 'promised' && (
+          <div className="flex gap-1.5 flex-wrap">
+            {TYPE_FILTERS.map(f => {
+              const cnt = f.value === 'all' ? reviews.length : reviews.filter(r => r.type === f.value).length;
+              return (
+                <button
+                  key={f.value}
+                  onClick={() => setTypeFilter(f.value)}
+                  className={`px-3 py-1 rounded-full text-[11px] font-medium transition ${
+                    typeFilter === f.value
+                      ? 'bg-neutral-700 text-white'
+                      : 'bg-neutral-50 text-neutral-500 border border-neutral-200 hover:bg-neutral-100'
+                  }`}
+                >
+                  {f.label} <span className="opacity-60 tabular-nums">{cnt}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* 약속 대기 탭 — 별도 리스트 */}
         {activeTab === 'promised' && (
@@ -474,11 +508,13 @@ export default function ReviewsPage() {
         {/* 리뷰 카드 리스트 (promised 외 탭) */}
         {activeTab !== 'promised' && (loading ? (
           <div className="text-center py-16 text-neutral-400 text-sm">불러오는 중...</div>
-        ) : reviews.length === 0 ? (
-          <div className="text-center py-16 text-neutral-400 text-sm">리뷰가 없습니다</div>
+        ) : visibleReviews.length === 0 ? (
+          <div className="text-center py-16 text-neutral-400 text-sm">
+            {reviews.length === 0 ? '리뷰가 없습니다' : '해당 유형의 리뷰가 없습니다'}
+          </div>
         ) : (
           <div className="grid gap-3 lg:grid-cols-3 md:grid-cols-2">
-            {reviews.map(review => (
+            {visibleReviews.map(review => (
               <div
                 key={review.id}
                 className="bg-white rounded-xl border border-neutral-100 p-4 space-y-3"
