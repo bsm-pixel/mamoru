@@ -126,9 +126,14 @@ img{display:block; max-width:100%}
 
 /* ── 3. 연락처 ── */
 .contacts{background:var(--ivory)}
+/* 카드 하단 '마음 전하기'(계좌) 버튼 + 안내문 */
+.contact-give{display:block; width:100%; margin-top:auto; padding:11px 6px; border:1px solid var(--gold-soft); border-radius:9px; background:#fff; color:var(--gold); font-family:var(--sans); font-size:12.5px; font-weight:700; letter-spacing:.02em; transition:.15s}
+.contact-col .person:last-of-type{margin-bottom:16px}   /* 사람목록↔버튼 최소 간격(하단정렬이어도) */
+.contact-give:active{background:var(--gold); color:#fff; border-color:var(--gold); transform:translateY(1px)}
+.give-note{margin-top:22px; font-family:var(--serif-ko); font-size:12.5px; color:var(--muted); line-height:1.85; letter-spacing:.01em}
 /* minmax(0,1fr) = 좁은 폭에서도 칸이 min-content 이하로 축소돼 우측 넘침·잘림 방지 */
 .contact-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; margin-top:26px}
-.contact-col{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:22px 12px 22px 16px; box-shadow:var(--shadow); min-width:0}
+.contact-col{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:22px 12px 22px 16px; box-shadow:var(--shadow); min-width:0; display:flex; flex-direction:column}
 .contact-col h4{font-family:var(--serif-en); font-size:12px; letter-spacing:.2em; color:var(--gold); text-align:center; margin-bottom:16px}
 .person{display:flex; align-items:center; justify-content:space-between; gap:5px; padding:11px 0; border-top:1px solid var(--line)}
 .person:first-of-type{border-top:0}
@@ -170,9 +175,16 @@ img{display:block; max-width:100%}
 
 /* ── 5. 오시는 길 ── */
 .location{background:var(--ivory)}
-.venue-name{font-family:var(--serif-ko); font-size:20px; font-weight:700; margin-top:8px}
-.venue-hall{color:var(--muted); font-size:14px; margin-top:4px}
+.loc-date{font-family:var(--serif-ko); font-size:15px; color:var(--gold); font-weight:700; letter-spacing:.02em; margin-top:14px}
+.venue-name{font-family:var(--serif-ko); font-size:clamp(24px,6.5vw,28px); font-weight:700; margin-top:10px; line-height:1.3}
+.venue-hall{color:var(--muted); font-size:15px; margin-top:5px}
 .venue-addr{color:var(--ink); font-size:14px; margin-top:12px; letter-spacing:.01em}
+/* 교통 안내 — 지하철/버스/자가운전 하이라이트 행 */
+.transit{max-width:360px; margin:34px auto 0; text-align:left; border-top:1px solid var(--line)}
+.transit-row{display:flex; gap:14px; padding:16px 2px; border-bottom:1px solid var(--line)}
+.transit-row .tk{flex:0 0 62px; font-family:var(--serif-ko); font-size:13.5px; font-weight:700; color:var(--gold); padding-top:1px}
+.transit-row .tv{flex:1; min-width:0; font-size:13.5px; color:var(--ink); line-height:1.6}
+.transit-row .tv em{display:block; font-style:normal; font-size:12.5px; color:var(--muted); margin-top:3px; letter-spacing:.01em}
 .map-view{margin-top:22px; border-radius:14px; overflow:hidden; border:1px solid var(--line);
   box-shadow:var(--shadow); position:relative; background:#eee}
 .map-view img{width:100%; height:auto; aspect-ratio:4/3; object-fit:cover}
@@ -188,6 +200,8 @@ img{display:block; max-width:100%}
 
 /* ── 5c. 신부측 피로연 안내 ── */
 .reception{background:var(--paper)}
+/* 피로연 테두리 프레임 — 어르신도 '별도 안내'로 바로 인지 */
+.reception-frame{margin-top:10px; border:1.6px solid var(--gold-soft); border-radius:18px; background:var(--ivory); box-shadow:0 8px 26px rgba(180,154,106,.10); padding:clamp(28px,7vw,38px) clamp(18px,5vw,24px) clamp(26px,6vw,32px)}
 .reception-msg{margin-top:20px; font-family:var(--serif-ko); font-size:14.5px; color:var(--ink); line-height:2; letter-spacing:.01em}
 .reception-info{margin-top:26px; padding-top:22px; border-top:1px solid var(--line)}
 /* 카운트다운 날짜 글씨체(cd-note: 한글 명조·muted)와 동일하게 */
@@ -354,6 +368,7 @@ textarea.rsvp-input{resize:none; line-height:1.6}
     <div class="label-sm" style="margin-top:24px">Contact</div>
     <h3 class="title">연락하기</h3>
     <div class="contact-grid" id="contactGrid"><!-- JS 렌더 --></div>
+    <p class="give-note">화환은 혜정이 얼굴로 대체됩니다<br>마음으로만 충분히 받겠습니다</p>
   </section>
 
   <!-- ═══════════ 4. 갤러리 ═══════════ -->
@@ -367,7 +382,8 @@ textarea.rsvp-input{resize:none; line-height:1.6}
 
   <!-- ═══════════ 5. 오시는 길 ═══════════ -->
   <section class="location section center reveal">
-    <div class="label-sm">Location</div>
+    <div class="label-sm">Location · 본식</div>
+    <div class="loc-date">2026. 10. 31. (토) · 오후 12시 20분</div>
     <h3 class="venue-name" id="venueName">CN웨딩홀 주안</h3>
     <div class="venue-hall" id="venueHall">샤방샤방홀</div>
     <div class="venue-addr" id="venueAddr">인천 미추홀구 주안동 0000-00</div>
@@ -383,6 +399,22 @@ textarea.rsvp-input{resize:none; line-height:1.6}
       <button class="btn" onclick="navKakao()">카카오네비</button>
       <button class="btn" onclick="navNaver()">네이버지도</button>
     </div>
+
+    <!-- 교통 안내 (✏️ 노선/문구 수정 가능) -->
+    <div class="transit">
+      <div class="transit-row">
+        <span class="tk">지하철</span>
+        <span class="tv">주안역(북광장) 하차<em>1호선 지하 1번·지상 3번 / 인천2호선 6번 출구</em></span>
+      </div>
+      <div class="transit-row">
+        <span class="tk">버스</span>
+        <span class="tv">주안역 하차<em>시내 5-1·13·38·63·65·81·82 · 마을 511·515·516·518·522</em></span>
+      </div>
+      <div class="transit-row">
+        <span class="tk">자가운전</span>
+        <span class="tv">본관 지하주차장(제1) · 뒷편 주차타워(제2)<em>단독 홀 사용이라 주차 널널 예상됩니다 :&gt;</em></span>
+      </div>
+    </div>
   </section>
 
   <!-- ═══════════ 5b. 참석여부(RSVP) ═══════════ -->
@@ -394,25 +426,11 @@ textarea.rsvp-input{resize:none; line-height:1.6}
     <button class="btn btn--fill btn--full" style="max-width:280px;margin:24px auto 0" onclick="openRsvp()">참석 의사 전달하기</button>
   </section>
 
-  <!-- ═══════════ 6. 마음 전하기 ═══════════ -->
-  <section class="gift section center reveal">
-    <div class="divider"></div>
-    <div class="label-sm" style="margin-top:24px">With Heart</div>
-    <h3 class="title">축하 마음 전하기</h3>
-    <div class="gift-btns">
-      <button class="btn btn--fill" onclick="openAcct('groom')">신랑 측 계좌번호</button>
-      <button class="btn btn--fill" onclick="openAcct('bride')">신부 측 계좌번호</button>
-    </div>
-    <p class="gift-note">
-      화환은 혜정이 얼굴로 대체됩니다<br>
-      마음으로만 충분히 받겠습니다
-    </p>
-  </section>
-
-  <!-- ═══════════ 6b. 신부측 피로연 안내 (맨 하단) ═══════════ -->
+  <!-- ═══════════ 6. 신부측 피로연 안내 (맨 하단) ═══════════ -->
   <section class="reception section center reveal">
     <div class="divider"></div>
-    <div class="label-sm" style="margin-top:24px">Reception</div>
+    <div class="reception-frame">
+    <div class="label-sm" style="margin-top:0">Reception</div>
     <h3 class="title">신부측 피로연 안내</h3>
     <!-- ✏️ 안내 인사말 -->
     <p class="reception-msg">
@@ -433,6 +451,7 @@ textarea.rsvp-input{resize:none; line-height:1.6}
       <button class="btn" onclick="recKakao()">카카오맵</button>
       <button class="btn" onclick="recNaver()">네이버지도</button>
     </div>
+    </div><!-- /reception-frame -->
   </section>
 
   <!-- ═══════════ 7. 하단 띠 ═══════════ -->
@@ -613,7 +632,8 @@ const IC_SMS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 // 3. 연락처 렌더
 function renderContacts(){
   const box = $('#contactGrid');
-  [CONFIG.contact.groom, CONFIG.contact.bride].forEach(side=>{
+  ['groom','bride'].forEach(key=>{           // key 유지 → 카드 하단 계좌 버튼에 연결
+    const side = CONFIG.contact[key];
     const col = document.createElement('div');
     col.className = 'contact-col';
     col.innerHTML = `<h4>${side.label}</h4>` + side.people.map(p=>{
@@ -628,7 +648,7 @@ function renderContacts(){
           <a class="icon-btn" href="sms:${t}" aria-label="문자">${IC_SMS}</a>
         </div>
       </div>`;
-    }).join('');
+    }).join('') + `<button class="contact-give" onclick="openAcct('${key}')">마음 전하기</button>`;
     box.appendChild(col);
   });
 }
