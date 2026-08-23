@@ -70,7 +70,7 @@ export function useOrderCounts() {
       }
 
       // Fallback: RPC 미배포 시 개별 쿼리
-      const statuses = ['pay_wait', 'pay_done', 'preparing', 'shipping', 'delivered', 'cancel_pending', 'cancelled'];
+      const statuses = ['pay_wait', 'pay_done', 'preparing', 'ready_to_ship', 'shipping', 'delivered', 'cancel_pending', 'cancelled'];
       const counts: Record<string, number> = {};
       const results = await Promise.all(
         statuses.map(async (s) => {
@@ -238,14 +238,14 @@ export function useBookInvoice() {
       const prevOrders = queryClient.getQueriesData({ queryKey: ['orders'] });
       const prevOrder = queryClient.getQueryData(['order', data.orderId]);
 
-      // 목록 캐시에서 해당 주문 즉시 '배송중' 표시
+      // 목록 캐시에서 해당 주문 즉시 '배송대기' 표시 (128: 송장생성 = 배송대기)
       queryClient.setQueriesData({ queryKey: ['orders'] }, (old: unknown) => {
         if (!old || typeof old !== 'object') return old;
         const d = old as { orders: Order[]; total: number };
         return {
           ...d,
           orders: d.orders.map((o) =>
-            o.id === data.orderId ? { ...o, status: 'shipping' as const, invoice_number: '생성중...' } : o
+            o.id === data.orderId ? { ...o, status: 'ready_to_ship' as const, invoice_number: '생성중...' } : o
           ),
         };
       });

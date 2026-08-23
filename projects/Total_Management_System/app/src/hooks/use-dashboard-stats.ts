@@ -401,10 +401,11 @@ export function useOrderDashboardStats() {
     queryFn: async () => {
       const todayISO = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
-      const [payDone, preparing, shipping, delivered, todayOrders] =
+      const [payDone, preparing, readyToShip, shipping, delivered, todayOrders] =
         await Promise.all([
           supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'pay_done'),
           supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparing'),
+          supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'ready_to_ship'),
           supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'shipping'),
           supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'delivered'),
           supabase.from('orders').select('*', { count: 'exact', head: true }).gte('ordered_at', todayISO),
@@ -413,12 +414,14 @@ export function useOrderDashboardStats() {
       return {
         payDone: payDone.count || 0,
         preparing: preparing.count || 0,
+        readyToShip: readyToShip.count || 0,
         shipping: shipping.count || 0,
         delivered: delivered.count || 0,
         todayOrders: todayOrders.count || 0,
         pipeline: [
           { label: '결제완료', count: payDone.count || 0, status: 'pay_done' },
           { label: '준비중', count: preparing.count || 0, status: 'preparing' },
+          { label: '배송대기', count: readyToShip.count || 0, status: 'ready_to_ship' },
           { label: '배송중', count: shipping.count || 0, status: 'shipping' },
           { label: '배송완료', count: delivered.count || 0, status: 'delivered' },
         ],

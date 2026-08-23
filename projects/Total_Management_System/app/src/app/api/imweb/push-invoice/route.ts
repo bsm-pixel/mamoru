@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { updateInvoice } from '@/lib/imweb/client';
+import { updateInvoice, prepareImwebDelivery } from '@/lib/imweb/client';
 
 /** POST /api/imweb/push-invoice — 아임웹에 송장번호 재전송 */
 export async function POST(request: NextRequest) {
@@ -23,6 +23,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'NO_INVOICE' }, { status: 400 });
     }
 
+    // 128: 배송대기 자동 전환(place) 후 송장 등록 — 아임웹 수동 "배송대기 처리" 불필요
+    await prepareImwebDelivery(order.imweb_order_no);
     const result = await updateInvoice(order.imweb_order_no, {
       parcel_code: 'LOTTE',
       invoice_no: order.invoice_number,

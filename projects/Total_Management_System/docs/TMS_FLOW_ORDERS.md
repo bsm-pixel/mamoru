@@ -1,23 +1,32 @@
 # 주문관리 프로세스 흐름도
-> 최종 업데이트: 2026-04-15
+> 최종 업데이트: 2026-08-23 (마이그 128/129 — 배송대기 3단계 + 아임웹 배송상태 자동 역동기)
 
 ---
 
 ## 1. 비즈니스 프로세스 흐름
 
-### 주문 수신 → 배송 흐름
+### 주문 수신 → 배송 흐름 (2026-08-23 자동화 완성)
 ```
 [아임웹] 고객 결제
-  → TMS Cron 동기화 (또는 수동 동기화 버튼)
+  → TMS Cron 동기화(매일 09시) 또는 웹훅(실시간) 또는 수동 동기화 버튼
     → GET /v2/shop/orders → Supabase upsert
   → [status: pay_done] (결제완료)
-  → (관리자) 아임웹에서 "배송대기" 처리 (수동 1회)
-  → (관리자) TMS에서 "송장 생성" 클릭
-    → ALPS 접수 → 12자리 운송장 생성
-    → 아임웹 자동 송장 입력 (STANDBY 상태에서)
-  → [status: shipping] (배송중)
-  → 배송 완료 → [status: delivered]
+  → (관리자) TMS에서 "송장 생성" 클릭 한 번  ← 아임웹 수동 개입 불필요!
+    → ALPS 접수 → 운송장 생성
+    → 아임웹 자동 역동기: place(배송대기 전환) → invoice(송장번호 등록)  ※ 전 품목 루프
+  → [status: ready_to_ship] (배송대기) / 아임웹도 배송대기(STANDBY)
+  → (기사) 집하 스캔 → track-delivery 크론(30분)이 ALPS 집하(godsStatCd 10) 감지
+    → [status: shipping] (배송중) + shipped_at 기록
+    → 아임웹 자동 역동기: send(발송처리) → 아임웹 배송중(DELIVERING)  ※ 전 품목 루프
+  → 배송 완료 → track-delivery 크론이 ALPS 배달완료 감지 → [status: delivered]
+    → 아임웹은 실제 롯데 송장 추적으로 자체 배송완료 처리 (complete 강제호출 불필요)
 ```
+
+> **핵심(2026-08-23 실측 확정)**: 아임웹 v2 API로 배송상태 역동기가 **가능**하다.
+> `PATCH /v2/shop/prod-orders/{품목주문번호}/{place|invoice|send}?order_version=v2`
+> place=배송대기 / invoice=송장등록(배송대기 유지) / send=배송중. **전 품목주문(prod-order) 루프 필수**
+> (하나만 처리 시 아임웹 "부분출고"). 과거 "code -99 미지원"은 오해 — 엔드포인트 형식 오류였음.
+> 송장 발급 ≠ 출고: 복원수리·납품과 동일 리듬으로 통일(집하 전=배송대기, 집하 후=배송중).
 
 ### 취소 흐름
 ```
@@ -46,19 +55,28 @@
 ```
 아임웹 Cron 동기화 시 TMS-managed 상태는 덮어쓰기 방지:
 - cancel_pending (TMS에서 취소 진행 중)
-- shipping (TMS에서 송장 생성 완료)
-→ 이 상태들은 아임웹 데이터로 덮어쓰지 않음
+- ready_to_ship (TMS에서 송장 생성 완료 = 배송대기)
+- shipping (TMS에서 집하 감지 = 배송중)
+→ 이 상태들은 아임웹 데이터로 덮어쓰지 않음 (sync.ts TMS_MANAGED_STATUSES)
+```
+
+### 재고 차감 상태 (STOCK_DEDUCT_STATUSES — 재고 정합성)
+```
+pay_done · preparing · ready_to_ship · shipping · delivered · confirmed → 재고 차감 유지
+cancelled · refunded → 재고 복구
+※ ready_to_ship(배송대기)도 결제완료 이상이므로 반드시 차감 상태에 포함 (누락 시 재고 오복구)
 ```
 
 ### 상태 목록
 ```
-pay_wait     — 입금대기
-pay_done     — 결제완료
-preparing    — 상품준비중
-shipping     — 배송중
-delivered    — 배송완료
+pay_wait      — 입금대기
+pay_done      — 결제완료
+preparing     — 상품준비중
+ready_to_ship — 배송대기 (128 신규: 송장생성 완료, 집하 전)
+shipping      — 배송중 (집하 후)
+delivered     — 배송완료
 cancel_pending — 취소진행중 (TMS 전용)
-cancelled    — 취소완료
+cancelled     — 취소완료
 ```
 
 ---
@@ -110,10 +128,13 @@ Supabase waybill_counter (싱글턴 테이블)
 |------|----------|------|
 | 주문 조회 | ✅ | GET /v2/shop/orders |
 | 상품주문 조회 | ✅ | GET /v2/shop/orders/{no}/prod-orders |
-| 송장 입력 | ✅ | PATCH /v2/shop/prod-orders/{no}/invoice (STANDBY 이상) |
+| 배송대기 전환 | ✅ | PATCH /v2/shop/prod-orders/{no}/place?order_version=v2 (결제완료→배송대기, 2026-08-23 실측) |
+| 송장 입력 | ✅ | PATCH /v2/shop/prod-orders/{no}/invoice?order_version=v2 (배송대기 이상, 등록해도 배송대기 유지) |
+| 발송 처리 | ✅ | PATCH /v2/shop/prod-orders/{no}/send?order_version=v2 (배송대기→배송중, 집하 시 호출) |
+| 강제 배송완료 | (미사용) | PATCH /v2/shop/prod-orders/{no}/complete — 실 롯데송장이면 아임웹 자동완료라 불필요 |
 | 상품 목록 조회 | ✅ | GET /v2/shop/products |
 | 상품 재고 수정 | ❌ | v2로는 200 반환하지만 실제 미반영 → 새 OpenAPI 사용 |
-| 주문 상태 변경 | ❌ | code -99 |
+| ~~주문 상태 변경 code -99~~ | ✅ 정정 | 과거 "-99 미지원"은 엔드포인트 형식 오류였음(위 place/send로 가능). order_version=v2 + 전 품목 루프 필수 |
 
 ### 아임웹 새 OpenAPI (재고+주문 상태용, 04-15 연동 완료)
 | 기능 | 가능여부 | 비고 |
@@ -203,8 +224,9 @@ Supabase waybill_counter (싱글턴 테이블)
 ### TMS Lib
 | 파일 | 설명 |
 |------|------|
-| `app/src/lib/imweb/client.ts` | 아임웹 v2 API 클라이언트 |
-| `app/src/lib/imweb/sync.ts` | 주문 동기화 로직 (증분+보호) |
+| `app/src/lib/imweb/client.ts` | 아임웹 v2 API 클라이언트 — **prepareImwebDelivery(place)·updateInvoice(전 품목)·shipImwebOrder(send)** 배송상태 역동기 |
+| `app/src/lib/imweb/sync.ts` | 주문 동기화 로직 (증분+보호) — STOCK_DEDUCT/TMS_MANAGED에 ready_to_ship 포함 |
+| `app/src/app/api/cron/track-delivery/route.ts` | [1-A] 주문 집하 감지(ready_to_ship→shipping) + 아임웹 send back-sync |
 | `app/src/lib/imweb/types.ts` | 아임웹 타입 정의 |
 | `app/src/lib/lotte/client.ts` | 롯데택배 ALPS 클라이언트 (book/cancel/track) |
 | `app/src/lib/lotte/types.ts` | 롯데택배 타입 정의 |

@@ -7,6 +7,7 @@ import { sendSalesShippedNotification } from '@/lib/notification/sales-shipped';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
 import { getServerSetting } from '@/hooks/use-settings';
+import { shipImwebOrder } from '@/lib/imweb/client';
 
 /**
  * GET /api/cron/track-delivery
@@ -51,6 +52,57 @@ export async function GET(request: NextRequest) {
     // 109: 신규 블록용 별칭 — 기존 코드의 `db` 반복 대신 한 번만 캐스팅 (lint 에러 증가 0)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // [1-A] 아임웹 orders 집하 감지 (ready_to_ship → shipping) + 아임웹 배송중(send) back-sync — 128 신규
+    //   송장생성 시 status='ready_to_ship'(배송대기). 기사 집하가 감지되면 배송중으로 올리고
+    //   아임웹에도 send 로 배송중을 반영한다. (복원수리 [2-A]·납품 [4-A] 와 동일 패턴)
+    //   ⚠️ [1] 앞에 둔다: 여기서 shipping 으로 올리면 [1]이 같은 사이클에 배달완료까지 처리 가능.
+    const { data: orderPickups, error: orderPickupErr } = await db
+      .from('orders')
+      .select('id, invoice_number, imweb_order_no')
+      .eq('status', 'ready_to_ship')
+      .not('invoice_number', 'is', null)
+      .limit(50);
+
+    if (orderPickupErr) throw orderPickupErr;
+
+    let ordersShipped = 0;
+    for (const order of orderPickups || []) {
+      try {
+        const r = await queryTrackingStatus(order.invoice_number);
+        if (r.state === 'CANCELLED' || r.state === 'NOT_FOUND') continue;
+        if (!r.pickedUp) continue;   // 아직 기사님이 안 가져감
+
+        // 조건부 CAS — status 가 아직 ready_to_ship 일 때만 전이 (중복 방지)
+        const { data: claimed } = await db
+          .from('orders')
+          .update({
+            status: 'shipping',
+            shipped_at: r.pickedUpAt || new Date().toISOString(),
+          })
+          .eq('id', order.id)
+          .eq('status', 'ready_to_ship')
+          .select('id');
+
+        if (!claimed || claimed.length === 0) continue;
+        ordersShipped++;
+        console.log(`[track-delivery/orders pickup] ${order.imweb_order_no} → 배송중(집하) 자동 처리`);
+
+        // 아임웹 배송중 back-sync (send) — 전 품목
+        if (order.imweb_order_no) {
+          after(async () => {
+            try {
+              await shipImwebOrder(order.imweb_order_no);
+            } catch (e) {
+              console.error(`[track-delivery/orders pickup] ${order.imweb_order_no} 아임웹 send 실패:`, e);
+            }
+          });
+        }
+      } catch (e) {
+        console.error(`[track-delivery/orders pickup] ${order.imweb_order_no} 집하 확인 실패:`, e);
+      }
+    }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // [1] 아임웹 orders 추적 (shipping → delivered) + 자동 후기요청 (2026-05-25 확장)
@@ -552,6 +604,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
+      ordersPickup: { checked: orderPickups?.length || 0, shipped: ordersShipped },   // 128: 주문 집하 감지
       orders: { checked: orders?.length || 0, delivered: ordersDelivered },
       // 109: 집하 자동 감지 (기사님 수거 스캔 → 출고완료)
       repairsPickup: { checked: repairPickups?.length || 0, picked: repairsPicked },

@@ -326,60 +326,122 @@ export async function getProdOrders(
   return imwebFetch<ImwebProdOrder[]>(`/v2/shop/orders/${orderNo}/prod-orders`);
 }
 
-/**
- * 아임웹 prod-order 상태 조회
- * 송장 입력 가능 여부 사전 체크용
- */
-export async function getImwebOrderStatus(
+/* ------------------------------------------------------------------
+ * 배송상태 역동기 (TMS → 아임웹) — 2026-08-23 실측 확정
+ *   place(배송대기) → invoice(송장등록, 배송대기 유지) → send(배송중) → 아임웹 자동 배송완료
+ *   ⚠️ 아임웹은 "품목주문(prod-order)" 단위로 동작 → 주문의 전 품목을 루프해야 한다.
+ *      (하나만 처리하면 아임웹이 "부분출고"로 표시됨 — 실측)
+ *   ⚠️ order_version=v2 를 전 요청에 붙여야 신규주문이 정상 해석됨.
+ * ------------------------------------------------------------------ */
+
+/** 주문의 모든 품목주문(prod-order) 조회 — order_version=v2 명시 */
+async function getProdOrdersV2(
   orderNo: string
-): Promise<{ prodOrderNo: string | null; status: string }> {
-  const prodRes = await getProdOrders(orderNo);
-  const prodOrders = prodRes.data || [];
-  if (prodOrders.length === 0) return { prodOrderNo: null, status: 'unknown' };
-  return { prodOrderNo: prodOrders[0].order_no, status: prodOrders[0].status };
+): Promise<Array<{ prodOrderNo: string; status: string }>> {
+  const res = await imwebFetch<ImwebProdOrder[]>(
+    `/v2/shop/orders/${orderNo}/prod-orders?order_version=v2`
+  );
+  const list = res.data || [];
+  return list.map((p) => ({ prodOrderNo: p.order_no, status: p.status }));
 }
 
-/** 송장 입력이 가능한 아임웹 상태 */
+/** place(배송대기 전환) 가능한 아임웹 품목주문 상태 (결제완료/상품준비) */
+const PLACE_READY_STATUSES = ['PAY_WAIT', 'PAY_COMPLETE', 'PREPARE'];
+/** 송장 입력이 가능한 아임웹 상태 (배송대기 이상) */
 const INVOICE_READY_STATUSES = ['STANDBY', 'DELIVERY_READY', 'DELIVERY', 'DELIVERING'];
+/** send(발송처리) 대상 아임웹 상태 (배송대기) */
+const SEND_READY_STATUSES = ['STANDBY', 'DELIVERY_READY'];
+
+/** 응답이 성공(code 200/0)이고 failed 배열이 없는지 — 잘못된 전이는 data.failed 로 옴 */
+function isImwebOk(res: { code: number; data?: unknown }): boolean {
+  if (res.code !== 200 && res.code !== 0) return false;
+  const failed = (res.data as { failed?: unknown[] } | undefined)?.failed;
+  return !failed || failed.length === 0;
+}
 
 /**
- * 송장 등록 — 아임웹 배송대기 이상일 때만 동작
- * @returns success: 아임웹 반영 성공 여부, needsManual: 수동 처리 필요 여부
+ * 배송대기 전환 (place) — 결제완료/상품준비 품목을 배송대기(STANDBY)로.
+ * 전 품목 루프. 이미 배송대기 이상/취소면 스킵(멱등).
+ */
+export async function prepareImwebDelivery(
+  orderNo: string
+): Promise<{ moved: number; skipped: number }> {
+  const prods = await getProdOrdersV2(orderNo);
+  let moved = 0;
+  let skipped = 0;
+  for (const p of prods) {
+    if (!PLACE_READY_STATUSES.includes(p.status)) { skipped++; continue; }
+    const res = await imwebFetch<unknown>(
+      `/v2/shop/prod-orders/${p.prodOrderNo}/place?order_version=v2`,
+      { method: 'PATCH', body: '{}' }
+    );
+    if (isImwebOk(res)) moved++; else skipped++;
+  }
+  console.log('[imweb/prepareImwebDelivery]', { orderNo, moved, skipped });
+  return { moved, skipped };
+}
+
+/**
+ * 송장 등록 (invoice) — 배송대기(STANDBY) 이상 품목에 송장번호 입력.
+ * 전 품목 루프. 송장등록만으로는 배송중으로 안 넘어감(배송대기 유지 — 실측).
+ * @returns success: 1건 이상 등록됨, needsManual: 등록 0건이고 place 필요 품목이 남음
  */
 export async function updateInvoice(
   orderNo: string,
   data: { parcel_code: string; invoice_no: string }
 ): Promise<{ success: boolean; needsManual: boolean; imwebStatus: string }> {
-  // 1) 현재 아임웹 상태 확인
-  const { prodOrderNo, status } = await getImwebOrderStatus(orderNo);
-  console.log('[imweb/updateInvoice] 상태:', { orderNo, prodOrderNo, status });
-
-  if (!prodOrderNo) {
+  const prods = await getProdOrdersV2(orderNo);
+  if (prods.length === 0) {
     return { success: false, needsManual: true, imwebStatus: 'no_prod_order' };
   }
 
-  // 2) 배송대기 이상이 아니면 → 수동 처리 필요
-  if (!INVOICE_READY_STATUSES.includes(status)) {
-    console.log('[imweb/updateInvoice] 아임웹 배송대기 미전환 → 수동 필요');
-    return { success: false, needsManual: true, imwebStatus: status };
-  }
-
-  // 3) 송장번호 입력 (공식 엔드포인트)
-  const res = await imwebFetch<unknown>(
-    `/v2/shop/prod-orders/${prodOrderNo}/invoice`,
-    {
-      method: 'PATCH',
-      body: JSON.stringify({
-        parcel_code: data.parcel_code,
-        invoice_no: data.invoice_no,
-        order_version: 'v2',
-      }),
+  let applied = 0;
+  let needsPlace = false;
+  let lastStatus = '';
+  for (const p of prods) {
+    lastStatus = p.status;
+    if (!INVOICE_READY_STATUSES.includes(p.status)) {
+      // 아직 결제완료/상품준비면 place(배송대기) 먼저 필요
+      if (PLACE_READY_STATUSES.includes(p.status)) needsPlace = true;
+      continue;
     }
-  );
+    const res = await imwebFetch<unknown>(
+      `/v2/shop/prod-orders/${p.prodOrderNo}/invoice?order_version=v2`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({
+          parcel_code: data.parcel_code,
+          invoice_no: data.invoice_no,
+          order_version: 'v2',
+        }),
+      }
+    );
+    if (isImwebOk(res)) applied++;
+  }
+  console.log('[imweb/updateInvoice]', { orderNo, applied, needsPlace });
+  return { success: applied > 0, needsManual: applied === 0 && needsPlace, imwebStatus: lastStatus };
+}
 
-  const ok = res.code === 200 || res.code === 0;
-  console.log('[imweb/updateInvoice] 송장 입력:', { code: res.code, msg: res.msg, ok });
-  return { success: ok, needsManual: !ok, imwebStatus: status };
+/**
+ * 발송 처리 (send) — 배송대기(STANDBY) 품목을 배송중(DELIVERING)으로.
+ * 집하 감지 시 호출. 전 품목 루프. 이미 배송중 이상/취소면 스킵(멱등).
+ */
+export async function shipImwebOrder(
+  orderNo: string
+): Promise<{ moved: number; skipped: number }> {
+  const prods = await getProdOrdersV2(orderNo);
+  let moved = 0;
+  let skipped = 0;
+  for (const p of prods) {
+    if (!SEND_READY_STATUSES.includes(p.status)) { skipped++; continue; }
+    const res = await imwebFetch<unknown>(
+      `/v2/shop/prod-orders/${p.prodOrderNo}/send?order_version=v2`,
+      { method: 'PATCH', body: '{}' }
+    );
+    if (isImwebOk(res)) moved++; else skipped++;
+  }
+  console.log('[imweb/shipImwebOrder]', { orderNo, moved, skipped });
+  return { moved, skipped };
 }
 
 /** 품목주문 상태 변경 (CANCEL 등) */

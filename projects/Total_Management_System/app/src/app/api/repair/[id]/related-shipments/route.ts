@@ -58,7 +58,7 @@ export async function GET(
       db.from('orders')
         .select('id, imweb_order_no, orderer_name, orderer_phone, total_price, invoice_number, shipped_at, status, paid_at')
         .not('invoice_number', 'is', null)
-        .in('status', ['shipping', 'delivered'])
+        .in('status', ['ready_to_ship', 'shipping', 'delivered'])  // 128: 배송대기(송장O·집하前)도 합포장 대상
         .order('shipped_at', { ascending: false })
         .limit(50),
     ]);

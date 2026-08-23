@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { updateInvoice } from '@/lib/imweb/client';
+import { updateInvoice, prepareImwebDelivery } from '@/lib/imweb/client';
 import { getNextInvoice, bookShipment } from '@/lib/lotte/alps-client';
 
 /** POST /api/lotte/book — 송장 생성 (ALPS 직접 호출) */
@@ -53,6 +53,9 @@ export async function POST(request: NextRequest) {
     const db = supabase as any;
 
     // 주문에 송장 정보 저장
+    // 🔴 128 (2026-08-23): 송장 발급 ≠ 출고. status 를 'ready_to_ship'(배송대기)로 두고
+    //    shipped_at 은 비워둔다. 기사 집하가 감지되면 크론[1-A]이 'shipping'(배송중)+shipped_at 을 채운다.
+    //    (복원수리·납품과 동일 리듬 — 송장만으로 "배송중"이 뜨던 것을 바로잡음)
     if (body.orderId) {
       await db
         .from('orders')
@@ -60,8 +63,7 @@ export async function POST(request: NextRequest) {
           invoice_number: invoiceNumber,
           courier_code: 'LOTTE',
           courier_name: '롯데택배',
-          status: 'shipping',
-          shipped_at: new Date().toISOString(),
+          status: 'ready_to_ship',
         })
         .eq('id', body.orderId);
     }
@@ -81,11 +83,15 @@ export async function POST(request: NextRequest) {
         .eq('id', body.deliveryId);
     }
 
-    // 아임웹에 송장번호 반영 (배송대기 상태일 때만 성공)
+    // 아임웹 역동기: 배송대기 전환(place) → 송장번호 등록(invoice)
+    // 🔴 128: 이제 아임웹 "배송대기 처리"를 자동으로 수행하므로 수동 개입 불필요.
+    //    place 로 전 품목을 배송대기(STANDBY)로 올린 뒤 invoice 로 송장번호를 등록한다.
+    //    (배송중 전환은 집하 시 크론이 send 로 수행 — 여기서는 배송대기까지만)
     let imwebSynced = false;
     let imwebNeedsManual = false;
     if (body.ordNo) {
       try {
+        await prepareImwebDelivery(body.ordNo); // 결제완료 → 배송대기 (전 품목)
         const imwebResult = await updateInvoice(body.ordNo, {
           parcel_code: 'LOTTE',
           invoice_no: invoiceNumber,

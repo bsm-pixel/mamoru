@@ -12,7 +12,7 @@ import { subDays } from 'date-fns';
 import { after } from 'next/server';
 
 /** 재고 차감이 필요한 상태 (결제 완료 이상) */
-const STOCK_DEDUCT_STATUSES: OrderStatus[] = ['pay_done', 'preparing', 'shipping', 'delivered', 'confirmed'];
+const STOCK_DEDUCT_STATUSES: OrderStatus[] = ['pay_done', 'preparing', 'ready_to_ship', 'shipping', 'delivered', 'confirmed'];
 /** 재고 복구가 필요한 상태 (취소/환불) */
 const STOCK_RESTORE_STATUSES: OrderStatus[] = ['cancelled', 'refunded'];
 
@@ -22,7 +22,10 @@ function mapImwebStatus(status: string): OrderStatus {
     BEFORE_DEPOSIT: 'pay_wait',
     PAY_COMPLETE: 'pay_done',
     PREPARE: 'preparing',
+    STANDBY: 'ready_to_ship',      // 128: 아임웹 배송대기 → TMS 배송대기
+    DELIVERY_READY: 'ready_to_ship',
     DELIVERY: 'shipping',
+    DELIVERING: 'shipping',
     DELIVERY_COMPLETE: 'delivered',
     CONFIRM: 'confirmed',
     CANCEL: 'cancelled',
@@ -165,7 +168,7 @@ export async function syncSingleOrder(
 }
 
 /** TMS에서 직접 관리하는 상태 — 아임웹 동기화 시 덮어쓰지 않음 */
-const TMS_MANAGED_STATUSES: OrderStatus[] = ['cancel_pending', 'shipping'];
+const TMS_MANAGED_STATUSES: OrderStatus[] = ['cancel_pending', 'ready_to_ship', 'shipping'];
 /** 배송완료 이후 상태 — shipping 보호를 해제하여 delivered 전환 허용 */
 const DELIVERED_OR_LATER: OrderStatus[] = ['delivered', 'confirmed', 'cancelled', 'refund_request', 'refunded'];
 

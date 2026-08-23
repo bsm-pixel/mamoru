@@ -109,8 +109,8 @@ export function OrderActionBar({ order, items }: Props) {
           </>
         )}
 
-        {/* shipping: 아임웹 연동 + 송장 취소 */}
-        {(order.status === 'shipping' || (order.status === 'pay_done' && order.invoice_number)) && (
+        {/* 배송대기/배송중: 아임웹 연동 + 송장 취소 */}
+        {(order.status === 'ready_to_ship' || order.status === 'shipping' || (order.status === 'pay_done' && order.invoice_number)) && (
           <>
             <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPushImweb(true)} disabled={busy}>
               <ExternalLink size={14} />

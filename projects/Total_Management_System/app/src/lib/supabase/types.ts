@@ -4,6 +4,7 @@ export type OrderStatus =
   | 'pay_wait'
   | 'pay_done'
   | 'preparing'
+  | 'ready_to_ship'  // 128: 배송대기 — 송장생성 완료(아임웹 place+invoice), 집하 전
   | 'shipping'
   | 'delivered'
   | 'confirmed'

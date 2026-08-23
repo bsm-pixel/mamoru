@@ -25,6 +25,7 @@ const STATUS_TABS = [
   { value: 'pay_wait', label: '입금대기' },   // 무통장 미입금 (아임웹 BEFORE_DEPOSIT) 가시화
   { value: 'pay_done', label: '결제완료' },
   { value: 'preparing', label: '준비중' },
+  { value: 'ready_to_ship', label: '배송대기' },
   { value: 'shipping', label: '배송중' },
   { value: 'delivered', label: '배송완료' },
   { value: 'cancel_pending', label: 'ALPS취소대기' },
