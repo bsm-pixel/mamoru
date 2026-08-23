@@ -76,7 +76,7 @@ img{display:block; max-width:100%}
 .ko-serif{font-family:var(--serif-ko)}
 .divider{width:1px; height:56px; background:linear-gradient(var(--gold-soft),transparent); margin:0 auto}
 .label-sm{font-size:12px; letter-spacing:.24em; color:var(--gold); font-family:var(--serif-en); text-transform:uppercase; margin-bottom:14px}
-.title{font-family:var(--serif-ko); font-size:23px; font-weight:700; letter-spacing:.02em}
+.title{font-family:var(--serif-ko); font-size:24.5px; font-weight:700; letter-spacing:.02em}
 
 /* ── 1. 메인: 세로 영상/이미지 (9:16, 1080×1920) — 피크: 92%로 다음 섹션 살짝 노출 ── */
 .hero{position:relative; height:92vh; height:92svh; height:calc(var(--app-vh) * 0.92); min-height:500px; background:#efe9df; overflow:hidden}
@@ -95,11 +95,17 @@ img{display:block; max-width:100%}
 .hero.names-in .hero__names > *:nth-child(1){transition-delay:.20s}
 .hero.names-in .hero__names > *:nth-child(2){transition-delay:.42s}
 .hero.names-in .hero__names > *:nth-child(3){transition-delay:.64s}
+.hero.names-in .hero__names > *:nth-child(4){transition-delay:.86s}
 .cover__eng{font-family:var(--serif-en); letter-spacing:.32em; font-size:13px; color:var(--gold); text-transform:uppercase}
-.cover__names{margin:34px 0 30px; font-family:var(--serif-ko); color:var(--ink)}
+.cover__names{margin:30px 0 26px; font-family:var(--serif-ko); color:var(--ink)}
 .cover__names span{display:block; font-size:clamp(34px,10vw,44px); font-weight:700; line-height:1.28}
 .cover__names em{display:block; font-style:normal; font-family:var(--serif-en); font-size:20px; color:var(--gold); margin:12px 0; letter-spacing:.1em}
-.cover__date{font-family:var(--serif-en); letter-spacing:.26em; font-size:15px; color:var(--muted)}
+.cover__date{font-family:var(--serif-en); letter-spacing:.26em; font-size:17px; color:var(--muted)}
+.cover__time{margin-top:9px; font-family:var(--serif-ko); font-size:16px; color:var(--ink); letter-spacing:.02em}
+/* 장소 — 날짜·시간 다음(언제→어디서). 짧은 골드 선으로만 분리해 이름의 무게를 지킨다 */
+.cover__place{margin-top:22px; font-family:var(--serif-ko); font-size:16px; color:var(--ink); letter-spacing:.01em; line-height:1.5}
+.cover__place::before{content:''; display:block; width:34px; height:1px; background:var(--gold-soft); margin:0 auto 18px}
+.cover__place em{display:block; font-style:normal; font-size:14.5px; color:var(--muted); margin-top:6px}
 
 /* 스크롤 힌트: 이름이 뜬 뒤(아이보리 위)에만 골드로 표시 */
 .hero__scroll{position:absolute; z-index:4; left:0; right:0; bottom:calc(22px + env(safe-area-inset-bottom));
@@ -133,17 +139,17 @@ img{display:block; max-width:100%}
 .cd-box{background:var(--ivory); border:1px solid var(--line); border-radius:12px; padding:16px 4px; box-shadow:var(--shadow)}
 .cd-num{display:block; font-family:var(--serif-en); font-size:clamp(24px,7vw,30px); font-weight:500; color:var(--ink);
   font-variant-numeric:tabular-nums; letter-spacing:.02em; line-height:1}
-.cd-unit{display:block; font-size:11px; color:var(--muted); letter-spacing:.08em; margin-top:8px}
-.cd-note{margin-top:24px; font-family:var(--serif-ko); font-size:14px; color:var(--muted); line-height:1.9; letter-spacing:.02em}
+.cd-unit{display:block; font-size:12px; color:var(--muted); letter-spacing:.08em; margin-top:8px}
+.cd-note{margin-top:24px; font-family:var(--serif-ko); font-size:15.5px; color:var(--muted); line-height:1.9; letter-spacing:.02em}
 .cd-dday{color:var(--gold); font-weight:700}
 
 /* ── 3. 연락처 ── */
 .contacts{background:var(--ivory)}
 /* 카드 하단 '마음 전하기'(계좌) 버튼 + 안내문 */
-.contact-give{display:block; width:100%; margin-top:auto; padding:11px 6px; border:1px solid var(--gold-soft); border-radius:9px; background:#fff; color:var(--gold); font-family:var(--sans); font-size:12.5px; font-weight:700; letter-spacing:.02em; transition:.15s}
+.contact-give{display:block; width:100%; margin-top:auto; padding:11px 6px; border:1px solid var(--gold-soft); border-radius:9px; background:#fff; color:var(--gold); font-family:var(--sans); font-size:13.5px; font-weight:700; letter-spacing:.02em; transition:.15s}
 .contact-col .person:last-of-type{margin-bottom:16px}   /* 사람목록↔버튼 최소 간격(하단정렬이어도) */
 .contact-give:active{background:var(--gold); color:#fff; border-color:var(--gold); transform:translateY(1px)}
-.give-note{margin-top:22px; font-family:var(--serif-ko); font-size:12.5px; color:var(--muted); line-height:1.85; letter-spacing:.01em}
+.give-note{margin-top:22px; font-family:var(--serif-ko); font-size:13.5px; color:var(--muted); line-height:1.85; letter-spacing:.01em}
 /* minmax(0,1fr) = 좁은 폭에서도 칸이 min-content 이하로 축소돼 우측 넘침·잘림 방지 */
 .contact-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; margin-top:26px}
 .contact-col{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:22px 12px 22px 16px; box-shadow:var(--shadow); min-width:0; display:flex; flex-direction:column}
@@ -151,8 +157,8 @@ img{display:block; max-width:100%}
 .person{display:flex; align-items:center; justify-content:space-between; gap:5px; padding:11px 0; border-top:1px solid var(--line)}
 .person:first-of-type{border-top:0}
 .person__name{min-width:0}
-.person__role{font-size:11px; color:var(--muted); letter-spacing:.05em}
-.person__nm{font-family:var(--serif-ko); font-size:15.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.person__role{font-size:12px; color:var(--muted); letter-spacing:.05em}
+.person__nm{font-family:var(--serif-ko); font-size:16.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .person__acts{display:flex; gap:4px; flex-shrink:0}
 .icon-btn{width:30px; height:30px; border-radius:50%; display:grid; place-items:center; flex-shrink:0;
   border:1px solid var(--line); background:#fff; color:var(--gold); transition:.2s}
@@ -184,39 +190,39 @@ img{display:block; max-width:100%}
 .lb__count{position:fixed; top:calc(18px + env(safe-area-inset-top)); left:0; right:0; text-align:center;
   color:rgba(255,255,255,.85); font-family:var(--serif-en); letter-spacing:.2em; font-size:14px; z-index:102}
 .lb__hint{position:fixed; bottom:calc(78px + env(safe-area-inset-bottom)); left:0; right:0; text-align:center;
-  color:rgba(255,255,255,.45); font-size:11px; letter-spacing:.05em; z-index:101}
+  color:rgba(255,255,255,.45); font-size:12px; letter-spacing:.05em; z-index:101}
 
 /* ── 5. 오시는 길 ── */
 .location{background:var(--ivory)}
-.loc-date{font-family:var(--serif-ko); font-size:15px; color:var(--gold); font-weight:700; letter-spacing:.02em; margin-top:14px}
+.loc-date{font-family:var(--serif-ko); font-size:16px; color:var(--gold); font-weight:700; letter-spacing:.02em; margin-top:14px}
 .venue-name{font-family:var(--serif-ko); font-size:clamp(24px,6.5vw,28px); font-weight:700; margin-top:10px; line-height:1.3}
-.venue-hall{color:var(--muted); font-size:15px; margin-top:5px}
-.venue-addr{color:var(--ink); font-size:14px; margin-top:12px; letter-spacing:.01em}
+.venue-hall{color:var(--muted); font-size:16px; margin-top:5px}
+.venue-addr{color:var(--ink); font-size:15px; margin-top:12px; letter-spacing:.01em}
 /* 교통 안내 — 자가용/지하철/버스 (아이콘 헤더 + 내용 블록) */
 .transit{max-width:360px; margin:34px auto 0; text-align:left}
 .tr{padding:22px 2px 4px}
 .tr:first-child{padding-top:10px}
 /* 헤더: 아이콘+제목, 아래 골드 헤어라인 — 어르신도 항목 구분 즉시 인지 */
-.tr-h{display:flex; align-items:center; gap:8px; font-family:var(--serif-ko); font-size:15px; font-weight:700;
+.tr-h{display:flex; align-items:center; gap:8px; font-family:var(--serif-ko); font-size:16px; font-weight:700;
   color:var(--gold); padding-bottom:9px; border-bottom:1px solid var(--gold-soft)}
 .tr-h svg{width:19px; height:19px; flex-shrink:0}
-.tr-b{margin-top:14px; font-size:13.5px; color:var(--ink); line-height:1.65; letter-spacing:.01em}
+.tr-b{margin-top:14px; font-size:15px; color:var(--ink); line-height:1.65; letter-spacing:.01em}
 .tr-b b{font-weight:700}
-.tr-b em{display:block; font-style:normal; font-size:12.5px; color:var(--muted); margin-top:4px; line-height:1.7}
+.tr-b em{display:block; font-style:normal; font-size:13.5px; color:var(--muted); margin-top:4px; line-height:1.7}
 .tr-sub{margin-top:14px}
-.tr-note{margin-top:14px; font-size:12.5px; color:var(--gold)}
+.tr-note{margin-top:14px; font-size:13.5px; color:var(--gold)}
 .map-view{margin-top:22px; border-radius:14px; overflow:hidden; border:1px solid var(--line);
   box-shadow:var(--shadow); position:relative; background:#eee}
 .map-view img{width:100%; height:auto; aspect-ratio:4/3; object-fit:cover}
 .map-view__pin{position:absolute; inset:0; display:grid; place-items:center; pointer-events:none}
 .btn{display:inline-flex; align-items:center; justify-content:center; gap:6px;
-  border-radius:10px; font-family:var(--sans); font-size:13.5px; font-weight:600;
+  border-radius:10px; font-family:var(--sans); font-size:15px; font-weight:600;
   padding:13px 18px; border:1px solid var(--gold); color:var(--gold); background:#fff; transition:.2s}
 .btn:active{transform:scale(.97)}
 .btn--fill{background:var(--gold); color:#fff}
 .btn--full{width:100%; margin-top:14px}
 .nav-row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px}
-.nav-row .btn{padding:12px 4px; font-size:clamp(11.5px,3.3vw,12.5px); border-color:var(--line); color:var(--ink);
+.nav-row .btn{padding:12px 4px; font-size:clamp(12px,3.4vw,13.5px); border-color:var(--line); color:var(--ink);
   gap:5px; white-space:nowrap}
 .nav-row .btn svg{width:16px; height:16px; flex-shrink:0}
 
@@ -224,19 +230,19 @@ img{display:block; max-width:100%}
 .reception{background:var(--paper)}
 /* 피로연 테두리 프레임 — 어르신도 '별도 안내'로 바로 인지 */
 .reception-frame{margin-top:10px; border:1.6px solid var(--gold-soft); border-radius:18px; background:var(--ivory); box-shadow:0 8px 26px rgba(180,154,106,.10); padding:clamp(28px,7vw,38px) clamp(18px,5vw,24px) clamp(26px,6vw,32px)}
-.reception-msg{margin-top:20px; font-family:var(--serif-ko); font-size:14.5px; color:var(--ink); line-height:2; letter-spacing:.01em}
+.reception-msg{margin-top:20px; font-family:var(--serif-ko); font-size:15.5px; color:var(--ink); line-height:2; letter-spacing:.01em}
 .reception-info{margin-top:26px; padding-top:22px; border-top:1px solid var(--line)}
 /* 카운트다운 날짜 글씨체(cd-note: 한글 명조·muted)와 동일하게 */
-.reception-info .ri-date{font-family:var(--serif-ko); letter-spacing:.02em; font-size:14px; color:var(--muted); font-weight:400; line-height:1.9; margin-bottom:12px}
+.reception-info .ri-date{font-family:var(--serif-ko); letter-spacing:.02em; font-size:15px; color:var(--muted); font-weight:400; line-height:1.9; margin-bottom:12px}
 .reception .btn--full,.reception .nav-row{max-width:280px; margin-left:auto; margin-right:auto}
 
 /* ── 미니 달력 (예식·피로연 공용) ── */
 .cal{max-width:290px; margin-left:auto; margin-right:auto}
 .cal-cap{font-family:var(--serif-en); letter-spacing:.18em; font-size:12px; text-transform:uppercase; color:var(--gold); text-align:center; margin-bottom:16px}
 .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); row-gap:6px; place-items:center}
-.cal .dow{font-family:var(--sans); font-size:11px; font-weight:600; color:var(--muted); letter-spacing:.02em; padding-bottom:6px}
+.cal .dow{font-family:var(--sans); font-size:12px; font-weight:600; color:var(--muted); letter-spacing:.02em; padding-bottom:6px}
 .cal .dow.sun{color:#C58B7B}
-.cal .d{font-size:13px; color:var(--ink); font-variant-numeric:tabular-nums; line-height:1}
+.cal .d{font-size:14.5px; color:var(--ink); font-variant-numeric:tabular-nums; line-height:1}
 .cal .d.sun{color:#C58B7B}
 .cal .d span{display:inline-flex; width:30px; height:30px; align-items:center; justify-content:center; border-radius:50%}
 .cal .d.on span{background:var(--gold); color:#fff; font-weight:700; box-shadow:0 3px 10px rgba(180,154,106,.35)}
@@ -246,7 +252,7 @@ img{display:block; max-width:100%}
 .gift{background:var(--paper)}
 .gift-btns{display:flex; flex-direction:column; gap:12px; max-width:280px; margin:26px auto 0}
 .gift-note{margin-top:44px; text-align:center; font-family:var(--serif-ko);
-  color:var(--muted); font-size:14px; line-height:2; letter-spacing:.02em}
+  color:var(--muted); font-size:15px; line-height:2; letter-spacing:.02em}
 
 /* 계좌 모달 */
 .modal{position:fixed; inset:0; z-index:110; background:rgba(30,26,22,.5);
@@ -255,23 +261,23 @@ img{display:block; max-width:100%}
 .modal__card{width:100%; max-width:460px; background:var(--ivory); border-radius:22px 22px 0 0;
   padding:26px 22px calc(26px + env(safe-area-inset-bottom)); animation:up .3s ease}
 @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.modal__title{text-align:center; font-family:var(--serif-ko); font-size:18px; font-weight:700; margin-bottom:20px}
+.modal__title{text-align:center; font-family:var(--serif-ko); font-size:19px; font-weight:700; margin-bottom:20px}
 #rsvpModal .modal__title{margin-bottom:8px}
-.modal__sub{text-align:center; font-family:var(--serif-ko); color:var(--muted); font-size:13px; line-height:1.75; margin-bottom:20px}
+.modal__sub{text-align:center; font-family:var(--serif-ko); color:var(--muted); font-size:14px; line-height:1.75; margin-bottom:20px}
 .acct{background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:12px}
 .acct__top{display:flex; justify-content:space-between; align-items:center; gap:10px}
-.acct__bank{font-size:13.5px; color:var(--ink); font-weight:600}
-.acct__no{font-family:var(--sans); font-size:16px; font-weight:600; letter-spacing:.01em; color:var(--ink); margin-top:8px; font-variant-numeric:tabular-nums}
-.copy-btn{flex-shrink:0; font-size:12px; font-weight:600; color:var(--gold); background:#fff;
+.acct__bank{font-size:14.5px; color:var(--ink); font-weight:600}
+.acct__no{font-family:var(--sans); font-size:17.5px; font-weight:600; letter-spacing:.01em; color:var(--ink); margin-top:8px; font-variant-numeric:tabular-nums}
+.copy-btn{flex-shrink:0; font-size:13px; font-weight:600; color:var(--gold); background:#fff;
   border:1px solid var(--gold-soft); border-radius:8px; padding:7px 12px}
 .copy-btn:active{background:var(--gold); color:#fff}
-.modal__close{width:100%; margin-top:8px; padding:14px; border-radius:12px; background:var(--ink); color:#fff; font-weight:600; font-size:14px}
+.modal__close{width:100%; margin-top:8px; padding:14px; border-radius:12px; background:var(--ink); color:#fff; font-weight:600; font-size:15px}
 
 /* ── 5b. 참석여부(RSVP) ── */
 .rsvp{background:var(--ivory)}
-.rsvp-desc{margin-top:14px; font-family:var(--serif-ko); color:var(--muted); font-size:14px; line-height:1.9; letter-spacing:.02em}
+.rsvp-desc{margin-top:14px; font-family:var(--serif-ko); color:var(--muted); font-size:15px; line-height:1.9; letter-spacing:.02em}
 .rsvp-input{width:100%; margin-top:10px; padding:13px 14px; border:1px solid var(--line); border-radius:10px;
-  background:#fff; font:inherit; font-size:14px; color:var(--ink); -webkit-appearance:none; appearance:none}
+  background:#fff; font:inherit; font-size:15px; color:var(--ink); -webkit-appearance:none; appearance:none}
 .rsvp-input::placeholder{color:#b6ada2}
 .rsvp-input:focus{outline:none; border-color:var(--gold-soft)}
 textarea.rsvp-input{resize:none; line-height:1.6}
@@ -279,20 +285,20 @@ textarea.rsvp-input{resize:none; line-height:1.6}
 .rsvp-seg label{position:relative; display:block}
 .rsvp-seg input{position:absolute; opacity:0; inset:0; margin:0; cursor:pointer}
 .rsvp-seg span{display:block; text-align:center; padding:12px; border:1px solid var(--line); border-radius:10px;
-  font-size:14px; color:var(--muted); background:#fff; transition:.15s}
+  font-size:15px; color:var(--muted); background:#fff; transition:.15s}
 .rsvp-seg input:checked+span{border-color:var(--gold); color:var(--gold); background:#fdfbf7; font-weight:600}
-.modal__submit{width:100%; margin-top:16px; padding:14px; border-radius:12px; background:var(--gold); color:#fff; font-weight:600; font-size:14px}
+.modal__submit{width:100%; margin-top:16px; padding:14px; border-radius:12px; background:var(--gold); color:#fff; font-weight:600; font-size:15px}
 .modal__submit:disabled{opacity:.55}
 /* 참석 인원 스테퍼 (− 숫자 +) */
 .rsvp-stepper{display:flex; align-items:center; justify-content:space-between; gap:10px;
   width:100%; margin-top:10px; padding:7px 8px 7px 14px; border:1px solid var(--line); border-radius:10px; background:#fff}
-.rsvp-stepper__label{font-size:14px; color:#9a9086}
+.rsvp-stepper__label{font-size:15px; color:#9a9086}
 .stepper{display:flex; align-items:center; gap:4px; flex-shrink:0}
 .stepper__btn{width:36px; height:36px; border-radius:8px; font-size:22px; line-height:1; color:var(--gold);
   border:1px solid var(--line); background:#fff; display:grid; place-items:center; user-select:none; transition:.12s}
 .stepper__btn:active{background:var(--gold); color:#fff; border-color:var(--gold); transform:scale(.94)}
 .stepper__btn:disabled{opacity:.3; color:var(--muted)}
-.stepper__num{min-width:44px; text-align:center; font-family:var(--sans); font-size:18px; font-weight:700;
+.stepper__num{min-width:44px; text-align:center; font-family:var(--sans); font-size:19px; font-weight:700;
   color:var(--ink); font-variant-numeric:tabular-nums}
 
 /* ── 7. 하단 띠 ── */
@@ -307,7 +313,7 @@ textarea.rsvp-input{resize:none; line-height:1.6}
   display:grid; place-items:center; color:var(--gold); background:#fff;
   box-shadow:0 2px 8px rgba(180,154,106,.12); transition:.2s}
 .footer-bar .fi{width:18px; height:18px}
-.footer-bar .ft{font-size:11px; font-weight:600; letter-spacing:.02em; color:var(--muted); line-height:1.35; text-align:center; transition:color .2s ease}
+.footer-bar .ft{font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--muted); line-height:1.35; text-align:center; transition:color .2s ease}
 .footer-bar button:active{transform:translateY(1px)}
 .footer-bar button:active .fic{background:var(--gold); color:#fff; border-color:var(--gold); transform:scale(.93)}
 .footer-bar button:active .ft{color:var(--gold)}
@@ -316,7 +322,7 @@ textarea.rsvp-input{resize:none; line-height:1.6}
 
 /* 토스트 */
 .toast{position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(20px);
-  background:var(--ink); color:#fff; font-size:13px; padding:11px 20px; border-radius:24px;
+  background:var(--ink); color:#fff; font-size:14px; padding:11px 20px; border-radius:24px;
   opacity:0; pointer-events:none; transition:.3s; z-index:200; white-space:nowrap}
 .toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
 
@@ -356,7 +362,8 @@ textarea.rsvp-input{resize:none; line-height:1.6}
     <div class="hero__names">
       <div class="cover__eng">We Are Getting Married</div>
       <div class="cover__names"><span>백성민</span><em>그리고</em><span>김혜정</span></div>
-      <div class="cover__date">2026 · 10 · 31</div>
+      <div class="cover__date">2026 · 10 · 31<div class="cover__time">토요일 오후 12시 20분</div></div>
+      <div class="cover__place">CN천년부페웨딩홀 주안점<em>F6 오펠리스홀</em></div>
     </div>
     <div class="hero__scroll">SCROLL
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v13M6 12l6 6 6-6"/></svg>
@@ -369,7 +376,7 @@ textarea.rsvp-input{resize:none; line-height:1.6}
     <div class="photo-frame"><div class="mat"><img src="assets/g3.jpg?v=2" alt="백성민 김혜정" loading="lazy" decoding="async" onerror="this.closest('.photo-frame').style.display='none'"></div></div>
     <div class="label-sm">Invitation</div>
     <!-- ✏️ 편지 이미지(권장 1080×1440). 이미지 대신 글로 쓰고싶으면 아래 img 지우고 텍스트 -->
-    <img src="assets/letter.jpg" alt="초대의 글" onerror="this.outerHTML='&lt;p class=ko-serif style=\'font-size:16px;line-height:2.1;color:var(--ink)\'&gt;두 사람이 사랑으로 만나<br>하나의 이름으로 새 길을 열려 합니다.<br>귀한 걸음으로 축복해 주시면<br>더없는 기쁨으로 간직하겠습니다.&lt;/p&gt;'">
+    <img src="assets/letter.jpg" alt="초대의 글" onerror="this.outerHTML='&lt;p class=ko-serif style=\'font-size:17px;line-height:2.1;color:var(--ink)\'&gt;두 사람이 사랑으로 만나<br>하나의 이름으로 새 길을 열려 합니다.<br>귀한 걸음으로 축복해 주시면<br>더없는 기쁨으로 간직하겠습니다.&lt;/p&gt;'">
   </section>
 
   <!-- ═══════════ 2b. 카운트다운(D-day) ═══════════ -->
@@ -858,7 +865,7 @@ function openAcct(side){
       <div class="acct__top">
         <div>
           <span class="acct__bank">${a.bank} <span style="color:var(--muted);font-weight:400">· ${a.role}</span></span>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">예금주 ${a.holder}</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:2px">예금주 ${a.holder}</div>
         </div>
         <button class="copy-btn" onclick="copyAcct('${a.no.replace(/[^0-9-]/g,'')}')">복사하기</button>
       </div>
