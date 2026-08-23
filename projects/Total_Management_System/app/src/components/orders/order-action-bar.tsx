@@ -28,6 +28,13 @@ export function OrderActionBar({ order, items }: Props) {
 
   const busy = bookInvoice.isPending || cancelInvoice.isPending || cancelOrder.isPending || completePickup.isPending || checkingAlps;
 
+  // 주문 취소 확인 문구 — 상태별 경고 (집하 후 배송중은 강한 경고)
+  const cancelOrderMessage = order.status === 'shipping'
+    ? <>⚠️ <strong>이미 발송(집하)된 주문</strong>입니다. 취소하면 재고가 복구됩니다.<br />실제 물건이 배송 중이면 아임웹 반품·롯데 반송을 먼저 확인하세요.</>
+    : order.invoice_number
+      ? <>송장(<strong>{order.invoice_number}</strong>)이 발급된 주문입니다.<br />롯데 송장까지 정리하려면 <strong>[송장 취소]</strong>를 쓰세요. 그래도 주문을 취소하면 재고가 복구됩니다.<br />아임웹에서도 취소 처리하세요.</>
+      : <>이 주문을 취소합니다. 재고가 복구됩니다.<br />아임웹에서도 취소 처리해주세요.</>;
+
   async function handleCheckAlpsCancel() {
     if (!order.invoice_number) return;
     setCheckingAlps(true);
@@ -109,16 +116,30 @@ export function OrderActionBar({ order, items }: Props) {
           </>
         )}
 
-        {/* 배송대기/배송중: 아임웹 연동 + 송장 취소 */}
+        {/* 배송대기/배송중: 아임웹 연동 + 송장 취소 + 주문 취소 */}
         {(order.status === 'ready_to_ship' || order.status === 'shipping' || (order.status === 'pay_done' && order.invoice_number)) && (
           <>
-            <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPushImweb(true)} disabled={busy}>
-              <ExternalLink size={14} />
-              아임웹 송장 연동
+            {/* 실제 롯데 송장이 있을 때만 — 아임웹 재연동 / 롯데 송장 취소 */}
+            {order.invoice_number && (
+              <>
+                <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPushImweb(true)} disabled={busy}>
+                  <ExternalLink size={14} />
+                  아임웹 송장 연동
+                </Button>
+                <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelInvoice(true)} disabled={busy}>
+                  송장 취소
+                </Button>
+              </>
+            )}
+            {/* 주문 취소 — 모든 진행 상태에서 '정리' 가능 (재고 복구). orphan(송장없음)도 이 버튼으로 정리 */}
+            <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelOrder(true)} disabled={busy}>
+              주문 취소
             </Button>
-            <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelInvoice(true)} disabled={busy}>
-              송장 취소
-            </Button>
+            <p className="text-[11px] text-neutral-400 px-1 leading-relaxed">
+              {order.invoice_number
+                ? '집하 전 취소는 [송장 취소]로 롯데 송장까지 정리 · 이미 발송됐거나 강제 정리는 [주문 취소]'
+                : '롯데 송장이 없는 주문입니다. [주문 취소]로 정리하세요.'}
+            </p>
           </>
         )}
       </div>
@@ -139,7 +160,7 @@ export function OrderActionBar({ order, items }: Props) {
         onClose={() => setShowCancelOrder(false)}
         onConfirm={async () => { await cancelOrder.mutateAsync(order.id); }}
         title="주문 취소"
-        message="이 주문을 취소합니다. 되돌릴 수 없습니다."
+        message={cancelOrderMessage}
         confirmLabel="주문 취소"
         variant="danger"
       />
