@@ -87,7 +87,7 @@ img{display:block; max-width:100%}
 
 /* 이름 오버레이: 영상이 끝나면 이 영역으로 페이드인 */
 .hero__names{position:absolute; inset:0; z-index:3; background:var(--ivory); text-align:center;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 40px 84px;
   opacity:0; pointer-events:none; transition:opacity 1.3s ease}
 .hero.names-in .hero__names{opacity:1}
 .hero__names > *{opacity:0; transform:translateY(18px); transition:opacity 1s ease, transform 1s cubic-bezier(.22,.61,.36,1)}
@@ -97,15 +97,33 @@ img{display:block; max-width:100%}
 .hero.names-in .hero__names > *:nth-child(3){transition-delay:.64s}
 .hero.names-in .hero__names > *:nth-child(4){transition-delay:.86s}
 .cover__eng{font-family:var(--serif-en); letter-spacing:.32em; font-size:13px; color:var(--gold); text-transform:uppercase}
-.cover__names{margin:30px 0 26px; font-family:var(--serif-ko); color:var(--ink)}
+.cover__names{margin:30px 0 38px; font-family:var(--serif-ko); color:var(--ink)}
 .cover__names span{display:block; font-size:clamp(34px,10vw,44px); font-weight:700; line-height:1.28}
 .cover__names em{display:block; font-style:normal; font-family:var(--serif-en); font-size:20px; color:var(--gold); margin:12px 0; letter-spacing:.1em}
 .cover__date{font-family:var(--serif-en); letter-spacing:.26em; font-size:17px; color:var(--muted)}
-.cover__time{margin-top:9px; font-family:var(--serif-ko); font-size:16px; color:var(--ink); letter-spacing:.02em}
+/* 이름 ↔ 안내(언제·어디서) 상위 분리 — 가로 헤어라인 */
+.cover__date::before{content:''; display:block; width:44px; height:1px; background:var(--gold-soft); margin:0 auto 28px}
+.cover__time{margin-top:12px; font-family:var(--serif-ko); font-size:16px; color:var(--ink); letter-spacing:.02em}
 /* 장소 — 날짜·시간 다음(언제→어디서). 짧은 골드 선으로만 분리해 이름의 무게를 지킨다 */
-.cover__place{margin-top:22px; font-family:var(--serif-ko); font-size:16px; color:var(--ink); letter-spacing:.01em; line-height:1.5}
-.cover__place::before{content:''; display:block; width:34px; height:1px; background:var(--gold-soft); margin:0 auto 18px}
-.cover__place em{display:block; font-style:normal; font-size:14.5px; color:var(--muted); margin-top:6px}
+.cover__place{margin-top:30px; font-family:var(--serif-ko); font-size:16px; color:var(--ink); letter-spacing:.01em; line-height:1.5}
+/* 날짜 ↔ 장소는 페이지 divider와 같은 세로 헤어라인으로 '한 박자 쉼' */
+.cover__place::before{content:''; display:block; width:1px; height:22px; margin:0 auto 26px;
+  background:linear-gradient(transparent,var(--gold-soft),transparent)}
+.cover__place em{display:block; font-style:normal; font-size:14.5px; color:var(--muted); margin-top:8px}
+
+/* 화면이 짧은 폰(SE 등): 커버 간격을 압축해 'SCROLL'과 겹치지 않게 */
+@media (max-height:740px){
+  .hero__names{padding:28px 28px 76px}
+  .cover__names{margin:20px 0 26px}
+  .cover__names span{font-size:clamp(30px,8.6vw,40px)}
+  .cover__names em{margin:9px 0}
+  .cover__date::before{margin-bottom:20px}
+  .cover__time{margin-top:10px}
+  .cover__place{margin-top:22px}
+  .cover__place::before{height:16px; margin-bottom:18px}
+}
+/* 더 짧은 화면: SCROLL 힌트 생략(스크롤은 그대로) + 힌트 자리 예약도 해제 */
+@media (max-height:680px){ .hero__scroll{display:none} .hero__names{padding:24px} }
 
 /* 스크롤 힌트: 이름이 뜬 뒤(아이보리 위)에만 골드로 표시 */
 .hero__scroll{position:absolute; z-index:4; left:0; right:0; bottom:calc(22px + env(safe-area-inset-bottom));
