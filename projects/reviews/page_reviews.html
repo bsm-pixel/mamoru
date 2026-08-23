@@ -549,7 +549,7 @@ img { display: block; max-width: 100%; }
 }
 
 /* ── 사진 후기 갤러리 (무신사식) ── */
-.mm-rv-photos { max-width: var(--mm-max-w); margin: 36px auto 8px; padding: 0 20px; }
+.mm-rv-photos { max-width: var(--mm-max-w); margin: 36px auto 28px; padding: 0 20px; }
 .mm-rv-photos__head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 14px; padding-left: 2px; }
 .mm-rv-photos__title { font-size: 13px; font-weight: 600; color: var(--mm-text-d2); letter-spacing: 0.05em; text-transform: uppercase; }
 .mm-rv-photos__count { font-size: 12px; color: var(--mm-text-d3); }
@@ -690,7 +690,8 @@ img { display: block; max-width: 100%; }
   var currentPage = 1;
   var allReviews = []; // API에서 가져온 전체 리뷰
   var galleryPhotos = []; // 전체 리뷰의 모든 사진 평면화 {url, review}
-  var GALLERY_PREVIEW = 6; // 상단 미리보기 노출 장수
+  // 상단 미리보기 노출 장수 — breakpoint 컬럼수×2행 (PC 12 / 태블릿 8 / 모바일 6)
+  function galleryMax() { var w = window.innerWidth; return w >= 1024 ? 12 : (w >= 768 ? 8 : 6); }
   var currentModalReview = null; // 모달에 표시 중인 리뷰 (라이트박스 캡션용)
   var modalCtx = { list: [], idx: -1 }; // 모달 순회 컨텍스트
 
@@ -1060,7 +1061,7 @@ img { display: block; max-width: 100%; }
     if (!galleryPhotos.length) { sec.style.display = 'none'; return; }
     sec.style.display = '';
     document.getElementById('rvPhotosCount').textContent = galleryPhotos.length + '개';
-    var max = GALLERY_PREVIEW;
+    var max = galleryMax();
     var shown = galleryPhotos.slice(0, max);
     var hasMore = galleryPhotos.length > max;
     grid.innerHTML = shown.map(function(p, i) {
@@ -1070,6 +1071,13 @@ img { display: block; max-width: 100%; }
       return '<div class="mm-rv-photos__item"' + attr + '><img src="' + p.url + '" alt="사진 후기" loading="lazy">' + overlay + '</div>';
     }).join('');
   }
+
+  // 뷰포트 폭 바뀌면 미리보기 장수 재계산 (디바운스)
+  var _galResize;
+  window.addEventListener('resize', function () {
+    clearTimeout(_galResize);
+    _galResize = setTimeout(function () { if (galleryPhotos.length) renderGalleryPreview(); }, 200);
+  });
 
   /* 전체 사진 모아보기 오버레이 */
   var allGrid = document.getElementById('rvAllGrid');
