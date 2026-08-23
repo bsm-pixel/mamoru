@@ -204,7 +204,7 @@ img { display: block; max-width: 100%; }
 /* ── 1. 요약 헤더 — 큰 평균숫자 + 영문 라벨 (Phase 2) ── */
 .mm-prv__summary {
   text-align: center;
-  padding: 56px 24px 28px;
+  padding: 56px 20px 28px;
   max-width: var(--mm-max-w);
   margin: 0 auto;
 }
@@ -303,7 +303,7 @@ img { display: block; max-width: 100%; }
 .mm-prv__controls {
   max-width: var(--mm-max-w);
   margin: 20px auto 4px;
-  padding: 0 24px;
+  padding: 0 20px;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -369,7 +369,7 @@ img { display: block; max-width: 100%; }
 .mm-prv__gallery-wrap {
   max-width: var(--mm-max-w);
   margin: 0 auto;
-  padding: 28px 24px 4px;
+  padding: 28px 20px 4px;
 }
 .mm-prv__gallery-title {
   font-family: 'Outfit', sans-serif;
@@ -431,7 +431,7 @@ img { display: block; max-width: 100%; }
 .mm-prv__zero {
   max-width: var(--mm-max-w);
   margin: 0 auto;
-  padding: 80px 24px 96px;
+  padding: 80px 20px 96px;
   text-align: center;
 }
 .mm-prv__zero-label {
@@ -477,7 +477,7 @@ img { display: block; max-width: 100%; }
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
-  padding: 16px 24px 0;
+  padding: 16px 20px 0;
   max-width: var(--mm-max-w);
   margin: 0 auto;
 }
@@ -700,7 +700,7 @@ img { display: block; max-width: 100%; }
   .mm-prv__count { font-size: 13px; }
   .mm-prv__dist { padding-left: 40px; padding-right: 40px; }
   .mm-prv__controls, .mm-prv__gallery-wrap { padding-left: 40px; padding-right: 40px; }
-  .mm-prv__gallery { grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .mm-prv__gallery { grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .mm-prv__grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
@@ -1107,6 +1107,7 @@ img { display: block; max-width: 100%; }
   }
 
   /* ── 포토 후기 갤러리 — 전 사진 평면화(리뷰당 모든 사진), 사진 단위 라이트박스 (page_reviews 동기화) ── */
+  var galMaxShow = 6;
   function renderGallery() {
     galleryPhotos = [];
     allReviews.forEach(function(r) {
@@ -1122,7 +1123,9 @@ img { display: block; max-width: 100%; }
     wrap.style.display = 'block';
     countEl.textContent = '· ' + galleryPhotos.length + '장';
 
-    var maxShow = 6;
+    // page_reviews와 동일: PC 12 / 태블릿 8 / 모바일 6 (컬럼수×2행)
+    galMaxShow = window.innerWidth >= 1024 ? 12 : (window.innerWidth >= 768 ? 8 : 6);
+    var maxShow = galMaxShow;
     var displayed = galleryPhotos.slice(0, maxShow);
     var hasMore = galleryPhotos.length > maxShow;
 
@@ -1135,13 +1138,23 @@ img { display: block; max-width: 100%; }
       '</div>';
     }).join('');
 
-    // 사진 클릭 → 라이트박스(전 사진 순환, 캡션=부모 리뷰). "+N더보기" → 그 지점부터 순환
-    galleryEl.addEventListener('click', function(e) {
-      if (e.target.closest('[data-gallery-more]')) { openLightbox(galleryPhotos, maxShow - 1); return; }
-      var item = e.target.closest('[data-gal-idx]');
-      if (item) openLightbox(galleryPhotos, parseInt(item.dataset.galIdx));
-    });
+    // 사진 클릭 → 라이트박스. 리스너는 1회만 바인딩(리사이즈 재렌더 시 중복 방지), galMaxShow는 공유값
+    if (!galleryEl.__galBound) {
+      galleryEl.__galBound = true;
+      galleryEl.addEventListener('click', function(e) {
+        if (e.target.closest('[data-gallery-more]')) { openLightbox(galleryPhotos, galMaxShow - 1); return; }
+        var item = e.target.closest('[data-gal-idx]');
+        if (item) openLightbox(galleryPhotos, parseInt(item.dataset.galIdx));
+      });
+    }
   }
+
+  // 뷰포트 폭 변화 시 갤러리 노출 장수 재계산 (page_reviews와 동일, 디바운스)
+  var _prvGalRz;
+  window.addEventListener('resize', function () {
+    clearTimeout(_prvGalRz);
+    _prvGalRz = setTimeout(function () { if (galleryPhotos.length) renderGallery(); }, 200);
+  });
 
   /* ── Phase 1: 필터 + 정렬 ── */
   function applyFilterSort() {
