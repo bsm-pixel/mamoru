@@ -49,14 +49,16 @@ const CHANNEL_CHIP: Record<string, { label: string; className: string }> = {
 
 /**
  * 운영 상태 칩 (2026-05-25 — 사장님 결정: '판매완료' 단일 통일 + '미수금' 우선)
- *   우선순위: 취소 > 판매완료 > 배송중 > (default 없음, 결제상태 칩이 별도 표시)
+ *   우선순위: 취소 > 반품 > 판매완료 > 배송중 > 배송대기 > (default 없음, 결제상태 칩이 별도 표시)
  *   미수금은 결제상태 칩에서 빨강으로 이미 강조됨 (중복 칩 X)
+ *   2026-08-23: 주문관리와 통일 — 송장 발급·집하 전(invoice O·shipped_at X)에 '배송대기' 칩 추가
  */
 function getSaleOperationChip(sale: OfflineSale): { label: string; className: string } | null {
   if (sale.cancelled_at) return { label: '취소', className: 'bg-red-100 text-red-700' };
   if (sale.returned_at) return { label: '반품', className: 'bg-violet-100 text-violet-700' };  // 종결 — 취소 다음 우선
   if (sale.delivered_at) return { label: '판매완료', className: 'bg-neutral-100 text-neutral-600' };
   if (sale.shipped_at)   return { label: '배송중', className: 'bg-green-100 text-green-700' };
+  if (sale.invoice_number) return { label: '배송대기', className: 'bg-amber-100 text-amber-700' };  // 송장 발급, 집하 전
   return null;
 }
 

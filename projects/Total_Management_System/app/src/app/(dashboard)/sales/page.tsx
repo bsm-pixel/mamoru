@@ -628,10 +628,10 @@ type UnifiedItem =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | { sourceType: 'delivery'; id: string; date: string; data: any };
 
-/** 배송상태 tone → 텍스트 색 */
-const SHIP_TONE: Record<ShipStatus['tone'], string> = {
-  amber: 'text-amber-600',
-  green: 'text-emerald-600',
+/** 배송상태 tone → 컴팩트 배지 (주문관리 배지 스타일과 통일) */
+const SHIP_BADGE: Record<ShipStatus['tone'], string> = {
+  amber: 'bg-amber-50 text-amber-700',
+  green: 'bg-emerald-50 text-emerald-700',
   mute: 'text-neutral-300',
 };
 
@@ -702,7 +702,9 @@ const SalesGridTable = memo(function SalesGridTable({
                 </span>
               </td>
               <td className="px-3 py-2.5 whitespace-nowrap">
-                <span className={`text-xs font-medium ${SHIP_TONE[ship.tone]}`}>{ship.label}</span>
+                {ship.tone === 'mute'
+                  ? <span className="text-xs text-neutral-300">{ship.label}</span>
+                  : <span className={`inline-block px-2 py-0.5 rounded text-[10.5px] font-semibold ${SHIP_BADGE[ship.tone]}`}>{ship.label}</span>}
                 {ship.autoPicked && <span className="ml-1 text-[10px] text-neutral-400">· 수거</span>}
               </td>
               <td className={`px-3 py-2.5 text-right font-bold tabular-nums ${cancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{formatKRW(amt)}</td>

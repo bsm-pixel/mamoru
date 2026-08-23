@@ -2,7 +2,8 @@
  * 배송상태 파생 — 판매(offline_sales) / 납품(deliveries) 공용 (2026-07-16)
  *
  * "상태"(결제/전체)와 별개로, 출고 흐름만 떼어낸 라벨.
- *   출고대기 → 출고완료 → 배송완료 / 직접수령
+ *   판매(B2C): 배송대기 → 배송중 → 배송완료 / 직접수령  (2026-08-23 주문관리와 워딩 통일)
+ *   납품(B2B): 출고대기 → 출고완료 (도매 특성상 '출고' 용어 유지)
  *
  * ⚠️ 판정 기준은 상세 패널·getRowStateSale 과 100% 동일 필드(delivered_at/shipped_at/invoice_number)를
  *    재사용한다. 새 기준을 만들지 않는다(라벨 드리프트 0).
@@ -26,8 +27,8 @@ export function getSaleShipStatus(sale: {
 }): ShipStatus {
   if (sale.delivered_at && !sale.invoice_number) return { label: '직접수령', tone: 'green' };
   if (sale.delivered_at) return { label: '배송완료', tone: 'green' };
-  if (sale.shipped_at) return { label: '출고완료', tone: 'green', autoPicked: sale.shipped_source === 'alps_pickup' };
-  if (sale.invoice_number) return { label: '출고대기', tone: 'amber' };
+  if (sale.shipped_at) return { label: '배송중', tone: 'green', autoPicked: sale.shipped_source === 'alps_pickup' };
+  if (sale.invoice_number) return { label: '배송대기', tone: 'amber' };
   return NONE;
 }
 
