@@ -183,6 +183,20 @@ img{display:block; max-width:100%}
 .icon-btn:active{transform:scale(.92); background:var(--gold); color:#fff; border-color:var(--gold)}
 .icon-btn svg{width:14px; height:14px}
 
+/* 좁은 폰: 이름칸 확보 — 카드 여백·아이콘 버튼 살짝 축소(이름이 '백…'으로 잘리는 것 방지) */
+@media (max-width:390px){
+  .contact-col{padding:20px 10px 20px 13px}
+  .icon-btn{width:28px; height:28px}
+  .icon-btn svg{width:13px; height:13px}
+  .person__acts{gap:3px}
+}
+/* 그래도 좁은 폰(≤355px): 2열이면 이름칸이 30px대라 무조건 잘림 → 1열로 전환 */
+@media (max-width:355px){
+  .contact-grid{grid-template-columns:minmax(0,1fr); gap:10px}
+  .contact-col{padding:20px 16px}
+  .contact-col .person:last-of-type{margin-bottom:12px}
+}
+
 /* ── 4. 갤러리 ── */
 .gallery{background:var(--paper)}
 .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:26px}
