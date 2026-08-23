@@ -192,12 +192,19 @@ img{display:block; max-width:100%}
 .venue-name{font-family:var(--serif-ko); font-size:clamp(24px,6.5vw,28px); font-weight:700; margin-top:10px; line-height:1.3}
 .venue-hall{color:var(--muted); font-size:15px; margin-top:5px}
 .venue-addr{color:var(--ink); font-size:14px; margin-top:12px; letter-spacing:.01em}
-/* 교통 안내 — 지하철/버스/자가운전 하이라이트 행 */
-.transit{max-width:360px; margin:34px auto 0; text-align:left; border-top:1px solid var(--line)}
-.transit-row{display:flex; gap:14px; padding:16px 2px; border-bottom:1px solid var(--line)}
-.transit-row .tk{flex:0 0 62px; font-family:var(--serif-ko); font-size:13.5px; font-weight:700; color:var(--gold); padding-top:1px}
-.transit-row .tv{flex:1; min-width:0; font-size:13.5px; color:var(--ink); line-height:1.6}
-.transit-row .tv em{display:block; font-style:normal; font-size:12.5px; color:var(--muted); margin-top:3px; letter-spacing:.01em}
+/* 교통 안내 — 자가용/지하철/버스 (아이콘 헤더 + 내용 블록) */
+.transit{max-width:360px; margin:34px auto 0; text-align:left}
+.tr{padding:22px 2px 4px}
+.tr:first-child{padding-top:10px}
+/* 헤더: 아이콘+제목, 아래 골드 헤어라인 — 어르신도 항목 구분 즉시 인지 */
+.tr-h{display:flex; align-items:center; gap:8px; font-family:var(--serif-ko); font-size:15px; font-weight:700;
+  color:var(--gold); padding-bottom:9px; border-bottom:1px solid var(--gold-soft)}
+.tr-h svg{width:19px; height:19px; flex-shrink:0}
+.tr-b{margin-top:14px; font-size:13.5px; color:var(--ink); line-height:1.65; letter-spacing:.01em}
+.tr-b b{font-weight:700}
+.tr-b em{display:block; font-style:normal; font-size:12.5px; color:var(--muted); margin-top:4px; line-height:1.7}
+.tr-sub{margin-top:14px}
+.tr-note{margin-top:14px; font-size:12.5px; color:var(--gold)}
 .map-view{margin-top:22px; border-radius:14px; overflow:hidden; border:1px solid var(--line);
   box-shadow:var(--shadow); position:relative; background:#eee}
 .map-view img{width:100%; height:auto; aspect-ratio:4/3; object-fit:cover}
@@ -209,7 +216,9 @@ img{display:block; max-width:100%}
 .btn--fill{background:var(--gold); color:#fff}
 .btn--full{width:100%; margin-top:14px}
 .nav-row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px}
-.nav-row .btn{padding:12px 4px; font-size:12.5px; border-color:var(--line); color:var(--ink)}
+.nav-row .btn{padding:12px 4px; font-size:clamp(11.5px,3.3vw,12.5px); border-color:var(--line); color:var(--ink);
+  gap:5px; white-space:nowrap}
+.nav-row .btn svg{width:16px; height:16px; flex-shrink:0}
 
 /* ── 5c. 신부측 피로연 안내 ── */
 .reception{background:var(--paper)}
@@ -409,24 +418,40 @@ textarea.rsvp-input{resize:none; line-height:1.6}
     <button class="btn btn--fill btn--full" onclick="openNaverMap()">지도 보기</button>
 
     <div class="nav-row">
-      <button class="btn" onclick="navTmap()">티맵</button>
-      <button class="btn" onclick="navKakao()">카카오네비</button>
-      <button class="btn" onclick="navNaver()">네이버지도</button>
+      <button class="btn" onclick="navTmap()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#0F6BFF"/><path d="M6.5 7h11v2.65h-4.15V17h-2.7V9.65H6.5V7Z" fill="#fff"/></svg>티맵</button>
+      <button class="btn" onclick="navKakao()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#FEE500"/><path d="M12 5.6c-3.62 0-6.55 2.2-6.55 4.92 0 1.72 1.17 3.23 2.94 4.1l-.66 2.48a.3.3 0 0 0 .45.33l2.98-1.92c.27.02.55.03.84.03 3.62 0 6.55-2.2 6.55-4.92S15.62 5.6 12 5.6Z" fill="#3C1E1E"/></svg>카카오네비</button>
+      <button class="btn" onclick="navNaver()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#03C75A"/><path d="M8.3 7h3.2l2.7 4.15V7h2.5v10h-3.2l-2.7-4.15V17H8.3V7Z" fill="#fff"/></svg>네이버지도</button>
     </div>
 
     <!-- 교통 안내 (✏️ 노선/문구 수정 가능) -->
     <div class="transit">
-      <div class="transit-row">
-        <span class="tk">지하철</span>
-        <span class="tv">주안역(북광장) 하차<em>1호선 3번출구<br>인천2호선 6번 출구</em></span>
+      <!-- 자가용 -->
+      <div class="tr">
+        <div class="tr-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.4" y="12.3" width="17.2" height="4.4" rx="1.6"/><path d="M6.2 12.3 7.7 8.9a2 2 0 0 1 1.83-1.2h4.94a2 2 0 0 1 1.83 1.2l1.5 3.4"/><circle cx="7.9" cy="17.6" r="1.5"/><circle cx="16.1" cy="17.6" r="1.5"/></svg>자가용</div>
+        <div class="tr-b">
+          네비 <b>&ldquo;길파로6&rdquo;</b> 검색
+          <em>구주소 : 주안5동 24-14번지</em>
+          <div class="tr-sub"><b>주차장</b>
+            <em>제1주차장 · 건물 지하주차장 이용<br>제2주차장 · 건물 뒷편 주차타워 이용</em>
+          </div>
+          <p class="tr-note">단독 홀 사용이라 주차 널널 예상됩니다 :&gt;</p>
+        </div>
       </div>
-      <div class="transit-row">
-        <span class="tk">버스</span>
-        <span class="tv">주안역 하차<em>시내 5-1·13·38·63·65·81·82<br>마을 511·515·516·518·522</em></span>
+      <!-- 지하철 -->
+      <div class="tr">
+        <div class="tr-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.4" y="3.4" width="13.2" height="13.4" rx="4"/><path d="M8.6 8h6.8M9.5 13h.01M14.5 13h.01M8.6 16.8 6.9 20.4M15.4 16.8l1.7 3.6"/></svg>지하철</div>
+        <div class="tr-b">
+          주안역 (1호선 북광장)<em>지하 1번 출구 · 지상 3번 출구</em>
+          <div class="tr-sub">주안역 (인천2호선 북광장)<em>6번 출구</em></div>
+        </div>
       </div>
-      <div class="transit-row">
-        <span class="tk">자가운전</span>
-        <span class="tv">본관 지하주차장(제1) · 뒷편 주차타워(제2)<em>단독 홀 사용이라 주차 널널 예상됩니다 :&gt;</em></span>
+      <!-- 버스 -->
+      <div class="tr">
+        <div class="tr-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.4" width="14" height="13.6" rx="3.2"/><path d="M5 9.6h14M8.7 13.3h.01M15.3 13.3h.01M8.1 17v2.2M15.9 17v2.2"/></svg>버스</div>
+        <div class="tr-b">
+          <b>주안남부역</b> 하차
+          <em>5-1, 13, 38, 63, 65, 65-1, 81, 82,<br>511, 514-1, 515, 515-1, 516, 518, 522번</em>
+        </div>
       </div>
     </div>
   </section>
@@ -461,9 +486,9 @@ textarea.rsvp-input{resize:none; line-height:1.6}
     </div>
     <button class="btn btn--fill btn--full" onclick="openRecMap()">지도 보기</button>
     <div class="nav-row">
-      <button class="btn" onclick="recTmap()">티맵</button>
-      <button class="btn" onclick="recKakao()">카카오맵</button>
-      <button class="btn" onclick="recNaver()">네이버지도</button>
+      <button class="btn" onclick="recTmap()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#0F6BFF"/><path d="M6.5 7h11v2.65h-4.15V17h-2.7V9.65H6.5V7Z" fill="#fff"/></svg>티맵</button>
+      <button class="btn" onclick="recKakao()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#FEE500"/><path d="M12 5.6c-3.62 0-6.55 2.2-6.55 4.92 0 1.72 1.17 3.23 2.94 4.1l-.66 2.48a.3.3 0 0 0 .45.33l2.98-1.92c.27.02.55.03.84.03 3.62 0 6.55-2.2 6.55-4.92S15.62 5.6 12 5.6Z" fill="#3C1E1E"/></svg>카카오맵</button>
+      <button class="btn" onclick="recNaver()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#03C75A"/><path d="M8.3 7h3.2l2.7 4.15V7h2.5v10h-3.2l-2.7-4.15V17H8.3V7Z" fill="#fff"/></svg>네이버</button>
     </div>
     </div><!-- /reception-frame -->
   </section>
