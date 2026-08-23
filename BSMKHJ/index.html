@@ -58,7 +58,7 @@ img{ touch-action:pan-x pan-y; -webkit-touch-callout:none; -webkit-user-select:n
 button{border:0; background:none; font:inherit; color:inherit; cursor:pointer}  /* 기본 3D 테두리 제거 */
 html,body{background:#EDE7DD}
 body{
-  font-family:var(--sans); color:var(--ink); line-height:1.75;
+  font-family:var(--sans); color:var(--ink); line-height:1.75; word-break:keep-all;   /* 한글: 어절 중간에서 끊지 않음 */
   -webkit-font-smoothing:antialiased; overflow-x:hidden;
   overscroll-behavior-y:none;   /* 스크롤 체이닝/바운스 억제 → 상하 스크롤 매끄럽게 */
 }
@@ -248,7 +248,10 @@ img{display:block; max-width:100%}
 .reception{background:var(--paper)}
 /* 피로연 테두리 프레임 — 어르신도 '별도 안내'로 바로 인지 */
 .reception-frame{margin-top:10px; border:1.6px solid var(--gold-soft); border-radius:18px; background:var(--ivory); box-shadow:0 8px 26px rgba(180,154,106,.10); padding:clamp(28px,7vw,38px) clamp(18px,5vw,24px) clamp(26px,6vw,32px)}
-.reception-msg{margin-top:20px; font-family:var(--serif-ko); font-size:15.5px; color:var(--ink); line-height:2; letter-spacing:.01em}
+.reception-msg{margin-top:20px; font-family:var(--serif-ko); font-size:clamp(14.5px,4.1vw,15.5px); color:var(--ink);
+  line-height:2; letter-spacing:.01em}
+/* 인사말은 '절' 단위로 묶어 줄바꿈 — 폭이 넓으면 두 절이 한 줄, 좁으면 절마다 한 줄(음절 고아 0) */
+.reception-msg b{display:inline-block; font-weight:inherit}
 .reception-info{margin-top:26px; padding-top:22px; border-top:1px solid var(--line)}
 /* 카운트다운 날짜 글씨체(cd-note: 한글 명조·muted)와 동일하게 */
 .reception-info .ri-date{font-family:var(--serif-ko); letter-spacing:.02em; font-size:15px; color:var(--muted); font-weight:400; line-height:1.9; margin-bottom:12px}
@@ -498,10 +501,12 @@ textarea.rsvp-input{resize:none; line-height:1.6}
     <h3 class="title">신부측 피로연 안내</h3>
     <!-- ✏️ 안내 인사말 -->
     <p class="reception-msg">
-      거리가 멀어 본식에 참석이 어려우신 분들을 위해<br>
-      혼례에 앞서 별도의 피로연 자리를 마련하였습니다.<br>
-      귀한 발걸음으로 두 사람의 행복한 앞날을<br>
-      축복해주시면 더 큰 기쁨과 격려가 되겠습니다.
+      <b>거리가 멀어 본식 참석이</b>
+      <b>어려우신 분들을 위해 혼례에 앞서</b>
+      <b>별도의 피로연 자리를 마련하였습니다.</b>
+      <b>귀한 발걸음으로 두 사람의</b>
+      <b>행복한 앞날을 축복해주시면</b>
+      <b>더 큰 기쁨과 격려가 되겠습니다.</b>
     </p>
     <div class="reception-info">
       <div class="cal" id="calRec" style="margin-bottom:26px"></div>
