@@ -7,6 +7,8 @@ import { SlidePanel } from '@/components/ui/slide-panel';
 import { useEvents, useEventPatch, useEventDelete, useCampaigns, useCreateCampaign, useUpdateCampaign } from '@/hooks/use-events';
 import { EVENT_STATUS_LABEL, CAMPAIGN_TYPE_LABEL, type EventSubmission, type EventStatus, type EventCampaign, type DiscountRule } from '@/lib/event/types';
 import { Zap, Loader2, Package, Truck, Store, ArrowLeft, Plus, ExternalLink, Settings, X } from 'lucide-react';
+import { useActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 
 const TABS: { key: EventStatus; label: string }[] = [
   { key: 'received', label: '신규접수' },
@@ -45,6 +47,7 @@ export default function EventsPage() {
 
   const activeCampaign = useMemo(() => (campaigns || []).find((c) => c.id === campaignId) || null, [campaigns, campaignId]);
   const list = useMemo(() => (all || []).filter((e) => e.campaign_id === campaignId && e.status === tab), [all, campaignId, tab]);
+  const eventActTypes = useActivityTypes(list.map((e) => e.customer_phone));
   const tabCounts = countsByCampaign[campaignId || '_none'] || {};
   const sel = useMemo(() => (all || []).find((e) => e.id === selId) || null, [all, selId]);
 
@@ -173,7 +176,10 @@ export default function EventsPage() {
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <div className="text-[10px] font-mono text-neutral-400">{e.event_number}</div>
-                    <div className="text-sm font-bold text-neutral-900 truncate">{e.customer_name}</div>
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="text-sm font-bold text-neutral-900 truncate">{e.customer_name}</span>
+                      <ActivityChips types={eventActTypes(e.customer_phone)} className="shrink-0" />
+                    </div>
                   </div>
                   <div className="shrink-0 text-right">
                     <div className="text-sm font-bold text-neutral-900">{won(e.total_amount)}</div>

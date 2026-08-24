@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, memo, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -16,6 +16,8 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
+import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 import { ContractDetailPanel } from '@/components/contracts/contract-detail-panel';
 import { Plus, FileText } from 'lucide-react';
 import type { Contract } from '@/lib/supabase/types';
@@ -69,6 +71,17 @@ export default function ContractsPage() {
   const { data, isLoading } = useContracts({ tab, search, dateRange, page, limit: 20 });
   const { data: tabCounts } = useContractTabCounts();
   const contracts = data?.contracts || [];
+  const contractActTypes = useActivityTypes(contracts.map((c) => c.customer_phone));
+  const columns = useMemo<GridColumn<Contract>[]>(() =>
+    CONTRACT_COLUMNS.map((col) => col.key === 'customer'
+      ? { ...col, render: (c: Contract) => (
+          <span className="inline-flex items-center gap-1 min-w-0 max-w-full">
+            <span className={`font-semibold text-indigo-black truncate ${c.status === 'cancelled' ? 'line-through' : ''}`}>{c.customer_name}</span>
+            <ActivityChips types={contractActTypes(c.customer_phone)} className="shrink-0" />
+          </span>
+        ) }
+      : col
+    ), [contractActTypes]);
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
 
@@ -144,7 +157,7 @@ export default function ContractsPage() {
                   </div>
                 ) : (
                   <DataGrid
-                    columns={CONTRACT_COLUMNS}
+                    columns={columns}
                     rows={contracts}
                     getRowKey={(c) => c.id}
                     selectedKey={selectedId ?? undefined}
@@ -188,7 +201,7 @@ export default function ContractsPage() {
               ) : (
                 <div className="divide-y divide-neutral-100">
                   {contracts.map((c) => (
-                    <ContractRow key={c.id} contract={c} isSelected={false} onClick={() => setSelectedId(c.id)} />
+                    <ContractRow key={c.id} contract={c} isSelected={false} onClick={() => setSelectedId(c.id)} actTypes={contractActTypes(c.customer_phone)} />
                   ))}
                 </div>
               )}
@@ -226,7 +239,7 @@ const ContractTableRow = memo(function ContractTableRow({ contract, onClick }: {
 });
 
 /* 모바일 카드 행 */
-const ContractRow = memo(function ContractRow({ contract, isSelected, onClick }: { contract: Contract; isSelected?: boolean; onClick: () => void }) {
+const ContractRow = memo(function ContractRow({ contract, isSelected, onClick, actTypes }: { contract: Contract; isSelected?: boolean; onClick: () => void; actTypes?: ActivityTypes }) {
   const isCancelled = contract.status === 'cancelled';
   return (
     <div onClick={onClick} className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-stone-50/60 transition ${isCancelled ? 'opacity-50' : ''} ${isSelected ? 'bg-stone-100 border-l-2 border-l-stone-900' : ''}`}>
@@ -235,6 +248,7 @@ const ContractRow = memo(function ContractRow({ contract, isSelected, onClick }:
           <span className={`text-sm font-semibold text-stone-900 truncate ${isCancelled ? 'line-through' : ''}`}>
             {contract.customer_name}
           </span>
+          <ActivityChips types={actTypes} className="shrink-0" />
           <Badge className={STATUS_COLOR[contract.status] || ''}>
             {STATUS_LABEL[contract.status] || contract.status}
           </Badge>

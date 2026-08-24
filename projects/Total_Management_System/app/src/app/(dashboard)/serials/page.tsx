@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSerialLookup, useSerialAudit, type SerialAuditLog } from '@/hooks/use-serial-lookup';
 import { useProducts } from '@/hooks/use-sales';
 import { formatPhone, SALE_CHANNEL_LABEL } from '@/lib/utils/format';
+import { useActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 import { Package, User, ShoppingBag, Wrench, Hash, Activity, ArrowRight, ArrowLeft, ArrowLeftRight, Search, QrCode } from 'lucide-react';
 import { SerialSwapDialog } from '@/components/serials/serial-swap-dialog';
 import { SerialManagePanel } from '@/components/serials/serial-manage-panel';
@@ -112,6 +114,7 @@ export default function SerialsPage() {
   const product = data?.product;
   const sale = data?.sale;
   const repairs = data?.repairs || [];
+  const serialActTypes = useActivityTypes([serial?.sold_to_phone || sale?.customer_phone]);
 
   // 시리얼 이동 이력 (Phase C — DB 트리거 자동 캡처)
   const { data: auditData } = useSerialAudit(serial?.id);
@@ -289,7 +292,10 @@ export default function SerialsPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between gap-2">
                     <span className="text-neutral-400 shrink-0 whitespace-nowrap">성함</span>
-                    <span className="font-medium truncate text-right">{serial.sold_to_name || sale?.customer_name}</span>
+                    <span className="inline-flex items-center gap-1 justify-end min-w-0">
+                      <span className="font-medium truncate text-right">{serial.sold_to_name || sale?.customer_name}</span>
+                      <ActivityChips types={serialActTypes(serial.sold_to_phone || sale?.customer_phone)} className="shrink-0" />
+                    </span>
                   </div>
                   {(serial.sold_to_phone || sale?.customer_phone) && (
                     <div className="flex justify-between gap-2">

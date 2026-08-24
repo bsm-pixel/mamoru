@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, memo, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -16,6 +16,8 @@ import { deliveryNet } from '@/lib/sales/amounts';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-panel';
+import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 import { useDeliveries, useDeliveryStats } from '@/hooks/use-deliveries';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { formatKRW, formatDate } from '@/lib/utils/format';
@@ -95,6 +97,17 @@ export default function DeliveriesPage() {
     limit,
   });
   const deliveries = data?.deliveries || [];
+  const deliveryActTypes = useActivityTypes(deliveries.map((d) => (d as { customer_phone?: string | null }).customer_phone));
+  const columns = useMemo<GridColumn<DeliveryLike>[]>(() =>
+    DELIVERY_COLUMNS.map((col) => col.key === 'customer'
+      ? { ...col, render: (d: DeliveryLike) => (
+          <span className="inline-flex items-center gap-1 min-w-0 max-w-full">
+            <span className="font-semibold text-indigo-black truncate">{d.company_name || d.customer_name || '미지정'}</span>
+            <ActivityChips types={deliveryActTypes((d as { customer_phone?: string | null }).customer_phone)} className="shrink-0" />
+          </span>
+        ) }
+      : col
+    ), [deliveryActTypes]);
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / limit);
   const { data: stats } = useDeliveryStats();
@@ -200,7 +213,7 @@ export default function DeliveriesPage() {
           <EmptyState icon={Package} message="납품 내역이 없습니다" />
         ) : isLg ? (
           <DataGrid
-            columns={DELIVERY_COLUMNS}
+            columns={columns}
             rows={deliveries as unknown as DeliveryLike[]}
             getRowKey={(d) => d.id}
             selectedKey={selectedId ?? undefined}
@@ -216,6 +229,7 @@ export default function DeliveriesPage() {
                 dl={dl}
                 isSelected={selectedId === dl.id}
                 onClick={() => setSelectedId(dl.id as string)}
+                actTypes={deliveryActTypes((dl as { customer_phone?: string | null }).customer_phone)}
               />
             ))}
           </div>
@@ -267,8 +281,8 @@ export default function DeliveriesPage() {
 }
 
 /* ── 목록 행 ── */
-const DeliveryRow = memo(function DeliveryRow({ dl, isSelected, onClick }: {
-  dl: Record<string, unknown>; isSelected: boolean; onClick: () => void;
+const DeliveryRow = memo(function DeliveryRow({ dl, isSelected, onClick, actTypes }: {
+  dl: Record<string, unknown>; isSelected: boolean; onClick: () => void; actTypes?: ActivityTypes;
 }) {
   const status = (dl.status as string) || 'draft';
   const paymentStatus = (dl.payment_status as string) || 'unpaid';
@@ -285,6 +299,7 @@ const DeliveryRow = memo(function DeliveryRow({ dl, isSelected, onClick }: {
           <span className="text-sm font-semibold text-stone-900 truncate">
             {dl.customer_name as string}
           </span>
+          <ActivityChips types={actTypes} className="shrink-0" />
           {/* 110: 상세와 같은 규칙 (납품확정 → 출고대기 → 출고완료 → 배송완료) */}
           {(() => {
             const chip = getDeliveryStatusChip(dl);
