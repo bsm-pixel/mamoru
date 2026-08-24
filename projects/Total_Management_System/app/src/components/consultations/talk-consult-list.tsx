@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultations } from '@/hooks/use-consultations';
 import { activityDisplay } from '@/lib/customer/display';
+import { useActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 import {
   formatRelative,
   formatPhone,
@@ -50,6 +52,7 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
     limit: 20,
   });
   const consultations = data?.consultations || [];
+  const consultActTypes = useActivityTypes(consultations.map((c) => c.phone));
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
 
@@ -112,6 +115,7 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
                   <div className="flex items-center gap-2">
                     <MessageCircle size={14} className={isCancelled ? 'text-neutral-400 shrink-0' : 'text-info shrink-0'} />
                     <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{activityDisplay(c.activity_name, c.name)}</span>
+                    <ActivityChips types={consultActTypes(c.phone)} className="shrink-0" />
                     <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
                       {tab === 'new_intake' ? formatRelative(c.received_at) : (CONSULTATION_STATUS_LABEL[c.status] || c.status)}
                     </Badge>

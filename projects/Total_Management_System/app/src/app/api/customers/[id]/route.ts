@@ -15,7 +15,7 @@ export async function GET(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
-    const [customerRes, salesRes, contractsRes, consultationsRes, repairsRes] = await Promise.all([
+    const [customerRes, salesRes, contractsRes, consultationsRes, repairsRes, ordersRes] = await Promise.all([
       db.from('customers').select('*').eq('id', id).single(),
       db.from('offline_sales')
         .select('id, sale_number, sale_date, total_amount, paid_amount, payment_method, payment_status')
@@ -37,6 +37,12 @@ export async function GET(
         .eq('customer_id', id)
         .order('created_at', { ascending: false })
         .limit(10),
+      // 128: 아임웹 주문도 고객 타임라인에 포함 (customer_id 연결 후)
+      db.from('orders')
+        .select('id, imweb_order_no, ordered_at, paid_amount, status')
+        .eq('customer_id', id)
+        .order('ordered_at', { ascending: false })
+        .limit(20),
     ]);
 
     if (customerRes.error) throw customerRes.error;
@@ -55,6 +61,7 @@ export async function GET(
       contracts: contractsRes.data || [],
       consultations: consultationsRes.data || [],
       repairs: repairsRes.data || [],
+      orders: ordersRes.data || [],
       summary: {
         totalSales: activeSales.length,
         totalSalesAmount,

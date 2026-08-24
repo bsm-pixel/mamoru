@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultations } from '@/hooks/use-consultations';
 import { activityDisplay } from '@/lib/customer/display';
+import { useActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 import {
   formatPhone,
   formatDday,
@@ -64,6 +66,7 @@ export function StoreVisitList({
     limit: 20,
   });
   const consultations = data?.consultations || [];
+  const consultActTypes = useActivityTypes(consultations.map((c) => c.phone));
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
 
@@ -104,6 +107,7 @@ export function StoreVisitList({
         >
           <div className="flex items-center gap-2">
             <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{activityDisplay(c.activity_name, c.name)}</span>
+            <ActivityChips types={consultActTypes(c.phone)} className="shrink-0" />
             {tab === 'past' && (
               <Badge className={CONSULTATION_STATUS_COLOR[c.status] || 'bg-neutral-100 text-neutral-600'}>
                 {CONSULTATION_STATUS_LABEL[c.status] || c.status}

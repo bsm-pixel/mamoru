@@ -69,6 +69,14 @@ export function OrderDetailPanel({ orderId }: Props) {
         {o.recipient_memo && (
           <p className="text-[11px] text-amber-700 bg-amber-100/50 rounded px-2 py-1">📝 {o.recipient_memo}</p>
         )}
+        {o.customer_id && (
+          <Link
+            href={`/customers/${o.customer_id}`}
+            className="block pt-1 text-[11px] text-blue-600 hover:text-blue-700 font-medium"
+          >
+            이 고객 전체 이력 →
+          </Link>
+        )}
       </div>
 
       {/* 주문 품목 */}

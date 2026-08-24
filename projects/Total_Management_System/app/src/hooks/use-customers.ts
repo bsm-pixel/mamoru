@@ -101,6 +101,13 @@ export function useCustomer(id: string) {
           total_cost: number | null;
           created_at: string;
         }>;
+        orders?: Array<{
+          id: string;
+          imweb_order_no: string;
+          ordered_at: string;
+          paid_amount: number | null;
+          status: string;
+        }>;
         summary: {
           totalSales: number;
           totalSalesAmount: number;

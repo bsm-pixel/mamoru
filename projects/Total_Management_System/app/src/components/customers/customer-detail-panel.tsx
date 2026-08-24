@@ -8,11 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomer, useUpdateCustomer } from '@/hooks/use-customers';
 import { useCustomerManualInvoices } from '@/hooks/use-manual-invoices';
-import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
+import { formatKRW, formatDate, formatPhone, ORDER_STATUS_LABEL } from '@/lib/utils/format';
 import { activitySuffix } from '@/lib/customer/display';
 import {
   Save, ShoppingBag, FileSignature, MessageSquare, Wrench,
-  Clock, Pencil, X, Truck, Copy, Merge,
+  Clock, Pencil, X, Truck, Copy, Merge, Package,
 } from 'lucide-react';
 import { TagBadges, TagSelector } from '@/components/shared/tag-selector';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
@@ -85,10 +85,22 @@ export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
   }
 
   const { customer: c, sales, contracts, consultations, repairs, summary } = data;
+  const orders = data.orders ?? [];
   const manualInvoices = manualInvoicesData?.invoices ?? [];
 
   // 통합 타임라인 생성 — 시간순 역순
   const timeline = [
+    ...orders.map((ord) => ({
+      type: 'order' as const,
+      id: ord.id,
+      date: ord.ordered_at,
+      title: ord.imweb_order_no,
+      sub: ORDER_STATUS_LABEL[ord.status] || ord.status,
+      amount: ord.paid_amount,
+      icon: Package,
+      color: 'text-emerald-600 bg-emerald-50',
+      cancelled: ord.status === 'cancelled',
+    })),
     ...sales.map((s) => ({
       type: 'sale' as const,
       id: s.id,
@@ -495,11 +507,12 @@ export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
                   onClick={() => {
                     if (item.type === 'sale') router.push(`/sales/${item.id}`);
                     else if (item.type === 'contract') router.push(`/contracts/${item.id}`);
+                    else if (item.type === 'order') router.push(`/orders/${item.id}`);
                     else if (item.type === 'manual_invoice') router.push('/manual-invoices');
                   }}
                   className={`flex items-start gap-3 py-3 ${
                     i < timeline.length - 1 ? 'border-b border-neutral-100' : ''
-                  } ${item.type === 'sale' || item.type === 'contract' || item.type === 'manual_invoice' ? 'cursor-pointer hover:bg-stone-50/40 -mx-1 px-1 rounded' : ''}`}
+                  } ${item.type === 'sale' || item.type === 'contract' || item.type === 'order' || item.type === 'manual_invoice' ? 'cursor-pointer hover:bg-stone-50/40 -mx-1 px-1 rounded' : ''}`}
                 >
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${item.color}`}>
                     <Icon size={14} />

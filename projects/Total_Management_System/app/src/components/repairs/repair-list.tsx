@@ -18,6 +18,8 @@ import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
 import type { Repair } from '@/lib/supabase/types';
 import type { RepairTabKey } from './repair-tab-bar';
+import { useActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 
 interface RepairListProps {
   onSelect?: (id: string) => void;
@@ -121,11 +123,16 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
     return list;
   }, [tabData, activeTab, search, unpaidOnly, staleOnly]);
 
+  const repairActTypes = useActivityTypes(filteredRepairs.map((r) => r.phone));
+
   // PC 그리드 컬럼 — 고객(맨앞)·진행방법·접수일·수거요청일·입고일·수량·금액·상태·액션. 날짜는 2행(M/d · HH:mm)
   const gridColumns = useMemo<GridColumn<Repair>[]>(() => [
     { key: 'customer', label: '고객', render: (r) => (
       <div className="min-w-0">
-        <div className={`font-bold text-sm truncate ${r.status === 'cancelled' ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{r.name}</div>
+        <div className="flex items-center gap-1 min-w-0">
+          <span className={`font-bold text-sm truncate ${r.status === 'cancelled' ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{r.name}</span>
+          <ActivityChips types={repairActTypes(r.phone)} className="shrink-0" />
+        </div>
         <div className="text-[11px] text-neutral-400">{formatPhone(r.phone)}</div>
       </div>
     ) },
@@ -149,7 +156,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
     ) },
     { key: 'status', label: '상태', render: (r) => <RepairStatusBadge status={r.status} proceedType={r.proceed_type} /> },
     { key: 'action', label: '', align: 'right', render: (r) => <InlineAction repair={r} tab={activeTab} /> },
-  ], [activeTab]);
+  ], [activeTab, repairActTypes]);
 
   return (
     <div className="space-y-3">
@@ -266,6 +273,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
               prepMode={prepMode}
               checked={checkedIds.has(r.id)}
               onSelect={rowClick}
+              actTypes={repairActTypes(r.phone)}
             />
           ))}
         </div>
@@ -285,9 +293,10 @@ interface RepairCardProps {
   onSelect?: (id: string) => void;
   prepMode?: boolean;
   checked?: boolean;
+  actTypes?: import('@/hooks/use-activity-types').ActivityTypes;
 }
 
-function RepairCard({ repair: r, tab, isSelected, onSelect, prepMode = false, checked = false }: RepairCardProps) {
+function RepairCard({ repair: r, tab, isSelected, onSelect, prepMode = false, checked = false, actTypes }: RepairCardProps) {
   const days = getDaysElapsed(r.received_at);
   const isCancelled = r.status === 'cancelled';
   const isCompleted = r.status === 'completed';
@@ -329,9 +338,12 @@ function RepairCard({ repair: r, tab, isSelected, onSelect, prepMode = false, ch
             </div>
 
             {/* 고객 정보 */}
-            <p className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>
-              {r.name}
-            </p>
+            <div className="flex items-center gap-1 min-w-0">
+              <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>
+                {r.name}
+              </span>
+              <ActivityChips types={actTypes} className="shrink-0" />
+            </div>
             <p className="text-xs text-neutral-500">{formatPhone(r.phone)}</p>
 
             {/* 가위 수량 + 금액 */}

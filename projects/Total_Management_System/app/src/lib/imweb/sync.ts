@@ -7,6 +7,7 @@ import { getOrders, getOrder, getProdOrders, updateImwebStock } from './client';
 import type { ImwebOrder, ImwebProdOrder } from './types';
 import type { OrderStatus } from '@/lib/supabase/types';
 import { createServiceClient } from '@/lib/supabase/server';
+import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { subDays } from 'date-fns';
 import { after } from 'next/server';
@@ -195,9 +196,19 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
     && TMS_MANAGED_STATUSES.includes(existing.status)
     && !DELIVERED_OR_LATER.includes(imwebStatus);
 
+  // 128: 주문을 TMS 고객과 연결 — 전화번호로 matchOrCreate (repairs/consultations 와 동일 패턴)
+  //   온라인 전용 고객이면 신규 생성(customer_type='online'), 기존 고객이면 그 id 로 연결.
+  const { customerId } = await matchOrCreateCustomer(supabase, {
+    phone: imwebOrder.orderer?.call || '',
+    name: imwebOrder.orderer?.name || '',
+    source: 'imweb',
+    extra: { customerType: 'online' },
+  });
+
   const orderData = {
     imweb_order_no: imwebOrder.order_no,
     imweb_order_id: imwebOrder.order_code,
+    customer_id: customerId,
     orderer_name: imwebOrder.orderer?.name || '',
     orderer_phone: imwebOrder.orderer?.call || null,
     orderer_email: imwebOrder.orderer?.email || null,

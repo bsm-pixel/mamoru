@@ -15,6 +15,8 @@ import { useDeliveryStats, useDeliveries } from '@/hooks/use-deliveries';
 import { useContracts } from '@/hooks/use-contracts';
 import { formatKRW, formatDate, SALE_CHANNEL_LABEL } from '@/lib/utils/format';
 import { getSaleShipStatus, getDeliveryShipStatus, type ShipStatus } from '@/lib/sales/ship-status';
+import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -266,6 +268,11 @@ export default function SalesPage() {
   const partnerMonthRepair = (stats?.partnerMonthRepair || 0) + (deliveryStats?.monthRepair || 0);
   const partnerMonthProduct = partnerMonth - partnerMonthRepair;
 
+  // 활동유형 칩 — 보이는 항목들의 고객 전화로 배치 조회
+  const salesActTypes = useActivityTypes(
+    unifiedItems.map((i) => (i.data as { customer_phone?: string | null }).customer_phone)
+  );
+
   /* --- 목록 영역 (좌측/모바일) --- */
   const listContent = (
     <>
@@ -492,6 +499,7 @@ export default function SalesPage() {
               checkedDelivery={checkedDeliveryIds}
               onCheckSale={toggleCheck}
               onCheckDelivery={toggleCheckDelivery}
+              actLookup={salesActTypes}
             />
           </div>
         ) : (
@@ -508,6 +516,7 @@ export default function SalesPage() {
                     prepMode={prepMode}
                     checked={checkedIds.has(item.id)}
                     onCheck={() => toggleCheck(item.id)}
+                    actTypes={salesActTypes(item.data.customer_phone)}
                   />
                 );
               }
@@ -636,7 +645,7 @@ const SHIP_BADGE: Record<ShipStatus['tone'], string> = {
 };
 
 const SalesGridTable = memo(function SalesGridTable({
-  items, selectedId, onSelect, prepMode, checkedSale, checkedDelivery, onCheckSale, onCheckDelivery,
+  items, selectedId, onSelect, prepMode, checkedSale, checkedDelivery, onCheckSale, onCheckDelivery, actLookup,
 }: {
   items: UnifiedItem[];
   selectedId?: string;
@@ -646,6 +655,7 @@ const SalesGridTable = memo(function SalesGridTable({
   checkedDelivery: Set<string>;
   onCheckSale: (id: string) => void;
   onCheckDelivery: (id: string) => void;
+  actLookup?: (phone?: string | null) => ActivityTypes | undefined;
 }) {
   return (
     <table className="w-full text-sm border-collapse">
@@ -691,7 +701,10 @@ const SalesGridTable = memo(function SalesGridTable({
               )}
               <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap tabular-nums">{formatDate(item.date, 'yy.MM.dd')}</td>
               <td className="px-3 py-2.5">
-                <div className={`font-semibold text-indigo-black ${cancelled ? 'line-through' : ''}`}>{d.customer_name || '—'}</div>
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className={`font-semibold text-indigo-black truncate ${cancelled ? 'line-through' : ''}`}>{d.customer_name || '—'}</span>
+                  {isSale && <ActivityChips types={actLookup?.(d.customer_phone)} className="shrink-0" />}
+                </div>
                 {isSale && d.company_name && <div className="text-[11px] text-neutral-400">{d.company_name}</div>}
               </td>
               <td className="px-3 py-2.5 whitespace-nowrap text-xs text-neutral-500">{channelLabel}</td>
@@ -716,9 +729,9 @@ const SalesGridTable = memo(function SalesGridTable({
   );
 });
 
-const SaleRow = memo(function SaleRow({ sale, note, selected, onClick, prepMode, checked, onCheck }: {
+const SaleRow = memo(function SaleRow({ sale, note, selected, onClick, prepMode, checked, onCheck, actTypes }: {
   sale: OfflineSale; note?: LatestNote; selected?: boolean; onClick: () => void;
-  prepMode?: boolean; checked?: boolean; onCheck?: () => void;
+  prepMode?: boolean; checked?: boolean; onCheck?: () => void; actTypes?: ActivityTypes;
 }) {
   const state = getRowStateSale(sale);
   const isCancelled = state === 'cancelled';
@@ -745,8 +758,11 @@ const SaleRow = memo(function SaleRow({ sale, note, selected, onClick, prepMode,
       {/* 본문 */}
       <div className="flex-1 min-w-0 flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>
-            {sale.customer_name}
+          <div className="flex items-center gap-1 min-w-0">
+            <span className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>
+              {sale.customer_name}
+            </span>
+            <ActivityChips types={actTypes} className="shrink-0" />
           </div>
           <div className="text-xs text-neutral-500 mt-0.5 flex items-center gap-1.5 flex-wrap">
             <span>{formatDate(sale.sale_date)}</span>

@@ -21,6 +21,8 @@ import { useConsultations } from '@/hooks/use-consultations';
 import { useLatestCustomerNotes } from '@/hooks/use-customer-notes';
 import { NotePreview } from '@/components/shared/customer-notes';
 import { activityDisplay } from '@/lib/customer/display';
+import { useActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 import {
   formatPhone,
   CONSULTATION_STATUS_LABEL,
@@ -69,6 +71,7 @@ export function AllConsultationsList({ onSelect }: { onSelect?: (id: string) => 
 
   const consultations = data?.consultations || [];
   const { data: noteMap } = useLatestCustomerNotes(consultations.map((c) => c.customer_id));
+  const consultActTypes = useActivityTypes(consultations.map((c) => c.phone));
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 30);
 
@@ -141,6 +144,7 @@ export function AllConsultationsList({ onSelect }: { onSelect?: (id: string) => 
                           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                             <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${cfg.bg} ${cfg.text}`}>{cfg.label}</span>
                             <p className="text-sm font-semibold text-stone-800 truncate">{activityDisplay(c.activity_name, c.name)}</p>
+                            <ActivityChips types={consultActTypes(c.phone)} className="shrink-0" />
                             <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${CONSULTATION_STATUS_COLOR[c.status] || 'bg-stone-100 text-stone-600'}`}>
                               {CONSULTATION_STATUS_LABEL[c.status] || c.status}
                             </span>

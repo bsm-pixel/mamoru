@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,8 @@ import { SlidePanel } from '@/components/ui/slide-panel';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { CustomerDetailPanel } from '@/components/customers/customer-detail-panel';
 import { activitySuffix } from '@/lib/customer/display';
+import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 import { Users, Plus } from 'lucide-react';
 import type { Customer } from '@/lib/supabase/types';
 import { TagBadges } from '@/components/shared/tag-selector';
@@ -100,6 +102,24 @@ export default function CustomersPage() {
   const total = tagFilter ? customers.length : (data?.total || 0);
   const totalPages = Math.ceil((data?.total || 0) / limit);
   const { data: noteMap } = useLatestCustomerNotes(customers.map((c: Customer) => c.id));
+  const customerActTypes = useActivityTypes(customers.map((c: Customer) => c.phone));
+
+  // 고객 컬럼에 활동유형 칩을 붙인 버전 (첫 컬럼만 교체)
+  const columns = useMemo<GridColumn<Customer>[]>(() => [
+    {
+      key: 'name', label: '고객',
+      render: (c) => (
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="font-semibold text-indigo-black truncate">{c.name}</span>
+          {activitySuffix(c.activity_name, c.position) && (
+            <span className="text-[11px] text-neutral-400 truncate">{activitySuffix(c.activity_name, c.position)}</span>
+          )}
+          <ActivityChips types={customerActTypes(c.phone)} className="shrink-0" />
+        </div>
+      ),
+    },
+    ...CUSTOMER_COLUMNS.slice(1),
+  ], [customerActTypes]);
 
   const listContent = isLoading ? (
     <div className="p-4 space-y-3">
@@ -118,6 +138,7 @@ export default function CustomersPage() {
           note={noteMap?.[c.id]}
           isSelected={selectedId === c.id}
           onClick={() => setSelectedId(c.id)}
+          actTypes={customerActTypes(c.phone)}
         />
       ))}
     </div>
@@ -188,7 +209,7 @@ export default function CustomersPage() {
                   <div className="p-4 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
                 ) : (
                   <DataGrid
-                    columns={CUSTOMER_COLUMNS}
+                    columns={columns}
                     rows={customers}
                     getRowKey={(c) => c.id}
                     selectedKey={selectedId ?? undefined}
@@ -248,7 +269,7 @@ export default function CustomersPage() {
 
 /* 기존 AddCustomerModal → CustomerCreateModal 공통 컴포넌트로 교체 (customer-create-modal.tsx) */
 
-function CustomerRow({ customer, note, isSelected, onClick }: { customer: Customer; note?: LatestNote; isSelected: boolean; onClick: () => void }) {
+function CustomerRow({ customer, note, isSelected, onClick, actTypes }: { customer: Customer; note?: LatestNote; isSelected: boolean; onClick: () => void; actTypes?: ActivityTypes }) {
   const c = customer;
   return (
     <div
@@ -261,6 +282,7 @@ function CustomerRow({ customer, note, isSelected, onClick }: { customer: Custom
           {activitySuffix(c.activity_name, c.position) && (
             <span className="text-xs text-neutral-400 truncate shrink-0">{activitySuffix(c.activity_name, c.position)}</span>
           )}
+          <ActivityChips types={actTypes} className="shrink-0" />
           <Badge className={TYPE_COLOR[c.customer_type] || TYPE_COLOR.retail}>
             {TYPE_LABEL[c.customer_type] || '일반'}
           </Badge>

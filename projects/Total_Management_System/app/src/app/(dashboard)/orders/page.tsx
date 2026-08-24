@@ -18,6 +18,8 @@ import { OrderDetailPanel } from '@/components/orders/order-detail-panel';
 import { RefreshCw, Truck, ShoppingBag } from 'lucide-react';
 import { useEscapeKey } from '@/hooks/use-media-query';
 import { InvoiceModal } from '@/components/orders/invoice-modal';
+import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 import type { Order } from '@/lib/supabase/types';
 
 const STATUS_TABS = [
@@ -47,6 +49,7 @@ export default function OrdersPage() {
   useEscapeKey(() => setSelectedId(null), !!selectedId);
   const { data, isLoading } = useOrders({ status, search, dateRange, page, limit: 20 });
   const orders = data?.orders || [];
+  const orderActTypes = useActivityTypes(orders.map((o) => o.orderer_phone));
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
 
@@ -54,7 +57,7 @@ export default function OrdersPage() {
   const orderColumns: GridColumn<Order>[] = [
     { key: 'ordered', label: '주문일', render: (o) => <span className="text-neutral-500 whitespace-nowrap tabular-nums text-xs">{formatDateTime(o.ordered_at)}</span> },
     { key: 'no', label: '주문번호', render: (o) => <span className="font-mono text-[11px] text-neutral-500">{o.imweb_order_no}</span> },
-    { key: 'name', label: '주문자', render: (o) => <span className="font-semibold text-indigo-black truncate">{o.orderer_name}</span> },
+    { key: 'name', label: '주문자', render: (o) => <span className="inline-flex items-center gap-1 min-w-0 max-w-full"><span className="font-semibold text-indigo-black truncate">{o.orderer_name}</span><ActivityChips types={orderActTypes(o.orderer_phone)} className="shrink-0" /></span> },
     { key: 'status', label: '상태', render: (o) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${ORDER_STATUS_COLOR[o.status] || 'bg-stone-100 text-stone-500'}`}>{ORDER_STATUS_LABEL[o.status] || o.status}</span> },
     { key: 'pay', label: '결제', render: (o) => o.paid_at
       ? <span className="text-emerald-600 text-xs font-medium">결제완료</span>
@@ -78,7 +81,8 @@ export default function OrdersPage() {
     <div className="divide-y divide-neutral-100">
       {orders.map((order) => (
         <OrderRow key={order.id} order={order} isSelected={selectedId === order.id}
-          onClick={() => setSelectedId(order.id)} onInvoice={() => setInvoiceOrder(order)} />
+          onClick={() => setSelectedId(order.id)} onInvoice={() => setInvoiceOrder(order)}
+          actTypes={orderActTypes(order.orderer_phone)} />
       ))}
     </div>
   );
@@ -214,7 +218,7 @@ export default function OrdersPage() {
   );
 }
 
-const OrderRow = memo(function OrderRow({ order, isSelected, onClick, onInvoice }: { order: Order; isSelected: boolean; onClick: () => void; onInvoice: () => void }) {
+const OrderRow = memo(function OrderRow({ order, isSelected, onClick, onInvoice, actTypes }: { order: Order; isSelected: boolean; onClick: () => void; onInvoice: () => void; actTypes?: ActivityTypes }) {
   const statusColor = ORDER_STATUS_COLOR[order.status] || 'bg-stone-100 text-stone-500';
 
   return (
@@ -227,6 +231,7 @@ const OrderRow = memo(function OrderRow({ order, isSelected, onClick, onInvoice 
           <span className="text-sm font-semibold text-stone-800 truncate">
             {order.orderer_name}
           </span>
+          <ActivityChips types={actTypes} className="shrink-0" />
           <Badge className={statusColor}>
             {ORDER_STATUS_LABEL[order.status] || order.status}
           </Badge>
