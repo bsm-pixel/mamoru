@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DeliveryTracker } from './delivery-tracker';
 import { OrderActionBar } from './order-action-bar';
 import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
-import { User, Phone, MapPin, Package, CreditCard, Hash } from 'lucide-react';
+import { Package, Hash } from 'lucide-react';
 import Link from 'next/link';
 
 interface Props {
@@ -29,74 +29,64 @@ export function OrderDetailPanel({ orderId }: Props) {
 
   const { order: o, items, serials } = data;
   const statusColor = ORDER_STATUS_COLOR[o.status] || 'bg-neutral-100 text-neutral-500';
+  const addr = [o.recipient_address, o.recipient_address_detail].filter(Boolean).join(' ');
+  // 주문자 ≠ 받는분일 때만 주문자 보조표기 (같으면 중복 제거)
+  const ordererDiffers = !!o.orderer_name &&
+    (o.orderer_name !== o.recipient_name || (o.orderer_phone || '') !== (o.recipient_phone || ''));
+  const fee = o.delivery_fee ?? 0;
+  const discount = o.discount_amount ?? 0;
 
   return (
-    <div className="space-y-4">
-      {/* 헤더 */}
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className="text-base font-bold">{o.imweb_order_no}</h3>
-          <Badge className={statusColor}>{ORDER_STATUS_LABEL[o.status] || o.status}</Badge>
-          {o.is_pickup && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-violet-50 text-violet-700">직접수령</span>
-          )}
+    <div className="space-y-3">
+      {/* 헤더 — 주문번호·상태·날짜 */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5">
+            <h3 className="text-sm font-bold font-mono text-indigo-black truncate">{o.imweb_order_no}</h3>
+            {o.is_pickup && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-violet-50 text-violet-700 shrink-0">직접수령</span>
+            )}
+          </div>
+          <p className="text-[11px] text-neutral-400 mt-0.5">{formatDateTime(o.ordered_at)}</p>
         </div>
-        <p className="text-xs text-neutral-500">{formatDateTime(o.ordered_at)}</p>
+        <Badge className={`${statusColor} shrink-0`}>{ORDER_STATUS_LABEL[o.status] || o.status}</Badge>
       </div>
 
-      {/* 주문자 정보 */}
-      <div className="bg-neutral-50 rounded-lg p-3 space-y-2">
-        <div className="flex items-center gap-2 text-sm">
-          <User size={14} className="text-neutral-400" />
-          <span className="font-medium">{o.orderer_name}</span>
-        </div>
-        {o.orderer_phone && (
-          <div className="flex items-center gap-2 text-sm">
-            <Phone size={14} className="text-neutral-400" />
-            <a href={`tel:${o.orderer_phone}`} className="text-blue-600">{o.orderer_phone}</a>
+      {/* 받는분 (배송지) — 주문자와 같으면 통합, 다르면 주문자 보조표기 */}
+      <div className="rounded-lg bg-neutral-50 p-3 space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-sm font-semibold text-indigo-black truncate">{o.recipient_name || o.orderer_name}</span>
+            {o.recipient_phone && (
+              <a href={`tel:${o.recipient_phone}`} className="text-xs text-blue-600 shrink-0">{o.recipient_phone}</a>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* 배송지 */}
-      <div className="bg-neutral-50 rounded-lg p-3 space-y-2">
-        <p className="text-xs font-semibold text-neutral-500 mb-1">배송지</p>
-        <div className="flex items-center gap-2 text-sm">
-          <User size={14} className="text-neutral-400" />
-          <span>{o.recipient_name}</span>
-          {o.recipient_phone && (
-            <a href={`tel:${o.recipient_phone}`} className="text-blue-600 text-xs">{o.recipient_phone}</a>
+          {ordererDiffers && (
+            <span className="text-[10px] text-neutral-400 shrink-0 whitespace-nowrap">주문 {o.orderer_name}</span>
           )}
         </div>
-        {o.recipient_address && (
-          <div className="flex items-start gap-2 text-sm">
-            <MapPin size={14} className="text-neutral-400 shrink-0 mt-0.5" />
-            <span className="text-neutral-700">
-              {o.recipient_address} {o.recipient_address_detail || ''}
-            </span>
-          </div>
-        )}
+        {addr && <p className="text-[13px] text-neutral-600 leading-snug">{addr}</p>}
         {o.recipient_memo && (
-          <p className="text-xs text-neutral-500 ml-6">📝 {o.recipient_memo}</p>
+          <p className="text-[11px] text-amber-700 bg-amber-100/50 rounded px-2 py-1">📝 {o.recipient_memo}</p>
         )}
       </div>
 
       {/* 주문 품목 */}
       {items.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-neutral-500 mb-2 flex items-center gap-1">
-            <Package size={12} /> 주문 품목
+          <p className="text-[11px] font-semibold text-neutral-400 mb-1.5 flex items-center gap-1">
+            <Package size={11} /> 주문 품목
           </p>
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {items.map((item) => (
-              <div key={item.id} className="flex items-center justify-between text-sm">
+              <div key={item.id} className="flex items-center justify-between gap-2 text-sm">
                 <div className="min-w-0">
-                  <p className="font-medium truncate">{item.product_name}</p>
-                  {item.option_text && <p className="text-xs text-neutral-500">{item.option_text}</p>}
+                  <p className="font-medium text-indigo-black truncate">{item.product_name}</p>
+                  {item.option_text && <p className="text-[11px] text-neutral-400 truncate">{item.option_text}</p>}
                 </div>
-                <div className="text-right shrink-0 ml-2">
-                  <p className="text-xs text-neutral-500">{item.quantity}개</p>
-                  <p className="font-semibold">{formatKRW(item.total_price)}</p>
+                <div className="text-right shrink-0 tabular-nums whitespace-nowrap">
+                  <span className="text-[11px] text-neutral-400 mr-1.5">{item.quantity}개</span>
+                  <span className="font-semibold text-indigo-black">{formatKRW(item.total_price)}</span>
                 </div>
               </div>
             ))}
@@ -104,69 +94,56 @@ export function OrderDetailPanel({ orderId }: Props) {
         </div>
       )}
 
-      {/* 배정 시리얼 (시리얼 대상 품목이 있고, 취소 아님) */}
+      {/* 배정 시리얼 */}
       {items.some((i) => i.product_id) && o.status !== 'cancelled' && (
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold text-neutral-500 flex items-center gap-1">
-              <Hash size={12} /> 배정 시리얼
-              {serials.length > 0 && <span className="text-neutral-400">({serials.length})</span>}
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-[11px] font-semibold text-neutral-400 flex items-center gap-1">
+              <Hash size={11} /> 배정 시리얼{serials.length > 0 && <span className="text-neutral-300 ml-0.5">({serials.length})</span>}
             </p>
             <button
               onClick={() => setShowSerials(true)}
-              className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+              className="text-[11px] text-blue-600 hover:text-blue-700 font-medium"
             >
               {serials.length > 0 ? '수정' : '배정'}
             </button>
           </div>
           {serials.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1">
               {serials.map((s) => (
-                <span key={s.id} className="font-mono text-[11px] bg-neutral-100 text-neutral-700 rounded px-1.5 py-0.5">
+                <span key={s.id} className="font-mono text-[11px] bg-neutral-100 text-neutral-600 rounded px-1.5 py-0.5">
                   {s.serial_number}
                 </span>
               ))}
             </div>
           ) : (
-            <p className="text-xs text-neutral-400">배정된 시리얼 없음</p>
+            <p className="text-[11px] text-neutral-400">배정된 시리얼 없음</p>
           )}
         </div>
       )}
 
-      {/* 결제 정보 */}
-      <div className="bg-neutral-50 rounded-lg p-3">
-        <p className="text-xs font-semibold text-neutral-500 mb-2 flex items-center gap-1">
-          <CreditCard size={12} /> 결제 정보
-        </p>
-        <div className="space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span className="text-neutral-500">상품금액</span>
-            <span>{formatKRW(o.total_price)}</span>
-          </div>
-          {(o.delivery_fee ?? 0) > 0 && (
-            <div className="flex justify-between">
-              <span className="text-neutral-500">배송비</span>
-              <span>{formatKRW(o.delivery_fee)}</span>
-            </div>
-          )}
-          {(o.discount_amount ?? 0) > 0 && (
-            <div className="flex justify-between">
-              <span className="text-neutral-500">할인</span>
-              <span className="text-red-500">-{formatKRW(o.discount_amount)}</span>
-            </div>
-          )}
-          <div className="flex justify-between pt-1 border-t border-neutral-200 font-bold">
-            <span>결제금액</span>
-            <span className="text-terracotta">{formatKRW(o.paid_amount)}</span>
-          </div>
+      {/* 결제 — 결제금액 강조 + 내역 한 줄 */}
+      <div className="rounded-lg bg-neutral-50 p-3">
+        <div className="flex items-baseline justify-between">
+          <span className="text-xs font-semibold text-neutral-500">결제금액</span>
+          <span className="text-lg font-bold text-terracotta tabular-nums">{formatKRW(o.paid_amount)}</span>
         </div>
+        {(o.total_price !== o.paid_amount || fee > 0 || discount > 0) && (
+          <p className="mt-0.5 text-[11px] text-neutral-400 text-right tabular-nums">
+            상품 {formatKRW(o.total_price)}
+            {fee > 0 && <> · 배송 {formatKRW(fee)}</>}
+            {discount > 0 && <> · 할인 -{formatKRW(discount)}</>}
+          </p>
+        )}
       </div>
 
-      {/* 배송 추적 */}
-      {o.invoice_number && !['cancelled'].includes(o.status) && (
+      {/* 배송 추적 — 송장번호 인라인 */}
+      {o.invoice_number && o.status !== 'cancelled' && (
         <div>
-          <p className="text-xs font-semibold text-neutral-500 mb-2">배송 추적</p>
-          <p className="text-xs text-neutral-500 mb-2">송장번호: <span className="font-mono text-terracotta">{o.invoice_number}</span></p>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-semibold text-neutral-400">배송 추적</span>
+            <span className="font-mono text-[11px] text-terracotta">{o.invoice_number}</span>
+          </div>
           <DeliveryTracker invNo={o.invoice_number} />
         </div>
       )}
@@ -174,23 +151,20 @@ export function OrderDetailPanel({ orderId }: Props) {
       {/* 상태별 액션 */}
       <OrderActionBar order={o} items={items} />
 
-      {/* 아임웹 주문관리 바로가기 — 취소/수령 등 아임웹 쪽 수동 처리용 */}
-      <a
-        href="https://mamoruscissors63682.imweb.me/admin/shopping/order-v1"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block text-center text-xs text-blue-500 hover:text-blue-700 py-1"
-      >
-        아임웹 주문관리에서 열기 ↗
-      </a>
-
-      {/* 상세 페이지 링크 */}
-      <Link
-        href={`/orders/${o.id}`}
-        className="block text-center text-xs text-neutral-400 hover:text-neutral-600 py-2"
-      >
-        상세 페이지에서 보기 →
-      </Link>
+      {/* 하단 링크 — 한 줄 */}
+      <div className="flex items-center justify-between pt-1 text-[11px]">
+        <a
+          href="https://mamoruscissors63682.imweb.me/admin/shopping/order-v1"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:text-blue-700"
+        >
+          아임웹에서 열기 ↗
+        </a>
+        <Link href={`/orders/${o.id}`} className="text-neutral-400 hover:text-neutral-600">
+          상세 페이지 →
+        </Link>
+      </div>
 
       {showSerials && (
         <OrderSerialModal orderId={o.id} items={items} serials={serials} onClose={() => setShowSerials(false)} />
