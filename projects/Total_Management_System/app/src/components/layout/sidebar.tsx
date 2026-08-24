@@ -120,10 +120,10 @@ export function Sidebar() {
       <nav className="flex-1 px-2.5 pb-4 overflow-y-auto">
         {/* MY MENU — 즐겨찾기 바로가기 (설정>화면 설정에서 등록·순서). 은은한 앰버 톤 패널로 구분 */}
         {favorites.length > 0 && (
-          <div className="mb-2 mt-1 rounded-xl bg-amber-400/[0.07] ring-1 ring-inset ring-amber-300/15 p-1.5">
-            <div className="flex items-center gap-1.5 px-1.5 pt-0.5 pb-1.5 text-amber-300/85">
-              <Star size={12} className="fill-current" />
-              <span className="text-[11px] font-semibold tracking-wider uppercase">MY MENU</span>
+          <div className="mb-2 mt-1 rounded-xl bg-cream p-1.5 shadow-sm">
+            <div className="flex items-center gap-1.5 px-1.5 pt-0.5 pb-1.5 text-indigo-black/50">
+              <Star size={12} className="fill-current text-amber-500" />
+              <span className="text-[11px] font-bold tracking-wider uppercase">MY MENU</span>
             </div>
             <div className="space-y-0.5">
               {favorites.map((item) => {
@@ -135,10 +135,10 @@ export function Sidebar() {
                     href={item.href}
                     className={cn(
                       'flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm font-medium transition',
-                      active ? 'bg-amber-300/20 text-cream' : 'text-cream/65 hover:text-cream hover:bg-white/10'
+                      active ? 'bg-indigo-black text-cream' : 'text-indigo-black/70 hover:bg-black/5 hover:text-indigo-black'
                     )}
                   >
-                    {Icon && <Icon size={18} className={active ? 'opacity-100 text-amber-200' : 'opacity-60'} />}
+                    {Icon && <Icon size={18} className={active ? 'opacity-100' : 'opacity-55'} />}
                     {item.label}
                   </Link>
                 );
