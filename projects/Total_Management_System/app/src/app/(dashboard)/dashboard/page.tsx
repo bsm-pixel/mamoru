@@ -34,6 +34,8 @@ import {
 } from '@/hooks/use-dashboard-stats';
 import { useSetting, useUpdateSettings } from '@/hooks/use-settings';
 import { formatPhone } from '@/lib/utils/format';
+import { useActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 
 function fmtKRW(n: number) {
   if (n >= 10000) return `₩${Math.round(n / 10000)}만`;
@@ -137,6 +139,7 @@ function OutstandingCard({
   outstanding?: Array<{ id: string; name: string; phone: string | null; outstanding_balance: number }>;
 }) {
   const items = outstanding || [];
+  const actTypes = useActivityTypes(items.map((c) => c.phone));
   return (
     <div className="bg-white rounded-2xl border border-stone-200 p-4 h-full">
       <div className="flex items-center justify-between mb-3">
@@ -161,7 +164,10 @@ function OutstandingCard({
               className="flex items-center justify-between p-2 rounded-lg hover:bg-rose-50/40 transition"
             >
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-stone-800 truncate">{c.name}</p>
+                <div className="flex items-center gap-1 min-w-0">
+                  <p className="text-xs font-semibold text-stone-800 truncate">{c.name}</p>
+                  <ActivityChips types={actTypes(c.phone)} className="shrink-0" />
+                </div>
                 {c.phone && <p className="text-[10px] text-stone-400 truncate">{formatPhone(c.phone)}</p>}
               </div>
               <span className="text-xs font-bold text-rose-600 shrink-0">{fmtKRW(c.outstanding_balance)}</span>

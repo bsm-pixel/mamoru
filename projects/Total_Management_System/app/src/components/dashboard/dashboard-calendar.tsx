@@ -19,6 +19,8 @@ import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { CustomerNotes } from '@/components/shared/customer-notes';
 import { activityDisplay } from '@/lib/customer/display';
+import { useActivityTypes } from '@/hooks/use-activity-types';
+import { ActivityChips } from '@/components/shared/activity-chips';
 import { getCalendarDays, ymd } from '@/lib/schedule/calendar';
 import { useScheduleEvents } from '@/lib/schedule/use-schedule-events';
 import { SCHEDULE_COLORS } from '@/lib/schedule/colors';
@@ -97,6 +99,7 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
 
   const calendarDays = getCalendarDays(year, month);
   const selectedEvents = dateMap.get(selectedDate) || [];
+  const calActTypes = useActivityTypes(selectedEvents.map((ev) => (ev.data as { phone?: string | null }).phone));
   const selectedPast = includePast && selectedDate < todayStr; // 지난 날짜 타임라인 회색(일정 페이지 전용)
 
   const goMonth = (delta: number) => {
@@ -237,7 +240,7 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                       <span className="text-xs font-semibold text-stone-500 w-10 shrink-0">{r.visit_time || '-'}</span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${selectedPast ? 'bg-stone-100 text-stone-400' : SCHEDULE_COLORS.repair_visit.badge}`}>수리</span>
                       <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                        <span className={`text-xs font-medium truncate ${selectedPast ? 'text-stone-400' : 'text-stone-800'}`}>{r.name}</span>
+                        <span className="inline-flex items-center gap-1 min-w-0"><span className={`text-xs font-medium truncate ${selectedPast ? 'text-stone-400' : 'text-stone-800'}`}>{r.name}</span><ActivityChips types={calActTypes(r.phone)} className="shrink-0" /></span>
                         <span className="text-[10px] text-stone-400 truncate">
                           {qty > 0 ? `${qty}자루` : formatPhone(r.phone)}
                         </span>
@@ -258,7 +261,7 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                       <span className="text-xs font-semibold text-stone-500 w-10 shrink-0">-</span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${selectedPast ? 'bg-stone-100 text-stone-400' : SCHEDULE_COLORS.repair_pickup.badge}`}>수거</span>
                       <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                        <span className={`text-xs font-medium truncate ${selectedPast ? 'text-stone-400' : 'text-stone-800'}`}>{p.name}</span>
+                        <span className="inline-flex items-center gap-1 min-w-0"><span className={`text-xs font-medium truncate ${selectedPast ? 'text-stone-400' : 'text-stone-800'}`}>{p.name}</span><ActivityChips types={calActTypes(p.phone)} className="shrink-0" /></span>
                         <span className="text-[10px] text-stone-400 truncate">
                           {qty > 0 ? `${qty}자루` : formatPhone(p.phone)}
                         </span>
@@ -280,7 +283,7 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                       {isStore ? '매장' : '출장'}
                     </span>
                     <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                      <span className={`text-xs font-medium truncate ${selectedPast ? 'text-stone-400' : 'text-stone-800'}`}>{activityDisplay(c.activity_name, c.name)}</span>
+                      <span className="inline-flex items-center gap-1 min-w-0"><span className={`text-xs font-medium truncate ${selectedPast ? 'text-stone-400' : 'text-stone-800'}`}>{activityDisplay(c.activity_name, c.name)}</span><ActivityChips types={calActTypes(c.phone)} className="shrink-0" /></span>
                       <span className="text-[10px] text-stone-400 truncate">{formatPhone(c.phone || '')}</span>
                     </div>
                   </div>
