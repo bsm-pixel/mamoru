@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Save, RefreshCw, CheckCircle2, AlertCircle, Database, Upload } from 'lucide-react';
+import { Save, RefreshCw, CheckCircle2, AlertCircle, Database, Upload, Star, GripVertical, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useOrderSync, useProductSync } from '@/hooks/use-orders';
 import { formatDateTime } from '@/lib/utils/format';
@@ -24,7 +24,8 @@ export default function SystemSettings({ settings, onSave, saving }: TabProps) {
   const productSync = useProductSync();
   const [pageSize, setPageSize] = useState(20);
   const [startPage, setStartPage] = useState('/dashboard');
-  const [sidebarConfig, setSidebarConfig] = useState<{ order: string[]; hidden: string[] }>({ order: [], hidden: [] });
+  const [sidebarConfig, setSidebarConfig] = useState<{ order: string[]; hidden: string[]; favorites: string[] }>({ order: [], hidden: [], favorites: [] });
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
 
   const { data: syncLogs } = useQuery({
     queryKey: ['sync-logs'],
@@ -37,7 +38,8 @@ export default function SystemSettings({ settings, onSave, saving }: TabProps) {
   useEffect(() => {
     setPageSize(parse(settings['system.table_page_size'], 20));
     setStartPage(parse(settings['system.start_page'], '/dashboard'));
-    setSidebarConfig(parse(settings['system.sidebar_config'], { order: [], hidden: [] }));
+    const cfg = parse(settings['system.sidebar_config'], { order: [], hidden: [], favorites: [] }) as { order?: string[]; hidden?: string[]; favorites?: string[] };
+    setSidebarConfig({ order: cfg.order || [], hidden: cfg.hidden || [], favorites: cfg.favorites || [] });
   }, [settings]);
 
   const handleSave = () => {
@@ -58,6 +60,22 @@ export default function SystemSettings({ settings, onSave, saving }: TabProps) {
       ? sidebarConfig.hidden.filter((h) => h !== href)
       : [...sidebarConfig.hidden, href];
     setSidebarConfig({ ...sidebarConfig, hidden: next });
+  };
+
+  const toggleFavorite = (href: string) => {
+    setSidebarConfig((c) => ({
+      ...c,
+      favorites: c.favorites.includes(href) ? c.favorites.filter((h) => h !== href) : [...c.favorites, href],
+    }));
+  };
+
+  const reorderFavorite = (from: number, to: number) => {
+    setSidebarConfig((c) => {
+      const arr = [...c.favorites];
+      const [moved] = arr.splice(from, 1);
+      arr.splice(to, 0, moved);
+      return { ...c, favorites: arr };
+    });
   };
 
   // 시작 페이지 옵션
@@ -104,19 +122,59 @@ export default function SystemSettings({ settings, onSave, saving }: TabProps) {
         </p>
       </Field>
 
-      {/* 14. 사이드바 커스텀 */}
-      <Field label="사이드바 메뉴 커스텀" desc="메뉴를 숨기거나 표시할 수 있습니다. 숨겨진 메뉴는 URL 직접 접근은 가능합니다.">
-        <div className="space-y-1">
-          {allMenuItems.map((item) => (
-            <label key={item.href} className="flex items-center gap-2 py-1">
-              <input type="checkbox"
-                checked={!sidebarConfig.hidden.includes(item.href)}
-                onChange={() => toggleHidden(item.href)}
-                className="rounded" />
-              <span className="text-sm">{item.label}</span>
-              {item.group && <span className="text-xs text-neutral-400">({item.group})</span>}
-            </label>
-          ))}
+      {/* 14-A. MY MENU — 즐겨찾기 순서 (드래그) */}
+      {sidebarConfig.favorites.length > 0 && (
+        <Field label="MY MENU (즐겨찾기 · 순서)" desc="드래그해서 순서를 바꾸세요. 사이드바 최상단에 이 순서대로 표시됩니다.">
+          <div className="space-y-1">
+            {sidebarConfig.favorites.map((href, i) => {
+              const item = allMenuItems.find((m) => m.href === href);
+              if (!item) return null;
+              return (
+                <div
+                  key={href}
+                  draggable
+                  onDragStart={() => setDragIdx(i)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => { if (dragIdx !== null && dragIdx !== i) reorderFavorite(dragIdx, i); setDragIdx(null); }}
+                  onDragEnd={() => setDragIdx(null)}
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded-lg border transition cursor-grab active:cursor-grabbing ${dragIdx === i ? 'border-amber-400 bg-amber-50' : 'border-neutral-200 bg-white hover:border-neutral-300'}`}
+                >
+                  <GripVertical size={14} className="text-neutral-300 shrink-0" />
+                  <span className="text-[11px] text-neutral-400 w-4 shrink-0 tabular-nums">{i + 1}</span>
+                  <Star size={13} className="text-amber-500 fill-current shrink-0" />
+                  <span className="text-sm flex-1 truncate">{item.label}</span>
+                  {item.group && <span className="text-xs text-neutral-400 shrink-0">({item.group})</span>}
+                  <button type="button" onClick={() => toggleFavorite(href)} className="shrink-0 p-0.5 text-neutral-300 hover:text-red-500" title="MY MENU에서 제거"><X size={14} /></button>
+                </div>
+              );
+            })}
+          </div>
+        </Field>
+      )}
+
+      {/* 14-B. 사이드바 커스텀 — 숨김 + 즐겨찾기(별) */}
+      <Field label="사이드바 메뉴 커스텀" desc="체크 해제 시 사이드바에서 숨깁니다(URL 직접 접근은 가능). ★ 를 누르면 MY MENU(상단 즐겨찾기)에 추가됩니다.">
+        <div className="space-y-0.5">
+          {allMenuItems.map((item) => {
+            const isFav = sidebarConfig.favorites.includes(item.href);
+            return (
+              <div key={item.href} className="flex items-center gap-2 py-1">
+                <label className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
+                  <input type="checkbox"
+                    checked={!sidebarConfig.hidden.includes(item.href)}
+                    onChange={() => toggleHidden(item.href)}
+                    className="rounded" />
+                  <span className="text-sm truncate">{item.label}</span>
+                  {item.group && <span className="text-xs text-neutral-400 shrink-0">({item.group})</span>}
+                </label>
+                <button type="button" onClick={() => toggleFavorite(item.href)}
+                  title={isFav ? 'MY MENU에서 제거' : 'MY MENU에 추가'}
+                  className={`shrink-0 p-1 rounded transition ${isFav ? 'text-amber-500' : 'text-neutral-300 hover:text-amber-400'}`}>
+                  <Star size={16} className={isFav ? 'fill-current' : ''} />
+                </button>
+              </div>
+            );
+          })}
         </div>
       </Field>
 

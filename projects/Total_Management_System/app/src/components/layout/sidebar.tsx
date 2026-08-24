@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { NAV_GROUPS } from '@/lib/utils/constants';
+import { useSetting } from '@/hooks/use-settings';
 
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -63,6 +64,13 @@ const COLLAPSE_KEY = 'tms-sidebar-collapsed';
 
 export function Sidebar() {
   const pathname = usePathname();
+  // 사이드바 커스텀 설정 (즐겨찾기 MY MENU + 숨김) — 설정>화면 설정에서 관리
+  const cfg = useSetting<{ hidden?: string[]; favorites?: string[] }>('system.sidebar_config', {});
+  const hidden = new Set(cfg.hidden || []);
+  const itemByHref = Object.fromEntries(NAV_GROUPS.flatMap((g) => g.items).map((i) => [i.href, i]));
+  const favorites = (cfg.favorites || [])
+    .map((href) => itemByHref[href])
+    .filter((it): it is (typeof NAV_GROUPS)[number]['items'][number] => !!it && it.href !== '/dashboard');
   // 그룹 접힘 상태 (localStorage 영속)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   useEffect(() => {
@@ -110,8 +118,38 @@ export function Sidebar() {
 
       {/* 그룹별 내비 (그룹 접기 + pill 액티브) */}
       <nav className="flex-1 px-2.5 pb-4 overflow-y-auto">
+        {/* MY MENU — 즐겨찾기 바로가기 (설정>화면 설정에서 등록·순서) */}
+        {favorites.length > 0 && (
+          <div className="mb-1">
+            <div className="flex items-center gap-1.5 px-2.5 mt-1 mb-1 text-amber-300/70">
+              <Star size={12} className="fill-current" />
+              <span className="text-[11px] font-semibold tracking-wider uppercase">MY MENU</span>
+            </div>
+            <div className="space-y-0.5">
+              {favorites.map((item) => {
+                const Icon = iconMap[item.icon];
+                const active = isActive(item.matchPrefix);
+                return (
+                  <Link
+                    key={`fav-${item.href}`}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition',
+                      active ? 'bg-white/12 text-cream' : 'text-cream/55 hover:text-cream/90 hover:bg-white/8'
+                    )}
+                  >
+                    {Icon && <Icon size={18} className={active ? 'opacity-100' : 'opacity-50'} />}
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="mx-2.5 my-2 border-t border-white/8" />
+          </div>
+        )}
+
         {NAV_GROUPS.map((group, gi) => {
-          const items = group.items.filter((it) => it.href !== '/dashboard'); // 대시보드 제외
+          const items = group.items.filter((it) => it.href !== '/dashboard' && !hidden.has(it.href)); // 대시보드·숨김 제외
           if (items.length === 0) return null; // 대시보드만 있던 빈 그룹 스킵
           const hasHeader = !!group.group;
           const isCollapsed = hasHeader && !!collapsed[group.group];
