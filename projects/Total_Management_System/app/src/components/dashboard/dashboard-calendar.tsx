@@ -269,6 +269,24 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                     </div>
                   );
                 }
+                if (ev.kind === 'return_pickup') {
+                  const p = ev.data;
+                  return (
+                    <div
+                      key={`return-${p.id}`}
+                      className="relative flex items-center gap-2.5 group cursor-pointer"
+                      onClick={() => router.push(`/returns/${p.id}`)}
+                    >
+                      <div className={`absolute -left-[15px] w-2.5 h-2.5 rounded-full ring-2 ring-white ${selectedPast ? 'bg-stone-300' : SCHEDULE_COLORS.return_pickup.dot}`} />
+                      <span className="text-xs font-semibold text-stone-500 w-10 shrink-0">-</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${selectedPast ? 'bg-stone-100 text-stone-400' : SCHEDULE_COLORS.return_pickup.badge}`}>반품수거</span>
+                      <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-1 min-w-0"><span className={`text-xs font-medium truncate ${selectedPast ? 'text-stone-400' : 'text-stone-800'}`}>{p.name || '고객'}</span><ActivityChips types={calActTypes(p.phone)} className="shrink-0" /></span>
+                        <span className="text-[10px] text-stone-400 truncate">{p.pickup_method || formatPhone(p.phone || '')}</span>
+                      </div>
+                    </div>
+                  );
+                }
                 const c = ev.data;
                 const isStore = c.consultation_type === 'store_visit';
                 return (

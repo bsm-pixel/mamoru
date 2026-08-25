@@ -35,7 +35,7 @@ export function ScheduleSummary() {
   const todayItems = flat.filter((x) => x.date === todayStr);
   const weekItems = flat.filter((x) => x.date >= weekStart && x.date <= weekEnd);
 
-  const catCount: Record<ScheduleCategory, number> = { store: 0, field: 0, repair_visit: 0, repair_pickup: 0 };
+  const catCount: Record<ScheduleCategory, number> = { store: 0, field: 0, repair_visit: 0, repair_pickup: 0, return_pickup: 0 };
   for (const x of weekItems) catCount[eventCategory(x.ev)]++;
 
   // 다음 일정 = 오늘 이후(내일부터) 가장 가까운 건 (오늘은 위 리스트에 이미 표시)

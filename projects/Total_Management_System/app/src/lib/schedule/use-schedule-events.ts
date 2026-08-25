@@ -15,6 +15,7 @@ import {
   type RepairScheduleItem,
   type RepairPickupItem,
 } from '@/hooks/use-repairs';
+import { useReturnPickupSchedule, type ReturnPickupItem } from '@/hooks/use-returns';
 import { activityDisplay } from '@/lib/customer/display';
 import type { ScheduleCategory } from './colors';
 import type { Consultation } from '@/lib/supabase/types';
@@ -22,7 +23,8 @@ import type { Consultation } from '@/lib/supabase/types';
 export type ScheduleEvent =
   | { kind: 'consult'; data: Consultation }
   | { kind: 'repair'; data: RepairScheduleItem }   // 복원수리 직접방문
-  | { kind: 'pickup'; data: RepairPickupItem };    // 복원수리 방문수거(수거예정)
+  | { kind: 'pickup'; data: RepairPickupItem }      // 복원수리 방문수거(수거예정)
+  | { kind: 'return_pickup'; data: ReturnPickupItem }; // 반품·교환 수거
 
 /** 정렬 키 — 시간 있는 건 시간순, 수거(시간 없음)는 맨 앞 */
 function eventTime(ev: ScheduleEvent): string {
@@ -60,6 +62,7 @@ export function useScheduleEvents(
   // 복원수리 직접방문 / 방문수거 (훅 자체가 월 범위로 필터)
   const { data: repairData } = useRepairSchedule(monthStart, monthEnd);
   const { data: pickupData } = useRepairPickupSchedule(monthStart, monthEnd);
+  const { data: returnPickupData } = useReturnPickupSchedule(monthStart, monthEnd);
 
   const dateMap = useMemo(() => {
     const map = new Map<string, ScheduleEvent[]>();
@@ -83,9 +86,13 @@ export function useScheduleEvents(
       if (!p.pickup_date) continue;
       add(p.pickup_date, { kind: 'pickup', data: p });
     }
+    for (const p of returnPickupData || []) {
+      if (!p.pickup_date) continue;
+      add(p.pickup_date, { kind: 'return_pickup', data: p });
+    }
     for (const arr of map.values()) arr.sort((a, b) => eventTime(a).localeCompare(eventTime(b)));
     return map;
-  }, [storeData, fieldData, repairData, pickupData, monthStart, monthEnd]);
+  }, [storeData, fieldData, repairData, pickupData, returnPickupData, monthStart, monthEnd]);
 
   return { dateMap };
 }
@@ -95,6 +102,7 @@ export function useScheduleEvents(
 export function eventCategory(ev: ScheduleEvent): ScheduleCategory {
   if (ev.kind === 'consult') return ev.data.consultation_type === 'store_visit' ? 'store' : 'field';
   if (ev.kind === 'repair') return 'repair_visit';
+  if (ev.kind === 'return_pickup') return 'return_pickup';
   return 'repair_pickup';
 }
 
@@ -112,7 +120,9 @@ export function eventTimeStr(ev: ScheduleEvent): string | null {
 }
 
 export function eventHref(ev: ScheduleEvent): string {
-  return ev.kind === 'consult' ? `/consultations/${ev.data.id}` : `/repairs/${ev.data.id}`;
+  if (ev.kind === 'consult') return `/consultations/${ev.data.id}`;
+  if (ev.kind === 'return_pickup') return `/returns/${ev.data.id}`;
+  return `/repairs/${ev.data.id}`;
 }
 
 /** 출장 상담만 방문 주소 반환 (길찾기용). 나머지는 null */

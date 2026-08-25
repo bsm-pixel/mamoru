@@ -10,7 +10,7 @@
  * Google colorId 표: https://developers.google.com/calendar/api/v3/reference/colors
  */
 
-export type ScheduleCategory = 'store' | 'field' | 'repair_visit' | 'repair_pickup';
+export type ScheduleCategory = 'store' | 'field' | 'repair_visit' | 'repair_pickup' | 'return_pickup';
 
 export interface ScheduleColor {
   label: string;
@@ -45,5 +45,11 @@ export const SCHEDULE_COLORS: Record<ScheduleCategory, ScheduleColor> = {
     dot: 'bg-sky-500', dotSelected: 'bg-sky-300',
     badge: 'bg-sky-50 text-sky-700', text: 'text-sky-600',
     googleColorId: null, // 방문수거는 구글 캘린더 미동기화(직접방문만 동기화)
+  },
+  return_pickup: {
+    label: '반품수거',
+    dot: 'bg-rose-500', dotSelected: 'bg-rose-300',
+    badge: 'bg-rose-50 text-rose-700', text: 'text-rose-600',
+    googleColorId: null, // 반품수거는 인앱 달력만
   },
 };

@@ -208,6 +208,24 @@ export function ScheduleCalendar({ onSelect }: ScheduleCalendarProps = {}) {
                     </div>
                   );
                 }
+                if (ev.kind === 'return_pickup') {
+                  const p = ev.data;
+                  return (
+                    <div
+                      key={`return-${p.id}`}
+                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-warm-ivory/60 cursor-pointer transition"
+                      onClick={() => router.push(`/returns/${p.id}`)}
+                    >
+                      <Package size={14} className={`${SCHEDULE_COLORS.return_pickup.text} shrink-0`} />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-semibold text-indigo-black">{p.name || '고객'}</span>
+                        <span className="text-xs text-neutral-400 ml-2">{p.pickup_method || ''}</span>
+                      </div>
+                      <span className="text-xs text-neutral-500">{formatPhone(p.phone || '')}</span>
+                      <Badge className={SCHEDULE_COLORS.return_pickup.badge}>반품수거</Badge>
+                    </div>
+                  );
+                }
                 const c = ev.data;
                 return (
                   <div
