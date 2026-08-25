@@ -650,7 +650,7 @@ export function useRebuildSale() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, items, sale_info, allow_serial_transfer, exchange_returned_serial_ids }: {
+    mutationFn: async ({ id, items, sale_info, allow_serial_transfer, exchange_returned_serial_ids, exchange_return_nonserial }: {
       id: string;
       items: Array<{
         product_id?: string;
@@ -677,11 +677,13 @@ export function useRebuildSale() {
       allow_serial_transfer?: boolean;
       /** 🔁 교환 — 제거 품목의 시리얼 id(반품창고行). 비우면 일반 수정 */
       exchange_returned_serial_ids?: string[];
+      /** 🔁 교환(비시리얼) — { product_id: qty } 제거 비시리얼 수량을 return_stock으로 */
+      exchange_return_nonserial?: Record<string, number>;
     }) => {
       const res = await fetch(`/api/sales/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'rebuild_sale', items, sale_info, allow_serial_transfer, exchange_returned_serial_ids }),
+        body: JSON.stringify({ action: 'rebuild_sale', items, sale_info, allow_serial_transfer, exchange_returned_serial_ids, exchange_return_nonserial }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));

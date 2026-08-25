@@ -565,6 +565,10 @@ export async function PATCH(
       const exchangeReturnedIds = new Set<string>(
         (((body as Record<string, unknown>).exchange_returned_serial_ids as string[] | undefined) || []).filter(Boolean),
       );
+      // 🔁 교환(비시리얼): { product_id: qty } — 제거 비시리얼 수량을 판매가능 대신 반품창고(return_stock)로.
+      //    비어있으면 아래 분기가 실행 안 돼 return_stock 컬럼 접근조차 안 함(마이그133 미실행 시 일반수정 무해).
+      const exchangeReturnNonserial: Record<string, number> =
+        ((body as Record<string, unknown>).exchange_return_nonserial as Record<string, number> | undefined) || {};
 
       // 무결성 가드 — 같은 판매 안에서 동일 시리얼 중복 배정 거부 (2026-06-11)
       {
@@ -644,14 +648,22 @@ export async function PATCH(
           if (item.product_id) oldQtyMap[item.product_id] = (oldQtyMap[item.product_id] || 0) + item.quantity;
         }
         for (const [productId, qty] of Object.entries(oldQtyMap)) {
-          const restoreQty = qty - (returnedQtyByProduct[productId] || 0); // 반품분 제외
-          if (restoreQty <= 0) continue; // 전량 반품이면 복원 없음
-          const { data: prod } = await db.from('products').select('stock_quantity, raw_stock').eq('id', productId).single();
-          if (prod) {
-            const hadSerials = oldSerials?.some((s: { product_id: string }) => s.product_id === productId);
-            const updateData: Record<string, unknown> = { stock_quantity: (prod.stock_quantity || 0) + restoreQty };
-            if (!hadSerials) updateData.raw_stock = (prod.raw_stock || 0) + restoreQty;
-            await db.from('products').update(updateData).eq('id', productId);
+          const serialRet = returnedQtyByProduct[productId] || 0;      // 시리얼 반품(→반품 zone)
+          const nonserialRet = exchangeReturnNonserial[productId] || 0; // 비시리얼 반품(→return_stock)
+          const restoreQty = qty - serialRet - nonserialRet;            // 판매가능으로 복원할 수량
+          if (restoreQty > 0) {
+            const { data: prod } = await db.from('products').select('stock_quantity, raw_stock').eq('id', productId).single();
+            if (prod) {
+              const hadSerials = oldSerials?.some((s: { product_id: string }) => s.product_id === productId);
+              const updateData: Record<string, unknown> = { stock_quantity: (prod.stock_quantity || 0) + restoreQty };
+              if (!hadSerials) updateData.raw_stock = (prod.raw_stock || 0) + restoreQty;
+              await db.from('products').update(updateData).eq('id', productId);
+            }
+          }
+          // 비시리얼 반품분 → 반품창고(return_stock). 판매가능 미복원(검수대기). 마이그133 필요.
+          if (nonserialRet > 0) {
+            const { data: p2 } = await db.from('products').select('return_stock').eq('id', productId).single();
+            await db.from('products').update({ return_stock: ((p2?.return_stock as number) || 0) + nonserialRet }).eq('id', productId);
           }
         }
       }
@@ -851,6 +863,26 @@ export async function PATCH(
         vat_amount: vatAmount,
         is_vat_included: cardAmount > 0,
       }).eq('id', id);
+
+      // 🔁 교환 차액 → 현금흐름 1줄 (교환일 때만 — 일반 수정은 기록 안 함).
+      //    차액 = 교환 후 수납 − 교환 전 수납. + 추가징수(income) / − 환불(expense).
+      if (exchangeReturnedIds.size > 0 || Object.keys(exchangeReturnNonserial).length > 0) {
+        const diff = effRebuildPaid - (sale.paid_amount || 0);
+        if (diff !== 0) {
+          try {
+            await db.from('cash_transactions').insert({
+              transaction_date: new Date().toISOString().slice(0, 10),
+              type: diff > 0 ? 'income' : 'expense',
+              category: '매출교환차액',
+              amount: Math.abs(diff),
+              memo: `${sale.sale_number} 교환차액 ${diff > 0 ? '추가징수' : '환불'}: ${sale.customer_name}`,
+              source_type: 'offline_sale',
+              source_id: id,
+              created_by: user.id,
+            });
+          } catch (e) { console.error('[rebuild_sale] 교환차액 cashflow insert 실패:', e); }
+        }
+      }
 
       await recalcOutstanding(db, sale.customer_id);
       return NextResponse.json({ success: true, action: 'sale_rebuilt' });

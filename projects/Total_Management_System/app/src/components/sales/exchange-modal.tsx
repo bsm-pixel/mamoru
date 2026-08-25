@@ -134,6 +134,12 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
     const paid = Math.max(0, Math.min(received, net));
     const payment_status = paid >= net ? 'paid' : paid <= 0 ? 'unpaid' : 'partial';
 
+    // 비시리얼 반납품목은 return_stock(반품창고)로 (시리얼 없으면)
+    const exchangeReturnNonserial: Record<string, number> = {};
+    if (returnSerialIds.length === 0 && returnItem.product_id) {
+      exchangeReturnNonserial[returnItem.product_id] = returnItem.quantity || 1;
+    }
+
     try {
       await rebuild.mutateAsync({
         id: sale.id,
@@ -149,6 +155,7 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
           sale_channel: sale.sale_channel || undefined,
         },
         exchange_returned_serial_ids: returnSerialIds,
+        exchange_return_nonserial: exchangeReturnNonserial,
       });
 
       // 배송 수거건이면 반품수거 추적 레코드 생성(매장/직접 즉시반납은 생성 안 함)

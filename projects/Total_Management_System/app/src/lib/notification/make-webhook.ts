@@ -71,6 +71,8 @@ async function isNotificationEnabled(template: string): Promise<boolean> {
       stock_received: 'notifications.stock_received',
       stock_payment_notice: 'notifications.stock_payment_notice',
       stock_payment_confirmed: 'notifications.stock_payment_confirmed',
+      return_received: 'notifications.return_received',
+      return_inbound: 'notifications.return_inbound',
     };
     const settingKey = templateKeyMap[template];
     if (!settingKey) return true; // 매핑 안 된 템플릿은 항상 발송
@@ -144,7 +146,10 @@ export type NotifyTemplate =
   // 재고판매(LS) — webhook_consultation 시나리오 사용
   | 'stock_received'          // 재고판매 접수 확인 + 입금 안내(계좌+금액) (자동)
   | 'stock_payment_notice'    // 재고판매 입금 안내 재발송 (어드민)
-  | 'stock_payment_confirmed'; // 재고판매 입금 확인 (→ 판매 자동전환)
+  | 'stock_payment_confirmed'  // 재고판매 입금 확인 (→ 판매 자동전환)
+  // 반품·교환수거 (2026-08-25) — webhook_consultation 폴백
+  | 'return_received'          // 반품수거 접수 (교환/반품 시 자동, 사장님 푸시)
+  | 'return_inbound';          // 반품 입고완료 (사장님 처리 시 고객 알림)
 
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
@@ -188,6 +193,9 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   stock_received: 'STOCK_RECEIVED',
   stock_payment_notice: 'STOCK_PAYMENT_NOTICE',
   stock_payment_confirmed: 'STOCK_PAYMENT_CONFIRMED',
+  // 반품·교환수거
+  return_received: 'RETURN_RECEIVED',
+  return_inbound: 'RETURN_INBOUND',
 };
 
 interface NotifyPayload {
@@ -232,6 +240,8 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     event_received: { title: '새 이벤트 접수', body: `${payload.name}님 이벤트 접수`, url: '/events', settingKey: 'push.event_received' },
     // 재고판매 접수(고객) — 2026-07-21 추가
     stock_received: { title: '새 재고판매 접수', body: `${payload.name}님 재고판매 주문`, url: '/stock-sale', settingKey: 'push.stock_received' },
+    // 반품·교환수거 접수 — 2026-08-25 추가 (사장님 푸시)
+    return_received: { title: '새 반품·교환수거 접수', body: `${payload.name}님 반품수거 접수`, url: '/returns', settingKey: 'push.return_received' },
   };
   const pushCfg = PUSH_CONFIG[payload.template];
   if (pushCfg) {

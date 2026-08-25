@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { insertReturn } from '@/lib/returns/insert-return';
+import { sendNotification } from '@/lib/notification/make-webhook';
 import { toLocalDateString } from '@/lib/utils/format';
 
 /** GET /api/returns?status=&search= — 반품·교환수거 목록 */
@@ -63,6 +65,26 @@ export async function POST(req: NextRequest) {
     };
 
     const created = await insertReturn(db, toLocalDateString(new Date()), payload);
+
+    // 사장님 푸시(즉시) + 고객 알림톡(솔라피 return_received 등록 시). after()로 서버리스 완주 보장
+    if (payload.phone) {
+      after(async () => {
+        try {
+          await sendNotification({
+            template: 'return_received',
+            phone: String(payload.phone),
+            name: String(payload.name || ''),
+            data: {
+              return_number: String(created.return_number || ''),
+              product_name: String(payload.product_name || ''),
+              pickup_method: String(payload.pickup_method || ''),
+              pickup_date: String(payload.pickup_date || ''),
+            },
+          });
+        } catch (e) { console.error('[returns POST] 알림 발송 실패(접수는 완료):', e); }
+      });
+    }
+
     return NextResponse.json({ return: created });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

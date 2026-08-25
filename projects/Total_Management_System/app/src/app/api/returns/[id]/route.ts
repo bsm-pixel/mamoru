@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidReturnTransition } from '@/lib/returns/transitions';
+import { sendNotification } from '@/lib/notification/make-webhook';
 import type { ReturnStatus } from '@/lib/supabase/types';
 
 /** 상태 → 채울 타임스탬프 컬럼 */
@@ -57,6 +59,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const { data, error } = await db.from('returns').update(update).eq('id', id).select().single();
     if (error) throw error;
+
+    // 입고완료 → 고객에게 "반품 잘 받았습니다" 알림톡(솔라피 return_inbound 등록 시). after()로 완주 보장
+    if (update.status === 'inbound' && cur.phone) {
+      after(async () => {
+        try {
+          await sendNotification({
+            template: 'return_inbound',
+            phone: String(cur.phone),
+            name: String(cur.name || ''),
+            data: { return_number: String(cur.return_number || ''), product_name: String(cur.product_name || '') },
+          });
+        } catch (e) { console.error('[returns PATCH] 입고 알림 실패:', e); }
+      });
+    }
+
     return NextResponse.json({ return: data });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
