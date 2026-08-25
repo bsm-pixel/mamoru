@@ -3,21 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard, ShoppingCart, MessageSquare, Wrench, Store,
-  FileSignature, Package, Settings, Users, Truck, BarChart3,
-  MoreHorizontal, X, Boxes, Star, Building2, Handshake, PackageOpen, PackageSearch, Search,
-  Wallet, CalendarOff, CalendarDays, Zap, Tag,
-  type LucideIcon,
-} from 'lucide-react';
+import { MoreHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { NAV_ITEMS } from '@/lib/utils/constants';
-
-const iconMap: Record<string, LucideIcon> = {
-  LayoutDashboard, ShoppingCart, MessageSquare, Wrench, Store,
-  FileSignature, Package, Settings, Users, Truck, BarChart3, Boxes, Star, Building2, Handshake, PackageOpen, PackageSearch, Search,
-  Wallet, CalendarOff, CalendarDays, Zap, Tag,
-};
+import { NAV_ICON_MAP } from '@/lib/utils/nav-icons';
 
 // 모바일 하단 탭에 고정 표시할 4개 + 더보기
 const MOBILE_TAB_PREFIXES = ['/dashboard', '/sales', '/consultations', '/repairs'];
@@ -57,7 +46,7 @@ export function MobileNav() {
             </div>
             <div className="grid grid-cols-4 gap-1 px-3 pb-4">
               {moreItems.map((item) => {
-                const Icon = iconMap[item.icon];
+                const Icon = NAV_ICON_MAP[item.icon];
                 const active = pathname.startsWith(item.matchPrefix);
                 return (
                   <Link
@@ -83,7 +72,7 @@ export function MobileNav() {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card-white/95 backdrop-blur-sm border-t border-neutral-200 safe-area-bottom">
         <div className="flex items-center justify-around h-14">
           {mobileTabs.map((item) => {
-            const Icon = iconMap[item.icon];
+            const Icon = NAV_ICON_MAP[item.icon];
             const active = pathname.startsWith(item.matchPrefix);
             return (
               <Link

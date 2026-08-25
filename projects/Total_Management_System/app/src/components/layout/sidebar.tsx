@@ -3,62 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard,
-  ShoppingCart,
-  Settings,
-  MessageSquare,
-  Wrench,
-  Store,
-  Package,
-  Users,
-  Truck,
-  Boxes,
-  BarChart3,
-  Star,
-  Building2,
-  Handshake,
-  PackageOpen,
-  PackageSearch,
-  Search,
-  FileSignature,
-  Wallet,
-  CalendarOff,
-  CalendarDays,
-  Zap,
-  Tag,
-  ChevronDown,
-  type LucideIcon,
-} from 'lucide-react';
+import { LayoutDashboard, Star, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { NAV_GROUPS } from '@/lib/utils/constants';
+import { NAV_ICON_MAP } from '@/lib/utils/nav-icons';
 import { useSetting } from '@/hooks/use-settings';
-
-const iconMap: Record<string, LucideIcon> = {
-  LayoutDashboard,
-  ShoppingCart,
-  Settings,
-  MessageSquare,
-  Wrench,
-  Store,
-  Package,
-  Users,
-  Truck,
-  Boxes,
-  BarChart3,
-  Star,
-  Building2,
-  Handshake,
-  PackageOpen,
-  PackageSearch,
-  Search,
-  FileSignature,
-  Wallet,
-  CalendarOff,
-  CalendarDays,
-  Zap,
-  Tag,
-};
 
 const COLLAPSE_KEY = 'tms-sidebar-collapsed';
 
@@ -127,7 +76,7 @@ export function Sidebar() {
             </div>
             <div className="space-y-0.5">
               {favorites.map((item) => {
-                const Icon = iconMap[item.icon];
+                const Icon = NAV_ICON_MAP[item.icon];
                 const active = isActive(item.matchPrefix);
                 return (
                   <Link
@@ -167,7 +116,7 @@ export function Sidebar() {
               {!isCollapsed && (
                 <div className="space-y-0.5">
                   {items.map((item) => {
-                    const Icon = iconMap[item.icon];
+                    const Icon = NAV_ICON_MAP[item.icon];
                     const active = isActive(item.matchPrefix);
                     return (
                       <Link
