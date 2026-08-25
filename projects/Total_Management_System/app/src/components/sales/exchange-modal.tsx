@@ -29,6 +29,8 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
   const [newSerialId, setNewSerialId] = useState<string | null>(null);
   const [availSerials, setAvailSerials] = useState<{ id: string; serial_number: string }[]>([]);
   const [receivedInput, setReceivedInput] = useState<string>('');
+  const [serialInput, setSerialInput] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const itemSerials = (it: SaleItem) => serials.filter(
     (s) => (s.sale_item_id && s.sale_item_id === it.id) || (!s.sale_item_id && s.product_id && s.product_id === it.product_id),
@@ -40,18 +42,56 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
   const returnSerialIds = returnSerials.map((s) => s.id);
   const newProduct = (products as ProductLike[]).find((p) => p.id === newProductId) || null;
 
-  // 새 제품 in_stock 시리얼 로드
-  useEffect(() => {
+  // 새 제품 in_stock 시리얼 로드 (+ 생성 후 특정 번호 자동 선택)
+  const loadSerials = async (selectNumber?: string) => {
     if (!newProductId) { setAvailSerials([]); setNewSerialId(null); return; }
-    let alive = true;
-    (async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const db = createClient() as any;
-      const { data } = await db.from('product_serials').select('id, serial_number').eq('product_id', newProductId).eq('status', 'in_stock').order('serial_number');
-      if (alive) { setAvailSerials(data || []); setNewSerialId(null); }
-    })();
-    return () => { alive = false; };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = createClient() as any;
+    const { data } = await db.from('product_serials').select('id, serial_number').eq('product_id', newProductId).eq('status', 'in_stock').order('serial_number');
+    const list: { id: string; serial_number: string }[] = data || [];
+    setAvailSerials(list);
+    if (selectNumber) {
+      const hit = list.find((s) => s.serial_number === selectNumber);
+      if (hit) setNewSerialId(hit.id);
+    }
+  };
+  useEffect(() => {
+    setNewSerialId(null); setSerialInput('');
+    loadSerials();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newProductId]);
+
+  /** 자동생성 — 서버 SSOT 채번(MR{YY}{NNNNN}, 전역 MAX+1, DB UNIQUE 백스톱). 보관−1·준비+1 후 in_stock 시리얼을 배정 */
+  async function handleAutoGen() {
+    if (!newProductId || creating) return;
+    setCreating(true);
+    try {
+      const res = await fetch('/api/serials/batch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: newProductId, count: 1, warehouse_zone: 'ready' }) });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || '시리얼 생성 실패');
+      await loadSerials(j.first_serial);
+      toast.success(`시리얼 ${j.first_serial} 생성·배정`);
+    } catch (e) { toast.error(e instanceof Error ? e.message : '시리얼 생성 실패'); }
+    finally { setCreating(false); }
+  }
+
+  /** 직접입력 — 지정 번호로 생성(보관−1·준비+1). 중복은 서버/DB UNIQUE에서 차단 */
+  async function handleManualCreate() {
+    const num = serialInput.trim();
+    if (!newProductId || !num || creating) return;
+    setCreating(true);
+    try {
+      const res = await fetch('/api/serials', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: newProductId, serial_number: num }) });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(/duplicate|unique|23505/i.test(txt) ? `이미 존재하는 시리얼 번호입니다: ${num}` : (txt || '등록 실패'));
+      }
+      setSerialInput('');
+      await loadSerials(num);
+      toast.success(`시리얼 ${num} 생성·배정`);
+    } catch (e) { toast.error(e instanceof Error ? e.message : '시리얼 등록 실패'); }
+    finally { setCreating(false); }
+  }
 
   const newUnitPrice = newProduct?.price || 0;
   const oldLineTotal = returnItem?.total_price || 0;
@@ -65,7 +105,7 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
     (!prodSearch || p.name.toLowerCase().includes(prodSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(prodSearch.toLowerCase())),
   ).slice(0, 40), [products, prodSearch, returnItem]);
 
-  const canConfirm = !!returnItem && !!newProduct && (availSerials.length === 0 || !!newSerialId) && !rebuild.isPending;
+  const canConfirm = !!returnItem && !!newProduct && (availSerials.length === 0 || !!newSerialId) && !rebuild.isPending && !creating;
 
   async function handleConfirm() {
     if (!returnItem || !newProduct) return;
@@ -169,18 +209,37 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
             </div>
           )}
 
-          {/* 3) 새 시리얼 */}
+          {/* 3) 새 시리얼 — 재고에서 선택 or 자동생성/직접입력(딜러납품 등 미리 마킹 안 한 경우) */}
           {newProduct && (
             <div>
-              <p className="text-xs font-semibold text-neutral-500 mb-1.5">3. 새 제품 시리얼 (판매가능 재고에서 배정)</p>
-              {availSerials.length === 0 ? (
-                <p className="text-xs text-neutral-500 py-2 px-3 bg-neutral-50 rounded-lg">배정 가능한 재고 시리얼이 없습니다. <b>비시리얼 제품</b>이면 이대로 진행하세요(시리얼 없이 배정). 시리얼 제품인데 재고가 없다면 시리얼을 먼저 등록하세요.</p>
-              ) : (
+              <p className="text-xs font-semibold text-neutral-500 mb-1.5">3. 새 제품 시리얼</p>
+              {availSerials.length > 0 && (
                 <select value={newSerialId || ''} onChange={(e) => setNewSerialId(e.target.value || null)}
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
-                  <option value="">시리얼 선택…</option>
+                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 mb-2">
+                  <option value="">재고 시리얼 선택…</option>
                   {availSerials.map((s) => <option key={s.id} value={s.id}>{s.serial_number}</option>)}
                 </select>
+              )}
+              {/* 새로 만들기 */}
+              <div className="rounded-lg border border-dashed border-neutral-300 p-2.5 space-y-2 bg-neutral-50/50">
+                <p className="text-[11px] text-neutral-500">새 시리얼 만들기 (미리 마킹 안 한 제품 — 보관재고에서 1개 꺼내 배정)</p>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={handleAutoGen} disabled={creating}
+                    className="shrink-0 flex items-center gap-1 px-3 h-9 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition disabled:opacity-50">
+                    <RefreshCw size={12} className={creating ? 'animate-spin' : ''} /> 자동생성
+                  </button>
+                  <input value={serialInput} onChange={(e) => setSerialInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleManualCreate(); } }}
+                    placeholder="직접입력 (예: MR2610900)"
+                    className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                  <button type="button" onClick={handleManualCreate} disabled={creating || !serialInput.trim()}
+                    className="shrink-0 px-3 h-9 rounded-lg border border-neutral-300 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 transition disabled:opacity-50">등록</button>
+                </div>
+              </div>
+              {newSerialId ? (
+                <p className="text-[11px] text-emerald-700 mt-1.5">✓ 배정 시리얼: <b>{availSerials.find((s) => s.id === newSerialId)?.serial_number}</b></p>
+              ) : (
+                <p className="text-[11px] text-amber-600 mt-1.5">시리얼 미배정 상태로 확정 가능(비시리얼 제품이면 정상). 가위 등 시리얼 제품은 위에서 배정하세요.</p>
               )}
             </div>
           )}
