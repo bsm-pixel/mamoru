@@ -18,6 +18,8 @@ export interface InventoryItem {
   zone_raw: number;
   zone_ready: number;
   zone_display: number;
+  /** 반품창고(status=returned) — 판매가능 현재고와 분리, 무결식 합계에 미포함 */
+  zone_return?: number;
   /** 112: 정위치 (표시 전용, 미지정이면 null) */
   location_id: string | null;
   location_code: string | null;

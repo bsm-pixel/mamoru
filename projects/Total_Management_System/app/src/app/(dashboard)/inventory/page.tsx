@@ -444,7 +444,7 @@ function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSe
         </div>
         {!isNoStock && total > 0 && (
           <div className="flex items-center gap-2 mt-1">
-            <ZoneDots raw={item.zone_raw} ready={item.zone_ready} display={item.zone_display} />
+            <ZoneDots raw={item.zone_raw} ready={item.zone_ready} display={item.zone_display} ret={item.zone_return || 0} />
           </div>
         )}
       </div>
@@ -484,7 +484,7 @@ function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSe
         </div>
         <div className="col-span-3">
           {!isNoStock && total > 0 ? (
-            <ZoneDots raw={item.zone_raw} ready={item.zone_ready} display={item.zone_display} />
+            <ZoneDots raw={item.zone_raw} ready={item.zone_ready} display={item.zone_display} ret={item.zone_return || 0} />
           ) : (
             <span className="text-xs text-neutral-300">-</span>
           )}
@@ -504,8 +504,8 @@ function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSe
   );
 }
 
-/** 창고별 색상 도트 + 숫자 */
-function ZoneDots({ raw, ready, display }: { raw: number; ready: number; display: number }) {
+/** 창고별 색상 도트 + 숫자 (반품창고는 판매가능 현재고와 분리 표시) */
+function ZoneDots({ raw, ready, display, ret = 0 }: { raw: number; ready: number; display: number; ret?: number }) {
   return (
     <div className="flex items-center gap-3 text-[11px]">
       {raw > 0 && (
@@ -524,6 +524,12 @@ function ZoneDots({ raw, ready, display }: { raw: number; ready: number; display
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-blue-500" />
           <span className="text-blue-700">디스플레이 {display}</span>
+        </span>
+      )}
+      {ret > 0 && (
+        <span className="flex items-center gap-1" title="반품창고 — 검수대기(판매가능 현재고·아임웹 미반영)">
+          <span className="w-2 h-2 rounded-full bg-purple-500" />
+          <span className="text-purple-700">반품 {ret}</span>
         </span>
       )}
     </div>

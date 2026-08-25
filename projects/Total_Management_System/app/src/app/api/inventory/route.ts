@@ -70,6 +70,17 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // 3.5) 반품창고 재고 (status='returned') — 판매가능 현재고와 분리 집계(검수대기·아임웹 미반영)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: returnedRaw } = await (supabase as any)
+    .from('product_serials')
+    .select('product_id')
+    .eq('status', 'returned');
+  const returnMap: Record<string, number> = {};
+  if (returnedRaw) {
+    for (const row of returnedRaw) returnMap[row.product_id] = (returnMap[row.product_id] || 0) + 1;
+  }
+
   // 4) 조합
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const items = (products || []).map((p: any) => ({
@@ -87,6 +98,7 @@ export async function GET(req: NextRequest) {
     zone_raw: p.raw_stock || 0,  // 보관 = raw_stock (비시리얼 수량)
     zone_ready: zoneMap[p.id]?.ready || 0,
     zone_display: zoneMap[p.id]?.display || 0,
+    zone_return: returnMap[p.id] || 0,  // 반품창고(검수대기) — 판매가능 현재고 제외
     // 112: 정위치 (표시 전용). 미지정이면 null
     location_id: p.location_id || null,
     location_code: p.warehouse_locations?.code || null,

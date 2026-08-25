@@ -23,6 +23,7 @@ const ZONE_COLOR: Record<string, string> = {
   raw: 'bg-neutral-100 text-neutral-500',
   ready: 'bg-green-50 text-green-700',
   display: 'bg-blue-50 text-blue-700',
+  return: 'bg-purple-50 text-purple-700',
 };
 const STATUS_COLOR: Record<string, string> = {
   in_stock: 'bg-green-100 text-green-700',
@@ -31,7 +32,7 @@ const STATUS_COLOR: Record<string, string> = {
   returned: 'bg-purple-100 text-purple-700',
   defective: 'bg-red-100 text-red-700',
 };
-const ZONE_LABEL: Record<string, string> = { raw: '보관', ready: '준비', display: '디스플레이' };
+const ZONE_LABEL: Record<string, string> = { raw: '보관', ready: '준비', display: '디스플레이', return: '반품창고' };
 const STATUS_LABEL: Record<string, string> = { in_stock: '재고', reserved: '예약', sold: '판매', returned: '반품', defective: '불량' };
 const STATUS_TABS = [
   { value: 'all', label: '전체' },

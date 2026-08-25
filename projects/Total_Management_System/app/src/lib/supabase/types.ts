@@ -58,7 +58,7 @@ export type ContractStatus = 'draft' | 'signed' | 'sent' | 'completed' | 'cancel
 
 // R7: 시리얼넘버 ENUM
 export type SerialStatus = 'in_stock' | 'reserved' | 'sold' | 'returned' | 'defective';
-export type WarehouseZone = 'raw' | 'ready' | 'display';
+export type WarehouseZone = 'raw' | 'ready' | 'display' | 'return';  // return=반품창고(검수대기·판매불가·아임웹 미반영)
 
 /** 112: 로케이션의 용도 구역. WarehouseZone(시리얼의 존)과 개념은 같으나
  *  raw 존의 물리적 자리를 다루므로 'storage' 라는 이름을 쓴다. */
