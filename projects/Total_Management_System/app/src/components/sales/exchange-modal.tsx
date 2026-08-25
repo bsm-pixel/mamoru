@@ -33,8 +33,8 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
   const itemSerials = (it: SaleItem) => serials.filter(
     (s) => (s.sale_item_id && s.sale_item_id === it.id) || (!s.sale_item_id && s.product_id && s.product_id === it.product_id),
   );
-  // 반납 대상 = 시리얼이 배정된 품목만 (반품창고=시리얼 실물 격리)
-  const returnableItems = items.filter((it) => itemSerials(it).length > 0);
+  // 반납 대상 = 전 품목 (시리얼 제품=반품창고 격리 / 비시리얼=판매가능 재고 복구)
+  const returnableItems = items;
   const returnItem = items.find((i) => i.id === returnItemId) || null;
   const returnSerials = returnItem ? itemSerials(returnItem) : [];
   const returnSerialIds = returnSerials.map((s) => s.id);
@@ -125,7 +125,7 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
           <div>
             <p className="text-xs font-semibold text-neutral-500 mb-1.5">1. 반납받을 품목 (구제품 → 반품창고)</p>
             {returnableItems.length === 0 ? (
-              <p className="text-xs text-neutral-400 py-3 text-center bg-neutral-50 rounded-lg">시리얼이 배정된 품목이 없어 교환할 수 없습니다.</p>
+              <p className="text-xs text-neutral-400 py-3 text-center bg-neutral-50 rounded-lg">교환할 품목이 없습니다.</p>
             ) : (
               <div className="space-y-1.5">
                 {returnableItems.map((it) => {
@@ -138,7 +138,9 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
                         <span className="text-sm font-medium text-neutral-800">{it.product_name}</span>
                         <span className="text-sm font-semibold text-neutral-700">{formatKRW(it.total_price)}</span>
                       </div>
-                      <div className="text-[11px] text-neutral-400 mt-0.5">시리얼 {srs.map((s) => s.serial_number).join(', ')}</div>
+                      <div className="text-[11px] text-neutral-400 mt-0.5">
+                        {srs.length > 0 ? `시리얼 ${srs.map((s) => s.serial_number).join(', ')} → 반품창고` : '비시리얼 제품 → 판매가능 재고로 복구'}
+                      </div>
                     </button>
                   );
                 })}
@@ -172,7 +174,7 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
             <div>
               <p className="text-xs font-semibold text-neutral-500 mb-1.5">3. 새 제품 시리얼 (판매가능 재고에서 배정)</p>
               {availSerials.length === 0 ? (
-                <p className="text-xs text-rose-500 py-2 px-3 bg-rose-50 rounded-lg">이 제품에 배정 가능한 시리얼(재고)이 없습니다. 시리얼을 먼저 등록하세요.</p>
+                <p className="text-xs text-neutral-500 py-2 px-3 bg-neutral-50 rounded-lg">배정 가능한 재고 시리얼이 없습니다. <b>비시리얼 제품</b>이면 이대로 진행하세요(시리얼 없이 배정). 시리얼 제품인데 재고가 없다면 시리얼을 먼저 등록하세요.</p>
               ) : (
                 <select value={newSerialId || ''} onChange={(e) => setNewSerialId(e.target.value || null)}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
