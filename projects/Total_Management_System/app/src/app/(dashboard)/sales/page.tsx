@@ -541,7 +541,7 @@ export default function SalesPage() {
         <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
       )}
       {section !== 'customer' && unifiedItems.length >= 30 && (
-        <p className="text-xs text-neutral-400 text-center py-2">최대 30건까지 표시됩니다. 더 자세히는 [B2B거래] 메뉴에서 확인하세요.</p>
+        <p className="text-xs text-neutral-400 text-center py-2">최대 30건까지 표시됩니다. 더 자세히는 <button onClick={() => router.push('/deliveries')} className="underline font-semibold text-neutral-500 hover:text-neutral-700">B2B 납품</button> 메뉴에서 확인하세요.</p>
       )}
     </>
   );

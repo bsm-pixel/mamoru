@@ -10,9 +10,7 @@ import { Button } from './button';
  *
  * 판매관리 SalesGridTable에서 검증된 밀집표(sticky 헤더 + 선택 하이라이트 + 촘촘한 패딩)를
  * 도메인 무관하게 일반화. 컬럼 정의·행 렌더·행 색줄은 각 페이지가 주입한다.
- *
- * 기존 components/ui/data-table.tsx(DataTable)와 별개:
- *   DataTable = 단순 목록 표(sticky·선택 없음) / DataGrid = 마스터-디테일 밀집표(선택 하이라이트·sticky).
+ * (마스터-디테일 밀집표 — sticky 헤더 + 선택 하이라이트 + 촘촘한 패딩)
  */
 export interface GridColumn<T> {
   key: string;

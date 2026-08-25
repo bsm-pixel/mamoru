@@ -221,23 +221,6 @@ export default function ContractsPage() {
   );
 }
 
-/* PC 테이블 행 */
-const ContractTableRow = memo(function ContractTableRow({ contract, onClick }: { contract: Contract; onClick: () => void }) {
-  const isCancelled = contract.status === 'cancelled';
-  return (
-    <tr onClick={onClick} className={`border-b border-neutral-100 cursor-pointer hover:bg-neutral-50 transition ${isCancelled ? 'opacity-50' : ''}`}>
-      <td className={`px-4 py-3 font-mono text-xs ${isCancelled ? 'line-through' : ''}`}>{contract.contract_number}</td>
-      <td className="px-4 py-3 text-neutral-600">{formatDate(contract.created_at)}</td>
-      <td className={`px-4 py-3 font-semibold ${isCancelled ? 'line-through' : ''}`}>{contract.customer_name}</td>
-      <td className="px-4 py-3">
-        <Badge className={STATUS_COLOR[contract.status] || ''}>{STATUS_LABEL[contract.status] || contract.status}</Badge>
-      </td>
-      <td className="px-4 py-3 text-neutral-600">{PAYMENT_LABEL[contract.payment_method] || contract.payment_method}</td>
-      <td className={`px-4 py-3 text-right font-bold ${isCancelled ? 'line-through text-neutral-400' : ''}`}>{formatKRW(contract.final_amount)}</td>
-    </tr>
-  );
-});
-
 /* 모바일 카드 행 */
 const ContractRow = memo(function ContractRow({ contract, isSelected, onClick, actTypes }: { contract: Contract; isSelected?: boolean; onClick: () => void; actTypes?: ActivityTypes }) {
   const isCancelled = contract.status === 'cancelled';
