@@ -498,11 +498,13 @@ export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
                     if (item.type === 'sale') router.push(`/sales/${item.id}`);
                     else if (item.type === 'contract') router.push(`/contracts/${item.id}`);
                     else if (item.type === 'order') router.push(`/orders/${item.id}`);
+                    else if (item.type === 'consultation') router.push(`/consultations/${item.id}`);
+                    else if (item.type === 'repair') router.push(`/repairs/${item.id}`);
                     else if (item.type === 'manual_invoice') router.push('/manual-invoices');
                   }}
                   className={`flex items-start gap-3 py-3 ${
                     i < timeline.length - 1 ? 'border-b border-neutral-100' : ''
-                  } ${item.type === 'sale' || item.type === 'contract' || item.type === 'order' || item.type === 'manual_invoice' ? 'cursor-pointer hover:bg-stone-50/40 -mx-1 px-1 rounded' : ''}`}
+                  } cursor-pointer hover:bg-stone-50/40 -mx-1 px-1 rounded`}
                 >
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${item.color}`}>
                     <Icon size={14} />

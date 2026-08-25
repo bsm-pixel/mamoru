@@ -315,7 +315,7 @@ function AlertsCard({
     icon: typeof PackageX; label: string; count: number; href: string;
     active: boolean; color: 'rose' | 'amber' | 'yellow' | 'blue' | 'stone';
   }> = [
-    { icon: PackageX,      label: '저재고',   count: lowStockCount,  href: '/purchasing/new', active: lowStockCount > 0,  color: 'rose'   },
+    { icon: PackageX,      label: '저재고',   count: lowStockCount,  href: '/inventory?low=1', active: lowStockCount > 0,  color: 'rose'   },
     { icon: Truck,         label: '운송장',   count: waybillCount,    href: '/settings',       active: waybillCount < 100, color: 'amber'  },
     { icon: Star,          label: '신규 후기', count: reviewCount,     href: '/reviews',        active: reviewCount > 0,    color: 'yellow' },
     { icon: PackageOpen,   label: '매입 대기', count: purchasingCount, href: '/purchasing',     active: purchasingCount > 0,color: 'blue'   },

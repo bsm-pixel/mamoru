@@ -220,6 +220,26 @@ export function ContractDetailPanel({ contractId, onDeleted }: Props) {
         </Card>
       )}
 
+      {/* 전환된 판매 보기 — 이미 판매로 전환된 계약(offline_sale_id)은 해당 판매로 딥링크 */}
+      {contract.offline_sale_id && (
+        <Card>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Receipt size={14} className="text-emerald-600 shrink-0" />
+              <span className="text-xs font-semibold text-neutral-600">이 계약은 판매로 전환됨</span>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="shrink-0"
+              onClick={() => router.push(`/sales/${contract.offline_sale_id}`)}
+            >
+              전환된 판매 보기
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {/* 판매 전환 확인 */}
       <ConfirmModal
         open={showConvertConfirm}

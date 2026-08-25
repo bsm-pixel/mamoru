@@ -53,6 +53,12 @@ export default function InventoryPage() {
   const [categoryGroup, setCategoryGroup] = useState('all');
   const [search, setSearch] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(false);
+  // 대시보드 '저재고' 드릴다운(/inventory?low=1) 진입 시 저재고 필터 자동 적용 (Suspense 불필요 — 클라이언트 마운트 후 1회)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('low') === '1') {
+      setLowStockOnly(true);
+    }
+  }, []);
   const [hideUnused, setHideUnused] = useState(true); // 미사용 기본 숨김
   const [mismatchOnly, setMismatchOnly] = useState(false); // 무결성 어긋난 것만
   const [sortKey, setSortKey] = useState<SortKey>('name');

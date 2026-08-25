@@ -198,7 +198,7 @@ export default function EventsPage() {
       </div>
 
       <SlidePanel open={!!sel} onClose={() => setSelId(null)} title="EVENT 접수 상세" className="sm:w-[440px]">
-        {sel && <EventDetail ev={sel} patch={patch} del={del} onDone={() => setSelId(null)} goSales={() => router.push('/sales')} />}
+        {sel && <EventDetail ev={sel} patch={patch} del={del} onDone={() => setSelId(null)} goSales={(saleId?: string) => router.push(saleId ? `/sales/${saleId}` : '/sales')} />}
       </SlidePanel>
 
       {editCampaign && <CampaignFormModal campaign={editCampaign} onClose={() => setEditCampaign(null)} create={createCampaign} update={updateCampaign} />}
@@ -295,7 +295,7 @@ function EventDetail({ ev, patch, del, onDone, goSales }: {
   patch: ReturnType<typeof useEventPatch>;
   del: ReturnType<typeof useEventDelete>;
   onDone: () => void;
-  goSales: () => void;
+  goSales: (saleId?: string) => void;
 }) {
   const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
     <div className="flex justify-between gap-2 py-1.5 border-b border-neutral-50 text-sm">
@@ -374,8 +374,8 @@ function EventDetail({ ev, patch, del, onDone, goSales }: {
           </button>
         )}
         {ev.status === 'converted' && (
-          <button onClick={goSales} className="w-full py-2.5 rounded-lg border border-neutral-300 text-sm font-semibold text-neutral-700">
-            판매로 전환됨 — 판매관리에서 발송/수령 처리 →
+          <button onClick={() => goSales(ev.sale_id || undefined)} className="w-full py-2.5 rounded-lg border border-neutral-300 text-sm font-semibold text-neutral-700">
+            판매로 전환됨 — {ev.sale_id ? '전환된 판매 상세로 →' : '판매관리에서 발송/수령 처리 →'}
           </button>
         )}
 
