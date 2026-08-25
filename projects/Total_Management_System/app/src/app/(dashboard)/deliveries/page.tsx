@@ -241,7 +241,7 @@ export default function DeliveriesPage() {
 
   return (
     <>
-      <Topbar title="B2B거래" />
+      <Topbar title="B2B 납품" />
 
       {isLg ? (
         /* PC: 밀집 그리드 + 우측 상세 (카드보기·토글 폐지 — 항상 그리드) */

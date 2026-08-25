@@ -7,6 +7,7 @@ import { SlidePanel } from '@/components/ui/slide-panel';
 import { useEvents, useEventPatch, useEventDelete, useCampaigns, useCreateCampaign, useUpdateCampaign } from '@/hooks/use-events';
 import { EVENT_STATUS_LABEL, CAMPAIGN_TYPE_LABEL, type EventSubmission, type EventStatus, type EventCampaign, type DiscountRule } from '@/lib/event/types';
 import { Zap, Loader2, Package, Truck, Store, ArrowLeft, Plus, ExternalLink, Settings, X } from 'lucide-react';
+import { useIsLg } from '@/hooks/use-grid-mode';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 
@@ -50,6 +51,7 @@ export default function EventsPage() {
   const eventActTypes = useActivityTypes(list.map((e) => e.customer_phone));
   const tabCounts = countsByCampaign[campaignId || '_none'] || {};
   const sel = useMemo(() => (all || []).find((e) => e.id === selId) || null, [all, selId]);
+  const isLg = useIsLg();
 
   // ── 캠페인 카드 화면 ──
   if (!campaignId) {
@@ -164,42 +166,62 @@ export default function EventsPage() {
           ))}
         </div>
 
-        {isLoading ? (
-          <div className="py-16 text-center text-sm text-neutral-400"><Loader2 size={20} className="animate-spin inline" /></div>
-        ) : list.length === 0 ? (
-          <div className="py-16 text-center text-sm text-neutral-400">{EVENT_STATUS_LABEL[tab]} 건이 없습니다</div>
-        ) : (
-          <div className="space-y-2">
-            {list.map((e) => (
-              <button key={e.id} onClick={() => setSelId(e.id)}
-                className="w-full text-left bg-white rounded-xl border border-neutral-200 px-4 py-3 hover:border-neutral-400 transition">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="text-[10px] font-mono text-neutral-400">{e.event_number}</div>
-                    <div className="flex items-center gap-1 min-w-0">
-                      <span className="text-sm font-bold text-neutral-900 truncate">{e.customer_name}</span>
-                      <ActivityChips types={eventActTypes(e.customer_phone)} className="shrink-0" />
+        {(() => {
+          const listContent = isLoading ? (
+            <div className="py-16 text-center text-sm text-neutral-400"><Loader2 size={20} className="animate-spin inline" /></div>
+          ) : list.length === 0 ? (
+            <div className="py-16 text-center text-sm text-neutral-400">{EVENT_STATUS_LABEL[tab]} 건이 없습니다</div>
+          ) : (
+            <div className="space-y-2">
+              {list.map((e) => (
+                <button key={e.id} onClick={() => setSelId(e.id)}
+                  className={`w-full text-left bg-white rounded-xl border px-4 py-3 transition ${selId === e.id ? 'border-neutral-900 ring-1 ring-neutral-900' : 'border-neutral-200 hover:border-neutral-400'}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-mono text-neutral-400">{e.event_number}</div>
+                      <div className="flex items-center gap-1 min-w-0">
+                        <span className="text-sm font-bold text-neutral-900 truncate">{e.customer_name}</span>
+                        <ActivityChips types={eventActTypes(e.customer_phone)} className="shrink-0" />
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="text-sm font-bold text-neutral-900">{won(e.total_amount)}</div>
+                      <div className="text-[11px] text-neutral-400 flex items-center gap-0.5 justify-end">
+                        {e.receive_method === 'visit' ? <><Store size={11} />매장</> : <><Truck size={11} />택배</>}
+                      </div>
                     </div>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <div className="text-sm font-bold text-neutral-900">{won(e.total_amount)}</div>
-                    <div className="text-[11px] text-neutral-400 flex items-center gap-0.5 justify-end">
-                      {e.receive_method === 'visit' ? <><Store size={11} />매장</> : <><Truck size={11} />택배</>}
-                    </div>
+                  <div className="mt-1.5 text-xs text-neutral-500 truncate">
+                    {(e.items || []).map((it) => `${it.product_name}${it.slicing ? '(슬라이싱)' : ''}×${it.qty}`).join(', ')}
                   </div>
-                </div>
-                <div className="mt-1.5 text-xs text-neutral-500 truncate">
-                  {(e.items || []).map((it) => `${it.product_name}${it.slicing ? '(슬라이싱)' : ''}×${it.qty}`).join(', ')}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+                </button>
+              ))}
+            </div>
+          );
+          // PC: 좌목록 + 우 상세(마스터-디테일) / 모바일: 목록만(상세는 SlidePanel)
+          return isLg ? (
+            <div className="flex gap-4 h-[calc(100vh-260px)]">
+              <div className="flex-1 min-w-0 overflow-y-auto">{listContent}</div>
+              <div className="w-[400px] shrink-0 overflow-y-auto">
+                {sel ? (
+                  <EventDetail ev={sel} patch={patch} del={del} onDone={() => setSelId(null)} goSales={(saleId?: string) => router.push(saleId ? `/sales/${saleId}` : '/sales')} />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-60 text-stone-400">
+                    <Zap size={28} className="mb-2 opacity-40" />
+                    <p className="text-xs text-center">접수를 선택하면<br />상세가 표시됩니다</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : listContent;
+        })()}
       </div>
 
-      <SlidePanel open={!!sel} onClose={() => setSelId(null)} title="EVENT 접수 상세" className="sm:w-[440px]">
-        {sel && <EventDetail ev={sel} patch={patch} del={del} onDone={() => setSelId(null)} goSales={(saleId?: string) => router.push(saleId ? `/sales/${saleId}` : '/sales')} />}
-      </SlidePanel>
+      {!isLg && (
+        <SlidePanel open={!!sel} onClose={() => setSelId(null)} title="EVENT 접수 상세" className="sm:w-[440px]">
+          {sel && <EventDetail ev={sel} patch={patch} del={del} onDone={() => setSelId(null)} goSales={(saleId?: string) => router.push(saleId ? `/sales/${saleId}` : '/sales')} />}
+        </SlidePanel>
+      )}
 
       {editCampaign && <CampaignFormModal campaign={editCampaign} onClose={() => setEditCampaign(null)} create={createCampaign} update={updateCampaign} />}
     </>

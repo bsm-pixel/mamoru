@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSerialLookup, useSerialAudit, type SerialAuditLog } from '@/hooks/use-serial-lookup';
 import { useProducts } from '@/hooks/use-sales';
+import { useIsLg } from '@/hooks/use-grid-mode';
 import { formatPhone, SALE_CHANNEL_LABEL } from '@/lib/utils/format';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
@@ -109,6 +110,7 @@ export default function SerialsPage() {
   const { data: products = [] } = useProducts();
   const [prodSearch, setProdSearch] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const isLg = useIsLg();
 
   const serial = data?.serial;
   const product = data?.product;
@@ -385,43 +387,91 @@ export default function SerialsPage() {
 
         {/* 제품별 관리 탭 — 제품 선택 → 시리얼 생성·상태/위치 관리 */}
         {tab === 'manage' && (
-          selectedProductId ? (
-            <div className="space-y-3">
-              <button onClick={() => setSelectedProductId(null)} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
-                <ArrowLeft size={12} /> 다른 제품 선택
-              </button>
-              {(() => { const p = products.find((x) => x.id === selectedProductId); return p ? (
-                <div className="flex items-center gap-2">
-                  <Package size={16} className="text-stone-900" />
-                  <span className="text-sm font-bold">{p.name}</span>
-                  <span className="text-xs text-neutral-500">({p.sku})</span>
+          isLg ? (
+            /* PC: 좌 제품리스트(항상) + 우 시리얼 관리 패널 — 다른 화면과 동일 마스터-디테일 */
+            <div className="flex gap-4 h-[calc(100vh-220px)]">
+              <div className="w-[340px] shrink-0 flex flex-col gap-3">
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                  <input type="text" value={prodSearch} onChange={(e) => setProdSearch(e.target.value)} placeholder="제품명 또는 SKU 검색"
+                    className="w-full h-10 pl-9 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
-              ) : null; })()}
-              <SerialManagePanel key={selectedProductId} productId={selectedProductId} productName={products.find((x) => x.id === selectedProductId)?.name} />
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-                <input type="text" value={prodSearch} onChange={(e) => setProdSearch(e.target.value)} placeholder="제품명 또는 SKU 검색"
-                  className="w-full h-10 pl-9 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                <div className="bg-white rounded-xl border border-neutral-200 divide-y divide-neutral-100 flex-1 overflow-y-auto">
+                  {products.filter((p) => p.category !== 'SUP' && (!prodSearch || p.name.toLowerCase().includes(prodSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(prodSearch.toLowerCase()))).map((p) => (
+                    <button key={p.id} onClick={() => setSelectedProductId(p.id)} className={`w-full flex items-center justify-between px-4 py-3 text-left transition ${selectedProductId === p.id ? 'bg-stone-100 border-l-2 border-l-stone-900' : 'hover:bg-neutral-50'}`}>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Package size={15} className="text-neutral-400 shrink-0" />
+                        <span className="text-sm font-medium truncate">{p.name}</span>
+                        <span className="text-xs text-neutral-400 shrink-0">{p.sku}</span>
+                      </div>
+                      <ArrowRight size={14} className="text-neutral-300 shrink-0" />
+                    </button>
+                  ))}
+                  {products.filter((p) => p.category !== 'SUP').length === 0 && (
+                    <div className="px-4 py-8 text-center text-sm text-neutral-400">제품이 없습니다</div>
+                  )}
+                </div>
               </div>
-              <div className="bg-white rounded-xl border border-neutral-200 divide-y divide-neutral-100 max-h-[60vh] overflow-y-auto">
-                {products.filter((p) => p.category !== 'SUP' && (!prodSearch || p.name.toLowerCase().includes(prodSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(prodSearch.toLowerCase()))).map((p) => (
-                  <button key={p.id} onClick={() => setSelectedProductId(p.id)} className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-neutral-50 transition">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Package size={15} className="text-neutral-400 shrink-0" />
-                      <span className="text-sm font-medium truncate">{p.name}</span>
-                      <span className="text-xs text-neutral-400 shrink-0">{p.sku}</span>
-                    </div>
-                    <ArrowRight size={14} className="text-neutral-300 shrink-0" />
-                  </button>
-                ))}
-                {products.filter((p) => p.category !== 'SUP').length === 0 && (
-                  <div className="px-4 py-8 text-center text-sm text-neutral-400">제품이 없습니다</div>
+              <div className="flex-1 min-w-0 overflow-y-auto">
+                {selectedProductId ? (
+                  <div className="space-y-3">
+                    {(() => { const p = products.find((x) => x.id === selectedProductId); return p ? (
+                      <div className="flex items-center gap-2">
+                        <Package size={16} className="text-stone-900" />
+                        <span className="text-sm font-bold">{p.name}</span>
+                        <span className="text-xs text-neutral-500">({p.sku})</span>
+                      </div>
+                    ) : null; })()}
+                    <SerialManagePanel key={selectedProductId} productId={selectedProductId} productName={products.find((x) => x.id === selectedProductId)?.name} />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-60 text-stone-400">
+                    <Package size={28} className="mb-2 opacity-40" />
+                    <p className="text-xs text-center">제품을 선택하면<br />시리얼 관리가 표시됩니다</p>
+                  </div>
                 )}
               </div>
             </div>
+          ) : (
+            /* 모바일: 드릴인 (기존 유지) */
+            selectedProductId ? (
+              <div className="space-y-3">
+                <button onClick={() => setSelectedProductId(null)} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                  <ArrowLeft size={12} /> 다른 제품 선택
+                </button>
+                {(() => { const p = products.find((x) => x.id === selectedProductId); return p ? (
+                  <div className="flex items-center gap-2">
+                    <Package size={16} className="text-stone-900" />
+                    <span className="text-sm font-bold">{p.name}</span>
+                    <span className="text-xs text-neutral-500">({p.sku})</span>
+                  </div>
+                ) : null; })()}
+                <SerialManagePanel key={selectedProductId} productId={selectedProductId} productName={products.find((x) => x.id === selectedProductId)?.name} />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                  <input type="text" value={prodSearch} onChange={(e) => setProdSearch(e.target.value)} placeholder="제품명 또는 SKU 검색"
+                    className="w-full h-10 pl-9 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                </div>
+                <div className="bg-white rounded-xl border border-neutral-200 divide-y divide-neutral-100 max-h-[60vh] overflow-y-auto">
+                  {products.filter((p) => p.category !== 'SUP' && (!prodSearch || p.name.toLowerCase().includes(prodSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(prodSearch.toLowerCase()))).map((p) => (
+                    <button key={p.id} onClick={() => setSelectedProductId(p.id)} className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-neutral-50 transition">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Package size={15} className="text-neutral-400 shrink-0" />
+                        <span className="text-sm font-medium truncate">{p.name}</span>
+                        <span className="text-xs text-neutral-400 shrink-0">{p.sku}</span>
+                      </div>
+                      <ArrowRight size={14} className="text-neutral-300 shrink-0" />
+                    </button>
+                  ))}
+                  {products.filter((p) => p.category !== 'SUP').length === 0 && (
+                    <div className="px-4 py-8 text-center text-sm text-neutral-400">제품이 없습니다</div>
+                  )}
+                </div>
+              </div>
+            )
           )
         )}
       </div>
