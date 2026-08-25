@@ -32,6 +32,7 @@ export default function ProductsPage() {
   const CATEGORY_LABEL = useSetting<Record<string, string>>('inventory.category_labels', DEFAULT_CAT_LABELS);
   const catTabVisible = useSetting<Record<string, boolean>>('inventory.category_tab_visible', {});
   const defaultSort = useSetting<string>('inventory.default_sort', 'group');
+  const lowThreshold = useSetting<number>('inventory.low_stock_threshold', 3);  // 재고화면과 동일 기준
   const useGrouping = defaultSort === 'group';
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panelMode, setPanelMode] = useState<'view' | 'create' | 'duplicate'>('view');
@@ -60,10 +61,10 @@ export default function ProductsPage() {
     return counts;
   }, [products]);
 
-  // 재고부족 카운트 (0~3, -1 제외)
+  // 재고부족 카운트 (0~임계치, -1 제외) — 재고화면과 동일 설정 기준
   const lowStockCount = useMemo(
-    () => products.filter((p) => p.stock_quantity >= 0 && p.stock_quantity <= 3).length,
-    [products]
+    () => products.filter((p) => p.stock_quantity >= 0 && p.stock_quantity <= lowThreshold).length,
+    [products, lowThreshold]
   );
 
   // 필터링 (부자재 SUP 제외 — /supplies에서 별도 관리)

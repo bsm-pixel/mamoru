@@ -37,6 +37,8 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
   const updatePO = useUpdatePurchaseOrder();
 
   const [depositInput, setDepositInput] = useState('');
+  // ⚠️ 모든 훅은 조기 반환 위에서 (Rules of Hooks) — 로딩→로드 전환 시 훅 개수 변동 크래시 방지
+  const [pendingAction, setPendingAction] = useState<{ status: string; label: string; msg: string; variant?: 'danger' | 'default'; extra?: Record<string, unknown> } | null>(null);
 
   if (isLoading) {
     return (
@@ -63,8 +65,6 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
 
   const { order: po, items } = data;
   const { supply, vat } = calcVAT(po.total_amount);
-
-  const [pendingAction, setPendingAction] = useState<{ status: string; label: string; msg: string; variant?: 'danger' | 'default'; extra?: Record<string, unknown> } | null>(null);
 
   async function handleAction(status: string, extra?: Record<string, unknown>) {
     await updatePO.mutateAsync({ id, status, ...extra });

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReportSummary, type SaleDetail } from '@/hooks/use-reports';
 import { useSale } from '@/hooks/use-sales';
-import { formatKRW } from '@/lib/utils/format';
+import { formatKRW, toLocalDateString } from '@/lib/utils/format';
 import { ArrowLeft, Printer } from 'lucide-react';
 import Link from 'next/link';
 
@@ -24,15 +24,15 @@ function TransactionContent() {
   const searchParams = useSearchParams();
   const saleId = searchParams?.get('sale_id') || null;
 
-  // 단건 모드: sale_id가 있으면 해당 건만 표시
-  if (saleId) return <SingleSaleReceipt saleId={saleId} />;
-
+  // ⚠️ 모든 훅은 조기 반환 위에서 무조건 호출 (Rules of Hooks) — sale_id 유무로 훅 개수가 바뀌면 크래시
   const now = new Date();
-  const [from, setFrom] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10));
-  const [to, setTo] = useState(now.toISOString().slice(0, 10));
+  const [from, setFrom] = useState(toLocalDateString(new Date(now.getFullYear(), now.getMonth(), 1)));  // KST 월초(UTC 슬라이스 버그 수정)
+  const [to, setTo] = useState(toLocalDateString(now));
   const [customerFilter, setCustomerFilter] = useState('');
-
   const { data, isLoading } = useReportSummary(from, to);
+
+  // 단건 모드: sale_id가 있으면 해당 건만 표시 (훅 호출 뒤 조기 반환)
+  if (saleId) return <SingleSaleReceipt saleId={saleId} />;
 
   // 고객별 그룹핑
   const sales = data?.details.sales || [];

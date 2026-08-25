@@ -10,9 +10,9 @@ import { formatPhone } from '@/lib/utils/format';
 import { Navigation, Copy, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
-/** 날짜 포맷: YYYY-MM-DD */
+/** 날짜 포맷: YYYY-MM-DD (KST 로컬 — UTC 슬라이스 시 자정 전후 off-by-one 방지) */
 function toDateStr(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 function addDays(d: Date, n: number): Date {
