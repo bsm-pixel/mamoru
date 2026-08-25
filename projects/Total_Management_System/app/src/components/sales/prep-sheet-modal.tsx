@@ -62,6 +62,9 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], orderIds = [], prelo
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<PrepMode>('list'); // 기존 동작 보존: 기본 리스트형
 
+  // 부모가 매 렌더 새 배열([...set])을 넘겨도 effect가 재실행되지 않도록 "내용 기반" 안정 키 사용
+  const idKey = `${saleIds.join(',')}|${deliveryIds.join(',')}|${orderIds.join(',')}|${preloaded ? preloaded.sale.id : ''}`;
+
   // 데이터 로딩
   useEffect(() => {
     if (preloaded) {
@@ -83,6 +86,7 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], orderIds = [], prelo
 
     (async () => {
       setLoading(true);
+      try {
       const supabase = createClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
@@ -193,9 +197,15 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], orderIds = [], prelo
         });
       }
       setAddresses(addrMap);
-      setLoading(false);
+      } catch (e) {
+        console.error('준비표 데이터 로딩 실패:', e);
+      } finally {
+        setLoading(false); // 성공/실패 무관 로딩 해제 (무한 "로딩 중" 방지)
+      }
     })();
-  }, [saleIds, deliveryIds, orderIds, preloaded]);
+    // idKey = 내용 기반 안정 키. 배열 참조가 아닌 값으로 비교해 불필요한 재실행 차단
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idKey]);
 
   // 시리얼 매칭 (sale-detail-panel과 동일 로직)
   function getItemSerials(saleData: SaleData, item: SaleData['items'][0]): string[] {
