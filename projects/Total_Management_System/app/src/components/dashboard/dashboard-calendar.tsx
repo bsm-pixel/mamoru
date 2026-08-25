@@ -24,12 +24,12 @@ import { ActivityChips } from '@/components/shared/activity-chips';
 import { getCalendarDays, ymd } from '@/lib/schedule/calendar';
 import { useScheduleEvents } from '@/lib/schedule/use-schedule-events';
 import { SCHEDULE_COLORS } from '@/lib/schedule/colors';
-import { formatPhone, CONSULTATION_STATUS_LABEL, CONSULTATION_STATUS_COLOR } from '@/lib/utils/format';
+import { formatPhone, CONSULTATION_STATUS_LABEL, CONSULTATION_STATUS_COLOR, CONSULTATION_TYPE_LABEL } from '@/lib/utils/format';
 import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Phone, MapPin, ArrowRight, StickyNote } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
-const CTYPE_LABEL: Record<string, string> = { store_visit: '매장', field_request: '출장', talk_consult: '톡상담' };
+// 상담유형 라벨은 format.ts SSOT(CONSULTATION_TYPE_LABEL) 사용
 
 interface ConsultContext {
   company: string | null;
@@ -389,7 +389,7 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                         {ctx.pastConsults.map((pc) => (
                           <button key={pc.id} onClick={() => router.push(`/consultations/${pc.id}`)}
                             className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-stone-100 hover:bg-stone-50 hover:border-stone-200 text-left transition">
-                            <span className="text-xs text-stone-600 truncate">{pc.visit_date || '-'}{pc.visit_time ? ` ${pc.visit_time}` : ''} · {CTYPE_LABEL[pc.consultation_type] || pc.consultation_type}</span>
+                            <span className="text-xs text-stone-600 truncate">{pc.visit_date || '-'}{pc.visit_time ? ` ${pc.visit_time}` : ''} · {CONSULTATION_TYPE_LABEL[pc.consultation_type] || pc.consultation_type}</span>
                             <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${CONSULTATION_STATUS_COLOR[pc.status] || 'bg-stone-100 text-stone-600'}`}>{CONSULTATION_STATUS_LABEL[pc.status] || pc.status}</span>
                           </button>
                         ))}

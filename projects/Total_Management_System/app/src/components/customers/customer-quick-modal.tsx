@@ -1,7 +1,7 @@
 'use client';
 
 import { useCustomer } from '@/hooks/use-customers';
-import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
+import { formatKRW, formatDate, formatPhone, CONSULTATION_TYPE_LABEL } from '@/lib/utils/format';
 import { activitySuffix } from '@/lib/customer/display';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,7 +9,7 @@ import { X, ShoppingBag, FileSignature, MessageSquare, Wrench, Copy, ExternalLin
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
-const CONSULTATION_TYPE_LABEL: Record<string, string> = { store_visit: '매장방문', field_request: '출장', talk_consult: '온라인상담' };
+// 상담유형 라벨은 format.ts SSOT(CONSULTATION_TYPE_LABEL) 사용
 
 interface Props {
   customerId: string;

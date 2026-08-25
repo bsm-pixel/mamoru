@@ -10,7 +10,7 @@ import { useDelivery, useUpdateDelivery } from '@/hooks/use-deliveries';
 import { useProducts } from '@/hooks/use-sales';
 import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
 import type { Product } from '@/lib/supabase/types';
-import { formatKRW, formatDate, calcVAT } from '@/lib/utils/format';
+import { formatKRW, formatDate, calcVAT, CUSTOMER_TYPE_LABEL, CUSTOMER_TYPE_COLOR } from '@/lib/utils/format';
 import { useQueryClient } from '@tanstack/react-query';
 import { Package, Pencil, Save, X, Printer, Minus, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -29,8 +29,7 @@ const STATUS_COLOR: Record<string, string> = {
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
 const PAYMENT_COLOR: Record<string, string> = { unpaid: 'bg-red-100 text-red-600', partial: 'bg-yellow-100 text-yellow-700', paid: 'bg-green-100 text-green-700' };
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
-const CUSTOMER_TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy: '아카데미' };
-const CUSTOMER_TYPE_COLOR: Record<string, string> = { dealer: 'bg-blue-100 text-blue-700', academy: 'bg-purple-100 text-purple-700' };
+// 고객유형 라벨/색은 format.ts SSOT 사용
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DL = any;

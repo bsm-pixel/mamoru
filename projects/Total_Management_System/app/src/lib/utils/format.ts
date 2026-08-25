@@ -170,6 +170,22 @@ export const SALE_CHANNEL_LABEL: Record<string, string> = {
   offline: '오프라인', // 레거시 (구 데이터)
 };
 
+/** 고객유형 라벨/색 — SSOT (기존 화면마다 재정의되며 딜러 색이 파랑↔보라로 충돌하던 것 통일) */
+export const CUSTOMER_TYPE_LABEL: Record<string, string> = {
+  retail: '일반',
+  online: '온라인',
+  dealer: '딜러',
+  academy: '아카데미',
+  supplier: '매입처',
+};
+export const CUSTOMER_TYPE_COLOR: Record<string, string> = {
+  retail: 'bg-neutral-100 text-neutral-600',
+  online: 'bg-blue-100 text-blue-700',
+  dealer: 'bg-purple-100 text-purple-700',
+  academy: 'bg-emerald-100 text-emerald-700',
+  supplier: 'bg-amber-100 text-amber-700',
+};
+
 /** 상담 유형 → 판매 채널 자동 매핑 (상담 연결 판매 채널 자동설정용). 없으면 '' */
 export function channelFromConsultationType(t?: string | null): string {
   if (t === 'store_visit') return 'store';

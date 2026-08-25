@@ -13,7 +13,7 @@ import { useSales, useSalesTabCounts, useSalesStats, useMarkSalePacked } from '@
 import type { SalesTab, SalesChannel, SalesDateRange } from '@/hooks/use-sales';
 import { useDeliveryStats, useDeliveries } from '@/hooks/use-deliveries';
 import { useContracts } from '@/hooks/use-contracts';
-import { formatKRW, formatDate, SALE_CHANNEL_LABEL } from '@/lib/utils/format';
+import { formatKRW, formatDate, SALE_CHANNEL_LABEL, CUSTOMER_TYPE_LABEL } from '@/lib/utils/format';
 import { getSaleShipStatus, getDeliveryShipStatus, type ShipStatus } from '@/lib/sales/ship-status';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
@@ -36,7 +36,7 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
 
 // 채널 라벨은 공용 SALE_CHANNEL_LABEL(format.ts) 사용 — 전 화면 통일
 
-const CUSTOMER_TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy: '아카데미' };
+// 고객유형 라벨은 format.ts SSOT(CUSTOMER_TYPE_LABEL) 사용
 
 /** 2026-05-26 Phase G-4: 안 A 상태 분류 — 좌측 색 줄 + 우측 도트 결정 */
 type RowState = 'paid_done' | 'paid_shipping' | 'paid_packed' | 'paid_wait_ship' | 'paid_unhandled' | 'unpaid' | 'partial' | 'shipped_b2b_unpaid' | 'wait_pickup_unpaid' | 'cancelled' | 'returned';

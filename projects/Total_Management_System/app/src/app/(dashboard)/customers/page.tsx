@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomers } from '@/hooks/use-customers';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
-import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
+import { formatKRW, formatDate, formatPhone, CUSTOMER_TYPE_LABEL, CUSTOMER_TYPE_COLOR } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -26,20 +26,7 @@ import { NotePreview } from '@/components/shared/customer-notes';
 import { useLatestCustomerNotes, type LatestNote } from '@/hooks/use-customer-notes';
 import { useSetting } from '@/hooks/use-settings';
 
-const TYPE_LABEL: Record<string, string> = {
-  retail: '일반',
-  online: '온라인',
-  dealer: '딜러',
-  academy: '아카데미',
-};
-
-const TYPE_COLOR: Record<string, string> = {
-  retail: 'bg-neutral-100 text-neutral-600',
-  online: 'bg-blue-100 text-blue-700',
-  dealer: 'bg-purple-100 text-purple-700',
-  academy: 'bg-emerald-100 text-emerald-700',
-};
-
+// 고객유형 라벨/색은 format.ts SSOT(CUSTOMER_TYPE_LABEL/COLOR) 사용
 const SOURCE_LABEL: Record<string, string> = {
   imweb: '아임웹',
   consultation: '상담',
@@ -68,7 +55,7 @@ const CUSTOMER_COLUMNS: GridColumn<Customer>[] = [
       </div>
     ),
   },
-  { key: 'type', label: '유형', render: (c) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${TYPE_COLOR[c.customer_type] || TYPE_COLOR.retail}`}>{TYPE_LABEL[c.customer_type] || '일반'}</span> },
+  { key: 'type', label: '유형', render: (c) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${CUSTOMER_TYPE_COLOR[c.customer_type] || CUSTOMER_TYPE_COLOR.retail}`}>{CUSTOMER_TYPE_LABEL[c.customer_type] || '일반'}</span> },
   { key: 'phone', label: '연락처', render: (c) => <span className="text-neutral-600 tabular-nums">{c.phone ? formatPhone(c.phone) : '—'}</span> },
   { key: 'company', label: '업체/매장', render: (c) => <span className="text-neutral-500 truncate">{c.company_name || '—'}</span> },
   { key: 'source', label: '유입', render: (c) => <span className="text-neutral-400 text-xs">{SOURCE_LABEL[c.source] || c.source || '—'}</span> },
@@ -283,8 +270,8 @@ function CustomerRow({ customer, note, isSelected, onClick, actTypes }: { custom
             <span className="text-xs text-neutral-400 truncate shrink-0">{activitySuffix(c.activity_name, c.position)}</span>
           )}
           <ActivityChips types={actTypes} className="shrink-0" />
-          <Badge className={TYPE_COLOR[c.customer_type] || TYPE_COLOR.retail}>
-            {TYPE_LABEL[c.customer_type] || '일반'}
+          <Badge className={CUSTOMER_TYPE_COLOR[c.customer_type] || CUSTOMER_TYPE_COLOR.retail}>
+            {CUSTOMER_TYPE_LABEL[c.customer_type] || '일반'}
           </Badge>
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">

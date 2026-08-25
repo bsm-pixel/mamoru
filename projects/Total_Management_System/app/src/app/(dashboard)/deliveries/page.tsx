@@ -20,7 +20,7 @@ import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types
 import { ActivityChips } from '@/components/shared/activity-chips';
 import { useDeliveries, useDeliveryStats } from '@/hooks/use-deliveries';
 import { useIsLg } from '@/hooks/use-grid-mode';
-import { formatKRW, formatDate } from '@/lib/utils/format';
+import { formatKRW, formatDate, CUSTOMER_TYPE_LABEL, CUSTOMER_TYPE_COLOR } from '@/lib/utils/format';
 import { Package, Plus, AlertCircle, Calendar, TrendingUp } from 'lucide-react';
 
 /* ── 상수 ── */
@@ -36,8 +36,7 @@ const STATUS_COLOR: Record<string, string> = {
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
 const PAYMENT_COLOR: Record<string, string> = { unpaid: 'bg-red-100 text-red-600', partial: 'bg-yellow-100 text-yellow-700', paid: 'bg-green-100 text-green-700' };
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
-const TYPE_LABEL: Record<string, string> = { dealer: '딜러', academy: '아카데미' };
-const TYPE_COLOR: Record<string, string> = { dealer: 'bg-blue-100 text-blue-700', academy: 'bg-purple-100 text-purple-700' };
+// 고객유형 라벨/색은 format.ts SSOT(CUSTOMER_TYPE_LABEL/COLOR) 사용
 /** 배송상태 tone → 텍스트 색 (sales SHIP_TONE 과 동일) */
 const SHIP_TONE = { amber: 'text-amber-600', green: 'text-emerald-600', mute: 'text-neutral-300' } as const;
 
@@ -57,7 +56,7 @@ interface DeliveryLike extends DeliveryStatusInput {
 const DELIVERY_COLUMNS: GridColumn<DeliveryLike>[] = [
   { key: 'date', label: '납품일', render: (d) => <span className="text-neutral-600 whitespace-nowrap tabular-nums">{d.delivery_date ? formatDate(d.delivery_date) : '—'}</span> },
   { key: 'customer', label: '거래처', render: (d) => <span className="font-semibold text-indigo-black truncate">{d.company_name || d.customer_name || '미지정'}</span> },
-  { key: 'type', label: '유형', render: (d) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${TYPE_COLOR[d.customer_type || ''] || 'bg-neutral-100 text-neutral-500'}`}>{TYPE_LABEL[d.customer_type || ''] || '거래처'}</span> },
+  { key: 'type', label: '유형', render: (d) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${CUSTOMER_TYPE_COLOR[d.customer_type || ''] || 'bg-neutral-100 text-neutral-500'}`}>{CUSTOMER_TYPE_LABEL[d.customer_type || ''] || '거래처'}</span> },
   { key: 'status', label: '상태', render: (d) => { const c = getDeliveryStatusChip(d); return <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${c.className}`}>{c.label}</span>; } },
   { key: 'ship', label: '배송', render: (d) => { const s = getDeliveryShipStatus(d); return <span className={`text-xs font-medium ${SHIP_TONE[s.tone]}`}>{s.label}</span>; } },
   { key: 'pay', label: '결제', render: (d) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${PAYMENT_COLOR[d.payment_status || ''] || PAYMENT_COLOR.unpaid}`}>{PAYMENT_LABEL[d.payment_status || ''] || '미결제'}</span> },

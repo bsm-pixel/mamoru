@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomer, useUpdateCustomer } from '@/hooks/use-customers';
 import { useCustomerManualInvoices } from '@/hooks/use-manual-invoices';
-import { formatKRW, formatDate, formatPhone, ORDER_STATUS_LABEL } from '@/lib/utils/format';
+import { formatKRW, formatDate, formatPhone, ORDER_STATUS_LABEL, CUSTOMER_TYPE_COLOR, CONSULTATION_TYPE_LABEL } from '@/lib/utils/format';
 import { activitySuffix } from '@/lib/customer/display';
 import {
   Save, ShoppingBag, FileSignature, MessageSquare, Wrench,
@@ -28,19 +28,9 @@ const TYPE_OPTIONS = [
   { value: 'academy', label: '아카데미' },
 ];
 
-const TYPE_COLOR: Record<string, string> = {
-  retail: 'bg-neutral-100 text-neutral-600',
-  online: 'bg-blue-100 text-blue-700',
-  dealer: 'bg-purple-100 text-purple-700',
-  academy: 'bg-emerald-100 text-emerald-700',
-};
-
+// 고객유형 색·상담유형 라벨은 format.ts SSOT(CUSTOMER_TYPE_COLOR/CONSULTATION_TYPE_LABEL) 사용
 const PAYMENT_STATUS_LABEL: Record<string, string> = {
   paid: '결제완료', unpaid: '미결제', partial: '부분결제',
-};
-
-const CONSULTATION_TYPE_LABEL: Record<string, string> = {
-  store_visit: '매장방문', field_request: '출장', talk_consult: '온라인상담',
 };
 
 const REPAIR_STATUS_LABEL: Record<string, string> = {
@@ -220,7 +210,7 @@ export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
                 <span className="ml-1.5 text-xs font-normal text-neutral-400">{activitySuffix(c.activity_name, c.position)}</span>
               )}
             </h2>
-            <Badge className={TYPE_COLOR[c.customer_type] || TYPE_COLOR.retail}>
+            <Badge className={CUSTOMER_TYPE_COLOR[c.customer_type] || CUSTOMER_TYPE_COLOR.retail}>
               {TYPE_OPTIONS.find(t => t.value === c.customer_type)?.label || '일반'}
             </Badge>
             <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${rfmColor}`}>{rfmLabel}</span>
