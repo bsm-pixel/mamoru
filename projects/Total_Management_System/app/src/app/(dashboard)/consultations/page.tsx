@@ -304,13 +304,36 @@ export default function ConsultationsPage() {
             )}
           </>
         ) : (
-          /* 톡상담 — 기존 레이아웃 */
-          <div>
-            <TalkConsultList onSelect={setSelectedId} />
-            <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="상담 상세">
-              {selectedId && <ConsultationDetailPanel consultationId={selectedId} />}
-            </SlidePanel>
-          </div>
+          /* 톡상담 — 형제 탭과 동일: PC 2열(리스트|상세 모니터) + 모바일 슬라이드 패널 */
+          <>
+            {!isLg && (
+              <div>
+                <TalkConsultList onSelect={setSelectedId} />
+              </div>
+            )}
+
+            {isLg && <div className="flex gap-4 h-[calc(100vh-260px)]">
+              <div className="flex-1 min-w-0 overflow-y-auto">
+                <TalkConsultList onSelect={setSelectedId} />
+              </div>
+              <div className="w-[400px] shrink-0 overflow-y-auto">
+                {selectedId ? (
+                  <ConsultationDetailPanel consultationId={selectedId} />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-60 text-stone-400">
+                    <LayoutGrid size={28} className="mb-2 opacity-40" />
+                    <p className="text-xs text-center">목록에서 상담을<br />클릭하면 상세가 표시됩니다</p>
+                  </div>
+                )}
+              </div>
+            </div>}
+
+            {!isLg && (
+              <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="상담 상세">
+                {selectedId && <ConsultationDetailPanel consultationId={selectedId} />}
+              </SlidePanel>
+            )}
+          </>
         )}
       </div>
 

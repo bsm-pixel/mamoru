@@ -131,8 +131,12 @@
 | `4766d459` | **R2(P2-1/P2-2)** 크로스링크 — 타임라인 전 이력 클릭·계약→판매·이벤트→판매 딥링크·저재고 드릴다운 교정 | ✅ 완료·검증 |
 | `195eb430` | **P4** 데드코드 873줄 제거(repairs/tabs 6·repair-action-chips·inspection-photo-marker·data-table·ContractTableRow) + 끊긴 안내링크 교정 | ✅ 완료·검증 |
 | `8499cbd1` | **P1-4** 팔레트 통일 — 회계·리뷰류 구팔레트→stone 38곳 | ✅ 완료·검증 |
+| `398fac93` | **P4** 네비 아이콘맵 SSOT — sidebar·mobile-nav 이중정의 통합(nav-icons.ts) | ✅ 완료·검증 |
+| `0dc277b4` | **P1-3** 상세 패널 단일화 — sales/[id]·purchasing/[id] → 패널 래퍼, products/[id] 유령라우트 리다이렉트(839줄↓) | ✅ 완료·검증(orders는 보류) |
 
 각 커밋 `tsc 0 / build 성공` 확인.
+
+**P1-3 세부**: sales·purchasing은 패널이 구 풀페이지의 상위집합임을 grep 검증 후 스왑(안전). products/[id]는 도달 경로 0 유령라우트라 리다이렉트. **orders/[id]는 보류** — 패널이 OrderActionBar를 포함해 스왑 자체는 가능하나, 구 페이지의 `cancel_pending 마운트 시 자동 ALPS 취소확인` 편의가 패널엔 없고 ALPS 플로우 실측 불가 → 액션 패리티 확인 후 별도 진행.
 
 ### 판단으로 보류(사유 명시)
 - **P1-2 StatusBadge 전면 sweep**: 실제 결함(딜러 색 충돌)은 P1-1에서 SSOT로 해소됨. 판매행 4중인코딩(색줄+도트)은 **2026-05-26 사장님 채택 디자인**이라 Fix Preservation 원칙상 임의 개편 안 함.
