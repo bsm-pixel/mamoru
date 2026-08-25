@@ -11,6 +11,9 @@ function parse<T>(raw: unknown, fallback: T): T {
   return raw as T;
 }
 
+// 실제 대시보드 KPI 카드 = 4종 (page.tsx CARD_DEF와 일치). 미수금/저재고는 별도 알림이라 배치 대상 아님.
+const DASH_CARD_KEYS = ['orders', 'consultations', 'repairs', 'sales'];
+
 export default function DashboardSettings({ settings, onSave, saving }: TabProps) {
   const [monthlyGoal, setMonthlyGoal] = useState(0);
   const [lowStock, setLowStock] = useState(3);
@@ -20,11 +23,9 @@ export default function DashboardSettings({ settings, onSave, saving }: TabProps
   const [outstandingWarning, setOutstandingWarning] = useState(0);
   const [purchaseLimit, setPurchaseLimit] = useState(0);
   const [cardVisibility, setCardVisibility] = useState<Record<string, boolean>>({
-    sales: true, repairs: true, orders: true, consultations: true, outstanding: true, lowStock: true,
+    orders: true, consultations: true, repairs: true, sales: true,
   });
-  const [cardOrder, setCardOrder] = useState<string[]>([
-    'sales', 'repairs', 'orders', 'consultations', 'outstanding', 'lowStock',
-  ]);
+  const [cardOrder, setCardOrder] = useState<string[]>([...DASH_CARD_KEYS]);
 
   useEffect(() => {
     setMonthlyGoal(parse(settings['dashboard.monthly_goal'], 0));
@@ -35,11 +36,13 @@ export default function DashboardSettings({ settings, onSave, saving }: TabProps
     setOutstandingWarning(parse(settings['dashboard.outstanding_warning'], 0));
     setPurchaseLimit(parse(settings['dashboard.monthly_purchase_limit'], 0));
     setCardVisibility(parse(settings['dashboard.card_visibility'], {
-      sales: true, repairs: true, orders: true, consultations: true, outstanding: true, lowStock: true,
+      orders: true, consultations: true, repairs: true, sales: true,
     }));
-    setCardOrder(parse(settings['dashboard.card_order'], [
-      'sales', 'repairs', 'orders', 'consultations', 'outstanding', 'lowStock',
-    ]));
+    // 저장값에 유령키(미수금/저재고 등)가 남아 있어도 실제 카드 4종만 유지 + 순서 보존, 누락 카드는 뒤에 보충
+    const savedOrder = parse(settings['dashboard.card_order'], [...DASH_CARD_KEYS]);
+    const kept = savedOrder.filter((k) => DASH_CARD_KEYS.includes(k));
+    const missing = DASH_CARD_KEYS.filter((k) => !kept.includes(k));
+    setCardOrder([...kept, ...missing]);
   }, [settings]);
 
   const handleSave = () => {
@@ -58,7 +61,7 @@ export default function DashboardSettings({ settings, onSave, saving }: TabProps
   };
 
   const CARD_LABELS: Record<string, string> = {
-    sales: '매출', repairs: '복원수리', orders: '주문', consultations: '상담', outstanding: '미수금', lowStock: '저재고',
+    orders: '주문', consultations: '상담', repairs: '복원수리', sales: '매출',
   };
 
   return (

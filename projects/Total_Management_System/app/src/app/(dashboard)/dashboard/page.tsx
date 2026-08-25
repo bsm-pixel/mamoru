@@ -362,7 +362,7 @@ function AlertsCard({
  * 페이지 본체
  * ──────────────────────────────────────────────────────── */
 export default function DashboardPage() {
-  const { data: stats, isLoading } = useHubStats();
+  const { data: stats, isLoading, isError } = useHubStats();
   const monthGoal = useSetting<number>('dashboard.monthly_goal', 0);
   const kpiGreen = useSetting<number>('dashboard.kpi_green', 80);
   const kpiYellow = useSetting<number>('dashboard.kpi_yellow', 50);
@@ -436,6 +436,13 @@ export default function DashboardPage() {
     <>
       <Topbar title="대시보드" />
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4">
+        {/* 장애 시 전부 "0"으로 보여 정상 오인 방지 — 명시적 경고 */}
+        {isError && (
+          <div className="mb-3 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <AlertTriangle size={16} className="shrink-0" />
+            데이터를 불러오지 못했습니다. 표시된 수치가 실제와 다를 수 있어요 — 잠시 후 새로고침해 주세요.
+          </div>
+        )}
         {isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-40 w-full" />
