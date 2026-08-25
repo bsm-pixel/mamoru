@@ -15,9 +15,10 @@ import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { OrderDetailPanel } from '@/components/orders/order-detail-panel';
-import { RefreshCw, Truck, ShoppingBag } from 'lucide-react';
+import { RefreshCw, Truck, ShoppingBag, Printer, X } from 'lucide-react';
 import { useEscapeKey } from '@/hooks/use-media-query';
 import { InvoiceModal } from '@/components/orders/invoice-modal';
+import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import type { Order } from '@/lib/supabase/types';
@@ -41,6 +42,12 @@ export default function OrdersPage() {
   const [page, setPage] = useState(1);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // 준비표 다중선택 (판매관리와 동일 UX)
+  const [prepMode, setPrepMode] = useState(false);
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [showPrepSheet, setShowPrepSheet] = useState(false);
+  const toggleCheck = (id: string) => setCheckedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const togglePrepMode = () => { setPrepMode((v) => !v); setCheckedIds(new Set()); };
   const sync = useOrderSync();
   const { data: counts } = useOrderCounts();
 
@@ -81,8 +88,9 @@ export default function OrdersPage() {
     <div className="divide-y divide-neutral-100">
       {orders.map((order) => (
         <OrderRow key={order.id} order={order} isSelected={selectedId === order.id}
-          onClick={() => setSelectedId(order.id)} onInvoice={() => setInvoiceOrder(order)}
-          actTypes={orderActTypes(order.orderer_phone)} />
+          onClick={() => (prepMode ? toggleCheck(order.id) : setSelectedId(order.id))} onInvoice={() => setInvoiceOrder(order)}
+          actTypes={orderActTypes(order.orderer_phone)}
+          prepMode={prepMode} checked={checkedIds.has(order.id)} />
       ))}
     </div>
   );
@@ -118,7 +126,25 @@ export default function OrdersPage() {
             <option value="week">이번주</option>
             <option value="month">이번달</option>
           </select>
+          {/* 준비표 뽑기 (판매관리와 동일 UX) */}
+          {!prepMode ? (
+            <Button variant="secondary" size="sm" className="shrink-0" onClick={togglePrepMode}>
+              <Printer size={14} />준비표 뽑기
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2 shrink-0">
+              <Button size="sm" disabled={checkedIds.size === 0} onClick={() => setShowPrepSheet(true)}>
+                <Printer size={14} />준비표 인쇄 ({checkedIds.size})
+              </Button>
+              <Button variant="ghost" size="sm" onClick={togglePrepMode}>
+                <X size={14} />취소
+              </Button>
+            </div>
+          )}
         </div>
+        {prepMode && (
+          <p className="text-[11px] text-stone-500">출고할 주문을 클릭해 선택하세요. 선택 후 <b>준비표 인쇄</b>를 누르면 리스트형·트레이형으로 출력됩니다.</p>
+        )}
 
         {/* 상태 탭 */}
         <div className="flex gap-1 overflow-x-auto pb-1">
@@ -156,12 +182,17 @@ export default function OrdersPage() {
                   <div className="p-4 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
                 ) : (
                   <DataGrid
-                    columns={orderColumns}
+                    columns={prepMode
+                      ? [{ key: '_check', label: '', render: (o: Order) => (
+                          <input type="checkbox" readOnly checked={checkedIds.has(o.id)}
+                            className="w-4 h-4 rounded border-stone-300 pointer-events-none accent-stone-900" />
+                        ) } as GridColumn<Order>, ...orderColumns]
+                      : orderColumns}
                     rows={orders}
                     getRowKey={(o) => o.id}
-                    selectedKey={selectedId ?? undefined}
-                    onSelect={(o) => setSelectedId(o.id)}
-                    rowClassName={(o) => (o.status === 'cancelled' ? 'opacity-50' : '')}
+                    selectedKey={prepMode ? undefined : (selectedId ?? undefined)}
+                    onSelect={(o) => (prepMode ? toggleCheck(o.id) : setSelectedId(o.id))}
+                    rowClassName={(o) => `${o.status === 'cancelled' ? 'opacity-50' : ''} ${prepMode && checkedIds.has(o.id) ? 'bg-stone-100' : ''}`}
                     emptyMessage="주문이 없습니다"
                   />
                 )}
@@ -214,18 +245,31 @@ export default function OrdersPage() {
           order={invoiceOrder}
         />
       )}
+
+      {/* 일괄 준비표 (선택 주문 묶음) */}
+      {showPrepSheet && (
+        <PrepSheetModal
+          saleIds={[]}
+          orderIds={[...checkedIds]}
+          onClose={() => setShowPrepSheet(false)}
+        />
+      )}
     </>
   );
 }
 
-const OrderRow = memo(function OrderRow({ order, isSelected, onClick, onInvoice, actTypes }: { order: Order; isSelected: boolean; onClick: () => void; onInvoice: () => void; actTypes?: ActivityTypes }) {
+const OrderRow = memo(function OrderRow({ order, isSelected, onClick, onInvoice, actTypes, prepMode, checked }: { order: Order; isSelected: boolean; onClick: () => void; onInvoice: () => void; actTypes?: ActivityTypes; prepMode?: boolean; checked?: boolean }) {
   const statusColor = ORDER_STATUS_COLOR[order.status] || 'bg-stone-100 text-stone-500';
 
   return (
     <div
       onClick={onClick}
-      className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-stone-50 transition ${isSelected ? 'bg-stone-50 border-l-2 border-l-stone-900' : ''}`}
+      className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-stone-50 transition ${isSelected ? 'bg-stone-50 border-l-2 border-l-stone-900' : ''} ${prepMode && checked ? 'bg-stone-100' : ''}`}
     >
+      {prepMode && (
+        <input type="checkbox" readOnly checked={!!checked}
+          className="w-4 h-4 shrink-0 rounded border-stone-300 pointer-events-none accent-stone-900" />
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-stone-800 truncate">

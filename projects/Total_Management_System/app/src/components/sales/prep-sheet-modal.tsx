@@ -42,6 +42,8 @@ interface PrepSheetModalProps {
   saleIds: string[];
   /** 2026-05-26 Phase D: 거래처 납품 ID — B2B 카드 체크 시 합산 표시 */
   deliveryIds?: string[];
+  /** 2026-08-25: 아임웹 주문 ID — 주문관리 준비표(단건/다건). orders→SaleData 매핑, 주소는 recipient_* 인라인 */
+  orderIds?: string[];
   /** 단건 모드: 이미 로드된 데이터 직접 전달 */
   preloaded?: SaleData;
   onClose: () => void;
@@ -52,7 +54,7 @@ function esc(s: unknown): string {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-export function PrepSheetModal({ saleIds, deliveryIds = [], preloaded, onClose }: PrepSheetModalProps) {
+export function PrepSheetModal({ saleIds, deliveryIds = [], orderIds = [], preloaded, onClose }: PrepSheetModalProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const [salesData, setSalesData] = useState<SaleData[]>([]);
   const [memos, setMemos] = useState<Record<string, string>>({});
@@ -77,7 +79,7 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], preloaded, onClose }
       return;
     }
 
-    if (saleIds.length === 0 && deliveryIds.length === 0) return;
+    if (saleIds.length === 0 && deliveryIds.length === 0 && orderIds.length === 0) return;
 
     (async () => {
       setLoading(true);
@@ -85,6 +87,7 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], preloaded, onClose }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
       const results: SaleData[] = [];
+      const orderAddrs: Record<string, string> = {}; // 주문 주소(recipient_* 인라인) — customer_id(=order.id) 키
 
       // B2C — offline_sales + items + serials
       await Promise.all(saleIds.map(async (id) => {
@@ -133,6 +136,41 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], preloaded, onClose }
         }
       }));
 
+      // 2026-08-25: 아임웹 주문 — orders + order_items + product_serials(order_id). 주소는 recipient_* 인라인
+      await Promise.all(orderIds.map(async (id) => {
+        const [ordRes, itemsRes, serialsRes] = await Promise.all([
+          db.from('orders').select('*').eq('id', id).single(),
+          db.from('order_items').select('*').eq('order_id', id),
+          db.from('product_serials').select('id, serial_number, product_id, sale_item_id').eq('order_id', id),
+        ]);
+        if (ordRes.data) {
+          const o = ordRes.data;
+          results.push({
+            sourceType: 'sale', // 준비표 표시상 일반건과 동일(거래처 태그 X)
+            sale: {
+              ...o,
+              id: o.id,
+              sale_number: o.imweb_order_no || o.id,
+              sale_date: o.ordered_at || o.created_at || '',
+              customer_name: o.recipient_name || o.orderer_name || '미지정',
+              customer_phone: o.recipient_phone || o.orderer_phone,
+              customer_id: o.id, // 주소 매핑 키(주문은 고객 대신 주문 인라인 주소 사용)
+              memo: o.recipient_memo,
+            },
+            items: (itemsRes.data || []).map((it: Record<string, unknown>) => ({
+              ...it,
+              id: it.id as string,
+              product_id: (it.product_id as string) ?? null,
+              product_name: (it.product_name as string) || '',
+              quantity: (it.quantity as number) || 0,
+              unit_price: (it.unit_price as number) || 0,
+            })),
+            serials: serialsRes.data || [],
+          });
+          orderAddrs[o.id] = [o.recipient_postcode ? `(${o.recipient_postcode})` : '', o.recipient_address, o.recipient_address_detail].filter(Boolean).join(' ');
+        }
+      }));
+
       // 정렬: B2C(sale_number) → B2B(dl_number) 순
       results.sort((a, b) => {
         if (a.sourceType !== b.sourceType) return a.sourceType === 'sale' ? -1 : 1;
@@ -145,18 +183,19 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], preloaded, onClose }
       setMemos(initMemos);
 
       // 트레이형 슬립용 — B2C 고객 주소 배치 로드
-      const custIds = [...new Set(results.filter((r) => r.sourceType === 'sale' && r.sale.customer_id).map((r) => r.sale.customer_id as string))];
-      if (custIds.length > 0) {
-        const { data: custs } = await db.from('customers').select('id, postcode, address_road, address_detail').in('id', custIds);
-        const addrMap: Record<string, string> = {};
+      // 판매(B2C) 고객 주소는 customers 조회, 주문 주소는 위에서 모은 orderAddrs — 하나로 병합
+      const addrMap: Record<string, string> = { ...orderAddrs };
+      const saleCustIds = [...new Set(results.filter((r) => r.sourceType === 'sale' && r.sale.customer_id && !orderAddrs[r.sale.customer_id as string]).map((r) => r.sale.customer_id as string))];
+      if (saleCustIds.length > 0) {
+        const { data: custs } = await db.from('customers').select('id, postcode, address_road, address_detail').in('id', saleCustIds);
         (custs || []).forEach((c: { id: string; postcode?: string; address_road?: string; address_detail?: string }) => {
           addrMap[c.id] = [c.postcode ? `(${c.postcode})` : '', c.address_road, c.address_detail].filter(Boolean).join(' ');
         });
-        setAddresses(addrMap);
       }
+      setAddresses(addrMap);
       setLoading(false);
     })();
-  }, [saleIds, deliveryIds, preloaded]);
+  }, [saleIds, deliveryIds, orderIds, preloaded]);
 
   // 시리얼 매칭 (sale-detail-panel과 동일 로직)
   function getItemSerials(saleData: SaleData, item: SaleData['items'][0]): string[] {

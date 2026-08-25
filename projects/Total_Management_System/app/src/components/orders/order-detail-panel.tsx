@@ -8,8 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DeliveryTracker } from './delivery-tracker';
 import { OrderActionBar } from './order-action-bar';
 import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
-import { Package, Hash } from 'lucide-react';
+import { Package, Hash, Printer } from 'lucide-react';
 import Link from 'next/link';
+import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 
 interface Props {
   orderId: string;
@@ -18,6 +19,7 @@ interface Props {
 export function OrderDetailPanel({ orderId }: Props) {
   const { data, isLoading } = useOrder(orderId);
   const [showSerials, setShowSerials] = useState(false);
+  const [showPrepSheet, setShowPrepSheet] = useState(false);
 
   if (isLoading) {
     return <div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /><Skeleton className="h-20" /></div>;
@@ -159,6 +161,16 @@ export function OrderDetailPanel({ orderId }: Props) {
       {/* 상태별 액션 */}
       <OrderActionBar order={o} items={items} />
 
+      {/* 출고 준비표 (판매관리와 동일 양식 — 리스트형/트레이형) */}
+      {o.status !== 'cancelled' && (
+        <button
+          onClick={() => setShowPrepSheet(true)}
+          className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-neutral-200 text-xs font-semibold text-neutral-600 hover:bg-neutral-50 transition"
+        >
+          <Printer size={13} /> 준비표
+        </button>
+      )}
+
       {/* 하단 링크 — 한 줄 */}
       <div className="flex items-center justify-between pt-1 text-[11px]">
         <a
@@ -176,6 +188,10 @@ export function OrderDetailPanel({ orderId }: Props) {
 
       {showSerials && (
         <OrderSerialModal orderId={o.id} items={items} serials={serials} onClose={() => setShowSerials(false)} />
+      )}
+
+      {showPrepSheet && (
+        <PrepSheetModal saleIds={[]} orderIds={[o.id]} onClose={() => setShowPrepSheet(false)} />
       )}
     </div>
   );
