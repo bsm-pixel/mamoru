@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useProducts, useRebuildSale } from '@/hooks/use-sales';
+import { useCreateReturn } from '@/hooks/use-returns';
 import { formatKRW } from '@/lib/utils/format';
-import { Search, RefreshCw, ArrowRight } from 'lucide-react';
+import { Search, RefreshCw, ArrowRight, Store, Truck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 /**
@@ -15,14 +16,19 @@ import toast from 'react-hot-toast';
  */
 interface SaleItem { id: string; product_id?: string | null; product_name: string; sku?: string | null; category?: string | null; quantity: number; unit_price: number; total_price: number; }
 interface SerialRow { id: string; serial_number: string; product_id?: string | null; sale_item_id?: string | null; }
-interface SaleLike { id: string; total_amount: number; discount_amount?: number | null; paid_amount?: number | null; payment_method?: string | null; sale_date?: string | null; memo?: string | null; sale_channel?: string | null; customer_name?: string | null; }
+interface SaleLike { id: string; total_amount: number; discount_amount?: number | null; paid_amount?: number | null; payment_method?: string | null; sale_date?: string | null; memo?: string | null; sale_channel?: string | null; customer_name?: string | null; customer_id?: string | null; customer_phone?: string | null; shipped_at?: string | null; delivered_at?: string | null; invoice_number?: string | null; }
 interface ProductLike { id: string; name: string; sku?: string | null; category?: string | null; price?: number | null; }
 
 export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
   sale: SaleLike; items: SaleItem[]; serials: SerialRow[]; onClose: () => void; onDone?: () => void;
 }) {
   const rebuild = useRebuildSale();
+  const createReturn = useCreateReturn();
   const { data: products = [] } = useProducts();
+  // 구 제품 회수 방식 — 배송건은 수거 필요, 매장/직접건은 즉시 반납 기본
+  const wasShipped = !!(sale.shipped_at || sale.delivered_at || sale.invoice_number);
+  const [pickupMode, setPickupMode] = useState<'store' | '방문수거' | '택배수거' | '직접반납'>(wasShipped ? '택배수거' : 'store');
+  const [pickupDate, setPickupDate] = useState<string>('');
   const [returnItemId, setReturnItemId] = useState<string | null>(null);
   const [prodSearch, setProdSearch] = useState('');
   const [newProductId, setNewProductId] = useState<string | null>(null);
@@ -144,7 +150,31 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
         },
         exchange_returned_serial_ids: returnSerialIds,
       });
-      toast.success('교환 완료 — 구제품은 반품창고로, 새 제품 시리얼이 배정되었습니다');
+
+      // 배송 수거건이면 반품수거 추적 레코드 생성(매장/직접 즉시반납은 생성 안 함)
+      if (pickupMode !== 'store') {
+        try {
+          await createReturn.mutateAsync({
+            return_type: 'exchange',
+            sale_id: sale.id,
+            product_id: returnItem.product_id || null,
+            product_name: returnItem.product_name,
+            serial_id: returnSerials[0]?.id || null,
+            serial_number: returnSerials[0]?.serial_number || null,
+            qty: 1,
+            customer_id: sale.customer_id || null,
+            name: sale.customer_name || null,
+            phone: sale.customer_phone || null,
+            pickup_method: pickupMode,
+            pickup_date: pickupMode === '방문수거' && pickupDate ? pickupDate : null,
+            reason: '제품 교환',
+          });
+        } catch { toast('반품수거 접수 기록 생성 실패 — 반품관리에서 수동 등록하세요', { icon: '⚠️' }); }
+      }
+
+      toast.success(pickupMode === 'store'
+        ? '교환 완료 — 구제품 반품창고, 새 제품 배정'
+        : '교환 완료 — 새 제품 배정 + 반품수거 접수됨(반품관리에서 진행)');
       onDone?.();
       onClose();
     } catch (e) {
@@ -244,7 +274,42 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
             </div>
           )}
 
-          {/* 4) 차액·수납 */}
+          {/* 3.5) 구 제품 회수 방식 */}
+          {returnItem && (
+            <div>
+              <p className="text-xs font-semibold text-neutral-500 mb-1.5">
+                4. 구 제품 회수 {wasShipped && <span className="text-amber-600">(배송건 — 수거 필요)</span>}
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {([
+                  { v: 'store', label: '매장/직접 지금 받음', icon: Store },
+                  { v: '방문수거', label: '방문수거', icon: Truck },
+                  { v: '택배수거', label: '택배수거', icon: Truck },
+                  { v: '직접반납', label: '고객 직접반납(나중)', icon: Store },
+                ] as const).map((o) => {
+                  const on = pickupMode === o.v;
+                  return (
+                    <button key={o.v} onClick={() => setPickupMode(o.v)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition ${on ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-neutral-200 text-neutral-600 hover:border-neutral-300'}`}>
+                      <o.icon size={13} /> {o.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {pickupMode === '방문수거' && (
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="text-[11px] text-neutral-500 shrink-0">수거 예약일</span>
+                  <input type="date" value={pickupDate} onChange={(e) => setPickupDate(e.target.value)}
+                    className="h-8 px-2 rounded-lg border border-neutral-200 text-sm" />
+                </div>
+              )}
+              <p className="text-[11px] text-neutral-400 mt-1">
+                {pickupMode === 'store' ? '구 제품을 지금 매장에서 받음 → 즉시 반품창고.' : '구 제품은 반품수거로 회수 → 반품관리에서 입고완료까지 추적.'}
+              </p>
+            </div>
+          )}
+
+          {/* 5) 차액·수납 */}
           {returnItem && newProduct && (
             <div className="rounded-lg bg-stone-50 p-3 space-y-2">
               <div className="flex items-center justify-center gap-2 text-sm">

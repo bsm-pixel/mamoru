@@ -24,6 +24,7 @@ export const NAV_GROUPS: NavGroup[] = [
     group: '주문 · 배송',
     items: [
       { label: '주문관리', href: '/orders', icon: 'ShoppingCart', matchPrefix: '/orders' },
+      { label: '반품·교환', href: '/returns', icon: 'Undo2', matchPrefix: '/returns' },
     ],
   },
   {

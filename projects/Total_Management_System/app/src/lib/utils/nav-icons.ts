@@ -2,7 +2,7 @@ import {
   LayoutDashboard, ShoppingCart, Settings, MessageSquare, Wrench, Store,
   Package, Users, Truck, Boxes, BarChart3, Star, Building2, Handshake,
   PackageOpen, PackageSearch, Search, FileSignature, Wallet, CalendarOff,
-  CalendarDays, Zap, Tag,
+  CalendarDays, Zap, Tag, Undo2,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -15,5 +15,5 @@ export const NAV_ICON_MAP: Record<string, LucideIcon> = {
   LayoutDashboard, ShoppingCart, Settings, MessageSquare, Wrench, Store,
   Package, Users, Truck, Boxes, BarChart3, Star, Building2, Handshake,
   PackageOpen, PackageSearch, Search, FileSignature, Wallet, CalendarOff,
-  CalendarDays, Zap, Tag,
+  CalendarDays, Zap, Tag, Undo2,
 };
