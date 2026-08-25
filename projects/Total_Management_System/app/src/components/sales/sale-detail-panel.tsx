@@ -12,8 +12,9 @@ import { CustomerQuickModal } from '@/components/customers/customer-quick-modal'
 import { CustomerNotes } from '@/components/shared/customer-notes';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
-import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2 } from 'lucide-react';
+import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2, RefreshCw } from 'lucide-react';
 import { PrepSheetModal } from './prep-sheet-modal';
+import { ExchangeModal } from './exchange-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { ReviewManagementCard } from '@/components/reviews/review-management-card';
 import { LinkConsultationModal } from './link-consultation-modal';
@@ -91,6 +92,7 @@ export function SaleDetailPanel({ saleId }: Props) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showPrepSheet, setShowPrepSheet] = useState(false);
+  const [showExchange, setShowExchange] = useState(false);
   const [showCustomer, setShowCustomer] = useState(false);
   const [editingMemo, setEditingMemo] = useState(false);
   const [memoValue, setMemoValue] = useState('');
@@ -405,6 +407,17 @@ export function SaleDetailPanel({ saleId }: Props) {
           </button>
         )}
       </div>
+
+      {/* 교환 — 구제품 반납(반품창고) + 새 제품 배정 (시리얼 무결성 유지). 취소/반품건 제외 */}
+      {!s.cancelled_at && !(s as Record<string, unknown>).returned_at && (
+        <button
+          onClick={() => setShowExchange(true)}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-purple-200 bg-purple-50/40 text-sm font-medium text-purple-700 hover:bg-purple-50 transition"
+        >
+          <RefreshCw size={14} />
+          제품 교환
+        </button>
+      )}
 
       {/* 070: 출장/매장상담 link 정보 칩 — 사장님이 이 판매가 어떤 상담에서 시작됐는지 한눈에 확인 */}
       {!s.cancelled_at && data?.linkedConsultation && (
@@ -784,6 +797,15 @@ export function SaleDetailPanel({ saleId }: Props) {
           saleIds={[saleId]}
           preloaded={{ sourceType: 'sale', sale: s, items: data.items, serials: data.serials || [] }}
           onClose={() => setShowPrepSheet(false)}
+        />
+      )}
+
+      {showExchange && data && (
+        <ExchangeModal
+          sale={s as unknown as Parameters<typeof ExchangeModal>[0]['sale']}
+          items={data.items as unknown as Parameters<typeof ExchangeModal>[0]['items']}
+          serials={(data.serials || []) as unknown as Parameters<typeof ExchangeModal>[0]['serials']}
+          onClose={() => setShowExchange(false)}
         />
       )}
 

@@ -560,6 +560,12 @@ export async function PATCH(
         return NextResponse.json({ error: '최소 1개 항목이 필요합니다' }, { status: 400 });
       }
 
+      // 🔁 교환(exchange): 제거되는 제품의 시리얼 id 집합. 이 시리얼은 재판매 불가 → 반품창고(return)로,
+      //    재고 복원·아임웹 반영에서 제외. 비어있으면(일반 수정) 아래 모든 분기가 기존 동작과 100% 동일.
+      const exchangeReturnedIds = new Set<string>(
+        (((body as Record<string, unknown>).exchange_returned_serial_ids as string[] | undefined) || []).filter(Boolean),
+      );
+
       // 무결성 가드 — 같은 판매 안에서 동일 시리얼 중복 배정 거부 (2026-06-11)
       {
         const allManual: string[] = [];
@@ -591,17 +597,33 @@ export async function PATCH(
       if (hasNewSerials && oldSerials && oldSerials.length > 0) {
         // 새 시리얼이 명시적으로 있을 때만 기존 시리얼 복원
         for (const serial of oldSerials) {
-          await db.from('product_serials').update({
-            status: 'in_stock',
-            warehouse_zone: serial.previous_zone || 'ready',
-            previous_zone: null,
-            sold_via: null,
-            offline_sale_id: null,
-            sold_at: null,
-            sold_to_name: null,
-            sold_to_phone: null,
-            sale_item_id: null,
-          }).eq('id', serial.id);
+          if (exchangeReturnedIds.has(serial.id)) {
+            // 🔁 교환 반품분: 실물에 판매 시리얼이 각인된 채 회수됨 → 반품창고(검수대기·판매불가).
+            //    판매에서 분리하되 status='returned'+zone='return'으로 격리. 재고 복원/아임웹 반영은 STEP2에서 제외.
+            await db.from('product_serials').update({
+              status: 'returned',
+              warehouse_zone: 'return',
+              previous_zone: serial.warehouse_zone,
+              sold_via: null,
+              offline_sale_id: null,
+              sold_at: null,
+              sold_to_name: null,
+              sold_to_phone: null,
+              sale_item_id: null,
+            }).eq('id', serial.id);
+          } else {
+            await db.from('product_serials').update({
+              status: 'in_stock',
+              warehouse_zone: serial.previous_zone || 'ready',
+              previous_zone: null,
+              sold_via: null,
+              offline_sale_id: null,
+              sold_at: null,
+              sold_to_name: null,
+              sold_to_phone: null,
+              sale_item_id: null,
+            }).eq('id', serial.id);
+          }
         }
       }
 
@@ -612,16 +634,23 @@ export async function PATCH(
         .eq('sale_id', id);
 
       if (oldItems) {
+        // 🔁 교환 반품 시리얼의 제품·수량은 재고 복원에서 제외(반품창고行이라 판매가능 아님)
+        const returnedQtyByProduct: Record<string, number> = {};
+        for (const s of (oldSerials || []) as Array<{ id: string; product_id: string | null }>) {
+          if (exchangeReturnedIds.has(s.id) && s.product_id) returnedQtyByProduct[s.product_id] = (returnedQtyByProduct[s.product_id] || 0) + 1;
+        }
         const oldQtyMap: Record<string, number> = {};
         for (const item of oldItems) {
           if (item.product_id) oldQtyMap[item.product_id] = (oldQtyMap[item.product_id] || 0) + item.quantity;
         }
         for (const [productId, qty] of Object.entries(oldQtyMap)) {
+          const restoreQty = qty - (returnedQtyByProduct[productId] || 0); // 반품분 제외
+          if (restoreQty <= 0) continue; // 전량 반품이면 복원 없음
           const { data: prod } = await db.from('products').select('stock_quantity, raw_stock').eq('id', productId).single();
           if (prod) {
             const hadSerials = oldSerials?.some((s: { product_id: string }) => s.product_id === productId);
-            const updateData: Record<string, unknown> = { stock_quantity: (prod.stock_quantity || 0) + qty };
-            if (!hadSerials) updateData.raw_stock = (prod.raw_stock || 0) + qty;
+            const updateData: Record<string, unknown> = { stock_quantity: (prod.stock_quantity || 0) + restoreQty };
+            if (!hadSerials) updateData.raw_stock = (prod.raw_stock || 0) + restoreQty;
             await db.from('products').update(updateData).eq('id', productId);
           }
         }
