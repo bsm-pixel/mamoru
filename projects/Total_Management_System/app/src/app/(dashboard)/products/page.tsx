@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useIsLg } from '@/hooks/use-grid-mode';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -42,15 +43,8 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'bulk-edit'>('grid');
 
-  // PC 여부 감지 (lg:1024px+)
-  const [isLg, setIsLg] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)');
-    setIsLg(mql.matches);
-    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
+  // PC 여부 감지 (lg:1024px+) — 공용 훅으로 일원화
+  const isLg = useIsLg();
 
   // 카테고리별 카운트
   const categoryCounts = useMemo(() => {

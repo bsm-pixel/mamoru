@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useIsLg } from '@/hooks/use-grid-mode';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { Topbar } from '@/components/layout/topbar';
@@ -67,15 +68,8 @@ export default function InventoryPage() {
   const [showPrint, setShowPrint] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // PC 여부 감지
-  const [isLg, setIsLg] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)');
-    setIsLg(mql.matches);
-    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
+  // PC 여부 감지 — 공용 훅으로 일원화
+  const isLg = useIsLg();
 
   const { data, isLoading } = useInventory({
     search: search || undefined,

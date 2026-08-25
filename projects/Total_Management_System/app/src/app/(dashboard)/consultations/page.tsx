@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useIsLg } from '@/hooks/use-grid-mode';
 import dynamic from 'next/dynamic';
 import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
@@ -78,15 +79,8 @@ export default function ConsultationsPage() {
     if (storeVisitTab === 'confirmed') setStoreVisitTab('past');
   };
 
-  // PC 여부 감지 (lg:1024px+) — SlidePanel 조건부 렌더링용
-  const [isLg, setIsLg] = useState(false);
-  useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)');
-    setIsLg(mql.matches);
-    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
+  // PC 여부 감지 (lg:1024px+) — SlidePanel 조건부 렌더링용. 공용 훅으로 일원화
+  const isLg = useIsLg();
 
   return (
     <>
