@@ -1,6 +1,8 @@
 # MAMORU 시스템 구축 — TODO
 
-> 최종 수정: 2026-07-16 — **TMS PC 그리드(밀집표) 토글 전면 확산**. 판매관리 검증 패턴을 공용화(`useGridMode` 훅 + `components/ui/data-grid.tsx` DataGrid/GridToggleButton)하여 **복원수리·고객·매입·주문·B2B납품·계약·거래처 7개 화면**에 이식(카드뷰·모바일 유지, 그리드모드 시 목록 넓게/상세 420px 반전). 각 화면 인라인 matchMedia effect도 훅으로 통합. 판매관리 그리드 컬럼 재배치(날짜·고객·상태·상담유형·배송상태·금액)+리뷰약속 세로깨짐 컨테이너쿼리 fix. consultations는 지도/달력 특수레이아웃이라 제외.
+> 최종 수정: 2026-08-25 — **TMS IA/UX 전수감사 개선 R0~P1-4 실행**(5커밋, 상세 `projects/Total_Management_System/docs/TMS_IA_IMPROVEMENT_PLAN.md`). ①R0 버그4건(훅크래시·UTC날짜·저재고기준) ②R1 라벨SSOT(고객/상담유형 색·라벨 단일화, 딜러색 충돌 해소) ③R2 크로스링크(고객 타임라인 전이력 클릭·계약/이벤트→판매 딥링크·저재고 드릴다운) ④P4 데드코드 873줄 삭제 ⑤P1-4 팔레트 stone 통일. 각 tsc0/build성공. **남은 구조 대공사(P1-3 패널단일화·P1-5 DataGrid수렴·P3 PC마스터-디테일·P2-3 발송스텝화)는 시각/구동 검증 커서 별도 회차 권장** — 플랜 문서 진행로그 참조.
+>
+> 이전: 2026-07-16 — **TMS PC 그리드(밀집표) 토글 전면 확산**. 판매관리 검증 패턴을 공용화(`useGridMode` 훅 + `components/ui/data-grid.tsx` DataGrid/GridToggleButton)하여 **복원수리·고객·매입·주문·B2B납품·계약·거래처 7개 화면**에 이식(카드뷰·모바일 유지, 그리드모드 시 목록 넓게/상세 420px 반전). 각 화면 인라인 matchMedia effect도 훅으로 통합. 판매관리 그리드 컬럼 재배치(날짜·고객·상태·상담유형·배송상태·금액)+리뷰약속 세로깨짐 컨테이너쿼리 fix. consultations는 지도/달력 특수레이아웃이라 제외.
 >
 > 이전: 2026-07-12 — **EVENT 접수폼 아임웹 iframe 삽입**(임베드 모드로 고정CTA·모달 해결) · **회사소개 연락처/링크 fix** · **상품 빌더 서체 규칙(영문숫자 Paperlogy / 한글 Pretendard)** · **틴닝 스펙 PC 4열 재설계** · **DRY 카드 일원화**.
 >
