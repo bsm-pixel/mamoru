@@ -80,7 +80,7 @@ function TransactionContent() {
                 type="date"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                className="block h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                className="block h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400/40"
               />
             </div>
             <div>
@@ -89,7 +89,7 @@ function TransactionContent() {
                 type="date"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                className="block h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                className="block h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400/40"
               />
             </div>
             <div className="flex-1">
@@ -99,7 +99,7 @@ function TransactionContent() {
                 value={customerFilter}
                 onChange={(e) => setCustomerFilter(e.target.value)}
                 placeholder="고객명 검색"
-                className="block w-full h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                className="block w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400/40"
               />
             </div>
           </div>
@@ -136,7 +136,7 @@ function TransactionContent() {
 
                   return (
                     <div key={customerName} className="break-inside-avoid">
-                      <h3 className="text-sm font-bold text-indigo-black mb-2 pb-1 border-b-2 border-indigo-black print:border-black">
+                      <h3 className="text-sm font-bold text-stone-900 mb-2 pb-1 border-b-2 border-stone-900 print:border-black">
                         {customerName}
                       </h3>
                       <table className="w-full text-xs">
@@ -177,7 +177,7 @@ function TransactionContent() {
                 })}
 
                 {/* 총계 */}
-                <div className="border-t-2 border-indigo-black print:border-black pt-3">
+                <div className="border-t-2 border-stone-900 print:border-black pt-3">
                   <table className="w-full text-sm font-bold">
                     <tbody>
                       <tr>

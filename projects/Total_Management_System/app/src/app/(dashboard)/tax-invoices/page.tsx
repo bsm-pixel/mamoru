@@ -192,7 +192,7 @@ export default function TaxInvoicesPage() {
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {data.invoices.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-warm-ivory/40">
+                  <tr key={inv.id} className="hover:bg-stone-50/40">
                     <td className="px-4 py-2.5">
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${inv.invoice_type === 'sales' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
                         {inv.invoice_type === 'sales' ? '매출' : '매입'}

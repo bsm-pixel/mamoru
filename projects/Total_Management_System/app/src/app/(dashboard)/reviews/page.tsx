@@ -426,7 +426,7 @@ export default function ReviewsPage() {
                   <div key={`${it.source}-${it.id}`} className="flex flex-col gap-1.5 md:grid md:grid-cols-[1fr_90px_90px_90px_120px] md:gap-3 md:items-center px-4 py-3 border-t border-neutral-100">
                     <div>
                       <Link href={detailHref} className="hover:underline block">
-                        <div className="text-sm font-semibold text-indigo-black">{it.customerName}</div>
+                        <div className="text-sm font-semibold text-stone-900">{it.customerName}</div>
                         <div className="text-[11px] text-neutral-500">{it.displayId}</div>
                       </Link>
                       {related.length > 0 && (
@@ -478,7 +478,7 @@ export default function ReviewsPage() {
                             alert(`발송 실패: ${e.error || '알 수 없음'}`);
                           }
                         }}
-                        className="px-2 py-1 rounded text-[11px] font-semibold bg-indigo-black text-cream hover:bg-indigo-black/85"
+                        className="px-2 py-1 rounded text-[11px] font-semibold bg-stone-900 text-white hover:bg-stone-900/85"
                       >
                         {sentDate ? '재발송' : '발송'}
                       </button>

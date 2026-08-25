@@ -70,7 +70,7 @@ export default function ReportsPage() {
                 onClick={() => { setPreset(p.key); setCustomFrom(''); setCustomTo(''); }}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
                   preset === p.key && !customFrom
-                    ? 'bg-terracotta text-cream'
+                    ? 'bg-stone-900 text-white'
                     : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
                 }`}
               >
@@ -82,14 +82,14 @@ export default function ReportsPage() {
                 type="date"
                 value={customFrom || period.from}
                 onChange={(e) => { setCustomFrom(e.target.value); setPreset(''); }}
-                className="h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                className="h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400/40"
               />
               <span className="text-xs text-neutral-400">~</span>
               <input
                 type="date"
                 value={customTo || period.to}
                 onChange={(e) => { setCustomTo(e.target.value); setPreset(''); }}
-                className="h-8 px-2 rounded-lg border border-neutral-200 bg-warm-ivory text-xs focus:outline-none focus:ring-2 focus:ring-terracotta/40"
+                className="h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400/40"
               />
             </div>
           </div>
@@ -128,7 +128,7 @@ export default function ReportsPage() {
                   <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
                     <TrendingUp size={18} className="text-green-600" />
                   </div>
-                  <h3 className="text-sm font-bold text-indigo-black">
+                  <h3 className="text-sm font-bold text-stone-900">
                     {revenueTab === 'all' ? '전체 매출' : revenueTab === 'repair' ? '복원수리 매출' : '제품 매출'}
                   </h3>
                 </div>
@@ -229,7 +229,7 @@ export default function ReportsPage() {
                   <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
                     <TrendingDown size={18} className="text-red-500" />
                   </div>
-                  <h3 className="text-sm font-bold text-indigo-black">매입</h3>
+                  <h3 className="text-sm font-bold text-stone-900">매입</h3>
                 </div>
                 <p className="text-2xl font-bold text-red-500">{formatKRW(data.purchases.total)}</p>
                 <div className="mt-2 space-y-1 text-xs text-neutral-500">
@@ -246,7 +246,7 @@ export default function ReportsPage() {
                   <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
                     <Receipt size={18} className="text-indigo-600" />
                   </div>
-                  <h3 className="text-sm font-bold text-indigo-black">부가세 요약</h3>
+                  <h3 className="text-sm font-bold text-stone-900">부가세 요약</h3>
                 </div>
                 <p className={`text-2xl font-bold ${data.vat.net_vat >= 0 ? 'text-indigo-600' : 'text-green-600'}`}>
                   {data.vat.net_vat >= 0 ? '' : '-'}{formatKRW(Math.abs(data.vat.net_vat))}
@@ -267,7 +267,7 @@ export default function ReportsPage() {
                   <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
                     <BarChart3 size={18} className="text-amber-600" />
                   </div>
-                  <h3 className="text-sm font-bold text-indigo-black">손익</h3>
+                  <h3 className="text-sm font-bold text-stone-900">손익</h3>
                 </div>
                 {(() => {
                   const pl = (data as unknown as { profit_loss?: { revenue: number; cogs: number; gross_profit: number; expenses: number; operating_profit: number; margin_rate: number } }).profit_loss;
@@ -283,13 +283,13 @@ export default function ReportsPage() {
                       <div className="mt-2 space-y-1 text-xs text-neutral-500">
                         <div className="flex justify-between"><span>매출</span><span>{formatKRW(pl?.revenue ?? data.sales.total)}</span></div>
                         <div className="flex justify-between"><span>매출원가</span><span>-{formatKRW(pl?.cogs ?? data.margin.total_cogs)}</span></div>
-                        <div className="flex justify-between font-semibold text-indigo-black border-t border-neutral-100 pt-1">
+                        <div className="flex justify-between font-semibold text-stone-900 border-t border-neutral-100 pt-1">
                           <span>매출총이익</span><span>{formatKRW(pl?.gross_profit ?? data.margin.gross_profit)}</span>
                         </div>
                         {pl && pl.expenses > 0 && (
                           <>
                             <div className="flex justify-between"><span>경비</span><span>-{formatKRW(pl.expenses)}</span></div>
-                            <div className="flex justify-between font-bold text-indigo-black border-t border-neutral-200 pt-1">
+                            <div className="flex justify-between font-bold text-stone-900 border-t border-neutral-200 pt-1">
                               <span>영업이익</span><span className={opProfit >= 0 ? '' : 'text-red-500'}>{formatKRW(opProfit)}</span>
                             </div>
                           </>
@@ -303,7 +303,7 @@ export default function ReportsPage() {
 
             {/* 일별 추이 (간단 바 차트) — 탭별 분리: 전체=제품+복원수리 / 제품=제품만 / 복원수리=복원수리만(납품 포함) */}
             <Card>
-              <h3 className="text-sm font-bold text-indigo-black mb-3">
+              <h3 className="text-sm font-bold text-stone-900 mb-3">
                 일별 {revenueTab === 'repair' ? '복원수리' : revenueTab === 'product' ? '제품 매출' : '매출/매입'} 추이
               </h3>
               {(() => {
@@ -364,7 +364,7 @@ export default function ReportsPage() {
             {data.by_product.length > 0 && (
               <Card>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-indigo-black">제품별 매출 랭킹</h3>
+                  <h3 className="text-sm font-bold text-stone-900">제품별 매출 랭킹</h3>
                   <Link href="/reports/products" className="text-xs font-semibold text-neutral-500 hover:text-neutral-900">전체 보기 →</Link>
                 </div>
                 <div className="overflow-x-auto">
@@ -381,9 +381,9 @@ export default function ReportsPage() {
                     </thead>
                     <tbody className="divide-y divide-neutral-50">
                       {data.by_product.slice(0, 10).map((p) => (
-                        <tr key={p.product_id} className="hover:bg-warm-ivory/40">
+                        <tr key={p.product_id} className="hover:bg-stone-50/40">
                           <td className="py-2 pr-2">
-                            <p className="font-medium text-indigo-black truncate max-w-[140px]">{p.product_name}</p>
+                            <p className="font-medium text-stone-900 truncate max-w-[140px]">{p.product_name}</p>
                             <p className="text-[10px] text-neutral-400">{p.sku}</p>
                           </td>
                           <td className="text-right py-2 px-2">{p.qty}</td>
@@ -408,7 +408,7 @@ export default function ReportsPage() {
               <Card>
                 <div className="flex items-center gap-2 mb-3">
                   <Truck size={16} className="text-neutral-500" />
-                  <h3 className="text-sm font-bold text-indigo-black">매입처별 지출</h3>
+                  <h3 className="text-sm font-bold text-stone-900">매입처별 지출</h3>
                 </div>
                 <div className="space-y-2">
                   {data.by_supplier.map((s) => (
@@ -431,7 +431,7 @@ export default function ReportsPage() {
                 <Card>
                   <div className="flex items-center gap-2 mb-3">
                     <Wallet size={16} className="text-red-500" />
-                    <h3 className="text-sm font-bold text-indigo-black">미지급금</h3>
+                    <h3 className="text-sm font-bold text-stone-900">미지급금</h3>
                     <span className="ml-auto text-sm font-bold text-red-500">{formatKRW(data.payables.total)}</span>
                   </div>
                   {data.payables.items.length === 0 ? (
@@ -455,7 +455,7 @@ export default function ReportsPage() {
                 <Card>
                   <div className="flex items-center gap-2 mb-3">
                     <Users size={16} className="text-amber-600" />
-                    <h3 className="text-sm font-bold text-indigo-black">미수금</h3>
+                    <h3 className="text-sm font-bold text-stone-900">미수금</h3>
                     <span className="ml-auto text-sm font-bold text-amber-600">{formatKRW(data.receivables.total)}</span>
                   </div>
                   {/* 에이징 바 */}
@@ -486,7 +486,7 @@ export default function ReportsPage() {
                         const days = (r as unknown as Record<string, unknown>).daysOverdue as number || 0;
                         const agingColor = days <= 30 ? 'text-green-600' : days <= 60 ? 'text-yellow-600' : days <= 90 ? 'text-orange-600' : 'text-red-600';
                         return (
-                          <Link key={r.id} href={`/customers/${r.id}`} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0 hover:bg-warm-ivory/40 transition rounded px-1">
+                          <Link key={r.id} href={`/customers/${r.id}`} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0 hover:bg-stone-50/40 transition rounded px-1">
                             <div>
                               <p className="text-sm font-medium">{r.name}</p>
                               {days > 0 && <p className={`text-[10px] font-medium ${agingColor}`}>{days}일 경과</p>}
@@ -503,7 +503,7 @@ export default function ReportsPage() {
 
             {/* 최근 매출 내역 */}
             <Card>
-              <h3 className="text-sm font-bold text-indigo-black mb-3">
+              <h3 className="text-sm font-bold text-stone-900 mb-3">
                 매출 내역 ({data.details.sales.length}건)
               </h3>
               {data.details.sales.length === 0 ? (
@@ -511,7 +511,7 @@ export default function ReportsPage() {
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {data.details.sales.map((s) => (
-                    <Link key={s.id} href={`/sales/${s.id}`} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0 hover:bg-warm-ivory/40 transition rounded px-1">
+                    <Link key={s.id} href={`/sales/${s.id}`} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0 hover:bg-stone-50/40 transition rounded px-1">
                       <div>
                         <p className="text-sm font-medium">{s.customer_name}</p>
                         <p className="text-xs text-neutral-500">{s.sale_date}</p>
@@ -525,7 +525,7 @@ export default function ReportsPage() {
 
             {/* 최근 매입 내역 */}
             <Card>
-              <h3 className="text-sm font-bold text-indigo-black mb-3">
+              <h3 className="text-sm font-bold text-stone-900 mb-3">
                 매입 내역 ({data.details.purchases.length}건)
               </h3>
               {data.details.purchases.length === 0 ? (
@@ -533,7 +533,7 @@ export default function ReportsPage() {
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {data.details.purchases.map((p) => (
-                    <Link key={p.id} href={`/purchasing/${p.id}`} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0 hover:bg-warm-ivory/40 transition rounded px-1">
+                    <Link key={p.id} href={`/purchasing/${p.id}`} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0 hover:bg-stone-50/40 transition rounded px-1">
                       <div>
                         <p className="text-sm font-medium">{p.supplier_name}</p>
                         <p className="text-xs text-neutral-500">{p.order_date}</p>
