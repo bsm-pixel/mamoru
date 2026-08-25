@@ -47,6 +47,58 @@ export type RepairStatus =
   | 'completed'
   | 'cancelled';
 
+// 반품·교환수거(returns) 상태머신 (2026-08-25 Phase 2) — 새 테이블은 (supabase as any)로 접근, 아래 인터페이스 사용
+export type ReturnStatus =
+  | 'requested'          // 반품수거 접수
+  | 'pickup_scheduled'   // 수거 예약(방문/택배)
+  | 'inbound'            // 반품 입고완료 (구 시리얼 반품창고 확정)
+  | 'inspected'          // 검수 완료
+  | 'completed'          // 교환발송/환불 완료
+  | 'cancelled';
+export type ReturnType = 'exchange' | 'refund';
+export type ReturnPickupMethod = '방문수거' | '택배수거' | '직접반납';
+
+export interface ReturnRow {
+  id: string;
+  return_number: string;
+  return_type: ReturnType;
+  sale_id: string | null;
+  product_id: string | null;
+  product_name: string | null;
+  serial_id: string | null;
+  serial_number: string | null;
+  qty: number;
+  customer_id: string | null;
+  name: string | null;
+  phone: string | null;
+  phone_normalized: string | null;
+  postcode: string | null;
+  address: string | null;
+  address_detail: string | null;
+  pickup_method: ReturnPickupMethod | null;
+  pickup_date: string | null;
+  courier_name: string | null;
+  invoice_number: string | null;
+  status: ReturnStatus;
+  requested_at: string | null;
+  pickup_scheduled_at: string | null;
+  inbound_at: string | null;
+  inspected_at: string | null;
+  completed_at: string | null;
+  cancelled_at: string | null;
+  cancelled_reason: string | null;
+  refund_amount: number;
+  refund_method: string | null;
+  reason: string | null;
+  memo: string | null;
+  admin_note: string | null;
+  received_notified_at: string | null;
+  inbound_notified_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // R5: 오프라인 판매 ENUM
 export type PaymentMethod = 'card' | 'cash' | 'transfer' | 'mixed';
 export type PaymentStatus = 'paid' | 'unpaid' | 'partial';
