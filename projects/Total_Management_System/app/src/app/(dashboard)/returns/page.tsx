@@ -9,7 +9,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useReturns, useUpdateReturn, useShipReturn } from '@/hooks/use-returns';
-import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, RETURN_ACTION_LABEL, getAllowedReturnTransitions } from '@/lib/returns/transitions';
+import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, RETURN_ACTION_LABEL, RETURN_STATUS_ORDER, RETURN_STATUS_HINT, RETURN_PRIMARY_NEXT, getAllowedReturnTransitions } from '@/lib/returns/transitions';
 import { formatDate, formatPhone } from '@/lib/utils/format';
 import { Undo2, Package, Truck } from 'lucide-react';
 import type { ReturnRow, ReturnStatus } from '@/lib/supabase/types';
@@ -154,22 +154,60 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
         </div>
       </Card>
 
-      {/* 상태 전이 액션 */}
-      {allowed.length > 0 && (
-        <Card>
-          <p className="text-xs font-semibold text-neutral-500 mb-2">다음 단계</p>
-          <div className="flex flex-wrap gap-2">
-            {allowed.map((next) => (
-              <button key={next} disabled={update.isPending}
-                onClick={() => update.mutate({ id: r.id, status: next })}
-                className={`px-3 py-2 rounded-lg text-xs font-semibold transition disabled:opacity-50 ${next === 'cancelled' ? 'border border-red-200 text-red-600 hover:bg-red-50' : 'bg-stone-900 text-white hover:bg-stone-800'}`}>
-                {RETURN_ACTION_LABEL[next as ReturnStatus]}
+      {/* 구 제품 회수 — 진행 막대 + 지금 할 일 */}
+      {allowed.length > 0 && (() => {
+        const curIdx = RETURN_STATUS_ORDER.indexOf(r.status);
+        const primary = RETURN_PRIMARY_NEXT[r.status];
+        const secondary = allowed.filter((s) => s !== primary && s !== 'cancelled');
+        return (
+          <Card>
+            <p className="text-xs font-semibold text-neutral-500 mb-2">구 제품 회수 진행</p>
+            {/* 진행 막대 */}
+            <div className="flex items-center mb-3">
+              {RETURN_STATUS_ORDER.map((s, i) => {
+                const done = i < curIdx; const cur = i === curIdx;
+                return (
+                  <div key={s} className="flex items-center flex-1 last:flex-none">
+                    <div className="flex flex-col items-center">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${cur ? 'bg-stone-900 text-white' : done ? 'bg-emerald-500 text-white' : 'bg-neutral-200 text-neutral-400'}`}>
+                        {done ? '✓' : i + 1}
+                      </div>
+                      <span className={`text-[9px] mt-1 whitespace-nowrap ${cur ? 'text-stone-900 font-semibold' : 'text-neutral-400'}`}>{RETURN_STATUS_LABEL[s]}</span>
+                    </div>
+                    {i < RETURN_STATUS_ORDER.length - 1 && <div className={`h-0.5 flex-1 mx-1 ${done ? 'bg-emerald-500' : 'bg-neutral-200'}`} />}
+                  </div>
+                );
+              })}
+            </div>
+            {/* 지금 할 일 안내 */}
+            <p className="text-[11px] text-neutral-500 bg-neutral-50 rounded-lg px-3 py-2 mb-2.5 leading-relaxed">
+              {RETURN_STATUS_HINT[r.status]}
+            </p>
+            {/* 대표 액션 (큰 버튼) */}
+            {primary && allowed.includes(primary) && (
+              <button disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: primary })}
+                className="w-full py-2.5 rounded-lg bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 transition disabled:opacity-50 mb-1.5">
+                {RETURN_ACTION_LABEL[primary]} →
               </button>
-            ))}
-          </div>
-          {allowed.includes('inbound') && <p className="text-[11px] text-neutral-400 mt-2">입고완료 시 구 제품 시리얼이 반품창고로 확정됩니다.</p>}
-        </Card>
-      )}
+            )}
+            {/* 보조 액션 + 취소 */}
+            <div className="flex items-center gap-2">
+              {secondary.map((next) => (
+                <button key={next} disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: next })}
+                  className="flex-1 py-2 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-600 hover:bg-neutral-50 transition disabled:opacity-50">
+                  {RETURN_ACTION_LABEL[next]}
+                </button>
+              ))}
+              {allowed.includes('cancelled') && (
+                <button disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: 'cancelled' })}
+                  className="px-3 py-2 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition disabled:opacity-50">
+                  취소
+                </button>
+              )}
+            </div>
+          </Card>
+        );
+      })()}
     </div>
   );
 }

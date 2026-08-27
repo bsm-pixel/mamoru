@@ -43,14 +43,32 @@ export const RETURN_STATUS_COLOR: Record<ReturnStatus, string> = {
   cancelled: 'bg-red-100 text-red-700',
 };
 
-/** 액션 버튼 라벨 (해당 상태로 전이하는 버튼 텍스트) */
+/** 액션 버튼 라벨 (해당 상태로 전이하는 버튼 텍스트 — 무엇을 하는지 명확히) */
 export const RETURN_ACTION_LABEL: Record<ReturnStatus, string> = {
   requested: '수거접수',
-  pickup_scheduled: '수거 예약',
-  inbound: '입고완료',
-  inspected: '검수완료',
-  completed: '완료 처리',
-  cancelled: '취소',
+  pickup_scheduled: '수거 예약함',
+  inbound: '구 제품 입고완료',
+  inspected: '검수 완료',
+  completed: '전체 완료 처리',
+  cancelled: '이 건 취소',
+};
+
+/** 현재 상태에서 "지금 무엇을 하면 되는지" 한 줄 안내 */
+export const RETURN_STATUS_HINT: Record<ReturnStatus, string> = {
+  requested: '구 제품 회수를 접수했습니다. 택배 기사 방문 예약을 잡았으면 「수거 예약함」, 제품이 도착했으면 바로 「구 제품 입고완료」를 누르세요.',
+  pickup_scheduled: '수거 예약됨. 구 제품이 매장에 도착하면 「구 제품 입고완료」를 누르세요.',
+  inbound: '구 제품이 입고됐습니다(반품창고 확정). 상태 확인이 끝나면 「검수 완료」 또는 바로 「전체 완료 처리」.',
+  inspected: '검수 완료. 교환/환불까지 끝났으면 「전체 완료 처리」.',
+  completed: '완료된 건입니다.',
+  cancelled: '취소된 건입니다.',
+};
+
+/** 현재 상태에서 "다음의 대표(primary) 액션" — 이걸 큰 버튼으로. 나머지는 보조 */
+export const RETURN_PRIMARY_NEXT: Partial<Record<ReturnStatus, ReturnStatus>> = {
+  requested: 'inbound',          // 대개 바로 입고완료(수거예약은 선택)
+  pickup_scheduled: 'inbound',
+  inbound: 'completed',
+  inspected: 'completed',
 };
 
 /** 수거방식별 표시 라벨 (목록에서 상태 대신 보여줄 안내) */
