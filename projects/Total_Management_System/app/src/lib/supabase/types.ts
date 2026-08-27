@@ -68,6 +68,13 @@ export interface ReturnRow {
   serial_id: string | null;
   serial_number: string | null;
   qty: number;
+  // 교환해줄 새 제품 + 교환 출고 송장(매장→고객) — 마이그134
+  new_product_id: string | null;
+  new_product_name: string | null;
+  new_serial_number: string | null;
+  exchange_out_invoice_number: string | null;
+  exchange_out_courier_name: string | null;
+  exchange_shipped_at: string | null;
   customer_id: string | null;
   name: string | null;
   phone: string | null;

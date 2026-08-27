@@ -169,6 +169,10 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
             serial_id: returnSerials[0]?.id || null,
             serial_number: returnSerials[0]?.serial_number || null,
             qty: 1,
+            // 교환해줄 새 제품 (교환 출고 송장용)
+            new_product_id: newProduct.id,
+            new_product_name: newProduct.name,
+            new_serial_number: newSerialId ? (availSerials.find((s) => s.id === newSerialId)?.serial_number || null) : null,
             customer_id: sale.customer_id || null,
             name: sale.customer_name || null,
             phone: sale.customer_phone || null,

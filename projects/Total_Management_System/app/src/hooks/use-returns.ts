@@ -52,6 +52,23 @@ export function useUpdateReturn() {
   });
 }
 
+/** 교환 출고 송장 발행 (새 제품 1개 롯데 송장) */
+export function useShipReturn() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string): Promise<{ return: ReturnRow }> => {
+      const res = await fetch(`/api/returns/${id}/ship`, { method: 'POST' });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('교환 출고 송장이 발행되었습니다');
+      qc.invalidateQueries({ queryKey: ['returns'] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : '송장 발행 실패'),
+  });
+}
+
 /** 캘린더용 — 방문/택배 수거 예약(pickup_date) 있는 진행중 반품 */
 export interface ReturnPickupItem {
   id: string;

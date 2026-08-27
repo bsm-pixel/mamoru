@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useIsLg } from '@/hooks/use-grid-mode';
-import { useReturns, useUpdateReturn } from '@/hooks/use-returns';
+import { useReturns, useUpdateReturn, useShipReturn } from '@/hooks/use-returns';
 import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, RETURN_ACTION_LABEL, getAllowedReturnTransitions } from '@/lib/returns/transitions';
 import { formatDate, formatPhone } from '@/lib/utils/format';
 import { Undo2, Package, Truck } from 'lucide-react';
@@ -97,6 +97,7 @@ export default function ReturnsPage() {
 
 function ReturnDetail({ r }: { r: ReturnRow }) {
   const update = useUpdateReturn();
+  const ship = useShipReturn();
   const allowed = getAllowedReturnTransitions(r.status);
 
   return (
@@ -117,6 +118,28 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
           {r.reason && <p className="text-xs text-neutral-400">사유: {r.reason}</p>}
         </div>
       </Card>
+
+      {/* 교환 출고 송장 (배송 교환 — 새 제품 발송) */}
+      {r.return_type === 'exchange' && r.new_product_name && (
+        <Card>
+          <p className="text-xs font-semibold text-neutral-500 mb-2">교환 출고 (새 제품 발송)</p>
+          <p className="text-sm text-neutral-700 mb-2">
+            {r.new_product_name}{r.new_serial_number ? ` · ${r.new_serial_number}` : ''}
+          </p>
+          {r.exchange_out_invoice_number ? (
+            <div className="text-xs text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
+              ✓ 출고 송장 <b className="font-mono">{r.exchange_out_invoice_number}</b>
+              {r.exchange_shipped_at && <span className="text-neutral-400 ml-1">({formatDate(r.exchange_shipped_at)})</span>}
+            </div>
+          ) : (
+            <button disabled={ship.isPending} onClick={() => ship.mutate(r.id)}
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition disabled:opacity-50">
+              <Truck size={13} /> {ship.isPending ? '발행 중…' : '교환 출고 송장 발행'}
+            </button>
+          )}
+          <p className="text-[11px] text-neutral-400 mt-1.5">새 제품 1개만 담긴 롯데 송장을 발행합니다(원 주문 다품목이어도 교환품만).</p>
+        </Card>
+      )}
 
       {/* 상태 타임라인 */}
       <Card>
