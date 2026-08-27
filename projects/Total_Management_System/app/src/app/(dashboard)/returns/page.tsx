@@ -120,8 +120,8 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
         </div>
       </Card>
 
-      {/* 반품 수거접수 (택배 회수 — 롯데 반품 API ustRtgSctCd=02) */}
-      {r.pickup_method === '택배수거' && (
+      {/* 반품 수거접수 (택배 회수 — 롯데 반품 API ustRtgSctCd=02). 완료·취소 건은 숨김 */}
+      {r.pickup_method === '택배수거' && r.status !== 'completed' && r.status !== 'cancelled' && (
         <Card>
           <p className="text-xs font-semibold text-neutral-500 mb-2">반품 수거접수 (고객집 → 매장 회수)</p>
           {r.pickup_invoice_number ? (
