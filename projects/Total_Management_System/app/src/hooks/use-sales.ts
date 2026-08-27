@@ -735,8 +735,10 @@ export function useCancelSaleShipment() {
       }
       return res.json();
     },
-    onSuccess: (_d, id) => {
-      toast.success('송장 취소 완료');
+    onSuccess: (data, id) => {
+      // ALPS 집하취소는 API 미지원 → 실패 시 warning 을 반드시 노출(거짓 성공 신호 방지). 복원수리·빠른송장과 동일 패턴
+      if (data?.warning) toast(data.warning, { icon: '⚠️', duration: 8000 });
+      else toast.success('송장 취소 완료');
       queryClient.invalidateQueries({ queryKey: ['sale', id] });
       invalidateFinancialQueries(queryClient);
     },

@@ -110,7 +110,8 @@ export async function DELETE(
     let warning: string | undefined;
     const cancelResult = await cancelShipment(sale.invoice_number);
     if (!cancelResult.success) {
-      warning = `ALPS 취소 실패: ${cancelResult.error}`;
+      // ALPS 집하취소는 API 미지원 — DB 송장만 정리하고, 사장님께 ALPS 수동취소 안내
+      warning = 'DB 송장은 정리됐습니다 · ⚠️ ALPS에서 직접 집하취소 해주세요';
     }
 
     // DB 업데이트 (109: 집하 자동감지 흔적도 함께 초기화 — 재출고 시 상태 오염 방지)
