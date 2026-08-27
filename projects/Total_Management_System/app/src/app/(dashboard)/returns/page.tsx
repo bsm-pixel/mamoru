@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useIsLg } from '@/hooks/use-grid-mode';
-import { useReturns, useUpdateReturn, useShipReturn } from '@/hooks/use-returns';
+import { useReturns, useUpdateReturn, useShipReturn, useBookReturnPickup } from '@/hooks/use-returns';
 import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, RETURN_ACTION_LABEL, RETURN_STATUS_ORDER, RETURN_STATUS_HINT, RETURN_PRIMARY_NEXT, getAllowedReturnTransitions } from '@/lib/returns/transitions';
 import { formatDate, formatPhone } from '@/lib/utils/format';
 import { Undo2, Package, Truck } from 'lucide-react';
@@ -98,6 +98,7 @@ export default function ReturnsPage() {
 function ReturnDetail({ r }: { r: ReturnRow }) {
   const update = useUpdateReturn();
   const ship = useShipReturn();
+  const pickup = useBookReturnPickup();
   const allowed = getAllowedReturnTransitions(r.status);
 
   return (
@@ -118,6 +119,28 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
           {r.reason && <p className="text-xs text-neutral-400">사유: {r.reason}</p>}
         </div>
       </Card>
+
+      {/* 반품 수거접수 (택배 회수 — 롯데 반품 API ustRtgSctCd=02) */}
+      {r.pickup_method === '택배수거' && (
+        <Card>
+          <p className="text-xs font-semibold text-neutral-500 mb-2">반품 수거접수 (고객집 → 매장 회수)</p>
+          {r.pickup_invoice_number ? (
+            <div className="text-xs text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
+              ✓ 수거 송장 <b className="font-mono">{r.pickup_invoice_number}</b>
+              {r.pickup_booked_at && <span className="text-neutral-400 ml-1">({formatDate(r.pickup_booked_at)})</span>}
+              <p className="text-[11px] text-neutral-400 mt-1">접수 후 취소는 ALPS 화면에서 수동으로 해주세요(롯데 취소 API 미지원).</p>
+            </div>
+          ) : (
+            <>
+              <button disabled={pickup.isPending} onClick={() => pickup.mutate(r.id)}
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition disabled:opacity-50">
+                <Truck size={13} /> {pickup.isPending ? '접수 중…' : '롯데 반품 수거접수'}
+              </button>
+              <p className="text-[11px] text-neutral-400 mt-1.5">고객집으로 롯데 기사가 방문 수거합니다. 접수 후 취소는 ALPS에서 수동.</p>
+            </>
+          )}
+        </Card>
+      )}
 
       {/* 교환 출고 송장 (배송 교환 — 새 제품 발송) */}
       {r.return_type === 'exchange' && r.new_product_name && (

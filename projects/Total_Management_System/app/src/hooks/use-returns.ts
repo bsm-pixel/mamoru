@@ -52,6 +52,24 @@ export function useUpdateReturn() {
   });
 }
 
+/** 반품 수거접수 (롯데 반품 API, ustRtgSctCd=02 — 고객집 회수) */
+export function useBookReturnPickup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string): Promise<{ return: ReturnRow }> => {
+      const res = await fetch(`/api/returns/${id}/pickup`, { method: 'POST' });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('롯데 반품 수거접수가 완료되었습니다');
+      qc.invalidateQueries({ queryKey: ['returns'] });
+      qc.invalidateQueries({ queryKey: ['schedule'] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : '반품 수거접수 실패'),
+  });
+}
+
 /** 교환 출고 송장 발행 (새 제품 1개 롯데 송장) */
 export function useShipReturn() {
   const qc = useQueryClient();

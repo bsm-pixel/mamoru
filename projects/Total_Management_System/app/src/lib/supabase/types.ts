@@ -76,6 +76,9 @@ export interface ReturnRow {
   exchange_out_courier_name: string | null;
   exchange_shipped_at: string | null;
   exchange_out_notified_at: string | null;   // 136: 교환 출고 알림톡 발송 시각(집하 감지 시)
+  pickup_invoice_number: string | null;       // 137: 반품 수거접수 롯데 송장(ustRtgSctCd=02)
+  pickup_courier_name: string | null;
+  pickup_booked_at: string | null;
   customer_id: string | null;
   name: string | null;
   phone: string | null;

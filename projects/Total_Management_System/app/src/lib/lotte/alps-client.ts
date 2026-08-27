@@ -132,6 +132,8 @@ export async function bookShipment(order: {
   receiverAddr: string;
   goodsName?: string;
   deliveryMessage?: string;
+  ustRtgSctCd?: string;        // '01'=출고(기본) / '02'=반품(회수) — 롯데 IS팀 안내(2026-08-27)
+  orgInvoiceNumber?: string;   // 원송장번호(반품 시 선택) → orglInvNo
 }): Promise<{ success: boolean; invoiceNumber: string; error?: string }> {
   if (!LOTTE_API_URL || !LOTTE_CLIENT_KEY) {
     return { success: false, invoiceNumber: order.invoiceNumber, error: 'LOTTE API 환경변수 미설정' };
@@ -149,11 +151,12 @@ export async function bookShipment(order: {
   const payload = {
     snd_list: [{
       jobCustCd:   LOTTE_JOBCUSTCD,
-      ustRtgSctCd: '01',
+      ustRtgSctCd: order.ustRtgSctCd || '01',   // '02'=반품(회수). 출고/반품 외 양식 동일(롯데 IS팀)
       ordSct:      '1',
       fareSctCd:   LOTTE_FARE,
       ordNo:       ordNo,
       invNo:       order.invoiceNumber,
+      orglInvNo:   (order.orgInvoiceNumber || '').replace(/\D/g, ''),  // 원송장번호(반품 시 선택)
 
       snperNm:     SENDER.name,
       snperTel:    SENDER.tel.replace(/\D/g, ''),

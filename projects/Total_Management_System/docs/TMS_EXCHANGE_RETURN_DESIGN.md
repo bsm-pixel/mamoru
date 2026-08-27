@@ -86,6 +86,7 @@
 - 반품수거접수 → 일정/대시보드 캘린더 연동(`use-schedule-events`에 `return_pickup` kind 추가) → 입고완료 시 반품창고 이동.
 - 반품 전용 알림톡(수거접수/수거완료/입고완료) + 사장님 푸시.
 - 신제품 OUT 배송(송장) 연동.
+- **✅ 롯데 반품 수거접수 자동화(2026-08-27, 마이그137)**: 롯데 IS팀 회신 — `ustRtgSctCd:'02'`=반품(양식 출고와 동일), `orglInvNo`=원송장(선택), 취소 API 미지원(접수 후 취소는 ALPS 수동). 구현=`bookShipment`에 ustRtgSctCd·orgInvoiceNumber 옵션 additive + `/api/returns/[id]/pickup`(고객주소로 반품접수→송장 저장·상태 pickup_scheduled) + `/returns` 「롯데 반품 수거접수」 버튼(pickup_method='택배수거'). ⚠️정답=snper=마모루/acper=고객 그대로+02(과거 01+역방향 테스트가 '출고'로 오판). [[reference_lotte_alps_invoice]]
 
 ### Phase 3 — 아임웹 반품/교환 실시간 연동 (실측 선행)
 - **먼저 실측**: 아임웹 개발자센터에서 취소/클레임 API 존재·경로·페이로드 확인 → `imweb_order_test.gs`식 실호출로 검증(place/send 검증했던 방식).
