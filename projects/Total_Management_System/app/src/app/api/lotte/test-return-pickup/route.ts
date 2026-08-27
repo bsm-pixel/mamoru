@@ -11,18 +11,38 @@ import { randomUUID } from 'crypto';
  */
 export async function GET(req: NextRequest) {
   try {
+    const sp = req.nextUrl.searchParams;
+    // 임시 진단용: 로그인 쿠키 or 토큰 둘 중 하나 (브라우저 직접 열기용). 확인 후 이 엔드포인트 제거 예정.
+    const TEST_TOKEN = 'mamoru-return-pickup-2608';
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user && sp.get('token') !== TEST_TOKEN) {
+      return NextResponse.json({ error: 'Unauthorized (로그인 안 됐으면 &token=... 붙이세요)' }, { status: 401 });
+    }
 
-    const sp = req.nextUrl.searchParams;
+    const API_URL = (process.env.LOTTE_API_URL || '').trim();
+    const CANCEL_URL = (process.env.LOTTE_CANCEL_API_URL || '').trim();
+    const KEY = (process.env.LOTTE_CLIENT_KEY || '').trim();
+    const JOB = (process.env.LOTTE_JOB_CUST_CD || process.env.LOTTE_JOBCUSTCD || '').trim();
+
+    // 🧹 취소 모드: ?cancelInvoice=송장번호 — 방금 접수된 테스트 건을 취소 + 원시 응답 확인
+    const cancelInv = (sp.get('cancelInvoice') || '').replace(/\D/g, '');
+    if (cancelInv) {
+      if (!CANCEL_URL) return NextResponse.json({ error: 'LOTTE_CANCEL_API_URL 미설정 — 롯데 관리자에서 수동취소 필요', invoice: cancelInv });
+      const payload = { snd_list: [{ jobCustCd: JOB, invNo: cancelInv, canCd: '01', canDtlCd: '19', canRmk: '반품수거 테스트 취소(TMS)' }] };
+      const res = await fetch(CANCEL_URL, {
+        method: 'POST',
+        headers: { Authorization: `IgtAK ${KEY}`, Accept: 'application/json', 'Content-Type': 'application/json; charset=utf-8', 'X-Idempotency-Key': randomUUID(), 'X-Correlation-Id': randomUUID() },
+        body: JSON.stringify(payload),
+      });
+      const raw = (await res.text()).slice(0, 600);
+      return NextResponse.json({ mode: 'cancel', invoice: cancelInv, httpCode: res.status, raw });
+    }
+
     if (sp.get('confirm') !== 'YES') {
       return NextResponse.json({ error: '실측을 실행하려면 ?confirm=YES 를 붙이세요. (롯데 접수 시도 후 자동 취소)' }, { status: 400 });
     }
 
-    const API_URL = (process.env.LOTTE_API_URL || '').trim();
-    const KEY = (process.env.LOTTE_CLIENT_KEY || '').trim();
-    const JOB = (process.env.LOTTE_JOB_CUST_CD || process.env.LOTTE_JOBCUSTCD || '').trim();
     const FARE = (process.env.LOTTE_DEFAULT_FARE || '03').trim();
     const SENDER = {
       name: (process.env.LOTTE_SENDER_NAME || '마모루').trim(),
