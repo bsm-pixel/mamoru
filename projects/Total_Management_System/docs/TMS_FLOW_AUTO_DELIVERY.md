@@ -18,6 +18,8 @@
    ↓  cron (1시간마다)
 [3-A] offline_sales   shipped_at 자동 기록 + shipped_source='alps_pickup'
         └→ B2C 만 sales_shipped 알림톡 → shipped_notified_at 기록
+[3-C] returns(교환출고) exchange_out_invoice_number 집하 → exchange_out_notified_at CAS 선점  ← 136(2026-08-27)
+        └→ B2C 만 sales_shipped 알림톡(품명=새제품+"(교환)") · 매장교환(송장없음)/B2B/배달완료 제외
 [2-A] repairs         ready_to_ship → shipped
         └→ as_shipped 알림톡
    ↓
