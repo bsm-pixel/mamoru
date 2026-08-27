@@ -75,6 +75,7 @@ export interface ReturnRow {
   exchange_out_invoice_number: string | null;
   exchange_out_courier_name: string | null;
   exchange_shipped_at: string | null;
+  exchange_out_notified_at: string | null;   // 136: 교환 출고 알림톡 발송 시각(집하 감지 시)
   customer_id: string | null;
   name: string | null;
   phone: string | null;

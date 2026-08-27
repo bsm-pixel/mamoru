@@ -86,3 +86,40 @@ export async function sendSalesShippedNotification(
   if (!result.success) return { sent: false, reason: 'send_failed', error: result.error };
   return { sent: true };
 }
+
+/* ── 교환 출고 알림톡 (136, 2026-08-27) ──
+   배송 교환 시 발행한 '교환 출고 송장'이 집하되면, 판매 출고와 동일한 sales_shipped 템플릿으로 발송.
+   품명만 새 제품(교환품)으로 바꾸고 "(교환)" 표기 → 고객이 교환 상품 출고임을 인지.
+   B2B·전화번호 없음·토글 OFF 는 sendSalesShippedNotification 과 동일하게 스스로 걸러 낸다. */
+export interface ExchangeShippedTarget {
+  refId: string | null;             // 표시용(원 판매번호 우선, 없으면 반품번호)
+  invoiceNumber: string | null;     // 교환 출고 송장
+  customerName: string;
+  customerPhone: string | null;
+  customerType?: string | null;     // B2B 2차 가드
+  newProductName: string | null;    // 교환된 새 제품
+  courierName?: string | null;
+}
+
+export async function sendExchangeShippedNotification(
+  t: ExchangeShippedTarget,
+): Promise<{ sent: boolean; reason?: string; error?: string }> {
+  if (!t.customerPhone) return { sent: false, reason: 'no_phone' };
+  if (isB2BCustomerType(t.customerType)) return { sent: false, reason: 'b2b' };
+
+  const result = await sendNotification({
+    template: 'sales_shipped',   // 판매 출고와 동일 템플릿(신규 등록 불필요) — 토글도 sales_shipped 공유
+    phone: t.customerPhone,
+    name: t.customerName,
+    data: {
+      id: t.refId || '',
+      tracking: t.invoiceNumber || '',
+      courier: t.courierName || '롯데택배',
+      goods_name: t.newProductName ? `${t.newProductName} (교환)` : '마모루 제품 (교환)',
+    },
+  });
+
+  if (result.skipped) return { sent: false, reason: 'toggle_off' };
+  if (!result.success) return { sent: false, reason: 'send_failed', error: result.error };
+  return { sent: true };
+}

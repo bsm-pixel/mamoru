@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { queryStatus } from '@/lib/lotte/client';
 import { queryTrackingStatus } from '@/lib/lotte/alps-client';
 import { sendReviewRequestNotification } from '@/lib/notification/review-request';
-import { sendSalesShippedNotification } from '@/lib/notification/sales-shipped';
+import { sendSalesShippedNotification, sendExchangeShippedNotification } from '@/lib/notification/sales-shipped';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
 import { getServerSetting } from '@/hooks/use-settings';
@@ -449,6 +449,80 @@ export async function GET(request: NextRequest) {
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // [3-C] returns 교환 출고 집하 감지 → 교환 출고 알림톡 (136, 2026-08-27)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //   배송 교환건의 '교환 출고 송장'이 집하되면 판매 출고와 동일하게 sales_shipped 로 발송.
+    //   매장 교환(송장 없음)은 exchange_out_invoice_number NULL → 자연 제외. B2B 는 헬퍼가 걸러 냄.
+    //   dedup: exchange_out_notified_at 을 CAS 로 선점(판매 shipped_at 선점과 동일 철학 — 집하 시 1회).
+    let exchangePicked = 0;
+    let exchangeNotified = 0;
+    const { data: exTargets, error: exErr } = await db
+      .from('returns')
+      .select('id, return_number, sale_id, new_product_name, exchange_out_invoice_number, exchange_out_courier_name, name, phone')
+      .eq('return_type', 'exchange')
+      .not('exchange_out_invoice_number', 'is', null)
+      .is('exchange_out_notified_at', null)
+      .not('status', 'in', '(cancelled)')
+      .gte('exchange_shipped_at', thirtyDaysAgo)
+      .limit(50);
+    // 🛡️ 비치명적: 마이그136(exchange_out_notified_at) 미실행 등으로 실패해도 나머지 배송추적은 계속
+    if (exErr) console.error('[track-delivery/returns pickup] 조회 실패(마이그136 미실행?):', exErr.message);
+
+    for (const ret of (exErr ? [] : exTargets) || []) {
+      try {
+        const r = await queryTrackingStatus(ret.exchange_out_invoice_number);
+        // 송장 취소/미접수는 건드리지 않음
+        if (r.state === 'CANCELLED' || r.state === 'NOT_FOUND') continue;
+        if (!r.pickedUp) continue;   // 아직 기사님이 안 가져감
+
+        // 🔒 조건부 CAS — exchange_out_notified_at 이 NULL 일 때만 선점(중복 발송 방지, 집하 시 1회)
+        const { data: claimed } = await db
+          .from('returns')
+          .update({ exchange_out_notified_at: r.pickedUpAt || new Date().toISOString() })
+          .eq('id', ret.id)
+          .is('exchange_out_notified_at', null)
+          .select('id');
+        if (!claimed || claimed.length === 0) continue;   // 다른 사이클이 선점
+        exchangePicked++;
+
+        // 이미 배달완료된 건은 "출고했습니다" 금지(집하 시점을 통째로 놓친 케이스)
+        if (r.state === 'DELIVERED') {
+          console.log(`[track-delivery/returns pickup] ${ret.return_number} 알림톡 skip — 이미 배달완료`);
+          continue;
+        }
+
+        // 원 판매번호·고객유형(B2B 가드) 조회 — 없으면 반품번호로 표시
+        let refId: string | null = ret.return_number;
+        let customerType: string | null = null;
+        if (ret.sale_id) {
+          const { data: s } = await db.from('offline_sales').select('sale_number, customer_type').eq('id', ret.sale_id).single();
+          if (s) { refId = s.sale_number || refId; customerType = s.customer_type; }
+        }
+
+        after(async () => {
+          try {
+            const sent = await sendExchangeShippedNotification({
+              refId,
+              invoiceNumber: ret.exchange_out_invoice_number,
+              customerName: ret.name || '고객',
+              customerPhone: ret.phone,
+              customerType,
+              newProductName: ret.new_product_name,
+              courierName: ret.exchange_out_courier_name,
+            });
+            if (sent.sent) console.log(`[track-delivery/returns pickup] ${ret.return_number} 교환 출고 알림톡 발송 성공`);
+            else console.log(`[track-delivery/returns pickup] ${ret.return_number} 알림톡 미발송 — ${sent.reason} ${sent.error || ''}`);
+          } catch (e) {
+            console.error(`[track-delivery/returns pickup] ${ret.return_number} 알림톡 예외:`, e);
+          }
+        });
+        exchangeNotified++;
+      } catch (e) {
+        console.error(`[track-delivery/returns pickup] ${ret.return_number} 집하 확인 실패:`, e);
+      }
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // [3] offline_sales 추적 (shipped → delivered) — 2026-05-25 추가 (Phase 2)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     //   진입 조건: 송장 발급됨(invoice_number) + 출고완료(shipped_at) + 배송 미완료(delivered_at NULL) + 미취소
@@ -614,6 +688,7 @@ export async function GET(request: NextRequest) {
         notified: salesNotified,
         skippedB2B: salesPickupSkippedB2B,
       },
+      exchangePickup: { checked: exTargets?.length || 0, picked: exchangePicked, notified: exchangeNotified },   // 136: 교환 출고 집하 감지
       deliveriesPickup: { checked: dlPickups?.length || 0, picked: deliveriesPicked },   // 110
       repairs: { checked: repairs?.length || 0, delivered: repairsDelivered },
       sales: { checked: sales?.length || 0, delivered: salesDelivered },
