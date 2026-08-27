@@ -20,6 +20,20 @@ export function Sidebar() {
   const favorites = (cfg.favorites || [])
     .map((href) => itemByHref[href])
     .filter((it): it is (typeof NAV_GROUPS)[number]['items'][number] => !!it && it.href !== '/dashboard');
+  // 즐겨찾기를 원래 소속 그룹으로 분류 (MY MENU 내 분류명·구분선용 — 순수 파생, 설정 변경 없음)
+  type FavItem = (typeof NAV_GROUPS)[number]['items'][number];
+  const hrefToGroup: Record<string, string> = Object.fromEntries(
+    NAV_GROUPS.flatMap((g) => g.items.map((i) => [i.href, g.group]))
+  );
+  const favByGroup: { group: string; items: FavItem[] }[] = [];
+  for (const item of favorites) {
+    const gname = hrefToGroup[item.href] || '';
+    let bucket = favByGroup.find((b) => b.group === gname);
+    if (!bucket) { bucket = { group: gname, items: [] }; favByGroup.push(bucket); }
+    bucket.items.push(item);
+  }
+  const groupOrder = NAV_GROUPS.map((g) => g.group);
+  favByGroup.sort((a, b) => groupOrder.indexOf(a.group) - groupOrder.indexOf(b.group)); // 분류는 메뉴 순서대로(그룹 내 순서는 유지)
   // 그룹 접힘 상태 (localStorage 영속)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   useEffect(() => {
@@ -65,37 +79,49 @@ export function Sidebar() {
         </Link>
       </div>
 
-      {/* 그룹별 내비 (그룹 접기 + pill 액티브) */}
-      <nav className="flex-1 px-2.5 pb-4 overflow-y-auto">
-        {/* MY MENU — 즐겨찾기 바로가기 (설정>화면 설정에서 등록·순서). 은은한 앰버 톤 패널로 구분 */}
-        {favorites.length > 0 && (
-          <div className="mb-2 mt-1 rounded-xl bg-cream p-1.5 shadow-sm">
+      {/* MY MENU — 즐겨찾기 (스크롤 밖 상단 고정). 원래 그룹별로 분류 + 작은 분류명/hairline */}
+      {favorites.length > 0 && (
+        <div className="flex-shrink-0 px-2.5 pt-1">
+          <div className="rounded-xl bg-cream p-1.5 shadow-sm max-h-[45vh] overflow-y-auto">
             <div className="flex items-center gap-1.5 px-1.5 pt-0.5 pb-1.5 text-indigo-black/50">
               <Star size={12} className="fill-current text-amber-500" />
               <span className="text-[11px] font-bold tracking-wider uppercase">MY MENU</span>
             </div>
-            <div className="space-y-0.5">
-              {favorites.map((item) => {
-                const Icon = NAV_ICON_MAP[item.icon];
-                const active = isActive(item.matchPrefix);
-                return (
-                  <Link
-                    key={`fav-${item.href}`}
-                    href={item.href}
-                    className={cn(
-                      'flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm font-medium transition',
-                      active ? 'bg-indigo-black text-cream' : 'text-indigo-black/70 hover:bg-black/5 hover:text-indigo-black'
-                    )}
-                  >
-                    {Icon && <Icon size={18} className={active ? 'opacity-100' : 'opacity-55'} />}
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </div>
+            {favByGroup.map((bucket, bi) => (
+              <div key={bucket.group || `_g${bi}`}>
+                {/* 분류명(작게) + 얇은 가로선 — 첫 분류엔 상단선 없음, 이름 없는 그룹은 선만 */}
+                {bucket.group ? (
+                  <div className={cn('px-1.5 pb-1', bi > 0 ? 'mt-1 pt-1.5 border-t border-indigo-black/10' : 'pt-0.5')}>
+                    <span className="text-[10px] font-semibold tracking-wide text-indigo-black/40 uppercase">{bucket.group}</span>
+                  </div>
+                ) : (bi > 0 && <div className="mt-1 pt-1 border-t border-indigo-black/10" />)}
+                <div className="space-y-0.5">
+                  {bucket.items.map((item) => {
+                    const Icon = NAV_ICON_MAP[item.icon];
+                    const active = isActive(item.matchPrefix);
+                    return (
+                      <Link
+                        key={`fav-${item.href}`}
+                        href={item.href}
+                        className={cn(
+                          'flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm font-medium transition',
+                          active ? 'bg-indigo-black text-cream' : 'text-indigo-black/70 hover:bg-black/5 hover:text-indigo-black'
+                        )}
+                      >
+                        {Icon && <Icon size={18} className={active ? 'opacity-100' : 'opacity-55'} />}
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
+      {/* 그룹별 내비 (그룹 접기 + pill 액티브) — 나머지, 스크롤 */}
+      <nav className="flex-1 px-2.5 pb-4 overflow-y-auto">
         {NAV_GROUPS.map((group, gi) => {
           const items = group.items.filter((it) => it.href !== '/dashboard' && !hidden.has(it.href)); // 대시보드·숨김 제외
           if (items.length === 0) return null; // 대시보드만 있던 빈 그룹 스킵
