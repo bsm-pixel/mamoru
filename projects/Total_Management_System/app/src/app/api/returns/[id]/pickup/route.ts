@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getNextInvoice, bookShipment } from '@/lib/lotte/alps-client';
+import { getNextInvoice, bookReturnPickup } from '@/lib/lotte/alps-client';
 
 /** POST /api/returns/[id]/pickup — 롯데 반품 수거접수 (ustRtgSctCd='02', 고객집 → 마모루 회수)
  *  롯데 IS팀 회신(2026-08-27): 02=반품, 양식은 출고와 동일, orglInvNo=원송장(선택), 취소 API 미지원.
@@ -48,17 +48,16 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     const goodsName = `${r.product_name || '반품 상품'}${r.serial_number ? ` (${r.serial_number})` : ''} 회수`.slice(0, 50);
     const fullAddr = [addrRoad, addrDetail].filter(Boolean).join(' ');
 
-    // 반품 수거접수 — 수취인=고객(수거지), ustRtgSctCd='02'. 원송장은 있으면 참조(선택)
+    // 반품 수거접수 — 보내는분(수거지)=고객, 받는분=마모루, ustRtgSctCd='02'. 원송장은 있으면 참조(선택)
     const { invoiceNumber } = await getNextInvoice();
-    const result = await bookShipment({
+    const result = await bookReturnPickup({
       invoiceNumber,
-      receiverName: custName || '고객',
-      receiverTel: custTel,
-      receiverZip: postcode,
-      receiverAddr: fullAddr,
+      pickupName: custName || '고객',
+      pickupTel: custTel,
+      pickupZip: postcode,
+      pickupAddr: fullAddr,
       goodsName,
       deliveryMessage: '반품 수거',
-      ustRtgSctCd: '02',                                   // 반품(회수)
       orgInvoiceNumber: r.exchange_out_invoice_number || undefined,  // 원송장(있으면, 선택)
     });
     if (!result.success) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { getNextInvoice, bookShipment } from '@/lib/lotte/alps-client';
+import { getNextInvoice, bookReturnPickup } from '@/lib/lotte/alps-client';
 
 /** POST /api/repair/[id]/recall-pickup — 복원수리 재수거(정밀 재점검) 롯데 반품접수(ustRtgSctCd='02')
  *  출고된 복원수리를 고객집에서 다시 회수. 롯데 IS팀 회신: 02=반품, 양식 출고와 동일.
@@ -30,15 +30,16 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
     const fullAddress = [repair.address, repair.address_detail].filter(Boolean).join(' ');
     const { invoiceNumber } = await getNextInvoice();
-    const result = await bookShipment({
+    // 반품수거: 보내는분(수거지)=고객(송채림 집), 받는분=마모루. 원송장=원 출고송장(invoice_number)
+    const result = await bookReturnPickup({
       invoiceNumber,
-      receiverName: repair.name,
-      receiverTel: repair.phone || '',
-      receiverZip: repair.postcode || '',
-      receiverAddr: fullAddress,
+      pickupName: repair.name,
+      pickupTel: repair.phone || '',
+      pickupZip: repair.postcode || '',
+      pickupAddr: fullAddress,
       goodsName: '[MAMORU] 정밀 재점검 회수',   // 고객 노출 대비 중립 문구
       deliveryMessage: '정밀 재점검 수거',
-      ustRtgSctCd: '02',                          // 반품(회수)
+      orgInvoiceNumber: repair.invoice_number || undefined,   // 원 출고송장 참조
     });
     if (!result.success) {
       return NextResponse.json({ error: `롯데 재수거 접수 실패: ${result.error}` }, { status: 502 });

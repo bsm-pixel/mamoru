@@ -132,8 +132,6 @@ export async function bookShipment(order: {
   receiverAddr: string;
   goodsName?: string;
   deliveryMessage?: string;
-  ustRtgSctCd?: string;        // '01'=출고(기본) / '02'=반품(회수) — 롯데 IS팀 안내(2026-08-27)
-  orgInvoiceNumber?: string;   // 원송장번호(반품 시 선택) → orglInvNo
 }): Promise<{ success: boolean; invoiceNumber: string; error?: string }> {
   if (!LOTTE_API_URL || !LOTTE_CLIENT_KEY) {
     return { success: false, invoiceNumber: order.invoiceNumber, error: 'LOTTE API 환경변수 미설정' };
@@ -151,12 +149,11 @@ export async function bookShipment(order: {
   const payload = {
     snd_list: [{
       jobCustCd:   LOTTE_JOBCUSTCD,
-      ustRtgSctCd: order.ustRtgSctCd || '01',   // '02'=반품(회수). 출고/반품 외 양식 동일(롯데 IS팀)
+      ustRtgSctCd: '01',
       ordSct:      '1',
       fareSctCd:   LOTTE_FARE,
       ordNo:       ordNo,
       invNo:       order.invoiceNumber,
-      orglInvNo:   (order.orgInvoiceNumber || '').replace(/\D/g, ''),  // 원송장번호(반품 시 선택)
 
       snperNm:     SENDER.name,
       snperTel:    SENDER.tel.replace(/\D/g, ''),
@@ -200,6 +197,79 @@ export async function bookShipment(order: {
       return { success: true, invoiceNumber: order.invoiceNumber };
     }
 
+    const fe = friendlyAlpsError(String(first.rtnMsg || rtnCd));
+    reportAlpsFailure(fe, order.invoiceNumber).catch(() => {});
+    return { success: false, invoiceNumber: order.invoiceNumber, error: fe };
+  } catch (err) {
+    const fe = friendlyAlpsError(err instanceof Error ? err.message : String(err));
+    reportAlpsFailure(fe, order.invoiceNumber).catch(() => {});
+    return { success: false, invoiceNumber: order.invoiceNumber, error: fe };
+  }
+}
+
+/* ── 반품 수거접수 (ustRtgSctCd='02') ──
+   🔴 반품은 출고와 역할이 반대다: 보내는분(송하인)=고객(수거지) / 받는분(수하인)=마모루(도착지).
+   출고 매핑(송하인=마모루) 그대로 02 로 보내면 ALPS 가 수하인을 거래처(마모루) 정보로 덮어써
+   고객 수거지 주소가 안 들어간다(2026-08-27 송채림 건 실측으로 발견). 그래서 전용 함수로 역할을 뒤집는다. */
+export async function bookReturnPickup(order: {
+  invoiceNumber: string;
+  pickupName: string;      // 고객(수거지)
+  pickupTel: string;
+  pickupZip: string;
+  pickupAddr: string;
+  goodsName?: string;
+  deliveryMessage?: string;
+  orgInvoiceNumber?: string;   // 원 출고송장 → orglInvNo
+}): Promise<{ success: boolean; invoiceNumber: string; error?: string }> {
+  if (!LOTTE_API_URL || !LOTTE_CLIENT_KEY) return { success: false, invoiceNumber: order.invoiceNumber, error: 'LOTTE API 환경변수 미설정' };
+  if (!LOTTE_JOBCUSTCD) return { success: false, invoiceNumber: order.invoiceNumber, error: 'LOTTE_JOBCUSTCD 환경변수 미설정' };
+
+  const now = new Date();
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  const ordNo = `RET-${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}${pad2(now.getSeconds())}`;
+  const pickReqYmd = `${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}`;
+  const cleanTel = (order.pickupTel || '').replace(/\D/g, '');
+
+  const payload = {
+    snd_list: [{
+      jobCustCd:   LOTTE_JOBCUSTCD,
+      ustRtgSctCd: '02',                                        // 반품(회수)
+      ordSct:      '1',
+      fareSctCd:   LOTTE_FARE,
+      ordNo,
+      invNo:       order.invoiceNumber,
+      orglInvNo:   (order.orgInvoiceNumber || '').replace(/\D/g, ''),  // 원 출고송장 참조
+      // 🔁 보내는분(송하인) = 고객(수거지) — 롯데가 여기서 집하
+      snperNm:     order.pickupName,
+      snperTel:    cleanTel,
+      snperCpno:   cleanTel,
+      snperZipcd:  order.pickupZip,
+      snperAdr:    order.pickupAddr,
+      // 받는분(수하인) = 마모루(도착지)
+      acperNm:     SENDER.name,
+      acperTel:    SENDER.tel.replace(/\D/g, ''),
+      acperCpno:   '',
+      acperZipcd:  SENDER.zip,
+      acperAdr:    SENDER.addr,
+      boxTypCd:    'A',
+      gdsNm:       order.goodsName || '반품 수거',
+      dlvMsgCont:  order.deliveryMessage || '',
+      cusMsgCont:  '',
+      pickReqYmd,
+    }],
+  };
+
+  try {
+    const r = await httpPost(LOTTE_API_URL, alpsHeaders(), payload, 3);
+    if (!r.ok) {
+      const fe = friendlyAlpsError(`ALPS HTTP ${r.code}`);
+      reportAlpsFailure(fe, order.invoiceNumber).catch(() => {});
+      return { success: false, invoiceNumber: order.invoiceNumber, error: fe };
+    }
+    console.log('[ALPS bookReturnPickup] 응답:', JSON.stringify(r.json).slice(0, 500));
+    const first = (Array.isArray(r.json.rtn_list) ? r.json.rtn_list[0] : {}) as Record<string, unknown>;
+    const rtnCd = String(first.rtnCd || '').toUpperCase();
+    if (rtnCd === 'S') return { success: true, invoiceNumber: order.invoiceNumber };
     const fe = friendlyAlpsError(String(first.rtnMsg || rtnCd));
     reportAlpsFailure(fe, order.invoiceNumber).catch(() => {});
     return { success: false, invoiceNumber: order.invoiceNumber, error: fe };
