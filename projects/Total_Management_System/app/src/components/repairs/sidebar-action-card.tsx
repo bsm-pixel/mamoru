@@ -341,9 +341,9 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                   <button
                     onClick={() => { if (window.confirm('정밀 재점검 재수거를 접수합니다 (고객집 방문수거).\n접수 후 취소는 ALPS에서 수동입니다. 진행할까요?')) recallPickup.mutate(r.id); }}
                     disabled={recallPickup.isPending}
-                    className="text-xs text-blue-500 hover:text-blue-700 py-1 transition disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition disabled:opacity-50"
                   >
-                    {recallPickup.isPending ? '접수 중...' : '↩ 정밀 재점검 재수거 접수'}
+                    <Truck size={13} /> {recallPickup.isPending ? '접수 중…' : '정밀 재점검 재수거 접수'}
                   </button>
                 )
               )}
