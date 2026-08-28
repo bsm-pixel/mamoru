@@ -9,6 +9,7 @@ import {
   useUpdateRepairFields,
   useShipRepair,
   useCancelShipment,
+  useRecallRepairPickup,
   useSendRepairNotification,
   useDeleteRepair,
 } from '@/hooks/use-repairs';
@@ -38,6 +39,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const updateFields = useUpdateRepairFields();
   const shipRepair = useShipRepair();
   const cancelShipment = useCancelShipment();
+  const recallPickup = useRecallRepairPickup();
   const sendNotify = useSendRepairNotification();
   const deleteRepair = useDeleteRepair();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
@@ -192,7 +194,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
               variant="primary"
               size="sm"
               onClick={() => setConfirmAction('mark_paid')}
-              loading={updateFields.isPending}
+              loading={updateFields.isPending}
             >
               <CreditCard size={14} />
               입금확인
@@ -208,7 +210,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 variant="primary"
                 size="sm"
                 onClick={() => setConfirmAction('visit_checkout')}
-                loading={updateStatus.isPending || updateFields.isPending}
+                loading={updateStatus.isPending || updateFields.isPending}
               >
                 🏪 방문 확정 · 현장결제
               </Button>
@@ -217,7 +219,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 variant="primary"
                 size="sm"
                 onClick={() => setConfirmAction('cost_notice')}
-                loading={updateStatus.isPending || sendNotify.isPending}
+                loading={updateStatus.isPending || sendNotify.isPending}
               >
                 <Send size={14} />
                 {isCostResend ? '비용 안내 재발송' : '입고 & 비용안내'}
@@ -238,7 +240,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                   size="sm"
                   disabled={busy}
                   loading={updateStatus.variables?.status === nextStatus && busy}
-                  onClick={() => updateStatus.mutate({ id: r.id, status: nextStatus })}
+                  onClick={() => updateStatus.mutate({ id: r.id, status: nextStatus })}
                 >
                   {REPAIR_ACTION_LABEL[nextStatus]}
                 </Button>
@@ -289,7 +291,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                   variant="primary"
                   size="sm"
                   onClick={() => setConfirmAction('mark_shipped')}
-                  loading={updateStatus.isPending}
+                  loading={updateStatus.isPending}
                 >
                   <Truck size={14} />
                   출고완료
@@ -327,6 +329,24 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                   {cancelShipment.isPending ? '취소 중...' : '송장 취소'}
                 </button>
               )}
+              {/* 정밀 재점검 재수거 (출고된 건 회수 — 롯데 반품 API 02). 알림톡 없음, 취소는 ALPS 수동 */}
+              {['shipped', 'delivered', 'completed'].includes(currentStatus) && (
+                r.recall_invoice_number ? (
+                  <div className="mt-1 text-xs text-blue-700 bg-blue-50 rounded-lg px-2.5 py-2">
+                    ↩ 재수거 송장 <b className="font-mono">{r.recall_invoice_number}</b>
+                    {r.recall_booked_at && <span className="text-neutral-400 ml-1">({formatDateTime(r.recall_booked_at)})</span>}
+                    <p className="text-[11px] text-neutral-400 mt-0.5">접수 후 취소는 ALPS에서 수동입니다.</p>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { if (window.confirm('정밀 재점검 재수거를 접수합니다 (고객집 방문수거).\n접수 후 취소는 ALPS에서 수동입니다. 진행할까요?')) recallPickup.mutate(r.id); }}
+                    disabled={recallPickup.isPending}
+                    className="text-xs text-blue-500 hover:text-blue-700 py-1 transition disabled:opacity-50"
+                  >
+                    {recallPickup.isPending ? '접수 중...' : '↩ 정밀 재점검 재수거 접수'}
+                  </button>
+                )
+              )}
             </div>
           ) : (
             <div className="space-y-2">
@@ -334,7 +354,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 variant="primary"
                 size="sm"
                 onClick={() => shipRepair.mutate({ id: r.id })}
-                loading={shipRepair.isPending}
+                loading={shipRepair.isPending}
               >
                 <Truck size={14} />
                 송장 생성
@@ -343,7 +363,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => setMergedShipOpen(true)}
+                  onClick={() => setMergedShipOpen(true)}
                 >
                   <Package size={14} />
                   판매건 합포장 출고

@@ -331,6 +331,27 @@ export function useCancelShipment() {
   });
 }
 
+/** 복원수리 재수거 접수 (정밀 재점검 — 롯데 반품 API 02, 고객집 회수). 알림톡 없음 */
+export function useRecallRepairPickup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/repair/${id}/recall-pickup`, { method: 'POST' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : '재수거 접수 실패');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('롯데 재수거 접수가 완료되었습니다');
+      queryClient.invalidateQueries({ queryKey: ['repair'] });
+      queryClient.invalidateQueries({ queryKey: ['repairs'] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : '재수거 접수 실패'),
+  });
+}
+
 /** 알림톡 수동 발송 */
 export function useSendRepairNotification() {
   return useMutation({

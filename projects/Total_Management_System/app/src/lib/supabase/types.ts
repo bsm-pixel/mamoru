@@ -458,6 +458,9 @@ export interface Database {
           courier_name: string | null;
           shipped_at: string | null;
           shipped_source: 'manual' | 'alps_pickup' | null;  // 109: 출고 기록 주체 (집하 자동감지 구분)
+          recall_invoice_number: string | null;   // 139: 재수거(정밀 재점검) 롯데 송장(ustRtgSctCd=02)
+          recall_courier_name: string | null;
+          recall_booked_at: string | null;
           paid_at: string | null;
           delivered_at: string | null;
           confirmed_at: string | null;  // R1: 접수확인 시점
