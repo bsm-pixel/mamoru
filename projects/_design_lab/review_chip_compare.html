@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>리뷰 카드 태그 — 개선 시안 비교</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--void:#1A1A1A;--graphite:#2D2D2D;--stone:#4A4A4A;--warm-gray:#8A8580;--mist:#B8B4AF;--sand:#D4D0CB;--parchment:#EDEBE8;--shell:#F5F3F0;--cream:#FAF9F7;--font-display:'Outfit',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#e6e4e0;font-family:'Noto Sans KR',sans-serif;color:var(--stone);padding:24px 12px 60px}
+.lab{max-width:1000px;margin:0 auto}
+.lab__h{text-align:center;margin-bottom:8px;font-family:var(--font-display);font-weight:800;font-size:22px;color:var(--void)}
+.lab__sub{text-align:center;color:var(--warm-gray);font-size:13px;margin-bottom:28px}
+.cols{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.col{flex:1;min-width:320px;max-width:360px}
+.col__cap{text-align:center;font-weight:700;font-size:13px;margin-bottom:4px;color:var(--void)}
+.col__note{text-align:center;font-size:12px;color:var(--warm-gray);margin-bottom:14px;min-height:32px}
+.col--bad .col__cap{color:#B23B3B}.col--good .col__cap{color:#2E7D57}
+.phone{background:var(--cream);border-radius:24px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.10)}
+
+/* 실제 카드 규격 재현 */
+.card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);border:1px solid var(--parchment)}
+.card__img{width:100%;aspect-ratio:16/11;object-fit:cover;background:linear-gradient(135deg,#c9743f,#a85c33);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+.card__pad{padding:14px 14px 12px}
+.card__head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.card__name{font-weight:700;font-size:14px;color:var(--void)}
+.card__name small{font-weight:400;color:var(--warm-gray);font-size:12px}
+.card__subtype{font-size:11px;font-weight:600;padding:2px 7px;background:rgba(26,26,26,.04);border-radius:999px;color:var(--stone);margin-left:auto}
+.card__stars{font-size:14px;letter-spacing:2px;color:var(--void);margin:2px 0 8px}
+.card__text{font-size:13.5px;line-height:1.6;color:var(--graphite);margin-top:2px}
+.card__date{margin-top:10px;font-size:11.5px;color:var(--warm-gray)}
+
+/* 현재 태그 */
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.tag{font-size:11px;font-weight:500;color:var(--stone);padding:2px 8px;border:1px solid var(--sand);border-radius:6px;background:transparent}
+/* 개선 태그 */
+.tags--cap{margin-bottom:8px}
+.tag--more{border:none;color:var(--mist);padding:2px 4px;font-weight:600}
+</style></head>
+<body>
+<div class="lab">
+  <div class="lab__h">리뷰 카드 태그 — 개선 시안</div>
+  <div class="lab__sub">모바일 카드 폭(약 320px)에서 비교 · 상세 모달은 어느 안이든 태그 전량 유지</div>
+  <div class="cols">
+
+    <!-- BEFORE -->
+    <div class="col col--bad">
+      <div class="col__cap">① 현재 (태그 전량)</div>
+      <div class="col__note">칩 5개가 3줄 → 본문보다 태그가 더 큰 면적 차지</div>
+      <div class="phone"><div class="card">
+        <div class="card__img">후기 사진</div>
+        <div class="card__pad">
+          <div class="card__head"><span class="card__name">김*영 <small>· 이**어 선릉점</small></span><span class="card__subtype">상담·출장</span></div>
+          <div class="card__stars">★★★★★</div>
+          <div class="tags">
+            <span class="tag">설명이 자세해요</span><span class="tag">맞춤 안내</span>
+            <span class="tag">전문적이에요</span><span class="tag">시간이 아깝지 않아요</span>
+            <span class="tag">합리적이에요</span>
+          </div>
+          <div class="card__text">가위가 너무 많지만 딱 히맘에든 가위가 없어요 요번에 가위에대해 자세해 알았으며 좋은 가…</div>
+          <div class="card__date">상담 260820 · 작성 260822</div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- AFTER A -->
+    <div class="col col--good">
+      <div class="col__cap">② 개선안 A (상위 3 + “+N”) ★추천</div>
+      <div class="col__note">가장 중요한 3개만 1줄 + 나머지는 흐린 +2 (탭하면 모달서 전부)</div>
+      <div class="phone"><div class="card">
+        <div class="card__img">후기 사진</div>
+        <div class="card__pad">
+          <div class="card__head"><span class="card__name">김*영 <small>· 이**어 선릉점</small></span><span class="card__subtype">상담·출장</span></div>
+          <div class="card__stars">★★★★★</div>
+          <div class="tags tags--cap">
+            <span class="tag">설명이 자세해요</span><span class="tag">맞춤 안내</span>
+            <span class="tag">전문적이에요</span><span class="tag tag--more">+2</span>
+          </div>
+          <div class="card__text">가위가 너무 많지만 딱 히맘에든 가위가 없어요 요번에 가위에대해 자세해 알았으며 좋은 가…</div>
+          <div class="card__date">상담 260820 · 작성 260822</div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- AFTER B -->
+    <div class="col col--good">
+      <div class="col__cap">③ 개선안 B (상위 2 + “+N”)</div>
+      <div class="col__note">더 절제 — 핵심 2개만. 태그를 가장 조용하게</div>
+      <div class="phone"><div class="card">
+        <div class="card__img">후기 사진</div>
+        <div class="card__pad">
+          <div class="card__head"><span class="card__name">김*영 <small>· 이**어 선릉점</small></span><span class="card__subtype">상담·출장</span></div>
+          <div class="card__stars">★★★★★</div>
+          <div class="tags tags--cap">
+            <span class="tag">설명이 자세해요</span><span class="tag">맞춤 안내</span><span class="tag tag--more">+3</span>
+          </div>
+          <div class="card__text">가위가 너무 많지만 딱 히맘에든 가위가 없어요 요번에 가위에대해 자세해 알았으며 좋은 가…</div>
+          <div class="card__date">상담 260820 · 작성 260822</div>
+        </div>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+</body></html>

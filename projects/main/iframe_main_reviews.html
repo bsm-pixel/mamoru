@@ -300,10 +300,13 @@ img { display: block; max-width: 100%; }
       var imgHtml = imgUrl ? '<img class="mm-review-card__img" src="' + imgUrl + '" alt="후기 이미지" loading="lazy">' : '';
       var tagsHtml = '';
       if (r.meta && r.meta.tags && r.meta.tags.length > 0) {
+        var _tg = r.meta.tags;                    // 카드=상위 2개 + '+N'(모달은 전량)
         tagsHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">' +
-          r.meta.tags.map(function(t) {
+          _tg.slice(0, 2).map(function(t) {
             return '<span style="font-size:11px;padding:2px 8px;border:1px solid var(--sand);border-radius:6px;color:var(--stone);">' + (TAG_LABELS[t] || t) + '</span>';
-          }).join('') + '</div>';
+          }).join('') +
+          (_tg.length > 2 ? '<span style="font-size:11px;padding:2px 4px;color:#B8B4AF;font-weight:600;">+' + (_tg.length - 2) + '</span>' : '') +
+          '</div>';
       }
       var chips = '';
       var clbl = chipLabel(r);

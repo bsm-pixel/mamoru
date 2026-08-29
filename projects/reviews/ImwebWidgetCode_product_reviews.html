@@ -542,6 +542,8 @@ img { display: block; max-width: 100%; }
   flex-wrap: wrap;
   gap: 4px;
 }
+/* 카드 '+N' — 조용한 보조 표시 */
+.mm-prv__tag--more { border: none; color: var(--mm-warm-gray); font-weight: 600; padding: 2px 4px; opacity: .7; }
 .mm-prv__tag {
   font-size: 10px;
   font-weight: 500;
@@ -952,11 +954,14 @@ img { display: block; max-width: 100%; }
     would_recommend:'추천하고 싶어요'
   };
 
-  function renderTagChips(r, cls) {
+  function renderTagChips(r, cls, limit) {
     var tags = r.meta && r.meta.tags;
     if (!tags || !tags.length) return '';
+    var over = limit && tags.length > limit;      // 카드=상위 N + '+나머지', 모달=전량
+    var shown = over ? tags.slice(0, limit) : tags;
+    var more = over ? '<span class="mm-prv__tag mm-prv__tag--more">+' + (tags.length - limit) + '</span>' : '';
     return '<div class="' + cls + '">' +
-      tags.map(function(t) { return '<span class="mm-prv__tag">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') +
+      shown.map(function(t) { return '<span class="mm-prv__tag">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') + more +
     '</div>';
   }
 
@@ -1042,7 +1047,7 @@ img { display: block; max-width: 100%; }
         '<span class="mm-prv__card-stars">' + renderStars(r.stars) + '</span>' +
       '</div>' +
       productHtml +
-      renderTagChips(r, 'mm-prv__tags') +
+      renderTagChips(r, 'mm-prv__tags', 2) +
       '<div class="mm-prv__card-text">' + preview + '</div>' +
       renderDates(r, 'mm-prv__card-date') +
     '</article>';

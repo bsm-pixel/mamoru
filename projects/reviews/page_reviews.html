@@ -250,6 +250,8 @@ img { display: block; max-width: 100%; }
   border-radius: 6px;
   background: transparent;
 }
+/* 카드 '+N' — 조용한 보조 표시 (테두리 없이 흐리게) */
+.mm-rv-tag--more { border: none; color: #B8B4AF; font-weight: 600; padding: 2px 4px; }
 
 /* ── 모달 — iframe 뷰포트 센터링 ── */
 .mm-rv-overlay {
@@ -736,11 +738,15 @@ img { display: block; max-width: 100%; }
     good_quality:'품질이 좋아요', fast_delivery:'배송이 빨라요', neat_packaging:'포장이 꼼꼼해요',
     would_recommend:'추천하고 싶어요'
   };
-  function renderTagChips(r, cls) {
+  function renderTagChips(r, cls, limit) {
     var tags = r.meta && r.meta.tags;
     if (!tags || !tags.length) return '';
+    // limit 지정 시(카드) 상위 N개만 + '+나머지'. 미지정(모달)은 전량.
+    var over = limit && tags.length > limit;
+    var shown = over ? tags.slice(0, limit) : tags;
+    var more = over ? '<span class="mm-rv-tag mm-rv-tag--more">+' + (tags.length - limit) + '</span>' : '';
     return '<div class="' + cls + '">' +
-      tags.map(function(t) { return '<span class="mm-rv-tag">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') +
+      shown.map(function(t) { return '<span class="mm-rv-tag">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') + more +
     '</div>';
   }
   var SUBTYPE_LABELS = { store_visit: '직접방문', field_request: '출장', talk_consult: '톡상담', restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거', delivery: '택배 수리', parcel_pickup: '방문수거', self_ship: '직접발송', offline: '오프라인', online: '온라인', talk: '톡상담', visit_pickup: '방문수거', direct_send: '직접발송', same_day: '당일수리', event: '이벤트참여' };
@@ -821,7 +827,7 @@ img { display: block; max-width: 100%; }
       '</div>' +
       productHtml +
       '<div class="mm-rv-card__stars">' + renderStars(r.stars) + '</div>' +
-      renderTagChips(r, 'mm-rv-card__tags') +
+      renderTagChips(r, 'mm-rv-card__tags', 2) +
       '<div class="mm-rv-card__text">' + preview + '</div>' +
       renderDates(r, 'mm-rv-card__date') +
     '</article>';
