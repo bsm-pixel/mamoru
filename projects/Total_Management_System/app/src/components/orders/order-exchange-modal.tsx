@@ -202,17 +202,17 @@ export function OrderExchangeModal({ order, items, onClose }: { order: Order; it
 
           {/* 3) 새 제품 여러 개 */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <p className="text-xs font-semibold text-neutral-500">3. 교환해줄 새 제품 (여러 개 가능 · 아임웹 없는 제품도 검색됨)</p>
-              <button onClick={addRow} className="flex items-center gap-1 text-xs text-purple-600 font-semibold"><Plus size={13} /> 추가</button>
-            </div>
+            <p className="text-xs font-semibold text-neutral-500 mb-1.5">3. 교환해줄 새 제품 <span className="font-normal text-neutral-400">· 여러 개면 아래 [+ 새 제품 추가]로 계속</span></p>
             <div className="space-y-2">
-              {rows.map((r) => {
+              {rows.map((r, ri) => {
                 const p = productById(r.productId);
                 return (
                   <div key={r.key} className="rounded-lg border border-neutral-200 p-2.5">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-medium text-neutral-700">{p ? <>{p.name} <span className="text-neutral-400">{formatKRW(p.price || 0)}</span></> : '제품 미선택'}</span>
+                      <span className="text-xs font-medium text-neutral-700 flex items-center">
+                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold mr-1.5">{ri + 1}</span>
+                        {p ? <>{p.name} <span className="text-neutral-400 ml-1">{formatKRW(p.price || 0)}</span></> : '제품 미선택'}
+                      </span>
                       {rows.length > 1 && <button onClick={() => removeRow(r.key)} className="text-neutral-300 hover:text-red-500"><X size={14} /></button>}
                     </div>
                     {activeRow === r.key || !r.productId ? (
@@ -267,6 +267,11 @@ export function OrderExchangeModal({ order, items, onClose }: { order: Order; it
                 );
               })}
             </div>
+            <button onClick={addRow}
+              className="w-full mt-2 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border-2 border-dashed border-purple-300 text-purple-600 text-sm font-semibold hover:bg-purple-50 transition">
+              <Plus size={15} /> 새 제품 추가 (여러 개 교환 시)
+            </button>
+            <p className="text-[11px] text-neutral-400 mt-1">현재 <b className="text-neutral-600">{validRows.length}개</b> 제품 담김 · 합계 {formatKRW(newTotal)}</p>
           </div>
 
           {/* 4) 차액 */}
