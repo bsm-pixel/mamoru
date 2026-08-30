@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DeliveryTracker } from './delivery-tracker';
 import { OrderActionBar } from './order-action-bar';
 import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
-import { Package, Hash, Printer } from 'lucide-react';
+import { Package, Hash, Printer, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 
@@ -104,12 +104,26 @@ export function OrderDetailPanel({ orderId }: Props) {
         </div>
       )}
 
+      {/* 교환 내역 — 교환 처리된 주문만 (반납/발송/차액 요약). 위 주문품목·결제는 아임웹 원본 그대로 */}
+      {o.exchanged_at && o.exchange_memo && (
+        <div className="rounded-lg bg-purple-50 border border-purple-100 p-3">
+          <p className="text-[11px] font-semibold text-purple-700 mb-1 flex items-center gap-1">
+            <RefreshCw size={11} /> 교환 내역
+          </p>
+          <p className="text-[12px] text-purple-900 whitespace-pre-line leading-relaxed">{o.exchange_memo}</p>
+          <p className="text-[10px] text-purple-400 mt-1.5">
+            {formatDateTime(o.exchanged_at)} · 위 주문 품목·결제금액은 아임웹 원본 그대로(카드 재결제 없음)
+          </p>
+        </div>
+      )}
+
       {/* 배정 시리얼 */}
       {items.some((i) => i.product_id) && o.status !== 'cancelled' && (
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-[11px] font-semibold text-neutral-400 flex items-center gap-1">
               <Hash size={11} /> 배정 시리얼{serials.length > 0 && <span className="text-neutral-300 ml-0.5">({serials.length})</span>}
+              {o.exchanged_at && <span className="text-purple-400 ml-0.5 font-normal">· 교환 발송분</span>}
             </p>
             <button
               onClick={() => setShowSerials(true)}
