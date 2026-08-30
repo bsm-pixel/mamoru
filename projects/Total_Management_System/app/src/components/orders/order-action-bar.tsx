@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useBookInvoice, useCancelInvoice, useCancelOrder, useCompletePickup } from '@/hooks/use-orders';
 import { InvoiceModal } from './invoice-modal';
-import { AlertTriangle, Truck, ExternalLink, Store } from 'lucide-react';
+import { OrderExchangeModal } from './order-exchange-modal';
+import { AlertTriangle, Truck, ExternalLink, Store, RefreshCw } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import type { Order, OrderItem } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
@@ -20,6 +21,7 @@ export function OrderActionBar({ order, items }: Props) {
   const [showCancelInvoice, setShowCancelInvoice] = useState(false);
   const [showPushImweb, setShowPushImweb] = useState(false);
   const [showPickup, setShowPickup] = useState(false);
+  const [showExchange, setShowExchange] = useState(false);
   const [checkingAlps, setCheckingAlps] = useState(false);
   const bookInvoice = useBookInvoice();
   const cancelInvoice = useCancelInvoice();
@@ -77,8 +79,8 @@ export function OrderActionBar({ order, items }: Props) {
     }
   }
 
-  // 완료/취소 상태 — 액션 없음
-  if (['delivered', 'cancelled'].includes(order.status)) return null;
+  // 취소 상태 — 액션 없음 (배송완료는 '제품 교환' 위해 액션바 유지)
+  if (order.status === 'cancelled') return null;
 
   return (
     <>
@@ -142,6 +144,15 @@ export function OrderActionBar({ order, items }: Props) {
             </p>
           </>
         )}
+
+        {/* 제품 교환 — 모든 진행/완료(취소 제외) 상태에서 가능. 매출·카드 불변, 상품/재고만 스왑 */}
+        <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowExchange(true)} disabled={busy}>
+          <RefreshCw size={14} />
+          제품 교환
+        </Button>
+        {order.exchanged_at && (
+          <p className="text-[11px] text-emerald-600 px-1">✓ 교환 처리됨 — 아임웹 주문/결제는 그대로 유지됨</p>
+        )}
       </div>
 
       {/* 송장 생성 모달 */}
@@ -152,6 +163,11 @@ export function OrderActionBar({ order, items }: Props) {
           order={order}
           items={items}
         />
+      )}
+
+      {/* 제품 교환 모달 */}
+      {showExchange && (
+        <OrderExchangeModal order={order} items={items} onClose={() => setShowExchange(false)} />
       )}
 
       {/* 주문 취소 확인 */}

@@ -360,3 +360,41 @@ export function useCancelInvoice() {
     },
   });
 }
+
+/** 주문 제품 교환 — 매출·카드 불변, 상품/재고만 스왑 (반납→반품창고, 새 제품 출고, 차액 cash) */
+export function useExchangeOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: {
+      orderId: string;
+      returns: Array<{ product_id: string; product_name?: string; qty: number; serial_ids?: string[] }>;
+      new_items: Array<{ product_id: string; product_name?: string; qty: number; serial_ids?: string[] }>;
+      recovery_method?: string;
+      diff_amount?: number;
+      diff_method?: string;
+      memo?: string;
+    }) => {
+      const { orderId, ...bodyPayload } = payload;
+      const res = await fetch(`/api/orders/${orderId}/exchange`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyPayload),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ ok: boolean; summary: string }>;
+    },
+    onSuccess: (_d, payload) => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', payload.orderId] });
+      queryClient.invalidateQueries({ queryKey: ['order-counts'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['serials'] });
+      queryClient.invalidateQueries({ queryKey: ['serials-available'] });
+    },
+    onError: (err) => {
+      toast.error('교환 실패: ' + String(err));
+    },
+  });
+}

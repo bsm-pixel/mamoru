@@ -198,6 +198,8 @@ export interface Database {
           delivered_at: string | null;
           review_requested_at: string | null; // 011: 리뷰 요청 발송 시각
           is_pickup?: boolean | null;          // 126: 직접수령(대면 픽업) 마커
+          exchanged_at?: string | null;        // 140: 제품 교환 처리 시각(매출·카드 불변, 상품만 스왑)
+          exchange_memo?: string | null;       // 140: 교환 내역 요약
           status: OrderStatus;
           imweb_raw: Record<string, unknown> | null;
           synced_at: string;
