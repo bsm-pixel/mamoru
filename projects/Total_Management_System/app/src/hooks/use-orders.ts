@@ -114,7 +114,8 @@ export function useOrder(id: string) {
         (supabase as any)
           .from('product_serials')
           .select('id, product_id, serial_number, status, sold_at')
-          .eq('order_id', id),
+          .eq('order_id', id)
+          .eq('status', 'sold'),   // 배정 시리얼 = 현재 출고분만(반품/교환 반납분 제외)
       ]);
 
       if (orderRes.error) throw orderRes.error;

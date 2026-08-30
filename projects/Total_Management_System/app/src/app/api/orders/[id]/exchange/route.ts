@@ -63,31 +63,42 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const newLabels: string[] = [];
 
   try {
-    // ── 1) 반납품 → 반품창고 (판매가능 미복원) ─────────────────────
+    // ── 1) 반납품 → 반품창고 (판매가능 미복원, 멱등) ─────────────────
+    //   🚨 서버에서 '이 주문·이 제품의 판매됨 시리얼'을 직접 조회해 반품 처리.
+    //   교환을 두 번 돌려도(재실행) 이미 반품된 건 0건 조회 → return_stock 이중집계 없음.
     for (const r of returns) {
       if (!r.product_id || !r.qty) continue;
-      const serialIds = (r.serial_ids || []).filter(Boolean);
 
-      if (serialIds.length > 0) {
-        // 시리얼 반납: 실물에 판매 시리얼 각인 → 반품창고(검수대기·판매불가) 격리
-        const { data: srows } = await db.from('product_serials')
-          .select('id, warehouse_zone').in('id', serialIds);
-        for (const s of (srows || []) as Array<{ id: string; warehouse_zone: string | null }>) {
-          await db.from('product_serials').update({
-            status: 'returned',
-            warehouse_zone: 'return',
-            previous_zone: s.warehouse_zone,
-            order_id: null, sold_via: null,
-          }).eq('id', s.id);
-        }
+      const { data: soldRows } = await db.from('product_serials')
+        .select('id, warehouse_zone')
+        .eq('order_id', orderId).eq('product_id', r.product_id).eq('status', 'sold');
+      const sold = (soldRows || []) as Array<{ id: string; warehouse_zone: string | null }>;
+
+      // 이 제품이 이 주문에서 시리얼 추적되는지(과거 반품분 포함) — 비시리얼 판별
+      const { count: anySerial } = await db.from('product_serials')
+        .select('id', { count: 'exact', head: true })
+        .eq('order_id', orderId).eq('product_id', r.product_id);
+      const isSerialTracked = (anySerial || 0) > 0;
+
+      let moved = 0;
+      for (const s of sold) {
+        const { count } = await db.from('product_serials').update({
+          status: 'returned', warehouse_zone: 'return', previous_zone: s.warehouse_zone,
+          // order_id 유지(감사·멱등 근거). sold_via 유지.
+        }).eq('id', s.id).eq('status', 'sold').select('id', { count: 'exact', head: true });
+        if ((count || 0) > 0) moved++;
       }
-      // 반품창고 카운터 +qty (시리얼/비시리얼 공통 — 물리 실물이 반품창고로 들어옴)
+
+      // 반품창고 증가: 시리얼 제품이면 '이번에 실제 이동한 수'만(멱등), 비시리얼이면 qty
+      const addReturn = isSerialTracked ? moved : r.qty;
       const { data: p } = await db.from('products').select('return_stock, sku, name').eq('id', r.product_id).single();
       if (p) {
-        await db.from('products').update({ return_stock: ((p.return_stock as number) || 0) + r.qty, updated_at: now }).eq('id', r.product_id);
+        if (addReturn > 0) {
+          await db.from('products').update({ return_stock: ((p.return_stock as number) || 0) + addReturn, updated_at: now }).eq('id', r.product_id);
+        }
         retLabels.push(`${r.product_name || p.sku || p.name || r.product_id}×${r.qty}`);
       }
-      // 판매가능 stock_quantity·raw_stock 는 복원하지 않음 (반품창고行이라 판매불가)
+      // 판매가능(stock_quantity·raw_stock)은 복원 안 함 — 반품창고行(검수/복원 대상)
     }
 
     // ── 2) 새 제품 → 출고 (진짜 −1) ────────────────────────────────
@@ -96,7 +107,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const serialIds = (n.serial_ids || []).filter(Boolean);
 
       if (serialIds.length > 0) {
-        // in_stock → sold (주문 귀속). raw 불변 → stock_quantity 자연 −1. 낙관적 잠금.
+        // in_stock → sold (주문 귀속). 낙관적 잠금.
+        let soldCount = 0;
         for (const sid of serialIds) {
           const { count } = await db.from('product_serials').update({
             status: 'sold', sold_via: 'online', order_id: orderId,
@@ -107,8 +119,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           if (count === 0) {
             return NextResponse.json({ error: `시리얼(${sid})이 재고 상태가 아닙니다 — 새로고침 후 다시 시도하세요` }, { status: 409 });
           }
+          soldCount++;
         }
-        const { data: p } = await db.from('products').select('sku, name').eq('id', n.product_id).single();
+        // 🚨 시리얼 in_stock→sold = 판매가능 재고 소진 → stock_quantity −soldCount (raw 불변).
+        //   stock_quantity는 저장 컬럼이라 명시 차감 필요(빠뜨리면 현재고가 +1씩 부풀어 드리프트).
+        const { data: p } = await db.from('products').select('stock_quantity, sku, name').eq('id', n.product_id).single();
+        if (p) {
+          await db.from('products').update({
+            stock_quantity: Math.max(0, (p.stock_quantity || 0) - soldCount), updated_at: now,
+          }).eq('id', n.product_id);
+        }
         newLabels.push(`${n.product_name || p?.sku || p?.name || n.product_id}×${serialIds.length}`);
       } else {
         // 비시리얼: 보관(raw)에서 진짜 차감
