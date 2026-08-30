@@ -52,28 +52,17 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * 대시보드 페이지만 매칭 — API 경로는 미들웨어 대상 아님
-     * 인증이 필요한 TMS 페이지: /dashboard, /orders, /sales, /repairs 등
+     * 🔒 캐치올: 아래를 제외한 '모든 페이지'를 인증 뒤에 둔다 (2026-08-30 하드닝)
+     *   - 예전엔 경로를 하나씩 나열 → /sourcing·/schedule·/events·/manual-invoices·
+     *     /deliveries·/stock-sale 가 목록에서 빠져 로그인 없이 껍데기가 열렸음.
+     *   - 이제 새 페이지를 추가해도 자동으로 보호됨(재발 방지).
+     * 제외(공개 유지):
+     *   - api : 각 API가 자체 auth.getUser() 검사
+     *   - _next/static·_next/image : 빌드 정적 자산
+     *   - firebase-messaging-sw.js : FCM 서비스워커(무인증 로드 필수)
+     *   - 정적 파일 확장자(png/svg/json/wav 등) : manifest·아이콘·알림음 등
+     *   - /login 은 matcher엔 포함되나 미들웨어 로직이 예외 처리(무인증 접근 허용)
      */
-    '/dashboard/:path*',
-    '/orders/:path*',
-    '/sales/:path*',
-    '/repairs/:path*',
-    '/consultations/:path*',
-    '/products/:path*',
-    '/customers/:path*',
-    '/suppliers/:path*',
-    '/supplies/:path*',
-    '/purchasing/:path*',
-    '/contracts/:path*',
-    '/inventory/:path*',
-    '/serials/:path*',
-    '/reports/:path*',
-    '/expenses/:path*',
-    '/cashflow/:path*',
-    '/tax-invoices/:path*',
-    '/reviews/:path*',
-    '/settings/:path*',
-    '/login',
+    '/((?!api|_next/static|_next/image|favicon.ico|firebase-messaging-sw.js|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico|woff2?|json|wav|txt|xml)$).*)',
   ],
 };
