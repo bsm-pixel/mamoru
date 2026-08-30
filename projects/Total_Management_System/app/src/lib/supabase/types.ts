@@ -200,6 +200,10 @@ export interface Database {
           is_pickup?: boolean | null;          // 126: 직접수령(대면 픽업) 마커
           exchanged_at?: string | null;        // 140: 제품 교환 처리 시각(매출·카드 불변, 상품만 스왑)
           exchange_memo?: string | null;       // 140: 교환 내역 요약
+          exchange_ship_method?: string | null;    // 141: 새 제품 발송 방식(배송/직접전달)
+          exchange_goods?: string | null;          // 141: 교환 새 제품명(송장 품목)
+          exchange_invoice_number?: string | null; // 141: 교환품 발송 송장번호
+          exchange_shipped_at?: string | null;     // 141: 교환품 송장 발행 시각
           status: OrderStatus;
           imweb_raw: Record<string, unknown> | null;
           synced_at: string;

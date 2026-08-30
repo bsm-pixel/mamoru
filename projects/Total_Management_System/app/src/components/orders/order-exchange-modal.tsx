@@ -25,8 +25,9 @@ export function OrderExchangeModal({ order, items, onClose }: { order: Order; it
   const returnItem = items[returnItemIdx] || null;
   const [returnSerials, setReturnSerials] = useState<{ id: string; serial_number: string }[]>([]);
 
-  // 회수 방식
+  // 회수 방식(구 제품) + 발송 방식(새 제품)
   const [pickupMode, setPickupMode] = useState<'직접수거' | '방문수거' | '택배수거' | '고객반납'>('직접수거');
+  const [shipMode, setShipMode] = useState<'배송' | '직접전달'>('배송');
 
   // 새 제품 여러 줄
   const [rows, setRows] = useState<NewRow[]>([{ key: 1, productId: null, serialId: null, avail: [], serialInput: '', creating: false }]);
@@ -136,6 +137,7 @@ export function OrderExchangeModal({ order, items, onClose }: { order: Order; it
         returns,
         new_items,
         recovery_method: pickupMode,
+        ship_method: shipMode,
         diff_amount: received,
         diff_method: received === 0 ? '없음' : diffMethod,
       });
@@ -156,6 +158,26 @@ export function OrderExchangeModal({ order, items, onClose }: { order: Order; it
           <p className="text-[11px] text-neutral-500 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
             아임웹 주문·카드결제·매출은 <b>그대로</b> 두고 상품/재고만 바꿉니다(재결제 없음). 반납품은 <b>반품창고</b>로.
           </p>
+
+          {/* 0) 새 제품 발송 방식 */}
+          <div>
+            <p className="text-xs font-semibold text-neutral-500 mb-1.5">새 제품을 어떻게 전달하나요?</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {([
+                { v: '배송', label: '택배 배송', sub: '송장 생성', icon: Truck },
+                { v: '직접전달', label: '직접 전달', sub: '송장 없음', icon: Store },
+              ] as const).map((o) => {
+                const on = shipMode === o.v;
+                return (
+                  <button key={o.v} onClick={() => setShipMode(o.v)}
+                    className={`flex items-center gap-1.5 px-3 py-2.5 rounded-lg border text-xs font-semibold transition ${on ? 'border-stone-900 bg-stone-900 text-white' : 'border-neutral-200 text-neutral-600 hover:border-neutral-300'}`}>
+                    <o.icon size={14} /> {o.label} <span className={`font-normal ${on ? 'text-white/60' : 'text-neutral-400'}`}>· {o.sub}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {shipMode === '배송' && <p className="text-[11px] text-neutral-400 mt-1">교환 확정 후 주문 상세에서 <b>[교환품 송장 생성]</b>으로 새 제품을 발송합니다.</p>}
+          </div>
 
           {/* 1) 반납 품목 */}
           <div>

@@ -371,6 +371,7 @@ export function useExchangeOrder() {
       returns: Array<{ product_id: string; product_name?: string; qty: number; serial_ids?: string[] }>;
       new_items: Array<{ product_id: string; product_name?: string; qty: number; serial_ids?: string[] }>;
       recovery_method?: string;
+      ship_method?: string;
       diff_amount?: number;
       diff_method?: string;
       memo?: string;
@@ -395,6 +396,28 @@ export function useExchangeOrder() {
     },
     onError: (err) => {
       toast.error('교환 실패: ' + String(err));
+    },
+  });
+}
+
+/** 교환 새 제품 발송 송장 발행 (롯데, 수령지 기준) */
+export function useExchangeShip() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      const res = await fetch(`/api/orders/${orderId}/exchange-ship`, { method: 'POST' });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ success: boolean; invoiceNumber?: string; warning?: string }>;
+    },
+    onSuccess: (data, orderId) => {
+      if (data?.invoiceNumber) toast.success(`교환품 송장 발행 완료 (${data.invoiceNumber})`);
+      if (data?.warning) toast(data.warning, { icon: '⚠️', duration: 6000 });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+    },
+    onError: (err) => {
+      toast.error('교환품 송장 발행 실패: ' + String(err));
     },
   });
 }

@@ -33,13 +33,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   let body: {
     returns?: ReturnLine[]; new_items?: NewLine[];
-    recovery_method?: string; diff_amount?: number; diff_method?: string; memo?: string;
+    recovery_method?: string; ship_method?: string; diff_amount?: number; diff_method?: string; memo?: string;
   };
   try { body = await request.json(); } catch { return NextResponse.json({ error: '잘못된 요청' }, { status: 400 }); }
 
   const returns = Array.isArray(body.returns) ? body.returns : [];
   const newItems = Array.isArray(body.new_items) ? body.new_items : [];
   const recovery = (body.recovery_method || '직접수거').trim();
+  const shipMethod = (body.ship_method || '배송').trim();  // 배송|직접전달 (새 제품 발송 방식)
   const diffAmount = Number(body.diff_amount || 0);
   const diffMethod = (body.diff_method || '없음').trim();
   if (returns.length === 0 && newItems.length === 0) {
@@ -140,14 +141,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // ── 4) 주문에 교환 이력 기록 (매출/카드/status 불변) ───────────
-    const summary = `[교환 ${today}] 반납: ${retLabels.join(', ') || '없음'}→반품창고 / 발송: ${newLabels.join(', ') || '없음'}`
+    const exchangeGoods = newLabels.map((l) => l.replace(/×\d+$/, '')).join(', ');  // 송장 품목명(×N 제거)
+    const summary = `[교환 ${today}] 반납: ${retLabels.join(', ') || '없음'}→반품창고 / 발송: ${newLabels.join(', ') || '없음'}(${shipMethod})`
       + ` / 회수: ${recovery}`
       + (diffAmount !== 0 ? ` / 차액 ${diffAmount > 0 ? '+' : '-'}${Math.abs(diffAmount).toLocaleString()} ${diffMethod}` : '')
       + (body.memo ? ` / ${body.memo}` : '');
     const merged = order.exchange_memo ? `${order.exchange_memo}\n${summary}` : summary;
-    await db.from('orders').update({ exchanged_at: now, exchange_memo: merged, updated_at: now }).eq('id', orderId);
+    await db.from('orders').update({
+      exchanged_at: now, exchange_memo: merged,
+      exchange_ship_method: shipMethod, exchange_goods: exchangeGoods || null,
+      updated_at: now,
+    }).eq('id', orderId);
 
-    return NextResponse.json({ ok: true, summary, returns: retLabels, newItems: newLabels });
+    return NextResponse.json({ ok: true, summary, returns: retLabels, newItems: newLabels, shipMethod });
   } catch (err) {
     console.error('[orders/exchange]', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });

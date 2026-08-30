@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useOrder } from '@/hooks/use-orders';
+import { useOrder, useExchangeShip } from '@/hooks/use-orders';
 import { OrderSerialModal } from './order-serial-modal';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeliveryTracker } from './delivery-tracker';
 import { OrderActionBar } from './order-action-bar';
-import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
-import { Package, Hash, Printer, RefreshCw } from 'lucide-react';
+import { formatKRW, formatDate, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
+import { Package, Hash, Printer, RefreshCw, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 
@@ -18,6 +18,7 @@ interface Props {
 
 export function OrderDetailPanel({ orderId }: Props) {
   const { data, isLoading } = useOrder(orderId);
+  const exchangeShip = useExchangeShip();
   const [showSerials, setShowSerials] = useState(false);
   const [showPrepSheet, setShowPrepSheet] = useState(false);
 
@@ -114,6 +115,23 @@ export function OrderDetailPanel({ orderId }: Props) {
           <p className="text-[10px] text-purple-400 mt-1.5">
             {formatDateTime(o.exchanged_at)} · 위 주문 품목·결제금액은 아임웹 원본 그대로(카드 재결제 없음)
           </p>
+          {/* 배송 교환이면 새 제품 발송 송장 (직접전달이면 생략) */}
+          {o.exchange_ship_method !== '직접전달' && (
+            o.exchange_invoice_number ? (
+              <div className="mt-2 text-[11px] text-purple-700 bg-white/70 rounded-lg px-2.5 py-1.5">
+                ✓ 교환품 송장 <b className="font-mono">{o.exchange_invoice_number}</b>
+                {o.exchange_shipped_at && <span className="text-purple-400 ml-1">({formatDate(o.exchange_shipped_at)})</span>}
+              </div>
+            ) : (
+              <>
+                <button onClick={() => exchangeShip.mutate(o.id)} disabled={exchangeShip.isPending}
+                  className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700 transition disabled:opacity-50">
+                  <Truck size={13} /> {exchangeShip.isPending ? '발행 중…' : '교환품 송장 생성'}
+                </button>
+                <p className="text-[10px] text-purple-400 mt-1">새 제품({o.exchange_goods || '교환품'})을 수령지로 발송하는 롯데 송장을 만듭니다.</p>
+              </>
+            )
+          )}
         </div>
       )}
 
