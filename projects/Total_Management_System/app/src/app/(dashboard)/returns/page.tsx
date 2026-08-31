@@ -109,6 +109,27 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
   const pickup = useBookReturnPickup();
   const allowed = getAllowedReturnTransitions(r.status);
 
+  // 진행 흐름 — 교환/반품 타입별로 다르게 (교환은 '새 제품 발송'이 핵심 단계)
+  const isExchange = r.return_type === 'exchange';
+  const shipped = !!r.exchange_out_invoice_number;
+  const flowSteps = isExchange
+    ? [
+        { key: 'requested', label: '접수', at: r.requested_at },
+        { key: 'inbound', label: '구제품 회수', at: r.inbound_at },
+        { key: 'shipped', label: '새 제품 발송', at: r.exchange_shipped_at },
+        { key: 'completed', label: '완료', at: r.completed_at },
+      ]
+    : [
+        { key: 'requested', label: '수거접수', at: r.requested_at },
+        { key: 'pickup_scheduled', label: '수거예약', at: r.pickup_scheduled_at },
+        { key: 'inbound', label: '입고완료', at: r.inbound_at },
+        { key: 'inspected', label: '검수완료', at: r.inspected_at },
+        { key: 'completed', label: '완료', at: r.completed_at },
+      ];
+  const flowCurrent = isExchange
+    ? (r.status === 'completed' ? 'completed' : shipped ? 'shipped' : ['inbound', 'inspected'].includes(r.status) ? 'inbound' : 'requested')
+    : r.status;
+
   return (
     <div className="space-y-4">
       <Card>
@@ -177,14 +198,8 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
       <Card>
         <p className="text-xs font-semibold text-neutral-500 mb-3">진행 흐름</p>
         <StatusStepper
-          steps={[
-            { key: 'requested', label: '수거접수', at: r.requested_at },
-            { key: 'pickup_scheduled', label: '수거예약', at: r.pickup_scheduled_at },
-            { key: 'inbound', label: '입고완료', at: r.inbound_at },
-            { key: 'inspected', label: '검수완료', at: r.inspected_at },
-            { key: 'completed', label: '완료', at: r.completed_at },
-          ]}
-          currentKey={r.status}
+          steps={flowSteps}
+          currentKey={flowCurrent}
           cancelled={r.status === 'cancelled'}
           cancelledAt={r.cancelled_at}
         />
