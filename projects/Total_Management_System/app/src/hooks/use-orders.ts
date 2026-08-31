@@ -97,6 +97,8 @@ export interface OrderSerial {
   serial_number: string;
   status: string;
   sold_at: string | null;
+  // 제품명 매핑(nested join) — PostgREST가 객체/배열 어느쪽으로 줘도 대응
+  product?: { sku: string | null; name: string | null } | { sku: string | null; name: string | null }[] | null;
 }
 
 /** 주문 단건 조회 (품목 + 귀속 시리얼 포함) */
@@ -113,9 +115,9 @@ export function useOrder(id: string) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabase as any)
           .from('product_serials')
-          .select('id, product_id, serial_number, status, sold_at')
+          .select('id, product_id, serial_number, status, sold_at, product:products(sku, name)')
           .eq('order_id', id)
-          .eq('status', 'sold'),   // 배정 시리얼 = 현재 출고분만(반품/교환 반납분 제외)
+          .eq('status', 'sold'),   // 배정 시리얼 = 현재 출고분만(반품/교환 반납분 제외) + 제품명 조인
       ]);
 
       if (orderRes.error) throw orderRes.error;

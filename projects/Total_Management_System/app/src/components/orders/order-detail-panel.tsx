@@ -151,11 +151,21 @@ export function OrderDetailPanel({ orderId }: Props) {
             </button>
           </div>
           {serials.length > 0 ? (
-            <div className="flex flex-wrap gap-1">
-              {serials.map((s) => (
-                <span key={s.id} className="font-mono text-[11px] bg-neutral-100 text-neutral-600 rounded px-1.5 py-0.5">
-                  {s.serial_number}
-                </span>
+            <div className="space-y-1.5">
+              {Object.entries(serials.reduce((acc, s) => {
+                const p = Array.isArray(s.product) ? s.product[0] : s.product;
+                const key = p?.name || p?.sku || '기타';
+                (acc[key] ||= []).push(s);
+                return acc;
+              }, {} as Record<string, typeof serials>)).map(([prod, list]) => (
+                <div key={prod} className="flex items-start gap-2">
+                  <span className="text-[11px] text-neutral-500 font-medium shrink-0 mt-0.5 max-w-[40%] truncate">{prod}</span>
+                  <div className="flex flex-wrap gap-1 min-w-0">
+                    {list.map((s) => (
+                      <span key={s.id} className="font-mono text-[11px] bg-neutral-100 text-neutral-600 rounded px-1.5 py-0.5">{s.serial_number}</span>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
