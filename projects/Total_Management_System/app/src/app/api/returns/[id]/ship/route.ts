@@ -37,8 +37,14 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         postcode = c.postcode; addrRoad = c.address_road; addrDetail = c.address_detail;
       }
     }
+    // 주문 교환 등 고객 미연결 건 — returns 레코드 자체 주소(수령지) 사용
     if (!postcode || !addrRoad) {
-      return NextResponse.json({ error: '고객 주소(우편번호+도로명)가 없습니다. 고객 정보에서 보강 후 다시 시도해주세요.' }, { status: 400 });
+      postcode = postcode || (r.postcode as string | null);
+      addrRoad = addrRoad || (r.address as string | null);
+      addrDetail = addrDetail || (r.address_detail as string | null);
+    }
+    if (!postcode || !addrRoad) {
+      return NextResponse.json({ error: '수령지 주소(우편번호+주소)가 없습니다.' }, { status: 400 });
     }
     if (!receiverTel) {
       return NextResponse.json({ error: '고객 연락처가 없습니다.' }, { status: 400 });
@@ -69,6 +75,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     if (error) {
       console.error('[returns ship] DB 저장 실패(ALPS는 성공):', invoiceNumber, error);
       return NextResponse.json({ success: true, warning: 'DB 저장 실패 — 송장번호는 발급됨', invoiceNumber });
+    }
+    // 주문 교환건이면 원 주문에도 송장 미러(주문/판매 화면과 동기)
+    if (r.order_id) {
+      await db.from('orders').update({ exchange_invoice_number: invoiceNumber, exchange_shipped_at: new Date().toISOString() }).eq('id', r.order_id);
     }
     return NextResponse.json({ success: true, return: data });
   } catch (err) {

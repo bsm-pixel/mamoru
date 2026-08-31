@@ -108,7 +108,7 @@ export function useOrder(id: string) {
   return useQuery({
     queryKey: ['order', id],
     queryFn: async () => {
-      const [orderRes, itemsRes, serialsRes] = await Promise.all([
+      const [orderRes, itemsRes, serialsRes, returnRes] = await Promise.all([
         supabase.from('orders').select('*').eq('id', id).single(),
         supabase.from('order_items').select('*').eq('order_id', id),
         // product_serials 는 생성 타입 미포함 테이블 → any 캐스팅 (프로젝트 컨벤션)
@@ -118,6 +118,14 @@ export function useOrder(id: string) {
           .select('id, product_id, serial_number, status, sold_at, product:products(sku, name)')
           .eq('order_id', id)
           .eq('status', 'sold'),   // 배정 시리얼 = 현재 출고분만(반품/교환 반납분 제외) + 제품명 조인
+        // 연결된 교환·반품 레코드(있으면) — 주문 상세 배지/링크용
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase as any)
+          .from('returns')
+          .select('id, return_number, status')
+          .eq('order_id', id)
+          .order('created_at', { ascending: false })
+          .limit(1),
       ]);
 
       if (orderRes.error) throw orderRes.error;
@@ -140,6 +148,7 @@ export function useOrder(id: string) {
         order: orderRes.data as Order,
         items,
         serials: (serialsRes.data || []) as OrderSerial[],
+        exchangeReturn: (((returnRes.data as Array<{ id: string; return_number: string; status: string }>) || [])[0] || null),
       };
     },
     enabled: !!id,

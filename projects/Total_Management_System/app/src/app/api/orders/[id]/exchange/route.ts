@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
+import { insertReturn } from '@/lib/returns/insert-return';
 
 /**
  * POST /api/orders/[id]/exchange — 아임웹 주문 제품 교환 (매출/카드 불변, 상품·재고만 스왑)
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { data: order, error: oErr } = await db
     .from('orders')
-    .select('id, orderer_name, orderer_phone, status, exchange_memo')
+    .select('id, orderer_name, orderer_phone, customer_id, recipient_postcode, recipient_address, recipient_address_detail, status, exchange_memo')
     .eq('id', orderId).single();
   if (oErr || !order) return NextResponse.json({ error: '주문을 찾을 수 없습니다' }, { status: 404 });
   if (order.status === 'cancelled') return NextResponse.json({ error: '취소된 주문은 교환할 수 없습니다' }, { status: 400 });
@@ -172,6 +173,35 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       exchange_ship_method: shipMethod, exchange_goods: exchangeGoods || null,
       updated_at: now,
     }).eq('id', orderId);
+
+    // ── 5) returns SSOT 레코드 생성 (교환·반품 화면에서 관리) — 주문당 1건, 재실행 시 중복 방지 ──
+    try {
+      const { data: existing } = await db.from('returns').select('id').eq('order_id', orderId).limit(1);
+      if (!existing || existing.length === 0) {
+        await insertReturn(db, today, {
+          return_type: 'exchange',
+          source: 'order',
+          order_id: orderId,
+          sale_id: null,
+          product_id: returns[0]?.product_id || null,
+          product_name: retLabels.join(', ') || null,          // 반납품 요약
+          new_product_id: newItems[0]?.product_id || null,
+          new_product_name: newLabels.map((l) => l.replace(/×\d+$/, '')).join(', ') || null,  // 발송품 요약
+          customer_id: order.customer_id || null,
+          name: order.orderer_name || null,
+          phone: order.orderer_phone || null,
+          postcode: order.recipient_postcode || null,
+          address: order.recipient_address || null,
+          address_detail: order.recipient_address_detail || null,
+          pickup_method: recovery,
+          status: 'inbound',        // 구제품 반품창고 확정(수거완료). 남은 건 발송/마감.
+          inbound_at: now,
+          reason: '주문 교환',
+          memo: summary,
+          created_by: user.id,
+        });
+      }
+    } catch (e) { console.error('[orders/exchange] returns 레코드 생성 실패(교환은 완료):', e); }
 
     return NextResponse.json({ ok: true, summary, returns: retLabels, newItems: newLabels, shipMethod });
   } catch (err) {

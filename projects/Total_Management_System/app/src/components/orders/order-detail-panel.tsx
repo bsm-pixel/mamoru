@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useOrder, useExchangeShip } from '@/hooks/use-orders';
+import { useOrder } from '@/hooks/use-orders';
 import { OrderSerialModal } from './order-serial-modal';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeliveryTracker } from './delivery-tracker';
 import { OrderActionBar } from './order-action-bar';
-import { formatKRW, formatDate, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
-import { Package, Hash, Printer, RefreshCw, Truck } from 'lucide-react';
+import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
+import { Package, Hash, Printer, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 
@@ -18,7 +18,6 @@ interface Props {
 
 export function OrderDetailPanel({ orderId }: Props) {
   const { data, isLoading } = useOrder(orderId);
-  const exchangeShip = useExchangeShip();
   const [showSerials, setShowSerials] = useState(false);
   const [showPrepSheet, setShowPrepSheet] = useState(false);
 
@@ -30,7 +29,7 @@ export function OrderDetailPanel({ orderId }: Props) {
     return <p className="text-sm text-neutral-400 text-center py-8">주문 정보를 찾을 수 없습니다</p>;
   }
 
-  const { order: o, items, serials } = data;
+  const { order: o, items, serials, exchangeReturn } = data;
   const statusColor = ORDER_STATUS_COLOR[o.status] || 'bg-neutral-100 text-neutral-500';
   const addr = [o.recipient_address, o.recipient_address_detail].filter(Boolean).join(' ');
   // 주문자 ≠ 받는분일 때만 주문자 보조표기 (같으면 중복 제거)
@@ -105,32 +104,20 @@ export function OrderDetailPanel({ orderId }: Props) {
         </div>
       )}
 
-      {/* 교환 내역 — 교환 처리된 주문만 (반납/발송/차액 요약). 위 주문품목·결제는 아임웹 원본 그대로 */}
-      {o.exchanged_at && o.exchange_memo && (
+      {/* 교환 처리된 주문 — 상세·송장은 [반품·교환] 화면에서 관리(SSOT). 여기선 상태 배지 + 링크만 */}
+      {o.exchanged_at && (
         <div className="rounded-lg bg-purple-50 border border-purple-100 p-3">
-          <p className="text-[11px] font-semibold text-purple-700 mb-1 flex items-center gap-1">
-            <RefreshCw size={11} /> 교환 내역
-          </p>
-          <p className="text-[12px] text-purple-900 whitespace-pre-line leading-relaxed">{o.exchange_memo}</p>
-          <p className="text-[10px] text-purple-400 mt-1.5">
-            {formatDateTime(o.exchanged_at)} · 위 주문 품목·결제금액은 아임웹 원본 그대로(카드 재결제 없음)
-          </p>
-          {/* 배송 교환이면 새 제품 발송 송장 (직접전달이면 생략) */}
-          {o.exchange_ship_method !== '직접전달' && (
-            o.exchange_invoice_number ? (
-              <div className="mt-2 text-[11px] text-purple-700 bg-white/70 rounded-lg px-2.5 py-1.5">
-                ✓ 교환품 송장 <b className="font-mono">{o.exchange_invoice_number}</b>
-                {o.exchange_shipped_at && <span className="text-purple-400 ml-1">({formatDate(o.exchange_shipped_at)})</span>}
-              </div>
-            ) : (
-              <>
-                <button onClick={() => exchangeShip.mutate(o.id)} disabled={exchangeShip.isPending}
-                  className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-purple-600 text-white text-xs font-semibold hover:bg-purple-700 transition disabled:opacity-50">
-                  <Truck size={13} /> {exchangeShip.isPending ? '발행 중…' : '교환품 송장 생성'}
-                </button>
-                <p className="text-[10px] text-purple-400 mt-1">새 제품({o.exchange_goods || '교환품'})을 수령지로 발송하는 롯데 송장을 만듭니다.</p>
-              </>
-            )
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold text-purple-700 flex items-center gap-1">
+              <RefreshCw size={11} /> 제품 교환 · {exchangeReturn?.status === 'completed' ? '✓ 완료' : '진행중'}
+            </span>
+            <Link href={`/returns?search=${encodeURIComponent(o.orderer_name || o.recipient_name || '')}`}
+              className="text-[11px] text-purple-600 font-medium hover:text-purple-700 shrink-0">
+              반품·교환에서 관리 →
+            </Link>
+          </div>
+          {o.exchange_goods && (
+            <p className="text-[11px] text-purple-500 mt-1">발송: {o.exchange_goods} · 상세·송장은 반품·교환 화면에서</p>
           )}
         </div>
       )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,7 +12,7 @@ import { useReturns, useUpdateReturn, useShipReturn, useBookReturnPickup } from 
 import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, RETURN_ACTION_LABEL, RETURN_STATUS_ORDER, RETURN_STATUS_HINT, RETURN_PRIMARY_NEXT, getAllowedReturnTransitions } from '@/lib/returns/transitions';
 import { formatDate, formatPhone } from '@/lib/utils/format';
 import { Undo2, Package, Truck } from 'lucide-react';
-import type { ReturnRow, ReturnStatus } from '@/lib/supabase/types';
+import type { ReturnRow } from '@/lib/supabase/types';
 
 const STATUS_TABS: { value: string; label: string }[] = [
   { value: 'all', label: '전체' },
@@ -28,6 +28,13 @@ export default function ReturnsPage() {
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // 주문/판매 상세의 [반품·교환에서 관리 →] 링크로 진입 시 검색어 프리필
+  useEffect(() => {
+    const s = new URLSearchParams(window.location.search).get('search');
+    // 마운트 1회 URL 프리필(링크 진입) — 정당한 1회 setState
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (s) setSearch(s);
+  }, []);
   const isLg = useIsLg();
   const { data, isLoading } = useReturns({ status: status === 'all' ? undefined : status, search: search || undefined });
   const returns = data?.returns || [];
