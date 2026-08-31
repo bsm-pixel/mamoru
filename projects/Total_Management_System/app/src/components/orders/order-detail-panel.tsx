@@ -11,6 +11,7 @@ import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } fro
 import { Package, Hash, Printer, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
+import { StatusStepper } from '@/components/ui/status-stepper';
 
 interface Props {
   orderId: string;
@@ -31,6 +32,9 @@ export function OrderDetailPanel({ orderId }: Props) {
 
   const { order: o, items, serials, exchangeReturn } = data;
   const statusColor = ORDER_STATUS_COLOR[o.status] || 'bg-neutral-100 text-neutral-500';
+  // 진행 스텝바 매핑(전이성 상태는 대표 단계로 흡수)
+  const orderStepKey = ({ pay_wait: 'pay_wait', pay_done: 'pay_done', preparing: 'pay_done', ready_to_ship: 'ready_to_ship', shipping: 'shipping', delivered: 'delivered' } as Record<string, string>)[o.status] || 'pay_wait';
+  const orderCancelled = o.status === 'cancelled' || o.status === 'cancel_pending';
   const addr = [o.recipient_address, o.recipient_address_detail].filter(Boolean).join(' ');
   // 주문자 ≠ 받는분일 때만 주문자 보조표기 (같으면 중복 제거)
   const ordererDiffers = !!o.orderer_name &&
@@ -52,6 +56,21 @@ export function OrderDetailPanel({ orderId }: Props) {
           <p className="text-[11px] text-neutral-400 mt-0.5">{formatDateTime(o.ordered_at)}</p>
         </div>
         <Badge className={`${statusColor} shrink-0`}>{ORDER_STATUS_LABEL[o.status] || o.status}</Badge>
+      </div>
+
+      {/* 진행 흐름 */}
+      <div className="rounded-lg border border-neutral-100 p-3">
+        <StatusStepper
+          steps={[
+            { key: 'pay_wait', label: '입금대기' },
+            { key: 'pay_done', label: '결제완료', at: o.paid_at },
+            { key: 'ready_to_ship', label: '배송대기' },
+            { key: 'shipping', label: '배송중', at: o.shipped_at },
+            { key: 'delivered', label: '배송완료', at: o.delivered_at },
+          ]}
+          currentKey={orderStepKey}
+          cancelled={orderCancelled}
+        />
       </div>
 
       {/* 받는분 (배송지) — 주문자와 같으면 통합, 다르면 주문자 보조표기 */}
