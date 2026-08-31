@@ -467,6 +467,7 @@ export interface Database {
           recall_invoice_number: string | null;   // 139: 재수거(정밀 재점검) 롯데 송장(ustRtgSctCd=02)
           recall_courier_name: string | null;
           recall_booked_at: string | null;
+          reworked_at: string | null;              // 143: 재작업 시작 시각(재수리 탭 분기용)
           paid_at: string | null;
           delivered_at: string | null;
           confirmed_at: string | null;  // R1: 접수확인 시점

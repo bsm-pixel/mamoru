@@ -7,7 +7,8 @@ export type RepairTabKey =
   | 'inbound_waiting'
   | 'in_progress'
   | 'ready_to_ship'
-  | 'shipped';
+  | 'shipped'
+  | 'recall';   // 재수리 — 재수거 접수했으나 재작업 전 (출고완료에 묻히던 건)
 
 export interface RepairTabDef {
   key: RepairTabKey;

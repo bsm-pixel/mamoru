@@ -465,6 +465,22 @@ function TabSpecificInfo({ repair: r, tab }: { repair: Repair; tab: RepairTabKey
         </div>
       );
 
+    case 'recall':
+      // 재수거 송장 + 재수거 접수일 + "재작업 시작 대기" — 상세로 들어가 [재수거품 입고·재작업 시작]
+      return (
+        <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs">
+          {r.recall_invoice_number && (
+            <span className="flex items-center gap-1 text-neutral-500">
+              <Package size={11} /> 재수거 {r.recall_invoice_number}
+            </span>
+          )}
+          {r.recall_booked_at && (
+            <span className="text-neutral-400">{formatDate(r.recall_booked_at, 'M/d')} 접수</span>
+          )}
+          <Badge className="bg-amber-100 text-amber-700 text-[10px]">재작업 시작 대기</Badge>
+        </div>
+      );
+
     default:
       return null;
   }

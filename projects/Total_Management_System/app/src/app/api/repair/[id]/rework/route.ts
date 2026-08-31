@@ -37,6 +37,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       courier_name: null,
       shipped_at: null,
       delivered_at: null,
+      reworked_at: now,   // 143: 재작업 시작 마커 → '재수리' 탭에서 빠지고 진행중 흐름으로 편입
       updated_at: now,
     }).eq('id', id).select().single();
     if (error) throw error;

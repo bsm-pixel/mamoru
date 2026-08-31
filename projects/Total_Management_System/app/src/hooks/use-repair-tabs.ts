@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { Repair } from '@/lib/supabase/types';
-import type { RepairTabKey, RepairTabDef } from '@/components/repairs/repair-tab-bar';
+import type { RepairTabDef } from '@/components/repairs/repair-tab-bar';
 
 interface RepairTabData {
   intake: Repair[];
@@ -13,6 +13,7 @@ interface RepairTabData {
   in_progress: Repair[];
   ready_to_ship: Repair[];
   shipped: Repair[];
+  recall: Repair[];
 }
 
 /** 복원수리 대시보드 탭별 데이터 + 카운트 */
@@ -37,6 +38,7 @@ export function useRepairTabData() {
         inProgressRes,
         readyToShipRes,
         shippedRes,
+        recallRes,
         staleRes,
       ] = await Promise.all([
         // 1) 신규접수: intake + confirmed_at IS NULL
@@ -107,11 +109,23 @@ export function useRepairTabData() {
           .limit(50),
 
         // 6) 출고완료: shipped + delivered + completed
+        //    단, 재수거 접수 후 재작업 전(recall_booked_at 있고 reworked_at 없음)인 건은 '재수리' 탭으로 이동 → 여기서 제외.
+        //    재출고 완료건(reworked_at 있음)은 다시 출고완료로 복귀.
         supabase
           .from('repairs')
           .select('*')
           .in('status', ['shipped', 'delivered', 'completed'])
+          .or('recall_booked_at.is.null,reworked_at.not.is.null')
           .order('shipped_at', { ascending: false })
+          .limit(50),
+
+        // 7) 재수리: 재수거 접수했으나 아직 재작업 전 (출고완료에 묻히던 건 — 여기서 [재작업 시작])
+        supabase
+          .from('repairs')
+          .select('*')
+          .not('recall_booked_at', 'is', null)
+          .is('reworked_at', null)
+          .order('recall_booked_at', { ascending: false })
           .limit(50),
 
         // 경과일 3일 이상 미처리
@@ -133,6 +147,7 @@ export function useRepairTabData() {
       const inProgress = (inProgressRes.data || []) as Repair[];
       const readyToShip = (readyToShipRes.data || []) as Repair[];
       const shipped = (shippedRes.data || []) as Repair[];
+      const recall = (recallRes.data || []) as Repair[];
 
       return {
         tabData: {
@@ -143,6 +158,7 @@ export function useRepairTabData() {
           in_progress: inProgress,
           ready_to_ship: readyToShip,
           shipped,
+          recall,
         } as RepairTabData,
         staleCount: staleRes.count || 0,
       };
@@ -157,6 +173,7 @@ export function useRepairTabData() {
     in_progress: [],
     ready_to_ship: [],
     shipped: [],
+    recall: [],
   };
 
   const tabs: RepairTabDef[] = [
@@ -167,6 +184,7 @@ export function useRepairTabData() {
     { key: 'in_progress', label: '진행중', count: tabData.in_progress.length },
     { key: 'ready_to_ship', label: '출고대기', count: tabData.ready_to_ship.length },
     { key: 'shipped', label: '출고완료', count: tabData.shipped.length },
+    { key: 'recall', label: '재수리', count: tabData.recall.length },
   ];
 
   return {
