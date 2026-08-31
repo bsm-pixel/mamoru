@@ -109,14 +109,18 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
   const pickup = useBookReturnPickup();
   const allowed = getAllowedReturnTransitions(r.status);
 
-  // 진행 흐름 — 교환/반품 타입별로 다르게 (교환은 '새 제품 발송'이 핵심 단계)
+  // 진행 흐름 — 교환/반품 타입별로 다르게 (교환은 '송장 생성'과 '발송(집하)'를 분리)
+  //   ⚠️ 발송 ✓ = 송장 생성이 아니라 '기사 집하' 시점(exchange_out_notified_at, 크론이 집하 감지 시 CAS 세팅).
+  //      송장만 발행하고 아직 집하 전이면 '송장 생성'까지만 ✓, '발송(집하)'는 대기.
   const isExchange = r.return_type === 'exchange';
-  const shipped = !!r.exchange_out_invoice_number;
+  const hasInvoice = !!r.exchange_out_invoice_number;   // 송장 생성됨
+  const dispatched = !!r.exchange_out_notified_at;       // 기사 집하됨(실발송)
   const flowSteps = isExchange
     ? [
         { key: 'requested', label: '접수', at: r.requested_at },
         { key: 'inbound', label: '구제품 회수', at: r.inbound_at },
-        { key: 'shipped', label: '새 제품 발송', at: r.exchange_shipped_at },
+        { key: 'booked', label: '송장 생성', at: r.exchange_shipped_at },
+        { key: 'dispatched', label: '발송(집하)', at: r.exchange_out_notified_at },
         { key: 'completed', label: '완료', at: r.completed_at },
       ]
     : [
@@ -127,7 +131,11 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
         { key: 'completed', label: '완료', at: r.completed_at },
       ];
   const flowCurrent = isExchange
-    ? (r.status === 'completed' ? 'completed' : shipped ? 'shipped' : ['inbound', 'inspected'].includes(r.status) ? 'inbound' : 'requested')
+    ? (r.status === 'completed' ? 'completed'
+        : dispatched ? 'dispatched'          // 집하 감지됨 → 발송 ✓
+        : hasInvoice ? 'booked'              // 송장만 발행, 집하 대기
+        : ['inbound', 'inspected'].includes(r.status) ? 'inbound'
+        : 'requested')
     : r.status;
 
   return (
@@ -181,7 +189,12 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
           {r.exchange_out_invoice_number ? (
             <div className="text-xs text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
               ✓ 출고 송장 <b className="font-mono">{r.exchange_out_invoice_number}</b>
-              {r.exchange_shipped_at && <span className="text-neutral-400 ml-1">({formatDate(r.exchange_shipped_at)})</span>}
+              {r.exchange_shipped_at && <span className="text-neutral-400 ml-1">({formatDate(r.exchange_shipped_at)} 발행)</span>}
+              <p className="text-[11px] mt-1">
+                {r.exchange_out_notified_at
+                  ? <span className="text-emerald-600">🚚 집하 완료 · 발송됨 ({formatDate(r.exchange_out_notified_at)})</span>
+                  : <span className="text-amber-600">⏳ 기사 집하 대기 중 — 집하 스캔되면 자동으로 발송 처리됩니다</span>}
+              </p>
             </div>
           ) : (
             <button disabled={ship.isPending} onClick={() => ship.mutate(r.id)}

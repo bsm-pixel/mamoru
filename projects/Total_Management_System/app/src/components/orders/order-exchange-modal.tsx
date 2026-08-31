@@ -176,7 +176,7 @@ export function OrderExchangeModal({ order, items, onClose }: { order: Order; it
                 );
               })}
             </div>
-            {shipMode === '배송' && <p className="text-[11px] text-neutral-400 mt-1">교환 확정 후 주문 상세에서 <b>[교환품 송장 생성]</b>으로 새 제품을 발송합니다.</p>}
+            {shipMode === '배송' && <p className="text-[11px] text-neutral-400 mt-1">교환 확정 후 <b>[반품·교환]</b> 화면에서 <b>[교환 출고 송장 발행]</b>으로 새 제품을 발송합니다. 기사 집하가 스캔되면 자동으로 발송 처리됩니다.</p>}
           </div>
 
           {/* 1) 반납 품목 */}
