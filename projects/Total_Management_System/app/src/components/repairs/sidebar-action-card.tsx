@@ -10,6 +10,7 @@ import {
   useShipRepair,
   useCancelShipment,
   useRecallRepairPickup,
+  useReworkRepair,
   useSendRepairNotification,
   useDeleteRepair,
 } from '@/hooks/use-repairs';
@@ -17,7 +18,7 @@ import { invalidateFinancialQueries } from '@/lib/query/invalidate-keys';
 import { getFilteredRepairTransitions, REPAIR_ACTION_LABEL } from '@/lib/repair/transitions';
 import { formatKRW, formatDateTime } from '@/lib/utils/format';
 import type { Repair, RepairStatus } from '@/lib/supabase/types';
-import { Package, Truck, X, Send, CheckCircle, CreditCard } from 'lucide-react';
+import { Package, Truck, Send, CheckCircle, CreditCard } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { MergedShipModal } from './merged-ship-modal';
 
@@ -40,6 +41,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const shipRepair = useShipRepair();
   const cancelShipment = useCancelShipment();
   const recallPickup = useRecallRepairPickup();
+  const reworkRepair = useReworkRepair();
   const sendNotify = useSendRepairNotification();
   const deleteRepair = useDeleteRepair();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
@@ -332,11 +334,21 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
               {/* 정밀 재점검 재수거 (출고된 건 회수 — 롯데 반품 API 02). 알림톡 없음, 취소는 ALPS 수동 */}
               {['shipped', 'delivered', 'completed'].includes(currentStatus) && (
                 r.recall_invoice_number ? (
-                  <div className="mt-1 text-xs text-blue-700 bg-blue-50 rounded-lg px-2.5 py-2">
-                    ↩ 재수거 송장 <b className="font-mono">{r.recall_invoice_number}</b>
-                    {r.recall_booked_at && <span className="text-neutral-400 ml-1">({formatDateTime(r.recall_booked_at)})</span>}
-                    <p className="text-[11px] text-neutral-400 mt-0.5">접수 후 취소는 ALPS에서 수동입니다.</p>
-                  </div>
+                  <>
+                    <div className="mt-1 text-xs text-blue-700 bg-blue-50 rounded-lg px-2.5 py-2">
+                      ↩ 재수거 송장 <b className="font-mono">{r.recall_invoice_number}</b>
+                      {r.recall_booked_at && <span className="text-neutral-400 ml-1">({formatDateTime(r.recall_booked_at)})</span>}
+                      <p className="text-[11px] text-neutral-400 mt-0.5">접수 후 취소는 ALPS에서 수동입니다.</p>
+                    </div>
+                    {/* 재수거품이 돌아오면 → 재작업 시작(수리중 복귀). 이후 기존 출고흐름(송장·as_shipped 알림톡) 재사용 */}
+                    <button
+                      onClick={() => { if (window.confirm('재수거품이 입고되었습니다. 재작업을 시작합니다(수리중으로 되돌림).\n재출고 시 새 송장과 출고 알림톡이 발송됩니다. 진행할까요?')) reworkRepair.mutate(r.id); }}
+                      disabled={reworkRepair.isPending}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 mt-1.5 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition disabled:opacity-50"
+                    >
+                      <Package size={13} /> {reworkRepair.isPending ? '처리 중…' : '재수거품 입고 · 재작업 시작'}
+                    </button>
+                  </>
                 ) : (
                   <button
                     onClick={() => { if (window.confirm('정밀 재점검 재수거를 접수합니다 (고객집 방문수거).\n접수 후 취소는 ALPS에서 수동입니다. 진행할까요?')) recallPickup.mutate(r.id); }}

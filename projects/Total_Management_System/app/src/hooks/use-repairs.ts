@@ -352,6 +352,28 @@ export function useRecallRepairPickup() {
   });
 }
 
+/** 재수거품 입고 · 재작업 시작 — 출고건을 repairing 으로 되돌림(송장 초기화) */
+export function useReworkRepair() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/repair/${id}/rework`, { method: 'POST' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : '재작업 시작 실패');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('재수거품 입고 — 재작업을 시작합니다 (수리중)');
+      queryClient.invalidateQueries({ queryKey: ['repair'] });
+      queryClient.invalidateQueries({ queryKey: ['repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : '재작업 시작 실패'),
+  });
+}
+
 /** 알림톡 수동 발송 */
 export function useSendRepairNotification() {
   return useMutation({
