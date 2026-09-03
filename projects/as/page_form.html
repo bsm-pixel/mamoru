@@ -328,12 +328,12 @@ select.err {
    [SECTION] 진행방식 선택
    ═══════════════════════════════════════════════════════════════════ */
 .segment-wrap {
-  margin-bottom: 4px; /* 8→4 안내문구와 간격 축소 */
+  margin-bottom: 14px; /* 세그먼트↔안내문구 숨통(4px는 너무 붙음) */
 }
 
 @media (min-width: 768px) {
   .segment-wrap {
-    margin-bottom: 8px; /* 12→8 */
+    margin-bottom: 18px;
   }
 }
 
@@ -1283,7 +1283,7 @@ select.err {
       </div>
 
       <!-- 진행방식 안내문구 -->
-      <div class="type-info" id="type-info">우체국 기사님이 요청 날짜에 방문하여 수거해갑니다<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요</div>
+      <div class="type-info" id="type-info">우체국 집배원님이 요청 날짜에 방문하여 수거해갑니다<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요</div>
 
       <!-- 직접방문(당일수리) 매장 안내 카드 — 안내문구 바로 아래, 고객정보 위 -->
       <div id="visit-store-info" style="display:none">
@@ -1967,7 +1967,7 @@ select.err {
   }
 
   const typeMessages = {
-    'pickup': '지정수거일에 맞추어 수거해드립니다<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요',
+    'pickup': '우체국 집배원님이 요청 날짜에 방문하여 수거해갑니다<br><b>수거 요청일</b>과 <b>전달방법</b>을 선택해주세요',
     'direct': '아래 주소로 직접 발송해주세요<br><b>서울특별시 구로구 부광로 88 SKV1, B동 311호 마모루</b>',
     'visit':  '매장에 직접 방문하여 <b>당일 수리</b>받으실 수 있습니다<br><b>날짜와 방문 시간</b>을 선택해주세요'
   };
