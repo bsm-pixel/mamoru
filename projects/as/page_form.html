@@ -2542,14 +2542,16 @@ select.err {
 })();
 </script>
 <script>
-  /* 전달방법 안내 노트 토글 — 매장카운터/직접전달일 때만(문앞보관·미선택 제외).
+  /* 전달방법 안내 노트 토글 — '10시 이후' 옵션에서만 노출.
+     (9시 이후는 집배원 조기방문 우려가 낮아 불필요 / 문앞보관·직접발송·직접방문 제외)
      전역 함수라 onchange + 로드/복원 어디서든 호출 가능. */
   function mmDmCaveat() {
     var s = document.getElementById('delivery_method');
     var c = document.getElementById('pickup-caveat');
     if (!s || !c) return;
     var v = s.value || '';
-    c.classList.toggle('show', v.indexOf('매장카운터') === 0 || v.indexOf('직접전달') === 0);
+    var timed = v.indexOf('매장카운터') === 0 || v.indexOf('직접전달') === 0;
+    c.classList.toggle('show', timed && v.indexOf('10시') !== -1);
   }
   document.addEventListener('DOMContentLoaded', mmDmCaveat);
   window.addEventListener('load', mmDmCaveat);   // 초안 복원(programmatic .value) 후에도 반영
