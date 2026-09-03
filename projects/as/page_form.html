@@ -308,6 +308,22 @@ select.err {
   color: var(--text-muted);
 }
 
+/* 전달방법 안내 노트 — 집배원 조기방문 대비(모노크롬: 강조는 좌측 굵은선) */
+.pickup-caveat {
+  display: none;
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: var(--shell);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--void);
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--stone);
+}
+.pickup-caveat.show { display: block; }
+.pickup-caveat b { color: var(--void); font-weight: 600; }
+
 /* ═══════════════════════════════════════════════════════════════════
    [SECTION] 진행방식 선택
    ═══════════════════════════════════════════════════════════════════ */
@@ -1336,16 +1352,18 @@ select.err {
         </div>
         <div class="form-group">
           <label class="required">방문기사님께 전달방법</label>
-          <select id="delivery_method">
+          <select id="delivery_method" onchange="mmDmCaveat()">
             <option value="">선택</option>
             <option>문앞보관 - 9시 이전 보관</option>
-            <option>매장카운터 보관 - 9시 이후 방문</option>
-            <option>매장카운터 보관 - 10시 이후 방문</option>
-            <option>매장카운터 보관 - 11시 이후 방문</option>
-            <option>직접전달 - 9시 이후 방문</option>
-            <option>직접전달 - 10시 이후 방문</option>
-            <option>직접전달 - 11시 이후 방문</option>
+            <option>매장카운터 보관 - 9시 이후 수거요청</option>
+            <option>매장카운터 보관 - 10시 이후 수거요청</option>
+            <option>직접전달 - 9시 이후 수거요청</option>
+            <option>직접전달 - 10시 이후 수거요청</option>
           </select>
+          <div id="pickup-caveat" class="pickup-caveat">
+            ⏱ 선택하신 시간은 <b>요청 시간일 뿐</b>이며, <b>빠른 준비일수록 좋습니다.</b><br>
+            우체국 집배원님은 배달 동선에 따라 안내된 시간보다 더 일찍 오실 수 있어요. 당일 확실한 수거가 필요하시면 <b>문앞 보관</b> 또는 <b>오전 9시쯤 전달 준비</b>를 부탁드려요. 🙏
+          </div>
         </div>
         <div id="err-pick" class="err-msg">수거일·전달방법을 선택하세요</div>
       </div>
@@ -1982,6 +2000,7 @@ select.err {
       secPick.style.display = 'none';
       $('delivery_method').closest('.form-group').style.display = '';
     }
+    if (window.mmDmCaveat) mmDmCaveat();   // 전달방법 안내 노트 재동기화
 
     // sec-visit (방문 시간 슬롯)
     secVisit.style.display = isVisit ? 'block' : 'none';
@@ -2521,6 +2540,19 @@ select.err {
     window.addEventListener('load', function() { setTimeout(hideLoader, 150); });
   }
 })();
+</script>
+<script>
+  /* 전달방법 안내 노트 토글 — 매장카운터/직접전달일 때만(문앞보관·미선택 제외).
+     전역 함수라 onchange + 로드/복원 어디서든 호출 가능. */
+  function mmDmCaveat() {
+    var s = document.getElementById('delivery_method');
+    var c = document.getElementById('pickup-caveat');
+    if (!s || !c) return;
+    var v = s.value || '';
+    c.classList.toggle('show', v.indexOf('매장카운터') === 0 || v.indexOf('직접전달') === 0);
+  }
+  document.addEventListener('DOMContentLoaded', mmDmCaveat);
+  window.addEventListener('load', mmDmCaveat);   // 초안 복원(programmatic .value) 후에도 반영
 </script>
 </body>
 </html>
