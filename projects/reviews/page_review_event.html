@@ -68,6 +68,8 @@
 .re-count__l{ font-size:10px; letter-spacing:.1em; color:var(--mist); margin-top:7px; text-transform:uppercase; }
 .re-count__sep{ align-self:center; color:#4a4a4a; font-weight:700; }
 .re-deadline{ margin-top:14px; font-size:12px; letter-spacing:.02em; color:var(--mist); }
+.re-notice{ margin:16px auto 0; max-width:460px; padding:12px 16px; border:1px solid rgba(212,208,203,.35); border-radius:12px; background:rgba(255,255,255,.06); color:var(--sand); font-size:13px; line-height:1.65; text-align:center; }
+.re-notice b{ color:#fff; font-weight:600; }
 .re-draw{ margin-top:7px; font-size:12px; letter-spacing:.02em; color:var(--mist); }
 .re-hero__note{ margin-top:20px; font-size:13px; color:var(--sand); line-height:1.7; }
 .re-hero__note b{ color:var(--cream); }
@@ -205,7 +207,7 @@
       </div>
 
       <!-- ✏️ 수정가능: 마감일 → data-deadline. 말일 24시 = 다음 달 1일 00:00 (예: 8월 마감 → 2026-09-01T00:00:00) -->
-      <div class="re-count" id="reCount" data-deadline="2026-09-01T00:00:00">
+      <div class="re-count" id="reCount" data-deadline="2026-09-01T00:00:00" data-draw-override="9월 11일 (금) 오후 8시">
         <div class="re-count__box"><div class="re-count__n" data-c="d">--</div><div class="re-count__l">Days</div></div>
         <div class="re-count__sep">:</div>
         <div class="re-count__box"><div class="re-count__n" data-c="h">--</div><div class="re-count__l">Hours</div></div>
@@ -217,6 +219,9 @@
       <p class="re-deadline">이달의 후기 마감 · <b style="color:var(--sand);">2026년 8월 31일 24시</b>까지</p>
       <!-- 추첨일 = 다음 달 첫째 금요일 오후 8시 (마감일 기준 자동 계산, JS) -->
       <p class="re-draw" id="reDraw"></p>
+
+      <!-- ✏️ 발표 연기 공지 (연기 해제 시 이 블록 + 위 data-draw-override 삭제) -->
+      <div class="re-notice">📢 첫 회차 경품 준비를 위해 <b>당첨자 발표가 9월 11일(금) 오후 8시로 연기</b>되었습니다. 조금만 기다려주세요 🙏</div>
 
       <p class="re-hero__note">제품과 함께 받으신 <b>카카오 알림톡의 '후기 남기기'</b>로 참여하세요.</p>
     </div>
@@ -435,6 +440,9 @@
 /* 추첨(당첨 발표)일 = 마감월의 첫째 금요일 오후 8시 자동계산.
    마감=말일 24시(=익월 1일 00:00)라 그 달이 곧 '다음 달'=발표월 → 그 달 첫째 금요일. */
 function drawDateText(iso){
+  // ✏️ 발표일 수동 오버라이드: #reCount 에 data-draw-override="9월 11일 (금) 오후 8시" 있으면 자동계산 대신 그대로 표기(연기 공지용). 평상시엔 이 속성만 지우면 자동계산 복귀.
+  var _rc=document.getElementById('reCount'), _ov=_rc&&_rc.getAttribute('data-draw-override');
+  if(_ov) return '당첨 발표 · <b style="color:var(--sand);">'+_ov+'</b>';
   var t=new Date(iso||'').getTime(); if(isNaN(t)) return '';
   var k=new Date(t+9*3600*1000);                          // KST
   var y=k.getUTCFullYear(), mo=k.getUTCMonth();
