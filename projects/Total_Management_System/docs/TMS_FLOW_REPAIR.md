@@ -319,9 +319,11 @@ cancelled → (terminal)
 | **진행중** | `status IN ('cost_notified', 'repairing')` |
 | **출고대기** | `status='ready_to_ship'` |
 | **출고완료** | `status IN ('shipped','delivered','completed')` **AND (`recall_booked_at IS NULL` OR `reworked_at IS NOT NULL`)** ⭐ 재수거 후 재작업 전 건은 제외(재수리 탭으로), 재출고 완료건은 복귀 |
-| **재수리** ⭐ | `recall_booked_at IS NOT NULL AND reworked_at IS NULL` (재수거 접수했으나 재작업 전 — 여기서 상세 진입 → **[재수거품 입고·재작업 시작]**) |
+| **재수리** ⭐ | `recall_booked_at IS NOT NULL AND reworked_at IS NULL` **AND 재수거 이후 재출고/재배달 안 됨**(`shipped_at`·`delivered_at` ≤ `recall_booked_at`, JS 필터) — 재수거 접수했으나 재작업 전. 상세 진입 → **[재수거품 입고·재작업 시작]** |
 
-> 🔁 **재수리 탭 (143, 2026-08-31)**: 재수거(정밀 재점검)한 출고건이 예전엔 '출고완료' 탭에 묻혀 나중에 재작업하러 찾기 어려웠음 → 전용 탭 신설. 마커 `reworked_at`(재작업 시작 시각, `/api/repair/[id]/rework`가 세팅)로 '재작업 대기'와 '재출고 완료'를 구분(status로는 둘 다 shipped라 불가). 재작업 시작 시 `reworked_at` 채워짐 → 재수리 탭에서 빠지고 진행중→출고대기→출고완료 정상 흐름 편입. 재수거 접수(recall-pickup)는 status 미변경.
+> 🔁 **재수리 탭 (143, 2026-08-31 / 필터 보강 2026-09-05)**: 재수거(정밀 재점검)한 출고건이 예전엔 '출고완료' 탭에 묻혀 나중에 재작업하러 찾기 어려웠음 → 전용 탭 신설. 마커 `reworked_at`(재작업 시작 시각, `/api/repair/[id]/rework`가 세팅)로 '재작업 대기'와 '재출고 완료'를 구분. **⚠️ 보강(2026-09-05)**: [재작업 시작] 버튼을 **안 거치고** 재송장→출고완료로 바로 처리하면 `reworked_at`이 안 찍혀 완료건이 재수리 탭에 잔존(송채림 AS-20260824-001 사례). → `use-repair-tabs.ts`에서 **재수거 이후 재출고/재배달된 건(shipped_at·delivered_at > recall_booked_at)은 JS로 제외**. reworked_at 없이 완료된 과거건도 자동 정리. 재수거 접수(recall-pickup)는 status 미변경.
+
+> ⏱ **'3일 경과' 카운트 보강 (2026-09-05)**: 경과 미처리 = `status IN ('intake','cost_notified') AND updated_at 3일 경과` — 단 **수거요청일(pickup_date)·방문일(visit_date)이 미래면 제외**(예정일 대기 = 지연 아님). `use-repair-tabs.ts`·`use-dashboard-stats.ts` 2곳 동일. 예: 접수 9/2·수거요청일 9/7 건은 더 이상 경과로 안 뜸.
 
 > 🐛 **2026-05-19 fix**: "수거접수필요" 탭이 `confirmed_at IS NULL`(접수확인 전)로 잘못 설정되어 있었음. 방문수거 건에 "접수확인" 누르면 → confirmed_at 채워짐 → 신규접수·수거접수필요·입고대기 3개 탭 조건 모두 탈락 → **orphan(리스트에서 사라짐)**. 대시보드 카운트는 status 기반이라 별개로 정상 표시되어 불일치 발견. `confirmed_at IS NOT NULL`로 정정 → 접수확인 후 수거접수필요 탭에 정상 표시.
 

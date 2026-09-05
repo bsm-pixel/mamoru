@@ -545,12 +545,13 @@ export function useRepairDashboardStats() {
               .then((r) => ({ status: s, count: r.count || 0 }))
           )
         ),
-        // 경과일 3일 이상 미처리 (intake, cost_notified)
+        // 경과일 3일 이상 미처리 (intake, cost_notified) — 수거/방문 예정일 미래건은 아래 JS에서 제외
         supabase
           .from('repairs')
-          .select('*', { count: 'exact', head: true })
+          .select('pickup_date, visit_date')
           .in('status', ['intake', 'cost_notified'])
-          .lt('updated_at', threeDaysAgoISO),
+          .lt('updated_at', threeDaysAgoISO)
+          .limit(200),
         // 미입금 건수 (cost_notified 이후 + paid_at IS NULL + 받을 금액>0)
         //   delivered/completed 포함 — 자동배송완료로 완료된 미입금 건이 누락되던 사각지대 fix (2026-06-11)
         supabase
@@ -610,6 +611,15 @@ export function useRepairDashboardStats() {
         })(),
       ]);
 
+      // 경과 카운트: 수거요청일·방문일이 미래면 제외(예정일 대기 = 지연 아님)
+      const todayZero = new Date(); todayZero.setHours(0, 0, 0, 0);
+      const staleRows = (staleCount.data || []) as { pickup_date: string | null; visit_date: string | null }[];
+      const staleCountNum = staleRows.filter((r) => {
+        const fp = r.pickup_date && new Date(r.pickup_date).getTime() > todayZero.getTime();
+        const fv = r.visit_date && new Date(r.visit_date).getTime() > todayZero.getTime();
+        return !(fp || fv);
+      }).length;
+
       const byStatus = Object.fromEntries(counts.map((c) => [c.status, c.count])) as Record<string, number>;
 
       // 진행대기 = intake+pickup_scheduled 중 confirmed_at 있는 것 (입고 전 전체)
@@ -619,7 +629,7 @@ export function useRepairDashboardStats() {
 
       return {
         byStatus,
-        staleCount: staleCount.count || 0,
+        staleCount: staleCountNum,
         unpaidCount: unpaidCount.count || 0,
         // R1: 탭별 카운트 (대시보드 카드용)
         intakeNew: intakeNewCount.count || 0,

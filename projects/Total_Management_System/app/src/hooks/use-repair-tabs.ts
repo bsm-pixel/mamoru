@@ -128,12 +128,13 @@ export function useRepairTabData() {
           .order('recall_booked_at', { ascending: false })
           .limit(50),
 
-        // 경과일 3일 이상 미처리
+        // 경과일 3일 이상 미처리 — 수거/방문 예정일이 미래면 제외(대기중이라 지연 아님)는 아래 JS에서
         supabase
           .from('repairs')
-          .select('*', { count: 'exact', head: true })
+          .select('pickup_date, visit_date')
           .in('status', ['intake', 'cost_notified'])
-          .lt('updated_at', threeDaysAgoISO),
+          .lt('updated_at', threeDaysAgoISO)
+          .limit(200),
       ]);
 
       const intake = (intakeRes.data || []) as Repair[];
@@ -147,7 +148,24 @@ export function useRepairTabData() {
       const inProgress = (inProgressRes.data || []) as Repair[];
       const readyToShip = (readyToShipRes.data || []) as Repair[];
       const shipped = (shippedRes.data || []) as Repair[];
-      const recall = (recallRes.data || []) as Repair[];
+      // 재수리: 재수거 접수 후 아직 재작업/재출고 전인 것만.
+      //  재수거 이후 이미 재출고/재배달된 건(shipped/delivered_at > recall_booked_at)은 사이클 종료 → 제외.
+      //  ([재작업 시작] 버튼을 안 거쳐 reworked_at 이 없어도 자동 정리 — 송채림 사례)
+      const recall = ((recallRes.data || []) as Repair[]).filter((r) => {
+        const rb = r.recall_booked_at ? new Date(r.recall_booked_at).getTime() : 0;
+        const reshipped = r.shipped_at && new Date(r.shipped_at).getTime() > rb;
+        const redelivered = r.delivered_at && new Date(r.delivered_at).getTime() > rb;
+        return !(reshipped || redelivered);
+      });
+
+      // 경과 카운트: 수거요청일(pickup_date)·방문일(visit_date)이 미래면 제외(예정일 대기 = 지연 아님)
+      const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+      const staleRows = (staleRes.data || []) as { pickup_date: string | null; visit_date: string | null }[];
+      const staleCount = staleRows.filter((r) => {
+        const futurePickup = r.pickup_date && new Date(r.pickup_date).getTime() > todayStart.getTime();
+        const futureVisit = r.visit_date && new Date(r.visit_date).getTime() > todayStart.getTime();
+        return !(futurePickup || futureVisit);
+      }).length;
 
       return {
         tabData: {
@@ -160,7 +178,7 @@ export function useRepairTabData() {
           shipped,
           recall,
         } as RepairTabData,
-        staleCount: staleRes.count || 0,
+        staleCount,
       };
     },
   });
