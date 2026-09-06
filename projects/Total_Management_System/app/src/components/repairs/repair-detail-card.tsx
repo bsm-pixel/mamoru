@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,20 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
   const [serviceCost, setServiceCost] = useState(r.service_cost);
   const [shippingFee, setShippingFee] = useState(r.shipping_fee);
   const [savingCost, setSavingCost] = useState(false);
+
+  // 사장님 메모(관리자 전용, admin_note) — 선택 건이 바뀔 때만 서버값으로 초기화(타이핑 중 값 보존)
+  const [adminNote, setAdminNote] = useState(r.admin_note || '');
+  const [savingNote, setSavingNote] = useState(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setAdminNote(r.admin_note || ''); }, [r.id]);
+  const adminNoteDirty = adminNote !== (r.admin_note ?? '');
+  const handleSaveNote = async () => {
+    if (!onUpdate) return;
+    setSavingNote(true);
+    try { await onUpdate({ admin_note: adminNote }); toast.success('메모 저장됨'); }
+    catch { toast.error('메모 저장 실패'); }
+    finally { setSavingNote(false); }
+  };
 
   const handleSaveQty = async () => {
     if (!onUpdate) return;
@@ -170,13 +184,33 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
           </button>
         )}
 
-        {/* 메모 (있을 때만, 컴팩트) */}
-        {(r.memo || r.admin_note) && (
-          <div className="border-t border-neutral-100 pt-2.5 space-y-1.5 text-sm">
-            {r.memo && <p className="text-neutral-700 whitespace-pre-wrap"><span className="text-xs text-neutral-400 mr-1">고객메모</span>{r.memo}</p>}
-            {r.admin_note && <p className="text-neutral-700 whitespace-pre-wrap"><span className="text-xs text-neutral-400 mr-1">관리자</span>{r.admin_note}</p>}
+        {/* 고객 메모 (읽기전용, 있을 때만) */}
+        {r.memo && (
+          <div className="border-t border-neutral-100 pt-2.5 text-sm">
+            <p className="text-neutral-700 whitespace-pre-wrap"><span className="text-xs text-neutral-400 mr-1">고객메모</span>{r.memo}</p>
           </div>
         )}
+
+        {/* 사장님 메모 (관리자 전용 · 편집) — 고객 비노출. 출장상담 메모와 동일 패턴 */}
+        <div className="border-t border-neutral-100 pt-2.5">
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-xs font-medium text-neutral-700">📝 사장님 메모 <span className="font-normal text-neutral-400">(고객 비노출)</span></p>
+            <button
+              onClick={handleSaveNote}
+              disabled={!adminNoteDirty || savingNote || !onUpdate}
+              className="text-xs font-semibold text-stone-900 disabled:text-neutral-300"
+            >
+              {savingNote ? '저장 중…' : '저장'}
+            </button>
+          </div>
+          <textarea
+            value={adminNote}
+            onChange={(e) => setAdminNote(e.target.value)}
+            rows={2}
+            placeholder="작업 참고사항, 유선·톡 요청 등 — 고객에게 안 보입니다"
+            className="w-full px-2.5 py-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-400 placeholder:text-neutral-400"
+          />
+        </div>
 
         {/* ── 편집 모드 (인라인 확장) ── */}
         {editQty && (
