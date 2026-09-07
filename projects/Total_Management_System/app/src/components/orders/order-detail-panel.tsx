@@ -12,6 +12,8 @@ import { Package, Hash, Printer, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 import { StatusStepper } from '@/components/ui/status-stepper';
+import { LabelPrintModal } from '@/components/labels/label-print-modal';
+import { useLabelTemplate } from '@/hooks/use-label-templates';
 
 interface Props {
   orderId: string;
@@ -21,6 +23,8 @@ export function OrderDetailPanel({ orderId }: Props) {
   const { data, isLoading } = useOrder(orderId);
   const [showSerials, setShowSerials] = useState(false);
   const [showPrepSheet, setShowPrepSheet] = useState(false);
+  const serialLabelTpl = useLabelTemplate('serial_40x20');
+  const [labelSerial, setLabelSerial] = useState<{ product: string; serial: string } | null>(null);
 
   if (isLoading) {
     return <div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /><Skeleton className="h-20" /></div>;
@@ -168,7 +172,13 @@ export function OrderDetailPanel({ orderId }: Props) {
                   <span className="text-[11px] text-neutral-500 font-medium shrink-0 mt-0.5 max-w-[40%] truncate">{prod}</span>
                   <div className="flex flex-wrap gap-1 min-w-0">
                     {list.map((s) => (
-                      <span key={s.id} className="font-mono text-[11px] bg-neutral-100 text-neutral-600 rounded px-1.5 py-0.5">{s.serial_number}</span>
+                      <button key={s.id} type="button"
+                        onClick={() => setLabelSerial({ product: prod, serial: s.serial_number })}
+                        title="시리얼 라벨 출력"
+                        className="inline-flex items-center gap-0.5 font-mono text-[11px] bg-neutral-100 text-neutral-600 rounded px-1.5 py-0.5 hover:bg-stone-900 hover:text-white transition">
+                        <Hash size={8} />{s.serial_number}
+                        <Printer size={9} className="ml-0.5 opacity-60" />
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -240,6 +250,16 @@ export function OrderDetailPanel({ orderId }: Props) {
 
       {showPrepSheet && (
         <PrepSheetModal saleIds={[]} orderIds={[o.id]} onClose={() => setShowPrepSheet(false)} />
+      )}
+
+      {/* 시리얼 라벨 출력 — 배정 시리얼 칩 클릭 (판매관리와 동일) */}
+      {labelSerial && (
+        <LabelPrintModal
+          template={serialLabelTpl}
+          data={{ product: labelSerial.product, serial: labelSerial.serial }}
+          title="시리얼 라벨"
+          onClose={() => setLabelSerial(null)}
+        />
       )}
     </div>
   );
