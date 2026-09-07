@@ -163,7 +163,7 @@ export function SaleDetailPanel({ saleId }: Props) {
           <Badge className={channel.className}>{channel.label}</Badge>
         </div>
 
-        {/* 진행 흐름 — 배송 판매만(송장/집하/배달 흔적 있을 때). 주문관리와 동일 스테퍼 + 배송추적 */}
+        {/* 진행 흐름 — 배송 판매만(송장/집하/배달 흔적 있을 때). 배송추적은 아래 택배발송 섹션에 합침(송장번호 중복 방지) */}
         {(s.invoice_number || s.shipped_at || s.delivered_at) && (
           <div className="rounded-lg border border-neutral-100 p-3 mb-2">
             <StatusStepper
@@ -177,15 +177,6 @@ export function SaleDetailPanel({ saleId }: Props) {
               cancelled={!!s.cancelled_at || !!s.returned_at}
               cancelledAt={s.cancelled_at || s.returned_at}
             />
-            {s.invoice_number && !s.cancelled_at && !s.returned_at && (
-              <div className="mt-2 pt-2 border-t border-neutral-100">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] font-semibold text-neutral-400">배송 추적</span>
-                  <span className="font-mono text-[11px] text-terracotta">{s.invoice_number}</span>
-                </div>
-                <DeliveryTracker invNo={s.invoice_number} />
-              </div>
-            )}
           </div>
         )}
         {/* 2026-05-26: 헤더 정보 좌측 + 리뷰 관리 미니 우측 (사장님 시선 부담 ↓) */}
@@ -644,6 +635,7 @@ export function SaleDetailPanel({ saleId }: Props) {
                 <span className="text-sm font-mono font-medium">{s.invoice_number}</span>
                 <span className="text-xs text-neutral-400">{s.courier_name || '롯데택배'}</span>
               </div>
+              <DeliveryTracker invNo={s.invoice_number} />
               {s.shipped_at ? (
                 <>
                   <p className="text-xs text-green-600 flex items-center gap-1 flex-wrap">

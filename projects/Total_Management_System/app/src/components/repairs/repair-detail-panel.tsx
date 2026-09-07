@@ -9,7 +9,6 @@ import { InspectionSummary } from './inspection-summary';
 import { SidebarActionCard } from './sidebar-action-card';
 import { RepairTimeline } from './repair-timeline';
 import { StatusStepper } from '@/components/ui/status-stepper';
-import { DeliveryTracker } from '@/components/orders/delivery-tracker';
 import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
 import { ReviewManagementCard } from '@/components/reviews/review-management-card';
 import { Modal } from '@/components/ui/modal';
@@ -106,7 +105,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
 
       {showPrep && <RepairPrepSheetModal repairIds={[r.id]} onClose={() => setShowPrep(false)} />}
 
-      {/* 진행 흐름 — 복원수리 흐름 스테퍼 + 배송추적(송장 있을 때). 주문/판매와 동일 컴포넌트 */}
+      {/* 진행 흐름 — 복원수리 흐름 스테퍼. 배송추적은 아래 출고 섹션에 합침(송장번호 중복 방지) */}
       <div className="rounded-lg border border-neutral-100 p-3">
         <StatusStepper
           steps={[
@@ -119,15 +118,6 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
           currentKey={repairStepKey}
           cancelled={r.status === 'cancelled'}
         />
-        {r.invoice_number && r.status !== 'cancelled' && (
-          <div className="mt-2 pt-2 border-t border-neutral-100">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-semibold text-neutral-400">배송 추적</span>
-              <span className="font-mono text-[11px] text-terracotta">{r.invoice_number}</span>
-            </div>
-            <DeliveryTracker invNo={r.invoice_number} />
-          </div>
-        )}
       </div>
 
       {/* 2컬럼 내부 레이아웃 — 기본 정보 먼저(상단/좌), 액션은 바로 아래/우 (정보가 밀집돼 스크롤 부담 없음) */}

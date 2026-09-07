@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { DeliveryTracker } from '@/components/orders/delivery-tracker';
 import {
   useUpdateRepairStatus,
   useUpdateRepairFields,
@@ -287,6 +288,8 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
               {r.shipped_at && (
                 <p className="text-xs text-neutral-400">발송: {formatDateTime(r.shipped_at)}</p>
               )}
+              {/* 라이브 배송추적(접수/집화/배달중/배달완료) — 주문/판매와 동일 컴포넌트 */}
+              <DeliveryTracker invNo={r.invoice_number} />
               {/* 출고완료 버튼 (ready_to_ship → shipped) */}
               {canMarkShipped && (
                 <Button
