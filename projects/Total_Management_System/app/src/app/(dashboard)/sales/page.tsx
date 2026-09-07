@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, memo, useEffect, useMemo } from 'react';
+import { useState, memo, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useHotkeys, isDialogOpen } from '@/hooks/use-hotkeys';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -257,6 +258,22 @@ export default function SalesPage() {
     router.push('/sales/new?mode=b2b');
   };
 
+  // 단축키 — 이 화면(판매관리)에서만 동작. F2/F4 는 기능키라 입력창 포커스 중에도 안전
+  const searchRef = useRef<HTMLInputElement>(null);
+  useHotkeys([
+    { combo: 'f2', allowInInput: true, handler: () => router.push('/sales/new') },
+    { combo: 'f4', allowInInput: true, handler: handlePartnerSaleClick },
+    { combo: '/', handler: () => searchRef.current?.focus() },
+    {
+      combo: 'escape', allowInInput: true, preventDefault: false,
+      handler: () => {
+        if (isDialogOpen()) return;              // 모달 열려있으면 모달에 양보
+        if (selected) { setSelected(null); return; } // 상세 열려있으면 닫기
+        if (search) { setSearch(''); setPage(1); }    // 아니면 검색어 지우기
+      },
+    },
+  ]);
+
   /** 거래처(B2B) 카드 합산값 — offline_sales (dealer/academy) + deliveries 매출 */
   const partnerWeek = (stats?.partnerWeek?.amount || 0) + (deliveryStats?.weekAmount || 0);
   const partnerWeekCount = (stats?.partnerWeek?.count || 0) + (deliveryStats?.weekCount || 0);
@@ -382,6 +399,7 @@ export default function SalesPage() {
           value={search}
           onChange={(v) => { setSearch(v); setPage(1); }}
           placeholder="판매번호, 고객명, 전화번호"
+          inputRef={searchRef}
         />
       </div>
 
@@ -567,14 +585,16 @@ export default function SalesPage() {
                 {gridMode ? '카드 보기' : 'PC 그리드'}
               </Button>
             )}
-            <Button onClick={() => router.push('/sales/new')} size="sm">
+            <Button onClick={() => router.push('/sales/new')} size="sm" title="단축키: F2">
               <Plus size={14} />
               판매 입력
+              <kbd className="ml-1 px-1 py-0.5 text-[9px] font-sans font-semibold text-white/80 bg-white/15 border border-white/25 rounded">F2</kbd>
             </Button>
             {/* 2026-05-26 IA 통합: 거래처 매출 (B2B). Phase C 에서 /sales/new?mode=b2b 라우팅으로 교체 예정 */}
-            <Button onClick={handlePartnerSaleClick} size="sm" variant="secondary">
+            <Button onClick={handlePartnerSaleClick} size="sm" variant="secondary" title="단축키: F4">
               <Plus size={14} />
               거래처 매출
+              <kbd className="ml-1 px-1 py-0.5 text-[9px] font-sans font-semibold text-neutral-500 bg-neutral-100 border border-neutral-300 rounded">F4</kbd>
             </Button>
           </div>
         }

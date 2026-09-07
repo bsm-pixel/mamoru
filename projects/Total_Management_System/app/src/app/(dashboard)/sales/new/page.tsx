@@ -2,6 +2,7 @@
 
 import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useHotkeys } from '@/hooks/use-hotkeys';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { Topbar } from '@/components/layout/topbar';
@@ -355,6 +356,13 @@ function NewSaleContent() {
     router.push('/sales');
   }
 
+  // 저장 가능 여부 — 하단 버튼 disabled 와 동일 기준. Ctrl+S 단축키와 공유
+  const canSubmit = (!!selectedCustomer || !!customerName.trim()) && (cart.length > 0 || hasRepair) && !createSale.isPending;
+  // Ctrl+S = 저장(등록). 폼 입력 중에도 동작(allowInInput) + 브라우저 저장창 차단(preventDefault)
+  useHotkeys([
+    { combo: 'ctrl+s', allowInInput: true, handler: () => { if (canSubmit) handleSubmit(); } },
+  ]);
+
   // 제품 검색/필터
   const [productSearch, setProductSearch] = useState('');
   const [productCategory, setProductCategory] = useState<string>('all');
@@ -411,6 +419,8 @@ function NewSaleContent() {
                   if (!c) return;
                   const exactSku = products.find((p) => (p.sku || '').toLowerCase() === c.toLowerCase());
                   if (isMSerial(c) || exactSku) { e.preventDefault(); handleScan(c); setProductSearch(''); }
+                  // 스캔이 아니고 검색 결과가 딱 1개면 Enter 로 그 제품 담기 (2개 이상이면 무동작 — 오담 방지)
+                  else if (filteredProducts.length === 1) { e.preventDefault(); addToCart(filteredProducts[0]); setProductSearch(''); }
                 }}
                 placeholder="제품명 또는 SKU 검색 (스캔도 가능)"
                 className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"

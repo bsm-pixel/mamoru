@@ -2,6 +2,7 @@
 
 import { Sidebar } from '@/components/layout/sidebar';
 import { MobileNav } from '@/components/layout/mobile-nav';
+import { ShortcutHelp } from '@/components/ui/shortcut-help';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 
 export default function DashboardLayout({
@@ -19,6 +20,7 @@ export default function DashboardLayout({
         {children}
       </main>
       <MobileNav />
+      <ShortcutHelp />
     </div>
   );
 }
