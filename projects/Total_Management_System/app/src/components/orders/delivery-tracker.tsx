@@ -6,7 +6,7 @@ import { ExternalLink, XCircle, HelpCircle } from 'lucide-react';
 
 const STEPS = [
   { label: '접수', codes: ['01'] },
-  { label: '집화', codes: ['02', '41'] },
+  { label: '집하', codes: ['02', '41'] },
   { label: '배달중', codes: ['42', '44'] },
   { label: '배달완료', codes: ['91'] },
 ];
