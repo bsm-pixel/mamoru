@@ -40,6 +40,7 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1); // ↑↓ 로 지정한 결과 행
 
   // 신규 등록 폼 state
   const [newName, setNewName] = useState('');
@@ -49,13 +50,18 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
 
   const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<NodeJS.Timeout>(undefined);
+  const activeRef = useRef<HTMLButtonElement>(null);
 
   const { data: results = [], isLoading } = useCustomerSearch(debouncedQuery);
   const createCustomer = useCreateCustomer();
 
+  // 활성 행이 스크롤 밖이면 보이게 (setState 아님 → effect 안전)
+  useEffect(() => { activeRef.current?.scrollIntoView({ block: 'nearest' }); }, [activeIdx]);
+
   // 디바운스 검색
   const handleQueryChange = useCallback((value: string) => {
     setQuery(value);
+    setActiveIdx(-1); // 검색어 바뀌면 지정 초기화
     if (timerRef.current) clearTimeout(timerRef.current);
     if (value.length >= 2) {
       timerRef.current = setTimeout(() => setDebouncedQuery(value), 300);
@@ -236,6 +242,22 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
           onFocus={() => { if (debouncedQuery.length >= 2) setShowDropdown(true); }}
+          onKeyDown={(e) => {
+            if (!showDropdown) return; // 드롭다운 없으면 기본 동작 유지
+            if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx((i) => Math.min(i + 1, results.length - 1)); return; }
+            if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx((i) => Math.max(i - 1, 0)); return; }
+            // Esc: 드롭다운만 닫음. preventDefault/stopPropagation 으로 모달(native dialog)이 함께 닫히는 것 방지
+            if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setShowDropdown(false); setActiveIdx(-1); return; }
+            if (e.key === 'Enter') {
+              if (isLoading) { e.preventDefault(); return; }
+              // ① ↑↓ 로 지정한 고객 선택
+              if (activeIdx >= 0 && activeIdx < results.length) { e.preventDefault(); handleSelect(results[activeIdx]); return; }
+              // ② 지정 없이 결과가 딱 1명이면 그 고객 선택
+              if (results.length === 1) { e.preventDefault(); handleSelect(results[0]); return; }
+              // ③ 결과 0명이면 신규 등록 폼 (인라인 허용 시)
+              if (results.length === 0 && !disableInlineNewForm) { e.preventDefault(); openNewForm(); return; }
+            }
+          }}
           placeholder="고객명 또는 전화번호 검색..."
           className="w-full h-9 pl-8 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
         />
@@ -251,12 +273,16 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
             </div>
           ) : results.length > 0 ? (
             <>
-              {results.map((c) => (
+              {results.map((c, i) => (
                 <button
                   key={c.id}
                   type="button"
+                  ref={i === activeIdx ? activeRef : undefined}
                   onClick={() => handleSelect(c)}
-                  className="w-full px-3 py-2.5 text-left hover:bg-neutral-50 border-b border-neutral-50 last:border-b-0"
+                  onMouseEnter={() => setActiveIdx(i)}
+                  className={`w-full px-3 py-2.5 text-left border-b border-neutral-50 last:border-b-0 ${
+                    i === activeIdx ? 'bg-terracotta/10' : 'hover:bg-neutral-50'
+                  }`}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-indigo-black">{c.name}</span>
