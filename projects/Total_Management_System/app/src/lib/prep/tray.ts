@@ -135,3 +135,57 @@ export function wrapTray(slips: string[], title = '준비표'): string {
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>${esc(title)}</title>
   <style>${TRAY_CSS}</style></head><body>${pages.join('')}</body></html>`;
 }
+
+// ── 리스트형(표) 문서 ── 한 페이지에 여러 건, 시리얼 표기. 도메인별 그룹 소제목.
+export interface PrepListRow {
+  group: string;       // '복원수리' | '주문' | '판매'
+  no?: string | null;  // 접수/주문/판매 번호
+  name?: string | null;
+  contact?: string | null;
+  itemsHtml: string;   // 품목(시리얼 포함) 또는 자루/검수 내용
+  qty?: string | null; // 수량 요약
+  memo?: string | null;
+}
+const LIST_CSS = `
+  @page { margin: 13mm; }
+  * { box-sizing:border-box; }
+  body { font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif; font-size:12px; color:#000; margin:0; }
+  h1 { text-align:center; font-size:18px; margin:0 0 2px; }
+  .date { text-align:center; font-size:11px; color:#888; margin-bottom:14px; }
+  table { width:100%; border-collapse:collapse; }
+  th { background:#f2f2f2; font-size:11px; font-weight:700; padding:6px 8px; border:1px solid #ccc; text-align:left; white-space:nowrap; }
+  td { padding:6px 8px; border:1px solid #e6e6e6; font-size:11.5px; vertical-align:top; }
+  tr.grp td { background:#111; color:#fff; font-weight:700; font-size:12px; padding:5px 8px; }
+  .chk { width:24px; text-align:center; font-size:14px; }
+  .no { font-family:'Courier New',monospace; color:#555; white-space:nowrap; }
+  .nm { font-weight:700; }
+  .ph { color:#777; font-size:10px; }
+  .qtyc { text-align:center; white-space:nowrap; font-weight:600; }
+  .ser { font-family:'Courier New',monospace; color:#0a58ca; font-size:10.5px; }  /* 시리얼 강조 */
+  .mem { color:#666; font-size:10.5px; white-space:pre-wrap; }
+  @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } thead { display:table-header-group; } tr { break-inside:avoid; } }`;
+export function buildListDoc(rows: PrepListRow[], title = '통합 준비표'): string {
+  const today = new Date().toISOString().slice(0, 10);
+  let body = '';
+  let curGroup = '';
+  rows.forEach((r) => {
+    if (r.group !== curGroup) {
+      curGroup = r.group;
+      const cnt = rows.filter((x) => x.group === curGroup).length;
+      body += `<tr class="grp"><td colspan="6">${esc(curGroup)} (${cnt}건)</td></tr>`;
+    }
+    body += `<tr>
+      <td class="chk">☐</td>
+      <td class="no">${esc(r.no)}</td>
+      <td><span class="nm">${esc(r.name)}</span>${r.contact ? `<div class="ph">${esc(r.contact)}</div>` : ''}</td>
+      <td>${r.itemsHtml || '<span style="color:#aaa">—</span>'}</td>
+      <td class="qtyc">${esc(r.qty)}</td>
+      <td class="mem">${esc(r.memo)}</td>
+    </tr>`;
+  });
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>${esc(title)}</title>
+  <style>${LIST_CSS}</style></head><body>
+  <h1>MAMORU ${esc(title)}</h1><div class="date">${today} · 총 ${rows.length}건</div>
+  <table><thead><tr><th class="chk">☐</th><th>번호</th><th>고객</th><th>품목 · 내용 (시리얼)</th><th>수량</th><th>메모</th></tr></thead>
+  <tbody>${body}</tbody></table></body></html>`;
+}

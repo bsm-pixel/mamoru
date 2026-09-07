@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { repairSlip, saleSlip, wrapTray, type PrepInspection } from '@/lib/prep/tray';
+import { repairSlip, saleSlip, wrapTray, buildListDoc, esc, type PrepInspection, type PrepListRow } from '@/lib/prep/tray';
 
 /**
  * 통합 준비표 — 복원수리(출고대기)·주문(배송대기)·판매(미출고)를 탭으로 모아 체크 → 한 번에 인쇄.
@@ -31,6 +31,7 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
   const [checked, setChecked] = useState<Record<Domain, Set<string>>>({ repair: new Set(), order: new Set(), sale: new Set() });
   const [loading, setLoading] = useState(true);
   const [printing, setPrinting] = useState(false);
+  const [mode, setMode] = useState<'tray' | 'list'>('tray');
 
   // 준비 대기 목록 로딩(요약만) + preselect 초기화
   useEffect(() => {
@@ -94,6 +95,7 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = createClient() as any;
       const slips: string[] = [];
+      const listRows: PrepListRow[] = [];
 
       // 1) 복원수리 슬립
       const repIds = [...checked.repair];
@@ -112,7 +114,18 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
         }
         const ordered = repIds.map((id) => (reps || []).find((r: Record<string, unknown>) => r.id === id)).filter(Boolean);
         ordered.forEach((r: Record<string, unknown>) => {
-          slips.push(repairSlip(r, inspBy[r.id as string] || [], (r.customer_id ? actBy[r.customer_id as string] : '') || ''));
+          const insp2 = inspBy[r.id as string] || [];
+          const act = (r.customer_id ? actBy[r.customer_id as string] : '') || '';
+          slips.push(repairSlip(r, insp2, act));
+          const mamoru = (r.qty_mamoru as number) || 0, other = (r.qty_other as number) || 0;
+          const inspHtml = insp2.length
+            ? insp2.map((i) => `#${i.scissor_number} ${esc(i.scissor_type || '가위')}${i.comment ? ` — ${esc(i.comment)}` : ''}`).join('<br>')
+            : '';
+          listRows.push({
+            group: '복원수리', no: (r.as_id as string) || '', name: `${r.name}${act ? ` (${act})` : ''}`, contact: (r.phone as string) || '',
+            itemsHtml: inspHtml, qty: `마모루 ${mamoru}${other > 0 ? `·타사 ${other}` : ''}자루`,
+            memo: [(r.memo as string) || '', (r.admin_note as string) || ''].filter(Boolean).join(' / '),
+          });
         });
       }
 
@@ -127,16 +140,20 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
         ordIds.map((id) => (ords || []).find((o: Record<string, unknown>) => o.id === id)).filter(Boolean).forEach((o: Record<string, unknown>) => {
           const its = (items || []).filter((it: Record<string, unknown>) => it.order_id === o.id);
           const addr = [o.recipient_postcode ? `(${o.recipient_postcode})` : '', o.recipient_address, o.recipient_address_detail].filter(Boolean).join(' ');
+          const mapped: { product_name: string; quantity: number; serialStr: string }[] = its.map((it: Record<string, unknown>) => ({
+            product_name: it.product_name as string, quantity: (it.quantity as number) || 0,
+            serialStr: (sers || []).filter((s: Record<string, unknown>) => s.order_id === o.id && s.product_id === it.product_id).map((s: Record<string, unknown>) => s.serial_number).join(', '),
+          }));
           slips.push(saleSlip({
             headerLabel: 'MAMORU 출고 준비표', orderNo: (o.imweb_order_no as string) || '', tag: '주문',
             dateStr: (o.ordered_at as string) || '', custName: (o.recipient_name as string) || (o.orderer_name as string) || '', showNim: true,
-            phone: (o.recipient_phone as string) || '', addr,
-            items: its.map((it: Record<string, unknown>) => ({
-              product_name: it.product_name as string, quantity: it.quantity as number,
-              serialStr: (sers || []).filter((s: Record<string, unknown>) => s.order_id === o.id && s.product_id === it.product_id).map((s: Record<string, unknown>) => s.serial_number).join(', '),
-            })),
-            memo: (o.recipient_memo as string) || '',
+            phone: (o.recipient_phone as string) || '', addr, items: mapped, memo: (o.recipient_memo as string) || '',
           }));
+          listRows.push({
+            group: '주문', no: (o.imweb_order_no as string) || '', name: (o.recipient_name as string) || (o.orderer_name as string) || '', contact: (o.recipient_phone as string) || '',
+            itemsHtml: mapped.map((m) => `${esc(m.product_name)}${m.serialStr ? ` <span class="ser">(${esc(m.serialStr)})</span>` : ''} <b>×${m.quantity}</b>`).join('<br>'),
+            qty: `${mapped.reduce((a, m) => a + m.quantity, 0)}개`, memo: (o.recipient_memo as string) || '',
+          });
         });
       }
 
@@ -157,23 +174,28 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
         saleIds.map((id) => (sales || []).find((s: Record<string, unknown>) => s.id === id)).filter(Boolean).forEach((s: Record<string, unknown>) => {
           const its = (items || []).filter((it: Record<string, unknown>) => it.sale_id === s.id);
           const isD = s.customer_type === 'dealer' || s.customer_type === 'academy';
+          const mapped: { product_name: string; quantity: number; serialStr: string }[] = its.map((it: Record<string, unknown>) => ({
+            product_name: it.product_name as string, quantity: (it.quantity as number) || 0,
+            serialStr: (sers || []).filter((se: Record<string, unknown>) => se.offline_sale_id === s.id && (se.sale_item_id === it.id || se.product_id === it.product_id)).map((se: Record<string, unknown>) => se.serial_number).join(', '),
+          }));
           slips.push(saleSlip({
             headerLabel: 'MAMORU 출고 준비표', orderNo: (s.sale_number as string) || '', tag: isD ? '거래처' : null,
             dateStr: (s.sale_date as string) || '', custName: (s.customer_name as string) || '', showNim: !isD,
             phone: (s.customer_phone as string) || '', addr: s.customer_id ? (addrBy[s.customer_id as string] || '') : '',
-            items: its.map((it: Record<string, unknown>) => ({
-              product_name: it.product_name as string, quantity: it.quantity as number,
-              serialStr: (sers || []).filter((se: Record<string, unknown>) => se.offline_sale_id === s.id && (se.sale_item_id === it.id || se.product_id === it.product_id)).map((se: Record<string, unknown>) => se.serial_number).join(', '),
-            })),
-            memo: (s.memo as string) || '',
+            items: mapped, memo: (s.memo as string) || '',
           }));
+          listRows.push({
+            group: '판매', no: (s.sale_number as string) || '', name: `${s.customer_name || ''}${isD ? ' (거래처)' : ''}`, contact: (s.customer_phone as string) || '',
+            itemsHtml: mapped.map((m) => `${esc(m.product_name)}${m.serialStr ? ` <span class="ser">(${esc(m.serialStr)})</span>` : ''} <b>×${m.quantity}</b>`).join('<br>'),
+            qty: `${mapped.reduce((a, m) => a + m.quantity, 0)}개`, memo: (s.memo as string) || '',
+          });
         });
       }
 
       if (slips.length === 0) return;
       const w = window.open('', '_blank');
       if (!w) return;
-      w.document.write(wrapTray(slips, '통합 준비표'));
+      w.document.write(mode === 'tray' ? wrapTray(slips, '통합 준비표') : buildListDoc(listRows, '통합 준비표'));
       w.document.close();
       w.print();
     } finally {
@@ -195,6 +217,10 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800">통합 준비표 <span className="font-normal text-neutral-400">지금 준비할 것</span></h3>
           <div className="flex items-center gap-2">
+            <div className="flex items-center text-[11px] rounded-md overflow-hidden border border-neutral-200">
+              <button onClick={() => setMode('tray')} className={`px-2 py-1 font-semibold transition ${mode === 'tray' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-500 hover:bg-neutral-50'}`}>트레이형</button>
+              <button onClick={() => setMode('list')} className={`px-2 py-1 font-semibold transition ${mode === 'list' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-500 hover:bg-neutral-50'}`}>리스트형</button>
+            </div>
             <button onClick={handlePrint} disabled={printing || totalChecked === 0}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-neutral-900 text-xs text-white hover:bg-neutral-800 transition disabled:opacity-40">
               <Printer size={12} /> {printing ? '준비 중…' : `인쇄 (${totalChecked})`}
