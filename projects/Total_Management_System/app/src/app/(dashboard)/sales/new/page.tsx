@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense, useEffect } from 'react';
+import { useState, Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useHotkeys } from '@/hooks/use-hotkeys';
 import Link from 'next/link';
@@ -366,6 +366,11 @@ function NewSaleContent() {
   // 제품 검색/필터
   const [productSearch, setProductSearch] = useState('');
   const [productCategory, setProductCategory] = useState<string>('all');
+  // 검색 결과 화살표 네비게이션 — ↑↓ 로 활성 행 지정, Enter 로 담기(결과 2개 이상일 때)
+  const [activeIdx, setActiveIdx] = useState(-1);
+  const activeRowRef = useRef<HTMLTableRowElement>(null);
+  // 활성 행이 스크롤 밖이면 보이게 (setState 아님 → effect 안전)
+  useEffect(() => { activeRowRef.current?.scrollIntoView({ block: 'nearest' }); }, [activeIdx]);
 
   const CATEGORY_LABEL: Record<string, string> = {
     BL: '블런트',
@@ -411,23 +416,27 @@ function NewSaleContent() {
               <input
                 type="text"
                 value={productSearch}
-                onChange={(e) => setProductSearch(e.target.value)}
+                onChange={(e) => { setProductSearch(e.target.value); setActiveIdx(-1); }}
                 onKeyDown={(e) => {
-                  // 검색창에 코드(시리얼 or 정확한 SKU)를 스캔하면 그것도 카트에 담음 (타이핑한 제품명은 무시)
+                  // ↓/↑ : 결과 행 이동(활성 지정)
+                  if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx((i) => Math.min(i + 1, filteredProducts.length - 1)); return; }
+                  if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx((i) => Math.max(i - 1, 0)); return; }
                   if (e.key !== 'Enter') return;
                   const c = productSearch.trim();
-                  if (!c) return;
-                  const exactSku = products.find((p) => (p.sku || '').toLowerCase() === c.toLowerCase());
-                  if (isMSerial(c) || exactSku) { e.preventDefault(); handleScan(c); setProductSearch(''); }
-                  // 스캔이 아니고 검색 결과가 딱 1개면 Enter 로 그 제품 담기 (2개 이상이면 무동작 — 오담 방지)
-                  else if (filteredProducts.length === 1) { e.preventDefault(); addToCart(filteredProducts[0]); setProductSearch(''); }
+                  // ① 코드 스캔(시리얼/정확 SKU) 우선 — 타이핑한 제품명은 무시
+                  const exactSku = c ? products.find((p) => (p.sku || '').toLowerCase() === c.toLowerCase()) : undefined;
+                  if (c && (isMSerial(c) || exactSku)) { e.preventDefault(); handleScan(c); setProductSearch(''); setActiveIdx(-1); return; }
+                  // ② ↑↓ 로 지정한 활성 행이 있으면 그 제품 담기
+                  if (activeIdx >= 0 && activeIdx < filteredProducts.length) { e.preventDefault(); addToCart(filteredProducts[activeIdx]); setProductSearch(''); setActiveIdx(-1); return; }
+                  // ③ 지정 없이 결과가 딱 1개면 그것 담기(오담 방지 — 2개 이상은 무동작)
+                  if (filteredProducts.length === 1) { e.preventDefault(); addToCart(filteredProducts[0]); setProductSearch(''); setActiveIdx(-1); }
                 }}
                 placeholder="제품명 또는 SKU 검색 (스캔도 가능)"
                 className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
               />
               <div className="flex gap-1 shrink-0">
                 <button
-                  onClick={() => setProductCategory('all')}
+                  onClick={() => { setProductCategory('all'); setActiveIdx(-1); }}
                   className={`px-2.5 py-1.5 text-xs rounded-md border transition ${
                     productCategory === 'all' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'
                   }`}
@@ -435,7 +444,7 @@ function NewSaleContent() {
                 {Object.entries(CATEGORY_LABEL).map(([key, label]) => (
                   <button
                     key={key}
-                    onClick={() => setProductCategory(key)}
+                    onClick={() => { setProductCategory(key); setActiveIdx(-1); }}
                     className={`px-2.5 py-1.5 text-xs rounded-md border transition ${
                       productCategory === key ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'
                     }`}
@@ -466,16 +475,20 @@ function NewSaleContent() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-100">
-                      {filteredProducts.map((p) => {
+                      {filteredProducts.map((p, i) => {
                         const inCart = cart.find((c) => c.product?.id === p.id);
                         const price = getUnitPrice(p, customerType, priceGroups);
                         const isDiscounted = hasGroupPrice(p, customerType, priceGroups);
+                        const isActive = i === activeIdx; // ↑↓ 로 지정된 행
                         return (
                           <tr
                             key={p.id}
+                            ref={isActive ? activeRowRef : undefined}
                             onClick={() => addToCart(p)}
+                            onMouseEnter={() => setActiveIdx(i)}
                             className={`cursor-pointer transition ${
-                              inCart ? 'bg-neutral-900/5' : 'hover:bg-stone-50/60'
+                              isActive ? 'bg-stone-100 ring-1 ring-inset ring-neutral-900/60'
+                                : inCart ? 'bg-neutral-900/5' : 'hover:bg-stone-50/60'
                             }`}
                           >
                             <td className="px-3 py-2.5">

@@ -39,6 +39,8 @@ export function ShortcutHelp() {
           <Row keys={['?']} desc="이 도움말 열기 / 닫기" />
           <Row keys={['Esc']} desc="열린 창·상세 닫기 / 검색어 지우기" />
           <Row keys={['/']} desc="검색창으로 이동" />
+          <Row keys={['Ctrl', '[']} desc="이전 화면으로 (뒤로)" />
+          <Row keys={['Ctrl', ']']} desc="다음 화면으로 (앞으로)" />
         </div>
         <div className="py-2">
           <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">판매 관리</p>
@@ -46,9 +48,10 @@ export function ShortcutHelp() {
           <Row keys={['F4']} desc="거래처 매출 열기" />
         </div>
         <div className="pt-2">
-          <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">입력 폼</p>
+          <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">입력 폼 · 제품 검색</p>
           <Row keys={['Ctrl', 'S']} desc="저장 / 등록" />
-          <Row keys={['Enter']} desc="검색 결과가 1개면 자동으로 담기" />
+          <Row keys={['↑', '↓']} desc="검색 결과 행 이동(지정)" />
+          <Row keys={['Enter']} desc="지정한 행(또는 결과 1개) 담기" />
         </div>
       </div>
       <p className="mt-4 text-[11px] text-neutral-400">
