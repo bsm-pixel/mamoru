@@ -8,6 +8,8 @@ import { InspectionForm } from './inspection-form';
 import { InspectionSummary } from './inspection-summary';
 import { SidebarActionCard } from './sidebar-action-card';
 import { RepairTimeline } from './repair-timeline';
+import { StatusStepper } from '@/components/ui/status-stepper';
+import { DeliveryTracker } from '@/components/orders/delivery-tracker';
 import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
 import { ReviewManagementCard } from '@/components/reviews/review-management-card';
 import { Modal } from '@/components/ui/modal';
@@ -55,6 +57,13 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
   const currentStatus = r.status as RepairStatus;
   const proceedType = r.proceed_type;
 
+  // 진행 흐름 스테퍼 매핑 — 복원수리 다단 상태를 5단계로 압축
+  const repairStepKey = ({
+    intake: 'intake', pickup_scheduled: 'intake',
+    cost_notified: 'inspect', repairing: 'repair',
+    ready_to_ship: 'ship', shipped: 'ship', delivered: 'done', completed: 'done',
+  } as Record<string, string>)[r.status] || 'intake';
+
   const handleUpdate = async (fields: Record<string, unknown>) => {
     await updateFields.mutateAsync({ id: r.id, ...fields });
   };
@@ -96,6 +105,30 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
       </div>
 
       {showPrep && <RepairPrepSheetModal repairIds={[r.id]} onClose={() => setShowPrep(false)} />}
+
+      {/* 진행 흐름 — 복원수리 흐름 스테퍼 + 배송추적(송장 있을 때). 주문/판매와 동일 컴포넌트 */}
+      <div className="rounded-lg border border-neutral-100 p-3">
+        <StatusStepper
+          steps={[
+            { key: 'intake', label: '접수', at: r.received_at },
+            { key: 'inspect', label: '입고·검수', at: r.inbound_at },
+            { key: 'repair', label: '수리' },
+            { key: 'ship', label: '출고', at: r.shipped_at },
+            { key: 'done', label: '완료', at: r.delivered_at },
+          ]}
+          currentKey={repairStepKey}
+          cancelled={r.status === 'cancelled'}
+        />
+        {r.invoice_number && r.status !== 'cancelled' && (
+          <div className="mt-2 pt-2 border-t border-neutral-100">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] font-semibold text-neutral-400">배송 추적</span>
+              <span className="font-mono text-[11px] text-terracotta">{r.invoice_number}</span>
+            </div>
+            <DeliveryTracker invNo={r.invoice_number} />
+          </div>
+        )}
+      </div>
 
       {/* 2컬럼 내부 레이아웃 — 기본 정보 먼저(상단/좌), 액션은 바로 아래/우 (정보가 밀집돼 스크롤 부담 없음) */}
       <div className="flex flex-col @xl:flex-row gap-4">

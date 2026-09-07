@@ -14,6 +14,8 @@ import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
 import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2, RefreshCw } from 'lucide-react';
 import { PrepSheetModal } from './prep-sheet-modal';
+import { StatusStepper } from '@/components/ui/status-stepper';
+import { DeliveryTracker } from '@/components/orders/delivery-tracker';
 import { ExchangeModal } from './exchange-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { ReviewManagementCard } from '@/components/reviews/review-management-card';
@@ -160,6 +162,32 @@ export function SaleDetailPanel({ saleId }: Props) {
           })()}
           <Badge className={channel.className}>{channel.label}</Badge>
         </div>
+
+        {/* 진행 흐름 — 배송 판매만(송장/집하/배달 흔적 있을 때). 주문관리와 동일 스테퍼 + 배송추적 */}
+        {(s.invoice_number || s.shipped_at || s.delivered_at) && (
+          <div className="rounded-lg border border-neutral-100 p-3 mb-2">
+            <StatusStepper
+              steps={[
+                { key: 'paid', label: '결제완료', at: s.sale_date },
+                { key: 'ready', label: '배송대기' },
+                { key: 'shipping', label: '배송중', at: s.shipped_at },
+                { key: 'delivered', label: '배송완료', at: s.delivered_at },
+              ]}
+              currentKey={s.delivered_at ? 'delivered' : s.shipped_at ? 'shipping' : s.invoice_number ? 'ready' : 'paid'}
+              cancelled={!!s.cancelled_at || !!s.returned_at}
+              cancelledAt={s.cancelled_at || s.returned_at}
+            />
+            {s.invoice_number && !s.cancelled_at && !s.returned_at && (
+              <div className="mt-2 pt-2 border-t border-neutral-100">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] font-semibold text-neutral-400">배송 추적</span>
+                  <span className="font-mono text-[11px] text-terracotta">{s.invoice_number}</span>
+                </div>
+                <DeliveryTracker invNo={s.invoice_number} />
+              </div>
+            )}
+          </div>
+        )}
         {/* 2026-05-26: 헤더 정보 좌측 + 리뷰 관리 미니 우측 (사장님 시선 부담 ↓) */}
         {/* 좁은 패널(그리드모드 420px·모바일): 세로 스택 → 고객정보 폭 확보 / 넓은 패널: 좌우 (@md=28rem 기준) */}
         <div className="flex flex-col @md:flex-row @md:items-start gap-4">

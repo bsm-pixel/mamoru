@@ -207,8 +207,8 @@ export default function OrdersPage() {
               </div>
             </div>
 
-            {/* 우측: 주문 상세 모니터 (고정폭) */}
-            <div className="w-[440px] shrink-0 overflow-y-auto">
+            {/* 우측: 주문 상세 모니터 (고정폭) — px로 스크롤바와 내용 사이 여백 확보 */}
+            <div className="w-[440px] shrink-0 overflow-y-auto px-4 py-1">
               {selectedId ? (
                 <OrderDetailPanel orderId={selectedId} />
               ) : (
