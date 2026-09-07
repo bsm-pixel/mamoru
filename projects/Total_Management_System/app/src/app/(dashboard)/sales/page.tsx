@@ -22,6 +22,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { Plus, FileSignature, Receipt, ClipboardList, LayoutGrid, Package } from 'lucide-react';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
+import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
 import { RevenueDarkCard } from '@/components/ui/revenue-dark-card';
 import type { OfflineSale } from '@/lib/supabase/types';
 import { NotePreview } from '@/components/shared/customer-notes';
@@ -179,6 +180,7 @@ export default function SalesPage() {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [checkedDeliveryIds, setCheckedDeliveryIds] = useState<Set<string>>(new Set()); // 2026-05-26 Phase D: 거래처 납품 준비표 통합
   const [showPrepSheet, setShowPrepSheet] = useState(false);
+  const [showUnified, setShowUnified] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -341,6 +343,12 @@ export default function SalesPage() {
 
       {/* 준비표 뽑기 + 검색 */}
       <div className="flex items-center gap-2">
+        <button
+          onClick={() => setShowUnified(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition shrink-0"
+        >
+          <ClipboardList size={14} /> 통합 준비표
+        </button>
         <button
           onClick={() => { setPrepMode(!prepMode); setCheckedIds(new Set()); setCheckedDeliveryIds(new Set()); }}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
@@ -622,6 +630,7 @@ export default function SalesPage() {
           onClose={() => setShowPrepSheet(false)}
         />
       )}
+      {showUnified && <UnifiedPrepModal initialTab="sale" onClose={() => setShowUnified(false)} />}
     </>
   );
 }

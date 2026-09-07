@@ -19,6 +19,7 @@ import { RefreshCw, Truck, ShoppingBag, Printer, X } from 'lucide-react';
 import { useEscapeKey } from '@/hooks/use-media-query';
 import { InvoiceModal } from '@/components/orders/invoice-modal';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
+import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import type { Order } from '@/lib/supabase/types';
@@ -46,6 +47,7 @@ export default function OrdersPage() {
   const [prepMode, setPrepMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [showPrepSheet, setShowPrepSheet] = useState(false);
+  const [showUnified, setShowUnified] = useState(false);
   const toggleCheck = (id: string) => setCheckedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const togglePrepMode = () => { setPrepMode((v) => !v); setCheckedIds(new Set()); };
   const sync = useOrderSync();
@@ -126,6 +128,9 @@ export default function OrdersPage() {
             <option value="week">이번주</option>
             <option value="month">이번달</option>
           </select>
+          <Button variant="secondary" size="sm" className="shrink-0" onClick={() => setShowUnified(true)}>
+            <Printer size={14} />통합 준비표
+          </Button>
           {/* 준비표 뽑기 (판매관리와 동일 UX) */}
           {!prepMode ? (
             <Button variant="secondary" size="sm" className="shrink-0" onClick={togglePrepMode}>
@@ -254,6 +259,7 @@ export default function OrdersPage() {
           onClose={() => setShowPrepSheet(false)}
         />
       )}
+      {showUnified && <UnifiedPrepModal initialTab="order" onClose={() => setShowUnified(false)} />}
     </>
   );
 }

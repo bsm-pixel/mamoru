@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
+import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
 import type { Repair } from '@/lib/supabase/types';
 import type { RepairTabKey } from './repair-tab-bar';
 import { useActivityTypes } from '@/hooks/use-activity-types';
@@ -101,6 +102,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
   const [prepMode, setPrepMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [showPrep, setShowPrep] = useState(false);
+  const [showUnified, setShowUnified] = useState(false);
   const toggleCheck = (id: string) => setCheckedIds((prev) => {
     const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next;
   });
@@ -216,6 +218,12 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
         <p className="text-xs text-neutral-500">{filteredRepairs.length}건</p>
         <div className="ml-auto flex items-center gap-2">
           <button
+            onClick={() => setShowUnified(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition"
+          >
+            <ClipboardList size={14} /> 통합 준비표
+          </button>
+          <button
             onClick={() => { setPrepMode(!prepMode); setCheckedIds(new Set()); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
               prepMode ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
@@ -280,6 +288,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
       )}
 
       {showPrep && <RepairPrepSheetModal repairIds={[...checkedIds]} onClose={() => setShowPrep(false)} />}
+      {showUnified && <UnifiedPrepModal initialTab="repair" onClose={() => setShowUnified(false)} />}
     </div>
   );
 }
