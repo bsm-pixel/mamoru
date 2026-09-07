@@ -155,6 +155,27 @@ export function useOrder(id: string) {
   });
 }
 
+/** 주문 사장님 메모(관리자 전용) 저장 — admin_note 화이트리스트 */
+export function useUpdateOrderMemo() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, admin_note }: { id: string; admin_note: string }) => {
+      const res = await fetch(`/api/orders/${id}/memo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_note }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: (_d, { id }) => {
+      toast.success('메모 저장됨');
+      queryClient.invalidateQueries({ queryKey: ['order', id] });
+    },
+    onError: (err) => toast.error('메모 저장 실패: ' + String(err)),
+  });
+}
+
 /** 주문 동기화 */
 export function useOrderSync() {
   const queryClient = useQueryClient();

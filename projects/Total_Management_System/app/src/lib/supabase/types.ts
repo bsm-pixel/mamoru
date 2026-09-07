@@ -185,6 +185,7 @@ export interface Database {
           recipient_address: string | null;
           recipient_address_detail: string | null;
           recipient_memo: string | null;
+          admin_note?: string | null;         // 144: 사장님 메모(관리자 전용, 고객 비노출)
           total_price: number;
           delivery_fee: number;
           discount_amount: number;

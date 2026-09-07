@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useOrder } from '@/hooks/use-orders';
+import { useState, useEffect } from 'react';
+import { useOrder, useUpdateOrderMemo } from '@/hooks/use-orders';
 import { OrderSerialModal } from './order-serial-modal';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,6 +25,11 @@ export function OrderDetailPanel({ orderId }: Props) {
   const [showPrepSheet, setShowPrepSheet] = useState(false);
   const serialLabelTpl = useLabelTemplate('serial_40x20');
   const [labelSerial, setLabelSerial] = useState<{ product: string; serial: string } | null>(null);
+  // 사장님 메모(관리자 전용) — 선택 주문이 바뀔 때만 서버값으로 초기화(타이핑 중 값 보존)
+  const updateMemo = useUpdateOrderMemo();
+  const [adminNote, setAdminNote] = useState('');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setAdminNote(data?.order?.admin_note || ''); }, [data?.order?.id]);
 
   if (isLoading) {
     return <div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /><Skeleton className="h-20" /></div>;
@@ -102,6 +107,27 @@ export function OrderDetailPanel({ orderId }: Props) {
             이 고객 전체 이력 →
           </Link>
         )}
+      </div>
+
+      {/* 사장님 메모 (관리자 전용 · 편집) — 고객 비노출. 복원수리·상담 메모와 동일 패턴 */}
+      <div className="rounded-lg border border-neutral-200 bg-stone-50 p-3 space-y-1.5">
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] font-semibold text-neutral-600">📝 사장님 메모 <span className="font-normal text-neutral-400">(고객 비노출)</span></p>
+          <button
+            onClick={() => updateMemo.mutate({ id: o.id, admin_note: adminNote })}
+            disabled={adminNote === (o.admin_note ?? '') || updateMemo.isPending}
+            className="text-[11px] font-semibold text-stone-900 disabled:text-neutral-300"
+          >
+            {updateMemo.isPending ? '저장 중…' : '저장'}
+          </button>
+        </div>
+        <textarea
+          value={adminNote}
+          onChange={(e) => setAdminNote(e.target.value)}
+          rows={2}
+          placeholder="작업 참고사항, 유선·톡 요청 등 — 고객에게 안 보입니다"
+          className="w-full px-2.5 py-2 rounded-lg border border-neutral-200 bg-white text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-stone-400 placeholder:text-neutral-400"
+        />
       </div>
 
       {/* 주문 품목 */}
