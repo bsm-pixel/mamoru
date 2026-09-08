@@ -16,6 +16,7 @@ import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer,
 import { PrepSheetModal } from './prep-sheet-modal';
 import { StatusStepper } from '@/components/ui/status-stepper';
 import { DeliveryTracker } from '@/components/orders/delivery-tracker';
+import { PrimaryActionBar } from '@/components/ui/primary-action-bar';
 import { ExchangeModal } from './exchange-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { ReviewManagementCard } from '@/components/reviews/review-management-card';
@@ -145,6 +146,13 @@ export function SaleDetailPanel({ saleId }: Props) {
     updateMemo.mutate({ id: saleId, memo: memoValue });
     setEditingMemo(false);
   };
+
+  // ⚡ 다음 할 일 — 상태별 주 액션 판정(하단 결제/배송 영역의 버튼을 상단으로 이동, 중복 제거)
+  const notClosed = !s.cancelled_at && !(s as Record<string, unknown>).returned_at;
+  const showPayDone = notClosed && s.payment_status !== 'paid';
+  const canCreateInvoice = notClosed && !s.invoice_number && !s.delivered_at;
+  const canMarkShipped = notClosed && !!s.invoice_number && !s.shipped_at;
+  const hasPrimaryAction = showPayDone || canCreateInvoice || canMarkShipped;
 
   return (
     <div className="p-4 space-y-4">
@@ -294,6 +302,36 @@ export function SaleDetailPanel({ saleId }: Props) {
           )}
         </div>
       </div>
+
+      {/* ⚡ 다음 할 일 — 상태별 주 액션(상단 고정). 파괴/부차 액션(반품·취소·송장취소·교환)은 하단 유지 */}
+      {hasPrimaryAction && (
+        <PrimaryActionBar>
+          {showPayDone && (
+            <Button size="sm" className="w-full" onClick={() => setShowPaidConfirm(true)} disabled={updatePayment.isPending}>
+              <CheckCircle size={14} />
+              {updatePayment.isPending ? '처리 중...' : '결제완료로 변경'}
+            </Button>
+          )}
+          {canCreateInvoice && (
+            <>
+              <Button size="sm" className="w-full" onClick={() => shipSale.mutate(saleId)} disabled={shipSale.isPending}>
+                <Truck size={14} />
+                {shipSale.isPending ? '송장 생성 중...' : '택배 발송 (송장 생성)'}
+              </Button>
+              <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPickupConfirm(true)} disabled={markDelivered.isPending}>
+                <Package size={14} />
+                고객 수령 완료
+              </Button>
+            </>
+          )}
+          {canMarkShipped && (
+            <Button size="sm" className="w-full" onClick={() => { setShipNotify(true); setShowShipConfirm(true); }} disabled={markShipped.isPending}>
+              <Truck size={14} />
+              {markShipped.isPending ? '처리 중...' : '출고완료'}
+            </Button>
+          )}
+        </PrimaryActionBar>
+      )}
 
       {/* 고객 상담 메모 (특징·불편·요구 등 — 고객 연결된 판매만) */}
       {s.customer_id && (
@@ -521,12 +559,7 @@ export function SaleDetailPanel({ saleId }: Props) {
         </div>
       ) : (
         <div className="flex items-center gap-2 pt-2 border-t border-neutral-100">
-          {s.payment_status !== 'paid' && (
-            <Button size="sm" onClick={() => setShowPaidConfirm(true)} disabled={updatePayment.isPending}>
-              <CheckCircle size={14} />
-              {updatePayment.isPending ? '처리 중...' : '결제완료로 변경'}
-            </Button>
-          )}
+          {/* 결제완료로 변경은 상단 「다음 할 일」로 이동 */}
           <button onClick={() => setReturnMode(true)} className="text-xs text-purple-500 hover:text-purple-700 transition">
             반품 처리
           </button>
@@ -693,15 +726,7 @@ export function SaleDetailPanel({ saleId }: Props) {
                     롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인)
                     {!isB2BCustomerType(s.customer_type) && ' · 출고 알림톡도 자동 발송'}
                   </p>
-                  <Button
-                    size="sm"
-                    onClick={() => { setShipNotify(true); setShowShipConfirm(true); }}
-                    disabled={markShipped.isPending}
-                    className="w-full"
-                  >
-                    <Truck size={14} />
-                    {markShipped.isPending ? '처리 중...' : '출고완료'}
-                  </Button>
+                  {/* 출고완료는 상단 「다음 할 일」로 이동 */}
                   <button onClick={() => cancelShipment.mutate(saleId)}
                     disabled={cancelShipment.isPending}
                     className="w-full text-center text-xs text-red-400 hover:text-red-600">
@@ -719,24 +744,8 @@ export function SaleDetailPanel({ saleId }: Props) {
                   고객 수령 완료 {formatDate(s.delivered_at)}
                 </p>
               ) : (
-                <>
-                  <button
-                    onClick={() => shipSale.mutate(saleId)}
-                    disabled={shipSale.isPending}
-                    className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition"
-                  >
-                    <Truck size={14} />
-                    {shipSale.isPending ? '송장 생성 중...' : '택배 발송 (송장 생성)'}
-                  </button>
-                  <button
-                    onClick={() => setShowPickupConfirm(true)}
-                    disabled={markDelivered.isPending}
-                    className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-neutral-200 text-sm text-neutral-600 hover:bg-neutral-50 transition disabled:opacity-50"
-                  >
-                    <Package size={14} />
-                    {markDelivered.isPending ? '처리 중...' : '고객 수령 완료'}
-                  </button>
-                </>
+                /* 택배 발송·고객 수령 완료는 상단 「다음 할 일」로 이동 */
+                null
               )}
             </div>
           )}
