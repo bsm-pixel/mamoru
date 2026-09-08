@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { useBookInvoice, useCancelInvoice, useCancelOrder, useCompletePickup } from '@/hooks/use-orders';
 import { InvoiceModal } from './invoice-modal';
@@ -10,12 +10,22 @@ import { ConfirmModal } from '@/components/ui/confirm-modal';
 import type { Order, OrderItem } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
 
-interface Props {
-  order: Order;
-  items: OrderItem[];
+export interface OrderActions {
+  /** 상단 「다음 할 일」에 넣을 주 액션이 있는지 */
+  hasPrimary: boolean;
+  /** 상단 주 액션(긍정 진행): 송장 생성 · 직접수령 · 아임웹 연동 · ALPS 취소 확인 */
+  primary: ReactNode;
+  /** 하단 부차/파괴 액션: 송장 취소 · 주문 취소 · 제품 교환 */
+  secondary: ReactNode;
+  /** 모달 모음 — 패널에 딱 1번만 렌더 */
+  modals: ReactNode;
 }
 
-export function OrderActionBar({ order, items }: Props) {
+/**
+ * 주문 상세 액션을 상단(주)·하단(부차)·모달로 분리해 돌려주는 훅.
+ * 상태(모달 open)를 한 곳에서만 소유 → 버튼은 상/하단 2곳에 두되 모달은 1벌만 렌더(중복 방지).
+ */
+export function useOrderActions(order: Order | null | undefined, items: OrderItem[]): OrderActions {
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [showCancelOrder, setShowCancelOrder] = useState(false);
   const [showCancelInvoice, setShowCancelInvoice] = useState(false);
@@ -30,6 +40,10 @@ export function OrderActionBar({ order, items }: Props) {
 
   const busy = bookInvoice.isPending || cancelInvoice.isPending || cancelOrder.isPending || completePickup.isPending || checkingAlps;
 
+  // 로딩 등으로 아직 주문이 없으면 빈 액션 (rules-of-hooks: 훅은 위에서 이미 모두 호출됨)
+  if (!order) return { hasPrimary: false, primary: null, secondary: null, modals: null };
+  const ord = order; // non-null 별칭 — 아래 클로저(핸들러)에서 narrowing 유지용
+
   // 주문 취소 확인 문구 — 상태별 경고 (집하 후 배송중은 강한 경고)
   const cancelOrderMessage = order.status === 'shipping'
     ? <>⚠️ <strong>이미 발송(집하)된 주문</strong>입니다. 취소하면 재고가 복구됩니다.<br />실제 물건이 배송 중이면 아임웹 반품·롯데 반송을 먼저 확인하세요.</>
@@ -38,13 +52,13 @@ export function OrderActionBar({ order, items }: Props) {
       : <>이 주문을 취소합니다. 재고가 복구됩니다.<br />아임웹에서도 취소 처리해주세요.</>;
 
   async function handleCheckAlpsCancel() {
-    if (!order.invoice_number) return;
+    if (!ord.invoice_number) return;
     setCheckingAlps(true);
     try {
       const res = await fetch('/api/lotte/check-cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: order.id, invNo: order.invoice_number }),
+        body: JSON.stringify({ orderId: ord.id, invNo: ord.invoice_number }),
       });
       const data = await res.json();
       if (data.cancelled) {
@@ -64,7 +78,7 @@ export function OrderActionBar({ order, items }: Props) {
       const res = await fetch('/api/imweb/push-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: order.id }),
+        body: JSON.stringify({ orderId: ord.id }),
       });
       const data = await res.json();
       if (data.success) {
@@ -79,98 +93,101 @@ export function OrderActionBar({ order, items }: Props) {
     }
   }
 
-  // 취소 상태 — 액션 없음 (배송완료는 '제품 교환' 위해 액션바 유지)
-  if (order.status === 'cancelled') return null;
+  // 취소 상태 — 액션 없음
+  if (order.status === 'cancelled') {
+    return { hasPrimary: false, primary: null, secondary: null, modals: null };
+  }
 
-  return (
+  // 상태 판정 (상호배타)
+  const showInvoiceCreate = order.status === 'pay_done' && !order.invoice_number;
+  const canPushImweb = !!order.invoice_number &&
+    (order.status === 'ready_to_ship' || order.status === 'shipping' || order.status === 'pay_done');
+  const showAlpsCheck = order.status === 'cancel_pending';
+  const hasPrimary = showInvoiceCreate || canPushImweb || showAlpsCheck;
+
+  // ── 상단: 주 액션(긍정 진행) ──
+  const primary = (
     <>
-      <div className="space-y-2 pt-3 border-t border-neutral-100">
-        {/* cancel_pending: 경고 + 확인 버튼 */}
-        {order.status === 'cancel_pending' && (
-          <>
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-50 border border-yellow-200">
-              <AlertTriangle size={16} className="text-yellow-600 shrink-0 mt-0.5" />
-              <div className="text-xs text-yellow-700">
-                <p className="font-semibold">ALPS 집하취소 필요</p>
-                <p className="mt-0.5">송장 {order.invoice_number}을 ALPS에서 직접 취소해주세요</p>
-              </div>
+      {showAlpsCheck && (
+        <>
+          <div className="flex items-start gap-2 p-2.5 rounded-lg bg-yellow-50 border border-yellow-200">
+            <AlertTriangle size={15} className="text-yellow-600 shrink-0 mt-0.5" />
+            <div className="text-[11px] text-yellow-700">
+              <p className="font-semibold">ALPS 집하취소 필요</p>
+              <p className="mt-0.5">송장 {order.invoice_number}을 ALPS에서 직접 취소해주세요</p>
             </div>
-            <Button size="sm" className="w-full" onClick={handleCheckAlpsCancel} disabled={busy} loading={checkingAlps}>
-              ALPS 취소 확인
-            </Button>
-          </>
-        )}
-
-        {/* pay_done 송장 없음: 송장 생성 + 주문 취소 */}
-        {order.status === 'pay_done' && !order.invoice_number && (
-          <>
-            <Button size="sm" className="w-full" onClick={() => setInvoiceOpen(true)} disabled={busy}>
-              <Truck size={14} />
-              송장 생성
-            </Button>
-            <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPickup(true)} disabled={busy}>
-              <Store size={14} />
-              직접수령 완료
-            </Button>
-            <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelOrder(true)} disabled={busy}>
-              주문 취소
-            </Button>
-          </>
-        )}
-
-        {/* 배송대기/배송중: 아임웹 연동 + 송장 취소 + 주문 취소 */}
-        {(order.status === 'ready_to_ship' || order.status === 'shipping' || (order.status === 'pay_done' && order.invoice_number)) && (
-          <>
-            {/* 실제 롯데 송장이 있을 때만 — 아임웹 재연동 / 롯데 송장 취소 */}
-            {order.invoice_number && (
-              <>
-                <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPushImweb(true)} disabled={busy}>
-                  <ExternalLink size={14} />
-                  아임웹 송장 연동
-                </Button>
-                <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelInvoice(true)} disabled={busy}>
-                  송장 취소
-                </Button>
-              </>
-            )}
-            {/* 주문 취소 — 모든 진행 상태에서 '정리' 가능 (재고 복구). orphan(송장없음)도 이 버튼으로 정리 */}
-            <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelOrder(true)} disabled={busy}>
-              주문 취소
-            </Button>
-            <p className="text-[11px] text-neutral-400 px-1 leading-relaxed">
-              {order.invoice_number
-                ? '집하 전 취소는 [송장 취소]로 롯데 송장까지 정리 · 이미 발송됐거나 강제 정리는 [주문 취소]'
-                : '롯데 송장이 없는 주문입니다. [주문 취소]로 정리하세요.'}
-            </p>
-          </>
-        )}
-
-        {/* 제품 교환 — 모든 진행/완료(취소 제외) 상태에서 가능. 매출·카드 불변, 상품/재고만 스왑 */}
-        <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowExchange(true)} disabled={busy}>
-          <RefreshCw size={14} />
-          제품 교환
-        </Button>
-        {order.exchanged_at && (
-          <p className="text-[11px] text-emerald-600 px-1">✓ 교환 처리됨 — 아임웹 주문/결제는 그대로 유지됨</p>
-        )}
-      </div>
-
-      {/* 송장 생성 모달 */}
-      {invoiceOpen && (
-        <InvoiceModal
-          open={invoiceOpen}
-          onClose={() => setInvoiceOpen(false)}
-          order={order}
-          items={items}
-        />
+          </div>
+          <Button size="sm" className="w-full" onClick={handleCheckAlpsCancel} disabled={busy} loading={checkingAlps}>
+            ALPS 취소 확인
+          </Button>
+        </>
       )}
+      {showInvoiceCreate && (
+        <>
+          <Button size="sm" className="w-full" onClick={() => setInvoiceOpen(true)} disabled={busy}>
+            <Truck size={14} />
+            송장 생성
+          </Button>
+          <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPickup(true)} disabled={busy}>
+            <Store size={14} />
+            직접수령 완료
+          </Button>
+        </>
+      )}
+      {canPushImweb && (
+        <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPushImweb(true)} disabled={busy}>
+          <ExternalLink size={14} />
+          아임웹 송장 연동
+        </Button>
+      )}
+    </>
+  );
 
-      {/* 제품 교환 모달 */}
+  // ── 하단: 부차/파괴 액션 ──
+  const secondary = (
+    <div className="space-y-2 pt-3 border-t border-neutral-100">
+      {showInvoiceCreate && (
+        <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelOrder(true)} disabled={busy}>
+          주문 취소
+        </Button>
+      )}
+      {canPushImweb && (
+        <>
+          {order.invoice_number && (
+            <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelInvoice(true)} disabled={busy}>
+              송장 취소
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelOrder(true)} disabled={busy}>
+            주문 취소
+          </Button>
+          <p className="text-[11px] text-neutral-400 px-1 leading-relaxed">
+            {order.invoice_number
+              ? '집하 전 취소는 [송장 취소]로 롯데 송장까지 정리 · 이미 발송됐거나 강제 정리는 [주문 취소]'
+              : '롯데 송장이 없는 주문입니다. [주문 취소]로 정리하세요.'}
+          </p>
+        </>
+      )}
+      {/* 제품 교환 — 모든 진행/완료(취소 제외) 상태에서 가능 */}
+      <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowExchange(true)} disabled={busy}>
+        <RefreshCw size={14} />
+        제품 교환
+      </Button>
+      {order.exchanged_at && (
+        <p className="text-[11px] text-emerald-600 px-1">✓ 교환 처리됨 — 아임웹 주문/결제는 그대로 유지됨</p>
+      )}
+    </div>
+  );
+
+  // ── 모달 (1벌) ──
+  const modals = (
+    <>
+      {invoiceOpen && (
+        <InvoiceModal open={invoiceOpen} onClose={() => setInvoiceOpen(false)} order={order} items={items} />
+      )}
       {showExchange && (
         <OrderExchangeModal order={order} items={items} onClose={() => setShowExchange(false)} />
       )}
-
-      {/* 주문 취소 확인 */}
       <ConfirmModal
         open={showCancelOrder}
         onClose={() => setShowCancelOrder(false)}
@@ -180,8 +197,6 @@ export function OrderActionBar({ order, items }: Props) {
         confirmLabel="주문 취소"
         variant="danger"
       />
-
-      {/* 송장 취소 확인 */}
       <ConfirmModal
         open={showCancelInvoice}
         onClose={() => setShowCancelInvoice(false)}
@@ -191,8 +206,6 @@ export function OrderActionBar({ order, items }: Props) {
         confirmLabel="송장 취소"
         variant="danger"
       />
-
-      {/* 직접수령 완료 확인 */}
       <ConfirmModal
         open={showPickup}
         onClose={() => setShowPickup(false)}
@@ -201,8 +214,6 @@ export function OrderActionBar({ order, items }: Props) {
         message={<>이 주문을 <strong>직접수령(대면 픽업)</strong>으로 완료합니다.<br />송장 없이 배송완료로 마감됩니다. 아임웹에서도 수령 처리해주세요.</>}
         confirmLabel="직접수령 완료"
       />
-
-      {/* 아임웹 송장 연동 확인 */}
       <ConfirmModal
         open={showPushImweb}
         onClose={() => setShowPushImweb(false)}
@@ -213,4 +224,6 @@ export function OrderActionBar({ order, items }: Props) {
       />
     </>
   );
+
+  return { hasPrimary, primary, secondary, modals };
 }

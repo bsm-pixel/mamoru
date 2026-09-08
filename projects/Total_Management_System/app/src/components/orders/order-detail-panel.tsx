@@ -6,7 +6,8 @@ import { OrderSerialModal } from './order-serial-modal';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeliveryTracker } from './delivery-tracker';
-import { OrderActionBar } from './order-action-bar';
+import { useOrderActions } from './order-action-bar';
+import { PrimaryActionBar } from '@/components/ui/primary-action-bar';
 import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
 import { Package, Hash, Printer, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
@@ -30,6 +31,8 @@ export function OrderDetailPanel({ orderId }: Props) {
   const [adminNote, setAdminNote] = useState('');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { setAdminNote(data?.order?.admin_note || ''); }, [data?.order?.id]);
+  // 주문 액션(상단 주/하단 부차/모달) — rules-of-hooks 위해 조기 return 전에 호출(nullable 가드 내장)
+  const orderActions = useOrderActions(data?.order, data?.items ?? []);
 
   if (isLoading) {
     return <div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-32" /><Skeleton className="h-20" /></div>;
@@ -81,6 +84,9 @@ export function OrderDetailPanel({ orderId }: Props) {
           cancelled={orderCancelled}
         />
       </div>
+
+      {/* ⚡ 다음 할 일 — 상태별 주 액션(상단 고정). 파괴/부차 액션은 하단 유지 */}
+      {orderActions.hasPrimary && <PrimaryActionBar>{orderActions.primary}</PrimaryActionBar>}
 
       {/* 받는분 (배송지) — 주문자와 같으면 통합, 다르면 주문자 보조표기 */}
       <div className="rounded-lg bg-neutral-50 p-3 space-y-1.5">
@@ -242,8 +248,8 @@ export function OrderDetailPanel({ orderId }: Props) {
         </div>
       )}
 
-      {/* 상태별 액션 */}
-      <OrderActionBar order={o} items={items} />
+      {/* 상태별 부차/파괴 액션 (주 액션은 상단 「다음 할 일」로 이동) */}
+      {orderActions.secondary}
 
       {/* 출고 준비표 (판매관리와 동일 양식 — 리스트형/트레이형) */}
       {o.status !== 'cancelled' && (
@@ -269,6 +275,9 @@ export function OrderDetailPanel({ orderId }: Props) {
           상세 페이지 →
         </Link>
       </div>
+
+      {/* 주문 액션 모달 (송장생성·교환·취소·직접수령·아임웹연동) — 1벌만 */}
+      {orderActions.modals}
 
       {showSerials && (
         <OrderSerialModal orderId={o.id} items={items} serials={serials} onClose={() => setShowSerials(false)} />
