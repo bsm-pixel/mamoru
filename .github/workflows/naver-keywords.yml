@@ -1,0 +1,26 @@
+name: 주간 검색어 자동 추출 (네이버→Notion)
+
+on:
+  schedule:
+    # 매주 월요일 00:00 UTC = 한국시간 월요일 오전 9시
+    - cron: '0 0 * * 1'
+  workflow_dispatch: {}   # 수동 실행(테스트)용 버튼
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: install deps
+        run: pip install -r automation/naver-keywords/requirements.txt
+      - name: run
+        env:
+          NAVER_API_KEY: ${{ secrets.NAVER_API_KEY }}
+          NAVER_SECRET_KEY: ${{ secrets.NAVER_SECRET_KEY }}
+          NAVER_CUSTOMER_ID: ${{ secrets.NAVER_CUSTOMER_ID }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DB_ID: ${{ secrets.NOTION_DB_ID }}
+        run: python automation/naver-keywords/main.py
