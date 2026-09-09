@@ -126,6 +126,18 @@
   var uid = params.get('uid') || '';
   var RES = null;          // 예약 정보
   var pickedTime = '';     // 선택된 슬롯
+  var BLOCKED = new Set();          // 관리자 지정 수거 불가일
+  var BLOCKED_REASONS = {};
+
+  function loadBlocked(){
+    return fetch(API_BASE + '/blocked-dates')
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        BLOCKED = new Set((j && j.ok && j.dates) ? j.dates : []);
+        BLOCKED_REASONS = (j && j.reasons) ? j.reasons : {};
+      }).catch(function(){});
+  }
+  loadBlocked();
 
   function $(id){ return document.getElementById(id); }
   function show(id){ $(id).classList.remove('hidden'); }
@@ -199,6 +211,13 @@
 
   function loadSlots(date){
     var box = $('r-slots');
+    // 관리자 지정 수거 불가일이면 시간 불러오지 않고 안내
+    if (BLOCKED.has(date)) {
+      pickedTime = ''; $('r-confirm').disabled = true;
+      var why = BLOCKED_REASONS[date] ? ' (' + BLOCKED_REASONS[date] + ')' : '';
+      box.innerHTML = '<div class="slot-empty">이 날짜는 수거가 불가합니다' + why + '. 다른 날짜를 선택해 주세요.</div>';
+      return;
+    }
     box.innerHTML = '<div class="slot-empty">시간을 불러오는 중…</div>';
     fetch(API_BASE + '/slots?date=' + encodeURIComponent(date) + '&qty=' + (RES.qty || 1))
       .then(function(r){ return r.json(); })
@@ -223,6 +242,11 @@
   function submitResched(){
     var date = $('r-date').value;
     if (!date || !pickedTime) return;
+    if (BLOCKED.has(date)) {
+      var why = BLOCKED_REASONS[date] ? ' (' + BLOCKED_REASONS[date] + ')' : '';
+      $('r-warn').textContent = '이 날짜는 수거 불가일입니다' + why + '. 다른 날짜를 선택해 주세요.'; show('r-warn');
+      return;
+    }
     var btn = $('r-confirm'); btn.disabled = true; btn.textContent = '변경 중…';
     fetch(API_BASE + '/resched', {
       method:'POST', headers:{'Content-Type':'application/json'},

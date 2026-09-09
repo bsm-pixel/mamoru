@@ -12,11 +12,12 @@ import { useUpdateRepairStatus, useUpdateRepairFields, useShipRepair } from '@/h
 import { formatKRW, formatPhone, formatDate, formatDateTime } from '@/lib/utils/format';
 import {
   Search, Scissors, Package, MapPin, CheckCircle,
-  CreditCard, Truck, ClipboardCheck, ClipboardList, Printer,
+  CreditCard, Truck, ClipboardCheck, ClipboardList, Printer, CalendarOff,
 } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
 import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
+import { RepairBlockedDatesModal } from './repair-blocked-dates-modal';
 import type { Repair } from '@/lib/supabase/types';
 import type { RepairTabKey } from './repair-tab-bar';
 import { useActivityTypes } from '@/hooks/use-activity-types';
@@ -103,6 +104,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [showPrep, setShowPrep] = useState(false);
   const [showUnified, setShowUnified] = useState(false);
+  const [showBlocked, setShowBlocked] = useState(false);
   const toggleCheck = (id: string) => setCheckedIds((prev) => {
     const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next;
   });
@@ -162,16 +164,25 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
 
   return (
     <div className="space-y-3">
-      {/* 검색 */}
-      <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="이름, 전화번호, 접수번호 검색..."
-          className="w-full h-9 pl-9 pr-3 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-stone-400 transition"
-        />
+      {/* 검색 + 수거 불가일 관리 */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="이름, 전화번호, 접수번호 검색..."
+            className="w-full h-9 pl-9 pr-3 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-stone-400 transition"
+          />
+        </div>
+        <button
+          onClick={() => setShowBlocked(true)}
+          title="명절·연휴 등 수거(픽업) 불가 기간 지정 — 고객 달력에서 선택 차단"
+          className="shrink-0 flex items-center gap-1.5 h-9 px-3 rounded-xl border border-stone-200 bg-white text-xs font-semibold text-stone-600 hover:bg-stone-50 hover:text-stone-800 transition whitespace-nowrap"
+        >
+          <CalendarOff size={14} className="text-red-500" /> 수거 불가일
+        </button>
       </div>
 
       {/* 교차 필터 활성 안내 */}
@@ -289,6 +300,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
 
       {showPrep && <RepairPrepSheetModal repairIds={[...checkedIds]} onClose={() => setShowPrep(false)} />}
       {showUnified && <UnifiedPrepModal initialTab="repair" onClose={() => setShowUnified(false)} />}
+      {showBlocked && <RepairBlockedDatesModal onClose={() => setShowBlocked(false)} />}
     </div>
   );
 }

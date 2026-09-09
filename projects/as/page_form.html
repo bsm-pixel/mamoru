@@ -1552,6 +1552,8 @@ select.err {
   // [CONFIG] 공휴일 목록 (캐시 기반)
   // ═══════════════════════════════════════════════════════════════════
   let HOLIDAYS = new Set();
+  let BLOCKED = new Set();          // 관리자 지정 수거 불가일(우체국 픽업 중지 등)
+  let BLOCKED_REASONS = {};
 
   // ─────────────────────────────────────────────────────────────
   // 유틸리티 함수
@@ -1574,8 +1576,12 @@ select.err {
     return HOLIDAYS.has(fmt(date));
   }
 
+  function isBlockedDate(date) {
+    return BLOCKED.has(fmt(date));
+  }
+
   function isDisabledDate(date) {
-    return isWeekend(date) || isHolidayDate(date);
+    return isWeekend(date) || isHolidayDate(date) || isBlockedDate(date);
   }
 
   function isDisabledDateStr(s) {
@@ -1604,6 +1610,16 @@ select.err {
         const list = (j && j.ok && j.data) ? j.data.map(h => h.date) : [];
         HOLIDAYS = new Set(list);
         try { localStorage.setItem(k, JSON.stringify({ t: now, list })); } catch (_) {}
+      }).catch(() => {});
+  }
+
+  // 관리자 지정 '수거 불가일' 로드 (캐시 없이 매번 최신 — 관리자 변경 즉시 반영)
+  function loadBlocked() {
+    return fetch(`${API_BASE}/blocked-dates`)
+      .then(r => r.json())
+      .then(j => {
+        BLOCKED = new Set((j && j.ok && j.dates) ? j.dates : []);
+        BLOCKED_REASONS = (j && j.reasons) ? j.reasons : {};
       }).catch(() => {});
   }
 
@@ -1656,19 +1672,21 @@ select.err {
       const dateStr = fmt(date);
       const isWknd = isWeekend(date);
       const isHol = isHolidayDate(date);
+      const isBlk = isBlockedDate(date);
       const isPast = date < minDate;
-      const isDisabled = isPast || isWknd || isHol;
+      const isDisabled = isPast || isWknd || isHol || isBlk;
       const isToday = fmt(new Date()) === dateStr;
       const isSelected = selectedDate === dateStr;
 
       let classes = ['calendar-day'];
       if (isDisabled) classes.push('disabled');
       if (isWknd) classes.push('weekend');
-      if (isHol) classes.push('holiday');
+      if (isHol || isBlk) classes.push('holiday');
       if (isToday) classes.push('today');
       if (isSelected) classes.push('selected');
 
-      html += `<button type="button" class="${classes.join(' ')}" data-date="${dateStr}" ${isDisabled ? 'disabled' : ''}>${day}</button>`;
+      const titleAttr = (isBlk && BLOCKED_REASONS[dateStr]) ? ` title="${BLOCKED_REASONS[dateStr]}"` : '';
+      html += `<button type="button" class="${classes.join(' ')}" data-date="${dateStr}"${titleAttr} ${isDisabled ? 'disabled' : ''}>${day}</button>`;
     }
 
     calendarGrid.innerHTML = html;
@@ -2519,7 +2537,7 @@ select.err {
   // ─────────────────────────────────────────────────────────────
   // 초기화
   // ─────────────────────────────────────────────────────────────
-  loadHolidays().then(() => {
+  Promise.all([loadHolidays(), loadBlocked()]).then(() => {
     renderCalendar();
   });
   applyDraft();
