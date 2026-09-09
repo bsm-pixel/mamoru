@@ -30,13 +30,14 @@ export async function GET() {
       .from('settings')
       .select('value')
       .eq('key', 'repair.pickup_blocked_dates')
-      .maybeSingle();
-    if (error) throw error;
+      .limit(1);
+    if (error) throw new Error(error.message || error.hint || JSON.stringify(error));
 
+    const row = Array.isArray(data) && data.length ? data[0] : null;
     let ranges: { start?: string; end?: string; reason?: string }[] = [];
-    if (data?.value) {
+    if (row?.value) {
       try {
-        ranges = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+        ranges = typeof row.value === 'string' ? JSON.parse(row.value) : row.value;
       } catch {
         ranges = [];
       }
@@ -65,8 +66,9 @@ export async function GET() {
     );
   } catch (err) {
     console.error('[repair/public/blocked-dates] 조회 실패:', err);
+    const msg = err instanceof Error ? err.message : (typeof err === 'string' ? err : JSON.stringify(err));
     return NextResponse.json(
-      { ok: false, error: String(err), dates: [], reasons: {}, ranges: [] },
+      { ok: false, error: msg, dates: [], reasons: {}, ranges: [] },
       { status: 500, headers: CORS_HEADERS },
     );
   }
