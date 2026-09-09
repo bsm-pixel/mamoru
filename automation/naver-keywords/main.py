@@ -127,6 +127,12 @@ def _bullet(text):
             "bulleted_list_item": {"rich_text": [{"type": "text", "text": {"content": text}}]}}
 
 
+def _todo(text):
+    # 체크박스 + 텍스트. 검색어를 콘텐츠에 실제로 쓰면 이 체크박스만 체크해 사용완료 표시.
+    return {"object": "block", "type": "to_do",
+            "to_do": {"rich_text": [{"type": "text", "text": {"content": text}}], "checked": False}}
+
+
 def _line(r):
     return f"{r['kw']}  —  PC {r['pc']:,} / 모바일 {r['mo']:,}  (합 {r['total']:,}, 경쟁 {r['comp']})"
 
@@ -136,12 +142,12 @@ def build_children(rows):
     easy = [r for r in rows if r["comp"] != "높음" and r["total"] >= 30][:12]
     hard = [r for r in rows if r["comp"] == "높음"][:8]
     children = [_heading("💎 우선 공략 (경쟁 덜함 · 상위 잡기 유리)")]
-    children += ([_bullet(_line(r)) for r in easy] or [_bullet("해당 없음")])
+    children += ([_todo(_line(r)) for r in easy] or [_bullet("해당 없음")])
     children.append(_heading("🔥 검색량 크지만 경쟁 치열 (장기전 · 참고)"))
-    children += ([_bullet(_line(r)) for r in hard] or [_bullet("해당 없음")])
+    children += ([_todo(_line(r)) for r in hard] or [_bullet("해당 없음")])
     children.append({"object": "block", "type": "callout",
                      "callout": {"icon": {"emoji": "✍️"},
-                                 "rich_text": [{"type": "text", "text": {"content": "제목·표현은 Claude에게 요청: \"이 검색어들로 블로그/인스타 제목 뽑아줘\" (브랜드 톤 유지). 특히 💎 우선 공략 키워드부터."}}]}})
+                                 "rich_text": [{"type": "text", "text": {"content": "쓴 검색어는 왼쪽 ☑ 체크박스를 체크해 '사용완료' 표시. 제목은 Claude에 요청: \"이 검색어로 블로그/인스타 제목 뽑아줘\" (💎부터, 브랜드 톤)."}}]}})
     return children
 
 
