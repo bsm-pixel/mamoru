@@ -124,18 +124,16 @@ def _line(r):
 
 
 def build_children(rows):
-    vol_top = rows[:12]                                                     # 🔥 검색량 높은 것
-    opp = [r for r in rows if r["comp"] == "낮음" and r["total"] >= 100][:8]  # 💎 경쟁 낮은 기회
-    children = [_heading("🔥 검색량 높은 검색어 (트래픽·인지도)")]
-    children += [_bullet(_line(r)) for r in vol_top]
-    children.append(_heading("💎 경쟁 낮은 기회 키워드 (상위 잡기 쉬움 · 우선 공략)"))
-    if opp:
-        children += [_bullet(_line(r)) for r in opp]
-    else:
-        children.append(_bullet("이번 주 조건(경쟁 낮음·검색량 100+) 맞는 키워드 없음"))
+    # 난이도별: 💎 우선 공략(경쟁 낮음·중간) / 🔥 경쟁 치열(높음). 둘 다 검색량순.
+    easy = [r for r in rows if r["comp"] != "높음" and r["total"] >= 30][:12]
+    hard = [r for r in rows if r["comp"] == "높음"][:8]
+    children = [_heading("💎 우선 공략 (경쟁 덜함 · 상위 잡기 유리)")]
+    children += ([_bullet(_line(r)) for r in easy] or [_bullet("해당 없음")])
+    children.append(_heading("🔥 검색량 크지만 경쟁 치열 (장기전 · 참고)"))
+    children += ([_bullet(_line(r)) for r in hard] or [_bullet("해당 없음")])
     children.append({"object": "block", "type": "callout",
                      "callout": {"icon": {"emoji": "✍️"},
-                                 "rich_text": [{"type": "text", "text": {"content": "제목·표현은 Claude에게 요청: \"이 검색어들로 블로그/인스타 제목 뽑아줘\" (브랜드 톤 유지). 특히 💎 기회 키워드부터 공략."}}]}})
+                                 "rich_text": [{"type": "text", "text": {"content": "제목·표현은 Claude에게 요청: \"이 검색어들로 블로그/인스타 제목 뽑아줘\" (브랜드 톤 유지). 특히 💎 우선 공략 키워드부터."}}]}})
     return children
 
 
