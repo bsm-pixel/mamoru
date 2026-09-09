@@ -27,7 +27,7 @@ export async function GET() {
     const dbAny = db as any;
 
     const { data, error } = await dbAny
-      .from('settings')
+      .from('system_settings')
       .select('value')
       .eq('key', 'repair.pickup_blocked_dates')
       .limit(1);
