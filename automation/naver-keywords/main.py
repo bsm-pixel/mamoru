@@ -31,12 +31,16 @@ TOP_N = 15  # Notion에 기록할 상위 키워드 수
 # 관련성 필터: 연관검색어 중 아래 토큰을 포함한 것만 남긴다
 # (검색량만으로 정렬하면 롤·빗·바리깡 같은 일반 소품이 '가위' 전문어를 밀어내므로)
 RELEVANT_TOKENS = ["가위", "시저스", "틴닝", "숱", "연마", "scissor"]
+# 사람 미용가위 아닌 것 배제 (반려동물 미용·코털 등)
+EXCLUDE_TOKENS = ["코털", "강아지", "애견", "반려", "펫", "고양이", "주방", "요리", "원예", "가지"]
 
 NAVER_BASE = "https://api.searchad.naver.com"
 
 
 def is_relevant(kw: str) -> bool:
     low = kw.lower()
+    if any(t in low for t in EXCLUDE_TOKENS):
+        return False
     return any(t in low for t in RELEVANT_TOKENS)
 
 
