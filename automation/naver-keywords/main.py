@@ -101,7 +101,7 @@ def collect():
             print(f"[warn] batch {batch} 실패: {e}", file=sys.stderr)
         time.sleep(0.3)  # 레이트리밋 여유
     rows = sorted(seen.values(), key=lambda x: x["total"], reverse=True)
-    return rows[:TOP_N]
+    return rows[:80]  # 풀 유지 → 아래에서 '검색량순'과 '경쟁낮은 기회'로 나눠 씀
 
 
 def week_label(d: datetime.date) -> str:
@@ -109,18 +109,33 @@ def week_label(d: datetime.date) -> str:
     return f"{d.month}월 {nth}주차 ({d:%m/%d})"
 
 
+def _heading(text):
+    return {"object": "block", "type": "heading_3",
+            "heading_3": {"rich_text": [{"type": "text", "text": {"content": text}}]}}
+
+
+def _bullet(text):
+    return {"object": "block", "type": "bulleted_list_item",
+            "bulleted_list_item": {"rich_text": [{"type": "text", "text": {"content": text}}]}}
+
+
+def _line(r):
+    return f"{r['kw']}  —  PC {r['pc']:,} / 모바일 {r['mo']:,}  (합 {r['total']:,}, 경쟁 {r['comp']})"
+
+
 def build_children(rows):
-    children = [
-        {"object": "block", "type": "heading_3",
-         "heading_3": {"rich_text": [{"type": "text", "text": {"content": "🔍 이번 주 검색어 (월간 검색량순)"}}]}},
-    ]
-    for r in rows:
-        line = f"{r['kw']}  —  PC {r['pc']:,} / 모바일 {r['mo']:,}  (합 {r['total']:,}, 경쟁 {r['comp']})"
-        children.append({"object": "block", "type": "bulleted_list_item",
-                         "bulleted_list_item": {"rich_text": [{"type": "text", "text": {"content": line}}]}})
+    vol_top = rows[:12]                                                     # 🔥 검색량 높은 것
+    opp = [r for r in rows if r["comp"] == "낮음" and r["total"] >= 100][:8]  # 💎 경쟁 낮은 기회
+    children = [_heading("🔥 검색량 높은 검색어 (트래픽·인지도)")]
+    children += [_bullet(_line(r)) for r in vol_top]
+    children.append(_heading("💎 경쟁 낮은 기회 키워드 (상위 잡기 쉬움 · 우선 공략)"))
+    if opp:
+        children += [_bullet(_line(r)) for r in opp]
+    else:
+        children.append(_bullet("이번 주 조건(경쟁 낮음·검색량 100+) 맞는 키워드 없음"))
     children.append({"object": "block", "type": "callout",
                      "callout": {"icon": {"emoji": "✍️"},
-                                 "rich_text": [{"type": "text", "text": {"content": "제목·표현은 Claude에게 요청: \"이 검색어들로 블로그/인스타 제목 뽑아줘\" (브랜드 톤 유지)"}}]}})
+                                 "rich_text": [{"type": "text", "text": {"content": "제목·표현은 Claude에게 요청: \"이 검색어들로 블로그/인스타 제목 뽑아줘\" (브랜드 톤 유지). 특히 💎 기회 키워드부터 공략."}}]}})
     return children
 
 
