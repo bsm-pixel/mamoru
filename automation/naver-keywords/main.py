@@ -28,7 +28,16 @@ SEED_KEYWORDS = [
 ]
 TOP_N = 15  # Notion에 기록할 상위 키워드 수
 
+# 관련성 필터: 연관검색어 중 아래 토큰을 포함한 것만 남긴다
+# (검색량만으로 정렬하면 롤·빗·바리깡 같은 일반 소품이 '가위' 전문어를 밀어내므로)
+RELEVANT_TOKENS = ["가위", "시저스", "틴닝", "숱", "연마", "scissor"]
+
 NAVER_BASE = "https://api.searchad.naver.com"
+
+
+def is_relevant(kw: str) -> bool:
+    low = kw.lower()
+    return any(t in low for t in RELEVANT_TOKENS)
 
 
 def naver_signature(timestamp: str, method: str, path: str) -> str:
@@ -75,7 +84,7 @@ def collect():
         try:
             for row in fetch_keywords(batch):
                 kw = row.get("relKeyword")
-                if not kw:
+                if not kw or not is_relevant(kw):
                     continue
                 pc = to_int(row.get("monthlyPcQcCnt"))
                 mo = to_int(row.get("monthlyMobileQcCnt"))
