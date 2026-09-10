@@ -114,41 +114,92 @@ def collect():
 
 def week_label(d: datetime.date) -> str:
     nth = (d.day - 1) // 7 + 1
-    return f"{d.month}월 {nth}주차 ({d:%m/%d})"
+    return f"{d.month}월 {nth}주차 ({d:%m/%d}) · 네이버 (블로그·인스타)"
+
+
+def _rt(text, bold=False):
+    return [{"type": "text", "text": {"content": str(text)[:1900]}, "annotations": {"bold": bold}}]
 
 
 def _heading(text):
-    return {"object": "block", "type": "heading_3",
-            "heading_3": {"rich_text": [{"type": "text", "text": {"content": text}}]}}
+    return {"object": "block", "type": "heading_3", "heading_3": {"rich_text": _rt(text)}}
+
+
+def _para(text):
+    return {"object": "block", "type": "paragraph", "paragraph": {"rich_text": _rt(text)}}
 
 
 def _bullet(text):
-    return {"object": "block", "type": "bulleted_list_item",
-            "bulleted_list_item": {"rich_text": [{"type": "text", "text": {"content": text}}]}}
+    return {"object": "block", "type": "bulleted_list_item", "bulleted_list_item": {"rich_text": _rt(text)}}
 
 
 def _todo(text):
     # 체크박스 + 텍스트. 검색어를 콘텐츠에 실제로 쓰면 이 체크박스만 체크해 사용완료 표시.
-    return {"object": "block", "type": "to_do",
-            "to_do": {"rich_text": [{"type": "text", "text": {"content": text}}], "checked": False}}
+    return {"object": "block", "type": "to_do", "to_do": {"rich_text": _rt(text), "checked": False}}
+
+
+def _callout(text, emoji="✍️", color="gray_background"):
+    return {"object": "block", "type": "callout",
+            "callout": {"icon": {"emoji": emoji}, "color": color, "rich_text": _rt(text)}}
+
+
+def _toggle(title, children):
+    return {"object": "block", "type": "toggle", "toggle": {"rich_text": _rt(title), "children": children[:100]}}
+
+
+def _table(header, rows):
+    def row(cells, bold=False):
+        return {"object": "block", "type": "table_row", "table_row": {"cells": [_rt(c, bold) for c in cells]}}
+    return {"object": "block", "type": "table",
+            "table": {"table_width": len(header), "has_column_header": True, "has_row_header": False,
+                      "children": [row(header, True)] + [row(r) for r in rows[:98]]}}
 
 
 def _line(r):
     return f"{r['kw']}  —  PC {r['pc']:,} / 모바일 {r['mo']:,}  (합 {r['total']:,}, 경쟁 {r['comp']})"
 
 
+def _row(r):
+    return [r["kw"], f"{r['pc']:,}", f"{r['mo']:,}", f"{r['total']:,}", r["comp"] or "-"]
+
+
 def build_children(rows):
     # 난이도별: 💎 우선 공략(경쟁 낮음·중간) / 🔥 경쟁 치열(높음). 둘 다 검색량순.
     easy = [r for r in rows if r["comp"] != "높음" and r["total"] >= 30][:12]
     hard = [r for r in rows if r["comp"] == "높음"][:8]
-    children = [_heading("💎 우선 공략 (경쟁 덜함 · 상위 잡기 유리)")]
-    children += ([_todo(_line(r)) for r in easy] or [_bullet("해당 없음")])
-    children.append(_heading("🔥 검색량 크지만 경쟁 치열 (장기전 · 참고)"))
-    children += ([_todo(_line(r)) for r in hard] or [_bullet("해당 없음")])
-    children.append({"object": "block", "type": "callout",
-                     "callout": {"icon": {"emoji": "✍️"},
-                                 "rich_text": [{"type": "text", "text": {"content": "쓴 검색어는 왼쪽 ☑ 체크박스를 체크해 '사용완료' 표시. 제목은 Claude에 요청: \"이 검색어로 블로그/인스타 제목 뽑아줘\" (💎부터, 브랜드 톤)."}}]}})
-    return children
+    header = ["검색어", "PC", "모바일", "합계 (월간)", "경쟁"]
+
+    ch = [_callout(
+        "숫자 읽는 법 — "
+        "PC / 모바일: 지난 한 달간 네이버에서 이 검색어를 친 횟수(네이버 검색광고 실데이터). 미용사는 대부분 모바일.  "
+        "합계: 수요 크기. 100~1,000이면 롱테일(적지만 정확한 손님), 1,000↑이면 메인 검색어.  "
+        "경쟁: 네이버 광고 경쟁도(낮음/중간/높음). 블로그 순위 그 자체는 아니지만 '돈 되는 검색어'일수록 글도 많다는 근사치 — 낮음·중간이 상위 잡기 쉬움.  "
+        "💎 = 경쟁 낮음·중간이면서 검색량 있음 / 🔥 = 검색량 크지만 경쟁 높음(장기전).",
+        "📐")]
+    ch.append(_heading("💎 우선 공략 (경쟁 덜함 · 상위 잡기 유리)"))
+    ch.append(_table(header, [_row(r) for r in easy]) if easy else _bullet("해당 없음"))
+    ch.append(_heading("🔥 검색량 크지만 경쟁 치열 (장기전 · 참고)"))
+    ch.append(_table(header, [_row(r) for r in hard]) if hard else _bullet("해당 없음"))
+
+    main_kw = easy[0]["kw"] if easy else (rows[0]["kw"] if rows else "미용가위")
+    subs = [r["kw"] for r in easy[1:3]] or [r["kw"] for r in rows[1:3]]
+    ch.append(_heading("🧩 조합 가이드 — 블로그 제목 · 인스타 캡션 만들 때"))
+    ch.append(_table(
+        ["채널", "자리", "어디서 고르나", "규칙", "이번 주 예시"],
+        [
+            ["블로그", "제목 앞쪽 + 첫 문단 1~2회", "💎 1개 (메인)", "숫자형 또는 질문형, 낚시 ❌", f"{main_kw} 고르는 기준 3가지"],
+            ["블로그", "소제목(H2) 3개", "💎 보조 2개", "소제목마다 1개씩, 억지 반복 ❌", " / ".join(subs) or "-"],
+            ["블로그", "태그 5~10개", "메인+보조+카테고리", "보조 수단일 뿐, 태그로 순위 안 오름", f"#{main_kw.replace(' ', '')} …"],
+            ["인스타", "캡션 첫 줄(후킹)", "💎 1개", "질문 또는 반전 한 줄", f"{main_kw}, 비싼 게 답일까?"],
+            ["인스타", "해시태그 롱테일 1~3개", "💎 표에서 합계 100~1,000짜리", "브랜드 고정 4개 + 카테고리 + 롱테일", "#마모루 #미용가위 + 롱테일"],
+            ["인스타 릴스", "첫 1초 화면 텍스트", "💎 1개", "검색어 그대로 짧게", main_kw],
+        ]))
+    ch.append(_callout(
+        "Claude에게 이렇게 요청: \"이번 주 네이버 로그 💎로 블로그 제목 5개 + 인스타 캡션 첫 줄 3개 뽑아줘 (브랜드 톤)\". "
+        "🔥는 시리즈로 여러 편 쌓을 때만. 쓴 검색어는 아래 토글의 ☑ 체크로 사용완료 표시.", "✍️"))
+    ch.append(_toggle("☑ 사용완료 체크용 (전체 검색어)",
+                      [_todo(("💎 " if r in easy else "🔥 " if r in hard else "· ") + _line(r)) for r in (easy + hard)]))
+    return ch[:100]
 
 
 def create_notion_entry(rows):
