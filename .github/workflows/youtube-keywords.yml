@@ -1,0 +1,24 @@
+name: 주간 유튜브 검색어 자동 추출 (YouTube→Notion)
+
+on:
+  schedule:
+    # 매주 월요일 00:30 UTC = 한국시간 월요일 오전 9시 30분 (네이버 봇 30분 뒤)
+    - cron: '30 0 * * 1'
+  workflow_dispatch: {}   # 수동 실행(테스트)용 버튼
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: install deps
+        run: pip install -r automation/youtube-keywords/requirements.txt
+      - name: run
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DB_ID: ${{ secrets.NOTION_DB_ID }}
+        run: python automation/youtube-keywords/main.py
