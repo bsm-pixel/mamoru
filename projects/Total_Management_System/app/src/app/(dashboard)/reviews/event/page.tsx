@@ -359,7 +359,7 @@ export default function ReviewEventPage() {
             <button onClick={() => setSelMode('roulette')} className={`px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 border-l border-stone-200 ${selMode === 'roulette' ? 'bg-stone-900 text-white' : 'bg-white text-stone-500 hover:bg-stone-50'}`}><Dices size={13} />랜덤 룰렛</button>
           </div>
 
-          <p className="text-xs text-stone-500 mb-3">선정 대상 · <b className="text-stone-700">{poolRangeLabel} 작성 후기</b></p>
+          <p className="text-xs text-stone-500 mb-3">선정 대상 · <b className="text-stone-700">{poolRangeLabel} 작성 후기</b> <span className="text-stone-400">· 총 {reviews.length}명</span></p>
 
           {reviews.length === 0 && !loading && <div className="text-sm text-stone-400 py-8 text-center">이 기간에 등록된 후기가 없습니다.</div>}
 
