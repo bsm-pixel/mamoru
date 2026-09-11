@@ -164,6 +164,17 @@ export default function ReviewEventPage() {
     return c;
   }, [marks]);
 
+  // 선정 대상 후기 작성일 범위 라벨 (응모 시작일 ~ 이벤트 달). 예: '7월~9월' / 단일이면 '9월'
+  const poolRangeLabel = useMemo(() => {
+    const endM = parseInt(month.slice(2, 4), 10);
+    let startM = endM;
+    if (config.entry_start) {
+      const d = new Date(config.entry_start);
+      startM = new Date(d.getTime() + 9 * 3600 * 1000).getUTCMonth() + 1;
+    }
+    return startM === endM ? `${endM}월` : `${startM}월~${endM}월`;
+  }, [month, config.entry_start]);
+
   function setRank(id: string, rank: number | null) {
     setDirty(true);
     setMarks((prev) => {
@@ -348,6 +359,8 @@ export default function ReviewEventPage() {
             <button onClick={() => setSelMode('roulette')} className={`px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5 border-l border-stone-200 ${selMode === 'roulette' ? 'bg-stone-900 text-white' : 'bg-white text-stone-500 hover:bg-stone-50'}`}><Dices size={13} />랜덤 룰렛</button>
           </div>
 
+          <p className="text-xs text-stone-500 mb-3">선정 대상 · <b className="text-stone-700">{poolRangeLabel} 작성 후기</b></p>
+
           {reviews.length === 0 && !loading && <div className="text-sm text-stone-400 py-8 text-center">이 기간에 등록된 후기가 없습니다.</div>}
 
           {selMode === 'manual' && (
@@ -414,7 +427,7 @@ export default function ReviewEventPage() {
                 className="mt-6 px-8 py-3 rounded-full bg-white text-stone-900 font-bold text-sm hover:bg-stone-100 disabled:opacity-50 inline-flex items-center gap-2">
                 {spinning ? <><Loader2 size={16} className="animate-spin" />추첨 중…</> : <><Dices size={16} />{drawRank}등 추첨하기</>}
               </button>
-              <div className="mt-3 text-[11px] text-stone-500">남은 후보 {reviews.filter((r) => !marks[r.id]).length}명 · 이미 뽑힌 사람 제외 · 완전 랜덤</div>
+              <div className="mt-3 text-[11px] text-stone-500">이미 뽑힌 분은 제외 · 완전 랜덤</div>
             </div>
 
             {/* 선정된 당첨자 명단 */}
