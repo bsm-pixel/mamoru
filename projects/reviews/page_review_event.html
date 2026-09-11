@@ -206,8 +206,8 @@
         <span class="re-imgph">이달의 1등 상품<br>이미지</span>
       </div>
 
-      <!-- ✏️ 수정가능: 마감일 → data-deadline. 말일 24시 = 다음 달 1일 00:00 (예: 8월 마감 → 2026-09-01T00:00:00) -->
-      <div class="re-count" id="reCount" data-deadline="2026-09-01T00:00:00" data-draw-override="9월 11일 (금) 오후 8시">
+      <!-- ✏️ 수정가능: 마감일 → data-deadline. 말일 24시 = 다음 달 1일 00:00 (통합 8~9월 라운드 → 9월 말일 = 2026-10-01T00:00:00) -->
+      <div class="re-count" id="reCount" data-deadline="2026-10-01T00:00:00">
         <div class="re-count__box"><div class="re-count__n" data-c="d">--</div><div class="re-count__l">Days</div></div>
         <div class="re-count__sep">:</div>
         <div class="re-count__box"><div class="re-count__n" data-c="h">--</div><div class="re-count__l">Hours</div></div>
@@ -216,12 +216,12 @@
         <div class="re-count__sep">:</div>
         <div class="re-count__box"><div class="re-count__n" data-c="s">--</div><div class="re-count__l">Sec</div></div>
       </div>
-      <p class="re-deadline">이달의 후기 마감 · <b style="color:var(--sand);">2026년 8월 31일 24시</b>까지</p>
+      <p class="re-deadline">이달의 후기 마감 · <b style="color:var(--sand);">2026년 9월 30일 24시</b>까지</p>
       <!-- 추첨일 = 다음 달 첫째 금요일 오후 8시 (마감일 기준 자동 계산, JS) -->
       <p class="re-draw" id="reDraw"></p>
 
-      <!-- ✏️ 발표 연기 공지 (연기 해제 시 이 블록 + 위 data-draw-override 삭제) -->
-      <div class="re-notice">📢 첫 회차 경품 준비를 위해 <b>당첨자 발표가 9월 11일(금) 오후 8시로 연기</b>되었습니다. 조금만 기다려주세요 🙏</div>
+      <!-- ✏️ 안내 공지 (필요 없을 땐 이 블록 삭제) -->
+      <div class="re-notice">📢 <b>8월·9월 후기를 함께 모아</b> 선정합니다. 발표는 <b>10월 초</b>예요 🙏</div>
 
       <p class="re-hero__note">제품과 함께 받으신 <b>카카오 알림톡의 '후기 남기기'</b>로 참여하세요.</p>
     </div>
@@ -400,7 +400,7 @@
       <p class="mm-label">NOTICE</p>
       <ul class="re-notes" style="margin-top:14px;">
         <!-- ✏️ 수정가능: 유의사항 (추첨일·추첨기준·당첨자 안내 포함) -->
-        <li>후기는 매월 1일~말일 작성분이 해당 월 이벤트에 별도 신청 없이 자동 응모됩니다.</li>
+        <li>이번 회차는 8~9월 작성 후기를 함께 모아 선정합니다. (이후 매월 1일~말일 단위로 진행)</li>
         <li>응모 마감은 매월 말일 24시, 당첨 발표는 다음 달 첫째 금요일 오후 8시입니다.</li>
         <li>당첨자는 후기의 진정성을 기준으로 베스트를 선정합니다.</li>
         <li>부적절하거나 허위로 판단되는 후기는 선정에서 제외됩니다.</li>
