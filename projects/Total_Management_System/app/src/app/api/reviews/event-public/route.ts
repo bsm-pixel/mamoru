@@ -21,7 +21,7 @@ export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-interface Prize { rank: number; name?: string; desc?: string; image_url?: string; count?: number }
+interface Prize { rank: number; label?: string; name?: string; desc?: string; image_url?: string; count?: number }
 interface WinnerRow {
   event_month: string; event_rank: number;
   name: string | null; phone: string | null;
@@ -79,6 +79,7 @@ export async function GET() {
         label: monthLabel(c.month),
         winners: winnersByMonth[c.month].map((w) => ({
           rank: w.event_rank,
+          rank_label: ((Array.isArray(c.prizes) ? c.prizes : []).find((p) => p.rank === w.event_rank)?.label || '').trim() || `${w.event_rank}등`,
           name: displayWinnerName(w.name, w.event_display_name),
           phone: maskPhoneEvent(w.phone),
           route: (w.event_route || w.product || '').trim(),

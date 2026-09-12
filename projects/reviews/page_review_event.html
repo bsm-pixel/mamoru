@@ -604,7 +604,7 @@ function drawDateText(iso){
 
   function winnerCard(w){
     var photos = (w.photos&&w.photos.length) ? '<div class="re-rc__photos">'+w.photos.map(function(u){return '<img class="re-rc__photo" src="'+esc(u)+'">';}).join('')+'</div>' : '';
-    return '<div class="re-rc" data-rank="'+esc(w.rank)+'등" data-who="'+esc(w.name)+'" data-phone="'+esc(w.phone)+'" data-route="'+esc(w.route)+'">'
+    return '<div class="re-rc" data-rank="'+esc(w.rank_label||(w.rank+'등'))+'" data-who="'+esc(w.name)+'" data-phone="'+esc(w.phone)+'" data-route="'+esc(w.route)+'">'
       +'<div class="re-rc__hd"><span class="re-rc__who">'+esc(w.name)+'</span>'+(w.phone?'<span class="re-rc__phone">'+esc(w.phone)+'</span>':'')+'</div>'
       +(w.route?'<div class="re-rc__route">'+esc(w.route)+'</div>':'')
       +'<p class="re-rc__review">'+esc(w.review)+'</p>'+photos
@@ -620,7 +620,7 @@ function drawDateText(iso){
       var prod = p.image_url ? '<img src="'+esc(p.image_url)+'" alt="">' : '<span class="re-rank__prodph">'+rank+'등<br>상품<br>이미지</span>';
       var swipe = ws.length>1 ? '<span class="re-rank__swipe">← 옆으로 밀어보기</span>' : '';
       html+='<div class="re-rank'+(rank===1?' re-rank--1':'')+'">'
-        +'<div class="re-rank__label"><span class="re-rank__badge">'+rank+'등</span><span class="re-rank__cnt">'+ws.length+'명 당첨</span>'+swipe+'</div>'
+        +'<div class="re-rank__label"><span class="re-rank__badge">'+esc((ws[0]&&ws[0].rank_label)||(rank+'등'))+'</span><span class="re-rank__cnt">'+ws.length+'명 당첨</span>'+swipe+'</div>'
         +'<div class="re-rank__body"><div class="re-rank__prod">'+prod+'</div>'
         +'<div class="re-rank__scroll">'+ws.map(winnerCard).join('')+'</div></div></div>';
     });

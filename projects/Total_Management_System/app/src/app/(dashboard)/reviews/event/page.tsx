@@ -8,7 +8,7 @@ import { maskNameEvent, maskPhoneEvent } from '@/lib/reviews/mask';
 
 const LIVE_PAGE = 'https://page.mamoru.kr/projects/reviews/page_review_event.html';
 
-interface Prize { rank: number; name: string; desc: string; image_url: string; count: number; image_urls?: string[] }
+interface Prize { rank: number; label?: string; name: string; desc: string; image_url: string; count: number; image_urls?: string[] }
 interface EventConfig {
   deadline: string | null;
   announce_at: string | null;
@@ -70,9 +70,9 @@ function kstDateToISO(dateStr: string): string | null {
 }
 
 const EMPTY_PRIZES: Prize[] = [
-  { rank: 1, name: '', desc: '', image_url: '', count: 1, image_urls: [] },
-  { rank: 2, name: '', desc: '', image_url: '', count: 0, image_urls: [] },
-  { rank: 3, name: '', desc: '', image_url: '', count: 0, image_urls: [] },
+  { rank: 1, label: '', name: '', desc: '', image_url: '', count: 1, image_urls: [] },
+  { rank: 2, label: '', name: '', desc: '', image_url: '', count: 0, image_urls: [] },
+  { rank: 3, label: '', name: '', desc: '', image_url: '', count: 0, image_urls: [] },
 ];
 // 상품 이미지 배열 — image_urls(신) 우선, 없으면 image_url(구) 폴백(하위호환)
 function prizeImgList(p: Prize): string[] { return (Array.isArray(p.image_urls) && p.image_urls.length) ? p.image_urls.filter(Boolean) : (p.image_url ? [p.image_url] : []); }
@@ -92,6 +92,7 @@ export default function ReviewEventPage() {
   const [spinning, setSpinning] = useState(false);
   const [reel, setReel] = useState<string>('');
   const [wonId, setWonId] = useState<string | null>(null);
+  const [wonRank, setWonRank] = useState<number | null>(null);   // 당첨 연출용(등급별)
   const spinTimer = useRef<number | null>(null);
   useEffect(() => () => { if (spinTimer.current) window.clearTimeout(spinTimer.current); }, []);
 
@@ -107,7 +108,7 @@ export default function ReviewEventPage() {
         announce_at: cfg.announce_at ?? null,
         entry_start: cfg.entry_start ?? null,
         hero_image_url: cfg.hero_image_url ?? null,
-        prizes: (Array.isArray(cfg.prizes) && cfg.prizes.length ? cfg.prizes : EMPTY_PRIZES).map((p: Prize, i: number) => { const imgs = prizeImgList(p); return { rank: p.rank ?? i + 1, name: p.name ?? '', desc: p.desc ?? '', image_url: imgs[0] ?? '', count: p.count ?? 0, image_urls: imgs }; }),
+        prizes: (Array.isArray(cfg.prizes) && cfg.prizes.length ? cfg.prizes : EMPTY_PRIZES).map((p: Prize, i: number) => { const imgs = prizeImgList(p); return { rank: p.rank ?? i + 1, label: p.label ?? '', name: p.name ?? '', desc: p.desc ?? '', image_url: imgs[0] ?? '', count: p.count ?? 0, image_urls: imgs }; }),
         status: cfg.status ?? 'draft',
       } : { deadline: null, announce_at: null, entry_start: null, hero_image_url: null, prizes: EMPTY_PRIZES, status: 'draft' });
       const rv: ReviewRow[] = data.reviews || [];
@@ -203,29 +204,51 @@ export default function ReviewEventPage() {
     const a = new Uint32Array(1); crypto.getRandomValues(a);
     return a[0] % n;
   }
-  // 슬롯 이름 릴 추첨: 미당첨 후보 중 랜덤 1명 → 감속 정지 → 기존 marks 에 주입(저장 전 스테이징)
+  // 상 이름(라벨) — 상품 설정에 입력한 이름, 없으면 'N등'
+  function rankLabel(rank: number): string {
+    const l = (config.prizes.find((p) => p.rank === rank)?.label || '').trim();
+    return l || `${rank}등`;
+  }
+  // 등급별 당첨 연출(이모지·색·글로우)
+  function rankFx(rank: number | null) {
+    if (rank === 1) return { emoji: '👑', text: 'text-amber-300', ring: 'ring-2 ring-amber-400/60' };
+    if (rank === 2) return { emoji: '🥈', text: 'text-slate-200', ring: 'ring-2 ring-slate-300/50' };
+    if (rank === 3) return { emoji: '🥉', text: 'text-orange-300', ring: 'ring-2 ring-orange-500/40' };
+    return { emoji: '🎉', text: 'text-amber-300', ring: 'ring-2 ring-amber-400/50' };
+  }
+  // [추첨] 한 번 = 그 상의 목표 인원만큼 자동 연속 추첨(한 명씩 연출)
   function spinDraw() {
     if (spinning) return;
     const rank = drawRank;
     const target = config.prizes.find((p) => p.rank === rank)?.count || 0;
-    if (target > 0 && (counts[rank] || 0) >= target) { setMsg(`${rank}등은 이미 ${target}명 다 뽑았어요.`); return; }
-    const pool = reviews.filter((r) => !marks[r.id]);   // 이미 뽑힌 사람 제외
-    if (pool.length === 0) { setMsg('추첨할 후보가 없습니다. (모두 이미 선정됨)'); return; }
-    setMsg(''); setSpinning(true); setWonId(null);
+    if (target <= 0) { setMsg(`${rankLabel(rank)}는 '명 추첨' 인원이 0이에요. 상품 설정에서 인원을 정하세요.`); return; }
+    const need = target - (counts[rank] || 0);
+    if (need <= 0) { setMsg(`${rankLabel(rank)}는 이미 ${target}명 다 뽑았어요.`); return; }
+    if (reviews.filter((r) => !marks[r.id]).length === 0) { setMsg('추첨할 후보가 없습니다. (모두 이미 선정됨)'); return; }
+    setMsg('');
+    runDraws(rank, need, new Set(Object.keys(marks)));
+  }
+  // need 명을 한 명씩 순차 추첨(각 당첨 연출 1.7초 보여주고 다음)
+  function runDraws(rank: number, remaining: number, drawn: Set<string>) {
+    const pool = reviews.filter((r) => !drawn.has(r.id));
+    if (remaining <= 0 || pool.length === 0) { setSpinning(false); return; }
+    setSpinning(true); setWonId(null);
     const winner = pool[randInt(pool.length)];
-    const total = 32; let step = 0;
+    const total = 30; let step = 0;
     const tick = () => {
       if (step < total) {
         setReel(maskCand(pool[randInt(pool.length)]));
         step++;
-        const t = step / total;
-        const delay = 40 + Math.pow(t, 3) * 320;         // 뒤로 갈수록 느려짐(서스펜스)
-        spinTimer.current = window.setTimeout(tick, delay);
+        spinTimer.current = window.setTimeout(tick, 40 + Math.pow(step / total, 3) * 300);
       } else {
         setReel(maskCand(winner));
-        setWonId(winner.id);
-        setRank(winner.id, rank);                        // 당첨 확정 → marks 반영(공개는 [선정자 게시하기] 눌러야)
-        setSpinning(false);
+        setWonId(winner.id); setWonRank(rank);
+        setRank(winner.id, rank);                        // 당첨 확정 → marks 반영(공개는 [선정자 게시하기])
+        drawn.add(winner.id);
+        spinTimer.current = window.setTimeout(() => {
+          if (remaining - 1 > 0 && pool.length - 1 > 0) runDraws(rank, remaining - 1, drawn);
+          else setSpinning(false);                       // 마지막 당첨 연출 유지
+        }, 1700);
       }
     };
     tick();
@@ -323,10 +346,11 @@ export default function ReviewEventPage() {
             {config.prizes.map((p, idx) => (
               <div key={p.rank} className="border border-stone-100 rounded-lg p-3 bg-stone-50/60">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold text-white bg-stone-800 rounded-full px-2 py-0.5">{p.rank}등</span>
+                  <span className="text-xs font-bold text-white bg-stone-800 rounded-full px-2 py-0.5">{(p.label || '').trim() || `${p.rank}등`}</span>
                   <input type="number" min={0} value={p.count} onChange={(e) => setPrize(idx, 'count', parseInt(e.target.value) || 0)} className="w-16 px-2 py-1 rounded border border-stone-200 text-sm" />
                   <span className="text-xs text-stone-500">명 추첨</span>
                 </div>
+                <input placeholder={`상 이름 (예: ${p.rank}등 · 아차상 · 정성상 — 비우면 '${p.rank}등')`} value={p.label || ''} onChange={(e) => setPrize(idx, 'label', e.target.value)} className="w-full mb-2 px-2.5 py-1.5 rounded border border-stone-200 text-sm font-medium" />
                 <input placeholder="상품명 (예: 프리미엄 가위 1자루)" value={p.name} onChange={(e) => setPrize(idx, 'name', e.target.value)} className="w-full mb-2 px-2.5 py-1.5 rounded border border-stone-200 text-sm" />
                 <input placeholder="한 줄 설명 (선택)" value={p.desc} onChange={(e) => setPrize(idx, 'desc', e.target.value)} className="w-full mb-2 px-2.5 py-1.5 rounded border border-stone-200 text-sm" />
                 <div className="flex items-center gap-2 flex-wrap">
@@ -353,7 +377,7 @@ export default function ReviewEventPage() {
         <section className="border border-stone-200 rounded-xl p-4 bg-white">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-stone-800 flex items-center gap-1.5"><Star size={16} />응모자 · 등수 선정</h2>
-            <span className="text-xs text-stone-500">1등 {counts[1] || 0} · 2등 {counts[2] || 0} · 3등 {counts[3] || 0}</span>
+            <span className="text-xs text-stone-500">{rankLabel(1)} {counts[1] || 0} · {rankLabel(2)} {counts[2] || 0} · {rankLabel(3)} {counts[3] || 0}</span>
           </div>
 
           {/* 선정 모드: 직접 지정 / 랜덤 룰렛 */}
@@ -413,7 +437,7 @@ export default function ReviewEventPage() {
                 return (
                   <button key={rank} disabled={spinning || target === 0} onClick={() => setDrawRank(rank)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border disabled:opacity-40 ${drawRank === rank ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'}`}>
-                    {rank}등 <span className="opacity-70">{done}/{target}</span>{full ? ' ✓' : ''}
+                    {rankLabel(rank)} <span className="opacity-70">{done}/{target}</span>{full ? ' ✓' : ''}
                   </button>
                 );
               })}
@@ -422,17 +446,17 @@ export default function ReviewEventPage() {
             </div>
 
             {/* 슬롯 이름 릴 — 다크·큰 글씨(화면 녹화 구도) */}
-            <div className="rounded-2xl bg-stone-900 text-white px-6 py-10 text-center">
-              <div className="text-[11px] tracking-[0.2em] text-stone-400 uppercase mb-4">MAMORU REAL REVIEW · {drawRank}등 추첨</div>
-              <div className={`font-extrabold transition-transform ${wonId && !spinning ? 'text-3xl md:text-4xl text-white scale-105' : 'text-2xl md:text-3xl text-stone-200'}`} style={{ minHeight: '2.4em', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className={`rounded-2xl bg-stone-900 text-white px-6 py-10 text-center transition-shadow duration-300 ${wonId && !spinning ? rankFx(wonRank).ring : ''}`}>
+              <div className="text-[11px] tracking-[0.2em] text-stone-400 uppercase mb-4">MAMORU REAL REVIEW · {rankLabel(drawRank)} 추첨</div>
+              <div className={`font-extrabold transition-all duration-300 ${wonId && !spinning ? 'text-3xl md:text-4xl scale-110 ' + rankFx(wonRank).text : 'text-2xl md:text-3xl text-stone-200'}`} style={{ minHeight: '2.4em', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {reel || '추첨을 시작하세요'}
               </div>
-              {wonId && !spinning && <div className="mt-2 text-sm text-amber-300 font-semibold flex items-center justify-center gap-1.5"><PartyPopper size={16} />당첨!</div>}
+              {wonId && !spinning && <div className={`mt-3 text-base font-extrabold flex items-center justify-center gap-1.5 ${rankFx(wonRank).text}`}><span className="text-2xl animate-bounce">{rankFx(wonRank).emoji}</span>{rankLabel(wonRank ?? drawRank)} 당첨!</div>}
               <button onClick={spinDraw} disabled={spinning}
                 className="mt-6 px-8 py-3 rounded-full bg-white text-stone-900 font-bold text-sm hover:bg-stone-100 disabled:opacity-50 inline-flex items-center gap-2">
-                {spinning ? <><Loader2 size={16} className="animate-spin" />추첨 중…</> : <><Dices size={16} />{drawRank}등 추첨하기</>}
+                {spinning ? <><Loader2 size={16} className="animate-spin" />추첨 중…</> : <><Dices size={16} />{rankLabel(drawRank)} 추첨하기</>}
               </button>
-              <div className="mt-3 text-[11px] text-stone-500">이미 뽑힌 분은 제외 · 완전 랜덤</div>
+              <div className="mt-3 text-[11px] text-stone-500">이미 뽑힌 분 제외 · 완전 랜덤 · [추첨]=목표 인원만큼 자동 연속</div>
             </div>
 
             {/* 선정된 당첨자 명단 */}
@@ -444,7 +468,7 @@ export default function ReviewEventPage() {
                 <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
                   {reviews.filter((r) => marks[r.id]).sort((a, b) => marks[a.id].rank - marks[b.id].rank).map((r) => (
                     <div key={r.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg bg-amber-50/50 border border-amber-200">
-                      <span className="text-xs font-bold text-white bg-stone-800 rounded-full px-2 py-0.5">{marks[r.id].rank}등</span>
+                      <span className="text-xs font-bold text-white bg-stone-800 rounded-full px-2 py-0.5">{rankLabel(marks[r.id].rank)}</span>
                       <span className="text-stone-800">{maskCand(r)}</span>
                       <button onClick={() => setRank(r.id, null)} className="ml-auto text-xs text-rose-500 hover:bg-rose-50 rounded px-1.5 py-0.5">제외</button>
                     </div>
