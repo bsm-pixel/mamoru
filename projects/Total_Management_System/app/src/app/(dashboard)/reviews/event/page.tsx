@@ -167,12 +167,14 @@ export default function ReviewEventPage() {
   // 선정 대상 후기 작성일 범위 라벨 (응모 시작일 ~ 이벤트 달). 예: '7월~9월' / 단일이면 '9월'
   const poolRangeLabel = useMemo(() => {
     const endM = parseInt(month.slice(2, 4), 10);
-    let startM = endM;
+    const endY = 2000 + parseInt(month.slice(0, 2), 10);
     if (config.entry_start) {
-      const d = new Date(config.entry_start);
-      startM = new Date(d.getTime() + 9 * 3600 * 1000).getUTCMonth() + 1;
+      const k = new Date(new Date(config.entry_start).getTime() + 9 * 3600 * 1000);
+      const sY = k.getUTCFullYear(), sM = k.getUTCMonth() + 1;
+      if (sY < endY) return '전체 기간';                       // 시작일 해가 이벤트 해보다 이전 = 처음부터 전체
+      return sM === endM ? `${endM}월` : `${sM}월~${endM}월`;
     }
-    return startM === endM ? `${endM}월` : `${startM}월~${endM}월`;
+    return `${endM}월`;
   }, [month, config.entry_start]);
 
   function setRank(id: string, rank: number | null) {
@@ -305,6 +307,7 @@ export default function ReviewEventPage() {
           <label className="block text-xs text-stone-500 mb-1">응모 시작일 (선택 · 응모자 집계 하한)</label>
           <div className="flex items-center gap-2 mb-1">
             <input type="date" value={isoToKstDate(config.entry_start)} onChange={(e) => { const iso = kstDateToISO(e.target.value); setDirty(true); setConfig((c) => ({ ...c, entry_start: iso })); reloadPool(month, e.target.value); }} className="flex-1 px-3 py-2 rounded-lg border border-stone-200 text-sm" />
+            <button type="button" onClick={() => { setDirty(true); setConfig((c) => ({ ...c, entry_start: kstDateToISO('2000-01-01') })); reloadPool(month, '2000-01-01'); }} className="px-2.5 py-2 rounded-lg border border-stone-300 bg-stone-50 text-xs text-stone-700 font-medium hover:bg-stone-100 whitespace-nowrap">처음부터 전체</button>
             {config.entry_start && <button type="button" onClick={() => { setDirty(true); setConfig((c) => ({ ...c, entry_start: null })); reloadPool(month, ''); }} className="px-2.5 py-2 rounded-lg border border-stone-200 text-xs text-stone-500 hover:bg-stone-50">지우기</button>}
           </div>
           <p className="text-[11px] text-stone-400 mb-3">비우면 <b>{monthTitle(month)} 1일</b>부터 집계. 첫 회차처럼 과거 후기까지 포함하려면 시작일을 앞당겨 지정하세요. (끝은 항상 그 달 말일)</p>
@@ -414,6 +417,8 @@ export default function ReviewEventPage() {
                   </button>
                 );
               })}
+              {/* 선정 대상 인원 — 다크 릴 바깥(녹화 프레임에 안 잡히는 위치) */}
+              <span className="ml-auto text-xs text-stone-500">🎯 선정 대상 <b className="text-stone-700">{reviews.length}명</b> <span className="text-stone-400">(미당첨 {reviews.filter((r) => !marks[r.id]).length})</span></span>
             </div>
 
             {/* 슬롯 이름 릴 — 다크·큰 글씨(화면 녹화 구도) */}
@@ -495,7 +500,7 @@ export default function ReviewEventPage() {
         · <b>랜덤 룰렛</b> = 미당첨 후보 중 완전 랜덤 추첨(이미 뽑힌 사람 제외). 뽑아도 <b>바로 공개되지 않아요</b>.<br />
         · 선정을 마치면 <b>[선정자 게시하기]</b>를 눌러야 고객 페이지 <b>지난 당첨자</b>에 공개(=발표됨)됩니다.<br />
         · 표시명을 비우면 자동 마스킹 — 예: <b>백*민 님 (3562)</b> (성 가운데 *, 전화 뒷 4자리).<br />
-        · 응모 시작일을 앞당기면(예: 7/1) 여러 달(7~9월) 후기를 한 풀에서 선정할 수 있어요.
+        · 응모 시작일을 앞당기거나 <b>[처음부터 전체]</b> 버튼을 누르면 지금까지의 <b>모든 후기</b>를 한 풀에서 선정합니다(라벨=“전체 기간”). 룰렛 화면 상단에 <b>선정 대상 인원</b>도 표시돼요(다크 릴 바깥이라 녹화엔 안 잡힘).
       </p>
     </div>
   );
