@@ -14,7 +14,7 @@
  *   - 따라서 GET 후 있으면 PUT, 없으면 POST
  */
 
-import { createServiceClient } from '@/lib/supabase/server';
+import { getOpenApiToken } from './openapi-token';
 
 const OPENAPI_BASE = 'https://openapi.imweb.me';
 
@@ -27,74 +27,6 @@ export interface ImwebScriptRecord {
   scriptContent: string;
   wtime: string;
   mtime: string;
-}
-
-/** OpenAPI 토큰 로드 (만료 시 refresh) — client.ts의 로직 재사용 */
-async function getOpenApiToken(): Promise<string> {
-  const db = createServiceClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbAny = db as any;
-
-  const { data: settings } = await dbAny
-    .from('system_settings')
-    .select('key, value')
-    .in('key', [
-      'imweb_openapi.access_token',
-      'imweb_openapi.refresh_token',
-      'imweb_openapi.token_updated_at',
-    ]);
-
-  if (!settings || settings.length === 0) {
-    throw new Error('아임웹 OpenAPI 토큰이 없습니다. OAuth 재연결이 필요합니다.');
-  }
-
-  const map: Record<string, string> = {};
-  for (const s of settings) map[s.key] = s.value;
-
-  const accessToken = map['imweb_openapi.access_token'];
-  const refreshToken = map['imweb_openapi.refresh_token'];
-  const updatedAt = map['imweb_openapi.token_updated_at'];
-
-  if (!accessToken) {
-    throw new Error('아임웹 OpenAPI access_token 없음 — OAuth 재연결 필요');
-  }
-
-  // 50분 이내면 그대로 사용
-  const tokenAge = Date.now() - new Date(updatedAt || 0).getTime();
-  if (tokenAge < 50 * 60 * 1000) {
-    return accessToken;
-  }
-
-  // 만료 → refresh
-  if (!refreshToken) {
-    throw new Error('refresh_token 없음 — OAuth 재연결 필요');
-  }
-
-  const res = await fetch(`${OPENAPI_BASE}/oauth2/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      clientId: process.env.IMWEB_OPENAPI_KEY || '',
-      clientSecret: process.env.IMWEB_OPENAPI_SECRET || '',
-      grantType: 'refresh_token',
-      refreshToken,
-    }),
-  });
-
-  const data = await res.json();
-  if (!res.ok || data.statusCode !== 200) {
-    throw new Error(`토큰 갱신 실패: ${res.status} ${JSON.stringify(data)}`);
-  }
-
-  const newAccess = data.data.accessToken;
-  const newRefresh = data.data.refreshToken;
-  const now = new Date().toISOString();
-
-  await dbAny.from('system_settings').upsert({ key: 'imweb_openapi.access_token', value: newAccess, updated_at: now }, { onConflict: 'key' });
-  await dbAny.from('system_settings').upsert({ key: 'imweb_openapi.refresh_token', value: newRefresh, updated_at: now }, { onConflict: 'key' });
-  await dbAny.from('system_settings').upsert({ key: 'imweb_openapi.token_updated_at', value: now, updated_at: now }, { onConflict: 'key' });
-
-  return newAccess;
 }
 
 interface ImwebApiEnvelope<T> {

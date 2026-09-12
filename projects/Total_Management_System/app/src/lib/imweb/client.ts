@@ -12,6 +12,9 @@ import type {
   ImwebOrdersParams,
   ImwebProdOrder,
 } from './types';
+// 아임웹 OpenAPI 토큰 로직은 단일 직렬화 모듈로 이전 (rotation 경쟁 → 30170 방지)
+import { getOpenApiToken } from './openapi-token';
+export { forceRefreshOpenApiToken } from './openapi-token';
 
 const BASE_URL = 'https://api.imweb.me';
 
@@ -79,123 +82,6 @@ export async function getImwebProducts(
 }
 
 /** 새 OpenAPI 토큰 — DB에서 읽고 만료 시 refreshToken으로 갱신 */
-let cachedOpenApiToken: { token: string; expiresAt: number } | null = null;
-
-async function getOpenApiToken(): Promise<string> {
-  // 메모리 캐시 유효하면 바로 반환
-  if (cachedOpenApiToken && Date.now() < cachedOpenApiToken.expiresAt - 60_000) {
-    return cachedOpenApiToken.token;
-  }
-
-  // DB에서 토큰 읽기
-  const { createServiceClient } = await import('@/lib/supabase/server');
-  const db = createServiceClient() as ReturnType<typeof createServiceClient> & { from: (...args: unknown[]) => unknown };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbAny = db as any;
-
-  const { data: settings } = await dbAny
-    .from('system_settings')
-    .select('key, value')
-    .in('key', ['imweb_openapi.access_token', 'imweb_openapi.refresh_token', 'imweb_openapi.token_updated_at']);
-
-  if (!settings || settings.length === 0) {
-    throw new Error('아임웹 OpenAPI 토큰이 없습니다. 설정 > 아임웹 연동에서 OAuth 인증을 진행해주세요.');
-  }
-
-  const tokenMap: Record<string, string> = {};
-  for (const s of settings) tokenMap[s.key] = s.value;
-
-  const accessToken = tokenMap['imweb_openapi.access_token'];
-  const refreshToken = tokenMap['imweb_openapi.refresh_token'];
-  const updatedAt = tokenMap['imweb_openapi.token_updated_at'];
-
-  if (!accessToken) {
-    throw new Error('아임웹 OpenAPI 토큰이 없습니다. OAuth 인증을 진행해주세요.');
-  }
-
-  // 토큰 발급 후 50분 이내면 유효 (아임웹 토큰 만료: 보통 1시간)
-  const tokenAge = Date.now() - new Date(updatedAt || 0).getTime();
-  if (tokenAge < 50 * 60 * 1000) {
-    cachedOpenApiToken = { token: accessToken, expiresAt: new Date(updatedAt).getTime() + 60 * 60 * 1000 };
-    return accessToken;
-  }
-
-  // 토큰 만료 → refreshToken으로 갱신
-  if (!refreshToken) {
-    throw new Error('아임웹 OpenAPI refreshToken이 없습니다. 재인증이 필요합니다.');
-  }
-
-  const res = await fetch('https://openapi.imweb.me/oauth2/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      clientId: process.env.IMWEB_OPENAPI_KEY || '',
-      clientSecret: process.env.IMWEB_OPENAPI_SECRET || '',
-      grantType: 'refresh_token',
-      refreshToken,
-    }),
-  });
-
-  const data = await res.json();
-
-  if (!res.ok || data.statusCode !== 200) {
-    throw new Error(`아임웹 OpenAPI 토큰 갱신 실패: ${res.status} ${JSON.stringify(data)}`);
-  }
-
-  const newAccess = data.data.accessToken;
-  const newRefresh = data.data.refreshToken;
-  const now = new Date().toISOString();
-
-  // DB 업데이트
-  await dbAny.from('system_settings').upsert({ key: 'imweb_openapi.access_token', value: newAccess, updated_at: now }, { onConflict: 'key' });
-  await dbAny.from('system_settings').upsert({ key: 'imweb_openapi.refresh_token', value: newRefresh, updated_at: now }, { onConflict: 'key' });
-  await dbAny.from('system_settings').upsert({ key: 'imweb_openapi.token_updated_at', value: now, updated_at: now }, { onConflict: 'key' });
-
-  cachedOpenApiToken = { token: newAccess, expiresAt: Date.now() + 60 * 60 * 1000 };
-  return newAccess;
-}
-
-/**
- * 아임웹 OpenAPI 토큰 강제 갱신 (keep-alive 크론용).
- * 만료 여부와 무관하게 refresh_token으로 새 access/refresh 토큰을 발급받아 rotation 체인을 살려둔다.
- * → 판매가 뜸한 기간에도 토큰이 방치로 죽지 않게 한다.
- */
-export async function forceRefreshOpenApiToken(): Promise<{ ok: boolean; error?: string; updatedAt?: string }> {
-  const { createServiceClient } = await import('@/lib/supabase/server');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbAny = createServiceClient() as any;
-  const { data: settings } = await dbAny
-    .from('system_settings')
-    .select('key, value')
-    .in('key', ['imweb_openapi.refresh_token']);
-  const refreshToken = (settings || []).find((s: { key: string }) => s.key === 'imweb_openapi.refresh_token')?.value;
-  if (!refreshToken) return { ok: false, error: 'refresh_token 없음 — 재연결 필요' };
-
-  const res = await fetch(`https://openapi.imweb.me/oauth2/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      clientId: process.env.IMWEB_OPENAPI_KEY || '',
-      clientSecret: process.env.IMWEB_OPENAPI_SECRET || '',
-      grantType: 'refresh_token',
-      refreshToken,
-    }),
-  });
-  const data = await res.json();
-  if (!res.ok || data.statusCode !== 200) {
-    return { ok: false, error: `토큰 갱신 실패: ${res.status} ${JSON.stringify(data)}` };
-  }
-
-  const newAccess = data.data.accessToken;
-  const newRefresh = data.data.refreshToken;
-  const now = new Date().toISOString();
-  await dbAny.from('system_settings').upsert({ key: 'imweb_openapi.access_token', value: newAccess, updated_at: now }, { onConflict: 'key' });
-  await dbAny.from('system_settings').upsert({ key: 'imweb_openapi.refresh_token', value: newRefresh, updated_at: now }, { onConflict: 'key' });
-  await dbAny.from('system_settings').upsert({ key: 'imweb_openapi.token_updated_at', value: now, updated_at: now }, { onConflict: 'key' });
-  cachedOpenApiToken = { token: newAccess, expiresAt: Date.now() + 60 * 60 * 1000 };
-  return { ok: true, updatedAt: now };
-}
-
 /**
  * 아임웹 OpenAPI 연결 상태 진단 (설정 화면용).
  * 재고 push가 의존하는 getOpenApiToken()을 실제로 호출해 유효성을 검증한다.
