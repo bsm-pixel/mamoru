@@ -93,6 +93,7 @@ export default function ReviewEventPage() {
   const [reel, setReel] = useState<string>('');
   const [wonId, setWonId] = useState<string | null>(null);
   const [wonRank, setWonRank] = useState<number | null>(null);   // 당첨 연출용(등급별)
+  const [reveal, setReveal] = useState(false);                   // 당첨 연출 표시: 릴 도는 중=false, 한 명 확정 후 유지=true
   const spinTimer = useRef<number | null>(null);
   useEffect(() => () => { if (spinTimer.current) window.clearTimeout(spinTimer.current); }, []);
 
@@ -232,7 +233,7 @@ export default function ReviewEventPage() {
   function runDraws(rank: number, remaining: number, drawn: Set<string>) {
     const pool = reviews.filter((r) => !drawn.has(r.id));
     if (remaining <= 0 || pool.length === 0) { setSpinning(false); return; }
-    setSpinning(true); setWonId(null);
+    setSpinning(true); setWonId(null); setReveal(false);   // 새 스핀 시작 → 이전 당첨 연출 끔
     const winner = pool[randInt(pool.length)];
     const total = 30; let step = 0;
     const tick = () => {
@@ -242,12 +243,12 @@ export default function ReviewEventPage() {
         spinTimer.current = window.setTimeout(tick, 40 + Math.pow(step / total, 3) * 300);
       } else {
         setReel(maskCand(winner));
-        setWonId(winner.id); setWonRank(rank);
+        setWonId(winner.id); setWonRank(rank); setReveal(true);   // 한 명 확정 → 이 당첨자 연출 ON(매 명마다)
         setRank(winner.id, rank);                        // 당첨 확정 → marks 반영(공개는 [선정자 게시하기])
         drawn.add(winner.id);
         spinTimer.current = window.setTimeout(() => {
           if (remaining - 1 > 0 && pool.length - 1 > 0) runDraws(rank, remaining - 1, drawn);
-          else setSpinning(false);                       // 마지막 당첨 연출 유지
+          else setSpinning(false);                       // 마지막 당첨 연출 유지(reveal=true 그대로)
         }, 1700);
       }
     };
@@ -446,12 +447,13 @@ export default function ReviewEventPage() {
             </div>
 
             {/* 슬롯 이름 릴 — 다크·큰 글씨(화면 녹화 구도) */}
-            <div className={`rounded-2xl bg-stone-900 text-white px-6 py-10 text-center transition-shadow duration-300 ${wonId && !spinning ? rankFx(wonRank).ring : ''}`}>
-              <div className="text-[11px] tracking-[0.2em] text-stone-400 uppercase mb-4">MAMORU REAL REVIEW · {rankLabel(drawRank)} 추첨</div>
-              <div className={`font-extrabold transition-all duration-300 ${wonId && !spinning ? 'text-3xl md:text-4xl scale-110 ' + rankFx(wonRank).text : 'text-2xl md:text-3xl text-stone-200'}`} style={{ minHeight: '2.4em', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className={`rounded-2xl bg-stone-900 text-white px-6 py-10 text-center transition-shadow duration-300 ${wonId && reveal ? rankFx(wonRank).ring : ''}`}>
+              <div className="text-[11px] tracking-[0.25em] text-stone-400 uppercase mb-1.5">MAMORU REAL REVIEW</div>
+              <div className="text-lg md:text-2xl font-bold text-stone-300 mb-5">{rankLabel(drawRank)} 추첨</div>
+              <div className={`font-extrabold transition-all duration-300 ${wonId && reveal ? 'text-3xl md:text-4xl scale-110 ' + rankFx(wonRank).text : 'text-2xl md:text-3xl text-stone-200'}`} style={{ minHeight: '2.4em', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {reel || '추첨을 시작하세요'}
               </div>
-              {wonId && !spinning && <div className={`mt-3 text-base font-extrabold flex items-center justify-center gap-1.5 ${rankFx(wonRank).text}`}><span className="text-2xl animate-bounce">{rankFx(wonRank).emoji}</span>{rankLabel(wonRank ?? drawRank)} 당첨!</div>}
+              {wonId && reveal && <div className={`mt-3 text-base font-extrabold flex items-center justify-center gap-1.5 ${rankFx(wonRank).text}`}><span className="text-2xl animate-bounce">{rankFx(wonRank).emoji}</span>{rankLabel(wonRank ?? drawRank)} 당첨!</div>}
               <button onClick={spinDraw} disabled={spinning}
                 className="mt-6 px-8 py-3 rounded-full bg-white text-stone-900 font-bold text-sm hover:bg-stone-100 disabled:opacity-50 inline-flex items-center gap-2">
                 {spinning ? <><Loader2 size={16} className="animate-spin" />추첨 중…</> : <><Dices size={16} />{rankLabel(drawRank)} 추첨하기</>}
@@ -470,7 +472,6 @@ export default function ReviewEventPage() {
                     <div key={r.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg bg-amber-50/50 border border-amber-200">
                       <span className="text-xs font-bold text-white bg-stone-800 rounded-full px-2 py-0.5">{rankLabel(marks[r.id].rank)}</span>
                       <span className="text-stone-800">{maskCand(r)}</span>
-                      <button onClick={() => setRank(r.id, null)} className="ml-auto text-xs text-rose-500 hover:bg-rose-50 rounded px-1.5 py-0.5">제외</button>
                     </div>
                   ))}
                 </div>
@@ -521,7 +522,7 @@ export default function ReviewEventPage() {
       </div>
       <p className="text-[11px] text-stone-400 mt-2 leading-relaxed">
         · <b>저장</b> = 편집한 내용을 <b>현재 게시 상태 그대로</b> 저장합니다. (이미지·상품·당첨자 변경은 저장해야 반영돼요)<br />
-        · <b>랜덤 룰렛</b> = 미당첨 후보 중 완전 랜덤 추첨(이미 뽑힌 사람 제외). 뽑아도 <b>바로 공개되지 않아요</b>.<br />
+        · <b>랜덤 룰렛</b> = 미당첨 후보 중 완전 랜덤 추첨(이미 뽑힌 사람 제외). 뽑아도 <b>바로 공개되지 않아요</b>. 잘못 뽑았으면 <b>[직접 지정]</b> 탭에서 되돌릴 수 있어요(룰렛 화면엔 제외 버튼을 숨겨 녹화 시 오해를 막습니다).<br />
         · 선정을 마치면 <b>[선정자 게시하기]</b>를 눌러야 고객 페이지 <b>지난 당첨자</b>에 공개(=발표됨)됩니다.<br />
         · 표시명을 비우면 자동 마스킹 — 예: <b>백*민 님 (3562)</b> (성 가운데 *, 전화 뒷 4자리).<br />
         · 응모 시작일을 앞당기거나 <b>[처음부터 전체]</b> 버튼을 누르면 지금까지의 <b>모든 후기</b>를 한 풀에서 선정합니다(라벨=“전체 기간”). 룰렛 화면 상단에 <b>선정 대상 인원</b>도 표시돼요(다크 릴 바깥이라 녹화엔 안 잡힘).
