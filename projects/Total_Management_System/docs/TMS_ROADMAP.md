@@ -5,6 +5,13 @@
 
 ---
 
+## ✅ 완료 (09-13): 알림톡 점검 — 구매후기 링크 404 · 발송 버그 · EVENT 범용 변수 — 마이그 `145` (커밋 d36ea21b·d6d68d91·1a21d833)
+- 구매후기: 아임웹 주문 자동후기 링크 uid를 `orders.id`로 통일 + 옛 링크(주문번호) 호환(`lib/reviews/resolve-purchase-uid.ts`)
+- 상담 일정변경 2통→1통(`skip_notify`) · 리마인드 24h/2h에 visit_date·visit_time·change_request_link · 복원수리 전 경로 `as_id` · 무상수리 입금확인 알림 중복 제거
+- EVENT: 범용 템플릿용 `event_name`(캠페인명, 3종)·`event_notice`(`event_campaigns.customer_notice`, 접수) 추가 — 헬퍼 `lib/event/campaign-notify.ts`, 캠페인 설정 모달에 안내 문구 입력(80자)
+- 기준 문서: 노션 「알림톡 템플릿 매뉴얼 (허브)」 카탈로그(Make 블루프린트 대조) · `docs/EVENT_ALIMTALK_SETUP.md` §9
+- [ ] 사장님 외부: 솔라피 신규 8종(field_delayed·return 2·MMR 2·EVENT v2 3) 등록·검수 → Make 분기/교체 → 옛 템플릿 삭제 · 결제완료 웹훅 Make 이관(코드창)
+
 ## ✅ 완료 (09-13): 상담 리뷰 칩 '상담·직접방문' 통일 — 마이그 `146`·`147` (커밋 aba7d4d4·a3ad20c3·84a085dd)
 - 증상: 같은 매장 상담 리뷰가 관리자 '상담·매장' / 고객 '상담' / 레거시 '상담·오프라인'으로 갈라짐
 - 근본: 솔라피 후기요청 버튼 URL에 subtype 없음 → 약속 칩 없는 판매건은 submit이 sale_channel 원시값(store/offline) 저장
