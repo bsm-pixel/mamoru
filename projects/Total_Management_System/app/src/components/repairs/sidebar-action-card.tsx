@@ -90,6 +90,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
       await updateFields.mutateAsync({
         id: r.id,
         paid_at: new Date().toISOString(),
+        skip_notify: true, // 무상(0원)은 비용안내 알림톡만 — "입금이 확인되었습니다" 2번째 알림톡 생략 (2026-09-13)
       });
     }
 

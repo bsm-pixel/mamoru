@@ -117,6 +117,7 @@ export async function POST(
             tracking: cleanInvoice,
             courier: cleanCourier,
             uid: updated.as_id,
+            as_id: updated.as_id, // 2026-09-13: #{as_id} 템플릿 호환
             as_uid: updated.as_id,
             review_type: 'repair',
             type_label: '복원수리',

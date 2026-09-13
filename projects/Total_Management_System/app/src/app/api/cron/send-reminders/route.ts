@@ -90,6 +90,10 @@ export async function GET(req: NextRequest) {
               time: c.visit_time,
               type: isField ? '출장' : '매장방문',
               address,                  // 출장 리마인더 방문주소 치환 변수
+              // 2026-09-13: 확정/일정변경 템플릿과 같은 키도 함께 — 템플릿이 이 변수를 쓰면 빈 값→문자 대체되던 위험 차단
+              visit_date: c.visit_date || '',
+              visit_time: c.visit_time || '',
+              change_request_link: c.unique_id ? `page.mamoru.kr/projects/consulting/page_change_request.html?uid=${c.unique_id}` : '',
             },
           });
 
@@ -123,6 +127,10 @@ export async function GET(req: NextRequest) {
               time: c.visit_time,
               type: isField ? '출장' : '매장방문',
               address,                  // 출장 리마인더 방문주소 치환 변수
+              // 2026-09-13: 확정/일정변경 템플릿과 같은 키도 함께 — 템플릿이 이 변수를 쓰면 빈 값→문자 대체되던 위험 차단
+              visit_date: c.visit_date || '',
+              visit_time: c.visit_time || '',
+              change_request_link: c.unique_id ? `page.mamoru.kr/projects/consulting/page_change_request.html?uid=${c.unique_id}` : '',
             },
           });
 

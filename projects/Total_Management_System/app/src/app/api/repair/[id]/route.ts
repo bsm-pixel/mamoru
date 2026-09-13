@@ -184,6 +184,7 @@ export async function PATCH(
           name: data.name,
           data: {
             id: data.as_id,
+            as_id: data.as_id,  // 2026-09-13: 접수번호 #{as_id} 템플릿 호환 (관리자 취소 경로 포함)
             as_uid: data.as_id, // 수리내역 조회 버튼 #{as_uid} — Make 매핑 무관하게 채워지도록 둘 다 전달
             as_amount: String(data.service_cost || 0),
             shipping_amount: String(data.shipping_fee || 0),
@@ -213,6 +214,8 @@ export async function PATCH(
             name: data.name,
             data: {
               id: data.as_id,
+              as_id: data.as_id,  // 2026-09-13: #{as_id}/#{as_uid} 템플릿 호환
+              as_uid: data.as_id,
               as_amount: String(data.service_cost || 0),
               shipping_amount: String(data.shipping_fee || 0),
               total_amount: String(data.total_amount || 0),

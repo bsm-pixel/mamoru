@@ -260,6 +260,8 @@ cancelled → (terminal)
 | `as_received` (접수완료) | Vercel submit route | Vercel → Make webhook |
 | `as_cost_notice` (비용안내) | UI "비용안내" 버튼 | UI → POST `/api/repair/[id]/notify` |
 | `as_payment_confirmed` (입금확인) | paid_at 플래그 설정 시 | PATCH `/api/repair/[id]` → after() 자동 |
+
+> 2026-09-13: ① **무상(0원)** 은 [비용안내] 버튼의 자동 입금처리에 `skip_notify: true` → `as_payment_confirmed` 생략(비용안내 1통만). ② 복원수리 알림 전 경로(`[id]` 자동·입금확인·`notify`·집하 크론·합포장)에 `as_id` 키 추가 — 기존 `id`/`as_uid` 와 같은 값, `#{as_id}` 템플릿 호환(관리자 취소 `as_visit_cancelled` 포함).
 | `as_shipped` (출고완료) | shipped 상태 전환 시 | PATCH `/api/repair/[id]` → after() 자동 |
 | `as_cancelled` (취소안내) | cancelled 상태 전환 시 | PATCH `/api/repair/[id]` → after() 자동 |
 | `as_satisfaction` (만족도) | 미구현 | — |

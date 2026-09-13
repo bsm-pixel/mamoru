@@ -1,7 +1,17 @@
 # 상담관리 프로세스 흐름도
-> 최종 업데이트: 2026-05-14 — 출장 상담 알림톡 흐름 전반 정상화 (확정·변경·취소 변수 누락 + 일정변경 페이지 404 + 수동변경 분기 + 라벨 동적화)
+> 최종 업데이트: 2026-09-13 — 일정변경 알림톡 2통→1통, 리마인드 변수 보강 / (이전) 2026-05-14 — 출장 상담 알림톡 흐름 전반 정상화 (확정·변경·취소 변수 누락 + 일정변경 페이지 404 + 수동변경 분기 + 라벨 동적화)
 
 ---
+
+## 2026-09-13 — 일정변경 알림톡 2통 발송 제거 + 리마인드 변수 보강
+
+### 1) 일정변경 모달 → 알림톡 1통으로 통합
+**증상(코드 확인)**: `reschedule-modal`(확정 건에서만 열림) 저장 시 ① `PATCH /api/consultation/[id]` 가 `scheduleChanged && confirmed` 로 `rescheduled/field_rescheduled` 자동 발송 + ② 훅 `useRescheduleConsultation` 이 `/api/consultation/notify` 로 같은 템플릿을 한 번 더 발송 → **2통**. '알림 보내기' 체크를 해제해도 ①은 나감.
+**수정**: 훅은 PATCH 에 `skip_notify: !notify` 만 싣고 `/notify` 호출 삭제. PATCH 는 `skip_notify` 를 body 에서 분리(DB 컬럼 아님)하고 true 면 알림톡 생략. → 체크 ON = 1통 / OFF = 0통. 캘린더 동기화는 그대로.
+- 같은 이중호출 구조였던 미사용 훅 `useStartTalkConsult` 삭제 (톡상담 시작 알림은 상태→진행중 PATCH 가 1회 발송).
+
+### 2) 리마인드 크론 변수 보강 (`api/cron/send-reminders`)
+`remind24 / remind2 / field_remind_24h / field_remind_2h` 에 `visit_date`·`visit_time`·`change_request_link` 추가 (기존 `date`/`time`/`address` 유지). 확정·변경 템플릿과 같은 키 — 템플릿이 이 변수를 쓰고 있어도 빈 값→문자 대체되지 않게 방어. 링크는 확정(confirmed) 건이라 page_change_request 에서 정상 동작.
 
 ## 2026-05-13~14 — 출장 상담 알림톡 흐름 fix 묶음 (GAS→TMS 이식 누락 일괄 복구)
 

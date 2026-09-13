@@ -426,48 +426,15 @@ export function useFieldDelay() {
   });
 }
 
-/** 톡상담 시작 (상태변경 + talk_ready 알림톡) */
-export function useStartTalkConsult() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id }: { id: string }) => {
-      // 1) 상태를 in_progress로 변경
-      const statusRes = await fetch(`/api/consultation/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'in_progress', note: '톡상담 시작' }),
-      });
-      if (!statusRes.ok) throw new Error(await statusRes.text());
-
-      // 2) talk_ready 알림톡 발송
-      await fetch('/api/consultation/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ consultationId: id, template: 'talk_ready' }),
-      }).catch(() => {}); // 알림 실패해도 상태변경은 유지
-
-      return statusRes.json();
-    },
-    onSuccess: () => {
-      toast.success('톡상담 시작 + 알림톡 발송');
-      queryClient.invalidateQueries({ queryKey: ['consultations'] });
-      queryClient.invalidateQueries({ queryKey: ['consultation'] });
-      queryClient.invalidateQueries({ queryKey: ['hub-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['consultation-dashboard-stats'] });
-    },
-    onError: (err) => {
-      toast.error('톡상담 시작 실패: ' + errMsg(err));
-    },
-  });
-}
+/* useStartTalkConsult 제거(2026-09-13): 미사용 + PATCH(in_progress)가 이미 talk_ready 를 자동 발송하는데 /notify 로 한 번 더 쏘는 2통 구조였음.
+   톡상담 시작 알림은 상태를 '진행중'으로 바꾸면 api/consultation/[id] 가 1회 발송한다. */
 
 /** 일정 변경 (reschedule) */
 export function useRescheduleConsultation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, visitDate, visitTime, consultationType, uniqueId, notify }: {
+    mutationFn: async ({ id, visitDate, visitTime, notify }: {
       id: string;
       visitDate: string;
       visitTime: string;
@@ -482,32 +449,13 @@ export function useRescheduleConsultation() {
           visit_date: visitDate,
           visit_time: visitTime,
           note: `일정 변경: ${visitDate} ${visitTime}`,
+          // 알림톡은 PATCH 서버가 1회만 발송(확정 건 일정변경 → rescheduled/field_rescheduled, change_request_link 포함).
+          // 예전엔 여기서 /notify 로 한 번 더 보내 2통 발송 + 체크 해제해도 서버가 1통 보내던 문제 — 2026-09-13 통합
+          skip_notify: notify === false,
         }),
       });
       if (!res.ok) throw new Error(await parseApiError(res, '요청 실패'));
-      const data = await res.json();
-
-      // 알림톡 발송 — change_request_link 포함 (date/time은 notify API가 DB에서 새 값 조회)
-      if (notify) {
-        const isField = consultationType === 'field_request';
-        const template = isField ? 'field_rescheduled' : 'rescheduled';
-        const changeLink = uniqueId
-          ? `page.mamoru.kr/projects/consulting/page_change_request.html?uid=${uniqueId}`
-          : '';
-        await fetch('/api/consultation/notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            consultationId: id,
-            template,
-            extraData: {
-              change_request_link: changeLink,
-            },
-          }),
-        }).catch(() => {}); // 실패해도 무시
-      }
-
-      return data;
+      return res.json();
     },
     onSuccess: () => {
       toast.success('일정이 변경되었습니다');
