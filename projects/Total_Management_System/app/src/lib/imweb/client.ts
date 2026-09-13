@@ -95,6 +95,13 @@ export async function getOpenApiConnectionStatus(): Promise<{
   scope: string | null;
   error: string | null;
 }> {
+  // 갱신을 먼저 시도한 뒤 저장값을 읽는다 — 순서가 반대면 방금 rotation 해도 카드에 갱신 전 시각("N분 전")이 표시됨(2026-09-13)
+  let error: string | null = null;
+  try {
+    await getOpenApiToken(); // 만료 시 refresh 시도 — 실패하면 여기서 throw
+  } catch (e) {
+    error = e instanceof Error ? e.message : String(e);
+  }
   const { createServiceClient } = await import('@/lib/supabase/server');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dbAny = createServiceClient() as any;
@@ -113,12 +120,7 @@ export async function getOpenApiConnectionStatus(): Promise<{
   const scope = map['imweb_openapi.scope'] || null;
   const hasRefreshToken = !!map['imweb_openapi.refresh_token'];
   const ageMinutes = updatedAt ? Math.round((Date.now() - new Date(updatedAt).getTime()) / 60000) : null;
-  try {
-    await getOpenApiToken(); // 만료 시 refresh 시도 — 실패하면 여기서 throw
-    return { connected: true, hasRefreshToken, updatedAt, ageMinutes, scope, error: null };
-  } catch (e) {
-    return { connected: false, hasRefreshToken, updatedAt, ageMinutes, scope, error: e instanceof Error ? e.message : String(e) };
-  }
+  return { connected: error === null, hasRefreshToken, updatedAt, ageMinutes, scope, error };
 }
 
 /**
