@@ -51,7 +51,7 @@
 
 #### 상담 리뷰 subtype 결정 규칙 (2026-09-13)
 - 저장 우선순위(`api/reviews/submit`): **URL subtype → 판매건 약속 subtype(review_promised_subtype) → 판매채널 정규화**
-- 판매채널 정규화 SSOT = `lib/reviews/consult-subtype.ts` `saleChannelToConsultSubtype`: `store→store_visit` · `field→field_request` · `talk→talk_consult` (offline/online 레거시는 원값 유지)
+- 판매채널 정규화 SSOT = `lib/reviews/consult-subtype.ts` `saleChannelToConsultSubtype`: `store→store_visit` · `field→field_request` · `talk→talk_consult` · 레거시 `offline→store_visit`(사장님 결정 2026-09-13, 마이그 147) (online 등은 원값 유지)
 - ⚠️ 솔라피 `review_request` 버튼 URL엔 `subtype`이 없음 → 약속 칩 없이 보낸 판매건은 판매채널로 결정됨. 과거 `'store'` 원시값이 저장돼 관리자 "상담·매장" / 고객 "상담"으로 갈라졌던 버그 → 코드 정규화 + 마이그 146(과거분 교정)
 - 표기 통일: 작성 폼(`api/reviews/info` `consultTypeLabel` + `page_review.html`) = `상담 · 직접방문/출장/톡상담`, 노출 칩 = `상담·직접방문`. `info`는 CT- 상담이 없으면 판매건(OS-) fallback으로 이어짐(과거엔 404)
 

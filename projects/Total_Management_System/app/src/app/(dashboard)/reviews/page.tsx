@@ -51,7 +51,7 @@ const SUBTYPE_LABELS: Record<string, string> = {
   restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거',
   parcel_pickup: '방문수거', self_ship: '직접발송',
   store: '직접방문', field: '출장', // store=판매채널 원시값 — 상담 칩은 '직접방문'으로 통일(2026-09-13)
-  offline: '오프라인', online: '온라인', talk: '톡상담', // sale_channel 값(2026-07-17 4분류) + 레거시 호환
+  offline: '직접방문', online: '온라인', talk: '톡상담', // sale_channel 값(2026-07-17 4분류) + 레거시 호환. offline=대면판매 → 직접방문(2026-09-13)
   event: '이벤트참여', // EVENT(타사가위 팡팡) 전환 판매에서 온 구매 후기
 };
 

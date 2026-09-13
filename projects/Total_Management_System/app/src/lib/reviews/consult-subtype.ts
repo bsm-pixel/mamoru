@@ -7,9 +7,9 @@
  * → 저장 시점에 리뷰 어휘로 정규화하고, 작성 폼 라벨도 고객 노출 칩과 같은 표기로 통일한다.
  */
 
-/** 판매채널 → 상담 리뷰 subtype. 대응값 없으면(offline/online 등 레거시) 원값 유지 — 기존 동작 보존 */
+/** 판매채널 → 상담 리뷰 subtype. 레거시 'offline'(4분류 이전 대면판매)=직접방문(사장님 결정 2026-09-13). 대응값 없으면(online 등) 원값 유지 */
 export function saleChannelToConsultSubtype(channel: string | null | undefined): string {
-  if (channel === 'store') return 'store_visit';
+  if (channel === 'store' || channel === 'offline') return 'store_visit';
   if (channel === 'field') return 'field_request';
   if (channel === 'talk') return 'talk_consult';
   return channel || '';
