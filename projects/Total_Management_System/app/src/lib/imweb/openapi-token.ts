@@ -9,13 +9,16 @@
  *
  * 해결: 모든 갱신을 이 모듈로 모으고, DB 락(system_settings.imweb_openapi.refresh_lock)으로
  * 인스턴스 간 직렬화 + 락 획득 후 재확인(single-flight)으로 불필요한 중복 rotation 을 막는다.
- * 락 값 = 만료 ISO 문자열(사전식==시간순) → Postgres UPDATE ... WHERE value < now 로 원자적 CAS.
+ * 락 값 = 만료 epoch ms **숫자** → Postgres UPDATE ... WHERE value < now 로 원자적 CAS.
+ * ⚠️ system_settings.value 는 jsonb — 필터 리터럴이 JSON 이어야 한다. ISO 문자열(따옴표 없음)은 22P02 로 매번 실패해
+ *    락을 영영 못 잡고 '락 대기 시간 초과'로 갱신이 전면 중단됐었다(2026-09-12 배포~09-13). 숫자는 유효 JSON 이라 정상 비교.
+ *    기존 문자열 락 행("1970-...")도 jsonb 정렬상 String < Number 라 첫 획득 가능 → 이후 숫자로 덮임.
  */
 import { createServiceClient } from '@/lib/supabase/server';
 
 const OPENAPI_TOKEN_URL = 'https://openapi.imweb.me/oauth2/token';
 const LOCK_KEY = 'imweb_openapi.refresh_lock';
-const EPOCH = '1970-01-01T00:00:00.000Z';
+const UNLOCKED = 0;                     // 락 해제 값(epoch ms) — jsonb 숫자
 const LOCK_TTL_MS = 30_000;             // 락 최대 보유 시간(갱신 1회 = HTTP 1회라 충분)
 const USABLE_MS = 50 * 60 * 1000;       // access_token 발급 후 50분 이내면 유효(아임웹 만료 ~1시간)
 const RECENT_ROTATE_MS = 5 * 60 * 1000; // 5분 내 이미 갱신됐으면 크론은 재-rotation 생략(체인 보호)
@@ -52,31 +55,34 @@ async function readTokens(dbAny: DbAny): Promise<TokenRow> {
 /** 락 행이 없으면 만들어 둔다(이미 있으면 건드리지 않음 = 보유 중인 락을 리셋하지 않음) */
 async function ensureLockRow(dbAny: DbAny) {
   await dbAny.from('system_settings').upsert(
-    { key: LOCK_KEY, value: EPOCH, updated_at: new Date().toISOString() },
+    { key: LOCK_KEY, value: UNLOCKED, updated_at: new Date().toISOString() },
     { onConflict: 'key', ignoreDuplicates: true },
   );
 }
 
-/** 락 획득 시도 — 성공 시 우리가 설정한 만료 ISO 반환, 실패 시 null (원자적 CAS) */
-async function acquireLock(dbAny: DbAny): Promise<string | null> {
-  const nowISO = new Date().toISOString();
-  const expISO = new Date(Date.now() + LOCK_TTL_MS).toISOString();
-  const { data } = await dbAny
+/** 락 획득 시도 — 성공 시 우리가 설정한 만료 epoch ms 반환, 실패 시 null (원자적 CAS) */
+async function acquireLock(dbAny: DbAny): Promise<number | null> {
+  const nowMs = Date.now();
+  const nowISO = new Date(nowMs).toISOString();
+  const expMs = nowMs + LOCK_TTL_MS;
+  const { data, error } = await dbAny
     .from('system_settings')
-    .update({ value: expISO, updated_at: nowISO })
+    .update({ value: expMs, updated_at: nowISO })
     .eq('key', LOCK_KEY)
-    .lt('value', nowISO)     // 비어있음(만료)일 때만 갱신됨 — ISO 문자열 사전식==시간순
+    .lt('value', nowMs)      // 비어있음(만료)일 때만 갱신됨 — jsonb 숫자 비교(문자열 리터럴 금지)
     .select('key');
-  return (Array.isArray(data) && data.length > 0) ? expISO : null;
+  // 쿼리 에러는 '남이 쥠'과 구분해 즉시 드러낸다(과거 22P02 가 조용히 null → 10초 대기 후 오진 메시지)
+  if (error) throw new Error(`아임웹 토큰 갱신 락 쿼리 실패: ${error.message}`);
+  return (Array.isArray(data) && data.length > 0) ? expMs : null;
 }
 
 /** 우리가 잡은 락만 해제(그 사이 남이 가져갔으면 no-op) */
-async function releaseLock(dbAny: DbAny, expISO: string) {
+async function releaseLock(dbAny: DbAny, expMs: number) {
   await dbAny
     .from('system_settings')
-    .update({ value: EPOCH, updated_at: new Date().toISOString() })
+    .update({ value: UNLOCKED, updated_at: new Date().toISOString() })
     .eq('key', LOCK_KEY)
-    .eq('value', expISO);
+    .eq('value', expMs);
 }
 
 /** 실제 rotation — refresh_token 으로 새 access/refresh 발급 후 저장(새 refresh_token 먼저 확정) */
