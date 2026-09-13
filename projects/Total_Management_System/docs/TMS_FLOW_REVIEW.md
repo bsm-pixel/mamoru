@@ -1,5 +1,5 @@
 # 리뷰(후기) 프로세스 흐름도
-> 최종 업데이트: 2026-08-23 · 대상: 후기 요청→작성→저장→노출 전 경로
+> 최종 업데이트: 2026-09-13 · 대상: 후기 요청→작성→저장→노출 전 경로
 > ⚠️ `REVIEW_SYSTEM_BRIEF.md`(2026-02, GAS+시트 계획)는 **폐기된 구계획**. 현행은 아래 TMS(Vercel)+Supabase.
 
 ---
@@ -48,6 +48,12 @@
   - **상품 매칭 키**: `meta.imweb_product_no` + `product_group` (submit route에서 기록) ← 상품별 필터의 핵심
   - 중복 방지: purchase `source_id = uid:productNo`(제품별 1회), 그 외 uid
   - **purchase uid 정규화** `lib/reviews/resolve-purchase-uid.ts` (info·submit 공용): 숫자 아임웹 주문번호가 오면 `orders.id` 로 변환. 2026-09-13 이전 track-delivery [1] 이 uid=imweb_order_no 로 보내 링크가 404 나던 버그의 **옛 링크 호환**. 새 발송은 orders.id
+
+#### 상담 리뷰 subtype 결정 규칙 (2026-09-13)
+- 저장 우선순위(`api/reviews/submit`): **URL subtype → 판매건 약속 subtype(review_promised_subtype) → 판매채널 정규화**
+- 판매채널 정규화 SSOT = `lib/reviews/consult-subtype.ts` `saleChannelToConsultSubtype`: `store→store_visit` · `field→field_request` · `talk→talk_consult` (offline/online 레거시는 원값 유지)
+- ⚠️ 솔라피 `review_request` 버튼 URL엔 `subtype`이 없음 → 약속 칩 없이 보낸 판매건은 판매채널로 결정됨. 과거 `'store'` 원시값이 저장돼 관리자 "상담·매장" / 고객 "상담"으로 갈라졌던 버그 → 코드 정규화 + 마이그 146(과거분 교정)
+- 표기 통일: 작성 폼(`api/reviews/info` `consultTypeLabel` + `page_review.html`) = `상담 · 직접방문/출장/톡상담`, 노출 칩 = `상담·직접방문`. `info`는 CT- 상담이 없으면 판매건(OS-) fallback으로 이어짐(과거엔 404)
 
 ### (C) ★상품 상세 하단 자동 노출 — YES (승인된 것만)
 - 위젯: `projects/reviews/ImwebWidgetCode_product_reviews.html`

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { resolvePurchaseUid } from '@/lib/reviews/resolve-purchase-uid';
+import { saleChannelToConsultSubtype } from '@/lib/reviews/consult-subtype';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -127,7 +128,8 @@ export async function POST(req: NextRequest) {
         phone = sale.customer_phone || '';
         // 판매건에 건 리뷰약속의 promised subtype 우선 (없을 때만 sale_channel fallback)
         // → 매장방문(store_visit) 상담이 'offline'(sale_channel)로 잘못 박히는 문제 방지
-        subtype = bodySubtype || sale.review_promised_subtype || sale.sale_channel || '';
+        // fallback 은 리뷰 어휘로 정규화(store→store_visit 등) — 'store' 원시값 저장 시 칩이 '상담·매장'/'상담'으로 갈라짐(2026-09-13)
+        subtype = bodySubtype || sale.review_promised_subtype || saleChannelToConsultSubtype(sale.sale_channel);
         meta = {
           sale_number: uid,
           sale_channel: sale.sale_channel || '',

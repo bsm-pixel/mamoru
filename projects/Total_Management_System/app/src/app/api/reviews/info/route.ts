@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { resolvePurchaseUid } from '@/lib/reviews/resolve-purchase-uid';
+import { consultTypeLabel, saleChannelToConsultSubtype } from '@/lib/reviews/consult-subtype';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -160,22 +161,18 @@ export async function GET(req: NextRequest) {
         .eq('unique_id', uid)
         .single();
 
-      if (!consult) {
-        return NextResponse.json(
-          { error: '상담 정보를 찾을 수 없습니다' },
-          { status: 404, headers: CORS_HEADERS }
-        );
+      // consultations 에 없으면 → 아래 offline_sales fallback (판매건 OS- 상담 후기). 과거엔 404 → 작성 폼이 '상담 후기'만 표시(2026-09-13)
+      if (consult) {
+        // 작성 폼 라벨 = 고객 노출 칩과 동일 표기('상담 · 직접방문') — 2026-09-13 통일
+        const typeLabel = consultTypeLabel(consult.consultation_type);
+
+        return NextResponse.json({
+          name: maskName(consult.name),
+          typeLabel,
+          date: consult.visit_date || '',
+          consultationType: consult.consultation_type,
+        }, { headers: CORS_HEADERS });
       }
-
-      const typeLabel = consult.consultation_type === 'store_visit' ? '매장 방문'
-        : consult.consultation_type === 'field_request' ? '출장 상담' : '온라인상담';
-
-      return NextResponse.json({
-        name: maskName(consult.name),
-        typeLabel,
-        date: consult.visit_date || '',
-        consultationType: consult.consultation_type,
-      }, { headers: CORS_HEADERS });
     }
 
     if (type === 'repair') {
@@ -198,7 +195,7 @@ export async function GET(req: NextRequest) {
     {
       const { data: sale } = await dbAny
         .from('offline_sales')
-        .select('customer_name, sale_date, sale_number')
+        .select('customer_name, sale_date, sale_number, sale_channel, review_promised_subtype')
         .eq('sale_number', uid)
         .single();
 
@@ -206,7 +203,10 @@ export async function GET(req: NextRequest) {
         const typeLabels: Record<string, string> = { consult: '상담', repair: '복원수리', purchase: '제품구매' };
         return NextResponse.json({
           name: maskName(sale.customer_name),
-          typeLabel: typeLabels[type] || type,
+          // 상담 = 제출 시 저장될 subtype 과 같은 규칙으로 라벨(약속 subtype 우선 → 판매채널 정규화)
+          typeLabel: type === 'consult'
+            ? consultTypeLabel(sale.review_promised_subtype || saleChannelToConsultSubtype(sale.sale_channel))
+            : (typeLabels[type] || type),
           date: sale.sale_date || '',
         }, { headers: CORS_HEADERS });
       }
