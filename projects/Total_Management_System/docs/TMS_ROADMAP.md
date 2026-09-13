@@ -5,6 +5,13 @@
 
 ---
 
+## ✅ 완료 (09-13): 상담 리뷰 칩 '상담·직접방문' 통일 — 마이그 `146`·`147` (커밋 aba7d4d4·a3ad20c3·84a085dd)
+- 증상: 같은 매장 상담 리뷰가 관리자 '상담·매장' / 고객 '상담' / 레거시 '상담·오프라인'으로 갈라짐
+- 근본: 솔라피 후기요청 버튼 URL에 subtype 없음 → 약속 칩 없는 판매건은 submit이 sale_channel 원시값(store/offline) 저장
+- fix: `lib/reviews/consult-subtype.ts` SSOT 정규화(store·offline→store_visit, field→field_request, talk→talk_consult) + 작성 폼 라벨 '상담 · 직접방문' + 관리자·고객 4화면 라벨 안전망
+- 데이터: 146(store 3건)·147(offline 1건) 적용 → 상담 리뷰 원시값 0건. 상품상세 후기 위젯 아임웹 재-paste 완료(라이브 확인)
+- 남은 틈: 약속 없이 모달에서 고른 subtype은 버튼 URL에 안 실림(판매채널로 결정) → 필요 시 솔라피 템플릿 URL에 `&subtype=#{subtype}` 추가+재검수
+
 ## ✅ 완료 (07-21): 재고판매(LS) 시스템 — 마이그 `117`
 
 사무실 재고를 아임웹 커스텀 카탈로그로 판매. **EVENT 접수 허브를 재활용**(백엔드 80~90%)해 신규 코드 최소화.
