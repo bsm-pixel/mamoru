@@ -358,9 +358,10 @@
 
     // ── subtype → 한글 라벨 ──
     var SUBTYPE_LABELS = {
-      store_visit: '매장 방문',
-      field_request: '출장 상담',
-      talk_consult: '온라인상담',
+      // 상담 3종 = 고객 노출 칩과 동일 표기(2026-09-13 통일, 구 '매장 방문/출장 상담/온라인상담')
+      store_visit: '상담 · 직접방문',
+      field_request: '상담 · 출장',
+      talk_consult: '상담 · 톡상담',
       // 복원수리 3종 (119) — 링크 subtype 그대로 후기 chip 표기
       direct_visit: '직접방문 수리',
       pickup: '방문수거 수리',
