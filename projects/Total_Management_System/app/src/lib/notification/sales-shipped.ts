@@ -10,6 +10,7 @@
  *    (여기서도 2차 가드를 둔다: customerType 을 넘기면 B2B 는 skip)
  */
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { getEventNotifyVarsBySale } from '@/lib/event/campaign-notify';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -67,6 +68,8 @@ export async function sendSalesShippedNotification(
   // EVENT 접수페이지 유입 건은 전용 출고완료(event_shipped)로 발송 → EVENT 시나리오로 분리
   const isEvent = await isEventOriginSale(db, sale.id);
   const template = isEvent ? 'event_shipped' : 'sales_shipped';
+  // 범용 EVENT_출고완료 템플릿용 이벤트명 (판매 → 전환 원본 EVENT 접수 → 캠페인) — 2026-09-13
+  const eventName = isEvent ? (await getEventNotifyVarsBySale(db, sale.id)).event_name : null;
 
   // 토글(notifications.sales_shipped / event_shipped) 체크는 sendNotification 내부에서 수행 → 여기서 중복 확인 불필요
   const result = await sendNotification({
@@ -78,6 +81,7 @@ export async function sendSalesShippedNotification(
       tracking: sale.invoiceNumber || '',
       courier: sale.courierName || '롯데택배',
       goods_name: goodsName,
+      ...(eventName ? { event_name: eventName } : {}),
     },
   });
 

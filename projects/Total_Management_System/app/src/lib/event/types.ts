@@ -42,6 +42,8 @@ export interface EventCampaign {
   starts_at: string | null;
   ends_at: string | null;
   memo: string | null;
+  /** 145: 고객 안내 문구 — 알림톡 EVENT_신청완료 #{event_notice}. 비면 기본 문구 발송 */
+  customer_notice?: string | null;
   discount_rules: DiscountRule[];
   created_at: string;
   updated_at: string;

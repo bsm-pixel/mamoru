@@ -21,7 +21,7 @@ import type { DiscountRule } from '@/lib/event/types';
 export function useCreateCampaign() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: { name: string; type?: string; discount_rules?: DiscountRule[] }) => {
+    mutationFn: async (body: { name: string; type?: string; discount_rules?: DiscountRule[]; customer_notice?: string }) => {
       const res = await fetch('/api/campaigns', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       });
@@ -35,7 +35,7 @@ export function useCreateCampaign() {
 export function useUpdateCampaign() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...body }: { id: string; name?: string; type?: string; status?: string; discount_rules?: DiscountRule[] }) => {
+    mutationFn: async ({ id, ...body }: { id: string; name?: string; type?: string; status?: string; discount_rules?: DiscountRule[]; customer_notice?: string }) => {
       const res = await fetch(`/api/campaigns/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
       });

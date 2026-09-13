@@ -239,15 +239,20 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
   const [type, setType] = useState(campaign?.type || 'stock_clearance');
   const [status, setStatus] = useState(campaign?.status || 'active');
   const [rules, setRules] = useState<DiscountRule[]>(campaign?.discount_rules || []);
+  // 145: 알림톡 EVENT_신청완료의 #{event_notice} — 비우면 기본 문구("추가로 필요한 사항이 있으면 따로 연락드립니다") 발송
+  const [notice, setNotice] = useState(campaign?.customer_notice || '');
   const pending = create.isPending || update.isPending;
+  const saveError = (update.error || create.error) as Error | null;
 
   const setRule = (i: number, k: keyof DiscountRule, v: number) =>
     setRules(rules.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
 
   const save = () => {
     const cleanRules = rules.filter((r) => r.unit_price > 0 && r.min_qty > 0 && r.bundle_price > 0);
-    if (isEdit) update.mutate({ id: campaign!.id, name: name.trim(), type, status, discount_rules: cleanRules }, { onSuccess: onClose });
-    else create.mutate({ name: name.trim(), type, discount_rules: cleanRules }, { onSuccess: onClose });
+    // 안내 문구는 바뀌었을 때만 전송 (마이그 145 실행 전에도 다른 설정 저장이 막히지 않게)
+    const noticeChanged = notice.trim() !== (campaign?.customer_notice || '').trim();
+    if (isEdit) update.mutate({ id: campaign!.id, name: name.trim(), type, status, discount_rules: cleanRules, ...(noticeChanged ? { customer_notice: notice.trim() } : {}) }, { onSuccess: onClose });
+    else create.mutate({ name: name.trim(), type, discount_rules: cleanRules, ...(notice.trim() ? { customer_notice: notice.trim() } : {}) }, { onSuccess: onClose });
   };
 
   return (
@@ -277,6 +282,16 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
           )}
         </div>
 
+        {/* 145: 알림톡 고객 안내 문구 — EVENT_신청완료 🔔 진행 안내 첫 줄 */}
+        <div className="rounded-xl border border-neutral-200 p-3 mb-4">
+          <div className="text-xs font-bold text-neutral-700 mb-1">신청완료 알림톡 안내 문구</div>
+          <p className="text-[11px] text-neutral-400 mb-2">이벤트별로 고객에게 따로 알릴 내용 한 줄 (예: 보내실 가위는 신청 후 3일 안에 발송해 주세요). 비우면 기본 문구가 나갑니다. 할인·홍보 문구는 넣지 마세요</p>
+          <input value={notice} onChange={(e) => setNotice(e.target.value)} maxLength={80}
+            placeholder="추가로 필요한 사항이 있으면 따로 연락드립니다"
+            className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm" />
+          <div className="text-right text-[10px] text-neutral-400 mt-1">{notice.length}/80</div>
+        </div>
+
         {/* 묶음 할인 규칙 */}
         <div className="rounded-xl border border-neutral-200 p-3 mb-4">
           <div className="text-xs font-bold text-neutral-700 mb-1">묶음 할인 (같은 단가끼리)</div>
@@ -300,6 +315,9 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
             className="mt-2 flex items-center gap-1 text-xs font-semibold text-indigo-600"><Plus size={13} />할인 규칙 추가</button>
         </div>
 
+        {saveError && (
+          <p className="text-xs text-red-500 mb-2">{(() => { try { return JSON.parse(saveError.message).error || saveError.message; } catch { return saveError.message; } })()}</p>
+        )}
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm">취소</button>
           <button disabled={!name.trim() || pending} onClick={save}

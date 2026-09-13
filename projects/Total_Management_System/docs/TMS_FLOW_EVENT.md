@@ -1,12 +1,12 @@
 # TMS 흐름도 — EVENT (고객 접수 이벤트)
 
-> 최종 업데이트: 2026-06-15 · 재고 전환 이벤트 1탄으로 구축. 접수형 이벤트 공통 허브.
+> 최종 업데이트: 2026-09-13 · 알림톡 범용화(이벤트명·고객 안내 문구 변수) / (최초) 2026-06-15 재고 전환 이벤트 1탄으로 구축. 접수형 이벤트 공통 허브.
 
 ## 개요
 릴스/DM → **EVENT 접수 페이지(카탈로그형)** → 접수 → 입금안내 → 입금확인 → **판매(offline_sales) 자동 전환** → 발송/배송완료/후기(기존 판매 인프라). 캠페인(이벤트)별로 분리 관리.
 
 ## 데이터 모델
-- `event_campaigns` (마이그 104·105): 이벤트 단위. `type`(stock_clearance/limited/group_buy/tester/trade_in/other), `status`(active/ended), `is_default`, `discount_rules` jsonb.
+- `event_campaigns` (마이그 104·105): 이벤트 단위. `type`(stock_clearance/limited/group_buy/tester/trade_in/other), `status`(active/ended), `is_default`, `discount_rules` jsonb, `customer_notice`(마이그 145 — 신청완료 알림톡 #{event_notice}).
 - `event_submissions` (마이그 103·104): 접수 1건. `event_number`(EV-YYYYMMDD-NNN), `campaign_id`, `items` jsonb, `slicing_addon`, `total_amount`, `status`, `payment_noticed_at`, `paid_at`, `sale_id`(전환 시), `receive_method`(delivery/visit).
 - `event_history`: 상태 이력.
 
@@ -30,6 +30,13 @@ received(접수)
 - 4개 웹훅 = consultation/as_received/repair/**event(`MAKE_EVENT_WEBHOOK_URL`, 설정 `notifications.webhook_event`, 미설정 시 consultation 폴백)**.
 - 출고완료는 `sales_shipped` 대신 `event_shipped` — sales-shipped.ts 가 memo `EVENT 전환` 접두어면 자동 분기(집하 cron·수동 [출고완료] 공통).
 - 셋업·전환순서 = `docs/EVENT_ALIMTALK_SETUP.md`. ※ 솔라피 콘솔 3종 검수 + Make 분기 필요.
+
+### 2026-09-13 범용 템플릿 변수 (특정 이벤트에 묶이지 않게)
+- `lib/event/campaign-notify.ts` 공용 헬퍼: `event_name` = 캠페인명, `event_notice` = 캠페인 `customer_notice` (비면 "추가로 필요한 사항이 있으면 따로 연락드립니다"). 캠페인 없으면 이벤트명 "MAMORU 이벤트". select('*') 라 마이그 145 전에도 안 깨짐.
+- `event_received`(접수) → `event_name`·`event_notice` 추가 / `event_payment_notice`·`event_payment_confirmed` → `event_name` 추가(재고판매 LS 제외) / `event_shipped` → 판매 sale_id → event_submissions → 캠페인으로 `event_name` 추가.
+- 기존 변수는 모두 유지(추가만) → 이전 템플릿도 그대로 동작.
+- 캠페인 설정 모달에 "신청완료 알림톡 안내 문구"(80자) 입력. 마이그 전 저장 시 409 안내.
+- 이름 규칙: 신청완료만 `#{name}`, 입금확인·출고완료(후속 안내)는 이름 없음. 템플릿 등록본 = `docs/EVENT_ALIMTALK_SETUP.md` §9.
 
 ## 화면/코드
 - 고객폼: `projects/event/page_form.html` (page.mamoru.kr, `?campaign=<id>`). 공개 API `app/api/event/public/{products,submit}`.

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { convertEventToSale } from '@/lib/event/convert-to-sale';
+import { getEventCampaignNotifyVars } from '@/lib/event/campaign-notify';
 
 /** GET /api/events/[id] */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -51,7 +52,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         after(async () => {
           await sendNotification({
             template: T.notice, phone: phoneNorm, name: ev.customer_name,
-            data: { id: ev.event_number, [numKey]: ev.event_number, total_amount: String(total) },
+            data: {
+              id: ev.event_number, [numKey]: ev.event_number, total_amount: String(total),
+              // 범용 EVENT 템플릿용 이벤트명 (재고판매 LS 는 해당 없음) — 2026-09-13
+              ...(isStock ? {} : { event_name: (await getEventCampaignNotifyVars(dbAny, ev.campaign_id)).event_name }),
+            },
           });
         });
       }
@@ -69,7 +74,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         after(async () => {
           await sendNotification({
             template: T.confirmed, phone: phoneNorm, name: ev.customer_name,
-            data: { id: ev.event_number, [numKey]: ev.event_number, total_amount: String(ev.total_amount) },
+            data: {
+              id: ev.event_number, [numKey]: ev.event_number, total_amount: String(ev.total_amount),
+              ...(isStock ? {} : { event_name: (await getEventCampaignNotifyVars(dbAny, ev.campaign_id)).event_name }),
+            },
           });
         });
       }

@@ -193,3 +193,77 @@ EVENT는 **선입금 주문**이라 취소는 입금 전/후로 성격이 완전
 ---
 
 관련: [reference_solapi_templates] · [project_event_system] · `docs/TMS_FLOW_EVENT.md` · `projects/Total_Management_System/docs/MANUAL_EVENT.md`
+
+---
+
+## 9. 2026-09-13 범용 템플릿 v2 (이벤트명·안내 문구 변수) — 솔라피 등록용
+
+> 특정 이벤트(타사가위 등)에 묶이지 않는 3종. 이벤트명은 캠페인명, 이벤트별 안내는 캠페인 설정의 "신청완료 알림톡 안내 문구"에서 채워짐.
+> 콘솔 템플릿명: 기존 운영본과 헷갈리지 않게 입금확인·출고완료는 `_v2` 로 등록.
+> 이름 규칙: **신청완료(첫 접점)만 이름**, 입금확인·출고완료는 이름 없이 요지로 시작. 부가정보 `고객센터 · 평일 10:00 ~ 20:00`.
+> ⚠️ 검수 메모 권장: "#{event_notice} = 이벤트별 진행 안내(주소 회신·발송 기한 등), 광고성 문구 미포함"
+
+### ① EVENT_신청완료 (event_received) — 강조표기 제목 `신청 접수완료` / 보조 `MAMORU EVENT`
+```
+#{name}님, 안녕하세요
+#{event_name} 신청이 접수되었습니다
+
+✅ 신청 내역
+#{items}
+
+• 결제 금액 : #{total_amount}원
+• 받으실 곳 : #{address}
+
+🔔 진행 안내
+• #{event_notice}
+• 입금이 확인되면 바로 준비를 시작합니다
+• 확인되는 대로 알림톡으로 안내드리니 따로 연락 주지 않으셔도 됩니다
+
+입금 계좌
+• 우리 1002-439-462514 백성민
+• 신한 110-445-097604 마모루(백성민)
+```
+버튼: `1:1 문의`
+
+### ② EVENT_입금확인_v2 (event_payment_confirmed) — 제목 `입금확인 완료` / 보조 `MAMORU EVENT`
+```
+#{event_name} 입금이 확인되었습니다
+
+✅ 확인 내역
+• 접수번호 : #{event_number}
+• 결제 금액 : #{total_amount}원
+
+🔔 진행 안내
+• 준비되는 대로 발송해 드립니다
+• 발송이 완료되면 송장번호를 다시 안내드립니다
+```
+버튼: `1:1 문의`
+
+### ③ EVENT_출고완료_v2 (event_shipped) — 제목 `발송 완료` / 보조 `MAMORU EVENT`
+```
+#{event_name} 신청 상품이 발송되었습니다
+
+✅ 발송 내역
+#{goods_name}
+
+• 택배사 : #{courier}
+• 송장번호 : #{tracking}
+• 주문번호 : #{id}
+
+🔔 안내
+• 받으신 뒤 이상이 있으면 1:1 문의로 말씀해 주세요
+```
+버튼: `배송조회`(DS) · `1:1 문의`
+
+### Make 매핑 (EVENT관련 시나리오 · 웹훅 모듈 = 2)
+| 분기 | 필터 `{{2.template}}` | 템플릿 | 변수 매핑 |
+|---|---|---|---|
+| r1 | `event_received` | EVENT_신청완료 | #{name}={{2.name}} · #{event_name}={{2.event_name}} · #{items}={{2.items}} · #{total_amount}={{2.total_amount}} · #{address}={{2.address}} · #{event_notice}={{2.event_notice}} |
+| r2 | `event_payment_confirmed` | EVENT_입금확인_v2 | #{event_name}={{2.event_name}} · #{event_number}={{2.event_number}} · #{total_amount}={{2.total_amount}} |
+| r3 | `event_shipped` | EVENT_출고완료_v2 | #{event_name}={{2.event_name}} · #{goods_name}={{2.goods_name}} · #{courier}={{2.courier}} · #{tracking}={{2.tracking}} · #{id}={{2.id}} |
+
+### 전환 순서
+1. Supabase에서 마이그 `145_event_campaign_customer_notice.sql` 실행 → 캠페인 설정에 안내 문구 입력(선택)
+2. 솔라피 3종 등록·검수
+3. 승인 후 Make r1~r3 템플릿 교체 + 위 매핑 → 테스트(본인 번호)
+4. 옛 템플릿(EVENT_접수완료·EVENT_입금확인·EVENT_출고완료 구버전, 찐막 2개) 정리 + 상담 시나리오 r18·r19 삭제
