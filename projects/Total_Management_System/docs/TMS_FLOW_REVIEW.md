@@ -31,7 +31,7 @@
 **발송 트리거(진입점)**
 | 소스 | 자동 발송 위치 | 조건 |
 |---|---|---|
-| **아임웹 주문(orders)** | `lib/imweb/sync.ts:299-336` (배송완료 감지 시 sync가 직접 `purchase_review_request` 발송) | `review.auto_request_on_completion` 토글 ON + 미발송 + 전화O. **orders는 '약속' 개념 없음 → 토글 ON이면 전건 자동** |
+| **아임웹 주문(orders)** | ① `lib/imweb/sync.ts` (아임웹 상태가 배송완료로 동기화될 때 직접 발송 — **토글 무관**) ② `track-delivery` 크론 [1] 롯데 배달완료 감지 (토글 ON) ③ `api/orders/[id]/pickup-complete` 매장 픽업 | 미발송(`orders.review_requested_at`) + 전화O. **orders는 '약속' 개념 없음**. uid = **orders.id(UUID)** 로 통일 |
 | 판매(offline_sales) | `track-delivery` 크론 [3] 배송완료 감지 | 토글 ON + **review_promised_at 있는 건만**(약속) |
 | 복원수리(repairs) | `track-delivery` 크론 [2] + `api/repair/[id]` | 토글 ON + **약속 있는 건만** |
 | 상담 | 정책상 **영구 수동만** | — |
@@ -47,6 +47,7 @@
   - 컬럼: `type/subtype/name/phone/stars/content/photo_urls/source_id/product/product_group/status/is_best/meta`
   - **상품 매칭 키**: `meta.imweb_product_no` + `product_group` (submit route에서 기록) ← 상품별 필터의 핵심
   - 중복 방지: purchase `source_id = uid:productNo`(제품별 1회), 그 외 uid
+  - **purchase uid 정규화** `lib/reviews/resolve-purchase-uid.ts` (info·submit 공용): 숫자 아임웹 주문번호가 오면 `orders.id` 로 변환. 2026-09-13 이전 track-delivery [1] 이 uid=imweb_order_no 로 보내 링크가 404 나던 버그의 **옛 링크 호환**. 새 발송은 orders.id
 
 ### (C) ★상품 상세 하단 자동 노출 — YES (승인된 것만)
 - 위젯: `projects/reviews/ImwebWidgetCode_product_reviews.html`
@@ -79,7 +80,7 @@
 
 ### 알림톡 발송
 - `app/src/lib/notification/review-request.ts` — URL/템플릿 조립 SSOT
-- `app/src/lib/imweb/sync.ts:299-336` — 아임웹 주문 배송완료 자동 발송
+- `app/src/lib/imweb/sync.ts` · `api/cron/track-delivery` [1] · `api/orders/[id]/pickup-complete` — 아임웹 주문 후기 자동 발송 (uid=orders.id)
 - `app/src/lib/notification/make-webhook.ts` — 솔라피-Make 연동
 - 진입점: `api/reviews/request`, `api/imweb/orders/[id]/review-request`, `api/consultation/[id]`, `api/repair/[id]`
 
@@ -87,6 +88,7 @@
 - `projects/reviews/page_review.html` — 작성 폼(고객)
 - `app/src/app/api/reviews/submit/route.ts` — 저장
 - `app/src/app/api/reviews/info/route.ts` — 고객·구매품목 조회
+- `app/src/lib/reviews/resolve-purchase-uid.ts` — purchase uid 정규화(아임웹 주문번호→orders.id)
 - `app/src/app/api/reviews/public/route.ts` — 공개 조회 + 상품(군)별 필터 (approved만)
 - `app/src/app/api/reviews/upload|upload-bulk/route.ts` — 사진
 - `app/src/app/api/reviews/[id]/route.ts` — 승인/숨김/베스트/삭제(수동 큐레이션)

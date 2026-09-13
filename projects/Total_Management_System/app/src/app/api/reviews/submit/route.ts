@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { resolvePurchaseUid } from '@/lib/reviews/resolve-purchase-uid';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -45,11 +46,11 @@ async function generateReviewId(db: ReturnType<typeof createServiceClient>): Pro
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { uid, type: rawType, stars, content, photoUrls, productNo, tags, subtype: bodySubtype } = body;
+    const { uid: rawUid, type: rawType, stars, content, photoUrls, productNo, tags, subtype: bodySubtype } = body;
     // 'as'는 'repair'의 별칭으로 정규화 (info route와 동일 패턴)
     const type = rawType === 'as' ? 'repair' : rawType;
 
-    if (!uid || !type || !stars || !content) {
+    if (!rawUid || !type || !stars || !content) {
       return NextResponse.json(
         { error: '필수 항목을 입력해주세요' },
         { status: 400, headers: CORS_HEADERS }
@@ -67,6 +68,8 @@ export async function POST(req: NextRequest) {
     const db = createServiceClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dbAny = db as any;
+    // 구매 후기: 아임웹 주문번호로 나간 옛 링크 → orders.id 로 정규화 (중복체크·저장 키도 정규화 값 기준)
+    const uid: string = type === 'purchase' ? await resolvePurchaseUid(dbAny, String(rawUid)) : rawUid;
 
     // 중복 제출 방지: purchase는 제품별 source_id, 나머지는 uid
     const sourceId = type === 'purchase' ? `${uid}:${productNo}` : uid;

@@ -158,7 +158,8 @@ export async function GET(request: NextRequest) {
 
               const r = await sendReviewRequestNotification({
                 source: 'sale',
-                sourceId: order.imweb_order_no,
+                // 후기 폼은 아임웹 주문을 orders.id(UUID)로 조회 — imweb_order_no 를 넣으면 링크가 404 (2026-09-13 fix)
+                sourceId: order.id,
                 customerName: order.orderer_name || '고객',
                 customerPhone: order.orderer_phone,
                 reviewType: 'purchase',

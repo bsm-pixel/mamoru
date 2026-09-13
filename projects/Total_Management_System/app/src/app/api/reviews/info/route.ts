@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { resolvePurchaseUid } from '@/lib/reviews/resolve-purchase-uid';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -22,12 +23,12 @@ function maskName(name: string): string {
 /** GET /api/reviews/info?uid=XXX&type=consult — 리뷰 폼 pre-fill 정보 (비인증) */
 export async function GET(req: NextRequest) {
   try {
-    const uid = req.nextUrl.searchParams.get('uid');
+    const rawUid = req.nextUrl.searchParams.get('uid');
     const rawType = req.nextUrl.searchParams.get('type');
     // 'as'는 'repair'의 별칭으로 정규화 (솔라피 측 정적 URL이 'as'로 박혀있는 경우 방어망)
     const type = rawType === 'as' ? 'repair' : rawType;
 
-    if (!uid || !type) {
+    if (!rawUid || !type) {
       return NextResponse.json(
         { error: '잘못된 요청입니다' },
         { status: 400, headers: CORS_HEADERS }
@@ -37,6 +38,8 @@ export async function GET(req: NextRequest) {
     const db = createServiceClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dbAny = db as any;
+    // 구매 후기: 아임웹 주문번호로 나간 옛 링크 → orders.id 로 정규화 (submit 과 동일 헬퍼)
+    const uid = type === 'purchase' ? await resolvePurchaseUid(dbAny, rawUid) : rawUid;
 
     // purchase 타입은 제품별 리뷰라 중복 체크를 items 단위로 수행 (아래 분기에서)
     if (type !== 'purchase') {
