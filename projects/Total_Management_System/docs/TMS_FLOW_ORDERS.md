@@ -123,6 +123,13 @@ Supabase waybill_counter (싱글턴 테이블)
   → 결과: 12자리 문자열
 ```
 
+### 아임웹 웹훅 수신 (`/api/imweb/webhook?key=`) — 2026-09-14 기록기 추가
+- 인증: URL 쿼리 `key` = env `IMWEB_WEBHOOK_SECRET` (헤더 미사용, 불일치 401·기록 안 함)
+- **모든 수신 원본을 `imweb_webhook_events`(마이그 148)에 기록** — event_type · order_no · action · payload(원본) · headers
+- 분기: `ORDER_CREATE`·`ORDER_DEPOSIT_COMPLETE`(또는 eventType 없는 구형) → `syncSingleOrder` 동기화(기존 동작) + 결과를 행에 기록 / 그 외(취소·반품·교환·거절 등) → **기록만**(action=logged, 재고·상태 영향 없음)
+- 기록 실패(테이블 없음 등)는 삼키고 기존 동기화는 계속 — 배포 순서와 무관하게 안전
+- 목적: 아임웹 웹훅이 실제로 들어오는지·어떤 값이 오는지 실측 → MMR_ 알림톡(취소·반품) 템플릿·매핑 확정. 이후 단계: TMS가 주문조회로 이름·전화·품목을 채워 Make로 알림톡 발송(토큰 주인 TMS 1곳)
+
 ### 아임웹 v2 API (주문/송장용)
 | 기능 | 가능여부 | 비고 |
 |------|----------|------|
