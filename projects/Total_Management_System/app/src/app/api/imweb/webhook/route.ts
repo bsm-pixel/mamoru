@@ -23,8 +23,9 @@ import { createServiceClient } from '@/lib/supabase/server';
 /** 기존에 TMS 로 받아 주문 동기화하던 이벤트 — 동작 유지 */
 const SYNC_EVENTS = new Set(['ORDER_CREATE', 'ORDER_DEPOSIT_COMPLETE']);
 
-/** 기록에서 제외할 헤더 (민감정보) */
+/** 기록에서 제외할 헤더 (민감정보) — Vercel 내부 헤더(x-vercel-*)엔 단기 OIDC 토큰·프록시 서명이 섞여 있어 통째로 제외 (2026-09-14 실측 발견) */
 const SKIP_HEADERS = new Set(['cookie', 'authorization']);
+const isSkippedHeader = (k: string) => SKIP_HEADERS.has(k) || k.startsWith('x-vercel-');
 
 export async function POST(request: NextRequest) {
   // 1) 시크릿 검증 (미설정이면 fail-closed → 401). 인증 실패 요청은 기록하지 않음(스팸 방지)
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
 
   // 3) 원본 기록 — 실패해도 기존 주문 동기화를 막지 않는다
   const headers: Record<string, string> = {};
-  request.headers.forEach((v, k) => { if (!SKIP_HEADERS.has(k.toLowerCase())) headers[k] = v; });
+  request.headers.forEach((v, k) => { if (!isSkippedHeader(k.toLowerCase())) headers[k] = v; });
   const eventId = await recordEvent({ event_type: eventType, order_no: orderNo, action, payload, headers });
 
   if (!orderNo) {
