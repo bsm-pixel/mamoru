@@ -8,9 +8,9 @@
  *  2) 후기 요청 발송: ReviewRequestModal 열어 알림톡 수동 발송 (review_request_sent_at)
  *  3) 작성 완료 표시: review_submitted_at 있으면 readonly 정적 라벨로 전환
  *
- * 자동 발송 정책 (system_settings.review.auto_request_on_completion):
- *  - OFF (기본, 핀셋 정책): 약속 ✓ 고객만 사장님 수동 발송
- *  - ON (안내문 정책): 약속 X 고객은 자동 발송 / 약속 ✓ 고객은 항상 사장님 수동만
+ * 자동 발송 정책 (항상 발송 원칙 2026-09-14 — 설정 토글 없음):
+ *  - 약속 ✓ 고객: 배송완료(인수자등록) 자동 감지 시 자동 발송
+ *  - 약속 X 고객: 사장님 수동 발송
  */
 
 import { useState, useEffect } from 'react';
@@ -19,7 +19,6 @@ import { Card } from '@/components/ui/card';
 import { Star, MessageCircle, CheckCircle2, Send, Info, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ReviewRequestModal } from '@/components/sales/review-request-modal';
-import { useSetting } from '@/hooks/use-settings';
 import type { ReviewSource } from '@/lib/notification/review-request';
 
 interface RelatedActivity {
@@ -178,11 +177,9 @@ export function ReviewManagementCard({
   const [related, setRelated] = useState<RelatedActivity[]>([]);
 
   // 2026-05-26: 자동 발송 예정 판정 (사장님 우려 → 시각 신호)
-  //   조건 5중: 토글 ON + 약속 ✓ + 미발송 + 송장 있음 + 배송중(shipped + !delivered)
+  //   조건: 약속 ✓ + 미발송 + 송장 있음 + 배송중(shipped + !delivered)
   //   ALPS cron 1시간마다 자동 추적 → '41'/'45' 코드 감지 시 자동 발송 예정
-  const autoEnabled = useSetting<boolean>('review.auto_request_on_completion', false);
   const autoSendPending =
-    autoEnabled &&
     !!promisedAt &&
     !requestSentAt &&
     !!invoiceNumber &&

@@ -3,6 +3,10 @@
  * GAS postMake_ 로직과 동일한 payload 형식으로 전송
  *
  * Make 시나리오에서 _meta.func (event) + template 으로 분기 → 솔라피 알림톡
+ *
+ * 📌 발송 원칙(2026-09-14 사장님 확정): **항상 발송** — 설정 on/off 토글 없음.
+ *   고객 행동·상태 변화마다 빠짐없이 안내한다. 같은 내용이 두 번 가는 경우만 호출부의 중복 방지 규칙으로 막는다.
+ *   비상 시 특정 흐름을 멈추려면 설정의 해당 Make 웹훅 URL 을 비우거나 Make 시나리오를 끈다.
  */
 import { after } from 'next/server';
 
@@ -10,26 +14,29 @@ const ENV_WEBHOOK_CONSULTATION = process.env.MAKE_WEBHOOK_URL || '';
 const ENV_WEBHOOK_AS_RECEIVED = process.env.MAKE_AS_RECEIVED_WEBHOOK_URL || '';
 const ENV_WEBHOOK_REPAIR_STATUS = process.env.MAKE_REPAIR_WEBHOOK_URL || '';
 const ENV_WEBHOOK_EVENT = process.env.MAKE_EVENT_WEBHOOK_URL || '';
+const ENV_WEBHOOK_IMWEB = process.env.MAKE_IMWEB_WEBHOOK_URL || '';
 const VERSION = 'tms-2.3';
 
 /**
  * DB 우선 → 환경변수 fallback으로 웹훅 URL 조회
  *
- * 4개 Make 시나리오:
+ * 5개 Make 시나리오:
  * 1. consultation  — 상담 접수/확정/취소/리마인더/리뷰 (+재고판매)
  * 2. as_received   — 복원수리 접수 안내 (별도 시나리오)
  * 3. repair_status — 복원수리 상태변경 (입고확인/입금/출고/취소/만족도)
  * 4. event         — EVENT 접수확인/입금확인/출고완료 (전용 시나리오, 2026-07-31 분리)
  *                    미설정 시 consultation 로 폴백 → 전환기(웹훅 세팅 전)에도 메시지 유실 방지
+ * 5. imweb         — 아임웹 주문 취소·반품 안내 (2026-09-14). **폴백 없음**: 미설정이면 발송하지 않음
+ *                    (Make 분기·솔라피 승인 전 오발송 방지 — URL 입력이 곧 가동 시점)
  */
-async function getWebhookUrls(): Promise<{ consultation: string; as_received: string; repair_status: string; event: string }> {
+async function getWebhookUrls(): Promise<{ consultation: string; as_received: string; repair_status: string; event: string; imweb: string }> {
   try {
-    const { createServiceClient } = require('@/lib/supabase/server');
+    const { createServiceClient } = await import('@/lib/supabase/server');
     const db = createServiceClient();
     const { data: rows } = await db
       .from('system_settings')
       .select('key, value')
-      .in('key', ['notifications.webhook_consultation', 'notifications.webhook_as_received', 'notifications.webhook_repair', 'notifications.webhook_event']);
+      .in('key', ['notifications.webhook_consultation', 'notifications.webhook_as_received', 'notifications.webhook_repair', 'notifications.webhook_event', 'notifications.webhook_imweb']);
 
     const map: Record<string, string> = {};
     (rows || []).forEach((r: { key: string; value: string }) => { if (r.value) map[r.key] = String(r.value).replace(/^"|"$/g, ''); });
@@ -41,46 +48,11 @@ async function getWebhookUrls(): Promise<{ consultation: string; as_received: st
       repair_status: map['notifications.webhook_repair'] || ENV_WEBHOOK_REPAIR_STATUS,
       // EVENT 전용 미설정 시 consultation 폴백(전환기 안전) — 웹훅 세팅 후엔 완전 분리
       event: map['notifications.webhook_event'] || ENV_WEBHOOK_EVENT || consultation,
+      // 아임웹 주문 안내는 폴백 없음 — 미설정이면 미발송(가동 전 오발송 방지)
+      imweb: map['notifications.webhook_imweb'] || ENV_WEBHOOK_IMWEB,
     };
   } catch {
-    return { consultation: ENV_WEBHOOK_CONSULTATION, as_received: ENV_WEBHOOK_AS_RECEIVED, repair_status: ENV_WEBHOOK_REPAIR_STATUS, event: ENV_WEBHOOK_EVENT || ENV_WEBHOOK_CONSULTATION };
-  }
-}
-
-// 설정 기반 알림 on/off 체크를 위한 헬퍼
-async function isNotificationEnabled(template: string): Promise<boolean> {
-  try {
-    const { createServiceClient } = require('@/lib/supabase/server');
-    const db = createServiceClient();
-    // 마스터 스위치
-    const { data: master } = await db.from('system_settings').select('value').eq('key', 'notifications.master_enabled').single();
-    if (master?.value === 'false' || master?.value === false) return false;
-    // 개별 템플릿 매핑
-    const templateKeyMap: Record<string, string> = {
-      confirmed: 'notifications.consultation_received',
-      as_received: 'notifications.repair_received',
-      as_cost_notice: 'notifications.repair_cost_notice',
-      as_payment_confirmed: 'notifications.repair_payment_confirmed',
-      as_shipped: 'notifications.repair_shipped',
-      sales_shipped: 'notifications.sales_shipped',
-      review_request: 'notifications.review_request',
-      event_received: 'notifications.event_received',
-      event_payment_notice: 'notifications.event_payment_notice',
-      event_payment_confirmed: 'notifications.event_payment_confirmed',
-      event_shipped: 'notifications.event_shipped',
-      stock_received: 'notifications.stock_received',
-      stock_payment_notice: 'notifications.stock_payment_notice',
-      stock_payment_confirmed: 'notifications.stock_payment_confirmed',
-      return_received: 'notifications.return_received',
-      return_inbound: 'notifications.return_inbound',
-    };
-    const settingKey = templateKeyMap[template];
-    if (!settingKey) return true; // 매핑 안 된 템플릿은 항상 발송
-    const { data: row } = await db.from('system_settings').select('value').eq('key', settingKey).single();
-    if (row?.value === 'false' || row?.value === false) return false;
-    return true;
-  } catch {
-    return true; // DB 오류 시 발송 (안전)
+    return { consultation: ENV_WEBHOOK_CONSULTATION, as_received: ENV_WEBHOOK_AS_RECEIVED, repair_status: ENV_WEBHOOK_REPAIR_STATUS, event: ENV_WEBHOOK_EVENT || ENV_WEBHOOK_CONSULTATION, imweb: ENV_WEBHOOK_IMWEB };
   }
 }
 
@@ -96,6 +68,15 @@ const REPAIR_STATUS_TEMPLATES = new Set<NotifyTemplate>([
   'as_visit_remind_2h',
   'as_visit_rescheduled',
   'as_visit_cancelled',
+]);
+
+/** 아임웹 주문 취소·반품 안내 (전용 Make 시나리오 → webhook_imweb, 폴백 없음) — 2026-09-14 */
+const IMWEB_ORDER_TEMPLATES = new Set<NotifyTemplate>([
+  'imweb_cancel_requested',
+  'imweb_cancel_completed',
+  'imweb_return_requested',
+  'imweb_return_approved',
+  'imweb_return_completed',
 ]);
 
 /** EVENT 전용 템플릿 (전용 Make 시나리오 → webhook_event) — 2026-07-31 consultation 에서 분리 */
@@ -149,7 +130,13 @@ export type NotifyTemplate =
   | 'stock_payment_confirmed'  // 재고판매 입금 확인 (→ 판매 자동전환)
   // 반품·교환수거 (2026-08-25) — webhook_consultation 폴백
   | 'return_received'          // 반품수거 접수 (교환/반품 시 자동, 사장님 푸시)
-  | 'return_inbound';          // 반품 입고완료 (사장님 처리 시 고객 알림)
+  | 'return_inbound'           // 반품 입고완료 (사장님 처리 시 고객 알림)
+  // 아임웹 주문 취소·반품 (2026-09-14) — webhook_imweb 전용 · 솔라피 MMR_ 템플릿
+  | 'imweb_cancel_requested'   // MMR_취소접수 (고객 요청만 — 관리자 직접 취소는 생략)
+  | 'imweb_cancel_completed'   // MMR_취소완료 (환불 안내 겸)
+  | 'imweb_return_requested'   // MMR_반품접수 (고객 요청만)
+  | 'imweb_return_approved'    // MMR_반품승인 (반품 수거중 = 승인)
+  | 'imweb_return_completed';  // MMR_반품완료 (환불 안내 겸)
 
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
@@ -196,6 +183,12 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   // 반품·교환수거
   return_received: 'RETURN_RECEIVED',
   return_inbound: 'RETURN_INBOUND',
+  // 아임웹 주문 취소·반품
+  imweb_cancel_requested: 'IMWEB_CANCEL_REQUESTED',
+  imweb_cancel_completed: 'IMWEB_CANCEL_COMPLETED',
+  imweb_return_requested: 'IMWEB_RETURN_REQUESTED',
+  imweb_return_approved: 'IMWEB_RETURN_APPROVED',
+  imweb_return_completed: 'IMWEB_RETURN_COMPLETED',
 };
 
 interface NotifyPayload {
@@ -214,34 +207,32 @@ function uuid(): string {
 export async function sendNotification(payload: NotifyPayload): Promise<{
   success: boolean;
   error?: string;
-  /** 🔴 실제 발송이 아니라 설정 토글 OFF 로 '건너뜀'. success=true 지만 고객에겐 안 나감.
-   *   발송 시각(shipped_notified_at / review_requested_at)을 찍는 호출부는 이 값을 반드시 확인할 것.
-   *   (2026-07-15: 토글 OFF인데 '발송됨'으로 잘못 기록되던 버그 수정) */
-  skipped?: boolean;
 }> {
   // ── 1) 관리자 앱 푸시 — 고객 행동이면 무조건 발송 ──
-  //  ⚠️ 알림톡 설정(on/off)·웹훅 설정과 완전 독립. 반드시 함수 최상단에서 먼저 쏜다.
-  //     (알림톡이 꺼져 있어도 사장님 푸시는 항상 울려야 함 — 2026-07-01)
+  //  ⚠️ 웹훅 설정과 완전 독립. 반드시 함수 최상단에서 먼저 쏜다. (웹훅 미설정이어도 사장님 푸시는 항상 울림)
   //  🔔 새 고객 접수/행동 템플릿을 만들면 여기 한 줄만 추가하면 자동으로 울림.
   //     (사장님 자신의 행동=견적발송·출고·입금확인 등은 스팸 방지로 넣지 않음)
-  const PUSH_CONFIG: Record<string, { title: string; body: string; url: string; settingKey: string }> = {
-    confirmed: { title: '새 상담 접수', body: `${payload.name}님 상담 접수`, url: '/consultations', settingKey: 'push.consultation_received' },
-    as_received: { title: '새 복원수리 접수', body: `${payload.name}님 복원수리 접수`, url: '/repairs', settingKey: 'push.repair_received' },
-    // 직접방문(매장방문) 접수 — as_received 와 같은 접수 푸시 토글(push.repair_received) 공유
-    as_visit_booked: { title: '새 매장방문 수리 접수', body: `${payload.name}님 매장방문 수리 접수`, url: '/repairs', settingKey: 'push.repair_received' },
+  const PUSH_CONFIG: Record<string, { title: string; body: string; url: string }> = {
+    confirmed: { title: '새 상담 접수', body: `${payload.name}님 상담 접수`, url: '/consultations' },
+    as_received: { title: '새 복원수리 접수', body: `${payload.name}님 복원수리 접수`, url: '/repairs' },
+    // 직접방문(매장방문) 접수
+    as_visit_booked: { title: '새 매장방문 수리 접수', body: `${payload.name}님 매장방문 수리 접수`, url: '/repairs' },
     // 출장 신규: submit/route.ts 는 template='request' 로 호출 (솔라피 템플릿명과 일치)
-    request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },
-    field_request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations', settingKey: 'push.field_request' },
-    talk_received: { title: '새 톡상담 접수', body: `${payload.name}님 톡상담 접수`, url: '/consultations', settingKey: 'push.talk_received' },
+    request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations' },
+    field_request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations' },
+    talk_received: { title: '새 톡상담 접수', body: `${payload.name}님 톡상담 접수`, url: '/consultations' },
     // 취소: 고객이 page_change_request 에서 취소 → public/cancel/route.ts
-    field_cancelled: { title: '⚠️ 출장 예약 취소', body: `${payload.name}님 출장 예약 취소`, url: '/consultations', settingKey: 'push.field_cancelled' },
-    cancelled: { title: '⚠️ 상담 예약 취소', body: `${payload.name}님 상담 예약 취소`, url: '/consultations', settingKey: 'push.consultation_cancelled' },
+    field_cancelled: { title: '⚠️ 출장 예약 취소', body: `${payload.name}님 출장 예약 취소`, url: '/consultations' },
+    cancelled: { title: '⚠️ 상담 예약 취소', body: `${payload.name}님 상담 예약 취소`, url: '/consultations' },
     // 이벤트 접수(고객) — 2026-07-01 추가
-    event_received: { title: '새 이벤트 접수', body: `${payload.name}님 이벤트 접수`, url: '/events', settingKey: 'push.event_received' },
+    event_received: { title: '새 이벤트 접수', body: `${payload.name}님 이벤트 접수`, url: '/events' },
     // 재고판매 접수(고객) — 2026-07-21 추가
-    stock_received: { title: '새 재고판매 접수', body: `${payload.name}님 재고판매 주문`, url: '/stock-sale', settingKey: 'push.stock_received' },
+    stock_received: { title: '새 재고판매 접수', body: `${payload.name}님 재고판매 주문`, url: '/stock-sale' },
     // 반품·교환수거 접수 — 2026-08-25 추가 (사장님 푸시)
-    return_received: { title: '새 반품·교환수거 접수', body: `${payload.name}님 반품수거 접수`, url: '/returns', settingKey: 'push.return_received' },
+    return_received: { title: '새 반품·교환수거 접수', body: `${payload.name}님 반품수거 접수`, url: '/returns' },
+    // 아임웹 주문 취소·반품 요청(고객) — 사장님이 아임웹에서 승인/거절 처리해야 함 (2026-09-14)
+    imweb_cancel_requested: { title: '아임웹 주문 취소 요청', body: `${payload.name}님 취소 요청 · 아임웹에서 승인/거절 처리`, url: '/orders' },
+    imweb_return_requested: { title: '아임웹 주문 반품 요청', body: `${payload.name}님 반품 요청 · 아임웹에서 승인/거절 처리`, url: '/orders' },
   };
   const pushCfg = PUSH_CONFIG[payload.template];
   if (pushCfg) {
@@ -261,14 +252,8 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     }
   }
 
-  // ── 2) 고객 알림톡 on/off (푸시엔 영향 없음 — 위에서 이미 발송) ──
-  const enabled = await isNotificationEnabled(payload.template);
-  if (!enabled) {
-    console.log(`[make-webhook] SKIP 알림톡 template=${payload.template} — 설정에서 비활성 (관리자 푸시는 발송됨)`);
-    return { success: true, skipped: true }; // 에러는 아니지만 '실제 발송 X' → skipped 로 명시 (발송시각 오기록 방지)
-  }
-
-  // 템플릿에 따라 3분기 웹훅 URL (DB 우선 → 환경변수 fallback)
+  // ── 2) 고객 알림톡 — 항상 발송 (on/off 토글 없음, 2026-09-14) ──
+  // 템플릿에 따라 웹훅 URL 분기 (DB 우선 → 환경변수 fallback)
   const urls = await getWebhookUrls();
   let webhookUrl: string;
   let urlSource: string;
@@ -285,6 +270,10 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     // EVENT 접수확인/입금확인/출고완료 → 전용 시나리오 (미설정 시 consultation 폴백)
     webhookUrl = urls.event;
     urlSource = 'webhook_event';
+  } else if (IMWEB_ORDER_TEMPLATES.has(payload.template)) {
+    // 아임웹 주문 취소·반품 → 전용 시나리오 (폴백 없음)
+    webhookUrl = urls.imweb;
+    urlSource = 'webhook_imweb';
   } else {
     // 상담 알림톡 (접수/확정/취소/리마인더/리뷰 등)
     webhookUrl = urls.consultation;

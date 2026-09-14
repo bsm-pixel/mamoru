@@ -47,7 +47,6 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const deleteRepair = useDeleteRepair();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [mergedShipOpen, setMergedShipOpen] = useState(false);
-  const [paidNotify, setPaidNotify] = useState(true); // 입금확인 알림톡 발송 여부
   const [payMethod, setPayMethod] = useState<PayMethod>('transfer'); // 120: 결제수단
   const [visitPaid, setVisitPaid] = useState(true); // 직접방문 현장결제 시 입금완료 처리 여부
   const isDirectVisit = r.proceed_type === '직접방문';
@@ -89,8 +88,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
     if (isFree && !r.paid_at) {
       await updateFields.mutateAsync({
         id: r.id,
-        paid_at: new Date().toISOString(),
-        skip_notify: true, // 무상(0원)은 비용안내 알림톡만 — "입금이 확인되었습니다" 2번째 알림톡 생략 (2026-09-13)
+        paid_at: new Date().toISOString(), // 무상(0원) — 서버가 총액 0 을 보고 입금확인 알림톡 생략(비용안내와 중복 방지)
       });
     }
 
@@ -117,7 +115,6 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
       id: r.id,
       paid_at: new Date().toISOString(),
       payment_method: payMethod, // 120
-      skip_notify: !paidNotify, // 체크 해제 시 알림톡 스킵
     });
   };
 
@@ -137,7 +134,8 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
     await updateFields.mutateAsync({
       id: r.id,
       payment_method: payMethod,
-      ...(visitPaid && !r.paid_at ? { paid_at: new Date().toISOString(), skip_notify: true } : {}),
+      // 현장결제 — 고객이 매장에서 직접 결제해 입금확인 알림톡은 서버가 생략(paid_on_site)
+      ...(visitPaid && !r.paid_at ? { paid_at: new Date().toISOString(), paid_on_site: true } : {}),
     });
     setConfirmAction(null);
   };
@@ -462,7 +460,7 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
       />
       <ConfirmModal
         open={confirmAction === 'mark_paid'}
-        onClose={() => { setConfirmAction(null); setPaidNotify(true); }}
+        onClose={() => setConfirmAction(null)}
         onConfirm={handleMarkPaid}
         title="입금 확인"
         message={
@@ -483,21 +481,9 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 ))}
               </div>
             </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={paidNotify}
-                onChange={(e) => setPaidNotify(e.target.checked)}
-                className="w-4 h-4 rounded border-neutral-300 text-terracotta focus:ring-terracotta"
-              />
-              <span className="text-sm text-neutral-600">고객에게 입금확인 알림톡 발송</span>
-            </label>
-            {!paidNotify && (
-              <p className="text-xs text-neutral-400">알림톡 없이 내부 입금완료 처리만 합니다</p>
-            )}
           </div>
         }
-        confirmLabel={paidNotify ? '입금 확인 + 알림톡' : '입금완료 표시'}
+        confirmLabel="입금 확인 + 알림톡"
       />
       <ConfirmModal
         open={confirmAction === 'mark_shipped'}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { syncSingleOrder } from '@/lib/imweb/sync';
 import { createServiceClient } from '@/lib/supabase/server';
+import { handleImwebClaimEvent, isImwebClaimEvent } from '@/lib/imweb/claim-notify';
 
 /**
  * POST /api/imweb/webhook?key=<시크릿> — 아임웹 주문 웹훅 수신 (실시간)
@@ -9,8 +10,9 @@ import { createServiceClient } from '@/lib/supabase/server';
  *    → "실제로 들어오는지 / 어떤 값이 오는지" 실측 근거 + 알림톡 미발송 문의 시 1차 진단
  * 2) 주문생성·입금완료(SYNC_EVENTS)는 기존대로 해당 주문 1건을 아임웹 API로 재조회해 TMS에 반영
  *    (syncSingleOrder = upsertOrder 재사용 → imweb_order_no 유니크로 크론과 겹쳐도 멱등)
- * 3) 취소·반품·교환·거절 등 그 외 이벤트는 **기록만** 한다 (2026-09-14) — 실제 페이로드 실측 전까지
- *    재고·주문상태에 영향 주지 않음. 알림톡 연결은 실측 후 별도 단계.
+ * 3) 취소·반품 이벤트(claim)는 lib/imweb/claim-notify 로 고객 알림톡·거절 푸시 처리 (2026-09-14)
+ *    — 재고·주문상태엔 영향 없음. 결과(outcome)는 같은 기록 행 process_result 에 남김
+ * 4) 그 외(철회·반품 수거완료·교환 등)는 **기록만** 한다
  *
  * ⚠️ 보안: 아임웹 웹훅은 서명(signature)을 제공하지 않는다.
  *   1차 — URL 쿼리의 시크릿(key = env IMWEB_WEBHOOK_SECRET)으로 위조 요청 차단 (헤더는 보지 않음)
@@ -54,7 +56,8 @@ export async function POST(request: NextRequest) {
   const orderNo = extractOrderNo(payload);
   // eventType 이 없는 구형/미확인 페이로드는 기존 동작(동기화) 유지
   const shouldSync = !!orderNo && (!eventType || SYNC_EVENTS.has(eventType));
-  const action = !orderNo ? 'no_order_no' : shouldSync ? 'sync' : 'logged';
+  const isClaim = !!orderNo && !shouldSync && isImwebClaimEvent(eventType);
+  const action = !orderNo ? 'no_order_no' : shouldSync ? 'sync' : isClaim ? 'claim' : 'logged';
 
   // 3) 원본 기록 — 실패해도 기존 주문 동기화를 막지 않는다
   const headers: Record<string, string> = {};
@@ -68,7 +71,26 @@ export async function POST(request: NextRequest) {
   }
 
   if (!shouldSync) {
-    return NextResponse.json({ ok: true, event_type: eventType, order_no: orderNo, logged: true });
+    if (isClaim) {
+      // 취소·반품 → 고객 알림톡 / 거절 푸시. 응답은 즉시, 처리는 after()로 완주 보장
+      const runClaim = async () => {
+        try {
+          const r = await handleImwebClaimEvent({ eventId, eventType: eventType as string, orderNo, payload });
+          console.log('[imweb/webhook] claim 처리:', eventType, orderNo, r);
+          await markProcessed(eventId, { process_result: r });
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          console.error('[imweb/webhook] claim 처리 실패:', msg);
+          await markProcessed(eventId, { process_error: msg });
+        }
+      };
+      try {
+        after(runClaim);
+      } catch {
+        await runClaim().catch(() => {});
+      }
+    }
+    return NextResponse.json({ ok: true, event_type: eventType, order_no: orderNo, logged: true, claim: isClaim });
   }
 
   // 4) 응답은 즉시, 처리는 after()로 완주 보장 (fire-and-forget 누락 방지)

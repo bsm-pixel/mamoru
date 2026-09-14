@@ -67,7 +67,6 @@ export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedSh
   const [selected, setSelected] = useState<SelectedShipment>(null);
   const [manualInvoice, setManualInvoice] = useState('');
   const [manualCourier, setManualCourier] = useState('롯데택배');
-  const [skipNotify, setSkipNotify] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // 모달 열릴 때 검색
@@ -77,7 +76,6 @@ export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedSh
       setSelected(null);
       setManualInvoice('');
       setManualCourier('롯데택배');
-      setSkipNotify(false);
       return;
     }
 
@@ -105,7 +103,6 @@ export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedSh
             courier_name: selected.item.courier_name || '롯데택배',
             source_type: 'sale',
             source_id: selected.item.id,
-            skip_notify: skipNotify,
           }
         : selected.type === 'order'
         ? {
@@ -113,13 +110,11 @@ export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedSh
             courier_name: '롯데택배', // orders 는 courier 컬럼 없음 (기본값)
             source_type: 'order',
             source_id: selected.item.id,
-            skip_notify: skipNotify,
           }
         : {
             invoice_number: selected.invoice.trim(),
             courier_name: selected.courier.trim() || '롯데택배',
             source_type: 'manual',
-            skip_notify: skipNotify,
           };
 
     if (selected.type === 'manual' && !payload.invoice_number) {
@@ -136,7 +131,7 @@ export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedSh
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || '처리 실패');
-      toast.success(skipNotify ? '합포장 출고 처리 완료 (알림톡 미발송)' : '합포장 출고 처리 완료 + 알림톡 발송');
+      toast.success('합포장 출고 처리 완료 + 알림톡 발송');
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -290,18 +285,6 @@ export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedSh
           )}
         </div>
 
-        {/* 알림톡 발송 옵션 */}
-        <label className="flex items-center gap-2 cursor-pointer p-3 bg-neutral-50 rounded-lg">
-          <input
-            type="checkbox"
-            checked={!skipNotify}
-            onChange={e => setSkipNotify(!e.target.checked)}
-            className="w-4 h-4 rounded border-neutral-300"
-          />
-          <span className="text-sm">
-            고객에게 출고 알림톡 발송 <span className="text-neutral-500">(수리내역 조회 + 배송조회 버튼 포함)</span>
-          </span>
-        </label>
 
         {/* 액션 */}
         <div className="flex justify-end gap-2 pt-2">

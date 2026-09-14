@@ -72,12 +72,12 @@ B·C는 두 화면 완전 동일. **A채널만 화면 목적에 따라 기준이
 
 ## 리뷰 요청 분기 (2026-04-29 추가 / 2026-07-12 버그 수정)
 
-배송완료(`delivered`) 진입 시 후기 알림톡 발송 정책. `system_settings.review.auto_request_on_completion` 토글 + **약속(`review_promised_at`) 받은 고객만** 자동 발송 (판매와 동일 정책).
+배송완료(`delivered`) 진입 시 후기 알림톡 발송 정책. **약속(`review_promised_at`) 받은 고객만** 자동 발송 (판매와 동일 정책). 2026-09-14 설정 토글(`auto_request_on_completion`) 삭제 — 항상 자동.
 
 🔴 **2026-07-12 (109) 버그 수정 — 자동 배송완료 건은 리뷰 알림톡이 아예 안 나가고 있었다.**
 크론(`track-delivery`)이 `repairs` 를 **DB 직접 update** 해서, 발송 코드가 있는 `PATCH /api/repair/[id]` 를 우회했기 때문.
 → 사장님이 **수동으로** 상태를 바꿀 때만 발송됐고, **ALPS 자동 감지로 배송완료된 건은 발송 0건**.
-→ 크론 repairs 블록에 판매와 동일한 4중 가드(토글 → 약속 → 미발송 → 전화번호)를 복제해 해결.
+→ 크론 repairs 블록에 판매와 동일한 4중 가드(토글 → 약속 → 미발송 → 전화번호)를 복제해 해결. (2026-09-14 토글 삭제 → 약속 → 미발송 → 전화번호 3중)
 
 발송 경로 2개 (둘 다 같은 가드):
 | 경로 | 트리거 |
@@ -261,7 +261,7 @@ cancelled → (terminal)
 | `as_cost_notice` (비용안내) | UI "비용안내" 버튼 | UI → POST `/api/repair/[id]/notify` |
 | `as_payment_confirmed` (입금확인) | paid_at 플래그 설정 시 | PATCH `/api/repair/[id]` → after() 자동 |
 
-> 2026-09-13: ① **무상(0원)** 은 [비용안내] 버튼의 자동 입금처리에 `skip_notify: true` → `as_payment_confirmed` 생략(비용안내 1통만). ② 복원수리 알림 전 경로(`[id]` 자동·입금확인·`notify`·집하 크론·합포장)에 `as_id` 키 추가 — 기존 `id`/`as_uid` 와 같은 값, `#{as_id}` 템플릿 호환(관리자 취소 `as_visit_cancelled` 포함).
+> 2026-09-13: ① **무상(0원)** 은 [비용안내] 버튼의 자동 입금처리에 `skip_notify: true` → `as_payment_confirmed` 생략(비용안내 1통만). **2026-09-14 변경**: `skip_notify` 삭제 → 서버가 `total_amount <= 0` 이면 입금확인 생략 / 직접방문 현장결제는 사실 플래그 `paid_on_site: true`(DB 컬럼 아님)로 생략. 입금확인 모달의 발송 체크박스·합포장 출고 체크박스도 삭제(항상 발송). ② 복원수리 알림 전 경로(`[id]` 자동·입금확인·`notify`·집하 크론·합포장)에 `as_id` 키 추가 — 기존 `id`/`as_uid` 와 같은 값, `#{as_id}` 템플릿 호환(관리자 취소 `as_visit_cancelled` 포함).
 | `as_shipped` (출고완료) | shipped 상태 전환 시 | PATCH `/api/repair/[id]` → after() 자동 |
 | `as_cancelled` (취소안내) | cancelled 상태 전환 시 | PATCH `/api/repair/[id]` → after() 자동 |
 | `as_satisfaction` (만족도) | 미구현 | — |
@@ -351,7 +351,7 @@ cancelled → (terminal)
 - 상태 배지 (색상 코딩 + 진행방식 배지)
 - **탭별 특화 정보 칩** (03-26): 수거필요→주소, 진행중→입금상태, 출고대기→송장/포장, 출고완료→배송상태
 - **완료/취소 시각 구분** (03-26): green border-left / opacity+취소선 / 미입금=orange border / 미입금+3일경과=red border
-- **입금확인 알림톡 선택** (03-30): 체크박스로 발송/미발송 분리 (skip_notify 플래그)
+- ~~**입금확인 알림톡 선택** (03-30): 체크박스로 발송/미발송 분리 (skip_notify 플래그)~~ → 2026-09-14 삭제(항상 발송)
 - **확인 모달 전체 적용** (03-29): 비용안내/입금확인/출고완료/송장취소/수리취소 — ConfirmModal 공통 컴포넌트
 
 ### 검수 자동 문구 생성

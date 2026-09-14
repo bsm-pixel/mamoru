@@ -347,7 +347,6 @@ export async function POST(req: NextRequest) {
           body: `${name}님 ${typeLabel} 리뷰 — ${String(content).slice(0, 40)}${String(content).length > 40 ? '...' : ''}`,
           url: '/reviews',
           tag: 'mamoru-review',
-          settingKey: 'push.review_submitted',
         });
       } catch (e) {
         console.error('[reviews/submit push] 실패:', e);

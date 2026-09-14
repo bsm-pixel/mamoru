@@ -84,8 +84,9 @@ export async function PATCH(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const body = await req.json();
-    // skip_notify: 일정변경 모달에서 '알림 보내기' 체크 해제 시 true — DB 컬럼이 아니므로 rest 에서 분리
-    const { status: newStatus, note, skip_notify, ...rest } = body;
+    // 항상 발송 원칙(2026-09-14): 알림 끄기 옵션 없음. 캐시된 구버전 화면이 보내는 skip_notify 는 DB 컬럼이 아니므로 버림
+    delete body.skip_notify;
+    const { status: newStatus, note, ...rest } = body;
 
     // 현재 상담 조회 (캘린더 동기화 판단용 visit_date/visit_time 포함)
     const { data: current, error: fetchErr } = await db
@@ -168,7 +169,6 @@ export async function PATCH(
           template = data.consultation_type === 'field_request' ? 'field_rescheduled' : 'rescheduled';
         }
         // 일정변경 알림은 여기 한 곳에서만 발송 (모달이 /notify 로 한 번 더 쏘던 2통 발송 제거 — 2026-09-13)
-        if (skip_notify) template = null;
         if (template && data.phone) {
           const address = [data.address_road, data.address_detail].filter(Boolean).join(' ');
           const typeLabel = data.consultation_type === 'store_visit' ? '매장 방문'

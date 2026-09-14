@@ -49,7 +49,6 @@ export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
   const [addressRoad, setAddressRoad] = useState('');
   const [addressDetail, setAddressDetail] = useState('');
   const [memo, setMemo] = useState('');
-  const [notify, setNotify] = useState(true);
   const [duplicate, setDuplicate] = useState<DuplicateExistingConsultation | null>(null);
 
   const create = useCreateConsultation();
@@ -64,7 +63,6 @@ export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
     setAddressRoad('');
     setAddressDetail('');
     setMemo('');
-    setNotify(true);
     setDuplicate(null);
   };
 
@@ -139,7 +137,6 @@ export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
         addressDetail: type === 'field_request' ? addressDetail.trim() : undefined,
         postcode: type === 'field_request' ? (postcode.trim() || undefined) : undefined,
         memo: memo.trim() || undefined,
-        notify,
       });
 
       if (!result.ok) {
@@ -293,26 +290,6 @@ export function CreateConsultationModal({ open, onClose, onCreated }: Props) {
               maxLength={300}
             />
           </div>
-
-          {/* 알림톡 발송 */}
-          <label className="flex items-start gap-2 p-3 rounded-lg bg-warm-ivory border border-neutral-200 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={notify}
-              onChange={(e) => setNotify(e.target.checked)}
-              className="mt-0.5"
-            />
-            <div className="flex-1">
-              <div className="text-sm font-semibold text-neutral-800">고객에게 확정 알림톡 발송</div>
-              <div className="text-[11px] text-neutral-500 leading-relaxed">
-                {type === 'field_request'
-                  ? '출장 확정 알림톡 (일정·주소·변경링크 포함)'
-                  : '매장방문 확정 알림톡 (일정·변경링크 포함)'}
-                <br />
-                이미 구두로 안내 완료했으면 끄세요.
-              </div>
-            </div>
-          </label>
 
           {/* 액션 */}
           <div className="flex justify-end gap-2 pt-2 border-t border-neutral-100">

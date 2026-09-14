@@ -28,8 +28,6 @@ interface PushPayload {
   body: string;
   url?: string;
   tag?: string;
-  /** @deprecated 설정 게이팅 제거됨(2026-08-01) — 고객 행동 푸시는 항상 발송. 값은 무시된다. */
-  settingKey?: string;
 }
 
 /**

@@ -106,7 +106,6 @@ export async function GET(req: NextRequest) {
             : `${data.name}님이 다른 시간을 요청했습니다`,
           url: '/consultations',
           tag: `mamoru-resched-${data.id}`,
-          settingKey: 'push.field_reschedule',
         });
       } catch (e) {
         console.error('[resched push] 실패:', e);

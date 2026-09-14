@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
       memo,
       activityName,
       position,
-      notify = true, // 기본 On
     } = body;
 
     // ── 입력 검증 ──────────────────────────────────────────────
@@ -164,8 +163,8 @@ export async function POST(req: NextRequest) {
 
     // ── 알림톡 + Google Calendar 동기화 (after로 응답 후 실행 보장) ──
     after(async () => {
-      // 알림톡 (notify=true일 때만)
-      if (notify) {
+      // 알림톡 — 항상 발송 (2026-09-14 원칙)
+      {
         try {
           const isField = type === 'field_request';
           const fullAddress = [addressRoad, addressDetail].filter(Boolean).join(' ');

@@ -31,9 +31,12 @@
 **발송 트리거(진입점)**
 | 소스 | 자동 발송 위치 | 조건 |
 |---|---|---|
-| **아임웹 주문(orders)** | ① `lib/imweb/sync.ts` (아임웹 상태가 배송완료로 동기화될 때 직접 발송 — **토글 무관**) ② `track-delivery` 크론 [1] 롯데 배달완료 감지 (토글 ON) ③ `api/orders/[id]/pickup-complete` 매장 픽업 | 미발송(`orders.review_requested_at`) + 전화O. **orders는 '약속' 개념 없음**. uid = **orders.id(UUID)** 로 통일 |
-| 판매(offline_sales) | `track-delivery` 크론 [3] 배송완료 감지 | 토글 ON + **review_promised_at 있는 건만**(약속) |
-| 복원수리(repairs) | `track-delivery` 크론 [2] + `api/repair/[id]` | 토글 ON + **약속 있는 건만** |
+| **아임웹 주문(orders)** | ① `lib/imweb/sync.ts` (아임웹 상태가 배송완료로 동기화될 때 직접 발송 — **토글 무관**) ② `track-delivery` 크론 [1] 롯데 배달완료 감지 ③ `api/orders/[id]/pickup-complete` 매장 픽업 | 미발송(`orders.review_requested_at`) + 전화O. **orders는 '약속' 개념 없음**. uid = **orders.id(UUID)** 로 통일 |
+| 판매(offline_sales) | `track-delivery` 크론 [3] 배송완료 감지 | **review_promised_at 있는 건만**(약속) |
+| 복원수리(repairs) | `track-delivery` 크론 [2] + `api/repair/[id]` | **약속 있는 건만** |
+
+> 📌 **2026-09-14 알림톡 항상 발송 원칙** — 설정의 알림톡 on/off 토글(전체·유형별·자동 후기요청)과 화면별 "알림톡 발송" 체크박스를 모두 삭제. 고객 행동·상태 변화마다 항상 발송하고, 같은 내용 2통만 서버 규칙으로 막는다(무상 0원 입금확인 · 직접방문 현장결제 `paid_on_site`). 비상 정지 = 설정의 해당 Make 웹훅 URL 비우기.
+
 | 상담 | 정책상 **영구 수동만** | — |
 | 수동 발송 | 판매/주문 상세 "후기 요청" 버튼 → `api/reviews/request` | 언제든 |
 - 실제 도착 3요소: ①솔라피 템플릿 검수완료 ②Make 리뷰 분기 ③토글. 미발송 진단은 이 순서.

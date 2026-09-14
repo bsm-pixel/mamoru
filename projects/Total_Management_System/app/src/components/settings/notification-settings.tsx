@@ -16,70 +16,35 @@ function parse<T>(raw: unknown, fb: T): T {
 }
 
 export default function NotificationSettings({ settings, onSave, saving }: TabProps) {
-  const [masterEnabled, setMasterEnabled] = useState(true);
-  const [consultationReceived, setConsultationReceived] = useState(true);
-  const [repairReceived, setRepairReceived] = useState(true);
-  const [repairCostNotice, setRepairCostNotice] = useState(true);
-  const [repairPayment, setRepairPayment] = useState(true);
-  const [repairShipped, setRepairShipped] = useState(true);
-  const [reviewRequest, setReviewRequest] = useState(true);
   const [webhookConsultation, setWebhookConsultation] = useState('');
   const [webhookAsReceived, setWebhookAsReceived] = useState('');
   const [webhookRepair, setWebhookRepair] = useState('');
   const [webhookEvent, setWebhookEvent] = useState('');
+  const [webhookImweb, setWebhookImweb] = useState(''); // 아임웹 주문 취소·반품 (2026-09-14) — 입력 = 가동
   // 🔴 앱 푸시 on/off 토글 제거(2026-08-01) — 고객 행동 푸시는 항상 발송(무조건). 놓치면 안 되므로 게이팅 없음.
-  // 067: 후기 요청 자동 발송 정책 토글
-  const [reviewAutoRequest, setReviewAutoRequest] = useState(false);
-  // 109: 판매 출고 알림톡 (집하 자동감지 시 B2C 고객에게 발송) — 코드엔 있었으나 화면에 토글이 없었음
-  const [salesShipped, setSalesShipped] = useState(false);
+  // 🔴 고객 알림톡 on/off 토글 제거(2026-09-14) — 항상 발송 원칙. 비상 정지는 해당 Make 웹훅 URL 비우기
   // 앱 화면 열려 있을 때 in-app 알림음(notification.wav) — 배송설정 탭에서 여기로 이동(2026-08-01), 기본 ON
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   useEffect(() => {
-    setMasterEnabled(parse(settings['notifications.master_enabled'], true));
-    setConsultationReceived(parse(settings['notifications.consultation_received'], true));
-    setRepairReceived(parse(settings['notifications.repair_received'], true));
-    setRepairCostNotice(parse(settings['notifications.repair_cost_notice'], true));
-    setRepairPayment(parse(settings['notifications.repair_payment_confirmed'], true));
-    setRepairShipped(parse(settings['notifications.repair_shipped'], true));
-    setReviewRequest(parse(settings['notifications.review_request'], true));
-    setSalesShipped(parse(settings['notifications.sales_shipped'], false));
     setWebhookConsultation(parse(settings['notifications.webhook_consultation'], ''));
     setWebhookAsReceived(parse(settings['notifications.webhook_as_received'], ''));
     setWebhookRepair(parse(settings['notifications.webhook_repair'], ''));
     setWebhookEvent(parse(settings['notifications.webhook_event'], ''));
+    setWebhookImweb(parse(settings['notifications.webhook_imweb'], ''));
     setSoundEnabled(parse(settings['notifications.sound_enabled'], true));
-    setReviewAutoRequest(parse(settings['review.auto_request_on_completion'], false));
   }, [settings]);
 
   const handleSave = () => {
     onSave([
-      { key: 'notifications.master_enabled', value: masterEnabled },
-      { key: 'notifications.consultation_received', value: consultationReceived },
-      { key: 'notifications.repair_received', value: repairReceived },
-      { key: 'notifications.repair_cost_notice', value: repairCostNotice },
-      { key: 'notifications.repair_payment_confirmed', value: repairPayment },
-      { key: 'notifications.repair_shipped', value: repairShipped },
-      { key: 'notifications.review_request', value: reviewRequest },
-      { key: 'notifications.sales_shipped', value: salesShipped },
       { key: 'notifications.webhook_consultation', value: webhookConsultation },
       { key: 'notifications.webhook_as_received', value: webhookAsReceived },
       { key: 'notifications.webhook_repair', value: webhookRepair },
       { key: 'notifications.webhook_event', value: webhookEvent },
+      { key: 'notifications.webhook_imweb', value: webhookImweb },
       { key: 'notifications.sound_enabled', value: soundEnabled },
-      { key: 'review.auto_request_on_completion', value: reviewAutoRequest },
     ]);
   };
-
-  const NOTIF_ITEMS = [
-    { key: 'consultation_received', label: '상담 접수 확인', state: consultationReceived, setter: setConsultationReceived },
-    { key: 'repair_received', label: '복원수리 접수 확인', state: repairReceived, setter: setRepairReceived },
-    { key: 'repair_cost_notice', label: '비용안내', state: repairCostNotice, setter: setRepairCostNotice },
-    { key: 'repair_payment', label: '입금확인', state: repairPayment, setter: setRepairPayment },
-    { key: 'repair_shipped', label: '복원수리 출고', state: repairShipped, setter: setRepairShipped },
-    { key: 'sales_shipped', label: '판매 출고 안내 (기사님 수거 시 자동)', state: salesShipped, setter: setSalesShipped },
-    { key: 'review_request', label: '리뷰 요청', state: reviewRequest, setter: setReviewRequest },
-  ];
 
   return (
     <div className="space-y-6">
@@ -125,42 +90,15 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
         <h3 className="text-sm font-bold text-neutral-700 mb-3">💬 고객 알림톡 발송</h3>
       </div>
 
-      {/* 1. 마스터 on/off */}
-      <Field label="알림톡 전체 on/off" desc="끄면 모든 알림톡 발송이 즉시 중단됩니다. 점검/테스트 시 사용.">
-        <div className="flex items-center gap-3">
-          <Toggle checked={masterEnabled} onChange={setMasterEnabled} />
-          <span className={`text-sm font-medium ${masterEnabled ? 'text-green-600' : 'text-red-500'}`}>
-            {masterEnabled ? '활성' : '비활성 — 모든 알림 중단'}
-          </span>
-        </div>
-      </Field>
+      {/* 항상 발송 원칙 (2026-09-14) — on/off 토글 없음 */}
+      <div className="rounded-lg border border-neutral-200 bg-stone-50 p-3 text-xs text-neutral-600 leading-relaxed">
+        고객 알림톡은 <b>항상 발송</b>됩니다 — 접수·확정·변경·출고·후기 요청 등 고객 행동과 상태 변화마다 빠짐없이 안내합니다.
+        같은 내용이 두 번 가는 경우만 시스템이 자동으로 1통으로 줄입니다. (예: 무상 수리의 입금 확인, 매장 현장 결제)
+        <br />
+        <span className="text-neutral-400">※ 장애 등으로 특정 흐름을 잠시 멈춰야 하면 아래 해당 Make 웹훅 URL 을 비우고 저장하세요.</span>
+      </div>
 
-      {/* 067 → 2026-05-25 → 2026-05-26 정책 정정: 약속 ✓ 고객만 자동 발송 (사장님 의도) */}
-      <Field
-        label="배송완료 시 자동 후기요청"
-        desc="복원수리·아임웹 주문·TMS 판매 3채널 공통. OFF → 모든 후기 요청 수동만 (자동 발송 안 됨). ON → 판매 상세에서 '리뷰 약속' 토글 ON 한 건만, ALPS 인수자등록(코드 41/45) 자동 감지 시 알림톡 자동 발송. ※ 약속 OFF 건은 토글 ON 이어도 사장님 수동 발송만. ※ 상담은 정책상 영구 수동만 (2026-04-30)."
-      >
-        <div className="flex items-center gap-3">
-          <Toggle checked={reviewAutoRequest} onChange={setReviewAutoRequest} />
-          <span className={`text-sm font-medium ${reviewAutoRequest ? 'text-blue-600' : 'text-neutral-500'}`}>
-            {reviewAutoRequest ? 'ON — 약속 ✓ 건 자동 발송' : 'OFF — 모두 수동 발송'}
-          </span>
-        </div>
-      </Field>
-
-      {/* 2~7. 개별 on/off */}
-      <Field label="알림 유형별 on/off" desc="개별 알림을 세밀하게 제어합니다.">
-        <div className={`space-y-3 ${!masterEnabled ? 'opacity-40 pointer-events-none' : ''}`}>
-          {NOTIF_ITEMS.map((item) => (
-            <div key={item.key} className="flex items-center justify-between">
-              <span className="text-sm">{item.label}</span>
-              <Toggle checked={item.state} onChange={item.setter} />
-            </div>
-          ))}
-        </div>
-      </Field>
-
-      {/* Make 웹훅 URL — 4개 시나리오 */}
+      {/* Make 웹훅 URL — 5개 시나리오 */}
       <Field label="Make 웹훅 URL (상담)" desc="상담 접수/확정/취소/리마인더/리뷰 등">
         <input value={webhookConsultation} onChange={(e) => setWebhookConsultation(e.target.value)}
           className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
@@ -178,6 +116,11 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
 
       <Field label="Make 웹훅 URL (이벤트)" desc="EVENT 접수확인/입금확인/출고완료 — 비우면 상담 웹훅으로 폴백">
         <input value={webhookEvent} onChange={(e) => setWebhookEvent(e.target.value)}
+          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+      </Field>
+
+      <Field label="Make 웹훅 URL (아임웹 주문)" desc="아임웹 주문 취소 접수·완료 / 반품 접수·승인·완료 — 비워 두면 발송하지 않음(폴백 없음). 솔라피 승인 + Make 분기 완성 후 입력 = 가동">
+        <input value={webhookImweb} onChange={(e) => setWebhookImweb(e.target.value)}
           className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
@@ -210,7 +153,7 @@ function PushTestPanel() {
   const [busy, setBusy] = useState<string | null>(null);
 
   const TESTS: Array<{ type: string; label: string; icon: string }> = [
-    { type: 'generic',          label: '기본 테스트 (토글 무관)',      icon: '🔔' },
+    { type: 'generic',          label: '기본 테스트',                  icon: '🔔' },
     { type: 'review',           label: '리뷰 작성',                    icon: '⭐' },
     { type: 'consultation',     label: '상담 접수 (매장방문)',         icon: '📋' },
     { type: 'field_request',    label: '상담 접수 (출장)',             icon: '🚗' },

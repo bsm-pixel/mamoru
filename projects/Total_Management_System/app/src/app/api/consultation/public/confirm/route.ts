@@ -91,7 +91,6 @@ export async function GET(req: NextRequest) {
           body: `${data.name}님이 ${date} ${time}로 확정했습니다`,
           url: '/consultations',
           tag: `mamoru-confirm-${data.id}`,
-          settingKey: 'push.field_confirmed',
         });
       } catch (e) {
         console.error('[confirm push] 실패:', e);

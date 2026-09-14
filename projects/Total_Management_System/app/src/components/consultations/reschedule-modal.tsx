@@ -22,7 +22,6 @@ const CLOSE = '20:00';
 export function RescheduleModal({ open, onClose, consultationId, currentDate, currentTime, consultationType, uniqueId }: Props) {
   const [date, setDate] = useState(currentDate || '');
   const [time, setTime] = useState(currentTime || '');
-  const [notify, setNotify] = useState(true);
   const [timeError, setTimeError] = useState(''); // 영업시간 밖 경고
   const reschedule = useRescheduleConsultation();
 
@@ -41,7 +40,6 @@ export function RescheduleModal({ open, onClose, consultationId, currentDate, cu
         visitTime: time,
         consultationType,
         uniqueId,
-        notify,
       },
       { onSuccess: () => { onClose(); } }
     );
@@ -71,15 +69,6 @@ export function RescheduleModal({ open, onClose, consultationId, currentDate, cu
           />
           {timeError && <p className="mt-1 text-xs text-red-500">{timeError}</p>}
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={notify}
-            onChange={(e) => setNotify(e.target.checked)}
-            className="rounded border-neutral-300"
-          />
-          변경 알림톡 발송
-        </label>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" size="sm" onClick={onClose}>취소</Button>
           <Button

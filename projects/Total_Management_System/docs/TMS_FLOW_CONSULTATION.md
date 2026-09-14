@@ -8,6 +8,7 @@
 ### 1) 일정변경 모달 → 알림톡 1통으로 통합
 **증상(코드 확인)**: `reschedule-modal`(확정 건에서만 열림) 저장 시 ① `PATCH /api/consultation/[id]` 가 `scheduleChanged && confirmed` 로 `rescheduled/field_rescheduled` 자동 발송 + ② 훅 `useRescheduleConsultation` 이 `/api/consultation/notify` 로 같은 템플릿을 한 번 더 발송 → **2통**. '알림 보내기' 체크를 해제해도 ①은 나감.
 **수정**: 훅은 PATCH 에 `skip_notify: !notify` 만 싣고 `/notify` 호출 삭제. PATCH 는 `skip_notify` 를 body 에서 분리(DB 컬럼 아님)하고 true 면 알림톡 생략. → 체크 ON = 1통 / OFF = 0통. 캘린더 동기화는 그대로.
+**2026-09-14 후속**: 항상 발송 원칙으로 '알림 보내기' 체크박스와 `skip_notify` 판정 자체를 삭제 → 확정 건 일정변경은 **항상 1통**. (상담 직접등록 모달의 '확정 알림톡 발송' 체크박스·`notify` 파라미터도 삭제 — 항상 발송)
 - 같은 이중호출 구조였던 미사용 훅 `useStartTalkConsult` 삭제 (톡상담 시작 알림은 상태→진행중 PATCH 가 1회 발송).
 
 ### 2) 리마인드 크론 변수 보강 (`api/cron/send-reminders`)
@@ -410,6 +411,8 @@ CREATE INDEX idx_consult_reminder_pending
 ## 리뷰 요청 분기 (2026-04-29 추가)
 
 상담완료(`completed`) 진입 시 후기 알림톡 발송 정책. `system_settings.review.auto_request_on_completion` 토글로 두 모드 양립.
+
+> ⚠️ 이하 Mode A/B 는 **이력**입니다. 상담 자동 후기요청은 제거됐고(영구 수동), 2026-09-14 `auto_request_on_completion` 토글 자체가 삭제됨.
 
 ### Mode A — 핀셋 정책 (default, OFF)
 ```

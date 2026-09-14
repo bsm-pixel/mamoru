@@ -304,7 +304,6 @@ export interface AdminCreatePayload {
   addressDetail?: string;
   postcode?: string;
   memo?: string;
-  notify?: boolean;
 }
 
 export interface DuplicateExistingConsultation {
@@ -434,13 +433,12 @@ export function useRescheduleConsultation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, visitDate, visitTime, notify }: {
+    mutationFn: async ({ id, visitDate, visitTime }: {
       id: string;
       visitDate: string;
       visitTime: string;
       consultationType?: string; // 'store_visit' | 'field_request'
       uniqueId?: string;
-      notify?: boolean;
     }) => {
       const res = await fetch(`/api/consultation/${id}`, {
         method: 'PATCH',
@@ -449,9 +447,7 @@ export function useRescheduleConsultation() {
           visit_date: visitDate,
           visit_time: visitTime,
           note: `일정 변경: ${visitDate} ${visitTime}`,
-          // 알림톡은 PATCH 서버가 1회만 발송(확정 건 일정변경 → rescheduled/field_rescheduled, change_request_link 포함).
-          // 예전엔 여기서 /notify 로 한 번 더 보내 2통 발송 + 체크 해제해도 서버가 1통 보내던 문제 — 2026-09-13 통합
-          skip_notify: notify === false,
+          // 알림톡은 PATCH 서버가 1회만 발송(확정 건 일정변경 → rescheduled/field_rescheduled, change_request_link 포함) — 항상 발송
         }),
       });
       if (!res.ok) throw new Error(await parseApiError(res, '요청 실패'));

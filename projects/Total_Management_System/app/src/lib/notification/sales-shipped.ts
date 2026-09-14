@@ -71,7 +71,6 @@ export async function sendSalesShippedNotification(
   // 범용 EVENT_출고완료 템플릿용 이벤트명 (판매 → 전환 원본 EVENT 접수 → 캠페인) — 2026-09-13
   const eventName = isEvent ? (await getEventNotifyVarsBySale(db, sale.id)).event_name : null;
 
-  // 토글(notifications.sales_shipped / event_shipped) 체크는 sendNotification 내부에서 수행 → 여기서 중복 확인 불필요
   const result = await sendNotification({
     template,
     phone: sale.customerPhone,
@@ -85,8 +84,6 @@ export async function sendSalesShippedNotification(
     },
   });
 
-  // 🔴 토글 OFF 로 건너뛴 건 '발송'이 아니다 — shipped_notified_at 을 찍으면 '발송됨'으로 잘못 뜬다
-  if (result.skipped) return { sent: false, reason: 'toggle_off' };
   if (!result.success) return { sent: false, reason: 'send_failed', error: result.error };
   return { sent: true };
 }
@@ -94,7 +91,7 @@ export async function sendSalesShippedNotification(
 /* ── 교환 출고 알림톡 (136, 2026-08-27) ──
    배송 교환 시 발행한 '교환 출고 송장'이 집하되면, 판매 출고와 동일한 sales_shipped 템플릿으로 발송.
    품명만 새 제품(교환품)으로 바꾸고 "(교환)" 표기 → 고객이 교환 상품 출고임을 인지.
-   B2B·전화번호 없음·토글 OFF 는 sendSalesShippedNotification 과 동일하게 스스로 걸러 낸다. */
+   B2B·전화번호 없음은 sendSalesShippedNotification 과 동일하게 스스로 걸러 낸다. */
 export interface ExchangeShippedTarget {
   refId: string | null;             // 표시용(원 판매번호 우선, 없으면 반품번호)
   invoiceNumber: string | null;     // 교환 출고 송장
@@ -112,7 +109,7 @@ export async function sendExchangeShippedNotification(
   if (isB2BCustomerType(t.customerType)) return { sent: false, reason: 'b2b' };
 
   const result = await sendNotification({
-    template: 'sales_shipped',   // 판매 출고와 동일 템플릿(신규 등록 불필요) — 토글도 sales_shipped 공유
+    template: 'sales_shipped',   // 판매 출고와 동일 템플릿(신규 등록 불필요)
     phone: t.customerPhone,
     name: t.customerName,
     data: {
@@ -123,7 +120,6 @@ export async function sendExchangeShippedNotification(
     },
   });
 
-  if (result.skipped) return { sent: false, reason: 'toggle_off' };
   if (!result.success) return { sent: false, reason: 'send_failed', error: result.error };
   return { sent: true };
 }

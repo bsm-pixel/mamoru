@@ -17,7 +17,6 @@ import { sendNotification } from '@/lib/notification/make-webhook';
  *     courier_name?: string,     // 택배사 (기본: '롯데택배')
  *     source_type: 'sale' | 'order' | 'manual',  // 출처 타입
  *     source_id?: string,        // offline_sales.id 또는 orders.id (manual 시 null)
- *     skip_notify?: boolean,     // true 면 알림톡 미발송 (옵션, 기본 false)
  *   }
  */
 export async function POST(
@@ -33,7 +32,7 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { invoice_number, courier_name, source_type, source_id, skip_notify } = body;
+    const { invoice_number, courier_name, source_type, source_id } = body;
 
     // 입력 검증
     if (!invoice_number || !String(invoice_number).trim()) {
@@ -101,8 +100,8 @@ export async function POST(
       note,
     });
 
-    // 알림톡 발송 (기본 발송, skip_notify=true 시 우회)
-    if (!skip_notify) {
+    // 알림톡 발송 — 항상 발송 (2026-09-14 원칙)
+    {
       after(async () => {
         if (!updated.phone) return;
         const result = await sendNotification({

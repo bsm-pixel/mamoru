@@ -3,7 +3,6 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
 import { sendSalesShippedNotification } from '@/lib/notification/sales-shipped';
 import { sendReviewRequestNotification } from '@/lib/notification/review-request';
-import { getServerSetting } from '@/hooks/use-settings';
 import { recalcOutstanding } from '@/lib/outstanding';
 
 /** PATCH /api/sales/[id] — 취소 / 결제상태 변경 / 메모 수정 */
@@ -382,7 +381,7 @@ export async function PATCH(
     }
 
     // --- D-1) 출고 알림톡 수동 재발송 (2026-07-15) ---
-    //   이미 출고됐는데 알림톡이 안 나간 건(토글 OFF 시절 자동 출고 등) 사장님이 직접 보낼 때.
+    //   이미 출고됐는데 알림톡이 안 나간 건(발송 실패 등) 사장님이 직접 보낼 때.
     if (action === 'resend_ship_notify') {
       if (sale.cancelled_at) return NextResponse.json({ error: '취소된 판매입니다' }, { status: 400 });
       if (!sale.shipped_at) return NextResponse.json({ error: '아직 출고되지 않았습니다' }, { status: 400 });
@@ -398,10 +397,8 @@ export async function PATCH(
         courierName: sale.courier_name,
       });
       if (!sent.sent) {
-        // 실패 사유를 그대로 전달 (toggle_off → 설정 안내 / no_phone / b2b / send_failed)
-        const msg = sent.reason === 'toggle_off'
-          ? '알림톡 설정(판매 출고 안내)이 꺼져 있습니다. 설정에서 켠 뒤 다시 시도하세요.'
-          : sent.reason === 'no_phone' ? '고객 전화번호가 없습니다.'
+        // 실패 사유를 그대로 전달 (no_phone / b2b / send_failed)
+        const msg = sent.reason === 'no_phone' ? '고객 전화번호가 없습니다.'
           : sent.reason === 'b2b' ? '거래처(B2B)는 출고 알림톡 대상이 아닙니다.'
           : (sent.error || '발송에 실패했습니다.');
         return NextResponse.json({ error: msg }, { status: 400 });
@@ -444,12 +441,10 @@ export async function PATCH(
       if (updateErr) throw updateErr;
 
       // 자동 후기요청 — 택배(ALPS cron)와 동일 기준을 픽업/수동배송완료에도 적용 (2026-06-12)
-      //   약속✓ + 토글ON + 미발송 + 연락처 있음 → 즉시 발송 (버튼 클릭=수령완료라 cron 불필요)
+      //   약속✓ + 미발송 + 연락처 있음 → 즉시 발송 (버튼 클릭=수령완료라 cron 불필요). 항상 발송 원칙(2026-09-14) — 토글 없음
       after(async () => {
         try {
           if (sale.review_requested_at || !sale.review_promised_at || !sale.customer_phone) return;
-          const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
-          if (!autoEnabled) return;
           const reviewType = (sale.review_promised_type as 'purchase' | 'repair' | 'consult' | null) || 'purchase';
           const subtype = reviewType === 'purchase' ? undefined : (sale.review_promised_subtype as string | null) || undefined;
           const r = await sendReviewRequestNotification({
@@ -460,7 +455,7 @@ export async function PATCH(
             reviewType,
             subtype,
           });
-          if (r.success && !r.skipped) {
+          if (r.success) {
             await db.from('offline_sales').update({ review_requested_at: new Date().toISOString() }).eq('id', id);
             console.log(`[mark_delivered/${mode} auto-review] ${sale.sale_number} 발송 성공`);
           }

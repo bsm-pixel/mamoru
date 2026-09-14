@@ -199,7 +199,7 @@ intake (접수)
 | 방문 D-1 21:00 + 당일 09:00 (사장님 결정) | `as_visit_remind` | 상태변경 (`MAKE_REPAIR_WEBHOOK_URL`) | 방문 리마인드 (노쇼 방지) |
 | 일정 변경 | `as_visit_rescheduled` | 상태변경 | 기존→변경 일시 안내 |
 | 취소 | `as_visit_cancelled` | 상태변경 | 취소 + 재예약 링크 |
-| 수령 완료 | `as_visit_completed` | 상태변경 | 완료 + 후기 링크 (auto_request_on_completion 토글 ON 시 자동) |
+| 수령 완료 | `as_visit_completed` | 상태변경 | 완료 + 후기 링크 (자동 — 2026-09-14 설정 토글 삭제) |
 
 → 솔라피 검수 통과 후 TMS 코드 변경 (`lib/notification/make-webhook.ts` 5종 추가). 상세: [reference_solapi_templates](../../../C:/Users/user/.claude/projects/c--Users-user-Desktop-mamoru/memory/reference_solapi_templates.md) "직접방문 알림톡 5종" 섹션.
 

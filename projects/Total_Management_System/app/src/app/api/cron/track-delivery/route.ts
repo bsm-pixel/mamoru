@@ -6,7 +6,6 @@ import { sendReviewRequestNotification } from '@/lib/notification/review-request
 import { sendSalesShippedNotification, sendExchangeShippedNotification } from '@/lib/notification/sales-shipped';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
-import { getServerSetting } from '@/hooks/use-settings';
 import { shipImwebOrder } from '@/lib/imweb/client';
 
 /**
@@ -139,17 +138,12 @@ export async function GET(request: NextRequest) {
           ordersDelivered++;
           console.log(`[track-delivery/orders] ${order.imweb_order_no} → 배송완료`);
 
-          // 후기요청 자동 발송 (settings 토글 ON + 중복 방지)
+          // 후기요청 자동 발송 (항상 발송 원칙 2026-09-14 — 토글 없음 · 중복 방지만)
           // 2026-05-26 메모: 사장님 정책 "약속 받은 고객만 자동 발송" 적용 불가 — orders 에 review_promised_at 컬럼 미존재
-          //   아임웹 무인 주문 흐름이라 사장님이 약속 받을 일 거의 없음 → 현재 정책 유지 (토글 ON 시 모든 배송완료 자동 발송)
+          //   아임웹 무인 주문 흐름이라 사장님이 약속 받을 일 거의 없음 → 모든 배송완료 자동 발송
           //   향후 사장님 정책 통일 원하면 orders.review_promised_at 컬럼 마이그레이션 필요
           after(async () => {
             try {
-              const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
-              if (!autoEnabled) {
-                console.log(`[track-delivery/orders auto-review] ${order.imweb_order_no} skip — 토글 OFF`);
-                return;
-              }
               if (order.review_requested_at) {
                 console.log(`[track-delivery/orders auto-review] ${order.imweb_order_no} skip — 이미 발송됨`);
                 return;
@@ -164,7 +158,7 @@ export async function GET(request: NextRequest) {
                 customerPhone: order.orderer_phone,
                 reviewType: 'purchase',
               });
-              if (r.success && !r.skipped) {
+              if (r.success) {
                 await db.from('orders')
                   .update({ review_requested_at: new Date().toISOString() })
                   .eq('id', order.id);
@@ -309,11 +303,6 @@ export async function GET(request: NextRequest) {
           //    → 사장님이 수동으로 상태를 바꿀 때만 나가고, ALPS 자동 배송완료 건은 발송 자체가 없었음.
           after(async () => {
             try {
-              const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
-              if (!autoEnabled) {
-                console.log(`[track-delivery/repairs auto-review] ${repair.as_id} skip — 토글 OFF`);
-                return;
-              }
               if (!repair.review_promised_at) {
                 console.log(`[track-delivery/repairs auto-review] ${repair.as_id} skip — 약속 X (사장님 수동만)`);
                 return;
@@ -334,7 +323,7 @@ export async function GET(request: NextRequest) {
                 reviewType,
                 subtype,
               });
-              if (r.success && !r.skipped) {
+              if (r.success) {
                 await db.from('repairs')
                   .update({ review_request_sent_at: new Date().toISOString() })
                   .eq('id', repair.id);
@@ -557,11 +546,6 @@ export async function GET(request: NextRequest) {
           //   약속 X 고객은 사장님 수동 발송만 (compact UI 의 후기 요청 버튼 사용)
           after(async () => {
             try {
-              const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
-              if (!autoEnabled) {
-                console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} skip — 토글 OFF`);
-                return;
-              }
               if (!sale.review_promised_at) {
                 console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} skip — 약속 X (사장님 수동만)`);
                 return;
@@ -584,7 +568,7 @@ export async function GET(request: NextRequest) {
                 reviewType,
                 subtype,
               });
-              if (r.success && !r.skipped) {
+              if (r.success) {
                 await db.from('offline_sales')
                   .update({ review_requested_at: new Date().toISOString() })
                   .eq('id', sale.id);

@@ -3,7 +3,6 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidRepairTransition } from '@/lib/repair/transitions';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
 import { sendReviewRequestNotification } from '@/lib/notification/review-request';
-import { getServerSetting } from '@/hooks/use-settings';
 import type { RepairStatus } from '@/lib/supabase/types';
 import { syncRepairToCalendar } from '@/lib/google/repair-calendar-sync';
 
@@ -75,7 +74,10 @@ export async function PATCH(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
     const body = await req.json();
-    const { status: newStatus, note, skip_notify, ...rest } = body;
+    // 항상 발송 원칙(2026-09-14): 알림 끄기 옵션 없음. 구버전 화면의 skip_notify 는 DB 컬럼이 아니므로 버림
+    delete body.skip_notify;
+    // paid_on_site: 직접방문 현장결제 사실 플래그(DB 컬럼 아님) — 입금확인 알림톡 중복 방지 판단에만 사용
+    const { status: newStatus, note, paid_on_site, ...rest } = body;
 
     // 현재 조회
     const { data: current, error: fetchErr } = await db
@@ -134,7 +136,6 @@ export async function PATCH(
       });
 
       after(async () => {
-        if (skip_notify) return;  // 합포장 출고 등 알림톡 우회 케이스
         let template = getAutoNotifyTemplate(newStatus);
         // 직접방문 취소 → 매장방문 전용 템플릿으로 분기 (기존 as_cancelled 와 분리, 중복 없음)
         // ⏳ as_visit_cancelled 는 검수 전이면 Make 분기 없어 미발송(잘못된 as_cancelled 는 안 나감)
@@ -147,8 +148,6 @@ export async function PATCH(
         // 2026-05-26 정책 정정: 약속 ✓ 고객만 자동 발송
         // 094 (2026-05-27): review_promised_type 으로 솔라피 템플릿 분기
         if (template === 'as_review_request') {
-          const autoEnabled = await getServerSetting<boolean>(db, 'review.auto_request_on_completion', false);
-          if (!autoEnabled) { console.log('[repair auto-review] skip — 토글 OFF'); return; }
           if (!data.review_promised_at) { console.log('[repair auto-review] skip — 약속 X'); return; }
           if (data.review_request_sent_at) { console.log('[repair auto-review] skip — 이미 발송'); return; }
 
@@ -204,8 +203,11 @@ export async function PATCH(
       });
     }
 
-    // 입금확인 알림톡 (paid_at 플래그 설정 시, skip_notify가 아닐 때)
-    if (justPaid && !skip_notify) {
+    // 입금확인 알림톡 (paid_at 첫 설정 시) — 중복 방지 규칙만 예외:
+    //   · 무상(총액 0원): 비용안내 알림톡이 이미 무상 안내 → '입금 확인' 2번째 알림 생략
+    //   · 현장결제(paid_on_site): 고객이 매장에서 직접 결제 → 즉시 대면 확인이라 생략
+    const isFree = data.total_amount != null && Number(data.total_amount) <= 0;
+    if (justPaid && !isFree && !paid_on_site) {
       after(async () => {
         if (data.phone) {
           const result = await sendNotification({

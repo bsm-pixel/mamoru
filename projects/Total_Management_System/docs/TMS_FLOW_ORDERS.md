@@ -126,9 +126,26 @@ Supabase waybill_counter (싱글턴 테이블)
 ### 아임웹 웹훅 수신 (`/api/imweb/webhook?key=`) — 2026-09-14 기록기 추가
 - 인증: URL 쿼리 `key` = env `IMWEB_WEBHOOK_SECRET` (헤더 미사용, 불일치 401·기록 안 함)
 - **모든 수신 원본을 `imweb_webhook_events`(마이그 148)에 기록** — event_type · order_no · action · payload(원본) · headers
-- 분기: `ORDER_CREATE`·`ORDER_DEPOSIT_COMPLETE`(또는 eventType 없는 구형) → `syncSingleOrder` 동기화(기존 동작) + 결과를 행에 기록 / 그 외(취소·반품·교환·거절 등) → **기록만**(action=logged, 재고·상태 영향 없음)
+- 분기: `ORDER_CREATE`·`ORDER_DEPOSIT_COMPLETE`(또는 eventType 없는 구형) → `syncSingleOrder` 동기화(기존 동작) + 결과를 행에 기록 / **취소·반품(claim)** → `lib/imweb/claim-notify.ts` (action=claim) / 그 외(철회·반품 수거완료·교환 등) → **기록만**(action=logged). claim 도 재고·주문상태엔 영향 없음
 - 기록 실패(테이블 없음 등)는 삼키고 기존 동기화는 계속 — 배포 순서와 무관하게 안전
-- 목적: 아임웹 웹훅이 실제로 들어오는지·어떤 값이 오는지 실측 → MMR_ 알림톡(취소·반품) 템플릿·매핑 확정. 이후 단계: TMS가 주문조회로 이름·전화·품목을 채워 Make로 알림톡 발송(토큰 주인 TMS 1곳)
+- 목적: 아임웹 웹훅이 실제로 들어오는지·어떤 값이 오는지 실측 + "알림톡 안 왔어요" 1차 진단
+
+### 아임웹 취소·반품 알림톡 (`lib/imweb/claim-notify.ts`, 2026-09-14)
+| 웹훅 이벤트 | 처리 | 템플릿(코드 → 솔라피) |
+|---|---|---|
+| `ORDER_CANCEL_REQUEST` | 고객 요청만(`isCustomerRequest≠N`) 고객 알림톡 + 사장님 푸시 | `imweb_cancel_requested` → MMR_취소접수 |
+| `ORDER_CANCEL_COMPLETE` | 고객 알림톡(환불 안내 겸) | `imweb_cancel_completed` → MMR_취소완료 |
+| `ORDER_RETURN_REQUEST` | 고객 요청만 고객 알림톡 + 사장님 푸시 | `imweb_return_requested` → MMR_반품접수 |
+| `ORDER_RETURN_COLLECTING` | 고객 알림톡(반품 승인·회수 시작) | `imweb_return_approved` → MMR_반품승인 |
+| `ORDER_RETURN_COMPLETE` | 고객 알림톡(환불 안내 겸) | `imweb_return_completed` → MMR_반품완료 |
+| `ORDER_CANCEL_REJECT` · `ORDER_RETURN_REJECT` | **고객 알림톡 없음** → 사장님 푸시 "고객 연락 필요" (거절 사유 필드 없음) | — |
+| 철회 · 반품 수거완료 · 교환 | 기록만 | — |
+- 연락처: TMS `orders`(orderer_name/phone) 우선 → 없으면 v2 `getOrder`(key/secret, OAuth 토큰 불필요). 주문 미확인(테스트 보내기의 가짜 주문번호)이면 알림톡·푸시 모두 안 보냄
+- 품목: 웹훅 `data.section.sectionItems`(요청·처리 품목만) → TMS `order_items` → `주문 상품`. 형식 `상품명 N개 외 N건`
+- 중복 방지: 같은 이벤트·주문·섹션(`orderSectionNo`)이 이미 outcome=sent/pushed 면 재발송 안 함
+- 가동: 설정 'Make 웹훅 URL (아임웹 주문)' 입력(`notifications.webhook_imweb`, **폴백 없음**) — 미입력이면 outcome=not_configured(푸시만)
+- 결과 `imweb_webhook_events.process_result.outcome`: sent · pushed · not_configured · send_failed · admin_initiated · duplicate · order_not_found · no_phone
+- 📌 알림톡 **항상 발송 원칙**(2026-09-14): 설정 on/off 토글·화면별 발송 체크박스 없음. 비상 정지 = 해당 Make 웹훅 URL 비우기
 
 ### 아임웹 v2 API (주문/송장용)
 | 기능 | 가능여부 | 비고 |
