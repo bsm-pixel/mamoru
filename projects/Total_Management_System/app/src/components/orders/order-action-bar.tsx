@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useBookInvoice, useCancelInvoice, useCancelOrder, useCompletePickup } from '@/hooks/use-orders';
 import { InvoiceModal } from './invoice-modal';
 import { OrderExchangeModal } from './order-exchange-modal';
-import { AlertTriangle, Truck, ExternalLink, Store, RefreshCw } from 'lucide-react';
+import { Truck, ExternalLink, Store } from 'lucide-react';
+import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import type { Order, OrderItem } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
@@ -110,13 +111,9 @@ export function useOrderActions(order: Order | null | undefined, items: OrderIte
     <>
       {showAlpsCheck && (
         <>
-          <div className="flex items-start gap-2 p-2.5 rounded-lg bg-yellow-50 border border-yellow-200">
-            <AlertTriangle size={15} className="text-yellow-600 shrink-0 mt-0.5" />
-            <div className="text-[11px] text-yellow-700">
-              <p className="font-semibold">ALPS 집하취소 필요</p>
-              <p className="mt-0.5">송장 {order.invoice_number}을 ALPS에서 직접 취소해주세요</p>
-            </div>
-          </div>
+          <ActionNote tone="wait" title="ALPS 집하취소 필요" meta={order.invoice_number}>
+            송장을 ALPS 에서 직접 취소하신 뒤 아래 버튼으로 확인해주세요.
+          </ActionNote>
           <Button size="sm" className="w-full" onClick={handleCheckAlpsCancel} disabled={busy} loading={checkingAlps}>
             ALPS 취소 확인
           </Button>
@@ -143,39 +140,41 @@ export function useOrderActions(order: Order | null | undefined, items: OrderIte
     </>
   );
 
-  // ── 하단: 부차/파괴 액션 ──
+  // ── 하단: ④ 접힘 + ⑤ 파괴적 액션 (표준 5슬롯 — components/ui/action-section.tsx) ──
+  //    전엔 [주문 취소]·[송장 취소]가 빨간 full-width 버튼으로 주 액션과 같은 무게로 쌓여 있었다.
+  //    교환은 취소/완료가 아닌 모든 상태에서 가능 — 조건은 그대로 두고 자리만 접힘 안으로.
+  const canCancelOrder = showInvoiceCreate || canPushImweb;
   const secondary = (
-    <div className="space-y-2 pt-3 border-t border-neutral-100">
-      {showInvoiceCreate && (
-        <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelOrder(true)} disabled={busy}>
-          주문 취소
-        </Button>
-      )}
-      {canPushImweb && (
-        <>
-          {order.invoice_number && (
-            <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelInvoice(true)} disabled={busy}>
-              송장 취소
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => setShowCancelOrder(true)} disabled={busy}>
-            주문 취소
-          </Button>
-          <p className="text-[11px] text-neutral-400 px-1 leading-relaxed">
-            {order.invoice_number
-              ? '집하 전 취소는 [송장 취소]로 롯데 송장까지 정리 · 이미 발송됐거나 강제 정리는 [주문 취소]'
-              : '롯데 송장이 없는 주문입니다. [주문 취소]로 정리하세요.'}
-          </p>
-        </>
-      )}
-      {/* 제품 교환 — 모든 진행/완료(취소 제외) 상태에서 가능 */}
-      <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowExchange(true)} disabled={busy}>
-        <RefreshCw size={14} />
-        제품 교환
-      </Button>
-      {order.exchanged_at && (
-        <p className="text-[11px] text-emerald-600 px-1">✓ 교환 처리됨 — 아임웹 주문/결제는 그대로 유지됨</p>
-      )}
+    <div className="pt-3 border-t border-neutral-100">
+      <MoreActions label="송장 · 교환 · 취소">
+        <SubtleButton onClick={() => setShowExchange(true)} disabled={busy}>
+          🔄 제품 교환
+        </SubtleButton>
+        {order.exchanged_at && (
+          <p className="text-[11px] text-emerald-600 px-1">✓ 교환 처리됨 — 아임웹 주문/결제는 그대로 유지됨</p>
+        )}
+        {(canCancelOrder || (canPushImweb && order.invoice_number)) && (
+          <DangerZone>
+            {canPushImweb && order.invoice_number && (
+              <DangerLink onClick={() => setShowCancelInvoice(true)} disabled={busy}>
+                송장 취소 (롯데 송장까지 정리)
+              </DangerLink>
+            )}
+            {canCancelOrder && (
+              <DangerLink onClick={() => setShowCancelOrder(true)} disabled={busy}>
+                주문 취소
+              </DangerLink>
+            )}
+            {canPushImweb && (
+              <p className="text-[11px] text-neutral-400 px-1 pt-1 leading-relaxed">
+                {order.invoice_number
+                  ? '집하 전 취소는 [송장 취소]로 롯데 송장까지 정리 · 이미 발송됐거나 강제 정리는 [주문 취소]'
+                  : '롯데 송장이 없는 주문입니다. [주문 취소]로 정리하세요.'}
+              </p>
+            )}
+          </DangerZone>
+        )}
+      </MoreActions>
     </div>
   );
 

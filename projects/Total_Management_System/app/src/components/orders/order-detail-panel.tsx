@@ -248,9 +248,6 @@ export function OrderDetailPanel({ orderId }: Props) {
         </div>
       )}
 
-      {/* 상태별 부차/파괴 액션 (주 액션은 상단 「다음 할 일」로 이동) */}
-      {orderActions.secondary}
-
       {/* 출고 준비표 (판매관리와 동일 양식 — 리스트형/트레이형) */}
       {o.status !== 'cancelled' && (
         <button
@@ -260,6 +257,10 @@ export function OrderDetailPanel({ orderId }: Props) {
           <Printer size={13} /> 준비표
         </button>
       )}
+
+      {/* ④⑤ 부차/파괴 액션 — 주 액션은 상단 「다음 할 일」 바.
+           2026-09-15: 준비표(문서 액션)보다 위에 있어 슬롯 순서가 뒤집혀 있던 것을 아래로 내렸다 */}
+      {orderActions.secondary}
 
       {/* 하단 링크 — 한 줄 */}
       <div className="flex items-center justify-between pt-1 text-[11px]">
