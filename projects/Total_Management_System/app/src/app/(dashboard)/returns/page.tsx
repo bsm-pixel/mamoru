@@ -11,6 +11,8 @@ import { useIsLg } from '@/hooks/use-grid-mode';
 import { useReturns, useUpdateReturn, useShipReturn, useBookReturnPickup } from '@/hooks/use-returns';
 import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, RETURN_ACTION_LABEL, RETURN_STATUS_HINT, RETURN_PRIMARY_NEXT, getAllowedReturnTransitions } from '@/lib/returns/transitions';
 import { StatusStepper } from '@/components/ui/status-stepper';
+import { Button } from '@/components/ui/button';
+import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
 import { formatDate, formatPhone } from '@/lib/utils/format';
 import { Undo2, Package, Truck } from 'lucide-react';
 import type { ReturnRow } from '@/lib/supabase/types';
@@ -162,17 +164,15 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
         <Card>
           <p className="text-xs font-semibold text-neutral-500 mb-2">반품 수거접수 (고객집 → 매장 회수)</p>
           {r.pickup_invoice_number ? (
-            <div className="text-xs text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
-              ✓ 수거 송장 <b className="font-mono">{r.pickup_invoice_number}</b>
-              {r.pickup_booked_at && <span className="text-neutral-400 ml-1">({formatDate(r.pickup_booked_at)})</span>}
-              <p className="text-[11px] text-neutral-400 mt-1">접수 후 취소는 ALPS 화면에서 수동으로 해주세요(롯데 취소 API 미지원).</p>
-            </div>
+            <ActionNote tone="done" title="수거 송장" meta={r.pickup_invoice_number}>
+              {r.pickup_booked_at ? `${formatDate(r.pickup_booked_at)} 접수 · ` : ''}
+              접수 후 취소는 ALPS 화면에서 수동으로 해주세요(롯데 취소 API 미지원).
+            </ActionNote>
           ) : (
             <>
-              <button disabled={pickup.isPending} onClick={() => pickup.mutate(r.id)}
-                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition disabled:opacity-50">
-                <Truck size={13} /> {pickup.isPending ? '접수 중…' : '롯데 반품 수거접수'}
-              </button>
+              <Button variant={r.status === 'requested' ? 'primary' : 'secondary'} className="w-full" disabled={pickup.isPending} loading={pickup.isPending} onClick={() => pickup.mutate(r.id)}>
+                <Truck size={14} /> 롯데 반품 수거접수
+              </Button>
               <p className="text-[11px] text-neutral-400 mt-1.5">고객집으로 롯데 기사가 방문 수거합니다. 접수 후 취소는 ALPS에서 수동.</p>
             </>
           )}
@@ -187,20 +187,20 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
             {r.new_product_name}{r.new_serial_number ? ` · ${r.new_serial_number}` : ''}
           </p>
           {r.exchange_out_invoice_number ? (
-            <div className="text-xs text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
-              ✓ 출고 송장 <b className="font-mono">{r.exchange_out_invoice_number}</b>
-              {r.exchange_shipped_at && <span className="text-neutral-400 ml-1">({formatDate(r.exchange_shipped_at)} 발행)</span>}
-              <p className="text-[11px] mt-1">
-                {r.exchange_out_notified_at
-                  ? <span className="text-emerald-600">🚚 집하 완료 · 발송됨 ({formatDate(r.exchange_out_notified_at)})</span>
-                  : <span className="text-amber-600">⏳ 기사 집하 대기 중 — 집하 스캔되면 자동으로 발송 처리됩니다</span>}
-              </p>
-            </div>
+            <ActionNote
+              tone={r.exchange_out_notified_at ? 'done' : 'wait'}
+              title={r.exchange_out_notified_at ? '발송완료' : '집하대기'}
+              meta={r.exchange_out_invoice_number}
+            >
+              {r.exchange_out_notified_at
+                ? `기사 집하 확인 · ${formatDate(r.exchange_out_notified_at)} 발송`
+                : '집하 스캔되면 자동으로 발송 처리됩니다'}
+              {r.exchange_shipped_at ? ` (송장 ${formatDate(r.exchange_shipped_at)} 발행)` : ''}
+            </ActionNote>
           ) : (
-            <button disabled={ship.isPending} onClick={() => ship.mutate(r.id)}
-              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition disabled:opacity-50">
-              <Truck size={13} /> {ship.isPending ? '발행 중…' : '교환 출고 송장 발행'}
-            </button>
+            <Button variant={['inbound', 'inspected'].includes(r.status) ? 'primary' : 'secondary'} className="w-full" disabled={ship.isPending} loading={ship.isPending} onClick={() => ship.mutate(r.id)}>
+              <Truck size={14} /> 교환 출고 송장 발행
+            </Button>
           )}
           <p className="text-[11px] text-neutral-400 mt-1.5">새 제품 1개만 담긴 롯데 송장을 발행합니다(원 주문 다품목이어도 교환품만).</p>
         </Card>
@@ -216,39 +216,53 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
           cancelled={r.status === 'cancelled'}
           cancelledAt={r.cancelled_at}
         />
-        {/* 지금 할 일 + 액션 (진행 가능한 상태만) */}
-        {allowed.length > 0 && (() => {
-          const primary = RETURN_PRIMARY_NEXT[r.status];
-          const secondary = allowed.filter((s) => s !== primary && s !== 'cancelled');
-          return (
-            <div className="mt-3 pt-3 border-t border-neutral-100">
-              <p className="text-[11px] text-neutral-500 bg-neutral-50 rounded-lg px-3 py-2 mb-2.5 leading-relaxed">
-                {RETURN_STATUS_HINT[r.status]}
-              </p>
-              {primary && allowed.includes(primary) && (
-                <button disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: primary })}
-                  className="w-full py-2.5 rounded-lg bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 transition disabled:opacity-50 mb-1.5">
-                  {RETURN_ACTION_LABEL[primary]} →
-                </button>
-              )}
-              <div className="flex items-center gap-2">
-                {secondary.map((next) => (
-                  <button key={next} disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: next })}
-                    className="flex-1 py-2 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-600 hover:bg-neutral-50 transition disabled:opacity-50">
-                    {RETURN_ACTION_LABEL[next]}
-                  </button>
-                ))}
-                {allowed.includes('cancelled') && (
-                  <button disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: 'cancelled' })}
-                    className="px-3 py-2 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition disabled:opacity-50">
-                    취소
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })()}
       </Card>
+
+      {/* 액션 — 표준 5슬롯 (components/ui/action-section.tsx)
+           2026-09-15: 전엔 진행 흐름 카드 안에 안내문·주 액션·보조 전이·취소가 한 덩어리로
+           섞여 있었고, [취소]가 보조 버튼과 같은 줄에 나란히 있어 오클릭 위험이 있었다 */}
+      {allowed.length > 0 && (() => {
+        const primary = RETURN_PRIMARY_NEXT[r.status];
+        const secondary = allowed.filter((s) => s !== primary && s !== 'cancelled');
+        return (
+          <Card>
+            <h4 className="text-xs font-semibold text-neutral-500 mb-2">액션</h4>
+            <div className="space-y-2">
+              {/* ① 지금 상태 */}
+              <ActionNote tone="wait" title={RETURN_STATUS_LABEL[r.status]}>
+                {RETURN_STATUS_HINT[r.status]}
+              </ActionNote>
+
+              {/* ② 주 액션 */}
+              {primary && allowed.includes(primary) && (
+                <Button className="w-full" disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: primary })}>
+                  {RETURN_ACTION_LABEL[primary]}
+                </Button>
+              )}
+
+              {/* ④ 다른 전이 — 접어둔다 */}
+              {secondary.length > 0 && (
+                <MoreActions label="다른 처리 방법">
+                  {secondary.map((next) => (
+                    <SubtleButton key={next} disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: next })}>
+                      {RETURN_ACTION_LABEL[next]}
+                    </SubtleButton>
+                  ))}
+                </MoreActions>
+              )}
+
+              {/* ⑤ 파괴적 액션 */}
+              {allowed.includes('cancelled') && (
+                <DangerZone>
+                  <DangerLink disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: 'cancelled' })}>
+                    반품 취소
+                  </DangerLink>
+                </DangerZone>
+              )}
+            </div>
+          </Card>
+        );
+      })()}
     </div>
   );
 }
