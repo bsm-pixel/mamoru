@@ -17,16 +17,9 @@ import toast from 'react-hot-toast';
 import { DLPrintModal } from './dl-print-modal';
 import { getDeliveryStatusChip, isAwaitingPickup } from '@/lib/deliveries/status';
 import { COURIER_OPTIONS, COURIER_LOTTE, COURIER_DIRECT, isAlpsTrackable, isDirectHandover, courierLabel } from '@/lib/shipping/couriers';
+import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
 
-const STATUS_LABEL: Record<string, string> = {
-  draft: '작성중', confirmed: '납품확정', shipped: '출고완료', settled: '정산완료',
-};
-const STATUS_COLOR: Record<string, string> = {
-  draft: 'bg-neutral-100 text-neutral-600',
-  confirmed: 'bg-blue-100 text-blue-700',
-  shipped: 'bg-green-100 text-green-700',
-  settled: 'bg-emerald-100 text-emerald-700',
-};
+// 상태 뱃지 라벨/색은 lib/deliveries/status.ts getDeliveryStatusChip 이 단일 출처 (여기 있던 사본은 미사용이라 제거)
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
 const PAYMENT_COLOR: Record<string, string> = { unpaid: 'bg-red-100 text-red-600', partial: 'bg-yellow-100 text-yellow-700', paid: 'bg-green-100 text-green-700' };
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
@@ -254,11 +247,8 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
           ) : isAwaitingPickup(dl) ? (
             <div>
               <span className="text-xs text-neutral-500">출고</span>
-              <p className="text-xs text-amber-600">
-                {isAlpsTrackable(dl.courier_name as string | null)
-                  ? '출고대기 — 기사님 수거 시 자동 처리'
-                  : '출고대기 — 자동 감지 없음, [출고 완료]를 눌러주세요'}
-              </p>
+              {/* 자세한 안내는 액션 카드가 맡는다 — 같은 문장을 두 번 쓰지 않는다 */}
+              <p className="text-xs text-amber-600">출고대기</p>
             </div>
           ) : null}
           {dl.tracking_number && (
@@ -284,11 +274,6 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
             <div>
               <span className="text-xs text-neutral-500">배송완료</span>
               <p className="text-green-600 font-medium">{formatDate(dl.delivered_at as string, 'M월 d일 HH:mm')}</p>
-            </div>
-          ) : dl.tracking_number && isAlpsTrackable(dl.courier_name as string | null) ? (
-            <div>
-              <span className="text-xs text-neutral-500">배송완료</span>
-              <p className="text-xs text-neutral-400">인수자등록 자동 감지 시 표시 (1시간마다 확인)</p>
             </div>
           ) : null}
           <div>
@@ -445,12 +430,52 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
         </div>
       </Card>
 
-      {/* 액션 */}
+      {/* 액션 — 표준 5슬롯 (components/ui/action-section.tsx)
+           ① 지금 상태 한 줄 ② 주 액션(검은 버튼 1개) ③ 결제 ④ 드문 것·되돌리기는 접어둠 ⑤ 파괴적 액션
+           2026-09-15 재설계: 전엔 가장 큰 검은 버튼이 제일 안 쓰는 [송장 재발급]이었고
+           주 행동인 [출고 완료]는 흰 버튼으로 박스에 갇혀 있었으며,
+           출고가 끝난 뒤에도 [송장 취소]만 빨갛게 덩그러니 남았다(사장님 지적).
+           ⚠️ 슬롯 순서를 바꾸지 말 것 — 다른 상세 패널도 이 순서로 통일한다 */}
       {!dl.cancelled_at && status !== 'settled' && (
         <Card>
           <h4 className="text-xs font-semibold text-neutral-500 mb-2">액션</h4>
           <div className="space-y-2">
-            {/* 납품 확정 (draft -> confirmed) */}
+
+            {/* ① 지금 상태 */}
+            {status === 'confirmed' && (
+              dl.tracking_number ? (
+                <ActionNote
+                  tone={isAlpsTrackable(dl.courier_name as string | null) ? 'wait' : 'muted'}
+                  title="출고대기"
+                  meta={`${courierLabel(dl.courier_name as string | null)} ${dl.tracking_number as string}`}
+                >
+                  {isAlpsTrackable(dl.courier_name as string | null)
+                    ? '롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인)'
+                    : '자동 감지가 안 되는 택배사입니다. 보내셨으면 아래 [출고 완료]를 눌러주세요.'}
+                </ActionNote>
+              ) : (
+                <ActionNote tone="muted" title="납품확정" meta="송장 없음">
+                  송장을 만들면 기사님 수거 시 자동으로 출고완료 처리됩니다.
+                </ActionNote>
+              )
+            )}
+            {status === 'shipped' && (
+              <ActionNote
+                tone="done"
+                title="출고완료"
+                meta={dl.tracking_number
+                  ? `${courierLabel(dl.courier_name as string | null)} ${dl.tracking_number as string}`
+                  : '직접 전달 (송장 없음)'}
+              >
+                {dl.delivered_at
+                  ? '배송완료까지 확인됐습니다.'
+                  : dl.tracking_number && isAlpsTrackable(dl.courier_name as string | null)
+                    ? '인수자등록이 감지되면 배송완료로 바뀝니다 (1시간마다 확인)'
+                    : '자동 배송추적은 되지 않습니다.'}
+              </ActionNote>
+            )}
+
+            {/* ② 주 액션 — 딱 하나 */}
             {status === 'draft' && (
               <Button className="w-full" onClick={() => setPendingAction({
                 action: 'confirm', label: '납품 확정',
@@ -459,75 +484,23 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
                 납품 확정 (재고 차감)
               </Button>
             )}
-
-            {/* 출고 완료 (confirmed -> shipped) */}
             {status === 'confirmed' && (
-              <div className="space-y-2">
-                {/* 110: 송장 발급됨 = 출고대기. 150: 자동 처리는 롯데 건에만 해당 */}
-                {isAwaitingPickup(dl) && (
-                  isAlpsTrackable(dl.courier_name as string | null) ? (
-                    <p className="text-[11px] text-amber-600 leading-relaxed bg-amber-50 rounded-lg px-2.5 py-2">
-                      송장 발급됨 · <b>출고대기</b><br />
-                      롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인)
-                    </p>
-                  ) : (
-                    <p className="text-[11px] text-neutral-500 leading-relaxed bg-stone-50 rounded-lg px-2.5 py-2">
-                      {courierLabel(dl.courier_name as string | null)} 송장 · <b>출고대기</b><br />
-                      롯데 외 택배사는 자동 감지가 되지 않습니다. 보내셨으면 아래 [출고 완료]를 눌러주세요.
-                    </p>
-                  )
-                )}
-
-                {/* ALPS 송장 자동 생성 — 롯데 건에만 (타 택배사로 바꾼 뒤엔 숨긴다) */}
-                {isAlpsTrackable(dl.courier_name as string | null) && (
-                  <Button className="w-full" onClick={handleBookInvoice} disabled={bookingInvoice || updateDL.isPending}>
-                    {bookingInvoice ? '송장 생성 중...' : dl.tracking_number ? '🚚 송장 재발급 (롯데택배)' : '🚚 송장 생성 (롯데택배)'}
-                  </Button>
-                )}
-
-                {/* 150: 실제로 보낸 방법을 기록하고 출고 처리 — 롯데 외 택배사·직접 전달 경로 */}
-                <div className="rounded-lg border border-neutral-200 p-2.5 space-y-1.5">
-                  <p className="text-[11px] font-semibold text-neutral-500">실제로 보낸 방법</p>
-                  <select
-                    value={courierInput}
-                    onChange={(ev) => setCourierPick(ev.target.value)}
-                    className="w-full h-9 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300"
-                  >
-                    {COURIER_OPTIONS.map((c) => (
-                      <option key={c} value={c}>{c === COURIER_DIRECT ? '직접 전달 (송장 없음)' : c}</option>
-                    ))}
-                  </select>
-                  {courierInput !== COURIER_DIRECT && (
-                    <input
-                      type="text"
-                      value={trackingInput}
-                      onChange={(ev) => setTrackingInput(ev.target.value)}
-                      placeholder={dl.tracking_number ? '송장번호 (비우면 기존 송장 유지)' : '송장번호 직접 입력'}
-                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
-                    />
-                  )}
-                  <Button variant="secondary" className="w-full" onClick={() => setPendingAction({
-                    action: 'ship',
-                    label: courierInput === COURIER_DIRECT ? '직접 전달 처리' : '출고 완료',
-                    msg: courierInput === COURIER_DIRECT
-                      ? '택배 없이 직접 전달한 것으로 출고 처리합니다.\n등록된 송장번호가 있으면 함께 지워집니다.'
-                      : `${courierInput} · 송장 ${trackingInput || (dl.tracking_number as string) || '없음'}(으)로 출고 처리합니다.`,
-                    extra: { tracking_number: trackingInput || undefined, courier_name: courierInput },
-                  })} disabled={updateDL.isPending}>
-                    {courierInput === COURIER_DIRECT ? '직접 전달로 출고 완료' : '출고 완료'}
-                  </Button>
-                  {courierInput !== COURIER_LOTTE && courierInput !== COURIER_DIRECT && (
-                    <p className="text-[10px] text-neutral-400 leading-relaxed">
-                      롯데 외 택배사는 집하·배송완료 자동 추적이 되지 않습니다. 상태는 직접 눌러 관리해주세요.
-                    </p>
-                  )}
-                </div>
-              </div>
+              dl.tracking_number ? (
+                <Button className="w-full" onClick={() => setPendingAction({
+                  action: 'ship', label: '출고 완료',
+                  msg: `${courierLabel(dl.courier_name as string | null)} 송장 ${dl.tracking_number as string}(으)로 출고 처리합니다.`,
+                  extra: { courier_name: (dl.courier_name as string | null) || COURIER_LOTTE },
+                })} disabled={updateDL.isPending}>
+                  출고 완료
+                </Button>
+              ) : (
+                <Button className="w-full" onClick={handleBookInvoice} disabled={bookingInvoice || updateDL.isPending}>
+                  {bookingInvoice ? '송장 생성 중...' : '🚚 송장 생성 (롯데택배)'}
+                </Button>
+              )
             )}
 
-            {/* 정산완료 버튼 제거 — 출고완료+결제완료가 최종 상태 */}
-
-            {/* 결제완료 처리 (결제 미완료 시) */}
+            {/* ③ 결제 — 상태와 무관하게 남은 할 일 */}
             {paymentStatus !== 'paid' && (
               <Button variant="secondary" className="w-full" onClick={() => setPendingAction({
                 action: 'update_payment', label: '결제완료 처리',
@@ -538,38 +511,113 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
               </Button>
             )}
 
-            {/* 150: 송장 취소 — ALPS 집하취소를 사장님이 직접 하신 뒤 TMS 를 정리하는 버튼.
-                 (ALPS 취소 API 는 실패만 해서 호출하지 않는다. 납품 자체는 살아있고 재고·매출 불변) */}
-            {dl.tracking_number && status !== 'settled' && (
-              <button
-                onClick={() => setPendingAction({
-                  action: 'cancel_shipment', label: '송장 취소',
-                  msg: `송장 ${dl.tracking_number as string}
+            {/* ④ 드물게 쓰는 것 — 접어둔다 */}
+            {status === 'confirmed' && (
+              <MoreActions label={dl.tracking_number ? '다르게 보냈어요' : '다른 택배사로 보냈어요'}>
+                  <div className="rounded-lg border border-neutral-200 p-2.5 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-12 shrink-0 text-[11px] text-neutral-500">택배사</span>
+                      <select
+                        value={courierInput}
+                        onChange={(ev) => setCourierPick(ev.target.value)}
+                        className="flex-1 h-9 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                      >
+                        {COURIER_OPTIONS.map((c) => (
+                          <option key={c} value={c}>{c === COURIER_DIRECT ? '직접 전달 (송장 없음)' : c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {courierInput !== COURIER_DIRECT && (
+                      <div className="flex items-center gap-2">
+                        <span className="w-12 shrink-0 text-[11px] text-neutral-500">송장</span>
+                        <input
+                          type="text"
+                          value={trackingInput}
+                          onChange={(ev) => setTrackingInput(ev.target.value)}
+                          placeholder={dl.tracking_number ? '비우면 기존 송장 유지' : '송장번호'}
+                          className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                        />
+                      </div>
+                    )}
+                    <Button variant="secondary" className="w-full" onClick={() => setPendingAction({
+                      action: 'ship',
+                      label: courierInput === COURIER_DIRECT ? '직접 전달 처리' : '출고 완료',
+                      msg: courierInput === COURIER_DIRECT
+                        ? '택배 없이 직접 전달한 것으로 출고 처리합니다.\n등록된 송장번호가 있으면 함께 지워집니다.'
+                        : `${courierInput} · 송장 ${trackingInput || (dl.tracking_number as string) || '없음'}(으)로 출고 처리합니다.`,
+                      extra: { tracking_number: trackingInput || undefined, courier_name: courierInput },
+                    })} disabled={updateDL.isPending}>
+                      {courierInput === COURIER_DIRECT ? '직접 전달로 출고 완료' : '이 방법으로 출고 완료'}
+                    </Button>
+                    {courierInput !== COURIER_LOTTE && courierInput !== COURIER_DIRECT && (
+                      <p className="text-[10px] text-neutral-400 leading-relaxed">
+                        롯데 외 택배사는 집하·배송완료 자동 추적이 되지 않습니다.
+                      </p>
+                    )}
+                  </div>
+
+                {/* 롯데 건에서만 재발급 의미가 있다 */}
+                {dl.tracking_number && isAlpsTrackable(dl.courier_name as string | null) && (
+                  <SubtleButton onClick={handleBookInvoice} disabled={bookingInvoice || updateDL.isPending}>
+                    {bookingInvoice ? '송장 생성 중...' : '🚚 롯데 송장 재발급'}
+                  </SubtleButton>
+                )}
+
+                {dl.tracking_number && (
+                  <DangerLink
+                    onClick={() => setPendingAction({
+                      action: 'cancel_shipment', label: '송장 취소',
+                      msg: `송장 ${dl.tracking_number as string}
 (${courierLabel(dl.courier_name as string | null)})
 
 먼저 롯데 ALPS 에서 집하취소를 완료하셨나요?
-TMS 는 송장 기록만 지우고 납품확정 상태로 되돌립니다.
+TMS 는 송장 기록만 지웁니다.
 재고·매출·미수금은 그대로입니다.`,
-                  variant: 'danger',
-                })}
-                disabled={updateDL.isPending}
-                className="w-full text-center text-xs text-red-400 hover:text-red-600 py-1 transition disabled:opacity-50"
-              >
-                송장 취소
-              </button>
+                      variant: 'danger',
+                    })}
+                    disabled={updateDL.isPending}
+                  >
+                    송장 취소 (기록 지우기)
+                  </DangerLink>
+                )}
+              </MoreActions>
+            )}
+            {status === 'shipped' && dl.tracking_number && (
+              <MoreActions label="잘못 처리했나요?">
+                <DangerLink
+                  onClick={() => setPendingAction({
+                    action: 'cancel_shipment', label: '송장 취소',
+                    msg: `송장 ${dl.tracking_number as string}
+(${courierLabel(dl.courier_name as string | null)})
+
+송장 기록을 지우고 출고 전(납품확정)으로 되돌립니다.
+롯데 송장이면 ALPS 집하취소를 먼저 해주세요.
+재고·매출·미수금은 그대로입니다.`,
+                    variant: 'danger',
+                  })}
+                  disabled={updateDL.isPending}
+                >
+                  송장 취소 · 출고 전으로 되돌리기
+                </DangerLink>
+              </MoreActions>
             )}
 
-            {/* 취소 (draft/confirmed만) */}
+            {/* ⑤ 파괴적 액션 */}
             {(status === 'draft' || status === 'confirmed') && (
-              <Button variant="ghost" className="w-full text-red-500 hover:text-red-600" onClick={() => setPendingAction({
-                action: 'cancel', label: '납품 취소',
-                msg: status === 'confirmed'
-                  ? '이 납품을 취소합니다.\n확정된 납품은 재고가 복원됩니다.'
-                  : '이 납품을 취소합니다.',
-                variant: 'danger',
-              })} disabled={updateDL.isPending}>
-                납품 취소
-              </Button>
+              <DangerZone>
+                <DangerLink
+                  onClick={() => setPendingAction({
+                    action: 'cancel', label: '납품 취소',
+                    msg: status === 'confirmed'
+                      ? '이 납품을 취소합니다.\n확정된 납품은 재고가 복원됩니다.'
+                      : '이 납품을 취소합니다.',
+                    variant: 'danger',
+                  })}
+                  disabled={updateDL.isPending}
+                >
+                  납품 취소
+                </DangerLink>
+              </DangerZone>
             )}
           </div>
         </Card>
