@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
 import { recalcOutstanding } from '@/lib/outstanding';
 import { computeDeliveryTotals } from '@/lib/deliveries/totals';
+import { COURIER_LOTTE, isDirectHandover } from '@/lib/shipping/couriers';
 
 /** GET /api/deliveries/[id] — 납품 상세 */
 export async function GET(
@@ -91,15 +92,46 @@ export async function PATCH(
       // 🐛 110 버그 수정: 기존엔 `body.tracking_number || null` 이라, 송장이 이미 발급된 건에
       //    수동 [출고 완료] 를 누르면 **송장번호가 null 로 지워졌다.**
       //    (전엔 송장 생성 즉시 shipped 라 이 버튼을 누를 일이 없어 안 드러났던 버그)
-      const trackingNumber = body.tracking_number || dl.tracking_number || null;
+      // 150: 직접전달(거래처 방문 수령·직접 배달)은 송장이 없다 → 남아있던 송장번호를 지운다.
+      //      그 외엔 기존 규칙 유지(입력 없으면 기존 송장 보존).
+      const direct = isDirectHandover(body.courier_name);
+      const trackingNumber = direct ? null : (body.tracking_number || dl.tracking_number || null);
+      // 택배사: 명시값 → 기존값 → (송장이 있으면) 롯데. 송장도 택배사도 없으면 null
+      const courierName = direct
+        ? String(body.courier_name)
+        : (body.courier_name || dl.courier_name || (trackingNumber ? COURIER_LOTTE : null));
       await db.from('deliveries').update({
         status: 'shipped',
         shipped_date: new Date().toISOString().slice(0, 10),
         tracking_number: trackingNumber,
+        courier_name: courierName,
         shipped_source: 'manual',   // 110: 집하 자동감지와 구분
         updated_at: new Date().toISOString(),
       }).eq('id', id);
       return NextResponse.json({ success: true, status: 'shipped' });
+    }
+
+    // ── 송장 취소 (150, 2026-09-15) ──
+    //   🔴 ALPS 취소 API 는 호출하지 않는다. 실제로 성공한 적이 없어(사장님 실측) 매번 실패 경고만 띄웠다.
+    //      올바른 순서는 **ALPS 에서 직접 집하취소 → 이 버튼으로 TMS 정리** 다. 화면 문구도 그렇게 안내한다.
+    //      (잘 되는 반품 수거접수 bookReturnPickup(02) 와는 완전히 다른 API 라 서로 영향 없음)
+    //   납품 자체는 살린다 — 재고·매출·미수금 불변. 상태만 출고대기 이전(confirmed)으로 되돌린다.
+    if (action === 'cancel_shipment') {
+      if (!dl.tracking_number) return NextResponse.json({ error: '송장이 없습니다' }, { status: 400 });
+      if (dl.status === 'settled') return NextResponse.json({ error: '정산 완료 건은 송장을 취소할 수 없습니다' }, { status: 400 });
+      if (dl.cancelled_at) return NextResponse.json({ error: '취소된 납품입니다' }, { status: 400 });
+
+      await db.from('deliveries').update({
+        tracking_number: null,
+        courier_name: null,
+        // 출고완료까지 갔던 건이면 출고 흔적도 함께 지운다(재출고 시 상태 오염 방지 — 판매 DELETE /ship 과 같은 규칙)
+        status: 'confirmed',
+        shipped_date: null,
+        shipped_source: null,
+        delivered_at: null,
+        updated_at: new Date().toISOString(),
+      }).eq('id', id);
+      return NextResponse.json({ success: true, status: 'confirmed' });
     }
 
     // ── 정산 완료 (shipped → settled) ──

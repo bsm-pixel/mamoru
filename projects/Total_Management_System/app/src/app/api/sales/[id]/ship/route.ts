@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getNextInvoice, bookShipment, cancelShipment } from '@/lib/lotte/alps-client';
 
-/** POST /api/sales/[id]/ship — 판매 건 송장 생성 */
+/**
+ * POST /api/sales/[id]/ship — 판매 건 송장 등록
+ *
+ *   기본       : 롯데 ALPS 송장 자동 생성 (주소·연락처 필요)
+ *   manual:true: 150 신규 — **다른 택배사로 직접 보낸 경우** 택배사+송장번호만 기록.
+ *                ALPS 를 호출하지 않으므로 주소가 없어도 되고, 크론 자동추적 대상에서도 빠진다.
+ *                (롯데 집하취소 후 우체국으로 보냈는데 기록할 방법이 없던 문제 — 사장님 2026-09-15)
+ */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -26,6 +33,23 @@ export async function POST(
     if (fetchErr || !sale) return NextResponse.json({ error: '판매 건을 찾을 수 없습니다' }, { status: 404 });
     if (sale.cancelled_at) return NextResponse.json({ error: '취소된 판매입니다' }, { status: 400 });
     if (sale.invoice_number) return NextResponse.json({ error: '이미 송장이 생성되었습니다' }, { status: 400 });
+
+    // ── 150: 타 택배사 직접 발송 — ALPS 미호출, 기록만 ──
+    const body = await req.json().catch(() => ({}));
+    if (body?.manual === true) {
+      const invoiceNumber = String(body.invoice_number || '').trim();
+      const courierName = String(body.courier_name || '').trim();
+      if (!invoiceNumber) return NextResponse.json({ error: '송장번호를 입력해주세요' }, { status: 400 });
+      if (!courierName) return NextResponse.json({ error: '택배사를 선택해주세요' }, { status: 400 });
+
+      await db.from('offline_sales').update({
+        invoice_number: invoiceNumber,
+        delivery_method: 'shipping',
+        courier_name: courierName,
+      }).eq('id', id);
+
+      return NextResponse.json({ success: true, invoiceNumber, manual: true });
+    }
 
     // 고객 주소 조회
     if (!sale.customer_id) return NextResponse.json({ error: '고객 정보가 없어 송장 생성 불가' }, { status: 400 });
@@ -117,6 +141,7 @@ export async function DELETE(
     // DB 업데이트 (109: 집하 자동감지 흔적도 함께 초기화 — 재출고 시 상태 오염 방지)
     await db.from('offline_sales').update({
       invoice_number: null,
+      courier_name: null,        // 150: 택배사도 함께 정리 — 안 지우면 다음 발송에 옛 택배사가 따라붙는다
       shipped_at: null,
       shipped_source: null,
       shipped_notified_at: null,

@@ -7,6 +7,7 @@ import { sendSalesShippedNotification, sendExchangeShippedNotification } from '@
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
 import { shipImwebOrder } from '@/lib/imweb/client';
+import { isAlpsTrackable } from '@/lib/shipping/couriers';
 
 /**
  * GET /api/cron/track-delivery
@@ -196,6 +197,8 @@ export async function GET(request: NextRequest) {
     let repairsPicked = 0;
     for (const repair of repairPickups || []) {
       try {
+        // 150: 롯데 외 택배사·직접전달 건은 ALPS 추적 대상이 아니다 (헛조회 + 영영 안 끝나는 폴링 방지)
+        if (!isAlpsTrackable(repair.courier_name)) continue;
         const r = await queryTrackingStatus(repair.invoice_number);
         if (r.state === 'CANCELLED' || r.state === 'NOT_FOUND') continue;
         if (!r.pickedUp) continue;
@@ -258,7 +261,7 @@ export async function GET(request: NextRequest) {
 
     const { data: repairs, error: repairsErr } = await db
       .from('repairs')
-      .select('id, as_id, invoice_number, name, phone, review_promised_at, review_promised_type, review_promised_subtype, review_request_sent_at')
+      .select('id, as_id, invoice_number, name, phone, courier_name, review_promised_at, review_promised_type, review_promised_subtype, review_request_sent_at')
       .eq('status', 'shipped')
       .not('invoice_number', 'is', null)
       .limit(50);
@@ -268,6 +271,8 @@ export async function GET(request: NextRequest) {
     let repairsDelivered = 0;
     for (const repair of repairs || []) {
       try {
+        // 150: 롯데 외 택배사·직접전달 건은 ALPS 추적 대상이 아니다 (헛조회 + 영영 안 끝나는 폴링 방지)
+        if (!isAlpsTrackable(repair.courier_name)) continue;
         const result = await queryTrackingStatus(repair.invoice_number);
         if (debug) {
           debugResults.push({
@@ -368,6 +373,8 @@ export async function GET(request: NextRequest) {
     let salesPickupSkippedB2B = 0;
     for (const sale of pickupTargets || []) {
       try {
+        // 150: 롯데 외 택배사·직접전달 건은 ALPS 추적 대상이 아니다 (헛조회 + 영영 안 끝나는 폴링 방지)
+        if (!isAlpsTrackable(sale.courier_name)) continue;
         const r = await queryTrackingStatus(sale.invoice_number);
         if (debug && salesPickupDebug.length < 3) {
           salesPickupDebug.push({
@@ -461,6 +468,8 @@ export async function GET(request: NextRequest) {
 
     for (const ret of (exErr ? [] : exTargets) || []) {
       try {
+        // 150: 롯데 외 택배사·직접전달 건은 ALPS 추적 대상이 아니다 (헛조회 + 영영 안 끝나는 폴링 방지)
+        if (!isAlpsTrackable(ret.exchange_out_courier_name)) continue;
         const r = await queryTrackingStatus(ret.exchange_out_invoice_number);
         // 송장 취소/미접수는 건드리지 않음
         if (r.state === 'CANCELLED' || r.state === 'NOT_FOUND') continue;
@@ -520,7 +529,7 @@ export async function GET(request: NextRequest) {
     //   매장 직접 수령은 invoice_number NULL → 자연 제외
     const { data: sales, error: salesErr } = await db
       .from('offline_sales')
-      .select('id, sale_number, invoice_number, customer_name, customer_phone, review_requested_at, review_promised_at, review_promised_type, review_promised_subtype')
+      .select('id, sale_number, invoice_number, customer_name, customer_phone, courier_name, review_requested_at, review_promised_at, review_promised_type, review_promised_subtype')
       .not('shipped_at', 'is', null)
       .is('delivered_at', null)
       .not('invoice_number', 'is', null)
@@ -532,6 +541,8 @@ export async function GET(request: NextRequest) {
     let salesDelivered = 0;
     for (const sale of sales || []) {
       try {
+        // 150: 롯데 외 택배사·직접전달 건은 ALPS 추적 대상이 아니다 (헛조회 + 영영 안 끝나는 폴링 방지)
+        if (!isAlpsTrackable(sale.courier_name)) continue;
         const result = await queryTrackingStatus(sale.invoice_number);
         if (result.state === 'DELIVERED') {
           await db
@@ -594,7 +605,7 @@ export async function GET(request: NextRequest) {
     //   B2B 는 출고 알림톡을 보내지 않는다 (사장님 결정) — 상태만 정확히.
     const { data: dlPickups, error: dlPickupErr } = await db
       .from('deliveries')
-      .select('id, dl_number, customer_name, tracking_number')
+      .select('id, dl_number, customer_name, tracking_number, courier_name')
       .eq('status', 'confirmed')
       .not('tracking_number', 'is', null)
       .is('cancelled_at', null)
@@ -605,6 +616,8 @@ export async function GET(request: NextRequest) {
     let deliveriesPicked = 0;
     for (const dl of dlPickups || []) {
       try {
+        // 150: 롯데 외 택배사·직접전달 건은 ALPS 추적 대상이 아니다 (헛조회 + 영영 안 끝나는 폴링 방지)
+        if (!isAlpsTrackable(dl.courier_name)) continue;
         const r = await queryTrackingStatus(dl.tracking_number);
         if (r.state === 'CANCELLED' || r.state === 'NOT_FOUND') continue;
         if (!r.pickedUp) continue;   // 아직 기사님이 안 가져감
@@ -638,7 +651,7 @@ export async function GET(request: NextRequest) {
     //   ALPS 인수자등록(코드 45)/배달완료(41) 감지 시 delivered_at 세팅 (status 는 정산용이라 미변경)
     const { data: deliveries, error: dlErr } = await db
       .from('deliveries')
-      .select('id, dl_number, customer_name, tracking_number')
+      .select('id, dl_number, customer_name, tracking_number, courier_name')
       .not('tracking_number', 'is', null)
       .is('delivered_at', null)
       .is('cancelled_at', null)
@@ -649,6 +662,8 @@ export async function GET(request: NextRequest) {
     let deliveriesDelivered = 0;
     for (const dl of deliveries || []) {
       try {
+        // 150: 롯데 외 택배사·직접전달 건은 ALPS 추적 대상이 아니다 (헛조회 + 영영 안 끝나는 폴링 방지)
+        if (!isAlpsTrackable(dl.courier_name)) continue;
         const result = await queryTrackingStatus(dl.tracking_number);
         if (result.state === 'DELIVERED') {
           await db

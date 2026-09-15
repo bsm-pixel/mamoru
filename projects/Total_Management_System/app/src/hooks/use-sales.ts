@@ -723,6 +723,31 @@ export function useShipSale() {
   });
 }
 
+/** 150: 다른 택배사로 직접 보낸 건 기록 (ALPS 미호출) */
+export function useRecordSaleShipment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (p: { id: string; invoice_number: string; courier_name: string }) => {
+      const res = await fetch(`/api/sales/${p.id}/ship`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ manual: true, invoice_number: p.invoice_number, courier_name: p.courier_name }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '송장 기록 실패');
+      }
+      return res.json();
+    },
+    onSuccess: (_data, p) => {
+      toast.success(`${p.courier_name} 송장 기록 완료`);
+      queryClient.invalidateQueries({ queryKey: ['sale', p.id] });
+      invalidateFinancialQueries(queryClient);
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+  });
+}
+
 /** 판매 송장 취소 */
 export function useCancelSaleShipment() {
   const queryClient = useQueryClient();

@@ -16,6 +16,7 @@ import { Package, Pencil, Save, X, Printer, Minus, Plus, Trash2 } from 'lucide-r
 import toast from 'react-hot-toast';
 import { DLPrintModal } from './dl-print-modal';
 import { getDeliveryStatusChip, isAwaitingPickup } from '@/lib/deliveries/status';
+import { COURIER_OPTIONS, COURIER_LOTTE, COURIER_DIRECT, isAlpsTrackable, isDirectHandover, courierLabel } from '@/lib/shipping/couriers';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', confirmed: '납품확정', shipped: '출고완료', settled: '정산완료',
@@ -57,6 +58,9 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const [saving, setSaving] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
   const [trackingInput, setTrackingInput] = useState('');
+  // 150: 수동 출고 시 택배사 — 롯데 외 배송·직접전달 경로.
+  //      null = 아직 안 고름 → 이 건에 이미 기록된 택배사를 기본값으로 쓴다(우체국 건을 열면 우체국이 뜨게)
+  const [courierPick, setCourierPick] = useState<string | null>(null);
   const [bookingInvoice, setBookingInvoice] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     action: string; label: string; msg: string; variant?: 'danger' | 'default'; extra?: Record<string, unknown>;
@@ -77,6 +81,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const dl: DL = data.delivery;
   const items: DLItem[] = data.items;
   const status = (dl.status as string) || 'draft';
+  const courierInput = courierPick ?? ((dl.courier_name as string | null) || COURIER_LOTTE);
 
   // 거래처별 납품명·가격 결정 (생성 모달 create-delivery-modal 과 동일 규칙: catalog → 고객유형 → 기본)
   const catalogEntryMap = new Map((customerCatalogData?.catalog || []).map((c) => [c.product_id, c]));
@@ -249,13 +254,29 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
           ) : isAwaitingPickup(dl) ? (
             <div>
               <span className="text-xs text-neutral-500">출고</span>
-              <p className="text-xs text-amber-600">출고대기 — 기사님 수거 시 자동 처리</p>
+              <p className="text-xs text-amber-600">
+                {isAlpsTrackable(dl.courier_name as string | null)
+                  ? '출고대기 — 기사님 수거 시 자동 처리'
+                  : '출고대기 — 자동 감지 없음, [출고 완료]를 눌러주세요'}
+              </p>
             </div>
           ) : null}
           {dl.tracking_number && (
             <div>
               <span className="text-xs text-neutral-500">송장번호</span>
               <p className="font-mono text-xs">{dl.tracking_number as string}</p>
+              {/* 150: 택배사 명시 — 롯데가 아니면 자동추적이 안 된다는 사실을 같이 보여준다 */}
+              <p className="text-[11px] text-neutral-400">
+                {courierLabel(dl.courier_name as string | null)}
+                {!isAlpsTrackable(dl.courier_name as string | null) && ' · 자동 추적 미지원'}
+              </p>
+            </div>
+          )}
+          {/* 150: 택배 없이 직접 전달한 건 */}
+          {!dl.tracking_number && isDirectHandover(dl.courier_name as string | null) && (
+            <div>
+              <span className="text-xs text-neutral-500">배송</span>
+              <p className="text-xs">직접 전달 (송장 없음)</p>
             </div>
           )}
           {/* 배송완료 (ALPS 인수자등록 자동 감지) — 날짜+시간 */}
@@ -264,7 +285,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
               <span className="text-xs text-neutral-500">배송완료</span>
               <p className="text-green-600 font-medium">{formatDate(dl.delivered_at as string, 'M월 d일 HH:mm')}</p>
             </div>
-          ) : dl.tracking_number ? (
+          ) : dl.tracking_number && isAlpsTrackable(dl.courier_name as string | null) ? (
             <div>
               <span className="text-xs text-neutral-500">배송완료</span>
               <p className="text-xs text-neutral-400">인수자등록 자동 감지 시 표시 (1시간마다 확인)</p>
@@ -441,38 +462,66 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
 
             {/* 출고 완료 (confirmed -> shipped) */}
             {status === 'confirmed' && (
-              <div className="space-y-1.5">
-                {/* 110: 송장 발급됨 = 출고대기. 기사님 수거 시 자동으로 출고완료 처리된다 */}
+              <div className="space-y-2">
+                {/* 110: 송장 발급됨 = 출고대기. 150: 자동 처리는 롯데 건에만 해당 */}
                 {isAwaitingPickup(dl) && (
-                  <p className="text-[11px] text-amber-600 leading-relaxed bg-amber-50 rounded-lg px-2.5 py-2">
-                    송장 발급됨 · <b>출고대기</b><br />
-                    롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인)
-                  </p>
+                  isAlpsTrackable(dl.courier_name as string | null) ? (
+                    <p className="text-[11px] text-amber-600 leading-relaxed bg-amber-50 rounded-lg px-2.5 py-2">
+                      송장 발급됨 · <b>출고대기</b><br />
+                      롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인)
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-neutral-500 leading-relaxed bg-stone-50 rounded-lg px-2.5 py-2">
+                      {courierLabel(dl.courier_name as string | null)} 송장 · <b>출고대기</b><br />
+                      롯데 외 택배사는 자동 감지가 되지 않습니다. 보내셨으면 아래 [출고 완료]를 눌러주세요.
+                    </p>
+                  )
                 )}
-                {/* ALPS 송장 자동 생성 */}
-                <Button className="w-full" onClick={handleBookInvoice} disabled={bookingInvoice || updateDL.isPending}>
-                  {bookingInvoice ? '송장 생성 중...' : dl.tracking_number ? '🚚 송장 재발급 (롯데택배)' : '🚚 송장 생성 (롯데택배)'}
-                </Button>
-                {/* 또는 수동 입력 */}
-                <div className="flex items-center gap-1.5">
-                  <div className="flex-1 h-px bg-neutral-200" />
-                  <span className="text-[10px] text-neutral-400">또는 수동 입력</span>
-                  <div className="flex-1 h-px bg-neutral-200" />
+
+                {/* ALPS 송장 자동 생성 — 롯데 건에만 (타 택배사로 바꾼 뒤엔 숨긴다) */}
+                {isAlpsTrackable(dl.courier_name as string | null) && (
+                  <Button className="w-full" onClick={handleBookInvoice} disabled={bookingInvoice || updateDL.isPending}>
+                    {bookingInvoice ? '송장 생성 중...' : dl.tracking_number ? '🚚 송장 재발급 (롯데택배)' : '🚚 송장 생성 (롯데택배)'}
+                  </Button>
+                )}
+
+                {/* 150: 실제로 보낸 방법을 기록하고 출고 처리 — 롯데 외 택배사·직접 전달 경로 */}
+                <div className="rounded-lg border border-neutral-200 p-2.5 space-y-1.5">
+                  <p className="text-[11px] font-semibold text-neutral-500">실제로 보낸 방법</p>
+                  <select
+                    value={courierInput}
+                    onChange={(ev) => setCourierPick(ev.target.value)}
+                    className="w-full h-9 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                  >
+                    {COURIER_OPTIONS.map((c) => (
+                      <option key={c} value={c}>{c === COURIER_DIRECT ? '직접 전달 (송장 없음)' : c}</option>
+                    ))}
+                  </select>
+                  {courierInput !== COURIER_DIRECT && (
+                    <input
+                      type="text"
+                      value={trackingInput}
+                      onChange={(ev) => setTrackingInput(ev.target.value)}
+                      placeholder={dl.tracking_number ? '송장번호 (비우면 기존 송장 유지)' : '송장번호 직접 입력'}
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                    />
+                  )}
+                  <Button variant="secondary" className="w-full" onClick={() => setPendingAction({
+                    action: 'ship',
+                    label: courierInput === COURIER_DIRECT ? '직접 전달 처리' : '출고 완료',
+                    msg: courierInput === COURIER_DIRECT
+                      ? '택배 없이 직접 전달한 것으로 출고 처리합니다.\n등록된 송장번호가 있으면 함께 지워집니다.'
+                      : `${courierInput} · 송장 ${trackingInput || (dl.tracking_number as string) || '없음'}(으)로 출고 처리합니다.`,
+                    extra: { tracking_number: trackingInput || undefined, courier_name: courierInput },
+                  })} disabled={updateDL.isPending}>
+                    {courierInput === COURIER_DIRECT ? '직접 전달로 출고 완료' : '출고 완료'}
+                  </Button>
+                  {courierInput !== COURIER_LOTTE && courierInput !== COURIER_DIRECT && (
+                    <p className="text-[10px] text-neutral-400 leading-relaxed">
+                      롯데 외 택배사는 집하·배송완료 자동 추적이 되지 않습니다. 상태는 직접 눌러 관리해주세요.
+                    </p>
+                  )}
                 </div>
-                <input
-                  type="text"
-                  value={trackingInput}
-                  onChange={(e) => setTrackingInput(e.target.value)}
-                  placeholder="송장번호 직접 입력"
-                  className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
-                />
-                <Button variant="secondary" className="w-full" onClick={() => setPendingAction({
-                  action: 'ship', label: '출고 완료',
-                  msg: trackingInput ? `송장번호 ${trackingInput}(으)로 출고 처리합니다.` : '출고 완료 처리합니다.',
-                  extra: { tracking_number: trackingInput || undefined },
-                })} disabled={updateDL.isPending}>
-                  출고 완료
-                </Button>
               </div>
             )}
 
@@ -487,6 +536,27 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
               })} disabled={updateDL.isPending}>
                 결제완료 처리
               </Button>
+            )}
+
+            {/* 150: 송장 취소 — ALPS 집하취소를 사장님이 직접 하신 뒤 TMS 를 정리하는 버튼.
+                 (ALPS 취소 API 는 실패만 해서 호출하지 않는다. 납품 자체는 살아있고 재고·매출 불변) */}
+            {dl.tracking_number && status !== 'settled' && (
+              <button
+                onClick={() => setPendingAction({
+                  action: 'cancel_shipment', label: '송장 취소',
+                  msg: `송장 ${dl.tracking_number as string}
+(${courierLabel(dl.courier_name as string | null)})
+
+먼저 롯데 ALPS 에서 집하취소를 완료하셨나요?
+TMS 는 송장 기록만 지우고 납품확정 상태로 되돌립니다.
+재고·매출·미수금은 그대로입니다.`,
+                  variant: 'danger',
+                })}
+                disabled={updateDL.isPending}
+                className="w-full text-center text-xs text-red-400 hover:text-red-600 py-1 transition disabled:opacity-50"
+              >
+                송장 취소
+              </button>
             )}
 
             {/* 취소 (draft/confirmed만) */}

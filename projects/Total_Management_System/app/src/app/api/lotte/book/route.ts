@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
         .from('deliveries')
         .update({
           tracking_number: invoiceNumber,
+          courier_name: '롯데택배',   // 150: 택배사 명시 — 크론 자동추적 대상 판정에 쓰인다
           updated_at: new Date().toISOString(),
         })
         .eq('id', body.deliveryId);

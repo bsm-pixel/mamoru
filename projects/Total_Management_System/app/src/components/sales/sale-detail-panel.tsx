@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useMarkSaleShipped, useMarkSaleDelivered, useResendShipNotify, useMarkSalePacked } from '@/hooks/use-sales';
+import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useRecordSaleShipment, useMarkSaleShipped, useMarkSaleDelivered, useResendShipNotify, useMarkSalePacked } from '@/hooks/use-sales';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { CustomerNotes } from '@/components/shared/customer-notes';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
@@ -16,6 +16,7 @@ import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer,
 import { PrepSheetModal } from './prep-sheet-modal';
 import { StatusStepper } from '@/components/ui/status-stepper';
 import { DeliveryTracker } from '@/components/orders/delivery-tracker';
+import { COURIER_OPTIONS, COURIER_LOTTE, COURIER_DIRECT, isAlpsTrackable, courierLabel } from '@/lib/shipping/couriers';
 import { PrimaryActionBar } from '@/components/ui/primary-action-bar';
 import { ExchangeModal } from './exchange-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -81,11 +82,17 @@ export function SaleDetailPanel({ saleId }: Props) {
   const rebuildSale = useRebuildSale();
   const shipSale = useShipSale();
   const cancelShipment = useCancelSaleShipment();
+  const recordShipment = useRecordSaleShipment();   // 150: 다른 택배사로 직접 발송
   const markShipped = useMarkSaleShipped();
   const markDelivered = useMarkSaleDelivered();
   const resendShipNotify = useResendShipNotify();
   const markPacked = useMarkSalePacked();   // 포장완료(준비완료) 토글 — 2026-07-18
   const [showPickupConfirm, setShowPickupConfirm] = useState(false);
+  // 150: 롯데 외 택배사로 직접 보낸 경우 — 택배사+송장번호 기록
+  const [manualShipOpen, setManualShipOpen] = useState(false);
+  const [manualCourier, setManualCourier] = useState<string>('우체국택배');
+  const [manualInvoice, setManualInvoice] = useState('');
+  const [showCancelShipConfirm, setShowCancelShipConfirm] = useState(false);
   const [cancelMode, setCancelMode] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [returnMode, setReturnMode] = useState(false);
@@ -666,9 +673,14 @@ export function SaleDetailPanel({ saleId }: Props) {
               <div className="flex items-center gap-2">
                 <Package size={14} className="text-green-600" />
                 <span className="text-sm font-mono font-medium">{s.invoice_number}</span>
-                <span className="text-xs text-neutral-400">{s.courier_name || '롯데택배'}</span>
+                <span className="text-xs text-neutral-400">{courierLabel(s.courier_name)}</span>
               </div>
-              <DeliveryTracker invNo={s.invoice_number} />
+              {/* 150: 롯데 송장만 ALPS 추적이 된다. 타 택배사에 추적기를 띄우면 "추적 정보 없음"만 뜬다 */}
+              {isAlpsTrackable(s.courier_name) ? (
+                <DeliveryTracker invNo={s.invoice_number} />
+              ) : (
+                <p className="text-[11px] text-neutral-400">자동 배송추적 미지원 택배사 — 상태는 직접 눌러 관리해주세요</p>
+              )}
               {s.shipped_at ? (
                 <>
                   <p className="text-xs text-green-600 flex items-center gap-1 flex-wrap">
@@ -721,13 +733,20 @@ export function SaleDetailPanel({ saleId }: Props) {
                 </>
               ) : (
                 <>
-                  {/* 109: 자동 감지 안내 — "왜 버튼 안 눌렀는데 됐지?" 를 막는 문구 */}
-                  <p className="text-[11px] text-neutral-400 leading-relaxed">
-                    롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인)
-                    {!isB2BCustomerType(s.customer_type) && ' · 출고 알림톡도 자동 발송'}
-                  </p>
+                  {/* 109: 자동 감지 안내 — "왜 버튼 안 눌렀는데 됐지?" 를 막는 문구. 150: 롯데 건에만 해당 */}
+                  {isAlpsTrackable(s.courier_name) ? (
+                    <p className="text-[11px] text-neutral-400 leading-relaxed">
+                      롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인)
+                      {!isB2BCustomerType(s.customer_type) && ' · 출고 알림톡도 자동 발송'}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-neutral-400 leading-relaxed">
+                      {courierLabel(s.courier_name)}는 자동 감지가 되지 않습니다. 보내셨으면 위 [출고완료]를 눌러주세요.
+                    </p>
+                  )}
                   {/* 출고완료는 상단 「다음 할 일」로 이동 */}
-                  <button onClick={() => cancelShipment.mutate(saleId)}
+                  {/* 150: 확인 모달 경유 — ALPS 집하취소가 먼저라는 순서를 알려준다 */}
+                  <button onClick={() => setShowCancelShipConfirm(true)}
                     disabled={cancelShipment.isPending}
                     className="w-full text-center text-xs text-red-400 hover:text-red-600">
                     {cancelShipment.isPending ? '취소 중...' : '송장 취소'}
@@ -747,10 +766,83 @@ export function SaleDetailPanel({ saleId }: Props) {
                 /* 택배 발송·고객 수령 완료는 상단 「다음 할 일」로 이동 */
                 null
               )}
+              {/* 150: 롯데가 아닌 택배사로 직접 보낸 경우 — 택배사+송장번호만 기록(ALPS 미호출).
+                   이전엔 이 경로가 아예 없어 [고객 수령 완료](매장 수령)로 잘못 기록할 수밖에 없었다 */}
+              {!s.delivered_at && !s.cancelled_at && (
+                manualShipOpen ? (
+                  <div className="rounded-lg border border-neutral-200 p-2.5 space-y-1.5">
+                    <p className="text-[11px] font-semibold text-neutral-500">다른 택배사로 발송</p>
+                    <select
+                      value={manualCourier}
+                      onChange={(ev) => setManualCourier(ev.target.value)}
+                      className="w-full h-9 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                    >
+                      {COURIER_OPTIONS.filter((c) => c !== COURIER_DIRECT && c !== COURIER_LOTTE).map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={manualInvoice}
+                      onChange={(ev) => setManualInvoice(ev.target.value)}
+                      placeholder="송장번호"
+                      className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                    />
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => { setManualShipOpen(false); setManualInvoice(''); }}
+                        className="flex-1 h-9 rounded-lg border border-neutral-200 text-xs text-neutral-500 hover:bg-neutral-50"
+                      >
+                        닫기
+                      </button>
+                      <button
+                        onClick={() => recordShipment.mutate(
+                          { id: saleId, invoice_number: manualInvoice.trim(), courier_name: manualCourier },
+                          { onSuccess: () => { setManualShipOpen(false); setManualInvoice(''); } },
+                        )}
+                        disabled={!manualInvoice.trim() || recordShipment.isPending}
+                        className="flex-1 h-9 rounded-lg bg-stone-900 text-xs font-medium text-white disabled:opacity-40"
+                      >
+                        {recordShipment.isPending ? '기록 중…' : '송장 기록'}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-neutral-400 leading-relaxed">
+                      롯데 외 택배사는 집하·배송완료 자동 추적이 되지 않습니다. 출고완료는 직접 눌러주세요.
+                    </p>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setManualShipOpen(true)}
+                    className="w-full text-center text-xs text-neutral-500 hover:text-neutral-700 underline py-1"
+                  >
+                    다른 택배사로 발송 (직접 입력)
+                  </button>
+                )
+              )}
             </div>
           )}
         </div>
       )}
+
+      {/* 150: 송장 취소 확인 — ALPS 집하취소가 먼저다 */}
+      <ConfirmModal
+        open={showCancelShipConfirm}
+        onClose={() => setShowCancelShipConfirm(false)}
+        onConfirm={() => { cancelShipment.mutate(saleId); setShowCancelShipConfirm(false); }}
+        title="송장 취소"
+        message={
+          <div className="space-y-2">
+            <p>
+              송장 <strong className="font-mono">{(s as Record<string, unknown>).invoice_number as string}</strong>
+              {' '}({courierLabel(s.courier_name)}) 기록을 지웁니다.
+            </p>
+            <p className="text-xs text-red-500">먼저 롯데 ALPS 에서 집하취소를 완료해주세요. TMS 는 송장 기록만 정리합니다.</p>
+            <p className="text-xs text-neutral-500">판매·매출·재고는 그대로입니다. 취소 후 다른 택배사로 다시 발송할 수 있습니다.</p>
+          </div>
+        }
+        confirmLabel="송장 취소"
+        variant="danger"
+      />
 
       {/* 고객 수령 완료 확인 모달 */}
       <ConfirmModal
