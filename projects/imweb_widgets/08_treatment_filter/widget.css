@@ -1,4 +1,4 @@
-.mm-flt{max-width:880px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-flt{max-width:880px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-flt__chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:22px;}
 .mm-flt__chip{appearance:none;cursor:pointer;padding:9px 18px;border-radius:999px;border:1px solid #D4D0CB;background:#FFFFFF;color:#1A1A1A;font-family:inherit;font-size:14px;font-weight:600;transition:all .2s;}
 .mm-flt__chip.is-on{background:#1A1A1A;color:#FAF9F7;border-color:#1A1A1A;}

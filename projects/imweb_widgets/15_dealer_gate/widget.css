@@ -1,4 +1,4 @@
-.mm-gate{max-width:440px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-gate{max-width:440px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-gate__lock{padding:clamp(24px,5vw,32px);border:1px solid #D4D0CB;border-radius:16px;background:#FAF9F7;text-align:center;}
 .mm-gate__prompt{margin:0 0 16px;font-size:clamp(15px,4vw,17px);font-weight:700;}
 .mm-gate__row{display:flex;gap:8px;}

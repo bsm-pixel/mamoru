@@ -1,4 +1,4 @@
-.mm-hpin{position:relative;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-hpin{position:relative;font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;}
 .mm-hpin__sticky{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;align-items:center;}
 .mm-hpin__track{display:flex;gap:clamp(16px,3vw,32px);padding:0 clamp(16px,4vw,48px);will-change:transform;}
 .mm-hpin__panel{flex:0 0 auto;width:min(78vw,560px);}

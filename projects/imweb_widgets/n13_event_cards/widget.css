@@ -1,4 +1,4 @@
-.mm-ev{--ev-cols:3;box-sizing:border-box;max-width:1080px;margin:0 auto;padding:clamp(8px,2vw,16px) 0;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-ev{--ev-cols:3;box-sizing:border-box;max-width:1080px;margin:0 auto;padding:clamp(8px,2vw,16px) 0;font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-ev[data-theme="다크"]{color:#FAF9F7;}
 .mm-ev__title{margin:0 0 clamp(14px,3vw,22px);padding:0 4px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(18px,4vw,26px);font-weight:800;letter-spacing:-.02em;color:inherit;}
 .mm-ev__title:empty{display:none;}

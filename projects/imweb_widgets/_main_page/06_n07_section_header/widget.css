@@ -1,4 +1,4 @@
-.mm-sh{max-width:900px;margin:0 auto;padding:clamp(20px,4vw,32px) 8px;display:flex;align-items:baseline;gap:clamp(14px,3vw,28px);font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-sh{max-width:900px;margin:0 auto;padding:clamp(20px,4vw,32px) 8px;display:flex;align-items:baseline;gap:clamp(14px,3vw,28px);font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;color:#1A1A1A;}
 /* 글씨 색: 밝은 배경=블랙(기본) / 어두운 배경=화이트(크림 반전). 인덱스·제목은 currentColor 상속, 키커·라인만 톤별 */
 .mm-sh[data-text="화이트"]{color:#FAF9F7;}
 /* 정렬 3종: 왼쪽(기본) · 중앙 · 오른쪽. 순수 CSS 속성선택자(편집기 즉시반영). 변형 입력도 커버 */

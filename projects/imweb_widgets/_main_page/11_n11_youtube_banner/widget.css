@@ -1,4 +1,4 @@
-.mm-yt{--yt-cols:3;box-sizing:border-box;max-width:920px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-yt{--yt-cols:3;box-sizing:border-box;max-width:920px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-yt__heading{margin:0 0 16px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(20px,5vw,28px);font-weight:800;letter-spacing:-.02em;}
 .mm-yt__heading:empty{display:none;}
 /* PC: 한 줄 N개(--yt-cols) 그리드 */

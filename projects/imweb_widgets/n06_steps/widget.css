@@ -1,4 +1,4 @@
-.mm-step{max-width:880px;margin:0 auto;padding:clamp(20px,4vw,32px) 8px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-step{max-width:880px;margin:0 auto;padding:clamp(20px,4vw,32px) 8px;font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-step__title{margin:0 0 24px;text-align:center;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(20px,5vw,28px);font-weight:800;letter-spacing:-.02em;}
 .mm-step__title:empty{display:none;}
 .mm-step__list{counter-reset:st;list-style:none;margin:0;padding:0;display:flex;gap:0;}

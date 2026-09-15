@@ -1,4 +1,4 @@
-.mm-tl{box-sizing:border-box;--tl-gap:clamp(16px,3vw,28px);max-width:960px;margin:0 auto;padding:clamp(20px,4vw,32px) 0;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-tl{box-sizing:border-box;--tl-gap:clamp(16px,3vw,28px);max-width:960px;margin:0 auto;padding:clamp(20px,4vw,32px) 0;font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;color:#1A1A1A;}
 /* 글씨 색: 밝은 배경=블랙(기본) / 어두운 배경=화이트. 제목·단계명·인덱스는 currentColor 상속, 설명만 톤별 흐림 */
 .mm-tl[data-text="화이트"]{color:#FAF9F7;}
 .mm-tl__title{margin:0 0 clamp(16px,3vw,26px);padding:0 20px;font-family:'Outfit','Plus Jakarta Sans',sans-serif;font-size:clamp(20px,5vw,28px);font-weight:800;letter-spacing:-.02em;}

@@ -1,4 +1,4 @@
-.mm-360{max-width:560px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+.mm-360{max-width:560px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;}
 .mm-360__stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:14px;background:#F5F3F0;touch-action:pan-y;cursor:ew-resize;user-select:none;}
 .mm-360__f{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none;pointer-events:none;}
 .mm-360__f.is-on{display:block;}

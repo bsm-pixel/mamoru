@@ -1,5 +1,5 @@
 .mm-nav{--nav-fpc:11pt;--nav-fm:10pt;--nav-pady:12px;
-  box-sizing:border-box;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding:8px 12px;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;}
+  box-sizing:border-box;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;padding:8px 12px;font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;}
 .mm-nav::-webkit-scrollbar{display:none;}
 /* 트랙: 다 들어오면 margin auto로 중앙, 넘치면 좌측부터 스크롤 + 우측 칩 살짝 보임(peek). justify-content:center의 좌측 잘림 없음 */
 .mm-nav__track{display:flex;flex-wrap:nowrap;gap:10px;width:max-content;margin:0 auto;}

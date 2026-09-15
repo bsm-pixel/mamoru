@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
 <!-- MAMORU: Brand Guide v1.0 폰트 — 아임웹 전역 적용 -->
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- MAMORU: 상품 상세 표시값 서체 — 영문·숫자=Paperlogy / 한글=Pretendard (2026-07-12)
      ⚠️ 상품 상세 본문은 inline 전용이라 <link>를 못 넣는다 → 폰트는 반드시 여기(전역 헤더)서 로드해야 한다.
@@ -26,6 +26,6 @@
 <style>
 body, .shop-title, .item-detail, .pay, .cate-label,
 [class*="category"], [class*="product"], [class*="shop"] {
-  font-family: 'Plus Jakarta Sans', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+  font-family: 'Plus Jakarta Sans', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
 }
 </style>

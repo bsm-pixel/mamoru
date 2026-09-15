@@ -6,7 +6,9 @@
   <title>MAMORU 가위 상태 자가진단</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+  <!-- MAMORU: 한글 본문 서체 Pretendard (Google Fonts 미제공 → jsDelivr) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
   <style>
     :root{
       --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580;
@@ -16,7 +18,7 @@
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
     html{overflow-x:hidden;}
     body{
-      font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--void);
+      font-family:'Pretendard',sans-serif;background:var(--cream);color:var(--void);
       min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden;
     }
     .en{font-family:'Outfit',sans-serif;}
@@ -55,7 +57,7 @@
     /* 결과 버튼 */
     .cta{
       width:100%;padding:17px;border:none;border-radius:14px;background:var(--void);color:var(--cream);
-      font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;
+      font-family:'Pretendard',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:.15s;
     }
     .cta:active{transform:scale(.99);}
     .cta.ghost{background:var(--white);color:var(--void);border:1px solid var(--sand);}

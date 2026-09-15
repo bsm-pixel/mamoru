@@ -21,7 +21,7 @@
   --white: #FFFFFF;     /* 카드 내부 · 팝업 */
 
   --font-display: 'Outfit', sans-serif;
-  --font-body: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Pretendard', sans-serif;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -33,12 +33,21 @@
 }
 ```
 
-**Google Fonts 로드:**
+**폰트 로드 (2026-09-15: 한글 본문 Noto Sans KR → Pretendard 교체):**
+
+Google Fonts — 영문 2종
 ```
 Outfit: 700, 800, 900
 Plus Jakarta Sans: 300, 400, 500, 600, 700, 800
-Noto Sans KR: 300, 400, 500, 600, 700, 800, 900
 ```
+
+⚠️ **Pretendard 는 Google Fonts 에 없습니다.** jsDelivr CDN 으로 따로 불러야 합니다.
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+```
+- 패밀리명은 `Pretendard` (변수 폰트판 `Pretendard Variable` 과 이름이 다르니 섞지 말 것)
+- dynamic-subset = 쓰는 글자만 내려받음. 한글 전체 폰트를 받지 않아 가볍다
+- 아임웹은 **전역 헤더에서 1회만** 로드 (`projects/common_code/header_code_top.txt`) — 상품 상세 본문은 inline 전용이라 `<link>`를 못 넣는다
 
 ---
 
@@ -189,7 +198,7 @@ MAMORU는 판매하지 않습니다. 안내할 뿐입니다.
 아임웹 모든 고객 페이지는 **단일 표준(Page Kit)**을 따른다. 복사 원본 = `projects/_design_lab/_page_kit.html`(KIT 블록), 메모리 = `reference_mamoru_page_kit.md`.
 
 - **레이아웃**: 풀블리드 배경 `.mm-band`(+`--dark`/`--parchment`) > 중앙 콘텐츠 `.mm-inner`(`--content-w:760` / `--content-w-wide:1100`). 음수마진·`100vw` 해킹 폐기 → 배경 전폭이라 폭 달라도 계단현상 불가.
-- **변수**: `--void/--cream` 등 모노크롬 9색 + `--font-display/--font-body`로 통일(구 `--mm-*`·`--ink` 마이그레이션).
+- **변수**: `--void/--cream` 등 모노크롬 10색 + `--font-display/--font-body`로 통일(구 `--mm-*`·`--ink` 마이그레이션).
 - **히어로**: 라이트 기본. 다크(Void)는 문제→답 등 **몰입 띠만**(B-01).
 - **타입/모션/CTA**: 아래 B-02 clamp 스케일을 유틸(`.mm-display/.mm-h2/.mm-h3/.mm-body/.mm-sub/.mm-label`)로, 모션은 B-06 `.mm-reveal`.
 - iframe cross-origin이라 공유 CSS 불가 → 각 페이지 인라인 박제. 토큰 갱신 시 전 페이지 동기화.
@@ -199,8 +208,8 @@ MAMORU는 판매하지 않습니다. 안내할 뿐입니다.
 ### 서체 역할
 
 - **Display:** Outfit (PC 900 / 모바일 700) — 히어로, 대제목
-- **Body:** Plus Jakarta Sans + Noto Sans KR (400) — 본문
-- **Caption:** Plus Jakarta Sans + Noto Sans KR (400~500) — 주석, 라벨
+- **Body:** Plus Jakarta Sans + Pretendard (400) — 본문 (영문·숫자 Jakarta / 한글 Pretendard)
+- **Caption:** Plus Jakarta Sans + Pretendard (400~500) — 주석, 라벨
 
 ### 타입 스케일 (기본)
 
@@ -219,13 +228,13 @@ MAMORU는 판매하지 않습니다. 안내할 뿐입니다.
 |------|-------------|----------------|---------------|
 | Display | 56px | 28~32px | Outfit 900 (PC) / 700 (모바일) |
 | 페이지 제목 (H1) | 40px | 22px | Outfit 700~800 |
-| 섹션 제목 (H2) | 28px | 18px | Jakarta/Noto 700 |
-| 카드 제목 (H3) | 20px | 15px | Jakarta/Noto 600~700 |
-| 서브 헤딩 | 16px | 14px | Jakarta/Noto 500~600 |
-| 본문 | 16px | 13px (최소) | Jakarta/Noto 400 |
-| 보조 설명 | 14px | 13px | Jakarta/Noto 400 |
-| 주석 / 캡션 | 13px | 12px (최소) | Jakarta/Noto 400~500 |
-| 라벨 / 배지 | 12px | 11px (하한선) | Jakarta/Noto 500~600 |
+| 섹션 제목 (H2) | 28px | 18px | Jakarta/Pretendard 700 |
+| 카드 제목 (H3) | 20px | 15px | Jakarta/Pretendard 600~700 |
+| 서브 헤딩 | 16px | 14px | Jakarta/Pretendard 500~600 |
+| 본문 | 16px | 13px (최소) | Jakarta/Pretendard 400 |
+| 보조 설명 | 14px | 13px | Jakarta/Pretendard 400 |
+| 주석 / 캡션 | 13px | 12px (최소) | Jakarta/Pretendard 400~500 |
+| 라벨 / 배지 | 12px | 11px (하한선) | Jakarta/Pretendard 500~600 |
 
 **핵심 규칙:**
 - **모바일 절대 하한선: 11px** — 이보다 작으면 가독성 실패. 라벨/배지 외에는 사용 금지.

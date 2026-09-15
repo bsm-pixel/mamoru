@@ -1,4 +1,4 @@
-.mm-st{max-width:1000px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-st{max-width:1000px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-st__media{display:none;}
 .mm-st__scene{padding:clamp(40px,10vw,90px) 4px;}
 .mm-st__inline{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;background:#F5F3F0;margin-bottom:18px;display:block;}

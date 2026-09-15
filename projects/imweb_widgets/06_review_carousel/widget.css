@@ -1,4 +1,4 @@
-.mm-rev{max-width:560px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-rev{max-width:560px;margin:0 auto;font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;color:#1A1A1A;}
 .mm-rev__viewport{overflow:hidden;border-radius:16px;}
 .mm-rev__track{display:flex;transition:transform .5s cubic-bezier(.4,0,.2,1);}
 .mm-rev__card{flex:0 0 100%;box-sizing:border-box;padding:clamp(24px,5vw,36px);background:#FFFFFF;border:1px solid #D4D0CB;border-radius:16px;text-align:center;}

@@ -1,4 +1,4 @@
-.mm-pt{box-sizing:border-box;max-width:1080px;margin:0 auto;padding:clamp(8px,2vw,16px) 0;font-family:'Plus Jakarta Sans','Pretendard','Noto Sans KR',-apple-system,sans-serif;color:#1A1A1A;}
+.mm-pt{box-sizing:border-box;max-width:1080px;margin:0 auto;padding:clamp(8px,2vw,16px) 0;font-family:'Plus Jakarta Sans','Pretendard',-apple-system,sans-serif;color:#1A1A1A;}
 /* 글씨 색: 밝은 배경=블랙(기본) / 어두운 배경=화이트 */
 .mm-pt[data-text="화이트"]{color:#FAF9F7;}
 /* 탭이 많아 넘치면 가로 스크롤(스크롤바 숨김) */
