@@ -12,11 +12,12 @@ import { CustomerQuickModal } from '@/components/customers/customer-quick-modal'
 import { CustomerNotes } from '@/components/shared/customer-notes';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
-import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2, RefreshCw } from 'lucide-react';
+import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2 } from 'lucide-react';
 import { PrepSheetModal } from './prep-sheet-modal';
 import { StatusStepper } from '@/components/ui/status-stepper';
 import { DeliveryTracker } from '@/components/orders/delivery-tracker';
 import { COURIER_OPTIONS, COURIER_LOTTE, COURIER_DIRECT, isAlpsTrackable, courierLabel } from '@/lib/shipping/couriers';
+import { MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
 import { PrimaryActionBar } from '@/components/ui/primary-action-bar';
 import { ExchangeModal } from './exchange-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -472,16 +473,8 @@ export function SaleDetailPanel({ saleId }: Props) {
         )}
       </div>
 
-      {/* 교환 — 구제품 반납(반품창고) + 새 제품 배정 (시리얼 무결성 유지). 취소/반품건 제외 */}
-      {!s.cancelled_at && !(s as Record<string, unknown>).returned_at && (
-        <button
-          onClick={() => setShowExchange(true)}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-purple-200 bg-purple-50/40 text-sm font-medium text-purple-700 hover:bg-purple-50 transition"
-        >
-          <RefreshCw size={14} />
-          제품 교환
-        </button>
-      )}
+      {/* 교환·반품·취소는 하단 「반품 · 교환 · 취소」 묶음으로 이동 (2026-09-15 액션 IA 통일).
+           전엔 보라 채움 버튼이 본문 한가운데 떠 있어 주 액션보다 눈에 띄었다 */}
 
       {/* 070: 출장/매장상담 link 정보 칩 — 사장님이 이 판매가 어떤 상담에서 시작됐는지 한눈에 확인 */}
       {!s.cancelled_at && data?.linkedConsultation && (
@@ -545,35 +538,6 @@ export function SaleDetailPanel({ saleId }: Props) {
             queryClient.invalidateQueries({ queryKey: ['sale', saleId] });
           }}
         />
-      )}
-
-      {/* 액션 */}
-      {s.cancelled_at ? (
-        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-red-50 border border-red-100">
-          <Ban size={14} className="text-red-500 shrink-0" />
-          <div className="text-xs">
-            <p className="font-semibold text-red-700">취소됨 — {formatDate(s.cancelled_at)}</p>
-            {s.cancelled_reason && <p className="text-red-600 mt-0.5">{s.cancelled_reason}</p>}
-          </div>
-        </div>
-      ) : (s as Record<string, unknown>).returned_at ? (
-        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-purple-50 border border-purple-100">
-          <Package size={14} className="text-purple-500 shrink-0" />
-          <div className="text-xs">
-            <p className="font-semibold text-purple-700">반품 완료 — {formatDate((s as Record<string, unknown>).returned_at as string)}</p>
-            {(s as Record<string, unknown>).return_reason ? <p className="text-purple-600 mt-0.5">{String((s as Record<string, unknown>).return_reason)}</p> : null}
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2 pt-2 border-t border-neutral-100">
-          {/* 결제완료로 변경은 상단 「다음 할 일」로 이동 */}
-          <button onClick={() => setReturnMode(true)} className="text-xs text-purple-500 hover:text-purple-700 transition">
-            반품 처리
-          </button>
-          <button onClick={() => setShowCancelConfirm(true)} className="text-xs text-red-500 hover:text-red-700 transition">
-            판매 취소
-          </button>
-        </div>
       )}
 
       {/* 결제완료 확인 모달 */}
@@ -721,13 +685,12 @@ export function SaleDetailPanel({ saleId }: Props) {
                       <p className="text-xs text-neutral-400 leading-relaxed">
                         ALPS 인수자등록 자동 감지 시 배송완료 전환됩니다 (1시간마다 자동 확인)
                       </p>
-                      <button
+                      <SubtleButton
                         onClick={() => markDelivered.mutate({ id: saleId, mode: 'delivery' })}
                         disabled={markDelivered.isPending}
-                        className="text-xs text-neutral-500 hover:text-neutral-700 underline transition disabled:opacity-50"
                       >
                         수동 배송완료 처리
-                      </button>
+                      </SubtleButton>
                     </div>
                   )}
                 </>
@@ -746,11 +709,9 @@ export function SaleDetailPanel({ saleId }: Props) {
                   )}
                   {/* 출고완료는 상단 「다음 할 일」로 이동 */}
                   {/* 150: 확인 모달 경유 — ALPS 집하취소가 먼저라는 순서를 알려준다 */}
-                  <button onClick={() => setShowCancelShipConfirm(true)}
-                    disabled={cancelShipment.isPending}
-                    className="w-full text-center text-xs text-red-400 hover:text-red-600">
-                    {cancelShipment.isPending ? '취소 중...' : '송장 취소'}
-                  </button>
+                  <DangerLink onClick={() => setShowCancelShipConfirm(true)} disabled={cancelShipment.isPending}>
+                    {cancelShipment.isPending ? '취소 중...' : '송장 취소 (기록 지우기)'}
+                  </DangerLink>
                 </>
               )}
             </div>
@@ -811,16 +772,49 @@ export function SaleDetailPanel({ saleId }: Props) {
                     </p>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setManualShipOpen(true)}
-                    className="w-full text-center text-xs text-neutral-500 hover:text-neutral-700 underline py-1"
-                  >
+                  <SubtleButton onClick={() => setManualShipOpen(true)}>
                     다른 택배사로 발송 (직접 입력)
-                  </button>
+                  </SubtleButton>
                 )
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* 액션 ④⑤ — 반품·교환·취소. 주 액션(②③)은 상단 「⚡ 다음 할 일」 바가 맡는다.
+           2026-09-15: 택배 발송 섹션보다 위에 있어 슬롯 순서가 뒤집혀 있던 것을 맨 아래로 내렸다 */}
+      {s.cancelled_at ? (
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-red-50 border border-red-100">
+          <Ban size={14} className="text-red-500 shrink-0" />
+          <div className="text-xs">
+            <p className="font-semibold text-red-700">취소됨 — {formatDate(s.cancelled_at)}</p>
+            {s.cancelled_reason && <p className="text-red-600 mt-0.5">{s.cancelled_reason}</p>}
+          </div>
+        </div>
+      ) : (s as Record<string, unknown>).returned_at ? (
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-purple-50 border border-purple-100">
+          <Package size={14} className="text-purple-500 shrink-0" />
+          <div className="text-xs">
+            <p className="font-semibold text-purple-700">반품 완료 — {formatDate((s as Record<string, unknown>).returned_at as string)}</p>
+            {(s as Record<string, unknown>).return_reason ? <p className="text-purple-600 mt-0.5">{String((s as Record<string, unknown>).return_reason)}</p> : null}
+          </div>
+        </div>
+      ) : (
+        /* ④ 드물게 쓰는 것 + ⑤ 파괴적 액션 — 표준 5슬롯(components/ui/action-section.tsx).
+             주 액션(②③)은 상단 「⚡ 다음 할 일」 바가 맡는다 */
+        <div className="pt-2 border-t border-neutral-100">
+          <MoreActions label="반품 · 교환 · 취소">
+            <SubtleButton onClick={() => setShowExchange(true)}>
+              🔄 제품 교환 (구제품 반납 + 새 제품 배정)
+            </SubtleButton>
+            <SubtleButton onClick={() => setReturnMode(true)}>
+              ↩ 반품 처리
+            </SubtleButton>
+            <DangerZone>
+              <DangerLink onClick={() => setShowCancelConfirm(true)}>판매 취소</DangerLink>
+            </DangerZone>
+          </MoreActions>
         </div>
       )}
 
