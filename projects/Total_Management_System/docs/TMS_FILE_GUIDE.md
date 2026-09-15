@@ -101,6 +101,9 @@
 | 제품 선택 모달 | `components/contracts/product-picker-modal.tsx` | 계약서 제품 선택 |
 | 시리얼 선택 | `components/sales/serial-picker.tsx` | 판매 시 시리얼 연결 |
 | 버튼/카드/뱃지 등 | `components/ui/` 폴더 | UI 기본 요소 |
+| **액션 영역 5슬롯** | `components/ui/action-section.tsx` | 상세 패널 「액션」 표준 — ActionNote/MoreActions/DangerZone/DangerLink/SubtleButton. **새 상세 화면은 반드시 이걸로** → [TMS_UI_ACTION_PANEL.md](TMS_UI_ACTION_PANEL.md) |
+| 주 액션 바 | `components/ui/primary-action-bar.tsx` | 상단 고정 「⚡ 다음 할 일」 (판매·주문) |
+| 택배사 판정 | `lib/shipping/couriers.ts` | `isAlpsTrackable()` — 롯데만 자동추적. 송장·출고 UI는 전부 이걸 본다 |
 
 ---
 
