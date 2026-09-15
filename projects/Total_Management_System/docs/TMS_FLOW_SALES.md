@@ -168,6 +168,10 @@ Gmail "작성" / Notion "+ 새로" / Linear "+ Issue" 처럼 Create 액션은 Li
 - **B2C `/sales/new`**: 상단 "제품 판매/복원수리" **양자택일 토글 제거**. 좌측에 제품 목록 + **복원수리 입력 카드를 동시 노출**, 우측 한 장바구니에 제품 라인 + "복원수리 (마모루/타사)" 라인 함께 표시. 저장 시 `items = [...제품, ...복원수리(RS)]` 한 번에 전송. 시리얼은 제품 항목에만.
 - **B2B 납품 모달(`create-delivery-modal.tsx`)**: "제품 납품/복원수리" 모드 토글 제거 → 한 납품서에 제품 품목 + "복원수리(선택)" 섹션 동시 입력. `default_repair_price` 자동 적용 유지.
 - **합계**: 복원수리(RS)는 **VAT 제외** — 공통 헬퍼 `lib/deliveries/totals.ts` `computeDeliveryTotals()` 신설, 납품 POST/PATCH 양쪽 적용(제품만 VAT, RS 무세 가산). 제품 전용·RS 전용은 기존 수치와 동일(하위호환).
+- **할인 적용 순서(2026-09-15 fix)**: 할인은 **제품 → 복원수리(RS) 순서로 소진**. 제품에서 다 못 깎으면 남은 금액을 RS 에서 뺀다.
+  - 과거 버그: 할인을 제품에만 적용 → **복원수리 전용 납품(제품 0)에 할인을 넣으면 할인이 통째로 유실**되어 `total_amount` 가 할인 전 금액으로 저장됨. 상세·미수금은 할인 전 금액, 목록(`/sales` PC표)은 `total−discount` 로 우연히 맞아 **화면마다 금액이 달라 보였다** (DL-20260914-001 93,000 vs 73,000).
+  - 같은 커밋에서 `/sales` PC 표의 납품 행 금액을 `deliveryNet()`(할인 재차감 금지)으로 교체. 판매 행은 `saleNet()`.
+  - 🔒 규칙 재확인: **deliveries.total_amount = NET**(할인 반영 완료) · **offline_sales.total_amount = GROSS**(할인 별도 차감). 금액 계산은 항상 `lib/sales/amounts.ts` 헬퍼 경유.
 - **편집 버그 fix**: `delivery-detail-panel.tsx` 편집 시 `category` 필드 누락 → RS가 제품으로 둔갑하던 문제 수정(편집 저장에도 category 보존). 판매 편집 모달(`FullEditSaleModal`)은 이미 category 보존 — 변경 없음.
 - API(`/api/sales`, `/api/deliveries`)·DB·집계(대시보드/리포트/RPC)는 변경 없음 — 이미 혼합 items 지원.
 

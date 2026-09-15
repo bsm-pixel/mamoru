@@ -5,7 +5,7 @@
  * 2026-05-26 Phase C: deliveries/page.tsx 안에서 분리 — /sales/new?mode=b2b 에서도 재사용
  * 2026-06-09: 제품 납품 + 복원수리 혼합 입력 통합 (mode 양자택일 제거)
  *   - 한 납품서에 제품 품목 + 복원수리(category='RS') 항목을 함께 담아 한 번에 저장
- *   - 복원수리는 VAT 제외(computeDeliveryTotals), 거래처 default_repair_price 자동 적용
+ *   - 할인은 제품 → 복원수리 순으로 적용(2026-09-15), 복원수리는 VAT 제외(computeDeliveryTotals), 거래처 default_repair_price 자동 적용
  *   - 집계는 delivery_items.category='RS' 태그 기반으로 그대로 작동
  */
 
@@ -529,7 +529,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
           {/* 할인 + 메모 */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-neutral-500 mb-1 block">할인금액 (제품)</label>
+              <label className="text-xs font-semibold text-neutral-500 mb-1 block">할인금액</label>
               <input type="number" value={discount || ''} onChange={(e) => setDiscount(parseInt(e.target.value) || 0)}
                 placeholder="0"
                 className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />

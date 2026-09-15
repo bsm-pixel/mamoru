@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { SaleDetailPanel } from '@/components/sales/sale-detail-panel';
+import { saleNet, deliveryNet } from '@/lib/sales/amounts';
 import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-panel';
 import { useSales, useSalesTabCounts, useSalesStats, useMarkSalePacked } from '@/hooks/use-sales';
 import type { SalesTab, SalesChannel, SalesDateRange } from '@/hooks/use-sales';
@@ -709,7 +710,8 @@ const SalesGridTable = memo(function SalesGridTable({
           const sel = selectedId === item.id;
           const checked = isSale ? checkedSale.has(item.id) : checkedDelivery.has(item.id);
           const onCheck = () => (isSale ? onCheckSale(item.id) : onCheckDelivery(item.id));
-          const amt = (d.total_amount || 0) - (d.discount_amount || 0);
+          // 판매=GROSS(할인 차감) / 납품=NET(이미 할인 반영, 재차감 금지) — lib/sales/amounts SSOT
+          const amt = isSale ? saleNet(d) : deliveryNet(d);
           // 채널: 판매는 sale_channel 직접(매장/출장/톡/온라인·레거시오프라인), B2B납품은 '거래처'
           const channelLabel = isSale ? (SALE_CHANNEL_LABEL[d.sale_channel as string] || d.sale_channel || '—') : '거래처';
           // 배송상태: 목록 데이터만으로 파생(추가 쿼리 0)
