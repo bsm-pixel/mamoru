@@ -244,6 +244,23 @@ async function upsertOrder(supabase: any, imwebOrder: ImwebOrder, prodOrders: Im
 
   if (error) throw error;
 
+  // 🔴 2026-09-15: 무통장 입금완료도 알려야 한다.
+  //    전엔 "신규 주문"에만 푸시가 나가서, 입금대기로 들어온 주문이 나중에 입금돼도
+  //    사장님이 모르고 있었다(ORDER_DEPOSIT_COMPLETE 웹훅이 와도 기존 주문이라 조용히 지나감).
+  const justPaid = !!existing && existing.status === 'pay_wait' && imwebStatus === 'pay_done';
+  if (justPaid) {
+    const deliverPaid = async () => {
+      const { sendPushToAll } = await import('@/lib/firebase/send-push');
+      await sendPushToAll({
+        title: '입금 확인 💰',
+        body: `${imwebOrder.orderer?.name || '고객'}님 무통장 입금 완료 — 발송 준비`,
+        url: '/orders',
+        tag: `mamoru-order-paid-${imwebOrder.order_no}`,
+      });
+    };
+    try { after(deliverPaid); } catch { await deliverPaid().catch(() => {}); }
+  }
+
   // 신규 주문이면 관리자 푸시 (기존 주문 업데이트는 푸시 안 함)
   const isNewOrder = !existing;
   if (isNewOrder && imwebStatus !== 'cancelled') {

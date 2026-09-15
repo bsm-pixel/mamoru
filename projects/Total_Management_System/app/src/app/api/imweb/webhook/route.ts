@@ -103,6 +103,17 @@ export async function POST(request: NextRequest) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error('[imweb/webhook] 동기화 실패:', msg);
       await markProcessed(eventId, { process_error: msg });
+      // 🔴 2026-09-15: 실패를 조용히 삼키면 "주문이 안 들어온다"를 며칠 뒤에 알게 된다.
+      //    웹훅은 왔는데 주문 조회/저장이 실패한 것이므로 즉시 알린다(15분 폴백 크론이 다시 시도한다).
+      try {
+        const { sendPushToAll } = await import('@/lib/firebase/send-push');
+        await sendPushToAll({
+          title: '⚠️ 아임웹 주문 동기화 실패',
+          body: `주문 ${orderNo} 를 불러오지 못했습니다. 15분 내 자동 재시도합니다.`,
+          url: '/orders',
+          tag: `mamoru-order-syncfail-${orderNo}`,
+        });
+      } catch { /* 알림 실패가 웹훅 응답을 막지 않게 */ }
     }
   };
   try {

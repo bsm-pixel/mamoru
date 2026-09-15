@@ -217,6 +217,10 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     as_received: { title: '새 복원수리 접수', body: `${payload.name}님 복원수리 접수`, url: '/repairs' },
     // 직접방문(매장방문) 접수
     as_visit_booked: { title: '새 매장방문 수리 접수', body: `${payload.name}님 매장방문 수리 접수`, url: '/repairs' },
+    // 🔴 2026-09-15 누락 복구 — 고객이 직접방문 예약을 스스로 취소/변경한 건.
+    //    슬롯이 비거나 시간이 바뀌므로 사장님이 반드시 알아야 하는데 푸시가 없었다.
+    as_visit_cancelled: { title: '⚠️ 매장방문 수리 취소', body: `${payload.name}님 매장방문 예약 취소`, url: '/repairs' },
+    as_visit_rescheduled: { title: '매장방문 일정 변경', body: `${payload.name}님 방문 일정 변경`, url: '/repairs' },
     // 출장 신규: submit/route.ts 는 template='request' 로 호출 (솔라피 템플릿명과 일치)
     request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations' },
     field_request: { title: '새 출장 상담 접수', body: `${payload.name}님 출장 상담 접수`, url: '/consultations' },

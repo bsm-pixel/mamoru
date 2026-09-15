@@ -7,7 +7,6 @@ import toast from 'react-hot-toast';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
 import GoogleCalendarSettings from '@/components/settings/google-calendar-settings';
 import BannerSettings from '@/components/settings/banner-settings';
-import { requestPushToken } from '@/lib/firebase/client';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -83,7 +82,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
         <PushTestPanel />
 
         {/* 디바이스 정리 — 중복 알림 해결 */}
-        <CleanupDevicesPanel />
+        <DevicesPanel />
       </div>
 
       <div className="pt-4 border-t border-neutral-100">
@@ -224,63 +223,98 @@ function PushTestPanel() {
   );
 }
 
-/** 디바이스 정리 패널 — "이 기기만 알림 받기" 버튼
- *  같은 사용자가 여러 토큰 누적되어 푸시 알림이 중복 도착할 때, 한 번 클릭으로
- *  현재 기기 토큰만 남기고 본인의 다른 모든 토큰을 정리.
+/** 알림 받는 기기 패널 (2026-09-15 재작성)
+ *
+ *  전엔 "이 기기만 알림 받기" 버튼 하나뿐이라 **몇 대가 등록돼 있는지 볼 수 없었다.**
+ *  게다가 구독 API가 사용자당 토큰 1개만 남겨서, PC에서 열면 모바일이 끊기고
+ *  모바일에서 열면 PC가 끊겼다(사장님 신고 → 근본원인).
+ *  이제 기기 단위로 등록되므로, 등록된 기기를 **보여주고** 개별 해제만 제공한다.
  */
-function CleanupDevicesPanel() {
-  const [busy, setBusy] = useState(false);
+function DevicesPanel() {
+  const [devices, setDevices] = useState<Array<{ id: string; label: string; isCurrent: boolean; updatedAt: string }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [iosNotice, setIosNotice] = useState(false);
 
-  const handleCleanup = async () => {
-    setBusy(true);
+  const load = async () => {
     try {
-      const token = await requestPushToken();
-      if (!token) {
-        toast.error('현재 기기의 토큰을 발급받지 못했습니다. 알림 권한 허용 후 페이지 새로고침해주세요.');
-        return;
-      }
-      const res = await fetch('/api/push/cleanup-others', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      });
+      const { getDeviceId, needsIosPwaNotice } = await import('@/lib/firebase/device');
+      setIosNotice(needsIosPwaNotice());
+      const res = await fetch(`/api/push/devices?deviceId=${encodeURIComponent(getDeviceId())}`);
       const json = await res.json();
-      if (!res.ok || !json.ok) {
-        toast.error(`정리 실패: ${json.error || 'unknown'}`);
-        return;
-      }
-      const deleted = json.deleted ?? 0;
-      if (deleted === 0) {
-        toast('정리할 다른 기기 토큰이 없습니다 — 이미 단일 기기 상태입니다', { icon: '✅' });
-      } else {
-        toast.success(`다른 기기 토큰 ${deleted}건 정리 완료`);
-      }
-    } catch (err) {
-      toast.error(`정리 실패: ${String(err)}`);
+      setDevices(json.devices || []);
+    } catch {
+      setDevices([]);
     } finally {
-      setBusy(false);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleRemove = async (id: string, label: string) => {
+    if (!window.confirm(`"${label}" 기기의 알림을 해제합니다.\n이 기기에서 TMS를 다시 열면 자동으로 재등록됩니다.`)) return;
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/push/devices?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) { toast.error('해제 실패'); return; }
+      toast.success('해제 완료');
+      await load();
+    } finally {
+      setBusyId(null);
     }
   };
 
   return (
     <div className="mt-3 pt-3 border-t border-neutral-200 space-y-2">
-      <div className="flex items-center gap-1.5">
-        <Smartphone size={13} className="text-neutral-600" />
-        <span className="text-xs font-bold text-neutral-700">기기 정리</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <Smartphone size={13} className="text-neutral-600" />
+          <span className="text-xs font-bold text-neutral-700">알림 받는 기기</span>
+        </div>
+        <button type="button" onClick={load} className="text-[11px] text-neutral-400 hover:text-neutral-700">새로고침</button>
       </div>
-      <p className="text-[11px] text-neutral-500 leading-relaxed">
-        같은 알림이 여러 번 도착할 때 사용. 현재 이 기기의 토큰만 남기고
-        다른 기기·캐시에 등록된 본인의 토큰을 모두 삭제합니다.
+
+      {loading ? (
+        <p className="text-[11px] text-neutral-400">불러오는 중…</p>
+      ) : devices.length === 0 ? (
+        <p className="text-[11px] text-amber-600 leading-relaxed bg-amber-50 rounded-lg px-2.5 py-2">
+          등록된 기기가 없습니다. 알림이 오지 않습니다.<br />
+          브라우저 알림 권한을 <b>허용</b>한 뒤 이 페이지를 새로고침해주세요.
+        </p>
+      ) : (
+        <ul className="space-y-1">
+          {devices.map((d) => (
+            <li key={d.id} className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-neutral-200 bg-white">
+              <span className="text-xs text-neutral-700 flex-1 truncate">
+                {d.label}
+                {d.isCurrent && <span className="ml-1.5 text-[10px] font-bold text-green-600">지금 이 기기</span>}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleRemove(d.id, d.label)}
+                disabled={busyId === d.id}
+                className="text-[11px] text-neutral-400 hover:text-red-600 disabled:opacity-50 shrink-0"
+              >
+                {busyId === d.id ? '해제 중…' : '해제'}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className="text-[10px] text-neutral-400 leading-relaxed">
+        알림 받을 기기에서 각각 TMS를 한 번 열고 알림 권한을 허용하면 자동 등록됩니다.
+        PC·휴대폰 모두 등록해두면 양쪽 모두 알림이 옵니다.
       </p>
-      <button
-        type="button"
-        onClick={handleCleanup}
-        disabled={busy}
-        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-xs font-semibold text-neutral-700 disabled:opacity-50"
-      >
-        <Smartphone size={13} />
-        {busy ? '정리 중...' : '이 기기만 알림 받기'}
-      </button>
+
+      {iosNotice && (
+        <p className="text-[11px] text-amber-700 leading-relaxed bg-amber-50 rounded-lg px-2.5 py-2">
+          <b>아이폰은 홈 화면에 추가해야 알림이 옵니다.</b><br />
+          사파리에서 공유 버튼 → <b>홈 화면에 추가</b> → 홈 화면 아이콘으로 TMS를 연 뒤 알림을 허용해주세요.
+          (iOS 정책상 사파리 탭에서는 웹 푸시가 오지 않습니다)
+        </p>
+      )}
     </div>
   );
 }
