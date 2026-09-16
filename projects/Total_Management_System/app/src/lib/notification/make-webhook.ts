@@ -131,12 +131,12 @@ export type NotifyTemplate =
   // 반품·교환수거 (2026-08-25) — webhook_consultation 폴백
   | 'return_received'          // 반품수거 접수 (교환/반품 시 자동, 사장님 푸시)
   | 'return_inbound'           // 반품 입고완료 (사장님 처리 시 고객 알림)
-  // 아임웹 주문 취소·반품 (2026-09-14) — webhook_imweb 전용 · 솔라피 MMR_ 템플릿
-  | 'imweb_cancel_requested'   // MMR_취소접수 (고객 요청만 — 관리자 직접 취소는 생략)
-  | 'imweb_cancel_completed'   // MMR_취소완료 (환불 안내 겸)
-  | 'imweb_return_requested'   // MMR_반품접수 (고객 요청만)
-  | 'imweb_return_approved'    // MMR_반품승인 (반품 수거중 = 승인)
-  | 'imweb_return_completed';  // MMR_반품완료 (환불 안내 겸)
+  // 아임웹 주문 취소·반품 (2026-09-14) — webhook_imweb 전용 · 솔라피 IW- 템플릿
+  | 'imweb_cancel_requested'   // IW-취소접수 (고객 요청만 — 관리자 직접 취소는 생략)
+  | 'imweb_cancel_completed'   // IW-취소완료 (환불 안내 겸)
+  | 'imweb_return_requested'   // IW-반품접수 (고객 요청만)
+  | 'imweb_return_approved'    // IW-반품승인 (반품 수거중 = 승인)
+  | 'imweb_return_completed';  // IW-반품완료 (환불 안내 겸)
 
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {

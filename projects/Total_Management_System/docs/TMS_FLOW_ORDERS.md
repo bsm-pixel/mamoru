@@ -133,11 +133,11 @@ Supabase waybill_counter (싱글턴 테이블)
 ### 아임웹 취소·반품 알림톡 (`lib/imweb/claim-notify.ts`, 2026-09-14)
 | 웹훅 이벤트 | 처리 | 템플릿(코드 → 솔라피) |
 |---|---|---|
-| `ORDER_CANCEL_REQUEST` | 고객 요청만(`isCustomerRequest≠N`) 고객 알림톡 + 사장님 푸시 | `imweb_cancel_requested` → MMR_취소접수 |
-| `ORDER_CANCEL_COMPLETE` | 고객 알림톡(환불 안내 겸) | `imweb_cancel_completed` → MMR_취소완료 |
-| `ORDER_RETURN_REQUEST` | 고객 요청만 고객 알림톡 + 사장님 푸시 | `imweb_return_requested` → MMR_반품접수 |
-| `ORDER_RETURN_COLLECTING` | 고객 알림톡(반품 승인·회수 시작) | `imweb_return_approved` → MMR_반품승인 |
-| `ORDER_RETURN_COMPLETE` | 고객 알림톡(환불 안내 겸) | `imweb_return_completed` → MMR_반품완료 |
+| `ORDER_CANCEL_REQUEST` | 고객 요청만(`isCustomerRequest≠N`) 고객 알림톡 + 사장님 푸시 | `imweb_cancel_requested` → IW-취소접수 |
+| `ORDER_CANCEL_COMPLETE` | 고객 알림톡(환불 안내 겸) | `imweb_cancel_completed` → IW-취소완료 |
+| `ORDER_RETURN_REQUEST` | 고객 요청만 고객 알림톡 + 사장님 푸시 | `imweb_return_requested` → IW-반품접수 |
+| `ORDER_RETURN_COLLECTING` | 고객 알림톡(반품 승인·회수 시작) | `imweb_return_approved` → IW-반품승인 |
+| `ORDER_RETURN_COMPLETE` | 고객 알림톡(환불 안내 겸) | `imweb_return_completed` → IW-반품완료 |
 | `ORDER_CANCEL_REJECT` · `ORDER_RETURN_REJECT` | **고객 알림톡 없음** → 사장님 푸시 "고객 연락 필요" (거절 사유 필드 없음) | — |
 | 철회 · 반품 수거완료 · 교환 | 기록만 | — |
 - 연락처: TMS `orders`(orderer_name/phone) 우선 → 없으면 v2 `getOrder`(key/secret, OAuth 토큰 불필요). 주문 미확인(테스트 보내기의 가짜 주문번호)이면 알림톡·푸시 모두 안 보냄
