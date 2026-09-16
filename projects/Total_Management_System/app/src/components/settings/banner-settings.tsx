@@ -20,6 +20,7 @@ import {
   Zap, AlertCircle, Plus, Trash2, ArrowUp, ArrowDown, Link as LinkIcon,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { backdropClose } from '@/lib/ui/backdrop';
 import {
   useBanners, useUpdateBanner, useUploadBannerImage,
   type ImwebBanner, type BannerImage,
@@ -612,7 +613,7 @@ function PreviewModal({
   return (
     <div
       className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center p-6"
-      onClick={onClose}
+      {...backdropClose(onClose)}
     >
       <div
         className="bg-[#FAF9F7] max-w-[420px] w-full rounded-lg overflow-hidden shadow-2xl relative"

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { formatKRW, formatPhone } from '@/lib/utils/format';
 import { useMergeCustomers } from '@/hooks/use-customers';
 import toast from 'react-hot-toast';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 interface Hit {
   id: string;
@@ -105,7 +106,7 @@ export function CustomerMergeModal({ open, onClose, primary, onMerged }: Props) 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" {...backdropClose(onClose)}>
       <div className="bg-white rounded-xl shadow-xl w-full max-w-[460px] max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">

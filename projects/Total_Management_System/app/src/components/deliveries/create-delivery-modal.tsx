@@ -22,6 +22,7 @@ import toast from 'react-hot-toast';
 import { ScanInput } from '@/components/sales/scan-input';
 import { resolveScan } from '@/lib/sales/resolve-scan';
 import type { Product } from '@/lib/supabase/types';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
@@ -173,14 +174,8 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
     }
   }
 
-  // 드래그 중 모달 바깥으로 나가도 닫히지 않도록 mousedown 위치 체크
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const mouseDownTarget = useRef<EventTarget | null>(null);
-
   return (
-    <div ref={overlayRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onMouseDown={(e) => { mouseDownTarget.current = e.target; }}
-      onClick={(e) => { if (e.target === overlayRef.current && mouseDownTarget.current === overlayRef.current) onClose(); }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
       <div
         className="bg-white rounded-xl shadow-2xl flex flex-col"
         style={{ width: '780px', maxHeight: '90vh' }}

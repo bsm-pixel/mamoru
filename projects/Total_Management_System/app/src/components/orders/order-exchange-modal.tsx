@@ -8,6 +8,7 @@ import { formatKRW } from '@/lib/utils/format';
 import { Search, RefreshCw, Store, Truck, Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { Order, OrderItem } from '@/lib/supabase/types';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 /**
  * 주문 교환 모달 (아임웹 온라인 주문) — 매출·카드 불변, 상품/재고만 스왑.
@@ -147,7 +148,7 @@ export function OrderExchangeModal({ order, items, onClose }: { order: Order; it
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
       <div className="bg-white rounded-xl shadow-2xl flex flex-col w-[580px] max-h-[92vh]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800 flex items-center gap-1.5"><RefreshCw size={14} /> 주문 제품 교환</h3>

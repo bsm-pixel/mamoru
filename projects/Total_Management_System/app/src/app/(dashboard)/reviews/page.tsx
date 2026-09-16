@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Star, Eye, EyeOff, RefreshCw, Image as ImageIcon, Award, Plus, Pencil, X, Trash2, Trophy } from 'lucide-react';
 import Link from 'next/link';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 interface Review {
   id: string;
@@ -805,7 +806,7 @@ export default function ReviewsPage() {
       {lightbox && (
         <div
           className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
-          onClick={() => setLightbox(null)}
+          {...backdropClose(() => setLightbox(null))}
         >
           <img
             src={lightbox}
@@ -818,7 +819,7 @@ export default function ReviewsPage() {
 
       {/* 삭제 확인 모달 */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setDeleteTarget(null)}>
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" {...backdropClose(() => setDeleteTarget(null))}>
           <div className="bg-white rounded-xl p-5 w-[320px] space-y-3" onClick={e => e.stopPropagation()}>
             <h3 className="text-sm font-bold text-neutral-800">리뷰 삭제</h3>
             <p className="text-xs text-neutral-500">이 리뷰를 삭제하시겠습니까? 삭제된 리뷰는 복구할 수 없습니다.</p>

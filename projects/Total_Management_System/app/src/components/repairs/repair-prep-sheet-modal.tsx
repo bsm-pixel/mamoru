@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 /**
  * 복원수리 준비표 (트레이형) — 2026-07-23
@@ -173,7 +174,7 @@ export function RepairPrepSheetModal({ repairIds, onClose }: Props) {
   const previewH = Math.min(297 * 3.7795 * scale * pageCount, 460);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
       <div className="bg-white rounded-xl shadow-2xl flex flex-col" style={{ width: '760px', maxHeight: '90vh' }}
         onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">

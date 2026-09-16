@@ -36,6 +36,7 @@ import { useSetting, useUpdateSettings } from '@/hooks/use-settings';
 import { formatPhone } from '@/lib/utils/format';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 function fmtKRW(n: number) {
   if (n >= 10000) return `₩${Math.round(n / 10000)}만`;
@@ -273,7 +274,7 @@ function TodoCard() {
 
       {/* 완료 확인 모달 */}
       {confirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setConfirmId(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" {...backdropClose(() => setConfirmId(null))}>
           <div className="bg-white rounded-2xl shadow-xl p-5 w-72" onClick={(e) => e.stopPropagation()}>
             <p className="text-sm font-semibold mb-3 text-stone-800">이 할일을 완료했습니까?</p>
             <div className="flex gap-2">

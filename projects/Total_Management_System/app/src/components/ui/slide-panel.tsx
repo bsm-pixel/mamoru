@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 interface SlidePanelProps {
   open: boolean;
@@ -60,7 +61,7 @@ export function SlidePanel({ open, onClose, children, title, className }: SlideP
           'fixed inset-0 z-50 bg-indigo-black/40 transition-opacity duration-200',
           open ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
-        onClick={onClose}
+        {...backdropClose(onClose)}
       />
 
       {/* 패널 */}

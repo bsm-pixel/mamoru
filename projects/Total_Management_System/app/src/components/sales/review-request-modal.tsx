@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 interface Props {
   saleId: string;             // 기존 호환: source='sale'에선 sale_id로 사용. 다른 source에선 'id'.
@@ -78,7 +79,7 @@ export function ReviewRequestModal({ saleId, customerName, customerPhone, hasRep
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" {...backdropClose(onClose)}>
       <div className="bg-white rounded-xl shadow-xl w-[95vw] max-w-[400px] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="px-5 py-3 border-b border-neutral-200 flex items-center justify-between">
           <h3 className="text-sm font-bold text-neutral-800">후기 요청</h3>

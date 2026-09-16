@@ -8,6 +8,7 @@ import type { LabelTemplate, LabelData } from '@/lib/label/templates';
 import { ensureLabelFonts, renderLabelPreview, renderLabelZpl } from '@/lib/label/render-label';
 import { sendZplToPrinter, downloadZpl } from '@/lib/label/browser-print';
 import { useLabelTemplates } from '@/hooks/use-label-templates';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 interface Props {
   template: LabelTemplate;
@@ -64,7 +65,7 @@ export function LabelPrintModal({ template, data, title, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
       <div className="bg-white rounded-xl shadow-2xl w-[420px] max-w-[95vw]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800">{title || '라벨 출력'}</h3>

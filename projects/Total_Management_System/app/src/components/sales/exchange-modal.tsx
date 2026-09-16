@@ -7,6 +7,7 @@ import { useCreateReturn } from '@/hooks/use-returns';
 import { formatKRW } from '@/lib/utils/format';
 import { Search, RefreshCw, ArrowRight, Store, Truck } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 /**
  * 교환 모달 (2026-08-25 · Phase 1 매장 직접 교환)
@@ -194,7 +195,7 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
       <div className="bg-white rounded-xl shadow-2xl flex flex-col w-[560px] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800 flex items-center gap-1.5"><RefreshCw size={14} /> 제품 교환</h3>

@@ -9,6 +9,7 @@ import { Camera, Trash2, Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { resizeImage } from '@/lib/utils/resize-image';
 import { CameraCapture } from '@/components/ui/camera-capture';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 interface Photo {
   id: string;
@@ -126,7 +127,7 @@ export function RepairPhotos({ repairId }: { repairId: string }) {
       {preview && (
         <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
-          onClick={() => setPreview(null)}
+          {...backdropClose(() => setPreview(null))}
         >
           <button
             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"

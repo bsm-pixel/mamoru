@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { repairSlip, saleSlip, wrapTray, buildListDoc, esc, type PrepInspection, type PrepListRow } from '@/lib/prep/tray';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 /**
  * 통합 준비표 — 복원수리(출고대기)·주문(배송대기)·판매(미출고)를 탭으로 모아 체크 → 한 번에 인쇄.
@@ -210,7 +211,7 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
   }), [checked]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" {...backdropClose(onClose)}>
       <div className="bg-white rounded-xl shadow-2xl flex flex-col w-full" style={{ maxWidth: 620, maxHeight: '88vh' }}
         onClick={(e) => e.stopPropagation()}>
         {/* 헤더 */}

@@ -11,6 +11,7 @@ import { Zap, Loader2, Package, Truck, Store, ArrowLeft, Plus, ExternalLink, Set
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 const TABS: { key: EventStatus; label: string }[] = [
   { key: 'received', label: '신규접수' },
@@ -291,7 +292,7 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" {...backdropClose(onClose)}>
       <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-base font-bold text-neutral-900 px-5 pt-5 pb-3 shrink-0">{isEdit ? '캠페인 설정' : '새 캠페인'}</h3>
         <div className="grid lg:grid-cols-[1fr_330px] flex-1 min-h-0 overflow-hidden">

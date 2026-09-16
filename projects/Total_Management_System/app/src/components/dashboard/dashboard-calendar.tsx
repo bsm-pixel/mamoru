@@ -27,6 +27,7 @@ import { SCHEDULE_COLORS } from '@/lib/schedule/colors';
 import { formatPhone, CONSULTATION_STATUS_LABEL, CONSULTATION_STATUS_COLOR, CONSULTATION_TYPE_LABEL } from '@/lib/utils/format';
 import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Phone, MapPin, ArrowRight, StickyNote } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 // 상담유형 라벨은 format.ts SSOT(CONSULTATION_TYPE_LABEL) 사용
@@ -317,7 +318,7 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
         const isStore = detail.consultation_type === 'store_visit';
         const addr = [detail.address_road, detail.address_detail].filter(Boolean).join(' ');
         return (
-          <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setDetail(null)}>
+          <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" {...backdropClose(() => setDetail(null))}>
             <div className="bg-white rounded-2xl w-full max-w-md max-h-[85vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
               {/* 헤더 */}
               <div className="p-4 border-b border-stone-100 flex items-start justify-between gap-3">

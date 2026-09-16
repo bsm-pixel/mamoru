@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 export interface SerialConflictInfo {
   serial: string;
@@ -23,7 +24,7 @@ export function SerialConflictDialog({ info, onConfirm, onCancel }: DialogProps)
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-      onClick={onCancel}
+      {...backdropClose(onCancel)}
     >
       <div
         className="bg-white rounded-xl shadow-2xl w-full max-w-[420px] overflow-hidden"

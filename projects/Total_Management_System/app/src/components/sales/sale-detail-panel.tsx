@@ -29,6 +29,7 @@ import { usePriceGroups } from '@/hooks/use-price-groups';
 import { SerialPicker } from './serial-picker';
 import { LabelPrintModal } from '@/components/labels/label-print-modal';
 import { useLabelTemplate } from '@/hooks/use-label-templates';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
@@ -1102,7 +1103,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" {...backdropClose(onClose)}>
       <div className="bg-white rounded-xl shadow-xl w-[95vw] max-w-[550px] max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="px-5 py-3 border-b border-neutral-200 flex items-center justify-between">
           <h3 className="text-sm font-bold text-neutral-800">판매 수정</h3>
@@ -1461,7 +1462,7 @@ function ReceiptModal({ sale, items, customerType, onClose }: {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
       <div
         className="bg-white rounded-xl shadow-2xl flex flex-col"
         style={{ width: '595px', maxHeight: '90vh' }}

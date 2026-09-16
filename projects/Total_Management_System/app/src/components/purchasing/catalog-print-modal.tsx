@@ -6,6 +6,7 @@ import { useSupplierCatalog } from '@/hooks/use-purchasing';
 import { formatKRW } from '@/lib/utils/format';
 import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 interface Props {
   supplierId: string;
@@ -77,7 +78,7 @@ export function CatalogPrintModal({ supplierId, supplierName, onClose }: Props) 
   const tdStyle = { padding: '7px 10px', border: '1px solid #eee', fontSize: '13px' };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
       <div
         className="bg-white rounded-xl shadow-2xl flex flex-col"
         style={{ width: '800px', maxHeight: '90vh' }}

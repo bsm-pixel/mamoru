@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Package, Plus, ExternalLink, X, Pencil, Trash2 } from 'lucide-react';
 import { useSourcingByProduct } from '@/hooks/use-product-detail';
 import toast from 'react-hot-toast';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 interface Supply {
   id: string;
@@ -200,7 +201,7 @@ function AddSupplyModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" {...backdropClose(onClose)}>
       <div className="bg-white rounded-xl w-full max-w-md mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
           <h2 className="text-sm font-bold text-indigo-black">부자재 추가</h2>
@@ -274,7 +275,7 @@ function EditSupplyModal({ supply, onClose }: { supply: Supply; onClose: () => v
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" {...backdropClose(onClose)}>
       <div className="bg-white rounded-xl w-full max-w-md mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
           <h2 className="text-sm font-bold text-indigo-black">부자재 수정</h2>

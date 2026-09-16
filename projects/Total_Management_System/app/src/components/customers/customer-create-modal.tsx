@@ -9,6 +9,7 @@ import { formatPhone } from '@/lib/utils/format';
 import { useSetting } from '@/hooks/use-settings';
 import { TagSelector } from '@/components/shared/tag-selector';
 import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -118,7 +119,7 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" {...backdropClose(onClose)}>
       <div className="bg-white rounded-xl shadow-xl w-[95vw] max-w-[480px] max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800">{prefill?.company_name ? '복제 등록 (같은 매장)' : '고객 등록'}</h3>

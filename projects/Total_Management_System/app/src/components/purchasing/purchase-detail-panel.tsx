@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Truck, Pencil, Minus, Plus, Trash2, X, Save, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { POPrintModal } from './po-print-modal';
+import { backdropClose } from '@/lib/ui/backdrop';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
@@ -416,7 +417,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
 
       {/* 입고검수 모달 — 품목별 실수령 수량 (제작품이라 주문≠입고 흔함) */}
       {showReceive && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => { if (!receiving) setShowReceive(false); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" {...backdropClose(() => { if (!receiving) setShowReceive(false); })}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 border-b border-neutral-100">
               <h3 className="text-sm font-bold text-stone-900">입고 검수</h3>
