@@ -31,7 +31,7 @@ const TAB_FILTERS = [
   { label: '대기중', value: 'pending' },
   { label: '승인', value: 'approved' },
   { label: '숨김', value: 'hidden' },
-  { label: '약속 대기', value: 'promised' },
+  { label: '후기 대기', value: 'promised' },
 ] as const;
 
 // 유형 필터 (상담/복원수리/제품) — 상태 탭과 별개 축
@@ -164,7 +164,7 @@ export default function ReviewsPage() {
     try {
       if (activeTab === 'promised') {
         const res = await fetch('/api/reviews/promised');
-        if (!res.ok) throw new Error('약속 대기 조회 실패');
+        if (!res.ok) throw new Error('후기 대기 조회 실패');
         const data = await res.json();
         setPromisedItems(data.items || []);
       } else {
@@ -184,7 +184,7 @@ export default function ReviewsPage() {
     fetchReviews();
   }, [fetchReviews]);
 
-  // 약속 대기 탭: 각 row의 같은 phone 다른 source 활동 fetch (정보 표시용)
+  // 후기 대기 탭: 각 row의 같은 phone 다른 source 활동 fetch (정보 표시용)
   useEffect(() => {
     if (activeTab !== 'promised' || promisedItems.length === 0) {
       setRelatedByItem({});
@@ -383,7 +383,7 @@ export default function ReviewsPage() {
           </div>
         </div>
 
-        {/* 유형 필터 (상담/복원수리/제품) — 약속 대기 탭 제외 */}
+        {/* 유형 필터 (상담/복원수리/제품) — 후기 대기 탭 제외 */}
         {activeTab !== 'promised' && (
           <div className="flex gap-1.5 flex-wrap">
             {TYPE_FILTERS.map(f => {
@@ -405,18 +405,18 @@ export default function ReviewsPage() {
           </div>
         )}
 
-        {/* 약속 대기 탭 — 별도 리스트 */}
+        {/* 후기 대기 탭 — 별도 리스트 */}
         {activeTab === 'promised' && (
           loading ? (
             <div className="text-center py-16 text-neutral-400 text-sm">불러오는 중...</div>
           ) : promisedItems.length === 0 ? (
-            <div className="text-center py-16 text-neutral-400 text-sm">약속 대기 중인 고객이 없습니다</div>
+            <div className="text-center py-16 text-neutral-400 text-sm">후기 요청 대기 중인 고객이 없습니다</div>
           ) : (
             <div className="bg-white rounded-xl border border-neutral-100 overflow-hidden">
               <div className="hidden md:grid grid-cols-[1fr_90px_90px_90px_120px] gap-3 px-4 py-2.5 bg-neutral-50 text-[11px] font-semibold text-neutral-500">
                 <div>고객 / 식별번호</div>
                 <div>종류</div>
-                <div>약속일</div>
+                <div>등록일</div>
                 <div>발송</div>
                 <div className="text-right">액션</div>
               </div>
@@ -440,7 +440,7 @@ export default function ReviewsPage() {
                             let cls = '';
                             if (r.submittedAt) { label = `${r.typeLabel} ✅ 작성완료`; cls = 'bg-green-50 text-green-700 hover:bg-green-100'; }
                             else if (r.requestSentAt) { label = `${r.typeLabel} 📤 발송됨`; cls = 'bg-blue-50 text-blue-700 hover:bg-blue-100'; }
-                            else if (r.promisedAt) { label = `${r.typeLabel} ☑ 약속만`; cls = 'bg-amber-50 text-amber-700 hover:bg-amber-100'; }
+                            else if (r.promisedAt) { label = `${r.typeLabel} ⏳ 발송대기`; cls = 'bg-amber-50 text-amber-700 hover:bg-amber-100'; }
                             return (
                               <Link
                                 key={`${r.source}-${r.id}`}
@@ -487,7 +487,7 @@ export default function ReviewsPage() {
                       </button>
                       <button
                         onClick={async () => {
-                          if (!window.confirm(`${it.customerName}님 약속을 취소하시겠습니까?`)) return;
+                          if (!window.confirm(`${it.customerName}님 건의 후기 자동발송을 해제하시겠습니까?\n\n(해제해도 수동 발송은 가능합니다)`)) return;
                           const res = await fetch('/api/reviews/promise', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },

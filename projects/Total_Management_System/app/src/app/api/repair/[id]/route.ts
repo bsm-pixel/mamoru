@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidRepairTransition } from '@/lib/repair/transitions';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
-import { sendReviewRequestNotification } from '@/lib/notification/review-request';
+import { sendReviewRequestNotification, repairSubtypeFromProceedType } from '@/lib/notification/review-request';
 import type { RepairStatus } from '@/lib/supabase/types';
 import { syncRepairToCalendar } from '@/lib/google/repair-calendar-sync';
 
@@ -145,16 +145,19 @@ export async function PATCH(
         if (!template || !data.phone) return;
 
         // 067: 후기 요청 자동 발송 가드
-        // 2026-05-26 정책 정정: 약속 ✓ 고객만 자동 발송
+        // 2026-05-26: 약속 ✓ 고객만 → 153(2026-09-16) 기본 ON 으로 뒤집음 (해제한 건만 걸린다)
         // 094 (2026-05-27): review_promised_type 으로 솔라피 템플릿 분기
         if (template === 'as_review_request') {
-          if (!data.review_promised_at) { console.log('[repair auto-review] skip — 약속 X'); return; }
+          if (!data.review_promised_at) { console.log('[repair auto-review] skip — 사장님이 해제함'); return; }
           if (data.review_request_sent_at) { console.log('[repair auto-review] skip — 이미 발송'); return; }
 
           // 094: 약속 시 선택한 유형으로 발송 (NULL이면 'repair' 디폴트)
           // 095: subtype 도 함께 전달 (purchase 면 무시)
           const reviewType = (data.review_promised_type as 'purchase' | 'repair' | 'consult' | null) || 'repair';
-          const subtype = reviewType === 'purchase' ? undefined : (data.review_promised_subtype as string | null) || undefined;
+          // 153: 사장님이 고른 값 우선, 없으면 진행유형에서 유도
+          const subtype = reviewType === 'purchase'
+            ? undefined
+            : (data.review_promised_subtype as string | null) || repairSubtypeFromProceedType(data.proceed_type as string | null);
           const r = await sendReviewRequestNotification({
             source: 'repair',
             sourceId: data.as_id,

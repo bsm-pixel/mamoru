@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
-/** GET /api/reviews/promised — 약속 받았지만 아직 미작성 고객 통합 리스트
+/** GET /api/reviews/promised — 후기 요청 대상인데 아직 미작성인 고객 리스트
+ *  153(2026-09-16): 자동발송이 기본 ON 이라 "약속 받은 고객"이 아니라 "해제하지 않은 전체"가 뜬다
  *  3 source UNION: consultations + repairs + offline_sales
  *  조건: review_promised_at IS NOT NULL AND review_submitted_at IS NULL
  */

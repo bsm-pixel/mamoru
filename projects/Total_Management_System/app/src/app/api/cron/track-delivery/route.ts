@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { queryStatus } from '@/lib/lotte/client';
 import { queryTrackingStatus } from '@/lib/lotte/alps-client';
-import { sendReviewRequestNotification } from '@/lib/notification/review-request';
+import { sendReviewRequestNotification, repairSubtypeFromProceedType } from '@/lib/notification/review-request';
 import { sendSalesShippedNotification, sendExchangeShippedNotification } from '@/lib/notification/sales-shipped';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
@@ -261,7 +261,7 @@ export async function GET(request: NextRequest) {
 
     const { data: repairs, error: repairsErr } = await db
       .from('repairs')
-      .select('id, as_id, invoice_number, name, phone, courier_name, review_promised_at, review_promised_type, review_promised_subtype, review_request_sent_at')
+      .select('id, as_id, invoice_number, name, phone, courier_name, proceed_type, review_promised_at, review_promised_type, review_promised_subtype, review_request_sent_at')
       .eq('status', 'shipped')
       .not('invoice_number', 'is', null)
       .limit(50);
@@ -303,13 +303,14 @@ export async function GET(request: NextRequest) {
           repairsDelivered++;
           console.log(`[track-delivery/repairs] ${repair.as_id} (${repair.name}) → 배송완료`);
 
-          // 🔴 109 버그 수정: 자동 후기요청 (판매와 동일 정책 — '약속한 고객만')
+          // 🔴 109 버그 수정: 자동 후기요청 (판매와 동일 정책)
+          //    153(2026-09-16): 자동발송이 "기본 ON" 으로 뒤집혔다 → 사장님이 카드에서 해제한 건만 아래 가드에 걸린다
           //    기존엔 이 크론이 DB 를 직접 update 해서 PATCH /api/repair/[id] 의 발송 코드를 우회했다.
           //    → 사장님이 수동으로 상태를 바꿀 때만 나가고, ALPS 자동 배송완료 건은 발송 자체가 없었음.
           after(async () => {
             try {
               if (!repair.review_promised_at) {
-                console.log(`[track-delivery/repairs auto-review] ${repair.as_id} skip — 약속 X (사장님 수동만)`);
+                console.log(`[track-delivery/repairs auto-review] ${repair.as_id} skip — 사장님이 해제함 (수동만)`);
                 return;
               }
               if (repair.review_request_sent_at) {
@@ -319,7 +320,10 @@ export async function GET(request: NextRequest) {
               if (!repair.phone) return;
 
               const reviewType = (repair.review_promised_type as 'purchase' | 'repair' | 'consult' | null) || 'repair';
-              const subtype = reviewType === 'purchase' ? undefined : (repair.review_promised_subtype as string | null) || undefined;
+              // 153: 사장님이 고른 값 우선, 없으면 진행유형에서 유도
+              const subtype = reviewType === 'purchase'
+                ? undefined
+                : (repair.review_promised_subtype as string | null) || repairSubtypeFromProceedType(repair.proceed_type as string | null);
               const r = await sendReviewRequestNotification({
                 source: 'repair',
                 sourceId: repair.as_id,
@@ -552,13 +556,13 @@ export async function GET(request: NextRequest) {
           salesDelivered++;
           console.log(`[track-delivery/offline_sales] ${sale.sale_number} (${sale.customer_name}) → 배송완료`);
 
-          // 자동 후기요청 (2026-05-26 정책 정정: 약속 ✓ 고객만 자동 발송 — 보수적)
-          //   사장님 의도: "약속 받은 고객 + 배송완료(인수자등록) 자동 감지 → 자동 알림톡"
-          //   약속 X 고객은 사장님 수동 발송만 (compact UI 의 후기 요청 버튼 사용)
+          // 자동 후기요청
+          //   2026-05-26: "약속 ✓ 고객만" (보수적)
+          //   153(2026-09-16): 기본 ON 으로 뒤집음 — 사장님이 카드에서 해제한 건만 아래 가드에 걸린다
           after(async () => {
             try {
               if (!sale.review_promised_at) {
-                console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} skip — 약속 X (사장님 수동만)`);
+                console.log(`[track-delivery/offline_sales auto-review] ${sale.sale_number} skip — 사장님이 해제함 (수동만)`);
                 return;
               }
               if (sale.review_requested_at) {

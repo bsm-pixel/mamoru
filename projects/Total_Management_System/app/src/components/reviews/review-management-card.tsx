@@ -4,13 +4,16 @@
  * 067: 리뷰 관리 공용 카드 — 상담/수리/판매 상세 패널에서 동일 사용
  *
  * 역할:
- *  1) 약속 토글: 사장님이 "이 고객 후기 약속 받았다" 체크 (review_promised_at)
+ *  1) 자동발송 토글: 배송완료 시 후기 요청을 자동으로 보낼지 (review_promised_at)
  *  2) 후기 요청 발송: ReviewRequestModal 열어 알림톡 수동 발송 (review_request_sent_at)
  *  3) 작성 완료 표시: review_submitted_at 있으면 readonly 정적 라벨로 전환
  *
- * 자동 발송 정책 (항상 발송 원칙 2026-09-14 — 설정 토글 없음):
- *  - 약속 ✓ 고객: 배송완료(인수자등록) 자동 감지 시 자동 발송
- *  - 약속 X 고객: 사장님 수동 발송
+ * 자동 발송 정책
+ *  - 항상 발송 원칙(2026-09-14): 설정에 on/off 토글 없음
+ *  - 153(2026-09-16): 신규 건은 **기본 ON** (마이그 153 DEFAULT now())
+ *      → ON  : 배송완료(인수자등록) 자동 감지 시 자동 발송
+ *      → 해제: 사장님 수동 발송만. "이 고객엔 안 보낸다" 할 때만 끈다
+ *  - B2B 납품(deliveries)은 후기 발송 대상이 아니다 (컬럼 자체가 없음)
  */
 
 import { useState, useEffect } from 'react';
@@ -135,7 +138,7 @@ function RelatedActivitySection({ items }: { items: RelatedActivity[] }) {
           let chipClass = '';
           if (isCompleted) { chipLabel = `✅ 작성완료 ${formatDate(it.submittedAt)}`; chipClass = 'bg-green-50 text-green-700'; }
           else if (isPending) { chipLabel = `📤 발송 ${formatDate(it.requestSentAt)} · 대기`; chipClass = 'bg-blue-50 text-blue-700'; }
-          else if (isPromised) { chipLabel = `☑ 약속 ${formatDate(it.promisedAt)}`; chipClass = 'bg-amber-50 text-amber-700'; }
+          else if (isPromised) { chipLabel = '⏳ 자동발송 대기'; chipClass = 'bg-amber-50 text-amber-700'; }
           return (
             <Link
               key={`${it.source}-${it.id}`}
@@ -177,7 +180,7 @@ export function ReviewManagementCard({
   const [related, setRelated] = useState<RelatedActivity[]>([]);
 
   // 2026-05-26: 자동 발송 예정 판정 (사장님 우려 → 시각 신호)
-  //   조건: 약속 ✓ + 미발송 + 송장 있음 + 배송중(shipped + !delivered)
+  //   조건: 자동발송 ON + 미발송 + 송장 있음 + 배송중(shipped + !delivered)
   //   ALPS cron 1시간마다 자동 추적 → '41'/'45' 코드 감지 시 자동 발송 예정
   const autoSendPending =
     !!promisedAt &&
@@ -297,9 +300,9 @@ export function ReviewManagementCard({
   const handleTogglePromise = async () => {
     const next = !promisedAt;
     if (next) {
-      await callPromiseApi(true, activeType, activeSubtype, '리뷰 약속 체크');
+      await callPromiseApi(true, activeType, activeSubtype, '후기 자동발송 ON');
     } else {
-      await callPromiseApi(false, undefined, undefined, '약속 해제');
+      await callPromiseApi(false, undefined, undefined, '후기 자동발송 해제 — 수동 발송만');
     }
   };
 
@@ -307,7 +310,7 @@ export function ReviewManagementCard({
   const handleChangePromiseType = async (next: PromiseType) => {
     if (next === activeType) return;
     const nextSubtype = next === 'purchase' ? null : defaultPromiseSubtype(next, sourceType);
-    await callPromiseApi(true, next, nextSubtype, `약속 유형: ${TYPE_LABEL[next]}`);
+    await callPromiseApi(true, next, nextSubtype, `후기 유형: ${TYPE_LABEL[next]}`);
   };
 
   // 095: subtype 변경 (현재 유형 유지)
@@ -322,7 +325,7 @@ export function ReviewManagementCard({
     : activeType === 'consult' ? [...CONSULT_SUBTYPES]
     : [];
 
-  /** 후기 요청 발송 — 약속 ON 시 모달 우회 (이미 유형/subtype 선택됨), OFF 시 모달 열기 */
+  /** 후기 요청 발송 — 자동발송 ON 이면 모달 우회 (유형/subtype 이미 정해짐), OFF 면 모달 열기 */
   const handleRequestClick = async () => {
     if (!customerPhone) { toast.error('고객 연락처가 없어 발송할 수 없습니다'); return; }
     // 자동 발송 예정 confirm 가드 (compact 모드에서만 의미 — 기존 동작 유지)
@@ -330,12 +333,12 @@ export function ReviewManagementCard({
       const ok = confirm('이 건은 배송완료 시 자동 발송될 예정입니다.\n\n지금 수동으로 발송하시겠습니까?');
       if (!ok) return;
     }
-    // 약속 OFF → 모달 열기 (유형 선택 → 발송)
+    // 자동발송 OFF → 모달 열기 (유형 선택 → 발송)
     if (!promisedAt) {
       setShowRequestModal(true);
       return;
     }
-    // 약속 ON → 토글+칩 선택값 그대로 즉시 발송 (IA: SSOT 일관)
+    // 자동발송 ON → 토글+칩 선택값 그대로 즉시 발송 (IA: SSOT 일관)
     setTogglingPromise(true);
     try {
       const res = await fetch('/api/reviews/request', {
@@ -368,12 +371,12 @@ export function ReviewManagementCard({
     return (
       <>
         <div className="flex items-center gap-2 flex-wrap min-w-0">
-          {/* 약속 토글 스위치 (시안 3) */}
+          {/* 자동발송 토글 스위치 (시안 3) — 153: 기본 ON, 끄면 수동 발송만 */}
           <button
             type="button"
             onClick={handleTogglePromise}
             disabled={togglingPromise}
-            title={promisedAt ? `리뷰 약속 ON (${formatDate(promisedAt)})` : '리뷰 약속 받음 토글'}
+            title={promisedAt ? `배송완료 시 후기 요청 자동 발송 ON (${formatDate(promisedAt)})` : '자동 발송 해제됨 — 켜면 배송완료 시 자동으로 후기 요청이 나갑니다'}
             className="flex items-center gap-2 text-[11px] px-2 py-1 rounded-md hover:bg-neutral-50 transition disabled:opacity-50"
           >
             <span
@@ -387,11 +390,11 @@ export function ReviewManagementCard({
                 }`}
               />
             </span>
-            <span className={promisedAt ? 'font-semibold text-neutral-900' : 'text-neutral-500'}>리뷰 약속</span>
+            <span className={promisedAt ? 'font-semibold text-neutral-900' : 'text-neutral-500'}>후기 자동발송</span>
             {promisedAt && <span className="text-[10px] text-neutral-400">{formatDate(promisedAt)}</span>}
           </button>
 
-          {/* 094: 약속 ON 시 유형 라디오 칩 (자동 발송 시 솔라피 템플릿 분기) */}
+          {/* 094: ON 시 유형 라디오 칩 (자동 발송 시 솔라피 템플릿 분기) */}
           {promisedAt && (
             <div className="flex items-center gap-1">
               {(['repair', 'consult', 'purchase'] as PromiseType[]).map((t) => (
@@ -413,7 +416,7 @@ export function ReviewManagementCard({
             </div>
           )}
 
-          {/* 095: 약속 ON + repair/consult 일 때 subtype 라디오 칩 */}
+          {/* 095: ON + repair/consult 일 때 subtype 라디오 칩 */}
           {promisedAt && availableSubtypes.length > 0 && (
             <div className="flex items-center gap-1 pl-1 border-l border-stone-200">
               {availableSubtypes.map((st) => (
@@ -435,7 +438,7 @@ export function ReviewManagementCard({
             </div>
           )}
 
-          {/* 후기 요청 작은 버튼 — 약속 ON 시 모달 없이 즉시 발송, OFF 시 모달 */}
+          {/* 후기 요청 작은 버튼 — 자동발송 ON 이면 모달 없이 즉시 발송, OFF 면 모달 */}
           <button
             type="button"
             onClick={handleRequestClick}
@@ -485,7 +488,7 @@ export function ReviewManagementCard({
           <h3 className="text-xs font-bold text-indigo-black">리뷰 관리</h3>
         </div>
 
-        {/* 약속 토글 */}
+        {/* 자동발송 토글 (전체 모드) — 153: 기본 ON, 끄면 수동 발송만 */}
         <button
           type="button"
           onClick={handleTogglePromise}
@@ -507,13 +510,13 @@ export function ReviewManagementCard({
               {promisedAt ? '✓' : ''}
             </span>
             <span className={`text-sm ${promisedAt ? 'font-semibold text-indigo-black' : 'text-neutral-600'}`}>
-              리뷰 참여 약속
+              배송완료 시 후기 요청 자동발송
             </span>
           </div>
           {promisedAt && <span className="text-[11px] text-neutral-500">{formatDate(promisedAt)}</span>}
         </button>
 
-        {/* 094: 약속 ON 시 유형 라디오 칩 (자동 발송 시 솔라피 템플릿 분기) */}
+        {/* 094: ON 시 유형 라디오 칩 (자동 발송 시 솔라피 템플릿 분기) */}
         {promisedAt && (
           <div className="mb-2 flex items-center gap-1.5">
             <span className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold">자동 발송 유형</span>
@@ -537,7 +540,7 @@ export function ReviewManagementCard({
           </div>
         )}
 
-        {/* 095: 약속 ON + repair/consult 일 때 subtype 라디오 칩 */}
+        {/* 095: ON + repair/consult 일 때 subtype 라디오 칩 */}
         {promisedAt && availableSubtypes.length > 0 && (
           <div className="mb-2 flex items-center gap-1.5">
             <span className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold">세부 유형</span>
@@ -561,7 +564,7 @@ export function ReviewManagementCard({
           </div>
         )}
 
-        {/* 후기 요청 발송 버튼 — 약속 ON 시 모달 없이 즉시 발송, OFF 시 모달 */}
+        {/* 후기 요청 발송 버튼 — 자동발송 ON 이면 모달 없이 즉시 발송, OFF 면 모달 */}
         <button
           type="button"
           onClick={handleRequestClick}

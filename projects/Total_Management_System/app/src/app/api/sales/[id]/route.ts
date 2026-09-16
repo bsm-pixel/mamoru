@@ -441,7 +441,8 @@ export async function PATCH(
       if (updateErr) throw updateErr;
 
       // 자동 후기요청 — 택배(ALPS cron)와 동일 기준을 픽업/수동배송완료에도 적용 (2026-06-12)
-      //   약속✓ + 미발송 + 연락처 있음 → 즉시 발송 (버튼 클릭=수령완료라 cron 불필요). 항상 발송 원칙(2026-09-14) — 토글 없음
+      //   미해제 + 미발송 + 연락처 있음 → 즉시 발송 (버튼 클릭=수령완료라 cron 불필요)
+      //   항상 발송 원칙(2026-09-14) — 설정 토글 없음 / 153(2026-09-16) — 자동발송 기본 ON, 해제한 건만 제외
       after(async () => {
         try {
           if (sale.review_requested_at || !sale.review_promised_at || !sale.customer_phone) return;
