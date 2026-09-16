@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 import {
   useBanners, useUpdateBanner, useUploadBannerImage,
   type ImwebBanner, type BannerImage,
@@ -615,6 +616,7 @@ function PreviewModal({
       className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center p-6"
       {...backdropClose(onClose)}
     >
+      <EscClose onClose={onClose} />
       <div
         className="bg-[#FAF9F7] max-w-[420px] w-full rounded-lg overflow-hidden shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}

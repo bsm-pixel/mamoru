@@ -14,6 +14,7 @@ import { useRef, useMemo } from 'react';
 import { Printer } from 'lucide-react';
 import type { InventoryItem } from '@/hooks/use-inventory';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 interface Props {
   items: InventoryItem[];
@@ -94,6 +95,7 @@ export function InventoryPrintModal({ items, categoryLabel, categoryLabels, filt
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
+      <EscClose onClose={onClose} />
       <div
         className="bg-white rounded-xl shadow-2xl flex flex-col"
         style={{ width: '780px', maxHeight: '90vh' }}

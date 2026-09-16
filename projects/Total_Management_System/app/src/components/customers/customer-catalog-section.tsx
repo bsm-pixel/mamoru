@@ -5,6 +5,7 @@ import { Plus, Search, Save, Trash2 } from 'lucide-react';
 import { formatKRW } from '@/lib/utils/format';
 import { useProducts } from '@/hooks/use-sales';
 import { useCustomerCatalog, useAddToCustomerCatalog, useUpdateCustomerCatalog, useRemoveFromCustomerCatalog } from '@/hooks/use-customer-catalog';
+import { useEnterSelect } from '@/hooks/use-enter-select';
 
 /**
  * B2B 납품처(dealer/academy) 납품품목 카탈로그 UI
@@ -66,6 +67,9 @@ export function CustomerCatalogSection({ customerId }: { customerId: string }) {
     await removeFromCatalog.mutateAsync({ customerId, catalogId });
   }
 
+  // 검색 결과에서 ↑↓·Enter 로 바로 추가 (결과 1개면 Enter 만으로)
+  const pick = useEnterSelect(filtered, (p) => { handleAdd(p.id); setProductSearch(''); });
+
   return (
     <div className="px-4 py-4 space-y-3">
       {/* 상단 버튼 */}
@@ -89,6 +93,7 @@ export function CustomerCatalogSection({ customerId }: { customerId: string }) {
               value={productSearch}
               onChange={(e) => setProductSearch(e.target.value)}
               placeholder="제품명 또는 SKU 검색"
+              onKeyDown={pick.onKeyDown}
               className="w-full h-8 pl-8 pr-3 rounded-lg border border-neutral-200 text-xs"
               autoFocus
             />
@@ -96,11 +101,12 @@ export function CustomerCatalogSection({ customerId }: { customerId: string }) {
           <div className="max-h-40 overflow-y-auto space-y-0.5">
             {filtered.length === 0 ? (
               <p className="text-xs text-neutral-400 text-center py-3">추가 가능한 제품 없음</p>
-            ) : filtered.map((p) => (
+            ) : filtered.map((p, pi) => (
               <button
                 key={p.id}
                 onClick={() => handleAdd(p.id)}
-                className="w-full flex items-center justify-between px-3 py-2 rounded hover:bg-neutral-50 text-left"
+                onMouseEnter={() => pick.setActiveIdx(pi)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded text-left ${pick.isActive(pi) ? 'bg-neutral-100' : 'hover:bg-neutral-50'}`}
               >
                 <div>
                   <span className="text-xs font-medium">{p.name}</span>

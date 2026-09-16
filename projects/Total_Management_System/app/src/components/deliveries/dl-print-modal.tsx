@@ -8,6 +8,7 @@ import { useProducts } from '@/hooks/use-sales';
 import { usePriceGroups } from '@/hooks/use-price-groups';
 import { formatKRW } from '@/lib/utils/format';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 interface Props {
   deliveryId: string;
@@ -154,6 +155,7 @@ export function DLPrintModal({ deliveryId, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
+      <EscClose onClose={onClose} />
       <div
         className="bg-white rounded-xl shadow-2xl flex flex-col"
         style={{ width: '700px', maxHeight: '90vh' }}

@@ -5,6 +5,7 @@ import { ArrowLeftRight, AlertTriangle, Check, X, Search } from 'lucide-react';
 import { useSerialLookup, useSwapSerials } from '@/hooks/use-serial-lookup';
 import { formatPhone } from '@/lib/utils/format';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 interface SerialInfo {
   id: string;
@@ -88,6 +89,7 @@ export function SerialSwapDialog({ currentSerial, currentMeta, onClose }: Props)
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
       {...backdropClose(onClose)}
     >
+      <EscClose onClose={onClose} />
       <div
         className="bg-white rounded-xl shadow-2xl w-full max-w-[640px] overflow-hidden"
         onClick={(e) => e.stopPropagation()}

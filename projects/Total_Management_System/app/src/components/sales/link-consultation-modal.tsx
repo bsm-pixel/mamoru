@@ -18,6 +18,7 @@ import { useState, useEffect } from 'react';
 import { X, Link2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 interface ConsultationItem {
   id: string;
@@ -110,6 +111,7 @@ export function LinkConsultationModal({ saleId, customerPhone, onClose, onLinked
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center p-4 pt-16 overflow-y-auto" {...backdropClose(onClose)}>
+      <EscClose onClose={onClose} />
       <div className="bg-white rounded-xl w-full max-w-md p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

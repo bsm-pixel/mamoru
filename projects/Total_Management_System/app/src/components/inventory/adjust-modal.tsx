@@ -6,6 +6,7 @@ import { X, Plus, Minus } from 'lucide-react';
 import type { InventoryItem } from '@/hooks/use-inventory';
 import toast from 'react-hot-toast';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 const ADJUSTMENT_TYPES = [
   { value: 'correction', label: '실사 보정' },
@@ -57,6 +58,7 @@ export function AdjustModal({ items, onClose, onSuccess }: AdjustModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" {...backdropClose(onClose)}>
+      <EscClose onClose={onClose} />
       <div
         className="bg-white rounded-xl w-full max-w-md mx-4 shadow-xl"
         onClick={(e) => e.stopPropagation()}

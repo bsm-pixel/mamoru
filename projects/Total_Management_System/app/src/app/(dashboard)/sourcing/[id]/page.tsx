@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 export default function SourcingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -388,6 +389,7 @@ function LabelPrintChip({ item }: { item: SourcingItem }) {
       {open && (
         <>
           <div className="fixed inset-0 z-10" {...backdropClose(() => setOpen(false))} />
+          <EscClose onClose={() => setOpen(false)} />
           <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-lg border border-neutral-200 bg-white shadow-lg p-2.5 space-y-2">
             <div className="text-[10px] text-neutral-500 font-mono truncate">{item.sticker_no}</div>
             <label className="block">

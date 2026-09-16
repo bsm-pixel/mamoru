@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatPhone } from '@/lib/utils/format';
 import { X, MapPin, Phone } from 'lucide-react';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 interface TodayConsultationPickerProps {
   open: boolean;
@@ -67,6 +68,7 @@ export function TodayConsultationPicker({ open, onClose, onSelect }: TodayConsul
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" {...backdropClose(onClose)}>
+      <EscClose onClose={onClose} />
       <div
         className="bg-white rounded-xl shadow-xl w-[90vw] max-w-[400px] max-h-[70vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}

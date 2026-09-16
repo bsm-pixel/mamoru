@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCustomers } from '@/hooks/use-customers';
 import { ChevronDown, X } from 'lucide-react';
+import { useEnterSelect } from '@/hooks/use-enter-select';
 
 interface SupplierSelectProps {
   value: string;          // supplier_id
@@ -48,6 +49,9 @@ export function SupplierSelect({ value, displayName, onChange, placeholder = '�
     setSearch('');
   }
 
+  // 검색 결과에서 ↑↓·Enter 로 바로 선택 (결과 1개면 Enter 만으로)
+  const pick = useEnterSelect(filtered, (s) => handleSelect(s.id, s.company_name || s.name));
+
   return (
     <div ref={ref} className="relative">
       <div
@@ -80,6 +84,7 @@ export function SupplierSelect({ value, displayName, onChange, placeholder = '�
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="매입처 검색..."
+              onKeyDown={pick.onKeyDown}
               autoFocus
               className="w-full h-8 px-2 rounded border border-neutral-200 bg-neutral-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-terracotta/40"
             />
@@ -88,11 +93,12 @@ export function SupplierSelect({ value, displayName, onChange, placeholder = '�
             {filtered.length === 0 ? (
               <p className="text-xs text-neutral-400 text-center py-3">매입처 없음</p>
             ) : (
-              filtered.map((s) => (
+              filtered.map((s, si) => (
                 <button
                   key={s.id}
                   onClick={() => handleSelect(s.id, s.company_name || s.name)}
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-neutral-50 transition ${
+                  onMouseEnter={() => pick.setActiveIdx(si)}
+                  className={`w-full text-left px-3 py-2 text-sm transition ${pick.isActive(si) ? 'bg-neutral-100' : 'hover:bg-neutral-50'} ${
                     s.id === value ? 'bg-terracotta/5 text-terracotta font-medium' : ''
                   }`}
                 >

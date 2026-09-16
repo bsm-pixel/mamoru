@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 export interface SerialConflictInfo {
   serial: string;
@@ -26,6 +27,7 @@ export function SerialConflictDialog({ info, onConfirm, onCancel }: DialogProps)
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
       {...backdropClose(onCancel)}
     >
+      <EscClose onClose={onCancel} />
       <div
         className="bg-white rounded-xl shadow-2xl w-full max-w-[420px] overflow-hidden"
         onClick={(e) => e.stopPropagation()}

@@ -8,6 +8,7 @@ import { SerialPicker } from '@/components/sales/serial-picker';
 import type { OrderItem } from '@/lib/supabase/types';
 import type { OrderSerial } from '@/hooks/use-orders';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 interface Props {
   orderId: string;
@@ -79,6 +80,7 @@ export function OrderSerialModal({ orderId, items, serials, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" {...backdropClose(onClose)}>
+      <EscClose onClose={onClose} />
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
           <h3 className="text-sm font-bold">시리얼 배정</h3>

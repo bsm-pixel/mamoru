@@ -14,6 +14,8 @@ import { Truck, Pencil, Minus, Plus, Trash2, X, Save, Printer } from 'lucide-rea
 import toast from 'react-hot-toast';
 import { POPrintModal } from './po-print-modal';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
+import { useEnterSelect } from '@/hooks/use-enter-select';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
@@ -40,6 +42,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
   const [editing, setEditing] = useState(false);
   const [editItems, setEditItems] = useState<Array<{ product_id?: string; product_name: string; sku?: string; quantity: number; unit_price: number }>>([]);
   const [editMemo, setEditMemo] = useState('');
+  const [addSearch, setAddSearch] = useState('');
   const [editExpectedDate, setEditExpectedDate] = useState('');
   const [saving, setSaving] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
@@ -47,6 +50,19 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
   const [receiveItems, setReceiveItems] = useState<Array<{ id: string; name: string; ordered: number; already: number; received: number; unit_price: number }>>([]);
   const [showReceive, setShowReceive] = useState(false);
   const [receiving, setReceiving] = useState(false);
+  // 제품 추가 후보 — 이미 담은 것 제외 + 이름·SKU 검색
+  const addableProducts = products.filter((p) => {
+    if (editItems.find((ei) => ei.product_id === p.id)) return false;
+    const q = addSearch.trim().toLowerCase();
+    if (!q) return true;
+    return p.name.toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q);
+  });
+  function addEditItem(p: typeof products[number]) {
+    setEditItems(prev => [...prev, { product_id: p.id, product_name: p.name, sku: p.sku, quantity: 1, unit_price: p.price_purchase || p.price }]);
+  }
+  // 검색 결과에서 ↑↓·Enter 로 바로 담기 (결과 1개면 Enter 만으로)
+  const addPick = useEnterSelect(addableProducts, (p) => { addEditItem(p); setAddSearch(''); });
+
   const [pendingAction, setPendingAction] = useState<{
     status: string; label: string; msg: string; variant?: 'danger' | 'default'; extra?: Record<string, unknown>;
   } | null>(null);
@@ -210,25 +226,19 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
             <p className="text-xs text-neutral-400 mb-1">제품 추가</p>
             <input
               type="text"
-              placeholder="제품명 검색..."
-              onChange={(e) => {
-                const el = e.target.nextElementSibling;
-                if (el) el.setAttribute('data-search', e.target.value.toLowerCase());
-                // 강제 리렌더 위해 state 불필요 — DOM 직접 필터
-                el?.querySelectorAll('[data-product-row]').forEach((row) => {
-                  const name = row.getAttribute('data-product-name') || '';
-                  (row as HTMLElement).style.display = name.includes(e.target.value.toLowerCase()) ? '' : 'none';
-                });
-              }}
+              placeholder="제품명·SKU 검색..."
+              value={addSearch}
+              onChange={(e) => setAddSearch(e.target.value)}
+              onKeyDown={addPick.onKeyDown}
               className="w-full h-8 px-3 mb-1.5 rounded-lg border border-neutral-200 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
             />
             <div className="max-h-[200px] overflow-y-auto border border-neutral-100 rounded-lg divide-y divide-neutral-50">
-              {products.filter(p => !editItems.find(ei => ei.product_id === p.id)).map(p => (
-                <button key={p.id} data-product-row data-product-name={p.name.toLowerCase()}
-                  onClick={() => setEditItems(prev => [...prev, {
-                    product_id: p.id, product_name: p.name, sku: p.sku, quantity: 1, unit_price: p.price_purchase || p.price,
-                  }])}
-                  className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-neutral-50 transition text-left">
+              {addableProducts.length === 0 && <p className="px-3 py-3 text-xs text-neutral-400 text-center">검색 결과 없음</p>}
+              {addableProducts.map((p, pi) => (
+                <button key={p.id}
+                  onClick={() => addEditItem(p)}
+                  onMouseEnter={() => addPick.setActiveIdx(pi)}
+                  className={`w-full flex items-center justify-between px-3 py-2 text-xs transition text-left ${addPick.isActive(pi) ? 'bg-neutral-100' : 'hover:bg-neutral-50'}`}>
                   <span className="truncate font-medium">{p.name}</span>
                   <span className="text-neutral-400 shrink-0 ml-2">{formatKRW(p.price_purchase || p.price)}</span>
                 </button>
@@ -418,6 +428,7 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
       {/* 입고검수 모달 — 품목별 실수령 수량 (제작품이라 주문≠입고 흔함) */}
       {showReceive && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" {...backdropClose(() => { if (!receiving) setShowReceive(false); })}>
+          <EscClose onClose={() => { if (!receiving) setShowReceive(false); }} />
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 border-b border-neutral-100">
               <h3 className="text-sm font-bold text-stone-900">입고 검수</h3>

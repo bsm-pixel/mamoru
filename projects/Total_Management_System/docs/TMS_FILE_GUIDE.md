@@ -104,6 +104,8 @@
 | **액션 영역 5슬롯** | `components/ui/action-section.tsx` | 상세 패널 「액션」 표준 — ActionNote/MoreActions/DangerZone/DangerLink/SubtleButton. **새 상세 화면은 반드시 이걸로** → [TMS_UI_ACTION_PANEL.md](TMS_UI_ACTION_PANEL.md) |
 | 주 액션 바 | `components/ui/primary-action-bar.tsx` | 상단 고정 「⚡ 다음 할 일」 (판매·주문) |
 | **모달 배경 닫기** | `lib/ui/backdrop.ts` `backdropClose()` | 🚨 배경 div 에 `onClick={onClose}` 를 **직접 쓰지 말 것**. 모달 안에서 글자를 드래그하다 바깥에서 놓으면 닫혀 작성 내용이 날아간다. `<div className="fixed inset-0 …" {...backdropClose(onClose)}>` 로 쓴다 |
+| **모달 ESC 닫기** | `components/ui/esc-close.tsx` | 🚨 모달마다 `useEffect` 로 keydown 을 붙이지 말 것(중첩 모달이 한 번에 다 닫힌다). 배경 `div` 바로 안에 `<EscClose onClose={…} />` 한 줄. 모듈 전역 스택으로 **맨 위 모달만** 닫는다. 한글 조합 중(isComposing) ESC 는 무시 |
+| **검색 Enter 선택** | `hooks/use-enter-select.ts` | 검색 결과에서 ↑↓ 이동 + Enter 선택. **결과가 딱 1개면 Enter 만으로 바로 선택**, 2개 이상인데 지정을 안 했으면 무동작(오선택 방지). 결과가 줄면 활성 행을 렌더 중 무효화 |
 | 택배사 판정 | `lib/shipping/couriers.ts` | `isAlpsTrackable()` — 롯데만 자동추적. 송장·출고 UI는 전부 이걸 본다 |
 
 ---

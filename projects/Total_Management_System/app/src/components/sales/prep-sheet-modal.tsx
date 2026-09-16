@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 /** 2026-05-26 Phase D: B2C(sale) + B2B(delivery) 통합 준비표 출력
  *  2026-07-23: 트레이형 추가 — A4 1장에 주문 2건(좌·우), 중앙 절취선. 반쪽(105×297mm) 트레이용. */
@@ -321,6 +322,7 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], orderIds = [], prelo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
+      <EscClose onClose={onClose} />
       <div
         className="bg-white rounded-xl shadow-2xl flex flex-col"
         style={{ width: mode === 'tray' ? '760px' : '700px', maxHeight: '90vh' }}

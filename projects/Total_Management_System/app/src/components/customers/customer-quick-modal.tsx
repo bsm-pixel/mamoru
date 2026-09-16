@@ -9,6 +9,7 @@ import { X, ShoppingBag, FileSignature, MessageSquare, Wrench, Copy, ExternalLin
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 // 상담유형 라벨은 format.ts SSOT(CONSULTATION_TYPE_LABEL) 사용
 
@@ -28,6 +29,7 @@ export function CustomerQuickModal({ customerId, open, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" {...backdropClose(onClose)}>
+      <EscClose onClose={onClose} />
       <div className="bg-white rounded-xl shadow-xl w-[90vw] max-w-[420px] max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">

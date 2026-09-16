@@ -23,6 +23,8 @@ import { ScanInput } from '@/components/sales/scan-input';
 import { resolveScan } from '@/lib/sales/resolve-scan';
 import type { Product } from '@/lib/supabase/types';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
+import { useEnterSelect } from '@/hooks/use-enter-select';
 
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
@@ -82,6 +84,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
   );
 
   // 제품 필터
+  // 검색 결과에서 ↑↓·Enter 로 바로 담기 (결과 1개면 Enter 만으로)
   const filteredProducts = products.filter((p) => {
     if (!productSearch) return true;
     const q = productSearch.toLowerCase();
@@ -174,8 +177,12 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
     }
   }
 
+  // 검색 결과에서 ↑↓·Enter 로 바로 담기 (결과 1개면 Enter 만으로)
+  const productPick = useEnterSelect(filteredProducts, (p: Product) => { addProduct(p); setProductSearch(''); });
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
+      <EscClose onClose={onClose} />
       <div
         className="bg-white rounded-xl shadow-2xl flex flex-col"
         style={{ width: '780px', maxHeight: '90vh' }}
@@ -315,18 +322,20 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
                 placeholder="제품명 또는 SKU 검색"
+                onKeyDown={productPick.onKeyDown}
                 className="w-full h-8 px-3 rounded-lg border border-neutral-200 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
               />
               {productSearch && (
                 <div className="absolute z-20 w-full mt-1 max-h-[180px] overflow-y-auto bg-white border border-neutral-200 rounded-lg shadow-lg divide-y divide-neutral-50">
-                  {filteredProducts.map((p) => {
+                  {filteredProducts.map((p, pi) => {
                     const inCart = cart.find((c) => c.product_id === p.id);
                     const price = getPrice(p);
                     return (
                       <button
                         key={p.id}
                         onClick={() => { addProduct(p); setProductSearch(''); }}
-                        className={`w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-neutral-50 transition text-left ${inCart ? 'bg-neutral-900/5' : ''}`}
+                        onMouseEnter={() => productPick.setActiveIdx(pi)}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-xs transition text-left ${productPick.isActive(pi) ? 'bg-neutral-100' : 'hover:bg-neutral-50'} ${inCart ? 'bg-neutral-900/5' : ''}`}
                       >
                         <span className="truncate font-medium">
                           {p.name}

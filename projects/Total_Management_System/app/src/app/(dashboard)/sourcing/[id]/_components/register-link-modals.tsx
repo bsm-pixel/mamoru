@@ -7,6 +7,7 @@ import { useCreateProduct } from '@/hooks/use-product-detail';
 import { useLinkSourcingItem, type SourcingItem } from '@/hooks/use-sourcing';
 import { useProducts } from '@/hooks/use-sales';
 import { useSetting } from '@/hooks/use-settings';
+import { useEnterSelect } from '@/hooks/use-enter-select';
 
 type Mode = 'product' | 'supply' | 'link';
 
@@ -178,23 +179,27 @@ function LinkMode({ item, link, onClose }: {
     }
   };
 
+  // 검색 결과에서 ↑↓·Enter 로 바로 연결 (결과 1개면 Enter 만으로)
+  const sel = useEnterSelect(filtered, (p) => { if (!busy) void pick(p.id); });
+
   return (
     <div className="space-y-3">
       <div className="relative">
         <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="제품명·SKU 검색" className={inp + ' pl-8'} autoFocus />
+        <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={sel.onKeyDown} placeholder="제품명·SKU 검색" className={inp + ' pl-8'} autoFocus />
       </div>
       <div className="max-h-72 overflow-y-auto divide-y divide-neutral-100 border border-neutral-200 rounded-lg">
         {filtered.length === 0 ? (
           <div className="p-4 text-center text-xs text-neutral-400">검색 결과 없음</div>
         ) : (
-          filtered.map((p) => (
+          filtered.map((p, pi) => (
             <button
               key={p.id}
               type="button"
               onClick={() => pick(p.id)}
+              onMouseEnter={() => sel.setActiveIdx(pi)}
               disabled={busy}
-              className="w-full flex items-center gap-2 p-2.5 hover:bg-neutral-50 text-left disabled:opacity-50"
+              className={`w-full flex items-center gap-2 p-2.5 text-left disabled:opacity-50 ${sel.isActive(pi) ? 'bg-neutral-100' : 'hover:bg-neutral-50'}`}
             >
               <span className="font-mono text-[10px] text-neutral-400 w-24 truncate">{p.sku}</span>
               <span className="flex-1 text-sm text-indigo-black truncate">{p.name}</span>

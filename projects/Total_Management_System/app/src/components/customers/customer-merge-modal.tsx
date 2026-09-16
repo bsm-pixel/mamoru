@@ -7,6 +7,8 @@ import { formatKRW, formatPhone } from '@/lib/utils/format';
 import { useMergeCustomers } from '@/hooks/use-customers';
 import toast from 'react-hot-toast';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
+import { useEnterSelect } from '@/hooks/use-enter-select';
 
 interface Hit {
   id: string;
@@ -64,10 +66,6 @@ export function CustomerMergeModal({ open, onClose, primary, onMerged }: Props) 
     return () => { active = false; clearTimeout(t); };
   }, [q, open, primary.id]);
 
-  if (!open) return null;
-
-  const victims = Object.values(selected);
-
   async function toggle(c: Hit) {
     setSelected((s) => {
       const next = { ...s };
@@ -94,6 +92,13 @@ export function CustomerMergeModal({ open, onClose, primary, onMerged }: Props) 
     }
   }
 
+  // 검색 결과에서 ↑↓·Enter 로 바로 선택/해제 (결과 1개면 Enter 만으로)
+  const pick = useEnterSelect(results, (c: Hit) => { void toggle(c); });
+
+  if (!open) return null;
+
+  const victims = Object.values(selected);
+
   async function doMerge() {
     try {
       await merge.mutateAsync({ primaryId: primary.id, victimIds: victims.map((v) => v.id) });
@@ -107,6 +112,7 @@ export function CustomerMergeModal({ open, onClose, primary, onMerged }: Props) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" {...backdropClose(onClose)}>
+      <EscClose onClose={onClose} />
       <div className="bg-white rounded-xl shadow-xl w-full max-w-[460px] max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
@@ -131,6 +137,7 @@ export function CustomerMergeModal({ open, onClose, primary, onMerged }: Props) 
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="합칠 중복 고객 검색 (이름·전화)"
+                  onKeyDown={pick.onKeyDown}
                   className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                   autoFocus
                 />
@@ -142,13 +149,14 @@ export function CustomerMergeModal({ open, onClose, primary, onMerged }: Props) 
                 {!searching && q.trim().length >= 2 && results.length === 0 && (
                   <p className="text-xs text-neutral-400 text-center py-3">검색 결과 없음</p>
                 )}
-                {results.map((c) => {
+                {results.map((c, ci) => {
                   const on = !!selected[c.id];
                   return (
                     <button
                       key={c.id}
                       onClick={() => toggle(c)}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition ${on ? 'border-stone-900 bg-stone-50' : 'border-neutral-200 hover:bg-neutral-50'}`}
+                      onMouseEnter={() => pick.setActiveIdx(ci)}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition ${on ? 'border-stone-900 bg-stone-50' : pick.isActive(ci) ? 'border-neutral-200 bg-neutral-100' : 'border-neutral-200 hover:bg-neutral-50'}`}
                     >
                       <span className={`w-4 h-4 rounded flex items-center justify-center shrink-0 ${on ? 'bg-stone-900 text-white' : 'border border-neutral-300'}`}>
                         {on && <Check size={11} />}

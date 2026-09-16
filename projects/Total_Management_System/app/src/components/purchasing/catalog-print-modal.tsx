@@ -7,6 +7,7 @@ import { formatKRW } from '@/lib/utils/format';
 import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 interface Props {
   supplierId: string;
@@ -79,6 +80,7 @@ export function CatalogPrintModal({ supplierId, supplierName, onClose }: Props) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
+      <EscClose onClose={onClose} />
       <div
         className="bg-white rounded-xl shadow-2xl flex flex-col"
         style={{ width: '800px', maxHeight: '90vh' }}

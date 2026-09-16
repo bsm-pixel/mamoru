@@ -18,6 +18,7 @@ import { DLPrintModal } from './dl-print-modal';
 import { getDeliveryStatusChip, isAwaitingPickup } from '@/lib/deliveries/status';
 import { COURIER_OPTIONS, COURIER_LOTTE, COURIER_DIRECT, isAlpsTrackable, isDirectHandover, courierLabel } from '@/lib/shipping/couriers';
 import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
+import { useEnterSelect } from '@/hooks/use-enter-select';
 
 // 상태 뱃지 라벨/색은 lib/deliveries/status.ts getDeliveryStatusChip 이 단일 출처 (여기 있던 사본은 미사용이라 제거)
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
@@ -47,6 +48,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
     product_id?: string; product_name: string; sku?: string; category?: string; quantity: number; unit_price: number;
   }>>([]);
   const [editMemo, setEditMemo] = useState('');
+  const [addSearch, setAddSearch] = useState('');
   const [editExpectedDate, setEditExpectedDate] = useState('');
   const [saving, setSaving] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
@@ -58,6 +60,16 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const [pendingAction, setPendingAction] = useState<{
     action: string; label: string; msg: string; variant?: 'danger' | 'default'; extra?: Record<string, unknown>;
   } | null>(null);
+
+  // 제품 추가 후보 — 이미 담은 것 제외 + 이름·SKU 검색 (훅이라 early return 위에 둔다)
+  const addableProducts = products.filter((p) => {
+    if (editItems.find((ei) => ei.product_id === p.id)) return false;
+    const q = addSearch.trim().toLowerCase();
+    if (!q) return true;
+    return p.name.toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q);
+  });
+  // 검색 결과에서 ↑↓·Enter 로 바로 담기 (결과 1개면 Enter 만으로)
+  const addPick = useEnterSelect(addableProducts, (p: Product) => { addEditItem(p); setAddSearch(''); });
 
   if (isLoading) {
     return <div className="p-4 space-y-4"><Skeleton className="h-48" /><Skeleton className="h-32" /></div>;
@@ -85,6 +97,11 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
     if (dlCustomerType === 'dealer' && (p as Record<string, unknown>).price_dealer) return (p as Record<string, unknown>).price_dealer as number;
     if (dlCustomerType === 'academy' && (p as Record<string, unknown>).price_academy) return (p as Record<string, unknown>).price_academy as number;
     return p.price;
+  }
+  function addEditItem(p: Product) {
+    setEditItems((prev) => [...prev, {
+      product_id: p.id, product_name: getDeliveryName(p), sku: p.sku || undefined, category: p.category || undefined, quantity: 1, unit_price: getDeliveryPrice(p),
+    }]);
   }
   function getDeliveryName(p: Product): string {
     const ce = catalogEntryMap.get(p.id);
@@ -338,23 +355,19 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
             <p className="text-xs text-neutral-400 mb-1">제품 추가</p>
             <input
               type="text"
-              placeholder="제품명 검색..."
-              onChange={(e) => {
-                const el = e.target.nextElementSibling;
-                el?.querySelectorAll('[data-product-row]').forEach((row) => {
-                  const name = row.getAttribute('data-product-name') || '';
-                  (row as HTMLElement).style.display = name.includes(e.target.value.toLowerCase()) ? '' : 'none';
-                });
-              }}
+              placeholder="제품명·SKU 검색..."
+              value={addSearch}
+              onChange={(e) => setAddSearch(e.target.value)}
+              onKeyDown={addPick.onKeyDown}
               className="w-full h-8 px-3 mb-1.5 rounded-lg border border-neutral-200 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-300"
             />
             <div className="max-h-[200px] overflow-y-auto border border-neutral-100 rounded-lg divide-y divide-neutral-50">
-              {products.filter((p) => !editItems.find((ei) => ei.product_id === p.id)).map((p) => (
-                <button key={p.id} data-product-row data-product-name={p.name.toLowerCase()}
-                  onClick={() => setEditItems((prev) => [...prev, {
-                    product_id: p.id, product_name: getDeliveryName(p), sku: p.sku || undefined, category: p.category || undefined, quantity: 1, unit_price: getDeliveryPrice(p),
-                  }])}
-                  className="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-neutral-50 transition text-left">
+              {addableProducts.length === 0 && <p className="px-3 py-3 text-xs text-neutral-400 text-center">검색 결과 없음</p>}
+              {addableProducts.map((p, pi) => (
+                <button key={p.id}
+                  onClick={() => addEditItem(p)}
+                  onMouseEnter={() => addPick.setActiveIdx(pi)}
+                  className={`w-full flex items-center justify-between px-3 py-2 text-xs transition text-left ${addPick.isActive(pi) ? 'bg-neutral-100' : 'hover:bg-neutral-50'}`}>
                   <span className="truncate font-medium">{getDeliveryName(p)}</span>
                   <span className="text-neutral-400 shrink-0 ml-2">{formatKRW(getDeliveryPrice(p))}</span>
                 </button>

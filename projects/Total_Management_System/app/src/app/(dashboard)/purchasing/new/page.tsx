@@ -13,6 +13,7 @@ import { SupplierSelect } from '@/components/ui/supplier-select';
 import { LowStockPickerModal } from '@/components/purchasing/low-stock-picker-modal';
 import { ArrowLeft, Minus, Plus, Trash2, AlertTriangle, Filter, Search } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
+import { useEnterSelect } from '@/hooks/use-enter-select';
 
 interface POItem {
   product: Product | null;
@@ -130,6 +131,9 @@ export default function NewPurchaseOrderPage() {
     router.push('/purchasing');
   }
 
+  // 검색 결과에서 ↑↓·Enter 로 바로 담기 (결과 1개면 Enter 만으로)
+  const productPick = useEnterSelect(displayProducts, (p) => { addProduct(p); setProductSearch(''); });
+
   return (
     <>
       <Topbar title="발주 작성" />
@@ -178,20 +182,24 @@ export default function NewPurchaseOrderPage() {
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
                   placeholder="제품명, SKU, 제품군 검색..."
+                  onKeyDown={productPick.onKeyDown}
                   className="w-full h-8 pl-8 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400 transition"
                 />
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {displayProducts.map((p) => {
+                {displayProducts.map((p, pi) => {
                   const inList = items.find((i) => i.product?.id === p.id);
                   return (
                     <button
                       key={p.id}
                       onClick={() => addProduct(p)}
+                      onMouseEnter={() => productPick.setActiveIdx(pi)}
                       className={`p-3 rounded-lg border text-left transition ${
                         inList
                           ? 'border-stone-900 bg-stone-100'
-                          : 'border-neutral-200 bg-white hover:border-stone-900/40'
+                          : productPick.isActive(pi)
+                            ? 'border-stone-900/40 bg-neutral-100'
+                            : 'border-neutral-200 bg-white hover:border-stone-900/40'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-1">

@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useCustomerNotes, useAddCustomerNote, useDeleteCustomerNote, type LatestNote, type CustomerNote } from '@/hooks/use-customer-notes';
 import { StickyNote, X, Plus } from 'lucide-react';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 /** 목록 행용 최종 메모 한 줄 미리보기 (없으면 아무것도 렌더 안 함) */
 export function NotePreview({ note, className = '' }: { note?: LatestNote; className?: string }) {
@@ -107,6 +108,7 @@ export function CustomerNotes({ customerId, compact, collapsed }: { customerId?:
       {/* 이전 메모 전체 모달 (collapsed 전용) */}
       {collapsed && showAll && (
         <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4" {...backdropClose(() => setShowAll(false))}>
+          <EscClose onClose={() => setShowAll(false)} />
           <div className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 border-b border-stone-100 flex items-center justify-between shrink-0">
               <h3 className="text-sm font-bold text-stone-900">상담 메모 전체 ({notes.length}건)</h3>

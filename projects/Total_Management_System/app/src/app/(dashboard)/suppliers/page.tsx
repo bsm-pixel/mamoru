@@ -24,6 +24,7 @@ import { useProducts } from '@/hooks/use-sales';
 import toast from 'react-hot-toast';
 import type { Customer } from '@/lib/supabase/types';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 // 074: B2B 카테고리 동적 관리 — system_settings('b2b.categories')에서 로드
 // supplier(매입처)는 catalog 흐름이 다르므로 system 고정으로 별도 관리
@@ -624,6 +625,7 @@ function AddPartnerModal({ defaultType, tabs, onClose }: { defaultType: string; 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" {...backdropClose(onClose)}>
+      <EscClose onClose={onClose} />
       <div className="bg-white rounded-xl w-full max-w-md mx-4 shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 sticky top-0 bg-white rounded-t-xl z-10">
           <h2 className="text-sm font-bold text-indigo-black">거래처 추가</h2>
