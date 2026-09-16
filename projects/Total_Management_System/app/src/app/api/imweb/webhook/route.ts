@@ -94,26 +94,48 @@ export async function POST(request: NextRequest) {
   }
 
   // 4) 응답은 즉시, 처리는 after()로 완주 보장 (fire-and-forget 누락 방지)
+  // 🔴 2026-09-15: 실패를 조용히 삼키면 "주문이 안 들어온다"를 며칠 뒤에 알게 된다 → 즉시 푸시.
+  const notify = async (title: string, body: string, tag: string) => {
+    try {
+      const { sendPushToAll } = await import('@/lib/firebase/send-push');
+      await sendPushToAll({ title, body, url: '/orders', tag });
+    } catch { /* 알림 실패가 웹훅 응답을 막지 않게 */ }
+  };
+
   const run = async () => {
     try {
       const r = await syncSingleOrder(orderNo);
       console.log('[imweb/webhook] 동기화 결과:', r);
       await markProcessed(eventId, { process_result: r ?? null });
+
+      // 🔴 2026-09-16: 예외가 아니라 "조회 결과가 비어" 실패한 경우도 알린다.
+      //   전엔 throw 일 때만 푸시해서 이 경로가 통째로 무음이었다 — 주문이 조용히 사라진다.
+      if (r && r.success === false) {
+        if (r.notFound) {
+          // 아임웹이 2026-09-11 부터 '아임웹 상품과 연결 안 된 외부채널 주문'을 API 응답에서 제외한다.
+          // 재시도해도 영영 안 들어오므로 "재시도 중" 이라고 말하면 안 된다 → 수동 확인을 요청한다.
+          await notify(
+            '🚨 아임웹 주문이 조회되지 않습니다',
+            `주문 ${orderNo} 가 아임웹 API 에 없습니다. 외부 판매채널(스마트스토어 등) 전용 상품이면 자동으로 못 가져옵니다 — 아임웹 관리자에서 직접 확인해 주세요.`,
+            `mamoru-order-notfound-${orderNo}`,
+          );
+        } else {
+          await notify(
+            '⚠️ 아임웹 주문 동기화 실패',
+            `주문 ${orderNo} 를 불러오지 못했습니다. 15분 내 자동 재시도합니다.`,
+            `mamoru-order-syncfail-${orderNo}`,
+          );
+        }
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error('[imweb/webhook] 동기화 실패:', msg);
       await markProcessed(eventId, { process_error: msg });
-      // 🔴 2026-09-15: 실패를 조용히 삼키면 "주문이 안 들어온다"를 며칠 뒤에 알게 된다.
-      //    웹훅은 왔는데 주문 조회/저장이 실패한 것이므로 즉시 알린다(15분 폴백 크론이 다시 시도한다).
-      try {
-        const { sendPushToAll } = await import('@/lib/firebase/send-push');
-        await sendPushToAll({
-          title: '⚠️ 아임웹 주문 동기화 실패',
-          body: `주문 ${orderNo} 를 불러오지 못했습니다. 15분 내 자동 재시도합니다.`,
-          url: '/orders',
-          tag: `mamoru-order-syncfail-${orderNo}`,
-        });
-      } catch { /* 알림 실패가 웹훅 응답을 막지 않게 */ }
+      await notify(
+        '⚠️ 아임웹 주문 동기화 실패',
+        `주문 ${orderNo} 를 불러오지 못했습니다. 15분 내 자동 재시도합니다.`,
+        `mamoru-order-syncfail-${orderNo}`,
+      );
     }
   };
   try {

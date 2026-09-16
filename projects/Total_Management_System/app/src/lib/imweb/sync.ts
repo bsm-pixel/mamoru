@@ -75,6 +75,7 @@ export async function syncOrders(): Promise<{
     .select()
     .single();
 
+  const MAX_PAGES = 200;   // 안전장치: 서버 응답이 이상해도 무한 루프에 빠지지 않게
   try {
     let page = 1;
     let hasMore = true;
@@ -105,11 +106,23 @@ export async function syncOrders(): Promise<{
         }
       }
 
-      const pageSize = res.data?.pagenation?.pagesize || 50;
-      if (orders.length < pageSize) {
-        hasMore = false;
+      // 🔴 2026-09-16: "받은 개수 < 페이지크기 → 마지막 페이지" 추측을 버리고 total_page 를 쓴다.
+      //   아임웹이 2026-09-11 18:10 부터 '아임웹 상품과 연결되지 않은 외부채널 주문'을
+      //   주문조회 API 응답에서 제외한다. 조회 후 제외되는 방식이면 페이지당 개수가 줄어드는데,
+      //   옛 판정은 그걸 "마지막 페이지"로 오인해 **뒤 페이지 전체를 통째로 건너뛴다**(조용한 대량 누락).
+      const pg = res.data?.pagenation;
+      if (pg && typeof pg.total_page === 'number' && pg.total_page > 0) {
+        // 🔒 응답의 current_page 가 아니라 **우리 카운터(page)** 로 판정한다.
+        //    서버가 current_page 를 1로 고정해 돌려주면 무한 루프가 되기 때문.
+        hasMore = page < pg.total_page;
       } else {
-        page++;
+        // total_page 가 없으면 옛 방식으로 폴백 (단, 0건이면 위에서 이미 종료)
+        hasMore = orders.length >= (pg?.pagesize || 50);
+      }
+      page++;
+      if (page > MAX_PAGES) {
+        errors.push(`페이지 상한(${MAX_PAGES}) 도달 — 남은 주문이 있을 수 있습니다`);
+        hasMore = false;
       }
     }
 
@@ -149,14 +162,18 @@ export async function syncOrders(): Promise<{
  */
 export async function syncSingleOrder(
   orderNo: string
-): Promise<{ success: boolean; order_no: string; error?: string }> {
+): Promise<{ success: boolean; order_no: string; notFound?: boolean; error?: string }> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase: any = createServiceClient();
   try {
     const orderRes = await getOrder(orderNo);
     const order = orderRes.data;
     if (!order) {
-      return { success: false, order_no: orderNo, error: 'order not found in imweb' };
+      // 🔴 2026-09-16: 웹훅은 왔는데 주문조회가 비어 오는 경우.
+      //   가장 흔한 원인 = 아임웹 상품과 연결되지 않은 외부채널(스마트스토어·카톡선물하기) 주문.
+      //   아임웹이 이런 주문을 API 응답에서 통째로 제외하므로 **영원히 안 들어온다**(재시도해도 소용없음).
+      //   호출처가 이 사유를 구분해 사장님께 알릴 수 있게 not_found 플래그를 준다.
+      return { success: false, order_no: orderNo, notFound: true, error: 'order not found in imweb' };
     }
     const prodRes = await getProdOrders(orderNo);
     const prodOrders = prodRes.data || [];
