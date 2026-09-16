@@ -45,6 +45,11 @@ export interface EventCampaignConfig {
   payment_type: 'paid' | 'free';
   /** #{items} 대체 문구 (비면 제품명 사용) */
   items_label: string;
+  /**
+   * 안내 문구 **원문**(줄바꿈 보존) — event_detail 조립용.
+   * event_notice 는 옛 템플릿이 "• #{event_notice}" 한 줄 불릿으로 쓰므로 줄바꿈을 공백으로 합친 값이다.
+   */
+  notice_raw: string;
 }
 
 /** 캠페인 설정 읽기 — 마이그 152 미적용/캠페인 없음이면 전부 기존 동작(유료)으로 떨어진다 */
@@ -53,12 +58,14 @@ export async function getEventCampaignConfig(db: Db, campaignId: string | null |
   let notice = '';
   let paymentType: 'paid' | 'free' = 'paid';
   let itemsLabel = '';
+  let noticeRaw = '';
 
   if (campaignId) {
     const { data } = await db.from('event_campaigns').select('*').eq('id', campaignId).maybeSingle();
     name = typeof data?.name === 'string' ? data.name.trim() : '';
     // 옛 템플릿에서 "• #{event_notice}" 한 줄로 쓰이므로 줄바꿈은 공백으로 합친다
-    notice = typeof data?.customer_notice === 'string' ? data.customer_notice.replace(/\s*\n\s*/g, ' ').trim() : '';
+    noticeRaw = typeof data?.customer_notice === 'string' ? data.customer_notice.trim() : '';
+    notice = noticeRaw.replace(/\s*\n\s*/g, ' ');
     if (data?.payment_type === 'free') paymentType = 'free';
     itemsLabel = typeof data?.items_label === 'string' ? data.items_label.trim() : '';
   }
@@ -68,6 +75,7 @@ export async function getEventCampaignConfig(db: Db, campaignId: string | null |
     event_notice: notice || DEFAULT_EVENT_NOTICE,
     payment_type: paymentType,
     items_label: itemsLabel,
+    notice_raw: noticeRaw,
   };
 }
 
@@ -113,6 +121,9 @@ export interface EventDetailInput {
 export function buildEventDetail(cfg: EventCampaignConfig, input: EventDetailInput): string {
   const lines: string[] = [];
   const isPaid = cfg.payment_type === 'paid';
+  // 사장님이 직접 적은 안내만 쓴다(줄바꿈 보존). 기본 문구는 여기서 붙이지 않는다 —
+  // 기본값을 그대로 내보내면 "추가로 필요한 사항이 있으면 따로 연락드립니다"가 매번 따라붙어 군더더기가 된다
+  const notice = (cfg.notice_raw || '').trim();
 
   // 금액 — 유료이고 실제 금액이 있을 때만. 0원짜리 유료는 금액 줄을 만들지 않는다
   if (isPaid && input.totalAmount > 0) {
@@ -131,12 +142,10 @@ export function buildEventDetail(cfg: EventCampaignConfig, input: EventDetailInp
   lines.push('');
   if (isPaid && input.totalAmount > 0) {
     lines.push('입금이 확인되면 바로 준비를 시작합니다');
-    if (cfg.event_notice && cfg.event_notice !== DEFAULT_EVENT_NOTICE) lines.push(cfg.event_notice);
+    if (notice) lines.push(notice);
   } else {
     // 무료: 캠페인이 안내문구를 지정했으면 그것만(예: "선정 결과는 마감 후 개별 안내드립니다")
-    lines.push(cfg.event_notice && cfg.event_notice !== DEFAULT_EVENT_NOTICE
-      ? cfg.event_notice
-      : '바로 준비를 시작합니다');
+    lines.push(notice || '바로 준비를 시작합니다');
   }
 
   return lines.join('\n').trim();
@@ -156,4 +165,73 @@ export async function getEventNotifyVarsBySale(db: Db, saleId: string): Promise<
 /** 판매 → 그 EVENT 접수 캠페인이 무료인지 (입금확인 알림톡 생략 판단용) */
 export async function getEventCampaignBySubmission(db: Db, campaignId: string | null | undefined) {
   return getEventCampaignConfig(db, campaignId);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   미리보기 (캠페인 설정 화면) — 2026-09-16
+   전엔 "비우면 기본 문구가 나갑니다"라고만 적어 두고 **그 문구가 뭔지 화면에 없었다.**
+   사장님이 뭘 저장하는지 모르는 채로 저장하게 되던 문제 → 실시간 미리보기로 해결.
+   ────────────────────────────────────────────────────────────── */
+
+/**
+ * 🔴 솔라피 `EVENT_신청완료` 본문과 **글자 그대로 같아야 한다.**
+ *    본문을 고치면 솔라피 재검수 + 이 상수 + 노션(작업판 9번 · 메뉴얼 EVENT 템플릿) 3곳을 같이 고친다.
+ */
+export const EVENT_RECEIVED_TEMPLATE = `#{name}님, 안녕하세요
+#{event_name} 신청이 접수되었습니다
+
+✅ 신청 내역
+#{items}
+
+#{event_detail}
+
+🔔 안내
+• 확인되는 대로 알림톡으로 안내드리니 따로 연락 주지 않으셔도 됩니다
+• 궁금한 점은 아래 1:1 문의로 남겨주세요`;
+
+export interface PreviewSample {
+  name: string;
+  items: EventItemLike[];
+  totalAmount: number;
+  isVisit: boolean;
+  address: string;
+}
+
+/** 캠페인 설정 화면 미리보기용 샘플 — 실제 접수처럼 보이게 */
+export const PREVIEW_SAMPLE: PreviewSample = {
+  name: '김미용',
+  items: [
+    { product_name: 'C-55', qty: 1 },
+    { product_name: 'B-263', qty: 2, slicing: true },
+  ],
+  totalAmount: 125000,
+  isVisit: false,
+  address: '서울 강남구 테헤란로 1 101호',
+};
+
+/**
+ * 설정값 → 고객이 실제로 받을 본문.
+ * 발송 경로(`event/public/submit`)와 **같은 조립 함수**(buildItemsText/buildEventDetail)를 쓰므로
+ * 미리보기와 실제 발송이 갈라지지 않는다.
+ */
+export function renderEventReceivedPreview(
+  cfg: Pick<EventCampaignConfig, 'event_name' | 'payment_type' | 'items_label' | 'notice_raw'>,
+  sample: PreviewSample = PREVIEW_SAMPLE,
+): string {
+  const full: EventCampaignConfig = {
+    event_name: cfg.event_name || DEFAULT_EVENT_NAME,
+    event_notice: (cfg.notice_raw || '').replace(/\s*\n\s*/g, ' ') || DEFAULT_EVENT_NOTICE,
+    payment_type: cfg.payment_type,
+    items_label: cfg.items_label,
+    notice_raw: cfg.notice_raw,
+  };
+  return EVENT_RECEIVED_TEMPLATE
+    .replace('#{name}', sample.name)
+    .replace('#{event_name}', full.event_name)
+    .replace('#{items}', buildItemsText(sample.items, full.items_label))
+    .replace('#{event_detail}', buildEventDetail(full, {
+      totalAmount: sample.totalAmount,
+      isVisit: sample.isVisit,
+      address: sample.address,
+    }));
 }

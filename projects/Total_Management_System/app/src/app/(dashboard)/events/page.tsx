@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useEvents, useEventPatch, useEventDelete, useCampaigns, useCreateCampaign, useUpdateCampaign } from '@/hooks/use-events';
+import { renderEventReceivedPreview, PREVIEW_SAMPLE } from '@/lib/event/campaign-notify';
 import { EVENT_STATUS_LABEL, CAMPAIGN_TYPE_LABEL, type EventSubmission, type EventStatus, type EventCampaign, type DiscountRule } from '@/lib/event/types';
 import { Zap, Loader2, Package, Truck, Store, ArrowLeft, Plus, ExternalLink, Settings, X } from 'lucide-react';
 import { useIsLg } from '@/hooks/use-grid-mode';
@@ -258,6 +259,14 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
   const setRule = (i: number, k: keyof DiscountRule, v: number) =>
     setRules(rules.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
 
+  // 실시간 미리보기 — 발송 경로와 **같은 조립 함수**를 써서 화면과 실제 발송이 갈라지지 않게 한다
+  const preview = renderEventReceivedPreview({
+    event_name: name.trim() || '(캠페인명)',
+    payment_type: paymentType,
+    items_label: itemsLabel.trim(),
+    notice_raw: notice.trim(),
+  });
+
   const save = () => {
     const cleanRules = rules.filter((r) => r.unit_price > 0 && r.min_qty > 0 && r.bundle_price > 0);
     // 안내 문구는 바뀌었을 때만 전송 (마이그 145 실행 전에도 다른 설정 저장이 막히지 않게)
@@ -283,8 +292,10 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl p-5 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-base font-bold text-neutral-900 mb-4">{isEdit ? '캠페인 설정' : '새 캠페인'}</h3>
+      <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-base font-bold text-neutral-900 px-5 pt-5 pb-3 shrink-0">{isEdit ? '캠페인 설정' : '새 캠페인'}</h3>
+        <div className="grid lg:grid-cols-[1fr_330px] flex-1 min-h-0 overflow-hidden">
+        <div className="px-5 pb-5 overflow-y-auto">
 
         <label className="text-xs text-neutral-500">캠페인명</label>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="예: 여름 한정 판매"
@@ -339,11 +350,20 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
         {/* 145: 알림톡 고객 안내 문구 — EVENT_신청완료 🔔 진행 안내 첫 줄 */}
         <div className="rounded-xl border border-neutral-200 p-3 mb-4">
           <div className="text-xs font-bold text-neutral-700 mb-1">신청완료 알림톡 안내 문구</div>
-          <p className="text-[11px] text-neutral-400 mb-2">이벤트별로 고객에게 따로 알릴 내용 한 줄 (예: 보내실 가위는 신청 후 3일 안에 발송해 주세요 / 선정 결과는 마감 후 개별 안내드립니다). 비우면 기본 문구가 나갑니다. 할인·홍보 문구는 넣지 마세요</p>
-          <input value={notice} onChange={(e) => setNotice(e.target.value)} maxLength={80}
-            placeholder="추가로 필요한 사항이 있으면 따로 연락드립니다"
-            className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm" />
-          <div className="text-right text-[10px] text-neutral-400 mt-1">{notice.length}/80</div>
+          <p className="text-[11px] text-neutral-400 mb-2">이벤트별로 고객에게 따로 알릴 내용. <b>여러 줄</b>로 써도 됩니다. <b>할인·홍보 문구는 넣지 마세요</b> — 검수 반려 사유입니다</p>
+          <textarea value={notice} onChange={(ev) => setNotice(ev.target.value)} maxLength={300} rows={4}
+            placeholder={'예)\n보내실 가위는 신청 후 3일 안에 발송해 주세요\n받으실 주소가 바뀌면 이 채팅으로 회신해 주세요'}
+            className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm leading-relaxed resize-y" />
+          <div className="flex items-start justify-between gap-2 mt-1">
+            <span className="text-[10px] text-neutral-400 leading-relaxed">
+              {notice.trim()
+                ? '→ 오른쪽 미리보기에 바로 반영됩니다'
+                : paymentType === 'free'
+                  ? '비워두면 → "바로 준비를 시작합니다" 한 줄만 나갑니다'
+                  : '비워두면 → "입금이 확인되면 바로 준비를 시작합니다" 만 나갑니다'}
+            </span>
+            <span className="text-[10px] text-neutral-400 shrink-0">{notice.length}/300</span>
+          </div>
         </div>
 
         {/* 묶음 할인 규칙 */}
@@ -369,15 +389,45 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
             className="mt-2 flex items-center gap-1 text-xs font-semibold text-indigo-600"><Plus size={13} />할인 규칙 추가</button>
         </div>
 
-        {saveError && (
-          <p className="text-xs text-red-500 mb-2">{(() => { try { return JSON.parse(saveError.message).error || saveError.message; } catch { return saveError.message; } })()}</p>
-        )}
-        <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm">취소</button>
-          <button disabled={!name.trim() || pending} onClick={save}
-            className="flex-1 py-2.5 rounded-lg bg-neutral-900 text-white text-sm font-bold disabled:opacity-50">
-            {pending ? '저장 중...' : isEdit ? '저장' : '생성'}
-          </button>
+        </div>
+
+        {/* 실시간 미리보기 (2026-09-16)
+            전엔 "비우면 기본 문구가 나갑니다"라고만 적혀 있고 그 문구가 화면에 없어서,
+            사장님이 뭘 저장하는지 모르는 채 저장하게 됐다. 이제 눈으로 보고 정한다. */}
+        <div className="border-t lg:border-t-0 lg:border-l border-neutral-200 bg-stone-50 px-4 py-4 overflow-y-auto">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-neutral-700">고객이 받을 알림톡</span>
+            <span className="text-[10px] font-semibold text-neutral-400">신청완료</span>
+          </div>
+          <div className="rounded-2xl bg-[#B2C7DA] p-2.5">
+            <div className="rounded-xl bg-white p-3 shadow-sm">
+              <div className="text-[10px] font-bold text-neutral-400 mb-2 pb-2 border-b border-neutral-100">알림톡 도착</div>
+              <pre className="whitespace-pre-wrap break-words font-sans text-[12px] leading-relaxed text-neutral-800 m-0">{preview}</pre>
+              <div className="mt-2.5 pt-2 border-t border-neutral-100 text-center text-[11px] font-semibold text-neutral-500">1:1 문의</div>
+            </div>
+          </div>
+          <p className="text-[10px] text-neutral-400 mt-2 leading-relaxed">
+            예시 값 — {PREVIEW_SAMPLE.name}님 · {PREVIEW_SAMPLE.totalAmount.toLocaleString('ko-KR')}원 · 택배 발송.
+            실제로는 접수한 고객의 이름·품목·금액·주소가 들어갑니다.
+          </p>
+          <p className="text-[10px] text-amber-600 mt-1.5 leading-relaxed">
+            ⚠️ 솔라피에 <b>EVENT_신청완료</b> 새 본문이 등록·승인된 뒤부터 이 모양으로 나갑니다. 그 전에는 옛 템플릿이 발송됩니다.
+          </p>
+        </div>
+        </div>
+
+        {/* 푸터 — 모달 하단 고정. 좌측 컬럼 안에 두면 화면이 짧을 때 저장까지 스크롤해야 한다 */}
+        <div className="shrink-0 border-t border-neutral-200 px-5 py-3 bg-white">
+          {saveError && (
+            <p className="text-xs text-red-500 mb-2">{(() => { try { return JSON.parse(saveError.message).error || saveError.message; } catch { return saveError.message; } })()}</p>
+          )}
+          <div className="flex gap-2">
+            <button onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm">취소</button>
+            <button disabled={!name.trim() || pending} onClick={save}
+              className="flex-1 py-2.5 rounded-lg bg-neutral-900 text-white text-sm font-bold disabled:opacity-50">
+              {pending ? '저장 중...' : isEdit ? '저장' : '생성'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
