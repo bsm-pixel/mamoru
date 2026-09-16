@@ -38,6 +38,9 @@ export async function POST(req: NextRequest) {
     };
     // 145: 알림톡 고객 안내 문구 (입력했을 때만 — 마이그 전 컬럼 없음 대비)
     if (typeof body.customer_notice === 'string' && body.customer_notice.trim()) row.customer_notice = body.customer_notice.trim();
+    // 152: 무료 이벤트·신청항목 표기
+    if (body.payment_type === 'free' || body.payment_type === 'paid') row.payment_type = body.payment_type;
+    if (typeof body.items_label === 'string' && body.items_label.trim()) row.items_label = body.items_label.trim();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (db as any).from('event_campaigns').insert(row).select().single();
     if (error) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
-import { getEventCampaignNotifyVars } from '@/lib/event/campaign-notify';
+import { getEventCampaignConfig, buildItemsText, buildEventDetail } from '@/lib/event/campaign-notify';
 import { sendAdminEmail } from '@/lib/notification/email';
 import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
 import { computeEventPricing } from '@/lib/event/pricing';
@@ -125,10 +125,17 @@ export async function POST(req: NextRequest) {
 
     // 접수확인 알림톡 (자동)
     try {
-      // 품목을 줄바꿈(\n)으로 — 알림톡 #{items} 변수 안에서 한 줄에 하나씩 표시 (카카오가 변수 내 \n 렌더)
-      const itemSummary = items.map((it) => `${it.product_name}${it.slicing ? '(슬라이싱)' : ''} ${it.qty}개`).join('\n');
-      // 범용 EVENT_신청완료 템플릿용 이벤트명·고객 안내 문구 (캠페인 기준, 비면 기본값) — 2026-09-13
-      const campaignVars = await getEventCampaignNotifyVars(dbAny, campaignId);
+      // 🔴 2026-09-16 (마이그 152): 고객에게 보이는 문구는 캠페인이 정한다.
+      //    알림톡은 변수 안의 변수를 치환하지 않으므로(치환 1회) 서버가 완성해서 넘긴다.
+      //    - items        : 캠페인이 표기를 지정했으면 그 문구(예: 체험단 신청) — 내부 품목/재고는 그대로
+      //    - event_detail : 금액·수령지·계좌·진행안내를 상황에 맞게 조립(무료면 금액·계좌 줄이 아예 없음)
+      const campaignCfg = await getEventCampaignConfig(dbAny, campaignId);
+      const itemSummary = buildItemsText(items, campaignCfg.items_label);
+      const eventDetail = buildEventDetail(campaignCfg, {
+        totalAmount,
+        isVisit,
+        address: [address1, address2].filter(Boolean).join(' '),
+      });
       await sendNotification({
         template: 'event_received',
         phone: phoneNorm,
@@ -136,8 +143,9 @@ export async function POST(req: NextRequest) {
         data: {
           id: eventNumber,
           event_number: eventNumber,
-          event_name: campaignVars.event_name,
-          event_notice: campaignVars.event_notice,
+          event_name: campaignCfg.event_name,
+          event_notice: campaignCfg.event_notice,   // 옛 템플릿 호환 (신규 본문은 event_detail 사용)
+          event_detail: eventDetail,
           items: itemSummary,
           total_amount: String(totalAmount),
           receive_method: isVisit ? '매장방문' : '택배발송',

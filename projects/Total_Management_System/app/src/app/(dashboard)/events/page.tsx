@@ -51,6 +51,12 @@ export default function EventsPage() {
   const eventActTypes = useActivityTypes(list.map((e) => e.customer_phone));
   const tabCounts = countsByCampaign[campaignId || '_none'] || {};
   const sel = useMemo(() => (all || []).find((e) => e.id === selId) || null, [all, selId]);
+  // 152: 선택한 접수의 캠페인이 무료(증정·체험단)인가 — 버튼 문구·확인 문구가 달라진다
+  const selIsFree = useMemo(() => {
+    const cid = (sel as { campaign_id?: string } | null | undefined)?.campaign_id;
+    const c = (campaigns || []).find((x) => x.id === cid) as { payment_type?: string } | undefined;
+    return c?.payment_type === 'free';
+  }, [campaigns, sel]);
   const isLg = useIsLg();
 
   // ── 캠페인 카드 화면 ──
@@ -204,7 +210,7 @@ export default function EventsPage() {
               <div className="flex-1 min-w-0 overflow-y-auto">{listContent}</div>
               <div className="w-[400px] shrink-0 overflow-y-auto">
                 {sel ? (
-                  <EventDetail ev={sel} patch={patch} del={del} onDone={() => setSelId(null)} goSales={(saleId?: string) => router.push(saleId ? `/sales/${saleId}` : '/sales')} />
+                  <EventDetail ev={sel} patch={patch} del={del} onDone={() => setSelId(null)} goSales={(saleId?: string) => router.push(saleId ? `/sales/${saleId}` : '/sales')} isFree={selIsFree} />
                 ) : (
                   <div className="flex flex-col items-center justify-center h-60 text-stone-400">
                     <Zap size={28} className="mb-2 opacity-40" />
@@ -219,7 +225,7 @@ export default function EventsPage() {
 
       {!isLg && (
         <SlidePanel open={!!sel} onClose={() => setSelId(null)} title="EVENT 접수 상세" className="sm:w-[440px]">
-          {sel && <EventDetail ev={sel} patch={patch} del={del} onDone={() => setSelId(null)} goSales={(saleId?: string) => router.push(saleId ? `/sales/${saleId}` : '/sales')} />}
+          {sel && <EventDetail ev={sel} patch={patch} del={del} onDone={() => setSelId(null)} goSales={(saleId?: string) => router.push(saleId ? `/sales/${saleId}` : '/sales')} isFree={selIsFree} />}
         </SlidePanel>
       )}
 
@@ -239,8 +245,13 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
   const [type, setType] = useState(campaign?.type || 'stock_clearance');
   const [status, setStatus] = useState(campaign?.status || 'active');
   const [rules, setRules] = useState<DiscountRule[]>(campaign?.discount_rules || []);
-  // 145: 알림톡 EVENT_신청완료의 #{event_notice} — 비우면 기본 문구("추가로 필요한 사항이 있으면 따로 연락드립니다") 발송
+  // 145: 알림톡 EVENT_신청완료의 안내 문구 — 비우면 기본 문구 발송
   const [notice, setNotice] = useState(campaign?.customer_notice || '');
+  // 152: 무료(증정·체험단) 이벤트 + 신청 항목 표기
+  const [paymentType, setPaymentType] = useState<'paid' | 'free'>(
+    (campaign as { payment_type?: string } | undefined)?.payment_type === 'free' ? 'free' : 'paid',
+  );
+  const [itemsLabel, setItemsLabel] = useState((campaign as { items_label?: string } | undefined)?.items_label || '');
   const pending = create.isPending || update.isPending;
   const saveError = (update.error || create.error) as Error | null;
 
@@ -251,8 +262,23 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
     const cleanRules = rules.filter((r) => r.unit_price > 0 && r.min_qty > 0 && r.bundle_price > 0);
     // 안내 문구는 바뀌었을 때만 전송 (마이그 145 실행 전에도 다른 설정 저장이 막히지 않게)
     const noticeChanged = notice.trim() !== (campaign?.customer_notice || '').trim();
-    if (isEdit) update.mutate({ id: campaign!.id, name: name.trim(), type, status, discount_rules: cleanRules, ...(noticeChanged ? { customer_notice: notice.trim() } : {}) }, { onSuccess: onClose });
-    else create.mutate({ name: name.trim(), type, discount_rules: cleanRules, ...(notice.trim() ? { customer_notice: notice.trim() } : {}) }, { onSuccess: onClose });
+    // 152 도 같은 규칙 — 바뀐 것만 전송해서 마이그 미실행 시에도 다른 설정 저장이 막히지 않게
+    const prevPay = (campaign as { payment_type?: string } | undefined)?.payment_type === 'free' ? 'free' : 'paid';
+    const prevLabel = (campaign as { items_label?: string } | undefined)?.items_label || '';
+    const payChanged = paymentType !== prevPay;
+    const labelChanged = itemsLabel.trim() !== prevLabel.trim();
+    if (isEdit) update.mutate({
+      id: campaign!.id, name: name.trim(), type, status, discount_rules: cleanRules,
+      ...(noticeChanged ? { customer_notice: notice.trim() } : {}),
+      ...(payChanged ? { payment_type: paymentType } : {}),
+      ...(labelChanged ? { items_label: itemsLabel.trim() } : {}),
+    }, { onSuccess: onClose });
+    else create.mutate({
+      name: name.trim(), type, discount_rules: cleanRules,
+      ...(notice.trim() ? { customer_notice: notice.trim() } : {}),
+      ...(paymentType === 'free' ? { payment_type: paymentType } : {}),
+      ...(itemsLabel.trim() ? { items_label: itemsLabel.trim() } : {}),
+    }, { onSuccess: onClose });
   };
 
   return (
@@ -282,10 +308,38 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
           )}
         </div>
 
+        {/* 152: 결제 방식 — 무료면 알림톡에 금액·계좌 줄이 아예 생기지 않는다 */}
+        <div className="rounded-xl border border-neutral-200 p-3 mb-4">
+          <div className="text-xs font-bold text-neutral-700 mb-2">결제 방식</div>
+          <div className="flex gap-2">
+            {([['paid', '유료 (입금 받음)'], ['free', '무료 (증정·체험단)']] as const).map(([v, label]) => (
+              <button key={v} type="button" onClick={() => setPaymentType(v)}
+                className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition ${paymentType === v ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-neutral-400 mt-2 leading-relaxed">
+            {paymentType === 'free'
+              ? '신청완료 알림톡에서 결제 금액·입금 계좌가 빠집니다. 진행도 [입금확인] 대신 [신청 확정]으로 바뀌고, 입금확인 알림톡은 보내지 않습니다.'
+              : '신청완료 알림톡에 결제 금액과 입금 계좌가 안내됩니다.'}
+          </p>
+        </div>
+
+        {/* 152: 신청 항목 표기 — 고객에게 보이는 줄만 바뀌고 내부 품목·재고는 그대로 */}
+        <div className="rounded-xl border border-neutral-200 p-3 mb-4">
+          <div className="text-xs font-bold text-neutral-700 mb-1">신청 항목 표기 <span className="font-normal text-neutral-400">(선택)</span></div>
+          <p className="text-[11px] text-neutral-400 mb-2">알림톡 「신청 내역」에 제품명 대신 보여줄 문구. 비우면 <b>제품명 N개</b>가 그대로 나갑니다. 재고·판매 전환에는 영향 없습니다</p>
+          <input value={itemsLabel} onChange={(e) => setItemsLabel(e.target.value)} maxLength={40}
+            placeholder="예: 체험단 신청 / 증정 이벤트 응모"
+            className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm" />
+          <div className="text-right text-[10px] text-neutral-400 mt-1">{itemsLabel.length}/40</div>
+        </div>
+
         {/* 145: 알림톡 고객 안내 문구 — EVENT_신청완료 🔔 진행 안내 첫 줄 */}
         <div className="rounded-xl border border-neutral-200 p-3 mb-4">
           <div className="text-xs font-bold text-neutral-700 mb-1">신청완료 알림톡 안내 문구</div>
-          <p className="text-[11px] text-neutral-400 mb-2">이벤트별로 고객에게 따로 알릴 내용 한 줄 (예: 보내실 가위는 신청 후 3일 안에 발송해 주세요). 비우면 기본 문구가 나갑니다. 할인·홍보 문구는 넣지 마세요</p>
+          <p className="text-[11px] text-neutral-400 mb-2">이벤트별로 고객에게 따로 알릴 내용 한 줄 (예: 보내실 가위는 신청 후 3일 안에 발송해 주세요 / 선정 결과는 마감 후 개별 안내드립니다). 비우면 기본 문구가 나갑니다. 할인·홍보 문구는 넣지 마세요</p>
           <input value={notice} onChange={(e) => setNotice(e.target.value)} maxLength={80}
             placeholder="추가로 필요한 사항이 있으면 따로 연락드립니다"
             className="w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm" />
@@ -330,12 +384,14 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
   );
 }
 
-function EventDetail({ ev, patch, del, onDone, goSales }: {
+function EventDetail({ ev, patch, del, onDone, goSales, isFree }: {
   ev: EventSubmission;
   patch: ReturnType<typeof useEventPatch>;
   del: ReturnType<typeof useEventDelete>;
   onDone: () => void;
   goSales: (saleId?: string) => void;
+  /** 152: 무료(증정·체험단) 캠페인 — "입금"이라는 말이 성립하지 않는다 */
+  isFree: boolean;
 }) {
   const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
     <div className="flex justify-between gap-2 py-1.5 border-b border-neutral-50 text-sm">
@@ -380,25 +436,31 @@ function EventDetail({ ev, patch, del, onDone, goSales }: {
       <div className="space-y-2 pt-2">
         {ev.status === 'received' && (
           <>
-            {/* 2메시지 흐름: 접수완료 알림톡에 계좌 포함 → 신규접수에서 바로 입금확인 */}
+            {/* 2메시지 흐름: 접수완료 알림톡에 계좌 포함 → 신규접수에서 바로 입금확인
+                152: 무료 캠페인이면 "입금" 대신 "신청 확정" — 알림톡도 안 나간다 */}
             <button
               disabled={patch.isPending}
               onClick={() => {
-                if (!window.confirm(`${ev.customer_name}님 입금을 확인하고 판매로 전환합니다. (재고가 차감됩니다)`)) return;
+                const msg = isFree
+                  ? `${ev.customer_name}님 신청을 확정하고 발송 준비 단계로 넘깁니다. (재고가 차감됩니다)\n무료 이벤트라 입금확인 알림톡은 나가지 않습니다.`
+                  : `${ev.customer_name}님 입금을 확인하고 판매로 전환합니다. (재고가 차감됩니다)`;
+                if (!window.confirm(msg)) return;
                 patch.mutate({ id: ev.id, action: 'confirm_payment' }, { onSuccess: onDone });
               }}
               className="w-full py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {patch.isPending ? <Loader2 size={16} className="animate-spin" /> : '입금확인 → 판매 전환'}
+              {patch.isPending ? <Loader2 size={16} className="animate-spin" /> : (isFree ? '신청 확정 → 발송 준비' : '입금확인 → 판매 전환')}
             </button>
-            {/* (선택) 별도 입금안내 알림톡이 필요한 경우 */}
-            <button
-              disabled={patch.isPending}
-              onClick={() => patch.mutate({ id: ev.id, action: 'payment_notice' }, { onSuccess: onDone })}
-              className="w-full py-2 rounded-lg border border-neutral-300 text-neutral-600 text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              <Package size={14} /> 입금안내 별도 발송 (선택)
-            </button>
+            {/* (선택) 별도 입금안내 알림톡 — 무료 이벤트엔 보낼 이유가 없어 숨긴다 */}
+            {!isFree && (
+              <button
+                disabled={patch.isPending}
+                onClick={() => patch.mutate({ id: ev.id, action: 'payment_notice' }, { onSuccess: onDone })}
+                className="w-full py-2 rounded-lg border border-neutral-300 text-neutral-600 text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Package size={14} /> 입금안내 별도 발송 (선택)
+              </button>
+            )}
           </>
         )}
         {ev.status === 'payment_noticed' && (

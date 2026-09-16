@@ -14,6 +14,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (typeof body.memo === 'string') patch.memo = body.memo;
     // 145: 알림톡 고객 안내 문구 (빈 문자열 = 기본 문구로 되돌림)
     if (typeof body.customer_notice === 'string') patch.customer_notice = body.customer_notice.trim() || null;
+    // 152: 무료 이벤트·신청항목 표기
+    if (body.payment_type === 'free' || body.payment_type === 'paid') patch.payment_type = body.payment_type;
+    if (typeof body.items_label === 'string') patch.items_label = body.items_label.trim() || null;
     if (Array.isArray(body.discount_rules)) patch.discount_rules = body.discount_rules;
     if (body.starts_at !== undefined) patch.starts_at = body.starts_at || null;
     if (body.ends_at !== undefined) patch.ends_at = body.ends_at || null;

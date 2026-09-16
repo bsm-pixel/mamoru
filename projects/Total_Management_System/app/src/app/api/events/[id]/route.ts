@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { convertEventToSale } from '@/lib/event/convert-to-sale';
-import { getEventCampaignNotifyVars } from '@/lib/event/campaign-notify';
+import { getEventCampaignNotifyVars, getEventCampaignConfig } from '@/lib/event/campaign-notify';
 
 /** GET /api/events/[id] */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -69,8 +69,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       await dbAny.from('event_submissions').update({
         status: 'converted', paid_at: new Date().toISOString(), sale_id: saleId,
       }).eq('id', id);
-      await dbAny.from('event_history').insert({ event_id: id, to_status: 'converted', note: `입금확인 → 판매 전환` });
-      if (phoneNorm && body.send_notification !== false) {
+      // 🔴 2026-09-16: 무료(증정·체험단) 캠페인은 "입금"이라는 말 자체가 성립하지 않는다.
+      //    전엔 판매 전환이 이 경로 하나뿐이라, 증정 이벤트도 [입금확인]을 눌러야 진행됐고
+      //    그 순간 "입금이 확인되었습니다 / 0원" 알림톡이 고객에게 나갔다(사장님 지적).
+      const evCfg = isStock ? null : await getEventCampaignConfig(dbAny, ev.campaign_id);
+      const isFreeEvent = evCfg?.payment_type === 'free';
+      await dbAny.from('event_history').insert({
+        event_id: id, to_status: 'converted',
+        note: isFreeEvent ? '신청 확정 → 판매 전환(무료)' : '입금확인 → 판매 전환',
+      });
+      if (phoneNorm && body.send_notification !== false && !isFreeEvent) {
         after(async () => {
           await sendNotification({
             template: T.confirmed, phone: phoneNorm, name: ev.customer_name,
