@@ -30,6 +30,16 @@ SEED_KEYWORDS = [
     # 미용 특화 기술·입문 (일반 '가위'는 노이즈라 제외)
     "미용가위입문", "숱치기",
 ]
+# 수리·복원 씨앗 (2026-09-16 추가 · 복원수리 블로그 시리즈용)
+# 위 목록과 따로 5개씩 호출됨 → 이쪽 배치가 실패해도 기존 조사에는 영향 없음
+REPAIR_SEEDS = [
+    "미용가위수리", "가위수리", "가위연마", "가위복원", "미용가위AS",
+    "가위날세우기", "가위이나감", "가위떨어뜨림", "가위안들때", "가위볼트",
+]
+# 수리·복원 계열 판별 토큰 (소문자 비교)
+REPAIR_TOKENS = ["수리", "연마", "복원", "가위as", "as수리", "as비용", "a/s", "갈기", "가는법", "날세우", "샤프닝",
+                 "이나감", "이빠짐", "이나갔", "녹", "볼트", "안들", "무뎌"]
+REPAIR_MIN_TOTAL = 10  # 수리 계열은 검색량이 작아도 표시 (월 10회 이상)
 TOP_N = 15  # Notion에 기록할 상위 키워드 수
 
 # 관련성 필터: 연관검색어 중 아래 토큰을 포함한 것만 남긴다
@@ -50,6 +60,11 @@ def is_relevant(kw: str) -> bool:
     if any(t in low for t in EXCLUDE_TOKENS):
         return False
     return any(t in low for t in RELEVANT_TOKENS)
+
+
+def is_repair(kw: str) -> bool:
+    low = kw.lower().replace(" ", "")
+    return any(t in low for t in REPAIR_TOKENS)
 
 
 def naver_signature(timestamp: str, method: str, path: str) -> str:
@@ -90,9 +105,13 @@ def to_int(v):
 
 def collect():
     seen = {}
+    # 기존 씨앗 배치는 그대로, 수리 씨앗은 뒤에 별도 배치 (중복 제거)
+    general = list(dict.fromkeys(SEED_KEYWORDS))
+    repair = [k for k in dict.fromkeys(REPAIR_SEEDS) if k not in general]
+    batches = [general[i:i + 5] for i in range(0, len(general), 5)]
+    batches += [repair[i:i + 5] for i in range(0, len(repair), 5)]
     # 5개씩 끊어서 호출 (API 힌트 상한 대비)
-    for i in range(0, len(SEED_KEYWORDS), 5):
-        batch = SEED_KEYWORDS[i:i + 5]
+    for batch in batches:
         try:
             for row in fetch_keywords(batch):
                 kw = row.get("relKeyword")
@@ -109,7 +128,10 @@ def collect():
             print(f"[warn] batch {batch} 실패: {e}", file=sys.stderr)
         time.sleep(0.3)  # 레이트리밋 여유
     rows = sorted(seen.values(), key=lambda x: x["total"], reverse=True)
-    return rows[:80]  # 풀 유지 → 아래에서 '검색량순'과 '경쟁낮은 기회'로 나눠 씀
+    pool = rows[:80]  # 풀 유지 → 아래에서 '검색량순'과 '경쟁낮은 기회'로 나눠 씀
+    # 수리 계열은 검색량이 작아 상위 80에서 잘리므로 따로 보존 (순서는 검색량순 유지)
+    pool += [r for r in rows[80:] if is_repair(r["kw"])]
+    return pool
 
 
 def week_label(d: datetime.date) -> str:
@@ -174,12 +196,17 @@ def build_children(rows):
         "PC / 모바일: 지난 한 달간 네이버에서 이 검색어를 친 횟수(네이버 검색광고 실데이터). 미용사는 대부분 모바일.  "
         "합계: 수요 크기. 100~1,000이면 롱테일(적지만 정확한 손님), 1,000↑이면 메인 검색어.  "
         "경쟁: 네이버 광고 경쟁도(낮음/중간/높음). 블로그 순위 그 자체는 아니지만 '돈 되는 검색어'일수록 글도 많다는 근사치 — 낮음·중간이 상위 잡기 쉬움.  "
-        "💎 = 경쟁 낮음·중간이면서 검색량 있음 / 🔥 = 검색량 크지만 경쟁 높음(장기전).",
+        "💎 = 경쟁 낮음·중간이면서 검색량 있음 / 🔥 = 검색량 크지만 경쟁 높음(장기전) / "
+        "🛠 = 수리·복원 계열(검색량이 작아도 따로 표시 — 복원수리 글의 소제목·롱테일용).",
         "📐")]
     ch.append(_heading("💎 우선 공략 (경쟁 덜함 · 상위 잡기 유리)"))
     ch.append(_table(header, [_row(r) for r in easy]) if easy else _bullet("해당 없음"))
     ch.append(_heading("🔥 검색량 크지만 경쟁 치열 (장기전 · 참고)"))
     ch.append(_table(header, [_row(r) for r in hard]) if hard else _bullet("해당 없음"))
+    # 🛠 수리·복원 (2026-09-16 추가) — 검색량이 작아 위 표에 안 잡히므로 별도 표
+    repair = repair_rows(rows)
+    ch.append(_heading("🛠 수리·복원 검색어 (복원수리 시리즈용 · 검색량 작아도 표시)"))
+    ch.append(_table(header, [_row(r) for r in repair]) if repair else _bullet("해당 없음"))
 
     main_kw = easy[0]["kw"] if easy else (rows[0]["kw"] if rows else "미용가위")
     subs = [r["kw"] for r in easy[1:3]] or [r["kw"] for r in rows[1:3]]
@@ -193,13 +220,21 @@ def build_children(rows):
             ["인스타", "캡션 첫 줄(후킹)", "💎 1개", "질문 또는 반전 한 줄", f"{main_kw}, 비싼 게 답일까?"],
             ["인스타", "해시태그 롱테일 1~3개", "💎 표에서 합계 100~1,000짜리", "브랜드 고정 4개 + 카테고리 + 롱테일", "#마모루 #미용가위 + 롱테일"],
             ["인스타 릴스", "첫 1초 화면 텍스트", "💎 1개", "검색어 그대로 짧게", main_kw],
+            ["블로그 (복원수리)", "소제목(H2) · 사진 설명 · 태그", "🛠 표",
+             "메인은 💎(예: 미용가위), 🛠은 보조·롱테일로", " / ".join(r["kw"] for r in repair[:3]) or "-"],
         ]))
     ch.append(_callout(
         "Claude에게 이렇게 요청: \"이번 주 네이버 로그 💎로 블로그 제목 5개 + 인스타 캡션 첫 줄 3개 뽑아줘 (브랜드 톤)\". "
         "🔥는 시리즈로 여러 편 쌓을 때만. 쓴 검색어는 아래 토글의 ☑ 체크로 사용완료 표시.", "✍️"))
+    listed = easy + hard
+    listed += [r for r in repair if r not in listed]  # 🛠 중 위 표와 겹치지 않는 것 추가
     ch.append(_toggle("☑ 사용완료 체크용 (전체 검색어)",
-                      [_todo(("💎 " if r in easy else "🔥 " if r in hard else "· ") + _line(r)) for r in (easy + hard)]))
+                      [_todo(("💎 " if r in easy else "🔥 " if r in hard else "🛠 ") + _line(r)) for r in listed]))
     return ch[:100]
+
+
+def repair_rows(rows):
+    return [r for r in rows if is_repair(r["kw"]) and r["total"] >= REPAIR_MIN_TOTAL][:15]
 
 
 def create_notion_entry(rows):
@@ -213,7 +248,8 @@ def create_notion_entry(rows):
             "검색어": {"rich_text": [{"text": {"content": top_kw}}]},
             "채널": {"multi_select": [{"name": "블로그"}, {"name": "인스타"}]},
             "반영": {"checkbox": False},
-            "메모": {"rich_text": [{"text": {"content": "GitHub Actions 자동 기록 (네이버 검색광고 API · 월간검색량 실데이터)"}}]},
+            "메모": {"rich_text": [{"text": {"content": "GitHub Actions 자동 기록 (네이버 검색광고 API · 월간검색량 실데이터)"
+                                                         f" · 🛠 수리·복원 {len(repair_rows(rows))}개"}}]},
         },
         "children": build_children(rows),
     }
