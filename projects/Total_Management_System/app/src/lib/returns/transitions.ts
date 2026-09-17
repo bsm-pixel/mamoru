@@ -80,3 +80,16 @@ export function getReturnDisplayLabel(status: ReturnStatus, pickupMethod?: strin
   }
   return RETURN_STATUS_LABEL[status];
 }
+
+/**
+ * 반품/교환 구분을 고객 문구용 한글로 (2026-09-17)
+ *
+ * 알림톡 `return_received` 본문 첫 줄이 "반품·교환 회수 접수가 완료되었습니다" 였다.
+ * 사장님 지적: **교환 신청한 고객이 "반품" 글자를 보면 헷갈린다.**
+ * returns 에 return_type 이 이미 있는데 알림톡에 안 넘기고 있어서 뭉뚱그렸던 것.
+ *
+ * 🚨 빈 문자열을 절대 반환하지 않는다 — 알림톡 변수가 비면 문자(SMS)로 대체되고 버튼이 사라진다.
+ */
+export function returnTypeLabel(returnType?: string | null): string {
+  return String(returnType || '').trim() === 'return' ? '반품' : '교환';
+}

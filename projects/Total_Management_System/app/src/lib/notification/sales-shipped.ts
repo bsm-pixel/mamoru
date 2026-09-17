@@ -88,6 +88,65 @@ export async function sendSalesShippedNotification(
   return { sent: true };
 }
 
+/* ── 아임웹 주문 출고 알림톡 (2026-09-17) ──
+   아임웹 쇼핑몰 주문도 **오프라인 판매와 똑같이** 롯데 집하가 감지되면 출고 알림톡을 보낸다.
+
+   왜 전용 템플릿(IW-배송중)을 안 만들었나 — 사장님 판단(09-17):
+     "아임웹 주문건도 TMS 로 넘어와서 내가 송장 생성하고 집하 스캔 시 출고완료 알림톡 가는 형태"
+     운영이 동일하므로 고객이 받는 문구도 같아야 한다 → `sales_shipped` 그대로 재사용.
+     (전엔 아임웹 기본 '발송 안내'가 이 자리를 맡는 설계였는데, 실제로 꺼져 있어
+      결제완료 → [침묵] → 후기요청 이 되어 있었다. 09-17 캡처로 확인)
+
+   중복 방지: 호출부 [1-A] 가 status='ready_to_ship' → 'shipping' 조건부 CAS 로 선점한 뒤에만
+   부르므로 건당 1회가 보장된다. 그래서 offline_sales 처럼 별도 notified 컬럼을 두지 않는다. */
+export interface OrderShippedTarget {
+  id: string;                    // orders.id (품명 조회용)
+  orderNo: string | null;        // imweb_order_no
+  invoiceNumber: string | null;
+  ordererName: string | null;
+  ordererPhone: string | null;
+  courierName?: string | null;
+}
+
+/** 품명 조립 — orders 는 order_items 를 본다 (offline_sale_items 와 테이블만 다르고 규칙은 동일) */
+async function buildOrderGoodsName(db: Db, orderId: string): Promise<string> {
+  const { data: items } = await db
+    .from('order_items')
+    .select('product_name, quantity')
+    .eq('order_id', orderId);
+
+  if (!items || items.length === 0) return '마모루 제품';
+  return items
+    .map((i: { product_name: string; quantity: number }) =>
+      i.quantity > 1 ? `${i.product_name} ${i.quantity}개` : i.product_name,
+    )
+    .join('\n');
+}
+
+export async function sendOrderShippedNotification(
+  db: Db,
+  order: OrderShippedTarget,
+): Promise<{ sent: boolean; reason?: string; error?: string }> {
+  if (!order.ordererPhone) return { sent: false, reason: 'no_phone' };
+
+  const goodsName = await buildOrderGoodsName(db, order.id);
+
+  const result = await sendNotification({
+    template: 'sales_shipped',
+    phone: order.ordererPhone,
+    name: order.ordererName || '고객',
+    data: {
+      id: order.orderNo || order.id,
+      tracking: order.invoiceNumber || '',
+      courier: order.courierName || '롯데택배',
+      goods_name: goodsName,
+    },
+  });
+
+  if (!result.success) return { sent: false, reason: 'send_failed', error: result.error };
+  return { sent: true };
+}
+
 /* ── 교환 출고 알림톡 (136, 2026-08-27) ──
    배송 교환 시 발행한 '교환 출고 송장'이 집하되면, 판매 출고와 동일한 sales_shipped 템플릿으로 발송.
    품명만 새 제품(교환품)으로 바꾸고 "(교환)" 표기 → 고객이 교환 상품 출고임을 인지.

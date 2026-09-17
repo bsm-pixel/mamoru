@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidReturnTransition } from '@/lib/returns/transitions';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import type { ReturnStatus } from '@/lib/supabase/types';
+import { returnTypeLabel } from '@/lib/returns/transitions';
 
 /** 상태 → 채울 타임스탬프 컬럼 */
 const STATUS_TS: Partial<Record<ReturnStatus, string>> = {
@@ -68,7 +69,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             template: 'return_inbound',
             phone: String(cur.phone),
             name: String(cur.name || ''),
-            data: { return_number: String(cur.return_number || ''), product_name: String(cur.product_name || '') },
+            // 2026-09-17: 본문은 중립 문구라 변수가 없어도 맞지만, 향후 개정 대비해 같이 넘긴다
+            data: {
+              return_type: returnTypeLabel(cur.return_type),
+              return_number: String(cur.return_number || ''),
+              product_name: String(cur.product_name || ''),
+            },
           });
         } catch (e) { console.error('[returns PATCH] 입고 알림 실패:', e); }
       });

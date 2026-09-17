@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { queryStatus } from '@/lib/lotte/client';
 import { queryTrackingStatus } from '@/lib/lotte/alps-client';
 import { sendReviewRequestNotification, repairSubtypeFromProceedType } from '@/lib/notification/review-request';
+import { sendOrderShippedNotification } from '@/lib/notification/sales-shipped';
 import { sendSalesShippedNotification, sendExchangeShippedNotification } from '@/lib/notification/sales-shipped';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
     //   ⚠️ [1] 앞에 둔다: 여기서 shipping 으로 올리면 [1]이 같은 사이클에 배달완료까지 처리 가능.
     const { data: orderPickups, error: orderPickupErr } = await db
       .from('orders')
-      .select('id, invoice_number, imweb_order_no')
+      .select('id, invoice_number, imweb_order_no, orderer_name, orderer_phone, courier_name')
       .eq('status', 'ready_to_ship')
       .not('invoice_number', 'is', null)
       .limit(50);
@@ -70,6 +71,8 @@ export async function GET(request: NextRequest) {
     let ordersShipped = 0;
     for (const order of orderPickups || []) {
       try {
+        // 150: 롯데 외 택배사·직접전달은 ALPS 추적 대상이 아니다
+        if (!isAlpsTrackable(order.courier_name)) continue;
         const r = await queryTrackingStatus(order.invoice_number);
         if (r.state === 'CANCELLED' || r.state === 'NOT_FOUND') continue;
         if (!r.pickedUp) continue;   // 아직 기사님이 안 가져감
@@ -99,6 +102,26 @@ export async function GET(request: NextRequest) {
             }
           });
         }
+
+        // 🔴 2026-09-17: 고객 출고 알림톡 — 오프라인 판매([3-A])와 같은 템플릿(sales_shipped)
+        //   전엔 이 자리가 비어 있어 아임웹 주문 고객은 배송 안내를 한 통도 못 받았다
+        //   (아임웹 기본 '발송 안내'가 꺼져 있고 TMS 도 안 보냈음 — 09-17 확인)
+        //   위 CAS 로 건당 1회가 보장되므로 별도 중복 플래그 없음
+        after(async () => {
+          try {
+            const sent = await sendOrderShippedNotification(db, {
+              id: order.id,
+              orderNo: order.imweb_order_no,
+              invoiceNumber: order.invoice_number,
+              ordererName: order.orderer_name,
+              ordererPhone: order.orderer_phone,
+              courierName: order.courier_name,
+            });
+            console.log(`[track-delivery/orders pickup] ${order.imweb_order_no} 출고 알림톡 ${sent.sent ? '발송 성공' : '미발송 — ' + sent.reason + ' ' + (sent.error || '')}`);
+          } catch (e) {
+            console.error(`[track-delivery/orders pickup] ${order.imweb_order_no} 출고 알림톡 예외:`, e);
+          }
+        });
       } catch (e) {
         console.error(`[track-delivery/orders pickup] ${order.imweb_order_no} 집하 확인 실패:`, e);
       }

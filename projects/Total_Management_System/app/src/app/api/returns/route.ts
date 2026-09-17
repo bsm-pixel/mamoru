@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { insertReturn } from '@/lib/returns/insert-return';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { toLocalDateString } from '@/lib/utils/format';
+import { returnTypeLabel } from '@/lib/returns/transitions';
 
 /** GET /api/returns?status=&search= — 반품·교환수거 목록 */
 export async function GET(req: NextRequest) {
@@ -78,6 +79,9 @@ export async function POST(req: NextRequest) {
             phone: String(payload.phone),
             name: String(payload.name || ''),
             data: {
+              // 🔴 2026-09-17: 전엔 본문이 "반품·교환 회수 접수"로 뭉뚱그려 나가 교환 고객이 혼란
+              //   returns 에 이미 return_type(return|exchange)이 있는데 알림톡에 안 넘기고 있었다
+              return_type: returnTypeLabel(String(payload.return_type ?? '')),
               return_number: String(created.return_number || ''),
               product_name: String(payload.product_name || ''),
               pickup_method: String(payload.pickup_method || ''),
