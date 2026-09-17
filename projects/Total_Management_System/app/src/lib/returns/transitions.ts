@@ -3,7 +3,7 @@ import type { ReturnStatus } from '@/lib/supabase/types';
 
 /** 허용 전이 맵 */
 export const RETURN_TRANSITIONS: Record<ReturnStatus, ReturnStatus[]> = {
-  requested: ['pickup_scheduled', 'inbound', 'cancelled'],   // 직접반납 등은 수거예약 건너뛰고 바로 입고 가능
+  requested: ['pickup_scheduled', 'inbound', 'cancelled'],   // 대면수령은 수거예약 건너뛰고 바로 입고
   pickup_scheduled: ['inbound', 'cancelled'],
   inbound: ['inspected', 'completed', 'cancelled'],
   inspected: ['completed', 'cancelled'],
@@ -74,9 +74,8 @@ export const RETURN_PRIMARY_NEXT: Partial<Record<ReturnStatus, ReturnStatus>> = 
 /** 수거방식별 표시 라벨 (목록에서 상태 대신 보여줄 안내) */
 export function getReturnDisplayLabel(status: ReturnStatus, pickupMethod?: string | null): string {
   if (status === 'requested') {
-    if (pickupMethod === '방문수거') return '수거 예약 필요';
-    if (pickupMethod === '택배수거') return '수거 접수됨';
-    if (pickupMethod === '직접반납') return '입고 대기';
+    if (pickupMethod === PICKUP_COURIER) return '수거 접수됨';
+    if (pickupMethod === PICKUP_IN_PERSON) return '직접 받기 대기';
   }
   return RETURN_STATUS_LABEL[status];
 }
@@ -92,4 +91,21 @@ export function getReturnDisplayLabel(status: ReturnStatus, pickupMethod?: strin
  */
 export function returnTypeLabel(returnType?: string | null): string {
   return String(returnType || '').trim() === 'return' ? '반품' : '교환';
+}
+
+/* ── 회수 방법 (154, 2026-09-17) ────────────────────────────────
+   전엔 '직접반납'·'고객반납'·'직접수거'·'방문수거' 가 뒤섞여 있었고
+   사장님이 "뭔지 이해가 하나도 안 되는 단어"라고 지적. 2가지로 정리한다.
+
+   '택배수거' : 롯데 기사가 고객집 방문 회수 → 고객 알림톡 O
+   '대면수령' : 사장님이 만나서 직접 받음    → 고객 알림톡 X (이미 만나서 얘기함)
+
+   🚫 '방문수거' 는 쓰지 않는다 — 복원수리에서 **고객이 가위를 보내는 방법** 이름이라 뜻이 충돌.
+   ※ 그 자리에서 바로 받는 경우(exchange-modal 'store')는 반품 건 자체가 생기지 않는다. */
+export const PICKUP_COURIER = '택배수거';
+export const PICKUP_IN_PERSON = '대면수령';
+
+/** 고객 알림톡을 보내는 회수 방법인가 — 대면으로 받은 건은 보내지 않는다 */
+export function isCourierPickup(pickupMethod?: string | null): boolean {
+  return String(pickupMethod || '').trim() === PICKUP_COURIER;
 }

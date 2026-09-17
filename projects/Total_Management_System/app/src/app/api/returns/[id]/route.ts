@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidReturnTransition } from '@/lib/returns/transitions';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import type { ReturnStatus } from '@/lib/supabase/types';
-import { returnTypeLabel } from '@/lib/returns/transitions';
+import { returnTypeLabel, isCourierPickup } from '@/lib/returns/transitions';
 
 /** 상태 → 채울 타임스탬프 컬럼 */
 const STATUS_TS: Partial<Record<ReturnStatus, string>> = {
@@ -62,7 +62,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (error) throw error;
 
     // 입고완료 → 고객에게 "반품 잘 받았습니다" 알림톡(솔라피 return_inbound 등록 시). after()로 완주 보장
-    if (update.status === 'inbound' && cur.phone) {
+    // 154: 입고 알림톡도 택배수거 건만 — 대면으로 받았으면 눈앞에서 건넸으니 알릴 것이 없다
+    if (update.status === 'inbound' && cur.phone && isCourierPickup(cur.pickup_method)) {
       after(async () => {
         try {
           await sendNotification({

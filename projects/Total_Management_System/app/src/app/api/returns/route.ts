@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { insertReturn } from '@/lib/returns/insert-return';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { toLocalDateString } from '@/lib/utils/format';
-import { returnTypeLabel } from '@/lib/returns/transitions';
+import { returnTypeLabel, isCourierPickup } from '@/lib/returns/transitions';
 
 /** GET /api/returns?status=&search= — 반품·교환수거 목록 */
 export async function GET(req: NextRequest) {
@@ -71,7 +71,10 @@ export async function POST(req: NextRequest) {
     const created = await insertReturn(db, toLocalDateString(new Date()), payload);
 
     // 사장님 푸시(즉시) + 고객 알림톡(솔라피 return_received 등록 시). after()로 서버리스 완주 보장
-    if (payload.phone) {
+    //   🔴 154(2026-09-17): **택배수거일 때만** 고객에게 보낸다.
+    //   대면수령은 사장님이 만나서 받기로 이미 얘기한 건이라 알림톡이 잔소리가 된다(사장님 확정).
+    //   덕분에 본문·이미지의 "문 앞에 놓아주세요" 가 항상 사실이 된다(전엔 직접 받는 건과 충돌).
+    if (payload.phone && isCourierPickup(payload.pickup_method as string | null)) {
       after(async () => {
         try {
           await sendNotification({
@@ -84,7 +87,6 @@ export async function POST(req: NextRequest) {
               return_type: returnTypeLabel(String(payload.return_type ?? '')),
               return_number: String(created.return_number || ''),
               product_name: String(payload.product_name || ''),
-              pickup_method: String(payload.pickup_method || ''),
               pickup_date: String(payload.pickup_date || ''),
             },
           });

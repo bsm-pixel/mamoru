@@ -28,7 +28,8 @@ export function OrderExchangeModal({ order, items, onClose }: { order: Order; it
   const [returnSerials, setReturnSerials] = useState<{ id: string; serial_number: string }[]>([]);
 
   // 회수 방식(구 제품) + 발송 방식(새 제품)
-  const [pickupMode, setPickupMode] = useState<'직접수거' | '방문수거' | '택배수거' | '고객반납'>('직접수거');
+  // 154: 회수 방법 2가지로 통일 (반품·교환 모달과 동일)
+  const [pickupMode, setPickupMode] = useState<'택배수거' | '대면수령'>('대면수령');
   const [shipMode, setShipMode] = useState<'배송' | '직접전달'>('배송');
 
   // 새 제품 여러 줄
@@ -209,10 +210,8 @@ export function OrderExchangeModal({ order, items, onClose }: { order: Order; it
             <p className="text-xs font-semibold text-neutral-500 mb-1.5">2. 구 제품 회수 방식</p>
             <div className="grid grid-cols-2 gap-1.5">
               {([
-                { v: '직접수거', label: '내가 직접 수거함', icon: Store },
-                { v: '고객반납', label: '고객 직접반납', icon: Store },
-                { v: '방문수거', label: '방문수거', icon: Truck },
-                { v: '택배수거', label: '택배수거', icon: Truck },
+                { v: '택배수거', label: '택배로 회수', icon: Truck },
+                { v: '대면수령', label: '직접 받기', icon: Store },
               ] as const).map((o) => {
                 const on = pickupMode === o.v;
                 return (

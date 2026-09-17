@@ -16,7 +16,7 @@ import { insertReturn } from '@/lib/returns/insert-return';
  * body: {
  *   returns:   [{ product_id, product_name?, qty, serial_ids?: string[] }],   // 반납 → 반품창고
  *   new_items: [{ product_id, product_name?, qty, serial_ids?: string[] }],   // 새 제품 → 출고
- *   recovery_method?: string,  // 직접수거|방문수거|택배수거|고객반납
+ *   recovery_method?: string,  // 택배수거|대면수령 (154 — 용어 통일)
  *   diff_amount?: number,      // + 추가수령 / - 환불 (신제품합 − 주문결제액)
  *   diff_method?: string,      // 현금|카드|이체|없음
  *   memo?: string,
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const returns = Array.isArray(body.returns) ? body.returns : [];
   const newItems = Array.isArray(body.new_items) ? body.new_items : [];
-  const recovery = (body.recovery_method || '직접수거').trim();
+  const recovery = (body.recovery_method || '대면수령').trim();
   const shipMethod = (body.ship_method || '배송').trim();  // 배송|직접전달 (새 제품 발송 방식)
   const diffAmount = Number(body.diff_amount || 0);
   const diffMethod = (body.diff_method || '없음').trim();

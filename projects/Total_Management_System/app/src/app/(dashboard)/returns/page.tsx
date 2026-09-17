@@ -14,7 +14,7 @@ import { StatusStepper } from '@/components/ui/status-stepper';
 import { Button } from '@/components/ui/button';
 import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
 import { formatDate, formatPhone } from '@/lib/utils/format';
-import { Undo2, Package, Truck } from 'lucide-react';
+import { Undo2, Package, Truck, Store } from 'lucide-react';
 import type { ReturnRow } from '@/lib/supabase/types';
 
 const STATUS_TABS: { value: string; label: string }[] = [
@@ -158,6 +158,19 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
           {r.reason && <p className="text-xs text-neutral-400">사유: {r.reason}</p>}
         </div>
       </Card>
+
+      {/* 대면 수거완료 (154) — 사장님이 직접 받은 건. 알림톡 없이 흐름만 입고로 넘긴다 */}
+      {r.pickup_method === '대면수령' && r.status === 'requested' && (
+        <Card>
+          <p className="text-xs font-semibold text-neutral-500 mb-2">구 제품 회수 (직접 받기)</p>
+          <Button className="w-full" disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: 'inbound' })}>
+            <Store size={14} /> 대면 수거완료
+          </Button>
+          <p className="text-[11px] text-neutral-400 mt-1.5">
+            고객에게서 직접 받으셨으면 누르세요. 입고완료로 넘어가며 <b>고객 알림톡은 나가지 않습니다</b>.
+          </p>
+        </Card>
+      )}
 
       {/* 반품 수거접수 (택배 회수 — 롯데 반품 API ustRtgSctCd=02). 완료·취소 건은 숨김 */}
       {r.pickup_method === '택배수거' && r.status !== 'completed' && r.status !== 'cancelled' && (

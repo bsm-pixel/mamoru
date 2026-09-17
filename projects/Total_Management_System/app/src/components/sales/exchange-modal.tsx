@@ -29,7 +29,8 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
   const { data: products = [] } = useProducts();
   // 구 제품 회수 방식 — 배송건은 수거 필요, 매장/직접건은 즉시 반납 기본
   const wasShipped = !!(sale.shipped_at || sale.delivered_at || sale.invoice_number);
-  const [pickupMode, setPickupMode] = useState<'store' | '방문수거' | '택배수거' | '직접반납'>(wasShipped ? '택배수거' : 'store');
+  // 154: 회수 방법 2가지 + 즉시수령(store, 반품 건 자체가 안 생김)
+  const [pickupMode, setPickupMode] = useState<'store' | '택배수거' | '대면수령'>(wasShipped ? '택배수거' : 'store');
   const [pickupDate, setPickupDate] = useState<string>('');
   const [returnItemId, setReturnItemId] = useState<string | null>(null);
   const [prodSearch, setProdSearch] = useState('');
@@ -179,7 +180,7 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
             name: sale.customer_name || null,
             phone: sale.customer_phone || null,
             pickup_method: pickupMode,
-            pickup_date: pickupMode === '방문수거' && pickupDate ? pickupDate : null,
+            pickup_date: pickupMode === '대면수령' && pickupDate ? pickupDate : null,
             reason: '제품 교환',
           });
         } catch { toast('반품수거 접수 기록 생성 실패 — 반품관리에서 수동 등록하세요', { icon: '⚠️' }); }
@@ -296,10 +297,9 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
               </p>
               <div className="grid grid-cols-2 gap-1.5">
                 {([
-                  { v: 'store', label: '매장/직접 지금 받음', icon: Store },
-                  { v: '방문수거', label: '방문수거', icon: Truck },
-                  { v: '택배수거', label: '택배수거', icon: Truck },
-                  { v: '직접반납', label: '고객 직접반납(나중)', icon: Store },
+                  { v: 'store', label: '지금 바로 받음', icon: Store },
+                  { v: '택배수거', label: '택배로 회수', icon: Truck },
+                  { v: '대면수령', label: '직접 받기(나중)', icon: Store },
                 ] as const).map((o) => {
                   const on = pickupMode === o.v;
                   return (
@@ -310,9 +310,9 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
                   );
                 })}
               </div>
-              {pickupMode === '방문수거' && (
+              {pickupMode === '대면수령' && (
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-[11px] text-neutral-500 shrink-0">수거 예약일</span>
+                  <span className="text-[11px] text-neutral-500 shrink-0">받기로 한 날 (선택)</span>
                   <input type="date" value={pickupDate} onChange={(e) => setPickupDate(e.target.value)}
                     className="h-8 px-2 rounded-lg border border-neutral-200 text-sm" />
                 </div>

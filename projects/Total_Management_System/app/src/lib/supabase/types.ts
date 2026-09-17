@@ -56,7 +56,8 @@ export type ReturnStatus =
   | 'completed'          // 교환발송/환불 완료
   | 'cancelled';
 export type ReturnType = 'exchange' | 'refund';
-export type ReturnPickupMethod = '방문수거' | '택배수거' | '직접반납';
+// 154(2026-09-17): 용어 통일 — '방문수거'(복원수리 용어와 충돌)·'직접반납'(뜻이 안 읽힘) 폐기
+export type ReturnPickupMethod = '택배수거' | '대면수령';
 
 export interface ReturnRow {
   id: string;
