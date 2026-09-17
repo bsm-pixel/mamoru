@@ -15,6 +15,22 @@
 - 문서 `docs/TMS_FLOW_PUSH.md` 신설(전 경로표 + 안 올 때 확인 순서)
 - 남은 확인: 첫 실주문으로 웹훅 경로 검증(v2 getOrder 호환) — 실패 시 `⚠️ 아임웹 주문 동기화 실패` 푸시가 뜸
 
+## ✅ 완료 (09-17): 알림톡 전면 중단 사고 — 원인·복구·재발방지
+- 15:19 Make 「상담접수_제작중」 **자동 비활성화** → 16:00 실고객 출장접수(구교은) 알림톡 미발송. 17:27 복구·재발송 확인
+- 원인은 코드·분기·템플릿이 전부 아님 → 솔라피 인증서버 **순단 1회** (`ECONNRESET` on `/oauth2/v1/access_token`, `AccountValidationError`)
+  Make 는 실행 전 모든 모듈의 연결을 검증 → 솔라피 연결 1개가 깨지면 시나리오 전체가 초기화 실패로 죽는다
+  ⚠️ 특정 모듈에 에러 표시가 붙어도 그 분기로 갔다는 뜻이 아니다 — 검증 순서상 첫 솔라피 모듈일 뿐
+- 복구: 연결 재검증 → 시나리오 ON → 웹훅 큐 `Process old data` (실행 165→171)
+- 재발방지: 시나리오 Settings **`Store incomplete executions` = Yes** (기본 No). 에러가 나도 시나리오가 꺼지지 않고 미완료 실행으로 보관·재시도
+- 🚨 남은 구멍: `lib/notification/make-webhook.ts` 는 **Make HTTP 200 = 성공**으로 판정.
+  200 은 "웹훅 받았다"일 뿐이라 Make 가 죽어 있어도 TMS 는 발송 성공으로 기록한다(`review_requested_at` 등)
+  → 판별법: **사장님 앱 푸시는 오는데 고객 알림톡만 안 감 = Make/솔라피 구간**
+  → 개선안(미결정): Make 에러 핸들러 → TMS 엔드포인트 → 사장님 앱 푸시
+- 상세 memory `reference_make_scenario_autostop`
+
+## ✅ 완료 (09-17): 아임웹 전역헤더 Pretendard 붙여넣기 (사장님 직접)
+- 09-15 서체 교체에서 유일하게 남아 있던 수동 작업. `projects/common_code/header_code_top.txt` 를 아임웹 관리자 Header Code 에 반영 완료
+
 ## ✅ 완료 (09-15): 한글 서체 Noto Sans KR → Pretendard 전면 교체 (커밋 4ed0c422·43da6b2d)
 - 브랜드 가이드 원문은 Noto였으나 킷·노션·실제 제작물이 모두 Pretendard → 실무에 맞춰 원본을 고침
 - 가이드(변수·로드안내·B-02 서체역할·반응형표 7곳) + 고객 페이지 113개(구글폰트 URL 29개 파일, Pretendard CDN 27개 추가, 스택 193곳) + 아임웹 전역헤더
