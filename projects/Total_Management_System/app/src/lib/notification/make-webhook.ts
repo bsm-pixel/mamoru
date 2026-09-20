@@ -29,14 +29,14 @@ const VERSION = 'tms-2.3';
  * 5. imweb         — 아임웹 주문 취소·반품 안내 (2026-09-14). **폴백 없음**: 미설정이면 발송하지 않음
  *                    (Make 분기·솔라피 승인 전 오발송 방지 — URL 입력이 곧 가동 시점)
  */
-async function getWebhookUrls(): Promise<{ consultation: string; as_received: string; repair_status: string; event: string; imweb: string }> {
+async function getWebhookUrls(): Promise<{ consultation: string; as_received: string; repair_status: string; event: string; imweb: string; sales: string; returns: string }> {
   try {
     const { createServiceClient } = await import('@/lib/supabase/server');
     const db = createServiceClient();
     const { data: rows } = await db
       .from('system_settings')
       .select('key, value')
-      .in('key', ['notifications.webhook_consultation', 'notifications.webhook_as_received', 'notifications.webhook_repair', 'notifications.webhook_event', 'notifications.webhook_imweb']);
+      .in('key', ['notifications.webhook_consultation', 'notifications.webhook_as_received', 'notifications.webhook_repair', 'notifications.webhook_event', 'notifications.webhook_imweb', 'notifications.webhook_sales', 'notifications.webhook_returns']);
 
     const map: Record<string, string> = {};
     (rows || []).forEach((r: { key: string; value: string }) => { if (r.value) map[r.key] = String(r.value).replace(/^"|"$/g, ''); });
@@ -50,9 +50,12 @@ async function getWebhookUrls(): Promise<{ consultation: string; as_received: st
       event: map['notifications.webhook_event'] || ENV_WEBHOOK_EVENT || consultation,
       // 아임웹 주문 안내는 폴백 없음 — 미설정이면 미발송(가동 전 오발송 방지)
       imweb: map['notifications.webhook_imweb'] || ENV_WEBHOOK_IMWEB,
+      // 2026-09-20 신설 — 미설정이면 consultation 으로(= 지금과 동일). 새 시나리오 URL 넣으면 전환
+      sales: map['notifications.webhook_sales'] || consultation,
+      returns: map['notifications.webhook_returns'] || consultation,
     };
   } catch {
-    return { consultation: ENV_WEBHOOK_CONSULTATION, as_received: ENV_WEBHOOK_AS_RECEIVED, repair_status: ENV_WEBHOOK_REPAIR_STATUS, event: ENV_WEBHOOK_EVENT || ENV_WEBHOOK_CONSULTATION, imweb: ENV_WEBHOOK_IMWEB };
+    return { consultation: ENV_WEBHOOK_CONSULTATION, as_received: ENV_WEBHOOK_AS_RECEIVED, repair_status: ENV_WEBHOOK_REPAIR_STATUS, event: ENV_WEBHOOK_EVENT || ENV_WEBHOOK_CONSULTATION, imweb: ENV_WEBHOOK_IMWEB, sales: ENV_WEBHOOK_CONSULTATION, returns: ENV_WEBHOOK_CONSULTATION };
   }
 }
 
@@ -77,6 +80,30 @@ const IMWEB_ORDER_TEMPLATES = new Set<NotifyTemplate>([
   'imweb_return_requested',
   'imweb_return_approved',
   'imweb_return_completed',
+]);
+
+/* ── Make 시나리오 분리 (2026-09-20) ────────────────────────────────────────
+   전엔 `상담접수_제작중` 한 시나리오에 상담 14 + 후기 3 + 출고 + 반품 2 + 지연 = 20종 넘게 몰려 있었다.
+   2026-09-17 사고: 솔라피 연결 순단 1회로 그 시나리오가 꺼지면서 **저 20종이 전부 멈췄다**.
+   → 고객 흐름 단위로 쪼개 **장애를 격리**한다.
+
+   🔒 전환 안전장치: 새 키가 비어 있으면 **기존대로 consultation 으로 간다**.
+      그래서 이 배포만으로는 동작이 하나도 안 바뀌고, 새 시나리오 URL 을 넣는 순간 전환된다.
+      문제가 생기면 URL 만 비우면 즉시 롤백(무중단).
+
+   ※ 복원수리 접수(as_received)와 상태변경을 한 시나리오로 합치고 싶으면
+      **설정에서 webhook_as_received 에 webhook_repair 와 같은 URL 을 넣으면 된다** (코드 변경 불필요). */
+
+/** 판매·배송 — 아임웹 주문·오프라인 판매 공통 (출고·구매후기) */
+const SALES_TEMPLATES = new Set<NotifyTemplate>([
+  'sales_shipped',
+  'purchase_review_request',
+]);
+
+/** 반품·교환 — TMS /returns (오프라인 판매분). 아임웹 주문 클레임은 IMWEB_ORDER_TEMPLATES */
+const RETURN_TEMPLATES = new Set<NotifyTemplate>([
+  'return_received',
+  'return_inbound',
 ]);
 
 /** EVENT 전용 템플릿 (전용 Make 시나리오 → webhook_event) — 2026-07-31 consultation 에서 분리 */
@@ -274,6 +301,12 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     // EVENT 접수확인/입금확인/출고완료 → 전용 시나리오 (미설정 시 consultation 폴백)
     webhookUrl = urls.event;
     urlSource = 'webhook_event';
+  } else if (SALES_TEMPLATES.has(payload.template)) {
+    webhookUrl = urls.sales;
+    urlSource = 'webhook_sales';
+  } else if (RETURN_TEMPLATES.has(payload.template)) {
+    webhookUrl = urls.returns;
+    urlSource = 'webhook_returns';
   } else if (IMWEB_ORDER_TEMPLATES.has(payload.template)) {
     // 아임웹 주문 취소·반품 → 전용 시나리오 (폴백 없음)
     webhookUrl = urls.imweb;

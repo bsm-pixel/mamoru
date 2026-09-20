@@ -20,6 +20,9 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
   const [webhookRepair, setWebhookRepair] = useState('');
   const [webhookEvent, setWebhookEvent] = useState('');
   const [webhookImweb, setWebhookImweb] = useState(''); // 아임웹 주문 취소·반품 (2026-09-14) — 입력 = 가동
+  // 2026-09-20 시나리오 분리 — 비워두면 상담 웹훅으로 감(지금과 동일). 새 시나리오 URL 넣으면 전환
+  const [webhookSales, setWebhookSales] = useState('');
+  const [webhookReturns, setWebhookReturns] = useState('');
   // 🔴 앱 푸시 on/off 토글 제거(2026-08-01) — 고객 행동 푸시는 항상 발송(무조건). 놓치면 안 되므로 게이팅 없음.
   // 🔴 고객 알림톡 on/off 토글 제거(2026-09-14) — 항상 발송 원칙. 비상 정지는 해당 Make 웹훅 URL 비우기
   // 앱 화면 열려 있을 때 in-app 알림음(notification.wav) — 배송설정 탭에서 여기로 이동(2026-08-01), 기본 ON
@@ -31,6 +34,8 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     setWebhookRepair(parse(settings['notifications.webhook_repair'], ''));
     setWebhookEvent(parse(settings['notifications.webhook_event'], ''));
     setWebhookImweb(parse(settings['notifications.webhook_imweb'], ''));
+    setWebhookSales(parse(settings['notifications.webhook_sales'], ''));
+    setWebhookReturns(parse(settings['notifications.webhook_returns'], ''));
     setSoundEnabled(parse(settings['notifications.sound_enabled'], true));
   }, [settings]);
 
@@ -41,6 +46,8 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
       { key: 'notifications.webhook_repair', value: webhookRepair },
       { key: 'notifications.webhook_event', value: webhookEvent },
       { key: 'notifications.webhook_imweb', value: webhookImweb },
+      { key: 'notifications.webhook_sales', value: webhookSales },
+      { key: 'notifications.webhook_returns', value: webhookReturns },
       { key: 'notifications.sound_enabled', value: soundEnabled },
     ]);
   };
@@ -120,6 +127,16 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
 
       <Field label="Make 웹훅 URL (아임웹 주문)" desc="아임웹 주문 취소 접수·완료 / 반품 접수·승인·완료 — 비워 두면 발송하지 않음(폴백 없음). 솔라피 승인 + Make 분기 완성 후 입력 = 가동">
         <input value={webhookImweb} onChange={(e) => setWebhookImweb(e.target.value)}
+          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+      </Field>
+
+      <Field label="Make 웹훅 URL (판매·배송)" desc="출고 안내 · 구매후기 요청 — 아임웹 주문·오프라인 판매 공통. 비우면 상담 웹훅으로 감(지금과 동일)">
+        <input value={webhookSales} onChange={(e) => setWebhookSales(e.target.value)}
+          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+      </Field>
+
+      <Field label="Make 웹훅 URL (반품·교환)" desc="TMS 반품 접수·입고 (오프라인 판매분) — 비우면 상담 웹훅으로 감. 아임웹 주문 반품은 위 「아임웹 주문」 담당">
+        <input value={webhookReturns} onChange={(e) => setWebhookReturns(e.target.value)}
           className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
