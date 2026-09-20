@@ -51,8 +51,29 @@
   저 시나리오가 실수로 켜지면 TMS 의 토큰 체인을 끊어 재고 연동이 죽는다(09-12 실사고).
   지금은 `lib/imweb/openapi-token.ts` 가 DB 락으로 단독 관리한다.
 
-**남은 것** — 솔라피 미등록 4종: `return_received` · `return_inbound` (→ `04`),
-`IW-교환접수` · `IW-교환배송` (→ `05`). EVENT v2 3종은 가동 결정 시.
+**후속 (09-20 저녁 · 승인 대기)** — 사장님이 솔라피에 **8건 검수 신청 완료**. 반려 0건.
+
+| 솔라피 등록명 | 코드값 | 가는 곳 |
+|---|---|---|
+| `TMS-회수예약` | `return_received` | `04` |
+| `TMS-입고완료` | `return_inbound` | `04` |
+| `TMS-교환발송` | `exchange_shipped` 🆕 | `04` |
+| `IW-교환접수` | `imweb_exchange_requested` 🆕 | `05` |
+| `EVENT-신청완료` / `EVENT-입금확인` / `EVENT-출고완료` | 기존 `event_*` | `06` (r1~r3 교체) |
+| `💚IW-반품완료(이미지배너 수정)` | `imweb_return_completed` | `05` (**템플릿ID 교체 필요**) |
+
+- 8건 전부 `emphasizeType=IMAGE` + 배너 첨부 + 버튼 정상, **변수도 TMS 전송 필드와 전수 대조 일치**(09-20 API 실측)
+- 🖼 **사장님 확정: 마모루 알림톡은 예외 없이 이미지형.** 실측도 현역 100% IMAGE — 문서에 「기본형」이라 적혀 있던 칸은 전부 오류였음
+- 🏷 **등록명 ≠ 코드값**을 문서에서 혼동해 적어 사장님이 혼란. 등록명은 자유(한글 OK), Make 는 templateId 로 연결되므로 발송 무관. `IW-`/`TMS-`/`EVENT-` 접두어로 채널 구분
+
+**🔴 승인 후 남은 코드 작업 2건** (지금은 승인돼도 안 나감)
+1. `TMS-교환발송` — `/returns/[id]/ship` 에 발송 추가. 교환 출고 송장은 **TMS 가 롯데 ALPS 로 직접 발행**해
+   `returns.exchange_out_invoice_number` / `exchange_out_courier_name`(롯데택배) / `new_product_name` 에 이미 있다
+   (아임웹 건은 `orders.exchange_invoice_number` 미러까지). **웹훅을 볼 이유가 없었다** — 09-20 발견.
+   지금은 교환품을 보내고도 고객에게 아무 알림이 없다.
+2. `IW-교환접수` — 아임웹 교환 웹훅 처리 추가 (`claim-notify.ts` 패턴). `imweb_exchange_*` 는 코드에 전무(grep 0건).
+
+그 뒤 Make 분기 추가 + `notifications.webhook_returns` 채우기 + 전건 실발송 테스트.
 
 ---
 
