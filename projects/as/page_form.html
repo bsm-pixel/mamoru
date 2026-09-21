@@ -1556,6 +1556,10 @@ select.err {
   let HOLIDAYS = new Set();
   let BLOCKED = new Set();          // 관리자 지정 수거 불가일(우체국 픽업 중지 등)
   let BLOCKED_REASONS = {};
+  // 2026-09-21: 직접방문(매장·당일수리) 날짜 = 상담 '매장 방문'과 같은 매장 달력(달력관리 휴무요일·휴무일).
+  //   수거 불가일·주말·공휴일은 '우체국 수거' 기준이라 직접방문엔 적용하지 않는다 (시간 충돌은 /slots 가 판정)
+  let STORE_CLOSED_WEEKDAYS = [];
+  let STORE_CLOSED_DATES = new Set();
 
   // ─────────────────────────────────────────────────────────────
   // 유틸리티 함수
@@ -1582,8 +1586,19 @@ select.err {
     return BLOCKED.has(fmt(date));
   }
 
+  function isVisitMode() {
+    const el = $('proceed_type');
+    return !!el && el.value === '직접방문';
+  }
+
+  // 매장 휴무 (상담 매장방문과 동일 기준)
+  function isStoreClosedDate(date) {
+    return STORE_CLOSED_WEEKDAYS.includes(date.getDay()) || STORE_CLOSED_DATES.has(fmt(date));
+  }
+
   function isDisabledDate(date) {
-    return isWeekend(date) || isHolidayDate(date) || isBlockedDate(date);
+    if (isVisitMode()) return isStoreClosedDate(date);   // 직접방문 = 매장 달력
+    return isWeekend(date) || isHolidayDate(date) || isBlockedDate(date);   // 수거 = 우체국 기준
   }
 
   function isDisabledDateStr(s) {
@@ -1625,6 +1640,17 @@ select.err {
       }).catch(() => {});
   }
 
+  // 매장 달력(상담 매장방문과 공유) 로드 — 실패 시 휴무 미표시, 휴무일 판정은 /slots 의 closedDay 가 안전망
+  function loadStoreCalendar() {
+    return fetch(API_BASE.replace('/repair/public', '/consultation/public') + '/settings')
+      .then(r => r.json())
+      .then(j => {
+        const s = (j && j.ok && j.data) ? j.data : {};
+        STORE_CLOSED_WEEKDAYS = Array.isArray(s.CLOSED_WEEKDAYS) ? s.CLOSED_WEEKDAYS : [];
+        STORE_CLOSED_DATES = new Set((s.CLOSED_DATES || []).map(v => String(v).slice(0, 10)));
+      }).catch(() => {});
+  }
+
   // ─────────────────────────────────────────────────────────────
   // 커스텀 달력 (바텀시트)
   // ─────────────────────────────────────────────────────────────
@@ -1662,6 +1688,7 @@ select.err {
     calPrev.disabled = prevMonth < minDate;
 
     let html = '';
+    const visit = isVisitMode();   // 직접방문=매장 달력 / 수거=우체국 기준
 
     // 빈 칸 (이전 달)
     for (let i = 0; i < startDayOfWeek; i++) {
@@ -1673,10 +1700,10 @@ select.err {
       const date = new Date(calendarYear, calendarMonth, day);
       const dateStr = fmt(date);
       const isWknd = isWeekend(date);
-      const isHol = isHolidayDate(date);
-      const isBlk = isBlockedDate(date);
+      const isHol = visit ? isStoreClosedDate(date) : isHolidayDate(date);
+      const isBlk = visit ? false : isBlockedDate(date);
       const isPast = date < minDate;
-      const isDisabled = isPast || isWknd || isHol || isBlk;
+      const isDisabled = isPast || (visit ? isHol : (isWknd || isHol || isBlk));
       const isToday = fmt(new Date()) === dateStr;
       const isSelected = selectedDate === dateStr;
 
@@ -1711,6 +1738,10 @@ select.err {
       calendarYear = minDate.getFullYear();
       calendarMonth = minDate.getMonth();
     }
+
+    // 달력 제목 — 직접방문은 '방문 날짜', 수거는 '수거 요청일' (2026-09-21)
+    const calTitle = calendarSheet.querySelector('.calendar-title');
+    if (calTitle) calTitle.textContent = isVisitMode() ? '방문 날짜 선택' : '수거 요청일 선택';
 
     renderCalendar();
     calendarSheet.removeAttribute('style'); // 이전 인라인 스타일 초기화
@@ -2288,12 +2319,14 @@ select.err {
       const pd = $('pickup_date').value;
       const dm = $('delivery_method').value;
       const pickOk = !!(pd && dm) && !isDisabledDateStr(pd);
+      $('err-pick').textContent = '수거일·전달방법을 선택하세요';
       setErr('err-pick', !pickOk);
       ok &= pickOk;
     } else if (isVisit) {
       // 직접방문: 날짜 + 시간 슬롯 둘 다 필수
       const pd = $('pickup_date').value;
       const dateOk = !!pd && !isDisabledDateStr(pd);
+      $('err-pick').textContent = '방문 날짜를 선택하세요';   // 직접방문 문구 (2026-09-21)
       setErr('err-pick', !dateOk);
       ok &= dateOk;
       const timeOk = !!selectedVisitTime;
@@ -2539,7 +2572,7 @@ select.err {
   // ─────────────────────────────────────────────────────────────
   // 초기화
   // ─────────────────────────────────────────────────────────────
-  Promise.all([loadHolidays(), loadBlocked()]).then(() => {
+  Promise.all([loadHolidays(), loadBlocked(), loadStoreCalendar()]).then(() => {
     renderCalendar();
   });
   applyDraft();
