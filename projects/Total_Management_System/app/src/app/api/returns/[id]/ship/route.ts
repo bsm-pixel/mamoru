@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getNextInvoice, bookShipment } from '@/lib/lotte/alps-client';
+import { sendNotification } from '@/lib/notification/make-webhook';
 
 /** POST /api/returns/[id]/ship — 교환 출고 송장 발행 (새 제품 1개만, 매장→고객 정방향)
  *  빠른송장(manual-invoices)과 동일한 롯데 발행 패턴. 판매/주문/아임웹 부수효과 0.
@@ -80,6 +81,31 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     if (r.order_id) {
       await db.from('orders').update({ exchange_invoice_number: invoiceNumber, exchange_shipped_at: new Date().toISOString() }).eq('id', r.order_id);
     }
+
+    /* 고객 알림톡 — 교환품 발송 안내 (2026-09-21 신규)
+       전엔 교환품을 보내고도 **고객에게 아무 말도 안 했다**. 고객은 언제 오는지 알 방법이 없었다.
+       아임웹 주문 교환도 여기로 온다 — 접수는 아임웹이 알지만 **출고 송장은 TMS 가 직접 발행**하므로
+       송장번호를 확실히 넣을 수 있다(아임웹 웹훅에 오는지 확인할 필요가 없었다).
+       위 update 성공 뒤(= 송장번호 확정 뒤)에만 부르므로 건당 1회. 이미 발행된 건은 위에서 400 으로 끊긴다.
+       after() 로 응답을 막지 않는다 — 알림 실패가 송장 발행을 되돌리지는 않는다. */
+    if (r.phone) {
+      after(async () => {
+        try {
+          await sendNotification({
+            template: 'exchange_shipped',
+            phone: String(r.phone),
+            name: String(r.name || ''),
+            data: {
+              // 🚨 세 값 모두 비면 알림톡이 문자로 대체되고 버튼이 사라진다 → 폴백을 둔다
+              product_name: String(r.new_product_name || '교환 상품'),
+              courier: '롯데택배',            // ALPS 발행분은 항상 롯데
+              tracking: invoiceNumber,
+            },
+          });
+        } catch (e) { console.error('[returns ship] 교환발송 알림톡 실패(송장은 발행됨):', invoiceNumber, e); }
+      });
+    }
+
     return NextResponse.json({ success: true, return: data });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

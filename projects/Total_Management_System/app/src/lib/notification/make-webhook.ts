@@ -80,6 +80,7 @@ const IMWEB_ORDER_TEMPLATES = new Set<NotifyTemplate>([
   'imweb_return_requested',
   'imweb_return_approved',
   'imweb_return_completed',
+  'imweb_exchange_requested',
 ]);
 
 /* ── Make 시나리오 분리 (2026-09-20) ────────────────────────────────────────
@@ -100,10 +101,15 @@ const SALES_TEMPLATES = new Set<NotifyTemplate>([
   'purchase_review_request',
 ]);
 
-/** 반품·교환 — TMS /returns (오프라인 판매분). 아임웹 주문 클레임은 IMWEB_ORDER_TEMPLATES */
+/** 반품·교환 — TMS /returns. 아임웹 주문 클레임(취소·반품·교환접수)은 IMWEB_ORDER_TEMPLATES
+ *
+ *  ⚠️ exchange_shipped 만 아임웹 주문 건도 여기로 온다 — 접수는 아임웹이 알지만
+ *     **교환 출고 송장은 TMS 가 롯데 ALPS 로 직접 발행**하므로(returns.exchange_out_invoice_number)
+ *     발송 주체가 TMS 다. 그래서 오프라인 판매 교환과 한 흐름으로 묶는다. */
 const RETURN_TEMPLATES = new Set<NotifyTemplate>([
   'return_received',
   'return_inbound',
+  'exchange_shipped',
 ]);
 
 /** EVENT 전용 템플릿 (전용 Make 시나리오 → webhook_event) — 2026-07-31 consultation 에서 분리 */
@@ -163,7 +169,10 @@ export type NotifyTemplate =
   | 'imweb_cancel_completed'   // IW-취소완료 (환불 안내 겸)
   | 'imweb_return_requested'   // IW-반품접수 (고객 요청만)
   | 'imweb_return_approved'    // IW-반품승인 (반품 수거중 = 승인)
-  | 'imweb_return_completed';  // IW-반품완료 (환불 안내 겸)
+  | 'imweb_return_completed'   // IW-반품완료 (환불 안내 겸)
+  | 'imweb_exchange_requested' // IW-교환접수 (고객 요청만) — 2026-09-21
+  // 교환 출고 (2026-09-21) — 아임웹 주문 + 오프라인 판매 공통
+  | 'exchange_shipped';        // TMS-교환발송 (교환 출고 송장 발행 시 · 송장번호 포함)
 
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
@@ -210,7 +219,9 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   // 반품·교환수거
   return_received: 'RETURN_RECEIVED',
   return_inbound: 'RETURN_INBOUND',
-  // 아임웹 주문 취소·반품
+  exchange_shipped: 'EXCHANGE_SHIPPED',
+  // 아임웹 주문 취소·반품·교환
+  imweb_exchange_requested: 'IMWEB_EXCHANGE_REQUESTED',
   imweb_cancel_requested: 'IMWEB_CANCEL_REQUESTED',
   imweb_cancel_completed: 'IMWEB_CANCEL_COMPLETED',
   imweb_return_requested: 'IMWEB_RETURN_REQUESTED',
@@ -264,6 +275,7 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     // 아임웹 주문 취소·반품 요청(고객) — 사장님이 아임웹에서 승인/거절 처리해야 함 (2026-09-14)
     imweb_cancel_requested: { title: '아임웹 주문 취소 요청', body: `${payload.name}님 취소 요청 · 아임웹에서 승인/거절 처리`, url: '/orders' },
     imweb_return_requested: { title: '아임웹 주문 반품 요청', body: `${payload.name}님 반품 요청 · 아임웹에서 승인/거절 처리`, url: '/orders' },
+    imweb_exchange_requested: { title: '아임웹 주문 교환 요청', body: `${payload.name}님 교환 요청 · 아임웹에서 승인/거절 처리`, url: '/orders' },
   };
   const pushCfg = PUSH_CONFIG[payload.template];
   if (pushCfg) {

@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
 import { getNextInvoice, bookShipment } from '@/lib/lotte/alps-client';
+import { sendNotification } from '@/lib/notification/make-webhook';
 
 /**
  * POST /api/orders/[id]/exchange-ship — 교환 새 제품 발송 송장 발행 (롯데, 수령지 기준)
@@ -56,6 +57,29 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       console.error('[orders/exchange-ship] DB 저장 실패(ALPS는 성공):', invoiceNumber, error);
       return NextResponse.json({ success: true, warning: 'DB 저장 실패 — 송장은 발급됨(ALPS 확인)', invoiceNumber });
     }
+
+    /* 고객 알림톡 — 교환품 발송 안내 (2026-09-21 신규)
+       🚨 교환 출고 경로가 **두 곳**이다. 둘 다 넣지 않으면 한쪽만 조용히 무발송이 된다.
+          · 여기(주문 화면 [교환품 송장])  · `/api/returns/[id]/ship`(반품·교환 화면)
+       위 update 성공 뒤(= 송장번호 확정)에만 부르고, 이미 발행된 건은 위에서 400 으로 끊기므로 건당 1회. */
+    if (receiverTel) {
+      after(async () => {
+        try {
+          await sendNotification({
+            template: 'exchange_shipped',
+            phone: String(receiverTel),
+            name: String(receiverName || ''),
+            data: {
+              // 🚨 셋 중 하나라도 비면 문자 대체 + 버튼 소멸 → 폴백을 둔다
+              product_name: String(o.exchange_goods || '교환 상품'),
+              courier: '롯데택배',          // ALPS 발행분은 항상 롯데
+              tracking: invoiceNumber,
+            },
+          });
+        } catch (e) { console.error('[orders/exchange-ship] 교환발송 알림톡 실패(송장은 발행됨):', invoiceNumber, e); }
+      });
+    }
+
     return NextResponse.json({ success: true, invoiceNumber });
   } catch (err) {
     console.error('[orders/exchange-ship]', err);

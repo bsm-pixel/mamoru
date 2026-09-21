@@ -26,6 +26,9 @@ const CLAIM_ACTIONS: Record<string, ClaimAction> = {
   ORDER_RETURN_REQUEST: { kind: 'notify', template: 'imweb_return_requested', customerRequestOnly: true },
   ORDER_RETURN_COLLECTING: { kind: 'notify', template: 'imweb_return_approved' },
   ORDER_RETURN_COMPLETE: { kind: 'notify', template: 'imweb_return_completed' },
+  // 교환 접수 (2026-09-21) — 교환 '출고'는 여기가 아니다: 출고 송장은 TMS 가 직접 발행하므로
+  // `/api/returns/[id]/ship` 에서 exchange_shipped 로 나간다(송장번호 포함)
+  ORDER_EXCHANGE_REQUEST: { kind: 'notify', template: 'imweb_exchange_requested', customerRequestOnly: true },
   ORDER_CANCEL_REJECT: { kind: 'push', label: '취소 거절' },
   ORDER_RETURN_REJECT: { kind: 'push', label: '반품 거절' },
 };
@@ -68,7 +71,10 @@ export async function handleImwebClaimEvent({ eventId, eventType, orderNo, paylo
 
   // 1) 관리자가 직접 처리한 취소·반품은 '접수' 알림 생략
   if (action.kind === 'notify' && action.customerRequestOnly) {
-    const info = obj(section?.cancelInfo) || obj(section?.returnInfo);
+    // 교환은 exchangeInfo 로 올 것으로 보이나 실측 전이다. 못 찾으면 info 가 undefined →
+    // isCustomerRequest 판정을 건너뛰고 **발송한다**(fail-open). 관리자 직접 교환건까지 나갈 수는 있어도
+    // 고객이 신청한 건을 막지는 않는다 — 알림 누락보다 중복이 낫다는 기존 판단과 같다.
+    const info = obj(section?.cancelInfo) || obj(section?.returnInfo) || obj(section?.exchangeInfo);
     if (str(info?.isCustomerRequest).toUpperCase() === 'N') return { outcome: 'admin_initiated', section_no: sectionNo };
   }
 
