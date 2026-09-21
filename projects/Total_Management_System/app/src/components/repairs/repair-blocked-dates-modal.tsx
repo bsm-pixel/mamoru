@@ -23,7 +23,8 @@ interface Props {
   onClose: () => void;
 }
 
-/** 수거 불가일(우체국 픽업 중지 등) 관리 — 고객 접수·수거일 변경 달력에서 선택 차단 */
+/** 수거 불가일(우체국 픽업 중지 등) 관리 — 고객 접수 폼 '방문수거' 달력에서만 선택 차단.
+ *  직접방문(매장·당일수리)·상담 매장방문은 달력관리(휴무일·시간차단)를 따르며 여기 영향 없음 (2026-09-21) */
 export function RepairBlockedDatesModal({ onClose }: Props) {
   const saved = useSetting<BlockedRange[]>(KEY, []);
   const update = useUpdateSettings();
@@ -50,8 +51,8 @@ export function RepairBlockedDatesModal({ onClose }: Props) {
     <Modal open onClose={onClose} title="수거 불가일 지정" className="max-w-lg">
       <div className="space-y-4">
         <p className="text-xs text-neutral-500 leading-relaxed">
-          여기 지정한 기간은 <b>고객 접수 폼 · 수거일 변경</b> 달력에서 <b>선택 불가</b>로 표시됩니다.
-          (예: 명절 우체국 픽업 중지)
+          여기 지정한 기간은 고객 접수 폼의 <b>방문수거</b> 달력에서만 <b>선택 불가</b>로 표시됩니다.
+          (예: 명절 우체국 픽업 중지) · <b>직접방문(매장)</b>·상담 예약은 달력관리를 따르며 영향 없음
         </p>
 
         {/* 현재 목록 */}
