@@ -345,7 +345,7 @@ textarea.rsvp-input{resize:none; line-height:1.6}
 /* 하단 띠: 고정(sticky) 아님 — 페이지 맨 끝에 자연스럽게 위치 */
 .footer-bar{background:var(--ivory);
   border-top:1px solid var(--gold-soft);
-  display:grid; grid-template-columns:repeat(4,minmax(0,1fr));   /* minmax(0,·)=초협폭에서도 4열 유지(오버플로 방지) */
+  display:grid; grid-template-columns:repeat(5,minmax(0,1fr));   /* 5열(문자 공유 추가) — minmax(0,·)=초협폭에서도 열 유지(오버플로 방지) */
   padding-bottom:env(safe-area-inset-bottom)}
 .footer-bar button{display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:8px;
   padding:14px 2px 15px; background:none; border:0; color:var(--ink); cursor:pointer; transition:transform .18s ease}
@@ -575,6 +575,10 @@ body[style*="hidden"] .fsz{opacity:0; pointer-events:none}
     <button onclick="copyLink()">
       <span class="fic"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 13.5a4 4 0 0 0 5.7.3l3-3a4 4 0 1 0-5.66-5.66L11 6.4"/><path d="M14.5 10.5a4 4 0 0 0-5.7-.3l-3 3a4 4 0 1 0 5.66 5.66L12 18.1"/></svg></span>
       <span class="ft">링크<br>복사</span>
+    </button>
+    <button onclick="shareSms()"><!-- 문자 공유: 문자앱에 문구+링크 자동입력 -->
+      <span class="fic"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="13" rx="2.5"/><path d="M8 17.5l-2.5 3v-3"/><path d="M7.5 9.5h9M7.5 12.5h6"/></svg></span>
+      <span class="ft">문자<br>공유</span>
     </button>
     <button onclick="shareKakao()">
       <span class="fic"><svg class="fi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5C7.3 4.5 3.5 7.5 3.5 11.2c0 2.4 1.6 4.5 4 5.7-.2.7-.7 2.3-.8 2.6-.1.3.1.5.4.3.3-.2 2.4-1.6 3.3-2.2.5.1 1.1.1 1.6.1 4.7 0 8.5-3 8.5-6.6S16.7 4.5 12 4.5z"/></svg></span>
@@ -1016,6 +1020,16 @@ function addCalendar(which){
   }
 }
 function copyLink(){ doCopy(location.href, '링크가 복사되었습니다'); }
+// 문자 공유 — 본문 구분자가 iOS 'sms:&body=' / 안드로이드 'sms:?body=' 로 달라 분기. PC는 문자앱 없음 → 링크 복사
+function shareSms(){
+  const url='https://page.mamoru.kr/BSMKHJ/';   // 정식 주소 고정(카톡 경유 시 붙는 추적 파라미터 제외)
+  const body=['백성민 ♥ 김혜정 결혼합니다', CONFIG.event.dateText||'', 'CN천년부페웨딩홀 주안점', url].join('\n');
+  const ua=navigator.userAgent;
+  const isIOS=/iPhone|iPad|iPod/i.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  const isAndroid=/Android/i.test(ua);
+  if(!isIOS && !isAndroid){ copyLink(); return; }
+  location.href=(isIOS ? 'sms:&body=' : 'sms:?body=') + encodeURIComponent(body);
+}
 function shareKakao(){
   const e=CONFIG.event, url=location.href, title='백성민 ♥ 김혜정 결혼합니다';
   try{
