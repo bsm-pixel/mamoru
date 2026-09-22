@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SuggestTimeModal } from './suggest-time-modal';
 import { ManualConfirmModal } from './manual-confirm-modal';
+import { FieldDelayAction } from './field-delay-action';
 import { formatPhone, formatDate, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
 import { Calendar, MapPin, Phone, User, Clock, FileSignature, ShoppingCart, CheckCircle2, CheckCircle } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -272,6 +273,10 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
               <CheckCircle size={14} />
               {c.status === 'confirmed' ? '수동 일정 변경' : '수동 일정 확정'}
             </Button>
+          )}
+          {/* 출장 도착 지연 안내 (2026-09-22 복원) — 확정 출장만, 알림톡 field_delayed */}
+          {c.status === 'confirmed' && c.consultation_type === 'field_request' && (
+            <FieldDelayAction consultationId={c.id} visitTime={c.visit_time} className="w-full" />
           )}
           {/* 확정 → 완료 */}
           {c.status === 'confirmed' && (

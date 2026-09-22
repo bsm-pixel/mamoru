@@ -40,8 +40,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '출장 예약만 지연 안내 가능합니다' }, { status: 400 });
     }
 
-    // 도착 예정 시간 계산
-    const [h, m] = (c.visit_time || '00:00').split(':').map(Number);
+    // 도착 예정 시간 계산 — 방문 시간이 없으면 '원래 시간'이 비어 알림톡이 문자로 대체되므로 막는다
+    const visitTime = String(c.visit_time || '').slice(0, 5);
+    if (!/^\d{2}:\d{2}$/.test(visitTime)) {
+      return NextResponse.json({ error: '방문 시간이 없어 지연 안내를 보낼 수 없습니다' }, { status: 400 });
+    }
+    const [h, m] = visitTime.split(':').map(Number);
     const revisedMin = h * 60 + m + delayMin;
     const revisedH = String(Math.floor(revisedMin / 60)).padStart(2, '0');
     const revisedM = String(revisedMin % 60).padStart(2, '0');
@@ -49,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     // 알림톡 발송 — field_delayed
     const phoneNorm = (c.phone || '').replace(/\D/g, '');
-    await sendNotification({
+    const sent = await sendNotification({
       template: 'field_delayed',
       phone: phoneNorm,
       name: c.name,
@@ -59,11 +63,18 @@ export async function POST(req: NextRequest) {
         phone: phoneNorm,
         type: '출장 요청',
         date: c.visit_date || '',
-        time: c.visit_time || '',
+        time: visitTime,
+        // 🚨 솔라피 템플릿 변수는 #{visit_time} — 'time' 만 보내면 변수 누락으로 문자 대체됐다 (2026-09-22 수정)
+        visit_time: visitTime,
         delay_min: String(delayMin),
         visit_time_revised: visitTimeRevised,
       },
     });
+
+    // 발송 실패(웹훅 미설정·Make 오류)는 성공으로 숨기지 않는다
+    if (!sent.success) {
+      return NextResponse.json({ error: `알림톡 발송 실패: ${sent.error || '알 수 없음'}` }, { status: 502 });
+    }
 
     // 이력 기록
     await db.from('consultation_history').insert({

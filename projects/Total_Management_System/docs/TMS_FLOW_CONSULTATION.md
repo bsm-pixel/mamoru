@@ -520,6 +520,8 @@ admin-create / resched는 호출하던 `syncConsultationToCalendar`를 cancel AP
        또는 다른 일정 요청 → [status: reschedule_requested] + 관리자 이메일
   → [리마인드] D-1(24H) + D-0(2H) 자동 알림톡
   → (관리자) 출장 지연 시 → 지연안내 알림톡 (Vercel 직접)
+     · 버튼: 상세 패널(확정 출장) + 모바일 '오늘 출장' 카드 [지연 안내] → 5~60분 선택·도착예정 미리보기 (`field-delay-action.tsx`, 2026-09-22 복원 — R1~R7 리모델서 UI 누락됐었음)
+     · 페이로드 `visit_time`·`visit_time_revised`·`delay_min` = 솔라피 변수명 그대로 (예전엔 `time` 만 보내 문자 대체될 구조였음) · 발송 실패는 502 로 표시
   → 출장 완료 → [status: completed]
   → 리뷰 요청 알림톡
 ```

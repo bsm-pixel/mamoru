@@ -9,6 +9,7 @@ import { useConsultations } from '@/hooks/use-consultations';
 import { formatPhone } from '@/lib/utils/format';
 import { Navigation, Copy, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
+import { FieldDelayAction } from './field-delay-action';
 
 /** 날짜 포맷: YYYY-MM-DD (KST 로컬 — UTC 슬라이스 시 자정 전후 off-by-one 방지) */
 function toDateStr(d: Date): string {
@@ -163,6 +164,8 @@ export function MobileFieldDayView({ onSelect }: MobileFieldDayViewProps = {}) {
                   {copiedId === c.id ? <Check size={14} /> : <Copy size={14} />}
                   {copiedId === c.id ? '복사됨' : '주소복사'}
                 </Button>
+                {/* 이동 중 원탭 지연 안내 (2026-09-22) */}
+                <FieldDelayAction consultationId={c.id} visitTime={c.visit_time} className="flex-1" compact />
               </div>
             </Card>
           ))}
