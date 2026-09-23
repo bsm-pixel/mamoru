@@ -20,7 +20,7 @@ if (-not (Test-Path $dst)) { New-Item -ItemType Directory -Path $dst -Force | Ou
 
 $sw = [Diagnostics.Stopwatch]::StartNew()
 # /MIR 미러 · /XD 폴더 제외 · /R:1 /W:1 재시도 최소 · /NFL /NDL 파일목록 생략(로그 폭주 방지)
-robocopy $src $dst /MIR /XD '.git' 'node_modules' '.next' '__pycache__' '.vercel' /XF 'desktop.ini' `
+robocopy $src $dst /MIR /XD '.git' 'node_modules' '.next' '__pycache__' '.vercel' /XF 'desktop.ini' '_마지막미러.txt' `
   /R:1 /W:1 /NFL /NDL /NJH /NP | Out-Null
 $code = $LASTEXITCODE
 $sw.Stop()
