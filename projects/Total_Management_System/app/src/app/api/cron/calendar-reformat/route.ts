@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { syncConsultationToCalendar, loadFormatSettings } from '@/lib/google/calendar-sync';
 import { syncRepairToCalendar } from '@/lib/google/repair-calendar-sync';
-import { formatConsultationToEvent, formatRepairToEvent, formatShippingTodoToEvent } from '@/lib/google/event-formatter';
+import { formatConsultationToEvent, formatRepairToEvent, formatShippingTodoToTask } from '@/lib/google/event-formatter';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app-eta-sandy-75.vercel.app';
 
@@ -77,10 +77,12 @@ export async function GET(req: NextRequest) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       repairs: (rRows || []).map((r: any) => show(formatRepairToEvent(r, settings, BASE_URL))),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      shippingTodos: (dRows || []).map((d: any) => show(formatShippingTodoToEvent({
+      // 송장 대기건은 '일정'이 아니라 구글 할 일(Tasks) 로 나간다 — 제목·메모만 확인
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      shippingTodos: (dRows || []).map((d: any) => formatShippingTodoToTask({
         kind: 'delivery', who: d.customer_name || '거래처', docNo: d.dl_number, amount: d.total_amount,
-        createdAt: d.created_at, date: todayKST, nextDate: todayKST,
-      }, BASE_URL))),
+        createdAt: d.created_at,
+      })),
     });
   }
 

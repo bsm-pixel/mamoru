@@ -29,6 +29,8 @@ export const SCOPES = [
   'email',
   'profile',
   'https://www.googleapis.com/auth/calendar.events',
+  // 2026-09-24: 송장 미생성 '할 일'을 구글 할 일(Tasks)로 — 스코프 추가분이라 재연결 1회 필요
+  'https://www.googleapis.com/auth/tasks',
 ];
 
 /** 새 OAuth2 클라이언트 (토큰 없음 — 인가 단계에서 사용) */

@@ -1,8 +1,9 @@
 /**
- * 송장 미생성 건 → Google Calendar '할 일' 종일 일정 (2026-09-24 신규)
+ * 송장 미생성 건 → Google **Tasks(할 일)** (2026-09-24)
  *
  * 상담(calendar-sync.ts)·복원수리(repair-calendar-sync.ts)와 같은 패턴.
- * 다른 점: 고객 약속이 아니라 **사장님 업무 할 일**이라 시간이 없다 → 종일 일정.
+ * 고객 약속이 아니라 **처리해야 할 일**이다 → 일정이 아니라 할 일(체크로 끝낼 수 있음).
+ * 캘린더 '종일 일정'으로 넣던 최초 구현은 체크가 안 돼 폐기(09-24). 남은 일정은 자동 정리한다.
  *
  * 대상 (실데이터로 기준 확정 — 2026-09-24 조회)
  *   · 판매 offline_sales : delivery_method='shipping' AND invoice_number IS NULL
@@ -15,16 +16,17 @@
  *   · since(=calendar.shipping_todo_since) 이후 등록분만 — 옛 데이터 소급 금지
  *   · 송장 생성·출고·취소되면 다음 정리 때 일정이 사라진다 (경로마다 손대지 않고 여기서 일괄)
  *
- * 이벤트 id 보관: system_settings `calendar.shipping_todo_events` = { "sale:<id>": "<eventId>" }
+ * 할 일 id 보관: system_settings `calendar.shipping_todo_tasks` = { "sale:<id>": "<taskId>" }
  *   컬럼을 안 쓴 이유 — 마이그레이션 없이 시작하기 위함. 쓰는 쪽이 이 크론 하나뿐이라 경합 없음.
  */
 
 import { createServiceClient } from '@/lib/supabase/server';
-import { createCalendarEvent, deleteCalendarEvent } from './calendar-client';
-import { formatShippingTodoToEvent } from './event-formatter';
+import { deleteCalendarEvent } from './calendar-client';
+import { createTask, deleteTask } from './tasks-client';
+import { formatShippingTodoToTask } from './event-formatter';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app-eta-sandy-75.vercel.app';
-const MAP_KEY = 'calendar.shipping_todo_events';
+const MAP_KEY = 'calendar.shipping_todo_tasks';              // { "sale:<id>": "<taskId>" }
+const LEGACY_EVENT_MAP_KEY = 'calendar.shipping_todo_events'; // 09-24 이전: 캘린더 '일정'으로 넣던 시절 — 정리 후 비움
 const SINCE_KEY = 'calendar.shipping_todo_since';
 const LAST_RUN_KEY = 'calendar.shipping_todo_last_run';   // 크론이 실제로 돌고 있는지 확인용(무소식이면 크론 미등록)
 const SINCE_DEFAULT = '2026-09-24';   // 기능 시작일 — 이전 등록분은 올리지 않는다
@@ -54,6 +56,8 @@ export interface SweepResult {
   deleted: string[];
   pending: string[];    // 대상이지만 아직 '다음 날'이 안 된 건
   dryRun: boolean;
+  /** 토큰에 tasks 스코프가 없음 → TMS 설정에서 구글 재연결 필요 */
+  needsReauth?: boolean;
   error?: string;
 }
 
@@ -73,7 +77,7 @@ export async function sweepShippingTodos(opts: { create: boolean; dryRun?: boole
     const { data: settingRows } = await dbAny
       .from('system_settings')
       .select('key, value')
-      .in('key', [MAP_KEY, SINCE_KEY]);
+      .in('key', [MAP_KEY, SINCE_KEY, LEGACY_EVENT_MAP_KEY]);
     const raw: Record<string, string> = {};
     (settingRows || []).forEach((r: { key: string; value: string | null }) => {
       if (r.value != null) raw[r.key] = String(r.value);
@@ -85,10 +89,10 @@ export async function sweepShippingTodos(opts: { create: boolean; dryRun?: boole
         return o && typeof o === 'object' && !Array.isArray(o) ? o : {};
       } catch { return {}; }
     };
-    const eventMap = parse(raw[MAP_KEY]);
+    const taskMap = parse(raw[MAP_KEY]);
+    const legacyEvents = parse(raw[LEGACY_EVENT_MAP_KEY]);
     const since = (raw[SINCE_KEY] || SINCE_DEFAULT).replace(/^"|"$/g, '').slice(0, 10);
     const today = /^\d{4}-\d{2}-\d{2}$/.test(opts.asOf || '') ? (opts.asOf as string) : kstDate();
-    const tomorrow = kstDate(new Date(new Date(`${today}T00:00:00+09:00`).getTime() + 24 * 60 * 60 * 1000));
 
     // 2) 지금 '송장 대기'인 건 수집
     const pendings: Pending[] = [];
@@ -134,34 +138,50 @@ export async function sweepShippingTodos(opts: { create: boolean; dryRun?: boole
     const pendingKeys = new Set(pendings.map((p) => p.key));
     let mapChanged = false;
 
-    // 3) 정리 — 더는 대기가 아닌 건(송장 생성·출고·취소·완료)의 일정 삭제
-    for (const [key, eventId] of Object.entries(eventMap)) {
+    // 3) 정리 — 더는 대기가 아닌 건(송장 생성·출고·취소·완료)의 할 일 삭제
+    for (const [key, taskId] of Object.entries(taskMap)) {
       if (pendingKeys.has(key)) continue;
       if (!opts.dryRun) {
-        const res = await deleteCalendarEvent({ eventId });
-        // 404/410(이미 지워짐)도 맵에서는 제거 — 남겨두면 영영 안 지워진다
-        if (!res.ok && !/\b(404|410|notFound|deleted)\b/i.test(res.error || '')) continue;
-        delete eventMap[key];
+        const res = await deleteTask(String(taskId));   // 이미 지워졌으면 ok 로 돌아온다
+        if (!res.ok) continue;
+        delete taskMap[key];
         mapChanged = true;
       }
       result.deleted.push(key);
     }
 
-    // 4) 생성 — 등록 '다음 날'부터, 아직 일정이 없는 건만
+    // 3-b) 옛 방식(캘린더 종일 일정)으로 남은 것 정리 — 같은 건이 '일정'과 '할 일' 둘로 보이지 않게 (09-24 전환)
+    if (!opts.dryRun && Object.keys(legacyEvents).length > 0) {
+      let legacyChanged = false;
+      for (const [key, eventId] of Object.entries(legacyEvents)) {
+        const res = await deleteCalendarEvent({ eventId: String(eventId) });
+        if (!res.ok && !/\b(404|410|notFound|deleted)\b/i.test(res.error || '')) continue;
+        delete legacyEvents[key];
+        legacyChanged = true;
+        result.deleted.push(`${key}(옛 일정)`);
+      }
+      if (legacyChanged) {
+        await dbAny.from('system_settings').upsert(
+          { key: LEGACY_EVENT_MAP_KEY, value: JSON.stringify(legacyEvents), updated_at: new Date().toISOString() },
+          { onConflict: 'key' },
+        );
+      }
+    }
+
+    // 4) 생성 — 등록 '다음 날'부터, 아직 할 일이 없는 건만
     for (const p of pendings) {
-      if (eventMap[p.key]) continue;
+      if (taskMap[p.key]) continue;
       if (p.createdDate >= today) { result.pending.push(p.key); continue; }   // 당일 등록분은 내일 아침에
       if (!opts.create) continue;
       if (!opts.dryRun) {
-        const res = await createCalendarEvent({
-          // 제목·본문 규칙은 상담/수리와 같은 곳(event-formatter)에서 관리 — 형식이 갈라지지 않게
-          event: formatShippingTodoToEvent(
-            { kind: p.kind, who: p.who, docNo: p.docNo, amount: p.amount, createdAt: p.createdAt, date: today, nextDate: tomorrow },
-            BASE_URL,
-          ),
-        });
-        if (!res.ok || !res.eventId) continue;   // 미연결·오류는 조용히 — 다음 실행에서 재시도
-        eventMap[p.key] = res.eventId;
+        const { title, notes } = formatShippingTodoToTask(p);
+        const res = await createTask({ title, notes, due: today });
+        if (!res.ok || !res.taskId) {
+          // 스코프 미승인이면 조용히 실패해선 안 된다 — 설정에서 구글 재연결이 필요하다는 뜻
+          if (res.needsReauth) result.needsReauth = true;
+          continue;
+        }
+        taskMap[p.key] = res.taskId;
         mapChanged = true;
       }
       result.created.push(p.key);
@@ -178,7 +198,7 @@ export async function sweepShippingTodos(opts: { create: boolean; dryRun?: boole
     // 6) 맵 저장
     if (mapChanged && !opts.dryRun) {
       await dbAny.from('system_settings').upsert(
-        { key: MAP_KEY, value: JSON.stringify(eventMap), updated_at: new Date().toISOString() },
+        { key: MAP_KEY, value: JSON.stringify(taskMap), updated_at: new Date().toISOString() },
         { onConflict: 'key' },
       );
     }

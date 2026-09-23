@@ -6,6 +6,8 @@
 import type { calendar_v3 } from 'googleapis';
 import { SCHEDULE_COLORS } from '@/lib/schedule/colors';
 
+const BASE_URL_FOR_TASK = process.env.NEXT_PUBLIC_APP_URL || 'https://app-eta-sandy-75.vercel.app';
+
 export interface ConsultationForCalendar {
   id: string;
   name: string | null;
@@ -286,35 +288,26 @@ export function formatRepairToEvent(
   return event;
 }
 
+
 /**
- * 송장 미생성 '할 일' → 종일 이벤트 (2026-09-24)
- * 같은 제목·본문 규칙을 따른다: `송장 생성 · 이름` / 본문 3줄 이내.
+ * 송장 미생성 → 구글 **할 일(Tasks)** 제목·메모 (2026-09-24)
+ *
+ * 일정이 아니라 할 일이다 — 체크(○→✓)로 끝낼 수 있어야 '남은 일'이 분명해진다.
+ * 제목 규칙은 일정과 같다: `송장 생성 · 이름` / 메모 3줄(문서번호·금액 / 등록일 / TMS 링크).
  */
-export function formatShippingTodoToEvent(t: {
+export function formatShippingTodoToTask(t: {
   kind: 'sale' | 'delivery';
   who: string;
   docNo: string | null;
   amount: number | null;
   createdAt: string | null;
-  date: string;        // 표시할 날짜(KST, 종일)
-  nextDate: string;    // 종료일(배타적)
-}, baseUrl: string): calendar_v3.Schema$Event {
+}): { title: string; notes: string } {
   const isSale = t.kind === 'sale';
-  const summary = `${isSale ? '송장 생성' : '납품 출고'} · ${t.who}`;
-  const description = buildDescription([
-    [t.docNo || null, t.amount ? `${Number(t.amount).toLocaleString('ko-KR')}원` : null]
-      .filter(Boolean).join(' · ') || null,
+  const notes = [
+    [t.docNo || null, t.amount ? `${Number(t.amount).toLocaleString('ko-KR')}원` : null].filter(Boolean).join(' · '),
     t.createdAt ? `등록 ${shortDateTimeKR(t.createdAt)} · 송장 없음` : '송장 없음',
-  ], baseUrl, isSale ? '/sales' : '/deliveries');
+    `${BASE_URL_FOR_TASK}${isSale ? '/sales' : '/deliveries'}`,
+  ].filter(Boolean).join('\n');
 
-  return {
-    summary,
-    description,
-    start: { date: t.date },
-    end: { date: t.nextDate },          // 구글 종일 일정의 end.date 는 배타적
-    colorId: '8',                        // Graphite — 예약(초록·보라·주황)과 구분되는 '업무'
-    transparency: 'transparent',         // 한가함 — 예약 슬롯을 막지 않는다
-    reminders: { useDefault: false, overrides: [] },
-    extendedProperties: { private: { mamoru_type: 'shipping_todo', mamoru_ref: `${t.kind}:${t.docNo || ''}` } },
-  };
+  return { title: `${isSale ? '송장 생성' : '납품 출고'} · ${t.who}`, notes };
 }

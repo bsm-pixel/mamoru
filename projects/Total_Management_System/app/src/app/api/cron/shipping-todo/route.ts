@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sweepShippingTodos, kstHour } from '@/lib/google/shipping-todo-sync';
+import { probeTasks } from '@/lib/google/tasks-client';
 
 const CRON_SECRET = process.env.CRON_SECRET || 'mamoru-tms-cron-2026';
 const CREATE_HOUR_KST = 8;   // 아침 8시에만 '할 일' 생성 — 정리(삭제)는 매시간
@@ -12,7 +13,8 @@ const CREATE_HOUR_KST = 8;   // 아침 8시에만 '할 일' 생성 — 정리(�
  *   · 정리는 자주 돌아야 한다 — 송장을 만들자마자 캘린더에서 사라져야 믿고 쓴다 (최대 1시간 지연)
  *   판매/납품 API 각각에 삭제 훅을 심지 않고 여기서 일괄 처리 → 경로 누락으로 유령 일정이 남는 일이 없다
  *
- * 수동 확인: ?dry=1 (캘린더를 건드리지 않고 대상만 반환) · ?force=1 (시각 무시하고 생성) · ?asOf=YYYY-MM-DD (기준일 대체)
+ * 수동 확인: ?dry=1 (구글을 건드리지 않고 대상만 반환) · ?force=1 (시각 무시하고 생성) · ?asOf=YYYY-MM-DD (기준일 대체)
+ *          ?probe=1 (구글 할 일 권한이 살아있는지만 확인 — 재연결 필요 여부 판별)
  */
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
@@ -21,6 +23,7 @@ export async function GET(req: NextRequest) {
   }
 
   const sp = req.nextUrl.searchParams;
+  if (sp.get('probe') === '1') return NextResponse.json(await probeTasks());
   const dryRun = sp.get('dry') === '1';
   const create = sp.get('force') === '1' || kstHour() === CREATE_HOUR_KST;
 
