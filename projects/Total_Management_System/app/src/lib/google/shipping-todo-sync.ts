@@ -26,6 +26,7 @@ import { formatShippingTodoToEvent } from './event-formatter';
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app-eta-sandy-75.vercel.app';
 const MAP_KEY = 'calendar.shipping_todo_events';
 const SINCE_KEY = 'calendar.shipping_todo_since';
+const LAST_RUN_KEY = 'calendar.shipping_todo_last_run';   // 크론이 실제로 돌고 있는지 확인용(무소식이면 크론 미등록)
 const SINCE_DEFAULT = '2026-09-24';   // 기능 시작일 — 이전 등록분은 올리지 않는다
 
 /** KST 기준 YYYY-MM-DD */
@@ -166,7 +167,15 @@ export async function sweepShippingTodos(opts: { create: boolean; dryRun?: boole
       result.created.push(p.key);
     }
 
-    // 5) 맵 저장
+    // 5) 실행 흔적 — 할 일이 0건이면 아무 것도 안 바뀌어서 '크론이 도는지' 알 방법이 없다
+    if (!opts.dryRun) {
+      await dbAny.from('system_settings').upsert(
+        { key: LAST_RUN_KEY, value: `${new Date().toISOString()} created=${result.created.length} deleted=${result.deleted.length} create=${opts.create}`, updated_at: new Date().toISOString() },
+        { onConflict: 'key' },
+      );
+    }
+
+    // 6) 맵 저장
     if (mapChanged && !opts.dryRun) {
       await dbAny.from('system_settings').upsert(
         { key: MAP_KEY, value: JSON.stringify(eventMap), updated_at: new Date().toISOString() },
