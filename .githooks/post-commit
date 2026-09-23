@@ -1,0 +1,6 @@
+#!/bin/sh
+# 커밋 직후 작업 폴더를 구글 드라이브로 미러 (2026-09-24)
+#   · 실패해도 커밋은 그대로 둔다(항상 exit 0)
+#   · 새 PC 에서는 한 번만:  git config core.hooksPath .githooks
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(git rev-parse --show-toplevel)/scripts/mirror-to-drive.ps1" || true
+exit 0
