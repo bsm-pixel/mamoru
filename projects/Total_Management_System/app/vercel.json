@@ -24,6 +24,10 @@
     {
       "path": "/api/cron/repair-visit-remind",
       "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/shipping-todo",
+      "schedule": "0 * * * *"
     }
   ]
 }
