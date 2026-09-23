@@ -151,7 +151,7 @@ export function fireAndForgetSync(consultationId: string): void {
   });
 }
 
-async function loadFormatSettings(): Promise<EventFormatSettings> {
+export async function loadFormatSettings(): Promise<EventFormatSettings> {
   const db = createServiceClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dbAny = db as any;

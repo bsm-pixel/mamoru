@@ -21,12 +21,12 @@
 
 import { createServiceClient } from '@/lib/supabase/server';
 import { createCalendarEvent, deleteCalendarEvent } from './calendar-client';
+import { formatShippingTodoToEvent } from './event-formatter';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app-eta-sandy-75.vercel.app';
 const MAP_KEY = 'calendar.shipping_todo_events';
 const SINCE_KEY = 'calendar.shipping_todo_since';
 const SINCE_DEFAULT = '2026-09-24';   // 기능 시작일 — 이전 등록분은 올리지 않는다
-const COLOR_GRAPHITE = '8';           // 상담(초록·보라)·수리(주황)·수거(파랑)와 구분되는 회색
 
 /** KST 기준 YYYY-MM-DD */
 export function kstDate(d: Date = new Date()): string {
@@ -40,8 +40,11 @@ export function kstHour(d: Date = new Date()): number {
 
 interface Pending {
   key: string;          // sale:<id> | delivery:<id>
-  title: string;
-  description: string;
+  kind: 'sale' | 'delivery';
+  who: string;
+  docNo: string | null;
+  amount: number | null;
+  createdAt: string | null;
   createdDate: string;  // KST 등록일
 }
 
@@ -51,10 +54,6 @@ export interface SweepResult {
   pending: string[];    // 대상이지만 아직 '다음 날'이 안 된 건
   dryRun: boolean;
   error?: string;
-}
-
-function money(n: number | null): string {
-  return `${Number(n || 0).toLocaleString('ko-KR')}원`;
 }
 
 /**
@@ -103,8 +102,11 @@ export async function sweepShippingTodos(opts: { create: boolean; dryRun?: boole
     for (const s of sales || []) {
       pendings.push({
         key: `sale:${s.id}`,
-        title: `🚚 송장 생성 · ${s.customer_name || '고객'} (판매)`,
-        description: `${s.sale_number || ''} · ${money(s.total_amount)}\n배송 판매인데 송장이 아직 없습니다.\n${BASE_URL}/sales`,
+        kind: 'sale',
+        who: s.customer_name || '고객',
+        docNo: s.sale_number || null,
+        amount: s.total_amount ?? null,
+        createdAt: s.created_at || null,
         createdDate: kstDate(new Date(s.created_at)),
       });
     }
@@ -119,8 +121,11 @@ export async function sweepShippingTodos(opts: { create: boolean; dryRun?: boole
     for (const d of dels || []) {
       pendings.push({
         key: `delivery:${d.id}`,
-        title: `🚚 납품 출고 · ${d.customer_name || '거래처'} (B2B)`,
-        description: `${d.dl_number || ''} · ${money(d.total_amount)}\n납품확정 상태인데 송장이 아직 없습니다.\n${BASE_URL}/deliveries`,
+        kind: 'delivery',
+        who: d.customer_name || '거래처',
+        docNo: d.dl_number || null,
+        amount: d.total_amount ?? null,
+        createdAt: d.created_at || null,
         createdDate: kstDate(new Date(d.created_at)),
       });
     }
@@ -148,15 +153,11 @@ export async function sweepShippingTodos(opts: { create: boolean; dryRun?: boole
       if (!opts.create) continue;
       if (!opts.dryRun) {
         const res = await createCalendarEvent({
-          event: {
-            summary: p.title,
-            description: p.description,
-            start: { date: today },
-            end: { date: tomorrow },     // 구글 종일 일정의 end.date 는 '배타적' — 하루짜리는 다음 날을 넣는다
-            colorId: COLOR_GRAPHITE,
-            transparency: 'transparent', // 한가함 — 예약 슬롯을 막지 않는다
-            extendedProperties: { private: { mamoru_type: 'shipping_todo', ref: p.key } },
-          },
+          // 제목·본문 규칙은 상담/수리와 같은 곳(event-formatter)에서 관리 — 형식이 갈라지지 않게
+          event: formatShippingTodoToEvent(
+            { kind: p.kind, who: p.who, docNo: p.docNo, amount: p.amount, createdAt: p.createdAt, date: today, nextDate: tomorrow },
+            BASE_URL,
+          ),
         });
         if (!res.ok || !res.eventId) continue;   // 미연결·오류는 조용히 — 다음 실행에서 재시도
         eventMap[p.key] = res.eventId;

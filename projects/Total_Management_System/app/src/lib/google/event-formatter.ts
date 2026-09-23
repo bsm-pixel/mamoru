@@ -36,18 +36,6 @@ export interface EventFormatSettings {
   duration_field_request?: number;
 }
 
-const STATUS_KR: Record<string, string> = {
-  confirmed: '확정',
-  reschedule_requested: '고객 변경 요청 중',
-  change_requested: '고객 변경 요청 중',
-  completed: '완료',
-};
-
-function getStatusPrefix(status: string): string {
-  if (status === 'reschedule_requested' || status === 'change_requested') return '⏳ ';
-  if (status === 'completed') return '✅ ';
-  return '';
-}
 
 function getColorId(type: string, status: string): string {
   // 색상 SSOT(lib/schedule/colors.ts) 참조 — 인앱 일정 달력과 동일 색
@@ -90,6 +78,24 @@ function formatDateKR(iso?: string | null): string {
   }
 }
 
+/**
+ * 제목에 쓸 지역 한 토막 — '서초구' · '일산동구'
+ * address_sigungu 는 실측 전부 NULL(2026-09-24) 이라 도로명 주소에서 뽑는다.
+ * '경기 고양시 일산동구 …' 처럼 시·구가 겹치면 더 좁은 쪽(구)을 쓴다.
+ */
+function shortRegion(c: ConsultationForCalendar): string {
+  if (c.address_sigungu) return c.address_sigungu;
+  const tokens = (c.address_road || '').trim().split(/\s+/).slice(0, 3);
+  const hits = tokens.filter((t) => /(시|군|구)$/.test(t));
+  return hits.length ? hits[hits.length - 1] : '';
+}
+
+/** 사람이 못 읽는 UUID 형태면 본문에 넣지 않는다 (상담번호가 UUID 인 건이 있음) */
+function readableId(id?: string | null): string | null {
+  if (!id) return null;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(id) ? null : id;
+}
+
 function buildFullAddress(c: ConsultationForCalendar): string {
   const road = (c.address_road || '').trim();
   const detail = (c.address_detail || '').trim();
@@ -103,12 +109,30 @@ function getDurationMin(type: string, settings: EventFormatSettings): number {
   return settings.duration_store_visit ?? settings.duration_min ?? 60;
 }
 
+/** 짧은 날짜 — '9/22 14:03' (KST) */
+function shortDateTimeKR(iso?: string | null): string {
+  const full = formatDateKR(iso);            // 'YYYY-MM-DD HH:MM'
+  if (!full || full.length < 16) return full;
+  return `${Number(full.slice(5, 7))}/${Number(full.slice(8, 10))} ${full.slice(11, 16)}`;
+}
+
+/**
+ * 설명 블록 표준 (2026-09-24 정리)
+ *   - 구분선(━)·항목마다 붙던 이모지·3줄 경고문 전부 제거. 캘린더에서 **읽을 게 아니라 확인할 것**만 남긴다.
+ *   - 순서 = 위계: ① 연락 ② 이 건의 내용 ③ 식별·출처 ④ TMS 링크
+ *   - 주소는 location 필드에 들어가므로 본문에서 반복하지 않는다(구글이 지도·길찾기로 띄워줌).
+ */
+function buildDescription(blocks: Array<string | null | undefined>, baseUrl: string, path: string): string {
+  const body = blocks.map((b) => (b || '').trim()).filter(Boolean);
+  body.push(`${baseUrl}${path}`);
+  return body.join('\n');
+}
+
 /**
  * Consultation → Calendar Event 변환
  *
- * @param c 상담 레코드
- * @param settings 매장/기본값 설정
- * @param baseUrl TMS 앱 베이스 URL (이벤트 설명의 링크용)
+ * 제목 규칙: `종류 · 이름 · 지역` — 한눈에 확인할 것만. 전화번호는 제목에서 뺀다(잘림 유발, 본문에 있음)
+ *            확인이 필요한 상태만 앞에 [변경요청] 을 붙인다.
  */
 export function formatConsultationToEvent(
   c: ConsultationForCalendar,
@@ -116,74 +140,35 @@ export function formatConsultationToEvent(
   baseUrl: string,
 ): calendar_v3.Schema$Event {
   const isField = c.consultation_type === 'field_request';
-  const typeLabel = isField ? '[출장]' : '[매장]';
-  const statusPrefix = getStatusPrefix(c.status);
-  const region = c.address_sigungu || '';
-  const regionLabel = isField && region ? ` · ${region}` : '';
-
-  const durMin = getDurationMin(c.consultation_type, settings);
+  const typeLabel = isField ? '출장' : '매장';
+  const region = shortRegion(c);
   const name = c.name || '고객';
   const phone = c.phone || '';
+  const durMin = getDurationMin(c.consultation_type, settings);
+  const needsAttention = c.status === 'reschedule_requested' || c.status === 'change_requested';
 
-  // 제목: [매장/출장] ⏳✅ 이름 · 지역 · 010-xxxx
-  const summary = `${typeLabel} ${statusPrefix}${name}${regionLabel}${phone ? ' · ' + phone : ''}`.trim();
+  const summary = [
+    needsAttention ? '[변경요청]' : '',
+    [typeLabel, name, isField && region ? region : ''].filter(Boolean).join(' · '),
+  ].filter(Boolean).join(' ');
 
-  // 위치
   const fullAddress = buildFullAddress(c);
   const location = isField ? fullAddress : settings.store_address || '';
 
-  // 설명 (Description) — 풍부한 정보 블록
-  const lines: string[] = [];
-  lines.push('━━━━━━━━━━━━━━━━━━━━━━');
-  lines.push(`🏷 상담 종류: ${isField ? '출장 요청' : '매장 방문'}`);
-  lines.push(`👤 고객명: ${name}`);
-  if (phone) lines.push(`📱 연락처: ${phone}`);
-  if (isField && fullAddress) lines.push(`📍 방문 주소: ${fullAddress}`);
-  if (!isField && settings.store_name) lines.push(`🏪 방문지: ${settings.store_name}`);
-  if (c.memo) lines.push(`💬 고객 메모: ${c.memo}`);
-  if (c.adminNote) lines.push(`📝 상담자 메모: ${c.adminNote}`);
-  if (isField) {
-    const before = settings.field_buffer_before ?? 90;
-    const after = settings.field_buffer_after ?? 90;
-    lines.push(`🚗 이동 버퍼: 앞 ${before}분 / 뒤 ${after}분 (매장 예약 자동 차단)`);
-  }
-  lines.push('━━━━━━━━━━━━━━━━━━━━━━');
-  lines.push(`📋 상태: ${STATUS_KR[c.status] || c.status}`);
-  if (c.unique_id) lines.push(`🆔 상담번호: ${c.unique_id}`);
-  if (c.created_at) lines.push(`📅 접수일시: ${formatDateKR(c.created_at)}`);
-
-  // 재요청 사유 (gas_raw에 저장됨)
   const reschedReason =
     c.gas_raw?.reschedule_reason ||
     c.gas_raw?.change_reason ||
     c.gas_raw?.rescheduleReason;
-  if ((c.status === 'reschedule_requested' || c.status === 'change_requested') && reschedReason) {
-    lines.push(`⚠️ 고객 변경 사유: ${reschedReason}`);
-  }
 
-  if (c.status === 'completed' && c.completed_at) {
-    lines.push(`✅ 완료 시각: ${formatDateKR(c.completed_at)}`);
-  }
+  const description = buildDescription([
+    phone,
+    needsAttention && reschedReason ? `변경 요청: ${reschedReason}` : null,
+    c.memo ? `고객 메모: ${c.memo}` : null,
+    c.adminNote ? `내 메모: ${c.adminNote}` : null,
+    [readableId(c.unique_id), c.created_at ? `접수 ${shortDateTimeKR(c.created_at)}` : null]
+      .filter(Boolean).join(' · ') || null,
+  ], baseUrl, `/consultations/${c.id}`);
 
-  lines.push('━━━━━━━━━━━━━━━━━━━━━━');
-  lines.push('');
-  lines.push('🔗 TMS 상세보기:');
-  lines.push(`${baseUrl}/consultations/${c.id}`);
-
-  if (phone) {
-    const phoneDigits = phone.replace(/\D/g, '');
-    lines.push('');
-    lines.push(`📞 바로 전화: tel:${phoneDigits}`);
-  }
-
-  lines.push('');
-  lines.push('⚠ 이 일정은 MAMORU TMS에서 자동 생성됩니다.');
-  lines.push('  캘린더에서 직접 수정하시면 TMS와 불일치가 발생합니다.');
-  lines.push('  변경·취소는 반드시 TMS에서 진행해 주세요.');
-
-  const description = lines.join('\n');
-
-  // 시작/종료 시간
   const startTime = c.visit_time && c.visit_time.match(/^\d{1,2}:\d{2}/) ? c.visit_time.slice(0, 5) : '10:00';
   const endTime = addMinutes(startTime, durMin);
   const visitDate = c.visit_date || '';
@@ -207,7 +192,7 @@ export function formatConsultationToEvent(
         mamoru_consultation_id: c.id,
         mamoru_consultation_type: c.consultation_type,
         mamoru_status: c.status,
-        mamoru_version: '1.0',
+        mamoru_version: '2.0',
       },
     },
   };
@@ -255,54 +240,22 @@ export function formatRepairToEvent(
 ): calendar_v3.Schema$Event {
   const name = r.name || '고객';
   const phone = r.phone || '';
-  const qty = (r.qty_mamoru || 0) + (r.qty_other || 0);
+  const qtyM = r.qty_mamoru || 0;
+  const qtyO = r.qty_other || 0;
+  const qty = qtyM + qtyO;
   const durMin = r.visit_duration_min || (qty >= 6 ? 60 : 30);
 
-  // 제목: [복원수리 직접방문] 고객명 · N자루 · 010-xxxx
-  const qtyLabel = qty > 0 ? ` · ${qty}자루` : '';
-  const summary = `[복원수리 직접방문] ${name}${qtyLabel}${phone ? ' · ' + phone : ''}`.trim();
+  // 제목: `수리 · 고객명 · N자루`
+  const summary = ['수리', name, qty > 0 ? `${qty}자루` : ''].filter(Boolean).join(' · ');
 
-  // 위치: 매장 (직접방문은 매장 워크인)
-  const location = settings.store_address || '';
+  const description = buildDescription([
+    phone,
+    qty > 0 ? `마모루 ${qtyM}자루 · 타사 ${qtyO}자루 · 예상 ${durMin}분` : `예상 ${durMin}분`,
+    r.memo ? `고객 메모: ${r.memo}` : null,
+    [r.as_id || null, r.created_at ? `접수 ${shortDateTimeKR(r.created_at)}` : null]
+      .filter(Boolean).join(' · ') || null,
+  ], baseUrl, `/repairs/${r.id}`);
 
-  // Description
-  const lines: string[] = [];
-  lines.push('━━━━━━━━━━━━━━━━━━━━━━');
-  lines.push('🔧 복원수리 (당일수리)');
-  lines.push(`👤 고객명: ${name}`);
-  if (phone) lines.push(`📱 연락처: ${phone}`);
-  if (settings.store_name) lines.push(`🏪 방문지: ${settings.store_name}`);
-  if (qty > 0) {
-    lines.push(`✂️ 가위 수량: 마모루 ${r.qty_mamoru || 0}자루 / 타사 ${r.qty_other || 0}자루 (총 ${qty}자루)`);
-  }
-  lines.push(`⏱ 예상 소요: ${durMin}분`);
-  if (r.memo) lines.push(`💬 고객 메모: ${r.memo}`);
-  lines.push('━━━━━━━━━━━━━━━━━━━━━━');
-  lines.push(`🆔 접수번호: ${r.as_id}`);
-  if (r.created_at) lines.push(`📅 접수일시: ${formatDateKR(r.created_at)}`);
-  if (r.status) {
-    const statusKr =
-      r.status === 'intake' ? '신규접수' :
-      r.status === 'completed' ? '완료' :
-      r.status === 'cancelled' ? '취소' :
-      r.status;
-    lines.push(`📋 상태: ${statusKr}`);
-  }
-  lines.push('━━━━━━━━━━━━━━━━━━━━━━');
-  lines.push('');
-  lines.push('🔗 TMS 상세보기:');
-  lines.push(`${baseUrl}/repairs/${r.id}`);
-  if (phone) {
-    const phoneDigits = phone.replace(/\D/g, '');
-    lines.push('');
-    lines.push(`📞 바로 전화: tel:${phoneDigits}`);
-  }
-  lines.push('');
-  lines.push('⚠ 이 일정은 MAMORU TMS에서 자동 생성됩니다.');
-  lines.push('  변경·취소는 반드시 TMS에서 진행해 주세요.');
-  const description = lines.join('\n');
-
-  // 시작/종료 (visit_time 기준 + duration)
   const startTime = r.visit_time && r.visit_time.match(/^\d{1,2}:\d{2}/) ? r.visit_time.slice(0, 5) : '10:00';
   const endTime = addMinutes(startTime, durMin);
   const visitDate = r.visit_date || '';
@@ -310,7 +263,7 @@ export function formatRepairToEvent(
   const event: calendar_v3.Schema$Event = {
     summary,
     description,
-    location: location || undefined,
+    location: settings.store_address || undefined,   // 직접방문 = 매장 워크인
     start: visitDate
       ? { dateTime: toKSTIso(visitDate, startTime), timeZone: 'Asia/Seoul' }
       : undefined,
@@ -325,10 +278,43 @@ export function formatRepairToEvent(
         mamoru_repair_as_id: r.as_id,
         mamoru_repair_status: r.status,
         mamoru_source: 'repair_direct_visit',
-        mamoru_version: '1.0',
+        mamoru_version: '2.0',
       },
     },
   };
 
   return event;
+}
+
+/**
+ * 송장 미생성 '할 일' → 종일 이벤트 (2026-09-24)
+ * 같은 제목·본문 규칙을 따른다: `송장 생성 · 이름` / 본문 3줄 이내.
+ */
+export function formatShippingTodoToEvent(t: {
+  kind: 'sale' | 'delivery';
+  who: string;
+  docNo: string | null;
+  amount: number | null;
+  createdAt: string | null;
+  date: string;        // 표시할 날짜(KST, 종일)
+  nextDate: string;    // 종료일(배타적)
+}, baseUrl: string): calendar_v3.Schema$Event {
+  const isSale = t.kind === 'sale';
+  const summary = `${isSale ? '송장 생성' : '납품 출고'} · ${t.who}`;
+  const description = buildDescription([
+    [t.docNo || null, t.amount ? `${Number(t.amount).toLocaleString('ko-KR')}원` : null]
+      .filter(Boolean).join(' · ') || null,
+    t.createdAt ? `등록 ${shortDateTimeKR(t.createdAt)} · 송장 없음` : '송장 없음',
+  ], baseUrl, isSale ? '/sales' : '/deliveries');
+
+  return {
+    summary,
+    description,
+    start: { date: t.date },
+    end: { date: t.nextDate },          // 구글 종일 일정의 end.date 는 배타적
+    colorId: '8',                        // Graphite — 예약(초록·보라·주황)과 구분되는 '업무'
+    transparency: 'transparent',         // 한가함 — 예약 슬롯을 막지 않는다
+    reminders: { useDefault: false, overrides: [] },
+    extendedProperties: { private: { mamoru_type: 'shipping_todo', mamoru_ref: `${t.kind}:${t.docNo || ''}` } },
+  };
 }
