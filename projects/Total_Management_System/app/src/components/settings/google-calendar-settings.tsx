@@ -22,7 +22,15 @@ interface StatusData {
   connected_at?: string;
   last_error?: string;
   last_success_at?: string;
+  missing_scopes?: string[];
+  needs_reauth?: boolean;
 }
+
+/** 권한 코드 → 사장님이 아는 말 */
+const SCOPE_LABEL: Record<string, string> = {
+  'https://www.googleapis.com/auth/calendar.events': '캘린더 일정',
+  'https://www.googleapis.com/auth/tasks': '할 일(Tasks)',
+};
 
 export default function GoogleCalendarSettings() {
   const [status, setStatus] = useState<StatusData | null>(null);
@@ -124,6 +132,24 @@ export default function GoogleCalendarSettings() {
           </p>
         </div>
       </div>
+
+      {/* 권한 부족 배너 — 구글은 새 권한을 자동으로 못 준다(동의 1회 필수). 그 1회를 화면이 먼저 알린다 */}
+      {status?.needs_reauth && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex items-start gap-2">
+          <AlertCircle size={16} className="text-amber-600 mt-0.5 shrink-0" />
+          <div className="flex-1 text-xs">
+            <p className="font-semibold text-amber-800">권한이 하나 빠져 있습니다</p>
+            <p className="text-amber-700 mt-1">
+              {(status.missing_scopes || []).map((sc) => SCOPE_LABEL[sc] || sc).join(' · ')} 권한이 없어 해당 기능이 동작하지 않습니다.
+              <br />아래 <b>재연결</b>을 한 번 누르면 해결됩니다 (그 뒤론 다시 누를 일 없습니다).
+            </p>
+            <Button size="sm" className="mt-2" onClick={handleConnect}>
+              <RefreshCw size={13} />
+              재연결
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* 에러 배너 */}
       {hasError && (

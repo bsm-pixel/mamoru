@@ -77,7 +77,7 @@ export async function sweepShippingTodos(opts: { create: boolean; dryRun?: boole
     const { data: settingRows } = await dbAny
       .from('system_settings')
       .select('key, value')
-      .in('key', [MAP_KEY, SINCE_KEY, LEGACY_EVENT_MAP_KEY]);
+      .in('key', [MAP_KEY, SINCE_KEY, LEGACY_EVENT_MAP_KEY, 'calendar.shipping_todo_needs_reauth']);
     const raw: Record<string, string> = {};
     (settingRows || []).forEach((r: { key: string; value: string | null }) => {
       if (r.value != null) raw[r.key] = String(r.value);
@@ -185,6 +185,26 @@ export async function sweepShippingTodos(opts: { create: boolean; dryRun?: boole
         mapChanged = true;
       }
       result.created.push(p.key);
+    }
+
+    // 4-b) 권한이 없어 못 만들었으면 사장님께 알린다 — 하루 1회 (조용한 실패 금지)
+    if (result.needsReauth && !opts.dryRun) {
+      const lastNotified = String(raw['calendar.shipping_todo_needs_reauth'] || '').slice(0, 10);
+      if (lastNotified !== today) {
+        try {
+          const { sendPushToAll } = await import('@/lib/firebase/send-push');
+          await sendPushToAll({
+            title: '구글 할 일 권한 필요',
+            body: '송장 할 일이 등록되지 않았습니다 · 설정에서 구글 재연결 1회',
+            url: '/settings',
+            tag: 'mamoru-google-tasks-reauth',
+          });
+        } catch (e) { console.error('[shipping-todo] 재연결 푸시 실패', e); }
+        await dbAny.from('system_settings').upsert(
+          { key: 'calendar.shipping_todo_needs_reauth', value: new Date().toISOString(), updated_at: new Date().toISOString() },
+          { onConflict: 'key' },
+        );
+      }
     }
 
     // 5) 실행 흔적 — 할 일이 0건이면 아무 것도 안 바뀌어서 '크론이 도는지' 알 방법이 없다

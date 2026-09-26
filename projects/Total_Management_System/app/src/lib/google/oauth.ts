@@ -112,6 +112,11 @@ export async function getConnectionStatus(): Promise<{
   connected_at?: string;
   last_error?: string;
   last_success_at?: string;
+  /** 연결 시 실제로 허용된 권한 (콜백에서 기록) */
+  granted_scopes?: string[];
+  /** SCOPES 중 아직 허용 안 된 것 — 있으면 재연결 1회 필요 */
+  missing_scopes?: string[];
+  needs_reauth?: boolean;
 }> {
   const db = createServiceClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -127,6 +132,7 @@ export async function getConnectionStatus(): Promise<{
       'google.calendar.connected_at',
       'google.calendar.last_error',
       'google.calendar.last_success_at',
+      'google.calendar.granted_scopes',
     ]);
 
   const map: Record<string, string> = {};
@@ -134,13 +140,24 @@ export async function getConnectionStatus(): Promise<{
     if (r.value) map[r.key] = String(r.value).replace(/^"|"$/g, '');
   });
 
+  /* 2026-09-26: 권한 누락을 '조용히' 두지 않는다.
+     구글은 새 권한(scope)을 추가하면 **사용자 동의**를 다시 받아야 한다 — 자동 부여는 불가능.
+     그 1회를 사장님이 눈치로 알아야 했던 게 문제였다 → 허용된 목록을 저장해두고 화면이 먼저 알린다.
+     granted_scopes 가 비어 있으면(이 기능 이전에 연결된 토큰) 판단하지 않는다 — 괜한 경고 금지. */
+  const connected = !!map['google.calendar.refresh_token'];
+  const granted = (map['google.calendar.granted_scopes'] || '').split(/\s+/).filter(Boolean);
+  const missing = granted.length > 0 ? SCOPES.filter((sc) => !granted.includes(sc)) : [];
+
   return {
-    connected: !!map['google.calendar.refresh_token'],
+    connected,
     email: map['google.calendar.connected_email'] || undefined,
     hd: map['google.calendar.connected_hd'] || undefined,
     connected_at: map['google.calendar.connected_at'] || undefined,
     last_error: map['google.calendar.last_error'] || undefined,
     last_success_at: map['google.calendar.last_success_at'] || undefined,
+    granted_scopes: granted.length ? granted : undefined,
+    missing_scopes: missing.length ? missing : undefined,
+    needs_reauth: connected && missing.length > 0,
   };
 }
 
@@ -162,5 +179,6 @@ export async function disconnectCalendar(): Promise<void> {
       'google.calendar.connected_at',
       'google.calendar.last_error',
       'google.calendar.last_success_at',
+      'google.calendar.granted_scopes',
     ]);
 }

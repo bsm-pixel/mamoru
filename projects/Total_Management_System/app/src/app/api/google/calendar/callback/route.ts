@@ -87,6 +87,8 @@ export async function GET(req: NextRequest) {
       { key: 'google.calendar.connected_hd', value: hd },
       { key: 'google.calendar.connected_at', value: now },
       { key: 'google.calendar.calendar_id', value: 'primary' },
+      // 2026-09-26: 실제 허용된 권한 목록 — 설정 화면이 '권한 부족'을 스스로 알리는 근거
+      { key: 'google.calendar.granted_scopes', value: String(tokens.scope || '') },
     ];
 
     for (const { key, value } of upserts) {
@@ -98,8 +100,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 이전 오류 지우기
-    await dbAny.from('system_settings').delete().eq('key', 'google.calendar.last_error');
+    // 이전 오류 + 권한부족 경고 해제
+    await dbAny.from('system_settings').delete().in('key', ['google.calendar.last_error', 'calendar.shipping_todo_needs_reauth']);
 
     return NextResponse.redirect(new URL('/settings?google_calendar=connected', origin));
   } catch (e: unknown) {
