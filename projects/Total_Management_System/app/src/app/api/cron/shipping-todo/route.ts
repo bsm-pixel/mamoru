@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sweepShippingTodos, kstHour } from '@/lib/google/shipping-todo-sync';
-import { probeTasks } from '@/lib/google/tasks-client';
+import { probeTasks, createTask, deleteTask } from '@/lib/google/tasks-client';
 
 const CRON_SECRET = process.env.CRON_SECRET || 'mamoru-tms-cron-2026';
 const CREATE_HOUR_KST = 8;   // 아침 8시에만 '할 일' 생성 — 정리(삭제)는 매시간
@@ -24,6 +24,16 @@ export async function GET(req: NextRequest) {
 
   const sp = req.nextUrl.searchParams;
   if (sp.get('probe') === '1') return NextResponse.json(await probeTasks());
+
+  /* ?selftest=1 — 실제로 할 일을 만들고 바로 지운다.
+     권한 조회(probe)만으로는 '쓰기'가 되는지 알 수 없어서 둔다. 대기 건이 0건일 때도 연결을 증명할 수 있다.
+     남는 흔적 없음(생성 → 삭제). */
+  if (sp.get('selftest') === '1') {
+    const made = await createTask({ title: '[연결 테스트] 송장 할 일', notes: 'TMS 자가진단 — 곧 자동 삭제됩니다' });
+    if (!made.ok || !made.taskId) return NextResponse.json({ ...made, ok: false, step: 'create' });
+    const gone = await deleteTask(made.taskId);
+    return NextResponse.json({ ok: gone.ok, created: true, deleted: gone.ok, taskId: made.taskId, error: gone.error });
+  }
   const dryRun = sp.get('dry') === '1';
   const create = sp.get('force') === '1' || kstHour() === CREATE_HOUR_KST;
 
