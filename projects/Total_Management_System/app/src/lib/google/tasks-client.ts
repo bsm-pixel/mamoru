@@ -18,10 +18,18 @@ export interface TaskResult {
   error?: string;
   notConnected?: boolean;
   needsReauth?: boolean;   // 토큰에 tasks 스코프가 없음 → 재연결 안내
+  apiDisabled?: boolean;   // 구글 클라우드에서 Tasks API 자체가 꺼짐 → 콘솔에서 '사용 설정' 필요(재연결로는 해결 안 됨)
 }
 
-/** 권한 부족(스코프 미승인) 판별 — 재연결 안내를 위해 일반 오류와 구분한다 */
+/* 실패를 셋으로 나눈다 — 안내 문구가 완전히 다르기 때문.
+   ① API 비활성화: 구글 클라우드 콘솔에서 Tasks API '사용 설정' (재연결해도 소용없음) — 2026-09-26 실제로 걸림
+   ② 권한 미승인: 설정에서 재연결 1회
+   ③ 그 외: 일반 오류 */
+function isApiDisabled(msg: string): boolean {
+  return /has not been used in project|is disabled|SERVICE_DISABLED|accessNotConfigured/i.test(msg);
+}
 function isScopeError(msg: string): boolean {
+  if (isApiDisabled(msg)) return false;   // 403 이지만 재연결로는 안 풀린다
   return /insufficient|ACCESS_TOKEN_SCOPE|invalid_scope|Request had insufficient authentication scopes|403/i.test(msg);
 }
 
@@ -49,7 +57,7 @@ export async function createTask(params: {
     return { ok: true, taskId: res.data.id };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    return { ok: false, error: msg, needsReauth: isScopeError(msg) };
+    return { ok: false, error: msg, needsReauth: isScopeError(msg), apiDisabled: isApiDisabled(msg) };
   }
 }
 
@@ -65,7 +73,7 @@ export async function deleteTask(taskId: string, taskListId = '@default'): Promi
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     if (/\b(404|410|notFound|deleted)\b/i.test(msg)) return { ok: true };
-    return { ok: false, error: msg, needsReauth: isScopeError(msg) };
+    return { ok: false, error: msg, needsReauth: isScopeError(msg), apiDisabled: isApiDisabled(msg) };
   }
 }
 
@@ -79,6 +87,6 @@ export async function probeTasks(): Promise<TaskResult & { listTitle?: string }>
     return { ok: true, listTitle: res.data.title || '' };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    return { ok: false, error: msg, needsReauth: isScopeError(msg) };
+    return { ok: false, error: msg, needsReauth: isScopeError(msg), apiDisabled: isApiDisabled(msg) };
   }
 }

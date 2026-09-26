@@ -24,6 +24,7 @@ interface StatusData {
   last_success_at?: string;
   missing_scopes?: string[];
   needs_reauth?: boolean;
+  tasks_api_disabled?: boolean;
 }
 
 /** 권한 코드 → 사장님이 아는 말 */
@@ -132,6 +133,29 @@ export default function GoogleCalendarSettings() {
           </p>
         </div>
       </div>
+
+      {/* 구글 클라우드에서 Tasks API 가 꺼진 경우 — 재연결로는 안 풀린다. 콘솔에서 1회 '사용 설정' */}
+      {status?.tasks_api_disabled && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex items-start gap-2">
+          <AlertCircle size={16} className="text-amber-600 mt-0.5 shrink-0" />
+          <div className="flex-1 text-xs">
+            <p className="font-semibold text-amber-800">구글 할 일(Tasks) 기능이 꺼져 있습니다</p>
+            <p className="text-amber-700 mt-1">
+              권한은 정상인데 <b>구글 클라우드에서 Tasks API 가 꺼져</b> 있어 송장 할 일이 등록되지 않습니다.
+              <br />아래 링크에서 <b>사용 설정</b>을 누르면 끝납니다 (재연결은 필요 없습니다).
+            </p>
+            <a
+              href="https://console.cloud.google.com/apis/library/tasks.googleapis.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 mt-2 text-amber-800 underline font-semibold"
+            >
+              <ExternalLink size={12} />
+              구글 클라우드에서 Tasks API 켜기
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* 권한 부족 배너 — 구글은 새 권한을 자동으로 못 준다(동의 1회 필수). 그 1회를 화면이 먼저 알린다 */}
       {status?.needs_reauth && (

@@ -58,6 +58,8 @@ export interface SweepResult {
   dryRun: boolean;
   /** 토큰에 tasks 스코프가 없음 → TMS 설정에서 구글 재연결 필요 */
   needsReauth?: boolean;
+  /** 구글 클라우드에서 Tasks API 가 꺼져 있음 → 콘솔에서 사용 설정 (재연결로는 해결 안 됨) */
+  apiDisabled?: boolean;
   error?: string;
 }
 
@@ -179,6 +181,7 @@ export async function sweepShippingTodos(opts: { create: boolean; dryRun?: boole
         if (!res.ok || !res.taskId) {
           // 스코프 미승인이면 조용히 실패해선 안 된다 — 설정에서 구글 재연결이 필요하다는 뜻
           if (res.needsReauth) result.needsReauth = true;
+          if (res.apiDisabled) result.apiDisabled = true;
           continue;
         }
         taskMap[p.key] = res.taskId;
@@ -188,14 +191,16 @@ export async function sweepShippingTodos(opts: { create: boolean; dryRun?: boole
     }
 
     // 4-b) 권한이 없어 못 만들었으면 사장님께 알린다 — 하루 1회 (조용한 실패 금지)
-    if (result.needsReauth && !opts.dryRun) {
+    if ((result.needsReauth || result.apiDisabled) && !opts.dryRun) {
       const lastNotified = String(raw['calendar.shipping_todo_needs_reauth'] || '').slice(0, 10);
       if (lastNotified !== today) {
         try {
           const { sendPushToAll } = await import('@/lib/firebase/send-push');
           await sendPushToAll({
-            title: '구글 할 일 권한 필요',
-            body: '송장 할 일이 등록되지 않았습니다 · 설정에서 구글 재연결 1회',
+            title: result.apiDisabled ? '구글 Tasks API 사용 설정 필요' : '구글 할 일 권한 필요',
+            body: result.apiDisabled
+              ? '송장 할 일 미등록 · 구글 클라우드 콘솔에서 Tasks API 켜기'
+              : '송장 할 일이 등록되지 않았습니다 · 설정에서 구글 재연결 1회',
             url: '/settings',
             tag: 'mamoru-google-tasks-reauth',
           });

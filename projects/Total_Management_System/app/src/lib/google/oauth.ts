@@ -33,6 +33,20 @@ export const SCOPES = [
   'https://www.googleapis.com/auth/tasks',
 ];
 
+/* 구글은 허용 결과를 **정규형**으로 돌려준다: 'email' → 'https://www.googleapis.com/auth/userinfo.email'.
+   요청 목록(SCOPES)의 짧은 이름과 문자 그대로 비교하면 멀쩡한 권한이 '빠졌다'고 나온다(2026-09-26 실제 오탐).
+   그래서 ① 별칭을 정규형으로 바꾸고 ② 신원 확인용(openid/email/profile)은 비교에서 제외한다 —
+   기능에 필요한 건 calendar.events 와 tasks 뿐이다. */
+const SCOPE_ALIAS: Record<string, string> = {
+  email: 'https://www.googleapis.com/auth/userinfo.email',
+  profile: 'https://www.googleapis.com/auth/userinfo.profile',
+};
+const IDENTITY_SCOPES = new Set(['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']);
+const normalizeScope = (sc: string) => SCOPE_ALIAS[sc] || sc;
+
+/** 기능에 실제로 필요한 권한 — 이것만 있으면 '연결 정상' */
+export const FEATURE_SCOPES = SCOPES.map(normalizeScope).filter((sc) => !IDENTITY_SCOPES.has(sc));
+
 /** 새 OAuth2 클라이언트 (토큰 없음 — 인가 단계에서 사용) */
 export function createOAuthClient(): OAuth2ClientType {
   return new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI);
@@ -145,8 +159,8 @@ export async function getConnectionStatus(): Promise<{
      그 1회를 사장님이 눈치로 알아야 했던 게 문제였다 → 허용된 목록을 저장해두고 화면이 먼저 알린다.
      granted_scopes 가 비어 있으면(이 기능 이전에 연결된 토큰) 판단하지 않는다 — 괜한 경고 금지. */
   const connected = !!map['google.calendar.refresh_token'];
-  const granted = (map['google.calendar.granted_scopes'] || '').split(/\s+/).filter(Boolean);
-  const missing = granted.length > 0 ? SCOPES.filter((sc) => !granted.includes(sc)) : [];
+  const granted = (map['google.calendar.granted_scopes'] || '').split(/\s+/).filter(Boolean).map(normalizeScope);
+  const missing = granted.length > 0 ? FEATURE_SCOPES.filter((sc) => !granted.includes(sc)) : [];
 
   return {
     connected,
