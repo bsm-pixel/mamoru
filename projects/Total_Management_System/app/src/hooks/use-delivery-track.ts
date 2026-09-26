@@ -1,18 +1,14 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import type { TrackRecord } from '@/lib/lotte/track-steps';
 
 export interface LotteTrackResult {
   ok: boolean;
   state: string;
   raw: {
-    tracking?: Array<{
-      godsStatCd?: string;
-      statTm?: string;
-      orgNm?: string;
-      statDt?: string;
-      [key: string]: unknown;
-    }>;
+    // 필드명은 실측 기준(2026-09-26) — 옛 타입의 statDt/statTm/orgNm 은 응답에 없는 이름이었다
+    tracking?: TrackRecord[];
     [key: string]: unknown;
   };
 }
