@@ -13,7 +13,7 @@ import { saleNet, deliveryNet } from '@/lib/sales/amounts';
 import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-panel';
 import { useSales, useSalesTabCounts, useSalesStats, useMarkSalePacked } from '@/hooks/use-sales';
 import type { SalesTab, SalesChannel, SalesDateRange } from '@/hooks/use-sales';
-import { useDeliveryStats, useDeliveries } from '@/hooks/use-deliveries';
+import { useDeliveryStats, useDeliveries, useDeliveryTabCounts } from '@/hooks/use-deliveries';
 import { useContracts } from '@/hooks/use-contracts';
 import { formatKRW, formatDate, SALE_CHANNEL_LABEL, CUSTOMER_TYPE_LABEL } from '@/lib/utils/format';
 import { getSaleShipStatus, getDeliveryShipStatus, type ShipStatus } from '@/lib/sales/ship-status';
@@ -66,9 +66,9 @@ function getRowStateDelivery(d: any): RowState {
   //      (전엔 송장 발급 즉시 status='shipped' 라 여기서 '출고완료' 로 잘못 떴다)
   const isShipped = d.status === 'shipped' || d.status === 'settled';
   if (d.payment_status === 'unpaid' && isShipped) return 'shipped_b2b_unpaid'; // 출고됐는데 결제 대기
-  // 110: 송장은 발급됐지만 아직 기사님이 안 가져간 건 — '미결제'로만 뭉개면 출고대기 정보가 사라진다
-  if (d.payment_status === 'unpaid' && d.tracking_number) return 'wait_pickup_unpaid';
-  if (d.payment_status === 'unpaid') return 'unpaid';
+  /* 미출고 + 미결제 — '미결제'로만 뭉개면 **출고가 남았다는 사실이 사라진다**.
+     2026-09-27: 송장 유무를 따지던 조건 제거(송장 없어도 출고 대기인 건 마찬가지). */
+  if (d.payment_status === 'unpaid') return 'wait_pickup_unpaid';
   // payment_status === 'paid'
   if (d.delivered_at) return 'paid_done';             // 110: 배송완료 = 끝 (B2C 와 동일 기준)
   if (isShipped) return 'paid_done';                  // 출고완료 + 결제완료 = 판매완료
@@ -196,6 +196,7 @@ export default function SalesPage() {
 
   const { data, isLoading } = useSales({ search, page, limit: 20, tab, channel, dateRange, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined });
   const { data: tabCounts } = useSalesTabCounts();
+  const { data: deliveryTabCounts } = useDeliveryTabCounts();   // 2026-09-27: 거래처 영역에서 B2C 숫자가 뜨던 것 수정
   const { data: stats } = useSalesStats();
   const { data: deliveryStats } = useDeliveryStats(); // 2026-05-26: 거래처 카드 — deliveries 합산용
   // 2026-05-26 Phase B: 영역 'partner'/'all' 일 때 deliveries 목록 합집합. limit 30 (사장님 운영 규모 충분)
@@ -224,8 +225,11 @@ export default function SalesPage() {
       for (const d of dls) {
         if (d.cancelled_at && tab !== 'cancelled') continue; // 영역 partner/all 에서도 취소 탭 외엔 cancelled 숨김
         if (tab === 'unpaid' && !['unpaid', 'partial'].includes(d.payment_status)) continue;
-        // 처리 필요 = 결제완료인데 출고 전(거래처)
-        if (tab === 'processing' && !(d.payment_status === 'paid' && !['shipped', 'settled'].includes(d.status))) continue;
+        /* 처리 필요 = 아직 출고 전(작성중·납품확정) — 2026-09-27 수정
+           전엔 `결제완료 AND 출고 전` 이라 **거래처 건이 거의 다 빠졌다**.
+           거래처는 후불이 기본이라 출고 대기 건은 대부분 미결제다(실측 9월 9건 중 미결제 3건이 전부 숨겨짐).
+           결제 여부는 '미수금' 탭이 따로 본다. 여기선 '내 손이 필요한가'만 본다. */
+        if (tab === 'processing' && !['draft', 'confirmed'].includes(d.status)) continue;
         items.push({ sourceType: 'delivery', id: d.id, date: d.delivery_date || d.created_at || '', data: d });
       }
     }
@@ -408,7 +412,11 @@ export default function SalesPage() {
       <div className="flex items-end gap-1 border-b border-neutral-200">
         <span className="text-[11px] font-semibold text-neutral-400 pb-2 pr-1 shrink-0">상태</span>
         {TABS.map((t) => {
-          const count = tabCounts?.[t.key] ?? 0;
+          /* 배지 숫자도 영역(고객/거래처/전체)을 따른다 — 거래처를 보는데 고객 건수가 떠 있으면 숫자를 믿을 수 없다.
+             '처리 필요'·'미수금' 두 탭만 배지가 있으므로 그 둘만 합산한다. */
+          const b2c = tabCounts?.[t.key] ?? 0;
+          const b2b = (t.key === 'processing' || t.key === 'unpaid') ? (deliveryTabCounts?.[t.key] ?? 0) : 0;
+          const count = section === 'customer' ? b2c : section === 'partner' ? b2b : b2c + b2b;
           const active = tab === t.key;
           return (
             <button

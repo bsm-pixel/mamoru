@@ -6,6 +6,33 @@ import { createClient } from '@/lib/supabase/client';
 import { deliveryNet, deliveryOutstanding } from '@/lib/sales/amounts';
 
 /** 납품 목록 */
+/**
+ * 거래처(B2B) 탭 배지용 건수 — 2026-09-27
+ * 판매(B2C)는 useSalesTabCounts 가 세는데 거래처는 아무도 안 세서, '거래처' 영역에서 배지가 B2C 숫자로 떠 있었다.
+ *   · 처리 필요 = 아직 출고 전(draft·confirmed) — **결제 여부와 무관**(거래처는 후불이 기본)
+ *   · 미수금    = unpaid/partial
+ * 기간 필터는 적용하지 않는다(B2C 배지와 같은 기준 — 전체 기간).
+ */
+export function useDeliveryTabCounts() {
+  const supabase = createClient();
+
+  return useQuery({
+    queryKey: ['delivery-tab-counts'],
+    staleTime: 30_000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
+      const [processingRes, unpaidRes] = await Promise.all([
+        db.from('deliveries').select('*', { count: 'exact', head: true })
+          .in('status', ['draft', 'confirmed']).is('cancelled_at', null),
+        db.from('deliveries').select('*', { count: 'exact', head: true })
+          .in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null),
+      ]);
+      return { processing: processingRes.count || 0, unpaid: unpaidRes.count || 0 };
+    },
+  });
+}
+
 export function useDeliveries(filters?: {
   status?: string;
   search?: string;
