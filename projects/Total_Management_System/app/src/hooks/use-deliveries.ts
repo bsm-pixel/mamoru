@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { createClient } from '@/lib/supabase/client';
 import { deliveryNet, deliveryOutstanding } from '@/lib/sales/amounts';
+import { resolveDateRange } from '@/lib/sales/date-range';
 
 /** 납품 목록 */
 /**
@@ -13,20 +14,25 @@ import { deliveryNet, deliveryOutstanding } from '@/lib/sales/amounts';
  *   · 미수금    = unpaid/partial
  * 기간 필터는 적용하지 않는다(B2C 배지와 같은 기준 — 전체 기간).
  */
-export function useDeliveryTabCounts() {
+export function useDeliveryTabCounts(filters?: { dateRange?: string; dateFrom?: string; dateTo?: string }) {
   const supabase = createClient();
 
   return useQuery({
-    queryKey: ['delivery-tab-counts'],
+    queryKey: ['delivery-tab-counts', filters],
     staleTime: 30_000,
     queryFn: async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
+      const { from: df, to: dt } = resolveDateRange(filters);   // 목록과 같은 기간 기준 (2026-09-28)
+      const base = () => {
+        let q = db.from('deliveries').select('*', { count: 'exact', head: true }).is('cancelled_at', null);
+        if (df) q = q.gte('delivery_date', df);
+        if (dt) q = q.lte('delivery_date', dt);
+        return q;
+      };
       const [processingRes, unpaidRes] = await Promise.all([
-        db.from('deliveries').select('*', { count: 'exact', head: true })
-          .in('status', ['draft', 'confirmed']).is('cancelled_at', null),
-        db.from('deliveries').select('*', { count: 'exact', head: true })
-          .in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null),
+        base().in('status', ['draft', 'confirmed']),
+        base().in('payment_status', ['unpaid', 'partial']),
       ]);
       return { processing: processingRes.count || 0, unpaid: unpaidRes.count || 0 };
     },

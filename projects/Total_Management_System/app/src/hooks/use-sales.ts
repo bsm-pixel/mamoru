@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
+import { resolveDateRange } from '@/lib/sales/date-range';
 import type { OfflineSale, OfflineSaleItem, Product } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
 // 075: cross-domain invalidation 일원화 — mutation 후 대시보드/통계가 즉각 갱신되도록
@@ -69,29 +70,11 @@ export function useSales(filters?: {
         }
       }
 
-      // 기간 필터: 커스텀 날짜 범위 우선, 없으면 프리셋
-      if (filters?.dateFrom) {
-        query = query.gte('sale_date', filters.dateFrom);
-      } else if (filters?.dateRange && filters.dateRange !== 'all') {
-        // ⚠️ 로컬(KST) 달력 기준 — toISOString()(UTC) 쓰면 날짜가 하루/한달 밀림(이번달이 5월까지 나오던 버그)
-        const now = new Date();
-        const pad = (n: number) => String(n).padStart(2, '0');
-        const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-        let df: string;
-        if (filters.dateRange === 'today') {
-          df = ymd(now);                              // 오늘 (로컬)
-        } else if (filters.dateRange === 'week') {
-          const d = new Date(now);
-          const dow = d.getDay();                     // 0=일
-          d.setDate(d.getDate() + (dow === 0 ? -6 : 1 - dow)); // 이번주 월요일
-          df = ymd(d);
-        } else {
-          df = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`; // 이번달 1일
-        }
-        query = query.gte('sale_date', df);
-      }
-      if (filters?.dateTo) {
-        query = query.lte('sale_date', filters.dateTo);
+      // 기간 필터 — 계산은 lib/sales/date-range.ts 한 곳에서 (탭 배지와 같은 기준이어야 한다)
+      {
+        const { from: df, to: dt } = resolveDateRange(filters);
+        if (df) query = query.gte('sale_date', df);
+        if (dt) query = query.lte('sale_date', dt);
       }
 
       // 검색
@@ -109,24 +92,33 @@ export function useSales(filters?: {
   });
 }
 
-/** 판매 탭별 건수 */
-export function useSalesTabCounts() {
+/** 판매 탭별 건수 — 목록과 **같은 기간**을 센다 (2026-09-28)
+ *  전엔 기간을 무시하고 전체를 세어 '처리 필요 5'인데 목록엔 4건(나머지는 지난달)인 어긋남이 있었다. */
+export function useSalesTabCounts(filters?: { dateRange?: SalesDateRange; dateFrom?: string; dateTo?: string }) {
   const supabase = createClient();
 
   return useQuery({
-    queryKey: ['sales-tab-counts'],
+    queryKey: ['sales-tab-counts', filters],
     staleTime: 30_000,
     queryFn: async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
       const today = new Date().toISOString().slice(0, 10);
+      const { from: df, to: dt } = resolveDateRange(filters);
+
+      const base = () => {
+        let q = db.from('offline_sales').select('*', { count: 'exact', head: true });
+        if (df) q = q.gte('sale_date', df);
+        if (dt) q = q.lte('sale_date', dt);
+        return q;
+      };
 
       const [allRes, todayRes, unpaidRes, processingRes, cancelledRes] = await Promise.all([
-        db.from('offline_sales').select('*', { count: 'exact', head: true }).is('cancelled_at', null).is('returned_at', null),
-        db.from('offline_sales').select('*', { count: 'exact', head: true }).eq('sale_date', today).is('cancelled_at', null).is('returned_at', null),
-        db.from('offline_sales').select('*', { count: 'exact', head: true }).in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null).is('returned_at', null),
-        db.from('offline_sales').select('*', { count: 'exact', head: true }).eq('payment_status', 'paid').is('shipped_at', null).is('delivered_at', null).is('cancelled_at', null).is('returned_at', null),
-        db.from('offline_sales').select('*', { count: 'exact', head: true }).or('cancelled_at.not.is.null,returned_at.not.is.null'),
+        base().is('cancelled_at', null).is('returned_at', null),
+        base().eq('sale_date', today).is('cancelled_at', null).is('returned_at', null),
+        base().in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null).is('returned_at', null),
+        base().eq('payment_status', 'paid').is('shipped_at', null).is('delivered_at', null).is('cancelled_at', null).is('returned_at', null),
+        base().or('cancelled_at.not.is.null,returned_at.not.is.null'),
       ]);
 
       return {

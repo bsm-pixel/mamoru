@@ -11,6 +11,7 @@ export const FINANCIAL_QUERY_KEYS = [
   'sales',
   'sales-stats',
   'sales-tab-counts',
+  'delivery-tab-counts',   // 2026-09-28: 거래처 배지도 매출 변동 시 같이 갱신
   'hub-stats',
   'order-dashboard-stats',
   'repair-dashboard-stats',

@@ -195,8 +195,11 @@ export default function SalesPage() {
   }, []);
 
   const { data, isLoading } = useSales({ search, page, limit: 20, tab, channel, dateRange, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined });
-  const { data: tabCounts } = useSalesTabCounts();
-  const { data: deliveryTabCounts } = useDeliveryTabCounts();   // 2026-09-27: 거래처 영역에서 B2C 숫자가 뜨던 것 수정
+  /* 배지 숫자는 목록과 **같은 기간**을 봐야 한다 — 2026-09-28
+     (전엔 전체 기간을 세어 '처리 필요 5'인데 목록엔 이번달 4건만 뜨는 어긋남이 있었다) */
+  const countFilters = { dateRange, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined };
+  const { data: tabCounts } = useSalesTabCounts(countFilters);
+  const { data: deliveryTabCounts } = useDeliveryTabCounts(countFilters);   // 2026-09-27: 거래처 영역에서 B2C 숫자가 뜨던 것 수정
   const { data: stats } = useSalesStats();
   const { data: deliveryStats } = useDeliveryStats(); // 2026-05-26: 거래처 카드 — deliveries 합산용
   // 2026-05-26 Phase B: 영역 'partner'/'all' 일 때 deliveries 목록 합집합. limit 30 (사장님 운영 규모 충분)
