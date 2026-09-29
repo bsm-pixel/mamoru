@@ -327,7 +327,7 @@ img{display:block; max-width:100%}
 .recm__date span{display:block}   /* 날짜 / 시간 분리 — 좁은 폰·큰 글씨에서 '8시'만 떨어지지 않게 */
 .recm__name{margin-top:6px; font-size:calc(18px * var(--fs)); font-weight:700; color:var(--ink)}
 .recm__addr{margin-top:5px; font-size:calc(13.5px * var(--fs)); color:var(--muted)}
-.recm__btns{display:grid; grid-template-columns:1.25fr 1fr; gap:8px; margin-top:22px}
+.recm__btns{display:grid; grid-template-columns:3fr 1fr; gap:8px; margin-top:22px}   /* 안내 보기 : 닫기 = 3:1 */
 .recm__go{width:100%; padding:14px 6px; border-radius:12px; background:var(--gold); color:#fff; font-weight:600; font-size:calc(15px * var(--fs)); white-space:nowrap}
 .recm__dismiss{width:100%; padding:14px 6px; border-radius:12px; background:#fff; border:1px solid var(--line); color:var(--muted); font-weight:600; font-size:calc(15px * var(--fs))}
 .recm__dismiss:active{background:#f3ede4; color:var(--ink)}
@@ -675,7 +675,7 @@ body[style*="hidden"] .fsz{opacity:0; pointer-events:none}
       <div class="recm__addr" id="recmAddr"></div>
     </div>
     <div class="recm__btns">
-      <button class="recm__go" type="button" onclick="goReception()">안내 보기</button>
+      <button class="recm__go" type="button" onclick="goReception()">피로연 안내 보기</button>
       <button class="recm__dismiss" type="button" onclick="closeRecModal()">닫기</button>
     </div>
   </div>
