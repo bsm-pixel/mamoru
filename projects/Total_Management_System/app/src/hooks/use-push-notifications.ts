@@ -25,20 +25,9 @@ export function usePushNotifications() {
 
     (async () => {
       try {
-        const { requestPushToken } = await import('@/lib/firebase/client');
-        const token = await requestPushToken();
-        if (!token) return;
-
-        // 🔴 2026-09-15: 기기 id를 함께 보낸다.
-        //    전엔 토큰만 보내서 서버가 "사용자당 1개" 정책으로 다른 기기 토큰을 지웠고,
-        //    그 결과 PC·모바일이 서로의 알림을 끊었다. 이제 같은 기기의 옛 토큰만 교체된다.
-        const { getDeviceId, getDeviceLabel } = await import('@/lib/firebase/device');
-        await fetch('/api/push/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, deviceId: getDeviceId(), deviceInfo: getDeviceLabel() }),
-        });
-        console.log('[Push] FCM 토큰 등록 완료 —', getDeviceLabel());
+        // 🔴 2026-09-29: 등록 로직은 lib/firebase/register.ts 로 분리 (로그인 화면에서도 재등록)
+        const { registerPushDevice } = await import('@/lib/firebase/register');
+        await registerPushDevice({ allowPrompt: true });
       } catch (err) {
         console.error('[Push] FCM 토큰 등록 실패:', err);
       }

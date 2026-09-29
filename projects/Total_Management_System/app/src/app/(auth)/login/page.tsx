@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
@@ -12,6 +12,14 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
+
+  // 🔴 2026-09-29: 로그인 화면에서도 이 기기의 알림 토큰을 새로 고친다 (이미 알림 허용된 기기만, 팝업 없음)
+  //    → 로그인이 풀린 휴대폰도 앱을 여는 순간 알림 수신이 복구된다
+  useEffect(() => {
+    import('@/lib/firebase/register')
+      .then(({ registerPushDevice }) => registerPushDevice({ allowPrompt: false }))
+      .catch(() => {});
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

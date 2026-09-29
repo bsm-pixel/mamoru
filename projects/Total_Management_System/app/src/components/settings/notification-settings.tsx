@@ -248,7 +248,9 @@ function PushTestPanel() {
  *  이제 기기 단위로 등록되므로, 등록된 기기를 **보여주고** 개별 해제만 제공한다.
  */
 function DevicesPanel() {
-  const [devices, setDevices] = useState<Array<{ id: string; label: string; isCurrent: boolean; updatedAt: string }>>([]);
+  const [devices, setDevices] = useState<Array<{ id: string; label: string; isCurrent: boolean; updatedAt: string; lastAckAt: string | null }>>([]);
+  // 2026-09-29: 문자 예비발송 안전망 상태 (휴대폰 2분 미수신 → 사장님 문자)
+  const [safety, setSafety] = useState<{ smsReady: boolean; sweepAlive: boolean; smsFallbacks7d: number | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [iosNotice, setIosNotice] = useState(false);
@@ -260,6 +262,7 @@ function DevicesPanel() {
       const res = await fetch(`/api/push/devices?deviceId=${encodeURIComponent(getDeviceId())}`);
       const json = await res.json();
       setDevices(json.devices || []);
+      setSafety(json.safety || null);
     } catch {
       setDevices([]);
     } finally {
@@ -306,6 +309,7 @@ function DevicesPanel() {
               <span className="text-xs text-neutral-700 flex-1 truncate">
                 {d.label}
                 {d.isCurrent && <span className="ml-1.5 text-[10px] font-bold text-green-600">지금 이 기기</span>}
+                <span className="block text-[10px] text-neutral-400">마지막 수신 · {formatAgo(d.lastAckAt)}</span>
               </span>
               <button
                 type="button"
@@ -319,6 +323,18 @@ function DevicesPanel() {
           ))}
         </ul>
       )}
+
+      {safety && (!safety.smsReady || !safety.sweepAlive) ? (
+        <p className="text-[11px] text-amber-700 leading-relaxed bg-amber-50 rounded-lg px-2.5 py-2">
+          <b>문자 안전망이 꺼져 있습니다.</b>{' '}
+          {!safety.smsReady ? '문자 발송 설정(솔라피 키·발신번호·받을 번호)이 없습니다.' : '수신 확인 점검(1분 주기)이 멈춰 있어 알림마다 문자가 즉시 함께 갑니다.'}
+        </p>
+      ) : safety ? (
+        <p className="text-[10px] text-neutral-500 leading-relaxed">
+          휴대폰이 2분 안에 알림을 받지 못하면 문자로 한 번 더 보냅니다
+          {safety.smsFallbacks7d != null && <> · 최근 7일 문자 {safety.smsFallbacks7d}건</>}
+        </p>
+      ) : null}
 
       <p className="text-[10px] text-neutral-400 leading-relaxed">
         알림 받을 기기에서 각각 TMS를 한 번 열고 알림 권한을 허용하면 자동 등록됩니다.
@@ -334,6 +350,17 @@ function DevicesPanel() {
       )}
     </div>
   );
+}
+
+/** "3분 전" 형식 — 마지막 실제 수신 표시용 */
+function formatAgo(iso: string | null): string {
+  if (!iso) return '기록 없음';
+  const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (min < 1) return '방금';
+  if (min < 60) return `${min}분 전`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}시간 전`;
+  return `${Math.floor(h / 24)}일 전`;
 }
 
 function Field({ label, desc, children }: { label: string; desc?: string; children: React.ReactNode }) {

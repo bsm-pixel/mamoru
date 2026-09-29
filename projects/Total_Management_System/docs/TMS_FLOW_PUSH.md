@@ -5,6 +5,41 @@
 
 ---
 
+## 🛡 2026-09-29 수신 확인 + 문자 예비발송 (마이그 155)
+
+사장님 신고: *"모바일 로그인이 풀려 있던 동안 울려야 할 알림이 안 울렸다"*
+
+**실측**: 9월 고객 접수는 서버가 **100% 발송**했다(복원수리 10/10, 고객 상담 전건). 새는 곳은 서버→폰 구간.
+그런데 발송 결과를 DB에 안 남겨서 "몇 건을 놓쳤는지"조차 셀 수 없었다.
+
+**원인**: 로그인 자체는 푸시와 무관(로그아웃해도 토큰 유지). 문제는 토큰이 죽었을 때
+**재등록 경로가 "로그인 후 대시보드" 하나뿐**이라, 토큰이 죽고 로그인까지 풀린 동안 알림이 통째로 비었던 것.
++ 절전 중 지연(Urgency 미지정) + 구독 교체 미처리(SW에서 Firebase SDK 제거 때 자동복구도 빠짐) + 저장소 보존 미요청.
+
+**구조**
+
+```
+sendPushToAll
+  ① push_notifications 행 먼저 생성(fallback_needed=true) → id 를 푸시 data.nid 로 전송
+  ② FCM 발송 (webpush Urgency: high) → sent/failed 기록
+  ③ 휴대폰 0대 / 휴대폰 발송 전부 실패 / 크론 심장박동 끊김 → 즉시 문자
+휴대폰 SW push 수신 → showNotification → POST /api/push/ack {nid, deviceId}   (무인증)
+  → 휴대폰이면 acked_at 기록 (PC 수신은 인정 안 함 — PC만 받고 폰 못 받으면 문자)
+크론 /api/cron/push-fallback (1분)
+  → 심장박동(system_settings push.fallback_heartbeat) 기록
+  → 2분 지나도 acked_at 없음 → fallback_sent_at 선점 후 사장님 문자 1통 (1건 1회)
+SW pushsubscriptionchange → /api/push/lost → "앱 한 번 열어주세요" 문자 (등록된 휴대폰만, 6시간 1회)
+로그인 화면 → 이미 알림 허용된 기기면 토큰 재등록 (subscribe: 기존 device_id 면 로그인 없이 토큰 교체)
+```
+
+- 문자 = 솔라피 REST 직접 호출(`lib/notification/owner-sms.ts`) — Make 경유 금지(Make 자동 OFF 전례, 안전망이 안전망에 기대면 안 됨)
+- Vercel 환경변수: `SOLAPI_API_KEY` `SOLAPI_API_SECRET` `SOLAPI_SENDER`(등록 발신번호) `OWNER_ALERT_PHONE`(받을 번호). 없으면 설정 화면에 **"문자 안전망이 꺼져 있습니다"** 경고
+- 설정 → 알림 → 「알림 받는 기기」에 기기별 **마지막 수신 시각** + 최근 7일 문자 건수
+- 기존 행은 `fallback_needed=false` → 배포 직후 옛 알림에 문자 몰림 없음
+- 막을 수 없는 것: 폰 꺼짐·무신호(켜지면 도착), 무음/방해금지(도착은 하나 소리 X), 솔라피·통신사 장애
+
+---
+
 ## 🚨 2026-09-15 점검에서 찾은 것 (근본원인 4가지)
 
 ### ① 기기 하나만 알림을 받고 있었다 ← 가장 큰 원인
@@ -105,7 +140,9 @@ sendPushToAll()                     ← lib/firebase/send-push.ts
 
 ## 알림이 안 올 때 — 확인 순서
 
-1. **설정 → 알림 → 「알림 받는 기기」** 에 그 기기가 있는가
+0. **`push_notifications` 최근 행**의 `sent_count`·`acked_at`·`fallback_result` 를 본다 (2026-09-29~)
+   - sent_count=0 → 등록 기기 없음/토큰 죽음 · acked_at 있음 → 폰은 받았음(소리·무음 설정 문제) · fallback_result=env-missing → 문자 환경변수 미설정
+1. **설정 → 알림 → 「알림 받는 기기」** 에 그 기기가 있는가 (마지막 수신 시각 확인)
    - 없으면: 그 기기에서 TMS를 열고 **알림 권한 허용** → 자동 등록
    - PC·휴대폰 **각각** 한 번씩 열어야 둘 다 등록된다
 2. **아이폰이면 홈 화면에 추가(PWA)** 했는가 — iOS는 사파리 탭에서 웹푸시가 오지 않는다. 설정 화면에 자동 안내가 뜬다

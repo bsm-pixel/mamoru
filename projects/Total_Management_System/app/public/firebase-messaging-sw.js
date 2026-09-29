@@ -31,7 +31,50 @@ self.addEventListener('push', (event) => {
     requireInteraction: true,
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  // 🔴 2026-09-29: 표시 직후 "받았음" 신호 → 서버가 2분 안에 휴대폰 수신을 확인 못 하면 사장님 문자
+  //    (로그인 여부와 무관하게 동작 — /api/push/ack 는 무인증)
+  event.waitUntil(
+    self.registration.showNotification(title, options).then(() => ackReceived(payload.data?.nid))
+  );
+});
+
+// 페이지가 Cache API 에 넣어둔 기기 id (SW 에선 localStorage 를 못 읽는다) — use-push-notifications 참고
+async function readDeviceId() {
+  try {
+    const res = await caches.match('/__mamoru_device');
+    return res ? await res.text() : '';
+  } catch {
+    return '';
+  }
+}
+
+async function ackReceived(nid) {
+  if (!nid) return;
+  try {
+    const deviceId = await readDeviceId();
+    await fetch('/api/push/ack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nid, deviceId, ua: self.navigator.userAgent }),
+    });
+  } catch {
+    // 신호 실패 = 서버 입장에선 미수신 → 문자가 한 번 더 올 뿐, 알림 누락은 없다
+  }
+}
+
+// 브라우저가 푸시 구독을 교체/만료시킴 → 이 기기의 FCM 토큰이 죽는다.
+// SW 안에선 새 FCM 토큰을 받을 수 없으므로(Firebase SDK 미탑재) 서버에 알려 사장님께 "앱 한 번 열기" 문자를 보낸다.
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil((async () => {
+    try {
+      const deviceId = await readDeviceId();
+      await fetch('/api/push/lost', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId }),
+      });
+    } catch { /* noop */ }
+  })());
 });
 
 // 클라이언트에서 특정 tag 알림 회수 요청 수신

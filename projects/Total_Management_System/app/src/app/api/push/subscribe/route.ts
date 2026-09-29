@@ -19,10 +19,29 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { token, deviceId, deviceInfo } = await req.json();
     if (!token) return NextResponse.json({ error: 'token required' }, { status: 400 });
+
+    // 🔴 2026-09-29: 로그인이 풀린 기기(로그인 화면)도 토큰을 새로 고칠 수 있게 —
+    //    "이미 등록된 기기 id" 일 때만 그 기기 행의 토큰을 교체한다. 새 기기 등록은 여전히 로그인 필수.
+    //    (전엔 로그인 전까지 재등록이 안 돼, 로그인 풀린 동안 휴대폰 알림이 통째로 비었다)
+    if (!user) {
+      if (!deviceId || typeof deviceId !== 'string') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      const { createServiceClient } = await import('@/lib/supabase/server');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const svc = createServiceClient() as any;
+      const now = new Date().toISOString();
+      const { data: known } = await svc.from('push_subscriptions').select('id').eq('device_id', deviceId).limit(1);
+      if (!known || known.length === 0) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const { error } = await svc.from('push_subscriptions')
+        .update({ token, device_info: deviceInfo || null, last_seen_at: now, updated_at: now })
+        .eq('id', known[0].id);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ ok: true, mode: 'device-refresh' });
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;

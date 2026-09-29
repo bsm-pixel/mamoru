@@ -19,11 +19,19 @@ export async function GET(req: NextRequest) {
     const db = supabase as any;
     const currentDeviceId = req.nextUrl.searchParams.get('deviceId') || '';
 
-    const { data, error } = await db
+    // 2026-09-29: last_ack_at(마지막 실제 수신) 추가 — 마이그 155 전이면 옛 컬럼만
+    let { data, error } = await db
       .from('push_subscriptions')
-      .select('id, device_id, device_info, created_at, updated_at')
+      .select('id, device_id, device_info, created_at, updated_at, last_ack_at')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
+    if (error) {
+      ({ data, error } = await db
+        .from('push_subscriptions')
+        .select('id, device_id, device_info, created_at, updated_at')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false }));
+    }
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -32,9 +40,29 @@ export async function GET(req: NextRequest) {
       label: (d.device_info as string) || '이름 없는 기기 (구버전 등록)',
       isCurrent: !!currentDeviceId && d.device_id === currentDeviceId,
       updatedAt: d.updated_at,
+      lastAckAt: (d.last_ack_at as string) || null,
     }));
 
-    return NextResponse.json({ devices });
+    // 예비 문자 안전망 상태 — 설정 화면에서 "안전망이 켜져 있는가"를 한눈에
+    const { isOwnerSmsReady } = await import('@/lib/notification/owner-sms');
+    const { isSweepAlive } = await import('@/lib/firebase/push-fallback');
+    const { createServiceClient } = await import('@/lib/supabase/server');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const svc = createServiceClient() as any;
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { count: smsFallbacks7d } = await svc.from('push_notifications')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', since)
+      .not('fallback_sent_at', 'is', null);
+
+    return NextResponse.json({
+      devices,
+      safety: {
+        smsReady: isOwnerSmsReady(),
+        sweepAlive: await isSweepAlive(svc),
+        smsFallbacks7d: smsFallbacks7d ?? null,
+      },
+    });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }

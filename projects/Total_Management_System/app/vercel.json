@@ -28,6 +28,10 @@
     {
       "path": "/api/cron/shipping-todo",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/push-fallback",
+      "schedule": "* * * * *"
     }
   ]
 }
