@@ -320,9 +320,6 @@ img{display:block; max-width:100%}
 .modal--soft .modal__card{position:relative; max-width:360px; border-radius:20px; text-align:center; animation:softIn .55s cubic-bezier(.22,.9,.3,1);
   padding:30px 24px 26px; border:1.6px solid var(--gold-soft); box-shadow:0 16px 44px rgba(60,46,30,.20)}
 @keyframes softIn{from{opacity:0; transform:translateY(12px) scale(.985)}to{opacity:1; transform:none}}
-.recm__x{position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
-  color:var(--muted); background:transparent; border:0; line-height:0}
-.recm__x:active{background:rgba(180,154,106,.14); color:var(--gold)}
 .recm__msg b{display:inline-block; font-weight:inherit}
 .recm__msg{margin-top:12px; font-family:var(--serif-ko); color:var(--muted); font-size:calc(14.5px * var(--fs)); line-height:1.95; letter-spacing:.01em}
 .recm__info{margin-top:18px; padding-top:18px; border-top:1px solid var(--gold-soft); font-family:var(--serif-ko)}
@@ -330,7 +327,10 @@ img{display:block; max-width:100%}
 .recm__date span{display:block}   /* 날짜 / 시간 분리 — 좁은 폰·큰 글씨에서 '8시'만 떨어지지 않게 */
 .recm__name{margin-top:6px; font-size:calc(18px * var(--fs)); font-weight:700; color:var(--ink)}
 .recm__addr{margin-top:5px; font-size:calc(13.5px * var(--fs)); color:var(--muted)}
-.recm__go{width:100%; margin-top:22px; padding:14px; border-radius:12px; background:var(--gold); color:#fff; font-weight:600; font-size:calc(15px * var(--fs))}
+.recm__btns{display:grid; grid-template-columns:1.25fr 1fr; gap:8px; margin-top:22px}
+.recm__go{width:100%; padding:14px 6px; border-radius:12px; background:var(--gold); color:#fff; font-weight:600; font-size:calc(15px * var(--fs)); white-space:nowrap}
+.recm__dismiss{width:100%; padding:14px 6px; border-radius:12px; background:#fff; border:1px solid var(--line); color:var(--muted); font-weight:600; font-size:calc(15px * var(--fs))}
+.recm__dismiss:active{background:#f3ede4; color:var(--ink)}
 
 /* ── 5b. 참석여부(RSVP) ── */
 .rsvp{background:var(--ivory)}
@@ -662,9 +662,6 @@ body[style*="hidden"] .fsz{opacity:0; pointer-events:none}
 <!-- 피로연 안내 모달 — 스크롤이 편지/카운트다운 구간에 닿으면 1회 자동 노출 -->
 <div class="modal modal--soft" id="recModal" role="dialog" aria-modal="true" aria-labelledby="recmTitle" onclick="if(event.target===this)closeRecModal()">
   <div class="modal__card">
-    <button class="recm__x" type="button" onclick="closeRecModal()" aria-label="닫기">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
     <div class="label-sm" style="margin-bottom:10px">Reception</div>
     <div class="modal__title" id="recmTitle" style="margin-bottom:0">신부측 피로연 안내</div>
     <p class="recm__msg"><!-- 절 단위로 끊어 고아줄 방지(큰 글씨 모드 포함) -->
@@ -677,7 +674,10 @@ body[style*="hidden"] .fsz{opacity:0; pointer-events:none}
       <div class="recm__name" id="recmName"></div>
       <div class="recm__addr" id="recmAddr"></div>
     </div>
-    <button class="recm__go" type="button" onclick="goReception()">피로연 안내 보기</button>
+    <div class="recm__btns">
+      <button class="recm__go" type="button" onclick="goReception()">안내 보기</button>
+      <button class="recm__dismiss" type="button" onclick="closeRecModal()">닫기</button>
+    </div>
   </div>
 </div>
 
