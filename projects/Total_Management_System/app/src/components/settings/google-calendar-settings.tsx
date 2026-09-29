@@ -31,6 +31,7 @@ interface StatusData {
 const SCOPE_LABEL: Record<string, string> = {
   'https://www.googleapis.com/auth/calendar.events': '캘린더 일정',
   'https://www.googleapis.com/auth/tasks': '할 일(Tasks)',
+  'https://www.googleapis.com/auth/gmail.send': '알림 메일 발송',
 };
 
 export default function GoogleCalendarSettings() {

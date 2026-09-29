@@ -249,8 +249,8 @@ function PushTestPanel() {
  */
 function DevicesPanel() {
   const [devices, setDevices] = useState<Array<{ id: string; label: string; isCurrent: boolean; updatedAt: string; lastAckAt: string | null }>>([]);
-  // 2026-09-29: 문자 예비발송 안전망 상태 (휴대폰 2분 미수신 → 사장님 문자)
-  const [safety, setSafety] = useState<{ smsReady: boolean; sweepAlive: boolean; smsFallbacks7d: number | null } | null>(null);
+  // 2026-09-29: 메일 예비발송 안전망 상태 (휴대폰 2분 미수신 → bsm@mamoru.kr 메일)
+  const [safety, setSafety] = useState<{ alertReady: boolean; alertProblem: string | null; sweepAlive: boolean; fallbacks7d: number | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [iosNotice, setIosNotice] = useState(false);
@@ -282,6 +282,21 @@ function DevicesPanel() {
       await load();
     } finally {
       setBusyId(null);
+    }
+  };
+
+  // 예비 알림 메일이 실제로 도착·울리는지 확인 (구글 재연결 직후 1회)
+  const [mailTesting, setMailTesting] = useState(false);
+  const handleMailTest = async () => {
+    setMailTesting(true);
+    try {
+      const res = await fetch('/api/push/test-alert', { method: 'POST' });
+      const json = await res.json().catch(() => ({}));
+      if (json.ok) toast.success('테스트 메일 발송 — Gmail 앱 알림을 확인하세요');
+      else toast.error(`메일 발송 실패: ${json.result || res.status}`);
+      await load();
+    } finally {
+      setMailTesting(false);
     }
   };
 
@@ -324,17 +339,27 @@ function DevicesPanel() {
         </ul>
       )}
 
-      {safety && (!safety.smsReady || !safety.sweepAlive) ? (
+      {safety && (!safety.alertReady || !safety.sweepAlive) ? (
         <p className="text-[11px] text-amber-700 leading-relaxed bg-amber-50 rounded-lg px-2.5 py-2">
-          <b>문자 안전망이 꺼져 있습니다.</b>{' '}
-          {!safety.smsReady ? '문자 발송 설정(솔라피 키·발신번호·받을 번호)이 없습니다.' : '수신 확인 점검(1분 주기)이 멈춰 있어 알림마다 문자가 즉시 함께 갑니다.'}
+          <b>{!safety.alertReady ? '메일 안전망이 꺼져 있습니다.' : '수신 확인 점검이 멈춰 있습니다.'}</b>{' '}
+          {!safety.alertReady ? safety.alertProblem : '알림마다 메일이 즉시 함께 갑니다.'}
         </p>
       ) : safety ? (
         <p className="text-[10px] text-neutral-500 leading-relaxed">
-          휴대폰이 2분 안에 알림을 받지 못하면 문자로 한 번 더 보냅니다
-          {safety.smsFallbacks7d != null && <> · 최근 7일 문자 {safety.smsFallbacks7d}건</>}
+          휴대폰이 2분 안에 알림을 받지 못하면 메일(Gmail)로 한 번 더 보냅니다
+          {safety.fallbacks7d != null && <> · 최근 7일 메일 {safety.fallbacks7d}건</>}
         </p>
       ) : null}
+      {safety && (
+        <button
+          type="button"
+          onClick={handleMailTest}
+          disabled={mailTesting}
+          className="text-[11px] text-neutral-500 underline hover:text-neutral-800 disabled:opacity-50"
+        >
+          {mailTesting ? '메일 보내는 중…' : '알림 메일 테스트'}
+        </button>
+      )}
 
       <p className="text-[10px] text-neutral-400 leading-relaxed">
         알림 받을 기기에서 각각 TMS를 한 번 열고 알림 권한을 허용하면 자동 등록됩니다.

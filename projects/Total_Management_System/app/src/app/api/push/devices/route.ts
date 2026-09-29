@@ -43,24 +43,40 @@ export async function GET(req: NextRequest) {
       lastAckAt: (d.last_ack_at as string) || null,
     }));
 
-    // 예비 문자 안전망 상태 — 설정 화면에서 "안전망이 켜져 있는가"를 한눈에
-    const { isOwnerSmsReady } = await import('@/lib/notification/owner-sms');
+    // 예비 메일 안전망 상태 — 설정 화면에서 "안전망이 켜져 있는가"를 한눈에
+    const { getOwnerAlertStatus } = await import('@/lib/notification/owner-alert');
     const { isSweepAlive } = await import('@/lib/firebase/push-fallback');
     const { createServiceClient } = await import('@/lib/supabase/server');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const svc = createServiceClient() as any;
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { count: smsFallbacks7d } = await svc.from('push_notifications')
+    const { count: fallbacks7d } = await svc.from('push_notifications')
       .select('id', { count: 'exact', head: true })
       .gte('created_at', since)
       .not('fallback_sent_at', 'is', null);
+    const alert = await getOwnerAlertStatus();
+    // 권한은 있어도 실제 발송이 실패했을 수 있다(Gmail API 꺼짐 등) → 마지막 예비발송 결과로 조용한 실패를 드러낸다
+    const { data: lastFallback } = await svc.from('push_notifications')
+      .select('fallback_result, fallback_sent_at')
+      .not('fallback_sent_at', 'is', null)
+      .order('fallback_sent_at', { ascending: false })
+      .limit(1);
+    const lastResult: string = lastFallback?.[0]?.fallback_result || '';
+    const { data: testOk } = await svc.from('system_settings').select('value').eq('key', 'push.alert_test_ok_at').maybeSingle();
+    const testOkAt = testOk?.value ? String(testOk.value).replace(/^"|"$/g, '') : '';
+    const lastFailed = !!lastResult && lastResult !== 'mailed'
+      && !(testOkAt && Date.parse(testOkAt) > Date.parse(String(lastFallback?.[0]?.fallback_sent_at || 0)));   // 이후 테스트 메일 성공이면 해소된 것
+    const lastProblem = lastResult.startsWith('gmail-api-disabled')
+      ? '구글 클라우드에서 Gmail API 가 꺼져 있습니다 — 콘솔에서 사용 설정 필요.'
+      : `마지막 알림 메일 발송이 실패했습니다 (${lastResult.slice(0, 60)}).`;
 
     return NextResponse.json({
       devices,
       safety: {
-        smsReady: isOwnerSmsReady(),
+        alertReady: alert.ready && !lastFailed,
+        alertProblem: alert.problem || (lastFailed ? lastProblem : null),
         sweepAlive: await isSweepAlive(svc),
-        smsFallbacks7d: smsFallbacks7d ?? null,
+        fallbacks7d: fallbacks7d ?? null,
       },
     });
   } catch (err) {

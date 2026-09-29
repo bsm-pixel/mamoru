@@ -8,7 +8,7 @@ import { isMobileLabel } from '@/lib/firebase/push-fallback';
  * 🔓 로그인 불필요: 로그인이 풀린 휴대폰도 알림은 받을 수 있고, 그 수신도 인정돼야 한다.
  *    받는 값은 알림 id(nid)·기기 id 뿐이고 하는 일은 "수신 시각 기록"이 전부라 노출 위험이 없다.
  *
- * 휴대폰 수신만 push_notifications.acked_at 으로 인정한다 → PC만 받고 폰이 못 받으면 문자가 간다.
+ * 휴대폰 수신만 push_notifications.acked_at 으로 인정한다 → PC만 받고 폰이 못 받으면 메일이 간다.
  * body: { nid, deviceId?, ua? }
  */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

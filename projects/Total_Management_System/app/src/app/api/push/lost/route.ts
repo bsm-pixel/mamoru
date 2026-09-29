@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { isMobileLabel } from '@/lib/firebase/push-fallback';
-import { sendOwnerSms } from '@/lib/notification/owner-sms';
+import { sendOwnerAlert } from '@/lib/notification/owner-alert';
 
 /**
  * POST /api/push/lost — 서비스워커가 "푸시 구독이 교체돼 이 기기 알림이 끊겼다"고 알림 (2026-09-29)
  *
- * SW 안에서는 새 FCM 토큰을 받을 수 없어 스스로 복구가 안 된다 → 사장님께 "TMS 앱 한 번 열기" 문자.
+ * SW 안에서는 새 FCM 토큰을 받을 수 없어 스스로 복구가 안 된다 → 사장님께 "TMS 앱 한 번 열기" 메일.
  * (앱을 열면 로그인 여부와 무관하게 토큰이 재등록된다 — 로그인 화면 포함)
  *
- * 🔓 무인증이라 남용 방지: 등록된 **휴대폰** 기기 id 일 때만, 그리고 6시간에 1번만 문자.
+ * 🔓 무인증이라 남용 방지: 등록된 **휴대폰** 기기 id 일 때만, 그리고 6시간에 1번만 메일.
  * body: { deviceId }
  */
 const THROTTLE_KEY = 'push.lost_warned_at';
@@ -32,7 +32,11 @@ export async function POST(req: NextRequest) {
 
     const nowIso = new Date().toISOString();
     await db.from('system_settings').upsert({ key: THROTTLE_KEY, value: nowIso, updated_at: nowIso }, { onConflict: 'key' });
-    const r = await sendOwnerSms(`[MAMORU] ${label} 앱알림 연결이 끊겼습니다.\nTMS 앱을 한 번 열어주세요(로그인 안 해도 됨).`);
+    const r = await sendOwnerAlert(
+      '[MAMORU] 휴대폰 앱알림 연결 끊김 — TMS 앱을 한 번 열어주세요',
+      `${label} 의 앱 알림 연결이 끊겼습니다.\nTMS 앱을 한 번 열면 바로 복구됩니다(로그인 안 해도 됨).\n\n복구 전까지 접수 알림은 이 메일로 대신 옵니다.`,
+      '/dashboard',
+    );
     return NextResponse.json({ ok: r.ok });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

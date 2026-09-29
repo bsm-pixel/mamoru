@@ -31,12 +31,14 @@ export const SCOPES = [
   'https://www.googleapis.com/auth/calendar.events',
   // 2026-09-24: 송장 미생성 '할 일'을 구글 할 일(Tasks)로 — 스코프 추가분이라 재연결 1회 필요
   'https://www.googleapis.com/auth/tasks',
+  // 2026-09-29: 앱 푸시 미수신 시 사장님께 알림 메일(bsm@mamoru.kr) — 스코프 추가분이라 재연결 1회 필요
+  'https://www.googleapis.com/auth/gmail.send',
 ];
 
 /* 구글은 허용 결과를 **정규형**으로 돌려준다: 'email' → 'https://www.googleapis.com/auth/userinfo.email'.
    요청 목록(SCOPES)의 짧은 이름과 문자 그대로 비교하면 멀쩡한 권한이 '빠졌다'고 나온다(2026-09-26 실제 오탐).
    그래서 ① 별칭을 정규형으로 바꾸고 ② 신원 확인용(openid/email/profile)은 비교에서 제외한다 —
-   기능에 필요한 건 calendar.events 와 tasks 뿐이다. */
+   기능에 필요한 건 calendar.events · tasks · gmail.send 뿐이다. */
 const SCOPE_ALIAS: Record<string, string> = {
   email: 'https://www.googleapis.com/auth/userinfo.email',
   profile: 'https://www.googleapis.com/auth/userinfo.profile',

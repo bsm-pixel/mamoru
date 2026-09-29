@@ -28,7 +28,7 @@ interface PushPayload {
   body: string;
   url?: string;
   tag?: string;
-  /** 휴대폰이 2분 안에 못 받으면 사장님 문자 예비발송 (기본 true) */
+  /** 휴대폰이 2분 안에 못 받으면 사장님 메일 예비발송 (기본 true) */
   fallback?: boolean;
 }
 
@@ -38,10 +38,10 @@ interface PushPayload {
  *    (2026-08-01: isPushEnabled 게이팅 제거 — 접수 알림 오락가락 근본원인 정리)
  * 발송은 sendEach 배치 1회로 처리 → 순차 send 루프의 지연/부분누락 제거.
  *
- * 🔴 2026-09-29 수신 확인 + 문자 예비발송 (마이그 155) — "로그인 풀린 사이 알림 누락" 신고
+ * 🔴 2026-09-29 수신 확인 + 메일 예비발송 (마이그 155) — "로그인 풀린 사이 알림 누락" 신고
  *    ① 기록을 먼저 만들고 그 id(nid)를 푸시에 실어 보낸다 → 휴대폰 SW가 받는 즉시 /api/push/ack
- *    ② 2분 안에 휴대폰 수신이 없으면 크론(push-fallback)이 사장님 문자 1통
- *    ③ 휴대폰이 0대 / 휴대폰 발송 전부 실패 / 크론 중단 → 기다리지 않고 즉시 문자
+ *    ② 2분 안에 휴대폰 수신이 없으면 크론(push-fallback)이 사장님 메일 1통(bsm@mamoru.kr → Gmail 앱 알림)
+ *    ③ 휴대폰이 0대 / 휴대폰 발송 전부 실패 / 크론 중단 → 기다리지 않고 즉시 메일
  *    ④ Urgency: high — 안드로이드 절전(Doze) 중에도 지연 없이 깨워서 표시
  */
 export async function sendPushToAll(payload: PushPayload): Promise<{ sent: number; failed: number }> {
@@ -123,7 +123,7 @@ export async function sendPushToAll(payload: PushPayload): Promise<{ sent: numbe
       console.error('[FCM] sendEach 오류:', err instanceof Error ? err.message : String(err));
     }
   } else if (!app) {
-    console.warn('[FCM] Firebase Admin 미설정 — 푸시 생략, 문자 예비발송만 판단');
+    console.warn('[FCM] Firebase Admin 미설정 — 푸시 생략, 메일 예비발송만 판단');
   } else {
     console.log('[FCM] 구독 토큰 없음');
   }
@@ -133,7 +133,7 @@ export async function sendPushToAll(payload: PushPayload): Promise<{ sent: numbe
       .then(() => {}, () => {});
   }
 
-  // ③ 기다려도 휴대폰에 안 올 게 확실하거나, 2분 뒤 확인해줄 크론이 죽어 있으면 → 즉시 문자
+  // ③ 기다려도 휴대폰에 안 올 게 확실하거나, 2분 뒤 확인해줄 크론이 죽어 있으면 → 즉시 메일
   if (wantFallback) {
     const reason =
       mobileCount === 0 ? '휴대폰 알림 미등록 — TMS 앱을 열어 알림을 허용해주세요'
@@ -141,8 +141,9 @@ export async function sendPushToAll(payload: PushPayload): Promise<{ sent: numbe
       : !(await isSweepAlive(db)) ? '수신확인 점검 중단 — 즉시 발송'
       : null;
     if (reason) {
-      const r = nid ? await claimAndSendFallback(db, { id: nid, title: payload.title, body: payload.body }, reason) : 'no-column';
-      if (r === 'no-column') await sendFallbackUnclaimed({ id: '', title: payload.title, body: payload.body }, reason);
+      const row = { id: nid || '', title: payload.title, body: payload.body, url };
+      const r = nid ? await claimAndSendFallback(db, row, reason) : 'no-column';
+      if (r === 'no-column') await sendFallbackUnclaimed(row, reason);
     }
   }
 
