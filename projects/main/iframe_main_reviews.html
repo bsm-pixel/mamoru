@@ -169,6 +169,8 @@ img { display: block; max-width: 100%; }
   .mm-rv-backdrop--open .mm-rv-sheet{ transform:translateY(0) scale(1); opacity:1; }
   .mm-rv-sheet__grip{ display:none; }
 }
+/* 2026-10-01 구매 제품 칩 — 분류 칩보다 한 톤 진한 채움(Parchment) + 모델명 서체 (page_reviews 와 동일) */
+.mm-rv-product { display: inline-block; max-width: 100%; vertical-align: middle; padding: 3px 10px; border-radius: 999px; background: var(--parchment); color: var(--void); font-family: 'Outfit', 'Pretendard', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* 2026-10-01 카드 헤더 세로 3단 (분류 / 이름 / 매장) */
 .mm-review-card__header { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 3px; margin-bottom: 8px; }
 .mm-review-card__meta { font-size: 11px; font-weight: 500; color: var(--warm-gray); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -327,6 +329,7 @@ img { display: block; max-width: 100%; }
           (metaHtml ? '<div class="mm-review-card__meta">' + metaHtml + '</div>' : '') +
           '<span class="mm-review-card__name">' + maskName(r.name) + honHtml(r.name) + '</span>' +
           (r.store_name ? '<div class="mm-review-card__store">' + maskStore(r.store_name) + '</div>' : '') +
+          (r.product ? '<div style="margin-top:4px;"><span class="mm-rv-product">' + r.product + '</span></div>' : '') +
         '</div>' +
         '<div class="mm-review-card__stars">' + stars + '</div>' +
         tagsHtml +
@@ -458,6 +461,7 @@ img { display: block; max-width: 100%; }
     var clbl = chipLabel(r);
     var chip = clbl ? '<span class="mm-rv-sheet__chip">' + clbl + '</span>' : '';
     if (r.source === 'naver') chip += '<span class="mm-rv-sheet__chip mm-rv-sheet__chip--src">네이버</span>';
+    if (r.product) chip += '<span class="mm-rv-product">' + r.product + '</span>';  // 2026-10-01 구매 제품 = 분류 칩 옆 채움 칩
     _rvScroll.innerHTML = gallery +
       '<div class="mm-rv-sheet__pad">' +
         (chip ? '<div class="mm-rv-sheet__topline">' + chip + '</div>' : '') +

@@ -628,8 +628,20 @@ img { display: block; max-width: 100%; }
 .mm-prv__modal-name {
   font-size: 17px; font-weight: 700; margin-bottom: 4px;
 }
-.mm-prv__modal-product {
-  font-size: 14px; color: var(--mm-warm-gray); margin-bottom: 12px;
+/* 2026-10-01 모달 태그↔본문 간격 (예전엔 제품명 줄이 대신 띄워주고 있었음) */
+#prvModalBody > .mm-prv__tags { margin-bottom: 14px; }
+/* 2026-10-01 모달 칩줄 (분류 + 구매 제품) */
+.mm-prv__modal-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 12px; }
+.mm-prv__modal-chips .mm-prv__chip { margin-left: 0; }
+/* 구매 제품 칩 — 분류 칩보다 한 톤 진한 채움(Parchment) + 모델명 서체 (page_reviews 와 동일) */
+.mm-prv__modal-product,
+.mm-prv__card-product {
+  display: inline-block; max-width: 100%; align-self: flex-start;
+  padding: 3px 10px; border-radius: 999px;
+  background: #EDEBE8; color: var(--mm-void);
+  font-family: 'Outfit', 'Pretendard', sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .mm-prv__modal-text {
   font-size: 15px; line-height: 1.8; color: var(--mm-void); margin-bottom: 16px;
@@ -1290,13 +1302,16 @@ img { display: block; max-width: 100%; }
           return '<img class="mm-prv__modal-photo" src="' + url + '" alt="후기 사진" data-lb-idx="' + i + '">';
         }).join('') + '</div>';
     }
-    var productHtml = r.product ? '<div class="mm-prv__modal-product">' + r.product + '</div>' : '';
-    // 시안 순서: 사진(상단) → 이름 → 별점 → product → 태그 → 내용 → 날짜
+    // 2026-10-01 순서: 사진 → 칩줄(분류 + 구매 제품) → 이름 → 매장 → 별점 → 태그 → 내용 → 날짜
+    //   (이름 뒤에 매장·칩이 줄줄이 붙고, 제품명이 별점 아래 끼어 있던 것 정리 — page_reviews 모달과 동일 틀)
+    var chipRow = chipHtml(r).replace(' style="margin-left:6px"', '') +
+      (r.product ? '<span class="mm-prv__modal-product">' + r.product + '</span>' : '');
     modalBody.innerHTML =
       photosHtml +
-      '<div class="mm-prv__modal-name">' + maskName(r.name) + storeHtml(r) + chipHtml(r) + '</div>' +
+      (chipRow ? '<div class="mm-prv__modal-chips">' + chipRow + '</div>' : '') +
+      '<div class="mm-prv__modal-name">' + maskName(r.name) + '</div>' +
+      (r.store_name ? '<div class="mm-prv__card-store" style="margin-top:-2px;margin-bottom:6px">' + maskStore(r.store_name) + '</div>' : '') +
       '<div class="mm-prv__modal-stars">' + renderStars(r.stars) + '</div>' +
-      productHtml +
       renderTagChips(r, 'mm-prv__tags') +
       '<div class="mm-prv__modal-text">' + r.content + '</div>' +
       renderDates(r, 'mm-prv__modal-date');

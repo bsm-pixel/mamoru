@@ -184,6 +184,23 @@ img { display: block; max-width: 100%; }
   text-overflow: ellipsis;
 }
 .mm-rv-card__meta-src { font-weight: 700; color: var(--mm-text-d2); }
+/* 구매 제품 칩 (2026-10-01) — 분류 칩(흐린 글자)과 구분되게 한 톤 진한 채움 + 모델명 서체 */
+.mm-rv-product {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--parchment);
+  color: var(--mm-void);
+  font-family: 'Outfit', 'Pretendard', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .mm-rv-card__store {
   font-size: 12px;
   font-weight: 500;
@@ -262,6 +279,7 @@ img { display: block; max-width: 100%; }
   flex-wrap: wrap;
   gap: 4px;
 }
+.mm-rv-modal__tags { margin-bottom: 16px; } /* 태그↔본문 간격 (예전엔 제품명 줄이 대신 띄워주고 있었음) */
 .mm-rv-tag {
   font-size: 11px;
   font-weight: 500;
@@ -315,6 +333,7 @@ img { display: block; max-width: 100%; }
 }
 .mm-rv-modal__chips {
   display: flex; gap: 6px; margin-bottom: 16px;
+  flex-wrap: wrap; align-items: center; /* 구매 제품 칩이 붙어도 좁은 폭에서 넘치지 않게 */
 }
 .mm-rv-modal__text {
   font-size: 15px; line-height: 1.8; color: var(--mm-text-d); margin-bottom: 16px;
@@ -800,6 +819,10 @@ img { display: block; max-width: 100%; }
     if (r.source === 'naver') html += (html ? ' · ' : '') + '<b class="mm-rv-card__meta-src">네이버</b>';
     return html;
   }
+  /* 구매 제품 칩 — 분류 칩보다 한 톤 진한 채움(Parchment) + Outfit. 제품구매 후기만 */
+  function productChip(r) {
+    return r.product ? '<span class="mm-rv-product">' + r.product + '</span>' : '';
+  }
   /* 매장명은 이름 옆이 아니라 자기 줄 (긴 매장명이 이름을 밀어내지 않게) */
   function storeLine(r) {
     return r.store_name ? '<div class="mm-rv-card__store">' + maskStore(r.store_name) + '</div>' : '';
@@ -862,7 +885,7 @@ img { display: block; max-width: 100%; }
       imgHtml = '<img class="mm-rv-card__img" src="' + r.product_image_url + '" alt="제품 이미지" loading="lazy">';
     }
     // 제품명 (purchase 타입)
-    var productHtml = r.product ? '<div style="font-size:13px;color:var(--mm-text-d2);margin-bottom:2px">' + r.product + '</div>' : '';
+    var productHtml = r.product ? '<div>' + productChip(r) + '</div>' : '';  // 2026-10-01 구매 제품 = 채움 칩
     // 본문 미리보기 (모바일 2열 Masonry — 50자)
     var preview = r.content.length > 50 ? r.content.substring(0, 50) + '…' : r.content;
     return '<article class="mm-rv-card" data-idx="' + idx + '" style="cursor:pointer">' +
@@ -1052,17 +1075,17 @@ img { display: block; max-width: 100%; }
           return '<img class="mm-rv-modal__photo" src="' + url + '" alt="후기 사진" data-lb-idx="' + i + '">';
         }).join('') + '</div>';
     }
-    var productHtml = r.product ? '<div style="font-size:14px;color:var(--mm-text-d2);margin-bottom:12px">' + r.product + '</div>' : '';
-    // 시안 순서: 사진(상단) → 칩 → 이름 → 별점 → 태그 → 내용 → 날짜
+    // 시안 순서: 사진(상단) → 칩(+구매 제품) → 이름 → 별점 → 태그 → 내용 → 날짜
+    // 2026-10-01: 구매 제품은 태그 아래 회색 글줄 → '제품구매' 칩 옆 채움 칩으로 (무엇을 샀는지가 분류와 한 묶음)
     modalBody.innerHTML =
       photosHtml +
       '<div class="mm-rv-modal__chips">' + renderChips(r, 'mm-rv-chip') +
         (r.source === 'naver' ? '<span class="mm-rv-chip mm-rv-chip--naver">네이버</span>' : '') +
+        productChip(r) +
       '</div>' +
       '<div class="mm-rv-modal__name">' + maskName(r.name) + honHtml(r.name) + storeHtml(r, 13) + '</div>' +
       '<div class="mm-rv-modal__stars">' + renderStars(r.stars) + '</div>' +
       renderTagChips(r, 'mm-rv-modal__tags') +
-      productHtml +
       '<div class="mm-rv-modal__text">' + r.content + '</div>' +
       renderDates(r, 'mm-rv-modal__date');
     updateModalNav();
