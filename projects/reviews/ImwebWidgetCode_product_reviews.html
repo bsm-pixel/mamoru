@@ -502,17 +502,39 @@ img { display: block; max-width: 100%; }
   border-radius: var(--mm-radius-sm);
   object-fit: cover;
 }
+/* 2026-10-01 카드 헤더 세로 3단 (분류 / 이름·별점 / 매장) */
 .mm-prv__card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.mm-prv__card-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
+.mm-prv__card-meta,
+.mm-prv__card-store {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mm-warm-gray);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mm-prv__card-store { font-size: 12px; }
 .mm-prv__card-name {
   font-size: 14px;
   font-weight: 700;
   color: var(--mm-void);
   letter-spacing: -0.01em;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .mm-prv__card-stars {
   color: var(--mm-void);
@@ -546,6 +568,10 @@ img { display: block; max-width: 100%; }
 }
 /* 카드 '+N' — 조용한 보조 표시 */
 .mm-prv__tag--more { border: none; color: var(--mm-warm-gray); font-weight: 600; padding: 2px 4px; opacity: .7; }
+/* 2026-10-01 카드 태그 = 한 줄 고정 (1개 + N). 모달(.mm-prv__modal 쪽)은 그대로 전량 줄바꿈 */
+.mm-prv__card .mm-prv__tags { flex-wrap: nowrap; overflow: hidden; }
+.mm-prv__card .mm-prv__tag { flex-shrink: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mm-prv__card .mm-prv__tag--more { flex-shrink: 0; border: none; }  /* 아래 .mm-prv__tag 가 뒤에 선언돼 테두리가 되살아나던 것 */
 .mm-prv__tag {
   font-size: 10px;
   font-weight: 500;
@@ -1044,12 +1070,17 @@ img { display: block; max-width: 100%; }
 
     return '<article class="mm-prv__card" data-idx="' + idx + '">' +
       imgHtml +
+      // 2026-10-01: 분류(위·작게) → 이름·별점(한 줄) → 매장(자기 줄). 이름 뒤에 매장·칩이 줄줄이 붙던 것 정리 (page_reviews 와 동일 틀)
       '<div class="mm-prv__card-header">' +
-        '<span class="mm-prv__card-name">' + maskName(r.name) + storeHtml(r) + chipHtml(r) + '</span>' +
-        '<span class="mm-prv__card-stars">' + renderStars(r.stars) + '</span>' +
+        (chipLabel(r) ? '<div class="mm-prv__card-meta">' + chipLabel(r).replace('·', ' · ') + '</div>' : '') +
+        '<div class="mm-prv__card-row">' +
+          '<span class="mm-prv__card-name">' + maskName(r.name) + '</span>' +
+          '<span class="mm-prv__card-stars">' + renderStars(r.stars) + '</span>' +
+        '</div>' +
+        (r.store_name ? '<div class="mm-prv__card-store">' + maskStore(r.store_name) + '</div>' : '') +
       '</div>' +
       productHtml +
-      renderTagChips(r, 'mm-prv__tags', 2) +
+      renderTagChips(r, 'mm-prv__tags', 1) +
       '<div class="mm-prv__card-text">' + preview + '</div>' +
       renderDates(r, 'mm-prv__card-date') +
     '</article>';

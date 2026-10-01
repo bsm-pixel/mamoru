@@ -668,6 +668,10 @@ button[class*="mm-"]:focus-visible {
   .mm-slogan__ko { font-size: 17px; }
   .mm-slogan__philosophy { font-size: 14px; }
 }
+/* 2026-10-01 카드 헤더 세로 3단 (분류 / 이름 / 매장) */
+.mm-review-card__header { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 3px; margin-bottom: 8px; }
+.mm-review-card__meta { font-size: 11px; font-weight: 500; color: var(--warm-gray); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mm-review-card__store { font-size: 12px; font-weight: 500; color: var(--warm-gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
 </head>
 <body>
@@ -964,12 +968,12 @@ button[class*="mm-"]:focus-visible {
       var imgHtml = imgUrl ? '<img class="mm-review-card__img" src="' + imgUrl + '" alt="후기 이미지" loading="lazy">' : '';
       var tagsHtml = '';
       if (r.meta && r.meta.tags && r.meta.tags.length > 0) {
-        var _tg = r.meta.tags;                    // 카드=상위 2개 + '+N'(모달은 전량)
-        tagsHtml = '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">' +
-          _tg.slice(0, 2).map(function(t) {
-            return '<span style="font-size:11px;padding:2px 8px;border:1px solid var(--sand);border-radius:6px;color:var(--stone);">' + (TAG_LABELS[t] || t) + '</span>';
+        var _tg = r.meta.tags;                    // 카드=상위 1개 + '+N' 한 줄 고정(모달은 전량) — 2026-10-01 줄바꿈 정리
+        tagsHtml = '<div style="display:flex;flex-wrap:nowrap;overflow:hidden;gap:4px;margin-bottom:8px;">' +
+          _tg.slice(0, 1).map(function(t) {
+            return '<span style="font-size:11px;padding:2px 8px;border:1px solid var(--sand);border-radius:6px;color:var(--stone);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;">' + (TAG_LABELS[t] || t) + '</span>';
           }).join('') +
-          (_tg.length > 2 ? '<span style="font-size:11px;padding:2px 4px;color:#B8B4AF;font-weight:600;">+' + (_tg.length - 2) + '</span>' : '') +
+          (_tg.length > 1 ? '<span style="font-size:11px;padding:2px 4px;color:#B8B4AF;font-weight:600;flex-shrink:0;">+' + (_tg.length - 1) + '</span>' : '') +
           '</div>';
       }
       /* 우측 상단 칩: 서브타입 + 네이버 출처 (page_reviews 화면과 동일 배치) */
@@ -981,13 +985,15 @@ button[class*="mm-"]:focus-visible {
       if (r.source === 'naver') {
         chips += '<span class="mm-review-card__source-badge">네이버</span>';
       }
-      var chipsHtml = chips ? '<div class="mm-review-card__chips">' + chips + '</div>' : '';
+      var metaHtml = (clbl || '').replace('·', ' · ') + (r.source === 'naver' ? (clbl ? ' · ' : '') + '<b style="font-weight:700;color:var(--stone);">네이버</b>' : '');
       var preview = r.content.length > 60 ? r.content.substring(0, 60) + '\u2026' : r.content;
       return '<div class="mm-review-card mm-anim mm-anim-stagger" data-idx="' + idx + '">' +
         imgHtml +
+        // 2026-10-01: 분류(위·작게) → 이름(한 줄 전체) → 매장(자기 줄) — 이름 옆 칩이 줄바꿈되며 틀이 깨지던 문제 (page_reviews 와 동일)
         '<div class="mm-review-card__header">' +
-          '<span class="mm-review-card__name">' + maskName(r.name) + honHtml(r.name) + storeHtml(r, 11) + '</span>' +
-          chipsHtml +
+          (metaHtml ? '<div class="mm-review-card__meta">' + metaHtml + '</div>' : '') +
+          '<span class="mm-review-card__name">' + maskName(r.name) + honHtml(r.name) + '</span>' +
+          (r.store_name ? '<div class="mm-review-card__store">' + maskStore(r.store_name) + '</div>' : '') +
         '</div>' +
         '<div class="mm-review-card__stars">' + stars + '</div>' +
         tagsHtml +
