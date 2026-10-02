@@ -206,7 +206,7 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
                 </div>
 
                 {/* 4. 송장 · 출고 */}
-                <div className="flex items-center gap-1.5 shrink-0 text-xs lg:w-52 lg:justify-end">
+                <div className="flex items-center gap-1.5 shrink-0 text-xs lg:w-64 lg:justify-end whitespace-nowrap">
                   {it.delivered_at ? (
                     <span className="flex items-center gap-1 text-emerald-700 font-semibold"><PackageCheck size={13} />배달완료 · {it.invoice_number}</span>
                   ) : it.shipped_at ? (
