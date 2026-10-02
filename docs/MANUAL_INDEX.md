@@ -29,6 +29,7 @@
 | `MANUAL_REPAIR.md` | 복원수리 접수→수거→입고→수리→출고 |
 | `MANUAL_CONSULTATION.md` | 상담(매장/출장/톡) 관리 |
 | `MANUAL_EVENT.md` | 이벤트 접수→입금→판매전환 |
+| `MANUAL_REVIEW_EVENT.md` | **리뷰 이벤트 매달 순서** — 상품 게시 → 홍보물(피그마) → 추첨 → 명단 복사·발표 게시물 → 공개 → 당첨 안내 → 송장 → 출고 알림톡 (2026-10-02) |
 | `STOCK_SALE_MANUAL.md` | 재고판매(LS) |
 | `MANUAL_ORDER.md` | 아임웹 주문 관리 |
 | `MANUAL_CUSTOMER.md` | 고객(활동명·병합) |

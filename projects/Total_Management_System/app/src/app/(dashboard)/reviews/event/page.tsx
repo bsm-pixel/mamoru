@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Star, Trophy, Calendar, ImagePlus, Save, Loader2, ExternalLink, Dices, Hand, PartyPopper } from 'lucide-react';
+import { ArrowLeft, Star, Trophy, Calendar, ImagePlus, Save, Loader2, ExternalLink, Dices, Hand, PartyPopper, Copy } from 'lucide-react';
 import { resizeImage } from '@/lib/utils/resize-image';
 import { maskNameEvent, maskPhoneEvent } from '@/lib/reviews/mask';
 import EventShipmentsPanel from '@/components/reviews/event-shipments-panel';
@@ -210,6 +210,36 @@ export default function ReviewEventPage() {
   function rankLabel(rank: number): string {
     const l = (config.prizes.find((p) => p.rank === rank)?.label || '').trim();
     return l || `${rank}등`;
+  }
+  // 2026-10-02 게시물용 명단 복사 — 고객 공개(게시) 전에 인스타 발표 게시물을 먼저 만들 수 있게.
+  //   공개 API와 같은 마스킹(백*민 님 (3562))만 내보낸다. 실명·전체 번호는 화면 밖으로 나가지 않는다.
+  async function copyWinnerList() {
+    const byRank = new Map<number, string[]>();
+    reviews.forEach((r) => {
+      const m = marks[r.id];
+      if (!m) return;
+      const nm = (m.display_name || '').trim() || `${maskNameEvent(r.name)} 님`;
+      const ph = maskPhoneEvent(r.phone);
+      if (!byRank.has(m.rank)) byRank.set(m.rank, []);
+      byRank.get(m.rank)!.push(`${nm}${ph ? ' ' + ph : ''}`);
+    });
+    const ranks = [...byRank.keys()].sort((a, b) => a - b);
+    if (!ranks.length) { setMsg('선정된 당첨자가 없습니다'); return; }
+    const lines: string[] = [`${parseInt(month.slice(2, 4), 10)}월 MAMORU 리뷰 이벤트 당첨자`];
+    let total = 0;
+    ranks.forEach((rk) => {
+      const prize = (config.prizes.find((p) => p.rank === rk)?.name || '').trim();
+      const list = byRank.get(rk)!;
+      total += list.length;
+      lines.push('', `[${rankLabel(rk)}${prize ? ' · ' + prize : ''} · ${list.length}명]`, ...list);
+    });
+    const text = lines.join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      setMsg(`게시물용 명단을 복사했습니다 (${total}명) — 피그마 프로젝트에 붙여넣으세요`);
+    } catch {
+      window.prompt('아래 내용을 복사하세요', text);
+    }
   }
   // 등급별 당첨 연출(이모지·색·글로우)
   function rankFx(rank: number | null) {
@@ -507,17 +537,25 @@ export default function ReviewEventPage() {
           </div>
         </div>
 
+        {/* 2026-10-02 게시물용 명단 복사 — 게시(고객 공개) 전에 인스타 발표 게시물을 먼저 만들 때. 선정이 있으면 항상 노출 */}
+        {Object.keys(marks).length > 0 && (
+          <button type="button" onClick={copyWinnerList}
+            className="ml-auto px-3 py-2 rounded-lg border border-stone-300 bg-white text-stone-700 text-sm font-semibold hover:bg-stone-50 flex items-center gap-1.5">
+            <Copy size={15} />게시물용 명단 복사
+          </button>
+        )}
+
         {/* 선정자 게시하기 — 선정 검토 후 고객 페이지에 공개(=발표됨). 선정 있고 아직 발표 전일 때만 노출 */}
         {config.status !== 'announced' && Object.keys(marks).length > 0 && (
           <button disabled={saving} onClick={() => changeStatus('announced')}
-            className="ml-auto px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1.5">
+            className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1.5">
             <PartyPopper size={15} />선정자 게시하기
           </button>
         )}
 
         {/* 저장 (현재 상태 유지) */}
         <button disabled={saving} onClick={() => save()}
-          className={`${config.status !== 'announced' && Object.keys(marks).length > 0 ? '' : 'ml-auto'} px-4 py-2 rounded-lg bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 disabled:opacity-50 flex items-center gap-1.5`}>
+          className={`${Object.keys(marks).length > 0 ? '' : 'ml-auto'} px-4 py-2 rounded-lg bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 disabled:opacity-50 flex items-center gap-1.5`}>
           {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}저장
         </button>
       </div>
@@ -525,6 +563,7 @@ export default function ReviewEventPage() {
         · <b>저장</b> = 편집한 내용을 <b>현재 게시 상태 그대로</b> 저장합니다. (이미지·상품·당첨자 변경은 저장해야 반영돼요)<br />
         · <b>랜덤 룰렛</b> = 미당첨 후보 중 완전 랜덤 추첨(이미 뽑힌 사람 제외). 뽑아도 <b>바로 공개되지 않아요</b>. 잘못 뽑았으면 <b>[직접 지정]</b> 탭에서 되돌릴 수 있어요(룰렛 화면엔 제외 버튼을 숨겨 녹화 시 오해를 막습니다).<br />
         · 선정을 마치면 <b>[선정자 게시하기]</b>를 눌러야 고객 페이지 <b>지난 당첨자</b>에 공개(=발표됨)됩니다.<br />
+        · <b>[게시물용 명단 복사]</b> = 가려진 이름·번호(백*민 님 (3562))로 등수별 명단을 복사합니다. <b>게시 전에</b> 인스타 발표 게시물을 먼저 만들 때 쓰세요.<br />
         · 표시명을 비우면 자동 마스킹 — 예: <b>백*민 님 (3562)</b> (성 가운데 *, 전화 뒷 4자리).<br />
         · 응모 시작일을 앞당기거나 <b>[처음부터 전체]</b> 버튼을 누르면 지금까지의 <b>모든 후기</b>를 한 풀에서 선정합니다(라벨=“전체 기간”). 룰렛 화면 상단에 <b>선정 대상 인원</b>도 표시돼요(다크 릴 바깥이라 녹화엔 안 잡힘).
       </p>
