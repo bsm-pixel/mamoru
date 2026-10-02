@@ -705,7 +705,56 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // [5] 리뷰 이벤트 당첨 상품 — 집하 감지 → 출고 알림톡 / 배달완료 기록 (156, 2026-10-02)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //   판매 출고([3-B])와 같은 규칙: shipped_at CAS 선점 → 알림톡 1회. 이미 배달완료면 출고 알림톡 생략.
+    //   테이블이 없으면(마이그 156 미적용) 조용히 건너뛴다 — 다른 구간에 영향 없음.
+    let eventPicked = 0;
+    let eventNotified = 0;
+    let eventDelivered = 0;
+    const { data: eventTargets, error: eventErr } = await db
+      .from('review_event_shipments')
+      .select('id, name, phone, prize, invoice_number, courier_name, shipped_at')
+      .not('invoice_number', 'is', null)
+      .is('delivered_at', null)
+      .is('cancelled_at', null)
+      .gte('invoice_created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .limit(50);
+    if (eventErr) console.warn('[track-delivery/review_event] 조회 건너뜀:', eventErr.message);
+    for (const ev of eventTargets || []) {
+      try {
+        const r = await queryTrackingStatus(ev.invoice_number);
+        if (r.state === 'CANCELLED' || r.state === 'NOT_FOUND') continue;
+        if (!ev.shipped_at && r.pickedUp) {
+          const { data: claimed } = await db.from('review_event_shipments')
+            .update({ shipped_at: r.pickedUpAt || new Date().toISOString() })
+            .eq('id', ev.id).is('shipped_at', null).select('id');
+          if (claimed?.length) {
+            eventPicked++;
+            if (r.state !== 'DELIVERED') {
+              const { sendShippedNotice } = await import('@/lib/reviews/event-shipments');
+              after(async () => {
+                const sent = await sendShippedNotice(db, ev).catch((e) => ({ ok: false, error: String(e) }));
+                console.log(`[track-delivery/review_event] ${ev.name} 출고 알림톡 ${sent.ok ? '발송' : '실패 ' + sent.error}`);
+              });
+              eventNotified++;
+            }
+          }
+        }
+        if (r.state === 'DELIVERED') {
+          await db.from('review_event_shipments')
+            .update({ delivered_at: new Date().toISOString(), shipped_at: ev.shipped_at || r.pickedUpAt || new Date().toISOString() })
+            .eq('id', ev.id).is('delivered_at', null);
+          eventDelivered++;
+        }
+      } catch (e) {
+        console.error(`[track-delivery/review_event] ${ev.name} 추적 실패:`, e);
+      }
+    }
+
     return NextResponse.json({
+      reviewEvent: { checked: eventTargets?.length || 0, picked: eventPicked, notified: eventNotified, delivered: eventDelivered },   // 156
       ordersPickup: { checked: orderPickups?.length || 0, shipped: ordersShipped },   // 128: 주문 집하 감지
       orders: { checked: orders?.length || 0, delivered: ordersDelivered },
       // 109: 집하 자동 감지 (기사님 수거 스캔 → 출고완료)

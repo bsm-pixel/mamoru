@@ -118,6 +118,9 @@ const EVENT_TEMPLATES = new Set<NotifyTemplate>([
   'event_payment_notice',
   'event_payment_confirmed',
   'event_shipped',
+  // 2026-10-02 리뷰 이벤트 당첨자 배송 — 같은 06 EVENT 시나리오로 (솔라피 TMS-리뷰이벤트-당첨안내/출고안내)
+  'review_event_won',
+  'review_event_shipped',
 ]);
 
 export type NotifyTemplate =
@@ -157,6 +160,8 @@ export type NotifyTemplate =
   | 'event_payment_notice'    // EVENT 입금 안내 (총액+계좌, 사장님 재고확인 후)
   | 'event_payment_confirmed' // EVENT 입금 확인 (→ 판매 자동전환)
   | 'event_shipped'           // EVENT 출고완료 (판매전환분 출고 시 자동, sales_shipped 대체)
+  | 'review_event_won'        // 리뷰 이벤트 당첨 안내 + 배송지 입력 링크 (TMS 당첨자 배송 [당첨 안내 보내기])
+  | 'review_event_shipped'    // 리뷰 이벤트 당첨 상품 출고 (집하 감지 시 자동)
   // 재고판매(LS) — webhook_consultation 시나리오 사용
   | 'stock_received'          // 재고판매 접수 확인 + 입금 안내(계좌+금액) (자동)
   | 'stock_payment_notice'    // 재고판매 입금 안내 재발송 (어드민)
@@ -212,6 +217,8 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   event_payment_notice: 'EVENT_PAYMENT_NOTICE',
   event_payment_confirmed: 'EVENT_PAYMENT_CONFIRMED',
   event_shipped: 'EVENT_SHIPPED',
+  review_event_won: 'REVIEW_EVENT_WON',           // 2026-10-02 리뷰 이벤트 당첨 안내
+  review_event_shipped: 'REVIEW_EVENT_SHIPPED',   // 2026-10-02 리뷰 이벤트 당첨 상품 출고
   // 재고판매(LS)
   stock_received: 'STOCK_RECEIVED',
   stock_payment_notice: 'STOCK_PAYMENT_NOTICE',

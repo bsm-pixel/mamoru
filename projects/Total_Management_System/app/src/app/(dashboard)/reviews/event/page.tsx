@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Star, Trophy, Calendar, ImagePlus, Save, Loader2, ExternalLink, Dices, Hand, PartyPopper } from 'lucide-react';
 import { resizeImage } from '@/lib/utils/resize-image';
 import { maskNameEvent, maskPhoneEvent } from '@/lib/reviews/mask';
+import EventShipmentsPanel from '@/components/reviews/event-shipments-panel';
 
 const LIVE_PAGE = 'https://page.mamoru.kr/projects/reviews/page_review_event.html';
 
@@ -527,6 +528,9 @@ export default function ReviewEventPage() {
         · 표시명을 비우면 자동 마스킹 — 예: <b>백*민 님 (3562)</b> (성 가운데 *, 전화 뒷 4자리).<br />
         · 응모 시작일을 앞당기거나 <b>[처음부터 전체]</b> 버튼을 누르면 지금까지의 <b>모든 후기</b>를 한 풀에서 선정합니다(라벨=“전체 기간”). 룰렛 화면 상단에 <b>선정 대상 인원</b>도 표시돼요(다크 릴 바깥이라 녹화엔 안 잡힘).
       </p>
+
+      {/* 2026-10-02 당첨자 배송 — 당첨 안내(주소 링크) → 배송지 → 송장 → 집하 시 출고 알림톡 */}
+      {(config.status === 'announced' || Object.keys(marks).length > 0) && !dirty && <EventShipmentsPanel key={month} month={month} />}
     </div>
   );
 }

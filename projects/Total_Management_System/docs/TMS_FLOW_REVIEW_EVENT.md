@@ -61,6 +61,31 @@
 ## 월 경계 주의
 - 응모자 집계는 `created_at`(timestamptz)을 **KST 월**로 묶음(`kstMonthRange`, UTC밀림 회피). `toISOString().slice(0,7)` 금지. 날짜 하한 변환 `kstDateStartISO`.
 
+## 당첨자 배송 (2026-10-02, 마이그 156)
+
+```
+선정 화면에서 당첨 저장 (reviews.event_month/event_rank = SSOT, 그대로)
+   ↓  TMS 「당첨자 배송」 패널 (reviews/event 하단) — 열 때 당첨자 기준 자동 동기화
+[당첨 안내 보내기] → review_event_won 알림톡 (#{token} = 배송지 입력 링크)
+   │                (템플릿 승인 전: [링크] 복사 → 카톡 채널 채팅으로 직접 전송, 흐름 동일)
+   ↓
+page.mamoru.kr/projects/reviews/page_event_address.html?t=<token>
+   · 이름·연락처 고정 / 주소 = 저장값 → 없으면 예전 주소(고객정보 → 복원수리 → 아임웹 주문) 미리 채움
+   · 저장 → review_event_shipments 주소 + customers 주소 갱신(없으면 고객 생성, source=manual) + 사장님 푸시
+   ↓
+[송장 생성] → 롯데 ALPS bookShipment (품목 "리뷰이벤트 {상품}") → ALPS에서 출력
+   ↓
+track-delivery 크론 [5] (30분) → 집하 감지 → shipped_at CAS → review_event_shipped 알림톡 1회
+                                 → 배달완료 감지 → delivered_at
+```
+
+- 표: `review_event_shipments` (당첨자 1명=1행, review_id 유니크, 토큰 32자). 송장 전이면 당첨 취소 시 `cancelled_at`(soft).
+- API: 관리 `api/reviews/event/shipments` (GET 목록 / POST notify·invoice·cancel_invoice·save_address) · 고객 `api/reviews/event-address` (GET/POST, 토큰=권한, CORS *)
+- 공용 로직: `lib/reviews/event-shipments.ts` (sync·예전주소·고객주소갱신·알림톡 2종)
+- 알림톡: `review_event_won`(변수 name·rank·prize·token·address_link) / `review_event_shipped`(name·prize·courier·tracking) → `EVENT_TEMPLATES` → `webhook_event`(Make 06 EVENT)
+- 송장 생성 후엔 고객 페이지에서 주소 수정 불가(발송 준비 중 화면). 바꾸려면 TMS에서 송장 취소(집하 전만) → 주소 수정 → 재생성.
+- 당첨 안내는 **게시와 동시 자동발송이 아니라 버튼**: 템플릿 승인 전 게시하면 Make 분기가 없어 조용히 사라지는데 TMS엔 '보냄'으로 남기 때문(Make 200=성공 판정 구멍). 승인 후 버튼 한 번에 미발송 전원.
+
 ## 미구현/후속
-- 당첨 알림톡(발표 시 당첨자에게) — 미연결. 필요 시 솔라피 템플릿 추가.
+- 솔라피 2종 검수 → Make `06 EVENT`에 분기 2개 연결(템플릿 필터 + 솔라피 모듈 + 변수 매핑, dlq 확인)
 - 인스타 응모(Phase 2) 보류.
