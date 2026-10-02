@@ -166,6 +166,9 @@ export default function ReviewEventPage() {
     Object.values(marks).forEach((m) => { c[m.rank] = (c[m.rank] || 0) + 1; });
     return c;
   }, [marks]);
+  // 룰렛: 지금 고른 등수의 목표 인원을 다 뽑았는가 → 다 뽑으면 [추첨하기] 버튼 대신 완료 화면 (2026-10-02)
+  const drawTarget = config.prizes.find((p) => p.rank === drawRank)?.count || 0;
+  const drawFull = drawTarget > 0 && (counts[drawRank] || 0) >= drawTarget;
 
   // 선정 대상 후기 작성일 범위 라벨 (응모 시작일 ~ 이벤트 달). 예: '7월~9월' / 단일이면 '9월'
   const poolRangeLabel = useMemo(() => {
@@ -467,7 +470,8 @@ export default function ReviewEventPage() {
                 const done = counts[rank] || 0;
                 const full = target > 0 && done >= target;
                 return (
-                  <button key={rank} disabled={spinning || target === 0} onClick={() => setDrawRank(rank)}
+                  <button key={rank} disabled={spinning || target === 0}
+                    onClick={() => { if (rank !== drawRank) { setDrawRank(rank); setReel(''); setWonId(null); setReveal(false); } }}   // 다른 등수로 넘어가면 이전 등수 연출 초기화
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border disabled:opacity-40 ${drawRank === rank ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'}`}>
                     {rankLabel(rank)} <span className="opacity-70">{done}/{target}</span>{full ? ' ✓' : ''}
                   </button>
@@ -480,16 +484,32 @@ export default function ReviewEventPage() {
             {/* 슬롯 이름 릴 — 다크·큰 글씨(화면 녹화 구도) */}
             <div className={`rounded-2xl bg-stone-900 text-white px-6 py-10 text-center transition-shadow duration-300 ${wonId && reveal ? rankFx(wonRank).ring : ''}`}>
               <div className="text-[11px] tracking-[0.25em] text-stone-400 uppercase mb-1.5">MAMORU REAL REVIEW</div>
-              <div className="text-lg md:text-2xl font-bold text-stone-300 mb-5">{rankLabel(drawRank)} 추첨</div>
+              <div className="text-lg md:text-2xl font-bold text-stone-300 mb-5">{rankLabel(drawRank)} {drawFull && !spinning ? '추첨 완료' : '추첨'}</div>
               <div className={`font-extrabold transition-all duration-300 ${wonId && reveal ? 'text-3xl md:text-4xl scale-110 ' + rankFx(wonRank).text : 'text-2xl md:text-3xl text-stone-200'}`} style={{ minHeight: '2.4em', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {reel || '추첨을 시작하세요'}
+                {reel || (drawFull ? '🎉' : '추첨을 시작하세요')}
               </div>
               {wonId && reveal && <div className={`mt-3 text-base font-extrabold flex items-center justify-center gap-1.5 ${rankFx(wonRank).text}`}><span className="text-2xl animate-bounce">{rankFx(wonRank).emoji}</span>{rankLabel(wonRank ?? drawRank)} 당첨!</div>}
-              <button onClick={spinDraw} disabled={spinning}
-                className="mt-6 px-8 py-3 rounded-full bg-white text-stone-900 font-bold text-sm hover:bg-stone-100 disabled:opacity-50 inline-flex items-center gap-2">
-                {spinning ? <><Loader2 size={16} className="animate-spin" />추첨 중…</> : <><Dices size={16} />{rankLabel(drawRank)} 추첨하기</>}
-              </button>
-              <div className="mt-3 text-[11px] text-stone-500">이미 뽑힌 분 제외 · 완전 랜덤 · [추첨]=목표 인원만큼 자동 연속</div>
+              {/* 2026-10-02: 목표 인원을 다 뽑으면 [추첨하기] 버튼을 없애고 완료 화면으로 —
+                  다 뽑았는데 버튼이 남아 있으면 녹화 영상에서 "또 뽑을 수 있네? 조작 아냐?"로 보인다 */}
+              {drawFull && !spinning ? (
+                <div className="mt-7">
+                  <div className={`text-xl md:text-2xl font-extrabold ${rankFx(drawRank).text}`}>축하합니다</div>
+                  <div className="mt-1.5 text-sm text-stone-300">{rankLabel(drawRank)} 당첨자 {drawTarget}명 추첨이 완료되었습니다</div>
+                  <div className="mt-4 flex flex-wrap justify-center gap-2">
+                    {reviews.filter((r) => marks[r.id]?.rank === drawRank).map((r) => (
+                      <span key={r.id} className="px-3.5 py-1.5 rounded-full bg-white/10 text-sm font-semibold text-white">{maskCand(r)}</span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <button onClick={spinDraw} disabled={spinning}
+                  className="mt-6 px-8 py-3 rounded-full bg-white text-stone-900 font-bold text-sm hover:bg-stone-100 disabled:opacity-50 inline-flex items-center gap-2">
+                  {spinning ? <><Loader2 size={16} className="animate-spin" />추첨 중…</> : <><Dices size={16} />{rankLabel(drawRank)} 추첨하기</>}
+                </button>
+              )}
+              <div className="mt-3 text-[11px] text-stone-500">
+                {drawFull && !spinning ? '완전 랜덤 추첨 · 목표 인원 추첨 완료' : '이미 뽑힌 분 제외 · 완전 랜덤 · [추첨]=목표 인원만큼 자동 연속'}
+              </div>
             </div>
 
             {/* 선정된 당첨자 명단 */}
