@@ -443,12 +443,25 @@ function drawDateText(iso){
   // ✏️ 발표일 수동 오버라이드: #reCount 에 data-draw-override="9월 11일 (금) 오후 8시" 있으면 자동계산 대신 그대로 표기(연기 공지용). 평상시엔 이 속성만 지우면 자동계산 복귀.
   var _rc=document.getElementById('reCount'), _ov=_rc&&_rc.getAttribute('data-draw-override');
   if(_ov) return '당첨 발표 · <b style="color:var(--sand);">'+_ov+'</b>';
+  // 2026-10-02: TMS 「발표 예정일」(announce_at)이 있으면 그 값을 그대로 쓴다 — 전엔 무시하고 자동계산해서
+  //   마감 10/3 인데 발표 '10/2'(마감보다 앞)로 표기되는 사고가 났다.
+  var an=arguments.length>1 ? arguments[1] : null;
+  if(an){ var ak=new Date(new Date(an).getTime()+9*3600*1000); if(!isNaN(ak.getTime())) return '당첨 발표 · <b style="color:var(--sand);">'+kstText(ak)+'</b>'; }
+  // 자동계산(발표일 미입력 시): 마감이 속한 기간의 '다음 달' 첫 금요일 오후 8시. 말일 24시 마감(=익월1일 00:00)도 같은 결과
   var t=new Date(iso||'').getTime(); if(isNaN(t)) return '';
-  var k=new Date(t+9*3600*1000);                          // KST
-  var y=k.getUTCFullYear(), mo=k.getUTCMonth();
+  var k=new Date(t-1000+9*3600*1000);                     // KST, 마감 1초 전이 속한 날(말일 24시 → 말일)
+  var y=k.getUTCFullYear(), mo=k.getUTCMonth()+1;         // 다음 달
+  if(mo>11){ mo=0; y++; }
   var firstDow=new Date(Date.UTC(y,mo,1)).getUTCDay();    // 그 달 1일 요일(5=금)
   var day=1+((5-firstDow+7)%7);                           // 첫째 금요일 날짜
   return '당첨 발표 · <b style="color:var(--sand);">'+(mo+1)+'월 '+day+'일 (금) 오후 8시</b>';
+}
+/* KST Date(UTC 필드에 KST가 들어있는 값) → "10월 7일 (수) 오후 8시" / 분이 있으면 "오후 8시 30분" */
+function kstText(k){
+  var dows=['일','월','화','수','목','금','토'];
+  var h=k.getUTCHours(), m=k.getUTCMinutes();
+  var ap=h<12?'오전':'오후', h12=h%12===0?12:h%12;
+  return (k.getUTCMonth()+1)+'월 '+k.getUTCDate()+'일 ('+dows[k.getUTCDay()]+') '+ap+' '+h12+'시'+(m?' '+m+'분':'');
 }
 
 /* 카운트다운 (외부 라이브러리 0) */
@@ -558,11 +571,15 @@ function drawDateText(iso){
       var rc=document.getElementById('reCount'); if(rc) rc.setAttribute('data-deadline', cur.deadline); // UTC ISO — 카운트다운이 매 틱 재읽기
       var d=new Date(cur.deadline), k=new Date(d.getTime()+9*3600*1000);
       var midnight=(k.getUTCHours()===0 && k.getUTCMinutes()===0);        // 말일 24시(=익월1일 00:00)면 말일 날짜+24시로 표기
+      var lastMin=(k.getUTCHours()===23 && k.getUTCMinutes()===59);       // 2026-10-02: TMS에서 '오후 11:59'로 넣은 마감도 그날 24시로
       var end=midnight ? new Date(d.getTime()-1000) : d, ke=new Date(end.getTime()+9*3600*1000);
-      var txt=ke.getUTCFullYear()+'년 '+(ke.getUTCMonth()+1)+'월 '+ke.getUTCDate()+'일'+(midnight?' 24시':'');
+      var txt=ke.getUTCFullYear()+'년 '+(ke.getUTCMonth()+1)+'월 '+ke.getUTCDate()+'일'+((midnight||lastMin)?' 24시':'');
       var dl=document.querySelector('.re-deadline'); if(dl) dl.innerHTML='이달의 후기 마감 · <b style="color:var(--sand);">'+txt+'</b>까지';
-      var rd=document.getElementById('reDraw'); if(rd) rd.innerHTML=drawDateText(cur.deadline);   // 추첨일 재계산(fetch)
     }
+    // 발표일 — TMS 「발표 예정일」 우선, 없으면 자동계산 (2026-10-02)
+    var rd=document.getElementById('reDraw'); if(rd) rd.innerHTML=drawDateText(cur.deadline, cur.announce_at);
+    // 정적 공지 한 줄(예: "8월·9월 후기를 함께 모아… 발표는 10월 초")은 TMS 값과 어긋날 수 있어 TMS 연동 시 숨긴다
+    var nt=document.querySelector('.re-notice'); if(nt) nt.style.display='none';
   }
 
   function prizeCard(p, feature){
