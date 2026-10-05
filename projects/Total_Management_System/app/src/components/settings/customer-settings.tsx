@@ -91,7 +91,7 @@ export default function CustomerSettings({ settings, onSave, saving }: TabProps)
   }
 
   const TYPE_LABELS: Record<string, string> = { retail: '일반', online: '온라인', dealer: '딜러', academy: '아카데미' };
-  const SOURCE_LABELS: Record<string, string> = { imweb: '아임웹', consultation: '상담', as: '복원수리', manual: '수동' };
+  const SOURCE_LABELS: Record<string, string> = { imweb: '아임웹', consultation: '상담', as: '복원수리', manual: '수동', event: '이벤트', stock_sale: '재고판매' };
 
   return (
     <div className="space-y-6">

@@ -153,7 +153,7 @@ export interface Database {
           postcode: string | null;
           address_road: string | null;
           address_detail: string | null;
-          source: 'imweb' | 'consultation' | 'as' | 'manual';
+          source: 'imweb' | 'consultation' | 'as' | 'manual' | 'event' | 'stock_sale';   // 157
           customer_type: 'retail' | 'online' | 'dealer' | 'academy' | 'supplier';
           company_name: string | null;
           activity_name: string | null;          // 102: 활동명(매장 사용 이름, 예 하은)

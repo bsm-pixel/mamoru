@@ -68,6 +68,13 @@ received(접수)
 - **무료 캠페인은 `event_payment_confirmed` 알림톡을 보내지 않는다.** 버튼도 [입금확인 → 판매 전환] → **[신청 확정 → 발송 준비]** 로 바뀐다. 판매 전환·재고 차감은 그대로(금액 0) — 무료 이벤트의 첫 자동 알림은 **출고완료(`event_shipped`)**
 - ⚠️ 본문을 통째로 변수로 만들면 카카오 심사에서 "치환문구로만 구성"으로 반려될 수 있어, 인사·신청내역·안내 **골격은 고정 텍스트로 남겼다**
 
+## 고객 연결 (2026-10-05 사고 정리, 마이그 157)
+
+- 접수·판매 전환은 `lib/customer/match-or-create.ts` 로 **전화번호 기준 매칭 → 없으면 고객 생성**(접수 주소 포함). 송장 생성(`api/sales/[id]/ship`)은 **판매에 연결된 고객의 주소**를 쓰므로 고객이 안 붙으면 "고객 정보가 없어 송장 생성 불가".
+- 🚨 **사고(EV-20261004-001 → OS-20261005-001)**: `customers.source` 는 DB enum `customer_source`(imweb·consultation·as·manual)인데 코드가 `'event'`/`'stock_sale'` 로 INSERT → `22P02` 로 **고객 생성이 통째로 거부** → 로그만 남기고 진행 → 판매가 고객 없이 저장. 기존 이벤트 구매자는 전부 "이미 있던 고객"(매칭만)이라 안 드러났고, **처음 온 고객의 첫 전환**에서 터졌다.
+- 수정: ① 마이그 157 로 enum 에 `event`·`stock_sale` 추가 ② INSERT 가 거부되면 `manual` 로 재시도(출처는 memo) — 고객은 반드시 만들어진다 ③ 전환 시 붙인 고객을 `event_submissions.customer_id` 에도 기록 ④ 전환 후 판매에 고객이 없으면 응답 `warning` → 화면 토스트 ⑤ 출처 라벨(고객목록·설정·자동완성)에 이벤트/재고판매 추가.
+- 교훈: **enum 컬럼에 새 값을 쓰는 코드는 실제 DB 에 넣어보고 확인**할 것(타입·빌드는 못 잡는다). 실패를 `console.error` 로만 남기는 "조용한 null 반환"은 다음 단계(송장)에서야 드러난다.
+
 ## 화면/코드
 - 고객폼: `projects/event/page_form.html` (page.mamoru.kr, `?campaign=<id>`). 공개 API `app/api/event/public/{products,submit}`.
 - 허브: `app/(dashboard)/events/page.tsx` (캠페인 카드 → 접수목록). hooks `use-events.ts`.

@@ -33,6 +33,8 @@ const SOURCE_LABEL: Record<string, string> = {
   consultation: '상담',
   as: '복원수리',
   manual: '수동',
+  event: '이벤트',
+  stock_sale: '재고판매',
 };
 
 export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, showExtendedFields, disableInlineNewForm }: Props) {

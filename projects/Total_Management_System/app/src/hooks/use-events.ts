@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import type { EventSubmission, EventCampaign } from '@/lib/event/types';
 
 export function useCampaigns() {
@@ -82,9 +83,11 @@ export function useEventPatch() {
       if (!res.ok) throw new Error(json.error || '요청 실패');  // 서버의 한국어 안내(예: 활성 판매 차단)를 그대로 노출
       return json;
     },
-    onSuccess: () => {
+    onSuccess: (json: { warning?: string }) => {
       qc.invalidateQueries({ queryKey: ['events'] });
       qc.invalidateQueries({ queryKey: ['sales'] });
+      // 서버가 알려준 주의사항(예: 판매 전환됐지만 고객 미연결)을 그 자리에서 보여준다 — 2026-10-05
+      if (json?.warning) toast.error(json.warning, { duration: 10000 });
     },
   });
 }

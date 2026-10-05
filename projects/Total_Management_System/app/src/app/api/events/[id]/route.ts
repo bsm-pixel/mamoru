@@ -89,7 +89,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           });
         });
       }
-      return NextResponse.json({ ok: true, sale_id: saleId });
+      // 2026-10-05: 판매에 고객이 연결됐는지 확인 — 안 됐으면 송장 생성이 막히므로 그 자리에서 알린다
+      //   (전엔 고객 등록 실패가 조용히 지나가, 사장님이 [택배 발송]을 누를 때에야 알았다)
+      const { data: madeSale } = await dbAny.from('offline_sales').select('customer_id').eq('id', saleId).maybeSingle();
+      const warning = madeSale && !madeSale.customer_id
+        ? '판매는 전환됐지만 고객 정보가 연결되지 않았습니다. 고객관리에서 이 고객을 등록·연결해야 송장을 만들 수 있습니다.'
+        : undefined;
+      return NextResponse.json({ ok: true, sale_id: saleId, warning });
     }
 
     if (action === 'cancel') {

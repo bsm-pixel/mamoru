@@ -32,6 +32,8 @@ const SOURCE_LABEL: Record<string, string> = {
   consultation: '상담',
   as: '복원수리',
   manual: '수동',
+  event: '이벤트',          // 157: 이벤트 접수로 처음 등록된 고객
+  stock_sale: '재고판매',   // 157
 };
 
 const FILTER_TYPES = [

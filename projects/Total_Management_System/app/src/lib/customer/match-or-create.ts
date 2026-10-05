@@ -112,11 +112,24 @@ export async function matchOrCreateCustomer(
   if (activityName) insertData.activity_name = activityName;
   if (position) insertData.position = position;
 
-  const { data: created, error: insertErr } = await db
+  let { data: created, error: insertErr } = await db
     .from('customers')
     .insert(insertData)
     .select('id')
     .single();
+
+  // 🔴 2026-10-05: 출처 값이 DB enum(customer_source)에 없으면 INSERT 가 통째로 거부된다(22P02).
+  //    전엔 그 실패를 로그만 남기고 null 을 돌려줘서, 이벤트로 처음 온 고객이 등록되지 않고
+  //    판매가 "고객 없음"으로 저장 → 송장 생성이 막혔다(EV-20261004-001 실사고).
+  //    고객은 반드시 만들어져야 하므로 'manual' 로 한 번 더 시도하고, 원래 출처는 memo 에 남긴다.
+  if ((insertErr || !created) && input.source !== 'manual') {
+    console.error(`[matchOrCreateCustomer] source='${input.source}' INSERT 실패 → 'manual' 로 재시도:`, insertErr?.code, insertErr?.message);
+    ({ data: created, error: insertErr } = await db
+      .from('customers')
+      .insert({ ...insertData, source: 'manual', memo: `출처: ${input.source} (출처값 저장 실패로 직접입력으로 등록)` })
+      .select('id')
+      .single());
+  }
 
   if (insertErr || !created) {
     console.error('[matchOrCreateCustomer] INSERT 실패:', insertErr);

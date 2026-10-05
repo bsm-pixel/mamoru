@@ -59,6 +59,8 @@ export async function convertEventToSale(db: any, ev: EventRow, opts?: ConvertOp
       },
     });
     customerId = matched;
+    // 2026-10-05: 여기서 붙인 고객을 접수 기록에도 남긴다 (전엔 판매에만 붙고 접수 기록은 '고객 없음'으로 남았다)
+    if (customerId) await db.from('event_submissions').update({ customer_id: customerId }).eq('id', ev.id).is('customer_id', null);
   }
 
   // 판매번호 채번+중복재시도는 공용 insertOfflineSale (SSOT)
