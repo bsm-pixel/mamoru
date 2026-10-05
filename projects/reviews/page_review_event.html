@@ -62,6 +62,10 @@
 .re-imgph{ font-family:var(--font-display); font-size:11px; letter-spacing:.16em; color:#6f6b66; text-transform:uppercase; text-align:center; line-height:1.9; }
 
 /* 카운트다운 */
+.re-count__cap{ margin-top:26px; font-size:12px; font-weight:600; letter-spacing:.12em; color:var(--mist); }
+.re-count__cap:empty{ display:none; }
+.re-count__cap[data-phase="done"], .re-count__cap[data-phase="none"]{ font-size:15px; letter-spacing:.02em; color:var(--sand); margin-bottom:6px; }
+.re-count__cap + .re-count{ margin-top:10px; }
 .re-count{ display:flex; gap:10px; justify-content:center; margin-top:26px; }
 .re-count__box{ min-width:62px; padding:12px 8px; border-radius:var(--radius-md); background:rgba(255,255,255,.06); border:1px solid var(--hairline-d); text-align:center; }
 .re-count__n{ font-family:var(--font-display); font-size:clamp(22px,7vw,30px); font-weight:800; line-height:1; color:var(--cream); font-variant-numeric:tabular-nums; }
@@ -207,6 +211,8 @@
       </div>
 
       <!-- ✏️ 수정가능: 마감일 → data-deadline. 말일 24시 = 다음 달 1일 00:00 (통합 8~9월 라운드 → 9월 말일 = 2026-10-01T00:00:00) -->
+      <!-- 시계 위 한 줄: 후기 마감까지 / 당첨 발표까지 / 추첨을 준비하고 있습니다 (JS 가 단계에 맞게 바꿈) -->
+      <p class="re-count__cap" id="reCountCap"></p>
       <div class="re-count" id="reCount" data-deadline="2026-10-01T00:00:00">
         <div class="re-count__box"><div class="re-count__n" data-c="d">--</div><div class="re-count__l">Days</div></div>
         <div class="re-count__sep">:</div>
@@ -470,16 +476,50 @@ function kstText(k){
   var box={ d:root.querySelector('[data-c=d]'), h:root.querySelector('[data-c=h]'), m:root.querySelector('[data-c=m]'), s:root.querySelector('[data-c=s]') };
   var rd=document.getElementById('reDraw'); if(rd) rd.innerHTML=drawDateText(root.getAttribute('data-deadline'));  // 추첨일 표기(정적/초기)
   function p2(n){ return (n<10?'0':'')+n; }
+  /* 2026-10-05: 마감이 지나면 00:00:00:00 에 멈춰 "고장 난 시계"처럼 보였다(사장님 지적).
+     3단계로 바꾼다 — open(마감까지) → wait(당첨 발표까지) → done(시계 대신 안내 문구) / none(진행 중인 이벤트 없음).
+     마감·발표 시각은 매 틱 속성에서 다시 읽으므로 TMS 값이 바뀌면 그대로 따라간다. */
+  var cap=document.getElementById('reCountCap'), dlEl=document.querySelector('.re-deadline'), lastPhase='';
+  function setPhase(ph){
+    if(ph===lastPhase) return; lastPhase=ph;
+    root.style.display = (ph==='open'||ph==='wait') ? '' : 'none';
+    if(cap){
+      cap.textContent = ph==='wait' ? '당첨 발표까지' : ph==='done' ? '추첨을 준비하고 있습니다' : ph==='none' ? '다음 리뷰 이벤트를 준비하고 있습니다' : '후기 마감까지';
+      cap.setAttribute('data-phase', ph);
+    }
+    if(dlEl){
+      var dt=root.getAttribute('data-deadline-text');            // renderHero 가 넣어둔 "2026년 10월 3일 24시"
+      if(ph==='none' || (!dt && ph!=='open')){ dlEl.style.display='none'; }   // TMS 값 못 받은 채 마감이 지났으면 옛 날짜를 보여주지 않는다
+      else {
+        dlEl.style.display='';
+        if(dt) dlEl.innerHTML = (ph==='open')
+          ? '이달의 후기 마감 · <b style="color:var(--sand);">'+dt+'</b>까지'
+          : '후기 접수 마감 · <b style="color:var(--sand);">'+dt+'</b>';
+      }
+    }
+    if(rd) rd.style.display = (ph==='none' || (!root.getAttribute('data-deadline-text') && ph!=='open')) ? 'none' : '';
+    // 높이 변화는 아래 'iframe 높이 통신'의 ResizeObserver 가 자동 전송
+  }
+  var t0=Date.now();
   function tick(){
-    var target=new Date(root.getAttribute('data-deadline')||'').getTime();  // fetch 로 마감일 바뀌면 즉시 반영
-    var diff=target-Date.now();
-    if(isNaN(target)||diff<=0){ box.d.textContent='00'; box.h.textContent='00'; box.m.textContent='00'; box.s.textContent='00'; return; }
-    var s=Math.floor(diff/1000);
+    // TMS 값을 받기 전(최대 1.5초)엔 정적 폴백 날짜로 판정하지 않는다 — 옛 날짜 기준 문구가 깜빡 보이는 것 방지
+    if(root.getAttribute('data-ready')!=='1' && Date.now()-t0<1500){ root.style.visibility='hidden'; return; }
+    root.style.visibility='';
+    if(root.getAttribute('data-none')==='1'){ setPhase('none'); return; }
+    var dl=new Date(root.getAttribute('data-deadline')||'').getTime();   // fetch 로 마감일 바뀌면 즉시 반영
+    var an=new Date(root.getAttribute('data-announce')||'').getTime();   // TMS 발표 예정일 (없으면 NaN)
+    var now=Date.now(), target, ph;
+    if(!isNaN(dl) && now<dl){ ph='open'; target=dl; }
+    else if(!isNaN(an) && now<an){ ph='wait'; target=an; }
+    else { setPhase('done'); return; }
+    setPhase(ph);
+    var s=Math.floor((target-now)/1000);
     box.d.textContent=Math.floor(s/86400);
     box.h.textContent=p2(Math.floor(s%86400/3600));
     box.m.textContent=p2(Math.floor(s%3600/60));
     box.s.textContent=p2(s%60);
   }
+  window.__mmCountTick=tick;   // fetch 직후 즉시 한 번 더 그리기용
   tick(); setInterval(tick,1000);
 })();
 
@@ -575,7 +615,11 @@ function kstText(k){
       var end=midnight ? new Date(d.getTime()-1000) : d, ke=new Date(end.getTime()+9*3600*1000);
       var txt=ke.getUTCFullYear()+'년 '+(ke.getUTCMonth()+1)+'월 '+ke.getUTCDate()+'일'+((midnight||lastMin)?' 24시':'');
       var dl=document.querySelector('.re-deadline'); if(dl) dl.innerHTML='이달의 후기 마감 · <b style="color:var(--sand);">'+txt+'</b>까지';
+      if(rc) rc.setAttribute('data-deadline-text', txt);   // 마감 후 문구("후기 접수 마감 · …") 재조립용
     }
+    // 카운트다운 2단계(마감 후 → 당첨 발표까지)용 발표 시각. 비어 있으면 마감 후엔 안내 문구만 (2026-10-05)
+    var rc2=document.getElementById('reCount');
+    if(rc2){ if(cur.announce_at) rc2.setAttribute('data-announce', cur.announce_at); else rc2.removeAttribute('data-announce'); rc2.removeAttribute('data-none'); }
     // 발표일 — TMS 「발표 예정일」 우선, 없으면 자동계산 (2026-10-02)
     var rd=document.getElementById('reDraw'); if(rd) rd.innerHTML=drawDateText(cur.deadline, cur.announce_at);
     // 정적 공지 한 줄(예: "8월·9월 후기를 함께 모아… 발표는 10월 초")은 TMS 값과 어긋날 수 있어 TMS 연동 시 숨긴다
@@ -662,6 +706,9 @@ function kstText(k){
   fetch(API + (API.indexOf('?')<0?'?':'&') + 't=' + Math.floor(Date.now()/30000)).then(function(r){ return r.json(); }).then(function(data){  // 30초 버킷 캐시버스터 — 편집이 최대 30초 내 반영(5분 CDN 캐시 우회) + 버킷 내 트래픽은 CDN 흡수
     if(!data) return;
     try{ renderHero(data.current); }catch(e){}
+    // 진행 중인 이벤트가 없으면(전부 비공개/발표 완료) 옛 날짜·00 시계 대신 "다음 이벤트 준비 중" (2026-10-05)
+    try{ if(!data.current){ var rcN=document.getElementById('reCount'); if(rcN) rcN.setAttribute('data-none','1'); var ntN=document.querySelector('.re-notice'); if(ntN) ntN.style.display='none'; } }catch(e){}
+    try{ var rcR=document.getElementById('reCount'); if(rcR) rcR.setAttribute('data-ready','1'); if(window.__mmCountTick) window.__mmCountTick(); }catch(e){}
     try{ renderPrizes(data.current); }catch(e){}
     try{ renderArchive(data.past); }catch(e){}
   }).catch(function(){ /* 정적 폴백 유지 */ });
