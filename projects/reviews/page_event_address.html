@@ -172,6 +172,8 @@ body {
   var token = (new URLSearchParams(location.search).get('t') || '').trim();
   var $ = function (id) { return document.getElementById(id); };
   var data = null;
+  // 미리보기(?t=preview) — 사장님 확인용. 서버를 부르지 않고 예시 데이터로만 동작(저장도 실제로 되지 않음)
+  var PREVIEW = token === 'preview';
 
   function show(id) {
     ['vLoading', 'vError', 'vForm', 'vDone', 'vLocked'].forEach(function (v) { $(v).hidden = v !== id; });
@@ -207,6 +209,13 @@ body {
   }
 
   function load() {
+    if (PREVIEW) {
+      fill({ name: '홍길동', phone: '010-1234-5678', rank_label: '1등', prize: '예시 상품',
+        address: { postcode: '06236', address_road: '서울 강남구 테헤란로 152', address_detail: '101동 1001호' },
+        delivery_message: '', source: 'order', source_label: '제품 주문 당시 기재하신 주소' });
+      show('vForm');
+      return;
+    }
     if (!/^[0-9a-f]{32}$/.test(token)) { show('vError'); return; }
     fetch(API + '?t=' + encodeURIComponent(token), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
@@ -260,8 +269,10 @@ body {
     if (!body.address_detail) { $('fErr').textContent = '상세 주소(동·호수)를 입력해 주세요'; $('addr2').focus(); return; }
     var btn = $('btnSave');
     btn.disabled = true; btn.textContent = '저장 중…';
-    fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+    (PREVIEW
+      ? Promise.resolve({ ok: true, j: {} })   // 미리보기: 저장하지 않고 완료 화면만 보여준다
+      : fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); }))
       .then(function (res) {
         if (!res.ok) throw new Error(res.j.error || '저장하지 못했습니다');
         $('dAddr').textContent = fullAddr(body.postcode, body.address_road, body.address_detail) + (body.delivery_message ? ' · ' + body.delivery_message : '');
