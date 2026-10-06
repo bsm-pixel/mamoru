@@ -1,5 +1,6 @@
 'use client';
 
+import { MamoruWordmark } from '@/components/ui/mamoru-logo';
 import { useRef, useState } from 'react';
 import { Printer, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -254,7 +255,7 @@ export function DLPrintModal({ deliveryId, onClose }: Props) {
               </div>
             )}
 
-            <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '10px', color: '#ccc' }}>MAMORU</p>
+            <p style={{ textAlign: 'center', marginTop: '24px', lineHeight: 1 }}><MamoruWordmark height={7} color="#ccc" /></p>
           </div>
         </div>
       </div>

@@ -10,6 +10,7 @@
  * - window.open() 새 탭 패턴 (po-print-modal와 동일)
  */
 
+import { MamoruWordmark } from '@/components/ui/mamoru-logo';
 import { useRef, useMemo } from 'react';
 import { Printer } from 'lucide-react';
 import type { InventoryItem } from '@/hooks/use-inventory';
@@ -188,7 +189,7 @@ export function InventoryPrintModal({ items, categoryLabel, categoryLabels, filt
               비고:
             </div>
 
-            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '9px', color: '#ccc' }}>MAMORU · {dateStr}</p>
+            <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '9px', color: '#ccc' }}><MamoruWordmark height={6} color="#ccc" /> · {dateStr}</p>
           </div>
         </div>
       </div>

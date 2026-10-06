@@ -1,5 +1,6 @@
 'use client';
 
+import { mamoruWordmarkSvg } from '@/lib/brand/logo-svg';
 import { useState, useEffect, useMemo } from 'react';
 import { Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -110,7 +111,7 @@ export function RepairPrepSheetModal({ repairIds, onClose }: Props) {
       ${cost}
       ${memo ? `<div class="sec memo">${memo}</div>` : ''}
       <div class="chk">☐ 검수 완료&nbsp;&nbsp;&nbsp;☐ 포장 완료</div>
-      <div class="ft">MAMORU</div>
+      <div class="ft">${mamoruWordmarkSvg(7)}</div>
     </div>`;
   };
 

@@ -4,6 +4,8 @@
  * 통합 준비표(unified-prep-modal)가 도메인 혼합 인쇄에 사용. (2026-09-07)
  */
 
+import { mamoruWordmarkSvg } from '@/lib/brand/logo-svg';
+
 export function esc(s: unknown): string {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -54,7 +56,7 @@ export function repairSlip(r: PrepRepair, insp: PrepInspection[], activity: stri
     ${cost}
     ${memo ? `<div class="sec memo">${memo}</div>` : ''}
     <div class="chk">☐ 검수 완료&nbsp;&nbsp;&nbsp;☐ 포장 완료</div>
-    <div class="ft">MAMORU</div>
+    <div class="ft">${mamoruWordmarkSvg(7)}</div>
   </div>`;
 }
 
@@ -88,7 +90,7 @@ export function saleSlip(s: PrepSale): string {
     <div class="sec items">${itemsHtml}</div>
     ${s.memo ? `<div class="sec memo"><span class="lbl">메모</span> ${esc(s.memo)}</div>` : ''}
     <div class="chk">☐ 포장 완료</div>
-    <div class="ft">MAMORU</div>
+    <div class="ft">${mamoruWordmarkSvg(7)}</div>
   </div>`;
 }
 

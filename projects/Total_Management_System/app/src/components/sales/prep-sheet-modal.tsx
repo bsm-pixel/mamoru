@@ -1,5 +1,7 @@
 'use client';
 
+import { mamoruWordmarkSvg } from '@/lib/brand/logo-svg';
+import { MamoruWordmark } from '@/components/ui/mamoru-logo';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -243,7 +245,7 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], orderIds = [], prelo
         <div class="sec items">${itemsHtml}</div>
         ${memo ? `<div class="sec memo"><span class="lbl">메모</span> ${esc(memo)}</div>` : ''}
         <div class="chk">☐ 포장 완료</div>
-        <div class="ft">MAMORU</div>
+        <div class="ft">${mamoruWordmarkSvg(7)}</div>
       </div>`;
     };
     const pages: string[] = [];
@@ -454,7 +456,7 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], orderIds = [], prelo
                     </tbody>
                   </table>
 
-                  <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '10px', color: '#ccc' }}>MAMORU</p>
+                  <p style={{ textAlign: 'center', marginTop: '16px', lineHeight: 1 }}><MamoruWordmark height={7} color="#ccc" /></p>
                 </div>
               )}
             </>

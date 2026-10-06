@@ -1,5 +1,6 @@
 'use client';
 
+import { MamoruWordmark } from '@/components/ui/mamoru-logo';
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useQueryClient as __useQueryClient } from '@tanstack/react-query';
@@ -1604,7 +1605,7 @@ function ReceiptModal({ sale, items, customerType, onClose }: {
 
           {/* 하단 로고 */}
           <div style={{ textAlign: 'center', marginTop: '32px', opacity: 0.3 }}>
-            <p style={{ fontSize: '14px', fontWeight: 'bold', letterSpacing: '4px' }}>MAMORU</p>
+            <p style={{ lineHeight: 1 }}><MamoruWordmark height={11} color="#000" /></p>
           </div>
         </div>
       </div>

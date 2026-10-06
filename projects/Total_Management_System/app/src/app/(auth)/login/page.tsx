@@ -1,5 +1,6 @@
 'use client';
 
+import { MamoruWordmark } from '@/components/ui/mamoru-logo';
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -90,8 +91,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-cream px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-extrabold tracking-tight text-indigo-black">
-            MAMORU
+          <h1 className="leading-none text-indigo-black">
+            <MamoruWordmark height={18} />
           </h1>
           <p className="mt-1 text-sm text-neutral-500">통합관리시스템</p>
         </div>

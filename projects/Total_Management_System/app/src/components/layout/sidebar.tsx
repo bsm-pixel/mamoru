@@ -1,5 +1,6 @@
 'use client';
 
+import { MamoruWordmark } from '@/components/ui/mamoru-logo';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -49,7 +50,7 @@ export function Sidebar() {
       {/* 로고 + 대시보드(홈) 아이콘 — 대시보드는 메뉴 목록에서 빼고 여기로 */}
       <div className="px-4 py-4 flex items-center justify-between flex-shrink-0">
         <div>
-          <h1 className="text-lg font-extrabold tracking-tight">MAMORU</h1>
+          <h1 className="leading-none"><MamoruWordmark height={13} /></h1>
           <p className="text-[11px] text-cream/50 mt-0.5">TMS v1.0</p>
         </div>
         <Link

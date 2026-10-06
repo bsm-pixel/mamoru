@@ -1,5 +1,6 @@
 'use client';
 
+import { MamoruWordmark } from '@/components/ui/mamoru-logo';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { SignatureCanvas } from '@/components/contracts/signature-canvas';
@@ -180,7 +181,7 @@ export default function ContractStandalonePage() {
 
           {/* ── 헤더 ── */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-400">
-            <span className="text-sm font-bold tracking-wider text-neutral-800">MAMORU</span>
+            <MamoruWordmark height={10} color="#262626" />
             <h2 className="text-base font-extrabold tracking-[0.3em] text-neutral-900">구 매 계 약 서</h2>
           </div>
 

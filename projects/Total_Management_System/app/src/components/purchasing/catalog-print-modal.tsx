@@ -1,5 +1,6 @@
 'use client';
 
+import { MamoruWordmark } from '@/components/ui/mamoru-logo';
 import { useRef, useState } from 'react';
 import { Printer } from 'lucide-react';
 import { useSupplierCatalog } from '@/hooks/use-purchasing';
@@ -192,7 +193,7 @@ export function CatalogPrintModal({ supplierId, supplierName, onClose }: Props) 
               );
             })()}
 
-            <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '10px', color: '#ccc' }}>MAMORU</p>
+            <p style={{ textAlign: 'center', marginTop: '24px', lineHeight: 1 }}><MamoruWordmark height={7} color="#ccc" /></p>
           </div>
         </div>
       </div>
