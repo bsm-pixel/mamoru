@@ -83,3 +83,10 @@ MAMORU 리뷰 이벤트 #{rank}에 당첨되셨습니다
 - 연결 후 Settings `Store incomplete executions` = Yes 재확인 ([reference_make_scenario_autostop])
 
 관련: `projects/Total_Management_System/docs/TMS_FLOW_REVIEW_EVENT.md` 「당첨자 배송」 · [project_review_event]
+
+---
+
+## 가동 기록 (2026-10-07)
+- Make `06 EVENT` 분기 2개 연결 완료 — `review_event_won` → `KA01TP261002083848427oK8tv09coaC` / `review_event_shipped` → `KA01TP261002084553517S6nnhiMLk3A`. 둘 다 사장님 번호로 테스트 발송해 Make 실행 성공 확인(미완료 0)
+- ① 당첨안내는 반려 1회 후 재검수 승인본 — 첫 문장에 수신자 행동 고정 문구 "고객님께서 후기를 작성해 응모하신" (위 본문 초안은 반려 전 문구이므로 솔라피 콘솔의 승인본이 기준)
+- 배송지 페이지 미리보기: `page_event_address.html?t=preview` (예시 데이터, 저장 안 됨)
