@@ -156,3 +156,24 @@ sendPushToAll()                     ← lib/firebase/send-push.ts
    - 행도 없음 = 발송 코드가 호출되지 않음 (서버 로그 `[FCM]` 확인)
 
 > 💡 SW 캐시 때문에 안 바뀌는 경우: 크롬 개발자도구 → Application → Service Workers → **Unregister** 후 새로고침 ([reference_tms_deploy_gotchas])
+
+---
+
+## 🩺 2026-10-06 운영 자동 점검 (ops-watch)
+
+"멈췄는데 아무도 모르는" 상태를 잡는 크론. Claude/외부 AI 없이 TMS만으로 동작(추가 비용 0).
+코드: `lib/ops/watch.ts` · `api/cron/ops-watch` (Vercel Cron 10분) · 상태 `system_settings` `ops.watch_state`
+
+| 주기 | 점검 | 알림 |
+|---|---|---|
+| 10분 | Make 시나리오 꺼짐/설정오류 (팀 1942714 전체) | ⚠️ Make 시나리오 꺼짐 — 알림톡 정지 |
+| 1시간 | Make 미완료 실행(DLQ) 증가 · 실행 경고/오류(로그 status≥2) | ⚠️ 알림톡 발송 오류 확인 필요 |
+| 매일 08시 KST | Make "미완료 실행 저장" 꺼진 시나리오 · Make 조회 실패 · 예비 메일 경로 · 휴대폰 알림 등록 · 아임웹 토큰 갱신 25h 정지 · 복원수리 멈춘 건 | 아침 점검 — 확인할 것 N건 (새로 M건) |
+
+- **알림 피로 방지**: 같은 문제는 한 번만(보고한 키 기억). 해결되면 키가 빠지고 재발 시 다시 알림. 아침 점검은 **새 항목이 있을 때만** 발송(기존 항목은 `•`, 새 항목은 `🆕`로 같이 표시). "정상" 알림 없음
+- 발송 = `sendPushToAll` → 휴대폰 미수신 2분이면 메일 예비발송(위 155 구조 그대로)
+- 복원수리 멈춤 기준: 직접방문 접수=방문일 지남 / 기타 접수=7일 / 입고대기=수거일+3일 / 출고완료=7일 미배송 / 나머지 진행 단계=3일 무변경. 키=`repair:<id>:<status>` → 상태가 바뀌면 새로 판단
+- 아임웹은 **읽기만**(token_updated_at 나이) — 점검이 토큰 rotation 을 일으키면 안 됨
+- 송장 할 일 권한 문제는 `shipping-todo` 크론이 직접 알림 → 여기서 중복 제외
+- 환경변수: `MAKE_API_TOKEN`(필수, 없으면 아침 점검에 "미설정" 항목) · `MAKE_TEAM_ID`(기본 1942714) · `MAKE_API_BASE`(기본 eu2)
+- 수동: `?dry=1`(발송·저장 없이 결과) · `?force=hourly|daily` — Authorization: Bearer CRON_SECRET
