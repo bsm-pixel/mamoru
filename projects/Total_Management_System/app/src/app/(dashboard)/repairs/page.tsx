@@ -11,12 +11,14 @@ import { Button } from '@/components/ui/button';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useRepairSync } from '@/hooks/use-repairs';
 import { useRepairDashboardStats } from '@/hooks/use-dashboard-stats';
-import { RefreshCw, Scissors, Inbox, Loader, CreditCard, AlertTriangle, TrendingUp } from 'lucide-react';
+import { RefreshCw, Scissors, Inbox, Loader, CreditCard, AlertTriangle, TrendingUp, CalendarPlus } from 'lucide-react';
+import { VisitBookingModal } from '@/components/repairs/visit-booking-modal';
 import { formatKRW } from '@/lib/utils/format';
 
 export default function RepairsPage() {
   const sync = useRepairSync();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);   // 방문 예약 등록 모달
   const { data: stats } = useRepairDashboardStats();
   const [badgeFilter, setBadgeFilter] = useState<{ tab?: 'intake' | 'in_progress'; unpaidOnly?: boolean; staleOnly?: boolean } | null>(null);
 
@@ -98,11 +100,18 @@ export default function RepairsPage() {
   return (
     <>
       <Topbar title="복원수리" action={
-        <Button variant="secondary" size="sm" onClick={() => sync.mutate()} disabled={sync.isPending}>
-          <RefreshCw size={14} className={sync.isPending ? 'animate-spin' : ''} />
-          {sync.isPending ? '새로고침 중...' : '새로고침'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={() => sync.mutate()} disabled={sync.isPending}>
+            <RefreshCw size={14} className={sync.isPending ? 'animate-spin' : ''} />
+            {sync.isPending ? '새로고침 중...' : '새로고침'}
+          </Button>
+          {/* 2026-10-06 전화로 정한 매장 방문을 바로 등록 → 고객 알림톡 + 캘린더 + 리마인드 */}
+          <Button size="sm" onClick={() => setBookingOpen(true)}>
+            <CalendarPlus size={14} />방문 예약 등록
+          </Button>
+        </div>
       } />
+      <VisitBookingModal open={bookingOpen} onClose={() => setBookingOpen(false)} onCreated={(id) => setSelectedId(id)} />
 
       {isLg ? (
         /* PC: 좌측(통계+밀집그리드) + 우측 상세(전체 높이) — 판매관리와 동일 IA */

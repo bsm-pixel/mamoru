@@ -3,6 +3,19 @@
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
 
+## 2026-10-06 — TMS 「방문 예약 등록」 (전화로 정한 매장 방문을 사장님이 직접 등록)
+
+- 위치: 복원수리 화면 상단 **[방문 예약 등록]** → `components/repairs/visit-booking-modal.tsx`
+- 입력: 성함·연락처(기존 고객 검색 가능) / 가위 수(마모루·타사, 소요시간 계산용 기본 1) / 날짜 / 시간(그날 시간표 칩 + 직접 입력) / 메모
+- 생성 = **고객 접수와 같은 공용 함수** `lib/repair/intake.ts createRepairIntake(actor)` — 고객 페이지(`api/repair/public/submit`)도 이걸 쓰도록 분리(동작 동일)
+  - 예약번호 AS-… · 고객 자동 연결(신규는 출처 manual) · `as_visit_booked` 알림톡(일정 확인·변경 링크) · 구글 캘린더 · 방문 리마인드 대상
+  - actor 'admin' 차이: 이력 "관리자 전화 예약 등록" / **사장님 앱 푸시 없음**(본인 행동, `sendNotification({skipAdminPush})`) / 관리자 메일 없음. 고객 알림톡은 항상 발송
+- 시간표·충돌 = 공용 `lib/repair/visit-schedule.ts` (고객 슬롯 `api/repair/public/slots` 와 같은 규칙: 상담 매장/출장(버퍼)/제안 시간/복원수리 방문/시간 차단·매주 반복)
+  - 관리자 API `api/repair/visit-booking` GET=시간표(겹치는 일정 이름까지) · POST=등록
+  - **충돌 = 경고 후 허용**(사장님 결정): 겹침·휴무·영업시간 밖·지난 시각·같은 날 같은 고객 예약 → 409 `needConfirm` → 확인창 → `force` 재전송. 확인 내용은 수리 메모에 남김
+  - 🔒 고객 슬롯 API 는 여전히 `{time, available}` 만 — 다른 고객 이름이 든 겹침 라벨은 관리자 API 에서만
+- 같이 고친 것: 고객 슬롯의 "오늘 지난 시간" 판정이 서버(UTC) 시각 기준이라 KST 오전에 지난 시간이 열려 보일 수 있었음 → KST 기준
+
 ## 2026-06-09 — B/C채널 복원수리, 제품과 한 화면에서 함께 입력 (양자택일 모드 제거)
 
 출장상담 등에서 제품 판매 + 복원수리를 **한 번에** 입력. 집계(A+B+C, category='RS')는 그대로 — 매출·수량만 기록(물리 파이프라인 A채널 repairs 미생성, 이중집계 0).

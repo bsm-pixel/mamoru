@@ -242,6 +242,8 @@ interface NotifyPayload {
   name: string;
   /** 추가 데이터 — GAS payload와 동일 키 사용 (date, time, address 등) */
   data?: Record<string, string>;
+  /** true = 사장님 앱 푸시 생략 (사장님 본인이 TMS에서 등록한 건 — 본인 행동은 푸시 제외 규칙). 고객 알림톡은 그대로 발송. 2026-10-06 */
+  skipAdminPush?: boolean;
 }
 
 /** 간단한 UUID 생성 */
@@ -285,7 +287,7 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     imweb_exchange_requested: { title: '아임웹 주문 교환 요청', body: `${payload.name}님 교환 요청 · 아임웹에서 승인/거절 처리`, url: '/orders' },
   };
   const pushCfg = PUSH_CONFIG[payload.template];
-  if (pushCfg) {
+  if (pushCfg && !payload.skipAdminPush) {
     // tag에 건별 고유 ID 포함 — 레코드 삭제 시 SW에서 해당 알림만 정확히 회수 가능
     const uniqId = payload.data?.as_id || payload.data?.id || '';
     const pushTag = uniqId ? `mamoru-${payload.template}-${uniqId}` : `mamoru-${payload.template}`;
