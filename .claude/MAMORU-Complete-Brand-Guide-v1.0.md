@@ -174,7 +174,7 @@ MAMORU는 판매하지 않습니다. 안내할 뿐입니다.
 ### Logo Status · 로고 현황
 
 - **워드마크:** 라운드 처리 볼드 버전 유지. 부드러우면서 무게감.
-  - **서체 = AGRESSIVE** (2026-10-06 사장님 확정). 웹에서는 글자로 쓰지 말고 **SVG 워드마크**를 넣는다 — 원본 `projects/brand/img/mamoru-wordmark.svg`(색은 currentColor, 가로:세로 ≈ 8.84:1). 페이지에는 `<svg class="mm-wordmark">` 로 인라인 삽입하고 높이만 지정(본문 로고 10~14px). Outfit 등 다른 서체로 "MAMORU"를 로고처럼 쓰는 것 금지. 폰트 파일(.otf)은 저장소에 올리지 않는다.
+  - **서체 = AGRESSIVE** (2026-10-06 사장님 확정, 원본 = 사장님 제공 로고 파일). 웹에서는 "MAMORU"를 글자로 타이핑하지 말고 **SVG 로고**를 넣는다 — `projects/brand/img/` 의 3종(모두 currentColor): `mamoru-wordmark.svg`(글씨만, 가로:세로≈9.28:1) · `mamoru-logo.svg`(거북이+글씨 세로 조합, 323:253) · `mamoru-symbol.svg`(거북이만). 작은 머리 로고(높이 10~14px)=글씨만 인라인 `<svg class="mm-wordmark">`, 거북이 조합은 크게 쓰는 자리(히어로·소개·인쇄)만 — 작으면 거북이가 뭉개진다. Outfit 등 다른 서체로 로고처럼 쓰는 것 금지. 폰트 파일(.otf)은 저장소에 올리지 않는다.
 - **거북이 심볼:** 리디자인 예정. 트라이벌 → 미니멀/기하학적 방향. 거북이 상징(천천히, 오래, 신뢰) 유지.
 
 ---
