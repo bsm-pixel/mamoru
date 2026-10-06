@@ -1,0 +1,68 @@
+/* MAMORU 디자인 토큰 — 자동 생성 파일 (직접 수정 금지)
+ * 원본: 마모루_클로드킷/MAMORU_디자인시스템/tokens.json (v1)
+ * 다시 만들기: node scripts/build-design-tokens.cjs
+ * 규칙: 무채색 10색이 전부(포인트 컬러 없음) · 그림자 금지(경계선 --line 과 명도 차이) · 그라데이션 금지
+ *       다크는 몰입 구간에만 — 해당 구간에 data-theme="dark" */
+:root {
+  /* 무채색 10색 */
+  --void: #1a1a1a;
+  --graphite: #2d2d2d;
+  --stone: #4a4a4a;
+  --warm-gray: #8a8580;
+  --mist: #b8b4af;
+  --sand: #d4d0cb;
+  --parchment: #edebe8;
+  --shell: #f5f3f0;
+  --cream: #faf9f7;
+  --white: #ffffff;
+  /* 의미 토큰 — 라이트(기본) */
+  --bg: var(--cream);
+  --bg-section: var(--parchment);
+  --surface-card: var(--shell);
+  --surface-raised: var(--white);
+  --line: var(--sand);
+  --ink: var(--void);
+  --ink-body: var(--stone);
+  --ink-muted: var(--warm-gray);
+  --ink-inverse: var(--cream);
+  /* 서체 */
+  --font-display: "Outfit", "Pretendard", system-ui, sans-serif;
+  --font-kr: "Pretendard", system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Pretendard", system-ui, sans-serif;
+  /* 여백 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --gutter-mobile: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-20: 80px;
+  /* 모서리 */
+  --radius-0: 0px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+}
+/* 다크 — 몰입 구간(복원수리 안내 · 브랜드 철학)에만 */
+[data-theme="dark"] {
+  --bg: var(--void);
+  --bg-section: var(--graphite);
+  --surface-card: var(--graphite);
+  --surface-raised: var(--graphite);
+  --line: var(--stone);
+  --ink: var(--cream);
+  --ink-body: var(--sand);
+  --ink-muted: var(--mist);
+  --ink-inverse: var(--void);
+}
+/* 글자 스타일 */
+.mm-display-pc{font-family:var(--font-display);font-size:64px;line-height:1.1;font-weight:900;letter-spacing:-0.03em;}
+.mm-display-mobile{font-family:var(--font-display);font-size:40px;line-height:1.15;font-weight:700;letter-spacing:-0.02em;}
+.mm-label-en{font-family:var(--font-display);font-size:11px;line-height:1.4;font-weight:500;letter-spacing:0.24em;text-transform:uppercase;}
+.mm-title-kr{font-family:var(--font-kr);font-size:24px;line-height:1.4;font-weight:600;letter-spacing:-0.02em;}
+.mm-subtitle-kr{font-family:var(--font-kr);font-size:18px;line-height:1.5;font-weight:600;letter-spacing:-0.01em;}
+.mm-body-kr{font-family:var(--font-kr);font-size:15px;line-height:1.8;font-weight:400;}
+.mm-caption-kr{font-family:var(--font-kr);font-size:13.5px;line-height:1.6;font-weight:500;}
+.mm-body-en{font-family:var(--font-sans);font-size:15px;line-height:1.7;font-weight:400;}
+.mm-caption-en{font-family:var(--font-sans);font-size:12px;line-height:1.5;font-weight:500;}
