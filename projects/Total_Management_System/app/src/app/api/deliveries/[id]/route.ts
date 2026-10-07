@@ -25,10 +25,43 @@ export async function GET(
     ]);
 
     if (dlRes.error) throw dlRes.error;
+    const dl = dlRes.data;
+
+    // ── 합포장 정보 (158, 2026-10-07) ── 마이그 158 전이면 컬럼이 없어 쿼리가 에러 → 빈 값으로 둔다(기존 화면 무영향)
+    //   mergedInto      : 이 건이 얹혀 가는 원 송장 납품
+    //   mergedChildren  : 이 건의 송장에 얹힌 납품들
+    //   mergeCandidates : 지금 묶을 수 있는 같은 거래처의 송장 있는 납품 (납품확정·송장 없음일 때만)
+    let mergedInto: Record<string, unknown> | null = null;
+    let mergedChildren: Array<Record<string, unknown>> = [];
+    let mergeCandidates: Array<Record<string, unknown>> = [];
+    const COLS = 'id, dl_number, tracking_number, courier_name, status, total_amount, delivery_date';
+    if (dl.merged_into_delivery_id) {
+      const { data } = await db.from('deliveries').select(COLS).eq('id', dl.merged_into_delivery_id).maybeSingle();
+      mergedInto = data || null;
+    }
+    {
+      const { data } = await db.from('deliveries').select(COLS)
+        .eq('merged_into_delivery_id', id).is('cancelled_at', null);
+      mergedChildren = data || [];
+    }
+    if (dl.status === 'confirmed' && !dl.tracking_number && !dl.cancelled_at && dl.customer_id) {
+      const { data } = await db.from('deliveries').select(COLS)
+        .eq('customer_id', dl.customer_id).neq('id', id)
+        .not('tracking_number', 'is', null)
+        .is('merged_into_delivery_id', null)   // 이미 얹혀 가는 건은 원본이 아니다
+        .is('cancelled_at', null).is('delivered_at', null)
+        .in('status', ['confirmed', 'shipped'])
+        .order('delivery_date', { ascending: false })
+        .limit(10);
+      mergeCandidates = data || [];
+    }
 
     return NextResponse.json({
-      delivery: dlRes.data,
+      delivery: dl,
       items: itemsRes.data || [],
+      mergedInto,
+      mergedChildren,
+      mergeCandidates,
     });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
@@ -100,15 +133,66 @@ export async function PATCH(
       const courierName = direct
         ? String(body.courier_name)
         : (body.courier_name || dl.courier_name || (trackingNumber ? COURIER_LOTTE : null));
-      await db.from('deliveries').update({
+      const shipFields = {
         status: 'shipped',
         shipped_date: new Date().toISOString().slice(0, 10),
         tracking_number: trackingNumber,
         courier_name: courierName,
         shipped_source: 'manual',   // 110: 집하 자동감지와 구분
         updated_at: new Date().toISOString(),
+      };
+      await db.from('deliveries').update(shipFields).eq('id', id);
+      // 158: 이 송장에 합포장한 건들도 같은 박스다 → 같은 방법·같은 번호로 함께 출고 처리
+      //      (다른 택배사로 바꿔 보냈거나 직접 전달한 경우도 그대로 따라간다). 마이그 158 전이면 조용히 무시.
+      const { data: shippedChildren } = await db.from('deliveries').update(shipFields)
+        .eq('merged_into_delivery_id', id).eq('status', 'confirmed').is('cancelled_at', null).select('id');
+      // 얹혀 가던 건을 따로 출고 처리했다면(다른 번호·직접전달) 더는 합포장이 아니다
+      if (dl.merged_into_delivery_id && (direct || (body.tracking_number && body.tracking_number !== dl.tracking_number))) {
+        await db.from('deliveries').update({ merged_into_delivery_id: null }).eq('id', id);
+      }
+      return NextResponse.json({ success: true, status: 'shipped', mergedShipped: shippedChildren?.length || 0 });
+    }
+
+    // ── 합포장 (158, 2026-10-07) ── 새 송장을 만들지 않고, 같은 거래처의 기존 송장에 얹는다.
+    //   상태는 그대로 confirmed(=출고대기). 출고완료·배송완료는 원 송장과 **같은 시점에** 바뀐다:
+    //   크론 [4-A](집하)·[4](배송완료)가 건마다 송장번호로 조회하므로 같은 번호면 같은 회차에 함께 처리되고,
+    //   원 건을 수동 [출고 완료] 하면 위 ship 이 함께 올린다.
+    if (action === 'merge_shipment') {
+      if (dl.status !== 'confirmed') return NextResponse.json({ error: '납품확정 상태에서만 합포장할 수 있습니다' }, { status: 400 });
+      if (dl.cancelled_at) return NextResponse.json({ error: '취소된 납품입니다' }, { status: 400 });
+      if (dl.tracking_number) return NextResponse.json({ error: '이미 송장이 있습니다. 먼저 송장을 취소해 주세요' }, { status: 400 });
+      const targetId = String(body.target_id || '');
+      if (!targetId || targetId === id) return NextResponse.json({ error: '합포장할 납품을 골라 주세요' }, { status: 400 });
+
+      const { data: target, error: tErr } = await db.from('deliveries').select('*').eq('id', targetId).single();
+      if (tErr || !target) return NextResponse.json({ error: '합포장할 납품을 찾을 수 없습니다' }, { status: 404 });
+      if (target.customer_id !== dl.customer_id) return NextResponse.json({ error: '같은 거래처의 납품만 합포장할 수 있습니다' }, { status: 400 });
+      if (!target.tracking_number || target.cancelled_at || target.delivered_at) {
+        return NextResponse.json({ error: '그 납품의 송장이 없거나 이미 배송이 끝났습니다' }, { status: 400 });
+      }
+      if (target.merged_into_delivery_id) {
+        return NextResponse.json({ error: '그 납품도 다른 송장에 합포장된 건입니다. 원래 송장 건을 골라 주세요' }, { status: 400 });
+      }
+
+      const { error: mErr } = await db.from('deliveries').update({
+        tracking_number: target.tracking_number,
+        courier_name: target.courier_name || COURIER_LOTTE,
+        merged_into_delivery_id: target.id,
+        updated_at: new Date().toISOString(),
       }).eq('id', id);
-      return NextResponse.json({ success: true, status: 'shipped' });
+      if (mErr) {
+        // 마이그 158(merged_into_delivery_id 컬럼) 미실행이 가장 흔한 원인
+        return NextResponse.json({ error: `합포장 저장 실패 — 마이그레이션 158을 실행했는지 확인해 주세요 (${mErr.message})` }, { status: 500 });
+      }
+      // 원 건이 이미 기사님께 넘어간 뒤(출고완료)에 묶었다면 이 건도 바로 출고완료 — 다음 크론을 기다릴 이유가 없다
+      if (target.status === 'shipped') {
+        await db.from('deliveries').update({
+          status: 'shipped',
+          shipped_date: target.shipped_date || new Date().toISOString().slice(0, 10),
+          shipped_source: target.shipped_source || 'manual',
+        }).eq('id', id);
+      }
+      return NextResponse.json({ success: true, status: target.status === 'shipped' ? 'shipped' : 'confirmed', mergedInto: target.dl_number });
     }
 
     // ── 송장 취소 (150, 2026-09-15) ──
@@ -121,7 +205,7 @@ export async function PATCH(
       if (dl.status === 'settled') return NextResponse.json({ error: '정산 완료 건은 송장을 취소할 수 없습니다' }, { status: 400 });
       if (dl.cancelled_at) return NextResponse.json({ error: '취소된 납품입니다' }, { status: 400 });
 
-      await db.from('deliveries').update({
+      const clearFields = {
         tracking_number: null,
         courier_name: null,
         // 출고완료까지 갔던 건이면 출고 흔적도 함께 지운다(재출고 시 상태 오염 방지 — 판매 DELETE /ship 과 같은 규칙)
@@ -130,8 +214,16 @@ export async function PATCH(
         shipped_source: null,
         delivered_at: null,
         updated_at: new Date().toISOString(),
-      }).eq('id', id);
-      return NextResponse.json({ success: true, status: 'confirmed' });
+      };
+      await db.from('deliveries').update(clearFields).eq('id', id);
+      // 158: 합포장 정리 — 아래 두 줄은 마이그 158 전이면 조용히 실패한다(위 본 처리는 이미 끝남)
+      //   · 얹혀 가던 건이면 → 합포장만 푼다(원 송장 건은 그대로)
+      //   · 원 송장 건이면   → 그 송장이 사라진 것이므로 얹힌 건들도 함께 송장을 지운다(죽은 번호가 남으면 영영 출고대기)
+      await db.from('deliveries').update({ merged_into_delivery_id: null }).eq('id', id);
+      const { data: freed } = await db.from('deliveries')
+        .update({ ...clearFields, merged_into_delivery_id: null })
+        .eq('merged_into_delivery_id', id).neq('status', 'settled').is('cancelled_at', null).select('id');
+      return NextResponse.json({ success: true, status: 'confirmed', mergedCleared: freed?.length || 0 });
     }
 
     // ── 정산 완료 (shipped → settled) ──
@@ -186,6 +278,11 @@ export async function PATCH(
         cancelled_reason: reason,
         updated_at: new Date().toISOString(),
       }).eq('id', id);
+      // 158: 납품이 취소되면 이 송장에 합포장한 건들은 자기 송장을 다시 만들어야 한다 → 송장·합포장 표시를 함께 푼다
+      //      (마이그 158 전이면 조용히 무시)
+      await db.from('deliveries')
+        .update({ tracking_number: null, courier_name: null, merged_into_delivery_id: null, updated_at: new Date().toISOString() })
+        .eq('merged_into_delivery_id', id).eq('status', 'confirmed').is('cancelled_at', null);
       await recalcOutstanding(db, dl.customer_id);
       return NextResponse.json({ success: true, action: 'cancelled' });
     }

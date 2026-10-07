@@ -65,6 +65,17 @@ export function useDeliveries(filters?: {
   });
 }
 
+/** 158 합포장 — 상세 API가 돌려주는 연결 납품 요약 */
+export interface DeliveryMergeRef {
+  id: string;
+  dl_number: string;
+  tracking_number: string | null;
+  courier_name: string | null;
+  status: string;
+  total_amount: number;
+  delivery_date: string | null;
+}
+
 /** 납품 상세 */
 export function useDelivery(id: string) {
   return useQuery({
@@ -75,6 +86,12 @@ export function useDelivery(id: string) {
       return res.json() as Promise<{
         delivery: Record<string, unknown>;
         items: Array<Record<string, unknown>>;
+        /** 158 합포장 — 이 건이 얹혀 가는 원 송장 납품 */
+        mergedInto?: DeliveryMergeRef | null;
+        /** 158 합포장 — 이 건의 송장에 얹힌 납품들 */
+        mergedChildren?: DeliveryMergeRef[];
+        /** 158 합포장 — 지금 묶을 수 있는 같은 거래처의 송장 있는 납품 */
+        mergeCandidates?: DeliveryMergeRef[];
       }>;
     },
     enabled: !!id,

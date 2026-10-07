@@ -82,6 +82,13 @@ export async function POST(request: NextRequest) {
           updated_at: new Date().toISOString(),
         })
         .eq('id', body.deliveryId);
+      // 158 합포장: (마이그 158 전이면 아래 두 줄은 조용히 실패 — 위 본 처리는 이미 끝남)
+      //   · 얹혀 가던 건이 자기 송장을 새로 만들었으면 더는 합포장이 아니다
+      //   · 원 송장 건을 재발급했으면 얹힌 건들도 새 번호를 따라간다(옛 번호가 남으면 추적이 끊긴다)
+      await db.from('deliveries').update({ merged_into_delivery_id: null }).eq('id', body.deliveryId);
+      await db.from('deliveries')
+        .update({ tracking_number: invoiceNumber, courier_name: '롯데택배', updated_at: new Date().toISOString() })
+        .eq('merged_into_delivery_id', body.deliveryId).is('cancelled_at', null).is('delivered_at', null);
     }
 
     // 아임웹 역동기: 배송대기 전환(place) → 송장번호 등록(invoice)

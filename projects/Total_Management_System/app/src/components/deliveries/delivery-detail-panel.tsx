@@ -88,6 +88,29 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const status = (dl.status as string) || 'draft';
   const courierInput = courierPick ?? ((dl.courier_name as string | null) || COURIER_LOTTE);
 
+  // 158 합포장 — 새 송장 없이 같은 거래처의 기존 송장에 얹어 보낸다. 상태는 원 송장과 함께 바뀐다.
+  const mergedInto = data.mergedInto || null;
+  const mergedChildren = data.mergedChildren || [];
+  const mergeCandidates = data.mergeCandidates || [];
+  const mergeNote = mergedInto
+    ? <span className="block mt-1 font-medium">합포장 · {mergedInto.dl_number} 송장에 같이 보냅니다. 수거·배송완료 때 함께 바뀝니다.</span>
+    : mergedChildren.length > 0
+      ? <span className="block mt-1 font-medium">합포장 {mergedChildren.length}건 포함 · {mergedChildren.map((c) => c.dl_number).join(', ')}</span>
+      : null;
+  /** 송장 취소 확인 문구 — 얹힌 건은 '합포장 해제', 원 건은 얹힌 건도 같이 풀린다고 알린다 */
+  const cancelShipmentAction = (baseMsg: string, baseLabel = '송장 취소') => mergedInto
+    ? {
+        action: 'cancel_shipment', label: '합포장 해제',
+        msg: `${mergedInto.dl_number} 송장과의 합포장을 풉니다.\n\n이 건은 송장 없는 납품확정으로 돌아가고,\n${mergedInto.dl_number} 은 그대로입니다.\n재고·매출·미수금은 그대로입니다.`,
+      }
+    : {
+        action: 'cancel_shipment', label: baseLabel,
+        msg: baseMsg + (mergedChildren.length > 0
+          ? `\n\n이 송장에 합포장한 ${mergedChildren.length}건(${mergedChildren.map((c) => c.dl_number).join(', ')})의 송장도 함께 지워집니다.`
+          : ''),
+        variant: 'danger' as const,
+      };
+
   // 거래처별 납품명·가격 결정 (생성 모달 create-delivery-modal 과 동일 규칙: catalog → 고객유형 → 기본)
   const catalogEntryMap = new Map((customerCatalogData?.catalog || []).map((c) => [c.product_id, c]));
   const dlCustomerType = dl.customer_type as string | undefined;
@@ -154,7 +177,13 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
 
   async function handleAction(action: string, extra?: Record<string, unknown>) {
     try {
-      await updateDL.mutateAsync({ id: deliveryId, action, ...extra });
+      const result = await updateDL.mutateAsync({ id: deliveryId, action, ...extra }) as {
+        mergedInto?: string; mergedShipped?: number; mergedCleared?: number;
+      };
+      // 158 합포장 — 함께 바뀐 건이 있으면 알려준다(조용히 바뀌면 다른 건을 열었을 때 놀란다)
+      if (action === 'merge_shipment') toast.success(`${result?.mergedInto || '기존'} 송장에 합포장했습니다`);
+      if (result?.mergedShipped) toast.success(`합포장 ${result.mergedShipped}건도 함께 출고완료 처리했습니다`);
+      if (result?.mergedCleared) toast.success(`합포장 ${result.mergedCleared}건의 송장도 함께 지웠습니다`);
       queryClient.invalidateQueries({ queryKey: ['delivery', deliveryId] });
       setPendingAction(null);
     } catch {
@@ -465,6 +494,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
                   {isAlpsTrackable(dl.courier_name as string | null)
                     ? '롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인)'
                     : '자동 감지가 안 되는 택배사입니다. 보내셨으면 아래 [출고 완료]를 눌러주세요.'}
+                  {mergeNote}
                 </ActionNote>
               ) : (
                 <ActionNote tone="muted" title="납품확정" meta="송장 없음">
@@ -485,6 +515,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
                   : dl.tracking_number && isAlpsTrackable(dl.courier_name as string | null)
                     ? '인수자등록이 감지되면 배송완료로 바뀝니다 (1시간마다 확인)'
                     : '자동 배송추적은 되지 않습니다.'}
+                {mergeNote}
               </ActionNote>
             )}
 
@@ -507,9 +538,25 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
                   출고 완료
                 </Button>
               ) : (
-                <Button className="w-full" onClick={handleBookInvoice} disabled={bookingInvoice || updateDL.isPending}>
-                  {bookingInvoice ? '송장 생성 중...' : '🚚 송장 생성 (롯데택배)'}
-                </Button>
+                <>
+                  <Button className="w-full" onClick={handleBookInvoice} disabled={bookingInvoice || updateDL.isPending}>
+                    {bookingInvoice ? '송장 생성 중...' : '🚚 송장 생성 (롯데택배)'}
+                  </Button>
+                  {/* 158 합포장 — 같은 거래처에 아직 배송이 안 끝난 송장이 있을 때만 뜬다(없으면 이 줄 자체가 없다).
+                       접어두지 않는 이유: 해당될 때는 [송장 생성]과 대등한 선택지라서. 흰 버튼이라 주 액션(검정 1개) 규칙은 지킨다 */}
+                  {mergeCandidates.map((c) => (
+                    <Button key={c.id} variant="secondary" className="w-full h-auto py-2 flex-col gap-0.5" onClick={() => setPendingAction({
+                      action: 'merge_shipment', label: '합포장',
+                      msg: `새 송장을 만들지 않고 ${c.dl_number} 의 송장에 합포장합니다.\n\n${courierLabel(c.courier_name)} ${c.tracking_number || ''}\n\n같은 박스로 보내는 것으로 기록하고,\n기사님 수거·배송완료 때 두 건이 함께 바뀝니다.`,
+                      extra: { target_id: c.id },
+                    })} disabled={bookingInvoice || updateDL.isPending}>
+                      <span>{c.dl_number} 송장에 합포장</span>
+                      <span className="text-xs font-normal text-neutral-500">
+                        {c.status === 'shipped' ? '출고완료' : '출고대기'} · {formatKRW(c.total_amount || 0)}
+                      </span>
+                    </Button>
+                  ))}
+                </>
               )
             )}
 
@@ -578,19 +625,15 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
 
                 {dl.tracking_number && (
                   <DangerLink
-                    onClick={() => setPendingAction({
-                      action: 'cancel_shipment', label: '송장 취소',
-                      msg: `송장 ${dl.tracking_number as string}
+                    onClick={() => setPendingAction(cancelShipmentAction(`송장 ${dl.tracking_number as string}
 (${courierLabel(dl.courier_name as string | null)})
 
 먼저 롯데 ALPS 에서 집하취소를 완료하셨나요?
 TMS 는 송장 기록만 지웁니다.
-재고·매출·미수금은 그대로입니다.`,
-                      variant: 'danger',
-                    })}
+재고·매출·미수금은 그대로입니다.`))}
                     disabled={updateDL.isPending}
                   >
-                    송장 취소 (기록 지우기)
+                    {mergedInto ? '합포장 해제' : '송장 취소 (기록 지우기)'}
                   </DangerLink>
                 )}
               </MoreActions>
@@ -598,19 +641,15 @@ TMS 는 송장 기록만 지웁니다.
             {status === 'shipped' && dl.tracking_number && (
               <MoreActions label="잘못 처리했나요?">
                 <DangerLink
-                  onClick={() => setPendingAction({
-                    action: 'cancel_shipment', label: '송장 취소',
-                    msg: `송장 ${dl.tracking_number as string}
+                  onClick={() => setPendingAction(cancelShipmentAction(`송장 ${dl.tracking_number as string}
 (${courierLabel(dl.courier_name as string | null)})
 
 송장 기록을 지우고 출고 전(납품확정)으로 되돌립니다.
 롯데 송장이면 ALPS 집하취소를 먼저 해주세요.
-재고·매출·미수금은 그대로입니다.`,
-                    variant: 'danger',
-                  })}
+재고·매출·미수금은 그대로입니다.`))}
                   disabled={updateDL.isPending}
                 >
-                  송장 취소 · 출고 전으로 되돌리기
+                  {mergedInto ? '합포장 해제 · 출고 전으로 되돌리기' : '송장 취소 · 출고 전으로 되돌리기'}
                 </DangerLink>
               </MoreActions>
             )}
