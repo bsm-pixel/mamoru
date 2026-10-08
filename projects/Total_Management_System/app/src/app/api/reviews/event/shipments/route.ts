@@ -5,6 +5,7 @@ import {
   syncShipments, findPrefillAddress, upsertCustomerAddress, sendWonNotice, addressLink, digits,
   type ShipmentRow,
 } from '@/lib/reviews/event-shipments';
+import { COURIER_DIRECT, isDirectHandover } from '@/lib/shipping/couriers';
 
 /**
  * 리뷰 이벤트 당첨자 배송 — 관리 API (2026-10-02, 마이그 156)
@@ -12,6 +13,8 @@ import {
  *   POST { action: 'notify', month, ids? }           → 당첨 안내 알림톡 (ids 없으면 아직 안 보낸 전원)
  *   POST { action: 'invoice', id }                   → 롯데 ALPS 송장 생성
  *   POST { action: 'cancel_invoice', id }            → 송장 취소 (집하 전만)
+ *   POST { action: 'direct_plan' | 'direct_done' | 'direct_undo', id }
+ *                                                    → 직접전달(방문 수령): 예정 표시 → 전달완료 → 되돌리기 (2026-10-08)
  *   POST { action: 'save_address', id, postcode, address_road, address_detail, delivery_message }
  *                                                    → 사장님이 전화로 받은 주소 직접 입력
  */
@@ -87,9 +90,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
+    // ── 직접전달 (2026-10-08) ── 나중에 방문해서 받아가기로 한 당첨자. 송장을 만들지 않는다.
+    //   예정   = courier_name '직접전달' + delivered_at 없음
+    //   완료   = courier_name '직접전달' + delivered_at 있음
+    //   송장이 없으므로 집하 감지 크론·출고 알림톡 대상에서 자연히 빠진다.
+    if (body.action === 'direct_plan') {
+      if (row.invoice_number) return NextResponse.json({ error: '이미 송장이 있습니다. 송장을 먼저 취소한 뒤 직접전달로 바꿔주세요' }, { status: 409 });
+      if (row.delivered_at) return NextResponse.json({ error: '이미 완료된 건입니다' }, { status: 409 });
+      await db.from('review_event_shipments')
+        .update({ courier_name: COURIER_DIRECT, updated_at: new Date().toISOString() }).eq('id', id);
+      return NextResponse.json({ ok: true });
+    }
+    if (body.action === 'direct_done') {
+      if (!isDirectHandover(row.courier_name) || row.invoice_number) return NextResponse.json({ error: '직접전달 예정 건이 아닙니다' }, { status: 400 });
+      if (row.delivered_at) return NextResponse.json({ error: '이미 전달완료 처리된 건입니다' }, { status: 409 });
+      const now = new Date().toISOString();
+      await db.from('review_event_shipments').update({ delivered_at: now, updated_at: now }).eq('id', id);
+      return NextResponse.json({ ok: true });
+    }
+    // 되돌리기 — 전달완료 → 예정 / 예정 → 택배 발송(원래 흐름)
+    if (body.action === 'direct_undo') {
+      if (!isDirectHandover(row.courier_name)) return NextResponse.json({ error: '직접전달 건이 아닙니다' }, { status: 400 });
+      const upd = row.delivered_at
+        ? { delivered_at: null, updated_at: new Date().toISOString() }
+        : { courier_name: '롯데택배', updated_at: new Date().toISOString() };
+      await db.from('review_event_shipments').update(upd).eq('id', id);
+      return NextResponse.json({ ok: true, back: row.delivered_at ? 'planned' : 'shipping' });
+    }
+
     // ── 송장 생성 ──
     if (body.action === 'invoice') {
       if (row.invoice_number) return NextResponse.json({ error: `이미 송장이 있습니다 (${row.invoice_number})` }, { status: 409 });
+      if (isDirectHandover(row.courier_name)) return NextResponse.json({ error: '직접전달 예정 건입니다. 택배로 보내려면 먼저 [택배로 되돌리기]를 눌러주세요' }, { status: 409 });
       if (!row.postcode || !row.address_road) return NextResponse.json({ error: '배송지가 아직 없습니다. 고객 입력을 기다리거나 직접 입력해주세요' }, { status: 400 });
       if (!digits(row.phone)) return NextResponse.json({ error: '연락처가 없습니다' }, { status: 400 });
 

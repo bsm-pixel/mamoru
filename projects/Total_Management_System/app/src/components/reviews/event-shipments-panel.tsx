@@ -22,8 +22,12 @@ interface Item {
   address_submitted_at: string | null; won_notified_at: string | null;
   invoice_number: string | null; invoice_created_at: string | null;
   shipped_at: string | null; shipped_notified_at: string | null; delivered_at: string | null;
+  courier_name: string | null;
   prefill: Prefill | null;
 }
+
+/** 직접전달(방문 수령) 건 — 송장 없이 매장에서 건넨다. 예정 = delivered_at 없음 / 완료 = 있음 (2026-10-08) */
+const isDirect = (it: Item) => (it.courier_name || '').trim() === '직접전달';
 
 const SRC: Record<string, string> = { customer: '고객정보', repair: '복원수리 접수', order: '아임웹 주문' };
 
@@ -110,6 +114,26 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
     if (r) { toast.success('송장을 취소했습니다'); load(); }
   }
 
+  // ── 직접전달 (2026-10-08) ── 나중에 방문해서 받아가는 당첨자. 송장을 만들지 않는다
+  async function directPlan(it: Item) {
+    if (!window.confirm(`${it.name}님을 직접전달(방문 수령)로 바꿉니다.\n송장을 만들지 않고, 건네신 뒤 [전달완료]를 누르면 끝납니다.`)) return;
+    const r = await post({ action: 'direct_plan', id: it.id }, `dp-${it.id}`);
+    if (r) { toast.success('직접전달 예정으로 바꿨습니다'); load(); }
+  }
+  async function directDone(it: Item) {
+    if (!window.confirm(`${it.name}님께 ${it.prize || '당첨 상품'}을(를) 건넨 것으로 처리합니다.`)) return;
+    const r = await post({ action: 'direct_done', id: it.id }, `dd-${it.id}`);
+    if (r) { toast.success('전달완료 처리했습니다'); load(); }
+  }
+  async function directUndo(it: Item) {
+    const msg = it.delivered_at
+      ? `${it.name}님 전달완료를 취소하고 '직접전달 예정'으로 되돌립니다.`
+      : `${it.name}님을 택배 발송으로 되돌립니다.\n(배송지 입력 → 송장 생성 흐름으로 돌아갑니다)`;
+    if (!window.confirm(msg)) return;
+    const r = await post({ action: 'direct_undo', id: it.id }, `du-${it.id}`);
+    if (r) { toast.success(r.back === 'planned' ? '직접전달 예정으로 되돌렸습니다' : '택배 발송으로 되돌렸습니다'); load(); }
+  }
+
   function openEdit(it: Item) {
     const src = it.address_road ? it : it.prefill;
     setForm({
@@ -126,7 +150,11 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
   }
 
   const total = items.length;
-  const addrDone = items.filter((i) => i.address_submitted_at).length;
+  // 직접전달 건은 배송지·송장이 필요 없으므로 택배 집계에서 빼고 따로 센다
+  const directItems = items.filter(isDirect);
+  const directDoneCount = directItems.filter((i) => i.delivered_at).length;
+  const shipTotal = total - directItems.length;
+  const addrDone = items.filter((i) => !isDirect(i) && i.address_submitted_at).length;
   const invDone = items.filter((i) => i.invoice_number).length;
   const shipDone = items.filter((i) => i.shipped_at).length;
   const notNotified = items.filter((i) => !i.won_notified_at).length;
@@ -138,7 +166,8 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
         <span className="text-sm font-bold text-stone-900">당첨자 배송</span>
         {total > 0 && (
           <span className="text-xs text-stone-500">
-            배송지 {addrDone}/{total} · 송장 {invDone} · 출고 {shipDone}
+            배송지 {addrDone}/{shipTotal} · 송장 {invDone} · 출고 {shipDone}
+            {directItems.length > 0 && ` · 직접전달 ${directDoneCount}/${directItems.length}`}
           </span>
         )}
         <button type="button" onClick={load} className="ml-auto p-1.5 rounded-md text-stone-400 hover:text-stone-700 hover:bg-stone-50" title="새로고침">
@@ -172,7 +201,9 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
 
                 {/* 2. 배송지 */}
                 <div className="flex-1 min-w-0 text-xs">
-                  {it.address_submitted_at ? (
+                  {isDirect(it) ? (
+                    <div className="text-stone-500">매장에서 직접 전달 · 송장 없음</div>
+                  ) : it.address_submitted_at ? (
                     <div className="flex items-start gap-1.5">
                       <MapPin size={13} className="text-emerald-600 mt-0.5 shrink-0" />
                       <span className="text-stone-700 break-keep">{addr}{it.delivery_message ? ` · ${it.delivery_message}` : ''}</span>
@@ -197,7 +228,7 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
                     className="px-2 py-1 rounded-md border border-stone-200 text-stone-700 hover:bg-stone-50 flex items-center gap-1" title="안내 문구 + 배송지 입력 링크 복사">
                     <Link2 size={12} />링크
                   </button>
-                  {!it.invoice_number && (
+                  {!it.invoice_number && !isDirect(it) && (
                     <button type="button" onClick={() => openEdit(it)}
                       className="px-2 py-1 rounded-md border border-stone-200 text-stone-700 hover:bg-stone-50">
                       {it.address_submitted_at ? '주소 수정' : '직접 입력'}
@@ -207,7 +238,23 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
 
                 {/* 4. 송장 · 출고 */}
                 <div className="flex items-center gap-1.5 shrink-0 text-xs lg:w-64 lg:justify-end whitespace-nowrap">
-                  {it.delivered_at ? (
+                  {isDirect(it) && it.delivered_at ? (
+                    <>
+                      <span className="flex items-center gap-1 text-emerald-700 font-semibold"><PackageCheck size={13} />전달완료 · {fmt(it.delivered_at)}</span>
+                      <button type="button" disabled={!!busy} onClick={() => directUndo(it)}
+                        className="p-1 rounded text-stone-400 hover:text-red-600 disabled:opacity-40" title="전달완료 취소 (직접전달 예정으로)"><X size={13} /></button>
+                    </>
+                  ) : isDirect(it) ? (
+                    <>
+                      <span className="text-amber-700 font-semibold">직접전달 예정</span>
+                      <button type="button" disabled={!!busy} onClick={() => directDone(it)}
+                        className="px-2.5 py-1 rounded-md bg-stone-900 text-white font-semibold hover:bg-stone-800 disabled:opacity-30 flex items-center gap-1">
+                        {busy === `dd-${it.id}` ? <Loader2 size={12} className="animate-spin" /> : <PackageCheck size={12} />}전달완료
+                      </button>
+                      <button type="button" disabled={!!busy} onClick={() => directUndo(it)}
+                        className="p-1 rounded text-stone-400 hover:text-red-600 disabled:opacity-40" title="택배 발송으로 되돌리기"><X size={13} /></button>
+                    </>
+                  ) : it.delivered_at ? (
                     <span className="flex items-center gap-1 text-emerald-700 font-semibold"><PackageCheck size={13} />배달완료 · {it.invoice_number}</span>
                   ) : it.shipped_at ? (
                     <span className="text-blue-700 font-semibold">출고 {fmt(it.shipped_at)} · {it.invoice_number}{it.shipped_notified_at ? ' · 알림 ✓' : ''}</span>
@@ -219,11 +266,19 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
                         className="p-1 rounded text-stone-400 hover:text-red-600 disabled:opacity-40" title="송장 취소"><X size={13} /></button>
                     </>
                   ) : (
-                    <button type="button" disabled={!!busy || !it.address_road} onClick={() => makeInvoice(it)}
-                      className="px-2.5 py-1 rounded-md bg-stone-900 text-white font-semibold hover:bg-stone-800 disabled:opacity-30 flex items-center gap-1"
-                      title={it.address_road ? '롯데 송장 생성' : '배송지가 있어야 송장을 만들 수 있습니다'}>
-                      {busy === `inv-${it.id}` ? <Loader2 size={12} className="animate-spin" /> : <Truck size={12} />}송장 생성
-                    </button>
+                    <>
+                      {/* 직접전달 — 나중에 방문해서 받아가는 당첨자. 흰 버튼(주 액션인 송장 생성과 구분) */}
+                      <button type="button" disabled={!!busy} onClick={() => directPlan(it)}
+                        className="px-2.5 py-1 rounded-md border border-stone-200 text-stone-700 hover:bg-stone-50 disabled:opacity-40 flex items-center gap-1"
+                        title="방문해서 직접 받아가는 당첨자 — 송장을 만들지 않습니다">
+                        {busy === `dp-${it.id}` ? <Loader2 size={12} className="animate-spin" /> : null}직접전달
+                      </button>
+                      <button type="button" disabled={!!busy || !it.address_road} onClick={() => makeInvoice(it)}
+                        className="px-2.5 py-1 rounded-md bg-stone-900 text-white font-semibold hover:bg-stone-800 disabled:opacity-30 flex items-center gap-1"
+                        title={it.address_road ? '롯데 송장 생성' : '배송지가 있어야 송장을 만들 수 있습니다'}>
+                        {busy === `inv-${it.id}` ? <Loader2 size={12} className="animate-spin" /> : <Truck size={12} />}송장 생성
+                      </button>
+                    </>
                   )}
                 </div>
               </li>
@@ -235,7 +290,8 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
       <p className="px-4 py-3 text-[11px] text-stone-400 leading-relaxed border-t border-stone-100">
         · <b>당첨 안내</b> = 배송지 입력 링크가 담긴 알림톡. 솔라피 템플릿 승인 전에는 <b>[링크]</b>로 복사해 카톡 채널 채팅에서 보내도 같은 흐름입니다.<br />
         · 고객이 주소를 저장하면 앱 알림이 오고, <b>고객정보 주소도 새 주소로 갱신</b>됩니다. 전화로 받은 주소는 <b>[직접 입력]</b>.<br />
-        · <b>[송장 생성]</b> 후 ALPS에서 출력 → 기사님 집하 스캔 시 <b>출고 알림톡이 자동</b>으로 나갑니다(30분 주기 확인).
+        · <b>[송장 생성]</b> 후 ALPS에서 출력 → 기사님 집하 스캔 시 <b>출고 알림톡이 자동</b>으로 나갑니다(30분 주기 확인).<br />
+        · 방문해서 받아가는 당첨자는 <b>[직접전달]</b> → 건넨 뒤 <b>[전달완료]</b>. 송장·출고 알림톡 없이 끝납니다.
       </p>
 
       {/* 배송지 직접 입력/수정 */}

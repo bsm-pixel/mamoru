@@ -8,6 +8,7 @@
 - 위치: 복원수리 화면 상단 **[방문 예약 등록]** → `components/repairs/visit-booking-modal.tsx`
 - 입력: 성함·연락처(기존 고객 검색 가능) / 가위 수(마모루·타사, 소요시간 계산용 기본 1) / 날짜 / 시간(그날 시간표 칩 + 직접 입력) / 메모
 - 생성 = **고객 접수와 같은 공용 함수** `lib/repair/intake.ts createRepairIntake(actor)` — 고객 페이지(`api/repair/public/submit`)도 이걸 쓰도록 분리(동작 동일)
+  - 🆕 2026-10-08: actor 'admin'(사장님 등록)은 저장 시 **접수확인까지 된 상태**(`confirmed_at`)로 기록 → 등록 즉시 **방문예정 탭**에 뜬다. 고객 접수(actor 'customer')는 종전대로 신규접수 → [접수확인] → 방문예정.
   - 예약번호 AS-… · 고객 자동 연결(신규는 출처 manual) · `as_visit_booked` 알림톡(일정 확인·변경 링크) · 구글 캘린더 · 방문 리마인드 대상
   - actor 'admin' 차이: 이력 "관리자 전화 예약 등록" / **사장님 앱 푸시 없음**(본인 행동, `sendNotification({skipAdminPush})`) / 관리자 메일 없음. 고객 알림톡은 항상 발송
 - 시간표·충돌 = 공용 `lib/repair/visit-schedule.ts` (고객 슬롯 `api/repair/public/slots` 와 같은 규칙: 상담 매장/출장(버퍼)/제안 시간/복원수리 방문/시간 차단·매주 반복)

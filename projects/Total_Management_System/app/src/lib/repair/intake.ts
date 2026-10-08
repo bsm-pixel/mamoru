@@ -139,6 +139,10 @@ export async function createRepairIntake(db: Db, input: RepairIntakeInput, actor
     total_amount: totalAmount,
     status: 'intake',
     received_at: new Date().toISOString(),
+    // 2026-10-08: 사장님이 「방문 예약 등록」으로 직접 넣은 건은 이미 고객과 확정한 것 → 접수확인까지 된 상태로 저장.
+    //   (전엔 confirmed_at 이 비어 '신규접수' 탭에 들어가서, 방문예정 탭에 보이려면 [접수확인]을 한 번 더 눌러야 했다)
+    //   고객이 직접 접수한 건은 지금처럼 신규접수 → 사장님 [접수확인] 후 방문예정.
+    ...(actor === 'admin' ? { confirmed_at: new Date().toISOString() } : {}),
   };
 
   const { data: repair, error: insertErr } = await db.from('repairs').insert(insertData).select().single();

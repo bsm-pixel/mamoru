@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { findPrefillAddress, upsertCustomerAddress, digits, type ShipmentRow } from '@/lib/reviews/event-shipments';
+import { isDirectHandover } from '@/lib/shipping/couriers';
 
 /**
  * 리뷰 이벤트 당첨자 배송지 입력 — 고객 공개 API (2026-10-02, 마이그 156)
@@ -73,7 +74,9 @@ export async function GET(req: NextRequest) {
       source,                                         // saved | customer | repair | order | null
       source_label: source && source !== 'saved' ? SOURCE_LABEL[source] : null,
       submitted_at: row.address_submitted_at,
-      locked: !!row.invoice_number,                   // 송장 생성 후엔 수정 불가 (발송 준비 중)
+      locked: !!row.invoice_number || isDirectHandover(row.courier_name),   // 송장 생성 후·직접전달 건은 수정 불가
+      direct: isDirectHandover(row.courier_name),     // 2026-10-08: 매장에서 직접 받기로 한 건
+      handed_over: isDirectHandover(row.courier_name) && !!row.delivered_at,
       shipped: !!row.shipped_at,
     }, { headers: CORS_HEADERS });
   } catch (err) {
@@ -90,6 +93,9 @@ export async function POST(req: NextRequest) {
     if (!row) return NextResponse.json({ error: 'not_found' }, { status: 404, headers: CORS_HEADERS });
     if (row.invoice_number) {
       return NextResponse.json({ error: '이미 발송 준비 중이라 주소를 바꿀 수 없습니다. 고객센터로 연락 주세요' }, { status: 409, headers: CORS_HEADERS });
+    }
+    if (isDirectHandover(row.courier_name)) {
+      return NextResponse.json({ error: '매장에서 직접 받으시는 것으로 접수되어 있습니다. 택배로 받으시려면 고객센터로 연락 주세요' }, { status: 409, headers: CORS_HEADERS });
     }
 
     const postcode = String(body.postcode || '').trim().slice(0, 10);
