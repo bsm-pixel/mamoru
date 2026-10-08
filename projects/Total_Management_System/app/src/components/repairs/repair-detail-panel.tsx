@@ -56,8 +56,15 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
   const currentStatus = r.status as RepairStatus;
   const proceedType = r.proceed_type;
 
-  // 진행 흐름 스테퍼 매핑 — 복원수리 다단 상태를 5단계로 압축
-  const repairStepKey = ({
+  // 2026-10-08 방문 건(직접방문 + 송장 없음)은 택배 단계(입고·검수/출고)가 없다 → 접수·방문·수리·전달 4단계
+  const isVisitFlow = proceedType === '직접방문' && !r.invoice_number;
+
+  // 진행 흐름 스테퍼 매핑 — 복원수리 다단 상태를 5단계(방문 건은 4단계)로 압축
+  const repairStepKey = (isVisitFlow ? {
+    intake: 'intake', pickup_scheduled: 'intake',
+    cost_notified: 'inspect', repairing: 'repair', ready_to_ship: 'repair',
+    delivered: 'done', completed: 'done',
+  } : {
     intake: 'intake', pickup_scheduled: 'intake',
     cost_notified: 'inspect', repairing: 'repair',
     ready_to_ship: 'ship', shipped: 'ship', delivered: 'done', completed: 'done',
@@ -108,7 +115,12 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
       {/* 진행 흐름 — 복원수리 흐름 스테퍼. 배송추적은 아래 출고 섹션에 합침(송장번호 중복 방지) */}
       <div className="rounded-lg border border-neutral-100 p-3">
         <StatusStepper
-          steps={[
+          steps={isVisitFlow ? [
+            { key: 'intake', label: '접수', at: r.received_at },
+            { key: 'inspect', label: '방문', at: r.inbound_at },
+            { key: 'repair', label: '수리' },
+            { key: 'done', label: '전달', at: r.delivered_at },
+          ] : [
             { key: 'intake', label: '접수', at: r.received_at },
             { key: 'inspect', label: '입고·검수', at: r.inbound_at },
             { key: 'repair', label: '수리' },

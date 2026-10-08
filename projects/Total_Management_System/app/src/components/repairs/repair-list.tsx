@@ -448,6 +448,8 @@ function TabSpecificInfo({ repair: r, tab }: { repair: Repair; tab: RepairTabKey
             <Badge className="bg-green-100 text-green-700 text-[10px]">
               <Package size={10} className="mr-0.5" />{r.invoice_number}
             </Badge>
+          ) : r.proceed_type === '직접방문' ? (
+            <Badge className="bg-amber-100 text-amber-700 text-[10px]">전달 대기</Badge>
           ) : (
             <Badge className="bg-neutral-100 text-neutral-500 text-[10px]">송장 미생성</Badge>
           )}
@@ -471,11 +473,15 @@ function TabSpecificInfo({ repair: r, tab }: { repair: Repair; tab: RepairTabKey
           {r.shipped_at && (
             <span>{formatDate(r.shipped_at, 'M/d')} 출고</span>
           )}
+          {/* 방문 건(송장 없이 손으로 건넴)은 출고일이 없다 → 전달일을 보여준다 */}
+          {!r.shipped_at && !r.invoice_number && r.delivered_at && (
+            <span>{formatDate(r.delivered_at, 'M/d')} 전달</span>
+          )}
           {r.status === 'completed' && (
             <Badge className="bg-green-100 text-green-700 text-[10px]">완료</Badge>
           )}
           {r.status === 'delivered' && (
-            <Badge className="bg-blue-100 text-blue-700 text-[10px]">배송완료</Badge>
+            <Badge className="bg-blue-100 text-blue-700 text-[10px]">{r.invoice_number ? '배송완료' : '전달완료'}</Badge>
           )}
           {/* 출고/완료됐는데 미입금 — 사각지대 방지(2026-06-11): 입금확인 누락 표시 */}
           {!r.paid_at && r.total_amount > 0 && (
@@ -516,6 +522,11 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
   const [showConfirm, setShowConfirm] = useState(false);
   const busy = updateStatus.isPending || updateFields.isPending || shipRepair.isPending;
 
+  // 2026-10-08 방문 건(직접방문 + 송장 없음): 진행중·출고대기 탭에서 바로 [전달완료] → 완료.
+  //   상세 패널의 [고객 전달 완료]와 같은 요청(서버가 전달 시각·수령방법을 채우고, 후기 요청은 3시간 뒤 크론).
+  const isVisitHandover = r.proceed_type === '직접방문' && !r.invoice_number && (tab === 'in_progress' || tab === 'ready_to_ship')
+    && (r.status === 'repairing' || r.status === 'ready_to_ship');
+
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowConfirm(true);
@@ -523,6 +534,10 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
 
   // 확인 후 실행할 액션
   const handleConfirm = async () => {
+    if (isVisitHandover) {
+      await updateStatus.mutateAsync({ id: r.id, status: 'completed', note: '고객 전달 완료 (매장 방문)' });
+      return;
+    }
     switch (tab) {
       case 'intake':
         await updateFields.mutateAsync({ id: r.id, confirmed_at: new Date().toISOString() });
@@ -552,9 +567,14 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
       : { btn: '출고완료', title: '출고 완료', msg: `송장 ${r.invoice_number}으로 출고합니다. 알림톡이 발송됩니다.` },
   };
 
-  const label = labels[tab];
+  const label = isVisitHandover
+    ? {
+        btn: '전달완료', title: '고객 전달 완료',
+        msg: `${r.name}님께 가위를 건넨 것으로 처리하고 이 건을 완료합니다.` + (!r.paid_at && r.total_amount > 0 ? ' 아직 입금확인 전입니다 — 입금확인은 완료 후에도 됩니다.' : ''),
+      }
+    : labels[tab];
   if (!label) return null;
-  if (tab === 'in_progress' && r.paid_at) return null;
+  if (!isVisitHandover && tab === 'in_progress' && r.paid_at) return null;
 
   const btnColors: Record<string, string> = {
     intake: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
@@ -568,9 +588,9 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
       <button
         onClick={handleClick}
         disabled={busy}
-        className={`px-2 py-1 rounded-md text-[11px] font-semibold transition disabled:opacity-50 ${btnColors[tab]}`}
+        className={`px-2 py-1 rounded-md text-[11px] font-semibold transition disabled:opacity-50 ${isVisitHandover ? 'bg-neutral-900 text-white hover:bg-neutral-700' : btnColors[tab]}`}
       >
-        {tab === 'ready_to_ship' && !r.invoice_number && <Truck size={11} className="inline mr-0.5" />}
+        {!isVisitHandover && tab === 'ready_to_ship' && !r.invoice_number && <Truck size={11} className="inline mr-0.5" />}
         {label.btn}
       </button>
       {showConfirm && (

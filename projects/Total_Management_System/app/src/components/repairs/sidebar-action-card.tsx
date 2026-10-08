@@ -31,7 +31,7 @@ interface SidebarActionCardProps {
 
 type ConfirmAction =
   | 'cost_notice' | 'mark_paid' | 'mark_shipped' | 'cancel_shipment'
-  | 'cancel_repair' | 'delete_repair' | 'visit_checkout'
+  | 'cancel_repair' | 'delete_repair' | 'visit_checkout' | 'visit_handover'
   | 'direct_pickup' | 'recall_pickup' | 'rework' | 'mark_delivered'
   | null;
 type PayMethod = 'transfer' | 'card' | 'cash';
@@ -76,6 +76,13 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const busy = updateStatus.isPending;
   const isTerminal = currentStatus === 'completed' || currentStatus === 'cancelled';
 
+  // 2026-10-08 방문 건 전용 흐름 (사장님 지적: 방문 고객인데 택배 화면을 그대로 써서 흐름이 복잡하다)
+  //   직접방문 + 송장 없음 = 손으로 건네고 끝나는 건. 택배용 버튼(출고대기·송장 미리 생성·재수거)을 숨기고
+  //   [방문 확정 · 현장결제] → [고객 전달 완료] 두 번으로 끝낸다.
+  //   방문 고객이 "택배로 보내 달라"고 해서 송장을 만들면 이 플래그가 꺼지고 자동으로 택배 흐름으로 돌아간다.
+  const isVisitFlow = isDirectVisit && !r.invoice_number;
+  const canVisitHandover = isVisitFlow && ['repairing', 'ready_to_ship'].includes(currentStatus);
+
   // 비용안내 발송 가능 상태
   const canSendCostNotice = ['intake', 'pickup_scheduled', 'picked_up', 'inspecting', 'cost_notified'].includes(currentStatus);
   const isCostResend = currentStatus === 'cost_notified';
@@ -88,28 +95,31 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
   const canMarkShipped = currentStatus === 'ready_to_ship' && !!r.invoice_number;
 
   // 합포장 출고 버튼 조건 (송장 없을 때 — 다른 주문 송장에 합쳐 발송한 케이스)
-  const canMergedShip = currentStatus === 'ready_to_ship' && !r.invoice_number;
+  const canMergedShip = currentStatus === 'ready_to_ship' && !r.invoice_number && !isVisitFlow;
 
   // 119: 택배 없이 매장에서 직접 전달(직접수령) → 바로 완료 처리. 작업중/출고대기 + 송장 없을 때만
-  const canDirectPickup = ['repairing', 'ready_to_ship'].includes(currentStatus) && !r.invoice_number;
+  const canDirectPickup = !isVisitFlow && ['repairing', 'ready_to_ship'].includes(currentStatus) && !r.invoice_number;
 
   // 정밀 재점검 재수거 (출고된 건 회수 — 롯데 반품 API 02). 알림톡 없음, 취소는 ALPS 수동
-  const canRecall = ['shipped', 'delivered', 'completed'].includes(currentStatus);
+  // 방문 건(주소 없음)은 롯데 재수거를 걸 수 없다 → 재점검이 필요하면 다시 방문 예약을 잡는다
+  const canRecall = !isVisitFlow && ['shipped', 'delivered', 'completed'].includes(currentStatus);
 
   // 🔒 기존 동작 보존: 출고 섹션이 cost_notified 이상에서 송장 생성을 열어줬다(입금확인 후 바로 발급).
   //    ready_to_ship 은 주 액션이라 여기서 제외 — 나머지 단계에서는 보조 버튼으로 제공한다.
-  const canBookEarly = !r.invoice_number && ['cost_notified', 'repairing'].includes(currentStatus);
+  // 방문 건은 송장이 필요 없다 → [송장 미리 생성] 숨김. 택배로 보내야 하면 접힘 안의 [택배로 보내야 해요]를 쓴다
+  const canBookEarly = !isDirectVisit && !r.invoice_number && ['cost_notified', 'repairing'].includes(currentStatus);
 
   // 상태 전이 버튼 — 별도 전용 버튼이 있는 전이는 제외. 실제로는 항상 0~1개다
   const visibleTransitions = filtered.filter(
     (s) => !['cancelled', 'cost_notified', 'shipped', 'repairing', 'delivered'].includes(s),
   );
-  const primaryTransition = visibleTransitions[0];
+  // 방문 건의 수리중·전달대기 단계는 주 버튼이 [고객 전달 완료] 하나다 (택배용 [출고대기] 대신)
+  const primaryTransition = canVisitHandover ? undefined : visibleTransitions[0];
 
   // 접힘(④)에 들어갈 게 하나라도 있는가
   const hasMore =
     visibleTransitions.length > 1 ||
-    canMergedShip || canDirectPickup || canRecall ||
+    canMergedShip || canDirectPickup || canRecall || canVisitHandover ||
     (!!r.invoice_number && ['ready_to_ship', 'shipped'].includes(currentStatus)) ||
     currentStatus === 'shipped' ||
     (!!primaryTransition && canSendCostNotice && !isDirectVisit && visibleTransitions.length > 1);
@@ -213,10 +223,21 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
       );
     }
     if (currentStatus === 'delivered') {
-      return <ActionNote tone="done" title="배송완료">고객 수령이 확인되면 완료로 넘겨주세요.</ActionNote>;
+      return isVisitFlow
+        ? <ActionNote tone="done" title="전달완료">고객께 건넨 건입니다. [완료]를 누르면 마무리됩니다.</ActionNote>
+        : <ActionNote tone="done" title="배송완료">고객 수령이 확인되면 완료로 넘겨주세요.</ActionNote>;
     }
     if (currentStatus === 'completed') {
-      return <ActionNote tone="done" title="완료">끝난 건입니다. 재점검이 필요하면 아래에서 재수거를 접수하세요.</ActionNote>;
+      return isVisitFlow
+        ? <ActionNote tone="done" title="완료" meta={r.delivered_at ? `전달 ${formatDateTime(r.delivered_at)}` : undefined}>고객께 전달을 마친 건입니다.</ActionNote>
+        : <ActionNote tone="done" title="완료">끝난 건입니다. 재점검이 필요하면 아래에서 재수거를 접수하세요.</ActionNote>;
+    }
+    if (canVisitHandover) {
+      return (
+        <ActionNote tone="wait" title={currentStatus === 'ready_to_ship' ? '전달 대기' : '수리중'}>
+          수리가 끝나 가위를 건네면 [고객 전달 완료]를 눌러주세요.
+        </ActionNote>
+      );
     }
     if (currentStatus === 'ready_to_ship') {
       return (
@@ -237,7 +258,10 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
       return <ActionNote tone="wait" title="작업중">수리가 끝나면 출고대기로 넘겨주세요.</ActionNote>;
     }
     if (currentStatus === 'cost_notified') {
-      return <ActionNote tone="wait" title="작업중" meta="비용안내 발송됨">입금이 확인되면 아래 [입금확인]을 눌러주세요.</ActionNote>;
+      // 방문 건은 [방문 확정]이 비용안내→수리중을 한 번에 넘긴다. 여기 머물러 있으면 중간에 끊긴 것
+      return isDirectVisit
+        ? <ActionNote tone="wait" title="방문 확정 미완료">처리가 중간에 끊겼습니다. [방문 확정 · 현장결제]를 다시 눌러주세요.</ActionNote>
+        : <ActionNote tone="wait" title="작업중" meta="비용안내 발송됨">입금이 확인되면 아래 [입금확인]을 눌러주세요.</ActionNote>;
     }
     if (currentStatus === 'cancelled') {
       return <ActionNote tone="muted" title="취소됨" />;
@@ -265,10 +289,12 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
             <span className="text-neutral-500">수리비</span>
             <span>{formatKRW(r.service_cost)}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-neutral-500">수거비</span>
-            <span>{formatKRW(r.shipping_fee)}</span>
-          </div>
+          {!(isDirectVisit && !r.shipping_fee) && (
+            <div className="flex justify-between">
+              <span className="text-neutral-500">수거비</span>
+              <span>{formatKRW(r.shipping_fee)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-bold border-t border-neutral-100 pt-1 mt-1">
             <span>합계</span>
             <span className="text-terracotta-deep">{formatKRW(r.total_amount)}</span>
@@ -340,6 +366,11 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                 loading={updateStatus.isPending || updateFields.isPending}
               >
                 🏪 방문 확정 · 현장결제
+              </Button>
+            ) : canVisitHandover ? (
+              <Button className="w-full" onClick={() => setConfirmAction('visit_handover')} loading={updateStatus.isPending}>
+                <CheckCircle size={14} />
+                고객 전달 완료
               </Button>
             ) : primaryTransition ? (
               <Button
@@ -417,6 +448,11 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
                     {REPAIR_ACTION_LABEL[nextStatus]}
                   </SubtleButton>
                 ))}
+                {canVisitHandover && (
+                  <SubtleButton onClick={() => shipRepair.mutate({ id: r.id })} disabled={shipRepair.isPending}>
+                    🚚 택배로 보내야 해요 — 송장 생성
+                  </SubtleButton>
+                )}
                 {canMergedShip && (
                   <SubtleButton onClick={() => setMergedShipOpen(true)}>
                     📦 판매건 합포장 출고
@@ -553,6 +589,28 @@ export function SidebarActionCard({ repair: r }: SidebarActionCardProps) {
         title="출고 완료"
         message={<>송장 {r.invoice_number}으로 출고 완료 처리합니다.<br />고객에게 <strong>출고 알림톡</strong>이 자동 발송됩니다.</>}
         confirmLabel="출고 완료"
+      />
+      {/* 2026-10-08 방문 건 — 건네는 순간 완료. 미입금이면 경고만 하고 허용(입금확인은 완료 후에도 가능) */}
+      <ConfirmModal
+        open={confirmAction === 'visit_handover'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={() => {
+          updateStatus.mutate({ id: r.id, status: 'completed', note: '고객 전달 완료 (매장 방문)' });
+          setConfirmAction(null);
+        }}
+        title="고객 전달 완료"
+        message={
+          <>
+            {r.name}님께 가위를 건넨 것으로 처리하고 이 건을 <strong>완료</strong>합니다.
+            {!r.paid_at && (
+              <><br /><span className="text-error font-medium">아직 입금확인 전입니다.</span> 그래도 완료할 수 있고, 입금확인은 완료 후에도 됩니다.</>
+            )}
+            {(r as { review_promised_at?: string | null }).review_promised_at && (
+              <><br /><span className="text-neutral-500">후기 요청 알림톡은 3시간 뒤에 자동으로 나갑니다.</span></>
+            )}
+          </>
+        }
+        confirmLabel="전달 완료"
       />
       {/* 119: 택배 없이 매장에서 직접 전달 → 바로 완료 */}
       <ConfirmModal

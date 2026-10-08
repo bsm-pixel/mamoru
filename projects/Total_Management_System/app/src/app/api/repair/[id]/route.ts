@@ -90,8 +90,19 @@ export async function PATCH(
       return NextResponse.json({ error: '복원수리 건을 찾을 수 없습니다' }, { status: 404 });
     }
 
+    // 2026-10-08 매장 방문 건 「고객 전달 완료」 — 수리중/출고대기에서 한 번에 '완료'로.
+    //   택배 건은 배송완료 → (수령 확인) → 완료 두 단계가 맞지만, 방문 건은 손에 건넨 순간이 끝이다.
+    //   조건: 직접방문 + 송장 없음 + 수리중/출고대기 → completed. 건넨 시각·수령방법은 서버가 채운다(클라이언트 값 신뢰 X).
+    //   후기 요청 알림톡은 여기서 보내지 않는다 — 고객이 아직 매장에 있을 수 있어 크론이 3시간 뒤에 보낸다
+    //   (api/cron/repair-visit-remind [3]). 자동 알림 맵에 completed 가 없으므로 아래 after() 는 아무것도 안 보낸다.
+    const isVisitHandover =
+      newStatus === 'completed' &&
+      current.proceed_type === '직접방문' &&
+      !current.invoice_number &&
+      ['repairing', 'ready_to_ship'].includes(current.status);
+
     // 상태 전이 검증
-    if (newStatus && newStatus !== current.status) {
+    if (newStatus && newStatus !== current.status && !isVisitHandover) {
       const valid = isValidRepairTransition(
         current.status as RepairStatus,
         newStatus as RepairStatus
@@ -103,10 +114,14 @@ export async function PATCH(
         );
       }
     }
-
     // 업데이트 데이터
     const updateData = { ...rest };
     if (newStatus) updateData.status = newStatus;
+    if (isVisitHandover) {
+      // 수령방법·건넨 시각은 서버가 정한다 (재수거 버튼 등 '직접 전달 건' 판정에 쓰임)
+      updateData.delivery_method = 'pickup';
+      updateData.delivered_at = new Date().toISOString();
+    }
 
     // 119: 입고일 — '입고 & 비용안내'(cost_notified) 첫 전이 시점을 기록 (재발송해도 최초값 유지)
     if (newStatus === 'cost_notified' && !current.inbound_at) {

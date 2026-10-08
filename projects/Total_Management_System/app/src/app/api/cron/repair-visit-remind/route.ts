@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { sendReviewRequestNotification, repairSubtypeFromProceedType } from '@/lib/notification/review-request';
 
 const CRON_SECRET = process.env.CRON_SECRET || 'mamoru-tms-cron-2026';
 const GITHUB_PAGES = 'page.mamoru.kr/projects/as'; // Make 시나리오가 https:// 추가
@@ -19,6 +20,11 @@ function formatKoreanDate(dateStr: string): string {
  * - 24h(2~24h 전, 등록-방문 간격 24h+ 만 = 당일예약 제외) / 2h(0.5~2h 전)
  * - visit_remind_24h_sent_at / visit_remind_2h_sent_at 선(先)마킹으로 중복/동시실행 방지
  * - 일정 변경(resched) 시 두 플래그 NULL 리셋되어 새 일정에 재발송됨
+ *
+ * [3] 방문 건 후기 요청 (2026-10-08) — 「고객 전달 완료」 3시간 뒤.
+ *     - 대상: 직접방문 + completed + 직접전달(delivery_method='pickup') + 후기 자동발송 켜짐 + 미발송 + 전달 3시간~3일 사이
+ *     - 전달 직후엔 고객이 아직 매장에 있을 수 있어 바로 보내지 않는다. 밤 9시~아침 9시(KST)엔 보내지 않고 다음 회차로 미룬다
+ *     - 택배 건의 후기 요청은 기존대로 배송완료 시점(api/repair/[id] PATCH)에 나간다
  */
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
@@ -39,6 +45,7 @@ export async function GET(req: NextRequest) {
     const sent24h: string[] = [];
     const sent2h: string[] = [];
     const errors: string[] = [];
+    const sentReview: string[] = [];
 
     const { data: repairs } = await dbAny
       .from('repairs')
@@ -49,11 +56,7 @@ export async function GET(req: NextRequest) {
       .lte('visit_date', tomorrow)
       .not('visit_time', 'is', null);
 
-    if (!repairs || repairs.length === 0) {
-      return NextResponse.json({ sent24h: 0, sent2h: 0, checked: 0 });
-    }
-
-    for (const r of repairs) {
+    for (const r of repairs || []) {
       if (!r.visit_date || !r.visit_time) continue;
 
       const [h, m] = r.visit_time.split(':').map(Number);
@@ -126,10 +129,58 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // ── [3] 방문 건 후기 요청 — 전달 3시간 뒤 ──
+    const kstHour = new Date(now.getTime() + 9 * 3600 * 1000).getUTCHours();
+    if (kstHour >= 9 && kstHour < 21) {
+      const upper = new Date(now.getTime() - 3 * 3600 * 1000).toISOString();
+      const lower = new Date(now.getTime() - 3 * 24 * 3600 * 1000).toISOString();
+      const { data: handed } = await dbAny
+        .from('repairs')
+        .select('id, as_id, name, phone, proceed_type, review_promised_type, review_promised_subtype, delivered_at')
+        .eq('proceed_type', '직접방문')
+        .eq('status', 'completed')
+        .eq('delivery_method', 'pickup')
+        .not('review_promised_at', 'is', null)
+        .is('review_request_sent_at', null)
+        .lte('delivered_at', upper)
+        .gte('delivered_at', lower)
+        .limit(20);
+      for (const r of handed || []) {
+        try {
+          // CAS 선점 — 같은 회차 중복 발송 방지
+          const { count } = await dbAny
+            .from('repairs')
+            .update({ review_request_sent_at: now.toISOString() })
+            .eq('id', r.id)
+            .is('review_request_sent_at', null)
+            .select('id', { count: 'exact', head: true });
+          if (count === 0) continue;
+          const reviewType = (r.review_promised_type as 'purchase' | 'repair' | 'consult' | null) || 'repair';
+          const res = await sendReviewRequestNotification({
+            source: 'repair',
+            sourceId: r.as_id,
+            customerName: r.name,
+            customerPhone: r.phone,
+            reviewType,
+            subtype: reviewType === 'purchase' ? undefined : (r.review_promised_subtype as string | null) || repairSubtypeFromProceedType(r.proceed_type as string | null),
+          });
+          if (res.success) sentReview.push(r.name);
+          else {
+            // 발송 실패 → 선점 해제(다음 회차 재시도)
+            await dbAny.from('repairs').update({ review_request_sent_at: null }).eq('id', r.id);
+            errors.push(`review ${r.name}: ${res.error || '발송 실패'}`);
+          }
+        } catch (err) {
+          errors.push(`review ${r.name}: ${String(err)}`);
+        }
+      }
+    }
+
     return NextResponse.json({
       sent24h: sent24h.length,
       sent2h: sent2h.length,
-      checked: repairs.length,
+      checked: (repairs || []).length,
+      sentReview: sentReview.length,
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (err) {
