@@ -678,7 +678,10 @@ function kstText(k){
     [1,2,3].forEach(function(rank){
       var ws=byRank[rank]; if(!ws.length) return;
       var p=pz[rank]||{};
-      var prod = p.image_url ? '<img src="'+esc(p.image_url)+'" alt="">' : '<span class="re-rank__prodph">'+rank+'등<br>상품<br>이미지</span>';
+      // 2026-10-08 fix: 상품 이미지는 image_urls(배열·신형)에 저장된다. 예전 코드는 image_url(구)만 봐서
+      //   TMS 에 이미지를 올려도 지난 당첨자 블록엔 항상 자리표시만 나왔다 → prizeImgs() 로 신·구 모두 읽는다
+      var pim = prizeImgs(p);
+      var prod = pim.length ? '<img src="'+esc(pim[0])+'" alt="">' : '<span class="re-rank__prodph">'+rank+'등<br>상품<br>이미지</span>';
       var swipe = ws.length>1 ? '<span class="re-rank__swipe">← 옆으로 밀어보기</span>' : '';
       html+='<div class="re-rank'+(rank===1?' re-rank--1':'')+'">'
         +'<div class="re-rank__label"><span class="re-rank__badge">'+esc((ws[0]&&ws[0].rank_label)||(rank+'등'))+'</span><span class="re-rank__cnt">'+ws.length+'명 당첨</span>'+swipe+'</div>'

@@ -77,6 +77,9 @@ export async function GET() {
       .map((c) => ({
         month: c.month,
         label: monthLabel(c.month),
+        // 2026-10-08 fix: 지난 당첨자 블록이 등수별 상품 이미지를 그릴 수 있게 그 달 상품 설정도 함께 내려준다.
+        //   (전엔 past 에 prizes 가 없어 TMS 에 이미지를 올려도 고객 페이지엔 항상 "N등 상품 이미지" 자리표시만 나왔다)
+        prizes: Array.isArray(c.prizes) ? c.prizes : [],
         winners: winnersByMonth[c.month].map((w) => ({
           rank: w.event_rank,
           rank_label: ((Array.isArray(c.prizes) ? c.prizes : []).find((p) => p.rank === w.event_rank)?.label || '').trim() || `${w.event_rank}등`,
