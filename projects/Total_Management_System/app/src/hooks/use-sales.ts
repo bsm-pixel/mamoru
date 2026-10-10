@@ -698,16 +698,27 @@ export function useRebuildSale() {
 export function useShipSale() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/sales/${id}/ship`, { method: 'POST' });
+    // 159: ship_* 를 주면 이번 건만 그 주소로 발송(고객정보 주소 불변). 안 주면 종전대로 고객 등록 주소
+    mutationFn: async (p: string | {
+      id: string; ship_postcode?: string; ship_address_road?: string; ship_address_detail?: string;
+    }) => {
+      const { id, ...addr } = typeof p === 'string' ? { id: p } : p;
+      const res = await fetch(`/api/sales/${id}/ship`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(addr),
+      });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));
         throw new Error(typeof err.error === 'string' ? err.error : JSON.stringify(err.error) || '송장 생성 실패');
       }
       return res.json();
     },
-    onSuccess: (data, id) => {
-      toast.success(`송장 생성 완료: ${data.invoiceNumber}`);
+    onSuccess: (data, p) => {
+      const id = typeof p === 'string' ? p : p.id;
+      toast.success(data.shipAddress
+        ? `송장 생성 완료: ${data.invoiceNumber} · 별도 배송지로 발송`
+        : `송장 생성 완료: ${data.invoiceNumber}`);
       queryClient.invalidateQueries({ queryKey: ['sale', id] });
       invalidateFinancialQueries(queryClient);
     },

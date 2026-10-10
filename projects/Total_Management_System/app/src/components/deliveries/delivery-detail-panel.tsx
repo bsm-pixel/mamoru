@@ -9,6 +9,8 @@ import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { useDelivery, useUpdateDelivery } from '@/hooks/use-deliveries';
 import { useProducts } from '@/hooks/use-sales';
 import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
+import { useCustomer } from '@/hooks/use-customers';
+import { ShipAddressModal, type ShipAddress } from '@/components/shared/ship-address-modal';
 import type { Product } from '@/lib/supabase/types';
 import { formatKRW, formatDate, calcVAT, CUSTOMER_TYPE_LABEL, CUSTOMER_TYPE_COLOR } from '@/lib/utils/format';
 import { useQueryClient } from '@tanstack/react-query';
@@ -42,6 +44,8 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const { data: products = [] } = useProducts();
   // 거래처별 납품명·가격 (생성 모달과 동일 — catalog 우선)
   const { data: customerCatalogData } = useCustomerCatalog((data?.delivery?.customer_id as string | undefined) ?? undefined);
+  // 159: 송장 생성 전 「받는 곳 확인」 모달에 거래처 등록 주소를 보여주려면 미리 받아둬야 한다
+  const { data: customerData } = useCustomer((data?.delivery?.customer_id as string | undefined) ?? '');
 
   const [editing, setEditing] = useState(false);
   const [editItems, setEditItems] = useState<Array<{
@@ -57,6 +61,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   //      null = 아직 안 고름 → 이 건에 이미 기록된 택배사를 기본값으로 쓴다(우체국 건을 열면 우체국이 뜨게)
   const [courierPick, setCourierPick] = useState<string | null>(null);
   const [bookingInvoice, setBookingInvoice] = useState(false);
+  const [shipAddrOpen, setShipAddrOpen] = useState(false);   // 159: 받는 곳 확인
   const [pendingAction, setPendingAction] = useState<{
     action: string; label: string; msg: string; variant?: 'danger' | 'default'; extra?: Record<string, unknown>;
   } | null>(null);
@@ -87,6 +92,13 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const items: DLItem[] = data.items;
   const status = (dl.status as string) || 'draft';
   const courierInput = courierPick ?? ((dl.courier_name as string | null) || COURIER_LOTTE);
+
+  // 159: 이번 건에 쓴 별도 배송지 (비어 있으면 거래처 등록 주소로 발송). 마이그 159 전이면 전부 ''
+  const shipAddr = {
+    postcode: (dl.ship_postcode as string | null) || '',
+    road: (dl.ship_address_road as string | null) || '',
+    detail: (dl.ship_address_detail as string | null) || '',
+  };
 
   // 158 합포장 — 새 송장 없이 같은 거래처의 기존 송장에 얹어 보낸다. 상태는 원 송장과 함께 바뀐다.
   const mergedInto = data.mergedInto || null;
@@ -132,15 +144,16 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   }
 
   // ALPS 송장 생성 (B2B 배송)
-  const handleBookInvoice = async () => {
+  //   159: ship 을 주면 이번 건만 그 주소로 보낸다(거래처 등록 주소는 그대로). 안 주면 종전대로 등록 주소
+  const handleBookInvoice = async (ship?: ShipAddress | null) => {
     if (!dl.customer_id) { toast.error('거래처 정보가 없어 송장을 생성할 수 없습니다'); return; }
     setBookingInvoice(true);
     try {
-      // 고객 주소 조회
+      // 고객 주소 조회 — 연락처는 별도 배송지일 때도 그대로 쓴다(받는 사람은 바뀌지 않는다)
       const custRes = await fetch(`/api/customers/${dl.customer_id}`);
       const custData = await custRes.json();
       const cust = custData.customer;
-      if (!cust?.address_road) { toast.error('거래처 주소가 등록되어 있지 않습니다'); return; }
+      if (!ship && !cust?.address_road) { toast.error('거래처 주소가 등록되어 있지 않습니다'); return; }
 
       const gdsNm = items.map((it: DLItem) =>
         it.quantity > 1 ? `${it.product_name} x${it.quantity}` : it.product_name
@@ -153,14 +166,19 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
           deliveryId: dl.id,
           rcvName: dl.customer_name,
           rcvTel: cust.phone || '',
-          rcvZip: cust.postcode || '',
-          rcvAdr: `${cust.address_road || ''} ${cust.address_detail || ''}`.trim(),
+          rcvZip: (ship ? ship.postcode : cust.postcode) || '',
+          rcvAdr: ship
+            ? [ship.road, ship.detail].filter(Boolean).join(' ')
+            : `${cust.address_road || ''} ${cust.address_detail || ''}`.trim(),
           gdsNm,
+          // 별도 배송지는 납품 건에 기록해 둔다(화면 표시 + 재발급 시 재사용)
+          shipAddress: ship ? { postcode: ship.postcode, road: ship.road, detail: ship.detail } : null,
         }),
       });
       const result = await res.json();
       if (!res.ok) { toast.error(result.error || '송장 생성 실패'); return; }
-      toast.success(`송장 생성 완료: ${result.invNo}`);
+      toast.success(ship ? `송장 생성 완료: ${result.invNo} · 별도 배송지로 발송` : `송장 생성 완료: ${result.invNo}`);
+      setShipAddrOpen(false);
       queryClient.invalidateQueries({ queryKey: ['delivery', deliveryId] });
       queryClient.invalidateQueries({ queryKey: ['deliveries'] });
     } catch (err) {
@@ -299,6 +317,11 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
           ) : null}
           {dl.tracking_number && (
             <div>
+              {shipAddr.road && (
+                <p className="text-xs text-neutral-600 break-keep mb-1">
+                  별도 배송지 · {[shipAddr.road, shipAddr.detail].filter(Boolean).join(' ')}
+                </p>
+              )}
               <span className="text-xs text-neutral-500">송장번호</span>
               <p className="font-mono text-xs">{dl.tracking_number as string}</p>
               {/* 150: 택배사 명시 — 롯데가 아니면 자동추적이 안 된다는 사실을 같이 보여준다 */}
@@ -539,7 +562,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
                 </Button>
               ) : (
                 <>
-                  <Button className="w-full" onClick={handleBookInvoice} disabled={bookingInvoice || updateDL.isPending}>
+                  <Button className="w-full" onClick={() => setShipAddrOpen(true)} disabled={bookingInvoice || updateDL.isPending}>
                     {bookingInvoice ? '송장 생성 중...' : '🚚 송장 생성 (롯데택배)'}
                   </Button>
                   {/* 158 합포장 — 같은 거래처에 아직 배송이 안 끝난 송장이 있을 때만 뜬다(없으면 이 줄 자체가 없다).
@@ -618,7 +641,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
 
                 {/* 롯데 건에서만 재발급 의미가 있다 */}
                 {dl.tracking_number && isAlpsTrackable(dl.courier_name as string | null) && (
-                  <SubtleButton onClick={handleBookInvoice} disabled={bookingInvoice || updateDL.isPending}>
+                  <SubtleButton onClick={() => setShipAddrOpen(true)} disabled={bookingInvoice || updateDL.isPending}>
                     {bookingInvoice ? '송장 생성 중...' : '🚚 롯데 송장 재발급'}
                   </SubtleButton>
                 )}
@@ -687,6 +710,19 @@ TMS 는 송장 기록만 지웁니다.
         </Card>
       )}
 
+      {/* 159: 택배 발송 — 받는 곳 확인(등록 주소 / 이번만 다른 주소). 거래처 정보 주소는 바뀌지 않는다 */}
+      <ShipAddressModal
+        open={shipAddrOpen}
+        onClose={() => setShipAddrOpen(false)}
+        name={dl.customer_name as string}
+        phone={(customerData?.customer?.phone as string | undefined) ?? (dl.customer_phone as string | null)}
+        registered={customerData?.customer
+          ? { postcode: customerData.customer.postcode, road: customerData.customer.address_road, detail: customerData.customer.address_detail }
+          : null}
+        saved={{ postcode: shipAddr.postcode, road: shipAddr.road, detail: shipAddr.detail }}
+        busy={bookingInvoice}
+        onConfirm={(addr) => { handleBookInvoice(addr); }}
+      />
       {/* 확인 모달 */}
       {pendingAction && (
         <ConfirmModal

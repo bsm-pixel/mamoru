@@ -74,6 +74,9 @@ export async function POST(request: NextRequest) {
     //    → status 는 'confirmed'(출고대기) 로 두고, 크론 [4-A] 집하 감지가 'shipped' 로 올린다.
     //    B2C 판매(api/sales/[id]/ship)와 같은 정의로 통일 — 그쪽도 송장번호만 넣고 출고는 집하가 채운다.
     if (body.deliveryId) {
+      // 159: 별도 배송지로 보냈으면 그 주소를 남기고(화면 표시·재발급 재사용), 등록 주소로 보냈으면 지운다
+      const sa = body.shipAddress as { postcode?: string; road?: string; detail?: string } | null | undefined;
+      const useOther = !!(sa?.postcode && sa?.road);
       await db
         .from('deliveries')
         .update({
@@ -82,6 +85,12 @@ export async function POST(request: NextRequest) {
           updated_at: new Date().toISOString(),
         })
         .eq('id', body.deliveryId);
+      // 별도 배송지 기록은 **따로** 쓴다 — 마이그 159 전이면 이 줄만 조용히 실패하고 송장 저장은 지켜진다
+      await db.from('deliveries').update({
+        ship_postcode: useOther ? sa!.postcode : null,
+        ship_address_road: useOther ? sa!.road : null,
+        ship_address_detail: useOther ? (sa!.detail || null) : null,
+      }).eq('id', body.deliveryId);
       // 158 합포장: (마이그 158 전이면 아래 두 줄은 조용히 실패 — 위 본 처리는 이미 끝남)
       //   · 얹혀 가던 건이 자기 송장을 새로 만들었으면 더는 합포장이 아니다
       //   · 원 송장 건을 재발급했으면 얹힌 건들도 새 번호를 따라간다(옛 번호가 남으면 추적이 끊긴다)

@@ -1,6 +1,7 @@
 'use client';
 
 import { MamoruWordmark } from '@/components/ui/mamoru-logo';
+import { ShipAddressModal } from '@/components/shared/ship-address-modal';
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useQueryClient as __useQueryClient } from '@tanstack/react-query';
@@ -13,7 +14,7 @@ import { CustomerQuickModal } from '@/components/customers/customer-quick-modal'
 import { CustomerNotes } from '@/components/shared/customer-notes';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
-import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2 } from 'lucide-react';
+import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2, MapPin } from 'lucide-react';
 import { PrepSheetModal } from './prep-sheet-modal';
 import { StatusStepper } from '@/components/ui/status-stepper';
 import { DeliveryTracker } from '@/components/orders/delivery-tracker';
@@ -92,6 +93,8 @@ export function SaleDetailPanel({ saleId }: Props) {
   const resendShipNotify = useResendShipNotify();
   const markPacked = useMarkSalePacked();   // 포장완료(준비완료) 토글 — 2026-07-18
   const [showPickupConfirm, setShowPickupConfirm] = useState(false);
+  // 159: 송장 생성 전 받는 곳 확인 — 등록 주소 / 이번만 다른 주소
+  const [shipAddrOpen, setShipAddrOpen] = useState(false);
   // 150: 롯데 외 택배사로 직접 보낸 경우 — 택배사+송장번호 기록
   const [manualShipOpen, setManualShipOpen] = useState(false);
   const [manualCourier, setManualCourier] = useState<string>('우체국택배');
@@ -135,6 +138,12 @@ export function SaleDetailPanel({ saleId }: Props) {
   const addressText = customerInfo
     ? [customerInfo.address_road, customerInfo.address_detail].filter(Boolean).join(' ').trim()
     : '';
+  // 159: 이번 건에 쓴 별도 배송지 (비어 있으면 고객 등록 주소로 발송된 건). 마이그 159 전이면 전부 ''
+  const shipAddr = {
+    postcode: (sale as { ship_postcode?: string | null }).ship_postcode || '',
+    road: (sale as { ship_address_road?: string | null }).ship_address_road || '',
+    detail: (sale as { ship_address_detail?: string | null }).ship_address_detail || '',
+  };
   const s = sale as unknown as OfflineSale;
   const channel = CHANNEL_CHIP[(s.sale_channel || 'offline') as SaleChannel] || CHANNEL_CHIP.offline;
 
@@ -325,7 +334,7 @@ export function SaleDetailPanel({ saleId }: Props) {
           )}
           {canCreateInvoice && (
             <>
-              <Button size="sm" className="w-full" onClick={() => shipSale.mutate(saleId)} disabled={shipSale.isPending}>
+              <Button size="sm" className="w-full" onClick={() => setShipAddrOpen(true)} disabled={shipSale.isPending}>
                 <Truck size={14} />
                 {shipSale.isPending ? '송장 생성 중...' : '택배 발송 (송장 생성)'}
               </Button>
@@ -544,6 +553,24 @@ export function SaleDetailPanel({ saleId }: Props) {
       )}
 
       {/* 결제완료 확인 모달 */}
+      {/* 159: 택배 발송 — 받는 곳 확인(등록 주소 / 이번만 다른 주소). 고객정보 주소는 바뀌지 않는다 */}
+      <ShipAddressModal
+        open={shipAddrOpen}
+        onClose={() => setShipAddrOpen(false)}
+        name={s.customer_name}
+        phone={s.customer_phone}
+        registered={customerInfo ? { postcode: customerInfo.postcode, road: customerInfo.address_road, detail: customerInfo.address_detail } : null}
+        saved={{ postcode: shipAddr.postcode, road: shipAddr.road, detail: shipAddr.detail }}
+        busy={shipSale.isPending}
+        onConfirm={(addr) => {
+          shipSale.mutate(
+            addr
+              ? { id: saleId, ship_postcode: addr.postcode, ship_address_road: addr.road, ship_address_detail: addr.detail }
+              : saleId,
+            { onSuccess: () => setShipAddrOpen(false) },
+          );
+        }}
+      />
       <ConfirmModal
         open={showPaidConfirm}
         onClose={() => setShowPaidConfirm(false)}
@@ -642,6 +669,13 @@ export function SaleDetailPanel({ saleId }: Props) {
                 <span className="text-sm font-mono font-medium">{s.invoice_number}</span>
                 <span className="text-xs text-neutral-400">{courierLabel(s.courier_name)}</span>
               </div>
+              {/* 159: 고객 등록 주소가 아닌 곳으로 보낸 건 — 어디로 갔는지 바로 보이게 */}
+              {shipAddr.road && (
+                <p className="text-xs text-neutral-600 flex items-start gap-1">
+                  <MapPin size={12} className="mt-0.5 shrink-0 text-neutral-400" />
+                  <span className="break-keep">별도 배송지 · {[shipAddr.road, shipAddr.detail].filter(Boolean).join(' ')}</span>
+                </p>
+              )}
               {/* 150: 롯데 송장만 ALPS 추적이 된다. 타 택배사에 추적기를 띄우면 "추적 정보 없음"만 뜬다 */}
               {isAlpsTrackable(s.courier_name) ? (
                 <DeliveryTracker invNo={s.invoice_number} />

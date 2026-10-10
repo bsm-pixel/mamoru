@@ -51,16 +51,23 @@ export async function POST(
       return NextResponse.json({ success: true, invoiceNumber, manual: true });
     }
 
-    // 고객 주소 조회
-    if (!sale.customer_id) return NextResponse.json({ error: '고객 정보가 없어 송장 생성 불가' }, { status: 400 });
+    // ── 159: 별도 배송지 — 이번 건만 다른 곳으로 (고객정보 주소는 건드리지 않는다) ──
+    //    받는 사람 이름·연락처는 그대로. 주소만 교체하고 그 값을 판매 건에 기록한다(재발급 때 재사용·추적).
+    const sp = String(body?.ship_postcode || '').trim();
+    const sr = String(body?.ship_address_road || '').trim();
+    const sd = String(body?.ship_address_detail || '').trim();
+    const useOther = !!(sp && sr);
 
-    const { data: customer } = await db
-      .from('customers')
-      .select('postcode, address_road, address_detail')
-      .eq('id', sale.customer_id)
-      .single();
+    // 고객 주소 조회 — 별도 배송지를 받았으면 고객 주소가 없어도 된다
+    if (!useOther && !sale.customer_id) {
+      return NextResponse.json({ error: '고객 정보가 없어 송장 생성 불가' }, { status: 400 });
+    }
 
-    if (!customer?.postcode || !customer?.address_road) {
+    const { data: customer } = sale.customer_id
+      ? await db.from('customers').select('postcode, address_road, address_detail').eq('id', sale.customer_id).single()
+      : { data: null };
+
+    if (!useOther && (!customer?.postcode || !customer?.address_road)) {
       return NextResponse.json({ error: '고객 주소(우편번호+도로명)를 먼저 등록해주세요' }, { status: 400 });
     }
 
@@ -78,15 +85,18 @@ export async function POST(
       ? items.map((i: { product_name: string; quantity: number }) => `${i.product_name}×${i.quantity}`).join(', ')
       : '마모루 제품';
 
-    // ALPS 송장 생성
+    // ALPS 송장 생성 — 별도 배송지가 있으면 그 주소로
     const { invoiceNumber } = await getNextInvoice();
-    const fullAddr = [customer.address_road, customer.address_detail].filter(Boolean).join(' ');
+    const zip = useOther ? sp : customer.postcode;
+    const fullAddr = useOther
+      ? [sr, sd].filter(Boolean).join(' ')
+      : [customer.address_road, customer.address_detail].filter(Boolean).join(' ');
 
     const result = await bookShipment({
       invoiceNumber,
       receiverName: sale.customer_name,
       receiverTel: sale.customer_phone || '',
-      receiverZip: customer.postcode,
+      receiverZip: zip,
       receiverAddr: fullAddr,
       goodsName: goodsName.slice(0, 50), // ALPS 50자 제한
     });
@@ -96,13 +106,21 @@ export async function POST(
     }
 
     // 판매 건 업데이트 (shipped_at은 출고완료 시 별도 설정)
+    //   별도 배송지면 그 주소를 남기고, 등록 주소로 보냈으면 지난 별도 배송지 흔적을 지운다(화면 오표시 방지)
     await db.from('offline_sales').update({
       invoice_number: invoiceNumber,
       delivery_method: 'shipping',
       courier_name: '롯데택배',
     }).eq('id', id);
+    // 159: 별도 배송지 기록은 **따로** 쓴다 — 마이그 159 전이면 이 줄만 조용히 실패하고,
+    //      이미 발급된 송장번호 저장은 지켜진다(한 UPDATE 로 묶으면 송장이 통째로 유실된다)
+    await db.from('offline_sales').update({
+      ship_postcode: useOther ? sp : null,
+      ship_address_road: useOther ? sr : null,
+      ship_address_detail: useOther ? (sd || null) : null,
+    }).eq('id', id);
 
-    return NextResponse.json({ success: true, invoiceNumber });
+    return NextResponse.json({ success: true, invoiceNumber, shipAddress: useOther ? fullAddr : null });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
