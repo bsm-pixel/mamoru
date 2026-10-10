@@ -169,7 +169,7 @@ Gmail "작성" / Notion "+ 새로" / Linear "+ Issue" 처럼 Create 액션은 Li
 - **B2B 납품 모달(`create-delivery-modal.tsx`)**: "제품 납품/복원수리" 모드 토글 제거 → 한 납품서에 제품 품목 + "복원수리(선택)" 섹션 동시 입력. `default_repair_price` 자동 적용 유지.
 - **합계**: 복원수리(RS)는 **VAT 제외** — 공통 헬퍼 `lib/deliveries/totals.ts` `computeDeliveryTotals()` 신설, 납품 POST/PATCH 양쪽 적용(제품만 VAT, RS 무세 가산). 제품 전용·RS 전용은 기존 수치와 동일(하위호환).
 - **별도 배송지 (159, 2026-10-10)**: 송장 생성 전 「받는 곳 확인」 모달 — `components/shared/ship-address-modal.tsx` 를 **판매(B2C)·납품(B2B) 공용**으로 쓴다. 사장님 요청: 거래처·고객 등록 주소가 아닌 곳으로 보내는 일이 잦은데, 전엔 고객정보 주소를 고쳤다 되돌려야 했다(정보 오염 + 어디로 갔는지 기록 없음).
-  - 선택지 2개: (기본) / (다음 우편번호 검색 + 상세주소). **받는 사람 이름·연락처는 바꾸지 않는다**. 고객정보(customers) 주소도 불변
+  - 선택지 2개: `등록된 주소로 보내기`(기본) / `이번만 다른 주소로 보내기`(다음 우편번호 검색 + 상세주소). **받는 사람 이름·연락처는 바꾸지 않는다**. 고객정보(customers) 주소도 불변
   - 저장: `offline_sales`·`deliveries` 의 `ship_postcode/ship_address_road/ship_address_detail`(마이그 159). 등록 주소로 보내면 NULL 로 정리 → 화면 오표시 방지. 송장 취소 후에도 남아 재발급 때 그대로 미리 채워진다
   - 경로: 판매=`api/sales/[id]/ship` body 의 `ship_*` / 납품=`api/lotte/book` body 의 `shipAddress`
   - 🚨 **ship_* 기록은 송장번호 UPDATE 와 분리**해서 쓴다 — 한 UPDATE 로 묶으면 마이그 159 전 배포 시 ALPS 송장은 발급됐는데 번호가 통째로 유실된다(실측: 마이그 전 PGRST204, 분리하면 송장 저장은 정상)
