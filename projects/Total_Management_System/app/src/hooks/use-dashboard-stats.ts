@@ -290,7 +290,8 @@ export function useHubStats() {
 
       // 2단계 매출 3분할 — 제품 매출 B2C/B2B 분리 (RS 제외)
       //   B2C 제품 = offline_sales(소매/온라인) (total−discount) − 그 채널 RS_total
-      //   B2B 제품 = offline_sales(딜러/아카데미) (total−discount) − RS_total + 납품 전체 (total−discount − 납품 RS_total)
+      //   B2B 제품 = offline_sales(딜러/아카데미) (total−discount) − RS_total + 납품 전체 (deliveryNet − 납품 RS_total)
+      //   ※ 납품 total_amount 는 이미 할인 반영(NET) — 재차감 금지. SSOT: lib/sales/amounts.ts deliveryNet
       const isB2BCt = (ct: string | null | undefined) => ct === 'dealer' || ct === 'academy';
       const osProductB2C = salesRows.reduce((s, r) => s + (isB2BCt(r.customer_type) ? 0 : (r.total_amount || 0) - (r.discount_amount || 0)), 0);
       const osProductB2B = salesRows.reduce((s, r) => s + (isB2BCt(r.customer_type) ? (r.total_amount || 0) - (r.discount_amount || 0) : 0), 0);

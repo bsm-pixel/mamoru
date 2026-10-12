@@ -8,7 +8,8 @@ import { normalizeImwebPayMethod } from '@/lib/sales/imweb-pay-method';
  *
  * 2단계 매출 3분할 (2026-05-12):
  *   총매출 = 제품 매출(B2C + B2B, 납품 포함, RS 제외) + 복원수리 매출(A 접수 + B 판매RS + C 납품RS)
- *   - 제품 매출: offline_sales (total−discount) − 그 주문 RS items + deliveries (total−discount) − 납품 RS items
+ *   - 제품 매출: offline_sales (total−discount) − 그 주문 RS items + deliveries (total, 이미 net) − 납품 RS items
+ *     ※ 테이블별 저장 방식이 다르다 — offline_sales=GROSS(할인 차감 필요) / deliveries=NET(재차감 금지). SSOT: lib/sales/amounts.ts
  *   - 복원수리: repairs(접수시스템, paid_at 기준 실제 금액) + offline_sale_items(category='RS') + delivery_items(category='RS')
  *   - by_product / margin: RS 항목 제외 (RS 는 제품이 아니므로 제품 랭킹·원가 집계에서 빠짐)
  */
