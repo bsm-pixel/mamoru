@@ -30,6 +30,9 @@ interface CartItem {
   product: Product | null; // null이면 임시 제품
   customName?: string;     // 임시 제품명
   customPrice?: number;    // 임시 제품 가격
+  // 2026-10-12: 직접 입력 품목의 분류. 'RS'=복원수리 / undefined=제품.
+  //   전엔 직접 입력이 분류 없이 저장돼, 복원수리를 직접 입력하면 제품 매출로 잡혔다(집계 왜곡)
+  customCategory?: string;
   quantity: number;
   unitPrice: number;
   selectedSerialIds: string[];
@@ -201,6 +204,7 @@ function NewSaleContent() {
   // 임시 제품 입력 상태
   const [customProductName, setCustomProductName] = useState('');
   const [customProductPrice, setCustomProductPrice] = useState('');
+  const [customProductIsRepair, setCustomProductIsRepair] = useState(false);   // 직접 입력 분류(복원수리 여부)
 
   function addToCart(product: Product, serialId?: string) {
     // 074: catalog.unit_price 우선 사용 (해당 customer 등록된 맞춤가) → 없으면 group 단가 fallback
@@ -253,10 +257,12 @@ function NewSaleContent() {
     if (!name || price <= 0) return;
     setCart((prev) => [
       ...prev,
-      { product: null, customName: name, customPrice: price, quantity: 1, unitPrice: price, selectedSerialIds: [] },
+      { product: null, customName: name, customPrice: price, quantity: 1, unitPrice: price, selectedSerialIds: [],
+        customCategory: customProductIsRepair ? 'RS' : undefined },
     ]);
     setCustomProductName('');
     setCustomProductPrice('');
+    setCustomProductIsRepair(false);
   }
 
   // 고객 변경 시 장바구니 가격 재계산 (등록 제품만)
@@ -341,7 +347,7 @@ function NewSaleContent() {
             ? ((catalogEntryMap.get(item.product.id)?.delivery_name?.trim()) || getProductDisplayName(item.product, customerType, priceGroups))
             : (item.customName || '임시 제품'),
           sku: item.product?.sku || undefined,
-          category: item.product?.category || undefined,
+          category: item.product?.category || item.customCategory || undefined,
           quantity: item.quantity,
           unit_price: item.unitPrice,
           total_price: item.unitPrice * item.quantity,
@@ -528,6 +534,24 @@ function NewSaleContent() {
             <Card>
               <h3 className="text-sm font-semibold text-neutral-700 mb-2">+ 직접 입력</h3>
               <p className="text-xs text-neutral-400 mb-2">등록되지 않은 제품을 직접 입력합니다 (빗, 소모품 등)</p>
+              {/* 분류 — 복원수리를 직접 입력할 때 제품 매출로 잡히지 않게 (2026-10-12) */}
+              <div className="flex gap-1.5 mb-2">
+                {([[false, '제품'], [true, '복원수리']] as const).map(([v, label]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => setCustomProductIsRepair(v)}
+                    className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition ${
+                      customProductIsRepair === v ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-600 border-neutral-200 hover:bg-stone-50'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <span className="self-center text-[11px] text-neutral-400">
+                  {customProductIsRepair ? '복원수리 매출로 집계됩니다' : '제품 매출로 집계됩니다'}
+                </span>
+              </div>
               <div className="flex gap-2">
                 <input
                   type="text"

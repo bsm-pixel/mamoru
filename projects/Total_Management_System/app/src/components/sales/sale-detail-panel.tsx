@@ -1046,6 +1046,8 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
   const [productSearch, setProductSearch] = useState('');
   const [customName, setCustomName] = useState('');
   const [customPrice, setCustomPrice] = useState('');
+  // 2026-10-12: 직접 입력 품목의 분류. 전엔 분류 없이 저장돼 복원수리가 제품 매출로 잡혔다
+  const [customIsRepair, setCustomIsRepair] = useState(false);
 
   const totalAmount = editItems.reduce((s, it) => s + it.unit_price * it.quantity, 0);
   const finalAmount = totalAmount - discountAmount;
@@ -1087,7 +1089,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
       product_id: undefined,
       product_name: name,
       sku: undefined,
-      category: undefined,
+      category: customIsRepair ? 'RS' : undefined,
       quantity: 1,
       unit_price: price,
       total_price: price,
@@ -1096,6 +1098,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
     }]);
     setCustomName('');
     setCustomPrice('');
+    setCustomIsRepair(false);
   };
 
   const filteredProducts = productSearch.length >= 1
@@ -1232,6 +1235,24 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
           {/* 임시 제품 추가 */}
           <div>
             <label className="text-xs font-semibold text-neutral-600 mb-1 block">임시 제품</label>
+            {/* 분류 — 복원수리를 직접 입력할 때 제품 매출로 잡히지 않게 (2026-10-12) */}
+            <div className="flex gap-1.5 mb-1.5">
+              {([[false, '제품'], [true, '복원수리']] as const).map(([v, label]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setCustomIsRepair(v)}
+                  className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition ${
+                    customIsRepair === v ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-600 border-neutral-200 hover:bg-stone-50'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+              <span className="self-center text-[11px] text-neutral-400">
+                {customIsRepair ? '복원수리 매출로 집계' : '제품 매출로 집계'}
+              </span>
+            </div>
             <div className="flex gap-2">
               <input
                 type="text"

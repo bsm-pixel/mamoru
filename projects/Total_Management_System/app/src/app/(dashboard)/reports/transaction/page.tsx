@@ -48,9 +48,28 @@ function TransactionContent() {
     grouped.get(key)!.push(s);
   }
 
-  const grandTotal = filtered.reduce((s, r) => s + r.total_amount, 0);
-  const grandSupply = filtered.reduce((s, r) => s + (r.supply_amount || 0), 0);
-  const grandVat = filtered.reduce((s, r) => s + (r.vat_amount || 0), 0);
+  // 2026-10-12: 고객에게 나가는 문서라 **할인 후 금액**으로 통일한다.
+  //   전엔 표·합계만 할인 전(total_amount)이고 상세 카드(아래 '합계' 줄)만 할인 후라, 한 화면에서 숫자가 어긋났다.
+  const netOf = (r: SaleDetail) => (r.total_amount || 0) - (r.discount_amount || 0);
+  // 공급가액·부가세도 할인 후 금액에 맞춰 보여준다.
+  //   DB의 supply_amount/vat_amount 는 **할인 전** 기준으로 저장돼 있어(api/sales POST), 그대로 쓰면
+  //   "합계 620,000 · 공급가액 1,140,909" 처럼 고객 문서에서 숫자가 어긋난다.
+  //   저장값은 건드리지 않고(세금계산서 영역), 저장된 공급가:부가세 **비율을 유지한 채** net 에 맞춰 안분한다.
+  //   → 부가세 포함/별도 어느 방식이든 비율이 보존되고, 합계 = 공급가액 + 부가세 가 항상 맞는다.
+  const vatSplit = (r: SaleDetail) => {
+    const net = netOf(r);
+    const sup = r.supply_amount || 0;
+    const vat = r.vat_amount || 0;
+    const base = sup + vat;
+    if (base <= 0) return { supply: 0, vat: 0 };            // VAT 미산정 건(현금 등)
+    if (base === net) return { supply: sup, vat };          // 할인 없음 — 저장값 그대로
+    const supply = Math.round((net * sup) / base);
+    return { supply, vat: net - supply };
+  };
+  const grandTotal = filtered.reduce((s, r) => s + netOf(r), 0);
+  const grandDiscount = filtered.reduce((s, r) => s + (r.discount_amount || 0), 0);
+  const grandSupply = filtered.reduce((s, r) => s + vatSplit(r).supply, 0);
+  const grandVat = filtered.reduce((s, r) => s + vatSplit(r).vat, 0);
 
   return (
     <>
@@ -130,9 +149,9 @@ function TransactionContent() {
             ) : (
               <div className="space-y-6">
                 {Array.from(grouped.entries()).map(([customerName, customerSales]) => {
-                  const custTotal = customerSales.reduce((s, r) => s + r.total_amount, 0);
-                  const custSupply = customerSales.reduce((s, r) => s + (r.supply_amount || 0), 0);
-                  const custVat = customerSales.reduce((s, r) => s + (r.vat_amount || 0), 0);
+                  const custTotal = customerSales.reduce((s, r) => s + netOf(r), 0);
+                  const custSupply = customerSales.reduce((s, r) => s + vatSplit(r).supply, 0);
+                  const custVat = customerSales.reduce((s, r) => s + vatSplit(r).vat, 0);
 
                   return (
                     <div key={customerName} className="break-inside-avoid">
@@ -153,9 +172,14 @@ function TransactionContent() {
                           {customerSales.map((s) => (
                             <tr key={s.id} className="border-b border-neutral-50">
                               <td className="py-1.5">{s.sale_date}</td>
-                              <td className="text-right py-1.5 font-medium">{formatKRW(s.total_amount)}</td>
-                              <td className="text-right py-1.5 text-neutral-500">{formatKRW(s.supply_amount || 0)}</td>
-                              <td className="text-right py-1.5 text-neutral-500">{formatKRW(s.vat_amount || 0)}</td>
+                              <td className="text-right py-1.5 font-medium">
+                                {formatKRW(netOf(s))}
+                                {(s.discount_amount || 0) > 0 && (
+                                  <span className="block text-[10px] font-normal text-neutral-400">할인 -{formatKRW(s.discount_amount)}</span>
+                                )}
+                              </td>
+                              <td className="text-right py-1.5 text-neutral-500">{formatKRW(vatSplit(s).supply)}</td>
+                              <td className="text-right py-1.5 text-neutral-500">{formatKRW(vatSplit(s).vat)}</td>
                               <td className="py-1.5 pl-3 text-neutral-500">
                                 {({ card: '카드', cash: '현금', transfer: '이체', mixed: '복합' })[s.payment_method] || s.payment_method}
                               </td>
@@ -181,7 +205,12 @@ function TransactionContent() {
                   <table className="w-full text-sm font-bold">
                     <tbody>
                       <tr>
-                        <td>총계 ({filtered.length}건)</td>
+                        <td>
+                          총계 ({filtered.length}건)
+                          {grandDiscount > 0 && (
+                            <span className="ml-1.5 text-[11px] font-normal text-neutral-500">할인 -{formatKRW(grandDiscount)} 반영</span>
+                          )}
+                        </td>
                         <td className="text-right">{formatKRW(grandTotal)}</td>
                         <td className="text-right text-neutral-600 text-xs font-medium">{formatKRW(grandSupply)}</td>
                         <td className="text-right text-neutral-600 text-xs font-medium">{formatKRW(grandVat)}</td>
