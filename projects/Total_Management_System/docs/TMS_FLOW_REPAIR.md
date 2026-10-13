@@ -9,6 +9,7 @@
  → MacroDroid → POST /api/bank/deposit (x-mamoru-key = env BANK_WEBHOOK_SECRET)
  → lib/bank/woori-deposit.ts 해석 → bank_deposits 기록 (dedupe_key 로 재전송 무시)
  → 입금대기 repairs (paid_at NULL · 취소 아님 · total_amount = 입금액)
+     ※ 자동 확정은 cost_notified(입고 & 비용안내) 이후 상태만. 접수·수거 단계 입금 → 확인 필요 푸시
      ├ 이름(공백무시)+총액 정확히 1건 → paid_at·payment_method=transfer (paid_at IS NULL 조건부)
      │    → repair_history 「자동 입금확인」 + as_payment_confirmed 알림톡 + 사장님 푸시(정보성)
      ├ 총액만 맞음 / 이름+총액 2건↑ → 알림톡 X, 푸시 「💰 입금 확인 필요」(수동 입금확인)

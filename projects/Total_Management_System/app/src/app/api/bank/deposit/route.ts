@@ -5,6 +5,11 @@ import { sendRepairPaymentConfirmed } from '@/lib/repair/payment-notify';
 import { sendPushToAll } from '@/lib/firebase/send-push';
 import { formatKRW } from '@/lib/utils/format';
 
+/** 자동 입금확인 대상 상태 = 「입고 & 비용안내」(cost_notified) 이후 (payment_confirmed 는 레거시) */
+const POST_COST_STATUSES = new Set([
+  'cost_notified', 'payment_confirmed', 'repairing', 'ready_to_ship', 'shipped', 'delivered', 'completed',
+]);
+
 /**
  * POST /api/bank/deposit — 은행 입금 알림 → 복원수리 입금확인 자동화 (161, 2026-10-13)
  *
@@ -13,7 +18,7 @@ import { formatKRW } from '@/lib/utils/format';
  *   본문: JSON {"title": "...", "text": "..."} 또는 알림 글자 그대로(text/plain)
  *
  * 처리 규칙 — 확실할 때만 고객에게 알림톡이 나간다:
- *   ① 입금대기 수리 건(paid_at 없음·취소 아님) 중 「이름+총액」 정확히 1건 → 입금 처리 + 입금확인 알림톡
+ *   ① 입금대기 수리 건(paid_at 없음·「입고 & 비용안내」 이후) 중 「이름+총액」 정확히 1건 → 입금 처리 + 입금확인 알림톡
  *   ② 총액만 맞는 건이 있거나 이름+총액이 2건 이상 → 알림톡 X, 사장님 푸시 「입금 확인 필요」
  *   ③ 맞는 건 없음(제품 판매·개인 송금 등) → 기록만 (푸시 X — 알림 피로 방지)
  * 받은 알림은 모두 bank_deposits 에 남고, 같은 알림이 두 번 와도 한 번만 처리된다(dedupe_key).
@@ -64,7 +69,10 @@ export async function POST(req: NextRequest) {
       .eq('total_amount', parsed.amount);
     if (cErr) throw cErr;
     const amountMatches: Array<{ id: string; as_id: string; name: string; status: string } & Record<string, unknown>> = cands || [];
-    const nameMatches = amountMatches.filter((r) => normalizeName(r.name) === normalizeName(parsed.depositor));
+    // 자동 확정은 「입고 & 비용안내」 이후 건만 — 접수·수거 단계 총액은 예상가라 검수 후 바뀔 수 있고,
+    //   입금확인 알림톡이 비용안내보다 먼저 나가면 순서가 꼬인다 (사장님 결정 2026-10-13). 그 전 단계 입금은 ② 확인 필요로
+    const nameMatches = amountMatches.filter((r) =>
+      POST_COST_STATUSES.has(r.status) && normalizeName(r.name) === normalizeName(parsed.depositor));
     const who = `${parsed.depositor} ${formatKRW(parsed.amount)}`;
 
     // ① 정확히 1건 → 자동 입금확인
@@ -112,7 +120,9 @@ export async function POST(req: NextRequest) {
     // ② 애매함 → 사장님 확인
     if (amountMatches.length > 0) {
       const list = (nameMatches.length > 1 ? nameMatches : amountMatches)
-        .slice(0, 3).map((r) => `${r.name}(${r.as_id})`).join(', ');
+        .slice(0, 3)
+        .map((r) => `${r.name}(${r.as_id}${POST_COST_STATUSES.has(r.status) ? '' : '·비용안내 전'})`)
+        .join(', ');
       await db.from('bank_deposits')
         .update({ outcome: 'needs_review', candidate_repair_ids: amountMatches.map((r) => r.id) })
         .eq('id', depositId);
