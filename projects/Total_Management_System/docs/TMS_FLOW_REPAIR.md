@@ -3,6 +3,20 @@
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
 
+## 2026-10-13 — 은행 입금 알림 → 입금확인 자동 (161)
+```
+우리WON뱅킹 푸시 「[입금] 민세영 220,000원 …계좌 10/13 14:52:18」 (사장님 안드로이드)
+ → MacroDroid → POST /api/bank/deposit (x-mamoru-key = env BANK_WEBHOOK_SECRET)
+ → lib/bank/woori-deposit.ts 해석 → bank_deposits 기록 (dedupe_key 로 재전송 무시)
+ → 입금대기 repairs (paid_at NULL · 취소 아님 · total_amount = 입금액)
+     ├ 이름(공백무시)+총액 정확히 1건 → paid_at·payment_method=transfer (paid_at IS NULL 조건부)
+     │    → repair_history 「자동 입금확인」 + as_payment_confirmed 알림톡 + 사장님 푸시(정보성)
+     ├ 총액만 맞음 / 이름+총액 2건↑ → 알림톡 X, 푸시 「💰 입금 확인 필요」(수동 입금확인)
+     └ 맞는 건 없음(제품·개인 송금) → 기록만 (푸시 X)
+```
+- 입금확인 알림톡 발송 SSOT = `lib/repair/payment-notify.ts` (수동 PATCH 와 공용)
+- 폰이 꺼져 있으면 전달 안 됨 → 기존 수동 [입금확인] 그대로 유지
+
 ## 2026-10-08 — 방문 건 전용 흐름 (택배 화면을 빌려 쓰던 것 정리)
 
 - 판별: `직접방문` + 송장 없음 = 손으로 건네고 끝나는 건. 방문 고객이 택배로 보내 달라고 해서 송장을 만들면 자동으로 택배 흐름으로 돌아간다
@@ -284,7 +298,7 @@ cancelled → (terminal)
 |--------|--------|------|
 | `as_received` (접수완료) | Vercel submit route | Vercel → Make webhook |
 | `as_cost_notice` (비용안내) | UI "비용안내" 버튼 | UI → POST `/api/repair/[id]/notify` |
-| `as_payment_confirmed` (입금확인) | paid_at 플래그 설정 시 | PATCH `/api/repair/[id]` → after() 자동 |
+| `as_payment_confirmed` (입금확인) | paid_at 플래그 설정 시 | PATCH `/api/repair/[id]` → after() 자동 / 161: `/api/bank/deposit` 자동매칭 |
 
 > 2026-09-13: ① **무상(0원)** 은 [비용안내] 버튼의 자동 입금처리에 `skip_notify: true` → `as_payment_confirmed` 생략(비용안내 1통만). **2026-09-14 변경**: `skip_notify` 삭제 → 서버가 `total_amount <= 0` 이면 입금확인 생략 / 직접방문 현장결제는 사실 플래그 `paid_on_site: true`(DB 컬럼 아님)로 생략. 입금확인 모달의 발송 체크박스·합포장 출고 체크박스도 삭제(항상 발송). ② 복원수리 알림 전 경로(`[id]` 자동·입금확인·`notify`·집하 크론·합포장)에 `as_id` 키 추가 — 기존 `id`/`as_uid` 와 같은 값, `#{as_id}` 템플릿 호환(관리자 취소 `as_visit_cancelled` 포함).
 | `as_shipped` (출고완료) | shipped 상태 전환 시 | PATCH `/api/repair/[id]` → after() 자동 |

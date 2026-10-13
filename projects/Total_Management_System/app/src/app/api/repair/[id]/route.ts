@@ -5,6 +5,7 @@ import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-w
 import { sendReviewRequestNotification, repairSubtypeFromProceedType } from '@/lib/notification/review-request';
 import type { RepairStatus } from '@/lib/supabase/types';
 import { syncRepairToCalendar } from '@/lib/google/repair-calendar-sync';
+import { sendRepairPaymentConfirmed } from '@/lib/repair/payment-notify';
 
 /** 상태→자동 알림톡 매핑 (payment_confirmed는 paid_at 플래그로 분리됨) */
 function getAutoNotifyTemplate(newStatus: string): NotifyTemplate | null {
@@ -226,27 +227,8 @@ export async function PATCH(
     //   · 현장결제(paid_on_site): 고객이 매장에서 직접 결제 → 즉시 대면 확인이라 생략
     const isFree = data.total_amount != null && Number(data.total_amount) <= 0;
     if (justPaid && !isFree && !paid_on_site) {
-      after(async () => {
-        if (data.phone) {
-          const result = await sendNotification({
-            template: 'as_payment_confirmed',
-            phone: data.phone,
-            name: data.name,
-            data: {
-              id: data.as_id,
-              as_id: data.as_id,  // 2026-09-13: #{as_id}/#{as_uid} 템플릿 호환
-              as_uid: data.as_id,
-              as_amount: String(data.service_cost || 0),
-              shipping_amount: String(data.shipping_fee || 0),
-              total_amount: String(data.total_amount || 0),
-              tracking: data.invoice_number || '',
-              courier: '롯데택배',
-            },
-          });
-          if (!result.success) console.error('[repair paid_at notify] 실패:', result.error);
-          else console.log('[repair paid_at notify] 입금확인 알림톡 발송');
-        }
-      });
+      // 161: 은행 입금 자동확인과 같은 발송 함수 사용 (SSOT)
+      after(() => sendRepairPaymentConfirmed(data));
     }
 
     // 직접방문 건 → Google Calendar 자동 동기화. after 가 Promise 를 await (fire-and-forget 금지)
