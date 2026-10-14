@@ -765,9 +765,13 @@ export function useCancelSaleShipment() {
     },
     onSuccess: (data, id) => {
       // ALPS 집하취소는 API 미지원 → 실패 시 warning 을 반드시 노출(거짓 성공 신호 방지). 복원수리·빠른송장과 동일 패턴
-      if (data?.warning) toast(data.warning, { icon: '⚠️', duration: 8000 });
+      if (data?.unmerged) toast.success('합포장을 풀었습니다 (원 송장은 그대로)');   // 162
+      else if (data?.warning) toast(data.warning, { icon: '⚠️', duration: 8000 });
       else toast.success('송장 취소 완료');
+      if (data?.mergedCleared) toast.success(`같이 보내던 ${data.mergedCleared}건의 송장도 함께 지웠습니다`);
       queryClient.invalidateQueries({ queryKey: ['sale', id] });
+      if (data?.mergedCleared || data?.unmerged) queryClient.invalidateQueries({ queryKey: ['sale'] });
+      queryClient.invalidateQueries({ queryKey: ['sale-merge'] });
       invalidateFinancialQueries(queryClient);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
@@ -790,9 +794,67 @@ export function useMarkSaleShipped() {
       }
       return res.json();
     },
-    onSuccess: (_d, { id }) => {
+    onSuccess: (d, { id }) => {
       toast.success('출고완료 처리되었습니다');
+      if (d?.mergedShipped) {   // 162 합포장 — 함께 바뀐 건을 알려준다
+        toast.success(`같이 보낸 ${d.mergedShipped}건도 함께 출고완료 처리했습니다`);
+        queryClient.invalidateQueries({ queryKey: ['sale'] });
+      }
       queryClient.invalidateQueries({ queryKey: ['sale', id] });
+      queryClient.invalidateQueries({ queryKey: ['sale-merge'] });
+      invalidateFinancialQueries(queryClient);
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+  });
+}
+
+/* ── 162 판매 합포장 — 다른 판매의 송장에 같이 보내기 ── */
+
+export interface SaleMergeRow {
+  id: string;
+  sale_number: string;
+  customer_name: string;
+  customer_phone: string | null;
+  sale_date: string;
+  invoice_number: string | null;
+  courier_name: string | null;
+  shipped_at: string | null;
+}
+export interface SaleMergeCandidate extends SaleMergeRow {
+  address: string;
+  same_address: boolean;
+  same_customer: boolean;
+}
+
+export function useSaleMergeInfo(saleId: string | undefined) {
+  return useQuery<{ mergedInto: SaleMergeRow | null; mergedChildren: SaleMergeRow[]; candidates: SaleMergeCandidate[] }>({
+    queryKey: ['sale-merge', saleId],
+    queryFn: async () => {
+      const res = await fetch(`/api/sales/${saleId}/merge-shipment`);
+      if (!res.ok) return { mergedInto: null, mergedChildren: [], candidates: [] };
+      return res.json();
+    },
+    enabled: !!saleId,
+  });
+}
+
+export function useMergeSaleShipment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, target_id }: { id: string; target_id: string }) => {
+      const res = await fetch(`/api/sales/${id}/merge-shipment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_id }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || '합포장 실패');
+      return json;
+    },
+    onSuccess: (d) => {
+      toast.success(`${d?.targetName || ''} 송장(${d?.invoiceNumber || ''})에 같이 보냅니다`);
+      queryClient.invalidateQueries({ queryKey: ['sale'] });
+      queryClient.invalidateQueries({ queryKey: ['sale-merge'] });
       invalidateFinancialQueries(queryClient);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),

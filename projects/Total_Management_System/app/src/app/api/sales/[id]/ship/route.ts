@@ -142,31 +142,46 @@ export async function DELETE(
 
     const { data: sale } = await db
       .from('offline_sales')
-      .select('invoice_number')
+      .select('*')   // 162: merged_into_sale_id — 마이그 전이면 키가 없을 뿐 에러 없음
       .eq('id', id)
       .single();
 
     if (!sale?.invoice_number) return NextResponse.json({ error: '송장이 없습니다' }, { status: 400 });
 
+    // 162: 다른 판매 송장에 얹혀 가던 건 → 합포장만 푼다. 원 건 송장이 살아 있으므로 ALPS 취소를 부르지 않는다
+    const isMergedChild = !!sale.merged_into_sale_id;
+
     // ALPS 취소 시도
     let warning: string | undefined;
-    const cancelResult = await cancelShipment(sale.invoice_number);
-    if (!cancelResult.success) {
-      // ALPS 집하취소는 API 미지원 — DB 송장만 정리하고, 사장님께 ALPS 수동취소 안내
-      warning = 'DB 송장은 정리됐습니다 · ⚠️ ALPS에서 직접 집하취소 해주세요';
+    if (!isMergedChild) {
+      const cancelResult = await cancelShipment(sale.invoice_number);
+      if (!cancelResult.success) {
+        // ALPS 집하취소는 API 미지원 — DB 송장만 정리하고, 사장님께 ALPS 수동취소 안내
+        warning = 'DB 송장은 정리됐습니다 · ⚠️ ALPS에서 직접 집하취소 해주세요';
+      }
     }
 
     // DB 업데이트 (109: 집하 자동감지 흔적도 함께 초기화 — 재출고 시 상태 오염 방지)
-    await db.from('offline_sales').update({
+    const clearFields = {
       invoice_number: null,
       courier_name: null,        // 150: 택배사도 함께 정리 — 안 지우면 다음 발송에 옛 택배사가 따라붙는다
       shipped_at: null,
       shipped_source: null,
       shipped_notified_at: null,
       delivery_method: 'pickup',
-    }).eq('id', id);
+    };
+    await db.from('offline_sales').update(clearFields).eq('id', id);
 
-    return NextResponse.json({ success: true, warning });
+    // 162 합포장 정리 — 마이그 162 전이면 아래는 조용히 실패(위 본 처리는 이미 끝남)
+    //   · 얹혀 가던 건 → 표시만 해제
+    //   · 원 송장 건   → 그 송장이 사라졌으므로 얹힌 건(배송 안 끝난 것)도 송장을 지운다(죽은 번호가 남으면 영영 출고대기)
+    await db.from('offline_sales').update({ merged_into_sale_id: null }).eq('id', id);
+    const { data: freed } = isMergedChild ? { data: [] } : await db.from('offline_sales')
+      .update({ ...clearFields, merged_into_sale_id: null })
+      .eq('merged_into_sale_id', id).is('cancelled_at', null).is('delivered_at', null)
+      .select('id');
+
+    return NextResponse.json({ success: true, warning, mergedCleared: freed?.length || 0, unmerged: isMergedChild });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }

@@ -124,6 +124,13 @@ export async function PATCH(
 
       if (updateErr) throw updateErr;
 
+      // 162 합포장: 취소된 판매의 송장에 얹혀 가던 출고 전 판매 → 자기 송장을 다시 만들어야 하므로 송장·표시를 푼다
+      //   (마이그 162 전이면 조용히 무시). 이 판매가 얹힌 쪽이었으면 표시만 해제.
+      await db.from('offline_sales')
+        .update({ invoice_number: null, courier_name: null, shipped_source: null, shipped_notified_at: null, delivery_method: 'pickup', merged_into_sale_id: null })
+        .eq('merged_into_sale_id', id).is('shipped_at', null).is('cancelled_at', null);
+      await db.from('offline_sales').update({ merged_into_sale_id: null }).eq('id', id);
+
       // 077: 회계 자동 연동 — 입금된 금액이 있으면 환불(expense) 기록
       if (sale.paid_amount > 0) {
         try {
@@ -350,34 +357,50 @@ export async function PATCH(
         return NextResponse.json({ error: '이미 출고완료 처리되었습니다 (기사님 수거 자동 감지)' }, { status: 400 });
       }
 
+      // 162 합포장: 이 송장에 얹힌 판매도 같은 박스 → 함께 출고완료 (마이그 162 전이면 조용히 0건)
+      const { data: mergedShipped } = await db
+        .from('offline_sales')
+        .update({ shipped_at: new Date().toISOString(), shipped_source: 'manual' })
+        .eq('merged_into_sale_id', id)
+        .is('shipped_at', null)
+        .is('cancelled_at', null)
+        .select('id, sale_number, invoice_number, customer_name, customer_phone, customer_type, courier_name');
+
       // 선택적 알림톡 발송 (백그라운드) — 109: 자동 경로와 같은 공유 함수 사용
+      //   162: 얹힌 판매도 각자 전화번호로 (원 건과 같은 송장번호)
       if (send_notification) {
+        const targets = [
+          { id, sale_number: sale.sale_number, invoice_number: sale.invoice_number, customer_name: sale.customer_name, customer_phone: sale.customer_phone, customer_type: sale.customer_type, courier_name: sale.courier_name },
+          ...(mergedShipped || []),
+        ];
         after(async () => {
-          try {
-            const sent = await sendSalesShippedNotification(db, {
-              id,
-              saleNumber: sale.sale_number,
-              invoiceNumber: sale.invoice_number,
-              customerName: sale.customer_name,
-              customerPhone: sale.customer_phone,
-              customerType: sale.customer_type,
-              courierName: sale.courier_name,
-            });
-            if (sent.sent) {
-              await db.from('offline_sales')
-                .update({ shipped_notified_at: new Date().toISOString() })
-                .eq('id', id);
-              console.log('[sales mark_shipped notify] 출고 알림톡 발송 성공');
-            } else {
-              console.log(`[sales mark_shipped notify] 미발송 — ${sent.reason} ${sent.error || ''}`);
+          for (const t of targets) {
+            try {
+              const sent = await sendSalesShippedNotification(db, {
+                id: t.id,
+                saleNumber: t.sale_number,
+                invoiceNumber: t.invoice_number,
+                customerName: t.customer_name,
+                customerPhone: t.customer_phone,
+                customerType: t.customer_type,
+                courierName: t.courier_name,
+              });
+              if (sent.sent) {
+                await db.from('offline_sales')
+                  .update({ shipped_notified_at: new Date().toISOString() })
+                  .eq('id', t.id);
+                console.log(`[sales mark_shipped notify] ${t.sale_number} 출고 알림톡 발송 성공`);
+              } else {
+                console.log(`[sales mark_shipped notify] ${t.sale_number} 미발송 — ${sent.reason} ${sent.error || ''}`);
+              }
+            } catch (e) {
+              console.error(`[sales mark_shipped notify] ${t.sale_number} 예외:`, e);
             }
-          } catch (e) {
-            console.error('[sales mark_shipped notify] 예외:', e);
           }
         });
       }
 
-      return NextResponse.json({ success: true, action: 'marked_shipped' });
+      return NextResponse.json({ success: true, action: 'marked_shipped', mergedShipped: mergedShipped?.length || 0 });
     }
 
     // --- D-1) 출고 알림톡 수동 재발송 (2026-07-15) ---

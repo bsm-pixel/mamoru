@@ -9,7 +9,8 @@ import toast from 'react-hot-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useRecordSaleShipment, useMarkSaleShipped, useMarkSaleDelivered, useResendShipNotify, useMarkSalePacked } from '@/hooks/use-sales';
+import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdateSaleMemo, useEditSale, useRebuildSale, useProducts, useShipSale, useCancelSaleShipment, useRecordSaleShipment, useMarkSaleShipped, useMarkSaleDelivered, useResendShipNotify, useMarkSalePacked, useSaleMergeInfo, useMergeSaleShipment } from '@/hooks/use-sales';
+import { Modal } from '@/components/ui/modal';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { CustomerNotes } from '@/components/shared/customer-notes';
 import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
@@ -92,6 +93,11 @@ export function SaleDetailPanel({ saleId }: Props) {
   const markDelivered = useMarkSaleDelivered();
   const resendShipNotify = useResendShipNotify();
   const markPacked = useMarkSalePacked();   // 포장완료(준비완료) 토글 — 2026-07-18
+  // 162 합포장 — 다른 판매의 송장에 같이 보내기
+  const { data: mergeInfo } = useSaleMergeInfo(saleId);
+  const mergeShipment = useMergeSaleShipment();
+  const [showMerge, setShowMerge] = useState(false);
+  const [mergeTarget, setMergeTarget] = useState<string | null>(null);
   const [showPickupConfirm, setShowPickupConfirm] = useState(false);
   // 159: 송장 생성 전 받는 곳 확인 — 등록 주소 / 이번만 다른 주소
   const [shipAddrOpen, setShipAddrOpen] = useState(false);
@@ -173,6 +179,10 @@ export function SaleDetailPanel({ saleId }: Props) {
   const canCreateInvoice = notClosed && !s.invoice_number && !s.delivered_at;
   const canMarkShipped = notClosed && !!s.invoice_number && !s.shipped_at;
   const hasPrimaryAction = showPayDone || canCreateInvoice || canMarkShipped;
+  // 162 합포장 상태
+  const mergedInto = mergeInfo?.mergedInto || null;
+  const mergedChildren = mergeInfo?.mergedChildren || [];
+  const mergeCandidates = mergeInfo?.candidates || [];
 
   return (
     <div className="p-4 space-y-4">
@@ -338,6 +348,13 @@ export function SaleDetailPanel({ saleId }: Props) {
                 <Truck size={14} />
                 {shipSale.isPending ? '송장 생성 중...' : '택배 발송 (송장 생성)'}
               </Button>
+              {/* 162: 출고 전 롯데 송장이 있는 다른 판매가 있을 때만 — 같은 주소가 맨 위 */}
+              {mergeCandidates.length > 0 && (
+                <Button variant="secondary" size="sm" className="w-full" onClick={() => { setMergeTarget(mergeCandidates[0].id); setShowMerge(true); }} disabled={mergeShipment.isPending}>
+                  <Link2 size={14} />
+                  다른 송장에 같이 보내기
+                </Button>
+              )}
               <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPickupConfirm(true)} disabled={markDelivered.isPending}>
                 <Package size={14} />
                 고객 수령 완료
@@ -669,6 +686,19 @@ export function SaleDetailPanel({ saleId }: Props) {
                 <span className="text-sm font-mono font-medium">{s.invoice_number}</span>
                 <span className="text-xs text-neutral-400">{courierLabel(s.courier_name)}</span>
               </div>
+              {/* 162 합포장 표시 — 출고·배송완료·알림톡은 건마다 같은 송장으로 함께 처리된다 */}
+              {mergedInto && (
+                <p className="text-xs text-neutral-600 flex items-start gap-1">
+                  <Link2 size={12} className="mt-0.5 shrink-0 text-neutral-400" />
+                  <span className="break-keep">합포장 · {mergedInto.customer_name}({mergedInto.sale_number}) 송장에 같이 보냅니다. 출고 알림톡은 이 고객에게 따로 갑니다.</span>
+                </p>
+              )}
+              {mergedChildren.length > 0 && (
+                <p className="text-xs text-neutral-600 flex items-start gap-1">
+                  <Link2 size={12} className="mt-0.5 shrink-0 text-neutral-400" />
+                  <span className="break-keep">같이 보내는 판매 {mergedChildren.length}건 · {mergedChildren.map((c) => c.customer_name).join(', ')}</span>
+                </p>
+              )}
               {/* 159: 고객 등록 주소가 아닌 곳으로 보낸 건 — 어디로 갔는지 바로 보이게 */}
               {shipAddr.road && (
                 <p className="text-xs text-neutral-600 flex items-start gap-1">
@@ -747,7 +777,7 @@ export function SaleDetailPanel({ saleId }: Props) {
                   {/* 출고완료는 상단 「다음 할 일」로 이동 */}
                   {/* 150: 확인 모달 경유 — ALPS 집하취소가 먼저라는 순서를 알려준다 */}
                   <DangerLink onClick={() => setShowCancelShipConfirm(true)} disabled={cancelShipment.isPending}>
-                    {cancelShipment.isPending ? '취소 중...' : '송장 취소 (기록 지우기)'}
+                    {cancelShipment.isPending ? '취소 중...' : mergedInto ? '합포장 해제' : '송장 취소 (기록 지우기)'}
                   </DangerLink>
                 </>
               )}
@@ -860,8 +890,14 @@ export function SaleDetailPanel({ saleId }: Props) {
         open={showCancelShipConfirm}
         onClose={() => setShowCancelShipConfirm(false)}
         onConfirm={() => { cancelShipment.mutate(saleId); setShowCancelShipConfirm(false); }}
-        title="송장 취소"
-        message={
+        title={mergedInto ? '합포장 해제' : '송장 취소'}
+        message={mergedInto ? (
+          /* 162: 얹힌 건 — ALPS 는 건드리지 않는다(원 송장은 살아 있음) */
+          <div className="space-y-2">
+            <p>{mergedInto.customer_name}({mergedInto.sale_number}) 송장과의 합포장을 풉니다.</p>
+            <p className="text-xs text-neutral-500">이 판매는 송장 없는 상태로 돌아가고, {mergedInto.customer_name} 송장은 그대로입니다. 판매·매출·재고는 그대로입니다.</p>
+          </div>
+        ) : (
           <div className="space-y-2">
             <p>
               송장 <strong className="font-mono">{(s as Record<string, unknown>).invoice_number as string}</strong>
@@ -869,11 +905,51 @@ export function SaleDetailPanel({ saleId }: Props) {
             </p>
             <p className="text-xs text-red-500">먼저 롯데 ALPS 에서 집하취소를 완료해주세요. TMS 는 송장 기록만 정리합니다.</p>
             <p className="text-xs text-neutral-500">판매·매출·재고는 그대로입니다. 취소 후 다른 택배사로 다시 발송할 수 있습니다.</p>
+            {mergedChildren.length > 0 && (
+              <p className="text-xs text-amber-700">이 송장에 같이 보내던 {mergedChildren.length}건({mergedChildren.map((c) => c.customer_name).join(', ')})의 송장도 함께 지워집니다.</p>
+            )}
           </div>
-        }
-        confirmLabel="송장 취소"
+        )}
+        confirmLabel={mergedInto ? '합포장 해제' : '송장 취소'}
         variant="danger"
       />
+
+      {/* 162 합포장 — 다른 판매의 송장에 같이 보내기 */}
+      <Modal open={showMerge} onClose={() => setShowMerge(false)} title="다른 송장에 같이 보내기" className="max-w-md">
+        <div className="space-y-3">
+          <p className="text-sm text-neutral-600">새 송장을 만들지 않고, 고른 판매의 송장 박스에 같이 넣어 보냅니다.</p>
+          <div className="space-y-1.5 max-h-72 overflow-y-auto">
+            {mergeCandidates.map((c) => (
+              <label key={c.id}
+                className={`flex items-start gap-2 rounded-lg border px-3 py-2 cursor-pointer transition ${mergeTarget === c.id ? 'border-neutral-900 bg-neutral-50' : 'border-neutral-200 hover:bg-neutral-50'}`}>
+                <input type="radio" name="merge-target" className="mt-1" checked={mergeTarget === c.id} onChange={() => setMergeTarget(c.id)} />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm font-semibold text-neutral-900">{c.customer_name}</span>
+                    <span className="text-[11px] text-neutral-400">{c.sale_number}</span>
+                    {c.same_address && <Badge className="bg-neutral-900 text-white">같은 주소</Badge>}
+                    {!c.same_address && c.same_customer && <Badge className="bg-neutral-100 text-neutral-600">같은 고객</Badge>}
+                    {c.shipped_at && <Badge className="bg-neutral-100 text-neutral-500">이미 출고</Badge>}
+                  </span>
+                  <span className="block text-xs font-mono text-neutral-500">{c.invoice_number}</span>
+                  {c.address && <span className="block text-xs text-neutral-500 break-keep">{c.address}</span>}
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-600 space-y-0.5">
+            <p>· 기사님이 수거하면 이 판매도 함께 출고완료되고, <b>{s.customer_name}</b>님에게 출고 알림톡이 따로 갑니다.</p>
+            <p>· 택배 받는 분은 고른 판매의 고객으로 표시됩니다.</p>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="ghost" size="sm" onClick={() => setShowMerge(false)}>취소</Button>
+            <Button size="sm" disabled={!mergeTarget || mergeShipment.isPending}
+              onClick={() => mergeTarget && mergeShipment.mutate({ id: saleId, target_id: mergeTarget }, { onSuccess: () => setShowMerge(false) })}>
+              {mergeShipment.isPending ? '처리 중...' : '같이 보내기'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* 고객 수령 완료 확인 모달 */}
       <ConfirmModal
