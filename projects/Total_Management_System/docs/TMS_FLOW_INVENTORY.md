@@ -1,7 +1,20 @@
 # 상품·재고·매입 프로세스 흐름도
-> 최종 업데이트: 2026-05-13 — 매입(발주→입고) 흐름 보강: 결제·입고 독립화 + 입고검수(실수령 수량) + 입고 전 발주 편집
+> 최종 업데이트: 2026-10-14 — 반품창고 재판매/불량 처리
 
 ---
+
+## 2026-10-14 — 반품창고 → 재판매 / 불량 (`/api/inventory/return-release`)
+```
+반품·교환 회수품 → 반품창고 (시리얼: status=returned·zone=return / 비시리얼: products.return_stock)
+  · 현재고(stock_quantity)·아임웹 미포함, 판매 입력 시리얼 목록(ready·display in_stock만)에 안 뜸
+제품 상세 「반품창고 · 검수 대기」 카드 (components/inventory/return-stock-card.tsx)
+  [재판매] 시리얼 → in_stock + 판매대기/진열, stock_quantity +1 (raw 불변)
+           비시리얼 → return_stock −1, raw_stock +1, stock_quantity +1
+           공통 → 아임웹 +1 (updateImwebStock), stock_adjustments(type=return, +1)
+  [불량]   시리얼 → status=defective / 비시리얼 → return_stock −1. 재고·아임웹 변화 0, stock_adjustments(type=damage, 0)
+```
+- 시리얼 갱신은 `status='returned'` 조건부(중복 클릭 409). 이력은 DB 트리거 audit log 자동.
+- 🚨 판매 입력에서 반품 시리얼을 직접입력하면 raw_stock 이 −1 돼 드리프트 → 반드시 [재판매] 먼저.
 
 ## 2026-05-13 — 매입(발주 → 입고) 흐름 (현행)
 

@@ -16,6 +16,7 @@ import { Save, Package, Hash, X, Plus, Archive, Copy, Eye, EyeOff, Trash2, Arrow
 import toast from 'react-hot-toast';
 import { LabelPrintModal } from '@/components/labels/label-print-modal';
 import { StockImageManager } from '@/components/products/stock-image-manager';
+import { ReturnStockCard } from '@/components/inventory/return-stock-card';
 import { useLabelTemplate } from '@/hooks/use-label-templates';
 
 import { useSetting } from '@/hooks/use-settings';
@@ -739,6 +740,9 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               </div>
             </Card>
           )}
+
+          {/* 반품창고 — 검수 후 재판매/불량 (비어 있으면 숨김) */}
+          <ReturnStockCard productId={productId!} />
 
           {/* 퀵 액션 */}
           <Card>
