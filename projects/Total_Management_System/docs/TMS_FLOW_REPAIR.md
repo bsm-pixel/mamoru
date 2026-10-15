@@ -17,6 +17,24 @@
 - 요약(`inspection-text.ts`): 플래그(장력·밸런스·날각)는 "N곳" 집계 제외, 가위별 요약엔 짧은 라벨로
 - 다음(P2~P4): 가위 종류별 그림체 + 부위 카탈로그 체크 → 고객 페이지 사진1장+그림체+번호 안내, 가위간 스와이프
 
+## 2026-10-15 — 수리내역서 v3 (그림체 상처 맵 + 확대 사진) — 163
+
+```
+검수 폼 (액션카드 [수리내역서 작성])
+ ├ 가위 사진 1장: CameraCapture(square·hiRes) → compressImage 1:1 1080 WebP(불가 시 JPEG)
+ ├ 확대 사진 0~3장: 갤러리 다중 선택(현미경 앱 촬영분) → 긴 변 1080
+ ├ 상처 칩 체크 → diagram_marks (체크 id 배열) · 그림 미리보기 = 고객 화면과 동일 규칙
+ └ 추가 안내(선택) → comment
+ → POST /api/repair/[id]/inspect (normalizeChecks, zoom_photos ≤3)
+ → GET /api/repair/report: v3·diagram·layers·views·wounds 를 서버에서 계산 (문구 SSOT=wound-catalog)
+ → page_as_report.html: v3 가위 있으면 스와이프 + 그림(체크 칸만) + 색 네모 목록 + 확대 사진 전체화면
+```
+- 항목·문구·색 SSOT: `lib/repair/wound-catalog.ts`. 그림: `projects/as/img/diagram/{blunt,thinning,long,slicing}.svg` (+`-blade/-handle.webp`). 기타=블런트 그림
+- 그림 로더: `lib/repair/diagram-loader.ts` ↔ page_as_report.html 순수 JS 사본 (수정 시 동기화). 이미지는 data URL 로 박아 html2canvas 저장에도 나옴
+- `diagram_marks` NULL = 구 사진핀 내역서 → 고객 화면·수정 모두 기존 그대로. 체크해야 v3 로 전환
+- 그림 없는 종류 = 그림 칸 없이 목록만. 준비표 3곳 = `inspectionNote()` 공용
+- 미사용 핀 코드 제거: inspection-mark-board · mark-overlay · ment-linkage
+
 ## 2026-10-13 — 은행 입금 알림 → 입금확인 자동 (161)
 ```
 우리WON뱅킹 푸시 「[입금] 민세영 220,000원 …계좌 10/13 14:52:18」 (사장님 안드로이드)
