@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수리내역서 v3 시안 — 그림체 상처 맵</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+<style>
+  /* 시안 전용 — 확정 후 page_as_report.html 가위 카드 영역만 교체 (헤더·비용·저장 기존 유지) */
+  :root {
+    --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580;
+    --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; --shell:#F5F3F0;
+    --cream:#FAF9F7; --white:#FFFFFF;
+    --font-display:'Outfit',sans-serif;
+    --font-body:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    /* 상처 표시색 = 피그마 원본(blunt.svg) 그대로 — 정보 전달용 예외 */
+    --mk-dull:#CE4545; --mk-nick:#F08A24; --mk-tension:#2F80ED; --mk-part:#9B3FE0;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family:var(--font-body); background:var(--cream); color:var(--void); line-height:1.5; -webkit-font-smoothing:antialiased; }
+
+  /* ── 시안 래퍼 ── */
+  .lab { max-width:1100px; margin:0 auto; padding:40px 20px 80px; }
+  .lab-head { margin-bottom:32px; }
+  .lab-head small { font-family:var(--font-display); font-size:11px; letter-spacing:.18em; color:var(--warm-gray); }
+  .lab-head h1 { font-size:clamp(22px,5vw,30px); font-weight:800; letter-spacing:-.02em; margin-top:6px; }
+  .lab-head p { font-size:14px; color:var(--stone); margin-top:8px; }
+  .lab-grid { display:grid; grid-template-columns:minmax(0,1fr) 375px; gap:40px; align-items:start; }
+  .lab-grid > section { min-width:0; } /* 캐러셀 트랙이 그리드 칸을 밀어내 가로 스크롤 나던 것 방지 */
+  @media (max-width:860px) { .lab-grid { grid-template-columns:minmax(0,1fr); } }
+  .col-label { font-family:var(--font-display); font-size:11px; font-weight:700; letter-spacing:.16em; color:var(--warm-gray); margin-bottom:12px; }
+
+  /* ── ① TMS 체크 (시뮬레이션) ── */
+  .tms { background:var(--white); border:1px solid var(--parchment); border-radius:4px; padding:20px; }
+  .tms-tabs { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
+  .tms-tab { border:1px solid var(--sand); background:var(--white); color:var(--stone); font:600 13px var(--font-body); padding:8px 14px; border-radius:4px; cursor:pointer; }
+  .tms-tab.on { background:var(--void); border-color:var(--void); color:var(--cream); }
+  .tms-group + .tms-group { margin-top:20px; padding-top:20px; border-top:1px solid var(--parchment); }
+  .tms-group h3 { font-size:12px; font-weight:700; color:var(--warm-gray); margin-bottom:10px; }
+  .tms-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .tms-row + .tms-row { margin-top:8px; }
+  .tms-row > span { width:64px; font-size:13px; font-weight:600; flex-shrink:0; display:flex; align-items:center; gap:6px; }
+  .tms-chip { border:1px solid var(--sand); background:var(--white); color:var(--stone); font:500 13px var(--font-body); padding:7px 12px; border-radius:4px; cursor:pointer; min-height:36px; }
+  .tms-chip.on { background:var(--void); border-color:var(--void); color:var(--white); }
+  .sw { width:10px; height:10px; border-radius:2px; display:inline-block; flex-shrink:0; }
+  .tms-note { font-size:12px; color:var(--warm-gray); margin-top:20px; line-height:1.6; }
+
+  /* ── ② 고객 화면 — 폰 프레임 ── */
+  .phone { width:100%; max-width:375px; background:var(--white); border:1px solid var(--sand); border-radius:4px; overflow:hidden; }
+  .phone-top { background:var(--void); color:var(--cream); padding:14px 20px; font-size:12px; text-align:center; opacity:.95; }
+
+  /* 가위 캐러셀 (page_guide.html intro-ba 패턴 동일: scroll-snap) */
+  .mm-sc-head { display:flex; align-items:baseline; justify-content:space-between; padding:28px 20px 0; }
+  .mm-sc-head h2 { font-size:15px; font-weight:700; }
+  .mm-sc-hint { font-size:11px; color:var(--warm-gray); }
+  /* 슬라이드마다 높이가 달라(상처 수) 가장 긴 슬라이드에 맞춰 빈칸 생기던 것 → 현재 슬라이드 높이로 트랙 맞춤 */
+  .mm-sc-track { display:flex; align-items:flex-start; overflow-x:auto; overflow-y:hidden; transition:height .25s ease; scroll-snap-type:x mandatory; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  .mm-sc-track::-webkit-scrollbar { display:none; }
+  .mm-sc-slide { flex:0 0 100%; scroll-snap-align:start; padding:16px 20px 8px; }
+
+  .mm-sc-index { display:flex; align-items:baseline; gap:10px; margin-bottom:14px; }
+  .mm-sc-index b { font-family:var(--font-display); font-size:40px; font-weight:900; line-height:1; letter-spacing:-.02em; }
+  .mm-sc-index i { font-style:normal; font-family:var(--font-display); font-size:14px; font-weight:700; color:var(--mist); }
+  .mm-sc-index span { margin-left:auto; font-size:13px; font-weight:600; color:var(--stone); }
+
+  .mm-sc-photo { width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:4px; display:block; background:var(--shell); }
+  .mm-sc-label { font-size:11px; font-weight:700; color:var(--warm-gray); letter-spacing:.04em; margin:20px 0 8px; }
+  .mm-sc-fig { background:var(--white); border:1px solid var(--parchment); border-radius:4px; overflow:hidden; }
+  .mm-sc-fig + .mm-sc-fig { margin-top:8px; }
+  .mm-sc-fig svg { display:block; width:100%; height:auto; }
+
+  .mm-sc-list { list-style:none; margin-top:16px; }
+  .mm-sc-list li { display:flex; gap:10px; padding:12px 0; border-top:1px solid var(--parchment); }
+  .mm-sc-list li:last-child { border-bottom:1px solid var(--parchment); }
+  .mm-sc-list .sw { margin-top:5px; }
+  .mm-sc-list b { display:block; font-size:14px; font-weight:700; }
+  .mm-sc-list small { display:block; font-size:13px; color:var(--stone); margin-top:2px; }
+  .mm-sc-ok { margin-top:20px; padding:20px; background:var(--shell); border-radius:4px; font-size:14px; color:var(--stone); text-align:center; }
+
+  .mm-sc-nav { display:flex; align-items:center; justify-content:center; gap:16px; padding:12px 20px 28px; }
+  .mm-sc-nav button { width:44px; height:44px; border:1px solid var(--sand); background:var(--white); border-radius:50%; font-size:16px; color:var(--stone); cursor:pointer; }
+  .mm-sc-nav button:disabled { opacity:.3; cursor:default; }
+  .mm-sc-dots { display:flex; gap:6px; }
+  .mm-sc-dots i { width:6px; height:6px; border-radius:50%; background:var(--sand); transition:all .2s; }
+  .mm-sc-dots i.on { width:18px; border-radius:3px; background:var(--void); }
+  .phone-rest { background:var(--shell); padding:16px 20px; font-size:12px; color:var(--warm-gray); text-align:center; }
+</style>
+</head>
+<body>
+<div class="lab">
+  <div class="lab-head">
+    <small>DESIGN LAB · AS REPORT v3</small>
+    <h1>수리내역서 — 그림체 상처 맵</h1>
+    <p>왼쪽에서 체크하면 오른쪽 고객 화면에 바로 반영됩니다. 그림은 블런트만 준비돼 있어 3자루 모두 블런트로 표시합니다.</p>
+  </div>
+
+  <div class="lab-grid">
+    <section>
+      <div class="col-label">① TMS 검수 — 체크만</div>
+      <div class="tms">
+        <div class="tms-tabs" id="tmsTabs"></div>
+        <div id="tmsBody"></div>
+        <p class="tms-note">· 같은 줄의 칩을 여러 개 고르면 고객 목록에서 한 줄로 합쳐집니다 (예: 날끝+중앙 → "날끝~중앙 무뎌짐").<br>· 날 쪽 체크가 없으면 날 그림, 핸들 쪽 체크가 없으면 핸들 그림은 고객 화면에서 숨겨집니다.<br>· 아무것도 체크하지 않으면 "양호"로 표시됩니다.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="col-label">② 고객 화면 — 375px</div>
+      <div class="phone">
+        <div class="phone-top">기존 헤더 (MAMORU · 접수번호 · 고객명) 유지</div>
+        <div class="mm-sc-head"><h2>가위별 복원 내역</h2><span class="mm-sc-hint" id="scHint">옆으로 밀어 다음 가위 보기 →</span></div>
+        <div class="mm-sc-track" id="scTrack"></div>
+        <div class="mm-sc-nav"><button id="scPrev" aria-label="이전 가위">←</button><div class="mm-sc-dots" id="scDots"></div><button id="scNext" aria-label="다음 가위">→</button></div>
+        <div class="phone-rest">비용 · 추가 안내 · 이미지 저장 영역 (기존 유지)</div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ── 그림체 원본 (피그마 export → 이미지 분리 경량화). 실서비스는 diagram/{type}.svg 를 fetch ──
+  var BLUNT_SVG = '<svg viewBox="0 0 1200 1700" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">'
+    + '<g clip-path="url(#ch__S)"><rect opacity="0.6" x="-198" y="646.764" width="1230.29" height="1230.29" transform="rotate(-11.333 -198 646.764)" fill="url(#ph__S)"/></g>'
+    + '<g clip-path="url(#cb__S)"><rect opacity="0.6" x="23" y="-113" width="1102" height="1104" fill="url(#pb__S)"/></g>'
+    + '<path data-z="z-root-dull" d="M622.5 497L841 529" stroke="#CE4545" stroke-width="15" stroke-linecap="round"/>'
+    + '<path data-z="z-mid-dull" d="M401 469C492.102 477.915 542.125 486.388 620.5 497" stroke="#CE4545" stroke-width="15" stroke-linecap="round"/>'
+    + '<path data-z="z-tip-dull" d="M172 447L401 469" stroke="#CE4545" stroke-width="15" stroke-linecap="round"/>'
+    + '<path data-z="z-tip-nick" d="M287 168L337 218M337 168L287 218" stroke="#F08A24" stroke-width="15" stroke-linecap="round"/>'
+    + '<path data-z="z-mid-nick" d="M461 317L511 367M511 317L461 367" stroke="#F08A24" stroke-width="15" stroke-linecap="round"/>'
+    + '<path data-z="z-root-nick" d="M641 458L691 508M691 458L641 508" stroke="#F08A24" stroke-width="15" stroke-linecap="round"/>'
+    + '<circle data-z="z-pivot-tension" cx="366.34" cy="1037.34" r="112.5" stroke="#2F80ED" stroke-width="15" stroke-dasharray="10 10"/>'
+    + '<circle data-z="z-part-worn" cx="369.34" cy="1037.34" r="67.5" stroke="#9A3FE0" stroke-width="15"/>'
+    + '<circle data-z="z-stopper" cx="723.34" cy="1413.34" r="53.5" stroke="#9B3FE0" stroke-width="15"/>'
+    + '<defs>'
+    + '<pattern id="ph__S" patternContentUnits="objectBoundingBox" width="1" height="1"><use xlink:href="#ih__S" transform="scale(0.000797448)"/></pattern>'
+    + '<pattern id="pb__S" patternContentUnits="objectBoundingBox" width="1" height="1"><use xlink:href="#ib__S" transform="matrix(0.00118558 0 0 0.00118343 -0.000314651 0)"/></pattern>'
+    + '<clipPath id="ch__S"><rect width="1000" height="720" transform="translate(100 880)"/></clipPath>'
+    + '<clipPath id="cb__S"><rect width="1000" height="720" transform="translate(100 100)"/></clipPath>'
+    + '<image id="ih__S" width="1254" height="1254" preserveAspectRatio="none" xlink:href="diagram/blunt-handle.webp"/>'
+    + '<image id="ib__S" width="844" height="845" preserveAspectRatio="none" xlink:href="diagram/blunt-blade.webp"/>'
+    + '</defs></svg>';
+
+  // 칸(view) = 피그마 clipPath 영역. 체크된 표시가 있는 칸만 고객에게 보인다
+  var VIEWS = { blade: '100 100 1000 720', handle: '100 880 1000 720' };
+
+  // ── 상처 카탈로그 (실서비스: lib/repair/wound-catalog.ts 로 이동 — TMS·고객 공용) ──
+  var SEG = ['tip', 'mid', 'root'];
+  var SEG_KO = { tip: '날끝', mid: '중앙', root: '뿌리' };
+  var KINDS = [
+    { key: 'dull', view: 'blade', ko: '무뎌짐', color: 'var(--mk-dull)', segs: true, desc: '무뎌진 날을 경계선까지 연마해 복원했습니다' },
+    { key: 'nick', view: 'blade', ko: '찍힘', color: 'var(--mk-nick)', segs: true, desc: '찍힌 상처를 경계선까지 다듬어 복원했습니다' },
+    { key: 'pivot-tension', view: 'handle', ko: '장력 헐거움', color: 'var(--mk-tension)', desc: '헐거워진 장력을 맞춰 조정했습니다' },
+    { key: 'part-worn', view: 'handle', ko: '부품 노후', color: 'var(--mk-part)', desc: '노후된 부품을 새 부품으로 교체했습니다' },
+    { key: 'stopper', view: 'handle', ko: '스토퍼 노후', color: 'var(--mk-part)', desc: '닳은 스토퍼를 새 스토퍼로 교체했습니다' },
+  ];
+  function layerIds(kind) { return kind.segs ? SEG.map(function (s) { return 'z-' + s + '-' + kind.key; }) : ['z-' + kind.key]; }
+
+  // 구간 문구 합치기: 연속=물결(~), 떨어짐=가운뎃점(·), 셋 다 = 날 전체
+  function segText(on, kind) {
+    var idx = SEG.map(function (s, i) { return on.indexOf('z-' + s + '-' + kind.key) >= 0 ? i : -1; }).filter(function (i) { return i >= 0; });
+    if (!idx.length) return null;
+    if (idx.length === 3) return '날 전체';
+    var names = idx.map(function (i) { return SEG_KO[SEG[i]]; });
+    // 찍힘은 점 상처라 범위(~)가 아닌 나열
+    if (kind.key === 'dull' && idx.length === 2 && idx[1] - idx[0] === 1) return names[0] + '~' + names[1];
+    return names.join('·');
+  }
+
+  // 데모 데이터 — 3자루
+  var PHOTOS = ['../as/images/복원전1.jpg', '../as/images/복원전2.jpg', '../as/images/복원전3.jpg'];
+  var scissors = [
+    { type: '블런트', on: ['z-tip-dull', 'z-mid-dull', 'z-root-nick', 'z-pivot-tension'] },
+    { type: '블런트', on: ['z-part-worn', 'z-stopper'] },
+    { type: '블런트', on: [] },
+  ];
+  var active = 0;
+
+  function svgFor(view, on, uid) {
+    var s = BLUNT_SVG.replace(/__S/g, '_' + uid).replace('viewBox="0 0 1200 1700"', 'viewBox="' + VIEWS[view] + '"');
+    return s.replace(/data-z="([^"]+)"/g, function (m, id) { return m + (on.indexOf(id) >= 0 ? '' : ' display="none"'); });
+  }
+
+  function legend(on) {
+    var rows = [];
+    KINDS.forEach(function (k) {
+      var title = k.segs ? (segText(on, k) && segText(on, k) + ' ' + k.ko) : (on.indexOf('z-' + k.key) >= 0 ? k.ko : null);
+      if (title) rows.push('<li><i class="sw" style="background:' + k.color + '"></i><div><b>' + title + '</b><small>' + k.desc + '</small></div></li>');
+    });
+    return rows;
+  }
+
+  // ── 고객 화면 렌더 ──
+  var track = document.getElementById('scTrack'), dots = document.getElementById('scDots');
+  function renderCustomer() {
+    var keep = track.scrollLeft;
+    track.innerHTML = scissors.map(function (sc, n) {
+      var hasView = function (v) { return KINDS.some(function (k) { return k.view === v && layerIds(k).some(function (id) { return sc.on.indexOf(id) >= 0; }); }); };
+      var figs = ['blade', 'handle'].filter(hasView).map(function (v) { return '<div class="mm-sc-fig">' + svgFor(v, sc.on, n + v) + '</div>'; }).join('');
+      var rows = legend(sc.on);
+      var num = ('0' + (n + 1)).slice(-2);
+      return '<article class="mm-sc-slide">'
+        + '<div class="mm-sc-index"><b>' + num + '</b><i>/ ' + ('0' + scissors.length).slice(-2) + '</i><span>' + sc.type + '</span></div>'
+        + '<img class="mm-sc-photo" src="' + PHOTOS[n % PHOTOS.length] + '" alt="' + (n + 1) + '번 가위 사진">'
+        + (rows.length
+            ? '<div class="mm-sc-label">상처 위치</div>' + figs + '<ul class="mm-sc-list">' + rows.join('') + '</ul>'
+            : '<div class="mm-sc-ok">특별한 상처 없이 양호한 상태였습니다.<br>기본 연마와 점검을 마쳤습니다.</div>')
+        + '</article>';
+    }).join('');
+    dots.innerHTML = scissors.map(function () { return '<i></i>'; }).join('');
+    document.getElementById('scHint').style.display = scissors.length > 1 ? '' : 'none';
+    track.scrollLeft = keep;
+    // 사진·그림이 늦게 로드되면 슬라이드 높이가 바뀜 → 다시 맞춤
+    Array.prototype.forEach.call(track.querySelectorAll('img, image'), function (el) { el.addEventListener('load', syncNav); });
+    syncNav();
+  }
+  function cur() { return Math.round(track.scrollLeft / track.clientWidth); }
+  function syncNav() {
+    var c = cur();
+    var slide = track.children[c];
+    if (slide) track.style.height = slide.offsetHeight + 'px';
+    Array.prototype.forEach.call(dots.children, function (d, i) { d.className = i === c ? 'on' : ''; });
+    document.getElementById('scPrev').disabled = c === 0;
+    document.getElementById('scNext').disabled = c === scissors.length - 1;
+  }
+  var raf = 0;
+  track.addEventListener('scroll', function () { cancelAnimationFrame(raf); raf = requestAnimationFrame(syncNav); }, { passive: true });
+  function go(d) { track.scrollTo({ left: (cur() + d) * track.clientWidth, behavior: 'smooth' }); }
+  document.getElementById('scPrev').onclick = function () { go(-1); };
+  document.getElementById('scNext').onclick = function () { go(1); };
+
+  // ── TMS 체크 패널 ──
+  function renderTms() {
+    document.getElementById('tmsTabs').innerHTML = scissors.map(function (sc, n) {
+      return '<button class="tms-tab' + (n === active ? ' on' : '') + '" data-tab="' + n + '">#' + (n + 1) + ' ' + sc.type + '</button>';
+    }).join('');
+    var on = scissors[active].on;
+    var chip = function (id, label) { return '<button class="tms-chip' + (on.indexOf(id) >= 0 ? ' on' : '') + '" data-id="' + id + '">' + label + '</button>'; };
+    var html = '<div class="tms-group"><h3>날</h3>';
+    KINDS.filter(function (k) { return k.segs; }).forEach(function (k) {
+      html += '<div class="tms-row"><span><i class="sw" style="background:' + k.color + '"></i>' + k.ko + '</span>'
+        + SEG.map(function (s) { return chip('z-' + s + '-' + k.key, SEG_KO[s]); }).join('') + '</div>';
+    });
+    html += '</div><div class="tms-group"><h3>핸들 · 볼트</h3><div class="tms-row">';
+    KINDS.filter(function (k) { return !k.segs; }).forEach(function (k) {
+      html += chip('z-' + k.key, '<i class="sw" style="background:' + k.color + ';margin-right:6px"></i>' + k.ko);
+    });
+    document.getElementById('tmsBody').innerHTML = html + '</div></div>';
+  }
+  document.querySelector('.tms').addEventListener('click', function (e) {
+    var t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.tab) {
+      active = +t.dataset.tab;
+      track.scrollTo({ left: active * track.clientWidth, behavior: 'smooth' });
+    } else if (t.dataset.id) {
+      var on = scissors[active].on, i = on.indexOf(t.dataset.id);
+      if (i >= 0) on.splice(i, 1); else on.push(t.dataset.id);
+      renderCustomer();
+    }
+    renderTms();
+  });
+
+  renderTms();
+  renderCustomer();
+})();
+</script>
+</body>
+</html>
