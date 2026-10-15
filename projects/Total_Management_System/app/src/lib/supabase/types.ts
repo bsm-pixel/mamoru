@@ -593,6 +593,8 @@ export interface Database {
           photo_url: string | null;
           photo_marks: Array<{ label: string; x?: number; y?: number; x2?: number; y2?: number; flag?: boolean }> | null;
           comment: string | null;  // 097: 가위별 진단 및 내역
+          diagram_marks: string[] | null;  // 163: v3 그림체 체크 id (NULL=v2 사진핀 내역서)
+          zoom_photos: string[];  // 163: 확대 사진 URL 0~3장
           worker: string;
           created_at: string;
         };
@@ -610,6 +612,8 @@ export interface Database {
           photo_url?: string | null;
           photo_marks?: Array<{ label: string; x?: number; y?: number; x2?: number; y2?: number; flag?: boolean }> | null;
           comment?: string | null;
+          diagram_marks?: string[] | null;
+          zoom_photos?: string[];
           worker?: string;
         };
         Update: {
@@ -625,6 +629,8 @@ export interface Database {
           photo_url?: string | null;
           photo_marks?: Array<{ label: string; x?: number; y?: number; x2?: number; y2?: number; flag?: boolean }> | null;
           comment?: string | null;
+          diagram_marks?: string[] | null;
+          zoom_photos?: string[];
           worker?: string;
         };
       };

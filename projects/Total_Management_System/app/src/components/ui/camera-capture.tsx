@@ -15,9 +15,13 @@ interface Props {
   open: boolean;
   onCapture: (file: File) => void;
   onClose: () => void;
+  /** 1:1 미리보기 — 화면에 보이는 정사각 영역 = 저장될 영역(가운데 기준). 실제 자르기는 업로드 쪽 compressImage({square}) */
+  square?: boolean;
+  /** 고해상도 요청 — 미지정 시 브라우저 기본(대개 640×480)이라 흐릿함. 수리내역서 가위 사진용 */
+  hiRes?: boolean;
 }
 
-export function CameraCapture({ open, onCapture, onClose }: Props) {
+export function CameraCapture({ open, onCapture, onClose, square = false, hiRes = false }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -42,7 +46,9 @@ export function CameraCapture({ open, onCapture, onClose }: Props) {
       }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } },
+          video: hiRes
+            ? { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } }
+            : { facingMode: { ideal: 'environment' } },
           audio: false,
         });
         if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
@@ -62,7 +68,7 @@ export function CameraCapture({ open, onCapture, onClose }: Props) {
     })();
 
     return () => { cancelled = true; stopStream(); };
-  }, [open]);
+  }, [open, hiRes]);
 
   if (!open) return null;
 
@@ -101,8 +107,13 @@ export function CameraCapture({ open, onCapture, onClose }: Props) {
         {status === 'init' && (
           <div className="text-white/70 flex flex-col items-center gap-2"><Loader2 size={28} className="animate-spin" /><span className="text-sm">카메라 여는 중…</span></div>
         )}
+        {/* square: 정사각 틀 + cover → 가운데 잘림 영역이 저장 영역과 같다 */}
         <video ref={videoRef} playsInline muted
-          className={`max-h-full max-w-full ${status === 'live' ? 'block' : 'hidden'}`} style={{ objectFit: 'contain' }} />
+          className={`${square ? 'w-[min(100vw,calc(100vh-180px))] aspect-square' : 'max-h-full max-w-full'} ${status === 'live' ? 'block' : 'hidden'}`}
+          style={{ objectFit: square ? 'cover' : 'contain' }} />
+        {square && status === 'live' && (
+          <p className="absolute bottom-3 inset-x-0 text-center text-xs text-white/70 pointer-events-none">가위 전체가 정사각 안에 들어오게 찍어주세요</p>
+        )}
         {status === 'fallback' && (
           <div className="text-center text-white/80 px-6">
             <Camera size={36} className="mx-auto mb-3 opacity-60" />
