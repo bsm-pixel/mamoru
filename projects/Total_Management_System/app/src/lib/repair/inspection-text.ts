@@ -6,22 +6,30 @@
  */
 
 import type { RepairInspection } from '@/lib/supabase/types';
+import { FLAG_TYPES } from '@/components/repairs/inspection-marks';
 
-type Mark = { x: number; y: number; label: string };
+type Mark = { x?: number; y?: number; label: string; flag?: boolean };
 
+// 2026-10-15: 플래그(장력·밸런스·날각 — 위치 없음, label=긴 안내문)는 "N곳" 집계 대상이 아니다
+//   (전엔 "장력이 헐거운 상태 - 조절 필요 1곳"처럼 TMS 요약·고객 work_summary에 섞여 나왔다)
 function marksOf(insp: RepairInspection): Mark[] {
-  return (insp.photo_marks as Mark[] | null) || [];
+  return ((insp.photo_marks as Mark[] | null) || []).filter((m) => !m.flag);
 }
 
 /** 가위 한 자루 요약 — 핀 라벨별 개수 (예: "무뎌짐 2 · 찍힘") */
 export function getScissorSummary(insp: RepairInspection): string {
   const marks = marksOf(insp);
-  if (marks.length === 0) return '표시 없음';
+  // 플래그는 개수 없이 짧은 라벨로 덧붙인다 (저장값=긴 note → FLAG_TYPES 로 짧은 라벨 역매핑)
+  const flags = ((insp.photo_marks as Mark[] | null) || [])
+    .filter((m) => m.flag)
+    .map((m) => FLAG_TYPES.find((f) => f.note === m.label)?.label || m.label);
+  if (marks.length === 0 && flags.length === 0) return '표시 없음';
   const counts: Record<string, number> = {};
   for (const m of marks) counts[m.label] = (counts[m.label] || 0) + 1;
-  return Object.entries(counts)
-    .map(([label, n]) => (n > 1 ? `${label} ${n}` : label))
-    .join(' · ');
+  return [
+    ...Object.entries(counts).map(([label, n]) => (n > 1 ? `${label} ${n}` : label)),
+    ...flags,
+  ].join(' · ');
 }
 
 /** 종합 자동 문구 — 전체 핀 라벨 집계 (예: "무뎌짐 3곳 · 찍힘 1곳 복원") */

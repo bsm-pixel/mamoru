@@ -24,8 +24,12 @@ export async function POST(
       return NextResponse.json({ error: 'inspections 배열 필수' }, { status: 400 });
     }
 
-    // 기존 검수 데이터 삭제 후 재삽입 (전체 교체 방식)
-    await db.from('repair_inspections').delete().eq('repair_id', id);
+    // 전체 교체 방식 — 2026-10-15: "삭제 후 삽입"은 삽입 실패 시 기존 내역서가 통째로 사라졌다.
+    //   → 기존 행 id를 먼저 잡고, 새 행 삽입이 성공한 뒤에만 기존 행을 지운다 (실패 시 기존 보존)
+    const { data: oldRows, error: oldErr } = await db
+      .from('repair_inspections').select('id').eq('repair_id', id);
+    if (oldErr) throw oldErr;
+    const oldIds: string[] = (oldRows || []).map((r: { id: string }) => r.id);
 
     const rows = inspections.map((insp: Record<string, unknown>) => ({
       repair_id: id,
@@ -50,6 +54,11 @@ export async function POST(
       .select();
 
     if (error) throw error;
+
+    if (oldIds.length > 0) {
+      const { error: delErr } = await db.from('repair_inspections').delete().in('id', oldIds);
+      if (delErr) throw delErr;
+    }
 
     return NextResponse.json({ inspections: data });
   } catch (err) {

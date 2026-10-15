@@ -4,16 +4,13 @@ import { useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RepairStatusBadge } from './repair-status-badge';
 import { RepairDetailCard } from './repair-detail-card';
-import { InspectionForm } from './inspection-form';
 import { InspectionSummary } from './inspection-summary';
 import { SidebarActionCard } from './sidebar-action-card';
 import { RepairTimeline } from './repair-timeline';
 import { StatusStepper } from '@/components/ui/status-stepper';
 import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
 import { ReviewManagementCard } from '@/components/reviews/review-management-card';
-import { Modal } from '@/components/ui/modal';
-import { Button } from '@/components/ui/button';
-import { ClipboardCheck, ClipboardList, Printer } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import {
   useRepair,
   useUpdateRepairFields,
@@ -30,7 +27,6 @@ interface RepairDetailPanelProps {
 export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
   const { data, isLoading, refetch } = useRepair(repairId);
   const updateFields = useUpdateRepairFields();
-  const [showInspection, setShowInspection] = useState(false);
   const [showPrep, setShowPrep] = useState(false);
 
   if (isLoading) {
@@ -88,19 +84,8 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
             {r.as_id} &middot; {formatDateTime(r.received_at)}
           </p>
         </div>
-        {/* 툴바 — 컴팩트 버튼(풀폭 X) */}
+        {/* 툴바 — 컴팩트 버튼(풀폭 X). 수리내역서는 2026-10-15 액션 카드로 이동 */}
         <div className="flex items-center gap-2 shrink-0">
-          <Button
-            variant={inspections.length > 0 ? 'secondary' : 'primary'}
-            size="sm"
-            onClick={() => setShowInspection(true)}
-          >
-            {inspections.length > 0 ? (
-              <><ClipboardCheck size={14} className="text-green-600" /> 내역 {inspections.length}건</>
-            ) : (
-              <><ClipboardList size={14} /> 내역작성</>
-            )}
-          </Button>
           <button
             onClick={() => setShowPrep(true)}
             className="flex items-center gap-1 text-xs font-semibold text-neutral-600 border border-neutral-200 rounded-md px-2.5 py-1.5 hover:bg-neutral-50 transition"
@@ -141,28 +126,11 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
 
           {/* 검수 요약 (저장된 게 있을 때만) */}
           {inspections.length > 0 && <InspectionSummary inspections={inspections} />}
-
-          {/* 검수 모달 */}
-          <Modal
-            open={showInspection}
-            onClose={() => setShowInspection(false)}
-            title="수리내역서 작성"
-            className="max-w-2xl max-h-[90vh] overflow-y-auto"
-            preventAutoClose
-          >
-            <InspectionForm
-              repairId={r.id}
-              existingInspections={inspections}
-              totalScissors={r.qty_mamoru + r.qty_other}
-              onSaved={() => setShowInspection(false)}
-            />
-          </Modal>
-
         </div>
 
         {/* 사이드바(액션) — 좁을 때 위로(order-first)/넓을 때 오른쪽 */}
         <div className="w-full @xl:w-72 shrink-0 space-y-4 order-first @xl:order-none">
-          <SidebarActionCard repair={r} />
+          <SidebarActionCard repair={r} inspections={inspections} />
           {/* 067: 리뷰 관리 카드 — 취소 외 상태에서 표시 (compact = 판매 패널과 동일 미니) */}
           {r.status !== 'cancelled' && (
             <ReviewManagementCard

@@ -62,14 +62,24 @@ function useLandscapeMobile() {
 }
 
 const draftKey = (repairId: string) => `repair_inspect_${repairId}`;
-interface Draft { items: InspectionItem[]; activeIdx: number; }
-function loadDraft(repairId: string): Draft | null {
+// base = 초안을 만들 때 기준이 된 DB 내역서(행 id 목록). 저장할 때마다 행이 새로 만들어져 id가 바뀐다.
+interface Draft { items: InspectionItem[]; activeIdx: number; base?: string; }
+const baseSig = (rows: RepairInspection[]) => rows.map((r) => r.id).join(',');
+function loadDraft(repairId: string, base: string): Draft | null {
   if (typeof window === 'undefined') return null;
-  try { const raw = sessionStorage.getItem(draftKey(repairId)); return raw ? (JSON.parse(raw) as Draft) : null; } catch { return null; }
+  try {
+    const raw = sessionStorage.getItem(draftKey(repairId));
+    if (!raw) return null;
+    const d = JSON.parse(raw) as Draft;
+    // 2026-10-15: 초안 이후 DB가 바뀌었으면(다른 기기 저장 등) 오래된 초안이 최신 내역서를 덮지 않게 버린다
+    if (d.base !== base) { sessionStorage.removeItem(draftKey(repairId)); return null; }
+    return d;
+  } catch { return null; }
 }
 
-export function InspectionForm({ repairId, existingInspections, onSaved }: InspectionFormProps) {
-  const draft = typeof window !== 'undefined' ? loadDraft(repairId) : null;
+export function InspectionForm({ repairId, existingInspections, totalScissors, onSaved }: InspectionFormProps) {
+  const base = baseSig(existingInspections);
+  const draft = typeof window !== 'undefined' ? loadDraft(repairId, base) : null;
 
   const [items, setItems] = useState<InspectionItem[]>(() => {
     if (draft?.items?.length) return draft.items;
@@ -86,7 +96,8 @@ export function InspectionForm({ repairId, existingInspections, onSaved }: Inspe
         };
       });
     }
-    return [newInspectionItem(1)];
+    // 2026-10-15: 접수 수량(마모루+타사)만큼 가위 탭을 미리 만든다 (전엔 1개부터 [+추가] 수동)
+    return Array.from({ length: Math.max(1, totalScissors || 0) }, (_, i) => newInspectionItem(i + 1));
   });
   const [activeIdx, setActiveIdx] = useState(draft?.activeIdx ?? 0);
   const [uploading, setUploading] = useState(false);
@@ -98,8 +109,8 @@ export function InspectionForm({ repairId, existingInspections, onSaved }: Inspe
   // 작성 중 draft 보존 (카메라/포커스 손실로 모달 재마운트 시 복원)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    try { sessionStorage.setItem(draftKey(repairId), JSON.stringify({ items, activeIdx })); } catch { /* noop */ }
-  }, [repairId, items, activeIdx]);
+    try { sessionStorage.setItem(draftKey(repairId), JSON.stringify({ items, activeIdx, base })); } catch { /* noop */ }
+  }, [repairId, items, activeIdx, base]);
 
   const patchActive = (patch: Partial<InspectionItem>) =>
     setItems((prev) => prev.map((it, i) => (i === activeIdx ? { ...it, ...patch } : it)));
@@ -189,8 +200,9 @@ export function InspectionForm({ repairId, existingInspections, onSaved }: Inspe
       )}
 
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>수리내역서 작성</span>
+        <CardTitle className="flex items-center justify-between w-full">
+          {/* 모달 제목(수리내역서)과 중복 제거 — 진행 상황을 보여준다 */}
+          <span>가위 {items.length}자루 · 사진 {items.filter((it) => it.photo_url).length}/{items.length}</span>
           <Button variant="primary" size="sm" onClick={handleSave} disabled={busy} loading={saveInspections.isPending}>
             <Save size={14} />
             {uploading ? '사진 업로드 중...' : '저장'}
