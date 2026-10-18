@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { generateWorkSummary } from '@/lib/repair/inspection-text';
+import { DIAGRAM_FILE, normalizeChecks, woundLayerColors, woundLayers, woundLines, woundViews } from '@/lib/repair/wound-catalog';
 
 /** CORS 헤더 — GitHub Pages에서 호출 허용 */
 const CORS_HEADERS = {
@@ -46,7 +47,12 @@ export async function GET(req: NextRequest) {
       .eq('repair_id', repair.id)
       .order('scissor_number', { ascending: true });
 
-    const scissors = (inspections || []).map((insp: Record<string, unknown>) => ({
+    const scissors = (inspections || []).map((insp: Record<string, unknown>) => {
+      // 163 v3: diagram_marks 가 있으면 그림체 내역서 — 문구·레이어·칸을 서버에서 계산해 내려준다(카탈로그 SSOT)
+      const v3 = insp.diagram_marks != null;
+      const checks = v3 ? normalizeChecks(insp.diagram_marks) : [];
+      const type = (insp.scissor_type as string) || '';
+      return {
       number: insp.scissor_number,
       type: insp.scissor_type || '',
       blade_tip: insp.blade_tip,
@@ -60,7 +66,15 @@ export async function GET(req: NextRequest) {
       photo_marks: insp.photo_marks || [],
       comment: insp.comment || '',  // 097: 가위별 진단 및 내역
       worker: insp.worker,
-    }));
+      v3,
+      diagram: DIAGRAM_FILE[type] || DIAGRAM_FILE['기타'],
+      layers: woundLayers(checks),
+      layer_colors: woundLayerColors(checks),
+      views: woundViews(checks),
+      wounds: woundLines(checks),
+      zoom_photos: Array.isArray(insp.zoom_photos) ? insp.zoom_photos : [],
+      };
+    });
 
     // 타입별 카운트
     const typeCounts: Record<string, number> = {};

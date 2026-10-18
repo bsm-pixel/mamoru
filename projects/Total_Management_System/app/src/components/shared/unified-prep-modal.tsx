@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { repairSlip, saleSlip, wrapTray, buildListDoc, esc, type PrepInspection, type PrepListRow } from '@/lib/prep/tray';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { inspectionNote } from '@/lib/repair/wound-catalog';
 
 /**
  * 통합 준비표 — 복원수리(출고대기)·주문(배송대기)·판매(미출고)를 탭으로 모아 체크 → 한 번에 인쇄.
@@ -104,7 +105,7 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
       if (repIds.length) {
         const [{ data: reps }, { data: insp }] = await Promise.all([
           db.from('repairs').select('*').in('id', repIds),
-          db.from('repair_inspections').select('repair_id, scissor_number, scissor_type, comment').in('repair_id', repIds).order('scissor_number'),
+          db.from('repair_inspections').select('repair_id, scissor_number, scissor_type, comment, diagram_marks').in('repair_id', repIds).order('scissor_number'),
         ]);
         const inspBy: Record<string, PrepInspection[]> = {};
         (insp || []).forEach((i: PrepInspection & { repair_id: string }) => { (inspBy[i.repair_id] ||= []).push(i); });
@@ -121,7 +122,7 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
           slips.push(repairSlip(r, insp2, act));
           const mamoru = (r.qty_mamoru as number) || 0, other = (r.qty_other as number) || 0;
           const inspHtml = insp2.length
-            ? insp2.map((i) => `#${i.scissor_number} ${esc(i.scissor_type || '가위')}${i.comment ? ` — ${esc(i.comment)}` : ''}`).join('<br>')
+            ? insp2.map((i) => `#${i.scissor_number} ${esc(i.scissor_type || '가위')}${inspectionNote(i) ? ` — ${esc(inspectionNote(i))}` : ''}`).join('<br>')
             : '';
           listRows.push({
             group: '복원수리', no: (r.as_id as string) || '', name: `${r.name}${act ? ` (${act})` : ''}`, contact: (r.phone as string) || '',

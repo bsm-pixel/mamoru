@@ -1,6 +1,7 @@
 'use client';
 
 import { mamoruWordmarkSvg } from '@/lib/brand/logo-svg';
+import { inspectionNote } from '@/lib/repair/wound-catalog';
 import { useState, useEffect, useMemo } from 'react';
 import { Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -22,7 +23,7 @@ interface RepairRow {
   received_at?: string | null;
   [key: string]: unknown;
 }
-interface Inspection { repair_id: string; scissor_number: number; scissor_type?: string | null; comment?: string | null }
+interface Inspection { repair_id: string; scissor_number: number; scissor_type?: string | null; comment?: string | null; diagram_marks?: string[] | null }
 
 interface Props {
   repairIds: string[];   // repairs.id 배열 (단건 상세면 [id])
@@ -48,7 +49,7 @@ export function RepairPrepSheetModal({ repairIds, onClose }: Props) {
       const db = createClient() as any;
       const [repRes, inspRes] = await Promise.all([
         db.from('repairs').select('*').in('id', repairIds),
-        db.from('repair_inspections').select('repair_id, scissor_number, scissor_type, comment').in('repair_id', repairIds).order('scissor_number'),
+        db.from('repair_inspections').select('repair_id, scissor_number, scissor_type, comment, diagram_marks').in('repair_id', repairIds).order('scissor_number'),
       ]);
       const reps: RepairRow[] = (repRes.data || []) as RepairRow[];
       // 선택 순서 유지
@@ -83,7 +84,7 @@ export function RepairPrepSheetModal({ repairIds, onClose }: Props) {
     const lines = rowN > 0
       ? Array.from({ length: rowN }).map((_, k) => {
           const no = k + 1; const i = inspByNo[no];
-          const label = i ? `<b>${esc(i.scissor_type || '가위')}</b>${i.comment ? ` <span class="cm">— ${esc(i.comment)}</span>` : ''}`
+          const label = i ? `<b>${esc(i.scissor_type || '가위')}</b>${inspectionNote(i) ? ` <span class="cm">— ${esc(inspectionNote(i))}</span>` : ''}`
             : '<span class="blank">________________________</span>';
           return `<div class="it">☐ <span class="no">#${no}</span> ${label}</div>`;
         }).join('')

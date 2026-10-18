@@ -1,43 +1,46 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSaveInspections } from '@/hooks/use-repairs';
 import type { RepairInspection } from '@/lib/supabase/types';
-import { Plus, Trash2, Save, Camera, X, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Save, Camera, X, Loader2, ImagePlus, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { resizeImage } from '@/lib/utils/resize-image';
+import { compressImage } from '@/lib/utils/compress-image';
 import { createClient } from '@/lib/supabase/client';
-import { InspectionMarkBoard } from './inspection-mark-board';
 import { CameraCapture } from '@/components/ui/camera-capture';
-import { type MarkV2 } from './inspection-marks';
 import { COMMENT_PRESETS_BY_TYPE } from '@/lib/repair/comment-presets';
-import { applyMarkMents, applyFlagMents, splitBlocks } from './ment-linkage';
+import { SEGS, SEG_KO, kindsFor, checkIdsOf, normalizeChecks, woundLines } from '@/lib/repair/wound-catalog';
+import { WoundDiagram } from './wound-diagram';
 
 const SCISSOR_TYPES = ['블런트', '틴닝', '장가위', '슬라이싱', '기타'];
+const MAX_ZOOM = 3;
 
+/**
+ * 수리내역서 v3 (2026-10-15) — 사진 위 손 핀 → 가위 종류별 그림체 + 상처 체크
+ *   가위 사진 1장(1:1) · 확대 사진 0~3장 · 상처 칩 체크 · 추가 메모(선택)
+ *   체크 항목·문구 SSOT = lib/repair/wound-catalog.ts
+ *
+ * 구 내역서(diagram_marks = NULL, 사진 핀)는 열어도 그대로 보존된다.
+ *   상처를 하나라도 체크해야 새 방식으로 바뀐다 (그 전엔 저장해도 고객 화면이 옛 방식 그대로)
+ */
 interface InspectionItem {
   scissor_number: number;
   scissor_type: string;
   photo_url: string;
-  marks: MarkV2[];
-  flags: string[];
+  zoom_photos: string[];
+  checks: string[];
+  /** v2 사진 핀 내역서 — 체크 전까지 diagram_marks 를 NULL 로 둔다 */
+  legacy: boolean;
+  /** v2 핀 데이터 비파괴 통과 */
+  photo_marks: RepairInspection['photo_marks'];
   comment: string;
   worker: string;
-  _photoPreview?: string;
 }
 
 function newInspectionItem(num: number): InspectionItem {
-  return { scissor_number: num, scissor_type: '블런트', photo_url: '', marks: [], flags: [], comment: '', worker: '백성민' };
-}
-
-/** repair_inspections.photo_marks(점·선·플래그 혼합) → marks/flags 분리 */
-function splitMarks(raw: unknown): { marks: MarkV2[]; flags: string[] } {
-  const arr = Array.isArray(raw) ? (raw as Array<{ label: string; x?: number; y?: number; x2?: number; y2?: number; flag?: boolean }>) : [];
-  const marks = arr.filter((m) => !m.flag && typeof m.x === 'number').map((m) => ({ label: m.label, x: m.x as number, y: m.y as number, x2: m.x2, y2: m.y2 }));
-  const flags = arr.filter((m) => m.flag).map((m) => m.label);
-  return { marks, flags };
+  return { scissor_number: num, scissor_type: '블런트', photo_url: '', zoom_photos: [], checks: [], legacy: false, photo_marks: null, comment: '', worker: '백성민' };
 }
 
 interface InspectionFormProps {
@@ -63,7 +66,8 @@ function useLandscapeMobile() {
 
 const draftKey = (repairId: string) => `repair_inspect_${repairId}`;
 // base = 초안을 만들 때 기준이 된 DB 내역서(행 id 목록). 저장할 때마다 행이 새로 만들어져 id가 바뀐다.
-interface Draft { items: InspectionItem[]; activeIdx: number; base?: string; }
+// v = 초안 형식 버전. v3 이전 초안(marks/flags 형식)은 버린다
+interface Draft { v: 3; items: InspectionItem[]; activeIdx: number; base?: string; }
 const baseSig = (rows: RepairInspection[]) => rows.map((r) => r.id).join(',');
 function loadDraft(repairId: string, base: string): Draft | null {
   if (typeof window === 'undefined') return null;
@@ -71,10 +75,19 @@ function loadDraft(repairId: string, base: string): Draft | null {
     const raw = sessionStorage.getItem(draftKey(repairId));
     if (!raw) return null;
     const d = JSON.parse(raw) as Draft;
-    // 2026-10-15: 초안 이후 DB가 바뀌었으면(다른 기기 저장 등) 오래된 초안이 최신 내역서를 덮지 않게 버린다
-    if (d.base !== base) { sessionStorage.removeItem(draftKey(repairId)); return null; }
+    // 초안 이후 DB가 바뀌었거나(다른 기기 저장 등) 옛 형식이면 버린다 — 오래된 초안이 최신 내역서를 덮지 않게
+    if (d.v !== 3 || d.base !== base) { sessionStorage.removeItem(draftKey(repairId)); return null; }
     return d;
   } catch { return null; }
+}
+
+async function uploadRepairPhoto(repairId: string, file: File, tag: string): Promise<string> {
+  const supabase = createClient();
+  const ext = file.type === 'image/webp' ? 'webp' : 'jpg';
+  const filePath = `inspections/${repairId}/${Date.now()}_${tag}_${Math.random().toString(36).slice(2, 7)}.${ext}`;
+  const { error } = await supabase.storage.from('repair-photos').upload(filePath, file, { contentType: file.type, upsert: false });
+  if (error) throw error;
+  return supabase.storage.from('repair-photos').getPublicUrl(filePath).data.publicUrl;
 }
 
 export function InspectionForm({ repairId, existingInspections, totalScissors, onSaved }: InspectionFormProps) {
@@ -84,36 +97,40 @@ export function InspectionForm({ repairId, existingInspections, totalScissors, o
   const [items, setItems] = useState<InspectionItem[]>(() => {
     if (draft?.items?.length) return draft.items;
     if (existingInspections.length > 0) {
-      return existingInspections.map((e) => {
-        const { marks, flags } = splitMarks(e.photo_marks);
-        return {
-          scissor_number: e.scissor_number,
-          scissor_type: e.scissor_type || '블런트',
-          photo_url: e.photo_url || '',
-          marks, flags,
-          comment: (e as { comment?: string | null }).comment || '',
-          worker: e.worker,
-        };
-      });
+      return existingInspections.map((e) => ({
+        scissor_number: e.scissor_number,
+        scissor_type: e.scissor_type || '블런트',
+        photo_url: e.photo_url || '',
+        zoom_photos: Array.isArray(e.zoom_photos) ? e.zoom_photos : [],
+        checks: normalizeChecks(e.diagram_marks),
+        legacy: e.diagram_marks == null,
+        photo_marks: e.photo_marks,
+        comment: e.comment || '',
+        worker: e.worker,
+      }));
     }
-    // 2026-10-15: 접수 수량(마모루+타사)만큼 가위 탭을 미리 만든다 (전엔 1개부터 [+추가] 수동)
+    // 접수 수량(마모루+타사)만큼 가위 탭을 미리 만든다
     return Array.from({ length: Math.max(1, totalScissors || 0) }, (_, i) => newInspectionItem(i + 1));
   });
   const [activeIdx, setActiveIdx] = useState(draft?.activeIdx ?? 0);
-  const [uploading, setUploading] = useState(false);
+  // 업로드 중 표시 — 미리보기는 메모리(object URL)에만. 초안(sessionStorage)엔 넣지 않는다(수 MB 라 저장 실패 → 초안 전체 유실)
+  const [pending, setPending] = useState<Record<string, string>>({});
+  const [busyCount, setBusyCount] = useState(0);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [memoOpen, setMemoOpen] = useState(false);
+  const zoomInput = useRef<HTMLInputElement>(null);
 
   const saveInspections = useSaveInspections();
   const landscapeMobile = useLandscapeMobile();
 
-  // 작성 중 draft 보존 (카메라/포커스 손실로 모달 재마운트 시 복원)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    try { sessionStorage.setItem(draftKey(repairId), JSON.stringify({ items, activeIdx, base })); } catch { /* noop */ }
+    try { sessionStorage.setItem(draftKey(repairId), JSON.stringify({ v: 3, items, activeIdx, base })); } catch { /* noop */ }
   }, [repairId, items, activeIdx, base]);
 
-  const patchActive = (patch: Partial<InspectionItem>) =>
-    setItems((prev) => prev.map((it, i) => (i === activeIdx ? { ...it, ...patch } : it)));
+  const patchAt = (idx: number, fn: (it: InspectionItem) => InspectionItem) =>
+    setItems((prev) => prev.map((it, i) => (i === idx ? fn(it) : it)));
+  const patchActive = (patch: Partial<InspectionItem>) => patchAt(activeIdx, (it) => ({ ...it, ...patch }));
 
   const addScissor = () => { setItems((prev) => [...prev, newInspectionItem(prev.length + 1)]); setActiveIdx(items.length); };
   const removeScissor = (idx: number) => {
@@ -122,50 +139,65 @@ export function InspectionForm({ repairId, existingInspections, totalScissors, o
     setActiveIdx(Math.max(0, activeIdx - 1));
   };
 
-  // 핀/플래그 변경 → 자동 멘트 연동 (해당 가위)
-  const handleMarks = (newMarks: MarkV2[]) =>
-    setItems((prev) => prev.map((it, i) => (i === activeIdx ? { ...it, marks: newMarks, comment: applyMarkMents(it.comment, it.marks, newMarks) } : it)));
-  const handleFlags = (newFlags: string[]) =>
-    setItems((prev) => prev.map((it, i) => (i === activeIdx ? { ...it, flags: newFlags, comment: applyFlagMents(it.comment, it.flags, newFlags, it.scissor_type) } : it)));
+  // 종류 변경 — 새 종류에 없는 항목(예: 틴닝 전용 빗살)은 체크 해제
+  const changeType = (t: string) => patchAt(activeIdx, (it) => {
+    const allowed = new Set(kindsFor(t).flatMap(checkIdsOf));
+    return { ...it, scissor_type: t, checks: it.checks.filter((c) => allowed.has(c)) };
+  });
 
-  const handlePhotoSelect = async (idx: number, file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, _photoPreview: e.target?.result as string } : it)));
-    reader.readAsDataURL(file);
+  // 체크 토글 — 구 내역서도 체크하는 순간 새 방식(legacy 해제)
+  const toggleCheck = (id: string) => patchAt(activeIdx, (it) => ({
+    ...it,
+    legacy: false,
+    checks: it.checks.includes(id) ? it.checks.filter((c) => c !== id) : [...it.checks, id],
+  }));
 
-    setUploading(true);
+  const runUpload = async (key: string, file: File, opts: Parameters<typeof compressImage>[1], tag: string) => {
+    setPending((p) => ({ ...p, [key]: URL.createObjectURL(file) }));
+    setBusyCount((n) => n + 1);
     try {
-      const resized = await resizeImage(file, 1200, 0.8);
-      const supabase = createClient();
-      const ext = file.name.split('.').pop() || 'jpg';
-      const filePath = `inspections/${repairId}/${Date.now()}_${idx}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from('repair-photos').upload(filePath, resized, { contentType: 'image/jpeg', upsert: false });
-      if (uploadErr) throw uploadErr;
-      const { data: urlData } = supabase.storage.from('repair-photos').getPublicUrl(filePath);
-      // 새 사진 → 마킹·플래그·진단멘트 초기화
-      setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, photo_url: urlData.publicUrl, _photoPreview: undefined, marks: [], flags: [], comment: '' } : it)));
-    } catch (err) {
-      console.error('검수 사진 업로드 실패:', err);
-      setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, _photoPreview: undefined } : it)));
-      toast.error('사진 업로드 실패 — 다시 시도해주세요');
+      const small = await compressImage(file, opts);
+      return await uploadRepairPhoto(repairId, small, tag);
     } finally {
-      setUploading(false);
+      setPending((p) => { const n = { ...p }; if (n[key]) URL.revokeObjectURL(n[key]); delete n[key]; return n; });
+      setBusyCount((n) => n - 1);
     }
   };
 
-  const removePhoto = (idx: number) =>
-    setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, photo_url: '', _photoPreview: undefined, marks: [], flags: [], comment: '' } : it)));
+  // 가위 사진 — 1:1 가운데 자르기, 1080. 재촬영해도 체크는 유지(그림체는 사진과 무관)
+  const handlePhotoSelect = async (idx: number, file: File) => {
+    try {
+      const url = await runUpload(`main${idx}`, file, { square: true, maxSize: 1080 }, `s${idx + 1}`);
+      patchAt(idx, (it) => ({ ...it, photo_url: url }));
+    } catch (err) {
+      console.error('가위 사진 업로드 실패:', err);
+      toast.error('사진 업로드 실패 — 다시 시도해주세요');
+    }
+  };
 
-  // 가위 종류별 수동 멘트 칩 (공통 멘트는 핀/플래그로 자동 삽입)
+  // 확대 사진 — 갤러리 여러 장, 긴 변 1080 (현미경 원본 비율 유지)
+  const handleZoomFiles = async (idx: number, files: File[]) => {
+    const room = MAX_ZOOM - items[idx].zoom_photos.length;
+    if (files.length > room) toast(`확대 사진은 가위당 ${MAX_ZOOM}장까지라 ${room}장만 올립니다`);
+    await Promise.all(files.slice(0, Math.max(0, room)).map(async (f, k) => {
+      try {
+        const url = await runUpload(`zoom${idx}_${Date.now()}_${k}`, f, { maxSize: 1080 }, `z${idx + 1}`);
+        patchAt(idx, (it) => ({ ...it, zoom_photos: [...it.zoom_photos, url].slice(0, MAX_ZOOM) }));
+      } catch (err) {
+        console.error('확대 사진 업로드 실패:', err);
+        toast.error('확대 사진 업로드 실패 — 다시 시도해주세요');
+      }
+    }));
+  };
+
   const togglePreset = (p: string) => {
     const t = p.trim();
-    setItems((prev) => prev.map((it, i) => {
-      if (i !== activeIdx) return it;
-      const blocks = splitBlocks(it.comment);
+    patchAt(activeIdx, (it) => {
+      const blocks = it.comment.split('\n\n').map((b) => b.trim()).filter(Boolean);
       const k = blocks.indexOf(t);
       if (k >= 0) blocks.splice(k, 1); else blocks.push(t);
       return { ...it, comment: blocks.join('\n\n') };
-    }));
+    });
   };
 
   const handleSave = () => {
@@ -173,7 +205,10 @@ export function InspectionForm({ repairId, existingInspections, totalScissors, o
       scissor_number: it.scissor_number,
       scissor_type: it.scissor_type,
       photo_url: it.photo_url || null,
-      photo_marks: [...it.marks, ...it.flags.map((note) => ({ label: note, flag: true }))],
+      photo_marks: it.photo_marks ?? null,
+      // 구 내역서를 체크 없이 저장 → NULL 유지(고객 화면 옛 방식 그대로)
+      diagram_marks: it.legacy && it.checks.length === 0 ? null : it.checks,
+      zoom_photos: it.zoom_photos,
       comment: it.comment.trim() || null,
       worker: it.worker,
     }));
@@ -184,10 +219,27 @@ export function InspectionForm({ repairId, existingInspections, totalScissors, o
 
   const current = items[activeIdx];
   if (!current) return null;
-  const photoSrc = current._photoPreview || current.photo_url;
-  const busy = uploading || saveInspections.isPending;
+  const mainPending = pending[`main${activeIdx}`];
+  const photoSrc = mainPending || current.photo_url;
+  const zoomPending = Object.entries(pending).filter(([k]) => k.startsWith(`zoom${activeIdx}_`)).map(([, v]) => v);
+  const busy = busyCount > 0 || saveInspections.isPending;
+  const kinds = kindsFor(current.scissor_type);
+  const segKinds = kinds.filter((k) => k.segs);
+  const plainKinds = kinds.filter((k) => !k.segs);
+  const lines = woundLines(current.checks);
   const presetList = COMMENT_PRESETS_BY_TYPE[current.scissor_type] || [];
-  const presetActive = (p: string) => splitBlocks(current.comment).includes(p.trim());
+  const presetActive = (p: string) => current.comment.split('\n\n').map((b) => b.trim()).includes(p.trim());
+
+  const chip = (id: string, label: ReactNode) => {
+    const on = current.checks.includes(id);
+    return (
+      <button key={id} type="button" onClick={() => toggleCheck(id)}
+        className={`min-h-9 px-3 rounded-md border text-[13px] font-medium transition inline-flex items-center gap-1.5 ${on ? 'bg-neutral-900 border-neutral-900 text-white' : 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300'}`}>
+        {label}
+      </button>
+    );
+  };
+  const sw = (color: string) => <i className="inline-block w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ background: color }} />;
 
   return (
     <Card>
@@ -201,11 +253,10 @@ export function InspectionForm({ repairId, existingInspections, totalScissors, o
 
       <CardHeader>
         <CardTitle className="flex items-center justify-between w-full">
-          {/* 모달 제목(수리내역서)과 중복 제거 — 진행 상황을 보여준다 */}
           <span>가위 {items.length}자루 · 사진 {items.filter((it) => it.photo_url).length}/{items.length}</span>
           <Button variant="primary" size="sm" onClick={handleSave} disabled={busy} loading={saveInspections.isPending}>
             <Save size={14} />
-            {uploading ? '사진 업로드 중...' : '저장'}
+            {busyCount > 0 ? '사진 올리는 중...' : '저장'}
           </Button>
         </CardTitle>
       </CardHeader>
@@ -215,7 +266,7 @@ export function InspectionForm({ repairId, existingInspections, totalScissors, o
         {items.map((item, idx) => (
           <button key={idx} onClick={() => setActiveIdx(idx)}
             className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded-lg transition ${activeIdx === idx ? 'bg-neutral-800 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}`}>
-            #{item.scissor_number} {item.scissor_type}
+            #{item.scissor_number} {item.scissor_type}{item.photo_url ? '' : ' ·'}
           </button>
         ))}
         <button onClick={addScissor} className="shrink-0 px-3 py-1.5 text-xs text-neutral-400 hover:text-neutral-600 flex items-center gap-1">
@@ -223,55 +274,111 @@ export function InspectionForm({ repairId, existingInspections, totalScissors, o
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {/* 종류 */}
         <div className="flex items-center gap-3">
           <label className="text-sm text-neutral-500 w-16 shrink-0">종류</label>
-          <select value={current.scissor_type} onChange={(e) => patchActive({ scissor_type: e.target.value })}
+          <select value={current.scissor_type} onChange={(e) => changeType(e.target.value)}
             className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm">
             {SCISSOR_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
           {items.length > 1 && (
-            <button onClick={() => removeScissor(activeIdx)} className="text-error/60 hover:text-error"><Trash2 size={14} /></button>
+            <button onClick={() => removeScissor(activeIdx)} title="이 가위 삭제" className="text-error/60 hover:text-error"><Trash2 size={14} /></button>
           )}
         </div>
 
-        {/* 사진 촬영 */}
+        {/* 사진 — 가위 1장(1:1) + 확대 사진 0~3장 */}
         <div className="flex items-start gap-3">
           <label className="text-sm text-neutral-500 w-16 shrink-0 pt-2">사진</label>
-          {photoSrc ? (
-            <div className="relative">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={photoSrc} alt="검수 사진" className="w-28 h-28 object-cover rounded-lg border border-neutral-200" />
-              {uploading && (
-                <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center"><Loader2 size={24} className="text-white animate-spin" /></div>
-              )}
-              <button onClick={() => removePhoto(activeIdx)} className="absolute -top-2 -right-2 w-7 h-7 bg-error text-white rounded-full flex items-center justify-center shadow-md"><X size={14} /></button>
+          <div className="flex flex-wrap items-start gap-2">
+            {photoSrc ? (
+              <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={photoSrc} alt="가위 사진" className="w-28 h-28 object-cover rounded-lg border border-neutral-200" />
+                {mainPending && <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center"><Loader2 size={24} className="text-white animate-spin" /></div>}
+                <button type="button" onClick={() => setCameraOpen(true)} title="다시 찍기"
+                  className="absolute bottom-1 right-1 w-7 h-7 bg-white/85 rounded-full flex items-center justify-center shadow hover:bg-white transition">
+                  <Camera size={14} className="text-neutral-600" />
+                </button>
+              </div>
+            ) : (
               <button type="button" onClick={() => setCameraOpen(true)}
-                className="absolute bottom-1 right-1 w-7 h-7 bg-white/80 rounded-full flex items-center justify-center cursor-pointer shadow hover:bg-white transition">
-                <Camera size={14} className="text-neutral-600" />
+                className="flex flex-col items-center justify-center w-28 h-28 border-2 border-dashed border-neutral-300 rounded-lg hover:border-neutral-400 transition">
+                <Camera size={24} className="text-neutral-400 mb-1" />
+                <span className="text-[11px] text-neutral-400">가위 사진</span>
               </button>
-            </div>
-          ) : (
-            <button type="button" onClick={() => setCameraOpen(true)}
-              className="cursor-pointer flex flex-col items-center justify-center w-28 h-28 border-2 border-dashed border-neutral-300 rounded-lg hover:border-neutral-400 transition">
-              {uploading ? <Loader2 size={24} className="text-neutral-500 mb-1 animate-spin" /> : <Camera size={24} className="text-neutral-400 mb-1" />}
-              <span className="text-[11px] text-neutral-400">{uploading ? '업로드중...' : '촬영/업로드'}</span>
-            </button>
-          )}
+            )}
+
+            {/* 확대 사진 */}
+            {current.zoom_photos.map((u, k) => (
+              <div key={u} className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={u} alt={`확대 사진 ${k + 1}`} className="w-16 h-16 object-cover rounded-md border border-neutral-200" />
+                <button type="button" onClick={() => patchActive({ zoom_photos: current.zoom_photos.filter((x) => x !== u) })} title="빼기"
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-neutral-800 text-white rounded-full flex items-center justify-center"><X size={11} /></button>
+              </div>
+            ))}
+            {zoomPending.map((u) => (
+              <div key={u} className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={u} alt="" className="w-16 h-16 object-cover rounded-md border border-neutral-200 opacity-60" />
+                <Loader2 size={18} className="absolute inset-0 m-auto text-neutral-700 animate-spin" />
+              </div>
+            ))}
+            {current.zoom_photos.length + zoomPending.length < MAX_ZOOM && (
+              <button type="button" onClick={() => zoomInput.current?.click()}
+                className="w-16 h-16 flex flex-col items-center justify-center border border-dashed border-neutral-300 rounded-md text-neutral-400 hover:border-neutral-400 transition">
+                <ImagePlus size={16} />
+                <span className="text-[10px] mt-0.5">확대 사진</span>
+              </button>
+            )}
+            {/* capture 미사용 — 갤러리 선택(현미경 앱으로 찍어둔 사진) */}
+            <input ref={zoomInput} type="file" accept="image/*" multiple className="hidden"
+              onChange={(e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; if (fs.length) handleZoomFiles(activeIdx, fs); }} />
+          </div>
         </div>
 
-        {/* 인페이지 카메라 — 앱 전환 없이 촬영(튕김 방지) */}
-        <CameraCapture
-          open={cameraOpen}
-          onClose={() => setCameraOpen(false)}
-          onCapture={(file) => handlePhotoSelect(activeIdx, file)}
-        />
+        <CameraCapture open={cameraOpen} square hiRes onClose={() => setCameraOpen(false)} onCapture={(file) => handlePhotoSelect(activeIdx, file)} />
 
-        {/* 핀 마킹 (자동 멘트 연동) */}
-        <div>
-          <label className="block text-sm text-neutral-500 mb-2">상처 표시</label>
-          <InspectionMarkBoard photoUrl={current.photo_url} marks={current.marks} flags={current.flags} onMarks={handleMarks} onFlags={handleFlags} scissorType={current.scissor_type} />
+        {/* 상처 체크 */}
+        <div className="pt-4 border-t border-neutral-100">
+          <label className="block text-sm font-medium text-neutral-600 mb-2">상처 체크 — #{current.scissor_number} {current.scissor_type}</label>
+          {current.legacy && (
+            <p className="text-[12px] text-amber-700 bg-amber-50 rounded-md px-2.5 py-2 mb-3">
+              이전 방식(사진 위 표시)으로 작성된 내역입니다. 상처를 체크하면 새 방식으로 바뀝니다. 체크하지 않고 저장하면 고객 화면은 그대로입니다.
+            </p>
+          )}
+          <div className="space-y-2">
+            {segKinds.map((k) => (
+              <div key={k.key} className="flex items-center gap-2 flex-wrap">
+                <span className="w-16 shrink-0 text-[13px] font-semibold flex items-center gap-1.5">{sw(k.color)}{k.ko}</span>
+                {SEGS.map((s) => chip(`z-${s}-${k.key}`, SEG_KO[s]))}
+              </div>
+            ))}
+            <div className="flex gap-2 flex-wrap pt-1">
+              {plainKinds.map((k) => chip(`z-${k.key}`, <>{sw(k.color)}{k.ko}</>))}
+            </div>
+          </div>
+
+          {/* 고객 화면 미리보기 — 그림 + 목록 (고객 페이지와 같은 규칙) */}
+          {lines.length > 0 ? (
+            <div className="mt-4 space-y-3">
+              <WoundDiagram scissorType={current.scissor_type} checks={current.checks} />
+              <ul className="divide-y divide-neutral-100 border-y border-neutral-100">
+                {lines.map((l) => (
+                  <li key={l.key} className="flex gap-2.5 py-2">
+                    <i className="mt-1.5 w-2.5 h-2.5 rounded-[2px] shrink-0" style={{ background: l.color }} />
+                    <div>
+                      <p className="text-sm font-semibold">{l.title}</p>
+                      {l.desc.map((d, i) => <p key={i} className={`text-xs ${i ? 'text-neutral-400 mt-0.5' : 'text-neutral-600'}`}>{d}</p>)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : !current.legacy && (
+            <p className="mt-3 text-xs text-neutral-400">체크한 상처가 없으면 고객에게 &quot;특별한 상처 없이 양호&quot;로 표시됩니다.</p>
+          )}
         </div>
 
         {/* 작업자 */}
@@ -281,26 +388,29 @@ export function InspectionForm({ repairId, existingInspections, totalScissors, o
             className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm" />
         </div>
 
-        {/* 진단 및 내역 — 가위별 (종류별 수동 칩 + 핀/플래그 자동) */}
+        {/* 추가 메모 (선택) — 상처 목록 외에 고객에게 더 전할 말. 기본 접힘 */}
         <div className="pt-3 border-t border-neutral-100">
-          <label className="block text-sm font-medium text-neutral-600 mb-2">진단 및 내역 — #{current.scissor_number} {current.scissor_type}</label>
-          {presetList.length > 0 && (
-            <div className="flex gap-1.5 flex-wrap mb-2">
-              {presetList.map((p) => {
-                const on = presetActive(p);
-                return (
-                  <button key={p} type="button" onClick={() => togglePreset(p)} title={p}
-                    className={`px-2.5 py-1 text-[11px] rounded-lg border text-left leading-snug transition max-w-[300px] truncate ${on ? 'bg-neutral-800 text-white border-neutral-800' : 'bg-white text-neutral-500 border-neutral-200 hover:border-neutral-300'}`}>
-                    {p.split('\n')[0]}{p.includes('\n') ? ' …' : ''}
-                  </button>
-                );
-              })}
+          <button type="button" onClick={() => setMemoOpen((v) => !v)} className="flex items-center gap-1 text-sm text-neutral-500">
+            <ChevronDown size={14} className={`transition ${memoOpen || current.comment ? 'rotate-180' : ''}`} />
+            추가 안내 (선택){current.comment ? ' · 작성됨' : ''}
+          </button>
+          {(memoOpen || !!current.comment) && (
+            <div className="mt-2">
+              {presetList.length > 0 && (
+                <div className="flex gap-1.5 flex-wrap mb-2">
+                  {presetList.map((p) => (
+                    <button key={p} type="button" onClick={() => togglePreset(p)} title={p}
+                      className={`px-2.5 py-1 text-[11px] rounded-lg border text-left leading-snug transition max-w-[300px] truncate ${presetActive(p) ? 'bg-neutral-800 text-white border-neutral-800' : 'bg-white text-neutral-500 border-neutral-200 hover:border-neutral-300'}`}>
+                      {p.split('\n')[0]}{p.includes('\n') ? ' …' : ''}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <textarea value={current.comment} onChange={(e) => patchActive({ comment: e.target.value })} rows={4}
+                placeholder="상처 목록 외에 고객에게 더 전할 내용 (줄바꿈 그대로 표시)"
+                className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm leading-relaxed resize-y focus:outline-none focus:border-neutral-400" />
             </div>
           )}
-          <p className="text-[11px] text-neutral-400 mb-1.5">※ 장력·밸런스·날각·무뎌짐·찍힘·부품·스토퍼·빗살은 위에서 표시하면 멘트가 자동으로 들어갑니다.</p>
-          <textarea value={current.comment} onChange={(e) => patchActive({ comment: e.target.value })} rows={6}
-            placeholder="칩 선택·자동삽입된 멘트가 여기 모입니다. 직접 수정도 가능. 줄바꿈 그대로 고객에게 표시됩니다."
-            className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm leading-relaxed resize-y focus:outline-none focus:border-neutral-400" />
         </div>
       </div>
     </Card>

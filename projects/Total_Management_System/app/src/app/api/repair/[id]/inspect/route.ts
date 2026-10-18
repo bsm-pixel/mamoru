@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { normalizeChecks } from '@/lib/repair/wound-catalog';
 
 /** POST /api/repair/[id]/inspect — 검수 데이터 저장 (가위별) */
 export async function POST(
@@ -45,6 +46,9 @@ export async function POST(
       photo_url: insp.photo_url || null,
       photo_marks: insp.photo_marks || null,
       comment: insp.comment ?? null,  // 097: 가위별 진단 및 내역
+      // 163 v3: NULL = 구 사진핀 내역서 그대로 / 배열 = 그림체 체크 id (모르는 id 는 버림)
+      diagram_marks: insp.diagram_marks == null ? null : normalizeChecks(insp.diagram_marks),
+      zoom_photos: Array.isArray(insp.zoom_photos) ? (insp.zoom_photos as unknown[]).filter((u): u is string => typeof u === 'string').slice(0, 3) : [],
       worker: insp.worker || '백성민',
     }));
 

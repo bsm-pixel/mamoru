@@ -5,6 +5,7 @@
  */
 
 import { mamoruWordmarkSvg } from '@/lib/brand/logo-svg';
+import { inspectionNote } from '@/lib/repair/wound-catalog';
 
 export function esc(s: unknown): string {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -12,7 +13,7 @@ export function esc(s: unknown): string {
 const won = (n: number) => `${(n || 0).toLocaleString()}원`;
 
 // ── 복원수리 슬립 ──
-export interface PrepInspection { scissor_number: number; scissor_type?: string | null; comment?: string | null }
+export interface PrepInspection { scissor_number: number; scissor_type?: string | null; comment?: string | null; diagram_marks?: string[] | null }
 export interface PrepRepair {
   as_id?: string | null; name?: string | null; phone?: string | null;
   proceed_type?: string | null; postcode?: string | null; address?: string | null; address_detail?: string | null;
@@ -30,7 +31,7 @@ export function repairSlip(r: PrepRepair, insp: PrepInspection[], activity: stri
   const lines = rowN > 0
     ? Array.from({ length: rowN }).map((_, k) => {
         const no = k + 1; const i = inspByNo[no];
-        const label = i ? `<b>${esc(i.scissor_type || '가위')}</b>${i.comment ? ` <span class="cm">— ${esc(i.comment)}</span>` : ''}`
+        const label = i ? `<b>${esc(i.scissor_type || '가위')}</b>${inspectionNote(i) ? ` <span class="cm">— ${esc(inspectionNote(i))}</span>` : ''}`
           : '<span class="blank">________________________</span>';
         return `<div class="it">☐ <span class="no">#${no}</span> ${label}</div>`;
       }).join('')
