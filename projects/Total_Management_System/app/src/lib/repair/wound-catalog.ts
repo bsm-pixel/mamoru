@@ -58,6 +58,8 @@ export const WOUND_KINDS: WoundKind[] = [
   { key: 'dull', ko: '무뎌짐', view: 'blade', color: WOUND_COLOR.dull, segs: true, desc: ['무뎌진 부분이 확인되어 복원했습니다'] },
   { key: 'nick', ko: '찍힘', view: 'blade', color: WOUND_COLOR.nick, segs: true, desc: ['찍힌 상처를 경계선까지 다듬어 복원했습니다'] },
   { key: 'comb-damage', ko: '빗살 손상', view: 'blade', color: WOUND_COLOR.dull, only: ['틴닝'], desc: ['빗살부 손상은 완전 복구가 어려워 최선의 복원으로 마무리했습니다'] },
+  // 2026-10-18: 빗살이 부러진 경우 — 점 상처라 찍힘과 같은 주황, 그림 표시는 원
+  { key: 'comb-broken', ko: '빗살 깨짐', view: 'blade', color: WOUND_COLOR.nick, only: ['틴닝'], desc: ['깨진 빗살은 복구가 어려워, 모발 걸림이 없도록 다듬어 마무리했습니다'] },
   { key: 'pivot-tension', ko: '장력 헐거움', view: 'handle', color: WOUND_COLOR.tension, desc: ['헐거워진 장력을 맞춰 조정했습니다', '받으실 때의 텐션감을 기억해 두셨다가, 추후 헐거워지면 조여서 사용해 주세요'] },
   { key: 'part-worn', ko: '내부 부품 노후', view: 'handle', color: WOUND_COLOR.part, desc: ['노후된 내부 부품을 새 부품으로 교체했습니다'] },
   { key: 'part-fit', ko: '부품 장착 불량', view: 'handle', layer: 'z-part-worn', color: WOUND_COLOR.part, desc: ['내부 부품이 반대로 장착되어 있어 올바르게 장착했습니다'] },
