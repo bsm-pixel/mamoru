@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { generateWorkSummary } from '@/lib/repair/inspection-text';
-import { DIAGRAM_FILE, normalizeChecks, woundLayers, woundLines, woundViews } from '@/lib/repair/wound-catalog';
+import { DIAGRAM_FILE, normalizeChecks, woundLayerColors, woundLayers, woundLines, woundViews } from '@/lib/repair/wound-catalog';
 
 /** CORS 헤더 — GitHub Pages에서 호출 허용 */
 const CORS_HEADERS = {
@@ -69,6 +69,7 @@ export async function GET(req: NextRequest) {
       v3,
       diagram: DIAGRAM_FILE[type] || DIAGRAM_FILE['기타'],
       layers: woundLayers(checks),
+      layer_colors: woundLayerColors(checks),
       views: woundViews(checks),
       wounds: woundLines(checks),
       zoom_photos: Array.isArray(insp.zoom_photos) ? insp.zoom_photos : [],

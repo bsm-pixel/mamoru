@@ -704,7 +704,7 @@
       mmDiagramCache[file] = p;
       return p;
     }
-    function mmRenderView(src, view, on, uid) {
+    function mmRenderView(src, view, on, uid, colors) {
       var vb = src.views[view]; if (!vb) return '';
       var sfx = '__' + uid;
       var s = src.svg
@@ -712,7 +712,15 @@
         .replace(/\sid="([^"]+)"/g, function (_, id) { return ' id="' + id + sfx + '"'; })
         .replace(/url\(#([^)]+)\)/g, function (_, id) { return 'url(#' + id + sfx + ')'; })
         .replace(/href="#([^"]+)"/g, function (_, id) { return 'href="#' + id + sfx + '"'; });
-      return s.replace(/\sid="(z-[^"]+?)__[^"]+"/g, function (m, id) { return on.indexOf(id) >= 0 ? m : m + ' display="none"'; });
+      s = s.replace(/\sid="(z-[^"]+?)__[^"]+"/g, function (m, id) { return on.indexOf(id) >= 0 ? m : m + ' display="none"'; });
+      // 표시색은 서버(카탈로그) 색으로 덮어씀 — 피그마 색과 무관
+      var css = Object.keys(colors || {}).map(function (id) {
+        var sel = '#' + id + sfx, c = colors[id];
+        return sel + '[stroke]:not([stroke="none"]),' + sel + ' [stroke]:not([stroke="none"]){stroke:' + c + '!important}' +
+          sel + '[fill]:not([fill="none"]),' + sel + ' [fill]:not([fill="none"]){fill:' + c + '!important}';
+      }).join('');
+      if (css) s = s.replace(/(<svg[^>]*>)/, '$1<style>' + css + '</style>');
+      return s;
     }
 
     function mmSlideHtml(s, n, total) {
@@ -802,7 +810,7 @@
             return;
           }
           box.innerHTML = s.views.map(function (v) {
-            var html = mmRenderView(src, v, s.layers || [], 's' + n + v);
+            var html = mmRenderView(src, v, s.layers || [], 's' + n + v, s.layer_colors);
             return html ? '<div class="mm-sc-fig">' + html + '</div>' : '';
           }).join('');
           sync();

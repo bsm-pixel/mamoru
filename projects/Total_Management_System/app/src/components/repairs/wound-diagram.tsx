@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useState } from 'react';
-import { DIAGRAM_FILE, woundLayers, woundViews, type DiagramView } from '@/lib/repair/wound-catalog';
+import { DIAGRAM_FILE, woundLayerColors, woundLayers, woundViews, type DiagramView } from '@/lib/repair/wound-catalog';
 import { loadDiagram, renderDiagramView, type DiagramSource } from '@/lib/repair/diagram-loader';
 
 interface Props {
@@ -31,11 +31,12 @@ export function WoundDiagram({ scissorType, checks, views, className }: Props) {
   if (src === null) return <p className={`text-xs text-neutral-400 ${className || ''}`}>{scissorType} 그림이 아직 없습니다 — 고객에게는 목록만 표시됩니다.</p>;
 
   const layers = woundLayers(checks);
+  const colors = woundLayerColors(checks);
   const show = views || woundViews(checks);
   return (
     <div className={`space-y-2 ${className || ''}`}>
       {show.map((v) => {
-        const html = renderDiagramView(src, v, layers, `${uid}${v}`);
+        const html = renderDiagramView(src, v, layers, `${uid}${v}`, colors);
         return html ? (
           <div key={v} className="rounded border border-neutral-100 bg-white overflow-hidden [&>svg]:block [&>svg]:w-full [&>svg]:h-auto" dangerouslySetInnerHTML={{ __html: html }} />
         ) : null;

@@ -69,8 +69,8 @@ export function loadDiagram(file: string): Promise<DiagramSource | null> {
   return p;
 }
 
-/** 한 칸을 그릴 SVG 문자열 — on 에 없는 z- 레이어는 숨김 */
-export function renderDiagramView(src: DiagramSource, view: DiagramView, on: string[], uid: string): string | null {
+/** 한 칸을 그릴 SVG 문자열 — on 에 없는 z- 레이어는 숨김, colors 가 있으면 표시색을 덮어씀(선·채움) */
+export function renderDiagramView(src: DiagramSource, view: DiagramView, on: string[], uid: string, colors: Record<string, string> = {}): string | null {
   const vb = src.views[view];
   if (!vb) return null;
   const sfx = `__${uid}`;
@@ -80,5 +80,12 @@ export function renderDiagramView(src: DiagramSource, view: DiagramView, on: str
     .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${id}${sfx})`)
     .replace(/href="#([^"]+)"/g, (_, id) => `href="#${id}${sfx}"`);
   s = s.replace(/\sid="(z-[^"]+?)__[^"]+"/g, (m, id) => (on.includes(id) ? m : `${m} display="none"`));
+  // 피그마 색 무시하고 카탈로그 색으로 — 칠해진 곳(stroke/fill 이 none 이 아닌 곳)만 바꾼다
+  const css = Object.entries(colors).map(([id, c]) => {
+    const sel = `#${id}${sfx}`;
+    return `${sel}[stroke]:not([stroke="none"]),${sel} [stroke]:not([stroke="none"]){stroke:${c}!important}`
+      + `${sel}[fill]:not([fill="none"]),${sel} [fill]:not([fill="none"]){fill:${c}!important}`;
+  }).join('');
+  if (css) s = s.replace(/(<svg[^>]*>)/, `$1<style>${css}</style>`);
   return s;
 }
