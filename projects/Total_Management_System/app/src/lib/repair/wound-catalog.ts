@@ -14,15 +14,15 @@
 
 export type DiagramView = 'blade' | 'handle';
 
-/** 그림 파일 위치 (GitHub Pages). {file}.svg + {file}-blade.webp / {file}-handle.webp */
+/** 그림 파일 위치 (GitHub Pages). {file}.svg + 그 안에서 참조하는 {file}-img{n}.webp */
 export const DIAGRAM_BASE = 'https://page.mamoru.kr/projects/as/img/diagram/';
 
-/** 가위 종류 → 그림 파일. 기타는 블런트 그림 공용 */
+/** 가위 종류 → 그림 파일 (2026-10-18 사장님 확정: 장가위=블런트와 형태 같아 공용, 슬라이싱=DRY 그림). 기타는 블런트 */
 export const DIAGRAM_FILE: Record<string, string> = {
   블런트: 'blunt',
   틴닝: 'thinning',
-  장가위: 'long',
-  슬라이싱: 'slicing',
+  장가위: 'blunt',
+  슬라이싱: 'dry',
   기타: 'blunt',
 };
 
@@ -30,15 +30,17 @@ export const SEGS = ['tip', 'mid', 'root'] as const;
 export type Seg = (typeof SEGS)[number];
 export const SEG_KO: Record<Seg, string> = { tip: '날끝', mid: '날 중앙', root: '날 안쪽' };
 
-/** 표시색 — 피그마 그림의 레이어 색과 같아야 한다 (빨강·주황=날 복원 / 파랑=조정 / 보라=교체) */
+/** 표시색 — 그림을 그릴 때 이 색으로 덮어쓴다(피그마에서 칠한 색과 무관). 색 바꾸기 = 여기만
+ *  2026-10-18: 흔하고 가벼운 상처일수록 차분하게, 드물고 심할수록 강하게
+ *  앰버=무뎌짐(가장 흔함) / 빨강=찍힘·빗살 손상 / 파랑=조정 / 보라=교체 */
 export const WOUND_COLOR = {
-  dull: '#CE4545',
-  nick: '#F08A24',
+  dull: '#E0A030',
+  nick: '#D64541',
   tension: '#2F80ED',
   part: '#9B3FE0',
   plain: '#8A8580',
   /** 빗살 손상 (틴닝) */
-  comb: '#CE4545',
+  comb: '#D64541',
 } as const;
 
 export interface WoundKind {

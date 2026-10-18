@@ -1,35 +1,35 @@
 <svg width="1200" height="1700" viewBox="0 0 1200 1700" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="blunt">
-<g id="view-handle" clip-path="url(#clip0_1_2)">
-<rect id="&#235;&#184;&#148;&#235;&#159;&#176;&#237;&#138;&#184; 1" opacity="0.6" x="-198" y="646.764" width="1230.29" height="1230.29" transform="rotate(-11.333 -198 646.764)" fill="url(#pattern0_1_2)"/>
+<g id="view-blade" clip-path="url(#clip0_1_2)">
+<rect id="Meshy_AI_open-blade-fine-thin-line-art 1" opacity="0.6" x="-124.418" y="135.07" width="1334.1" height="888.698" transform="rotate(-10.1376 -124.418 135.07)" fill="url(#pattern0_1_2)"/>
 </g>
-<g id="view-blade" clip-path="url(#clip1_1_2)">
-<rect id="&#235;&#130;&#160;&#237;&#142;&#188;&#236;&#185;&#156;&#235;&#175;&#188;&#234;&#176;&#128;&#236;&#156;&#132; 1" opacity="0.6" x="23" y="-113" width="1102" height="1104" fill="url(#pattern1_1_2)"/>
+<path id="z-root-dull" d="M572 528C572 528 688 568.5 759.5 597" stroke-width="15" stroke-linecap="round" stroke="#F08A24"/>
+<path id="z-mid-dull" d="M372 466.5C445.5 482.5 571.5 527.5 571.5 527.5" stroke-width="15" stroke-linecap="round" stroke="#F08A24"/>
+<path id="z-tip-dull" d="M183.5 414L374 466.5" stroke-width="15" stroke-linecap="round" stroke="#F08A24"/>
+<path id="z-tip-nick" d="M374 116L424 166M424 116L374 166" stroke-width="15" stroke-linecap="round" stroke="#CE4545"/>
+<path id="z-mid-nick" d="M479 293L529 343M529 293L479 343" stroke-width="15" stroke-linecap="round" stroke="#CE4545"/>
+<path id="z-root-nick" d="M610 478L660 528M660 478L610 528" stroke-width="15" stroke-linecap="round" stroke="#CE4545"/>
+<g id="view-handle" clip-path="url(#clip1_1_2)">
+<rect id="Meshy_AI_scissors-3-fine-line-art (1) 1" opacity="0.6" x="-309" y="589.2" width="1490.69" height="1340.43" transform="rotate(-7.09798 -309 589.2)" fill="url(#pattern1_1_2)"/>
 </g>
-<path id="z-root-dull" d="M622.5 497L841 529" stroke="#CE4545" stroke-width="15" stroke-linecap="round"/>
-<path id="z-mid-dull" d="M401 469C492.102 477.915 542.125 486.388 620.5 497" stroke="#CE4545" stroke-width="15" stroke-linecap="round"/>
-<path id="z-tip-dull" d="M172 447L401 469" stroke="#CE4545" stroke-width="15" stroke-linecap="round"/>
-<path id="z-tip-nick" d="M287 168L337 218M337 168L287 218" stroke="#F08A24" stroke-width="15" stroke-linecap="round"/>
-<path id="z-mid-nick" d="M461 317L511 367M511 317L461 367" stroke="#F08A24" stroke-width="15" stroke-linecap="round"/>
-<path id="z-root-nick" d="M641 458L691 508M691 458L641 508" stroke="#F08A24" stroke-width="15" stroke-linecap="round"/>
-<circle id="z-pivot-tension" cx="366.34" cy="1037.34" r="112.5" stroke="#2F80ED" stroke-width="15" stroke-dasharray="10 10"/>
-<circle id="z-part-worn" cx="369.34" cy="1037.34" r="67.5" stroke="#9A3FE0" stroke-width="15"/>
-<circle id="z-stopper" cx="723.34" cy="1413.34" r="53.5" stroke="#9B3FE0" stroke-width="15"/>
+<circle id="z-pivot-tension" cx="391.5" cy="1008.5" r="112.5" stroke="#2F80ED" stroke-width="15" stroke-dasharray="10 10"/>
+<circle id="z-part-worn" cx="394.5" cy="1008.5" r="67.5" stroke="#9A3FE0" stroke-width="15"/>
+<circle id="z-stopper" cx="740.5" cy="1401.5" r="53.5" stroke="#9B3FE0" stroke-width="15"/>
 </g>
 <defs>
 <pattern id="pattern0_1_2" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image0_1_2" transform="scale(0.000797448)"/>
+<use xlink:href="#image0_1_2" transform="scale(0.000791139 0.00118765)"/>
 </pattern>
 <pattern id="pattern1_1_2" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image1_1_2" transform="matrix(0.00118558 0 0 0.00118343 -0.000314651 0)"/>
+<use xlink:href="#image1_1_2" transform="scale(0.0008 0.00088968)"/>
 </pattern>
 <clipPath id="clip0_1_2">
-<rect width="1000" height="720" fill="white" transform="translate(100 880)"/>
-</clipPath>
-<clipPath id="clip1_1_2">
 <rect width="1000" height="720" fill="white" transform="translate(100 100)"/>
 </clipPath>
-<image id="image0_1_2" data-name="&#235;&#184;&#148;&#235;&#159;&#176;&#237;&#138;&#184;.png" width="1254" height="1254" preserveAspectRatio="none" xlink:href="blunt-handle.webp"/>
-<image id="image1_1_2" data-name="&#235;&#130;&#160;&#237;&#142;&#188;&#236;&#185;&#156;&#235;&#175;&#188;&#234;&#176;&#128;&#236;&#156;&#132;.png" width="844" height="845" preserveAspectRatio="none" xlink:href="blunt-blade.webp"/>
+<clipPath id="clip1_1_2">
+<rect width="1000" height="720" fill="white" transform="translate(100 880)"/>
+</clipPath>
+<image id="image0_1_2" data-name="Meshy_AI_open-blade-fine-thin-line-art.jpg" width="1264" height="842" preserveAspectRatio="none" xlink:href="blunt-img1.webp"/>
+<image id="image1_1_2" data-name="Meshy_AI_scissors-3-fine-line-art (1).png" width="1250" height="1124" preserveAspectRatio="none" xlink:href="blunt-img2.webp"/>
 </defs>
 </svg>

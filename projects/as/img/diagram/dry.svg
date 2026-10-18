@@ -1,0 +1,35 @@
+<svg width="1200" height="1700" viewBox="0 0 1200 1700" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="DRY">
+<g id="view-blade" opacity="0.6" clip-path="url(#clip0_5_2)">
+<rect id="Meshy_AI_open-blade-line-art-2 1" x="-133" y="29" width="1413" height="941" fill="url(#pattern0_5_2)"/>
+</g>
+<path id="z-root-dull" d="M594 524.5L741 603" stroke-width="15" stroke-linecap="round" stroke="#F08A24"/>
+<path id="z-mid-dull" d="M417 441C475.5 461.5 593 524.5 593 524.5" stroke-width="15" stroke-linecap="round" stroke="#F08A24"/>
+<path id="z-tip-dull" d="M221 370C300.166 395.882 334.131 407.335 415.5 440.5" stroke-width="15" stroke-linecap="round" stroke="#F08A24"/>
+<path id="z-tip-nick" d="M422 161L472 211M472 161L422 211" stroke-width="15" stroke-linecap="round" stroke="#CE4545"/>
+<path id="z-mid-nick" d="M479 320L529 370M529 320L479 370" stroke-width="15" stroke-linecap="round" stroke="#CE4545"/>
+<path id="z-root-nick" d="M550 467L600 517M600 467L550 517" stroke-width="15" stroke-linecap="round" stroke="#CE4545"/>
+<g id="view-handle" clip-path="url(#clip1_5_2)">
+<rect id="Meshy_AI_scissors-3-fine-line-art (1) 1" opacity="0.6" x="-309" y="589.2" width="1490.69" height="1340.43" transform="rotate(-7.09798 -309 589.2)" fill="url(#pattern1_5_2)"/>
+</g>
+<circle id="z-pivot-tension" cx="391.5" cy="1008.5" r="112.5" stroke="#2F80ED" stroke-width="15" stroke-dasharray="10 10"/>
+<circle id="z-part-worn" cx="394.5" cy="1008.5" r="67.5" stroke="#9A3FE0" stroke-width="15"/>
+<circle id="z-stopper" cx="740.5" cy="1401.5" r="53.5" stroke="#9B3FE0" stroke-width="15"/>
+</g>
+<defs>
+<pattern id="pattern0_5_2" patternContentUnits="objectBoundingBox" width="1" height="1">
+<use xlink:href="#image0_5_2" transform="scale(0.000791139 0.00118797)"/>
+</pattern>
+<pattern id="pattern1_5_2" patternContentUnits="objectBoundingBox" width="1" height="1">
+<use xlink:href="#image1_5_2" transform="scale(0.0008 0.00088968)"/>
+</pattern>
+<clipPath id="clip0_5_2">
+<rect width="1000" height="720" fill="white" transform="translate(100 100)"/>
+</clipPath>
+<clipPath id="clip1_5_2">
+<rect width="1000" height="720" fill="white" transform="translate(100 880)"/>
+</clipPath>
+<image id="image0_5_2" data-name="Meshy_AI_open-blade-line-art-2.png" width="1264" height="842" preserveAspectRatio="none" xlink:href="dry-img1.webp"/>
+<image id="image1_5_2" data-name="Meshy_AI_scissors-3-fine-line-art (1).png" width="1250" height="1124" preserveAspectRatio="none" xlink:href="dry-img2.webp"/>
+</defs>
+</svg>
