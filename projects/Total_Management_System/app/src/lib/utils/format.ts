@@ -205,7 +205,7 @@ export const REPAIR_STATUS_LABEL: Record<string, string> = {
   cost_notified: '진행중',
   payment_confirmed: '진행중',
   repairing: '진행중',
-  ready_to_ship: '출고대기',  // R1: 활성 상태로 승격
+  ready_to_ship: '작업완료',  // 2026-10-19 출고대기→작업완료 (표시만)
   shipped: '출고 완료',
   delivered: '배송완료',
   completed: '완료',

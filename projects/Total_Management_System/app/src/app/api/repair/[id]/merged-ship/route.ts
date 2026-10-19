@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { isAlpsTrackable } from '@/lib/shipping/couriers';
 
 /**
  * POST /api/repair/[id]/merged-ship
@@ -8,8 +9,8 @@ import { sendNotification } from '@/lib/notification/make-webhook';
  * 복원수리 합포장 출고 처리:
  *   - 같은 고객의 판매건/주문건 송장에 복원수리 합쳐 발송한 케이스
  *   - 선택한 송장번호 + courier 를 repairs 에 복사
- *   - status='shipped' 전환 + shipped_at 설정
- *   - 기존 as_shipped 알림톡 자동 발송 (변경 없이 invoice_number 채워졌으므로 정상)
+ *   - 롯데 송장: 송장만 묶음 (상태 유지) → 기사님 수거 감지 시 크론이 출고완료 + as_shipped (2026-10-19)
+ *   - 그 외 택배사·직접입력: 즉시 status='shipped' + shipped_at + as_shipped 알림톡
  *
  * Body:
  *   {
@@ -56,11 +57,15 @@ export async function POST(
       return NextResponse.json({ error: '복원수리 건을 찾을 수 없습니다' }, { status: 404 });
     }
 
-    if (current.status !== 'ready_to_ship') {
+    // 2026-10-19: 작업중에도 합포장 가능 (송장은 작업 상태와 별개)
+    if (!['cost_notified', 'repairing', 'ready_to_ship'].includes(current.status)) {
       return NextResponse.json(
-        { error: 'invalid_status_transition', current: current.status, expected: 'ready_to_ship' },
+        { error: 'invalid_status_transition', current: current.status, expected: 'repairing|ready_to_ship' },
         { status: 400 }
       );
+    }
+    if (current.invoice_number) {
+      return NextResponse.json({ error: `이미 송장(${current.invoice_number})이 있습니다` }, { status: 400 });
     }
 
     const now = new Date().toISOString();
@@ -73,7 +78,26 @@ export async function POST(
       : source_type === 'order'
       ? `아임웹주문(${source_id || '-'})`
       : '직접입력';
-    const note = `판매건 합포장 출고 — 송장 ${cleanInvoice} (${cleanCourier}, 출처: ${sourceLabel})`;
+    // 2026-10-19 롯데 송장 = 송장만 묶어둔다 → 기사님 수거 스캔 때 크론이 출고완료 + 알림톡 (실제 출고 시점에 맞춤)
+    //   그 외 택배사·직접입력 = 자동 감지가 안 되므로 기존처럼 즉시 출고완료 + 알림톡
+    const linkOnly = isAlpsTrackable(cleanCourier);
+    const note = linkOnly
+      ? `합포장 — 송장 ${cleanInvoice} 에 묶음 (출처: ${sourceLabel}). 기사님 수거 시 자동 출고완료`
+      : `판매건 합포장 출고 — 송장 ${cleanInvoice} (${cleanCourier}, 출처: ${sourceLabel})`;
+
+    if (linkOnly) {
+      const { data: linked, error: linkErr } = await db
+        .from('repairs')
+        .update({ invoice_number: cleanInvoice, courier_name: cleanCourier })
+        .eq('id', id)
+        .select()
+        .single();
+      if (linkErr) throw linkErr;
+      await db.from('repair_history').insert({
+        repair_id: id, from_status: current.status, to_status: current.status, changed_by: user.id, note,
+      });
+      return NextResponse.json({ ok: true, repair: linked, note, linked: true });
+    }
 
     // 업데이트: 송장 복사 + 상태 전환
     const { data: updated, error: updateErr } = await db

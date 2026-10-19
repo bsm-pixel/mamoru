@@ -56,11 +56,11 @@ export async function POST(
       );
     }
 
-    // Supabase 업데이트
+    // 2026-10-19: 송장은 작업 상태와 별개 — 미리 뽑아도 진행중이면 진행중 그대로 (작업완료는 사장님이 따로)
+    //   기사님 수거는 상태와 무관하게 크론 track-delivery [2-A] 가 감지해 출고완료 + 알림톡
     const { data: updated, error: updateErr } = await db
       .from('repairs')
       .update({
-        status: 'ready_to_ship',
         invoice_number: invoiceNumber,
         courier_name: '롯데택배',
       })
@@ -73,7 +73,7 @@ export async function POST(
     await db.from('repair_history').insert({
       repair_id: id,
       from_status: repair.status,
-      to_status: 'ready_to_ship',
+      to_status: repair.status,
       changed_by: user.id,
       note: `송장 생성: ${invoiceNumber}`,
     });
@@ -122,13 +122,17 @@ export async function DELETE(
       }
     }
 
-    // DB 상태 되돌림
+    // 2026-10-19: 송장만 지운다 — 작업 상태는 그대로 (전엔 무조건 진행중으로 되돌려 작업완료 표시가 날아갔다)
+    //   출고완료(shipped)에서 취소하면 아직 안 나간 것이므로 작업완료로
+    const nextStatus = repair.status === 'shipped' ? 'ready_to_ship' : repair.status;
     const { data: updated } = await db
       .from('repairs')
       .update({
-        status: 'repairing',
+        status: nextStatus,
         invoice_number: null,
+        courier_name: null,
         shipped_at: null,
+        shipped_source: null,
       })
       .eq('id', id)
       .select()
@@ -137,7 +141,7 @@ export async function DELETE(
     await db.from('repair_history').insert({
       repair_id: id,
       from_status: repair.status,
-      to_status: 'repairing',
+      to_status: nextStatus,
       changed_by: user.id,
       note: `송장 취소: ${cancelledInvNo}${alpsWarning ? ' (' + alpsWarning + ')' : ''}`,
     });

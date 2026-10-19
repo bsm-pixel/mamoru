@@ -35,7 +35,7 @@ const PAYMENT_STATUS_LABEL: Record<string, string> = {
 
 const REPAIR_STATUS_LABEL: Record<string, string> = {
   intake: '접수', pickup_scheduled: '수거접수', cost_notified: '비용안내',
-  repairing: '작업중', shipped: '출고', delivered: '배송완료',
+  repairing: '작업중', ready_to_ship: '작업완료', shipped: '출고', delivered: '배송완료',
   completed: '완료', cancelled: '취소',
 };
 

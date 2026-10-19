@@ -100,7 +100,7 @@ export function useRepairTabData() {
           .order('received_at', { ascending: false })
           .limit(50),
 
-        // 5) 출고대기: ready_to_ship
+        // 5) 작업완료: ready_to_ship (2026-10-19 출고대기→작업완료, 송장 여부 무관)
         supabase
           .from('repairs')
           .select('*')
@@ -200,7 +200,7 @@ export function useRepairTabData() {
     { key: 'visit_scheduled', label: '방문예정', count: tabData.visit_scheduled.length },
     { key: 'inbound_waiting', label: '입고대기', count: tabData.inbound_waiting.length },
     { key: 'in_progress', label: '진행중', count: tabData.in_progress.length },
-    { key: 'ready_to_ship', label: '출고대기', count: tabData.ready_to_ship.length },
+    { key: 'ready_to_ship', label: '작업완료', count: tabData.ready_to_ship.length },
     { key: 'shipped', label: '출고완료', count: tabData.shipped.length },
     { key: 'recall', label: '재수리', count: tabData.recall.length },
   ];

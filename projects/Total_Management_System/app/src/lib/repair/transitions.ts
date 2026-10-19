@@ -13,7 +13,8 @@ const REPAIR_TRANSITIONS: TransitionMap = {
   pickup_scheduled:   ['cost_notified', 'cancelled'],
   cost_notified:      ['repairing', 'cancelled'],   // payment_confirmed 제거
   // 119: 'delivered' 추가 = 택배 없이 매장에서 직접 수령(직접수령) 단축 완료
-  repairing:          ['ready_to_ship', 'delivered', 'cancelled'],  // R1: ready_to_ship 활성 승격
+  // 2026-10-19 'shipped' 추가 = 송장이 진행중에 먼저 나간 건의 수동 출고완료(롯데 수거 감지 실패 시 비상용)
+  repairing:          ['ready_to_ship', 'shipped', 'delivered', 'cancelled'],  // R1: ready_to_ship 활성 승격
   shipped:            ['delivered'],
   delivered:          ['completed'],
   completed:          [],
@@ -41,7 +42,7 @@ export const REPAIR_STATUS_ORDER: RepairStatus[] = [
   'pickup_scheduled',
   'cost_notified',
   'repairing',
-  'ready_to_ship',  // R1: 출고대기 활성 추가
+  'ready_to_ship',  // R1: 활성 추가 (표시명 작업완료)
   'shipped',
   'delivered',
   'completed',
@@ -54,7 +55,7 @@ export const REPAIR_STATUS_LABEL: Record<string, string> = {
   cost_notified: '작업중',
   payment_confirmed: '작업중',  // 레거시
   repairing: '작업중',
-  ready_to_ship: '출고대기',    // R1: 활성 상태로 승격
+  ready_to_ship: '작업완료',    // 2026-10-19 출고대기→작업완료 (DB 값 그대로, 표시만. 송장 여부와 무관한 "수리 끝" 상태)
   shipped: '출고완료',
   delivered: '배송완료',
   completed: '완료',
@@ -94,7 +95,7 @@ export const REPAIR_ACTION_LABEL: Record<string, string> = {
   // 레거시
   picked_up: '입고완료',
   inspecting: '검수 시작',
-  ready_to_ship: '출고대기',
+  ready_to_ship: '작업완료',
 };
 
 /** 진행방식별 분기 라벨 (방문수거 intake → "수거접수 필요") */

@@ -9,7 +9,7 @@ import { EscClose } from '@/components/ui/esc-close';
 import { inspectionNote } from '@/lib/repair/wound-catalog';
 
 /**
- * 통합 준비표 — 복원수리(출고대기)·주문(배송대기)·판매(미출고)를 탭으로 모아 체크 → 한 번에 인쇄.
+ * 통합 준비표 — 복원수리(작업완료)·주문(배송대기)·판매(미출고)를 탭으로 모아 체크 → 한 번에 인쇄.
  * 진입: 세 목록의 '통합 준비표' 버튼 → initialTab 포커스 + 현재 선택분 preselect. (2026-09-07)
  * 체크는 인쇄 대상 선택일 뿐 데이터 무변경(읽기전용).
  */

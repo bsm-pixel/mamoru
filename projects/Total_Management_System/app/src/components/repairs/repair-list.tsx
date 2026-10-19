@@ -22,6 +22,7 @@ import type { Repair } from '@/lib/supabase/types';
 import type { RepairTabKey } from './repair-tab-bar';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
+import { isAlpsTrackable } from '@/lib/shipping/couriers';
 
 interface RepairListProps {
   onSelect?: (id: string) => void;
@@ -474,9 +475,14 @@ function TabSpecificInfo({ repair: r, tab }: { repair: Repair; tab: RepairTabKey
       ) : null;
 
     case 'in_progress':
-      // 입금 상태 + 검수 여부 칩
+      // 입금 상태 + 송장(미리 뽑아둔 경우) 칩
       return (
         <div className="flex items-center gap-2 mt-1.5">
+          {r.invoice_number && (
+            <Badge className="bg-neutral-100 text-neutral-600 text-[10px]">
+              <Package size={10} className="mr-0.5" />{r.invoice_number}
+            </Badge>
+          )}
           {r.paid_at ? (
             <Badge className="bg-green-100 text-green-700 text-[10px]">
               <CheckCircle size={10} className="mr-0.5" />입금완료
@@ -571,7 +577,7 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
   const [showConfirm, setShowConfirm] = useState(false);
   const busy = updateStatus.isPending || updateFields.isPending || shipRepair.isPending;
 
-  // 2026-10-08 방문 건(직접방문 + 송장 없음): 진행중·출고대기 탭에서 바로 [전달완료] → 완료.
+  // 2026-10-08 방문 건(직접방문 + 송장 없음): 진행중·작업완료 탭에서 바로 [전달완료] → 완료.
   //   상세 패널의 [고객 전달 완료]와 같은 요청(서버가 전달 시각·수령방법을 채우고, 후기 요청은 3시간 뒤 크론).
   const isVisitHandover = r.proceed_type === '직접방문' && !r.invoice_number && (tab === 'in_progress' || tab === 'ready_to_ship')
     && (r.status === 'repairing' || r.status === 'ready_to_ship');
@@ -624,6 +630,8 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
     : labels[tab];
   if (!label) return null;
   if (!isVisitHandover && tab === 'in_progress' && r.paid_at) return null;
+  // 2026-10-19 롯데 송장이 있는 작업완료 건 = 누를 게 없다 (기사님 수거 스캔 → 자동 출고완료 + 알림톡)
+  if (!isVisitHandover && tab === 'ready_to_ship' && r.invoice_number && isAlpsTrackable(r.courier_name)) return null;
 
   const btnColors: Record<string, string> = {
     intake: 'bg-blue-100 text-blue-700 hover:bg-blue-200',

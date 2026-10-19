@@ -15,7 +15,7 @@ import { isAlpsTrackable } from '@/lib/shipping/couriers';
  *
  * [1] 아임웹 orders   : shipping → delivered (queryStatus)
  * [2] 복원수리 repairs : shipped → delivered (ALPS 41/45 인수자등록) + 후기요청 (109 추가)
- * [2-A] 복원수리 집하 : ready_to_ship → shipped (ALPS 10 집하) + as_shipped 알림톡  ← 109 신규
+ * [2-A] 복원수리 집하 : 송장 있는 작업중·작업완료 → shipped (ALPS 10 집하) + as_shipped 알림톡  ← 109 신규 / 2026-10-19 상태 확대
  * [3-A] 판매 집하     : 송장O·미출고 → shipped_at 자동 기록 + B2C 출고 알림톡      ← 109 신규
  * [3] 판매 offline_sales: shipped_at → delivered_at + 후기요청
  * [4] B2B 납품 deliveries: → delivered_at
@@ -206,12 +206,14 @@ export async function GET(request: NextRequest) {
     //   - status='shipped' + invoice_number 있는 건 50건 폴링
     //   - ALPS queryTrackingStatus '91' (인수자등록) 감지 시 자동 delivered 전환
     //   - 합포장 출고 케이스(다른 주문 송장 복사된 건)도 동일 흐름 (invoice_number 채워져 있음)
-    // ── [2-A] 복원수리 집하 감지 (ready_to_ship → shipped) — 109 신규 ──
-    //   송장 발급 시 status='ready_to_ship' (api/repair/[id]/ship). 기사님이 수거하면 자동 출고 처리.
+    // ── [2-A] 복원수리 집하 감지 (→ shipped) — 109 신규 ──
+    //   2026-10-19: 송장 생성이 상태를 바꾸지 않게 됨(송장 미리 출력 흐름). 송장이 있으면 진행중이든 작업완료든
+    //   기사님이 수거하는 순간 출고완료 처리. 조회 때 상태로 CAS(중복 알림톡 차단).
+    const PICKUP_WATCH = ['cost_notified', 'repairing', 'ready_to_ship'];
     const { data: repairPickups, error: repairPickupErr } = await db
       .from('repairs')
-      .select('id, as_id, invoice_number, name, phone, courier_name')
-      .eq('status', 'ready_to_ship')
+      .select('id, as_id, invoice_number, name, phone, courier_name, status')
+      .in('status', PICKUP_WATCH)
       .not('invoice_number', 'is', null)
       .limit(50);
 
@@ -226,7 +228,7 @@ export async function GET(request: NextRequest) {
         if (r.state === 'CANCELLED' || r.state === 'NOT_FOUND') continue;
         if (!r.pickedUp) continue;
 
-        // 조건부 CAS — status 가 아직 ready_to_ship 일 때만 전이 (중복 알림톡 차단)
+        // 조건부 CAS — 조회 때 상태 그대로일 때만 전이 (중복 알림톡 차단)
         const { data: claimed } = await db
           .from('repairs')
           .update({
@@ -235,7 +237,7 @@ export async function GET(request: NextRequest) {
             shipped_source: 'alps_pickup',
           })
           .eq('id', repair.id)
-          .eq('status', 'ready_to_ship')
+          .eq('status', repair.status)
           .select('id');
 
         if (!claimed || claimed.length === 0) continue;
@@ -243,7 +245,7 @@ export async function GET(request: NextRequest) {
 
         await db.from('repair_history').insert({
           repair_id: repair.id,
-          from_status: 'ready_to_ship',
+          from_status: repair.status,
           to_status: 'shipped',
           changed_by: null,                       // 자동 cron
           note: '롯데 집하 자동 감지 (기사님 수거 스캔)',

@@ -416,7 +416,7 @@ export default function DashboardPage() {
     repairs: (
       <StatCard
         key="repairs" label="복원수리" icon={Wrench} accent="emerald" href="/repairs/dashboard"
-        value={stats?.repairs.readyToShip || 0} primarySub="출고대기"
+        value={stats?.repairs.readyToShip || 0} primarySub="작업완료"
         secondarySub={stats ? `이번달 ${stats.repairs.monthRepairCount}자루` : undefined}
       />
     ),

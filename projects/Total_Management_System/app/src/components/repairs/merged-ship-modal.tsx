@@ -59,7 +59,7 @@ type SelectedShipment =
  * 흐름:
  *   1. 모달 열기 → 같은 고객의 송장 보유 판매/주문건 자동 검색
  *   2. 검색 결과 리스트에서 1클릭 선택 (또는 fallback 직접 송장번호 입력)
- *   3. confirm → API 호출 → 송장 복사 + status='shipped' + 알림톡 발송
+ *   3. confirm → API: 롯데=송장만 묶음(수거 감지 때 출고완료+알림톡) / 그 외=즉시 출고완료+알림톡
  */
 export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedShipModalProps) {
   const [loading, setLoading] = useState(false);
@@ -131,7 +131,7 @@ export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedSh
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || '처리 실패');
-      toast.success('합포장 출고 처리 완료 + 알림톡 발송');
+      toast.success(result?.linked ? '합포장 완료 — 기사님 수거 시 자동 출고완료 + 알림톡' : '합포장 출고 처리 완료 + 알림톡 발송');
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -144,14 +144,14 @@ export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedSh
   const hasResults = data && (data.sales.length > 0 || data.orders.length > 0);
 
   return (
-    <Modal open={open} onClose={onClose} title="판매건 합포장 출고" className="max-w-2xl">
+    <Modal open={open} onClose={onClose} title="다른 송장에 합포장" className="max-w-2xl">
       <div className="space-y-4">
         {/* 안내 */}
         <div className="flex items-start gap-2 p-3 bg-warm-ivory rounded-lg text-sm text-neutral-700">
           <AlertCircle size={16} className="flex-shrink-0 mt-0.5 text-neutral-500" />
           <div>
-            <p>같은 고객의 다른 주문 송장에 복원수리를 합쳐 발송한 경우 선택하세요.</p>
-            <p className="text-xs text-neutral-500 mt-1">선택한 송장번호가 복원수리 출고 알림톡 (수리내역 조회 + 배송조회) 에 사용됩니다.</p>
+            <p>같은 고객의 판매·주문 송장에 복원수리를 같이 넣어 보낼 때 고르세요.</p>
+            <p className="text-xs text-neutral-500 mt-1">롯데 송장이면 송장만 묶어두고, 기사님이 수거할 때 자동으로 출고완료 + 고객 알림톡이 나갑니다. 다른 택배사·직접 입력은 바로 출고완료 처리됩니다.</p>
           </div>
         </div>
 
@@ -297,7 +297,7 @@ export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedSh
             loading={submitting}
             disabled={!selected || submitting}
           >
-            합포장 출고 처리
+            합포장
           </Button>
         </div>
       </div>

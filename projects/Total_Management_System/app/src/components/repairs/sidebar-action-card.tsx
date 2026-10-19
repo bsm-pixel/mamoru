@@ -85,7 +85,7 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   const isTerminal = currentStatus === 'completed' || currentStatus === 'cancelled';
 
   // 2026-10-08 방문 건 전용 흐름 (사장님 지적: 방문 고객인데 택배 화면을 그대로 써서 흐름이 복잡하다)
-  //   직접방문 + 송장 없음 = 손으로 건네고 끝나는 건. 택배용 버튼(출고대기·송장 미리 생성·재수거)을 숨기고
+  //   직접방문 + 송장 없음 = 손으로 건네고 끝나는 건. 택배용 버튼(작업완료·송장 생성·재수거)을 숨기고
   //   [방문 확정 · 현장결제] → [고객 전달 완료] 두 번으로 끝낸다.
   //   방문 고객이 "택배로 보내 달라"고 해서 송장을 만들면 이 플래그가 꺼지고 자동으로 택배 흐름으로 돌아간다.
   const isVisitFlow = isDirectVisit && !r.invoice_number;
@@ -105,13 +105,22 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   //   (ALPS 자동추적으로 shipped→delivered→completed 전이 후 입금확인 길이 막히던 버그 fix 2026-06-11)
   const canMarkPaid = !r.paid_at && ['cost_notified', 'repairing', 'ready_to_ship', 'shipped', 'delivered', 'completed'].includes(currentStatus);
 
-  // 출고완료 버튼 조건 (ready_to_ship 상태 + 송장 있음)
-  const canMarkShipped = currentStatus === 'ready_to_ship' && !!r.invoice_number;
+  // 2026-10-19 택배 건 작업 단계 재설계 (사장님: 송장을 미리 뽑기도 하고, 작업완료가 먼저일 수도 있다)
+  //   [작업완료] 와 [송장 생성 / 합포장] 은 서로 독립 — 순서 없이 나란히. 송장은 상태를 바꾸지 않는다.
+  //   롯데 송장은 기사님 수거 스캔 → 크론이 자동 출고완료 + 알림톡 (상태 무관). 수동 [출고완료] 는 롯데 외 택배사만.
+  const hasInvoice = !!r.invoice_number;
+  const alpsInvoice = hasInvoice && isAlpsTrackable(r.courier_name);
+  const isCourierWork = !isVisitFlow && ['repairing', 'ready_to_ship'].includes(currentStatus);
+  const workDone = currentStatus === 'ready_to_ship';
 
-  // 합포장 출고 버튼 조건 (송장 없을 때 — 다른 주문 송장에 합쳐 발송한 케이스)
-  const canMergedShip = currentStatus === 'ready_to_ship' && !r.invoice_number && !isVisitFlow;
+  // 수동 출고완료 — 자동 추적이 안 되는 송장(롯데 외)만 주 버튼. 롯데는 수거 감지가 안 될 때만 접힘에서
+  const canMarkShipped = isCourierWork && hasInvoice && !alpsInvoice;
+  const canManualShipFallback = isCourierWork && alpsInvoice;
 
-  // 119: 택배 없이 매장에서 직접 전달(직접수령) → 바로 완료 처리. 작업중/출고대기 + 송장 없을 때만
+  // 합포장 — 송장 없을 때, 송장 생성 옆 선택지 (같은 고객 판매·주문 송장에 묶기)
+  const canMergedShip = isCourierWork && !hasInvoice;
+
+  // 119: 택배 없이 매장에서 직접 전달(직접수령) → 바로 완료 처리. 작업중/작업완료 + 송장 없을 때만
   const canDirectPickup = !isVisitFlow && ['repairing', 'ready_to_ship'].includes(currentStatus) && !r.invoice_number;
 
   // 정밀 재점검 재수거 (출고된 건 회수 — 롯데 반품 API 02). 알림톡 없음, 취소는 ALPS 수동
@@ -121,22 +130,24 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   // 🔒 기존 동작 보존: 출고 섹션이 cost_notified 이상에서 송장 생성을 열어줬다(입금확인 후 바로 발급).
   //    ready_to_ship 은 주 액션이라 여기서 제외 — 나머지 단계에서는 보조 버튼으로 제공한다.
   // 방문 건은 송장이 필요 없다 → [송장 미리 생성] 숨김. 택배로 보내야 하면 접힘 안의 [택배로 보내야 해요]를 쓴다
-  const canBookEarly = !isDirectVisit && !r.invoice_number && ['cost_notified', 'repairing'].includes(currentStatus);
+  //   2026-10-19: 진행중·작업완료는 위 isCourierWork 의 나란한 버튼이 맡는다 → 여기는 비용안내 직후(cost_notified)만
+  const canBookEarly = !isDirectVisit && !r.invoice_number && currentStatus === 'cost_notified';
 
   // 상태 전이 버튼 — 별도 전용 버튼이 있는 전이는 제외. 실제로는 항상 0~1개다
   const visibleTransitions = filtered.filter(
     (s) => !['cancelled', 'cost_notified', 'shipped', 'repairing', 'delivered'].includes(s),
   );
-  // 방문 건의 수리중·전달대기 단계는 주 버튼이 [고객 전달 완료] 하나다 (택배용 [출고대기] 대신)
-  const primaryTransition = canVisitHandover ? undefined : visibleTransitions[0];
+  // 방문 건의 수리중·전달대기 단계는 주 버튼이 [고객 전달 완료] 하나다 (택배용 [작업완료]·[송장 생성] 대신)
+  // 택배 건 작업 단계는 [작업완료]·[송장 생성] 나란한 버튼이 주 액션 (상태전이 단일 버튼 대신)
+  const primaryTransition = canVisitHandover || isCourierWork ? undefined : visibleTransitions[0];
   // 검은 버튼이 실제로 [수리내역서 작성]인 경우 (방문수거 접수처럼 상태전이가 우선이면 아님)
   const inspectionIsPrimary = needInspection && !primaryTransition;
 
   // 접힘(④)에 들어갈 게 하나라도 있는가
   const hasMore =
     visibleTransitions.length > 1 ||
-    canMergedShip || canDirectPickup || canRecall || canVisitHandover ||
-    (!!r.invoice_number && ['ready_to_ship', 'shipped'].includes(currentStatus)) ||
+    canManualShipFallback || canDirectPickup || canRecall || canVisitHandover ||
+    (hasInvoice && ['cost_notified', 'repairing', 'ready_to_ship', 'shipped'].includes(currentStatus)) ||
     currentStatus === 'shipped' ||
     (!!primaryTransition && canSendCostNotice && !isDirectVisit && visibleTransitions.length > 1);
 
@@ -255,23 +266,25 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
         </ActionNote>
       );
     }
-    if (currentStatus === 'ready_to_ship') {
+    // 택배 건 작업 단계 — 작업 상태와 송장 상태를 한 줄에 같이
+    if (isCourierWork) {
       return (
         <ActionNote
           tone="wait"
-          title="출고대기"
-          meta={r.invoice_number ? `${courierLabel(r.courier_name)} ${r.invoice_number}` : '송장 없음'}
+          title={workDone ? '작업완료' : '작업중'}
+          meta={hasInvoice ? `${courierLabel(r.courier_name)} ${r.invoice_number}` : '송장 없음'}
         >
-          {r.invoice_number
-            ? (isAlpsTrackable(r.courier_name)
-                ? '롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인)'
+          {hasInvoice
+            ? (alpsInvoice
+                ? (workDone
+                    ? '기사님이 수거하면 자동으로 출고완료 + 고객 출고 알림톡이 나갑니다 (1시간마다 확인)'
+                    : '송장 준비됨. 작업이 끝나면 [작업완료] — 기사님이 수거하면 자동으로 출고완료됩니다.')
                 : '자동 감지가 안 되는 택배사입니다. 보내셨으면 [출고완료]를 눌러주세요.')
-            : '송장을 만들거나, 판매건에 합포장하거나, 매장에서 직접 전달할 수 있습니다.'}
+            : (workDone
+                ? '송장을 만들거나 다른 송장에 합포장하세요. 매장 전달은 접힘에서.'
+                : '[작업완료]와 [송장 생성]은 순서 상관없이 눌러도 됩니다.')}
         </ActionNote>
       );
-    }
-    if (currentStatus === 'repairing') {
-      return <ActionNote tone="wait" title="작업중">수리가 끝나면 출고대기로 넘겨주세요.</ActionNote>;
     }
     if (currentStatus === 'cost_notified') {
       // 방문 건은 [방문 확정]이 비용안내→수리중을 한 번에 넘긴다. 여기 머물러 있으면 중간에 끊긴 것
@@ -418,6 +431,54 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
                 <CheckCircle size={14} />
                 고객 전달 완료
               </Button>
+            ) : isCourierWork ? (
+              // 2026-10-19 [작업완료] · [송장 생성] 나란히 — 순서 자유. 끝난 쪽은 ✓ 표시로 바뀐다
+              <div className="space-y-1.5">
+                <div className="grid grid-cols-2 gap-2">
+                  {workDone ? (
+                    <div className="h-9 rounded-lg border border-green-200 bg-green-50 text-green-700 text-xs font-semibold flex items-center justify-center gap-1">
+                      <CheckCircle size={13} />작업완료
+                    </div>
+                  ) : (
+                    <Button
+                      className="w-full"
+                      disabled={busy}
+                      loading={updateStatus.variables?.status === 'ready_to_ship' && busy}
+                      onClick={() => updateStatus.mutate({ id: r.id, status: 'ready_to_ship', note: '작업완료' })}
+                    >
+                      <CheckCircle size={14} />
+                      작업완료
+                    </Button>
+                  )}
+                  {hasInvoice ? (
+                    <div className="h-9 rounded-lg border border-green-200 bg-green-50 text-green-700 text-xs font-semibold flex items-center justify-center gap-1 min-w-0" title={r.invoice_number || ''}>
+                      <Package size={13} className="shrink-0" /><span className="truncate">송장 {r.invoice_number}</span>
+                    </div>
+                  ) : (
+                    <Button
+                      variant={workDone ? 'primary' : 'secondary'}
+                      className="w-full"
+                      onClick={() => shipRepair.mutate({ id: r.id })}
+                      loading={shipRepair.isPending}
+                    >
+                      <Truck size={14} />
+                      송장 생성
+                    </Button>
+                  )}
+                </div>
+                {canMergedShip && (
+                  <button type="button" onClick={() => setMergedShipOpen(true)}
+                    className="block ml-auto text-[11px] font-medium text-neutral-500 hover:text-neutral-900 hover:underline">
+                    다른 송장에 합포장 →
+                  </button>
+                )}
+                {canMarkShipped && (
+                  <Button className="w-full" onClick={() => setConfirmAction('mark_shipped')} loading={updateStatus.isPending}>
+                    <Truck size={14} />
+                    출고완료
+                  </Button>
+                )}
+              </div>
             ) : primaryTransition ? (
               <Button
                 className="w-full"
@@ -441,23 +502,13 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
                 <Send size={14} />
                 {isCostResend ? '비용 안내 재발송' : '입고 & 비용안내'}
               </Button>
-            ) : canMarkShipped ? (
-              <Button className="w-full" onClick={() => setConfirmAction('mark_shipped')} loading={updateStatus.isPending}>
-                <Truck size={14} />
-                출고완료
-              </Button>
-            ) : currentStatus === 'ready_to_ship' ? (
-              <Button className="w-full" onClick={() => shipRepair.mutate({ id: r.id })} loading={shipRepair.isPending}>
-                <Truck size={14} />
-                송장 생성
-              </Button>
             ) : null}
 
-            {/* 수리 도중에도 송장을 미리 뽑을 수 있다 (기존 출고 섹션이 열어주던 경로) */}
+            {/* 비용안내 직후에도 송장을 뽑을 수 있다 (진행중·작업완료는 위 나란한 버튼) */}
             {canBookEarly && (
               <Button variant="secondary" className="w-full" onClick={() => shipRepair.mutate({ id: r.id })} loading={shipRepair.isPending}>
                 <Truck size={14} />
-                송장 미리 생성
+                송장 생성
               </Button>
             )}
 
@@ -505,9 +556,9 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
                     🚚 택배로 보내야 해요 — 송장 생성
                   </SubtleButton>
                 )}
-                {canMergedShip && (
-                  <SubtleButton onClick={() => setMergedShipOpen(true)}>
-                    📦 판매건 합포장 출고
+                {canManualShipFallback && (
+                  <SubtleButton onClick={() => setConfirmAction('mark_shipped')} disabled={updateStatus.isPending}>
+                    기사님 수거 감지가 안 돼요 — 수동 출고완료
                   </SubtleButton>
                 )}
                 {canDirectPickup && (
@@ -531,7 +582,7 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
                     </SubtleButton>
                   )
                 )}
-                {!!r.invoice_number && ['ready_to_ship', 'shipped'].includes(currentStatus) && (
+                {hasInvoice && ['cost_notified', 'repairing', 'ready_to_ship', 'shipped'].includes(currentStatus) && (
                   <DangerLink onClick={() => setConfirmAction('cancel_shipment')} disabled={cancelShipment.isPending}>
                     {cancelShipment.isPending ? '취소 중...' : '송장 취소 (기록 지우기)'}
                   </DangerLink>

@@ -640,7 +640,7 @@ export function useRepairDashboardStats() {
           { label: '신규접수', count: intakeNewCount.count || 0, status: 'intake' },
           { label: '입고대기', count: pendingInbound, status: 'pickup_scheduled' },
           { label: '진행중', count: workingCount, status: 'repairing' },
-          { label: '출고대기', count: byStatus.ready_to_ship || 0, status: 'ready_to_ship' },
+          { label: '작업완료', count: byStatus.ready_to_ship || 0, status: 'ready_to_ship' },
           { label: '출고완료', count: byStatus.shipped || 0, status: 'shipped' },
           { label: '배송완료', count: byStatus.delivered || 0, status: 'delivered' },
         ],

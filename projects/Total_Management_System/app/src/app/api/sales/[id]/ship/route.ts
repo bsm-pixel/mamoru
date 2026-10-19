@@ -181,7 +181,19 @@ export async function DELETE(
       .eq('merged_into_sale_id', id).is('cancelled_at', null).is('delivered_at', null)
       .select('id');
 
-    return NextResponse.json({ success: true, warning, mergedCleared: freed?.length || 0, unmerged: isMergedChild });
+    // 2026-10-19 복원수리 합포장 정리 — 이 송장에 묶여 아직 안 나간 복원수리도 송장을 지운다
+    //   (복원수리 합포장은 롯데 송장이면 송장만 묶고 수거 감지를 기다린다 → 죽은 번호가 남으면 영영 출고 안 됨)
+    let repairsCleared = 0;
+    if (!isMergedChild) {
+      const { data: freedRepairs } = await db.from('repairs')
+        .update({ invoice_number: null, courier_name: null })
+        .eq('invoice_number', sale.invoice_number)
+        .in('status', ['cost_notified', 'repairing', 'ready_to_ship'])
+        .select('id');
+      repairsCleared = freedRepairs?.length || 0;
+    }
+
+    return NextResponse.json({ success: true, warning, mergedCleared: freed?.length || 0, unmerged: isMergedChild, repairsCleared });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
