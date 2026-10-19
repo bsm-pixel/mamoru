@@ -12,7 +12,7 @@
  * 사장님 룰: 전체 탭은 모든 활성 상담을 한눈에 보기 위한 진입점 (기본값).
  */
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,7 +56,7 @@ function formatDateHeader(dateStr: string): string {
   return `${m}월 ${d}일 (${wd})`;
 }
 
-export function AllConsultationsList({ onSelect }: { onSelect?: (id: string) => void } = {}) {
+export function AllConsultationsList({ onSelect, searchAction }: { onSelect?: (id: string) => void; searchAction?: ReactNode } = {}) {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -77,8 +77,9 @@ export function AllConsultationsList({ onSelect }: { onSelect?: (id: string) => 
 
   return (
     <div className="space-y-3">
-      {/* 검색 */}
-      <div className="relative">
+      {/* 검색 (+ 모바일 작업 버튼) */}
+      <div className="flex items-center gap-2">
+      <div className="relative flex-1 min-w-0">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
         <input
           type="text"
@@ -88,6 +89,8 @@ export function AllConsultationsList({ onSelect }: { onSelect?: (id: string) => 
           className="w-full h-9 pl-9 pr-3 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-stone-400 transition"
         />
         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-stone-400">{total}건</span>
+      </div>
+        {searchAction}
       </div>
 
       {/* 목록 */}

@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
+import { useIsLg } from '@/hooks/use-grid-mode';
+import { StageGrid } from '@/components/ui/stage-grid';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,12 +20,13 @@ import {
 } from '@/lib/utils/format';
 import { Search, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 
-// 3탭: 신규접수 / 진행중 / 완료
-type TabKey = 'new_intake' | 'in_progress' | 'completed';
+// 4탭: 신규접수 / 진행중 / 보류 / 완료 — 2026-10-19 '보류' 추가 (on_hold 건이 어느 탭에도 안 보이던 문제)
+type TabKey = 'new_intake' | 'in_progress' | 'on_hold' | 'completed';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'new_intake', label: '신규접수' },
   { key: 'in_progress', label: '진행중' },
+  { key: 'on_hold', label: '보류' },
   { key: 'completed', label: '완료' },
 ];
 
@@ -33,13 +36,23 @@ function getTabFilters(tab: TabKey) {
       return { status: 'pending_admin', orderBy: 'received_at_desc' as const };
     case 'in_progress':
       return { status: 'in_progress', orderBy: 'received_at_desc' as const };
+    case 'on_hold':
+      return { status: 'on_hold', orderBy: 'updated_at_desc' as const };
     case 'completed':
       return { statuses: ['completed', 'cancelled'], orderBy: 'updated_at_desc' as const };
   }
 }
 
-export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void } = {}) {
+export function TalkConsultList({ onSelect, searchAction }: { onSelect?: (id: string) => void; searchAction?: ReactNode } = {}) {
   const router = useRouter();
+  const isLg = useIsLg();
+  // 2026-10-19 모바일 단계 버튼판 건수
+  const { data: newCheck } = useConsultations({ status: 'pending_admin', type: 'talk_consult', limit: 1 });
+  const { data: progCheck } = useConsultations({ status: 'in_progress', type: 'talk_consult', limit: 1 });
+  const { data: holdCheck } = useConsultations({ status: 'on_hold', type: 'talk_consult', limit: 1 });
+  const stageCount: Record<TabKey, number | null> = {
+    new_intake: newCheck?.total ?? 0, in_progress: progCheck?.total ?? 0, on_hold: holdCheck?.total ?? 0, completed: null,
+  };
   const [tab, setTab] = useState<TabKey>('new_intake');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -58,8 +71,19 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
 
   return (
     <div className="space-y-4">
-      {/* 검색 */}
-      <div className="relative">
+      {/* 모바일: 단계 버튼판 먼저 — 2026-10-19 */}
+      {!isLg && (
+        <StageGrid
+          ariaLabel="톡 상담 단계"
+          items={TABS.map((t) => ({ key: t.key, label: t.label, count: stageCount[t.key], tone: t.key === 'new_intake' ? 'amber' as const : 'default' as const }))}
+          active={tab}
+          onChange={(k) => { setTab(k); setPage(1); }}
+        />
+      )}
+
+      {/* 검색 (+ 모바일 작업 버튼) */}
+      <div className="flex items-center gap-2">
+      <div className="relative flex-1 min-w-0">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
         <input
           type="text"
@@ -69,9 +93,11 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
           className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
         />
       </div>
+        {searchAction}
+      </div>
 
-      {/* 탭 */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1">
+      {/* 탭 (PC) */}
+      {isLg && <div className="flex items-center gap-1 overflow-x-auto pb-1">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -86,7 +112,7 @@ export function TalkConsultList({ onSelect }: { onSelect?: (id: string) => void 
           </button>
         ))}
         <span className="ml-auto text-xs text-neutral-500 shrink-0">{total}건</span>
-      </div>
+      </div>}
 
       {/* 목록 */}
       <Card padding={false}>

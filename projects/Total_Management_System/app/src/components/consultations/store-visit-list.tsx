@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
+import { useIsLg } from '@/hooks/use-grid-mode';
+import { StageGrid } from '@/components/ui/stage-grid';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,11 +22,13 @@ import {
 import { Calendar, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 
-// #4: 2탭 (확정 / 지난내역)
-type TabKey = 'confirmed' | 'past';
+// #4: 3탭 (확정 / 보류 / 지난내역) — 2026-10-19 '보류' 추가 (on_hold 건이 어느 탭에도 안 보이던 문제)
+export type StoreVisitTabKey = 'confirmed' | 'on_hold' | 'past';
+type TabKey = StoreVisitTabKey;
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'confirmed', label: '확정' },
+  { key: 'on_hold', label: '보류' },
   { key: 'past', label: '지난내역' },
 ];
 
@@ -32,6 +36,8 @@ function getTabFilters(tab: TabKey) {
   switch (tab) {
     case 'confirmed':
       return { status: 'confirmed', dateFilter: 'upcoming' as const, orderBy: 'visit_date_asc' };
+    case 'on_hold':
+      return { status: 'on_hold', orderBy: 'updated_at_desc' };
     case 'past':
       return { statuses: ['completed', 'cancelled', 'confirmed'], dateFilter: 'past' as const, orderBy: 'updated_at_desc' };
   }
@@ -41,13 +47,21 @@ export function StoreVisitList({
   onSelect,
   tab: externalTab,
   onTabChange,
+  searchAction,
 }: {
   onSelect?: (id: string) => void;
   /** 077: controlled 모드 — 부모가 탭 상태 관리 (예: 상담완료 후 자동 전환) */
   tab?: TabKey;
   onTabChange?: (tab: TabKey) => void;
+  /** 검색창 오른쪽 버튼 (모바일 작업줄) */
+  searchAction?: ReactNode;
 } = {}) {
   const router = useRouter();
+  const isLg = useIsLg();
+  // 2026-10-19 모바일 단계 버튼판 건수
+  const { data: confCheck } = useConsultations({ status: 'confirmed', dateFilter: 'upcoming', type: 'store_visit', limit: 1 });
+  const { data: holdCheck } = useConsultations({ status: 'on_hold', type: 'store_visit', limit: 1 });
+  const stageCount: Record<TabKey, number | null> = { confirmed: confCheck?.total ?? 0, on_hold: holdCheck?.total ?? 0, past: null };
   const [internalTab, setInternalTab] = useState<TabKey>('confirmed');
   const tab = externalTab ?? internalTab;
   const setTab = (next: TabKey) => {
@@ -139,8 +153,20 @@ export function StoreVisitList({
 
   return (
     <div className="space-y-4">
-      {/* 검색 */}
-      <div className="relative">
+      {/* 모바일: 단계 버튼판 먼저 — 2026-10-19 */}
+      {!isLg && (
+        <StageGrid
+          ariaLabel="매장 방문 단계"
+          cols={3}
+          items={TABS.map((t) => ({ key: t.key, label: t.label, count: stageCount[t.key] }))}
+          active={tab}
+          onChange={(k) => { setTab(k); setPage(1); }}
+        />
+      )}
+
+      {/* 검색 (+ 모바일 작업 버튼) */}
+      <div className="flex items-center gap-2">
+      <div className="relative flex-1 min-w-0">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
         <input
           type="text"
@@ -150,9 +176,11 @@ export function StoreVisitList({
           className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
         />
       </div>
+        {searchAction}
+      </div>
 
-      {/* R2: 3탭 */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1">
+      {/* 탭 (PC) */}
+      {isLg && <div className="flex items-center gap-1 overflow-x-auto pb-1">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -167,7 +195,7 @@ export function StoreVisitList({
           </button>
         ))}
         <span className="ml-auto text-xs text-neutral-500 shrink-0">{total}건</span>
-      </div>
+      </div>}
 
       {/* 목록 */}
       <Card padding={false}>
@@ -179,7 +207,7 @@ export function StoreVisitList({
           </div>
         ) : consultations.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-neutral-400">
-            {tab === 'confirmed' ? '확정된 방문이 없습니다' : '지난 내역이 없습니다'}
+            {tab === 'confirmed' ? '확정된 방문이 없습니다' : tab === 'on_hold' ? '보류 중인 방문이 없습니다' : '지난 내역이 없습니다'}
           </div>
         ) : dateGroups ? (
           <div>

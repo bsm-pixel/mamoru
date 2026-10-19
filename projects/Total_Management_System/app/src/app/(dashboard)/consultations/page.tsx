@@ -7,7 +7,8 @@ import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
 import { useConsultationSync, useConsultations } from '@/hooks/use-consultations';
 import { useConsultationDashboardStats } from '@/hooks/use-dashboard-stats';
-import { StoreVisitList } from '@/components/consultations/store-visit-list';
+import { StoreVisitList, type StoreVisitTabKey } from '@/components/consultations/store-visit-list';
+import { StageGrid } from '@/components/ui/stage-grid';
 import { FieldRequestList } from '@/components/consultations/field-request-list';
 import { TalkConsultList } from '@/components/consultations/talk-consult-list';
 import { AllConsultationsList } from '@/components/consultations/all-consultations-list';
@@ -59,6 +60,7 @@ const SUB_TAB_STATUSES: Record<string, string[] | undefined> = {
   suggested: ['suggested'],
   action_needed: ['reschedule_requested', 'change_requested'],
   confirmed: ['confirmed'],
+  on_hold: ['on_hold'],  // 2026-10-19 보류 탭 추가
   past: ['completed'],  // 지난내역 탭에서만 완료 핀 노출 (cancelled은 위치 의미 X — 매핑 X)
 };
 
@@ -69,7 +71,9 @@ export default function ConsultationsPage() {
   const [fieldSubTab, setFieldSubTab] = useState<string>('new_intake');
   const [createModalOpen, setCreateModalOpen] = useState(false);
   // 077: 매장방문 서브탭 상태 — 상담완료 후 '확정' → '지난내역' 자동 전환용
-  const [storeVisitTab, setStoreVisitTab] = useState<'confirmed' | 'past'>('confirmed');
+  const [storeVisitTab, setStoreVisitTab] = useState<StoreVisitTabKey>('confirmed');
+  // 2026-10-19 모바일 출장 지도 — 기본 접힘 (전엔 320px 지도가 목록 위를 차지하고 스크롤이 지도에 걸렸다)
+  const [mobileMapOpen, setMobileMapOpen] = useState(false);
   const sync = useConsultationSync();
   const needAction = useNeedActionCounts();
   const { data: stats } = useConsultationDashboardStats();
@@ -82,13 +86,36 @@ export default function ConsultationsPage() {
   // PC 여부 감지 (lg:1024px+) — SlidePanel 조건부 렌더링용. 공용 훅으로 일원화
   const isLg = useIsLg();
 
+  // 모바일 작업줄 버튼 — 검색창 오른쪽 (전엔 탭 줄 끝 '일정수동등록', 작업 영역 밖)
+  const addButton = (
+    <button
+      type="button"
+      onClick={() => setCreateModalOpen(true)}
+      className="shrink-0 h-9 px-3 rounded-xl bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap"
+    >
+      <CalendarPlus size={14} />일정 등록
+    </button>
+  );
+  const mobileAction = isLg ? undefined : addButton;
+
   return (
     <>
-      <Topbar title="상담관리" />
+      {/* 2026-10-19 모바일: 새로고침은 상단바 아이콘 하나 (전엔 상단 아이콘 + 화면 폭 전체 새로고침 버튼 중복) */}
+      <Topbar
+        title="상담관리"
+        hideRefresh={!isLg}
+        action={!isLg && (
+          <button type="button" onClick={() => sync.mutate()} disabled={sync.isPending} aria-label="목록 새로고침"
+            className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-warm-ivory transition disabled:opacity-60">
+            <RefreshCw size={16} className={`text-neutral-500 ${sync.isPending ? 'animate-spin' : ''}`} />
+          </button>
+        )}
+      />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-4 overflow-x-hidden">
-        {/* 1행: 요약 4카드 (상태 기반: 신규/조율중/확정/완료) + 새로고침 */}
-        <div className="grid grid-cols-12 gap-3">
+        {/* 1행: 요약 4카드 (상태 기반: 신규/조율중/확정/완료) + 새로고침 — PC 전용
+            (모바일은 아래 종류·단계 버튼판이 같은 역할. 카드는 엉뚱한 탭으로 이동해 혼란만 줬다) */}
+        {isLg && <div className="grid grid-cols-12 gap-3">
           <div className="col-span-12 lg:col-span-9 grid grid-cols-2 lg:grid-cols-4 gap-3">
             <StatCard label="신규" icon={Inbox} accent="blue"
               value={stats?.newIntake || 0} primarySub="확인 필요"
@@ -117,10 +144,20 @@ export default function ConsultationsPage() {
               {sync.isPending ? '새로고침 중...' : '새로고침'}
             </button>
           </div>
-        </div>
+        </div>}
 
-        {/* 2행: 최상위 4탭 (전체+매장+출장+톡) + 일정 수동 등록 */}
-        <div className="flex items-center justify-between gap-2 border-b border-stone-200">
+        {/* 모바일: 종류 4칸 버튼판 — 숫자 = 처리 필요 건수 (가로 스크롤로 '톡'이 가려지던 문제) */}
+        {!isLg && (
+          <StageGrid
+            ariaLabel="상담 종류"
+            items={TABS.map((t) => ({ key: t.key, label: t.label, count: t.key === 'store_visit' ? null : needAction[t.key], tone: 'amber' as const }))}
+            active={activeTab}
+            onChange={(k) => { setActiveTab(k); setSelectedFieldId(null); setSelectedId(null); }}
+          />
+        )}
+
+        {/* 2행: 최상위 4탭 (전체+매장+출장+톡) + 일정 수동 등록 — PC */}
+        {isLg && <div className="flex items-center justify-between gap-2 border-b border-stone-200">
           <div className="flex gap-1 overflow-x-auto scrollbar-hide min-w-0">
             {TABS.map((tab) => (
               <button
@@ -149,7 +186,7 @@ export default function ConsultationsPage() {
             <CalendarPlus size={14} />
             일정수동등록
           </button>
-        </div>
+        </div>}
 
         {/* 메인 콘텐츠 — 탭별 분기 (전체 / 매장 / 출장 / 톡) */}
         {activeTab === 'all' ? (
@@ -157,7 +194,7 @@ export default function ConsultationsPage() {
             {/* 전체 — 모바일: 리스트 + 슬라이드 패널 */}
             {!isLg && (
               <div>
-                <AllConsultationsList onSelect={setSelectedId} />
+                <AllConsultationsList onSelect={setSelectedId} searchAction={mobileAction} />
               </div>
             )}
 
@@ -189,21 +226,43 @@ export default function ConsultationsPage() {
           <>
             {/* 모바일: 기존 레이아웃 — PC에서는 렌더링하지 않음 */}
             {!isLg && (
-              <div>
-                <div className="mb-4">
-                  <FieldRequestMap
-                    selectedFieldId={selectedFieldId}
-                    onFieldSelect={setSelectedFieldId}
-                    onSelect={setSelectedId}
-                    activeStatuses={SUB_TAB_STATUSES[fieldSubTab]}
-                  />
-                </div>
+              <div className="space-y-3">
                 <FieldRequestList
                   selectedFieldId={selectedFieldId}
                   onFieldSelect={setSelectedFieldId}
                   onSelect={setSelectedId}
                   onSubTabChange={setFieldSubTab}
+                  searchAction={
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setMobileMapOpen((v) => !v)}
+                        aria-label={mobileMapOpen ? '지도 접기' : '지도 보기'}
+                        className={`shrink-0 h-9 w-9 rounded-xl border flex items-center justify-center transition ${mobileMapOpen ? 'border-stone-900 bg-stone-900 text-white' : 'border-stone-200 bg-white text-stone-600'}`}
+                      >
+                        <MapPin size={16} />
+                      </button>
+                      {addButton}
+                    </>
+                  }
                 />
+                {/* 지도 — 📍 버튼으로 펼칠 때만 (목록 아래가 아니라 위에 띄우면 목록이 밀리므로 목록 위 고정 대신 접힘 기본) */}
+                {mobileMapOpen && (
+                  <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 z-30 h-[55vh] bg-white border-t border-stone-200 shadow-2xl">
+                    <div className="flex items-center justify-between px-4 h-10 border-b border-stone-100">
+                      <span className="text-xs font-semibold text-stone-600">출장 지도</span>
+                      <button type="button" onClick={() => setMobileMapOpen(false)} className="h-8 px-2 text-xs font-semibold text-stone-500">닫기</button>
+                    </div>
+                    <div className="h-[calc(55vh-2.5rem)]">
+                      <FieldRequestMap
+                        selectedFieldId={selectedFieldId}
+                        onFieldSelect={setSelectedFieldId}
+                        onSelect={(id) => { setSelectedId(id); setMobileMapOpen(false); }}
+                        activeStatuses={SUB_TAB_STATUSES[fieldSubTab]}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -258,7 +317,7 @@ export default function ConsultationsPage() {
             {/* 매장방문 — 모바일: 리스트 + 슬라이드 패널 */}
             {!isLg && (
               <div>
-                <StoreVisitList onSelect={setSelectedId} tab={storeVisitTab} onTabChange={setStoreVisitTab} />
+                <StoreVisitList onSelect={setSelectedId} tab={storeVisitTab} onTabChange={setStoreVisitTab} searchAction={mobileAction} />
               </div>
             )}
 
@@ -302,7 +361,7 @@ export default function ConsultationsPage() {
           <>
             {!isLg && (
               <div>
-                <TalkConsultList onSelect={setSelectedId} />
+                <TalkConsultList onSelect={setSelectedId} searchAction={mobileAction} />
               </div>
             )}
 

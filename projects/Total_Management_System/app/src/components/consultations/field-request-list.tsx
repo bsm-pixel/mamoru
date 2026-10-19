@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
+import { useIsLg } from '@/hooks/use-grid-mode';
+import { StageGrid } from '@/components/ui/stage-grid';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,15 +22,17 @@ import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import type { Consultation } from '@/lib/supabase/types';
 
-// 6탭: 오늘출장 | 신규접수 | 제안중 | 일정재요청 | 확정 | 지난내역
-type TabKey = 'today' | 'new_intake' | 'suggested' | 'action_needed' | 'confirmed' | 'past';
+// 7탭: 오늘출장 | 신규접수 | 제안중 | 일정재요청 | 확정 | 보류 | 지난내역
+//   2026-10-19 '보류' 추가 — 전엔 on_hold 건이 어느 탭에도 안 보여 사라졌다
+type TabKey = 'today' | 'new_intake' | 'suggested' | 'action_needed' | 'confirmed' | 'on_hold' | 'past';
 
-const TABS: { key: TabKey; label: string }[] = [
+const TABS: { key: TabKey; label: string; short?: string }[] = [
   { key: 'today', label: '오늘출장' },
   { key: 'new_intake', label: '신규접수' },
   { key: 'suggested', label: '제안중' },
-  { key: 'action_needed', label: '일정재요청' },
+  { key: 'action_needed', label: '일정재요청', short: '재요청' },
   { key: 'confirmed', label: '확정' },
+  { key: 'on_hold', label: '보류' },
   { key: 'past', label: '지난내역' },
 ];
 
@@ -44,6 +48,8 @@ function getTabFilters(tab: TabKey) {
       return { statuses: ['reschedule_requested', 'change_requested'], orderBy: 'received_at_desc' as const };
     case 'confirmed':
       return { status: 'confirmed', dateFilter: 'upcoming' as const, orderBy: 'visit_date_asc' as const };
+    case 'on_hold':
+      return { status: 'on_hold', orderBy: 'updated_at_desc' as const };
     case 'past':
       return { statuses: ['completed', 'cancelled'], orderBy: 'updated_at_desc' as const };
   }
@@ -54,9 +60,12 @@ interface Props {
   onFieldSelect?: (id: string | null) => void;
   onSelect?: (id: string) => void;  // 상세 패널 열기
   onSubTabChange?: (tab: string) => void; // 서브탭 변경 → 지도 연동
+  /** 검색창 오른쪽 버튼 (모바일 작업줄 — 예: [+ 일정 등록]) */
+  searchAction?: ReactNode;
 }
 
-export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onSubTabChange }: Props) {
+export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onSubTabChange, searchAction }: Props) {
+  const isLg = useIsLg();
   const router = useRouter();
   const [tab, setTab] = useState<TabKey>('new_intake');
   const [search, setSearch] = useState('');
@@ -79,6 +88,22 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
     limit: 1,
   });
   const actionCount = actionCheck?.total || 0;
+
+  // 2026-10-19 모바일 단계 버튼판 건수 (limit 1 → total 만 사용)
+  const { data: newCheck } = useConsultations({ status: 'pending_admin', type: 'field_request', limit: 1 });
+  const { data: suggestedCheck } = useConsultations({ status: 'suggested', type: 'field_request', limit: 1 });
+  const { data: confirmedCheck } = useConsultations({ status: 'confirmed', dateFilter: 'upcoming', type: 'field_request', limit: 1 });
+  const { data: holdCheck } = useConsultations({ status: 'on_hold', type: 'field_request', limit: 1 });
+  const stageCount: Record<TabKey, number | null> = {
+    today: todayCount,
+    new_intake: newCheck?.total ?? 0,
+    suggested: suggestedCheck?.total ?? 0,
+    action_needed: actionCount,
+    confirmed: confirmedCheck?.total ?? 0,
+    on_hold: holdCheck?.total ?? 0,
+    past: null,
+  };
+  const changeTab = (k: TabKey) => { setTab(k); setPage(1); setSelectedRegion(null); onSubTabChange?.(k); };
 
   // 최초 로드 시 우선순위: 일정재요청 > 오늘출장 > 신규접수
   const [initialTabSet, setInitialTabSet] = useState(false);
@@ -229,8 +254,19 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
 
   return (
     <div className="space-y-4">
-      {/* 검색 — 모든 탭에서 동일 위치 유지 */}
-      <div className="relative">
+      {/* 모바일: 단계 버튼판이 먼저 (가로 스크롤 탭 대신) — 2026-10-19 */}
+      {!isLg && (
+        <StageGrid
+          ariaLabel="출장 상담 단계"
+          items={TABS.map((t) => ({ key: t.key, label: t.short || t.label, count: stageCount[t.key], tone: t.key === 'action_needed' || t.key === 'today' ? 'amber' as const : 'default' as const }))}
+          active={tab}
+          onChange={changeTab}
+        />
+      )}
+
+      {/* 검색 — 모든 탭에서 동일 위치 유지. 모바일은 오른쪽에 작업 버튼 */}
+      <div className="flex items-center gap-2">
+      <div className="relative flex-1 min-w-0">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
         <input
           type="text"
@@ -240,13 +276,15 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
             className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm text-indigo-black placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 transition"
           />
         </div>
+        {searchAction}
+      </div>
 
-      {/* 6탭 */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1">
+      {/* 7탭 (PC) */}
+      {isLg && <div className="flex items-center gap-1 overflow-x-auto pb-1">
         {TABS.map((t) => (
           <button
             key={t.key}
-            onClick={() => { setTab(t.key); setPage(1); setSelectedRegion(null); onSubTabChange?.(t.key); }}
+            onClick={() => changeTab(t.key)}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
               tab === t.key
                 ? 'bg-stone-900 text-white'
@@ -274,7 +312,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
           </button>
         ))}
         {tab !== 'today' && <span className="ml-auto text-xs text-neutral-500 shrink-0">{total}건</span>}
-      </div>
+      </div>}
 
       {/* 지역 필터 토글 + 칩 */}
       {(tab === 'new_intake' || tab === 'action_needed') && consultations.length > 0 && (
@@ -331,7 +369,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
               </div>
             ) : filteredConsultations.length === 0 ? (
               <div className="flex items-center justify-center h-32 text-sm text-neutral-400">
-                {selectedRegion ? `${selectedRegion} 지역에 해당 건이 없습니다` : tab === 'past' ? '지난 출장 내역이 없습니다' : '해당 출장요청이 없습니다'}
+                {selectedRegion ? `${selectedRegion} 지역에 해당 건이 없습니다` : tab === 'past' ? '지난 출장 내역이 없습니다' : tab === 'on_hold' ? '보류 중인 출장요청이 없습니다' : '해당 출장요청이 없습니다'}
               </div>
             ) : (
               <div className="divide-y divide-neutral-100">
