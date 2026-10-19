@@ -181,11 +181,11 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
   const productPick = useEnterSelect(filteredProducts, (p: Product) => { addProduct(p); setProductSearch(''); });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" {...backdropClose(onClose)}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50" {...backdropClose(onClose)}>
       <EscClose onClose={onClose} />
+      {/* 2026-10-19 모바일: 폭 780px 고정이라 폰에서 양옆이 잘렸다 → 모바일은 화면 꽉 찬 시트, PC 는 기존 780px */}
       <div
-        className="bg-white rounded-xl shadow-2xl flex flex-col"
-        style={{ width: '780px', maxHeight: '90vh' }}
+        className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl flex flex-col w-full sm:w-[780px] max-h-[100dvh] sm:max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 헤더 */}
@@ -296,7 +296,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
           </div>
 
           {/* 날짜 */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-neutral-500 mb-1 block">납품일</label>
               <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)}
@@ -351,9 +351,9 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
             {/* 임시 제품 직접 입력 */}
             <div className="flex gap-2 mt-2">
               <input type="text" value={customName} onChange={(e) => setCustomName(e.target.value)}
-                placeholder="품목명 직접 입력" className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs placeholder:text-neutral-400" />
+                placeholder="품목명 직접 입력" className="flex-1 min-w-0 h-7 px-2 rounded border border-neutral-200 text-xs placeholder:text-neutral-400" />
               <input type="number" value={customPrice} onChange={(e) => setCustomPrice(e.target.value)}
-                placeholder="금액" className="w-24 h-7 px-2 rounded border border-neutral-200 text-xs text-right placeholder:text-neutral-400" />
+                placeholder="금액" className="w-20 sm:w-24 shrink-0 h-7 px-2 rounded border border-neutral-200 text-xs text-right placeholder:text-neutral-400" />
               <button onClick={() => {
                 if (!customName.trim() || !parseInt(customPrice)) return;
                 setCart((prev) => [...prev, { product_name: customName.trim(), quantity: 1, unit_price: parseInt(customPrice) || 0 }]);
@@ -428,9 +428,9 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
             {/* 추가 항목 */}
             <div className="flex gap-2">
               <input type="text" value={repairExtraName} onChange={(e) => setRepairExtraName(e.target.value)}
-                placeholder="추가 항목 (예: 급행료)" className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs placeholder:text-neutral-400" />
+                placeholder="추가 항목 (예: 급행료)" className="flex-1 min-w-0 h-7 px-2 rounded border border-neutral-200 text-xs placeholder:text-neutral-400" />
               <input type="number" value={repairExtraPrice} onChange={(e) => setRepairExtraPrice(e.target.value)}
-                placeholder="금액" className="w-24 h-7 px-2 rounded border border-neutral-200 text-xs text-right placeholder:text-neutral-400" />
+                placeholder="금액" className="w-20 sm:w-24 shrink-0 h-7 px-2 rounded border border-neutral-200 text-xs text-right placeholder:text-neutral-400" />
               <button onClick={() => {
                 if (!repairExtraName.trim() || !parseInt(repairExtraPrice)) return;
                 setRepairExtras((prev) => [...prev, { product_name: repairExtraName.trim(), quantity: 1, unit_price: parseInt(repairExtraPrice) || 0, category: 'RS' }]);
@@ -465,8 +465,8 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
             )}
           </div>
 
-          {/* VAT + 증빙 + 결제 — 그루핑 */}
-          <div className="grid grid-cols-3 gap-3">
+          {/* VAT + 증빙 + 결제 — 그루핑 (모바일 세로) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="border border-neutral-200 rounded-lg p-2.5">
               <label className="text-[10px] font-semibold text-neutral-400 mb-1.5 block">부가세</label>
               <div className="flex gap-1">
@@ -531,7 +531,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
           </div>
 
           {/* 할인 + 메모 */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-neutral-500 mb-1 block">할인금액</label>
               <input type="number" value={discount || ''} onChange={(e) => setDiscount(parseInt(e.target.value) || 0)}

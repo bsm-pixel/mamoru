@@ -394,11 +394,14 @@ function NewSaleContent() {
     return matchSearch && matchCat;
   });
 
+  const submitDisabled = (!selectedCustomer && !customerName.trim()) || (cart.length === 0 && !hasRepair) || createSale.isPending;
+
   return (
     <>
       <Topbar title="판매 입력" />
 
-      <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
+      {/* 2026-10-19 모바일: 하단 고정 바(장바구니·합계·판매 등록) 높이만큼 아래 여백 */}
+      <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 pb-32 xl:pb-4 space-y-3">
         {/* 070: 상담 link 안내 배너 */}
         {sourceConsultation && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-xs">
@@ -417,8 +420,8 @@ function NewSaleContent() {
             <div className="mb-2">
               <ScanInput onScan={handleScan} />
             </div>
-            {/* 검색 + 카테고리 필터 */}
-            <div className="flex items-center gap-2">
+            {/* 검색 + 카테고리 필터 — 모바일은 카테고리를 검색 아래 줄로 (전엔 한 줄에 몰려 검색칸이 80px 로 줄었다) */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <input
                 type="text"
                 value={productSearch}
@@ -438,12 +441,12 @@ function NewSaleContent() {
                   if (filteredProducts.length === 1) { e.preventDefault(); addToCart(filteredProducts[0]); setProductSearch(''); setActiveIdx(-1); }
                 }}
                 placeholder="제품명 또는 SKU 검색 (스캔도 가능)"
-                className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                className="w-full sm:flex-1 min-w-0 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
               />
-              <div className="flex gap-1 shrink-0">
+              <div className="flex flex-wrap gap-1 sm:shrink-0">
                 <button
                   onClick={() => { setProductCategory('all'); setActiveIdx(-1); }}
-                  className={`px-2.5 py-1.5 text-xs rounded-md border transition ${
+                  className={`h-8 px-2.5 text-xs rounded-md border transition ${
                     productCategory === 'all' ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'
                   }`}
                 >전체</button>
@@ -451,7 +454,7 @@ function NewSaleContent() {
                   <button
                     key={key}
                     onClick={() => { setProductCategory(key); setActiveIdx(-1); }}
-                    className={`px-2.5 py-1.5 text-xs rounded-md border transition ${
+                    className={`h-8 px-2.5 text-xs rounded-md border transition ${
                       productCategory === key ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'
                     }`}
                   >{label}</button>
@@ -558,14 +561,14 @@ function NewSaleContent() {
                   value={customProductName}
                   onChange={(e) => setCustomProductName(e.target.value)}
                   placeholder="제품명"
-                  className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                  className="flex-1 min-w-0 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
                 />
                 <input
                   type="number"
                   value={customProductPrice}
                   onChange={(e) => setCustomProductPrice(e.target.value)}
                   placeholder="금액"
-                  className="w-28 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                  className="w-24 sm:w-28 shrink-0 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
                 />
                 <Button
                   size="sm"
@@ -773,7 +776,7 @@ function NewSaleContent() {
           </div>
 
           {/* 우: 장바구니 + 판매등록 */}
-          <div className="space-y-3">
+          <div className="space-y-3" id="mm-cart">
             <Card>
               <h3 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
                 <ShoppingBag size={16} />
@@ -798,12 +801,12 @@ function NewSaleContent() {
                             <p className="text-xs text-neutral-500">{formatKRW(item.unitPrice)} x {item.quantity} = {formatKRW(item.unitPrice * item.quantity)}</p>
                           </div>
                           <div className="flex items-center gap-1">
-                            <button onClick={() => updateQuantity(key, -1)} className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Minus size={12} /></button>
+                            <button onClick={() => updateQuantity(key, -1)} className="w-8 h-8 xl:w-6 xl:h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Minus size={12} /></button>
                             <input type="number" min="1" value={item.quantity}
                               onChange={(e) => { const val = parseInt(e.target.value) || 1; setCart((prev) => prev.map((it) => cartItemKey(it) === key ? { ...it, quantity: Math.max(1, val) } : it)); }}
-                              className="w-10 h-6 text-center text-sm font-semibold border border-neutral-200 rounded bg-white focus:outline-none focus:ring-1 focus:ring-neutral-300 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
-                            <button onClick={() => updateQuantity(key, 1)} className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Plus size={12} /></button>
-                            <button onClick={() => removeFromCart(key)} className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"><Trash2 size={12} /></button>
+                              className="w-10 h-8 xl:h-6 text-center text-sm font-semibold border border-neutral-200 rounded bg-white focus:outline-none focus:ring-1 focus:ring-neutral-300 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
+                            <button onClick={() => updateQuantity(key, 1)} className="w-8 h-8 xl:w-6 xl:h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Plus size={12} /></button>
+                            <button onClick={() => removeFromCart(key)} className="w-8 h-8 xl:w-6 xl:h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"><Trash2 size={12} /></button>
                           </div>
                         </div>
                         {item.product && customerType !== 'dealer' && customerType !== 'academy' ? (
@@ -848,13 +851,30 @@ function NewSaleContent() {
               )}
             </Card>
 
-            <Button className="w-full"
-              disabled={(!selectedCustomer && !customerName.trim()) || (cart.length === 0 && !hasRepair) || createSale.isPending}
-              onClick={handleSubmit}>
-              {createSale.isPending ? '등록 중...' : `판매 등록 (${formatKRW(paidAmount)})`}
-            </Button>
+            <div className="hidden xl:block">
+              <Button className="w-full"
+                disabled={submitDisabled}
+                onClick={handleSubmit}>
+                {createSale.isPending ? '등록 중...' : `판매 등록 (${formatKRW(paidAmount)})`}
+              </Button>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* 2026-10-19 모바일 하단 고정 바 — 상품을 고르는 동안에도 장바구니·합계·[판매 등록]이 보이게
+          (전엔 맨 아래까지 스크롤해야 등록 버튼이 있었다). 왼쪽을 누르면 장바구니로 이동 */}
+      <div className="xl:hidden fixed left-3 right-3 z-30 bottom-[calc(3.5rem+env(safe-area-inset-bottom)+8px)] md:bottom-4 rounded-2xl bg-stone-900 text-white shadow-xl px-3 py-2.5 flex items-center gap-3">
+        <button type="button" onClick={() => document.getElementById('mm-cart')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="flex-1 min-w-0 text-left">
+          <p className="text-[11px] text-white/60">
+            장바구니 {cart.reduce((n, it) => n + it.quantity, 0)}개{hasRepair || repShipping ? ' + 복원수리' : ''}
+          </p>
+          <p className="text-base font-bold tabular-nums truncate">{formatKRW(paidAmount)}</p>
+        </button>
+        <button type="button" disabled={submitDisabled} onClick={handleSubmit}
+          className="h-11 px-5 rounded-xl bg-white text-stone-900 text-sm font-bold disabled:opacity-40 whitespace-nowrap">
+          {createSale.isPending ? '등록 중...' : '판매 등록'}
+        </button>
       </div>
     </>
   );
