@@ -551,32 +551,28 @@ body[style*="hidden"] .fsz{opacity:0; pointer-events:none}
     <button class="btn btn--fill btn--full" style="max-width:280px;margin:24px auto 0" onclick="openRsvp()">참석 의사 전달하기</button>
   </section>
 
-  <!-- ═══════════ 6. 신부측 피로연 안내 (맨 하단) ═══════════ -->
+  <!-- ═══════════ 6. 신부측 피로연 (2026-10-19: 행사 종료 → 감사 인사 + 기록) ═══════════ -->
   <section class="reception section center reveal" id="reception">
     <div class="divider"></div>
     <div class="reception-frame">
     <div class="label-sm" style="margin-top:0">Reception</div>
-    <h3 class="title">신부측 피로연 안내</h3>
-    <!-- ✏️ 안내 인사말 -->
+    <h3 class="title">피로연을 마치며</h3>
+    <!-- ✏️ 감사 인사말 -->
     <p class="reception-msg">
-      <b>거리가 멀어 본식 참석이</b>
-      <b>어려우신 분들을 위해 혼례에 앞서</b>
-      <b>별도의 피로연 자리를 마련하였습니다.</b>
-      <b>귀한 발걸음으로 두 사람의</b>
-      <b>행복한 앞날을 축복해주시면</b>
-      <b>더 큰 기쁨과 격려가 되겠습니다.</b>
+      <b>지난 10월 17일,</b>
+      <b>먼 길 마다하지 않고</b>
+      <b>귀한 걸음을 해주신</b>
+      <b>모든 분들께</b>
+      <b>깊이 감사드립니다.</b>
     </p>
-    <div class="reception-info">
-      <div class="cal" id="calRec" style="margin-bottom:26px"></div>
-      <div class="ri-date" id="recDate">2026. 10. 17. (토) · 오후 5시 – 8시</div>
+    <p class="reception-msg" style="margin-top:16px">
+      <b>따뜻하게 건네주신</b>
+      <b>축하와 격려를 오래 간직하며</b>
+      <b>잘 살겠습니다.</b>
+    </p>
+    <div class="reception-info">   <!-- 끝난 행사이므로 달력·지도·길안내는 제거, 날짜·장소만 기록 -->
+      <div class="ri-date" id="recDate">2026. 10. 17. (토)</div>
       <div class="venue-name" id="recName">사랑한식부페</div>
-      <div class="venue-addr" id="recAddr">충남 보령시 원동1길 30-8</div>
-    </div>
-    <button class="btn btn--fill btn--full" onclick="openRecMap()">지도 보기</button>
-    <div class="nav-row">
-      <button class="btn" onclick="recTmap()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#0F6BFF"/><path d="M6.5 7h11v2.65h-4.15V17h-2.7V9.65H6.5V7Z" fill="#fff"/></svg>티맵</button>
-      <button class="btn" onclick="recKakao()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#FEE500"/><path d="M12 5.6c-3.62 0-6.55 2.2-6.55 4.92 0 1.72 1.17 3.23 2.94 4.1l-.66 2.48a.3.3 0 0 0 .45.33l2.98-1.92c.27.02.55.03.84.03 3.62 0 6.55-2.2 6.55-4.92S15.62 5.6 12 5.6Z" fill="#3C1E1E"/></svg>카카오맵</button>
-      <button class="btn" onclick="recNaver()"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#03C75A"/><path d="M8.3 7h3.2l2.7 4.15V7h2.5v10h-3.2l-2.7-4.15V17H8.3V7Z" fill="#fff"/></svg>네이버</button>
     </div>
     </div><!-- /reception-frame -->
   </section>
@@ -916,9 +912,9 @@ function navNaver(){
 // 5c. 피로연 — 좌표 미검증 → 상호+도로명주소로 지도앱 '검색'(앱이 정확히 지오코딩·핀). 앱에서 한 번 탭으로 길찾기.
 function fillReception(){
   const r=CONFIG.reception;
-  $('#recDate').textContent = r.dateText;
+  // 행사 종료 후: 섹션은 날짜(요일까지)·상호만 기록으로 노출 — 시간·주소는 표시하지 않음
+  $('#recDate').textContent = r.dateText.split('·')[0].trim();
   $('#recName').textContent = r.name;
-  $('#recAddr').textContent = r.address;
   const dp = r.dateText.split('·');                  // '날짜 · 시간' → 두 줄로
   $('#recmDate').innerHTML = dp.map(t=>`<span>${t.trim()}</span>`).join('');
   $('#recmName').textContent = r.name;
