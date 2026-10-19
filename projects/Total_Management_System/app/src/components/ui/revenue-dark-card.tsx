@@ -71,7 +71,8 @@ export function RevenueDarkCard({
         {Icon && <Icon size={18} className="opacity-60" />}
         <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-wider opacity-60 font-semibold">{label}</p>
-          <p className="text-2xl font-bold">{amount}</p>
+          {/* 2026-10-19 긴 금액 줄바꿈 금지 — 길면 한 단계 작게 */}
+          <p className={`${amount.length > 10 ? 'text-xl' : 'text-2xl'} font-bold whitespace-nowrap tabular-nums truncate`}>{amount}</p>
           {amountSub && <p className="text-xs opacity-70 mt-0.5">{amountSub}</p>}
           {subNote && <p className="text-[11px] opacity-45 mt-0.5">{subNote}</p>}
         </div>

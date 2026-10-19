@@ -500,7 +500,27 @@ export default function SalesPage() {
         </button>
       )}
 
-      {/* 준비표 뽑기 + 검색 (PC — 모바일은 위 작업줄) */}
+      {/* PC 작업줄 — 2026-10-19 상단바에 있던 [판매 입력]·[거래처 매출]을 작업 영역 안으로 (다른 화면과 같은 위치: 검색 왼쪽) */}
+      {isLg && <div className="flex items-center gap-2">
+        <Button onClick={() => router.push('/sales/new')} size="sm" title="단축키: F2" className="shrink-0">
+          <Plus size={14} />
+          판매 입력
+          <kbd className="ml-1 px-1 py-0.5 text-[9px] font-sans font-semibold text-white/80 bg-white/15 border border-white/25 rounded">F2</kbd>
+        </Button>
+        <Button onClick={handlePartnerSaleClick} size="sm" variant="secondary" title="단축키: F4" className="shrink-0">
+          <Plus size={14} />
+          거래처 매출
+          <kbd className="ml-1 px-1 py-0.5 text-[9px] font-sans font-semibold text-neutral-500 bg-neutral-100 border border-neutral-300 rounded">F4</kbd>
+        </Button>
+        <SearchInput
+          value={search}
+          onChange={(v) => { setSearch(v); setPage(1); }}
+          placeholder="판매번호, 고객명, 전화번호"
+          inputRef={searchRef}
+        />
+      </div>}
+
+      {/* 준비표 도구 + 보기 전환 (PC — 모바일은 위 작업줄 [📋]) */}
       {isLg && <div className="flex items-center gap-2">
         <button
           onClick={() => setShowUnified(true)}
@@ -537,12 +557,12 @@ export default function SalesPage() {
             {markPacked.isPending ? '처리 중…' : `포장완료 (${checkedIds.size}건)`}
           </button>
         )}
-        <SearchInput
-          value={search}
-          onChange={(v) => { setSearch(v); setPage(1); }}
-          placeholder="판매번호, 고객명, 전화번호"
-          inputRef={searchRef}
-        />
+        {/* 2026-07-14 PC 그리드(베타) 토글 — 상단바에서 이동 */}
+        <button onClick={toggleGrid} title="목록을 밀집 표로 보기"
+          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-600 border border-neutral-200 bg-white hover:bg-neutral-50 transition shrink-0">
+          <LayoutGrid size={14} />
+          {gridMode ? '카드 보기' : 'PC 그리드'}
+        </button>
       </div>}
 
       {/* 탭 바 — 상태 필터 (PC — 모바일은 위 상태 버튼판) */}
@@ -720,32 +740,8 @@ export default function SalesPage() {
 
   return (
     <>
-      {/* 2026-10-19 모바일 상단바는 제목만 — 판매 입력·거래처 매출은 작업줄 [+ 입력] 으로 (글자가 2~3줄로 꺾이던 문제) */}
-      <Topbar
-        title="판매 관리"
-        action={isLg && (
-          <div className="flex gap-2">
-            {/* 2026-07-14 PC 그리드(베타) 토글 — PC 에서만 */}
-            {isLg && (
-              <Button onClick={toggleGrid} size="sm" variant="secondary" title="목록을 밀집 표로 보기">
-                <LayoutGrid size={14} />
-                {gridMode ? '카드 보기' : 'PC 그리드'}
-              </Button>
-            )}
-            <Button onClick={() => router.push('/sales/new')} size="sm" title="단축키: F2">
-              <Plus size={14} />
-              판매 입력
-              <kbd className="ml-1 px-1 py-0.5 text-[9px] font-sans font-semibold text-white/80 bg-white/15 border border-white/25 rounded">F2</kbd>
-            </Button>
-            {/* 2026-05-26 IA 통합: 거래처 매출 (B2B). Phase C 에서 /sales/new?mode=b2b 라우팅으로 교체 예정 */}
-            <Button onClick={handlePartnerSaleClick} size="sm" variant="secondary" title="단축키: F4">
-              <Plus size={14} />
-              거래처 매출
-              <kbd className="ml-1 px-1 py-0.5 text-[9px] font-sans font-semibold text-neutral-500 bg-neutral-100 border border-neutral-300 rounded">F4</kbd>
-            </Button>
-          </div>
-        )}
-      />
+      {/* 2026-10-19 상단바는 제목만 — 판매 입력·거래처 매출·보기 전환은 작업 영역 안으로 (모바일 [+ 입력], PC 작업줄) */}
+      <Topbar title="판매 관리" />
 
       {isLg ? (
         /* PC: 마스터-디테일 2컬럼. gridMode 면 목록(표)을 넓게, 상세를 고정폭으로 뒤집는다 */

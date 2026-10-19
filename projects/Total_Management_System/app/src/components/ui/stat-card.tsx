@@ -66,6 +66,11 @@ export function StatCard({
 }: StatCardProps) {
   const isZero = typeof value === 'number' && value === 0;
   const accentClass = (dimWhenZero && isZero) ? 'text-stone-300' : ACCENT_TEXT[accent];
+  // 2026-10-19 긴 금액("56,093,070원")이 폰에서 두 줄로 꺾이던 문제 — 글자 수에 따라 한 단계씩 줄이고 줄바꿈 금지
+  const len = String(value).length;
+  const valueSize = compact
+    ? (len > 10 ? 'text-sm' : len > 7 ? 'text-base' : 'text-xl')
+    : (len > 10 ? 'text-lg' : len > 7 ? 'text-xl sm:text-2xl' : 'text-3xl');
 
   const className = `bg-white rounded-2xl border hover:border-stone-300 transition group text-left w-full h-full flex flex-col ${
     compact ? 'p-2.5' : 'p-4'
@@ -81,7 +86,7 @@ export function StatCard({
         {!compact && <ArrowRight size={12} className="text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition" />}
       </div>
       <div className="flex-1 flex flex-col justify-center">
-        <p className={`${compact ? 'text-xl' : 'text-3xl'} font-bold leading-none ${accentClass}`}>{value}</p>
+        <p className={`${valueSize} font-bold leading-none whitespace-nowrap tabular-nums truncate ${accentClass}`}>{value}</p>
         {primarySub && <p className={`text-[10px] text-stone-500 ${compact ? 'mt-0.5' : 'mt-1'}`}>{primarySub}</p>}
       </div>
       {secondarySub && (

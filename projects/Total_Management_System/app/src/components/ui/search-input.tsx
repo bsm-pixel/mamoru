@@ -12,7 +12,7 @@ interface SearchInputProps {
 /** 목록 페이지 공통 검색 input */
 export function SearchInput({ value, onChange, placeholder = '검색', inputRef }: SearchInputProps) {
   return (
-    <div className="flex-1 relative">
+    <div className="flex-1 min-w-0 relative">
       <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
       <input
         ref={inputRef}
