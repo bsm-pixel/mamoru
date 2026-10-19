@@ -26,6 +26,7 @@ import { Plus, FileSignature, Receipt, ClipboardList, LayoutGrid, Package } from
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
 import { RevenueDarkCard } from '@/components/ui/revenue-dark-card';
+import { StageGrid } from '@/components/ui/stage-grid';
 import type { OfflineSale } from '@/lib/supabase/types';
 import { NotePreview } from '@/components/shared/customer-notes';
 import { useLatestCustomerNotes, type LatestNote } from '@/hooks/use-customer-notes';
@@ -183,6 +184,9 @@ export default function SalesPage() {
   const [checkedDeliveryIds, setCheckedDeliveryIds] = useState<Set<string>>(new Set()); // 2026-05-26 Phase D: 거래처 납품 준비표 통합
   const [showPrepSheet, setShowPrepSheet] = useState(false);
   const [showUnified, setShowUnified] = useState(false);
+  // 2026-10-19 모바일 전용 — 기간 선택창 / [+ 입력] 메뉴 / [⋯] 메뉴
+  const [periodOpen, setPeriodOpen] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState<'add' | 'more' | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -300,11 +304,141 @@ export default function SalesPage() {
     unifiedItems.map((i) => (i.data as { customer_phone?: string | null }).customer_phone)
   );
 
+  /* 상태 탭 배지 숫자 — 영역(고객/거래처/전체)을 따른다. 거래처는 '처리 필요'·'미수금'만 셀 수 있다 */
+  const tabCount = (key: SalesTab): number | null => {
+    const b2c = tabCounts?.[key] ?? 0;
+    const b2bCountable = key === 'processing' || key === 'unpaid';
+    const b2b = b2bCountable ? (deliveryTabCounts?.[key] ?? 0) : 0;
+    if (section === 'customer') return b2c;
+    if (!b2bCountable) return null;   // 거래처 전체·취소 건수는 따로 세지 않는다 → '–'
+    return section === 'partner' ? b2b : b2c + b2b;
+  };
+  const periodLabel = dateFrom || dateTo
+    ? `${dateFrom ? formatDate(dateFrom, 'M/d') : '…'}~${dateTo ? formatDate(dateTo, 'M/d') : '…'}`
+    : (DATE_RANGES.find((d) => d.key === dateRange)?.label || '기간');
+
+  /* --- 모바일 상단 (2026-10-19 재설계) ---
+     사장님 지적: 모바일이 PC 화면을 세로로 쌓은 형태라 목록 전에 ~540px 를 쌓았다.
+     표준 구조: ① 요약 한 줄 ② 상태 버튼판 ③ 대상·기간 한 줄 ④ 검색 + [+ 입력] + [⋯] → 목록 */
+  const mobileHeader = !isLg && (
+    <>
+      {/* ① 이번달 요약 한 줄 — 카드 2장(약 180px) 대신. 미수금을 누르면 미수금 탭 */}
+      {stats && (
+        <div className="grid grid-cols-3 rounded-2xl bg-stone-900 text-white overflow-hidden divide-x divide-white/10">
+          <div className="px-3 py-2.5 min-w-0">
+            <p className="text-[10px] text-white/50 font-semibold">이번달 고객</p>
+            <p className="text-[13px] font-bold tabular-nums truncate mt-0.5">{formatKRW(customerMonthProduct)}</p>
+          </div>
+          <div className="px-3 py-2.5 min-w-0">
+            <p className="text-[10px] text-white/50 font-semibold">이번달 거래처</p>
+            <p className="text-[13px] font-bold tabular-nums truncate mt-0.5">{formatKRW(partnerMonthProduct)}</p>
+          </div>
+          <button type="button" onClick={() => handleTabChange('unpaid')} className="px-3 py-2.5 min-w-0 text-left active:bg-white/5">
+            <p className="text-[10px] text-amber-300/80 font-semibold">미수금 ›</p>
+            <p className="text-[13px] font-bold tabular-nums truncate mt-0.5 text-amber-300">
+              {formatKRW((stats.customerOutstanding || 0) + partnerOutstanding)}
+            </p>
+          </button>
+        </div>
+      )}
+
+      {/* ② 상태 버튼판 — 4칸, 건수 크게 */}
+      <StageGrid
+        ariaLabel="판매 상태"
+        items={TABS.map((t) => ({ key: t.key, label: t.label, count: tabCount(t.key), tone: t.key === 'processing' ? 'amber' as const : 'default' as const }))}
+        active={tab}
+        onChange={handleTabChange}
+      />
+
+      {/* ③ 대상 + 기간 한 줄 — 날짜 입력칸은 기간 선택창 안으로 */}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 grid grid-cols-3 p-0.5 rounded-xl border border-stone-200 bg-white">
+          {SECTIONS.map((s) => (
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => handleSectionChange(s.key)}
+              className={`h-8 rounded-[10px] text-xs font-semibold transition ${section === s.key ? 'bg-stone-900 text-white' : 'text-stone-500'}`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => setPeriodOpen((v) => !v)}
+          className={`shrink-0 h-9 px-3 rounded-xl border text-xs font-semibold whitespace-nowrap transition ${periodOpen ? 'border-stone-900 bg-stone-900 text-white' : 'border-stone-200 bg-white text-stone-700'}`}
+        >
+          {periodLabel} ▾
+        </button>
+      </div>
+      {periodOpen && (
+        <div className="rounded-xl border border-stone-200 bg-white p-3 space-y-2.5">
+          <div className="grid grid-cols-4 gap-1.5">
+            {DATE_RANGES.map((d) => (
+              <button
+                key={d.key}
+                type="button"
+                onClick={() => { handleDateRangeChange(d.key); setDateFrom(''); setDateTo(''); setPeriodOpen(false); }}
+                className={`h-9 rounded-lg border text-xs font-semibold transition ${dateRange === d.key && !dateFrom && !dateTo ? 'bg-stone-900 border-stone-900 text-white' : 'border-stone-200 text-stone-600'}`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setDateRange('all'); setPage(1); }}
+              className="flex-1 min-w-0 h-9 px-2 rounded-lg border border-stone-200 text-xs bg-white" />
+            <span className="text-xs text-stone-400">~</span>
+            <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setDateRange('all'); setPage(1); }}
+              className="flex-1 min-w-0 h-9 px-2 rounded-lg border border-stone-200 text-xs bg-white" />
+          </div>
+          {(dateFrom || dateTo) && (
+            <button type="button" onClick={() => { setDateFrom(''); setDateTo(''); }} className="h-8 text-xs font-semibold text-stone-500">날짜 지우기</button>
+          )}
+        </div>
+      )}
+
+      {/* ④ 작업줄 — 검색 + [+ 입력] + [⋯] (상단바에서 내려온 판매 입력·거래처 매출, 준비표) */}
+      <div className="flex items-center gap-2">
+        <SearchInput value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="판매번호·고객·전화" inputRef={searchRef} />
+        <div className="relative shrink-0">
+          <button type="button" onClick={() => setMobileMenu(mobileMenu === 'add' ? null : 'add')}
+            className="h-9 px-3 rounded-xl bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+            <Plus size={14} />입력
+          </button>
+          {mobileMenu === 'add' && (
+            <div className="absolute right-0 top-11 z-40 w-40 rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
+              <button type="button" onClick={() => { setMobileMenu(null); router.push('/sales/new'); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50">판매 입력</button>
+              <button type="button" onClick={() => { setMobileMenu(null); handlePartnerSaleClick(); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">거래처 매출</button>
+            </div>
+          )}
+        </div>
+        <div className="relative shrink-0">
+          <button type="button" aria-label="준비표 메뉴" onClick={() => setMobileMenu(mobileMenu === 'more' ? null : 'more')}
+            className="h-9 w-9 rounded-xl border border-stone-200 bg-white text-stone-600 flex items-center justify-center">
+            <ClipboardList size={16} />
+          </button>
+          {mobileMenu === 'more' && (
+            <div className="absolute right-0 top-11 z-40 w-40 rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
+              <button type="button" onClick={() => { setMobileMenu(null); setShowUnified(true); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50">통합 준비표</button>
+              <button type="button" onClick={() => { setMobileMenu(null); setPrepMode(true); setCheckedIds(new Set()); setCheckedDeliveryIds(new Set()); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">준비표 뽑기 (선택)</button>
+            </div>
+          )}
+        </div>
+      </div>
+      {/* 메뉴 바깥 누르면 닫기 */}
+      {mobileMenu && <button type="button" aria-label="메뉴 닫기" className="fixed inset-0 z-30 cursor-default" onClick={() => setMobileMenu(null)} />}
+    </>
+  );
+
   /* --- 목록 영역 (좌측/모바일) --- */
   const listContent = (
     <>
-      {/* 통계 요약 카드 — 2026-05-26 Phase G-4 안 3 + 2026-05-27 공통 RevenueDarkCard 추출 */}
-      {stats && (
+      {mobileHeader}
+
+      {/* 통계 요약 카드 — 2026-05-26 Phase G-4 안 3 + 2026-05-27 공통 RevenueDarkCard 추출 (PC) */}
+      {isLg && stats && (
         <div className="grid grid-cols-2 gap-3">
           <RevenueDarkCard
             label="고객 (B2C) 제품"
@@ -366,8 +500,8 @@ export default function SalesPage() {
         </button>
       )}
 
-      {/* 준비표 뽑기 + 검색 */}
-      <div className="flex items-center gap-2">
+      {/* 준비표 뽑기 + 검색 (PC — 모바일은 위 작업줄) */}
+      {isLg && <div className="flex items-center gap-2">
         <button
           onClick={() => setShowUnified(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition shrink-0"
@@ -409,10 +543,10 @@ export default function SalesPage() {
           placeholder="판매번호, 고객명, 전화번호"
           inputRef={searchRef}
         />
-      </div>
+      </div>}
 
-      {/* 탭 바 — 상태 필터 */}
-      <div className="flex items-end gap-1 border-b border-neutral-200">
+      {/* 탭 바 — 상태 필터 (PC — 모바일은 위 상태 버튼판) */}
+      {isLg && <div className="flex items-end gap-1 border-b border-neutral-200">
         <span className="text-[11px] font-semibold text-neutral-400 pb-2 pr-1 shrink-0">상태</span>
         {TABS.map((t) => {
           /* 배지 숫자도 영역(고객/거래처/전체)을 따른다 — 거래처를 보는데 고객 건수가 떠 있으면 숫자를 믿을 수 없다.
@@ -444,10 +578,10 @@ export default function SalesPage() {
             </button>
           );
         })}
-      </div>
+      </div>}
 
-      {/* 영역 칩 + 기간 필터 (한 줄 통합) — 2026-05-26 Phase G-2: 채널 칩 폐기 */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* 영역 칩 + 기간 필터 (한 줄 통합) — 2026-05-26 Phase G-2: 채널 칩 폐기 (PC — 모바일은 위 대상·기간 줄) */}
+      {isLg && <div className="flex flex-wrap items-center gap-3">
         {/* 대상 — 고객(B2C) / 거래처(B2B) / 전체. default 고객 */}
         <div className="flex items-center gap-1">
           <span className="text-[11px] font-semibold text-neutral-400 pr-0.5">대상</span>
@@ -504,17 +638,17 @@ export default function SalesPage() {
             )}
           </div>
         </div>
-      </div>
+      </div>}
 
-      {/* 색 범례 — 좌측 줄/도트 의미 */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-neutral-500 px-1">
+      {/* 색 범례 — 좌측 줄/도트 의미 (PC — 모바일은 각 행에 상태 글자가 있어 생략) */}
+      {isLg && <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-neutral-500 px-1">
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-green-500" />완료(출고·수령)</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" />처리 대기</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-500" />미결제</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-yellow-400" />부분결제</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-neutral-300" />취소</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-violet-300" />반품</span>
-      </div>
+      </div>}
 
       {/* 판매 목록 (2026-05-26 Phase B: sale + delivery 통합) — gridMode 면 밀집 표, 아니면 카드 */}
       <Card padding={false}>
@@ -586,9 +720,10 @@ export default function SalesPage() {
 
   return (
     <>
+      {/* 2026-10-19 모바일 상단바는 제목만 — 판매 입력·거래처 매출은 작업줄 [+ 입력] 으로 (글자가 2~3줄로 꺾이던 문제) */}
       <Topbar
         title="판매 관리"
-        action={
+        action={isLg && (
           <div className="flex gap-2">
             {/* 2026-07-14 PC 그리드(베타) 토글 — PC 에서만 */}
             {isLg && (
@@ -609,7 +744,7 @@ export default function SalesPage() {
               <kbd className="ml-1 px-1 py-0.5 text-[9px] font-sans font-semibold text-neutral-500 bg-neutral-100 border border-neutral-300 rounded">F4</kbd>
             </Button>
           </div>
-        }
+        )}
       />
 
       {isLg ? (
@@ -635,9 +770,31 @@ export default function SalesPage() {
           </div>
         </div>
       ) : (
-        /* 모바일: 목록 + SlidePanel */
-        <div className="px-4 md:px-6 py-4 space-y-4">
+        /* 모바일: 목록 + SlidePanel. 선택 모드면 하단 고정 바만큼 아래 여백 */
+        <div className={`px-4 md:px-6 py-4 space-y-3 ${prepMode ? 'pb-28' : ''}`}>
           {listContent}
+        </div>
+      )}
+
+      {/* 2026-10-19 모바일 준비표 선택 모드 — 하단 고정 바 (전엔 검색줄에 버튼이 늘어나 가로로 넘쳤다) */}
+      {!isLg && prepMode && (
+        <div className="fixed left-3 right-3 z-30 bottom-[calc(3.5rem+env(safe-area-inset-bottom)+8px)] md:bottom-4 rounded-2xl bg-stone-900 text-white shadow-xl px-3 py-2.5 flex items-center gap-2">
+          <span className="text-xs font-semibold flex-1 min-w-0 truncate">{totalChecked > 0 ? `${totalChecked}건 선택` : '목록에서 건을 눌러 선택'}</span>
+          {checkedIds.size > 0 && (
+            <button type="button" disabled={markPacked.isPending}
+              onClick={() => { markPacked.mutate({ ids: [...checkedIds], packed: true }); setCheckedIds(new Set()); }}
+              className="h-9 px-3 rounded-lg bg-white/10 text-xs font-semibold whitespace-nowrap disabled:opacity-50">
+              {markPacked.isPending ? '처리 중…' : '포장완료'}
+            </button>
+          )}
+          {totalChecked > 0 && (
+            <button type="button" onClick={() => setShowPrepSheet(true)} className="h-9 px-3 rounded-lg bg-white text-stone-900 text-xs font-bold whitespace-nowrap">
+              준비표 인쇄
+            </button>
+          )}
+          <button type="button" onClick={() => { setPrepMode(false); setCheckedIds(new Set()); setCheckedDeliveryIds(new Set()); }} className="h-9 px-2 text-xs font-semibold text-white/70 whitespace-nowrap">
+            취소
+          </button>
         </div>
       )}
 

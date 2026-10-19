@@ -23,6 +23,7 @@ import type { RepairTabKey } from './repair-tab-bar';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import { isAlpsTrackable } from '@/lib/shipping/couriers';
+import { StageGrid } from '@/components/ui/stage-grid';
 
 interface RepairListProps {
   onSelect?: (id: string) => void;
@@ -168,7 +169,14 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
   return (
     <div className="space-y-3">
       {/* 모바일: 8단계를 한 화면에 — 가로 스크롤 탭 대신 4×2 버튼 판 (PC는 아래 밑줄 탭 유지) */}
-      {!gridMode && <PipelineGrid tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />}
+      {!gridMode && (
+        <StageGrid
+          ariaLabel="복원수리 진행 단계"
+          items={tabs.map((t) => ({ key: t.key, label: SHORT_TAB_LABEL[t.key] || t.label, count: t.count }))}
+          active={activeTab}
+          onChange={setActiveTab}
+        />
+      )}
 
       {/* 검색 + 수거 불가일 관리 */}
       <div className="flex items-center gap-2">
@@ -320,51 +328,9 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
   );
 }
 
-// ── 모바일 단계 버튼 판 ──
-
-/** 4칸에 들어가도록 줄인 이름 (모바일 전용) */
+// 모바일 단계 버튼 판 — 4칸에 들어가도록 줄인 이름 (공용 StageGrid, components/ui/stage-grid.tsx)
 const SHORT_TAB_LABEL: Partial<Record<RepairTabKey, string>> = { pickup_needed: '수거필요' };
 
-/**
- * 2026-10-19 모바일 IA 개선 (사장님 지적: 진행중이 가로 스크롤 밖에 있어 직관적이지 않다)
- *   8단계를 4×2 로 한 화면에 — 윗줄=도착 전(신규·수거필요·방문예정·입고대기) / 아랫줄=작업·출고.
- *   업무 순서 그대로 읽히고, 건수를 크게 둬서 "어디에 일이 쌓였나"가 1초에 보인다. 0건은 흐리게.
- */
-function PipelineGrid({ tabs, activeTab, onChange }: {
-  tabs: { key: RepairTabKey; label: string; count: number }[];
-  activeTab: RepairTabKey;
-  onChange: (k: RepairTabKey) => void;
-}) {
-  return (
-    <div className="grid grid-cols-4 gap-1.5" role="tablist" aria-label="복원수리 진행 단계">
-      {tabs.map((tab) => {
-        const on = activeTab === tab.key;
-        const empty = tab.count === 0;
-        return (
-          <button
-            key={tab.key}
-            type="button"
-            role="tab"
-            aria-selected={on}
-            onClick={() => onChange(tab.key)}
-            className={`flex flex-col items-start justify-between min-h-[60px] px-2.5 py-2 rounded-xl border text-left transition active:scale-[0.98] ${
-              on
-                ? 'bg-stone-900 border-stone-900 text-white'
-                : empty
-                  ? 'bg-white/60 border-stone-200 text-stone-400'
-                  : 'bg-white border-stone-200 text-stone-900 hover:border-stone-400'
-            }`}
-          >
-            <span className={`text-[11px] font-semibold leading-tight whitespace-nowrap ${on ? 'text-white/80' : empty ? '' : 'text-stone-500'}`}>
-              {SHORT_TAB_LABEL[tab.key] || tab.label}
-            </span>
-            <span className="text-lg font-bold tabular-nums leading-none mt-1">{tab.count}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 // ── 탭별 특화 카드 ──
 
