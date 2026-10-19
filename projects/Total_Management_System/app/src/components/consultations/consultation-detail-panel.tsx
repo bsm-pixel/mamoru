@@ -16,6 +16,10 @@ import { Calendar, MapPin, Phone, User, Clock, FileSignature, ShoppingCart, Chec
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { Modal } from '@/components/ui/modal';
 import Link from 'next/link';
+import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
+import { HoldReasonModal } from './hold-reason-modal';
+import { getAllowedTransitions } from '@/lib/consultation/transitions';
+import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 const TYPE_LABEL: Record<string, string> = {
   store_visit: '매장방문',
   field_request: '출장요청',
@@ -52,6 +56,8 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   // 077: 상담완료 시 판매전환 분기 모달 (linkedSales 없을 때만)
   const [saleConvertOpen, setSaleConvertOpen] = useState(false);
+  // 2026-10-19 보류 — 상세 페이지에만 있던 기능을 패널에도 (사유 입력 모달 공용)
+  const [holdOpen, setHoldOpen] = useState(false);
   // 108: 상담자 메모 로컬 편집 상태 — 선택 상담이 바뀔 때만 서버값으로 초기화(재조회로 타이핑 중 값 안 날아가게 id 기준)
   const [adminNote, setAdminNote] = useState('');
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,6 +93,70 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
     toast.success('상담완료 처리됨 — 지난내역 탭에서 확인 가능');
     onAfterComplete?.();
   };
+
+  // ── 액션 5칸 규칙 (2026-10-19) — 상태 전이 SSOT = lib/consultation/transitions.ts ──
+  const type = c.consultation_type as ConsultationType;
+  const allowed = getAllowedTransitions(type, c.status as ConsultationStatus);
+  const isTerminal = ['completed', 'cancelled'].includes(c.status);
+  const canHold = allowed.includes('on_hold');
+  const canCancel = allowed.includes('cancelled');
+  const canManualConfirm = !isTerminal && type !== 'talk_consult' && !['in_progress', 'on_hold'].includes(c.status);
+  const canSellContract = ['confirmed', 'in_progress', 'completed'].includes(c.status) && type !== 'talk_consult';
+  const busy = updateStatus.isPending;
+  const visitMeta = c.visit_date ? `${formatDate(c.visit_date)} ${c.visit_time || ''}`.trim() : undefined;
+
+  // ① 지금 상태 한 줄 — 무엇을 기다리고, 다음에 뭘 누르면 되는지
+  const renderNote = () => {
+    switch (c.status) {
+      case 'pending_admin':
+        return type === 'talk_consult'
+          ? <ActionNote tone="wait" title="신규접수">톡으로 응대를 시작하면 [상담 시작]을 눌러주세요.</ActionNote>
+          : <ActionNote tone="wait" title="신규접수">가능 요일·시간을 보고 방문 시간을 제안해주세요.</ActionNote>;
+      case 'suggested':
+        return <ActionNote tone="wait" title="제안중">고객이 일정을 고르면 자동으로 확정됩니다. 전화로 정했다면 [수동 일정 확정].</ActionNote>;
+      case 'reschedule_requested':
+      case 'change_requested':
+        return <ActionNote tone="wait" title="일정 재요청">고객이 다른 일정을 원합니다. 재요청 메모를 보고 다시 제안해주세요.</ActionNote>;
+      case 'confirmed':
+        return <ActionNote tone="wait" title="확정" meta={visitMeta}>상담이 끝나면 [상담 완료]를 눌러주세요.</ActionNote>;
+      case 'in_progress':
+        return <ActionNote tone="wait" title="진행중">응대가 끝나면 [상담 완료]를 눌러주세요.</ActionNote>;
+      case 'on_hold':
+        return <ActionNote tone="muted" title="보류" meta={c.hold_reason || undefined}>다시 진행할 때 아래 버튼을 눌러주세요.</ActionNote>;
+      case 'completed':
+        return <ActionNote tone="done" title="완료">{hasLinkedSales || type === 'talk_consult' ? '끝난 상담입니다.' : '판매로 이어졌다면 아래 [판매로 처리]로 연결해주세요.'}</ActionNote>;
+      case 'cancelled':
+        return <ActionNote tone="muted" title="취소됨" />;
+      default:
+        return <ActionNote tone="muted" title={statusLabel} />;
+    }
+  };
+
+  // ② 주 액션 — 상태별 딱 하나
+  const resumeTo: ConsultationStatus | null = c.status !== 'on_hold' ? null
+    : type === 'talk_consult' ? 'in_progress'
+    : type === 'store_visit' ? 'confirmed'
+    : 'pending_admin';
+  const resumeLabel = type === 'talk_consult' ? '상담 재개' : type === 'store_visit' ? '다시 확정 (보류 해제)' : '신규로 되돌리기 (보류 해제)';
+  const primary = (() => {
+    if (type === 'field_request' && ['pending_admin', 'reschedule_requested', 'change_requested'].includes(c.status)) {
+      return <Button className="w-full" onClick={() => setSuggestModalOpen(true)} disabled={busy}><Clock size={14} />시간 제안</Button>;
+    }
+    if (type === 'talk_consult' && c.status === 'pending_admin') {
+      return <Button className="w-full" onClick={() => handleStatus('in_progress')} disabled={busy}>상담 시작</Button>;
+    }
+    if (c.status === 'confirmed' || c.status === 'in_progress') {
+      return <Button className="w-full" onClick={() => handleStatus('completed')} disabled={busy}><CheckCircle2 size={14} />상담 완료</Button>;
+    }
+    if (resumeTo && allowed.includes(resumeTo)) {
+      return (
+        <Button className="w-full" loading={busy} onClick={() => updateStatus.mutate({ id: c.id, status: resumeTo, note: '보류 해제' })}>
+          {resumeLabel}
+        </Button>
+      );
+    }
+    return null;
+  })();
 
   const confirmStatusLabels: Record<string, { title: string; msg: string; variant?: 'danger' | 'default' }> = {
     completed: { title: '상담 완료', msg: `${honorific(c.activity_name, c.name)}님의 상담을 완료 처리합니다.` },
@@ -257,72 +327,12 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
         )}
       </div>
 
-      {/* 액션 버튼 — #3: 모든 액션을 패널 내부에 집중 */}
-      {!['completed', 'cancelled'].includes(c.status) && (
-        <div className="space-y-2 pt-2 border-t border-neutral-100">
-          {/* 출장: 신규/재요청 → 시간 제안 모달 */}
-          {c.consultation_type === 'field_request' && ['pending_admin', 'reschedule_requested', 'change_requested'].includes(c.status) && (
-            <Button size="sm" className="w-full" onClick={() => setSuggestModalOpen(true)} disabled={updateStatus.isPending}>
-              <Clock size={14} />
-              시간 제안
-            </Button>
-          )}
-          {/* 079: 수동 일정 확정 — DM/유선 협의 후 즉시 확정 (매장/출장 한정, 톡상담 제외). 이미 확정된 건이면 라벨은 "변경" */}
-          {c.consultation_type !== 'talk_consult' && c.status !== 'in_progress' && (
-            <Button size="sm" variant="secondary" className="w-full" onClick={() => setManualConfirmOpen(true)} disabled={updateStatus.isPending}>
-              <CheckCircle size={14} />
-              {c.status === 'confirmed' ? '수동 일정 변경' : '수동 일정 확정'}
-            </Button>
-          )}
-          {/* 출장 도착 지연 안내 (2026-09-22 복원) — 확정 출장만, 알림톡 field_delayed */}
-          {c.status === 'confirmed' && c.consultation_type === 'field_request' && (
-            <FieldDelayAction consultationId={c.id} visitTime={c.visit_time} className="w-full" />
-          )}
-          {/* 확정 → 완료 */}
-          {c.status === 'confirmed' && (
-            <Button size="sm" className="w-full" onClick={() => handleStatus('completed')} disabled={updateStatus.isPending}>
-              상담 완료
-            </Button>
-          )}
-          {/* 톡: 신규 → 진행 */}
-          {c.status === 'pending_admin' && c.consultation_type === 'talk_consult' && (
-            <Button size="sm" className="w-full" onClick={() => handleStatus('in_progress')} disabled={updateStatus.isPending}>
-              상담 시작
-            </Button>
-          )}
-          {/* 진행중 → 완료 */}
-          {c.status === 'in_progress' && (
-            <Button size="sm" className="w-full" onClick={() => handleStatus('completed')} disabled={updateStatus.isPending}>
-              상담 완료
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" className="w-full text-red-600" onClick={() => handleStatus('cancelled')} disabled={updateStatus.isPending}>
-            취소
-          </Button>
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="w-full text-center text-xs text-neutral-400 hover:text-red-500 py-1.5 transition"
-          >
-            삭제 (알림 없이 제거)
-          </button>
-        </div>
-      )}
-
-      {/* 취소/완료 상태에서도 삭제 가능 */}
-      {['completed', 'cancelled'].includes(c.status) && (
-        <button
-          onClick={() => setShowDeleteConfirm(true)}
-          className="w-full text-center text-xs text-neutral-400 hover:text-red-500 py-1.5 transition"
-        >
-          삭제 (알림 없이 제거)
-        </button>
-      )}
-
-      {/* 070: 이 상담으로 처리된 판매 노출 (역방향 link) */}
-      {data?.linkedSales && data.linkedSales.length > 0 && (
+      {/* 이 상담으로 처리된 판매 (070 역방향 link) — 정보 */}
+      {hasLinkedSales && (
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="text-neutral-500 font-medium">이 상담으로 판매 처리:</span>
-          {data.linkedSales.map((s) => (
+          <CheckCircle2 size={14} className="text-green-600" />
+          <span className="text-neutral-500 font-medium">판매연결완료:</span>
+          {data!.linkedSales!.map((s) => (
             <Link
               key={s.id}
               href={`/sales/${s.id}`}
@@ -334,37 +344,60 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
         </div>
       )}
 
-      {/* 070: 판매로 처리 CTA — 톡상담 제외, 확정~완료 단계에서 표시 */}
-      {/* 077: linkedSales 있으면 "판매연결완료" 배지로 대체 (중복 처리 방지) */}
-      {['confirmed', 'in_progress', 'completed'].includes(c.status) && c.consultation_type !== 'talk_consult' && (
-        data?.linkedSales && data.linkedSales.length > 0 ? (
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200">
-            <CheckCircle2 size={16} className="text-green-600" />
-            <span className="text-sm font-medium text-green-700">
-              판매연결완료 ({data.linkedSales.length}건)
-            </span>
+      {/* 액션 — 표준 5칸 (2026-10-19, 복원수리·판매와 같은 순서: ① 상태 한 줄 ② 검은 버튼 1개 ③ 보조 ④ 접힘 ⑤ 위험)
+          전엔 상태에 따라 버튼 4~6개가 평면 나열되고 보류가 없었으며, 판매·계약 CTA 가 색 박스로 따로 떠 있었다 */}
+      <div className="pt-3 border-t border-neutral-100 space-y-2">
+        <h4 className="text-xs font-semibold text-neutral-500">액션</h4>
+        {/* ① 지금 상태 */}
+        {renderNote()}
+        {/* ② 주 액션 — 딱 하나 */}
+        {primary}
+        {/* ③ 보조 */}
+        {canManualConfirm && (
+          <Button size="sm" variant="secondary" className="w-full" onClick={() => setManualConfirmOpen(true)} disabled={updateStatus.isPending}>
+            <CheckCircle size={14} />
+            {c.status === 'confirmed' ? '수동 일정 변경' : '수동 일정 확정'}
+          </Button>
+        )}
+        {/* 출장 도착 지연 안내 (2026-09-22 복원) — 확정 출장만, 알림톡 field_delayed */}
+        {c.status === 'confirmed' && type === 'field_request' && (
+          <FieldDelayAction consultationId={c.id} visitTime={c.visit_time} className="w-full" />
+        )}
+        {/* 판매로 처리 · 계약서 — 톡상담 제외, 확정~완료 (판매연결 있으면 판매 버튼 숨김 = 중복 처리 방지 077) */}
+        {canSellContract && (
+          <div className="grid grid-cols-2 gap-2">
+            {!hasLinkedSales ? (
+              <Link href={`/sales/new?from_consultation=${c.id}`}
+                className="h-9 rounded-lg border border-neutral-200 bg-white text-xs font-semibold text-neutral-800 hover:bg-neutral-50 flex items-center justify-center gap-1.5">
+                <ShoppingCart size={14} />판매로 처리
+              </Link>
+            ) : <span />}
+            <Link href={`/contracts/new?customer_name=${encodeURIComponent(c.name)}&customer_phone=${encodeURIComponent(c.phone || '')}`}
+              className={`h-9 rounded-lg border border-neutral-200 bg-white text-xs font-semibold text-neutral-800 hover:bg-neutral-50 flex items-center justify-center gap-1.5 ${hasLinkedSales ? 'col-span-2' : ''}`}>
+              <FileSignature size={14} />계약서 작성
+            </Link>
           </div>
-        ) : (
-          <Link
-            href={`/sales/new?from_consultation=${c.id}`}
-            className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 transition"
-          >
-            <ShoppingCart size={16} className="text-blue-600" />
-            <span className="text-sm font-medium text-blue-700">판매로 처리</span>
-          </Link>
-        )
-      )}
-
-      {/* 계약서 CTA — 톡상담 제외, 확정~완료 단계에서 표시 */}
-      {['confirmed', 'in_progress', 'completed'].includes(c.status) && c.consultation_type !== 'talk_consult' && (
-        <Link
-          href={`/contracts/new?customer_name=${encodeURIComponent(c.name)}&customer_phone=${encodeURIComponent(c.phone || '')}`}
-          className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200 hover:bg-green-100 transition"
-        >
-          <FileSignature size={16} className="text-green-600" />
-          <span className="text-sm font-medium text-green-700">계약서 작성하기</span>
-        </Link>
-      )}
+        )}
+        {/* ④ 드물게 쓰는 것 — 보류 */}
+        {canHold && (
+          <MoreActions label="다른 처리 방법">
+            <SubtleButton onClick={() => setHoldOpen(true)} disabled={updateStatus.isPending}>
+              보류 (사유 입력)
+            </SubtleButton>
+          </MoreActions>
+        )}
+        {/* ⑤ 파괴적 액션 */}
+        <DangerZone>
+          {canCancel && (
+            <DangerLink onClick={() => handleStatus('cancelled')} disabled={updateStatus.isPending}>
+              상담 취소
+            </DangerLink>
+          )}
+          <DangerLink onClick={() => setShowDeleteConfirm(true)}>
+            삭제 (알림 없이 제거)
+          </DangerLink>
+        </DangerZone>
+      </div>
 
       {/* 상세 페이지 링크 */}
       <Link
@@ -469,6 +502,9 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
         confirmLabel="삭제"
         variant="danger"
       />
+
+      {/* 보류 사유 모달 (상세 페이지와 공용) */}
+      {holdOpen && <HoldReasonModal open={holdOpen} onClose={() => setHoldOpen(false)} consultationId={c.id} />}
 
       {/* 시간 제안 모달 */}
       {c.consultation_type === 'field_request' && (
