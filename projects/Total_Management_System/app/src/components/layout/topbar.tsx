@@ -9,9 +9,11 @@ interface TopbarProps {
   title: string;
   onMenuToggle?: () => void;
   action?: React.ReactNode;
+  /** 페이지가 자체 새로고침 버튼을 action 으로 줄 때 공통 새로고침 아이콘을 숨긴다 (아이콘 2개 중복 방지) */
+  hideRefresh?: boolean;
 }
 
-export function Topbar({ title, onMenuToggle, action }: TopbarProps) {
+export function Topbar({ title, onMenuToggle, action, hideRefresh = false }: TopbarProps) {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -37,13 +39,13 @@ export function Topbar({ title, onMenuToggle, action }: TopbarProps) {
 
       <div className="flex items-center gap-2">
         {action}
-        <button
+        {!hideRefresh && <button
           onClick={() => router.refresh()}
           className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-warm-ivory transition"
           title="새로고침"
         >
           <RefreshCw size={16} className="text-neutral-500" />
-        </button>
+        </button>}
         <button
           onClick={handleLogout}
           className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-warm-ivory transition"

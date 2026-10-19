@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useRepairSync } from '@/hooks/use-repairs';
 import { useRepairDashboardStats } from '@/hooks/use-dashboard-stats';
-import { RefreshCw, Scissors, Inbox, Loader, CreditCard, AlertTriangle, TrendingUp, CalendarPlus } from 'lucide-react';
+import { RefreshCw, Scissors, Inbox, Loader, CreditCard, AlertTriangle, TrendingUp } from 'lucide-react';
 import { VisitBookingModal } from '@/components/repairs/visit-booking-modal';
 import { formatKRW } from '@/lib/utils/format';
 
@@ -100,17 +100,13 @@ export default function RepairsPage() {
 
   return (
     <>
-      <Topbar title="복원수리" action={
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={() => sync.mutate()} disabled={sync.isPending}>
-            <RefreshCw size={14} className={sync.isPending ? 'animate-spin' : ''} />
-            {sync.isPending ? '새로고침 중...' : '새로고침'}
-          </Button>
-          {/* 2026-10-06 전화로 정한 매장 방문을 바로 등록 → 고객 알림톡 + 캘린더 + 리마인드 */}
-          <Button size="sm" onClick={() => setBookingOpen(true)}>
-            <CalendarPlus size={14} />방문 예약 등록
-          </Button>
-        </div>
+      {/* 2026-10-19 상단바는 새로고침만 — 모바일에선 아이콘만(글자가 2줄로 꺾이던 문제).
+          [방문 예약 등록]은 작업 영역(검색줄 수거 불가일 옆)으로 이동 */}
+      <Topbar title="복원수리" hideRefresh action={
+        <Button variant="secondary" size="sm" onClick={() => sync.mutate()} disabled={sync.isPending} className="whitespace-nowrap" title="목록 새로고침">
+          <RefreshCw size={14} className={sync.isPending ? 'animate-spin' : ''} />
+          <span className="hidden sm:inline">{sync.isPending ? '새로고침 중...' : '새로고침'}</span>
+        </Button>
       } />
       <VisitBookingModal open={bookingOpen} onClose={() => setBookingOpen(false)} onCreated={(id) => setSelectedId(id)} />
 
@@ -126,6 +122,7 @@ export default function RepairsPage() {
               unpaidOnly={badgeFilter?.unpaidOnly}
               staleOnly={badgeFilter?.staleOnly}
               onClearFilter={() => setBadgeFilter(null)}
+              onBookVisit={() => setBookingOpen(true)}
               gridMode
             />
           </div>
@@ -144,6 +141,7 @@ export default function RepairsPage() {
             unpaidOnly={badgeFilter?.unpaidOnly}
             staleOnly={badgeFilter?.staleOnly}
             onClearFilter={() => setBadgeFilter(null)}
+            onBookVisit={() => setBookingOpen(true)}
           />
           <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="복원수리 상세">
             {selectedId && <RepairDetailPanel repairId={selectedId} />}

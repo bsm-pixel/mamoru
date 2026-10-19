@@ -12,7 +12,7 @@ import { useUpdateRepairStatus, useUpdateRepairFields, useShipRepair } from '@/h
 import { formatKRW, formatPhone, formatDate, formatDateTime } from '@/lib/utils/format';
 import {
   Search, Scissors, Package, MapPin, CheckCircle,
-  CreditCard, Truck, ClipboardCheck, ClipboardList, Printer, CalendarOff,
+  CreditCard, Truck, ClipboardCheck, ClipboardList, Printer, CalendarOff, CalendarPlus,
 } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
@@ -33,6 +33,8 @@ interface RepairListProps {
   onClearFilter?: () => void;
   /** PC 그리드(밀집 표) 모드 — 카드 대신 표로 렌더 (PC에서만 전달) */
   gridMode?: boolean;
+  /** [방문 예약 등록] — 2026-10-19 상단바에서 검색줄(수거 불가일 옆)로 이동 */
+  onBookVisit?: () => void;
 }
 
 /** 경과일 계산 */
@@ -96,7 +98,7 @@ function matchSearch(r: Repair, q: string): boolean {
   );
 }
 
-export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, staleOnly, onClearFilter, gridMode }: RepairListProps = {}) {
+export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, staleOnly, onClearFilter, gridMode, onBookVisit }: RepairListProps = {}) {
   const [activeTab, setActiveTab] = useState<RepairTabKey>(initialTab || 'intake');
   const [search, setSearch] = useState('');
   const { tabs, tabData, isLoading } = useRepairTabData();
@@ -176,7 +178,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="이름, 전화번호, 접수번호 검색..."
+            placeholder="이름·전화·접수번호 검색"
             className="w-full h-9 pl-9 pr-3 rounded-xl border border-stone-200 bg-white text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:border-stone-400 transition"
           />
         </div>
@@ -187,6 +189,15 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
         >
           <CalendarOff size={14} className="text-red-500" /> 수거 불가일
         </button>
+        {/* 전화로 정한 매장 방문을 바로 등록 → 고객 알림톡 + 캘린더 + 리마인드 (작업 영역 안, 수거 불가일 옆) */}
+        {onBookVisit && (
+          <button
+            onClick={onBookVisit}
+            className="shrink-0 flex items-center gap-1.5 h-9 px-3 rounded-xl bg-stone-900 text-xs font-semibold text-white hover:bg-stone-800 transition whitespace-nowrap"
+          >
+            <CalendarPlus size={14} /> 방문 예약
+          </button>
+        )}
       </div>
 
       {/* 교차 필터 활성 안내 */}
