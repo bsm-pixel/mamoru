@@ -1255,7 +1255,7 @@ setHead(1);
 initFsz();
 armReveal();
 armFrameSettle();
-armRecModal();
+// armRecModal();   // 2026-10-19 피로연(10/17) 종료 → 자동 안내 모달 중단. 다시 쓰려면 이 줄의 주석만 해제
 try{ if(CONFIG.kakaoKey && CONFIG.kakaoKey!=='YOUR_KAKAO_JS_KEY') Kakao.init(CONFIG.kakaoKey); }catch(e){}
 
 // 핀치 줌 차단 — 스크롤 성능 위해 touchmove 리스너 제거. CSS touch-action(pan-x pan-y) + iOS 제스처 이벤트만 차단(제스처는 2손가락에서만 발생 → 스크롤 무영향)
