@@ -62,18 +62,19 @@ export default function RepairsPage() {
         );
       })()}
 
-      {/* 상태 4카드 (컴팩트 — 밀집) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <StatCard compact label="신규" icon={Inbox} accent="blue"
+      {/* 상태 카드 — PC 4개. 모바일은 신규·진행을 뺀 2개
+          (2026-10-19: 모바일은 목록 위 단계 버튼 판이 신규·진행 건수를 이미 보여줘 중복. 단계와 무관한 필터 2개만 남김) */}
+      <div className={`grid gap-2 ${isLg ? 'grid-cols-4' : 'grid-cols-2'}`}>
+        {isLg && <StatCard compact label="신규" icon={Inbox} accent="blue"
           value={stats.intakeNew || 0} primarySub="확인 필요"
           active={badgeFilter?.tab === 'intake'}
           onClick={() => setBadgeFilter(badgeFilter?.tab === 'intake' ? null : { tab: 'intake' })}
-        />
-        <StatCard compact label="진행" icon={Loader} accent="amber"
+        />}
+        {isLg && <StatCard compact label="진행" icon={Loader} accent="amber"
           value={stats.workingCount || 0} primarySub="작업 중"
           active={badgeFilter?.tab === 'in_progress' && !badgeFilter.unpaidOnly}
           onClick={() => setBadgeFilter(badgeFilter?.tab === 'in_progress' && !badgeFilter.unpaidOnly ? null : { tab: 'in_progress' })}
-        />
+        />}
         <StatCard compact label="미입금" icon={CreditCard} accent="rose" dimWhenZero
           value={stats.unpaidCount || 0} primarySub="확인 필요"
           active={badgeFilter?.unpaidOnly}
