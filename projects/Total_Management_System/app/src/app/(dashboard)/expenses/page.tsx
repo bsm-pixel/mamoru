@@ -169,7 +169,7 @@ export default function ExpensesPage() {
                 <div className="flex flex-wrap gap-1.5">
                   {CATEGORIES.map((c) => (
                     <button key={c} onClick={() => setCategory(c)}
-                      className={`px-2.5 py-1 text-xs rounded-md border transition ${category === c ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'}`}
+                      className={`h-8 lg:h-auto px-2.5 py-1 text-xs rounded-md border transition ${category === c /* 2026-10-19 모바일 탭 타겟 32px */ ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'}`}
                     >{c}</button>
                   ))}
                 </div>
@@ -261,11 +261,12 @@ export default function ExpensesPage() {
                   <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${CATEGORY_COLOR[item.category] || CATEGORY_COLOR['기타']}`}>
                     {item.category}
                   </span>
-                  <span className="text-sm text-neutral-700 flex-1">{item.memo || item.category}</span>
-                  <span className="text-sm font-bold">{formatKRW(item.amount)}</span>
+                  {/* 2026-10-19 모바일: 긴 메모 줄바꿈 허용·삭제버튼 탭 타겟 확대 */}
+                  <span className="text-sm text-neutral-700 flex-1 min-w-0 break-words">{item.memo || item.category}</span>
+                  <span className="text-sm font-bold shrink-0 whitespace-nowrap">{formatKRW(item.amount)}</span>
                   <button
                     onClick={() => { if (confirm('고정 경비를 삭제하시겠습니까?')) deleteRecurring.mutate(item.id); }}
-                    className="w-6 h-6 rounded flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-50"
+                    className="shrink-0 w-9 h-9 lg:w-6 lg:h-6 rounded flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-50"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -280,18 +281,19 @@ export default function ExpensesPage() {
           )}
 
           {/* 고정 경비 등록 폼 */}
-          <div className="flex gap-2 items-end">
+          {/* 2026-10-19 모바일: 2열 그리드(분류·금액 / 메모 / 추가)로 가로 넘침 방지, sm↑는 기존 한 줄 */}
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-end">
             <select value={recCategory} onChange={(e) => setRecCategory(e.target.value)}
-              className="h-9 px-2 rounded-lg border border-neutral-200 text-xs">
+              className="w-full sm:w-auto min-w-0 h-9 px-2 rounded-lg border border-neutral-200 text-xs">
               {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
             <input type="number" value={recAmount} placeholder="금액"
               onChange={(e) => setRecAmount(e.target.value)}
-              className="w-24 h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+              className="w-full sm:w-24 min-w-0 h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
             <input type="text" value={recMemo} placeholder="메모"
               onChange={(e) => setRecMemo(e.target.value)}
-              className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400" />
-            <Button size="sm" variant="secondary"
+              className="col-span-2 w-full sm:w-auto sm:flex-1 min-w-0 h-9 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400" />
+            <Button size="sm" variant="secondary" className="col-span-2 h-9 sm:h-8 shrink-0"
               onClick={() => createRecurring.mutate()}
               disabled={!recAmount || parseInt(recAmount) <= 0}>
               추가

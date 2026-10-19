@@ -113,15 +113,16 @@ export default function TaxInvoicesPage() {
           <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-8 px-2 rounded-lg border border-neutral-200 text-xs" />
           <span className="text-xs text-neutral-400">~</span>
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-8 px-2 rounded-lg border border-neutral-200 text-xs" />
-          <div className="flex gap-1 ml-2">
+          {/* 2026-10-19 모바일: 날짜 1줄 / 칩+등록 2줄로 자연 줄바꿈, 칩 32px 탭 타겟 */}
+          <div className="flex gap-1 sm:ml-2">
             {[{ key: 'all', label: '전체' }, { key: 'sales', label: '매출' }, { key: 'purchase', label: '매입' }].map((t) => (
               <button key={t.key} onClick={() => setTypeFilter(t.key)}
-                className={`px-2.5 py-1 text-xs rounded-md border transition ${typeFilter === t.key ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'}`}>
+                className={`h-8 lg:h-auto px-2.5 py-1 text-xs rounded-md border transition ${typeFilter === t.key ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'}`}>
                 {t.label}
               </button>
             ))}
           </div>
-          <Button size="sm" className="ml-auto" onClick={() => setShowForm(!showForm)}>
+          <Button size="sm" className="ml-auto shrink-0" onClick={() => setShowForm(!showForm)}>
             <Plus size={14} /> 등록
           </Button>
         </div>

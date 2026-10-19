@@ -114,11 +114,11 @@ export default function ProductSalesPage() {
           <div className="flex flex-wrap items-center gap-2">
             {PRESETS.map((p) => (
               <button key={p.key} onClick={() => { setPreset(p.key); setCustomFrom(''); setCustomTo(''); }}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${preset === p.key && !customFrom ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
+                className={`h-8 lg:h-auto px-3 py-1.5 rounded-full text-xs font-semibold transition ${preset === p.key && !customFrom ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
                 {p.label}
               </button>
             ))}
-            <div className="flex items-center gap-1.5 ml-auto">
+            <div className="flex items-center gap-1.5 ml-auto min-w-0">
               <input type="date" value={customFrom || period.from} onChange={(e) => { setCustomFrom(e.target.value); setPreset(''); }}
                 className="h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400" />
               <span className="text-xs text-neutral-400">~</span>
@@ -154,11 +154,12 @@ export default function ProductSalesPage() {
                   <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="제품명 · SKU 검색"
                     className="flex-1 bg-transparent text-sm outline-none placeholder:text-neutral-400" />
                 </div>
+                {/* 2026-10-19 모바일: 칩 h-8(32px) 탭 타겟 확보, PC는 기존 높이 */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-[11px] text-neutral-400 mr-1">정렬</span>
                   {SORTS.map((s) => (
                     <button key={s.key} onClick={() => setSort(s.key)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-semibold transition ${sort === s.key ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
+                      className={`h-8 lg:h-auto px-2.5 py-1 rounded-full text-xs font-semibold transition ${sort === s.key ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
                       {s.label}
                     </button>
                   ))}
@@ -167,7 +168,7 @@ export default function ProductSalesPage() {
                   <span className="text-[11px] text-neutral-400 mr-1">채널</span>
                   {CHANNELS.map((c) => (
                     <button key={c.key} onClick={() => setChannel(c.key)}
-                      className={`px-2.5 py-1 rounded-full text-xs font-semibold transition ${channel === c.key ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
+                      className={`h-8 lg:h-auto px-2.5 py-1 rounded-full text-xs font-semibold transition ${channel === c.key ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
                       {c.label}
                     </button>
                   ))}
@@ -176,10 +177,10 @@ export default function ProductSalesPage() {
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-[11px] text-neutral-400 mr-1">분류</span>
                     <button onClick={() => setCat('all')}
-                      className={`px-2.5 py-1 rounded-full text-xs font-semibold transition ${cat === 'all' ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>전체</button>
+                      className={`h-8 lg:h-auto px-2.5 py-1 rounded-full text-xs font-semibold transition ${cat === 'all' ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>전체</button>
                     {cats.map((c) => (
                       <button key={c} onClick={() => setCat(c)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold transition ${cat === c ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
+                        className={`h-8 lg:h-auto px-2.5 py-1 rounded-full text-xs font-semibold transition ${cat === c ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
                         {catLabels[c] || c}
                       </button>
                     ))}
@@ -190,7 +191,7 @@ export default function ProductSalesPage() {
 
             {/* 전체 목록 */}
             <Card>
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 mb-3">
                 <h3 className="text-sm font-bold text-stone-900">품목별 매출 ({rows.length})</h3>
                 <span className="text-[11px] text-neutral-400">{period.from} ~ {period.to} · 온라인·매장·납품 합산 (RS 제외)</span>
               </div>
@@ -201,13 +202,15 @@ export default function ProductSalesPage() {
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-neutral-200 text-neutral-500">
-                        <th className="text-left py-2 pr-2 w-8">#</th>
+                        {/* 2026-10-19 모바일(<sm): #·원가·이익률 숨겨 375px에서 가로 넘침 방지 */}
+                        <th className="hidden sm:table-cell text-left py-2 pr-2 w-8">#</th>
                         <th className="text-left py-2 pr-2">제품</th>
-                        <th className="text-right py-2 px-2">수량</th>
-                        <th className="text-right py-2 px-2">매출</th>
-                        <th className="text-right py-2 px-2">원가</th>
-                        <th className="text-right py-2 px-2">이익</th>
-                        <th className="text-right py-2 pl-2">이익률</th>
+                        <th className="text-right py-2 px-1.5 sm:px-2 whitespace-nowrap">수량</th>
+                        {/* 2026-10-19 모바일: 이익은 매출 아래 작은 줄로 (열 4개가 폭 375px 를 넘던 문제) */}
+                        <th className="text-right py-2 px-1.5 sm:px-2 whitespace-nowrap">매출<span className="sm:hidden text-neutral-400 font-normal"> / 이익</span></th>
+                        <th className="hidden sm:table-cell text-right py-2 px-2">원가</th>
+                        <th className="hidden sm:table-cell text-right py-2 px-2">이익</th>
+                        <th className="hidden sm:table-cell text-right py-2 pl-2">이익률</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-50">
@@ -215,23 +218,26 @@ export default function ProductSalesPage() {
                         const v = viewOf(p, channel);
                         return (
                         <tr key={p.product_id + String(i)} className="hover:bg-stone-50">
-                          <td className="py-2 pr-2 text-neutral-400 font-mono">{i + 1}</td>
+                          <td className="hidden sm:table-cell py-2 pr-2 text-neutral-400 font-mono">{i + 1}</td>
                           <td className="py-2 pr-2">
-                            <p className="font-medium text-stone-900 truncate max-w-[220px]">{p.product_name}</p>
+                            <p className="font-medium text-stone-900 truncate max-w-[120px] sm:max-w-[220px]">{p.product_name}</p>
                             <p className="text-[10px] text-neutral-400">{p.sku}{p.category ? ` · ${catLabels[p.category] || p.category}` : ''}</p>
                             {channel === 'all' && ((p.b2c_qty || 0) > 0 || (p.b2b_qty || 0) > 0) && (
                               <p className="text-[10px] mt-0.5">
-                                <span className="text-blue-500">B2C {p.b2c_qty || 0}개·{formatKRW(p.b2c_revenue || 0)}</span>
-                                <span className="text-neutral-300"> / </span>
-                                <span className="text-violet-500">B2B {p.b2b_qty || 0}개·{formatKRW(p.b2b_revenue || 0)}</span>
+                                <span className="block sm:inline text-blue-500">B2C {p.b2c_qty || 0}개·{formatKRW(p.b2c_revenue || 0)}</span>
+                                <span className="hidden sm:inline text-neutral-300"> / </span>
+                                <span className="block sm:inline text-violet-500">B2B {p.b2b_qty || 0}개·{formatKRW(p.b2b_revenue || 0)}</span>
                               </p>
                             )}
                           </td>
-                          <td className="text-right py-2 px-2 font-semibold">{v.qty}</td>
-                          <td className="text-right py-2 px-2 font-semibold">{formatKRW(v.revenue)}</td>
-                          <td className="text-right py-2 px-2 text-neutral-500">{formatKRW(v.cogs)}</td>
-                          <td className={`text-right py-2 px-2 font-semibold ${v.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{formatKRW(v.profit)}</td>
-                          <td className={`text-right py-2 pl-2 ${v.margin_rate >= 30 ? 'text-emerald-600' : v.margin_rate >= 0 ? 'text-amber-600' : 'text-red-500'}`}>{v.margin_rate}%</td>
+                          <td className="text-right py-2 px-1.5 sm:px-2 font-semibold whitespace-nowrap">{v.qty}</td>
+                          <td className="text-right py-2 px-1.5 sm:px-2 font-semibold whitespace-nowrap">
+                            {formatKRW(v.revenue)}
+                            <p className={`sm:hidden text-[10px] font-medium ${v.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{formatKRW(v.profit)}</p>
+                          </td>
+                          <td className="hidden sm:table-cell text-right py-2 px-2 text-neutral-500 whitespace-nowrap">{formatKRW(v.cogs)}</td>
+                          <td className={`hidden sm:table-cell text-right py-2 px-2 font-semibold whitespace-nowrap ${v.profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>{formatKRW(v.profit)}</td>
+                          <td className={`hidden sm:table-cell text-right py-2 pl-2 ${v.margin_rate >= 30 ? 'text-emerald-600' : v.margin_rate >= 0 ? 'text-amber-600' : 'text-red-500'}`}>{v.margin_rate}%</td>
                         </tr>
                         );
                       })}

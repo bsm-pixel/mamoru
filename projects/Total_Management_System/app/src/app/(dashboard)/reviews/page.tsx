@@ -129,6 +129,7 @@ export default function ReviewsPage() {
   const [autoApprove, setAutoApprove] = useState(false);
   const [autoLoaded, setAutoLoaded] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [toolsOpen, setToolsOpen] = useState(false); // 2026-10-19 모바일 도구 "⋯" 메뉴 열림
   const editPhotoRef = useRef<HTMLInputElement>(null);
 
   // 자동 노출 토글 로드
@@ -329,13 +330,15 @@ export default function ReviewsPage() {
 
       <div className="px-4 md:px-6 py-4 space-y-4">
         {/* 상단 탭 + 새로고침 */}
+        {/* 2026-10-19 모바일(<lg): 상태 탭 한 줄 꽉 채움 + 도구는 "⋯" 메뉴로 묶음. PC는 기존 그대로 */}
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 w-full lg:w-auto">
+            <div className="flex gap-1 lg:gap-1.5 flex-1 lg:flex-none min-w-0">
             {TAB_FILTERS.map(tab => (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                className={`flex-1 lg:flex-none h-10 lg:h-auto px-1 lg:px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${
                   activeTab === tab.value
                     ? 'bg-neutral-800 text-white'
                     : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
@@ -344,8 +347,54 @@ export default function ReviewsPage() {
                 {tab.label}
               </button>
             ))}
+            </div>
+            {/* 모바일 도구 메뉴 */}
+            <div className="relative shrink-0 lg:hidden">
+              <button
+                onClick={() => setToolsOpen(v => !v)}
+                aria-label="도구 메뉴"
+                aria-expanded={toolsOpen}
+                className="w-10 h-10 rounded-full bg-neutral-100 text-neutral-600 text-lg font-bold leading-none flex items-center justify-center"
+              >
+                ⋯
+              </button>
+              {toolsOpen && (
+                <>
+                  <button aria-label="메뉴 닫기" className="fixed inset-0 z-30 bg-transparent cursor-default" onClick={() => setToolsOpen(false)} />
+                  <div className="absolute right-0 top-11 z-40 w-48 rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
+                    {autoLoaded && (
+                      <button
+                        onClick={() => { setToolsOpen(false); toggleAutoApprove(); }}
+                        className="w-full h-11 px-3 text-left text-sm font-semibold flex items-center gap-2"
+                      >
+                        <span className={`w-2 h-2 rounded-full ${autoApprove ? 'bg-green-500' : 'bg-neutral-300'}`} />
+                        즉시 노출: {autoApprove ? 'ON' : 'OFF'}
+                      </button>
+                    )}
+                    <Link href="/reviews/event" onClick={() => setToolsOpen(false)}
+                      className="w-full h-11 px-3 text-left text-sm font-semibold flex items-center gap-2 border-t border-stone-100">
+                      <Trophy size={14} />
+                      리뷰 이벤트 관리
+                    </Link>
+                    <Link href="/reviews/naver" onClick={() => setToolsOpen(false)}
+                      className="w-full h-11 px-3 text-left text-sm font-semibold flex items-center gap-2 border-t border-stone-100">
+                      <Plus size={14} />
+                      네이버 리뷰 등록
+                    </Link>
+                    <button
+                      onClick={() => { setToolsOpen(false); fetchReviews(); }}
+                      disabled={loading}
+                      className="w-full h-11 px-3 text-left text-sm font-semibold flex items-center gap-2 border-t border-stone-100"
+                    >
+                      <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                      새로고침
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             {/* 자동 노출 토글 */}
             {autoLoaded && (
               <button

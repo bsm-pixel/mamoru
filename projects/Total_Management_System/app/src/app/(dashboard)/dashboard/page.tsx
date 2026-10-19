@@ -122,11 +122,11 @@ function GoalEditBox({
         value={goalInput}
         onChange={(e) => setGoalInput(e.target.value)}
         placeholder="예: 5000000"
-        className="flex-1 h-8 px-3 rounded-lg border border-stone-200 text-sm focus:outline-none focus:border-stone-400 transition"
+        className="flex-1 min-w-0 h-9 lg:h-8 px-3 rounded-lg border border-stone-200 text-sm focus:outline-none focus:border-stone-400 transition" /* 2026-10-19 모바일: min-w-0로 저장 버튼 밀림 방지 */
       />
-      <button onClick={onSave} className="px-3 py-1.5 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition">저장</button>
+      <button onClick={onSave} className="shrink-0 h-9 lg:h-auto px-3 py-1.5 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition">저장</button>
       {isEdit && onCancel && (
-        <button onClick={onCancel} className="text-xs text-stone-400 hover:text-stone-600 transition">취소</button>
+        <button onClick={onCancel} className="shrink-0 h-9 lg:h-auto text-xs text-stone-400 hover:text-stone-600 transition">취소</button>
       )}
     </div>
   );
