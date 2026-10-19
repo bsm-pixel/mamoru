@@ -139,12 +139,13 @@ export default function B2BPartnersPage() {
   const listContent = (
     <div className="space-y-3">
       {/* 서브탭 */}
-      <div className="flex gap-1.5">
+      {/* 2026-10-19 탭 수가 늘면 375px에서 가로 넘침 → flex-wrap, 모바일 터치 36px */}
+      <div className="flex flex-wrap gap-1.5">
         {B2B_TABS.map((tab) => {
           const Icon = tab.icon;
           return (
             <button key={tab.value} onClick={() => { setActiveTab(tab.value); setSearch(''); setSelectedId(null); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+              className={`flex items-center gap-1.5 h-9 lg:h-auto px-3 py-1.5 rounded-full text-xs font-semibold transition ${
                 activeTab === tab.value ? 'bg-terracotta text-cream' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
               }`}>
               <Icon size={12} />{tab.label}
@@ -153,7 +154,16 @@ export default function B2BPartnersPage() {
         })}
       </div>
 
-      <SearchInput value={search} onChange={setSearch} placeholder={`${tabConfig.label}명, 담당자명, 전화번호 검색`} />
+      {/* 작업줄 — 검색 + [거래처 추가] (2026-10-19 상단바에서 이동) */}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <SearchInput value={search} onChange={setSearch} placeholder={`${tabConfig.label}명, 담당자명, 전화번호 검색`} />
+        </div>
+        <button type="button" onClick={() => setShowAdd(true)}
+          className="shrink-0 h-9 px-3 rounded-xl bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+          <Plus size={14} />거래처 추가
+        </button>
+      </div>
 
       <Card padding={false}>
         {isLoading ? (
@@ -185,9 +195,8 @@ export default function B2BPartnersPage() {
 
   return (
     <>
-      <Topbar title="B2B 거래처" action={
-        <Button size="sm" onClick={() => setShowAdd(true)}><Plus size={14} />거래처 추가</Button>
-      } />
+      {/* 2026-10-19 상단바=제목+새로고침만 — [거래처 추가]는 검색줄로 이동 */}
+      <Topbar title="B2B 거래처" />
 
       <div className="px-4 md:px-6 py-4">
         {isLg ? (

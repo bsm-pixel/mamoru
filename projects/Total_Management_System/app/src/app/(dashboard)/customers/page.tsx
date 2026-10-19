@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomers } from '@/hooks/use-customers';
 import { useIsLg } from '@/hooks/use-grid-mode';
@@ -135,20 +134,24 @@ export default function CustomersPage() {
 
   return (
     <>
-      <Topbar title="고객 관리" action={
-        <Button size="sm" onClick={() => setShowAdd(true)}>
-          <Plus size={14} />
-          고객 추가
-        </Button>
-      } />
+      {/* 2026-10-19 상단바=제목+새로고침만 — [고객 추가]는 검색줄(작업 영역)로 이동 */}
+      <Topbar title="고객 관리" />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
-        {/* 검색 */}
-        <SearchInput
-          value={search}
-          onChange={(v) => { setSearch(v); setPage(1); }}
-          placeholder="고객명, 전화번호, 업체명 검색"
-        />
+        {/* 작업줄 — 검색 + [고객 추가] (2026-10-19) */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <SearchInput
+              value={search}
+              onChange={(v) => { setSearch(v); setPage(1); }}
+              placeholder="고객명, 전화번호, 업체명 검색"
+            />
+          </div>
+          <button type="button" onClick={() => setShowAdd(true)}
+            className="shrink-0 h-9 px-3 rounded-xl bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+            <Plus size={14} />고객 추가
+          </button>
+        </div>
 
         {/* 유형 필터 칩 */}
         <div className="flex gap-1.5 overflow-x-auto pb-1">

@@ -13,7 +13,7 @@ import { ProductBulkEditTable } from '@/components/products/product-bulk-edit-ta
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useProducts } from '@/hooks/use-sales';
 import { formatKRW } from '@/lib/utils/format';
-import { Plus, Search, Package, AlertTriangle, EyeOff, Table as TableIcon, Tags } from 'lucide-react';
+import { Plus, Search, Package, AlertTriangle, EyeOff, Table as TableIcon, Tags, MoreHorizontal } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 
 import { useSetting } from '@/hooks/use-settings';
@@ -42,6 +42,7 @@ export default function ProductsPage() {
   const [productGroup, setProductGroup] = useState('all');
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'bulk-edit'>('grid');
+  const [moreOpen, setMoreOpen] = useState(false); // 2026-10-19 모바일 보조 작업 메뉴(⋯)
 
   // PC 여부 감지 (lg:1024px+) — 공용 훅으로 일원화
   const isLg = useIsLg();
@@ -114,25 +115,40 @@ export default function ProductsPage() {
         {/* ── 상단 고정 영역 ── */}
         <div className="shrink-0 space-y-3 pb-3">
         {/* 상단: 요약 카드 + 제품 등록 버튼 */}
-        <div className="flex items-center gap-3">
+        {/* 2026-10-19 모바일 375px 넘침 해소 — 간격·여백 축소, 아이콘 숨김(PC 유지), 라벨 디자이너는 ⋯ 메뉴로 */}
+        <div className="flex items-center gap-2 lg:gap-3">
           <div className="flex gap-2 flex-1 min-w-0">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 min-w-0">
-              <Package size={14} className="text-blue-600 shrink-0" />
+            <div className="flex items-center gap-1.5 lg:gap-2 px-2.5 lg:px-3 py-2 rounded-lg bg-blue-50 min-w-0 whitespace-nowrap">
+              <Package size={14} className="hidden lg:block text-blue-600 shrink-0" />
               <span className="text-xs text-neutral-500">전체</span>
               <span className="text-sm font-bold text-blue-700">{products.length}</span>
             </div>
             {lowStockCount > 0 && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 min-w-0">
-                <AlertTriangle size={14} className="text-red-600 shrink-0" />
+              <div className="flex items-center gap-1.5 lg:gap-2 px-2.5 lg:px-3 py-2 rounded-lg bg-red-50 min-w-0 whitespace-nowrap">
+                <AlertTriangle size={14} className="hidden lg:block text-red-600 shrink-0" />
                 <span className="text-xs text-neutral-500">재고부족</span>
                 <span className="text-sm font-bold text-red-700">{lowStockCount}</span>
               </div>
             )}
           </div>
-          <Button variant="secondary" size="sm" onClick={() => router.push('/labels')} className="shrink-0">
-            <Tags size={14} />
-            라벨 디자이너
-          </Button>
+          {isLg ? (
+            <Button variant="secondary" size="sm" onClick={() => router.push('/labels')} className="shrink-0">
+              <Tags size={14} />
+              라벨 디자이너
+            </Button>
+          ) : (
+            <div className="relative shrink-0">
+              <button type="button" aria-label="제품 작업 메뉴" onClick={() => setMoreOpen(!moreOpen)}
+                className="h-9 w-9 rounded-xl border border-stone-200 bg-white text-stone-600 flex items-center justify-center">
+                <MoreHorizontal size={16} />
+              </button>
+              {moreOpen && (
+                <div className="absolute right-0 top-11 z-40 w-44 rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
+                  <button type="button" onClick={() => { setMoreOpen(false); router.push('/labels'); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 flex items-center gap-2"><Tags size={14} />라벨 디자이너</button>
+                </div>
+              )}
+            </div>
+          )}
           {isLg && viewMode === 'grid' && (
             <Button variant="secondary" size="sm" onClick={() => setViewMode('bulk-edit')} className="shrink-0">
               <TableIcon size={14} />
@@ -146,6 +162,9 @@ export default function ProductsPage() {
             </Button>
           )}
         </div>
+
+        {/* 2026-10-19 ⋯ 메뉴 바깥 누르면 닫기 */}
+        {moreOpen && <button type="button" aria-label="메뉴 닫기" className="fixed inset-0 z-30 cursor-default" onClick={() => setMoreOpen(false)} />}
 
         {/* 검색 */}
         <div className="relative">

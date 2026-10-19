@@ -8,7 +8,6 @@ import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
 import { ProductDetailPanel } from '@/components/products/product-detail-panel';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { useInventory, type InventoryItem } from '@/hooks/use-inventory';
@@ -18,7 +17,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import {
   AlertTriangle, Package, Boxes, TrendingDown,
-  ArrowUpDown, Wrench, Eye, EyeOff, Printer, MapPin,
+  ArrowUpDown, Wrench, Eye, EyeOff, Printer, MapPin, MoreHorizontal,
 } from 'lucide-react';
 import { InventoryPrintModal } from '@/components/inventory/inventory-print-modal';
 
@@ -66,6 +65,7 @@ export default function InventoryPage() {
   const [sortAsc, setSortAsc] = useState(true);
   const [showAdjust, setShowAdjust] = useState(false);
   const [showPrint, setShowPrint] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false); // 2026-10-19 모바일 작업 메뉴(⋯)
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // PC 여부 감지 — 공용 훅으로 일원화
@@ -144,23 +144,8 @@ export default function InventoryPage() {
 
   return (
     <>
-      <Topbar title="창고·재고 관리" action={
-        <div className="flex items-center gap-1">
-          {/* 112: 창고 배치도 — 제품이 어느 렉·칸에 있는지 그림으로 */}
-          <Button size="sm" variant="secondary" onClick={() => router.push('/inventory/map')}>
-            <MapPin size={14} />
-            창고 배치도
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => setShowPrint(true)}>
-            <Printer size={14} />
-            재고조사 인쇄
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => setShowAdjust(true)}>
-            <Wrench size={14} />
-            재고 조정
-          </Button>
-        </div>
-      } />
+      {/* 2026-10-19 상단바=제목+새로고침만 — 작업 버튼은 검색줄(작업 영역)로 이동 (모바일 3줄 줄바꿈 해소) */}
+      <Topbar title="창고·재고 관리" />
 
       {showAdjust && (
         <AdjustModal
@@ -218,12 +203,48 @@ export default function InventoryPage() {
           />
         </div>
 
-        {/* 검색 + 필터 */}
-        <div className="flex items-center gap-2">
-          <SearchInput value={search} onChange={setSearch} placeholder="제품명, SKU, 바코드 검색" />
+        {/* 검색 + 필터 + 작업 버튼 — 2026-10-19 모바일: [검색][⋯] 1줄 + 필터칩 다음 줄 / PC: 검색·칩·버튼 1줄 */}
+        <div className="flex flex-wrap lg:flex-nowrap items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <SearchInput value={search} onChange={setSearch} placeholder="제품명, SKU, 바코드 검색" />
+          </div>
+          {/* 2026-10-19 상단바에서 내려온 작업 버튼 — PC는 그대로 나열, 모바일은 ⋯ 메뉴 하나로 */}
+          {isLg ? (
+            <div className="order-last flex items-center gap-2 shrink-0">
+              {/* 112: 창고 배치도 — 제품이 어느 렉·칸에 있는지 그림으로 */}
+              <button type="button" onClick={() => router.push('/inventory/map')}
+                className="shrink-0 h-9 px-3 rounded-xl border border-stone-200 bg-white text-stone-700 text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                <MapPin size={14} />창고 배치도
+              </button>
+              <button type="button" onClick={() => setShowPrint(true)}
+                className="shrink-0 h-9 px-3 rounded-xl border border-stone-200 bg-white text-stone-700 text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                <Printer size={14} />재고조사 인쇄
+              </button>
+              <button type="button" onClick={() => setShowAdjust(true)}
+                className="shrink-0 h-9 px-3 rounded-xl border border-stone-200 bg-white text-stone-700 text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                <Wrench size={14} />재고 조정
+              </button>
+            </div>
+          ) : (
+            <div className="relative shrink-0">
+              <button type="button" aria-label="재고 작업 메뉴" onClick={() => setMoreOpen(!moreOpen)}
+                className="h-9 w-9 rounded-xl border border-stone-200 bg-white text-stone-600 flex items-center justify-center">
+                <MoreHorizontal size={16} />
+              </button>
+              {moreOpen && (
+                <div className="absolute right-0 top-11 z-40 w-44 rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
+                  <button type="button" onClick={() => { setMoreOpen(false); router.push('/inventory/map'); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 flex items-center gap-2"><MapPin size={14} />창고 배치도</button>
+                  <button type="button" onClick={() => { setMoreOpen(false); setShowPrint(true); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100 flex items-center gap-2"><Printer size={14} />재고조사 인쇄</button>
+                  <button type="button" onClick={() => { setMoreOpen(false); setShowAdjust(true); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100 flex items-center gap-2"><Wrench size={14} />재고 조정</button>
+                </div>
+              )}
+            </div>
+          )}
+          {/* 2026-10-19 필터칩 — 모바일은 검색 아래 자기 줄(order-last·w-full), PC는 검색 옆 */}
+          <div className="order-last w-full lg:order-none lg:w-auto flex flex-wrap items-center gap-1.5 lg:shrink-0">
           <button
             onClick={() => setLowStockOnly(!lowStockOnly)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1 ${
+            className={`shrink-0 h-9 lg:h-auto px-3 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1 ${
               lowStockOnly ? 'bg-amber-500 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'
             }`}
           >
@@ -232,7 +253,7 @@ export default function InventoryPage() {
           </button>
           <button
             onClick={() => setHideUnused(!hideUnused)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1 ${
+            className={`shrink-0 h-9 lg:h-auto px-3 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1 ${
               hideUnused ? 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200' : 'bg-neutral-700 text-white'
             }`}
           >
@@ -243,14 +264,18 @@ export default function InventoryPage() {
           <button
             onClick={() => setMismatchOnly(!mismatchOnly)}
             title="현재고 ≠ 보관+준비+디스플레이 (수량 불일치)"
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1 ${
+            className={`shrink-0 h-9 lg:h-auto px-3 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1 ${
               mismatchOnly ? 'bg-rose-500 text-white' : mismatchCount > 0 ? 'bg-rose-100 text-rose-600 hover:bg-rose-200' : 'bg-neutral-100 text-neutral-400 hover:bg-neutral-200'
             }`}
           >
             <AlertTriangle size={11} />
             무결성{mismatchCount > 0 ? ` ${mismatchCount}` : ''}
           </button>
+          </div>
         </div>
+
+        {/* 2026-10-19 ⋯ 메뉴 바깥 누르면 닫기 */}
+        {moreOpen && <button type="button" aria-label="메뉴 닫기" className="fixed inset-0 z-30 cursor-default" onClick={() => setMoreOpen(false)} />}
 
         {/* 카테고리 칩 탭 */}
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
@@ -334,9 +359,9 @@ function SummaryCard({ icon, label, value, sub, alert }: {
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${alert ? 'bg-amber-50' : 'bg-neutral-50'}`}>
           {icon}
         </div>
-        <div>
+        <div className="min-w-0">{/* 2026-10-19 금액 줄바꿈 방지 — nowrap + 모바일 글자 축소 */}
           <p className="text-[11px] text-neutral-500">{label}</p>
-          <p className={`text-base font-bold ${alert ? 'text-amber-600' : 'text-indigo-black'}`}>{value}</p>
+          <p className={`text-sm md:text-base font-bold whitespace-nowrap tabular-nums ${alert ? 'text-amber-600' : 'text-indigo-black'}`}>{value}</p>
           {sub && <p className="text-[10px] text-neutral-400">{sub}</p>}
         </div>
       </div>

@@ -88,17 +88,13 @@ export default function SuppliesPage() {
 
   return (
     <>
-      <Topbar title="부자재 관리" action={
-        <Button size="sm" onClick={() => setShowAdd(true)}>
-          <Plus size={14} />
-          부자재 추가
-        </Button>
-      } />
+      {/* 2026-10-19 상단바=제목+새로고침만 — [부자재 추가]는 작업 영역 첫 줄로 이동 */}
+      <Topbar title="부자재 관리" />
 
       <div className="px-4 md:px-6 py-4 space-y-4">
-        {/* 요약 */}
-        {(neededCount > 0 || orderedCount > 0) && (
-          <div className="flex gap-3">
+        {/* 작업줄 — 요약 배지(왼쪽) + [부자재 추가](오른쪽) (2026-10-19) */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0 flex flex-wrap gap-2">
             {neededCount > 0 && (
               <Badge className="bg-red-100 text-red-700">주문필요 {neededCount}건</Badge>
             )}
@@ -106,7 +102,11 @@ export default function SuppliesPage() {
               <Badge className="bg-amber-100 text-amber-700">주문완료 대기 {orderedCount}건</Badge>
             )}
           </div>
-        )}
+          <button type="button" onClick={() => setShowAdd(true)}
+            className="shrink-0 h-9 px-3 rounded-xl bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+            <Plus size={14} />부자재 추가
+          </button>
+        </div>
 
         {/* 목록 */}
         <Card padding={false}>
