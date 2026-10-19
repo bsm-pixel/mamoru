@@ -15,7 +15,8 @@ import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { OrderDetailPanel } from '@/components/orders/order-detail-panel';
-import { RefreshCw, Truck, ShoppingBag, Printer, X } from 'lucide-react';
+import { RefreshCw, Truck, ShoppingBag, Printer, X, MoreHorizontal } from 'lucide-react';
+import { StageGrid } from '@/components/ui/stage-grid';
 import { useEscapeKey } from '@/hooks/use-media-query';
 import { InvoiceModal } from '@/components/orders/invoice-modal';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
@@ -48,6 +49,7 @@ export default function OrdersPage() {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [showPrepSheet, setShowPrepSheet] = useState(false);
   const [showUnified, setShowUnified] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false); // 2026-10-19 모바일 [⋯] 메뉴
   const toggleCheck = (id: string) => setCheckedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const togglePrepMode = () => { setPrepMode((v) => !v); setCheckedIds(new Set()); };
   const sync = useOrderSync();
@@ -102,7 +104,70 @@ export default function OrdersPage() {
       <Topbar title="주문관리" />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
-        {/* 상단: 동기화 + 검색 */}
+        {/* 모바일 상단 (2026-10-19) — 동기화 버튼이 세로로 찌그러지던 문제: 상태 버튼판 + 검색·기간·[⋯] 작업줄 */}
+        {!isLg && (
+          <>
+            <StageGrid
+              ariaLabel="주문 상태"
+              cols={3}
+              items={STATUS_TABS.map((t) => ({
+                key: t.value,
+                label: t.value === 'cancel_pending' ? '취소대기' : t.label,
+                count: counts ? (counts[t.value] ?? 0) : null,
+                tone: t.value === 'pay_done' || t.value === 'cancel_pending' ? 'amber' as const : 'default' as const,
+              }))}
+              active={status}
+              onChange={(k) => { setStatus(k); setPage(1); }}
+            />
+            <div className="flex items-center gap-2">
+              <SearchInput
+                value={search}
+                onChange={(v) => { setSearch(v); setPage(1); }}
+                placeholder="주문번호·이름·송장"
+              />
+              <select
+                value={dateRange}
+                onChange={(e) => { setDateRange(e.target.value as typeof dateRange); setPage(1); }}
+                className="shrink-0 h-9 px-2 rounded-xl border border-stone-200 bg-white text-xs font-medium text-stone-700 focus:outline-none focus:border-stone-400 transition"
+              >
+                <option value="all">전체 기간</option>
+                <option value="today">오늘</option>
+                <option value="week">이번주</option>
+                <option value="month">이번달</option>
+              </select>
+              <div className="relative shrink-0">
+                <button type="button" aria-label="주문 작업 메뉴" onClick={() => setMobileMenu((v) => !v)}
+                  className="h-9 w-9 rounded-xl border border-stone-200 bg-white text-stone-600 flex items-center justify-center">
+                  {sync.isPending ? <RefreshCw size={16} className="animate-spin" /> : <MoreHorizontal size={16} />}
+                </button>
+                {mobileMenu && (
+                  <div className="absolute right-0 top-11 z-40 w-44 rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
+                    <button type="button" disabled={sync.isPending} onClick={() => { setMobileMenu(false); sync.mutate(); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 disabled:opacity-40">
+                      {sync.isPending ? '동기화 중...' : '아임웹 동기화'}
+                    </button>
+                    <button type="button" onClick={() => { setMobileMenu(false); setShowUnified(true); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">통합 준비표</button>
+                    <button type="button" onClick={() => { setMobileMenu(false); if (!prepMode) togglePrepMode(); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">준비표 뽑기 (선택)</button>
+                  </div>
+                )}
+              </div>
+            </div>
+            {mobileMenu && <button type="button" aria-label="메뉴 닫기" className="fixed inset-0 z-30 cursor-default" onClick={() => setMobileMenu(false)} />}
+            {/* 준비표 선택 중일 때만 인쇄/취소 줄 */}
+            {prepMode && (
+              <div className="flex items-center gap-2">
+                <Button size="sm" className="flex-1" disabled={checkedIds.size === 0} onClick={() => setShowPrepSheet(true)}>
+                  <Printer size={14} />준비표 인쇄 ({checkedIds.size})
+                </Button>
+                <Button variant="ghost" size="sm" className="shrink-0" onClick={togglePrepMode}>
+                  <X size={14} />취소
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* 상단: 동기화 + 검색 (PC) */}
+        {isLg && (
         <div className="flex items-center gap-3">
           <Button
             variant="secondary"
@@ -147,11 +212,13 @@ export default function OrdersPage() {
             </div>
           )}
         </div>
+        )}
         {prepMode && (
           <p className="text-[11px] text-stone-500">출고할 주문을 클릭해 선택하세요. 선택 후 <b>준비표 인쇄</b>를 누르면 리스트형·트레이형으로 출력됩니다.</p>
         )}
 
-        {/* 상태 탭 */}
+        {/* 상태 탭 (PC) — 모바일은 위 StageGrid (2026-10-19) */}
+        {isLg && (
         <div className="flex gap-1 overflow-x-auto pb-1">
           {STATUS_TABS.map((tab) => (
             <button
@@ -176,6 +243,7 @@ export default function OrdersPage() {
             </button>
           ))}
         </div>
+        )}
 
         {/* PC: 밀집 그리드 + 우측 상세 (카드보기·토글 폐지 — 항상 그리드) */}
         {isLg && (

@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
+import { StageGrid } from '@/components/ui/stage-grid';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { PurchaseDetailPanel } from '@/components/purchasing/purchase-detail-panel';
 import { Plus, Truck } from 'lucide-react';
@@ -99,6 +100,40 @@ export default function PurchasingPage() {
       <Topbar title="매입관리" />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
+        {/* 모바일 (2026-10-19) — 검색이 찌그러지던 한 줄을 풀어: 상태 버튼판 → 기간 → 검색 + 발주 작성 */}
+        {!isLg && (
+          <>
+            <StageGrid
+              ariaLabel="발주 상태"
+              items={STATUS_TABS.map((t) => ({ key: t.value, label: t.label, count: null }))}
+              active={statusFilter}
+              onChange={(k) => { setStatusFilter(k); setPage(1); }}
+            />
+            <select
+              value={dateRange}
+              onChange={(e) => { setDateRange(e.target.value as typeof dateRange); setPage(1); }}
+              className="w-full h-9 px-3 rounded-xl border border-stone-200 bg-white text-xs font-medium text-stone-700 focus:outline-none focus:border-stone-400"
+            >
+              <option value="all">전체 기간</option>
+              <option value="today">오늘</option>
+              <option value="week">이번주</option>
+              <option value="month">이번달</option>
+            </select>
+            <div className="flex items-center gap-2">
+              <SearchInput
+                value={search}
+                onChange={(v) => { setSearch(v); setPage(1); }}
+                placeholder="발주번호·매입처"
+              />
+              <button type="button" onClick={() => router.push('/purchasing/new')}
+                className="shrink-0 h-9 px-3 rounded-xl bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                <Plus size={14} />발주 작성
+              </button>
+            </div>
+          </>
+        )}
+
+        {isLg && (
         <div className="flex items-center gap-3">
           <Button size="sm" onClick={() => router.push('/purchasing/new')}>
             <Plus size={14} />
@@ -120,7 +155,9 @@ export default function PurchasingPage() {
             <option value="month">이번달</option>
           </select>
         </div>
+        )}
 
+        {isLg && (
         <div className="flex gap-1.5 overflow-x-auto pb-1">
           {STATUS_TABS.map((tab) => (
             <button
@@ -136,6 +173,7 @@ export default function PurchasingPage() {
             </button>
           ))}
         </div>
+        )}
 
         {/* PC: 밀집 그리드 + 우측 상세 (카드보기·토글 폐지 — 항상 그리드) */}
         {isLg && (

@@ -14,6 +14,7 @@ import { getDeliveryStatusChip, type DeliveryStatusInput } from '@/lib/deliverie
 import { getDeliveryShipStatus } from '@/lib/sales/ship-status';
 import { deliveryNet } from '@/lib/sales/amounts';
 import { SlidePanel } from '@/components/ui/slide-panel';
+import { StageGrid } from '@/components/ui/stage-grid';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-panel';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
@@ -84,6 +85,7 @@ export default function DeliveriesPage() {
   const [dateRange, setDateRange] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [addMenu, setAddMenu] = useState(false); // 2026-10-19 모바일 [+ 작성] 메뉴
   const limit = 20;
 
   const isLg = useIsLg();
@@ -116,31 +118,69 @@ export default function DeliveriesPage() {
     <>
       {/* 통계 카드 */}
       {stats && (
+        /* 2026-10-19 모바일 3칸에서 금액이 줄바꿈되던 문제 — 모바일만 작은 글씨 + 줄바꿈 금지 (lg 이상은 기존 크기) */
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-white rounded-2xl border border-stone-200 p-3">
+          <div className="bg-white rounded-2xl border border-stone-200 p-2.5 lg:p-3 min-w-0">
             <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
               <Calendar size={12} />이번주
             </div>
-            <p className="text-base font-bold text-neutral-900">{formatKRW(stats.weekAmount)}</p>
+            <p className="text-[13px] lg:text-base font-bold text-neutral-900 whitespace-nowrap truncate">{formatKRW(stats.weekAmount)}</p>
             <p className="text-[11px] text-neutral-400">{stats.weekCount}건</p>
           </div>
-          <div className="bg-white rounded-2xl border border-stone-200 p-3">
+          <div className="bg-white rounded-2xl border border-stone-200 p-2.5 lg:p-3 min-w-0">
             <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
               <TrendingUp size={12} />이번달
             </div>
-            <p className="text-base font-bold text-neutral-900">{formatKRW(stats.monthAmount)}</p>
+            <p className="text-[13px] lg:text-base font-bold text-neutral-900 whitespace-nowrap truncate">{formatKRW(stats.monthAmount)}</p>
             <p className="text-[11px] text-neutral-400">{stats.monthCount}건</p>
           </div>
-          <div className="bg-white rounded-2xl border border-stone-200 p-3">
+          <div className="bg-white rounded-2xl border border-stone-200 p-2.5 lg:p-3 min-w-0">
             <div className="flex items-center gap-1.5 text-xs text-red-500 mb-1">
               <AlertCircle size={12} />미수금
             </div>
-            <p className="text-base font-bold text-red-600">{formatKRW(stats.outstanding)}</p>
+            <p className="text-[13px] lg:text-base font-bold text-red-600 whitespace-nowrap truncate">{formatKRW(stats.outstanding)}</p>
           </div>
         </div>
       )}
 
-      {/* 검색 + 생성 버튼 — 2026-05-26 Phase E: 입력 진입점 /sales/new?mode=b2b 로 일원화 */}
+      {/* 모바일 (2026-10-19) — 버튼 2개에 검색이 눌리던 줄을: 상태 버튼판 → 검색 + [+ 작성 ▾] 작업줄 */}
+      {!isLg && (
+        <>
+          <StageGrid
+            ariaLabel="납품 상태"
+            items={STATUS_TABS.map((t) => ({
+              key: t.value,
+              label: t.label,
+              count: stats ? ((t.value === '' ? stats.all : stats[t.value as keyof typeof stats]) as number) ?? 0 : null,
+            }))}
+            active={statusFilter}
+            onChange={(k) => { setStatusFilter(k); setPage(1); }}
+          />
+          <div className="flex items-center gap-2">
+            <SearchInput
+              value={search}
+              onChange={(v) => { setSearch(v); setPage(1); }}
+              placeholder="납품번호·고객명"
+            />
+            <div className="relative shrink-0">
+              <button type="button" onClick={() => setAddMenu((v) => !v)}
+                className="h-9 px-3 rounded-xl bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                <Plus size={14} />작성
+              </button>
+              {addMenu && (
+                <div className="absolute right-0 top-11 z-40 w-44 rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
+                  <button type="button" onClick={() => { setAddMenu(false); router.push('/sales/new?mode=b2b'); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50">납품서 작성</button>
+                  <button type="button" onClick={() => { setAddMenu(false); router.push('/sales/new?mode=b2b&initial=repair'); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">B2B 수리</button>
+                </div>
+              )}
+            </div>
+          </div>
+          {addMenu && <button type="button" aria-label="메뉴 닫기" className="fixed inset-0 z-30 cursor-default" onClick={() => setAddMenu(false)} />}
+        </>
+      )}
+
+      {/* 검색 + 생성 버튼 — 2026-05-26 Phase E: 입력 진입점 /sales/new?mode=b2b 로 일원화 (PC) */}
+      {isLg && (
       <div className="flex items-center gap-2">
         <Button size="sm" onClick={() => router.push('/sales/new?mode=b2b')}>
           <Plus size={14} />납품서 작성
@@ -154,8 +194,10 @@ export default function DeliveriesPage() {
           placeholder="납품번호, 고객명 검색"
         />
       </div>
+      )}
 
-      {/* 탭 바 */}
+      {/* 탭 바 (PC) */}
+      {isLg && (
       <div className="flex gap-1 border-b border-neutral-200">
         {STATUS_TABS.map((tab) => {
           const count = stats ? (tab.value === '' ? stats.all : stats[tab.value as keyof typeof stats] as number) : 0;
@@ -182,6 +224,7 @@ export default function DeliveriesPage() {
           );
         })}
       </div>
+      )}
 
       {/* 기간 필터 */}
       <div className="flex gap-1">

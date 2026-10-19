@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { SlidePanel } from '@/components/ui/slide-panel';
+import { StageGrid } from '@/components/ui/stage-grid';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useReturns, useUpdateReturn, useShipReturn, useBookReturnPickup } from '@/hooks/use-returns';
 import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, RETURN_ACTION_LABEL, RETURN_STATUS_HINT, RETURN_PRIMARY_NEXT, getAllowedReturnTransitions } from '@/lib/returns/transitions';
@@ -73,7 +74,22 @@ export default function ReturnsPage() {
     <>
       <Topbar title="반품 · 교환" />
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
-        <SearchInput value={search} onChange={setSearch} placeholder="반품번호, 이름, 시리얼 검색" />
+        {/* 모바일 (2026-10-19) — 가로 스크롤 탭 대신 상태 버튼판(건수 집계 없음 → –) + 검색 */}
+        {!isLg && (
+          <>
+            <StageGrid
+              ariaLabel="반품 상태"
+              items={STATUS_TABS.map((t) => ({ key: t.value, label: t.label, count: null }))}
+              active={status}
+              onChange={setStatus}
+            />
+            <div className="flex items-center gap-2">
+              <SearchInput value={search} onChange={setSearch} placeholder="반품번호·이름·시리얼" />
+            </div>
+          </>
+        )}
+        {isLg && <SearchInput value={search} onChange={setSearch} placeholder="반품번호, 이름, 시리얼 검색" />}
+        {isLg && (
         <div className="flex gap-1 overflow-x-auto pb-1">
           {STATUS_TABS.map((t) => (
             <button key={t.value} onClick={() => setStatus(t.value)}
@@ -82,6 +98,7 @@ export default function ReturnsPage() {
             </button>
           ))}
         </div>
+        )}
 
         {isLg ? (
           <div className="flex gap-4 h-[calc(100vh-220px)]">

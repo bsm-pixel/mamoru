@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { SlidePanel } from '@/components/ui/slide-panel';
+import { StageGrid } from '@/components/ui/stage-grid';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
@@ -92,6 +93,40 @@ export default function ContractsPage() {
       <Topbar title="전자 계약서" />
 
       <div className="px-4 md:px-6 py-4 space-y-4">
+        {/* 모바일 (2026-10-19) — 검색창이 잘리던 한 줄을 풀어: 상태 버튼판 → 기간 → 검색 + 계약서 작성 */}
+        {!isLg && (
+          <div className="space-y-3">
+            <StageGrid
+              ariaLabel="계약 상태"
+              items={TABS.map((t) => ({ key: t.key, label: t.label, count: tabCounts ? (tabCounts[t.key] ?? 0) : null }))}
+              active={tab}
+              onChange={handleTabChange}
+            />
+            <select
+              value={dateRange}
+              onChange={(e) => { setDateRange(e.target.value as typeof dateRange); setPage(1); }}
+              className="w-full h-9 px-3 rounded-xl border border-stone-200 bg-white text-xs font-medium text-stone-700 focus:outline-none focus:border-stone-400"
+            >
+              <option value="all">전체 기간</option>
+              <option value="today">오늘</option>
+              <option value="week">이번주</option>
+              <option value="month">이번달</option>
+            </select>
+            <div className="flex items-center gap-2">
+              <SearchInput
+                value={search}
+                onChange={(v) => { setSearch(v); setPage(1); }}
+                placeholder="계약번호·고객·전화"
+              />
+              <button type="button" onClick={() => router.push('/contracts/new')}
+                className="shrink-0 h-9 px-3 rounded-xl bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
+                <Plus size={14} />계약서 작성
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isLg && (
         <div className="flex items-center gap-3">
           <Button size="sm" onClick={() => router.push('/contracts/new')}>
             <Plus size={14} />
@@ -114,8 +149,10 @@ export default function ContractsPage() {
             <option value="month">이번달</option>
           </select>
         </div>
+        )}
 
-        {/* 탭 바 — 판매관리와 동일 패턴 */}
+        {/* 탭 바 — 판매관리와 동일 패턴 (PC 전용, 모바일은 위 StageGrid 2026-10-19) */}
+        {isLg && (
         <div className="flex gap-1 border-b border-neutral-200">
           {TABS.map((t) => {
             const count = tabCounts?.[t.key] ?? 0;
@@ -142,6 +179,7 @@ export default function ContractsPage() {
             );
           })}
         </div>
+        )}
 
         {/* PC: 밀집 그리드 + 우측 상세 (카드보기·토글 폐지 — 항상 그리드) */}
         {isLg && (
