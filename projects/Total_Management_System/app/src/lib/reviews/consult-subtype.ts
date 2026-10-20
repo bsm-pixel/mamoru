@@ -27,3 +27,38 @@ export function consultTypeLabel(subtype: string | null | undefined): string {
   const sub = subtype ? CONSULT_SUBTYPE_LABELS[subtype] : '';
   return sub ? `상담 · ${sub}` : '상담';
 }
+
+/**
+ * 리뷰 유형별 세부유형(subtype) 허용값 SSOT — 리뷰관리 수정 모달 칩 + PATCH 검증 공용 (2026-10-20).
+ * 배경: 흐름을 잘못 골라 보낸 후기(제품구매→상담 등)를 고칠 때 subtype 선택 칸이 없어 null 로 남고,
+ * 제품명도 그대로 남아 고객 후기벽에 상담 후기인데 제품명 칩이 노출됐다.
+ * value '' = subtype 없음(null 저장). 첫 항목 = 유형 변경 시 기본값.
+ */
+export type ReviewType = 'consult' | 'repair' | 'purchase';
+
+export const REVIEW_SUBTYPE_OPTIONS: Record<ReviewType, { value: string; label: string }[]> = {
+  consult: [
+    { value: 'store_visit', label: '직접방문' },
+    { value: 'field_request', label: '출장' },
+    { value: 'talk_consult', label: '톡상담' },
+  ],
+  repair: [
+    { value: 'restoration', label: '기본' },
+    { value: 'direct_visit', label: '직접방문' },
+    { value: 'parcel_pickup', label: '방문수거' },
+    { value: 'self_ship', label: '직접발송' },
+  ],
+  purchase: [
+    { value: '', label: '일반' },
+    { value: 'event', label: '이벤트참여' },
+  ],
+};
+
+export function isReviewType(t: unknown): t is ReviewType {
+  return t === 'consult' || t === 'repair' || t === 'purchase';
+}
+
+/** 해당 유형에서 허용되는 subtype 인지 (null/'' = 값 없음) */
+export function isAllowedReviewSubtype(type: ReviewType, subtype: string | null | undefined): boolean {
+  return REVIEW_SUBTYPE_OPTIONS[type].some(o => o.value === (subtype || ''));
+}

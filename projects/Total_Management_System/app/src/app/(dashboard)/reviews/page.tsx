@@ -6,6 +6,7 @@ import { Star, Eye, EyeOff, RefreshCw, Image as ImageIcon, Award, Plus, Pencil, 
 import Link from 'next/link';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { REVIEW_SUBTYPE_OPTIONS, isAllowedReviewSubtype } from '@/lib/reviews/consult-subtype';
 
 interface Review {
   id: string;
@@ -259,6 +260,8 @@ export default function ReviewsPage() {
     setEditForm({
       name: review.name,
       type: review.type,
+      // 세부유형: 현재값이 이 유형에 맞지 않으면(null·레거시) 기본값으로 — 칩에 선택 상태로 보임
+      subtype: isAllowedReviewSubtype(review.type, review.subtype) ? (review.subtype || '') : REVIEW_SUBTYPE_OPTIONS[review.type][0].value,
       stars: review.stars,
       content: review.content,
       photo_urls: [...(review.photo_urls || [])],
@@ -302,10 +305,11 @@ export default function ReviewsPage() {
         body: JSON.stringify({
           name: editForm.name,
           type: editForm.type,
+          subtype: editForm.subtype ?? '',
           stars: editForm.stars,
           content: editForm.content,
           photo_urls: editForm.photo_urls,
-          product: editForm.product || null,
+          product: editForm.type === 'purchase' ? (editForm.product || null) : null, // 상담/복원수리=제품명 제거(서버도 강제)
           created_at: editForm.created_at || editReview.created_at,
           is_best: editForm.is_best,
         }),
@@ -702,7 +706,11 @@ export default function ReviewsPage() {
                 {TYPE_OPTIONS.map(opt => (
                   <button
                     key={opt.value}
-                    onClick={() => setEditForm(prev => ({ ...prev, type: opt.value as Review['type'] }))}
+                    onClick={() => setEditForm(prev => prev.type === opt.value ? prev : ({
+                      ...prev,
+                      type: opt.value as Review['type'],
+                      subtype: REVIEW_SUBTYPE_OPTIONS[opt.value as Review['type']][0].value, // 유형 변경 시 세부유형 기본값
+                    }))}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
                       editForm.type === opt.value
                         ? 'bg-neutral-800 text-white'
@@ -713,6 +721,27 @@ export default function ReviewsPage() {
                   </button>
                 ))}
               </div>
+              {/* 세부유형 — 고객 후기벽 칩(상담·직접방문 등)에 그대로 노출 */}
+              {editForm.type && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {REVIEW_SUBTYPE_OPTIONS[editForm.type].map(opt => (
+                    <button
+                      key={opt.value || 'none'}
+                      onClick={() => setEditForm(prev => ({ ...prev, subtype: opt.value }))}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${
+                        (editForm.subtype || '') === opt.value
+                          ? 'border-neutral-800 text-neutral-800 bg-white'
+                          : 'border-neutral-200 text-neutral-400 hover:border-neutral-400'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {editForm.type !== 'purchase' && editReview.product && (
+                <p className="mt-1.5 text-[11px] text-neutral-400">저장하면 제품명({editReview.product})이 고객 화면에서 사라집니다</p>
+              )}
             </div>
 
             {/* 이름 + 별점 */}
@@ -756,15 +785,18 @@ export default function ReviewsPage() {
                   className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-neutral-400"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-neutral-500 mb-1.5">제품명 (선택)</label>
-                <input
-                  type="text"
-                  value={editForm.product || ''}
-                  onChange={e => setEditForm(prev => ({ ...prev, product: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-neutral-400"
-                />
-              </div>
+              {/* 제품명 = 제품구매 후기만 (상담/복원수리는 고객 화면에 제품 칩 노출 금지) */}
+              {editForm.type === 'purchase' && (
+                <div>
+                  <label className="block text-xs font-medium text-neutral-500 mb-1.5">제품명 (선택)</label>
+                  <input
+                    type="text"
+                    value={editForm.product || ''}
+                    onChange={e => setEditForm(prev => ({ ...prev, product: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:border-neutral-400"
+                  />
+                </div>
+              )}
             </div>
 
             {/* 내용 */}

@@ -51,9 +51,9 @@ export async function GET(req: NextRequest) {
     if (resolvedGroup && resolvedGroup.startsWith('__imweb_no__')) {
       // product_group 미설정 상품 → imweb_product_no로 직접 매칭
       const no = resolvedGroup.replace('__imweb_no__', '');
-      query = query.eq('meta->>imweb_product_no', no);
+      query = query.eq('meta->>imweb_product_no', no).eq('type', 'purchase'); // 상담/복원수리로 옮긴 후기는 상품 위젯 제외(2026-10-20)
     } else if (resolvedGroup) {
-      query = query.eq('product_group', resolvedGroup);
+      query = query.eq('product_group', resolvedGroup).eq('type', 'purchase');
     } else if (imwebNo) {
       // 상품을 못 찾은 경우 → 빈 결과
       return NextResponse.json({ reviews: [], stats: { count: 0, average: 0 } }, { headers: CORS_HEADERS });

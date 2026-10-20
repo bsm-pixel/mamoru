@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { isReviewType, isAllowedReviewSubtype } from '@/lib/reviews/consult-subtype';
 
 /** 수정 가능한 필드 목록 */
 const EDITABLE_FIELDS = ['name', 'stars', 'content', 'photo_urls', 'type', 'subtype', 'product', 'created_at'] as const;
@@ -46,6 +47,30 @@ export async function PATCH(
     for (const field of EDITABLE_FIELDS) {
       if (rest[field] !== undefined) {
         updateData[field] = rest[field];
+      }
+    }
+
+    // 유형/세부유형 정합성 (2026-10-20) — 흐름을 잘못 골라 보낸 후기를 고칠 때
+    //  ① subtype 은 유형별 허용값만 ② 상담/복원수리로 옮기면 제품명·제품군 제거(후기벽 제품 칩·상품 위젯 노출 차단)
+    if (rest.type !== undefined || rest.subtype !== undefined) {
+      let nextType: unknown = rest.type;
+      if (nextType === undefined) {
+        const { data: cur } = await db.from('reviews').select('type').eq('id', id).single();
+        nextType = cur?.type;
+      }
+      if (!isReviewType(nextType)) {
+        return NextResponse.json({ error: '유효하지 않은 리뷰 유형입니다' }, { status: 400 });
+      }
+      if (rest.type !== undefined && rest.subtype === undefined) {
+        return NextResponse.json({ error: '유형을 바꿀 때는 세부유형도 함께 지정해야 합니다' }, { status: 400 });
+      }
+      if (!isAllowedReviewSubtype(nextType, rest.subtype)) {
+        return NextResponse.json({ error: '이 유형에 맞지 않는 세부유형입니다' }, { status: 400 });
+      }
+      updateData.subtype = rest.subtype || null;
+      if (nextType !== 'purchase') {
+        updateData.product = null;
+        updateData.product_group = null;
       }
     }
 
