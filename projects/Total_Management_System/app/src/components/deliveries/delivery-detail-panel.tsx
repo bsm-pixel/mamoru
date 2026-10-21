@@ -21,6 +21,11 @@ import { getDeliveryStatusChip, isAwaitingPickup } from '@/lib/deliveries/status
 import { COURIER_OPTIONS, COURIER_LOTTE, COURIER_DIRECT, isAlpsTrackable, isDirectHandover, courierLabel } from '@/lib/shipping/couriers';
 import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
 import { useEnterSelect } from '@/hooks/use-enter-select';
+import { DeliveryReturnModal, type DeliveryReturnSubmit } from './delivery-return-modal';
+import { isReturnableDeliveryItem } from '@/lib/deliveries/apply-return';
+import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR } from '@/lib/returns/transitions';
+import type { ReturnStatus } from '@/lib/supabase/types';
+import Link from 'next/link';
 
 // 상태 뱃지 라벨/색은 lib/deliveries/status.ts getDeliveryStatusChip 이 단일 출처 (여기 있던 사본은 미사용이라 제거)
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
@@ -62,6 +67,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const [courierPick, setCourierPick] = useState<string | null>(null);
   const [bookingInvoice, setBookingInvoice] = useState(false);
   const [shipAddrOpen, setShipAddrOpen] = useState(false);   // 159: 받는 곳 확인
+  const [returnOpen, setReturnOpen] = useState(false);       // 164: 반품 처리
   const [pendingAction, setPendingAction] = useState<{
     action: string; label: string; msg: string; variant?: 'danger' | 'default'; extra?: Record<string, unknown>;
   } | null>(null);
@@ -104,6 +110,18 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const mergedInto = data.mergedInto || null;
   const mergedChildren = data.mergedChildren || [];
   const mergeCandidates = data.mergeCandidates || [];
+
+  // 164 반품 — 이 납품에서 생긴 반품 건 + 아직 입고 안 된(반영 전) 반품이 잡아둔 수량
+  const dlReturns = data.returns || [];
+  const pendingReturnQty: Record<string, number> = {};
+  for (const r of dlReturns) {
+    if (r.applied_at || r.status === 'cancelled') continue;
+    for (const it of r.items || []) {
+      pendingReturnQty[it.delivery_item_id] = (pendingReturnQty[it.delivery_item_id] || 0) + (it.qty || 0);
+    }
+  }
+  const canReturn = (status === 'shipped' || status === 'settled') && !dl.cancelled_at
+    && items.some((it: DLItem) => isReturnableDeliveryItem(it) && it.quantity - (pendingReturnQty[it.id] || 0) > 0);
   const mergeNote = mergedInto
     ? <span className="block mt-1 font-medium">합포장 · {mergedInto.dl_number} 송장에 같이 보냅니다. 수거·배송완료 때 함께 바뀝니다.</span>
     : mergedChildren.length > 0
@@ -193,6 +211,28 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
   const discountAmount = (dl.discount_amount as number) || 0;
   const { supply, vat } = calcVAT(totalAmount, dlVatType);
 
+  async function handleReturn(v: DeliveryReturnSubmit) {
+    try {
+      const result = await updateDL.mutateAsync({ id: deliveryId, action: 'return', ...v }) as {
+        returnNumber?: string; applied?: boolean; refundDue?: number;
+      };
+      if (result?.applied) {
+        toast.success(result.refundDue
+          ? `반품 반영 완료 (${result.returnNumber}) · 환불 필요 ${formatKRW(result.refundDue)}`
+          : `반품 반영 완료 (${result.returnNumber}) · 반품창고에 들어갔습니다`);
+      } else {
+        toast.success(`반품 접수 (${result?.returnNumber}) · 반품·교환 메뉴에서 롯데 수거접수를 해주세요`);
+      }
+      queryClient.invalidateQueries({ queryKey: ['returns'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['customer'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      setReturnOpen(false);
+    } catch {
+      // error handled by hook
+    }
+  }
+
   async function handleAction(action: string, extra?: Record<string, unknown>) {
     try {
       const result = await updateDL.mutateAsync({ id: deliveryId, action, ...extra }) as {
@@ -270,6 +310,8 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
             const chip = getDeliveryStatusChip(dl);
             return <Badge className={chip.className}>{chip.label}</Badge>;
           })()}
+          {/* 164: 부분 반품은 배송 단계 칩 옆에 따로 (전량 반품은 칩 자체가 '반품') */}
+          {dl.return_status === 'partial' && <Badge className="bg-violet-100 text-violet-700">부분반품</Badge>}
         </div>
       </div>
 
@@ -443,9 +485,13 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
                   <p className="text-sm font-medium">{item.product_name as string}</p>
                   <p className="text-xs text-neutral-500">
                     {item.sku && !String(item.sku).startsWith('IW-') && `${item.sku} · `}{formatKRW(item.unit_price as number)} x {item.quantity as number}
+                    {/* 164: 반품으로 빠진 수량 — 원래 수량 = quantity + returned_qty */}
+                    {(item.returned_qty || 0) > 0 && (
+                      <span className="text-violet-600"> · 반품 {item.returned_qty as number} (원래 {(item.quantity as number) + (item.returned_qty as number)}개)</span>
+                    )}
                   </p>
                 </div>
-                <span className="text-sm font-bold">{formatKRW(item.total_price as number)}</span>
+                <span className={`text-sm font-bold ${(item.quantity as number) === 0 ? 'text-neutral-300' : ''}`}>{formatKRW(item.total_price as number)}</span>
               </div>
             ))}
           </div>
@@ -489,11 +535,43 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
           </div>
         </div>
         <div className="flex justify-center mt-2">
-          <Badge className={PAYMENT_COLOR[paymentStatus] || ''}>
-            {PAYMENT_LABEL[paymentStatus] || paymentStatus}
-          </Badge>
+          {/* 164: 전량 반품이면 0원 '결제완료'가 오해를 부른다 → '반품'으로 */}
+          {dl.return_status === 'full' ? (
+            <Badge className="bg-violet-100 text-violet-700">반품</Badge>
+          ) : (
+            <Badge className={PAYMENT_COLOR[paymentStatus] || ''}>
+              {PAYMENT_LABEL[paymentStatus] || paymentStatus}
+            </Badge>
+          )}
         </div>
       </Card>
+
+      {/* 164: 반품 내역 — 정보 섹션(액션 위). 반영 전 건은 반품·교환 메뉴에서 수거·입고를 진행 */}
+      {dlReturns.length > 0 && (
+        <Card>
+          <h4 className="text-xs font-semibold text-neutral-500 mb-2">반품 내역</h4>
+          <div className="space-y-2">
+            {dlReturns.map((r) => (
+              <Link key={r.id} href={`/returns?search=${encodeURIComponent(r.return_number)}`}
+                className="block rounded-lg border border-neutral-200 px-3 py-2 hover:bg-stone-50 transition">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium truncate">{r.product_name}</span>
+                  <span className={`shrink-0 px-2 py-0.5 rounded text-[10.5px] font-bold ${RETURN_STATUS_COLOR[r.status as ReturnStatus] ?? ''}`}>
+                    {RETURN_STATUS_LABEL[r.status as ReturnStatus] || r.status}
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  <span className="font-mono">{r.return_number}</span> · {r.pickup_method}
+                  {r.applied_at ? ' · 금액·재고 반영됨' : r.status === 'cancelled' ? '' : ' · 입고되면 반영'}
+                </p>
+                {(r.refund_amount || 0) > 0 && (
+                  <p className="text-xs font-semibold text-violet-700 mt-0.5">환불 필요 {formatKRW(r.refund_amount || 0)}</p>
+                )}
+              </Link>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* 액션 — 표준 5슬롯 (components/ui/action-section.tsx)
            ① 지금 상태 한 줄 ② 주 액션(검은 버튼 1개) ③ 결제 ④ 드문 것·되돌리기는 접어둠 ⑤ 파괴적 액션
@@ -676,6 +754,14 @@ TMS 는 송장 기록만 지웁니다.
                 </DangerLink>
               </MoreActions>
             )}
+            {/* 164: 반품 — 실수 되돌리기(위)와는 다른 일이라 따로 접어둔다. 출고된 뒤에만, 반품할 수량이 남았을 때만 */}
+            {canReturn && (
+              <MoreActions label="반품이 들어왔나요?">
+                <SubtleButton onClick={() => setReturnOpen(true)} disabled={updateDL.isPending}>
+                  반품 처리 (전체·일부)
+                </SubtleButton>
+              </MoreActions>
+            )}
 
             {/* ⑤ 파괴적 액션 */}
             {(status === 'draft' || status === 'confirmed') && (
@@ -722,6 +808,22 @@ TMS 는 송장 기록만 지웁니다.
         saved={{ postcode: shipAddr.postcode, road: shipAddr.road, detail: shipAddr.detail }}
         busy={bookingInvoice}
         onConfirm={(addr) => { handleBookInvoice(addr); }}
+      />
+      {/* 164: 반품 처리 */}
+      <DeliveryReturnModal
+        open={returnOpen}
+        onClose={() => setReturnOpen(false)}
+        items={items.map((it: DLItem) => ({
+          id: it.id as string, product_name: it.product_name as string, category: (it.category as string | null) ?? null,
+          quantity: (it.quantity as number) || 0, unit_price: (it.unit_price as number) || 0,
+        }))}
+        pendingQty={pendingReturnQty}
+        vatType={dlVatType}
+        discount={discountAmount}
+        totalAmount={totalAmount}
+        paidAmount={(dl.paid_amount as number) || 0}
+        busy={updateDL.isPending}
+        onSubmit={handleReturn}
       />
       {/* 확인 모달 */}
       {pendingAction && (

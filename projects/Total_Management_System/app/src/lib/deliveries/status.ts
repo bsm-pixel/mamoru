@@ -16,6 +16,7 @@ export interface DeliveryStatusInput {
   delivered_at?: string | null;
   shipped_source?: string | null;
   cancelled_at?: string | null;
+  return_status?: string | null;   // 164: 'partial' | 'full'
 }
 
 export interface DeliveryStatusChip {
@@ -30,6 +31,10 @@ export function getDeliveryStatusChip(dl: DeliveryStatusInput): DeliveryStatusCh
 
   if (dl.cancelled_at) {
     return { label: '취소', className: 'bg-red-100 text-red-700', autoPicked: false };
+  }
+  // 164: 전량 반품 = 종결 (판매 반품과 같은 보라). 부분 반품은 배송 단계를 그대로 보여주고 상세에서 따로 표시
+  if (dl.return_status === 'full') {
+    return { label: '반품', className: 'bg-violet-100 text-violet-700', autoPicked: false };
   }
   // 배송완료 (ALPS 인수자등록 자동 감지) — 지금까지 뱃지에 아예 안 뜨던 단계
   if (dl.delivered_at) {

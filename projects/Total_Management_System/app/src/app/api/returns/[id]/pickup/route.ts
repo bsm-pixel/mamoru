@@ -38,11 +38,22 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         postcode = c.postcode; addrRoad = c.address_road; addrDetail = c.address_detail;
       }
     }
+    // 164: 납품 반품은 접수 때 그 납품의 배송지를 반품 건에 저장해 둔다 → 그 주소를 우선 쓴다(교환 출고 ship 과 같은 폴백)
+    if (r.delivery_id && r.postcode && r.address) {
+      postcode = r.postcode; addrRoad = r.address; addrDetail = r.address_detail;
+    }
     if (!postcode || !addrRoad) {
       return NextResponse.json({ error: '고객 주소(우편번호+도로명)가 없습니다. 고객 정보에서 보강 후 다시 시도해주세요.' }, { status: 400 });
     }
     if (!custTel) {
       return NextResponse.json({ error: '고객 연락처가 없습니다.' }, { status: 400 });
+    }
+
+    // 원송장 참조 — 교환 건은 교환 출고 송장, 납품 반품은 그 납품의 송장(164)
+    let orgInvoice: string | undefined = r.exchange_out_invoice_number || undefined;
+    if (!orgInvoice && r.delivery_id) {
+      const { data: d } = await db.from('deliveries').select('tracking_number').eq('id', r.delivery_id).single();
+      orgInvoice = d?.tracking_number || undefined;
     }
 
     const goodsName = `${r.product_name || '반품 상품'}${r.serial_number ? ` (${r.serial_number})` : ''} 회수`.slice(0, 50);
@@ -58,7 +69,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       pickupAddr: fullAddr,
       goodsName,
       deliveryMessage: '반품 수거',
-      orgInvoiceNumber: r.exchange_out_invoice_number || undefined,  // 원송장(있으면, 선택)
+      orgInvoiceNumber: orgInvoice,  // 원송장(있으면, 선택)
     });
     if (!result.success) {
       return NextResponse.json({ error: `롯데 반품 수거접수 실패: ${result.error}` }, { status: 502 });

@@ -1,7 +1,28 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-10-14 — 판매 합포장(162): 다른 판매의 롯데 송장에 같이 보내기
+> 최종 업데이트: 2026-10-21 — 납품(B2B) 반품·부분반품(164)
+> 이전: 2026-10-14 — 판매 합포장(162): 다른 판매의 롯데 송장에 같이 보내기
 > 이전: 2026-10-12 — 직접 입력(임시) 품목에 [제품]/[복원수리] 분류 선택 추가
 > 이전: 2026-05-26 — Phase G + 자동 후기 요청 정책 정정 (약속 ✓ 만 자동) + autoSendPending amber 시각 신호 + 약속 토글 시안 3 (스위치) 적용
+
+## 2026-10-21 — 납품(B2B) 반품 · 부분반품 (164)
+```
+납품 상세(출고완료·배송완료) → [반품이 들어왔나요?] → [반품 처리 (전체·일부)]
+   ① 품목별 수량 (복원수리·배송비=RS 제외, 회수 대기 중 수량은 빼고)  ② 회수 방법  ③ 사유
+   → PATCH /api/deliveries/[id] action='return' → returns 행 생성 (source='delivery', return_type='refund', items jsonb)
+      · 택배로 회수(기본) : status=requested → 반품·교환 메뉴 [롯데 반품 수거접수](02, 수거지=납품 배송지/거래처 주소, 원송장=납품 송장)
+                           → 도착 시 [입고완료] → PATCH /api/returns/[id] → applyDeliveryReturn
+      · 이미 받았어요(예외): status=inbound 로 생성 → 즉시 applyDeliveryReturn
+applyDeliveryReturn (lib/deliveries/apply-return.ts, 입고 시 1회 · returns.applied_at CAS 멱등)
+   delivery_items.quantity −n · returned_qty +n · total_price 재계산 → computeDeliveryTotals 로 합계 재계산
+   products.return_stock +n (반품창고 — 판매가능·아임웹 불변 → 재고 화면 [재판매]/[불량])
+   paid_amount > 새 합계 → paid=합계, 차액 = returns.refund_amount (「환불 필요」 표시, cash_transactions 미기록 — 납품 입금도 미기록이라 일관)
+   deliveries.return_status = partial | full, returned_at · recalcOutstanding
+```
+- **매출은 원래 납품한 달에서 빠진다**(사장님 확정) — 품목·합계 자체를 줄이므로 대시보드 RPC 160·리포트·판매관리 카드·미수금·납품서가 수정 없이 맞는다.
+- 수거 접수만 한 상태(반영 전)는 금액·재고 불변 → 그 상태에서 반품 취소는 되돌릴 것 없음. **입고 반영 후 반품 취소는 막음**(서버+화면).
+- 거래처 건이라 반품 알림톡(접수·입고) 없음.
+- 표시: 전량 반품 = 상태칩·판매관리 행 「반품」(보라), 부분 반품 = 상세 「부분반품」 배지 + 품목 「반품 n (원래 m개)」, 상세 「반품 내역」 카드 → 반품·교환 메뉴 링크. 납품서 출력은 전량 반품된 줄 제외.
+- 마이그 164 미실행이면: 상세 반품 내역은 빈 배열(기존 화면 무영향), [반품 처리]는 DB 오류.
 
 ## 2026-10-14 — 판매 합포장 (162, `offline_sales.merged_into_sale_id`)
 ```

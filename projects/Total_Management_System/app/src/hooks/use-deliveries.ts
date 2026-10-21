@@ -76,6 +76,21 @@ export interface DeliveryMergeRef {
   delivery_date: string | null;
 }
 
+/** 164 — 납품 상세에 붙는 반품 건 요약 (api/deliveries/[id] GET returns) */
+export interface DeliveryReturnRef {
+  id: string;
+  return_number: string;
+  status: string;
+  pickup_method: string | null;
+  items: Array<{ delivery_item_id: string; qty: number }> | null;
+  qty: number;
+  product_name: string | null;
+  refund_amount: number | null;
+  applied_at: string | null;
+  pickup_invoice_number: string | null;
+  created_at: string;
+}
+
 /** 납품 상세 */
 export function useDelivery(id: string) {
   return useQuery({
@@ -92,6 +107,8 @@ export function useDelivery(id: string) {
         mergedChildren?: DeliveryMergeRef[];
         /** 158 합포장 — 지금 묶을 수 있는 같은 거래처의 송장 있는 납품 */
         mergeCandidates?: DeliveryMergeRef[];
+        /** 164 반품 — 이 납품에서 생긴 반품 건 (마이그 164 전이면 빈 배열) */
+        returns?: DeliveryReturnRef[];
       }>;
     },
     enabled: !!id,

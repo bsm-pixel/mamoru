@@ -62,6 +62,7 @@ function getRowStateSale(s: OfflineSale): RowState {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getRowStateDelivery(d: any): RowState {
   if (d.cancelled_at) return 'cancelled';
+  if (d.return_status === 'full') return 'returned';   // 164: 납품 전량 반품 = 종결(판매 반품과 같은 표시)
   if (d.payment_status === 'partial') return 'partial';
   // 110: '출고' = 기사님이 실제로 수거해 감 (집하). 송장만 발급된 건은 아직 출고 전이다.
   //      (전엔 송장 발급 즉시 status='shipped' 라 여기서 '출고완료' 로 잘못 떴다)

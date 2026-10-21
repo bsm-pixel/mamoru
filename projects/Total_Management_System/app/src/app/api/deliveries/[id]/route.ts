@@ -4,6 +4,10 @@ import { updateImwebStock } from '@/lib/imweb/client';
 import { recalcOutstanding } from '@/lib/outstanding';
 import { computeDeliveryTotals } from '@/lib/deliveries/totals';
 import { COURIER_LOTTE, isDirectHandover } from '@/lib/shipping/couriers';
+import { insertReturn } from '@/lib/returns/insert-return';
+import { PICKUP_COURIER, PICKUP_IN_PERSON } from '@/lib/returns/transitions';
+import { applyDeliveryReturn, isReturnableDeliveryItem, summarizeReturnItems, type DeliveryReturnItem } from '@/lib/deliveries/apply-return';
+import { toLocalDateString } from '@/lib/utils/format';
 
 /** GET /api/deliveries/[id] — 납품 상세 */
 export async function GET(
@@ -56,9 +60,19 @@ export async function GET(
       mergeCandidates = data || [];
     }
 
+    // 164: 이 납품에서 생긴 반품 건 (마이그 164 전이면 컬럼이 없어 에러 → 빈 배열, 기존 화면 무영향)
+    let returns: Array<Record<string, unknown>> = [];
+    {
+      const { data, error } = await db.from('returns')
+        .select('id, return_number, status, pickup_method, items, qty, product_name, refund_amount, applied_at, pickup_invoice_number, created_at')
+        .eq('delivery_id', id).order('created_at', { ascending: false });
+      if (!error) returns = data || [];
+    }
+
     return NextResponse.json({
       delivery: dl,
       items: itemsRes.data || [],
+      returns,
       mergedInto,
       mergedChildren,
       mergeCandidates,
@@ -285,6 +299,98 @@ export async function PATCH(
         .eq('merged_into_delivery_id', id).eq('status', 'confirmed').is('cancelled_at', null);
       await recalcOutstanding(db, dl.customer_id);
       return NextResponse.json({ success: true, action: 'cancelled' });
+    }
+
+    // ── 반품 처리 (164, 2026-10-21) ── 출고된 납품의 전체·부분 반품
+    //   여기서는 반품 건(returns, source='delivery')만 만든다. 금액·재고는 **입고 시점에** applyDeliveryReturn 이 1회 반영.
+    //   · 이미 받음(대면수령) → 바로 입고 + 반영
+    //   · 택배수거            → 반품·교환 메뉴에서 롯데 수거접수 → [입고완료] 때 반영
+    //   거래처(B2B) 건이라 반품 알림톡은 보내지 않는다.
+    if (action === 'return') {
+      if (dl.cancelled_at) return NextResponse.json({ error: '취소된 납품입니다' }, { status: 400 });
+      if (!['shipped', 'settled'].includes(dl.status)) {
+        return NextResponse.json({ error: '출고된 납품만 반품할 수 있습니다. 출고 전이면 납품 취소를 써 주세요' }, { status: 400 });
+      }
+      const pickupMethod = body.pickup_method === PICKUP_IN_PERSON ? PICKUP_IN_PERSON : PICKUP_COURIER;
+      const reqItems = (Array.isArray(body.items) ? body.items : []) as Array<{ delivery_item_id: string; qty: number }>;
+
+      const { data: dlItems } = await db.from('delivery_items').select('*').eq('delivery_id', id);
+      // 아직 입고 안 된(반영 전) 반품이 잡아둔 수량 — 같은 가위를 두 번 반품 접수하지 않게
+      const { data: pendingRets } = await db.from('returns').select('items')
+        .eq('delivery_id', id).is('applied_at', null).neq('status', 'cancelled');
+      const pendingQty: Record<string, number> = {};
+      for (const pr of pendingRets || []) {
+        for (const it of ((pr.items || []) as DeliveryReturnItem[])) {
+          pendingQty[it.delivery_item_id] = (pendingQty[it.delivery_item_id] || 0) + (it.qty || 0);
+        }
+      }
+
+      const retItems: DeliveryReturnItem[] = [];
+      for (const ri of reqItems) {
+        const qty = Math.floor(Number(ri.qty) || 0);
+        if (qty <= 0) continue;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const di = (dlItems || []).find((d: any) => d.id === ri.delivery_item_id);
+        if (!di || !isReturnableDeliveryItem(di)) {
+          return NextResponse.json({ error: '반품할 수 없는 품목이 포함돼 있습니다' }, { status: 400 });
+        }
+        const left = (di.quantity || 0) - (pendingQty[di.id] || 0);
+        if (qty > left) {
+          return NextResponse.json({ error: `${di.product_name}: 반품 가능 수량은 ${Math.max(0, left)}개입니다` }, { status: 400 });
+        }
+        retItems.push({
+          delivery_item_id: di.id, product_id: di.product_id || null, product_name: di.product_name,
+          category: di.category || null, qty, unit_price: di.unit_price || 0,
+        });
+      }
+      if (retItems.length === 0) return NextResponse.json({ error: '반품할 수량을 골라 주세요' }, { status: 400 });
+
+      // 수거지 = 이번 납품의 별도 배송지(159) → 없으면 거래처 등록 주소
+      let cust: Record<string, unknown> | null = null;
+      if (dl.customer_id) {
+        const { data } = await db.from('customers').select('name, phone, postcode, address_road, address_detail').eq('id', dl.customer_id).single();
+        cust = data || null;
+      }
+      const useShip = !!dl.ship_address_road;
+      const nowIso = new Date().toISOString();
+      const inHand = pickupMethod === PICKUP_IN_PERSON;
+      const totalQty = retItems.reduce((s, i) => s + i.qty, 0);
+
+      const created = await insertReturn(db, toLocalDateString(new Date()), {
+        return_type: 'refund',
+        source: 'delivery',
+        delivery_id: id,
+        items: retItems,
+        product_id: retItems.length === 1 ? retItems[0].product_id : null,
+        product_name: summarizeReturnItems(retItems),
+        qty: totalQty,
+        customer_id: dl.customer_id || null,
+        name: dl.customer_name || (cust?.name as string) || null,
+        phone: (cust?.phone as string) || dl.customer_phone || null,
+        postcode: useShip ? dl.ship_postcode : ((cust?.postcode as string) || null),
+        address: useShip ? dl.ship_address_road : ((cust?.address_road as string) || null),
+        address_detail: useShip ? (dl.ship_address_detail || null) : ((cust?.address_detail as string) || null),
+        pickup_method: pickupMethod,
+        status: inHand ? 'inbound' : 'requested',
+        requested_at: nowIso,
+        ...(inHand ? { inbound_at: nowIso } : {}),
+        refund_amount: 0,
+        reason: body.reason || null,
+        created_by: user.id,
+      });
+
+      // 이미 받음 → 지금 반영
+      let applied = null;
+      if (inHand) applied = await applyDeliveryReturn(db, created.id);
+
+      return NextResponse.json({
+        success: true,
+        returnId: created.id,
+        returnNumber: created.return_number,
+        applied: !!applied?.applied,
+        refundDue: applied?.refundDue || 0,
+        returnStatus: applied?.returnStatus || null,
+      });
     }
 
     // ── 결제상태 변경 ──

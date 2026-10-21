@@ -64,6 +64,11 @@ export interface ReturnRow {
   return_number: string;
   return_type: ReturnType;
   sale_id: string | null;
+  order_id?: string | null;                   // 142: 아임웹 주문 교환
+  source?: 'sale' | 'order' | 'delivery' | null;   // 142 · 164
+  delivery_id?: string | null;                // 164: 납품(B2B) 반품
+  items?: Array<{ delivery_item_id: string; product_id: string | null; product_name: string; category: string | null; qty: number; unit_price: number }> | null;
+  applied_at?: string | null;                 // 164: 납품 반품을 수량·금액·반품창고에 반영한 시각
   product_id: string | null;
   product_name: string | null;
   serial_id: string | null;

@@ -58,6 +58,8 @@ export default function ReturnsPage() {
               <span className="text-sm font-semibold text-stone-800 truncate">{r.name || '이름없음'}</span>
               <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${RETURN_STATUS_COLOR[r.status]}`}>{RETURN_STATUS_LABEL[r.status]}</span>
               <span className="text-[10px] font-semibold text-neutral-400">{r.return_type === 'refund' ? '반품' : '교환'}</span>
+              {/* 164: 납품(B2B)에서 생긴 반품 */}
+              {r.source === 'delivery' && <span className="text-[10px] font-semibold text-violet-600">납품</span>}
             </div>
             <div className="flex items-center gap-2 mt-0.5 text-xs text-neutral-500 min-w-0">
               <span className="font-mono text-[11px] shrink-0">{r.return_number}</span>
@@ -173,6 +175,23 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
           <p className="text-neutral-600 flex items-center gap-1"><Package size={13} className="text-neutral-400" />{r.product_name}{r.serial_number ? ` · ${r.serial_number}` : ''}</p>
           {r.pickup_method && <p className="text-xs text-neutral-500">회수: {r.pickup_method}{r.pickup_date ? ` · 예약 ${formatDate(r.pickup_date)}` : ''}</p>}
           {r.reason && <p className="text-xs text-neutral-400">사유: {r.reason}</p>}
+          {/* 164: 납품 반품 — 품목별 수량 + 반영 여부 + 환불 필요 */}
+          {r.source === 'delivery' && (
+            <div className="mt-2 pt-2 border-t border-neutral-100 space-y-1">
+              {(r.items || []).map((it) => (
+                <p key={it.delivery_item_id} className="text-xs text-neutral-600 flex justify-between">
+                  <span>{it.product_name}</span><span className="font-semibold">{it.qty}개</span>
+                </p>
+              ))}
+              <p className="text-[11px] text-neutral-400">
+                {r.applied_at ? '납품 금액·반품창고에 반영됨' : '입고완료를 누르면 납품 금액·반품창고에 반영됩니다'}
+                {' · 거래처 건이라 알림톡 없음'}
+              </p>
+              {(r.refund_amount || 0) > 0 && (
+                <p className="text-xs font-semibold text-violet-700">환불 필요 {r.refund_amount.toLocaleString()}원</p>
+              )}
+            </div>
+          )}
         </div>
       </Card>
 
@@ -282,7 +301,8 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
               )}
 
               {/* ⑤ 파괴적 액션 */}
-              {allowed.includes('cancelled') && (
+              {/* 164: 반영된 납품 반품은 취소 불가(서버도 막음) */}
+              {allowed.includes('cancelled') && !(r.delivery_id && r.applied_at) && (
                 <DangerZone>
                   <DangerLink disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: 'cancelled' })}>
                     반품 취소

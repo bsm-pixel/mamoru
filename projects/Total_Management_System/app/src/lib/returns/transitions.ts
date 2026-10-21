@@ -90,7 +90,9 @@ export function getReturnDisplayLabel(status: ReturnStatus, pickupMethod?: strin
  * 🚨 빈 문자열을 절대 반환하지 않는다 — 알림톡 변수가 비면 문자(SMS)로 대체되고 버튼이 사라진다.
  */
 export function returnTypeLabel(returnType?: string | null): string {
-  return String(returnType || '').trim() === 'return' ? '반품' : '교환';
+  // 164: DB 값은 'refund'(types.ts ReturnType). 예전엔 'return' 만 봐서 반품 건이 "교환"으로 나갔다 → 둘 다 반품
+  const t = String(returnType || '').trim();
+  return t === 'refund' || t === 'return' ? '반품' : '교환';
 }
 
 /* ── 회수 방법 (154, 2026-09-17) ────────────────────────────────

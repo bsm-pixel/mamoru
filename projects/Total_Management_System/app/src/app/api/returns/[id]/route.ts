@@ -5,6 +5,7 @@ import { isValidReturnTransition } from '@/lib/returns/transitions';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import type { ReturnStatus } from '@/lib/supabase/types';
 import { returnTypeLabel, isCourierPickup } from '@/lib/returns/transitions';
+import { applyDeliveryReturn } from '@/lib/deliveries/apply-return';
 
 /** 상태 → 채울 타임스탬프 컬럼 */
 const STATUS_TS: Partial<Record<ReturnStatus, string>> = {
@@ -36,6 +37,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (!isValidReturnTransition(cur.status, body.status)) {
         return NextResponse.json({ error: `전이 불가: ${cur.status} → ${body.status}` }, { status: 400 });
       }
+      // 164: 납품 반품은 입고 때 납품 수량·금액·반품창고에 이미 반영됐다 → 그 뒤 취소하면 되돌릴 길이 없어 막는다
+      if (body.status === 'cancelled' && cur.delivery_id && cur.applied_at) {
+        return NextResponse.json({ error: '입고 처리된 납품 반품은 취소할 수 없습니다 (금액·재고에 이미 반영됨)' }, { status: 400 });
+      }
       update.status = body.status;
       const tsCol = STATUS_TS[body.status as ReturnStatus];
       if (tsCol && !cur[tsCol]) update[tsCol] = new Date().toISOString();
@@ -58,12 +63,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     if (Object.keys(update).length === 0) return NextResponse.json({ ok: true });
 
-    const { data, error } = await db.from('returns').update(update).eq('id', id).select().single();
+    const { data: updated, error } = await db.from('returns').update(update).eq('id', id).select().single();
     if (error) throw error;
+    let data = updated;
+
+    // 164: 납품(B2B) 반품 — 입고되는 순간 납품 수량·금액·반품창고·미수금에 1회 반영 (멱등: applied_at CAS)
+    if (update.status === 'inbound' && cur.delivery_id) {
+      const r = await applyDeliveryReturn(db, id);
+      if (r.applied) {
+        const { data: fresh } = await db.from('returns').select('*').eq('id', id).single();
+        if (fresh) data = fresh;
+      }
+    }
 
     // 입고완료 → 고객에게 "반품 잘 받았습니다" 알림톡(솔라피 return_inbound 등록 시). after()로 완주 보장
     // 154: 입고 알림톡도 택배수거 건만 — 대면으로 받았으면 눈앞에서 건넸으니 알릴 것이 없다
-    if (update.status === 'inbound' && cur.phone && isCourierPickup(cur.pickup_method)) {
+    // 164: 납품(B2B) 반품은 거래처 건이라 보내지 않는다 (판매 쪽 B2B 출고 알림톡 skip 과 같은 규칙)
+    if (update.status === 'inbound' && cur.phone && isCourierPickup(cur.pickup_method) && !cur.delivery_id) {
       after(async () => {
         try {
           await sendNotification({

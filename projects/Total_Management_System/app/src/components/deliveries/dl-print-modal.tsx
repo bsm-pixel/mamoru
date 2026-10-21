@@ -111,8 +111,9 @@ export function DLPrintModal({ deliveryId, onClose }: Props) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dl: any = data.delivery;
+  // 164: 전부 반품돼 수량 0 이 된 줄은 납품서에서 뺀다 (금액은 0 이라 합계 불변)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const items: any[] = data.items;
+  const items: any[] = (data.items || []).filter((i) => !(((i.quantity as number) || 0) === 0 && ((i.returned_qty as number) || 0) > 0));
 
   // 납품명 자동 적용 (최초 1회)
   if (!namesInit && items.length > 0) {
