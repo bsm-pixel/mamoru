@@ -8,6 +8,7 @@ import { insertReturn } from '@/lib/returns/insert-return';
 import { PICKUP_COURIER, PICKUP_IN_PERSON } from '@/lib/returns/transitions';
 import { applyDeliveryReturn, isReturnableDeliveryItem, summarizeReturnItems, type DeliveryReturnItem } from '@/lib/deliveries/apply-return';
 import { toLocalDateString } from '@/lib/utils/format';
+import { bookReturnPickupFor } from '@/lib/returns/book-pickup';
 
 /** GET /api/deliveries/[id] — 납품 상세 */
 export async function GET(
@@ -304,7 +305,8 @@ export async function PATCH(
     // ── 반품 처리 (164, 2026-10-21) ── 출고된 납품의 전체·부분 반품
     //   여기서는 반품 건(returns, source='delivery')만 만든다. 금액·재고는 **입고 시점에** applyDeliveryReturn 이 1회 반영.
     //   · 이미 받음(대면수령) → 바로 입고 + 반영
-    //   · 택배수거            → 반품·교환 메뉴에서 롯데 수거접수 → [입고완료] 때 반영
+    //   · 롯데 반품수거 접수  → 접수와 동시에 ALPS 반품수거(02)까지 (2026-10-21 사장님 확정) → [입고완료] 때 반영
+    //                          ALPS 실패 시 반품 건은 남기고 pickupError 로 알린다(반품·교환 메뉴에서 재시도)
     //   거래처(B2B) 건이라 반품 알림톡은 보내지 않는다.
     if (action === 'return') {
       if (dl.cancelled_at) return NextResponse.json({ error: '취소된 납품입니다' }, { status: 400 });
@@ -383,6 +385,19 @@ export async function PATCH(
       let applied = null;
       if (inHand) applied = await applyDeliveryReturn(db, created.id);
 
+      // 롯데 반품수거 → 지금 ALPS 접수 (취소 API 없음 → 화면에서 수거지 확인 후 누름)
+      let pickupInvoice: string | null = null;
+      let pickupError: string | null = null;
+      if (!inHand) {
+        try {
+          const b = await bookReturnPickupFor(db, created.id);
+          if (b.ok) pickupInvoice = b.invoiceNumber;
+          else pickupError = b.error;
+        } catch (e) {
+          pickupError = `롯데 반품 수거접수 오류: ${String(e)}`;
+        }
+      }
+
       return NextResponse.json({
         success: true,
         returnId: created.id,
@@ -390,6 +405,8 @@ export async function PATCH(
         applied: !!applied?.applied,
         refundDue: applied?.refundDue || 0,
         returnStatus: applied?.returnStatus || null,
+        pickupInvoice,
+        pickupError,
       });
     }
 

@@ -215,13 +215,17 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
     try {
       const result = await updateDL.mutateAsync({ id: deliveryId, action: 'return', ...v }) as {
         returnNumber?: string; applied?: boolean; refundDue?: number;
+        pickupInvoice?: string | null; pickupError?: string | null;
       };
       if (result?.applied) {
         toast.success(result.refundDue
           ? `반품 반영 완료 (${result.returnNumber}) · 환불 필요 ${formatKRW(result.refundDue)}`
           : `반품 반영 완료 (${result.returnNumber}) · 반품창고에 들어갔습니다`);
+      } else if (result?.pickupInvoice) {
+        toast.success(`롯데 반품수거 접수 완료 · 수거 송장 ${result.pickupInvoice}`);
       } else {
-        toast.success(`반품 접수 (${result?.returnNumber}) · 반품·교환 메뉴에서 롯데 수거접수를 해주세요`);
+        // 반품 건은 생겼지만 ALPS 접수 실패 — 원인과 재시도 위치를 같이 알린다
+        toast.error(`반품 건(${result?.returnNumber})은 만들었지만 롯데 수거접수 실패: ${result?.pickupError || '알 수 없는 오류'}\n반품·교환 메뉴에서 다시 수거접수해 주세요`, { duration: 8000 });
       }
       queryClient.invalidateQueries({ queryKey: ['returns'] });
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
@@ -822,6 +826,11 @@ TMS 는 송장 기록만 지웁니다.
         discount={discountAmount}
         totalAmount={totalAmount}
         paidAmount={(dl.paid_amount as number) || 0}
+        pickupAddress={shipAddr.road
+          ? `(${shipAddr.postcode}) ${[shipAddr.road, shipAddr.detail].filter(Boolean).join(' ')} · 이 납품의 별도 배송지`
+          : customerData?.customer?.address_road
+            ? `(${customerData.customer.postcode || ''}) ${[customerData.customer.address_road, customerData.customer.address_detail].filter(Boolean).join(' ')}`
+            : null}
         busy={updateDL.isPending}
         onSubmit={handleReturn}
       />

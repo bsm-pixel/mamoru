@@ -9,7 +9,9 @@
 납품 상세(출고완료·배송완료) → [반품이 들어왔나요?] → [반품 처리 (전체·일부)]
    ① 품목별 수량 (복원수리·배송비=RS 제외, 회수 대기 중 수량은 빼고)  ② 회수 방법  ③ 사유
    → PATCH /api/deliveries/[id] action='return' → returns 행 생성 (source='delivery', return_type='refund', items jsonb)
-      · 택배로 회수(기본) : status=requested → 반품·교환 메뉴 [롯데 반품 수거접수](02, 수거지=납품 배송지/거래처 주소, 원송장=납품 송장)
+      · 롯데 반품수거 접수(기본): 반품 건 생성과 **동시에 ALPS 반품수거(02)** 접수 → status=pickup_scheduled
+                           (lib/returns/book-pickup.ts 공용 — 수거지=납품 배송지/거래처 주소, 원송장=납품 송장. 모달에 수거지 표시, 주소 없으면 버튼 비활성)
+                           ALPS 실패 → 반품 건은 requested 로 남고 오류 안내 → 반품·교환 메뉴 [롯데 반품 수거접수]로 재시도
                            → 도착 시 [입고완료] → PATCH /api/returns/[id] → applyDeliveryReturn
       · 이미 받았어요(예외): status=inbound 로 생성 → 즉시 applyDeliveryReturn
 applyDeliveryReturn (lib/deliveries/apply-return.ts, 입고 시 1회 · returns.applied_at CAS 멱등)

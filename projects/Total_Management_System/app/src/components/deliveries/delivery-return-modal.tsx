@@ -33,6 +33,8 @@ interface Props {
   discount: number;
   totalAmount: number;
   paidAmount: number;
+  /** 롯데 반품수거 수거지 (그 납품의 별도 배송지 → 없으면 거래처 등록 주소). null = 주소 없음 */
+  pickupAddress: string | null;
   busy?: boolean;
   onSubmit: (v: DeliveryReturnSubmit) => void;
 }
@@ -40,12 +42,12 @@ interface Props {
 /**
  * 납품 반품 처리 모달 (164, 2026-10-21) — 전체·부분 반품
  *
- * 회수 방법 기본값 = 택배수거(롯데 반품수거). 「이미 받음」은 수리 박스에 같이 왔거나
+ * 회수 방법 기본값 = 롯데 반품수거 접수(누르면 ALPS 까지 즉시, 2026-10-21). 「이미 받음」은 수리 박스에 같이 왔거나
  * 직접 가져온 **예외** 경우라 두 번째 선택지로만 둔다(사장님: 예외를 일반화하지 말 것).
  * 금액·재고는 물건이 입고되는 순간 반영 → 미리보기는 "입고되면 이렇게 바뀝니다".
  */
 export function DeliveryReturnModal({
-  open, onClose, items, pendingQty, vatType, discount, totalAmount, paidAmount, busy, onSubmit,
+  open, onClose, items, pendingQty, vatType, discount, totalAmount, paidAmount, pickupAddress, busy, onSubmit,
 }: Props) {
   const [qty, setQty] = useState<Record<string, number>>({});
   const [method, setMethod] = useState<DeliveryReturnSubmit['pickup_method']>(PICKUP_COURIER);
@@ -113,21 +115,27 @@ export function DeliveryReturnModal({
           )}
         </div>
 
-        {/* ② 회수 방법 — 기본은 택배수거 */}
+        {/* ② 회수 방법 — 기본은 롯데 반품수거(누르면 ALPS 즉시 접수) */}
         <div className="space-y-2">
           <p className="text-xs font-semibold text-neutral-500">회수 방법</p>
           <button type="button" onClick={() => setMethod(PICKUP_COURIER)}
             className={`w-full text-left rounded-lg border px-3 py-2.5 transition ${!inHand ? 'border-neutral-900 bg-white' : 'border-neutral-200 bg-white hover:bg-stone-50'}`}>
-            <span className="block text-sm font-semibold text-neutral-900">택배로 회수</span>
+            <span className="block text-sm font-semibold text-neutral-900">롯데 반품수거 접수</span>
             <span className="block text-xs text-neutral-500 mt-0.5 break-keep">
-              반품·교환 메뉴에서 롯데 반품수거를 접수합니다. 물건이 도착해 [입고완료]를 누르면 금액·재고가 반영됩니다.
+              누르는 즉시 롯데에 반품수거가 접수됩니다. 물건이 도착해 반품·교환 메뉴에서 [입고완료]를 누르면 금액·재고가 반영됩니다.
             </span>
           </button>
+          {/* 롯데 취소 API 가 없어 잘못 접수하면 ALPS 에서 수동 취소 → 어디로 기사님이 가는지 누르기 전에 보여준다 */}
+          {!inHand && (
+            <p className={`text-xs px-1 break-keep ${pickupAddress ? 'text-neutral-600' : 'text-red-600'}`}>
+              {pickupAddress ? `수거지 · ${pickupAddress}` : '수거지 주소가 없습니다 — 거래처 정보에 주소를 등록해 주세요'}
+            </p>
+          )}
           <button type="button" onClick={() => setMethod(PICKUP_IN_PERSON)}
             className={`w-full text-left rounded-lg border px-3 py-2.5 transition ${inHand ? 'border-neutral-900 bg-white' : 'border-neutral-200 bg-white hover:bg-stone-50'}`}>
             <span className="block text-sm font-semibold text-neutral-900">이미 받았어요</span>
             <span className="block text-xs text-neutral-500 mt-0.5 break-keep">
-              수리 박스에 같이 왔거나 직접 가져온 경우. 지금 바로 반영됩니다.
+              직접 가져왔거나 다른 택배(수리 박스 등)에 같이 와서 이미 사무실에 있는 경우. 롯데 접수 없이 지금 바로 반영됩니다.
             </span>
           </button>
         </div>
@@ -153,7 +161,7 @@ export function DeliveryReturnModal({
               </div>
             )}
             <p className="text-[11px] text-neutral-400 break-keep">
-              {inHand ? '지금 반영됩니다. ' : '물건이 입고될 때 반영됩니다. '}
+              {inHand ? '지금 반영됩니다. ' : '금액·재고는 물건이 입고될 때 반영됩니다. '}
               매출은 원래 납품한 달에서 빠지고, 돌아온 제품은 반품창고로 들어갑니다(판매가능·아임웹 재고 불변).
             </p>
           </div>
@@ -161,13 +169,13 @@ export function DeliveryReturnModal({
 
         <div className="flex gap-2 pt-1">
           <Button variant="secondary" className="flex-1" onClick={onClose} disabled={busy}>취소</Button>
-          <Button className="flex-1" disabled={totalPick === 0 || busy} loading={busy}
+          <Button className="flex-1" disabled={totalPick === 0 || busy || (!inHand && !pickupAddress)} loading={busy}
             onClick={() => onSubmit({
               items: rows.filter((r) => pick(r.id) > 0).map((r) => ({ delivery_item_id: r.id, qty: pick(r.id) })),
               pickup_method: method,
               reason: reason.trim(),
             })}>
-            {inHand ? `${totalPick}개 반품 처리` : `${totalPick}개 반품 접수`}
+            {inHand ? `${totalPick}개 반품 처리` : `${totalPick}개 롯데 반품수거 접수`}
           </Button>
         </div>
       </div>
