@@ -2,7 +2,7 @@
    editor.js — 문구 편집기 (로컬 전용)
    카탈로그 카드/카피풀의 '문구'(라벨·이름·설명·카피)만 입력칸으로 띄워 직접 수정.
    · 입력 즉시 localStorage 임시저장 → 새로고침/서버다운/파일수정과 무관하게 입력 보존(손실 방지).
-   · [저장] = 임시저장 내용을 실제 JSON 파일에 영구 기록(preview.bat 서버 필요).
+   · [저장] = 임시저장 내용을 실제 JSON 파일에 영구 기록(로컬 저장 서버 필요 — 2026-10-22 서버 폐기로 현재 미지원).
    · 작업대(workspace)와 BroadcastChannel 실시간 연동.
    SVG 등은 보존(문구 칸만 노출).
    ────────────────────────────────────────────────────────────── */
@@ -57,15 +57,15 @@ function banner(msg, cls) {
   if (msg) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
 }
 
-/* 저장 서버(preview.bat 새 버전) 연결 확인 */
+/* 저장 서버 연결 확인 — 2026-10-22 로컬 미리보기 서버(preview.bat) 폐기: 파일 저장은 더 이상 지원하지 않음 */
 async function pingServer() {
   try {
     const r = await fetch('/__save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"file":"__ping__","content":"{}"}' });
     if (r.status === 403) banner('저장 준비됨 — [저장]/[전체 저장] 으로 파일에 기록됩니다.', 'ok');
-    else if (r.status === 404) banner('⚠ 저장 서버 미연결 — preview.bat(검은 창) 닫았다 다시 켜야 [저장]이 됩니다. (입력은 자동 임시저장 중이라 안 날아갑니다)', 'warn');
+    else if (r.status === 404) banner('⚠ 파일 저장 기능은 사용하지 않습니다 (로컬 저장 서버 폐기). 입력은 이 브라우저에 임시저장됩니다.', 'warn');
     else banner('', '');
   } catch (e) {
-    banner('⚠ 로컬 서버 미연결 — preview.bat 로 열어야 저장됩니다. (입력은 자동 임시저장 중)', 'warn');
+    banner('⚠ 파일 저장 기능은 사용하지 않습니다 (로컬 저장 서버 폐기). 입력은 이 브라우저에 임시저장됩니다.', 'warn');
   }
 }
 
@@ -216,7 +216,7 @@ function addOption(src) {
   if (obj.options.some(o => o.id === id)) { alert('이미 있는 ID입니다: ' + id); return; }
   obj.options.push(isCard ? { id: id, name_ko: '', name_en: '', description_ko: '' } : { id: id, text: '', tone: '' });
   render(src);
-  saveFile(src);                          // 구조 변경 → 즉시 파일 기록 (preview.bat 서버 필요)
+  saveFile(src);                          // 구조 변경 → 즉시 파일 기록 (로컬 저장 서버 폐기 — 실패해도 임시저장 유지)
 }
 /* 옵션 삭제 — 최소 1개는 유지 */
 function delOption(src, idx) {
@@ -276,7 +276,7 @@ async function saveFile(src) {
       status(src, '✓ 저장됨', 'ok');
       return true;
     }
-    if (res.status === 404) status(src, 'preview.bat 재시작 필요 (임시저장은 유지됨)', 'err');
+    if (res.status === 404) status(src, '파일 저장 미지원 (임시저장은 유지됨)', 'err');
     else status(src, '실패: ' + (d.error || res.status), 'err');
   } catch (e) {
     status(src, '서버 미연결 (임시저장은 유지됨)', 'err');
@@ -295,5 +295,5 @@ async function saveAll() {
     catch (e) { console.error('[editor] 저장 실패:', src, e); status(src, '실패: ' + e.message, 'err'); }
   }
   if (ok === srcs.length) banner('✓ 전체 저장 완료 (' + ok + '개 파일)', 'ok');
-  else banner('일부 저장 실패 (' + ok + '/' + srcs.length + ') — preview.bat 재시작 후 다시. 입력은 임시저장돼 안 날아갑니다.', 'warn');
+  else banner('일부 저장 실패 (' + ok + '/' + srcs.length + ') — 파일 저장 기능은 사용하지 않습니다. 입력은 임시저장돼 안 날아갑니다.', 'warn');
 }

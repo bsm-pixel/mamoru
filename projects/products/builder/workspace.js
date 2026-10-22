@@ -55,7 +55,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     await Catalog.load();
   } catch (e) {
     const f = document.getElementById('wsPC_frame');
-    if (f) f.srcdoc = '<div style="padding:40px;font-family:sans-serif;color:#8A8580">카탈로그 로드 실패: ' + e.message + ' (preview.bat 로 열어야 함)</div>';
+    if (f) f.srcdoc = '<div style="padding:40px;font-family:sans-serif;color:#8A8580">카탈로그 로드 실패: ' + e.message + '</div>';
     return;
   }
   NEUTRAL = true;       // 작업대 기본 = 정보 보기(모든 옵션 또렷)
