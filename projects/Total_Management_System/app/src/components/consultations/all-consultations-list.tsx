@@ -29,6 +29,7 @@ import {
   CONSULTATION_STATUS_COLOR,
 } from '@/lib/utils/format';
 import { Search, ChevronLeft, ChevronRight, Store, Truck, MessageCircle, ArrowRight, MapPin } from 'lucide-react';
+import { CustomerNameButton } from '@/components/customers/customer-name-button';
 
 const ACTIVE_STATUSES = [
   'pending_admin',
@@ -146,7 +147,7 @@ export function AllConsultationsList({ onSelect, searchAction }: { onSelect?: (i
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                             <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${cfg.bg} ${cfg.text}`}>{cfg.label}</span>
-                            <p className="text-sm font-semibold text-stone-800 truncate">{activityDisplay(c.activity_name, c.name)}</p>
+                            <div className="min-w-0 truncate"><CustomerNameButton customerId={c.customer_id} className="text-sm font-semibold text-stone-800">{activityDisplay(c.activity_name, c.name)}</CustomerNameButton></div>
                             <ActivityChips types={consultActTypes(c.phone)} className="shrink-0" />
                             <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${CONSULTATION_STATUS_COLOR[c.status] || 'bg-stone-100 text-stone-600'}`}>
                               {CONSULTATION_STATUS_LABEL[c.status] || c.status}

@@ -20,6 +20,7 @@ import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@
 import { HoldReasonModal } from './hold-reason-modal';
 import { getAllowedTransitions } from '@/lib/consultation/transitions';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
+import { CustomerNameButton } from '@/components/customers/customer-name-button';
 const TYPE_LABEL: Record<string, string> = {
   store_visit: '매장방문',
   field_request: '출장요청',
@@ -169,7 +170,7 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
       {/* 헤더 */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <h3 className="text-base font-bold">{activityDisplay(c.activity_name, c.name)}</h3>
+          <h3 className="text-base font-bold"><CustomerNameButton customerId={c.customer_id}>{activityDisplay(c.activity_name, c.name)}</CustomerNameButton></h3>
           <Badge className={statusColor}>{statusLabel}</Badge>
         </div>
         <div className="flex items-center gap-2 text-xs text-neutral-500">

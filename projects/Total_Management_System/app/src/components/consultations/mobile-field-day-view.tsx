@@ -10,6 +10,7 @@ import { formatPhone } from '@/lib/utils/format';
 import { Navigation, Copy, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 import { FieldDelayAction } from './field-delay-action';
+import { CustomerNameButton } from '@/components/customers/customer-name-button';
 
 /** 날짜 포맷: YYYY-MM-DD (KST 로컬 — UTC 슬라이스 시 자정 전후 off-by-one 방지) */
 function toDateStr(d: Date): string {
@@ -128,7 +129,7 @@ export function MobileFieldDayView({ onSelect }: MobileFieldDayViewProps = {}) {
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-indigo-black">{c.name}</span>
+                      <CustomerNameButton customerId={c.customer_id} className="text-sm font-bold text-indigo-black">{c.name}</CustomerNameButton>
                       {c.visit_time && (
                         <Badge variant="info">{c.visit_time}</Badge>
                       )}

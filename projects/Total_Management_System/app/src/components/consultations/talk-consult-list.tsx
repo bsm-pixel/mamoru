@@ -19,6 +19,7 @@ import {
   CONSULTATION_STATUS_LABEL,
 } from '@/lib/utils/format';
 import { Search, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { CustomerNameButton } from '@/components/customers/customer-name-button';
 
 // 4탭: 신규접수 / 진행중 / 보류 / 완료 — 2026-10-19 '보류' 추가 (on_hold 건이 어느 탭에도 안 보이던 문제)
 type TabKey = 'new_intake' | 'in_progress' | 'on_hold' | 'completed';
@@ -140,7 +141,7 @@ export function TalkConsultList({ onSelect, searchAction }: { onSelect?: (id: st
                 <div className="cursor-pointer" onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}>
                   <div className="flex items-center gap-2">
                     <MessageCircle size={14} className={isCancelled ? 'text-neutral-400 shrink-0' : 'text-info shrink-0'} />
-                    <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{activityDisplay(c.activity_name, c.name)}</span>
+                    <CustomerNameButton customerId={c.customer_id} className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{activityDisplay(c.activity_name, c.name)}</CustomerNameButton>
                     <ActivityChips types={consultActTypes(c.phone)} className="shrink-0" />
                     <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
                       {tab === 'new_intake' ? formatRelative(c.received_at) : (CONSULTATION_STATUS_LABEL[c.status] || c.status)}

@@ -21,6 +21,7 @@ import { activityDisplay } from '@/lib/customer/display';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import type { Consultation } from '@/lib/supabase/types';
+import { CustomerNameButton } from '@/components/customers/customer-name-button';
 
 // 7탭: 오늘출장 | 신규접수 | 제안중 | 일정재요청 | 확정 | 보류 | 지난내역
 //   2026-10-19 '보류' 추가 — 전엔 on_hold 건이 어느 탭에도 안 보여 사라졌다
@@ -182,7 +183,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
           }}
         >
           <div className="flex items-center gap-2">
-            <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{activityDisplay(c.activity_name, c.name)}</span>
+            <CustomerNameButton customerId={c.customer_id} className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{activityDisplay(c.activity_name, c.name)}</CustomerNameButton>
             <ActivityChips types={consultActTypes(c.phone)} className="shrink-0" />
             <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
               {CONSULTATION_STATUS_LABEL[c.status]}
