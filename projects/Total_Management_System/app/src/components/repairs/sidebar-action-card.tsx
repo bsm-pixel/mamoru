@@ -95,12 +95,12 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   const canSendCostNotice = ['intake', 'pickup_scheduled', 'picked_up', 'inspecting', 'cost_notified'].includes(currentStatus);
   const isCostResend = currentStatus === 'cost_notified';
 
-  // 2026-10-15 수리내역서 = 입고 후 비용안내 직전 단계의 "지금 할 일"
-  //   (전엔 헤더 구석 작은 버튼 + 상태줄은 "검수 후 비용안내" 말만 하고 버튼이 없었다)
-  //   택배 건이 비용안내 가능 단계인데 내역서가 없으면 → ② 검은 버튼 = 내역서 작성, 비용안내는 흰 버튼으로 한 칸 내려간다
+  // 2026-10-22 사장님 운영 순서: 입고 → (수량·수리 전 상태 확인) → [입고 & 비용안내] 먼저(빠른 입금) → 수리 → 수리내역 작성 → 포장·발송
+  //   그래서 입고 단계의 검은 버튼 = [입고 & 비용안내]. 수리내역서는 ①-b 한 줄에서 언제든 작성.
+  //   (10-15 판은 내역서를 비용안내 앞의 주 버튼으로 뒀으나, 비용안내 알림톡엔 수리내역 링크가 없다 — 링크는 출고 알림톡에만)
+  //   내역서 미작성 경고는 고객이 실제로 링크를 받는 **출고 단계**(작업중·작업완료)에서만 띄운다.
   const inspCount = inspections.length;
   const totalQty = (r.qty_mamoru || 0) + (r.qty_other || 0);
-  const needInspection = canSendCostNotice && !isDirectVisit && !isCostResend && inspCount === 0;
   // 입금확인 독립 버튼 표시 조건 — 미입금이면 배송완료/완료 이후에도 가능
   //   (ALPS 자동추적으로 shipped→delivered→completed 전이 후 입금확인 길이 막히던 버그 fix 2026-06-11)
   const canMarkPaid = !r.paid_at && ['cost_notified', 'repairing', 'ready_to_ship', 'shipped', 'delivered', 'completed'].includes(currentStatus);
@@ -140,8 +140,8 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   // 방문 건의 수리중·전달대기 단계는 주 버튼이 [고객 전달 완료] 하나다 (택배용 [작업완료]·[송장 생성] 대신)
   // 택배 건 작업 단계는 [작업완료]·[송장 생성] 나란한 버튼이 주 액션 (상태전이 단일 버튼 대신)
   const primaryTransition = canVisitHandover || isCourierWork ? undefined : visibleTransitions[0];
-  // 검은 버튼이 실제로 [수리내역서 작성]인 경우 (방문수거 접수처럼 상태전이가 우선이면 아님)
-  const inspectionIsPrimary = needInspection && !primaryTransition;
+  // 출고 단계인데 내역서가 없다 → 출고 알림톡의 [수리내역 조회]가 빈 화면 (방문 건은 링크 알림톡이 없어 제외)
+  const inspectionMissingAtShip = isCourierWork && inspCount === 0;
 
   // 접힘(④)에 들어갈 게 하나라도 있는가
   const hasMore =
@@ -301,11 +301,7 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
           ? '고객이 매장에 오시면 현장에서 비용을 확정하고 결제까지 한 번에 처리합니다.'
           : proceedType === '방문수거' && currentStatus === 'intake'
             ? '고객집 방문수거를 먼저 접수해주세요.'
-            : needInspection
-              ? '가위가 도착하면 수리내역서를 작성하고 비용안내를 보내주세요.'
-              : inspCount > 0
-                ? '수리내역서를 확인하고 비용안내를 보내주세요.'
-                : '가위가 도착하면 검수 후 비용안내를 보내주세요.'}
+            : '가위가 도착하면 수량을 확인하고 [입고 & 비용안내]를 보내주세요. 수리내역서는 출고 전까지 작성하면 됩니다.'}
       </ActionNote>
     );
   }
@@ -391,9 +387,9 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
             {/* ① 지금 상태 */}
             {renderNote()}
 
-            {/* ①-b 수리내역서 상태 한 줄 — 검은 버튼이 이미 [수리내역서 작성]이면 중복이라 숨김 */}
-            {!inspectionIsPrimary && (
-              <div className="flex items-center gap-2 rounded-lg border border-neutral-200 px-2.5 py-2 text-xs">
+            {/* ①-b 수리내역서 상태 한 줄 — 출고 단계인데 미작성이면 경고(출고 알림톡 [수리내역 조회]가 빈 화면) */}
+            {(
+              <div className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 text-xs ${inspectionMissingAtShip ? 'border-amber-300 bg-amber-50' : 'border-neutral-200'}`}>
                 <ClipboardList size={13} className="text-neutral-400 shrink-0" />
                 <span className="flex-1 min-w-0 text-neutral-600">
                   수리내역서{' '}
@@ -402,6 +398,8 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
                     <b className={totalQty > 0 && inspCount !== totalQty ? 'text-amber-700' : 'text-neutral-900'}>
                       {totalQty > 0 && inspCount !== totalQty ? `${inspCount}/${totalQty}` : inspCount}자루
                     </b>
+                  ) : inspectionMissingAtShip ? (
+                    <span className="text-amber-700 font-medium">미작성 · 출고 알림톡의 수리내역 링크가 비어 보입니다</span>
                   ) : (
                     <span className="text-neutral-400">미작성</span>
                   )}
@@ -488,11 +486,6 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
               >
                 {REPAIR_ACTION_LABEL[primaryTransition]}
               </Button>
-            ) : inspectionIsPrimary ? (
-              <Button className="w-full" onClick={() => setShowInspection(true)}>
-                <ClipboardList size={14} />
-                수리내역서 작성
-              </Button>
             ) : canSendCostNotice ? (
               <Button
                 className="w-full"
@@ -513,8 +506,7 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
             )}
 
             {/* 방문수거 접수 단계처럼 "지금 해도 되는" 다음 행동이 하나 더 있는 경우만 흰 버튼으로 */}
-            {/* 내역서 미작성일 때도 비용안내는 흰 버튼으로 남긴다 (무상·사진 없이 보내는 예외 건) */}
-            {(primaryTransition || inspectionIsPrimary) && canSendCostNotice && !isDirectVisit && (
+            {primaryTransition && canSendCostNotice && !isDirectVisit && (
               <Button
                 variant="secondary"
                 className="w-full"
@@ -616,10 +608,7 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
         message={
           <>
             고객에게 <strong>비용 안내 알림톡</strong>이 발송됩니다.<br />금액: {formatKRW(r.total_amount)}{r.total_amount === 0 ? ' (무상 처리)' : ''}
-            {/* 2026-10-15: 내역서 없이 보내면 고객 수리내역 링크가 빈 화면 — 막지는 않고 경고만 */}
-            {inspCount === 0 && (
-              <><br /><span className="text-amber-700 font-medium">수리내역서가 아직 없습니다.</span> 고객 수리내역 화면이 비어 보입니다.</>
-            )}
+            {/* 2026-10-22: 내역서 없음 경고 삭제 — 비용안내 알림톡엔 수리내역 링크가 없다(링크는 출고 알림톡). 경고는 출고 단계 ①-b 로 이동 */}
           </>
         }
         confirmLabel="발송"
