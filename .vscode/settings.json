@@ -1,0 +1,33 @@
+{
+  // 2026-10-22 작업환경 최적화 — 빌드 산출물·대용량 폴더를 감시/검색에서 제외 (버벅임 원인 1순위였던 .next 1.2GB)
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/.vercel/**": true,
+    "**/__pycache__/**": true,
+    "**/참고이미지_스크린샷/**": true,
+    "**/BSMKHJ/**": true,
+    "**/projects/as/videos/**": true,
+    "**/projects/products/product_detail/*/images/**": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/.vercel": true,
+    "**/__pycache__": true,
+    "**/*.tsbuildinfo": true,
+    "**/imweb_widgets/_ALL_WIDGETS.md": true,
+    "**/imweb_widgets/_WIDGETS_part*.md": true
+  },
+  "files.exclude": {
+    "**/.next": true,
+    "**/__pycache__": true
+  },
+  // 이 저장소는 TS/HTML 위주(파이썬 3개·Go 0개) — 파이썬/Go 언어서버가 상주하지 않게
+  "python.languageServer": "None",
+  "python.analysis.indexing": false,
+  "go.useLanguageServer": false,
+  // TS 서버: 대형 폴더 자동 타입 수집 끔
+  "typescript.disableAutomaticTypeAcquisition": true
+}
