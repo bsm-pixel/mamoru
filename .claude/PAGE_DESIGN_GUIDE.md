@@ -25,7 +25,7 @@
 
 ### A. 쇼윈도형 — max-width: 1200px
 - 이미지·그리드·카드 중심, 시각 밀도 높음
-- 레퍼런스: `projects/main/page_main.html`
+- 레퍼런스: `projects/brand/page_intro.html` (옛 page_main 은 2026-10-23 삭제)
 - 특징: 모바일 다크 중심 → PC 라이트 전환
 
 ### B. 리딩형 — max-width: 960px

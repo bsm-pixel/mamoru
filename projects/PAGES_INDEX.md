@@ -52,7 +52,7 @@
 |--------|------|-----------|------|
 | 후기 작성 | `projects/reviews/page_review.html` | `...?uid={id}&type={type}` | 리뷰 작성 폼 |
 | 고객 후기 목록 | `projects/reviews/page_reviews.html` | 코드위젯 | 리뷰 표시 |
-| 메인 홈 | `projects/main/page_main.html` | 아임웹 `/` | 메인 페이지 |
+| 메인 후기 | `projects/main/iframe_main_reviews.html` | 아임웹 `/` (메인은 아임웹 위젯, 후기만 iframe) | 메인 후기 (옛 page_main·top·btm 은 2026-10-23 삭제) |
 | 리뷰 이벤트 | `projects/reviews/page_review_event.html` | 코드위젯 | 매월 후기 이벤트 |
 
 ---

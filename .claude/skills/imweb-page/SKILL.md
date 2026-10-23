@@ -41,7 +41,7 @@ when_to_use: >-
 - 실제 렌더 확인(Chrome 헤드리스 캡처, PC+모바일 폭). 자산 `src/href` 실제 파일 매칭 확인(깨진 이미지=고객 노출).
 - 배포 후 `curl`로 라이브 콘텐츠·해시 대조(이미지 교체는 Fastly 엣지캐시 함정 — `git hash-object` 3해시 대조).
 - 🚫 `common_code/header_code.txt` 등 공유 공통코드 절대 손대지 않기.
-- 리뷰 표시 수정은 `page_reviews.html` + `page_main_btm.html` **2곳 동시**.
+- 리뷰 표시 수정은 `page_reviews.html` + `main/iframe_main_reviews.html` (+ 상품상세 `ImwebWidgetCode_product_reviews.html` 수동 재붙여넣기) **동시**.
 
 ## 폴더
 consulting/as/main/event/products/reviews/stock_sale = 고객 HTML(page.mamoru.kr). 🚫 폴더명 변경 금지(알림톡·위젯 박제).

@@ -75,14 +75,13 @@
 
 ---
 
-## 3. 노출 4개 화면 (동일 데이터 `api/reviews/public` 공유)
+## 3. 노출 3개 화면 (동일 데이터 `api/reviews/public` 공유)
 | # | 화면 | 파일 | 배포 |
 |---|---|---|---|
 | 1 | 메인 후기 iframe | `projects/main/iframe_main_reviews.html` | 자동(GitHub Pages) |
-| 2 | 메인 하단 | `projects/main/page_main_btm.html` | 자동 |
 | 3 | 리뷰 전체보기 `/62` | `projects/reviews/page_reviews.html` | 자동 |
 | 4 | **상품 상세 하단** | `projects/reviews/ImwebWidgetCode_product_reviews.html` | ⚠️ **아임웹 수동 재-paste**(자동반영 X) |
-- 리뷰 표시/모달 로직 수정 시 **4곳 전부 동기화** ([feedback_review_display_sync])
+- 리뷰 표시/모달 로직 수정 시 **3곳 전부 동기화** (메인 하단 page_main_btm 은 2026-10-23 삭제 — 메인은 아임웹 위젯+후기 iframe) ([feedback_review_display_sync])
 
 ---
 

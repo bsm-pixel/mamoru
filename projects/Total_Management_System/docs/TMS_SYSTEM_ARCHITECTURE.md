@@ -468,7 +468,7 @@ Vercel API → sendAdminEmail() → Gmail SMTP → 관리자 이메일
 | `as/page_form.html` | 복원수리 접수 폼 | `/api/repair/public/submit, holidays` |
 | `as/page_as_report.html` | 수리 현황 조회 | `/api/repair/report` |
 | `as/page_guide.html` | 복원수리 안내 | 없음 (정적) |
-| `main/page_main.html` | 메인 홈페이지 | `/api/reviews/public` |
+| `main/iframe_main_reviews.html` | 메인 후기 (옛 page_main 은 2026-10-23 삭제) | `/api/reviews/public` |
 
 **Vercel 도메인**: `https://app-eta-sandy-75.vercel.app`
 
