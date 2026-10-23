@@ -1992,8 +1992,7 @@ img[src=""], video[src=""] {
 /* ── 0. 공통: 그림자 제거 · 모서리 2px (원형 요소는 유지) ── */
 .mamoru-as-page *{ box-shadow:none !important; }
 .mamoru-as-page [class*="as-"], .mamoru-as-page [class*="intro-"]{ border-radius:2px; }
-.mamoru-as-page .as-icon-circle, .mamoru-as-page .intro-ba-dot, .mamoru-as-page .intro-ba-nav-btn,
-.mamoru-as-page .as-icon-circle img{ border-radius:50%; }
+.mamoru-as-page .intro-ba-dot, .mamoru-as-page .intro-ba-nav-btn{ border-radius:50%; }
 .mamoru-as-page video, .mamoru-as-page img{ border-radius:2px; }
 .b-num{ font-family:'Outfit',sans-serif; font-variant-numeric:tabular-nums; }
 /* 한글 줄바꿈은 단어 단위 ("드 / 립니다" 방지) */
@@ -2074,19 +2073,27 @@ img[src=""], video[src=""] {
 #tab-intro .intro-why__rule{ margin-left:0 !important; }
 /* 작업내용 타임라인: 번호를 크게(도면 번호) */
 .intro-timeline-step{ font-family:'Outfit',sans-serif !important; font-weight:300 !important; font-size:clamp(30px,8vw,44px) !important; letter-spacing:-.05em !important; line-height:1 !important; color:var(--mist) !important; font-variant-numeric:tabular-nums; }
-.intro-timeline-img img{ filter:grayscale(1) contrast(1.06); }
 .intro-process-story-title{ font-size:clamp(26px,7vw,38px) !important; font-weight:900 !important; letter-spacing:-.04em !important; }
 
-/* ── 5. 진행과정 — 거대 단계 번호 + 가는 선 ── */
-.mamoru-as-page .as-step-num{ background:none !important; border:0 !important; border-radius:0 !important; padding:0 !important; width:auto !important; height:auto !important; color:var(--sand) !important; font-family:'Outfit',sans-serif !important; font-weight:300 !important; font-size:clamp(48px,13vw,72px) !important; line-height:.85 !important; letter-spacing:-.06em; display:block !important; text-align:left; margin-bottom:8px; font-variant-numeric:tabular-nums; }
-.mamoru-as-page .as-step-item{ text-align:left !important; }
-.mamoru-as-page .as-step-title{ font-size:clamp(18px,5vw,22px) !important; font-weight:900 !important; letter-spacing:-.03em !important; text-align:left !important; }
+/* ── 5. 진행과정 — 공정표 3칸: 거대 번호 | 글 | 일러스트(원래 색) ── */
+.mamoru-as-page .as-step-item{ display:grid !important; grid-template-columns:clamp(48px,13vw,76px) 1fr clamp(64px,18vw,96px); column-gap:clamp(12px,3.6vw,22px); align-items:start; text-align:left !important; }
+.mamoru-as-page .as-step-item > *{ grid-column:2 / span 2; }
+.mamoru-as-page .as-step-item > .as-step-num{ grid-column:1; grid-row:1 / span 6; }
+.mamoru-as-page .as-step-item > .as-step-icon{ grid-column:3; grid-row:1 / span 3; width:100% !important; margin:0 !important; }
+.mamoru-as-page .as-step-item:has(> .as-step-icon) > .as-step-title,
+.mamoru-as-page .as-step-item:has(> .as-step-icon) > .as-step-desc{ grid-column:2; }
+.mamoru-as-page .as-step-num{ background:none !important; border:0 !important; border-radius:0 !important; padding:0 !important; width:auto !important; height:auto !important; color:var(--sand) !important; font-family:'Outfit',sans-serif !important; font-weight:300 !important; font-size:clamp(48px,13vw,72px) !important; line-height:.85 !important; letter-spacing:-.06em; display:block !important; margin:0 !important; font-variant-numeric:tabular-nums; }
+.mamoru-as-page .as-step-title{ margin-top:2px; font-size:clamp(17px,4.8vw,21px) !important; font-weight:900 !important; letter-spacing:-.03em !important; text-align:left !important; }
 .mamoru-as-page .as-step-desc, .mamoru-as-page .as-method-label{ text-align:left !important; }
-.mamoru-as-page .as-step-icon{ margin-left:0 !important; }
-.mamoru-as-page .as-step-icon img{ filter:grayscale(1); }
 .mamoru-as-page .as-step-divider{ height:1px !important; background:var(--sand) !important; width:100% !important; margin:28px 0 !important; }
-.mamoru-as-page .as-icon-row{ justify-content:flex-start !important; }
 .mamoru-as-page .as-step-note{ background:transparent !important; border:0 !important; border-left:2px solid var(--void) !important; border-radius:0 !important; padding:4px 0 4px 12px !important; text-align:left !important; color:var(--stone) !important; }
+/* 방문수거·직접발송 카드: 아이콘 3개는 카드 폭에 고르게 / 1개는 글 오른쪽 */
+.mamoru-as-page .as-method-group{ background:var(--white) !important; border:1px solid var(--sand) !important; }
+.mamoru-as-page .as-icon-row{ display:grid !important; grid-template-columns:repeat(3,1fr); justify-items:center; gap:8px !important; margin-top:16px !important; }
+.mamoru-as-page .as-icon-circle{ width:clamp(60px,17vw,84px) !important; height:clamp(60px,17vw,84px) !important; }
+.mamoru-as-page .as-method-group:has(.as-icon-item:only-child){ display:grid; grid-template-columns:1fr clamp(64px,18vw,96px); column-gap:12px; align-items:center; }
+.mamoru-as-page .as-method-group:has(.as-icon-item:only-child) > .as-icon-row{ grid-column:2; grid-row:1 / span 2; grid-template-columns:1fr; margin-top:0 !important; }
+.mamoru-as-page .as-method-group:has(.as-icon-item:only-child) .as-icon-circle{ width:100% !important; height:auto !important; }
 
 /* ── 6. 소요시간 — 문제(7~15일, 흐림·취소선) ↔ 답(2~3일, 크게) ── */
 .mamoru-as-page .as-dur-heading{ text-align:left !important; font-size:clamp(21px,5.8vw,28px) !important; font-weight:900 !important; letter-spacing:-.035em !important; line-height:1.25 !important; }
@@ -2098,7 +2105,6 @@ img[src=""], video[src=""] {
 .mamoru-as-page .as-dur-compare-value{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; letter-spacing:-.04em !important; line-height:1 !important; margin-top:6px; }
 .mamoru-as-page .as-dur-compare-item.other .as-dur-compare-value{ font-size:clamp(24px,7vw,34px) !important; font-weight:300 !important; color:var(--mist) !important; text-decoration:line-through; text-decoration-thickness:1px; }
 .mamoru-as-page .as-dur-compare-item.mamoru .as-dur-compare-value{ font-size:clamp(40px,12vw,64px) !important; font-weight:900 !important; color:var(--void) !important; }
-.mamoru-as-page .as-dur-cal-img img, .mamoru-as-page .as-dur-wide-img img{ filter:grayscale(1); }
 
 /* ── 7. 비용 — 거대 숫자 + 가는 선 표 ── */
 .mamoru-as-page .as-price-cards{ display:grid !important; grid-template-columns:1fr 1fr; gap:0 !important; border-top:1px solid var(--void); }
