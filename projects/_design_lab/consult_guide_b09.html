@@ -1,0 +1,2389 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAMORU 상담 안내</title>
+  <!-- Brand Guide v1.0 폰트: Outfit + Plus Jakarta Sans + Pretendard -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- MAMORU: 한글 본문 서체 Pretendard (Google Fonts 미제공 → jsDelivr) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+
+  <!--
+  =========================================================
+   MAMORU 상담 안내 페이지 (page_guide.html)
+   - GitHub Pages 호스팅용
+   - 아임웹 경로: /61
+
+   ★★★ 수정 가이드 ★★★
+   - 이미지 수정: [IMG] 검색
+   - 문구 수정: [TEXT] 검색
+   - URL 수정: [URL] 검색
+  ========================================================= -->
+
+<style>
+/* ══════════════════════════════════════════════════════════════
+   MAMORU 상담 안내 페이지 — Monochrome (Brand Guide v1.0)
+   아임웹 코드위젯 삽입용
+
+   ★★★ 수정 가이드 ★★★
+   [IMG] = 이미지, [TEXT] = 문구, [URL] = 링크
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 0. 변수 & 리셋 ── */
+:root {
+  --mm-bg-light: #FAF9F7;
+  --mm-bg-card: #FFFFFF;
+  --mm-bg-dark: #1A1A1A;
+  --mm-bg-darker: #111111;
+  --mm-bg-card-dark: #2D2D2D;
+  --mm-ink: #1A1A1A;
+  --mm-ink-dark: #2D2D2D;
+  --mm-ink-soft: rgba(26,26,26,0.06);
+  --mm-text-d: #1A1A1A;
+  --mm-text-d2: #8A8580;
+  --mm-text-d3: rgba(26,26,26,0.55);
+  --mm-text-w: #FAF9F7;
+  --mm-text-w2: rgba(250,249,247,0.6);
+  --mm-text-w3: rgba(250,249,247,0.52);
+  --mm-border-l: rgba(26,26,26,0.08);
+  --mm-border-d: rgba(255,255,255,0.08);
+  --mm-radius: 8px;
+  --mm-radius-lg: 8px;
+  --mm-ease-fast: 0.15s ease;
+  --mm-ease: 0.25s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--mm-bg-light);
+  min-height: 100%;
+}
+
+/* ── 기본 설정 ── */
+.mamoru-consult-page {
+  font-family: 'Plus Jakarta Sans', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--mm-bg-light);
+  color: var(--mm-text-d);
+  line-height: 1.6;
+  padding-bottom: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mamoru-consult-page * {
+  box-sizing: border-box;
+}
+
+/* ── 섹션 공통 ── */
+.consult-section {
+  padding: 56px 20px;
+}
+
+.consult-section-title {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  margin-top: 0;
+  color: var(--mm-text-d);
+  text-align: center;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.consult-section-divider {
+  width: 28px;
+  height: 3px;
+  background: var(--mm-ink);
+  border-radius: 2px;
+  margin: 0 auto 32px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [1] 히어로 섹션 — 다크 배경 (30%)
+   ══════════════════════════════════════════════════════════════ */
+.consult-hero {
+  padding: 72px 20px 56px;
+  text-align: center;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(250,249,247,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(250,249,247,0.03) 0%, transparent 50%),
+    var(--mm-bg-dark);
+}
+
+.consult-hero-label {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(250,249,247,0.08);
+  border: 1px solid rgba(250,249,247,0.12);
+  border-radius: 100px;
+  color: var(--mm-text-w2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+.consult-hero-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-bottom: 16px;
+  letter-spacing: -0.03em;
+  color: var(--mm-text-w);
+}
+
+.consult-hero-title .chosen {
+  color: var(--mm-text-w); /* cream — 다크 배경 위 선명한 대비 */
+  font-weight: 800;
+}
+
+.consult-hero-title .not-sold {
+  color: var(--mm-text-w3);
+  font-weight: 500;
+  font-size: 0.75em;
+  display: block;
+  margin-top: 4px;
+}
+
+.consult-hero-desc {
+  font-size: 14px;
+  color: var(--mm-text-w2);
+  line-height: 1.8;
+  margin-bottom: 32px;
+  letter-spacing: -0.01em;
+}
+
+.consult-hero-image {
+  max-width: 350px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.consult-hero-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.consult-hero-image-placeholder {
+  width: 100%;
+  height: 200px;
+  background: var(--mm-bg-card-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mm-text-w3);
+  font-size: 13px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [2] 카테고리 탭
+   ══════════════════════════════════════════════════════════════ */
+.consult-tabs-container {
+  padding: 12px 16px;
+  position: sticky;
+  top: 0;
+  background: var(--mm-bg-light);
+  z-index: 100;
+  border-bottom: 1px solid var(--mm-border-l);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.consult-tabs {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+}
+
+.consult-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.consult-tab {
+  flex: 1;
+  padding: 8px 20px;
+  background: transparent;
+  border: 1px solid var(--mm-border-l);
+  border-radius: 999px;
+  color: var(--mm-text-d2);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--mm-ease-fast);
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  user-select: none;
+}
+
+.consult-tab:active {
+  transform: scale(0.96);
+}
+
+.consult-tab.active {
+  background: var(--mm-ink);
+  border-color: var(--mm-ink);
+  color: var(--mm-text-w);
+  font-weight: 600;
+}
+
+/* 탭 콘텐츠 */
+.consult-tab-content {
+  display: none;
+}
+
+.consult-tab-content.active {
+  display: block;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [3] 탭별 캐릭터 이미지
+   ══════════════════════════════════════════════════════════════ */
+.tab-character {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0px 4px;
+}
+
+.tab-character-image {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-character-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.tab-character-placeholder {
+  width: 100px;
+  height: 100px;
+  background: var(--mm-ink-soft);
+  border: 2px dashed rgba(26,26,26,0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mm-ink);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [4] 상담철칙
+   ══════════════════════════════════════════════════════════════ */
+.principle-list {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.principle-item {
+  padding: 24px 24px 24px 28px;
+  background: var(--mm-bg-card);
+  border-radius: var(--mm-radius-lg);
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--mm-ease);
+  border: 1px solid var(--mm-border-l);
+}
+
+/* 좌측 액센트 라인 */
+.principle-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--mm-ink);
+  border-radius: 3px 0 0 3px;
+}
+
+.principle-number {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mm-text-d3);
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.principle-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.principle-desc {
+  font-size: 13px;
+  color: var(--mm-text-d2);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+/* 레거시 호환 */
+.principle-text {
+  font-size: 15px;
+  color: var(--mm-text-d);
+  line-height: 1.85;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [5] 상담방식 공통
+   ══════════════════════════════════════════════════════════════ */
+.method-intro {
+  text-align: center;
+  padding: 8px 20px 40px;
+}
+
+.method-intro-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--mm-text-d2);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.method-intro-desc {
+  font-size: 14px;
+  color: var(--mm-text-d3);
+  letter-spacing: -0.01em;
+}
+
+.process-section {
+  padding: 0 20px 32px;
+}
+
+.process-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mm-text-d3);
+  margin-bottom: 20px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.process-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.process-step {
+  display: flex;
+  gap: 16px;
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
+  overflow: hidden;
+  align-items: center;
+}
+
+.process-step-image {
+  flex-shrink: 0;
+  width: 100px;
+  height: 100px;
+  background: rgba(26,26,26,0.03);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mm-text-d3);
+  font-size: 12px;
+}
+
+.process-step-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+}
+
+.process-step-number {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+  background: var(--mm-ink);
+  border-radius: var(--mm-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mm-text-w);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.process-step-content {
+  flex: 1;
+  padding: 16px 16px 16px 0;
+}
+
+.process-step-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.process-step-desc {
+  font-size: 13px;
+  color: var(--mm-text-d2);
+  line-height: 1.5;
+}
+
+/* 화살표 */
+.process-arrow {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+  color: rgba(26,26,26,0.15);
+  font-size: 18px;
+}
+.process-arrow svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* 버튼형 스텝 (시간조율 요청) */
+.process-step-action {
+  background: var(--mm-ink-soft);
+  border-color: rgba(26,26,26,0.05);
+}
+
+.process-step-action .process-step-image {
+  background: rgba(26,26,26,0.05);
+}
+
+.process-step-action .process-step-title {
+  color: var(--mm-ink-dark);
+}
+
+.action-hint {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  background: rgba(26,26,26,0.06);
+  border-radius: var(--mm-radius);
+  font-size: 11px;
+  color: var(--mm-ink-dark);
+  font-weight: 500;
+}
+
+/* 추가설명 */
+.method-notes {
+  padding: 0 20px 32px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.method-notes-card {
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
+  padding: 20px;
+}
+
+.method-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.method-note-item {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--mm-text-d2);
+  line-height: 1.5;
+}
+
+.method-note-item::before {
+  content: '•';
+  color: var(--mm-ink);
+  flex-shrink: 0;
+}
+
+/* 팁 영역 */
+.method-tip {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--mm-ink-soft);
+  border: 1px solid rgba(26,26,26,0.05);
+  border-radius: var(--mm-radius-lg);
+}
+
+.method-tip-label {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--mm-ink);
+  border-radius: 4px;
+  color: var(--mm-text-w);
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.method-tip-text {
+  font-size: 13px;
+  color: var(--mm-text-d);
+  line-height: 1.5;
+}
+
+/* 감성메시지 */
+.method-emotion {
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.method-emotion-text {
+  font-size: 15px;
+  font-style: italic;
+  color: var(--mm-text-d2);
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [6] Q&A 토글 섹션
+   ══════════════════════════════════════════════════════════════ */
+.qna-list {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.qna-item {
+  background: var(--mm-bg-card);
+  border-radius: var(--mm-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--mm-border-l);
+  transition: all var(--mm-ease);
+}
+
+.qna-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.qna-question:active {
+  background: rgba(26,26,26,0.03);
+}
+
+.qna-question-text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mm-text-d);
+  line-height: 1.4;
+  padding-right: 12px;
+}
+
+.qna-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mm-text-d3);
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.qna-item.active .qna-icon {
+  transform: rotate(180deg);
+}
+
+.qna-answer {
+  display: none;
+  padding: 0 20px 20px;
+}
+
+.qna-item.active .qna-answer {
+  display: block;
+}
+
+.qna-answer-text {
+  font-size: 14px;
+  color: var(--mm-text-d2);
+  line-height: 1.7;
+}
+
+.qna-answer-sub {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(26,26,26,0.03);
+  border-radius: var(--mm-radius-lg);
+  font-size: 13px;
+  color: var(--mm-text-d2);
+  line-height: 1.6;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [7] 하단 CTA — 페이지 끝 (스크롤 끝까지 본 사용자용)
+   ══════════════════════════════════════════════════════════════ */
+.consult-cta-fixed {
+  position: static;
+  display: flex;
+  gap: 8px;
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  background: transparent;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [7.1] Hero 영역 인라인 CTA — PC 전용 (모바일은 wrapper floating으로 단일화)
+   사장님 룰: 전체 흐름·UI/UX 위계 점검 → 모바일 중복 제거
+   ══════════════════════════════════════════════════════════════ */
+.consult-hero-cta {
+  display: none; /* 모바일 기본 숨김 (PC media에서 flex 복원) */
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 20px 8px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.consult-hero-cta-primary {
+  /* Brand Guide: 모바일 CTA 48px, padding 14px 24px */
+  /* Hero 영역 배경이 var(--mm-bg-dark) #1A1A1A 다크라서 반전 적용:
+     Cream 배경 + Void 텍스트 (Brand Guide 다크 모드 대응 패턴) */
+  width: 100%;
+  padding: 14px 24px;
+  background: var(--mm-text-w);   /* Cream #FAF9F7 */
+  border: none;
+  border-radius: 999px;
+  color: var(--mm-ink);            /* Void #1A1A1A */
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--mm-ease-fast);
+  -webkit-tap-highlight-color: transparent;
+  letter-spacing: -0.01em;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.30);
+}
+
+.consult-hero-cta-primary:active {
+  transform: scale(0.98);
+}
+
+.consult-hero-cta-secondary {
+  /* Hero 다크 배경 위 — 연한 Cream 텍스트로 반전 */
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mm-text-w2);        /* rgba(250,249,247,0.6) 연한 Cream */
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  -webkit-tap-highlight-color: transparent;
+  padding: 4px 8px;
+}
+
+.consult-hero-cta-secondary:active {
+  color: var(--mm-text-w);          /* Cream */
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [7.2] PC 탭 바 우측 CTA — 모바일 숨김, PC만 노출 (3중 보장 2/3)
+   ══════════════════════════════════════════════════════════════ */
+.consult-tab-cta {
+  display: none; /* 모바일 숨김 */
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [7.3] 모바일 플로팅 하단 CTA — 항상 화면 하단 보임 (3중 보장 3/3)
+   ══════════════════════════════════════════════════════════════ */
+.consult-floating-cta {
+  /* 075 → 사장님 룰: page 내부 floating 사용 안 함 (wrapper 부모 floating으로 단일화)
+     HTML은 회귀 안전상 그대로 두고 CSS로만 영구 숨김 */
+  display: none !important;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(250,249,247,0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--mm-border-l);
+  justify-content: center;
+  gap: 8px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.consult-floating-cta > * {
+  /* 자식 합산 max-width = 240 + 240 + gap 8 = 488 (모바일 480px 가이드 근사) */
+  max-width: 240px;
+}
+
+.consult-floating-cta.visible {
+  transform: translateY(0);
+}
+
+.consult-floating-cta-btn {
+  flex: 1;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--mm-ease-fast);
+  border: none;
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1;
+}
+
+.consult-floating-cta-btn:active {
+  transform: scale(0.98);
+}
+
+.consult-floating-cta-secondary {
+  background: rgba(26,26,26,0.06);
+  color: var(--mm-text-d);
+  flex: 0 1 auto;
+  padding: 14px 16px;
+}
+
+.consult-floating-cta-primary {
+  background: var(--mm-ink);
+  color: var(--mm-text-w);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.consult-cta-btn {
+  flex: 1;
+  padding: 14px 16px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--mm-ease-fast);
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  line-height: 1;
+}
+
+.consult-cta-btn:active {
+  transform: scale(0.97);
+}
+
+.consult-cta-secondary {
+  background: transparent;
+  border: 1px solid var(--mm-border-l);
+  color: var(--mm-text-d2);
+}
+
+.consult-cta-primary {
+  background: var(--mm-ink);
+  border: none;
+  color: var(--mm-text-w);
+}
+
+/* ── 찾아오시는 길 ── */
+.method-location {
+  padding: 0 20px 16px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+.method-location-card {
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
+  padding: 24px;
+  text-align: center;
+}
+.method-location-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mm-ink);
+  letter-spacing: 0.04em;
+  margin-bottom: 12px;
+}
+.method-location-address {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--mm-text-d);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PC hover
+   ══════════════════════════════════════════════════════════════ */
+@media (hover: hover) {
+  .principle-item:hover {
+    border-color: rgba(26,26,26,0.05);
+    box-shadow: 0 4px 16px rgba(26,26,26,0.04);
+    transform: translateX(4px);
+  }
+  .qna-item:hover {
+    border-color: rgba(26,26,26,0.06);
+    box-shadow: 0 4px 16px rgba(26,26,26,0.04);
+  }
+  .consult-tab:hover:not(.active) {
+    border-color: var(--mm-ink);
+    color: var(--mm-ink);
+  }
+  .consult-cta-secondary:hover {
+    border-color: var(--mm-ink);
+    color: var(--mm-ink);
+  }
+  .consult-cta-primary:hover {
+    background: var(--mm-ink-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(26,26,26,0.05);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   반응형
+   ══════════════════════════════════════════════════════════════ */
+@media screen and (min-width: 768px) {
+  /* 히어로는 전폭, 콘텐츠 영역만 제약 */
+  .consult-section,
+  .consult-tabs-container,
+  .process-section,
+  .method-intro,
+  .method-notes,
+  .method-location,
+  .method-emotion,
+  .qna-list,
+  .consult-cta-fixed {
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .consult-hero {
+    padding: 72px 48px;
+  }
+
+  .consult-hero-title {
+    font-size: 42px;
+    letter-spacing: -0.04em;
+    line-height: 1.2;
+  }
+
+  .consult-hero-desc {
+    font-size: 16px;
+  }
+
+  .consult-hero-label {
+    font-size: 13px;
+  }
+
+  .consult-section-title {
+    font-size: 30px;
+    letter-spacing: -0.025em;
+  }
+
+  .tab-character-image {
+    width: 150px;
+    height: 150px;
+  }
+
+  .consult-tabs {
+    justify-content: center;
+  }
+
+  .consult-tab {
+    flex: 0 1 auto; /* PC에서는 콘텐츠 너비만큼 */
+    padding: 10px 28px;
+    font-size: 15px;
+  }
+
+  /* PC: 모바일 floating CTA 숨김 (PC는 hero CTA + 탭 인라인 CTA로 충분) */
+  .consult-floating-cta { display: none !important; }
+
+  /* PC: Hero CTA 노출 (모바일은 wrapper floating으로 단일화) + max-width 680px */
+  .consult-hero-cta {
+    display: flex;
+    max-width: 680px;
+  }
+
+  .consult-hero-cta-primary {
+    /* PC CTA 높이 52px (Brand Guide) — padding 16px 32px → 약 52px */
+    padding: 16px 32px;
+    font-size: 17px;
+  }
+
+  /* PC: 탭 바 우측 인라인 CTA 노출 (탭과 동일 폰트 15px / padding 12x24) */
+  .consult-tab-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 24px;
+    background: var(--mm-ink);
+    color: var(--mm-text-w);
+    border: none;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--mm-ease-fast);
+    margin-left: 8px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .consult-tab-cta:hover {
+    background: var(--mm-ink-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(26,26,26,0.12);
+  }
+  .consult-tab-cta:active {
+    transform: scale(0.98);
+  }
+
+  .principle-list {
+    max-width: 760px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .process-grid {
+    max-width: 640px;
+  }
+
+  .process-step-title {
+    font-size: 16px;
+  }
+
+  .process-step-desc {
+    font-size: 14px;
+  }
+
+  .principle-text {
+    font-size: 16px;
+  }
+
+  .method-emotion-text {
+    font-size: 16px;
+  }
+
+  .method-location-address {
+    font-size: 16px;
+  }
+
+  .consult-cta-fixed {
+    max-width: 640px;
+    margin-top: 40px;
+    padding: 20px;
+  }
+
+  .consult-cta-btn {
+    font-size: 17px;
+    padding: 16px 20px;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  /* 모바일: 페이지끝 CTA 숨김 — 외부 아임웹 플로팅(#mamoruConsultFloatingCta)과 중복 제거.
+     (외부 플로팅은 모바일 전용 → PC에선 이 페이지끝 CTA가 하단 CTA로 노출) */
+  .consult-cta-fixed { display: none; }
+
+  .consult-hero-title {
+    font-size: 28px;
+  }
+
+  .consult-section-title {
+    font-size: 20px;
+  }
+
+  .process-arrow svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [4-2] 마모루 컨설팅 탭 — About 섹션
+   ══════════════════════════════════════════════════════════════ */
+.about-block {
+  padding: 0 20px 32px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.about-problem {
+  background: var(--mm-bg-dark);
+  border-radius: var(--mm-radius-lg);
+  padding: 32px 24px;
+  margin-bottom: 24px;
+}
+
+.about-problem-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mm-text-w3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.about-problem-title {
+  font-family: 'Outfit', 'Pretendard', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--mm-text-w);
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.about-problem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.about-problem-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.about-problem-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(250,249,247,0.08);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mm-text-w2);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.about-problem-text {
+  font-size: 14px;
+  color: var(--mm-text-w2);
+  line-height: 1.6;
+}
+
+.about-problem-text strong {
+  color: var(--mm-text-w);
+  font-weight: 600;
+}
+
+/* 약속 카드 */
+.about-promise {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.about-promise-card {
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.about-promise-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: rgba(26,26,26,0.08);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.about-promise-content h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.about-promise-content p {
+  font-size: 13px;
+  color: var(--mm-text-d2);
+  line-height: 1.6;
+}
+
+/* 이미지 + 캡션 */
+.about-image {
+  border-radius: var(--mm-radius-lg);
+  overflow: hidden;
+  margin-bottom: 24px;
+  position: relative;
+  aspect-ratio: 3 / 2;   /* 고정 틀 — 가로:세로 3:2 (어떤 사진이든 이 비율로) */
+}
+
+.about-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;     /* 비율 달라도 틀에 맞춰 가운데 자동 크롭 */
+  display: block;
+}
+
+.about-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--mm-ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mm-text-d3);
+  font-size: 13px;
+  text-align: center;
+  padding: 0 16px;
+}
+
+.about-image-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  background: linear-gradient(transparent, rgba(26,26,26,0.7));
+  color: var(--mm-text-w);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* 기술력 카드 */
+.about-tech {
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.about-tech-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mm-text-d3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.about-tech-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.about-tech-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.about-tech-item {
+  font-size: 14px;
+  color: var(--mm-text-d2);
+  line-height: 1.5;
+  padding-left: 16px;
+  position: relative;
+}
+
+.about-tech-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  background: var(--mm-ink);
+  border-radius: 50%;
+}
+
+/* CTA 인라인 */
+.about-cta {
+  text-align: center;
+  padding: 8px 0 16px;
+}
+
+.about-cta-text {
+  font-size: 15px;
+  font-style: italic;
+  color: var(--mm-text-d3);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+/* PC 반응형 */
+@media screen and (min-width: 768px) {
+  .about-block { max-width: 760px; }
+  .about-problem { padding: 40px 32px; }
+  .about-problem-title { font-size: 24px; }
+  .about-promise { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .about-promise-card { flex-direction: column; text-align: center; }
+  .about-promise-num { margin: 0 auto 4px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [4-3] 큰 메시지 블록
+   ══════════════════════════════════════════════════════════════ */
+.about-message {
+  padding: 48px 20px;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.about-message-big {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  line-height: 1.5;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+.about-message-sub {
+  font-size: 14px;
+  color: var(--mm-text-d2);
+  line-height: 1.7;
+}
+.about-message-sub strong {
+  color: var(--mm-text-d);
+  font-weight: 600;
+}
+.about-message-highlight {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--mm-ink-soft);
+  border-radius: 4px;
+  font-weight: 600;
+  color: var(--mm-text-d);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [4-4] 상담철칙 세로 중앙 배열
+   ══════════════════════════════════════════════════════════════ */
+.about-principles {
+  padding: 0 20px 40px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.about-principles-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mm-text-d3);
+  text-align: center;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.about-principle-item {
+  text-align: center;
+  padding: 24px 16px;
+  border-bottom: 1px solid var(--mm-border-l);
+}
+.about-principle-item:last-child { border-bottom: none; }
+.about-principle-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mm-text-d3);
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.about-principle-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+.about-principle-desc {
+  font-size: 13px;
+  color: var(--mm-text-d2);
+  line-height: 1.7;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   [4-5] 마모루 혜택 카드 그리드
+   ══════════════════════════════════════════════════════════════ */
+.about-benefits {
+  padding: 0 20px 40px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.about-benefits-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  text-align: center;
+  margin-bottom: 20px;
+  letter-spacing: -0.02em;
+}
+.about-benefits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.about-benefit-card {
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-l);
+  border-radius: var(--mm-radius-lg);
+  padding: 20px 16px;
+  text-align: center;
+}
+.about-benefit-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+.about-benefit-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mm-text-d);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+.about-benefit-desc {
+  font-size: 13px;
+  color: var(--mm-text-d2);
+  line-height: 1.6;
+}
+.about-benefit-link {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  background: var(--mm-ink-soft);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mm-text-d);
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media screen and (min-width: 768px) {
+  .about-message-big { font-size: 26px; }
+  .about-benefits-grid { grid-template-columns: repeat(4, 1fr); }
+  .about-benefit-card { padding: 24px 16px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   fade-in 스크롤 애니메이션
+   ══════════════════════════════════════════════════════════════ */
+.fade-in {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s var(--mm-ease), transform 0.6s var(--mm-ease);
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-in.delay-1 { transition-delay: 0.1s; }
+.fade-in.delay-2 { transition-delay: 0.2s; }
+.fade-in.delay-3 { transition-delay: 0.3s; }
+.fade-in.delay-4 { transition-delay: 0.4s; }
+.fade-in.delay-5 { transition-delay: 0.5s; }
+
+/* 히어로 순차 등장 */
+.consult-hero .fade-in { transform: translateY(16px); }
+
+@media screen and (max-width: 360px) {
+  .consult-hero-title {
+    font-size: 24px;
+  }
+
+  .consult-section-title {
+    font-size: 18px;
+  }
+
+  .principle-text {
+    font-size: 14px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ✨ MAMORU 트렌디 레이어 — 복원수리(as/page_guide)와 동일 시스템
+   append-override. 되돌리기 = 이 블록 전체 삭제
+   변수는 --mmt-* 로 격리하여 기존 --mm-* / 기능 0 영향
+   ════════════════════════════════════════════════════════════════ */
+.mamoru-consult-page{
+  --mmt-cream:#FAF9F7; --mmt-mist:#B8B4AF; --mmt-sand:#D4D0CB;
+  --mmt-dim:#807b75; --mmt-display:'Outfit','Plus Jakarta Sans','Pretendard',sans-serif;
+}
+@keyframes mmRise{ from{ opacity:0; transform:translateY(26px); } to{ opacity:1; transform:none; } }
+
+/* ── 히어로 — 플루이드 업스케일 ("Chosen, Not Sold" 위계 강화) ── */
+.consult-hero-title{ font-size:clamp(32px,9vw,52px); line-height:1.08; letter-spacing:-.04em; text-wrap:balance; }
+.consult-hero-desc{ font-size:clamp(14px,3.8vw,17px); line-height:1.7; text-wrap:balance; }
+.consult-hero-label{ letter-spacing:.22em; }
+
+/* ── ⓪ 왜, 마모루 상담인가 — 문제→답 (복원수리 intro-why 패턴 이식) ── */
+.consult-why-wrap{ background:var(--mm-bg-dark); margin:0 -20px; padding:clamp(48px,11vw,84px) 0 clamp(56px,13vw,96px); }
+.consult-why{ max-width:600px; margin:0 auto; padding:0 clamp(20px,5.5vw,40px); }
+.cwhy__kicker{ font-family:var(--mmt-display); font-size:11px; font-weight:700; letter-spacing:.32em; color:var(--mmt-mist); text-transform:uppercase; }
+.cwhy__title{ font-family:var(--mmt-display); font-size:clamp(26px,8vw,44px); font-weight:800; line-height:1.1; letter-spacing:-.03em; color:var(--mmt-cream); margin-top:14px; text-wrap:balance; }
+.cwhy__rule{ width:38px; height:2px; background:var(--mmt-cream); opacity:.85; margin-top:22px; }
+/* 범례 — 옅음=흔한 영업 / 흰색=마모루 (같은 두께, 색만 차이). 항목엔 라벨 반복 X */
+.cwhy__legend{ font-size:clamp(15px,4.2vw,19px); font-weight:600; letter-spacing:-.015em; line-height:1.55; margin-top:16px; text-wrap:balance; }
+.cwhy__legend .cwhy__dim{ color:var(--mmt-dim); }
+.cwhy__legend .cwhy__on{ color:var(--mmt-cream); }
+.cwhy__item{ margin-top:clamp(36px,9vw,58px); padding-top:clamp(36px,9vw,58px); border-top:1px solid rgba(255,255,255,.10); }
+.cwhy__item:first-of-type{ border-top:0; padding-top:clamp(26px,7vw,40px); }
+.cwhy__idx{ font-family:var(--mmt-display); font-size:clamp(13px,3.5vw,15px); font-weight:700; letter-spacing:.2em; color:#6f6b66; margin-bottom:18px; }
+.cwhy__idx b{ color:var(--mmt-cream); font-weight:800; }
+.cwhy__problem{ font-size:clamp(14px,3.7vw,15px); line-height:1.85; color:var(--mmt-dim); text-wrap:pretty; }
+.cwhy__cue{ width:1px; height:clamp(24px,6vw,38px); background:linear-gradient(rgba(255,255,255,.10),var(--mmt-cream)); margin:18px 0 16px; }
+.cwhy__atitle{ font-family:var(--mmt-display); font-size:clamp(22px,6vw,30px); font-weight:800; letter-spacing:-.03em; line-height:1.2; color:var(--mmt-cream); margin-bottom:14px; text-wrap:balance; }
+.cwhy__answer{ font-size:clamp(14px,3.8vw,16px); line-height:1.8; color:var(--mmt-sand); text-wrap:pretty; }
+
+/* ── 3가지 약속 — 거대 인덱스 + 위계 ── */
+.about-promise-num{ font-family:var(--mmt-display); font-size:clamp(30px,8vw,44px); color:rgba(26,26,26,0.12); }
+.about-promise-content h4{ font-size:clamp(15px,4vw,18px); line-height:1.4; text-wrap:balance; }
+
+/* ── 상담철칙 — 트렌디 위계 ── */
+.about-principles-title{ letter-spacing:.18em; font-size:clamp(12px,3.2vw,13px); }
+.about-principle-num{ font-family:var(--mmt-display); font-size:clamp(12px,3.2vw,13px); letter-spacing:.2em; }
+.about-principle-title{ font-size:clamp(17px,4.8vw,22px); line-height:1.3; letter-spacing:-.02em; text-wrap:balance; }
+.about-principle-desc{ font-size:clamp(13px,3.5vw,15px); line-height:1.75; text-wrap:pretty; }
+/* 상담철칙 리스트형 — 본문 흐림 + 핵심부 볼드 진하게, hairline 구분 */
+/* (고유 클래스 creed-list — 옛 .principle-list PC 2단 그리드와 충돌 회피) */
+.creed-list{ list-style:none; margin:0 auto; padding:0; max-width:600px; display:block; }
+.creed-list__item{ padding:clamp(22px,5vw,30px) 0; border-top:1px solid rgba(26,26,26,.12); }
+.creed-list__item:first-child{ border-top:0; padding-top:0; }
+.creed-list__item p{ font-size:clamp(14px,3.8vw,16px); line-height:1.85; color:var(--stone); text-wrap:pretty; }
+.creed-list__item b{ color:var(--void); font-weight:700; }
+
+/* ── 혜택 카드 — 이모지 제거, 인덱스 번호로 ── */
+.about-benefits-title{ font-size:clamp(18px,5.2vw,26px); letter-spacing:-.025em; text-wrap:balance; }
+.about-benefit-icon{ font-family:var(--mmt-display); font-size:clamp(22px,6vw,30px); font-weight:800; color:rgba(26,26,26,0.16); line-height:1; margin-bottom:12px; letter-spacing:.04em; }
+.about-benefit-title{ font-size:clamp(14px,3.8vw,16px); line-height:1.4; text-wrap:balance; }
+.about-benefit-desc{ font-size:clamp(13px,3.4vw,14px); line-height:1.65; text-wrap:pretty; }
+.about-benefit-desc b{ color:var(--void); font-weight:700; }  /* 핵심어 = 진하게(위계 색 구분) */
+
+/* ── 진행방식 탭 (직접방문·출장·톡상담) — 위계 정리 (구조·기능 불변) ── */
+.consult-section-title{ font-size:clamp(22px,5.8vw,30px); letter-spacing:-.03em; line-height:1.2; text-wrap:balance; }
+.process-section-title{ letter-spacing:.2em; }
+.method-intro-title{ font-size:clamp(16px,4.6vw,22px); letter-spacing:-.02em; text-wrap:balance; }
+.method-intro-desc{ font-size:clamp(14px,3.6vw,16px); line-height:1.6; text-wrap:pretty; }
+.process-step-title{ font-size:clamp(15px,4vw,18px); line-height:1.4; letter-spacing:-.01em; text-wrap:balance; }
+.process-step-desc{ font-size:clamp(13px,3.4vw,15px); line-height:1.6; text-wrap:pretty; }
+.method-note-item{ font-size:clamp(13px,3.4vw,14.5px); line-height:1.6; }
+.method-tip-text{ font-size:clamp(13px,3.4vw,14.5px); line-height:1.6; text-wrap:pretty; }
+.method-emotion-text{ font-size:clamp(15px,4vw,18px); line-height:1.6; text-wrap:balance; }
+
+/* ── Q&A — 위계 정리 (토글 기능 불변) ── */
+.qna-question-text{ font-size:clamp(14px,3.8vw,17px); line-height:1.4; text-wrap:pretty; }
+.qna-answer-text{ font-size:clamp(13px,3.5vw,15px); line-height:1.7; text-wrap:pretty; }
+.qna-answer-sub{ font-size:clamp(13px,3.3vw,14px); line-height:1.6; text-wrap:pretty; }
+
+/* ── 혜택 3카드 — PC 3열 (지속방문X 삭제 후) ── */
+@media screen and (min-width:768px){ .about-benefits-grid{ grid-template-columns:repeat(2,1fr); } } /* 4카드 = PC 2×2 */
+
+/* ── 진행방식 탭 PROCESS — 카드 → 에디토리얼 행 구조 리디자인 ── */
+.process-grid{ gap:0; max-width:520px; }
+.process-step{ background:transparent; border:0; border-bottom:1px solid var(--mm-border-l); border-radius:0; overflow:visible; align-items:center; gap:clamp(14px,4vw,20px); padding:clamp(16px,4.5vw,22px) 2px; }
+.process-step:last-child{ border-bottom:0; }
+.process-step-image{ width:clamp(52px,15vw,68px); height:clamp(52px,15vw,68px); background:rgba(26,26,26,0.035); border-radius:50%; }
+.process-step-number{ top:5px; left:5px; width:21px; height:21px; font-size:11px; }
+.process-step-content{ padding:0; }
+.process-arrow{ display:none; } /* 행 사이 hairline이 흐름 — 화살표 군더더기 제거 */
+.method-notes-card{ background:rgba(26,26,26,0.025); }
+
+/* ── Page Kit: 히어로·탭 라이트 통일 (다크→라이트 · 복원수리와 톤 일치) ── */
+/* 캐논 토큰 정렬 (값은 기존 --mm-* 와 동일, 이름만 Page Kit 표준) */
+.mamoru-consult-page{ --void:#1A1A1A; --stone:#4A4A4A; --warm-gray:#8A8580; --sand:#D4D0CB; --parchment:#EDEBE8; --cream:#FAF9F7; }
+/* 히어로 라이트 (Chosen, Not Sold 유지) */
+.consult-hero{ background:var(--cream); }
+.consult-hero-label{ background:rgba(26,26,26,.05); border-color:rgba(26,26,26,.10); color:var(--warm-gray); }
+.consult-hero-title, .consult-hero-title .chosen{ color:var(--void); }
+.consult-hero-title .not-sold{ color:var(--warm-gray); }
+.consult-hero-desc{ color:var(--stone); }
+.consult-hero-cta-primary{ background:var(--void); color:var(--cream); box-shadow:0 4px 16px rgba(26,26,26,.12); }
+.consult-hero-cta-secondary{ color:var(--warm-gray); }
+.consult-hero-cta-secondary:active{ color:var(--void); }
+/* 탭 바 = 라이트 (base 유지). 활성 = void 알약(base) — 다크 오버라이드 제거 */
+
+/* ── PC: 폭 통일 — 색 블록 전폭 풀블리드 + 내부만 중앙 (계단현상 제거) ── */
+.mamoru-consult-page{ overflow-x:hidden; } /* 100vw 풀블리드 가로 스크롤 방지 */
+@media screen and (min-width:768px){
+  /* 탭 바: 960 제약 해제 → 히어로처럼 전폭 다크 (탭은 내부 중앙 정렬 유지) */
+  .consult-tabs-container{ max-width:none; padding:16px; }
+  /* 색 블록(문제답·철칙·선언·혜택): 컨테이너(760)를 뚫고 전폭 */
+  .consult-why-wrap, .mmt-bleed{
+    margin-left:calc(50% - 50vw) !important;
+    margin-right:calc(50% - 50vw) !important;
+    width:100vw;
+  }
+  /* 풀블리드 내부 콘텐츠는 중앙 제약(답답하지 않게 720) — 철칙·선언은 자체 inner(600)로 OK, 혜택만 지정 */
+  .mmt-bleed > .about-benefits-title,
+  .mmt-bleed > .about-benefits-grid{ max-width:760px; margin-left:auto; margin-right:auto; }
+  .consult-why{ max-width:680px; }
+  /* 여백 — PC에서 답답하지 않도록 섹션 패딩↑ */
+  .consult-section{ padding:80px 40px; }
+}
+</style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 기존 스타일·트렌디 레이어 위에 덧입힘. 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 상담 기록(진단 리포트) / 시그니처: 상담 현장 사진 위 정밀 주석 / 연출 순간: 히어로 진입 1곳
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 0/2/4px · 흑백은 시그니처 사진만(일러스트 원래 색) -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.mamoru-consult-page{ word-break:keep-all; overflow-wrap:break-word; --mist:#B8B4AF; --graphite:#2D2D2D; --white:#FFFFFF; }
+.mamoru-consult-page *{ box-shadow:none !important; }
+.mamoru-consult-page [class*="consult-"], .mamoru-consult-page [class*="about-"], .mamoru-consult-page [class*="method-"],
+.mamoru-consult-page [class*="process-"], .mamoru-consult-page [class*="qna-"]{ border-radius:2px; }
+
+/* ── 1. 히어로 — 상담 현장 흑백 사진 + 정밀 주석 + 거대 CHOSEN ── */
+.consult-hero.b-hero{ position:relative; background:var(--void) !important; text-align:left !important; padding:0 !important; overflow:hidden; }
+.b-hero__stage{ position:relative; max-width:1100px; margin:0 auto; }
+.b-hero__photo{ position:relative; aspect-ratio:896/1195; width:100%; background:var(--parchment); }
+.b-hero__photo img{ width:100%; height:100%; object-fit:cover; filter:grayscale(1) contrast(1.05); display:block; }
+.b-anno{ position:absolute; inset:0; pointer-events:none; }
+.b-anno svg{ position:absolute; inset:0; width:100%; height:100%; }
+.b-anno line, .b-anno circle{ stroke:rgba(26,26,26,.82); stroke-width:1; fill:none; vector-effect:non-scaling-stroke; }
+.b-tag{ position:absolute; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--void); white-space:nowrap; }
+.b-tag small{ display:block; font-family:'Pretendard',sans-serif; font-size:11px; letter-spacing:0; text-transform:none; color:var(--stone); font-weight:500; margin-top:2px; }
+.b-hero__word{ position:absolute; left:14px; bottom:-0.17em; font-family:'Outfit',sans-serif; font-weight:900; font-size:clamp(70px,22vw,170px); line-height:.8; letter-spacing:-.05em; color:var(--cream); white-space:nowrap; margin:0; }
+.b-hero__plate{ display:none; }
+@media(min-width:640px){
+  .b-hero__stage{ padding:40px 32px 0; }
+  .b-hero__photo{ width:54%; margin-left:auto; }
+  .b-hero__plate{ display:block; position:absolute; left:32px; top:40px; width:calc(46% - 56px); border-top:1px solid rgba(250,249,247,.18); padding-top:14px; }
+  .b-hero__plate p{ font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--mist); line-height:2; }
+  .b-hero__plate b{ color:var(--cream); font-weight:700; }
+  .b-hero__word{ left:24px; font-size:clamp(120px,18vw,180px); }
+}
+.b-hero__body{ background:var(--cream); padding:clamp(36px,8vw,56px) max(20px, calc((100% - 760px)/2)) clamp(36px,8vw,52px); }
+@media(min-width:640px){ .b-hero__body{ padding-left:max(32px, calc((100% - 760px)/2)); padding-right:max(32px, calc((100% - 760px)/2)); } }
+.b-hero__body .consult-hero-label{ display:block; padding:0 !important; margin:0 !important; background:none !important; border:0 !important; font-family:'Outfit','Pretendard',sans-serif; font-size:11px !important; font-weight:700; letter-spacing:.2em; color:var(--warm-gray) !important; }
+.b-hero__body .consult-hero-title{ margin:12px 0 0 !important; font-family:'Outfit','Pretendard',sans-serif !important; font-size:clamp(40px,12vw,72px) !important; line-height:.95 !important; letter-spacing:-.05em !important; text-align:left; }
+.b-hero__body .consult-hero-title .chosen{ font-weight:900 !important; color:var(--void) !important; }
+.b-hero__body .consult-hero-title .not-sold{ display:block; font-size:1em !important; font-weight:300 !important; color:var(--warm-gray) !important; margin-top:2px !important; }
+.b-hero__body .consult-hero-desc{ margin:16px 0 0 !important; text-align:left; color:var(--stone) !important; font-size:clamp(15px,4vw,18px) !important; }
+.b-spec{ display:grid; grid-template-columns:repeat(3,1fr); margin-top:28px; border-top:1px solid var(--sand); }
+.b-spec div{ padding:14px 8px 0 0; }
+.b-spec dt{ font-family:'Outfit','Pretendard',sans-serif; font-size:clamp(26px,7vw,38px); font-weight:800; letter-spacing:-.03em; line-height:1; color:var(--void); font-variant-numeric:tabular-nums; }
+.b-spec dt span{ font-size:.5em; font-family:'Pretendard',sans-serif; }
+.b-spec dd{ margin-top:6px; font-size:12px; color:var(--warm-gray); line-height:1.5; }
+.b-hero__body .consult-hero-cta{ text-align:left !important; margin-top:28px; }
+.consult-hero-cta-primary{ border-radius:2px !important; }
+@keyframes b-draw{ from{ stroke-dashoffset:120; } to{ stroke-dashoffset:0; } }
+.b-anno line{ stroke-dasharray:120; animation:b-draw 1.1s .35s ease-out both; }
+@media (prefers-reduced-motion: reduce){ .b-anno line{ animation:none !important; stroke-dasharray:none; } }
+
+/* ── 2. 탭 — 글자 탭 + 굵은 밑줄 ── */
+.mamoru-consult-page .consult-tab{ flex:0 0 auto !important; border:0 !important; border-radius:0 !important; background:transparent !important; color:var(--warm-gray) !important; font-weight:600 !important; padding:8px 12px !important; position:relative; }
+.mamoru-consult-page .consult-tab.active{ color:var(--void) !important; font-weight:800 !important; background:transparent !important; }
+.mamoru-consult-page .consult-tab.active::after{ content:''; position:absolute; left:12px; right:12px; bottom:0; height:2px; background:var(--void); }
+.mamoru-consult-page .consult-tabs{ justify-content:center !important; gap:2px !important; }
+.mamoru-consult-page .mmt-tab-label{ font-family:'Outfit','Pretendard',sans-serif; letter-spacing:.14em; }
+
+/* ── 3. 왜, 마모루 상담인가 — 왼쪽 거대 번호 / 문제(취소선) → 답(굵게) ── */
+.mamoru-consult-page .cwhy__item{ display:grid; grid-template-columns:clamp(64px,19vw,128px) 1fr; column-gap:clamp(12px,4vw,28px); align-items:start; }
+.mamoru-consult-page .cwhy__item > *{ grid-column:2; }
+.mamoru-consult-page .cwhy__idx{ grid-column:1 !important; grid-row:1 / span 4; font-size:0 !important; margin:0 !important; }
+.mamoru-consult-page .cwhy__idx b{ font-family:'Outfit',sans-serif; font-size:clamp(56px,16vw,104px); font-weight:300 !important; line-height:.8; letter-spacing:-.06em; color:var(--stone) !important; font-variant-numeric:tabular-nums; }
+.mamoru-consult-page .cwhy__problem{ text-decoration:line-through; text-decoration-color:rgba(138,133,128,.55); text-decoration-thickness:1px; font-size:13px !important; }
+.mamoru-consult-page .cwhy__cue{ display:none !important; }
+.mamoru-consult-page .cwhy__atitle{ margin-top:12px !important; font-family:'Pretendard',sans-serif !important; font-weight:900 !important; letter-spacing:-.04em !important; }
+.mamoru-consult-page .cwhy__answer b{ color:var(--cream); }
+.mamoru-consult-page .cwhy__title{ font-weight:900 !important; }
+
+/* ── 4. 상담철칙 — 거대 번호 + 가는 선 ── */
+.mamoru-consult-page .about-principles-title{ color:var(--void) !important; font-family:'Pretendard',sans-serif; font-size:clamp(24px,6.6vw,34px) !important; font-weight:900; letter-spacing:-.04em !important; text-align:left !important; max-width:600px; margin:0 auto 20px !important; }
+.mamoru-consult-page .creed-list{ counter-reset:creed; }
+.mamoru-consult-page .creed-list__item{ counter-increment:creed; display:grid; grid-template-columns:clamp(52px,14vw,88px) 1fr; column-gap:clamp(12px,4vw,24px); align-items:start; border-top:1px solid rgba(26,26,26,.16) !important; padding-top:clamp(22px,5vw,30px) !important; }
+.mamoru-consult-page .creed-list__item::before{ content:counter(creed, decimal-leading-zero); font-family:'Outfit',sans-serif; font-weight:300; font-size:clamp(40px,11vw,64px); line-height:.82; letter-spacing:-.06em; color:var(--sand); font-variant-numeric:tabular-nums; }
+.mamoru-consult-page .creed-list__item b{ font-weight:900 !important; }
+
+/* ── 5. 마모루에서 구매하시면 — 거대 번호 카드 → 가는 선 그리드 ── */
+.mamoru-consult-page .about-benefits-title{ font-family:'Pretendard',sans-serif; font-weight:900 !important; font-size:clamp(24px,6.6vw,34px) !important; letter-spacing:-.04em !important; text-align:left !important; }
+.mamoru-consult-page .about-benefit-card{ background:transparent !important; border:0 !important; border-top:1px solid var(--void) !important; border-radius:0 !important; padding:16px 0 4px !important; text-align:left !important; }
+.mamoru-consult-page .about-benefit-icon{ font-family:'Outfit',sans-serif !important; font-weight:300 !important; font-size:clamp(44px,12vw,64px) !important; line-height:.82 !important; letter-spacing:-.06em !important; color:var(--sand) !important; margin-bottom:10px !important; font-variant-numeric:tabular-nums; }
+.mamoru-consult-page .about-benefit-title{ font-weight:900 !important; letter-spacing:-.03em; font-size:clamp(16px,4.4vw,19px) !important; }
+.mamoru-consult-page .about-benefit-link{ background:none !important; padding:0 0 1px !important; border:0 !important; border-bottom:1px solid var(--void) !important; border-radius:0 !important; font-weight:700; color:var(--void) !important; }
+/* 상담 현장 사진은 히어로로 이동 — 본문의 같은 사진 자리는 숨김(중복 방지) */
+.mamoru-consult-page .about-block > .about-image:has(img[src*="상담현장"]){ display:none; }
+
+/* ── 6. 진행방식 탭 — 제목·PROCESS 거대 번호 행 ── */
+.mamoru-consult-page .consult-section-title{ font-family:'Pretendard',sans-serif !important; font-weight:900 !important; font-size:clamp(26px,7vw,36px) !important; letter-spacing:-.04em !important; }
+.mamoru-consult-page .consult-section-divider{ height:2px !important; width:38px !important; border-radius:0 !important; }
+.mamoru-consult-page .method-intro-title{ font-weight:900 !important; }
+.mamoru-consult-page .process-section-title{ font-family:'Outfit',sans-serif; font-size:11px !important; font-weight:700; color:var(--warm-gray) !important; text-align:left !important; max-width:520px; margin-left:auto !important; margin-right:auto !important; }
+.mamoru-consult-page .process-grid{ border-top:1px solid var(--void); }
+.mamoru-consult-page .process-step{ display:grid !important; grid-template-columns:clamp(52px,14vw,84px) 1fr; column-gap:clamp(12px,4vw,22px); align-items:start !important; text-align:left; }
+.mamoru-consult-page .process-step-image{ width:auto !important; height:auto !important; background:none !important; border-radius:0 !important; display:block !important; }
+.mamoru-consult-page .process-step-number{ position:static !important; width:auto !important; height:auto !important; background:none !important; border-radius:0 !important; display:block !important; color:var(--sand) !important; font-family:'Outfit',sans-serif !important; font-weight:300 !important; font-size:clamp(44px,12vw,64px) !important; line-height:.82 !important; letter-spacing:-.06em; font-variant-numeric:tabular-nums; }
+.mamoru-consult-page .process-step-title{ font-weight:900 !important; letter-spacing:-.03em !important; }
+.mamoru-consult-page .action-hint{ border-radius:2px !important; }
+.mamoru-consult-page .method-notes-card{ background:transparent !important; border:0 !important; border-left:2px solid var(--void) !important; border-radius:0 !important; padding:4px 0 4px 14px !important; }
+.mamoru-consult-page .method-tip{ background:transparent !important; border:0 !important; border-top:1px solid var(--sand) !important; border-radius:0 !important; padding:12px 0 0 !important; }
+.mamoru-consult-page .method-tip-label{ font-family:'Outfit',sans-serif; font-weight:800; letter-spacing:.12em; }
+.mamoru-consult-page .method-location-card{ background:transparent !important; border:0 !important; border-top:1px solid var(--void) !important; border-radius:0 !important; text-align:left !important; padding:16px 0 0 !important; }
+.mamoru-consult-page .method-location-card a{ border-radius:2px !important; }
+.mamoru-consult-page .method-location-address{ font-weight:800; }
+
+/* ── 7. Q&A — 가는 선 목록 ── */
+.mamoru-consult-page .qna-item:first-child{ border-top:1px solid var(--void) !important; }
+.mamoru-consult-page .qna-item{ background:transparent !important; border:0 !important; border-bottom:1px solid var(--sand) !important; border-radius:0 !important; margin:0 !important; }
+.mamoru-consult-page .qna-question{ padding:18px 2px !important; }
+.mamoru-consult-page .qna-question-text{ font-weight:800 !important; letter-spacing:-.02em; }
+
+/* ── 8. 하단 플로팅 CTA — 그림자 대신 가는 선 ── */
+#consultFloatingCta{ border-top:1px solid rgba(0,0,0,.08); }
+#consultFloatingCta button{ border-radius:2px !important; }
+</style>
+
+</head>
+<body>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본 projects/consulting/page_guide.html 에 B-09 덧입힘(문구·탭·버튼·스크립트 동일). OK → 원본 반영 / 별로 → 삭제 -->
+<div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — 상담 안내 /61. 문구·탭·버튼은 같고 디자인만 다릅니다. 히어로 일러스트 → 상담 현장 사진+주석(본문의 같은 사진은 히어로로 옮김).</span>
+    <a href="https://page.mamoru.kr/projects/consulting/page_guide.html" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+
+<div class="mamoru-consult-page">
+
+  <!-- =========================================================
+       [1] 히어로 섹션
+       ========================================================= -->
+  <!-- B-09 히어로: 상담 현장 흑백 사진 + 정밀 주석(시그니처) + 거대 CHOSEN + 숫자 스펙 (클래스 consult-hero 유지 — 스크립트 참조) -->
+  <section class="consult-hero b-hero">
+    <div class="b-hero__stage">
+      <div class="b-hero__plate" aria-hidden="true">
+        <p><b>REC. CONSULTATION</b></p>
+        <p>SUBJECT — STYLE · HABIT · BUDGET</p>
+        <p>METHOD — VISIT / FIELD / TALK</p>
+        <p>FEE — FREE · 1 HOUR</p>
+      </div>
+      <div class="b-hero__photo">
+        <!-- [IMG] 히어로 사진 — 상담 현장(흑백 처리는 CSS) -->
+        <img src="../consulting/images/상담현장.png" alt="마모루 상담 현장 — 마네킹과 비교용 가위들">
+        <div class="b-anno" aria-hidden="true">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+            <circle cx="18" cy="42" r="1.4"/><line x1="19.1" y1="40.9" x2="40" y2="27"/>
+            <circle cx="67" cy="72" r="1.4"/><line x1="67" y1="70.6" x2="67" y2="55"/>
+          </svg>
+          <span class="b-tag" style="left:41%;top:21.5%">01 TEST<small>직접 잡고 가위 테스트</small></span>
+          <span class="b-tag" style="left:60%;top:47.5%">02 COMPARE<small>여러 가위 비교</small></span>
+        </div>
+      </div>
+      <p class="b-hero__word" aria-hidden="true">CHOSEN</p>
+    </div>
+    <div class="b-hero__body">
+      <span class="consult-hero-label fade-in">상담 안내</span>
+      <h1 class="consult-hero-title fade-in delay-1">
+        <span class="chosen">Chosen,</span>
+        <span class="not-sold">Not Sold</span>
+      </h1>
+      <p class="consult-hero-desc fade-in delay-2">
+        권하지 않습니다<br>
+        올바른 선택을 돕습니다
+      </p>
+      <dl class="b-spec fade-in delay-3">
+        <div><dt>무료</dt><dd>상담 예약<br>비용</dd></div>
+        <div><dt>1<span>시간</span></dt><dd>상담 시간<br>기준</dd></div>
+        <div><dt>3<span>가지</span></dt><dd>방문·출장·톡<br>진행방식</dd></div>
+      </dl>
+      <!-- ✨ Hero 영역 인라인 CTA — PC 전용 (모바일은 wrapper floating으로 단일화) -->
+      <div class="consult-hero-cta fade-in delay-4">
+        <button class="consult-hero-cta-primary" onclick="goToForm();">상담 접수하기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- [2] 카테고리 탭 - 개선: 가로 스크롤 -->
+  <!-- [2] 탭 — 1행: 상담철칙 + Q&A / 2행: 상담방법 3종 + PC 인라인 CTA -->
+  <div class="consult-tabs-container">
+    <div class="consult-tabs">
+      <button class="consult-tab active" data-tab="about">마모루 컨설팅</button>
+      <button class="consult-tab" data-tab="qna">Q&A</button>
+    </div>
+    <p class="mmt-tab-label" style="font-size: 11px; color: var(--mm-text-d3); font-weight: 500; margin: 2px 0 4px; text-align: center;">상담 진행방식</p>
+    <div class="consult-tabs">
+      <button class="consult-tab" data-tab="visit">직접방문</button>
+      <button class="consult-tab" data-tab="dispatch">출장요청</button>
+      <button class="consult-tab" data-tab="talk">톡상담</button>
+    </div>
+    <!-- PC 탭 CTA 제거 (ADDENDUM_IMWEB 중복 CTA 금지 룰 준수) — Hero/모바일 floating/페이지 끝 3중으로 충분 -->
+  </div>
+
+  <!-- =========================================================
+       [2.5] 마모루 컨설팅 탭
+       페이지 간 메시지 분담 (사장님 룰):
+         - brand/page_intro = 시장 문제점 + 마모루 철학 (Why)
+         - 이 페이지 = 마모루 컨설팅이 어떻게 다른가 (How)
+       시장 문제점 3블록은 brand 페이지와 중복이라 제거 — 이 페이지는 차별화/약속/철칙에 집중
+       ========================================================= -->
+  <div class="consult-tab-content active" id="tab-about">
+    <div class="about-block">
+      <!-- ⓪ 왜, 마모루 상담인가 — 흔한 영업 vs 마모루 상담 (문제→답) -->
+      <!-- [TEXT] 문제/답 문구 수정은 각 cwhy__problem / cwhy__atitle / cwhy__answer -->
+      <div class="consult-why-wrap">
+        <div class="consult-why">
+          <p class="cwhy__kicker">MAMORU CONSULTING</p>
+          <h3 class="cwhy__title">Therefore, MAMORU  </h3>
+          <p class="cwhy__legend"><span class="cwhy__dim">현재 가위업계 문제점,</span> <span class="cwhy__on">마모루의 한마디</span></p>
+          <div class="cwhy__rule"></div>
+
+          <article class="cwhy__item fade-in">
+            <div class="cwhy__idx"><b>01</b> / 03</div>
+            <p class="cwhy__problem">방문딜러가 제품이 좋다고 권합니다<br>
+방문딜러가 새로 살때가 되었다 합니다<br>
+높은 금액이니 오래 쓸 수 있다 말합니다<br>사용중 불편하면 딜러에게 연락합니다</p>
+            <div class="cwhy__cue"></div>
+            <h4 class="cwhy__atitle">프레임을 벗어날 '비교' 를 권합니다</h4>
+            <p class="cwhy__answer">그 고객에게 좋은가위의 기준은 어떻게될까요?<br>
+좋은 가격과 좋은 가위의 기준은요?<br>
+온전히 판매자의 흐름 안에서 기준이 생기게 됩니다<br>
+<b>비교하세요</b> <br>
+고객을 위하는 브랜드만이 나아갈 것입니다</p>
+          </article>
+
+          <article class="cwhy__item fade-in">
+            <div class="cwhy__idx"><b>02</b> / 03</div>
+            <p class="cwhy__problem">너무나도 자연스러운 가위 할부<br>
+매출을 늘리려 가위를 써야하는데<br>
+부담이 너무 큽니다<br> 다들 그렇게 사는데 어쩌겠어요</p>
+            <div class="cwhy__cue"></div>
+            <h4 class="cwhy__atitle">미용이 취미생활인가요?</h4>
+            <p class="cwhy__answer">골프와같이 취미를 위한 구매라면 이해합니다<br>
+미용은 고객님들께 방향이자 직업입니다<br>
+상황에, 지갑에 맞추어 구매해야합니다<br>
+즐길수있는 미용가위가격을 보이겠습니다</p>
+          </article>
+
+          <article class="cwhy__item fade-in">
+            <div class="cwhy__idx"><b>03</b> / 03</div>
+            <p class="cwhy__problem">재질, 형태, 디자인 .. <br>
+인터넷을 검색해봐도<br>
+미용가위의 비싼 이유만 있습니다<br>
+결국, 고객은 자주보이는 딜러만 찾게됩니다</p>
+            <div class="cwhy__cue"></div>
+            <h4 class="cwhy__atitle">좋은 가위의 기준, 알려드립니다</h4>
+            <p class="cwhy__answer">필요한 상황에 필요한 구매인가?<br>
+커트스타일, 환경, 습관에 적당한가?<br>
+내 경력에도 안전한 구매인가?<br>
+가격 부담이 없는가?<br>
+이 모든것을 책임지겠습니다<br>
+마모루상담의 가치를 경험하세요</p>
+          </article>
+        </div>
+      </div>
+
+      <!-- ③ 이미지 영역 -->
+      <!-- [IMG] 사진 넣기: projects/consulting/images/상담현장.jpg 에 파일 저장 (가로:세로 3:2, 권장 1200×800px) -->
+      <div class="about-image fade-in" style="margin-top: 32px;">
+        <img src="../consulting/images/상담현장.jpg" alt="마모루 상담 현장"
+             onerror="if(!this.dataset.png){this.dataset.png=1;this.src='../consulting/images/상담현장.png';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}">
+        <div class="about-image-placeholder" style="display:none;">상담 현장 이미지<br>images/상담현장.jpg 또는 .png</div>
+      </div>
+
+      <!-- ④ 상담철칙 — parchment 배경 (실무 원칙 먼저) -->
+      <div style="background: #EDEBE8; margin: 32px -20px 0; padding: 48px 20px;" class="fade-in mmt-bleed">
+        <div class="about-principles" style="padding-bottom: 0;">
+          <p class="about-principles-title">상담철칙</p>
+          <!-- [TEXT] 리스트 항목 — 중요 문구는 <b>...</b> 로 볼드 처리 -->
+          <ul class="creed-list">
+            <li class="creed-list__item fade-in">
+              <p>제품을 보이기보다, <b>고객을 살피겠습니다</b><br>좋은 가위의 기준은 고객을 파악해야 알 수 있기에</p>
+            </li>
+            <li class="creed-list__item fade-in">
+              <p><b>불필요한 구매가 없도록</b><br>기존 가위의 단순한 불편으로 인한 구매는 <b>복원수리</b>라는 안전장치가 있습니다<br>눈앞의 매출보다, 고객님의 <b>믿을 구석</b>이 되고 싶습니다</p>
+            </li>
+            <li class="creed-list__item fade-in">
+              <p><b>고객님께 맞는 제품이 없다면,</b><br>타사의 상담과 제품을 알아보시길 말씀드립니다<br>당장의 판매보다, 만족할 수 있는 구매를 지향합니다<br>많은 고객이 선택할 수 있는 넓은 폭을 구축하겠습니다</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ⑤ 큰 메시지 — 다크 배경으로 강한 대비 (상담철칙 → 결심 유도) -->
+      <div style="background: var(--mm-bg-dark); margin: 0 -20px; padding: 56px 20px;" class="fade-in mmt-bleed">
+        <div style="max-width: 600px; margin: 0 auto; text-align: center;">
+          <p style="font-family: 'Outfit','Plus Jakarta Sans',sans-serif; font-size: clamp(26px,7vw,42px); font-weight: 800; color: var(--mm-text-w); line-height: 1.12; letter-spacing: 0.005em; text-wrap: balance;">
+            CUT THE FAKE,<br>KEEP THE REAL
+          </p>
+        </div>
+      </div>
+
+      <!-- ⑦ 이미지 영역 -->
+      <!-- [IMG] 사진 넣기: projects/consulting/images/복원수리.jpg 에 파일 저장 (가로:세로 3:2, 권장 1200×800px) -->
+      <div class="about-image fade-in" style="margin-top: 32px;">
+        <img src="../consulting/images/복원수리.png" alt="마모루 복원수리 / 상담"
+             onerror="if(!this.dataset.png){this.dataset.png=1;this.src='../consulting/images/복원수리.png';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}">
+        <div class="about-image-placeholder" style="display:none;">복원수리 / 상담 이미지<br>images/복원수리.jpg 또는 .png</div>
+      </div>
+
+      <!-- ⑧ 마모루에서 구매하시면 — 배경 구분 + 4카드 (위계: 번호 흐림 → 제목 진함 → 설명 회색·핵심어 볼드) -->
+      <div style="background: #EDEBE8; margin: 32px -20px 0; padding: 48px 20px 40px;" class="fade-in mmt-bleed">
+        <h3 class="about-benefits-title">마모루에서 구매하시면</h3>
+        <div class="about-benefits-grid">
+          <div class="about-benefit-card fade-in">
+            <div class="about-benefit-icon">01</div>
+            <h4 class="about-benefit-title">복원수리 50% 할인</h4>
+            <p class="about-benefit-desc">정품 마모루 가위는 <b>할인적용</b>되어 복원수리 진행</p>
+            <span class="about-benefit-link" onclick="window.parent.postMessage({type:'MAMORU_NAVIGATE',url:'/60'},'*')">복원수리 안내 →</span>
+          </div>
+          <div class="about-benefit-card fade-in delay-1">
+            <div class="about-benefit-icon">02</div>
+            <h4 class="about-benefit-title">원스톱 AS 접수</h4>
+            <p class="about-benefit-desc">내일 바로 수거<br><b>2~3일</b>이면 다시 손에<br>매장방문 당일수리도 OK</p>
+          </div>
+          <div class="about-benefit-card fade-in delay-2">
+            <div class="about-benefit-icon">03</div>
+            <h4 class="about-benefit-title">가위 날변형 할인</h4>
+            <p class="about-benefit-desc">스타일이 바뀌면<br>가위도 맞춤으로<br><b>날 변형 가공</b>도 할인적용</p>
+          </div>
+          <div class="about-benefit-card fade-in delay-3">
+            <div class="about-benefit-icon">04</div>
+            <h4 class="about-benefit-title">가위에 똑똑해지는 정보</h4>
+            <p class="about-benefit-desc"><b>상술 간파</b> · 불필요한 지출 예방 · 나에게 맞는 가위 고르는 법</p>
+          </div>
+        </div>
+      </div><!-- /benefits parchment bg -->
+
+      <!-- ⑨ 클로징 다크 띠 — 비교 권유 (브랜드 자신감) -->
+      <div style="background: var(--mm-bg-dark); margin: 32px -20px 0; padding: clamp(56px,13vw,88px) 20px;" class="fade-in mmt-bleed">
+        <div style="max-width: 600px; margin: 0 auto; text-align: center;">
+          <p style="font-size: clamp(15px,4vw,19px); color: var(--mm-text-w2); line-height: 1.75; letter-spacing: -0.01em;">
+            비교하셔도 됩니다<br>
+            <b style="color: var(--mm-text-w); font-weight: 700;">아니, 비교해주세요</b>
+          </p>
+          <p style="margin-top: 20px; font-family: 'Outfit','Plus Jakarta Sans','Pretendard',sans-serif; font-size: clamp(21px,5.8vw,32px); font-weight: 800; color: var(--mm-text-w); line-height: 1.28; letter-spacing: -0.02em; text-wrap: balance;">
+            고객을 위한 마음,<br>누구보다 자신있습니다
+          </p>
+        </div>
+      </div>
+    </div><!-- /about-block -->
+  </div><!-- /tab-about -->
+
+  <!-- =========================================================
+       [4] 직접방문 탭
+       ========================================================= -->
+  <div class="consult-tab-content" id="tab-visit">
+    <div class="tab-character">
+      <div class="tab-character-image">
+        <img class="fr-fic fr-dii" src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/e23be01a7b4cf.png" alt="직접방문_아이콘.png">
+      </div>
+    </div>
+    <section class="consult-section" style="padding-top: 16px;">
+      <h2 class="consult-section-title">직접방문</h2>
+      <div class="consult-section-divider"></div>
+
+      <div class="method-intro">
+        <p class="method-intro-desc">고객님이 날짜와 시간을 달력에서 체크하여<br>방문해주시는 방법입니다</p>
+      </div>
+
+      <div class="process-section">
+        <h3 class="process-section-title">PROCESS</h3>
+        <div class="process-grid">
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">1</span>
+              <!-- ✏️ 수정가능: 직접방문 STEP1 이미지 (src URL만 교체) -->
+              <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF -->
+              <!-- <img src="이미지URL" alt="예약" style="width:48px;height:48px;object-fit:contain;"> -->
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">원하는 요일, 시간 예약</h4>
+              <p class="process-step-desc">달력에서 희망 일정을 선택하여 접수합니다</p>
+            </div>
+          </div>
+
+          <div class="process-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M6 14l6 6 6-6"/></svg></div>
+
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">2</span>
+              <!-- ✏️ 수정가능: 직접방문 STEP2 이미지 (src URL만 교체) -->
+              <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF -->
+              <!-- <img src="이미지URL" alt="상담진행" style="width:48px;height:48px;object-fit:contain;"> -->
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">예약일 방문하여 상담진행</h4>
+              <p class="process-step-desc">가위 테스트는 물론,<br>고객님께 딱 맞는 가위를 안내드립니다</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="method-notes">
+        <div class="method-notes-card">
+          <div class="method-notes-list">
+            <p class="method-note-item">당일예약은 불가합니다</p>
+            <p class="method-note-item">상담시간은 1시간 기준입니다</p>
+            <p class="method-note-item">상담인원이 2명 이상일 경우 접수 시 메모에 작성해주세요</p>
+          </div>
+
+          <div class="method-tip">
+            <span class="method-tip-label">Tip!</span>
+            <p class="method-tip-text">사용중이신 가위를 챙기신다면 <br>무상점검 및 꿀팁을 진행&제공해드립니다</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 찾아오시는 길 -->
+      <div class="method-location">
+        <div class="method-location-card">
+          <p class="method-location-label">찾아오시는 길</p>
+          <p class="method-location-address">서울특별시 구로구 부광로 88 SKV1,<br>B동 311호 마모루</p>
+          <a href="https://naver.me/GtYtEMSh" target="_blank" rel="noopener"
+            style="display: inline-block; margin-top: 12px; padding: 10px 22px; background: var(--mm-ink); color: var(--mm-text-w); border-radius: 999px; font-size: 13px; font-weight: 600; text-decoration: none; -webkit-tap-highlight-color: transparent;">
+            네이버 지도로 보기 →
+          </a>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <!-- =========================================================
+       [5] 출장요청 탭
+       ========================================================= -->
+  <div class="consult-tab-content" id="tab-dispatch">
+    <div class="tab-character">
+      <div class="tab-character-image">
+        <img class="fr-fic fr-dii" src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/1e19cedccfb2a.png" alt="출장상담진행.png">
+      </div>
+    </div>
+    <section class="consult-section" style="padding-top: 16px;">
+      <h2 class="consult-section-title">출장상담요청</h2>
+      <div class="consult-section-divider"></div>
+
+      <div class="method-intro">
+        <p class="method-intro-title">마모루가 고객님께 방문합니다</p>
+      </div>
+
+      <div class="process-section">
+        <h3 class="process-section-title">PROCESS</h3>
+        <div class="process-grid">
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">1</span>
+              <!-- ✏️ 수정가능: 출장 STEP1 이미지 (src URL만 교체) -->
+              <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF -->
+              <!-- <img src="이미지URL" alt="접수" style="width:48px;height:48px;object-fit:contain;"> -->
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">출장 상담 접수</h4>
+              <p class="process-step-desc">희망 일정과 주소를 입력해주세요</p>
+            </div>
+          </div>
+
+          <div class="process-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M6 14l6 6 6-6"/></svg></div>
+
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">2</span>
+              <!-- ✏️ 수정가능: 출장 STEP2 이미지 (src URL만 교체) -->
+              <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF -->
+              <!-- <img src="이미지URL" alt="일정확정" style="width:48px;height:48px;object-fit:contain;"> -->
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">일정 확정 안내</h4>
+              <p class="process-step-desc">알림톡으로 방문 일정을 안내드립니다</p>
+            </div>
+          </div>
+
+          <div class="process-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M6 14l6 6 6-6"/></svg></div>
+
+          <div class="process-step process-step-action">
+            <div class="process-step-image">
+              <span class="process-step-number">3</span>
+              <!-- ✏️ 수정가능: 출장 STEP3 이미지 (src URL만 교체) -->
+              <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF -->
+              <!-- <img src="이미지URL" alt="일정조율" style="width:48px;height:48px;object-fit:contain;"> -->
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">시간이 안 되시나요?</h4>
+              <p class="process-step-desc">알림톡에서 시간 재조율 요청이 가능합니다</p>
+              <span class="action-hint">버튼 눌러 일정 조율</span>
+            </div>
+          </div>
+
+          <div class="process-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M6 14l6 6 6-6"/></svg></div>
+
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">4</span>
+              <!-- ✏️ 수정가능: 출장 STEP4 이미지 (src URL만 교체) -->
+              <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF -->
+              <!-- <img src="이미지URL" alt="방문상담" style="width:48px;height:48px;object-fit:contain;"> -->
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">확정일자에 방문 상담 진행</h4>
+              <p class="process-step-desc">고객님 매장에서 직접 상담을 진행합니다</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="method-notes">
+        <div class="method-notes-card">
+          <div class="method-notes-list">
+            <p class="method-note-item">상담시간은 1시간 기준입니다</p>
+            <p class="method-note-item">인원이 2명 이상일 경우 접수 메모란에 적어주세요</p>
+            <p class="method-note-item">상담접수가 몰리는 경우 일정제안 알림톡이 지연될 수 있습니다</p>
+          </div>
+
+          <div class="method-tip">
+            <span class="method-tip-label">Tip!</span>
+            <p class="method-tip-text">사용중이신 가위를 챙기신다면<br>무상점검 및 꿀팁을 진행&제공해드립니다</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <!-- =========================================================
+       [6] 톡상담 탭
+       ========================================================= -->
+  <div class="consult-tab-content" id="tab-talk">
+    <!-- ✏️ 수정가능: 톡상담 캐릭터 이미지 (src URL만 교체) -->
+    <!-- 📐 추천: 120x120px PNG(투명배경) -->
+    <div class="tab-character">
+      <div class="tab-character-image">
+        <!-- <img src="톡상담_캐릭터URL" alt="톡상담"> -->
+        <div class="tab-character-placeholder">캐릭터</div>
+      </div>
+    </div>
+    <section class="consult-section" style="padding-top: 16px;">
+      <h2 class="consult-section-title">톡상담</h2>
+      <div class="consult-section-divider"></div>
+
+      <div class="method-intro">
+        <p class="method-intro-desc">카카오톡 상담채널로 진행됩니다</p>
+      </div>
+
+      <div class="process-section">
+        <h3 class="process-section-title">PROCESS</h3>
+        <div class="process-grid">
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">1</span>
+              <!-- ✏️ 수정가능: 톡상담 STEP1 이미지 (src URL만 교체) -->
+              <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF -->
+              <!-- <img src="이미지URL" alt="간편진단" style="width:48px;height:48px;object-fit:contain;"> -->
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">간편진단 진행</h4>
+              <p class="process-step-desc">스타일과 사용습관을 진단해주세요</p>
+            </div>
+          </div>
+
+          <div class="process-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M6 14l6 6 6-6"/></svg></div>
+
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">2</span>
+              <!-- ✏️ 수정가능: 톡상담 STEP2 이미지 (src URL만 교체) -->
+              <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF -->
+              <!-- <img src="이미지URL" alt="톡상담접수" style="width:48px;height:48px;object-fit:contain;"> -->
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">톡상담 접수</h4>
+              <p class="process-step-desc">진단 결과와 함께 상담을 접수합니다</p>
+            </div>
+          </div>
+
+          <div class="process-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M6 14l6 6 6-6"/></svg></div>
+
+          <div class="process-step">
+            <div class="process-step-image">
+              <span class="process-step-number">3</span>
+              <!-- ✏️ 수정가능: 톡상담 STEP3 이미지 (src URL만 교체) -->
+              <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF -->
+              <!-- <img src="이미지URL" alt="맞춤상담" style="width:48px;height:48px;object-fit:contain;"> -->
+            </div>
+            <div class="process-step-content">
+              <h4 class="process-step-title">맞춤 상담 진행</h4>
+              <p class="process-step-desc">카카오톡으로 맞춤 안내를 드립니다</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="method-notes">
+        <div class="method-notes-card">
+          <div class="method-notes-list">
+            <p class="method-note-item">톡상담 진행 전 페이지 내 간편진단으로 스타일과 사용습관을 진단해주세요 (상담사에게 전달됩니다)</p>
+            <p class="method-note-item">상담 전 주로 쓰는 메인가위의 사진을 찍어주시면 상담 시 도움이 될 수 있습니다</p>
+            <p class="method-note-item">기존 사용중인 가위의 불편으로 인한 상담일 경우, 해당 가위의 전면 사진 · 날 벌린 사진 각 한 장씩 찍어 준비해주세요</p>
+          </div>
+
+          <div class="method-tip">
+            <span class="method-tip-label">Tip!</span>
+            <p class="method-tip-text">간편진단을 먼저 진행하시면<br>상담사가 고객님의 스타일을 미리 파악하여 더 정확한 안내가 가능합니다</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <!-- =========================================================
+       [7] Q&A 탭
+       ========================================================= -->
+  <div class="consult-tab-content" id="tab-qna">
+    <section class="consult-section" style="padding-top: 32px;">
+      <h2 class="consult-section-title">자주 묻는 질문</h2>
+      <div class="consult-section-divider"></div>
+
+      <div class="qna-list">
+        <div class="qna-item">
+          <div class="qna-question">
+            <p class="qna-question-text">상담 예약에 비용은 얼마인가요?</p>
+            <span class="qna-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
+          </div>
+          <div class="qna-answer">
+            <p class="qna-answer-text">무료입니다 현재 어느 회사던 무료이니 타사와 비교를 해보시는것도 추천드립니다</p>
+          </div>
+        </div>
+
+        <div class="qna-item">
+          <div class="qna-question">
+            <p class="qna-question-text">수도권이 아닌데 출장 상담 접수하면 얼마 후에 방문주시나요?</p>
+            <span class="qna-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
+          </div>
+          <div class="qna-answer">
+            <p class="qna-answer-text">보통 1~2주 이내로 방문드리지만 지역에 따라 출장제안 일정이 늦어질 수 있습니다</p>
+            <div class="qna-answer-sub">
+              급하신 경우라면 마모루 매장방문으로 예약주시면 보다 빠르게 상담과 제품수령이 가능합니다
+            </div>
+          </div>
+        </div>
+
+        <div class="qna-item">
+          <div class="qna-question">
+            <p class="qna-question-text">가장 빠른 상담방법은 어떻게 될까요?</p>
+            <span class="qna-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
+          </div>
+          <div class="qna-answer">
+            <p class="qna-answer-text">톡상담 → 매장방문 → 출장상담 순으로 상담이 수월합니다</p>
+          </div>
+        </div>
+
+        <div class="qna-item">
+          <div class="qna-question">
+            <p class="qna-question-text">가위상담 시 가위 복원수리도 맡길 수 있나요?</p>
+            <span class="qna-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
+          </div>
+          <div class="qna-answer">
+            <p class="qna-answer-text">가능합니다</p>
+            <div class="qna-answer-sub">
+              <strong>매장방문 시</strong> 당일 수리도 가능 일정이 바쁜경우 맡겨주시면 수리작업 후 배송으로 보내드립니다<br><br>
+              <strong>출장상담 시</strong> 가위상담 진행하며 맡겨주시면 수리작업 후 발송으로 처리드립니다 (상담일 기준 2~3일 안으로 수령 생각해주시면 됩니다)<br><br>
+              <strong>톡상담 시</strong> 저희 복원수리 접수를 진행해주시면 됩니다
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- =========================================================
+       [8] 페이지 끝 CTA — 스크롤 끝까지 본 사용자용 (3중 보장 외 추가)
+       ========================================================= -->
+  <div class="consult-cta-fixed">
+    <!-- [URL] 간편진단: /55, 상담접수: /56 -->
+    <button class="consult-cta-btn consult-cta-secondary" onclick="goToDiag();">간편진단 체험하기</button>
+    <button class="consult-cta-btn consult-cta-primary" onclick="goToForm();">상담접수 진행하기</button>
+  </div>
+
+</div>
+
+<!-- =========================================================
+     [9] 모바일 플로팅 하단 CTA — 항상 화면 하단 고정 (3중 보장 3/3)
+     PC에서는 .consult-floating-cta { display: none } 처리
+     ========================================================= -->
+<div class="consult-floating-cta" id="consultFloatingCta">
+  <button class="consult-floating-cta-btn consult-floating-cta-secondary" onclick="goToDiag();" aria-label="간편진단">진단</button>
+  <button class="consult-floating-cta-btn consult-floating-cta-primary" onclick="goToForm();">상담 접수하기</button>
+</div>
+
+<script>
+// 탭 전환
+document.querySelectorAll('.consult-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.consult-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.consult-tab-content').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('tab-' + this.getAttribute('data-tab')).classList.add('active');
+
+    // 탭 클릭 시 해당 탭이 보이도록 스크롤
+    this.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+
+    // 탭 변경 시 높이 재계산
+    setTimeout(notifyHeight, 100);
+  });
+});
+
+// Q&A 토글
+document.querySelectorAll('.qna-question').forEach(question => {
+  question.addEventListener('click', function() {
+    const item = this.parentElement;
+    const isActive = item.classList.contains('active');
+
+    document.querySelectorAll('.qna-item').forEach(q => q.classList.remove('active'));
+
+    if (!isActive) {
+      item.classList.add('active');
+    }
+
+    // 높이 재계산
+    setTimeout(notifyHeight, 100);
+  });
+});
+
+// [URL] 간편진단 페이지로 이동 (postMessage 방식)
+function goToDiag() {
+  window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: '/58' }, '*');
+}
+
+// [URL] 상담접수 페이지로 이동 (postMessage 방식)
+function goToForm() {
+  window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: '/52' }, '*');
+}
+
+// 맨 위로 스크롤 (iframe 내부 → 부모 페이지에 postMessage로 요청)
+function scrollToTop() {
+  window.parent.postMessage({ type: 'MAMORU_SCROLL_TOP' }, '*');
+}
+
+/* =========================================================
+   iframe 높이 전송 (아임웹 코드위젯 대응)
+   ========================================================= */
+var lastSentHeight = 0;
+
+function getFullHeight() {
+  var pageEl = document.querySelector('.mamoru-consult-page');
+  if (pageEl) {
+    var rect = pageEl.getBoundingClientRect();
+    return Math.ceil(rect.height + 100);
+  }
+  return Math.ceil(document.body.scrollHeight + 100);
+}
+
+function notifyHeight() {
+  var height = getFullHeight();
+  if (window.parent && window.parent !== window && height > 0 && Math.abs(height - lastSentHeight) > 5) {
+    lastSentHeight = height;
+    window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: height }, '*');
+  }
+}
+
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'REQUEST_HEIGHT') notifyHeight();
+});
+
+window.addEventListener('load', function() {
+  setTimeout(notifyHeight, 100);
+  setTimeout(notifyHeight, 500);
+  setTimeout(notifyHeight, 1000);
+
+  // 모바일 floating CTA: hero 지나면 슬라이드 업
+  // (iframe 안 fixed는 iframe document 박스 끝 기준 — 사장님이 어느 정도 스크롤하면 자연스럽게 보임)
+  var floatingCta = document.getElementById('consultFloatingCta');
+  var heroEl = document.querySelector('.consult-hero');
+  if (floatingCta && heroEl) {
+    var heroBottom = heroEl.getBoundingClientRect().bottom + window.scrollY;
+    function toggleFloatingCta() {
+      // iframe 환경에서 window.scrollY는 0일 수 있으므로 부모 스크롤 추정 어려움
+      // 단순화: load 직후 200ms 후 visible 처리 (사용자가 스크롤 시작하면 자연스럽게 노출)
+      floatingCta.classList.add('visible');
+    }
+    setTimeout(toggleFloatingCta, 800);
+  }
+});
+
+var resizeTimer;
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(notifyHeight, 200);
+});
+
+// fade-in 스크롤 애니메이션 (IntersectionObserver)
+(function() {
+  var els = document.querySelectorAll('.fade-in');
+  if (!('IntersectionObserver' in window)) {
+    // fallback: 즉시 표시
+    els.forEach(function(el) { el.classList.add('visible'); });
+    return;
+  }
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  els.forEach(function(el) { observer.observe(el); });
+})();
+</script>
+
+</body>
+</html>
