@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>고객 페이지 개편 현황판 (B-09)</title>
+<!--
+  고객 페이지 B-09 개편 현황판 — 디자인 작업실 전용(고객 미노출)
+  · 진행 규칙: 한 페이지씩 → 시안(A 현재 / B 개편) 링크 → 사장님 OK → 실제 페이지 반영·배포 → 반영완료
+  · 상태 갱신은 아래 PAGES 배열만 고친다(클로드가 단계마다 커밋)
+  · 상태값: wait 대기 / doing 진행중 / review 확인 요청 / done 반영완료 / skip 반영 안 함
+-->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+:root{ --void:#1A1A1A; --stone:#4A4A4A; --warm-gray:#8A8580; --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; --cream:#FAF9F7; --white:#fff;
+  --font-display:'Outfit','Pretendard',sans-serif; --font-body:'Pretendard',-apple-system,system-ui,sans-serif; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{ background:var(--cream); color:var(--void); font-family:var(--font-body); -webkit-font-smoothing:antialiased; line-height:1.6; }
+.wrap{ max-width:1100px; margin:0 auto; padding:clamp(32px,7vw,64px) 20px 80px; }
+@media(min-width:768px){ .wrap{ padding-left:32px; padding-right:32px; } }
+.label{ font-family:var(--font-display); font-size:11px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--warm-gray); }
+h1{ margin-top:10px; font-size:clamp(28px,7vw,48px); line-height:1.1; letter-spacing:-.04em; }
+h1 .lt{ font-weight:300; color:var(--warm-gray); } h1 .bk{ font-weight:900; display:block; }
+.lead{ margin-top:14px; font-size:14px; color:var(--stone); max-width:640px; }
+.flow{ margin-top:18px; display:flex; flex-wrap:wrap; gap:6px 10px; font-size:12px; color:var(--warm-gray); }
+.flow b{ color:var(--void); font-weight:700; }
+
+.summary{ margin-top:32px; display:grid; grid-template-columns:repeat(5,1fr); border-top:1px solid var(--sand); }
+.summary div{ padding:14px 8px 0 0; }
+.summary dt{ font-family:var(--font-display); font-size:clamp(24px,6vw,40px); font-weight:800; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums; }
+.summary dd{ margin-top:6px; font-size:11.5px; color:var(--warm-gray); }
+
+.group{ margin-top:44px; }
+.group h2{ font-size:13px; font-weight:700; letter-spacing:-.01em; padding-bottom:10px; border-bottom:1px solid var(--void); display:flex; justify-content:space-between; gap:12px; }
+.group h2 small{ font-weight:500; color:var(--warm-gray); }
+.row{ display:grid; grid-template-columns:42px 1fr; gap:12px; padding:18px 0; border-bottom:1px solid var(--sand); }
+@media(min-width:900px){ .row{ grid-template-columns:56px 1fr 300px; align-items:center; } }
+.idx{ font-family:var(--font-display); font-size:clamp(26px,6vw,36px); font-weight:300; color:var(--mist); line-height:1; font-variant-numeric:tabular-nums; }
+.name{ font-size:16px; font-weight:800; letter-spacing:-.02em; }
+.meta{ margin-top:3px; font-size:12px; color:var(--warm-gray); }
+.note{ margin-top:6px; font-size:12.5px; color:var(--stone); }
+.side{ grid-column:2; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+@media(min-width:900px){ .side{ grid-column:auto; justify-content:flex-end; } }
+.st{ font-size:11.5px; font-weight:700; padding:5px 9px; border-radius:2px; border:1px solid var(--sand); color:var(--warm-gray); background:var(--white); white-space:nowrap; }
+.st--doing{ border-color:var(--void); color:var(--void); }
+.st--review{ background:var(--void); border-color:var(--void); color:var(--cream); }
+.st--done{ background:var(--parchment); border-color:var(--parchment); color:var(--void); }
+.st--skip{ text-decoration:line-through; }
+.lnk{ font-size:12px; font-weight:700; color:var(--void); text-decoration:none; border-bottom:1px solid var(--void); padding-bottom:1px; white-space:nowrap; }
+.lnk--muted{ color:var(--warm-gray); border-color:var(--sand); font-weight:600; }
+.foot{ margin-top:40px; font-size:12px; color:var(--warm-gray); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="label">MAMORU · DESIGN LAB</p>
+  <h1><span class="lt">고객 페이지</span><span class="bk">B-09 개편 현황판</span></h1>
+  <p class="lead">내용·기능은 그대로 두고 디자인만 개편합니다. 한 페이지씩 <b>지금 페이지</b>와 <b>새 시안</b>을 비교해 OK 하시면 반영합니다. 이 화면은 고객에게 보이지 않습니다.</p>
+  <p class="flow"><span><b>대기</b></span>→<span><b>진행중</b> 시안 제작</span>→<span><b>확인 요청</b> 링크로 비교</span>→<span><b>반영완료</b> OK 후 배포</span>·<span><b>반영 안 함</b> 결정 시</span></p>
+
+  <dl class="summary" id="summary"></dl>
+  <div id="list"></div>
+  <p class="foot">기준: Brand Guide B-09 개성 레이어 · 예시 시안 <a class="lnk lnk--muted" href="b09_sample_as_intro.html">b09_sample_as_intro.html</a> · 마지막 갱신 <span id="updated"></span></p>
+</div>
+
+<script>
+/* ── 상태 갱신은 여기만 ── */
+var UPDATED = '2026-10-23';
+var BASE = 'https://page.mamoru.kr/projects/';
+var GROUPS = [
+  { key:'info',   title:'안내·소개 페이지', hint:'B-09 전면 적용' },
+  { key:'review', title:'후기', hint:'카드·위계 중심' },
+  { key:'trust',  title:'신뢰·진단 (정밀 주석 콘셉트가 잘 맞음)', hint:'B-09 전면 적용' },
+  { key:'form',   title:'접수폼·일정 페이지', hint:'가볍게 — 입력 편의 우선, 로직 그대로' }
+];
+var PAGES = [
+  { g:'info',   name:'복원수리 안내',         path:'as/page_guide.html',              where:'아임웹 /60',          status:'wait', mock:'' },
+  { g:'info',   name:'상담 안내',             path:'consulting/page_guide.html',      where:'아임웹 /61',          status:'wait', mock:'' },
+  { g:'info',   name:'브랜드 소개',           path:'brand/page_intro.html',           where:'아임웹 브랜드',       status:'wait', mock:'' },
+  { g:'info',   name:'복원수리 안내(알림톡용)', path:'as/page_as_guide.html',           where:'알림톡 버튼',         status:'wait', mock:'' },
+  { g:'info',   name:'추천',                  path:'consulting/page_recommend.html',  where:'아임웹',              status:'wait', mock:'' },
+  { g:'review', name:'후기 전체보기',          path:'reviews/page_reviews.html',       where:'아임웹 /62',          status:'wait', mock:'' },
+  { g:'review', name:'메인 후기',              path:'main/iframe_main_reviews.html',   where:'mamoru.kr 메인',      status:'wait', mock:'' },
+  { g:'review', name:'상품상세 후기 위젯',      path:'reviews/ImwebWidgetCode_product_reviews.html', where:'아임웹 상품상세 (수동 붙여넣기)', status:'wait', mock:'' },
+  { g:'review', name:'후기 작성',              path:'reviews/page_review.html',        where:'알림톡 후기 요청',     status:'wait', mock:'' },
+  { g:'review', name:'리뷰 이벤트',            path:'reviews/page_review_event.html',  where:'아임웹·알림톡',        status:'wait', mock:'' },
+  { g:'review', name:'이벤트 당첨 배송지',      path:'reviews/page_event_address.html', where:'알림톡(당첨자)',       status:'wait', mock:'' },
+  { g:'trust',  name:'수리내역서 (고객 화면)',  path:'as/page_as_report.html',          where:'출고 알림톡',          status:'wait', mock:'' },
+  { g:'trust',  name:'정품확인',               path:'verify/index.html',               where:'시리얼 QR',            status:'wait', mock:'' },
+  { g:'trust',  name:'자가진단',               path:'verify/self-check.html',          where:'정품확인에서 이동',     status:'wait', mock:'' },
+  { g:'trust',  name:'가위 진단',              path:'consulting/page_diag.html',       where:'아임웹 /58',          status:'wait', mock:'' },
+  { g:'form',   name:'복원수리 접수',          path:'as/page_form.html',               where:'아임웹 /53',          status:'wait', mock:'' },
+  { g:'form',   name:'상담 접수',              path:'consulting/page_form.html',       where:'아임웹 상담',          status:'wait', mock:'' },
+  { g:'form',   name:'EVENT 접수',             path:'event/page_form.html',            where:'릴스·DM 링크',         status:'wait', mock:'' },
+  { g:'form',   name:'상담 일정 확인·변경',     path:'consulting/page_change_request.html', where:'알림톡',           status:'wait', mock:'' },
+  { g:'form',   name:'상담 일정 제안',          path:'consulting/page_suggest.html',    where:'알림톡',              status:'wait', mock:'' },
+  { g:'form',   name:'상담 처리 결과',          path:'consulting/page_result.html',     where:'알림톡 버튼 결과',     status:'wait', mock:'' },
+  { g:'form',   name:'직접방문 일정 변경',      path:'as/page_change_request.html',     where:'알림톡',              status:'wait', mock:'' }
+];
+/* ─────────────────── */
+
+var LABEL = { wait:'대기', doing:'진행중', review:'확인 요청', done:'반영완료', skip:'반영 안 함' };
+function esc(s){ return String(s||'').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+var count = { wait:0, doing:0, review:0, done:0, skip:0 };
+PAGES.forEach(function(p){ count[p.status]++; });
+document.getElementById('summary').innerHTML = ['wait','doing','review','done','skip'].map(function(k){
+  return '<div><dt>' + count[k] + '</dt><dd>' + LABEL[k] + '</dd></div>';
+}).join('');
+var n = 0;
+document.getElementById('list').innerHTML = GROUPS.map(function(g){
+  var rows = PAGES.filter(function(p){ return p.g === g.key; }).map(function(p){
+    n++;
+    var links = '<a class="lnk lnk--muted" target="_blank" href="' + BASE + esc(p.path) + '">지금 페이지</a>';
+    if (p.mock) links += '<a class="lnk" target="_blank" href="' + esc(p.mock) + '">새 시안 보기 →</a>';
+    return '<div class="row"><p class="idx">' + String(n).padStart(2,'0') + '</p>' +
+      '<div><p class="name">' + esc(p.name) + '</p><p class="meta">' + esc(p.where) + ' · ' + esc(p.path) + '</p>' + (p.note ? '<p class="note">' + esc(p.note) + '</p>' : '') + '</div>' +
+      '<div class="side"><span class="st st--' + p.status + '">' + LABEL[p.status] + '</span>' + links + '</div></div>';
+  }).join('');
+  return '<section class="group"><h2>' + esc(g.title) + '<small>' + esc(g.hint) + '</small></h2>' + rows + '</section>';
+}).join('');
+document.getElementById('updated').textContent = UPDATED;
+</script>
+</body>
+</html>
