@@ -188,6 +188,75 @@
     .all-reviewed-card h2 { font-size: 18px; margin-bottom: 8px; }
     .all-reviewed-card p { font-size: 14px; color: #4A4A4A; } /* Stone */
   </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 작성폼이라 "가볍게". 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 검수 기록지에 서명하듯 쓰는 후기 / 시그니처: 입력 항목마다 거대 얇은 번호(01·02·03…) + 가는 선
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px · 입력칸·버튼 크기 유지(입력 편의 우선) · 히어로 사진 없음 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+body{ font-family:'Pretendard', -apple-system, system-ui, sans-serif; word-break:keep-all; overflow-wrap:break-word; }
+*{ box-shadow:none !important; }
+
+/* ── 1. 머리 — 왼쪽 정렬 · 굵은 제목 ↔ 얇은 부제 ── */
+.header{ text-align:left; padding:36px 0 22px; }
+.header::before{ content:'REVIEW'; display:block; font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; color:var(--warm-gray); margin-bottom:10px; }
+.header h1{ font-size:clamp(30px,9vw,40px); font-weight:900; letter-spacing:-.04em; line-height:1.1; }
+.header p{ font-size:clamp(17px,4.8vw,20px); font-weight:300; color:var(--stone); letter-spacing:-.02em; margin-top:8px; }
+/* (짧은 룰은 생략 — 바로 아래 카드의 검은 가는 선이 룰 역할. 선 2줄 겹침 방지) */
+
+/* ── 2. 카드 → 가는 선 묶음 (흰 판·둥근 모서리 제거, 입력칸만 흰색) ── */
+.card{ background:transparent; border-radius:0; border-top:1px solid var(--void); padding:22px 0 8px; margin-bottom:12px; }
+.chip{ border-radius:2px; border-color:var(--void); color:var(--void); font-weight:700; padding:4px 10px; letter-spacing:-.01em; }
+.customer-info{ background:transparent; border-radius:0; border-left:2px solid var(--void); padding:2px 0 2px 14px; margin-bottom:6px; }
+.customer-info .name{ font-size:18px; font-weight:800; letter-spacing:-.02em; }
+.customer-info .meta{ font-size:13px; }
+
+/* ── 3. 시그니처 — 입력 항목 거대 번호 + 가는 선 (숨겨진 항목은 번호에서 자동 제외) ── */
+#main .card{ counter-reset:b-step; }
+#main .form-group{ counter-increment:b-step; border-top:1px solid var(--sand); padding-top:18px; margin-bottom:22px; }
+#main .customer-info + .form-group{ margin-top:22px; }
+#main .form-group > label{ font-size:15px; font-weight:800; letter-spacing:-.02em; margin-bottom:12px; }
+#main .form-group > label::before{ content:counter(b-step, decimal-leading-zero); display:inline-block; min-width:1.5em; margin-right:10px; font-family:'Outfit',sans-serif; font-size:clamp(30px,8.6vw,38px); font-weight:300; line-height:.8; letter-spacing:-.06em; color:var(--mist); vertical-align:-.06em; font-variant-numeric:tabular-nums; }
+.form-group .optional{ white-space:nowrap; font-weight:500; }
+#product-select .form-group > label{ font-size:15px; font-weight:800; letter-spacing:-.02em; margin:18px 0 12px; }
+
+/* 별점 — 크기 그대로, 색만 */
+.star-hint{ font-weight:600; color:var(--stone); }
+
+/* 태그 — 2px 모서리, 선택 = 검정 채움(선택 여부가 한눈에) */
+.tag-chip{ border-radius:2px; background:var(--white); }
+.tag-chip.selected{ background:var(--void); border-color:var(--void); color:var(--cream); font-weight:700; }
+
+/* 입력칸 — 2px, 포커스는 그림자 대신 선 */
+textarea{ border-radius:2px; background:var(--white); }
+textarea:focus{ border-color:var(--void); outline:1px solid var(--void); outline-offset:-2px; }
+
+/* 사진 — 2px */
+.photo-area .photo-btn{ border-radius:2px; border-color:var(--mist); background:var(--white); }
+.photo-wrap img, .photo-preview{ border-radius:2px; }
+.photo-remove{ border-radius:2px; }
+.photo-wrap.uploading::after{ border-radius:2px; }
+
+/* ── 4. 버튼 — 알약 → 2px 사각 (크기 유지) ── */
+.btn{ border-radius:2px; letter-spacing:-.01em; }
+.btn-primary{ border-radius:2px; font-weight:800; }
+.btn-close{ background:transparent; border:1px solid var(--sand); color:var(--stone); }
+#main > .btn-close{ margin-top:4px; }
+
+/* ── 5. 상태 화면(로딩·오류·완료) — 가는 선 묶음, 굵은 제목 ── */
+.card.loading{ border-top:1px solid var(--sand); padding:72px 20px; }
+.error-card, .success-card, .all-reviewed-card{ background:transparent; border:0; border-top:1px solid var(--void); border-bottom:1px solid var(--sand); border-radius:0; padding:56px 4px; }
+.error-card h2, .success-card h2, .all-reviewed-card h2{ font-size:clamp(20px,5.8vw,24px); font-weight:900; letter-spacing:-.03em; }
+.success-card .btn-close, .all-reviewed-card .btn-close{ background:transparent; }
+
+/* ── 6. 제품 선택(구매 후기) — 2px · 가는 선 ── */
+.product-item{ border-width:1px; border-radius:2px; background:var(--white); }
+.product-item.selected{ border-color:var(--void); outline:1px solid var(--void); outline-offset:-2px; }
+.product-item .pname{ font-weight:700; }
+.product-item .pbadge{ border-radius:2px; }
+</style>
 </head>
 <body>
   <div class="container">

@@ -93,6 +93,53 @@ body {
 .postcode-close { border: none; background: none; font-size: 22px; line-height: 1; cursor: pointer; padding: 4px 6px; color: var(--warm-gray); }
 #postcode-inner { flex: 1; min-height: 400px; }
 </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 입력폼이라 "가볍게". 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 당첨 축하 + 발송 전표(送り状)처럼 정확하게 / 시그니처: 얇은 인사(이름님,) ↔ 굵은 축하 문장 + 항목 거대 번호 01·02
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px · 입력칸 높이·버튼 크기 유지 · 히어로 사진 없음 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+*{ box-shadow:none !important; }
+
+/* ── 1. 제목 — 첫 줄(이름님,) 얇게 ↔ 둘째 줄(당첨을 축하드립니다) 굵게 ── */
+.ea-eyebrow{ margin-top:32px; }
+.ea-title{ margin-top:12px; font-size:clamp(28px,8.4vw,36px); font-weight:900; line-height:1.2; letter-spacing:-.04em; }
+.ea-title::first-line{ font-weight:300; color:var(--stone); }
+.ea-title #fName{ font-weight:700; color:var(--void); }
+.ea-prize{ margin-top:18px; }
+.ea-chip{ border-radius:2px; padding:4px 10px; }
+.ea-chip--rank{ font-family:'Outfit','Pretendard',sans-serif; font-weight:800; letter-spacing:.02em; }
+.ea-chip--prize{ background:transparent; border:1px solid var(--void); font-weight:700; }
+
+/* ── 2. 카드 → 가는 선 묶음 + 항목 거대 번호 (01 받는 분 / 02 받으실 주소) ── */
+.ea-card{ margin-top:30px; background:transparent; border:0; border-top:1px solid var(--void); border-radius:0; padding:20px 0 4px; counter-reset:b-sec; }
+.ea-sec{ counter-increment:b-sec; }
+.ea-sec + .ea-sec{ border-top:1px solid var(--sand); margin-top:24px; padding-top:20px; }
+.ea-label{ font-size:14px; font-weight:800; color:var(--void); letter-spacing:-.02em; margin-bottom:12px; }
+.ea-label::before{ content:counter(b-sec, decimal-leading-zero); display:inline-block; min-width:1.5em; margin-right:10px; font-family:'Outfit',sans-serif; font-size:clamp(30px,8.6vw,38px); font-weight:300; line-height:.8; letter-spacing:-.06em; color:var(--mist); vertical-align:-.06em; font-variant-numeric:tabular-nums; }
+.ea-who b{ font-size:18px; font-weight:800; letter-spacing:-.02em; }
+.ea-who span{ font-variant-numeric:tabular-nums; }
+
+/* 안내 문구 — 회색 상자 → 왼쪽 검은 선 */
+.ea-note{ background:transparent; border-radius:0; border-left:2px solid var(--void); padding:2px 0 2px 12px; }
+
+/* 입력칸·버튼 — 2px (높이 48 / 54 그대로) */
+.ea-input{ border-radius:2px; }
+.ea-input:focus{ outline:1px solid var(--void); outline-offset:-2px; }
+.ea-btn-sub{ border-radius:2px; }
+.ea-save{ border-radius:2px; font-weight:800; letter-spacing:-.01em; }
+.ea-foot{ border-top:1px solid var(--sand); padding-top:16px; text-wrap:pretty; }
+.ea-state p, .ea-note{ text-wrap:pretty; }
+
+/* ── 3. 상태 화면(로딩·완료·발송 준비·오류) — 가는 선 묶음, 굵은 제목 ── */
+.ea-state{ background:transparent; border:0; border-top:1px solid var(--void); border-bottom:1px solid var(--sand); border-radius:0; padding:40px 4px; }
+.ea-state h2{ font-size:clamp(20px,5.8vw,24px); font-weight:900; letter-spacing:-.03em; }
+.ea-state .ea-addr{ background:transparent; border-radius:0; border-left:2px solid var(--void); padding:2px 0 2px 12px; }
+
+/* 주소 검색 레이어 — 4px */
+.postcode-wrap{ border-radius:4px; }
+</style>
 </head>
 <body>
 <main class="ea">
@@ -137,7 +184,7 @@ body {
 
     <p class="ea-foot">
       • 저장하신 주소로 당첨 상품을 발송해 드리며, 발송되면 송장번호를 알림톡으로 안내드립니다<br>
-      • 입력하신 주소는 다음 주문·복원수리 접수 때도 그대로 불러올 수 있도록 고객 정보에 저장됩니다
+      • 입력하신 주소는 다음 주문·복원수리 접수 때도 그대로 <span class="b-nw">불러올 수 있도록</span> 고객 정보에 저장됩니다
     </p>
   </div>
 

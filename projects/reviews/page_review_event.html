@@ -191,23 +191,127 @@
 .re-notes li{ font-size:13px; color:var(--stone); line-height:1.9; list-style:none; padding-left:16px; position:relative; }
 .re-notes li::before{ content:''; position:absolute; left:2px; top:11px; width:4px; height:4px; border-radius:50%; background:var(--warm-gray); }
 </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 기존 Page Kit 스타일 위에 덧입힘. 문구·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 이달의 시상 보드(마감 시계가 걸린 게시판) / 시그니처: 거대 카운트다운 — 일(Days)은 굵게 900, 시·분·초는 얇게 300, 가는 세로선으로 칸 구분
+     겹침 1곳: 상품 이미지 아래 끝을 덮는 거대 REVIEW / 거대 번호: 참여 방법 01·02·03
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 0/2/4px · 상품·알림톡 이미지는 원래 색(흑백 필터 없음 — 히어로 사진이 상품이라) -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+body{ margin:0; } /* 원본은 body 기본 여백 8px 이 남아 띠(band)가 화면 끝까지 안 닿음 → 0 */
+.mm-shell{ word-break:keep-all; overflow-wrap:break-word; }
+.mm-shell *, .re-modal *{ box-shadow:none !important; }
+
+/* ── 1. 히어로 — 왼쪽 정렬 · 굵기 대비 제목 ── */
+.b-hero .b-hero__inner{ text-align:left; }
+.b-hero .mm-sub{ margin-left:0 !important; margin-right:0 !important; }
+.b-hero__title{ font-family:'Pretendard',sans-serif !important; font-size:clamp(42px,12.4vw,76px) !important; line-height:1.04 !important; letter-spacing:-.05em !important; }
+.b-hero__thin{ display:block; font-weight:300; color:var(--sand); }
+.b-hero__bold{ display:block; font-weight:900; color:var(--cream); }
+
+/* 상품 이미지 + 거대 REVIEW 겹침 (이미지는 원래 색) */
+.b-hero__photo{ position:relative; margin-top:30px; margin-bottom:10px; }
+.b-hero .re-hero__img{ margin:0; max-width:none; width:100%; border-radius:2px; background:#232323; border:1px solid var(--hairline-d); }
+.b-hero__word{ position:absolute; left:-3px; bottom:-.2em; margin:0; font-family:'Outfit',sans-serif; font-weight:900; font-size:clamp(64px,21vw,132px); line-height:.8; letter-spacing:-.05em; color:var(--cream); white-space:nowrap; pointer-events:none; }
+
+/* ── 2. 시그니처 — 거대 카운트다운 (상자 → 가는 세로선 칸) ── */
+.b-hero .re-count__cap{ margin-top:34px; font-family:'Outfit','Pretendard',sans-serif; font-weight:700; letter-spacing:.08em; }
+.b-hero .re-count__cap[data-phase="done"], .b-hero .re-count__cap[data-phase="none"]{ font-family:'Pretendard',sans-serif; font-weight:700; letter-spacing:-.01em; font-size:clamp(17px,4.8vw,20px); color:var(--cream); }
+.b-hero .re-count{ justify-content:flex-start; gap:0; margin-top:26px; border-top:1px solid var(--hairline-d); border-bottom:1px solid var(--hairline-d); }
+.b-hero .re-count__cap + .re-count{ margin-top:12px; }
+.b-hero .re-count__sep{ display:none; }
+.b-hero .re-count__box{ flex:1 1 0; min-width:0; padding:14px 0 12px 12px; border:0; border-left:1px solid var(--hairline-d); border-radius:0; background:transparent; text-align:left; }
+.b-hero .re-count__box:first-child{ border-left:0; padding-left:0; }
+.b-hero .re-count__n{ font-size:clamp(38px,11.4vw,66px); font-weight:300; letter-spacing:-.05em; line-height:.9; }
+.b-hero .re-count__box:first-child .re-count__n{ font-weight:900; }
+.b-hero .re-count__l{ font-family:'Outfit',sans-serif; font-weight:600; letter-spacing:.18em; margin-top:10px; }
+.b-hero .re-deadline{ margin-top:16px; }
+.b-hero .re-notice b{ white-space:nowrap; } /* 「10월 초」 구절 끊김 방지 */
+.b-hero .re-notice{ margin:18px 0 0; max-width:none; text-align:left; border-radius:2px; background:transparent; }
+.b-hero .re-hero__note{ margin-top:18px; padding-top:16px; border-top:1px solid var(--hairline-d); }
+
+/* PC — 글 왼쪽 / 이미지 오른쪽(비대칭 2단), 폭 1100. 이미지는 오른쪽 고정 칸(absolute) — 글 칸 높이와 무관하게 안정 */
+@media(min-width:900px){
+  .b-hero .b-hero__inner{ --b-img:min(420px,40vw); position:relative; max-width:var(--content-w-wide); padding-right:calc(32px + var(--b-img) + 56px); min-height:calc(var(--b-img) + 2 * clamp(48px,9vw,84px) + 20px); }
+  .b-hero .b-hero__inner > .b-hero__photo{ position:absolute; top:clamp(48px,9vw,84px); right:32px; width:var(--b-img); margin:0; }
+  .b-hero__word{ font-size:calc(var(--b-img) / 3.75); }
+  .b-hero .re-count__n{ font-size:clamp(44px,5vw,66px); }
+}
+
+/* ── 3. 섹션 제목 — 굵게 ── */
+.mm-h2{ font-family:'Pretendard',sans-serif; font-weight:900; font-size:clamp(26px,7vw,36px); letter-spacing:-.04em; }
+
+/* ── 4. 지난 당첨자 — 알약 탭 → 글자 탭 + 굵은 밑줄 / 등수 = 거대 글자 ── */
+.re-tabs{ gap:0; border-bottom:1px solid var(--sand); padding-bottom:0; }
+.re-tab{ position:relative; border:0; border-radius:0; background:transparent; padding:10px 2px; margin-right:20px; color:var(--warm-gray); }
+.re-tab:hover{ color:var(--void); }
+.re-tab[aria-selected="true"]{ background:transparent; color:var(--void); font-weight:800; }
+.re-tab[aria-selected="true"]::after{ content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--void); }
+.re-win{ gap:0; }
+.re-rank{ padding:18px 0 20px; border-top:1px solid var(--sand); }
+.re-rank:first-child{ border-top:0; padding-top:4px; }
+.re-rank__label{ align-items:baseline; gap:10px; margin-bottom:12px; }
+.re-rank__badge, .re-rank--1 .re-rank__badge{ background:transparent; border:0; border-radius:0; padding:0; font-family:'Outfit','Pretendard',sans-serif; font-size:clamp(24px,6.6vw,30px); font-weight:900; letter-spacing:-.04em; line-height:1; color:var(--void); }
+.re-rank__prod, .re-rank__prod img{ border-radius:2px; }
+.re-rc{ border-radius:2px; }
+.re-rc__photo, .re-rc__photoph{ border-radius:2px; }
+
+/* ── 5. 이달의 추첨 상품 — 2px / 크게 볼 때 등수 = 거대 글자 ── */
+.re-prize{ border-radius:2px; }
+.re-prize__media{ border-radius:2px; }
+.re-prize__rank{ border-radius:2px; background:transparent; border-color:var(--void); color:var(--void); }
+.re-prize.is-feature{ border:1px solid var(--void); border-radius:2px; }
+.re-prize.is-feature .re-prize__media{ border-radius:0; }
+.re-prize.is-feature .re-prize__rank{ background:transparent; border:0; padding:0; color:var(--void); font-family:'Outfit','Pretendard',sans-serif; font-size:clamp(34px,9.4vw,48px); font-weight:900; letter-spacing:-.04em; line-height:1; }
+.re-prize.is-feature .re-prize__name{ font-weight:900; letter-spacing:-.03em; }
+.re-prize.is-feature .re-prize__pick{ border-radius:2px; }
+.re-prize__pick .n{ font-variant-numeric:tabular-nums; }
+
+/* ── 6. 참여 방법 — 거대 번호 01·02·03 (모바일 = 번호를 글 위로 / PC = 번호 | 글 | 알림톡 화면) ── */
+.re-step__idx{ font-family:'Outfit',sans-serif; font-size:clamp(56px,16vw,96px); font-weight:300; letter-spacing:-.06em; line-height:.8; color:var(--sand); font-variant-numeric:tabular-nums; }
+.re-step__t{ margin-top:14px; font-weight:900; letter-spacing:-.03em; }
+.re-step__shot img{ border-radius:2px; }
+@media(min-width:768px){
+  .re-step{ display:grid; grid-template-columns:120px minmax(0,1fr) auto; column-gap:28px; align-items:start; }
+  .re-step > *{ grid-column:2; }
+  .re-step > .re-step__idx{ grid-column:1; grid-row:1 / span 6; }
+  .re-step > .re-step__t{ margin-top:4px; }
+  .re-step > .re-step__shot{ grid-column:3; grid-row:1 / span 6; margin-top:4px; width:220px; }
+}
+
+/* ── 7. 유의사항 — 흰 상자 → 가는 선 목록 ── */
+.re-notes{ background:transparent; border-top:1px solid var(--void); border-radius:0; padding:14px 0 0; }
+.re-notes li{ padding-left:18px; }
+.re-notes li::before{ width:8px; height:1px; border-radius:0; top:13px; left:0; background:var(--stone); }
+
+/* ── 8. 후기 모달 — 2px ── */
+.re-modal__box{ border-radius:2px; }
+.re-modal__close{ border-radius:2px; }
+.re-modal__rank{ border-radius:2px; }
+.re-modal__photos img{ border-radius:2px; }
+</style>
 </head>
 <body>
 <div class="mm-shell">
 
   <!-- ═══════════ 히어로 (다크 · 상품 스포트라이트) ═══════════ -->
-  <div class="mm-band mm-band--dark">
-    <div class="mm-inner mm-reveal re-center">
+  <!-- B-09 히어로: 얇은「이달의 리뷰」↔ 굵은「주인공은?」 + 상품 이미지 끝을 덮는 거대 REVIEW + 거대 카운트다운(시그니처). PC = 글 왼쪽 / 이미지 오른쪽 -->
+  <div class="mm-band mm-band--dark b-hero">
+    <div class="mm-inner mm-reveal re-center b-hero__inner">
       <p class="mm-label">REAL REVIEW</p>
-      <h1 class="mm-display" style="margin-top:14px;">이달의 리뷰 주인공은?</h1>
+      <h1 class="mm-display b-hero__title" style="margin-top:14px;"><span class="b-hero__thin">이달의 리뷰</span> <span class="b-hero__bold">주인공은?</span></h1>
       <p class="mm-sub" style="max-width:520px;margin:14px auto 0;">
         저희를 생각해서 남겨주신 진심에<br> <b style="color:var(--cream);">이달의 상품</b>으로 보답합니다
       </p>
 
       <!-- ✏️ 수정가능: 이달의 1등 상품 이미지 (아래 <img> 주석 풀고 src="" 에 이미지 URL) -->
-      <div class="re-hero__img">
-        <!-- <img src="이미지-URL" alt="이달의 상품"> -->
-        <span class="re-imgph">이달의 1등 상품<br>이미지</span>
+      <div class="b-hero__photo">
+        <div class="re-hero__img">
+          <!-- <img src="이미지-URL" alt="이달의 상품"> -->
+          <span class="re-imgph">이달의 1등 상품<br>이미지</span>
+        </div>
+        <p class="b-hero__word" aria-hidden="true">REVIEW</p>
       </div>
 
       <!-- ✏️ 수정가능: 마감일 → data-deadline. 말일 24시 = 다음 달 1일 00:00 (통합 8~9월 라운드 → 9월 말일 = 2026-10-01T00:00:00) -->
@@ -407,7 +511,7 @@
       <ul class="re-notes" style="margin-top:14px;">
         <!-- ✏️ 수정가능: 유의사항 (추첨일·추첨기준·당첨자 안내 포함) -->
         <li>이번 회차는 8~9월 작성 후기를 함께 모아 선정합니다. (이후 매월 1일~말일 단위로 진행)</li>
-        <li>응모 마감은 매월 말일 24시, 당첨 발표는 다음 달 첫째 금요일 오후 8시입니다.</li>
+        <li>응모 마감은 매월 말일 24시, 당첨 발표는 다음 달 <span class="b-nw">첫째 금요일</span> 오후 8시입니다.</li>
         <li>당첨자는 후기의 진정성을 기준으로 베스트를 선정합니다.</li>
         <li>부적절하거나 허위로 판단되는 후기는 선정에서 제외됩니다.</li>
         <li>당첨 시 등록된 연락처로 알림톡을 보내드리며, 7일간 회신이 없으면 상품은 다음 달로 이월됩니다.</li>

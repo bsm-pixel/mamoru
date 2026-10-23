@@ -176,6 +176,98 @@ img { display: block; max-width: 100%; }
 .mm-review-card__meta { font-size: 11px; font-weight: 500; color: var(--warm-gray); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mm-review-card__store { font-size: 12px; font-weight: 500; color: var(--warm-gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 기존 스타일 위에 덧입힘. 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 후기 아카이브 색인(메인 일부라 히어로 없음) / 시그니처: 헤드라인 굵기 대비 + 기록 카드 / 후기 공통 블록 = 전체보기·상품상세와 동일
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 0/2/4px · 후기 사진은 원래 색 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+/* ═══════════════ [B-09 후기 공통] — 3곳 동일 블록 (2026-10-23) ═══════════════
+   대상: page_reviews.html(/62) · iframe_main_reviews.html(메인) · ImwebWidgetCode_product_reviews.html(상품상세)
+   🚫 후기 표시 동시 수정 규칙: 이 공통 블록은 3파일에 글자 하나 다르지 않게 똑같이 넣는다(고칠 때도 3곳 같이).
+      각 파일 클래스명이 달라서 선택자를 묶어 둠 — 다른 파일 클래스는 그 파일에선 그냥 무시됨.
+   콘셉트: 후기 = "기록 카드(아카이브 색인)" — hairline 테두리 · 모서리 2px · 그림자 0 · 날짜/숫자는 Outfit 표 숫자
+   모달은 겉모양만(위치·열림·뷰포트 앵커 로직 무수정). 후기 사진은 원래 색 유지(흑백 금지). */
+.b-nw{ white-space:nowrap; }
+
+/* 1. 후기 카드 */
+.mm-rv-card, .mm-review-card, .mm-prv__card{ background:#FFFFFF !important; border:1px solid rgba(26,26,26,.14) !important; border-radius:2px !important; box-shadow:none !important; word-break:keep-all; overflow-wrap:break-word; }
+.mm-rv-card:active, .mm-review-card:active, .mm-prv__card:active{ transform:none !important; }
+@media (hover:hover){ .mm-rv-card:hover, .mm-review-card:hover, .mm-prv__card:hover{ border-color:#1A1A1A !important; box-shadow:none !important; transform:none !important; } }
+.mm-rv-card__img, .mm-review-card__img, .mm-prv__card-img{ border-radius:2px !important; }
+.mm-rv-card__meta, .mm-review-card__meta, .mm-prv__card-meta{ font-size:10.5px !important; font-weight:600 !important; letter-spacing:.08em !important; color:#8A8580 !important; }
+.mm-rv-card__meta-src, .mm-review-card__meta b{ color:#1A1A1A !important; font-weight:800 !important; }
+.mm-rv-card__name, .mm-review-card__name, .mm-prv__card-name{ font-weight:900 !important; letter-spacing:-.02em !important; color:#1A1A1A !important; }
+.mm-hon{ font-weight:400 !important; color:#8A8580 !important; }
+.mm-rv-card__store, .mm-review-card__store, .mm-prv__card-store{ color:#8A8580 !important; }
+.mm-rv-card__stars, .mm-review-card__stars, .mm-prv__card-stars{ color:#1A1A1A !important; letter-spacing:2px !important; }
+.mm-rv-card__text, .mm-review-card__text, .mm-prv__card-text{ color:#2D2D2D !important; word-break:keep-all; }
+.mm-rv-card__date, .mm-review-card__date, .mm-prv__card-date{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; font-size:11px !important; letter-spacing:.06em !important; color:#8A8580 !important; border-top:1px solid #EDEBE8 !important; padding-top:10px !important; }
+.mm-rv-card__date, .mm-rv-modal__date{ flex-wrap:wrap; row-gap:2px; }
+.mm-rv-card__date span, .mm-rv-modal__date span{ white-space:nowrap; }
+
+/* 2. 태그 · 분류 칩 · 구매 제품 칩 — 둥근 알약 → 2px 사각 */
+.mm-rv-tag, .mm-rv-sheet__tag, .mm-prv__tag{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:transparent !important; color:#4A4A4A !important; font-size:11px !important; font-weight:500 !important; padding:2px 8px !important; }
+.mm-rv-tag--more, .mm-prv__tag--more{ border:0 !important; color:#B8B4AF !important; font-weight:600 !important; padding:2px 4px !important; }
+.mm-review-card > div[style*="nowrap"] > span:first-child{ border-radius:2px !important; border-color:#D4D0CB !important; color:#4A4A4A !important; } /* 메인 카드 태그=인라인 스타일 → 같은 값으로 */
+.mm-rv-chip, .mm-rv-sheet__chip, .mm-prv__chip, .mm-review-card__subtype, .mm-rv-best__chip{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:transparent !important; color:#4A4A4A !important; font-size:11px !important; font-weight:600 !important; padding:2px 8px !important; }
+.mm-rv-chip--naver, .mm-rv-sheet__chip--src, .mm-review-card__source-badge{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:#D4D0CB !important; color:#2D2D2D !important; }
+.mm-rv-product, .mm-prv__modal-product, .mm-prv__card-product{ border-radius:2px !important; background:#EDEBE8 !important; color:#1A1A1A !important; font-family:'Outfit','Pretendard',sans-serif !important; font-weight:600 !important; letter-spacing:.04em !important; }
+
+/* 3. 필터 탭 — 알약 → 글자 탭 + 굵은 밑줄 2px (가는 기준선 위) */
+.mm-rv-tabs, .mm-reviews__tabs, .mm-prv__filters{ gap:0 !important; border-bottom:1px solid #D4D0CB; flex-wrap:nowrap !important; }
+.mm-rv-tab, .mm-reviews__tab, .mm-prv__filter-btn{ position:relative; border:0 !important; border-radius:0 !important; background:transparent !important; color:#8A8580 !important; font-size:13px !important; font-weight:600 !important; letter-spacing:-.01em !important; padding:10px 12px 11px !important; transform:none !important; white-space:nowrap; }
+.mm-rv-tab:first-child, .mm-reviews__tab:first-child, .mm-prv__filter-btn:first-child{ padding-left:2px !important; }
+.mm-rv-tab--active, .mm-reviews__tab--active, .mm-prv__filter-btn.active{ color:#1A1A1A !important; font-weight:800 !important; background:transparent !important; }
+.mm-rv-tab--active::after, .mm-reviews__tab--active::after, .mm-prv__filter-btn.active::after{ content:''; position:absolute; left:12px; right:12px; bottom:-1px; height:2px; background:#1A1A1A; }
+.mm-rv-tab--active:first-child::after, .mm-reviews__tab--active:first-child::after, .mm-prv__filter-btn.active:first-child::after{ left:2px; }
+@media (hover:hover){ .mm-rv-tab:hover, .mm-reviews__tab:hover, .mm-prv__filter-btn:hover{ color:#1A1A1A !important; } }
+
+/* 4. 별점 분포 막대 · 사진 칸 · 더보기 */
+.mm-rv-bar__track, .mm-prv__dist-bar{ height:2px !important; border-radius:0 !important; background:#D4D0CB !important; }
+.mm-rv-bar__fill, .mm-prv__dist-bar-fill{ border-radius:0 !important; background:#1A1A1A !important; }
+.mm-rv-bar__label, .mm-rv-bar__pct, .mm-prv__dist-star, .mm-prv__dist-count{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; }
+.mm-rv-photos__item, .mm-prv__gallery-item, .mm-rv-allgrid__item{ border-radius:2px !important; }
+.mm-rv-loadmore, .mm-prv__loadmore{ border-radius:2px !important; border:1px solid #1A1A1A !important; background:transparent !important; color:#1A1A1A !important; font-weight:700 !important; }
+.mm-rv-loadmore:active, .mm-prv__loadmore:active{ transform:none !important; }
+
+/* 5. 리뷰 상세 모달 — 겉모양만. 흰 기록지 + 머리 굵은 선 2px · 모서리 4px · 그림자 0 */
+.mm-rv-modal, .mm-rv-sheet, .mm-prv__modal{ background:#FFFFFF !important; border-radius:4px !important; border-top:2px solid #1A1A1A !important; box-shadow:none !important; word-break:keep-all; overflow-wrap:break-word; }
+.mm-rv-sheet__nav{ background:#FFFFFF !important; border-top:1px solid #EDEBE8 !important; }
+.mm-rv-modal__foot, .mm-prv__modal-foot{ border-top:1px solid #EDEBE8 !important; }
+.mm-rv-modal__close, .mm-rv-sheet__close, .mm-prv__modal-close{ border-radius:2px !important; background:#FFFFFF !important; border:1px solid #D4D0CB !important; color:#1A1A1A !important; }
+.mm-rv-modal__photo, .mm-rv-gallery img, .mm-prv__modal-photo{ border-radius:2px !important; }
+.mm-rv-modal__chips, .mm-rv-sheet__topline, .mm-prv__modal-chips{ gap:6px !important; }
+.mm-rv-modal__name, .mm-rv-sheet__name, .mm-prv__modal-name{ font-family:'Pretendard',sans-serif !important; font-size:20px !important; font-weight:900 !important; letter-spacing:-.03em !important; color:#1A1A1A !important; line-height:1.35 !important; }
+.mm-rv-modal__stars, .mm-rv-sheet__stars, .mm-prv__modal-stars{ font-size:15px !important; letter-spacing:3px !important; color:#1A1A1A !important; }
+.mm-rv-modal__text, .mm-rv-sheet__body, .mm-prv__modal-text{ font-size:15px !important; line-height:1.85 !important; color:#2D2D2D !important; }
+.mm-rv-modal__date, .mm-rv-sheet__date, .mm-prv__modal-date{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; font-size:11.5px !important; letter-spacing:.06em !important; color:#8A8580 !important; border-top:1px solid #EDEBE8 !important; }
+.mm-rv-modal__navbtn, .mm-rv-sheet__navbtn, .mm-prv__modal-footbtn{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:#FFFFFF !important; color:#1A1A1A !important; font-weight:700 !important; }
+.mm-rv-modal__navbtn--close, .mm-rv-sheet__navbtn--close, .mm-prv__modal-footbtn--close{ background:#1A1A1A !important; border-color:#1A1A1A !important; color:#FAF9F7 !important; }
+
+/* 6. 사진 확대(라이트박스) — 둥근 버튼 → 2px, 캡션 그라데이션 → 단색 띠 */
+.mm-lb__close, .mm-lb__arrow, .mm-rv-lb__x{ border-radius:2px !important; backdrop-filter:none !important; }
+.mm-lb__img, .mm-rv-lb img{ border-radius:2px !important; }
+.mm-lb__caption{ background:rgba(26,26,26,.88) !important; padding-top:18px !important; }
+.mm-lb__cap-chip{ border-radius:2px !important; }
+.mm-lb__cap-date{ font-family:'Outfit','Pretendard',sans-serif; font-variant-numeric:tabular-nums; letter-spacing:.06em; }
+/* ═══════════════ [B-09 후기 공통] 끝 ═══════════════ */
+
+/* ═══════════════ [B-09 페이지 전용] 메인 후기 iframe ═══════════════
+   메인 페이지 일부 → 큰 히어로 없음. 헤드라인 위계(작은 라벨 → 제목 900 ↔ 설명 300) + 공통 기록 카드만.
+   시그니처: 헤드라인 굵기 대비 + 2px 밑줄 탭. */
+.mm-reviews{ word-break:keep-all; overflow-wrap:break-word; padding:clamp(64px,13vw,120px) 0 clamp(52px,10vw,88px) !important; }
+.mm-reviews__head{ margin-bottom:clamp(24px,6vw,36px) !important; }
+.mm-section-kicker{ display:flex; align-items:center; gap:10px; font-family:'Outfit',sans-serif; font-size:11px !important; font-weight:700 !important; letter-spacing:.2em !important; color:#8A8580 !important; margin-bottom:14px !important; }
+.mm-section-kicker::before{ content:''; width:38px; height:2px; background:#1A1A1A; flex-shrink:0; }
+.mm-reviews__title{ font-family:'Pretendard',sans-serif; font-size:clamp(32px,9vw,52px) !important; font-weight:900 !important; letter-spacing:-.045em !important; line-height:1.05 !important; margin-bottom:10px !important; }
+.mm-reviews__desc{ font-size:clamp(15px,4.2vw,20px) !important; font-weight:300 !important; letter-spacing:-.03em; color:#4A4A4A !important; }
+.mm-reviews__tabs{ margin-bottom:18px !important; }
+.mm-review-card{ padding:20px !important; }
+.mm-review-card__img{ margin-bottom:14px !important; }
+@media (min-width:1024px){ .mm-reviews__tabs{ margin-bottom:24px !important; } .mm-reviews__tab{ font-size:14px !important; } .mm-review-card{ padding:24px !important; } }
+.mm-reviews__more{ display:table !important; margin:28px auto 0 !important; padding:0 0 2px !important; border-bottom:1px solid #1A1A1A; color:#1A1A1A !important; font-weight:700 !important; }
+</style>
 </head>
 <body>
 <!-- ══════════════════════════════════════════════════════════════

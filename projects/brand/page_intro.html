@@ -705,27 +705,230 @@ img[src=""] { display: none; }
   .intro-quicknav-wrap { display: none; }
 }
 </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 기존 스타일 위에 덧입힘. 마크업·스크립트 무수정 원칙(히어로만 교체) ═══════════════
+     콘셉트: 장인 작업대 다큐 / 시그니처: 히어로 흑백 작업대 사진 위 hairline 주석 + 사진 끝을 덮는 거대 REAL / 연출 순간: 히어로 진입 1곳
+     규칙: 모노크롬(골드 폐기) · 그림자/그라데이션 금지 · 모서리 0/2px · 새 글꼴 없음(Outfit+Pretendard) · 아이콘·작업사진은 원래 색 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+<style id="b09">
+/* ── 0. 공통: 그림자·떠오르는 hover 제거 · 모서리 2px · 한글 단어 단위 줄바꿈 ── */
+body *{ box-shadow:none !important; }
+body{ word-break:keep-all; overflow-wrap:break-word; }
+.problem-card, .value-card, .tech-feature, .consult-step, .tech-image, .story-image, .story-highlight, .story-highlight-image,
+.location-map, .btn-primary, .btn-secondary, .btn-location, .cta-link, .problem-icon, .tech-feature-icon{ border-radius:2px !important; }
+.problem-card:hover, .value-card:hover, .consult-step:hover, .btn-primary:hover{ transform:none !important; }
+.hero-to-light{ display:none !important; }            /* 히어로→라이트 그라데이션 띠 제거 */
+.b-num{ font-family:'Outfit',sans-serif; font-variant-numeric:tabular-nums; }
+/* Outfit에는 한글이 없음 → 한글 제목은 Pretendard로 받기 */
+.section-title, .cta-title, .location-title, .principle-text, .story-greeting{ font-family:'Outfit','Pretendard',sans-serif !important; }
+
+/* ── 1. 히어로 — 흑백 작업대 사진 + 정밀 주석 + 거대 REAL ── */
+.hero.b-hero{ display:block; min-height:0; padding:0 !important; background:var(--void); text-align:left; overflow:hidden; position:relative; }
+.hero.b-hero::before, .hero.b-hero::after{ content:none !important; display:none !important; }
+.b-hero__stage{ position:relative; max-width:1100px; margin:0 auto; }
+/* 사진 비율 4:3 고정(원본 16:9의 오른쪽 4:3 크롭) — 비율이 고정이라 좌표가 폭과 무관하게 같은 부위에 고정 */
+.b-hero__photo{ position:relative; aspect-ratio:4/3; width:100%; overflow:hidden; }
+.b-hero__photo img{ display:block; width:100%; height:100%; object-fit:cover; object-position:100% 50%; filter:grayscale(1) contrast(1.12) brightness(.82); border-radius:0 !important; }
+.b-hero__plate{ display:none; }
+.b-anno{ position:absolute; inset:0; pointer-events:none; }
+.b-anno svg{ position:absolute; inset:0; width:100%; height:100%; }
+.b-anno line, .b-anno ellipse{ stroke:rgba(250,249,247,.85); stroke-width:1; fill:none; vector-effect:non-scaling-stroke; }
+.b-tag{ position:absolute; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--cream); white-space:nowrap; line-height:1.3; }
+.b-tag small{ display:block; font-family:'Pretendard',sans-serif; font-size:11px; letter-spacing:0; text-transform:none; color:var(--mist); font-weight:500; margin-top:2px; }
+.b-hero__word{ position:absolute; left:12px; bottom:-0.17em; margin:0; font-family:'Outfit',sans-serif; font-weight:900; font-size:clamp(76px,24vw,200px); line-height:.8; letter-spacing:-.05em; color:var(--cream); white-space:nowrap; }
+@media(min-width:768px){
+  .b-hero__stage{ padding:48px 40px 0; }
+  .b-hero__photo{ width:60%; margin-left:auto; }
+  .b-hero__plate{ display:block; position:absolute; left:40px; top:48px; width:calc(40% - 72px); border-top:1px solid rgba(250,249,247,.18); padding-top:14px; }
+  .b-hero__plate p{ font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--mist); line-height:2; }
+  .b-hero__plate b{ color:var(--cream); font-weight:700; }
+  .b-hero__word{ left:32px; font-size:clamp(150px,19vw,220px); }
+}
+.b-hero__body{ background:var(--cream); color:var(--void); }
+.b-hero__inner{ max-width:1100px; margin:0 auto; padding:clamp(40px,9vw,64px) 24px clamp(48px,10vw,72px); }
+@media(min-width:768px){ .b-hero__inner{ padding-left:40px; padding-right:40px; } }
+.b-hero__label{ display:block; }
+.b-wordmark{ display:block; height:12px; width:auto; }
+.b-hero__body .hero-title{ margin:18px 0 0; font-family:'Outfit',sans-serif; font-size:clamp(34px,10vw,92px); line-height:.95; letter-spacing:-.045em; font-weight:900; color:var(--void); }
+.b-hero__body .hero-title .lt{ display:block; font-weight:300; color:var(--warm-gray); margin-bottom:4px; }
+.b-hero__body .hero-subtitle{ opacity:1; margin:20px 0 0; font-family:'Pretendard',sans-serif; font-size:clamp(15px,4vw,19px); line-height:1.7; color:var(--stone); }
+.b-spec{ display:grid; grid-template-columns:repeat(3,1fr); margin:32px 0 0; border-top:1px solid var(--sand); max-width:720px; }
+.b-spec div{ padding:14px 8px 0 0; }
+.b-spec dt{ font-family:'Outfit','Pretendard',sans-serif; font-size:clamp(28px,7.4vw,44px); font-weight:800; letter-spacing:-.03em; line-height:1; color:var(--void); font-variant-numeric:tabular-nums; }
+.b-spec dt span{ font-size:.5em; font-family:'Pretendard',sans-serif; margin-left:1px; }
+.b-spec dd{ margin:6px 0 0; font-size:12px; color:var(--warm-gray); line-height:1.5; }
+/* 연출된 순간 1곳 — 히어로 진입(라벨 → 제목 → 부제 → 스펙, 100ms 간격) + 주석선 그려짐 */
+@keyframes b-rise{ from{ opacity:0; transform:translateY(20px); } to{ opacity:1; transform:none; } }
+@keyframes b-draw{ from{ stroke-dashoffset:120; } to{ stroke-dashoffset:0; } }
+.b-seq{ animation:b-rise .85s cubic-bezier(.2,.7,.2,1) both; }
+.b-seq:nth-child(2){ animation-delay:.1s; } .b-seq:nth-child(3){ animation-delay:.2s; } .b-seq:nth-child(4){ animation-delay:.3s; }
+.b-anno line{ stroke-dasharray:120; animation:b-draw 1.1s .35s ease-out both; }
+@media (prefers-reduced-motion: reduce){ .b-seq, .b-anno line{ animation:none !important; stroke-dasharray:none; } }
+
+/* ── 2. 모바일 퀵네비 — 알약 칩 → 글자 탭(누름 시 2px 밑줄) ── */
+.intro-quicknav-wrap{ border-bottom:1px solid var(--sand) !important; }
+.intro-quicknav-wrap::after{ display:none !important; }   /* 그라데이션 페이드 제거(5개가 한 줄에 들어감) */
+.intro-quicknav{ gap:0 !important; padding:0 24px !important; }
+.intro-quicknav-chip{ position:relative; background:transparent !important; border:0 !important; border-radius:0 !important; padding:14px 11px !important; color:var(--warm-gray) !important; font-family:'Pretendard',sans-serif !important; font-weight:600 !important; }
+.intro-quicknav-chip:first-child{ padding-left:0 !important; }
+.intro-quicknav-chip:active, .intro-quicknav-chip:focus-visible{ color:var(--void) !important; transform:none !important; outline:0; }
+.intro-quicknav-chip:active::after, .intro-quicknav-chip:focus-visible::after{ content:''; position:absolute; left:11px; right:11px; bottom:-1px; height:2px; background:var(--void); }
+.intro-quicknav-chip:first-child:active::after, .intro-quicknav-chip:first-child:focus-visible::after{ left:0; }
+
+/* ── 3. 챕터 — 거대 인덱스(Outfit 300, 흐린 색) + 라벨 ── */
+.chapter{ display:flex !important; align-items:flex-end; gap:clamp(12px,3vw,20px); margin-bottom:clamp(18px,4vw,28px) !important; }
+.chapter-num{ font-family:'Outfit',sans-serif !important; font-weight:300 !important; font-size:clamp(64px,19vw,128px) !important; line-height:.78 !important; letter-spacing:-.06em !important; color:var(--sand) !important; font-variant-numeric:tabular-nums; }
+.values-section .chapter-num, .consult .chapter-num{ color:var(--mist) !important; }   /* Parchment 배경 위 */
+.chapter .section-label{ padding-bottom:4px; }
+.chapter .section-label::before{ display:none; }
+/* 섹션 제목 — 첫 줄 얇게(300) ↔ 둘째 줄 굵게(900) */
+.section-title{ font-size:clamp(28px,7.6vw,52px) !important; font-weight:900 !important; letter-spacing:-.045em; line-height:1.15 !important; }
+.section-title::first-line{ font-weight:300; color:var(--warm-gray); }
+.section-title b{ font-weight:900; color:var(--void); }
+.section-desc{ color:var(--stone) !important; }
+
+/* ── 4. 01 의문점 — 문제(취소선·흐림) → 답(크고 굵게) · 가는 선 행([문제 | 아이콘] → 이야기 → 답) ── */
+#problem .problem-grid{ display:block !important; margin-top:clamp(36px,8vw,56px) !important; border-top:1px solid var(--void); }
+#problem .problem-card{ display:grid; grid-template-columns:1fr 56px; column-gap:16px; align-items:center; background:transparent !important; border:0 !important; border-bottom:1px solid var(--sand) !important; border-radius:0 !important; padding:24px 0 28px !important; overflow:visible; }
+#problem .problem-icon{ grid-column:2; grid-row:1; width:56px !important; height:56px !important; margin:0 !important; background:transparent !important; border:0 !important; }
+#problem .problem-title{ grid-column:1; grid-row:1; margin:0 !important; font-size:clamp(15px,4.2vw,17px) !important; font-weight:500 !important; color:var(--warm-gray) !important; text-decoration:line-through; text-decoration-thickness:1px; text-decoration-color:rgba(138,133,128,.6); }
+#problem .problem-desc{ grid-column:1 / -1; margin-top:14px; font-size:14px !important; color:var(--stone) !important; }
+#problem .problem-desc b{ display:block; margin-top:.3em; font-size:clamp(19px,5.2vw,26px); font-weight:900; letter-spacing:-.035em; line-height:1.3; color:var(--void); }
+@media(min-width:768px){
+  #problem .problem-card{ grid-template-columns:minmax(220px,.8fr) 1.4fr 72px; column-gap:clamp(24px,4vw,56px); align-items:start; padding:40px 0 44px !important; }
+  #problem .problem-title{ grid-column:1; padding-top:4px; }
+  #problem .problem-desc{ grid-column:2; grid-row:1; margin-top:0; }
+  #problem .problem-icon{ grid-column:3; width:72px !important; height:72px !important; }
+}
+
+/* ── 5. 02 MAMORU IS — 글자를 그림처럼 + 에디토리얼 인덱스 리스트 ── */
+/* 브랜드명 = AGRESSIVE 워드마크 SVG (일반 글씨체로 타이핑 금지 — 사장님 규칙). 9.3:1로 길어 폭 기준 크기 */
+#values .section-title .mm-wordmark--title{ display:block; width:min(100%, 640px); height:auto; color:var(--void); margin-bottom:.12em; }
+#values .section-title .b-is{ display:block; font-weight:900; color:var(--void); }
+
+.values-section{ text-align:left !important; }
+#values .section-title{ text-align:left !important; font-family:'Outfit',sans-serif !important; font-size:clamp(52px,15vw,140px) !important; line-height:.85 !important; letter-spacing:-.05em; }
+#values .section-title::first-line{ font-weight:900; color:var(--void); }
+#values .values-grid{ display:grid !important; grid-template-columns:1fr; gap:0 !important; max-width:none !important; margin:clamp(36px,8vw,56px) 0 0 !important; border-top:1px solid var(--void); }
+#values .value-card{ background:transparent !important; border:0 !important; border-bottom:1px solid var(--sand) !important; border-radius:0 !important; padding:28px 0 32px !important; text-align:left !important; }
+#values .value-number{ font-family:'Outfit',sans-serif !important; font-weight:300 !important; font-size:clamp(44px,11vw,72px) !important; line-height:.8 !important; letter-spacing:-.06em; color:var(--mist) !important; margin-bottom:16px !important; font-variant-numeric:tabular-nums; }
+#values .value-title{ font-size:clamp(20px,5.4vw,26px) !important; font-weight:900 !important; letter-spacing:-.035em; }
+#values .value-desc{ color:var(--stone) !important; }
+#values .value-desc b{ color:var(--void); font-weight:800; }
+@media(min-width:768px){
+  #values .values-grid{ grid-template-columns:1fr 1fr; column-gap:clamp(32px,5vw,64px) !important; }
+  #values .value-card{ display:grid; grid-template-columns:clamp(84px,9vw,110px) 1fr; column-gap:20px; align-content:start; padding:36px 0 40px !important; }
+  #values .value-card > *{ grid-column:2; }
+  #values .value-number{ grid-column:1; grid-row:1 / span 2; margin:0 !important; }
+}
+
+/* ── 6. 03 기술력 — 작업사진(원래 톤) + 가는 선 목록(아이콘은 글 오른쪽) ── */
+.tech-image{ border:0 !important; }
+.tech-features{ gap:0 !important; border-top:1px solid var(--void); }
+.tech-feature{ align-items:flex-start; gap:16px !important; background:transparent !important; border:0 !important; border-bottom:1px solid var(--sand) !important; border-radius:0 !important; padding:24px 0 !important; }
+.tech-feature:hover{ background:transparent !important; }
+.tech-feature-icon{ order:2; margin-left:auto; width:56px !important; height:56px !important; background:transparent !important; border:0 !important; }
+.tech-feature-content h4{ font-size:clamp(18px,4.8vw,21px) !important; font-weight:900 !important; letter-spacing:-.03em; }
+.tech-feature-content p{ color:var(--stone) !important; }
+
+/* ── 7. 04 맞춤 컨설팅 — [제목 | 아이콘] → 글 · 모바일 1단 / PC 2·4단 ── */
+#consult .consult-steps{ display:grid !important; grid-template-columns:1fr !important; gap:0 !important; border-top:1px solid var(--void); }
+#consult .consult-step{ display:grid; grid-template-columns:1fr 64px; column-gap:16px; align-items:center; align-content:start; background:transparent !important; border:0 !important; border-bottom:1px solid var(--sand) !important; border-radius:0 !important; padding:22px 0 26px !important; text-align:left !important; }
+#consult .consult-step-icon{ grid-column:2; grid-row:1; width:64px !important; height:64px !important; margin:0 !important; }
+#consult .consult-step h4{ grid-column:1; grid-row:1; margin:0 !important; font-size:clamp(18px,4.8vw,21px) !important; font-weight:900 !important; letter-spacing:-.03em; }
+#consult .consult-step p{ grid-column:1 / -1; margin-top:10px; color:var(--stone) !important; }
+@media(min-width:768px){
+  #consult .consult-steps{ grid-template-columns:1fr 1fr !important; column-gap:clamp(24px,4vw,40px) !important; border-top:0; }
+  #consult .consult-step{ align-items:end; border-bottom:0 !important; border-top:1px solid var(--void) !important; padding:24px 0 36px !important; }
+}
+@media(min-width:1100px){ #consult .consult-steps{ grid-template-columns:repeat(4,1fr) !important; } }
+
+/* ── 8. 다크 숫자 띠 — 큰 단어 + 가는 선, 왼쪽 정렬 ── */
+.trust-grid{ max-width:none !important; gap:32px 24px !important; }
+.trust-item{ text-align:left !important; border-top:1px solid rgba(255,255,255,.14); padding-top:16px; }
+.trust-number{ font-family:'Pretendard',sans-serif !important; font-size:clamp(30px,8.4vw,56px) !important; font-weight:900 !important; letter-spacing:-.045em; margin-bottom:8px !important; }
+.trust-label{ font-size:12px !important; color:var(--mist) !important; letter-spacing:.02em !important; }
+
+/* ── 9. 05 인사말 ── */
+.story-image{ border:0 !important; }
+.story-greeting{ font-size:clamp(28px,7.6vw,44px) !important; font-weight:900 !important; letter-spacing:-.045em; line-height:1.2 !important; }
+.story-greeting::first-line{ font-weight:300; color:var(--warm-gray); }
+.story-highlight{ background:transparent !important; border:0 !important; border-top:1px solid var(--void) !important; border-radius:0 !important; padding:24px 0 0 !important; }
+.story-highlight-image{ border:1px solid var(--sand) !important; }
+.story-highlight-text .text-accent{ font-family:'Outfit',sans-serif; font-weight:900 !important; font-size:clamp(24px,6.6vw,34px); line-height:.95; letter-spacing:-.04em; color:var(--void) !important; }
+
+/* ── 10. 원칙문 — 판매하지 않습니다(얇게) ↔ 고객이 선택합니다(굵게) ── */
+.principle-section{ text-align:left !important; }
+.principle-text{ max-width:none !important; margin:0 !important; font-size:clamp(34px,9.6vw,76px) !important; font-weight:900 !important; letter-spacing:-.05em; line-height:1.1 !important; }
+.principle-text::first-line{ font-weight:300; color:var(--mist); }
+.principle-sub{ color:var(--mist) !important; }
+.principle-sub b{ color:var(--cream); }
+
+/* ── 11. 문의 CTA — 왼쪽 정렬, 버튼 2px, 그림자 없음 ── */
+.cta-section{ text-align:left !important; }
+.cta-box{ margin:0 !important; max-width:760px !important; }
+.cta-title{ font-size:clamp(28px,7.6vw,48px) !important; font-weight:900 !important; letter-spacing:-.045em; line-height:1.15 !important; }
+.cta-title::first-line{ font-weight:300; color:var(--warm-gray); }
+.btn-primary{ font-weight:800 !important; }
+.btn-primary:hover{ background:var(--graphite) !important; }
+.btn-secondary{ border-color:var(--void) !important; }
+@media(min-width:769px){ .cta-buttons{ justify-content:flex-start !important; } }
+.cta-links{ justify-content:flex-start !important; }
+
+/* ── 12. 06 오시는 길 ── */
+.location-title{ font-weight:900 !important; letter-spacing:-.03em; }
+#location .section-title::first-line{ font-weight:900; color:var(--void); }   /* 한 줄 제목은 굵게 */
+.location-map{ border-color:var(--sand) !important; }
+.btn-location{ border-color:var(--void) !important; }
+</style>
 </head>
 <body>
 
 <!-- ══ 섹션 1: 히어로 (다크+골드 유지) ══ -->
-<section class="hero section" id="hero">
-  <div class="hero-content">
-    <!-- ✏️ 수정가능: 히어로 로고 이미지 (src URL만 교체) -->
-    <!-- 📐 추천: 120x120px PNG(투명배경) 또는 SVG / 최소 80x80px -->
-    <div class="hero-logo">
-      <img src="./icons/mylogo.png" alt="MAMORU 로고">
+<!-- B-09 히어로: 장인 작업대 다큐 — 흑백 작업대 사진(수냉식 연마) + 정밀 주석(시그니처) + 거대 REAL + 숫자 스펙.
+     문구(CUT THE FAKE, / KEEP THE REAL / 거짓 없는 본질…)는 원본 그대로. 골드·글리치·그라데이션 제거. 로고 이미지 → 워드마크 SVG -->
+<section class="hero b-hero" id="hero">
+  <div class="b-hero__stage">
+    <div class="b-hero__plate" aria-hidden="true">
+      <p><b>DWG. MAMORU — BRAND</b></p>
+      <p>SUBJECT — WATER-COOLED RESTORATION</p>
+      <p>LINEAGE — 2ND GENERATION · 50 YRS</p>
+      <p>PRINCIPLE — CUT THE FAKE</p>
     </div>
-    <h1 class="hero-title">
-      <span class="glitch" data-text="CUT THE FAKE,">CUT THE FAKE,</span><br>
-      <span class="glitch text-gold" data-text="KEEP THE REAL" style="animation-delay: 0.3s;">KEEP THE REAL</span>
-    </h1>
-    <p class="hero-subtitle">
-      거짓 없는 본질<br>
-      당신만의 가위를 찾아드립니다
-    </p>
+    <div class="b-hero__photo">
+      <!-- [IMG] 작업대 사진(원본 1920×1080) — 4:3 고정 크롭(오른쪽 기준)이라 주석 좌표가 어느 폭에서도 고정. 흑백 처리는 CSS -->
+      <img src="../as/images/수냉식.jpg" alt="수냉식 연마 휠에 가위날을 맞추는 작업대">
+      <div class="b-anno" aria-hidden="true">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <!-- 01 노즐 끝(물방울) -->
+          <ellipse cx="68.1" cy="50.4" rx="1.3" ry="1.73"/><line x1="69.6" y1="50.4" x2="76" y2="50.4"/>
+          <!-- 02 가위날(휠 위에 눕힌 날) -->
+          <ellipse cx="40" cy="64.6" rx="1.3" ry="1.73"/><line x1="38.5" y1="64.6" x2="22" y2="64.6"/>
+          <!-- 03 연마 휠 -->
+          <ellipse cx="62.5" cy="60.2" rx="1.3" ry="1.73"/><line x1="62.5" y1="62" x2="62.5" y2="72"/>
+        </svg>
+        <span class="b-tag" style="left:77%;top:47.6%">01 COOLANT<small>수냉식</small></span>
+        <span class="b-tag" style="left:5%;top:56.4%">02 EDGE<small>가위날</small></span>
+        <span class="b-tag" style="left:64%;top:72.5%">03 WHEEL<small>연마 휠</small></span>
+      </div>
+    </div>
+    <p class="b-hero__word" aria-hidden="true">REAL</p>
   </div>
-  <div class="scroll-indicator"><span></span><span>Scroll</span></div>
+  <div class="b-hero__body">
+    <div class="b-hero__inner">
+      <span class="b-hero__label b-seq"><img class="b-wordmark" src="../brand/img/mamoru-wordmark-void.svg" alt="MAMORU"></span>
+      <h1 class="hero-title b-seq"><span class="lt">CUT THE FAKE,</span>KEEP THE REAL</h1>
+      <p class="hero-subtitle b-seq">
+        거짓 없는 본질<br>
+        당신만의 가위를 찾아드립니다
+      </p>
+      <dl class="b-spec b-seq">
+        <div><dt>50<span>년</span></dt><dd>아버지의<br>가위수리 경력</dd></div>
+        <div><dt>2<span>대</span></dt><dd>기술력과 진심을<br>잇습니다</dd></div>
+        <div><dt>12<span>년</span></dt><dd>영업 병아리<br>시절부터</dd></div>
+      </dl>
+    </div>
+  </div>
 </section>
 
 <!-- 히어로→라이트 트랜지션 -->
@@ -776,7 +979,7 @@ img[src=""] { display: none; }
 <section class="section values-section" id="values">
   <div class="container">
     <div class="chapter fade-in"><span class="chapter-num">02</span><span class="section-label">Our Answer</span></div>
-    <h2 class="section-title fade-in" style="text-align:center;">MAMORU IS</h2>
+    <h2 class="section-title fade-in" style="text-align:center;" aria-label="MAMORU IS"><svg class="mm-wordmark mm-wordmark--title" xmlns="http://www.w3.org/2000/svg" viewBox="3.19 205.21 315.73 34.01" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3.21875 205.211H10.958C12.1787 205.211 13.0739 205.805 13.6436 206.993C13.8063 207.237 14.8561 209.052 16.793 212.437C19.6087 217.304 22.4652 222.244 25.3623 227.257C25.4762 227.452 25.8506 228.095 26.4854 229.185H26.5098C26.6074 229.006 27.9258 226.719 30.4648 222.325C34.2083 215.88 36.1777 212.462 36.373 212.071C36.5358 211.827 37.6182 209.963 39.6201 206.48C39.9945 205.943 40.4746 205.569 41.0605 205.357C41.3372 205.26 41.6872 205.211 42.1104 205.211H49.7764C49.7926 205.211 49.8008 205.219 49.8008 205.235V236.314C49.8008 237.437 49.3206 238.284 48.3604 238.853C47.9372 239.097 47.4977 239.219 47.042 239.219H41.0605C41.0443 239.219 41.0361 239.211 41.0361 239.195V221.568C40.7106 222.105 39.0179 225.027 35.958 230.333L32.2471 236.754C31.6611 237.584 30.8962 237.999 29.9521 237.999H23.043C22.1315 237.999 21.3828 237.608 20.7969 236.827C20.6992 236.697 19.7389 235.037 17.916 231.846C17.8021 231.667 16.443 229.324 13.8389 224.815C12.9111 223.204 12.2845 222.122 11.959 221.568V239.195C11.959 239.211 11.9508 239.219 11.9346 239.219H5.95312C5.1556 239.219 4.45573 238.886 3.85352 238.219C3.41406 237.681 3.19434 237.095 3.19434 236.461V205.235C3.19434 205.219 3.20247 205.211 3.21875 205.211ZM77.6055 205.211H84.7588C86.2074 205.211 87.4199 205.813 88.3965 207.017C88.6569 207.375 88.9824 207.929 89.373 208.677C89.4382 208.775 89.4951 208.873 89.5439 208.97C89.6904 209.198 90.9437 211.396 93.3037 215.562C93.971 216.75 94.736 218.101 95.5986 219.615C100.953 229.071 103.704 233.905 103.851 234.117L106.707 239.219H99.1875C97.2018 239.219 95.737 238.284 94.793 236.412C94.1257 235.273 93.6374 234.426 93.3281 233.873C93.0677 233.401 92.9212 233.149 92.8887 233.116H69.5488C69.5163 233.116 69.4756 233.132 69.4268 233.165C69.3942 233.197 69.3698 233.262 69.3535 233.36L67.1562 237.218C66.1634 238.552 64.8451 239.219 63.2012 239.219H55.7549C55.7223 239.219 55.7061 239.219 55.7061 239.219C55.7061 239.203 55.7061 239.187 55.7061 239.171C59.3031 232.807 62.4362 227.289 65.1055 222.618C67.2214 218.891 68.9303 215.88 70.2324 213.585C72.2507 210.02 73.3086 208.165 73.4062 208.018C73.6667 207.53 73.9434 207.099 74.2363 206.724C75.1803 205.715 76.3034 205.211 77.6055 205.211ZM81.1943 212.462L73.5527 225.914H88.8359C83.8392 217.157 81.292 212.673 81.1943 212.462ZM112.734 205.211H120.474C121.694 205.211 122.59 205.805 123.159 206.993C123.322 207.237 124.372 209.052 126.309 212.437C129.124 217.304 131.981 222.244 134.878 227.257C134.992 227.452 135.366 228.095 136.001 229.185H136.025C136.123 229.006 137.441 226.719 139.98 222.325C143.724 215.88 145.693 212.462 145.889 212.071C146.051 211.827 147.134 209.963 149.136 206.48C149.51 205.943 149.99 205.569 150.576 205.357C150.853 205.26 151.203 205.211 151.626 205.211H159.292C159.308 205.211 159.316 205.219 159.316 205.235V236.314C159.316 237.437 158.836 238.284 157.876 238.853C157.453 239.097 157.013 239.219 156.558 239.219H150.576C150.56 239.219 150.552 239.211 150.552 239.195V221.568C150.226 222.105 148.534 225.027 145.474 230.333L141.763 236.754C141.177 237.584 140.412 237.999 139.468 237.999H132.559C131.647 237.999 130.898 237.608 130.312 236.827C130.215 236.697 129.255 235.037 127.432 231.846C127.318 231.667 125.959 229.324 123.354 224.815C122.427 223.204 121.8 222.122 121.475 221.568V239.195C121.475 239.211 121.466 239.219 121.45 239.219H115.469C114.671 239.219 113.971 238.886 113.369 238.219C112.93 237.681 112.71 237.095 112.71 236.461V205.235C112.71 205.219 112.718 205.211 112.734 205.211ZM181.945 205.211H199.45C202.396 205.211 205.147 206.098 207.702 207.872C208.125 208.132 208.654 208.555 209.289 209.141C209.387 209.223 209.493 209.312 209.606 209.41C210.404 210.321 210.982 211.021 211.34 211.51C213.049 214.032 213.903 216.816 213.903 219.859V224.571C213.903 228.168 212.74 231.366 210.412 234.166C209.68 234.963 209.077 235.533 208.605 235.875C207.792 236.558 206.953 237.12 206.091 237.559C203.975 238.666 201.745 239.219 199.401 239.219H181.994C178.853 239.219 175.956 238.251 173.303 236.314C172.863 235.972 172.245 235.411 171.447 234.63C170.65 233.767 170.104 233.067 169.812 232.53C168.265 230.137 167.492 227.517 167.492 224.669V219.761C167.492 216.425 168.558 213.398 170.69 210.679C171 210.321 171.504 209.768 172.204 209.019C172.904 208.417 173.506 207.969 174.011 207.677C176.501 206.033 179.146 205.211 181.945 205.211ZM176.306 219.981V224.425C176.306 225.629 176.558 226.63 177.062 227.427C177.16 227.72 177.453 228.135 177.941 228.673C179.097 229.844 180.497 230.43 182.141 230.43H199.255C201.159 230.43 202.705 229.657 203.894 228.111C204.235 227.672 204.504 227.224 204.699 226.768C204.96 226.134 205.09 225.32 205.09 224.327V220.177C205.09 219.119 204.976 218.329 204.748 217.808C204.243 216.523 203.397 215.53 202.209 214.83C201.314 214.293 200.345 214.024 199.304 214.024H182.092C180.204 214.024 178.641 214.822 177.404 216.417C177.062 216.905 176.826 217.336 176.696 217.711C176.436 218.313 176.306 219.07 176.306 219.981ZM225.155 205.211H249.911C253.248 205.211 256.129 205.732 258.554 206.773C259.042 206.969 259.424 207.131 259.701 207.261C260.108 207.489 260.539 207.758 260.995 208.067C263.16 209.385 264.698 211.249 265.609 213.658C266.098 214.944 266.342 216.311 266.342 217.76V218.077C266.342 219.818 265.976 221.462 265.243 223.009C265.015 223.448 264.73 223.936 264.389 224.473C264.096 224.864 263.746 225.279 263.339 225.719C263.144 225.946 262.948 226.15 262.753 226.329L262.509 226.573L262.313 226.719L261.947 227.012C261.654 227.224 261.288 227.468 260.849 227.745C260.784 227.777 260.718 227.818 260.653 227.867C260.214 228.095 259.815 228.298 259.457 228.477C259.278 228.559 259.107 228.64 258.944 228.721C258.31 228.982 257.642 229.218 256.942 229.429C258.961 231.513 260.344 233.026 261.093 233.97C261.597 234.54 262.094 235.102 262.582 235.655C263.51 236.729 264.397 237.73 265.243 238.658C265.504 238.902 265.658 239.073 265.707 239.171H255.16C254.558 239.171 254.086 239.106 253.744 238.975C253.646 238.927 253.557 238.878 253.476 238.829C253.394 238.78 253.305 238.723 253.207 238.658C252.865 238.43 252.483 238.048 252.06 237.51C250.513 235.671 248.878 233.661 247.152 231.48L246.298 230.382C246.249 230.382 246.151 230.398 246.005 230.43C244.996 230.43 241.96 230.447 236.898 230.479H230.697V236.021C230.697 237.063 230.25 237.942 229.354 238.658C228.817 239.032 228.199 239.219 227.499 239.219H221.908V208.629C221.908 208.075 221.973 207.636 222.104 207.31C222.169 207.115 222.283 206.887 222.445 206.627C222.559 206.464 222.698 206.309 222.86 206.163C223.544 205.528 224.309 205.211 225.155 205.211ZM230.697 214.024V221.715H250.692C252.255 221.715 253.443 221.446 254.257 220.909C254.843 220.535 255.274 220.038 255.551 219.42C255.779 218.948 255.893 218.411 255.893 217.808C255.893 216.62 255.347 215.627 254.257 214.83C254.094 214.716 253.923 214.618 253.744 214.537C253.695 214.521 253.646 214.496 253.598 214.464C253.305 214.317 252.857 214.187 252.255 214.073C252.06 214.073 251.791 214.057 251.449 214.024H230.697ZM286.725 239.219C285.471 239.171 284.552 239.122 283.966 239.073C283.51 239.073 282.59 238.918 281.207 238.609C280.165 238.349 279.368 238.088 278.814 237.828C278.049 237.486 277.285 236.965 276.52 236.265C274.518 234.475 273.517 231.326 273.517 226.817L273.712 209.581C273.712 208.425 274.029 207.473 274.664 206.724C275.543 205.715 276.609 205.211 277.862 205.211H282.721V227.965C282.721 228.225 282.786 228.51 282.916 228.819C283.355 229.714 284.023 230.162 284.918 230.162H307.525C308.176 230.162 308.738 229.877 309.21 229.307C309.552 228.966 309.723 228.42 309.723 227.672V205.26C309.723 205.243 309.723 205.235 309.723 205.235C309.723 205.219 309.739 205.211 309.771 205.211H314.605C315.159 205.211 315.696 205.333 316.217 205.577C317.226 206 317.958 206.733 318.414 207.774C318.561 208.165 318.658 208.564 318.707 208.97C318.854 219.648 318.927 225.662 318.927 227.012C318.927 229.47 318.577 231.602 317.877 233.409C317.698 233.881 317.429 234.402 317.071 234.971C316.534 235.753 315.867 236.436 315.069 237.022C314.402 237.445 313.718 237.795 313.019 238.072C312.319 238.365 311.269 238.634 309.869 238.878C308.258 239.106 306.923 239.219 305.865 239.219H286.725Z"/></svg><span class="b-is">IS</span></h2>
 
     <div class="values-grid">
       <div class="value-card fade-in delay-1">
