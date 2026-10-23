@@ -11,8 +11,8 @@ import {
   type SourcingItem,
 } from '@/hooks/use-sourcing';
 import { RegisterLinkModal } from './_components/register-link-modals';
-import { LabelPreview } from '@/app/(dashboard)/design-lab/_sections/sourcing-1688/LabelPreview';
-import type { DemoPO } from '@/app/(dashboard)/design-lab/_sections/sourcing-1688/types';
+import { LabelPreview } from '@/components/sourcing/label-preview';
+import type { DemoPO } from '@/components/sourcing/label-preview-types';
 import { printSourcingLabels, printSourcingPriceList } from '@/lib/sourcing/label-print';
 import {
   ArrowLeft, Plus, Trash2, ExternalLink, Award, X, RotateCcw, Copy, PackageSearch,

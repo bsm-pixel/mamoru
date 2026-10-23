@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from 'react';
 import QRCode from 'react-qr-code';
 import { Printer, FileImage, AlertCircle, FileDown, FileCode } from 'lucide-react';
 import { printSourcingLabels } from '@/lib/sourcing/label-print';
-import type { DemoPO, DemoPOItem } from './types';
+import type { DemoPO, DemoPOItem } from './label-preview-types';
 
 /**
  * 50×30mm 기본 + 사이즈 선택 가능한 열전사 라벨 미리보기.
